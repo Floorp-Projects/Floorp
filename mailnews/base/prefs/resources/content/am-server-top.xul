@@ -4,14 +4,12 @@
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-server-top.dtd" >
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      style="width: 100%; height: 100%"
-      onload = "">
-<box align="vertical" style="width: 100%; height=100%">
-<box align="vertical" class="cleanborder" flex="100%"
-    style="width: 100%; height: 100%">
+      align="vertical">
+
   <html:div>&serverSettings.label;</html:div>
+  <box align="vertical" class="cleanborder" flex="100%">
   <html:div>
     <spring flex="100%"/>
     Account Type
@@ -22,6 +20,5 @@
       <html:option name="webmail">&webmail.label;</html:option>
     </html:select>
   </html:div>
-</box>
-</box>
-</xul:window>
+  </box>
+</window>

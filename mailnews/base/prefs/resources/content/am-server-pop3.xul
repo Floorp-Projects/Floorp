@@ -6,11 +6,10 @@
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      style="width: 100%; height=100%"
+      align="vertical"
       onload = "">
 
-<box align="vertical" style="width: 100%">
-<box align="vertical" class="cleanborder" flex="100%" style="width: 100%; height: 100%;">
+<box align="vertical" class="cleanborder" flex="100%">
   <box align="horizontal">
     <spring flex="100%"/>
     <html:div>&hostname.label;</html:div>
@@ -27,11 +26,10 @@
   <html:div><html:input type="checkbox"/>&biffStart.label;
             <html:spacer/>
             <html:input type="text" size="3"/>
-            <html:spacer/>&biffEnd.label;`
+            <html:spacer/>&biffEnd.label;
   </html:div>
   <html:div><html:input type="checkbox"/>&leaveOnServer.label;</html:div>
   <html:div><html:input type="checkbox"/>&deleteOnServer.label;</html:div>
   <html:div><html:input type="checkbox"/>&emptyTrashOnExit.label;</html:div>
-</box>
 </box>
 </window>

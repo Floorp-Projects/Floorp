@@ -3,11 +3,11 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-copies.dtd" >
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload = "">
+      align="vertical">
 
-<box align="vertical" flex="100%" style="height: 100%; width: 100%;">
+
 <html:div>&copyAndFolderTitle.label;</html:div>
 <box align="vertical" class="cleanborder" flex="100%">
 <html:div>&sendingPrefix.label;</html:div>
@@ -47,5 +47,5 @@
     <html:button type="button">&chooseFolderButton.label;</html:button>
   </box>
 </box>
-</box>
-</xul:window>
+
+</window>

@@ -3,14 +3,14 @@
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
-      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      style="width: 100%"
-      onload = "">
 
-<box align="vertical" style="width: 100%">
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      align="vertical">
+
 <html:div>&advancedSettings.label;</html:div>
-  <html:div>&smtpServer.label;</html:div>
+<html:div>&smtpServer.label;</html:div>
+
 <box align="vertical" class="cleanborder">
   <html:div>&smtpDesc.label;</html:div>
   <box align="horizontal">
@@ -33,5 +33,5 @@
     <titledbutton value="&chooseFolderButton.label;"/>
   </box>
 </box>
-</box>
-</xul:window>
+
+</window>
