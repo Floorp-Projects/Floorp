@@ -562,7 +562,7 @@ printCertCB(CERTCertificate *cert, void *arg)
 
 static SECStatus
 ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
-          PRBool raw, PRBool ascii)
+          PRBool raw, PRBool ascii, PRFileDesc *outfile)
 {
     SECStatus rv;
     CERTCertificate *cert;
@@ -594,10 +594,10 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
 	    data.data = cert->derCert.data;
 	    data.len = cert->derCert.len;
 	    if (ascii) {
-		PR_fprintf(PR_STDOUT, "%s\n%s\n%s\n", NS_CERT_HEADER, 
+		PR_fprintf(outfile, "%s\n%s\n%s\n", NS_CERT_HEADER, 
 		        BTOA_DataToAscii(data.data, data.len), NS_CERT_TRAILER);
 	    } else if (raw) {
-	        numBytes = PR_Write(PR_STDOUT, data.data, data.len);
+	        numBytes = PR_Write(outfile, data.data, data.len);
 	        if (numBytes != data.len) {
 		    SECU_PrintSystemError(progName, "error writing raw cert");
 		    return SECFailure;
@@ -2422,7 +2422,8 @@ main(int argc, char **argv)
     if (certutil.commands[cmd_ListCerts].activated) {
 	rv = ListCerts(certHandle, name, slot,
 	               certutil.options[opt_BinaryDER].activated,
-	               certutil.options[opt_ASCIIForIO].activated);
+	               certutil.options[opt_ASCIIForIO].activated, 
+                       (outFile) ? outFile : PR_STDOUT);
 	return !rv - 1;
     }
     /*  XXX needs work  */
