@@ -671,10 +671,6 @@ if (($action eq 'remove_all_regexp') || ($action eq 'remove_all')) {
 PutHeader("Error");
 print "I don't have a clue what you want.<BR>\n";
 
-foreach ( sort keys %::FORM) {
-    print "$_: $::FORM{$_}<BR>\n";
-}
-
 PutTrailer("<a href=editgroups.cgi>Try the group list</a>");
 
 # confirm if the user wants to remove the explicit users

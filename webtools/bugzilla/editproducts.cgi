@@ -1510,7 +1510,3 @@ if ($action eq 'editgroupcontrols') {
 
 PutHeader("Error");
 print "I don't have a clue what you want.<BR>\n";
-
-foreach ( sort keys %::FORM) {
-    print "$_: $::FORM{$_}<BR>\n";
-}
