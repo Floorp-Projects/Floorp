@@ -38,13 +38,3 @@ interface nsIStreamTransferOperation : nsISupports {
     void Start();
     void Stop();
 };
-
-%{C++
-#define NS_DECL_ISTREAMTRANSFEROPERATION     \
-    NS_IMETHOD GetSource( char** );          \
-    NS_IMETHOD GetTarget( char** );          \
-    NS_IMETHOD GetObserver( nsIObserver** ); \
-    NS_IMETHOD SetObserver( nsIObserver* );  \
-    NS_IMETHOD Start( void );                \
-    NS_IMETHOD Stop( void );
-%}

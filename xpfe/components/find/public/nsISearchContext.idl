@@ -48,22 +48,3 @@ interface nsISearchContext : nsISupports {
     void ConvertToWeakReference();
     void ConvertToOwningReference();
 };
-
-%{C++
-#define NS_DECL_ISEARCHCONTEXT \
-  NS_IMETHOD GetSearchString(PRUnichar**); \
-  NS_IMETHOD SetSearchString(PRUnichar*); \
-  NS_IMETHOD GetReplaceString(PRUnichar**); \
-  NS_IMETHOD SetReplaceString(PRUnichar*); \
-  NS_IMETHOD GetSearchBackwards(PRBool*); \
-  NS_IMETHOD SetSearchBackwards(PRBool); \
-  NS_IMETHOD GetCaseSensitive(PRBool*); \
-  NS_IMETHOD SetCaseSensitive(PRBool); \
-  NS_IMETHOD GetWrapSearch(PRBool*); \
-  NS_IMETHOD SetWrapSearch(PRBool); \
-  NS_IMETHOD GetTargetWebShell(nsIWebShell**); \
-  NS_IMETHOD GetFindDialog(nsIDOMWindow**); \
-  NS_IMETHOD SetFindDialog(nsIDOMWindow*); \
-  NS_IMETHOD ConvertToWeakReference(); \
-  NS_IMETHOD ConvertToOwningReference();
-%}
