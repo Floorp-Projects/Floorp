@@ -738,11 +738,12 @@ nscoord CalcLength(const nsCSSValue& aValue,
 #define SETCOORD_LPFHN  (SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_NORMAL)
 #define SETCOORD_LPAH   (SETCOORD_LP | SETCOORD_AH)
 #define SETCOORD_LPEH   (SETCOORD_LP | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
+#define SETCOORD_LEH    (SETCOORD_LENGTH | SETCOORD_ENUMERATED | SETCOORD_INHERIT)
 #define SETCOORD_IAH    (SETCOORD_INTEGER | SETCOORD_AH)
 
-PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
-                PRInt32 aMask, const nsStyleFont* aFont, 
-                nsIPresContext* aPresContext)
+static PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord, 
+                       PRInt32 aMask, const nsStyleFont* aFont, 
+                       nsIPresContext* aPresContext)
 {
   PRBool  result = PR_TRUE;
   if (aValue.GetUnit() == eCSSUnit_Null) {
@@ -786,6 +787,33 @@ PRBool SetCoord(const nsCSSValue& aValue, nsStyleCoord& aCoord,
   return result;
 }
 
+static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor, nscolor& aResult)
+{
+  PRBool  result = PR_FALSE;
+  nsCSSUnit unit = aValue.GetUnit();
+
+  if (eCSSUnit_Color == unit) {
+    aResult = aValue.GetColorValue();
+    result = PR_TRUE;
+  }
+  else if (eCSSUnit_String == unit) {
+    nsAutoString  value;
+    char  cbuf[100];
+    aValue.GetStringValue(value);
+    value.ToCString(cbuf, sizeof(cbuf));
+    nscolor rgba;
+    if (NS_ColorNameToRGB(cbuf, &rgba)) {
+      aResult = rgba;
+      result = PR_TRUE;
+    }
+  }
+  else if (eCSSUnit_Inherit == aValue.GetUnit()) {
+    aResult = aParentColor;
+    result = PR_TRUE;
+  }
+  return result;
+}
+
 NS_IMETHODIMP
 CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
@@ -797,21 +825,21 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
                         nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   if (nsnull != aDeclaration) {
+    nsIStyleContext* parentContext = aContext->GetParent();
     nsStyleFont*  font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
+    const nsStyleFont* parentFont = font;
+    if (nsnull != parentContext) {
+      parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
+    }
 
     nsCSSFont*  ourFont;
     if (NS_OK == aDeclaration->GetData(kCSSFontSID, (nsCSSStruct**)&ourFont)) {
       if (nsnull != ourFont) {
-        const nsStyleFont* parentFont = font;
-        nsIStyleContext* parentContext = aContext->GetParent();
-        if (nsnull != parentContext) {
-          parentFont = (const nsStyleFont*)parentContext->GetStyleData(eStyleStruct_Font);
-        }
         const nsFont& defaultFont = aPresContext->GetDefaultFont();
         const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont();
 
-        // font-family: string list
-        if (ourFont->mFamily.GetUnit() == eCSSUnit_String) {
+        // font-family: string list, enum, inherit
+        if (eCSSUnit_String == ourFont->mFamily.GetUnit()) {
           nsIDeviceContext* dc = aPresContext->GetDeviceContext();
           if (nsnull != dc) {
             nsAutoString  familyList;
@@ -836,25 +864,50 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
             NS_RELEASE(dc);
           }
         }
+        else if (eCSSUnit_Enumerated == ourFont->mFamily.GetUnit()) {
+          NS_NOTYETIMPLEMENTED("system font");
+        }
+        else if (eCSSUnit_Inherit == ourFont->mFamily.GetUnit()) {
+          font->mFont.name = parentFont->mFont.name;
+          font->mFixedFont.name = parentFont->mFixedFont.name;
+          font->mFlags &= ~NS_STYLE_FONT_FACE_EXPLICIT;
+          font->mFlags |= (parentFont->mFlags & NS_STYLE_FONT_FACE_EXPLICIT);
+        }
 
-        // font-style: enum
-        if (ourFont->mStyle.GetUnit() == eCSSUnit_Enumerated) {
+        // font-style: enum, normal, inherit
+        if (eCSSUnit_Enumerated == ourFont->mStyle.GetUnit()) {
           font->mFont.style = ourFont->mStyle.GetIntValue();
           font->mFixedFont.style = ourFont->mStyle.GetIntValue();
         }
+        else if (eCSSUnit_Normal == ourFont->mStyle.GetUnit()) {
+          font->mFont.style = NS_STYLE_FONT_STYLE_NORMAL;
+          font->mFixedFont.style = NS_STYLE_FONT_STYLE_NORMAL;
+        }
+        else if (eCSSUnit_Inherit == ourFont->mStyle.GetUnit()) {
+          font->mFont.style = parentFont->mFont.style;
+          font->mFixedFont.style = parentFont->mFixedFont.style;
+        }
 
-        // font-variant: enum
-        if (ourFont->mVariant.GetUnit() == eCSSUnit_Enumerated) {
+        // font-variant: enum, normal, inherit
+        if (eCSSUnit_Enumerated == ourFont->mVariant.GetUnit()) {
           font->mFont.variant = ourFont->mVariant.GetIntValue();
           font->mFixedFont.variant = ourFont->mVariant.GetIntValue();
         }
+        else if (eCSSUnit_Normal == ourFont->mVariant.GetUnit()) {
+          font->mFont.variant = NS_STYLE_FONT_VARIANT_NORMAL;
+          font->mFixedFont.variant = NS_STYLE_FONT_VARIANT_NORMAL;
+        }
+        else if (eCSSUnit_Inherit == ourFont->mVariant.GetUnit()) {
+          font->mFont.variant = parentFont->mFont.variant;
+          font->mFixedFont.variant = parentFont->mFixedFont.variant;
+        }
 
-        // font-weight: abs, enum
-        if (ourFont->mWeight.GetUnit() == eCSSUnit_Integer) {
+        // font-weight: int, enum, normal, inherit
+        if (eCSSUnit_Integer == ourFont->mWeight.GetUnit()) {
           font->mFont.weight = ourFont->mWeight.GetIntValue();
           font->mFixedFont.weight = ourFont->mWeight.GetIntValue();
         }
-        else if (ourFont->mWeight.GetUnit() == eCSSUnit_Enumerated) {
+        else if (eCSSUnit_Enumerated == ourFont->mWeight.GetUnit()) {
           PRInt32 value = ourFont->mWeight.GetIntValue();
           switch (value) {
             case NS_STYLE_FONT_WEIGHT_NORMAL:
@@ -869,9 +922,17 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
               break;
           }
         }
+        else if (eCSSUnit_Normal == ourFont->mWeight.GetUnit()) {
+          font->mFont.weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+          font->mFixedFont.weight = NS_STYLE_FONT_WEIGHT_NORMAL;
+        }
+        else if (eCSSUnit_Inherit == ourFont->mWeight.GetUnit()) {
+          font->mFont.weight = parentFont->mFont.weight;
+          font->mFixedFont.weight = parentFont->mFixedFont.weight;
+        }
 
-        // font-size: enum, length, percent
-        if (ourFont->mSize.GetUnit() == eCSSUnit_Enumerated) {
+        // font-size: enum, length, percent, inherit
+        if (eCSSUnit_Enumerated == ourFont->mSize.GetUnit()) {
           PRInt32 value = ourFont->mSize.GetIntValue();
           PRInt32 scaler = aPresContext->GetFontScaler();
           float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
@@ -892,19 +953,24 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
             font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(index, (PRInt32)defaultFixedFont.size, scaleFactor);
           }
           // this does NOT explicitly set font size
+          font->mFlags &= ~NS_STYLE_FONT_SIZE_EXPLICIT;
         }
         else if (ourFont->mSize.IsLengthUnit()) {
           font->mFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
           font->mFixedFont.size = CalcLength(ourFont->mSize, parentFont, aPresContext);
           font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
         }
-        else if (ourFont->mSize.GetUnit() == eCSSUnit_Percent) {
+        else if (eCSSUnit_Percent == ourFont->mSize.GetUnit()) {
           font->mFont.size = (nscoord)((float)(parentFont->mFont.size) * ourFont->mSize.GetPercentValue());
           font->mFixedFont.size = (nscoord)((float)(parentFont->mFixedFont.size) * ourFont->mSize.GetPercentValue());
           font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
         }
-
-        NS_IF_RELEASE(parentContext);
+        else if (eCSSUnit_Inherit == ourFont->mSize.GetUnit()) {
+          font->mFont.size = parentFont->mFont.size;
+          font->mFixedFont.size = parentFont->mFixedFont.size;
+          font->mFlags &= ~NS_STYLE_FONT_SIZE_EXPLICIT;
+          font->mFlags |= (parentFont->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT);
+        }
       }
     }
 
@@ -913,53 +979,77 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourText) {
         // Get our text style and our parent's text style
         nsStyleText* text = (nsStyleText*) aContext->GetMutableStyleData(eStyleStruct_Text);
+        const nsStyleText* parentText = text;
+        if (nsnull != parentContext) {
+          parentText = (const nsStyleText*)parentContext->GetStyleData(eStyleStruct_Text);
+        }
 
-        // letter-spacing
+        // letter-spacing: normal, length, inherit
         SetCoord(ourText->mLetterSpacing, text->mLetterSpacing, SETCOORD_LH | SETCOORD_NORMAL, 
                  font, aPresContext);
 
-        // line-height
+        // line-height: normal, number, length, percent, inherit
         SetCoord(ourText->mLineHeight, text->mLineHeight, SETCOORD_LPFHN, font, aPresContext);
 
-        // text-align
-        if (ourText->mTextAlign.GetUnit() == eCSSUnit_Enumerated) {
+        // text-align: enum, string, inherit
+        if (eCSSUnit_Enumerated == ourText->mTextAlign.GetUnit()) {
           text->mTextAlign = ourText->mTextAlign.GetIntValue();
         }
+        else if (eCSSUnit_String == ourText->mTextAlign.GetUnit()) {
+          NS_NOTYETIMPLEMENTED("align string");
+        }
+        else if (eCSSUnit_Inherit == ourText->mTextAlign.GetUnit()) {
+          text->mTextAlign = parentText->mTextAlign;
+        }
 
-        // text-indent
+        // text-indent: length, percent, inherit
         SetCoord(ourText->mTextIndent, text->mTextIndent, SETCOORD_LPH, font, aPresContext);
 
-        // text-decoration: enum, int (bit field)
-        if ((ourText->mDecoration.GetUnit() == eCSSUnit_Enumerated) ||
-            (ourText->mDecoration.GetUnit() == eCSSUnit_Integer)) {
+        // text-decoration: none, enum (bit field), inherit
+        if (eCSSUnit_Enumerated == ourText->mDecoration.GetUnit()) {
           PRInt32 td = ourText->mDecoration.GetIntValue();
-          if (NS_STYLE_TEXT_DECORATION_NONE == td) {
-            font->mFont.decorations = td;
-            font->mFixedFont.decorations = td;
-            text->mTextDecoration = td;
-          }
-          else {
-            font->mFont.decorations |= td;
-            font->mFixedFont.decorations |= td;
-            text->mTextDecoration |= td;
-          }
+          font->mFont.decorations |= td;
+          font->mFixedFont.decorations |= td;
+          text->mTextDecoration |= td;
+        }
+        else if (eCSSUnit_None == ourText->mDecoration.GetUnit()) {
+          font->mFont.decorations = NS_STYLE_TEXT_DECORATION_NONE;
+          font->mFixedFont.decorations = NS_STYLE_TEXT_DECORATION_NONE;
+          text->mTextDecoration = NS_STYLE_TEXT_DECORATION_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourText->mDecoration.GetUnit()) {
+          font->mFont.decorations = parentFont->mFont.decorations;
+          font->mFixedFont.decorations = parentFont->mFixedFont.decorations;
+          text->mTextDecoration = parentText->mTextDecoration;
         }
 
-        // text-transform
-        if (ourText->mTextTransform.GetUnit() == eCSSUnit_Enumerated) {
+        // text-transform: enum, none, inherit
+        if (eCSSUnit_Enumerated == ourText->mTextTransform.GetUnit()) {
           text->mTextTransform = ourText->mTextTransform.GetIntValue();
         }
+        else if (eCSSUnit_None == ourText->mTextTransform.GetUnit()) {
+          text->mTextTransform = NS_STYLE_TEXT_TRANSFORM_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourText->mTextTransform.GetUnit()) {
+          text->mTextTransform = parentText->mTextTransform;
+        }
 
-        // vertical-align
+        // vertical-align: enum, length, percent, inherit
         SetCoord(ourText->mVerticalAlign, text->mVerticalAlign, SETCOORD_LPEH,
                  font, aPresContext);
 
-        // white-space
-        if (ourText->mWhiteSpace.GetUnit() == eCSSUnit_Enumerated) {
+        // white-space: enum, normal, inherit
+        if (eCSSUnit_Enumerated == ourText->mWhiteSpace.GetUnit()) {
           text->mWhiteSpace = ourText->mWhiteSpace.GetIntValue();
         }
+        else if (eCSSUnit_Normal == ourText->mWhiteSpace.GetUnit()) {
+          text->mWhiteSpace = NS_STYLE_WHITESPACE_NORMAL;
+        }
+        else if (eCSSUnit_Inherit == ourText->mWhiteSpace.GetUnit()) {
+          text->mWhiteSpace = parentText->mWhiteSpace;
+        }
 
-        // word-spacing
+        // word-spacing: normal, length, inherit
         SetCoord(ourText->mWordSpacing, text->mWordSpacing, SETCOORD_LH | SETCOORD_NORMAL,
                  font, aPresContext);
       }
@@ -973,47 +1063,73 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           aContext->GetMutableStyleData(eStyleStruct_Display);
 
         const nsStyleDisplay* parentDisplay = display;
-        nsIStyleContext* parentContext = aContext->GetParent();
         if (nsnull != parentContext) {
           parentDisplay = (const nsStyleDisplay*)parentContext->GetStyleData(eStyleStruct_Display);
         }
 
-        // display
-        if (ourDisplay->mDisplay.GetUnit() == eCSSUnit_Enumerated) {
+        // display: enum, none, inherit
+        if (eCSSUnit_Enumerated == ourDisplay->mDisplay.GetUnit()) {
           display->mDisplay = ourDisplay->mDisplay.GetIntValue();
         }
+        else if (eCSSUnit_None == ourDisplay->mDisplay.GetUnit()) {
+          display->mDisplay = NS_STYLE_DISPLAY_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourDisplay->mDisplay.GetUnit()) {
+          display->mDisplay = parentDisplay->mDisplay;
+        }
 
-        // direction: enum
-        if (ourDisplay->mDirection.GetUnit() == eCSSUnit_Enumerated) {
+        // direction: enum, inherit
+        if (eCSSUnit_Enumerated == ourDisplay->mDirection.GetUnit()) {
           display->mDirection = ourDisplay->mDirection.GetIntValue();
         }
-
-        // clear: enum
-        if (ourDisplay->mClear.GetUnit() == eCSSUnit_Enumerated) {
-          display->mBreakType = ourDisplay->mClear.GetIntValue();
+        else if (eCSSUnit_Inherit == ourDisplay->mDirection.GetUnit()) {
+          display->mDirection = parentDisplay->mDirection;
         }
 
-        // float: enum
-        if (ourDisplay->mFloat.GetUnit() == eCSSUnit_Enumerated) {
+        // clear: enum, none, inherit
+        if (eCSSUnit_Enumerated == ourDisplay->mClear.GetUnit()) {
+          display->mBreakType = ourDisplay->mClear.GetIntValue();
+        }
+        else if (eCSSUnit_None == ourDisplay->mClear.GetUnit()) {
+          display->mBreakType = NS_STYLE_CLEAR_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourDisplay->mClear.GetUnit()) {
+          display->mBreakType = parentDisplay->mBreakType;
+        }
+
+        // float: enum, none, inherit
+        if (eCSSUnit_Enumerated == ourDisplay->mFloat.GetUnit()) {
           display->mFloats = ourDisplay->mFloat.GetIntValue();
+        }
+        else if (eCSSUnit_None == ourDisplay->mFloat.GetUnit()) {
+          display->mFloats = NS_STYLE_FLOAT_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourDisplay->mFloat.GetUnit()) {
+          display->mFloats = parentDisplay->mFloats;
         }
 
         // visibility: enum, inherit
-        if (ourDisplay->mVisibility.GetUnit() == eCSSUnit_Enumerated) {
+        if (eCSSUnit_Enumerated == ourDisplay->mVisibility.GetUnit()) {
           display->mVisible = PRBool (NS_STYLE_VISIBILITY_VISIBLE == ourDisplay->mVisibility.GetIntValue());
         }
-        else if (ourDisplay->mVisibility.GetUnit() == eCSSUnit_Inherit) {
+        else if (eCSSUnit_Inherit == ourDisplay->mVisibility.GetUnit()) {
           display->mVisible = parentDisplay->mVisible;
         }
 
-        // overflow
-        if (ourDisplay->mOverflow.GetUnit() == eCSSUnit_Enumerated) {
+        // overflow: enum, auto, inherit
+        if (eCSSUnit_Enumerated == ourDisplay->mOverflow.GetUnit()) {
           display->mOverflow = ourDisplay->mOverflow.GetIntValue();
+        }
+        else if (eCSSUnit_Auto == ourDisplay->mOverflow.GetUnit()) {
+          display->mOverflow = NS_STYLE_OVERFLOW_AUTO;
+        }
+        else if (eCSSUnit_Inherit == ourDisplay->mOverflow.GetUnit()) {
+          display->mOverflow = parentDisplay->mOverflow;
         }
 
         // clip property: length, auto, inherit
         if (nsnull != ourDisplay->mClip) {
-          if (ourDisplay->mClip->mTop.GetUnit() == eCSSUnit_Inherit) { // if one is inherit, they all are
+          if (eCSSUnit_Inherit == ourDisplay->mClip->mTop.GetUnit()) { // if one is inherit, they all are
             display->mClipFlags = NS_STYLE_CLIP_INHERIT;
           }
           else {
@@ -1021,31 +1137,35 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
 
             display->mClipFlags = 0; // clear it
 
-            if (ourDisplay->mClip->mTop.GetUnit() == eCSSUnit_Auto) {
+            if (eCSSUnit_Auto == ourDisplay->mClip->mTop.GetUnit()) {
               display->mClip.top = 0;
               display->mClipFlags |= NS_STYLE_CLIP_TOP_AUTO;
-            } else if (ourDisplay->mClip->mTop.IsLengthUnit()) {
+            } 
+            else if (ourDisplay->mClip->mTop.IsLengthUnit()) {
               display->mClip.top = CalcLength(ourDisplay->mClip->mTop, font, aPresContext);
               fullAuto = PR_FALSE;
             }
-            if (ourDisplay->mClip->mRight.GetUnit() == eCSSUnit_Auto) {
+            if (eCSSUnit_Auto == ourDisplay->mClip->mRight.GetUnit()) {
               display->mClip.right = 0;
               display->mClipFlags |= NS_STYLE_CLIP_RIGHT_AUTO;
-            } else if (ourDisplay->mClip->mRight.IsLengthUnit()) {
+            } 
+            else if (ourDisplay->mClip->mRight.IsLengthUnit()) {
               display->mClip.right = CalcLength(ourDisplay->mClip->mRight, font, aPresContext);
               fullAuto = PR_FALSE;
             }
-            if (ourDisplay->mClip->mBottom.GetUnit() == eCSSUnit_Auto) {
+            if (eCSSUnit_Auto == ourDisplay->mClip->mBottom.GetUnit()) {
               display->mClip.bottom = 0;
               display->mClipFlags |= NS_STYLE_CLIP_BOTTOM_AUTO;
-            } else if (ourDisplay->mClip->mBottom.IsLengthUnit()) {
+            } 
+            else if (ourDisplay->mClip->mBottom.IsLengthUnit()) {
               display->mClip.bottom = CalcLength(ourDisplay->mClip->mBottom, font, aPresContext);
               fullAuto = PR_FALSE;
             }
-            if (ourDisplay->mClip->mLeft.GetUnit() == eCSSUnit_Auto) {
+            if (eCSSUnit_Auto == ourDisplay->mClip->mLeft.GetUnit()) {
               display->mClip.left = 0;
               display->mClipFlags |= NS_STYLE_CLIP_LEFT_AUTO;
-            } else if (ourDisplay->mClip->mLeft.IsLengthUnit()) {
+            } 
+            else if (ourDisplay->mClip->mLeft.IsLengthUnit()) {
               display->mClip.left = CalcLength(ourDisplay->mClip->mLeft, font, aPresContext);
               fullAuto = PR_FALSE;
             }
@@ -1058,8 +1178,6 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
             }
           }
         }
-
-        NS_IF_RELEASE(parentContext);
       }
     }
 
@@ -1069,58 +1187,73 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourColor) {
         nsStyleColor* color = (nsStyleColor*)aContext->GetMutableStyleData(eStyleStruct_Color);
 
-        // color: color
-        if (ourColor->mColor.GetUnit() == eCSSUnit_Color) {
-          color->mColor = ourColor->mColor.GetColorValue();
+        const nsStyleColor* parentColor = color;
+        if (nsnull != parentContext) {
+          parentColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
         }
 
-        // cursor: enum, auto, inherit
-        if (ourColor->mCursor.GetUnit() == eCSSUnit_Enumerated) {
-          color->mCursor = ourColor->mCursor.GetIntValue();
-        }
-        else if (ourColor->mCursor.GetUnit() == eCSSUnit_Auto) {
-          color->mCursor = NS_STYLE_CURSOR_AUTO;
-        }
-        else if (ourColor->mCursor.GetUnit() == eCSSUnit_Inherit) {
-          color->mCursor = NS_STYLE_CURSOR_INHERIT;
+        // color: color, string, inherit
+        SetColor(ourColor->mColor, parentColor->mColor, color->mColor);
+
+        // cursor: enum, auto, url, inherit
+        nsCSSValueList*  list = ourColor->mCursor;
+        if (nsnull != list) {
+          // XXX need to deal with multiple URL values
+          if (eCSSUnit_Enumerated == list->mValue.GetUnit()) {
+            color->mCursor = list->mValue.GetIntValue();
+          }
+          else if (eCSSUnit_Auto == list->mValue.GetUnit()) {
+            color->mCursor = NS_STYLE_CURSOR_AUTO;
+          }
+          else if (eCSSUnit_URL == list->mValue.GetUnit()) {
+            list->mValue.GetStringValue(color->mCursorImage);
+          }
+          else if (eCSSUnit_Inherit == list->mValue.GetUnit()) {
+            color->mCursor = NS_STYLE_CURSOR_INHERIT;
+          }
         }
 
-        // cursor-image: string
-        if (ourColor->mCursorImage.GetUnit() == eCSSUnit_String) {
-          ourColor->mCursorImage.GetStringValue(color->mCursorImage);
-        }
-
-        // background-color: color, enum (flags)
-        if (ourColor->mBackColor.GetUnit() == eCSSUnit_Color) {
-          color->mBackgroundColor = ourColor->mBackColor.GetColorValue();
+        // background-color: color, string, enum (flags), inherit
+        if (SetColor(ourColor->mBackColor, parentColor->mBackgroundColor, color->mBackgroundColor)) {
           color->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
         }
-        else if (ourColor->mBackColor.GetUnit() == eCSSUnit_Enumerated) {
+        else if (eCSSUnit_Enumerated == ourColor->mBackColor.GetUnit()) {
           color->mBackgroundFlags |= NS_STYLE_BG_COLOR_TRANSPARENT;
         }
 
-        // background-image: string (url), none
-        if (ourColor->mBackImage.GetUnit() == eCSSUnit_String) {
+        // background-image: url, none, inherit
+        if (eCSSUnit_URL == ourColor->mBackImage.GetUnit()) {
           ourColor->mBackImage.GetStringValue(color->mBackgroundImage);
           color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
         }
-        else if (ourColor->mBackImage.GetUnit() == eCSSUnit_None) {
+        else if (eCSSUnit_None == ourColor->mBackImage.GetUnit()) {
           color->mBackgroundImage.Truncate();
           color->mBackgroundFlags |= NS_STYLE_BG_IMAGE_NONE;
         }
+        else if (eCSSUnit_Inherit == ourColor->mBackImage.GetUnit()) {
+          color->mBackgroundImage = parentColor->mBackgroundImage;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+          color->mBackgroundFlags |= (parentColor->mBackgroundFlags & NS_STYLE_BG_IMAGE_NONE);
+        }
 
-        // background-repeat: enum
-        if (ourColor->mBackRepeat.GetUnit() == eCSSUnit_Enumerated) {
+        // background-repeat: enum, inherit
+        if (eCSSUnit_Enumerated == ourColor->mBackRepeat.GetUnit()) {
           color->mBackgroundRepeat = ourColor->mBackRepeat.GetIntValue();
         }
-
-        // background-attachment: enum
-        if (ourColor->mBackAttachment.GetUnit() == eCSSUnit_Enumerated) {
-          color->mBackgroundAttachment = ourColor->mBackAttachment.GetIntValue();
+        else if (eCSSUnit_Inherit == ourColor->mBackRepeat.GetUnit()) {
+          color->mBackgroundRepeat = parentColor->mBackgroundRepeat;
         }
 
-        // background-position: length, percent (flags)
-        if (ourColor->mBackPositionX.GetUnit() == eCSSUnit_Percent) {
+        // background-attachment: enum, inherit
+        if (eCSSUnit_Enumerated == ourColor->mBackAttachment.GetUnit()) {
+          color->mBackgroundAttachment = ourColor->mBackAttachment.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourColor->mBackAttachment.GetUnit()) {
+          color->mBackgroundAttachment = parentColor->mBackgroundAttachment;
+        }
+
+        // background-position: enum, length, percent (flags), inherit
+        if (eCSSUnit_Percent == ourColor->mBackPositionX.GetUnit()) {
           color->mBackgroundXPosition = (nscoord)(100.0f * ourColor->mBackPositionX.GetPercentValue());
           color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
           color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
@@ -1131,7 +1264,18 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_LENGTH;
           color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_PERCENT;
         }
-        if (ourColor->mBackPositionY.GetUnit() == eCSSUnit_Percent) {
+        else if (eCSSUnit_Enumerated == ourColor->mBackPositionX.GetUnit()) {
+          color->mBackgroundXPosition = (nscoord)ourColor->mBackPositionX.GetIntValue();
+          color->mBackgroundFlags |= NS_STYLE_BG_X_POSITION_PERCENT;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
+        }
+        else if (eCSSUnit_Inherit == ourColor->mBackPositionX.GetUnit()) {
+          color->mBackgroundXPosition = parentColor->mBackgroundXPosition;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_X_POSITION_LENGTH;
+          color->mBackgroundFlags |= (parentColor->mBackgroundFlags & NS_STYLE_BG_X_POSITION_PERCENT);
+        }
+
+        if (eCSSUnit_Percent == ourColor->mBackPositionY.GetUnit()) {
           color->mBackgroundYPosition = (nscoord)(100.0f * ourColor->mBackPositionY.GetPercentValue());
           color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
           color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
@@ -1142,23 +1286,26 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_LENGTH;
           color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_PERCENT;
         }
+        else if (eCSSUnit_Enumerated == ourColor->mBackPositionY.GetUnit()) {
+          color->mBackgroundYPosition = (nscoord)ourColor->mBackPositionY.GetIntValue();
+          color->mBackgroundFlags |= NS_STYLE_BG_Y_POSITION_PERCENT;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
+        }
+        else if (eCSSUnit_Inherit == ourColor->mBackPositionY.GetUnit()) {
+          color->mBackgroundYPosition = parentColor->mBackgroundYPosition;
+          color->mBackgroundFlags &= ~NS_STYLE_BG_Y_POSITION_LENGTH;
+          color->mBackgroundFlags |= (parentColor->mBackgroundFlags & NS_STYLE_BG_Y_POSITION_PERCENT);
+        }
 
-        // opacity: factor, percent, enum
-        if (ourColor->mOpacity.GetUnit() == eCSSUnit_Percent) {
+        // opacity: factor, percent, inherit
+        if (eCSSUnit_Percent == ourColor->mOpacity.GetUnit()) {
           color->mOpacity = ourColor->mOpacity.GetPercentValue();
         }
-        else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Number) {
+        else if (eCSSUnit_Number == ourColor->mOpacity.GetUnit()) {
           color->mOpacity = ourColor->mOpacity.GetFloatValue();
         }
-        else if (ourColor->mOpacity.GetUnit() == eCSSUnit_Inherit) {
-          const nsStyleColor* parentColor = color;
-          nsIStyleContext* parentContext = aContext->GetParent();
-          if (nsnull != parentContext) {
-            parentColor = (const nsStyleColor*)parentContext->GetStyleData(eStyleStruct_Color);
-            color->mOpacity = parentColor->mOpacity;
-            NS_RELEASE(parentContext);
-          }
-          
+        else if (eCSSUnit_Inherit == ourColor->mOpacity.GetUnit()) {
+          color->mOpacity = parentColor->mOpacity;
         }
 
   // XXX: NYI        nsCSSValue mBackFilter;
@@ -1170,6 +1317,11 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourMargin) {
         nsStyleSpacing* spacing = (nsStyleSpacing*)
           aContext->GetMutableStyleData(eStyleStruct_Spacing);
+
+        const nsStyleSpacing* parentSpacing = spacing;
+        if (nsnull != parentContext) {
+          parentSpacing = (const nsStyleSpacing*)parentContext->GetStyleData(eStyleStruct_Spacing);
+        }
 
         // margin: length, percent, auto, inherit
         if (nsnull != ourMargin->mMargin) {
@@ -1205,54 +1357,96 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
           }
         }
 
-        // border-size: length, enum (percent), inherit
+        // border-size: length, enum, inherit
         if (nsnull != ourMargin->mBorderWidth) {
           nsStyleCoord  coord;
-          if (SetCoord(ourMargin->mBorderWidth->mLeft, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mLeft, coord, SETCOORD_LEH, font, aPresContext)) {
             spacing->mBorder.SetLeft(coord);
           }
-          if (SetCoord(ourMargin->mBorderWidth->mTop, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mTop, coord, SETCOORD_LEH, font, aPresContext)) {
             spacing->mBorder.SetTop(coord);
           }
-          if (SetCoord(ourMargin->mBorderWidth->mRight, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mRight, coord, SETCOORD_LEH, font, aPresContext)) {
             spacing->mBorder.SetRight(coord);
           }
-          if (SetCoord(ourMargin->mBorderWidth->mBottom, coord, SETCOORD_LPEH, font, aPresContext)) {
+          if (SetCoord(ourMargin->mBorderWidth->mBottom, coord, SETCOORD_LEH, font, aPresContext)) {
             spacing->mBorder.SetBottom(coord);
           }
         }
 
-        // border-style
+        // border-style: enum, none, inhert
         if (nsnull != ourMargin->mBorderStyle) {
           nsCSSRect* ourStyle = ourMargin->mBorderStyle;
-          if (ourStyle->mTop.GetUnit() == eCSSUnit_Enumerated) {
+          if (eCSSUnit_Enumerated == ourStyle->mTop.GetUnit()) {
             spacing->mBorderStyle[NS_SIDE_TOP] = ourStyle->mTop.GetIntValue();
           }
-          if (ourStyle->mRight.GetUnit() == eCSSUnit_Enumerated) {
+          else if (eCSSUnit_None == ourStyle->mTop.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+          }
+          else if (eCSSUnit_Inherit == ourStyle->mTop.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_TOP] = parentSpacing->mBorderStyle[NS_SIDE_TOP];
+          }
+
+          if (eCSSUnit_Enumerated == ourStyle->mRight.GetUnit()) {
             spacing->mBorderStyle[NS_SIDE_RIGHT] = ourStyle->mRight.GetIntValue();
           }
-          if (ourStyle->mBottom.GetUnit() == eCSSUnit_Enumerated) {
+          else if (eCSSUnit_None == ourStyle->mRight.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+          }
+          else if (eCSSUnit_Inherit == ourStyle->mRight.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_RIGHT] = parentSpacing->mBorderStyle[NS_SIDE_RIGHT];
+          }
+
+          if (eCSSUnit_Enumerated == ourStyle->mBottom.GetUnit()) {
             spacing->mBorderStyle[NS_SIDE_BOTTOM] = ourStyle->mBottom.GetIntValue();
           }
-          if (ourStyle->mLeft.GetUnit() == eCSSUnit_Enumerated) {
+          else if (eCSSUnit_None == ourStyle->mBottom.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+          }
+          else if (eCSSUnit_Inherit == ourStyle->mBottom.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_BOTTOM] = parentSpacing->mBorderStyle[NS_SIDE_BOTTOM];
+          }
+
+          if (eCSSUnit_Enumerated == ourStyle->mLeft.GetUnit()) {
             spacing->mBorderStyle[NS_SIDE_LEFT] = ourStyle->mLeft.GetIntValue();
+          }
+          else if (eCSSUnit_None == ourStyle->mLeft.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+          }
+          else if (eCSSUnit_Inherit == ourStyle->mLeft.GetUnit()) {
+            spacing->mBorderStyle[NS_SIDE_LEFT] = parentSpacing->mBorderStyle[NS_SIDE_LEFT];
           }
         }
 
-        // border-color
+        // border-color: color. string, enum, inherit
         if (nsnull != ourMargin->mBorderColor) {
           nsCSSRect* ourColor = ourMargin->mBorderColor;
-          if (ourColor->mTop.GetUnit() == eCSSUnit_Color) {
-            spacing->mBorderColor[NS_SIDE_TOP] = ourColor->mTop.GetColorValue();
+          if (! SetColor(ourColor->mTop, parentSpacing->mBorderColor[NS_SIDE_TOP], 
+                         spacing->mBorderColor[NS_SIDE_TOP])) {
+            if (eCSSUnit_Enumerated == ourColor->mTop.GetUnit()) {
+              spacing->mBorderColor[NS_SIDE_TOP] = NS_RGBA(0, 0, 0, 0); // transparent
+            }
           }
-          if (ourColor->mRight.GetUnit() == eCSSUnit_Color) {
-            spacing->mBorderColor[NS_SIDE_RIGHT] = ourColor->mRight.GetColorValue();
+
+          if (! SetColor(ourColor->mRight, parentSpacing->mBorderColor[NS_SIDE_RIGHT], 
+                         spacing->mBorderColor[NS_SIDE_RIGHT])) {
+            if (eCSSUnit_Enumerated == ourColor->mRight.GetUnit()) {
+              spacing->mBorderColor[NS_SIDE_RIGHT] = NS_RGBA(0, 0, 0, 0); // transparent
+            }
           }
-          if (ourColor->mBottom.GetUnit() == eCSSUnit_Color) {
-            spacing->mBorderColor[NS_SIDE_BOTTOM] = ourColor->mBottom.GetColorValue();
+
+          if (! SetColor(ourColor->mBottom, parentSpacing->mBorderColor[NS_SIDE_BOTTOM], 
+                         spacing->mBorderColor[NS_SIDE_BOTTOM])) {
+            if (eCSSUnit_Enumerated == ourColor->mBottom.GetUnit()) {
+              spacing->mBorderColor[NS_SIDE_BOTTOM] = NS_RGBA(0, 0, 0, 0); // transparent
+            }
           }
-          if (ourColor->mLeft.GetUnit() == eCSSUnit_Color) {
-            spacing->mBorderColor[NS_SIDE_LEFT] = ourColor->mLeft.GetColorValue();
+
+          if (! SetColor(ourColor->mLeft, parentSpacing->mBorderColor[NS_SIDE_LEFT], 
+                         spacing->mBorderColor[NS_SIDE_LEFT])) {
+            if (eCSSUnit_Enumerated == ourColor->mLeft.GetUnit()) {
+              spacing->mBorderColor[NS_SIDE_LEFT] = NS_RGBA(0, 0, 0, 0); // transparent
+            }
           }
         }
       }
@@ -1263,20 +1457,17 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourPosition) {
         nsStylePosition* position = (nsStylePosition*)aContext->GetMutableStyleData(eStyleStruct_Position);
 
-        // position: normal, enum, inherit
-        if (ourPosition->mPosition.GetUnit() == eCSSUnit_Normal) {
-          position->mPosition = NS_STYLE_POSITION_NORMAL;
+        const nsStylePosition* parentPosition = position;
+        if (nsnull != parentContext) {
+          parentPosition = (const nsStylePosition*)parentContext->GetStyleData(eStyleStruct_Position);
         }
-        else if (ourPosition->mPosition.GetUnit() == eCSSUnit_Enumerated) {
+
+        // position: enum, inherit
+        if (eCSSUnit_Enumerated == ourPosition->mPosition.GetUnit()) {
           position->mPosition = ourPosition->mPosition.GetIntValue();
         }
-        else if (ourPosition->mPosition.GetUnit() == eCSSUnit_Inherit) {
-          // explicit inheritance
-          nsIStyleContext* parentContext = aContext->GetParent();
-          if (nsnull != parentContext) {
-            const nsStylePosition* parentPosition = (const nsStylePosition*)parentContext->GetStyleData(eStyleStruct_Position);
-            position->mPosition = parentPosition->mPosition;
-          }
+        else if (eCSSUnit_Inherit == ourPosition->mPosition.GetUnit()) {
+          position->mPosition = parentPosition->mPosition;
         }
 
         // box offsets: length, percent, auto, inherit
@@ -1299,26 +1490,43 @@ void MapDeclarationInto(nsICSSDeclaration* aDeclaration,
       if (nsnull != ourList) {
         nsStyleList* list = (nsStyleList*)aContext->GetMutableStyleData(eStyleStruct_List);
 
-        // list-style-type: enum
-        if (ourList->mType.GetUnit() == eCSSUnit_Enumerated) {
+        const nsStyleList* parentList = list;
+        if (nsnull != parentList) {
+          parentList = (const nsStyleList*)parentContext->GetStyleData(eStyleStruct_List);
+        }
+
+        // list-style-type: enum, none, inherit
+        if (eCSSUnit_Enumerated == ourList->mType.GetUnit()) {
           list->mListStyleType = ourList->mType.GetIntValue();
         }
+        else if (eCSSUnit_None == ourList->mType.GetUnit()) {
+          list->mListStyleType = NS_STYLE_LIST_STYLE_NONE;
+        }
+        else if (eCSSUnit_Inherit == ourList->mType.GetUnit()) {
+          list->mListStyleType = parentList->mListStyleType;
+        }
 
-        if (ourList->mImage.GetUnit() == eCSSUnit_String) {
-          // list-style-image: string
+        // list-style-image: url, none, inherit
+        if (eCSSUnit_URL == ourList->mImage.GetUnit()) {
           ourList->mImage.GetStringValue(list->mListStyleImage);
         }
-        else if (ourList->mImage.GetUnit() == eCSSUnit_Enumerated) {
-          // list-style-image: none
-          list->mListStyleImage = "";
+        else if (eCSSUnit_None == ourList->mImage.GetUnit()) {
+          list->mListStyleImage.Truncate();
+        }
+        else if (eCSSUnit_Inherit == ourList->mImage.GetUnit()) {
+          list->mListStyleImage = parentList->mListStyleImage;
         }
 
-        // list-style-position: enum
-        if (ourList->mPosition.GetUnit() == eCSSUnit_Enumerated) {
+        // list-style-position: enum, inherit
+        if (eCSSUnit_Enumerated == ourList->mPosition.GetUnit()) {
           list->mListStylePosition = ourList->mPosition.GetIntValue();
+        }
+        else if (eCSSUnit_Inherit == ourList->mPosition.GetUnit()) {
+          list->mListStylePosition = parentList->mListStylePosition;
         }
       }
     }
+    NS_IF_RELEASE(parentContext);
   }
 }
 
