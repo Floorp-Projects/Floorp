@@ -161,7 +161,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener, nsIURL ** aURL
 		server->GetPassword(&popPassword);
 		server->GetHostName(&popHost);
         rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                    (void **)popServer);
+                                    (void **)&popServer);
         
     }
     
