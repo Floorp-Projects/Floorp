@@ -32,6 +32,7 @@
 #include "nsLayoutCID.h"
 #include "nsNeckoUtil.h"
 #include "nsRect.h"
+#include "prprf.h"
 #include "nsIFrame.h"
 #include "nsIContent.h"
 
@@ -1796,6 +1797,49 @@ nsresult nsDocShell::EnsureContentListener()
 void nsDocShell::SetCurrentURI(nsIURI* aUri)
 {
    mCurrentURI = aUri; //This assignment addrefs
+}
+
+nsresult nsDocShell::CreateContentViewer(const char* aContentType, 
+   const char* aCommand, nsIChannel* aOpenedChannel, 
+   nsIStreamListener** aContentHandler)
+{
+   NS_ENSURE_STATE(mCreated);
+
+   //XXXQ Can we check the content type of the current content viewer
+   // and reuse it without destroying it and re-creating it?
+
+   // XXXIMPL Do cleanup....
+
+   // Instantiate the content viewer object
+   NS_ENSURE_SUCCESS(NewContentViewerObj(aContentType, aCommand, aOpenedChannel,
+      aContentHandler), NS_ERROR_FAILURE);
+
+   //XXXIMPL Do stuff found in embed here.  Don't call embed it is going away.
+
+   return NS_ERROR_FAILURE;
+}
+
+nsresult nsDocShell::NewContentViewerObj(const char* aContentType,
+   const char* aCommand, nsIChannel* aOpenedChannel, 
+   nsIStreamListener** aContentHandler)
+{
+   //XXX This should probably be some category thing....
+   char id[256];
+   PR_snprintf(id, sizeof(id), NS_DOCUMENT_LOADER_FACTORY_PROGID_PREFIX "%s/%s",
+      aCommand , aContentType);
+
+   // Create an instance of the document-loader-factory
+   nsCOMPtr<nsIDocumentLoaderFactory> docLoaderFactory(do_CreateInstance(id));
+   NS_ENSURE_TRUE(docLoaderFactory, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsILoadGroup> loadGroup(do_QueryInterface(mLoadCookie));
+   // Now create an instance of the content viewer
+   NS_ENSURE_SUCCESS(docLoaderFactory->CreateInstance(aCommand, aOpenedChannel,
+      loadGroup, aContentType, this /* this should become nsIDocShell*/,
+      nsnull /*XXXQ Need ExtraInfo???*/,
+      aContentHandler, getter_AddRefs(mContentViewer)), NS_ERROR_FAILURE);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP
