@@ -2,31 +2,12 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-client.h
 csid.h
-ctxtfunc.h
-edttypes.h
-fe_proto.h
-libc_r.h
-merrors.h
 minicom.h
-mk_cx_fn.h
-msgtypes.h
-m_cvstrm.h
-ncompat.h
-net.h
 npapi.h
 npupp.h
-ntypes.h
 platform.h
-proto.h
-shistele.h
-structs.h
-unix-dns.h
-winfile.h
-xp.h
 xpassert.h
-xpgetstr.h
 xp_core.h
 xp_debug.h
 xp_file.h
