@@ -1131,16 +1131,24 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aCo
   // if we don't have an nsIPluginInstance (mInstance), it means
   // we weren't able to load a plugin previously because we
   // didn't have the mimetype.  Now that we do (aContentType),
-  // we'll try again with SetUpPluginInstance()
+  // we'll try again with SetUpPluginInstance() 
+  // which is called by InstantiateEmbededPlugin()
+  // NOTE: we don't want to try again if we didn't get the MIME type this time
 
-  if ((nsnull == mInstance) && (nsnull != mOwner))
+  if ((nsnull == mInstance) && (nsnull != mOwner) && (nsnull != aContentType))
   {
     mOwner->GetInstance(mInstance);
     mOwner->GetWindow(window);
 
     if ((nsnull == mInstance) && (nsnull != mHost) && (nsnull != window))
     {
-      rv = mHost->SetUpPluginInstance(aContentType, aURL, mOwner);
+      // determine if we need to try embedded again. FullPage takes a different code path
+      nsPluginMode * mode;
+      mOwner->GetMode(mode);
+      if (*mode == nsPluginMode_Embedded)
+        rv = mHost->InstantiateEmbededPlugin(aContentType, aURL, mOwner);
+      else
+        rv = mHost->SetUpPluginInstance(aContentType, aURL, mOwner);
 
       if (NS_OK == rv)
       {
@@ -2130,15 +2138,25 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     return NS_OK;
   }
 
+  // if we don't have a MIME type at this point, we still have one more chance by 
+  // opening the stream and seeing if the server hands one back 
+  if (!aMimeType)
+    if (aURL)
+    {
+       rv = NewEmbededPluginStream(aURL, aOwner, nsnull);
+       return rv;
+    } else
+       return NS_ERROR_FAILURE;
+
   rv = SetUpPluginInstance(aMimeType, aURL, aOwner);
 
   if(rv == NS_OK)
 	  rv = aOwner->GetInstance(instance);
   else 
   {
-    // We may not have a mime type, but that's ok.  Let's try to render
-    // the default plugin.  See bug 41197
-
+    // We have the mime type either supplied in source or from the header.
+    // Let's try to render the default plugin.  See bug 41197
+    
     // We were unable to find a plug-in yet we 
     // really do have mime type. Return the error
     // so that the nsObjectFrame can render any 
@@ -2173,20 +2191,9 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
   if(rv == NS_ERROR_FAILURE)
 	  return rv;
 
-  if(rv != NS_OK)
-  {
-	// we have not been able to load a plugin because we have not 
-    // determined the mimetype
-    if (aURL)
-    {
-      //we need to stream in enough to get the mime type...
-      rv = NewEmbededPluginStream(aURL, aOwner, nsnull);
-    }
-    else
-      rv = NS_ERROR_FAILURE;
-  }
-  else // we have loaded a plugin for this mimetype
-  {
+   // if we are here then we have loaded a plugin for this mimetype
+   // and it could be the Default plugin
+  
     nsPluginWindow    *window = nsnull;
 
     //we got a plugin built, now stream
@@ -2215,7 +2222,6 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
 
       NS_RELEASE(instance);
     }
-  }
 
 #ifdef NS_DEBUG
   printf("InstantiateEmbededPlugin.. returning\n");
