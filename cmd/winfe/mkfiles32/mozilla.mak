@@ -565,6 +565,7 @@ CDISTINCLUDES= \
     /I$(XPDIST)\public\httpurl \
     /I$(XPDIST)\public\netcache \
     /I$(XPDIST)\public\network \
+    /I$(XPDIST)\public\util \
 #!ifdef MOZ_LOC_INDEP
 	/I$(XPDIST)\public\li \
 #!endif MOZ_LOC_INDEP
