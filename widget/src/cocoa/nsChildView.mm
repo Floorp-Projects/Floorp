@@ -69,6 +69,23 @@
 
 #define NSAppKitVersionNumber10_2 663
 
+// category of NSView methods to quiet warnings
+@interface NSView(ChildViewExtensions)
+
+- (NSWindow*)getNativeWindow;
+- (NSMenu*)getContextMenu;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_3
+- (void)getRectsBeingDrawn:(const NSRect **)rects count:(int *)count;
+- (BOOL)needsToDrawRect:(NSRect)aRect;
+- (BOOL)wantsDefaultClipping;
+#endif
+
+@end
+
+
+
+
 @interface ChildView(Private)
 
 // sends gecko an ime composition event
@@ -526,61 +543,6 @@ NS_IMETHODIMP nsChildView::Destroy()
 
 #pragma mark -
 
-static pascal OSStatus OnContentClick(EventHandlerCallRef handler, EventRef event, void* userData)
-{
-    WindowRef window;
-    GetEventParameter(event, kEventParamDirectObject, typeWindowRef, NULL,
-                      sizeof(window), NULL, &window);
-
-    EventRecord macEvent;
-    ConvertEventRefToEventRecord(event, &macEvent);
-    GrafPtr port = GetWindowPort(window);
-    StPortSetter setter(port);
-    Point localWhere = macEvent.where;
-    GlobalToLocal(&localWhere);
-    
-    nsChildView* childView = (nsChildView*) userData;
-    nsMouseEvent geckoEvent(NS_MOUSE_LEFT_BUTTON_DOWN, childView);
-    geckoEvent.nativeMsg = &macEvent;
-    geckoEvent.time = PR_IntervalNow();
-    geckoEvent.clickCount = 1;
-
-    geckoEvent.refPoint.x = geckoEvent.point.x = localWhere.h;
-    geckoEvent.refPoint.y = geckoEvent.point.y = localWhere.v;
-
-    geckoEvent.isShift = ((macEvent.modifiers & (shiftKey|rightShiftKey)) != 0);
-    geckoEvent.isControl = ((macEvent.modifiers & controlKey) != 0);
-    geckoEvent.isAlt = ((macEvent.modifiers & optionKey) != 0);
-    geckoEvent.isMeta = ((macEvent.modifiers & cmdKey) != 0);
-    
-    // send event into Gecko by going directly to the
-    // the widget.
-    childView->DispatchMouseEvent(geckoEvent);
-
-    return noErr;
-}
-
-#define AppKitVersionJaguar 644
-
-inline bool hasJaguarAppKit()
-{
-  return (NSAppKitVersionNumber >= AppKitVersionJaguar);
-}
-
-inline WindowRef windowToWindowRef(NSWindow* window)
-{
-  return (WindowRef) (hasJaguarAppKit() ?
-                      [window windowRef] :
-                      [window _windowRef]);
-}
-
-inline NSRect getWindowRefFrame(NSWindow* window)
-{
-    return (hasJaguarAppKit() ?
-            [[window contentView] frame] :
-            [window frame]);
-}
-
 #if DEBUG
 static void PrintViewHierarcy(NSView *view)
 {
@@ -654,13 +616,13 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       NSWindow* window = [mView getNativeWindow];
       if (window)
       {
-        WindowRef topLevelWindow = windowToWindowRef(window);
+        WindowRef topLevelWindow = (WindowRef)[window windowRef];
         if (topLevelWindow)
         {
           mPluginPort->port = ::GetWindowPort(topLevelWindow);
 
           NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
-          NSRect frame = getWindowRefFrame(window);
+          NSRect frame = [[window contentView] frame];
           viewOrigin.y = frame.size.height - viewOrigin.y;
           
           // need to convert view's origin to window coordinates.
@@ -1103,7 +1065,7 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
   if (!window) return NS_ERROR_FAILURE;
   
   NSPoint viewOrigin = [mView convertPoint:NSZeroPoint toView:nil];
-  NSRect frame = getWindowRefFrame(window);
+  NSRect frame = [[window contentView] frame];
   viewOrigin.y = frame.size.height - viewOrigin.y;
   
   // set up the clipping region for plugins.
@@ -1923,7 +1885,7 @@ PRBool nsChildView::PointInWidget(Point aThePoint)
   widgetRect.MoveBy(widgetOrigin.x, widgetOrigin.y);
 
   // finally tell whether it's a hit
-  return(widgetRect.Contains(aThePoint.h, aThePoint.v));
+  return widgetRect.Contains(aThePoint.h, aThePoint.v);
 }
 
 #pragma mark -
@@ -1941,8 +1903,18 @@ NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlo
   ConvertGeckoToCocoaRect(aLocalRect, temp);
   temp = [mView convertRect:temp toView:nil];                       // convert to window coords
   temp.origin = [[mView getNativeWindow] convertBaseToScreen:temp.origin];   // convert to screen coords
+  
+  // need to flip the point relative to the main screen
+  if ([[NSScreen screens] count] > 0)   // paranoia
+  {
+    // "global" coords are relative to the upper left of the main screen,
+    // which is the first screen in the array (not [NSScreen mainScreen]).
+    NSRect mainScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
+    temp.origin.y = NSMaxY(mainScreenFrame) - temp.origin.y;
+  }
+  
   ConvertCocoaToGeckoRect(temp, aGlobalRect);
-    
+  
   return NS_OK;
 }
 
@@ -1958,8 +1930,19 @@ NS_IMETHODIMP nsChildView::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLo
 {
   NSRect temp;
   ConvertGeckoToCocoaRect(aGlobalRect, temp);
+
+  // need to flip the point relative to the main screen
+  if ([[NSScreen screens] count] > 0)   // paranoia
+  {
+    // "global" coords are relative to the upper left of the main screen,
+    // which is the first screen in the array (not [NSScreen mainScreen]).
+    NSRect mainScreenFrame = [[[NSScreen screens] objectAtIndex:0] frame];
+    temp.origin.y = NSMaxY(mainScreenFrame) - temp.origin.y;
+  }
+
   temp.origin = [[mView getNativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
   temp = [mView convertRect:temp fromView:nil];                     // convert to window coords
+
   ConvertCocoaToGeckoRect(temp, aLocalRect);
   
   return NS_OK;
@@ -2275,14 +2258,16 @@ nsChildView::Idle()
                       // an empty fallback port.
 }
 
-// Find the nearest scrollable view for this ChildView.
+// Find the nearest scrollable view for this ChildView
+// (recall that views are not refcounted)
 - (nsIScrollableView*) getScrollableView
 {
-  nsIScrollableView* aScrollableView = nil;
+  nsIScrollableView* scrollableView = nsnull;
+
   ChildView* currView = self;
   // we have to loop up through superviews in case the view that received the
   // mouseDown is in fact a plugin view with no scrollbars
-  while (!aScrollableView && currView) {
+  while (currView) {
 
     // This is a hack I learned in nsView::GetViewFor(nsIWidget* aWidget)
     // that I'm not sure is kosher. If anyone knows a better way to get
@@ -2294,14 +2279,19 @@ nsChildView::Idle()
     nsISupports* data = (nsISupports*)clientData;
     nsCOMPtr<nsIInterfaceRequestor> req(do_QueryInterface(data));
     if (req)
-      req->GetInterface(NS_GET_IID(nsIScrollableView), &aScrollableView);
+    {
+      req->GetInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+      if (scrollableView)
+        break;
+    }
 
     if ([[currView superview] isMemberOfClass:[ChildView class]])
         currView = [currView superview];
     else
         currView = nil;
   }
-  return aScrollableView;
+
+  return scrollableView;
 }
 
 // set the closed hand cursor and record the starting scroll positions
@@ -2641,6 +2631,7 @@ nsChildView::Idle()
   macEvent.when = ::TickCount();
   // macEvent.where.h = screenLoc.x, macEvent.where.v = screenLoc.y; XXX fix this, they are flipped!
   GetGlobalMouse(&macEvent.where);
+  
   macEvent.modifiers = GetCurrentKeyModifiers();
   geckoEvent.nativeMsg = &macEvent;
 
@@ -2790,12 +2781,7 @@ const PRInt32 kNumLines = 4;
     scrollDelta = incomingDeltaX;
   }
   
-  // Use hasJaguarAppKit to determine if we're on 10.2 where the user has control
-  // over the deltaY from a scrollwheel event via the Mouse panel in System Preferences
-  if (hasJaguarAppKit())
-    geckoEvent.delta = -scrollDelta;
-  else
-    geckoEvent.delta = scrollDelta * -kNumLines;
+  geckoEvent.delta = -scrollDelta;
     
   // send event into Gecko by going directly to the
   // the widget.
@@ -2825,16 +2811,16 @@ const PRInt32 kNumLines = 4;
     
     // convert point to view coordinate system
     NSPoint localPoint = [self convertPoint:mouseLoc fromView:nil];
+    
     outGeckoEvent->refPoint.x = outGeckoEvent->point.x = NS_STATIC_CAST(nscoord, localPoint.x);
     outGeckoEvent->refPoint.y = outGeckoEvent->point.y = NS_STATIC_CAST(nscoord, localPoint.y);
-
   }
   
   // set up modifier keys
-  outGeckoEvent->isShift = ((inMods & NSShiftKeyMask) != 0);
-  outGeckoEvent->isControl = ((inMods & NSControlKeyMask) != 0);
-  outGeckoEvent->isAlt = ((inMods & NSAlternateKeyMask) != 0);
-  outGeckoEvent->isMeta = ((inMods & NSCommandKeyMask) != 0);
+  outGeckoEvent->isShift    = ((inMods & NSShiftKeyMask) != 0);
+  outGeckoEvent->isControl  = ((inMods & NSControlKeyMask) != 0);
+  outGeckoEvent->isAlt      = ((inMods & NSAlternateKeyMask) != 0);
+  outGeckoEvent->isMeta     = ((inMods & NSCommandKeyMask) != 0);
 }
 
  
