@@ -1625,7 +1625,7 @@ nsXULDocument::EndLoad()
     PRBool useXULCache;
     gXULCache->GetEnabled(&useXULCache);
 
-    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsISupportsArray> sheets;
     reg->GetStyleSheets(uri, getter_AddRefs(sheets));
@@ -5612,7 +5612,7 @@ nsresult
 nsXULDocument::AddChromeOverlays()
 {
     nsresult rv;
-    nsCOMPtr<nsIChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
+    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(kChromeRegistryCID, &rv));
 
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
