@@ -133,7 +133,7 @@ nsBufferInputStream::Close(void)
         return NS_BASE_STREAM_CLOSED;
 
     if (mBlocking) {
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
         NS_RELEASE(mBuffer);
         mBuffer = nsnull;
         nsresult rv = mon.Notify();   // wake up the writer
@@ -189,7 +189,7 @@ nsBufferInputStream::Read(char* aBuf, PRUint32 aCount, PRUint32 *aReadCount)
     }
     if (rv == NS_BASE_STREAM_EOF) {
         // all we're ever going to get -- so wake up anyone in Flush
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
         mon.Notify();   // wake up writer
     }
     return rv;
@@ -272,7 +272,7 @@ nsBufferInputStream::SetEOF()
         return NS_BASE_STREAM_CLOSED;
 
     if (mBlocking) {
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
         mBuffer->SetEOF();
         nsresult rv = mon.Notify();   // wake up the writer
         if (NS_FAILED(rv)) return rv;
@@ -290,8 +290,8 @@ nsBufferInputStream::Fill()
         return NS_BASE_STREAM_CLOSED;
 
     if (mBlocking) {
-        nsAutoMonitor mon(mBuffer);
-        while (PR_TRUE) {
+        nsAutoCMonitor mon(mBuffer);
+        //while (PR_TRUE) {
             nsresult rv;
 
             // check read buffer again while in the monitor
@@ -306,7 +306,7 @@ nsBufferInputStream::Fill()
             if (NS_FAILED(rv)) return rv;   // interrupted
             rv = mon.Wait();
             if (NS_FAILED(rv)) return rv;   // interrupted
-        }
+        //}
     }
     else {
         return NS_BASE_STREAM_WOULD_BLOCK;
@@ -370,7 +370,7 @@ nsBufferOutputStream::Close(void)
         return NS_BASE_STREAM_CLOSED;
 
     if (mBlocking) {
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
         mBuffer->SetEOF();
         NS_RELEASE(mBuffer);
         mBuffer = nsnull;
@@ -417,7 +417,7 @@ nsBufferOutputStream::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteC
     }
     if (rv == NS_BASE_STREAM_EOF) {
         // all we're ever going to get -- so wake up anyone in Flush
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
         mon.Notify();   // wake up writer
     }
     return rv;
@@ -456,7 +456,7 @@ nsBufferOutputStream::WriteFrom(nsIInputStream* fromStream, PRUint32 aCount,
     }
     if (rv == NS_BASE_STREAM_EOF) {
         // all we're ever going to get -- so wake up anyone in Flush
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
         mon.Notify();   // wake up writer
     }
     return rv;
@@ -470,14 +470,14 @@ nsBufferOutputStream::Flush(void)
 
     if (mBlocking) {
         nsresult rv;
-        nsAutoMonitor mon(mBuffer);
+        nsAutoCMonitor mon(mBuffer);
 
         // check write buffer again while in the monitor
         PRUint32 amt;
-        char* buf;
-        rv = mBuffer->GetWriteSegment(&buf, &amt);
-        // don't exit on EOF here -- we need to block until the data is consumed
-        if (NS_SUCCEEDED(rv) && amt > 0) return NS_OK;
+        const char* buf;
+        rv = mBuffer->GetReadSegment(0, &buf, &amt);
+        if (rv == NS_BASE_STREAM_EOF) return NS_OK;
+        if (amt == 0) return NS_OK;
 
         // else notify the reader and wait
         rv = mon.Notify();
