@@ -2607,6 +2607,10 @@ net_setup_http_stream(ActiveEntry * ce)
         }
         PR_FREEIF(ce->URL_s->content_encoding);
         ce->URL_s->content_encoding = NULL;
+#ifdef MODULAR_NETLIB
+        PR_FREEIF(ce->URL_s->transfer_encoding);
+        ce->URL_s->transfer_encoding=NULL;
+#endif /* MODULAR_NETLIB */
         ce->URL_s->content_length = 0;       /* reset */
         ce->URL_s->real_content_length = 0;  /* reset */
         ce->URL_s->last_modified = 0;        /* reset */
