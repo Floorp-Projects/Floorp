@@ -134,13 +134,17 @@ NS_IMETHODIMP
 LoadListener::HandleEvent(nsIDOMEvent *event)
 {
   nsresult rv;
+
+  PRUint32 httpStatus;
+  mRequest->GetStatus(&httpStatus);
+
+  nsCOMPtr<nsISchema> schema;
+
   nsAutoString eventType;
-  
   event->GetType(eventType);
-  
-  if (eventType.EqualsLiteral("load")) {
+
+  if ((httpStatus / 100 == 2) && eventType.EqualsLiteral("load")) {
     nsCOMPtr<nsIDOMDocument> document;
-    nsCOMPtr<nsISchema> schema;
     
     rv = mRequest->GetResponseXML(getter_AddRefs(document));
     if (NS_SUCCEEDED(rv)) {
@@ -149,26 +153,27 @@ LoadListener::HandleEvent(nsIDOMEvent *event)
       if (document)
         document->GetDocumentElement(getter_AddRefs(element));
 
-      if (element) {
-        //XXXTelemac TODO Use an nsIWebServiceErrorHandler instead of nsnull
+      //XXXTelemac TODO Use an nsIWebServiceErrorHandler instead of nsnull
+      if (element)
         rv = mLoader->ProcessSchemaElement(nsnull, element, getter_AddRefs(schema));
-      }
-      else {
+      else
         rv = NS_ERROR_SCHEMA_NOT_SCHEMA_ELEMENT;
-      }
     }
+  }
+  else {
+    rv = NS_ERROR_SCHEMA_LOADING_ERROR;
+  }
 
-    if (NS_SUCCEEDED(rv)) {
+  //XXXTelemac OnError call replace by use of nsIWebServiceErrorHandler 
+  //XXXTelemac in sub-processing methods.
+
+  if (mListener) {
+    if (NS_SUCCEEDED(rv))
       mListener->OnLoad(schema);
-    }
-    //XXXTelemac OnError call replace by use of nsIWebServiceErrorHandler 
-    //XXXTelemac in sub-processing methods.
+    else
+      mListener->OnError(rv, NS_LITERAL_STRING("Failure loading"));
   }
-  else if (eventType.EqualsLiteral("error") &&
-           mListener) {
-    mListener->OnError(NS_ERROR_SCHEMA_LOADING_ERROR, 
-                       NS_LITERAL_STRING("Failure loading"));
-  }
+
   NS_IF_RELEASE(mLoader);
   mListener = nsnull;
   mRequest = nsnull;
