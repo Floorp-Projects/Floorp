@@ -80,8 +80,12 @@ NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval)
         nsAllocator::Free(aPassword);
     }
 
-    // Get the offset byte from the stream. Our stream is
-    // just our password repeating itself infinite times.
-    *retval = mPassword[offset % mPassword.Length()];
+    // Get the offset byte from the stream. Our stream is just our password
+    // repeating itself infinite times.
+    //
+    // mPassword being a nsCString, returns a PRUnichar for operator [].
+    // Hence convert it to a const char * first before applying op [].
+    *retval = ((const char *)mPassword)[offset % mPassword.Length()];
+
     return rv;
 }
