@@ -504,7 +504,9 @@ function onAccept()
               gPrintSettingsInterface.kInitSaveInColor |
               gPrintSettingsInterface.kInitSaveReversed |
               gPrintSettingsInterface.kInitSaveOrientation |
-              gPrintSettingsInterface.kInitSaveOddEvenPages;
+              gPrintSettingsInterface.kInitSaveOddEvenPages |
+              gPrintSettingsInterface.kInitSaveShrinkToFit |
+              gPrintSettingsInterface.kInitSaveScaling |;
 
   gPrintService.savePrintSettingsToPrefs(gPrintSettings, true, flags);
 
