@@ -124,33 +124,39 @@ static void activateWindow( nsIDOMWindowInternal *win )
 static void openMailWindow(const PRUnichar * aMailWindowName, const char * aFolderUri)
 {
   nsCOMPtr<nsIWindowMediator> mediator ( do_GetService(NS_WINDOWMEDIATOR_CONTRACTID) );
-  if (mediator)
+  if (!mediator)
+    return;
+
+  nsCOMPtr<nsIDOMWindowInternal> domWindow;
+  mediator->GetMostRecentWindow(aMailWindowName, getter_AddRefs(domWindow));
+  if (domWindow)
   {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
-    mediator->GetMostRecentWindow( aMailWindowName, getter_AddRefs(domWindow));
-    if (domWindow)
+    if (aFolderUri)
     {
-      nsCOMPtr<nsISupports> xpConnectObj;
       nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(domWindow));
       if (piDOMWindow)
       {
+        nsCOMPtr<nsISupports> xpConnectObj;
         piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("MsgWindowCommands").get(), getter_AddRefs(xpConnectObj));
         nsCOMPtr<nsIMsgWindowCommands> msgWindowCommands = do_QueryInterface(xpConnectObj);
         if (msgWindowCommands)
           msgWindowCommands->SelectFolder(aFolderUri);
       }
+    }
 
-      activateWindow(domWindow);
-    }
-    else
-    {
-      // the user doesn't have a mail window open already so open one for them...
-      nsCOMPtr <nsIMessengerWindowService> messengerWindowService = do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID);
-      // if we want to preselect the first account with new mail, here is where we would try to generate
-      // a uri to pass in (and add code to the messenger window service to make that work)
-      if (messengerWindowService) 
-        messengerWindowService->OpenMessengerWindowWithUri("mail:3pane", aFolderUri, nsMsgKey_None);
-    }
+    activateWindow(domWindow);
+  }
+  else
+  {
+    // the user doesn't have a mail window open already so open one for them...
+    nsCOMPtr<nsIMessengerWindowService> messengerWindowService =
+      do_GetService(NS_MESSENGERWINDOWSERVICE_CONTRACTID);
+    // if we want to preselect the first account with new mail,
+    // here is where we would try to generate a uri to pass in
+    // (and add code to the messenger window service to make that work)
+    if (messengerWindowService)
+      messengerWindowService->OpenMessengerWindowWithUri(
+                                "mail:3pane", aFolderUri, nsMsgKey_None);
   }
 }
 
