@@ -203,7 +203,7 @@ function FillSiteList()
   for (i = 0; i < count; i++)
   {
     var name = gPublishSiteData[i].siteName;
-    var menuitem = AppendStringToMenulist(gDialog.SiteList, name);
+    var menuitem = gDialog.SiteList.appendItem(name);
     // Highlight the default site
     if (name == gDefaultSiteName)
     {
@@ -258,8 +258,8 @@ function SelectSiteList()
     {
       for (var i = 0; i < gPublishSiteData[selectedSiteIndex].dirList.length; i++)
       {
-        AppendStringToMenulist(gDialog.DocDirList, gPublishSiteData[selectedSiteIndex].dirList[i]);
-        AppendStringToMenulist(gDialog.OtherDirList, gPublishSiteData[selectedSiteIndex].dirList[i]);
+        gDialog.DocDirList.appendItem(gPublishSiteData[selectedSiteIndex].dirList[i]);
+        gDialog.OtherDirList.appendItem(gPublishSiteData[selectedSiteIndex].dirList[i]);
       }
     }
     gDialog.DocDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].docDir);
