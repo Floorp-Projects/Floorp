@@ -56,8 +56,10 @@ const nsISupportsString      = Components.interfaces.nsISupportsString;
 const nsIWebNavigation       = Components.interfaces.nsIWebNavigation;
 const nsIWindowMediator      = Components.interfaces.nsIWindowMediator;
 const nsIWindowWatcher       = Components.interfaces.nsIWindowWatcher;
+const nsICategoryManager     = Components.interfaces.nsICategoryManager;
 
 const NS_BINDING_ABORTED = 0x80020006;
+const NS_ERROR_WONT_HANDLE_CONTENT = 0x805d0001;
 
 function needHomepageOverride(prefb) {
   var savedmstone;
@@ -245,6 +247,15 @@ var nsBrowserContentHandler = {
   /* nsIContentHandler */
 
   handleContent : function bch_handleContent(contentType, context, request) {
+    try {
+      var catMan = Components.classes["@mozilla.org/categorymanager;1"]
+                             .getService(nsICategoryManager);
+      var entry = catMan.getCategoryEntry("Gecko-Content-Viewers",
+                                          contentType);
+    } catch (e) {
+      throw NS_ERROR_WONT_HANDLE_CONTENT;
+    }
+
     var parentWin;
     try {
       parentWin = context.getInterface(nsIDOMWindow);
@@ -451,7 +462,7 @@ var Module = {
     registerType("application/http-index-format");
 
     var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(Components.interfaces.nsICategoryManager);
+                           .getService(nsICategoryManager);
 
     catMan.addCategoryEntry("command-line-handler",
                             "m-browser",
@@ -467,7 +478,7 @@ var Module = {
     compReg.unregisterFactoryLocation(dch_CID, location);
 
     var catMan = Components.classes["@mozilla.org/categorymanager;1"]
-                           .getService(Components.interfaces.nsICategoryManager);
+                           .getService(nsICategoryManager);
 
     catMan.deleteCategoryEntry("command-line-handler",
                                "m-browser", true);
