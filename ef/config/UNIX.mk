@@ -32,7 +32,7 @@ endif
 # Name of the binary code directories
 #
 
-OBJDIR_NAME		= $(OS_CONFIG)$(COMPILER_TAG)$(OBJDIR_TAG).OBJ
+OBJDIR_NAME	= $(OS_CONFIG)$(CPU_ARCH_TAG)$(OBJDIR_TAG).OBJ
 
 #
 # Install
