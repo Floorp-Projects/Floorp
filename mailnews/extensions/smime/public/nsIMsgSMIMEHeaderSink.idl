@@ -49,8 +49,8 @@ interface nsIX509Cert;
 [scriptable, uuid(25380FA1-E70C-4e82-B0BC-F31C2F41C470)]
 interface nsIMsgSMIMEHeaderSink : nsISupports 
 {
-  void signedStatus(in PRInt32 aNestingLevel, in PRInt32 aSignatureStatus, in nsIX509Cert aSignerCert);
-  void encryptionStatus(in PRInt32 aNestingLevel, in PRInt32 aEncryptionStatus, in nsIX509Cert aReceipientCert);
+  void signedStatus(in long aNestingLevel, in long aSignatureStatus, in nsIX509Cert aSignerCert);
+  void encryptionStatus(in long aNestingLevel, in long aEncryptionStatus, in nsIX509Cert aReceipientCert);
 
-  PRInt32 maxWantedNesting(); // 1 == only info on outermost nesting level wanted
+  long maxWantedNesting(); // 1 == only info on outermost nesting level wanted
 };

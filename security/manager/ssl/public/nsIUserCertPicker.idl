@@ -44,7 +44,7 @@ interface nsIInterfaceRequestor;
 interface nsIUserCertPicker : nsISupports {
   nsIX509Cert pickByUsage(in nsIInterfaceRequestor ctx, 
                           in wstring selectedNickname,
-                          in PRInt32 certUsage, // as defined by NSS enum SECCertUsage
+                          in long certUsage, // as defined by NSS enum SECCertUsage
                           in boolean allowInvalid,
                           in boolean allowDuplicateNicknames,
                           out boolean canceled);

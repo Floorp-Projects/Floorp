@@ -41,6 +41,6 @@ interface nsIX509Cert;
 interface nsISSLStatus : nsISupports {
   readonly attribute nsIX509Cert serverCert;
   readonly attribute string cipherName;
-  readonly attribute PRUint32 keyLength;
-  readonly attribute PRUint32 secretKeyLength;
+  readonly attribute unsigned long keyLength;
+  readonly attribute unsigned long secretKeyLength;
 };

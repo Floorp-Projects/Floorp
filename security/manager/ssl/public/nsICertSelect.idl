@@ -41,7 +41,7 @@ interface nsIChannelSecurityInfo;
 [scriptable, uuid(3cac403c-edb3-11d4-998b-00b0d02354a0)]
 interface nsICertSelect : nsISupports {
   nsIX509Cert selectClientAuthCert(in nsIChannelSecurityInfo socketInfo,
-                                   in PRUint32 count,
+                                   in unsigned long count,
                                    [array, size_is(count)] in nsIX509Cert certs);
 };
 

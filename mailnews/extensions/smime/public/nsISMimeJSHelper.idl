@@ -77,7 +77,7 @@ interface nsISMimeJSHelper : nsISupports
   void getRecipientCertsInfo(in nsIMsgCompFields compFields,
                              out unsigned long count,
                              [array, size_is(count)] out wstring emailAddresses,
-                             [array, size_is(count)] out PRInt32 certVerification,
+                             [array, size_is(count)] out long certVerification,
                              [array, size_is(count)] out wstring certIssuedInfos,
                              [array, size_is(count)] out wstring certExpiresInfos,
                              [array, size_is(count)] out nsIX509Cert certs,

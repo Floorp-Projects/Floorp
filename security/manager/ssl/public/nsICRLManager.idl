@@ -61,7 +61,7 @@ interface nsICRLManager : nsISupports {
   void importCrl([array, size_is(length)] in octet data,
                  in unsigned long length,
                  in nsIURI uri,
-                 in PRUint32 type,
+                 in unsigned long type,
                  in boolean doSilentDownload,
                  in wstring crlKey);
 
@@ -86,7 +86,7 @@ interface nsICRLManager : nsISupports {
    *
    * Delete the crl.
    */
-  void deleteCrl(in PRUint32 crlIndex);
+  void deleteCrl(in unsigned long crlIndex);
 
 
   /* This would reschedule the autoupdate of crls with auto update enable.

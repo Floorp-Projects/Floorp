@@ -38,6 +38,6 @@
 [scriptable, uuid(b6fe3d78-1dd1-11b2-9058-ced9016984c8)]
 interface nsIPKIParamBlock : nsISupports {
 
-  void setISupportAtIndex(in PRInt32 index, in nsISupports object);
-  nsISupports getISupportAtIndex(in PRInt32 index);
+  void setISupportAtIndex(in long index, in nsISupports object);
+  nsISupports getISupportAtIndex(in long index);
 };

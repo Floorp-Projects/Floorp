@@ -41,8 +41,8 @@ interface nsIClientAuthDialogs : nsISupports
                         in wstring issuer,
                         [array, size_is(count)] in wstring certNickList,
                         [array, size_is(count)] in wstring certDetailsList,
-                        in PRUint32 count,
-                        out PRInt32 selectedIndex,
+                        in unsigned long count,
+                        out long selectedIndex,
                         out boolean canceled);
 };
 
