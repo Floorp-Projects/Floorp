@@ -286,6 +286,10 @@ $default{'rep_platform'} = pickplatform();
 $vars->{'op_sys'} = \@legal_opsys; 
 $default{'op_sys'} = pickos();
 
+$vars->{'keywords'} = formvalue('keywords');
+$vars->{'dependson'} = formvalue('dependson');
+$vars->{'blocked'} = formvalue('blocked');
+
 # Use the version specified in the URL, if one is supplied. If not,
 # then use the cookie-specified value. (Posting a bug sets a cookie
 # for the current version.) If no URL or cookie version, the default

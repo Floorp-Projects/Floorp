@@ -242,7 +242,7 @@ function set_assign_to() {
           </strong>
         </td>
         <td colspan="3">
-          <input name="keywords" size="60" value=""> (optional)
+          <input name="keywords" size="60" value="[% keywords FILTER html %]"> (optional)
         </td>
       </tr>
     [% END %]
@@ -251,7 +251,7 @@ function set_assign_to() {
         <strong>Depends on:</strong>
       </td>
       <td>
-        <input name="dependson" accesskey="d">
+        <input name="dependson" accesskey="d" value="[% dependson FILTER html %]">
       </td>
     </tr>
     <tr>
@@ -259,7 +259,7 @@ function set_assign_to() {
         <strong>Blocks:</strong>
       </td>
       <td>
-        <input name="blocked" accesskey="b">
+        <input name="blocked" accesskey="b" value="[% blocked FILTER html %]">
       </td>
     </tr>
   [% END %]
