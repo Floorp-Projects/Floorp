@@ -2916,7 +2916,7 @@ void JS_EndRequest(JSContext *cx);
 jsrefcount JS_SuspendRequest(JSContext *cx);
     </SYNTAX>
     <DESCRIPTION>
-      When your multi-threaded application is in a request but needs to block or perform lengthy computation that can race safely with the garbage collector, it should call <C>JS_SuspendRequest</C> before the blocking or length call, and <C>JS_ResumeRequest</C> after. <C>JS_SuspendRequest</C> safely decrements the request counter for the JS engine runtime associated with a given context, <C>cx</C>. <C>JS_SuspendRequest</C> returns the saved value of the request-depth counter stored in <C>cx</C>, which must be passed to the matching <C>JS_SuspendRequest</C> after the blocking or length code completes.<P/>
+      When your multi-threaded application is in a request but needs to block or perform lengthy computation that can race safely with the garbage collector, it should call <C>JS_SuspendRequest</C> before the blocking or lengthy call, and <C>JS_ResumeRequest</C> after. <C>JS_SuspendRequest</C> safely decrements the request counter for the JS engine runtime associated with a given context, <C>cx</C>. <C>JS_SuspendRequest</C> returns the saved value of the request-depth counter stored in <C>cx</C>, which must be passed to the matching <C>JS_SuspendRequest</C> after the blocking or lengthy code completes.<P/>
     </DESCRIPTION>
     <NOTE>
       <C>JS_SuspendRequest</C> is available only if you compile the JS engine with <C>JS_THREADSAFE</C> defined. In a default engine compilation, <C>JS_THREADSAFE</C> is undefined.<P/>
