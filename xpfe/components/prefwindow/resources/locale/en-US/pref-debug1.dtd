@@ -15,3 +15,8 @@
 <!ENTITY debugMotionEventDumping.label "Motion Event Dumping">
 <!ENTITY debugCrossingEventDumping.label "Crossing Event Dumping">
 
+<!-- Reflow events -->
+<!ENTITY debugReflowEvents.label                 "Reflow Debugging">
+<!ENTITY debugReflowShowFrameCounts.label        "Show frame counts">
+<!ENTITY debugReflowDumpFrameCounts.label        "Dump frame counts">
+<!ENTITY debugReflowDumpFrameByFrameCounts.label "Dump frame by frame counts">
