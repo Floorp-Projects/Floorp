@@ -406,7 +406,7 @@ nsInstallFile::RegisterInVersionRegistry()
 PRBool
 nsInstallFile::CanUninstall()
 {
-    return TRUE;
+    return PR_TRUE;
 }
 
 /* RegisterPackageNode
@@ -416,5 +416,5 @@ nsInstallFile::CanUninstall()
 PRBool
 nsInstallFile::RegisterPackageNode()
 {
-    return TRUE;
+    return PR_TRUE;
 }
