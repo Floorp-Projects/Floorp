@@ -29,6 +29,8 @@ mailnews/base/search/public/Makefile
 mailnews/base/search/src/Makefile
 mailnews/base/search/resources/Makefile
 mailnews/base/search/resources/content/Makefile
+mailnews/base/search/resources/locale/Makefile
+mailnews/base/search/resources/locale/en-US/Makefile
 mailnews/base/tests/Makefile
 mailnews/base/tests/accountmanager/Makefile
 mailnews/base/tests/identity/Makefile
