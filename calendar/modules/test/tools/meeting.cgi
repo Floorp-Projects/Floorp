@@ -48,6 +48,8 @@ foreach $val (@parms)
     $v =~ s/%27/'/g;
     $v =~ s/%29/)/g;
     $v =~ s/%2C/,/g;
+    $v =~ s/%3D/=/g;
+    $v =~ s/%3B/;/g;
     $vals{$p} = $v;
 }
 
@@ -231,7 +233,7 @@ sub mail_the_message {
     printf(S "--%s\n",$boundary);
     printf(S "Content-Type:text/calendar; method=REQUEST; component=VEVENT; charset=US-ASCII\n");
     printf(S "Content-Transfer-Encoding: 7bit\n");
-    printf(S "Content-Disposition: inline; filename=\"event.ics\"\n");
+    # printf(S "Content-Disposition: inline; filename=\"event.ics\"\n");
     printf(S "\n");
     printf(S "BEGIN:VCALENDAR\n");
     printf(S "METHOD:REQUEST\n");
@@ -263,6 +265,8 @@ sub mail_the_message {
     printf(S "UID:%s.%s-%s.%s\n",$h, $dm, $d, "$$" );
     printf(S "SEQUENCE:0\n");
     printf(S "LOCATION:%s\n",$vals{'LOCATION'});
+    printf(S "RRULE:%s\n",$vals{'RRULE'}) if ('' ne $vals{'RRULE'}) ;
+    printf(S "EXDATE:%s\n",$vals{'EXDATE'}) if ('' ne $vals{'RRULE'}) ;
     printf(S "STATUS:CONFIRMED\n");
     printf(S "END:VEVENT\n");
     printf(S "END:VCALENDAR\n");

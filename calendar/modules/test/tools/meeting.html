@@ -5,10 +5,11 @@
 </HEAD>
 <BODY>
 
-<H1>
-Make A Meeting Request</H1>
-&nbsp;
-<BR>&nbsp;<FORM ACTION="http://seasnake/cgi-bin/sm/meeting.cgi" METHOD=GET>
+<CENTER>
+<H1>Make An IMIP Meeting Request</H1>
+</CENTER>
+
+<FORM ACTION="http://seasnake/cgi-bin/sm/meeting.cgi" METHOD=GET>
 <TABLE>
 <TR>
 <TH ALIGN=RIGHT>Organizer:&nbsp;</TH>
@@ -52,8 +53,8 @@ you're sending the request to, but not always.  Example:
 Start time:
 </th>
 <td>
-<INPUT TYPE="TEXT" NAME="DTSTART" VALUE="19980522T070000Z" SIZE="20">
-<font size=-1>example: <tt>19980522T070000Z</tt></font>
+<INPUT TYPE="TEXT" NAME="DTSTART" VALUE="19981103T180000Z" SIZE="20">
+<font size=-1>example: <tt>19981006T180000Z</tt></font>
 </td>
 </tr>
 <tr>
@@ -61,9 +62,31 @@ Start time:
 End time:
 </th>
 <td>
-<INPUT TYPE="TEXT" NAME="DTEND" VALUE="19980523T070000Z" SIZE="20">
-<font size=-1>example: <tt>19980523T070000Z</tt></font>
+<INPUT TYPE="TEXT" NAME="DTEND" VALUE="19981103T190000Z" SIZE="20">
+<font size=-1>example: <tt>19980523T1006T190000Z</tt></font>
 </td>
+</tr>
+<tr>
+<th align="right">
+Location:
+</th>
+<td>
+<INPUT TYPE="TEXT" NAME="LOCATION" VALUE="Cheetos" SIZE="20">
+</td>
+</tr>
+<tr>
+    <th>RRULE:</th>
+    <td>
+    <input type="TEXT" NAME="RRULE" value="" SIZE=20>
+    <font size=-1>example:COUNT=10;FREQ=WEEKLY</font>
+    </td>
+</tr>
+<tr>
+    <th>EXDATE:</th>
+    <td>
+    <input type="TEXT" NAME="EXDATE" value="" SIZE=20>
+    <font size=-1>example:19981103T190000Z</font>
+    </td>
 </tr>
 <tr>
     <th align=right valign=top>Description:</th>
@@ -71,7 +94,9 @@ End time:
     <textarea name="DESCRIPTION" rows=6 cols=60></textarea>
 </tr>
 </TABLE>
+<center>
 <input type=submit name=btnSendRequest value="Send Meeting Request">
+</center>
 </FORM>
 </BODY>
 </HTML>
