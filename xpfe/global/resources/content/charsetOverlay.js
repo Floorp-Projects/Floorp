@@ -123,6 +123,7 @@ function SetForcedCharset(charset)
     BrowserSetForcedCharacterSet(charset);
 }
 
+var gPrevCharset = null;
 function UpdateCurrentCharset()
 {
     var menuitem = null;
@@ -133,6 +134,13 @@ function UpdateCurrentCharset()
     menuitem = document.getElementById('charset.' + wnd.document.characterSet);
 
     if (menuitem) {
+        // uncheck previously checked item to workaround Mac checkmark problem
+        // bug 98625
+        if (gPrevCharset) {
+            var pref_item = document.getElementById('charset.' + gPrevCharset);
+            if (pref_item)
+              pref_item.setAttribute('checked', 'false');
+        }
         menuitem.setAttribute('checked', 'true');
     }
 }
@@ -211,6 +219,7 @@ function charsetLoadListener (event)
 
     if (charset.length > 0 && (charset != gLastBrowserCharset)) {
         gCharsetMenu.SetCurrentCharset(charset);
+        gPrevCharset = gLastBrowserCharset;
         gLastBrowserCharset = charset;
     }
 }
