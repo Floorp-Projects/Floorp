@@ -141,6 +141,7 @@ private:
   NS_IMETHOD InstallProvider(const nsCString& aProviderType,
                              const nsCString& aBaseURL,
                              PRBool aUseProfile, PRBool aAllowScripts, PRBool aRemove);
+  NS_IMETHOD UninstallProvider(const nsCString& aProviderType, const PRUnichar* aProviderName, PRBool aUseProfile);
 
   nsresult ProcessNewChromeBuffer(char *aBuffer, PRInt32 aLength);
 

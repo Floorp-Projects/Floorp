@@ -1012,19 +1012,14 @@ nsChromeRegistry::UpdateArc(nsIRDFDataSource *aDataSource, nsIRDFResource* aSour
   rv = aDataSource->GetTarget(aSource, aProperty, PR_TRUE, getter_AddRefs(retVal));
   if (NS_FAILED(rv)) return rv;
 
-  if (retVal)
-    if (!aRemove) {
-      rv = aDataSource->Change(aSource, aProperty, retVal, aTarget);
-      if (NS_FAILED(rv)) return rv;
-    }
-    else {
-      rv = aDataSource->Unassert(aSource, aProperty, retVal);
-      if (NS_FAILED(rv)) return rv;
-    }
-  else if (!aRemove) {
-    rv = aDataSource->Assert(aSource, aProperty, aTarget, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+  if (retVal) {
+    if (!aRemove)
+      aDataSource->Change(aSource, aProperty, retVal, aTarget);
+    else
+      aDataSource->Unassert(aSource, aProperty, aTarget);
   }
+  else if (!aRemove)
+    aDataSource->Assert(aSource, aProperty, aTarget, PR_TRUE);
 
   return NS_OK;
 }
@@ -2096,20 +2091,89 @@ NS_IMETHODIMP nsChromeRegistry::InstallPackage(const char* aBaseURL, PRBool aUse
 
 NS_IMETHODIMP nsChromeRegistry::UninstallSkin(const PRUnichar* aSkinName, PRBool aUseProfile)
 {
+  // The skin must first be deselected.
+  DeselectSkin(aSkinName, aUseProfile);
+
+  // Now uninstall it.
   nsCAutoString provider("skin");
-  return InstallProvider(provider, nsCAutoString(), aUseProfile, PR_TRUE, PR_TRUE);
+  return UninstallProvider(provider, aSkinName, aUseProfile);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallLocale(const PRUnichar* aLocaleName, PRBool aUseProfile)
 {
+  // The locale must first be deselected.
+  DeselectLocale(aLocaleName, aUseProfile);
+
   nsCAutoString provider("locale");
-  return InstallProvider(provider, nsCAutoString(), aUseProfile, PR_TRUE, PR_TRUE);
+  return UninstallProvider(provider, aLocaleName, aUseProfile);
 }
 
 NS_IMETHODIMP nsChromeRegistry::UninstallPackage(const PRUnichar* aPackageName, PRBool aUseProfile)
 {
-  nsCAutoString provider("package");
-  return InstallProvider(provider, nsCAutoString(), aUseProfile, PR_TRUE, PR_TRUE);
+  NS_ERROR("XXX Write me!\n");
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::UninstallProvider(const nsCString& aProviderType,
+                                    const PRUnichar* aProviderName,
+                                    PRBool aUseProfile)
+{
+  // XXX We are going to simply do a snip of the arc from the seq ROOT to
+  // the associated package.  waterson is going to provide the ability to name
+  // roots in a datasource, and only resources that are reachable from the
+  // root will be saved.  
+  nsresult rv = NS_OK;
+  nsCAutoString prefix( "urn:mozilla:" );
+  prefix += aProviderType;
+  prefix += ":";
+
+  // Obtain the root.
+  nsCAutoString providerRoot(prefix);
+  providerRoot += "root";
+
+  // Obtain the child we wish to remove.
+  nsCAutoString specificChild(prefix);
+  nsCAutoString provName; provName.AssignWithConversion(aProviderName);
+  specificChild += provName;
+
+  // Instantiate the data source we wish to modify.
+  nsCOMPtr<nsIRDFDataSource> installSource;
+  nsCAutoString installStr( "all-" );
+  installStr += aProviderType;
+  installStr += "s.rdf";
+  rv = LoadDataSource(installStr, getter_AddRefs(installSource), aUseProfile, nsnull);
+  if (NS_FAILED(rv)) return rv;
+  NS_ASSERTION(installSource, "failed to get installSource");
+
+  // Now make a container out of the root seq.
+  nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("@mozilla.org/rdf/container;1"));
+     
+  // Get the resource for the root.
+  nsCOMPtr<nsIRDFResource> chromeResource;
+  if (NS_FAILED(rv = GetResource(providerRoot, getter_AddRefs(chromeResource)))) {
+    NS_ERROR("Unable to retrieve the resource corresponding to the skin/locale root.");
+    return rv;
+  }
+  
+  if (NS_FAILED(container->Init(installSource, chromeResource)))
+    return NS_ERROR_FAILURE;
+
+  // Get the resource for the child.
+  nsCOMPtr<nsIRDFResource> childResource;
+  if (NS_FAILED(rv = GetResource(specificChild, getter_AddRefs(childResource)))) {
+    NS_ERROR("Unable to retrieve the resource corresponding to the skin/locale child being removed.");
+    return rv;
+  }
+
+  // Remove the child from the container.
+  container->RemoveElement(childResource, PR_TRUE);
+
+  // Now flush the datasource.
+  nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(installSource);
+  remote->Flush();
+ 
+  return NS_OK;
 }
 
 NS_IMETHODIMP
