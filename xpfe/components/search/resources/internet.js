@@ -97,7 +97,7 @@ function saveSearch()
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
 
 	var searchTitle = "Search: '" + gText + "' using " + gSites;
-	if (bmks)	bmks.AddBookmark(searchURL, searchTitle);
+	if (bmks)	bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_SEARCH_TYPE);
 
 	return(true);
 }

@@ -40,8 +40,8 @@
 	onload="doLoad()" onunload="doUnload()"
 	>
 
-	<html:script src="chrome://global/content/treePopups.js" />
 	<html:script src="chrome://communicator/content/bookmarks/bm-find.js" />
+	<html:script src="chrome://global/content/treePopups.js" />
 
 	<menubar>
 		<menu value="&menu.file.label;">
@@ -100,9 +100,9 @@
 				</menupopup>
 			</menulist>
 
-			<textfield id="findtext" type="text" style="width:10em;" onkeyup="if (event.which == 13) { doFind(); }" />
+			<textfield id="findtext" type="text" style="width:10em;" onkeyup="if (event.which == 13) { return doFind(); }" />
 			<box autostretch="never">
-				<titledbutton value="&search.button.label;" onclick="return doFind();" class="dialog toolbar-non-iconic" />
+				<button value="&search.button.label;" onclick="return doFind();" class="dialog toolbar-non-iconic" />
 			</box>
 			<spring align="horizontal" flex="100%" />
 		</box>
@@ -158,10 +158,18 @@
 
 		<treehead>
 			<treerow id="headRow">
-				<treecell observes="NameColumn" value="&name.label;" resource="http://home.netscape.com/NC-rdf#Name" onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" />
-				<treecell observes="URLColumn" value="&url.label;" resource="http://home.netscape.com/NC-rdf#URL" onclick="return doSort('URLColumn', null);" />
-				<treecell observes="ShortcutURLColumn" value="&shortcut.label;" resource="http://home.netscape.com/NC-rdf#ShortcutURL" onclick="return doSort('ShortcutURLColumn', null);" />
-				<treecell observes="DescriptionColumn" value="&description.label;" resource="http://home.netscape.com/NC-rdf#Description" onclick="return doSort('DescriptionColumn', null);" />
+				<treecell class="treecell-header sortDirectionIndicator" observes="NameColumn"
+					value="&name.label;" resource="http://home.netscape.com/NC-rdf#Name"
+					onclick="return doSort('NameColumn', null);" sortActive="true" sortDirection="ascending" />
+				<treecell class="treecell-header sortDirectionIndicator" observes="URLColumn"
+					value="&url.label;" resource="http://home.netscape.com/NC-rdf#URL"
+					onclick="return doSort('URLColumn', null);" />
+				<treecell class="treecell-header sortDirectionIndicator" observes="ShortcutURLColumn"
+					value="&shortcut.label;" resource="http://home.netscape.com/NC-rdf#ShortcutURL"
+					onclick="return doSort('ShortcutURLColumn', null);" />
+				<treecell class="treecell-header sortDirectionIndicator" observes="DescriptionColumn"
+					value="&description.label;" resource="http://home.netscape.com/NC-rdf#Description"
+					onclick="return doSort('DescriptionColumn', null);" />
 
 				<treecell allowevents="true" id="popupCell">
 					<menu>
@@ -178,7 +186,7 @@
 
 	<box align="horizontal">
 		<spring flex="1" />
-		<titledbutton id="SaveSearch" disabled="true" value="&save.button.label;" onclick="return saveFind();" class="dialog toolbar-non-iconic"/>
+		<button id="SaveSearch" disabled="true" value="&save.button.label;" onclick="return saveFind();" class="dialog toolbar-non-iconic"/>
 		<spring flex="1" />
 	</box>
 

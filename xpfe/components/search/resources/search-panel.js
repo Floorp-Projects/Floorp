@@ -999,7 +999,7 @@ function saveSearch()
 	if( !textNode )		return(false);
 
 	var searchTitle = "Search: '" + lastSearchText + "'";	// using " + gSites;
-	if (bmks)	bmks.AddBookmark(lastSearchURI, searchTitle);
+	if (bmks)	bmks.AddBookmark(lastSearchURI, searchTitle, bmks.BOOKMARK_SEARCH_TYPE);
 
 	return(true);
 }
