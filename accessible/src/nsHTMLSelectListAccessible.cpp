@@ -32,6 +32,8 @@
 #include "nsISelectControlFrame.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLSelectElement.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsIListControlFrame.h"
 
 /** ----- nsHTMLSelectListAccessible ----- */
 
@@ -125,14 +127,11 @@ NS_IMETHODIMP nsHTMLSelectListAccessible::GetAccFirstChild(nsIAccessible **_retv
   * As a nsHTMLSelectListAccessible we can have the following states:
   *     STATE_MULTISELECTABLE
   *     STATE_EXTSELECTABLE
-  *     STATE_FOCUSED
-  *     STATE_FOCUSABLE
+  *     no STATE_FOCUSED!  -- can't be focused, options are focused instead
+  *     no STATE_FOCUSABLE!  -- can't be focused, options are focused instead
   */
 NS_IMETHODIMP nsHTMLSelectListAccessible::GetAccState(PRUint32 *_retval)
 {
-  // this sets either STATE_FOCUSED or 0
-  nsAccessible::GetAccState(_retval);
-
   nsCOMPtr<nsIDOMHTMLSelectElement> select (do_QueryInterface(mDOMNode));
   if ( select ) {
     PRBool multiple;
@@ -141,7 +140,6 @@ NS_IMETHODIMP nsHTMLSelectListAccessible::GetAccState(PRUint32 *_retval)
       *_retval |= STATE_MULTISELECTABLE | STATE_EXTSELECTABLE;
   }
 
-  *_retval |= STATE_FOCUSABLE;
   return NS_OK;
 }
 
@@ -246,8 +244,13 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccName(nsAWritableString& _retva
   */
 NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccState(PRUint32 *_retval)
 {
-  // this sets either STATE_FOCUSED or 0
-  nsAccessible::GetAccState(_retval);
+  // this sets either STATE_FOCUSED or 0 (nsAccessible::GetAccState() doesn't know about list options)
+  *_retval = 0;
+  nsCOMPtr<nsIDOMNode> focusedOptionNode, parentNode;
+  mParent->AccGetDOMNode(getter_AddRefs(parentNode));
+  GetFocusedOptionNode(mPresShell, parentNode, focusedOptionNode);
+  if (focusedOptionNode == mDOMNode)
+    *_retval |= STATE_FOCUSED;
 
   // Are we selected?
   nsCOMPtr<nsIDOMHTMLOptionElement> option (do_QueryInterface(mDOMNode));
@@ -263,4 +266,47 @@ NS_IMETHODIMP nsHTMLSelectOptionAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
+nsresult nsHTMLSelectOptionAccessible::GetFocusedOptionNode(nsIWeakReference *aPresShell, 
+                                                            nsIDOMNode *aListNode, 
+                                                            nsCOMPtr<nsIDOMNode>& aFocusedOptionNode)
+{
+  NS_ASSERTION(aListNode, "Called GetFocusedOptionNode without a valid list node");
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aPresShell));
+  if (!shell)
+    return NS_ERROR_FAILURE;
+
+  nsIFrame *frame = nsnull;
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aListNode));
+  shell->GetPrimaryFrameFor(content, &frame);
+
+  nsresult rv;
+  nsCOMPtr<nsIListControlFrame> listFrame(do_QueryInterface(frame, &rv));
+  if (NS_FAILED(rv))
+    return rv;  // How can list content not have a list frame?
+  NS_ASSERTION(listFrame, "We don't have a list frame, but rv returned a success code.");
+
+  // Get what's focused by asking frame for "selected item". 
+  // Don't use DOM method of getting selected item, which instead gives *first* selected option 
+  PRInt32 focusedOptionIndex = 0;
+  rv = listFrame->GetSelectedIndex(&focusedOptionIndex);  
+
+  nsCOMPtr<nsIDOMHTMLCollection> options;
+
+  // Get options
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement(do_QueryInterface(aListNode));
+    NS_ASSERTION(selectElement, "No select element where it should be");
+    rv = selectElement->GetOptions(getter_AddRefs(options));
+  }
+
+  // Either use options and focused index, or default to list node itself
+  if (NS_SUCCEEDED(rv) && options && focusedOptionIndex >= 0)   // Something is focused
+    rv = options->Item(focusedOptionIndex, getter_AddRefs(aFocusedOptionNode));
+  else {  // If no options in list or focusedOptionIndex <0, then we are not focused on an item
+    aFocusedOptionNode = aListNode;  // return normal target content
+    rv = NS_OK;
+  }
+
+  return rv;
+}
 
