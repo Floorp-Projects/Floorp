@@ -1830,7 +1830,7 @@ RDFGenericBuilderImpl::BuildContentFromTemplate(nsIContent *aTemplateNode,
                 if (NS_FAILED(rv)) return rv;
 
                 // test to see if the container has contents
-                char* isEmpty = IsEmpty(realKid, aChild) ? "true" : "false";
+                char* isEmpty = IsEmpty(realKid, aChild) ? (char *)"true" : (char *)"false";
                 rv = realKid->SetAttribute(kNameSpaceID_None, kEmptyAtom, isEmpty, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
             }

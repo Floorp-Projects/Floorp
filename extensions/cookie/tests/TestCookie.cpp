@@ -9,7 +9,7 @@ static NS_DEFINE_IID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 
 
-PRInt32 main(PRInt32 argc, char *argv[])
+int main(PRInt32 argc, char *argv[])
 {
 
     nsICookieService *cookieService = NULL;

@@ -76,7 +76,7 @@
  *
  */
 
-#define NS_DEF_PTR(cls)                                                       \
+#define NS_DEF_PTR1(cls)                                                      \
 class cls##Ptr {                                                              \
 public:                                                                       \
   cls##Ptr(void)  : mPtr(0) {}                                                \
@@ -126,17 +126,35 @@ public:                                                                       \
   operator cls*(void)     { return mPtr;  }                                   \
   const cls*  operator->(void) const  { return mPtr;  }                       \
   const cls&  operator*(void) const   { return *mPtr; }                       \
-  operator const cls* (void) const    { return mPtr;  }                       \
+  operator const cls* (void) const    { return mPtr;  }
+
+#if (__GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95))
+#define NS_DEF_PTR2(cls)                                                      \
+private:                                                                      \
+  void* operator new(size_t size) {}		                               \
+  void operator delete(void* aPtr)  {}                                        \
+  cls*  mPtr;                                                                 
+#else
+#define NS_DEF_PTR2(cls)                                                      \
 private:                                                                      \
   void* operator new(size_t size) { return 0; }                               \
   void operator delete(void* aPtr)  {}                                        \
-  cls*  mPtr;                                                                 \
+  cls*  mPtr;                                                                 
+#endif /* gcc 2.95 */
+
+#define NS_DEF_PTR3(cls)                                                      \
 public:                                                                       \
 friend inline PRBool operator==(const cls* aInterface, const cls##Ptr& aPtr)  \
 { return PRBool(aInterface == aPtr.mPtr); }                                   \
 friend inline PRBool operator!=(const cls* aInterface, const cls##Ptr& aPtr)  \
 { return PRBool(aInterface != aPtr.mPtr); }                                   \
 }
+
+#define NS_DEF_PTR(cls)                                                       \
+	NS_DEF_PTR1(cls)						      \
+	NS_DEF_PTR2(cls)						      \
+	NS_DEF_PTR3(cls)
+
 
 #endif // nsIPtr_h___
 
