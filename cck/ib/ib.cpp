@@ -920,7 +920,8 @@ int StartIB(CString parms, WIDGET *curWidget)
 
 	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
 	GetDiskFreeSpaceEx(NULL,&nTotalAvailable, &nTotalBytes, &nTotalFreeBytes);
-    if ((nTotalAvailable.QuadPart) > 17,505,658)
+	// Checking for 26.3MB disk space
+    if ((nTotalAvailable.QuadPart) > 27,577,549)
 		;
 	else
 	{
