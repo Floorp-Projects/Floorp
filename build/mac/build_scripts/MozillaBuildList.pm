@@ -304,6 +304,7 @@ sub ProcessJarManifests()
     {
       CreateJarFromManifest(":mozilla:extensions:irc:jar.mn", $chrome_dir, \%jars);
       CreateJarFromManifest(":mozilla:extensions:cview:resources:jar.mn", $chrome_dir, \%jars);
+      CreateJarFromManifest(":mozilla:extensions:help:resources:jar.mn", $chrome_dir, \%jars);
       if ($main::options{vixen})
       {
         CreateJarFromManifest(":mozilla:extensions:vixen:resources:jar.mn", $chrome_dir, \%jars);
