@@ -19,17 +19,25 @@
  *
  * Contributor(s): 
  */
-
 #include "nsIAccessible.h"
-
+#include "nsIAccessibleDocument.h"
+#include "nsIAccessibleSelectable.h"
+#include "nsIAccessibilityService.h"
 #include "Accessible.h"
 #include "nsIWidget.h"
 #include "nsWindow.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIAccessibleEventReceiver.h"
+#include "nsReadableUtils.h"
+#include "nsITextContent.h"
+#include "nsIDocument.h"
+#include "nsIXULDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
+#include "nsINameSpaceManager.h"
+#include "String.h"
 
-/* For documentation of the accessibility architecture, 
+ /* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
@@ -51,7 +59,7 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-Accessible::Accessible(nsIAccessible* aAcc, HWND aWnd)
+Accessible::Accessible(nsIAccessible* aAcc, nsIDOMNode* aNode, HWND aWnd): SimpleDOMNode(aAcc, aNode, aWnd)
 {
   mAccessible = aAcc;  // The nsIAccessible we're proxying from
 
@@ -66,8 +74,8 @@ Accessible::Accessible(nsIAccessible* aAcc, HWND aWnd)
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", ++gAccessibles);
 #endif
-
 }
+
 
 //-----------------------------------------------------
 // destruction
@@ -78,42 +86,37 @@ Accessible::~Accessible()
 #ifdef DEBUG_LEAKS
   printf("Accessibles=%d\n", --gAccessibles);
 #endif
-
 }
 
 
 //-----------------------------------------------------
-// IUnknown interface methods - see inknown.h for documentation
+// IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
-STDMETHODIMP Accessible::QueryInterface(REFIID riid, void** ppv)
+STDMETHODIMP Accessible::QueryInterface(REFIID iid, void** ppv)
 {
-  *ppv=NULL;
+  *ppv = NULL;
 
-  if ( (IID_IUnknown == riid) || (IID_IAccessible == riid) || (IID_IDispatch  == riid)) {
-    *ppv = this;
-    AddRef();
-    return S_OK;
-  }
-
-  return E_NOINTERFACE;
+  if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
+    *ppv = NS_STATIC_CAST(IAccessible*, this);
+ 
+  if (NULL == *ppv)
+    return SimpleDOMNode::QueryInterface(iid,ppv);
+    
+  (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+  return S_OK;
 }
 
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) Accessible::AddRef()
 {
-  return ++m_cRef;
+  return SimpleDOMNode::AddRef();
 }
 
 
 //-----------------------------------------------------
 STDMETHODIMP_(ULONG) Accessible::Release()
 {
-  if (0 != --m_cRef)
-    return m_cRef;
-
-  delete this;
-
-  return 0;
+  return SimpleDOMNode::Release();
 }
 
 HINSTANCE Accessible::gmAccLib = 0;
@@ -124,9 +127,12 @@ LPFNLRESULTFROMOBJECT Accessible::gmLresultFromObject = 0;
 
 LPFNNOTIFYWINEVENT Accessible::gmNotifyWinEvent = 0;
 
+
+
 //-----------------------------------------------------
 // IAccessible methods
 //-----------------------------------------------------
+
 
 STDMETHODIMP Accessible::AccessibleObjectFromWindow(
   HWND hwnd,
@@ -202,7 +208,7 @@ STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispPa
   mAccessible->GetAccParent(getter_AddRefs(parent));
 
   if (parent) {
-    IAccessible* a = new Accessible(parent, mWnd);
+    IAccessible* a = NewAccessible(parent, nsnull, mWnd);
     a->AddRef();
     *ppdispParent = a;
     return S_OK;
@@ -253,7 +259,7 @@ STDMETHODIMP Accessible::get_accChild(
     }
       
     // create a new one.
-    IAccessible* ia = new Accessible(a, mWnd);
+    IAccessible* ia = NewAccessible(a, nsnull, mWnd);
     ia->AddRef();
     *ppdispChild = ia;
     return S_OK;
@@ -265,22 +271,23 @@ STDMETHODIMP Accessible::get_accChild(
 
 STDMETHODIMP Accessible::get_accName( 
       /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszValue)
+      /* [retval][out] */ BSTR __RPC_FAR *pszName)
 {
-  *pszValue = NULL;
+  *pszName = NULL;
   nsCOMPtr<nsIAccessible> a;
   GetNSAccessibleFor(varChild,a);
   if (a) {
-     nsXPIDLString name;
-     nsresult rv = a->GetAccName(getter_Copies(name));
+     nsAutoString name;
+     nsresult rv = a->GetAccName(name);
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszValue = ::SysAllocString(name.get());
+     *pszName = ::SysAllocString(name.GetUnicode());
   }
 
   return S_OK;
 }
+
 
 STDMETHODIMP Accessible::get_accValue( 
       /* [optional][in] */ VARIANT varChild,
@@ -290,12 +297,12 @@ STDMETHODIMP Accessible::get_accValue(
   nsCOMPtr<nsIAccessible> a;
   GetNSAccessibleFor(varChild,a);
   if (a) {
-     nsXPIDLString name;
-     nsresult rv = a->GetAccValue(getter_Copies(name));
+     nsAutoString value;
+     nsresult rv = a->GetAccValue(value);
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszValue = ::SysAllocString(name.get());
+     *pszValue = ::SysAllocString(value.GetUnicode());
   }
 
   return S_OK;
@@ -304,18 +311,18 @@ STDMETHODIMP Accessible::get_accValue(
 
 STDMETHODIMP Accessible::get_accDescription( 
       /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszValue)
+      /* [retval][out] */ BSTR __RPC_FAR *pszDescription)
 {
-  *pszValue = NULL;
+  *pszDescription = NULL;
   nsCOMPtr<nsIAccessible> a;
   GetNSAccessibleFor(varChild,a);
   if (a) {
-     nsXPIDLString name;
-     nsresult rv = a->GetAccDescription(getter_Copies(name));
+     nsAutoString description;
+     nsresult rv = a->GetAccDescription(description);
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszValue = ::SysAllocString(name.get());
+     *pszDescription = ::SysAllocString(description.GetUnicode());
   }
 
   return S_OK;
@@ -371,7 +378,8 @@ STDMETHODIMP Accessible::get_accHelp(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszHelp)
 {
-  return NULL;
+  *pszHelp = NULL;
+  return S_FALSE;
 }
 
 STDMETHODIMP Accessible::get_accHelpTopic( 
@@ -379,6 +387,8 @@ STDMETHODIMP Accessible::get_accHelpTopic(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ long __RPC_FAR *pidTopic)
 {
+  *pszHelpFile = NULL;
+  *pidTopic = 0;
   return S_FALSE;
 }
 
@@ -386,6 +396,7 @@ STDMETHODIMP Accessible::get_accKeyboardShortcut(
       /* [optional][in] */ VARIANT varChild,
       /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut)
 {
+  *pszKeyboardShortcut = NULL;
   return S_FALSE;
 }
 
@@ -398,7 +409,7 @@ STDMETHODIMP Accessible::get_accFocus(
   nsCOMPtr<nsIAccessible> focusedAccessible;
   if (NS_SUCCEEDED(mAccessible->GetAccFocused(getter_AddRefs(focusedAccessible)))) {
     pvarChild->vt = VT_DISPATCH;
-    pvarChild->pdispVal = new Accessible(focusedAccessible, mWnd);
+    pvarChild->pdispVal = NewAccessible(focusedAccessible, nsnull, mWnd);
     pvarChild->pdispVal->AddRef();
     return S_OK;
   }
@@ -422,12 +433,12 @@ STDMETHODIMP Accessible::get_accDefaultAction(
   nsCOMPtr<nsIAccessible> a;
   GetNSAccessibleFor(varChild,a);
   if (a) {
-     nsXPIDLString name;
-     nsresult rv = a->GetAccActionName(0,getter_Copies(name));
+     nsAutoString defaultAction;
+     nsresult rv = a->GetAccActionName(0,defaultAction);
      if (NS_FAILED(rv))
         return S_FALSE;
 
-     *pszDefaultAction = ::SysAllocString(name.get());
+     *pszDefaultAction = ::SysAllocString(defaultAction.GetUnicode());
   }
 
   return S_OK;
@@ -521,7 +532,7 @@ STDMETHODIMP Accessible::accNavigate(
   }
 
   if (acc) {
-     IAccessible* a = new Accessible(acc,mWnd);
+     IAccessible* a = NewAccessible(acc, nsnull, mWnd);
      a->AddRef();
      pvarEndUpAt->vt = VT_DISPATCH;
      pvarEndUpAt->pdispVal = a;
@@ -556,7 +567,7 @@ STDMETHODIMP Accessible::accHitTest(
       pvarChild->lVal = CHILDID_SELF;
     } else { // its not create an Accessible for it.
       pvarChild->vt = VT_DISPATCH;
-      pvarChild->pdispVal = new Accessible(a, mWnd);
+      pvarChild->pdispVal = NewAccessible(a, nsnull, mWnd);
       pvarChild->pdispVal->AddRef();
     }
   } else {
@@ -587,6 +598,7 @@ STDMETHODIMP Accessible::put_accValue(
 {
   return S_FALSE;
 }
+
 
 // For IDispatch support
 STDMETHODIMP 
@@ -619,7 +631,27 @@ STDMETHODIMP Accessible::Invoke(DISPID dispIdMember, REFIID riid,
   return E_NOTIMPL;
 }
 
+
+        
 //------- Helper methods ---------
+
+IAccessible *Accessible::NewAccessible(nsIAccessible *aNSAcc, nsIDOMNode *aNode, HWND aWnd)
+{
+  IAccessible *retval = nsnull;
+  if (aNSAcc) {
+    nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(aNSAcc));
+    if (accDoc) {
+      nsCOMPtr<nsIDocument> doc;
+      accDoc->GetDocument(getter_AddRefs(doc));
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(doc));
+      retval = new DocAccessible(aNSAcc, node, aWnd);
+    }
+    else 
+      retval = new Accessible(aNSAcc, aNode, aWnd);
+  }
+  return retval;
+}
+
 
 void Accessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
 {
@@ -661,49 +693,181 @@ void Accessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& a
   }  
 }
 
-//----- Root Accessible -----
 
-NS_IMPL_QUERY_INTERFACE1(RootAccessible, nsIAccessibleEventListener)
+
+//----- DocAccessible -----
+
+// Microsoft COM QueryInterface
+STDMETHODIMP DocAccessible::QueryInterface(REFIID iid, void** ppv)
+{
+  *ppv = NULL;
+
+  if (IID_IUnknown == iid || IID_IDispatch == iid || IID_ISimpleDOMDocument == iid)
+    *ppv = NS_STATIC_CAST(ISimpleDOMDocument*, this);
+ 
+  if (NULL == *ppv)
+    return Accessible::QueryInterface(iid,ppv);
+    
+  (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+  return S_OK;
+}
+
 
 NS_IMETHODIMP_(nsrefcnt) 
-RootAccessible::AddRef(void)
+DocAccessible::AddRef(void)
 {
   return Accessible::AddRef();
 }
-
+  
 NS_IMETHODIMP_(nsrefcnt) 
-RootAccessible::Release(void)
+DocAccessible::Release(void)
 {
   return Accessible::Release();
 }
 
-RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):Accessible(aAcc,aWnd)
 
+DocAccessible::DocAccessible(nsIAccessible* aAcc, nsIDOMNode *aNode, HWND aWnd):Accessible(aAcc,aNode,aWnd)
 {
-    mListCount = 0;
-    mNextId = -1;
-    mNextPos = 0;
+}
 
-    nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
-    if (r) 
-      r->AddAccessibleEventListener(this);
+DocAccessible::~DocAccessible()
+{
+}
+
+
+STDMETHODIMP DocAccessible::get_URL(/* [out] */ BSTR __RPC_FAR *aURL)
+{
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  if (accDoc) {
+    nsAutoString URL;
+    if (NS_SUCCEEDED(accDoc->GetURL(URL))) {
+      *aURL= ::SysAllocString(URL.GetUnicode());
+      return S_OK;
+    }
+  }
+  return S_FALSE;
+}
+
+STDMETHODIMP DocAccessible::get_title( /* [out] */ BSTR __RPC_FAR *aTitle)
+{
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  if (accDoc) {
+    nsAutoString title;
+    if (NS_SUCCEEDED(accDoc->GetTitle(title))) { // getter_Copies(pszTitle)))) {
+      *aTitle= ::SysAllocString(title.GetUnicode());
+      return S_OK;
+    }
+  }
+  return S_FALSE;
+}
+
+STDMETHODIMP DocAccessible::get_mimeType(/* [out] */ BSTR __RPC_FAR *aMimeType)
+{
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  if (accDoc) {
+    nsAutoString mimeType;
+    if (NS_SUCCEEDED(accDoc->GetMimeType(mimeType))) {
+      *aMimeType= ::SysAllocString(mimeType.GetUnicode());
+      return S_OK;
+    }
+  }
+  return S_FALSE;
+}
+
+STDMETHODIMP DocAccessible::get_docType(/* [out] */ BSTR __RPC_FAR *aDocType)
+{
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  if (accDoc) {
+    nsAutoString docType;
+    if (NS_SUCCEEDED(accDoc->GetDocType(docType))) {
+      *aDocType= ::SysAllocString(docType.GetUnicode());
+      return S_OK;
+    }
+  }
+  return S_FALSE;
+}
+
+STDMETHODIMP DocAccessible::get_nameSpaceURIForID(/* [in] */  short aNameSpaceID,
+  /* [out] */ BSTR __RPC_FAR *aNameSpaceURI)
+{
+  nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mAccessible));
+  if (accDoc) {
+    *aNameSpaceURI = NULL;
+    nsAutoString nameSpaceURI;
+    if (NS_SUCCEEDED(accDoc->GetNameSpaceURIForID(aNameSpaceID, nameSpaceURI))) 
+      *aNameSpaceURI = ::SysAllocString(nameSpaceURI.GetUnicode());
+    return S_OK;
+  }
+
+  return S_FALSE;
+}
+
+
+STDMETHODIMP DocAccessible::put_alternateViewMediaTypes( /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes)
+{
+  return S_FALSE;
+}
+
+//----- Root Accessible -----
+
+// XPCOM QueryInterface
+NS_IMPL_QUERY_INTERFACE1(RootAccessible, nsIAccessibleEventListener)
+
+// Microsoft COM QueryInterface
+STDMETHODIMP RootAccessible::QueryInterface(REFIID iid, void** ppv)
+{
+  *ppv = NULL;
+
+  if (IID_IUnknown == iid || IID_IDispatch == iid || IID_ISimpleDOMDocument == iid)
+    *ppv = NS_STATIC_CAST(ISimpleDOMDocument*, this);
+ 
+  if (NULL == *ppv)
+    return DocAccessible::QueryInterface(iid, ppv);
+    
+  (NS_REINTERPRET_CAST(IUnknown*, *ppv))->AddRef();
+  return S_OK;
+}
+
+
+NS_IMETHODIMP_(nsrefcnt) 
+RootAccessible::AddRef(void)
+{
+  return DocAccessible::AddRef();
+}
+  
+NS_IMETHODIMP_(nsrefcnt) 
+RootAccessible::Release(void)
+{
+  return DocAccessible::Release();
+}
+
+RootAccessible::RootAccessible(nsIAccessible* aAcc, HWND aWnd):DocAccessible(aAcc,nsnull,aWnd)
+{
+
+  mListCount = 0;
+  mNextId = -1;
+  mNextPos = 0;
+
+  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
+  if (r) 
+    r->AddAccessibleEventListener(this);
 }
 
 RootAccessible::~RootAccessible()
 {
-    nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
-    if (r) 
-      r->RemoveAccessibleEventListener(this);
+  nsCOMPtr<nsIAccessibleEventReceiver> r(do_QueryInterface(mAccessible));
+  if (r) 
+    r->RemoveAccessibleEventListener(this);
 
-    // free up accessibles
-    for (int i=0; i < mListCount; i++)
-      mList[i].mAccessible = nsnull;
+  // free up accessibles
+  for (int i=0; i < mListCount; i++)
+    mList[i].mAccessible = nsnull;
 }
 
 void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc)
 {
   aAcc = nsnull;
-  Accessible::GetNSAccessibleFor(varChild, aAcc);
+  DocAccessible::GetNSAccessibleFor(varChild, aAcc);
 
   if (aAcc)
     return;

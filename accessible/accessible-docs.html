@@ -8,6 +8,10 @@
 <h1>How the Accessible module (accessibility.dll) works</h1>
 <ul>
 <p>
+See also: 
+<a href="http://www.mozilla.org/projects/ui/accessibility/vendors-win.html">Gecko Info for Windows Accessibility Vendors</a>, a primer for vendors of 3rd party accessibility software, on how to use our MSAA and other relevant API's.
+</p>
+<p>
 The <a href="http://lxr.mozilla.org/seamonkey/source/accessible/">Accessible module</a> is where we implement support for the <a href="http://www.microsoft.com/enable/msaa/">Microsoft Active Accessibility (MSAA) API</a> 
 (<a href="http://bugzilla.mozilla.org/show_bug.cgi?id=12952">bug 12952</a>). 
 Support for Sun's <a href="http://www.sun.com/access/gnome/">Gnome Accessibility API</a> is part of our future plans as well.
@@ -70,8 +74,8 @@ checked, etc. </li>
     <li>get_accHelp: Get context sensitive help for the IAccessible.</li>
     <li>get_accHelpTopic: We don't use this, it's only if the Windows help system is used.</li>
     <li>get_accKeyboardShortcut: What is the keyboard shortcut for this IAccessible.</li>
-    <li>get_accFocus: Not sure, why aren't states used for this.</li>
-    <li>get_accSelection: Hmm...</li>
+    <li>get_accFocus: Which child is focused?</li>
+    <li>get_accSelection: Which children of this item are selected?</li>
     <li>get_accDefaultAction: Get a description or name of the default action for this component, such as "jump" for links.</li>
 
     <li>accSelect: Select the item associated with this IAccessible.</li>
@@ -83,49 +87,66 @@ checked, etc. </li>
     <li>put_accValue: Change the value.</li>
 </ul>
 </p>
-<p>
-Rather than directly implement IAccessible with an Accessible class, we have chosen to proxy to our own interface,
-called nsIAccessible, which is more robust. It has the capability of supporting other new accessibility API's such
-as Sun's Gnome Accessiblity API. Our nsIAccessible implementation can proxy further to a variety of classes, each specialized for a particular kind of 
-widget or data node. 
-</p>
-<ul>
-<li>IAccessible (MSAA) is implemented by Accessible, which proxies to nsIAccessible (Mozilla's API)</li>
-<li>IAccessible is also implemented by RootAccessible, representing the root IAccessible for a window, 
-and also proxies to an nsIAccessible. In this case nsIAccessible will be implemented by nsRootAccessible.</li>
 </ul>
+<h2>The Basics</h2>
+<ul>
 <p>
-The first thing  that happens when an accessibility aid wants to watch our application is it sends the main application
-window a <a href="http://lxr.mozilla.org/seamonkey/search?string=WM_GETOBJECT">WM_GETOBJECT</a> message requesting an IAccessible for the window. This event is received in mozilla/widget/src/windows/nsWindow.cpp.
+Rather than directly implement IAccessible with an Accessible class, we have chosen to proxy to our own cross-platform interface,
+called nsIAccessible, which is more robust. It has the capability of supporting other new accessibility API's such
+as Sun's Gnome Accessiblity API. The nsIAccessible interface is implemented by a variety of classes for each of the
+various objects in HTML. Each class is tailored to the specific abilities and properties of the HTML objects it applies to.
+</p>
+<p>
+The first thing that happens when an accessibility aid wants to watch our application is calls the Windows API function
+AccessibleObjectFromWindow(). This in turns sends the window in question
+a <a href="http://lxr.mozilla.org/seamonkey/search?string=WM_GETOBJECT">WM_GETOBJECT</a> message requesting an IAccessible for the window. 
+In our case, this event is received in mozilla/widget/src/windows/nsWindow.cpp.
 We send back an IAccessible interface that represents that root window. The accessibility aid will use
-that IAccessible to get at the rest of the tree, by asking for it's children IAccessibles, asking the children for the 
+that first IAccessible to reach rest of the IAccessible hierarchy, by asking for it's children IAccessibles, asking the children for the 
 grandchildren IAccessibles, and so on. Until this WM_GETOBJECT message is processed, the accessibility.dll is not loaded,
 so there is almost zero overhead for accessibility in Mozilla.
 </p>
+</ul>
+
+<h2>How the IAccessible's are Created</h2>
+<ul>
 <p>
-To create a RootAccessible IAccessible for the window we get a <a href="http://lxr.mozilla.org/seamonkey/search?string=WM_GETOBJECT">WM_GETOBJECT</a> message in, nsWindow.cpp first generates an internal event 
-called <a href="http://lxr.mozilla.org/seamonkey/search?string=NS_GETACCESSIBLE">NS_GETACCESSIBLE</a>, which is handled in nsFrame.cpp via the creation of an nsRootAccessible implementation of the nsIAccessible interface.
-Next the new RootAccessible is created. RootAccessible and Accessible  are both implemented 
+To create the root IAccessible for a window the first time it gets the <a href="http://lxr.mozilla.org/seamonkey/search?string=WM_GETOBJECT">WM_GETOBJECT</a> message in, 
+nsWindow.cpp first generates an internal event 
+called <a href="http://lxr.mozilla.org/seamonkey/search?string=NS_GETACCESSIBLE">NS_GETACCESSIBLE</a>, 
+which is handled in nsFrame.cpp via the creation of an nsRootAccessible implementation of the nsIAccessible interface.
+The first IAccessible is then created by instantiating a RootAccessible class. This RootAccessible is also cached by
+the nsWindow it's for, so that any additional WM_GETOBJECT messages use the same RootAccessible.
+The RootAccessible class used to implement IAccessible here is slightly different from the normal Accessible class
+that's used, in that it keeps track of event data.
+RootAccessible and Accessible  are both implemented 
 in <a href="http://lxr.mozilla.org/seamonkey/source/widget/source/windows/Accessible.cpp">
 mozilla/widget/src/windows/Accessible.cpp</a>).
 </P>
-
+</ul>
+<h2>The Real Power Behind IAccessible's</h2>
+<ul>
+<p>The implementations of IAccessible (Accessible and RootAccessible), don't know anything about Mozilla
+objects. They merely proxy to our cross platform accessibility classes, which all have an nsIAccessible interface.
+</h2>
 <p>
-The impementation for nsIAccessible knows how
+The base implementation for nsIAccessible is called nsAccessible. It has default implementations for all the
+nsIAccessible methods. It also knows how
 to walk Mozilla's content DOM and frame tree, exposing only the objects that are needed for accessibility. 
-Essentially, nsAccessible knows what it needs to expose by QueryInterfacing the DOM node's primary frame for 
-an nsIAccessible. If it gets one, it's considered an accessible object. A frame that wishes to return
-an nsIAccessible when QI'd for it, creates one of the correct type on the fly using nsIAccessibilityService.
+Essentially, nsAccessible knows what it needs to expose by asking each DOM node's primary frame for 
+an nsIAccessible, using the GetAccessible() method. If it gets one, it's considered an accessible object. 
+A frame that wishes to return
+an nsIAccessible GetAccessible() is called, creates one of the correct type on the fly using 
+nsIAccessibilityService methods built for that purpose.
 </p>
 <p>
 The specific implementations
-of nsIAccessible for each widget or content type inherit from nsGenericAccessible, which simply returns 
-NS_ERROR_NOT_IMPLEMENTED for every method. The specific implementation then overrides those methods
+of nsIAccessible for each widget or content type inherit from nsAccessible.
+Each implementation then overrides those methods
 it wishes to implement, and does nothing for those methods it wants the default behavior for.
 For example, the default behavior for nsIAccessible::getAccFirstChild is to
-instantial a nsDOMTreeWalker, and ask it for the first child. It doesn't need to do this, however, for images,
-because an implementation exists for nsHTMLImageAccessible::getAccFirstChild (returns the first image map area
-for the image if one exists).
+instantial a nsDOMTreeWalker, and ask it for the first child. However, nsImageAccessible overrides getAccFirstChild,
+returning the first area of an image map if there is one, otherwise nsnull.
 </p>
 
 </ul>
@@ -134,18 +155,22 @@ for the image if one exists).
 <p>
 When an accessibility-related event occurs within an application such as Mozilla, it must use NotifyWinEvent from
 the Win32 API. NotifyWinEvent is passed arguments for the window the event occured in, and the number of the child
-within that window. Accessibility aids use a WIN32 call to register as a listener for these events.
+within that window. Accessibility aids use the Win32 call SetWinEventHook() to register as a listener for these events.
 </p>
 <p>
-The accessibility aid is choose which events it is interested in learning more about by sending a window a WM_????
-event requesting the IAccessible to the node corresponding to the 
-child number that had been indicated from NotifyWinEvent. In Mozilla, this creates a problem. We cannot 
+The accessibility aid is choose which events it is interested in learning more about by using the Win32 API call 
+AccessibleObjectFromEvent, requesting the IAccessible to the node corresponding to the 
+child number that had been indicated from NotifyWinEvent(). This ends up asking our RootAccessible for the child
+IAccessible that matches the window handle and child id we indicated through NotofyWinEvent().
+</p>
+<p>
+In Mozilla, this creates a problem. We cannot 
 keep track of a child number for every important accessible node in a document. We deal with this by generating fake
 child IDs for the most recent accessibile events that we have generated, in a circular array.
 </p>
 <p>
 Since there is a RootAccessible for each top level window that might generate MSAA events, that's where we do the bookkeeping
-for these events and their nsIAccessible's. Whenever NotifyWinEvent is called, a new fake ID is generated (We use 
+for these events and their nsIAccessible's. Whenever NotifyWinEvent() is called, a new fake ID is generated (We use 
 negative numbers for the fake IDs). When the callback comes to request the IAccessible for that child number,
 we check the circular array for that ID, and voila, we have the corresponding nsIAccessible to proxy.
 </p>

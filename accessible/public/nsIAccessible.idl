@@ -26,29 +26,28 @@
 
 #include "nsISupports.idl"
 #include "nsIDOMNode.idl"
+#include "domstubs.idl"
 
 [scriptable, uuid(B26FBE47-9A5F-42a1-822B-082461AE4D6D)]
 interface nsIAccessible : nsISupports
 {
-  nsIAccessible getAccParent();
-  nsIAccessible getAccNextSibling();
-  nsIAccessible getAccPreviousSibling();
-  nsIAccessible getAccFirstChild();
-  nsIAccessible getAccLastChild();
+  readonly attribute nsIAccessible accParent;
+  readonly attribute nsIAccessible accNextSibling;
+  readonly attribute nsIAccessible accPreviousSibling;
+  readonly attribute nsIAccessible accFirstChild;
+  readonly attribute nsIAccessible accLastChild;
 
-  long getAccChildCount();
-  wstring getAccName();
-  wstring getAccValue();
-  void setAccName(in wstring name);
-  void setAccValue(in wstring value);
+  readonly attribute long accChildCount;
+  attribute DOMString accName;
+  readonly attribute DOMString accValue;
 
-  wstring getAccDescription();
-  unsigned long getAccRole();
-  unsigned long getAccState();
-  unsigned long getAccExtState();
+  readonly attribute DOMString accDescription;
+  readonly attribute unsigned long accRole;
+  readonly attribute unsigned long accState;
+  readonly attribute unsigned long accExtState;
 
-  wstring getAccHelp();
-  nsIAccessible getAccFocused();
+  readonly attribute DOMString accHelp;
+  readonly attribute nsIAccessible accFocused;
 
   nsIAccessible accGetAt(in long x, in long y);
 
@@ -68,8 +67,8 @@ interface nsIAccessible : nsISupports
   void accTakeSelection();
   void accTakeFocus();
 
-  PRUint8 getAccNumActions();
-  wstring getAccActionName(in PRUint8 index);
+  readonly attribute PRUint8 accNumActions;
+  DOMString getAccActionName(in PRUint8 index);
   void accDoAction(in PRUint8 index);   // Action number 0 is the default action
 
   nsIDOMNode accGetDOMNode();

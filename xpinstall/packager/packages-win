@@ -66,6 +66,8 @@ bin\mozctlx.dll
 bin\regxpcom.exe
 bin\xpicleanup.exe
 bin\res\cmessage.txt
+bin\components\accessibility.dll
+bin\components\accessibility.xpt
 bin\components\AcctIdl.dll
 bin\components\AcctIdl.xpt
 bin\components\appshell.xpt
@@ -238,6 +240,8 @@ bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
 bin\components\transformiix.xpt
 bin\components\transformiix.dll
+bin\ISimpleDOMNodeMarshal.dll
+bin\ISimpleDOMDocumentMarshal.dll
 
 ; chrome stuff
 bin\chrome\help.jar

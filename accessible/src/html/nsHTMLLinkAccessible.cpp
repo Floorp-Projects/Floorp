@@ -32,21 +32,24 @@
 #include "nsReadableUtils.h"
 #include "nsIDOMElement.h"
 
-nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode):
-nsLinkableAccessible(aShell, aDomNode)
+nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsLinkableAccessible(aDomNode, aShell)
 { 
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(PRUnichar **_retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAWritableString& _retval)
 { 
   if (!IsALink())  // Also initializes private data members
     return NS_ERROR_FAILURE;
 
-  nsAutoString nameString;
-  nsresult rv = AppendFlatStringFromSubtree(mLinkContent, &nameString);
-  nameString.CompressWhitespace();
-  *_retval = nameString.ToNewUnicode();
+  nsAutoString name;
+  nsresult rv = AppendFlatStringFromSubtree(mLinkContent, &name);
+  if (NS_SUCCEEDED(rv)) {
+    // Temp var needed until CompressWhitespace built for nsAWritableString
+    name.CompressWhitespace();
+    _retval.Assign(name);
+  }
   return rv;
 }
 
@@ -58,14 +61,10 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccValue(PRUnichar **_retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetAccValue(nsAWritableString& _retval)
 {
-  *_retval = 0;
-  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mNode));
-  if (elt) {
-    nsAutoString hrefString;
-    elt->GetAttribute(NS_LITERAL_STRING("href"), hrefString);
-    *_retval = hrefString.ToNewUnicode();
-  }
-  return NS_OK;
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+  if (elt) 
+    return elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
+  return NS_ERROR_FAILURE;;
 }

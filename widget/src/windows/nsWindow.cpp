@@ -3566,28 +3566,31 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
       case WM_GETOBJECT: 
       {
         if (lParam == OBJID_CLIENT) {
-          nsCOMPtr<nsIAccessible> acc;
-          DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
-
-          // create the COM accessible object
-          if (acc) 
-          {
-            HWND wnd = GetWindowHandle();
-            if (!mRootAccessible) {
+          if (!mRootAccessible) {
+            nsCOMPtr<nsIAccessible> acc;
+            DispatchAccessibleEvent(NS_GETACCESSIBLE, getter_AddRefs(acc));
+            // create the COM accessible object
+            if (acc) 
+            {
+              HWND wnd = GetWindowHandle();
                mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
                mRootAccessible->AddRef();
+               CoInitialize(NULL);
             }
+          }
+          if (mRootAccessible) {
             // ask accessible to do this do it loads the library dynamically
             LRESULT lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
             if (lAcc == 0) {
               *aRetValue = NULL;
               return PR_FALSE;
             }
-
             *aRetValue = lAcc;
             return PR_TRUE; // yes we handled it.
           }
         }
+        *aRetValue = NULL;
+        return PR_FALSE;
       }
       break;
 

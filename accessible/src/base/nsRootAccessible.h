@@ -26,17 +26,32 @@
 #include "nsAccessible.h"
 #include "nsIAccessibleEventReceiver.h"
 #include "nsIAccessibleEventListener.h"
+#include "nsIAccessibleDocument.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDocument.h"
 
+class nsDocAccessibleMixin
+{
+  public:
+    nsDocAccessibleMixin(nsIDocument *doc);
+    nsDocAccessibleMixin(nsIWeakReference *aShell);
+    virtual ~nsDocAccessibleMixin();
+
+    NS_DECL_NSIACCESSIBLEDOCUMENT
+
+  protected:
+    nsCOMPtr<nsIDocument> mDocument;
+};
+
 class nsRootAccessible : public nsAccessible,
+                         public nsDocAccessibleMixin,
+                         public nsIAccessibleDocument,
                          public nsIAccessibleEventReceiver,
                          public nsIDOMFocusListener,
                          public nsIDOMFormListener
 
 {
-  
   NS_DECL_ISUPPORTS_INHERITED
 
   public:
@@ -44,8 +59,8 @@ class nsRootAccessible : public nsAccessible,
     virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
-    NS_IMETHOD GetAccName(PRUnichar * *aAccName);
-    NS_IMETHOD GetAccValue(PRUnichar * *aAccValue);
+    NS_IMETHOD GetAccName(nsAWritableString& aAccName);
+    NS_IMETHOD GetAccValue(nsAWritableString& aAccValue);
     NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
 
@@ -68,17 +83,17 @@ class nsRootAccessible : public nsAccessible,
     NS_IMETHOD Select(nsIDOMEvent* aEvent);
     NS_IMETHOD Input(nsIDOMEvent* aEvent);
 
-protected:
-  virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
-  virtual nsIFrame* GetFrame();
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+    NS_DECL_NSIACCESSIBLEDOCUMENT
 
-  // not a com pointer. We don't own the listener
-  // it is the callers responsibility to remove the listener
-  // otherwise we will get into circular referencing problems
-  nsIAccessibleEventListener* mListener;
-  nsCOMPtr<nsIContent> mCurrentFocus;
-  nsCOMPtr<nsIDocument> mDocument;
+  protected:
+    virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
+    virtual nsIFrame* GetFrame();
+
+    // not a com pointer. We don't own the listener
+    // it is the callers responsibility to remove the listener
+    // otherwise we will get into circular referencing problems
+    nsIAccessibleEventListener* mListener;
+    nsCOMPtr<nsIContent> mCurrentFocus;
 };
 
 

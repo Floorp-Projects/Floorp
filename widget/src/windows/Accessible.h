@@ -37,15 +37,18 @@
 #include "nsCOMPtr.h"
 #include "nsIAccessible.h"
 #include "nsIAccessibleEventListener.h"
+#include "SimpleDOMNode.h"
+#include "nsIDOMElement.h"
+#include "nsIContent.h"
 
 #include "nsString.h"
 
 typedef LRESULT (STDAPICALLTYPE *LPFNNOTIFYWINEVENT)(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
 
-class Accessible : public IAccessible
+class Accessible : public SimpleDOMNode, public IAccessible
 {
   public: // construction, destruction
-    Accessible(nsIAccessible*, HWND aWin = 0);
+    Accessible(nsIAccessible*, nsIDOMNode*, HWND aWin = 0);
     virtual ~Accessible();
 
   public: // IUnknown methods - see iunknown.h for documentation
@@ -58,91 +61,92 @@ class Accessible : public IAccessible
 
   public: 
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accParent( 
-      /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent( 
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accChildCount( 
-      /* [retval][out] */ long __RPC_FAR *pcountChildren);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChildCount( 
+        /* [retval][out] */ long __RPC_FAR *pcountChildren);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accChild( 
-      /* [in] */ VARIANT varChild,
-      /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChild( 
+        /* [in] */ VARIANT varChild,
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accName( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszName);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accName( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszName);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accValue( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszValue);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accValue( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszValue);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accDescription( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszDescription);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accDescription( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszDescription);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accRole( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarRole);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accRole( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarRole);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accState( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarState);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accState( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarState);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accHelp( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszHelp);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accHelp( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszHelp);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accHelpTopic( 
-      /* [out] */ BSTR __RPC_FAR *pszHelpFile,
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ long __RPC_FAR *pidTopic);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accHelpTopic( 
+        /* [out] */ BSTR __RPC_FAR *pszHelpFile,
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ long __RPC_FAR *pidTopic);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accKeyboardShortcut( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accKeyboardShortcut( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accFocus( 
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accFocus( 
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accSelection( 
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarChildren);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accSelection( 
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChildren);
 
-  virtual /* [id][propget][hidden] */ HRESULT STDMETHODCALLTYPE get_accDefaultAction( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction);
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accDefaultAction( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction);
 
-  virtual /* [id][hidden] */ HRESULT STDMETHODCALLTYPE accSelect( 
-      /* [in] */ long flagsSelect,
-      /* [optional][in] */ VARIANT varChild);
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE accSelect( 
+        /* [in] */ long flagsSelect,
+        /* [optional][in] */ VARIANT varChild);
 
-  virtual /* [id][hidden] */ HRESULT STDMETHODCALLTYPE accLocation( 
-      /* [out] */ long __RPC_FAR *pxLeft,
-      /* [out] */ long __RPC_FAR *pyTop,
-      /* [out] */ long __RPC_FAR *pcxWidth,
-      /* [out] */ long __RPC_FAR *pcyHeight,
-      /* [optional][in] */ VARIANT varChild);
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE accLocation( 
+        /* [out] */ long __RPC_FAR *pxLeft,
+        /* [out] */ long __RPC_FAR *pyTop,
+        /* [out] */ long __RPC_FAR *pcxWidth,
+        /* [out] */ long __RPC_FAR *pcyHeight,
+        /* [optional][in] */ VARIANT varChild);
 
-  virtual /* [id][hidden] */ HRESULT STDMETHODCALLTYPE accNavigate( 
-      /* [in] */ long navDir,
-      /* [optional][in] */ VARIANT varStart,
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt);
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE accNavigate( 
+        /* [in] */ long navDir,
+        /* [optional][in] */ VARIANT varStart,
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt);
 
-  virtual /* [id][hidden] */ HRESULT STDMETHODCALLTYPE accHitTest( 
-      /* [in] */ long xLeft,
-      /* [in] */ long yTop,
-      /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE accHitTest( 
+        /* [in] */ long xLeft,
+        /* [in] */ long yTop,
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
 
-  virtual /* [id][hidden] */ HRESULT STDMETHODCALLTYPE accDoDefaultAction( 
-      /* [optional][in] */ VARIANT varChild);
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE accDoDefaultAction( 
+        /* [optional][in] */ VARIANT varChild);
 
-  virtual /* [id][propput][hidden] */ HRESULT STDMETHODCALLTYPE put_accName( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [in] */ BSTR szName);
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_accName( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [in] */ BSTR szName);
 
-  virtual /* [id][propput][hidden] */ HRESULT STDMETHODCALLTYPE put_accValue( 
-      /* [optional][in] */ VARIANT varChild,
-      /* [in] */ BSTR szValue);
+    virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_accValue( 
+        /* [optional][in] */ VARIANT varChild,
+        /* [in] */ BSTR szValue);
 
+  //   ======  Methods for IDispatch - for VisualBasic bindings (not implemented) ======
 
   STDMETHODIMP GetTypeInfoCount(UINT *p);
   STDMETHODIMP GetTypeInfo(UINT i, LCID lcid, ITypeInfo **ppti);
@@ -158,47 +162,77 @@ class Accessible : public IAccessible
   static STDMETHODIMP AccessibleObjectFromWindow(HWND hwnd,DWORD dwObjectID,REFIID riid,void **ppvObject);
   static STDMETHODIMP_(LRESULT) LresultFromObject(REFIID riid,WPARAM wParam,LPUNKNOWN pAcc);
   static STDMETHODIMP NotifyWinEvent(DWORD event,HWND hwnd,LONG idObjectType,LONG idObject);
-  
-  static ULONG g_cRef;              // the cum reference count of all instances
-    ULONG        m_cRef;              // the reference count
-    nsCOMPtr<nsIAccessible> mAccessible;
-    nsCOMPtr<nsIAccessible> mCachedChild;
-    HWND mWnd;
-    LONG mCachedIndex;
 
-    protected:
+protected:
+  nsCOMPtr<nsIAccessible> mAccessible;
 
-    virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
-    PRBool InState(const nsString& aStates, const char* aState);
-    STDMETHODIMP GetAttribute(const char* aName, VARIANT varChild, BSTR __RPC_FAR *aString);
+  nsCOMPtr<nsIAccessible> mCachedChild;
+  LONG mCachedIndex;
+
+  virtual void GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible>& aAcc);
+  IAccessible *Accessible::NewAccessible(nsIAccessible *aNSAcc, nsIDOMNode *aNode, HWND aWnd);
 
 private:
-    /// the accessible library and cached methods
-    static HINSTANCE gmAccLib;
-    static HINSTANCE gmUserLib;
-    static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
-    static LPFNLRESULTFROMOBJECT gmLresultFromObject;
-
-    static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
-
+  /// the accessible library and cached methods
+  static HINSTANCE gmAccLib;
+  static HINSTANCE gmUserLib;
+  static LPFNACCESSIBLEOBJECTFROMWINDOW gmAccessibleObjectFromWindow;
+  static LPFNLRESULTFROMOBJECT gmLresultFromObject;
+  static LPFNNOTIFYWINEVENT gmNotifyWinEvent;
 };
 
 class nsAccessibleEventMap
 {
 public:
-  nsCOMPtr<nsIAccessible> mAccessible;
   PRInt32 mId;
+  nsCOMPtr<nsIAccessible> mAccessible;
 };
+
+
+class DocAccessible: public Accessible, public ISimpleDOMDocument
+{
+public:
+    DocAccessible(nsIAccessible*, nsIDOMNode *, HWND aWin = 0);
+    virtual ~DocAccessible();
+
+    STDMETHODIMP_(ULONG) AddRef        ();
+    STDMETHODIMP      QueryInterface(REFIID, void**);
+    STDMETHODIMP_(ULONG) Release       ();
+
+
+    // ISimpleDOMDocument
+
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_URL( 
+        /* [out] */ BSTR __RPC_FAR *url);
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_title( 
+        /* [out] */ BSTR __RPC_FAR *title);
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_mimeType( 
+        /* [out] */ BSTR __RPC_FAR *mimeType);
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_docType( 
+        /* [out] */ BSTR __RPC_FAR *docType);
+    
+    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_nameSpaceURIForID( 
+        /* [in] */ short nameSpaceID,
+        /* [out] */ BSTR __RPC_FAR *nameSpaceURI);
+
+    virtual /* [id] */ HRESULT STDMETHODCALLTYPE put_alternateViewMediaTypes( 
+        /* [in] */ BSTR __RPC_FAR *commaSeparatedMediaTypes);
+        
+};
+
 
 #define MAX_LIST_SIZE 100
 
-class RootAccessible: public Accessible,
-                      public nsIAccessibleEventListener
+class RootAccessible: public DocAccessible, public nsIAccessibleEventListener
 {
 public:
     RootAccessible(nsIAccessible*, HWND aWin = 0);
     virtual ~RootAccessible();
 
+    STDMETHODIMP      QueryInterface(REFIID, void**);
     NS_DECL_ISUPPORTS
 
     // nsIAccessibleEventListener
@@ -214,7 +248,6 @@ private:
     PRInt32 mListCount;
     PRInt32 mNextId;
     PRInt32 mNextPos;
-
 };
 #endif
 

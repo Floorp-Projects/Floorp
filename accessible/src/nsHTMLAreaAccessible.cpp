@@ -33,23 +33,18 @@
 
 // --- area -----
 
-nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIPresShell *aPresShell, nsIDOMNode *aDomNode, nsIAccessible *aAccParent):
-nsGenericAccessible(), mPresShell(aPresShell), mDOMNode(aDomNode), mAccParent(aAccParent)
+nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aAccParent, nsIWeakReference* aShell):
+nsLinkableAccessible(aDomNode, aShell), mAccParent(aAccParent)
 { 
 }
 
 /* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(PRUnichar **_retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(nsAWritableString & _retval)
 {
-  *_retval = 0;
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
     nsAutoString hrefString;
-    elt->GetAttribute(NS_LITERAL_STRING("title"), hrefString);
-    if (!hrefString.IsEmpty()) {
-      *_retval = hrefString.ToNewUnicode();
-      return NS_OK;
-    }
+    elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
   }
   return NS_OK;
 }
@@ -62,84 +57,24 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccRole(PRUint32 *_retval)
 }
 
 /* wstring getAccValue (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccValue(PRUnichar **_retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetAccValue(nsAWritableString& _retval)
 {
-  *_retval = 0;
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
-  if (elt) {
-    nsAutoString hrefString;
-    elt->GetAttribute(NS_LITERAL_STRING("href"), hrefString);
-    *_retval = hrefString.ToNewUnicode();
-  }
+  if (elt) 
+    elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
   return NS_OK;
 }
 
 /* wstring getAccDescription (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccDescription(PRUnichar **_retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetAccDescription(nsAWritableString& _retval)
 {
   // Still to do - follow IE's standard here
-  *_retval = 0;
-  nsAutoString shapeString;
   nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mDOMNode));
-  if (area) {
-    area->GetShape(shapeString);
-    if (!shapeString.IsEmpty())
-      *_retval = ToNewUnicode(shapeString);
-  }
+  if (area) 
+    area->GetShape(_retval);
   return NS_OK;
 }
 
-
-/* PRUint8 getAccNumActions (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccNumActions(PRUint8 *_retval)
-{
-  *_retval = 1;
-  return NS_OK;
-}
-
-/* wstring getAccActionName (in PRUint8 index); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccActionName(PRUint8 index, PRUnichar **_retval)
-{
-  if (index == 0) {
-    *_retval = ToNewUnicode(NS_LITERAL_STRING("jump"));
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* void accDoAction (in PRUint8 index); */
-NS_IMETHODIMP nsHTMLAreaAccessible::AccDoAction(PRUint8 index)
-{
-  if (index == 0) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mPresShell->GetPresContext(getter_AddRefs(presContext));
-    if (presContext) {
-      nsMouseEvent linkClickEvent;
-      linkClickEvent.eventStructType = NS_EVENT;
-      linkClickEvent.message = NS_MOUSE_LEFT_CLICK;
-      linkClickEvent.isShift = PR_FALSE;
-      linkClickEvent.isControl = PR_FALSE;
-      linkClickEvent.isAlt = PR_FALSE;
-      linkClickEvent.isMeta = PR_FALSE;
-      linkClickEvent.clickCount = 0;
-      linkClickEvent.widget = nsnull;
-
-      nsEventStatus eventStatus =  nsEventStatus_eIgnore;
-      nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-      content->HandleDOMEvent(presContext, &linkClickEvent, 
-        nsnull, NS_EVENT_FLAG_INIT, &eventStatus);
-      return NS_OK;
-    }
-    return NS_ERROR_FAILURE;
-  }
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccState(PRUint32 *_retval) 
-{
-  *_retval = STATE_LINKED | STATE_FOCUSABLE | STATE_READONLY;
-  return NS_OK;
-}
 
 /* nsIAccessible getAccFirstChild (); */
 NS_IMETHODIMP nsHTMLAreaAccessible::GetAccFirstChild(nsIAccessible **_retval)
@@ -172,8 +107,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccParent(nsIAccessible * *aAccParent)
 
 nsIAccessible *nsHTMLAreaAccessible::CreateAreaAccessible(nsIDOMNode *aDOMNode)
 {
-  nsresult rv;
-  NS_WITH_SERVICE(nsIAccessibilityService, accService, "@mozilla.org/accessibilityService;1", &rv);
+  nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   if (accService) {
     nsIAccessible* acc = nsnull;
     accService->CreateHTMLAreaAccessible(mPresShell, aDOMNode, mAccParent, &acc);

@@ -24,19 +24,27 @@
 #define _nsIFrameRootAccessible_H_
 
 #include "nsRootAccessible.h"
-#include "nsGenericAccessible.h"
+#include "nsAccessible.h"
+#include "nsIAccessibleDocument.h"
 
 class nsIWebShell;
+class nsIWeakReference;
 
-class nsHTMLIFrameAccessible : public nsDOMAccessible
+class nsHTMLIFrameAccessible : public nsHTMLBlockAccessible, 
+                               public nsIAccessibleDocument,
+                               public nsDocAccessibleMixin
 {
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_NSIACCESSIBLEDOCUMENT
+
   public:
-    nsHTMLIFrameAccessible(nsIPresShell* aShell, nsIDOMNode* aNode, nsIAccessible* aRoot);
+    nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *doc);
 
     NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
     NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
     NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-    NS_IMETHOD GetAccName(PRUnichar * *aAccName);
+    NS_IMETHOD GetAccName(nsAWritableString& aAccName);
+    NS_IMETHOD GetAccValue(nsAWritableString& AccValue);
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
 
   protected:
@@ -45,9 +53,10 @@ class nsHTMLIFrameAccessible : public nsDOMAccessible
 
 class nsHTMLIFrameRootAccessible : public nsRootAccessible
 {
-  
+  NS_DECL_ISUPPORTS_INHERITED
+
   public:
-    nsHTMLIFrameRootAccessible(nsIWeakReference* aShell, nsIDOMNode* aNode);
+    nsHTMLIFrameRootAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
     virtual ~nsHTMLIFrameRootAccessible();
 
     /* attribute wstring accName; */
@@ -59,15 +68,9 @@ class nsHTMLIFrameRootAccessible : public nsRootAccessible
     /* nsIAccessible getAccPreviousSibling (); */
     NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
 
-    NS_IMETHOD GetAccName(PRUnichar * *aAccName);
-
-    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
-
   protected:
-
-  NS_IMETHOD GetHTMLIFrameAccessible(nsIAccessible** aAcc);
-
-  nsCOMPtr<nsIDOMNode> mRealDOMNode;
+    NS_IMETHOD GetHTMLIFrameAccessible(nsIAccessible** aAcc);
+    nsCOMPtr<nsIDOMNode> mRealDOMNode;
 };
 
 

@@ -24,20 +24,20 @@
 #ifndef _nsHTMLTableAccessible_H_
 #define _nsHTMLTableAccessible_H_
 
-#include "nsGenericAccessible.h"
+#include "nsAccessible.h"
 
-class nsHTMLTableCellAccessible : public nsDOMAccessible
+class nsHTMLTableCellAccessible : public nsHTMLBlockAccessible
 {
 public:
-  nsHTMLTableCellAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode);
+  nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };
 
 
-class nsHTMLTableAccessible : public nsDOMAccessible
+class nsHTMLTableAccessible : public nsHTMLBlockAccessible
 {
 public:
-  nsHTMLTableAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode);
+  nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
 };
 

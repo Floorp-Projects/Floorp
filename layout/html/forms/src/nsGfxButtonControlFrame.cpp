@@ -31,6 +31,7 @@
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
+#include "nsLayoutAtoms.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 
@@ -120,6 +121,14 @@ NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
       
+NS_IMETHODIMP
+nsGfxButtonControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::gfxButtonControlFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
 
 PRBool
 nsGfxButtonControlFrame::IsReset(PRInt32 type)

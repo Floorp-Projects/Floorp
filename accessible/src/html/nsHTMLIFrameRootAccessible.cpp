@@ -30,19 +30,55 @@
 #include "nsIDocShell.h"
 #include "nsIWebShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIXULDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
+#include "nsINameSpaceManager.h"
 #include "nsReadableUtils.h"
 
+NS_INTERFACE_MAP_BEGIN(nsHTMLIFrameRootAccessible)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFormListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
+NS_INTERFACE_MAP_END_INHERITING(nsRootAccessible)
 
-nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIPresShell* aShell, nsIDOMNode* aNode, nsIAccessible* aRoot):
-  nsDOMAccessible(aShell, aNode)
+NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
+NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameRootAccessible, nsRootAccessible);
+
+NS_IMPL_ADDREF_INHERITED(nsHTMLIFrameAccessible, nsHTMLBlockAccessible);
+NS_IMPL_RELEASE_INHERITED(nsHTMLIFrameAccessible, nsHTMLBlockAccessible);
+
+
+NS_IMETHODIMP
+nsHTMLIFrameAccessible::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  mRootAccessible = aRoot;
+  NS_ASSERTION(aInstancePtr, "QueryInterface requires a non-NULL destination!");
+  if ( !aInstancePtr )
+    return NS_ERROR_NULL_POINTER;
+  if (aIID.Equals(NS_GET_IID(nsIAccessibleDocument))) {
+    *aInstancePtr = (void*)(nsIAccessibleDocument*) this;
+    NS_IF_ADDREF(this);
+    return NS_OK;
+  }
+  return nsHTMLBlockAccessible::QueryInterface(aIID, aInstancePtr); 
+}
+
+
+nsHTMLIFrameAccessible::nsHTMLIFrameAccessible(nsIDOMNode* aNode, nsIAccessible* aRoot, nsIWeakReference* aShell, nsIDocument *aDoc):
+  nsHTMLBlockAccessible(aNode, aShell), mRootAccessible(aRoot), nsDocAccessibleMixin(aDoc)
+{
 }
 
   /* attribute wstring accName; */
-NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccName(PRUnichar * *aAccName) 
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccName(nsAWritableString& aAccName) 
 { 
-  return mRootAccessible->GetAccName(aAccName);
+  return GetTitle(aAccName);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccValue(nsAWritableString& aAccValue) 
+{ 
+  return GetURL(aAccValue);
 }
 
 /* nsIAccessible getAccFirstChild (); */
@@ -66,13 +102,51 @@ NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccChildCount(PRInt32 *_retval)
 /* unsigned long getAccRole (); */
 NS_IMETHODIMP nsHTMLIFrameAccessible::GetAccRole(PRUint32 *_retval)
 {
-  return mRootAccessible->GetAccRole(_retval);
+  *_retval = ROLE_PANE;
+  return NS_OK;
 }
+
+// ------- nsIAccessibleDocument Methods (5) ---------------
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetURL(nsAWritableString& aURL)
+{
+  return nsDocAccessibleMixin::GetURL(aURL);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetTitle(nsAWritableString& aTitle)
+{
+  return nsDocAccessibleMixin::GetTitle(aTitle);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetMimeType(nsAWritableString& aMimeType)
+{
+  return nsDocAccessibleMixin::GetMimeType(aMimeType);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetDocType(nsAWritableString& aDocType)
+{
+  return nsDocAccessibleMixin::GetDocType(aDocType);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAWritableString& aNameSpaceURI)
+{
+  return nsDocAccessibleMixin::GetNameSpaceURIForID(aNameSpaceID, aNameSpaceURI);
+}
+
+NS_IMETHODIMP nsHTMLIFrameAccessible::GetDocument(nsIDocument **doc)
+{
+  return nsDocAccessibleMixin::GetDocument(doc);
+}
+
+//=============================//
+// nsHTMLIFrameRootAccessible  //
+//=============================//
+
 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIWeakReference* aShell, nsIDOMNode* aNode):
+nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
   nsRootAccessible(aShell)
 {
   mRealDOMNode = aNode;
@@ -83,23 +157,6 @@ nsHTMLIFrameRootAccessible::nsHTMLIFrameRootAccessible(nsIWeakReference* aShell,
 //-----------------------------------------------------
 nsHTMLIFrameRootAccessible::~nsHTMLIFrameRootAccessible()
 {
-}
-  /* attribute wstring accName; */
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccName(PRUnichar * *aAccName) 
-{ 
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  nsCOMPtr<nsIDocument> document;
-  if (shell)
-    shell->GetDocument(getter_AddRefs(document));
-  if (document) {
-    const nsString* docTitle = document->GetDocumentTitle();
-    if (docTitle && !docTitle->IsEmpty()) {
-      *aAccName = docTitle->ToNewUnicode();
-      return NS_OK;
-    }
-  }
-  *aAccName = ToNewUnicode(NS_LITERAL_STRING("Frame"));
-  return NS_OK;  
 }
 
   /* readonly attribute nsIAccessible accParent; */
@@ -137,18 +194,16 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccPreviousSibling(nsIAccessible **
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetAccRole(PRUint32 *_retval)
-{
-  *_retval = ROLE_PANE;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetHTMLIFrameAccessible(nsIAccessible** aAcc)
 {
   // Start by finding our PresShell and from that
   // we get our nsIDocShell in order to walk the DocShell tree
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mPresShell));
+  if (!presShell) {
+     *aAcc = nsnull;
+     return NS_ERROR_FAILURE;  
+  }
+
   nsCOMPtr<nsIDocShell> docShell;
   if (NS_SUCCEEDED(GetDocShellFromPS(presShell, getter_AddRefs(docShell)))) {
     // Now that we have the DocShell QI 
@@ -183,7 +238,7 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetHTMLIFrameAccessible(nsIAccessible*
               // OK, we found the content node in the parent doc
               // that corresponds to this sub-doc
               // Get the frame for that content
-              nsCOMPtr<nsIWeakReference> wr(getter_AddRefs(NS_GetWeakReference(parentPresShell)));
+              nsCOMPtr<nsIWeakReference> wr = do_GetWeakReference(parentPresShell);
               nsIFrame* frame = nsnull;
               parentPresShell->GetPrimaryFrameFor(content, &frame);
 #ifdef NS_DEBUG_X
@@ -200,7 +255,7 @@ NS_IMETHODIMP nsHTMLIFrameRootAccessible::GetHTMLIFrameAccessible(nsIAccessible*
               nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
               nsCOMPtr<nsIAccessible> acc(do_QueryInterface(frame));
 
-              *aAcc = CreateNewAccessible(acc, node, wr);
+              *aAcc = acc;
               NS_IF_ADDREF(*aAcc);
 
               return NS_OK;

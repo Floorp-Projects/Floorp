@@ -20,6 +20,6 @@
 # Contributor(s): 
 DEPTH=..\..
 
-DIRS=xpwidgets windows support build
+DIRS=xpwidgets windows\expose windows support build
 
 include <$(DEPTH)\config\rules.mak>

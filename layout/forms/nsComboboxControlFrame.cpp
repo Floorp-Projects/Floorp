@@ -22,6 +22,7 @@
  */
 #include "nsCOMPtr.h"
 #include "nsComboboxControlFrame.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIFrameManager.h"
 #include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
@@ -52,7 +53,6 @@
 #include "nsISelectControlFrame.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
-#include "nsIDOMMouseListener.h"
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
 #include "nsCSSFrameConstructor.h"
@@ -66,7 +66,6 @@
 #include "nsIAccessibilityService.h"
 #include "nsIServiceManager.h"
 #include "nsIDOMNode.h"
-
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -97,6 +96,44 @@ static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
 const char * kMozDropdownActive = "-moz-dropdown-active";
 
 const PRInt32 kSizeNotSet = -1;
+
+/**
+ * Helper class that listens to the combo boxes button. If the button is pressed the 
+ * combo box is toggled to open or close. this is used by Accessibility which presses
+ * that button Programmatically.
+ */
+class nsComboButtonListener: public nsIDOMMouseListener
+{
+  public:
+
+  NS_DECL_ISUPPORTS
+  NS_IMETHOD HandleEvent(nsIDOMEvent* anEvent) { return PR_FALSE; }
+  NS_IMETHOD MouseDown(nsIDOMEvent* aMouseEvent) { return PR_FALSE; }
+  NS_IMETHOD MouseUp(nsIDOMEvent* aMouseEvent) { return PR_FALSE; }
+  NS_IMETHOD MouseDblClick(nsIDOMEvent* aMouseEvent) { return PR_FALSE; }
+  NS_IMETHOD MouseOver(nsIDOMEvent* aMouseEvent) { return PR_FALSE; }
+  NS_IMETHOD MouseOut(nsIDOMEvent* aMouseEvent) { return PR_FALSE; }
+
+  NS_IMETHOD MouseClick(nsIDOMEvent* aMouseEvent) 
+  {
+    PRBool isDroppedDown;
+    mComboBox->IsDroppedDown(&isDroppedDown);
+    mComboBox->ShowDropDown(!isDroppedDown);
+    return PR_FALSE; 
+  }
+
+  nsComboButtonListener(nsComboboxControlFrame* aCombobox) 
+  { 
+    mComboBox = aCombobox; 
+    NS_INIT_ISUPPORTS(); 
+  }
+
+  virtual ~nsComboButtonListener() {}
+
+  nsComboboxControlFrame* mComboBox;
+};
+
+NS_IMPL_ISUPPORTS1(nsComboButtonListener, nsIDOMMouseListener)
 
 // static class data member for Bug 32920
 nsComboboxControlFrame * nsComboboxControlFrame::mFocused = nsnull;
@@ -316,7 +353,7 @@ NS_IMETHODIMP nsComboboxControlFrame::GetAccessible(nsIAccessible** aAccessible)
 
   if (accService) {
     nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateHTMLSelectAccessible(nsLayoutAtoms::popupList, node, mPresContext, aAccessible);
+    return accService->CreateHTMLSelectAccessible(node, mPresContext, aAccessible);
   }
 
   return NS_ERROR_FAILURE;
@@ -2272,6 +2309,14 @@ nsComboboxControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
       if (NS_SUCCEEDED(result)) {
         nsCOMPtr<nsIHTMLContent> btnContent(do_QueryInterface(content));
         if (btnContent) {
+          // make someone to listen to the button. If its pressed by someone like Accessibility
+          // then open or close the combo box.
+          nsCOMPtr<nsIDOMEventReceiver> eventReceiver(do_QueryInterface(content));
+          if (eventReceiver) {
+             mButtonListener = new nsComboButtonListener(this);
+             eventReceiver->AddEventListenerByIID(mButtonListener, NS_GET_IID(nsIDOMMouseListener));
+          }
+
           btnContent->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, NS_ConvertASCIItoUCS2("button"), PR_FALSE);
           aChildList.AppendElement(btnContent);
         }

@@ -41,9 +41,13 @@ CPPSRCS   = \
     nsHTMLImageAccessible.cpp \
     nsHTMLAreaAccessible.cpp \
     nsHTMLLinkAccessible.cpp \
-    nsSelectAccessible.cpp \
+    nsHTMLSelectAccessible.cpp \
     nsGenericAccessible.cpp \
     $(NULL)
+
+EXPORTS = \
+  nsRootAccessible.h \
+  $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
 FORCE_STATIC_LIB = 1

@@ -24,7 +24,7 @@
 #ifndef _nsHTMLImageAccessible_H_
 #define _nsHTMLImageAccessible_H_
 
-#include "nsGenericAccessible.h"
+#include "nsAccessible.h"
 #include "nsIFrame.h"
 #include "nsIImageFrame.h"
 #include "nsIDOMHTMLMapElement.h"
@@ -38,8 +38,8 @@ class nsHTMLImageAccessible : public nsLinkableAccessible
 {
 
 public:
-  nsHTMLImageAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode, nsIImageFrame *imageFrame);
-  NS_IMETHOD GetAccName(PRUnichar **_retval); 
+  nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIImageFrame *imageFrame, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccName(nsAWritableString& _retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
@@ -48,7 +48,6 @@ public:
 protected:
   nsIAccessible *CreateAreaAccessible(PRUint32 areaNum);
   nsCOMPtr<nsIDOMHTMLMapElement> mMapElement;
-  nsCOMPtr<nsIPresShell> mPresShell;
 };
 
 #endif  

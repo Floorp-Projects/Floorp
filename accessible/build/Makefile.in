@@ -39,14 +39,13 @@ CPPSRCS		= nsAccessibilityFactory.cpp
 LOCAL_INCLUDES	= -I$(srcdir)/../src
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libaccessibility_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libchrome_s.$(LIB_SUFFIX) \
-		$(NULL)
+    $(DIST)/lib/libaccessibility_s.$(LIB_SUFFIX) \
+    $(NULL)
 
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		-lgkgfx \
-		$(NULL)
+EXTRA_DSO_LDOPTS =           \
+    $(MOZ_COMPONENT_LIBS)    \
+    -lgkgfx                  \
+    $(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
