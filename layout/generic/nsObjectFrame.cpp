@@ -110,6 +110,7 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIFocusController.h"
 #include "nsPIDOMWindow.h"
+#include "nsContentUtils.h"
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
