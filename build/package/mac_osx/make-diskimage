@@ -97,7 +97,9 @@ if [ ! -z ${DMG_BKGND_IMG} ]; then
 fi
 
 # make the top window open itself on mount:
-/usr/local/bin/openUp ${MOUNT_DIR}
+if [ -x /usr/local/bin/openUp ]; then
+    /usr/local/bin/openUp ${MOUNT_DIR}
+fi
 
 # unmnount
 echo "unmounting disk image"
