@@ -97,15 +97,19 @@ protected:
 
 
 #define ImageFrameSuper nsLeafFrame
-class ImageFrame : public ImageFrameSuper {
+class nsImageFrame : public ImageFrameSuper {
 public:
-  ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
+  nsImageFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
+  NS_IMETHOD Reflow(nsIPresContext&          aPresContext,
+                    nsHTMLReflowMetrics&     aDesiredSize,
+                    const nsHTMLReflowState& aReflowState,
+                    nsReflowStatus&          aStatus);
   NS_METHOD HandleEvent(nsIPresContext& aPresContext,
                         nsGUIEvent* aEvent,
                         nsEventStatus& aEventStatus);
@@ -118,7 +122,7 @@ public:
                               PRInt32 aHint);
 
 protected:
-  virtual ~ImageFrame();
+  virtual ~nsImageFrame();
   void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
@@ -127,16 +131,13 @@ protected:
 
   nsIImageMap* GetImageMap();
 
-  nsHTMLImageLoader mImageLoader;
-  nsIImageMap* mImageMap;
-  PRBool mSizeFrozen;
-
   void TriggerLink(nsIPresContext& aPresContext,
                    const nsString& aURLSpec,
                    const nsString& aTargetSpec,
                    PRBool aClick);
 
   PRBool IsServerImageMap();
+
   PRIntn GetSuppress();
 
   nscoord MeasureString(const PRUnichar*     aString,
@@ -153,6 +154,14 @@ protected:
   void DisplayAltFeedback(nsIPresContext&      aPresContext,
                           nsIRenderingContext& aRenderingContext,
                           PRInt32              aIconId);
+
+  void GetInnerArea(nsIPresContext* aPresContext,
+                    nsRect& aInnerArea) const;
+
+  nsHTMLImageLoader mImageLoader;
+  nsIImageMap* mImageMap;
+  PRBool mSizeFrozen;
+  nsMargin mBorderPadding;
 };
 
 #endif /* nsHTMLImage_h___ */
