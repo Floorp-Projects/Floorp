@@ -44,8 +44,11 @@
 
 #include <stdio.h>
 
+#include "nsXPCOM.h"
+#include "nsCOMPtr.h"
 #include "nsISample.h"
 #include "nsIServiceManager.h"
+#include "nsIComponentManager.h"
 #include "nsIComponentRegistrar.h"
 
 #ifdef XPCOM_GLUE

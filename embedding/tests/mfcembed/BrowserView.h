@@ -97,14 +97,14 @@ public:
     void UpdateBusyState(PRBool aBusy);
     PRBool mbDocumentLoading;
 
-    void SetCtxMenuLinkUrl(nsAutoString& strLinkUrl);
-    nsAutoString mCtxMenuLinkUrl;
+    void SetCtxMenuLinkUrl(nsEmbedString& strLinkUrl);
+    nsEmbedString mCtxMenuLinkUrl;
 
-    void SetCtxMenuImageSrc(nsAutoString& strImgSrc);
-    nsAutoString mCtxMenuImgSrc;
+    void SetCtxMenuImageSrc(nsEmbedString& strImgSrc);
+    nsEmbedString mCtxMenuImgSrc;
 
-    void SetCurrentFrameURL(nsAutoString& strCurrentFrameURL);
-    nsString mCtxMenuCurrentFrameURL;
+    void SetCurrentFrameURL(nsEmbedString& strCurrentFrameURL);
+    nsEmbedString mCtxMenuCurrentFrameURL;
 
     inline void ClearFindDialog() { m_pFindDlg = NULL; }
     CFindDialog* m_pFindDlg;

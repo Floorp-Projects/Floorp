@@ -73,8 +73,5 @@ interface nsISupports {
 
 %{C++
 #include "nsISupportsBase.h"
-
-#ifndef MOZILLA_STRICT_API
 #include "nsISupportsUtils.h"
-#endif
 %}

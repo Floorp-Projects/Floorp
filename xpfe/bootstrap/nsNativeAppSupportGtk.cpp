@@ -39,10 +39,15 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#ifdef XPCOM_GLUE
+#include "nsStringSupport.h"
+#else
+#include "nsString.h"
+#endif
+
 #include "nsNativeAppSupportBase.h"
 #include "gdk/gdk.h"
 #include "prenv.h"
-#include "nsString.h"
 #ifdef MOZ_XUL_APP
 extern char* splash_xpm[];
 #else

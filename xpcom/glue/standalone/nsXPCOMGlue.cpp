@@ -40,8 +40,11 @@
 
 #include "nspr.h"
 #include "nsMemory.h"
+#include "nsDebug.h"
+#include "nsIServiceManager.h"
 #include "nsGREDirServiceProvider.h"
 #include "nsXPCOMPrivate.h"
+#include "nsCOMPtr.h"
 #include <stdlib.h>
 
 #if XP_WIN32

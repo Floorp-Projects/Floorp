@@ -31,13 +31,13 @@
  * ***** END LICENSE BLOCK ***** */
  
 #include "winEmbedFileLocProvider.h"
+#include "nsXPCOM.h"
 #include "nsXPCOMGlue.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsILocalFile.h"
-#include "nsString.h"
-#include "nsXPIDLString.h"
-
+#include "nsIProperties.h"
+#include "nsIServiceManagerUtils.h"
 
 #include <windows.h>
 #include <shlobj.h>
@@ -45,17 +45,17 @@
  
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
-#define APP_REGISTRY_NAME NS_LITERAL_CSTRING("registry.dat")
+#define APP_REGISTRY_NAME nsEmbedCString("registry.dat")
 
-#define PROFILE_ROOT_DIR_NAME       NS_LITERAL_CSTRING("Profiles")
-#define DEFAULTS_DIR_NAME           NS_LITERAL_CSTRING("defaults")
-#define DEFAULTS_PREF_DIR_NAME      NS_LITERAL_CSTRING("pref")
-#define DEFAULTS_PROFILE_DIR_NAME   NS_LITERAL_CSTRING("profile")
-#define RES_DIR_NAME                NS_LITERAL_CSTRING("res")
-#define CHROME_DIR_NAME             NS_LITERAL_CSTRING("chrome")
-#define PLUGINS_DIR_NAME            NS_LITERAL_CSTRING("plugins")
-#define SEARCH_DIR_NAME             NS_LITERAL_CSTRING("searchplugins")
-#define COMPONENTS_DIR_NAME         NS_LITERAL_CSTRING("components")
+#define PROFILE_ROOT_DIR_NAME       nsEmbedCString("Profiles")
+#define DEFAULTS_DIR_NAME           nsEmbedCString("defaults")
+#define DEFAULTS_PREF_DIR_NAME      nsEmbedCString("pref")
+#define DEFAULTS_PROFILE_DIR_NAME   nsEmbedCString("profile")
+#define RES_DIR_NAME                nsEmbedCString("res")
+#define CHROME_DIR_NAME             nsEmbedCString("chrome")
+#define PLUGINS_DIR_NAME            nsEmbedCString("plugins")
+#define SEARCH_DIR_NAME             nsEmbedCString("searchplugins")
+#define COMPONENTS_DIR_NAME         nsEmbedCString("components")
 
 //*****************************************************************************
 // winEmbedFileLocProvider::Constructor/Destructor

@@ -74,8 +74,6 @@
  and release them.
 */
 
-#include "nsString.h"
-
 #define NS_APPSTARTUPNOTIFIER_CONTRACTID "@mozilla.org/embedcomp/appstartup-notifier;1"
 #define NS_APPSTARTUPNOTIFIER_CLASSNAME  "AppStartup Notifier"
 
@@ -92,4 +90,3 @@
 */
 
 #endif /* nsIAppStartupNotifier_h___ */
-

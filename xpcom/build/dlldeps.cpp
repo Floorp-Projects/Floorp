@@ -88,9 +88,7 @@
 #include "nsVariant.h"
 #include "nsEscape.h"
 #include "nsStreamUtils.h"
-
-#define NS_STRINGAPI_IMPL
-#include "nsStringAPI.h"
+#include "nsNativeCharsetUtils.h"
 
 void XXXNeverCalled()
 {
@@ -175,20 +173,6 @@ void XXXNeverCalled()
     NS_NewUTF8StringEnumerator(nsnull, &carray);
     NS_NewAdoptingUTF8StringEnumerator(nsnull, &carray);
     nsVoidableString str3;
-    nsCStringContainer sc1;
-    NS_CStringContainerInit(sc1);
-    NS_CStringContainerFinish(sc1);
-    NS_CStringGetData(str2, nsnull, nsnull);
-    NS_CStringSetData(str2, nsnull, 0);
-    NS_CStringSetDataRange(str2, 0, 0, nsnull, 0);
-    NS_CStringCopy(str2, str2);
-    nsStringContainer sc2;
-    NS_StringContainerInit(sc2);
-    NS_StringContainerFinish(sc2);
-    NS_StringGetData(str1, nsnull, nsnull);
-    NS_StringSetData(str1, nsnull, 0);
-    NS_StringSetDataRange(str1, 0, 0, nsnull, 0);
-    NS_StringCopy(str1, str1);
     {
       nsAdoptingCString foo, bar;
       foo = bar;
@@ -197,6 +181,6 @@ void XXXNeverCalled()
       nsAdoptingString foo, bar;
       foo = bar;
     }
-    NS_UTF16ToCString(str1, NS_CSTRING_ENCODING_ASCII, str2);
-    NS_CStringToUTF16(str2, NS_CSTRING_ENCODING_ASCII, str1);
+    NS_CopyNativeToUnicode(str2, str1);
+    NS_CopyUnicodeToNative(str1, str2);
 }

@@ -39,6 +39,7 @@ bin\js3250.dll
 bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
+bin\xpcom_core.dll
 bin\xpistub.dll
 bin\nspr4.dll
 bin\components\xpinstal.dll

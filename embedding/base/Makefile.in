@@ -52,6 +52,8 @@ REQUIRES	= xpcom \
 		  embedcomponents \
 		  $(NULL)
 
+DEFINES += -DMOZILLA_STRICT_API
+
 SDK_HEADERS         = \
                 nsEmbedAPI.h \
                 $(NULL)

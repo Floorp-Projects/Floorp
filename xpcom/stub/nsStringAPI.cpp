@@ -38,7 +38,6 @@
 #include "nsString.h"
 #include "nsCharTraits.h"
 
-#define NS_STRINGAPI_IMPL
 #include "nsStringAPI.h"
 #include "nsNativeCharsetUtils.h"
 

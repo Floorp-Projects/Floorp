@@ -137,6 +137,7 @@ libmozjs.so
 ; XPCOM:
 ; 
 libxpcom.so 
+libxpcom_core.so 
 libxpistub.so
 libxpcom_compat.so
 components/xpcom_base.xpt

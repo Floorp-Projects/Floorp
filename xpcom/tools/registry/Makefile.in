@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= xpcom
 CPPSRCS		= regxpcom.cpp
 
-DEFINES		+= -DXPCOM_GLUE 
+DEFINES		+= -DXPCOM_GLUE -DMOZILLA_STRICT_API
 
 REQUIRES	= \
 		  string \

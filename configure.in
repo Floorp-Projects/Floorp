@@ -574,7 +574,7 @@ MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
 
 MOZ_JS_LIBS='-L$(DIST)/bin -lmozjs'
-XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
+XPCOM_LIBS='-L$(DIST)/bin -lxpcom -lxpcom_core'
 
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
@@ -1145,7 +1145,7 @@ case "$target" in
         MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
         MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
         MOZ_JS_LIBS='-L$(DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
-        XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
+        XPCOM_LIBS='-L$(DIST)/lib -lxpcom -lxpcom_core'
         DLL_PREFIX=
         IMPORT_LIB_SUFFIX=dll.a
     else
@@ -1181,7 +1181,7 @@ case "$target" in
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
         MOZ_PNG_LIBS='$(DIST)/lib/png.lib'
         MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
-        XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcom_core.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcom_compat.lib'
@@ -1426,6 +1426,7 @@ case "$target" in
         MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwdgt$(MOZ_WIDGET_TOOLKIT)'
         MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_GFX_TOOLKIT)'
         MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
+        XPCOM_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
 
         # GCC for OS/2 currently predefines these, but we don't want them
         _DEFINES_CFLAGS="$_DEFINES_CFLAGS -Uunix -U__unix -U__unix__"
@@ -1469,7 +1470,7 @@ case "$target" in
         MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
         MOZ_COMPONENT_XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_XPCOM_OBSOLETE_LIBS='$(DIST)/lib/xpcomct.lib'
-        XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
+        XPCOM_LIBS='$(DIST)/lib/xpcom.lib $(DIST)/lib/xpcomcor.lib'
         MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
         MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'

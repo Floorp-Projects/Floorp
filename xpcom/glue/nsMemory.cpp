@@ -38,6 +38,8 @@
 #include "nsXPCOM.h"
 #include "nsMemory.h"
 #include "nsXPCOMPrivate.h"
+#include "nsDebug.h"
+#include "nsISupportsUtils.h"
 
 static nsIMemory* gMemory = nsnull;
 

@@ -41,12 +41,12 @@
 
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportWin.h"
-#include "nsString.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
-#include "nsXPIDLString.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsXPCOM.h"
@@ -69,6 +69,12 @@
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
 #include "nsXPCOM.h"
+
+#ifdef XPCOM_GLUE
+#include "nsStringSupport.h"
+#else
+#include "nsString.h"
+#endif
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -1349,7 +1355,7 @@ static nsCString hszValue( DWORD, HSZ ) {
 
 
 // Utility function to escape double-quotes within a string.
-static void escapeQuotes( nsAString &aString ) {
+static void escapeQuotes( nsString &aString ) {
     PRInt32 offset = -1;
     while( 1 ) {
        // Find next '"'.
@@ -1509,7 +1515,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                         // title
                         outpt.Append( NS_LITERAL_CSTRING("\",\"") );
                         // Now copy the current page title to the return string
-                        outpt.Append( NS_LossyConvertUCS2toASCII( title.get() ));
+                        outpt.Append( NS_LossyConvertUCS2toASCII( title ));
                         // Fill out the return string with the remainin ",""
                         outpt.Append( NS_LITERAL_CSTRING( "\",\"\"" ));
 
@@ -1682,14 +1688,14 @@ void nsNativeAppSupportWin::ParseDDEArg( HSZ args, int index, nsCString& aString
     DWORD argLen = DdeQueryString( mInstance, args, NULL, NULL, CP_WINANSI );
     // there wasn't any string, so return empty string
     if ( !argLen ) return;
-    nsCAutoString temp;
     // Ensure result's buffer is sufficiently big.
-    temp.SetLength( argLen );
+    char *temp = (char *) malloc(argLen + 1);
+    if ( !temp ) return;
     // Now get the string contents.
-    DdeQueryString( mInstance, args, temp.BeginWriting(), argLen + 1, CP_WINANSI );
+    DdeQueryString( mInstance, args, temp, argLen + 1, CP_WINANSI );
     // Parse out the given arg.
-    ParseDDEArg(temp.get(), index, aString);
-    return;
+    ParseDDEArg(temp, index, aString);
+    free(temp);
 }
 
 void nsNativeAppSupportWin::ActivateLastWindow() {
@@ -1872,8 +1878,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     if (NS_FAILED(rv) || !defaultArgs) return;
 
     if (defaultArgs) {
-      nsCAutoString url;
-      url.AssignWithConversion( defaultArgs );
+      NS_LossyConvertUCS2toASCII url( defaultArgs );
       OpenBrowserWindow(url.get());
     } else {
       OpenBrowserWindow("about:blank");

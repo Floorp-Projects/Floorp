@@ -27,6 +27,7 @@ libmozjs.so
 ; XPCOM:
 ; 
 libxpcom.so 
+libxpcom_core.so 
 components/xpcom_base.xpt
 components/xpcom_components.xpt
 components/xpcom_ds.xpt

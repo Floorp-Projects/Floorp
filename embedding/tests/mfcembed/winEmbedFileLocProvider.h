@@ -31,9 +31,10 @@
 
 #include "nsIDirectoryService.h"
 #include "nsILocalFile.h"
-#include "nsString.h"
+#include "nsEmbedString.h"
+#include "nsCOMPtr.h"
 
-class nsIFile;
+class nsILocalFile;
 
 //*****************************************************************************
 // class winEmbedFileLocProvider
@@ -57,6 +58,6 @@ protected:
     NS_METHOD            GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
 
 
-    nsCString              mProductDirName;
+    nsEmbedCString         mProductDirName;
     nsCOMPtr<nsILocalFile> mMozBinDirectory;
 };

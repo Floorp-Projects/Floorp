@@ -294,6 +294,55 @@ static PRBool test_replace()
     return PR_TRUE;
   }
 
+static const char* kWhitespace="\b\t\r\n ";
+
+static void
+CompressWhitespace(nsACString &str)
+  {
+    const char *p;
+    PRInt32 i, len = (PRInt32) NS_CStringGetData(str, &p);
+
+    // trim leading whitespace
+
+    for (i=0; i<len; ++i)
+      {
+        if (!strchr(kWhitespace, (char) p[i]))
+          break;
+      }
+
+    if (i>0)
+      {
+        NS_CStringCutData(str, 0, i);
+        len = (PRInt32) NS_CStringGetData(str, &p);
+      }
+
+    // trim trailing whitespace
+
+    for (i=len-1; i>=0; --i)
+      {
+        if (!strchr(kWhitespace, (char) p[i]))
+          break;
+      }
+
+    if (++i < len)
+      NS_CStringCutData(str, i, len - i);
+  }
+
+static PRBool test_compress_ws()
+  {
+    nsCStringContainer s;
+    NS_CStringContainerInit(s);
+    NS_CStringSetData(s, " \thello world\r  \n");
+    CompressWhitespace(s);
+    const char *d;
+    NS_CStringGetData(s, &d);
+    PRBool rv = !strcmp(d, "hello world");
+    if (!rv)
+      printf("=> \"%s\"\n", d);
+    NS_CStringContainerFinish(s);
+    return rv;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -310,6 +359,7 @@ tests[] =
     { "test_convert", test_convert },
     { "test_append", test_append },
     { "test_replace", test_replace },
+    { "test_compress_ws", test_compress_ws },
     { nsnull, nsnull }
   };
 

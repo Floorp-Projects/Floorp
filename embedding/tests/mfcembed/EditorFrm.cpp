@@ -35,6 +35,10 @@
 #include "BrowserFrm.h"
 #include "EditorFrm.h"
 #include "Dialogs.h"
+#include "nsComponentManagerUtils.h"
+#include "nsMemory.h"
+#include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
 
 //------------------------------------------------------------
 //              Editor Command/Parameter Names
@@ -325,7 +329,7 @@ CEditorFrame::ExecuteAttribParam(const char *aCommand, const char *aAttribute)
 }
 
 NS_METHOD
-CEditorFrame::GetAttributeParamValue(const char *aCommand, nsCString &aValue)
+CEditorFrame::GetAttributeParamValue(const char *aCommand, nsEmbedCString &aValue)
 {
   nsresult rv;
   nsCOMPtr<nsICommandParams> params;
@@ -339,7 +343,8 @@ CEditorFrame::GetAttributeParamValue(const char *aCommand, nsCString &aValue)
   {
     char *tchar;
     rv = params->GetCStringValue(STATE_ATTRIBUTE,&tchar);
-    aValue.Adopt(tchar);
+    aValue.Assign(tchar);
+    nsMemory::Free(tchar);
     return rv;
   }
   return rv;
@@ -419,12 +424,12 @@ void CEditorFrame::OnAlignleft()
 
 void CEditorFrame::OnUpdateAlignleft(CCmdUI* pCmdUI) 
 {
-  nsCAutoString tValue;
+  nsEmbedCString tValue;
 
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
   {
-    if (tValue.Equals(ALIGN_LEFT))
+    if (strcmp(tValue.get(), ALIGN_LEFT) == 0)
       pCmdUI->SetCheck(1);
     else
       pCmdUI->SetCheck(0);
@@ -438,11 +443,11 @@ void CEditorFrame::OnAlignright()
 
 void CEditorFrame::OnUpdateAlignright(CCmdUI* pCmdUI) 
 {
-  nsCAutoString tValue;
+  nsEmbedCString tValue;
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
   {
-    if (tValue.Equals(ALIGN_RIGHT))
+    if (strcmp(tValue.get(), ALIGN_RIGHT) == 0)
       pCmdUI->SetCheck(1);
     else
       pCmdUI->SetCheck(0);
@@ -456,11 +461,11 @@ void CEditorFrame::OnAligncenter()
 
 void CEditorFrame::OnUpdateAligncenter(CCmdUI* pCmdUI) 
 {
-  nsCAutoString tValue;
+  nsEmbedCString tValue;
   nsresult rv = GetAttributeParamValue(ALIGN_COMMAND,tValue);
   if (NS_SUCCEEDED(rv))
   {
-    if (tValue.Equals(ALIGN_CENTER))
+    if (strcmp(tValue.get(), ALIGN_CENTER) == 0)
       pCmdUI->SetCheck(1);
     else
       pCmdUI->SetCheck(0);
@@ -494,11 +499,13 @@ void CEditorFrame::InsertLink(CString& linkText, CString& linkLocation)
 
 void CEditorFrame::InsertHTML(CString& str)
 {
-    nsString htmlToInsert;
+    nsEmbedString htmlToInsert;
 #ifdef _UNICODE
     htmlToInsert.Assign(str.GetBuffer(0));
 #else
-    htmlToInsert.AssignWithConversion(str.GetBuffer(0));
+    NS_CStringToUTF16(nsEmbedCString(str.GetBuffer(0)),
+                      NS_CSTRING_ENCODING_ASCII,
+                      htmlToInsert);
 #endif
 
     nsCOMPtr<nsIHTMLEditor> htmlEditor;
@@ -539,13 +546,13 @@ BOOL CEditorFrame::GetCurrentLinkInfo(CString& strLinkText, CString& strLinkLoca
         return FALSE;
 
     nsCOMPtr<nsIDOMElement> domElement;
-    htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), 
+    htmlEditor->GetElementOrParentByTagName(nsEmbedString(L"href"), 
                                             nsnull,
                                             getter_AddRefs(domElement));
     if (!domElement)
         return FALSE;
 
-    nsAutoString linkLocation, linkText;
+    nsEmbedString linkLocation, linkText;
     nsresult rv = NS_ERROR_FAILURE;
 
     // Determine linkLocation
@@ -657,7 +664,7 @@ BOOL CEditorFrame::InLink()
     if (htmlEditor) 
 	{
         nsCOMPtr<nsIDOMElement> domElememt;
-        htmlEditor->GetElementOrParentByTagName(NS_LITERAL_STRING("href"), 
+        htmlEditor->GetElementOrParentByTagName(nsEmbedString(L"href"), 
                                                 nsnull,
                                                 getter_AddRefs(domElememt));
         return domElememt ? TRUE : FALSE;

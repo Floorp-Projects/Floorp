@@ -38,6 +38,20 @@
 #ifndef nsXPCOM_h__
 #define nsXPCOM_h__
 
+// Map frozen functions to private symbol names if not using strict API.
+#ifndef MOZILLA_STRICT_API
+# define NS_InitXPCOM2               NS_InitXPCOM2_P
+# define NS_ShutdownXPCOM            NS_ShutdownXPCOM_P
+# define NS_GetServiceManager        NS_GetServiceManager_P
+# define NS_GetComponentManager      NS_GetComponentManager_P
+# define NS_GetComponentRegistrar    NS_GetComponentRegistrar_P
+# define NS_GetMemoryManager         NS_GetMemoryManager_P
+# define NS_NewLocalFile             NS_NewLocalFile_P
+# define NS_NewNativeLocalFile       NS_NewNativeLocalFile_P
+# define NS_GetDebug                 NS_GetDebug_P
+# define NS_GetTraceRefcnt           NS_GetTraceRefcnt_P
+#endif
+
 #include "nscore.h"
 #include "nsXPCOMCID.h"
 

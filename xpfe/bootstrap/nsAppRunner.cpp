@@ -39,10 +39,15 @@
 
 #ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
+#include "nsStringSupport.h"
+#else
+#include "nsString.h"
 #endif
 
 #include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIGenericFactory.h"
 #include "nsIComponentRegistrar.h"
 
@@ -67,6 +72,7 @@
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsIDirectoryService.h"
+#include "nsDirectoryServiceUtils.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
@@ -74,7 +80,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
-#include "nsXPIDLString.h"
 #include "nsIXULWindow.h"
 #include "nsIChromeRegistrySea.h"
 #include "nsIEventQueueService.h"
@@ -82,9 +87,9 @@
 #include "nsBuildID.h"
 #include "nsWindowCreator.h"
 #include "nsIWindowWatcher.h"
-#include "nsProcess.h"
 #include "nsILocalFile.h"
 #include "nsILookAndFeel.h"
+#include "nsIProcess.h"
 
 #ifdef MOZ_XPINSTALL
 #include "InstallCleanupDefines.h"
@@ -124,7 +129,6 @@
 #define DEBUG_CMD_LINE
 #endif
 
-static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
 
@@ -464,26 +468,26 @@ PrintUsage(void)
   fprintf(stderr, "\t<url>:  a fully defined url string like http:// etc..\n");
 }
 
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           const nsAFlatString& aAppArgs,
+static nsresult OpenWindow(const nsCString& aChromeURL,
+                           const nsString& aAppArgs,
                            PRInt32 aWidth, PRInt32 aHeight);
 
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           const nsAFlatString& aAppArgs)
+static nsresult OpenWindow(const nsCString& aChromeURL,
+                           const nsString& aAppArgs)
 {
   return OpenWindow(aChromeURL, aAppArgs,
                     nsIAppShellService::SIZE_TO_CONTENT,
                     nsIAppShellService::SIZE_TO_CONTENT);
 }
 
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
+static nsresult OpenWindow(const nsCString& aChromeURL,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
   return OpenWindow(aChromeURL, EmptyString(), aWidth, aHeight);
 }
 
-static nsresult OpenWindow(const nsAFlatCString& aChromeURL,
-                           const nsAFlatString& aAppArgs,
+static nsresult OpenWindow(const nsCString& aChromeURL,
+                           const nsString& aAppArgs,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
 
@@ -817,16 +821,26 @@ static char kMatchOSLocalePref[] = "intl.locale.matchOS";
 nsresult
 getCountry(const nsAString& lc_name, nsAString& aCountry)
 {
+#ifdef XPCOM_GLUE
+  const PRUnichar *begin = lc_name.BeginReading();
+  const PRUnichar *end   = lc_name.EndReading();
+  while (begin != end) {
+    if (*begin == '-')
+      break;
+    ++begin;
+  }
 
-  nsresult        result = NS_OK;
+  if (begin == end)
+    return NS_ERROR_FAILURE;
 
-  PRInt32 dash = lc_name.FindChar('-');
-  if (dash > 0)
-    aCountry = Substring(lc_name, dash+1, lc_name.Length()-dash);
-  else
-    result = NS_ERROR_FAILURE;
-
-  return result;
+  aCountry.Assign(begin + 1, end - begin);
+#else
+  PRInt32 i = lc_name.FindChar('-');
+  if (i == kNotFound)
+    return NS_ERROR_FAILURE;
+  aCountry = Substring(lc_name, i + 1, PR_UINT32_MAX);
+#endif
+  return NS_OK;
 }
 
 static nsresult
@@ -1035,7 +1049,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
     cleanupUtility->SetNativeLeafName(CLEANUP_UTIL);
 
     //Create the process framework to run the cleanup utility
-    nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);
+    nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(NS_PROCESS_CONTRACTID);
     rv = cleanupProcess->Init(cleanupUtility);
     if (NS_SUCCEEDED(rv))
       rv = cleanupProcess->Run(PR_FALSE,nsnull, 0, nsnull);

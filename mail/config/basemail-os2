@@ -121,6 +121,7 @@ components\jsurl.xpt
 
 ; XPCOM:
 xpcom.dll
+xpcomcor.dll
 xpcomct.dll
 xpistub.dll
 xpicleanup.exe

@@ -44,8 +44,11 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 
+#include "nsXPCOM.h"
 #include "nsEmbedAPI.h"
-#include "nsLiteralString.h"
+#include "nsCOMPtr.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIServiceManagerUtils.h"
 
 static nsIServiceManager *sServiceManager = nsnull;
 static PRBool             sRegistryInitializedFlag = PR_FALSE;

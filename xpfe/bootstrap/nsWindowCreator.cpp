@@ -74,6 +74,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsIURI.h"
 #include "nsIXULWindow.h"
 #include "nsIWebBrowserChrome.h"
