@@ -797,7 +797,7 @@ nsStdURL::SetRelativePath(const char* i_Relative)
                 CRTFREEIF(mRef);
                 return SetQuery((char*)i_Relative);
             } else {
-                DupString(&query,"");
+                DupString(&query,nsnull);
                 ExtractString((char*)i_Relative, &query, 0,(PL_strlen(i_Relative)-(ref-i_Relative)));
 
                 rv = SetQuery(query);
@@ -868,8 +868,8 @@ nsStdURL::ParsePath(void)
 
     char* dirfile;
     char* options;
-    DupString(&dirfile, ""); 
-    DupString(&options, ""); 
+    DupString(&dirfile, nsnull); 
+    DupString(&options, nsnull); 
 
     int len = PL_strlen(mPath);
 
