@@ -81,19 +81,37 @@ static NS_DEFINE_IID(kIRDFContentIID,             NS_IRDFCONTENT_IID);
 static NS_DEFINE_IID(kIRDFContentModelBuilderIID, NS_IRDFCONTENTMODELBUILDER_IID);
 static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
 
-static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////
 
 class RDFTreeBuilderImpl : public nsIRDFContentModelBuilder
 {
 private:
-    static nsrefcnt gRefCnt;
-
     nsIRDFDocument* mDocument;
-    nsIRDFService*  mRDFService;
     nsIRDFCompositeDataSource* mDB;
+
+    // pseudo-constants
+    static nsrefcnt gRefCnt;
+    static nsIRDFService* gRDFService;
+
+    static nsIAtom* kIdAtom;
+    static nsIAtom* kOpenAtom;
+    static nsIAtom* kResourceAtom;
+    static nsIAtom* kTreeAtom;
+    static nsIAtom* kTreeBodyAtom;
+    static nsIAtom* kTreeCellAtom;
+    static nsIAtom* kTreeChildrenAtom;
+    static nsIAtom* kTreeHeadAtom;
+    static nsIAtom* kTreeItemAtom;
+    static nsIAtom* kTreeRowAtom;
+
+    static PRInt32  kNameSpaceID_RDF;
+    static PRInt32  kNameSpaceID_XUL;
+
+    static nsIRDFResource* kNC_Title;
+    static nsIRDFResource* kNC_Column;
 
 public:
     RDFTreeBuilderImpl();
@@ -198,22 +216,23 @@ public:
 
 nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
 
-static nsIAtom* kIdAtom;
-static nsIAtom* kOpenAtom;
-static nsIAtom* kResourceAtom;
-static nsIAtom* kTreeAtom;
-static nsIAtom* kTreeBodyAtom;
-static nsIAtom* kTreeCellAtom;
-static nsIAtom* kTreeChildrenAtom;
-static nsIAtom* kTreeHeadAtom;
-static nsIAtom* kTreeItemAtom;
-static nsIAtom* kTreeRowAtom;
+nsIAtom* RDFTreeBuilderImpl::kIdAtom;
+nsIAtom* RDFTreeBuilderImpl::kOpenAtom;
+nsIAtom* RDFTreeBuilderImpl::kResourceAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeBodyAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeCellAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeChildrenAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeHeadAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
+nsIAtom* RDFTreeBuilderImpl::kTreeRowAtom;
 
-static PRInt32  kNameSpaceID_RDF;
-static PRInt32  kNameSpaceID_XUL;
+PRInt32  RDFTreeBuilderImpl::kNameSpaceID_RDF;
+PRInt32  RDFTreeBuilderImpl::kNameSpaceID_XUL;
 
-static nsIRDFResource* kNC_Title;
-static nsIRDFResource* kNC_Column;
+nsIRDFService*  RDFTreeBuilderImpl::gRDFService = nsnull;
+nsIRDFResource* RDFTreeBuilderImpl::kNC_Title;
+nsIRDFResource* RDFTreeBuilderImpl::kNC_Column;
 
 nsresult
 NS_NewRDFTreeBuilder(nsIRDFContentModelBuilder** result)
@@ -251,6 +270,9 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeRowAtom      = NS_NewAtom("treerow");
 
         nsresult rv;
+
+        // Register the XUL and RDF namespaces: these'll just retrieve
+        // the IDs if they've already been registered by someone else.
         nsINameSpaceManager* mgr;
         if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
                                                            nsnull,
@@ -275,6 +297,23 @@ static const char kRDFNameSpaceURI[]
         else {
             NS_ERROR("couldn't create namepsace manager");
         }
+
+
+        // Initialize the global shared reference to the service
+        // manager and get some shared resource objects.
+        rv = nsServiceManager::GetService(kRDFServiceCID,
+                                          kIRDFServiceIID,
+                                          (nsISupports**) &gRDFService);
+
+        if (NS_FAILED(rv)) {
+            NS_ERROR("couldnt' get RDF service");
+        }
+
+        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Title,  &kNC_Title)),
+                  "couldn't get resource");
+
+        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Column, &kNC_Column)),
+                  "couldn't get resource");
     }
 
     ++gRefCnt;
@@ -283,10 +322,7 @@ static const char kRDFNameSpaceURI[]
 RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
 {
     NS_IF_RELEASE(mDB);
-
-    if (mRDFService)
-        nsServiceManager::ReleaseService(kRDFServiceCID, mRDFService);
-
+    NS_IF_RELEASE(mDocument);
 
     --gRefCnt;
     if (gRefCnt == 0) {
@@ -304,6 +340,8 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
 
         NS_RELEASE(kNC_Title);
         NS_RELEASE(kNC_Column);
+
+        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
     }
 }
 
@@ -326,17 +364,6 @@ RDFTreeBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
     nsresult rv;
     if (NS_FAILED(rv = mDocument->GetDataBase(mDB)))
         return rv;
-
-    if (NS_FAILED(rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                    kIRDFServiceIID,
-                                                    (nsISupports**) &mRDFService)))
-        return rv;
-
-    // Get shared resources here
-    if (kNC_Title == nsnull) {
-        mRDFService->GetResource(kURINC_Title,  &kNC_Title);
-        mRDFService->GetResource(kURINC_Column, &kNC_Column);
-    }
 
     return NS_OK;
 }
@@ -998,7 +1025,7 @@ RDFTreeBuilderImpl::CreateTreeItemRowAndCells(nsIContent* aTreeItemElement,
         return rv;
 
     nsCOMPtr<nsIRDFResource> treeItemResource;
-    if (NS_FAILED(rv = mRDFService->GetUnicodeResource(treeItemResourceURI,
+    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(treeItemResourceURI,
                                                        getter_AddRefs(treeItemResource))))
         return rv;
 
@@ -1068,7 +1095,7 @@ RDFTreeBuilderImpl::CreateTreeItemRowAndCells(nsIContent* aTreeItemElement,
 
         // now construct the cell
         nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(mRDFService->GetUnicodeResource(uri, getter_AddRefs(property))))
+        if (NS_FAILED(gRDFService->GetUnicodeResource(uri, getter_AddRefs(property))))
             return rv; // XXX fatal
 
         nsCOMPtr<nsIRDFContent> cellElement;
