@@ -145,12 +145,9 @@
 <!ENTITY helpMenuCmd.label "Help">
 <!ENTITY helpMenuCmd.accesskey "h">
 <!ENTITY helpContentsCmd.label "Help Contents">
-<!ENTITY howTutorialCmd.label "How to Tutorial">
-<!ENTITY helpChannelCmd.label "Help Channel">
 <!ENTITY softwareUpdatesCmd.label "Software Updates">
 <!ENTITY technicalSupportCmd.label "Technical Support">
 <!ENTITY releaseNotesCmd.label "Release Notes">
-<!ENTITY aboutCommunicatorCmd.label "About Communicator Prototype">
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 
 <!ENTITY languages.label "Languages">
