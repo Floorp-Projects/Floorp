@@ -268,7 +268,7 @@ else
     else
     if (window && arrayOfStrings[0] == "composer") 
     {
-        var contentArea = window.document.getElementById("appcontent");
+        contentArea = window.document.getElementById("appcontent");
         if (contentArea)
             contentArea.addEventListener("load", composercharsetLoadListener, true);
     }
