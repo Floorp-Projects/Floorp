@@ -4,11 +4,84 @@
     <title>xmlterm page</title>
 
 <!--
-NOTE: Put all the skin stuff in the content directory for the moment
-      (Otherwise every Mozilla skin will need to provide an xmlterm skin!)
--->
   <link title="defaultstyle" rel="stylesheet" type="text/css"
         href="chrome://xmlterm/content/xmltpage.css">
+-->
+<!--
+NOTE: Ugly workaround for modifying CSS rules until bug 53448 is fixed
+      Put all the CSS stuff inline      
+-->
+  <style type="text/css">
+/* xmltpage.css: default style sheet for xmlterm.html */
+
+BODY { font-family: monaco, courier, elite, monospace;
+       background-color: #FFFFFF;
+     }
+
+DIV  { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN { margin: 0; padding-top: 0; padding-bottom: 0 }
+
+PRE  { margin: 0; padding-top: 0; padding-bottom: 0;
+       font-family: monaco;
+       line-height: 120% }
+
+/* Input components */
+SPAN.prompt      { color: blue }
+SPAN.command     { color: blue }
+
+/* Error messages */
+DIV.errmsg       { color: red }
+
+/* Explicit hyperlinks (underlined) */
+DIV.textlink     { font-family: monaco; color: blue; cursor: hand;
+                    text-decoration: underline }
+SPAN.textlink    { font-family: monaco; color: blue; cursor: hand;
+                    text-decoration: underline }
+
+/* Imlicit hyperlinks (highlighted) */
+SPAN.highlight   { font-family: monaco; color: blue; cursor: hand }
+SPAN.directory   { font-family: monaco; color: blue; cursor: hand }
+SPAN.executable  { font-family: monaco; color: blue; cursor: hand }
+SPAN.plainfile   { font-family: monaco; color: blue; cursor: hand }
+SPAN.imagefile   { font-family: monaco; color: blue; cursor: hand }
+SPAN.urlfile     { font-family: monaco; color: blue; cursor: hand }
+
+/* Screen display */
+PRE.row              { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.row             { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.boldstyle       { font-weight: bold; margin: 0;
+                        padding-top: 0; padding-bottom: 0 }
+SPAN.underlinestyle  { text-decoration: underline; margin: 0;
+                        padding-top: 0; padding-bottom: 0 }
+SPAN.blinkstyle      { font-weight: bold; margin: 0;
+                        padding-top: 0; padding-bottom: 0 }
+SPAN.inversestyle    { font-weight: bold; margin: 0;
+                        padding-top: 0; padding-bottom: 0 }
+
+/* Forms */
+FORM             { margin: 0; padding-top: 0; padding-bottom: 0 }
+SPAN.formhead    { font-family: sans-serif; font-weight: bold }
+
+/* Tips */
+SPAN.tipdata     { font-family: sans-serif; background-color: #DDDDDD }
+TABLE.tiptable   { background-color: #DDDDDD }
+DIV.tipelement   { font-family: sans-serif }
+
+/* Help links */
+SPAN.helphighlight { font-family: sans-serif; color: green; cursor: hand }
+SPAN.helplink      { font-family: sans-serif; color: blue; cursor: hand;
+                     text-decoration: underline }
+
+/* Level style */
+DIV.intermediate {display: block}
+DIV.beginner     {display: none}
+
+/* Icons style */
+SPAN.noicons {display: inline}
+SPAN.icons   {display: none}
+IMG.icons    {display: none}
+TR.icons     {display: none}
+  </style>
 
   <script language="JavaScript" src="XMLTermCommands.js">
   </script>
@@ -28,7 +101,7 @@ NOTE: Put all the skin stuff in the content directory for the moment
 
     <span class="helplink" onclick="return ExplainTip('level');">
      Level:</span>
-    <select name="level" size=1 onchange="return UpdateSettings();">
+    <select name="level" size=1 onchange="return UpdateSettings('level');">
       <option value="beginner">beginner</option>
       <option value="intermediate" selected>intermediate</option>
       <option value="advanced">advanced</option>
@@ -37,7 +110,7 @@ NOTE: Put all the skin stuff in the content directory for the moment
     &nbsp;
     <span class="helplink" onclick="return ExplainTip('icons');">
     Icons:</span>
-    <select name="icons" size=1 onchange="return UpdateSettings();">
+    <select name="icons" size=1 onchange="return UpdateSettings('icons');">
       <option value="off" selected>off</option>
       <option value="on">on</option>
     </select>
@@ -45,7 +118,7 @@ NOTE: Put all the skin stuff in the content directory for the moment
     &nbsp;
     <span class="helplink" onclick="return ExplainTip('windows');">
     Windows:</span>
-    <select name="windows" size=1 onchange="return UpdateSettings();">
+    <select name="windows" size=1 onchange="return UpdateSettings('windows');">
       <option value="off" selected>off</option>
       <option value="on">on</option>
     </select>
