@@ -660,7 +660,7 @@ nsFindComponent::Find(nsISupports *aContext, PRBool *aDidFind)
         rv = mAppShell->CreateTopLevelWindow( nsnull,
                                               url,
                                               PR_TRUE,
-                                              *getter_AddRefs(newWindow),
+                                              getter_AddRefs(newWindow),
                                               nsnull,
                                               dialog,
                                               0,

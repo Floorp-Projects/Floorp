@@ -1124,7 +1124,7 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
     return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, *getter_AddRefs(newWindow),
+  appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, getter_AddRefs(newWindow),
                                  nsnull, nsnull, 200, 300);
   // Move the window to aXPos and aYPos
   nsCOMPtr<nsIBrowserWindow> browserWindow = do_QueryInterface(newWindow);
@@ -1251,7 +1251,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   if ((aChromeMask & NS_CHROME_OPEN_AS_CHROME) != 0) {
     // Just do a nice normal create of a web shell and
     // return it immediately.  
-    rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, *getter_AddRefs(newWindow),
+    rv = appShell->CreateTopLevelWindow(nsnull, nsnull, PR_FALSE, getter_AddRefs(newWindow),
                                    nsnull, nsnull, 615, 480);
     if (NS_SUCCEEDED(rv)) {
       nsCOMPtr<nsIBrowserWindow> browser(do_QueryInterface(newWindow));
@@ -1294,7 +1294,7 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
 #endif // NECKO
 
   if (NS_SUCCEEDED(rv))
-    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, *getter_AddRefs(newWindow),
+    rv = appShell->CreateTopLevelWindow(nsnull, urlObj, PR_FALSE, getter_AddRefs(newWindow),
                                    nsnull, nsnull, 615, 480);
 
   nsIAppShell *subshell;

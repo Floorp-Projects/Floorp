@@ -173,7 +173,7 @@ nsPrefMigrationProgressDialog::CreateProfileProgressDialog()
             rv = appShell->CreateTopLevelWindow( nsnull,
                                                  url,
                                                  PR_TRUE,
-                                                 *getter_AddRefs(newWindow),
+                                                 getter_AddRefs(newWindow),
                                                  nsnull,
                                                  this,  // callbacks??
                                                  0,

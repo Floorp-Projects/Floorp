@@ -228,7 +228,7 @@ nsUnknownContentTypeHandler::HandleUnknownContentType( nsIURI *aURL,
             rv = mAppShell->CreateTopLevelWindow( nsnull,
                                                   url,
                                                   PR_TRUE,
-                                                  *getter_AddRefs(newWindow),
+                                                  getter_AddRefs(newWindow),
                                                   nsnull,
                                                   dialog,
                                                   0, 0 );

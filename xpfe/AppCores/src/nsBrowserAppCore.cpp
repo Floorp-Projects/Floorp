@@ -411,7 +411,7 @@ newWind(char* urlName)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
               nsnull, nsnull, 615, 480);
 
   NS_RELEASE(url);
@@ -478,23 +478,15 @@ nsBrowserAppCore::WalletEditor(nsIDOMWindow* aWin)
 
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+    window = nsnull;
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
                                  nsnull, cb, 504, 436);
+    if (window != nsnull) {
+      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      NS_RELEASE(window);
+    }
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
-    if (window != nsnull) {
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent;
-        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
-    }
     return rv;
 }
 
@@ -537,23 +529,14 @@ nsBrowserAppCore::SignonViewer(nsIDOMWindow* aWin)
 
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+    window = nsnull;
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
                                  nsnull, cb, 504, 436);
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-
     if (window != nsnull) {
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent;
-        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
+      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      NS_RELEASE(window);
     }
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
     return rv;
 }
 
@@ -596,23 +579,16 @@ nsBrowserAppCore::CookieViewer(nsIDOMWindow* aWin)
 
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+    window = nsnull;
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
                                  nsnull, cb, 504, 436);
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
     if (window != nsnull) {
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent;
-        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
+      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      NS_RELEASE(window);
     }
+
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
     return rv;
 }
 
@@ -698,23 +674,15 @@ nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
 
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(aWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+    window = nsnull;
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
                                  nsnull, cb, 504, 436);
+    if (window != nsnull) {
+      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      NS_RELEASE(window);
+    }
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
-    if (window != nsnull) {
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent;
-        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
-    }
     return rv;
 }
 
@@ -1462,7 +1430,7 @@ nsBrowserAppCore::NewWindow()
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIWebShellWindow> newWindow;
-  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, *getter_AddRefs(newWindow),
+  appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
               nsnull, nsnull, 615, 480);
   NS_RELEASE(url);
   
@@ -1731,7 +1699,7 @@ nsBrowserAppCore::DoDialog()
   if (NS_FAILED(rv))
     return rv;
 
-  rv = appShell->RunModalDialog(mWebShellWin, urlObj, window, nsnull, nsnull, 300, 200);
+  rv = appShell->RunModalDialog(&window, urlObj, mWebShellWin, nsnull, nsnull, 300, 200);
   if (NS_SUCCEEDED(rv))
     NS_RELEASE(window);
   return rv;

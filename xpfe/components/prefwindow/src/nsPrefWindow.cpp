@@ -210,21 +210,12 @@ NS_IMETHODIMP nsPrefWindow::showWindow(
     nsIXULWindowCallbacks *cb = nsnull;
     nsCOMPtr<nsIWebShellWindow> parent;
     DOMWindowToWebShellWindow(currentFrontWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
+    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, &window,
                                  nsnull, cb, 504, 436);
-    if (window)
+    if (window != nsnull)
     {
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent
-        	= parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
+      appShell->RunModalDialog(&window, nsnull, parent, nsnull, cb, 504, 436);
+      NS_RELEASE(window);
     }
     return rv;
 } // nsPrefWindow::showWindow()
