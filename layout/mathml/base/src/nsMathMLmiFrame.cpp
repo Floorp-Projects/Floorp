@@ -124,16 +124,11 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
     // we don't switch if we are in the scope of a mstyle frame with an 
     // explicit fontstyle="italic" ...
     nsAutoString fontStyle;
-    nsIFrame* mstyleFrame = mPresentationData.mstyle;
-    if (mstyleFrame) {
-      nsCOMPtr<nsIContent> mstyleContent;
-      mstyleFrame->GetContent(getter_AddRefs(mstyleContent));
-      if (NS_CONTENT_ATTR_HAS_VALUE == mstyleContent->GetAttribute(kNameSpaceID_None, 
-                       nsMathMLAtoms::fontstyle_, fontStyle))
-      {
-        if (fontStyle.EqualsWithConversion("italic"))
-          return rv;
-      }
+    if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
+                     nsMathMLAtoms::fontstyle_, fontStyle))
+    {
+      if (fontStyle.EqualsWithConversion("italic"))
+        return rv;
     }
 
     // Get a pseudo style context for the appropriate style font 
