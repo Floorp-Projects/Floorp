@@ -375,6 +375,7 @@ PDlgInitUPP theInitProcPtr;
         // don't print
         ::DisposeHandle((Handle)hPrintRec);
         ::SetPort(oldport); 
+        theResult = NS_ERROR_ABORT;
       }
       
       // clean up our dialog routines
