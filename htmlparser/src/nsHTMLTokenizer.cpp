@@ -768,7 +768,7 @@ void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner&
     PRInt32   theOrigin        =aStartToken->mOrigin;
     PRInt32   theCurrOffset    =aScanner.GetOffset();
     PRInt32   theLength        =(theCurrOffset>theOrigin)? theCurrOffset-theOrigin:-1;
-    if(theLength>1) {
+    if(theLength>0) {
       nsString& theRawXXX      =aStartToken->mTrailingContent;
       const PRUnichar* theBuff =(aScanner.GetBuffer()).GetUnicode();
       theRawXXX.Append(&theBuff[theOrigin],theLength);
