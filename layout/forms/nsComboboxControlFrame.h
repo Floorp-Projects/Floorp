@@ -138,6 +138,8 @@ public:
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
+  virtual nsIFrame* GetContentInsertionFrame();
+
      // nsIFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetName(nsAString* aName);

@@ -1962,6 +1962,10 @@ nsComboboxControlFrame::GetProperty(nsIAtom* aName, nsAString& aValue)
   return result;
 }
 
+nsIFrame*
+nsComboboxControlFrame::GetContentInsertionFrame() {
+  return mDropdownFrame->GetContentInsertionFrame();
+}
 
 NS_IMETHODIMP 
 nsComboboxControlFrame::CreateDisplayFrame(nsIPresContext* aPresContext)

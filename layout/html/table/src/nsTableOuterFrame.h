@@ -122,6 +122,10 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
+  virtual nsIFrame* GetContentInsertionFrame() {
+    return GetFirstChild(nsnull)->GetContentInsertionFrame();
+  }
+
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 #endif

@@ -119,6 +119,8 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
+  virtual nsIFrame* GetContentInsertionFrame();
+
   /**
    * Get the "type" of the frame
    *

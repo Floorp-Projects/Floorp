@@ -112,6 +112,14 @@ public:
 
    nsIScrollableView* GetScrollableView() const;
 
+  nsIFrame* GetScrolledFrame() const {
+    nsIBox* childBox;
+    nsIFrame* frame;
+    mScrollAreaBox->GetChildBox(&childBox);
+    childBox->GetFrame(&frame);
+    return frame;
+  }
+
   void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
   void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
@@ -206,6 +214,10 @@ public:
                                            PRInt32&        aContentOffset,
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent);
+
+  virtual nsIFrame* GetContentInsertionFrame() {
+    return mInner.GetScrolledFrame()->GetContentInsertionFrame();
+  }
 
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
@@ -329,6 +341,10 @@ public:
                                            PRInt32&        aContentOffset,
                                            PRInt32&        aContentOffsetEnd,
                                            PRBool&         aBeginFrameContent);
+
+  virtual nsIFrame* GetContentInsertionFrame() {
+    return mInner.GetScrolledFrame()->GetContentInsertionFrame();
+  }
 
   // nsIAnonymousContentCreator
   NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,

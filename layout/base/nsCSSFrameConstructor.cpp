@@ -7364,59 +7364,10 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
   nsIFrame* frame;
   aPresShell->GetPrimaryFrameFor(aContent, &frame);
 
-  if (nsnull != frame) {
-    // Check to see if the content is a select and 
-    // then if it has a drop down (thus making it a combobox)
-    // The drop down is a ListControlFrame derived from a 
-    // nsHTMLScrollFrame then get the area frame and that will be the parent
-    // What is unclear here, is if any of this fails, should it return
-    // the nsComboboxControlFrame or null?
-    nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
-    nsresult res = aContent->QueryInterface(NS_GET_IID(nsIDOMHTMLSelectElement),
-                                                 (void**)getter_AddRefs(selectElement));
-    if (NS_SUCCEEDED(res) && selectElement) {
-      nsIComboboxControlFrame * comboboxFrame;
-      res = frame->QueryInterface(NS_GET_IID(nsIComboboxControlFrame),
-                                               (void**)&comboboxFrame);
-      nsIFrame * listFrame;
-      if (NS_SUCCEEDED(res) && comboboxFrame) {
-        comboboxFrame->GetDropDown(&listFrame);
-      } else {
-        listFrame = frame;
-      }
+  if (!frame)
+    return nsnull;
 
-      if (listFrame != nsnull) {
-        nsIListControlFrame * list;
-        res = listFrame->QueryInterface(NS_GET_IID(nsIListControlFrame),
-                                                 (void**)&list);
-        if (NS_SUCCEEDED(res) && list) {
-          list->GetOptionsContainer(aPresContext, &frame);
-        } 
-      }
-    } else {
-      // If the primary frame is a scroll frame, then get the scrolled frame.
-      // That's the frame that gets the reflow command
-      const nsStyleDisplay* display = frame->GetStyleDisplay();
-
-      // If the primary frame supports IScrollableFrame, then get the scrolled frame.
-      // That's the frame that gets the reflow command                          
-      nsIScrollableFrame *pScrollableFrame = nsnull;                            
-      if (NS_SUCCEEDED( frame->QueryInterface(NS_GET_IID(nsIScrollableFrame),     
-                                              (void **)&pScrollableFrame) ))    
-      {                                                                         
-        pScrollableFrame->GetScrolledFrame( aPresContext, frame );              
-      } 
-
-      // if we get an outer table frame use its 1st child which is a table inner frame
-      // if we get a table cell frame   use its 1st child which is an area frame
-      else if ((NS_STYLE_DISPLAY_TABLE      == display->mDisplay) ||
-               (NS_STYLE_DISPLAY_TABLE_CELL == display->mDisplay)) {
-        frame = frame->GetFirstChild(nsnull);
-      }
-    }
-  }
-
-  return frame;
+  return frame->GetContentInsertionFrame();
 }
 
 nsIFrame*
