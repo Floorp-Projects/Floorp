@@ -100,7 +100,9 @@
     <titledbox style="padding: 4px">
       <box id="preview-image-box" valign="middle" autostretch="never">
         <spring flex="1"/>
-        <html id="preview-image-holder"/>
+        <html id="preview-image-holder">
+          <html:img id="preview-image" onload="PreviewImageLoaded();"/>
+        </html>
         <spring flex="1"/>
       </box>
       <box id="PreviewSize" orient="vertical" collapsed="true">

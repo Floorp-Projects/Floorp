@@ -73,7 +73,7 @@
     <spring class="spacer"/>
   </titledbox>
   <spring class="spacer"/>
-  <box>
+  <box valign="middle" autostretch="never">
     <text class="label align-right" text-align="right" value="&borderEditField.label;"
         tooltip="aTooltip" tooltiptext="&borderEditField.tooltip;" />
     <textbox class="narrow" id="borderInput" oninput="forceInteger(this.id)" />
