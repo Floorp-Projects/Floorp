@@ -269,9 +269,13 @@ public class ImporterTopLevel extends IdScriptableObject
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    private static ImporterTopLevel realThis(Scriptable thisObj,
-                                             IdFunctionObject f)
+    private ImporterTopLevel realThis(Scriptable thisObj, IdFunctionObject f)
     {
+        if (topScopeFlag) {
+            // when used as top scope importPackage and importClass are global
+            // function that ignore thisObj
+            return this;
+        }
         if (!(thisObj instanceof ImporterTopLevel))
             throw incompatibleCallError(f);
         return (ImporterTopLevel)thisObj;
