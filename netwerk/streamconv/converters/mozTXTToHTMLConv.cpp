@@ -152,6 +152,10 @@ void
 mozTXTToHTMLConv::CompleteAbbreviatedURL(const PRUnichar * aInString, PRInt32 aInLength, 
                                          const PRUint32 pos, nsString& aOutString)
 {
+  NS_ASSERTION(pos < aInLength, "bad args to CompleteAbbreviatedURL, see bug #190851");
+  if (pos >= aInLength)
+    return;
+
   if (aInString[pos] == '@')
   {
     // only pre-pend a mailto url if the string contains a .domain in it..
