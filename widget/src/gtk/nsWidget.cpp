@@ -2073,9 +2073,13 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
     event.point.y = nscoord(sButtonMotionWidgetY + diffY);
   }
 
-  NS_ADDREF(event.widget);
-  NS_STATIC_CAST(nsWidget*,event.widget)->DispatchMouseEvent(event);
-  NS_IF_RELEASE(event.widget);
+  // event.widget can get set to null when calling DispatchMouseEvent,
+  // so to release it we must make a copy
+  nsWidget* theWidget = NS_STATIC_CAST(nsWidget*,event.widget);
+
+  NS_ADDREF(theWidget);
+  theWidget->DispatchMouseEvent(event);
+  NS_IF_RELEASE(theWidget);
 
 
   if (sButtonMotionTarget)
