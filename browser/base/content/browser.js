@@ -361,7 +361,7 @@ function Startup()
       RegisterTabOpenObserver();
     }
   }
-#endif  
+#endif
   if (window.opener) {
     var openerSidebarBox = window.opener.document.getElementById("sidebar-box");
     if (!openerSidebarBox.hidden) {
