@@ -80,6 +80,7 @@ NS_HIDDEN_(nsresult) NS_NewXFormsRefreshElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsActionElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsLoadElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsSetValueElement(nsIXTFElement **aResult);
+NS_HIDDEN_(nsresult) NS_NewXFormsSetIndexElement(nsIXTFElement **aResult);
 NS_HIDDEN_(nsresult) NS_NewXFormsMessageElement(nsIXTFElement **aResult);
 
 NS_HIDDEN_(nsresult) NS_NewXFormsHintElement(nsIXTFElement **aResult);
@@ -154,6 +155,8 @@ nsXFormsElementFactory::CreateElement(const nsAString& aTagName,
     return NS_NewXFormsLoadElement(aElement);
   if (aTagName.EqualsLiteral("setvalue"))
     return NS_NewXFormsSetValueElement(aElement);
+  if (aTagName.EqualsLiteral("setindex"))
+    return NS_NewXFormsSetIndexElement(aElement);
   if (aTagName.EqualsLiteral("message"))
     return NS_NewXFormsMessageElement(aElement);
   if (aTagName.EqualsLiteral("hint"))

@@ -44,12 +44,16 @@
 #include "nsIDOM3Node.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMSerializer.h"
 #include "nsIDOMXPathResult.h"
 
 #include "nsXFormsControlStub.h"
+#include "nsIModelElementPrivate.h"
 #include "nsIXFormsContextControl.h"
+#include "nsIXFormsRepeatItemElement.h"
+#include "nsIXFormsRepeatElement.h"
 #include "nsXFormsUtils.h"
 
 #ifdef DEBUG
@@ -67,17 +71,21 @@
  *       @see http://www.w3.org/TR/xforms/sliceF.html#id2645142
  *       @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
  */
-class nsXFormsContextContainer : public nsXFormsControlStub
+class nsXFormsContextContainer : public nsXFormsControlStub,
+                                 public nsIXFormsRepeatItemElement
 {
 protected:
   /** The HTML representation for the node */
   nsCOMPtr<nsIDOMElement> mHTMLElement;
 
 public:
+  NS_DECL_ISUPPORTS_INHERITED
+
   // nsIXTFXMLVisual overrides
   NS_IMETHOD OnCreated(nsIXTFXMLVisualWrapper *aWrapper);
   
   // nsIXTFVisual overrides
+  NS_IMETHOD HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled);
   NS_IMETHOD GetVisualContent(nsIDOMElement **aElement);
   NS_IMETHOD GetInsertionPoint(nsIDOMElement **aElement);
 
@@ -88,10 +96,15 @@ public:
   // nsIXFormsControl
   NS_IMETHOD Bind();
   NS_IMETHOD Refresh();
+  NS_IMETHOD SetContextNode(nsIDOMNode *aContextNode);
 
-  // nsIXFormsContextControl
-  NS_DECL_NSIXFORMSCONTEXTCONTROL
+  // nsIXFormsRepeatItemElement
+  NS_DECL_NSIXFORMSREPEATITEMELEMENT
 };
+
+NS_IMPL_ISUPPORTS_INHERITED1(nsXFormsContextContainer,
+                             nsXFormsControlStub,
+                             nsIXFormsRepeatItemElement)
 
 // nsIXTFXMLVisual
 NS_IMETHODIMP
@@ -150,6 +163,56 @@ nsXFormsContextContainer::GetInsertionPoint(nsIDOMElement **aElement)
 
 // nsIXTFElement
 NS_IMETHODIMP
+nsXFormsContextContainer::HandleDefault(nsIDOMEvent *aEvent,
+                                        PRBool      *aHandled)
+{
+  if (!aEvent || !mElement)
+    return NS_OK;
+
+  nsAutoString type;
+  aEvent->GetType(type);
+  if (!type.EqualsLiteral("focus"))
+    return nsXFormsControlStub::HandleDefault(aEvent, aHandled);
+
+  /*
+   * Either we, or an element we contain, has gotten focus, so we need to set
+   * the repeat index. This is done through the \<repeat\> the
+   * nsXFormsContextContainer belongs to.
+   *
+   * Start by finding the \<repeat\> (our grandparent):
+   * <pre>
+   * <repeat> <-- gParent
+   *   <div>
+   *     <contextcontainer\> <-- this
+   *   </div>
+   * </repeat>
+   * </pre>
+   */
+  nsCOMPtr<nsIDOMNode> parent;
+  mElement->GetParentNode(getter_AddRefs(parent));
+  NS_ASSERTION(parent, "how can we get focus without a parent?");
+  
+  nsCOMPtr<nsIDOMNode> gParent;
+  parent->GetParentNode(getter_AddRefs(gParent));
+  nsCOMPtr<nsIXFormsRepeatElement> repeat = do_QueryInterface(gParent);
+
+  if (!repeat)
+    // Not a child to a \<repeat\>
+    return NS_OK;
+
+  // Find our context position
+  nsAutoString posString;
+  mElement->GetAttribute(NS_LITERAL_STRING("contextposition"), posString);
+  NS_ASSERTION(!posString.IsEmpty(), "@contextposition n/a or empty on repeat child?");
+  PRInt32 errCode;
+  PRUint32 pos = posString.ToInteger(&errCode);
+  NS_ASSERTION(!errCode, "@contextposition != integer on repeat child?");
+
+  // Tell \<repeat\> about the new index position
+  return repeat->SetIndex(&pos, PR_FALSE);
+}
+
+NS_IMETHODIMP
 nsXFormsContextContainer::OnDestroyed()
 {
   mHTMLElement = nsnull;
@@ -174,33 +237,11 @@ nsXFormsContextContainer::CloneState(nsIDOMElement *aElement)
 }
 
 // nsIXFormsContextControl
+
 NS_IMETHODIMP
 nsXFormsContextContainer::SetContextNode(nsIDOMNode *aContextNode)
 {
   mBoundNode = aContextNode;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXFormsContextContainer::GetContext(nsAString    &aModelID,
-                                      nsIDOMNode **aContextNode,
-                                      PRInt32     *aContextPosition,
-                                      PRInt32     *aContextSize)
-{
-  NS_IF_ADDREF(*aContextNode = mBoundNode);
-  nsAutoString val;
-  mElement->GetAttribute(NS_LITERAL_STRING("contextsize"), val);
-  PRInt32 errCode;
-  *aContextSize = val.ToInteger(&errCode);
-  if (errCode) {
-    *aContextSize = 1;
-  }  
-  mElement->GetAttribute(NS_LITERAL_STRING("contextposition"), val);
-  *aContextPosition = val.ToInteger(&errCode);
-  if (errCode) {
-    *aContextPosition = 1;
-  }
-  mElement->GetAttribute(NS_LITERAL_STRING("model"), aModelID);
   return NS_OK;
 }
 
@@ -216,6 +257,32 @@ nsresult
 nsXFormsContextContainer::Refresh()
 {
   return NS_OK;
+}
+
+// nsIXFormsRepeatItemElement
+/**
+ * @todo Should set/get pseudo-element, not attribute (XXX)
+ * @see http://bugzilla.mozilla.org/show_bug.cgi?id=271724
+ */
+NS_IMETHODIMP
+nsXFormsContextContainer::SetIndexState(PRBool aHasIndex)
+{
+  if (mElement) {
+    NS_NAMED_LITERAL_STRING(repIndex, "repeat-index");
+    if (aHasIndex) {
+      mElement->SetAttribute(repIndex,
+                             NS_LITERAL_STRING("1"));
+    } else {
+      mElement->RemoveAttribute(repIndex);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXFormsContextContainer::GetIndexState(PRBool *aHasIndex)
+{  
+  return mElement->HasAttribute(NS_LITERAL_STRING("repeat-index"), aHasIndex);
 }
 
 // Factory

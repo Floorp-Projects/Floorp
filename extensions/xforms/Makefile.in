@@ -83,6 +83,8 @@ XPIDLSRCS	= \
 		nsIXFormsCaseElement.idl \
 		nsIXFormsSelectChild.idl \
 		nsIXFormsValueElement.idl \
+		nsIXFormsRepeatElement.idl \
+		nsIXFormsRepeatItemElement.idl \
 		$(NULL)
 
 CPPSRCS		= \
@@ -118,6 +120,7 @@ CPPSRCS		= \
 		nsXFormsSendElement.cpp \
 		nsXFormsSetFocusElement.cpp \
 		nsXFormsSetValueElement.cpp \
+		nsXFormsSetIndexElement.cpp \
 		nsXFormsInsertDeleteElement.cpp \
 		nsXFormsLoadElement.cpp \
 		nsXFormsMessageElement.cpp \
