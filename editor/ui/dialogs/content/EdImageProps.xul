@@ -180,6 +180,7 @@
             <select 
               id      = "widthUnitsSelect" 
               size    = "1"
+              style   = "width: 100px; min-width: 100px; max-width: 100px;"
               onclick = "doOverallEnabling()"/>
             <!-- option elements are appended by JS -->
           </td>
@@ -209,6 +210,7 @@
             <select 
               id      = "heightUnitsSelect" 
               size    = "1" 
+              style   = "width: 100px; min-width: 100px; max-width: 100px;"
               onclick = "doOverallEnabling()"/>
               <!-- option elements are appended by JS -->
           </td>
