@@ -636,7 +636,6 @@ print "
 
 if (defined $::FORM{'debug'}) {
     print "<PRE>$query</PRE>\n";
-    print "::FORM{'order'} is <pre>$::FORM{'order'}</pre>\n";
 }
 
 if ($toolong) {
