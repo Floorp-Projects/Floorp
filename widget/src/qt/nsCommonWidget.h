@@ -133,6 +133,8 @@ protected:
      * They follow normal Qt widget semantics.
      */
     friend class nsQtEventDispatcher;
+    friend class InterceptContainer;
+    friend class MozQWidget;
 
     virtual bool mousePressEvent(QMouseEvent *);
     virtual bool mouseReleaseEvent(QMouseEvent *);

@@ -282,7 +282,8 @@ nsCommonWidget::Show(PRBool aState)
 
     if (mContainer)
         mContainer->setShown(aState);
-    mWidget->setShown(aState);
+    else
+        mWidget->setShown(aState);
 
     return NS_OK;
 }
@@ -461,8 +462,12 @@ nsCommonWidget::IsEnabled(PRBool *aState)
 NS_IMETHODIMP
 nsCommonWidget::SetFocus(PRBool aSet)
 {
-    if (mWidget && aSet)
-        mWidget->setFocus();
+    if (mWidget) {
+        if (aSet)
+            mWidget->setFocus();
+        else
+            mWidget->clearFocus();
+    }
 
     return NS_OK;
 }
@@ -753,7 +758,7 @@ nsCommonWidget::DispatchResizeEvent(nsRect &aRect, nsEventStatus &aStatus)
 bool
 nsCommonWidget::mousePressEvent(QMouseEvent *e)
 {
-    //qDebug("mousePressEvent mWidget=%p", (void*)mWidget);
+    qDebug("mousePressEvent mWidget=%p", (void*)mWidget);
 //     backTrace();
     PRUint32      eventType;
 
@@ -783,13 +788,13 @@ nsCommonWidget::mousePressEvent(QMouseEvent *e)
         DispatchEvent(&contextMenuEvent, status);
     }
 
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
 nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
 {
-    //qDebug("mouseReleaseEvent mWidget=%p", (void*)mWidget);
+    qDebug("mouseReleaseEvent mWidget=%p", (void*)mWidget);
     PRUint32      eventType;
 
     switch (e->button()) {
@@ -811,7 +816,7 @@ nsCommonWidget::mouseReleaseEvent(QMouseEvent *e)
     //not pressed
     nsEventStatus status;
     DispatchEvent(&event, status);
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
@@ -837,7 +842,7 @@ nsCommonWidget::mouseDoubleClickEvent(QMouseEvent *e)
     //pressed
     nsEventStatus status;
     DispatchEvent(&event, status);
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
@@ -848,7 +853,7 @@ nsCommonWidget::mouseMoveEvent(QMouseEvent *e)
     InitMouseEvent(&event, e, 0);
     nsEventStatus status;
     DispatchEvent(&event, status);
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
@@ -860,7 +865,7 @@ nsCommonWidget::wheelEvent(QWheelEvent *e)
 
     nsEventStatus status;
     DispatchEvent(&nsEvent, status);
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
@@ -900,7 +905,7 @@ nsCommonWidget::keyPressEvent(QKeyEvent *e)
         DispatchEvent(&event, status);
     }
 
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
@@ -912,7 +917,7 @@ nsCommonWidget::keyReleaseEvent(QKeyEvent *e)
 
     nsEventStatus status;
     DispatchEvent(&event, status);
-    return TRUE;//ignoreEvent(status);
+    return ignoreEvent(status);
 }
 
 bool
@@ -933,7 +938,7 @@ nsCommonWidget::focusInEvent(QFocusEvent *)
 bool
 nsCommonWidget::focusOutEvent(QFocusEvent *)
 {
-    //qDebug("focusOutEvent mWidget=%p", (void*)mWidget);
+    qDebug("focusOutEvent mWidget=%p", (void*)mWidget);
     DispatchLostFocusEvent();
     return FALSE;
 }
@@ -942,6 +947,11 @@ bool
 nsCommonWidget::enterEvent(QEvent *)
 {
     nsMouseEvent event(NS_MOUSE_ENTER, this);
+
+    QPoint pt = QCursor::pos();
+
+    event.point.x = nscoord(pt.x());
+    event.point.y = nscoord(pt.y());
 
     nsEventStatus status;
     DispatchEvent(&event, status);
@@ -953,6 +963,11 @@ nsCommonWidget::leaveEvent(QEvent *aEvent)
 {
     nsMouseEvent event(NS_MOUSE_EXIT, this);
 
+    QPoint pt = QCursor::pos();
+
+    event.point.x = nscoord(pt.x());
+    event.point.y = nscoord(pt.y());
+
     nsEventStatus status;
     DispatchEvent(&event, status);
     return FALSE;
@@ -961,8 +976,8 @@ nsCommonWidget::leaveEvent(QEvent *aEvent)
 bool
 nsCommonWidget::paintEvent(QPaintEvent *e)
 {
-    //qDebug("paintEvent: mWidget=%p x = %d, y = %d, width =  %d, height = %d", (void*)mWidget,
-    //e->rect().x(), e->rect().y(), e->rect().width(), e->rect().height());
+    qDebug("paintEvent: mWidget=%p x = %d, y = %d, width =  %d, height = %d", (void*)mWidget,
+           e->rect().x(), e->rect().y(), e->rect().width(), e->rect().height());
 //     qDebug("paintEvent: Widgetrect %d %d %d %d", mWidget->x(), mWidget->y(),
 //            mWidget->width(), mWidget->height());
 
