@@ -96,6 +96,9 @@ nsPresContext::nsPresContext()
   mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Gfx; 
   mImageAnimationMode = eImageAnimation_Normal;
+
+  mStopped = PR_FALSE;
+  mStopChrome = PR_TRUE;
   
   mShell = nsnull;
 
@@ -913,10 +916,15 @@ nsPresContext::StartLoadImage(const nsString& aURL,
                               nsIFrameImageLoader** aResult)
 {
   if (mStopped) {
-    if (aResult) {
-      *aResult = nsnull;
-    }
-    return NS_OK;
+      // if we are stopped and the image is not chrome
+      // don't load.
+      // If we are chrome don't load if we 
+      // were told to stop chrome
+      if (!aURL.EqualsWithConversion("chrome:", PR_TRUE, 7) || mStopChrome) {
+          if (aResult) {
+            *aResult = nsnull;
+          }    
+      }
   }
 
   // Allow for a null target frame argument (for precached images)
@@ -1011,13 +1019,14 @@ nsPresContext::StartLoadImage(const nsString& aURL,
 }
 
 NS_IMETHODIMP
-nsPresContext::Stop(void)
+nsPresContext::Stop(PRBool aStopChrome)
 {
+  mStopChrome = aStopChrome;
   PRInt32 n = mImageLoaders.Count();
   for (PRInt32 i = 0; i < n; i++) {
     nsIFrameImageLoader* loader;
     loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    loader->StopImageLoad();
+    loader->StopImageLoad(aStopChrome);
     NS_RELEASE(loader);
   }
   mImageLoaders.Clear();

@@ -61,7 +61,7 @@ public:
                   nsIFrameImageLoaderCB aCallBack,
                   void* aClosure, void* aKey);
 
-  NS_IMETHOD StopImageLoad();
+  NS_IMETHOD StopImageLoad(PRBool aStopChrome = PR_TRUE);
 
   NS_IMETHOD AbortImageLoad();
 

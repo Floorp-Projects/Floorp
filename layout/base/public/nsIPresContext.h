@@ -103,8 +103,9 @@ public:
 
   /**
    * Stop the presentation in preperation for destruction.
+   * @param aStopChrome PR_TRUE to stop chrome as well.
    */
-  NS_IMETHOD Stop(void) = 0;
+  NS_IMETHOD Stop(PRBool aStopChrome = PR_TRUE) = 0;
 
   /**
    * Set the presentation shell that this context is bound to.

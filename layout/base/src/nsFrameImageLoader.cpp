@@ -30,6 +30,7 @@
 #include "nsIStyleContext.h"
 #include "nsCOMPtr.h"
 #include "nsIDeviceContext.h"
+#include "nsXPIDLString.h"
 
 #ifdef DEBUG
 #undef NOISY_IMAGE_LOADING
@@ -251,8 +252,14 @@ nsFrameImageLoader::RemoveFrame(void* aKey)
 }
 
 NS_IMETHODIMP
-nsFrameImageLoader::StopImageLoad()
+nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
 {
+  // don't stop chrome
+  if (!aStopChrome) {
+      if (mURL.EqualsWithConversion("chrome:", PR_TRUE, 7))
+          return NS_OK;
+  }
+
 #ifdef NOISY_IMAGE_LOADING
   printf("    %p: stopping ", this);
   fputs(mURL, stdout);
