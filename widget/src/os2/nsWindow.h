@@ -53,6 +53,21 @@ class nsIMenuBar;
 // munged in here.  nsFrameWindow is separate because work needs to be done
 // there to decide whether methods apply to frame or client.
 
+/* Possible states of the window, used to emulate windows better... */
+   // default state; Create() not called 
+   #define   nsWindowState_ePrecreate      0x00000001
+   // processing Create() method          
+   #define   nsWindowState_eInCreate       0x00000002
+   // active, existing window             
+   #define      nsWindowState_eLive        0x00000004
+   //processing Close() method            
+   #define      nsWindowState_eClosing     0x00000008
+   // object destructor running 
+   #define      nsWindowState_eDoingDelete 0x00000010
+   // window destroyed 
+   #define      nsWindowState_eDead        0x00000100         
+   
+
 class nsWindow : public nsBaseWidget,
                  public nsSwitchToUIThread
 {
@@ -244,16 +259,7 @@ protected:
    nsToolkit     *mOS2Toolkit;
    nsFont        *mFont;
    nsIMenuBar    *mMenuBar;
-
-   // State of the window, used to emulate windows better...
-   enum nsWindowState
-   {
-      nsWindowState_ePrecreate,       // default state; Create() not called
-      nsWindowState_eInCreate,        // processing Create() method
-      nsWindowState_eLive,            // active, existing window
-      nsWindowState_eDoingDelete,     // object destructor running
-      nsWindowState_eDead             // window destroyed
-   } mWindowState;
+   PRInt32        mWindowState;
 
    // Implementation ------------------------------
    void DoCreate( HWND hwndP, nsWindow *wndP, const nsRect &rect,
