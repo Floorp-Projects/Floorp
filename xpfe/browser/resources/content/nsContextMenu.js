@@ -236,18 +236,30 @@ nsContextMenu.prototype = {
                         }
                     }
                 }   
-             } else if (this.target.tagName.toUpperCase() == "INPUT") {
+             } else if ( this.target.tagName.toUpperCase() == "OBJECT"
+                         &&
+                         // See if object tag is for an image.
+                         this.objectIsImage( this.target ) ) {
+                // This is an image.
+                this.onImage = true;
+                // URL must be constructed.
+                this.imageURL = this.objectImageURL( this.target );
+             } else if ( this.target.tagName.toUpperCase() == "INPUT") {
                if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
                  this.onImage = true;
-                 this.imageURL = this.target.src;
+                 // Convert src attribute to absolute URL.
+                 this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
+                                                       this.target.src );
                } else /* if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") */ {
                  this.onTextInput = this.isTargetATextField(this.target);
                }
-            } else if (this.target.tagName.toUpperCase() == "TEXTAREA") {
+            } else if ( this.target.tagName.toUpperCase() == "TEXTAREA" ) {
                  this.onTextInput = true;
-            } else if (this.target.getAttribute( "background" )) {
+            } else if ( this.target.getAttribute( "background" ) ) {
                this.onImage = true;
-               this.imageURL = this.target.getAttribute( "background" );
+               // Convert background attribute to absolute URL.
+               this.imageURL = this.makeURLAbsolute( this.target.ownerDocument,
+                                                     this.target.getAttribute( "background" ) );
             } else if ( window._content.HTTPIndex == "[xpconnect wrapped nsIHTTPIndex]"
                         &&
                         typeof window._content.HTTPIndex == "object"
@@ -293,7 +305,9 @@ nsContextMenu.prototype = {
                                   this.target.style.getPropertyValue( "background" );
                     if ( cssAttr ) {
                         this.onImage = true;
-                        this.imageURL = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
+                        var url = cssAttr.toLowerCase().replace(/url\("*(.+)"*\)/, "$1");
+                        // Convert attribute to absolute URL.
+                        this.imageURL = this.makeURLAbsolute( this.target.ownerDocument, url );
                     }
                 } catch ( exception ) {
                 }
@@ -722,8 +736,43 @@ nsContextMenu.prototype = {
                                Components.interfaces.nsIClipboard.kSelectionClipboard );
           }
         }
-
-
+    },
+    // Determine if target <object> is an image.
+    objectIsImage : function ( objElem ) {
+        var result = false;
+        // Get type and data attributes.
+        var type = objElem.getAttribute( "type" );
+        var data = objElem.getAttribute( "data" );
+        // Presume any mime type of the form "image/..." is an image.
+        // There must be a data= attribute with an URL, also.
+        if ( type.substring( 0, 6 ) == "image/" && data && data != "" ) {
+            result = true;
+        }
+        return result;
+    },
+    // Extract image URL from <object> tag.
+    objectImageURL : function ( objElem ) {
+        // Extract url from data= attribute.
+        var data = objElem.getAttribute( "data" );
+        // Make it absolute.
+        return this.makeURLAbsolute( objElem.ownerDocument, data );
+    },
+    // Convert relative URL to absolute, using document's <base>.
+    makeURLAbsolute : function ( doc, url ) {
+        // Construct nsIURL.
+        var baseURL = this.createInstance( "@mozilla.org/network/standard-url;1", "nsIURL" );
+        // Initialize from document url.
+        baseURL.spec = doc.location.href;
+        // Look for <base> tag.
+        var baseTags = doc.getElementsByTagName( "BASE" );
+        if ( baseTags && baseTags.length ) {
+            // Reset base URL using href attribute of <base> tag.
+            var href = baseTags[ baseTags.length - 1 ].getAttribute( "href" );
+            baseURL.spec = baseURL.resolve( href );
+        }
+        // Finally, convert argument url using base.
+        var result = baseURL.resolve( url );
+        return result;
     },
     // Save specified URL in user-selected file.
     savePage : function ( url, doNotValidate ) {
