@@ -73,6 +73,8 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\resources\sidebar.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bookmarks.xul $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bookmarks.css $(DIST)\bin\res\rdf
+	$(MAKE_INSTALL) ..\resources\history.xul $(DIST)\bin\res\rdf
+	$(MAKE_INSTALL) ..\resources\history.css $(DIST)\bin\res\rdf
 	$(MAKE_INSTALL) ..\resources\bookmarks.html $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\bookmark-item.gif $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\bookmark-folder-closed.gif $(DIST)\bin\res\rdf

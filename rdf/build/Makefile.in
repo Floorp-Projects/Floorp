@@ -86,6 +86,8 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/sidebar.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/history.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/history.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.html $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmark-item.gif $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmark-folder-closed.gif $(DIST)/bin/res/rdf
