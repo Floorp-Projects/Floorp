@@ -271,41 +271,41 @@ public class Node implements Cloneable {
             // If Context.printTrees is false, the compiler
             // can remove all these strings.
             String[] a = {
-                "TARGET",
-                "BREAK",
-                "CONTINUE",
-                "ENUM",
-                "FUNCTION",
-                "TEMP",
-                "LOCAL",
-                "CODEOFFSET",
-                "FIXUPS",
-                "VARS",
-                "USES",
-                "REGEXP",
-                "SWITCHES",
-                "CASES",
-                "DEFAULT",
-                "CASEARRAY",
-                "SOURCENAME",
-                "SOURCE",
-                "TYPE",
-                "SPECIAL_PROP",
-                "LABEL",
-                "FINALLY",
-                "LOCALCOUNT",
-                "TARGETBLOCK",
-                "VARIABLE",
-                "LASTUSE",
-                "ISNUMBER",
-                "DIRECTCALL",
-                "BASE_LINENO",
-                "END_LINENO",
-                "SPECIALCALL"
+                "target",
+                "break",
+                "continue",
+                "enum",
+                "function",
+                "temp",
+                "local",
+                "codeoffset",
+                "fixups",
+                "vars",
+                "uses",
+                "regexp",
+                "switches",
+                "cases",
+                "default",
+                "casearray",
+                "sourcename",
+                "source",
+                "type",
+                "special_prop",
+                "label",
+                "finally",
+                "localcount",
+                "targetblock",
+                "variable",
+                "lastuse",
+                "isnumber",
+                "directcall",
+                "base_lineno",
+                "end_lineno",
+                "specialcall"
             };
             propNames = a;
         }
-        return propNames[propType];
+        return propNames[propType-1];
     }
 
     public Object getProp(int propType) {
