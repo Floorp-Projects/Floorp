@@ -305,14 +305,3 @@ void nsHTMLValue::ToString(nsString& aBuffer) const
   aBuffer.Truncate();
   AppendToString(aBuffer);
 }
-
-void
-nsHTMLValue::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  if (eHTMLUnit_String == mUnit) {
-    if (!aHandler->HaveSeen(mValue.mString)) {
-      mValue.mString->SizeOf(aHandler);
-    }
-  }
-}

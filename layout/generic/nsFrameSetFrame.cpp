@@ -1691,6 +1691,6 @@ NS_IMETHODIMP nsHTMLFramesetBlankFrame::List(FILE* out, PRInt32 aIndent) const
 {
   for (PRInt32 i = aIndent; --i >= 0; ) fputs("  ", out);   // Indent
   fprintf(out, "%X BLANK \n", this);
-  return nsLeafFrame::List(out, aIndent, nsnull);
+  return nsLeafFrame::List(out, aIndent);
 }
 

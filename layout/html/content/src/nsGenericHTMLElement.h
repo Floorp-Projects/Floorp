@@ -287,7 +287,6 @@ public:
   nsresult Compact() {
     return NS_OK;
   }
-  nsresult SizeOf(nsISizeOfHandler* aHandler) const;
   nsresult CanContainChildren(PRBool& aResult) const {
     aResult = PR_FALSE;
     return NS_OK;
@@ -347,7 +346,6 @@ public:
   nsresult ConvertContentToXIF(nsXIFConverter& aConverter) const;
   nsresult FinishConvertToXIF(nsXIFConverter& aConverter) const;
   nsresult Compact();
-  nsresult SizeOf(nsISizeOfHandler* aHandler) const;
   nsresult CanContainChildren(PRBool& aResult) const;
   nsresult ChildCount(PRInt32& aResult) const;
   nsresult ChildAt(PRInt32 aIndex, nsIContent*& aResult) const;

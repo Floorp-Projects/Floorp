@@ -1916,14 +1916,6 @@ nsGenericHTMLLeafElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
   return slots->mChildNodes->QueryInterface(kIDOMNodeListIID, (void **)aChildNodes);
 }
 
-// XXX not really implemented (yet)
-nsresult
-nsGenericHTMLLeafElement::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  return NS_OK;
-}
-
 nsresult
 nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
 {
@@ -2380,13 +2372,6 @@ nsresult
 nsGenericHTMLContainerElement::Compact()
 {
   mChildren.Compact();
-  return NS_OK;
-}
-
-nsresult
-nsGenericHTMLContainerElement::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
   return NS_OK;
 }
 

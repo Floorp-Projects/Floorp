@@ -88,70 +88,6 @@ NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
   return gShowFrameBorders;
 }
 
-////////////////////////////////////////////////
-// Debug Listing Helper Class
-////////////////////////////////////////////////
-class TableListFilter : public nsIListFilter
-{
-private:
-  static char* kTagTable[];
-
-public:
-
-  TableListFilter() 
-  {};
-
-  virtual ~TableListFilter()
-  {};
-
-  virtual PRBool OutputTag(nsAutoString *aTag) const
-  {
-    PRBool result = PR_FALSE;
-    if (nsnull!=aTag  && 0!=aTag->Length())
-    {
-      for (PRInt32 i=0; ; i++)
-      {
-        const char *tableTag = kTagTable[i];
-        if (nsnull==tableTag)
-          break;
-        if (aTag->EqualsIgnoreCase(tableTag))
-        {
-          result = PR_TRUE;
-          break;
-        }
-      }
-    }
-    return result;
-  };
-
-};
-
-char* TableListFilter::kTagTable[] = {
-  "table",
-  "tbody", "thead", "tfoot",
-  "tr", "td", "th",
-  "colgroup", "col",
-  //"caption", captions are left out because there's no caption frame
-  // to hang a decent output method on.
-  "" 
-};
-
-NS_LAYOUT nsIListFilter * nsIFrame::GetFilter(nsString *aFilterName)
-{
-  nsIListFilter *result = nsnull;
-  if (nsnull!=aFilterName)
-  {
-    if (aFilterName->EqualsIgnoreCase("table"))
-    {
-      static nsIListFilter * tableListFilter;
-      if (nsnull==tableListFilter)
-        tableListFilter = new TableListFilter();
-      result = tableListFilter;
-    }
-  }
-  return result;
-}
-
 /**
  * Note: the log module is created during library initialization which
  * means that you cannot perform logging before then.
@@ -412,31 +348,15 @@ nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 }
 
 NS_IMETHODIMP
-nsFrame::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  SizeOfWithoutThis(aHandler);
-  return NS_OK;
-}
-
-void
-nsFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
-{
-  // Note: style context's are accounted for via the style system's
-  // sizeof support
-
-  // Note: content is accounted for via the content system's sizeof
-  // support
-}
-
-NS_IMETHODIMP nsFrame::GetContent(nsIContent*& aContent) const
+nsFrame::GetContent(nsIContent*& aContent) const
 {
   NS_IF_ADDREF(mContent);
   aContent = mContent;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::GetStyleContext(nsIStyleContext*& aStyleContext) const
+NS_IMETHODIMP
+nsFrame::GetStyleContext(nsIStyleContext*& aStyleContext) const
 {
   NS_ASSERTION(nsnull != mStyleContext, "frame should always have style context");
   NS_IF_ADDREF(mStyleContext);
@@ -1638,10 +1558,8 @@ PRInt32 nsFrame::ContentIndexInContainer(const nsIFrame* aFrame)
 
 // Debugging
 NS_IMETHODIMP
-nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+nsFrame::List(FILE* out, PRInt32 aIndent) const
 {
-  // if a filter is present, only output this frame if the filter says
-  // we should
   nsAutoString tagString;
   if (nsnull != mContent) {
     nsIAtom* tag;
@@ -1652,22 +1570,20 @@ nsFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
     }
   }
 
-  if ((nsnull==aFilter) || aFilter->OutputTag(&tagString)) {
-    // Indent
-    IndentBy(out, aIndent);
+  // Indent
+  IndentBy(out, aIndent);
 
-    // Output the tag and rect
-    ListTag(out);
-    if (nsnull != mView) {
-      fprintf(out, " [view=%p]", mView);
-    }
-    fputs(" ", out);
-    out << mRect;
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
-    fputs("<>\n", out);
+  // Output the tag and rect
+  ListTag(out);
+  if (nsnull != mView) {
+    fprintf(out, " [view=%p]", mView);
   }
+  fputs(" ", out);
+  out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fputs("<>\n", out);
   return NS_OK;
 }
 

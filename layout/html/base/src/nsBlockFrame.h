@@ -64,7 +64,7 @@ public:
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,
                    nsFramePaintLayer    aWhichLayer);
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const = 0;
   NS_IMETHOD VerifyTree() const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
@@ -320,7 +320,7 @@ public:
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
   NS_IMETHOD GetFrameName(nsString& aResult) const;
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   // nsIHTMLReflow overrides
   NS_IMETHOD Reflow(nsIPresContext&          aPresContext,

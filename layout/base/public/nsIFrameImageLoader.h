@@ -25,7 +25,6 @@ class nsIFrame;
 class nsIImage;
 class nsIImageGroup;
 class nsIPresContext;
-class nsISizeOfHandler;
 class nsString;
 struct nsSize;
 
@@ -70,8 +69,6 @@ public:
   NS_IMETHOD GetSize(nsSize& aResult) const = 0;
 
   NS_IMETHOD GetImageLoadStatus(PRIntn& aLoadStatus) const = 0;
-
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 };
 
 // Image load status bit values

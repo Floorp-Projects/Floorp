@@ -26,7 +26,6 @@
 #include "nsIStyleContext.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
-#include "nsISizeOfHandler.h"
 #include "nsVoidArray.h"
 
 static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
@@ -70,8 +69,6 @@ struct HTMLAttribute {
   {
     NS_IF_RELEASE(mAttribute);
   }
-
-  void SizeOf(nsISizeOfHandler* aHandler) const;
 
   HTMLAttribute& operator=(const HTMLAttribute& aCopy)
   {
@@ -150,20 +147,6 @@ struct HTMLAttribute {
   nsHTMLValue     mValue;
   HTMLAttribute*  mNext;
 };
-
-void
-HTMLAttribute::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  if (!aHandler->HaveSeen(mAttribute)) {
-    mAttribute->SizeOf(aHandler);
-  }
-  aHandler->Add(sizeof(*this));
-  aHandler->Add((size_t) (- ((PRInt32) sizeof(mValue)) ) );
-  mValue.SizeOf(aHandler);
-  if (!aHandler->HaveSeen(mNext)) {
-    mNext->SizeOf(aHandler);
-  }
-}
 
 // ----------------
 
@@ -244,11 +227,6 @@ public:
   // Strength is an out-of-band weighting, always 0 here
   NS_IMETHOD GetStrength(PRInt32& aStrength) const;
   NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
-
-  /**
-   * Add this object's size information to the sizeof handler.
-   */
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
 
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
@@ -856,18 +834,6 @@ NS_IMETHODIMP
 HTMLAttributesImpl::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-HTMLAttributesImpl::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  // XXX mID
-  // XXX mClass
-  if (!aHandler->HaveSeen(mFirst.mNext)) {
-    mFirst.mNext->SizeOf(aHandler);
-  }
   return NS_OK;
 }
 

@@ -137,7 +137,6 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
   NS_IMETHOD  DeleteFrame(nsIPresContext& aPresContext);
-  NS_IMETHOD  SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD  GetContent(nsIContent*& aContent) const;
   NS_IMETHOD  GetStyleContext(nsIStyleContext*& aStyleContext) const;
   NS_IMETHOD  SetStyleContext(nsIPresContext* aPresContext,
@@ -203,7 +202,7 @@ public:
   NS_IMETHOD  SetNextSibling(nsIFrame* aNextSibling);
   NS_IMETHOD  IsTransparent(PRBool& aTransparent) const;
   NS_IMETHOD  Scrolled(nsIView *aView);
-  NS_IMETHOD  List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD  GetFrameName(nsString& aResult) const;
   NS_IMETHOD  DumpRegressionData(FILE* out, PRInt32 aIndent);
   NS_IMETHOD  VerifyTree() const;
@@ -339,8 +338,6 @@ protected:
 
   // Style post processing hook
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
-
-  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   /**
    * Dump out the "base classes" regression data. This should dump

@@ -111,7 +111,7 @@ public:
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
 
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const;
+  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
@@ -2297,7 +2297,7 @@ TextFrame::GetFrameName(nsString& aResult) const
 }
 
 NS_IMETHODIMP
-TextFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const
+TextFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);

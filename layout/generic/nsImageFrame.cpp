@@ -84,18 +84,6 @@ nsHTMLImageLoader::~nsHTMLImageLoader()
   NS_IF_RELEASE(mBaseURL);
 }
 
-void
-nsHTMLImageLoader::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  if (!aHandler->HaveSeen(mURLSpec)) {
-    mURLSpec->SizeOf(aHandler);
-  }
-  if (!aHandler->HaveSeen(mImageLoader)) {
-    mImageLoader->SizeOf(aHandler);
-  }
-}
-
 nsIImage*
 nsHTMLImageLoader::GetImage()
 {
@@ -359,21 +347,6 @@ nsImageFrame::Init(nsIPresContext&  aPresContext,
   }
 
   return rv;
-}
-
-NS_IMETHODIMP
-nsImageFrame::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  nsImageFrame::SizeOfWithoutThis(aHandler);
-  return NS_OK;
-}
-
-void
-nsImageFrame::SizeOfWithoutThis(nsISizeOfHandler* aHandler) const
-{
-  ImageFrameSuper::SizeOfWithoutThis(aHandler);
-  mImageLoader.SizeOf(aHandler);
 }
 
 static nsresult

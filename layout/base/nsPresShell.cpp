@@ -1421,8 +1421,8 @@ LogVerifyMessage(nsIFrame* k1, nsIFrame* k2, const char* aMsg,
 
   printf(" %s\n", aMsg);
   if (gVerifyReflowAll) {
-    k1->List(stdout, 1, nsnull);
-    k2->List(stdout, 1, nsnull);
+    k1->List(stdout, 1);
+    k2->List(stdout, 1);
   }
 }
 

@@ -31,13 +31,11 @@ class nsIFrame;
 class nsIPresContext;
 class nsIPresShell;
 class nsIRenderingContext;
-class nsISizeOfHandler;
 class nsISpaceManager;
 class nsIStyleContext;
 class nsIView;
 class nsIWidget;
 class nsIReflowCommand;
-class nsIListFilter;
 class nsAutoString;
 class nsString;
 
@@ -263,13 +261,6 @@ public:
                          nsIPresShell&   aPresShell,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame) = 0;
-
-  /**
-   * Add this object's size information to the sizeof handler. Note that
-   * this does <b>not</b> add in the size of content, style, or view's
-   * (those are sized seperately).
-   */
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const = 0;
 
   /**
    * Deletes this frame and each of its child frames (recursively calls
@@ -517,9 +508,7 @@ public:
   NS_IMETHOD Scrolled(nsIView *aView) = 0;
 
   // Debugging
-  NS_IMETHOD  List(FILE* out,
-                   PRInt32 aIndent,
-                   nsIListFilter *aFilter) const = 0;
+  NS_IMETHOD  List(FILE* out, PRInt32 aIndent) const = 0;
 
   /**
    * Get a printable from of the name of the frame type.
@@ -541,8 +530,6 @@ public:
   NS_IMETHOD  SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw) = 0;
 
   NS_IMETHOD  GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset) = 0;
-
-  static NS_LAYOUT nsIListFilter * GetFilter(nsString *aFilterName);
 
   /**
    * See if tree verification is enabled. To enable tree verification add
@@ -576,13 +563,6 @@ protected:
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void) = 0;
   NS_IMETHOD_(nsrefcnt) Release(void) = 0;
-};
-
-/* ----- nsIListFilter definition ----- */
-class nsIListFilter
-{
-  public:
-    virtual PRBool OutputTag(nsAutoString *aTag) const = 0;
 };
 
 #endif /* nsIFrame_h___ */

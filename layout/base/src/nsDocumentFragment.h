@@ -21,7 +21,6 @@
 #include "nsIDOMDocumentFragment.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsGenericElement.h"
-#include "nsISizeOfHandler.h"
 #include "nsINameSpaceManager.h"
 
 class nsIDocument;
@@ -172,11 +171,6 @@ public:
     { return NS_OK; }
   NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const
     { return NS_OK; }
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const 
-    {
-      aHandler->Add(sizeof(*this));
-      return NS_OK;
-    }
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext,
                             nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent,

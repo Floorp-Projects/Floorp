@@ -495,7 +495,7 @@ NOFRAMES {
 
 /* Pseudo-element style */
 
-:IB-PSEUDO {
+:MOZ-ANONYMOUS-BLOCK {
   display: block;
 }
 

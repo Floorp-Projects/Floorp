@@ -27,7 +27,6 @@ class nsIFrame;
 class nsIFrameImageLoader;
 class nsImageMap;
 class nsIPresContext;
-class nsISizeOfHandler;
 class nsIURL;
 struct nsHTMLReflowState;
 struct nsHTMLReflowMetrics;
@@ -81,8 +80,6 @@ public:
 
   PRBool GetLoadImageFailed() const;
 
-  void SizeOf(nsISizeOfHandler* aHandler) const;
-
 protected:
   nsIFrameImageLoader* mImageLoader;
   PRPackedBool mLoadImageFailed;
@@ -103,7 +100,6 @@ public:
                   nsIContent*      aContent,
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext);
-  NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler) const;
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect,
@@ -125,7 +121,6 @@ public:
 
 protected:
   virtual ~nsImageFrame();
-  void SizeOfWithoutThis(nsISizeOfHandler* aHandler) const;
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,

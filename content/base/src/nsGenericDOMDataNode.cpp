@@ -682,15 +682,3 @@ nsGenericDOMDataNode::GetRangeList(nsVoidArray*& aResult) const
   aResult = mRangeList;
   return NS_OK;
 }
-
-
-//----------------------------------------------------------------------
-
-// XXX not really implemented (yet)
-nsresult
-nsGenericDOMDataNode::SizeOf(nsISizeOfHandler* aHandler) const
-{
-  aHandler->Add(sizeof(*this));
-  return NS_OK;
-}
-
