@@ -193,7 +193,7 @@ nsDownloadManager::DownloadStarted(const PRUnichar* aPath)
       nsCOMPtr<nsIRDFResource> res;
       nsCOMPtr<nsIRDFNode> node;
       
-      gRDFService->GetUnicodeResource(aPath, getter_AddRefs(res));
+      gRDFService->GetUnicodeResource(nsDependentString(aPath), getter_AddRefs(res));
       
       mDataSource->GetTarget(res, gNC_DateStarted, PR_TRUE, getter_AddRefs(node));
       if (node)
@@ -220,7 +220,7 @@ nsDownloadManager::DownloadEnded(const PRUnichar* aPath, const PRUnichar* aMessa
       nsCOMPtr<nsIRDFResource> res;
       nsCOMPtr<nsIRDFNode> node;
       
-      gRDFService->GetUnicodeResource(aPath, getter_AddRefs(res));
+      gRDFService->GetUnicodeResource(nsDependentString(aPath), getter_AddRefs(res));
       
       mDataSource->GetTarget(res, gNC_DateEnded, PR_TRUE, getter_AddRefs(node));
       if (node)
@@ -310,7 +310,7 @@ nsDownloadManager::AssertProgressInfoFor(const PRUnichar* aPath)
   nsCOMPtr<nsIRDFResource> res;
   nsCOMPtr<nsIRDFLiteral> literal;
 
-  gRDFService->GetUnicodeResource(aPath, getter_AddRefs(res));
+  gRDFService->GetUnicodeResource(nsDependentString(aPath), getter_AddRefs(res));
 
   DownloadState state;
   internalDownload->GetDownloadState(&state);
@@ -416,7 +416,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
     CancelDownload(path.get());
 
   nsCOMPtr<nsIRDFResource> downloadRes;
-  gRDFService->GetUnicodeResource(path.get(), getter_AddRefs(downloadRes));
+  gRDFService->GetUnicodeResource(path, getter_AddRefs(downloadRes));
 
   // if the resource is in the container already (the user has already
   // downloaded this file), remove it
@@ -472,7 +472,7 @@ nsDownloadManager::AddDownload(nsIURI* aSource,
 
   // Assert file information
   nsCOMPtr<nsIRDFResource> fileResource;
-  gRDFService->GetUnicodeResource(path.get(), getter_AddRefs(fileResource));
+  gRDFService->GetUnicodeResource(path, getter_AddRefs(fileResource));
   rv = mDataSource->Assert(downloadRes, gNC_File, fileResource, PR_TRUE);
   if (NS_FAILED(rv)) {
     downloads->IndexOf(downloadRes, &itemIndex);
@@ -603,7 +603,7 @@ nsDownloadManager::RemoveDownload(const PRUnichar* aPath)
   if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIRDFResource> res;
-  gRDFService->GetUnicodeResource(aPath, getter_AddRefs(res));
+  gRDFService->GetUnicodeResource(nsDependentString(aPath), getter_AddRefs(res));
 
   // remove all the arcs for this resource, and then remove it from the Seq
   nsCOMPtr<nsISimpleEnumerator> arcs;
@@ -1081,7 +1081,7 @@ nsDownload::SetDisplayName(const PRUnichar* aDisplayName)
   nsresult rv = mTarget->GetPath(path);
   if (NS_FAILED(rv)) return rv;
 
-  gRDFService->GetUnicodeResource(path.get(), getter_AddRefs(res));
+  gRDFService->GetUnicodeResource(path, getter_AddRefs(res));
   
   gRDFService->GetLiteral(aDisplayName, getter_AddRefs(nameLiteral));
   ds->Assert(res, gNC_Name, nameLiteral, PR_TRUE);
