@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(XP_UNIX)
+#if defined(XP_UNIX) || defined(XP_BEOS)
 
 #include <stdlib.h>   // mbtowc, wctomb
 #include <locale.h>   // setlocale
