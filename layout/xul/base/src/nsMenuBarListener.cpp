@@ -53,7 +53,6 @@
 #include "nsWidgetsCID.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
-#include "nsPresContext.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -237,10 +236,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 
       // If charCode == 0, then it is not a printable character.
       // Don't attempt to handle accesskey for non-printable characters.
-      // No other modifiers are allowed to be down except for Shift.
-      PRUint32 modifiers = GetModifiers(keyEvent);
-      if (mAccessKeyMask != MODIFIER_SHIFT && (modifiers & mAccessKeyMask) &&
-           (modifiers & ~(mAccessKeyMask | MODIFIER_SHIFT)) == 0 && charCode)
+      if (IsAccessKeyPressed(keyEvent) && charCode)
       {
         // Do shortcut navigation.
         // A letter was pressed. We want to see if a shortcut gets matched. If
@@ -280,6 +276,18 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     } 
   }
   return retVal;
+}
+
+PRBool
+nsMenuBarListener::IsAccessKeyPressed(nsIDOMKeyEvent* aKeyEvent)
+{
+  InitAccessKey();
+  // No other modifiers are allowed to be down except for Shift.
+  PRUint32 modifiers = GetModifiers(aKeyEvent);
+
+  return (mAccessKeyMask != MODIFIER_SHIFT &&
+          (modifiers & mAccessKeyMask) &&
+          (modifiers & ~(mAccessKeyMask | MODIFIER_SHIFT)) == 0);
 }
 
 PRUint32
