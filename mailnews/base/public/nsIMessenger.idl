@@ -20,6 +20,7 @@
 #include "domstubs.idl"
 #include "xulstubs.idl"
 #include "nsIRDFCompositeDataSource.idl"
+#include "nsIMsgStatusFeedback.idl"
 
 %{C++
 #include "nsIDOMWindow.h"
@@ -36,7 +37,7 @@ interface nsIMessenger : nsISupports {
 
     void GetNewMessages(in nsIRDFCompositeDataSource database, in nsIDOMXULElement folder);
 	void Open3PaneWindow();
-    void SetWindow(in nsIDOMWindow ptr);
+    void SetWindow(in nsIDOMWindow ptr, in nsIMsgStatusFeedback statusFeedback);
     void OpenURL(in string str);
     void DoPrint();
     void DoPrintPreview();
@@ -49,9 +50,6 @@ interface nsIMessenger : nsISupports {
 	void Exit();
     void Close();
     void OnUnload();
-	void ViewAllMessages(in nsIRDFCompositeDataSource database);
-	void ViewUnreadMessages(in nsIRDFCompositeDataSource database);
-	void ViewAllThreadMessages(in nsIRDFCompositeDataSource database);
 	void MarkMessagesRead(in nsIRDFCompositeDataSource database, in nsIDOMNodeList messages,
 						  in boolean markRead);
 	void MarkMessageRead(in nsIRDFCompositeDataSource database, in nsIDOMXULElement message,
