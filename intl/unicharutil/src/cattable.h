@@ -5,7 +5,7 @@
  * compliance with the NPL.  You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
- H Software distributed under the NPL is distributed on an "AS IS" basis,
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
  * NPL.
@@ -1432,31 +1432,31 @@ static PRUint8 GetCat(PRUnichar u)
     //
     // Handle U+0000 to U+06FF
     if((((PRUnichar)0x0000)<=u)&&(u<=((PRUnichar)0x06FF))) {
-        pat = gGenCatIdx1 [( u -(PRUnichar) 0x0000 )];
+        pat = gGenCatPat[gGenCatIdx1 [( u -(PRUnichar) 0x0000 )]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+0900 to U+11FF
     if((((PRUnichar)0x0900)<=u)&&(u<=((PRUnichar)0x11FF))) {
-        pat = gGenCatIdx2 [( u -(PRUnichar) 0x0900 )];
+        pat = gGenCatPat[gGenCatIdx2 [( u -(PRUnichar) 0x0900 )]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+1E00 to U+27FF
     if((((PRUnichar)0x1E00)<=u)&&(u<=((PRUnichar)0x27FF))) {
-        pat = gGenCatIdx3 [( u -(PRUnichar) 0x1E00 )];
+        pat = gGenCatPat[gGenCatIdx3 [( u -(PRUnichar) 0x1E00 )]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+3000 to U+33FF
     if((((PRUnichar)0x3000)<=u)&&(u<=((PRUnichar)0x33FF))) {
-        pat = gGenCatIdx4 [( u -(PRUnichar) 0x3000 )];
+        pat = gGenCatPat[gGenCatIdx4 [( u -(PRUnichar) 0x3000 )]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
     // Handle U+F900 to U+FFFF
     if((((PRUnichar)0xF900)<=u)&&(u<=((PRUnichar)0xFFFF))) {
-        pat = gGenCatIdx5 [( u -(PRUnichar) 0xF900 )];
+        pat = gGenCatPat[gGenCatIdx5 [( u -(PRUnichar) 0xF900 )]];
         return (pat  >> ((u % 8) * 4)) & 0x0F;
     }
 
