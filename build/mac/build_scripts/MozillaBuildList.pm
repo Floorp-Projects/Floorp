@@ -1707,6 +1707,8 @@ sub BuildCommonProjects()
 
     InstallFromManifest(":mozilla:xpcom:components:MANIFEST_COMPONENTS",         "${dist_dir}Components:");
 
+    BuildOneProject(":mozilla:gfx:macbuild:gfx.xml",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
+
     EndBuildModule("common");
 }
 
@@ -1995,8 +1997,6 @@ sub BuildLayoutProjects()
 
     BuildProject(":mozilla:expat:macbuild:expat.xml",                           "expat$D.o");
     BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.xml",              "htmlparser$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-
-    BuildOneProject(":mozilla:gfx:macbuild:gfx.xml",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
 
     my($dbg) = $main::DEBUG ? "Dbg" : "";
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfxComponent.xml",         "gfxComponent$C$dbg.$S", "gfxComponent$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
