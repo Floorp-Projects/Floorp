@@ -13,15 +13,6 @@
       <![CDATA[
         var i;
         var children;
-        if (this.menu == "") {
-          children = this.childNodes;
-          for (i = 0; i < children.length; i++) {
-            if (children[i].localName == "menupopup") {
-              this.menu = "_child";
-              break;
-            }
-          }
-        }
         if (this.tooltip == "") {
           children = this.childNodes;
           for (i = 0; i < children.length; i++) {
