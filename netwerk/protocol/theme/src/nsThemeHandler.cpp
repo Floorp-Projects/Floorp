@@ -40,7 +40,7 @@ using namespace std;
 typedef map<string, string> Arguments;
 
 /**
- *	Extra space to use to draw borders on menus correctly
+ *  Extra space to use to draw borders on menus correctly
  */
 static const PRInt8 mMenuDrawingBufferExtension = 6; 
 
@@ -321,7 +321,7 @@ public:
 
 static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
-    int width = getIntArgument(args, "width", 40);
+    int width = getIntArgument(args, "width", 58);
     int height = getIntArgument(args, "height", 20);
     bool isActive = getBoolArgument(args, "active", true);
     bool isPressed = getBoolArgument(args, "pressed", false);
@@ -376,73 +376,157 @@ static nsresult drawThemeButton(ThemeButtonKind kind, Arguments& args, nsIInputS
     return rv;
 }
 
+
+static nsresult drawThemeMenu(Arguments& args, nsIInputStream **result, PRInt32 *length)
+{
+    int width = getIntArgument(args, "width", 100);
+    int height = getIntArgument(args, "height", 300);
+    bool isActive = getBoolArgument(args, "active", true);
+    bool isPulldown = getBoolArgument(args, "pulldown", true);
+    bool isPopup  = getBoolArgument(args, "popup", false);
+    bool isHierarchical  = getBoolArgument(args, "hierarchical", false);
+
+        
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    OSStatus status;
+
+    ThemeMenuType type = (isPulldown ? kThemeMenuTypePullDown : 
+                            (isPopup? kThemeMenuTypePopUp : 
+                                (isHierarchical? kThemeMenuTypeHierarchical: kThemeMenuTypePullDown)
+                            ));
+    
+    if (!isActive) {
+        type += kThemeMenuTypeInactive;
+    }
+        
+    Rect menuBounds = { 0, 0, height, width };
+    RgnHandle backgroundRgn = ::NewRgn();
+    
+    status = ::GetThemeMenuBackgroundRegion(&menuBounds, type, backgroundRgn);
+    if (status == noErr) {  
+    
+        TempGWorld world((*backgroundRgn)->rgnBBox);
+        if (world.valid()) {
+            // initialize the GWorld with all black, alpha=0xFF.
+            world.fill(0xFF000000);
+            
+            status = ::DrawThemeMenuBackground (&((*backgroundRgn)->rgnBBox), type);
+
+            // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
+            // otherwise turn it off on the pixels that weren't touched.
+            world.xorFill(0xFF000000);
+            
+            // now, encode the image as a 'PNGf' image, and return the encoded image
+            // as an nsIInputStream.
+            rv = encodeGWorld(world, 'PNGf', result, length);
+        }
+        ::DisposeRgn(backgroundRgn);
+    }
+    return rv;
+}
+
+
 static nsresult drawThemeMenuItem(Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
-	int width = getIntArgument(args, "width", 60);
+    int width = getIntArgument(args, "width", 60);
     int height = getIntArgument(args, "height", 20);
     bool isActive = getBoolArgument(args, "active", true);
     bool isSelected = getBoolArgument(args, "selected", false);
-	bool hasSubMenu  = getBoolArgument(args, "submenu", false);
-	bool isUpArrow  = getBoolArgument(args, "uparrow", false);
-	bool isDownArrow  = getBoolArgument(args, "downarrow", false);
-	bool isAtTop  = getBoolArgument(args, "attop", false);
-	bool isAtBottom  = getBoolArgument(args, "atbottom", false);
-	bool isInSubMenu  = getBoolArgument(args, "insubmenu", false);
-	bool isInPopup  = getBoolArgument(args, "inpopup", false);
-	bool hasIcon  = getBoolArgument(args, "icon", false);
+    bool hasSubMenu  = getBoolArgument(args, "submenu", false);
+    bool isUpArrow  = getBoolArgument(args, "uparrow", false);
+    bool isDownArrow  = getBoolArgument(args, "downarrow", false);
+    bool isAtTop  = getBoolArgument(args, "attop", false);
+    bool isAtBottom  = getBoolArgument(args, "atbottom", false);
+    bool isInSubMenu  = getBoolArgument(args, "insubmenu", false);
+    bool isInPopup  = getBoolArgument(args, "inpopup", false);
+    bool hasIcon  = getBoolArgument(args, "icon", false);
 
-		
-	nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+        
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     OSStatus status;
     PRInt8 yOffset;
 
-	ThemeMenuState state = (isActive ? (isSelected? kThemeMenuSelected : kThemeMenuActive) : kThemeMenuDisabled);
-	ThemeMenuItemType type = (hasSubMenu ? kThemeMenuItemHierarchical : kThemeMenuItemPlain);
-	type = (isUpArrow ? kThemeMenuItemScrollUpArrow : type);
-	type = (isDownArrow ? kThemeMenuItemScrollDownArrow : type);
-	
-	if (isAtTop) {
-		type += kThemeMenuItemAtTop;
-		yOffset=0;
-	} else if (isAtBottom) {
-		type += kThemeMenuItemAtBottom;
-		yOffset = mMenuDrawingBufferExtension;
-	} else {
-		yOffset = mMenuDrawingBufferExtension/2;
-	}
-	
-	if (isInSubMenu) {
-		type += kThemeMenuItemHierBackground;
-	}
-	
-	if (isInPopup) {
-		type += kThemeMenuItemPopUpBackground;
-	}
+    ThemeMenuState state = (isActive ? (isSelected? kThemeMenuSelected : kThemeMenuActive) : kThemeMenuDisabled);
+    ThemeMenuItemType type = (hasSubMenu ? kThemeMenuItemHierarchical : kThemeMenuItemPlain);
+    type = (isUpArrow ? kThemeMenuItemScrollUpArrow : type);
+    type = (isDownArrow ? kThemeMenuItemScrollDownArrow : type);
+    
+    if (isAtTop) {
+        type += kThemeMenuItemAtTop;
+        yOffset=0;
+    } else if (isAtBottom) {
+        type += kThemeMenuItemAtBottom;
+        yOffset = mMenuDrawingBufferExtension;
+    } else {
+        yOffset = mMenuDrawingBufferExtension/2;
+    }
+    
+    if (isInSubMenu) {
+        type += kThemeMenuItemHierBackground;
+    }
+    
+    if (isInPopup) {
+        type += kThemeMenuItemPopUpBackground;
+    }
 
-	if (hasIcon) {
-		if (type != kThemeMenuItemScrollUpArrow && type != kThemeMenuItemScrollDownArrow) {
-			type += kThemeMenuItemHasIcon;
-		}
-	}
-	
-	PRInt16 extraHeight, extraWidth;
-	status = ::GetThemeMenuItemExtra(type, &extraHeight, &extraWidth);
-	if (status == noErr) {
-		width += extraWidth;
-		height += extraHeight;
-	}
-	
-	//make an imaginary menu a little bigger than the item, then position the item within this
-	//menu so that the right edge effects are included when attop or atbottom is true (see above)	
-	Rect itemBounds = { yOffset, 0, height + yOffset, width };
-	Rect menuBounds = { 0, 0, height + mMenuDrawingBufferExtension, width };
-	TempGWorld world(itemBounds);
+    if (hasIcon) {
+        if (type != kThemeMenuItemScrollUpArrow && type != kThemeMenuItemScrollDownArrow) {
+            type += kThemeMenuItemHasIcon;
+        }
+    }
+    
+    PRInt16 extraHeight, extraWidth;
+    status = ::GetThemeMenuItemExtra(type, &extraHeight, &extraWidth);
+    if (status == noErr) {
+        width += extraWidth;
+        height += extraHeight;
+    }
+    
+    //make an imaginary menu a little bigger than the item, then position the item within this
+    //menu so that the right edge effects are included when attop or atbottom is true (see above)   
+    Rect itemBounds = { yOffset, 0, height + yOffset, width };
+    Rect menuBounds = { 0, 0, height + mMenuDrawingBufferExtension, width };
+    TempGWorld world(itemBounds);
     if (world.valid()) {
         // initialize the GWorld with all black, alpha=0xFF.
         world.fill(0xFF000000);
         
         status = ::DrawThemeMenuItem(&menuBounds, &itemBounds, 0, 
-        							height+mMenuDrawingBufferExtension, state, type, NULL, NULL);
+                                    height+mMenuDrawingBufferExtension, state, type, NULL, NULL);
+
+        // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
+        // otherwise turn it off on the pixels that weren't touched.
+        world.xorFill(0xFF000000);
+        
+        // now, encode the image as a 'PNGf' image, and return the encoded image
+        // as an nsIInputStream.
+        rv = encodeGWorld(world, 'PNGf', result, length);
+    }
+    return rv;
+}
+
+static nsresult drawThemeMenuSeperator(Arguments& args, nsIInputStream **result, PRInt32 *length)
+{
+    int width = getIntArgument(args, "width", 60);
+    int height = getIntArgument(args, "height", 3);
+    
+        
+    nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    OSStatus status;
+
+    PRInt16 seperatorHeight;
+    status = ::GetThemeMenuSeparatorHeight(&seperatorHeight);
+    if (status == noErr) {
+        height = seperatorHeight;
+    }
+    
+    Rect seperatorBounds = { 0, 0, height, width };
+    TempGWorld world(seperatorBounds);
+    if (world.valid()) {
+        // initialize the GWorld with all black, alpha=0xFF.
+        world.fill(0xFF000000);
+        
+        status = ::DrawThemeMenuSeparator(&seperatorBounds);
 
         // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
         // otherwise turn it off on the pixels that weren't touched.
@@ -657,8 +741,12 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     ButtonMap::const_iterator ba = gButtonActions.find(action);
     if (ba != gButtonActions.end()) {
         rv = drawThemeButton(ba->second, args, getter_AddRefs(input), &contentLength);
+    } else if (action == "menu") {
+        rv = drawThemeMenu(args,  getter_AddRefs(input), &contentLength);
     } else if (action == "menuitem") {
-    	rv = drawThemeMenuItem(args,  getter_AddRefs(input), &contentLength);
+        rv = drawThemeMenuItem(args,  getter_AddRefs(input), &contentLength);
+    } else if (action == "menuseperator") {
+        rv = drawThemeMenuSeperator(args,  getter_AddRefs(input), &contentLength);    
     } else if (action == "scrollbar") {
         rv = drawThemeScrollbar(args, getter_AddRefs(input), &contentLength);
     } else {
