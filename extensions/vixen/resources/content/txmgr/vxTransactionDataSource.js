@@ -34,6 +34,9 @@ var gVxTransactionRoot    = null;   // transaction list
 
 var gVxTxnCommandString   = null;   // command string for a transaction
 var gVxTxnDescription     = null;   // pretty description of a transaction
+var gVxTxnState           = null;   // values = "undo"/"redo"
+var gVxTxnStackIndex      = null;   // specifies the stack index (current top transaction)
+var gVxTxnPosition        = null;  // specifies the position of the txn (top/bottom of stack, etc);
 
 function vxTransactionDataSource()
 {
@@ -63,7 +66,9 @@ function vxTransactionDataSource()
   // initialize other resources
   gVxTxnCommandString = this.mRDFS.GetResource(kVixenRDF + "command-string");
   gVxTxnDescription   = this.mRDFS.GetResource(kVixenRDF + "description");                            
-
+  gVxTxnState         = this.mRDFS.GetResource(kVixenRDF + "state");
+  gVxTxnStackIndex    = this.mRDFS.GetResource(kVixenRDF + "stack-index");
+  gVxTxnPosition      = this.mRDFS.GetResource(kVixenRDF + "position");
 }
 
 vxTransactionDataSource.prototype = 
@@ -81,6 +86,11 @@ vxTransactionDataSource.prototype =
   Unassert: function (aSource, aProperty, aValue, aTruthValue)
   {
     this.mDataSource.Unassert(aSource, aProperty, aValue, aTruthValue);
+  },
+
+  Change: function (aSource, aProperty, aOldVal, aNewVal) 
+  {
+    this.mDataSource.Change(aSource, aProperty, aOldVal, aNewVal);
   },
   
   GetTarget: function (aSource, aProperty, aTruthValue)

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Ben Goodger <ben@netscape.com>
  */
 
 #ifndef __vixenShell_h__

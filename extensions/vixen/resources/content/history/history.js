@@ -23,34 +23,53 @@
  
 var vxHistory = 
 {
+  mDocumentID: null, 
+  mBundle: null,
+  
   startup: function ()
   {
-    var rootWindow = vxUtils.getWindow("vixen:main");
-    if (rootWindow) {
-      _dd("adding observer");
-      rootWindow.vxShell.observerService.AddObserver(vfdFocusObserver, "vfd-focus");
-    }
+    // add a focus observer so that we can update our content depending on which
+    // document is at front
+    var rootShell = vxUtils.getRootShell();
+    if (rootShell && "observerService" in rootShell)
+      rootShell.observerService.AddObserver(vfdFocusObserver, "vfd-focus");
+    
+    this.mBundle = document.getElementById("historyBundle");
   }
 };
 
 var vfdFocusObserver = {
   Observe: function (aSubject, aTopic, aData) 
   {
-    _dd("do Observe");
+    // only update if we need to switch datasources. 
+    _ddf(aData.mDocumentID, vxHistory.mDocumentID);
+    if (aData.mDocumentID === vxHistory.mDocumentID) {
+      _dd("Not re-rooting for the same ID");
+      return false;
+    }
+    vxHistory.mDocumentID = aData.mDocumentID;
+  
     var historyTree = document.getElementById("historyTree");
     if (historyTree) {
       var datasources = historyTree.database.GetDataSources();
       while(datasources.hasMoreElements()) {
         var currDS = datasources.getNext();
+        currDS = currDS.QueryInterface(Components.interfaces.nsIRDFDataSource);
         historyTree.database.RemoveDataSource(currDS);
       }
       var datasource = aSubject.QueryInterface(Components.interfaces.nsIRDFDataSource);
       if (datasource) {
-        _dd("rebuilding history tree");
-        _ddf("datasource", datasource);
-        
         historyTree.database.AddDataSource(datasource);
+        historyTree.builder.rebuild();
         
+        if (aData.vfdDocumentWindowNode) {
+          var documentTitle = aData.vfdDocumentWindowNode.getAttribute("title");
+          var titleString = vxHistory.mBundle.getString("historyWindowTitle");
+          titleString = titleString.replace(/%FORM_NAME%/, documentTitle);
+          window.title = titleString;
+        }
+        
+        /*
         // XXX - inspect the datasource
         var RDFService = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
         RDFService = RDFService.QueryInterface(Components.interfaces.nsIRDFService);
@@ -64,6 +83,7 @@ var vfdFocusObserver = {
         container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
         container.Init(datasource, seq);
         var elts = container.GetElements();
+        
         while (elts.hasMoreElements()) {
           var currElt = elts.getNext();
           currElt = currElt.QueryInterface(Components.interfaces.nsIRDFResource);
@@ -71,10 +91,10 @@ var vfdFocusObserver = {
           commandString = commandString.QueryInterface(Components.interfaces.nsIRDFLiteral);
           _ddf("commandString", commandString.Value);
         }
-        
+        */
       }
     }
+    return true;
   }
 };
-
 
