@@ -367,14 +367,14 @@ char *WH_FilePlatformName(const char *pName)
 
 NS_DEFINE_IID(kRefreshURLIID,       NS_IREFRESHURL_IID);
 
-void FE_SetRefreshURLTimer(MWContext *pContext, uint32 seconds, char *pRefreshURL) 
+void FE_SetRefreshURLTimer(MWContext *pContext, URL_Struct *URL_s)
 {
     nsresult rv;
     nsIRefreshUrl* IRefreshURL=nsnull;
-    nsString refreshURL(pRefreshURL);
+    nsString refreshURL(URL_s->refresh_url);
     nsConnectionInfo* pConn;
 
-    NS_PRECONDITION((pRefreshURL != nsnull), "Null pointer...");
+    NS_PRECONDITION((URL_s != nsnull), "Null pointer...");
     NS_PRECONDITION((pContext != nsnull), "Null pointer...");
     NS_PRECONDITION((pContext->modular_data != nsnull), "Null pointer...");
     NS_PRECONDITION((pContext->modular_data->fe_data != nsnull), "Null pointer...");
@@ -395,7 +395,7 @@ void FE_SetRefreshURLTimer(MWContext *pContext, uint32 seconds, char *pRefreshUR
             nsIURL* aURL;
             rv = NS_NewURL(&aURL, refreshURL);
             if (rv == NS_OK) {
-                rv = IRefreshURL->RefreshURL(aURL, seconds*1000, FALSE);
+                rv = IRefreshURL->RefreshURL(aURL, URL_s->refresh*1000, FALSE);
                 NS_RELEASE(IRefreshURL);
                 NS_RELEASE(aURL);
             }
