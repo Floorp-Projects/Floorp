@@ -40,11 +40,13 @@
 #include "nsCWebBrowser.h"
 #include "nsIDiskDocument.h"
 #include "nsILocalFile.h"
-#include "nsIContentViewerFile.h"
 #include "nsISelectionController.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsIClipboardCommands.h"
 #include "nsIProfile.h"
+#include "nsIPrintListener.h"
+#include "nsIPrintOptions.h"
+#include "nsIWebBrowserPrint.h"
 
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -56,11 +58,11 @@
 static HANDLE s_hHackedNonReentrancy = NULL;
 #endif
 
-
 #define NS_PROMPTSERVICE_CID \
-    {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
+  {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // Macros to return errors from bad calls to the automation
 // interfaces and sets a descriptive string on IErrorInfo so VB programmers
@@ -79,6 +81,18 @@ static const TCHAR *c_szUninitialized = _T("Method called while control is unini
 #define RETURN_E_UNEXPECTED() \
 	RETURN_ERROR(c_szUninitialized, E_UNEXPECTED);
 
+class PrintListener : public nsIPrintListener
+{
+    PRBool mComplete;
+public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIPRINTLISTENER
+
+    PrintListener();
+    virtual ~PrintListener();
+
+    void WaitForComplete();
+};
 
 
 // Prefs
@@ -459,18 +473,7 @@ LRESULT CMozillaBrowser::OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL&
 	{
 		return 0;
 	}
-
-	// Print the contents
-	nsIContentViewer *pContentViewer = nsnull;
-    nsCOMPtr<nsIDocShell> rootDocShell = do_GetInterface(mWebBrowser);
-	nsresult res = rootDocShell->GetContentViewer(&pContentViewer);
-	if (NS_SUCCEEDED(res))
-	{
-        nsCOMPtr<nsIContentViewerFile> spContentViewerFile = do_QueryInterface(pContentViewer);
-		spContentViewerFile->Print(PR_TRUE, nsnull);
-		NS_RELEASE(pContentViewer);
-	}
-	
+    PrintDocument(TRUE);
 	return 0;
 }
 
@@ -1320,6 +1323,38 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 	return S_OK;
 }
 
+// Print document
+HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
+{
+    nsresult rv;
+
+    PRBool oldPrintSilent = PR_FALSE;
+    NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+    if (printService)
+    {
+        printService->GetPrintSilent(&oldPrintSilent);
+        printService->SetPrintSilent(promptUser ? PR_FALSE : PR_TRUE);
+    }
+
+	// Print the contents
+    nsCOMPtr<nsIWebBrowserPrint> browserAsPrint = do_QueryInterface(mWebBrowser);
+    nsCOMPtr<nsIDOMWindow> window;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(window));
+    if (window)
+    {
+        PrintListener *listener = new PrintListener;
+        nsCOMPtr<nsIPrintListener> printListener = do_QueryInterface(listener);
+        browserAsPrint->Print(window, nsnull, printListener);
+        listener->WaitForComplete();
+	}
+
+    if (printService)
+    {
+        printService->SetPrintSilent(oldPrintSilent);
+    }
+	
+    return S_OK;
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // IOleObject overrides
@@ -3078,6 +3113,14 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::put_Resizable(VARIANT_BOOL Value)
 // Ole Command Handlers
 
 
+HRESULT _stdcall CMozillaBrowser::PrintHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
+{
+    BOOL promptUser = (nCmdexecopt & OLECMDEXECOPT_DONTPROMPTUSER) ? FALSE : TRUE;
+    pThis->PrintDocument(promptUser);
+	return S_OK;
+}
+
+
 HRESULT _stdcall CMozillaBrowser::EditModeHandler(CMozillaBrowser *pThis, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT *pvaIn, VARIANT *pvaOut)
 {
 	BOOL bEditorMode = (nCmdID == IDM_EDITMODE) ? TRUE : FALSE;
@@ -3090,4 +3133,77 @@ HRESULT _stdcall CMozillaBrowser::EditCommandHandler(CMozillaBrowser *pThis, con
 {
 	pThis->OnEditorCommand(nCmdID);
 	return S_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// PrintListener implementation
+
+
+NS_IMPL_ISUPPORTS1(PrintListener, nsIPrintListener)
+
+PrintListener::PrintListener() : mComplete(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+    /* member initializers and constructor code */
+}
+
+PrintListener::~PrintListener()
+{
+    /* destructor code */
+}
+
+void PrintListener::WaitForComplete()
+{
+    MSG msg;
+    HANDLE hFakeEvent = ::CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    while (!mComplete)
+    {
+        // Process pending messages
+        while (::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            if (!::GetMessage(&msg, NULL, 0, 0))
+            {
+                ::CloseHandle(hFakeEvent);
+                return;
+            }
+
+            PRBool wasHandled = PR_FALSE;
+            ::NS_HandleEmbeddingEvent(msg, wasHandled);
+            if (wasHandled)
+                continue;
+
+            ::TranslateMessage(&msg);
+            ::DispatchMessage(&msg);
+        }
+
+        if (mComplete)
+            break;
+        
+        // Do idle stuff
+        ::NS_DoIdleEmbeddingStuff();
+        ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 500, QS_ALLEVENTS);
+    }
+
+    ::CloseHandle(hFakeEvent);
+}
+
+/* void OnStartPrinting (); */
+NS_IMETHODIMP PrintListener::OnStartPrinting()
+{
+    return NS_OK;
+}
+
+/* void OnProgressPrinting (in PRUint32 aProgress, in PRUint32 aProgressMax); */
+NS_IMETHODIMP PrintListener::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
+{
+    return NS_OK;
+}
+
+/* void OnEndPrinting (in PRUint32 aStatus); */
+NS_IMETHODIMP PrintListener::OnEndPrinting(PRUint32 aStatus)
+{
+    mComplete = PR_TRUE;
+    return NS_OK;
 }
