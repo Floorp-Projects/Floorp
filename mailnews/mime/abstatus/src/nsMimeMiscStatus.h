@@ -32,6 +32,7 @@ public:
   // nsISupports interface
   NS_DECL_ISUPPORTS
      
+  NS_IMETHOD GetWindowXULandJS(char **_retval);
   NS_IMETHOD GetGlobalXULandJS(char **_retval);
 
   NS_IMETHOD GetIndividualXUL(const char *aHeader, const char *aName, 

@@ -548,6 +548,7 @@ nsMimeXULEmitter::WriteXULHeader(const char *msgID)
   UtilityWriteCRLF("xmlns:html=\"http://www.w3.org/TR/REC-html40\" ");
   UtilityWriteCRLF("xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\" ");
   UtilityWriteCRLF("xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\" ");
+  DoWindowStatusProcessing();
   UtilityWriteCRLF("align=\"vertical\"> ");
 
   // Now, the JavaScript...
@@ -1046,6 +1047,33 @@ nsMimeXULEmitter::DoGlobalStatusProcessing()
       if (statusInfo->obj)
       {
         if (NS_SUCCEEDED(statusInfo->obj->GetGlobalXULandJS(&retval)))
+        {
+          if ( (retval) && (*retval) )
+            UtilityWriteCRLF(retval);
+
+          PR_FREEIF(retval);
+        }
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsMimeXULEmitter::DoWindowStatusProcessing()
+{
+  char    *retval = nsnull;
+
+  if (mMiscStatusArray)
+  {
+    for (PRInt32 i=0; i<mMiscStatusArray->Count(); i++)
+    {
+      retval = nsnull;
+      miscStatusType *statusInfo = (miscStatusType *)mMiscStatusArray->ElementAt(i);
+      if (statusInfo->obj)
+      {
+        if (NS_SUCCEEDED(statusInfo->obj->GetWindowXULandJS(&retval)))
         {
           if ( (retval) && (*retval) )
             UtilityWriteCRLF(retval);

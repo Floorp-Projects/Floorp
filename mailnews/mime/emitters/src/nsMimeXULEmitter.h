@@ -114,6 +114,7 @@ public:
     // For storing recipient info in the history database...
     nsresult      DoSpecialSenderProcessing(const char *field, const char *value);
     nsresult      DoGlobalStatusProcessing();
+    nsresult      DoWindowStatusProcessing();
     nsresult      BuildListOfStatusProviders();
     nsIMimeMiscStatus   *GetStatusObjForProgID(nsString aProgID);
 

@@ -68,6 +68,12 @@ nsMimeMiscStatus::GetImageURL(PRInt32 aStatus, char **_retval)
 }
 
 nsresult
+nsMimeMiscStatus::GetWindowXULandJS(char **_retval)
+{
+  return NS_ERROR_FAILURE;
+}
+
+nsresult
 nsMimeMiscStatus::GetGlobalXULandJS(char **_retval)
 {
 char  *headerLine = "<html:script language=\"javascript\" src=\"chrome://messenger/content/abookstat.js\"/>";

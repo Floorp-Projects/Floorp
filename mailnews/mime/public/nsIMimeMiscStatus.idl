@@ -27,6 +27,7 @@ interface nsIChannel;
 [scriptable, uuid(4644FB25-5255-11d3-82B8-444553540002)] 
 interface nsIMimeMiscStatus : nsISupports{
 
+    string  GetWindowXULandJS();
     string  GetGlobalXULandJS();
     string  GetIndividualXUL(in string aName, in string aHeader, in string aEmail);
 
