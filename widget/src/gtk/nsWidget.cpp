@@ -434,7 +434,6 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
   GdkRectangle nRect;
-  GdkRectangle wRect;
   
   if (mWidget == nsnull) {
     return NS_ERROR_FAILURE;
@@ -454,8 +453,7 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   nRect.y = aRect.y;
 
   if (aIsSynchronous)
-    if (gtk_widget_intersect(mWidget, &nRect, &wRect))
-      ::gtk_widget_draw(mWidget, &wRect);
+      ::gtk_widget_draw(mWidget, &nRect);
   else
       ::gtk_widget_queue_draw_area(mWidget,
                                    aRect.width, aRect.height,
@@ -656,6 +654,7 @@ void nsWidget::InitCallbacks(char *aName)
                      "motion_notify_event",
 		     GTK_SIGNAL_FUNC(gtk_true),
 		     NULL);
+		     /*
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "enter_notify_event",
 		     GTK_SIGNAL_FUNC(gtk_true),
@@ -664,6 +663,7 @@ void nsWidget::InitCallbacks(char *aName)
                      "leave_notify_event",
 		     GTK_SIGNAL_FUNC(gtk_true),
 		     NULL);
+		     
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "draw",
 		     GTK_SIGNAL_FUNC(gtk_false),
@@ -688,6 +688,7 @@ void nsWidget::InitCallbacks(char *aName)
                      "focus_out_event",
 		     GTK_SIGNAL_FUNC(gtk_true),
 		     NULL);
+		     */
 }
 
 void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
