@@ -820,10 +820,10 @@ $table{profiles} =
     realname varchar(255),
     groupset bigint not null,
     emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges",
-    disabledtext mediumtext not null,
-    newemailtech tinyint not null,
+    disabledtext mediumtext,
+    newemailtech tinyint not null default 1,
     mybugslink tinyint not null default 1,
-    blessgroupset bigint not null,
+    blessgroupset bigint not null default 0,
     emailflags mediumtext,
 
 
@@ -1001,9 +1001,9 @@ sub AddGroup {
    
     print "Adding group $name ...\n";
     $sth = $dbh->prepare('INSERT INTO groups
-                          (bit, name, description, userregexp)
-                          VALUES (?, ?, ?, ?)');
-    $sth->execute($bit, $name, $desc, $userregexp);
+                          (bit, name, description, userregexp, isbuggroup)
+                          VALUES (?, ?, ?, ?, ?)');
+    $sth->execute($bit, $name, $desc, $userregexp, 0);
     return $bit;
 }
 
@@ -1044,16 +1044,17 @@ my $sth = $dbh->prepare("SELECT product FROM products");
 $sth->execute;
 unless ($sth->rows) {
     print "Creating initial dummy product 'TestProduct' ...\n";
-    $dbh->do('INSERT INTO products(product, description) VALUES ("TestProduct",
+    $dbh->do('INSERT INTO products(product, description, milestoneurl, disallownew, votesperuser, votestoconfirm) VALUES ("TestProduct",
               "This is a test product.  This ought to be blown away and ' .
              'replaced with real stuff in a finished installation of ' .
-             'bugzilla.")');
+             'bugzilla.", "", 0, 0, 0)');
     $dbh->do('INSERT INTO versions (value, program) VALUES ("other", "TestProduct")');
-    $dbh->do('INSERT INTO components (value, program, description) VALUES (' .
+    $dbh->do('INSERT INTO components (value, program, description, initialowner, initialqacontact)
+             VALUES (' .
              '"TestComponent", "TestProduct", ' .
              '"This is a test component in the test product database.  ' .
              'This ought to be blown away and replaced with real stuff in ' .
-             'a finished installation of bugzilla.")');
+             'a finished installation of bugzilla.", "", "")');
     $dbh->do('INSERT INTO milestones (product, value) VALUES ("TestProduct","---")');
 }
 
