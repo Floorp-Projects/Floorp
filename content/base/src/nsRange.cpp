@@ -1666,51 +1666,56 @@ nsRange::CloneSibsAndParents(nsIDOMNode* aParentNode, PRInt32 nodeOffset,
 
 nsresult nsRange::CloneContents(nsIDOMDocumentFragment** aReturn)
 {
-// XXX  Not fully implemented  XXX
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
-  return NS_ERROR_NOT_IMPLEMENTED; 
-
-#if 0
-// partial implementation here
-  if (!aReturn) 
-    return NS_ERROR_NULL_POINTER;
-  if (!mIsPositioned)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIDOMNode> commonParent = CommonParent(mStartParent,mEndParent);
 
   nsresult res;
+  nsCOMPtr<nsIDOMNode> commonAncestor;
+  res = GetCommonAncestorContainer(getter_AddRefs(commonAncestor));
+  if(NS_FAILED(res)) return res;
+
   nsCOMPtr<nsIDOMDocument> document;
   res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
-  if (NS_FAILED(res))
-    return res;
+  if (NS_FAILED(res)) return res;
 
   // Create a new document fragment in the context of this document
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
-  res = document->CreateDocumentFragment(getter_AddRefs(docfrag));
+  nsCOMPtr<nsIDOMDocumentFragment> clonedFrag;
+  res = document->CreateDocumentFragment(getter_AddRefs(clonedFrag));
+  if (NS_FAILED(res)) return res;
 
-  // XXX but who owns this doc frag -- when will it be released?
-  if (NS_SUCCEEDED(res))
+  PRUint16 commonAncestorNodeType;
+  commonAncestor->GetNodeType(&commonAncestorNodeType);
+  if( (nsIDOMNode::CDATA_SECTION_NODE == commonAncestorNodeType) ||
+     (nsIDOMNode::TEXT_NODE == commonAncestorNodeType) )
   {
-    // Loop over the nodes contained in this Range,
-    // from the start and end points, and add them
-    // to the parent doc frag:
-    res = CloneSibsAndParents(mStartParent, mStartOffset, 0,
-                              commonParent, docFrag, PR_TRUE);
-    res = CloneSibsAndParents(mEndParent, mEndOffset, 0,
-                              commonParent, docFrag, PR_FALSE);
-
-    // XXX Now we need to add the sibs between the two top-level
-    // XXX doc frag cloned elements.
-
-    if (NS_SUCCEEDED(res))
-      return NS_OK;
+    nsCOMPtr<nsIDOMNode>clonedNode = do_QueryInterface(clonedFrag);
+    res = CopyContents(commonAncestor, clonedNode, this);
+    if(NS_FAILED(res)) return res;
+    clonedFrag = do_QueryInterface(clonedNode);
+    *aReturn = clonedFrag;
+    NS_ADDREF(*aReturn);
+    return NS_OK;
   }
 
-  *aReturn = docFrag;
-  return res;
-#endif
+  nsCOMPtr<nsIDOMNode> firstChild, nextSibling;
+  res = commonAncestor->GetFirstChild(getter_AddRefs(firstChild));
+  if (NS_FAILED(res)) return res;
+
+  while(firstChild)
+  {
+    res = firstChild->GetNextSibling(getter_AddRefs(nextSibling));
+    if (NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMNode>clonedNode = do_QueryInterface(clonedFrag);
+    res = CopyContents(firstChild, clonedNode, this);
+    if (NS_FAILED(res)) return res;
+    clonedFrag = do_QueryInterface(clonedNode);
+    *aReturn = clonedFrag;
+    firstChild = nextSibling;
+  }
+  *aReturn = clonedFrag;
+  NS_ADDREF(*aReturn);
+  return NS_OK;
 }
 
 nsresult nsRange::CloneRange(nsIDOMRange** aReturn)
@@ -1737,14 +1742,171 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
 {
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
-  return NS_ERROR_NOT_IMPLEMENTED;
+
+  nsresult res;
+
+  PRInt32 tStartOffset;
+  this->GetStartOffset(&tStartOffset);
+
+  nsCOMPtr<nsIDOMNode> tStartContainer;
+  res = this->GetStartContainer(getter_AddRefs(tStartContainer));
+  if(NS_FAILED(res)) return res;
+  
+  PRUint16 tNodeType;
+  aN->GetNodeType(&tNodeType);
+  if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
+      (nsIDOMNode::TEXT_NODE == tNodeType) )
+  {
+    nsCOMPtr<nsIDOMNode> tSCParentNode;
+    res = tStartContainer->GetParentNode(getter_AddRefs(tSCParentNode));
+    if(NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMNode> tResultNode;
+    return tSCParentNode->InsertBefore(aN, tSCParentNode, getter_AddRefs(tResultNode));
+  }  
+
+  nsCOMPtr<nsIDOMNodeList>tChildList;
+  res = tStartContainer->GetChildNodes(getter_AddRefs(tChildList));
+  if(NS_FAILED(res)) return res;
+  PRUint32 tChildListLength;
+  res = tChildList->GetLength(&tChildListLength);
+  if(NS_FAILED(res)) return res;
+
+  // find the insertion point in the DOM and insert the Node
+  if(tStartOffset == (PRInt32)tChildListLength)
+  {
+    nsCOMPtr<nsIDOMNode> tNode;
+    return tStartContainer->AppendChild(aN, getter_AddRefs(tNode));
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMNode>tChildNode;
+    res = tChildList->Item(tStartOffset, getter_AddRefs(tChildNode));
+    if(NS_FAILED(res)) return res;
+
+    nsCOMPtr<nsIDOMNode> tResultNode;
+    return tStartContainer->InsertBefore(aN, tChildNode, getter_AddRefs(tResultNode));
+  }
 }
 
 nsresult nsRange::SurroundContents(nsIDOMNode* aN)
 {
   if(IsDetached())
     return NS_ERROR_DOM_INVALID_STATE_ERR;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult res;
+
+  //get start offset, and start container
+  PRInt32 tStartOffset;
+  this->GetStartOffset(&tStartOffset);
+  nsCOMPtr<nsIDOMNode> tStartContainer;
+  res = GetStartContainer(getter_AddRefs(tStartContainer));
+  if(NS_FAILED(res)) return res;
+
+  //get end offset, and end container
+  PRInt32 tEndOffset;
+  this->GetEndOffset(&tEndOffset);
+  nsCOMPtr<nsIDOMNode> tEndContainer;
+  res = GetEndContainer(getter_AddRefs(tEndContainer));
+  if(NS_FAILED(res)) return res;
+
+  PRUint16 tStartNodeType;
+  tStartContainer->GetNodeType(&tStartNodeType);
+  if( (nsIDOMNode::CDATA_SECTION_NODE == tStartNodeType) ||
+      (nsIDOMNode::TEXT_NODE == tStartNodeType) )
+  {
+    nsCOMPtr<nsIDOMText> tStartContainerText = do_QueryInterface(tStartContainer);
+    nsCOMPtr<nsIDOMText> tTempText;
+    res = tStartContainerText->SplitText(tStartOffset, getter_AddRefs(tTempText));
+    if(NS_FAILED(res)) return res;
+    tStartOffset = 0;
+    tStartContainer = do_QueryInterface(tTempText);
+  }
+
+  PRUint16 tEndNodeType;
+  tEndContainer->GetNodeType(&tEndNodeType);
+  if( (nsIDOMNode::CDATA_SECTION_NODE == tEndNodeType) ||
+      (nsIDOMNode::TEXT_NODE == tEndNodeType) )
+  {
+    nsCOMPtr<nsIDOMText> tEndContainerText = do_QueryInterface(tEndContainer);
+    nsCOMPtr<nsIDOMText> tTempText;
+    res = tEndContainerText->SplitText(tEndOffset, getter_AddRefs(tTempText));
+    if(NS_FAILED(res)) return res;
+
+    tEndContainer = do_QueryInterface(tTempText);
+  }
+
+  nsCOMPtr<nsIDOMNode> tAncestorContainer;
+  this->GetCommonAncestorContainer(getter_AddRefs(tAncestorContainer));
+
+  PRUint16 tCommonAncestorType;
+  tAncestorContainer->GetNodeType(&tCommonAncestorType);
+
+  nsCOMPtr<nsIDOMNode>tempNode;
+  nsCOMPtr<nsIDOMNode>tRangeContentsNode;
+  nsCOMPtr<nsIDOMDocument> document;
+  res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
+  if (NS_FAILED(res)) return res;
+  // Create a new document fragment in the context of this document
+  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  res = document->CreateDocumentFragment(getter_AddRefs(docfrag));
+  if (NS_FAILED(res)) return res;
+  this->ExtractContents(getter_AddRefs(docfrag));
+  tRangeContentsNode = do_QueryInterface(docfrag);
+  aN->AppendChild(tRangeContentsNode, getter_AddRefs(tempNode));
+
+  if( (nsIDOMNode::CDATA_SECTION_NODE == tCommonAncestorType) ||
+      (nsIDOMNode::TEXT_NODE == tCommonAncestorType) )
+  {
+    this->InsertNode(aN);
+  }
+  else
+  {
+    nsCOMPtr<nsIDOMNodeList>tChildList;
+    res = tAncestorContainer->GetChildNodes(getter_AddRefs(tChildList));
+    PRUint32 i,tNumChildren;
+    tChildList->GetLength(&tNumChildren);
+
+    PRBool tFound = PR_FALSE;
+    PRInt16 tResult;
+    for(i = 0; (i < tNumChildren && !tFound); i++)
+    {
+      ComparePoint(tAncestorContainer, i, &tResult);
+      if(tResult == 0)
+      {
+        tFound = true;
+        break;
+      }
+    }
+
+    if(tFound)
+    {
+      nsCOMPtr<nsIDOMNode> tChild;
+      tChildList->Item(i-1, getter_AddRefs(tChild));
+      tAncestorContainer->InsertBefore(aN, tChild, getter_AddRefs(tempNode));
+    }
+    else // there is an error this may need to be updated later
+      this->InsertNode(aN);
+
+    // re-define the range so that it contains the same content as it did before
+    tEndContainer->GetNodeType(&tEndNodeType);
+    if( (nsIDOMNode::CDATA_SECTION_NODE == tEndNodeType) ||
+       (nsIDOMNode::TEXT_NODE == tEndNodeType) )
+    {
+      nsCOMPtr<nsIDOMText> tEndContainerText = do_QueryInterface(tEndContainer);
+      PRUint32 tInt;
+      tEndContainerText->GetLength(&tInt);
+      tEndOffset = tInt;
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMNodeList>tChildList;
+      res = tEndContainer->GetChildNodes(getter_AddRefs(tChildList));
+      PRUint32 tInt;
+      tChildList->GetLength(&tInt);
+      tEndOffset = tInt;
+    }
+    this->DoSetRange(tStartContainer, 0, tEndContainer, tEndOffset);
+  }
 }
 
 nsresult nsRange::ToString(nsAWritableString& aReturn)
@@ -2215,6 +2377,137 @@ nsRange::Unlock()
   if (mMonitor)
     PR_ExitMonitor(mMonitor);
 
+  return NS_OK;
+}
+
+
+nsresult
+nsRange::CopyContents(nsIDOMNode* aFromNode, nsIDOMNode* aAppendToNode, nsRange* aInRange)
+{
+  nsresult res;
+  PRBool nodeIntersects;
+  res = aInRange->IntersectsNode(aFromNode, &nodeIntersects);
+  if(NS_FAILED(res)) 
+    return res;
+  if(!nodeIntersects) 
+    return NS_ERROR_FAILURE;
+
+  PRUint16 compare;
+  nsCOMPtr<nsIDOMNode> clonedNode;
+  res = aInRange->CompareNode(aFromNode, &compare);
+  switch(compare)
+  {
+  case NODE_INSIDE:
+    {//node completely inside range, clone it and it's contents
+      res = aFromNode->CloneNode(PR_TRUE, getter_AddRefs(clonedNode));
+      if(NS_FAILED(res))
+        return res;
+      nsCOMPtr<nsIDOMNode>tempNode;
+      return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
+    }break;
+  case NODE_BEFORE_AND_AFTER:
+    {//this node is partially selected by the range, it extends before and after the range
+      PRUint16 tNodeType;
+      aFromNode->GetNodeType(&tNodeType);
+      if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
+         (nsIDOMNode::TEXT_NODE == tNodeType) )
+      {//split the Text/CDATASection node into the 3 sections (before,inside,after) and clone the inside contents
+        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
+        if(NS_FAILED(res)) return res;
+
+        // get the offsets for the splitting
+        PRInt32 tEndOffset, tStartOffset;
+        aInRange->GetEndOffset(&tEndOffset);
+        aInRange->GetStartOffset(&tStartOffset);
+        nsCOMPtr<nsIDOMText> tText = do_QueryInterface(clonedNode);
+        nsCOMPtr<nsIDOMText> tTempText;
+        //split off the end
+        res = tText->SplitText(tEndOffset, getter_AddRefs(tTempText));
+        if(NS_FAILED(res)) return res;
+        tText = tTempText;
+        //split off the start
+        res = tText->SplitText(tStartOffset, getter_AddRefs(tTempText));
+        if(NS_FAILED(res)) return res;
+        tText = tTempText;
+
+        clonedNode =  do_QueryInterface(tText);
+        nsCOMPtr<nsIDOMNode>tempNode;
+        return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
+      }
+      return NS_ERROR_FAILURE;      
+    }break;
+  case NODE_BEFORE:
+    {// the node is partially selected by the range, it extends before the range
+      PRUint16 tNodeType;
+      aFromNode->GetNodeType(&tNodeType);
+      if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
+         (nsIDOMNode::TEXT_NODE == tNodeType) )
+      {
+        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
+        if(NS_FAILED(res)) return res;
+
+        PRInt32 tStartOffset;
+        aInRange->GetStartOffset(&tStartOffset);
+        nsCOMPtr<nsIDOMText> tText = do_QueryInterface(clonedNode);
+        nsCOMPtr<nsIDOMText> tTempText;
+        //split off the start
+        res = tText->SplitText(tStartOffset, getter_AddRefs(tTempText));
+        if(NS_FAILED(res)) return res;
+        tText = tTempText;
+        clonedNode =  do_QueryInterface(tText);
+        nsCOMPtr<nsIDOMNode>tempNode;
+        return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
+      }
+      return NS_ERROR_FAILURE;
+    }break;
+  case NODE_AFTER:
+    {// the node is partially selected by the range, it extends after the range
+      PRUint16 tNodeType;
+      nsCOMPtr<nsIDOMNode>tempNode;
+      aFromNode->GetNodeType(&tNodeType);
+
+      if( (nsIDOMNode::CDATA_SECTION_NODE == tNodeType) ||
+         (nsIDOMNode::TEXT_NODE == tNodeType) )
+      {
+        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
+        if(NS_FAILED(res)) return res;
+
+        PRInt32 tEndOffset;
+        aInRange->GetEndOffset(&tEndOffset);
+        nsCOMPtr<nsIDOMText> tText = do_QueryInterface(clonedNode);
+        nsCOMPtr<nsIDOMText> tTempText;
+        //split off the end
+        res = tText->SplitText(tEndOffset, getter_AddRefs(tTempText));
+        if(NS_FAILED(res)) return res;
+        tText = tTempText;
+        clonedNode =  do_QueryInterface(tText);
+        nsCOMPtr<nsIDOMNode>tempNode;
+        return aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
+      }
+      else
+      {//the node is partially selected and is NOT a Text/CDATASection
+        res = aFromNode->CloneNode(PR_FALSE, getter_AddRefs(clonedNode));
+        if(NS_FAILED(res)) return res;
+
+        res = aAppendToNode->AppendChild(clonedNode, getter_AddRefs(tempNode));
+        if(NS_FAILED(res)) 
+          return res;
+        nsCOMPtr<nsIDOMNode> tFirstChild;
+        res = aFromNode->GetFirstChild(getter_AddRefs(tFirstChild));
+        if(NS_FAILED(res)) return res;
+        while(tFirstChild)
+        {
+          aInRange->CopyContents(tFirstChild, clonedNode, aInRange);
+          tFirstChild->GetFirstChild(getter_AddRefs(tFirstChild));
+        }
+        return NS_OK;
+      }
+      return NS_ERROR_FAILURE;
+    }break;
+  default:
+    {
+    }break;
+  }
   return NS_OK;
 }
 
