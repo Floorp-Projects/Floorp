@@ -761,6 +761,9 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   nsCOMPtr<nsIContent> cN;
   nsCOMPtr<nsIContent> firstCandidate;
   nsCOMPtr<nsIContent> lastCandidate;
+  nsCOMPtr<nsIContent> cChild;
+  PRInt32 indx, startIndx, endIndx;
+  PRInt32 numChildren;
 
   // get common content parent
   if (NS_FAILED(aRange->GetCommonParent(getter_AddRefs(commonParent))) || !commonParent)
@@ -771,18 +774,37 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (NS_FAILED(aRange->GetStartParent(getter_AddRefs(startParent))) || !startParent)
     return NS_ERROR_FAILURE;
   cStartP = do_QueryInterface(startParent);
+  aRange->GetStartOffset(&startIndx);
 
   // get end content parent
   if (NS_FAILED(aRange->GetEndParent(getter_AddRefs(endParent))) || !endParent)
     return NS_ERROR_FAILURE;
   cEndP = do_QueryInterface(endParent);
+  aRange->GetStartOffset(&endIndx);
   
+  // short circuit when start node == end node
+  if (startParent == endParent)
+  {
+    cStartP->ChildAt(0,*getter_AddRefs(cChild));
+  
+    if (!cChild) // no children, must be a text node or empty container
+    {
+      // all inside one text node - empty subtree iterator
+      MakeEmpty();
+      return NS_OK;
+    }
+    else
+    {
+      if (startIndx == endIndx)  // collapsed range
+      {
+        MakeEmpty();
+        return NS_OK;
+      }
+    }
+  }
   
   // find first node in range
-  PRInt32 indx;
   aRange->GetStartOffset(&indx);
-  nsCOMPtr<nsIContent> cChild;
-  PRInt32 numChildren;
   cStartP->ChildCount(numChildren);
   
   if (!numChildren) // no children, must be a text node
