@@ -3697,7 +3697,10 @@ nsTextFrame::GetPointFromOffset(nsIPresContext* aPresContext,
   }
   else
 #endif // IBMBIDI
-  outPoint->x = width;
+  if (width > mRect.width)
+    outPoint->x = mRect.width;
+  else
+    outPoint->x = width;
   outPoint->y = 0;
 
   return NS_OK;
@@ -4491,19 +4494,29 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
         width = wordLen*(aTs.mWordSpacing + aTs.mSpaceWidth);// XXX simplistic
       }
 
-      if (aTextData.mMeasureText) {
-        // See if there is room for the text
-        if ((0 != aTextData.mX) && aTextData.mWrapping && (aTextData.mX + width > maxWidth)) {
-          // The text will not fit.
-          break;
-        }
-        aTextData.mX += width;
-      }
+      //Even if there is not enough space for this "space", we still put it 
+      //here instead of next line
       prevColumn = column;
       column += wordLen;
       endsInWhitespace = PR_TRUE;
       prevOffset = aTextData.mOffset;
       aTextData.mOffset += contentLen;
+
+      if (aTextData.mMeasureText) {
+        //if we're wrapping, then don't add the whitespace width to the 
+        // x-offset unless the whitespace will fit within maxWidth.''
+        if (aTextData.mWrapping) {
+          if (aTextData.mX + width <= maxWidth)
+            aTextData.mX += width;
+          else 
+            break;
+        }
+        else {
+          //if we're not wrapping, then always advance 
+          // the x-offset regardless of maxWidth
+          aTextData.mX += width;
+        }
+      } //(aTextData.mMeasureText)
     } else {
       // See if the first thing in the section of text is a
       // non-breaking space (html nbsp entity). If it is then make
