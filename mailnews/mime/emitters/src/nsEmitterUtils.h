@@ -23,5 +23,13 @@
 
 extern "C" char     *nsEscapeHTML(const char *string);
 
+// mscott - I'm dumping this enum here for lack of a better
+// common header file shared by nsMimeRawEmitter & nsMimeXmlEmitter
+typedef enum {
+  MicroHeaders  = 0,
+  NormalHeaders,
+  AllHeaders
+} HeaderDisplayTypes;
+
 #endif // _nsEmitterUtils_h_
 
