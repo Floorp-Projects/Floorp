@@ -186,6 +186,7 @@ namespace JavaScript
             Get,                        // get
             Include,                    // include
             Javascript,                 // javascript
+            Named,                      // named
             Set,                        // set
             Strict,                     // strict
 
@@ -208,6 +209,7 @@ namespace JavaScript
         case Token::Get:           \
         case Token::Include:       \
         case Token::Javascript:    \
+        case Token::Named:         \
         case Token::Set:           \
         case Token::Strict:        \
         case Token::identifier
@@ -218,6 +220,7 @@ namespace JavaScript
         case Token::Exclude:       \
         case Token::Get:           \
         case Token::Javascript:    \
+        case Token::Named:         \
         case Token::Set:           \
         case Token::Strict:        \
         case Token::identifier

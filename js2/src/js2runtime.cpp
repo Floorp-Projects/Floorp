@@ -952,7 +952,6 @@ bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition *f)
 {
     bool result = false;
     if ((f->resultType == NULL)
-            && (f->restParameter == NULL)
             && (f->optParameters == NULL)
             && (f->prefix == FunctionName::normal)
             && (topClass() == NULL)) {
@@ -1107,9 +1106,10 @@ void ScopeChain::collectNames(StmtNode *p)
 
             uint32 reqArgCount = 0;
             uint32 optArgCount = 0;
+            uint32 namedArgCount = 0;
 
             VariableBinding *b = f->function.parameters;
-            while ((b != f->function.optParameters) && (b != f->function.restParameter)) {
+            while (b != f->function.optParameters) {
                 reqArgCount++;
                 b = b->next;
             }
@@ -1117,7 +1117,13 @@ void ScopeChain::collectNames(StmtNode *p)
                 optArgCount++;
                 b = b->next;
             }
-            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, (f->function.restParameter != NULL));
+            b = f->function.namedParameters;
+            while (b) {
+                namedArgCount++;
+                b = b->next;
+            }
+            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, namedArgCount,
+                              f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
 
             if (isOperator) {
                 // no need to do anything yet, all operators are 'pre-declared'
@@ -1922,9 +1928,10 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
 
         uint32 reqArgCount = 0;
         uint32 optArgCount = 0;
+        uint32 namedArgCount = 0;
 
         VariableBinding *b = f->function.parameters;
-        while ((b != f->function.optParameters) && (b != f->function.restParameter)) {
+        while (b != f->function.optParameters) {
             reqArgCount++;
             b = b->next;
         }
@@ -1932,7 +1939,13 @@ static JSValue Function_Constructor(Context *cx, const JSValue& thisValue, JSVal
             optArgCount++;
             b = b->next;
         }
-        fnc->setArgCounts(cx, reqArgCount, optArgCount, (f->function.restParameter != NULL));
+        b = f->function.namedParameters;
+        while (b) {
+            namedArgCount++;
+            b = b->next;
+        }
+        fnc->setArgCounts(cx, reqArgCount, optArgCount, namedArgCount,
+                          f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
 
         if (cx->mScopeChain->isPossibleUncheckedFunction(&f->function)) {
 	    fnc->setIsPrototype(true);
@@ -2497,15 +2510,17 @@ JSFunction::JSFunction(Context *, NativeCode *code, JSType *resultType)
 JSValue JSFunction::runArgInitializer(Context *cx, uint32 a, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
     ASSERT(mArguments && (a < (mRequiredArgs + mOptionalArgs)));
-    return cx->interpret(getByteCode(), (int32)mArguments[a].mInitializer, getScopeChain(), thisValue, argv, argc);    
+    return cx->interpret(getByteCode(), (int32)mArguments[a].mInitializer, getScopeChain(), thisValue, argv, argc);
 }
 
-void JSFunction::setArgCounts(Context *cx, uint32 r, uint32 o, bool hasRest)   
+void JSFunction::setArgCounts(Context *cx, uint32 r, uint32 o, uint32 n, bool hasRest, bool restIsNamed)
 {
-    mHasRestParameter = hasRest; 
-    mRequiredArgs = r; 
-    mOptionalArgs = o; 
-    mArguments = new ArgumentData[mRequiredArgs + mOptionalArgs + ((hasRest) ? 1 : 0)]; 
+    mHasRestParameter = hasRest;
+    mRestIsNamed = restIsNamed;
+    mRequiredArgs = r;
+    mOptionalArgs = o;
+    mNamedArgs = n;
+    mArguments = new ArgumentData[mRequiredArgs + mOptionalArgs + ((hasRest) ? 1 : 0)];
     defineVariable(cx, cx->Length_StringAtom, (NamespaceList *)NULL, Property::DontDelete | Property::ReadOnly, Number_Type, JSValue((float64)mRequiredArgs)); 
 }
 
@@ -2553,7 +2568,7 @@ void Context::initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef)
 //            fun->setClass(type); don't do this, it makes the function a method
             StringAtom *name = &mWorld.identifiers[widenCString(pdef->mDef[i].name)];
             fun->setFunctionName(name);
-            fun->setArgCounts(this, pdef->mDef[i].length, 0, false);
+            fun->setArgCounts(this, pdef->mDef[i].length, 0, 0, false, false);
             type->mPrototypeObject->defineVariable(this, *name,
                                                (NamespaceList *)(NULL), 
                                                Property::NoAttribute,
@@ -2963,7 +2978,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
     
     for (i = 0; i < (sizeof(globalObjectFunctions) / sizeof(ProtoFunDef)); i++) {
         x = new JSFunction(this, globalObjectFunctions[i].imp, globalObjectFunctions[i].result);
-        x->setArgCounts(this, globalObjectFunctions[i].length, 0, false);
+        x->setArgCounts(this, globalObjectFunctions[i].length, 0, 0, false, false);
         x->setIsPrototype(true);
         getGlobalObject()->defineVariable(this, widenCString(globalObjectFunctions[i].name), (NamespaceList *)(NULL), Property::NoAttribute, globalObjectFunctions[i].result, JSValue(x));    
     }

@@ -274,9 +274,15 @@ namespace JavaScript {
 
 
     struct FunctionDefinition: FunctionName {
-        VariableBinding *parameters;    // Linked list of all parameters, including optional and rest parameters, if any
-        VariableBinding *optParameters; // Pointer to first non-required (or rest) parameter inside parameters list; nil if none
-        VariableBinding *restParameter; // Pointer to rest parameter inside parameters list; nil if none
+        // The parameters linked list includes all kinds of parameters.  optParameters, restParameter, and namedParameters
+        // are pointers into the interior of the linked list.  If any kind is empty, then that kind's pointer is equal to
+        // the following kind's pointer, so, for example, if there is no rest parameter then restParameter == namedParameters.
+        // A pointer is nil only if its kind and all subsequent kinds are empty.
+        VariableBinding *parameters;    // Linked list of all parameters, including optional, rest, and named parameters
+        VariableBinding *optParameters; // Pointer to first optional parameter inside parameters list
+        VariableBinding *restParameter; // Pointer to rest parameter inside parameters list
+        VariableBinding *namedParameters;// Pointer to first named parameter inside parameters list
+        bool restIsNamed;               // True if the rest parameter has the 'named' attribute
         ExprNode *resultType;           // Result type expression or nil if not provided
         BlockStmtNode *body;            // Body; nil if none
 
@@ -827,8 +833,8 @@ namespace JavaScript {
         ExprNode *parseTypeExpression(bool noIn=false);
         ExprNode *parseTypeBinding(Token::Kind kind, bool noIn);
         bool doubleColonFollows();
-        VariableBinding *parseVariableBinding(size_t pos, bool noIn, bool untyped, bool constant);
-        VariableBinding *parseParameter();
+        VariableBinding *parseVariableBinding(size_t pos, bool noIn, bool noType, bool noInitializer, bool noAttributes, bool constant);
+        VariableBinding *parseParameter(bool rest, bool &named);
         void parseFunctionName(FunctionName &fn);
         void parseFunctionSignature(FunctionDefinition &fd);
         ExportBinding *parseExportBinding();

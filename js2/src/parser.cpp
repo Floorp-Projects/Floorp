@@ -787,6 +787,7 @@ const JS::Parser::BinaryOperatorInfo JS::Parser::tokenBinaryOperatorInfos[Token:
     {ExprNode::none, pExpression, pNone, false},                    // Token::Get
     {ExprNode::none, pExpression, pNone, false},                    // Token::Include
     {ExprNode::none, pExpression, pNone, false},                    // Token::Javascript
+    {ExprNode::none, pExpression, pNone, false},                    // Token::Named
     {ExprNode::none, pExpression, pNone, false},                    // Token::Set
     {ExprNode::none, pExpression, pNone, false},                    // Token::Strict
 
@@ -1053,32 +1054,40 @@ bool JS::Parser::doubleColonFollows()
 }
 
 
-// Parse and return a VariableBinding (UntypedVariableBinding if untyped is true).
+// Parse and return a VariableBinding or, depnding on the flags given, one of the related productions 
+// UntypedVariableBinding, TypedIdentifier, TypedInitialiser, or Identifier.
 // pos is the position of the binding or its first attribute, if any.
-// If noIn is false, allow the in operator.
+// If noIn is true, don't allow the in operator.
+// If noType is true, don't allow a type annotation.
+// If noInitializer is true, don't allow any initializers.
+// If noAttributes is true, don't allow initializers that are not expressions.
 // The value of the constant parameter is stored in the returned VariableBinding.
 //
-// If the first token was peeked, it should be have been done with preferRegExp set to true.
+// If the first or second token was peeked, it should be have been done with preferRegExp set to true.
 // After parseVariableBinding finishes, the next token might have been peeked with preferRegExp set to true.
 // The reason preferRegExp is true is to correctly parse the following case of semicolon insertion:
 //    var a
 //    /regexp/
-JS::VariableBinding *JS::Parser::parseVariableBinding(size_t pos, bool noIn, bool untyped, bool constant)
+JS::VariableBinding *JS::Parser::parseVariableBinding(size_t pos, bool noIn, bool noType, bool noInitializer, bool noAttributes, bool constant)
 {
     const StringAtom &name = parseIdentifier();
 
     ExprNode *type = 0;
     if (lexer.eat(true, Token::colon))
-        if (untyped)
-            syntaxError("Type annotation not allowed in a var inside a substatement; enclose the var in a block");
+        if (noType)
+            syntaxError(noInitializer ? "Type annotation not allowed on a named ... parameter" :
+                                        "Type annotation not allowed in a var inside a substatement; enclose the var in a block");
         else
             type = parseTypeExpression(noIn);
 
     ExprNode *initializer = 0;
     if (lexer.eat(true, Token::assignment)) {
+        if (noInitializer)
+            syntaxError("Initializer not allowed on a ... parameter");
+        
         const Token &t = lexer.get(true);
         size_t tPos = t.getPos();
-        if (!untyped && (t.getFlag(Token::isNonExpressionAttribute) || t.hasKind(Token::Private) && !doubleColonFollows())) {
+        if (!noAttributes && (t.getFlag(Token::isNonExpressionAttribute) || t.hasKind(Token::Private) && !doubleColonFollows())) {
             initializer = new(arena) IdentifierExprNode(t);
           makeAttribute:
             initializer = parseAttributes(tPos, initializer);
@@ -1087,7 +1096,7 @@ JS::VariableBinding *JS::Parser::parseVariableBinding(size_t pos, bool noIn, boo
             initializer = parseAssignmentExpression(noIn);
             lexer.redesignate(true); // Safe: a '/' or a '/=' would have been interpreted as an operator,
                                      // so it can't be the next token.
-            if (!untyped && expressionIsAttribute(initializer)) {
+            if (!noAttributes && expressionIsAttribute(initializer)) {
                 const Token &t2 = lexer.peek(true);
                 if (!lineBreakBefore(t2) && t2.getFlag(Token::canFollowAttribute))
                     goto makeAttribute;
@@ -1100,20 +1109,37 @@ JS::VariableBinding *JS::Parser::parseVariableBinding(size_t pos, bool noIn, boo
 
 
 // Parse and return a VariableBinding for a function parameter.  The parameter may optionally be
-// preceded by the const attribute.
+// preceded by the const and/or named attributes.  If named is true on entry to this function, then
+// the named attribute is required and named will remain true on exit.  If named is false on entry,
+// then the named attribute is optional and named will be true only if the named attribute was given.
+// If rest is true, then no initializer is allowed and, if the named attribute is also found, no type
+// is allowed.  rest and named must not be simultaneously true on entry to this function.
+// This function does not check that named parameters have initializers; the caller should make this
+// check.
 //
 // If the first token was peeked, it should be have been done with preferRegExp set to true.
 // After parseParameter finishes, the next token might have been peeked with preferRegExp set to true.
-JS::VariableBinding *JS::Parser::parseParameter()
+JS::VariableBinding *JS::Parser::parseParameter(bool rest, bool &named)
 {
-    const Token &t = lexer.peek(true);
-    size_t pos = t.getPos();
-    bool constant = false;
-    if (t.hasKind(Token::Const)) {
-        lexer.skip();
-        constant = true;
+    const Token *t = &lexer.get(true);
+    size_t pos = t->getPos();
+    bool constToken = false;
+    bool namedToken = false;
+    while (true) {
+        if (t->hasKind(Token::Const) && !constToken)
+            constToken = true;
+        // If the named attribute is required then assume that any Token::Named is the attribute.  If it
+        // isn't, then the parse will generate an error further down.
+        else if (t->hasKind(Token::Named) && !namedToken && (named || lexer.peek(true).getFlag(Token::canFollowAttribute)))
+            namedToken = true;
+        else break;
+        t = &lexer.get(true);
     }
-    return parseVariableBinding(pos, false, false, constant);
+    lexer.unget();
+    if (named && !namedToken)
+        syntaxError("'named' expected", 0);
+    named = namedToken;
+    return parseVariableBinding(pos, false, rest && namedToken, rest, true, constToken);
 }
 
 
@@ -1157,40 +1183,58 @@ void JS::Parser::parseFunctionSignature(FunctionDefinition &fd)
     NodeQueue<VariableBinding> parameters;
     VariableBinding *optParameters = 0;
     VariableBinding *restParameter = 0;
+    VariableBinding *namedParameters = 0;
+    bool restIsNamed = false;
+    bool named = false;
+
+    // The code below is very tricky because it discovers syntax errors on the earliest
+    // possible token.  Be careful to account for all possible error cases.
     if (!lexer.eat(true, Token::closeParenthesis)) {
         while (true) {
             if (lexer.eat(true, Token::tripleDot)) {
+                if (restParameter)
+                    syntaxError("A ... parameter can't follow a named or ... parameter");
                 const Token &t1 = lexer.peek(true);
-                if (t1.hasKind(Token::closeParenthesis))
+                if (t1.hasKind(Token::closeParenthesis) || t1.hasKind(Token::comma))
                     restParameter = new(arena) VariableBinding(t1.getPos(), 0, 0, 0, false);
                 else
-                    restParameter = parseParameter();
+                    restParameter = parseParameter(true, named);
+                restIsNamed = named;
                 if (!optParameters)
                     optParameters = restParameter;
                 parameters += restParameter;
-                require(true, Token::closeParenthesis);
-                break;
+                named = true; // Only named parameters may follow.
             } else {
-                VariableBinding *b = parseParameter();
+                VariableBinding *b = parseParameter(false, named);
+                if (named) {
+                    if (!namedParameters)
+                        namedParameters = b;
+                    if (!restParameter)
+                        restParameter = b;
+                }
                 if (b->initializer) {
                     if (!optParameters)
                         optParameters = b;
                 } else
-                    if (optParameters)
+                    if (optParameters || named)
                         syntaxError("'=' expected", 0);
                 parameters += b;
-                const Token &t = lexer.get(true);
-                if (!t.hasKind(Token::comma))
-                    if (t.hasKind(Token::closeParenthesis))
-                        break;
-                    else
-                        syntaxError("',' or ')' expected");
             }
+            const Token &t = lexer.get(true);
+            if (!t.hasKind(Token::comma))
+                if (t.hasKind(Token::closeParenthesis))
+                    break;
+                else
+                    syntaxError("',' or ')' expected");
+            if (restIsNamed)
+                syntaxError("')' expected"); // Nothing may follow a named rest parameter.
         }
     }
     fd.parameters = parameters.first;
     fd.optParameters = optParameters;
     fd.restParameter = restParameter;
+    fd.namedParameters = namedParameters;
+    fd.restIsNamed = restIsNamed;
     fd.resultType = parseTypeBinding(Token::colon, false);
 }
 
@@ -1525,7 +1569,7 @@ JS::StmtNode *JS::Parser::parseAnnotatableDirective(size_t pos, ExprNode *attrib
         {
             NodeQueue<VariableBinding> bindings;
 
-            do bindings += parseVariableBinding(lexer.peek(true).getPos(), noIn, untyped, sKind == StmtNode::Const);
+            do bindings += parseVariableBinding(lexer.peek(true).getPos(), noIn, untyped, false, false, sKind == StmtNode::Const);
             while (lexer.eat(true, Token::comma));
             s = new(arena) VariableStmtNode(pos, sKind, attributes, bindings.first);
         }
@@ -2057,13 +2101,20 @@ void JS::FunctionDefinition::print(PrettyPrinter &f, const AttributeStmtNode *at
         {
             PrettyPrinter::Block b2(f);
             const VariableBinding *p = parameters;
-            if (p)
+            if (p) {
+                bool named = false;
                 while (true) {
-                    if (p == restParameter) {
+                    if (p == namedParameters)
+                        named = true;
+                    else if (p == restParameter) {
                         f << "...";
-                        if (p->name)
+                        if (restIsNamed)
+                            f << " named ";
+                        else if (p->name)
                             f << ' ';
                     }
+                    if (named)
+                        f << "named ";
                     p->print(f, true);
                     p = p->next;
                     if (!p)
@@ -2071,6 +2122,7 @@ void JS::FunctionDefinition::print(PrettyPrinter &f, const AttributeStmtNode *at
                     f << ',';
                     f.fillBreak(1);
                 }
+            }
             f << ')';
         }
         if (resultType) {

@@ -171,6 +171,7 @@ const char *const JS::Token::kindNames[kindsEnd] = {
     "get",                          // Get
     "include",                      // Include
     "javascript",                   // Javascript
+    "named",                        // Named
     "set",                          // Set
     "strict"                        // Strict
 };
@@ -314,6 +315,7 @@ const uchar JS::Token::kindFlags[kindsEnd] = {
     isAttr|nonreserved,   // Get
     isAttr|nonreserved,   // Include
     isAttr|nonreserved,   // Javascript
+    isAttr|nonreserved,   // Named
     isAttr|nonreserved,   // Set
     isAttr|nonreserved,   // Strict
 

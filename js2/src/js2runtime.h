@@ -1212,7 +1212,7 @@ XXX ...couldn't get this to work...
 
         void setByteCode(ByteCodeModule *b)     { ASSERT(!isNative()); mByteCode = b; }
         void setResultType(JSType *r)           { mResultType = r; }
-        void setArgCounts(Context *cx, uint32 r, uint32 o, bool hasRest);
+        void setArgCounts(Context *cx, uint32 r, uint32 o, uint32 n, bool hasRest, bool restIsNamed);
         void setArgument(uint32 index, const String *n, JSType *t)
                                                 { ASSERT(mArguments && (index < (mRequiredArgs + mOptionalArgs + ((mHasRestParameter) ? 1 : 0) ))); mArguments[index].mType = t; mArguments[index].mName = n; }
         void setArgumentInitializer(uint32 index, uint32 offset)
@@ -1269,12 +1269,14 @@ XXX ...couldn't get this to work...
         JSType *mResultType;
         uint32 mRequiredArgs;                   // total # parameters
         uint32 mOptionalArgs;
+        uint32 mNamedArgs;
         ArgumentData *mArguments;
         ScopeChain *mScopeChain;
         bool mIsPrototype;                      // set for functions with prototype attribute
         bool mIsConstructor;
         bool mIsChecked;
         bool mHasRestParameter;
+        bool mRestIsNamed;
         const String *mRestParameterName;
         JSType *mClass;                         // pointer to owning class if this function is a method
         FunctionName *mFunctionName;

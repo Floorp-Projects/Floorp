@@ -2268,9 +2268,10 @@ BinaryOpEquals:
 
             uint32 reqArgCount = 0;
             uint32 optArgCount = 0;
+            uint32 namedArgCount = 0;
 
             VariableBinding *b = f->function.parameters;
-            while ((b != f->function.optParameters) && (b != f->function.restParameter)) {
+            while (b != f->function.optParameters) {
                 reqArgCount++;
                 b = b->next;
             }
@@ -2278,7 +2279,13 @@ BinaryOpEquals:
                 optArgCount++;
                 b = b->next;
             }
-            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, (f->function.restParameter != NULL));
+            b = f->function.namedParameters;
+            while (b) {
+                namedArgCount++;
+                b = b->next;
+            }
+            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, namedArgCount,
+                              f->function.restParameter != f->function.namedParameters, f->function.restIsNamed);
 
 	    if (mScopeChain->isPossibleUncheckedFunction(&f->function))
 		fnc->setIsPrototype(true);
