@@ -961,8 +961,6 @@ my $contenttype;
 my $disp = "inline";
 
 if ($format->{'extension'} eq "html") {
-    my $cookiepath = Param("cookiepath");
-
     if ($order) {
         $cgi->send_cookie(-name => 'LASTORDER',
                           -value => $order,

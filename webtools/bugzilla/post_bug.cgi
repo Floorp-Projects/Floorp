@@ -84,7 +84,6 @@ if (!$product_id) {
 }
 
 # Set cookies
-my $cookiepath = Param("cookiepath");
 if (exists $::FORM{'product'}) {
     if (exists $::FORM{'version'}) {
         $cgi->send_cookie(-name => "VERSION-$product",

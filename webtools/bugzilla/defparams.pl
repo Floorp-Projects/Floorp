@@ -358,6 +358,17 @@ sub find_languages {
   },
 
   {
+   name => 'cookiedomain',
+   desc => 'The domain for Bugzilla cookies.  Normally blank.  ' .
+           'If your website is at "www.foo.com", setting this to ' .
+           '".foo.com" will also allow bar.foo.com to access ' .
+           'Bugzilla cookies.  This is useful if you have more than ' .
+           'one hostname pointing at the same web server, and you ' .
+           'want them to share the Bugzilla cookie.',
+   type => 't',
+   default => ''
+  },
+  {
    name => 'cookiepath',
    desc => 'Path, relative to your web document root, to which to restrict ' .
            'Bugzilla cookies.  Normally this is the URI portion of your URL ' .

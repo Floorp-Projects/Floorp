@@ -179,6 +179,10 @@ sub send_cookie {
 
     # Add the default path in
     unshift(@_, '-path' => Param('cookiepath'));
+    if (Param('cookiedomain'))
+    {
+        unshift(@_, '-domain' => Param('cookiedomain'));
+    }
 
     # Use CGI::Cookie directly, because CGI.pm's |cookie| method gives the
     # current value if there isn't a -value attribute, which happens when
