@@ -20,6 +20,8 @@
  * Contributor(s): 
  */
 
+@import url(chrome://global/skin/);
+
 iframe#content-frame { 
   min-width: 100px; 
   min-height: 20px;

@@ -23,6 +23,8 @@
    -    Ben Goodger
   -->
 
+
+<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://sidebar/skin/" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/sidebar-editor.dtd" >
