@@ -42,6 +42,8 @@ package org.mozilla.javascript;
 import java.util.Hashtable;
 import java.util.Vector;
 import java.lang.reflect.*;
+import java.io.IOException;
+import org.mozilla.classfile.*;
 
 public class FunctionObject extends NativeFunction {
 
@@ -160,45 +162,26 @@ public class FunctionObject extends NativeFunction {
             length = 1;
         } else {
             parmsLength = (short) types.length;
-            boolean hasConversions = false;
             for (int i=0; i < parmsLength; i++) {
                 Class type = types[i];
-                if (type == ScriptRuntime.ObjectClass) {
-                    // may not need conversions
-                } else if (type == ScriptRuntime.StringClass || 
-                           type == ScriptRuntime.BooleanClass ||
-                           ScriptRuntime.NumberClass.isAssignableFrom(type) ||
-                           Scriptable.class.isAssignableFrom(type))
+                if (type != ScriptRuntime.ObjectClass &&
+                    type != ScriptRuntime.StringClass &&
+                    type != ScriptRuntime.BooleanClass &&
+                    !ScriptRuntime.NumberClass.isAssignableFrom(type) &&
+                    !Scriptable.class.isAssignableFrom(type) &&
+                    type != Boolean.TYPE &&
+                    type != Byte.TYPE &&
+                    type != Short.TYPE &&
+                    type != Integer.TYPE &&
+                    type != Float.TYPE && 
+                    type != Double.TYPE)
                 {
-                    hasConversions = true;
-                } else if (type == Boolean.TYPE) {
-                    hasConversions = true;
-                    types[i] = ScriptRuntime.BooleanClass;
-                } else if (type == Byte.TYPE) {
-                    hasConversions = true;
-                    types[i] = ScriptRuntime.ByteClass;
-                } else if (type == Short.TYPE) {
-                    hasConversions = true;
-                    types[i] = ScriptRuntime.ShortClass;
-                } else if (type == Integer.TYPE) {
-                    hasConversions = true;
-                    types[i] = ScriptRuntime.IntegerClass;
-                } else if (type == Float.TYPE) {
-                    hasConversions = true;
-                    types[i] = ScriptRuntime.FloatClass;
-                } else if (type == Double.TYPE) {
-                    hasConversions = true;
-                    types[i] = ScriptRuntime.DoubleClass;
-                } 
-                // Note that long is not supported; see comments above
-                else {
+                    // Note that long is not supported; see comments above
                     Object[] errArgs = { methodName };
                     throw Context.reportRuntimeError(
                         Context.getMessage("msg.bad.parms", errArgs));
                 }
             }
-            if (!hasConversions)
-                types = null;
             length = parmsLength;
         }
 
@@ -418,29 +401,34 @@ public class FunctionObject extends NativeFunction {
     static public Object convertArg(Scriptable scope,
                                     Object arg, Class desired)
     {
-        if (desired == ScriptRuntime.BooleanClass 
-                                    || desired == Boolean.TYPE)
-            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE 
-                                               : Boolean.FALSE;
-        else if (desired == ScriptRuntime.StringClass)
+        if (desired == ScriptRuntime.StringClass) 
             return ScriptRuntime.toString(arg);
-        else if (desired == ScriptRuntime.IntegerClass
-                                        || desired == Integer.TYPE)
+        if (desired == ScriptRuntime.IntegerClass || 
+            desired == Integer.TYPE)
+        {
             return new Integer(ScriptRuntime.toInt32(arg));
-        else if (desired == ScriptRuntime.DoubleClass 
-                                        || desired == Double.TYPE)
+        }
+        if (desired == ScriptRuntime.BooleanClass || 
+            desired == Boolean.TYPE)
+        {
+            return ScriptRuntime.toBoolean(arg) ? Boolean.TRUE 
+                                                : Boolean.FALSE;
+        }
+        if (desired == ScriptRuntime.DoubleClass || 
+            desired == Double.TYPE)
+        {
             return new Double(ScriptRuntime.toNumber(arg));
-        else if (desired == ScriptRuntime.ScriptableClass)
+        }
+        if (desired == ScriptRuntime.ScriptableClass)
             return ScriptRuntime.toObject(scope, arg);
-        else if (desired == ScriptRuntime.ObjectClass)
+        if (desired == ScriptRuntime.ObjectClass)
             return arg;
+        
         // Note that the long type is not supported; see the javadoc for
         // the constructor for this class
-        else {
-            Object[] errArgs = { desired.getName() };
-            throw Context.reportRuntimeError(
-                    Context.getMessage("msg.cant.convert", errArgs));
-        }
+        Object[] errArgs = { desired.getName() };
+        throw Context.reportRuntimeError(
+                Context.getMessage("msg.cant.convert", errArgs));
     }
 
     /**
@@ -501,9 +489,8 @@ public class FunctionObject extends NativeFunction {
             invokeArgs[i] = arg;
         }
         try {
-            Object result = (method != null)
-                            ? method.invoke(thisObj, invokeArgs)
-                            : ctor.newInstance(invokeArgs);
+            Object result = method == null ? ctor.newInstance(invokeArgs)
+                                           : doInvoke(thisObj, invokeArgs);
             return hasVoidReturn ? Undefined.instance : result;
         }
         catch (InvocationTargetException e) {
@@ -583,6 +570,273 @@ public class FunctionObject extends NativeFunction {
 
         return super.construct(cx, scope, args);
     }
+    
+    public abstract static class Invoker {
+        static int classNumber = 0;
+
+        public static Invoker createInvoker(Method method, Class[] types,
+                                            JavaAdapter.DefiningClassLoader classLoader)
+        {
+            String className;
+            Invoker result = null;
+            
+            //synchronized(invokers) { // is "++" atomic?
+                className = "inv" + ++classNumber;
+            //}
+            
+            ClassFileWriter cfw = new ClassFileWriter(className, 
+                                    "org.mozilla.javascript.FunctionObject$Invoker", "");
+            cfw.setFlags((short)(ClassFileWriter.ACC_PUBLIC | 
+                                 ClassFileWriter.ACC_FINAL));
+            
+            // Add our instantiator!
+            cfw.startMethod("<init>", "()V", ClassFileWriter.ACC_PUBLIC);
+            cfw.add(ByteCode.ALOAD_0);
+            cfw.add(ByteCode.INVOKESPECIAL,
+                    "org.mozilla.javascript.FunctionObject$Invoker",
+                    "<init>", "()", "V");
+            cfw.add(ByteCode.RETURN);
+            cfw.stopMethod((short)1, null); // one argument -- this???
+
+            // Add the invoke() method call
+            cfw.startMethod("invoke", 
+                            "(Ljava/lang/Object;[Ljava/lang/Object;)"+
+                             "Ljava/lang/Object;",
+                            (short)(ClassFileWriter.ACC_PUBLIC | 
+                                    ClassFileWriter.ACC_FINAL));
+            
+            // If we return a primitive type, then do something special!
+            String declaringClassName = method.getDeclaringClass().getName
+                ().replace('.', '/');
+            Class returnType = method.getReturnType();
+            String invokeSpecial = null;
+            String invokeSpecialType = null;
+            boolean returnsVoid = false;
+            boolean returnsBoolean = false;
+            
+            if (returnType.isPrimitive()) {
+                if (returnType == Boolean.TYPE) {
+                    returnsBoolean = true;
+                    invokeSpecialType = "(Z)";
+                } else if (returnType == Void.TYPE) {
+                    returnsVoid = true;
+                    invokeSpecialType = "(V)";
+                } else if (returnType == Integer.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Integer");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(I)";
+                } else if (returnType == Long.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Long");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(J)";
+                } else if (returnType == Short.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Short");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(S)";
+                } else if (returnType == Float.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Float");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(F)";
+                } else if (returnType == Double.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Double");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(D)";
+                } else if (returnType == Byte.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial = "java/lang/Byte");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(B)";
+                } else if (returnType == Character.TYPE) {
+                    cfw.add(ByteCode.NEW, invokeSpecial 
+                                = "java/lang/Character");
+                    cfw.add(ByteCode.DUP);
+                    invokeSpecialType = "(C)";
+                }
+            }
+            
+            // handle setup of call to virtual function (if calling non-static)
+            if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                cfw.add(ByteCode.ALOAD_1);
+                cfw.add(ByteCode.CHECKCAST, declaringClassName);
+            }
+            
+            // Handle parameters!
+            StringBuffer params = new StringBuffer(2 + ((types!=null)?(20 *
+                                    types.length):0));
+            
+            params.append("(");
+            if (types != null) {
+                for(int i = 0; i < types.length; i++) {
+                    Class type = types[i];
+
+                    cfw.add(ByteCode.ALOAD_2);
+                    
+                    if (i <= 5) {
+                        cfw.add((byte) (ByteCode.ICONST_0 + i));
+                    } else if (i <= Byte.MAX_VALUE) {
+                        cfw.add(ByteCode.BIPUSH, i);
+                    } else if (i <= Short.MAX_VALUE) {
+                        cfw.add(ByteCode.SIPUSH, i);
+                    } else {
+                        cfw.addLoadConstant((int)i);
+                    }
+                    
+                    cfw.add(ByteCode.AALOAD);
+                    
+                    if (type.isPrimitive()) {
+                        // Convert enclosed type back to primitive.
+                        
+                        if (type == Boolean.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Boolean");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Boolean", 
+                                    "booleanValue", "()", "Z");
+                            params.append("Z");
+                        } else if (type == Integer.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
+                                    "intValue", "()", "I");
+                            params.append("I");
+                        } else if (type == Short.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
+                                    "shortValue", "()", "S");
+                            params.append("S");
+                        } else if (type == Character.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Character");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Character", 
+                                    "charValue", "()", "C");
+                            params.append("C");
+                        } else if (type == Double.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
+                                    "doubleValue", "()", "D");
+                            params.append("D");
+                        } else if (type == Float.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Number");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Number", 
+                                    "floatValue", "()", "F");
+                            params.append("F");
+                        } else if (type == Byte.TYPE) {
+                            cfw.add(ByteCode.CHECKCAST, "java/lang/Byte");
+                            cfw.add(ByteCode.INVOKEVIRTUAL, "java/lang/Byte", 
+                                    "byteValue", "()", "B");
+                            params.append("B");
+                        }
+                    } else {
+                        String typeName = type.getName().replace('.', '/');
+                        cfw.add(ByteCode.CHECKCAST, typeName);
+                        
+                        if (!type.isArray()) {
+                            params.append('L');
+                        }
+                        params.append(typeName);
+                        
+                        if (!type.isArray()) {
+                            params.append(';');
+                        }
+                    }
+                }
+            }
+            params.append(")");
+            
+            // Call actual function!
+            if (!java.lang.reflect.Modifier.isStatic(method.getModifiers())) {
+                cfw.add(ByteCode.INVOKEVIRTUAL, declaringClassName, 
+                        method.getName(), params.toString(),
+                        (invokeSpecialType!=null?invokeSpecialType.substring(1,2)
+                                                 :returnType.isArray()?
+                                                  returnType.getName().replace('.','/')
+                                                  :"L".concat
+                    (returnType.getName().replace('.', '/').concat(";"))));
+            } else {
+                cfw.add(ByteCode.INVOKESTATIC, declaringClassName, 
+                        method.getName(), params.toString(),
+                        (invokeSpecialType!=null?invokeSpecialType.substring(1,2)
+                                                 :returnType.isArray()?
+                                                  returnType.getName().replace('.','/')
+                                                  :"L".concat
+                    (returnType.getName().replace('.', '/').concat(";"))));
+            }
+            
+            // Handle return value
+            if (returnsVoid) {
+                cfw.add(ByteCode.ACONST_NULL);
+                cfw.add(ByteCode.ARETURN);
+            } else if (returnsBoolean) {
+                // HACK
+                //check to see if true;
+                // '7' is the number of bytes of the ifeq<branch> plus getstatic<TRUE> plus areturn instructions
+                cfw.add(ByteCode.IFEQ, 7);
+                cfw.add(ByteCode.GETSTATIC,
+                        "java/lang/Boolean",
+                        "TRUE",
+                        "Ljava/lang/Boolean;");
+                cfw.add(ByteCode.ARETURN);
+                cfw.add(ByteCode.GETSTATIC,
+                        "java/lang/Boolean",
+                        "FALSE",
+                        "Ljava/lang/Boolean;");
+                cfw.add(ByteCode.ARETURN);
+            } else if (invokeSpecial != null) {
+                cfw.add(ByteCode.INVOKESPECIAL,
+                        invokeSpecial,
+                        "<init>", invokeSpecialType, "V");
+                cfw.add(ByteCode.ARETURN);
+            } else {
+                cfw.add(ByteCode.ARETURN);
+            }
+            cfw.stopMethod((short)3, null); // three arguments, including the this pointer???
+            
+            // Add class to our classloader.
+            java.io.ByteArrayOutputStream bos = 
+                new java.io.ByteArrayOutputStream(550);
+            
+            try {
+                cfw.write(bos);
+            }
+            catch (IOException ioe) {
+                throw new RuntimeException("unexpected IOException" + ioe.toString());
+            }
+            
+            try {
+                byte[] bytes = bos.toByteArray();
+                classLoader.defineClass(className, bytes);
+                Class clazz = classLoader.loadClass(className, true);
+                result = (Invoker)clazz.newInstance();
+                
+                if (false) {
+                    System.out.println("Generated method delegate for: " + method.getName() 
+                                       + " on " + method.getDeclaringClass().getName() + " :: " + params.toString() 
+                                       + " :: " + types);
+                }
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("unexpected " + e.toString());
+            } catch (InstantiationException e) {
+                throw new RuntimeException("unexpected " + e.toString());
+            } catch (IllegalAccessException e) {
+                throw new RuntimeException("unexpected " + e.toString());
+            }
+
+            return result;
+        }
+        
+        public abstract Object invoke(Object that, Object [] args);
+    }
+    
+    private final Object doInvoke(Object thisObj, Object[] args) 
+        throws IllegalAccessException, InvocationTargetException
+    {
+        if (classLoader != null) {
+            if (invoker == null) {
+                invoker = (Invoker) invokersCache.get(method);
+                if (invoker == null) {
+                    invoker = Invoker.createInvoker(method, types, classLoader);
+                    invokersCache.put(method, invoker);
+                }
+            }
+            return invoker.invoke(thisObj, args);
+        } 
+        return method.invoke(thisObj, args);
+    }
 
     private Object callVarargs(Context cx, Scriptable thisObj, Object[] args,
                                boolean inNewExpr)
@@ -591,14 +845,14 @@ public class FunctionObject extends NativeFunction {
         try {
             if (parmsLength == VARARGS_METHOD) {
                 Object[] invokeArgs = { cx, thisObj, args, this };
-                Object result = method.invoke(null, invokeArgs);
+                Object result = doInvoke(null, invokeArgs);
                 return hasVoidReturn ? Undefined.instance : result;
             } else {
                 Boolean b = inNewExpr ? Boolean.TRUE : Boolean.FALSE;
                 Object[] invokeArgs = { cx, args, this, b };
                 return (method == null)
                        ? ctor.newInstance(invokeArgs)
-                       : method.invoke(null, invokeArgs);
+                       : doInvoke(null, invokeArgs);
             }
         }
         catch (InvocationTargetException e) {
@@ -625,6 +879,17 @@ public class FunctionObject extends NativeFunction {
     boolean isVarArgsConstructor() { 
         return parmsLength == VARARGS_CTOR;
     }
+    
+    static void setCachingEnabled(boolean enabled) {
+        if (!enabled) {
+            methodsCache = null;
+            classLoader = null;
+            invokersCache = null;
+        } else if (classLoader == null) {
+            classLoader = JavaAdapter.createDefiningClassLoader();
+            invokersCache = new Hashtable();
+        }
+    }
 
     private static final short VARARGS_METHOD = -1;
     private static final short VARARGS_CTOR =   -2;
@@ -632,10 +897,14 @@ public class FunctionObject extends NativeFunction {
     private static boolean sawSecurityException;
 
     static Method[] methodsCache;
+    static Hashtable invokersCache = new Hashtable();
+    static JavaAdapter.DefiningClassLoader classLoader 
+        = JavaAdapter.createDefiningClassLoader();
 
     Method method;
     Constructor ctor;
     private Class[] types;
+    Invoker invoker;
     private short parmsLength;
     private short lengthPropertyValue;
     private boolean hasVoidReturn;

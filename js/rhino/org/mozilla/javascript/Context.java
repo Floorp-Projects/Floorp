@@ -1492,11 +1492,11 @@ public final class Context {
     public static void setCachingEnabled(boolean cachingEnabled) {
         if (isCachingEnabled && !cachingEnabled) {
             // Caching is being turned off. Empty caches.
-            FunctionObject.methodsCache = null;
             JavaMembers.classTable = new Hashtable();
             nameHelper.reset();
         }
         isCachingEnabled = cachingEnabled;
+        FunctionObject.setCachingEnabled(cachingEnabled);
     }
     
     /**

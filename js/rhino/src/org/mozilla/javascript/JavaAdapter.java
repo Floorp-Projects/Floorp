@@ -320,10 +320,19 @@ public class JavaAdapter extends ScriptableObject {
                 return result;
         } 
         if (classLoader == null)
-            classLoader = new MyClassLoader();
+            classLoader = new DefiningClassLoader();
         classLoader.defineClass(adapterName, bytes);
         return classLoader.loadClass(adapterName, true);
     }
+    
+    public static DefiningClassLoader createDefiningClassLoader() {
+        try {
+            return new JavaAdapter.DefiningClassLoader();
+        } catch (Throwable t) {
+            // most likely a security exception; just skip this optimization
+            return null;
+        }
+    }        
     
     /**
      * Utility method which dynamically binds a Context to the current thread, 
@@ -833,7 +842,7 @@ public class JavaAdapter extends ScriptableObject {
         return sb;
     }
     
-    static final class MyClassLoader extends ClassLoader {
+    static final class DefiningClassLoader extends ClassLoader {
         public Class defineClass(String name, byte data[]) {
             ClassLoader loader = getClass().getClassLoader();
             if (loader != null) {
@@ -915,6 +924,6 @@ public class JavaAdapter extends ScriptableObject {
     }
     
     private static int serial;
-    private static MyClassLoader classLoader;
+    private static DefiningClassLoader classLoader;
     private static Hashtable generatedClasses = new Hashtable(7);
 }
