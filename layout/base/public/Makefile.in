@@ -97,6 +97,7 @@ XPIDLSRCS	= \
 		nsISelectionController.idl  \
 		nsISelectionListener.idl  \
 		nsISelection.idl  \
+		nsISelectionPrivate.idl  \
 		nsIPrintListener.idl        \
 		$(NULL)
 
