@@ -161,7 +161,7 @@ nsFontMetricsPh :: Init ( const nsFont& aFont, nsIAtom* aLangGroup,
 
 	//PRInt32 sizePoints2 = NSToIntRound(app2dev * textZoom * mFont->size);
 	app2twip *= (app2dev * textZoom);
-	PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip));
+	PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size * app2twip * 0.90));
   
 	//printf("FONTSIZE: %f, %f, %f, %f, %d, %d (%d)\n", app2dev, app2twip, scale, textZoom, \
 	//	mFont->size, sizePoints, sizePoints2);
