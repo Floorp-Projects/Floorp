@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.28 2001/05/22 23:02:49 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.29 2001/05/23 01:33:35 mcgreer%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -90,6 +90,8 @@ public:
   virtual ~nsNSSCertTrust();
 
   /* query */
+  PRBool HasAnyCA();
+  PRBool HasAnyUser();
   PRBool HasCA(PRBool checkSSL = PR_TRUE, 
                PRBool checkEmail = PR_TRUE,  
                PRBool checkObjSign = PR_TRUE);
@@ -352,6 +354,16 @@ nsNSSCertTrust::SetUser()
 }
 
 PRBool
+nsNSSCertTrust::HasAnyCA()
+{
+  if (hasTrust(mTrust.sslFlags, CERTDB_VALID_CA) ||
+      hasTrust(mTrust.emailFlags, CERTDB_VALID_CA) ||
+      hasTrust(mTrust.objectSigningFlags, CERTDB_VALID_CA))
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
+PRBool
 nsNSSCertTrust::HasCA(PRBool checkSSL, 
                       PRBool checkEmail,  
                       PRBool checkObjSign)
@@ -378,6 +390,17 @@ nsNSSCertTrust::HasPeer(PRBool checkSSL,
     return PR_FALSE;
   return PR_TRUE;
 }
+
+PRBool
+nsNSSCertTrust::HasAnyUser()
+{
+  if (hasTrust(mTrust.sslFlags, CERTDB_USER) ||
+      hasTrust(mTrust.emailFlags, CERTDB_USER) ||
+      hasTrust(mTrust.objectSigningFlags, CERTDB_USER))
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
 PRBool
 nsNSSCertTrust::HasUser(PRBool checkSSL, 
                         PRBool checkEmail,  
@@ -2897,9 +2920,9 @@ nsNSSCertificateDB::getCertType(CERTCertificate *cert)
   char *email = cert->emailAddr;
   nsNSSCertTrust trust(cert->trust);
   if (nick) {
-    if (trust.HasUser())
+    if (trust.HasAnyUser())
       return nsIX509Cert::USER_CERT;
-    if (trust.HasCA())
+    if (trust.HasAnyCA())
       return nsIX509Cert::CA_CERT;
     if (trust.HasPeer(PR_TRUE, PR_FALSE, PR_FALSE))
       return nsIX509Cert::SERVER_CERT;
