@@ -192,7 +192,7 @@ BUILD_OFFICIAL=1 MOZILLA_OFFICIAL=1 \
 	./configure --prefix=%{_prefix} --enable-optimize \
 	--disable-debug \
 	--with-default-mozilla-five-home=/usr/lib/mozilla-%{version} \
-	--enable-strip-libs \
+	--enable-strip \
 	--disable-tests \
 	--disable-short-wchar \
 	--enable-nspr-autoconf \
