@@ -531,16 +531,8 @@ PRInt32 nsSmtpProtocol::SmtpResponse(nsIInputStream * inputStream, PRUint32 leng
   }
 
   if (m_responseCode == 220 && nsCRT::strlen(m_responseText) && !m_tlsInitiated)
-  { // check for the greeting if it is a ESMTP server set capability accordingly
-    if (m_responseText.Find("ESMTP", PR_TRUE) != -1)
-    {
-      SetFlag(SMTP_ESMTP_SERVER);
-      m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
-    }
-    else
-    {
-        m_nextStateAfterResponse = SMTP_LOGIN_RESPONSE;
-    }
+  { 
+        m_nextStateAfterResponse = SMTP_EXTN_LOGIN_RESPONSE;
   }
 
 	if(m_continuationResponse == -1)  /* all done with this response? */
