@@ -35,6 +35,7 @@ CPPSRCS		= \
 		nsEditorService.cpp \
 		nsEditorController.cpp \
 		nsEditorCommands.cpp \
+		nsComposerCommands.cpp \
 		nsEditorUtils.cpp \
 		nsEditorRegistration.cpp \
 		nsEditorParserObserver.cpp \
