@@ -1,3 +1,21 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 /*
  * Copyright (c) 1991, 1993
  *	The Regents of the University of California.  All rights reserved.
@@ -39,6 +57,13 @@
 #ifndef	_CDEFS_H_
 #define	_CDEFS_H_
 
+#ifdef __BEGIN_DECLS
+#undef __BEGIN_DECLS
+#endif
+#ifdef __END_DECLS
+#undef __END_DECLS
+#endif
+
 #if defined(__cplusplus)
 #define	__BEGIN_DECLS	extern "C" {
 #define	__END_DECLS	}
@@ -54,7 +79,11 @@
  * in between its arguments.  __CONCAT can also concatenate double-quoted
  * strings produced by the __STRING macro, but this only works with ANSI C.
  */
-#if defined(__STDC__) || defined(__cplusplus) || defined(_WINDOWS)
+#undef __P
+#undef __CONCAT
+#undef __STRING
+
+#if defined(__STDC__) || defined(__cplusplus) || defined(_WINDOWS) || defined(XP_OS2)
 #define	__P(protos)	protos		/* full-blown ANSI C */
 #define	__CONCAT(x,y)	x ## y
 #define	__STRING(x)	#x
@@ -119,6 +148,13 @@
 #ifndef __dead
 #define	__dead
 #define	__pure
+#endif
+
+#ifdef AIXV3
+/* Wont compile without const. Need a cleaner way to handle this. */
+#ifdef const
+#undef const
+#endif
 #endif
 
 #endif /* !_CDEFS_H_ */
