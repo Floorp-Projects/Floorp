@@ -77,7 +77,7 @@ sub packit {
     if ($Settings::sea_installer || $Settings::stub_installer) {
       $status = TinderUtils::run_shell_command "make -C $packaging_dir installer";
     } else {
-      $status = 1;
+      $status = 0;
     }
 
     if (is_windows()) {
