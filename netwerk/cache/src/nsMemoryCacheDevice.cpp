@@ -522,12 +522,10 @@ nsMemoryCacheDeviceInfo::GetUsageReport(char ** result)
     NS_ENSURE_ARG_POINTER(result);
     nsCString  buffer;
 
-    buffer.Assign("<table>\n");
-    buffer.Append("<tr><td><b>Inactive Storage:</b></td><td><tt> ");
+    buffer.Append("\n<tr>\n<td><b>Inactive Storage:</b></td>\n<td><tt> ");
     buffer.AppendInt(mDevice->mInactiveSize / 1024);
-    buffer.Append(" k</tt></td></tr>\n");
-    buffer.Append("</table>\n");
-
+    buffer.Append(" k</tt></td>\n</tr>\n");
+    
     *result = ToNewCString(buffer);
     if (!*result) return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;

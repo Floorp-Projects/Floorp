@@ -198,11 +198,9 @@ nsAboutCache::VisitDevice(const char *deviceID,
         mBuffer.AppendInt(value/1024);
         mBuffer.Append(" k</tt></td>\n</tr>\n");
 
-        mBuffer.Append("</table>\n");
-        
         deviceInfo->GetUsageReport(getter_Copies(str));
         mBuffer.Append(str);
-        mBuffer.Append("\n<br />");
+        mBuffer.Append("</table>\n\n<br />");
 
         if (mDeviceID.IsEmpty()) {
             mBuffer.Append("\n<a href=\"about:cache?device=");
