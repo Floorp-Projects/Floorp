@@ -1232,24 +1232,12 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aData, 
-                                       PRUint32 aLength)
+nsXMLContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
+                                       const PRUnichar *aEncoding,
+                                       const PRInt32 aStandalone)
 {
-  NS_ENSURE_ARG_POINTER(aData);
-  // strlen("<?xml version='a'?>") == 19, shortest decl
-  NS_ENSURE_TRUE(aLength >= 19, NS_ERROR_INVALID_ARG);
+  mDocument->SetXMLDeclaration(aVersion, aEncoding, aStandalone);
 
-  // <?xml version="a" encoding="a" standalone="yes|no"?>
-  const nsAString& data = Substring(aData + 6, aData + aLength - 2); // strip out "<?xml " and "?>"
-
-  nsAutoString version, encoding, standalone;
-
-  // XXX If this is too slow we need to parse this here
-  nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("version"), version);
-  nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("encoding"), encoding);
-  nsParserUtils::GetQuotedAttributeValue(data, NS_LITERAL_STRING("standalone"), standalone);
-
-  mDocument->SetXMLDeclaration(version, encoding, standalone);
   return NS_OK;
 }
 

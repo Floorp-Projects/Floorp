@@ -59,6 +59,19 @@ static const PRUnichar kUTF16[] = { 'U', 'T', 'F', '-', '1', '6', '\0' };
 // The callback handlers that get called from the expat parser.
 
 PR_STATIC_CALLBACK(void)
+Driver_HandleXMLDeclaration(void *aUserData,
+                            const XML_Char *aVersion,
+                            const XML_Char *aEncoding,
+                            int aStandalone)
+{
+  NS_ASSERTION(aUserData, "expat driver should exist");
+  if (aUserData) {
+    nsExpatDriver* driver = NS_STATIC_CAST(nsExpatDriver*, aUserData);
+    driver->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
+  }
+}
+
+PR_STATIC_CALLBACK(void)
 Driver_HandleStartElement(void *aUserData,
                           const XML_Char *aName,
                           const XML_Char **aAtts)
@@ -145,7 +158,7 @@ Driver_HandleEndCdataSection(void *aUserData)
 }
 
 PR_STATIC_CALLBACK(void)
-Driver_HandleStartDoctypeDecl(void *aUserData, 
+Driver_HandleStartDoctypeDecl(void *aUserData,
                               const XML_Char *aDoctypeName,
                               const XML_Char *aSysid,
                               const XML_Char *aPubid,
@@ -321,7 +334,6 @@ nsExpatDriver::nsExpatDriver()
     mInCData(PR_FALSE),
     mInDoctype(PR_FALSE),
     mInExternalDTD(PR_FALSE),
-    mHandledXMLDeclaration(PR_FALSE),
     mBytePosition(0),
     mInternalState(NS_OK),
     mBytesParsed(0),
@@ -427,29 +439,11 @@ nsExpatDriver::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 nsresult
-nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aValue,
-                                    const PRUint32 aLength)
+nsExpatDriver::HandleXMLDeclaration(const PRUnichar *aVersion,
+                                    const PRUnichar *aEncoding,
+                                    const PRInt32 aStandalone)
 {
-  mHandledXMLDeclaration = PR_TRUE;
-
-  // <?xml version='a'?>
-  // 0123456789012345678
-  // ?> can start at position 17 at the earliest
-  PRUint32 i;
-  for (i = 17; i < aLength; ++i) {
-    if (aValue[i] == '?')
-      break;
-  }
-
-  // +1 because index starts from 0
-  // +1 because '>' follows '?'
-  i += 2;
-
-  if (i > aLength) {
-    return NS_OK; // Bad declaration
-  }
-
-  return mSink->HandleXMLDeclaration(aValue, i);
+  return mSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
 }
 
 nsresult
@@ -464,14 +458,6 @@ nsExpatDriver::HandleDefault(const PRUnichar *aValue,
     }
   }
   else if (mSink) {
-    if (!mHandledXMLDeclaration && !mBytesParsed) {
-      static const PRUnichar xmlDecl[] = { '<', '?', 'x', 'm', 'l', ' ', '\0' };
-      // strlen("<?xml version='a'?>") == 19, shortest decl
-      if (aLength >= 19 && nsCRT::strncmp(aValue, xmlDecl, 6) == 0) {
-        HandleXMLDeclaration(aValue, aLength);
-      }
-    }
-
     static const PRUnichar newline[] = { '\n', '\0' };
     PRUint32 i;
     for (i = 0; i < aLength && NS_SUCCEEDED(mInternalState); ++i) {
@@ -649,8 +635,8 @@ nsExpatDriver::HandleExternalEntityRef(const PRUnichar *openEntityNames,
 
   int result = 1;
   if (uniIn) {
-    XML_Parser entParser =
-      XML_ExternalEntityParserCreate(mExpatParser, 0, (const XML_Char*)kUTF16);
+    XML_Parser entParser = XML_ExternalEntityParserCreate(mExpatParser, 0,
+                                                          kUTF16);
     if (entParser) {
       XML_SetBase(entParser, absURL.get());
 
@@ -812,8 +798,8 @@ nsExpatDriver::HandleError(const char *aBuffer,
 
   nsAutoString errorText;
   CreateErrorText(description.get(), XML_GetBase(mExpatParser),
-                  XML_GetCurrentLineNumber(mExpatParser),
-                  colNumber, errorText);
+                  XML_GetCurrentLineNumber(mExpatParser), colNumber,
+                  errorText);
 
   nsAutoString sourceText;
   CreateSourceText(colNumber, sourceLine.get(), sourceText);
@@ -1026,6 +1012,7 @@ nsExpatDriver::WillBuildModel(const CParserContext& aParserContext,
   XML_SetBase(mExpatParser, aParserContext.mScanner->GetFilename().get());
 
   // Set up the callbacks
+  XML_SetXmlDeclHandler(mExpatParser, Driver_HandleXMLDeclaration); 
   XML_SetElementHandler(mExpatParser, Driver_HandleStartElement,
                         Driver_HandleEndElement);
   XML_SetCharacterDataHandler(mExpatParser, Driver_HandleCharacterData);
@@ -1178,7 +1165,6 @@ nsExpatDriver::GetTokenAllocator(void)
 NS_IMETHODIMP_(void)
 nsExpatDriver::PrependTokens(nsDeque& aDeque)
 {
-
 }
 
 NS_IMETHODIMP

@@ -571,12 +571,14 @@ public:
   virtual nsIScriptEventManager* GetScriptEventManager() = 0;
 
   /**
-   * Set and get XML declaration. Notice that if version is empty,
-   * there can be no XML declaration (it is a required part).
+   * Set and get XML declaration. If aVersion is null there is no declaration.
+   * aStandalone takes values -1, 0 and 1 indicating respectively that there
+   * was no standalone parameter in the declaration, that it was given as no,
+   * or that it was given as yes.
    */
-  virtual void SetXMLDeclaration(const nsAString& aVersion,
-                                 const nsAString& aEncoding,
-                                 const nsAString& Standalone) = 0;
+  virtual void SetXMLDeclaration(const PRUnichar *aVersion,
+                                 const PRUnichar *aEncoding,
+                                 const PRInt32 aStandalone) = 0;
   virtual void GetXMLDeclaration(nsAString& aVersion,
                                  nsAString& aEncoding,
                                  nsAString& Standalone) = 0;

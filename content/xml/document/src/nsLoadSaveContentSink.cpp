@@ -191,10 +191,11 @@ nsLoadSaveContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 }
 
 NS_IMETHODIMP
-nsLoadSaveContentSink::HandleXMLDeclaration(const PRUnichar* aData,
-                                            PRUint32 aLength)
+nsLoadSaveContentSink::HandleXMLDeclaration(const PRUnichar *aVersion,
+                                            const PRUnichar *aEncoding,
+                                            const PRInt32 aStandalone)
 {
-  return mExpatSink->HandleXMLDeclaration(aData, aLength);
+  return mExpatSink->HandleXMLDeclaration(aVersion, aEncoding, aStandalone);
 }
 
 NS_IMETHODIMP
