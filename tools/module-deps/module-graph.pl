@@ -40,11 +40,11 @@ sub PrintUsage {
 END_USAGE
 }
 
-my %clustered;
+my %clustered;        # strongly connected components.
 my %deps;
-my %toplevel_modules;
+my %toplevel_modules; # visited components.
 
-my $debug = 0;
+my $debug = 10;
 
 my $makecommand;
 
@@ -61,7 +61,7 @@ my $curdir = getcwd();
 my $list_only_mode = 0;  # --list-only argument, only print out module names
 my $opt_list_only;
 
-my $load_file = 0;  # --file
+my $load_file = 0;       # --file
 my $opt_start_module;    # --start-module optionally print out dependencies    
                          # for a given module.
 
@@ -155,8 +155,6 @@ MFILE:
 sub build_deps_matrix_from_file {
   my ($filename) = @_;
 
-  print "build_deps_matrix_from_file()\n";
-
   open DEPS_FILE, $filename or print "can't open $filename, $?\n";
   my @line;
   while (<DEPS_FILE>) {
@@ -231,7 +229,7 @@ sub print_dependency_list() {
 				   keys %{ $deps{$module} } ) {
 	  #    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
 	  if(!$list_only_mode) {
-		print "    $module -> $req;\n";
+		print "$module -> $req;\n";
 	  } else {
 		# print "$req ";
 		push(@raw_list, $req);
@@ -315,7 +313,7 @@ sub sortby_deps() {
 #
 my %visited_nodes;
 
-sub print_module_digraph {
+sub walk_module_digraph {
   my ($module, $level) = @_;
 
   # Remember that we visited this node.
@@ -337,7 +335,7 @@ sub print_module_digraph {
 	my $visited = $visited_nodes{$depmod};
 
 	if(!$visited) {    	# test recursion: if($level < 5)
-	  print_module_digraph($depmod, $level + 1);
+	  walk_module_digraph($depmod, $level + 1);
 	}
   }
 
@@ -351,7 +349,7 @@ sub print_module_digraph {
 
 sub print_module_deps {
   # Recursively hunt down dependencies for $opt_start_module
-  print_module_digraph($opt_start_module, 1);
+  walk_module_digraph($opt_start_module, 1);
 
   my $visited_mod;
   foreach $visited_mod (sort keys %visited_nodes ) {
