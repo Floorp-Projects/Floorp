@@ -103,7 +103,7 @@ LocationImpl::SetURL(nsIURL* aURL)
     const char* spec;
     aURL->GetSpec(&spec);
     nsAutoString s = spec;
-    return mWebShell->LoadURL(s, nsnull, PR_TRUE);
+    return mWebShell->LoadURL(s.GetUnicode(), nsnull, PR_TRUE);
   }
   else {
     return NS_OK;
@@ -293,7 +293,7 @@ LocationImpl::SetHref(const nsString& aHref)
   }
 
   if ((NS_OK == result) && (nsnull != mWebShell)) {
-    return mWebShell->LoadURL(newHref, nsnull, PR_TRUE);
+    return mWebShell->LoadURL(newHref.GetUnicode(), nsnull, PR_TRUE);
   }
 
   return result;
@@ -510,7 +510,7 @@ NS_IMETHODIMP
 LocationImpl::Replace(const nsString& aUrl)
 {
   if (nsnull != mWebShell) {
-    return mWebShell->LoadURL(aUrl, nsnull, PR_FALSE);
+    return mWebShell->LoadURL(aUrl.GetUnicode(), nsnull, PR_FALSE);
   }
 
   return NS_OK;
