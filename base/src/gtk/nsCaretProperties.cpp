@@ -29,7 +29,7 @@ nsCaretProperties::nsCaretProperties()
 {
 	// in your platform-specific class, get data from the OS in your constructor
 	
-	mBlinkRate = 0;			// don't blink the caret
+	//mBlinkRate = 0;			// don't blink the caret
 }
 
 
