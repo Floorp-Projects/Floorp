@@ -17,7 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>,  3 Sep 1997.
- * Modified: Jeff Galyan <talisman@anamorphic.com>, 30 Dec 1998
+ *
+ * Contributors: Jeff Galyan <talisman@anamorphic.com>
  */
 
 package grendel.ui;
@@ -288,7 +289,7 @@ public class MessagePanel extends GeneralPanel {
             InputStream rawin;
             try {
               rawin = mextra.getInputStreamWithHeaders();
-              if (makeRealHTML) {
+              if (makeRealHtml) {
                 in = (new MakeItHTML(rawin)).getHTMLInputStream();
               } else {
                 in = new StupidHackToMakeHTML(rawin);

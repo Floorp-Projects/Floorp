@@ -14,12 +14,9 @@
  *
  * The Original Code is the Grendel mail/news client.
  *
- * The Initial Developer of the Original Code is Netscape Communications
- * Corporation.  Portions created by Netscape are Copyright (C) 1997
- * Netscape Communications Corporation.  All Rights Reserved.
- *
- * Created: Jeff Galyan <jeffrey.galyan@sun.com>, 1 January 1999
- * 
+ * The Initial Developer of the Original Code is Jeff Galyan
+ * <talisman@anamorphic.com>.  Portions created by Jeff Galyan are Copyright 
+ * (C) 1999 Jeff Galyan.  All Rights Reserved.
  */
 
 package grendel.ui;
