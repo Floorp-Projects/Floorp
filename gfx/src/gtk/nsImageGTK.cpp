@@ -1350,7 +1350,7 @@ nsImageGTK::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
       for (int x=mDecodedX1; x<mDecodedX2; x++)
         if (*(alpha++)!=255) {
           mAlphaValid=PR_TRUE;
-          return;
+          return NS_OK;
         }
     }
   }
