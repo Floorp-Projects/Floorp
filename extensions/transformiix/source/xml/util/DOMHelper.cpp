@@ -19,13 +19,13 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: DOMHelper.cpp,v 1.1 2000/02/22 11:12:57 kvisco%ziplink.net Exp $
+ * $Id: DOMHelper.cpp,v 1.2 2000/04/19 10:31:23 kvisco%ziplink.net Exp $
  */
 
 /**
  * A class used to overcome DOM 1.0 deficiencies
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.1 $ $Date: 2000/02/22 11:12:57 $
+ * @version $Revision: 1.2 $ $Date: 2000/04/19 10:31:23 $
 **/
 
 #include "DOMHelper.h"
@@ -71,6 +71,37 @@ Node* DOMHelper::appearsFirst(Node* node1, Node* node2) {
     return node1;
     
 } //-- compareDocumentOrders
+
+/**
+ * Generates a unique ID for the given node and places the result in
+ * dest
+**/
+void DOMHelper::generateId(Node* node, String& dest) {
+
+    if (!node) {
+        dest.append("<null>");
+        return;
+    }
+
+    dest.append("id");
+
+    if (node->getNodeType() == Node::DOCUMENT_NODE) {
+        Integer::toString((int)node,dest);
+        return;
+    }
+
+    Integer::toString((int)node->getOwnerDocument(), dest);
+
+    OrderInfo* orderInfo = getDocumentOrder(node);
+
+    int i = 0;
+    while (i < orderInfo->size) {
+        dest.append('.');
+        Integer::toString(orderInfo->order[i], dest);
+        ++i;
+    }
+
+} //-- generateId
 
 /**
  * Returns the parent of the given node. This method is available
