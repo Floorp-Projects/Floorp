@@ -46,42 +46,6 @@
 #include <stdlib.h>
 #include "xlibrgb.h"
 
-/* XXX: To be removed after checkin of bug 16688 */
-// Malloc an Encoder (unicode -> charset) buffer if the
-// result won't fit in the static buffer
-//
-//    p = the buffer pointer   (char*)
-//    e = encoder              (nsIUnicodeEncoder*)
-//    s = string               (PRUnichar*)
-//    l = string length        (PRInt32)
-//   sb = static buffer        (char[])
-//  sbl = static buffer length (PRUint32)
-//   al = actual buffer length (PRInt32)
-//
-#ifndef ENCODER_BUFFER_ALLOC_IF_NEEDED
-#define ENCODER_BUFFER_ALLOC_IF_NEEDED(p,e,s,l,sb,sbl,al) \
-  PR_BEGIN_MACRO                                          \
-    nsresult rv = (e)->GetMaxLength((s), (l), &(al));     \
-    if (NS_SUCCEEDED(rv)                                  \
-        && ((al) > (PRInt32)(sbl))                        \
-        && (nsnull!=((p)=(char*)nsMemory::Alloc((al)+1))) \
-        ) {                                               \
-    }                                                     \
-    else {                                                \
-      (p) = (char*)(sb);                                  \
-      (al) = (sbl);                                       \
-    }                                                     \
-  PR_END_MACRO 
-//
-// Free the Encoder buffer if it was allocated
-//
-#define ENCODER_BUFFER_FREE_IF_NEEDED(p,sb) \
-  PR_BEGIN_MACRO                            \
-    if ((p) != (char*)(sb))                 \
-      nsMemory::Free(p);                    \
-  PR_END_MACRO 
-#endif
-
 /* #define NOISY_FONTS 1 */
 #ifdef PR_LOGGING 
 static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
