@@ -124,9 +124,10 @@ FE_SelectDialog
 PRIVATE void
 si_lock_signon_list(void)
 {
-    if(!signon_lock_monitor)
+    if(!signon_lock_monitor) {
         signon_lock_monitor =
             PR_NewNamedMonitor("signon-lock");
+    }
 
     PR_EnterMonitor(signon_lock_monitor);
 
@@ -151,7 +152,7 @@ si_lock_signon_list(void)
 PRIVATE void
 si_unlock_signon_list(void)
 {
-   PR_EnterMonitor(signon_lock_monitor);
+    PR_EnterMonitor(signon_lock_monitor);
 
 #ifdef DEBUG
     /* make sure someone doesn't try to free a lock they don't own */
@@ -183,41 +184,41 @@ si_SaveSignonDataLocked(char * filename);
 PRIVATE void
 si_SetSignonRememberingPref(Bool x)
 {
-        /* do nothing if new value of pref is same as current value */
-        if (x == si_RememberSignons) {
-            return;
-        }
+    /* do nothing if new value of pref is same as current value */
+    if (x == si_RememberSignons) {
+        return;
+    }
 
-        /* if pref is being turned off, save the current signons to a file */
-        if (x == 0) {
-            si_lock_signon_list();
-            si_SaveSignonDataLocked(NULL);
-            si_unlock_signon_list();
+    /* if pref is being turned off, save the current signons to a file */
+    if (x == 0) {
+        si_lock_signon_list();
+        si_SaveSignonDataLocked(NULL);
+        si_unlock_signon_list();
 #ifdef APPLE_KEYCHAIN
-                /* We no longer need the Keychain callback installed */
-                KCRemoveCallback( si_kcUPP );
-                DisposeRoutineDescriptor( si_kcUPP );
-                si_kcUPP = NULL;
+            /* We no longer need the Keychain callback installed */
+            KCRemoveCallback( si_kcUPP );
+            DisposeRoutineDescriptor( si_kcUPP );
+            si_kcUPP = NULL;
 #endif
-        }
+    }
 
-        /* change the pref */
-        si_RememberSignons = x;
+    /* change the pref */
+    si_RememberSignons = x;
 
-        /* if pref is being turned on, load the signon file into memory */
-        if (x == 1) {
-            SI_RemoveAllSignonData();
-            SI_LoadSignonData(NULL);
-        }
+    /* if pref is being turned on, load the signon file into memory */
+    if (x == 1) {
+        SI_RemoveAllSignonData();
+        SI_LoadSignonData(NULL);
+    }
 }
 
 MODULE_PRIVATE int PR_CALLBACK
 si_SignonRememberingPrefChanged(const char * newpref, void * data)
 {
-        Bool x;
-        PREF_GetBoolPref(pref_rememberSignons, &x);
-        si_SetSignonRememberingPref(x);
-        return PREF_NOERROR;
+    Bool x;
+    PREF_GetBoolPref(pref_rememberSignons, &x);
+    si_SetSignonRememberingPref(x);
+    return PREF_NOERROR;
 }
 
 void
@@ -239,20 +240,22 @@ PRIVATE Bool
 si_GetSignonRememberingPref(void)
 {
 #ifdef APPLE_KEYCHAIN
-        /* If the Keychain has been locked or an item deleted or updated,
-           we need to reload the signon data */
-        if (si_list_invalid)
-        {
-                /* set si_list_invalid to FALSE first because SI_RemoveAllSignonData
-                   calls si_GetSignonRememberingPref */
-            si_list_invalid = FALSE;
-            SI_RemoveAllSignonData();
-            SI_LoadSignonData(NULL);
-        }
+    /* If the Keychain has been locked or an item deleted or updated,
+       we need to reload the signon data */
+    if (si_list_invalid)
+    {
+        /*
+         * set si_list_invalid to FALSE first because SI_RemoveAllSignonData
+         * calls si_GetSignonRememberingPref
+         */
+        si_list_invalid = FALSE;
+        SI_RemoveAllSignonData();
+        SI_LoadSignonData(NULL);
+    }
 #endif
 
-        si_RegisterSignonPrefCallbacks();
-        return si_RememberSignons;
+    si_RegisterSignonPrefCallbacks();
+    return si_RememberSignons;
 }
 
 /*
@@ -706,10 +709,10 @@ si_GetURLAndUserForChangeForm(MWContext *context, char* password)
     user_count = 0;
     url_ptr = si_signon_list;
     while((url = (si_SignonURLStruct *) XP_ListNextObject(url_ptr))!=0) {
-      user_ptr = url->signonUser_list;
-      while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
-        user_count++;
-      }
+        user_ptr = url->signonUser_list;
+        while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr))!=0) {
+            user_count++;
+        }
     }
 
     /* allocate lists for maximumum possible url and user names */
@@ -771,7 +774,7 @@ si_GetURLAndUserForChangeForm(MWContext *context, char* password)
 
     /* free allocated strings */
     while (--list2 > list) {
-      XP_FREE(*list2);
+        XP_FREE(*list2);
     }
     XP_FREE(list);
     XP_FREE(users);
@@ -1227,9 +1230,8 @@ SI_StartOfForm() {
 #ifdef APPLE_KEYCHAIN
 OSStatus PR_CALLBACK
 si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userContext) {
-        Bool    *listInvalid = (Bool*)userContext;
-
-        *listInvalid = TRUE;
+    Bool    *listInvalid = (Bool*)userContext;
+    *listInvalid = TRUE;
 }
 #endif
 
@@ -1280,172 +1282,169 @@ si_LoadSignonDataFromKeychain() {
 
     status = KCFindFirstItem( &attrList, &searchRef, &itemRef );
 
-    if (status == noErr)
-    {
+    if (status == noErr) {
         /* if we found a Netscape item, let's assume notice has been given */
         si_NoticeGiven = TRUE;
-    }
-    else
-    {
+    } else {
         si_NoticeGiven = FALSE;
     }
 
     si_lock_signon_list();
-        while(status == noErr)
-        {
-                char            *value;
-                uint16          i = 0;
-                uint32          actualSize;
-                KCItemFlags     flags;
-                Boolean         reject = FALSE;
+    while(status == noErr) {
+        char            *value;
+        uint16          i = 0;
+        uint32          actualSize;
+        KCItemFlags     flags;
+        Boolean         reject = FALSE;
 
-                submit.value_cnt = 0;
+        submit.value_cnt = 0;
 
-                /* first find out if it is a reject entry */
-                attr[0].tag = kFlagsKCItemAttr;
-                attr[0].length = sizeof( KCItemFlags );
-                attr[0].data = &flags;
+        /* first find out if it is a reject entry */
+        attr[0].tag = kFlagsKCItemAttr;
+        attr[0].length = sizeof(KCItemFlags);
+        attr[0].data = &flags;
 
-                status = KCGetAttribute( itemRef, attr, nil );
-                if (status != noErr)
-                        break;
-
-                if (flags & kNegativeKCItemFlag)
-                {
-                        reject = TRUE;
-                }
-
-                /* get the server name */
-                attr[0].tag = kServerKCItemAttr;
-                attr[0].length = BUFFER_SIZE;
-                attr[0].data = buffer;
-
-                status = KCGetAttribute( itemRef, attr, &actualSize );
-                if (status != noErr)
-                        break;
-
-                /* null terminate */
-                buffer[actualSize] = 0;
-
-                URLName = NULL;
-                StrAllocCopy(URLName, buffer);
-
-                if (!reject)
-                {
-                        /* get the password data */
-                        status = KCGetData( itemRef, BUFFER_SIZE, buffer, &actualSize );
-                        if (status != noErr)
-                                break;
-
-                        /* null terminate */
-                        buffer[actualSize] = 0;
-
-                        /* parse for '=' which separates the name and value */
-                        for (i = 0; i < XP_STRLEN(buffer); i++)
-                        {
-                                if (buffer[i] == '=')
-                                {
-                                        value = &buffer[i+1];
-                                        buffer[i] = 0;
-                                        break;
-                                }
-                        }
-                    name_array[submit.value_cnt] = NULL;
-                    value_array[submit.value_cnt] = NULL;
-
-                        type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
-                        StrAllocCopy(name_array[submit.value_cnt], buffer);
-                        StrAllocCopy(value_array[submit.value_cnt], value);
-                }
-
-                /* get the account attribute */
-                attr[0].tag = kAccountKCItemAttr;
-                attr[0].length = BUFFER_SIZE;
-                attr[0].data = buffer;
-
-                status = KCGetAttribute( itemRef, attr, &actualSize );
-                if (status != noErr)
-                        break;
-
-                /* null terminate */
-                buffer[actualSize] = 0;
-
-                if (!reject)
-                {
-                        /* parse for '=' which separates the name and value */
-                        for (i = 0; i < XP_STRLEN(buffer); i++)
-                        {
-                                if (buffer[i] == '=')
-                                {
-                                        value = &buffer[i+1];
-                                        buffer[i] = 0;
-                                        break;
-                                }
-                        }
-
-                        submit.value_cnt++;
-                    name_array[submit.value_cnt] = NULL;
-                    value_array[submit.value_cnt] = NULL;
-
-                        type_array[submit.value_cnt] = FORM_TYPE_TEXT;
-                        StrAllocCopy(name_array[submit.value_cnt], buffer);
-                        StrAllocCopy(value_array[submit.value_cnt], value);
-
-                    /* check for overruning of the arrays */
-                    if (submit.value_cnt >= MAX_ARRAY_SIZE) {
-                                break;
-                        }
-
-                        submit.value_cnt++;
-                        /* store the info for this URL into memory-resident data structure */
-                        if (!URLName || XP_STRLEN(URLName) == 0) {
-                            badInput = TRUE;
-                        }
-                        if (!badInput) {
-                            si_PutData(URLName, &submit, FALSE);
-                        }
-
-                        /* free up all the allocations done for processing this URL */
-                        for (i = 0; i < submit.value_cnt; i++) {
-                            XP_FREE(name_array[i]);
-                            XP_FREE(value_array[i]);
-                        }
-                }
-                else    /* reject */
-                {
-                        si_PutReject(URLName, buffer, FALSE);
-                }
-
-                reject = FALSE;         /* reset reject flag */
-                XP_FREE(URLName);
-                KCReleaseItemRef( &itemRef );
-
-            status = KCFindNextItem( searchRef, &itemRef );
-
+        status = KCGetAttribute( itemRef, attr, nil );
+        if (status != noErr) {
+            break;
         }
+
+        if (flags & kNegativeKCItemFlag) {
+            reject = TRUE;
+        }
+
+        /* get the server name */
+        attr[0].tag = kServerKCItemAttr;
+        attr[0].length = BUFFER_SIZE;
+        attr[0].data = buffer;
+
+        status = KCGetAttribute( itemRef, attr, &actualSize );
+        if (status != noErr) {
+            break;
+        {
+
+        /* null terminate */
+        buffer[actualSize] = 0;
+
+        URLName = NULL;
+        StrAllocCopy(URLName, buffer);
+
+        if (!reject) {
+            /* get the password data */
+            status = KCGetData(itemRef, BUFFER_SIZE, buffer, &actualSize);
+            if (status != noErr) {
+                break;
+            }
+
+            /* null terminate */
+            buffer[actualSize] = 0;
+
+            /* parse for '=' which separates the name and value */
+             for (i = 0; i < XP_STRLEN(buffer); i++) {
+                if (buffer[i] == '=') {
+                    value = &buffer[i+1];
+                    buffer[i] = 0;
+                    break;
+                }
+            }
+            name_array[submit.value_cnt] = NULL;
+            value_array[submit.value_cnt] = NULL;
+
+            type_array[submit.value_cnt] = FORM_TYPE_PASSWORD;
+            StrAllocCopy(name_array[submit.value_cnt], buffer);
+            StrAllocCopy(value_array[submit.value_cnt], value);
+        }
+
+        /* get the account attribute */
+        attr[0].tag = kAccountKCItemAttr;
+        attr[0].length = BUFFER_SIZE;
+        attr[0].data = buffer;
+
+        status = KCGetAttribute( itemRef, attr, &actualSize );
+        if (status != noErr) {
+            break;
+        }
+
+        /* null terminate */
+        buffer[actualSize] = 0;
+
+        if (!reject) {
+            /* parse for '=' which separates the name and value */
+            for (i = 0; i < XP_STRLEN(buffer); i++) {
+                if (buffer[i] == '=') {
+                    value = &buffer[i+1];
+                    buffer[i] = 0;
+                    break;
+                }
+            }
+
+            submit.value_cnt++;
+            name_array[submit.value_cnt] = NULL;
+            value_array[submit.value_cnt] = NULL;
+
+            type_array[submit.value_cnt] = FORM_TYPE_TEXT;
+            StrAllocCopy(name_array[submit.value_cnt], buffer);
+            StrAllocCopy(value_array[submit.value_cnt], value);
+
+            /* check for overruning of the arrays */
+            if (submit.value_cnt >= MAX_ARRAY_SIZE) {
+                break;
+            }
+
+            submit.value_cnt++;
+            /* store the info for this URL into memory-resident data structure */
+            if (!URLName || XP_STRLEN(URLName) == 0) {
+                badInput = TRUE;
+            }
+            if (!badInput) {
+                si_PutData(URLName, &submit, FALSE);
+            }
+
+            /* free up all the allocations done for processing this URL */
+            for (i = 0; i < submit.value_cnt; i++) {
+                XP_FREE(name_array[i]);
+                XP_FREE(value_array[i]);
+            }
+        } else {
+            /* reject */
+            si_PutReject(URLName, buffer, FALSE);
+        }
+
+        reject = FALSE;         /* reset reject flag */
+        XP_FREE(URLName);
+        KCReleaseItemRef( &itemRef );
+
+        status = KCFindNextItem( searchRef, &itemRef );
+
+    }
     si_unlock_signon_list();
 
-        if (searchRef)
-                KCReleaseSearchRef( &searchRef );
+    if (searchRef) {
+        KCReleaseSearchRef( &searchRef );
+    }
 
     /* Register a callback with the Keychain if we haven't already done so. */
 
     if (si_kcUPP == NULL)
     {
-            si_kcUPP = NewKCCallbackProc( si_KeychainCallback );
-            if (!si_kcUPP)
-                return memFullErr;
-
-            KCAddCallback( si_kcUPP, kLockKCEventMask + kDeleteKCEventMask + kUpdateKCEventMask, &si_list_invalid );
-            /* Note that the callback is not necessarily removed.  We take advantage of the fact that the
-               Keychain will clean up the callback when the app goes away. It is explicitly removed when
-               the signon preference is turned off. */
+        si_kcUPP = NewKCCallbackProc( si_KeychainCallback );
+        if (!si_kcUPP) {
+            return memFullErr;
         }
 
-        if (status == errKCItemNotFound)
-                status = 0;
+        KCAddCallback( si_kcUPP, kLockKCEventMask + kDeleteKCEventMask + kUpdateKCEventMask, &si_list_invalid );
+        /*
+         * Note that the callback is not necessarily removed.  We take advantage
+         * of the fact that the Keychain will clean up the callback when the app
+         * goes away. It is explicitly removed when the signon preference is turned off.
+         */
+    }
 
-        return (status);
+    if (status == errKCItemNotFound) {
+        status = 0;
+    }
+
+    return (status);
 }
 #endif
 
@@ -1473,8 +1472,9 @@ SI_LoadSignonData(char * filename) {
     }
 
 #ifdef APPLE_KEYCHAIN
-        if (KeychainManagerAvailable())
-                return si_LoadSignonDataFromKeychain();
+    if (KeychainManagerAvailable()) {
+        return si_LoadSignonDataFromKeychain();
+    }
 #endif
 
     /* open the signon file */
@@ -1618,104 +1618,126 @@ si_SaveSignonDataInKeychain() {
     KCItemFlags flags = kInvisibleKCItemFlag + kNegativeKCItemFlag;
     uint32              actualLength;
 
-        /* save off the reject list */
+    /* save off the reject list */
     if (si_reject_list) {
-                list_ptr = si_reject_list;
-                while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
-                    status = kcaddinternetpassword( reject->URLName, nil, reject->userName, kAnyPort, kNetscapeProtocolType,
-                                                                                kAnyAuthType, 0, nil, &itemRef );
-                    if (status != noErr && status != errKCDuplicateItem)
-                        return(status);
+        list_ptr = si_reject_list;
+        while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
+            status = kcaddinternetpassword
+                (reject->URLName, nil,
+                reject->userName,
+                kAnyPort,
+                kNetscapeProtocolType,
+                kAnyAuthType,
+                0,
+                nil,
+                &itemRef);
+            if (status != noErr && status != errKCDuplicateItem) {
+                return(status);
+            }
+            if (status == noErr) {
+                /*
+                 * make the item invisible so the user doesn't see it and
+                 * negative so we know that it is a reject entry
+                 */
+                attr.tag = kFlagsKCItemAttr;
+                attr.data = &flags;
+                attr.length = sizeof( flags );
 
-                    if (status == noErr)
-                    {
-                            /* make the item invisible so the user doesn't see it and negative
-                                   so we know that it is a reject entry */
-                                attr.tag = kFlagsKCItemAttr;
-                                attr.data = &flags;
-                                attr.length = sizeof( flags );
-
-                                status = KCSetAttribute( itemRef, &attr );
-                            if (status != noErr)
-                                return(status);
-
-                            status = KCUpdateItem( itemRef );
-                            if (status != noErr)
-                                return(status);
-
-                            KCReleaseItemRef( &itemRef );
-                        }
+                status = KCSetAttribute( itemRef, &attr );
+                if (status != noErr) {
+                    return(status);
                 }
+                status = KCUpdateItem(itemRef);
+                if (status != noErr) {
+                    return(status);
+                }
+                KCReleaseItemRef(&itemRef);
+            }
+        }
     }
 
+    /* save off the passwords */
+    if((si_signon_list)) {
+        list_ptr = si_signon_list;
+        while((URL = (si_SignonURLStruct *) XP_ListNextObject(list_ptr)) != NULL) {
 
-        /* save off the passwords */
+            user_ptr = URL->signonUser_list;
 
-        if((si_signon_list)) {
-                list_ptr = si_signon_list;
-                while((URL = (si_SignonURLStruct *) XP_ListNextObject(list_ptr)) != NULL) {
+            /* add each user node of the URL node */
+            while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr)) != NULL) {
 
-                    user_ptr = URL->signonUser_list;
+                data_ptr = user->signonData_list;
 
-                    /* add each user node of the URL node */
-                    while((user = (si_SignonUserStruct *) XP_ListNextObject(user_ptr)) != NULL) {
-
-                                data_ptr = user->signonData_list;
-
-                                /* write out each data node of the user node */
-                                while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr)) != NULL) {
-                                        char*   attribute = nil;
-                                        if (data->isPassword)
-                                        {
-                                        password = XP_ALLOC( XP_STRLEN(data->value) + XP_STRLEN(data->name) + 2);
-                                        if (!password)
-                                                return (-1);
-                                        attribute = password;
-                                        }
-                                        else
-                                        {
-                                        account = XP_ALLOC( XP_STRLEN(data->value) + XP_STRLEN(data->name) + 2);
-                                        if (!account)
-                                        {
-                                                XP_FREE(password);
-                                                return (-1);
-                                        }
-                                        attribute = account;
-                                        }
-
-                                XP_STRCPY( attribute, data->name );
-                                XP_STRCAT( attribute, "=" );
-                                XP_STRCAT( attribute, data->value );
-
-                                }
-                                /* if it's already there, we just want to change the password */
-                                status = kcfindinternetpassword( URL->URLName, nil, account, kAnyPort, kNetscapeProtocolType, kAnyAuthType,
-                                                                                                 0, nil, &actualLength, &itemRef );
-                                if (status == noErr)
-                                {
-                                        status = KCSetData( itemRef, XP_STRLEN( password ), password );
-                                        if (status != noErr)
-                                                return(status);
-
-                                        status = KCUpdateItem( itemRef );
-                                        KCReleaseItemRef( &itemRef );
-                                }
-                                else    /* wasn't there, let's add it */
-                                {
-                                    status = kcaddinternetpassword( URL->URLName, nil, account, kAnyPort, kNetscapeProtocolType, kAnyAuthType,
-                                                                                                XP_STRLEN( password ), password, nil );
-                                }
-                            if (account)
-                                XP_FREE( account );
-                            if (password)
-                                XP_FREE( password );
-                            account = password = nil;
-
-                            if (status != noErr)
-                                return(status);
+                /* write out each data node of the user node */
+                while((data=(si_SignonDataStruct *) XP_ListNextObject(data_ptr)) != NULL) {
+                    char*   attribute = nil;
+                    if (data->isPassword) {
+                        password = XP_ALLOC(XP_STRLEN(data->value) +
+                                   XP_STRLEN(data->name) + 2);
+                        if (!password) {
+                            return (-1);
+                        }
+                        attribute = password;
+                    } else {
+                        account = XP_ALLOC( XP_STRLEN(data->value) +
+                                  XP_STRLEN(data->name) + 2);
+                        if (!account) {
+                            XP_FREE(password);
+                            return (-1);
+                        }
+                        attribute = account;
                     }
+
+                    XP_STRCPY(attribute, data->name);
+                    XP_STRCAT(attribute, "=");
+                    XP_STRCAT(attribute, data->value);
+
                 }
+                /* if it's already there, we just want to change the password */
+                status = kcfindinternetpassword
+                    (URL->URLName,
+                    nil,
+                    account,
+                    kAnyPort,
+                    kNetscapeProtocolType,
+                    kAnyAuthType,
+                    0,
+                    nil,
+                    &actualLength,
+                    &itemRef);
+                if (status == noErr) {
+                    status = KCSetData(itemRef, XP_STRLEN(password), password);
+                    if (status != noErr) {
+                        return(status);
+                    }
+                    status = KCUpdateItem(itemRef);
+                    KCReleaseItemRef(&itemRef);
+                } else {
+                    /* wasn't there, let's add it */
+                    status = kcaddinternetpassword
+                        (URL->URLName,
+                        nil,
+                        account,
+                        kAnyPort,
+                        kNetscapeProtocolType,
+                        kAnyAuthType,
+                        XP_STRLEN(password),
+                        password,
+                        nil);
+                }
+                if (account) {
+                    XP_FREE(account);
+                }
+                if (password) {
+                    XP_FREE(password);
+                } 
+                account = password = nil;
+                if (status != noErr) {
+                    return(status);
+                }
+            }
         }
+    }
 
     si_signon_list_changed = FALSE;
     return (0);
@@ -1753,8 +1775,9 @@ si_SaveSignonDataLocked(char * filename) {
     }
 
 #ifdef APPLE_KEYCHAIN
-        if (KeychainManagerAvailable())
-                return si_SaveSignonDataInKeychain();
+    if (KeychainManagerAvailable()) {
+        return si_SaveSignonDataInKeychain();
+    }
 #endif
 
     /* do nothing if we are unable to open file that contains signon list */
