@@ -256,6 +256,10 @@ public:
                      const PRUnichar* aReferrer=nsnull,
                      const char * aWindowTarget = nsnull);
 
+  NS_IMETHOD GetCanGoBack(PRBool* aCanGoBack);
+  NS_IMETHOD GetCanGoForward(PRBool* aCanGoForward);
+  NS_IMETHOD GoBack();
+  NS_IMETHOD GoForward();
   NS_IMETHOD LoadURI(const PRUnichar* aURI);
   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
       nsIInputStream* aPostData, loadType aLoadType);
@@ -265,10 +269,6 @@ public:
   void SetReferrer(const PRUnichar* aReferrer);
 
   // History api's
-  NS_IMETHOD Back(void);
-  NS_IMETHOD CanBack(void);
-  NS_IMETHOD Forward(void);
-  NS_IMETHOD CanForward(void);
   NS_IMETHOD GoTo(PRInt32 aHistoryIndex);
   NS_IMETHOD GetHistoryLength(PRInt32& aResult);
   NS_IMETHOD GetHistoryIndex(PRInt32& aResult);
@@ -1259,6 +1259,46 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   return rv;
 }
 
+NS_IMETHODIMP nsWebShell::GetCanGoBack(PRBool* aCanGoBack)
+{
+#ifdef DOCSHELL_LOAD
+   return nsDocShell::GetCanGoBack(aCanGoBack);
+#else  /*!DOCSHELL_LOAD*/
+   *aCanGoBack = (mHistoryIndex - 1) > - 1 ? PR_TRUE : PR_FALSE;
+   return NS_OK;
+#endif /*!DOCSHELL_LOAD*/
+}
+
+NS_IMETHODIMP nsWebShell::GetCanGoForward(PRBool* aCanGoForward)
+{
+#ifdef DOCSHELL_LOAD
+   return nsDocShell::GetCanGoForward(aCanGoForward);
+#else  /*!DOCSHELL_LOAD*/
+   *aCanGoForward = mHistoryIndex  < mHistory.Count() - 1 ? PR_TRUE : PR_FALSE;
+   return NS_OK;
+#endif /*!DOCSHELL_LOAD*/
+}
+
+NS_IMETHODIMP nsWebShell::GoBack()
+{
+#ifdef DOCSHELL_LOAD
+   return nsDocShell::GoBack();
+#else  /*!DOCSHELL_LOAD*/
+   NS_ENSURE_SUCCESS(GoTo(mHistoryIndex - 1), NS_ERROR_FAILURE);
+   return NS_OK;
+#endif /*!DOCSHELL_LOAD*/
+}
+
+NS_IMETHODIMP nsWebShell::GoForward()
+{
+#ifdef DOCSHELL_LOAD
+   return nsDocShell::GoForward();
+#else  /*!DOCSHELL_LOAD*/
+   NS_ENSURE_SUCCESS(GoTo(mHistoryIndex + 1), NS_ERROR_FAILURE);
+   return NS_OK;
+#endif /*!DOCSHELL_LOAD*/
+}
+
 NS_IMETHODIMP nsWebShell::LoadURI(const PRUnichar* aURI)
 {
 #ifdef DOCSHELL_LOAD
@@ -1745,30 +1785,6 @@ NS_IMETHODIMP nsWebShell::Stop(void)
 //----------------------------------------
 
 // History methods
-
-NS_IMETHODIMP
-nsWebShell::Back(void)
-{
-  return GoTo(mHistoryIndex - 1);
-}
-
-NS_IMETHODIMP
-nsWebShell::CanBack(void)
-{
-  return ((mHistoryIndex-1)  > - 1 ? NS_OK : NS_COMFALSE);
-}
-
-NS_IMETHODIMP
-nsWebShell::Forward(void)
-{
-  return GoTo(mHistoryIndex + 1);
-}
-
-NS_IMETHODIMP
-nsWebShell::CanForward(void)
-{
-  return (mHistoryIndex  < mHistory.Count() - 1 ? NS_OK : NS_COMFALSE);
-}
 
 NS_IMETHODIMP
 nsWebShell::GoTo(PRInt32 aHistoryIndex)
