@@ -5650,15 +5650,27 @@ AC_SUBST(MOZ_LIBART_LIBS)
 dnl ========================================================
 dnl Check for cairo
 dnl ========================================================
-MOZ_CAIRO_CFLAGS=
-MOZ_CAIRO_LIBS=
+MOZ_CAIRO_CFLAGS='-I$(DIST)/include/cairo'
+MOZ_CAIRO_LIBS="-lcairo -lpixman"
+
+if test -z "$MACOSX"; then
+   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
+fi;
 
 if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
-   PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
-   MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
-   MOZ_CAIRO_LIBS=$CAIRO_LIBS
+   MOZ_ARG_ENABLE_BOOL(system-cairo,
+   [ --enable-system-cairo Use system cairo (located with pkgconfig)],
+   MOZ_SYSTEM_CAIRO=1,
+   MOZ_SYSTEM_CAIRO= )
+
+   if test "$MOZ_SYSTEM_CAIRO"; then
+      PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
+      MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
+      MOZ_CAIRO_LIBS=$CAIRO_LIBS
+   fi
 fi
 
+AC_SUBST(MOZ_SYSTEM_CAIRO)
 AC_SUBST(MOZ_CAIRO_CFLAGS)
 AC_SUBST(MOZ_CAIRO_LIBS)
 
@@ -6411,5 +6423,33 @@ if test "$MOZ_LDAP_XPCOM"; then
         ac_configure_args="$ac_configure_args --enable-64bit"
     fi
     AC_OUTPUT_SUBDIRS(directory/c-sdk)
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS"
+fi
+
+if test -z "$MOZ_SYSTEM_CAIRO"; then
+    # these subdirs may not yet have been created in the build tree.
+    # don't use the "-p" switch to mkdir, since not all platforms have it
+    #
+    if test ! -d "gfx/cairo"; then
+        mkdir "gfx/cairo"
+    fi
+    if test ! -d "gfx/cairo/libpixman"; then
+        mkdir "gfx/cairo/libpixman"
+    fi
+    if test ! -d "gfx/cairo/cairo"; then
+        mkdir "gfx/cairo/cairo"
+    fi
+
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --includedir=$MOZ_BUILD_ROOT/dist/include/cairo"
+    AC_OUTPUT_SUBDIRS(gfx/cairo/libpixman)
+
+    export PKG_CONFIG_PATH=$MOZ_BUILD_ROOT/gfx/cairo/libpixman
+    ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist --disable-ps --disable-pdf --disable-png --disable-glitz --disable-xcb"
+
+    if test -n "$MACOSX"; then
+        ac_configure_args="$ac_configure_args --disable-freetype --disable-xlib"
+    fi
+
+    AC_OUTPUT_SUBDIRS(gfx/cairo/cairo)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
 fi

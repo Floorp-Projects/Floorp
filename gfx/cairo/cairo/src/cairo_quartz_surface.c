@@ -221,6 +221,7 @@ _cairo_quartz_surface_set_image(    void		    *abstract_surface,
 	
 	CGContextDrawImage(surface->context, rect, surface->cgImage);
 	
+	memset(surface->image->data, 0, surface->width * surface->height * 4);
 	
 	status = CAIRO_STATUS_SUCCESS;
     }

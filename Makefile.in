@@ -55,6 +55,7 @@ default: $(SUBMAKEFILES)
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
+	$(MAKE) cairo
 	$(MAKE) tier_0
 	$(MAKE) tier_1
 	$(MAKE) tier_2
@@ -440,6 +441,7 @@ export::
 	$(MAKE) -C config export
 	$(MAKE) nspr
 	$(MAKE) ldap
+	$(MAKE) cairo
 ifneq ($(BUILD_MODULES),all)
 ifneq (,$(findstring xpcom, $(BUILD_MODULE_DIRS)))
 	$(MAKE) -C xpcom/typelib
@@ -466,6 +468,19 @@ ifndef MOZ_NATIVE_NSPR
 endif
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk $@
+endif
+
+# Map mozilla targets to standard automake target
+clobber realclean clobber_all::
+ifndef MOZ_SYSTEM_CAIRO
+	$(MAKE) -C gfx/cairo/libpixman clean
+	$(MAKE) -C gfx/cairo/cairo clean
+endif
+
+clean distclean::
+ifndef MOZ_SYSTEM_CAIRO
+	$(MAKE) -C gfx/cairo/libpixman $@
+	$(MAKE) -C gfx/cairo/cairo $@
 endif
 
 ifdef MOZ_ENABLE_LIBXUL
@@ -515,6 +530,19 @@ endif
 ldap:
 ifdef MOZ_LDAP_XPCOM
 	$(MAKE) -C directory/c-sdk
+endif
+
+cairo:
+ifndef MOZ_SYSTEM_CAIRO
+	$(MAKE) -C gfx/cairo/libpixman install
+	$(MAKE) -C gfx/cairo/cairo install
+ifneq ($(OS_ARCH),Darwin)
+	$(INSTALL) $(DIST)/lib/libpixman.so.1 $(DIST)/bin
+	$(INSTALL) $(DIST)/lib/libcairo.so.1 $(DIST)/bin
+else
+	$(INSTALL) $(DIST)/lib/libpixman.1.dylib $(DIST)/bin
+	$(INSTALL) $(DIST)/lib/libcairo.1.dylib $(DIST)/bin
+endif
 endif
 
 export::
