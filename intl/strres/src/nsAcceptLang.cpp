@@ -38,7 +38,7 @@ NS_DEFINE_IID(kAcceptLangCID, NS_ACCEPTLANG_CID);
 /////////////////////////////////////////////////////////////////////////////////////////
 
 /* util func */
-PRUnichar *copyUnicode(const nsString str) {
+static PRUnichar *copyUnicode(const nsString str) {
 
   PRInt32   len =  str.Length()+1;
   PRUnichar *retval = (PRUnichar *) PR_Calloc(len, sizeof(PRUnichar));
