@@ -1751,6 +1751,8 @@ function InitObjectPropertiesMenuitem(id)
     switch (name)
     {
       case "img":
+        // Check if img is enclosed in link
+        //  (use "href" to not be fooled by named anchor)
         if (editorShell.GetElementOrParentByTagName("href", element))
           objStr = GetString("ImageAndLink");
         else
