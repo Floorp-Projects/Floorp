@@ -44,6 +44,7 @@ const nsIEventQueue        = Components.interfaces.nsIEventQueue;
 var _eqs;
 var _quit = false;
 var _fail = false;
+var _running_event_loop = false;
 var _tests_pending = 0;
 
 function _TimerCallback(expr) {
@@ -75,7 +76,9 @@ function do_main() {
   dump("*** running event loop\n");
   var eq = _eqs.getSpecialEventQueue(_eqs.CURRENT_THREAD_EVENT_QUEUE);
 
+  _running_event_loop = true;
   eq.eventLoop();  // unblocked via interrupt from do_quit()
+  _running_event_loop = false;
 
   // process any remaining events before exiting
   eq.processPendingEvents();
@@ -88,10 +91,12 @@ function do_quit() {
 
   _quit = true;
 
-  // interrupt the current thread to make eventLoop return.
-  var thr = Components.classes["@mozilla.org/thread;1"]
-                      .createInstance(Components.interfaces.nsIThread);
-  thr.currentThread.interrupt();
+  if (_running_event_loop) {
+    // interrupt the current thread to make eventLoop return.
+    var thr = Components.classes["@mozilla.org/thread;1"]
+                        .createInstance(Components.interfaces.nsIThread);
+    thr.currentThread.interrupt();
+  }
 }
 
 function do_throw(text) {
