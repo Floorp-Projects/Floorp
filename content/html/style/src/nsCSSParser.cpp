@@ -506,7 +506,7 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
   PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
 
   ParseDeclaration(errorCode, aDeclaration, PR_FALSE, hint);  
-  if (nsnull == aHint) {
+  if (nsnull != aHint) {
     *aHint = hint;
   }
 
