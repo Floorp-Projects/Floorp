@@ -1534,6 +1534,8 @@ NET_ParseMimeHeader(FO_Present_Types outputFormat,
                 strtok(value, ","); /* terminate at ',' */
 				if(!PL_strcasecmp("KEEP-ALIVE", XP_StripLine(value)))
 					URL_s->can_reuse_connection = TRUE;
+				if(!PL_strcasecmp("CLOSE", XP_StripLine(value)))
+					URL_s->can_reuse_connection = FALSE;
               }
             else if(!PL_strncasecmp(name,"PRAGMA:",7))
               {
