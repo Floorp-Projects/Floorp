@@ -251,7 +251,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec, PRUnichar * aTitle )
 
     mPrintSetup->color = PR_TRUE;              // Image output 
     mPrintSetup->deep_color = PR_TRUE;         // 24 bit color output 
-    mPrintSetup->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4)
+    mPrintSetup->paper_size = NS_LEGAL_SIZE;   // Paper Size(letter,legal,exec,a4,a3)
     mPrintSetup->reverse = 0;                  // Output order, 0 is acsending 
     if ( aSpec != nsnull ) {
       aSpec->GetGrayscale( isGray );

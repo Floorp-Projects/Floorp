@@ -156,7 +156,7 @@ struct PrintSetup_ {
   float rules;			            /* Scale factor for rulers */
   int n_up;                     /* cool page combining */
   int bigger;                   /* Used to init sizes if sizesin NULL */
-  int paper_size;               /* Paper Size(letter,legal,exec,a4) */
+  int paper_size;               /* Paper Size(letter,legal,exec,a4,a3) */
 
   char* prefix;                 /* For text xlate, prepended to each line */
   char* eol;			              /* For text translation, line terminator  */
