@@ -161,6 +161,115 @@ NS_IMETHODIMP nsCommonDialogs::ConfirmCheck(nsIDOMWindow *inParent,  const PRUni
 	return rv;
 }
 
+/* Note: It would be nice if someone someday converts all the other dialogs so that they
+   all call UniversalDialog rather than calling on DoDialog directly.  This should save
+   a few bytes of memory
+*/
+NS_IMETHODIMP nsCommonDialogs::UniversalDialog
+	(nsIDOMWindow *inParent,
+	const PRUnichar *inTitleMessage,
+	const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+	const PRUnichar *inMsg, /* main message for dialog */
+	const PRUnichar *inCheckboxMsg, /* message for checkbox */
+	const PRUnichar *inButton0Text, /* text for first button */
+	const PRUnichar *inButton1Text, /* text for second button */
+	const PRUnichar *inButton2Text, /* text for third button */
+	const PRUnichar *inButton3Text, /* text for fourth button */
+	const PRUnichar *inEditfield1Msg, /*message for first edit field */
+	const PRUnichar *inEditfield2Msg, /* message for second edit field */
+	PRUnichar **inoutEditfield1Value, /* initial and final value for first edit field */
+	PRUnichar **inoutEditfield2Value, /* initial and final value for second edit field */
+	const PRUnichar *inIConURL, /* url of icon to be displayed in dialog */
+		/* examples are
+		   "chrome://global/skin/question-icon.gif" for question mark,
+		   "chrome://global/skin/alert-icon.gif" for exclamation mark
+		*/
+	PRBool *inoutCheckboxState, /* initial and final state of check box */
+	PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
+	PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
+	PRInt32 inEditField1Password, /* is first edit field a password field */
+	PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
+{
+	nsresult rv;
+
+	/* check for at least one button */
+	if (inNumberButtons < 1) {
+		rv = NS_ERROR_FAILURE;
+	}
+
+	/* create parameter block */
+
+	nsIDialogParamBlock* block = NULL;
+	rv = nsComponentManager::CreateInstance
+		(kDialogParamBlockCID, 0, nsIDialogParamBlock::GetIID(), (void**)&block );
+	if (NS_FAILED(rv)) {
+		return rv;
+	}
+
+	/* load up input parameters */
+
+	block->SetString(eTitleMessage, inTitleMessage);
+	block->SetString(eDialogTitle, inDialogTitle);
+	block->SetString(eMsg, inMsg);
+	block->SetString(eCheckboxMsg, inCheckboxMsg);
+	if (inNumberButtons >= 4) {
+		block->SetString(eButton3Text, inButton3Text);
+	}
+	if (inNumberButtons >= 3) {
+		block->SetString(eButton2Text, inButton2Text);
+	}
+	if (inNumberButtons >= 2) {
+		block->SetString(eButton1Text, inButton1Text);
+	}
+	if (inNumberButtons >= 1) {
+		block->SetString(eButton0Text, inButton0Text);
+	}
+	if (inNumberEditfields >= 2) {
+		block->SetString(eEditfield2Msg, inEditfield2Msg);
+		block->SetString(eEditfield2Value, *inoutEditfield2Value);
+	}
+	if (inNumberEditfields >= 1) {
+		block->SetString(eEditfield1Msg, inEditfield1Msg);
+		block->SetString(eEditfield1Value, *inoutEditfield1Value);
+		block->SetInt(eEditField1Password, inEditField1Password);
+	}
+	if (inIConURL) {
+		block->SetString(eIconURL, inIConURL);
+	} else {
+		nsString url(kQuestionIconURL);
+		block->SetString(eIconURL, url.GetUnicode());
+	}
+	if (inCheckboxMsg) {
+		block->SetInt(eCheckboxState, *inoutCheckboxState);
+	}
+	block->SetInt(eNumberButtons, inNumberButtons);
+	block->SetInt(eNumberEditfields, inNumberEditfields);
+
+	/* perform the dialog */
+
+	rv = DoDialog(inParent, block, kPromptURL);
+
+	/* get back output parameters */
+
+	if (outButtonPressed) {
+		block->GetInt(eButtonPressed, outButtonPressed);
+	}
+	if (inCheckboxMsg && inoutCheckboxState) {
+		block->GetInt(eCheckboxState, inoutCheckboxState);
+	}
+	if ((inNumberEditfields >= 2) && inoutEditfield2Value) {
+		block->GetString(eEditfield2Value, inoutEditfield2Value);
+	}
+	if ((inNumberEditfields >= 1) && inoutEditfield1Value) {
+		block->GetString(eEditfield1Value, inoutEditfield1Value);
+	}
+
+	/* destroy parameter block and return */	
+
+	NS_IF_RELEASE(block);
+	return rv;
+}
+
 NS_IMETHODIMP nsCommonDialogs::Prompt(nsIDOMWindow *inParent, const PRUnichar *inWindowTitle, const PRUnichar *inMsg, const PRUnichar *inDefaultText, PRUnichar **result, PRBool *_retval)
 {
 	nsresult rv;

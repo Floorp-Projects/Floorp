@@ -169,64 +169,6 @@ Local_SACat(char **destination, const char *source)
   return *destination;
 }
 
-PRBool
-cookie_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
-#ifdef REAL_DIALOG
-  PRBool retval = PR_TRUE; /* default value */
-  nsresult res;  
-  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
-  if (NS_FAILED(res)) {
-    *checkValue = 0;
-    return retval;
-  }
-  const nsString message = szMessage;
-  const nsString checkMessage = szCheckMessage;
-  retval = PR_FALSE; /* in case user exits dialog by clicking X */
-#ifdef YN_DIALOGS_FIXED
-  res = dialog->ConfirmCheckYN(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
-#else
-  res = dialog->ConfirmCheck(message.GetUnicode(), checkMessage.GetUnicode(), checkValue, &retval);
-#endif
-  if (NS_FAILED(res)) {
-    *checkValue = 0;
-  }
-  if (*checkValue!=0 && *checkValue!=1) {
-    *checkValue = 0; /* this should never happen but it is happening!!! */
-  }
-  return retval;
-
-#else
-
-  fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
-  char c;
-  PRBool result;
-  for (;;) {
-    c = getchar();
-    if (tolower(c) == 'y') {
-      result = PR_TRUE;
-      break;
-    }
-    if (tolower(c) == 'n') {
-      result = PR_FALSE;
-      break;
-    }
-  }
-  fprintf(stdout, "%c%s  y/n?  ", '\007', szCheckMessage); /* \007 is BELL */
-  for (;;) {
-    c = getchar();
-    if (tolower(c) == 'y') {
-      *checkValue = PR_TRUE;
-      break;
-    }
-    if (tolower(c) == 'n') {
-      *checkValue = PR_FALSE;
-      break;
-    }
-  }
-  return result;
-#endif
-}
-
 PRIVATE PRUnichar*
 cookie_Localize(char* genericString) {
   nsresult ret;
@@ -301,6 +243,81 @@ cookie_Localize(char* genericString) {
   return v.ToNewUnicode();
 }
 
+PRBool
+cookie_CheckConfirmYN(PRUnichar * szMessage, PRUnichar * szCheckMessage, PRBool* checkValue) {
+  nsresult res;  
+  NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &res);
+  if (NS_FAILED(res)) {
+    *checkValue = 0;
+    return PR_FALSE;
+  }
+
+  PRInt32 buttonPressed = 1; /* in case user exits dialog by clickin X */
+  PRUnichar * yes_string = cookie_Localize("Yes");
+  PRUnichar * no_string = cookie_Localize("No");
+  PRUnichar * confirm_string = cookie_Localize("Confirm");
+
+  res = dialog->UniversalDialog(
+    NULL, /* title message */
+    confirm_string, /* title text in top line of window */
+    szMessage, /* this is the main message */
+    szCheckMessage, /* This is the checkbox message */
+    yes_string, /* first button text */
+    no_string, /* second button text */
+    NULL, /* third button text */
+    NULL, /* fourth button text */
+    NULL, /* first edit field label */
+    NULL, /* second edit field label */
+    NULL, /* first edit field initial and final value */
+    NULL, /* second edit field initial and final value */
+    nsString("chrome://global/skin/question-icon.gif").GetUnicode() ,
+    checkValue, /* initial and final value of checkbox */
+    2, /* number of buttons */
+    0, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+
+  if (NS_FAILED(res)) {
+    *checkValue = 0;
+  }
+  if (*checkValue!=0 && *checkValue!=1) {
+    *checkValue = 0; /* this should never happen but it is happening!!! */
+  }
+  Recycle(yes_string);
+  Recycle(no_string);
+  Recycle(confirm_string);
+  return (buttonPressed == 0);
+
+#ifdef yyy
+  /* following is an example of the most general usage of UniversalDialog */
+  PRUnichar* inoutEdit1 = nsString("Edit field1 initial value").GetUnicode();
+  PRUnichar* inoutEdit2 = nsString("Edit field2 initial value").GetUnicode();
+  PRBool inoutCheckbox = PR_TRUE;
+  PRInt32 buttonPressed;
+
+  res = dialog->UniversalDialog(
+    nsString("Title Message").GetUnicode(),
+    nsString("Dialog Title").GetUnicode(),
+    nsString("This is the main message").GetUnicode(),
+    nsString("This is the checkbox message").GetUnicode(),
+    nsString("First Button").GetUnicode(),
+    nsString("Second Button").GetUnicode(),
+    nsString("Third Button").GetUnicode(),
+    nsString("Fourth Button").GetUnicode(),
+    nsString("First Edit field").GetUnicode(),
+    nsString("Second Edit field").GetUnicode(),
+    &inoutEdit1,
+    &inoutEdit2,
+    nsString("chrome://global/skin/question-icon.gif").GetUnicode() ,
+    &inoutCheckbox,
+    4, /* number of buttons */
+    2, /* number of edit fields */
+    0, /* is first edit field a password field */
+    &buttonPressed);
+#endif
+
+}
+
 PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   nsIFileSpec* spec = 
     NS_LocateFileOrDirectory(nsSpecialFileSpec::App_UserProfileDirectory50);
@@ -311,7 +328,6 @@ PRIVATE nsresult cookie_ProfileDirectory(nsFileSpec& dirSpec) {
   NS_RELEASE(spec);
   return res;
 }
-
 
 /*
  * Write a line to a file

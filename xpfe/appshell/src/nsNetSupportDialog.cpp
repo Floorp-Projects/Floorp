@@ -418,33 +418,49 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck(const PRUnichar *text,
 #endif
 }
 
-NS_IMETHODIMP nsNetSupportDialog::ConfirmYN(const PRUnichar *text, PRBool *returnValue)
+NS_IMETHODIMP	nsNetSupportDialog::UniversalDialog
+	(const PRUnichar *inTitleMessage,
+	const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+	const PRUnichar *inMsg, /* main message for dialog */
+	const PRUnichar *inCheckboxMsg, /* message for checkbox */
+	const PRUnichar *inButton0Text, /* text for first button */
+	const PRUnichar *inButton1Text, /* text for second button */
+	const PRUnichar *inButton2Text, /* text for third button */
+	const PRUnichar *inButton3Text, /* text for fourth button */
+	const PRUnichar *inEditfield1Msg, /*message for first edit field */
+	const PRUnichar *inEditfield2Msg, /* message for second edit field */
+	PRUnichar **inoutEditfield1Value, /* initial and final value for first edit field */
+	PRUnichar **inoutEditfield2Value, /* initial and final value for second edit field */
+	const PRUnichar *inIConURL, /* url of icon to be displayed in dialog */
+		/* examples are
+		   "chrome://global/skin/question-icon.gif" for question mark,
+		   "chrome://global/skin/alert-icon.gif" for exclamation mark
+		*/
+	PRBool *inoutCheckboxState, /* initial and final state of check box */
+	PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
+	PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
+	PRInt32 inEditField1Password, /* is first edit field a password field */
+	PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
 {
-	Init();
-  nsAutoString aText(text);
-	mMsg = &aText;
-	mReturnValue = returnValue;
-	nsString  url( "chrome://navigator/content/NetSupportConfirmYN.xul") ; 
-	DoDialog( url  );
-	return NS_OK;	
-}
+ nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
 
-NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN(const PRUnichar *text, 
-                                               const PRUnichar *checkMsg, 
-                                               PRBool *checkValue, 
-                                               PRBool *returnValue)
-{
-	
-	Init();
-  nsAutoString aText(text);
-  nsAutoString aCheckMsg(checkMsg);
-	mMsg = &aText;
-	mReturnValue = returnValue;
-	mCheckValue = checkValue;
-	mCheckMsg = &aCheckMsg;
-	nsString  url( "chrome://navigator/content/NetSupportConfirmCheckYN.xul") ; 
-	DoDialog( url  );
-	return NS_OK;	
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->UniversalDialog(
+                        window, inTitleMessage, inDialogTitle, inMsg, inCheckboxMsg,
+                        inButton0Text, inButton1Text, inButton2Text, inButton3Text,
+                        inEditfield1Msg, inEditfield2Msg, inoutEditfield1Value,
+                        inoutEditfield2Value, inIConURL, inoutCheckboxState, inNumberButtons,
+                        inNumberEditfields, inEditField1Password, outButtonPressed);
+	 }
+	 return rv;
 }
 
 NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *text,

@@ -2965,6 +2965,54 @@ NS_IMETHODIMP nsWebShellWindow::ConfirmCheck(const PRUnichar *text, const PRUnic
   return rv; 
 }
 
+NS_IMETHODIMP nsWebShellWindow::UniversalDialog
+	(const PRUnichar *inTitleMessage,
+	const PRUnichar *inDialogTitle, /* e.g., alert, confirm, prompt, prompt password */
+	const PRUnichar *inMsg, /* main message for dialog */
+	const PRUnichar *inCheckboxMsg, /* message for checkbox */
+	const PRUnichar *inButton0Text, /* text for first button */
+	const PRUnichar *inButton1Text, /* text for second button */
+	const PRUnichar *inButton2Text, /* text for third button */
+	const PRUnichar *inButton3Text, /* text for fourth button */
+	const PRUnichar *inEditfield1Msg, /*message for first edit field */
+	const PRUnichar *inEditfield2Msg, /* message for second edit field */
+	PRUnichar **inoutEditfield1Value, /* initial and final value for first edit field */
+	PRUnichar **inoutEditfield2Value, /* initial and final value for second edit field */
+	const PRUnichar *inIConURL, /* url of icon to be displayed in dialog */
+		/* examples are
+		   "chrome://global/skin/question-icon.gif" for question mark,
+		   "chrome://global/skin/alert-icon.gif" for exclamation mark
+		*/
+	PRBool *inoutCheckboxState, /* initial and final state of check box */
+	PRInt32 inNumberButtons, /* total number of buttons (0 to 4) */
+	PRInt32 inNumberEditfields, /* total number of edit fields (0 to 2) */
+	PRInt32 inEditField1Password, /* is first edit field a password field */
+	PRInt32 *outButtonPressed) /* number of button that was pressed (0 to 3) */
+{
+	 nsresult rv; 
+  nsCOMPtr<nsIDOMWindow> domWindow;
+  nsIWebShell* tempWebShell;
+  GetWebShell(tempWebShell  );
+  nsCOMPtr<nsIWebShell> webShell( dont_AddRef(tempWebShell) );
+  if (NS_FAILED(rv = ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow))))
+  {
+    NS_ERROR("Unable to retrieve the DOM window from the new web shell.");
+    return rv;
+  }
+ 
+ NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &rv);
+ if ( NS_SUCCEEDED( rv ) )
+       	rv = dialog->UniversalDialog(
+                        domWindow, inTitleMessage, inDialogTitle, inMsg, inCheckboxMsg,
+                        inButton0Text, inButton1Text, inButton2Text, inButton3Text,
+                        inEditfield1Msg, inEditfield2Msg, inoutEditfield1Value,
+                        inoutEditfield2Value, inIConURL, inoutCheckboxState, inNumberButtons,
+                        inNumberEditfields, inEditField1Password, outButtonPressed);
+  return rv; 
+}
+
+
+
 NS_IMETHODIMP nsWebShellWindow::Prompt(const PRUnichar *text, const PRUnichar *defaultText, PRUnichar **result, PRBool *_retval)
 {
   nsresult rv; 
@@ -3020,16 +3068,6 @@ NS_IMETHODIMP nsWebShellWindow::PromptPassword(const PRUnichar *text, const PRUn
  if ( NS_SUCCEEDED( rv ) )
  	rv = dialog->PromptPassword( domWindow, title, text, pwd, _retval );
   return rv;
-}
-
-NS_IMETHODIMP nsWebShellWindow::ConfirmYN(const PRUnichar *text, PRBool *_retval)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
-}
- 
-NS_IMETHODIMP nsWebShellWindow::ConfirmCheckYN(const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
-{
-	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsWebShellWindow::Select( const PRUnichar *inDialogTitle, const PRUnichar* inMsg, PRUint32 inCount, const char **inList, PRInt32 *outSelection, PRBool *_retval)
