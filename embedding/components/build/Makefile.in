@@ -87,6 +87,10 @@ ifeq ($(MOZ_GFX_TOOLKIT),gtk)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
 endif
 
+ifeq ($(MOZ_GFX_TOOLKIT),xlib)
+LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
+endif
+
 ifeq ($(MOZ_GFX_TOOLKIT),beos)
 LOCAL_INCLUDES += -I$(srcdir)/../printingui/src/gtk 
 endif
