@@ -11,9 +11,8 @@
   <!-- classic Information -->
   <RDF:Description about="urn:mozilla:skin:classic/1.0"
         chrome:displayName="Classic"
-        chrome:email="ben@netscape.com"
-        chrome:website="http://people.netscape.com/ben/"
         chrome:author="mozilla.org"
+        chrome:description="A theme for all Communicator components that simulates a traditional native look and feel."
         chrome:name="classic/1.0">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:classic/1.0:packages">

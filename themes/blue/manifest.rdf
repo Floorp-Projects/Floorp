@@ -12,6 +12,7 @@
   <RDF:Description about="urn:mozilla:skin:blue/1.0"
         chrome:displayName="Blue"
         chrome:author="mozilla.org"
+        chrome:description="A theme for all Communicator components designed to visually integrate with Netscape Netcenter."
         chrome:name="blue/1.0">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:skin:blue/1.0:packages">
