@@ -754,18 +754,24 @@ nsMsgFolder::GetCanRename(PRBool *aResult)
   if (isServer) {
 	*aResult = PR_FALSE;
   }
-  // old comment, from the 4.x code base:
-  // Here's a weird case necessitated because we don't have a separate
-  // preference for any folder name except the FCC folder (Sent). Others
-  // are known by name, and as such, can't be renamed. I guess.
   //
-  // new comment:
-  // we have prefs for drafts and templates now, can we remove those
-  // parts of this case?
+  // check if the folder is a special folder
+  // (Trash, Drafts, Unsent Messages, Inbox, Sent, Templates)
+  // if it is, don't allow the user to rename it
+  // (which includes dnd moving it with in the same server)
+  //
+  // this errors on the side of caution.  we'll return false a lot
+  // more often if we use flags,  
+  // instead of checking if the folder really is being used as a 
+  // special folder by looking at the "copies and folders" prefs on the
+  // identities.
+  //
+  // one day...
   else if (mFlags & MSG_FOLDER_FLAG_TRASH ||
       mFlags & MSG_FOLDER_FLAG_DRAFTS ||
       mFlags & MSG_FOLDER_FLAG_QUEUE ||
       mFlags & MSG_FOLDER_FLAG_INBOX ||
+      mFlags & MSG_FOLDER_FLAG_SENTMAIL ||
       mFlags & MSG_FOLDER_FLAG_TEMPLATES) {
         *aResult = PR_FALSE;
   }
