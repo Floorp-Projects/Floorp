@@ -124,7 +124,7 @@
       <toolbarbutton label="&cmd.remove.label;" accesskey="&cmd.remove.accesskey;"
                      command="cmd_remove"/>
       <toolbarseparator class="toolbarseparator-standard"/>
-      <toolbarbutton label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
+      <toolbarbutton id="btn_openfile" label="&cmd.openfile.label;" accesskey="&cmd.openfile.accesskey;"
                      command="cmd_openfile"/>
       <toolbarbutton id="btn_showinshell" command="cmd_showinshell"/>
     </toolbar>

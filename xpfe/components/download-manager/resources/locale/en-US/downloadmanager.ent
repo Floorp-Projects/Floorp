@@ -19,8 +19,8 @@
 <!ENTITY cmd.remove.accesskey             "r">
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "c">
-<!ENTITY cmd.openfile.label               "Open File">
-<!ENTITY cmd.openfile.accesskey           "o">
+<!ENTITY cmd.openfile.label               "Launch File">
+<!ENTITY cmd.openfile.accesskey           "L">
 
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
 <!ENTITY progressMsgNoRate "#1KB of #2KB">
