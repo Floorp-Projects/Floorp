@@ -227,57 +227,8 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
     {
         rv = mPrefs->CopyCharPref("network.proxy.autoconfig_url", 
                                   getter_Copies(tempString));
-        if (NS_SUCCEEDED(rv) && (!reloadPAC || PL_strcmp(tempString, mPACURL))) {
-            mPACURL.Adopt(nsCRT::strdup(tempString));
-
-            // create pac js component
-            mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
-            if (!mPAC || NS_FAILED(rv)) {
-                NS_ERROR("Cannot load PAC js component");
-                return;
-            }
-
-            /* now we need to setup a callback from the main ui thread
-               in which we will load the pac file from the specified
-               url. loading it now, in the current thread results in a
-               browser crash */
-
-            // get event queue service
-            nsCOMPtr<nsIEventQueueService> eqs = 
-                do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
-            if (!eqs) {
-                NS_ERROR("Failed to get EventQueue service");
-                return;
-            }
-
-            // get ui thread's event queue
-            nsCOMPtr<nsIEventQueue> eq = nsnull;
-            rv = eqs->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(eq));
-            if (NS_FAILED(rv) || !eqs) {
-                NS_ERROR("Failed to get UI EventQueue");
-                return;
-            }
-
-            // create an event
-            PLEvent* event = new PLEvent;
-            // AddRef this because it is being placed in the PLEvent struct
-            // It will be Released when DestroyPACLoadEvent is called
-            NS_ADDREF_THIS();
-            PL_InitEvent(event, 
-                         this,
-                         (PLHandleEventProc) 
-                         nsProtocolProxyService::HandlePACLoadEvent,
-                         (PLDestroyEventProc) 
-                         nsProtocolProxyService::DestroyPACLoadEvent);
-
-            // post the event into the ui event queue
-            if (eq->PostEvent(event) == PR_FAILURE) {
-                NS_ERROR("Failed to post PAC load event to UI EventQueue");
-                NS_RELEASE_THIS();
-                delete event;
-                return;
-            }
-        }
+        if (NS_SUCCEEDED(rv) && (!reloadPAC || PL_strcmp(tempString, mPACURL))) 
+            ConfigureFromPAC(tempString);
     }
 }
 
@@ -484,6 +435,62 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, char * *aProxyHost, PRInt3
     }
 
     
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProtocolProxyService::ConfigureFromPAC(const char *url)
+{
+    nsresult rv = NS_OK;
+    mPACURL.Adopt(nsCRT::strdup(url));
+
+    // create pac js component
+    mPAC = do_CreateInstance(NS_PROXY_AUTO_CONFIG_CONTRACTID, &rv);
+    if (!mPAC || NS_FAILED(rv)) {
+        NS_ERROR("Cannot load PAC js component");
+        return rv;
+    }
+
+    /* now we need to setup a callback from the main ui thread
+       in which we will load the pac file from the specified
+       url. loading it now, in the current thread results in a
+       browser crash */
+
+    // get event queue service
+    nsCOMPtr<nsIEventQueueService> eqs = 
+        do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID);
+    if (!eqs) {
+        NS_ERROR("Failed to get EventQueue service");
+        return rv;
+    }
+
+    // get ui thread's event queue
+    nsCOMPtr<nsIEventQueue> eq = nsnull;
+    rv = eqs->GetThreadEventQueue(NS_UI_THREAD, getter_AddRefs(eq));
+    if (NS_FAILED(rv) || !eqs) {
+        NS_ERROR("Failed to get UI EventQueue");
+        return rv;
+    }
+
+    // create an event
+    PLEvent* event = new PLEvent;
+    // AddRef this because it is being placed in the PLEvent struct
+    // It will be Released when DestroyPACLoadEvent is called
+    NS_ADDREF_THIS();
+    PL_InitEvent(event, 
+            this,
+            (PLHandleEventProc) 
+            nsProtocolProxyService::HandlePACLoadEvent,
+            (PLDestroyEventProc) 
+            nsProtocolProxyService::DestroyPACLoadEvent);
+
+    // post the event into the ui event queue
+    if (eq->PostEvent(event) == PR_FAILURE) {
+        NS_ERROR("Failed to post PAC load event to UI EventQueue");
+        NS_RELEASE_THIS();
+        delete event;
+        return NS_ERROR_FAILURE;
+    }
     return NS_OK;
 }
 

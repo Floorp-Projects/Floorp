@@ -139,6 +139,7 @@
                    pref="true" preftype="string" prefstring="network.proxy.autoconfig_url"
                    prefattribute="value"/>
         <button id="autoReload" class="dialog" label="&reload.label;" accesskey="&reload.accesskey;"
+                oncommand="ReloadPAC();"
                 pref="true" preftype="bool"
                 prefstring="pref.advanced.proxies.disable_button.reload" prefattribute="disabled"/>
       </hbox>

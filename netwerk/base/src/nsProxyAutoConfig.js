@@ -34,6 +34,7 @@ const kPAC_CID = Components.ID("{63ac8c66-1dd2-11b2-b070-84d00d3eaece}");
 const nsIProxyAutoConfig = Components.interfaces.nsIProxyAutoConfig;
 const nsIIOService = Components.interfaces['nsIIOService'];
 const nsIDNSService = Components.interfaces.nsIDNSService;
+const nsIRequest = Components.interfaces.nsIRequest;
 
 // implementor of nsIProxyAutoConfig
 function nsProxyAutoConfig() {};
@@ -85,6 +86,8 @@ nsProxyAutoConfig.prototype = {
     LoadPACFromURL: function(uri, ioService) {
         this.done = false;
         var channel = ioService.newChannelFromURI(uri);
+        // don't cache the PAC content
+        channel.loadFlags |= nsIRequest.LOAD_BYPASS_CACHE;
         pacURL = uri.spec;
         channel.asyncOpen(this, null);
     },
