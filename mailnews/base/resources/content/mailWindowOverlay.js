@@ -2228,7 +2228,8 @@ function HandleMDNResponse(aUrl)
     return;
 
   var DNTHeader = mimeHdr.extractHeader("Disposition-Notification-To", false);
-  if (!DNTHeader)
+  var oldDNTHeader = mimeHdr.extractHeader("Return-Receipt-To", false);
+  if (!DNTHeader && !oldDNTHeader)
     return;
  
   // Everything looks good so far, let's generate the MDN response.
