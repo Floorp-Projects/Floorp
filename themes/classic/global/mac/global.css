@@ -81,6 +81,16 @@ button.plain {
     {
       -moz-binding		: url(chrome://global/skin/classicBindings.xml#tabs);
     }
+  
+  toolbargrippy
+    {
+      -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy");
+    }
+  toolbargrippy[tbgrippy-collapsed="true"] 
+    {
+      -moz-binding          : url("chrome://global/skin/classicBindings.xml#toolbargrippy-collapsed");
+    }
+
     
   .wizard-header 
     {
@@ -96,6 +106,10 @@ button.plain {
     {
       -moz-binding: url("chrome://global/content/bindings/menu.xml#menu-iconic") !important;
     }
+
+
+
+
 
 /**  
  * XUL <window> element
@@ -179,6 +193,8 @@ button.plain {
       overflow            : hidden;
       border-right        : 1px solid #FFFFFF;
       border-bottom       : 1px solid #FFFFFF;
+      margin-bottom       : -1px !important; 
+
       /* DON'T DELETE.  Removes disappearance of scrollbars
        * in content pane when window is made smaller.
        * Talk to evaughan@netscape.com for details.
