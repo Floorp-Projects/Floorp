@@ -70,10 +70,10 @@ radio[pane=paneDownloads]:hover, radio[pane=paneDownloads][selected="true"] {
 }
 
 radio[pane=paneTabs] {
-	-moz-image-region: rect(0px, 128px, 32px, 96px)
+	-moz-image-region: rect(0px, 192px, 32px, 160px)
 }
 radio[pane=paneTabs]:hover, radio[pane=paneTabs][selected="true"] {
-	-moz-image-region: rect(32px, 128px, 64px, 96px)
+	-moz-image-region: rect(32px, 192px, 64px, 160px)
 }
 
 radio[pane=paneAdvanced] {
