@@ -1,0 +1,86 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsMsgSearchCore.idl"
+
+//////////////////////////////////////////////////////////////////////////////
+// The Msg Search Session is an interface designed to make constructing
+// searches easier. Clients typically build up search terms, and then run
+// the search
+//////////////////////////////////////////////////////////////////////////////
+
+[scriptable, uuid(a819050a-0302-11d3-a50a-0060b0fc04b7)]
+interface nsIMsgSearchSession {
+
+    void AddSearchTerm(in nsMsgSearchAttribute attrib, /* attribute for this term */
+                       in nsMsgSearchOperator op,/* operator e.g. opContains */
+                       in nsMsgSearchValue value, /* value e.g. "Dogbert" */
+                       in boolean BooleanAND, /* set to true if associated boolean operator is AND */
+                       in string arbitraryHeader); /* user defined arbitrary header. ignored unless attrib = attribOtherHeader */
+
+    readonly attribute long numSearchTerms;
+
+    void GetNthSearchTerm(in long whichTerm,
+                          in nsMsgSearchAttribute attrib,
+                          in nsMsgSearchOperator op,
+                          in nsMsgSearchValue value); // wrong, should be out
+
+    long MSG_CountSearchScopes();
+
+    voidStar MSG_GetNthSearchScope(in long which,
+                                   in nsMsgSearchScopeAttribute scopeId);
+
+	/* add a scope (e.g. a mail folder) to the search */
+    void AddScopeTerm(in nsMsgSearchScopeAttribute attrib,
+                      in nsIMsgFolder folder);
+
+    /* special cases for LDAP since LDAP isn't really a folderInfo */
+    void AddLdapScope(in nsMsgDIRServer server);
+    /* void AddAllLdapScopes(XP_List* dirServerList); */
+
+    /* Call this function everytime the scope changes! It informs the FE if 
+       the current scope support custom header use. FEs should not display the
+       custom header dialog if custom headers are not supported */
+    boolean ScopeUsesCustomHeaders(in nsMsgSearchScopeAttribute scope,
+                                   /* could be a folder or server based on scope */
+                                   in voidStar selection,
+                                   in boolean forFilters);
+
+    /* use this to determine if your attribute is a string attrib */
+    boolean IsStringAttribute(in nsMsgSearchAttribute attrib);
+
+    /* add all scopes of a given type to the search */
+    void AddAllScopes(in nsMsgSearchScopeAttribute attrib);
+    
+    void Search();
+    void InterruptSearch();
+    
+    readonly attribute voidStar searchParam;
+    readonly attribute nsMsgSearchType searchType;
+    
+    nsMsgSearchType SetSearchParam(in nsMsgSearchType type,
+                                   in voidStar param);
+
+    readonly attribute long numResults;
+    
+    /* these longs are all actually of type nsMsgSearchBooleanOp */
+    const long BooleanOR=0;
+    const long BooleanAND=1;
+
+};

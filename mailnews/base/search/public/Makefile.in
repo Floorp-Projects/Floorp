@@ -23,19 +23,24 @@ MODULE		= msgsearch
 
 include $(DEPTH)/config/autoconf.mk
 
-EXPORTS= \
-		nsIMsgFilter.h \
-		nsIMsgFilterService.h \
-		nsMsgFilterCore.h \
-		nsIMsgFilterList.h \
-		nsIMsgFilterHitNotify.h \
-		nsIMsgSearchSession.h \
-		nsIMsgSearchAdapter.h \
-		nsMsgSearchAdapter.h \
-		nsMsgSearchCore.h \
-		$(NULL)
-
 XPIDLSRCS = \
+			nsIMsgFilter.idl	\
+			nsIMsgFilterHitNotify.idl	\
+			nsIMsgFilterList.idl	\
+			nsIMsgFilterService.idl \
+			nsIMsgSearchAdapter.idl	\
+			nsIMsgSearchSession.idl	\
+			nsMsgFilterCore.idl	\
+			nsMsgSearchCore.idl	\
+			$(NULL)
+EXPORTS= \
+		nsMsgBodyHandler.h		\
+		nsMsgResultElement.h	\
+		nsMsgSearchArray.h		\
+		nsMsgSearchBoolExpression.h	\
+		nsMsgSearchScopeTerm.h	\
+		nsMsgSearchTerm.h		\
+		nsMsgSearchAdapter.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

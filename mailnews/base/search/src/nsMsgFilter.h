@@ -22,7 +22,7 @@
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIMsgFilter.h"
-
+#include "nsMsgSearchArray.h"
 
 class nsMsgRuleAction
 {
@@ -46,9 +46,9 @@ public:
 	nsMsgFilter();
 	virtual ~nsMsgFilter ();
 
-	NS_IMETHOD GetFilterType(nsMsgFilterType *filterType);
-	NS_IMETHOD EnableFilter(PRBool enable);
-	NS_IMETHOD IsFilterEnabled(PRBool *enabled);
+	NS_IMETHOD GetFilterType(nsMsgFilterTypeType *filterType);
+	NS_IMETHOD GetEnabled(PRBool *enabled);
+	NS_IMETHOD SetEnabled(PRBool enabled) {m_enabled = enabled; return NS_OK;}
 	NS_IMETHOD GetFilterName(char **name);	
 	NS_IMETHOD SetFilterName(char *name);
 	NS_IMETHOD GetFilterDesc(char **description);
@@ -59,7 +59,7 @@ public:
 		nsMsgSearchOperator op,         /* operator e.g. opContains               */
 		nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
 		PRBool BooleanAND, 	       /* TRUE if AND is the boolean operator. FALSE if OR is the boolean operators */
-		char * arbitraryHeader);       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
+		const char * arbitraryHeader);       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
 
 	NS_IMETHOD GetNumTerms(PRInt32 *numTerms);
 
@@ -79,13 +79,12 @@ public:
 	*/
 	NS_IMETHOD SetAction(nsMsgRuleActionType type, void *value);
 	NS_IMETHOD GetAction(nsMsgRuleActionType *type, void **value) ;
-	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, char *headers, PRUint32 headersSize) ;
+	NS_IMETHOD MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, const char *headers, PRUint32 headersSize) ;
 	NS_IMETHOD LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *header);
 
 
-	nsMsgFilterType	GetType() {return m_type;}
-	void			SetType(nsMsgFilterType	type) {m_type = type;}
-	void			SetEnabled(PRBool enabled) {m_enabled = enabled;}
+	nsMsgFilterTypeType	GetType() {return m_type;}
+	void			SetType(nsMsgFilterTypeType	type) {m_type = type;}
 	PRBool			GetEnabled() {return m_enabled;}
 	nsresult		GetName(nsString2 *name);
 	nsresult		SetName(nsString2 *name);
@@ -94,9 +93,11 @@ public:
 	void			SetFilterScript(nsString2 *filterName) ;
 	void			SetFilterList(nsMsgFilterList *filterList) ;
 	PRBool			IsRule() 
-						{return (m_type & (nsMsgFilterInboxRule | nsMsgFilterNewsRule)) != 0;}
+						{return (m_type & (nsMsgFilterType::InboxRule |
+                                           nsMsgFilterType::NewsRule)) != 0;}
 	PRBool			IsScript() {return (m_type &
-							(nsMsgFilterInboxJavaScript | nsMsgFilterNewsJavaScript)) != 0;}
+                                        (nsMsgFilterType::InboxJavaScript |
+                                         nsMsgFilterType::NewsJavaScript)) != 0;}
 
 	// filing routines.
 	nsresult		SaveToTextFile(nsIOFileStream *stream);
@@ -116,7 +117,7 @@ static	nsresult GetActionFilingStr(nsMsgRuleActionType action, nsString2 &action
 static nsMsgRuleActionType GetActionForFilingStr(nsString2 &actionStr);
 	nsMsgRuleAction      m_action;
 protected:
-	nsMsgFilterType m_type;
+	nsMsgFilterTypeType m_type;
 	PRBool			m_enabled;
 	nsString2		m_filterName;
 	nsString2		m_scriptFileName;	// iff this filter is a script.

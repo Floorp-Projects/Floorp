@@ -21,6 +21,7 @@
 
 #include "nsMsgSearchCore.h"
 #include "nsIMsgSearchAdapter.h"
+#include "nsMsgSearchArray.h"
 
 //-----------------------------------------------------------------------------
 // These Adapter classes contain the smarts to convert search criteria from 
@@ -42,9 +43,9 @@ public:
 	NS_IMETHOD SendUrl () { return NS_OK; }
 	NS_IMETHOD OpenResultElement (nsMsgResultElement *);
 	NS_IMETHOD ModifyResultElement (nsMsgResultElement*, nsMsgSearchValue*);
-	NS_IMETHOD GetEncoding (const char **encoding) { return NS_OK; }
+	NS_IMETHOD GetEncoding (char **encoding) { return NS_OK; }
 
-	NS_IMETHOD FindTargetFolder (nsMsgResultElement*, nsIMsgFolder **aFolder);
+	NS_IMETHOD FindTargetFolder (const nsMsgResultElement*, nsIMsgFolder **aFolder);
 	NS_IMETHOD Abort ();
 
 	nsMsgSearchScopeTerm		*m_scope;

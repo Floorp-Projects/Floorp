@@ -20,6 +20,9 @@
 #include "nsMsgSearchCore.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgDatabase.h"
+#include "nsMsgSearchTerm.h"
+#include "nsMsgBodyHandler.h"
+#include "nsMsgResultElement.h"
 
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
@@ -39,15 +42,15 @@ typedef struct
 
 nsMsgSearchAttribEntry SearchAttribEntryTable[] =
 {
-    {nsMsgSearchAttribSubject,		"subject"},
-    {nsMsgSearchAttribSender,		"from"},
-    {nsMsgSearchAttribBody,		"body"},
-    {nsMsgSearchAttribDate,		"date"},
-    {nsMsgSearchAttribPriority,	"priority"},
-    {nsMsgSearchAttribMsgStatus,	"status"},	
-    {nsMsgSearchAttribTo,			"to"},
-    {nsMsgSearchAttribCC,			"CC"},
-    {nsMsgSearchAttribToOrCC,		"to or CC"}
+    {nsMsgSearchAttrib::Subject,		"subject"},
+    {nsMsgSearchAttrib::Sender,		"from"},
+    {nsMsgSearchAttrib::Body,		"body"},
+    {nsMsgSearchAttrib::Date,		"date"},
+    {nsMsgSearchAttrib::Priority,	"priority"},
+    {nsMsgSearchAttrib::MsgStatus,	"status"},	
+    {nsMsgSearchAttrib::To,			"to"},
+    {nsMsgSearchAttrib::CC,			"CC"},
+    {nsMsgSearchAttrib::ToOrCC,		"to or CC"}
 };
 
 // Take a string which starts off with an attribute
@@ -67,7 +70,7 @@ nsresult NS_MsgGetAttributeFromString(const char *string, int16 *attrib)
 		}
 	}
 	if (!found)
-		*attrib = nsMsgSearchAttribOtherHeader; // assume arbitrary header if we could not find the header in the table
+		*attrib = nsMsgSearchAttrib::OtherHeader; // assume arbitrary header if we could not find the header in the table
 	return NS_OK;      // we always succeed now
 }
 
@@ -102,17 +105,17 @@ typedef struct
 
 nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
 {
-	{nsMsgSearchOpContains,	"contains"},
-    {nsMsgSearchOpDoesntContain,"doesn't contain"},
-    {nsMsgSearchOpIs,           "is"},
-    {nsMsgSearchOpIsnt,		"isn't"},
-    {nsMsgSearchOpIsEmpty,		"is empty"},
-	{nsMsgSearchOpIsBefore,    "is before"},
-    {nsMsgSearchOpIsAfter,		"is after"},
-    {nsMsgSearchOpIsHigherThan, "is higher than"},
-    {nsMsgSearchOpIsLowerThan,	"is lower than"},
-    {nsMsgSearchOpBeginsWith,  "begins with"},
-	{nsMsgSearchOpEndsWith,	"ends with"}
+	{nsMsgSearchOp::Contains,	"contains"},
+    {nsMsgSearchOp::DoesntContain,"doesn't contain"},
+    {nsMsgSearchOp::Is,           "is"},
+    {nsMsgSearchOp::Isnt,		"isn't"},
+    {nsMsgSearchOp::IsEmpty,		"is empty"},
+	{nsMsgSearchOp::IsBefore,    "is before"},
+    {nsMsgSearchOp::IsAfter,		"is after"},
+    {nsMsgSearchOp::IsHigherThan, "is higher than"},
+    {nsMsgSearchOp::IsLowerThan,	"is lower than"},
+    {nsMsgSearchOp::BeginsWith,  "begins with"},
+	{nsMsgSearchOp::EndsWith,	"ends with"}
 };
 
 nsresult NS_MsgGetOperatorFromString(const char *string, int16 *op)
@@ -223,7 +226,7 @@ nsMsgSearchTerm::nsMsgSearchTerm()
 {
 }
 
-
+#if 0
 nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchAttribute attrib, 
 	nsMsgSearchOperator op, 
@@ -232,25 +235,26 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 	char * arbitraryHeader) 
 {
 	m_operator = op;
-	m_booleanOp = (booleanAND) ? nsMsgSearchBooleanAND : nsMsgSearchBooleanOR;
-	if (attrib == nsMsgSearchAttribOtherHeader && arbitraryHeader)
+	m_booleanOp = (booleanAND) ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
+	if (attrib == nsMsgSearchAttrib::OtherHeader && arbitraryHeader)
 		m_arbitraryHeader = arbitraryHeader;
 	m_attribute = attrib;
 
 	nsMsgResultElement::AssignValues (val, &m_value);
 }
+#endif
 
 nsMsgSearchTerm::nsMsgSearchTerm (
 	nsMsgSearchAttribute attrib, 
 	nsMsgSearchOperator op, 
 	nsMsgSearchValue *val,
-	nsMsgSearchBooleanOp boolOp,
+	nsMsgSearchBooleanOperator boolOp,
 	char * arbitraryHeader) 
 {
 	m_operator = op;
 	m_attribute = attrib;
 	m_booleanOp = boolOp;
-	if (attrib == nsMsgSearchAttribOtherHeader && arbitraryHeader)
+	if (attrib == nsMsgSearchAttrib::OtherHeader && arbitraryHeader)
 		m_arbitraryHeader = arbitraryHeader;
 	nsMsgResultElement::AssignValues (val, &m_value);
 }
@@ -259,7 +263,7 @@ nsMsgSearchTerm::nsMsgSearchTerm (
 
 nsMsgSearchTerm::~nsMsgSearchTerm ()
 {
-	if (IsStringAttribute (m_attribute))
+	if (IS_STRING_ATTRIBUTE (m_attribute))
 		PR_Free(m_value.u.string);
 }
 
@@ -290,7 +294,7 @@ nsMsgSearchTerm::~nsMsgSearchTerm ()
 
 nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
 {
-	if (IsStringAttribute(m_attribute))
+	if (IS_STRING_ATTRIBUTE(m_attribute))
 	{
 		PRBool	quoteVal = PR_FALSE;
 		// need to quote strings with ')' - filter code will escape quotes
@@ -320,7 +324,7 @@ nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
 	{
 	    switch (m_attribute)
 		{
-		case nsMsgSearchAttribDate:
+		case nsMsgSearchAttrib::Date:
 		{
 			PRExplodedTime exploded;
 			PR_ExplodeTime(m_value.u.date, PR_LocalTimeParameters, &exploded);
@@ -331,14 +335,14 @@ nsresult nsMsgSearchTerm::OutputValue(nsString2 &outputStr)
 			outputStr += dateBuf;
 			break;
 		}
-		case nsMsgSearchAttribMsgStatus:
+		case nsMsgSearchAttrib::MsgStatus:
 		{
 			nsString2 status(eOneByte);
 			NS_MsgGetUntranslatedStatusName (m_value.u.msgStatus, &status);
 			outputStr += status;
 			break;
 		}
-		case nsMsgSearchAttribPriority:
+		case nsMsgSearchAttrib::Priority:
 		{
 			nsString2 priority(eOneByte);
 			NS_MsgGetUntranslatedPriorityName( m_value.u.priority, 
@@ -364,7 +368,7 @@ nsresult nsMsgSearchTerm::EnStreamNew (nsString2 &outStream)
 	if (ret != NS_OK)
 		return ret;
 
-	if (m_attribute == nsMsgSearchAttribOtherHeader)  // if arbitrary header, use it instead!
+	if (m_attribute == nsMsgSearchAttrib::OtherHeader)  // if arbitrary header, use it instead!
 	{
 		outputStr = "\"";
 		outputStr += m_arbitraryHeader;
@@ -390,7 +394,7 @@ nsresult nsMsgSearchTerm::EnStreamNew (nsString2 &outStream)
 // fill in m_value from the input stream.
 nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 {
-	if (IsStringAttribute(m_attribute))
+	if (IS_STRING_ATTRIBUTE(m_attribute))
 	{
 		PRBool	quoteVal = PR_FALSE;
 		while (IS_SPACE(*inStream))
@@ -414,15 +418,15 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 	{
 	    switch (m_attribute)
 		{
-		case nsMsgSearchAttribDate:
+		case nsMsgSearchAttrib::Date:
 #ifdef DO_DATE_YET
 			m_value.u.date = XP_ParseTimeString (inStream, PR_FALSE);
 #endif
 			break;
-		case nsMsgSearchAttribMsgStatus:
+		case nsMsgSearchAttrib::MsgStatus:
 			m_value.u.msgStatus = NS_MsgGetStatusValueFromName(inStream);
 			break;
-		case nsMsgSearchAttribPriority:
+		case nsMsgSearchAttrib::Priority:
 			NS_MsgGetPriorityFromString(inStream, &m_value.u.priority);
 			break;
 		default:
@@ -482,7 +486,7 @@ nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 	err = NS_MsgGetAttributeFromString(inStream, &attributeVal);
 	nsMsgSearchAttribute attrib = (nsMsgSearchAttribute) attributeVal;
 	
-	if (attrib == nsMsgSearchAttribOtherHeader)  // if we are dealing with an arbitrary header....
+	if (attrib == nsMsgSearchAttrib::OtherHeader)  // if we are dealing with an arbitrary header....
 		m_arbitraryHeader =  inStream;
 	
 	return attrib;
@@ -570,7 +574,7 @@ void nsMsgSearchTerm::StripQuotedPrintable (unsigned char *src)
 // Looks in the MessageDB for the user specified arbitrary header, if it finds the header, it then looks for a match against
 // the value for the header. 
 nsresult nsMsgSearchTerm::MatchArbitraryHeader (nsMsgSearchScopeTerm *scope, PRUint32 offset, PRUint32 length /* in lines*/, const char *charset,
-														nsIMsgDBHdr *msg, nsIMsgDatabase* db, char * headers, PRUint32 headersSize, PRBool ForFiltering)
+														nsIMsgDBHdr *msg, nsIMsgDatabase* db, const char * headers, PRUint32 headersSize, PRBool ForFiltering)
 {
 	nsresult err = NS_COMFALSE;
 	nsMsgBodyHandler * bodyHan = new nsMsgBodyHandler (scope, offset,length, msg, db, headers, headersSize, ForFiltering);
@@ -645,15 +649,15 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 
 	// Small hack so we don't look all through a message when someone has
 	// specified "BODY IS foo"
-	if ((length > 0) && (m_operator == nsMsgSearchOpIs || m_operator == nsMsgSearchOpIsnt))
+	if ((length > 0) && (m_operator == nsMsgSearchOp::Is || m_operator == nsMsgSearchOp::Isnt))
 		length = PL_strlen (m_value.u.string);
 
 	nsMsgBodyHandler * bodyHan  = new nsMsgBodyHandler (scope, offset, length, msg, db);
 	if (!bodyHan)
 		return NS_ERROR_OUT_OF_MEMORY;
 
-	const int kBufSize = 512; // max size of a line???
 #ifdef HAVE_I18N
+	const int kBufSize = 512; // max size of a line???
 	char *buf = (char*) PR_Malloc(kBufSize);
 	if (buf)
 	{
@@ -737,7 +741,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 	nsresult err = NS_COMFALSE;
 	nsString2 n_str(eOneByte);
 	const char* n_header = nsnull;
-	if(nsMsgSearchOpIsEmpty != m_operator)	// Save some performance for opIsEmpty
+	if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
 	{
 #ifdef DO_I18N
 		n_str = INTL_GetNormalizeStr(csid , (unsigned char*)m_value.u.string);	// Always new buffer unless not enough memory
@@ -755,17 +759,17 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 	}
 	switch (m_operator)
 	{
-	case nsMsgSearchOpContains:
+	case nsMsgSearchOp::Contains:
 		if ((nsnull != n_header) && (n_str[0]) && /* INTL_StrContains(csid, n_header, n_str) */
 			stringToMatch->Find(n_str, PR_TRUE) != -1)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpDoesntContain:
+	case nsMsgSearchOp::DoesntContain:
 		if ((nsnull != n_header) && (n_str[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
 			stringToMatch->Find(n_str, PR_TRUE) == -1)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIs:
+	case nsMsgSearchOp::Is:
 		if(n_header)
 		{
 			if (n_str[0])
@@ -777,7 +781,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 				err = NS_OK;
 		}
 		break;
-	case nsMsgSearchOpIsnt:
+	case nsMsgSearchOp::Isnt:
 		if(n_header)
 		{
 			if (n_str[0])
@@ -789,11 +793,11 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 				err = NS_OK;
 		}
 		break;
-	case nsMsgSearchOpIsEmpty:
+	case nsMsgSearchOp::IsEmpty:
 		if (stringToMatch->Length() == 0)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpBeginsWith:
+	case nsMsgSearchOp::BeginsWith:
 #ifdef DO_I18N_YET
 		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrBeginWith(csid, n_header, n_str))
 			err = NS_OK;
@@ -803,7 +807,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 			err = NS_OK;
 #endif
 		break;
-	case nsMsgSearchOpEndsWith: 
+	case nsMsgSearchOp::EndsWith: 
 #ifdef DO_I18N_YET
 		{
 		if((nsnull != n_str) && (nsnull != n_header) && INTL_StrEndWith(csid, n_header, n_str))
@@ -823,7 +827,7 @@ nsresult nsMsgSearchTerm::MatchString (nsString2 *stringToMatch, const char *cha
 
 PRBool nsMsgSearchTerm::MatchAllBeforeDeciding ()
 {
-	if (m_operator == nsMsgSearchOpDoesntContain || m_operator == nsMsgSearchOpIsnt)
+	if (m_operator == nsMsgSearchOp::DoesntContain || m_operator == nsMsgSearchOp::Isnt)
 		return PR_TRUE;
 	return PR_FALSE;
 }
@@ -896,11 +900,11 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
 	
 	switch (m_operator)
 	{
-	case nsMsgSearchOpIsBefore:
+	case nsMsgSearchOp::IsBefore:
 		if (t_date < nsTime(m_value.u.date))
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIsAfter:
+	case nsMsgSearchOp::IsAfter:
 		{
 			nsTime adjustedDate = nsTime(m_value.u.date);
 			adjustedDate += 60*60*24; // we want to be greater than the next day....
@@ -908,7 +912,7 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
 				err = NS_OK;
 		}
 		break;
-	case nsMsgSearchOpIs:
+	case nsMsgSearchOp::Is:
 		{
 			PRExplodedTime tmToMatch, tmThis;
 			if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
@@ -920,7 +924,7 @@ nsresult nsMsgSearchTerm::MatchDate (PRTime dateToMatch)
 			}
 		}
 		break;
-	case nsMsgSearchOpIsnt:
+	case nsMsgSearchOp::Isnt:
 		{
 			PRExplodedTime tmToMatch, tmThis;
 			if (NS_OK == GetLocalTimes (dateToMatch, m_value.u.date, tmToMatch, tmThis))
@@ -956,15 +960,15 @@ nsresult nsMsgSearchTerm::MatchAge (PRTime msgDate)
 
 	switch (m_operator)
 	{
-	case nsMsgSearchOpIsGreaterThan: // is older than 
+	case nsMsgSearchOp::IsGreaterThan: // is older than 
 		if (msgDate < matchDay)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIsLessThan: // is younger than 
+	case nsMsgSearchOp::IsLessThan: // is younger than 
 		if (msgDate > matchDay)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIs:
+	case nsMsgSearchOp::Is:
 		if (matchTime && msgTime)
 			if ((day == msgTime->tm_mday) 
 				&& (month == msgTime->tm_mon)
@@ -984,11 +988,11 @@ nsresult nsMsgSearchTerm::MatchSize (PRUint32 sizeToMatch)
 	nsresult err = NS_COMFALSE;
 	switch (m_operator)
 	{
-	case nsMsgSearchOpIsHigherThan:
+	case nsMsgSearchOp::IsHigherThan:
 		if (sizeToMatch > m_value.u.size)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIsLowerThan:
+	case nsMsgSearchOp::IsLowerThan:
 		if (sizeToMatch < m_value.u.size)
 			err = NS_OK;
 		break;
@@ -1009,11 +1013,11 @@ nsresult nsMsgSearchTerm::MatchStatus (PRUint32 statusToMatch)
 
 	switch (m_operator)
 	{
-	case nsMsgSearchOpIs:
+	case nsMsgSearchOp::Is:
 		if (matches)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIsnt:
+	case nsMsgSearchOp::Isnt:
 		if (!matches)
 			err = NS_OK;
 		break;
@@ -1036,15 +1040,15 @@ nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch)
 
 	switch (m_operator)
 	{
-	case nsMsgSearchOpIsHigherThan:
+	case nsMsgSearchOp::IsHigherThan:
 		if (p1 > p2)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIsLowerThan:
+	case nsMsgSearchOp::IsLowerThan:
 		if (p1 < p2)
 			err = NS_OK;
 		break;
-	case nsMsgSearchOpIs:
+	case nsMsgSearchOp::Is:
 		if (p1 == p2)
 			err = NS_OK;
 		break;
@@ -1100,13 +1104,13 @@ PRBool nsMsgSearchScopeTerm::IsOfflineNews()
 {
 	switch (m_attribute)
 	{
-	case nsMsgSearchScopeNewsgroup:
-	case nsMsgSearchScopeAllSearchableGroups:
+	case nsMsgSearchScope::Newsgroup:
+	case nsMsgSearchScope::AllSearchableGroups:
 		if (NET_IsOffline() || !m_searchServer)
 			return PR_TRUE;
 		else
 			return PR_FALSE;
-	case nsMsgSearchScopeOfflineNewsgroup:
+	case nsMsgSearchScope::OfflineNewsgroup:
 		return PR_TRUE;
 	default:
 		return PR_FALSE;
@@ -1171,7 +1175,7 @@ nsMsgResultElement::~nsMsgResultElement ()
 	{
 		nsMsgSearchValue *value = m_valueList.ElementAt(i);
 #ifdef HUH_WHATS_THIS
-		if (value->attribute == nsMsgSearchAttribJpegFile)
+		if (value->attribute == nsMsgSearchAttrib::JpegFile)
 		{
 			char *url = XP_PlatformFileToURL (value->u.string);
 			char *tmp = url + PL_strlen("file://");
@@ -1193,7 +1197,7 @@ nsresult nsMsgResultElement::AddValue (nsMsgSearchValue *value)
 
 nsresult nsMsgResultElement::DestroyValue (nsMsgSearchValue *value)
 {
-	if (IsStringAttribute(value->attribute))
+	if (IS_STRING_ATTRIBUTE(value->attribute))
 	{
 		NS_ASSERTION(value->u.string, "got null result value string");
 		PR_Free (value->u.string);
@@ -1210,30 +1214,30 @@ nsresult nsMsgResultElement::AssignValues (nsMsgSearchValue *src, nsMsgSearchVal
 	nsresult err = NS_OK;
 	switch (src->attribute)
 	{
-	case nsMsgSearchAttribPriority:
+	case nsMsgSearchAttrib::Priority:
 		dst->attribute = src->attribute;
 		dst->u.priority = src->u.priority;
 		break;
-	case nsMsgSearchAttribDate:
+	case nsMsgSearchAttrib::Date:
 		dst->attribute = src->attribute;
 		dst->u.date = src->u.date;
 		break;
-	case nsMsgSearchAttribMsgStatus:
+	case nsMsgSearchAttrib::MsgStatus:
 		dst->attribute = src->attribute;
 		dst->u.msgStatus = src->u.msgStatus;
 		break;
-	case nsMsgSearchAttribMessageKey:
+	case nsMsgSearchAttrib::MessageKey:
 		dst->attribute = src->attribute;
 		dst->u.key = src->u.key;
 		break;
-	case nsMsgSearchAttribAgeInDays:
+	case nsMsgSearchAttrib::AgeInDays:
 		dst->attribute = src->attribute;
 		dst->u.age = src->u.age;
 		break;
 	default:
-		if (src->attribute < kNumMsgSearchAttributes)
+		if (src->attribute < nsMsgSearchAttrib::kNumMsgSearchAttributes)
 		{
-			NS_ASSERTION(IsStringAttribute(src->attribute), "assigning non-string result");
+			NS_ASSERTION(IS_STRING_ATTRIBUTE(src->attribute), "assigning non-string result");
 			dst->attribute = src->attribute;
 			dst->u.string = PL_strdup(src->u.string);
 			if (!dst->u.string)
@@ -1270,7 +1274,7 @@ nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribute attrib, nsMsgSearchV
 #ifdef HAVE_SEARCH_PORT
 	// No need to store the folderInfo separately; we can always get it if/when
 	// we need it. This code is to support "view thread context" in the search dialog
-	if (SearchError_ScopeAgreement == err && attrib == nsMsgSearchAttribFolderInfo)
+	if (SearchError_ScopeAgreement == err && attrib == nsMsgSearchAttrib::FolderInfo)
 	{
 		nsMsgFolderInfo *targetFolder = m_adapter->FindTargetFolder (this);
 		if (targetFolder)
@@ -1279,7 +1283,7 @@ nsresult nsMsgResultElement::GetValue (nsMsgSearchAttribute attrib, nsMsgSearchV
 			if (*outValue)
 			{
 				(*outValue)->u.folder = targetFolder;
-				(*outValue)->attribute = nsMsgSearchAttribFolderInfo;
+				(*outValue)->attribute = nsMsgSearchAttrib::FolderInfo;
 				err = NS_OK;
 			}
 		}
@@ -1304,7 +1308,7 @@ const nsMsgSearchValue *nsMsgResultElement::GetValueRef (nsMsgSearchAttribute at
 
 nsresult nsMsgResultElement::GetPrettyName (nsMsgSearchValue **value)
 {
-	nsresult err = GetValue (nsMsgSearchAttribLocation, value);
+	nsresult err = GetValue (nsMsgSearchAttrib::Location, value);
 #ifdef HAVE_SEARCH_PORT
 	if (NS_OK == err)
 	{
@@ -1385,7 +1389,7 @@ int nsMsgResultElement::Compare (const void *e1, const void *e2)
 
 	switch (attrib)
 	{
-	case nsMsgSearchAttribDate:
+	case nsMsgSearchAttrib::Date:
 		{
 			// on Win 3.1, the requisite 'int' return type is a short, so use a 
 			// real time_t for comparison
@@ -1396,10 +1400,10 @@ int nsMsgResultElement::Compare (const void *e1, const void *e2)
 				ret = 0;
 		}
 		break;
-	case nsMsgSearchAttribPriority:
+	case nsMsgSearchAttrib::Priority:
 		ret = v1->u.priority - v2->u.priority;
 		break;
-	case nsMsgSearchAttribMsgStatus:
+	case nsMsgSearchAttrib::MsgStatus:
 		{
 			// Here's a totally arbitrary sorting protocol for msg status
 			uint32 s1, s2;
@@ -1429,7 +1433,7 @@ int nsMsgResultElement::Compare (const void *e1, const void *e2)
 		}
 		break;
 	default:
-		if (attrib == nsMsgSearchAttribSubject)
+		if (attrib == nsMsgSearchAttrib::Subject)
 		{
 			// Special case for subjects, so "Re:foo" sorts under 'f' not 'r'
 			const char *s1 = v1->u.string;

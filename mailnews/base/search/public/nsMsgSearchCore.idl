@@ -1,0 +1,228 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "MailNewsTypes2.idl"
+#include "nsIMsgFolder.idl"
+
+interface nsIMsgHeaderParser;
+
+%{C++
+#include "nsIMsgHeaderParser.h"
+%}
+
+interface nsIMsgDatabase;
+interface nsIMsgDBHdr;
+
+typedef long nsMsgSearchScopeAttribute;
+
+[scriptable]
+interface nsMsgSearchScope {
+    const long MailFolder = 0;
+    const long Newsgroup = 1;
+    const long LdapDirectory = 2;
+    const long OfflineNewsgroup = 3;
+    const long AllSearchableGroups = 4;
+};
+
+typedef long nsMsgSearchAttribute;
+
+[scriptable]
+interface nsMsgSearchAttrib {
+
+    const long Subject = 0;	/* mail and news */
+    const long Sender = 1;   
+    const long Body = 2;	
+    const long Date = 3;	
+
+    const long Priority = 4;	    /* mail only */
+    const long MsgStatus = 5;	
+    const long To = 6;
+    const long CC = 7;
+    const long ToOrCC = 8;
+
+    const long CommonName = 9;   /* LDAP only */
+    const long RFC822Address = 10;	
+    const long PhoneNumber = 11;
+    const long Organization = 12;
+    const long OrgUnit = 13;
+    const long Locality = 14;
+    const long StreetAddress = 15;
+    const long Size = 16;
+    const long AnyText = 17;      /* any header or body */
+	const long Keywords = 18;
+
+    const long DistinguishedName = 19; /* LDAP result elem only */
+    const long ObjectClass = 20;       
+    const long JpegFile = 21;
+
+    const long Location = 22;          /* result list only */
+    const long MessageKey = 23;        /* message result elems */
+
+	const long AgeInDays = 24;    /* for purging old news articles */
+
+	const long GivenName = 25;    /* for sorting LDAP results */
+	const long Surname = 26; 
+
+	const long FolderInfo = 27;	/* for "view thread context" from result */
+
+	const long Custom1 = 28;		/* custom LDAP attributes */
+	const long Custom2 = 29;
+	const long Custom3 = 30;
+	const long Custom4 = 31;
+	const long Custom5 = 32;
+
+	const long MessageId = 33; 
+	/* the following are LDAP specific attributes */
+	const long nsnMsgSearchAttribCarlicense = 34;
+	const long BusinessCategory = 35;
+	const long DepartmentNumber = 36;
+	const long Description = 37;
+	const long EmployeeType = 38;
+	const long FaxNumber = 39;
+	const long Manager = 40;
+	const long PostalAddress = 41;
+	const long PostalCode = 42;
+	const long Secretary = 43;
+	const long Title = 44;
+	const long Nickname = 45;
+	const long HomePhone = 46;
+	const long Pager = 47;
+	const long Cellular = 48;
+
+	const long OtherHeader = 49;  /* for mail and news. MUST ALWAYS BE LAST attribute since we can have an arbitrary # of these...*/
+    const long kNumMsgSearchAttributes = 50;      /* must be last attribute */
+};
+
+/* NB: If you add elements to this enum, add only to the end, since 
+ *     RULES.DAT stores enum values persistently
+ */
+
+typedef long nsMsgSearchOperator;
+
+[scriptable]
+interface nsMsgSearchOp {
+    const long Contains = 0; /* for text attributes      */
+    const long DoesntContain = 1;
+    const long Is = 2; /* is and isn't also apply to some non-text attrs */
+    const long Isnt = 3; 
+    const long IsEmpty = 4;
+
+    const long IsBefore = 5; /* for date attributes              */
+    const long IsAfter = 6;
+    
+    const long IsHigherThan = 7; /* for priority. Is also applies  */
+    const long IsLowerThan = 8;
+
+    const long BeginsWith = 9;              
+	const long EndsWith = 10;
+
+    const long SoundsLike = 11; /* for LDAP phoenetic matching      */
+	const long LdapDwim = 12; /* Do What I Mean for simple search */
+
+	const long IsGreaterThan = 13;	
+	const long IsLessThan = 14;
+
+	const long NameCompletion = 15; /* Name Completion operator...as the name implies =) */
+
+    const long kNumMsgSearchOperators  = 16;     /* must be last operator */
+};
+
+typedef long nsMsgSearchValueWidget;
+
+/* FEs use this to help build the search dialog box */
+[scriptable]
+interface nsMsgSearchWidget {
+    const long Text = 0;
+    const long Date = 1;
+    const long Menu = 2;
+	const long Int = 3;          /* added to account for age in days which requires an integer field */
+    const long None = 4;
+};
+
+typedef long nsMsgSearchTypeVal;
+
+
+/* Used to specify type of search to be performed */
+[scriptable]
+interface nsMsgSearchType {
+	const long None = 0;
+	const long RootDSE = 1;
+	const long Normal = 2;
+	const long LdapVLV = 3;
+	const long NameCompletion = 4;
+};
+
+typedef long nsMsgSearchBooleanOperator;
+ 
+[scriptable]
+interface nsMsgSearchBooleanOp {
+    const long BooleanOR = 0;
+    const long BooleanAND = 1;
+};
+
+/* Use this to specify the value of a search term */
+
+[ptr] native nsMsgSearchValue(nsMsgSearchValue);
+
+%{C++
+typedef struct nsMsgSearchValue
+{
+    nsMsgSearchAttribute attribute;
+    union
+    {
+        char *string;
+        nsMsgPriority priority;
+        PRTime date;
+        PRUint32 msgStatus; /* see MSG_FLAG in msgcom.h */
+        PRUint32 size;
+        nsMsgKey key;
+		PRUint32 age; /* in days */
+		nsIMsgFolder *folder;
+    } u;
+} nsMsgSearchValue;
+%}
+
+[ptr] native nsMsgSearchTerm(nsMsgSearchTerm);
+
+[ptr] native nsMsgDIRServer(nsMsgDIRServer);
+%{C++
+class nsMsgDIRServer;
+%}
+
+
+%{C++
+#define IS_STRING_ATTRIBUTE(_a) \
+(!(_a == nsMsgSearchAttrib::Priority || _a == nsMsgSearchAttrib::Date || \
+   _a == nsMsgSearchAttrib::MsgStatus || _a == nsMsgSearchAttrib::MessageKey || \
+   _a == nsMsgSearchAttrib::Size || _a == nsMsgSearchAttrib::AgeInDays || \
+   _a == nsMsgSearchAttrib::FolderInfo))
+%}
+
+[ptr] native nsSearchMenuItem;
+
+%{C++
+/* Use this to help build menus in the search dialog. See APIs below */
+#define kMsgSearchMenuLength 64
+typedef struct nsMsgSearchMenuItem 
+{
+    int16 attrib;
+    char name[kMsgSearchMenuLength];
+    PRBool isEnabled;
+} nsMsgSearchMenuItem;
+%}
+

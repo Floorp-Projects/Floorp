@@ -68,17 +68,17 @@ public:
 	*/
 	NS_IMETHOD SetFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter);
 	NS_IMETHOD RemoveFilterAt(PRUint32 filterIndex);
-	NS_IMETHOD MoveFilterAt(PRUint32 filterIndex, nsMsgFilterMotion motion);
+	NS_IMETHOD MoveFilterAt(PRUint32 filterIndex, nsMsgFilterMotionValue motion);
 	NS_IMETHOD InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter);
 
-	NS_IMETHOD EnableLogging(PRBool enable);
-	NS_IMETHOD LoggingEnabled(PRBool *aResult);
+	NS_IMETHOD SetLoggingEnabled(PRBool enable);
+	NS_IMETHOD GetLoggingEnabled(PRBool *aResult);
 
-	NS_IMETHOD CreateFilter(char *name,	nsIMsgFilter **result);
+	NS_IMETHOD CreateFilter(const char *name,	nsIMsgFilter **result);
 	NS_IMETHOD SaveToFile(nsIOFileStream *stream);
 
-	NS_IMETHOD ApplyFiltersToHdr(nsMsgFilterType filterType, nsIMsgDBHdr *msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
-					char *headers, PRUint32 headersSize, nsIMsgFilterHitNotify *listener);
+	NS_IMETHOD ApplyFiltersToHdr(nsMsgFilterTypeType filterType, nsIMsgDBHdr *msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
+                                 const char *headers, PRUint32 headersSize, nsIMsgFilterHitNotify *listener);
 
 	nsresult		Close();
 	nsresult		LoadTextFilters();

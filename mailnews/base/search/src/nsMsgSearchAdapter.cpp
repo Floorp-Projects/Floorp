@@ -20,7 +20,7 @@
 #include "nsMsgSearchCore.h"
 #include "nsMsgSearchAdapter.h"
 
-NS_IMETHODIMP nsMsgSearchAdapter::FindTargetFolder(nsMsgResultElement *,nsIMsgFolder * *)
+NS_IMETHODIMP nsMsgSearchAdapter::FindTargetFolder(const nsMsgResultElement *,nsIMsgFolder * *)
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }

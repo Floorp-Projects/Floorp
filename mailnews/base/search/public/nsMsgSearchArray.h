@@ -16,44 +16,32 @@
  * Reserved.
  */
 
-#ifndef _nsMsgFilterCore_H_
-#define _nsMsgFilterCore_H_
+#ifndef __nsMsgSearchArray_h
+#define __nsMsgSearchArray_h
 
-#include "MailNewsTypes.h"
-#include "nsString.h"
-#include "nsMsgSearchCore.h"
+#include "nsVoidArray.h"
 
-typedef enum
- {
-	 nsMsgFilterActionNone,				/* uninitialized state */
-     nsMsgFilterActionMoveToFolder,
-     nsMsgFilterActionChangePriority,
-     nsMsgFilterActionDelete,
-     nsMsgFilterActionMarkRead,
-     nsMsgFilterActionKillThread,
-	 nsMsgFilterActionWatchThread
- } nsMsgRuleActionType;
+class nsMsgSearchTerm;
+class nsMsgSearchScopeTerm;
+class nsMsgSearchValue;
 
-typedef enum 
+class nsMsgSearchTermArray : public nsVoidArray
 {
-	nsMsgFilterInboxRule = 0x1,
-	nsMsgFilterInboxJavaScript = 0x2,
-	nsMsgFilterInbox = 0x3,
-	nsMsgFilterNewsRule = 0x4,
-	nsMsgFilterNewsJavaScript = 0x8,
-	nsMsgFilterNews=0xb,
-	nsMsgFilterAll=0xf
-} nsMsgFilterType;
+public:
+	nsMsgSearchTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchTerm*) nsVoidArray::ElementAt(i); }
+};
 
-typedef enum
+class nsMsgSearchValueArray : public nsVoidArray
 {
-	nsMsgFilterUp,
-	nsMsgFilterDown
-} nsMsgFilterMotion;
+public:
+	nsMsgSearchValue *ElementAt(PRUint32 i) const { return (nsMsgSearchValue*) nsVoidArray::ElementAt(i); }
+};
 
-
-typedef PRInt32 nsMsgFilterIndex;
-
+class nsMsgSearchScopeTermArray : public nsVoidArray
+{
+public:
+	nsMsgSearchScopeTerm *ElementAt(PRUint32 i) const { return (nsMsgSearchScopeTerm*) nsVoidArray::ElementAt(i); }
+};
 
 #endif
 

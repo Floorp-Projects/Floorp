@@ -36,9 +36,12 @@ public:
 	NS_IMETHOD ValidateTerms ();
 	NS_IMETHOD Search ();
 	NS_IMETHOD Abort ();
-	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,nsMsgSearchTermArray &termList, nsMsgSearchScopeTerm *scope, 
-                                        nsIMsgDatabase * db, 
-												char * headers, PRUint32 headerSize);
+	static nsresult  MatchTermsForFilter(nsIMsgDBHdr * msgToMatch,
+                                         nsMsgSearchTermArray &termList,
+                                         nsMsgSearchScopeTerm *scope, 
+                                         nsIMsgDatabase * db, 
+                                         const char * headers,
+                                         PRUint32 headerSize);
 
 	static nsresult MatchTermsForSearch(nsIMsgDBHdr * msgTomatch, nsMsgSearchTermArray & termList, nsMsgSearchScopeTerm *scope,
                                                 nsIMsgDatabase *db);
@@ -51,9 +54,13 @@ public:
 
 
 protected:
-	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,nsMsgSearchTermArray &termList, nsMsgSearchScopeTerm *scope, 
-                                        nsIMsgDatabase * db, 
-										char * headers, PRUint32 headerSize, PRBool ForFilters);
+	static	nsresult MatchTerms(nsIMsgDBHdr *msgToMatch,
+                                nsMsgSearchTermArray &termList,
+                                nsMsgSearchScopeTerm *scope, 
+                                nsIMsgDatabase * db, 
+                                const char * headers,
+                                PRUint32 headerSize,
+                                PRBool ForFilters);
 	struct ListContext *m_cursor;
 	nsIMsgDatabase *m_db;
 	struct ListContext *m_listContext;

@@ -24,6 +24,7 @@
 #include "nsIMsgFilterHitNotify.h"
 #include "nsFileStream.h"
 #include "nsMsgUtils.h"
+#include "nsMsgSearchTerm.h"
 
 const int16 kFileVersion = 7;
 const int16 k45Version = 6;
@@ -57,7 +58,7 @@ NS_IMETHODIMP nsMsgFilterList::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_NOINTERFACE;
 }   
 
-NS_IMETHODIMP nsMsgFilterList::CreateFilter(char *name,class nsIMsgFilter **aFilter)
+NS_IMETHODIMP nsMsgFilterList::CreateFilter(const char *name,class nsIMsgFilter **aFilter)
 {
 	if (!aFilter)
 		return NS_ERROR_NULL_POINTER;
@@ -73,7 +74,7 @@ NS_IMETHODIMP nsMsgFilterList::CreateFilter(char *name,class nsIMsgFilter **aFil
 	return NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsMsgFilterList::EnableLogging(PRBool enable)
+NS_IMETHODIMP nsMsgFilterList::SetLoggingEnabled(PRBool enable)
 {
 	m_loggingEnabled = enable;
 	return NS_OK;
@@ -84,7 +85,7 @@ NS_IMETHODIMP nsMsgFilterList::GetFolderForFilterList(class nsIMsgFolder **aFold
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFilterList::LoggingEnabled(PRBool *aResult)
+NS_IMETHODIMP nsMsgFilterList::GetLoggingEnabled(PRBool *aResult)
 {
 	if (!aResult)
 		return NS_ERROR_NULL_POINTER;
@@ -101,8 +102,14 @@ NS_IMETHODIMP nsMsgFilterList::SaveToFile(nsIOFileStream *stream)
 	return SaveTextFilters();
 }
 
-NS_IMETHODIMP nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterType filterType, nsIMsgDBHdr *msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, 
-					char *headers, PRUint32 headersSize, nsIMsgFilterHitNotify *listener)
+NS_IMETHODIMP
+nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
+                                   nsIMsgDBHdr *msgHdr,
+                                   nsIMsgFolder *folder,
+                                   nsIMsgDatabase *db, 
+                                   const char *headers,
+                                   PRUint32 headersSize,
+                                   nsIMsgFilterHitNotify *listener)
 {
 	nsIMsgFilter	*filter;
 	PRUint32		filterCount = 0;
@@ -115,9 +122,9 @@ NS_IMETHODIMP nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterType filterType, nsI
 		if (NS_SUCCEEDED(GetFilterAt(filterIndex, &filter)))
 		{
 			PRBool isEnabled;
-			nsMsgFilterType curFilterType;
+			nsMsgFilterTypeType curFilterType;
 
-			filter->IsFilterEnabled(&isEnabled);
+			filter->GetEnabled(&isEnabled);
 			if (!isEnabled)
 				continue;
 
@@ -142,7 +149,7 @@ NS_IMETHODIMP nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterType filterType, nsI
 }
 
 #if 0
-nsresult nsMsgFilterList::Open(nsMsgFilterType type, nsIMsgFolder *folder, nsIMsgFilterList **filterList)
+nsresult nsMsgFilterList::Open(nsMsgFilterTypeType type, nsIMsgFolder *folder, nsIMsgFilterList **filterList)
 {
 	nsresult	err = NS_OK;
 	nsMsgFilterList	*newFilterList;
@@ -430,7 +437,7 @@ nsresult nsMsgFilterList::LoadTextFilters()
 		case nsMsgFilterAttribType:
 			if (m_curFilter)
 			{
-				m_curFilter->SetType((nsMsgFilterType) value.ToInteger(&intToStringResult, 10));
+				m_curFilter->SetType((nsMsgFilterTypeType) value.ToInteger(&intToStringResult, 10));
 			}
 			break;
 		case nsMsgFilterAttribScriptFile:
@@ -441,9 +448,9 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			m_curFilter->m_action.m_type = nsMsgFilter::GetActionForFilingStr(value);
 			break;
 		case nsMsgFilterAttribActionValue:
-			if (m_curFilter->m_action.m_type == nsMsgFilterActionMoveToFolder)
+			if (m_curFilter->m_action.m_type == nsMsgFilterAction::MoveToFolder)
 				err = m_curFilter->ConvertMoveToFolderValue(value);
-			else if (m_curFilter->m_action.m_type == nsMsgFilterActionChangePriority)
+			else if (m_curFilter->m_action.m_type == nsMsgFilterAction::ChangePriority)
 			{
 				nsMsgPriority outPriority;
 				nsresult res = NS_MsgGetPriorityFromString(value.GetBuffer(), &outPriority);
@@ -522,7 +529,7 @@ nsresult nsMsgFilterList::ParseCondition(nsString2 &value)
 		{
 			nsMsgSearchTerm	*newTerm = new nsMsgSearchTerm;
 			if (newTerm)
-				newTerm->m_booleanOp = ANDTerm ? nsMsgSearchBooleanAND : nsMsgSearchBooleanOR;
+				newTerm->m_booleanOp = ANDTerm ? nsMsgSearchBooleanOp::BooleanAND : nsMsgSearchBooleanOp::BooleanOR;
 			if (newTerm->DeStreamNew(termDup, PL_strlen(termDup)) == NS_OK)
 				m_curFilter->GetTermList()->AppendElement(newTerm);
 			PR_FREEIF(termDup);
@@ -705,7 +712,7 @@ nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *fil
 // If motion not possible in that direction, we still return success.
 // We could return an error if the FE's want to beep or something.
 nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex, 
-										 nsMsgFilterMotion motion)
+										 nsMsgFilterMotionValue motion)
 {
 	nsIMsgFilter	*tempFilter;
 
@@ -715,14 +722,14 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 		return NS_ERROR_INVALID_ARG;
 
 	tempFilter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
-	if (motion == nsMsgFilterUp)
+	if (motion == nsMsgFilterMotion::Up)
 	{
 		if (filterIndex == 0)
 			return NS_OK;
 		m_filters->ReplaceElementAt(m_filters->ElementAt(filterIndex - 1), filterIndex);
 		m_filters->ReplaceElementAt(tempFilter, filterIndex - 1);
 	}
-	else if (motion == nsMsgFilterDown)
+	else if (motion == nsMsgFilterMotion::Down)
 	{
 		if (filterIndex + 1 > filterCount - 1)
 			return NS_OK;

@@ -24,6 +24,7 @@
 #include "nsMsgUtils.h"
 #include "nsFileStream.h"
 #include "nsMsgLocalSearch.h"
+#include "nsMsgSearchTerm.h"
 
 static const char *kImapPrefix = "//imap:";
 
@@ -64,7 +65,7 @@ NS_IMETHODIMP nsMsgFilter::QueryInterface(REFNSIID aIID, void** aResult)
     return NS_NOINTERFACE;
 }   
 
-NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterType *aResult)
+NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterTypeType *aResult)
 {
 	if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
@@ -73,13 +74,7 @@ NS_IMETHODIMP nsMsgFilter::GetFilterType(nsMsgFilterType *aResult)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFilter::EnableFilter(PRBool enable)
-{
-	m_enabled = enable;
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgFilter::IsFilterEnabled(PRBool *aResult)
+NS_IMETHODIMP nsMsgFilter::GetEnabled(PRBool *aResult)
 {
 	if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
@@ -113,7 +108,7 @@ NS_IMETHODIMP nsMsgFilter::AddTerm(
 	nsMsgSearchOperator op,         /* operator e.g. opContains               */
 	nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
 	PRBool BooleanAND, 	       /* TRUE if AND is the boolean operator. FALSE if OR is the boolean operators */
-	char * arbitraryHeader)       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
+	const char * arbitraryHeader)       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
 {
 	return NS_OK;
 }
@@ -145,7 +140,7 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 		*op = term->m_operator;
 		*value = term->m_value;
 		*booleanAnd = term->m_booleanOp;
-		if (term->m_attribute == nsMsgSearchAttribOtherHeader)
+		if (term->m_attribute == nsMsgSearchAttrib::OtherHeader)
 			*arbitraryHeader = PL_strdup(term->m_arbitraryHeader.GetBuffer());
 	}
 	return NS_OK;
@@ -175,10 +170,10 @@ NS_IMETHODIMP nsMsgFilter::SetAction(nsMsgRuleActionType type, void *value)
 {
 	switch (type)
 	{
-	case nsMsgFilterActionMoveToFolder:
+	case nsMsgFilterAction::MoveToFolder:
 		m_action.m_folderName = (const char *) value;
 		break;
-	case nsMsgFilterActionChangePriority:
+	case nsMsgFilterAction::ChangePriority:
 		m_action.m_priority = (nsMsgPriority) (PRInt32)  value;
 		break;
 	default:
@@ -192,10 +187,10 @@ NS_IMETHODIMP nsMsgFilter::GetAction(nsMsgRuleActionType *type, void **value)
 	*type = m_action.m_type;
 	switch (m_action.m_type)
 	{
-	case nsMsgFilterActionMoveToFolder:
+	case nsMsgFilterAction::MoveToFolder:
 		* (const char **) value = m_action.m_folderName.GetBuffer();
 		break;
-	case nsMsgFilterActionChangePriority:
+	case nsMsgFilterAction::ChangePriority:
 		* (nsMsgPriority *) value = m_action.m_priority;
 		break;
 	default:
@@ -237,7 +232,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 		*stream << "\n";
 		const char *actionStr = GetActionStr(actionType);
 		char *actionValue = "";
-		if (actionType == nsMsgFilterActionMoveToFolder)
+		if (actionType == nsMsgFilterAction::MoveToFolder)
 			actionValue = (char *) value;
 		*stream << "Action = ";
 		*stream << actionStr;
@@ -245,7 +240,7 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 		*stream << actionValue;
 		*stream << "\n\n";
 //		XP_FilePrintf(*m_logFile, "Action = %s %s\n\n", actionStr, actionValue);
-		if (actionType == nsMsgFilterActionMoveToFolder)
+		if (actionType == nsMsgFilterAction::MoveToFolder)
 		{
 			nsString msgId;
 			msgHdr->GetMessageId(msgId);
@@ -262,10 +257,10 @@ NS_IMETHODIMP nsMsgFilter::LogRuleHit(nsOutputStream *stream, nsIMsgDBHdr *msgHd
 }
 
 
-NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, char *headers, PRUint32 headersSize)
+NS_IMETHODIMP nsMsgFilter::MatchHdr(nsIMsgDBHdr	*msgHdr, nsIMsgFolder *folder, nsIMsgDatabase *db, const char *headers, PRUint32 headersSize)
 {
 
-	nsMsgSearchScopeTerm scope (nsMsgSearchScopeMailFolder, folder);
+	nsMsgSearchScopeTerm scope (nsMsgSearchScope::MailFolder, folder);
 	return nsMsgSearchOfflineMail::MatchTermsForFilter(msgHdr, m_termList,
                                                            &scope,
                                                            db, 
@@ -375,14 +370,14 @@ nsresult nsMsgFilter::SaveRule()
 		return err;
 	switch(m_action.m_type)
 	{
-	case nsMsgFilterActionMoveToFolder:
+	case nsMsgFilterAction::MoveToFolder:
 		{
 		nsString2 imapTargetString(kImapPrefix, eOneByte);
 		imapTargetString += m_action.m_folderName;
 		err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, imapTargetString);
 		}
 		break;
-	case nsMsgFilterActionChangePriority:
+	case nsMsgFilterAction::ChangePriority:
 		{
 			nsString2 priority(eOneByte);
 			NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
@@ -407,7 +402,7 @@ nsresult nsMsgFilter::SaveRule()
 		if (condition.Length() > 1)
 			condition += ' ';
 
-		if (term->m_booleanOp == nsMsgSearchBooleanOR)
+		if (term->m_booleanOp == nsMsgSearchBooleanOp::BooleanOR)
 			condition += "OR (";
 		else
 			condition += "AND (";
@@ -431,7 +426,7 @@ nsresult nsMsgFilter::SaveRule()
 struct RuleActionsTableEntry
 {
 	nsMsgRuleActionType	action;
-	nsMsgFilterType		supportedTypes;
+	nsMsgFilterTypeType		supportedTypes;
 	PRInt32				xp_strIndex;
 	const char			*actionFilingStr;	/* used for filing out filters, don't translate! */
 };
@@ -440,12 +435,12 @@ struct RuleActionsTableEntry
 //  we can't initialize this structure directly, so we have to do it in two phases.
 static struct RuleActionsTableEntry ruleActionsTable[] =
 {
-	{ nsMsgFilterActionMoveToFolder,	nsMsgFilterInbox,	0, /*XP_FILTER_MOVE_TO_FOLDER*/		"Move to folder" },
-	{ nsMsgFilterActionChangePriority,	nsMsgFilterInbox,	0, /*XP_FILTER_CHANGE_PRIORITY*/	"Change priority"},
-	{ nsMsgFilterActionDelete,			nsMsgFilterAll,		0, /*XP_FILTER_DELETE */			"Delete"},
-	{ nsMsgFilterActionMarkRead,		nsMsgFilterAll,		0, /*XP_FILTER_MARK_READ */			"Mark read"},
-	{ nsMsgFilterActionKillThread,		nsMsgFilterAll,		0, /*XP_FILTER_KILL_THREAD */		"Ignore thread"},
-	{ nsMsgFilterActionWatchThread,		nsMsgFilterAll,		0, /*XP_FILTER_WATCH_THREAD */		"Watch thread"}
+	{ nsMsgFilterAction::MoveToFolder,	nsMsgFilterType::Inbox,	0, /*XP_FILTER_MOVE_TO_FOLDER*/		"Move to folder" },
+	{ nsMsgFilterAction::ChangePriority,	nsMsgFilterType::Inbox,	0, /*XP_FILTER_CHANGE_PRIORITY*/	"Change priority"},
+	{ nsMsgFilterAction::Delete,			nsMsgFilterType::All,		0, /*XP_FILTER_DELETE */			"Delete"},
+	{ nsMsgFilterAction::MarkRead,		nsMsgFilterType::All,		0, /*XP_FILTER_MARK_READ */			"Mark read"},
+	{ nsMsgFilterAction::KillThread,		nsMsgFilterType::All,		0, /*XP_FILTER_KILL_THREAD */		"Ignore thread"},
+	{ nsMsgFilterAction::WatchThread,		nsMsgFilterType::All,		0, /*XP_FILTER_WATCH_THREAD */		"Watch thread"}
 };
 
 const char *nsMsgFilter::GetActionStr(nsMsgRuleActionType action)
@@ -485,7 +480,7 @@ nsMsgRuleActionType nsMsgFilter::GetActionForFilingStr(nsString2 &actionStr)
 		if (actionStr.Equals(ruleActionsTable[i].actionFilingStr))
 			return ruleActionsTable[i].action;
 	}
-	return nsMsgFilterActionNone;
+	return nsMsgFilterAction::None;
 }
 
 #ifdef DEBUG

@@ -1,0 +1,58 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "MailNewsTypes2.idl"
+#include "nsMsgSearchCore.idl"
+
+
+typedef long nsMsgFilterTypeType;
+
+[scriptable]
+interface nsMsgFilterType {
+    /* these longs are all actually of type nsMsgFilterTypeType */
+	const long InboxRule = 0x1;
+	const long InboxJavaScript = 0x2;
+	const long Inbox = 0x3;
+	const long NewsRule = 0x4;
+	const long NewsJavaScript = 0x8;
+	const long News=0xb;
+	const long All=0xf;
+};
+
+typedef long nsMsgFilterMotionValue;
+
+typedef long nsMsgFilterIndex;
+
+typedef long nsMsgRuleActionType;
+
+[scriptable]
+interface nsMsgFilterAction {
+  
+    /* these longs are all actually of type nsMsgFilterActionType */
+    const long None=0;				/* uninitialized state */
+    const long MoveToFolder=1;
+    const long ChangePriority=2;
+    const long Delete=3;
+    const long MarkRead=4;
+    const long KillThread=5;
+    const long WatchThread=6;
+};
+
+
+#endif
+

@@ -24,6 +24,9 @@
 #include "nsMsgLocalSearch.h"
 #include "nsIStreamListener.h"
 #include "nsParseMailbox.h"
+#include "nsMsgSearchBoolExpression.h"
+#include "nsMsgSearchTerm.h"
+#include "nsMsgResultElement.h"
 
 extern "C"
 {
@@ -39,7 +42,7 @@ extern "C"
 nsMsgSearchBoolExpression::nsMsgSearchBoolExpression() : m_encodingStr(eOneByte)
 {
     m_term = nsnull;
-    m_boolOp = nsMsgSearchBooleanAND;
+    m_boolOp = nsMsgSearchBooleanOp::BooleanAND;
     m_evalValue = FALSE;
     m_leftChild = nsnull;
     m_rightChild = nsnull;
@@ -60,7 +63,7 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchTerm * newTerm,
 }
 
 
-nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchBoolExpression * expr1, nsMsgSearchBoolExpression * expr2, nsMsgSearchBooleanOp boolOp)
+nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchBoolExpression * expr1, nsMsgSearchBoolExpression * expr2, nsMsgSearchBooleanOperator boolOp)
 // we are creating an expression which contains two sub expressions and a boolean operator used to combine
 // them.
 {
@@ -137,13 +140,13 @@ PRBool nsMsgSearchBoolExpression::OfflineEvaluate()
     if (m_rightChild)
         result2 = m_rightChild->OfflineEvaluate();
 
-    if (m_boolOp == nsMsgSearchBooleanOR)
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR)
     {
         if (result1 || result2)
             return TRUE;
     }
     
-    if (m_boolOp == nsMsgSearchBooleanAND)
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
     {
         if (result1 && result2)
             return TRUE;
@@ -165,9 +168,9 @@ PRInt32 nsMsgSearchBoolExpression::CalcEncodeStrSize()
         return 0;    
     if (m_term)  // are we a leaf node?
         return m_encodingStr.Length();
-    if (m_boolOp == nsMsgSearchBooleanOR)
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR)
         return sizeOfORTerm + m_leftChild->CalcEncodeStrSize() + m_rightChild->CalcEncodeStrSize();
-    if (m_boolOp == nsMsgSearchBooleanAND)
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
         return sizeOfANDTerm + m_leftChild->CalcEncodeStrSize() + m_rightChild->CalcEncodeStrSize();
     return 0;
 }
@@ -187,7 +190,7 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsString2 * buffer)
     
     // add encode strings of each sub expression
     PRInt32 numBytesAdded = 0;
-    if (m_boolOp == nsMsgSearchBooleanOR) 
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR) 
     {
         *buffer += " (OR";
 
@@ -204,7 +207,7 @@ PRInt32 nsMsgSearchBoolExpression::GenerateEncodeStr(nsString2 * buffer)
         *buffer += ')';
     }
     
-    if (m_boolOp == nsMsgSearchBooleanAND)
+    if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
     {
         buffer[0] = '\0';
         numBytesAdded = m_leftChild->GenerateEncodeStr(buffer); // insert left expression
@@ -448,7 +451,7 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
                                                            nsMsgSearchTermArray & termList,
                                                            nsMsgSearchScopeTerm * scope,
                                                            nsIMsgDatabase * db, 
-                                                           char * headers,
+                                                           const char * headers,
                                                            PRUint32 headerSize)
 {
     return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, TRUE);
@@ -464,12 +467,12 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch,
 }
 
 nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
-                                                           nsMsgSearchTermArray & termList,
-                                                           nsMsgSearchScopeTerm * scope,
-                                                           nsIMsgDatabase * db, 
-                                                           char * headers,
-                                                           PRUint32 headerSize,
-                                                           PRBool Filtering) 
+                                            nsMsgSearchTermArray & termList,
+                                            nsMsgSearchScopeTerm * scope,
+                                            nsIMsgDatabase * db, 
+                                            const char * headers,
+                                            PRUint32 headerSize,
+                                            PRBool Filtering) 
 {
     nsresult err = NS_OK;
     nsString  recipients;
@@ -501,18 +504,18 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 
         switch (pTerm->m_attribute)
         {
-        case nsMsgSearchAttribSender:
+        case nsMsgSearchAttrib::Sender:
             msgToMatch->GetAuthor(matchString);
             err = pTerm->MatchRfc822String (nsAutoCString(matchString), charset);
             break;
-        case nsMsgSearchAttribSubject:
+        case nsMsgSearchAttrib::Subject:
 			{
             msgToMatch->GetSubject(matchString /* , TRUE */);
 			nsString2 singleByteString(matchString, eOneByte); 
             err = pTerm->MatchString (&singleByteString, charset);
 			}
             break;
-        case nsMsgSearchAttribToOrCC:
+        case nsMsgSearchAttrib::ToOrCC:
         {
             nsresult errKeepGoing = pTerm->MatchAllBeforeDeciding() ? NS_OK : NS_COMFALSE;
             msgToMatch->GetRecipients(recipients);
@@ -524,7 +527,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             }
         }
             break;
-        case nsMsgSearchAttribBody:
+        case nsMsgSearchAttrib::Body:
 			{
 				nsMsgKey messageKey;
 				PRUint32 lineCount;
@@ -533,46 +536,46 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 	            err = pTerm->MatchBody (scope, messageKey, lineCount, charset, msgToMatch, db);
 			}
             break;
-        case nsMsgSearchAttribDate:
+        case nsMsgSearchAttrib::Date:
 			{
 				PRTime date;
 				msgToMatch->GetDate(&date);
 				err = pTerm->MatchDate (date);
 			}
             break;
-        case nsMsgSearchAttribMsgStatus:
+        case nsMsgSearchAttrib::MsgStatus:
             err = pTerm->MatchStatus (msgFlags);
             break;
-        case nsMsgSearchAttribPriority:
+        case nsMsgSearchAttrib::Priority:
 			{
 				nsMsgPriority msgPriority;
 				msgToMatch->GetPriority(&msgPriority);
 				err = pTerm->MatchPriority (msgPriority);
 			}
             break;
-        case nsMsgSearchAttribSize:
+        case nsMsgSearchAttrib::Size:
 			{
 				PRUint32 messageSize;
 				msgToMatch->GetMessageSize(&messageSize);
 				err = pTerm->MatchSize (messageSize);
 			}
             break;
-        case nsMsgSearchAttribTo:
+        case nsMsgSearchAttrib::To:
             msgToMatch->GetRecipients(recipients);
             err = pTerm->MatchRfc822String(nsAutoCString(recipients), charset);
             break;
-        case nsMsgSearchAttribCC:
+        case nsMsgSearchAttrib::CC:
             msgToMatch->GetCCList(ccList);
             err = pTerm->MatchRfc822String (nsAutoCString(ccList), charset);
             break;
-        case nsMsgSearchAttribAgeInDays:
+        case nsMsgSearchAttrib::AgeInDays:
 			{
 				PRTime date;
 				msgToMatch->GetDate(&date);
 	            err = pTerm->MatchAge (date);
 			}
             break;
-        case nsMsgSearchAttribOtherHeader:
+        case nsMsgSearchAttrib::OtherHeader:
 			{
 				PRUint32 lineCount;
 				msgToMatch->GetLineCount(&lineCount);
@@ -696,7 +699,7 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
 
 			// Don't even bother to look at expunged messages awaiting compression
 			pHeaders->GetFlags(&msgFlags);
-            pValue->attribute = nsMsgSearchAttribSubject;
+            pValue->attribute = nsMsgSearchAttrib::Subject;
             char *reString = (msgFlags & MSG_FLAG_HAS_RE) ? "Re: " : "";
             pHeaders->GetSubject(subject);
             pValue->u.string = PR_smprintf ("%s%s", reString, (const char*) nsAutoCString(subject)); // hack. invoke cast operator by force
@@ -705,7 +708,7 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribSender;
+            pValue->attribute = nsMsgSearchAttrib::Sender;
 			nsString author;
             pHeaders->GetAuthor(author);
 			pValue->u.string = PL_strdup((const char *) nsAutoCString(author));
@@ -715,28 +718,28 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribDate;
+            pValue->attribute = nsMsgSearchAttrib::Date;
             pHeaders->GetDate(&pValue->u.date);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribMsgStatus;
+            pValue->attribute = nsMsgSearchAttrib::MsgStatus;
             pHeaders->GetFlags(&pValue->u.msgStatus);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribPriority;
+            pValue->attribute = nsMsgSearchAttrib::Priority;
             pHeaders->GetPriority(&pValue->u.priority);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribLocation;
+            pValue->attribute = nsMsgSearchAttrib::Location;
 #ifdef HAVE_SEARCH_PORT
             pValue->u.string = PL_strdup(m_scope->m_folder->GetName());
 #endif
@@ -745,14 +748,14 @@ nsresult nsMsgSearchOfflineMail::AddResultElement (nsIMsgDBHdr *pHeaders)
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribMessageKey;
+            pValue->attribute = nsMsgSearchAttrib::MessageKey;
             pHeaders->GetMessageKey(&pValue->u.key);
             newResult->AddValue (pValue);
         }
         pValue = new nsMsgSearchValue;
         if (pValue)
         {
-            pValue->attribute = nsMsgSearchAttribSize;
+            pValue->attribute = nsMsgSearchAttrib::Size;
             pHeaders->GetMessageSize(&pValue->u.size);
             newResult->AddValue (pValue);
         }
