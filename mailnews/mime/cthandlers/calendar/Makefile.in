@@ -29,10 +29,7 @@ LIBRARY_NAME=mimect-cal
 
 CPPSRCS = \
 		mimexpcom.cpp	\
-		$(NULL)
-
-CSRCS = \
-		mimecal.c	\
+		mimecal.cpp	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
