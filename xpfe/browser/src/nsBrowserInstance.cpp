@@ -1552,7 +1552,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
   
   if (chrome)
   {
-      chrome->AppendRelativeUnixPath("netwerk/content/default/");
+      chrome->AppendRelativeUnixPath("netwerk/content/");
       chrome->AppendRelativeUnixPath(scheme);
       PRBool exists;
       chrome->Exists(&exists);
@@ -1561,7 +1561,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
       {
           nsAutoString iconURIString;
   
-          iconURIString.SetString("chrome://netwerk/content/default/");
+          iconURIString.SetString("chrome://netwerk/content/");
           iconURIString.Append(scheme);
           iconURIString.Append("/working.gif");
 
@@ -1709,7 +1709,7 @@ end:
   
   if (chrome)
   {
-      chrome->AppendRelativeUnixPath("netwerk/content/default/");
+      chrome->AppendRelativeUnixPath("netwerk/content/");
       chrome->AppendRelativeUnixPath(scheme);
       PRBool exists;
       chrome->Exists(&exists);
@@ -1720,7 +1720,7 @@ end:
         aUrl->GetScheme(&scheme);
         nsAutoString iconURIString;
 
-        iconURIString.SetString("chrome://netwerk/content/default/");
+        iconURIString.SetString("chrome://netwerk/content/");
         iconURIString.Append(scheme);
         if (NS_SUCCEEDED(aStatus))
             iconURIString.Append("/successful.gif");
