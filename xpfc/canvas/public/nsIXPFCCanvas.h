@@ -32,6 +32,7 @@
 #include "nsIRenderingContext.h"
 
 class nsIModel;
+class nsIXPFCCommand;
 
 // IID for the nsIXPFCCanvas interface
 #define NS_IXPFC_CANVAS_IID   \
@@ -612,6 +613,10 @@ public:
 
   NS_IMETHOD FindLargestTabGroup(PRUint32& aTabGroup) = 0;
   NS_IMETHOD FindLargestTabID(PRUint32 aTabGroup, PRUint32& aTabID) = 0;
+
+  NS_IMETHOD SetCommand(nsString& aCommand) = 0;
+  NS_IMETHOD_(nsString&) GetCommand() = 0;
+  NS_IMETHOD_(nsEventStatus) ProcessCommand(nsIXPFCCommand * aCommand) = 0;
 
   /**
    * Dump the canvas hierarchy to a file

@@ -37,6 +37,7 @@
 #include "nsxpfcCIID.h"
 #include "nsxpfcstrings.h"
 #include "nsXPFCMethodInvokerCommand.h"
+#include "nsIWebViewerContainer.h"
 
 #include "nsXPFCToolkit.h"
 
@@ -92,8 +93,9 @@ nsXPFCCanvas :: nsXPFCCanvas(nsISupports* outer) :
   mChildWidgets = nsnull;
 
   // XXX: We should probably auto-generate unique names here
-  mNameID = "Canvas";
-  mLabel  = "Default Label";
+  mNameID  = "Canvas";
+  mLabel   = "Default Label";
+  mCommand = "";
 
   mOpacity = 1.0;
   mVisibility = PR_TRUE;
@@ -524,6 +526,10 @@ nsresult nsXPFCCanvas :: SetParameter(nsString& aKey, nsString& aValue)
   } else if (aKey.EqualsIgnoreCase(XPFC_STRING_VGAP)) {
 
     ((nsBoxLayout *)GetLayout())->SetVerticalGap(aValue.ToInteger(&error));
+
+  } else if (aKey.EqualsIgnoreCase(XPFC_STRING_COMMAND)) {
+    
+    SetCommand(aValue);
 
   } 
 
@@ -1873,6 +1879,26 @@ nsresult nsXPFCCanvas::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aComma
   return NS_OK;
 }
 
+/*
+ *  If we cannot process the command, pass it up the food chain
+ */
+
+nsEventStatus nsXPFCCanvas::ProcessCommand(nsIXPFCCommand * aCommand)
+{
+  if (GetParent())
+    return (GetParent()->ProcessCommand(aCommand));
+ 
+  // XXX: Until we figure out the relationship of embeddable widgets
+  //      and containing windows, pass directly to our owner...
+
+  nsIWebViewerContainer * container = gXPFCToolkit->GetCanvasManager()->GetWebViewerContainer();
+
+  if (container)
+    return (container->ProcessCommand(aCommand));
+
+  return (nsEventStatus_eIgnore); 
+}
+
 nsresult nsXPFCCanvas::Action(nsIXPFCCommand * aCommand)
 {
 
@@ -2099,3 +2125,14 @@ void nsXPFCCanvas::NotifyError(nsIImageRequest *aImageRequest,
 
 
 
+
+nsresult nsXPFCCanvas :: SetCommand(nsString& aCommand)
+{
+  mCommand = aCommand;
+  return NS_OK;
+}
+
+nsString& nsXPFCCanvas :: GetCommand()
+{
+  return (mCommand);
+}

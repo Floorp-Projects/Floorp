@@ -37,6 +37,7 @@ public:
   NS_IMETHOD GetClassPreferredSize(nsSize& aSize);
   NS_IMETHOD CreateWidget();
   NS_IMETHOD SetLabel(nsString& aString);
+  NS_IMETHOD_(nsEventStatus) OnKeyDown(nsGUIEvent *aEvent);
 
 protected:
   ~nsXPFCTextWidget();

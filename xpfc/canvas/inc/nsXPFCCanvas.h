@@ -177,6 +177,9 @@ public:
   NS_IMETHOD DeleteChildren();
   NS_IMETHOD DeleteChildren(PRUint32 aCount);
 
+  NS_IMETHOD SetCommand(nsString& aCommand);
+  NS_IMETHOD_(nsString&) GetCommand();
+
   NS_IMETHOD_(PRBool) PaintRequested();
 
   // nsIXPFCObserver methods
@@ -240,6 +243,7 @@ public:
   virtual void NotifyError(nsIImageRequest *aImageRequest,
                            nsImageError aErrorType);
 
+  NS_IMETHOD_(nsEventStatus) ProcessCommand(nsIXPFCCommand * aCommand) ;
 
 
 #if defined(DEBUG) && defined(XP_PC)
@@ -279,6 +283,7 @@ private:
   PRUint32        mTabID;
   PRUint32        mTabGroup;
   nsIModel *      mModel;
+  nsString        mCommand;
 
 protected:
 

@@ -22,6 +22,9 @@
 #include "nsITextWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsXPFCToolkit.h"
+#include "nsXPFCActionCommand.h"
+#include "nsRepository.h"
+#include "nsxpfcCIID.h"
 
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCXPFCTextWidgetCID,   NS_XPFC_TEXTWIDGET_CID);
@@ -32,6 +35,8 @@ static NS_DEFINE_IID(kIWidgetIID,           NS_IWIDGET_IID);
 
 #define DEFAULT_WIDTH  50
 #define DEFAULT_HEIGHT 50
+
+#define MAX_SIZE 2048
 
 nsXPFCTextWidget :: nsXPFCTextWidget(nsISupports* outer) : nsXPFCCanvas(outer)
 {
@@ -147,4 +152,76 @@ nsresult nsXPFCTextWidget :: SetLabel(nsString& aString)
 {
   nsXPFCCanvas::SetLabel(aString);
   return NS_OK;
+}
+
+nsEventStatus nsXPFCTextWidget::OnKeyDown(nsGUIEvent *aEvent)
+{  
+
+  nsresult res = NS_OK;
+
+  if (((nsKeyEvent*)aEvent)->keyCode == NS_VK_RETURN)
+  {
+    /*
+     * We hit the enter key in the edit field.
+     *
+     * Pass this command up the chain....
+     */
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsString command = GetCommand();
+    PRUint32 offset = command.Find("$label");
+
+    // If this command contains a $Label, replace it with
+    // our text
+
+    if (offset != -1)
+    {
+
+      nsITextWidget * text_widget = nsnull;
+
+      res = QueryInterface(kInsTextWidgetIID,(void**)&text_widget);
+
+      if (NS_OK == res)
+      {
+        nsString text ;
+        PRUint32 size;
+                
+        text_widget->GetText(text, MAX_SIZE, size);
+
+        command.Cut(offset,6);
+        command.Insert(text,offset,text.Length());
+
+        NS_RELEASE(text_widget);
+
+      }
+    }
+
+    // Create an Action Command and pass it on...
+
+    nsXPFCActionCommand * action;
+
+    static NS_DEFINE_IID(kCXPFCActionCommandCID, NS_XPFC_ACTION_COMMAND_CID);
+    static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+
+    res = nsRepository::CreateInstance(kCXPFCActionCommandCID, 
+                                       nsnull, 
+                                       kXPFCCommandIID, 
+                                       (void **)&action);
+
+    if (NS_OK != res)
+      return status ;
+
+    action->Init();
+
+    action->mAction = command;
+
+    status = ProcessCommand(action);
+
+    NS_RELEASE(action);
+
+    return (status);
+
+  }
+
+  return (nsXPFCCanvas::OnKeyDown(aEvent));
 }
