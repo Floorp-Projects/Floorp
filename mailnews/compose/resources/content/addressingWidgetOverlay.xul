@@ -47,12 +47,12 @@ Rights Reserved.
 								    onclick="awNotAnEmptyArea(event)"
 								    oncommand="contentChanged=true;">
 							        <menupopup>
-							            <menuitem value="&toAddr.label;"/>
-							            <menuitem value="&ccAddr.label;"/>
-							            <menuitem value="&bccAddr.label;"/>
-							            <menuitem value="&replyAddr.label;"/>
-							            <menuitem value="&newsgroupsAddr.label;"/>
-							            <menuitem value="&followupAddr.label;"/>
+							            <menuitem data="addr_to" value="&toAddr.label;"/>
+							            <menuitem data="addr_cc" value="&ccAddr.label;"/>
+							            <menuitem data="addr_bcc" value="&bccAddr.label;"/>
+							            <menuitem data="addr_reply" value="&replyAddr.label;"/>
+							            <menuitem data="addr_newsgroups" value="&newsgroupsAddr.label;"/>
+							            <menuitem data="addr_followup" value="&followupAddr.label;"/>
 							        </menupopup>
 							    </menulist>
 							

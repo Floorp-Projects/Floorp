@@ -62,7 +62,7 @@ function Recipients2CompFields(msgCompFields)
 	    	fieldValue = inputField.value;
 	    	if (fieldValue != "")
 	    	{
-	    		switch (awGetPopupElement(i).value)
+	    		switch (awGetPopupElement(i).selectedItem.getAttribute("data"))
 	    		{
 	    			case "addr_to"			: addrTo += to_Sep + fieldValue; to_Sep = ",";					break;
 	    			case "addr_cc"			: addrCc += cc_Sep + fieldValue; cc_Sep = ",";					break;
@@ -141,7 +141,12 @@ function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
     if ( select && select.length == 1 )
     {
 //Doesn't work!	    select[0].setAttribute("value", popupValue);
-        select[0].value = popupValue;
+        for (var i = 0; i < select[0].childNodes[0].childNodes.length; i ++)
+            if (select[0].childNodes[0].childNodes[i].getAttribute("data") == popupValue)
+            {
+                select[0].selectedItem = select[0].childNodes[0].childNodes[i];
+                break;
+            }
 	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
 	}
 }
