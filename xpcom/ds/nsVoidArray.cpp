@@ -96,6 +96,8 @@ nsVoidArray& nsVoidArray::operator=(const nsVoidArray& other)
       SetArraySize(otherCount);
       mImpl->mCount = otherCount;
       SetArrayOwner(PR_TRUE);
+
+      nsCRT::memcpy(mImpl->mArray, other.mImpl->mArray, mImpl->mCount * sizeof(void*));
     }
   }
   else {
