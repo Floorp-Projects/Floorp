@@ -87,6 +87,7 @@
     #define NS_MAC_CONTROL_PANELS_DIR           "CntlPnl"
     #define NS_MAC_EXTENSIONS_DIR               "Exts"
     #define NS_MAC_FONTS_DIR                    "Fnts"
+    #define NS_MAC_CLASSICPREFS_DIR             "ClassicPrfs"
     #define NS_MAC_PREFS_DIR                    "Prfs"
     #define NS_MAC_DOCUMENTS_DIR                "Docs"
     #define NS_MAC_INTERNET_SEARCH_DIR          "ISrch"

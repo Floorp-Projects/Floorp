@@ -66,11 +66,12 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   Mac_ControlPanelDirectory =   107
         ,   Mac_ExtensionDirectory    =   108
         ,   Mac_FontsDirectory        =   109
-        ,   Mac_PreferencesDirectory  =   110
+        ,   Mac_ClassicPreferencesDirectory  =   110
         ,   Mac_DocumentsDirectory    =   111
         ,   Mac_InternetSearchDirectory    =   112
         ,   Mac_DefaultDownloadDirectory   =   113
         ,   Mac_UserLibDirectory      =   114
+        ,   Mac_PreferencesDirectory  =   115
         
         ,   Win_SystemDirectory       =   201
         ,   Win_WindowsDirectory      =   202

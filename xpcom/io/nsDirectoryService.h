@@ -96,6 +96,7 @@ private:
     static nsIAtom *sControlPanelDirectory;
     static nsIAtom *sExtensionDirectory;
     static nsIAtom *sFontsDirectory;
+    static nsIAtom *sClassicPreferencesDirectory;
     static nsIAtom *sPreferencesDirectory;
     static nsIAtom *sDocumentsDirectory;
     static nsIAtom *sInternetSearchDirectory;
