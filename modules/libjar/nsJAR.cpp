@@ -194,7 +194,7 @@ nsrefcnt nsJAR::Release(void)
   if (0 == count) {
     mRefCnt = 1; /* stabilize */ 
     /* enable this to find non-threadsafe destructors: */ 
-    /* NS_ASSERT_OWNINGTHREAD(_class); */ 
+    /* NS_ASSERT_OWNINGTHREAD(nsJAR); */ 
     NS_DELETEXPCOM(this); 
     return 0; 
   }
