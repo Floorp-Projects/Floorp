@@ -1933,13 +1933,17 @@ nsMsgIncomingServer::SetSpamSettings(nsISpamSettings *aSpamSettings)
   rv = mSpamSettings->GetSpamFolderURI(getter_Copies(newJunkFolderURI));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // as the url listener, the spam settings will set the MSG_FOLDER_FLAG_JUNK folder flag
-  // on the junk mail folder, after it is created
-  nsCOMPtr <nsIUrlListener> listener = do_QueryInterface(mSpamSettings, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
+  // only try to create the junk folder if we are moving junk
+  // and we have a non-empty uri
+  if (moveOnSpam && !newJunkFolderURI.IsEmpty()) {
+    // as the url listener, the spam settings will set the MSG_FOLDER_FLAG_JUNK folder flag
+    // on the junk mail folder, after it is created
+    nsCOMPtr <nsIUrlListener> listener = do_QueryInterface(mSpamSettings, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = GetOrCreateFolder(newJunkFolderURI, listener);
-  NS_ENSURE_SUCCESS(rv,rv);
+    rv = GetOrCreateFolder(newJunkFolderURI, listener);
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   PRBool useWhiteList;
   rv = mSpamSettings->GetUseWhiteList(&useWhiteList);

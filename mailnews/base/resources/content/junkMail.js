@@ -40,6 +40,8 @@ var gSpamSettings = {};
 var gCurrentServer;
 var gMessengerBundle;
 
+const kJunkOnLocalFolderURI = "mailbox://nobody@Local%20Folders/Junk";
+
 function onJunkMailLoad()
 {
   gMessengerBundle = document.getElementById("bundle_messenger");
@@ -120,11 +122,17 @@ function setupForAccountFromFolder(aURI)
   // or search on that account (for purge)
   // in which case, use Local Folders
   var defaultAccountURI = obj.server.canCreateFoldersOnServer && obj.server.canSearchMessages ? obj.server.serverURI : "mailbox://nobody@Local%20Folders";
-  // if there is a target account, use it else use the default account
+  // if there is a target account, use it, else use the default account
   SetFolderPicker(obj.settings.actionTargetAccount ? obj.settings.actionTargetAccount : defaultAccountURI, "actionTargetAccount");
   
-  if (obj.settings.actionTargetFolder)
+  // if there is a target account, use it, else use Junk on Local Folders  
+  if (obj.settings.actionTargetFolder) 
     SetFolderPicker(obj.settings.actionTargetFolder, "actionTargetFolder");
+  else {
+    // note, this folder might not exist, but better this than ""
+    // and, we'll create it if we try to use it.
+    SetFolderPicker(kJunkOnLocalFolderURI, "actionTargetFolder");
+  }
 
   // set up the purge UI
   document.getElementById("purge").checked = obj.settings.purge;
@@ -165,7 +173,14 @@ function storeSettings(aSettings, aLoggingEnabled)
   aSettings.moveOnSpam = document.getElementById("moveOnSpam").checked;
   aSettings.moveTargetMode = document.getElementById("moveTargetMode").value;
   aSettings.actionTargetAccount = document.getElementById("actionTargetAccount").getAttribute("uri");
-  aSettings.actionTargetFolder = document.getElementById("actionTargetFolder").getAttribute("uri");
+  var targetFolderURI = document.getElementById("actionTargetFolder").getAttribute("uri");
+  if (targetFolderURI)
+    aSettings.actionTargetFolder = targetFolderURI;
+  else {
+    // note, this folder might not exist, but better this than ""
+    // and, we'll create it if we try to use it.
+    aSettings.actionTargetFolder = kJunkOnLocalFolderURI;
+  }
 
   aSettings.purge = document.getElementById("purge").checked;
   aSettings.purgeInterval = document.getElementById("purgeInterval").value;
