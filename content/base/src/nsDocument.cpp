@@ -2466,7 +2466,10 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNod
   }
 
   aNewChild->GetNodeType(&nodeType);
-  if ((COMMENT_NODE != nodeType) && (PROCESSING_INSTRUCTION_NODE != nodeType)) {
+
+  if ((COMMENT_NODE != nodeType) &&
+      (PROCESSING_INSTRUCTION_NODE != nodeType) &&
+      (DOCUMENT_TYPE_NODE != nodeType)) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
