@@ -199,32 +199,32 @@ nsFrameLoader::LoadFrame()
   // If we were called from script, get the referring URL from the script
 
   if (principal) {
-    rv = principal->GetURI(getter_AddRefs(referrer));
-    NS_ENSURE_SUCCESS(rv, rv);
-
     // Pass the script principal to the docshell
 
     loadInfo->SetOwner(principal);
-  }
-
-  if (!referrer) {
+  } else {
     // We're not being called form script, tell the docshell
     // to inherit an owner from the current document.
 
     loadInfo->SetInheritOwner(PR_TRUE);
-
-    referrer = base_uri;
+    principal = doc->GetPrincipal();
   }
 
-  loadInfo->SetReferrer(referrer);
-
+  if (!principal) {
+    return NS_ERROR_FAILURE;
+  }
+  
   // Check if we are allowed to load absURL
-  rv = secMan->CheckLoadURI(referrer, uri,
-                            nsIScriptSecurityManager::STANDARD);
+  rv = secMan->CheckLoadURIWithPrincipal(principal, uri,
+                                         nsIScriptSecurityManager::STANDARD);
   if (NS_FAILED(rv)) {
     return rv; // We're not
   }
 
+  rv = principal->GetURI(getter_AddRefs(referrer));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  loadInfo->SetReferrer(referrer);
 
   // Bug 136580: Check for recursive frame loading
   // pre-grab these for speed

@@ -910,10 +910,14 @@ nsDocument::SetBaseURI(nsIURI* aURI)
   nsresult rv = NS_OK;
 
   if (aURI) {
+    nsIPrincipal* principal = GetPrincipal();
+    NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+    
     nsIScriptSecurityManager* securityManager =
       nsContentUtils::GetSecurityManager();
-    rv = securityManager->CheckLoadURI(mDocumentURI, aURI,
-                                       nsIScriptSecurityManager::STANDARD);
+    rv = securityManager->
+      CheckLoadURIWithPrincipal(principal, aURI,
+                                nsIScriptSecurityManager::STANDARD);
     if (NS_SUCCEEDED(rv)) {
       mDocumentBaseURI = aURI;
     }

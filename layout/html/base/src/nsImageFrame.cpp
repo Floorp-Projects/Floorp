@@ -1462,11 +1462,10 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       nsCOMPtr<nsIDocument> doc;
       rv = ps->GetDocument(getter_AddRefs(doc));
       
-      if (NS_SUCCEEDED(rv)) {
-        nsIURI *baseURI = doc ? doc->GetDocumentURI() : nsnull;
-
-        rv = securityManager->CheckLoadURI(baseURI, aURI,
-                                           nsIScriptSecurityManager::STANDARD);
+      if (doc) {
+        rv = securityManager->
+          CheckLoadURIWithPrincipal(doc->GetPrincipal(), aURI,
+                                    nsIScriptSecurityManager::STANDARD);
 
         // Only pass off the click event if the script security manager
         // says it's ok.

@@ -40,7 +40,7 @@
 #include "nsIXPCSecurityManager.idl"
 interface nsIURI;
 
-[scriptable, uuid(58df5780-8006-11d2-bd91-00805f8ae3f4)]
+[scriptable, uuid(82bff35d-ebb7-4cb9-bb47-4f9ebdf11f77)]
 interface nsIScriptSecurityManager : nsIXPCSecurityManager
 {
     ///////////////// Security Checks //////////////////
@@ -86,6 +86,20 @@ interface nsIScriptSecurityManager : nsIXPCSecurityManager
 
     // Don't allow javascript: (and data:) URLs to load
     const unsigned long DISALLOW_SCRIPT_OR_DATA = 1 << 2;
+
+    /**
+     * Check that content with principal aPrincipal can load "uri".
+     *
+     * Will return error code NS_ERROR_DOM_BAD_URI if the load request 
+     * should be denied.
+     *
+     * @param aPrincipal the URI causing the load
+     * @param uri the URI that is being loaded
+     * @param flags the permission set, see above
+     */
+    [noscript] void checkLoadURIWithPrincipal(in nsIPrincipal aPrincipal,
+                                              in nsIURI uri, 
+                                              in unsigned long flags);
 
     /**
      * Check that content from "from" can load "uri".

@@ -5700,10 +5700,6 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
   if (!doc)
     return NS_ERROR_FAILURE;
 
-  nsIURI *sourceURL = doc->GetDocumentURI();
-  if (!sourceURL)
-    return NS_ERROR_FAILURE;
-
   // Create an absolute URL for the target in case the target is relative
   nsCOMPtr<nsIURI> targetURL;
   rv = NS_NewURI(getter_AddRefs(targetURL), aURL, doc->GetBaseURI());
@@ -5716,7 +5712,8 @@ nsPluginHostImpl::DoURLLoadSecurityCheck(nsIPluginInstance *aInstance,
   if (NS_FAILED(rv))
     return rv;
 
-  return secMan->CheckLoadURI(sourceURL, targetURL, nsIScriptSecurityManager::STANDARD);
+  return secMan->CheckLoadURIWithPrincipal(doc->GetPrincipal(), targetURL,
+                                           nsIScriptSecurityManager::STANDARD);
 
 }
 

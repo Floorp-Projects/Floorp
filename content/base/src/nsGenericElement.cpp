@@ -2202,6 +2202,12 @@ already_AddRefed<nsIURI>
 nsGenericElement::GetBaseURI() const
 {
   nsIDocument* doc = GetOwnerDocument();
+  if (!doc) {
+    // We won't be able to do security checks, etc.  So don't go any
+    // further.  That said, this really shouldn't happen...
+    NS_ERROR("Element without owner document");
+    return nsnull;
+  }
 
   // Our base URL depends on whether we have an xml:base attribute, as
   // well as on whether any of our ancestors do.
@@ -2210,7 +2216,7 @@ nsGenericElement::GetBaseURI() const
   nsIContent *parent = GetParent();
   if (parent) {
     parentBase = parent->GetBaseURI();
-  } else if (doc) {
+  } else {
     // No parent, so just use the document (we must be the root or not in the
     // tree).
     parentBase = doc->GetBaseURI();
@@ -2227,17 +2233,14 @@ nsGenericElement::GetBaseURI() const
     return base;
   }
 
-  nsCAutoString charset;
-  if (doc) {
-    charset = doc->GetDocumentCharacterSet();
-  }
-
   nsCOMPtr<nsIURI> ourBase;
-  rv = NS_NewURI(getter_AddRefs(ourBase), value, charset.get(), parentBase);
+  rv = NS_NewURI(getter_AddRefs(ourBase), value,
+                 doc->GetDocumentCharacterSet().get(), parentBase);
   if (NS_SUCCEEDED(rv)) {
     // do a security check, almost the same as nsDocument::SetBaseURL()
     rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURI(parentBase, ourBase, nsIScriptSecurityManager::STANDARD);
+      CheckLoadURIWithPrincipal(doc->GetPrincipal(), ourBase,
+                                nsIScriptSecurityManager::STANDARD);
   }
 
   nsIURI *base;

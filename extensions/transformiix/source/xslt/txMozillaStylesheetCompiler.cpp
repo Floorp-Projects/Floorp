@@ -55,6 +55,7 @@
 #include "nsIStreamConverterService.h"
 #include "nsISyncLoadDOMService.h"
 #include "nsIURI.h"
+#include "nsIPrincipal.h"
 #include "nsIWindowWatcher.h"
 #include "nsIXMLContentSink.h"
 #include "nsMimeTypes.h"
@@ -423,7 +424,7 @@ public:
     TX_DECL_ACOMPILEOBSERVER;
 
     nsresult startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
-                       nsIURI* aReferrerUri);
+                       nsIPrincipal* aCallerPrincipal);
 
 protected:
     nsAutoRefCnt mRefCnt;
@@ -492,19 +493,25 @@ txCompileObserver::onDoneCompiling(txStylesheetCompiler* aCompiler,
 
 nsresult
 txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
-                             nsIURI* aReferrerUri)
+                             nsIPrincipal* aCallerPrincipal)
 {
     nsresult rv;
-    if (aReferrerUri) {
+    nsCOMPtr<nsIURI> referrerURI;
+    
+    if (aCallerPrincipal) {
         nsCOMPtr<nsIScriptSecurityManager> securityManager = 
             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = securityManager->CheckLoadURI(aReferrerUri, aUri,
-                                           nsIScriptSecurityManager::STANDARD);
+        rv = securityManager->
+            CheckLoadURIWithPrincipal(aCallerPrincipal, aUri,
+                                      nsIScriptSecurityManager::STANDARD);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        rv = securityManager->CheckSameOriginURI(aReferrerUri, aUri);
+        aCallerPrincipal->GetURI(getter_AddRefs(referrerURI));
+        NS_ASSERTION(referrerURI, "Caller principal must have a URI!");
+        
+        rv = securityManager->CheckSameOriginURI(referrerURI, aUri);
         NS_ENSURE_SUCCESS(rv, rv);
     }
 
@@ -520,8 +527,8 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
                                       NS_LITERAL_CSTRING("text/xml,application/xml,application/xhtml+xml,*/*;q=0.1"),
                                       PR_FALSE);
 
-        if (aReferrerUri) {
-            httpChannel->SetReferrer(aReferrerUri);
+        if (referrerURI) {
+            httpChannel->SetReferrer(referrerURI);
         }
     }
 
@@ -542,7 +549,7 @@ txCompileObserver::startLoad(nsIURI* aUri, txStylesheetCompiler* aCompiler,
 
 nsresult
 TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
-             nsILoadGroup* aLoadGroup, nsIURI* aReferrerUri)
+             nsILoadGroup* aLoadGroup, nsIPrincipal* aCallerPrincipal)
 {
     nsCAutoString uri;
     aUri->GetSpec(uri);
@@ -556,7 +563,7 @@ TX_LoadSheet(nsIURI* aUri, txMozillaXSLTProcessor* aProcessor,
         new txStylesheetCompiler(NS_ConvertUTF8toUCS2(uri), observer);
     NS_ENSURE_TRUE(compiler, NS_ERROR_OUT_OF_MEMORY);
 
-    return observer->startLoad(aUri, compiler, aReferrerUri);
+    return observer->startLoad(aUri, compiler, aCallerPrincipal);
 }
 
 /**
