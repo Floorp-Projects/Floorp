@@ -24,6 +24,12 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= config build
 
+#
+ifdef MOZ_L10N
+DIRS        += l10n
+endif
+
+
 ifndef MOZ_NATIVE_NSPR
 DIRS		+= $(topsrcdir)/nsprpub
 # NSPR does not use Makefile.in
