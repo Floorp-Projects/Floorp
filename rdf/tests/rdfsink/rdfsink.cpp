@@ -110,20 +110,20 @@ static nsresult
 SetupRegistry(void)
 {
     // netlib
-    nsRepository::RegisterFactory(kNetServiceCID,            NETLIB_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kNetServiceCID,            NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
 
     // parser
-    nsRepository::RegisterFactory(kParserCID,                PARSER_DLL, PR_FALSE, PR_FALSE);
-    nsRepository::RegisterFactory(kWellFormedDTDCID,         PARSER_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kParserCID,                NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kWellFormedDTDCID,         NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
     // layout
-    nsRepository::RegisterFactory(kNameSpaceManagerCID,      LAYOUT_DLL, PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     // dom
-    nsRepository::RegisterFactory(kScriptNameSetRegistryCID, DOM_DLL,    PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kScriptNameSetRegistryCID, NULL, NULL, DOM_DLL,    PR_FALSE, PR_FALSE);
 
     // xpcom
-    nsRepository::RegisterFactory(kEventQueueServiceCID,     XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsRepository::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
     return NS_OK;
 }
