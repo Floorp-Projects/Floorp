@@ -785,11 +785,15 @@ function AddNodeToAddressBook (emailAddressNode)
 // with that address
 function SendMailToNode(emailAddressNode)
 {
-  if (emailAddressNode)
+  var fields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+  var params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+  if (emailAddressNode && fields && params)
   {
-     var emailAddress = emailAddressNode.getAttribute("emailAddress");
-     if (emailAddress)
-        messenger.OpenURL("mailto:" + emailAddress );
+    fields.to = emailAddressNode.getAttribute("label");
+    params.type = Components.interfaces.nsIMsgCompType.New;
+    params.format = Components.interfaces.nsIMsgCompFormat.Default;
+    params.composeFields = fields;
+    msgComposeService.OpenComposeWindowWithParams(null, params);
   }
 }
 
