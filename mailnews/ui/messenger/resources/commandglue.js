@@ -64,6 +64,15 @@ function GetNewMail()
   }
 }
 
+function MsgAccountManager()
+{
+  var appCore = FindMsgAppCore();
+  if (appCore != null) {
+    dump('Opening account manager..');
+    appCore.AccountManager(window);
+  }
+}
+
 function LoadMessage(messageNode)
 {
   var uri = messageNode.getAttribute('id');
@@ -135,3 +144,18 @@ function SortThreadPane(column, sortKey)
 
 
 }
+
+function MsgPreferences()
+{
+  var prefsCore = XPAppCoresManager.Find("PrefsCore");
+  if (!prefsCore) {
+    prefsCore = new PrefsCore();
+    if (prefsCore) {
+      prefsCore.Init("PrefsCore");
+    }
+  }
+  if (prefsCore) {
+    prefsCore.ShowWindow(window);
+  }
+}
+
