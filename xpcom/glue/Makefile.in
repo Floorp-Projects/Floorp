@@ -43,11 +43,18 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../build \
 		$(NULL)
 
+SDK_HEADERS     = \
+		nsCOMPtr.h	 \
+		nsDebug.h	 \
+		nsMemory.h	 \
+		nsWeakReference.h\
+		$(NULL)
+
+SDK_BINARY     =                        \
+		$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
+		$(NULL)
+
 EXPORTS		= \
-		nsCOMPtr.h \
-		nsDebug.h \
-		nsMemory.h \
-		nsWeakReference.h \
 		$(NULL)
 
 XPIDLSRCS	= \

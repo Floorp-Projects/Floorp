@@ -34,10 +34,6 @@ REQUIRES	= libreg \
 		  string \
 		  $(NULL)
 
-EXPORTS		= \
-		nsXPCOM.h \
-		$(NULL)			
-
 # pull in MoreFiles for MacOSX
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += macmorefiles
@@ -84,6 +80,12 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../threads/_xpidlgen \
 		-I$(srcdir)/../proxy/src \
 		$(NULL)
+
+SDK_HEADERS =  \
+		nsXPCOM.h    \
+		$(NULL)
+
+SDK_BINARY = $(IMPORT_LIBRARY) $(SHARED_LIBRARY)
 
 ifdef MOZ_DEMANGLE_SYMBOLS
 EXTRA_DSO_LDOPTS += -liberty

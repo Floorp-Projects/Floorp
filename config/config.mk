@@ -610,11 +610,16 @@ LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 endif
 
 # Default location of include files
+IDL_DIR		= $(DIST)/idl
 ifdef MODULE
 PUBLIC		= $(DIST)/include/$(MODULE)
 else
 PUBLIC		= $(DIST)/include
 endif
+
+SDK_PUBLIC	= $(DIST)/sdk/$(MODULE)/include
+SDK_IDL_DIR	= $(DIST)/sdk/$(MODULE)/idl
+SDK_BIN_DIR	= $(DIST)/sdk/$(MODULE)/bin
 
 DEPENDENCIES	= .md
 

@@ -86,19 +86,22 @@ EXPORTS		+= pure.h
 endif
 endif
 
+
+SDK_XPIDLSRCS   = \
+		nsIInterfaceRequestor.idl  \
+		nsIProgrammingLanguage.idl \
+		nsISupports.idl		   \
+		nsIWeakReference.idl	   \
+		nsIMemory.idl		   \
+		nsrootidl.idl		   \
+
 XPIDLSRCS	= \
-		nsrootidl.idl \
-		nsISupports.idl \
-		nsIMemory.idl \
 		nsIErrorService.idl \
-		nsIInterfaceRequestor.idl \
-		nsIWeakReference.idl \
 		nsIConsoleService.idl \
 		nsIConsoleMessage.idl \
 		nsIConsoleListener.idl \
 		nsIException.idl \
 		nsIExceptionService.idl \
-		nsIProgrammingLanguage.idl \
 		$(NULL)
 
 ifdef GC_LEAK_DETECTOR

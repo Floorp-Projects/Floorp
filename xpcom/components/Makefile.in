@@ -67,15 +67,18 @@ EXPORTS		= \
 XPIDLSRCS	= \
 		nsICategoryHandler.idl \
 		nsICategoryManager.idl \
-		nsIClassInfo.idl \
 		nsIComponentLoader.idl \
-		nsIComponentManager.idl \
 		nsIComponentManagerObsolete.idl \
 		nsIComponentRegistrar.idl \
-		nsIFactory.idl \
-		nsIModule.idl \
 		nsIRegistry.idl \
-		nsIServiceManager.idl \
+		$(NULL)
+
+SDK_XPIDLSRCS   = \
+		nsIClassInfo.idl        \
+		nsIFactory.idl	        \
+		nsIModule.idl	        \
+		nsIServiceManager.idl   \
+		nsIComponentManager.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
