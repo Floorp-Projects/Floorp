@@ -24,6 +24,10 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIComponentManager.h"
+#include "nsIEnumerator.h"
+
+#include "nsSpecialSystemDirectory.h"
+
 #ifdef XP_PC
 #include "plevent.h"
 #endif
@@ -32,11 +36,17 @@
 
 #ifdef XP_PC
 #define NETLIB_DLL "netlib.dll"
+#define RAPTORBASE_DLL "raptorbase.dll"
+#define XPCOM_DLL "xpcom32.dll"
 #else
 #ifdef XP_MAC
 #define NETLIB_DLL "NETLIB_DLL"
+#define RAPTORBASE_DLL "base.shlb"
+#define XPCOM_DLL "XPCOM_DLL"
 #else
 #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX
+#define RAPTORBASE_DLL "libraptorbase"MOZ_DLL_SUFFIX
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #endif
 #endif
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
@@ -47,39 +57,70 @@ static NS_DEFINE_IID(kIPersistentPropertiesIID, NS_IPERSISTENTPROPERTIES_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 
 
-#ifdef XP_MAC  // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
-extern "C" void NS_SetupRegistry();
-#endif
+
+/***************************************************************************/
+extern "C" void
+NS_SetupRegistry()
+{
+  // Autoregistration happens here. The rest of RegisterComponent() calls should happen
+  // only for dlls not in the components directory.
+
+  // Create exeDir/"components"
+  nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  sysdir += "components";
+  const char *componentsDir = sysdir.GetCString(); // native path
+  if (componentsDir != NULL)
+  {
+#ifdef XP_PC
+      /* The PC version of the directory from filePath is of the form
+       *    /y|/moz/mozilla/dist/bin/components
+       * We need to remove the initial / and change the | to :
+       * for all this to work with NSPR.      
+       */
+#endif /* XP_PC */
+      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
+
+#ifdef XP_MAC
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, nsnull);
+#else
+      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
+#endif    /* XP_MAC */
+      // XXX Look for user specific components
+      // XXX UNIX: ~/.mozilla/components
+  }
+
+	// startup netlib:	
+	nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
+
+    // Create the Event Queue for this thread...
+    nsIEventQueueService* pEventQService;
+    
+	pEventQService = nsnull;
+    nsresult result = nsServiceManager::GetService(kEventQueueServiceCID,
+                                          kIEventQueueServiceIID,
+                                          (nsISupports **)&pEventQService);
+    if (NS_SUCCEEDED(result)) {
+      // XXX: What if this fails?
+      result = pEventQService->CreateThreadEventQueue();
+    }
+
+	nsComponentManager::RegisterComponent(kPersistentPropertiesCID, 
+ 										 NULL,
+ 										 NULL, 
+										 RAPTORBASE_DLL, 
+										 PR_FALSE, 
+										 PR_FALSE);
+}
+
 
 int
 main(int argc, char* argv[])
 {
   nsresult ret;
 
-  // XXX why do I have to do this?!
-  ret = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                         "components");
-  if (NS_FAILED(ret)) return ret;
-
-  ret = nsComponentManager::RegisterComponent(kNetServiceCID, NULL,
-    NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
-
-#ifdef XP_MAC    // have not build this on PC and UNIX yet so make it #ifdef XP_MAC
   NS_SetupRegistry(); 
-#endif
 
-  nsIEventQueueService* pEventQueueService = nsnull;
-  ret = nsServiceManager::GetService(kEventQueueServiceCID,
-    kIEventQueueServiceIID, (nsISupports**) &pEventQueueService);
-  if (NS_FAILED(ret) || (!pEventQueueService)) {
-    printf("cannot get event queue service\n");
-    return 1;
-  }
-  ret = pEventQueueService->CreateThreadEventQueue();
-  if (NS_FAILED(ret)) {
-    printf("CreateThreadEventQueue failed\n");
-    return 1;
-  }
   nsINetService* pNetService = nsnull;
   ret = nsServiceManager::GetService(kNetServiceCID, kINetServiceIID,
     (nsISupports**) &pNetService);
@@ -131,6 +172,52 @@ main(int argc, char* argv[])
       printf("%d: ToNewCString failed\n", i);
     }
     i++;
+  }
+
+  nsIBidirectionalEnumerator* propEnum = nsnull;
+  ret = props->EnumerateProperties(&propEnum);
+  if (NS_FAILED(ret)) {
+	printf("cannot enumerate properties\n");
+	return 1;
+  }
+  ret = propEnum->First();
+  if (NS_FAILED(ret))
+  {
+	printf("enumerator is empty\n");
+	return 1;
+  }
+
+  cout << endl << "Key" << "\t" << "Value" << endl;
+  cout <<		  "---" << "\t" << "-----" << endl;
+  while (NS_SUCCEEDED(ret))
+  {
+	  nsIPropertyElement* propElem = nsnull;
+	  ret = propEnum->CurrentItem((nsISupports**)&propElem);
+	  if (NS_FAILED(ret)) {
+		printf("failed to get current item\n");
+		return 1;
+	  }
+	  nsString* key = nsnull;
+	  nsString* val = nsnull;
+	  ret = propElem->GetKey(&key);
+	  if (NS_FAILED(ret)) {
+		  printf("failed to get current element's key\n");
+		  return 1;
+	  }
+	  ret = propElem->GetValue(&val);
+	  if (NS_FAILED(ret)) {
+		  printf("failed to get current element's value\n");
+		  return 1;
+	  }
+	  char* keyCStr = key->ToNewCString();
+	  char* valCStr = val->ToNewCString();
+	  if (keyCStr && valCStr) 
+		cout << keyCStr << "\t" << valCStr << endl;
+	  delete[] keyCStr;
+	  delete[] valCStr;
+      delete key;
+      delete val;
+	  ret = propEnum->Next();
   }
 
   return 0;
