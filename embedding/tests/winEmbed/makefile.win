@@ -29,7 +29,6 @@ REQUIRES	= xpcom \
 		  embed_base \
 		  webBrowser_core \
 		  webshell \
-		  embedding \
 		  windowwatcher \
 		  profile \
 		  necko \
@@ -41,6 +40,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  shistory \
 		  $(NULL)
+
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe
 RESFILE         = $(MODULE).res
 

@@ -20,7 +20,7 @@
 
 DEPTH=..\..\..\..
 
-MODULE=embedcomponents
+MODULE=appstartup
 REQUIRES	= xpcom \
 		  string \
 		  $(NULL)

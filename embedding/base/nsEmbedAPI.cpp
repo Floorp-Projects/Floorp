@@ -31,6 +31,7 @@
 #include "nsIDirectoryService.h"
 
 #include "nsEmbedAPI.h"
+#include "nsLiteralString.h"
 
 static nsIServiceManager *sServiceManager = nsnull;
 static PRBool             sRegistryInitializedFlag = PR_FALSE;

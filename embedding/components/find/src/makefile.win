@@ -20,10 +20,9 @@
 
 DEPTH=..\..\..\..
 
-MODULE=embedcomponents
+MODULE=find
 REQUIRES	= string \
 		  xpcom \
-		  find \
 		  txtsvc \
 		  dom \
 		  docshell \

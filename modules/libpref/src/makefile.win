@@ -48,7 +48,6 @@ REQUIRES	= xpcom \
 		  intl \
 		  timer \
 		  necko \
-		  embedcomponents \
 		  profile \
 		  $(NULL)
 

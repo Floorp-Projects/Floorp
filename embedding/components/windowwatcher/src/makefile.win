@@ -20,23 +20,22 @@
 
 DEPTH=..\..\..\..
 
-MODULE=embedcomponents
+MODULE=windowwatcher
 REQUIRES	= xpcom \
 		  string \
 		  dom \
-		  windowwatcher \
 		  widget \
 		  js \
 		  xpconnect \
 		  caps \
 		  layout \
+		  content \
 		  necko \
 		  docshell \
 		  webBrowser_core \
 		  embed_base \
 		  wallet \
 		  intl \
-		  content \
 		  $(NULL)
 
 LIBRARY_NAME=windowwatcher_s

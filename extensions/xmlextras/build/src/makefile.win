@@ -28,7 +28,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  necko \
 		  webBrowser_core \
-		  embedcomponents \
+		  appstartup \
 		  content \
 		  $(NULL)
 LIBRARY_NAME=xmlextras
