@@ -2983,7 +2983,7 @@ static void  ReleaseMutableStyleStruct(nsStyleStructID aSID, nsStyleStruct* aSty
   short structType = aSID - 1;
   for (short structIndex = 0; structIndex < kStructIndexMax; structIndex++) {
     if (gStructPointer[structType][structIndex] == aStyleStruct) {
-      gStructBusy[structType][structIndex] = false;
+      gStructBusy[structType][structIndex] = PR_FALSE;
       return;
     }
   }
