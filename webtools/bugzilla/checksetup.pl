@@ -1311,9 +1311,9 @@ END { $dbh->disconnect if $dbh }
 #
 
 if( Param('webdotbase') && Param('webdotbase') !~ /^https?:/ ) {
-    printf("Checking for %15s %-9s ", "GraphViz", "(any)");
+    printf("Checking for %15s %-9s ", "GraphViz", "(any)") unless $silent;
     if(-x Param('webdotbase')) {
-        print "ok: found\n";
+        print "ok: found\n" unless $silent;
     } else {
         print "not a valid executable: " . Param{'webdotbase'} . "\n";
     }
