@@ -2990,12 +2990,10 @@ nsBrowserStatusHandler.prototype =
         // pages. 
         if (/^\s*wyciwyg:\/\/\d+\//.test(location))
           location = RegExp.rightContext;
-        setTimeout(function(loc) { gURLBar.value = loc; }, 0, location);
+        setTimeout(function(loc, aloc) { gURLBar.value = loc; SetPageProxyState("valid", aloc);}, 0, location, aLocation);
         // the above causes userTyped.value to become true, reset it
         this.userTyped.value = false;
       }
-
-      SetPageProxyState("valid", aLocation);
     }
     UpdateBackForwardButtons();
   },
