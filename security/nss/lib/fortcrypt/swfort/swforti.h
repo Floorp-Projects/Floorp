@@ -94,13 +94,14 @@ int fort_GetCertCount(FORTSWFile *file);
 SECStatus fort_CopyUnsigned(PRArenaPool *arena, SECItem *to, const SECItem *from);
 
 /*
- * NOTE: these keys do not have the public values, and cannot be used to
- * extract the public key from the private key. Since we never do this in
- * this code, and this function is private, we're reasonably safe (as long as
- * any of your callees do not try to extract the public value as well).
- * Also -- the token must be logged in before this function is called.
+ * return the private key based on the token and entry.
  */
-SECKEYLowPrivateKey * fort_GetPrivKey(FORTSWToken *token,KeyType keyType,fortSlotEntry *certEntry);
+FORTEZZAPrivateKey *fort_GetPrivKey(FORTSWToken *token,FORTEZZAKeyType keyType,fortSlotEntry *certEntry);
+
+/*
+ * Free the key acquired above.
+ */
+void fort_DestroyPrivateKey(FORTEZZAPrivateKey *key);
 
 /*
  * find a particulare certificate entry from the config
