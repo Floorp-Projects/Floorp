@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.5 2001/01/18 20:28:59 wtc%netscape.com Exp $
+ * $Id: nss.h,v 1.6 2001/02/04 05:52:42 wtc%netscape.com Exp $
  */
 
 #ifndef __nss_h_
@@ -98,7 +98,7 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
  */
 extern SECStatus NSS_Initialize(const char *configdir, 
 	const char *certPrefix, const char *keyPrefix, const char *secmodName,
-	PRBool readonly);
+	PRBool readOnly);
 
 /*
  * initialize NSS without a creating cert db's, key db's, or secmod db's.
