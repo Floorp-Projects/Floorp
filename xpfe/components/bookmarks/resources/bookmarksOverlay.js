@@ -817,31 +817,31 @@ var BookmarksUtils = {
 
   cloneFolder: function (aFolder, aParent, aRelativeItem) 
   {
-    const kBMDS = this.RDF.GetDataSource("rdf:bookmarks");
+    var BMDS = this.RDF.GetDataSource("rdf:bookmarks");
     
-    const krNameArc = this.RDF.GetResource(NC_NS + "Name");
-    var rName = kBMDS.GetTarget(aFolder, krNameArc, true);
+    var nameArc = this.RDF.GetResource(NC_NS + "Name");
+    var rName = BMDS.GetTarget(aFolder, nameArc, true);
     rName = rName.QueryInterface(Components.interfaces.nsIRDFLiteral);
     
-    const krNewFolder = this.createFolderWithID(rName.Value, aRelativeItem.Value, aParent.Value);
+	var newFolder = this.createFolderWithID(rName.Value, aRelativeItem, aParent);
     
     // Now need to append kiddies. 
     try {
       const kRDFCContractID = "@mozilla.org/rdf/container;1";
       const kRDFCIID = Components.interfaces.nsIRDFContainer;
-      const ksRDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
-      ksRDFC.Init(kBMDS, aFolder);
+      var RDFC = Components.classes[kRDFCContractID].getService(kRDFCIID);
+      RDFC.Init(BMDS, aFolder);
 
-      const kElts = ksRDFC.GetElements();
-      ksRDFC.Init(kBMDS, krNewFolder);
-      while (kElts.hasMoreElements()) {
-        var curr = kElts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-        ksRDFC.AppendElement(curr);
+      var elts = RDFC.GetElements();
+      RDFC.Init(BMDS, newFolder);
+      while (elts.hasMoreElements()) {
+        var curr = elts.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+        RDFC.AppendElement(curr);
       }
     }
     catch (e) {
     }
-    return krNewFolder;
+    return newFolder;
   },
   
   createFolderWithID: function (aTitle, aRelativeItem, aParentFolder)
@@ -856,7 +856,7 @@ var BookmarksUtils = {
     catch (e) {
       return null;
     }
-    var ix = kRDFC.IndexOf(aRelativeItem);
+    var ix = RDFC.IndexOf(aRelativeItem);
 
     var BMSvc = BMDS.QueryInterface(Components.interfaces.nsIBookmarksService);
     return BMSvc.createFolderWithDetails(aTitle, aParentFolder, ix);
