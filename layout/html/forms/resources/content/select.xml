@@ -101,15 +101,17 @@
            if (start == -1)
              start = selection.currentIndex;
            select.setOptionsSelectedByIndex(start, row.value, true, !augment, false, false);
+           if ("onchange" in this)
+             this.onchange();
          }
          else if (augment) {
            selection.toggleSelect(row.value);
            select.setOptionsSelectedByIndex(row.value, row.value,
-                                            !selection.isSelected(row.value), false, false, false);
+                                            selection.isSelected(row.value), false, false, false);
            selection.currentIndex = row.value;
+           if ("onchange" in this)
+             this.onchange();
          }
-         if ("onchange" in this)
-           this.onchange();
          else {
           /* We want to deselect all the selected items except what was
             clicked, UNLESS it was a right-click.  We have to do this
@@ -252,12 +254,12 @@
           if (c == this.selectionTail) {
             if (this.selectionHead > this.selectionTail) {
               selection.toggleSelect(c);
-              select.setOptionsSelectedByIndex(c, c, !selection.isSelected(c), false, false, false);
+              select.setOptionsSelectedByIndex(c, c, selection.isSelected(c), false, false, false);
               this.currentIndex = c + 1;
             }
             else {
               selection.toggleSelect(c + 1);
-              select.setOptionsSelectedByIndex(c+1, c+1, !selection.isSelected(c), false, false, false);
+              select.setOptionsSelectedByIndex(c+1, c+1, selection.isSelected(c), false, false, false);
             }
           }
           else {
