@@ -21,7 +21,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS = TestAtoms.cpp TestCRT.cpp CvtURL.cpp FilesTest.cpp PropertiesTest.cpp TestAutoLock.cpp
+CPPSRCS =\
+	TestAtoms.cpp		\
+	TestCRT.cpp		\
+	CvtURL.cpp		\
+	FilesTest.cpp		\
+	PropertiesTest.cpp	\
+	TestAutoLock.cpp	\
+	TestObserverService.cpp	\
+	$(NULL)
 
 LIBS		= \
 	-lnetlib \
