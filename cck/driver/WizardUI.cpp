@@ -871,17 +871,18 @@ void CWizardUI::CreateControls()
 			((CNavText*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 		}
 		else if (widgetType == "EditBox") {
-			curWidget->control = new CEdit;
+			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
 			((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
 													_T("EDIT"), 
 													NULL,
-													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER,
+													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL ,
 													curWidget->location.x,
 													curWidget->location.y,
 													curWidget->size.width,
 													curWidget->size.height,
 													m_hWnd, 0, 0 );
-
+			//Set maximum number of characters allowed per line - limit set to 200
+			((CEdit*)curWidget->control)->SetLimitText(200);
 			((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
 		}
 		else if (widgetType == "Button") {
