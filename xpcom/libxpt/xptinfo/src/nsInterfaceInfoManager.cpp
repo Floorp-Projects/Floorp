@@ -25,8 +25,6 @@
 #endif
 #include "nscore.h"
 
-#include "nsSpecialSystemDirectory.h"
-
 #include "nsISupports.h"
 #include "nsIInterfaceInfoManager.h"
 #include "nsIInterfaceInfo.h"
@@ -309,21 +307,8 @@ nsInterfaceInfoManager::initInterfaceTables()
         return NS_ERROR_FAILURE;
     }
 
-    // this code stolen from SetupRegistry; it might bear further
-    // examination, as the code there doesn't look quite done.
-    nsSpecialSystemDirectory
-        sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    sysdir += "components";
-    const char *xptdirname = sysdir.GetCString(); // native path
-  if (xptdirname != NULL) {
-      fprintf(stderr, "nsInterfaceInfoManager: Using xpt dir: %s\n", xptdirname);
-  }
-
-#if 0  
     // First, find the xpt directory from the env.  XXX Temporary hack.
     char *xptdirname = PR_GetEnv("XPTDIR");
-#endif
-
     PRDir *xptdir;
     if (xptdirname == NULL || (xptdir = PR_OpenDir(xptdirname)) == NULL)
         return NS_ERROR_FAILURE;
