@@ -94,7 +94,6 @@
   [super dealloc];
 }
 
-
 - (void)setBookmarkItem:(BookmarkItem*)aItem
 {
   [aItem retain];
@@ -173,42 +172,7 @@
 
 -(NSMenu*)menuForEvent:(NSEvent*)aEvent
 {
-  BookmarkItem *item = [self BookmarkItem];
-  if (item) {
-    NSMenu* contextMenu = [[[self superview] menu] copy];
-    [[contextMenu itemArray] makeObjectsPerformSelector:@selector(setTarget:) withObject: self];
-    NSString *nulString = [NSString string];
-    // clean the menu out
-    int numItems = [contextMenu numberOfItems];
-    int itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(showBookmarkInfo:)];
-    while (numItems > (itemIndex+1))
-      [contextMenu removeItemAtIndex:(--numItems)];
-    // set up menu
-    if ([item isKindOfClass:[Bookmark class]]) {
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewWindow:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open in New Window",@"Open in New Window")];
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewTab:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open in New Tab",@"Open in New Tab")];
-    } else if ([item isKindOfClass:[BookmarkFolder class]]) {
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewWindow:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open Tabs in New Window",@"Open Tabs in New Window")];
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewTab:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open in Tabs",@"Open in Tabs")];
-    }
-    // if it's a button, it's got to be on toolbar folder, so we can delete & make new folders
-    NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"Delete") action:@selector(deleteBookmarks:) keyEquivalent:nulString];
-    [menuItem setTarget:self];
-    [contextMenu addItem:menuItem];
-    [menuItem release];
-    [contextMenu addItem:[NSMenuItem separatorItem]];
-    // create new folder
-    menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...",@"Create New Folder...") action:@selector(addFolder:) keyEquivalent:nulString];
-    [menuItem setTarget:self];
-    [contextMenu addItem:menuItem];
-    [menuItem release];
-    return [contextMenu autorelease];
-  }
-  return nil;
+  return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:[self BookmarkItem] fromView:nil target:self];
 }
 
 //

@@ -20,9 +20,10 @@
 * the Initial Developer. All Rights Reserved.
 *
 * Contributor(s):
-*			Simon Fraser <sfraser@netscape.com>
-*			Max Horn <max@quendi.de>
-*           David Haas <haasd@cae.wisc.edu>
+*    Simon Fraser <sfraser@netscape.com>
+*    Max Horn <max@quendi.de>
+*    David Haas <haasd@cae.wisc.edu>
+*    Simon Woodside <sbwoodside@yahoo.com>
 *
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -1141,52 +1142,9 @@ const long kMinSearchPaneHeight = 80;
     return nil;
 }
 
- - (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
+- (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
 {
-  NSMenu *contextMenu = nil;
-  if (item) {
-    NSString *nulString = [NSString string];
-    contextMenu = [mItemPane menu];
-    // clean the menu out
-    int numItems = [contextMenu numberOfItems];
-    int itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(showBookmarkInfo:)];
-    while (numItems > (itemIndex+1))
-      [contextMenu removeItemAtIndex:(--numItems)];
-    if ([item isKindOfClass:[Bookmark class]]) {
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewWindow:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open in New Window",@"Open in New Window")];
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewTab:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open in New Tab",@"Open in New Tab")];
-    } else if ([item isKindOfClass:[BookmarkFolder class]]) {
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewWindow:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open Tabs in New Window",@"Open Tabs in New Window")];
-      itemIndex = [contextMenu indexOfItemWithTarget:self andAction:@selector(openBookmarkInNewTab:)];
-      [[contextMenu itemAtIndex:itemIndex] setTitle:NSLocalizedString(@"Open in Tabs",@"Open in Tabs")];
-      NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Use as Dock Menu",@"Use as Dock Menu") action:@selector(makeDockMenu:) keyEquivalent:nulString];
-      [menuItem setTarget:item];
-      [contextMenu addItem:menuItem];
-      [menuItem release];
-      [contextMenu addItem:[NSMenuItem separatorItem]];
-    }
-    id parent = [item parent];
-    if ([parent isKindOfClass:[BookmarkFolder class]] && ![parent isSmartFolder]) {
-      // delete
-      NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"Delete") action:@selector(deleteBookmarks:) keyEquivalent:nulString];
-      [menuItem setTarget:self];
-      [contextMenu addItem:menuItem];
-      [menuItem release];
-    }
-    if (![[self activeCollection] isSmartFolder]) {
-      // space
-      [contextMenu addItem:[NSMenuItem separatorItem]];
-      // create new folder
-      NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...",@"Create New Folder...") action:@selector(addFolder:) keyEquivalent:nulString];
-      [menuItem setTarget:self];
-      [contextMenu addItem:menuItem];
-      [menuItem release];
-    }
-  }
-  return contextMenu;
+  return [[BookmarkManager sharedBookmarkManager] contextMenuForItem:item fromView:outlineView target:self];
 }
 
 - (void)reloadDataForItem:(id)item reloadChildren: (BOOL)aReloadChildren

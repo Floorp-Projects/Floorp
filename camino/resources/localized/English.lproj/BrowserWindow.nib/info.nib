@@ -6,8 +6,6 @@
 	<string>148 35 445 438 0 0 1280 938 </string>
 	<key>IBEditorPositions</key>
 	<dict>
-		<key>124</key>
-		<string>58 576 170 96 0 0 1152 746 </string>
 		<key>297</key>
 		<string>72 297 213 294 0 0 1152 746 </string>
 		<key>314</key>
@@ -32,17 +30,7 @@
 		<string>337 341 606 458 0 0 1280 832 </string>
 	</dict>
 	<key>IBFramework Version</key>
-	<string>362.0</string>
-	<key>IBGroupedObjects</key>
-	<dict>
-		<key>7</key>
-		<array>
-			<string>641</string>
-			<string>640</string>
-		</array>
-	</dict>
-	<key>IBLastGroupID</key>
-	<string>10</string>
+	<string>364.0</string>
 	<key>IBLockedObjects</key>
 	<array>
 		<integer>748</integer>
@@ -50,6 +38,6 @@
 		<integer>889</integer>
 	</array>
 	<key>IBSystem Version</key>
-	<string>7D24</string>
+	<string>7F44</string>
 </dict>
 </plist>

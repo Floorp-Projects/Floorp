@@ -67,7 +67,7 @@
   IBOutlet BookmarkOutlineView* mItemPane;
   IBOutlet NSTableView* mSearchPane;            // shows search results, can be hidden
     
-  IBOutlet HistoryDataSource* mHistorySource; //can swap to this for history data
+  IBOutlet HistoryDataSource* mHistorySource; // can swap to this for history data
 
   BOOL mSetupComplete;                      // have we been fully initialized?
   BOOL mSplittersRestored;                  // splitters can only be positioned after we resize to fit the window

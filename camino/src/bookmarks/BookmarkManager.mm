@@ -21,6 +21,7 @@
 *
 * Contributor(s):
 *    David Haas <haasd@cae.wisc.edu>
+*    Josh Aas <josha@mac.com>
 *
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -49,6 +50,8 @@
 #import "BookmarkFolder.h"
 #import "BookmarkToolbar.h"
 #import "BookmarkImportDlgController.h"
+#import "BookmarkOutlineView.h"
+#import "BookmarkViewController.h"
 #import "KindaSmartFolderManager.h"
 #import "BrowserWindowController.h"
 #import "MainController.h" 
@@ -454,6 +457,82 @@ static unsigned gFirstUserCollection = 0;
       return NO;
   }
   return YES;
+}
+
+// unified context menu generator for all kinds of bookmarks
+// this can be called from a bookmark outline view
+// or from a bookmark button, which should pass a nil outlineView
+- (NSMenu *)contextMenuForItem:(id)item fromView:(BookmarkOutlineView *)outlineView target:(id)target
+{
+  // don't do anything if item == nil
+  if (!item)
+    return nil;
+  
+  NSString * nulString = [NSString string];
+  NSMenu * contextMenu = [[[NSMenu alloc] initWithTitle:@"notitle"] autorelease];
+  BOOL isFolder = [item isKindOfClass:[BookmarkFolder class]];
+  NSString * menuTitle;
+  
+  // open in new window
+  if (isFolder || (outlineView && ([outlineView numberOfSelectedRows] > 1)))
+    menuTitle = NSLocalizedString(@"Open Tabs in New Window", @"");
+  else
+    menuTitle = NSLocalizedString(@"Open in New Window", @"");
+  NSMenuItem *menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewWindow:) keyEquivalent:nulString];
+  [menuItem setTarget:target];
+  [contextMenu addItem:menuItem];
+  
+  // open in new tab
+  if (isFolder || ([outlineView numberOfSelectedRows] > 1))
+    menuTitle = NSLocalizedString(@"Open in New Tabs", @"");
+  else
+    menuTitle = NSLocalizedString(@"Open in New Tab", @"");
+  menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(openBookmarkInNewTab:) keyEquivalent:nulString];
+  [menuItem setTarget:target];
+  [contextMenu addItem:menuItem];
+  
+  if (!outlineView || ([outlineView numberOfSelectedRows] == 1)) {
+    [contextMenu addItem:[NSMenuItem separatorItem]];
+    menuTitle = NSLocalizedString(@"Get Info", @"");
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(showBookmarkInfo:) keyEquivalent:nulString];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+  
+  if ([item isKindOfClass:[BookmarkFolder class]]) {
+    menuTitle = NSLocalizedString(@"Use as Dock Menu", @"");
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(makeDockMenu:) keyEquivalent:nulString];
+    [menuItem setTarget:item];
+    [contextMenu addItem:menuItem];
+  }
+  
+  BOOL allowNewFolder = NO;
+  if ([target isKindOfClass:[BookmarkViewController class]]) {
+    if (![[target activeCollection] isSmartFolder])
+      allowNewFolder = YES;
+  } else
+    allowNewFolder = YES;
+  if (allowNewFolder) {
+    // space
+    [contextMenu addItem:[NSMenuItem separatorItem]];
+    // create new folder
+    menuTitle = NSLocalizedString(@"Create New Folder...", @"");
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(addFolder:) keyEquivalent:nulString];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+  
+  id parent = [item parent];
+  if ([parent isKindOfClass:[BookmarkFolder class]] && ![parent isSmartFolder]) {
+    // space
+    [contextMenu addItem:[NSMenuItem separatorItem]];
+    // delete
+    menuTitle = NSLocalizedString(@"Delete", @"");
+    menuItem = [[NSMenuItem alloc] initWithTitle:menuTitle action:@selector(deleteBookmarks:) keyEquivalent:nulString];
+    [menuItem setTarget:target];
+    [contextMenu addItem:menuItem];
+  }
+  return contextMenu;
 }
 
 #pragma mark -

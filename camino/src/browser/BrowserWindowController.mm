@@ -1221,7 +1221,7 @@ static NSArray* sToolbarDefaults = nil;
   }
   else
   {
-  	[self openTabGroup:resolvedURLs replaceExistingTabs:YES];
+  	[self openURLArray:resolvedURLs replaceExistingTabs:YES];
   }
     
   // global history needs to know the user typed this url so it can present it
@@ -2007,12 +2007,6 @@ static NSArray* sToolbarDefaults = nil;
   [browser loadURL: aURLSpec referrer:aReferrer activate:!aLoadInBG];
 }
 
-- (void)openNewWindowWithGroupURLs: (NSArray *)urlArray loadInBackground: (BOOL)aLoadInBG
-{
-  BrowserWindowController* browser = [self openNewWindow:aLoadInBG];
-  [browser openTabGroup:urlArray replaceExistingTabs:YES];
-}
-
 //
 // -openNewWindow:
 //
@@ -2091,8 +2085,7 @@ static NSArray* sToolbarDefaults = nil;
   [[[newTab view] getBrowserView] setPageDescriptor:aDesc displayType:aDisplayType];
 }
 
-
-- (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
+- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
 {
   // ensure the content area is visible. We can't rely on normal url loading
   // to do this because for the new tabs we create below, they won't be connected

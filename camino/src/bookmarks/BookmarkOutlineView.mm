@@ -22,6 +22,7 @@
 * Contributor(s):
 *   Joe Hewitt <hewitt@netscape.com> (Original Author)
 *   David Haas <haasd@cae.wisc.edu>
+*   Josh Aas <josha@mac.com>
 *
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -41,6 +42,7 @@
 #import "BookmarkOutlineView.h"
 #import "BookmarkFolder.h"
 #import "Bookmark.h"
+#import "BookmarkManager.h"
 #import "NSArray+Utils.h"
 
 
@@ -51,16 +53,30 @@
   [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, NSURLPboardType, nil]];
 }
 
+-(NSMenu*)menu
+{
+  BookmarkManager *bm = [BookmarkManager sharedBookmarkManager];
+  BookmarkFolder *activeCollection = [[self delegate] activeCollection];
+  // only give a default menu if its the bookmark menu or toolbar
+  if ((activeCollection == [bm bookmarkMenuFolder]) || (activeCollection == [bm toolbarFolder])) {
+    // set up default menu
+    NSMenu *menu = [[[NSMenu alloc] init] autorelease];
+    NSMenuItem *menuItem = [[[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Create New Folder...", @"")
+                                                       action:@selector(addFolder:) keyEquivalent:[NSString string]] autorelease];
+    [menuItem setTarget:[self delegate]];
+    [menu addItem:menuItem];
+    return menu;
+  }
+  return nil;
+}
+
 - (void)draggedImage:(NSImage *)anImage endedAt:(NSPoint)aPoint operation:(NSDragOperation)operation
 {
-  if (operation == NSDragOperationDelete)
-  {
+  if (operation == NSDragOperationDelete) {
     NSPasteboard* pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
     NSArray* bookmarks = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[pboard propertyListForType: @"MozBookmarkType"]];
-    if (bookmarks)
-    {
-      for (unsigned int i = 0; i < [bookmarks count]; ++i)
-      {
+    if (bookmarks) {
+      for (unsigned int i = 0; i < [bookmarks count]; ++i) {
         BookmarkItem* item = [bookmarks objectAtIndex:i];
         [[item parent] deleteChild:item];
       }

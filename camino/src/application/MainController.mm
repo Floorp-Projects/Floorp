@@ -434,9 +434,9 @@ const int kReuseWindowOnAE = 2;
     if (openInNewWindow)
       [self openBrowserWindowWithURLs:[(BookmarkFolder *)item childURLs] behind:behindWindow];
     else if (openInNewTab)
-      [browserWindowController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO];
+      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:NO];
     else
-      [browserWindowController openTabGroup:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
+      [browserWindowController openURLArray:[(BookmarkFolder *)item childURLs] replaceExistingTabs:YES];
   }
 }
 
@@ -831,7 +831,7 @@ const int kReuseWindowOnAE = 2;
     [browser showWindow: self];
   }
 
-  [browser openTabGroup:urlArray replaceExistingTabs:YES];
+  [browser openURLArray:urlArray replaceExistingTabs:YES];
   return browser;
 }
 

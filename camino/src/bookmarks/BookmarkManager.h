@@ -42,6 +42,7 @@
 
 @class BookmarkFolder;
 @class BookmarkImportDlgController;
+@class BookmarkOutlineView;
 @class KindaSmartFolderManager;
 @class RunLoopMessenger;
 
@@ -92,6 +93,7 @@
 -(NSArray *)searchBookmarksForString:(NSString *)searchString;
 -(unsigned) firstUserCollection;
 -(BOOL) isDropValid:(NSArray *)items toFolder:(BookmarkFolder *)parent;
+-(NSMenu *)contextMenuForItem:(id)item fromView:(BookmarkOutlineView *)outlineView target:(id)target;
 
 // Reading bookmark files
 -(BOOL) readBookmarks;

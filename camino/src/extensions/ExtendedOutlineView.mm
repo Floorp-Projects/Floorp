@@ -22,6 +22,7 @@
 * Contributor(s):
 *   David Hyatt <hyatt@netscape.com> (Original Author)
 *   Max Horn <max@quendi.de> (Context menu, tooltip code, and editing)
+*   Josh Aas <josha@mac.com> (contextual menu fixups)
 *
 *
 * Alternatively, the contents of this file may be used under the terms of
@@ -208,9 +209,13 @@
       
       if ([delegate respondsToSelector:@selector(outlineView:contextMenuForItem:)])
         return [delegate outlineView:self contextMenuForItem:item];
-    } else
+    } else {
       // no item, no context menu
       return nil;
+    }
+  }
+  else {
+    [self deselectAll:self];
   }
   
   // Just return the default context menu

@@ -282,10 +282,9 @@ typedef enum
 - (IBAction)frameToThisWindow:(id)sender;
 
 - (void)openNewWindowWithURL: (NSString*)aURLSpec referrer:(NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
-- (void)openNewWindowWithGroupURLs: (NSArray *)urlArray loadInBackground: (BOOL)aLoadInBG;
 - (void)openNewTabWithURL: (NSString*)aURLSpec referrer: (NSString*)aReferrer loadInBackground: (BOOL)aLoadInBG;
 
-- (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting;
+- (void)openURLArray:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting;
 
 -(BrowserTabViewItem*)createNewTabItem;
 

@@ -445,6 +445,8 @@ HistoryRDFObserver::OnChange(nsIRDFDataSource*, nsIRDFResource*,
   [contextMenu addItem:menuItem];
   [menuItem release];
 
+  [contextMenu addItem:[NSMenuItem separatorItem]];
+
   // delete
   menuItem = [[NSMenuItem alloc] initWithTitle:NSLocalizedString(@"Delete",@"") action:@selector(deleteHistoryItems:) keyEquivalent:nulString];
   [menuItem setTarget:self];
