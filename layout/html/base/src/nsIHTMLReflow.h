@@ -25,6 +25,7 @@
 class nsISpaceManager;
 class nsBlockFrame;
 class nsLineLayout;
+struct nsStyleDisplay;
 struct nsStylePosition;
 struct nsStyleSpacing;
 
@@ -156,6 +157,12 @@ struct nsHTMLReflowState : nsReflowState {
   // Computed margin values
   nsMargin         computedMargin;
 
+  // Cached copy of the border values
+  nsMargin         mComputedBorderPadding;
+
+  // Computed padding values
+  nsMargin         mComputedPadding;
+
   // Computed values for 'left/top/right/bottom' offsets. Only applies to
   // 'positioned' elements
   nsMargin         computedOffsets;
@@ -166,58 +173,57 @@ struct nsHTMLReflowState : nsReflowState {
   // Compact margin available space
   nscoord          mCompactMarginWidth;
 
-  // The following data members are relevant if nsStyleText.mTextAlign == NS_STYLE_TEXT_ALIGN_CHAR
-  nscoord          mAlignCharOffset;   // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
-                                       // to the align character (which will be specified in nsStyleTable)
-  PRPackedBool     mUseAlignCharOffset;// if true, the reflow honors alignCharOffset and does not
-                                       // set it. if false, the reflow sets alignCharOffset
+  // The following data members are relevant if nsStyleText.mTextAlign
+  // == NS_STYLE_TEXT_ALIGN_CHAR
 
-  // Constructs an initial reflow state (no parent reflow state) for a
-  // non-incremental reflow command. Sets reflowType to eReflowType_Block
-  nsHTMLReflowState(nsIPresContext&      aPresContext,
-                    nsIFrame*            aFrame,
-                    nsReflowReason       aReason, 
-                    const nsSize&        aAvailableSpace,
-                    nsIRenderingContext* aContext,
-                    nsISpaceManager*     aSpaceManager = nsnull);
+  // distance from reference edge (as specified in nsStyleDisplay.mDirection) 
+  // to the align character (which will be specified in nsStyleTable)
+  nscoord          mAlignCharOffset;
 
-  // Constructs an initial reflow state (no parent reflow state) for an
-  // incremental reflow command. Sets reflowType to eReflowType_Block
-  nsHTMLReflowState(nsIPresContext&      aPresContext,
-                    nsIFrame*            aFrame,
-                    nsIReflowCommand&    aReflowCommand,
-                    const nsSize&        aAvailableSpace,
-                    nsIRenderingContext* aContext,
-                    nsISpaceManager*     aSpaceManager = nsnull);
+  // if true, the reflow honors alignCharOffset and does not
+  // set it. if false, the reflow sets alignCharOffset
+  PRPackedBool     mUseAlignCharOffset;
 
-  // Construct a reflow state for the given frame, parent reflow state, and
-  // max size. Uses the reflow reason, space manager, reflow command, and
-  // line layout from the parent's reflow state.  Defaults to a reflow
-  // frame type of eReflowType_Block
+  // Cached pointers to the various style structs used during intialization
+  const nsStyleDisplay* mStyleDisplay;
+  const nsStylePosition* mStylePosition;
+  const nsStyleSpacing* mStyleSpacing;
+
+  // Note: The copy constructor is written by the compiler
+  // automatically. You can use that and then override specific values
+  // if you want, or you can call Init as desired...
+
+  // Initialize a <b>root</b> reflow state with a rendering context to
+  // use for measuring things.
   nsHTMLReflowState(nsIPresContext&          aPresContext,
                     nsIFrame*                aFrame,
-                    const nsHTMLReflowState& aParentReflowState,
+                    nsReflowReason           aReason,
+                    nsIRenderingContext*     aRenderingContext,
                     const nsSize&            aAvailableSpace);
 
-  // Construct a reflow state for the given inline frame, parent
-  // reflow state, and max size. Uses the reflow reason, space
-  // manager, and reflow command from the parent's reflow state. Sets
-  // the reflow frame type to eReflowType_Inline
+  // Initialize a <b>root</b> reflow state for an <b>incremental</b>
+  // reflow.
   nsHTMLReflowState(nsIPresContext&          aPresContext,
                     nsIFrame*                aFrame,
-                    const nsHTMLReflowState& aParentReflowState,
-                    const nsSize&            aAvailableSpace,
-                    nsLineLayout*            aLineLayout);
+                    nsIReflowCommand&        aReflowCommand,
+                    nsIRenderingContext*     aRenderingContext,
+                    const nsSize&            aAvailableSpace);
 
-  // Constructs a reflow state that overrides the reflow reason of the parent
-  // reflow state. Uses the space manager from the parent's reflow state and
-  // sets the reflow command to NULL. Sets lineLayout to NULL, and defaults to
-  // a reflow frame type of eReflowType_Block
+  // Initialize a reflow state for a child frames reflow. Some state
+  // is copied from the parent reflow state; the remaining state is
+  // computed.
   nsHTMLReflowState(nsIPresContext&          aPresContext,
-                    nsIFrame*                aFrame,
                     const nsHTMLReflowState& aParentReflowState,
+                    nsIFrame*                aFrame,
                     const nsSize&            aAvailableSpace,
-                    nsReflowReason           aReflowReason);
+                    nsReflowReason           aReason);
+
+  // Same as the previous except that the reason is taken from the
+  // parent's reflow state.
+  nsHTMLReflowState(nsIPresContext&          aPresContext,
+                    const nsHTMLReflowState& aParentReflowState,
+                    nsIFrame*                aFrame,
+                    const nsSize&            aAvailableSpace);
 
   /**
    * Returns PR_TRUE if the specified width or height has an value other
@@ -299,38 +305,31 @@ struct nsHTMLReflowState : nsReflowState {
   static nscoord CalcLineHeight(nsIPresContext& aPresContext,
                                 nsIFrame* aFrame);
 
-
   static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame);
 
 protected:
   // This method initializes various data members. It is automatically
   // called by the various constructors
-  void Init(nsIPresContext& aPresContext) {
-    mRunInFrame = nsnull;
-    mCompactMarginWidth = 0;
-    computedWidth = computedHeight = 0;
-    frameType = DetermineFrameType(frame);
-    InitConstraints(aPresContext);
-    mAlignCharOffset = 0;
-    mUseAlignCharOffset = 0;
-  }
+  void Init(nsIPresContext& aPresContext);
 
   void InitConstraints(nsIPresContext& aPresContext);
+
   void InitAbsoluteConstraints(nsIPresContext& aPresContext,
                                const nsHTMLReflowState* cbrs,
-                               const nsStylePosition* aPosition,
-                               nscoord containingBlockWidth,
-                               nscoord containingBlockHeight);
+                               nscoord aContainingBlockWidth,
+                               nscoord aContainingBlockHeight);
 
-  void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
-                              const nsStylePosition* aPosition);
+  void ComputeRelativeOffsets(const nsHTMLReflowState* cbrs);
+
+  void ComputeBlockBoxData(nsIPresContext& aPresContext,
+                           const nsHTMLReflowState* cbrs,
+                           nsStyleUnit aWidthUnit,
+                           nsStyleUnit aHeightUnit,
+                           nscoord aContainingBlockWidth,
+                           nscoord aContainingBlockHeight);
 
   void CalculateLeftRightMargin(const nsHTMLReflowState* aContainingBlockRS,
-                                const nsStyleSpacing*    aSpacing,
-                                nscoord                  aComputedWidth,
-                                const nsMargin&          aBorderPadding,
-                                nscoord&                 aComputedLeftMargin,
-                                nscoord&                 aComputedRightMargin);
+                                nscoord                  aComputedWidth);
 
   static void ComputeHorizontalValue(nscoord aContainingBlockWidth,
                                      nsStyleUnit aUnit,
@@ -341,6 +340,10 @@ protected:
                                    nsStyleUnit aUnit,
                                    const nsStyleCoord& aCoord,
                                    nscoord& aResult);
+
+  static nsCSSFrameType DetermineFrameType(nsIFrame* aFrame,
+                                           const nsStylePosition* aPosition,
+                                           const nsStyleDisplay* aDisplay);
 };
 
 //----------------------------------------------------------------------
@@ -434,88 +437,5 @@ public:
   NS_IMETHOD RelativePositionFrames(nsRect& aCombinedArea) = 0;
 #endif
 };
-
-//----------------------------------------------------------------------
-
-// Constructs an initial reflow state (no parent reflow state) for a
-// non-incremental reflow command. Sets reflowType to eReflowType_Block
-inline
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
-                                     nsIFrame*            aFrame,
-                                     nsReflowReason       aReason, 
-                                     const nsSize&        aAvailableSpace,
-                                     nsIRenderingContext* aContext,
-                                     nsISpaceManager*     aSpaceManager)
-  : nsReflowState(aFrame, aReason, aAvailableSpace, aContext)
-{
-  spaceManager = aSpaceManager;
-  lineLayout = nsnull;
-  Init(aPresContext);
-}
-
-// Constructs an initial reflow state (no parent reflow state) for an
-// incremental reflow command. Sets reflowType to eReflowType_Block
-inline
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&      aPresContext,
-                                     nsIFrame*            aFrame,
-                                     nsIReflowCommand&    aReflowCommand,
-                                     const nsSize&        aAvailableSpace,
-                                     nsIRenderingContext* aContext,
-                                     nsISpaceManager*     aSpaceManager)
-  : nsReflowState(aFrame, aReflowCommand, aAvailableSpace, aContext)
-{
-  spaceManager = aSpaceManager;
-  lineLayout = nsnull;
-  Init(aPresContext);
-}
-
-// Construct a reflow state for the given frame, parent reflow state, and
-// max size. Uses the reflow reason, space manager, reflow command, and
-// line layout from the parent's reflow state.  Defaults to a reflow
-// frame type of eReflowType_Block
-inline
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
-                                     nsIFrame*                aFrame,
-                                     const nsHTMLReflowState& aParentState,
-                                     const nsSize&            aAvailableSpace)
-  : nsReflowState(aFrame, aParentState, aAvailableSpace)
-{
-  spaceManager = aParentState.spaceManager;
-  lineLayout = aParentState.lineLayout;
-  Init(aPresContext);
-}
-
-// Construct a reflow state for the given inline frame, parent reflow state,
-// and max size. Uses the reflow reason, space manager, and reflow command from
-// the parent's reflow state. Sets the reflow frame type to eReflowType_Inline
-inline
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
-                                     nsIFrame*                aFrame,
-                                     const nsHTMLReflowState& aParentState,
-                                     const nsSize&            aAvailableSpace,
-                                     nsLineLayout*            aLineLayout)
-  : nsReflowState(aFrame, aParentState, aAvailableSpace)
-{
-  spaceManager = aParentState.spaceManager;
-  lineLayout = aLineLayout;
-  Init(aPresContext);
-}
-
-// Constructs a reflow state that overrides the reflow reason of the parent
-// reflow state. Uses the space manager from the parent's reflow state and
-// sets the reflow command to NULL. Sets lineLayout to NULL, and defaults to
-// a reflow frame type of eReflowType_Block
-inline
-nsHTMLReflowState::nsHTMLReflowState(nsIPresContext&          aPresContext,
-                                     nsIFrame*                aFrame,
-                                     const nsHTMLReflowState& aParentState,
-                                     const nsSize&            aAvailableSpace,
-                                     nsReflowReason           aReflowReason)
-  : nsReflowState(aFrame, aParentState, aAvailableSpace, aReflowReason)
-{
-  spaceManager = aParentState.spaceManager;
-  lineLayout = nsnull;
-  Init(aPresContext);
-}
 
 #endif /* nsIHTMLReflow_h___ */
