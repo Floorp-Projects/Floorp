@@ -94,6 +94,7 @@
 #include "nsRDFSort.h"
 #include "nsRuleNetwork.h"
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsXULAtoms.h"
@@ -4957,71 +4958,76 @@ nsXULTemplateBuilder::ParseAttribute(const nsAReadableString& aAttributeValue,
                                      void (*aTextCallback)(nsXULTemplateBuilder*, const nsAReadableString&, void*),
                                      void* aClosure)
 {
-    // XXX wish we could use iterators, but we can't right now.
-    PRInt32 len = aAttributeValue.Length();
-    PRUint32 mark = 0, backup = 0;
+    nsAReadableString::const_iterator done_parsing;
+    aAttributeValue.EndReading(done_parsing);
 
-    for (PRInt32 i = 0; i < len; backup = ++i) {
+    nsAReadableString::const_iterator iter;
+    aAttributeValue.BeginReading(iter);
+
+    nsAReadableString::const_iterator mark(iter), backup(iter);
+
+    for (; iter != done_parsing; backup = ++iter) {
         // A variable is either prefixed with '?' (in the extended
         // syntax) or "rdf:" (in the simple syntax).
         PRBool isvar;
-        if (aAttributeValue[i] == PRUnichar('?')) {
+        if (*iter == PRUnichar('?') && (++iter != done_parsing)) {
             isvar = PR_TRUE;
         }
-        else if ((aAttributeValue[i] == PRUnichar('r') && ++i < len) &&
-                 (aAttributeValue[i] == PRUnichar('d') && ++i < len) &&
-                 (aAttributeValue[i] == PRUnichar('f') && ++i < len) &&
-                 (aAttributeValue[i] == PRUnichar(':'))) {
+        else if ((*iter == PRUnichar('r') && (++iter != done_parsing)) &&
+                 (*iter == PRUnichar('d') && (++iter != done_parsing)) &&
+                 (*iter == PRUnichar('f') && (++iter != done_parsing)) &&
+                 (*iter == PRUnichar(':') && (++iter != done_parsing))) {
             isvar = PR_TRUE;
         }
         else {
             isvar = PR_FALSE;
         }
 
-        if (! isvar || ++i >= len) {
+        if (! isvar) {
             // It's not a variable, or we ran off the end of the
             // string after the initial variable prefix. Since we may
             // have slurped down some characters before realizing that
             // fact, back up to the point where we started.
-            i = backup;
+            iter = backup;
             continue;
         }
         else if (backup != mark && aTextCallback) {
             // Okay, we've found a variable, and there's some vanilla
             // text that's been buffered up. Flush it.
-            (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
+            (*aTextCallback)(this, Substring(aAttributeValue, mark, backup), aClosure);
         }
 
         // Construct a substring that is the symbol we need to look up
         // in the rule's symbol table. The symbol is terminated by a
         // space character, a caret, or the end of the string,
         // whichever comes first.
-        PRUint32 first = backup;
+        nsAReadableString::const_iterator first(backup);
 
         PRUnichar c = 0;
-        while (i < len) {
-            c = aAttributeValue[i];
+        while (iter != done_parsing) {
+            c = *iter;
             if ((c == PRUnichar(' ')) || (c == PRUnichar('^')))
                 break;
 
-            ++i;
+            ++iter;
         }
 
-        PRUint32 last = i;
+        nsAReadableString::const_iterator last(iter);
 
         // Back up so we don't consume the terminating character
         // *unless* the terminating character was a caret: the caret
         // means "concatenate with no space in between".
         if (c != PRUnichar('^'))
-            --i;
+            --iter;
 
-        (*aVariableCallback)(this, Substring(aAttributeValue, first, last - first), aClosure);
-        mark = i + 1;
+        (*aVariableCallback)(this, Substring(aAttributeValue, first, last), aClosure);
+        mark = iter;
+        ++mark;
     }
 
     if (backup != mark && aTextCallback) {
         // If there's any text left over, then fire the text callback
-        (*aTextCallback)(this, Substring(aAttributeValue, mark, backup - mark), aClosure);
+        (*aTextCallback)(this, Substring(aAttributeValue, mark, backup), aClosure);
     }
 }
 
@@ -5040,10 +5046,7 @@ nsXULTemplateBuilder::SubstituteText(Match& aMatch,
                                      nsString& aResult)
 {
     // See if it's the special value "..."
-    if (aAttributeValue.Length() == 3
-        && aAttributeValue[0] == PRUnichar('.')
-        && aAttributeValue[1] == PRUnichar('.')
-        && aAttributeValue[2] == PRUnichar('.')) {
+    if (aAttributeValue == NS_LITERAL_STRING("...")) {
         Value memberval;
         aMatch.GetAssignmentFor(mConflictSet, mMemberVar, &memberval);
 
