@@ -37,6 +37,7 @@
 
 #include <stdio.h>
 #include "nsString.h"
+#include "nsStringBuffer.h"
 #include "nsReadableUtils.h"
 #include "nsCRT.h"
 
@@ -583,6 +584,35 @@ PRBool test_rfindcharinset()
     return PR_TRUE;
   }
 
+PRBool test_stringbuffer()
+  {
+    const char kData[] = "hello world";
+
+    nsStringBuffer *buf;
+    
+    buf = nsStringBuffer::Alloc(sizeof(kData));
+    if (!buf)
+      return PR_FALSE;
+    buf->Release();
+ 
+    buf = nsStringBuffer::Alloc(sizeof(kData));
+    if (!buf)
+      return PR_FALSE;
+    char *data = (char *) buf->Data();
+    memcpy(data, kData, sizeof(kData));
+
+    nsCString str;
+    buf->ToString(sizeof(kData)-1, str);
+
+    nsStringBuffer *buf2;
+    buf2 = nsStringBuffer::FromString(str);
+
+    PRBool rv = (buf == buf2);
+
+    buf->Release();
+    return rv;
+  }
+
 //----
 
 typedef PRBool (*TestFunc)();
@@ -620,6 +650,7 @@ tests[] =
     { "test_appendint64", test_appendint64 },
     { "test_findcharinset", test_findcharinset },
     { "test_rfindcharinset", test_rfindcharinset },
+    { "test_stringbuffer", test_stringbuffer },
     { nsnull, nsnull }
   };
 

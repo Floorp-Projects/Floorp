@@ -91,6 +91,7 @@
 #include "nsInterfaceRequestorAgg.h"
 #include "nsHashPropertyBag.h"
 #include "nsStringAPI.h"
+#include "nsStringBuffer.h"
 
 void XXXNeverCalled()
 {
@@ -220,4 +221,19 @@ void XXXNeverCalled()
     NS_StringCloneData(str1);
     NS_UTF16ToCString(str1, NS_CSTRING_ENCODING_ASCII, str2);
     NS_CStringToUTF16(str2, NS_CSTRING_ENCODING_ASCII, str1);
+
+    // nsStringBuffer.h
+    {
+      nsString x;
+      nsCString y;
+      nsStringBuffer b;
+      b.AddRef();
+      b.Release();
+      nsStringBuffer::Alloc(0);
+      nsStringBuffer::Realloc(nsnull, 0);
+      nsStringBuffer::FromString(x);
+      nsStringBuffer::FromString(y);
+      b.ToString(0, x);
+      b.ToString(0, y);
+    }
 }

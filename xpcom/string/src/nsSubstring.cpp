@@ -47,6 +47,7 @@
 #include <stdlib.h>
 #include "nsSubstring.h"
 #include "nsString.h"
+#include "nsStringBuffer.h"
 #include "nsDependentString.h"
 #include "nsMemory.h"
 #include "pratom.h"
@@ -107,111 +108,12 @@ static nsStringStats gStringStats;
 
 // ---------------------------------------------------------------------------
 
-  /**
-   * This structure precedes the string buffers "we" allocate.  It may be the
-   * case that nsTSubstring::mData does not point to one of these special
-   * buffers.  The mFlags member variable distinguishes the buffer type.
-   *
-   * When this header is in use, it enables reference counting, and capacity
-   * tracking.  NOTE: A string buffer can be modified only if its reference
-   * count is 1.
-   */
-class nsStringHeader
-  {
-    private:
-
-      PRInt32  mRefCount;
-      PRUint32 mStorageSize;
-
-    public:
-
-      void AddRef()
-        {
-          PR_AtomicIncrement(&mRefCount);
-          STRING_STAT_INCREMENT(Share);
-        }
-
-      void Release()
-        {
-          if (PR_AtomicDecrement(&mRefCount) == 0)
-            {
-              STRING_STAT_INCREMENT(Free);
-              free(this); // we were allocated with |malloc|
-            }
-        }
-
-        /**
-         * Alloc returns a pointer to a new string header with set capacity.
-         */
-      static nsStringHeader* Alloc(size_t size)
-        {
-          STRING_STAT_INCREMENT(Alloc);
- 
-          NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
-
-          nsStringHeader *hdr =
-              (nsStringHeader *) malloc(sizeof(nsStringHeader) + size);
-          if (hdr)
-            {
-              hdr->mRefCount = 1;
-              hdr->mStorageSize = size;
-            }
-          return hdr;
-        }
-
-      static nsStringHeader* Realloc(nsStringHeader* hdr, size_t size)
-        {
-          STRING_STAT_INCREMENT(Realloc);
-
-          NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
-
-          // no point in trying to save ourselves if we hit this assertion
-          NS_ASSERTION(!hdr->IsReadonly(), "|Realloc| attempted on readonly string");
-
-          hdr = (nsStringHeader*) realloc(hdr, sizeof(nsStringHeader) + size);
-          if (hdr)
-            hdr->mStorageSize = size;
-
-          return hdr;
-        }
-
-      static nsStringHeader* FromData(void* data)
-        {
-          return (nsStringHeader*) ( ((char*) data) - sizeof(nsStringHeader) );
-        }
-
-      void* Data() const
-        {
-          return (void*) ( ((char*) this) + sizeof(nsStringHeader) );
-        }
-
-      PRUint32 StorageSize() const
-        {
-          return mStorageSize;
-        }
-
-        /**
-         * Because nsTSubstring allows only single threaded access, if this
-         * method returns FALSE, then the caller can be sure that it has
-         * exclusive access to the nsStringHeader and associated data.
-         * However, if this function returns TRUE, then other strings may
-         * rely on the data in this buffer being constant and other threads
-         * may access this buffer simultaneously.
-         */
-      PRBool IsReadonly() const
-        {
-          return mRefCount > 1;
-        }
-  };
-
-// ---------------------------------------------------------------------------
-
 inline void
 ReleaseData( void* data, PRUint32 flags )
   {
     if (flags & nsSubstring::F_SHARED)
       {
-        nsStringHeader::FromData(data)->Release();
+        nsStringBuffer::FromData(data)->Release();
       }
     else if (flags & nsSubstring::F_OWNED)
       {
@@ -220,6 +122,180 @@ ReleaseData( void* data, PRUint32 flags )
       }
     // otherwise, nothing to do.
   }
+
+// ---------------------------------------------------------------------------
+
+// XXX or we could make nsStringBuffer be a friend of nsTAString
+
+class nsAStringAccessor : public nsAString
+  {
+    private:
+      nsAStringAccessor(); // NOT IMPLEMENTED
+
+    public:
+      const void *vtable() const { return mVTable; }
+      char_type  *data() const   { return mData; }
+      size_type   length() const { return mLength; }
+      PRUint32    flags() const  { return mFlags; }
+
+      void set(char_type *data, size_type len, PRUint32 flags)
+        {
+          ReleaseData(mData, mFlags);
+          mData = data;
+          mLength = len;
+          mFlags = flags;
+        }
+  };
+
+class nsACStringAccessor : public nsACString
+  {
+    private:
+      nsACStringAccessor(); // NOT IMPLEMENTED
+
+    public:
+      const void *vtable() const { return mVTable; }
+      char_type  *data() const   { return mData; }
+      size_type   length() const { return mLength; }
+      PRUint32    flags() const  { return mFlags; }
+
+      void set(char_type *data, size_type len, PRUint32 flags)
+        {
+          ReleaseData(mData, mFlags);
+          mData = data;
+          mLength = len;
+          mFlags = flags;
+        }
+  };
+
+// ---------------------------------------------------------------------------
+
+void
+nsStringBuffer::AddRef()
+  {
+    PR_AtomicIncrement(&mRefCount);
+    STRING_STAT_INCREMENT(Share);
+  }
+
+void
+nsStringBuffer::Release()
+  {
+    if (PR_AtomicDecrement(&mRefCount) == 0)
+      {
+        STRING_STAT_INCREMENT(Free);
+        free(this); // we were allocated with |malloc|
+      }
+  }
+
+  /**
+   * Alloc returns a pointer to a new string header with set capacity.
+   */
+nsStringBuffer*
+nsStringBuffer::Alloc(size_t size)
+  {
+    STRING_STAT_INCREMENT(Alloc);
+
+    NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
+
+    nsStringBuffer *hdr =
+        (nsStringBuffer *) malloc(sizeof(nsStringBuffer) + size);
+    if (hdr)
+      {
+        hdr->mRefCount = 1;
+        hdr->mStorageSize = size;
+      }
+    return hdr;
+  }
+
+nsStringBuffer*
+nsStringBuffer::Realloc(nsStringBuffer* hdr, size_t size)
+  {
+    STRING_STAT_INCREMENT(Realloc);
+
+    NS_ASSERTION(size != 0, "zero capacity allocation not allowed");
+
+    // no point in trying to save ourselves if we hit this assertion
+    NS_ASSERTION(!hdr->IsReadonly(), "|Realloc| attempted on readonly string");
+
+    hdr = (nsStringBuffer*) realloc(hdr, sizeof(nsStringBuffer) + size);
+    if (hdr)
+      hdr->mStorageSize = size;
+
+    return hdr;
+  }
+
+nsStringBuffer*
+nsStringBuffer::FromString(const nsAString& str)
+  {
+    const nsAStringAccessor* accessor =
+        NS_STATIC_CAST(const nsAStringAccessor*, &str);
+
+    if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable ||
+        !(accessor->flags() & nsSubstring::F_SHARED))
+      return nsnull;
+
+    return FromData(accessor->data());
+  }
+
+nsStringBuffer*
+nsStringBuffer::FromString(const nsACString& str)
+  {
+    const nsACStringAccessor* accessor =
+        NS_STATIC_CAST(const nsACStringAccessor*, &str);
+
+    if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable ||
+        !(accessor->flags() & nsCSubstring::F_SHARED))
+      return nsnull;
+
+    return FromData(accessor->data());
+  }
+
+void
+nsStringBuffer::ToString(PRUint32 len, nsAString &str)
+  {
+    PRUnichar* data = NS_STATIC_CAST(PRUnichar*, Data());
+
+    nsAStringAccessor* accessor = NS_STATIC_CAST(nsAStringAccessor*, &str);
+    if (accessor->vtable() != nsObsoleteAString::sCanonicalVTable)
+      {
+        str.Assign(data, len);
+      }
+    else
+      {
+        NS_ASSERTION(data[len] == PRUnichar(0), "data should be null terminated");
+
+        // preserve class flags
+        PRUint32 flags = accessor->flags();
+        flags = (flags & 0xFFFF0000) | nsSubstring::F_SHARED | nsSubstring::F_TERMINATED;
+
+        AddRef();
+        accessor->set(data, len, flags);
+      }
+  }
+
+void
+nsStringBuffer::ToString(PRUint32 len, nsACString &str)
+  {
+    char* data = NS_STATIC_CAST(char*, Data());
+
+    nsACStringAccessor* accessor = NS_STATIC_CAST(nsACStringAccessor*, &str);
+    if (accessor->vtable() != nsObsoleteACString::sCanonicalVTable)
+      {
+        str.Assign(data, len);
+      }
+    else
+      {
+        NS_ASSERTION(data[len] == char(0), "data should be null terminated");
+
+        // preserve class flags
+        PRUint32 flags = accessor->flags();
+        flags = (flags & 0xFFFF0000) | nsCSubstring::F_SHARED | nsCSubstring::F_TERMINATED;
+
+        AddRef();
+        accessor->set(data, len, flags);
+      }
+  }
+
+// ---------------------------------------------------------------------------
 
 
   // define nsSubstring
