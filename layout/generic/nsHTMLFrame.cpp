@@ -559,38 +559,6 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     // absolutely positioned elements
     nsMargin      border;
 
-    if (!kidReflowState.mStyleBorder->GetBorder(border)) {
-      NS_NOTYETIMPLEMENTED("percentage border");
-    }
-
-    // First check the combined area
-    if (NS_FRAME_OUTSIDE_CHILDREN & kidFrame->GetStateBits()) {
-      // The background covers the content area and padding area, so check
-      // for children sticking outside the child frame's padding edge
-      nscoord paddingEdgeX = kidDesiredSize.width - border.right;
-      nscoord paddingEdgeY = kidDesiredSize.height - border.bottom;
-
-      if (kidDesiredSize.mOverflowArea.XMost() > paddingEdgeX) {
-        kidDesiredSize.width = kidDesiredSize.mOverflowArea.XMost() +
-                               border.right;
-      }
-      if (kidDesiredSize.mOverflowArea.YMost() > paddingEdgeY) {
-        kidDesiredSize.height = kidDesiredSize.mOverflowArea.YMost() +
-                                border.bottom;
-      }
-    }
-
-    // If our height is fixed, then make sure the child frame plus its top and
-    // bottom margin is at least that high as well...
-    if (NS_AUTOHEIGHT != aReflowState.mComputedHeight) {
-      nscoord totalHeight = kidDesiredSize.height + kidReflowState.mComputedMargin.top +
-        kidReflowState.mComputedMargin.bottom;
-
-      if (totalHeight < aReflowState.mComputedHeight) {
-        kidDesiredSize.height += aReflowState.mComputedHeight - totalHeight;
-      }
-    }
-
     // Complete the reflow and position and size the child frame
     FinishReflowChild(kidFrame, aPresContext, &kidReflowState, kidDesiredSize,
                       kidReflowState.mComputedMargin.left,
@@ -603,10 +571,25 @@ CanvasFrame::Reflow(nsIPresContext*          aPresContext,
     }
 
     // Return our desired size
-    aDesiredSize.width = kidDesiredSize.width + kidReflowState.mComputedMargin.left +
-      kidReflowState.mComputedMargin.right;
-    aDesiredSize.height = kidDesiredSize.height + kidReflowState.mComputedMargin.top +
-      kidReflowState.mComputedMargin.bottom;
+    // First check the combined area
+    if (NS_FRAME_OUTSIDE_CHILDREN & kidFrame->GetStateBits()) {
+      // Size ourselves to the size of the overflow area
+      // XXXbz this ignores overflow up and left
+      aDesiredSize.width = kidReflowState.mComputedMargin.left +
+        PR_MAX(kidDesiredSize.mOverflowArea.XMost(),
+               kidDesiredSize.width + kidReflowState.mComputedMargin.right);
+      aDesiredSize.height = kidReflowState.mComputedMargin.top +
+        PR_MAX(kidDesiredSize.mOverflowArea.YMost(),
+               kidDesiredSize.height + kidReflowState.mComputedMargin.bottom);
+    } else {
+      aDesiredSize.width = kidDesiredSize.width +
+        kidReflowState.mComputedMargin.left +
+        kidReflowState.mComputedMargin.right;
+      aDesiredSize.height = kidDesiredSize.height +
+        kidReflowState.mComputedMargin.top +
+        kidReflowState.mComputedMargin.bottom;
+    }
+
     aDesiredSize.ascent = aDesiredSize.height;
     aDesiredSize.descent = 0;
     // XXX Don't completely ignore NS_FRAME_OUTSIDE_CHILDREN for child frames
