@@ -29,6 +29,8 @@
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 #include "nsVoidArray.h"
+
+#include "nsIPref.h"
 #include "prefapi.h"
 
 extern "C" {
@@ -731,7 +733,9 @@ cookie_GetWarningPref() {
 MODULE_PRIVATE int PR_CALLBACK
 cookie_BehaviorPrefChanged(const char * newpref, void * data) {
   PRInt32 n;
-  if ((PREF_OK != PREF_GetIntPref(cookie_behaviorPref, &n))) {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     cookie_SetBehaviorPref(COOKIE_Accept);
   } else {
     cookie_SetBehaviorPref((cookie_BehaviorEnum)n);
@@ -742,7 +746,9 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
 MODULE_PRIVATE int PR_CALLBACK
 cookie_WarningPrefChanged(const char * newpref, void * data) {
   PRBool x;
-  if ((PREF_OK != PREF_GetBoolPref(cookie_warningPref, &x))) {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
   cookie_SetWarningPref(x);
@@ -788,18 +794,20 @@ PUBLIC void
 COOKIE_RegisterCookiePrefCallbacks(void) {
   PRInt32 n;
   PRBool x;
-  if ((PREF_OK != PREF_GetIntPref(cookie_behaviorPref, &n))) {
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+  if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     cookie_SetBehaviorPref(COOKIE_Accept);
   } else {
     cookie_SetBehaviorPref((cookie_BehaviorEnum)n);
   }
   cookie_SetBehaviorPref((cookie_BehaviorEnum)n);
-  PREF_RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, NULL);
-  if ((PREF_OK != PREF_GetBoolPref(cookie_warningPref, &x))) {
+  prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, NULL);
+  if (NS_FAILED(prefs->GetBoolPref(cookie_warningPref, &x))) {
     x = PR_FALSE;
   }
   cookie_SetWarningPref(x);
-  PREF_RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, NULL);
+  prefs->RegisterCallback(cookie_warningPref, cookie_WarningPrefChanged, NULL);
 }
 
 /* returns PR_TRUE if authorization is required
@@ -1244,7 +1252,9 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
        *  So only do it if the restrictCookieDomains pref is PR_TRUE.
        *
        */
-      if ( PREF_GetBoolPref(cookie_strictDomainsPref, &pref_scd) < 0 ) {
+      nsresult rv;
+      NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+      if (NS_FAILED(prefs->GetBoolPref(cookie_strictDomainsPref, &pref_scd))) {
         pref_scd = PR_FALSE;
       }
       if ( pref_scd == PR_TRUE ) {
