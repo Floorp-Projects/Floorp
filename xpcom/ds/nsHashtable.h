@@ -59,7 +59,7 @@ protected:
 
 public:
   nsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE);
-  ~nsHashtable();
+  virtual ~nsHashtable();
 
   PRInt32 Count(void) { return hashtable->nentries; }
   PRBool Exists(nsHashKey *aKey);
@@ -103,17 +103,41 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
 
-class NS_COM nsSupportsHashtable : public nsHashtable {
+class nsISupports;
+
+class NS_COM nsSupportsHashtable
+ : private nsHashtable
+{
 public:
+  typedef PRBool (* PR_CALLBACK EnumFunc) (nsHashKey *aKey, void *aData, void* closure);
+
   nsSupportsHashtable(PRUint32 aSize = 256, PRBool threadSafe = PR_FALSE)
     : nsHashtable(aSize, threadSafe) {}
   ~nsSupportsHashtable();
 
-  void *Put(nsHashKey *aKey, void *aData);
-  void *Get(nsHashKey *aKey);
-  void *Remove(nsHashKey *aKey);
+  PRInt32 Count (void)
+  {
+    return nsHashtable::Count();
+  }
+  PRBool Exists (nsHashKey *aKey)
+  {
+    return nsHashtable::Exists (aKey);
+  }
+  PRBool Put (nsHashKey *aKey,
+              nsISupports *aData,
+              nsISupports **value = NULL);
+  nsISupports* Get (nsHashKey *aKey);
+  PRBool Remove (nsHashKey *aKey, nsISupports **value = NULL);
   nsHashtable *Clone();
+  void Enumerate (EnumFunc aEnumFunc, void* closure = NULL)
+  {
+    nsHashtable::Enumerate (aEnumFunc, closure);
+  }
   void Reset();
+
+ private:
+  static PRBool PR_CALLBACK ReleaseElement (nsHashKey *, void *, void *);
+  static PRIntn PR_CALLBACK EnumerateCopy (PLHashEntry *, PRIntn, void *);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

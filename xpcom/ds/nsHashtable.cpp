@@ -385,8 +385,8 @@ nsObjectHashtable::RemoveAndDelete(nsHashKey *aKey)
 ////////////////////////////////////////////////////////////////////////////////
 // nsSupportsHashtable: an nsHashtable where the elements are nsISupports*
 
-static PRBool  PR_CALLBACK 
-_ReleaseElement(nsHashKey *aKey, void *aData, void* closure)
+PRBool PR_CALLBACK
+nsSupportsHashtable::ReleaseElement(nsHashKey *aKey, void *aData, void* closure)
 {
     nsISupports* element = NS_STATIC_CAST(nsISupports*, aData);
     NS_IF_RELEASE(element);
@@ -395,18 +395,25 @@ _ReleaseElement(nsHashKey *aKey, void *aData, void* closure)
 
 nsSupportsHashtable::~nsSupportsHashtable()
 {
-    Enumerate(_ReleaseElement, nsnull);
+    Enumerate(ReleaseElement, nsnull);
 }
 
-void*
-nsSupportsHashtable::Put(nsHashKey *aKey, void *aData)
+    // Return if we overwrote something
+
+PRBool
+nsSupportsHashtable::Put (nsHashKey *aKey, nsISupports* aData, nsISupports **value)
 {
-    nsISupports* element = NS_REINTERPRET_CAST(nsISupports*, aData);
-    NS_IF_ADDREF(element);
-    return nsHashtable::Put(aKey, aData);
+    NS_IF_ADDREF(aData);
+    void *prev = nsHashtable::Put(aKey, aData);
+    nsISupports *old = NS_REINTERPRET_CAST(nsISupports *, prev);
+    if (value)  // pass own the ownership to the caller
+        *value = old;
+    else        // the caller doesn't care, we do
+        NS_IF_RELEASE(old);
+    return prev != nsnull;
 }
 
-void*
+nsISupports *
 nsSupportsHashtable::Get(nsHashKey *aKey)
 {
     void* data = nsHashtable::Get(aKey);
@@ -414,22 +421,25 @@ nsSupportsHashtable::Get(nsHashKey *aKey)
         return nsnull;
     nsISupports* element = NS_REINTERPRET_CAST(nsISupports*, data);
     NS_IF_ADDREF(element);
-    return data;
+    return element;
 }
 
-void*
-nsSupportsHashtable::Remove(nsHashKey *aKey)
+    // Return if we found something (useful for checks)
+
+PRBool
+nsSupportsHashtable::Remove(nsHashKey *aKey, nsISupports **value)
 {
     void* data = nsHashtable::Remove(aKey);
-    if (!data)
-        return nsnull;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, data);
+    if (value)            // caller wants it
+        *value = element;
+    else                  // caller doesn't care, we do
     NS_IF_RELEASE(element);
-    return data;
+    return data != nsnull;
 }
 
-static PRIntn  PR_CALLBACK 
-_hashEnumerateCopy(PLHashEntry *he, PRIntn i, void *arg)
+PRIntn  PR_CALLBACK 
+nsSupportsHashtable::EnumerateCopy(PLHashEntry *he, PRIntn i, void *arg)
 {
     nsHashtable *newHashtable = (nsHashtable *)arg;
     nsISupports* element = NS_STATIC_CAST(nsISupports*, he->value);
@@ -447,14 +457,14 @@ nsSupportsHashtable::Clone()
     nsSupportsHashtable* newHashTable = 
         new nsSupportsHashtable(hashtable->nentries, threadSafe);
 
-    PL_HashTableEnumerateEntries(hashtable, _hashEnumerateCopy, newHashTable);
+    PL_HashTableEnumerateEntries(hashtable, EnumerateCopy, newHashTable);
     return newHashTable;
 }
 
 void 
 nsSupportsHashtable::Reset()
 {
-    Enumerate(_ReleaseElement, nsnull);
+    Enumerate(ReleaseElement, nsnull);
     nsHashtable::Reset();
 }
 

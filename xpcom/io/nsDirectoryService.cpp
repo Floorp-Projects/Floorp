@@ -506,8 +506,7 @@ nsDirectoryService::Undefine(const char* prop)
     if (!mHashtable->Exists(&key))
         return NS_ERROR_FAILURE;
 
-    nsISupports* prevValue = (nsISupports*)mHashtable->Remove(&key);
-    NS_IF_RELEASE(prevValue);
+    mHashtable->Remove (&key);
     return NS_OK;
 }
 
@@ -566,7 +565,7 @@ nsDirectoryService::Get(const char* prop, const nsIID & uuid, void* *result)
     if (mHashtable->Exists(&key))
     {
       nsCOMPtr<nsIFile> ourFile;
-      nsISupports* value = (nsISupports*)mHashtable->Get(&key);
+      nsCOMPtr<nsISupports> value = getter_AddRefs (mHashtable->Get(&key));
       
       if (value && NS_SUCCEEDED(value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile))))
       {
@@ -590,12 +589,9 @@ nsDirectoryService::Set(const char* prop, nsISupports* value)
     value->QueryInterface(NS_GET_IID(nsIFile), getter_AddRefs(ourFile));
     if (ourFile)
     {
-        nsIFile* cloneFile;
-        ourFile->Clone(&cloneFile);
-
-        nsISupports* prevValue = (nsISupports*)mHashtable->Put(&key, 
-			                                                   NS_STATIC_CAST(nsISupports*,cloneFile));
-        NS_IF_RELEASE(prevValue);
+      nsCOMPtr<nsIFile> cloneFile;
+      ourFile->Clone (getter_AddRefs (cloneFile));
+      mHashtable->Put(&key, cloneFile);
         return NS_OK;
     }
     return NS_ERROR_FAILURE;   

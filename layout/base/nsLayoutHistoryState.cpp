@@ -115,21 +115,22 @@ nsLayoutHistoryState::AddState(PRUint32 aContentID,
                                nsIPresState* aState, 
                                nsIStatefulFrame::StateType aStateType)
 {
-  nsresult rv = NS_OK;
   HistoryKey key(aContentID, aStateType);
-  void * res = mStates.Put(&key, (void *) aState);
-  /* nsHashTable seems to return null when it actually added
-   * the element in to the table. If another element was already
-   * present in the table for the key, it seems to return the 
-   * element that was already present. Not sure if that was
-   * the intended behavior
+  /*
+   * nsSupportsHashtable::Put() returns false when no object has been
+   * replaced when inserting the new one, true if it some one was.
+   *
    */
-  if (res)  {
-    //printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
-    rv = NS_OK;
+  PRBool replaced = mStates.Put (&key, aState);
+  if (replaced)
+  {
+          // done this way by indication of warren@netscape.com [ipg]
+#if 0
+      printf("nsLayoutHistoryState::AddState OOPS!. There was already a state in the hash table for the key\n");
+#endif
   }
 
-  return rv;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -139,13 +140,15 @@ nsLayoutHistoryState::GetState(PRUint32 aContentID,
 {
   nsresult rv = NS_OK;
   HistoryKey key(aContentID, aStateType);
-  void * state = nsnull;
+  nsISupports *state = nsnull;
   state = mStates.Get(&key);
   if (state) {
     *aState = (nsIPresState *)state;
   }
   else {
-    // printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+#if 0
+      printf("nsLayoutHistoryState::GetState, ERROR getting History state for the key\n");
+#endif
     *aState = nsnull;
     rv = NS_OK;
   }
@@ -158,7 +161,6 @@ nsLayoutHistoryState::RemoveState(PRUint32 aContentID,
 {
   nsresult rv = NS_OK;
   HistoryKey key(aContentID, aStateType);
-  void * state = nsnull;
-  state = mStates.Remove(&key);
+  mStates.Remove(&key);
   return rv;
 }

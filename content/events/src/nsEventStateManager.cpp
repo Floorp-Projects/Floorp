@@ -2444,8 +2444,7 @@ nsEventStateManager::RegisterAccessKey(nsIFrame * aFrame, nsIContent* aContent, 
   if (content) {
     nsVoidKey key((void*)aKey);
 
-    nsIContent* oldContent = NS_STATIC_CAST(nsIContent*, mAccessKeys->Put(&key, content));
-    NS_IF_RELEASE(oldContent);
+    mAccessKeys->Put(&key, content);
   }
 
   return NS_OK;

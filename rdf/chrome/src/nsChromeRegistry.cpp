@@ -855,7 +855,7 @@ NS_IMETHODIMP nsChromeRegistry::LoadDataSource(const nsCString &aFileName,
   
   nsCOMPtr<nsISupports> supports = do_QueryInterface(remote);
   nsStringKey skey(key);
-  mDataSourceTable->Put(&skey, (void*)supports.get());
+  mDataSourceTable->Put(&skey, supports.get());
 
   return NS_OK;
 }

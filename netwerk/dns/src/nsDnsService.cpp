@@ -609,7 +609,7 @@ nsDNSLookup::InitiateLookup(void)
 
     // XXX remove from hashtable and release - for now
     nsStringKey key(mHostName);
-    (void) nsDNSService::gService->mLookups.Remove(&key);
+    nsDNSService::gService->mLookups.Remove(&key);
     
 #endif /* XP_UNIX */
 
@@ -1149,7 +1149,6 @@ nsDNSService::GetLookupEntry(const char* hostName,
                              nsDNSLookup* *result)
 {
     nsresult rv;
-    void* prev;
 
     nsAutoMonitor mon(mMonitor);
 
@@ -1176,9 +1175,11 @@ nsDNSService::GetLookupEntry(const char* hostName,
     rv = lookup->Init(hostName);
     if (NS_FAILED(rv)) goto done;
 
-	NS_ADDREF(lookup);
-    prev = mLookups.Put(&key, lookup);
-    NS_ASSERTION(prev == nsnull, "already a nsDNSLookup entry");
+    NS_ADDREF(lookup);   // reference for the caller
+    if (mLookups.Put(&key, lookup))
+    {
+        NS_ASSERTION (0, "already a nsDNSLookup entry");
+    }
 
 	*result = lookup;
   done:

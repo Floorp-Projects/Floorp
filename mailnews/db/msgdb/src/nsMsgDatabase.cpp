@@ -132,7 +132,13 @@ nsresult nsMsgDatabase::RemoveHdrFromCache(nsIMsgDBHdr *hdr, nsMsgKey key)
 		nsCAutoString strKey;
 		strKey.AppendInt(key, 10);
 		nsStringKey hashKey(strKey.GetBuffer());
-		nsIMsgDBHdr *removedHdr = (nsIMsgDBHdr *) m_cachedHeaders->Remove(&hashKey); // does this release, or do I have to?
+            /*
+             * this does release on the held object, unless you don't
+             * want it to, by passing as third argument a non-null pointer
+             * where to store it; this way you would get the ownership
+             * of the reference held by the table for that object.
+             */
+		m_cachedHeaders->Remove(&hashKey);
 	}
 	return NS_OK;
 }

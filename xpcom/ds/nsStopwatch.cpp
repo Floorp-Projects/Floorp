@@ -100,12 +100,11 @@ NS_IMETHODIMP
 nsStopwatchService::Define(const char *prop, nsISupports *initialValue)
 {
     nsStringKey key(prop);
-    nsCOMPtr<nsIStopwatch> prev = (nsStopwatch*)mStopwatches.Get(&key);
-    NS_ASSERTION(prev == nsnull, "stopwatch redefinition");
-    if (prev != nsnull)
+    if (mStopwatches.Put(&key, initialValue))
+    {
+        NS_ASSERTION(0, "stopwatch redefinition");
         return NS_ERROR_FAILURE;
-
-    mStopwatches.Put(&key, initialValue);
+    }
     return NS_OK;
 }
 
@@ -113,12 +112,11 @@ NS_IMETHODIMP
 nsStopwatchService::Undefine(const char *prop)
 {
     nsStringKey key(prop);
-    nsCOMPtr<nsIStopwatch> prev = (nsStopwatch*)mStopwatches.Get(&key);
-    NS_ASSERTION(prev != nsnull, "stopwatch undefined");
-    if (prev == nsnull)
+    if (!mStopwatches.Remove(&key))
+    {
+        NS_ASSERTION(0, "stopwatch undefined");
         return NS_ERROR_FAILURE;
-
-    mStopwatches.Remove(&key);
+    }
     return NS_OK;
 }
 
@@ -137,12 +135,11 @@ NS_IMETHODIMP
 nsStopwatchService::Set(const char *prop, nsISupports *value)
 {
     nsStringKey key(prop);
-    nsCOMPtr<nsISupports> prev = (nsStopwatch*)mStopwatches.Get(&key);
-    NS_ASSERTION(prev != nsnull, "stopwatch undefined");
-    if (prev == nsnull)
+    if (!mStopwatches.Put(&key, value))
+    {
+        NS_ASSERTION (0, "stopwatch undefined");
         return NS_ERROR_FAILURE;
-
-    mStopwatches.Put(&key, value);
+    }
     return NS_OK;
 }
 

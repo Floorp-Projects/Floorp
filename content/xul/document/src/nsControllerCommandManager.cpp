@@ -52,16 +52,14 @@ nsControllerCommandManager::RegisterCommand(const PRUnichar *commandName, nsICon
 {
   nsStringKey commandKey(commandName);
   
-  void* replacedCmd = mCommandsTable.Put(&commandKey, (void*)aCommand);
-#if DEBUG
-  if (replacedCmd)
+  if (mCommandsTable.Put (&commandKey, aCommand))
   {
+#if DEBUG
     nsCAutoString msg("Replacing existing command -- ");
     msg.AppendWithConversion(commandName);
     NS_WARNING(msg);
-  }
 #endif
-  
+  }  
   return NS_OK;
 }
 
@@ -71,8 +69,8 @@ nsControllerCommandManager::UnregisterCommand(const PRUnichar *commandName, nsIC
 {
   nsStringKey commandKey(commandName);
 
-  void* foundCommand = mCommandsTable.Remove(&commandKey);
-  return (foundCommand) ? NS_OK : NS_ERROR_FAILURE;
+  PRBool any_object_actually_removed_p = mCommandsTable.Remove (&commandKey);
+  return any_object_actually_removed_p? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -84,7 +82,7 @@ nsControllerCommandManager::FindCommandHandler(const PRUnichar *aCommandName, ns
   *outCommand = NULL;
   
   nsStringKey commandKey(aCommandName);
-  void* foundCommand = mCommandsTable.Get(&commandKey);   // this does the addref
+  nsISupports* foundCommand = mCommandsTable.Get(&commandKey);   // this does the addref
   if (!foundCommand) return NS_ERROR_FAILURE;
   
   *outCommand = NS_REINTERPRET_CAST(nsIControllerCommand*, foundCommand);
