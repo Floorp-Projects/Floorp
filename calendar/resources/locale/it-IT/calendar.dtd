@@ -139,7 +139,7 @@
 <!ENTITY newtodo.completed.label "Completato">
 <!ENTITY newtodo.duedate.label "Data richiesta">
 <!ENTITY newtodo.startdate.label "Data Inizio">
-<!ENTITY newtodo.priority.label "Priorit' ">
+<!ENTITY newtodo.priority.label "Priorità">
 <!ENTITY newtodo.percentcomplete.label "&#037; completato">
 <!ENTITY newtodo.categories.label "Categorie">
 <!ENTITY newtodo.starttime.warning "La data di inizio e' posteriore alla data richiesta.">
@@ -222,7 +222,7 @@
 <!ENTITY calendar.events.filter.thisCalendarMonth.label "Events in this Calendar Month">
 
 <!ENTITY calendar.unifinder.tree.done.label          "Fatto">
-<!ENTITY calendar.unifinder.tree.priority.label      "Priorita' ">
+<!ENTITY calendar.unifinder.tree.priority.label      "Priorità">
 <!ENTITY calendar.unifinder.tree.title.label         "Titolo">
 <!ENTITY calendar.unifinder.tree.percentcomplete.label "&#037; Completato">
 <!ENTITY calendar.unifinder.tree.startdate.label     "Inizio">
@@ -369,7 +369,7 @@
 <!-- Task Context Menu -->
 <!ENTITY calendar.context.progress.label              "Progresso ">
 <!ENTITY calendar.context.progress.accesskey          "P">
-<!ENTITY calendar.context.priority.label              "Priorita' ">
+<!ENTITY calendar.context.priority.label              "Priorità ">
 <!ENTITY calendar.context.priority.accesskey          "r">
 
 <!ENTITY percnt "&#037;" ><!--=percent sign-->
@@ -414,7 +414,8 @@
 
 
 <!-- Calendar Server Dialog -->
-<!ENTITY calendar.server.dialog.title.new           "Aggiungi un nuovo Calendario">
+<!ENTITY calendar.server.dialog.title.new           "Aggiungi un Nuovo File Calendario">
+<!ENTITY calendar.server.dialog.title.open          "Apri File Calendario">
 <!ENTITY calendar.server.dialog.title.edit          "Modifica Calendario">
 <!ENTITY calendar.server.dialog.name.label          "Nome">
 <!ENTITY calendar.server.dialog.publish.label       "Pubblica cambiamenti automaticamente? Per Calendari Remoti, questo richiedera' lo scaricamento di una nuova versione prima che tu possa aggiungere, modificare o eliminare un evento. Quindi verra' eseguita la tua azione e caricato il nuovo file sul server.">
