@@ -36,7 +36,7 @@ CPP_OBJS=.\$(OBJDIR)\nsCSSKeywords.obj .\$(OBJDIR)\nsCSSLayout.obj \
     .\$(OBJDIR)\nsCSSStyleSheet.obj .\$(OBJDIR)\nsHTMLAttributes.obj \
     .\$(OBJDIR)\nsHTMLStyleSheet.obj .\$(OBJDIR)\nsHTMLValue.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \
   -I..\..\..\base\src \
   -I..\..\base\src
 

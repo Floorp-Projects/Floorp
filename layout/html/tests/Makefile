@@ -26,7 +26,7 @@ CPPSRCS = \
 	TestHTMLTagLookup.cpp	\
 	$(NULL)
 
-INCLUDES+=-I../src -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor
+INCLUDES+=-I../src -I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor -I$(PUBLIC)/netlib
 
 DIRS	=
 

@@ -48,7 +48,7 @@ INCLUDES += \
 
 MODULE = raptor
 
-REQUIRES = xpcom raptor dom
+REQUIRES = xpcom raptor dom netlib
 
 include $(DEPTH)/config/rules.mk
 

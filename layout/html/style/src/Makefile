@@ -43,7 +43,7 @@ MODULE = raptor
 
 INCLUDES += -I../../base/src -I../../../base/src -I.
 
-REQUIRES = xpcom raptor dom
+REQUIRES = xpcom raptor dom netlib
 
 include $(DEPTH)/config/rules.mk
 

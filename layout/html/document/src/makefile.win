@@ -33,10 +33,10 @@ EXPORTS =		\
  nsIHTMLDocument.h	\
  $(NULL)
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
   -I..\..\base\src -I..\..\forms\src \
   -I..\..\style\src -I..\..\table\src -I$(PUBLIC)\dom \
-  -I..\..\..\base\src
+  -I$(PUBLIC)\netlib -I..\..\..\base\src
 
 LCFLAGS = \
         $(LCFLAGS) \

@@ -34,7 +34,7 @@ LCFLAGS = \
         $(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\dom \
-  -I..\base\src -I..\style\src \
+  -I$(PUBLIC)\netlib -I..\base\src -I..\style\src \
   -I..\..\base\src
 
 LLIBS=				\
@@ -47,6 +47,7 @@ LLIBS=				\
  $(DIST)\lib\util.lib		\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\jsdom.lib		        \
+ $(DIST)\lib\netlib.lib		        \
  $(LIBNSPR)			\
  $(DIST)\lib\libplc21.lib
 

@@ -21,7 +21,7 @@ IGNORE_MANIFEST=1
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
-REQUIRES=xpcom raptor 
+REQUIRES=xpcom raptor netlib
 
 CPPSRCS=nsHTMLContentSink.cpp \
     nsHTMLTokens.cpp nsParserNode.cpp nsScanner.cpp \
@@ -41,7 +41,7 @@ CPP_OBJS=.\$(OBJDIR)\nsHTMLContentSink.obj \
     .\$(OBJDIR)\nsScanner.obj             .\$(OBJDIR)\nsToken.obj \
     .\$(OBJDIR)\nsTokenizer.obj           .\$(OBJDIR)\nsTokenHandler.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorhtmlpars

@@ -22,7 +22,7 @@ DIRS = windows
 
 LIBRARY_NAME=gmgfx 
 MODULE=raptor 
-REQUIRES=util img xpcom raptor 
+REQUIRES=util img xpcom raptor netlib
 
 DEFINES=-D_IMPL_NS_GFX -DWIN32_LEAN_AND_MEAN
 
@@ -45,8 +45,9 @@ CPP_OBJS=.\$(OBJDIR)\nsColor.obj .\$(OBJDIR)\nsColorNames.obj \
     .\$(OBJDIR)\nsImageURL.obj .\$(OBJDIR)\nsRect.obj \
     .\$(OBJDIR)\nsTransform2D.obj .\$(OBJDIR)\nsFontCache.obj 
 
-LINCS=-I$(XPDIST)\public\util -I$(XPDIST)\public\img \
-    -I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(PUBLIC)\util -I$(PUBLIC)\img \
+    -I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+    -I$(PUBLIC)\netlib
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorgfx
@@ -64,6 +65,7 @@ LLIBS=				\
  $(DIST)\lib\img3240.lib        \
  $(DIST)\lib\util.lib           \
  $(DIST)\lib\libplc21.lib       \
+ $(DIST)\lib\netlib.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>

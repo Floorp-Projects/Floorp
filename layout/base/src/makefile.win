@@ -41,8 +41,8 @@ CPP_OBJS=.\$(OBJDIR)\nsContainerFrame.obj .\$(OBJDIR)\nsDocument.obj \
     .\$(OBJDIR)\nsSplittableFrame.obj .\$(OBJDIR)\nsStyleCoord.obj \
 	.\$(OBJDIR)\nsStyleContext.obj .\$(OBJDIR)\nsStyleSet.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
-    -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+    -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
 
 LCFLAGS = \
         $(LCFLAGS) \

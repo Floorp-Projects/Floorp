@@ -41,7 +41,8 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsWebWidget.obj		\
  $(NULL)
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+      -I$(PUBLIC)\dom -I$(PUBLIC)\js -I$(PUBLIC)\netlib
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorweb
@@ -62,6 +63,7 @@ LLIBS=				\
  $(DIST)\lib\util.lib        \
  $(DIST)\lib\libplc21.lib    \
  $(DIST)\lib\jsdom.lib       \
+ $(DIST)\lib\netlib.lib       \
  $(LIBNSPR)  
 
 include <$(DEPTH)\config\rules.mak>
