@@ -1006,6 +1006,7 @@ my @bugarray;
 my %prodhash;
 my %statushash;
 my $buggroupset = "";
+my %ownerhash;
 
 my $pricol = -1;
 my $sevcol = -1;
@@ -1072,6 +1073,9 @@ while (@row = FetchSQLData()) {
                 my $value = shift @row;
                 if (!defined $value) {
                     next;
+                }
+                if ($c eq "owner") {
+                    $ownerhash{$value} = 1;
                 }
                 if ($::needquote{$c}) {
                     $value = html_quote($value);
@@ -1381,6 +1385,16 @@ if ($count > 0) {
         print "&nbsp;&nbsp;\n";
         print "<NOBR><A HREF=\"buglist.cgi?$fields$orderpart&tweak=1\">";
         print "Change several bugs at once</A></NOBR>\n";
+    }
+    my @owners = sort(keys(%ownerhash));
+    if (@owners > 1 && UserInGroup("editbugs")) {
+        my $suffix = Param('emailsuffix');
+        if ($suffix ne "") {
+            map(s/$/$suffix/, @owners);
+        }
+        my $list = join(',', @owners);
+        print qq{&nbsp;&nbsp;\n};
+        print qq{<NOBR><A HREF="mailto:$list">Send mail to bug owners</A></NOBR>\n};
     }
     print qq{&nbsp;&nbsp;\n};
     print qq{<NOBR><A HREF="query.cgi?$::buffer">Edit this query</A></NOBR>\n};
