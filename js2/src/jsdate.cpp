@@ -108,6 +108,21 @@ static float64 firstDayOfMonth[2][12] = {
 #define DayWithinYear(t, year)          ((int32)(Day(t) - DayFromYear(year)))
 
 
+typedef enum formatspec {
+    FORMATSPEC_FULL, FORMATSPEC_DATE, FORMATSPEC_TIME
+} formatspec;
+
+
+/* constants for toString, toUTCString */
+static char js_NaN_date_str[] = "Invalid Date";
+static const char* days[] =
+{
+   "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
+};
+static const char* months[] =
+{
+   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
 
 
 static float64 DaylightSavingTA(float64 t)
@@ -607,133 +622,6 @@ syntax:
     return nan;
 }
 
-#define MAXARGS        7
-JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
-{
-    JSValue thatValue = thisValue;
-    if (thatValue.isNull())
-        thatValue = Date_Type->newInstance(cx);
-    ASSERT(thatValue.isObject());
-    JSObject *thisObj = thatValue.object;
-    thisObj->mPrivate = new float64;
-
-#if 0
-    /* Date called as function */
-    if (!cx->fp->constructing) {
-	int64 us, ms, us2ms;
-	jsdouble msec_time;
-
-	/* NSPR 2.0 docs say 'We do not support PRMJ_NowMS and PRMJ_NowS',
-	 * so compute ms from PRMJ_Now.
-	 */
-	us = PRMJ_Now();
-	JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-	JSLL_DIV(ms, us, us2ms);
-	JSLL_L2D(msec_time, ms);
-
-	return date_format(cx, msec_time, FORMATSPEC_FULL, rval);
-    }
-#endif
-
-    /* Date called as constructor */
-    if (argc == 0) {
-	int64 us, ms, us2ms;
-	float64 msec_time;
-
-	us = PRMJ_Now();
-	JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
-	JSLL_DIV(ms, us, us2ms);
-	JSLL_L2D(msec_time, ms);
-
-	*((float64 *)(thisObj->mPrivate)) = msec_time;
-    } 
-    else {
-        if (argc == 1) {
-	    if (!argv[0].isString()) {
-	        /* the argument is a millisecond number */
-	        float64 d = argv[0].toNumber(cx).f64;
-	        *((float64 *)(thisObj->mPrivate)) = TIMECLIP(d);
-	    } else {
-	        /* the argument is a string; parse it. */
-	        const String *str = argv[0].toString(cx).string;
-
-	        double d = date_parseString(*str);
-	        *((float64 *)(thisObj->mPrivate)) = TIMECLIP(d);
-	    }
-        } 
-        else {
-	    float64 array[MAXARGS];
-	    uint32 loop;
-	    float64 day;
-	    float64 msec_time;
-
-	    for (loop = 0; loop < MAXARGS; loop++) {
-	        if (loop < argc) {
-	            float64 double_arg = argv[loop].toNumber(cx).f64;
-		    /* if any arg is NaN, make a NaN date object
-		       and return */
-		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
-		        *((float64 *)(thisObj->mPrivate)) = nan;
-                        return thatValue;
-		    }
-		    array[loop] = JSValue::float64ToInteger(double_arg);
-	        } else {
-                    if (loop == 2) {
-                        array[loop] = 1; /* Default the date argument to 1. */
-                    } else {
-                        array[loop] = 0;
-                    }
-	        }
-	    }
-	    /* adjust 2-digit years into the 20th century */
-	    if (array[0] >= 0 && array[0] <= 99)
-	        array[0] += 1900;
-
-	    day = MakeDay(array[0], array[1], array[2]);
-	    msec_time = MakeTime(array[3], array[4], array[5], array[6]);
-	    msec_time = MakeDate(day, msec_time);
-	    msec_time = UTC(msec_time);
-	    *((float64 *)(thisObj->mPrivate)) = TIMECLIP(msec_time);
-        }
-    }
-    return thatValue;
-}
-
-/* constants for toString, toUTCString */
-static char js_NaN_date_str[] = "Invalid Date";
-static const char* days[] =
-{
-   "Sun","Mon","Tue","Wed","Thu","Fri","Sat"
-};
-static const char* months[] =
-{
-   "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-};
-
-static JSValue Date_toGMTString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
-{
-    StringFormatter buf;
-    float64 *date = Date_getProlog(cx, thisValue);
-
-    if (!JSDOUBLE_IS_FINITE(*date)) {
-	buf << js_NaN_date_str;
-    } else {
-	float64 temp = *date;
-
-	/* Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
-	 * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
-	 */
-        printFormat(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
-		    days[WeekDay(temp)],
-		    DateFromTime(temp),
-		    months[MonthFromTime(temp)],
-		    YearFromTime(temp),
-		    HourFromTime(temp),
-		    MinFromTime(temp),
-		    SecFromTime(temp));
-    }
-    return JSValue(new String(buf.getString()));
-}
 
 /* for Date.toLocaleString; interface to PRMJTime date struct.
  * If findEquivalent is true, then try to map the year to an equivalent year
@@ -778,11 +666,6 @@ static void new_explode(float64 timeval, PRMJTime *split, bool findEquivalent)
        to matter. */
     split->tm_isdst = (DaylightSavingTA(timeval) != 0);
 }
-
-typedef enum formatspec {
-    FORMATSPEC_FULL, FORMATSPEC_DATE, FORMATSPEC_TIME
-} formatspec;
-
 
 /* helper function */
 static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
@@ -886,6 +769,163 @@ static JSValue Date_format(Context * /*cx*/, float64 date, formatspec format)
 
     return JSValue(new String(outf.getString()));
 }
+
+
+extern JSValue Date_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    int64 us, ms, us2ms;
+    float64 msec_time;
+
+    /* NSPR 2.0 docs say 'We do not support PRMJ_NowMS and PRMJ_NowS',
+     * so compute ms from PRMJ_Now.
+     */
+    us = PRMJ_Now();
+    JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
+    JSLL_DIV(ms, us, us2ms);
+    JSLL_L2D(msec_time, ms);
+
+    return Date_format(cx, msec_time, FORMATSPEC_FULL);
+}
+
+#define MAXARGS        7
+JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    JSValue thatValue = thisValue;
+    if (thatValue.isNull())
+        thatValue = Date_Type->newInstance(cx);
+    ASSERT(thatValue.isObject());
+    JSObject *thisObj = thatValue.object;
+    thisObj->mPrivate = new float64;
+
+    /* Date called as constructor */
+    if (argc == 0) {
+	int64 us, ms, us2ms;
+	float64 msec_time;
+
+	us = PRMJ_Now();
+	JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
+	JSLL_DIV(ms, us, us2ms);
+	JSLL_L2D(msec_time, ms);
+
+	*((float64 *)(thisObj->mPrivate)) = msec_time;
+    } 
+    else {
+        if (argc == 1) {
+	    if (!argv[0].isString()) {
+	        /* the argument is a millisecond number */
+	        float64 d = argv[0].toNumber(cx).f64;
+	        *((float64 *)(thisObj->mPrivate)) = TIMECLIP(d);
+	    } else {
+	        /* the argument is a string; parse it. */
+	        const String *str = argv[0].toString(cx).string;
+
+	        float64 d = date_parseString(*str);
+	        *((float64 *)(thisObj->mPrivate)) = TIMECLIP(d);
+	    }
+        } 
+        else {
+	    float64 array[MAXARGS];
+	    uint32 loop;
+	    float64 day;
+	    float64 msec_time;
+
+	    for (loop = 0; loop < MAXARGS; loop++) {
+	        if (loop < argc) {
+	            float64 double_arg = argv[loop].toNumber(cx).f64;
+		    /* if any arg is NaN, make a NaN date object
+		       and return */
+		    if (!JSDOUBLE_IS_FINITE(double_arg)) {
+		        *((float64 *)(thisObj->mPrivate)) = nan;
+                        return thatValue;
+		    }
+		    array[loop] = JSValue::float64ToInteger(double_arg);
+	        } else {
+                    if (loop == 2) {
+                        array[loop] = 1; /* Default the date argument to 1. */
+                    } else {
+                        array[loop] = 0;
+                    }
+	        }
+	    }
+	    /* adjust 2-digit years into the 20th century */
+	    if (array[0] >= 0 && array[0] <= 99)
+	        array[0] += 1900;
+
+	    day = MakeDay(array[0], array[1], array[2]);
+	    msec_time = MakeTime(array[3], array[4], array[5], array[6]);
+	    msec_time = MakeDate(day, msec_time);
+	    msec_time = UTC(msec_time);
+	    *((float64 *)(thisObj->mPrivate)) = TIMECLIP(msec_time);
+        }
+    }
+    return thatValue;
+}
+
+JSValue Date_parse(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 /*argc*/)
+{
+    const String *str = argv[0].toString(cx).string;
+    float64 d = date_parseString(*str);
+    d = TIMECLIP(d);
+    return JSValue(d);
+}
+
+JSValue Date_UTC(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    float64 array[MAXARGS];
+    uint32 loop;
+    float64 d;
+
+    for (loop = 0; loop < MAXARGS; loop++) {
+	if (loop < argc) {
+            d = argv[loop].toNumber(cx).f64;
+	    if (!JSDOUBLE_IS_FINITE(d))
+		return JSValue(d);
+	    array[loop] = floor(d);
+	} 
+        else 
+            array[loop] = 0;
+    }
+
+    /* adjust 2-digit years into the 20th century */
+    if ((array[0] >= 0) && (array[0] <= 99))
+	array[0] += 1900;
+    /* if we got a 0 for 'date' (which is out of range)
+     * pretend it's a 1.  (So Date.UTC(1972, 5) works) */
+    if (array[2] < 1)
+	array[2] = 1;
+
+    d = date_msecFromDate(array[0], array[1], array[2],
+			      array[3], array[4], array[5], array[6]);
+    d = TIMECLIP(d);
+    return JSValue(d);
+}
+
+
+static JSValue Date_toGMTString(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    StringFormatter buf;
+    float64 *date = Date_getProlog(cx, thisValue);
+
+    if (!JSDOUBLE_IS_FINITE(*date)) {
+	buf << js_NaN_date_str;
+    } else {
+	float64 temp = *date;
+
+	/* Avoid dependence on PRMJ_FormatTimeUSEnglish, because it
+	 * requires a PRMJTime... which only has 16-bit years.  Sub-ECMA.
+	 */
+        printFormat(buf, "%s, %.2d %s %.4d %.2d:%.2d:%.2d GMT",
+		    days[WeekDay(temp)],
+		    DateFromTime(temp),
+		    months[MonthFromTime(temp)],
+		    YearFromTime(temp),
+		    HourFromTime(temp),
+		    MinFromTime(temp),
+		    SecFromTime(temp));
+    }
+    return JSValue(new String(buf.getString()));
+}
+
 
 static JSValue Date_toLocaleHelper(Context *cx, const JSValue& thisValue, JSValue * /*argv*/, uint32 /*argc*/, char *format)
 {
@@ -1341,6 +1381,7 @@ Context::PrototypeFunctions *getDateProtos()
         { "setMilliseconds",    Number_Type, 1, Date_setMilliseconds    },
         { "setUTCMilliseconds", Number_Type, 1, Date_setUTCMilliseconds },
         { "toUTCString",        String_Type, 0, Date_toGMTString        },
+        { "toGMTString",        String_Type, 0, Date_toGMTString        },      // XXX this is a SpiderMonkey extension?
         { "toLocaleString",     String_Type, 0, Date_toLocaleString     },
         { "toLocaleDateString", String_Type, 0, Date_toLocaleDateString },
         { "toLocaleTimeString", String_Type, 0, Date_toLocaleTimeString },

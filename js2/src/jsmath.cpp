@@ -249,7 +249,7 @@ void initMathObject(Context *cx, JSObject *mathObj)
                                     (NamespaceList *)(NULL), Number_Type, JSValue(MathObjectConstants[i].value));
 
     for (i = 0; i < sizeof(MathObjectFunctions) / sizeof(MathObjectFunctionDef); i++) {
-        JSFunction *f = new JSFunction(MathObjectFunctions[i].imp, Number_Type);
+        JSFunction *f = new JSFunction(cx, MathObjectFunctions[i].imp, Number_Type);
         mathObj->defineVariable(cx, widenCString(MathObjectFunctions[i].name), 
                                     (NamespaceList *)(NULL), Number_Type, JSValue(f));
     }

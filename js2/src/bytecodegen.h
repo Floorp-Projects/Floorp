@@ -117,9 +117,10 @@ typedef enum {
     SwapOp,                 //                          <object1> <object2> --> <object2> <object1>
     DupOp,                  //                          <object> --> <object> <object>
     DupInsertOp,            //                          <object1> <object2> --> <object2> <object1> <object2>
-    DupNOp,                 // <N>                      <object> --> <object> { N times }
-    DupInsertNOp,           // <N>                      <object> {xN} <object2> --> <object2> <object> {xN} <object2>
+    DupNOp,                 // <N>                      <N things> --> <N things> <N things>
+    DupInsertNOp,           // <N>                      <N things> <object2> --> <object2> <N things> <object2>
     PopOp,                  //                          <object> -->   
+    PopNOp,                 // <N>                      <N things> -->   
     // for instance members
     GetFieldOp,             // <slot>                   <base> --> <object>
     SetFieldOp,             // <slot>                   <base> <object> --> <object>
@@ -365,9 +366,9 @@ extern ByteCodeData gByteCodeData[OpCodeCount];
 
         uint32 getLabel(LabelStmtNode *lbl);
 
-        uint32 getTopLabel(Label::LabelKind kind, const StringAtom *name);
+        uint32 getTopLabel(Label::LabelKind kind, const StringAtom *name, StmtNode *p);
 
-        uint32 getTopLabel(Label::LabelKind kind);
+        uint32 getTopLabel(Label::LabelKind kind, StmtNode *p);
 
         void setLabel(uint32 label)
         {

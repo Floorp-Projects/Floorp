@@ -73,6 +73,7 @@ JSValue Context::readEvalString(const String &str, const String& fileName, Scope
 
     Arena a;
     Parser p(mWorld, a, mFlags, str, fileName);
+    Reader *oldReader = mReader;
     mReader = &p.lexer.reader;
     StmtNode *parsedStatements = p.parseProgram();
     ASSERT(p.lexer.peek(true).hasKind(Token::end));
@@ -88,7 +89,6 @@ JSValue Context::readEvalString(const String &str, const String& fileName, Scope
         f.end();
         stdOut << '\n';
     }
-
     buildRuntime(parsedStatements);
     JS2Runtime::ByteCodeModule* bcm = genCode(parsedStatements, fileName);
     if (bcm) {
@@ -97,6 +97,7 @@ JSValue Context::readEvalString(const String &str, const String& fileName, Scope
         result = interpret(bcm, 0, scopeChain, thisValue, NULL, 0);
         delete bcm;
     }
+    setReader(oldReader);
     return result;
 }
 
@@ -384,6 +385,13 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     result = popValue(); // XXX debug only? - just decrement top
                 }
                 break;
+            case PopNOp:
+                {
+                    uint16 count = *((uint16 *)pc);
+                    pc += sizeof(uint16);
+                    resizeStack(mStackTop - count);
+                }
+                break;
             case DupOp:
                 {
                     JSValue v = topValue();
@@ -401,14 +409,14 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                 break;
             case DupNOp:
                 {
-                    JSValue v = topValue();
                     uint16 count = *((uint16 *)pc);
                     pc += sizeof(uint16);
+                    JSValue *vp = getBase(stackSize() - count);
                     while (count--)
-                        pushValue(v);
+                        pushValue(*vp++);
                 }
                 break;
-            // <object> {xN} <object2> --> <object2> <object> {xN} <object2>
+            // <N things> <object2> --> <object2> <N things> <object2>
             case DupInsertNOp:
                 {
                     JSValue v2 = topValue();
@@ -550,16 +558,19 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                             
                                 // XXX Note that this is different behaviour from JS1.5, where
                                 // (e.g.) Array(2) is an invocation of the constructor.
-
-                                if ((argCount > 1) || ((callFlags & ThisFlags) != NoThis))
-                                    reportError(Exception::referenceError, "Type cast can only take one argument");
-                                JSValue v;
-                                if (argCount > 0)
-                                    v = popValue();
-                                popValue();             // don't need the target anymore
-                                pushValue(mapValueToType(v, targetValue->type));
-                                mThis = oldThis;
-                                break;      // all done
+                                
+                                target = targetValue->type->getTypeCastFunction();
+                                if (target == NULL) {
+                                    if ((argCount > 1) || ((callFlags & ThisFlags) != NoThis))
+                                        reportError(Exception::referenceError, "Type cast can only take one argument");
+                                    JSValue v;
+                                    if (argCount > 0)
+                                        v = popValue();
+                                    popValue();             // don't need the target anymore
+                                    pushValue(mapValueToType(v, targetValue->type));
+                                    mThis = oldThis;
+                                    break;      // all done
+                                }
                             }
                         }
                         else
@@ -655,6 +666,7 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     mArgumentBase = prev->mArgumentBase;
                     mThis = prev->mThis;
                     mScopeChain = prev->mScopeChain;       
+                    pushValue(kUndefinedValue);
                     delete prev;
                 }
                 break;
@@ -854,7 +866,17 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     uint32 index = *((uint32 *)pc);
                     pc += sizeof(uint32);
                     const String &name = *mCurModule->getString(index);
-                    mScopeChain->getNameValue(this, name, CURRENT_ATTR);
+                    JSObject *parent = mScopeChain->getNameValue(this, name, CURRENT_ATTR);
+                    JSValue result = topValue();
+                    if (result.isFunction() && result.function->isMethod()) {
+                        popValue();
+                        if (result.function->isConstructor())
+                            // A constructor has to be called with a NULL 'this' in order to prompt it
+                            // to construct the instance object.
+                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, NULL))));
+                        else
+                            pushValue(JSValue((JSFunction *)(new JSBoundFunction(result.function, parent))));
+                    }
                 }
                 break;
             case GetTypeOfNameOp:
@@ -887,13 +909,13 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
 
                     // Use the type of the base to dispatch on...
                     JSObject *obj = NULL;
-					if (baseValue->isType())
-						obj = baseValue->type;
-					else
-					if (baseValue->isFunction())
-						obj = baseValue->function;
-					else
-					if (baseValue->isObject())
+                    if (baseValue->isType())
+                        obj = baseValue->type;
+                    else
+                    if (baseValue->isFunction())
+                        obj = baseValue->function;
+                    else
+                    if (baseValue->isObject())
                         obj = baseValue->object;
                     else
                         obj = baseValue->toObject(this).object;
@@ -1040,10 +1062,10 @@ JSValue Context::interpret(uint8 *pc, uint8 *endPC)
                     mPC = pc;
                     const String &name = *mCurModule->getString(index);
                     obj->getProperty(this, name, CURRENT_ATTR);
-                    // if the result is a function of some kind, bind
+                    // if the result is a method of some kind, bind
                     // the base object to it
                     JSValue result = topValue();
-                    if (result.isFunction()) {
+                    if (result.isFunction() && result.function->isMethod()) {
                         popValue();
                         if (result.function->isConstructor())
                             // A constructor has to be called with a NULL 'this' in order to prompt it
@@ -1853,16 +1875,22 @@ static JSValue compareEqual(Context *cx, JSValue r1, JSValue r2)
     else {
         if (r1.isUndefined())
             return kTrueValue;
-        if (r1.isNull())
+        if (r1.isNull() || r2.isNull()) // because null->getType() == Object_Type
             return kTrueValue;
+        if (r1.isObject() && r2.isObject()) // because new Boolean()->getType() == Boolean_Type
+            return JSValue(r1.object == r2.object);
+        if (r1.isType())
+            return JSValue(r1.type == r2.type);
+        if (r1.isFunction())
+            return JSValue(r1.function->isEqual(r2.function));
         if (t1 == Number_Type) {
             
             float64 f1 = r1.getNumberValue();
             float64 f2 = r2.getNumberValue();
 
-            if (r1.isNaN())
+            if (JSDOUBLE_IS_NaN(f1))
                 return kFalseValue;
-            if (r2.isNaN())
+            if (JSDOUBLE_IS_NaN(f2))
                 return kFalseValue;
 
             return JSValue(r1.f64 == r2.f64);
@@ -1872,12 +1900,6 @@ static JSValue compareEqual(Context *cx, JSValue r1, JSValue r2)
                 return JSValue(bool(r1.getStringValue()->compare(*r2.getStringValue()) == 0));
             if (t1 == Boolean_Type)
                 return JSValue(r1.getBoolValue() == r2.getBoolValue());
-            if (r1.isObject())
-                return JSValue(r1.object == r2.object);
-            if (r1.isType())
-                return JSValue(r1.type == r2.type);
-            if (r1.isFunction())
-                return JSValue(r1.function->isEqual(r2.function));
             NOT_REACHED("unhandled type");
             return kFalseValue;
         }
@@ -1944,7 +1966,7 @@ void Context::initOperators()
     };
 
     for (uint32 i = 0; i < sizeof(OpTable) / sizeof(OpTableEntry); i++) {
-        JSFunction *f = new JSFunction(OpTable[i].imp, OpTable[i].resType);
+        JSFunction *f = new JSFunction(this, OpTable[i].imp, OpTable[i].resType);
         OperatorDefinition *op = new OperatorDefinition(OpTable[i].op1, OpTable[i].op2, f);
         mOperatorTable[OpTable[i].which].push_back(op);
     }
@@ -2198,7 +2220,7 @@ float64 JSValue::float64ToInteger(float64 d)
     if (JSDOUBLE_IS_NaN(d))
         return 0.0;
     else
-        return (d >= 0.0) ? fd::floor(d) : -fd::floor(d);
+        return (d >= 0.0) ? fd::floor(d) : -fd::floor(-d);
 }
 
 JSValue JSValue::valueToInteger(Context *cx, const JSValue& value)
@@ -2382,6 +2404,7 @@ JSType *JSValue::getType() const {
     case undefined_tag: return Void_Type;
     case null_tag:      return Object_Type;
     case function_tag:  return Function_Type;
+    case type_tag:      return Type_Type;
     default: 
         NOT_REACHED("bad type"); 
         return NULL;

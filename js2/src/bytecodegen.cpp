@@ -105,6 +105,13 @@ void StaticFieldReference::emitImplicitLoad(ByteCodeGen *bcg)
     bcg->addPointer(mClass);
 }
 
+void StaticFieldReference::emitDelete(ByteCodeGen *bcg)
+{
+    bcg->addOp(DeleteOp);
+    bcg->addStringRef(mName); 
+}
+
+
 
 void FieldReference::emitImplicitLoad(ByteCodeGen *bcg) 
 {
@@ -323,6 +330,7 @@ ByteCodeData gByteCodeData[OpCodeCount] = {
 { -128,     "DupN", },
 { -128,     "DupInsertN", },
 { -1,       "Pop", },
+{ -128,     "PopN", },
 { 0,        "GetField", },
 { -1,       "SetField", },
 { 1,        "GetMethod", },
@@ -412,7 +420,7 @@ uint32 ByteCodeGen::getLabel(LabelStmtNode *lbl)
     return result;
 }
 
-uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind, const StringAtom *name)
+uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind, const StringAtom *name, StmtNode *p)
 {
     uint32 result = uint32(-1);
     for (std::vector<uint32>::reverse_iterator i = mLabelStack.rbegin(),
@@ -426,11 +434,11 @@ uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind, const StringAtom *name)
             if (mLabelList[*i].matches(name))
                 return result;
     }
-    NOT_REACHED("label not found");
+    m_cx->reportError(Exception::syntaxError, "label not found", p->pos);
     return false;
 }
 
-uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind)
+uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind, StmtNode *p)
 {
     for (std::vector<uint32>::reverse_iterator i = mLabelStack.rbegin(),
                         end = mLabelStack.rend();
@@ -439,7 +447,7 @@ uint32 ByteCodeGen::getTopLabel(Label::LabelKind kind)
         if (mLabelList[*i].matches(kind))
             return *i;
     }
-    NOT_REACHED("label not found");
+    m_cx->reportError(Exception::syntaxError, "label not found", p->pos);
     return false;
 }
 
@@ -615,7 +623,9 @@ void ByteCodeGen::genCodeForFunction(FunctionDefinition &f, size_t pos, JSFuncti
         }
     }
 
-    bool hasReturn = genCodeForStatement(f.body, NULL, NotALabel);
+    bool hasReturn = false;
+    if (f.body)
+        hasReturn = genCodeForStatement(f.body, NULL, NotALabel);
     
 /*
     // OPT - see above
@@ -702,7 +712,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 if (static_cg.hasContent()) {
                     // build a function to be invoked 
                     // when the class is loaded
-                    f = new JSFunction(Void_Type, mScopeChain);
+                    f = new JSFunction(m_cx, Void_Type, mScopeChain);
                     ByteCodeModule *bcm = new ByteCodeModule(&static_cg, NULL);
                     if (m_cx->mReader)
                         bcm->setSource(m_cx->mReader->source, m_cx->mReader->sourceLocation);
@@ -712,7 +722,7 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 f = NULL;
                 if (bcg.hasContent()) {
                     // execute this function now to form the initial instance
-                    f = new JSFunction(Void_Type, mScopeChain);
+                    f = new JSFunction(m_cx, Void_Type, mScopeChain);
                     ByteCodeModule *bcm = new ByteCodeModule(&bcg, NULL);
                     if (m_cx->mReader)
                         bcm->setSource(m_cx->mReader->source, m_cx->mReader->sourceLocation);
@@ -857,6 +867,11 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 else
                     NOT_REACHED("what else??");
             }            
+            if (value == NULL)
+                m_cx->reportError(Exception::referenceError, "Invalid for..in target");
+
+            uint16 valueBaseDepth = value->baseExpressionDepth();
+
             uint32 breakLabel = getLabel(Label::BreakLabel);
             uint32 labelAtTopOfBlock = getLabel();
             uint32 labelAtIncrement = getLabel(Label::ContinueLabel); 
@@ -902,6 +917,14 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addFixup(labelAtTestCondition);
 
             setLabel(labelAtTopOfBlock);
+                if (valueBaseDepth) {
+                    if (valueBaseDepth > 1) {
+                        addOpAdjustDepth(DupNOp, valueBaseDepth);
+                        addShort(valueBaseDepth);
+                    }
+                    else
+                        addOp(DupOp);
+                }
                 iteratorReadRef->emitCodeSequence(this);
                 addOp(GetPropertyOp);
                 addStringRef(m_cx->Value_StringAtom);
@@ -946,6 +969,14 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addOp(PopOp);
 
             setLabel(labelAtEnd);
+            if (valueBaseDepth) {
+                if (valueBaseDepth > 1) {
+                    addOpAdjustDepth(PopNOp, valueBaseDepth);
+                    addShort(valueBaseDepth);
+                }
+                else
+                    addOp(PopOp);
+            }
 
             delete objectReadRef;
             delete objectWriteRef;
@@ -987,6 +1018,10 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
                 addOp(JumpTrueOp);
                 addFixup(labelAtTopOfBlock);
             }
+            else {
+                addOp(JumpOp);
+                addFixup(labelAtTopOfBlock);
+            }
 
             setLabel(breakLabel);
         }
@@ -1009,9 +1044,9 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             GoStmtNode *g = checked_cast<GoStmtNode *>(p);
             addOp(JumpOp);
             if (g->name)
-                addFixup(getTopLabel(Label::BreakLabel, g->name));
+                addFixup(getTopLabel(Label::BreakLabel, g->name, p));
             else
-                addFixup(getTopLabel(Label::BreakLabel));
+                addFixup(getTopLabel(Label::BreakLabel, p));
         }
         break;
     case StmtNode::Continue:
@@ -1019,9 +1054,9 @@ bool ByteCodeGen::genCodeForStatement(StmtNode *p, ByteCodeGen *static_cg, uint3
             GoStmtNode *g = checked_cast<GoStmtNode *>(p);
             addOp(JumpOp);
             if (g->name)
-                addFixup(getTopLabel(Label::ContinueLabel, g->name));
+                addFixup(getTopLabel(Label::ContinueLabel, g->name, p));
             else
-                addFixup(getTopLabel(Label::ContinueLabel));
+                addFixup(getTopLabel(Label::ContinueLabel, p));
         }
         break;
     case StmtNode::Switch:
@@ -1673,7 +1708,7 @@ PreXcrement:
             uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
                 if (baseDepth > 1) {
-                    addOpAdjustDepth(DupNOp, -baseDepth);
+                    addOpAdjustDepth(DupNOp, baseDepth);
                     addShort(baseDepth);
                 }
                 else
@@ -1785,7 +1820,7 @@ BinaryOpEquals:
             uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
                 if (baseDepth > 1) {
-                    addOp(DupNOp);
+                    addOpAdjustDepth(DupNOp, baseDepth);
                     addShort(baseDepth);
                 }
                 else
@@ -1821,7 +1856,7 @@ BinaryOpEquals:
             uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
                 if (baseDepth > 1) {
-                    addOpAdjustDepth(DupNOp, -baseDepth);
+                    addOpAdjustDepth(DupNOp, baseDepth);
                     addShort(baseDepth);
                 }
                 else
@@ -1862,7 +1897,7 @@ BinaryOpEquals:
             uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
                 if (baseDepth > 1) {
-                    addOpAdjustDepth(DupNOp, -baseDepth);
+                    addOpAdjustDepth(DupNOp, baseDepth);
                     addShort(baseDepth);
                 }
                 else
@@ -1903,7 +1938,7 @@ BinaryOpEquals:
             uint16 baseDepth = readRef->baseExpressionDepth();
             if (baseDepth) {         // duplicate the base expression
                 if (baseDepth > 1) {
-                    addOpAdjustDepth(DupNOp, -baseDepth);
+                    addOpAdjustDepth(DupNOp, baseDepth);
                     addShort(baseDepth);
                 }
                 else
@@ -2175,7 +2210,7 @@ BinaryOpEquals:
         {
             addOp(LoadTypeOp);
             addPointer(Array_Type);
-            addOpAdjustDepth(NewInstanceOp, 1);
+            addOpAdjustDepth(NewInstanceOp, 0);
             addLong(0);
             PairListExprNode *plen = checked_cast<PairListExprNode *>(p);
             ExprPairList *e = plen->pairs;
@@ -2243,7 +2278,7 @@ BinaryOpEquals:
     case ExprNode::functionLiteral:
         {
             FunctionExprNode *f = checked_cast<FunctionExprNode *>(p);
-            JSFunction *fnc = new JSFunction(NULL, mScopeChain);
+            JSFunction *fnc = new JSFunction(m_cx, NULL, mScopeChain);
 
             uint32 reqArgCount = 0;
             uint32 optArgCount = 0;
@@ -2257,7 +2292,7 @@ BinaryOpEquals:
                 optArgCount++;
                 b = b->next;
             }
-            fnc->setArgCounts(reqArgCount, optArgCount, (f->function.restParameter != NULL));
+            fnc->setArgCounts(m_cx, reqArgCount, optArgCount, (f->function.restParameter != NULL));
 
 	    if (mScopeChain->isPossibleUncheckedFunction(&f->function))
 		fnc->setIsPrototype(true);
@@ -2324,6 +2359,7 @@ BinaryOpEquals:
         {
             BinaryExprNode *c = checked_cast<BinaryExprNode *>(p);
             genExpr(c->op1);
+            addOp(PopOp);
             return genExpr(c->op2);
         }
         break;
@@ -2403,6 +2439,7 @@ uint32 printInstruction(Formatter &f, uint32 i, const ByteCodeModule& bcm)
         break;
     
     case DupNOp:
+    case PopNOp:
     case DupInsertNOp:
         {
             uint16 u = bcm.getShort(i);

@@ -385,6 +385,7 @@ XXX ...couldn't get this to work...
         void emitInvokeSequence(ByteCodeGen *bcg);
         void emitImplicitLoad(ByteCodeGen *bcg);
         uint16 baseExpressionDepth() { return 1; }
+        void emitDelete(ByteCodeGen *bcg);
     };
     // a member function in a vtable
     class MethodReference : public Reference {
@@ -482,7 +483,7 @@ XXX ...couldn't get this to work...
         Access mAccess;
         uint16 mDepth;
         void emitCodeSequence(ByteCodeGen *bcg);
-        uint16 baseExpressionDepth() { return mDepth; }
+        uint16 baseExpressionDepth() { return mDepth + 1; }
         void emitDelete(ByteCodeGen *bcg);
     };
 
@@ -752,6 +753,7 @@ XXX ...couldn't get this to work...
         virtual Reference *genReference(bool hasBase, const String& name, NamespaceList *names, Access acc, uint32 depth);
 
         JSFunction *getDefaultConstructor() { return mDefaultConstructor; }
+        JSFunction *getTypeCastFunction()   { return mTypeCast; }
 
         JSValue getUninitializedValue()    { return mUninitializedValue; }
 
@@ -765,6 +767,7 @@ XXX ...couldn't get this to work...
         uint32          mVariableCount;
         JSFunction      *mInstanceInitializer;
         JSFunction      *mDefaultConstructor;
+        JSFunction      *mTypeCast;
 
         // the 'vtable'
         MethodList          mMethods;
@@ -806,8 +809,8 @@ XXX ...couldn't get this to work...
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super) 
-            : JSType(cx, name, super), mElementType(elementType)
+        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, JSObject *protoObj = NULL) 
+            : JSType(cx, name, super, protoObj), mElementType(elementType)
         {
         }
         virtual ~JSArrayType() { } // keeping gcc happy
@@ -1084,7 +1087,8 @@ XXX ...couldn't get this to work...
 
         bool hasNameValue(const String& name, NamespaceList *names);
 
-        void getNameValue(Context *cx, const String& name, AttributeStmtNode *attr);
+        // pushes the value of the name and returns it's container object
+        JSObject *getNameValue(Context *cx, const String& name, AttributeStmtNode *attr);
 
         // return the class on the top of the stack (or NULL if there
         // isn't one there).
@@ -1180,54 +1184,8 @@ XXX ...couldn't get this to work...
 
         // XXX these should be Function_Type->newInstance() calls, no?
 
-        JSFunction(JSType *resultType, ScopeChain *scopeChain) 
-                    : JSObject(Function_Type), 
-                        mParameterBarrel(NULL),
-                        mActivation(),
-                        mByteCode(NULL), 
-                        mCode(NULL), 
-                        mResultType(resultType),
-                        mRequiredArgs(0),
-                        mOptionalArgs(0),
-                        mArguments(NULL),
-                        mScopeChain(NULL), 
-                        mIsPrototype(false),
-                        mIsConstructor(false),
-                        mIsChecked(true),
-                        mHasRestParameter(false),
-                        mRestParameterName(NULL),
-                        mClass(NULL)
-        {
-            if (scopeChain) {
-                mScopeChain = new ScopeChain(*scopeChain);
-            }
-            if (Function_Type)    // protect against bootstrap
-                mPrototype = Function_Type->mPrototypeObject;
-            mActivation.mContainer = this;
-        }
-        
-        JSFunction(NativeCode *code, JSType *resultType) 
-                    : JSObject(Function_Type), 
-                        mParameterBarrel(NULL),
-                        mActivation(),
-                        mByteCode(NULL), 
-                        mCode(code), 
-                        mResultType(resultType), 
-                        mRequiredArgs(0),
-                        mOptionalArgs(0),
-                        mArguments(NULL),
-                        mScopeChain(NULL),
-                        mIsPrototype(false),
-                        mIsConstructor(false),
-                        mIsChecked(false),          // native functions aren't checked (?)
-                        mHasRestParameter(false),
-                        mRestParameterName(NULL),
-                        mClass(NULL)
-        {
-            if (Function_Type)    // protect against bootstrap
-                mPrototype = Function_Type->mPrototypeObject;
-            mActivation.mContainer = this;
-        }
+        JSFunction(Context *cx, JSType *resultType, ScopeChain *scopeChain);        
+        JSFunction(Context *cx, NativeCode *code, JSType *resultType);
 
         ~JSFunction() { }  // keeping gcc happy
         
@@ -1238,7 +1196,7 @@ XXX ...couldn't get this to work...
 
         void setByteCode(ByteCodeModule *b)     { ASSERT(!isNative()); mByteCode = b; }
         void setResultType(JSType *r)           { mResultType = r; }
-        void setArgCounts(uint32 r, uint32 o, bool hasRest);
+        void setArgCounts(Context *cx, uint32 r, uint32 o, bool hasRest);
         void setArgument(uint32 index, const String *n, JSType *t)
                                                 { ASSERT(mArguments && (index < (mRequiredArgs + mOptionalArgs + ((mHasRestParameter) ? 1 : 0) ))); mArguments[index].mType = t; mArguments[index].mName = n; }
         void setArgumentInitializer(uint32 index, uint32 offset)
@@ -1247,13 +1205,16 @@ XXX ...couldn't get this to work...
         void setIsPrototype(bool i)             { mIsPrototype = i; }
         void setIsConstructor(bool i)           { mIsConstructor = i; }
         void setIsUnchecked()                   { mIsChecked = false; }
-        void setFunctionName(FunctionName *n)   { mFunctionName = n; }
+        void setFunctionName(FunctionName *n)   { mFunctionName = new FunctionName(); mFunctionName->prefix = n->prefix; mFunctionName->name = n->name; }
+        void setFunctionName(const StringAtom *n)
+                                                { mFunctionName = new FunctionName(); mFunctionName->name = n; }
         void setClass(JSType *c)                { mClass = c; }
 
         virtual bool hasBoundThis()             { return false; }
         virtual bool isNative()                 { return (mCode != NULL); }
         virtual bool isPrototype()              { return mIsPrototype; }
         virtual bool isConstructor()            { return mIsConstructor; }
+        bool isMethod()                         { return (mClass != NULL); }
         virtual ByteCodeModule *getByteCode()   { ASSERT(!isNative()); return mByteCode; }
         virtual NativeCode *getNativeCode()     { ASSERT(isNative()); return mCode; }
 

@@ -37,6 +37,9 @@ namespace JS2Runtime {
 
 
     extern JSValue Date_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue Date_TypeCast(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue Date_parse(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
+    extern JSValue Date_UTC(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc);
 
     Context::PrototypeFunctions *getDateProtos();
 
