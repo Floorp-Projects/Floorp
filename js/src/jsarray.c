@@ -38,30 +38,34 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+/* 2^32 - 1 as a number and a string */
+#define MAXINDEX 4294967295u
+#define MAXSTR   "4294967295"
 
-/* Determine if the id represents an array index.
- * 
+/*
+ * Determine if the id represents an array index.
+ *
  * An id is an array index according to ECMA by (15.4):
  *
  * "Array objects give special treatment to a certain class of property names.
  * A property name P (in the form of a string value) is an array index if and
- * only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal 
+ * only if ToString(ToUint32(P)) is equal to P and ToUint32(P) is not equal
  * to 2^32-1."
- * 
+ *
  * In our implementation, it would be sufficient to check for JSVAL_IS_INT(id)
- * except that by using signed 32-bit integers we miss the top half of the 
+ * except that by using signed 32-bit integers we miss the top half of the
  * valid range. This function checks the string representation itself; note
- * that calling a standard conversion routine might allow strings such as 
+ * that calling a standard conversion routine might allow strings such as
  * "08" or "4.0" as array indices, which they are not.
  */
 static JSBool
 IdIsIndex(jsid id, jsuint *indexp)
 {
-    jsuint i;
     JSString *str;
-    jschar *ep;
+    jschar *cp;
 
     if (JSVAL_IS_INT(id)) {
+	jsint i;
         i = JSVAL_TO_INT(id);
         if (i < 0)
             return JS_FALSE;
@@ -71,21 +75,31 @@ IdIsIndex(jsid id, jsuint *indexp)
 
     /* It must be a string. */
     str = JSVAL_TO_STRING(id);
-    ep = str->chars;
-    if (str->length == 0 || *ep < '1' || *ep > '9')
-        return JS_FALSE;
-    i = 0;
-    while (*ep != 0 && JS7_ISDEC(*ep)) {
-        jsuint i2 = i*10 + (*ep - '0');
-        if (i2 < i)
-            return JS_FALSE;    /* overflow */
-        i = i2;
-        ep++;
+    cp = str->chars;
+    if (JS7_ISDEC(*cp) && str->length < sizeof(MAXSTR)) {
+	jsuint index = JS7_UNDEC(*cp++);
+        jsuint oldIndex = 0;
+        jsint c;
+        if (index != 0) {
+            while (JS7_ISDEC(*cp)) {
+                oldIndex = index;
+                c = JS7_UNDEC(*cp);
+                index = 10*index + c;
+	        cp++;
+	    }
+        }
+        /* Make sure all characters were consumed and that it couldn't
+         * have overflowed.
+         */
+        if (*cp == 0 &&
+             (oldIndex < (MAXINDEX / 10) ||
+              (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
+        {
+            *indexp = index;
+            return JS_TRUE;
+        }
     }
-    if (*ep != 0 || i == 4294967295)    /* 4294967295 == 2^32-1 */
-        return JS_FALSE;
-    *indexp = i;
-    return JS_TRUE;
+    return JS_FALSE;
 }
 
 
@@ -93,9 +107,9 @@ static JSBool
 ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
 {
     jsint i;
-    JSBool res = JS_FALSE;
-    
-    /* It's only an array length if it's an int or a double.  Some relevant
+
+    /*
+     * It's only an array length if it's an int or a double.  Some relevant
      * ECMA language is 15.4.2.2 - 'If the argument len is a number, then the
      * length property of the newly constructed object is set to ToUint32(len)
      * - I take 'is a number' to mean 'typeof len' returns 'number' in
@@ -106,16 +120,18 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
         /* jsuint cast does ToUint32 */
 	if (lengthp)
             *lengthp = (jsuint) i;
-        res = JS_TRUE;
-    } else if (JSVAL_IS_DOUBLE(v)) {
-        /* XXXmccabe I'd love to add another check here, against
+        return JS_TRUE;
+    }
+    if (JSVAL_IS_DOUBLE(v)) {
+        /*
+	 * XXXmccabe I'd love to add another check here, against
          * js_DoubleToInteger(d) != d), so that ValueIsLength matches
          * IdIsIndex, but it doesn't seem to follow from ECMA.
          * (seems to be appropriate for IdIsIndex, though).
 	 */
-	res = js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
+	return js_ValueToECMAUint32(cx, v, (uint32 *)lengthp);
     }
-    return res;	
+    return JS_FALSE;
 }
 
 

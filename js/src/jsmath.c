@@ -233,9 +233,9 @@ math_pow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
  * Math.random() support, lifted from java.util.Random.java.
  */
 static void
-random_setSeed(JSRuntime *rt, PRInt64 seed)
+random_setSeed(JSRuntime *rt, int64 seed)
 {
-    PRInt64 tmp;
+    int64 tmp;
 
     LL_I2L(tmp, 1000);
     LL_DIV(seed, seed, tmp);
@@ -246,7 +246,7 @@ random_setSeed(JSRuntime *rt, PRInt64 seed)
 static void
 random_init(JSRuntime *rt)
 {
-    PRInt64 tmp, tmp2;
+    int64 tmp, tmp2;
 
     /* Do at most once. */
     if (rt->rngInitialized)
@@ -277,7 +277,7 @@ random_init(JSRuntime *rt)
 static uint32
 random_next(JSRuntime *rt, int bits)
 {
-    PRInt64 nextseed, tmp;
+    int64 nextseed, tmp;
     uint32 retval;
 
     LL_MUL(nextseed, rt->rngSeed, rt->rngMultiplier);
@@ -292,7 +292,7 @@ random_next(JSRuntime *rt, int bits)
 static jsdouble
 random_nextDouble(JSRuntime *rt)
 {
-    PRInt64 tmp, tmp2;
+    int64 tmp, tmp2;
     jsdouble d;
 
     LL_ISHL(tmp, random_next(rt, 27), 27);
@@ -412,3 +412,4 @@ js_InitMathClass(JSContext *cx, JSObject *obj)
 	return NULL;
     return proto;
 }
+          

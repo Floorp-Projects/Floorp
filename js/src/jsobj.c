@@ -278,7 +278,7 @@ js_EnterSharpObject(JSContext *cx, JSObject *obj, JSIdArray **idap,
         hash = js_hash_object(obj);
         hep = PR_HashTableRawLookup(table, hash, obj);
         he = *hep;
-    
+
         /*
          * It's possible that the value of a property has changed from the
          * first time the object's properties are traversed (when the property
@@ -1081,11 +1081,9 @@ FindConstructor(JSContext *cx, const char *name, jsval *vp)
 	}
     }
 
-    if(!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, (JSProperty **) &sprop))
-    {
+    if (!OBJ_LOOKUP_PROPERTY(cx, obj, (jsid)atom, &pobj, (JSProperty**)&sprop))
 	return JS_FALSE;
-    }
-    if(!sprop)  {
+    if (!sprop)  {
 	*vp = JSVAL_VOID;
 	return JS_TRUE;
     }
@@ -1241,30 +1239,40 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 #define CHECK_FOR_EMPTY_INDEX(id) /* nothing */
 #endif
 
+/* JSVAL_INT_MAX as a string */
+#define JSVAL_INT_MAX_STRING "1073741823"
+
 #define CHECK_FOR_FUNNY_INDEX(id)                                             \
     PR_BEGIN_MACRO                                                            \
-	if (!JSVAL_IS_INT(id)) {                                              \
+    	if (!JSVAL_IS_INT(id)) {                                              \
 	    JSAtom *_atom = (JSAtom *)id;                                     \
 	    JSString *_str = ATOM_TO_STRING(_atom);                           \
 	    const jschar *_cp = _str->chars;                                  \
-	    if (JS7_ISDEC(*_cp)) {                                            \
-		jsint _index = JS7_UNDEC(*_cp);                               \
-		_cp++;                                                        \
-		if (_index != 0) {                                            \
-		    while (JS7_ISDEC(*_cp)) {                                 \
-			_index = 10 * _index + JS7_UNDEC(*_cp);               \
-			if (_index < 0)                                       \
-			    break;                                            \
-			_cp++;                                                \
-		    }                                                         \
-		}                                                             \
-		if (*_cp == 0 && INT_FITS_IN_JSVAL(_index))                   \
+	    if (JS7_ISDEC(*_cp) &&                                            \
+                _str->length <= sizeof(JSVAL_INT_MAX_STRING)-1)               \
+            {                                                                 \
+		jsuint _index = JS7_UNDEC(*_cp++);                            \
+                jsuint _oldIndex = 0;                                         \
+                jsuint _c;                                                    \
+                if (_index != 0) {                                            \
+                    while (JS7_ISDEC(*_cp)) {                                 \
+                        _oldIndex = _index;                                   \
+                        _c = JS7_UNDEC(*_cp);                                 \
+                        _index = 10*_index + _c;                              \
+		        _cp++;                                                \
+                    }                                                         \
+                }                                                             \
+                if (*_cp == 0 &&                                              \
+                     (_oldIndex < (JSVAL_INT_MAX / 10) ||                     \
+                      (_oldIndex == (JSVAL_INT_MAX / 10) &&                   \
+                       _c < (JSVAL_INT_MAX % 10))))                           \
 		    id = INT_TO_JSVAL(_index);                                \
 	    } else {                                                          \
 		CHECK_FOR_EMPTY_INDEX(id);                                    \
 	    }                                                                 \
 	}                                                                     \
     PR_END_MACRO
+
 
 JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
@@ -1275,7 +1283,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index.
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     /* Lock if object locking is required by this implementation. */
@@ -1345,7 +1354,8 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSObject *obj2, *proto;
     JSScopeProperty *sprop;
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index.
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     /* Search scopes starting with obj and following the prototype link. */
@@ -1529,6 +1539,9 @@ js_FindVariableScope(JSContext *cx, JSFunction **funp)
 	    ;
 	if (fp)
 	    obj = js_GetCallObject(cx, fp, parent, withobj);
+    } else if (clasp == &js_CallClass) {
+        fp = (JSStackFrame *) JS_GetPrivate(cx, obj);
+        fun = fp->fun;
     }
 #endif
 
@@ -1546,7 +1559,8 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
 	return JS_FALSE;
     if (!sprop) {
-	/* Handle old bug that treated empty string as zero index. */
+        /* Handle old bug that treated empty string as zero index.
+         * Also convert string indices to numbers if applicable. */
 	CHECK_FOR_FUNNY_INDEX(id);
 
 #if JS_BUG_NULL_INDEX_PROPS
@@ -1611,7 +1625,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	return JS_FALSE;
     }
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index.
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     hash = js_HashValue(id);
@@ -1743,7 +1758,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     pval = LOCKED_OBJ_GET_SLOT(obj, slot);
 
     /* Evil overloaded operator assign() hack. */
-    if (JSVAL_IS_OBJECT(pval)) {
+    if ((!JSVERSION_IS_ECMA(cx->version)) && (JSVAL_IS_OBJECT(pval))) {
 	assignobj = JSVAL_TO_OBJECT(pval);
 	if (assignobj) {
 	    older = JS_SetErrorReporter(cx, NULL);
@@ -1883,7 +1898,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     *rval = JSVERSION_IS_ECMA(cx->version) ? JSVAL_TRUE : JSVAL_VOID;
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index.
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
@@ -2061,6 +2077,7 @@ JSBool
 js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
              jsval *statep, jsid *idp)
 {
+    JSObject *proto_obj;
     JSClass *clasp;
     JSEnumerateOp enumerate;
     JSScopeProperty *sprop;
@@ -2073,7 +2090,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
     enumerate = clasp->enumerate;
     if (clasp->flags & JSCLASS_NEW_ENUMERATE)
         return ((JSNewEnumerateOp) enumerate)(cx, obj, enum_op, statep, idp);
-        
+
     switch (enum_op) {
 
     case JSENUMERATE_INIT:
@@ -2088,24 +2105,40 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
          */
         JS_LOCK_OBJ(cx, obj);
         scope = (JSScope *) obj->map;
-        for (sprop = scope->props; sprop; sprop = sprop->next) {
-	    if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols)
-	        length++;
-        }
-        ida = js_NewIdArray(cx, length);
-        if (!ida) {
-	    JS_UNLOCK_OBJ(cx, obj);
-    	    goto init_error;
-        }
-        i = 0;
-        for (sprop = scope->props; sprop; sprop = sprop->next) {
-	    if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols) {
-	        PR_ASSERT(i < length);
-	        ida->vector[i++] = sym_id(sprop->symbols);
+
+	/*
+	 * If this object shares a scope with its prototype, don't enumerate
+	 * its properties.  Otherwise they will be enumerated a second time
+	 * when the prototype object is enumerated.
+	 */
+	proto_obj = OBJ_GET_PROTO(cx, obj);
+	if (proto_obj && (scope == (JSScope *)proto_obj->map)) {
+	    ida = js_NewIdArray(cx, 0);
+	    if (!ida) {
+	      JS_UNLOCK_OBJ(cx, obj);
+	      goto init_error;
 	    }
-        }
+	} else {
+	    /* Object has a private scope; Enumerate all props in scope. */
+	    for (sprop = scope->props; sprop; sprop = sprop->next) {
+		if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols)
+		    length++;
+	    }
+	    ida = js_NewIdArray(cx, length);
+	    if (!ida) {
+		JS_UNLOCK_OBJ(cx, obj);
+		goto init_error;
+	    }
+	    i = 0;
+	    for (sprop = scope->props; sprop; sprop = sprop->next) {
+		if ((sprop->attrs & JSPROP_ENUMERATE) && sprop->symbols) {
+		    PR_ASSERT(i < length);
+		    ida->vector[i++] = sym_id(sprop->symbols);
+		}
+	    }
+	}
         JS_UNLOCK_OBJ(cx, obj);
-        
+
         state = JS_malloc(cx, sizeof(JSNativeIteratorState));
         if (!state) {
             JS_DestroyIdArray(cx, ida);
@@ -2117,7 +2150,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
         if (idp)
             *idp = INT_TO_JSVAL(length);
         return JS_TRUE;
-   
+
     case JSENUMERATE_NEXT:
         state = JSVAL_TO_PRIVATE(*statep);
         ida = state->ida;
@@ -2443,3 +2476,59 @@ out:
 }
 
 #endif /* JS_HAS_XDR */
+
+#ifdef DEBUG
+
+/* Routines to print out values during debugging. */
+
+void printChar(jschar *cp) {
+    fprintf(stderr, "jschar* (0x%x) \"", cp);
+    while (*cp)
+        fputc(*cp++, stderr);
+    fputc('"', stderr);
+    fputc('\n', stderr);
+}
+
+void printString(JSString *str) {
+    jsuint i;
+    fprintf(stderr, "string (0x%x) \"", str);
+    for (i=0; i < str->length; i++)
+        fputc(str->chars[i], stderr);
+    fputc('"', stderr);
+    fputc('\n', stderr);
+}
+
+void printVal(jsval val) {
+    fprintf(stderr, "val %d (0x%x) = ", val, val);
+    if (JSVAL_IS_NULL(val)) {
+        fprintf(stderr, "null\n");
+    } else if (JSVAL_IS_VOID(val)) {
+        fprintf(stderr, "undefined\n");
+    } else if (JSVAL_IS_OBJECT(val)) {
+        /* XXX can do more here */
+        fprintf(stderr, "object\n");
+    } else if (JSVAL_IS_INT(val)) {
+        fprintf(stderr, "(int) %d\n", JSVAL_TO_INT(val));
+    } else if (JSVAL_IS_STRING(val)) {
+        printString(JSVAL_TO_STRING(val));
+    } else if (JSVAL_IS_DOUBLE(val)) {
+        fprintf(stderr, "(double) %g\n", *JSVAL_TO_DOUBLE(val));
+    } else {
+        PR_ASSERT(JSVAL_IS_BOOLEAN(val));
+        fprintf(stderr, "(boolean) %s\n",
+                JSVAL_TO_BOOLEAN(val) ? "true" : "false");
+    }
+    fflush(stderr);
+}
+
+void printId(jsid id) {
+    fprintf(stderr, "id %d (0x%x) is ", id, id);
+    printVal(js_IdToValue(id));
+}
+
+void printAtom(JSAtom *atom) {
+    printString(ATOM_TO_STRING(atom));
+}
+
+#endif
+

@@ -131,10 +131,14 @@ static struct keyword {
 #endif
 
 #ifdef RESERVE_ECMA_KEYWORDS
-    {"debugger",       TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
     {"enum",           TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
 #endif
 
+#if JS_HAS_DEBUGGER_KEYWORD
+    {"debugger",       TOK_DEBUGGER,            JSOP_NOP}, /* XXX version? */
+#elif defined(RESERVE_ECMA_KEYWORDS)
+    {"debugger",       TOK_RESERVED,            JSOP_NOP,       JSVERSION_1_3},
+#endif
     {0}
 };
 
@@ -253,8 +257,17 @@ static void
 SendSourceToJSDebugger(JSTokenStream *ts, jschar *str, size_t length)
 {
     if (!ts->jsdsrc) {
-        ts->jsdsrc = JSD_NewSourceText(ts->jsdc,
-                                       ts->filename ? ts->filename : "typein");
+        const char* filename = ts->filename ? ts->filename : "typein";
+
+        if (1 == ts->lineno) {
+            ts->jsdsrc = JSD_NewSourceText(ts->jsdc, filename);
+        } else {
+            ts->jsdsrc = JSD_FindSourceForURL(ts->jsdc, filename);
+            if (ts->jsdsrc && JSD_SOURCE_PARTIAL != 
+                JSD_GetSourceStatus(ts->jsdc, ts->jsdsrc)) {
+                ts->jsdsrc = NULL;
+            }
+        }
     }
     if (ts->jsdsrc) {
         /* here we convert our Unicode into a C string to pass to JSD */
@@ -320,7 +333,7 @@ GetChar(JSTokenStream *ts)
 			}
 		    }
 		    for (j = 0; i < len; i++, j++)
-			ubuf[i] = (jschar) cbuf[j];
+			ubuf[i] = (jschar) (unsigned char) cbuf[j];
 		    ts->userbuf.limit = ubuf + len;
 		    ts->userbuf.ptr = ubuf;
 		} else
@@ -668,7 +681,7 @@ retry:
 
     if (JS7_ISDEC(c) || (c == '.' && JS7_ISDEC(PeekChar(ts)))) {
 	jsint radix;
-	jschar *endptr;
+	const jschar *endptr;
 	jsdouble dval;
 
 	radix = 10;
@@ -683,7 +696,15 @@ retry:
 		    RETURN(TOK_ERROR);
 		c = GetChar(ts);
 		radix = 16;
-	    } else if (JS7_ISDEC(c)) {
+	    } else if (JS7_ISDEC(c) && c < '8') {
+                /*
+                 * XXX Warning needed. Checking against c < '8' above is
+                 * non-ECMA, but is required to support legacy code; it's
+                 * likely that "08" and "09" are in use in code having to do
+                 * with dates.  So we need to support it, which makes our
+                 * behavior a superset of ECMA in this area.  We should be
+                 * raising a warning if '8' or '9' is encountered.
+                 */
 		radix = 8;
 	    }
 	}
@@ -729,16 +750,13 @@ retry:
 	FINISH_TOKENBUF(&ts->tokenbuf);
 
 	if (radix == 10) {
-	    /* Let js_strtod() do the hard work and validity checks. */
-	    if (!js_strtod(ts->tokenbuf.base, &endptr, &dval)) {
-		js_ReportCompileError(cx, ts,
-				      "floating point literal out of range");
+	    if (!js_strtod(cx, ts->tokenbuf.base, &endptr, &dval)) {
+		js_ReportCompileError(cx, ts, "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	} else {
-	    /* Let js_strtol() do the hard work, then check for overflow */
-	    if (!js_strtol(ts->tokenbuf.base, &endptr, radix, &dval)) {
-		js_ReportCompileError(cx, ts, "integer literal too large");
+	    if (!js_strtointeger(cx, ts->tokenbuf.base, &endptr, radix, &dval)) {
+		js_ReportCompileError(cx, ts, "out of memory");
 		RETURN(TOK_ERROR);
 	    }
 	}

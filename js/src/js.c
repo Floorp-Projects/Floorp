@@ -46,6 +46,10 @@
 #include "jsscope.h"
 #include "jsscript.h"
 
+#ifdef PERLCONNECT
+#include "jsperl.h"
+#endif
+
 #ifdef LIVECONNECT
 #include "jsjava.h"
 #endif
@@ -55,6 +59,9 @@
 #ifdef JSDEBUGGER_JAVA_UI
 #include "jsdjava.h"
 #endif /* JSDEBUGGER_JAVA_UI */
+#ifdef JSDEBUGGER_C_UI
+#include "jsdb.h"
+#endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
 #ifdef XP_UNIX
@@ -66,6 +73,28 @@
 
 #ifdef XP_MAC
 #define isatty(f) 1
+
+#include <SIOUX.h>
+#include <MacTypes.h>
+
+static char* mac_argv[] = { "js", NULL };
+
+static void initConsole(StringPtr consoleName, const char* startupMessage, int *argc, char** *argv)
+{
+	SIOUXSettings.autocloseonquit = true;
+	SIOUXSettings.asktosaveonclose = false;
+	/* SIOUXSettings.initializeTB = false;
+	 SIOUXSettings.showstatusline = true;*/
+	puts(startupMessage);
+	SIOUXSetTitle(consoleName);
+
+	/* set up a buffer for stderr (otherwise it's a pig). */
+	setvbuf(stderr, malloc(BUFSIZ), _IOLBF, BUFSIZ);
+
+	*argc = 1;
+	*argv = mac_argv;
+}
+
 #endif
 
 #ifndef JSFILE
@@ -109,7 +138,7 @@ Process(JSContext *cx, JSObject *obj, char *filename)
             while((ch = fgetc(ts->file)) != EOF) {
                 if(ch == '\n' || ch == '\r')
                     break;
-            } 
+            }
         }
         ungetc(ch, ts->file);
     }
@@ -151,6 +180,82 @@ out:
     PR_FreeArenaPool(&cx->tempPool);
 }
 
+static int
+usage(void)
+{
+    fprintf(stderr, "%s\n", JS_GetImplementationVersion());
+    fprintf(stderr, "usage: js [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    return 2;
+}
+
+static int
+ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
+{
+    int i;
+    char *filename = NULL;
+    jsint length;
+    jsval *vector;
+    jsval *p;
+    JSObject *argsObj;
+
+    for (i=0; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            switch (argv[i][1]) {
+            case 'v':
+                if (i+1 == argc) {
+                    return usage();
+                }
+                JS_SetVersion(cx, atoi(argv[i+1]));
+                i++;
+                break;
+
+            case 'f':
+                if (i+1 == argc) {
+                    return usage();
+                }
+                filename = argv[i+1];
+                /* "-f -" means read from stdin */
+                if (filename[0] == '-' && filename[1] == '\0')
+                    filename = NULL;
+                Process(cx, obj, filename);
+                i++;
+                break;
+            default:
+                return usage();
+            }
+        } else {
+            filename = argv[i++];
+            break;
+        }
+    }
+
+    length = argc - i;
+    vector = JS_malloc(cx, length * sizeof(jsval));
+    p = vector;
+
+    if (vector == NULL)
+        return 1;
+
+    while (i < argc) {
+        JSString *str = JS_NewStringCopyZ(cx, argv[i]);
+        if (str == NULL)
+            return 1;
+        *p++ = STRING_TO_JSVAL(str);
+        i++;
+    }
+    argsObj = JS_NewArrayObject(cx, length, vector);
+    if (argsObj == NULL)
+        return 1;
+
+    if (!JS_DefineProperty(cx, obj, "arguments",
+                           OBJECT_TO_JSVAL(argsObj), NULL, NULL, 0))
+        return 1;
+
+    Process(cx, obj, filename);
+    return 0;
+}
+
+
 static JSBool
 Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -160,6 +265,9 @@ Version(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	*rval = INT_TO_JSVAL(JS_GetVersion(cx));
     return JS_TRUE;
 }
+
+static void
+my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 static JSBool
 Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
@@ -179,13 +287,8 @@ Load(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	filename = JS_GetStringBytes(str);
 	errno = 0;
 	script = JS_CompileFile(cx, obj, filename);
-	if (!script) {
-	    fprintf(stderr, "js: cannot load %s", filename);
-	    if (errno)
-		fprintf(stderr, ": %s", strerror(errno));
-	    putc('\n', stderr);
+	if (!script)
 	    continue;
-	}
 	ok = JS_ExecuteScript(cx, obj, script, &result);
 	JS_DestroyScript(cx, script);
 	if (!ok)
@@ -391,7 +494,7 @@ PCToLine(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #ifdef DEBUG
 
 static void
-SingleNote(JSContext *cx, JSFunction *fun )
+SrcNotes(JSContext *cx, JSFunction *fun )
 {
     uintN offset, delta;
     jssrcnote *notes, *sn;
@@ -432,6 +535,11 @@ SingleNote(JSContext *cx, JSFunction *fun )
 		atom = js_GetAtom(cx, &fun->script->atomMap, atomIndex);
 		printf(" atom %u (%s)", (uintN)atomIndex, ATOM_BYTES(atom));
 		break;
+	      case SRC_CATCH:
+		delta = (uintN) js_GetSrcNoteOffset(sn, 0);
+		if (delta)
+		    printf(" guard size %u", delta);
+		break;
 	      default:;
 	    }
 	    putchar('\n');
@@ -450,23 +558,23 @@ Notes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	if (!fun)
 	    return JS_FALSE;
 
-	SingleNote(cx, fun);
+	SrcNotes(cx, fun);
     }
     return JS_TRUE;
 }
 
 static JSBool
-ExceptionTable(JSContext *cx, JSFunction *fun)
+TryNotes(JSContext *cx, JSFunction *fun)
 {
-    JSTryNote *iter = fun->script->trynotes;
+    JSTryNote *tn = fun->script->trynotes;
 
-    if (!iter)
+    if (!tn)
 	return JS_TRUE;
-    printf("\nException table:\nstart\tend\tcatch\tfinally\n");
-    while (iter->start && iter->end) {
-	printf("  %d\t%d\t%d\t%d\n",
-	       iter->start, iter->end, iter->catch, iter->finally);
-	iter++;
+    printf("\nException table:\nstart\tend\tcatch\n");
+    while (tn->start && tn->catchStart) {
+	printf("  %d\t%d\t%d\n",
+	       tn->start, tn->length, tn->catchStart);
+	tn++;
     }
     return JS_TRUE;
 }
@@ -492,8 +600,8 @@ Disassemble(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	    return JS_FALSE;
 
 	js_Disassemble(cx, fun->script, lines, stdout);
-	SingleNote(cx, fun);
-	ExceptionTable(cx, fun);
+	SrcNotes(cx, fun);
+	TryNotes(cx, fun);
     }
     return JS_TRUE;
 }
@@ -857,6 +965,7 @@ Help(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
     const char *bytes;
 
+    printf("%s\n", JS_GetImplementationVersion());
     if (argc == 0) {
 	ShowHelpHeader();
 	for (i = 0; shell_functions[i].name; i++)
@@ -1046,7 +1155,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
     fputs("^\n", stderr);
 }
 
-#if defined DEBUG && defined XP_UNIX
+#if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
 static JSBool
 Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
@@ -1099,7 +1208,7 @@ Exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 static JSBool
 global_resolve(JSContext *cx, JSObject *obj, jsval id)
 {
-#if defined DEBUG && defined XP_UNIX
+#if defined(SHELL_HACK) && defined(DEBUG) && defined(XP_UNIX)
     /*
      * Do this expensive hack only for unoptimized Unix builds, which are not
      * used for benchmarking.
@@ -1155,11 +1264,11 @@ static JSClass global_class = {
 int
 main(int argc, char **argv)
 {
-    int c, i;
     JSVersion version;
     JSRuntime *rt;
     JSContext *cx;
     JSObject *glob, *it;
+    int result;
 
 #ifdef XP_OS2
    /* these streams are normally line buffered on OS/2 and need a \n, *
@@ -1168,26 +1277,15 @@ main(int argc, char **argv)
     setbuf(stderr,0);
 #endif
 
+#ifdef XP_MAC
+	initConsole("\pJavaScript Shell", "Welcome to js shell.", &argc, &argv);
+#endif
+
     version = JSVERSION_DEFAULT;
-#ifdef XP_UNIX
-    while ((c = getopt(argc, argv, "v:")) != -1) {
-	switch (c) {
-	  case 'v':
-	    version = atoi(optarg);
-	    break;
-	  default:
-	    fprintf(stderr, "usage: js [-v version]\n");
-	    return 2;
-	}
-    }
-    argc -= optind;
-    argv += optind;
-#else
-    c = -1;
+#ifndef LIVECONNECT
     argc--;
     argv++;
 #endif
-
     rt = JS_NewRuntime(8L * 1024L * 1024L);
     if (!rt)
 	return 1;
@@ -1213,6 +1311,11 @@ main(int argc, char **argv)
 	return 1;
     if (!JS_DefineProperties(cx, it, its_props))
 	return 1;
+
+#ifdef PERLCONNECT
+    if (!js_InitPerlClass(cx, glob))
+        return 1;
+#endif
 
 #ifdef LIVECONNECT
 	if (!JSJ_SimpleInit(cx, glob, NULL, getenv("CLASSPATH")))
@@ -1240,14 +1343,12 @@ main(int argc, char **argv)
     * is passed on the cmd line.
     */
 #endif /* JSDEBUGGER_JAVA_UI */
+#ifdef JSDEBUGGER_C_UI
+    JSDB_InitDebugger(rt, _jsdc, 0);
+#endif /* JSDEBUGGER_C_UI */
 #endif /* JSDEBUGGER */
 
-    if (argc > 0) {
-	for (i = 0; i < argc; i++)
-	    Process(cx, glob, argv[i]);
-    } else {
-	Process(cx, glob, NULL);
-    }
+    result = ProcessArgs(cx, glob, argv, argc);
 
 #ifdef JSDEBUGGER
     if (_jsdc)
@@ -1257,5 +1358,5 @@ main(int argc, char **argv)
     JS_DestroyContext(cx);
     JS_DestroyRuntime(rt);
     JS_ShutDown();
-    return 0;
+    return result;
 }

@@ -60,10 +60,10 @@ struct JSRuntime {
 
     /* Random number generator state, used by jsmath.c. */
     JSBool              rngInitialized;
-    PRInt64               rngMultiplier;
-    PRInt64               rngAddend;
-    PRInt64               rngMask;
-    PRInt64               rngSeed;
+    int64               rngMultiplier;
+    int64               rngAddend;
+    int64               rngMask;
+    int64               rngSeed;
     jsdouble            rngDscale;
 
     /* Well-known numbers held for use by this runtime's contexts. */
@@ -84,6 +84,8 @@ struct JSRuntime {
     void                *newScriptHookData;
     JSDestroyScriptHook destroyScriptHook;
     void                *destroyScriptHookData;
+    JSTrapHandler       debuggerHandler;
+    void                *debuggerHandlerData;
 
     /* More debugging state, see jsdbgapi.c. */
     PRCList             trapList;
@@ -150,7 +152,7 @@ struct JSContext {
     JSErrorReporter     errorReporter;
 
     /* Client opaque pointer */
-    void                *pvt;
+    void                *data;
     
     /* Java environment and JS errors to throw as exceptions. */
     void                *javaEnv;
@@ -161,6 +163,7 @@ struct JSContext {
     JSPackedBool        gcActive;
     jsrefcount          requestDepth;
 #endif
+    JSStackFrame        *dormantFrameChain;   /* dormant frame chains */
 };
 
 typedef struct JSInterpreterHooks {

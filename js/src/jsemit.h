@@ -73,6 +73,7 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_IN_FUNCTION 0x01        /* parsing inside function body */
 #define TCF_RETURN_EXPR 0x02        /* function has 'return expr;' */
 #define TCF_RETURN_VOID 0x04        /* function has 'return;' */
+#define TCF_IN_FOR_INIT 0x08        /* parsing init expr of for; exclude 'in' */
 
 #define INIT_TREE_CONTEXT(tc) \
     ((tc)->flags = 0, (tc)->tryCount = 0, (tc)->topStmt = NULL)
@@ -247,7 +248,7 @@ typedef enum JSSrcNoteType {
     SRC_ASSIGNOP    = 8,        /* += or another assign-op follows */
     SRC_COND        = 9,        /* JSOP_IFEQ is from conditional ?: operator */
     SRC_PAREN       = 10,       /* JSOP_NOP generated to mark user parens */
-    SRC_HIDDEN      = 11,       /* JSOP_LEAVEWITH for break/continue in with */
+    SRC_HIDDEN      = 11,       /* opcode shouldn't be decompiled */
     SRC_PCBASE      = 12,       /* offset of first obj.prop.subprop bytecode */
     SRC_LABEL       = 13,       /* JSOP_NOP for label: with atomid immediate */
     SRC_LABELBRACE  = 14,       /* JSOP_NOP for label: {...} begin brace */
@@ -256,8 +257,8 @@ typedef enum JSSrcNoteType {
     SRC_CONT2LABEL  = 17,       /* JSOP_GOTO for 'continue label' with atomid */
     SRC_SWITCH      = 18,       /* JSOP_*SWITCH with offset to end of switch */
     SRC_FUNCDEF     = 19,       /* JSOP_NOP for function f() with atomid */
-    SRC_TRY	    = 20,       /* JSOP_NOP for beginning of try{} section */
-    SRC_CATCH       = 21,       /* beginning of catch block (at conditional) */
+    SRC_TRYFIN	    = 20,       /* JSOP_NOP for try{} or finally{} section */
+    SRC_CATCH       = 21,       /* catch block has guard */
     SRC_NEWLINE     = 22,       /* bytecode follows a source newline */
     SRC_SETLINE     = 23,       /* a file-absolute source line number note */
     SRC_XDELTA      = 24        /* 24-31 are for extended delta notes */
@@ -295,11 +296,11 @@ typedef enum JSSrcNoteType {
 
 /*
  * Offset fields follow certain notes and are frequency-encoded: an offset in
- * [0,127] consumes one byte, an offset in [128,32767] takes two, and the high
- * bit of the first byte is set.
+ * [0,0x7f] consumes one byte, an offset in [0x80,0x7fffff] takes three, and
+ * the high bit of the first byte is set.
  */
-#define SN_2BYTE_OFFSET_FLAG    0x80
-#define SN_2BYTE_OFFSET_MASK    0x7f
+#define SN_3BYTE_OFFSET_FLAG    0x80
+#define SN_3BYTE_OFFSET_MASK    0x7f
 
 extern JS_FRIEND_DATA(const char *) js_SrcNoteName[];
 extern JS_FRIEND_DATA(uint8) js_SrcNoteArity[];
@@ -361,7 +362,7 @@ js_AllocTryNotes(JSContext *cx, JSCodeGenerator *cg);
  */
 extern JS_FRIEND_API(JSTryNote *)
 js_NewTryNote(JSContext *cx, JSCodeGenerator *cg, ptrdiff_t start,
-	      ptrdiff_t end, ptrdiff_t catch, ptrdiff_t finally);
+	      ptrdiff_t end, ptrdiff_t catchStart);
 
 /*
  * Finish generating exception information, and copy it to JS_malloc

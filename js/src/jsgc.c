@@ -615,7 +615,7 @@ js_GC(JSContext *cx)
     PRArena *a, *ma, *fa, **ap, **fap;
     jsval v, *vp, *sp;
     pruword begin, end;
-    JSStackFrame *fp;
+    JSStackFrame *fp, *chain;
     void *mark;
     uint8 flags, *flagp;
     JSGCThing *thing, *final, **flp, **oflp;
@@ -703,8 +703,19 @@ restart:
     js_MarkAtomState(&rt->atomState, gc_mark);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
-	fp = acx->fp;
-	if (fp) {
+        /* Iterate frame chain and dormant chains. Temporarily tack current  
+         * frame onto the head of the dormant list to ease iteration.
+         *
+         * (NOTE: see comment on this whole 'dormant' thing in js_Execute)
+         */
+	chain = acx->fp;
+        if (chain) {
+            PR_ASSERT(!chain->dormantNext);
+            chain->dormantNext = acx->dormantFrameChain;
+        } else {
+            chain = acx->dormantFrameChain;
+        }
+        for (fp=chain; fp; fp = chain = chain->dormantNext) {
 	    sp = fp->sp;
 	    if (sp) {
 		for (a = acx->stackPool.first.next; a; a = a->next) {
@@ -736,6 +747,9 @@ restart:
 		    GC_MARK(rt, fp->sharpArray, "sharp array", NULL);
 	    } while ((fp = fp->down) != NULL);
 	}
+        /* cleanup temporary link */
+        if (acx->fp)
+            acx->fp->dormantNext = NULL;
 	GC_MARK(rt, acx->globalObject, "global object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_OBJECT], "newborn object", NULL);
 	GC_MARK(rt, acx->newborn[GCX_STRING], "newborn string", NULL);
