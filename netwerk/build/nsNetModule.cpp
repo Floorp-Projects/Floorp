@@ -191,12 +191,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpBasicAuth)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHttpDigestAuth)
 #endif // !NECKO_PROTOCOL_http
   
-#ifdef NECKO_PROTOCOL_jar
-// jar
-#include "nsJARProtocolHandler.h"
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsJARProtocolHandler, Init)
-#endif
-  
 #ifdef NECKO_PROTOCOL_res
 // resource
 #include "nsResProtocolHandler.h"
@@ -923,15 +917,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_FTPPROTOCOLHANDLER_CID,
       NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ftp",
       nsFtpProtocolHandlerConstructor
-    },
-#endif
-
-#ifdef NECKO_PROTOCOL_jar
-    // from netwerk/protocol/jar:
-    { NS_JARPROTOCOLHANDLER_CLASSNAME,
-      NS_JARPROTOCOLHANDLER_CID,
-      NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "jar", 
-      nsJARProtocolHandlerConstructor
     },
 #endif
 

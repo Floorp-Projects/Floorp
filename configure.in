@@ -5418,7 +5418,7 @@ dnl ========================================================
 dnl
 dnl option to disable various necko protocols
 dnl
-NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http jar keyword res viewsource"
+NECKO_PROTOCOLS_DEFAULT="about data file ftp gopher http keyword res viewsource"
 MOZ_ARG_ENABLE_STRING(necko-protocols,
 [  --enable-necko-protocols[={http,ftp,default,all,none}]
                           Enable/disable specific protocol handlers],

@@ -47,7 +47,6 @@ DIRS		= about \
               keyword \
               res \
               file \
-              jar \
               http \
               viewsource \
               ftp \

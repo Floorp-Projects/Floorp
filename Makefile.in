@@ -157,7 +157,6 @@ endif
 tier_9_dirs += \
 		js/src/xpconnect \
 		intl \
-		modules/libjar \
 		$(NULL)
 
 ifdef MOZ_OJI
@@ -186,6 +185,7 @@ endif
 tier_9_dirs	+= \
 		modules/libutil \
 		netwerk \
+		modules/libjar \
 		uriloader \
 		modules/libpref \
 		modules/libimg \

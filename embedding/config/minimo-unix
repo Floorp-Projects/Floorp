@@ -138,7 +138,6 @@ components/necko_about.xpt
 components/necko_data.xpt               
 components/necko_dns.xpt                
 components/necko_http.xpt               
-components/necko_jar.xpt                
 components/necko_res.xpt                
 components/necko_strconv.xpt
 
