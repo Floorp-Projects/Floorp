@@ -118,8 +118,7 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
   virtual PRBool IsContainingBlock() const { return PR_TRUE; }
@@ -630,13 +629,12 @@ CanvasFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-CanvasFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint, 
+CanvasFrame::GetFrameForPoint(const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
 nsIAtom*

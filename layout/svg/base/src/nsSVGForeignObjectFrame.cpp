@@ -524,23 +524,24 @@ nsSVGForeignObjectFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
 {
   *hit = nsnull;
 
-  nsPresContext *presContext = GetPresContext();
-
   nsPoint p( (nscoord)(x*GetTwipsPerPx()),
              (nscoord)(y*GetTwipsPerPx()));
 
   nsresult rv;
 
-  rv = nsSVGForeignObjectFrameBase::GetFrameForPoint(presContext, p,
-                                                     NS_FRAME_PAINT_LAYER_FOREGROUND, hit);
+  rv = nsSVGForeignObjectFrameBase::GetFrameForPoint(p,
+                                               NS_FRAME_PAINT_LAYER_FOREGROUND,
+                                               hit);
   if (NS_SUCCEEDED(rv) && *hit) return rv;
 
-  rv = nsSVGForeignObjectFrameBase::GetFrameForPoint(presContext, p,
-                                                     NS_FRAME_PAINT_LAYER_FLOATS, hit);
+  rv = nsSVGForeignObjectFrameBase::GetFrameForPoint(p,
+                                               NS_FRAME_PAINT_LAYER_FLOATS,
+                                               hit);
   if (NS_SUCCEEDED(rv) && *hit) return rv;
 
-  return nsSVGForeignObjectFrameBase::GetFrameForPoint(presContext, p,
-                                                       NS_FRAME_PAINT_LAYER_BACKGROUND, hit);
+  return nsSVGForeignObjectFrameBase::GetFrameForPoint(p,
+                                               NS_FRAME_PAINT_LAYER_BACKGROUND,
+                                               hit);
 }
 
 NS_IMETHODIMP_(already_AddRefed<nsISVGRendererRegion>)

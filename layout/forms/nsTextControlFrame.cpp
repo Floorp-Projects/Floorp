@@ -2080,22 +2080,21 @@ nsTextControlFrame::Paint(nsPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTextControlFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                         const nsPoint& aPoint,
+nsTextControlFrame::GetFrameForPoint(const nsPoint& aPoint,
                                          nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
 {
   nsresult rv = NS_ERROR_FAILURE;
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
-    rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
+    rv = nsStackFrame::GetFrameForPoint(aPoint,
                                       NS_FRAME_PAINT_LAYER_FOREGROUND, aFrame);
     if (NS_SUCCEEDED(rv))
       return NS_OK;
-    rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
+    rv = nsStackFrame::GetFrameForPoint(aPoint,
                                         NS_FRAME_PAINT_LAYER_FLOATS, aFrame);
     if (NS_SUCCEEDED(rv))
       return NS_OK;
-    rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
+    rv = nsStackFrame::GetFrameForPoint(aPoint,
                                       NS_FRAME_PAINT_LAYER_BACKGROUND, aFrame);
   }
   return rv;

@@ -125,8 +125,7 @@ nsTreeColFrame::Destroy(nsPresContext* aPresContext)
 }
 
 NS_IMETHODIMP
-nsTreeColFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                     const nsPoint& aPoint, 
+nsTreeColFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
 {
@@ -160,7 +159,7 @@ nsTreeColFrame::GetFrameForPoint(nsPresContext* aPresContext,
     }
   }
 
-  nsresult result = nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  nsresult result = nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
   if (result == NS_OK) {
     nsIContent* content = (*aFrame)->GetContent();
     if (content) {

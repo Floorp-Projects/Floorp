@@ -317,17 +317,15 @@ nsContainerFrame::PaintChild(nsPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsContainerFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
+nsContainerFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
 {
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND), aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND), aFrame);
 }
 
 nsresult
-nsContainerFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
-                                        const nsPoint& aPoint,
+nsContainerFrame::GetFrameForPointUsing(const nsPoint& aPoint,
                                         nsIAtom*       aList,
                                         nsFramePaintLayer aWhichLayer,
                                         PRBool         aConsiderSelf,
@@ -348,7 +346,7 @@ nsContainerFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
 
   nsPoint originOffset;
   nsIView *view = nsnull;
-  nsresult rv = GetOriginToViewOffset(aPresContext, originOffset, &view);
+  nsresult rv = GetOriginToViewOffset(originOffset, &view);
 
   if (NS_SUCCEEDED(rv) && view)
     tmp += originOffset;
@@ -356,18 +354,15 @@ nsContainerFrame::GetFrameForPointUsing(nsPresContext* aPresContext,
   while (kid) {
     if (aWhichLayer == NS_FRAME_PAINT_LAYER_ALL) {
       // Check all layers on this kid before moving on to the next one
-      rv = kid->GetFrameForPoint(aPresContext, tmp,
-                                 NS_FRAME_PAINT_LAYER_FOREGROUND, &hit);
+      rv = kid->GetFrameForPoint(tmp, NS_FRAME_PAINT_LAYER_FOREGROUND, &hit);
       if (NS_FAILED(rv) || !hit) {
-        rv = kid->GetFrameForPoint(aPresContext, tmp,
-                                   NS_FRAME_PAINT_LAYER_FLOATS, &hit);
+        rv = kid->GetFrameForPoint(tmp, NS_FRAME_PAINT_LAYER_FLOATS, &hit);
         if (NS_FAILED(rv) || !hit) {
-          rv = kid->GetFrameForPoint(aPresContext, tmp,
-                                     NS_FRAME_PAINT_LAYER_BACKGROUND, &hit);
+          rv = kid->GetFrameForPoint(tmp, NS_FRAME_PAINT_LAYER_BACKGROUND, &hit);
         }
       }
     } else {
-      rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+      rv = kid->GetFrameForPoint(tmp, aWhichLayer, &hit);
     }
 
     if (NS_SUCCEEDED(rv) && hit) {

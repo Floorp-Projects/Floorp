@@ -210,8 +210,7 @@ public:
                                nsIAtom*        aAttribute,
                                PRInt32         aModType);
 
-  NS_IMETHOD  GetFrameForPoint(nsPresContext* aPresContext,
-                               const nsPoint& aPoint, 
+  NS_IMETHOD  GetFrameForPoint(const nsPoint& aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**     aFrame);
 
@@ -709,8 +708,7 @@ nsSVGOuterSVGFrame::AttributeChanged(nsIContent*     aChild,
 
 
 nsresult
-nsSVGOuterSVGFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                     const nsPoint& aPoint,
+nsSVGOuterSVGFrame::GetFrameForPoint(const nsPoint& aPoint,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame**     aFrame)
 {

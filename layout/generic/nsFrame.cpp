@@ -2041,8 +2041,7 @@ nsFrame::GetCursor(const nsPoint& aPoint,
 }
 
 NS_IMETHODIMP
-nsFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                          const nsPoint& aPoint,
+nsFrame::GetFrameForPoint(const nsPoint& aPoint,
                           nsFramePaintLayer aWhichLayer,
                           nsIFrame** aFrame)
 {
@@ -2368,11 +2367,9 @@ NS_IMETHODIMP nsFrame::GetOffsetFromView(nsPoint&  aOffset,
 // not a descendant of the frame's parent view (ex: scrolling popup menu),
 // the offset returned will be (0,0).
 
-NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsPresContext* aPresContext,
-                                             nsPoint&        aOffset,
+NS_IMETHODIMP nsFrame::GetOriginToViewOffset(nsPoint&        aOffset,
                                              nsIView**       aView) const
 {
-  NS_ENSURE_ARG_POINTER(aPresContext);
   nsresult rv = NS_OK;
 
   aOffset.MoveTo(0,0);

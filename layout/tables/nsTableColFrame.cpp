@@ -145,8 +145,7 @@ nsTableColFrame::Paint(nsPresContext*      aPresContext,
 
 // override, since we want to act like a block
 NS_IMETHODIMP
-nsTableColFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                          const nsPoint& aPoint,
+nsTableColFrame::GetFrameForPoint(const nsPoint& aPoint,
                           nsFramePaintLayer aWhichLayer,
                           nsIFrame** aFrame)
 {

@@ -595,8 +595,7 @@ nsTableRowFrame::GetSkipSides() const
  * sufficient.  We have to ask the row if it has a child that contains the point.
  */
 NS_IMETHODIMP
-nsTableRowFrame::GetFrameForPoint(nsPresContext*        aPresContext,
-                                       const nsPoint&    aPoint,
+nsTableRowFrame::GetFrameForPoint(const nsPoint&    aPoint,
                                        nsFramePaintLayer aWhichLayer,
                                        nsIFrame**        aFrame)
 {
@@ -620,7 +619,7 @@ nsTableRowFrame::GetFrameForPoint(nsPresContext*        aPresContext,
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
   while (nsnull != kid) {
-    nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+    nsresult rv = kid->GetFrameForPoint(tmp, aWhichLayer, &hit);
 
     if (NS_SUCCEEDED(rv) && hit) {
       *aFrame = hit;

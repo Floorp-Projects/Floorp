@@ -353,8 +353,7 @@ nsTableOuterFrame::Paint(nsPresContext*      aPresContext,
 }
 
 NS_IMETHODIMP
-nsTableOuterFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
+nsTableOuterFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
 {
@@ -362,14 +361,14 @@ nsTableOuterFrame::GetFrameForPoint(nsPresContext* aPresContext,
   
   // caption frames live in a different list which we need to check separately
   if (mCaptionFrame) {
-    rv = GetFrameForPointUsing(aPresContext, aPoint, nsLayoutAtoms::captionList, aWhichLayer, PR_FALSE, aFrame);
+    rv = GetFrameForPointUsing(aPoint, nsLayoutAtoms::captionList, aWhichLayer, PR_FALSE, aFrame);
     if (NS_OK == rv) {
       return NS_OK;
     }
   }
   // This frame should never get events (it contains the margins of the
   // table), so always pass |PR_FALSE| for |aConsiderSelf|.
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
 }
 
 NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsPresContext* aPresContext,

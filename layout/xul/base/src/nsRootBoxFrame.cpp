@@ -102,8 +102,7 @@ public:
   NS_IMETHOD HandleEvent(nsPresContext* aPresContext, 
                          nsGUIEvent*     aEvent,
                          nsEventStatus*  aEventStatus);
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint, 
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
@@ -259,13 +258,12 @@ nsRootBoxFrame::HandleEvent(nsPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsRootBoxFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
+nsRootBoxFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
 {
   // this should act like a block, so we need to override
-  return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  return nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
 }
 
 nsIAtom*

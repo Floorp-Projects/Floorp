@@ -108,8 +108,7 @@ public:
   NS_IMETHOD Destroy(nsPresContext* aPresContext);
 
   // Overridden to prevent events from ever going to children of the menu.
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint,
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,    
                               nsIFrame**     aFrame);
 

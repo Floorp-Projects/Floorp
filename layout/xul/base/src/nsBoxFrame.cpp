@@ -1738,8 +1738,7 @@ nsBoxFrame::GetDebug(PRBool& aDebug)
 #endif
 
 NS_IMETHODIMP  
-nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
-                             const nsPoint&    aPoint, 
+nsBoxFrame::GetFrameForPoint(const nsPoint&    aPoint, 
                              nsFramePaintLayer aWhichLayer,    
                              nsIFrame**        aFrame)
 {   
@@ -1752,7 +1751,7 @@ nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
 
   nsIView* view = nsnull;
   nsPoint originOffset;
-  GetOriginToViewOffset(aPresContext, originOffset, &view);
+  GetOriginToViewOffset(originOffset, &view);
 
 #ifdef DEBUG_LAYOUT
   // get the debug frame.
@@ -1783,7 +1782,7 @@ nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
   nsIBox* kid = nsnull;
   GetChildBox(&kid);
   while (nsnull != kid) {
-    GetFrameForPointChild(aPresContext, tmp, aWhichLayer, kid, hit != nsnull, &hit);
+    GetFrameForPointChild(tmp, aWhichLayer, kid, hit != nsnull, &hit);
     kid->GetNextBox(&kid);
   }
   if (hit)
@@ -1803,8 +1802,7 @@ nsBoxFrame::GetFrameForPoint(nsPresContext*   aPresContext,
 }
 
 /* virtual */ nsresult
-nsBoxFrame::GetFrameForPointChild(nsPresContext*   aPresContext,
-                                  const nsPoint&    aPoint,
+nsBoxFrame::GetFrameForPointChild(const nsPoint&    aPoint,
                                   nsFramePaintLayer aWhichLayer,    
                                   nsIFrame*         aChild,
                                   PRBool            aCheckMouseThrough,
@@ -1812,7 +1810,7 @@ nsBoxFrame::GetFrameForPointChild(nsPresContext*   aPresContext,
 {
   nsIFrame *hit = nsnull;
   nsresult rv =
-    aChild->GetFrameForPoint(aPresContext, aPoint, aWhichLayer, &hit);
+    aChild->GetFrameForPoint(aPoint, aWhichLayer, &hit);
 
   if (NS_SUCCEEDED(rv) && hit) {
     rv = NS_ERROR_FAILURE;

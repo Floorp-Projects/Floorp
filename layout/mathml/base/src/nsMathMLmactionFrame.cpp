@@ -254,17 +254,16 @@ nsMathMLmactionFrame::SetInitialChildList(nsPresContext* aPresContext,
 
 // Return the selected frame ...
 NS_IMETHODIMP
-nsMathMLmactionFrame::GetFrameForPoint(nsPresContext*   aPresContext,
-                                       const nsPoint&    aPoint,
+nsMathMLmactionFrame::GetFrameForPoint(const nsPoint&    aPoint,
                                        nsFramePaintLayer aWhichLayer,
                                        nsIFrame**        aFrame)
 {
   nsIFrame* childFrame = GetSelectedFrame();
   if (childFrame) {
     nsPoint pt(aPoint.x - mRect.x, aPoint.y - mRect.y);
-    return childFrame->GetFrameForPoint(aPresContext, pt, aWhichLayer, aFrame);
+    return childFrame->GetFrameForPoint(pt, aWhichLayer, aFrame);
   }
-  return nsFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  return nsFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame);
 }
 
 //  Only paint the selected child...

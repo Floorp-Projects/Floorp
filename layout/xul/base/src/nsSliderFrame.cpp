@@ -714,8 +714,7 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
 
 }
 
-NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                             const nsPoint& aPoint,
+NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(const nsPoint& aPoint,
                                              nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 {
@@ -728,7 +727,7 @@ NS_IMETHODIMP  nsSliderFrame::GetFrameForPoint(nsPresContext* aPresContext,
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame)))
+  if (NS_SUCCEEDED(nsBoxFrame::GetFrameForPoint(aPoint, aWhichLayer, aFrame)))
     return NS_OK;
 
   // always return us (if visible)

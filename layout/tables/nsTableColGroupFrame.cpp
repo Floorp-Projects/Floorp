@@ -342,13 +342,12 @@ nsTableColGroupFrame::GetSkipSides() const
 }
 
 NS_IMETHODIMP
-nsTableColGroupFrame::GetFrameForPoint(nsPresContext* aPresContext,
-                                   const nsPoint& aPoint, 
+nsTableColGroupFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                    nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
 {
   // this should act like a block, so we need to override
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
+  return GetFrameForPointUsing(aPoint, nsnull, aWhichLayer, PR_FALSE, aFrame);
 }
 
 NS_METHOD nsTableColGroupFrame::Reflow(nsPresContext*          aPresContext,

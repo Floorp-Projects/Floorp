@@ -114,8 +114,7 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
-  NS_IMETHOD GetFrameForPoint(nsPresContext* aPresContext,
-                              const nsPoint& aPoint,
+  NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint,
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame** aFrame);
 
