@@ -73,4 +73,3 @@ foreach bug [split $FORM(buglist) :] {
     puts "<HR>"
   }
 }
-puts "<h6>Mozilla Communications Corporation, Company Confidential, read and eat.</h6>"
