@@ -143,7 +143,7 @@ NS_IMETHODIMP nsTransferable::IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
 }
 
 /**
-  * 
+  * The transferable owns the data (memory) and only gives the aData a copy of the pointer address to it.
   *
   */
 NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void ** aData, PRUint32 * aDataLen)
@@ -176,7 +176,7 @@ NS_IMETHODIMP nsTransferable::GetTransferData(nsIDataFlavor * aDataFlavor, void 
 }
 
 /**
-  * 
+  * The transferable now owns the data (the memory pointing to it)
   *
   */
 NS_IMETHODIMP nsTransferable::SetTransferData(nsIDataFlavor * aDataFlavor, void * aData, PRUint32 aDataLen)
