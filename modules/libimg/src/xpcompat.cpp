@@ -75,9 +75,9 @@ char *XP_GetString(int i)
 }
 
 /* We need this because Solaris' version of qsort is broken and
- * causes array bounds reads.
+ * causes array bounds reads. XXX Moving solaris version to xp/xp_qsort.c
  */
-#if defined(SOLARIS) || defined(XP_MAC)
+#if defined(XP_MAC)
 
 
 /* prototypes for local routines */
