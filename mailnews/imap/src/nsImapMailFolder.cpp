@@ -1840,15 +1840,6 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 				deleteImmediatelyNoTrash = PR_TRUE;
 		}
 	}
-  if (msgWindow && allowUndo)
-  {
-    nsCOMPtr <nsITransactionManager> txnMgr;
-
-    msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-
-    if (txnMgr) SetTransactionManager(txnMgr);
-  }
-    
 
   if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
   {
@@ -1862,8 +1853,11 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       undoMsgTxn->SetTransactionType(nsIMessenger::eDeleteMsg);
       // we're adding this undo action before the delete is successful. This is evil,
       // but 4.5 did it as well.
-      if (m_transactionManager)
-        m_transactionManager->DoTransaction(undoMsgTxn);
+      nsCOMPtr <nsITransactionManager> txnMgr;
+      if (msgWindow)
+        msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+      if (txnMgr)
+        txnMgr->DoTransaction(undoMsgTxn);
     }
 
     rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray.GetArray(), srcKeyArray.GetSize());
@@ -3849,8 +3843,13 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 // we still need to notify FE so it will show the imap deleted flag
                 srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
               }
-              if (m_transactionManager)
-                m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
+              if (m_copyState->m_msgWindow)
+              {
+                nsCOMPtr<nsITransactionManager> txnMgr;
+                m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+                if (txnMgr)
+                  txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+              }
             }
             if (m_copyState->m_listener)
               listener = do_QueryInterface(m_copyState->m_listener);
@@ -3928,8 +3927,14 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               m_copyState->m_curIndex++;
               if (m_copyState->m_curIndex >= m_copyState->m_totalCount)
               {
-                if (m_transactionManager && m_copyState->m_undoMsgTxn)
-                    m_transactionManager->DoTransaction(m_copyState->m_undoMsgTxn);
+                if (m_copyState->m_msgWindow && m_copyState->m_undoMsgTxn)
+                {
+                  nsCOMPtr<nsITransactionManager> txnMgr;
+                  m_copyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+                  if (txnMgr)
+                    txnMgr->DoTransaction(m_copyState->m_undoMsgTxn);
+                }
+
                 if (m_copyState->m_listener)
                   listener = do_QueryInterface(m_copyState->m_listener);
                 ClearCopyState(aExitCode);
@@ -5114,14 +5119,6 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
   nsCOMPtr<nsISupports> srcSupport;
   nsCOMPtr<nsISupports> copySupport;
 
-  if (msgWindow && allowUndo)
-  {
-    nsCOMPtr <nsITransactionManager> txnMgr;
-
-    msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-    if (txnMgr) SetTransactionManager(txnMgr);
-  }
-
   if (WeAreOffline())
     return CopyMessagesOffline(srcFolder, messages, isMove, msgWindow, listener);
 
@@ -5229,15 +5226,6 @@ nsImapMailFolder::CopyFolder(nsIMsgFolder* srcFolder,
 
   return rv;
   
-}
-
-nsresult
-nsImapMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
-{
-    nsresult rv = NS_OK;
-    if (txnMgr)
-        m_transactionManager = txnMgr;
-    return rv;
 }
 
 NS_IMETHODIMP

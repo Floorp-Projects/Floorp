@@ -30,6 +30,7 @@
 #include "nsMsgKeyArray.h"
 #include "nsCOMPtr.h"
 #include "nsIUrlListener.h"
+#include "nsIWeakReference.h"
 
 #define NS_LOCALMOVECOPYMSGTXN_IID \
 { /* 874363b4-242e-11d3-afad-001083002da8 */ \
@@ -68,9 +69,9 @@ public:
                                 PRBool addFlag);
   
 private:
-    nsCOMPtr<nsIMsgFolder> m_srcFolder;
+    nsWeakPtr m_srcFolder;
     nsMsgKeyArray m_srcKeyArray;
-    nsCOMPtr<nsIMsgFolder> m_dstFolder;
+    nsWeakPtr m_dstFolder;
     nsMsgKeyArray m_dstKeyArray;
     PRBool m_isMove;
     PRBool m_srcIsImap4;

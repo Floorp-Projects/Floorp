@@ -328,7 +328,6 @@ protected:
                          nsIMsgWindow *msgWindow,
                          PRBool allowUndo);
   void ClearCopyState(nsresult exitCode);
-  nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult BuildIdsAndKeyArray(nsISupportsArray* messages,
                                nsCString& msgIds, nsMsgKeyArray& keyArray);
 
@@ -361,7 +360,6 @@ protected:
   PRBool m_urlRunning;
 
   // *** jt - undo move/copy trasaction support
-  nsCOMPtr<nsITransactionManager> m_transactionManager;
   nsCOMPtr<nsMsgTxn> m_pendingUndoTxn;
   nsCOMPtr<nsImapMailCopyState> m_copyState;
   PRMonitor *m_appendMsgMonitor;

@@ -62,17 +62,16 @@ nsImapMoveCopyMsgTxn::Init(
     m_srcMsgIdString = srcMsgIdString;
     m_idsAreUids = idsAreUids;
     m_isMove = isMove;
-	m_srcFolder = do_QueryInterface(srcFolder, &rv);
-	m_dstFolder = do_QueryInterface(dstFolder, &rv);
+	m_srcFolder = getter_AddRefs(NS_GetWeakReference(srcFolder));
+	m_dstFolder = getter_AddRefs(NS_GetWeakReference(dstFolder));
 	m_eventQueue = do_QueryInterface(eventQueue, &rv);
 	if (urlListener)
 		m_urlListener = do_QueryInterface(urlListener, &rv);
 	m_srcKeyArray.CopyArray(srcKeyArray);
 	m_dupKeyArray.CopyArray(srcKeyArray);
-    char *uri = nsnull;
-    rv = m_srcFolder->GetURI(&uri);
+    nsXPIDLCString uri;
+    rv = srcFolder->GetURI(getter_Copies(uri));
     nsCString protocolType(uri);
-    PR_FREEIF(uri);
     protocolType.SetLength(protocolType.FindChar(':'));
     // ** jt -- only do this for mailbox protocol
     if (protocolType.EqualsIgnoreCase("mailbox"))
@@ -80,7 +79,7 @@ nsImapMoveCopyMsgTxn::Init(
         m_srcIsPop3 = PR_TRUE;
         PRUint32 i, count = m_srcKeyArray.GetSize();
         nsCOMPtr<nsIMsgDatabase> srcDB;
-        rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+        rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_FAILED(rv)) return rv;
         nsCOMPtr<nsIMsgDBHdr> srcHdr;
         nsCOMPtr<nsIMsgDBHdr> copySrcHdr;
@@ -159,21 +158,23 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
         }
         else
         {
+            nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+            if (NS_FAILED(rv) || !srcFolder) return rv;
             nsCOMPtr<nsIUrlListener> srcListener =
-                do_QueryInterface(m_srcFolder, &rv);
+                do_QueryInterface(srcFolder, &rv);
             if (NS_FAILED(rv)) return rv;
             // ** make sure we are in the selected state; use lite select
             // folder so we won't hit performance hard
-            rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
+            rv = imapService->LiteSelectFolder(m_eventQueue, srcFolder,
                                                srcListener, nsnull);
             if (NS_FAILED(rv)) return rv;
             rv = imapService->SubtractMessageFlags(
-                m_eventQueue, m_srcFolder, srcListener, nsnull,
+                m_eventQueue, srcFolder, srcListener, nsnull,
                 m_srcMsgIdString.get(), kImapMsgDeletedFlag,
                 m_idsAreUids);
             if (NS_FAILED(rv)) return rv;
-            if (DeleteIsMoveToTrash(m_srcFolder))
-                rv = imapService->GetHeaders(m_eventQueue, m_srcFolder,
+            if (DeleteIsMoveToTrash(srcFolder))
+                rv = imapService->GetHeaders(m_eventQueue, srcFolder,
                                              srcListener, nsnull,
                                              m_srcMsgIdString.get(),
                                              PR_TRUE); 
@@ -181,16 +182,19 @@ nsImapMoveCopyMsgTxn::UndoTransaction(void)
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
+        nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+        if (NS_FAILED(rv) || !dstFolder) return rv;
+
         nsCOMPtr<nsIUrlListener> dstListener;
 
-        dstListener = do_QueryInterface(m_dstFolder, &rv);
+        dstListener = do_QueryInterface(dstFolder, &rv);
         if (NS_FAILED(rv)) return rv;
         // ** make sire we are in the selected state; use lite select folder
         // so we won't hit preformace hard
-        rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
+        rv = imapService->LiteSelectFolder(m_eventQueue, dstFolder,
                                            dstListener, nsnull);
         if (NS_FAILED(rv)) return rv;
-        rv = imapService->AddMessageFlags(m_eventQueue, m_dstFolder,
+        rv = imapService->AddMessageFlags(m_eventQueue, dstFolder,
                                           dstListener, nsnull,
                                           m_dstMsgIdString.get(),
                                           kImapMsgDeletedFlag,
@@ -214,16 +218,18 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
         }
         else
         {
+            nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+            if (NS_FAILED(rv) || !srcFolder) return rv;
             nsCOMPtr<nsIUrlListener> srcListener =
-                do_QueryInterface(m_srcFolder, &rv); 
+                do_QueryInterface(srcFolder, &rv); 
             if (NS_FAILED(rv)) return rv;
             // ** make sire we are in the selected state; use lite select
             // folder so we won't hit preformace hard
-            rv = imapService->LiteSelectFolder(m_eventQueue, m_srcFolder,
+            rv = imapService->LiteSelectFolder(m_eventQueue, srcFolder,
                                                srcListener, nsnull);
             if (NS_FAILED(rv)) return rv;
 
-            rv = imapService->AddMessageFlags(m_eventQueue, m_srcFolder,
+            rv = imapService->AddMessageFlags(m_eventQueue, srcFolder,
                                               srcListener, nsnull,
                                               m_srcMsgIdString.get(),
                                               kImapMsgDeletedFlag,
@@ -232,23 +238,26 @@ nsImapMoveCopyMsgTxn::RedoTransaction(void)
     }
     if (m_dstKeyArray.GetSize() > 0)
     {
+        nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+        if (NS_FAILED(rv) || !dstFolder) return rv;
+
         nsCOMPtr<nsIUrlListener> dstListener;
 
-        dstListener = do_QueryInterface(m_dstFolder, &rv); 
+        dstListener = do_QueryInterface(dstFolder, &rv); 
         if (NS_FAILED(rv)) return rv;
         // ** make sire we are in the selected state; use lite select
         // folder so we won't hit preformace hard
-        rv = imapService->LiteSelectFolder(m_eventQueue, m_dstFolder,
+        rv = imapService->LiteSelectFolder(m_eventQueue, dstFolder,
                                            dstListener, nsnull);
         if (NS_FAILED(rv)) return rv;
-        rv = imapService->SubtractMessageFlags(m_eventQueue, m_dstFolder,
+        rv = imapService->SubtractMessageFlags(m_eventQueue, dstFolder,
                                                dstListener, nsnull,
                                                m_dstMsgIdString.get(),
                                                kImapMsgDeletedFlag,
                                                m_idsAreUids);
         if (NS_FAILED(rv)) return rv;
-        if (DeleteIsMoveToTrash(m_dstFolder))
-            rv = imapService->GetHeaders(m_eventQueue, m_dstFolder,
+        if (DeleteIsMoveToTrash(dstFolder))
+            rv = imapService->GetHeaders(m_eventQueue, dstFolder,
                                          dstListener, nsnull,
                                          m_dstMsgIdString.get(),
                                          PR_TRUE);
@@ -302,11 +311,17 @@ nsImapMoveCopyMsgTxn::UndoMailboxDelete()
     // ** jt -- only do this for mailbox protocol
     if (m_srcIsPop3)
     {
+        nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+        if (NS_FAILED(rv) || !srcFolder) return rv;
+
+        nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+        if (NS_FAILED(rv) || !dstFolder) return rv;
+
         nsCOMPtr<nsIMsgDatabase> srcDB;
         nsCOMPtr<nsIMsgDatabase> dstDB;
-        rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+        rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_FAILED(rv)) return rv;
-        rv = m_dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
+        rv = dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
         if (NS_FAILED(rv)) return rv;
         
         PRUint32 count = m_srcKeyArray.GetSize();
@@ -350,7 +365,9 @@ nsImapMoveCopyMsgTxn::RedoMailboxDelete()
     if (m_srcIsPop3)
     {
         nsCOMPtr<nsIMsgDatabase> srcDB;
-        rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+        nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+        if (NS_FAILED(rv) || !srcFolder) return rv;
+        rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
         if (NS_SUCCEEDED(rv))
         {
             srcDB->DeleteMessages(&m_srcKeyArray, nsnull);

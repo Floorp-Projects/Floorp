@@ -31,6 +31,7 @@
 #include "nsMsgTxn.h"
 #include "nsMsgKeyArray.h"
 #include "nsCOMPtr.h"
+#include "nsWeakReference.h"
 
 #define NS_IMAPMOVECOPYMSGTXN_IID \
 { /* 51c925b0-208e-11d3-abea-00805f8ac968 */ \
@@ -72,12 +73,12 @@ public:
 
 private:
 
-    nsCOMPtr<nsIMsgFolder> m_srcFolder;
+    nsWeakPtr m_srcFolder;
 	nsCOMPtr<nsISupportsArray> m_srcHdrs;
 	nsMsgKeyArray m_dupKeyArray;
     nsMsgKeyArray m_srcKeyArray;
     nsCString m_srcMsgIdString;
-    nsCOMPtr<nsIMsgFolder> m_dstFolder;
+    nsWeakPtr m_dstFolder;
     nsMsgKeyArray m_dstKeyArray;
     nsCString m_dstMsgIdString;
     nsCOMPtr<nsIEventQueue> m_eventQueue;

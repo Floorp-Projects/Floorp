@@ -108,7 +108,7 @@ nsLocalMoveCopyMsgTxn::SetSrcFolder(nsIMsgFolder* srcFolder)
 {
 	nsresult rv = NS_ERROR_NULL_POINTER;
 	if (srcFolder)
-		m_srcFolder = do_QueryInterface(srcFolder, &rv);
+          m_srcFolder = getter_AddRefs(NS_GetWeakReference(srcFolder, &rv));
 	return rv;
 }
 
@@ -117,7 +117,7 @@ nsLocalMoveCopyMsgTxn::SetDstFolder(nsIMsgFolder* dstFolder)
 {
 	nsresult rv = NS_ERROR_NULL_POINTER;
 	if (dstFolder)
-		m_dstFolder = do_QueryInterface(dstFolder, &rv);
+          m_dstFolder = getter_AddRefs(NS_GetWeakReference(dstFolder, &rv));
 	return rv;
 }
 
@@ -214,10 +214,15 @@ nsLocalMoveCopyMsgTxn::UndoTransaction()
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgDatabase> srcDB;
     nsCOMPtr<nsIMsgDatabase> dstDB;
+    nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+    if (NS_FAILED(rv) || !srcFolder) return rv;
     
-    rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+    nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+    if (NS_FAILED(rv) || !dstFolder) return rv;
+    
+    rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
     if(NS_FAILED(rv)) return rv;
-    rv = m_dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
+    rv = dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 count = m_srcKeyArray.GetSize();
@@ -229,7 +234,7 @@ nsLocalMoveCopyMsgTxn::UndoTransaction()
     {
         if (m_srcIsImap4)
         {
-            rv = UndoImapDeleteFlag(m_srcFolder, m_srcKeyArray, PR_FALSE);
+            rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, PR_FALSE);
         }
         else
         {
@@ -267,10 +272,16 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
     nsresult rv = NS_ERROR_FAILURE;
     nsCOMPtr<nsIMsgDatabase> srcDB;
     nsCOMPtr<nsIMsgDatabase> dstDB;
+
+    nsCOMPtr<nsIMsgFolder> srcFolder = do_QueryReferent(m_srcFolder, &rv);
+    if (NS_FAILED(rv) || !srcFolder) return rv;
+
+    nsCOMPtr<nsIMsgFolder> dstFolder = do_QueryReferent(m_dstFolder, &rv);
+    if (NS_FAILED(rv) || !dstFolder) return rv;
     
-    rv = m_srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
+    rv = srcFolder->GetMsgDatabase(nsnull, getter_AddRefs(srcDB));
     if(NS_FAILED(rv)) return rv;
-    rv = m_dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
+    rv = dstFolder->GetMsgDatabase(nsnull, getter_AddRefs(dstDB));
     if (NS_FAILED(rv)) return rv;
 
     PRUint32 count = m_srcKeyArray.GetSize();
@@ -306,7 +317,7 @@ nsLocalMoveCopyMsgTxn::RedoTransaction()
     {
         if (m_srcIsImap4)
         {
-            rv = UndoImapDeleteFlag(m_srcFolder, m_srcKeyArray, PR_TRUE);
+            rv = UndoImapDeleteFlag(srcFolder, m_srcKeyArray, PR_TRUE);
         }
         else
         {

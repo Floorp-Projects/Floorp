@@ -514,7 +514,11 @@ nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 	{
 		nsCOMPtr<nsIFileSpec> pathSpec;
 		rv = GetPath(getter_AddRefs(pathSpec));
-		if (NS_FAILED(rv)) return rv;
+        if (NS_FAILED(rv)) return rv;
+        PRBool exists;
+        rv = pathSpec->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (!exists) return NS_ERROR_NULL_POINTER;  //mDatabase will be null at this point.
 
 		nsresult folderOpen = NS_OK;
 		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
@@ -1519,16 +1523,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
       return rv;
   }
   else
-  {
-	  nsCOMPtr <nsITransactionManager> txnMgr;
-
-	  if (msgWindow && allowUndo)
-	  {
-		  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-
-		  if (txnMgr) SetTransactionManager(txnMgr);
-	  }
-  	
+  {  	
       rv = GetDatabase(msgWindow);
       if(NS_SUCCEEDED(rv))
       {
@@ -1553,15 +1548,6 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
         NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
       }
   }
-  return rv;
-}
-
-nsresult
-nsMsgLocalMailFolder::SetTransactionManager(nsITransactionManager* txnMgr)
-{
-  nsresult rv = NS_OK;
-  if (txnMgr)
-    mTxnMgr = do_QueryInterface(txnMgr, &rv);
   return rv;
 }
 
@@ -1621,6 +1607,7 @@ nsMsgLocalMailFolder::InitCopyState(nsISupports* aSupport,
   mCopyState->m_isMove = isMove;
   mCopyState->m_isFolder = isFolder;
   mCopyState->m_allowUndo = allowUndo;
+  mCopyState->m_msgWindow = msgWindow;
   rv = messages->Count(&mCopyState->m_totalMsgCount);
   if (listener)
     mCopyState->m_listener = do_QueryInterface(listener, &rv);
@@ -1697,14 +1684,6 @@ nsMsgLocalMailFolder::CopyMessages(nsIMsgFolder* srcFolder, nsISupportsArray*
   {
     NS_ASSERTION(0, "Destination is the root folder. Cannot move/copy here");
     return NS_OK;
-  }
-  nsCOMPtr <nsITransactionManager> txnMgr;
-
-  if (msgWindow && allowUndo)   // no undo for folder move/copy or from the search window
-  {
-	  msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
-
-	if (txnMgr) SetTransactionManager(txnMgr);
   }
 
   nsCOMPtr<nsISupports> srcSupport(do_QueryInterface(srcFolder, &rv));
@@ -2475,9 +2454,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
         nsCOMPtr<nsIMsgCopyService> copyService = 
                  do_GetService(kMsgCopyServiceCID, &result);
         
-        if (mTxnMgr && NS_SUCCEEDED(rv) && mCopyState->m_undoMsgTxn)
-          mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
-        
+        if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
+        {
+          nsCOMPtr<nsITransactionManager> txnMgr;
+          mCopyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+          if (txnMgr)
+            txnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+        }
         if (srcFolder && !mCopyState->m_isFolder)
           srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);	 
         
@@ -2526,8 +2509,13 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndMove()
       // enable the dest folder
       EnableNotifications(allMessageCountNotifications, PR_TRUE);
       
-      if (mTxnMgr  && mCopyState->m_undoMsgTxn)
-        mTxnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+      if (mCopyState->m_msgWindow && mCopyState->m_undoMsgTxn)
+      {
+        nsCOMPtr<nsITransactionManager> txnMgr;
+        mCopyState->m_msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
+        if (txnMgr)
+          txnMgr->DoTransaction(mCopyState->m_undoMsgTxn);
+      }
     
       nsCOMPtr<nsISupports> srcSupport = do_QueryInterface(mCopyState->m_srcSupport);
       nsCOMPtr<nsIMsgCopyServiceListener> listener =do_QueryInterface(mCopyState->m_listener);

@@ -55,6 +55,7 @@ struct nsLocalMailCopyState
   nsCOMPtr<nsIMsgDBHdr> m_message; // current copy message
   nsCOMPtr<nsIMsgParseMailMsgState> m_parseMsgState;
   nsCOMPtr<nsIMsgCopyServiceListener> m_listener;
+  nsCOMPtr<nsIMsgWindow> m_msgWindow;
 
   // for displaying status;
   nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
@@ -192,7 +193,6 @@ protected:
                                              nsIMsgFolder *dstFolder,
                                              PRBool isMove);
 	virtual const char* GetIncomingServerType();
-  nsresult SetTransactionManager(nsITransactionManager* txnMgr);
   nsresult InitCopyState(nsISupports* aSupport, nsISupportsArray* messages,
                          PRBool isMove, nsIMsgCopyServiceListener* listener, nsIMsgWindow *msgWindow, PRBool isMoveFolder, PRBool allowUndo);
   void ClearCopyState(PRBool moveCopySucceeded);
@@ -203,7 +203,6 @@ protected:
 	PRBool		mInitialized;
 	nsLocalMailCopyState *mCopyState; //We will only allow one of these at a
                                     //time
-  nsCOMPtr<nsITransactionManager> mTxnMgr;
   const char *mType;
   PRBool      mCheckForNewMessagesAfterParsing;
   PRBool      mParsingInbox;
