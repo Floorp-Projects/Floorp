@@ -1149,7 +1149,7 @@ NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 	return status;
 }
 
-NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const PRUnichar *folderName)
+NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow *msgWindow )
 {
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1170,7 +1170,7 @@ NS_IMETHODIMP nsMsgFolder::EmptyTrash(nsIMsgWindow *msgWindow, nsIUrlListener *a
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name)
+NS_IMETHODIMP nsMsgFolder::Rename(const PRUnichar *name, nsIMsgWindow *msgWindow)
 {
     nsresult status = NS_OK;
 	nsAutoString unicharString(name);
