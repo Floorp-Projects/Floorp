@@ -53,7 +53,10 @@ BEGIN {
  $::path = $0;
  $::path =~ m#(.*)/[^/]+#;
  $::path = $1;
+ $::path ||= '.';  # $0 is empty at compile time.  This line will
+                   # have no effect on this script at runtime.
 }
+
 chdir $::path;
 use lib ($::path);
 
