@@ -58,7 +58,8 @@ REQUIRES	=\
 			raptor \
 			netcnvts \
 			progress \
-			privacy
+			privacy \
+			caps
 
 ifdef OJI
 REQUIRES +=	  oji \
