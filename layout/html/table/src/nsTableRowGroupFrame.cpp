@@ -597,10 +597,12 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
   PRBool  hasRowSpanningCell = PR_FALSE;
   PRInt32 numRows;
   GetRowCount(numRows, PR_FALSE);
-  if (numRows <= 0) return;
-  nscoord *rowHeights = new nscoord[numRows];
-  if (!rowHeights) return;
-  nsCRT::memset (rowHeights, 0, numRows*sizeof(nscoord));
+  nscoord* rowHeights = nsnull;
+  if (numRows > 0) {
+    rowHeights = new nscoord[numRows];
+    if (!rowHeights) return;
+    nsCRT::memset (rowHeights, 0, numRows*sizeof(nscoord));
+  }
 
   /* Step 1:  get the height of the tallest cell in the row and save it for
    *          pass 2. This height is for table cells that originate in this
@@ -1538,12 +1540,12 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
     } else {
       // Adjust the frames that follow...
       AdjustSiblingsAfterReflow(aPresContext, aReflowState, aNextFrame,
-                                aDesiredSize.maxElementSize,
-                                desiredSize.height - oldKidRect.height);
-  
+                                  aDesiredSize.maxElementSize,
+                                  desiredSize.height - oldKidRect.height);
+    
       // Now recalculate the row heights
       CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState);
-
+      
       // Because we don't know what changed repaint everything.
       // XXX We should change CalculateRowHeights() to return the bounding
       // rect of what changed. Or whether anything moved or changed size...
