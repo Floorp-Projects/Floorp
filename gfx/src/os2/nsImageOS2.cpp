@@ -34,6 +34,41 @@
 #include "nsRenderingContextOS2.h"
 
 
+// Max size of image that could be tiled
+#define MAX_BUFFER_WIDTH   200        // For screen resolution 1600x1200
+#define MAX_BUFFER_HEIGHT  150        //   3 x 3 = 9 times
+
+
+struct MONOBITMAPINFO
+{
+   BITMAPINFOHEADER2 bmpInfo;
+   RGB2 argbColor [2];
+
+   operator PBITMAPINFO2 ()       { return (PBITMAPINFO2) &bmpInfo; }
+   operator PBITMAPINFOHEADER2 () { return &bmpInfo; }
+
+   MONOBITMAPINFO( PBITMAPINFO2 pBI)
+   {
+      memcpy( &bmpInfo, pBI, sizeof( BITMAPINFOHEADER2));
+      bmpInfo.cBitCount = 1;
+
+      argbColor [0].bRed      = 0;
+      argbColor [0].bGreen    = 0;
+      argbColor [0].bBlue     = 0;
+      argbColor [0].fcOptions = 0;
+      argbColor [1].bRed      = 255;
+      argbColor [1].bGreen    = 255;
+      argbColor [1].bBlue     = 255;
+      argbColor [1].fcOptions = 0;
+   }
+};
+
+
+PRUint8 nsImageOS2::gBlenderLookup [65536];    // Global table for fast alpha blending
+PRBool  nsImageOS2::gBlenderReady = PR_FALSE;
+
+
+
 NS_IMPL_ISUPPORTS(nsImageOS2, NS_GET_IID(nsIImage));
 
 //------------------------------------------------------------
@@ -42,12 +77,12 @@ nsImageOS2::nsImageOS2()
    NS_INIT_REFCNT();
     
    mInfo      = 0;
-   mRowBytes    = 0;
+   mRowBytes  = 0;
    mImageBits = 0;
    mBitmap    = 0;
 
-   mARowBytes    = 0;
-   mAlphaBits = 0;
+   mARowBytes  = 0;
+   mAlphaBits  = 0;
    mABitmap    = 0;
    mAlphaDepth = 0;
    mAlphaLevel = 0;
@@ -61,6 +96,8 @@ nsImageOS2::nsImageOS2()
    mNaturalWidth = 0;
    mNaturalHeight = 0;
 
+   if (gBlenderReady != PR_TRUE)
+     BuildBlenderLookup ();
 }
 
 nsImageOS2::~nsImageOS2()
@@ -195,6 +232,15 @@ void nsImageOS2::ImageUpdated( nsIDeviceContext *aContext,
    }
 }
 
+void nsImageOS2::BuildBlenderLookup (void)
+{
+  for (int y = 0 ; y < 256 ; y++)
+    for (int x = 0 ; x < 256 ; x++)
+      gBlenderLookup [y * 256 + x] = y * x / 255;
+
+  gBlenderReady = PR_TRUE;
+}
+
 nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
                            nsDrawingSurface aSurface,
                            PRInt32 aX, PRInt32 aY,
@@ -213,12 +259,12 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
    if (aDW == 0 || aDH == 0 || aSW == 0 || aSH == 0)  // Nothing to draw
       return NS_OK;
 
+   nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+
    // Find target rect in OS/2 coords.
    nsRect trect( aDX, aDY, aDW, aDH);
    RECTL  rcl;
-   ((nsRenderingContextOS2 &)aContext).NS2PM_ININ( trect, rcl); // !! !! !!
-
-   nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+   surf->NS2PM_ININ (trect, rcl); // !! !! !!
 
    // limit the size of the blit to the amount of the image read in
    PRInt32 notLoadedDY = 0;
@@ -232,6 +278,7 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
                        { rcl.xRight, rcl.yTop },
                        { aSX, mInfo->cy - aSY - aSH + notLoadedDY },
                        { aSX + aSW, mInfo->cy - aSY } };
+
 
    // Don't bother creating HBITMAPs, just use the pel data to GpiDrawBits
    // at all times.  This (a) makes printing work 'cos bitmaps are
@@ -250,12 +297,12 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
    if( mAlphaDepth == 0)
    {
       // no transparency, just blit it
-      DrawBitmap( surf->mPS, aptl, ROP_SRCCOPY, PR_FALSE);
+      GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
    }
-   else
+   else if( mAlphaDepth == 1)
    {
-      // from os2fe/cxdc1.cpp:
-      // > the transparent areas of the pixmap are coloured black.
+      // > The transparent areas of the mask are coloured black (0).
+      // > the transparent areas of the pixmap are coloured black (0).
       // > Note this does *not* mean that all black pels are transparent!
       // >
       // > Thus all we need to do is AND the mask onto the target, taking
@@ -269,9 +316,148 @@ nsresult nsImageOS2::Draw( nsIRenderingContext &aContext,
       // > always gives 0 - clears opaque region to zeros. 
 
       // Apply mask to target, clear pels we will fill in from the image
-      DrawBitmap( surf->mPS, aptl, ROP_SRCAND, PR_TRUE);
+      MONOBITMAPINFO MaskBitmapInfo (mInfo);
+      GFX (::GpiDrawBits (surf->GetPS (), mAlphaBits, MaskBitmapInfo, 4, aptl, ROP_SRCAND, BBO_IGNORE), GPI_ERROR);
+
       // Now combine image with target
-      DrawBitmap( surf->mPS, aptl, ROP_SRCPAINT, PR_FALSE);
+      GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCPAINT, BBO_IGNORE), GPI_ERROR);
+   } else
+   {
+      // Find the compatible device context and create a memory one
+      HDC hdcCompat = GFX (::GpiQueryDevice (surf->GetPS ()), HDC_ERROR);
+
+//DJ - This is temporary hack. Printer drivers can't get info that is already drawn on drawing surface.
+LONG Technology = 0;
+::DevQueryCaps (hdcCompat, CAPS_TECHNOLOGY, 1, &Technology);
+  
+if (Technology == CAPS_TECH_RASTER_DISPLAY)
+{
+//DJ - End of temporary hack
+
+      DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+      HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5, (PDEVOPENDATA) &dop, hdcCompat);
+
+      if (DEV_ERROR != MemDC)
+      {
+         // create the PS
+         SIZEL sizel = { 0, 0 };
+         HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel, PU_PELS | GPIT_MICRO | GPIA_ASSOC), GPI_ERROR);
+
+         if (GPI_ERROR != MemPS)
+         {
+            // now create a bitmap of the right size
+            HBITMAP hMemBmp;
+            BITMAPINFOHEADER2 bihMem = { 0 };
+
+            bihMem.cbFix = sizeof (BITMAPINFOHEADER2);
+            bihMem.cx = rcl.xRight - rcl.xLeft + 1;
+            bihMem.cy = rcl.yTop - rcl.yBottom + notLoadedDY + 1;
+            bihMem.cPlanes = 1;
+            LONG lBitCount = 0;
+            GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
+            bihMem.cBitCount = (USHORT) lBitCount;
+
+            hMemBmp = GFX (::GpiCreateBitmap (MemPS, &bihMem, 0, 0, 0), GPI_ERROR);
+
+            if (GPI_ERROR != hMemBmp)
+            {
+               GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
+
+               POINTL aptlDevToMem [3] = { 0, 0,                                    // TLL - mem bitmap (0, 0)
+                                           bihMem.cx, bihMem.cy,                    // TUR - mem bitmap (cx, cy)
+                                           rcl.xLeft, rcl.yBottom + notLoadedDY };  // SLL - device (Dx1, Dy2)
+
+               GFX (::GpiBitBlt (MemPS, surf->GetPS (), 3, aptlDevToMem, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+
+               // Now we want direct access to bitmap raw data. 
+               // Must copy data again because GpiSetBitmap doesn't provide pointer to start of raw bit data ?? (DJ)
+               
+               BITMAPINFOHEADER2 bihDirect = { 0 };
+               bihDirect.cbFix   = sizeof (BITMAPINFOHEADER2);
+               bihDirect.cPlanes = 1;
+               bihDirect.cBitCount = 24;
+
+               int RawDataSize = bihMem.cy * RASWIDTH (bihMem.cx, 24);
+               PRUint8* pRawBitData = (PRUint8*)malloc (RawDataSize);
+
+               if (pRawBitData)
+               {
+                 ULONG rc = GFX (::GpiQueryBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+
+                 if (rc != GPI_ALTERROR)
+                 {
+                   // Do manual alpha blending
+                   PRUint8* pDest  = pRawBitData;
+                   PRUint8* pSrc   = mImageBits;
+                   PRUint8* pAlpha = mAlphaBits;
+
+                   if (mInfo->cBitCount == 8)
+                   {
+                     for (int y = 0 ; y < bihDirect.cy ; y++)
+                     {
+                       for (int x = 0 ; x < bihDirect.cx ; x++)
+                       {
+                         pDest [0] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 0], pDest [0], *pAlpha);
+                         pDest [1] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 1], pDest [1], *pAlpha);
+                         pDest [2] = FAST_BLEND (mColorMap->Index [3 * (*pSrc) + 2], pDest [2], *pAlpha);
+                         pSrc++;
+                         pDest += 3;
+                         pAlpha++;
+                       }
+
+                       pSrc   = (PRUint8*) ((ULONG)(pSrc + 3) & ~3);    // For next scanline align pointers on DWORD boundary
+                       pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);
+                       pAlpha = (PRUint8*) ((ULONG)(pAlpha + 3) & ~3);
+                     }
+                   } else
+                   {
+                     for (int y = 0 ; y < bihDirect.cy ; y++)
+                     {
+                       for (int x = 0 ; x < bihDirect.cx ; x++)
+                       {
+                         pDest [0] = FAST_BLEND (pSrc [0], pDest [0], *pAlpha);
+                         pDest [1] = FAST_BLEND (pSrc [1], pDest [1], *pAlpha);
+                         pDest [2] = FAST_BLEND (pSrc [2], pDest [2], *pAlpha);
+                         pSrc  +=3;
+                         pDest += 3;
+                         pAlpha++;
+                       }
+
+                       pSrc   = (PRUint8*) ((ULONG)(pSrc + 3) & ~3);    // For next scanline align pointers on DWORD boundary
+                       pDest  = (PRUint8*) ((ULONG)(pDest + 3) & ~3);
+                       pAlpha = (PRUint8*) ((ULONG)(pAlpha + 3) & ~3);
+                     }
+                   }
+                   // Copy modified memory back to memory bitmap
+                   GFX (::GpiSetBitmapBits (MemPS, 0, bihMem.cy, (PBYTE)pRawBitData, (PBITMAPINFO2)&bihDirect), GPI_ALTERROR);
+
+                   // Transfer bitmap from memory bitmap back to device
+                   POINTL aptlMemToDev [3] = { rcl.xLeft, rcl.yBottom + notLoadedDY,    // TLL - device (Dx1, Dy2)
+                                               rcl.xRight, rcl.yTop,                    // TUR - device (Dx2, Dy1)
+                                               0, 0 };                                  // SLL - mem bitmap (0, 0)
+
+                   GFX (::GpiBitBlt (surf->GetPS (), MemPS, 3, aptlMemToDev, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+                 }
+
+                 free (pRawBitData);
+               }
+
+               GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+               GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
+            }
+
+            GFX (::GpiDestroyPS (MemPS), FALSE);
+         }
+         ::DevCloseDC (MemDC);
+      }
+
+//DJ - temporary hack
+} else  // This is not display driver. Can't get info that is alredy drawn. Output only image without mask.
+{
+  GFX (::GpiDrawBits (surf->GetPS (), mImageBits, mInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
+}
+//DJ - end of temporary hack
+
    }
 
    return NS_OK;
@@ -284,32 +470,9 @@ nsresult nsImageOS2::Optimize( nsIDeviceContext* aContext)
    return NS_OK;
 }
 
-// From os2fe/cxdc1.cpp
-
-static RGB2 rgb2White = { 0xff, 0xff, 0xff, 0 };
-static RGB2 rgb2Black = { 0, 0, 0, 0 };
-
-struct MASKBMPINFO
-{
-   BITMAPINFOHEADER2 bmpInfo;
-   RGB2              rgbZero;
-   RGB2              rgbOne;
-
-   operator PBITMAPINFO2 ()       { return (PBITMAPINFO2) &bmpInfo; }
-   operator PBITMAPINFOHEADER2 () { return &bmpInfo; }
-
-   MASKBMPINFO( PBITMAPINFO2 pBI)
-   {
-      memcpy( &bmpInfo, pBI, sizeof( BITMAPINFOHEADER2));
-      bmpInfo.cBitCount = 1;
-      rgbZero = rgb2Black;
-      rgbOne  = rgb2White;
-   }
-};
-
 void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
 {
-   mBitmap = GFX (::GpiCreateBitmap (surf->mPS, (PBITMAPINFOHEADER2)mInfo,
+   mBitmap = GFX (::GpiCreateBitmap (surf->GetPS (), (PBITMAPINFOHEADER2)mInfo,
                                      CBM_INIT, (PBYTE)mImageBits, mInfo),
                   GPI_ERROR);
 
@@ -317,26 +480,11 @@ void nsImageOS2::CreateBitmaps( nsDrawingSurfaceOS2 *surf)
    {
       if( mAlphaDepth == 1)
       {
-         MASKBMPINFO maskInfo( mInfo);
-         mABitmap = GFX (::GpiCreateBitmap (surf->mPS, maskInfo, CBM_INIT,
+         MONOBITMAPINFO maskInfo( mInfo);
+         mABitmap = GFX (::GpiCreateBitmap (surf->GetPS (), maskInfo, CBM_INIT,
                                             (PBYTE)mAlphaBits, maskInfo),
                          GPI_ERROR);
       }
-      else
-         printf( "8 bit alpha mask, no chance...\n");
-   }
-}
-
-void nsImageOS2::DrawBitmap (HPS hps, PPOINTL pPoints, LONG lRop, PRBool bIsMask)
-{
-   if (bIsMask)
-   {
-      MASKBMPINFO MaskBitmapInfo (mInfo);
-
-      GFX (::GpiDrawBits (hps, mAlphaBits, MaskBitmapInfo, 4, pPoints, lRop, BBO_OR), GPI_ERROR);
-   } else
-   {
-      GFX (::GpiDrawBits (hps, mImageBits, mInfo, 4, pPoints, lRop, BBO_OR), GPI_ERROR);
    }
 }
 
@@ -370,12 +518,11 @@ nsImageOS2::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2 )
   return NS_OK;
 }
 
-nscoord
-nsImageOS2::BuildTile(HPS hpsTile, HBITMAP hBmpTile,
-                              nscoord aWidth, nscoord aHeight,
-                              LONG tileWidth, LONG tileHeight, PRBool bMsk)
+void
+nsImageOS2::BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInfo,
+                       nscoord aWidth, nscoord aHeight,
+                       LONG tileWidth, LONG tileHeight)
 {
-   GFX (::GpiSetBitmap (hpsTile, hBmpTile), HBM_ERROR);
    PRInt32 notLoadedDY = 0;
    if( mDecodedY2 < mInfo->cy)
    {
@@ -392,7 +539,7 @@ nsImageOS2::BuildTile(HPS hpsTile, HBITMAP hBmpTile,
                        { mInfo->cx, mInfo->cy } };
 
    // Draw bitmap once into temporary PS
-   DrawBitmap( hpsTile, aptl, ROP_SRCCOPY, bMsk);
+   GFX (::GpiDrawBits (hpsTile, (PBYTE)pImageBits, pBitmapInfo, 4, aptl, ROP_SRCCOPY, BBO_IGNORE), GPI_ERROR);
 
    // Copy bitmap horizontally, doubling each time
    while( aWidth < tileWidth)
@@ -416,8 +563,6 @@ nsImageOS2::BuildTile(HPS hpsTile, HBITMAP hBmpTile,
       GFX (::GpiBitBlt (hpsTile, hpsTile, 4, aptlCopy, ROP_SRCCOPY, 0L), GPI_ERROR);
       aHeight *= 2;
    }
-
-   return aHeight;
 }
 
 PRBool 
@@ -430,140 +575,133 @@ nsImageOS2::DrawTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
    LONG tileHeight = aY1-aY0;
 
    // Don't bother tiling if we only have to draw the bitmap a couple of times
-   if( (aWidth <= tileWidth/2) || (aHeight <= tileHeight/2))
+   // Can't tile with 8bit alpha masks because need access destination bitmap values
+   if( (aWidth > tileWidth / 2) || (aHeight > tileHeight / 2) ||
+       (aWidth > MAX_BUFFER_WIDTH) || (aHeight > MAX_BUFFER_HEIGHT) ||
+        mAlphaDepth > 1)
+      return SlowTile (aContext, aSurface, aX0, aY0, aX1, aY1, aWidth, aHeight);   
+
+
+   nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+
+   // Find the compatible device context and create a memory one
+   HDC hdcCompat = GFX (::GpiQueryDevice (surf->GetPS ()), HDC_ERROR);
+
+   DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
+   HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5,
+                            (PDEVOPENDATA) &dop, hdcCompat);
+
+   if( DEV_ERROR != MemDC)
    {
-      nsDrawingSurfaceOS2 *surf = (nsDrawingSurfaceOS2*) aSurface;
+      // create the PS
+      SIZEL sizel = { 0, 0 };
+      HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel,
+                                      PU_PELS | GPIT_MICRO | GPIA_ASSOC),
+                       GPI_ERROR);
 
-      // Find the compatible device context and create a memory one
-      HDC hdcCompat = GFX (::GpiQueryDevice (surf->mPS), HDC_ERROR);
-
-      DEVOPENSTRUC dop = { 0, 0, 0, 0, 0 };
-      HDC MemDC = ::DevOpenDC( (HAB)0, OD_MEMORY, "*", 5,
-                               (PDEVOPENDATA) &dop, hdcCompat);
-
-      if( DEV_ERROR != MemDC)
+      if( GPI_ERROR != MemPS)
       {
-         // create the PS
-         SIZEL sizel = { 0, 0 };
-         HPS MemPS = GFX (::GpiCreatePS (0, MemDC, &sizel,
-                                         PU_PELS | GPIT_MICRO | GPIA_ASSOC),
-                          GPI_ERROR);
+         // now create a bitmap of the right size
+         BITMAPINFOHEADER2 hdr = { 0 };
 
-         // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
-         // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
-         IMAGEBUNDLE ib;
-         ib.lColor     = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR); // CLR_BLACK
-         if (ib.lColor == -1) {
-            ib.lColor = MK_RGB (0x00, 0x00, 0x00);
-         }
-         ib.lBackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR); // CLR_WHITE
-         if (ib.lBackColor == -1) {
-            ib.lBackColor = MK_RGB (0xFF, 0xFF, 0xFF);
-         }
-         ib.usMixMode  = FM_OVERPAINT;
-         ib.usBackMixMode = BM_OVERPAINT;
-         GFX (::GpiSetAttrs (MemPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
-
-         if( GPI_ERROR != MemPS)
+         hdr.cbFix = sizeof( BITMAPINFOHEADER2);
+         // Maximum size of tiled area (could do this better)
+         LONG endWidth = aWidth * 2;
+         while( endWidth < tileWidth)
          {
-            // now create a bitmap of the right size
-            HBITMAP hBmp;
-            HBITMAP hBmpMask = 0;
-            BITMAPINFOHEADER2 hdr = { 0 };
+            endWidth *= 2;
+         } 
+         LONG endHeight = aHeight * 2;
+         while( endHeight < tileHeight)
+         {
+            endHeight *= 2;
+         } 
+         hdr.cx = endWidth;
+         hdr.cy = endHeight;
+         hdr.cPlanes = 1;
 
-            hdr.cbFix = sizeof( BITMAPINFOHEADER2);
-            // Maximum size of tiled area (could do this better)
-            LONG endWidth = aWidth * 2;
-            while( endWidth < tileWidth)
+         // find bitdepth
+         LONG lBitCount = 0;
+         GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
+         hdr.cBitCount = (USHORT) lBitCount;
+
+         nsRect trect( aX0, aY0, tileWidth, tileHeight);
+         RECTL  rcl;
+         surf->NS2PM_ININ (trect, rcl); // !! !! !!
+
+         POINTL aptlTile[ 4] = { { rcl.xLeft, rcl.yBottom },
+                                 { rcl.xRight + 1, rcl.yTop + 1 },
+                                 { 0, endHeight - tileHeight },
+                                 { tileWidth, endHeight } };
+
+         HBITMAP hMemBmp = GFX (::GpiCreateBitmap (MemPS, &hdr, 0, 0, 0), GPI_ERROR);
+         if (hMemBmp != GPI_ERROR)
+         {
+            LONG ImageROP = ROP_SRCCOPY;
+
+            GFX (::GpiSetBitmap (MemPS, hMemBmp), HBM_ERROR);
+
+            if (mAlphaDepth == 1)
             {
-               endWidth *= 2;
-            } 
-            LONG endHeight = aHeight * 2;
-            while( endHeight < tileHeight)
-            {
-               endHeight *= 2;
-            } 
-            hdr.cx = endWidth;
-            hdr.cy = endHeight;
-            hdr.cPlanes = 1;
+               LONG BlackColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0x00, 0x00, 0x00)), GPI_ALTERROR);    // CLR_BLACK;
+               LONG WhiteColor = GFX (::GpiQueryColorIndex (MemPS, 0, MK_RGB (0xFF, 0xFF, 0xFF)), GPI_ALTERROR);    // CLR_WHITE;
 
-            // find bitdepth
-            LONG lBitCount = 0;
-            GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
-            hdr.cBitCount = (USHORT) lBitCount;
+               // WORKAROUND:
+               // PostScript drivers up to version 30.732 have problems with GpiQueryColorIndex.
+               // If we are in LCOL_RGB mode it doesn't return passed RGB color but returns error instead.
 
-            hBmp = GFX (::GpiCreateBitmap (MemPS, &hdr, 0, 0, 0), GPI_ERROR);
+               if (BlackColor == GPI_ALTERROR) BlackColor = MK_RGB (0x00, 0x00, 0x00);
+               if (WhiteColor == GPI_ALTERROR) WhiteColor = MK_RGB (0xFF, 0xFF, 0xFF);
 
-            if( GPI_ERROR != hBmp)
-            {
-               if (mAlphaDepth != 0)
-               {
-                  hBmpMask = GFX (::GpiCreateBitmap (MemPS, &hdr, 0, 0, 0), GPI_ERROR);
-               }
+               // Set image foreground and background colors. These are used in transparent images for blitting 1-bit masks.
+               // To invert colors on ROP_SRCAND we map 1 to black and 0 to white
+               IMAGEBUNDLE ib;
+               ib.lColor     = BlackColor;        // map 1 in mask to 0x000000 (black) in destination
+               ib.lBackColor = WhiteColor;        // map 0 in mask to 0xFFFFFF (white) in destination
+               ib.usMixMode  = FM_OVERPAINT;
+               ib.usBackMixMode = BM_OVERPAINT;
+               GFX (::GpiSetAttrs (MemPS, PRIM_IMAGE, IBB_COLOR | IBB_BACK_COLOR | IBB_MIX_MODE | IBB_BACK_MIX_MODE, 0, (PBUNDLE)&ib), FALSE);
 
-               nsRect trect( aX0, aY0, tileWidth, tileHeight);
-               RECTL  rcl;
-               ((nsRenderingContextOS2 &)aContext).NS2PM_ININ( trect, rcl); // !! !! !!
 
-               nscoord nHeight = BuildTile( MemPS, hBmp, aWidth, aHeight,
-                                            tileWidth, tileHeight, PR_FALSE );
-               if( hBmpMask)
-               {
-                  BuildTile( MemPS, hBmpMask, aWidth, aHeight,
-                             tileWidth, tileHeight, PR_TRUE );
-               }
+               MONOBITMAPINFO MaskBitmapInfo (mInfo);
+               BuildTile (MemPS, mAlphaBits, MaskBitmapInfo, aWidth, aHeight, tileWidth, tileHeight);
 
-               POINTL aptlTile[ 4] = { { rcl.xLeft, rcl.yBottom },
-                                       { rcl.xRight + 1, rcl.yTop + 1 },
-                                       { 0, nHeight - tileHeight },
-                                       { tileWidth, nHeight } };
+               // Apply mask to target, clear pels we will fill in from the image
+               GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlTile, ROP_SRCAND, 0L), GPI_ERROR);
 
-               // Copy tiled bitmap into destination PS
-               if( mAlphaDepth == 0)
-               {
-                  // no transparency, just blit it
-                  GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_SRCCOPY, 0L), GPI_ERROR);
-               }
-               else
-               {
-                  // Apply mask to target, clear pels we will fill in from the image
-//                  GFX (::GpiSetBitmap (MemPS, hBmpMask), HBM_ERROR);
-                  GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_SRCAND, 0L), GPI_ERROR);
-                  // Now combine image with target
-                  GFX (::GpiSetBitmap (MemPS, hBmp), HBM_ERROR);
-                  GFX (::GpiBitBlt (surf->mPS, MemPS, 4, aptlTile, ROP_SRCPAINT, 0L), GPI_ERROR);
-               }
-
-               // Tiling successful
-               didTile = PR_TRUE;
-
-               // Must deselect bitmap from PS before freeing bitmap and PS.
-               GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
-               GFX (::GpiDeleteBitmap (hBmp), FALSE);
-
-               if ( hBmpMask)
-               {
-                  GFX (::GpiDeleteBitmap (hBmpMask), FALSE);
-               }
+               ImageROP = ROP_SRCPAINT;    // Original image must be combined with mask
             }
-            GFX (::GpiDestroyPS (MemPS), FALSE);
+
+
+            BuildTile (MemPS, mImageBits, mInfo, aWidth, aHeight, tileWidth, tileHeight);
+
+            GFX (::GpiBitBlt (surf->GetPS (), MemPS, 4, aptlTile, ImageROP, 0L), GPI_ERROR);
+
+            didTile = PR_TRUE;
+
+            // Must deselect bitmap from PS before freeing bitmap and PS.
+            GFX (::GpiSetBitmap (MemPS, NULLHANDLE), HBM_ERROR);
+            GFX (::GpiDeleteBitmap (hMemBmp), FALSE);
          }
-         ::DevCloseDC (MemDC);
+         GFX (::GpiDestroyPS (MemPS), FALSE);
       }
+      ::DevCloseDC (MemDC);
    }
 
    // If we failed to tile the bitmap, then use the old, slow, reliable way
    if( didTile == PR_FALSE)
-   {
-      PRInt32 x,y;
-
-      for(y=aY0;y<aY1;y+=aHeight){
-         for(x=aX0;x<aX1;x+=aWidth){
-            this->Draw(aContext,aSurface,x,y,aWidth,aHeight);
-         }
-      } 
-   }
+      SlowTile (aContext, aSurface, aX0, aY0, aX1, aY1, aWidth, aHeight);
 
    return(PR_TRUE);
 }
 
+PRBool nsImageOS2::SlowTile (nsIRenderingContext& aContext, nsDrawingSurface aSurface, 
+                             nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1, 
+                             nscoord aWidth, nscoord aHeight)
+{
+  for (int y = aY0 ; y < aY1 ; y += aHeight)
+     for (int x = aX0 ; x < aX1 ; x += aWidth)
+        Draw (aContext, aSurface, x, y, aWidth, aHeight);
+
+  return PR_TRUE;
+}

@@ -36,6 +36,7 @@
 #include "nsDrawingSurfaceOS2.h"
 #include "nsImageOS2.h"
 #include "nsRenderingContextImpl.h"
+#include "nsIRenderingContextOS2.h"
 
 class nsIDeviceContext;
 class nsIFontMetrics;
@@ -47,7 +48,8 @@ class nsRect;
 class GraphicsState;
 class nsDrawingSurfaceOS2;
 
-class nsRenderingContextOS2 : public nsRenderingContextImpl
+class nsRenderingContextOS2 : public nsRenderingContextImpl,
+                              nsIRenderingContextOS2
 {
 public:
   nsRenderingContextOS2();
@@ -70,6 +72,9 @@ public:
 
   NS_IMETHOD SelectOffScreenDrawingSurface(nsDrawingSurface aSurface);
   NS_IMETHOD GetDrawingSurface(nsDrawingSurface *aSurface);
+  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
+                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
+
   NS_IMETHOD GetHints(PRUint32& aResult);
 
   NS_IMETHOD PushState(void);
@@ -180,11 +185,10 @@ public:
                         nscoord aWidth,nscoord aHeight);
  
 
-  NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
-                               const nsRect &aDestBounds, PRUint32 aCopyFlags);
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd);
 
+  NS_IMETHOD CreateDrawingSurface(HPS aPS, nsDrawingSurface &aSurface, nsIWidget *aWidget);
 
 #if 0 // OS2TODO
 #ifdef MOZ_MATHML
@@ -201,31 +205,20 @@ public:
 #endif
 #endif
 
-   // Convert XP-rects to OS/2 space.
-   // World coordinates given & required, double inclusive rcl wanted.
-   void NS2PM_ININ( const nsRect &in, RECTL &rcl);
-   // World coordinates given & required, inclusive-exclusive rcl wanted.
-   void NS2PM_INEX( const nsRect &in, RECTL &rcl);
-
-   // Convert OS/2 rects to XP space.
-   // World coords given & required, double-inclusive rcl wanted
-   void PM2NS_ININ( const RECTL &in, nsRect &out);
-
-   // Convert XP points to OS/2 space.
-   void NS2PM( PPOINTL aPointl, ULONG cPointls);
-
 private:
   // ConditionRect is used to fix coordinate overflow problems for
   // rectangles after they are transformed to screen coordinates
   NS_IMETHOD ConditionRect( nscoord &x, nscoord &y, nscoord &w, nscoord &h );
 
-  nsresult CommonInit(void);
-  nsresult SetupPS( HPS oldPS, HPS newPS);
-  void     GetTargetHeight( PRUint32 &ht);
+  nsresult CommonInit (void);
+  nsresult SetupPS (void);
+  LONG     GetGPIColor (void);
+
 
   // Colour/font setting; call before drawing things.
-  void SetupDrawingColor( BOOL bForce = FALSE);
-  void SetupFontAndColor( BOOL bForce = FALSE);
+  void SetupLineColorAndStyle (void);
+  void SetupFillColor (void);
+  void SetupFontAndTextColor (void);
 
   // Primitive draw-ers
   void PMDrawRect( nsRect &rect, BOOL fill);
@@ -246,7 +239,7 @@ protected:
 
    nsIDeviceContext    *mContext;         // device context
    nsDrawingSurfaceOS2 *mSurface;         // draw things here
-   nsDrawingSurfaceOS2 *mFrontSurface;    // if offscreen, this is onscreen
+   nsDrawingSurfaceOS2 *mMainSurface;     // if offscreen selected, this is original one that was set on init time
    nscolor              mColor;           // current colour
    nsLineStyle          mLineStyle;       // current line style
    nsTransform2D        mTMatrix;         // current xform matrix
@@ -254,27 +247,16 @@ protected:
    GraphicsState       *mStateStack;      // stack of graphics states
    nsIFontMetrics      *mFontMetrics;     // current font
    nsIFontMetrics      *mCurrFontMetrics; // currently selected font
-   nscolor              mCurrDrawingColor;// currently selected drawing color
-   PRBool               mAlreadySetDrawingColor;
-   PRBool               mAlreadySetTextColor;
-  PRUint8           *mGammaTable;
    nscolor              mCurrTextColor;   // currently selected text color
+   nscolor              mCurrLineColor;   // currently selected line color
    nsLineStyle          mCurrLineStyle;   // currently selected line style
-   HPS                  mPS;
-   nsIWidget            *mDCOwner;
-
+   nscolor              mCurrFillColor;   // currently selected fill color
+   PRBool               mPreservedInitialClipRegion;
+   PRBool               mPaletteMode;     // GPI colors are indexes into selected palette
+   PRUint8             *mGammaTable;
+   HPS                  mPS;              // GPI presentation space of current drawing surface
+   nsIWidget           *mDCOwner;         // Parent widget
 };
 
-inline void nsRenderingContextOS2::GetTargetHeight( PRUint32 &ht)
-{
-   PRUint32 on, dummy, off;
-   mSurface->GetDimensions( &dummy, &on);
-   if( mSurface != mFrontSurface)
-   {
-      mFrontSurface->GetDimensions( &dummy, &off);
-      if( off < on) on = off;
-   }
-   ht = on;
-}
 
 #endif

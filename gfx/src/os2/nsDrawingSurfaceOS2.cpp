@@ -26,6 +26,7 @@
 #include "nsDrawingSurfaceOS2.h"
 #include "nsFontMetricsOS2.h"
 
+
 // Base class -- fonts, palette and xpcom -----------------------------------
 
 NS_IMPL_ISUPPORTS(nsDrawingSurfaceOS2, NS_GET_IID(nsIDrawingSurface))
@@ -34,7 +35,8 @@ NS_IMPL_ISUPPORTS(nsDrawingSurfaceOS2, NS_GET_IID(nsIDrawingSurface))
 // do testing with, and 0 is, of course, LCID_DEFAULT.
 
 nsDrawingSurfaceOS2::nsDrawingSurfaceOS2()
-                    : mNextID(2), mTopID(1), mPS(0)
+                    : mNextID(2), mTopID(1), mPS(0),
+                      mWidth (0), mHeight (0)
 {
    NS_INIT_REFCNT();
    mHTFonts = new nsHashtable;
@@ -96,20 +98,71 @@ void nsDrawingSurfaceOS2::FlushFontCache()
    // leave mTopID where it is.
 }
 
-// yuck.
-nsresult nsDrawingSurfaceOS2::GetBitmap( HBITMAP &aBitmap)
+// OS/2 - XP coord conversion ----------------------------------------------
+
+// get inclusive-inclusive rect
+void nsDrawingSurfaceOS2::NS2PM_ININ( const nsRect &in, RECTL &rcl)
 {
-   aBitmap = 0;
+   PRUint32 ulHeight = GetHeight ();
+
+   rcl.xLeft = in.x;
+   rcl.xRight = in.x + in.width - 1;
+   rcl.yTop = ulHeight - in.y - 1;
+   rcl.yBottom = rcl.yTop - in.height + 1;
+}
+
+void nsDrawingSurfaceOS2::PM2NS_ININ( const RECTL &in, nsRect &out)
+{
+   PRUint32 ulHeight = GetHeight ();
+
+   out.x = in.xLeft;
+   out.width = in.xRight - in.xLeft + 1;
+   out.y = ulHeight - in.yTop - 1;
+   out.height = in.yTop - in.yBottom + 1;
+}
+
+// get in-ex rect
+void nsDrawingSurfaceOS2::NS2PM_INEX( const nsRect &in, RECTL &rcl)
+{
+   NS2PM_ININ( in, rcl);
+   rcl.xRight++;
+   rcl.yTop++;
+}
+
+void nsDrawingSurfaceOS2::NS2PM( PPOINTL aPointl, ULONG cPointls)
+{
+   PRUint32 ulHeight = GetHeight ();
+
+   for( ULONG i = 0; i < cPointls; i++)
+      aPointl[ i].y = ulHeight - aPointl[ i].y - 1;
+}
+
+nsresult nsDrawingSurfaceOS2::GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight)
+{
+   if( !aWidth || !aHeight)
+      return NS_ERROR_NULL_POINTER;
+
+   *aWidth = mWidth;
+   *aHeight = mHeight;
+
    return NS_OK;
 }
+
 
 // Offscreen surface --------------------------------------------------------
 
 nsOffscreenSurface::nsOffscreenSurface() : mDC(0), mBitmap(0),
-                                           mHeight(0), mWidth(0),
                                            mInfoHeader(0), mBits(0),
                                            mYPels(0), mScans(0)
-{}
+{
+}
+
+NS_IMETHODIMP nsOffscreenSurface :: Init(HPS aPS)
+{
+  mPS = aPS;
+
+  return NS_OK;
+}
 
 // Setup a new offscreen surface which is to be compatible with the
 // passed-in presentation space.
@@ -144,7 +197,7 @@ nsresult nsOffscreenSurface::Init( HPS     aCompatiblePS,
          LONG lBitCount = 0;
          GFX (::DevQueryCaps( hdcCompat, CAPS_COLOR_BITCOUNT, 1, &lBitCount), FALSE);
          hdr.cBitCount = (USHORT) lBitCount;
-      
+
          mBitmap = GFX (::GpiCreateBitmap (mPS, &hdr, 0, 0, 0), GPI_ERROR);
 
          if( GPI_ERROR != mBitmap)
@@ -168,26 +221,12 @@ nsOffscreenSurface::~nsOffscreenSurface()
       DisposeFonts();
       GFX (::GpiSetBitmap (mPS, 0), HBM_ERROR);
       GFX (::GpiDeleteBitmap (mBitmap), FALSE);
-//
-//    Don't need to do this because the PS is a micro-one.
-//
-//    if( !GpiAssociate( mPS, 0))
-//       PMERROR( "GpiAssociate");
-//
       GFX (::GpiDestroyPS (mPS), FALSE);
-      if( DEV_ERROR == DevCloseDC( mDC))
-         PMERROR( "DevCloseDC");
-      mPS = 0;
+      ::DevCloseDC( mDC);
    }
    if( mInfoHeader)
       free( mInfoHeader);
    delete [] mBits;
-}
-
-nsresult nsOffscreenSurface::GetBitmap( HBITMAP &aBitmap)
-{
-   aBitmap = mBitmap;
-   return NS_OK;
 }
 
 // Okay; plan here is to get the bits and hope that the fact that we're
@@ -279,17 +318,6 @@ nsresult nsOffscreenSurface::Unlock()
    return NS_OK;
 }
 
-nsresult nsOffscreenSurface::GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight)
-{
-   if( !aWidth || !aHeight)
-      return NS_ERROR_NULL_POINTER;
-
-   *aWidth = mWidth;
-   *aHeight = mHeight;
-
-   return NS_OK;
-}
-
 nsresult nsOffscreenSurface::IsOffscreen( PRBool *aOffScreen)
 {
    if( !aOffScreen)
@@ -331,23 +359,42 @@ nsresult nsOffscreenSurface::GetPixelFormat( nsPixelFormat *aFormat)
          memset( aFormat, 0, sizeof(nsPixelFormat));
          break;
 
-      case 24:
-         aFormat->mRedZeroMask = 0xff;
-         aFormat->mGreenZeroMask = 0xff;
-         aFormat->mBlueZeroMask = 0xff;
+      case 16:
+         aFormat->mRedZeroMask   = 0x001F;
+         aFormat->mGreenZeroMask = 0x003F;
+         aFormat->mBlueZeroMask  = 0x001F;
          aFormat->mAlphaZeroMask = 0;
-         aFormat->mRedMask = 0xff;
-         aFormat->mGreenMask = 0xff00;
-         aFormat->mBlueMask = 0xff0000;
-         aFormat->mAlphaMask = 0;
-         aFormat->mRedCount = 8;
-         aFormat->mGreenCount = 8;
-         aFormat->mBlueCount = 8;
-         aFormat->mAlphaCount = 0;
-         aFormat->mRedShift = 0;
-         aFormat->mGreenShift = 8;
-         aFormat->mBlueShift = 16;
-         aFormat->mAlphaShift = 0;
+         aFormat->mRedMask       = 0xF800;
+         aFormat->mGreenMask     = 0x07E0;
+         aFormat->mBlueMask      = 0x001F;
+         aFormat->mAlphaMask     = 0;
+         aFormat->mRedCount      = 5;
+         aFormat->mGreenCount    = 6;
+         aFormat->mBlueCount     = 5;
+         aFormat->mAlphaCount    = 0;
+         aFormat->mRedShift      = 11;
+         aFormat->mGreenShift    = 5;
+         aFormat->mBlueShift     = 0;
+         aFormat->mAlphaShift    = 0;
+         break;
+
+      case 24:
+         aFormat->mRedZeroMask   = 0x0000FF;
+         aFormat->mGreenZeroMask = 0x0000FF;
+         aFormat->mBlueZeroMask  = 0x0000FF;
+         aFormat->mAlphaZeroMask = 0;
+         aFormat->mRedMask       = 0x0000FF;
+         aFormat->mGreenMask     = 0x00FF00;
+         aFormat->mBlueMask      = 0xFF0000;
+         aFormat->mAlphaMask     = 0;
+         aFormat->mRedCount      = 8;
+         aFormat->mGreenCount    = 8;
+         aFormat->mBlueCount     = 8;
+         aFormat->mAlphaCount    = 0;
+         aFormat->mRedShift      = 0;
+         aFormat->mGreenShift    = 8;
+         aFormat->mBlueShift     = 16;
+         aFormat->mAlphaShift    = 0;
          break;
 
       default:
@@ -376,7 +423,7 @@ void nsOnscreenSurface::EnsureProxy()
       GetDimensions( &width, &height);
 
       mProxySurface = new nsOffscreenSurface;
-      if( NS_SUCCEEDED(mProxySurface->Init( mPS, width, height, 0)))
+      if( NS_SUCCEEDED(mProxySurface->Init( mPS, width, height, NS_CREATEDRAWINGSURFACE_FOR_PIXEL_ACCESS)))
       {
          NS_ADDREF(mProxySurface);
       }
@@ -402,7 +449,7 @@ nsresult nsOnscreenSurface::Lock( PRInt32 aX, PRInt32 aY,
    PRUint32 width, height;
    GetDimensions( &width, &height);
    POINTL pts[3] = { { 0, 0 }, { width, height }, { 0, 0 } };
-   long lHits = GFX (::GpiBitBlt (mProxySurface->mPS, mPS, 3, pts,
+   long lHits = GFX (::GpiBitBlt (mProxySurface->GetPS (), mPS, 3, pts,
                                   ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return mProxySurface->Lock( aX, aY, aWidth, aHeight,
@@ -417,7 +464,7 @@ nsresult nsOnscreenSurface::Unlock()
    PRUint32 width, height;
    GetDimensions( &width, &height);
    POINTL pts[3] = { { 0, 0 }, { width, height }, { 0, 0 } };
-   long lHits = GFX (::GpiBitBlt (mPS, mProxySurface->mPS, 3, pts,
+   long lHits = GFX (::GpiBitBlt (mPS, mProxySurface->GetPS (), 3, pts,
                                   ROP_SRCCOPY, BBO_OR), GPI_ERROR);
 
    return rc;
@@ -451,7 +498,8 @@ nsresult nsOnscreenSurface::IsPixelAddressable( PRBool *aAddressable)
 
 // Surface for a PM window --------------------------------------------------
 nsWindowSurface::nsWindowSurface() : mWidget(nsnull)
-{}
+{
+}
 
 nsWindowSurface::~nsWindowSurface()
 {
@@ -464,10 +512,19 @@ nsWindowSurface::~nsWindowSurface()
    mPS = 0; // just for safety
 }
 
+NS_IMETHODIMP nsWindowSurface::Init(HPS aPS, nsIWidget *aWidget)
+{
+  mPS = aPS;
+  mWidget = aWidget;
+
+  return NS_OK;
+}
+
 nsresult nsWindowSurface::Init( nsIWidget *aOwner)
 {
    mWidget = aOwner;
    mPS = (HPS) mWidget->GetNativeData( NS_NATIVE_GRAPHIC);
+
    return NS_OK;
 }
 
@@ -482,15 +539,26 @@ nsresult nsWindowSurface::GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight)
    return NS_OK;
 }
 
+PRUint32 nsWindowSurface::GetHeight () 
+{ 
+   nsRect rect;
+
+   mWidget->GetClientBounds (rect);
+
+   return rect.height;
+}
+
 // Printer surface.  A few minor differences, like the page size is fixed ---
-nsPrintSurface::nsPrintSurface() : mHeight(0), mWidth(0)
-{}
+nsPrintSurface::nsPrintSurface()
+{
+}
 
 nsresult nsPrintSurface::Init( HPS aPS, PRInt32 aWidth, PRInt32 aHeight, PRUint32 aFlags)
 {
    mPS = aPS;
    mHeight = aHeight;
    mWidth = aWidth;
+
    return NS_OK;
 }
 
@@ -498,15 +566,3 @@ nsPrintSurface::~nsPrintSurface()
 {
    // PS is owned by the DC; superclass dtor will deselect palette.
 }
-
-nsresult nsPrintSurface::GetDimensions( PRUint32 *aWidth, PRUint32 *aHeight)
-{
-   if( !aWidth || !aHeight)
-      return NS_ERROR_NULL_POINTER;
-
-   *aWidth = mWidth;
-   *aHeight = mHeight;
-
-   return NS_OK;
-}
-

@@ -207,10 +207,16 @@ public:
   PRInt16             mARowBytes;         // number of bytes per row in the image for tha alpha
   PRInt16             mAlphaLevel;        // an alpha level every pixel uses
 
-  void CreateBitmaps( nsDrawingSurfaceOS2 *surf);
-  void DrawBitmap( HPS hps, PPOINTL pPts, LONG lRop, PRBool bMsk);
+  static PRUint8      gBlenderLookup [65536];    // Lookup table for fast alpha blending
+  static PRBool       gBlenderReady;
+  static void         BuildBlenderLookup (void);
+  static PRUint8      FAST_BLEND (PRUint8 Source, PRUint8 Dest, PRUint8 Alpha) { return gBlenderLookup [(Alpha << 8) + Source] + 
+                                                                                        gBlenderLookup [((255 - Alpha) << 8) + Dest]; }
 
-  nscoord BuildTile(HPS hpsMem, HBITMAP hBmpTile, nscoord aWidth, nscoord aHeight, LONG tileWidth, LONG tileHeight, PRBool bMsk);
+  void CreateBitmaps( nsDrawingSurfaceOS2 *surf);
+
+  PRBool  SlowTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
+  void    BuildTile (HPS hpsTile, PRUint8* pImageBits, PBITMAPINFO2 pBitmapInfo, nscoord aWidth, nscoord aHeight, LONG tileWidth, LONG tileHeight);
 };
 
 #endif

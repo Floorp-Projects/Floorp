@@ -24,6 +24,15 @@
 #ifdef DEBUG
   #include <string.h>
   #include <ctype.h>
+
+//DJ  #include "nsLog.h"
+//DJ  NS_IMPL_LOG_ENABLED (GFXLog)
+//DJ  #define DPRINTF NS_LOG_PRINTF(GFXLog)
+  #include <stdio.h>
+  #define DPRINTF printf
+#else
+  #include <stdio.h>
+  #define DPRINTF printf
 #endif
 
 #include "libprint.h"
@@ -111,12 +120,6 @@ BOOL IsDBCS()
 
 
 
-
-
-#ifdef DEBUG
-PRLogModuleInfo *gGFXOS2LogModule;
-#endif
-
 // Module-level data ---------------------------------------------------------
 #ifdef DEBUG
 void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* FileName, const char* FunctionName, long LineNum)
@@ -143,9 +146,9 @@ void GFX_LogErr (unsigned ReturnCode, const char* ErrorExpression, const char* F
    USHORT ErrorCode = ERRORIDERROR (::WinGetLastError (0));
 
    if (FunctionName)      // Compiler knows function name from where we were called
-      PR_LogPrint ("GFX_Err: %s = 0x%X, 0x%X (%s - %s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, FunctionName, LineNum);
+      DPRINTF ("GFX_Err: %s = 0x%X, 0x%X (%s - %s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, FunctionName, LineNum);
    else
-      PR_LogPrint ("GFX_Err: %s = 0x%X, 0x%X (%s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, LineNum);
+      DPRINTF ("GFX_Err: %s = 0x%X, 0x%X (%s,  line %d)\n", APIName, ReturnCode, ErrorCode, FileName, LineNum);
 }
 #endif
 
@@ -153,7 +156,7 @@ void PMERROR( const char *api)
 {
    ERRORID eid = ::WinGetLastError(0);
    USHORT usError = ERRORIDERROR(eid);
-   PR_LogPrint( "%s failed, error = 0x%X\n", api, usError);
+   DPRINTF ( "%s failed, error = 0x%X\n", api, usError);
 }
 
 nsGfxModuleData::nsGfxModuleData() : hModResources(0), hpsScreen(0)
@@ -170,7 +173,7 @@ void nsGfxModuleData::Init()
 
    if( rc)
    {
-      PR_LogPrint( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
+      DPRINTF ( "Gfx failed to load self.  rc = %d, cause = %s\n", (int)rc, buffer);
       // rats.  Can't load ourselves.  Oh well.  Try to be harmless...
       hModResources = 0;
    }
