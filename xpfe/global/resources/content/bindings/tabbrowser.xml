@@ -602,15 +602,14 @@
         <parameter name="event"/>
         <body>
           <![CDATA[
-            var tabBrowser = this.parentNode.parentNode;
-            if (!tabBrowser.mPrefs.getBoolPref("browser.chrome.site_icons"))
+            if (!this.mPrefs.getBoolPref("browser.chrome.site_icons"))
               return;
 
-            if (!event.target.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
+            if (!event.originalTarget.rel.match((/(?:^|\s)icon(?:\s|$)/i)))
               return;
 
             // We have an icon.
-            var href = event.target.href;
+            var href = event.originalTarget.href;
             if (!href)
               return;
 
@@ -627,29 +626,28 @@
             var notifyListeners = true;
             var i;
 
-            if (tabBrowser.mTabbedMode) {
+            if (this.mTabbedMode) {
               // We need to update a tab.
               for (i = 0; i < this.childNodes.length; i++) {
-                if (this.childNodes[i].contentDocument == event.target.ownerDocument) {
+                if (this.browsers[i].contentDocument == event.originalTarget.ownerDocument) {
                   if (!contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
-                                                uri, event.target, this.childNodes[i].contentWindow))
+                                                uri, event.originalTarget, this.browsers[i].contentWindow))
                     return;
 
-                  var listener = tabBrowser.mTabListeners[i];
-                  listener.mIcon = href;
+                  this.mTabListeners[i].mIcon = href;
+                  notifyListeners = (this.browsers[i] == this.mCurrentBrowser);
                   break;
                 }
               }
-
-              notifyListeners = (this.childNodes[i] == tabBrowser.mCurrentBrowser);
             }
-            else if (!contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
-                                               uri, event.target, tabBrowser.mCurrentBrowser.contentWindow))
+            else if (this.contentDocument != event.originalTarget.ownerDocument ||
+                     !contentPolicy.shouldLoad(Components.interfaces.nsIContentPolicy.IMAGE,
+                                               uri, event.originalTarget, this.mCurrentBrowser.contentWindow))
               return;
 
-            if (notifyListeners && tabBrowser.mProgressListeners) {
-              for (i = 0; i < tabBrowser.mProgressListeners.length; i++) {
-                var p = tabBrowser.mProgressListeners[i];
+            if (notifyListeners && this.mProgressListeners) {
+              for (i = 0; i < this.mProgressListeners.length; i++) {
+                var p = this.mProgressListeners[i];
                 if (p)
                   p.onLinkIconAvailable(href);
               }
@@ -998,9 +996,6 @@
               const forceHide = this.mPrefs.getBoolPref("browser.tabs.forceHide");
               if (!autoHide && !forceHide)
                 this.setStripVisibilityTo(true);
-
-              // Hook up a listener for <link>s.
-              this.mPanelContainer.addEventListener("DOMLinkAdded", this.onLinkAdded, false);
             }
 
             this.mProgressListeners.push(aListener);
@@ -1431,13 +1426,14 @@
             this.mTabListeners[i] = null;
             this.mPanelContainer.childNodes[i].removeEventListener("DOMTitleChanged", this.onTitleChanged, false);
           }
-          this.mPanelContainer.removeEventListener("DOMLinkAdded", this.onLinkAdded, false);
         ]]>
       </destructor>
     </implementation>
 
     <handlers>
       <handler event="select" action="if (event.originalTarget == this.mPanelContainer) this.updateCurrentBrowser();"/>
+
+      <handler event="DOMLinkAdded" action="this.onLinkAdded(event);"/>
 
       <handler event="keypress" modifiers="control" keycode="VK_F4">
         <![CDATA[
