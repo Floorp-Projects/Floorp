@@ -65,6 +65,12 @@ interface nsPIExternalAppLauncher : nsISupports
   // launchAppWithTempFile --> used by the handler to actually launch the helper application
   // aTempFile --> the file which contains the data we want the helper app to use when it is launched
   void launchAppWithTempFile(in nsIMIMEInfo aMIMEInfo, in nsIFile aTempFile);
+
+  // mscott --> eventually I should move this into a new service so other consumers can add temporary files
+  // they want deleted on exit.
+  // aTemporaryFile --> a temporary file we should delete on exit.
+
+  void deleteTemporaryFileOnExit(in nsIFile aTemporaryFile); 
 };
 
 // a helper app launcher is a small object created to handle the launching of an external application.
