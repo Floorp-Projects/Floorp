@@ -1,7 +1,7 @@
 Known bugs
 ----------
 
-29 Feb 2000
+12 Mar 2000
 
 1. Mozilla bug (Solaris only): The cursor has disappeared! (also in Composer)
 
@@ -18,10 +18,16 @@ Known bugs
    on the window moves it up (very annoying). Mitigated by a WORKAROUND in
    mozXMLTermMouseListener::MouseClick.
 
-5. XMLterm bug: Arrow keys are bound to EMACS-style control characters;
-   do not work with VI
+5. XMLterm/DOM bug: As new commands are typed in, scrolling is jerky. For
+   example, type a few non-trivial commands interspersed with several
+   trivial commands (i.e., just pressing ENTER key). The output from the
+   earlier non-trivial commands sometimes jumps downwards instead of moving
+   monotonically upwards. (Does it have anything to do with deletion of
+   earlier DOM entries?)
 
-6. LTERM/NCURSES bug: Executing "emacs -nw" in the NCURSES version of LTERM
+6. XMLterm bug: Arrow keys are hard-wired to particular escape sequences.
+
+7. LTERM/NCURSES bug: Executing "emacs -nw" in the NCURSES version of LTERM
    results in LTERM exiting abnormally when user exits emacs. An interrupt
    error seems to occur while polling for output in ltermRead.
 

@@ -1,25 +1,34 @@
 #!/bin/sh
-# Script to invoke XMLterm from mozilla/dist/bin
-# (or from anywhere in the mozilla source tree)
+# Script to invoke XMLterm
+# 1) as ./xmlterm from mozilla/dist/bin or the package directory, or
+# 2) as xmlterm (invoking /usr/bin/xmlterm), if installed with RPM, or
+# 3) as xmlterm, if dist/bin or package directory has been included in PATH
 
 XMLTERM_CHROME="xmlterm.xul"
 MOZILLA_BIN="./mozilla-bin"
 
-MOZILLA_DIR=""
+# Determine command prefix
+PREFIX=$(dirname $0)
 
-if [ -d components -a -d res ]
+if [ "$PREFIX" = "." ]
 then
-        # Running from dist/bin
-	MOZILLA_DIR="./"
+   # Assume running in dist/bin or package directory (useful for testing)
+   MOZILLA_DIR=$(pwd)
+
 else
-	# Running from source dir
-	if [ -f Makefile.in ]
-	then
-	     MOZILLA_DIR=`grep -w DEPTH Makefile.in  | grep -e "\.\." | tail -1 | awk -F"=" '{ print $2; }'`/dist/bin
-        else
-        # Running from elsewhere
-           MOZILLA_DIR="${MOZILLA_FIVE_HOME:?}"
-	fi
+   MOZILLA_DIR=""
+
+   if [ -f /bin/rpm -a -f /usr/bin/xmlterm ]
+   then
+      # Try to find installation directory using RPM
+      MOZILLA_DIR=$(rpm -q --queryformat "%{INSTALLPREFIX}" xmlterm)
+   fi
+
+   if [ ${#MOZILLA_DIR} -eq 0 ]
+   then
+      # Assume command prefix points to mozilla directory
+      MOZILLA_DIR=$PREFIX
+   fi
 fi
 
 echo cd $MOZILLA_DIR

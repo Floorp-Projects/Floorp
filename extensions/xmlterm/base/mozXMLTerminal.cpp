@@ -38,6 +38,7 @@
 #include "nsIObserver.h"
 
 #include "nsIPresContext.h"
+#include "nsICaret.h"
 
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
@@ -456,6 +457,8 @@ NS_IMETHODIMP mozXMLTerminal::Activate(void)
     return NS_ERROR_FAILURE;
   }
 
+  // Show caret
+  ShowCaret();
 
   // Instantiate LineTerm  
   XMLT_LOG(mozXMLTerminal::Activate,22,("instantiating lineterm\n"));
@@ -603,6 +606,30 @@ NS_IMETHODIMP mozXMLTerminal::SendText(const nsString& aString,
   return NS_OK;
 }
 
+/** Shows the caret and make it editable.
+ */
+NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
+{
+  // In principle, this method needs to be called only once;
+  // in practice, certain operations seem to hide the caret
+  // especially when one starts mucking around with the display:
+  // style property.
+  // Under those circumstances, call this method to re-display the caret.
+
+  if (!mPresShell)
+    return NS_ERROR_FAILURE;
+
+  mPresShell->SetCaretEnabled(PR_TRUE);
+
+  nsCOMPtr<nsICaret> caret;
+  if (NS_SUCCEEDED(mPresShell->GetCaret(getter_AddRefs(caret)))) {
+    caret->SetCaretVisible(PR_TRUE);
+    caret->SetCaretReadOnly(PR_FALSE);
+  }
+
+  return NS_OK;
+}
+
 
 // Paste data from clipboard to terminal
 NS_IMETHODIMP mozXMLTerminal::Paste()
@@ -744,6 +771,15 @@ NS_IMETHODIMP mozXMLTerminal::GetPresShell(nsIPresShell** aPresShell)
     return NS_ERROR_NOT_INITIALIZED;
   return mPresShell->QueryInterface(NS_GET_IID(nsIPresShell),
                                     (void **)aPresShell);
+}
+
+
+/** Gets flag denoting whether terminal is in full screen mode
+ * @param aFlag (output) screen mode flag
+ */
+NS_IMETHODIMP mozXMLTerminal::GetScreenMode(PRBool* aFlag)
+{
+  return mXMLTermSession->GetScreenMode(aFlag);
 }
 
 

@@ -30,7 +30,7 @@
         onload="StartupXMLTerm();"
         title="xmlterm" align="vertical" width="740" height="484">
   
-  <html:script src="chrome://xmlterm/content/XMLTermCommands.js"></html:script>
+  <html:script src="chrome://xmlterm/content/XMLTermChrome.js"></html:script>
 
   <html:iframe id="content-frame" type="content" html:name="content"
                html:src="chrome://xmlterm/content/xmlterm.html" flex="100%"/>

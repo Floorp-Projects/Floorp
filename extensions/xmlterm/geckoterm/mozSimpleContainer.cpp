@@ -173,7 +173,7 @@ NS_IMETHODIMP mozSimpleContainer::Init(nsNativeWidget aNativeWidget,
   webShell->Init(aNativeWidget, 0, 0, width, height);
 
   if (aPref) {
-    mDocShell->SetPrefs(aPref);
+    //mDocShell->SetPrefs(aPref);
   }
 
   nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));

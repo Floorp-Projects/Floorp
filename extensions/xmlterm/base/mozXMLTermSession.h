@@ -103,6 +103,11 @@ class mozXMLTermSession
    */
   NS_IMETHOD SetPrompt(const PRUnichar* aPrompt);
 
+  /** Gets flag denoting whether terminal is in full screen mode
+   * @param aFlag (output) screen mode flag
+   */
+  NS_IMETHOD GetScreenMode(PRBool* aFlag);
+
 protected:
 
   /** ShellML element type (see ShellML documentation),
@@ -126,7 +131,6 @@ protected:
   /** allowed user-generated input event type */
   enum SessionEventType {
     CLICK_EVENT = 0,
-    DBLCLICK_EVENT,
     SESSION_EVENT_TYPES
   };
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # xls: an XMLterm wrapper for the UNIX "ls" command
-# Usage: xls  [-c|--cols] [-h|help] [-i||--iconic] [-w|--window]
+# Usage: xls  [-c|--cols] [-h|help] [-n||--noicons] [-w|--window]
 
 use Cwd;
 use Getopt::Long;
@@ -9,10 +9,10 @@ Getopt::Long::config('bundling');
 
 my $options = "@ARGV";
 
-&GetOptions("cols|c=i", "help|h!", "iconic|i!", "window|w!");
+&GetOptions("cols|c=i", "help|h!", "noicons|n!", "window|w!");
 
 if ($opt_help) {
-    print "Usage: xls [-c|--cols] [-i|--iconic] [-w|--window]\n";
+    print "Usage: xls [-c|--cols] [-n||--noicons] [-w|--window]\n";
     exit;
 }
 
@@ -36,6 +36,7 @@ my $dir = cwd();
 my $rowimg = "";
 my $rowtxt = "";
 my $nfile = 0;
+
 foreach $file (glob("*")) {        # for each file in current directory
     $file =~ m%\A(.*?) (\.[^/.]*)?\Z%x # Deconstruct file name
         or die "xls: Internal error; unable to deconstruct file name\n";
@@ -141,7 +142,7 @@ foreach $file (glob("*")) {        # for each file in current directory
     $nfile++;
 
     if (($nfile % $ncols) == 0) {       # print complete table row
-        print "<TR>$rowimg" if ($opt_iconic) ;
+        print "<TR CLASS='icons'>$rowimg" unless $opt_noicons;
         print "<TR>$rowtxt";
         $rowimg = "";
         $rowtxt = "";
@@ -150,7 +151,7 @@ foreach $file (glob("*")) {        # for each file in current directory
 }
 
 if ($rowtxt) {
-    print "<TR>$rowimg" if ($opt_iconic) ;
+    print "<TR CLASS='icons'>$rowimg" unless $opt_noicons;
     print "<TR>$rowtxt";
 }
 

@@ -131,6 +131,11 @@ public:
    */
   NS_IMETHOD GetPresShell(nsIPresShell** aPresShell) = 0;
 
+  /** Gets flag denoting whether terminal is in full screen mode
+   * @param aFlag (output) screen mode flag
+   */
+  NS_IMETHOD GetScreenMode(PRBool* aFlag) = 0;
+
   /** Checks if supplied cookie is valid for XMLTerm
    * @param aCookie supplied cookie string
    * @param _retval true if supplied cookie matches XMLTerm cookie
@@ -140,6 +145,10 @@ public:
   /** Resizes XMLterm to match a resized window.
    */
   NS_IMETHOD Resize(void) = 0;
+
+  /** Shows the caret and make it editable.
+   */
+  NS_IMETHOD ShowCaret(void) = 0;
 };
 
 #define MOZXMLTERMINAL_CID                       \

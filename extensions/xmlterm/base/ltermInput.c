@@ -377,6 +377,8 @@ static int ltermLineInput(struct lterms *lts,
     } else if (lti->escapeCSIFlag) {
       /* Character part of escape code sequence */
 
+      LTERM_LOG(ltermLineInput,38,("Escape code sequence - %c\n", (char) uch));
+
       if ((uch >= (UNICHAR)U_ZERO && uch <= (UNICHAR)U_NINE)) {
         /* Process numerical argument to escape code sequence */
         lti->escapeCSIArg = lti->escapeCSIArg*10 + (uch - U_ZERO);
@@ -385,6 +387,8 @@ static int ltermLineInput(struct lterms *lts,
       } else {
         /* End of escape code sequence */
         lti->escapeCSIFlag = 0;
+
+        /* NOTE: Input CSI escape sequence; may not be portable */
 
         /* SUN arrow key bindings */
         switch (uch) {
@@ -500,38 +504,60 @@ static int ltermLineInput(struct lterms *lts,
 
       } else {
         /* other control characters */
-        if (lti->inputMode >= LTERM2_EDIT_MODE) {
+
+        LTERM_LOG(ltermLineInput,32,("^%c\n", uch+U_ATSIGN));
+
+        if (lti->inputMode < LTERM2_EDIT_MODE) {
+          /* Non-edit mode; simply transmit control character */
+          if (ltermSendData(lts, &uch, 1) != 0)
+            return -1;
+
+        } else {
+          /* Edit input mode */
+
+          if (uch == U_CTL_D) {
+            /* Special handling for ^D */
+
+            if (lti->inputChars == 0) {
+              /* Lone ^D in input line, simply transmit it */
+              if (ltermSendData(lts, &uch, 1) != 0)
+                return -1;
+              uch = U_NUL;
+
+            } else if (lti->inputCursorGlyph < lti->inputGlyphs) {
+              /* Cursor not at end of line; delete to right */
+              if (ltermDeleteGlyphs(lti, -1) != 0)
+                return -1;
+              uch = U_NUL;
+            }
+          }
+              
           switch (uch) {
 
           case U_NUL:                /* Null character; ignore */
             break;
 
           case U_CTL_B:              /* move cursor backward */
-            LTERM_LOG(ltermLineInput,32,("^B\n"));
             if (lti->inputCursorGlyph > 0) {
               lti->inputCursorGlyph--;
             }
             break;
 
           case U_CTL_F:              /* move cursor forward */
-            LTERM_LOG(ltermLineInput,32,("^F\n"));
             if (lti->inputCursorGlyph < lti->inputGlyphs) {
               lti->inputCursorGlyph++;
             }
             break;
 
           case U_CTL_A:              /* position cursor at beginning of line */
-            LTERM_LOG(ltermLineInput,32,("^A\n"));
             lti->inputCursorGlyph = 0;
             break;
 
           case U_CTL_E:              /* position cursor at end of line */
-            LTERM_LOG(ltermLineInput,32,("^E\n"));
             lti->inputCursorGlyph = lti->inputGlyphs;
             break;
 
           case U_CTL_K:              /* delete to end of line */
-            LTERM_LOG(ltermLineInput,32,("^K\n"));
             if (ltermDeleteGlyphs(lti,-(lti->inputGlyphs-lti->inputCursorGlyph))
                 != 0)
               return -1;
@@ -539,21 +565,13 @@ static int ltermLineInput(struct lterms *lts,
 
           case U_CTL_L:              /* form feed */
           case U_CTL_R:              /* redisplay */
-            LTERM_LOG(ltermLineInput,32,("^%c\n", uch+U_ATSIGN));
             break;
 
-          case U_CTL_D:              /* ^D */
+          case U_CTL_D:              /* ^D at end of non-null input line */
           case U_CTL_N:              /* dowN history */
           case U_CTL_P:              /* uP history */
           case U_CTL_Y:              /* yank */
           case U_TAB:                /* command completion */
-
-            if ((lti->inputChars == 0) && (uch == U_CTL_D)) {
-              /* If lone ^D input, simply transmit it */
-              if (ltermSendData(lts, &uch, 1) != 0)
-                return -1;
-              return 0;
-            }
 
             /* Assert that completion character occurs at end of buffer;
              * enforced by lterm_write.
@@ -582,6 +600,10 @@ static int ltermLineInput(struct lterms *lts,
             }
 
             break;
+
+          default:              /* Transmit any other control character */
+            if (ltermSendData(lts, &uch, 1) != 0)
+              return -1;
           }
         }
       }
