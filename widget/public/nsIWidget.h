@@ -91,7 +91,11 @@ enum nsCursor {   ///(normal cursor,       usually rendered as an arrow)
                   ///(Selecting something, usually rendered as an IBeam)
                 eCursor_select, 
                   ///(can hyper-link,      usually rendered as a human hand)
-                eCursor_hyperlink }; 
+                eCursor_hyperlink, 
+                  ///(west/east sizing,    usually rendered as ->||<-)
+                eCursor_sizeWE,
+                  ///(north/south sizing,  usually rendered as sizeWE rotated 90 degrees)
+                eCursor_sizeNS }; 
 
 
 /**

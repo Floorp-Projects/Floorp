@@ -84,6 +84,8 @@ protected:
 
   PRInt32 GetBorderWidth(nsIPresContext* aPresContext);
 
+  PRBool GetFrameBorder(nsHTMLTagContent* aFrameContent);
+  
   virtual PRIntn GetSkipSides() const;
 
   void ParseRowCol(nsIAtom* aAttrType, PRInt32& aNumSpecs, nsFramesetSpec** aSpecs); 
@@ -103,6 +105,7 @@ protected:
   nsFramesetSpec*  mColSpecs;  // parsed, non-computed dimensions
   nscoord*         mColSizes;  // currently computed col sizes 
   PRInt32          mNonBorderChildCount; 
+  PRInt32          mEdgeVisibility;
 };
 
 /*******************************************************************************
