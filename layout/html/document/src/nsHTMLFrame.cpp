@@ -302,6 +302,12 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("enter nsHTMLFrameOuterFrame::Reflow: maxSize=%d,%d reason=%d",
+      aReflowState.maxSize.width,
+      aReflowState.maxSize.height,
+      aReflowState.reason));
+
   if (IsInline()) {
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
   } else {
@@ -340,6 +346,10 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&      aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("exit nsHTMLFrameOuterFrame::Reflow: size=%d,%d status=%x",
+      aDesiredSize.width, aDesiredSize.height, aStatus));
 
   return NS_OK;
 }
@@ -554,6 +564,12 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("enter nsHTMLFrameInnerFrame::Reflow: maxSize=%d,%d reason=%d",
+      aReflowState.maxSize.width,
+      aReflowState.maxSize.height,
+      aReflowState.reason));
+
   nsresult rv = NS_OK;
 
   // use the max size set in aReflowState by the nsHTMLFrameOuterFrame as our size
@@ -596,6 +612,10 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&      aPresContext,
   mWebShell->SetBounds(subBounds);
 
   aStatus = NS_FRAME_COMPLETE;
+
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("exit nsHTMLFrameInnerFrame::Reflow: size=%d,%d rv=%x",
+      aDesiredSize.width, aDesiredSize.height, aStatus));
   return rv;
 }
 
