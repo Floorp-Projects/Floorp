@@ -191,6 +191,7 @@ sub BuildDist()
 	[":mozilla:lib:mac:MoreFiles:MANIFEST", "$distdirectory:mac:common:morefiles:"],
 #INCLUDE
 		[":mozilla:config:mac:MANIFEST", "$distdirectory:config:"],
+		[":mozilla:config:mac:MANIFEST_config", "$distdirectory:config:"],
 		[":mozilla:include:MANIFEST", "$distdirectory:include:"],		
 		[":mozilla:cmd:macfe:pch:MANIFEST", "$distdirectory:include:"],
 #NSPR	
