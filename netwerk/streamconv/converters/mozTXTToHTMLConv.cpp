@@ -195,7 +195,7 @@ mozTXTToHTMLConv::FindURLStart(const nsAutoString& text, const PRUint32 pos,
     for (; i >= 0
              && text[PRUint32(i)] != '>' && text[PRUint32(i)] != '<'
              && text[PRUint32(i)] != '"' && text[PRUint32(i)] != '\''
-             && text[PRUint32(i)] != '`' 
+             && text[PRUint32(i)] != '`' && text[PRUint32(i)] != ',' 
              && text[PRUint32(i)] != '{' && text[PRUint32(i)] != '['
              && text[PRUint32(i)] != '(' && text[PRUint32(i)] != '|'
              && text[PRUint32(i)] != '\\'
@@ -251,7 +251,7 @@ mozTXTToHTMLConv::FindURLEnd(const nsAutoString& text, const PRUint32 pos,
     for (; PRInt32(i) < text.Length()
              && text[i] != '>' && text[i] != '<'
              && text[i] != '"' && text[i] != '\''
-             && text[i] != '`' && text[i] != ','
+             && text[i] != '`' 
              && text[i] != '}' && text[i] != ']'
              && text[i] != ')' && text[i] != '|'
              && !nsString::IsSpace(text[i])
