@@ -52,6 +52,45 @@ nsSVGStroke::Build(ArtVpath* path, nsISVGPathGeometrySource* source)
   if (mSvp)
     art_svp_free(mSvp);
 
+  float width;
+  source->GetStrokeWidth(&width);
+
+  // XXX since we construct the stroke from a pre-transformed path, we
+  // adjust the stroke width according to the expansion part of
+  // transformation. This is not true anamorphic scaling, but the best
+  // we can do given the circumstances...
+  float expansion; 
+  {
+    double matrix[6];
+    nsCOMPtr<nsIDOMSVGMatrix> ctm;
+    source->GetCTM(getter_AddRefs(ctm));
+    NS_ASSERTION(ctm, "graphic source didn't have a ctm");
+    
+    float val;
+    ctm->GetA(&val);
+    matrix[0] = val;
+    
+    ctm->GetB(&val);
+    matrix[1] = val;
+    
+    ctm->GetC(&val);  
+    matrix[2] = val;  
+    
+    ctm->GetD(&val);  
+    matrix[3] = val;  
+    
+    ctm->GetE(&val);
+    matrix[4] = val;
+    
+    ctm->GetF(&val);
+    matrix[5] = val;
+    
+    expansion = sqrt((float)fabs(matrix[0]*matrix[3]-matrix[2]*matrix[1]));
+  }
+
+  width*=expansion;
+  if (width==0.0) return;
+  
   PRUint16 strokelinecap;
   source->GetStrokeLinecap(&strokelinecap);  
   ArtPathStrokeCapType captype;
@@ -138,54 +177,16 @@ nsSVGStroke::Build(ArtVpath* path, nsISVGPathGeometrySource* source)
       path = art_vpath_new_vpath_array((ArtVpathIterator*)&src_iter);
   }    
 
-float miterlimit;
-source->GetStrokeMiterlimit(&miterlimit);
-float width;
-source->GetStrokeWidth(&width);
+  float miterlimit;
+  source->GetStrokeMiterlimit(&miterlimit);
 
-// XXX since we construct the stroke from a pre-transformed path, we
-// adjust the stroke width according to the expansion part of
-// transformation. This is not true anamorphic scaling, but the best
-// we can do given the circumstances...
- float expansion; 
- {
-   double matrix[6];
-   nsCOMPtr<nsIDOMSVGMatrix> ctm;
-   source->GetCTM(getter_AddRefs(ctm));
-   NS_ASSERTION(ctm, "graphic source didn't have a ctm");
-   
-   float val;
-   ctm->GetA(&val);
-   matrix[0] = val;
-   
-   ctm->GetB(&val);
-   matrix[1] = val;
-   
-   ctm->GetC(&val);  
-   matrix[2] = val;  
-   
-   ctm->GetD(&val);  
-   matrix[3] = val;  
-   
-   ctm->GetE(&val);
-   matrix[4] = val;
-   
-   ctm->GetF(&val);
-   matrix[5] = val;
-
-   expansion = sqrt((float)fabs(matrix[0]*matrix[3]-matrix[2]*matrix[1]));
- }
- 
- width*=expansion;
- 
- mSvp = art_svp_vpath_stroke(path,
-                             jointype,
-                             captype,
-                             width,
-                             miterlimit,
-                             getFlatness());
+  mSvp = art_svp_vpath_stroke(path,
+                              jointype,
+                              captype,
+                              width,
+                              miterlimit,
+                              getFlatness());
   art_free(path);
-
 }
 
 double nsSVGStroke::getFlatness()
