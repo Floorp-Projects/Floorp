@@ -28,8 +28,7 @@ sub Help {
             '' => 'A karma tracker. If you have authenticated (using the \'auth\' command) then it will also keep track of your own setting of people\'s karma, as well as the total of everyone\'s settings.',
             '++' => 'Increase someone\'s karma. Syntax: victim++',
             '--' => 'Decrease someone\'s karma. Syntax: victim++',
-            '?' => 'Find someone\'s current karma level. Syntax: victim karma?',
-            'rank' => 'Rank people by karma. Syntax: karma rank.',
+            'rank' => 'Find someone\'s karma level. Omit the victim\'s name to get a complete listing of everyone\'s karma (long). Syntax: \'rank victim\' or just \'rank\'',
     };
 }
 
@@ -40,9 +39,10 @@ sub Told {
         $self->ChangeKarma($event, $1, 1);
     } elsif ($message =~ /^(\S+)\-\-$/os) {
         $self->ChangeKarma($event, $1, -1);
-    } elsif ($message =~ /^(?:karma\s+)?(?:ranks?|list)[?]*$/os) {
+    } elsif ($message =~ /^\s*(?:karma\s+)?ranks?[?\s]*$/os) {
         $self->ReportKarmaRanks($event, $1);
-    } elsif ($message =~ /^(\S+)(?:\s+karma)?\?$/os) {
+    } elsif ($message =~ /^\s*(\S+)\s+(?:karma\s+)?rank[?\s]*$/os or
+             $message =~ /^\s*(?:karma\s+)?rank\s+(\S+)[?\s]*$/os) {
         $self->ReportKarma($event, $1);
     } else {
         return $self->SUPER::Told(@_);
@@ -53,9 +53,9 @@ sub Told {
 sub Heard {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ /^(\S+)\+\+$/os) {
+    if ($message =~ /^(\S*[^-+\s])\+\+$/os) {
         $self->ChangeKarma($event, $1, 1);
-    } elsif ($message =~ /^(\S+)\-\-$/os) {
+    } elsif ($message =~ /^(\S*[^-+\s])\-\-$/os) {
         $self->ChangeKarma($event, $1, -1);
     } else {
         return $self->SUPER::Told(@_);
@@ -72,7 +72,7 @@ sub ChangeKarma {
         ((time() - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who}) <= $self->{'secondsDelayRequired'})) {
         $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who} = $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who}+5;
         my $delay = $self->{'secondsDelayRequired'} - (time() - $self->{'_lastSpoken'}->{$event->{'user'}}->{lc $who});
-        $self->directSay($event, "You will have to wait another $delay seconds before being able to change $who's karma.");
+        $self->directSay($event, "You will have to wait another $delay seconds before being able to change ${who}'s karma.");
     } else {
         if (not defined($self->{'_lastSpoken'}->{$event->{'user'}})) {
             $self->{'_lastSpoken'}->{$event->{'user'}} = {};
@@ -85,6 +85,9 @@ sub ChangeKarma {
         }
         if ($event->{'channel'} ne '') {
             $self->{'scores'}->{lc $who} += $delta;
+            if ($self->{'scores'}->{lc $who} == 0) {
+                delete($self->{'scores'}->{lc $who});
+            }
         }
         $nick = lc $event->{'userName'};
         if ($nick) {
@@ -93,6 +96,9 @@ sub ChangeKarma {
             } else {
                 my %privateScores = split(' ', $self->{"privateScores"}->{$nick});
                 $privateScores{lc $who} += $delta;
+                if ($privateScores{lc $who} == 0) {
+                    delete($privateScores{lc $who});
+                }
                 my @privateScores = %privateScores;
                 local $" = ' ';
                 $self->{'privateScores'}->{$nick} = "@privateScores";
@@ -111,7 +117,17 @@ sub ReportKarma {
         $self->say($event, "$who has no karma.");
     } else {
         my $karma = $self->{'scores'}->{lc $who};
-        $self->say($event, "$who has $karma points of karma.");
+        my @order = sort { $self->{'scores'}->{$b} <=> $self->{'scores'}->{$a} } keys(%{$self->{'scores'}});
+        my $rank = 0;
+        if (scalar(@order)) {
+            user: foreach my $user (@order) {
+                $rank++;
+                if (lc $user eq lc $who) {
+                    last user;
+                }
+            }
+        }
+        $self->say($event, "$who has $karma points of karma (rank $rank).");
     }
     if ($event->{'channel'} eq '') {
         $nick = lc $event->{'userName'};
@@ -122,7 +138,7 @@ sub ReportKarma {
                 my %privateScores = split(' ', $self->{"privateScores"}->{$nick});
                 my $karma = $privateScores{lc $who};
 
-                if (defined($karma)) {
+                if (not defined($karma)) {
                     $self->say($event, "You have not given $who any karma.");
                 } else {
                     $self->say($event, "You have given $who $karma points of karma.");
