@@ -21,7 +21,7 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.c,v 1.1 1998/03/28 02:40:31 ltabb Exp $
+   $Id: color.c,v 3.1 1998/03/28 03:34:59 ltabb Exp $
 */
 
 

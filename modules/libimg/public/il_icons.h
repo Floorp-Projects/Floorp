@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_icons.h --- Image icon enumeration.
- *  $Id: il_icons.h,v 1.1 1998/03/28 02:40:27 ltabb Exp $
+ *  $Id: il_icons.h,v 3.1 1998/03/28 03:34:56 ltabb Exp $
  */
 
 

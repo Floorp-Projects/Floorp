@@ -47,7 +47,7 @@
  *
  */
 
-/* $Id: deflate.c,v 1.1 1998/03/28 02:41:40 ltabb Exp $ */
+/* $Id: deflate.c,v 3.1 1998/03/28 03:36:10 ltabb Exp $ */
 
 #include "deflate.h"
 

@@ -18,7 +18,7 @@
 
 
 /*
- *  npassoc.h $Revision: 1.1 $
+ *  npassoc.h $Revision: 3.1 $
  *  xp filetype associations
  */
 

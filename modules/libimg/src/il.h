@@ -19,7 +19,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *   il.h --- Exported image library interface
  *
- *   $Id: il.h,v 1.1 1998/03/28 02:40:33 ltabb Exp $
+ *   $Id: il.h,v 3.1 1998/03/28 03:35:02 ltabb Exp $
  */
 
 

@@ -3,7 +3,7 @@
  * For conditions of distribution and use, see copyright notice in zlib.h 
  */
 /* This file was modified since it was taken from the zlib distribution */
-/* $Id: uncompr.c,v 1.1 1998/03/28 02:41:45 ltabb Exp $ */
+/* $Id: uncompr.c,v 3.1 1998/03/28 03:36:16 ltabb Exp $ */
 
 #include "zlib.h"
 

@@ -20,7 +20,7 @@
  *  il_utilp.h Colormap and colorspace utilities - types and definitions
  *             private to Image Library.            
  *
- *   $Id: il_utilp.h,v 1.1 1998/03/28 02:40:34 ltabb Exp $
+ *   $Id: il_utilp.h,v 3.1 1998/03/28 03:35:02 ltabb Exp $
  */
 
 

@@ -19,7 +19,7 @@
 /* -*- Mode: C; tab-width: 4 -*-
  *  colormap.c
  *             
- *   $Id: colormap.c,v 1.1 1998/03/28 02:40:31 ltabb Exp $
+ *   $Id: colormap.c,v 3.1 1998/03/28 03:35:00 ltabb Exp $
  */
 
 

@@ -18,7 +18,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if.h,v 1.1 1998/03/28 02:40:33 ltabb Exp $
+ * $Id: if.h,v 3.1 1998/03/28 03:35:01 ltabb Exp $
  */
 
 #ifndef _if_h

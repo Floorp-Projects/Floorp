@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  il_types.h --- Image library data types and structures.
- *  $Id: il_types.h,v 1.1 1998/03/28 02:40:28 ltabb Exp $
+ *  $Id: il_types.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
  */
 
 

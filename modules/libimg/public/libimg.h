@@ -18,7 +18,7 @@
 
 /* -*- Mode: C; tab-width: 4 -*-
  *  libimg.h --- API calls to the Image Library.
- *  $Id: libimg.h,v 1.1 1998/03/28 02:40:29 ltabb Exp $
+ *  $Id: libimg.h,v 3.1 1998/03/28 03:34:57 ltabb Exp $
  */
 
 
