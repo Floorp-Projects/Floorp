@@ -56,6 +56,7 @@
 				<html:label for="pref:1:int:network.proxy.type" accesskey="m" tabindex="0">
 				&manualTypeRadio.label;
 				</html:label>
+				<titledbutton value="&view.label;" align="left" onclick="OpenProxyManualDialog();"/>
 			</html:div>
 			<html:div>
 				<html:input name="directManualOrAuto" type="radio" id="pref:2:int:network.proxy.type" />

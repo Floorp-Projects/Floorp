@@ -1,0 +1,112 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+  -->
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://pref/locale/pref-proxy-manual.dtd" >
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+                xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		title="&window.title;"
+		class="dialog"
+                align="vertical">
+
+<html:div flex="100%">
+<box align="vertical">
+	<box align="horizontal">
+		<html:div>
+		&intro.label;
+		</html:div>
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&ftp.label;
+		</html:div>
+		<html:input name="ftpproxy" type="text" id="pref:string:string:network.proxy.http" size="30" />
+		<spring flex="100%"/>
+		<html:div>
+		&port.label;
+		</html:div>
+		<html:input name="ftpproxyport" type="text" id="pref:string:string:network.proxy.http_port" size="5" />
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&gopher.label;
+		</html:div>
+		<html:input name="gopherproxy" type="text" id="pref:string:string:network.proxy.gopher" size="30" />
+		<spring flex="100%"/>
+		<html:div>
+		&port.label;
+		</html:div>
+		<html:input name="gopherproxyport" type="text" id="pref:string:string:network.proxy.gopher_port" size="5" />
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&http.label;
+		</html:div>
+		<html:input name="httpproxy" type="text" id="pref:string:string:network.proxy.http" size="30" />
+		<spring flex="100%"/>
+		<html:div>
+		&port.label;
+		</html:div>
+		<html:input name="httpproxyport" type="text" id="pref:string:string:network.proxy.http_port" size="5" />
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&wais.label;
+		</html:div>
+		<html:input name="waisproxy" type="text" id="pref:string:string:network.proxy.wais" size="30" />
+		<spring flex="100%"/>
+		<html:div>
+		&port.label;
+		</html:div>
+		<html:input name="waisproxyport" type="text" id="pref:string:string:network.proxy.wais_port" size="5" />
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&direct.label;
+		</html:div>
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&noproxy.label;
+		</html:div>
+		<html:input name="noproxy" type="text" id="pref:string:string:network.proxy.none" size="60" />
+	</box>
+	<box align="horizontal">
+		<html:div>
+		&sockhost.label;
+		</html:div>
+		<html:input name="sockshost" type="text" id="pref:string:string:network.socks.host" size="30" />
+		<spring flex="100%"/>
+		<html:div>
+		&port.label;
+		</html:div>
+		<html:input name="socksport" type="text" id="pref:string:string:network.socks.port" size="5" />
+	</box>
+	<box id="okCancelButtons"/>
+</box>
+</html:div>
+
+</window>
