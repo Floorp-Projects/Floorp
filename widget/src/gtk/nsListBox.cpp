@@ -17,6 +17,7 @@
  */
 
 #include <gtk/gtk.h>
+#include "gtklayout.h"
 
 #include "nsListBox.h"
 #include "nsColor.h"
@@ -358,6 +359,7 @@ NS_METHOD nsListBox::Create(nsIWidget *aParent,
 
   gtk_clist_column_titles_hide(GTK_CLIST(mWidget));
 
+  gtk_layout_put(GTK_LAYOUT(aParent), mWidget, aRect.x, aRect.y);
 /*
   mWidget = ::XtVaCreateManagedWidget("",
                                     xmListWidgetClass,
