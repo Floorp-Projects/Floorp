@@ -176,7 +176,7 @@ nsMsgSearchDataSource::HasAssertion(nsIRDFResource *aSource,
 NS_IMETHODIMP 
 nsMsgSearchDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *result)
 {
-    *result = aSource == mSearchRoot.get() && aArc == kNC_MessageChild;
+    *result = aSource == mSearchRoot.get() && aArc == kNC_MessageChild.get();
     return NS_OK;
 }
 
