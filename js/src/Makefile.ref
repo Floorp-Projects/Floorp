@@ -104,12 +104,16 @@ endif
 
 #
 # Line editing support.
+# Define JS_READLINE or JS_EDITLINE to enable line editing in the
+# js command-line interpreter.
 #
 ifdef JS_READLINE
+# For those platforms with the readline library installed.
 DEFINES += -DEDITLINE
 PROG_LIBS += -lreadline
 else
 ifdef JS_EDITLINE
+# Use the editline library, built locally.
 PREDIRS += editline
 DEFINES += -DEDITLINE
 PROG_LIBS += -Leditline/$(OBJDIR) -ledit

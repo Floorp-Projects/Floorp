@@ -102,6 +102,24 @@ else
 OTHER_LIBS += -L$(DEPTH)/fdlibm/$(OBJDIR) -lfdm -L../$(OBJDIR) -ljs
 endif
 
+#
+# Line editing support.
+# Define JS_READLINE or JS_EDITLINE to enable line editing in the
+# lcshell command-line interpreter.
+#
+ifdef JS_READLINE
+# For those platforms with the readline library installed.
+DEFINES += -DEDITLINE
+OTHER_LIBS += -lreadline
+else
+ifdef JS_EDITLINE
+# Use the editline library from ../editline.
+PREDIRS += ../editline
+DEFINES += -DEDITLINE
+OTHER_LIBS += -L../editline/$(OBJDIR) -ledit
+endif
+endif
+
 ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
 INCLUDES += -I../../../dist/$(OBJDIR)/include
