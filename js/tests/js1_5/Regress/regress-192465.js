@@ -39,6 +39,12 @@
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=192465
 *
+* MODIFIED: 27 February 2003
+*
+* We are adding an early return to this testcase, since it is causing
+* big problems on Linux RedHat8! For a discussion of this issue, see
+* http://bugzilla.mozilla.org/show_bug.cgi?id=174341#c24 and following.
+*
 */
 //-----------------------------------------------------------------------------
 var UBound = 0;
@@ -50,6 +56,12 @@ var actual = '';
 var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
+
+/*
+ * Early return added 2003-02-27 due to problems on Linux RedHat8.
+ * See reference above -
+ */
+quit();
 
 
 /*
