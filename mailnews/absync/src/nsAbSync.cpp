@@ -694,10 +694,11 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
       if (!nsCRT::strncasecmp(mSchemaMappingList[i].serverField, "OMIT:", 5))
         continue;
 
+      // Reset this flag...
+      foundPhone = PR_FALSE;
       // If this is a phone number, we have to special case this because
       // phone #'s are handled differently than all other tags...sigh!
       //
-      foundPhone = PR_FALSE;
       if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kWorkPhoneColumn, nsCRT::strlen(kWorkPhoneColumn)))
       {
         foundPhone = PR_TRUE;
@@ -787,6 +788,44 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
 
   if (!tProtLine.IsEmpty())
   {
+    // Now, check if this is that flag for the plain text email selection...if so,
+    // then tack this information on as well...
+    PRBool bValue = PR_FALSE;
+    if (NS_SUCCEEDED(aCard->GetSendPlainText(&bValue)))
+    {
+      if (bValue)
+        aName = nsString(NS_ConvertASCIItoUCS2("0")).ToNewUnicode();
+      else
+        aName = nsString(NS_ConvertASCIItoUCS2("1")).ToNewUnicode();
+    
+      // Just some sanity...
+      if (aName)
+      {
+        char      *utfString = nsString2(aName).ToNewUTF8String();
+      
+        // Now, URL Encode the value string....
+        char *myTStr = nsEscape(utfString, url_Path);
+        if (myTStr)
+        {
+          PR_FREEIF(utfString);
+          utfString = myTStr;
+        }
+      
+        tProtLine.Append(NS_ConvertASCIItoUCS2("&"));
+        tProtLine.Append(NS_ConvertASCIItoUCS2(kServerPlainTextColumn));
+        tProtLine.Append(NS_ConvertASCIItoUCS2("="));
+        if (utfString)
+        {
+          tProtLine.Append(NS_ConvertASCIItoUCS2(utfString));
+          PR_FREEIF(utfString);
+        }
+        else
+          tProtLine.Append(aName);
+      
+        PR_FREEIF(aName);
+      }
+    }
+
     char *tLine = tProtLine.ToNewCString();
     if (!tLine)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -2424,6 +2463,14 @@ nsAbSync::AddValueToNewCard(nsIAbCard *aCard, nsString *aTagName, nsString *aTag
     aCard->SetCustom3(aTagValue->GetUnicode());
   else if (!aTagName->CompareWithConversion(kServerCustom4Column))
     aCard->SetCustom4(aTagValue->GetUnicode());
+  else if (!aTagName->CompareWithConversion(kServerPlainTextColumn))
+  {
+    // This is plain text pref...have to add a little logic.
+    if (!aTagValue->CompareWithConversion("1"))
+      aCard->SetSendPlainText(PR_FALSE);
+    else if (!aTagValue->CompareWithConversion("0"))
+      aCard->SetSendPlainText(PR_TRUE);
+  }
 
   return rv;
 }
@@ -2458,13 +2505,11 @@ nsAbSync::GetString(const PRUnichar *aStringName)
 }
 
 /************ UNUSED FOR NOW
-aCard->SetDisplayName(aTagValue->GetUnicode());
 aCard->SetBirthYear(aTagValue->GetUnicode());
 aCard->SetBirthMonth(aTagValue->GetUnicode());
 aCard->SetBirthDay(aTagValue->GetUnicode());
 aCard->SetLastModifiedDate(aTagValue->GetUnicode());
 aCard->SetName(aTagValue->GetUnicode());
-aCard->SetSendPlainText(aTagValue->GetUnicode());
 aCard->SetIsMailList(aTagValue->GetUnicode());
 aCard->SetDbTableID(aTagValue->GetUnicode());
 aCard->SetDbRowID(aTagValue->GetUnicode());
@@ -2476,8 +2521,6 @@ aCard->SetAnonymousBoolAttribute(aTagValue->GetUnicode());
 **********************************************/
 
 /*************
-char *kServerNicknameColumn = "OMIT:NickName";
-char *kServerPlainTextColumn = "OMIT:SendPlainText";
 char *kServerBirthYearColumn = "OMIT:BirthYear";
 char *kServerBirthMonthColumn = "OMIT:BirthMonth";
 char *kServerBirthDayColumn = "OMIT:BirthDay";
