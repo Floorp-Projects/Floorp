@@ -122,8 +122,6 @@ protected:
   PRBool BuildBlockFromStack(nsIContent * aParent,
                              BlockText  & aBlockText,
                              PRInt32      aStackInx);
-  PRBool BuildBlock(nsIContent * aParent,
-                    BlockText  & aBlockText);
 
   // Search/Find Data Member
   nsIContent ** mParentStack;
