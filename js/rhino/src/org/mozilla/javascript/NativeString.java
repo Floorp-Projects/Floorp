@@ -65,11 +65,10 @@ final class NativeString extends IdScriptable {
         return "String";
     }
 
-    protected void fillConstructorProperties
-        (Context cx, IdFunction ctor, boolean sealed)
+    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
     {
         addIdFunctionProperty(ctor, ConstructorId_fromCharCode, sealed);
-        super.fillConstructorProperties(cx, ctor, sealed);
+        super.fillConstructorProperties(ctor, sealed);
     }
 
     protected int getIdAttributes(int id)

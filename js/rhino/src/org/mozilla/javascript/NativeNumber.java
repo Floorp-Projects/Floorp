@@ -68,8 +68,7 @@ final class NativeNumber extends IdScriptable {
         return "Number";
     }
 
-    protected void fillConstructorProperties
-        (Context cx, IdFunction ctor, boolean sealed)
+    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
     {
         final int attr = ScriptableObject.DONTENUM |
                          ScriptableObject.PERMANENT |
@@ -83,7 +82,7 @@ final class NativeNumber extends IdScriptable {
         ctor.defineProperty("MAX_VALUE", wrap_double(Double.MAX_VALUE), attr);
         ctor.defineProperty("MIN_VALUE", wrap_double(Double.MIN_VALUE), attr);
 
-        super.fillConstructorProperties(cx, ctor, sealed);
+        super.fillConstructorProperties(ctor, sealed);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,

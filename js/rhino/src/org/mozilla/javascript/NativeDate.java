@@ -88,13 +88,12 @@ final class NativeDate extends IdScriptable
         return date;
     }
 
-    protected void fillConstructorProperties
-        (Context cx, IdFunction ctor, boolean sealed)
+    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
     {
         addIdFunctionProperty(ctor, ConstructorId_now, sealed);
         addIdFunctionProperty(ctor, ConstructorId_parse, sealed);
         addIdFunctionProperty(ctor, ConstructorId_UTC, sealed);
-        super.fillConstructorProperties(cx, ctor, sealed);
+        super.fillConstructorProperties(ctor, sealed);
     }
 
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,

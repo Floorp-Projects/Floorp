@@ -500,33 +500,39 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *
      * See ECMA 8.6.2.6.
      */
-    public Object getDefaultValue(Class typeHint) {
-        Object val;
+    public Object getDefaultValue(Class typeHint)
+    {
         Context cx = null;
         for (int i=0; i < 2; i++) {
-            if (typeHint == ScriptRuntime.StringClass ? i == 0 : i == 1) {
-                Object v = getProperty(this, "toString");
-                if (!(v instanceof Function))
-                    continue;
-                Function fun = (Function) v;
-                if (cx == null)
-                    cx = Context.getContext();
-                val = fun.call(cx, fun.getParentScope(), this,
-                               ScriptRuntime.emptyArgs);
+            boolean tryToString;
+            if (typeHint == ScriptRuntime.StringClass) {
+                tryToString = (i == 0);
             } else {
+                tryToString = (i == 1);
+            }
+
+            String methodName;
+            Object[] args;
+            if (tryToString) {
+                methodName = "toString";
+                args = ScriptRuntime.emptyArgs;
+            } else {
+                methodName = "valueOf";
+                args = new Object[1];
                 String hint;
-                if (typeHint == null)
+                if (typeHint == null) {
                     hint = "undefined";
-                else if (typeHint == ScriptRuntime.StringClass)
+                } else if (typeHint == ScriptRuntime.StringClass) {
                     hint = "string";
-                else if (typeHint == ScriptRuntime.ScriptableClass)
+                } else if (typeHint == ScriptRuntime.ScriptableClass) {
                     hint = "object";
-                else if (typeHint == ScriptRuntime.FunctionClass)
+                } else if (typeHint == ScriptRuntime.FunctionClass) {
                     hint = "function";
-                else if (typeHint == ScriptRuntime.BooleanClass ||
-                                            typeHint == Boolean.TYPE)
+                } else if (typeHint == ScriptRuntime.BooleanClass
+                           || typeHint == Boolean.TYPE)
+                {
                     hint = "boolean";
-                else if (typeHint == ScriptRuntime.NumberClass ||
+                } else if (typeHint == ScriptRuntime.NumberClass ||
                          typeHint == ScriptRuntime.ByteClass ||
                          typeHint == Byte.TYPE ||
                          typeHint == ScriptRuntime.ShortClass ||
@@ -537,33 +543,38 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                          typeHint == Float.TYPE ||
                          typeHint == ScriptRuntime.DoubleClass ||
                          typeHint == Double.TYPE)
+                {
                     hint = "number";
-                else {
+                } else {
                     throw Context.reportRuntimeError1(
                         "msg.invalid.type", typeHint.toString());
                 }
-                Object v = getProperty(this, "valueOf");
-                if (!(v instanceof Function))
-                    continue;
-                Function fun = (Function) v;
-                Object[] args = { hint };
-                if (cx == null)
-                    cx = Context.getContext();
-                val = fun.call(cx, fun.getParentScope(), this, args);
+                args[0] = hint;
             }
-            if (val != null && (val == Undefined.instance ||
-                                !(val instanceof Scriptable) ||
-                                typeHint == ScriptRuntime.ScriptableClass ||
-                                typeHint == ScriptRuntime.FunctionClass))
-            {
-                return val;
-            }
-            if (val instanceof NativeJavaObject) {
-                // Let a wrapped java.lang.String pass for a primitive
-                // string.
-                Object u = ((Wrapper) val).unwrap();
-                if (u instanceof String)
-                    return u;
+            Object v = getProperty(this, methodName);
+            if (!(v instanceof Function))
+                continue;
+            Function fun = (Function) v;
+            if (cx == null)
+                cx = Context.getContext();
+            v = fun.call(cx, fun.getParentScope(), this, args);
+            if (v != null) {
+                if (!(v instanceof Scriptable)) {
+                    return v;
+                }
+                if (v == Undefined.instance
+                    || typeHint == ScriptRuntime.ScriptableClass
+                    || typeHint == ScriptRuntime.FunctionClass)
+                {
+                    return v;
+                }
+                if (tryToString && v instanceof Wrapper) {
+                    // Let a wrapped java.lang.String pass for a primitive
+                    // string.
+                    Object u = ((Wrapper)v).unwrap();
+                    if (u instanceof String)
+                        return u;
+                }
             }
         }
         // fall through to error
@@ -1160,15 +1171,19 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     {
         scope = getTopLevelScope(scope);
         Object ctor = getProperty(scope, className);
-        if (ctor == NOT_FOUND || !(ctor instanceof Scriptable))
+        Object proto;
+        if (ctor instanceof BaseFunction) {
+            proto = ((BaseFunction)ctor).getPrototypeProperty();
+        } else if (ctor instanceof Scriptable) {
+            Scriptable ctorObj = (Scriptable)ctor;
+            proto = ctorObj.get("prototype", ctorObj);
+        } else {
             return null;
-        Scriptable ctorObj = (Scriptable) ctor;
-        if (!ctorObj.has("prototype", ctorObj))
-            return null;
-        Object proto = ctorObj.get("prototype", ctorObj);
-        if (!(proto instanceof Scriptable))
-            return null;
-        return (Scriptable) proto;
+        }
+        if (proto instanceof Scriptable) {
+            return (Scriptable)proto;
+        }
+        return null;
     }
 
     /**

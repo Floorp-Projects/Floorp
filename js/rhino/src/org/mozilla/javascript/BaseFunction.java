@@ -53,8 +53,7 @@ public class BaseFunction extends IdScriptable implements Function {
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
-    protected void fillConstructorProperties
-        (Context cx, IdFunction ctor, boolean sealed)
+    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
     {
         // Fix up bootstrapping problem: getPrototype of the IdFunction
         // can not return Function.prototype because Function object is not
@@ -327,7 +326,7 @@ public class BaseFunction extends IdScriptable implements Function {
         return functionName;
     }
 
-    private Object getPrototypeProperty() {
+    Object getPrototypeProperty() {
         Object result = prototypeProperty;
         if (result == null) {
             synchronized (this) {

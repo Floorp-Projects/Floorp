@@ -417,40 +417,30 @@ public abstract class IdScriptable extends ScriptableObject
     public void addAsPrototype(int maxId, Context cx, Scriptable scope,
                                boolean sealed)
     {
-        setMaxId(maxId);
-
-        int constructorId = mapNameToId("constructor");
-        if (constructorId == 0) {
-            // It is a bug to call this function without id for constructor
-            throw new RuntimeException("No id for constructor property");
-        }
-
         // Set scope and prototype unless IdScriptable is top level scope itself
         if (scope != this && scope != null) {
             setParentScope(scope);
             setPrototype(getObjectPrototype(scope));
         }
 
-        IdFunction ctor = newIdFunction(getClassName(), constructorId, scope);
+        setMaxId(maxId);
+        IdFunction ctor = newConstructor(scope);
         ctor.markAsConstructor(this);
-        fillConstructorProperties(cx, ctor, sealed);
-        cacheIdValue(constructorId, ctor);
-
+        fillConstructorProperties(ctor, sealed);
+        cacheIdValue(ctor.methodId(), ctor);
         ctor.exportAsScopeProperty(sealed);
     }
 
-    protected void fillConstructorProperties
-        (Context cx, IdFunction ctor, boolean sealed)
+    protected void fillConstructorProperties(IdFunction ctor, boolean sealed)
     {
     }
 
     protected void addIdFunctionProperty
         (Scriptable obj, int id, boolean sealed)
     {
-        Scriptable scope = ScriptableObject.getTopLevelScope(this);
+        Scriptable scope = ScriptableObject.getTopLevelScope(obj);
         IdFunction f = newIdFunction(id, scope);
-        if (sealed) { f.sealObject(); }
-        defineProperty(obj, getIdName(id), f, DONTENUM);
+        f.addAsProperty(obj, sealed);
     }
 
     /**
@@ -491,6 +481,15 @@ public abstract class IdScriptable extends ScriptableObject
                                       scope);
         if (isSealed()) { f.sealObject(); }
         return f;
+    }
+
+    protected IdFunction newConstructor(Scriptable scope)
+    {
+        int constructorId = mapNameToId("constructor");
+        if (constructorId == 0) {
+            throw new IllegalStateException("No id for constructor property");
+        }
+        return newIdFunction(getClassName(), constructorId, scope);
     }
 
     protected final Object wrap_double(double x)

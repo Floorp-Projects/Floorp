@@ -67,16 +67,21 @@ public class IdFunction extends BaseFunction
         setImmunePrototypeProperty(prototypeProperty);
     }
 
-    public final void exportAsScopeProperty(boolean seal)
+    public final void addAsProperty(Scriptable target)
     {
-        exportAsScopeProperty(ScriptableObject.DONTENUM, seal);
+        addAsProperty(target, false);
     }
 
-    public void exportAsScopeProperty(int attributes, boolean seal)
+    public final void addAsProperty(Scriptable target, boolean seal)
     {
         if (seal) { sealObject(); }
-        ScriptableObject.defineProperty(getParentScope(), functionName, this,
-                                        attributes);
+        ScriptableObject.defineProperty(target, functionName, this,
+                                        ScriptableObject.DONTENUM);
+    }
+
+    public void exportAsScopeProperty(boolean seal)
+    {
+        addAsProperty(getParentScope(), seal);
     }
 
     public Scriptable getPrototype()
