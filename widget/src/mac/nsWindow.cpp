@@ -736,7 +736,7 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 		RgnHandle updateRgn = ::NewRgn();
 		if (updateRgn == nil)
 			return NS_ERROR_OUT_OF_MEMORY;
-		::ClipRect(&macRect);
+//		::ClipRect(&macRect);
 		::ScrollRect(&macRect, aDx, aDy, updateRgn);
 		::InvalRgn(updateRgn);
 		::DisposeRgn(updateRgn);
