@@ -78,7 +78,6 @@ static CERTSignedCrl *FindCRL
 
 static void DisplayCRL (CERTCertDBHandle *certHandle, char *nickName, int crlType)
 {
-    CERTCertificate *cert = NULL;
     CERTSignedCrl *crl = NULL;
 
     crl = FindCRL (certHandle, nickName, crlType);
@@ -194,7 +193,6 @@ static SECStatus DeleteCRL (CERTCertDBHandle *certHandle, char *name, int type)
 SECStatus ImportCRL (CERTCertDBHandle *certHandle, char *url, int type, 
                      PRFileDesc *inFile, PRInt32 importOptions, PRInt32 decodeOptions)
 {
-    CERTCertificate *cert = NULL;
     CERTSignedCrl *crl = NULL;
     SECItem crlDER;
     PK11SlotInfo* slot = NULL;
@@ -323,7 +321,6 @@ int main(int argc, char **argv)
     PLOptState *optstate;
     PLOptStatus status;
     SECStatus secstatus;
-    PRBool bypassChecks = PR_FALSE;
     PRInt32 decodeOptions = CRL_DECODE_DEFAULT_OPTIONS;
     PRInt32 importOptions = CRL_IMPORT_DEFAULT_OPTIONS;
     PRBool test = PR_FALSE;
