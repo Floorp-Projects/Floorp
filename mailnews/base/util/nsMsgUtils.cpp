@@ -296,9 +296,7 @@ static PRUint32 StringHash(const char *ubuf)
 
 nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 {
-#if defined(XP_OS2)
-  const PRUint32 MAX_LEN = 8;
-#elif defined(XP_MAC)
+#if defined(XP_MAC)
   const PRUint32 MAX_LEN = 25;
 #elif defined(XP_UNIX) || defined(XP_PC) || defined(XP_BEOS)
   const PRUint32 MAX_LEN = 55;
