@@ -16,6 +16,12 @@
  * Reserved.
  */
 
+
+
+
+
+
+
 #include "pch.h"
 #include <assert.h>
 #include "dllcom.h"
@@ -599,7 +605,8 @@ CLanguagesPrefs::DoTransfer(BOOL bSaveAndValidate)
 	if (bSaveAndValidate) {
 		HWND	hwndList = GetDlgItem(m_hwndDlg, IDC_LIST1);
 		int		nListCount = ListBox_GetCount(hwndList);
-		CString	strText;
+		CString	strText, langTag;
+		int		iStart, iEnd;
 		
 		// Build up the list of accept languages
 		m_strAcceptLangs.Empty();
@@ -608,10 +615,24 @@ CLanguagesPrefs::DoTransfer(BOOL bSaveAndValidate)
 			for (int i = 0; i < nListCount; i++) {
 				ListBox_GetString(hwndList, i, strText);
 
-				if (i == 0)
-					m_strAcceptLangs = strText;
+				langTag.Empty();
+				iStart = strText.ReverseFind('[');
+				iEnd = strText.ReverseFind(']');
+				if (iStart >= 0 && iEnd >= 0 && iStart < iEnd)
+				{
+					for (int j = iStart+1; j < iEnd; j++)
+					{
+						langTag += strText.GetAt(j);
+					}
+				}
 				else
-					m_strAcceptLangs += ',' + strText;
+				{
+					langTag = strText;	// may be a user defined
+				}
+				if (i == 0)
+					m_strAcceptLangs = langTag;
+				else
+					m_strAcceptLangs += ',' + langTag;
 			}
 		}
 		
@@ -676,14 +697,47 @@ CLanguagesPrefs::FillListBox()
 		HWND	hwndList = GetDlgItem(m_hwndDlg, IDC_LIST1);
 		int		nIndex;
 		CString	strTmp(m_strAcceptLangs);
+		char	languageDisplayString[256];
 
 		while ((nIndex = strTmp.Find(',')) != -1) {
-			ListBox_AddString(hwndList, (LPCSTR)strTmp.Left(nIndex));
+			if (NULL != GetLanguageDisplayString((LPCSTR) strTmp.Left(nIndex), languageDisplayString, sizeof(languageDisplayString)))
+				ListBox_AddString(hwndList, languageDisplayString);
 			strTmp = strTmp.Mid(nIndex + 1);
 		}
 
-		ListBox_AddString(hwndList, (LPCSTR)strTmp);  // add last string
+		if (NULL != GetLanguageDisplayString((LPCSTR) strTmp, languageDisplayString, sizeof(languageDisplayString)))
+			ListBox_AddString(hwndList, languageDisplayString);  // add last string
 	}
+}
+
+char *CLanguagesPrefs::GetLanguageDisplayString(LPCSTR langIn, LPSTR langOut, int szLangOut)
+{
+	char	tmp[256];
+	char	*val = NULL;
+
+	assert(lstrlen(langIn) < sizeof(tmp));
+	sprintf(tmp, "[%s]", langIn);
+
+	// Look for "English [en]" by "[en]"
+	for (int i = IDS_ACCEPTLANG_AF; i < IDS_ACCEPTLANG_MAX; i++)
+	{
+		int	nLen = ::LoadString(m_hInstance, i, langOut, szLangOut);
+		
+		assert(nLen > 0);
+
+		if (strstr(langOut, tmp))
+		{
+			val = langOut;
+			break;
+		}
+	}
+	if (val == NULL)
+	{
+		strcpy(langOut, langIn);	// may be a user defined
+		val = langOut;
+	}
+
+	return val;
 }
 
 BOOL

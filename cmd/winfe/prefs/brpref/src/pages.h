@@ -205,6 +205,7 @@ class CLanguagesPrefs : public CBrowserPropertyPage {
 		void	SetLBoxItemHeight();
 		void	DrawLBoxItem(LPDRAWITEMSTRUCT lpdis);
 		void	FillListBox();
+		char	*GetLanguageDisplayString(LPCSTR langIn, LPSTR langOut, int szLangOut);
 };
 
 /////////////////////////////////////////////////////////////////////////////
