@@ -1250,6 +1250,8 @@ nsWidget::HandleEvent(GdkEvent *event)
       OnMotionNotifySignal (&event->motion);
       break;
     case GDK_BUTTON_PRESS:
+    case GDK_2BUTTON_PRESS:
+    case GDK_3BUTTON_PRESS:
       OnButtonPressSignal (&event->button);
       break;
     case GDK_BUTTON_RELEASE:
