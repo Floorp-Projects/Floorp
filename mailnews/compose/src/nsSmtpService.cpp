@@ -30,7 +30,6 @@
 #include "nsIFileSpec.h"
 #include "nsCOMPtr.h"
 
-
 typedef struct _findServerByKeyEntry {
     const char *key;
     nsISmtpServer *server;
@@ -82,6 +81,7 @@ nsresult nsSmtpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     return NS_NOINTERFACE;
 }
 
+
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID); 
 
 nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
@@ -93,7 +93,6 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 	nsIURI * urlToRun = nsnull;
 	nsresult rv = NS_OK;
 
-	NS_LOCK_INSTANCE();
 	NS_WITH_SERVICE(nsISmtpService, smtpService, kSmtpServiceCID, &rv); 
 	if (NS_SUCCEEDED(rv) && smtpService)
 	{
@@ -108,12 +107,11 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 			smtpServer->GetHostname(getter_Copies(hostName));
 			smtpServer->GetUsername(getter_Copies(senderName));
 
-            if ((const char*)hostName) {
+            if ((const char*)hostName) 
+			{
                 rv = NS_MsgBuildMailtoUrl(aFilePath, hostName, senderName, aRecipients, aUrlListener, &urlToRun); // this ref counts urlToRun
-                if (NS_SUCCEEDED(rv) && urlToRun)
-                    {	
-                        rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
-                    }
+                if (NS_SUCCEEDED(rv) && urlToRun)	
+					rv = NS_MsgLoadMailtoUrl(urlToRun, nsnull);
 
                 if (aURL) // does the caller want a handle on the url?
                     *aURL = urlToRun; // transfer our ref count to the caller....
@@ -123,7 +121,6 @@ nsresult nsSmtpService::SendMailMessage(nsIFileSpec * aFilePath,
 		}
 	} // if we had a mail session
 
-	NS_UNLOCK_INSTANCE();
 	return rv;
 }
 
@@ -141,6 +138,7 @@ nsresult NS_MsgBuildMailtoUrl(nsIFileSpec * aFilePath,
 	
 	nsresult rv = NS_OK;
 	nsCOMPtr <nsISmtpUrl> smtpUrl;
+
 	rv = nsComponentManager::CreateInstance(kCSmtpUrlCID, NULL, nsCOMTypeInfo<nsISmtpUrl>::GetIID(), getter_AddRefs(smtpUrl));
 
 	if (NS_SUCCEEDED(rv) && smtpUrl)
@@ -186,7 +184,7 @@ nsresult NS_MsgLoadMailtoUrl(nsIURI * aUrl, nsISupports * aConsumer)
 		if (smtpProtocol == nsnull)
 			rv = NS_ERROR_OUT_OF_MEMORY;
 		else
-			smtpProtocol->LoadUrl(aUrl); // protocol will get destroyed when url is completed...
+			rv = smtpProtocol->LoadUrl(aUrl, aConsumer); // protocol will get destroyed when url is completed...
 	}
 
 	return rv;

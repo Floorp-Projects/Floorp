@@ -1200,7 +1200,7 @@ PRInt32 nsSmtpProtocol::SendMessageResponse()
 }
 
 
-nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
+nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer )
 {
 	nsresult rv = NS_OK;
     PRInt32 status = 0; 
@@ -1211,6 +1211,25 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 	if (aURL)
 	{
 		m_runningURL = do_QueryInterface(aURL);
+
+        // we had a bug where we failed to bring up an alert if the host
+        // name was empty....so throw up an alert saying we don't have
+        // a host name and inform the caller that we are not going to
+        // run the url...
+
+        nsXPIDLCString hostName;
+        aURL->GetHost(getter_Copies(hostName));
+        if (!hostName)
+        {
+           nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(aURL);
+           if (aMsgUrl)
+           {
+               aMsgUrl->SetUrlState(PR_TRUE, NS_OK);
+               rv = aMsgUrl->SetUrlState(PR_FALSE /* we aren't running the url */, NS_ERROR_COULD_NOT_LOGIN_TO_SMTP_SERVER); // set the url as a url currently being run...
+           }
+            return NS_OK;
+        }
+
 
 #ifdef UNREADY_CODE
 		m_hostName = PL_strdup(NET_MailRelayHost(cur_entry->window_id));
@@ -1271,7 +1290,7 @@ nsresult nsSmtpProtocol::LoadUrl(nsIURI * aURL, nsISupports * /* aConsumer */)
 			} // if parser
 		} // if post message
 		
-		rv = nsMsgProtocol::LoadUrl(aURL);
+		rv = nsMsgProtocol::LoadUrl(aURL, aConsumer);
 	} // if we received a url!
 
 	return rv;
