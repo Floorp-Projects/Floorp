@@ -1670,23 +1670,25 @@ PRBool
 nsGfxScrollFrameInner::AddRemoveScrollbar(PRBool& aHasScrollbar, nscoord& aXY, nscoord& aSize, nscoord aSbSize, PRBool aRightOrBottom, PRBool aAdd)
 { 
    nscoord size = aSize;
+   nscoord xy = aXY;
 
    if (size != NS_INTRINSICSIZE) {
      if (aAdd) {
         size -= aSbSize;
         if (!aRightOrBottom && size >= 0)
-          aXY += aSbSize;
+          xy += aSbSize;
      } else {
         size += aSbSize;
         if (!aRightOrBottom)
-          aXY -= aSbSize;
+          xy -= aSbSize;
      }
    }
 
    // not enough room? Yes? Return true.
-   if (size >= aSbSize) {
+   if (size >= 0) {
        aHasScrollbar = aAdd;
        aSize = size;
+       aXY = xy;
        return PR_TRUE;
    }
 
