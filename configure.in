@@ -328,6 +328,7 @@ DLL_SUFFIX=so
 OBJ_SUFFIX=o
 LIB_SUFFIX=a
 TARGET_MD_ARCH=unix
+DIRENT_INO='d_ino'
 
 OS_TARGET=`uname -s`
 OS_ARCH=`uname -s | sed -e 's|/|_|g'`
@@ -694,6 +695,7 @@ alpha*-*-osf*)
     ;;
 
 *-qnx*) 
+    DIRENT_INO='d_stat.st_ino'
     dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
     AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -773,6 +775,10 @@ dnl the qsort routine under solaris is faulty
     ;;
 
 esac
+
+dnl Only one oddball right now (QNX), but this gives us flexibility
+dnl if any other platforms need to override this in the future.
+AC_DEFINE_UNQUOTED(D_INO,"$DIRENT_INO")
 
 dnl ========================================================
 dnl Any platform that doesn't have MKSHLIB_FORCE_ALL defined
@@ -1829,6 +1835,21 @@ else
 fi
 fi
 
+dnl Does this platform require array notation to assign to a va_list?
+AC_MSG_CHECKING(whether va_list assignments need array notation)
+AC_CACHE_VAL(ac_cv_valistisarray,
+	[AC_TRY_COMPILE([#include <varargs.h>],
+			[va_list ap, foo;foo = "abcdef";ap = foo+3;],
+			[ac_cv_valistisarray=false],
+			[ac_cv_valistisarray=true])])
+
+if test "$ac_cv_valistisarray" = true ; then
+	AC_DEFINE(HAVE_VA_LIST_AS_ARRAY)
+	AC_MSG_RESULT(yes)
+else
+	AC_MSG_RESULT(no)
+fi
+
 dnl Check for dll-challenged libc's.
 dnl This check is apparently only needed for Linux.
 case "$target" in
@@ -2222,14 +2243,14 @@ dnl = to be linked in to mozilla itself, and not the
 dnl = 3 components above (widget, gfx and timer).
 dnl =
 dnl = In the case statement following this comment, I have
-dnl = force the toolkit to be monolithic for all platforms
+dnl = forced the toolkit to be monolithic for all platforms
 dnl = that are not Linux and Solaris, as these are the only
 dnl = ones that I could test.
 dnl =
 dnl = If you have questions, comments, or problems getting
 dnl = this to work on your platform, send me email:
 dnl = 
-dnl = ramiro@netscape.com
+dnl = ramiro@fateware.com
 dnl =
 dnl ========================================================
 
