@@ -1,0 +1,127 @@
+<?xml version="1.0"?>
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and imitations under the License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is International
+   - Business Machines Corporation. Portions created by IBM
+   - Corporation are Copyright (C) 2000 International Business
+   - Machines Corporation. All Rights Reserved.
+   -
+   - Contributor(s): IBM Corporation.
+   -
+   -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay    href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/P3PPrivacyInfo.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+        xmlns:web="http://home.netscape.com/WEB-rdf#"
+        id="privacyInfo"
+        class="dialog"
+        width="600" height="400" screenX="40" screenY="40"
+        persist="width height screenX screenY"
+        orient="vertical"
+        title="&privacyInfo.title;"
+        onload="Init()">
+
+  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
+  <html:script language="JavaScript" src="chrome://communicator/content/P3PBadPrivacyInfo.js"/>
+
+  <box class="box-smallheader" title="&privacyinfo.header;"/>
+
+  <text class="header" value="&badpolicy.text;"/>
+
+  <separator/>
+  <box flex="1">
+    <tree id="privacyTree" flex="1" datasources="rdf:null" ref="NC:P3PPolicyRoot"
+          containment="http://home.netscape.com/NC-rdf#P3PEntries">
+
+      <treecolgroup>
+        <treecol style="width:300px" flex="1"/>
+        <splitter class="tree-splitter"/>
+        <treecol style="width:300px" flex="1"/>
+      </treecolgroup>
+
+      <treehead>
+        <treerow>
+          <treecell class="treecell-header outset" value="&privacypolicy.text;"/>
+          <treecell class="treecell-header outset"/>
+        </treerow>
+      </treehead>
+
+      <template>
+        <rule>
+          <conditions>
+            <content uri="?uri"/>
+            <triple subject="?uri"
+                    predicate="http://home.netscape.com/NC-rdf#P3PEntries"
+                    object="?entries"/>
+            <member container="?entries" child="?entry"/>
+            <triple subject="?entry"
+                    predicate="http://home.netscape.com/NC-rdf#P3PTitle"
+                    object="?title"/>
+            <triple subject="?entry"
+                    predicate="http://home.netscape.com/NC-rdf#P3PValue"
+                    object="?value"/>
+          </conditions>
+
+          <action>
+            <treechildren flex="1">
+              <treeitem uri="?entry">
+                <treerow>
+                  <treecell class="treecell-indent" value="?title"/>
+                  <treecell class="treecell-indent" value="?value"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </action>
+        </rule>
+
+        <rule>
+          <conditions>
+            <content uri="?uri"/>
+            <triple subject="?uri"
+                    predicate="http://home.netscape.com/NC-rdf#P3PEntries"
+                    object="?entries"/>
+            <member container="?entries" child="?entry"/>
+            <triple subject="?entry"
+                    predicate="http://home.netscape.com/NC-rdf#P3PTitle"
+                    object="?title"/>
+          </conditions>
+
+          <action>
+            <treechildren flex="1">
+              <treeitem uri="?entry">
+                <treerow>
+                  <treecell class="treecell-indent" value="?title"/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </action>
+        </rule>
+      </template>
+    </tree>
+  </box>
+
+  <separator/>
+  <box align="horizontal" autostretch="never">
+    <spring flex="1"/>
+    <button id="ok" value="&okButton.label;" default="true" align="center" onclick="doOKButton()"/>
+    <spring flex="1"/>
+  </box>
+
+</window>

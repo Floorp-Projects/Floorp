@@ -1,0 +1,62 @@
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and imitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is International
+# Business Machines Corporation. Portions created by IBM
+# Corporation are Copyright (C) 2000 International Business
+# Machines Corporation. All Rights Reserved.
+#
+# Contributor(s): IBM Corporation.
+#
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+EXPORT_RESOURCE_PREF_CONTENT =     \
+		$(srcdir)/pref-P3P.xul     \
+		$(srcdir)/pref-P3P.js      \
+		$(srcdir)/pref-P3Pcust.xul \
+		$(srcdir)/pref-P3Pcust.js  \
+		$(NULL)
+
+EXPORT_RESOURCE_CONTENT =               \
+		$(srcdir)/privacyOverlay.xul          \
+		$(srcdir)/privacyUI.js                \
+		$(srcdir)/P3PPrivacyMetInfo.xul       \
+		$(srcdir)/P3PPrivacyMetInfo.js        \
+		$(srcdir)/P3PPrivacyNotMetInfo.xul    \
+		$(srcdir)/P3PPrivacyNotMetInfo.js     \
+		$(srcdir)/P3PNoPrivacyInfo.xul        \
+		$(srcdir)/P3PNoPrivacyInfo.js         \
+		$(srcdir)/P3PBadPrivacyInfo.xul       \
+		$(srcdir)/P3PBadPrivacyInfo.js        \
+		$(srcdir)/P3PPartialPrivacyInfo.xul   \
+		$(srcdir)/P3PPartialPrivacyInfo.js    \
+		$(srcdir)/P3PInProgressInfo.xul       \
+		$(srcdir)/P3PInProgressInfo.js        \
+		$(NULL)
+
+EXPORT_RESOURCE_DATASCHEMA_CONTENT =    \
+		$(srcdir)/P3PBaseDataSchema.xml \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+install::
+		$(INSTALL) $(EXPORT_RESOURCE_PREF_CONTENT)       $(DIST)/bin/chrome/comm/content/communicator/pref
+		$(INSTALL) $(EXPORT_RESOURCE_CONTENT)            $(DIST)/bin/chrome/comm/content/communicator
+		$(INSTALL) $(EXPORT_RESOURCE_DATASCHEMA_CONTENT) $(DIST)/bin/components

@@ -1,0 +1,2284 @@
+<?xml version="1.0"?>
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and imitations under the License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is International
+   - Business Machines Corporation. Portions created by IBM
+   - Corporation are Copyright (C) 2000 International Business
+   - Machines Corporation. All Rights Reserved.
+   -
+   - Contributor(s): IBM Corporation.
+   -
+   -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay    href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-P3P.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        class="color-dialog"
+        orient="vertical"
+        title="&window.title;"
+        onload="parent.initPanel('chrome://communicator/content/pref/pref-P3P.xul');">
+
+  <script language="JavaScript">
+    <![CDATA[
+      _elementIDs = ["P3PServiceEnabled",
+
+                     "P3PWarningNotPrivate",
+                     "P3PWarningPartialPrivacy",
+                     "P3PWarningPostToNotPrivate",
+                     "P3PWarningPostToBrokenPolicy",
+                     "P3PWarningPostToNoPolicy",
+                     "P3PLevel",
+
+                     "P3PPhysicalAdmin",                  "P3PPhysicalHistorical",
+                     "P3PPhysicalDevelop",                "P3PPhysicalPseudo-analysis",
+                     "P3PPhysicalIndividual-analysis",    "P3PPhysicalCustomization",
+                     "P3PPhysicalTailoring",              "P3PPhysicalPseudo-decision",
+                     "P3PPhysicalIndividual-decision",    "P3PPhysicalCurrent",
+                     "P3PPhysicalContact",                "P3PPhysicalTelemarketing",
+                     "P3PPhysicalOther-purpose",          "P3PPhysicalSharing",
+
+                     "P3PLocationAdmin",                  "P3PLocationHistorical",
+                     "P3PLocationDevelop",                "P3PLocationPseudo-analysis",
+                     "P3PLocationIndividual-analysis",    "P3PLocationCustomization",
+                     "P3PLocationTailoring",              "P3PLocationPseudo-decision",
+                     "P3PLocationIndividual-decision",    "P3PLocationCurrent",
+                     "P3PLocationContact",                "P3PLocationTelemarketing",
+                     "P3PLocationOther-purpose",          "P3PLocationSharing",
+
+                     "P3POnlineAdmin",                    "P3POnlineHistorical",
+                     "P3POnlineDevelop",                  "P3POnlinePseudo-analysis",
+                     "P3POnlineIndividual-analysis",      "P3POnlineCustomization",
+                     "P3POnlineTailoring",                "P3POnlinePseudo-decision",
+                     "P3POnlineIndividual-decision",      "P3POnlineCurrent",
+                     "P3POnlineContact",                  "P3POnlineTelemarketing",
+                     "P3POnlineOther-purpose",            "P3POnlineSharing",
+
+                     "P3PComputerAdmin",                  "P3PComputerHistorical",
+                     "P3PComputerDevelop",                "P3PComputerPseudo-analysis",
+                     "P3PComputerIndividual-analysis",    "P3PComputerCustomization",
+                     "P3PComputerTailoring",              "P3PComputerPseudo-decision",
+                     "P3PComputerIndividual-decision",    "P3PComputerCurrent",
+                     "P3PComputerContact",                "P3PComputerTelemarketing",
+                     "P3PComputerOther-purpose",          "P3PComputerSharing",
+
+                     "P3PStateAdmin",                     "P3PStateHistorical",
+                     "P3PStateDevelop",                   "P3PStatePseudo-analysis",
+                     "P3PStateIndividual-analysis",       "P3PStateCustomization",
+                     "P3PStateTailoring",                 "P3PStatePseudo-decision",
+                     "P3PStateIndividual-decision",       "P3PStateCurrent",
+                     "P3PStateContact",                   "P3PStateTelemarketing",
+                     "P3PStateOther-purpose",             "P3PStateSharing",
+
+                     "P3PUniqueIDAdmin",                  "P3PUniqueIDHistorical",
+                     "P3PUniqueIDDevelop",                "P3PUniqueIDPseudo-analysis",
+                     "P3PUniqueIDIndividual-analysis",    "P3PUniqueIDCustomization",
+                     "P3PUniqueIDTailoring",              "P3PUniqueIDPseudo-decision",
+                     "P3PUniqueIDIndividual-decision",    "P3PUniqueIDCurrent",
+                     "P3PUniqueIDContact",                "P3PUniqueIDTelemarketing",
+                     "P3PUniqueIDOther-purpose",          "P3PUniqueIDSharing",
+
+                     "P3PGovernmentAdmin",                "P3PGovernmentHistorical",
+                     "P3PGovernmentDevelop",              "P3PGovernmentPseudo-analysis",
+                     "P3PGovernmentIndividual-analysis",  "P3PGovernmentCustomization",
+                     "P3PGovernmentTailoring",            "P3PGovernmentPseudo-decision",
+                     "P3PGovernmentIndividual-decision",  "P3PGovernmentCurrent",
+                     "P3PGovernmentContact",              "P3PGovernmentTelemarketing",
+                     "P3PGovernmentOther-purpose",        "P3PGovernmentSharing",
+
+                     "P3PPurchaseAdmin",                  "P3PPurchaseHistorical",
+                     "P3PPurchaseDevelop",                "P3PPurchasePseudo-analysis",
+                     "P3PPurchaseIndividual-analysis",    "P3PPurchaseCustomization",
+                     "P3PPurchaseTailoring",              "P3PPurchasePseudo-decision",
+                     "P3PPurchaseIndividual-decision",    "P3PPurchaseCurrent",
+                     "P3PPurchaseContact",                "P3PPurchaseTelemarketing",
+                     "P3PPurchaseOther-purpose",          "P3PPurchaseSharing",
+
+                     "P3PFinancialAdmin",                 "P3PFinancialHistorical",
+                     "P3PFinancialDevelop",               "P3PFinancialPseudo-analysis",
+                     "P3PFinancialIndividual-analysis",   "P3PFinancialCustomization",
+                     "P3PFinancialTailoring",             "P3PFinancialPseudo-decision",
+                     "P3PFinancialIndividual-decision",   "P3PFinancialCurrent",
+                     "P3PFinancialContact",               "P3PFinancialTelemarketing",
+                     "P3PFinancialOther-purpose",         "P3PFinancialSharing",
+
+                     "P3PHealthAdmin",                    "P3PHealthHistorical",
+                     "P3PHealthDevelop",                  "P3PHealthPseudo-analysis",
+                     "P3PHealthIndividual-analysis",      "P3PHealthCustomization",
+                     "P3PHealthTailoring",                "P3PHealthPseudo-decision",
+                     "P3PHealthIndividual-decision",      "P3PHealthCurrent",
+                     "P3PHealthContact",                  "P3PHealthTelemarketing",
+                     "P3PHealthOther-purpose",            "P3PHealthSharing",
+
+                     "P3PPoliticalAdmin",                 "P3PPoliticalHistorical",
+                     "P3PPoliticalDevelop",               "P3PPoliticalPseudo-analysis",
+                     "P3PPoliticalIndividual-analysis",   "P3PPoliticalCustomization",
+                     "P3PPoliticalTailoring",             "P3PPoliticalPseudo-decision",
+                     "P3PPoliticalIndividual-decision",   "P3PPoliticalCurrent",
+                     "P3PPoliticalContact",               "P3PPoliticalTelemarketing",
+                     "P3PPoliticalOther-purpose",         "P3PPoliticalSharing",
+
+                     "P3PNavigationAdmin",                "P3PNavigationHistorical",
+                     "P3PNavigationDevelop",              "P3PNavigationPseudo-analysis",
+                     "P3PNavigationIndividual-analysis",  "P3PNavigationCustomization",
+                     "P3PNavigationTailoring",            "P3PNavigationPseudo-decision",
+                     "P3PNavigationIndividual-decision",  "P3PNavigationCurrent",
+                     "P3PNavigationContact",              "P3PNavigationTelemarketing",
+                     "P3PNavigationOther-purpose",        "P3PNavigationSharing",
+
+                     "P3PInteractiveAdmin",               "P3PInteractiveHistorical",
+                     "P3PInteractiveDevelop",             "P3PInteractivePseudo-analysis",
+                     "P3PInteractiveIndividual-analysis", "P3PInteractiveCustomization",
+                     "P3PInteractiveTailoring",           "P3PInteractivePseudo-decision",
+                     "P3PInteractiveIndividual-decision", "P3PInteractiveCurrent",
+                     "P3PInteractiveContact",             "P3PInteractiveTelemarketing",
+                     "P3PInteractiveOther-purpose",       "P3PInteractiveSharing",
+
+                     "P3PDemographicAdmin",               "P3PDemographicHistorical",
+                     "P3PDemographicDevelop",             "P3PDemographicPseudo-analysis",
+                     "P3PDemographicIndividual-analysis", "P3PDemographicCustomization",
+                     "P3PDemographicTailoring",           "P3PDemographicPseudo-decision",
+                     "P3PDemographicIndividual-decision", "P3PDemographicCurrent",
+                     "P3PDemographicContact",             "P3PDemographicTelemarketing",
+                     "P3PDemographicOther-purpose",       "P3PDemographicSharing",
+
+                     "P3PPreferenceAdmin",                "P3PPreferenceHistorical",
+                     "P3PPreferenceDevelop",              "P3PPreferencePseudo-analysis",
+                     "P3PPreferenceIndividual-analysis",  "P3PPreferenceCustomization",
+                     "P3PPreferenceTailoring",            "P3PPreferencePseudo-decision",
+                     "P3PPreferenceIndividual-decision",  "P3PPreferenceCurrent",
+                     "P3PPreferenceContact",              "P3PPreferenceTelemarketing",
+                     "P3PPreferenceOther-purpose",        "P3PPreferenceSharing",
+
+                     "P3PContentAdmin",                   "P3PContentHistorical",
+                     "P3PContentDevelop",                 "P3PContentPseudo-analysis",
+                     "P3PContentIndividual-analysis",     "P3PContentCustomization",
+                     "P3PContentTailoring",               "P3PContentPseudo-decision",
+                     "P3PContentIndividual-decision",     "P3PContentCurrent",
+                     "P3PContentContact",                 "P3PContentTelemarketing",
+                     "P3PContentOther-purpose",           "P3PContentSharing",
+
+                     "P3POtherAdmin",                     "P3POtherHistorical",
+                     "P3POtherDevelop",                   "P3POtherPseudo-analysis",
+                     "P3POtherIndividual-analysis",       "P3POtherCustomization",
+                     "P3POtherTailoring",                 "P3POtherPseudo-decision",
+                     "P3POtherIndividual-decision",       "P3POtherCurrent",
+                     "P3POtherContact",                   "P3POtherTelemarketing",
+                     "P3POtherOther-purpose",             "P3POtherSharing"];
+    ]]>
+  </script>
+
+  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
+  <html:script language="JavaScript" src="chrome://communicator/content/pref/prefutilities.js"/>
+  <html:script language="JavaScript" src="chrome://communicator/content/pref/pref-P3P.js"/>
+
+  <box class="box-smallheader" title="&lHeader;"/>
+
+  <!-- P3P Enable/Disable Box -->
+  <titledbox orient="vertical">
+    <title><text value="&service.label;"/></title>
+    <checkbox id="P3PServiceEnabled"
+              value="&enable.label;"
+              oncommand="DoEnableService( )"
+              pref="true" preftype="bool" prefstring="P3P.enabled" prefattribute="checked"/>
+
+      <checkbox id="P3PWarningNotPrivate"
+                value="&warningnotprivate.label;"
+                class="indent"
+                pref="true" preftype="bool" prefstring="P3P.warningnotprivate" prefattribute="checked"/>
+
+      <checkbox id="P3PWarningPartialPrivacy"
+                value="&warningpartialprivacy.label;"
+                class="indent"
+                pref="true" preftype="bool" prefstring="P3P.warningpartialprivacy" prefattribute="checked"/>
+
+      <checkbox id="P3PWarningPostToNotPrivate"
+                value="&warningposttonotprivate.label;"
+                class="indent"
+                pref="true" preftype="bool" prefstring="P3P.warningposttonotprivate" prefattribute="checked"/>
+
+      <checkbox id="P3PWarningPostToBrokenPolicy"
+                value="&warningposttobrokenpolicy.label;"
+                class="indent"
+                pref="true" preftype="bool" prefstring="P3P.warningposttobrokenpolicy" prefattribute="checked"/>
+
+      <checkbox id="P3PWarningPostToNoPolicy"
+                value="&warningposttonopolicy.label;"
+                class="indent"
+                pref="true" preftype="bool" prefstring="P3P.warningposttonopolicy" prefattribute="checked"/>
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="&selection.label;"/></title>
+    <html>&selection.desc;</html>
+    <radiogroup id="P3PLevel"
+                orient="vertical"
+                pref="true" preftype="int" prefstring="P3P.level" prefattribute="data">
+      <radio data="0"
+             group="P3PLevel"
+             value="&lowlevel.label;"
+             checked="true"
+             oncommand="DoMapLevel();"/>
+      <radio data="1"
+             group="P3PLevel"
+             value="&mediumlevel.label;"
+             oncommand="DoMapLevel();"/>
+      <radio data="2"
+             group="P3PLevel"
+             value="&highlevel.label;"
+             oncommand="DoMapLevel();"/>
+      <radio data="3" id="custradio"
+             group="P3PLevel"
+             value="&customlevel.label;"
+             oncommand="DoMapLevel();"/>
+      <separator/>
+      <box align="horizontal">
+        <button id="customizebutton" value="&customize.label;"
+                accesskey="&custom.accesskey;"
+                oncommand="doCustomize();"/>
+        <spring flex="1"/>
+      </box>
+    </radiogroup>
+  </titledbox>
+
+  <box orient="vertical" flex="1" hidden="true">
+    <box id="custombox" orient="vertical" flex="1">
+      <box orient="horizontal" flex="1">
+        <box orient="horizontal" flex="1">
+          <tree id="categoryTree" flex="1"
+                onselect="var categoryTree = document.getElementById('categoryTree');
+                          if (categoryTree) {
+                            var purposeDeck = document.getElementById('purposeDeck');
+                            if (purposeDeck) {
+                              var selectedItem = categoryTree.selectedItems.length ? categoryTree.selectedItems[0] : null;
+                              if (selectedItem) {
+                                purposeDeck.setAttribute('index', selectedItem.getAttribute('index'));
+                              } else {
+                                purposeDeck.setAttribute('index', '0');
+                              }
+                            }
+                          }"
+                          >
+
+            <treecolgroup>
+              <treecol style="width:100px" flex="1"/>
+            </treecolgroup>
+
+            <treehead>
+              <treerow>
+                <treecell class="treecell-header outset" value="&category.label;"/>
+              </treerow>
+            </treehead>
+
+            <treechildren flex="1">
+              <treeitem id="defaultItem" index="1" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superphysical.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="2">
+                    <treerow>
+                      <treecell class="treecell-indent" value="physical"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="3">
+                    <treerow>
+                      <treecell class="treecell-indent" value="location"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="4" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superonline.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="5">
+                    <treerow>
+                      <treecell class="treecell-indent" value="online"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="6" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superuserid.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="7">
+                    <treerow>
+                      <treecell class="treecell-indent" value="computer"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="8">
+                    <treerow>
+                      <treecell class="treecell-indent" value="state"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="9">
+                    <treerow>
+                      <treecell class="treecell-indent" value="uniqueid"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="10">
+                    <treerow>
+                      <treecell class="treecell-indent" value="government"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="11" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superpurchase.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="12">
+                    <treerow>
+                      <treecell class="treecell-indent" value="purchase"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="13" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superpersonal.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="14">
+                    <treerow>
+                      <treecell class="treecell-indent" value="financial"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="15">
+                    <treerow>
+                      <treecell class="treecell-indent" value="health"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="16">
+                    <treerow>
+                      <treecell class="treecell-indent" value="political"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="17" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superhistory.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="18">
+                    <treerow>
+                      <treecell class="treecell-indent" value="navigation"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="19">
+                    <treerow>
+                      <treecell class="treecell-indent" value="interactive"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="20" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superdemographic.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="21">
+                    <treerow>
+                      <treecell class="treecell-indent" value="demographic"/>
+                    </treerow>
+                  </treeitem>
+                  <treeitem index="22">
+                    <treerow>
+                      <treecell class="treecell-indent" value="preference"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="23" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&supercontent.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="24">
+                    <treerow>
+                      <treecell class="treecell-indent" value="content"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+              <treeitem index="25" container="true">
+                <treerow>
+                  <treecell class="treecell-indent" value="&superother.label;"/>
+                </treerow>
+                <treechildren flex="1">
+                  <treeitem index="26">
+                    <treerow>
+                      <treecell class="treecell-indent" value="other"/>
+                    </treerow>
+                  </treeitem>
+                </treechildren>
+              </treeitem>
+
+            </treechildren>
+          </tree>
+        </box>
+
+        <box orient="vertical" flex="1">
+          <deck id="purposeDeck" flex="1">
+            <!-- deck index 0 -->
+            <box orient="vertical" style="width:100px" flex="1"/>
+
+            <!-- deck index 1 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superphysical.label;"/>
+              <html>&superphysical.tip;</html>
+            </box>
+
+            <!-- deck index 2 -->
+            <box orient="vertical" style="width:100px">>
+              <text class="header" value="physical"/>
+              <html>&physical.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PPhysicalAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PPhysicalDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PPhysicalCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PPhysicalCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPhysicalTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PPhysicalOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.physical.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PPhysicalSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.physical.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 3 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="location"/>
+              <html>&location.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PLocationAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PLocationDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PLocationCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PLocationCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PLocationTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PLocationOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.location.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PLocationSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.location.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 4 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superonline.label;"/>
+              <html>&superonline.tip;</html>
+            </box>
+
+            <!-- deck index 5 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="online"/>
+              <html>&online.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3POnlineAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlineHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3POnlineDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlinePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlineIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3POnlineCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlineTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlinePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlineIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3POnlineCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlineContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POnlineTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3POnlineOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.online.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3POnlineSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.online.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 6 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superuserid.label;"/>
+              <html>&superuserid.tip;</html>
+            </box>
+
+            <!-- deck index 7 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="computer"/>
+              <html>&computer.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PComputerAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PComputerDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PComputerCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PComputerCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PComputerTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PComputerOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.computer.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PComputerSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.computer.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 8 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="state"/>
+              <html>&state.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PStateAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStateHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PStateDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStatePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStateIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PStateCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStateTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStatePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStateIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PStateCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStateContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PStateTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PStateOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.state.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PStateSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.state.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 9 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="uniqueid"/>
+              <html>&uniqueid.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PUniqueIDAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PUniqueIDDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PUniqueIDCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PUniqueIDCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PUniqueIDTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PUniqueIDOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.uniqueid.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PUniqueIDSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.uniqueid.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 10 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="government"/>
+              <html>&government.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PGovernmentAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PGovernmentDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PGovernmentCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PGovernmentCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PGovernmentTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PGovernmentOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.government.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PGovernmentSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.government.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 11 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superpurchase.label;"/>
+              <html>&superpurchase.tip;</html>
+            </box>
+
+            <!-- deck index 12 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="purchase"/>
+              <html>&purchase.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PPurchaseAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchaseHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PPurchaseDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchasePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchaseIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PPurchaseCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchaseTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchasePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchaseIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PPurchaseCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchaseContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPurchaseTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PPurchaseOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.purchase.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PPurchaseSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.purchase.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 13 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superpersonal.label;"/>
+              <html>&superpersonal.tip;</html>
+            </box>
+
+            <!-- deck index 14 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="financial"/>
+              <html>&financial.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PFinancialAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PFinancialDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PFinancialCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PFinancialCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PFinancialTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PFinancialOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.financial.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PFinancialSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.financial.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 15 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="health"/>
+              <html>&health.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PHealthAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PHealthDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PHealthCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PHealthCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PHealthTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PHealthOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.health.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PHealthSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.health.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 16 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="political"/>
+              <html>&political.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PPoliticalAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PPoliticalDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PPoliticalCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PPoliticalCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPoliticalTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PPoliticalOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.political.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PPoliticalSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.political.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 17 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superhistory.label;"/>
+              <html>&superhistory.tip;</html>
+            </box>
+
+            <!-- deck index 18 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="navigation"/>
+              <html>&navigation.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PNavigationAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PNavigationDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PNavigationCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PNavigationCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PNavigationTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PNavigationOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.navigation.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PNavigationSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.navigation.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 19 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="interactive"/>
+              <html>&interactive.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PInteractiveAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractiveHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PInteractiveDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractivePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractiveIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PInteractiveCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractiveTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractivePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractiveIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PInteractiveCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractiveContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PInteractiveTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PInteractiveOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.interactive.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PInteractiveSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.interactive.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 20 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superdemographic.label;"/>
+              <html>&superdemographic.tip;</html>
+            </box>
+
+            <!-- deck index 21 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="demographic"/>
+              <html>&demographic.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PDemographicAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PDemographicDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PDemographicCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PDemographicCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PDemographicTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PDemographicOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.demographic.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PDemographicSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.demographic.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 22 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="preference"/>
+              <html>&preference.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PPreferenceAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferenceHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PPreferenceDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferencePseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferenceIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PPreferenceCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferenceTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferencePseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferenceIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PPreferenceCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferenceContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PPreferenceTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PPreferenceOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.preference.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PPreferenceSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.preference.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 23 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&supercontent.label;"/>
+              <html>&supercontent.tip;</html>
+            </box>
+
+            <!-- deck index 24 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="content"/>
+              <html>&content.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3PContentAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3PContentDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3PContentCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3PContentCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3PContentTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3PContentOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.content.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3PContentSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.content.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+
+            <!-- deck index 25 -->
+            <box orient="vertical" style="width:100px" flex="1">
+              <text class="header" value="&superother.label;"/>
+              <html>&superother.tip;</html>
+            </box>
+
+            <!-- deck index 26 -->
+            <box orient="vertical" style="width:100px">
+              <text class="header" value="other"/>
+              <html>&other.tip;</html>
+              <spring flex="1"/>
+              <titledbox orient="horizontal">
+                <title><text value="&purpose.label;" tooltip="purposetip"/></title>
+                <grid>
+                  <columns>
+                    <column flex="1"/>
+                    <column flex="1"/>
+                  </columns>
+                  <rows>
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&superadmin.label;" tooltip="superadmintip"/></title>
+                        <checkbox id="P3POtherAdmin" value="admin" tooltip="admintip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.admin" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherHistorical" value="historical" tooltip="historicaltip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.historical" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&superdevelopment.label;" tooltip="superdevelopmenttip"/></title>
+                        <checkbox id="P3POtherDevelop" value="develop" tooltip="developtip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.develop" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherPseudo-analysis" value="pseudo-analysis" tooltip="pseudo-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.pseudo-analysis" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.individual-analysis" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <titledbox orient="vertical">
+                        <title><text value="&supercustomize.label;" tooltip="supercustomizetip"/></title>
+                        <checkbox id="P3POtherCustomization" value="customization" tooltip="customizationtip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.customization" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherTailoring" value="tailoring" tooltip="tailoringtip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.tailoring" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherPseudo-decision" value="pseudo-decision" tooltip="pseudo-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.pseudo-decision" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.individual-decision" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+
+                      <titledbox orient="vertical">
+                        <title><text value="&supercontact.label;" tooltip="supercontacttip"/></title>
+                        <checkbox id="P3POtherCurrent" value="current" tooltip="currenttip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.current" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherContact" value="contact" tooltip="contacttip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.contact" prefattribute="checked"
+                                  />
+                        <checkbox id="P3POtherTelemarketing" value="telemarketing" tooltip="telemarketingtip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.telemarketing" prefattribute="checked"
+                                  />
+                        <spring flex="1"/>
+                      </titledbox>
+                    </row>
+
+                    <row flex="1">
+                      <box orient="vertical">
+                        <checkbox id="P3POtherOther-purpose" value="other-purpose" tooltip="other-purposetip"
+                                  pref="true" preftype="bool" prefstring="P3P.other.other-purpose" prefattribute="checked"
+                                  />
+                      </box>
+                    </row>
+                  </rows>
+                </grid>
+              </titledbox>
+
+              <titledbox orient="vertical">
+                <title><text value="&sharingtitle.label;" tooltip="sharingtitletip"/></title>
+                <checkbox id="P3POtherSharing" value="&sharing.label;" tooltip="sharingtip"
+                          pref="true" preftype="bool" prefstring="P3P.other.sharing" prefattribute="checked"
+                          />
+              </titledbox>
+            </box>
+          </deck>
+        </box>
+      </box>
+
+      <separator/>
+      <checkbox id="showhelp" value="&showhelp.label;"/>
+
+      <popupset>
+        <popup id="purposetip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&purpose.tip;</html>
+          </window>
+        </popup>
+        <popup id="sharingtitletip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&sharingtitle.tip;</html>
+          </window>
+        </popup>
+
+        <popup id="superadmintip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&superadmin.tip;</html>
+          </window>
+        </popup>
+        <popup id="superdevelopmenttip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&superdevelopment.tip;</html>
+          </window>
+        </popup>
+        <popup id="supercustomizetip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&supercustomize.tip;</html>
+          </window>
+        </popup>
+        <popup id="supercontacttip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&supercontact.tip;</html>
+          </window>
+        </popup>
+        <popup id="currenttip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&current.tip;</html>
+          </window>
+        </popup>
+        <popup id="admintip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&admin.tip;</html>
+          </window>
+        </popup>
+        <popup id="developtip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&develop.tip;</html>
+          </window>
+        </popup>
+        <popup id="customizationtip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&customization.tip;</html>
+          </window>
+        </popup>
+        <popup id="tailoringtip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&tailoring.tip;</html>
+          </window>
+        </popup>
+        <popup id="pseudo-analysistip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&pseudo-analysis.tip;</html>
+          </window>
+        </popup>
+        <popup id="pseudo-decisiontip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&pseudo-decision.tip;</html>
+          </window>
+        </popup>
+        <popup id="individual-analysistip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&individual-analysis.tip;</html>
+          </window>
+        </popup>
+        <popup id="individual-decisiontip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&individual-decision.tip;</html>
+          </window>
+        </popup>
+        <popup id="contacttip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&contact.tip;</html>
+          </window>
+        </popup>
+        <popup id="historicaltip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&historical.tip;</html>
+          </window>
+        </popup>
+        <popup id="telemarketingtip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&telemarketing.tip;</html>
+          </window>
+        </popup>
+        <popup id="other-purposetip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&other-purpose.tip;</html>
+          </window>
+        </popup>
+        <popup id="sharingtip"
+               oncreate="return parent.document.getElementById( 'showhelp' ).checked"
+               >
+          <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+                  width="300px"
+                  height="100px"
+                  style="border: thin solid black">
+            <html>&sharing.tip;</html>
+          </window>
+        </popup>
+      </popupset>
+
+    </box>
+  </box>
+</window>

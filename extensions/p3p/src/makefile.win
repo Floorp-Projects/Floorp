@@ -1,0 +1,110 @@
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and imitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is International
+# Business Machines Corporation. Portions created by IBM
+# Corporation are Copyright (C) 2000 International Business
+# Machines Corporation. All Rights Reserved.
+#
+# Contributor(s): IBM Corporation.
+#
+
+DEPTH = ..\..\..
+
+include <$(DEPTH)/config/config.mak>
+
+
+MODULE       = p3p
+LIBRARY_NAME = p3p
+DLLNAME      = p3p
+DLL          = .\$(OBJDIR)\$(DLLNAME).dll
+IS_COMPONENT = 1
+
+REQUIRES     = p3p xpcom
+
+EXPORTS      = $(NULL)
+
+CPP_OBJS     =                                  \
+		.\$(OBJDIR)\nsP3PModule.obj             \
+		.\$(OBJDIR)\nsP3PService.obj            \
+		.\$(OBJDIR)\nsP3PUIService.obj          \
+		.\$(OBJDIR)\nsP3PHTTPNotify.obj         \
+		.\$(OBJDIR)\nsP3PObserverHTML.obj       \
+		.\$(OBJDIR)\nsP3PObserverXML.obj        \
+		.\$(OBJDIR)\nsP3PObserverUtils.obj      \
+		.\$(OBJDIR)\nsP3PObserverLayout.obj     \
+		.\$(OBJDIR)\nsP3PObserverFormSubmit.obj \
+		.\$(OBJDIR)\nsP3PURIInformation.obj     \
+		.\$(OBJDIR)\nsP3PReference.obj          \
+		.\$(OBJDIR)\nsP3PXMLProcessor.obj       \
+		.\$(OBJDIR)\nsP3PPolicyRefFile.obj      \
+		.\$(OBJDIR)\nsP3PPolicy.obj             \
+		.\$(OBJDIR)\nsP3PDataSchema.obj         \
+		.\$(OBJDIR)\nsP3PPrivacyResult.obj      \
+		.\$(OBJDIR)\nsP3PTags.obj               \
+		.\$(OBJDIR)\nsP3PDataStruct.obj         \
+		.\$(OBJDIR)\nsP3PXMLUtils.obj           \
+		.\$(OBJDIR)\nsP3PPreferences.obj        \
+		.\$(OBJDIR)\nsP3PUI.obj                 \
+		.\$(OBJDIR)\nsP3PSimpleEnumerator.obj   \
+		$(NULL)
+
+CPPSRCS      =                      \
+		nsP3PModule.cpp             \
+		nsP3PService.cpp            \
+		nsP3PUIService.cpp          \
+		nsP3PHTTPNotify.cpp         \
+		nsP3PObserverHTML.cpp       \
+		nsP3PObserverXML.cpp        \
+		nsP3PObserverUtils.cpp      \
+		nsP3PObserverLayout.cpp     \
+		nsP3PObserverFormSubmit.cpp \
+		nsP3PURIInformation.cpp     \
+		nsP3PReference.cpp          \
+		nsP3PXMLProcessor.cpp       \
+		nsP3PPoliycRefFile.cpp      \
+		nsP3PPolicy.cpp             \
+		nsP3PDataSchema.cpp         \
+		nsP3PPrivacyResult.cpp      \
+		nsP3PTags.cpp               \
+		nsP3PDataStruct.cpp         \
+		nsP3PXMLUtils.cpp           \
+		nsP3PPreferences.cpp        \
+		nsP3PUI.cpp                 \
+		nsP3PSimpleEnumerator.cpp   \
+		$(NULL)
+
+LLIBS        =                 \
+		$(LLIBS)               \
+		$(LIBNSPR)             \
+		$(DIST)\lib\xpcom.lib  \
+		$(DIST)\lib\js3250.lib \
+		$(NULL)
+
+LCFLAGS      =     \
+		$(LCFLAGS) \
+		$(DEFINES) \
+		$(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+clobber::
+		rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+		rm -f $(DIST)\lib\$(DLLNAME).lib
+		rm -f $(DIST)\bin\components\$(DLLNAME).dll
+
+install:: $(LIBRARY)
+		$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+install:: $(DLL)
+		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components

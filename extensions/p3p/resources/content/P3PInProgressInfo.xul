@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<!--
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and imitations under the License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is International
+   - Business Machines Corporation. Portions created by IBM
+   - Corporation are Copyright (C) 2000 International Business
+   - Machines Corporation. All Rights Reserved.
+   -
+   - Contributor(s): IBM Corporation.
+   -
+   -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xul-overlay    href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/P3PPrivacyInfo.dtd" >
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        id="privacyInfo"
+        class="dialog"
+        screenX="40" screenY="40"
+        persist="width height screenX screenY"
+        orient="vertical"
+        title="&privacyInfo.title;"
+        onload="Init()">
+
+  <html:script language="JavaScript" src="chrome://global/content/strres.js" />
+  <html:script language="JavaScript" src="chrome://communicator/content/P3PInProgressInfo.js"/>
+
+  <box class="box-smallheader" title="&privacyinfo.header;"/>
+
+  <text class="header" value="&inprogress1.text;"/>
+  <text class="header" value="&inprogress2.text;"/>
+
+  <separator/>
+  <text value="&currentURI.text;"/>
+  <text id="currentURI" value=""/>
+
+  <separator/>
+  <spring flex="1"/>
+  <box align="horizontal" autostretch="never">
+    <spring flex="1"/>
+    <button id="refresh" value="&refreshButton.label;" onclick="doRefreshButton()"/>
+    <button id="cancel"  value="&cancelButton.label;"  onclick="doCancelButton()"/>
+    <spring flex="1"/>
+  </box>
+
+</window>

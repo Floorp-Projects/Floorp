@@ -1,0 +1,67 @@
+#
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and imitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is International
+# Business Machines Corporation. Portions created by IBM
+# Corporation are Copyright (C) 2000 International Business
+# Machines Corporation. All Rights Reserved.
+#
+# Contributor(s): IBM Corporation.
+#
+
+DEPTH     = ../../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+CLASSIC_EXPORT_RESOURCE_CONTENT =            \
+		$(srcdir)/classic/P3PDefault.gif           \
+		$(srcdir)/classic/P3PNoPrivacy.gif         \
+		$(srcdir)/classic/P3PPrivate.gif           \
+		$(srcdir)/classic/P3PNotPrivate.gif        \
+		$(srcdir)/classic/P3PPartialPrivacy.gif    \
+		$(srcdir)/classic/P3PPrivacyBroken.gif     \
+		$(srcdir)/classic/P3PPrivacyInProgress.gif \
+		$(srcdir)/classic/privacyOverlay.css       \
+		$(NULL)
+
+BLUE_EXPORT_RESOURCE_CONTENT =               \
+		$(srcdir)/blue/P3PDefault.gif              \
+		$(srcdir)/blue/P3PNoPrivacy.gif            \
+		$(srcdir)/blue/P3PPrivate.gif              \
+		$(srcdir)/blue/P3PNotPrivate.gif           \
+		$(srcdir)/blue/P3PPartialPrivacy.gif       \
+		$(srcdir)/blue/P3PPrivacyBroken.gif        \
+		$(srcdir)/blue/P3PPrivacyInProgress.gif    \
+		$(srcdir)/blue/privacyOverlay.css          \
+		$(NULL)
+
+MODERN_EXPORT_RESOURCE_CONTENT =             \
+		$(srcdir)/modern/P3PDefault.gif            \
+		$(srcdir)/modern/P3PNoPrivacy.gif          \
+		$(srcdir)/modern/P3PPrivate.gif            \
+		$(srcdir)/modern/P3PNotPrivate.gif         \
+		$(srcdir)/modern/P3PPartialPrivacy.gif     \
+		$(srcdir)/modern/P3PPrivacyBroken.gif      \
+		$(srcdir)/modern/P3PPrivacyInProgress.gif  \
+		$(srcdir)/modern/privacyOverlay.css        \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+install::
+		$(INSTALL) $(CLASSIC_EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/classic/skin/classic/communicator
+		$(INSTALL) $(BLUE_EXPORT_RESOURCE_CONTENT)    $(DIST)/bin/chrome/blue/skin/blue/communicator
+		$(INSTALL) $(MODERN_EXPORT_RESOURCE_CONTENT)  $(DIST)/bin/chrome/modern/skin/modern/communicator
