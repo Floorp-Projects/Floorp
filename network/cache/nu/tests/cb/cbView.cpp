@@ -15,6 +15,7 @@
 #include "nsCacheObject.h"
 #include "nsTimeIt.h"
 #include "nsCacheBkgThd.h"
+#include "nsMemStream.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -124,6 +125,7 @@ void CCbView::OnInitialUpdate()
     pCO->LastModified(time(0));
     pDM->AddObject(pCO);
 
+    /*
 //    if (!pDM->Contains("http://www.netscape.com/"))
 //        pDM->AddObject(pCO);
 //    else 
@@ -155,13 +157,29 @@ void CCbView::OnInitialUpdate()
 
     m_Mesg += "-----------------\n";
 
-
+*/
     char buffer[10];
     m_Mesg += "Worst case time= ";
     m_Mesg += itoa(pCM->WorstCaseTime(), buffer, 10);
     m_Mesg += " microsec.\n";
+    m_Mesg += "Worst case time= ";
+    m_Mesg += itoa(pCM->WorstCaseTime(), buffer, 10);
+    m_Mesg += " microsec.\n";
 
-    PRUint32 t;
+    PRUint32 t; 
+    /* Test reading and writing to memory streams */
+    nsMemStream* ms = new nsMemStream();
+
+    t = ms->Write("Hello ", 6);
+    t = ms->Write("World", 5);
+    
+    char tempBuff[15];
+
+    t = ms->Read(&tempBuff, 15);
+    t = ms->Read(&tempBuff, 6);
+
+    delete ms; 
+    /* Time the lookup time */
     {
         nsTimeIt tmp(t);
         if (pCM->Contains("999"))
@@ -174,5 +192,6 @@ void CCbView::OnInitialUpdate()
 
     CView::OnInitialUpdate();
 }
+
 
 
