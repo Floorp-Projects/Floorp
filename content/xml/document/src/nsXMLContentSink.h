@@ -149,7 +149,7 @@ protected:
                             const nsString& aHref, PRBool aAlternate,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
-  nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAutoString& aHref);
+  nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAReadableString& aHref);
   nsresult LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType);
   nsresult SetupTransformMediator();
 #endif
