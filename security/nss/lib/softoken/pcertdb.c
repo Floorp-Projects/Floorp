@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.31 2002/09/06 00:27:49 wtc%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.32 2002/09/12 23:17:35 wtc%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3752,7 +3752,7 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
     if (appName) {
 	handle->permCertDB=rdbopen( appName, prefix, "cert", NO_CREATE);
     } else {
-	handle->permCertDB=dbsopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
+	handle->permCertDB=dbopen(certdbname, NO_CREATE, 0600, DB_HASH, 0);
     }
 
     /* if create fails then we lose */
@@ -3859,7 +3859,7 @@ nsslowcert_OpenPermCertDB(NSSLOWCERTCertDBHandle *handle, PRBool readOnly,
     if (appName) {
 	handle->permCertDB = rdbopen( appName, prefix, "cert", openflags);
     } else {
-	handle->permCertDB = dbsopen( certdbname, openflags, 0600, DB_HASH, 0 );
+	handle->permCertDB = dbopen( certdbname, openflags, 0600, DB_HASH, 0 );
     }
 
     /* check for correct version number */
