@@ -274,6 +274,9 @@ PK11SymKey *PK11_FindFixedKey(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
 						SECItem *keyID, void *wincx);
 SECStatus PK11_DeleteTokenPrivateKey(SECKEYPrivateKey *privKey);
 SECStatus PK11_DeleteTokenCertAndKey(CERTCertificate *cert,void *wincx);
+SECKEYPrivateKey * PK11_LoadPrivKey(PK11SlotInfo *slot,
+		SECKEYPrivateKey *privKey, SECKEYPublicKey *pubKey, 
+					PRBool token, PRBool sensitive);
 
 /* size to hold key in bytes */
 unsigned int PK11_GetKeyLength(PK11SymKey *key);

@@ -49,7 +49,6 @@ ifeq ($(OS_ARCH), WINNT)
 SHARED_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 IMPORT_LIBRARY = $(OBJDIR)/$(LIBRARY_NAME)$(LIBRARY_VERSION).lib
 
-DLLFLAGS += -DEF:smime.def
 RES = $(OBJDIR)/smime.res
 RESNAME = smime.rc
 
@@ -92,37 +91,3 @@ EXTRA_SHARED_LIBS += \
 	-lnspr4 \
 	$(NULL)
 endif
-
-ifeq ($(OS_ARCH),SunOS)
-MAPFILE = $(OBJDIR)/smimemap.sun
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -M $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),AIX)
-MAPFILE = $(OBJDIR)/smimemap.aix
-ALL_TRASH += $(MAPFILE)
-EXPORT_RULES = -bexport:$(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),HP-UX)
-MAPFILE = $(OBJDIR)/nssmap.hp
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -c $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH), OSF1)
-MAPFILE = $(OBJDIR)/smimemap.osf
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -hidden -input $(MAPFILE)
-endif
-
-ifeq ($(OS_ARCH),Linux)
-MAPFILE = $(OBJDIR)/smimemap.linux
-ALL_TRASH += $(MAPFILE)
-MKSHLIB += -Wl,--version-script,$(MAPFILE)
-endif
-
-
-	
-

@@ -147,7 +147,7 @@ static SECItem*
 cmmf_encode_certificate(CERTCertificate *inCert)
 {
     return SEC_ASN1EncodeItem(NULL, NULL, inCert, 
-			      SEC_SignedCertificateTemplate);
+			      SEC_ASN1_GET(SEC_SignedCertificateTemplate));
 }
 
 CERTCertList*

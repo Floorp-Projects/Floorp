@@ -1711,6 +1711,16 @@ pk11_loadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey,
 						objectID, privKey->wincx);
 }
 
+/*
+ * export this for PSM
+ */
+SECKEYPrivateKey *
+PK11_LoadPrivKey(PK11SlotInfo *slot,SECKEYPrivateKey *privKey, 
+		SECKEYPublicKey *pubKey, PRBool token, PRBool sensitive) 
+{
+    return pk11_loadPrivKey(slot,privKey,pubKey,token,sensitive);
+}
+
 
 /*
  * Use the token to Generate a key. keySize must be 'zero' for fixed key

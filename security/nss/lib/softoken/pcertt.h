@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: pcertt.h,v 1.2 2001/11/08 00:15:37 relyea%netscape.com Exp $
+ * $Id: pcertt.h,v 1.3 2001/11/21 18:00:24 relyea%netscape.com Exp $
  */
 #ifndef _PCERTT_H_
 #define _PCERTT_H_
@@ -163,7 +163,6 @@ typedef char * (*NSSLOWCERTDBNameFunc)(void *arg, int dbVersion);
 SEC_BEGIN_PROTOS
 
 extern const SEC_ASN1Template nsslowcert_CertificateTemplate[];
-extern const SEC_ASN1Template SEC_SignedCertificateTemplate[];
 extern const SEC_ASN1Template nsslowcert_SignedDataTemplate[];
 extern const SEC_ASN1Template NSSLOWKEY_PublicKeyTemplate[];
 extern const SEC_ASN1Template nsslowcert_SubjectPublicKeyInfoTemplate[];

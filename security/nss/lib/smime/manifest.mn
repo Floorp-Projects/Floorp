@@ -45,6 +45,7 @@ PRIVATE_EXPORTS = \
 	$(NULL)
 
 MODULE = security
+MAPFILE = $(OBJDIR)/smime.def
 
 CSRCS = \
 	cmsarray.c \

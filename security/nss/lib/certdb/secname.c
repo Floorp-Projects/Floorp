@@ -372,6 +372,8 @@ const SEC_ASN1Template CERT_NameTemplate[] = {
 	  offsetof(CERTName,rdns), CERT_RDNTemplate, sizeof(CERTName) }
 };
 
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_NameTemplate)
+
 CERTName *
 CERT_CreateName(CERTRDN *rdn0, ...)
 {
