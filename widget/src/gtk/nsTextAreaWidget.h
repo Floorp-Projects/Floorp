@@ -42,7 +42,7 @@ public:
   virtual void SetFontNative(GdkFont *aFont);
 
 protected:
-  NS_METHOD CreateNative(GtkWidget *parentWindow);
+  NS_METHOD CreateNative(GtkObject *parentWindow);
 };
 
 

@@ -45,10 +45,31 @@ nsButton::nsButton() : nsWidget() , nsIButton()
 // Create the native Button widget
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsButton::CreateNative(GtkWidget *parentWindow)
+NS_IMETHODIMP nsButton::CreateNative(GtkObject *parentWindow)
 {
+#ifdef USE_SUPERWIN
+    if (!GDK_IS_SUPERWIN(parentWindow)) {
+    g_print("Damn, brother.  That's not a superwin.\n");
+    return NS_ERROR_FAILURE;
+  }
+  
+  GdkSuperWin *superwin = GDK_SUPERWIN(parentWindow);
+
+  mMozBox = gtk_mozbox_new(superwin->bin_window);
+
+#endif
+
   mWidget = gtk_button_new_with_label("");
   gtk_widget_set_name(mWidget, "nsButton");
+
+#ifdef USE_SUPERWIN
+
+  // make sure that we put the scrollbar into the mozbox
+
+  gtk_container_add(GTK_CONTAINER(mMozBox), mWidget);
+
+#endif /* USE_SUPERWIN */
+
   return NS_OK;
 }
 

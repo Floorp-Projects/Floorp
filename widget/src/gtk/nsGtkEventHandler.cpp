@@ -20,9 +20,6 @@
  * Contributor(s): 
  */
 
-#include "gtk/gtk.h"
-#include "nsGtkEventHandler.h"
-
 #include "nsWidget.h"
 #include "nsWindow.h"
 
@@ -42,6 +39,9 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 
 #include "stdio.h"
 #include "ctype.h"
+
+#include "gtk/gtk.h"
+#include "nsGtkEventHandler.h"
 
 #include <gdk/gdkkeysyms.h>
 #include <X11/Xlib.h>
@@ -692,7 +692,7 @@ open_unicode_decoder(void) {
 }
 
 // GTK's text widget already does XIM, so we don't want to do this again
-gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
+gint handle_key_press_event_for_text(GtkObject *w, GdkEventKey* event,
                                      gpointer p)
 {
   nsKeyEvent kevent;
@@ -724,13 +724,16 @@ gint handle_key_press_event_for_text(GtkWidget *w, GdkEventKey* event,
   win->OnKey(kevent);
 
   win->Release();
-  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
+  if (w)
+  {
+    gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
+  }
 
   return PR_TRUE;
 }
 
 // GTK's text widget already does XIM, so we don't want to do this again
-gint handle_key_release_event_for_text(GtkWidget *w, GdkEventKey* event,
+gint handle_key_release_event_for_text(GtkObject *w, GdkEventKey* event,
                                        gpointer p)
 {
   nsKeyEvent kevent;
@@ -747,15 +750,18 @@ gint handle_key_release_event_for_text(GtkWidget *w, GdkEventKey* event,
   win->AddRef();
   win->OnKey(kevent);
   win->Release();
-
-  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+  
+  if (w)
+  {
+    gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+  }
 
   return PR_TRUE;
 }
 
 
 //==============================================================
-gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
+gint handle_key_press_event(GtkObject *w, GdkEventKey* event, gpointer p)
 {
   nsKeyEvent kevent;
   nsWindow* win = (nsWindow*)p;
@@ -810,13 +816,16 @@ gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   }
 
   win->Release();
-  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
-  
+  if (w)
+  {
+    gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_press_event");
+  }
+
   return PR_TRUE;
 }
 
 //==============================================================
-gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
+gint handle_key_release_event(GtkObject *w, GdkEventKey* event, gpointer p)
 {
   // Don't pass shift, control and alt as key release events
   if (event->keyval == GDK_Shift_L
@@ -833,9 +842,100 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
   win->OnKey(kevent);
   win->Release();
 
-  gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+  if (w)
+  {
+    gtk_signal_emit_stop_by_name (GTK_OBJECT(w), "key_release_event");
+  }
 
   return PR_TRUE;
+}
+
+//==============================================================
+void 
+handle_gdk_event (GdkEvent *event, gpointer data)
+{
+  GtkObject *object = nsnull;
+
+  if (event->any.window)
+    gdk_window_get_user_data (event->any.window, (void **)&object);
+
+  if (object != nsnull &&
+      GDK_IS_SUPERWIN (object))
+    {
+      // It was an event on one of our superwindows
+
+      nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");
+      
+      if (gtk_grab_get_current () != nsnull)
+        {
+          // A GTK+ grab is in effect. Rewrite the event to point to
+          // our toplevel, and pass it through.
+          // XXX: We should actually translate the coordinates
+
+          gdk_window_unref (event->any.window);
+          event->any.window = GTK_WIDGET (window->GetMozArea())->window;
+          gdk_window_ref (event->any.window);
+        }
+      else
+        {
+          // Handle it ourselves.
+
+          switch (event->type)
+            {
+            case GDK_KEY_PRESS:
+              handle_key_press_event (NULL, &event->key, window);
+              break;
+            case GDK_KEY_RELEASE:
+              handle_key_release_event (NULL, &event->key, window);
+              break;
+            default:
+              window->HandleEvent (event);
+            }
+          return;
+        }
+    }
+
+  gtk_main_do_event (event);
+}
+
+//==============================================================
+void
+handle_xlib_shell_event(GdkSuperWin *superwin, XEvent *event, gpointer p)
+{
+  nsWindow *window = (nsWindow *)p;
+  switch(event->xany.type) {
+  case ConfigureNotify:
+    window->HandleXlibConfigureNotifyEvent(event);
+    break;
+  default:
+    break;
+  }
+}
+
+//==============================================================
+void
+handle_xlib_bin_event(GdkSuperWin *superwin, XEvent *event, gpointer p)
+{
+  nsWindow *window = (nsWindow *)p;
+
+  switch(event->xany.type) {
+  case Expose:
+    window->HandleXlibExposeEvent(event);
+    break;
+  case ButtonPress:
+  case ButtonRelease:
+    window->HandleXlibButtonEvent((XButtonEvent *)event);
+    break;
+  case MotionNotify:
+    window->HandleXlibMotionNotifyEvent((XMotionEvent *) event);
+    break;
+  case EnterNotify:
+  case LeaveNotify:
+    window->HandleXlibCrossingEvent((XCrossingEvent *) event);
+    break;
+  default:
+    break;
+  }
 }
 
 //==============================================================

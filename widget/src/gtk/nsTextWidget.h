@@ -42,7 +42,7 @@ public:
 
   PRBool   OnKey(nsKeyEvent &aEvent);
 protected:
-  NS_IMETHOD CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD CreateNative(GtkObject *parentWindow);
 };
 
 #endif // nsTextWidget_h__

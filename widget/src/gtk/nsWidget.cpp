@@ -67,9 +67,9 @@ nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
 
-static nsIRollupListener *gRollupListener = nsnull;
-static nsIWidget *gRollupWidget = nsnull;
-static PRBool gRollupConsumeRollupEvent = PR_FALSE;
+nsIRollupListener *nsWidget::gRollupListener = nsnull;
+nsIWidget         *nsWidget::gRollupWidget = nsnull;
+PRBool             nsWidget::gRollupConsumeRollupEvent = PR_FALSE;
 
 //
 // Keep track of the last widget being "dragged"
@@ -116,6 +116,7 @@ nsWidget::nsWidget()
 
   mGrabTime = 0;
   mWidget = nsnull;
+  mMozBox = 0;
   mParent = nsnull;
   mPreferredWidth  = 0;
   mPreferredHeight = 0;
@@ -146,6 +147,7 @@ nsWidget::nsWidget()
   mIC = nsnull;
   mIMECompositionUniString = nsnull;
   mIMECompositionUniStringSize = 0;
+  mListenForResizes = PR_FALSE;
 
 }
 
@@ -170,7 +172,6 @@ nsWidget::~nsWidget()
     delete[] mIMECompositionUniString;
     mIMECompositionUniString = nsnull;
   }
-
   NS_ASSERTION(!ModalWidgetList::Find(mWidget), "destroying widget without first clearing modality.");
 }
 
@@ -269,7 +270,12 @@ NS_IMETHODIMP nsWidget::Destroy(void)
     }
     // prevent the widget from causing additional events
     mEventCallback = nsnull;
+#ifdef USE_SUPERWIN
+    // destroying the mozbox will destroy the widget contained in it.
+    ::gtk_widget_destroy(mMozBox);
+#else
     ::gtk_widget_destroy(mWidget);
+#endif
     mWidget = nsnull;
     if (PR_FALSE == mOnDestroyCalled)
       OnDestroy();
@@ -306,8 +312,9 @@ nsWidget::DestroySignal(GtkWidget* aGtkWidget, nsWidget* aWidget)
 void
 nsWidget::SuppressModality(PRBool aSuppress)
 {
-  ModalWidgetList::Suppress(aSuppress);
+  ModalWidgetList::Suppress(aSuppress); 
 }
+
 
 void
 nsWidget::OnDestroySignal(GtkWidget* aGtkWidget)
@@ -342,11 +349,21 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
   if (!mWidget)
     return NS_OK; // Will be null durring printing
 
+#ifdef USE_SUPERWIN
+  if (bState) {
+    gtk_widget_show(mWidget);
+    gtk_widget_show(mMozBox);
+  }
+  else {
+    gtk_widget_hide(mMozBox);
+    gtk_widget_hide(mWidget);
+  }
+#else 
   if (bState)
     gtk_widget_show(mWidget);
   else
     gtk_widget_hide(mWidget);
-
+#endif /* USE_SUPERWIN */
   mShown = bState;
 
   return NS_OK;
@@ -355,6 +372,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
 NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture, PRBool aConsumeRollupEvent)
 {
+#ifndef USE_SUPERWIN
 #ifdef DEBUG_pavlov
   printf("nsWindow::CaptureRollupEvents() this = %p , doCapture = %i\n", this, aDoCapture);
 #endif
@@ -379,15 +397,15 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
     else
     {
       gdk_pointer_grab (GTK_LAYOUT(mWidget)->bin_window, PR_TRUE,(GdkEventMask)
-               (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
-                GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                GDK_POINTER_MOTION_MASK),
-                (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
+                        (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+                         GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
+                         GDK_POINTER_MOTION_MASK),
+                        (GdkWindow*)NULL, cursor, GDK_CURRENT_TIME);
 #ifdef DEBUG_pavlov
       printf("pointer grab returned %i\n", ret);
 #endif
       gdk_cursor_destroy(cursor);
-      SuppressModality(PR_TRUE);
+      SuppressModality(PR_FALSE);
     }
   }
   else
@@ -397,7 +415,6 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
 #endif
     gdk_pointer_ungrab(GDK_CURRENT_TIME);
     //    gtk_grab_remove(grabWidget);
-    SuppressModality(PR_FALSE);
   }
 
   if (aDoCapture) {
@@ -415,10 +432,9 @@ NS_IMETHODIMP nsWidget::CaptureRollupEvents(nsIRollupListener * aListener, PRBoo
     //gRollupListener = nsnull;
     NS_IF_RELEASE(gRollupWidget);
   }
-
+#endif /* USE_SUPERWIN */
   return NS_OK;
 }
-
 
 NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
 {
@@ -448,7 +464,7 @@ NS_IMETHODIMP nsWidget::SetModal(PRBool aModal)
     gtk_window_set_modal(topWindow, FALSE);
   }
 
-  return NS_OK;
+	return NS_OK;
 }
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
@@ -471,6 +487,10 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
 {
   if (mWidget) 
   {
+    // all hail the nested ifdef
+#ifdef USE_SUPERWIN
+    gtk_mozbox_set_position(GTK_MOZBOX(mMozBox), aX, aY);
+#else
     GtkWidget *    layout = mWidget->parent;
 
     GtkAdjustment* ha = gtk_layout_get_hadjustment(GTK_LAYOUT(layout));
@@ -508,6 +528,7 @@ NS_IMETHODIMP nsWidget::Move(PRInt32 aX, PRInt32 aY)
                     mWidget, 
                     aX + x_correction, 
                     aY + y_correction);
+#endif /* USE_SUPERWIN */
   }
 
   return NS_OK;
@@ -1023,7 +1044,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsWidgetInitData *aInitData,
                                 nsNativeWidget aNativeParent)
 {
-  GtkWidget *parentWidget = nsnull;
+  GtkObject *parentWidget = nsnull;
 
 #ifdef NOISY_DESTROY
   if (aParent)
@@ -1050,10 +1071,12 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   NS_IF_ADDREF(mParent);
 
   if (aNativeParent) {
-    parentWidget = GTK_WIDGET(aNativeParent);
+    parentWidget = GTK_OBJECT(aNativeParent);
+    // we've got a native parent so listen for resizes
+    mListenForResizes = PR_TRUE;
   } else if (aParent) {
     // this ups the refcount of the gtk widget, we must unref later.
-    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
+    parentWidget = GTK_OBJECT(aParent->GetNativeData(NS_NATIVE_WIDGET));
   }
 
   mBounds = aRect;
@@ -1061,6 +1084,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
 
   Resize(aRect.width, aRect.height, PR_FALSE);
 
+#ifndef USE_SUPERWIN
   /* place the widget in its parent if it isn't a toplevel window*/
   if (mIsToplevel)
   {
@@ -1076,9 +1100,14 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
       gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
     }
   }
+#endif /* USE_SUPERWIN */
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
+
+#ifdef USE_SUPERWIN
+  if (mWidget) {
+#endif /* USE_SUPERWIN */
 
   InstallButtonPressSignal(mWidget);
   InstallButtonReleaseSignal(mWidget);
@@ -1105,16 +1134,24 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   InstallFocusInSignal(mWidget);
   InstallFocusOutSignal(mWidget);
 
-
+#ifdef USE_SUPERWIN
+  }
+#endif /* USE_SUPERWIN */
 
   DispatchStandardEvent(NS_CREATE);
   InitCallbacks();
 
+#ifdef USE_SUPERWIN
+  if (mWidget) {
+#endif /* USE_SUPERWIN */
   // Add in destroy callback
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "destroy",
                      GTK_SIGNAL_FUNC(DestroySignal),
                      this);
+#ifdef USE_SUPERWIN
+  }
+#endif /* USE_SUPERWIN */
 
   return NS_OK;
 }
@@ -1201,6 +1238,25 @@ void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint
   //    mLastPoint.y = event.point.y;
 }
 
+void 
+nsWidget::HandleEvent(GdkEvent *event)
+{
+  switch (event->any.type)
+    {
+    case GDK_MOTION_NOTIFY:
+      OnMotionNotifySignal (&event->motion);
+      break;
+    case GDK_BUTTON_PRESS:
+      OnButtonPressSignal (&event->button);
+      break;
+    case GDK_BUTTON_RELEASE:
+      OnButtonReleaseSignal (&event->button);
+      break;
+    default:
+      break;
+    }
+}
+
 PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 {
   switch(aStatus) {
@@ -1222,12 +1278,6 @@ PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
   nsEventStatus status;
   DispatchEvent(event, status);
   return ConvertStatus(status);
-}
-
-PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event, nsEventStatus &aEventStatus)
-{
-  DispatchEvent(event, aEventStatus);
-  return ConvertStatus(aEventStatus);
 }
 
 //-------------------------------------------------------------------------
@@ -1261,7 +1311,7 @@ PRBool nsWidget::DispatchFocus(nsGUIEvent &aEvent)
 
 #ifdef NS_DEBUG
 PRInt32
-nsWidget::debug_GetRenderXID(GtkWidget * aGtkWidget)
+nsWidget::debug_GetRenderXID(GtkObject * aGtkWidget)
 {
   GdkWindow * renderWindow = GetRenderWindow(aGtkWidget);
   
@@ -1270,9 +1320,25 @@ nsWidget::debug_GetRenderXID(GtkWidget * aGtkWidget)
   return (PRInt32) xid;
 }
 
+PRInt32
+nsWidget::debug_GetRenderXID(GtkWidget * aGtkWidget)
+{
+  return debug_GetRenderXID(GTK_OBJECT(aGtkWidget));
+}
+
+nsCAutoString
+nsWidget::debug_GetName(GtkObject * aGtkWidget)
+{
+  if (nsnull != aGtkWidget && GTK_IS_WIDGET(aGtkWidget))
+    return debug_GetName(GTK_WIDGET(aGtkWidget));
+  
+  return nsCAutoString("null");
+}
+
 nsCAutoString
 nsWidget::debug_GetName(GtkWidget * aGtkWidget)
 {
+
   if (nsnull != aGtkWidget)
     return nsCAutoString(gtk_widget_get_name(aGtkWidget));
   
@@ -1296,15 +1362,19 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *aEvent,
   NS_ADDREF(aEvent->widget);
 
 #ifdef NS_DEBUG
-  GtkWidget * gw = (GtkWidget *) aEvent->widget->GetNativeData(NS_NATIVE_WIDGET);
-
-  if (CAPS_LOCK_IS_ON)
-  {
-    debug_DumpEvent(stdout,
-                    aEvent->widget,
-                    aEvent,
-                    debug_GetName(gw),
-                    (PRInt32) debug_GetRenderXID(gw));
+  GtkObject *gw;
+  void *nativeWidget = aEvent->widget->GetNativeData(NS_NATIVE_WIDGET);
+  if (nativeWidget) {
+    gw = GTK_OBJECT(nativeWidget);
+    
+    if (CAPS_LOCK_IS_ON)
+      {
+        debug_DumpEvent(stdout,
+                        aEvent->widget,
+                        aEvent,
+                        debug_GetName(gw),
+                        (PRInt32) debug_GetRenderXID(gw));
+      }
   }
 #endif // NS_DEBUG
 
@@ -1836,13 +1906,13 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
   if (gRollupWidget && gRollupListener)
   {
-    GtkWidget *rollupWidget = GTK_WIDGET(gRollupWidget->GetNativeData(NS_NATIVE_WIDGET));
+    GdkWindow *rollupWindow = (GdkWindow *)gRollupWidget->GetNativeData(NS_NATIVE_WINDOW);
 
     gint x, y;
     gint w, h;
-    gdk_window_get_origin(rollupWidget->window, &x, &y);
+    gdk_window_get_origin(rollupWindow, &x, &y);
 
-    gdk_window_get_size(rollupWidget->window, &w, &h);
+    gdk_window_get_size(rollupWindow, &w, &h);
 
 
     if (!(aGdkButtonEvent->x_root > x &&
@@ -1851,7 +1921,6 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
           aGdkButtonEvent->y_root < y + h))
     {
       gRollupListener->Rollup();
-      printf("rolling up\n");
       return;
     }
   }
@@ -2498,21 +2567,24 @@ nsWidget::GetWindowForSetBackground()
 }
 
 /* virtual */ GdkWindow *
-nsWidget::GetRenderWindow(GtkWidget * aGtkWidget)
+nsWidget::GetRenderWindow(GtkObject * aGtkWidget)
 {
   GdkWindow * renderWindow = nsnull;
 
-  if (aGtkWidget)
+#ifdef USE_SUPERWIN
+  if (GDK_IS_SUPERWIN(aGtkWidget)) {
+    renderWindow = GDK_SUPERWIN(aGtkWidget)->bin_window;
+  }
+#else
+  if (aGtkWidget && GTK_IS_WIDGET(aGtkWidget))
   {
-    if (GTK_IS_LAYOUT(aGtkWidget))
-    {
+    if (GTK_IS_LAYOUT(aGtkWidget)) {
       renderWindow = GTK_LAYOUT(aGtkWidget)->bin_window;
-    }
-    else
-    {
-      renderWindow = aGtkWidget->window;
+    } else {
+      renderWindow = GTK_WIDGET(aGtkWidget)->window;
     }
   }
+#endif
 
   return renderWindow;
 }
@@ -2851,4 +2923,3 @@ void ModalWidgetList::Suppress(PRBool aSuppress) {
       gtk_window_set_modal(window, TRUE);
     }
 }
-

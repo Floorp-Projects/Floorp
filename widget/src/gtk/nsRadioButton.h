@@ -58,7 +58,7 @@ public:
   void DisArmed();
 
 protected:
-  NS_IMETHOD  CreateNative(GtkWidget *parentWindow);
+  NS_IMETHOD  CreateNative(GtkObject *parentWindow);
   virtual void InitCallbacks(char * aName = nsnull);
   virtual void OnDestroySignal(GtkWidget* aGtkWidget);
 

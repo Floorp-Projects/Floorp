@@ -68,7 +68,7 @@ nsCheckButton::OnDestroySignal(GtkWidget* aGtkWidget)
 // Create the native CheckButton widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD  nsCheckButton::CreateNative(GtkWidget *parentWindow)
+NS_METHOD  nsCheckButton::CreateNative(GtkObject *parentWindow)
 {
   mWidget = gtk_event_box_new();
   mCheckButton = gtk_check_button_new();

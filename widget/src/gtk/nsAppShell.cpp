@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
+#include "nsGtkEventHandler.h"
 #include <stdlib.h>
 
 #ifdef MOZ_GLE
@@ -301,6 +302,10 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
   gtk_set_locale ();
 
   gtk_init (&argc, &argv);
+
+  // It is most convenient for us to intercept our events after
+  // they have been converted to GDK, but before GTK+ gets them
+  gdk_event_handler_set (handle_gdk_event, NULL, NULL);
 
 #ifdef MOZ_GLE
   gle_init (&argc, &argv);
