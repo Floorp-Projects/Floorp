@@ -488,13 +488,14 @@ namespace JSTypes {
         ICodeModule* mICode;
         
     protected:
-        JSFunction() : mICode(0) {}
 
    	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
 	    typedef gc_allocator<JSFunction, traits> allocator;
 		
     public:
         static void initFunctionObject(JSScope *g);
+
+        JSFunction() : mICode(0) {}
 
         JSFunction(ICodeModule* iCode)
             : JSObject(FunctionPrototypeObject),

@@ -38,6 +38,8 @@
 #include "jsclasses.h"
 #include "icodegenerator.h"
 #include "interpreter.h"
+#include "xmlparser.h"
+#include "icodeasm.h"
 
 #include <stdexcept>
 #include <stdio.h>
@@ -49,6 +51,7 @@ using namespace VM;
 using namespace JSTypes;
 using namespace JSClasses;
 using namespace Interpreter;
+using namespace ICodeASM;
 
 inline char narrow(char16 ch) { return char(ch); }
 
@@ -82,7 +85,8 @@ ICodeGenerator::ICodeGenerator(World *world, JSScope *global, JSClass *aClass, I
         mFlags(flags),
         pLabels(NULL),
         mHasRestParameter(false),
-        mHasNamedRestParameter(false)
+        mHasNamedRestParameter(false),
+        mInitName(world->identifiers["__init__"])
 { 
     iCode = new InstructionStream();
     iCodeOwner = true;
@@ -1724,8 +1728,9 @@ ICodeModule *ICodeGenerator::genFunction(FunctionStmtNode *f, bool isConstructor
                 icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, &args);
             }
         }
-        const StringAtom &initName = mWorld->identifiers["__init__"];     // XXXXXXX
-        icg.call(icg.getStatic(mClass, initName), thisValue, &args);   // ok, so it's mis-named
+        if (mClass->hasStatic(mInitName))
+            icg.call(icg.getStatic(mClass, mInitName), thisValue, &args);   // ok, so it's mis-named
+
     }
     if (f->function.body)
         icg.genStmt(f->function.body);
@@ -1765,48 +1770,118 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             // to handle recursive types, such as linked list nodes.
             mGlobal->defineVariable(nameExpr->name, &Type_Type, JSValue(thisClass));
 
-            // Have to have this declared ahead of time so that it's slot can
-            // be discoverd when compiling constructors in the loop below. Could
-            // do a pre-processing loop to discover whether it is in fact empty
-            // and then pass that info through to the genFunction() call for each
-            // constructor.
-            const StringAtom &initName = mWorld->identifiers["__init__"];
-            thisClass->defineStatic(initName, &Function_Type);
-            
-            bool hasDefaultConstructor = false;
+
+/*
+    Pre-pass to declare all the methods & fields
+*/
+            bool needsInstanceInitializer = false;
+            TypedRegister thisRegister = TypedRegister(0, thisClass);
             if (classStmt->body) {
-                JSScope* thisScope = thisClass->getScope();
-                ICodeGenerator ccg(mWorld, thisScope, thisClass, kNoFlags);   // constructor code generator.
-                ccg.allocateParameter(mWorld->identifiers["this"], thisClass);   // always parameter #0
-                ICodeGenerator scg(mWorld, thisScope, thisClass, kIsStaticMethod);   // static initializer code generator.
                 StmtNode* s = classStmt->body->statements;
                 while (s) {
                     switch (s->getKind()) {
                     case StmtNode::Const:
                     case StmtNode::Var:
                         {
-                            // FIXME:  should preprocess all variable declarations, to prepare for method codegen.
                             VariableStmtNode *vs = static_cast<VariableStmtNode *>(s);
                             bool isStatic = hasAttribute(vs->attributes, Token::Static);
                             VariableBinding *v = vs->bindings;
-                            TypedRegister thisRegister = TypedRegister(0, thisClass);
                             while (v)  {
                                 if (v->name) {
                                     ASSERT(v->name->getKind() == ExprNode::identifier);
                                     IdentifierExprNode* idExpr = static_cast<IdentifierExprNode*>(v->name);
                                     JSType* type = extractType(v->type);
-                                    if (isStatic) {
+                                    if (isStatic)
                                         thisClass->defineStatic(idExpr->name, type);
-                                        if (v->initializer) {
+                                    else {
+                                        thisClass->defineSlot(idExpr->name, type);
+                                        if (v->initializer)
+                                            needsInstanceInitializer = true;
+                                    }
+                                }
+                                v = v->next;
+                            }
+                        }
+                        break;
+                    case StmtNode::Constructor:
+                    case StmtNode::Function:
+                        {
+                            FunctionStmtNode *f = static_cast<FunctionStmtNode *>(s);
+                            bool isStatic = hasAttribute(f->attributes, Token::Static);
+                            bool isConstructor = (s->getKind() == StmtNode::Constructor);
+                            if (f->function.name->getKind() == ExprNode::identifier) {
+                                const StringAtom& name = (static_cast<IdentifierExprNode *>(f->function.name))->name;
+                                if (isConstructor)
+                                    thisClass->defineConstructor(name);
+                                else
+                                    if (isStatic)
+                                        thisClass->defineStatic(name, &Function_Type);
+                                    else {
+                                        switch (f->function.prefix) {
+                                            // XXXX these dummy place holders for the getters/setters are leaking
+                                        case FunctionName::Get:
+                                            thisClass->setGetter(name, new JSFunction(), extractType(f->function.resultType));
+                                            break;
+                                        case FunctionName::Set:
+                                            thisClass->setSetter(name, new JSFunction(), extractType(f->function.resultType));
+                                            break;
+                                        case FunctionName::normal:
+                                            thisClass->defineMethod(name, NULL);
+                                            break;
+                                        }
+                                    }
+                            }
+                        }                        
+                        break;
+                    default:
+                        NOT_REACHED("unimplemented class member statement");
+                        break;
+                    }
+                    s = s->next;
+                }
+            }
+            if (needsInstanceInitializer)
+                thisClass->defineStatic(mInitName, &Function_Type);
+/*  
+    Now gen code for each
+*/
+            
+            bool hasDefaultConstructor = false;
+            if (classStmt->body) {
+                JSScope* thisScope = thisClass->getScope();
+                ICodeGenerator *ccg = NULL;
+                if (needsInstanceInitializer) {
+                      // constructor code generator. Slot variable
+                      // initializers get added to this function.
+                    ccg = new ICodeGenerator(mWorld, thisScope, thisClass, kNoFlags);   
+                    ccg->allocateParameter(mWorld->identifiers["this"], thisClass);   // always parameter #0
+                }
+                
+                ICodeGenerator scg(mWorld, thisScope, thisClass, kIsStaticMethod);   // static initializer code generator.
+                                                                                     // static field inits, plus code to initialize
+                                                                                     // static method slots.
+                StmtNode* s = classStmt->body->statements;
+                while (s) {
+                    switch (s->getKind()) {
+                    case StmtNode::Const:
+                    case StmtNode::Var:
+                        {
+                            VariableStmtNode *vs = static_cast<VariableStmtNode *>(s);
+                            bool isStatic = hasAttribute(vs->attributes, Token::Static);
+                            VariableBinding *v = vs->bindings;
+                            while (v)  {
+                                if (v->name) {
+                                    ASSERT(v->name->getKind() == ExprNode::identifier);
+                                    if (v->initializer) {
+                                        IdentifierExprNode* idExpr = static_cast<IdentifierExprNode*>(v->name);
+                                        JSType* type = extractType(v->type);
+                                        if (isStatic) {
                                             scg.setStatic(thisClass, idExpr->name, scg.genExpr(v->initializer));
                                             scg.resetStatement();
-                                        }
-                                     } else {
-                                        const JSSlot& slot = thisClass->defineSlot(idExpr->name, type);
-                                        if (v->initializer) {
-                                            // generate code for the default constructor, which initializes the slots.
-                                            ccg.setSlot(thisRegister, slot.mIndex, ccg.genExpr(v->initializer));
-                                            ccg.resetStatement();
+                                        } else {
+                                            const JSSlot& slot = thisClass->getSlot(idExpr->name);
+                                            ccg->setSlot(thisRegister, slot.mIndex, ccg->genExpr(v->initializer));
+                                            ccg->resetStatement();
                                         }
                                     }
                                 }
@@ -1829,14 +1904,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                 if (isConstructor) {
                                     if (name == nameExpr->name)
                                         hasDefaultConstructor = true;
-                                    thisClass->defineConstructor(name);
                                     scg.setStatic(thisClass, name, scg.newFunction(icm));
                                 }
                                 else
-                                    if (isStatic) {
-                                        thisClass->defineStatic(name, &Function_Type);
+                                    if (isStatic)
                                         scg.setStatic(thisClass, name, scg.newFunction(icm));
-                                    }
                                     else {
                                         switch (f->function.prefix) {
                                         case FunctionName::Get:
@@ -1861,7 +1933,10 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 }
 
                 // add the instance initializer
-                scg.setStatic(thisClass, initName, scg.newFunction(ccg.complete(&Void_Type))); 
+                if (ccg) {
+                    scg.setStatic(thisClass, mInitName, scg.newFunction(ccg->complete(&Void_Type)));
+                    delete ccg;
+                }
                 // invent a default constructor if necessary, it just calls the 
                 //   initializer and the superclass default constructor
                 if (!hasDefaultConstructor) {
@@ -1871,7 +1946,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     icg.allocateParameter(mWorld->identifiers["this"], thisClass);   // always parameter #0
                     if (superclass)
                         icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, &args);
-                    icg.call(icg.getStatic(thisClass, initName), thisValue, &args);
+                    if (thisClass->hasStatic(mInitName))
+                        icg.call(icg.getStatic(thisClass, mInitName), thisValue, &args);
                     icg.returnStmt(thisValue);
                     thisClass->defineConstructor(nameExpr->name);
                     scg.setStatic(thisClass, nameExpr->name, scg.newFunction(icg.complete(&Void_Type)));
@@ -2311,6 +2387,136 @@ Formatter& ICodeModule::print(Formatter& f)
         (uint32)its_iCode->size() << " bytecodes\n";
     return VM::operator<<(f, *its_iCode);
 }
+
+/*************************************************************************/
+
+Formatter& operator<<(Formatter &f, string &s)
+{
+    f << s.c_str();
+    return f;
+}
+
+
+void ICodeGenerator::readICode(const char *fileName)
+{
+    String buffer;
+    int ch;
+
+    FILE *f = fopen(fileName, "r");
+    while ((ch = getc(f)) != EOF) buffer += static_cast<char>(ch);
+    fclose(f);
+
+    XMLParser xp(buffer, fileName);
+    XMLNode *top = xp.parseDocument();
+    stdOut << *top;
+
+    XMLNodeList &kids = top->children();
+    for (XMLNodeList::const_iterator i = kids.begin(); i != kids.end(); i++) {
+        XMLNode *node = *i;
+
+        if (node->name().compare(widenCString("class")) == 0) {
+            String className;
+            String superName;
+            JSClass* superclass = 0;
+
+            node->getValue(widenCString("name"), className);
+            if (node->getValue(widenCString("super"), superName)) {
+                const JSValue& superclassValue = mGlobal->getVariable(superName);
+                superclass = static_cast<JSClass*>(superclassValue.object);
+            }
+            JSClass* thisClass = new JSClass(mGlobal, className, superclass);
+            JSScope* thisScope = thisClass->getScope();
+            ICodeGenerator scg(mWorld, thisScope, thisClass, kIsStaticMethod);
+            ICodeGenerator ccg(mWorld, thisScope, thisClass, kNoFlags);
+            ccg.allocateParameter(mWorld->identifiers["this"], thisClass);
+            thisClass->defineStatic(mInitName, &Function_Type);
+
+            mGlobal->defineVariable(className, &Type_Type, JSValue(thisClass));
+
+            bool hasDefaultConstructor = false;
+            XMLNodeList &elements = node->children();
+            for (XMLNodeList::const_iterator j = elements.begin(); j != elements.end(); j++) {
+                XMLNode *element = *j;
+
+                if (element->name().compare(widenCString("method")) == 0) {
+                    String methodName, resultTypeName;
+                    element->getValue(widenCString("name"), methodName);
+                    element->getValue(widenCString("result"), resultTypeName);
+                    JSType *resultType = findType(mWorld->identifiers[resultTypeName]);
+                    String &body = element->body();
+                    if (body.length()) {
+                        std::string str(body.length(), char());
+                        std::transform(body.begin(), body.end(), str.begin(), narrow);
+                        ICodeParser icp;
+
+                        stdOut << "Calling ICodeParser with :\n" << str << "\n";
+
+                        icp.ParseSourceFromString(str);
+
+#ifdef ROB_DONE
+                        ICodeModule *icm = new ICodeModule(icp.instructionStream(), 
+                                                            NULL,       /* VariableList *variables */
+                                                            icp.maxRegister, 
+                                                            1,          /* uint32 maxParameter, */
+                                                            NULL,       /* InstructionMap *instructionMap */
+                                                            false,      /* bool hasRestParameter, */
+                                                            false,      /* bool hasNamedRestParameter */
+                                                            resultType);
+                        thisClass->defineMethod(methodName, new JSFunction(icm));
+#endif
+                    }
+
+                }
+                else {
+                    if (element->name().compare(widenCString("field")) == 0) {
+                        String fieldName;
+                        String fieldType;
+
+                        element->getValue(widenCString("name"), fieldName);
+                        element->getValue(widenCString("type"), fieldType);
+                        JSType *type = findType(mWorld->identifiers[fieldType]);
+
+                        if (element->hasAttribute(widenCString("static")))
+                            thisClass->defineStatic(fieldName, type);
+                        else {
+                            const JSSlot& slot = thisClass->defineSlot(fieldName, type);
+                        }
+                    }
+                }
+            }
+            scg.setStatic(thisClass, mInitName, scg.newFunction(ccg.complete(&Void_Type))); 
+
+            if (!hasDefaultConstructor) {
+                TypedRegister thisValue = TypedRegister(0, thisClass);
+                ArgumentList args;
+                ICodeGenerator icg(mWorld, thisScope, thisClass, kIsStaticMethod);
+                icg.allocateParameter(mWorld->identifiers["this"], thisClass);   // always parameter #0
+                if (superclass)
+                    icg.call(icg.getStatic(superclass, superclass->getName()), thisValue, &args);
+                if (thisClass->hasStatic(mInitName))
+                    icg.call(icg.getStatic(thisClass, mInitName), thisValue, &args);
+                icg.returnStmt(thisValue);
+                thisClass->defineConstructor(className);
+                scg.setStatic(thisClass, mWorld->identifiers[className], scg.newFunction(icg.complete(&Void_Type)));
+            }
+            thisClass->complete();
+        
+            if (scg.getICode()->size()) {
+                Interpreter::Context cx(*mWorld, thisScope);
+                ICodeModule* clinit = scg.complete(&Void_Type);
+                cx.interpret(clinit, JSValues());
+                delete clinit;
+            }
+        }
+        else {
+            if (node->name().compare(widenCString("script")) == 0) {
+            }
+        }
+
+    }
+
+}
+    
 
     
 } // namespace ICG

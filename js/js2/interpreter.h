@@ -81,6 +81,8 @@ namespace Interpreter {
         ICodeModule* genCode(StmtNode *p, const String &fileName);
         JSValue readEvalFile(FILE* in, const String& fileName);
 
+        void loadClass(const char *fileName);
+
         void addBinaryOperator(BinaryOperator::BinaryOp op, BinaryOperator *fn) { mBinaryOperators[op].push_back(fn); }
         const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, BinaryOperator::BinaryOp op);
 

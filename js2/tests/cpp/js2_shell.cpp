@@ -35,6 +35,7 @@
 #include "world.h"
 #include "interpreter.h"
 #include "icodegenerator.h"
+#include "xmlparser.h"
 
 #ifdef DEBUGGER_FOO
 #include "debugger.h"
@@ -211,6 +212,7 @@ class Tracer : public Context::Listener {
     }
 };
 
+//#define HAVE_GEORGE_TRACE_IT
 
 static void readEvalPrint(FILE *in, World &world)
 {
@@ -232,7 +234,11 @@ static void readEvalPrint(FILE *in, World &world)
     Tracer *george = new Tracer();
     cx.addListener(george);
 #endif
-    
+
+#ifdef TEST_XML_LOADER    
+    cx.loadClass("class.xml");
+#endif
+
     while (promptLine(inReader, line, buffer.empty() ? "js> " : "> ")) {
         appendChars(buffer, line.data(), line.size());
         try {
@@ -309,6 +315,12 @@ static void testCompile()
 {
     JSScope glob;
     Context cx(world, &glob);
+
+#ifdef HAVE_GEORGE_TRACE_IT
+    Tracer *george = new Tracer();
+    cx.addListener(george);
+#endif
+
     glob.defineNativeFunction(world.identifiers["print"], print);
     for (uint i = 0; i < sizeof(tests) / sizeof(char *); i++) {
         String testScript = widenCString(tests[i]);
@@ -326,6 +338,7 @@ static void testCompile()
 }
 
 
+
 } /* namespace Shell */
 } /* namespace JavaScript */
 
@@ -341,10 +354,12 @@ int main(int , char **)
 
     using namespace JavaScript;
     using namespace Shell;
+
 #if 1
     testCompile();
 #endif
     readEvalPrint(stdin, world);
+    
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);
 }

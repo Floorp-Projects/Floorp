@@ -242,10 +242,15 @@ ICodeModule* Context::genCode(StmtNode *p, const String &fileName)
     icg.returnStmt(ret);
 
     ICodeModule *icm = icg.complete(&Void_Type);
-    icm->setFileName (fileName);
+    icm->setFileName(fileName);
     return icm;
 }
 
+void Context::loadClass(const char *fileName)
+{
+    ICodeGenerator icg(&getWorld(), getGlobalObject());
+    icg.readICode(fileName);    // loads it into the global object
+}
 
 JSValues& Context::getRegisters()    { return mActivation->mRegisters; }
 ICodeModule* Context::getICode()     { return mActivation->mICode; }
