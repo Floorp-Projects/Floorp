@@ -690,6 +690,7 @@ function EditorStartLog()
 
   fs = EditorGetScriptFileSpec();
   editorShell.StartLogging(fs);
+  contentWindow.focus();
 
   fs = null;
 }
@@ -697,6 +698,7 @@ function EditorStartLog()
 function EditorStopLog()
 {
   editorShell.StopLogging();
+  contentWindow.focus();
 }
 
 function EditorRunLog()
@@ -704,6 +706,7 @@ function EditorRunLog()
   var fs;
   fs = EditorGetScriptFileSpec();
   EditorExecuteScript(fs);
+  contentWindow.focus();
 }
 
 function EditorDocumentLoaded()
