@@ -38,8 +38,10 @@ public:
 	static const nsIID& GetIID() { static nsIID iid = NS_IEVENTQUEUE_IID; return iid;}
 
   NS_IMETHOD_(PRStatus) PostEvent(PLEvent* aEvent) = 0;
-  NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent) = 0;
-	NS_IMETHOD ProcessPendingEvents() = 0;
+  NS_IMETHOD PostSynchronousEvent(PLEvent* aEvent, void** aResult) = 0;
+	
+  NS_IMETHOD ProcessPendingEvents() = 0;
+  NS_IMETHOD EventLoop() = 0;
 
 	NS_IMETHOD EventAvailable(PRBool& aResult) = 0;
 	NS_IMETHOD GetEvent(PLEvent** aResult) = 0;

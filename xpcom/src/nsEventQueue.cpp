@@ -60,10 +60,14 @@ nsEventQueueImpl::PostEvent(PLEvent* aEvent)
 }
 
 NS_IMETHODIMP
-nsEventQueueImpl::PostSynchronousEvent(PLEvent* aEvent)
+nsEventQueueImpl::PostSynchronousEvent(PLEvent* aEvent, void** aResult)
 {
-	PL_PostSynchronousEvent(mEventQueue, aEvent);
-	return NS_OK;
+  void* result = PL_PostSynchronousEvent(mEventQueue, aEvent);
+	if (aResult)
+  {
+    *aResult = result;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -71,6 +75,13 @@ nsEventQueueImpl::ProcessPendingEvents()
 {
 	PL_ProcessPendingEvents(mEventQueue);
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::EventLoop()
+{
+  PL_EventLoop(mEventQueue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
