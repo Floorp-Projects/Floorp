@@ -4978,26 +4978,14 @@ BCMapCellIterator::First(BCMapCellInfo& aMapInfo)
   while (!mAtEnd) {
     if ((mAreaStart.y >= mRowGroupStart) && (mAreaStart.y <= mRowGroupEnd)) {
       CellData* cellData = mCellMap->GetDataAt(*mTableCellMap, mAreaStart.y - mRowGroupStart, mAreaStart.x, PR_FALSE);
-      if (cellData) {
-        if (!cellData->IsOrig()) {
-          // if the start data does not have an originating cell, adjust it to have one
-          if (cellData->IsRowSpan()) {
-            mAreaStart.y -= cellData->GetRowSpanOffset();
-            NS_ASSERTION(mAreaStart.y >= 0, "program error");
-          }
-          if (cellData->IsColSpan()) {
-            mAreaStart.x -= cellData->GetColSpanOffset();
-            NS_ASSERTION(mAreaStart.x >= 0, "program error");
-          }
-          cellData = mCellMap->GetDataAt(*mTableCellMap, mAreaStart.y - mRowGroupStart, mAreaStart.x, PR_FALSE);
-        }
-        if (cellData && cellData->IsOrig()) {
-          SetInfo(mRow, mAreaStart.x, cellData, aMapInfo);
-          break;
-        }
-        else mAtEnd = PR_TRUE;
+      if (cellData && cellData->IsOrig()) {
+        SetInfo(mRow, mAreaStart.x, cellData, aMapInfo);
+        break;
       }
-      else mAtEnd = PR_TRUE;
+      else {
+        NS_ASSERTION(PR_FALSE, "damage area expanded incorrectly");
+        mAtEnd = PR_TRUE;
+      }
     }
     SetNewRowGroup(); // could set mAtEnd
   } 
@@ -5610,9 +5598,9 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
   // to rebuild versus expand. This could be optimized to expand to the smallest area that contains
   // no spanners, but it may not be worth the effort in general, and it would need to be done in the
   // cell map as well.
+  PRBool haveSpanner = PR_FALSE;
   if ((dStartX > 0) || (dEndX < (numCols - 1)) || (dStartY > 0) || (dEndY < (numRows - 1))) {
     nsTableCellMap* tableCellMap = GetCellMap(); if (!tableCellMap) ABORT0();
-    PRBool haveSpanner = PR_FALSE;
     // Get the ordered row groups 
     PRUint32 numRowGroups;
     nsVoidArray rowGroups;
@@ -5683,10 +5671,19 @@ nsTableFrame::ExpandBCDamageArea(nsRect& aRect) const
       }
     }
   }
-  aRect.x      = dStartX;
-  aRect.y      = dStartY;
-  aRect.width  = 1 + dEndX - dStartX;
-  aRect.height = 1 + dEndY - dStartY;
+  if (haveSpanner) {
+    // make the damage area the whole table
+    aRect.x      = 0;
+    aRect.y      = 0;
+    aRect.width  = numCols;
+    aRect.height = numRows;
+  }
+  else {
+    aRect.x      = dStartX;
+    aRect.y      = dStartY;
+    aRect.width  = 1 + dEndX - dStartX;
+    aRect.height = 1 + dEndY - dStartY;
+  }
 }
 
 #define MAX_TABLE_BORDER_WIDTH 256

@@ -1686,12 +1686,12 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32* aTotalCounts,
 }
 
 
-struct nsColInfo {
-  nsColInfo(nsTableColFrame* aFrame,
-            PRInt32          aIndex,
-            PRInt32          aMinWidth,
-            PRInt32          aWidth,
-            PRInt32          aMaxWidth)
+struct ColInfo {
+  ColInfo(nsTableColFrame* aFrame,
+          PRInt32          aIndex,
+          PRInt32          aMinWidth,
+          PRInt32          aWidth,
+          PRInt32          aMaxWidth)
     : mFrame(aFrame), mIndex(aIndex), mMinWidth(aMinWidth), 
       mWidth(aWidth), mMaxWidth(aMaxWidth), mWeight(0)
   {}
@@ -1706,7 +1706,7 @@ struct nsColInfo {
 void
 AC_Wrapup(nsTableFrame* aTableFrame,
           PRInt32       aNumItems, 
-          nsColInfo**   aColInfo,
+          ColInfo**     aColInfo,
           PRBool        aAbort = PR_FALSE)
 {
   if (aColInfo) {
@@ -1724,7 +1724,7 @@ AC_Wrapup(nsTableFrame* aTableFrame,
 
 void
 AC_Increase(PRInt32     aNumAutoCols,
-            nsColInfo** aColInfo,
+            ColInfo**   aColInfo,
             PRInt32     aDivisor,
             PRInt32&    aAvailWidth,
             float       aPixelToTwips)
@@ -1753,7 +1753,7 @@ AC_Increase(PRInt32     aNumAutoCols,
 
 void
 AC_Decrease(PRInt32     aNumAutoCols,
-            nsColInfo** aColInfo,
+            ColInfo**   aColInfo,
             PRInt32     aDivisor,
             PRInt32&    aExcess,
             float       aPixelToTwips)
@@ -1779,15 +1779,15 @@ AC_Decrease(PRInt32     aNumAutoCols,
 }
 
 void 
-AC_Sort(nsColInfo** aColInfo, PRInt32 aNumCols)
+AC_Sort(ColInfo** aColInfo, PRInt32 aNumCols)
 {
   // sort the cols based on the Weight 
   for (PRInt32 j = aNumCols - 1; j > 0; j--) {
     for (PRInt32 i = 0; i < j; i++) { 
       if (aColInfo[i]->mWeight < aColInfo[i+1]->mWeight) { // swap them
-        nsColInfo* save = aColInfo[i];
-        aColInfo[i]     = aColInfo[i+1];
-        aColInfo[i+1]   = save;
+        ColInfo* save = aColInfo[i];
+        aColInfo[i]   = aColInfo[i+1];
+        aColInfo[i+1] = save;
       }
     }
   }
@@ -1840,9 +1840,9 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
   }
 
   // allocate storage for the constrained cols. Only they get adjusted.
-  nsColInfo** colInfo = new nsColInfo*[numConstrainedCols];
+  ColInfo** colInfo = new ColInfo*[numConstrainedCols];
   if (!colInfo) return;
-  memset(colInfo, 0, numConstrainedCols * sizeof(nsColInfo *));
+  memset(colInfo, 0, numConstrainedCols * sizeof(ColInfo *));
 
   PRInt32 maxMinDiff = 0;
   PRInt32 constrColX = 0;
@@ -1873,7 +1873,7 @@ void BasicTableLayoutStrategy::AllocateConstrained(PRInt32  aAvailWidth,
     maxWidth = PR_MAX(maxWidth, minWidth);
     maxMinDiff += maxWidth - minWidth;
     nscoord startWidth = (aStartAtMin) ? minWidth : maxWidth;
-    colInfo[constrColX] = new nsColInfo(colFrame, colX, minWidth, startWidth, maxWidth);
+    colInfo[constrColX] = new ColInfo(colFrame, colX, minWidth, startWidth, maxWidth);
     if (!colInfo[constrColX]) {
       AC_Wrapup(mTableFrame, numConstrainedCols, colInfo, PR_TRUE);
       return;
