@@ -152,7 +152,7 @@ net_pop3_load_state(const char* searchhost,
 
   buf = (char*)PR_CALLOC(512);
   if (buf) {
-	while (!fileStream.eof())
+	while (!fileStream.eof() && !fileStream.failed() && fileStream.is_open())
   {
       fileStream.readline(buf, 512);
       if (*buf == '#' || *buf == CR || *buf == LF || *buf == 0)
@@ -2168,45 +2168,17 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
     
     if(status == 0)
     {
-        /* should never happen */
-        return(Error(MK_POP3_SERVER_ERROR));
-    }
-    else if(status < 0) /* error */
-    {
-        int err = SOCKET_ERRNO;
-        
-        if (err /* == XP_ERRNO_EWOULDBLOCK */)
+        if (gPOP3dotFix && gPOP3AssumedEnd)
         {
-            /*
-              (rb) If we have the dot fix, and the server reported the
-              wrong number of bytes there may 
-              be nothing else to read, so now go ahead and close the
-              message if we saw something 
-              resembling the end of the message.
-              */
-            if (gPOP3dotFix && gPOP3AssumedEnd)
-            {
-                status =
-                    m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
-                m_pop3ConData->msg_closure = 0;
-                buffer_size = 0;
-            }
-            else
-            {
-                m_pop3ConData->pause_for_read = PR_TRUE;
-                return (0);
-            }
+            status =
+                m_nsIPop3Sink->IncorporateComplete(m_pop3ConData->msg_closure);
+            m_pop3ConData->msg_closure = 0;
+            buffer_size = 0;
         }
         else
         {
-#if 0
-            TRACEMSG(("TCP Error: %d", err));
-            
-            ce->URL_s->error_msg = NET_ExplainErrorDetails(MK_TCP_READ_ERROR, err);
-#endif                 
-            /* return TCP error
-             */
-            return Error(MK_TCP_READ_ERROR);
+            m_pop3ConData->pause_for_read = PR_TRUE;
+            return (0);
         }
     }
     
