@@ -26,6 +26,9 @@
   Code for the Bookmarks Sidebar Panel
  */
 
+// get handle to the BrowserAppCore in the content area.
+var appCore = window.content.appCore;
+
 function clicked(event, target)
 {
 	if ((event.button != 1) || (event.clickCount != 2) || (target.nodeName != "treeitem"))
@@ -79,6 +82,13 @@ function OpenBookmarkURL(node, datasources)
 	}
 	else
 	{
-        window.content.location = url;
+		if(appCore)
+		   appCore.loadUrl(url);
+		else {
+		  // May be it s'd look for a Browser window or create one
+		  // and redirect this to the browser.
+		  dump("BrowserAppCore is not initialised\n");
+		}
+        
   	}
 }
