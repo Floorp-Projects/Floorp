@@ -47,6 +47,7 @@
 #else
 #define SUMMARY_SUFFIX_IN_4x ".snm"
 #endif /* XP_UNIX */
+#define SUMMARY_SUFFIX_IN_5x ".msf"
 
 #define PREMIGRATION_PREFIX "premigration"
 #define PREF_MAIL_DIRECTORY "mail.directory"
@@ -622,7 +623,22 @@ nsPrefMigration::GetDirFromPref(const char *oldProfilePath, const char* newProfi
   
 }
 
+static PRBool
+nsStringEndsWith(nsString& name, const char *ending)
+{
+  if (!ending) return PR_FALSE;
 
+  PRInt32 len = name.Length();
+  if (len == 0) return PR_FALSE;
+
+  PRInt32 endingLen = PL_strlen(ending);
+  if (len > endingLen && name.RFind(ending, PR_TRUE) == len - endingLen) {
+        return PR_TRUE;
+  }
+  else {
+        return PR_FALSE;
+  }
+} 
 /*---------------------------------------------------------------------------------
  * GetSizes reads the 4.x files in the profile tree and accumulates their sizes
  *
@@ -646,7 +662,7 @@ nsPrefMigration::GetSizes(nsFileSpec inputPath, PRBool readSubdirs, PRUint32 *si
     folderName = fileOrDirName.GetLeafName();
     fileOrDirNameStr = folderName;
     len = fileOrDirNameStr.Length();
-    if (fileOrDirNameStr.Find(SUMMARY_SUFFIX_IN_4x, PR_TRUE) != -1)  /* Don't copy the summary files */
+    if (nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
     else
     {
@@ -753,7 +769,7 @@ nsPrefMigration::DoTheCopy(nsFileSpec oldPath, nsFileSpec newPath, PRBool readSu
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
     fileOrDirNameStr = folderName;
 
-    if (fileOrDirNameStr.Find(SUMMARY_SUFFIX_IN_4x, PR_TRUE) != -1)  /* Don't copy the summary files */
+    if (nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_4x) || nsStringEndsWith(fileOrDirNameStr, SUMMARY_SUFFIX_IN_5x)) /* Don't copy the summary files */
       continue;
     else
     {
@@ -931,5 +947,4 @@ nsPrefMigration::OnShutdown(const nsCID& aClass, nsISupports *service)
 
   return NS_OK;
 }
-
 
