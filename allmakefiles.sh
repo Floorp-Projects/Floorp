@@ -107,14 +107,10 @@ editor/ui/Makefile
 editor/ui/composer/Makefile
 editor/ui/composer/content/Makefile
 editor/ui/composer/content/images/Makefile
-editor/ui/composer/skin/Makefile
-editor/ui/composer/skin/images/Makefile
 editor/ui/composer/locale/Makefile
 editor/ui/composer/locale/en-US/Makefile
 editor/ui/dialogs/Makefile
 editor/ui/dialogs/content/Makefile
-editor/ui/dialogs/skin/Makefile
-editor/ui/dialogs/skin/images/Makefile
 editor/ui/dialogs/locale/Makefile
 editor/ui/dialogs/locale/en-US/Makefile
 expat/Makefile
@@ -356,7 +352,6 @@ profile/src/Makefile
 profile/public/Makefile
 profile/resources/Makefile
 profile/resources/content/Makefile
-profile/resources/skin/Makefile
 profile/resources/locale/Makefile
 profile/resources/locale/en-US/Makefile
 profile/pref-migrator/Makefile
@@ -509,7 +504,6 @@ xpinstall/res/Makefile
 xpinstall/res/content/Makefile
 xpinstall/res/locale/Makefile
 xpinstall/res/locale/en-US/Makefile
-xpinstall/res/skin/Makefile
 xpinstall/src/Makefile
 xpinstall/stub/Makefile
 xpinstall/wizard/unix/src2/Makefile
@@ -769,7 +763,6 @@ if [ `echo "$MOZ_EXTENSIONS" | grep -c psm-glue` != 0 ]; then
   extensions/psm-glue/Makefile
   extensions/psm-glue/res/content/Makefile
   extensions/psm-glue/res/Makefile
-  extensions/psm-glue/res/skin/Makefile
   extensions/psm-glue/res/locale/Makefile
   extensions/psm-glue/res/locale/en-US/Makefile
   extensions/psm-glue/src/Makefile
