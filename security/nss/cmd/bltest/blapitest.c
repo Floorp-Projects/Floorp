@@ -183,7 +183,8 @@ atob(SECItem *ascii, SECItem *binary, PRArenaPool *arena)
     binary->len = 0;
     it.item = binary;
     it.arena = arena;
-    len = (strcmp(&ascii->data[ascii->len-2],"\r\n"))?ascii->len:ascii->len-2;
+    len = (strcmp(&ascii->data[ascii->len-2],"\r\n")) ? 
+           ascii->len : ascii->len-2;
     cx = NSSBase64Decoder_Create(get_binary, &it);
     status = NSSBase64Decoder_Update(cx, (const char *)ascii->data, len);
     status = NSSBase64Decoder_Destroy(cx, PR_FALSE);
@@ -372,7 +373,7 @@ typedef enum {
     bltestBase64Encoded,       /* Base64 encoded ASCII */
     bltestBinary,	       /* straight binary */
     bltestHexSpaceDelim,       /* 0x12 0x34 0xab 0xCD ... */
-    bltestHexStream,	       /* 1234abCD ... */
+    bltestHexStream 	       /* 1234abCD ... */
 } bltestIOMode;
 
 typedef struct
