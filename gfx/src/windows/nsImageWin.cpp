@@ -79,22 +79,25 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
 
     if (aMaskRequirements != nsMaskRequirements_kNoMask)
     {
-      PRInt32 sizeMask;
-
       if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements)
       {
-        sizeMask = (aWidth + 7) / 8 * aHeight;
+        mARowBytes = (aWidth + 7) / 8;
+        mAlphaDepth = 1;
       }
       else
       {
         NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements,
                      "unexpected mask depth");
-        sizeMask = aWidth * aHeight;
+        mARowBytes = aWidth;
+        mAlphaDepth = 8;
       }
 
+      // 32-bit align each row
+      mARowBytes = (mARowBytes + 3) & ~0x3;
+
+      mAlphaBits = new unsigned char[mARowBytes * aHeight];
       mAlphaWidth = aWidth;
       mAlphaWidth = aHeight;
-      mAlphaBits = new unsigned char[sizeMask];
     }
     else
     {
