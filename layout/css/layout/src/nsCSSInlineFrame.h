@@ -23,6 +23,7 @@
 #include "nsCSSLineLayout.h"
 
 class nsCSSInlineFrame;
+class nsPlaceholderFrame;
 
 /**
  * Reflow state object for managing css inline layout. Most of the state
@@ -62,6 +63,7 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
+  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame* aChildList);
   NS_IMETHOD CreateContinuingFrame(nsIPresContext&  aCX,
                                    nsIFrame*        aParent,
                                    nsIStyleContext* aStyleContext,
@@ -110,8 +112,6 @@ protected:
   nsIFrame* PullOneChild(nsCSSInlineFrame* aNextInFlow,
                          nsIFrame*         aLastChild);
 
-  nsresult CreateNewFrames(nsIPresContext* aPresContext);
-
   nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
                                  nsIFrame*               aFrame);
 
@@ -119,6 +119,11 @@ protected:
                 nsIFrame* aPrevChild, nsIFrame* aPushedChild);
 
   void DrainOverflowLists();
+
+  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFloatedFrame);
+
+  nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
   friend nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
                                        nsIContent* aContent,

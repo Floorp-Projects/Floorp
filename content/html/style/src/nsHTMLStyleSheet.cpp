@@ -1074,6 +1074,7 @@ NS_IMETHODIMP HTMLStyleSheetImpl::ConstructFrame(nsIPresContext* aPresContext,
   
       case NS_STYLE_DISPLAY_INLINE:
         rv = NS_NewCSSInlineFrame(&frame, aContent, aParentFrame);
+        ProcessChildren(aPresContext, frame, aContent);
         break;
   
       default:
