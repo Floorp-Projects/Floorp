@@ -38,6 +38,12 @@
 
 #include "domstubs.idl"
 
+%{C++
+#ifdef WINCE
+#undef ERROR
+#endif
+%}
+
 [scriptable, uuid(e565d518-4510-407f-a3d9-3b4107549c6d)]
 interface nsIDOMNSEvent : nsISupports
 {
