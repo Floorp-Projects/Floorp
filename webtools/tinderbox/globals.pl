@@ -237,8 +237,7 @@ sub load_buildlog {
          binaryname => $binaryname,
          td => $t
       };
-      if ($mailtime > 0 
-          and ($form{noignore} or not $t->{ignore_builds}->{$buildname})) {
+      if ($form{noignore} or not $t->{ignore_builds}->{$buildname}) {
         push @{$build_list}, $buildrec;
       }
     }
@@ -443,8 +442,9 @@ sub load_notes {
         $noteid = $build_table->[$ti][$bi]->{noteid};
         $now_str = &print_time($nnow);
         $note = &url_decode($nenc_note);
-        $note_array[$noteid] .= "<pre>\n[<b><a href=mailto:$nwho>"
-                               ."$nwho</a> - $now_str</b>]\n$note\n</pre>";
+        $note_array[$noteid] = "<pre>\n[<b><a href=mailto:$nwho>"
+             ."$nwho</a> - $now_str</b>]\n$note\n</pre>"
+             .$note_array[$noteid];
       }
     }
     close(NOTES);
