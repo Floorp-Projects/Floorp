@@ -323,7 +323,7 @@ TypedRegister ICodeGenerator::propertyXcr(TypedRegister base, const StringAtom &
 }
 
 
-const JSSlot& getStaticSlot(JSClass *&c, const String &name)
+static const JSSlot& getStaticSlot(JSClass *&c, const String &name)
 {
     if (c->hasStatic(name))
         return c->getStatic(name);
