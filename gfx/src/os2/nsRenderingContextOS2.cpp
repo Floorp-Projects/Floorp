@@ -395,8 +395,11 @@ nsRenderingContextOS2::GetDrawingSurface( nsDrawingSurface *aSurface)
 NS_IMETHODIMP
 nsRenderingContextOS2::GetHints(PRUint32& aResult)
 {
-  aResult = 0;
+  PRUint32 result = 0;
   
+  result |= NS_RENDERING_HINT_FAST_MEASURE;
+
+  aResult = result;
   return NS_OK;
 }
 
@@ -1790,7 +1793,13 @@ do_BreakGetTextDimensions(const nsFontSwitch* aFontSwitch,
         // until we at least measure the first word entirely
         if (numCharsFit < data->mBreaks[0]) {
           allDone = PR_FALSE;
-          // from now on, the estimated number of characters is what we want to measure
+          // From now on we don't care anymore what is the _real_ estimated
+          // number of characters that fits. Rather, we have no where to break
+          // and have to measure one word fully, but the real estimate is less
+          // than that one word. However, since the other bits of code rely on
+          // what is in "data->mEstimatedNumChars", we want to override
+          // "data->mEstimatedNumChars" and pass in what _has_ to be measured
+          // so that it is transparent to the other bits that depend on it.
           data->mEstimatedNumChars = data->mBreaks[0] - numCharsFit;
           start += numChars;
         }
@@ -1980,7 +1989,7 @@ nsRenderingContextOS2::GetTextDimensions(const PRUnichar*  aString,
       // If we don't do this, a 'tall' trailing whitespace, i.e., if the whitespace
       // happens to come from a font with a bigger ascent and/or descent than all
       // current fonts on the line, this can cause the next lines to be shifted
-      // down the window is slowly resized to fit that whitespace.
+      // down when the window is slowly resized to fit that whitespace.
       if (*pstr == ' ') {
         // skip pass the whitespace to ignore the height that it may contribute
         ++pstr;

@@ -64,6 +64,7 @@
 #include "nsXFontNormal.h"
 #include "nsX11AlphaBlend.h"
 #include "nsXFontAAScaledBitmap.h"
+#include "nsUnicharUtils.h"
 #ifdef ENABLE_X_FONT_BANNING
 #include <regex.h>
 #endif /* ENABLE_X_FONT_BANNING */
@@ -1433,6 +1434,9 @@ void nsFontMetricsGTK::RealizeFont()
     PRUnichar space = (PRUnichar)' ';
     mSpaceWidth = NSToCoordRound(ft->GetWidth(&space, 1) * f);
 
+    PRUnichar averageX = (PRUnichar)'x';
+    mAveCharWidth = NSToCoordRound(ft->GetWidth(&averageX, 1) * f);
+
     unsigned long pr = 0;
     if (ft->getXHeight(pr)) {
       mXHeight = nscoord(pr * f);
@@ -1501,17 +1505,22 @@ void nsFontMetricsGTK::RealizeFont()
 
   mMaxAdvance = nscoord(fontInfo->max_bounds.width * f);
 
-  gint rawWidth;
+  gint rawWidth, rawAverage;
   if ((fontInfo->min_byte1 == 0) && (fontInfo->max_byte1 == 0)) {
     rawWidth = xFont->TextWidth8(" ", 1);
+    rawAverage = xFont->TextWidth8("x", 1);
   }
   else {
-    XChar2b _16bit_space;
+    XChar2b _16bit_space, _16bit_x;
     _16bit_space.byte1 = 0;
     _16bit_space.byte2 = ' ';
+    _16bit_x.byte1 = 0;
+    _16bit_x.byte2 = 'x';
     rawWidth = xFont->TextWidth16(&_16bit_space, sizeof(_16bit_space)/2);
+    rawAverage = xFont->TextWidth16(&_16bit_x, sizeof( _16bit_x)/2);
   }
   mSpaceWidth = NSToCoordRound(rawWidth * f);
+  mAveCharWidth = NSToCoordRound(rawAverage * f);
 
   unsigned long pr = 0;
   if (xFont->GetXFontProperty(XA_X_HEIGHT, &pr) &&
@@ -1681,6 +1690,12 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetMaxAdvance(nscoord &aAdvance)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFontMetricsGTK::GetAveCharWidth(nscoord &aAveCharWidth)
+{
+  aAveCharWidth = mAveCharWidth;
+  return NS_OK;
+}
+
 NS_IMETHODIMP  nsFontMetricsGTK::GetFont(const nsFont*& aFont)
 {
   aFont = mFont;
@@ -1705,6 +1720,106 @@ NS_IMETHODIMP  nsFontMetricsGTK::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
+nsFontGTK*
+nsFontMetricsGTK::LocateFont(PRUint32 aChar, PRInt32 & aCount)
+{
+  nsFontGTK *font;
+  PRInt32 i;
+
+  // see if one of our loaded fonts can represent the character
+  for (i = 0; i < aCount; ++i) {
+    font = (nsFontGTK*)mLoadedFonts[i];
+    if (CCMAP_HAS_CHAR(font->mCCMap, aChar))
+      return font;
+  }
+
+  font = FindFont(aChar);
+  aCount = mLoadedFontsCount; // update since FindFont() can change it
+
+  return font;
+}
+
+nsresult
+nsFontMetricsGTK::ResolveForwards(const PRUnichar        *aString,
+                                  PRUint32                aLength,
+                                  nsFontSwitchCallbackGTK aFunc, 
+                                  void                   *aData)
+{
+  NS_ASSERTION(aString || !aLength, "invalid call");
+  const PRUnichar* firstChar = aString;
+  const PRUnichar* currChar = firstChar;
+  const PRUnichar* lastChar  = aString + aLength;
+  nsFontGTK* currFont;
+  nsFontGTK* nextFont;
+  PRInt32 count;
+  nsFontSwitchGTK fontSwitch;
+
+  if (firstChar == lastChar)
+    return NS_OK;
+
+  count = mLoadedFontsCount;
+
+  if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+    currFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
+    currChar += 2;
+  }
+  else {
+    currFont = LocateFont(*currChar, count);
+    ++currChar;
+  }
+
+  //This if block is meant to speedup the process in normal situation, when
+  //most characters can be found in first font
+  if (currFont == mLoadedFonts[0]) {
+    while (currChar < lastChar && CCMAP_HAS_CHAR(currFont->mCCMap,*currChar))
+      ++currChar;
+    fontSwitch.mFontGTK = currFont;
+    if (!(*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData))
+      return NS_OK;
+    if (currChar == lastChar)
+      return NS_OK;
+    // continue with the next substring, re-using the available loaded fonts
+    firstChar = currChar;
+    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+      currFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
+      currChar += 2;
+    }
+    else {
+      currFont = LocateFont(*currChar, count);
+      ++currChar;
+    }
+  }
+
+  // see if we can keep the same font for adjacent characters
+  PRInt32 lastCharLen;
+  while (currChar < lastChar) {
+    if (IS_HIGH_SURROGATE(*currChar) && (currChar+1) < lastChar && IS_LOW_SURROGATE(*(currChar+1))) {
+      nextFont = LocateFont(SURROGATE_TO_UCS4(*currChar, *(currChar+1)), count);
+      lastCharLen = 2;
+    }
+    else {
+      nextFont = LocateFont(*currChar, count);
+      lastCharLen = 1;
+    }
+    if (nextFont != currFont) {
+      // We have a substring that can be represented with the same font, and
+      // we are about to switch fonts, it is time to notify our caller.
+      fontSwitch.mFontGTK = currFont;
+      if (!(*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData))
+        return NS_OK;
+      // continue with the next substring, re-using the available loaded fonts
+      firstChar = currChar;
+
+      currFont = nextFont; // use the font found earlier for the char
+    }
+    currChar += lastCharLen;
+  }
+
+  //do it for last part of the string
+  fontSwitch.mFontGTK = currFont;
+  (*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData);
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsFontMetricsGTK::GetSpaceWidth(nscoord &aSpaceWidth)

@@ -49,6 +49,7 @@
 #include "prprf.h"
 #include "prmem.h"
 #include "prlog.h"
+#include "prenv.h"
 #include "nsGCCache.h"
 #include "imgIContainer.h"
 #include "gfxIImageFrame.h"
@@ -250,6 +251,50 @@ nsRenderingContextXlib::GetHints(PRUint32& aResult)
   // XChar2b rendering. In addition, we can avoid the PRUnichar to
   // XChar2b conversion. So we set this bit...
   result |= NS_RENDERING_HINT_FAST_8BIT_TEXT;
+  
+/* We can't enable fast text measuring (yet) on platforms
+ * which force natural alignment of datatypes (see 
+ * http://bugzilla.mozilla.org/show_bug.cgi?id=36146#c46) ... ;-(
+ */
+#ifndef CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT
+#if defined(__i386)
+#define CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT 1
+#endif /* __i386 */
+#endif /* !CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT */
+
+  static PRBool enable_fast_measure;
+  static PRBool getenv_done = PR_FALSE;
+
+  /* Check for the env vars "MOZILLA_GFX_ENABLE_FAST_MEASURE" and
+   * "MOZILLA_GFX_DISABLE_FAST_MEASURE" to enable/disable fast text
+   * measuring (for debugging the feature and doing regression tests).
+   * This code will be removed one all issues around this new feature have
+   * been fixed. */
+  if (!getenv_done)
+  {
+#ifdef CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT
+    enable_fast_measure = PR_TRUE;
+#else
+    enable_fast_measure = PR_FALSE;
+#endif /* CPU_DOES_NOT_REQUIRE_NATURAL_ALIGNMENT */
+
+    if (PR_GetEnv("MOZILLA_GFX_ENABLE_FAST_MEASURE"))
+    {
+      enable_fast_measure = PR_TRUE;
+    }
+
+    if (PR_GetEnv("MOZILLA_GFX_DISABLE_FAST_MEASURE"))
+    {
+      enable_fast_measure = PR_FALSE;
+    }
+        
+    getenv_done = PR_TRUE;
+  } 
+
+  if (enable_fast_measure) {
+    // We have GetTextDimensions()
+    result |= NS_RENDERING_HINT_FAST_MEASURE;
+  }
 
   // XXX see if we are rendering to the local display or to a remote
   // dispaly and set the NS_RENDERING_HINT_REMOTE_RENDERING accordingly
@@ -1389,6 +1434,548 @@ FoundFont:
   }
   if (nsnull != aFontID)
     *aFontID = 0;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRenderingContextXlib::GetTextDimensions(const char*       aString,
+                                          PRInt32           aLength,
+                                          PRInt32           aAvailWidth,
+                                          PRInt32*          aBreaks,
+                                          PRInt32           aNumBreaks,
+                                          nsTextDimensions& aDimensions,
+                                          PRInt32&          aNumCharsFit,
+                                          nsTextDimensions& aLastWordDimensions,
+                                          PRInt32*          aFontID)
+{
+  NS_PRECONDITION(aBreaks[aNumBreaks - 1] == aLength, "invalid break array");
+
+  if (nsnull != mFontMetrics) {
+    // If we need to back up this state represents the last place we could
+    // break. We can use this to avoid remeasuring text
+    PRInt32 prevBreakState_BreakIndex = -1; // not known (hasn't been computed)
+    nscoord prevBreakState_Width = 0; // accumulated width to this point
+
+    // Initialize OUT parameters
+    mFontMetrics->GetMaxAscent(aLastWordDimensions.ascent);
+    mFontMetrics->GetMaxDescent(aLastWordDimensions.descent);
+    aLastWordDimensions.width = -1;
+    aNumCharsFit = 0;
+
+    // Iterate each character in the string and determine which font to use
+    nscoord width = 0;
+    PRInt32 start = 0;
+    nscoord aveCharWidth;
+    mFontMetrics->GetAveCharWidth(aveCharWidth);
+
+    while (start < aLength) {
+      // Estimate how many characters will fit. Do that by diving the available
+      // space by the average character width. Make sure the estimated number
+      // of characters is at least 1
+      PRInt32 estimatedNumChars = 0;
+      if (aveCharWidth > 0) {
+        estimatedNumChars = (aAvailWidth - width) / aveCharWidth;
+      }
+      if (estimatedNumChars < 1) {
+        estimatedNumChars = 1;
+      }
+
+      // Find the nearest break offset
+      PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+      PRInt32 breakIndex;
+      nscoord numChars;
+
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      if (aLength <= estimatedBreakOffset) {
+        // All the characters should fit
+        numChars = aLength - start;
+        breakIndex = aNumBreaks - 1;
+      } 
+      else {
+        breakIndex = prevBreakState_BreakIndex;
+        while (((breakIndex + 1) < aNumBreaks) &&
+               (aBreaks[breakIndex + 1] <= estimatedBreakOffset)) {
+          ++breakIndex;
+        }
+        if (breakIndex == prevBreakState_BreakIndex) {
+          ++breakIndex; // make sure we advanced past the previous break index
+        }
+        numChars = aBreaks[breakIndex] - start;
+      }
+
+      // Measure the text
+      nscoord twWidth = 0;
+      if ((1 == numChars) && (aString[start] == ' ')) {
+        mFontMetrics->GetSpaceWidth(twWidth);
+      } 
+      else if (numChars > 0)
+        GetWidth( &aString[start], numChars, twWidth);
+
+      // See if the text fits
+      PRBool  textFits = (twWidth + width) <= aAvailWidth;
+
+      // If the text fits then update the width and the number of
+      // characters that fit
+      if (textFits) {
+        aNumCharsFit += numChars;
+        width += twWidth;
+        start += numChars;
+
+        // This is a good spot to back up to if we need to so remember
+        // this state
+        prevBreakState_BreakIndex = breakIndex;
+        prevBreakState_Width = width;
+      }
+      else {
+        // See if we can just back up to the previous saved state and not
+        // have to measure any text
+        if (prevBreakState_BreakIndex > 0) {
+          // If the previous break index is just before the current break index
+          // then we can use it
+          if (prevBreakState_BreakIndex == (breakIndex - 1)) {
+            aNumCharsFit = aBreaks[prevBreakState_BreakIndex];
+            width = prevBreakState_Width;
+            break;
+          }
+        }
+
+        // We can't just revert to the previous break state
+        if (0 == breakIndex) {
+          // There's no place to back up to, so even though the text doesn't fit
+          // return it anyway
+          aNumCharsFit += numChars;
+          width += twWidth;
+          break;
+        }
+
+        // Repeatedly back up until we get to where the text fits or we're all
+        // the way back to the first word
+        width += twWidth;
+        while ((breakIndex >= 1) && (width > aAvailWidth)) {
+          twWidth = 0;
+          start = aBreaks[breakIndex - 1];
+          numChars = aBreaks[breakIndex] - start;
+          
+          if ((1 == numChars) && (aString[start] == ' ')) {
+            mFontMetrics->GetSpaceWidth(twWidth);
+          } 
+          else if (numChars > 0)
+            GetWidth( &aString[start], numChars, twWidth);
+
+          width -= twWidth;
+          aNumCharsFit = start;
+          breakIndex--;
+        }
+        break;
+      }
+    }
+
+    aDimensions.width = width;
+    mFontMetrics->GetMaxAscent(aDimensions.ascent);
+    mFontMetrics->GetMaxDescent(aDimensions.descent);
+
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+struct BreakGetTextDimensionsData {
+  float    mP2T;               // IN
+  PRInt32  mAvailWidth;        // IN
+  PRInt32* mBreaks;            // IN
+  PRInt32  mNumBreaks;         // IN
+  nscoord  mSpaceWidth;        // IN
+  nscoord  mAveCharWidth;      // IN
+  PRInt32  mEstimatedNumChars; // IN (running -- to handle the edge case of one word)
+
+  PRInt32  mNumCharsFit;  // IN/OUT -- accumulated number of chars that fit so far
+  nscoord  mWidth;        // IN/OUT -- accumulated width so far
+
+  // If we need to back up, this state represents the last place
+  // we could break. We can use this to avoid remeasuring text
+  PRInt32 mPrevBreakState_BreakIndex; // IN/OUT, initialized as -1, i.e., not yet computed
+  nscoord mPrevBreakState_Width;      // IN/OUT, initialized as  0
+
+  // Remember the fonts that we use so that we can deal with
+  // line-breaking in-between fonts later. mOffsets[0] is also used
+  // to initialize the current offset from where to start measuring
+  nsVoidArray* mFonts;   // OUT
+  nsVoidArray* mOffsets; // IN/OUT
+};
+
+static PRBool PR_CALLBACK
+do_BreakGetTextDimensions(const nsFontSwitchXlib *aFontSwitch,
+                          const PRUnichar*        aSubstring,
+                          PRUint32                aSubstringLength,
+                          void*                   aData)
+{
+  nsFontXlib *fontXlib = aFontSwitch->mFontXlib;
+
+  // Make sure the font is selected
+  BreakGetTextDimensionsData* data = (BreakGetTextDimensionsData*)aData;
+
+  // Our current state relative to the _full_ string...
+  // This allows emulation of the previous code...
+  const PRUnichar* pstr = (const PRUnichar*)data->mOffsets->ElementAt(0);
+  PRInt32 numCharsFit = data->mNumCharsFit;
+  nscoord width = data->mWidth;
+  PRInt32 start = (PRInt32)(aSubstring - pstr);
+  PRInt32 i = start + aSubstringLength;
+  PRBool allDone = PR_FALSE;
+
+  while (start < i) {
+    // Estimate how many characters will fit. Do that by dividing the
+    // available space by the average character width
+    PRInt32 estimatedNumChars = data->mEstimatedNumChars;
+    if (!estimatedNumChars && data->mAveCharWidth > 0) {
+      estimatedNumChars = (data->mAvailWidth - width) / data->mAveCharWidth;
+    }
+    // Make sure the estimated number of characters is at least 1
+    if (estimatedNumChars < 1) {
+      estimatedNumChars = 1;
+    }
+
+    // Find the nearest break offset
+    PRInt32 estimatedBreakOffset = start + estimatedNumChars;
+    PRInt32 breakIndex = -1; // not yet computed
+    PRBool  inMiddleOfSegment = PR_FALSE;
+    nscoord numChars;
+
+    // Avoid scanning the break array in the case where we think all
+    // the text should fit
+    if (i <= estimatedBreakOffset) {
+      // Everything should fit
+      numChars = i - start;
+    }
+    else {
+      // Find the nearest place to break that is less than or equal to
+      // the estimated break offset
+      breakIndex = data->mPrevBreakState_BreakIndex;
+      while (data->mBreaks[breakIndex + 1] <= estimatedBreakOffset) {
+        ++breakIndex;
+      }
+
+      if (breakIndex == -1)
+        breakIndex = 0;
+
+      // We found a place to break that is before the estimated break
+      // offset. Where we break depends on whether the text crosses a
+      // segment boundary
+      if (start < data->mBreaks[breakIndex]) {
+        // The text crosses at least one segment boundary so measure to the
+        // break point just before the estimated break offset
+        numChars = PR_MIN(data->mBreaks[breakIndex] - start, (PRInt32)aSubstringLength);
+      } 
+      else {
+        // See whether there is another segment boundary between this one
+        // and the end of the text
+        if ((breakIndex < (data->mNumBreaks - 1)) && (data->mBreaks[breakIndex] < i)) {
+          ++breakIndex;
+          numChars = data->mBreaks[breakIndex] - start;
+        }
+        else {
+          NS_ASSERTION(i != data->mBreaks[breakIndex], "don't expect to be at segment boundary");
+
+          // The text is all within the same segment
+          numChars = i - start;
+
+          // Remember we're in the middle of a segment and not between
+          // two segments
+          inMiddleOfSegment = PR_TRUE;
+        }
+      }
+    }
+
+    // Measure the text
+    nscoord twWidth, pxWidth;
+    if ((1 == numChars) && (pstr[start] == ' ')) {
+      twWidth = data->mSpaceWidth;
+    }
+    else {
+      pxWidth = fontXlib->GetWidth(&pstr[start], numChars);
+      twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+    }
+
+    // See if the text fits
+    PRBool textFits = (twWidth + width) <= data->mAvailWidth;
+
+    // If the text fits then update the width and the number of
+    // characters that fit
+    if (textFits) {
+      numCharsFit += numChars;
+      width += twWidth;
+
+      // If we computed the break index and we're not in the middle
+      // of a segment then this is a spot that we can back up to if
+      // we need to, so remember this state
+      if ((breakIndex != -1) && !inMiddleOfSegment) {
+        data->mPrevBreakState_BreakIndex = breakIndex;
+        data->mPrevBreakState_Width = width;
+      }
+    }
+    else {
+      // The text didn't fit. If we're out of room then we're all done
+      allDone = PR_TRUE;
+
+      // See if we can just back up to the previous saved state and not
+      // have to measure any text
+      if (data->mPrevBreakState_BreakIndex != -1) {
+        PRBool canBackup;
+
+        // If we're in the middle of a word then the break index
+        // must be the same if we can use it. If we're at a segment
+        // boundary, then if the saved state is for the previous
+        // break index then we can use it
+        if (inMiddleOfSegment) {
+          canBackup = data->mPrevBreakState_BreakIndex == breakIndex;
+        } else {
+          canBackup = data->mPrevBreakState_BreakIndex == (breakIndex - 1);
+        }
+
+        if (canBackup) {
+          numCharsFit = data->mBreaks[data->mPrevBreakState_BreakIndex];
+          width = data->mPrevBreakState_Width;
+          break;
+        }
+      }
+
+      // We can't just revert to the previous break state. Find the break
+      // index just before the end of the text
+      i = start + numChars;
+      if (breakIndex == -1) {
+        breakIndex = 0;
+        if (data->mBreaks[breakIndex] < i) {
+          while ((breakIndex + 1 < data->mNumBreaks) && (data->mBreaks[breakIndex + 1] < i)) {
+            ++breakIndex;
+          }
+        }
+      }
+
+      if ((0 == breakIndex) && (i <= data->mBreaks[0])) {
+        // There's no place to back up to, so even though the text doesn't fit
+        // return it anyway
+        numCharsFit += numChars;
+        width += twWidth;
+
+        // Edge case of one word: it could be that we just measured a fragment of the
+        // first word and its remainder involves other fonts, so we want to keep going
+        // until we at least measure the entire first word
+        if (numCharsFit < data->mBreaks[0]) {
+          allDone = PR_FALSE;
+          // From now on we don't care anymore what is the _real_ estimated
+          // number of characters that fits. Rather, we have no where to break
+          // and have to measure one word fully, but the real estimate is less
+          // than that one word. However, since the other bits of code rely on
+          // what is in "data->mEstimatedNumChars", we want to override
+          // "data->mEstimatedNumChars" and pass in what _has_ to be measured
+          // so that it is transparent to the other bits that depend on it.
+          data->mEstimatedNumChars = data->mBreaks[0] - numCharsFit;
+          start += numChars;
+        }
+
+        break;
+      }
+
+      // Repeatedly back up until we get to where the text fits or we're
+      // all the way back to the first word
+      width += twWidth;
+      while ((breakIndex >= 0) && (width > data->mAvailWidth)) {
+        twWidth = 0;
+        start = data->mBreaks[breakIndex];
+        numChars = i - start;
+        if ((1 == numChars) && (pstr[start] == ' ')) {
+          twWidth = data->mSpaceWidth;
+        }
+        else if (numChars > 0) {
+          pxWidth = fontXlib->GetWidth(&pstr[start], numChars);
+          twWidth = NSToCoordRound(float(pxWidth) * data->mP2T);
+        }
+
+        width -= twWidth;
+        numCharsFit = start;
+        --breakIndex;
+        i = start;
+      }
+    }
+
+    start += numChars;
+  }
+
+#ifdef DEBUG_rbs
+  NS_ASSERTION(allDone || start == i, "internal error");
+  NS_ASSERTION(allDone || data->mNumCharsFit != numCharsFit, "internal error");
+#endif /* DEBUG_rbs */
+
+  if (data->mNumCharsFit != numCharsFit) {
+    // some text was actually retained
+    data->mWidth = width;
+    data->mNumCharsFit = numCharsFit;
+    data->mFonts->AppendElement(fontXlib);
+    data->mOffsets->AppendElement((void*)&pstr[numCharsFit]);
+  }
+
+  if (allDone) {
+    // stop now
+    return PR_FALSE;
+  }
+
+  return PR_TRUE; // don't stop if we still need to measure more characters
+}
+
+NS_IMETHODIMP
+nsRenderingContextXlib::GetTextDimensions(const PRUnichar*  aString,
+                                          PRInt32           aLength,
+                                          PRInt32           aAvailWidth,
+                                          PRInt32*          aBreaks,
+                                          PRInt32           aNumBreaks,
+                                          nsTextDimensions& aDimensions,
+                                          PRInt32&          aNumCharsFit,
+                                          nsTextDimensions& aLastWordDimensions,
+                                          PRInt32*          aFontID)
+{
+  if (!mFontMetrics)
+    return NS_ERROR_FAILURE;
+
+  nsFontMetricsXlib *metrics = NS_REINTERPRET_CAST(nsFontMetricsXlib *, mFontMetrics.get());
+
+  nscoord spaceWidth, aveCharWidth;
+  metrics->GetSpaceWidth(spaceWidth);
+  metrics->GetAveCharWidth(aveCharWidth);
+
+  // Note: aBreaks[] is supplied to us so that the first word is located
+  // at aString[0 .. aBreaks[0]-1] and more generally, the k-th word is
+  // located at aString[aBreaks[k-1] .. aBreaks[k]-1]. Whitespace can
+  // be included and each of them counts as a word in its own right.
+
+  // Upon completion of glyph resolution, characters that can be
+  // represented with fonts[i] are at offsets[i] .. offsets[i+1]-1
+
+  nsAutoVoidArray fonts, offsets;
+  offsets.AppendElement((void*)aString);
+
+  BreakGetTextDimensionsData data = { mP2T, aAvailWidth, aBreaks, aNumBreaks,
+    spaceWidth, aveCharWidth, 0, 0, 0, -1, 0, &fonts, &offsets 
+  };
+
+  metrics->ResolveForwards(aString, aLength, do_BreakGetTextDimensions, &data);
+
+  if (aFontID) *aFontID = 0;
+
+  aNumCharsFit = data.mNumCharsFit;
+  aDimensions.width = data.mWidth;
+
+  ///////////////////
+  // Post-processing for the ascent and descent:
+  //
+  // The width of the last word is included in the final width, but its
+  // ascent and descent are kept aside for the moment. The problem is that
+  // line-breaking may occur _before_ the last word, and we don't want its
+  // ascent and descent to interfere. We can re-measure the last word and
+  // substract its width later. However, we need a special care for the ascent
+  // and descent at the break-point. The idea is to keep the ascent and descent
+  // of the last word separate, and let layout consider them later when it has
+  // determined that line-breaking doesn't occur before the last word.
+  //
+  // Therefore, there are two things to do:
+  // 1. Determine the ascent and descent up to where line-breaking may occur.
+  // 2. Determine the ascent and descent of the remainder.
+  //    For efficiency however, it is okay to bail out early if there is only
+  //    one font (in this case, the height of the last word has no special
+  //    effect on the total height).
+
+  // aLastWordDimensions.width should be set to -1 to reply that we don't
+  // know the width of the last word since we measure multiple words
+  aLastWordDimensions.Clear();
+  aLastWordDimensions.width = -1;
+
+  PRInt32 count = fonts.Count();
+  if (!count)
+    return NS_OK;
+  nsFontXlib *fontXlib = (nsFontXlib *)fonts[0];
+  NS_ASSERTION(fontXlib, "internal error in do_BreakGetTextDimensions");
+  aDimensions.ascent = fontXlib->mMaxAscent;
+  aDimensions.descent = fontXlib->mMaxDescent;
+
+  // fast path - normal case, quick return if there is only one font
+  if (count == 1)
+    return NS_OK;
+
+  // get the last break index.
+  // If there is only one word, we end up with lastBreakIndex = 0. We don't
+  // need to worry about aLastWordDimensions in this case too. But if we didn't
+  // return earlier, it would mean that the unique word needs several fonts
+  // and we will still have to loop over the fonts to return the final height
+  PRInt32 lastBreakIndex = 0;
+  while (aBreaks[lastBreakIndex] < aNumCharsFit)
+    ++lastBreakIndex;
+
+  const PRUnichar* lastWord = (lastBreakIndex > 0) 
+    ? aString + aBreaks[lastBreakIndex-1]
+    : aString + aNumCharsFit; // let it point outside to play nice with the loop
+
+  // now get the desired ascent and descent information... this is however
+  // a very fast loop of the order of the number of additional fonts
+
+  PRInt32 currFont = 0;
+  const PRUnichar* pstr = aString;
+  const PRUnichar* last = aString + aNumCharsFit;
+
+  while (pstr < last) {
+    fontXlib = (nsFontXlib*)fonts[currFont];
+    PRUnichar* nextOffset = (PRUnichar*)offsets[++currFont]; 
+
+    // For consistent word-wrapping, we are going to handle the whitespace
+    // character with special care because a whitespace character can come
+    // from a font different from that of the previous word. If 'x', 'y', 'z',
+    // are Unicode points that require different fonts, we want 'xyz <br>'
+    // and 'xyz<br>' to have the same height because it gives a more stable
+    // rendering, especially when the window is resized at the edge of the word.
+    // If we don't do this, a 'tall' trailing whitespace, i.e., if the whitespace
+    // happens to come from a font with a bigger ascent and/or descent than all
+    // current fonts on the line, this can cause the next lines to be shifted
+    // down when the window is slowly resized to fit that whitespace.
+    if (*pstr == ' ') {
+      // skip pass the whitespace to ignore the height that it may contribute
+      ++pstr;
+      // get out if we reached the end
+      if (pstr == last) {
+        break;
+      }
+      // switch to the next font if we just passed the current font 
+      if (pstr == nextOffset) {
+        fontXlib = (nsFontXlib*)fonts[currFont];
+        nextOffset = (PRUnichar*)offsets[++currFont];
+      } 
+    }
+
+    // see if the last word intersects with the current font
+    // (we are testing for 'nextOffset-1 >= lastWord' since the
+    // current font ends at nextOffset-1)
+    if (nextOffset > lastWord) {
+      if (aLastWordDimensions.ascent < fontXlib->mMaxAscent) {
+        aLastWordDimensions.ascent = fontXlib->mMaxAscent;
+      }
+      if (aLastWordDimensions.descent < fontXlib->mMaxDescent) {
+        aLastWordDimensions.descent = fontXlib->mMaxDescent;
+      }
+    }
+
+    // see if we have not reached the last word yet
+    if (pstr < lastWord) {
+      if (aDimensions.ascent < fontXlib->mMaxAscent) {
+        aDimensions.ascent = fontXlib->mMaxAscent;
+      }
+      if (aDimensions.descent < fontXlib->mMaxDescent) {
+        aDimensions.descent = fontXlib->mMaxDescent;
+      }
+    }
+
+    // advance to where the next font starts
+    pstr = nextOffset;
+  }
 
   return NS_OK;
 }

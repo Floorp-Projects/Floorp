@@ -3573,7 +3573,7 @@ nsFontMetricsWin::ResolveForwards(HDC                  aDC,
     ++currChar;
   }
 
-  //This if block is mean to speedup the process in normal situation, when
+  //This if block is meant to speedup the process in normal situation, when
   //most characters can be found in first font
   if (currFont == mLoadedFonts[0]) {
     while (currChar < lastChar && (currFont->HasGlyph(*currChar)))
@@ -5024,7 +5024,7 @@ nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
   count = mLoadedFonts.Count();
   currSubset = LocateFontSubset(aDC, *currChar, count, currFont);
 
-  //This if block is mean to speedup the process in normal situation, when
+  //This if block is meant to speedup the process in normal situation, when
   //most characters can be found in first font
   if (currFont == mLoadedFonts[0]) {
     while (++currChar < lastChar && currFont->HasGlyph(*(currChar)) && currSubset->HasGlyph(*currChar)) ;

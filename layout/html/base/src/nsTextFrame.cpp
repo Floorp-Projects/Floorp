@@ -24,6 +24,8 @@
  *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Prabhat Hegde <prabhat.hegde@sun.com>
+ *   Tomi Leppikangas <tomi.leppikangas@oulu.fi>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -565,9 +567,9 @@ public:
       SetFontFromStyle(&aRenderingContext, sc); // some users of the struct expect this state
       aRenderingContext.GetFontMetrics(mNormalFont);
       mNormalFont->GetSpaceWidth(mSpaceWidth);
-#if defined(_WIN32) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2)|| defined(MOZ_X11)
       mNormalFont->GetAveCharWidth(mAveCharWidth);
-#endif
+#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
       if (0 == mAveCharWidth) {
         // provide a default if it could not be resolved
         mAveCharWidth = 10;
@@ -4534,6 +4536,8 @@ TransformTextToUnicode(char* aText, PRInt32 aNumChars)
   PRUnichar*      cp2 = (PRUnichar*)aText + (aNumChars - 1);
   
   while (aNumChars-- > 0) {
+    // XXX: If you crash here then you may see the issue described
+    // in http://bugzilla.mozilla.org/show_bug.cgi?id=36146#c44
     *cp2-- = PRUnichar(*cp1--);
   }
 }
@@ -4562,15 +4566,19 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
   PRBool  endsInNewline = PR_FALSE;
   PRBool  justDidFirstLetter = PR_FALSE;
   nsTextDimensions dimensions, lastWordDimensions;
-#if defined(_WIN32) || defined(XP_OS2)
-  PRBool  measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
-                            !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing &&
-                            aTextData.mWrapping;
+  PRBool  measureTextRuns = PR_FALSE;
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
+  // see if we have implementation for GetTextDimensions()
+  PRUint32 hints = 0;
+  aReflowState.rendContext->GetHints(hints);
+  if (hints & NS_RENDERING_HINT_FAST_MEASURE) {
+    measureTextRuns = !aTextData.mComputeMaxWordWidth && !aTs.mPreformatted &&
+                      !aTs.mSmallCaps && !aTs.mWordSpacing && !aTs.mLetterSpacing &&
+                      aTextData.mWrapping;
+  }
   // Don't measure text runs with letter spacing active, it doesn't work
   // it also doesn't work if we are not word-wrapping (bug 42832)
-#else
-  PRBool  measureTextRuns = PR_FALSE;
-#endif
+#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
   TextRun textRun;
   PRInt32 estimatedNumChars;
    
@@ -4853,7 +4861,9 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     continue;
 
   MeasureTextRun:
-#if defined(_WIN32) || defined(XP_OS2)
+#if defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11)
+  // see if we have implementation for GetTextDimensions()
+  if (hints & NS_RENDERING_HINT_FAST_MEASURE) {
     PRInt32 numCharsFit;
     // These calls can return numCharsFit not positioned at a break in the textRun. Beware.
     if (aTx.TransformedTextIsAscii()) {
@@ -4961,9 +4971,10 @@ nsTextFrame::MeasureText(nsIPresContext*          aPresContext,
     // Estimate the remaining number of characters we think will fit
     estimatedNumChars = (maxWidth - aTextData.mX) / aTs.mAveCharWidth;
     estimatedNumChars += estimatedNumChars / 20;
-#else
+    }
+#else /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
     int unused = -1;
-#endif
+#endif /* defined(_WIN32) || defined(XP_OS2) || defined(MOZ_X11) */
   }
 
   // If we didn't actually measure any text, then make sure it looks
