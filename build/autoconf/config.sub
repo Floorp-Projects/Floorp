@@ -143,6 +143,10 @@ case $os in
 	-psos*)
 		os=-psos
 		;;
+	-qnx*)
+		basic_machine=i386-pc
+		os=-qnx`uname -v | cut -c1-1`
+		;;
 esac
 
 # Decode aliases for certain CPU-COMPANY combinations.
@@ -505,6 +509,10 @@ case $basic_machine in
 	ps2)
 		basic_machine=i386-ibm
 		;;
+	*qnx*)
+		basic_machine=i386-pc
+		os=-qnx`uname -v | cut -c1-1`
+		;;
 	rm[46]00)
 		basic_machine=mips-siemens
 		;;
@@ -774,6 +782,8 @@ case $os in
 		;;
 	-xenix)
 		os=-xenix
+		;;
+	-qnx*)
 		;;
 	-none)
 		;;
