@@ -1,0 +1,75 @@
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ *   Travis Bogard <travis@netscape.com>
+ */
+
+#include "nsISupports.idl"
+
+interface nsIDocShellTreeOwner;
+
+
+/**
+ * The nsIDocShellTreeItem supplies the methods that are required of any item
+ * that wishes to be able to live within the docshell tree either as a middle
+ * node or a leaf. 
+ */
+
+[scriptable, uuid(B52AE780-A966-11d3-AFC7-00A024FFC08C)]
+interface nsIDocShellTreeItem : nsISupports
+{
+	/*
+	name of the DocShellTreeItem
+	*/
+	attribute wstring name;
+
+	/*
+	Parent DocShell..  Note Implementers of this interface should NOT effect
+	the lifetime of the parent DocShellTreeItem by holding this reference as it
+	creates a cycle.  Parents when releasing this interface should set the
+	parent to nsnull.  Implementers of this interface are guaranteed that when
+	parent is set that the pointer is valid without having to addref.
+
+	Further note however when others try to Get the interface you should add
+	ref it before handing it to them.
+	*/
+	attribute nsIDocShellTreeItem parent;
+
+	/*
+	Returns the root DocShellTreeItem.  This is a convience equivalent to 
+	getting the parent and it's parent until there isn't a parent.
+	*/
+	readonly attribute nsIDocShellTreeItem rootDocShell;
+
+	/*
+	The owner of the DocShell Tree.  This interface will be called upon when
+	the docshell has things it needs to tell to the owner of the docshell.
+	
+	Note implementers of this interface should NOT effect the lifetime of the 
+	parent DocShell by holding this reference as it creates a cycle.  Owners
+	when releasing this interface should set the treeOwner to nsnull.
+	Implementers of this interface are guaranteed that when treeOwner is
+	set that the poitner is valid without having to addref.
+	
+	Further note however when others try to get the interface it should be 
+	addref'd before handing it to them. 
+	*/
+	attribute nsIDocShellTreeOwner treeOwner;
+};
+
