@@ -65,7 +65,8 @@
                   loading="rdf:http://home.netscape.com/NC-rdf#loading"
                   type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type">
             <treerow>
-              <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" />
+              <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"
+                                      src="rdf:http://home.netscape.com/NC-rdf#Icon" />
             </treerow>
           </treeitem>
         </treechildren>
@@ -77,19 +78,19 @@
     <treechildren>
       <treeitem id="NC:RelatedLinks" container="true">
         <treerow>
-          <treecell value="&related.row.label;"/>
+          <treecell value="&related.row.label;" indent="true" />
         </treerow>
       </treeitem>
 
       <treeitem id="NC:LastSearchRoot" container="true">
         <treerow>
-          <treecell value="&lastsearch.row.label;" />
+          <treecell value="&lastsearch.row.label;" indent="true" />
         </treerow>
       </treeitem>
 
       <treeitem id="NC:SiteMapRoot" container="true">
         <treerow>
-          <treecell value="&sitemap.row.label;" />
+          <treecell value="&sitemap.row.label;" indent="true" />
         </treerow>
       </treeitem>
 
