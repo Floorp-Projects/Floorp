@@ -36,11 +36,27 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+var NC_NS = "http://home.netscape.com/NC-rdf#";
+
 var gDownloadView = null;
 var gDownloadViewChildren = null;
+var gRDFService = null;
+
+var gNC_File = null;
+
+function NODE_ID(aElement)
+{
+  return aElement.getAttribute("ref") || aElement.id;
+}
 
 function Startup()
 {
+  const rdfSvcContractID = "@mozilla.org/rdf/rdf-service;1";
+  const rdfSvcIID = Components.interfaces.nsIRDFService;
+  gRDFService = Components.classes[rdfSvcContractID].getService(rdfSvcIID);
+  
+  gNC_File = gRDFService.GetResource(NC_NS + "File");
+
   gDownloadView = document.getElementById("downloadView");
   gDownloadViewChildren = document.getElementById("downloadViewChildren");
   
@@ -49,6 +65,31 @@ function Startup()
     gDownloadView.selectItem(gDownloadViewChildren.firstChild);
    
   gDownloadView.controllers.appendController(downloadViewController);
+}
+
+function Test()
+{  
+  // Test code:
+  var uriContractID = "@mozilla.org/network/standard-url;1";
+  var uriIID = Components.interfaces.nsIURI;
+  var uri = Components.classes[uriContractID].createInstance(uriIID);
+  uri.spec = "http://www.silverstone.net.nz/mozilla/fsmoz.png";
+
+  var lfContractID = "@mozilla.org/file/local;1";
+  var lfIID = Components.interfaces.nsILocalFile;
+  var lf = Components.classes[lfContractID].createInstance(lfIID);
+  lf.initWithPath("C:\\GOATS\\goat.png");
+
+  var dlmgrContractID = "@mozilla.org/download-manager;1";
+  var dlmgrIID = Components.interfaces.nsIDownloadManager;
+  var dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
+  
+  var ds = dlmgr.QueryInterface(Components.interfaces.nsIRDFDataSource);
+  gDownloadView.database.AddDataSource(ds);
+  gDownloadView.builder.rebuild();
+  dlmgr.addItem("Some File", uri, lf, null, null);
+  gDownloadView.builder.rebuild();  
+  dump("*** goat\n");
 }
 
 function Shutdown()
@@ -92,10 +133,15 @@ var downloadViewController = {
     var selectionCount = gDownloadView.selectedItems.length;
     switch (aCommand) {
     case "cmd_downloadFile":
+      downloadFile();
       return true;
-    case "cmd_properties":
     case "cmd_openfile":
     case "cmd_showinshell":
+      if (selectionCount != 1)
+        return false;
+      var file = getFileForItem(gDownloadView.selectedItems[0]);
+      return file.exists();
+    case "cmd_properties":
       return selectionCount == 1;
     case "cmd_pause":
     case "cmd_delete":
@@ -109,6 +155,7 @@ var downloadViewController = {
   doCommand: function dVC_doCommand (aCommand)
   {
     dump("*** command = " + aCommand + "\n");
+    var selection = gDownloadView.selectedItems;
     switch (aCommand) {
     case "cmd_downloadFile":
       dump("*** show a dialog that lets a user specify a URL to download\n");
@@ -118,9 +165,13 @@ var downloadViewController = {
       break;
     case "cmd_openfile":
       dump("*** launch the file for the selected item\n");
+      var file = getFileForItem(selection[0]);
+      file.launch();
       break;
     case "cmd_showinshell":
       dump("*** show the containing folder for the selected item\n");
+      var file = getFileForItem(selection[0]);
+      file.reveal();
       break;
     case "cmd_pause":
       dump("*** pause the transfer for the selected item\n");
@@ -154,4 +205,62 @@ var downloadViewController = {
       goUpdateCommand(cmds[command]);
   }
 };
+
+function downloadFile()
+{
+  var bundle = document.getElementById("downloadBundle");
+  
+  // Select a file to download
+  const promptContractID = "@mozilla.org/embedcomp/prompt-service;1";
+  const promptIID = Components.interfaces.nsIPromptService;
+  var promptSvc = Components.classes[promptContractID].getService(promptIID);
+  
+  var downloadFileTitle = bundle.getString("downloadFileTitle");
+  var downloadFileMsg = bundle.getString("downloadFileMsg");
+  
+  var rv = { value: "" };
+  var accept = promptSvc.prompt(window, downloadFileTitle, downloadFileMsg, 
+                                rv, null, { });
+  
+  if (accept && rv.value != "") {
+    // Now select a location to save it to
+    const fpContractID = "@mozilla.org/filepicker;1";
+    const fpIID = Components.interfaces.nsIFilePicker;
+    var fp = Components.classes[fpContractID].getService(fpIID);
+    
+    // XXX-todo: make this file picker use the user's download folder
+    var title = bundle.getString("chooseDestinationTitle");
+    fp.init(window, title, fpIID.modeSave);
+    fp.appendFilters(fpIID.filterAll);
+    if (fp.show() == fpIID.returnOK) {
+      var uriContractID = "@mozilla.org/network/standard-url;1";
+      var uriIID = Components.interfaces.nsIURI;
+      var uri = Components.classes[uriContractID].createInstance(uriIID);
+      uri.spec = rv.value;
+    
+      var dlmgrContractID = "@mozilla.org/download-manager;1";
+      var dlmgrIID = Components.interfaces.nsIDownloadManager;
+      var dlmgr = Components.classes[dlmgrContractID].getService(dlmgrIID);
+      dlmgr.addItem(fp.file.leafName, uri, fp.file, null, null);
+    }
+  }
+}
+
+function getFileForItem(aElement)
+{
+  var itemResource = gRDFService.GetResource(NODE_ID(aElement));
+  var fileResource = gDownloadView.database.GetTarget(itemResource, gNC_File, true);
+  fileResource = fileResource.QueryInterface(Components.interfaces.nsIRDFResource);
+  return createLocalFile(fileResource.Value);
+}
+
+function createLocalFile(aFilePath) 
+{
+  var lfContractID = "@mozilla.org/file/local;1";
+  var lfIID = Components.interfaces.nsILocalFile;
+  var lf = Components.classes[lfContractID].createInstance(lfIID);
+  dump("*** aPath = " + aFilePath + "\n");
+  lf.initWithPath(aFilePath);
+  return lf;
+}
 
