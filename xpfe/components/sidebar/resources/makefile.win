@@ -45,6 +45,7 @@ CHROME_CONTENT = \
         $(NULL)
 
 CHROME_SKIN = \
+		.\sidebar.css \
         .\customize-panel.css \
         .\customize.css \
 	.\sidebarOverlay.css \
