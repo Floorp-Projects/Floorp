@@ -273,7 +273,6 @@ static const PRUnichar unicharEmptyString[] = { (PRUnichar)'\0' };
     	} \
 	} \
 	else { \
-		printf("the string was empty, leave it that way. stupid mac.\n"); \
 		MACRO_OBJECT->MACRO_METHOD(""); \
 	}	\
   }
