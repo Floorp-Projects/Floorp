@@ -46,7 +46,7 @@ include $(DEPTH)/coreconf/config.mk
 
 include $(DEPTH)/dbm/config/config.mk
 
-ifeq ($(OS_ARCH),WINNT)
+ifeq (,$(filter-out WIN%,$(OS_TARGET))) 
 LIBDBM		= ../src/$(PLATFORM)/dbm$(STATIC_LIB_SUFFIX)
 else
 LIBDBM		= ../src/$(PLATFORM)/libdbm$(STATIC_LIB_SUFFIX)
