@@ -504,6 +504,7 @@ NS_IMETHODIMP
 nsContainerBox::GetLayoutManager(nsIBoxLayout** aLayout)
 {
   *aLayout = mLayoutManager;
+  NS_IF_ADDREF(*aLayout);
   return NS_OK;
 }
 

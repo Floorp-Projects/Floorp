@@ -56,8 +56,6 @@
 
 nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFrame):nsBox(aPresShell)
 {
-  NS_INIT_ISUPPORTS();
-
   mFrame = aFrame;
   mSpaceManager = nsnull;
   mWasCollapsed = PR_FALSE;
@@ -565,6 +563,12 @@ nsBoxToBlockAdaptor::Reflow(nsIPresContext*   aPresContext,
    //       PlaceChild(aPresContext, mFrame, aX + margin.left, aY + margin.top);
    // }
 
+    // html doesn't like 0 sizes.
+    if (reflowState.mComputedWidth == 0)
+      reflowState.mComputedWidth = 1;
+    if (reflowState.mComputedHeight == 0)
+      reflowState.mComputedHeight = 1;
+
     mFrame->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
 
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
@@ -802,17 +806,8 @@ nsBoxToBlockAdaptor::SetWasCollapsed(nsBoxLayoutState& aState, PRBool aCollapsed
   mWasCollapsed = aCollapsed;
 }
 
-NS_IMETHODIMP_(nsrefcnt) 
-nsBoxToBlockAdaptor::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt)
-nsBoxToBlockAdaptor::Release(void)
-{
-    return NS_OK;
-}
+NS_IMPL_ADDREF_INHERITED(nsBoxToBlockAdaptor, nsBox);
+NS_IMPL_RELEASE_INHERITED(nsBoxToBlockAdaptor, nsBox);
 
 //
 // QueryInterface

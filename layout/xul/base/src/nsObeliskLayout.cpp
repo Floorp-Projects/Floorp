@@ -64,6 +64,8 @@ nsObeliskLayout::UpdateMonuments(nsIBox* aBox, nsBoxLayoutState& aState)
 
      mOtherMonumentList = nsnull;
      GetOtherMonuments(aBox, &mOtherMonumentList);
+     if (mOtherMonumentList)
+        mOtherMonumentList->AddRef();
   }
 }
 
@@ -204,8 +206,10 @@ nsObeliskLayout::ComputeChildSizes(nsIBox* aBox,
   GetOtherTemple(aBox, &temple, &aTempleBox);
   if (temple) {
      // substitute our sizes for the other temples obelisk sizes.
+     nsBoxSize* first = nsnull;
      nsBoxSize* last = nsnull;
-     temple->BuildBoxSizeList(aTempleBox, aState, &aBoxSizes, &last);
+     temple->BuildBoxSizeList(aTempleBox, aState, first, last);
+     aBoxSizes = first;
   }
 
   nsSprocketLayout::ComputeChildSizes(aBox, aState, aGivenSize, aBoxSizes, aComputedBoxSizes);  

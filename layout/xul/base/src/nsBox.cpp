@@ -704,18 +704,6 @@ nsBox::Redraw(nsBoxLayoutState& aState,
   return NS_OK;
 }
 
-// nsISupports
-NS_IMPL_ADDREF(nsBox);
-NS_IMPL_RELEASE(nsBox);
-
-//
-// QueryInterface
-//
-NS_INTERFACE_MAP_BEGIN(nsBox)
-  NS_INTERFACE_MAP_ENTRY(nsIBox)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
-NS_INTERFACE_MAP_END
-
 PRBool 
 nsIBox::AddCSSPrefSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
 {
@@ -1022,4 +1010,25 @@ nsBox::GetDebug(PRBool& aDebug)
   aDebug = PR_FALSE;
   return NS_OK;
 }
+
+// nsISupports
+NS_IMETHODIMP_(nsrefcnt) 
+nsBox::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt)
+nsBox::Release(void)
+{
+    return NS_OK;
+}
+
+//
+// QueryInterface
+//
+NS_INTERFACE_MAP_BEGIN(nsBox)
+  NS_INTERFACE_MAP_ENTRY(nsIBox)
+  NS_INTERFACE_MAP_ENTRY(nsISupports)
+NS_INTERFACE_MAP_END
 
