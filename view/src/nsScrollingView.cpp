@@ -38,7 +38,6 @@
 #include "nsScrollingView.h"
 #include "nsIWidget.h"
 #include "nsUnitConversion.h"
-#include "nsIViewManager.h"
 #include "nsIPresContext.h"
 #include "nsIScrollbar.h"
 #include "nsIDeviceContext.h"
@@ -52,6 +51,7 @@
 #include "nsISupportsArray.h"
 #include "nsIScrollPositionListener.h"
 #include "nsIRegion.h"
+#include "nsViewManager.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
@@ -535,7 +535,6 @@ NS_IMETHODIMP nsScrollingView::SetPosition(nscoord aX, nscoord aY)
     nsIWidget         *thiswin;
     GetWidget(thiswin);
     float             t2p;
-    nsIView           *scrolledView;
   
     if (nsnull == thiswin)
       GetOffsetFromWidget(nsnull, nsnull, thiswin);
@@ -548,8 +547,7 @@ NS_IMETHODIMP nsScrollingView::SetPosition(nscoord aX, nscoord aY)
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
 
-    GetScrolledView(scrolledView);
-  
+    nsView* scrolledView = GetScrolledView();
     if (scrolledView)
     {
       // Adjust the positions of the scrollbars and clip view's widget
@@ -568,7 +566,7 @@ NS_IMETHODIMP nsScrollingView::SetPosition(nscoord aX, nscoord aY)
 }
 
 nsresult
-nsScrollingView::SetComponentVisibility(nsIView* aView, nsViewVisibility aViewVisibility) 
+nsScrollingView::SetComponentVisibility(nsView* aView, nsViewVisibility aViewVisibility) 
 {
   nsresult rv = NS_OK;
   if (nsnull != aView) {
@@ -757,8 +755,7 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
   mOffsetY = offsetY;
 
   // Position the scrolled view
-  nsIView *scrolledView;
-  GetScrolledView(scrolledView);
+  nsView *scrolledView = GetScrolledView();
   if(scrolledView) {
     scrolledView->SetPosition(-mOffsetX, -mOffsetY);
     Scroll(scrolledView, dx, dy, t2p, 0);
@@ -769,8 +766,6 @@ void nsScrollingView::HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags
 NS_IMETHODIMP_(void) nsScrollingView::Notify(nsITimer * aTimer)
 {
   nscoord xoff, yoff;
-  nsIView *view;
-  GetScrolledView(view);
 
   // First do the scrolling of the view
   xoff = mOffsetX;
@@ -896,11 +891,10 @@ NS_IMETHODIMP nsScrollingView::CreateScrollControls(nsNativeWidget aNative)
 
     // Find Parent view with window and remember the window
     nsIWidget * win  = nsnull;
-    nsIView   * view = (nsIView *)this;
+    nsView    * view = this;
     view->GetWidget(win);
     while (win == nsnull) {
-      nsIView * parent;
-      view->GetParent(parent);
+      nsView * parent = view->GetParent();
       if (nsnull == parent) {
         break;
       }
@@ -973,8 +967,7 @@ NS_IMETHODIMP nsScrollingView::SetZIndex(PRInt32 aZIndex)
 
 NS_IMETHODIMP nsScrollingView::ComputeScrollOffsets(PRBool aAdjustWidgets)
 {
-  nsIView       *scrolledView;
-  GetScrolledView(scrolledView);
+  nsView        *scrolledView = GetScrolledView();
   nsIScrollbar  *scrollv = nsnull, *scrollh = nsnull;
   PRBool		hasVertical = PR_TRUE, hasHorizontal = PR_FALSE;
   nsIWidget     *win;
@@ -1280,7 +1273,6 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 	nsSize            clipSize;
 	nsIWidget         *widget;
 	PRInt32           dx = 0, dy = 0;
-	nsIView           *scrolledView;
 
 	mViewManager->GetDeviceContext(dev);
 	dev->GetAppUnitsToDevUnits(t2p);
@@ -1353,7 +1345,7 @@ NS_IMETHODIMP nsScrollingView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdate
 
 	// Update the scrolled view's position
 
-	GetScrolledView(scrolledView);
+	nsView* scrolledView = GetScrolledView();
 
   NotifyScrollPositionWillChange(aX, aY);
 
@@ -1392,7 +1384,8 @@ NS_IMETHODIMP nsScrollingView::GetScrollbarVisibility(PRBool *aVerticalVisible,
   return NS_OK;
 }
 
-void nsScrollingView::AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *aView, nscoord aDx, nscoord aDy, float scale)
+void nsScrollingView::AdjustChildWidgets(nsScrollingView *aScrolling, nsView *aView,
+                                         nscoord aDx, nscoord aDy, float scale)
 {
   nscoord           offx, offy;
   PRBool            isscroll = PR_FALSE;
@@ -1409,8 +1402,8 @@ void nsScrollingView::AdjustChildWidgets(nsScrollingView *aScrolling, nsIView *a
   aDx += offx;
   aDy += offy;
 
-  nsIView *kid;
-  for (aView->GetChild(0, kid); kid != nsnull; kid->GetNextSibling(kid))
+  nsView* kid;
+  for (kid = aView->GetFirstChild(); kid != nsnull; kid = kid->GetNextSibling())
   {
     nsIWidget *win;
     kid->GetWidget(win);
@@ -1528,15 +1521,19 @@ NS_IMETHODIMP nsScrollingView::SetScrolledView(nsIView *aScrolledView)
   return mViewManager->InsertChild(mClipView, aScrolledView, 0);
 }
 
+nsView* nsScrollingView::GetScrolledView() const
+{
+  if (nsnull != mClipView) {
+    return mClipView->GetFirstChild();
+  } else {
+    return nsnull;
+  }
+}
+
 NS_IMETHODIMP nsScrollingView::GetScrolledView(nsIView *&aScrolledView) const
 {
-  if (nsnull != mClipView)
-    return mClipView->GetChild(0, aScrolledView);
-  else
-  {
-    aScrolledView = nsnull;
-    return NS_OK;
-  }
+  aScrolledView = GetScrolledView();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsScrollingView::GetScrollPosition(nscoord &aX, nscoord &aY) const
@@ -1673,7 +1670,7 @@ NS_IMETHODIMP nsScrollingView::ScrollByWhole(PRBool aTop)
 	return NS_OK;
 }
 
-PRBool nsScrollingView::CannotBitBlt(nsIView* aScrolledView)
+PRBool nsScrollingView::CannotBitBlt(nsView* aScrolledView)
 {
   PRBool    trans;
   float     opacity;
@@ -1688,7 +1685,8 @@ PRBool nsScrollingView::CannotBitBlt(nsIView* aScrolledView)
          (scrolledViewFlags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
 }
 
-void nsScrollingView::Scroll(nsIView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags)
+void nsScrollingView::Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy,
+                             float scale, PRUint32 aUpdateFlags)
 {
   if ((aDx != 0) || (aDy != 0))
   {

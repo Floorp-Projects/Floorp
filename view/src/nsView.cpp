@@ -37,7 +37,7 @@
 
 #include "nsView.h"
 #include "nsIWidget.h"
-#include "nsIViewManager.h"
+#include "nsViewManager.h"
 #include "nsIFrame.h"
 #include "nsIPresContext.h"
 #include "nsIWidget.h"
@@ -72,15 +72,13 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 //printf(" %d %d %d (%d,%d) \n", aEvent->widget, aEvent->widgetSupports, 
 //       aEvent->message, aEvent->point.x, aEvent->point.y);
   nsEventStatus result = nsEventStatus_eIgnore;
-  nsIView       *view = nsView::GetViewFor(aEvent->widget);
+  nsView       *view = nsView::GetViewFor(aEvent->widget);
 
   if (nsnull != view)
   {
-    nsIViewManager    *vm;
+    nsViewManager *vm = view->GetViewManager();
 
-    view->GetViewManager(vm);
     vm->DispatchEvent(aEvent, &result);
-    NS_RELEASE(vm);
   }
 
   return result;
@@ -105,24 +103,14 @@ nsView :: ~nsView()
 
   mVFlags |= NS_VIEW_PUBLIC_FLAG_DYING;
 
-  PRInt32 numKids;
-  GetChildCount(numKids);
-  if (numKids > 0)
+  while (GetFirstChild() != nsnull)
   {
-    nsIView *kid;
-
-    //nuke the kids
-    do {
-      GetChild(0, kid);
-      if (nsnull != kid)
-        kid->Destroy();
-    } while (nsnull != kid);
+    GetFirstChild()->Destroy();
   }
 
   if (nsnull != mViewManager)
   {
-    nsIView *rootView;
-    mViewManager->GetRootView(rootView);
+    nsView *rootView = mViewManager->GetRootView();
     
     if (nsnull != rootView)
     {
@@ -144,8 +132,7 @@ nsView :: ~nsView()
       mParent->RemoveChild(this);
     }
 
-    nsIView* grabbingView; //check to see if we are capturing!!!
-    mViewManager->GetMouseEventGrabber(grabbingView);
+    nsView* grabbingView = mViewManager->GetMouseEventGrabber(); //check to see if we are capturing!!!
     if (grabbingView == this)
     {
       PRBool boolResult;//not used
@@ -203,26 +190,24 @@ nsrefcnt nsView::Release()
   return 1;
 }
 
-nsIView* nsView::GetViewFor(nsIWidget* aWidget)
+nsView* nsView::GetViewFor(nsIWidget* aWidget)
 {           
-  nsIView*  view = nsnull;
-  void*     clientData;
+  void*    clientData;
 
   NS_PRECONDITION(nsnull != aWidget, "null widget ptr");
 	
   // The widget's client data points back to the owning view
   if (aWidget && NS_SUCCEEDED(aWidget->GetClientData(clientData))) {
-    view = (nsIView*)clientData;
- 
     nsISupports* data = (nsISupports*)clientData;
     
     if (nsnull != data) {
-      if (NS_FAILED(data->QueryInterface(NS_GET_IID(nsIView), (void **)&view))) {
-        return nsnull;  // return null if client data isn't a view
+      nsIView* view = nsnull;
+      if (NS_SUCCEEDED(data->QueryInterface(NS_GET_IID(nsIView), (void **)&view))) {
+        return NS_STATIC_CAST(nsView*, view);
       }
     }
   }
-  return view;
+  return nsnull;
 }
 
 NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
@@ -239,7 +224,7 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
     return NS_ERROR_ALREADY_INITIALIZED;
   }
   // we don't hold a reference to the view manager
-  mViewManager = aManager;
+  mViewManager = NS_STATIC_CAST(nsViewManager*, aManager);
 
   mChildClip.mLeft = 0;
   mChildClip.mRight = 0;
@@ -249,7 +234,7 @@ NS_IMETHODIMP nsView :: Init(nsIViewManager* aManager,
   SetBounds(aBounds);
 
   //temporarily set it...
-  SetParent((nsIView *)aParent);
+  SetParent(NS_CONST_CAST(nsView*, NS_STATIC_CAST(const nsView*, aParent)));
 
   SetVisibility(aVisibilityFlag);
 
@@ -335,18 +320,16 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
 
   //see if any of this view's children can process the event
   if ( !(mVFlags & NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN) ) {
-    PRInt32 numkids;
+    PRInt32 numkids = GetChildCount();
     nsRect  trect;
     nscoord x, y;
 
-    GetChildCount(numkids); 
     x = event->point.x;
     y = event->point.y;
 
     for (PRInt32 cnt = 0; cnt < numkids && !aHandled; cnt++) 
     {
-      nsIView *pKid;
-      GetChild(cnt, pKid);
+      nsView *pKid = GetChild(cnt);
       if (!pKid) break;
  
       pKid->GetBounds(trect);
@@ -555,11 +538,9 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
 NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
 {
 
-  nsIView *rootView;
+  nsView *rootView = mViewManager->GetRootView();
 
-  mViewManager->GetRootView(rootView);
-
-  if (this == ((const nsView*)rootView))
+  if (this == rootView)
     *x = *y = 0;
   else
   {
@@ -648,18 +629,16 @@ NS_IMETHODIMP nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoor
 
 NS_IMETHODIMP nsView :: GetBounds(nsRect &aBounds) const
 {
-  nsIView *rootView = nsnull;
-
   NS_ASSERTION(mViewManager, "mViewManager is null!");
   if (!mViewManager) {
     aBounds.x = aBounds.y = 0;
     return NS_ERROR_FAILURE;
   }
 
-  mViewManager->GetRootView(rootView);
+  nsView *rootView = mViewManager->GetRootView();
   aBounds = mBounds;
 
-  if ((nsIView *)this == rootView)
+  if (this == rootView)
     aBounds.x = aBounds.y = 0;
 
   return NS_OK;
@@ -692,8 +671,7 @@ NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
 
   if (aVisibility == nsViewVisibility_kHide)
   {
-    nsIView* grabbingView; //check to see if we are grabbing events
-    mViewManager->GetMouseEventGrabber(grabbingView);
+    nsView* grabbingView = mViewManager->GetMouseEventGrabber(); //check to see if we are grabbing events
     if (grabbingView == this)
     {
       //if yes then we must release them before we become hidden and can't get them
@@ -718,18 +696,6 @@ NS_IMETHODIMP nsView :: SetVisibility(nsViewVisibility aVisibility)
 NS_IMETHODIMP nsView :: GetVisibility(nsViewVisibility &aVisibility) const
 {
   aVisibility = mVis;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView :: SetZParent(nsIView *aZParent)
-{
-  mZParent = aZParent;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView :: GetZParent(nsIView *&aZParent) const
-{
-  aZParent = mZParent;
   return NS_OK;
 }
 
@@ -791,12 +757,6 @@ NS_IMETHODIMP nsView::GetFloating(PRBool &aFloatingView) const
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: SetParent(nsIView *aParent)
-{
-  mParent = aParent;
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsView :: GetParent(nsIView *&aParent) const
 {
   aParent = mParent;
@@ -809,59 +769,49 @@ NS_IMETHODIMP nsView :: GetNextSibling(nsIView *&aNextSibling) const
   return NS_OK;
 }
 
-NS_IMETHODIMP nsView::SetNextSibling(nsIView* aView)
+void nsView :: InsertChild(nsView *aChild, nsView *aSibling)
 {
-  mNextSibling = aView;
-  return NS_OK;
-}
+  NS_PRECONDITION(nsnull != aChild, "null ptr");
 
-NS_IMETHODIMP nsView :: InsertChild(nsIView *child, nsIView *sibling)
-{
-  NS_PRECONDITION(nsnull != child, "null ptr");
-  if (nsnull != child)
+  if (nsnull != aChild)
   {
-    if (nsnull != sibling)
+    if (nsnull != aSibling)
     {
 #ifdef NS_DEBUG
-      nsIView*  siblingParent;
-      sibling->GetParent(siblingParent);
+      nsView* siblingParent = aSibling->GetParent();
       NS_ASSERTION(siblingParent == this, "tried to insert view with invalid sibling");
 #endif
       //insert after sibling
-      nsIView*  siblingNextSibling;
-      sibling->GetNextSibling(siblingNextSibling);
-      child->SetNextSibling(siblingNextSibling);
-      sibling->SetNextSibling(child);
+      nsView* siblingNextSibling = aSibling->GetNextSibling();
+      aChild->SetNextSibling(siblingNextSibling);
+      aSibling->SetNextSibling(aChild);
     }
     else
     {
-      child->SetNextSibling(mFirstChild);
-      mFirstChild = child;
+      aChild->SetNextSibling(mFirstChild);
+      mFirstChild = aChild;
     }
-    child->SetParent(this);
+    aChild->SetParent(this);
     mNumKids++;
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: RemoveChild(nsIView *child)
+void nsView :: RemoveChild(nsView *child)
 {
   NS_PRECONDITION(nsnull != child, "null ptr");
 
   if (nsnull != child)
   {
-    nsIView* prevKid = nsnull;
-    nsIView* kid = mFirstChild;
+    nsView* prevKid = nsnull;
+    nsView* kid = mFirstChild;
     PRBool found = PR_FALSE;
     while (nsnull != kid) {
       if (kid == child) {
         if (nsnull != prevKid) {
-          nsIView*  kidNextSibling;
-          kid->GetNextSibling(kidNextSibling);
+          nsView* kidNextSibling = kid->GetNextSibling();
           prevKid->SetNextSibling(kidNextSibling);
         } else {
-          kid->GetNextSibling(mFirstChild);
+          mFirstChild = kid->GetNextSibling();
         }
         child->SetParent(nsnull);
         mNumKids--;
@@ -869,34 +819,21 @@ NS_IMETHODIMP nsView :: RemoveChild(nsIView *child)
         break;
       }
       prevKid = kid;
-	    kid->GetNextSibling(kid);
+	    kid = kid->GetNextSibling();
     }
     NS_ASSERTION(found, "tried to remove non child");
   }
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP nsView :: GetChildCount(PRInt32 &aCount) const
-{
-  aCount = mNumKids;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsView :: GetChild(PRInt32 index, nsIView *&aChild) const
+nsView* nsView :: GetChild(PRInt32 aIndex) const
 { 
-  NS_PRECONDITION(!(index > mNumKids), "bad index");
-
-  aChild = nsnull;
-  if (index < mNumKids)
-  {
-    aChild = mFirstChild;
-    for (PRInt32 cnt = 0; (cnt < index) && (nsnull != aChild); cnt++) {
-      aChild->GetNextSibling(aChild);
+  for (nsView* child = GetFirstChild(); child != nsnull; child = child->GetNextSibling()) {
+    if (aIndex == 0) {
+      return child;
     }
+    --aIndex;
   }
-
-  return NS_OK;
+  return nsnull;
 }
 
 NS_IMETHODIMP nsView :: SetOpacity(float opacity)
@@ -1042,7 +979,7 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  fprintf(out, "%p ", this);
+  fprintf(out, "%p ", (void*)this);
   if (nsnull != mWindow) {
     nsRect windowBounds;
     nsRect nonclientBounds;
@@ -1058,7 +995,7 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
     nsrefcnt widgetRefCnt = mWindow->AddRef() - 1;
     mWindow->Release();
     fprintf(out, "(widget=%p[%d] pos={%d,%d,%d,%d}) ",
-            mWindow, widgetRefCnt,
+            (void*)mWindow, widgetRefCnt,
             nonclientBounds.x, nonclientBounds.y,
             windowBounds.width, windowBounds.height);
   }
@@ -1069,10 +1006,10 @@ NS_IMETHODIMP nsView::List(FILE* out, PRInt32 aIndent) const
   PRBool  hasTransparency;
   HasTransparency(hasTransparency);
   fprintf(out, " z=%d vis=%d opc=%1.3f tran=%d clientData=%p <\n", mZindex, mVis, mOpacity, hasTransparency, mClientData);
-  nsIView* kid = mFirstChild;
+  nsView* kid = mFirstChild;
   while (nsnull != kid) {
     kid->List(out, aIndent + 1);
-    kid->GetNextSibling(kid);
+    kid = kid->GetNextSibling();
   }
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
   fputs(">\n", out);
@@ -1100,12 +1037,11 @@ NS_IMETHODIMP nsView :: GetViewFlags(PRUint32 *aFlags) const
 
 NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidget *&aWidget)
 {
-  nsIView   *ancestor;
+  nsView   *ancestor = GetParent();
   aWidget = nsnull;
   
   // XXX aDx and aDy are OUT parameters and so we should initialize them
   // to 0 rather than relying on the caller to do so...
-  GetParent(ancestor);
   while (nsnull != ancestor)
   {
     ancestor->GetWidget(aWidget);
@@ -1122,16 +1058,14 @@ NS_IMETHODIMP nsView :: GetOffsetFromWidget(nscoord *aDx, nscoord *aDy, nsIWidge
       *aDy += offy;
     }
 
-	  ancestor->GetParent(ancestor);
+	  ancestor = ancestor->GetParent();
   }
 
   
   if (nsnull == aWidget) {
        // The root view doesn't have a widget
        // but maybe the view manager does.
-    nsCOMPtr<nsIViewManager> vm;
-    GetViewManager(*getter_AddRefs(vm));
-    vm->GetWidget(&aWidget);
+    GetViewManager()->GetWidget(&aWidget);
   }
 
   return NS_OK;
@@ -1174,59 +1108,13 @@ NS_IMETHODIMP nsView::GetCompositorFlags(PRUint32 *aFlags)
 	return NS_OK;
 }
 
-static void calc_extents(nsIView *view, nsRect *extents, nscoord ox, nscoord oy)
-{
-  nsIView     *kid;
-  nsRect      bounds;
-  nsIClipView *cview;
-
-  view->GetChild(0, kid);
-  while (nsnull != kid)
-  {
-    kid->GetBounds(bounds);
-
-    bounds.x += ox;
-    bounds.y += oy;
-
-    extents->UnionRect(*extents, bounds);
-
-    cview = nsnull;
-
-    kid->QueryInterface(NS_GET_IID(nsIClipView), (void **)&cview);
-
-    if (!cview)
-      calc_extents(kid, extents, bounds.x, bounds.y);
-
-    kid->GetNextSibling(kid);
-  }
-}
-
-NS_IMETHODIMP nsView :: GetExtents(nsRect *aExtents)
-{
-  GetBounds(*aExtents);
-
-  aExtents->x = 0;
-  aExtents->y = 0;
-
-  calc_extents(this, aExtents, 0, 0);
-
-  return NS_OK;
-}
-
 PRBool nsView :: IsRoot()
 {
-nsIView *rootView;
-
   NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
-  mViewManager->GetRootView(rootView);
-  if (rootView == this) {
-   return PR_TRUE;
-  }
-  
-  return PR_FALSE;
+  return mViewManager->GetRootView() == this;
 }
 
-PRBool nsView::PointIsInside(nsIView& aView, nscoord x, nscoord y) const
+PRBool nsView::PointIsInside(nsView& aView, nscoord x, nscoord y) const
 {
   nsRect clippedRect;
   PRBool empty;
@@ -1258,8 +1146,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
   aIsClipped = PR_FALSE;
   
   GetBounds(aClippedRect);
-  nsIView* parentView;
-  GetParent(parentView);
+  nsView* parentView = GetParent();
 
   // Walk all of the way up the views to see if any
   // ancestor sets the NS_VIEW_PUBLIC_FLAG_CLIPCHILDREN
@@ -1292,7 +1179,7 @@ NS_IMETHODIMP nsView::GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, P
     ancestorX -= bounds.x;
     ancestorY -= bounds.y;
 
-    parentView->GetParent(parentView);
+    parentView = parentView->GetParent();
   }
  
   return NS_OK;

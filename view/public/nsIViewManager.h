@@ -321,22 +321,6 @@ public:
   NS_IMETHOD  MoveViewBelow(nsIView *aView, nsIView *aOther) = 0;
 
   /**
-   * Returns whether a view is actually shown (based on its visibility
-   * and that of its ancestors).
-   * @param aView view to query visibilty of
-   * @result PR_TRUE if visible, else PR_FALSE
-   */
-  NS_IMETHOD  IsViewShown(nsIView *aView, PRBool &aResult) = 0;
-
-  /**
-   * Returns the clipping area of a view in absolute coordinates.
-   * @param aView view to query clip rect of
-   * @param rect to set with view's clipping rect
-   * @result PR_TRUE if there is a clip rect, else PR_FALSE
-   */
-  NS_IMETHOD  GetViewClipAbsolute(nsIView *aView, nsRect *aRect, PRBool &aResult) = 0;
-
-  /**
    * Used set the transparency status of the content in a view. see
    * nsIView.HasTransparency().
    * @param aTransparent PR_TRUE if there are transparent areas, PR_FALSE otherwise.

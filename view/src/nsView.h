@@ -49,6 +49,8 @@
 
 class nsIPresContext;
 class nsIViewManager;
+class nsViewManager;
+class nsZPlaceholderView;
 
 class nsView : public nsIView
 {
@@ -88,22 +90,14 @@ public:
   NS_IMETHOD  GetChildClip(nscoord *aLeft, nscoord *aTop, nscoord *aRight, nscoord *aBottom) const;
   NS_IMETHOD  SetVisibility(nsViewVisibility visibility);
   NS_IMETHOD  GetVisibility(nsViewVisibility &aVisibility) const;
-  NS_IMETHOD  SetZParent(nsIView *aZParent);
-  NS_IMETHOD  GetZParent(nsIView *&aZParent) const;
   NS_IMETHOD  SetZIndex(PRInt32 aZIndex);
   NS_IMETHOD  GetZIndex(PRInt32 &aZIndex) const;
   NS_IMETHOD  SetAutoZIndex(PRBool aAutoZIndex);
   NS_IMETHOD  GetAutoZIndex(PRBool &aAutoZIndex) const;
   NS_IMETHOD  SetFloating(PRBool aFloatingView);
   NS_IMETHOD  GetFloating(PRBool &aFloatingView) const;
-  NS_IMETHOD  SetParent(nsIView *aParent);
   NS_IMETHOD  GetParent(nsIView *&aParent) const;
   NS_IMETHOD  GetNextSibling(nsIView *&aNextSibling) const;
-  NS_IMETHOD  SetNextSibling(nsIView* aNextSibling);
-  NS_IMETHOD  InsertChild(nsIView *child, nsIView *sibling);
-  NS_IMETHOD  RemoveChild(nsIView *child);
-  NS_IMETHOD  GetChildCount(PRInt32 &aCount) const;
-  NS_IMETHOD  GetChild(PRInt32 index, nsIView*& aChild) const;
   NS_IMETHOD  SetOpacity(float opacity);
   NS_IMETHOD  GetOpacity(float &aOpacity) const;
   NS_IMETHOD  HasTransparency(PRBool &aTransparent) const;
@@ -126,7 +120,6 @@ public:
   NS_IMETHOD  GetViewFlags(PRUint32 *aFlags) const;
   NS_IMETHOD  SetCompositorFlags(PRUint32 aFlags);
   NS_IMETHOD  GetCompositorFlags(PRUint32 *aFlags);
-  NS_IMETHOD  GetExtents(nsRect *aExtents);
   NS_IMETHOD  GetClippedRect(nsRect& aClippedRect, PRBool& aIsClipped, PRBool& aEmpty) const;
 
 
@@ -137,13 +130,30 @@ public:
 
 
   // Helper function to get the view that's associated with a widget
-  static nsIView*  GetViewFor(nsIWidget* aWidget);
+  static nsView*  GetViewFor(nsIWidget* aWidget);
 
    // Helper function to determine if the view instance is the root view
   PRBool IsRoot();
 
    // Helper function to determine if the view point is inside of a view
-  PRBool PointIsInside(nsIView& aView, nscoord x, nscoord y) const;
+  PRBool PointIsInside(nsView& aView, nscoord x, nscoord y) const;
+
+public: // NOT in nsIView, so only available in view module
+  nsView* GetFirstChild() const { return mFirstChild; }
+  nsView* GetNextSibling() const { return mNextSibling; }
+  nsView* GetParent() const { return mParent; }
+  nsZPlaceholderView* GetZParent() const { return mZParent; }
+  nsViewManager* GetViewManager() const { return mViewManager; }
+
+  PRInt32 GetChildCount() const { return mNumKids; }
+  nsView* GetChild(PRInt32 aIndex) const;
+
+  void InsertChild(nsView *aChild, nsView *aSibling);
+  void RemoveChild(nsView *aChild);
+
+  void SetParent(nsView *aParent) { mParent = aParent; }
+  void SetZParent(nsZPlaceholderView *aZParent) { mZParent = aZParent; }
+  void SetNextSibling(nsView *aSibling) { mNextSibling = aSibling; }
 
 protected:
   virtual ~nsView();
@@ -151,15 +161,15 @@ protected:
   virtual nsresult LoadWidget(const nsCID &aClassIID);
 
 protected:
-  nsIViewManager    *mViewManager;
-  nsIView           *mParent;
+  nsViewManager     *mViewManager;
+  nsView            *mParent;
   nsIWidget         *mWindow;
 
-  nsIView           *mZParent;
+  nsZPlaceholderView*mZParent;
 
   //XXX should there be pointers to last child so backward walking is fast?
-  nsIView           *mNextSibling;
-  nsIView           *mFirstChild;
+  nsView            *mNextSibling;
+  nsView            *mFirstChild;
   void              *mClientData;
   PRInt32           mZindex;
   nsViewVisibility  mVis;
