@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.26 2002/05/07 23:06:45 darin%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.27 2002/08/06 05:37:58 henry.jia%sun.com Exp $
  */
 
 #include "prmem.h"
@@ -678,8 +678,6 @@ pip_ucs2_ascii_conversion_fn(PRBool toUnicode,
   return PR_TRUE;
 }
 
-#define kWindowWatcherCID "@mozilla.org/embedcomp/window-watcher;1"
-
 PRBool
 nsPKCS12Blob::handleError(int myerr)
 {
@@ -694,7 +692,7 @@ nsPKCS12Blob::handleError(int myerr)
                                       do_GetService(NS_XPCOMPROXY_CONTRACTID));
   if (!proxyman) return PR_FALSE;
   nsCOMPtr<nsIPrompt> errPrompt;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(kWindowWatcherCID));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (wwatch) {
     wwatch->GetNewPrompter(0, getter_AddRefs(errPrompt));
     if (errPrompt) {

@@ -1573,7 +1573,7 @@ nsNntpIncomingServer::GroupNotFound(nsIMsgWindow *aMsgWindow, const char *aName,
   }
 
   if (!prompt) {
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     rv = wwatch->GetNewPrompter(nsnull, getter_AddRefs(prompt));
     NS_ENSURE_SUCCESS(rv,rv);
   }

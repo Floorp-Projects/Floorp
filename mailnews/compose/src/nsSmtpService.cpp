@@ -279,7 +279,7 @@ nsresult NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
             nsCOMPtr<nsIAuthPrompt> smtpAuthPrompt(do_GetInterface(aNotificationCallbacks));
             if (!smtpPrompt || !smtpAuthPrompt)
             {
-                nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
                 if (wwatch) {
                     if (!smtpPrompt)
                         wwatch->GetNewPrompter(0, getter_AddRefs(smtpPrompt));

@@ -273,7 +273,7 @@ nsresult nsMsgComposeService::OpenWindow(const char *chrome, nsIMsgComposeParams
   }
       
   //Else, create a new one...
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   if (!wwatch)
     return NS_ERROR_FAILURE;
 

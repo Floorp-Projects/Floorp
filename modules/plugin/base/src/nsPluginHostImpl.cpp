@@ -2912,7 +2912,7 @@ nsresult nsPluginHostImpl:: GetPrompt(nsIPluginInstanceOwner *aOwner, nsIPrompt 
 {
   nsresult rv;
   nsCOMPtr<nsIPrompt> prompt;
-  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+  nsCOMPtr<nsIWindowWatcher> wwatch = do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   
   if (wwatch) {
     nsCOMPtr<nsIDOMWindow> domWindow;

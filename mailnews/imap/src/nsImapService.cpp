@@ -3464,7 +3464,7 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
       {
         // this folder doesn't exist - check if the user wants to subscribe to this folder.
         nsCOMPtr<nsIPrompt> dialog;
-        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+        nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
         NS_ENSURE_SUCCESS(rv, rv);
         wwatch->GetNewPrompter(nsnull, getter_AddRefs(dialog));
 

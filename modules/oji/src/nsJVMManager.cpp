@@ -843,7 +843,7 @@ nsJVMManager::GetChrome(nsIWebBrowserChrome **theChrome)
     nsCOMPtr<nsIWebBrowserChrome> chrome;
 
     windowWatcher =
-        do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
     if (!windowWatcher) {
         return rv;
     }

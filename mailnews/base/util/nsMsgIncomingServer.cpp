@@ -765,7 +765,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
         }
         else
         {
-          nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+          nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
           if (wwatch)
             wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
           if (!dialog) return NS_ERROR_FAILURE;

@@ -1377,7 +1377,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
     }
     else {
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch)
         wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
 
@@ -1443,7 +1443,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
       if (NS_FAILED(rv)) return rv;
     }
     else {
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (wwatch)
         wwatch->GetNewAuthPrompter(0, getter_AddRefs(dialog));
       
