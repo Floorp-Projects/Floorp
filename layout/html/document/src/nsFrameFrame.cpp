@@ -209,13 +209,17 @@ nscoord
 nsHTMLFrameOuterFrame::GetBorderWidth(nsIPresContext& aPresContext)
 {
   if (IsInline()) {
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
-    nsStyleCoord leftBorder;
-    spacing->mBorder.GetLeft(leftBorder);
-    nsStyleUnit unit = leftBorder.GetUnit(); 
-    if (eStyleUnit_Coord == unit) {
-      return leftBorder.GetCoordValue();
+    if (nsnull != mFirstChild) {
+      if (eFrameborder_No != ((nsHTMLFrameInnerFrame*)mFirstChild)->GetFrameBorder(eCompatibility_Standard)) {
+        const nsStyleSpacing* spacing =
+          (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+        nsStyleCoord leftBorder;
+        spacing->mBorder.GetLeft(leftBorder);
+        nsStyleUnit unit = leftBorder.GetUnit(); 
+        if (eStyleUnit_Coord == unit) {
+          return leftBorder.GetCoordValue();
+        }
+      }
     }
   } 
   return 0;
