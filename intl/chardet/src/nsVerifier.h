@@ -33,7 +33,7 @@ typedef struct nsVerifier {
   nsPkgInt  states;
 } nsVerifier;
 
-#define GETCLASS(v,c) GETFROMPCK((c), (v)->cclass)
+#define GETCLASS(v,c) GETFROMPCK(((unsigned char)(c)), (v)->cclass)
 #define GETNEXTSTATE(v,c,s) \
              GETFROMPCK((s)*((v)->stFactor)+GETCLASS((v),(c)), ((v)->states))
 
