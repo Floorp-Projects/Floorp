@@ -67,6 +67,11 @@ class nsISupportsArray;
 #define NS_SIDE_BOTTOM  2
 #define NS_SIDE_LEFT    3
 
+union nsStyleValue {
+  nscoord coord;
+  float percent;
+};
+
 // The lifetime of these objects is managed by the nsIStyleContext.
 
 struct nsStyleStruct {
@@ -160,13 +165,18 @@ struct nsStyleText : public nsStyleStruct {
   PRUint8 mTextAlign;                   // see nsStyleConsts.h
   PRUint8 mTextDecoration;              // see nsStyleConsts.h
   PRUint8 mTextTransform;               // see nsStyleConsts.h
-  PRUint8 mVerticalAlign;               // see nsStyleConsts.h
+  PRUint8 mVerticalAlignFlags;          // see nsStyleConsts.h
   PRUint8 mWhiteSpace;                  // see nsStyleConsts.h
+  PRUint8 mLetterSpacingFlags;
+  PRUint8 mLineHeightFlags;
+  PRUint8 mTextIndentFlags;
+  PRUint8 mWordSpacingFlags;
 
-  nscoord mLetterSpacing;
-  nscoord mLineHeight;
-  nscoord mTextIndent;
-  nscoord mWordSpacing;
+  nsStyleValue mLetterSpacing;
+  nsStyleValue mLineHeight;
+  nsStyleValue mTextIndent;
+  nsStyleValue mWordSpacing;
+  nsStyleValue mVerticalAlign;
 
 protected:
   nsStyleText();
