@@ -1199,7 +1199,8 @@ case "$target" in
         CXX="$CXX -mno-cygwin"
         DLL_SUFFIX=dll
         MKSHLIB='$(CC) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY) -o $@'
-        RC="$WINDRES -O coff"
+        # Use temp file for windres (bug 213281)
+        RC="$WINDRES -O coff --use-temp-file"
     else
         CC=cl
         CXX=cl

@@ -1241,7 +1241,8 @@ case "$target" in
         DLL_SUFFIX=dll
         MKSHLIB='$(CC) -shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY) $(DLLBASE) -o $(subst $(OBJDIR)/,,$(SHARED_LIBRARY))'
         RC=$WINDRES
-        RCFLAGS='-O coff'
+        # Use temp file for windres (bug 213281)
+        RCFLAGS='-O coff --use-temp-file'
     else
         CC=cl
         CXX=cl
