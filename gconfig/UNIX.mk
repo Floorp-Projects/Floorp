@@ -58,6 +58,12 @@ XP_PREF_DLL=pref
 AR_ALL =
 AR_NONE =
 
+ifdef MOZ_TREX_FREE
+NATIVE_LIBNLS_LIBS=nlsstub10
+else
+NATIVE_LIBNLS_LIBS=nsfmt$(MOZ_BITS)30 nsuni$(MOZ_BITS)30 nscck$(MOZ_BITS)30 nsjpn$(MOZ_BITS)30 nscnv$(MOZ_BITS)30 nssb$(MOZ_BITS)30
+endif
+
 ####################################################################
 #
 # One can define the makefile variable NSDISTMODE to control
