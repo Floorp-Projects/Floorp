@@ -287,7 +287,8 @@ NS_IMETHODIMP nsPref::ReadUserPrefsFrom(nsIFileSpec* inFile)
         != PREF_NOERROR)
         rv = NS_ERROR_FAILURE;
     JS_EndRequest(gMochaContext);
-    gErrorOpeningUserPrefs = NS_FAILED(rv);
+    // pref_OpenFileSpec will set this for us, we don't need to.
+    //    gErrorOpeningUserPrefs = NS_FAILED(rv);
     return rv;
 } // nsPref::ReadUserPrefsFrom
 
