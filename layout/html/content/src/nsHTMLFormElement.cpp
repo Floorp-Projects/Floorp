@@ -197,18 +197,19 @@ nsHTMLFormElement::nsHTMLFormElement(nsIAtom* aTag)
 
 nsHTMLFormElement::~nsHTMLFormElement()
 {
-
   // set the controls to have no form
   PRUint32 numControls;
   GetElementCount(&numControls);
-  for (PRUint32 i = 0; i < numControls; i++) {
+  do {
+    if (numControls-- == 0)
+      break;
     // avoid addref to child
-    nsIFormControl* control = (nsIFormControl*)mControls->mElements.ElementAt(i); 
+    nsIFormControl* control = (nsIFormControl*)mControls->mElements.ElementAt(numControls); 
     if (control) {
       // it is assummed that passing in nsnull will not release formControl's previous form
       control->SetForm(nsnull); 
     }
-  }
+  } while(1);
 
   mControls->SetForm(nsnull);
   NS_RELEASE(mControls);

@@ -520,22 +520,28 @@ nsHTMLButtonElement::GetType(PRInt32* aType)
 NS_IMETHODIMP
 nsHTMLButtonElement::SetForm(nsIDOMHTMLFormElement* aForm)
 {
-  nsresult result = NS_OK;
+  nsresult result;
+  nsIFormControl *formControl;
+
+  result = QueryInterface(kIFormControlIID, (void**)&formControl);
+  if (NS_FAILED(result))
+    formControl = nsnull;
+
+  if (mForm && formControl)
+    mForm->RemoveElement(formControl, PR_TRUE);
   NS_IF_RELEASE(mForm);
-  if (nsnull == aForm) {
+
+  if (nsnull == aForm)
     mForm = nsnull;
-    return NS_OK;
-  } else {
-    nsIFormControl* formControl = nsnull;
-    result = QueryInterface(kIFormControlIID, (void**)&formControl);
-    if ((NS_OK == result) && formControl) {
+  else {
+    if (formControl) {
       result = aForm->QueryInterface(kIFormIID, (void**)&mForm); // keep the ref
       if ((NS_OK == result) && mForm) {
         mForm->AddElement(formControl);
       }
-      NS_RELEASE(formControl);
     }
   }
+  NS_IF_RELEASE(formControl);
   return result;
 }
 
