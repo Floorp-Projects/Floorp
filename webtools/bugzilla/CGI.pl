@@ -1064,7 +1064,9 @@ if (defined $ENV{"HTTP_COOKIE"}) {
     foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
         $pair = trim($pair);
         if ($pair =~ /^([^=]*)=(.*)$/) {
-            $::COOKIE{$1} = $2;
+            if (!exists($::COOKIE{$1})) {
+                $::COOKIE{$1} = $2;
+            }
         } else {
             $::COOKIE{$pair} = "";
         }
