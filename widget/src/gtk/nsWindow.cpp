@@ -412,6 +412,13 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
   return NS_OK;
 }
 
+#undef TRACE_PAINT
+#undef TRACE_PAINT_FLASH
+
+#ifdef TRACE_PAINT_FLASH
+#include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
+#endif
+
 /**
  * Processes an Expose Event
  *
@@ -424,19 +431,41 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
   if (mEventCallback) {
 
     event.renderingContext = nsnull;
-#if 0
-    if (event.rect) {
-      g_print("nsWindow::OnPaint(this=%p, {%i,%i,%i,%i})\n", this,
-              event.rect->x, event.rect->y,
-              event.rect->width, event.rect->height);
+
+#ifdef TRACE_PAINT
+	static PRInt32 sPrintCount = 0;
+
+	GdkWindow * renderWindow = GetRenderWindow();
+	Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0;
+
+    if (event.rect) 
+	{
+      printf("%4d nsWindow::OnPaint   (this=%p,name=%s,xid=%p,rect=%d,%d,%d,%d)\n", 
+			 sPrintCount++,
+			 (void *) this,
+			 gtk_widget_get_name(mWidget),
+			 (void *) xid,
+			 event.rect->x, 
+			 event.rect->y,
+			 event.rect->width, 
+			 event.rect->height);
     }
-    else {
-      g_print("nsWindow::OnPaint(this=%p, NO RECT)\n", this);
+    else 
+	{
+      printf("%4d nsWindow::OnPaint   (this=%p,name=%s,xid=%p,rect=none)\n", 
+			 sPrintCount++,
+			 (void *) this,
+			 gtk_widget_get_name(mWidget),
+			 (void *) xid);
     }
 #endif
 
     event.renderingContext = GetRenderingContext();
     result = DispatchWindowEvent(&event);
+
+#ifdef TRACE_PAINT_FLASH
+    nsGtkUtils::gdk_window_flash(renderWindow,2,100000);
+#endif
   }
   return result;
 }

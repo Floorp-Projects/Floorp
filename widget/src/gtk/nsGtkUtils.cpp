@@ -17,8 +17,12 @@
  */
 
 #include "nsGtkUtils.h"
+
 #include <gdk/gdkx.h>
 #include <gdk/gdkprivate.h>
+
+#include <unistd.h>
+#include <string.h>
 
 //////////////////////////////////////////////////////////////////
 #if 0
@@ -110,5 +114,86 @@ nsGtkUtils::gtk_widget_set_color(GtkWidget *  widget,
     rc_style->color_flags[state] = GtkRcFlags(rc_style->color_flags[state] | GTK_RC_BASE);
     rc_style->base[state] = *color;
   }
+}
+//////////////////////////////////////////////////////////////////
+/* static */ void
+nsGtkUtils::gdk_window_flash(GdkWindow * window,
+                             unsigned int  times,
+                             unsigned long interval)
+{
+  Display *    display = NULL;
+	Window       root_window = 0;
+	Window       child_window = 0;
+	Window       xwindow = 0;
+	GC           gc;
+	int          x;
+	int          y;
+	unsigned int width;
+	unsigned int height;
+	unsigned int border_width;
+	unsigned int depth;
+	int          root_x;
+	int          root_y;
+	unsigned int i;
+	XGCValues    gcv;
+
+  display = GDK_WINDOW_XDISPLAY(window);
+
+  xwindow = GDK_WINDOW_XWINDOW(window);
+
+	XGetGeometry(display,
+				 xwindow,
+				 &root_window,
+				 &x,
+				 &y,
+				 &width,
+				 &height,
+				 &border_width,
+				 &depth);
+
+	XTranslateCoordinates(display, 
+						  xwindow,
+						  root_window, 
+						  0, 
+						  0,
+						  &root_x,
+						  &root_y,
+						  &child_window);
+
+    memset(&gcv, 0, sizeof(XGCValues));
+
+	gcv.function = GXxor;
+	gcv.foreground = WhitePixel(display, DefaultScreen(display));
+	gcv.subwindow_mode = IncludeInferiors;
+
+	if (gcv.foreground == 0)
+		gcv.foreground = 1;
+
+	gc = XCreateGC(display,
+				   root_window,
+				   GCFunction | GCForeground | GCSubwindowMode, 
+				   &gcv);
+
+	XGrabServer(display);
+
+	for (i = 0; i < times; i++)
+	{
+		XFillRectangle(display,
+					   root_window,
+					   gc,
+					   root_x,
+					   root_y,
+					   width,
+					   height);
+		
+		XSync(display, False);
+
+		usleep(interval);
+	}
+							
+		
+	XFreeGC(display, gc);  
+
+	XUngrabServer(display);
 }
 //////////////////////////////////////////////////////////////////

@@ -659,6 +659,12 @@ NS_IMETHODIMP nsWidget::SetCursor(nsCursor aCursor)
   return NS_OK;
 }
 
+#undef TRACE_INVALIDATE
+
+#ifdef TRACE_INVALIDATE
+static PRInt32 sInvalidatePrintCount = 0;
+#endif
+
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   if (!mWidget)
@@ -669,6 +675,18 @@ NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
 
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
+
+#ifdef TRACE_INVALIDATE
+  GdkWindow * renderWindow = GetRenderWindow();
+  Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0;
+
+  printf("%4d nsWidget::Invalidate(this=%p,name=%s,xid=%p,sync=%s)\n",
+         sInvalidatePrintCount++,
+         (void *) this,
+         gtk_widget_get_name(mWidget),
+         (void *) xid,
+         aIsSynchronous ? "yes" : "no");
+#endif
 
   if (aIsSynchronous) {
     ::gtk_widget_draw(mWidget, (GdkRectangle *) NULL);
@@ -692,10 +710,27 @@ NS_IMETHODIMP nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
   if (!GTK_WIDGET_REALIZED(mWidget) || !GTK_WIDGET_VISIBLE(mWidget))
     return NS_ERROR_FAILURE;
 
+#ifdef TRACE_INVALIDATE
+  GdkWindow * renderWindow = GetRenderWindow();
+  Window      xid = renderWindow ? GDK_WINDOW_XWINDOW(renderWindow) : 0;
+
+  printf("%4d nsWidget::Invalidate(this=%p,name=%s,xid=%p,sync=%s,rect=%d,%d,%d,%d)\n",
+         sInvalidatePrintCount++,
+         (void *) this,
+         gtk_widget_get_name(mWidget),
+         (void *) xid,
+         aIsSynchronous ? "yes" : "no",
+         aRect.x, 
+         aRect.y,
+         aRect.width, 
+         aRect.height);
+#endif
+
   if (aIsSynchronous)
   {
     GdkRectangle nRect;
     NSRECT_TO_GDKRECT(aRect, nRect);
+
     gtk_widget_draw(mWidget, &nRect);
   }
   else
@@ -2295,6 +2330,26 @@ nsWidget::GetWindowForSetBackground()
   }
 
   return gdk_window;
+}
+
+/* virtual */ GdkWindow *
+nsWidget::GetRenderWindow()
+{
+  GdkWindow * renderWindow = nsnull;
+
+  if (mWidget)
+  {
+    if (GTK_IS_LAYOUT(mWidget))
+    {
+      renderWindow = GTK_LAYOUT(mWidget)->bin_window;
+    }
+    else
+    {
+      renderWindow = mWidget->window;
+    }
+  }
+
+  return renderWindow;
 }
 
 

@@ -54,6 +54,10 @@ struct nsGtkUtils
                                    GtkRcFlags   flags,
                                    GtkStateType state,
                                    GdkColor *   color);
+
+  static void gdk_window_flash(GdkWindow * window,
+                               unsigned int  times,  /* Number of times to flash */
+                               unsigned long interval); /* Interval between flashes */
 };
 
 #endif  // __nsGtkEventHandler.h
