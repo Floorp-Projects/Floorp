@@ -1584,12 +1584,15 @@ PossibleImapMailboxProxyEvent::PossibleImapMailboxProxyEvent(
     if (aSpec)
     {
         m_mailboxSpec = *aSpec;
-        m_mailboxSpec.allocatedPathName = PL_strdup(aSpec->allocatedPathName);
-        m_mailboxSpec.namespaceForFolder = 
-            new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
-                                aSpec->namespaceForFolder->GetPrefix(),
-                                aSpec->namespaceForFolder->GetDelimiter(),
-                                aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
+        if (aSpec->allocatedPathName)
+            m_mailboxSpec.allocatedPathName =
+                PL_strdup(aSpec->allocatedPathName); 
+        if (aSpec->namespaceForFolder)
+            m_mailboxSpec.namespaceForFolder = 
+                new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
+                                    aSpec->namespaceForFolder->GetPrefix(),
+                                    aSpec->namespaceForFolder->GetDelimiter(),
+                                    aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
     }
     else
     {
@@ -1640,12 +1643,15 @@ UpdateImapMailboxInfoProxyEvent::UpdateImapMailboxInfoProxyEvent(
     if (aSpec)
     {
         m_mailboxSpec = *aSpec;
-        m_mailboxSpec.allocatedPathName = PL_strdup(aSpec->allocatedPathName);
-        m_mailboxSpec.namespaceForFolder = 
-            new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
-                                aSpec->namespaceForFolder->GetPrefix(),
-                                aSpec->namespaceForFolder->GetDelimiter(),
-                                aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
+        if (aSpec->allocatedPathName)
+            m_mailboxSpec.allocatedPathName =
+                PL_strdup(aSpec->allocatedPathName); 
+        if (aSpec->namespaceForFolder)
+            m_mailboxSpec.namespaceForFolder = 
+                new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
+                                    aSpec->namespaceForFolder->GetPrefix(),
+                                    aSpec->namespaceForFolder->GetDelimiter(),
+                                    aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
     }
     else
     {
@@ -1678,12 +1684,15 @@ UpdateImapMailboxStatusProxyEvent::UpdateImapMailboxStatusProxyEvent(
     if (aSpec)
     {
         m_mailboxSpec = *aSpec;
-        m_mailboxSpec.allocatedPathName = PL_strdup(aSpec->allocatedPathName);
-        m_mailboxSpec.namespaceForFolder = 
-            new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
-                                aSpec->namespaceForFolder->GetPrefix(),
-                                aSpec->namespaceForFolder->GetDelimiter(),
-                                aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
+        if (aSpec->allocatedPathName)
+            m_mailboxSpec.allocatedPathName =
+                PL_strdup(aSpec->allocatedPathName);
+        if (aSpec->namespaceForFolder)
+            m_mailboxSpec.namespaceForFolder = 
+                new nsIMAPNamespace(aSpec->namespaceForFolder->GetType(),
+                                    aSpec->namespaceForFolder->GetPrefix(),
+                                    aSpec->namespaceForFolder->GetDelimiter(),
+                                    aSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
     }
     else
     {
@@ -1928,14 +1937,16 @@ SetupMsgWriteStreamProxyEvent::SetupMsgWriteStreamProxyEvent(
             m_streamInfo.boxSpec = (mailbox_spec*)
                 PR_CALLOC(sizeof(mailbox_spec));
             *m_streamInfo.boxSpec = *aStreamInfo->boxSpec;
-            m_streamInfo.boxSpec->allocatedPathName =
-                PL_strdup(aStreamInfo->boxSpec->allocatedPathName); 
-            m_streamInfo.boxSpec->namespaceForFolder = 
-                new nsIMAPNamespace(
-                    aStreamInfo->boxSpec->namespaceForFolder->GetType(),
-                    aStreamInfo->boxSpec->namespaceForFolder->GetPrefix(),
-                    aStreamInfo->boxSpec->namespaceForFolder->GetDelimiter(),
-                    aStreamInfo->boxSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
+            if (aStreamInfo->boxSpec->allocatedPathName)
+                m_streamInfo.boxSpec->allocatedPathName =
+                    PL_strdup(aStreamInfo->boxSpec->allocatedPathName); 
+            if (aStreamInfo->boxSpec->namespaceForFolder)
+                m_streamInfo.boxSpec->namespaceForFolder = 
+                    new nsIMAPNamespace(
+                        aStreamInfo->boxSpec->namespaceForFolder->GetType(),
+                        aStreamInfo->boxSpec->namespaceForFolder->GetPrefix(),
+                        aStreamInfo->boxSpec->namespaceForFolder->GetDelimiter(),
+                        aStreamInfo->boxSpec->namespaceForFolder->GetIsNamespaceFromPrefs());
         }
         else
         {
