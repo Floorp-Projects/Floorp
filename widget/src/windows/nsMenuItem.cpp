@@ -302,6 +302,18 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
 }
 
 //----------------------------------------------------------------------
+NS_IMETHODIMP nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
+{
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
+NS_IMETHODIMP nsMenuItem::SetDOMNode(nsIDOMNode ** aDOMNode)
+{
+  return NS_OK;
+}
+
+//----------------------------------------------------------------------
 NS_IMETHODIMP nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
 {
   *aDOMElement = mDOMElement;

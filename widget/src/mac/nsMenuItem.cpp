@@ -24,11 +24,11 @@
 #include "nsMenuItem.h"
 #include "nsIMenu.h"
 #include "nsIMenuBar.h"
+#include "nsIPopUpMenu.h"
 #include "nsIWidget.h"
 #include "nsIMenuListener.h"
-#include "nsStringUtil.h"
 
-#include "nsIPopUpMenu.h"
+#include "nsStringUtil.h"
 
 static NS_DEFINE_IID(kIMenuIID,     NS_IMENU_IID);
 static NS_DEFINE_IID(kIMenuBarIID,  NS_IMENUBAR_IID);
@@ -36,6 +36,7 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
 
+//-------------------------------------------------------------------------
 nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {                                                                        
   if (NULL == aInstancePtr) {                                            
@@ -81,6 +82,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
   mIsSeparator = PR_FALSE;
   mWebShell    = nsnull;
   mDOMElement  = nsnull;
+  mDOMNode     = nsnull;
   mKeyEquivalent = " ";
 }
 
@@ -91,6 +93,7 @@ nsMenuItem::nsMenuItem() : nsIMenuItem()
 //-------------------------------------------------------------------------
 nsMenuItem::~nsMenuItem()
 {
+  //printf("nsMenuItem::~nsMenuItem() called \n");
   NS_IF_RELEASE(mTarget);
   NS_IF_RELEASE(mXULCommandListener);
 }
@@ -317,14 +320,15 @@ NS_METHOD nsMenuItem::IsSeparator(PRBool & aIsSep)
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
 {
-  	return nsEventStatus_eIgnore;
+    DoCommand();
+  	return nsEventStatus_eConsumeNoDefault;
 }
 
 //-------------------------------------------------------------------------
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
-	if(mXULCommandListener)
-		return mXULCommandListener->MenuSelected(aMenuEvent);
+	//if(mXULCommandListener)
+	//	return mXULCommandListener->MenuSelected(aMenuEvent);
 		
     DoCommand();
   	return nsEventStatus_eIgnore;
@@ -372,7 +376,6 @@ NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
 */
 NS_METHOD nsMenuItem::DoCommand()
 {
-
   nsresult rv = NS_ERROR_FAILURE;
  
   nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
@@ -406,8 +409,14 @@ NS_METHOD nsMenuItem::DoCommand()
   event.eventStructType = NS_MOUSE_EVENT;
   event.message = NS_MENU_ACTION;
 
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  if(!element) {
+      NS_ERROR("Unable to QI dom element.");
+      return rv;  
+  }
+  
   nsCOMPtr<nsIContent> contentNode;
-  contentNode = do_QueryInterface(mDOMElement);
+  contentNode = do_QueryInterface(element);
   if (!contentNode) {
       NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
       return rv;
@@ -415,8 +424,23 @@ NS_METHOD nsMenuItem::DoCommand()
 
   rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
 
-  return rv;
+  return nsEventStatus_eConsumeNoDefault;
 
+}
+
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::SetDOMNode(nsIDOMNode * aDOMNode)
+{
+    mDOMNode = aDOMNode;
+    NS_ADDREF(mDOMNode);
+	return NS_OK;
+}
+    
+//-------------------------------------------------------------------------
+NS_METHOD nsMenuItem::GetDOMNode(nsIDOMNode ** aDOMNode)
+{
+    *aDOMNode = mDOMNode;
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------

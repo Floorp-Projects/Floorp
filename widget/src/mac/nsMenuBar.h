@@ -23,6 +23,8 @@
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
 
+extern nsIMenuBar * gMacMenubar;
+
 class nsIWidget;
 
 /**
@@ -70,6 +72,9 @@ protected:
   nsIWidget *  mParent;
 
   PRBool      mIsMenuBarAdded;
+  
+  nsIWebShell * mWebShell;
+  nsIDOMNode  * mDOMNode;
 
   // Mac Specific
   Handle      mMacMBarHandle;

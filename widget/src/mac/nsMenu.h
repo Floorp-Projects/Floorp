@@ -101,14 +101,32 @@ protected:
   nsIMenu    * mMenuParent;
   nsIMenuBar * mMenuBarParent;
 
+  nsIDOMNode    * mDOMNode;
+  nsIDOMElement * mDOMElement;
+  nsIWebShell   * mWebShell;
+  bool            mConstructed;
+
   // MacSpecific
   PRInt16			  mMacMenuID;
   MenuHandle          mMacMenuHandle;
   nsIMenuListener *   mListener;
   UnicodeToTextRunInfo	mUnicodeTextRunConverter;
 
+void LoadMenuItem(
+  nsIMenu *    pParentMenu,
+  nsIDOMElement * menuitemElement,
+  nsIDOMNode *    menuitemNode,
+  unsigned short  menuitemIndex,
+  nsIWebShell *   aWebShell);
+  
+void LoadSubMenu(
+  nsIMenu *       pParentMenu,
+  nsIDOMElement * menuElement,
+  nsIDOMNode *    menuNode);
+  
 void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
 MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
+MenuHandle NSStringNewChildMenu(short menuID, nsString& menuTitle);
 
 private:
   

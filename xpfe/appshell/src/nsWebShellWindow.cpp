@@ -898,6 +898,8 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
         nsMenuEvent fake;
         menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
 
+      #ifdef XP_MAC
+      #else
       // Resize around the menu.
       rv = NS_ERROR_FAILURE;
 
@@ -947,6 +949,7 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
       GetWindowBounds(currentBounds);
       SizeWindowTo(currentBounds.width, currentBounds.height + heightDelta);
       // END REFLOW CODE
+      #endif
                   
       } // end if ( nsnull != pnsMenuBar )
     }
@@ -1836,7 +1839,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
   nsCOMPtr<nsIDOMDocument> menubarDOMDoc(GetNamedDOMDoc(nsAutoString("this"))); // XXX "this" is a small kludge for code reused
   if (menubarDOMDoc)
   {
-#ifdef XP_MAC // Anyone using native non-dynamic menus should add themselves here.
+#ifdef SOME_PLATFORM // Anyone using native non-dynamic menus should add themselves here.
     LoadMenus(menubarDOMDoc, mWindow);
     // Context Menu test
     nsCOMPtr<nsIDOMElement> element;
@@ -1848,7 +1851,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     // End Context Menu test
 #else
     DynamicLoadMenus(menubarDOMDoc, mWindow);
-#endif // XP_MAC
+#endif 
   }
 #endif // XP_MAC
 
