@@ -948,6 +948,35 @@ CHyperTreeFlexTable :: RowIsContainer ( const TableIndexT & inRow ) const
 
 
 //
+// RowIsContainer
+//
+// Same as above, but also tells us if the container is open.
+//
+Boolean
+CHyperTreeFlexTable :: RowIsContainer( const TableIndexT & inRow, Boolean* outIsExpanded ) const
+{
+	Assert_(outIsExpanded != NULL);
+	if ( outIsExpanded )
+		*outIsExpanded = false;
+	else
+		return false;
+	
+	if ( RowIsContainer(inRow) ) {
+		HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inRow) );
+		if ( node ) {
+			PRBool openState;
+			if ( HT_GetOpenState(node, &openState) == HT_NoErr )
+				*outIsExpanded = openState;
+		}
+		return true;
+	}
+	else
+		return false;
+
+} // RowIsContainer
+
+
+//
 // HiliteDropRow
 //
 // Override to handle drawing the "insertion bar" for every row to always indicate to the

@@ -75,7 +75,7 @@ public:
 	virtual void	RedrawRow ( HT_Resource ) ;
 	
 	virtual void	SetupColumns ( ) ;
-	
+		
 protected:
 		
 		// Background image tiling stuff
@@ -92,7 +92,8 @@ protected:
 	virtual Boolean RowCanAcceptDrop ( DragReference inDragRef, TableIndexT inDropRow ) ;
 	virtual Boolean RowCanAcceptDropBetweenAbove( DragReference inDragRef, TableIndexT inDropRow ) ;
 	virtual void HiliteDropRow ( TableIndexT inRow, Boolean inDrawBarAbove ) ;
-	virtual Boolean	RowIsContainer ( const TableIndexT & /* inRow */ ) const ;
+	virtual Boolean	RowIsContainer ( const TableIndexT & inRow ) const ;
+	virtual Boolean	RowIsContainer ( const TableIndexT & inRow, Boolean* outIsExpanded ) const ;
 	virtual void DrawCellContents( const STableCell &inCell, const Rect &inLocalRect);
 	virtual void EraseCellBackground( const STableCell& inCell, const Rect& inLocalRect);
 	virtual ResIDT GetIconID(TableIndexT inRow) const;		
