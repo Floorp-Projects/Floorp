@@ -98,7 +98,7 @@ struct DSArrayStr {
 
 extern DSArray *DS_CreateArray(int slots);
 extern DSStatus DS_GrowArray(DSArray *da, int slots);
-extern void DS_SetArrayMethods(DSArray *da, DSElementFreeFunc free);
+extern void DS_SetArrayMethods(DSArray *da, DSElementFreeFunc freeFunc);
 extern void DS_DestroyArray(DSArray *da, DSBool freeit);
 extern void DS_Sort(DSArray *da, DSElementCompareFunc compare);
 extern int DS_Elements(DSArray *da);
