@@ -539,8 +539,13 @@ void GC_print_callers (/* struct callinfo info[NFRAMES] */);
 #  endif
 #  ifdef GENERIC_THREADS
 #    include "generic_threads.h"
-#    define LOCK() GC_generic_locker(GC_generic_mutex);
-#    define UNLOCK() GC_generic_unlocker(GC_generic_mutex);
+#    define LOCK() GC_generic_locker(GC_generic_mutex)
+#    define UNLOCK() GC_generic_unlocker(GC_generic_mutex)
+#    ifdef MACOS
+#      define FASTLOCK()
+#      define FASTLOCK_SUCCEEDED() TRUE
+#      define FASTUNLOCK()
+#    endif /* MACOS */
 #  endif /* GENERIC_THREADS */
 #  ifndef SET_LOCK_HOLDER
 #      define SET_LOCK_HOLDER()
