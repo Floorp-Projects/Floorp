@@ -721,7 +721,7 @@ nsDNSService::LookupComplete(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         nsAutoMonitor mon(mMonitor);        // protect mLookups
 
         // which lookup completed?  fetch lookup for this (HANDLE)wParam
-        FindCompletedClosure closure = { (HANDLE)wParam, &lookup };
+        FindCompletedClosure closure = { uMsg, &lookup };
         mLookups.Enumerate(nsDNSLookup::FindCompleted, &closure);
         NS_IF_ADDREF(lookup);
     }  // exit monitor
@@ -1152,7 +1152,9 @@ nsDNSService::Shutdown()
 {
     nsresult rv = NS_OK;
 
+#if !defined(XP_UNIX)
     if (mThread == nsnull) return rv;
+#endif
 
     {
         nsAutoMonitor mon(mMonitor);        // protect mLookups
