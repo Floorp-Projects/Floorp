@@ -18,7 +18,12 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/newserver.dtd">
+<!DOCTYPE window [
+<!ENTITY % newserverDTD SYSTEM "chrome://pippki/locale/newserver.dtd" >
+%newserverDTD;
+<!ENTITY % pippkiDTD SYSTEM "chrome://pippki/locale/pippki.dtd" >
+%pippkiDTD;
+]>
 
 
 <window
@@ -26,7 +31,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
-  height="350"
+  height="360"
   width="400"
   onload="onLoad();"
 >
@@ -58,19 +63,18 @@
            value="&newserver.reject;" data="2"/>
   </radiogroup>
 
-  <!--
   <box>
-  <button id="examineCert-button" class="dialog" value="Examine Certificate"
+  <button id="examineCert-button" class="dialog" value="&examineCert.label;"
      onclick=""/> 
   </box>
   <separator/>
-  -->
+  
   <box>
-  <button id="ok-button" class="dialog" value="&newserver.okButton.label;"
+  <button id="ok-button" class="dialog" value="&ok.label;"
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
-  <button id="cancel-button" class="dialog" value="&newserver.cancelButton.label;"
+  <button id="cancel-button" class="dialog" value="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" value="&newserver.helpButton.label;"
+  <button id="help-button" class="dialog" value="&help.label;"
     style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
   </box>
 </box>

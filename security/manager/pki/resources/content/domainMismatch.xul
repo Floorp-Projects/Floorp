@@ -25,7 +25,7 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
   debug="false"
-  height="350"
+  height="230"
   width="400"
   onload="onLoad();"
 >
@@ -39,13 +39,12 @@
   <separator/>
   <html id="message2" />
 
-  <!--
   <box>
-  <button id="examineCert-button" class="dialog" value="Examine Certificate"
-     onclick=""/> 
+  <button id="examineCert-button" class="dialog" value="&examineCert.label;"
+     onclick="viewCert();"/> 
   </box>
   <separator/>
-  -->
+  
   <box>
   <button id="ok-button" class="dialog" value="&ok.label;"
      style="width: 8ex" onclick="doOK();" disabled="false"/> 

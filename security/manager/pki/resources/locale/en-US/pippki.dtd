@@ -62,6 +62,7 @@
 
 <!-- Strings for the MismatchDomain dialog  -->
 <!ENTITY domainMismatch.title "Security Error: Domain Name  Mismatch">
+<!ENTITY examineCert.label "Examine Certificate">
 
 <!-- Strings for the Server cert expired dialog  -->
 <!ENTITY serverCertExpired.title "Security Error: Security Certificate Expired">

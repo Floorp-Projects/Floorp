@@ -22,6 +22,3 @@
 <!ENTITY newserver.acceptperm  "Accept this certificate permanently">
 <!ENTITY newserver.accepttemp  "Accept this certificate temporarily for this session">
 <!ENTITY newserver.reject  "Do not accept this certificate and do not connect to this web site">
-<!ENTITY newserver.helpButton.label  "Help">
-<!ENTITY newserver.okButton.label  "OK">
-<!ENTITY newserver.cancelButton.label  "Cancel">

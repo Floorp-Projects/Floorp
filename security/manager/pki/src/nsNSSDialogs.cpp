@@ -48,6 +48,7 @@
 #include "nsDateTimeFormatCID.h"
 
 #include "nsNSSDialogs.h"
+#include "nsPKIParamBlock.h"
 
 #define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
 #define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
@@ -73,7 +74,7 @@ public:
   static nsresult openDialog(
                   nsIDOMWindowInternal *window,
                   const char *url,
-                  nsIDialogParamBlock *params);
+                  nsIPKIParamBlock *params);
 
   static nsresult openDialogVA(nsIDOMWindowInternal *window,
                                const char *format, ...);
@@ -121,7 +122,7 @@ nsresult
 nsNSSDialogHelper::openDialog(
     nsIDOMWindowInternal *window,
     const char *url,
-    nsIDialogParamBlock *params)
+    nsIPKIParamBlock *params)
 {
   nsresult rv;
   nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
@@ -144,7 +145,7 @@ nsNSSDialogHelper::openDialog(
                                   url,
                                   "_blank",
                                   nsNSSDialogHelper::kDefaultOpenWindowParam,
-                                  &NS_GET_IID(nsIDialogParamBlock),
+                                  &NS_GET_IID(nsIPKIParamBlock),
                                   (nsISupports*)params
                                 );
   if ( !argv ) return NS_ERROR_FAILURE;
@@ -191,7 +192,7 @@ nsNSSDialogHelper::openDialogVA(nsIDOMWindowInternal *window,
 }
 
 /* ==== */
-static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
+static NS_DEFINE_CID(kDialogParamBlockCID, NS_PKIPARAMBLOCK_CID);
 
 nsNSSDialogs::nsNSSDialogs()
 {
@@ -239,7 +240,7 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
   if (!block) return NS_ERROR_FAILURE;
 
   // void ChangePassword(in wstring tokenName, out int status);
@@ -274,7 +275,7 @@ nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
   
   *_retval = PR_FALSE;
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
 
   if (!block)
     return NS_ERROR_FAILURE;
@@ -338,7 +339,7 @@ nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo,
 
   *_retval = PR_FALSE;
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
 
   if (!block)
     return NS_ERROR_FAILURE;
@@ -386,7 +387,7 @@ nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo,
 
   *_retval = PR_FALSE;
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
 
   if (!block)
     return NS_ERROR_FAILURE; 
@@ -609,7 +610,7 @@ nsNSSDialogs::DownloadCACert(nsIInterfaceRequestor *ctx,
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindowInternal> parent = do_GetInterface(ctx);
 
-  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+  nsCOMPtr<nsIPKIParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
   if (!block) return NS_ERROR_FAILURE;
 
   nsXPIDLString commonName;
