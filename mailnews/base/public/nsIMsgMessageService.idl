@@ -83,15 +83,18 @@ interface nsIMsgMessageService : nsISupports {
 
      /////////////////////////////////////////////////////////////////////
      //  OpenAttachment: When you want an attachment downloaded
-     //  aURL is a url representing the attachment.
-     //  aDisplayConsumer is (for now) a nsIWebshell which we'll use to load 
-     // the message into. 
+     //  aContentType --> we need to know the content type of the attachment
+	 //	 aUrl --> string representation of the original url associated with the msg.
+	 //  aMessageUri --> RDF resource that describes the message
+	 //	 aMsgWindow --> message window
      ///////////////////////////////////////////////////////////////////
 
-	void OpenAttachment(in nsIURI aURI, in string aMessageUri, in nsISupports aDisplayConsumer, 
+	void openAttachment(in string aContentType, 
+						in string aUrl,
+						in string aMessageUri, 
+						in nsISupports aDisplayConsumer, 
 						in nsIMsgWindow aMsgWindow,
-						in nsIUrlListener aUrlListener, 
-						out nsIURI aURL);
+						in nsIUrlListener aUrlListener);
 
      /////////////////////////////////////////////////////////////////////
      // SaveMessageToDisk: When you want to spool a message out to a file
@@ -116,8 +119,6 @@ interface nsIMsgMessageService : nsISupports {
     
 	void GetUrlForUri(in string aMessageURI, out nsIURI aURL, in nsIMsgWindow aMsgWindow);
 
-	// tells if the message service can download mime parts directly, like IMAP
-	readonly attribute boolean canFetchMimeParts;
      /////////////////////////////////////////////////////////////////////
      //  DisplayMessageForPrinting: When you want a message displayed in a
      //  format that is suitable for printing....
@@ -132,4 +133,18 @@ interface nsIMsgMessageService : nsISupports {
 						out nsIURI aURL);
 
 	void Search(in nsIMsgSearchSession aSearchSession, in nsIMsgWindow aMsgWindow, in nsIMsgFolder aMsgFolder, in string aSearchUri);
+};
+
+// Some mail protocols (like imap) allow you to fetch individual mime parts. We use this interface
+// to represent message services whose protocols support this. To use this interface, you should get
+// the message service then QI for this interface. If it's present, then can fetch a mime part.
+[scriptable, uuid(3728C255-480C-11d4-98D0-001083010E9B)]
+interface nsIMsgMessageFetchPartService : nsISupports 
+{
+	// FetchMimePart --> used to fetch an individual mime part
+	// aURI --> url representing the message
+	// aMessageURI --> RDF URI including the part to fetch
+	nsIURI fetchMimePart(in nsIURI aURI, in string aMessageUri, in nsISupports aDisplayConsumer, 
+						in nsIMsgWindow aMsgWindow,
+						in nsIUrlListener aUrlListener);	
 };
