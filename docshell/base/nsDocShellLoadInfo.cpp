@@ -27,10 +27,10 @@
 //***    nsDocShellLoadInfo: Object Management
 //*****************************************************************************
 
-nsDocShellLoadInfo::nsDocShellLoadInfo() : mReplaceSessionHistorySlot(PR_FALSE),
-    mRefresh(PR_FALSE)
+nsDocShellLoadInfo::nsDocShellLoadInfo()
 {
 	NS_INIT_REFCNT();
+  mLoadType = nsIDocShellLoadInfo::loadNormal;
 }
 
 nsDocShellLoadInfo::~nsDocShellLoadInfo()
@@ -68,34 +68,6 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetReferrer(nsIURI* aReferrer)
    return NS_OK;
 }
 
-NS_IMETHODIMP nsDocShellLoadInfo::GetReplaceSessionHistorySlot(PRBool* aReplace)
-{
-   NS_ENSURE_ARG_POINTER(aReplace);
-
-   *aReplace = mReplaceSessionHistorySlot;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShellLoadInfo::SetReplaceSessionHistorySlot(PRBool aReplace)
-{
-   mReplaceSessionHistorySlot = aReplace;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShellLoadInfo::GetRefresh(PRBool* aRefresh)
-{
-   NS_ENSURE_ARG_POINTER(aRefresh);
-
-   *aRefresh = mRefresh;
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsDocShellLoadInfo::SetRefresh(PRBool aRefresh)
-{
-   mRefresh = aRefresh;
-   return NS_OK;
-}
-
 NS_IMETHODIMP nsDocShellLoadInfo::GetOwner(nsISupports** aOwner)
 {
    NS_ENSURE_ARG_POINTER(aOwner);
@@ -108,6 +80,20 @@ NS_IMETHODIMP nsDocShellLoadInfo::GetOwner(nsISupports** aOwner)
 NS_IMETHODIMP nsDocShellLoadInfo::SetOwner(nsISupports* aOwner)
 {
    mOwner = aOwner;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::GetLoadType(nsDocShellInfoLoadType * aLoadType)
+{
+   NS_ENSURE_ARG_POINTER(aLoadType);
+
+   *aLoadType = mLoadType;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShellLoadInfo::SetLoadType(nsDocShellInfoLoadType aLoadType)
+{
+   mLoadType = aLoadType;
    return NS_OK;
 }
 
@@ -125,6 +111,7 @@ NS_IMETHODIMP nsDocShellLoadInfo::SetSHEntry(nsISHEntry* aSHEntry)
    mSHEntry = aSHEntry;
    return NS_OK;
 }
+
 //*****************************************************************************
 // nsDocShellLoadInfo: Helpers
 //*****************************************************************************   

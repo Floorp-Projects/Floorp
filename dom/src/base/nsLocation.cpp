@@ -379,7 +379,8 @@ LocationImpl::SetHrefWithBase(const nsString& aHref,
       return NS_ERROR_FAILURE;
 
     loadInfo->SetReferrer(referrer);
-    loadInfo->SetReplaceSessionHistorySlot(aReplace);
+    if (aReplace)
+      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
 
     return mDocShell->LoadURI(newUrl, loadInfo);
   }
