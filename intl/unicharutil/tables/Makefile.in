@@ -23,11 +23,11 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE	= \
-		$(srcdir)/latin1_entites.properties \
+		$(srcdir)/html40Latin1.properties \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
+	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res/entityTables
 
