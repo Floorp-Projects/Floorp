@@ -1,4 +1,4 @@
-/* $Id: qtmoz.cpp,v 1.3 1998/10/02 20:59:36 cls%seawood.org Exp $
+/* $Id: qtmoz.cpp,v 1.4 1998/10/03 20:13:57 cls%seawood.org Exp $
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -23,9 +23,8 @@
 // This is a kludge to get around the fact that DEBUG turns on internal QT
 // debugging information that we do not want.
 
-#ifdef DEBUG
-#undef DEBUG
-#define DEBUG_qt
+#ifndef DEBUG
+#define debug_off
 #endif
 
 // Qt includes
@@ -33,8 +32,9 @@
 #include <qsocknot.h>
 #include <qmsgbox.h>
 
-#ifdef DEBUG_qt
-#define DEBUG
+#ifdef debug_off
+#undef DEBUG
+#undef debug_off
 #endif
 
 #include "client.h"
