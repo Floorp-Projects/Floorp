@@ -988,7 +988,7 @@ void nsTextAddress::AddLdifRowToDatabase(PRBool bIsList)
         else
             continue; // parse error: continue with next loop iteration
     }
-    delete [] saveCursor;
+    nsMemory::Free(saveCursor);
     m_database->AddCardRowToDB(newRow);    
 
     if (bIsList)
