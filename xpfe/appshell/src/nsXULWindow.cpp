@@ -1189,7 +1189,21 @@ void nsXULWindow::ActivateParent() {
   if (ourDOMWindow != topDOMWindow)
     return;
 
-  // yes, we're topmost. bring our parent to the top.
+  // yes, we're topmost. is our parent HiddenWindow?
+  nsCOMPtr<nsIAppShellService> appshell(do_GetService(kAppShellServiceCID));
+  if (appshell) {
+    nsCOMPtr<nsIXULWindow> hiddenWindow;
+    appshell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
+    if (hiddenWindow) {
+      nsCOMPtr<nsIBaseWindow> baseHiddenWindow(do_GetInterface(hiddenWindow));
+      // somebody screwed up somewhere. hiddenwindow shouldn't be anybody's
+      // parent. still, when it happens, skip activating it.
+      if (baseHiddenWindow == parent)
+        return;
+    }
+  }
+
+  // alright already. bring our parent to the top.
   nsCOMPtr<nsIWidget> parentWidget;
   parent->GetMainWidget(getter_AddRefs(parentWidget));
   if (parentWidget)
