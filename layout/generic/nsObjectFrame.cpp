@@ -864,21 +864,24 @@ nsObjectFrame::InstantiatePlugin(nsIPresContext*          aPresContext,
 #endif
 
   // Check to see if content-policy wants to veto this
-  PRBool shouldLoad = PR_TRUE; // default permit
-  nsresult rv;
-  nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent, &rv);
+  if(aURL != nsnull)
+  {
+    PRBool shouldLoad = PR_TRUE; // default permit
+    nsresult rv;
+    nsCOMPtr<nsIDOMElement> element = do_QueryInterface(mContent, &rv);
 
-  // For pinkerton: a symphony for string conversion, in 3 parts.
-  nsXPIDLCString urlCString;
-  aURL->GetSpec(getter_Copies(urlCString));
-  nsAutoString url;
-  url.AssignWithConversion((const char *)urlCString);
+    // For pinkerton: a symphony for string conversion, in 3 parts.
+    nsXPIDLCString urlCString;
+    aURL->GetSpec(getter_Copies(urlCString));
+    nsAutoString url;
+    url.AssignWithConversion((const char *)urlCString);
   
-  if (NS_SUCCEEDED(rv) &&
-      NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_OBJECT,
-                                             url, element, &shouldLoad)) &&
-      !shouldLoad) {
-    return NS_OK;
+    if (NS_SUCCEEDED(rv) &&
+        NS_SUCCEEDED(NS_CheckContentLoadPolicy(nsIContentPolicy::CONTENT_OBJECT,
+                                               url, element, &shouldLoad)) &&
+        !shouldLoad) {
+      return NS_OK;
+    }
   }
 
   return aPluginHost->InstantiateEmbededPlugin(aMimetype, aURL, mInstanceOwner);
