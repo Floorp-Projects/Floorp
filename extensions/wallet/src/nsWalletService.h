@@ -33,13 +33,12 @@ public:
     NS_IMETHOD WALLET_Prefill(nsIPresShell* shell, PRBool quick);
     NS_IMETHOD WALLET_Capture(nsIDocument* doc, nsString name, nsString value);
     NS_IMETHOD WALLET_OKToCapture(PRBool* result, PRInt32 count, char* URLName);
-#ifdef junk
+
     NS_IMETHOD SI_DisplaySignonInfoAsHTML();
     NS_IMETHOD SI_RememberSignonData
-        (char* URLName, LO_FormSubmitData *submit);
+        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
     NS_IMETHOD SI_RestoreSignonData
         (char* URLNAME, char* name, char** value);
-#endif
 
 protected:
     virtual ~nsWalletlibService();

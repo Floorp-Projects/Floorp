@@ -31,6 +31,7 @@
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 
 #include "wallet.h"
+#include "singsign.h"
 
 //#if defined(HAS_C_PLUS_PLUS_CASTS)
 //#define NS_STATIC_CAST(__type, __ptr)	   static_cast<__type>(__ptr)
@@ -91,6 +92,25 @@ NS_IMETHODIMP nsWalletlibService::WALLET_Capture(
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWalletlibService::SI_DisplaySignonInfoAsHTML(){
+    ::SI_DisplaySignonInfoAsHTML();
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWalletlibService::SI_RememberSignonData
+        (char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt) {
+    ::SI_RememberSignonData(URLName, name_array, value_array, type_array, value_cnt);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWalletlibService::SI_RestoreSignonData
+        (char* URLName, char* name, char** value) {
+    ::SI_RestoreSignonData(URLName, name, value);
+    return NS_OK;
+}
 
 /* call to create the wallet object */
 
