@@ -66,6 +66,13 @@ input, button, select, textarea {
   -moz-user-focus: none !important;
 }
 
+isindex[prompt]
+{
+  -moz-user-select: none !important;
+  -moz-user-input: none !important;
+  -moz-user-focus: none !important;
+}
+
 input[type="hidden"] {
   border: 1px solid black !important;
   visibility: visible !important;

@@ -286,7 +286,6 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
       nsCOMPtr<nsIDOMNode> node = do_QueryInterface(target);
       if (node && !NodeIsInSelection)
       {
-        selection->Collapse(parent, offset);
 
         // Get enclosing link
         nsCOMPtr<nsIDOMElement> linkElement;
@@ -294,6 +293,8 @@ nsEditorShellMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
         if (NS_FAILED(res)) return res;
         if (linkElement)
           element = linkElement;
+        if (element)
+          selection->Collapse(parent, offset);
       }
     }
 
