@@ -68,10 +68,29 @@ sub ConnectToDatabase {
     }
 }
 
+my $dosqllog = (-e "data/sqllog") && (-w "data/sqllog");
+
+sub SqlLog {
+    if ($dosqllog) {
+        my ($str) = (@_);
+        open(SQLLOGFID, ">>data/sqllog") || die "Can't write to data/sqllog";
+        if (flock(SQLLOGFID,2)) { # 2 is magic 'exclusive lock' const.
+            print SQLLOGFID time2str("%D %H:%M:%S $$", time()) . ": $str\n";
+        }
+        flock(SQLLOGFID,8);     # '8' is magic 'unlock' const.
+        close SQLLOGFID;
+    }
+}
+    
+
+
+
 sub SendSQL {
     my ($str) = (@_);
+    SqlLog($str);
     $::currentquery = $::db->query($str)
 	|| die "$str: $::db_errstr";
+    SqlLog("Done");
 }
 
 sub MoreSQLData {
