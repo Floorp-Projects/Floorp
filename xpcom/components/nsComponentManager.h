@@ -57,6 +57,7 @@ public:
     static nsComponentManagerImpl* gComponentManager;
     nsresult Init(void);
     nsresult PlatformPrePopulateRegistry();
+    nsresult Shutdown(void);
 
     friend class nsFactoryEntry;
 protected:
@@ -106,6 +107,12 @@ protected:
     nsNativeComponentLoader *mNativeComponentLoader;
     nsSpecialSystemDirectory *mComponentsDir;
     PRUint32 mComponentsDirLen;
+
+    // Shutdown
+    #define NS_SHUTDOWN_NEVERHAPPENED 0
+    #define NS_SHUTDOWN_INPROGRESS 1
+    #define NS_SHUTDOWN_COMPLETE 2
+    PRUint32 mShuttingDown;
 };
 
 #define NS_MAX_FILENAME_LEN	1024
