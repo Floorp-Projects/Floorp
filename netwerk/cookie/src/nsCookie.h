@@ -42,7 +42,6 @@
 #include "nsICookie.h"
 #include "nsICookie2.h"
 #include "nsString.h"
-#include "nsMemory.h"
 #include "nsInt64.h"
 
 /** 
@@ -58,7 +57,7 @@
 
 class nsCookie : public nsICookie2
 {
-  // this is required because we use a bitfield refcount member.
+  // break up the NS_DECL_ISUPPORTS macro, since we use a bitfield refcount member
   public:
     NS_DECL_ISUPPORTS_INHERITED
   protected:
@@ -69,18 +68,50 @@ class nsCookie : public nsICookie2
     NS_DECL_NSICOOKIE
     NS_DECL_NSICOOKIE2
 
-    nsCookie(const nsACString &aName,
-             const nsACString &aValue,
-             const nsACString &aHost,
-             const nsACString &aPath,
-             nsInt64          aExpiry,
-             nsInt64          aLastAccessed,
-             PRBool           aIsSession,
-             PRBool           aIsSecure,
-             nsCookieStatus   aStatus,
-             nsCookiePolicy   aPolicy);
+  private:
+    // for internal use only. see nsCookie::Create().
+    nsCookie(const char     *aName,
+             const char     *aValue,
+             const char     *aHost,
+             const char     *aPath,
+             const char     *aEnd,
+             nsInt64         aExpiry,
+             nsInt64         aLastAccessed,
+             PRBool          aIsSession,
+             PRBool          aIsSecure,
+             nsCookieStatus  aStatus,
+             nsCookiePolicy  aPolicy)
+     : mNext(nsnull)
+     , mName(aName)
+     , mValue(aValue)
+     , mHost(aHost)
+     , mPath(aPath)
+     , mEnd(aEnd)
+     , mExpiry(aExpiry)
+     , mLastAccessed(aLastAccessed)
+     , mRefCnt(0)
+     , mIsSession(aIsSession != PR_FALSE)
+     , mIsSecure(aIsSecure != PR_FALSE)
+     , mStatus(aStatus)
+     , mPolicy(aPolicy)
+    {
+    }
 
-    virtual ~nsCookie();
+  public:
+    // public helper to create an nsCookie object. use |operator delete|
+    // to destroy an object created by this method.
+    static nsCookie * Create(const nsACString &aName,
+                             const nsACString &aValue,
+                             const nsACString &aHost,
+                             const nsACString &aPath,
+                             nsInt64           aExpiry,
+                             nsInt64           aLastAccessed,
+                             PRBool            aIsSession,
+                             PRBool            aIsSecure,
+                             nsCookieStatus    aStatus,
+                             nsCookiePolicy    aPolicy);
+
+    virtual ~nsCookie() {};
 
     // fast (inline, non-xpcom) getters
     inline const nsDependentCString Name()  const { return nsDependentCString(mName, mValue - 1); }
@@ -111,19 +142,19 @@ class nsCookie : public nsICookie2
     // store a terminating null for each string, so we can hand them
     // out as nsAFlatCStrings.
 
-    nsCookie *mNext;
-    char     *mName;
-    char     *mValue;
-    char     *mHost;
-    char     *mPath;
-    char     *mEnd;
-    nsInt64  mExpiry;
-    nsInt64  mLastAccessed;
-    PRUint32 mRefCnt    : 16;
-    PRUint32 mIsSession : 1;
-    PRUint32 mIsSecure  : 1;
-    PRUint32 mStatus    : 3;
-    PRUint32 mPolicy    : 3;
+    nsCookie   *mNext;
+    const char *mName;
+    const char *mValue;
+    const char *mHost;
+    const char *mPath;
+    const char *mEnd;
+    nsInt64     mExpiry;
+    nsInt64     mLastAccessed;
+    PRUint32    mRefCnt    : 16;
+    PRUint32    mIsSession : 1;
+    PRUint32    mIsSecure  : 1;
+    PRUint32    mStatus    : 3;
+    PRUint32    mPolicy    : 3;
 };
 
 #endif // nsCookie_h__
