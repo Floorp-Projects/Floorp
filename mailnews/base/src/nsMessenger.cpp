@@ -58,7 +58,8 @@
 #include "nsIWebShellWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDocShell.h"
-
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 
 // mail
 #include "nsMsgUtils.h"
@@ -295,12 +296,21 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
   {
     return NS_ERROR_FAILURE;
   }
-  nsCOMPtr<nsIWebShell> rootWebShell;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
-  webShell->GetRootWebShell(*getter_AddRefs(rootWebShell));
-  if (nsnull != rootWebShell) 
+  nsCOMPtr<nsIDocShellTreeItem> rootDocShellAsItem;
+  docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootDocShellAsItem));
+
+  nsCOMPtr<nsIDocShellTreeNode> 
+                     rootDocShellAsNode(do_QueryInterface(rootDocShellAsItem));
+  if (rootDocShellAsNode) 
   {
-    nsresult rv = rootWebShell->FindChildWithName(webShellName.GetUnicode(), *getter_AddRefs(mWebShell));
+    nsCOMPtr<nsIDocShellTreeItem> childAsItem;
+    nsresult rv = rootDocShellAsNode->FindChildWithName(webShellName.GetUnicode(),
+      PR_TRUE, PR_FALSE, nsnull, getter_AddRefs(childAsItem));
+
+    mWebShell = do_QueryInterface(childAsItem);
 
     if (NS_SUCCEEDED(rv) && mWebShell) {
 
@@ -311,7 +321,8 @@ nsMessenger::SetWindow(nsIDOMWindow *aWin, nsIMsgWindow *aMsgWindow)
             m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
             if (aStatusFeedback)
                 aStatusFeedback->SetWebShell(mWebShell, mWindow);
-            mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
+            nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+            docShell->SetDocLoaderObserver(m_docLoaderObserver);
             NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
             if(NS_SUCCEEDED(rv))
                 mailSession->SetTemporaryMsgWindow(aMsgWindow);
@@ -331,11 +342,12 @@ nsMessenger::InitializeDisplayCharset()
     return;
   
   // libmime always converts to UTF-8 (both HTML and XML)
-  if (mWebShell) 
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  if (docShell) 
   {
     nsAutoString aForceCharacterSet("UTF-8");
     nsCOMPtr<nsIContentViewer> cv;
-    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    docShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
@@ -1219,11 +1231,12 @@ nsMessenger::GetTransactionManager(nsITransactionManager* *aTxnMgr)
 
 NS_IMETHODIMP nsMessenger::SetDocumentCharset(const PRUnichar *characterSet)
 {
-	// Set a default charset of the webshell. 
-	if (mWebShell) 
+	// Set a default charset of the webshell.
+   nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell)); 
+	if (docShell) 
   {
     nsCOMPtr<nsIContentViewer> cv;
-    mWebShell->GetContentViewer(getter_AddRefs(cv));
+    docShell->GetContentViewer(getter_AddRefs(cv));
     if (cv) 
     {
       nsCOMPtr<nsIMarkupDocumentViewer> muDV = do_QueryInterface(cv);
@@ -1335,14 +1348,12 @@ NS_IMETHODIMP nsMessenger::DoPrint()
 #endif
 
   nsresult rv = NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mWebShell));
+  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
+
   nsCOMPtr<nsIContentViewer> viewer;
-
-  NS_ASSERTION(mWebShell,"can't print, there is no webshell");
-  if (!mWebShell) {
-	  return rv;
-  }
-
-  mWebShell->GetContentViewer(getter_AddRefs(viewer));
+  docShell->GetContentViewer(getter_AddRefs(viewer));
 
   if (viewer) 
   {

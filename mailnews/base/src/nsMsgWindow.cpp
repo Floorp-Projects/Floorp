@@ -24,6 +24,8 @@
 #include "nsIURILoader.h"
 #include "nsCURILoader.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeNode.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
@@ -200,31 +202,36 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 
 	nsresult rv = NS_OK;
 
-	nsCOMPtr<nsIScriptGlobalObject>
-		globalScript(do_QueryInterface(aWindow));
+	nsCOMPtr<nsIScriptGlobalObject> globalScript(do_QueryInterface(aWindow));
    nsCOMPtr<nsIDocShell> docShell;
 	if (globalScript)
 		globalScript->GetDocShell(getter_AddRefs(docShell));
-	nsCOMPtr<nsIWebShell> webshell(do_QueryInterface(docShell));
-   nsCOMPtr<nsIWebShell> rootWebshell;
-	if (webshell)
-	{
-		webshell->GetRootWebShell(mRootWebShell);
-		nsIWebShell *root = mRootWebShell;
-		NS_RELEASE(root); // don't hold reference
-    if (mRootWebShell)
-    {
-      nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mRootWebShell));
-      if (docShell)
-        docShell->SetParentURIContentListener(this);
-    }
 
-    nsAutoString  webShellName("messagepane");
-    nsCOMPtr<nsIWebShell> msgWebShell;
-    rv = mRootWebShell->FindChildWithName(webShellName.GetUnicode(), *getter_AddRefs(msgWebShell));
-    // we don't own mMessageWindowWebShell so don't try to keep a reference to it!
-    mMessageWindowWebShell = msgWebShell;
-	}
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+
+   if(docShellAsItem)
+      {
+      nsCOMPtr<nsIDocShellTreeItem> rootAsItem;
+      docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(rootAsItem));
+
+      nsCOMPtr<nsIDocShell> rootAsShell(do_QueryInterface(rootAsItem));
+      if(rootAsShell)
+         rootAsShell->SetParentURIContentListener(this);
+
+      nsAutoString childName("messagepane");
+      nsCOMPtr<nsIDocShellTreeNode> rootAsNode(do_QueryInterface(rootAsItem));
+      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(rootAsItem));
+      mRootWebShell = webShell;
+
+      nsCOMPtr<nsIDocShellTreeItem> msgDocShellItem;
+      if(rootAsNode)
+         rootAsNode->FindChildWithName(childName.GetUnicode(), PR_TRUE, PR_FALSE,
+         nsnull, getter_AddRefs(msgDocShellItem));
+
+      nsCOMPtr<nsIWebShell> msgWebShell(do_QueryInterface(msgDocShellItem));
+      // we don't own mMessageWindowWebShell so don't try to keep a reference to it!
+      mMessageWindowWebShell = msgWebShell;
+      }
 	return rv;
 }
 
