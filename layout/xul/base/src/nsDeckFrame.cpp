@@ -67,6 +67,7 @@ nsDeckFrame::Init(nsIPresContext&  aPresContext,
 {
    // Get the element's tag
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  //CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
   return rv;
 }
 
@@ -82,8 +83,15 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
 
 
    // if the index changed hide the old element and make the now element visible
-  if (aAttribute == nsHTMLAtoms::value) {
+  if (aAttribute == nsHTMLAtoms::index) {
+            nsCOMPtr<nsIPresShell> shell;
+            aPresContext->GetShell(getter_AddRefs(shell));
 
+            nsCOMPtr<nsIReflowCommand> reflowCmd;
+            nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                                  nsIReflowCommand::StyleChanged);
+            if (NS_SUCCEEDED(rv)) 
+              shell->AppendReflowCommand(reflowCmd);
   }
 
 
@@ -106,7 +114,7 @@ nsDeckFrame::GetSelectedFrame()
 
   // get the index attribute
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::index, value))
   {
     PRInt32 error;
 
@@ -195,11 +203,6 @@ nsDeckFrame::SetInitialChildList(nsIPresContext& aPresContext,
 {
   nsresult r = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-  // now that all the children are added. ReResolve our children
-  // so we hide everything that is hidden in the deck
-  ReResolveStyleContext(&aPresContext, mStyleContext, 
-                        NS_STYLE_HINT_REFLOW,
-                        nsnull, nsnull);
   return r;
 }
 
@@ -230,99 +233,21 @@ nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
       aInfo.maxSize.height = aChildInfo.maxSize.height;
 }
 
-NS_IMETHODIMP
-nsDeckFrame :: ReResolveStyleContext ( nsIPresContext* aPresContext, nsIStyleContext* aParentContext,
-                                               PRInt32 aParentChange, nsStyleChangeList* aChangeList,
-                                               PRInt32* aLocalChange)
+nsresult
+nsDeckFrame::PlaceChildren(nsIPresContext& aPresContext, nsRect& boxRect)
 {
-  // calculate our style context
-  PRInt32 ourChange = aParentChange;
-  nsresult result = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, 
-                                                   ourChange, aChangeList, &ourChange);
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  // get our hidden pseudo
-  nsCOMPtr<nsIAtom> hide ( getter_AddRefs(NS_NewAtom(":-moz-deck-hidden")) );
-
-  nsIStyleContext* newSC;
-
-  // get a style content for the hidden pseudo element
-  aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                          hide,
-                                          mStyleContext,
-                                          PR_FALSE, &newSC);
-
-  // get the index from the tab
   int index = 0;
 
   // get the index attribute
   nsAutoString value;
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::value, value))
+  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::index, value))
   {
     PRInt32 error;
 
     // convert it to an integer
     index = value.ToInteger(&error);
-  } 
-
-
-  if (aLocalChange) {
-    *aLocalChange = ourChange;
   }
 
-
-  // resolve all our children that are not selected with the hidden pseudo elements
-  // style context
-    nsIFrame* childFrame = mFrames.FirstChild(); 
-    PRInt32 count = 0;
-    while (nsnull != childFrame) 
-    {
-      
-      nsIStyleContext* oldS = nsnull;
-      nsIStyleContext* newS = nsnull;
-
-  
-      if (count == index)
-      {
-        childFrame->GetStyleContext(&oldS);
-        childFrame->ReResolveStyleContext(aPresContext, mStyleContext, 
-                                              ourChange, aChangeList, &ourChange);
-      } else {
-        // use hidden style context
-        childFrame->GetStyleContext(&oldS);
-        childFrame->ReResolveStyleContext(aPresContext, newSC, 
-                                              ourChange, aChangeList, &ourChange);
-
-      }
-
-      childFrame->GetStyleContext(&newS);
-
-      //CaptureStyleChangeFor(childFrame, oldS, newS, 
-      //      ourChange, aChangeList, &ourChange);
-
-      if (oldS != newS)
-      {
-        if (aChangeList) 
-            aChangeList->AppendChange(childFrame, NS_STYLE_HINT_VISUAL);
-      }
-
-      NS_RELEASE(oldS);
-      NS_RELEASE(newS);
-
-      childFrame->GetNextSibling(&childFrame); 
-      count++;
-    }
-
-  return result;
-  
-} // ReResolveStyleContext
-
-
-nsresult
-nsDeckFrame::PlaceChildren(nsRect& boxRect)
-{
   // ------- set the childs positions ---------
   nsIFrame* childFrame = mFrames.FirstChild(); 
   nscoord count = 0;
@@ -330,24 +255,36 @@ nsDeckFrame::PlaceChildren(nsRect& boxRect)
   {
     nsresult rv;
 
+    /*
+    // see if the child has a view. If it doesn't make one for it.
+    nsIView* childView = nsnull;
+    childFrame->GetView(&childView);
+    if (childView == nsnull) {
+       nsCOMPtr<nsIStyleContext> context;
+       childFrame->GetStyleContext(getter_AddRefs(context));
+       CreateViewForFrame(aPresContext,childFrame,context,PR_TRUE);
+       childFrame->GetView(&childView);
+       NS_ASSERTION(childView != nsnull, "Deck could not create a view for its child!!!");
+    }
+    */
+
+    //nsCOMPtr<nsIViewManager> vm;
+   // childView->GetViewManager(*getter_AddRefs(vm));
+  
     // make collapsed children not show up
-    if (mSprings[count].collapsed) {
-      
-      childFrame->SetRect(nsRect(0,0,0,0));
-
-      // make the view really small as well
-      nsIView* view = nsnull;
-      childFrame->GetView(&view);
-
-      if (view) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        vm->ResizeView(view, 0,0);
-      }
-      
+    if (mSprings[count].collapsed || count != index) {
+       CollapseChild(childFrame);
+  //  } if (count != index) {
+      // if the child is not in view then make sure its view is 0 so it clips
+      // out all its children.
+      //vm->ResizeView(childView, 0,0);
+      //childFrame->SizeTo(0,0);
+      //childView->SetParent(nsnull);
     } else {
-      nsRect rect;
-      childFrame->MoveTo(rect.x, rect.y);
+      ////nsIView* pv;
+      //GetView(&pv);
+      //childView->SetParent(pv);
+      childFrame->MoveTo(boxRect.x, boxRect.y);
     }
 
     rv = childFrame->GetNextSibling(&childFrame);

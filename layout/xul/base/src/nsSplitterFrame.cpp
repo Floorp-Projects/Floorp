@@ -225,6 +225,7 @@ nsSplitterFrame::nsSplitterFrame()
 
 nsSplitterFrame::~nsSplitterFrame()
 {
+  mImpl->RemoveListener();
   mImpl->Release();
 }
 
