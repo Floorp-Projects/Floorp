@@ -300,92 +300,81 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
             aProgressStateFlags,(const char*)temp));
   }
 #endif
+
+  // First event when loading doc
+  if (aProgressStateFlags & STATE_START) {
+    if (aProgressStateFlags & STATE_IS_NETWORK) {
+      // Reset state variables used per doc loading
+      mMixContentAlertShown = PR_FALSE;
+      mFirstRequest = PR_TRUE;
+      mSSLStatus = nsnull;
+    }
+  }
   
   // A Document is starting to load...
-  if ((aProgressStateFlags & (STATE_TRANSFERRING|STATE_REDIRECTING)) &&
-      (aProgressStateFlags & STATE_IS_DOCUMENT)) {
-    // starting to load a webpage
-    mMixContentAlertShown = PR_FALSE;
+  if ((aProgressStateFlags & (STATE_STOP)) &&
+      (aProgressStateFlags & STATE_IS_REQUEST)) {
 
-    // reset the current SSLStatus data (if any)
-    mSSLStatus = nsnull;
+    // work-around for bug 48515.
+    nsCOMPtr<nsIURI> aURI;
+    channel->GetURI(getter_AddRefs(aURI));
 
-    return CheckProtocolContextSwitch(eventSink, aRequest, channel);
+    nsXPIDLCString temp;
+    aURI->GetSpec(getter_Copies(temp));
+
+    if (!nsCRT::strncmp((const char*) temp, "file:", 5) ||
+        !nsCRT::strncmp((const char*) temp, "jar:", 4) ||
+        !nsCRT::strcmp((const char*) temp, "about:layout-dummy-request")) {
+      return NS_OK;
+    }
+
+    // If this is the first request, then do a protocol check
+    if (mFirstRequest) {
+      mFirstRequest = PR_FALSE;
+      return CheckProtocolContextSwitch(eventSink, aRequest, channel);
+    }
+    // Check that the request does not have mixed content.
+    return CheckMixedContext(eventSink, aRequest, channel);
   }
 
   // A document has finished loading
   if ((aProgressStateFlags & STATE_STOP) &&
-      (aProgressStateFlags & STATE_IS_NETWORK) &&
-      (IS_SECURE(mSecurityState) ||
-       mSecurityState == STATE_IS_BROKEN))
-    {
-      // Get SSL Status information if possible
-      nsCOMPtr<nsISupports> info;
-      channel->GetSecurityInfo(getter_AddRefs(info));
-      nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
-      if (sp) {
-        // Ignore result
-        sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
-      }
+    (aProgressStateFlags & STATE_IS_NETWORK)) {
 
-      if (IS_SECURE(mSecurityState)) {
-        // XXX Shouldn't we do this even if the state is broken?
-        // XXX Shouldn't we grab the pickled status at STATE_NET_TRANSFERRING?
-        
-        if (IS_SECURE(GetSecurityStateFromChannel(channel))) {
-          // Everything looks okay.
-          PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to lock\n", this));
-          
-          
-          if (eventSink)
-            eventSink->OnSecurityChange(aRequest, mSecurityState);
-          
-          if (!mSecurityButton)
-            return res;
-          
-          /* TNH - need event for changing the tooltip */
-
-          // Do we really need to look at res here? What happens if there's an error?
-          // We should still set the certificate authority display.
-
-          PRUnichar* tooltip = nsnull;
-          nsCOMPtr<nsISupports> info;
-          channel->GetSecurityInfo(getter_AddRefs(info));
-          if (info) {
-            nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
-            if (secInfo &&
-                NS_SUCCEEDED(secInfo->GetShortSecurityDescription(&tooltip)) &&
-                tooltip) {
-
-              res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("tooltiptext"),
-                                                  nsString(tooltip));
-              
-              PR_Free(tooltip);
-            }
-          }
-          return res;
-        }
-        mSecurityState = STATE_IS_BROKEN;
-      }
-      
-      PR_LOG(gSecureDocLog, PR_LOG_DEBUG, ("SecureUI:%p: Icon set to broken\n", this));
-      SetBrokenLockIcon(eventSink, aRequest);
-      
-      return res;
+    // Get SSL Status information if possible
+    nsCOMPtr<nsISupports> info;
+    channel->GetSecurityInfo(getter_AddRefs(info));
+    nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
+    if (sp) {
+      // Ignore result
+      sp->GetSSLStatus(getter_AddRefs(mSSLStatus));
     }
-  
-  // don't need to do anything more if the page is broken or not secure...
-  
-  if (!IS_SECURE(mSecurityState))
-    return NS_OK;
-  
-  // A URL is starting to load...
-  if ((aProgressStateFlags & (STATE_TRANSFERRING | STATE_REDIRECTING)) &&
-      (aProgressStateFlags & STATE_IS_REQUEST)) {
-    // check to see if we are going to mix content.
-    return CheckMixedContext(eventSink, aRequest, channel);
+
+    if (eventSink)
+      eventSink->OnSecurityChange(aRequest, mSecurityState);
+          
+    if (!mSecurityButton)
+      return res;
+          
+    /* TNH - need event for changing the tooltip */
+
+    // Do we really need to look at res here? What happens if there's an error?
+    // We should still set the certificate authority display.
+
+    nsXPIDLString tooltip;
+    if (info) {
+      nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(info));
+      if (secInfo &&
+          NS_SUCCEEDED(secInfo->GetShortSecurityDescription(getter_Copies(tooltip))) &&
+          tooltip) {
+
+        res = mSecurityButton->SetAttribute(NS_LITERAL_STRING("tooltiptext"),
+                                                nsString(tooltip));
+              
+      }
+    }
   }
-  
+
   return res;
 }
 
@@ -435,7 +424,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
     } else if (state == (STATE_IS_SECURE|STATE_SECURE_LOW)) {
       res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("low"));
     } else if (state == STATE_IS_BROKEN) {
-      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("mixed"));
+      res = mSecurityButton->SetAttribute(level, NS_LITERAL_STRING("broken"));
     } else {
       res = mSecurityButton->RemoveAttribute(level);
     }
@@ -506,6 +495,7 @@ nsSecureBrowserUIImpl::CheckProtocolContextSwitch(nsISecurityEventSink* eventSin
   PRInt32 newSecurityState, oldSecurityState = mSecurityState;
   
   newSecurityState = GetSecurityStateFromChannel(aChannel);
+  mSecurityState = newSecurityState;
 
   // Check to see if we are going from a secure page to an insecure page
   if (newSecurityState == STATE_IS_INSECURE &&
