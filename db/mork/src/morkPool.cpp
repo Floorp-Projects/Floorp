@@ -137,10 +137,10 @@ morkPool::ClosePool(morkEnv* ev) // called by CloseMorkNode();
 
       nsIMdbHeap* heap = mPool_Heap;
       nsIMdbEnv* mev = ev->AsMdbEnv();
-      morkLink* link;
+      morkLink* aLink;
       morkDeque* d = &mPool_FreeHandleFrames;
-      while ( (link = d->RemoveFirst()) != 0 )
-        heap->Free(mev, link);
+      while ( (aLink = d->RemoveFirst()) != 0 )
+        heap->Free(mev, aLink);
   
       this->MarkShut();
     }
@@ -162,10 +162,10 @@ morkPool::NewHandle(morkEnv* ev, mork_size inSize, morkZone* ioZone)
   void* newBlock = 0;
   if ( inSize <= sizeof(morkHandleFrame) )
   {
-    morkLink* link = mPool_FreeHandleFrames.RemoveFirst();
-    if ( link )
+    morkLink* firstLink = mPool_FreeHandleFrames.RemoveFirst();
+    if ( firstLink )
     {
-      newBlock = link;
+      newBlock = firstLink;
       if ( mPool_FreeFramesCount )
         --mPool_FreeFramesCount;
       else
@@ -193,8 +193,8 @@ morkPool::ZapHandle(morkEnv* ev, morkHandleFace* ioHandle)
 {
   if ( ioHandle )
   {
-    morkLink* link = (morkLink*) ioHandle;
-    mPool_FreeHandleFrames.AddLast(link);
+    morkLink* handleLink = (morkLink*) ioHandle;
+    mPool_FreeHandleFrames.AddLast(handleLink);
     ++mPool_FreeFramesCount;
   }
 }
