@@ -556,8 +556,7 @@ nsCookieService::GetCookieStringFromHttp(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  PRUint32 permission;
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull, permission);
+  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, nsnull);
   // for GetCookie(), we don't update the UI icon if cookie was rejected.
   if (cookieStatus == nsICookie::STATUS_REJECTED) {
     return NS_OK;
@@ -712,8 +711,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
   }
 
   // check default prefs
-  PRUint32 listPermission;
-  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader, listPermission);
+  nsCookieStatus cookieStatus = CheckPrefs(aHostURI, aFirstURI, aChannel, aCookieHeader);
   // update UI icon, and return, if cookie was rejected.
   // should we be doing this just for p3p?
   if (cookieStatus == nsICookie::STATUS_REJECTED) {
@@ -740,7 +738,7 @@ nsCookieService::SetCookieStringFromHttp(nsIURI     *aHostURI,
   nsDependentCString cookieHeader(aCookieHeader);
   while (SetCookieInternal(aHostURI,
                            cookieHeader, serverTime,
-                           cookieStatus, cookiePolicy, listPermission));
+                           cookieStatus, cookiePolicy));
 
   // write out the cookie file
   LazyWrite(PR_TRUE);
@@ -1461,8 +1459,7 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                    nsDependentCString &aCookieHeader,
                                    nsInt64            aServerTime,
                                    nsCookieStatus     aStatus,
-                                   nsCookiePolicy     aPolicy,
-                                   PRUint32           aListPermission)
+                                   nsCookiePolicy     aPolicy)
 {
   nsresult rv;
 
@@ -1543,7 +1540,6 @@ nsCookieService::SetCookieInternal(nsIURI             *aHostURI,
                                        nsnull,
                                        countFromHost, foundCookie,
                                        mCookiesAskPermission,
-                                       aListPermission,
                                        &permission);
     if (!permission) {
       COOKIE_LOGFAILURE(SET_COOKIE, aHostURI, cookieHeader, "cookie rejected by permission manager");
@@ -2084,8 +2080,7 @@ nsCookieStatus
 nsCookieService::CheckPrefs(nsIURI     *aHostURI,
                             nsIURI     *aFirstURI,
                             nsIChannel *aChannel,
-                            const char *aCookieHeader,
-                            PRUint32   &aListPermission)
+                            const char *aCookieHeader)
 {
   // pref tree:
   // 0) get the scheme strings from the two URI's
@@ -2173,13 +2168,11 @@ nsCookieService::CheckPrefs(nsIURI     *aHostURI,
   // default prefs. see bug 184059.
   nsCOMPtr<nsIPermissionManager> permissionManager = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    // we need to pass the lookup result, aListPermission, as an outparam since
-    // we'll need it later on to decide whether to prompt the user or not.
-    // (if an entry exists in the list, we don't want to prompt the user.)
-    permissionManager->TestPermission(aHostURI, "cookie", &aListPermission);
+    PRUint32 listPermission;
+    permissionManager->TestPermission(aHostURI, "cookie", &listPermission);
 
     // if we found an entry, use it
-    switch (aListPermission) {
+    switch (listPermission) {
       case nsIPermissionManager::DENY_ACTION:
         COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader, "cookies are blocked for this site");
         return nsICookie::STATUS_REJECTED;

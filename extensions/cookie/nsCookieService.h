@@ -92,7 +92,7 @@ class nsCookieService : public nsICookieService
     nsresult                      ReadPrefs();
     nsresult                      Read();
     nsresult                      Write();
-    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy, PRUint32 aListPermission);
+    PRBool                        SetCookieInternal(nsIURI *aHostURI, nsDependentCString &aCookieHeader, nsInt64 aServerTime, nsCookieStatus aStatus, nsCookiePolicy aPolicy);
     nsresult                      AddInternal(nsCookie *aCookie, nsInt64 aCurrentTime, nsIURI *aHostURI, const char *aCookieHeader);
     static PRBool                 GetTokenValue(nsASingleFragmentCString::const_char_iterator &aIter, nsASingleFragmentCString::const_char_iterator &aEndIter, nsDependentSingleFragmentCSubstring &aTokenString, nsDependentSingleFragmentCSubstring &aTokenValue, PRBool &aEqualsFound);
     static PRBool                 ParseAttributes(nsDependentCString &aCookieHeader, nsCookieAttributes &aCookie);
@@ -103,7 +103,7 @@ class nsCookieService : public nsICookieService
     static nsCookiePolicy         GetP3PPolicy(PRInt32 aPolicy);
     PRInt32                       SiteP3PPolicy(nsIURI *aCurrentURI, nsIChannel *aChannel);
     nsCookieStatus                P3PDecision(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel);
-    nsCookieStatus                CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader, PRUint32 &aListPermission);
+    nsCookieStatus                CheckPrefs(nsIURI *aHostURI, nsIURI *aFirstURI, nsIChannel *aChannel, const char *aCookieHeader);
     PRBool                        CheckDomain(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     static PRBool                 CheckPath(nsCookieAttributes &aCookie, nsIURI *aHostURI);
     PRBool                        GetExpiry(nsCookieAttributes &aCookie, nsInt64 aServerTime, nsInt64 aCurrentTime, nsCookieStatus aStatus);

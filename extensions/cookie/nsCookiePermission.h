@@ -38,15 +38,20 @@
 #define nsCookiePermission_h__
 
 #include "nsICookiePermission.h"
+#include "nsIPermissionManager.h"
+#include "nsCOMPtr.h"
 
 class nsCookiePermission : public nsICookiePermission
 {
 public:
-  nsCookiePermission();
-  virtual ~nsCookiePermission();
+  nsCookiePermission() {}
+  virtual ~nsCookiePermission() {}
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSICOOKIEPERMISSION
+
+private:
+  nsCOMPtr<nsIPermissionManager> mPermMgr;
 };
 
 // {CE002B28-92B7-4701-8621-CC925866FB87}

@@ -56,8 +56,6 @@ interface nsICookiePermission : nsISupports
    * @param cookiesFromHost number of cookies this host already has set
    * @param changingCookie  are we changing this cookie?
    * @param showDialog      show a prompt to the user?
-   * @param listPermission  previous result from nsIPermissionManager::
-                            TestPermission() (use UNKNOWN_ACTION if none)
    * @return                whether the cookie has permission to be loaded
    */
   boolean testPermission(in nsIURI uri,
@@ -65,8 +63,7 @@ interface nsICookiePermission : nsISupports
                          in nsIDOMWindow parent,
                          in long cookiesFromHost,
                          in boolean changingCookie,
-                         in boolean showDialog,
-                         in PRUint32 listPermission);
+                         in boolean showDialog);
 };
 
 %{ C++
