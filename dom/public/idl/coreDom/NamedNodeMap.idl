@@ -9,5 +9,14 @@
                                              raises(DOMException);
    Node                      item(in unsigned long index);
    readonly attribute  unsigned long        length;
- };
-
+   // Introduced in DOM Level 2:
+   Node                      getNamedItemNS(in DOMString namespaceURI, 
+                                            in DOMString localName);
+   // Introduced in DOM Level 2:
+   Node                      setNamedItemNS(in Node arg)
+                                              raises(DOMException);
+   // Introduced in DOM Level 2:
+   Node                      removeNamedItemNS(in DOMString namespaceURI, 
+                                               in DOMString localName)
+                                                 raises(DOMException);
+};

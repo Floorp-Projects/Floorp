@@ -47,6 +47,12 @@ public:
   NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)=0;
 
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn)=0;
+
+  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn)=0;
 };
 
 
@@ -56,6 +62,9 @@ public:
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn);  \
   NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn);  \
+  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn);  \
 
 
 
@@ -65,6 +74,9 @@ public:
   NS_IMETHOD    SetNamedItem(nsIDOMNode* aArg, nsIDOMNode** aReturn) { return _to SetNamedItem(aArg, aReturn); }  \
   NS_IMETHOD    RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn) { return _to RemoveNamedItem(aName, aReturn); }  \
   NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn) { return _to Item(aIndex, aReturn); }  \
+  NS_IMETHOD    GetNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn) { return _to GetNamedItemNS(aNamespaceURI, aLocalName, aReturn); }  \
+  NS_IMETHOD    SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn) { return _to SetNamedItemNS(aArg, aReturn); }  \
+  NS_IMETHOD    RemoveNamedItemNS(const nsString& aNamespaceURI, const nsString& aLocalName, nsIDOMNode** aReturn) { return _to RemoveNamedItemNS(aNamespaceURI, aLocalName, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitNamedNodeMapClass(nsIScriptContext *aContext, void **aPrototype);

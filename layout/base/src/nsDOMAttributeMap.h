@@ -49,6 +49,11 @@ public:
   NS_IMETHOD SetNamedItem(nsIDOMNode* aNode, nsIDOMNode** aReturn);
   NS_IMETHOD RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn);
   NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+  NS_IMETHOD GetNamedItemNS(const nsString& aNamespaceURI,
+                            const nsString& aLocalName, nsIDOMNode** aReturn);
+  NS_IMETHOD SetNamedItemNS(nsIDOMNode* aArg, nsIDOMNode** aReturn);
+  NS_IMETHOD RemoveNamedItemNS(const nsString& aNamespaceURI,
+                               const nsString&aLocalName, nsIDOMNode** aReturn);
 
   void DropReference();
 
