@@ -205,9 +205,9 @@ License File=license.txt
 ;*** LOCALIZE ME BABY ***
 Message0=Please read the following license agreement. Use the scroll bar to view the rest of this agreement.
 ;*** LOCALIZE ME BABY ***
-RadioAccept=I Accept the terms of the License Agreement
+RadioAccept=I &Accept the terms of the License Agreement
 ;*** LOCALIZE ME BABY ***
-RadioDecline=I do NOT Accept the terms of the License Agreement
+RadioDecline=I do &NOT Accept the terms of the License Agreement
 
 [Dialog Setup Type]
 Show Dialog=TRUE
