@@ -13,7 +13,7 @@
         chrome:author="mozilla.org"
         chrome:name="navigator"
         chrome:localeVersion="1.2a"
-        chrome:skinVersion="1.0">
+        chrome:skinVersion="1.2">
   </RDF:Description>
 
 </RDF:RDF>

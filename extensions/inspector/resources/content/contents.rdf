@@ -13,7 +13,7 @@
         chrome:author="Joe Hewitt"
         chrome:name="inspector"
         chrome:localeVersion="0.9.4"
-        chrome:skinVersion="1.0">
+        chrome:skinVersion="1.2">
   </RDF:Description>
 
   <!-- overlay information -->
