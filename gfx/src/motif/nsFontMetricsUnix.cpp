@@ -58,23 +58,25 @@ void nsFontMetricsUnix::RealizeFont()
   mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
 
   XFontStruct * fs = ::XQueryFont((Display *)mContext->GetNativeDeviceContext(), mFontHandle);
+
+  float f  = mContext->GetDevUnitsToAppUnits();
   
-  mAscent = fs->ascent ;
-  mDescent = fs->descent ;
-  mMaxAscent = fs->ascent ;
-  mMaxDescent = fs->descent ;
+  mAscent = nscoord(fs->ascent * f);
+  mDescent = nscoord(fs->descent * f);
+  mMaxAscent = nscoord(fs->ascent * f) ;
+  mMaxDescent = nscoord(fs->descent * f);
   
   //  ::XSetFont(aRenderingSurface->display, aRenderingSurface->gc, mFontHandle);
 
   // XXX Temp hardcodes
-  mHeight = 15 ;
+  mHeight = nscoord(15*f) ;
 
   PRUint32 i;
   for (i=0;i<256;i++)
-    mCharWidths[i] = 9 ;
+    mCharWidths[i] = nscoord(9*f) ;
 
-  mMaxAdvance = 15;
-  mLeading = 3;
+  mMaxAdvance = nscoord(15*f);
+  mLeading = nscoord(3*f);
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(char ch)
@@ -99,16 +101,16 @@ nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
 nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
 
-  nscoord rc = 0 ;
+  PRInt32 rc = 0 ;
 
   mFontHandle = ::XLoadFont((Display *)mContext->GetNativeDeviceContext(), "fixed");
   
   XFontStruct * fs = ::XQueryFont((Display *)mContext->GetNativeDeviceContext(), mFontHandle);
   
-  rc = (nscoord) ::XTextWidth(fs, aString, nsCRT::strlen(aString));
-  
-  return (rc);
+  rc = (PRInt32) ::XTextWidth(fs, aString, nsCRT::strlen(aString));
 
+  return (nscoord(rc * mContext->GetDevUnitsToAppUnits()));
+  
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
@@ -137,7 +139,7 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
 
   PR_Free(xstring);
 
-  return (width);
+  return (nscoord(width * mContext->GetDevUnitsToAppUnits()));
 }
 
 nscoord nsFontMetricsUnix :: GetHeight()

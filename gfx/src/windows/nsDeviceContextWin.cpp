@@ -127,16 +127,20 @@ nsIRenderingContext * nsDeviceContextWin :: CreateRenderingContext(nsIView *aVie
 
   rv = NSRepository::CreateInstance(kRCCID, nsnull, kRCIID, (void **)&pContext);
 
-  if (NS_OK == rv)
-    InitRenderingContext(pContext, win);
+  if (NS_OK == rv) {
+    rv = InitRenderingContext(pContext, win);
+    if (NS_OK != rv) {
+      NS_RELEASE(pContext);
+    }
+  }
 
   NS_IF_RELEASE(win);
   return pContext;
 }
 
-void nsDeviceContextWin :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
+nsresult nsDeviceContextWin :: InitRenderingContext(nsIRenderingContext *aContext, nsIWidget *aWin)
 {
-  aContext->Init(this, aWin);
+  return (aContext->Init(this, aWin));
 }
 
 nsIFontCache* nsDeviceContextWin::GetFontCache()

@@ -28,6 +28,8 @@
 #include "X11/Xlib.h"
 #include "X11/Xutil.h"
 
+#define CLIPPING_NOT_FUNCTIONAL 1
+
 class GraphicsState
 {
 public:
@@ -78,8 +80,8 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mFontCache = nsnull ;
   mFontMetrics = nsnull ;
   mContext = nsnull ;
+  mFrontBuffer = nsnull ;
   mRenderingSurface = nsnull ;
-  mOffscreenSurface = nsnull ;
   mCurrentColor = 0;
   mTMatrix = nsnull;
   mP2T = 1.0f;
@@ -119,7 +121,7 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
     mStateCache = nsnull;
   }
 
-  delete mRenderingSurface;
+  delete mFrontBuffer;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -129,6 +131,8 @@ NS_IMPL_RELEASE(nsRenderingContextUnix)
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 					nsIWidget *aWindow)
 {
+  if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
+    return NS_ERROR_NOT_INITIALIZED;
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
@@ -139,6 +143,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mRenderingSurface->drawable = (Drawable)aWindow->GetNativeData(NS_NATIVE_WINDOW);
   mRenderingSurface->gc       = (GC)aWindow->GetNativeData(NS_NATIVE_GRAPHIC);
 
+  mFrontBuffer = mRenderingSurface;
 
   ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
   ((nsDeviceContextUnix *)aContext)->InstallColormap();
@@ -156,6 +161,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 					nsDrawingSurface aSurface)
 {
+
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
@@ -172,8 +178,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
 }
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
-{
-  mOffscreenSurface = mRenderingSurface;
+{  
   mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
   return NS_OK;
 }
@@ -197,8 +202,11 @@ void nsRenderingContextUnix :: PushState(void)
 
   mStateCache->AppendElement(state);
 
-  mTMatrix = new nsTransform2D();
-  mTMatrix->SetToIdentity();  
+  if (nsnull == mTMatrix)
+    mTMatrix = new nsTransform2D();
+  else
+    mTMatrix = new nsTransform2D(mTMatrix);
+
 
 }
 
@@ -231,6 +239,9 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
 
 PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
+#ifdef CLIPPING_NOT_FUNCTIONAL
+  return PR_FALSE;
+#endif
 
   // Essentially, create the rect and select it into the GC. Get the current
   // ClipRegion first
@@ -311,6 +322,10 @@ PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine 
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
 {
+#ifdef CLIPPING_NOT_FUNCTIONAL
+  return PR_FALSE;
+#endif
+
   if (mRegion != nsnull) {
     XRectangle xrect;
     ::XClipBox(mRegion, &xrect);
@@ -324,6 +339,11 @@ PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
 
 PRBool nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
+
+#ifdef CLIPPING_NOT_FUNCTIONAL
+  return PR_FALSE;
+#endif
+
   nsRect rect;
   XRectangle xrect;
 
@@ -466,11 +486,8 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
   // XXX - Could this be a GC? If so, store the type of surface in nsDrawingSurfaceUnix
   ::XFreePixmap(surface->display, surface->drawable);
 
-  if (mOffscreenSurface == surface)
-    mOffscreenSurface = nsnull;
-
-  if (mRenderingSurface == surface)
-    mRenderingSurface = nsnull;
+  //  if (mRenderingSurface == surface)
+  //    mRenderingSurface = nsnull;
 
   delete aDS;
 }
@@ -657,11 +674,12 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
 
   PRInt32 x = aX;
   PRInt32 y = aY;
-  mTMatrix->TransformCoord(&x,&y);
 
   // Substract xFontStruct ascent since drawing specifies baseline
   if (mFontMetrics)
       y += mFontMetrics->GetMaxAscent();
+
+  mTMatrix->TransformCoord(&x,&y);
 
   ::XDrawString(mRenderingSurface->display, 
 		mRenderingSurface->drawable,
@@ -715,8 +733,8 @@ nsresult nsRenderingContextUnix :: CopyOffScreenBits(nsRect &aBounds)
   
   ::XCopyArea(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
-	      mOffscreenSurface->drawable,
-	      mOffscreenSurface->gc,
+	      mFrontBuffer->drawable,
+	      mFrontBuffer->gc,
 	      aBounds.x, aBounds.y, aBounds.width, aBounds.height, 0, 0);
 	      
   return NS_OK;

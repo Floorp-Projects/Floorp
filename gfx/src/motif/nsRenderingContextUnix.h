@@ -136,8 +136,8 @@ protected:
   nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   float             mP2T;
 
-  nsDrawingSurfaceUnix   *mOffscreenSurface;  
-  nsDrawingSurfaceUnix   *mRenderingSurface;
+  nsDrawingSurfaceUnix   *mRenderingSurface;  // Can be a BackBuffer if Selected in
+  nsDrawingSurfaceUnix   *mFrontBuffer;
   nsIDeviceContext       *mContext;
   nsIFontMetrics         *mFontMetrics;
   nsIFontCache           *mFontCache;
