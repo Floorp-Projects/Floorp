@@ -40,6 +40,7 @@
 #include "nsDOMEvent.h"
 #include "nsHTMLParts.h"
 #include "nsIDOMSelection.h"
+#include "nsISelectionControler.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
 #include "nsIDOMDocument.h"
@@ -52,7 +53,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIXMLDocument.h"
 #include "nsIScrollableView.h"
-#include "nsIDOMSelectionListener.h"
 #include "nsIParser.h"
 #include "nsParserCIID.h"
 #include "nsHTMLContentSinkStream.h"
@@ -105,7 +105,7 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMRangeIID, NS_IDOMRANGE_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFocusTrackerIID, NS_IFOCUSTRACKER_IID);
-static NS_DEFINE_IID(kIDomSelectionListenerIID, NS_IDOMSELECTIONLISTENER_IID);
+static NS_DEFINE_IID(kISelectionControlerIID, NS_ISELECTIONCONTROLER_IID);
 static NS_DEFINE_IID(kICaretIID, NS_ICARET_IID);
 static NS_DEFINE_IID(kICaretID,  NS_ICARET_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -167,7 +167,8 @@ private:
 
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   private nsIDocumentObserver, public nsIFocusTracker,
-                  public nsIDOMSelectionListener, public nsSupportsWeakReference
+                  public nsISelectionControler,
+                  public nsSupportsWeakReference
 {
 public:
   PresShell();
@@ -255,8 +256,15 @@ public:
   NS_IMETHOD SetDisplayNonTextSelection(PRBool aaInEnable);
   NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnable);
 
-  // nsIDOMSelectionListener interface
-  NS_IMETHOD NotifySelectionChanged();
+  // nsISelectionControler
+
+  NS_IMETHOD CharacterMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD ScrollPage(PRBool aForward);
+  NS_IMETHOD SelectAll();
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument *aDocument);
@@ -501,8 +509,8 @@ PresShell::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(kIDomSelectionListenerIID)) {
-    nsIDOMSelectionListener* tmp = this;
+  if (aIID.Equals(kISelectionControlerIID)) {
+    nsISelectionControler* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -612,10 +620,6 @@ PresShell::Init(nsIDocument* aDocument,
     return result;
   }
 
-  nsCOMPtr<nsIDOMSelection> domSelection;
-  mSelection->GetSelection(SELECTION_NORMAL, getter_AddRefs(domSelection));
-  domSelection->AddSelectionListener(this);//possible circular reference
-  
   result = mSelection->Init((nsIFocusTracker *) this);
   if (!NS_SUCCEEDED(result))
     return result;
@@ -865,7 +869,6 @@ PresShell::EndObservingDocument()
       return result;
     if (!domselection)
       return NS_ERROR_UNEXPECTED;
-    domselection->RemoveSelectionListener(this);
     mSelection->ShutDown();
   }
   return NS_OK;
@@ -1126,16 +1129,53 @@ NS_IMETHODIMP PresShell::GetDisplayNonTextSelection(PRBool *aOutEnable)
   return NS_OK;
 }
 
+//implementation of nsISelectionControler
 
-/*implementation of the nsIDOMSelectionListener
-  it will invoke the resetselection to update the presentation shell's frames
-*/
-NS_IMETHODIMP PresShell::NotifySelectionChanged()
+NS_IMETHODIMP 
+PresShell::CharacterMove(PRBool aForward, PRBool aExtend)
 {
-  if (!mSelection)
-    return NS_ERROR_NULL_POINTER;
-  return NS_ERROR_NULL_POINTER;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+NS_IMETHODIMP 
+PresShell::WordMove(PRBool aForward, PRBool aExtend)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+PresShell::LineMove(PRBool aForward, PRBool aExtend)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+PresShell::IntraLineMove(PRBool aForward, PRBool aExtend)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+PresShell::PageMove(PRBool aForward, PRBool aExtend)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+PresShell::ScrollPage(PRBool aForward)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP 
+PresShell::SelectAll()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//end implementations nsISelectionControler
+
+
 
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
@@ -2109,14 +2149,10 @@ PresShell::HandleEvent(nsIView         *aView,
 
   if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
   {//KEY HANDLERS WILL GET RID OF THIS 
-    mSelection->EnableFrameNotification(PR_FALSE);
     if (mDisplayNonTextSelection && NS_SUCCEEDED(mSelection->HandleKeyEvent(aEvent)))
     {  
-      mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
       return NS_OK;
     }
-     mSelection->EnableFrameNotification(PR_TRUE); //prevents secondary reset selection called since
-    //we are a listener now.
   }
 
   if (nsnull != frame) {

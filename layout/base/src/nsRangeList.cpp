@@ -924,7 +924,7 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
     if (NS_FAILED(result))
       return result;
     nsPeekOffsetStruct pos;
-    pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE);
+    pos.SetData(mTracker, desiredX, amount, eDirPrevious, offsetused, PR_FALSE,PR_TRUE, PR_TRUE);
     switch (keyEvent->keyCode){
       case nsIDOMUIEvent::DOM_VK_RIGHT : 
           InvalidateDesiredX();
@@ -1223,7 +1223,10 @@ nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
   {
     if (aOffset >= 0)
     {
-      result = aNode->ChildAt(aOffset, aNode);
+      if (mHint == HINTLEFT && aOffset >0)//we should back up a little
+        result = aNode->ChildAt(aOffset-1, aNode);
+      else
+        result = aNode->ChildAt(aOffset, aNode);
       if (NS_FAILED(result))
         return result;
       if (!aNode) //out of bounds?
@@ -1242,6 +1245,8 @@ nsRangeList::GetFrameForNodeOffset(nsIContent *aNode, PRInt32 aOffset, nsIFrame 
 	result = (*aReturnFrame)->GetChildFrameContainingOffset(aOffset, mHint, &aOffset, aReturnFrame);
 	return result;
 }
+
+
 
 //////////END FRAMESELECTION
 NS_METHOD

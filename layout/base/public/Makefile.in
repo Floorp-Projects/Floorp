@@ -44,6 +44,7 @@ nsINameSpace.h \
 nsINameSpaceManager.h \
 nsIFrameReflow.h \
 nsIFrameUtil.h \
+nsISelectionControler.h \
 nsIPageSequenceFrame.h \
 nsIPresContext.h \
 nsIPresShell.h \
