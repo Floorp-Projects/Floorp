@@ -34,6 +34,7 @@
 #include "nsDTDUtils.h"
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
+#include "nsIXMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsExpatTokenizer.h"
 
@@ -566,7 +567,11 @@ NS_IMETHODIMP CWellFormedDTD::HandleToken(CToken* aToken,nsIParser* aParser) {
       }
       break;
     case eToken_xmlDecl:
-      // result = mSink->AddXMLDecl(theNode);
+      {
+        nsCOMPtr<nsIXMLContentSink> xmlSink(do_QueryInterface(mSink, &result));
+        if (NS_SUCCEEDED(result))
+          result = xmlSink->AddXMLDecl(theNode);
+      }
       break;
     case eToken_doctypeDecl:
       result = mSink->AddDocTypeDecl(theNode);
