@@ -67,6 +67,8 @@ public:
   // Alphabetical list of frame types
   static nsIAtom* areaFrame;
   static nsIAtom* blockFrame;
+  static nsIAtom* htmlFrameOuterFrame;
+  static nsIAtom* htmlFrameInnerFrame;
   static nsIAtom* inlineFrame;
   static nsIAtom* letterFrame;
   static nsIAtom* lineFrame;
