@@ -1,5 +1,4 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
-/* vim:set ts=4 sw=4 sts=4 et cin: */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: MPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -39,7 +38,7 @@
 
 #include "nsHttp.h"
 #include "nscore.h"
-#include "pldhash.h"
+#include "plhash.h"
 #include "nsCRT.h"
 
 #if defined(PR_LOGGING)
@@ -51,152 +50,138 @@ PRLogModuleInfo *gHttpLog = nsnull;
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
 
-// find out how many atoms we have
-#define HTTP_ATOM(_name, _value) Unused_ ## _name,
-enum {
-#include "nsHttpAtomList.h"
-    NUM_HTTP_ATOMS
-};
-#undef HTTP_ATOM
-
-// we keep a linked list of atoms allocated on the heap for easy clean up when
-// the atom table is destroyed.  The structure and value string are allocated
-// as one contiguous block.
-
+// we keep a linked list of atoms allocated on the heap for easy clean up
+// when the atom table is destroyed.
 struct HttpHeapAtom {
+    char                *value;
     struct HttpHeapAtom *next;
-    char                 value[1];
+
+    HttpHeapAtom(const char *v) : value(PL_strdup(v)), next(0) {}
+   ~HttpHeapAtom() { PL_strfree(value); }
 };
 
-static struct PLDHashTable  sAtomTable = {0};
-static struct HttpHeapAtom *sHeapAtoms = nsnull;
-
-HttpHeapAtom *
-NewHeapAtom(const char *value) {
-    int len = strlen(value);
-
-    HttpHeapAtom *a =
-        NS_REINTERPRET_CAST(HttpHeapAtom *, malloc(sizeof(*a) + len));
-    if (!a)
-        return nsnull;
-    memcpy(a->value, value, len + 1);
-
-    // add this heap atom to the list of all heap atoms
-    a->next = sHeapAtoms;
-    sHeapAtoms = a;
-
-    return a;
-}
+static struct PLHashTable  *gHttpAtomTable = nsnull;
+static struct HttpHeapAtom *gHeapAtomsHead = nsnull;
+static struct HttpHeapAtom *gHeapAtomsTail = nsnull;
 
 // Hash string ignore case, based on PL_HashString
-PR_STATIC_CALLBACK(PLDHashNumber)
-StringHash(PLDHashTable *table, const void *key)
+static PLHashNumber
+StringHash(const PRUint8 *key)
 {
-    PLDHashNumber h = 0;
-    for (const char *s = NS_REINTERPRET_CAST(const char*, key); *s; ++s)
-        h = (h >> 28) ^ (h << 4) ^ nsCRT::ToLower(*s);
+    PLHashNumber h;
+    const PRUint8 *s;
+
+    h = 0;
+    for (s = key; *s; s++)
+        h = (h >> 28) ^ (h << 4) ^ nsCRT::ToLower((char)*s);
     return h;
 }
 
-PR_STATIC_CALLBACK(PRBool)
-StringCompare(PLDHashTable *table, const PLDHashEntryHdr *entry,
-              const void *testKey)
+static PRIntn
+StringCompare(const char *a, const char *b)
 {
-    const void *entryKey =
-            NS_REINTERPRET_CAST(const PLDHashEntryStub *, entry)->key;
-
-    return PL_strcasecmp(NS_REINTERPRET_CAST(const char *, entryKey),
-                         NS_REINTERPRET_CAST(const char *, testKey)) == 0;
+    return PL_strcasecmp(a, b) == 0;
 }
 
-static const PLDHashTableOps ops = {
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    PL_DHashGetKeyStub,
-    StringHash,
-    StringCompare,
-    PL_DHashMoveEntryStub,
-    PL_DHashClearEntryStub,
-    PL_DHashFinalizeStub,
-    nsnull
-};
+#if 0
+#define NBUCKETS(ht)    (1 << (PL_HASH_BITS - (ht)->shift))
+static void
+DumpAtomTable()
+{
+    if (gHttpAtomTable) {
+        PLHashEntry *he, **hep;
+        PRUint32 i, nbuckets = NBUCKETS(gHttpAtomTable);
+        for (i=0; i<nbuckets; ++i) {
+            printf("bucket %d: ", i);
+            hep = &gHttpAtomTable->buckets[i];
+            while ((he = *hep) != 0) {
+                printf("(%s,%x,%x) ", (const char *) he->key, he->keyHash, he->value);
+                hep = &he->next;
+            }
+            printf("\n");
+        }
+    }
+}
+#endif
 
 // We put the atoms in a hash table for speedy lookup.. see ResolveAtom.
 static nsresult
 CreateAtomTable()
 {
+    LOG(("CreateAtomTable\n"));
 
-    NS_ASSERTION(!sAtomTable.ops, "atom table already initialized");
+    if (gHttpAtomTable)
+        return NS_OK;
 
-    // The capacity for this table is initialized to a value greater than the
-    // number of known atoms (NUM_HTTP_ATOMS) because we expect to encounter a
-    // few random headers right off the bat.
-    if (!PL_DHashTableInit(&sAtomTable, &ops, nsnull, sizeof(PLDHashEntryStub),
-                           NUM_HTTP_ATOMS + 10)) {
-        sAtomTable.ops = nsnull;
+    gHttpAtomTable = PL_NewHashTable(128, (PLHashFunction) StringHash,
+                                          (PLHashComparator) StringCompare,
+                                          (PLHashComparator) 0, 0, 0);
+    if (!gHttpAtomTable)
         return NS_ERROR_OUT_OF_MEMORY;
-    }
 
-    // fill the table with our known atoms
-    const char *const atoms[] = {
 #define HTTP_ATOM(_name, _value) \
-        _value,
+    PL_HashTableAdd(gHttpAtomTable, _value, (void *) nsHttp::_name.get());
 #include "nsHttpAtomList.h"
 #undef HTTP_ATOM
-        nsnull
-    };
 
-    int i = 0;
-    while (atoms[i])
-        PL_DHashTableOperate(&sAtomTable, atoms[i++], PL_DHASH_ADD);
-
+    //DumpAtomTable();
     return NS_OK;
 }
 
 void
 nsHttp::DestroyAtomTable()
 {
-    if (sAtomTable.ops) {
-        PL_DHashTableFinish(&sAtomTable);
-        sAtomTable.ops = nsnull;
+    if (gHttpAtomTable) {
+        PL_HashTableDestroy(gHttpAtomTable);
+        gHttpAtomTable = nsnull;
     }
-
-    while (sHeapAtoms) {
-        HttpHeapAtom *next = sHeapAtoms->next;
-        free(sHeapAtoms);
-        sHeapAtoms = next;
+    while (gHeapAtomsHead) {
+        gHeapAtomsTail = gHeapAtomsHead->next;
+        delete gHeapAtomsHead;
+        gHeapAtomsHead = gHeapAtomsTail;
     }
+    gHeapAtomsTail = nsnull;
 }
 
 nsHttpAtom
 nsHttp::ResolveAtom(const char *str)
 {
+    if (!gHttpAtomTable)
+        CreateAtomTable();
+
     nsHttpAtom atom = { nsnull };
 
-    if (!str)
-        return atom;
+    if (gHttpAtomTable && str) {
+        atom._val = (const char *) PL_HashTableLookup(gHttpAtomTable, str);
 
-    if (!sAtomTable.ops && NS_FAILED(CreateAtomTable())) {
-        LOG(("failed to create atom table\n"));
-        return atom;
+        // if the atom could not be found in the atom table, then we'll go
+        // and allocate a new atom on the heap.
+        if (!atom) {
+            HttpHeapAtom *heapAtom = new HttpHeapAtom(str);
+            if (!heapAtom)
+                return atom;
+            if (!heapAtom->value) {
+                delete heapAtom;
+                return atom;
+            }
+
+            // append this heap atom to the list of all heap atoms
+            if (!gHeapAtomsHead) {
+                gHeapAtomsHead = heapAtom;
+                gHeapAtomsTail = heapAtom;
+            }
+            else {
+                gHeapAtomsTail->next = heapAtom;
+                gHeapAtomsTail = heapAtom;
+            }
+
+            // now insert the heap atom into the atom table
+            PL_HashTableAdd(gHttpAtomTable, heapAtom->value, heapAtom->value);
+
+            // now assign the value to the atom
+            atom._val = (const char *) heapAtom->value;
+        }
     }
 
-    PLDHashEntryStub *stub = NS_REINTERPRET_CAST(PLDHashEntryStub *,
-            PL_DHashTableOperate(&sAtomTable, str, PL_DHASH_ADD));
-    if (!stub)
-        return atom;  // out of memory
-
-    if (stub->key) {
-        atom._val = NS_REINTERPRET_CAST(const char *, stub->key);
-        return atom;
-    }
-
-    // if the atom could not be found in the atom table, then we'll go
-    // and allocate a new atom on the heap.
-    HttpHeapAtom *heapAtom = NewHeapAtom(str);
-    if (!heapAtom)
-        return atom;  // out of memory
-
-    stub->key = atom._val = heapAtom->value;
     return atom;
 }
