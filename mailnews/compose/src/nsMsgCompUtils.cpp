@@ -2039,6 +2039,11 @@ GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
     if (NS_FAILED(rv) || !prefs) 
       return nsnull;
     rv = prefs->CopyCharPref("mail.default_sendlater_uri", &uri);
+   
+    if (NS_FAILED(rv) || !uri) {
+	uri = PR_smprintf("%s", ANY_SERVER);
+	rv = NS_OK;
+    }
   }
   else if (aMode == nsMsgSaveAsDraft)    // SaveAsDraft (Drafts)
   {

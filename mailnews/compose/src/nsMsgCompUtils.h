@@ -25,6 +25,8 @@
 #include "nsMsgCompFields.h"
 #include "nsIMsgSend.h"
 
+#define ANY_SERVER "anyfolder://"
+
 NS_BEGIN_EXTERN_C
 
 //

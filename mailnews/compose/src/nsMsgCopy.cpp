@@ -34,8 +34,7 @@
 #include "nsRDFCID.h"
 #include "nsIURL.h"
 #include "nsMsgComposeStringBundle.h"
-
-#define ANY_SERVER "anyfolder://"
+#include "nsMsgCompUtils.h"
 
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kMsgCopyServiceCID,NS_MSGCOPYSERVICE_CID);

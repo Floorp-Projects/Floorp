@@ -3299,6 +3299,9 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
     // Need to determine what type of operation failed and set status accordingly. 
     switch (mode)
     {
+    case nsMsgQueueForLater:
+      status = NS_MSG_UNABLE_TO_SEND_LATER;
+      break;
     case nsMsgSaveAsDraft:
       status = NS_MSG_UNABLE_TO_SAVE_DRAFT;
       break;
