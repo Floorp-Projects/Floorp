@@ -25,8 +25,8 @@
 #include "nsWeakReference.h"
 #include "nsReadableUtils.h"
 
-nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode):
-nsDOMAccessible(aShell, aDomNode)
+nsHTMLTableCellAccessible::nsHTMLTableCellAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsHTMLBlockAccessible(aDomNode, aShell)
 { 
 }
 
@@ -37,8 +37,8 @@ NS_IMETHODIMP nsHTMLTableCellAccessible::GetAccRole(PRUint32 *_retval)
   return NS_OK;
 }
 
-nsHTMLTableAccessible::nsHTMLTableAccessible(nsIPresShell* aShell, nsIDOMNode* aDomNode):
-nsDOMAccessible(aShell, aDomNode)
+nsHTMLTableAccessible::nsHTMLTableAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
+nsHTMLBlockAccessible(aDomNode, aShell)
 { 
 }
 

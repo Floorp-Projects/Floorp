@@ -25,37 +25,31 @@
 #define _nsHTMLAreaAccessible_H_
 
 #include "nsGenericAccessible.h"
-#include "nsHTMLLinkAccessible.h"
+#include "nsAccessible.h"
 
 /* Accessible for image map areas - must be child of image
  */
 
-class nsHTMLAreaAccessible : public nsGenericAccessible
+class nsHTMLAreaAccessible : public nsLinkableAccessible
 {
 
 public:
-  nsHTMLAreaAccessible(nsIPresShell *presShell, nsIDOMNode *domNode, nsIAccessible *accParent);
-  NS_IMETHOD GetAccName(PRUnichar **_retval); 
+  nsHTMLAreaAccessible(nsIDOMNode *domNode, nsIAccessible *accParent, nsIWeakReference* aShell);
+  NS_IMETHOD GetAccName(nsAWritableString & _retval); 
   NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(PRUnichar **_retval);
+  NS_IMETHOD GetAccValue(nsAWritableString& _retval);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
   NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
   NS_IMETHOD GetAccNextSibling(nsIAccessible * *aAccNextSibling);
   NS_IMETHOD GetAccPreviousSibling(nsIAccessible * *aAccPreviousSibling);
-  NS_IMETHOD GetAccDescription(PRUnichar **_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, PRUnichar **_retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetAccDescription(nsAWritableString& _retval);
   NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
 
 protected:
   nsIAccessible *CreateAreaAccessible(nsIDOMNode *aDOMNode);
-  nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIAccessible> mAccParent;
-  nsCOMPtr<nsIPresShell> mPresShell;
 };
 
 #endif  

@@ -8,54 +8,6 @@
     <resources>
       <stylesheet src="chrome://global/skin/button.css"/>
     </resources>
-
-    <implementation implements="nsIAccessible">
-      <method name="getAccDefaultAction">
-        <body><![CDATA[
-          return 'Click';
-        ]]></body>
-      </method>
-      <method name="getAccDescription">
-        <body><![CDATA[
-          return 'This is a button that can be clicked to perform an action';
-        ]]></body>
-      </method>
-      <method name="getAccValue">
-        <body><![CDATA[
-          return this.getAttribute('value');
-        ]]></body>
-      </method>
-      <method name="getAccName">
-        <body><![CDATA[
-          return 'Left Button';
-        ]]></body>
-      </method>
-      <method name="getAccRole">
-        <body><![CDATA[
-          return 'push button';
-        ]]></body>
-      </method>
-      <method name="accDoDefaultAction">
-        <body><![CDATA[
-          this.click();
-        ]]></body>
-      </method>
-      <method name="getAccChildCount">
-        <body><![CDATA[
-          return 0;
-        ]]></body>
-      </method>
-      <method name="getAccFirstChild">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
-      <method name="getAccLastChild">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
-    </implementation>
   </binding>
 
   <binding id="buttonleft" extends="chrome://global/content/bindings/button.xml#button-base">

@@ -24,7 +24,7 @@
 #define _nsAccessible_H_
 
 #include "nsISupports.h"
-#include "nsIAccessible.h"
+#include "nsGenericAccessible.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
@@ -42,16 +42,26 @@ class nsIDocShell;
 class nsIWebShell;
 class nsIContent;
 
-class nsAccessible : public nsIAccessible
-//                     public nsIAccessibleWidgetAccess
+class nsAccessible : public nsGenericAccessible
 {
-  NS_DECL_ISUPPORTS
-
-  // nsIAccessibilityService methods:
-  NS_DECL_NSIACCESSIBLE
+public:
+  NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval); 
+  NS_IMETHOD GetAccChildCount(PRInt32 *_retval); 
+  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetAccFocused(nsIAccessible **_retval); 
+  NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval); 
+  NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height); 
+  NS_IMETHOD AccRemoveSelection(void); 
+  NS_IMETHOD AccTakeSelection(void); 
+  NS_IMETHOD AccTakeFocus(void); 
+  NS_IMETHOD AccGetDOMNode(nsIDOMNode **_retval); 
 
   public:
-    nsAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+    nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
     virtual ~nsAccessible();
 
     virtual void GetListAtomForFrame(nsIFrame* aFrame, nsIAtom*& aList) { aList = nsnull; }
@@ -87,28 +97,53 @@ protected:
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
   virtual void GetPresContext(nsCOMPtr<nsIPresContext>& aContext);
-  virtual nsIAccessible* CreateNewNextAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewPreviousAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewParentAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewFirstAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewLastAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
-  virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+  NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAWritableString *aFlatString);
+  NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAWritableString *aFlatString);
 
   // Data Members
   nsCOMPtr<nsIDOMNode> mDOMNode;
   nsCOMPtr<nsIWeakReference> mPresShell;
-  nsCOMPtr<nsIAccessible> mAccessible;
   nsCOMPtr<nsIFocusController> mFocusController;
+
 };
 
 /* Special Accessible that knows how to handle hit detection for flowing text */
 class nsHTMLBlockAccessible : public nsAccessible
 {
 public:
-   nsHTMLBlockAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell);
+   nsHTMLBlockAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
    NS_IMETHOD AccGetAt(PRInt32 x, PRInt32 y, nsIAccessible **_retval);
-protected:
-   virtual nsIAccessible* CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aFrame, nsIWeakReference* aShell);
 };
+
+/* Leaf version of DOM Accessible
+ * has no children
+ */
+class nsLeafAccessible : public nsAccessible
+{
+  public:
+    nsLeafAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+
+    NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
+    NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+    NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+};
+
+
+class nsLinkableAccessible : public nsAccessible
+{
+  public:
+    nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
+    NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
+    NS_IMETHOD GetAccActionName(PRUint8 index, nsAWritableString& _retval);
+    NS_IMETHOD AccDoAction(PRUint8 index);
+    NS_IMETHOD GetAccState(PRUint32 *_retval);
+
+  protected:
+    PRBool IsALink();
+    PRBool mIsALinkCached;  // -1 = unknown, 0 = not a link, 1 = is a link
+    nsCOMPtr<nsIContent> mLinkContent;
+    PRBool mIsLinkVisited;
+};
+
 
 #endif  

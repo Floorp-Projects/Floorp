@@ -25,20 +25,22 @@ LIBRARY_NAME=accessibility
 MODULE_NAME=nsAccessibilityModule
 
 CPP_OBJS=\
-        .\$(OBJDIR)\nsAccessibilityFactory.obj    \
-	$(NULL)
+  .\$(OBJDIR)\nsAccessibilityFactory.obj    \
+  $(NULL)
 
 LINCS = $(LINCS) -I..\src         # for implementation headers
 
-SUB_LIBRARIES=\
- $(DIST)\lib\accessibility_s.lib \
- $(NULL)
+SHARED_LIBRARY_LIBS=\
+  $(DIST)\lib\accessibility_s.lib           \
+  $(NULL)
 
 LLIBS=\
- $(DIST)\lib\xpcom.lib    \
- $(DIST)\lib\timer_s.lib  \
- $(DIST)\lib\gkgfx.lib \
- $(LIBNSPR)  
+  $(DIST)\lib\xpcom.lib                     \
+  $(DIST)\lib\timer_s.lib                   \
+  $(DIST)\lib\gkgfx.lib                  \
+  $(DIST)\lib\contentshared_s.lib           \
+  $(LIBNSPR)                                \
+  $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

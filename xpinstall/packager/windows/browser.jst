@@ -342,11 +342,13 @@ function upgradeCleanup()
 // main
 var srDest;
 var err;
+var err2;
 var fProgram;
 var fWindowsSystem;
 var fileComponentRegStr;
 var fileComponentReg;
 var restrictedAccess;
+var fileToRegister;
 
 $Ren8dot3List$
 
@@ -375,7 +377,14 @@ if(verifyDiskSpace(fProgram, srDest))
   // check return value
   if( err == SUCCESS )
   {
-    updateWinReg();
+    fileToRegister = getFolder(fProgram, "ISimpleDOMNodeMarshal.dll");
+    err2           = File.windowsRegisterServer(fileToRegister);
+    logComment("windowsRegisterServer() returned: " + err2);
+    fileToRegister = getFolder(fProgram, "ISimpleDOMDocumentMarshal.dll");
+    err2           = File.windowsRegisterServer(fileToRegister);
+    logComment("windowsRegisterServer() returned: " + err2);
+    updateWinReg();  // Finish registering above marshalling dll's
+
     createShortcuts();
     upgradeCleanup();
 

@@ -61,6 +61,8 @@ public:
  
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
 
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
    // nsFormControlFrame
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
 #ifdef DEBUG

@@ -36,8 +36,19 @@
 #include "nsHTMLLinkAccessible.h"
 #include "nsIURI.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsIXULDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMDocumentType.h"
+#include "nsINameSpaceManager.h"
+#include "nsIDOMNSHTMLSelectElement.h"
+#include "nsIAccessibleSelectable.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsLayoutAtoms.h"
+#include "nsString.h"
+#include "nsXPIDLString.h"
 
 NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
+  NS_INTERFACE_MAP_ENTRY(nsIAccessibleDocument)
   NS_INTERFACE_MAP_ENTRY(nsIAccessibleEventReceiver)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
   NS_INTERFACE_MAP_ENTRY(nsIDOMFormListener)
@@ -45,18 +56,23 @@ NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
 NS_INTERFACE_MAP_END_INHERITING(nsAccessible)
 
+
 NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsAccessible);
 NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsAccessible);
 
 //-----------------------------------------------------
 // construction 
 //-----------------------------------------------------
-nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull,nsnull,aShell)
+nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull,aShell), nsDocAccessibleMixin(aShell)
 {
   mListener = nsnull;
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
+
   shell->GetDocument(getter_AddRefs(mDocument));
   mDOMNode = do_QueryInterface(mDocument);
+
+  nsLayoutAtoms::AddRefAtoms();
 }
 
 //-----------------------------------------------------
@@ -64,24 +80,23 @@ nsRootAccessible::nsRootAccessible(nsIWeakReference* aShell):nsAccessible(nsnull
 //-----------------------------------------------------
 nsRootAccessible::~nsRootAccessible()
 {
+  nsLayoutAtoms::ReleaseAtoms();
   RemoveAccessibleEventListener(mListener);
 }
 
   /* attribute wstring accName; */
-NS_IMETHODIMP nsRootAccessible::GetAccName(PRUnichar * *aAccName) 
+NS_IMETHODIMP nsRootAccessible::GetAccName(nsAWritableString& aAccName) 
 { 
-  const nsString* docTitle = mDocument->GetDocumentTitle();
-  if (docTitle && !docTitle->IsEmpty())
-    *aAccName = docTitle->ToNewUnicode();
-  else *aAccName = ToNewUnicode(NS_LITERAL_STRING("Document"));
-  
-  return NS_OK;  
+  return GetTitle(aAccName);
 }
 
 // helpers
 nsIFrame* nsRootAccessible::GetFrame()
 {
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (!shell)
+    return nsnull;
+
   nsIFrame* root = nsnull;
   if (shell) 
     shell->GetRootFrame(&root);
@@ -95,11 +110,6 @@ void nsRootAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
   (*aRelativeFrame)->GetRect(aBounds);
 }
 
-nsIAccessible* nsRootAccessible::CreateNewAccessible(nsIAccessible* aAccessible, nsIDOMNode* aNode, nsIWeakReference* aShell)
-{
-  return new nsHTMLBlockAccessible(aAccessible, aNode, aShell);
-}
-
 /* readonly attribute nsIAccessible accParent; */
 NS_IMETHODIMP nsRootAccessible::GetAccParent(nsIAccessible * *aAccParent) 
 { 
@@ -111,6 +121,11 @@ NS_IMETHODIMP nsRootAccessible::GetAccParent(nsIAccessible * *aAccParent)
 NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole) 
 { 
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  if (!shell) {
+    *aAccRole = 0;
+    return NS_ERROR_FAILURE;
+  }
+
   nsCOMPtr<nsIPresContext> context; 
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsISupports> container;
@@ -131,14 +146,9 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
   return NS_OK;  
 }
 
-NS_IMETHODIMP nsRootAccessible::GetAccValue(PRUnichar * *aAccValue)
+NS_IMETHODIMP nsRootAccessible::GetAccValue(nsAWritableString& aAccValue)
 {
-  nsCOMPtr<nsIURI> pURI;
-  mDocument->GetDocumentURL(getter_AddRefs(pURI));
-  char *path;
-  pURI->GetSpec(&path);
-  *aAccValue = ToNewUnicode(nsDependentCString(path));
-  return NS_OK;
+  return GetURL(aAccValue);
 }
 
 /* void addAccessibleEventListener (in nsIAccessibleEventListener aListener); */
@@ -148,6 +158,9 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
   {
     // add an event listener to the document
     nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+    if (!shell)
+      return NS_ERROR_FAILURE;
+
     nsCOMPtr<nsIDocument> document;
     shell->GetDocument(getter_AddRefs(document));
 
@@ -248,34 +261,33 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         #endif
         nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
         if (node)
-          a = new nsHTMLLinkAccessible(shell, node);
+          a = new nsHTMLLinkAccessible(node, mPresShell);
       }
     }
 
     if (a) {
-      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content)); 
-      nsCOMPtr<nsIAccessible> na(CreateNewAccessible(a, node, mPresShell));
-      if ( !na ) 
-        return NS_OK;
-
       if ( eventType.EqualsIgnoreCase("focus") ) {
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, na);
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, a);
       }
       else if ( eventType.EqualsIgnoreCase("change") ) {
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, na);
+        nsCOMPtr<nsIDOMNSHTMLSelectElement> select(do_QueryInterface(content));
+        if ( select ) {
+          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_SELECTION, a);
+        }
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, a);
       }
       else if ( eventType.EqualsIgnoreCase("CheckboxStateChange") ) {
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, na);
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, a);
       }
       else if ( eventType.EqualsIgnoreCase("RadiobuttonStateChange") ) {
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, na);
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, a);
       }
     }
   }
   return NS_OK;
 }
 
-// ------- nsIDOMFocusListener Methods (2) -------------
+// ------- nsIDOMFocusListener Methods (1) -------------
 
 NS_IMETHODIMP nsRootAccessible::Focus(nsIDOMEvent* aEvent) 
 { 
@@ -306,5 +318,115 @@ NS_IMETHODIMP nsRootAccessible::Select(nsIDOMEvent* aEvent) { return NS_OK; }
 // gets Input events when text is entered or deleted in a textarea or input
 NS_IMETHODIMP nsRootAccessible::Input(nsIDOMEvent* aEvent) { return NS_OK; }
 
+// ------- nsIAccessibleDocument Methods (5) ---------------
 
+NS_IMETHODIMP nsRootAccessible::GetURL(nsAWritableString& aURL)
+{
+  return nsDocAccessibleMixin::GetURL(aURL);
+}
+
+NS_IMETHODIMP nsRootAccessible::GetTitle(nsAWritableString& aTitle)
+{
+  return nsDocAccessibleMixin::GetTitle(aTitle);
+}
+
+NS_IMETHODIMP nsRootAccessible::GetMimeType(nsAWritableString& aMimeType)
+{
+  return nsDocAccessibleMixin::GetMimeType(aMimeType);
+}
+
+NS_IMETHODIMP nsRootAccessible::GetDocType(nsAWritableString& aDocType)
+{
+  return nsDocAccessibleMixin::GetDocType(aDocType);
+}
+
+NS_IMETHODIMP nsRootAccessible::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAWritableString& aNameSpaceURI)
+{
+  return nsDocAccessibleMixin::GetNameSpaceURIForID(aNameSpaceID, aNameSpaceURI);
+}
+
+NS_IMETHODIMP nsRootAccessible::GetDocument(nsIDocument **doc)
+{
+  return nsDocAccessibleMixin::GetDocument(doc);
+}
+
+
+nsDocAccessibleMixin::nsDocAccessibleMixin(nsIDocument *aDoc):mDocument(aDoc)
+{
+}
+
+nsDocAccessibleMixin::nsDocAccessibleMixin(nsIWeakReference *aPresShell)
+{
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(aPresShell));
+  NS_ASSERTION(shell,"Shell is gone!!! What are we doing here?");
+  shell->GetDocument(getter_AddRefs(mDocument));
+}
+
+nsDocAccessibleMixin::~nsDocAccessibleMixin()
+{
+}
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetURL(nsAWritableString& aURL)
+{ 
+  nsCOMPtr<nsIURI> pURI;
+  mDocument->GetDocumentURL(getter_AddRefs(pURI));
+  nsXPIDLCString path;
+  pURI->GetSpec(getter_Copies(path));
+  aURL.Assign(NS_ConvertUTF8toUCS2(path).get());
+  //XXXaaronl Need to use CopyUTF8toUCS2(nsDependentCString(path), aURL); when it's written
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetTitle(nsAWritableString& aTitle)
+{
+  // This doesn't leak - we don't own the const pointer that's returned
+  aTitle = *(mDocument->GetDocumentTitle());
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetMimeType(nsAWritableString& aMimeType)
+{
+  if (mDocument)
+    return mDocument->GetContentType(aMimeType); 
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetDocType(nsAWritableString& aDocType)
+{
+  nsCOMPtr<nsIXULDocument> xulDoc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(mDocument));
+  nsCOMPtr<nsIDOMDocumentType> docType;
+
+  if (xulDoc) {
+    aDocType = NS_LITERAL_STRING("window"); // doctype not implemented for XUL at time of writing - causes assertion
+    return NS_OK;
+  }
+  else if (domDoc && NS_SUCCEEDED(domDoc->GetDoctype(getter_AddRefs(docType))) && docType) {
+    return docType->GetName(aDocType);
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetNameSpaceURIForID(PRInt16 aNameSpaceID, nsAWritableString& aNameSpaceURI)
+{
+  if (mDocument) {
+    nsCOMPtr<nsINameSpaceManager> nameSpaceManager;
+    if (NS_SUCCEEDED(mDocument->GetNameSpaceManager(*getter_AddRefs(nameSpaceManager)))) 
+      return nameSpaceManager->GetNameSpaceURI(aNameSpaceID, aNameSpaceURI);
+  }
+  return NS_ERROR_FAILURE;
+}
+
+
+NS_IMETHODIMP nsDocAccessibleMixin::GetDocument(nsIDocument **doc)
+{
+  *doc = mDocument;
+  if (mDocument) {
+    NS_IF_ADDREF(*doc);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
 

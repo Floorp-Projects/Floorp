@@ -58,7 +58,7 @@
 #include "nsVoidArray.h"
 #include "nsIScrollableFrame.h"
 #include "nsIDOMEventTarget.h"
-
+#include "nsIAccessibilityService.h"
 #include "nsISelectElement.h"
 #include "nsIPrivateDOMEvent.h"
 
@@ -543,6 +543,18 @@ nsListControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_OK;
   }
   return nsScrollFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP nsListControlFrame::GetAccessible(nsIAccessible** aAccessible)
+{
+  nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
+
+  if (accService) {
+    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
+    return accService->CreateHTMLSelectAccessible(node, mPresContext, aAccessible);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 //---------------------------------------------------------
@@ -2362,7 +2374,6 @@ nsListControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   return status;
 }
 
-
 //---------------------------------------------------------
 void 
 nsListControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -4116,6 +4127,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         SetContentSelected(mSelectedIndex, PR_TRUE);
         SetContentSelected(mOldSelectedIndex, PR_FALSE);
       }
+      UpdateSelection(PR_TRUE, PR_FALSE, GetOptionContent(mSelectedIndex)); // dispatch event
     } else {
       SingleSelection();
       if (nsnull != mComboboxFrame && mIsAllFramesHere) {

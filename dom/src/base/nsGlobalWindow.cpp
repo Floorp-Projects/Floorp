@@ -1767,6 +1767,12 @@ NS_IMETHODIMP GlobalWindowImpl::Focus()
         result = widget->SetFocus(PR_TRUE);
     }
   }
+  else {
+    nsCOMPtr<nsIFocusController> focusController;
+    GetRootFocusController(getter_AddRefs(focusController));
+    if (focusController)
+      focusController->SetFocusedWindow(this);
+  }
 
   return result;
 }

@@ -35,6 +35,7 @@
 //#define DO_NEW_REFLOW
 #endif
 
+#include "nsIDOMMouseListener.h"
 #include "nsAreaFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsIComboboxControlFrame.h"
@@ -275,6 +276,10 @@ protected:
   nsCSSFrameConstructor* mFrameConstructor;
 
   PRPackedBool          mGoodToGo;
+
+  // make someone to listen to the button. If its programmatically pressed by someone like Accessibility
+  // then open or close the combo box.
+  nsCOMPtr<nsIDOMMouseListener> mButtonListener;
 
   // static class data member for Bug 32920
   // only one control can be focused at a time

@@ -15,7 +15,7 @@
       <xul:scrollbarbutton sbattr="scrollbar-down-bottom" type="increment" inherits="sborient=align"/>
     </content>
     
-    <implementation implements="nsIAccessible">
+    <implementation>
       <constructor>
         this.initScrollbar();
       </constructor>
@@ -78,27 +78,6 @@
         ]]>
         </body>
       </method>
-    
-      <method name="getAccDescription">
-        <body><![CDATA[
-          return 'This is a scrollbar';
-        ]]></body>
-      </method>
-      <method name="getAccValue">
-        <body><![CDATA[
-          return this.getAttribute('curpos');
-        ]]></body>
-      </method>
-      <method name="getAccName">
-        <body><![CDATA[
-          return 'Scroll Bar';
-        ]]></body>
-      </method>
-      <method name="getAccRole">
-        <body><![CDATA[
-          return 'scrollbar';
-        ]]></body>
-      </method>
     </implementation>
     <handlers>                                                                      
       <handler event="contextmenu" action="event.preventDefault();"/>           
@@ -117,44 +96,6 @@
       <xul:image inherits="src"/>
       <xul:spring flex="1"/>
     </content>
-  
-    <implementation implements="nsIAccessible">
-      <method name="getAccDescription">
-        <body><![CDATA[
-          return 'This is a scrollbars thumb';
-        ]]></body>
-      </method>
-      <method name="getAccValue">
-        <body><![CDATA[
-          return this.getAttribute('curpos');
-        ]]></body>
-      </method>
-      <method name="getAccName">
-        <body><![CDATA[
-          return 'Thumb';
-        ]]></body>
-      </method>
-      <method name="getAccRole">
-        <body><![CDATA[
-          return 'indicator';
-        ]]></body>
-      </method>
-      <method name="getAccChildCount">
-        <body><![CDATA[
-          return 0;
-        ]]></body>
-      </method>
-      <method name="getAccFirstChild">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
-      <method name="getAccLastChild">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
-    </implementation>
   </binding>
 
   <binding id="scrollbarbutton">
@@ -163,51 +104,6 @@
         <xul:image class="scrollbarbutton-icon" inherits="src"/>
       </xul:box>
     </content>
-
-    <implementation implements="nsIAccessible">
-      <method name="getAccDefaultAction">
-        <body><![CDATA[
-          return 'Click';
-        ]]></body>
-      </method>
-      <method name="getAccDescription">
-        <body><![CDATA[
-          return 'Adjusts scrollbar';
-        ]]></body>
-      </method>
-      <method name="getAccName">
-        <body><![CDATA[
-          return 'scrollbar button';
-        ]]></body>
-      </method>
-      <method name="getAccRole">
-        <body><![CDATA[
-          return 'push button';
-        ]]></body>
-      </method>
-      <method name="accDoDefaultAction">
-        <body><![CDATA[
-          this.click();
-          dump("We just clicked!!!\n");
-        ]]></body>
-      </method>
-      <method name="getAccChildCount">
-        <body><![CDATA[
-          return 0;
-        ]]></body>
-      </method>
-      <method name="getAccFirstChild">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
-      <method name="getAccLastChild">
-        <body><![CDATA[
-          return null;
-        ]]></body>
-      </method>
-    </implementation>
   </binding>
-
 </bindings>
 

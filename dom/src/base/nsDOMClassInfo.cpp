@@ -139,16 +139,17 @@ static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
   nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY
 
 #define NODE_SCRIPTABLE_FLAGS                                                 \
-  (DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
+ ((DOM_DEFAULT_SCRIPTABLE_FLAGS |                                             \
    nsIXPCScriptable::WANT_PRECREATE |                                         \
    nsIXPCScriptable::WANT_NEWRESOLVE |                                        \
    nsIXPCScriptable::WANT_ADDPROPERTY |                                       \
    nsIXPCScriptable::WANT_SETPROPERTY) &                                      \
-  ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY
+  ~nsIXPCScriptable::USE_JSSTUB_FOR_ADDPROPERTY )
 
 #define ELEMENT_SCRIPTABLE_FLAGS                                              \
-  NODE_SCRIPTABLE_FLAGS |                                                     \
-  nsIXPCScriptable::WANT_POSTCREATE
+  ((NODE_SCRIPTABLE_FLAGS |                                                   \
+    nsIXPCScriptable::WANT_POSTCREATE ) &                                     \
+   ~nsIXPCScriptable::CLASSINFO_INTERFACES_ONLY ) /* to fix accessibility */
 
 #define ARRAY_SCRIPTABLE_FLAGS                                                \
   DOM_DEFAULT_SCRIPTABLE_FLAGS |                                              \
