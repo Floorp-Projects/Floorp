@@ -66,7 +66,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
     mLastFloaterY(0),
     mPrevBottomMargin(),
     mLineNumber(0),
-    mFlags(0)
+    mFlags(0),
+    mFloaterBreakType(NS_STYLE_CLEAR_NONE)
 {
   const nsMargin& borderPadding = BorderPadding();
 
@@ -974,6 +975,13 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 
     }
   }
+  // If the floater is continued, it will get the same x value as its prev-in-flow
+  nsRect prevInFlowRect(0,0,0,0);
+  nsIFrame* prevInFlow;
+  floater->GetPrevInFlow(&prevInFlow);
+  if (prevInFlow) {
+    prevInFlow->GetRect(prevInFlowRect);
+  }
   // Assign an x and y coordinate to the floater. Note that the x,y
   // coordinates are computed <b>relative to the translation in the
   // spacemanager</b> which means that the impacted region will be
@@ -982,7 +990,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
   PRBool isLeftFloater;
   if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
     isLeftFloater = PR_TRUE;
-    region.x = mAvailSpaceRect.x;
+    region.x = (prevInFlow) ? prevInFlowRect.x : mAvailSpaceRect.x;
   }
   else {
     isLeftFloater = PR_FALSE;
@@ -990,9 +998,7 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
       nsIFrame* prevInFlow;
       floater->GetPrevInFlow(&prevInFlow);
       if (prevInFlow) {
-        nsRect rect;
-        prevInFlow->GetRect(rect);
-        region.x = rect.x;
+        region.x = prevInFlowRect.x;
       }
       else if (!keepFloaterOnSameLine) {
         region.x = mAvailSpaceRect.XMost() - region.width;
@@ -1022,6 +1028,11 @@ nsBlockReflowState::FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
 
   // Place the floater in the space manager
   if (okToAddRectRegion) {
+    // if the floater split, then take up all of the vertical height 
+    if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus) && 
+        (NS_UNCONSTRAINEDSIZE != mContentArea.height)) {
+      region.height += PR_MAX(region.height, mContentArea.height);
+    }
 #ifdef DEBUG
     nsresult rv =
 #endif

@@ -256,6 +256,8 @@ public:
 #define BRS_LASTFLAG              BRS_DAMAGECONSTRAINED
 
   PRInt16 mFlags;
+ 
+  PRUint8 mFloaterBreakType;
 
   void SetFlag(PRUint32 aFlag, PRBool aValue)
   {

@@ -953,29 +953,43 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
 
   aStatus = state.mReflowStatus;
  
-  // If there are incomplete floaters then they will go in the 1st line of the overflow lines.
+  // Put continued floaters at the beginning of the first overflow line. If the first line 
+  // is a block then create a new line as the first line and put the floaters there. If there 
+  // are no overflow lines, then create one and put the floaters in it.
   if (state.mOverflowFloaters.NotEmpty()) {
-    aStatus = NS_FRAME_NOT_COMPLETE;
     nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
     if (overflowLines) {
-      // put the floaters at the beginning of the line
       line_iterator firstLine = overflowLines->begin(); 
-      nsIFrame* firstFrame = firstLine->mFirstChild;
-      firstLine->mFirstChild = state.mOverflowFloaters.FirstChild();
-      PRInt32 numOverflowFloaters = state.mOverflowFloaters.GetLength();
-      state.mOverflowFloaters.LastChild()->SetNextSibling(firstFrame);
-      firstLine->SetChildCount(firstLine->GetChildCount() + numOverflowFloaters);
+      if (firstLine->IsBlock()) { // floaters go on a new line before 1st overflow line
+        nsLineBox* newLine = state.NewLineBox(state.mOverflowFloaters.FirstChild(), 
+                                              state.mOverflowFloaters.GetLength(), PR_FALSE);
+        firstLine = mLines.before_insert(firstLine, newLine);
+      }
+      else { // floaters go on 1st overflow line
+        nsIFrame* firstFrame = firstLine->mFirstChild;
+        firstLine->mFirstChild = state.mOverflowFloaters.FirstChild();
+        PRInt32 numOverflowFloaters = state.mOverflowFloaters.GetLength();
+        // hook up the last placeholder with the original frames
+        nsPlaceholderFrame* lastPlaceholder = 
+          (nsPlaceholderFrame*)state.mOverflowFloaters.LastChild();
+        lastPlaceholder->SetNextSibling(firstFrame);
+        NS_ASSERTION(firstFrame != lastPlaceholder, "trying to set next sibling to self");
+        firstLine->SetChildCount(firstLine->GetChildCount() + numOverflowFloaters);
+      }
     }
-    else { 
-      // there aren't any overflow lines, so create a line, put the floaters in it, and then push.
+    else {
+      // Create a line, put the floaters in it, and then push.
       nsLineBox* newLine = state.NewLineBox(state.mOverflowFloaters.FirstChild(), 
                                             state.mOverflowFloaters.GetLength(), PR_FALSE);
       if (!newLine) 
         return NS_ERROR_OUT_OF_MEMORY;
+      state.mOverflowFloaters.SetFrames(nsnull);
       mLines.push_back(newLine);
       nsLineList::iterator nextToLastLine = ----end_lines();
       PushLines(state, nextToLastLine);
     }
+    aStatus = NS_FRAME_NOT_COMPLETE;
+    state.mOverflowFloaters.SetFrames(nsnull);
   }
 
   if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
@@ -3112,6 +3126,63 @@ nsBlockFrame::GetTopBlockChild()
   return nsnull;
 }
 
+// If placeholders/floaters split during reflowing a line, but that line will 
+// be put on the next page, then put the placeholders/floaters back the way
+// they were before the line was reflowed. 
+static void
+UndoPlaceholders(nsBlockReflowState& aState,
+                 nsIFrame*           aLastPlaceholder)
+{
+  nsIFrame* undoPlaceholder = nsnull;
+  if (aLastPlaceholder) {
+    aLastPlaceholder->GetNextSibling(&undoPlaceholder);
+    aLastPlaceholder->SetNextSibling(nsnull);
+  }
+  else {
+    undoPlaceholder = aState.mOverflowFloaters.FirstChild();
+    aState.mOverflowFloaters.SetFrames(nsnull);
+  }
+  // remove the next in flows of the placeholders that need to be removed
+  for (nsIFrame* placeholder = undoPlaceholder; placeholder; ) {
+    nsSplittableFrame::RemoveFromFlow(placeholder);
+    nsIFrame* savePlaceholder = placeholder; 
+    placeholder->GetNextSibling(&placeholder);
+    savePlaceholder->Destroy(aState.mPresContext);
+  }
+}
+
+// Combine aNewBreakType with aOrigBreakType, but limit the break types
+// to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT. When there is a <BR> right 
+// after a floater and the floater splits, then the <BR>'s break type is combined 
+// with the break type of the frame right after the floaters next-in-flow.
+static PRUint8
+CombineBreakType(PRUint8 aOrigBreakType, 
+                 PRUint8 aNewBreakType)
+{
+  PRUint8 breakType = aOrigBreakType;
+  switch(breakType) {
+  case NS_STYLE_CLEAR_LEFT:
+    if ((NS_STYLE_CLEAR_RIGHT          == aNewBreakType) || 
+        (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
+      breakType = NS_STYLE_CLEAR_LEFT_AND_RIGHT;
+    }
+    break;
+  case NS_STYLE_CLEAR_RIGHT:
+    if ((NS_STYLE_CLEAR_LEFT           == aNewBreakType) || 
+        (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
+      breakType = NS_STYLE_CLEAR_LEFT_AND_RIGHT;
+    }
+    break;
+  case NS_STYLE_CLEAR_NONE:
+    if ((NS_STYLE_CLEAR_LEFT           == aNewBreakType) ||
+        (NS_STYLE_CLEAR_RIGHT          == aNewBreakType) ||    
+        (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
+      breakType = NS_STYLE_CLEAR_LEFT_AND_RIGHT;
+    }
+  }
+  return breakType;
+}
+
 nsresult
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                line_iterator aLine,
@@ -3146,8 +3217,15 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     applyTopMargin = ShouldApplyTopMargin(aState, aLine);
   }
 
-  // Clear past floaters before the block if the clear style is not none
   PRUint8 breakType = display->mBreakType;
+  // If a floater split and its prev-in-flow was followed by a <BR>, then combine 
+  // the <BR>'s break type with the block's break type (the block will be the very 
+  // next frame after the split floater).
+  if (NS_STYLE_CLEAR_NONE != aState.mFloaterBreakType) {
+    breakType = ::CombineBreakType(breakType, aState.mFloaterBreakType);
+    aState.mFloaterBreakType = NS_STYLE_CLEAR_NONE;
+  }
+  // Clear past floaters before the block if the clear style is not none
   aLine->SetBreakType(breakType);
   if (NS_STYLE_CLEAR_NONE != breakType) {
     PRBool alsoApplyTopMargin = aState.ClearPastFloaters(breakType);
@@ -3219,6 +3297,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     }
   }
 
+  // keep track of the last overflow floater in case we need to undo any new additions
+  nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
+
   // Reflow the block into the available space
   nsReflowStatus frameReflowStatus=NS_FRAME_COMPLETE;
   nsMargin computedOffsets;
@@ -3226,6 +3307,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                        applyTopMargin, aState.mPrevBottomMargin,
                        aState.IsAdjacentWithTop(),
                        computedOffsets, frameReflowStatus);
+
   if (brc.BlockShouldInvalidateItself() && !mRect.IsEmpty()) {
     Invalidate(aState.mPresContext, mRect);
   }
@@ -3245,6 +3327,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
     // None of the child block fits.
+    ::UndoPlaceholders(aState, lastPlaceholder);
     PushLines(aState, aLine.prev());
     *aKeepReflowGoing = PR_FALSE;
     aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
@@ -3420,6 +3503,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       else {
         // Push the line that didn't fit and any lines that follow it
         // to our next-in-flow.
+        ::UndoPlaceholders(aState, lastPlaceholder);
         PushLines(aState, aLine.prev());
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
       }
@@ -3533,22 +3617,8 @@ nsBlockFrame::PushTruncatedPlaceholderLine(nsBlockReflowState& aState,
                                            nsIFrame*           aLastPlaceholder,
                                            PRBool&             aKeepReflowGoing)
 {
-  nsIFrame* undoPlaceholder = nsnull;
-  if (aLastPlaceholder) {
-    aLastPlaceholder->GetNextSibling(&undoPlaceholder);
-    aLastPlaceholder->SetNextSibling(nsnull);
-  }
-  else {
-    undoPlaceholder = aState.mOverflowFloaters.FirstChild();
-    aState.mOverflowFloaters.SetFrames(nsnull);
-  }
-  // remove the next in flows of the placeholders that need to be removed
-  for (nsIFrame* placeholder = undoPlaceholder; placeholder; ) {
-    nsSplittableFrame::RemoveFromFlow(placeholder);
-    nsIFrame* savePlaceholder = placeholder; 
-    placeholder->GetNextSibling(&placeholder);
-    savePlaceholder->Destroy(aState.mPresContext);
-  }
+  ::UndoPlaceholders(aState, aLastPlaceholder);
+
   line_iterator prevLine = aLine;
   --prevLine;
   PushLines(aState, prevLine);
@@ -3616,7 +3686,7 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     aLineLayout.SetFirstLetterStyleOK(PR_TRUE);
   }
 
-  // keep track of the last overflow floater in case we need to undo and push the line
+  // keep track of the last overflow floater in case we need to undo any new additions
   nsIFrame* lastPlaceholder = aState.mOverflowFloaters.LastChild();
 
   // Reflow the frames that are already on the line first
@@ -3707,7 +3777,9 @@ nsBlockFrame::DoReflowInlineFrames(nsBlockReflowState& aState,
     // If we are propagating out a break-before status then there is
     // no point in placing the line.
     if (!NS_INLINE_IS_BREAK_BEFORE(aState.mReflowStatus)) {
-      rv = PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing, aUpdateMaximumWidth);
+      if (PlaceLine(aState, aLineLayout, aLine, aKeepReflowGoing, aUpdateMaximumWidth)) {
+        ::UndoPlaceholders(aState, lastPlaceholder); // undo since we pushed the current line
+      }
     }
   }
   *aLineReflowStatus = lineReflowStatus;
@@ -3792,14 +3864,16 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   // block or we are an inline. This makes a total of 10 cases
   // (fortunately, there is some overlap).
   aLine->SetBreakType(NS_STYLE_CLEAR_NONE);
-  if (NS_INLINE_IS_BREAK(frameReflowStatus)) {
+  if (NS_INLINE_IS_BREAK(frameReflowStatus) || 
+      (NS_STYLE_CLEAR_NONE != aState.mFloaterBreakType)) {
     // Always abort the line reflow (because a line break is the
     // minimal amount of break we do).
     *aLineReflowStatus = LINE_REFLOW_STOP;
 
     // XXX what should aLine's break-type be set to in all these cases?
     PRUint8 breakType = NS_INLINE_GET_BREAK_TYPE(frameReflowStatus);
-    NS_ASSERTION(breakType != NS_STYLE_CLEAR_NONE, "bad break type");
+    NS_ASSERTION((NS_STYLE_CLEAR_NONE != breakType) || 
+                 (NS_STYLE_CLEAR_NONE != aState.mFloaterBreakType), "bad break type");
     NS_ASSERTION(NS_STYLE_CLEAR_PAGE != breakType, "no page breaks yet");
 
     if (NS_INLINE_IS_BREAK_BEFORE(frameReflowStatus)) {
@@ -3828,6 +3902,13 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       }
     }
     else {
+      // If a floater split and its prev-in-flow was followed by a <BR>, then combine 
+      // the <BR>'s break type with the inline's break type (the inline will be the very 
+      // next frame after the split floater).
+      if (NS_STYLE_CLEAR_NONE != aState.mFloaterBreakType) {
+        breakType = ::CombineBreakType(breakType, aState.mFloaterBreakType);
+        aState.mFloaterBreakType = NS_STYLE_CLEAR_NONE;
+      }
       // Break-after cases
       if (breakType == NS_STYLE_CLEAR_LINE) {
         if (!aLineLayout.GetLineEndsInBR()) {
@@ -4061,15 +4142,13 @@ nsBlockFrame::ShouldJustifyLine(nsBlockReflowState& aState,
   return PR_FALSE;
 }
 
-nsresult
+PRBool
 nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
-                        nsLineLayout& aLineLayout,
-                        line_iterator aLine,
-                        PRBool* aKeepReflowGoing,
-                        PRBool aUpdateMaximumWidth)
+                        nsLineLayout&       aLineLayout,
+                        line_iterator       aLine,
+                        PRBool*             aKeepReflowGoing,
+                        PRBool              aUpdateMaximumWidth)
 {
-  nsresult rv = NS_OK;
-
   // Trim extra white-space from the line before placing the frames
   aLineLayout.TrimTrailingWhiteSpace();
 
@@ -4242,7 +4321,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
       *aKeepReflowGoing = PR_FALSE;
     }
-    return rv;
+    return PR_TRUE;
   }
 
   aState.mY = newY;
@@ -4376,7 +4455,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     break;
   }
 
-  return rv;
+  return PR_FALSE;
 }
 
 // Compute the line's max-element-size by adding into the raw value
@@ -4484,7 +4563,7 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
 }
 
 void
-nsBlockFrame::PushLines(nsBlockReflowState& aState,
+nsBlockFrame::PushLines(nsBlockReflowState&  aState,
                         nsLineList::iterator aLineBefore)
 {
   nsLineList::iterator overBegin(aLineBefore.next());
@@ -5405,6 +5484,39 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 #ifdef NOISY_FLOATER
   printf("end ReflowFloater %p, sized to %d,%d\n", floater, metrics.width, metrics.height);
 #endif
+
+  // If the placeholder was continued and its first-in-flow was followed by a 
+  // <BR>, then cache the <BR>'s break type in aState.mFloaterBreakType so that
+  // the next frame after the placeholder can combine that break type with its own
+  nsIFrame* prevPlaceholder = nsnull;
+  aPlaceholder->GetPrevInFlow(&prevPlaceholder);
+  if (prevPlaceholder) {
+    // the break occurs only after the last continued placeholder
+    PRBool lastPlaceholder = PR_TRUE;
+    nsIFrame* next;
+    aPlaceholder->GetNextSibling(&next);
+    if (next) {
+      nsCOMPtr<nsIAtom> nextType;
+      next->GetFrameType(getter_AddRefs(nextType));
+      if (nsLayoutAtoms::placeholderFrame == nextType) {
+        lastPlaceholder = PR_FALSE;
+      }
+    }
+    if (lastPlaceholder) {
+      // get the containing block of prevPlaceholder which is our prev-in-flow
+      if (mPrevInFlow) {
+        // get the break type of the last line in mPrevInFlow
+        line_iterator endLine = --((nsBlockFrame*)mPrevInFlow)->end_lines();
+        PRUint8 breakType = endLine->GetBreakType();
+        if ((NS_STYLE_CLEAR_LEFT           == breakType) ||
+            (NS_STYLE_CLEAR_RIGHT          == breakType) ||
+            (NS_STYLE_CLEAR_LEFT_AND_RIGHT == breakType)) {
+          aState.mFloaterBreakType = breakType;
+        }
+      }
+      else NS_ASSERTION(PR_FALSE, "no prev in flow");
+    }
+  }
   return NS_OK;
 }
 
