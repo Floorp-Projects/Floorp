@@ -264,6 +264,18 @@ nsAppShell::nsAppShell()
 
 NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
 
+static 
+int xerror_handler( Display *display, XErrorEvent *ev )
+{
+  /* this should _never_ be happen... but if this happens - debug mode or not - scream !!! */
+  char errmsg[80];
+  XGetErrorText(display, ev->error_code, errmsg, sizeof(errmsg));
+  fprintf(stderr, "nsAppShellXlib: Warning (X Error) -  %s\n", errmsg);
+  abort(); // die !!
+  
+  return 0;
+}
+
 NS_METHOD nsAppShell::Create(int* bac, char ** bav)
 {
   char *mArgv[1]; 
@@ -337,6 +349,10 @@ NS_METHOD nsAppShell::Create(int* bac, char ** bav)
     // to make debugging easier. KenF
     if (synchronize)
     {
+      /* Set error handler which calls abort() - only usefull with an 
+       * unbuffered X connection */
+      (void)XSetErrorHandler(xerror_handler);
+      
       NS_WARNING("running via unbuffered X connection.");
       XSynchronize(mDisplay, True);
     }
