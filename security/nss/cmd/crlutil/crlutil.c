@@ -240,7 +240,7 @@ static void Usage(char *progName)
     fprintf(stderr, "%-20s CRL Types (default is SEC_CRL_TYPE):\n", " ");
     fprintf(stderr, "%-20s \t 0 - SEC_KRL_TYPE\n", " ");
     fprintf(stderr, "%-20s \t 1 - SEC_CRL_TYPE\n", " ");        
-    fprintf(stderr, "\n%-20s Bypass CA certificate checks (browser emulation).\n", "-B");
+    fprintf(stderr, "\n%-20s Bypass CA certificate checks.\n", "-B");
 
     exit(-1);
 }
