@@ -189,7 +189,7 @@ typedef struct CompilerState {
 } CompilerState;
 
 typedef struct RECapture {
-    int32 index;               /* start of contents, -1 for empty  */
+    ptrdiff_t index;           /* start of contents, -1 for empty  */
     uint16 length;             /* length of capture */
 } RECapture;
 
@@ -205,7 +205,7 @@ struct REBackTrackData;
 typedef struct REProgState {
     jsbytecode *continue_pc;        /* current continuation data */
     jsbytecode continue_op;
-    uint16 index;                   /* progress in text */
+    ptrdiff_t index;                /* progress in text */
     uintN parenSoFar;               /* highest indexed paren started */
     union {
         struct {
