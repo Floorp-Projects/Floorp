@@ -657,6 +657,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
         if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirPrevious, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
+        result = ScrollIntoView(aTracker);
         break;
       case nsIDOMEvent::VK_RIGHT : 
         //we need to look for the next PAINTED location to move the cursor to.
@@ -678,6 +679,7 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
         if (NS_SUCCEEDED(frameused->PeekOffset(amount, eDirNext, offsetused, &resultFrame, &frameOffset, &contentOffset, PR_FALSE)) && resultFrame){
           result = TakeFocus(aTracker, resultFrame, frameOffset, contentOffset, keyEvent->isShift);
         }
+        result = ScrollIntoView(aTracker);
         break;
       case nsIDOMEvent::VK_UP : 
 #ifdef DEBUG_NAVIGATION
@@ -686,7 +688,6 @@ nsRangeList::HandleKeyEvent(nsIFocusTracker *aTracker, nsGUIEvent *aGuiEvent)
         break;
     default :break;
     }
-    result = ScrollIntoView(aTracker);
   }
   return result;
 }
