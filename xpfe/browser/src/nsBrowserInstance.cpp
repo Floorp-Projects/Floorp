@@ -109,6 +109,9 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 PRBool isDoingHistory=PR_FALSE;
 #endif 
 
+#ifdef DEBUG
+#define FORCE_CHECKIN_GUIDELINES
+#endif /* DEBUG */
 
 
 // Stuff to implement find/findnext
@@ -2441,9 +2444,17 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
 { 
     if (!aDefaultArgs) return NS_ERROR_FAILURE; 
 
+    nsString args;
+
+#ifdef FORCE_CHECKIN_GUIDELINES
+    printf("FOR DEBUG BUILDS ONLY:  we are forcing you to see the checkin guidelines when you open a browser window\n");
+    args = "http://www.mozilla.org/quality/checkin-guidelines.html";
+#else
     nsresult rv;
-    nsString args("about:blank");
     nsXPIDLCString url;
+
+    /* the default, in case we fail somewhere */
+    args = "about:blank";
 
     nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));
     if (!prefs) return NS_ERROR_FAILURE;
@@ -2483,6 +2494,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     if (NS_SUCCEEDED(rv) && (const char *)url && (PL_strlen((const char *)url))) {              
         args = (const char *) url;
     }
+#endif /* FORCE_CHECKIN_GUIDELINES */
 
     *aDefaultArgs = args.ToNewUnicode(); 
     return NS_OK;
