@@ -34,32 +34,56 @@ use Template;
 
 my @testitems = @Support::Templates::testitems;
 my $include_path = $Support::Templates::include_path;
+# Capture the TESTERR from Test::More for printing errors.
+# This will handle verbosity for us automatically
+*TESTOUT = \*Test::More::TESTOUT;
 
 # Check to make sure all templates that are referenced in
 # Bugzilla exist in the proper place.
 
+my %exists;
 foreach my $file(@testitems) {
     if (-e $include_path . "/" . $file) {
         ok(1, "$file exists");
+        $exists{$file} = 1;
     } else {
         ok(0, "$file does not exist --ERROR");
     }
 }
 
 # Processes all the templates to make sure they have good syntax
-my $template = Template->new ({
-                 INCLUDE_PATH => $include_path,
-                 RELATIVE => 1
-                 });
+my $template = Template->new(
+{
+    INCLUDE_PATH => $include_path ,
+    RELATIVE => 1,
+    # Need to define filters used in the codebase, they don't
+    # actually have to function in this test, just be defined.
+    FILTERS =>
+    {
+      url => sub { return $_ } ,
+    } 
+}
+);
 
 open SAVEOUT, ">&STDOUT";     # stash the original output stream
+open SAVEERR, ">&STDERR";
 open STDOUT, "> /dev/null";   # discard all output
+open STDERR, "> /dev/null";
 foreach my $file(@testitems) {
-    if ($template->process($file)) {
-        ok(1, "$file syntax ok");
-    } else {
-        ok(0, "$file has bad syntax --ERROR");
+    if ($exists{$file}) {
+        if ($template->process($file)) {
+            ok(1, "$file syntax ok");
+        }
+        else {
+            print TESTOUT $template->error() . "\n";
+            ok(0, "$file has bad syntax --ERROR");
+        }
+    }
+    else {
+        ok(1, "$file doesn't exists, skipping test");
     }
 }
 open STDOUT, ">&SAVEOUT";     # redirect back to original stream
+open STDERR, ">&SAVEERR";
 close SAVEOUT;
+close SAVEERR;
