@@ -138,6 +138,7 @@ private:
   PRInt32 mCurrBytes;
   PRInt32 mMaxBytes;
   PRInt64 mStartTime;
+  PRTime mLastUpdate;
 
   friend class nsDownloadManager;
 };

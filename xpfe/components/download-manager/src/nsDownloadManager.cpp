@@ -63,6 +63,7 @@ static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 #define DOWNLOAD_MANAGER_FE_URL "chrome://communicator/content/downloadmanager/downloadmanager.xul"
 #define DOWNLOAD_MANAGER_BUNDLE "chrome://communicator/locale/downloadmanager/downloadmanager.properties"
+#define INTERVAL 500
 
 nsIRDFResource* gNC_DownloadsRoot;
 nsIRDFResource* gNC_File;
@@ -756,7 +757,8 @@ nsDownload::nsDownload():mStartTime(0),
                          mPercentComplete(0),
                          mCurrBytes(0),
                          mMaxBytes(0),
-                         mDownloadState(NOTSTARTED)
+                         mDownloadState(NOTSTARTED),
+                         mLastUpdate(-500)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -863,6 +865,14 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   if (!mRequest)
     mRequest = aRequest; // used for pause/resume
 
+  // filter notifications since they come in so frequently
+  PRTime delta;
+  LL_SUB(delta, PR_Now(), mLastUpdate);
+  if (delta < INTERVAL && aMaxTotalProgress != -1 && aCurTotalProgress < aMaxTotalProgress)
+    return NS_OK;
+
+  mLastUpdate = PR_Now();
+
   if (mDownloadState == NOTSTARTED) {
     char* persistentDescriptor;
     mTarget->GetPersistentDescriptor(&persistentDescriptor);
@@ -875,8 +885,8 @@ nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
   else
     mPercentComplete = -1;
 
-  mCurrBytes = aCurTotalProgress / 1024 + .5;
-  mMaxBytes = aMaxTotalProgress / 1024 + .5;
+  mCurrBytes = (PRInt32)((PRFloat64)aCurTotalProgress / 1024.0 + .5);
+  mMaxBytes = (PRInt32)((PRFloat64)aMaxTotalProgress / 1024 + .5);
 
   if (mListener) {
     mListener->OnProgressChange(aWebProgress, aRequest, aCurSelfProgress, aMaxSelfProgress,
