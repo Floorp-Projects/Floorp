@@ -112,3 +112,7 @@ pref("network.protocol-handler.warn-external.mailto", false);
 pref("network.protocol-handler.warn-external.news", false);
 pref("network.protocol-handler.warn-external.snews", false);
 pref("network.protocol-handler.warn-external.nntp", false);
+
+// defaults for cmd-click opening windows or tabs (default to windows)
+pref("browser.tabs.opentabfor.middleclick", false);
+pref("browser.tabs.loadInBackground"", false);
