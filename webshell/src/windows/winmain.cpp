@@ -31,7 +31,7 @@ extern nsIID kIXPCOMApplicationShellCID ;
 
 static NS_DEFINE_IID(kIApplicationShellIID, NS_IAPPLICATIONSHELL_IID);
 static NS_DEFINE_IID(kCApplicationShellIID, NS_IAPPLICATIONSHELL_CID);
-static NS_DEFINE_IID(kCShellInstanceIID, NS_ISHELLINSTANCE_CID);
+static NS_DEFINE_IID(kCShellInstanceIID, NS_ISHELLINSTANCE_IID);
 
 int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 {

@@ -31,9 +31,6 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIShellInstanceIID, NS_ISHELLINSTANCE_IID);
-static NS_DEFINE_CID(kIShellInstanceCID, NS_ISHELLINSTANCE_CID);
-static NS_DEFINE_CID(kCShellInstanceIID, NS_ISHELLINSTANCE_CID);
 
 class nsShellInstanceFactory : public nsIFactory {
 
@@ -61,7 +58,7 @@ nsShellInstance::~nsShellInstance()
 
 NS_IMPL_ADDREF(nsShellInstance)
 NS_IMPL_RELEASE(nsShellInstance)
-NS_IMPL_QUERY_INTERFACE(nsShellInstance,NS_ISHELLINSTANCE_CID);
+NS_IMPL_QUERY_INTERFACE(nsShellInstance,NS_ISHELLINSTANCE_IID);
 
 nsresult nsShellInstance::Init()
 {
@@ -218,15 +215,3 @@ extern "C" NS_WEB nsresult NSGetFactory(const nsCID &aClass, nsIFactory **aFacto
 }
 
 
-NS_WEB nsresult NS_NewShellInstance(nsIShellInstance** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  nsShellInstance* it = new nsShellInstance();
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kIShellInstanceIID, (void **) aInstancePtrResult);
-}

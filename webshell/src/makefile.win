@@ -24,7 +24,6 @@ DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
 MODULE=raptor 
 
 EXPORTS =			\
-	nsShellInstance.h		\
 	nsApplicationManager.h		\
 	$(NULL)
 
