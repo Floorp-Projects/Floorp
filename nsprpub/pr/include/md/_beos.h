@@ -327,6 +327,7 @@ struct protoent* getprotobynumber(int number);
 #define _MD_SOCKETPAIR _MD_socketpair
 #define _MD_SOCKET _MD_socket
 #define _MD_SOCKETAVAILABLE _MD_socketavailable
+#define _MD_PIPEAVAILABLE _MD_socketavailable
 
 #define _MD_GET_SOCKET_ERROR()	(errno)
 #define _MD_GETHOSTNAME _MD_gethostname
