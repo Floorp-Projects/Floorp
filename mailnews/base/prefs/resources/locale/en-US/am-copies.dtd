@@ -7,7 +7,7 @@
 <!-- LOCALIZATION NOTE (bccAccount.label): do not translate "Bcc" in below line -->
 <!ENTITY bccAccount.label "Bcc ">
 <!-- LOCALIZATION NOTE (bccAddress.label): do not translate "Bcc" in below line -->
-<!ENTITY bccAddress.label "Bcc these addresses:">
+<!ENTITY bccAddress.label "Bcc another address:">
 <!ENTITY specialFolderTitle.label "Special Folders">
 <!ENTITY draftMailFolder.label "Keep message drafts in:">
 <!ENTITY templateMailFolder.label "Keep message stationery in:">
