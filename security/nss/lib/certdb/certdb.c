@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.8 2001/02/09 01:06:41 nelsonb%netscape.com Exp $
+ * $Id: certdb.c,v 1.9 2001/02/28 22:50:12 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1182,10 +1182,19 @@ CERT_GetDefaultCertDB(void)
 SECStatus
 CERT_OpenVolatileCertDB(CERTCertDBHandle *handle)
 {
+#define DBM_DEFAULT 0
+    static const HASHINFO hashInfo = {
+        DBM_DEFAULT,    /* bucket size */
+        DBM_DEFAULT,    /* fill factor */
+        DBM_DEFAULT,    /* number of elements */
+        256 * 1024, 	/* bytes to cache */
+        DBM_DEFAULT,    /* hash function */
+        DBM_DEFAULT     /* byte order */
+    };
     /*
      * Open the memory resident perm cert database.
      */
-    handle->permCertDB = dbopen( 0, O_RDWR | O_CREAT, 0600, DB_HASH, 0 );
+    handle->permCertDB = dbopen(0, O_RDWR | O_CREAT, 0600, DB_HASH, &hashInfo);
     if ( !handle->permCertDB ) {
 	goto loser;
     }
@@ -1193,7 +1202,7 @@ CERT_OpenVolatileCertDB(CERTCertDBHandle *handle)
     /*
      * Open the memory resident decoded cert database.
      */
-    handle->tempCertDB = dbopen( 0, O_RDWR | O_CREAT, 0600, DB_HASH, 0 );
+    handle->tempCertDB = dbopen(0, O_RDWR | O_CREAT, 0600, DB_HASH, &hashInfo);
     if ( !handle->tempCertDB ) {
 	goto loser;
     }

@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.10 2001/02/10 01:44:34 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.11 2001/02/28 22:50:12 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -4843,6 +4843,15 @@ CERT_OpenCertDB(CERTCertDBHandle *handle, PRBool readOnly,
 		CERTDBNameFunc namecb, void *cbarg)
 {
     int rv;
+#define DBM_DEFAULT 0
+    static const HASHINFO hashInfo = {
+        DBM_DEFAULT,    /* bucket size */
+        DBM_DEFAULT,    /* fill factor */
+        DBM_DEFAULT,    /* number of elements */
+        256 * 1024, 	/* bytes to cache */
+        DBM_DEFAULT,    /* hash function */
+        DBM_DEFAULT     /* byte order */
+    };
 
     certdb_InitDBLock();
     
@@ -4855,7 +4864,7 @@ CERT_OpenCertDB(CERTCertDBHandle *handle, PRBool readOnly,
     /*
      * Open the memory resident decoded cert database.
      */
-    handle->tempCertDB = dbopen( 0, O_RDWR | O_CREAT, 0600, DB_HASH, 0 );
+    handle->tempCertDB = dbopen(0, O_RDWR | O_CREAT, 0600, DB_HASH, &hashInfo);
     if ( !handle->tempCertDB ) {
 	goto loser;
     }
