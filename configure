@@ -4034,8 +4034,8 @@ EOF
     AR_FLAGS='-M -a $@'
     AR_LIST='ar.elf t'
     AR_EXTRACT='ar.elf x'
-    _DEFINES_CFLAGS='-Wp,-include,$(DEPTH)/config-defs.h'
-    _DEFINES_CXXFLAGS='-Wp,-include,$(DEPTH)/config-defs.h'
+    _DEFINES_CFLAGS='-Wp,-include,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
+    _DEFINES_CXXFLAGS='-Wp,-include,$(DEPTH)/config-defs.h -DMOZILLA_CLIENT'
     _PREPROCESSOR_PREFIX="-Wp,"
     _COMPILER_PREFIX="-Wc,"
     _LINKER_PREFIX="-Wl,"      
