@@ -1,0 +1,3 @@
+xhost +local:
+xterm &
+exec twm
