@@ -57,13 +57,18 @@ public:
   /**
    * Initialize the presentation context from a particular device.
    */
-  virtual nsresult Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs) = 0;
+  NS_IMETHOD Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs) = 0;
+
+  /**
+   * Stop the presentation in preperation for destruction.
+   */
+  NS_IMETHOD Stop(void) = 0;
 
   /**
    * Set the presentation shell that this context is bound to.
    * A presentation context may only be bound to a single shell.
    */
-  virtual void SetShell(nsIPresShell* aShell) = 0;
+  NS_IMETHOD SetShell(nsIPresShell* aShell) = 0;
 
   /**
    * Get the PresentationShell that this context is bound to.
@@ -133,8 +138,8 @@ public:
   /**
    * Access Nav's magic font scaler value
    */
-  virtual PRInt32 GetFontScaler(void) = 0;
-  virtual void SetFontScaler(PRInt32 aScaler) = 0;
+  NS_IMETHOD GetFontScaler(PRInt32& aResult) = 0;
+  NS_IMETHOD SetFontScaler(PRInt32 aScaler) = 0;
 
   /** 
    * Get the defualt colors
@@ -187,13 +192,13 @@ public:
    * presenting the document. The returned value is in the standard
    * nscoord units (as scaled by the device context).
    */
-  virtual void GetVisibleArea(nsRect& aResult) = 0;
+  NS_IMETHOD GetVisibleArea(nsRect& aResult) = 0;
 
   /**
    * Set the currently visible area. The units for r are standard
    * nscoord units (as scaled by the device context).
    */
-  virtual void SetVisibleArea(const nsRect& r) = 0;
+  NS_IMETHOD SetVisibleArea(const nsRect& r) = 0;
 
   /**
    * Return true if this presentation context is a paginated
