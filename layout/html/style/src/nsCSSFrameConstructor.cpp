@@ -75,6 +75,7 @@
 #include "nsIPref.h"
 #include "nsLegendFrame.h"
 #include "nsTitleFrame.h"
+#include "nsIContentIterator.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -649,6 +650,15 @@ GetChildListNameFor(nsIPresContext* aPresContext,
 
   NS_IF_ADDREF(listName);
   *aListName = listName;
+}
+
+nsresult
+NS_NewGeneratedContentIterator(nsIPresContext*      aPresContext,
+                               nsIFrame*            aFrame,
+                               nsIContentIterator** aIterator)
+{
+  *aIterator = nsnull;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 nsresult
