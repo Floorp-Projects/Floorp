@@ -31,55 +31,47 @@ require "globals.pl";
 ConnectToDatabase();
 GetVersionTable();
 
-foreach (@::legal_product)
-	{
-	my $dir = "data/mining";
+foreach (@::legal_product) {
+    my $dir = "data/mining";
 
-	&check_data_dir ($dir);
-	&collect_stats ($dir, $_);
-	}
+    &check_data_dir ($dir);
+    &collect_stats ($dir, $_);
+}
 
-sub check_data_dir
-	{
-	my $dir = shift;
+sub check_data_dir {
+    my $dir = shift;
 
-	if (! -d)
-		{
-		mkdir $dir, 0777;
-		chmod 0777, $dir;
-		}
-	}
+    if (! -d) {
+        mkdir $dir, 0777;
+        chmod 0777, $dir;
+    }
+}
 
-sub collect_stats
-	{
-	my $dir = shift;
-	my $product = shift;
-	my $when = localtime (time);
+sub collect_stats {
+    my $dir = shift;
+    my $product = shift;
+    my $when = localtime (time);
 
-	my $query = <<FIN;
-select count(bug_status) from bugs where 
-(bug_status='NEW' or  bug_status='ASSIGNED' or bug_status='REOPENED')
-and product='$product' group by bug_status
-FIN
-        $product =~ s/\//-/gs;
-	my $file = join '/', $dir, $product;
-	my $exists = -f $file;
+    my $query = "select count(bug_status) from bugs where (bug_status='NEW' or  bug_status='ASSIGNED' or bug_status='REOPENED') and product='$product' group by bug_status";
 
-	if (open DATA, ">>$file")
-		{
-		SendSQL ($query);
+    $product =~ s/\//-/gs;
+    my $file = join '/', $dir, $product;
+    my $exists = -f $file;
 
-		my %count;
-		push my @row, &today;
-		
-		while (my @n = FetchSQLData())
-			{
-			push @row, @n;
-			}
-		
-		if (! $exists)
-			{
-			print DATA <<FIN;
+    if (open DATA, ">>$file") {
+        SendSQL ($query);
+
+        my %count;
+        push my @row, &today;
+
+        while (my @n = FetchSQLData())
+        {
+            push @row, @n;
+        }
+
+        if (! $exists)
+        {
+            print DATA <<FIN;
 # Bugzilla daily bug stats
 #
 # do not edit me! this file is generated.
@@ -88,20 +80,17 @@ FIN
 # product: $product
 # created: $when
 FIN
-			}
-
-		print DATA (join '|', @row) . "\n";
-		close DATA;
-		}
-	else
-		{
-		print "$0: $file, $!";
-		}
 	}
 
-sub today
-  {
-  my ($dom, $mon, $year) = (localtime(time))[3, 4, 5];
-  return sprintf "%04d%02d%02d", 1900 + $year, ++$mon, $dom;
-  }
+        print DATA (join '|', @row) . "\n";
+        close DATA;
+    } else {
+        print "$0: $file, $!";
+    }
+}
+
+sub today {
+    my ($dom, $mon, $year) = (localtime(time))[3, 4, 5];
+    return sprintf "%04d%02d%02d", 1900 + $year, ++$mon, $dom;
+}
 
