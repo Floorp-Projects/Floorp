@@ -100,18 +100,25 @@ nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl() {}
 
 NS_IMPL_ISUPPORTS1(nsXPCThreadJSContextStackImpl, nsIJSContextStack)
 
+static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
+
 //static
 nsXPCThreadJSContextStackImpl*
 nsXPCThreadJSContextStackImpl::GetSingleton()
 {
-    static nsXPCThreadJSContextStackImpl* singleton = nsnull;
-    if(!singleton)
+    if(!gXPCThreadJSContextStack)
     {
-        if(nsnull != (singleton = new nsXPCThreadJSContextStackImpl()))
-            NS_ADDREF(singleton);
+        if(nsnull != (gXPCThreadJSContextStack = new nsXPCThreadJSContextStackImpl()))
+            NS_ADDREF(gXPCThreadJSContextStack);
     }
-    NS_IF_ADDREF(singleton);
-    return singleton;
+    NS_IF_ADDREF(gXPCThreadJSContextStack);
+    return gXPCThreadJSContextStack;
+}
+
+void
+nsXPCThreadJSContextStackImpl::FreeSingleton()
+{
+    NS_IF_RELEASE(gXPCThreadJSContextStack);
 }
 
 /* readonly attribute PRInt32 Count; */

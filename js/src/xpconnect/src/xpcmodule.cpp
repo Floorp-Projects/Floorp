@@ -34,12 +34,12 @@
 
 /* Module level methods. */
 
+#include "nsCOMPtr.h"
 #include "xpcprivate.h"
+#include "nsIModule.h"
 
 /***************************************************************************/
 
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kJSID_CID,  NS_JS_ID_CID);
 static NS_DEFINE_CID(kXPCException_CID,  NS_XPCEXCEPTION_CID);
 static NS_DEFINE_CID(kXPConnect_CID, NS_XPCONNECT_CID);
@@ -142,113 +142,262 @@ Construct_nsJSRuntimeService(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 
 /********************************************/
 
-extern "C" PR_IMPLEMENT(nsresult)
-NSGetFactory(nsISupports* aServMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aProgID,
-             nsIFactory **aFactory)
+// Module implementation for the xpconnect library
+
+class nsXPConnectModule : public nsIModule
 {
-    nsresult rv;
-    NS_ASSERTION(aFactory != nsnull, "bad factory pointer");
+public:
+    nsXPConnectModule();
+    virtual ~nsXPConnectModule();
 
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
-                     aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_DECL_ISUPPORTS
 
-    nsIGenericFactory* factory;
-    rv = compMgr->CreateInstance(kGenericFactoryCID, nsnull,
-                                 nsIGenericFactory::GetIID(),
-                                 (void**)&factory);
-    if (NS_FAILED(rv)) return rv;
+    NS_DECL_NSIMODULE
 
-    // add more factories as 'if else's below...
+protected:
+    nsresult Initialize();
 
-    if(aClass.Equals(kJSID_CID))
-        rv = factory->SetConstructor(nsJSIDConstructor);
-    else if(aClass.Equals(kXPConnect_CID))
-        rv = factory->SetConstructor(Construct_nsXPConnect);
-    else if(aClass.Equals(kXPCThreadJSContextStack_CID))
-        rv = factory->SetConstructor(Construct_nsXPCThreadJSContextStack);
-    else if(aClass.Equals(kXPCException_CID))
-        rv = factory->SetConstructor(nsXPCExceptionConstructor);
-    else if(aClass.Equals(kJSRuntime_CID))
-        rv = factory->SetConstructor(Construct_nsJSRuntimeService);
-    else
-    {
-        NS_ASSERTION(0, "incorrectly registered");
-        rv = NS_ERROR_NO_INTERFACE;
+    void Shutdown();
+
+    PRBool mInitialized;
+    nsCOMPtr<nsIGenericFactory> mJSIDFactory;
+    nsCOMPtr<nsIGenericFactory> mXPConnectFactory;
+    nsCOMPtr<nsIGenericFactory> mXPCThreadJSContextStackFactory;
+    nsCOMPtr<nsIGenericFactory> mXPCExceptionFactory;
+    nsCOMPtr<nsIGenericFactory> mJSRuntimeServiceFactory;
+};
+
+static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
+
+nsXPConnectModule::nsXPConnectModule()
+    : mInitialized(PR_FALSE)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsXPConnectModule::~nsXPConnectModule()
+{
+    Shutdown();
+}
+
+NS_IMPL_ISUPPORTS(nsXPConnectModule, kIModuleIID)
+
+// Perform our one-time intialization for this module
+nsresult
+nsXPConnectModule::Initialize()
+{
+    if (mInitialized) {
+        return NS_OK;
     }
-
-    if (NS_FAILED(rv)) {
-        NS_RELEASE(factory);
-        return rv;
-    }
-    *aFactory = factory;
+    mInitialized = PR_TRUE;
     return NS_OK;
 }
 
-/***************************************************************************/
-
-extern "C" XPC_PUBLIC_API(PRBool)
-NSCanUnload(nsISupports* aServMgr)
+// Shutdown this module, releasing all of the module resources
+void
+nsXPConnectModule::Shutdown()
 {
-  return PR_FALSE;
+    // Release the factory objects
+    mJSIDFactory = nsnull;
+    mXPConnectFactory = nsnull;
+    mXPCThreadJSContextStackFactory = nsnull;
+    mXPCExceptionFactory = nsnull;
+    mJSRuntimeServiceFactory = nsnull;
+
+    // Release our singletons
+    nsXPCThreadJSContextStackImpl::FreeSingleton();
+    nsJSRuntimeServiceImpl::FreeSingleton();
+    nsXPConnect::FreeXPConnect();
 }
 
-extern "C" XPC_PUBLIC_API(nsresult)
-NSRegisterSelf(nsISupports* aServMgr, const char *aPath)
+// Create a factory object for creating instances of aClass.
+NS_IMETHODIMP
+nsXPConnectModule::GetClassObject(nsIComponentManager *aCompMgr,
+                                  const nsCID& aClass,
+                                  const nsIID& aIID,
+                                  void** r_classObj)
 {
     nsresult rv;
+
+    // Defensive programming: Initialize *r_classObj in case of error below
+    if (!r_classObj) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *r_classObj = NULL;
+
+    // Do one-time-only initialization if necessary
+    if (!mInitialized) {
+        rv = Initialize();
+        if (NS_FAILED(rv)) {
+            // Initialization failed! yikes!
+            return rv;
+        }
+    }
+
+    // Choose the appropriate factory, based on the desired instance
+    // class type (aClass).
+    nsCOMPtr<nsIGenericFactory> fact;
+    if (aClass.Equals(kJSID_CID)) {
+        if (!mJSIDFactory.get()) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mJSIDFactory),
+                                      nsJSIDConstructor);
+        }
+        fact = mJSIDFactory;
+    } else if(aClass.Equals(kXPConnect_CID)) {
+        if (!mXPConnectFactory.get()) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mXPConnectFactory),
+                                      Construct_nsXPConnect);
+        }
+        fact = mXPConnectFactory;
+    } else if(aClass.Equals(kXPCThreadJSContextStack_CID)) {
+        if (!mXPCThreadJSContextStackFactory.get()) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mXPCThreadJSContextStackFactory),
+                                      Construct_nsXPCThreadJSContextStack);
+        }
+        fact = mXPCThreadJSContextStackFactory;
+    } else if(aClass.Equals(kXPCException_CID)) {
+        if (!mXPCExceptionFactory.get()) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mXPCExceptionFactory),
+                                      nsXPCExceptionConstructor);
+        }
+        fact = mXPCExceptionFactory;
+    } else if(aClass.Equals(kJSRuntime_CID)) {
+        if (!mJSRuntimeServiceFactory.get()) {
+            rv = NS_NewGenericFactory(getter_AddRefs(mJSRuntimeServiceFactory),
+                                      Construct_nsJSRuntimeService);
+        }
+        fact = mJSRuntimeServiceFactory;
+    }
+    else {
+        rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef DEBUG
-    printf("*** Register XPConnect\n");
+        char* cs = aClass.ToString();
+        printf("+++ nsXPConnectModule: unable to create factory for %s\n", cs);
+        nsCRT::free(cs);
 #endif
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
-                     aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    }
 
-    rv = compMgr->RegisterComponent(kJSID_CID,
-                                    "nsIJSID","nsID",
-                                    aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
+    if (fact) {
+        rv = fact->QueryInterface(aIID, r_classObj);
+    }
 
-    rv = compMgr->RegisterComponent(kXPConnect_CID,
-                                    "nsIXPConnect","nsIXPConnect",
-                                    aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kXPCThreadJSContextStack_CID,
-                                    "nsThreadJSContextStack","nsThreadJSContextStack",
-                                    aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kXPCException_CID,
-                                    "nsXPCException","nsXPCException",
-                                    aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = compMgr->RegisterComponent(kJSRuntime_CID,
-                                    "JS Runtime Service", "nsJSRuntimeService",
-                                    aPath, PR_TRUE, PR_TRUE);
     return rv;
 }
 
-extern "C" XPC_PUBLIC_API(nsresult)
-NSUnregisterSelf(nsISupports* aServMgr, const char *aPath)
+//----------------------------------------
+
+struct Components {
+    const char* mDescription;
+    const nsID* mCID;
+    const char* mProgID;
+};
+
+// The list of components we register
+// XXX These progids look pretty bogus!
+static Components gComponents[] = {
+    { "nsIJSID", &kJSID_CID,
+      "nsID", },
+    { "nsIXPConnect", &kXPConnect_CID,
+      "nsIXPConnect", },
+    { "nsThreadJSContextStack", &kXPCThreadJSContextStack_CID,
+      "nsThreadJSContextStack", },
+    { "nsXPCException", &kXPCException_CID,
+      "nsXPCException", },
+    { "JS Runtime Service", &kJSRuntime_CID,
+      "nsJSRuntimeService", },
+};
+#define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
+
+NS_IMETHODIMP
+nsXPConnectModule::RegisterSelf(nsIComponentManager *aCompMgr,
+                                nsIFileSpec* aPath,
+                                const char* registryLocation,
+                                const char* componentType)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
+
 #ifdef DEBUG
-    printf("*** Unregister XPConnect\n");
+    printf("*** Registering xpconnect components\n");
 #endif
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
-                     aServMgr, kComponentManagerCID, &rv);
-    if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kJSID_CID, aPath);
-    rv = compMgr->UnregisterComponent(kXPConnect_CID, aPath);
-    rv = compMgr->UnregisterComponent(kXPCThreadJSContextStack_CID, aPath);
-    rv = compMgr->UnregisterComponent(kXPCException_CID, aPath);
-    rv = compMgr->UnregisterComponent(kJSRuntime_CID, aPath);
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
+                                             cp->mProgID, aPath, PR_TRUE,
+                                             PR_TRUE);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsXPConnectModule: unable to register %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+            break;
+        }
+        cp++;
+    }
 
+    return rv;
+}
+
+NS_IMETHODIMP
+nsXPConnectModule::UnregisterSelf(nsIComponentManager* aCompMgr,
+                                  nsIFileSpec* aPath,
+                                  const char* registryLocation)
+{
+#ifdef DEBUG
+    printf("*** Unregistering xpconnect components\n");
+#endif
+    Components* cp = gComponents;
+    Components* end = cp + NUM_COMPONENTS;
+    while (cp < end) {
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
+        if (NS_FAILED(rv)) {
+#ifdef DEBUG
+            printf("nsXPConnectModule: unable to unregister %s component => %x\n",
+                   cp->mDescription, rv);
+#endif
+        }
+        cp++;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPConnectModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
+{
+    if (!okToUnload) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+    *okToUnload = PR_FALSE;
+    return NS_ERROR_FAILURE;
+}
+
+//----------------------------------------------------------------------
+
+static nsXPConnectModule *gModule = NULL;
+
+extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *servMgr,
+                                          nsIFileSpec* location,
+                                          nsIModule** return_cobj)
+{
+    nsresult rv = NS_OK;
+
+    NS_ASSERTION(return_cobj, "Null argument");
+    NS_ASSERTION(gModule == NULL, "nsXPConnectModule: Module already created.");
+
+    // Create an initialize the layout module instance
+    nsXPConnectModule *m = new nsXPConnectModule();
+    if (!m) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    // Increase refcnt and store away nsIModule interface to m in return_cobj
+    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)return_cobj);
+    if (NS_FAILED(rv)) {
+        delete m;
+        m = nsnull;
+    }
+    gModule = m;                  // WARNING: Weak Reference
     return rv;
 }

@@ -160,6 +160,7 @@ class nsXPConnect : public nsIXPConnect
     // non-interface implementation
 public:
     static nsXPConnect* GetXPConnect();
+    static void FreeXPConnect();
     static nsIInterfaceInfoManager* GetInterfaceInfoManager(nsXPConnect* xpc = nsnull);
     static XPCContext*  GetContext(JSContext* cx, nsXPConnect* xpc = nsnull);
     static XPCJSThrower* GetJSThrower(nsXPConnect* xpc = nsnull);
@@ -176,7 +177,9 @@ private:
                             JSBool doInit = JS_TRUE);
 
 private:
-    static nsXPConnect* mSelf;
+    // Singleton instance
+    static nsXPConnect* gSelf;
+
     JSContext2XPCContextMap* mContextMap;
     nsIXPCScriptable* mArbitraryScriptable;
     nsIInterfaceInfoManager* mInterfaceInfoManager;
@@ -963,6 +966,7 @@ public:
     NS_DECL_NSIJSCONTEXTSTACK
 
     static nsXPCThreadJSContextStackImpl* GetSingleton();
+    static void FreeSingleton();
 
     nsXPCThreadJSContextStackImpl();
     virtual ~nsXPCThreadJSContextStackImpl();
@@ -1005,6 +1009,7 @@ class nsJSRuntimeServiceImpl : public nsIJSRuntimeService
     NS_DECL_NSIJSRUNTIMESERVICE
         
     static nsJSRuntimeServiceImpl *GetSingleton();
+    static void FreeSingleton();
 
     nsJSRuntimeServiceImpl();
     virtual ~nsJSRuntimeServiceImpl();
