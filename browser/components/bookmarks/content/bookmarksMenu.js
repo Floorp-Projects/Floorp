@@ -318,14 +318,20 @@ var BookmarksMenu = {
     else
       border = size/2;
     
+    var dropLocation;
     // in the first region?
     if (clientCoordValue-coordValue < border)
-      return BookmarksUtils.DROP_BEFORE;
+      dropLocation = BookmarksUtils.DROP_BEFORE;
     // in the last region?
-    if (clientCoordValue-coordValue >= size-border)
-      return BookmarksUtils.DROP_AFTER;
-    // must be in the middle somewhere
-    return BookmarksUtils.DROP_ON;
+    else if (clientCoordValue-coordValue >= size-border)
+      dropLocation = BookmarksUtils.DROP_AFTER;
+    else // must be in the middle somewhere
+      return BookmarksUtils.DROP_ON
+    
+    // If the direction of PersonalToolbar is RTL, we invert dropLocation before returning
+    if (window.getComputedStyle(document.getElementById("PersonalToolbar"),'').direction == 'rtl')
+      dropLocation = -dropLocation;
+    return dropLocation;
   },
 
   /////////////////////////////////////////////////////////////////////////
@@ -872,21 +878,27 @@ var BookmarksToolbar =
     chevron.collapsed = true;
     var overflowed = false;
 
+    var isLTR=window.getComputedStyle(document.getElementById("PersonalToolbar"),'').direction=='ltr';
+
     for (var i=0; i<buttons.childNodes.length; i++) {
       var button = buttons.childNodes[i];
       button.collapsed = overflowed;
       
       if (i == buttons.childNodes.length - 1) // last ptf item...
         chevronWidth = 0;
-      if (button.boxObject.x + button.boxObject.width + chevronWidth > width) {
-        overflowed = true;
+      var offset = isLTR ? button.boxObject.x 
+                         : width - button.boxObject.x;
+      if (offset + button.boxObject.width + chevronWidth > width) {
+         overflowed = true;
         // This button doesn't fit. Show it in the menu. Hide it in the toolbar.
         if (!button.collapsed)
           button.collapsed = true;
         if (chevron.collapsed) {
           chevron.collapsed = false;
           var overflowPadder = document.getElementById("overflow-padder");
-          overflowPadder.width = width - chevron.boxObject.width - buttons.boxObject.x;
+          offset = isLTR ? buttons.boxObject.x 
+                         : width - buttons.boxObject.x - buttons.boxObject.width;
+          overflowPadder.width = width - chevron.boxObject.width - offset;
         }
       }
     }
