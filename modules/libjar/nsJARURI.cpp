@@ -152,7 +152,7 @@ nsJARURI::SetSpec(const char * aSpec)
 
     nsCAutoString entry(aSpec);
     entry.Cut(0, pos + 2);      // 2 == strlen(NS_JAR_DELIMITER)
-    while (entry.CharAt(0) == '/')
+    while (entry.Length() && entry.CharAt(0) == '/')
         entry.Cut(0,1); // Strip any additional leading slashes from entry path
 
     rv = serv->ResolveRelativePath(entry.get(), nsnull, &mJAREntry);
