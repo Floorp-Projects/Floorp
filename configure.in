@@ -293,8 +293,9 @@ alpha*-*-osf*)
     DSO_CFLAGS='-fPIC'
     DSO_LDOPTS='-Wl,-shared -Wl,-h -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
     MKSHLIB='$(CXX) $(DSO_LDOPTS)'
+dnl What is this supposed to tell us...?  I don't see the point (at least on 1.3H for alpha).
     if $CC -E - -dM </dev/null | grep -v __ELF__ >/dev/null; then
-	DSO_LDOPTS="-Bshareable"
+	DSO_LDOPTS="-Bshareable $DSO_LDOPTS"
     fi
     if test "$LIBRUNPATH"; then
 	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
