@@ -56,6 +56,8 @@ mailextras      1
 xptlink         0
 psm             0      ENABLE_SMIME
 embedding_test  1
+embedding_chrome 0
+embedding_xulprefs 0
 carbon          0      TARGET_CARBON
 useimg2         1      USE_IMG2
 lowmem          0      MOZ_MAC_LOWMEM

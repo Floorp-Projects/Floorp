@@ -308,6 +308,151 @@ sub MakeNonChromeAliases()
     InstallComponentFiles();
 }
 
+
+#//--------------------------------------------------------------------------------------------------
+#// DumpChromeToTemp
+#//
+#// Iterates over all the .jar files in $chrome_dir and unzips them into a temp 
+#// directory organized by the name of the jar file. This matches the expected 
+#// format in the embedding jar manifest.
+#//--------------------------------------------------------------------------------------------------
+
+sub DumpChromeToTemp($$$$)
+{
+  my($dist_dir, $chrome_dir, $temp_chrome_dir, $verbose) = @_;
+  use Archive::Zip qw( :ERROR_CODES :CONSTANTS );
+  
+  opendir(CHROMEDIR, $chrome_dir);
+  my(@jarList) = readdir(CHROMEDIR);
+  closedir(CHROMEDIR);
+  
+  # the jar manifest generator expects the dumped files to be in
+  # a certain hierarchy:
+  #  <jar name>/<...path within jar...>
+  
+  mkpath($temp_chrome_dir, $verbose, 0777);
+  my($file);
+  foreach $file ( @jarList ) {
+    if ( $file =~ /\.jar/ ) {
+      print "-- unzipping $file\n" if $verbose;
+      
+      # pull everything from the jar's name (eg: classic.jar) up to the
+      # last "." and make that the foldername that everything in this
+      # jar file goes into
+      my($foldername) = substr($file, 0, rindex($file,".")) . ":";
+      
+      my($zip) = Archive::Zip->new("$chrome_dir:$file");
+      my(@members) = $zip->members();
+      my($item);
+      foreach $item ( @members ) {
+        my($name) = $item->fileName();
+        $name =~ s/\//:/g;
+#        print("+ extracting $name\n") if $verbose;
+        $item->extractToFileNamed($temp_chrome_dir . $foldername . $name);
+      }
+    }
+  }
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// PackageEmbeddingChrome
+#//
+#// Make use of mozilla/embedding/config's jar packaging scripts to build embed.jar
+#// with the bare-minimum chrome required for embedding. This process is unpleasant and
+#// suboptimal, but it allows us to reuse scripts and manifests so as to not get
+#// out of sync when changes are made for win/unix.
+#//
+#// Basically, this takes all the jar files in mozilla/viewer/Chrome, unzips them,
+#// runs a script to generate a manifest file with some substiutions, then rejars
+#// based on the new, minimal manifest.
+#//--------------------------------------------------------------------------------------------------
+
+sub PackageEmbeddingChrome($$)
+{
+  my($dist_dir, $chrome_dir) = @_;
+  
+  # unzip the existing jar files and dump them in a tempdir
+  my($embed_dir) = $dist_dir . ":Embed";
+  my($temp_chrome_dir) = "$embed_dir:tempchrome";
+  if ( $main::options{chrome_jars} ) {
+    DumpChromeToTemp($dist_dir, $chrome_dir, "$temp_chrome_dir:", 1);  
+  }
+  else {
+    $temp_chrome_dir = $chrome_dir;
+  }
+  
+  # Make sure we add the config dir to search, to pick up GenerateManifest.pm
+  # Need to do this dynamically, because this module can be used before
+  # mozilla/config has been checked out.
+  my ($top_path) = $0;        # $0 is the path to the parent script
+  $top_path =~ s/:build:mac:build_scripts:.+$//;
+  my($inc_path) = $top_path . ":embedding:config:";
+  push(@INC, $inc_path);
+  require GenerateManifest;
+  
+  # generate the embedding manifest from the template in embedding/config. The
+  # resulting manifest must go at the root of the tree it describes. The paths
+  # in the manifest are local to that location. As a result, we dump it
+  # in our temp chrome dir.
+  my($temp_manifest) = "$temp_chrome_dir:embed-jar.tmp.mn";
+  open(MANIFEST, ">$temp_manifest") || die "couldn't create embed jar manifest";
+  GenerateManifest::GenerateManifest($top_path, $inc_path . "embed-jar.mn", $temp_chrome_dir,
+                                      "en-US", *MANIFEST, ":", 1);
+  close(MANIFEST);
+  
+  # make embed.jar
+  my(%jars);
+  CreateJarFromManifest($temp_manifest, "$temp_chrome_dir:", \%jars);
+  if ($main::options{embedding_xulprefs}) {
+    # copy over our xul-pref manifest so that it's also at the root
+    # of our chrome tree then run it through the jar machine.
+    copy("$inc_path:xulprefs.mn", "$temp_chrome_dir:xulprefs.mn") || die "can't copy xul prefs manifest";
+    CreateJarFromManifest("$inc_path:xulprefs.mn", "$temp_chrome_dir:", \%jars);
+  }
+  WriteOutJarFiles("$temp_chrome_dir:", \%jars);
+
+  if ( $main::options{chrome_jars} ) {
+    print("deleting temp chrome dir $temp_chrome_dir\n");
+    rmtree($temp_chrome_dir, 0, 0);
+  }
+  else {
+    unlink($temp_manifest);
+  }
+  
+}
+
+#//--------------------------------------------------------------------------------------------------
+#// BuildEmbeddingPackage
+#//
+#// Run through the basebrowser manifest file and copy all the files into dist/Embed
+#//--------------------------------------------------------------------------------------------------
+sub BuildEmbeddingPackage
+{
+  unless ($main::options{embedding_chrome}) { return; }
+  
+  my($dist_dir) = GetBinDirectory();
+
+  # Make sure we add the config dir to search, to pick up Packager.pm
+  # Need to do this dynamically, because this module can be used before
+  # mozilla/xpinstall has been checked out.
+  my($top_path) = $0;        # $0 is the path to the parent script
+  $top_path =~ s/:build:mac:build_scripts:.+$//;
+  my($inc_path) = "$top_path:xpinstall:packager:";
+  push(@INC, $inc_path);
+  require Packager;
+  
+  # final destination will be a sibling of $dist_dir in dist
+  my($destination) = "$top_path:dist";  
+  my($manifest) = "$top_path:embedding:config:basebrowser-mac-cfm";
+  chop $dist_dir;             # Copy() expects the src/dest dirs not to have a ':' at the end
+  Packager::Copy($dist_dir, $destination, $manifest, "mac", 0, 0, 0, () );
+
+  # the Embed.jar is in the wrong place, move it into the chrome dir
+  move("$destination:Embed:embed.jar", "$destination:Embed:Chrome");
+  move("$destination:Embed:installed-chrome.txt", "$destination:Embed:Chrome");
+}
+
+
 #//--------------------------------------------------------------------------------------------------
 #// ProcessJarManifests
 #//--------------------------------------------------------------------------------------------------
@@ -405,8 +550,14 @@ sub ProcessJarManifests()
     }
     # bad jar.mn files
 #    CreateJarFromManifest(":mozilla:extensions:xmlterm:jar.mn", $chrome_dir, \%jars);
-
+    
     WriteOutJarFiles($chrome_dir, \%jars);
+    
+    # generate a jar manifest for embedding and package it. This needs to be done _after_
+    # all of the other jar files are created.
+    if ($main::options{embedding_chrome}) {
+      PackageEmbeddingChrome($dist_dir, $chrome_dir);
+    }
 }
 
 
@@ -439,7 +590,9 @@ sub BuildResources()
     ActivateApplication('McPL');
     
     MakeNonChromeAliases();   # Defaults, JS components etc.      
-    BuildJarFiles();    
+    BuildJarFiles();
+
+    BuildEmbeddingPackage();
 
     # Set the default skin to be classic
     SetDefaultSkin("classic/1.0"); 
