@@ -119,9 +119,7 @@ EMAIL FORMAT
 
 Each tinderbox client mails status updates to the tinderbox server.
 These mails contain special tinderbox data lines describing the
-progress of the build it may also contain the log of the build process
-and could contain a uuencoded binary.
-
+progress of the build it may also contain the log of the build process.
 
 The email to the tinderbox server looks like:
 
@@ -131,8 +129,9 @@ tinderbox: status: building
 tinderbox: build: IRIX 6.3 Depend
 tinderbox: errorparser: unix
 
-If binaryname is set then the mail message is run through uudecode to
-create a file called "$binaryname" on the tinderbox server.
+If binaryurl is set then a "D" link shows up in that builds status panel. This
+link points to an ftp url where you can fetch the build from the ftp server
+that was specified.
 
 # NOT USED tinderbox: buildfamily: unix
 
