@@ -34,7 +34,7 @@
         ondialogcancel="return subscribeCancel();">   
      
 <stringbundle id="bundle_subscribe" src="chrome://messenger/locale/subscribe.properties"/>
-<stringbundle id="bundle_subscribe" src="chrome://messenger/locale/messenger.properties"/>
+<stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
 
 <script type="application/x-javascript" src="chrome://messenger/content/mailWindow.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/subscribe.js"/>
