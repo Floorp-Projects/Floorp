@@ -88,6 +88,9 @@
 #include "nsIEventQueueService.h"
 #include "nsIEventQueue.h"
 
+#include "nsPIDOMWindow.h"
+#include "nsIFocusController.h"
+
 // Print Options
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
@@ -183,6 +186,7 @@ private:
 #pragma mark ** DocumentViewerImpl **
 #endif
 
+
 class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
@@ -241,6 +245,11 @@ public:
   typedef void (*CallChildFunc)(nsIMarkupDocumentViewer* aViewer,
                                 void* aClosure);
   nsresult CallChildren(CallChildFunc aFunc, void* aClosure);
+
+  // get the currently infocus frame for the document viewer
+  nsresult FindFocusedWebShell(nsIDOMWindowInternal  **aCurFocusFrame);
+  // get the DOM window for a given document viewer
+  nsresult GetDOMWindow(nsIDOMWindow  **aCurDOMWindow);
 
   // nsIImageGroupObserver interface
   virtual void Notify(nsIImageGroup *aImageGroup,
@@ -302,15 +311,16 @@ protected:
 
 
   // printing members
-  nsIDeviceContext  *mPrintDC;
-  nsIPresContext    *mPrintPC;
-  nsIStyleSet       *mPrintSS;
-  nsIPresShell      *mPrintPS;
-  nsIViewManager    *mPrintVM;
-  nsIView           *mPrintView;
-  FILE              *mFilePointer;   // a file where information can go to when printing
-  nsIDocument       *mSelectionDoc;
-  nsIDocShell       *mSelectionDocShell;
+  nsIDeviceContext            *mPrintDC;
+  nsIPresContext              *mPrintPC;
+  nsIStyleSet                 *mPrintSS;
+  nsIPresShell                *mPrintPS;
+  nsIViewManager              *mPrintVM;
+  nsIView                     *mPrintView;
+  static nsIDOMWindowInternal *mCurFocusFrame;  // this is the currently focused frame for a single print job
+  FILE                        *mFilePointer;    // a file where information can go to when printing
+  nsIDocument                 *mSelectionDoc;
+  nsIDocShell                 *mSelectionDocShell;
 
   nsCOMPtr<nsIPrintListener>  mPrintListener; // An observer for printing...
 
@@ -324,6 +334,9 @@ protected:
   nsCharsetSource mHintCharsetSource;
   nsString mForceCharacterSet;
 };
+
+nsIDOMWindowInternal* DocumentViewerImpl::mCurFocusFrame = 0;
+
 
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
@@ -1278,6 +1291,10 @@ nsresult
 DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
                                  nsIDeviceContext * aDContext)
 {
+#ifdef DEBUG_dcone
+  PRBool  CanPrint;
+#endif
+
   NS_ENSURE_ARG_POINTER(aParent);
   NS_ENSURE_ARG_POINTER(aDContext);
 
@@ -1345,10 +1362,25 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
       }
     }
   }
-  
+ 
+#ifdef DEBUG_dcone
+ 
+  CanPrint = PR_FALSE;
+  {
+  nsIDOMWindow *theDOMWindow;
+  this->GetDOMWindow(&theDOMWindow);
+  if(theDOMWindow == mCurFocusFrame)
+    CanPrint = PR_TRUE;
+  }
+ 
+#endif
+
   // now complete printing the rest of the document
   // if it doesn't contain any framesets
-  if (!doesContainFrameSet) {
+#ifdef DEBUG_dcone
+  if (!doesContainFrameSet && CanPrint==PR_TRUE) {
+#endif
+
     NS_ENSURE_SUCCESS( aDContext->BeginDocument(), NS_ERROR_FAILURE );
     aDContext->GetDeviceSurfaceDimensions(width, height);
 
@@ -1495,9 +1527,11 @@ DocumentViewerImpl::PrintContent(nsIWebShell *      aParent,
 
         // get the document title
         const nsString* docTitle = mDocument->GetDocumentTitle();
-        PRUnichar * docStr = docTitle->ToNewUnicode();
-        printService->SetTitle(docStr);
-        nsMemory::Free(docStr);
+        if( docTitle != nsnull) {
+          PRUnichar * docStr = docTitle->ToNewUnicode();
+          printService->SetTitle(docStr);
+          nsMemory::Free(docStr);
+        }
 
         // Get Document URL String
         nsCOMPtr<nsIURI> url(getter_AddRefs(mDocument->GetDocumentURL()));
@@ -1877,7 +1911,7 @@ void PR_CALLBACK DocumentViewerImpl::DestroyPLEvent(PLEvent* aEvent)
 
 void DocumentViewerImpl::DocumentReadyForPrinting()
 {
-  nsCOMPtr<nsIWebShell> webContainer;
+nsCOMPtr<nsIWebShell> webContainer;
 
   webContainer = do_QueryInterface(mContainer);
   if(webContainer) {
@@ -1889,6 +1923,9 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
     if (imageGroup) {
       imageGroup->RemoveObserver(this);
     }
+
+    this->FindFocusedWebShell(&mCurFocusFrame);
+
     //
     // Send the document to the printer...
     //
@@ -1903,6 +1940,7 @@ void DocumentViewerImpl::DocumentReadyForPrinting()
     if (mPrintListener)
       mPrintListener->OnEndPrinting(NS_OK);
 
+    NS_IF_RELEASE(mCurFocusFrame);
     NS_RELEASE(mPrintPS);
     NS_RELEASE(mPrintVM);
     NS_RELEASE(mPrintSS);
@@ -2870,3 +2908,66 @@ nsDocViewerFocusListener::Init(DocumentViewerImpl *aDocViewer)
   return NS_OK;
 }
 
+
+/** ---------------------------------------------------
+ *  Get the Focused Frame for a documentviewer
+ *  
+ */
+nsresult
+DocumentViewerImpl::FindFocusedWebShell(nsIDOMWindowInternal  **aCurFocusFrame)
+{
+nsCOMPtr<nsIDOMWindowInternal>  theDOMWin;
+nsCOMPtr<nsIDocument>           theDoc;
+nsCOMPtr<nsIScriptGlobalObject> theSGO;
+nsCOMPtr<nsIFocusController>    focusController;
+nsresult  theResult = NS_ERROR_NULL_POINTER;
+
+  *aCurFocusFrame = nsnull;
+  this->GetDocument(*getter_AddRefs(theDoc));  
+  if(theDoc){
+    theDoc->GetScriptGlobalObject(getter_AddRefs(theSGO));
+    if(theSGO){
+      nsCOMPtr<nsPIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
+      if(theDOMWindow){
+        theDOMWindow->GetRootFocusController(getter_AddRefs(focusController));
+        if(focusController){
+          focusController->GetFocusedWindow(getter_AddRefs(theDOMWin));
+          *aCurFocusFrame = theDOMWin.get();
+          if(*aCurFocusFrame){
+            NS_ADDREF(*aCurFocusFrame);
+            theResult = NS_OK;
+          }
+        }
+      }
+    }
+  }
+  return theResult;
+}
+
+/** ---------------------------------------------------
+ *  Get DOM Window represented by the document viewer
+ *  
+ */
+nsresult
+DocumentViewerImpl::GetDOMWindow(nsIDOMWindow  **aCurDOMWindow)
+{
+nsCOMPtr<nsIDocument>           theDoc;
+nsCOMPtr<nsIScriptGlobalObject> theSGO;
+nsCOMPtr<nsIFocusController>    focusController;
+nsresult                        theResult = NS_ERROR_NULL_POINTER;
+
+  *aCurDOMWindow = nsnull;
+  this->GetDocument(*getter_AddRefs(theDoc)); 
+  if(theDoc){ 
+    theDoc->GetScriptGlobalObject(getter_AddRefs(theSGO));
+    if(theSGO){
+      nsCOMPtr<nsIDOMWindow> theDOMWindow = do_QueryInterface(theSGO);
+      if(theDOMWindow){
+        *aCurDOMWindow = theDOMWindow.get();
+        NS_ADDREF(*aCurDOMWindow);
+        theResult = NS_OK;
+      }
+    }
+  }
+  return theResult;
+}
