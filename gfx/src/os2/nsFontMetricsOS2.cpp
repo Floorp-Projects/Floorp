@@ -833,8 +833,9 @@ HDC   ps = NULL;
    // Note: are you confused by the block above, and thinking that app2twip
    //       must be 1?  Well, there's *no* guarantee that app units are
    //       twips, despite whatever nscoord.h says!
-   int points = NSTwipsToFloorIntPoints( nscoord( mFont->size * app2twip * textZoom));
-   fh->charbox.cx = MAKEFIXED( points * 20 * twip2dev, 0);
+   LONG lHeight = NSToIntRound(mFont->size * app2dev * textZoom);
+   int points = mFont->size/20;
+   fh->charbox.cx = MAKEFIXED(lHeight, 0);
    fh->charbox.cy = fh->charbox.cx;
 
    // 8) If we're using an image font, check it's available in the size
@@ -848,7 +849,6 @@ HDC   ps = NULL;
       long lFonts = 0; int i;
       PFONTMETRICS pMetrics = getMetrics( lFonts, fh->fattrs.szFacename, ps);
 
-      
       int curPoints = 0;
       for( i = 0; i < lFonts; i++) {
          if( !stricmp(fh->fattrs.szFacename, pMetrics[i].szFacename) &&
