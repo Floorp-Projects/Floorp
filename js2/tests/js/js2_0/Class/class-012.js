@@ -71,8 +71,11 @@ class C2 extends C1
 
 static class C3
 {
-  this.texture = 'smooth';
-  this.width = 0;
+  constructor function C3()
+  {
+    this.texture = 'smooth';
+    this.width = 0;
+  }
 }
 
 class C4 extends C3
@@ -81,8 +84,11 @@ class C4 extends C3
 
 dynamic class C5
 {
-  this.texture = 'smooth';
-  this.width = 0;
+  constructor function C5()
+  {
+    this.texture = 'smooth';
+    this.width = 0;
+  }
 }
 
 class C6 extends C5
