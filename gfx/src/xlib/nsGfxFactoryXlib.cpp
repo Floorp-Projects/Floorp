@@ -45,7 +45,6 @@ static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 Display         *gDisplay;
 Screen          *gScreen;
-int              gScreenNum;
 int              gDepth;
 Visual          *gVisual;
 XVisualInfo     *gVisualInfo;
