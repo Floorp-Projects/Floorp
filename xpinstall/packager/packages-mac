@@ -38,7 +38,6 @@ viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 viewer:NSPR Logging
 
-viewer:Essential Files:AppShell.shlb 
 viewer:Essential Files:gfx.shlb 
 viewer:Essential Files:libimg.shlb 
 viewer:Essential Files:libutil.shlb 
@@ -50,6 +49,7 @@ viewer:Essential Files:widget.shlb
 
 viewer:Components:about.shlb 
 viewer:Components:about.xpt 
+viewer:Components:AppShell.shlb 
 viewer:Components:appshell.xpt 
 viewer:Components:bookmarks.shlb 
 viewer:Components:bookmarks.xpt 
