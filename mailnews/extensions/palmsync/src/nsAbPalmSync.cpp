@@ -188,58 +188,56 @@ nsresult nsAbPalmHotSync::GetABInterface()
 
   // Check each valid addrbook.
   nsCOMPtr<nsISupports> item;
-  if (NS_SUCCEEDED(subDirectories->First()))
+  PRBool hasMore;
+  while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
   {
-    do
+    if (NS_SUCCEEDED(subDirectories->GetNext(getter_AddRefs(item))))
     {
-      if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+      directory = do_QueryInterface(item, &rv);
+      if (NS_SUCCEEDED(rv))
       {
-        directory = do_QueryInterface(item, &rv);
-        if (NS_SUCCEEDED(rv))
-        {
-          // TODO: may need to skip mailing list?? but maybe not since there's no mailing list on the top level.
-          nsCOMPtr <nsIAbDirectoryProperties> properties;
-          rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
-          if(NS_FAILED(rv)) return E_FAIL;
+        // TODO: may need to skip mailing list?? but maybe not since there's no mailing list on the top level.
+        nsCOMPtr <nsIAbDirectoryProperties> properties;
+        rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+        if(NS_FAILED(rv)) return E_FAIL;
 
-          rv = properties->GetDescription(description);
-          if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetFileName(getter_Copies(fileName));
-          if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetURI(getter_Copies(uri));
-          if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetDirType(&dirType);
-          if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
-          if(NS_FAILED(rv)) return E_FAIL;
-          rv = properties->GetCategoryId(&palmCategoryIndex);
-          if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetDescription(description);
+        if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetFileName(getter_Copies(fileName));
+        if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetURI(getter_Copies(uri));
+        if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetDirType(&dirType);
+        if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
+        if(NS_FAILED(rv)) return E_FAIL;
+        rv = properties->GetCategoryId(&palmCategoryIndex);
+        if(NS_FAILED(rv)) return E_FAIL;
 
-          // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
-          if (((fileName.Length() > kABFileName_PreviousSuffixLen) && 
-              strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
-              (dirType != kPABDirectory && dirType != kMAPIDirectory))
-            continue;
+        // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension).
+        if (((fileName.Length() > kABFileName_PreviousSuffixLen) && 
+            strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
+            (dirType != kPABDirectory && dirType != kMAPIDirectory))
+          continue;
 
-          // If Palm category is already assigned to AB then just check that (ie, was synced before).
-          if((palmCategoryIndex > -1) && (mPalmCategoryIndex == palmCategoryIndex))
-            break;
+        // If Palm category is already assigned to AB then just check that (ie, was synced before).
+        if((palmCategoryIndex > -1) && (mPalmCategoryIndex == palmCategoryIndex))
+          break;
 
-          // If Palm category is not already assigned check the AB name (ie, never
-          // synced before). Note that Palm category name is only 15 chars max.
-          if (description.Length() > 15 && mAbName.Length() <= 15)
-            description.Cut(15, description.Length()-15);
+        // If Palm category is not already assigned check the AB name (ie, never
+        // synced before). Note that Palm category name is only 15 chars max.
+        if (description.Length() > 15 && mAbName.Length() <= 15)
+          description.Cut(15, description.Length()-15);
 
-          // check for matching AB+Category, and special case personal address book
-          // to match "Personal" category.
-          if(description == mAbName || 
-              (uri.Equals(PERSONAL_ADDRBOOK_URL, nsCaseInsensitiveCStringComparator())
-               && mAbName.Equals(NS_LITERAL_STRING("Personal"), nsCaseInsensitiveStringComparator())))
-            break;
-          directory = nsnull;
-        }
+        // check for matching AB+Category, and special case personal address book
+        // to match "Personal" category.
+        if(description == mAbName || 
+            (uri.Equals(PERSONAL_ADDRBOOK_URL, nsCaseInsensitiveCStringComparator())
+             && mAbName.Equals(NS_LITERAL_STRING("Personal"), nsCaseInsensitiveStringComparator())))
+          break;
+        directory = nsnull;
       }
-    } while (NS_SUCCEEDED(subDirectories->Next()));
+    }
   }
 
   // If not found return error.

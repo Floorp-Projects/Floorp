@@ -196,92 +196,89 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
     *aABCatIndexList = catIndexList;
 
     // For each valid addrbook collect info.
-    if (NS_SUCCEEDED(subDirectories->First()))
+    while (NS_SUCCEEDED(rv = subDirectories->HasMoreElements(&hasMore)) && hasMore)
     {
-      do
+      if (NS_SUCCEEDED(subDirectories->GetNext(getter_AddRefs(item))))
       {
-        if (NS_SUCCEEDED(subDirectories->CurrentItem(getter_AddRefs(item))))
+        directory = do_QueryInterface(item, &rv);
+        if (NS_SUCCEEDED(rv))
         {
-          directory = do_QueryInterface(item, &rv);
-          if (NS_SUCCEEDED(rv))
+          // We don't have to skip mailing list since there's no mailing lists at the top level.
+          nsCOMPtr <nsIAbDirectoryProperties> properties;
+          rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
+          if(NS_FAILED(rv)) return E_FAIL;
+
+          nsXPIDLCString fileName, uri;
+          nsAutoString description;
+          PRUint32 dirType, palmSyncTimeStamp;
+          PRInt32 palmCategoryIndex;
+
+          rv = properties->GetDescription(description);
+          if(NS_FAILED(rv)) return E_FAIL;
+          rv = properties->GetFileName(getter_Copies(fileName));
+          if(NS_FAILED(rv)) return E_FAIL;
+          rv = properties->GetURI(getter_Copies(uri));
+          if(NS_FAILED(rv)) return E_FAIL;
+          rv = properties->GetDirType(&dirType);
+          if(NS_FAILED(rv)) return E_FAIL;
+          rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
+          if(NS_FAILED(rv)) return E_FAIL;
+          rv = properties->GetCategoryId(&palmCategoryIndex);
+          if(NS_FAILED(rv)) return E_FAIL;
+          nsCAutoString prefName;
+          directory->GetDirPrefId(prefName);
+          prefName.Append(".disablePalmSync");
+          PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
+          // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
+          if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
+               strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
+                (dirType != kPABDirectory && dirType != kMAPIDirectory))
           {
-            // We don't have to skip mailing list since there's no mailing lists at the top level.
-            nsCOMPtr <nsIAbDirectoryProperties> properties;
-            rv = directory->GetDirectoryProperties(getter_AddRefs(properties));
-            if(NS_FAILED(rv)) return E_FAIL;
-
-            nsXPIDLCString fileName, uri;
-            nsAutoString description;
-            PRUint32 dirType, palmSyncTimeStamp;
-            PRInt32 palmCategoryIndex;
-
-            rv = properties->GetDescription(description);
-            if(NS_FAILED(rv)) return E_FAIL;
-            rv = properties->GetFileName(getter_Copies(fileName));
-            if(NS_FAILED(rv)) return E_FAIL;
-            rv = properties->GetURI(getter_Copies(uri));
-            if(NS_FAILED(rv)) return E_FAIL;
-            rv = properties->GetDirType(&dirType);
-            if(NS_FAILED(rv)) return E_FAIL;
-            rv = properties->GetSyncTimeStamp(&palmSyncTimeStamp);
-            if(NS_FAILED(rv)) return E_FAIL;
-            rv = properties->GetCategoryId(&palmCategoryIndex);
-            if(NS_FAILED(rv)) return E_FAIL;
-            nsCAutoString prefName;
-            directory->GetDirPrefId(prefName);
-            prefName.Append(".disablePalmSync");
-            PRBool disableThisAB = GetBoolPref(prefName.get(), PR_FALSE);
-            // Skip/Ignore 4.X addrbooks (ie, with ".na2" extension), and non personal AB's
-            if (disableThisAB || ((fileName.Length() > kABFileName_PreviousSuffixLen) && 
-                 strcmp(fileName.get() + fileName.Length() - kABFileName_PreviousSuffixLen, kABFileName_PreviousSuffix) == 0) ||
-                  (dirType != kPABDirectory && dirType != kMAPIDirectory))
-            {
-              continue;
-            }
-
-            if(aIsUnicode) 
-            {
-              // convert uri to Unicode
-              nsAutoString abUrl;
-              rv = ConvertToUnicode("UTF-8", uri.get(), abUrl);
-              if (NS_FAILED(rv))
-                break;
-              // add to the list
-              CopyUnicodeString(&(serverDescList->lpszABName), description);
-              CopyUnicodeString(&(serverDescList->lpszABUrl), abUrl);
-            }
-            else {
-              // we need to convert uri to Unicode and then to ASCII
-              nsAutoString abUUrl;
-              nsCAutoString abName(NS_ConvertUCS2toUTF8(description).get());
-
-              rv = ConvertToUnicode("UTF-8", uri.get(), abUUrl);
-              if (NS_FAILED(rv))
-                break;
-              nsCAutoString abUrl(NS_ConvertUCS2toUTF8(abUUrl).get());
-
-              CopyCString(&(serverDescList->lpszABName), abName);
-              CopyCString(&(serverDescList->lpszABUrl), abUrl);
-            }
-            serverDescList++;
-
-            *firstTimeSyncList = (palmSyncTimeStamp <= 0);
-            firstTimeSyncList++;
-
-            *catIndexList = palmCategoryIndex;
-            catIndexList++;
+            continue;
           }
+
+          if(aIsUnicode) 
+          {
+            // convert uri to Unicode
+            nsAutoString abUrl;
+            rv = ConvertToUnicode("UTF-8", uri.get(), abUrl);
+            if (NS_FAILED(rv))
+              break;
+            // add to the list
+            CopyUnicodeString(&(serverDescList->lpszABName), description);
+            CopyUnicodeString(&(serverDescList->lpszABUrl), abUrl);
+          }
+          else {
+            // we need to convert uri to Unicode and then to ASCII
+            nsAutoString abUUrl;
+            nsCAutoString abName(NS_ConvertUCS2toUTF8(description).get());
+
+            rv = ConvertToUnicode("UTF-8", uri.get(), abUUrl);
+            if (NS_FAILED(rv))
+              break;
+            nsCAutoString abUrl(NS_ConvertUCS2toUTF8(abUUrl).get());
+
+            CopyCString(&(serverDescList->lpszABName), abName);
+            CopyCString(&(serverDescList->lpszABUrl), abUrl);
+          }
+          serverDescList++;
+
+          *firstTimeSyncList = (palmSyncTimeStamp <= 0);
+          firstTimeSyncList++;
+
+          *catIndexList = palmCategoryIndex;
+          catIndexList++;
         }
-      } while (NS_SUCCEEDED(subDirectories->Next()));
-
-      // assign member variables to the beginning of the list
-      serverDescList = *aABList;
-      firstTimeSyncList = *aFirstTimeSyncList;
-      catIndexList = *aABCatIndexList;
-
-      if(NS_FAILED(rv))
-        return E_FAIL;
+      }
     }
+
+    // assign member variables to the beginning of the list
+    serverDescList = *aABList;
+    firstTimeSyncList = *aFirstTimeSyncList;
+    catIndexList = *aABCatIndexList;
+
+    if(NS_FAILED(rv))
+      return E_FAIL;
   }
   return S_OK;
 }
