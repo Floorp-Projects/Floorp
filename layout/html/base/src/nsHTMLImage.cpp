@@ -35,6 +35,8 @@
 #include "nsIURL.h"
 #include "nsCSSLayout.h"
 
+#define BROKEN_IMAGE_URL "resource:/html/broken-image.gif"
+
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleDisplaySID, NS_STYLEDISPLAY_SID);
@@ -64,9 +66,15 @@ protected:
                               nsReflowMetrics& aDesiredSize,
                               const nsSize& aMaxSize);
 
-  nsIImage* GetImage(nsIPresContext& aPresContext);
+  nsresult LoadImage(nsIPresContext& aPresContext);
 
   nsIImageMap* GetImageMap();
+
+  nsIImage* mImage;
+  nsSize mImageSize;
+  PRPackedBool mLoadImageFailed;
+  PRPackedBool mLoadBrokenImageFailed;
+  PRUint8 mImageStatus;
 
   void TriggerLink(nsIPresContext& aPresContext,
                    const nsString& aURLSpec,
@@ -126,18 +134,46 @@ ImageFrame::~ImageFrame()
 {
 }
 
-nsIImage* ImageFrame::GetImage(nsIPresContext& aPresContext)
+nsresult
+ImageFrame::LoadImage(nsIPresContext& aPresContext)
 {
+  nsresult rv;
   nsAutoString src;
-  if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
-    return aPresContext.LoadImage(src, this);
+  if (mLoadImageFailed) {
+    src.Append(BROKEN_IMAGE_URL);
+  } else {
+    if (eContentAttr_HasValue != mContent->GetAttribute("SRC", src)) {
+      src.Append(BROKEN_IMAGE_URL);
+      mLoadImageFailed = PR_TRUE;
+    }
   }
-  return nsnull;
+
+  // Try to load the image
+  PRInt32 loadStatus;
+  nsImageError loadError;
+  rv = aPresContext.LoadImage(src, this, loadStatus, loadError,
+                              mImageSize, mImage);
+  if (NS_OK == rv) {
+    mImageStatus |= loadStatus;
+  }
+  else {
+    if (mLoadImageFailed) {
+      // We are doomed. Loading the broken image has just failed.
+      mLoadBrokenImageFailed = PR_TRUE;
+    }
+    else {
+      // Try again, this time using the broke-image url
+      mLoadImageFailed = PR_TRUE;
+      return LoadImage(aPresContext);
+    }
+  }
+  return rv;
 }
 
-NS_METHOD ImageFrame::Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+NS_METHOD
+ImageFrame::Paint(nsIPresContext& aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect& aDirtyRect)
 {
   if ((0 == mRect.width) || (0 == mRect.height)) {
     // Do not render when given a zero area. This avoids some useless
@@ -146,8 +182,12 @@ NS_METHOD ImageFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  nsIImage* image = GetImage(aPresContext);
-  if (nsnull == image) {
+  nsresult rv = LoadImage(aPresContext);
+  if (NS_OK != rv) {
+    // Don't bother informing the outside world that we can't render
+    return NS_OK;
+  }
+  if (nsnull == mImage) {
     return NS_OK;
   }
 
@@ -158,7 +198,7 @@ NS_METHOD ImageFrame::Paint(nsIPresContext& aPresContext,
   // borders and padding)
   nsRect inner;
   GetInnerArea(&aPresContext, inner);
-  aRenderingContext.DrawImage(image, inner);
+  aRenderingContext.DrawImage(mImage, inner);
 
   if (GetShowFrameBorders()) {
     nsIImageMap* map = GetImageMap();
@@ -171,7 +211,8 @@ NS_METHOD ImageFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-nsIImageMap* ImageFrame::GetImageMap()
+nsIImageMap*
+ImageFrame::GetImageMap()
 {
   ImagePart* part = (ImagePart*)mContent;
   if (nsnull == part->mUseMap) {
@@ -202,9 +243,10 @@ nsIImageMap* ImageFrame::GetImageMap()
   return nsnull;
 }
 
-void ImageFrame::TriggerLink(nsIPresContext& aPresContext,
-                             const nsString& aURLSpec,
-                             const nsString& aTargetSpec)
+void
+ImageFrame::TriggerLink(nsIPresContext& aPresContext,
+                        const nsString& aURLSpec,
+                        const nsString& aTargetSpec)
 {
   nsILinkHandler* handler;
   if (NS_OK == aPresContext.GetLinkHandler(&handler)) {
@@ -213,10 +255,11 @@ void ImageFrame::TriggerLink(nsIPresContext& aPresContext,
   }
 }
 
-// XXX what about transparent pixels?
-NS_METHOD ImageFrame::HandleEvent(nsIPresContext& aPresContext,
-                                  nsGUIEvent* aEvent,
-                                  nsEventStatus& aEventStatus)
+// XXX what should clicks on transparent pixels do?
+NS_METHOD
+ImageFrame::HandleEvent(nsIPresContext& aPresContext,
+                        nsGUIEvent* aEvent,
+                        nsEventStatus& aEventStatus)
 {
   aEventStatus = nsEventStatus_eIgnore; 
 
@@ -262,10 +305,11 @@ NS_METHOD ImageFrame::HandleEvent(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-NS_METHOD ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
-                                  const nsPoint& aPoint,
-                                  nsIFrame** aFrame,
-                                  PRInt32& aCursor)
+NS_METHOD
+ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
+                        const nsPoint& aPoint,
+                        nsIFrame** aFrame,
+                        PRInt32& aCursor)
 {
   // The default cursor is to have no cursor
   aCursor = NS_STYLE_CURSOR_INHERIT;
@@ -293,9 +337,10 @@ NS_METHOD ImageFrame::GetCursorAt(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                nsReflowMetrics& aDesiredSize,
-                                const nsSize& aMaxSize)
+void
+ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
+                           nsReflowMetrics& aDesiredSize,
+                           const nsSize& aMaxSize)
 {
   nsSize styleSize;
   PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, this, styleSize);
@@ -306,8 +351,8 @@ void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
     else {
       // Preserve aspect ratio of image with unbound dimension.
-      nsIImage* image = GetImage(*aPresContext);
-      if (nsnull == image) {
+      nsresult rv = LoadImage(*aPresContext);
+      if (0 == (mImageStatus & NS_LOAD_IMAGE_STATUS_SIZE)) {
         // Provide a dummy size for now; later on when the image size
         // shows up we will reflow to the new size.
         aDesiredSize.width = 0;
@@ -315,8 +360,8 @@ void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       }
       else {
         float p2t = aPresContext->GetPixelsToTwips();
-        float imageWidth = image->GetWidth() * p2t;
-        float imageHeight = image->GetHeight() * p2t;
+        float imageWidth = mImageSize.width * p2t;
+        float imageHeight = mImageSize.height * p2t;
         if (0.0f != imageHeight) {
           if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
             // We have a width, and an auto height. Compute height
@@ -342,16 +387,16 @@ void ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    nsIImage* image = GetImage(*aPresContext);
-    if (nsnull == image) {
+    nsresult rv = LoadImage(*aPresContext);
+    if (0 == (mImageStatus & NS_LOAD_IMAGE_STATUS_SIZE)) {
       // Provide a dummy size for now; later on when the image size
       // shows up we will reflow to the new size.
       aDesiredSize.width = 0;
       aDesiredSize.height = 0;
     } else {
       float p2t = aPresContext->GetPixelsToTwips();
-      aDesiredSize.width = nscoord(image->GetWidth() * p2t);
-      aDesiredSize.height = nscoord(image->GetHeight() * p2t);
+      aDesiredSize.width = nscoord(mImageSize.width * p2t);
+      aDesiredSize.height = nscoord(mImageSize.height * p2t);
     }
   }
 }

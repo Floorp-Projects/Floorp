@@ -42,6 +42,10 @@
 #include "nsIImage.h"
 #include "nsHTMLForms.h"
 
+// XXX rewrite this to embed an html image frame in the form element
+// frame so that the html image code can be 100% reused to deal with
+// the image
+
 enum nsButtonTagType {
   kButtonTag_Button,
   kButtonTag_Input
@@ -117,7 +121,7 @@ public:
   nsButtonType GetButtonType() const;
   nsButtonTagType GetButtonTagType() const;
 
-  nsIImage* GetImage(nsIPresContext& aPresContext);
+  nsIImage* GetImage(nsIPresContext& aPresContext, PRBool aNeedBits);
 
 
 protected:
@@ -311,7 +315,8 @@ nsInputButtonFrame::GetButtonTagType() const
   return button->GetButtonTagType();
 }
 
-nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext)
+nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext,
+                                       PRBool aNeedBits)
 {
   if (kButton_Image != GetButtonType()) {
     return nsnull;
@@ -319,7 +324,13 @@ nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext)
 
   nsAutoString src;
   if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
-    return aPresContext.LoadImage(src, this);
+    PRInt32 loadStatus;
+    nsImageError loadError;
+    nsIImage* image = nsnull;
+    nsSize imageSize;
+    nsresult rv = aPresContext.LoadImage(src, this, loadStatus, loadError,
+                                         imageSize, image);
+    return image;
   }
   return nsnull;
 }
@@ -333,7 +344,7 @@ NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
     return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
 
-  nsIImage* image = GetImage(aPresContext);
+  nsIImage* image = GetImage(aPresContext, PR_TRUE);
   if (nsnull == image) {
     return NS_OK;
   }
@@ -420,7 +431,7 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
         aDesiredLayoutSize.width  = nscoord(styleSize.width  * p2t);
         aDesiredLayoutSize.height = nscoord(styleSize.height * p2t);
       } else {
-        nsIImage* image = GetImage(*aPresContext);
+        nsIImage* image = GetImage(*aPresContext, PR_FALSE);
         if (nsnull == image) {
           // XXX Here is where we trigger a resize-reflow later on; or block
           // layout or whatever our policy wants to be
