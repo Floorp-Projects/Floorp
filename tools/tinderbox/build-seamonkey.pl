@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.17 $ ';
+$Version = '$Revision: 1.18 $ ';
 
 
 sub PrintUsage {
@@ -105,7 +105,7 @@ sub PrintExampleConfig {
 }
 
 sub ConditionalArgs {
-  $FE          = 'apprunner'; 
+  $FE          = 'mozilla-bin'; 
   $BuildModule = 'SeaMonkeyAll';
   $CVSCO      .= " -r $BuildTag" unless $BuildTag eq '';
 }
@@ -594,7 +594,7 @@ sub BinaryExists {
 sub DeleteBinary {
   my ($fe) = @_;
   my $BinName;
-  $fe = 'apprunner' unless defined $fe; 
+  $fe = 'mozilla-bin' unless defined $fe; 
   
   $BinName = "$BuildDir/$TopLevel/${Topsrcdir}$BinaryName{$fe}";
   print LOG "unlinking $BinName\n";
@@ -653,7 +653,7 @@ sub RunSmokeTest {
   
   print LOG "$Binary\n";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
-  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/apprunner";
+  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/mozilla-bin";
   $BinaryLog = $BuildDir . '/runlog';
   
   # Fork off a child process.
@@ -682,7 +682,7 @@ sub RunSmokeTest {
 
   if ($status != 0) {
     print LOG "$Binary has crashed or quit on the AliveTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure output from apprunner for smoke tests --------------- \n";
+    print LOG "----------- failure output from mozilla-bin for smoke tests --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
@@ -697,7 +697,7 @@ sub RunSmokeTest {
 
   &killproc($pid);
 
-  print LOG "----------- success output from apprunner for smoke tests --------------- \n";
+  print LOG "----------- success output from mozilla-bin for smoke tests --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
@@ -727,7 +727,7 @@ sub RunBloatTest {
   
   print LOG "$Binary\n";
   $BinaryDir = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin";
-  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/apprunner";
+  $Binary    = "$BuildDir/$TopLevel/$Topsrcdir/dist/bin/mozilla-bin";
   $BinaryLog = $BuildDir . '/bloat-cur.log';
   
   rename ($BinaryLog, "$BuildDir/bloat-prev.log");
@@ -768,7 +768,7 @@ sub RunBloatTest {
   print LOG "Client quit with status $status\n";
   if ($status == 0) {
     print LOG "$Binary has crashed or quit on the BloatTest.  Turn the tree orange now.\n";
-    print LOG "----------- failure Output from apprunner for bloat stats --------------- \n";
+    print LOG "----------- failure Output from mozilla-bin for bloat stats --------------- \n";
     open READRUNLOG, "$BinaryLog";
     while (<READRUNLOG>) {
       print $_;
@@ -790,7 +790,7 @@ sub RunBloatTest {
   close(DIFF);
   print LOG "######################## END BLOAT STATISTICS\n</a>\n";
   
-  print LOG "----------- success output from apprunner for bloat stats --------------- \n";
+  print LOG "----------- success output from mozilla-bin for bloat stats --------------- \n";
   open READRUNLOG, "$BinaryLog";
   while (<READRUNLOG>) {
     print $_;
@@ -830,7 +830,7 @@ $CVSCO         = 'checkout -P';
 $Tinderbox_server = 'tinderbox-daemon@cvs-mirror.mozilla.org';
 
 # Relative path to binary
-$BinaryName{apprunner} = '/dist/bin/apprunner';
+$BinaryName{mozilla-bin} = '/dist/bin/mozilla-bin';
 
 #-
 #- The rest should not need to be changed

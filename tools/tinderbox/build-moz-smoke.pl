@@ -6,7 +6,7 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.33 $';
+$Version = '$Revision: 1.34 $';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
@@ -38,7 +38,7 @@ sub InitVars {
     $FullCircleDir = '/usr/local/lib';	# If you even have it, which is very unlikely.
 
     # These shouldn't really need to be changed
-    $BinaryName = '/dist/bin/apprunner';
+    $BinaryName = '/dist/bin/mozilla-bin';
     $BuildName = '';
     $BuildObjName = '';
     $BuildSleep = 10;  # Minimum wait period from start of build to start of next build in minutes.
@@ -49,7 +49,7 @@ sub InitVars {
     $ConfigureEnvArgs = '';
     $ConfigureArgs = '--with-nspr=' . $NSPRDir . ' --cache-file=/dev/null ';
     $ConfigGuess = './build/autoconf/config.guess';
-    $FE = 'apprunner'; 
+    $FE = 'mozilla-bin'; 
     $Logfile = '${BuildDir}.log';
     $NSCommModule = 'CommercialClient50All';
     $NSPRArgs = 'DIST=' . $NSPRDir . ' MOZILLA_CLIENT=1 NSDISTMODE=copy NO_MDUPDATE=1 ';
