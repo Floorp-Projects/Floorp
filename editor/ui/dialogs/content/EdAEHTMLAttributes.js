@@ -25,19 +25,15 @@ function BuildHTMLAttributeTable()
 }
 
 // add an attribute to the tree widget
-function onAddHTMLAttribute(which)
+function onAddHTMLAttribute()
 {
-  if(!which) 
-    return;
-  if( which.getAttribute ( "disabled" ) )
+  var which = document.getElementById('AddHTMLAttribute');
+  if(!which || which.getAttribute ( "disabled" ) )
     return;
 
   var name  = dialog.AddHTMLAttributeNameInput.value;
   var value = TrimString(dialog.AddHTMLAttributeValueInput.value);
-  if(name == "")
-    return;
-
-  if ( !CheckAttributeNameSimilarity( name, CSSAttrs ) )
+  if(!name || !CheckAttributeNameSimilarity( name, CSSAttrs ) )
     return;
 
   if ( AddTreeItem ( name, value, "HTMLAList", HTMLAttrs ) ) {
@@ -45,18 +41,14 @@ function onAddHTMLAttribute(which)
     dialog.AddHTMLAttributeValueInput.value = "";
   }
   dialog.AddHTMLAttributeNameInput.focus();
+  doHTMLEnabling();
 }
 
 // does enabling based on any user input.
-function doHTMLEnabling( keycode )
+function doHTMLEnabling()
 {
-dump("***doHTMLEnabling\n");
-  if(keycode == 13) {
-    onAddHTMLAttribute(document.getElementById("AddHTMLAttribute"));
-    return;
-  }
   var name = TrimString(dialog.AddHTMLAttributeNameInput.value).toLowerCase();
-  if( name == "" || !CheckAttributeNameSimilarity(name,HTMLAttrs)) {
+  if( !name || !CheckAttributeNameSimilarity(name,HTMLAttrs)) {
       dialog.AddHTMLAttribute.setAttribute("disabled","true");
   } else {
       dialog.AddHTMLAttribute.removeAttribute("disabled");
@@ -70,14 +62,7 @@ function UpdateHTMLAttributes()
   var HTMLAList = document.getElementById("HTMLAList");
   var name;
   var i;
-  for( i = 0; i < HTMLAList.childNodes.length; i++)
-  {
-    var item = HTMLAList.childNodes[i];
-    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
-    var value = TrimString(item.firstChild.lastChild.firstChild.value);
-    // set the attribute
-    element.setAttribute(name,value);
-  }
+
   // remove removed attributes
   for( i = 0; i < HTMLRAttrs.length; i++ )
   {
@@ -85,5 +70,14 @@ function UpdateHTMLAttributes()
     if(element.getAttribute(name))
       element.removeAttribute(name);
     else continue; // doesn't exist, so don't bother removing it.
+  }
+  // Set added attributes
+  for( i = 0; i < HTMLAList.childNodes.length; i++)
+  {
+    var item = HTMLAList.childNodes[i];
+    name = TrimString(item.firstChild.firstChild.getAttribute("value"));
+    var value = TrimString(item.firstChild.lastChild.firstChild.value);
+    // set the attribute
+    element.setAttribute(name,value);
   }
 }

@@ -12,9 +12,9 @@ function BuildCSSAttributeTable()
   }
   if(style.indexOf(";") == -1) {
     if(style.indexOf(":") != -1) {
-      name = TrimString(nvpairs.split(":")[0]);
-      value = TrimString(nvpairs.split(":")[1]);
-      if ( !AddTreeItem( name, value, "CSSATree", CSSAttrs ) )
+      name = TrimString(style.split(":")[0]);
+      value = TrimString(style.split(":")[1]);
+      if ( !AddTreeItem( name, value, "CSSAList", CSSAttrs ) )
         dump("Failed to add CSS attribute: " + i + "\n");
     } else
       return;
@@ -25,27 +25,23 @@ function BuildCSSAttributeTable()
     if(nvpairs[i].indexOf(":") != -1) {
       name = TrimString(nvpairs[i].split(":")[0]);
       value = TrimString(nvpairs[i].split(":")[1]);
-      if( !AddTreeItem( name, value, "CSSATree", CSSAttrs ) )
+      if( !AddTreeItem( name, value, "CSSAList", CSSAttrs ) )
         dump("Failed to add CSS attribute: " + i + "\n");
     }
   }
 }
   
 // add an attribute to the tree widget
-function onAddCSSAttribute( which )
+function onAddCSSAttribute()
 {
-  if( !which ) 
-    return;
-  if( which.getAttribute ( "disabled" ) )
+  var which = document.getElementById("AddCSSAttribute");
+  if(!which || which.getAttribute ( "disabled" ) )
     return;
 
   var name = dialog.AddCSSAttributeNameInput.value;
   var value = TrimString(dialog.AddCSSAttributeValueInput.value);
 
-  if(name == "")
-    return;
-
-  if ( !CheckAttributeNameSimilarity( name, CSSAttrs ) )
+  if(!name || !CheckAttributeNameSimilarity( name, CSSAttrs ) )
     return;
 
   if ( AddTreeItem ( name, value, "CSSAList", CSSAttrs ) ) {
@@ -53,15 +49,12 @@ function onAddCSSAttribute( which )
     dialog.AddCSSAttributeValueInput.value = "";
   } 
   dialog.AddCSSAttributeNameInput.focus();
+  doCSSEnabling();
 }
 
 // does enabling based on any user input.
-function doCSSEnabling( keycode )
+function doCSSEnabling()
 {
-  if(keycode == 13) {
-    onAddCSSAttribute( document.getElementById ( "AddCSSAttribute" ) );
-    return;
-  }
   var name = TrimString(dialog.AddCSSAttributeNameInput.value).toLowerCase();
   if( name == "" || !CheckAttributeNameSimilarity(name,CSSAttrs))
     dialog.AddCSSAttribute.setAttribute("disabled","true");

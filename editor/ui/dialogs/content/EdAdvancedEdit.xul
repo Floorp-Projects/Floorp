@@ -106,10 +106,10 @@
             <title value="&AddHTMLAttributeLabel.label;"/>
             <box autostretch="never">
               <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
-              <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
+              <textfield flex="1" id="AddHTMLAttributeNameInput" oninput="doHTMLEnabling()" onkeyup="if (event.keyCode == 13) onAddHTMLAttribute();"/>
               <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
-          	  <textfield flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.keyCode)"/>
-              <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+          	  <textfield flex="1" id="AddHTMLAttributeValueInput" oninput="doHTMLEnabling()" onkeyup="if (event.keyCode == 13) onAddHTMLAttribute();"/>
+              <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute()" value="&AddAttributeButton.label;" disabled="true"/>
             </box>
           </titledbox>
         </box>
@@ -144,10 +144,10 @@
             <title value="&AddCSSAttributeLabel.label;"/>
             <box autostretch="never">
               <text class="label" for="AddCSSAttributeNameInput" value="&AttName.label;"/>
-              <textfield flex="1" id="AddCSSAttributeNameInput" onkeyup="doCSSEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
+              <textfield flex="1" id="AddCSSAttributeNameInput"  oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddCSSAttribute();"/>
               <text class="label" for="AddCSSAttributeValueInput" value="&AttValue.label;"/>
-          	  <textfield flex="1" id="AddCSSAttributeValueInput" onkeyup="doCSSEnabling(event.keyCode)"/>
-              <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+          	  <textfield flex="1" id="AddCSSAttributeValueInput" oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddCSSAttribute();"/>
+              <button class="dialog" id="AddCSSAttribute" oncommand="onAddCSSAttribute()" value="&AddAttributeButton.label;" disabled="true"/>
             </box>
           </titledbox>
         </box>
@@ -182,10 +182,10 @@
             <title value="&AddJSEAttributeLabel.label;"/>
             <box autostretch="never">
               <text class="label" for="AddJSEAttributeNameInput" value="&AttName.label;"/>
-              <textfield type="text" flex="1" id="AddJSEAttributeNameInput" onkeyup="doJSEEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
+              <textfield flex="1" id="AddJSEAttributeNameInput" oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
               <text class="label" for="AddJSEAttributeValueInput" value="&AttValue.label;"/>
-          	  <textfield flex="1" id="AddJSEAttributeValueInput" onkeyup="doJSEEnabling(event.keyCode)"/>
-              <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
+          	  <textfield flex="1" id="AddJSEAttributeValueInput" oninput="doCSSEnabling()" onkeyup="if (event.keyCode == 13) onAddJSAttribute();"/>
+              <button class="dialog" id="AddJSEAttribute" oncommand="onAddJSEAttribute()" value="&AddAttributeButton.label;" disabled="true"/>
             </box>
           </titledbox>
         </box>
