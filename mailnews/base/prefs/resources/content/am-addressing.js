@@ -17,6 +17,9 @@ function enabling()
   var directoriesListPopup = document.getElementById("directoriesListPopup");
   var editButton = document.getElementById("editButton");
 
+  // this is the hidden text element that assigned a value from the prefs
+  var overrideGlobalPref = document.getElementById("identity.overrideGlobalPref");
+
   switch(autocomplete.selectedItem.value)
   {
     case "0":
@@ -25,9 +28,12 @@ function enabling()
       editButton.setAttribute("disabled", true);
       break;
     case "1":
-      directoriesList.removeAttribute("disabled");
-      directoriesListPopup.removeAttribute("disabled");
-      editButton.removeAttribute("disabled");
+      // if the pref is locked, we'll need to avoid enabling the elements
+      if (overrideGlobalPref.getAttribute("disabled") != "true") {
+        directoriesList.removeAttribute("disabled");
+        directoriesListPopup.removeAttribute("disabled");
+        editButton.removeAttribute("disabled");
+      }
       break;      
   }
   gFromGlobalPref = false;

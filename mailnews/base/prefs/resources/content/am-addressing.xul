@@ -53,6 +53,7 @@ Contributors:
   <vbox flex="1">
     <html>&addressingText.label;</html>
 	<radiogroup orient="vertical" class="indent" id="ldapAutocomplete" wsm_persist="true" oncommand="enabling();">
+      <observes element="identity.overrideGlobalPref" attribute="disabled"/>
       <radio group="ldapAutocomplete" id="useGlobalPref" value="0" label="&useGlobal.label;"/>
       <hbox autostretch="never">
         <radio group="ldapAutocomplete" id="directories" value="1" label="&directories.label;"/>
