@@ -645,6 +645,7 @@ function setupLdapAutocompleteSession()
     var autocompleteLdap = false;
     var autocompleteDirectory = null;
     var prevAutocompleteDirectory = currentAutocompleteDirectory;
+    var i;
 
     autocompleteLdap = prefs.GetBoolPref("ldap_2.autoComplete.useDirectory");
     if (autocompleteLdap)
@@ -828,7 +829,7 @@ function setupLdapAutocompleteSession()
                 // succeeded; add the session for all recipients, and 
                 // remember that we've done so
                 var autoCompleteWidget;
-                for (var i=1; i <= MAX_RECIPIENTS; i++)
+                for (i=1; i <= MAX_RECIPIENTS; i++)
                 {
                     autoCompleteWidget = document.getElementById("msgRecipient#" + i);
                     if (autoCompleteWidget)
@@ -851,7 +852,7 @@ function setupLdapAutocompleteSession()
         currentAutocompleteDirectory = null;
       }
       if (gLDAPSession && sessionAdded) {
-        for (var i=1; i <= MAX_RECIPIENTS; i++) 
+        for (i=1; i <= MAX_RECIPIENTS; i++) 
           document.getElementById("msgRecipient#" + i).
               removeSession(gLDAPSession);
         sessionAdded = false;
@@ -1163,7 +1164,7 @@ function ComposeLoad()
   AddDirectoryServerObserver(true);
 
   if (gLogComposePerformance)
-    msgComposeService.TimeStamp("Start Initializing the compose window (ComposeLoad)", false);
+    msgComposeService.TimeStamp("Start initializing the compose window (ComposeLoad)", false);
   gComposeMsgsBundle = document.getElementById("bundle_composeMsgs");
 
   try {
@@ -1203,7 +1204,7 @@ function ComposeLoad()
   }
   window.tryToClose=ComposeCanClose;
   if (gLogComposePerformance)
-    msgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about::blank", false);
+    msgComposeService.TimeStamp("Done with the initialization (ComposeLoad). Waiting on editor to load about:blank", false);
 }
 
 function ComposeUnload()
@@ -1726,6 +1727,7 @@ function ComposeCanClose()
   }
   if (sendOrSaveOperationInProgress)
   {
+      var result;
 
       if (gPromptService)
       {
@@ -1734,7 +1736,7 @@ function ComposeCanClose()
         var quitButtonLabel = gComposeMsgsBundle.getString("quitComposeWindowQuitButtonLabel");
         var waitButtonLabel = gComposeMsgsBundle.getString("quitComposeWindowWaitButtonLabel");
 
-        var result = {value:0};
+        result = {value:0};
         gPromptService.confirmEx(window, promptTitle, promptMsg,
           (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_0) +
           (gPromptService.BUTTON_TITLE_IS_STRING*gPromptService.BUTTON_POS_1),
@@ -1759,7 +1761,7 @@ function ComposeCanClose()
 		window.focus();
 		if (gPromptService)
 		{
-            var result = {value:0};
+            result = {value:0};
             gPromptService.confirmEx(window,
                               gComposeMsgsBundle.getString("saveDlogTitle"),
                               gComposeMsgsBundle.getString("saveDlogMessage"),
@@ -1970,10 +1972,11 @@ function AttachVCard()
 
 function DetermineHTMLAction(convertible)
 {
+    var obj;
     if (! msgCompose.composeHTML)
     {
         try {
-            var obj = new Object;
+            obj = new Object;
             msgCompose.CheckAndPopulateRecipients(true, false, obj);
         } catch(ex) { dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n"); }
         return msgCompSendFormat.PlainText;
@@ -1989,7 +1992,7 @@ function DetermineHTMLAction(convertible)
 
         //Check the address book for the HTML property for each recipient
         try {
-            var obj = new Object;
+            obj = new Object;
             preferFormat = msgCompose.CheckAndPopulateRecipients(true, true, obj);
             noHtmlRecipients = obj.value;
         } catch(ex)
@@ -2042,8 +2045,8 @@ function DetermineHTMLAction(convertible)
 	  else
 	  {
 		  try {
-        var obj = new Object;
-			  msgCompose.CheckAndPopulateRecipients(true, false, obj);
+                       obj = new Object;
+                       msgCompose.CheckAndPopulateRecipients(true, false, obj);
 		  } catch(ex) { dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n"); }
 	  }
 
