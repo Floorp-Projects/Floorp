@@ -140,6 +140,9 @@ KILL_SELFSERV=OFF   # if sourcing script sets this to on cleanup will also
 if [ -z "$UX_MASTERBUILD" ]
 then                     
     UX_MASTERBUILD=y2sun2_Solaris8
+    #if [ ! -d $UX_MASTERBUILD ] ; then
+        #UX_MASTERBUILD=y2sun2_Solaris8_forte6
+    #fi
 fi
 if [ -z "$NT_MASTERBUILD" ]
 then                     
@@ -200,6 +203,7 @@ glob_init()
     . $QASCRIPT_DIR/set_environment #finds out if we are running on Windows
     Debug "OPerating system: $os_name $os_full"
     if [ $O_WIN = "ON" ] ; then
+        win_set_tmp
         write_to_tmpfile
         MASTERBUILD=$NT_MASTERBUILD
     fi
@@ -323,9 +327,9 @@ copy_to_local()
 local_dirs()
 {
     Debug "Set directories for local QA"
-    if [ "$O_WIN" = "ON" ] ; then
-        win_set_tmp
-    fi
+    #if [ "$O_WIN" = "ON" ] ; then
+        #win_set_tmp
+    #fi
     NSS_VER_DIR=${LOCAL_MOZROOT}        # on local builds NSS_VER_DIR and DAILY_BUILD are 
                          # set to the LOCAL_MOZROOT, since it is not sure
                          # if ../../../.. (NSS_VER_DIR) even exists
@@ -370,7 +374,7 @@ tbx_dirs()
 {
     Debug "Set directories for tinderbox"
     if [ "$O_WIN" = "ON" ] ; then
-        win_set_d1 #also gets the TMP straight and we need the NSS_VER_DIR later
+        win_set_d1 # we need the NSS_VER_DIR later
     else
         NSS_VER_DIR="$UX_D0"/nss$NSSVER
     fi
@@ -435,7 +439,7 @@ init_dirs()
         #BCDIST=/share/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
         BCDIST=${NSS_VER_DIR}/../${BC_MASTER}/${MASTERBUILD}/mozilla/dist
         if [ ! -d $BCDIST ] ; then
-            ask "Backward compatibility dierectory $BCDIST does not exist, continue" "y" "n" || Exit
+            ask "Backward compatibility directory $BCDIST does not exist, continue" "y" "n" || Exit
         fi
     fi
 
@@ -738,7 +742,7 @@ eval_opts()
 
 win_set_tmp()
 {
-    TMP=`echo "$TMP" | sed -e 's/\\\/\//g'`
+    TMP=`echo "$TMP" | sed -e 's/	/\/t/g' -e 's//\/b/' -e 's/\\\/\//g'`
     Debug "TMP reformated to $TMP"
 }
 
@@ -749,7 +753,7 @@ win_set_tmp()
 win_set_d1()
 {
     Debug "set Windows Directories..."
-    win_set_tmp
+    #win_set_tmp
     if [ "$O_CYGNUS" = ON ]
     then
         NSS_VER_DIR=/cygdrive/w/nss/nss$NSSVER
