@@ -22,7 +22,7 @@
 
 #
 # This script will print the depth path for a mozilla directory based
-# on the info in Makefile.in
+# on the info in Makefile
 #
 # Its a hack.  Its brute force.  Its horrible.  
 # It dont use Artificial Intelligence.  It dont use Virtual Reality.
@@ -33,18 +33,18 @@
 # Send comments, improvements, bugs to ramiro@netscape.com
 # 
 
-# Make sure a Makefile.in exists
-if [ ! -f Makefile.in ]
+# Make sure a Makefile exists
+if [ ! -f Makefile ]
 then
 	echo
-	echo "There ain't no 'Makefile.in' over here: $pwd, dude."
+	echo "There ain't no 'Makefile' over here: $pwd, dude."
 	echo
 
 	exit
 fi
 
-# Use DEPTH in the Makefile.in to determine the depth
-depth=`grep -w DEPTH Makefile.in  | grep -e "\.\." | awk -F"=" '{ print $2; }'`
+# Use DEPTH in the Makefile to determine the depth
+depth=`grep -w DEPTH Makefile  | grep "\.\." | awk -F"=" '{ print $2; }'`
 
 # Determine the depth count
 n=`echo $depth | tr '/' ' ' | wc -w`
