@@ -721,6 +721,7 @@ public:
     nsCAutoString(PRUnichar aChar);
     virtual ~nsCAutoString();
 
+    nsCAutoString& operator=(const nsCAutoString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const nsCString& aString) {nsCString::Assign(aString); return *this;}
     nsCAutoString& operator=(const char* aCString) {nsCString::Assign(aCString); return *this;}
     nsCAutoString& operator=(PRUnichar aChar) {nsCString::Assign(aChar); return *this;}
