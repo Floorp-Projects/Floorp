@@ -75,7 +75,7 @@ toolbarbutton.bookmark-item[open="true"] {
   display: none;
 }
 
-.toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
+#wrapper-personal-bookmarks .toolbarpaletteitem-box[place="palette"] {
   width: 32px;
   height: 32px;
   background: url("chrome://browser/skin/Bookmarks-folder.png") no-repeat;
