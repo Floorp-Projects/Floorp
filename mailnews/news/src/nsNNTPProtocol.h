@@ -185,19 +185,19 @@ private:
 
   void ParseHeaderForCancel(char *buf);
 
-    static PRBool CheckIfAuthor(nsISupports *aElement, void *data);
+  static PRBool CheckIfAuthor(nsISupports *aElement, void *data);
 
-    nsCOMPtr<nsIOutputStream> m_tempArticleStream; 
+  nsCOMPtr<nsIOutputStream> m_tempArticleStream; 
    
 	// News Event Sinks
-    nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
-    nsCOMPtr <nsINNTPArticleList> m_articleList;
+  nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
+  nsCOMPtr <nsINNTPArticleList> m_articleList;
 	nsCOMPtr <nsINNTPHost>	 m_newsHost;
 	nsCOMPtr <nsINNTPNewsgroup>	m_newsgroup;
 	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
 
-    nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
-    nsCOMPtr <nsIMsgWindow> m_msgWindow;
+  nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
+  nsCOMPtr <nsIMsgWindow> m_msgWindow;
 
 	nsCOMPtr<nsIBufferInputStream> mDisplayInputStream;
 	nsCOMPtr<nsIBufferOutputStream> mDisplayOutputStream;
@@ -213,25 +213,25 @@ private:
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
 	StatesEnum  m_nextState;
-    StatesEnum  m_nextStateAfterResponse;
+  StatesEnum  m_nextStateAfterResponse;
 	PRInt32     m_typeWanted;     /* Article, List, or Group */
-    PRInt32     m_responseCode;    /* code returned from NNTP server */
+  PRInt32     m_responseCode;    /* code returned from NNTP server */
 	PRInt32 	m_previousResponseCode; 
-    char       *m_responseText;   /* text returned from NNTP server */
+  char       *m_responseText;   /* text returned from NNTP server */
 	nsXPIDLCString m_hostName;
-    nsXPIDLCString m_userName;
+  nsXPIDLCString m_userName;
     
-    char		*m_dataBuf;
-    PRUint32	 m_dataBufSize;
+  char		*m_dataBuf;
+  PRUint32	 m_dataBufSize;
 
 	/* for group command */
-    char     *m_path;			  /* message id */
-    nsCString m_currentGroup;     /* current group */
+  char     *m_path;			  /* message id */
+  nsCString m_currentGroup;     /* current group */
 
-    PRInt32   m_firstArticle;
-    PRInt32   m_lastArticle;
-    PRInt32   m_firstPossibleArticle;
-    PRInt32   m_lastPossibleArticle;
+  PRInt32   m_firstArticle;
+  PRInt32   m_lastArticle;
+  PRInt32   m_firstPossibleArticle;
+  PRInt32   m_lastPossibleArticle;
 
 	PRInt32	  m_numArticlesLoaded;	/* How many articles we got XOVER lines for. */
 	PRInt32	  m_numArticlesWanted; /* How many articles we wanted to get XOVER lines for. */
@@ -239,11 +239,11 @@ private:
 	// Cancelation specific state. In particular, the headers that should be 
 	// used for the cancelation message. 
 	// mscott: we can probably replace this stuff with nsString
-    char	 *m_cancelFromHdr;
-    char     *m_cancelNewsgroups;
-    char     *m_cancelDistribution;
-    char     *m_cancelID;
-    PRInt32	  m_cancelStatus;
+  char	 *m_cancelFromHdr;
+  char     *m_cancelNewsgroups;
+  char     *m_cancelDistribution;
+  char     *m_cancelID;
+  PRInt32	  m_cancelStatus;
 
 	// variables for ReadNewsRC
 	PRInt32   m_newsRCListIndex;
@@ -263,11 +263,11 @@ private:
 	
 	nsCOMPtr<nsIStringBundle> m_stringBundle;
 
-    nsCOMPtr<nsINntpIncomingServer> m_nntpServer;
+  nsCOMPtr<nsINntpIncomingServer> m_nntpServer;
 
 	nsresult GetNewsStringByName(const char *aName, PRUnichar **aString);
 
-    PRInt32 PostMessageInFile(nsIFileSpec * filePath);
+  PRInt32 PostMessageInFile(nsIFileSpec * filePath);
 
 	////////////////////////////////////////////////////////////////////////////////////////
 	// Communication methods --> Reading and writing protocol
@@ -399,7 +399,7 @@ private:
 	nsresult InitializeNewsFolderFromUri(const char *uri);
 	void TimerCallback();
 	nsCOMPtr <nsIInputStream> mInputStream;
-    nsCOMPtr <nsITimer> mUpdateTimer; 
+  nsCOMPtr <nsITimer> mUpdateTimer; 
 };
 
 NS_BEGIN_EXTERN_C

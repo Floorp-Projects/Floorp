@@ -5016,6 +5016,16 @@ NS_IMETHODIMP nsNNTPProtocol::GetContentType(char * *aContentType)
 {	
 	if (!aContentType) return NS_ERROR_NULL_POINTER;
 
+  // if we've been set with a content type, then return it....
+  // this happens when we go through libmime now as it sets our new content type
+  if (!m_ContentType.IsEmpty())
+  {
+    *aContentType = m_ContentType.ToNewCString();
+    return NS_OK;
+  }
+
+  // otherwise do what we did before...
+
 	if ((const char *)m_currentGroup && nsCRT::strlen((const char *)m_currentGroup)) {
 		// if it is an article url, it has a @ or %40 in it.
 		if (PL_strchr((const char *)m_currentGroup,'@') || PL_strstr((const char *)m_currentGroup,"%40")) {
