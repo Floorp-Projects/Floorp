@@ -22,7 +22,7 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgcore
 MODULE= mailnews
-REQUIRES=xpcom js nspr
+REQUIRES=xpcom js nspr dom
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
@@ -75,7 +75,8 @@ LINCS=                       \
         -I$(PUBLIC)\rdf      \
         -I$(PUBLIC)\rdfutil  \
         -I$(PUBLIC)\pref     \
-        -I$(PUBLIC)\js
+        -I$(PUBLIC)\js		\
+		-I$(PUBLIC)\dom		
 
 LCFLAGS = \
         $(LCFLAGS) \
