@@ -13,8 +13,8 @@
 (defun translate-number (data)
   (cond
    ((or (float64? data) (float32? data)) data)
-   ((eq (first data) 'l:long) (list 'j:long (second data)))
-   ((eq (first data) 'l:u-long) (list 'j:u-long (second data)))
+   ((eq (first data) 'l:long) (list (world-find-symbol *jw* 'long) (second data)))
+   ((eq (first data) 'l:u-long) (list (world-find-symbol *jw* 'u-long) (second data)))
    (t (error "Bad number token: ~S" data))))
 
 
@@ -158,6 +158,10 @@
             (format *trace-output* "!")))))))
 
 
+(defun object-to-source (o)
+  (funcall (world-find-symbol *jw* 'object-to-source) o))
+
+
 ; Simple JS2 read-eval-print loop.
 (defun rep (&key print-tokens break-on-error)
   (loop
@@ -172,7 +176,7 @@
                      (when print-tokens
                        (write tokens :stream *terminal-io* :pretty t)
                        (terpri *terminal-io*))
-                     (write (first results) :stream *terminal-io* :pretty t)
+                     (write-string (object-to-source (first results)) *terminal-io*)
                      (terpri *terminal-io*))))
             (if break-on-error
               (eval-and-print)
@@ -180,7 +184,7 @@
                      (catch :semantic-exception
                        (eval-and-print)
                        (return-from success))))
-                (format *terminal-io* "Exception: ~S~%" exception))))
+                (format *terminal-io* "Exception: ~A~%" (object-to-source exception)))))
           (syntax-error (condition)
                         (format *terminal-io* "~A~%" condition)))))))
 
