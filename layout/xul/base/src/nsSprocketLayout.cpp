@@ -1041,7 +1041,7 @@ nsSprocketLayout::ChildResized(nsIBox* aBox,
             nsSize max(0,0);
             nsSize min(0,0);
             aChild->GetMaxSize(aState, max);
-            aChild->GetMinSize(aState, max);
+            aChild->GetMinSize(aState, min);
             nsBox::BoundsCheckMinMax(min, max);
             AddMargin(aChild, max);
 
