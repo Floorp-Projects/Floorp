@@ -737,7 +737,8 @@ nsresult nsImapProtocol::LoadUrl(nsIURL * aURL, nsISupports * aConsumer)
                 char *tmpBuffer = nsnull;
                 if (search && PL_strlen(search))
                 {
-                    tmpBuffer = PR_smprintf("%s\r\n", search);
+				    IncrementCommandTagNumber();
+                    tmpBuffer = PR_smprintf("%s %s\r\n", GetServerCommandTag(), search);
                     if (tmpBuffer)
                     {
                         SendData(tmpBuffer);
