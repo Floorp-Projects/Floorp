@@ -230,6 +230,17 @@ viewReport(View *view, char *str)
 	}
 }
 
+void
+viewReportHTML(View *view, char *str)
+{
+	if (verbose)
+	{
+         	fprintf(view->out, str);
+		fprintf(view->out, "<br>");
+		fflush(view->out);
+	}
+}
+
 View *
 viewAlloc(void)
 {

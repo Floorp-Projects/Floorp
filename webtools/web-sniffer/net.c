@@ -140,7 +140,7 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	{
 		reportTime(REPORT_TIME_GETHOSTBYNAME_FAILURE, &theTime);
 		reportStatus(a, "gethostbyname_r failed", __FILE__, __LINE__);
-		fprintf(stdout, "failed<br><hr><br>");
+		viewReportHTML(a, "failed<br><hr>");
 		close(sock);
 #if !defined(HAVE_GETHOSTBYNAME_R)
 		threadMutexUnlock();
@@ -152,7 +152,7 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 
 	reportStatus(a, "gethostbyname_r succeeded", __FILE__, __LINE__);
 
-	fprintf(stdout, "succeeded<br><hr><br>");
+	viewReportHTML(a, "succeeded<br><hr>");
 
 	memset(addr, 0, sizeof(*addr));
 	addr->sin_family = host.h_addrtype /* PF_INET */;
@@ -278,7 +278,7 @@ netConnect(void *a, unsigned char *hostName, int port)
 		reportStatus(a, "connect failed", __FILE__, __LINE__);
 		viewReport(a, "failed:");
 		viewReport(a, strerror(errno) ? strerror(errno) : "NULL");
-		fprintf(stdout, "<hr><br>");
+		viewReportHTML(a, "<hr>");
 		return -1;
 	}
 
@@ -286,7 +286,7 @@ netConnect(void *a, unsigned char *hostName, int port)
 
 	reportStatus(a, "connect succeeded", __FILE__, __LINE__);
 
-	fprintf(stdout, "succeeded<br><hr><br>");
+	viewReportHTML(a, "succeeded<br><hr>");
 
 	threadMutexLock();
 	connectCount++;

@@ -43,6 +43,7 @@ void viewHTTP(View *view, Input *input);
 void viewHTTPHeaderName(View *view, Input *input);
 void viewHTTPHeaderValue(View *view, Input *input);
 void viewReport(View *view, char *str);
+void viewReportHTML(View *view, char *str);
 void viewVerbose(void);
 
 #endif /* _VIEW_H_ */

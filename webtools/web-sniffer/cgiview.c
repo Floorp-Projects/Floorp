@@ -272,7 +272,7 @@ getHTTPRequestHeaders(View *view, char *host, char *verbose)
 		*r++ = str;
 		viewReport(view, str);
 	}
-	fprintf(view->out, "<hr><br>");
+	viewReportHTML(view, "<hr>");
 	*r = NULL;
 
 	return (unsigned char **) ret;
@@ -361,7 +361,7 @@ main(int argc, char *argv[])
 		);
 		viewReport(view, "input url:");
 		viewReport(view, (char *) url);
-		fprintf(view->out, "<hr><br>");
+		viewReportHTML(view, "<hr>");
 		u = urlParse(url);
 		if
 		(
@@ -412,7 +412,7 @@ main(int argc, char *argv[])
 		free(newURL);
 		viewReport(view, "fully qualified url:");
 		viewReport(view, (char *) u->url);
-		fprintf(view->out, "<hr><br>");
+		viewReportHTML(view, "<hr>");
 		fflush(view->out);
 		if (!strcmp((char *) u->scheme, "http"))
 		{

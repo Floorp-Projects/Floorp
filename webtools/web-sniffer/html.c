@@ -849,7 +849,7 @@ toHTML(unsigned char *str)
 
 	result = NULL;
 
-        result = calloc(strlen((char *) escaped_str)+2, 1);
+        result = calloc(strlen((char *) escaped_str)+3, 1);
 	if (!result)
 	{
 	        fprintf(stderr, "cannot calloc toHTML string\n");
