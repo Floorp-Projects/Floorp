@@ -79,9 +79,15 @@ DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, NC, type);
 class nsMenuItem
 {
 public: 
+  // memory & ref counting & leak prevention stuff
+  nsMenuItem() { MOZ_COUNT_CTOR(nsMenuItem); }
+  ~nsMenuItem() { MOZ_COUNT_DTOR(nsMenuItem); }
+
   nsCOMPtr<nsIAtom> mCharset;
   nsAutoString      mTitle;
 };
+
+MOZ_DECL_CTOR_COUNTER(nsMenuItem);
 
 //----------------------------------------------------------------------------
 // Class nsCharsetMenu [declaration]
