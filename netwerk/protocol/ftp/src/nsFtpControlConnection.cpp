@@ -88,32 +88,9 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpStreamProvider,
 // nsFtpControlConnection implementation ...
 //
 
-NS_IMPL_THREADSAFE_QUERY_INTERFACE2(nsFtpControlConnection, 
-                                    nsIStreamListener, 
-                                    nsIRequestObserver);
-
-NS_IMPL_THREADSAFE_ADDREF(nsFtpControlConnection);
-nsrefcnt nsFtpControlConnection::Release(void)
-{
-    nsrefcnt count;
-    NS_PRECONDITION(0 != mRefCnt, "dup release");
-    count = PR_AtomicDecrement((PRInt32 *)&mRefCnt);
-    NS_LOG_RELEASE(this, count, "nsFtpControlConnection");
-    if (0 == count) {
-        mRefCnt = 1; /* stabilize */
-        /* enable this to find non-threadsafe destructors: */
-        /* NS_ASSERT_OWNINGTHREAD(_class); */
-        NS_DELETEXPCOM(this);
-        return 0;
-    } 
-    else if (1 == count && mConnected)
-    {
-        // mPipe has a reference to |this| caused by AsyncRead() 
-        // Break this cycle by calling disconnect.  
-        Disconnect(NS_BINDING_ABORTED);
-    }
-    return count;
-}
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpControlConnection, 
+                              nsIStreamListener, 
+                              nsIRequestObserver);
 
 nsFtpControlConnection::nsFtpControlConnection(const char* host, PRUint32 port)
 {
@@ -123,7 +100,6 @@ nsFtpControlConnection::nsFtpControlConnection(const char* host, PRUint32 port)
     mHost.Adopt(nsCRT::strdup(host));
     mPort = port;
     mServerType = 0;
-    mConnected =  PR_FALSE;
 
     mLock = PR_NewLock();
     NS_ASSERTION(mLock, "null lock");
@@ -139,8 +115,8 @@ nsFtpControlConnection::~nsFtpControlConnection()
 PRBool
 nsFtpControlConnection::IsAlive()
 {
-    if (!mConnected) 
-        return mConnected;
+    if (!mCPipe) 
+        return PR_FALSE;
 
     PRBool isAlive = PR_FALSE;
     nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface(mCPipe);
@@ -205,20 +181,15 @@ nsFtpControlConnection::Connect()
                            nsnull, 0, PRUint32(-1), 0, 
                            getter_AddRefs(mReadRequest));
 
-    mConnected = PR_TRUE;
     return rv;
 }
 
 nsresult 
 nsFtpControlConnection::Disconnect(nsresult status)
 {
-    if (!mConnected) return NS_ERROR_FAILURE;
+    if (!mCPipe) return NS_ERROR_FAILURE;
     
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection disconnecting (%x)", this, status));
-
-    if (NS_FAILED(status)) {
-        mConnected = PR_FALSE;
-    }
 
     if (mWriteRequest) {
         mWriteRequest->Cancel(status);    
@@ -234,7 +205,7 @@ nsFtpControlConnection::Disconnect(nsresult status)
 nsresult 
 nsFtpControlConnection::Write(nsCString& command, PRBool suspend)
 {
-    if (!mConnected)
+    if (!mCPipe)
         return NS_ERROR_FAILURE;
 
     PRUint32 len = command.Length();
@@ -276,7 +247,7 @@ nsFtpControlConnection::SetStreamListener(nsIStreamListener *aListener)
 NS_IMETHODIMP
 nsFtpControlConnection::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 {
-    if (!mConnected)
+    if (!mCPipe)
         return NS_OK;
 
     // we do not care about notifications from the write channel.
@@ -299,7 +270,7 @@ nsFtpControlConnection::OnStopRequest(nsIRequest *request, nsISupports *aContext
                             nsresult aStatus)
 {
     
-    if (!mConnected) 
+    if (!mCPipe) 
         return NS_OK;
 
     // we do not care about successful notifications from the write channel.
@@ -325,7 +296,7 @@ nsFtpControlConnection::OnDataAvailable(nsIRequest *request,
                                        PRUint32 aOffset, 
                                        PRUint32 aCount)
 {
-    if (!mConnected) 
+    if (!mCPipe) 
         return NS_OK;
     
     PR_Lock(mLock);

@@ -766,9 +766,6 @@ nsFtpState::Process()
             if (FTP_ERROR == mState)
                 mInternalError = NS_ERROR_FAILURE;
 
-            //(DONE)
-            mNextState = FTP_COMPLETE;
-            
             break;
 
 // SIZE            
@@ -1235,11 +1232,17 @@ nsFtpState::S_list() {
 
 FTP_STATE
 nsFtpState::R_list() {
-    if ((mResponseCode/100 == 4) || (mResponseCode/100 == 5)) {
-        mFireCallbacks = PR_TRUE;
-        return FTP_ERROR;
+    if (mResponseCode/100 == 1) 
+        return FTP_READ_BUF;
+
+    if (mResponseCode/100 == 2) {
+        //(DONE)
+        mNextState = FTP_COMPLETE;
+        return FTP_COMPLETE;
     }
-    return FTP_READ_BUF;
+
+    mFireCallbacks = PR_TRUE;
+    return FTP_ERROR;
 }
 
 nsresult
