@@ -73,6 +73,15 @@ function LoadCerts()
   document.getElementById('user-outliner')
    .outlinerBoxObject.view = userOutlinerView;
 
+  var rowCnt = userOutlinerView.rowCount;
+  var enableBackupAllButton=document.getElementById('mine_backupAllButton');
+  if(rowCnt < 1) {
+    enableBackupAllButton.setAttribute("disabled",true);
+  } else  {
+    enableBackupAllButton.setAttribute("enabled",true);
+  }
+
+
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var verifiedColText;
   if (certdb.ocspOn) {
