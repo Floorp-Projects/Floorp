@@ -190,4 +190,3 @@ private:
 NS_IMPL_ISUPPORTS2(nsDownloadProxy, nsIDownload, nsIWebProgressListener)  
 
 #endif
-  
