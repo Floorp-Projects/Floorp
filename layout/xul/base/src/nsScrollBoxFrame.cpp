@@ -53,7 +53,6 @@
 #include "nsScrollBoxFrame.h"
 #include "nsLayoutAtoms.h"
 #include "nsBoxLayoutState.h"
-#include "nsIBoxToBlockAdaptor.h"
 #include "nsIScrollbarMediator.h"
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
@@ -306,19 +305,20 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
 
   nsPresContext* presContext = aState.PresContext();
 
+  PRBool isBoxWrapped = kid->IsBoxWrapped();
+
   // see if our child is html. If it is then
   // never include the overflow. The child will be the size
   // given but its view will include the overflow size.
-  nsCOMPtr<nsIBoxToBlockAdaptor> adaptor = do_QueryInterface(kid);
-  if (adaptor)
-    adaptor->SetIncludeOverflow(PR_FALSE);
+  if (isBoxWrapped)
+    kid->SetIncludeOverflow(PR_FALSE);
 
   PRInt32 flags = NS_FRAME_NO_MOVE_VIEW;
 
-  // do we have an adaptor? No then we can't use
-  // min size the child technically can get as small as it wants
+  // if the child is not a box, then we can't use
+  // min size. the child technically can get as small as it wants
   // to.
-  if (!adaptor) {
+  if (!isBoxWrapped) {
     nsSize min(0,0);
     kid->GetMinSize(aState, min);
 
@@ -328,7 +328,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
     if (min.width > childRect.width)
        childRect.width = min.width;
   } else { 
-    // don't size the view if we have an adaptor
+    // don't size the view if our child isn't a box
     flags |=  NS_FRAME_NO_SIZE_VIEW;
   }
 
@@ -341,9 +341,9 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
   clientRect.Inflate(margin);
 
     // now size the view to the size including our overflow.
-  if (adaptor) {
+  if (isBoxWrapped) {
      nsSize overflow(0,0);
-     adaptor->GetOverflow(overflow);
+     kid->GetOverflow(overflow);
      childRect.width = overflow.width;
      childRect.height = overflow.height;
   }
@@ -367,7 +367,7 @@ nsScrollBoxFrame::DoLayout(nsBoxLayoutState& aState)
 
   SyncLayout(aState);
 
-  if (adaptor) {
+  if (isBoxWrapped) {
      nsRect r(0, 0, childRect.width, childRect.height);
      nsContainerFrame::SyncFrameViewAfterReflow(presContext, kid,
        kid->GetView(), &r, NS_FRAME_NO_MOVE_VIEW);
