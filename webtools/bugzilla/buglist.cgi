@@ -141,22 +141,6 @@ if ($::buffer =~ /&cmd-/) {
     exit;
 }
 
-# Generate a reasonable filename for the user agent to suggest to the user
-# when the user saves the bug list.  Uses the name of the remembered query
-# if available.  We have to do this now, even though we return HTTP headers 
-# at the end, because the fact that there is a remembered query gets 
-# forgotten in the process of retrieving it.
-my @time = localtime(time());
-my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
-my $filename = "bugs-$date.$format->{extension}";
-$::FORM{'cmdtype'} ||= "";
-if ($::FORM{'cmdtype'} eq 'runnamed') {
-    $filename = "$::FORM{'namedcmd'}-$date.$format->{extension}";
-    # Remove white-space from the filename so the user cannot tamper
-    # with the HTTP headers.
-    $filename =~ s/\s//;
-}
-
 ################################################################################
 # Utilities
 ################################################################################
@@ -185,6 +169,18 @@ sub LookupNamedQuery {
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
     my $result = FetchOneColumn();
     $result || ThrowUserError("missing_query", {'queryname' => '$name'});
+    return $result;
+}
+
+sub LookupSeries {
+    my ($series_id) = @_;
+    detaint_natural($series_id) || ThrowCodeError("invalid_series_id");
+    
+    my $dbh = Bugzilla->instance->dbh;
+    my $result = $dbh->selectrow_array("SELECT query FROM series " .
+                                       "WHERE series_id = $series_id");
+    $result
+           || ThrowCodeError("invalid_series_id", {'series_id' => $series_id});
     return $result;
 }
 
@@ -231,6 +227,9 @@ sub GetGroupsByUserId {
 # Command Execution
 ################################################################################
 
+$::FORM{'cmdtype'} ||= "";
+$::FORM{'remaction'} ||= "";
+
 # Backwards-compatibility - the old interface had cmdtype="runnamed" to run
 # a named command, and we can't break this because it's in bookmarks.
 if ($::FORM{'cmdtype'} eq "runnamed") {  
@@ -245,10 +244,31 @@ if ($::FORM{'cmdtype'} eq "runnamed") {
 # This will be modified, so make a copy.
 $params ||= new Bugzilla::CGI($cgi);
 
+# Generate a reasonable filename for the user agent to suggest to the user
+# when the user saves the bug list.  Uses the name of the remembered query
+# if available.  We have to do this now, even though we return HTTP headers 
+# at the end, because the fact that there is a remembered query gets 
+# forgotten in the process of retrieving it.
+my @time = localtime(time());
+my $date = sprintf "%04d-%02d-%02d", 1900+$time[5],$time[4]+1,$time[3];
+my $filename = "bugs-$date.$format->{extension}";
+if ($::FORM{'cmdtype'} eq "dorem" && $::FORM{'remaction'} =~ /^run/) {
+    $filename = "$::FORM{'namedcmd'}-$date.$format->{extension}";
+    # Remove white-space from the filename so the user cannot tamper
+    # with the HTTP headers.
+    $filename =~ s/\s/_/g;
+}
+
 # Take appropriate action based on user's request.
 if ($::FORM{'cmdtype'} eq "dorem") {  
     if ($::FORM{'remaction'} eq "run") {
         $::buffer = LookupNamedQuery($::FORM{"namedcmd"});
+        $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
+        $params = new Bugzilla::CGI($::buffer);
+        $order = $params->param('order') || $order;
+    }
+    elsif ($::FORM{'remaction'} eq "runseries") {
+        $::buffer = LookupSeries($::FORM{"series_id"});
         $vars->{'title'} = "Bug List: $::FORM{'namedcmd'}";
         $params = new Bugzilla::CGI($::buffer);
         $order = $params->param('order') || $order;
