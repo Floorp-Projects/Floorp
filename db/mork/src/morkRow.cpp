@@ -781,7 +781,7 @@ void morkRow::CutColumn(morkEnv* ev, mdb_column inColumn)
       {
         mork_fill last = fill - 1; // index of last cell in row
         
-        if ( pos < last ) // need to move cells following cut cell?
+        if ( pos < (mork_pos)last ) // need to move cells following cut cell?
         {
           morkCell* lastCell = mRow_Cells + last;
           mork_count after = last - pos; // cell count after cut cell
