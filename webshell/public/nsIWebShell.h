@@ -97,7 +97,7 @@ public:
    * contents).  The container can choose to set focus to themselves
    * or ignore the message and let the contained keep focus
    */
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell) = 0;
+  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken) = 0;
 
   // NS_IMETHOD SetHistoryIndex(PRInt32 aIndex, PRInt32 aMaxIndex) = 0;
 

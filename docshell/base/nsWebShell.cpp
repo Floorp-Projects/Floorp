@@ -229,7 +229,7 @@ public:
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult);
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell);
+  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken);
 
   // nsILinkHandler
   NS_IMETHOD OnLinkClick(nsIContent* aContent, 
@@ -1771,11 +1771,11 @@ nsWebShell::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
+nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
 {
   //If the WebShell with focus is us, pass this up to container
   if (this == aFocusedWebShell && nsnull != mContainer) {
-    mContainer->FocusAvailable(this);
+    mContainer->FocusAvailable(this, aFocusTaken);
   }
 
   nsIWebShell* shell = nsnull;
@@ -1791,7 +1791,7 @@ nsWebShell::FocusAvailable(nsIWebShell* aFocusedWebShell)
         break;
       }
       else if (nsnull != mContainer) {
-        mContainer->FocusAvailable(this);
+        mContainer->FocusAvailable(this, aFocusTaken);
         break;
       }
     }

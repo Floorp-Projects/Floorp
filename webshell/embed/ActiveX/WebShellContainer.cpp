@@ -218,7 +218,7 @@ CWebShellContainer::FindWebShellWithName(const PRUnichar* aName, nsIWebShell*& a
 }
 
 NS_IMETHODIMP
-CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell)
+CWebShellContainer::FocusAvailable(nsIWebShell* aFocusedWebShell, PRBool& aFocusTaken)
 {
 	NG_TRACE(_T("CWebShellContainer::FocusAvailable()\n"));
 	return NS_OK;
