@@ -25,6 +25,7 @@
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
 #include "nsVoidArray.h"
+#include "nsCOMPtr.h"
 
 /* Forward declarations.... */
 class nsIURL;
@@ -38,6 +39,7 @@ class nsIDOMCharacterData;
 class nsIDOMDocument;
 class nsIDOMHTMLInputElement;
 class nsIDOMHTMLImageElement;
+class nsIDOMElement;
 
 class nsWebShellWindow : public nsIWebShellContainer,
                          public nsIDocumentLoaderObserver
@@ -88,12 +90,17 @@ protected:
   void UpdateButtonStatus(PRBool aIsBusy);
   void SetCommandEnabled(const nsString & aCmdName, PRBool aState);
   void LoadCommands(nsIWebShell * aWebShell, nsIDOMDocument * aDOMDoc);
+  void ConnectCommandToOneGUINode(
+          nsIDOMNode* aNode,
+          nsIDOMElement* theNodeAsElementElement,
+          const nsString& aGuiNodeType);
+
   void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
-  nsIXULCommand *  FindCommandByName(const nsString & aCmdName);
-  nsIDOMNode *     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
-  nsIDOMNode *     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
-  nsIDOMDocument * GetNamedDOMDoc(const nsString & aWebShellName);
-  nsIDOMNode *     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
+  nsCOMPtr<nsIXULCommand>  FindCommandByName(const nsString & aCmdName);
+  nsCOMPtr<nsIDOMNode>     FindNamedParentFromDoc(nsIDOMDocument * aDomDoc, const nsString &aName);
+  nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
+  nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsString & aWebShellName);
+  nsCOMPtr<nsIDOMNode>     GetParentNodeFromDOMDoc(nsIDOMDocument * aDOMDoc);
 
   virtual ~nsWebShellWindow();
 
