@@ -45,6 +45,7 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
+
 /* ::::: Thread Pane icons :::::: */
 
 treechildren::-moz-tree-image(subjectCol, rss) {

@@ -45,6 +45,12 @@ treechildren::-moz-tree-image(folderNameCol, specialFolder-Trash) {
   list-style-image: url("chrome://messenger/skin/icons/folder-trash.png");
 }
 
+/* ..... Saved Search Folder, Hack to force the saved search artwork to show up for virtual folders in RSS accounts ..... */
+
+treechildren::-moz-tree-image(folderNameCol, specialFolder-Virtual) {
+  list-style-image: url("chrome://messenger/skin/icons/Search-bar.png");
+}
+
 /* ::::: Thread Pane icons :::::: */
 
 treechildren::-moz-tree-image(subjectCol, rss) {
