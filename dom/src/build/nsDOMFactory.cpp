@@ -138,8 +138,10 @@
 #include "nsIDOMPkcs11.h"
 #include "nsIDOMCSSPrimitiveValue.h"
 #include "plhash.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 class nsDOMNativeObjectRegistry : public nsIDOMNativeObjectRegistry {
 public:
@@ -320,12 +322,19 @@ public:
                                 nsISupports *aPI, 
                                 nsISupports *aParent, 
                                 void** aReturn);
-  
+
+  PRBool mUseXBLForms;
 };
 
 nsDOMScriptObjectFactory::nsDOMScriptObjectFactory()
 {
   NS_INIT_REFCNT();
+
+  nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID));
+  if (prefService)
+    prefService->GetBoolPref("nglayout.debug.enable_xbl_forms", &mUseXBLForms);
+  else
+    mUseXBLForms = PR_FALSE;
 }
 
 nsDOMScriptObjectFactory::~nsDOMScriptObjectFactory()
@@ -440,7 +449,9 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
     case DOMHTMLTag_body:
       return NS_NewScriptHTMLBodyElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_button:
-      return NS_NewScriptHTMLButtonElement(aContext, aElement, aParent, aReturn);
+      if (mUseXBLForms)
+        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
+      else return NS_NewScriptHTMLButtonElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_dl:
       return NS_NewScriptHTMLDListElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_dir:
@@ -479,9 +490,13 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
     case DOMHTMLTag_li:
       return NS_NewScriptHTMLLIElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_label:
-      return NS_NewScriptHTMLLabelElement(aContext, aElement, aParent, aReturn);
+      if (mUseXBLForms)
+        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
+      else return NS_NewScriptHTMLLabelElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_legend:
-      return NS_NewScriptHTMLLegendElement(aContext, aElement, aParent, aReturn);
+      if (mUseXBLForms)
+        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
+      else return NS_NewScriptHTMLLegendElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_link:
       return NS_NewScriptHTMLLinkElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_map:
@@ -500,9 +515,13 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
     case DOMHTMLTag_embed:
       return NS_NewScriptHTMLEmbedElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_optgroup:
-      return NS_NewScriptHTMLOptGroupElement(aContext, aElement, aParent, aReturn);
+      if (mUseXBLForms)
+        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
+      else return NS_NewScriptHTMLOptGroupElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_option:
-      return NS_NewScriptHTMLOptionElement(aContext, aElement, aParent, aReturn);
+      if (mUseXBLForms)
+        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
+      else return NS_NewScriptHTMLOptionElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_p:
       return NS_NewScriptHTMLParagraphElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_param:
@@ -515,7 +534,9 @@ nsDOMScriptObjectFactory::NewScriptElement(const nsString &aTagName,
     case DOMHTMLTag_script:
       return NS_NewScriptHTMLScriptElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_select:
-      return NS_NewScriptHTMLSelectElement(aContext, aElement, aParent, aReturn);
+      if (mUseXBLForms)
+        return NS_NewScriptHTMLElement(aContext, aElement, aParent, aReturn);
+      else return NS_NewScriptHTMLSelectElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_style:
       return NS_NewScriptHTMLStyleElement(aContext, aElement, aParent, aReturn);
     case DOMHTMLTag_caption:
