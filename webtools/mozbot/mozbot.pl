@@ -248,9 +248,9 @@ sub on_public
 $::dontQuitOnSignal = 0;
 sub on_boot
     {
-		if (!$::dontQuitOnSignal) {
-			die "$0: disconnected from network";
-		}
+        if (!$::dontQuitOnSignal) {
+            die "$0: disconnected from network";
+        }
     }
 
 ################
@@ -434,24 +434,23 @@ $::ourdate = 0;
 $::tinderboxdate = 0;
 
 sub checksourcechange {
-	my ($self) = @_;
-	my $lastourdate = $::ourdate;
-	my $lasttinderboxdate = $::tinderboxdate;
+    my ($self) = @_;
+    my $lastourdate = $::ourdate;
+    my $lasttinderboxdate = $::tinderboxdate;
     my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
         $atime,$mtime,$ctime,$blksize,$blocks)
         = stat("./mozbot.pl");
-	$::ourdate = $mtime;
+    $::ourdate = $mtime;
     ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
         $atime,$mtime,$ctime,$blksize,$blocks)
         = stat("./Tinderbox.pm");
-	$::tinderboxdate = $mtime;
-	if ($lastourdate > 0 && ($::ourdate > $lastourdate ||
-							 $::tinderboxdate > $lasttinderboxdate)) {
-		$self->privmsg($channel, "Whoops; someone seems to have changed my source code.  Be right back...");
-		$::dontQuitOnSignal = 1;
-		$self->quit();
-		&debug ("restarting self");
-		exec "$0 @::origargv";
-	}
+    $::tinderboxdate = $mtime;
+    if ($lastourdate > 0 && ($::ourdate > $lastourdate ||
+                             $::tinderboxdate > $lasttinderboxdate)) {
+        $::dontQuitOnSignal = 1;
+        $self->quit("someone seems to have changed my source code.  Be right back");
+        &debug ("restarting self");
+        exec "$0 @::origargv";
+    }
     $bot->schedule (60, \&checksourcechange);
 }
