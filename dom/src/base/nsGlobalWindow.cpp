@@ -827,6 +827,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 NS_IMETHODIMP GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 {
    nsCOMPtr<nsIDOMWindow> parent;
+   
+   FlushPendingNotifications();
 
    nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
    *aInnerHeight = 0;
@@ -869,6 +871,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
+   FlushPendingNotifications();
+
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(aOuterWidth, nsnull),
       NS_ERROR_FAILURE);
 
@@ -896,6 +900,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+   FlushPendingNotifications();
 
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetSize(nsnull, aOuterHeight),
       NS_ERROR_FAILURE);
@@ -925,6 +931,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
 
+   FlushPendingNotifications();
+
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(aScreenX, nsnull),
       NS_ERROR_FAILURE);
 
@@ -952,6 +960,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
    nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
    GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
    NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
+
+   FlushPendingNotifications();
 
    NS_ENSURE_SUCCESS(treeOwnerAsWin->GetPosition(nsnull, aScreenY),
       NS_ERROR_FAILURE);
@@ -1001,6 +1011,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollX(PRInt32* aScrollX)
    nsCOMPtr<nsIScrollableView> view;
    float p2t, t2p;
 
+   FlushPendingNotifications();
+
    GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
    if(view)
       {
@@ -1017,6 +1029,8 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
    nsresult result;
    nsCOMPtr<nsIScrollableView> view;
    float p2t, t2p;
+
+   FlushPendingNotifications();
 
    GetScrollInfo(getter_AddRefs(view), &p2t, &t2p);
    if(view)
@@ -3352,6 +3366,15 @@ PRBool GlobalWindowImpl::CheckForEventListener(JSContext* aContext, nsString& aP
       }
 
    return PR_TRUE;
+}
+
+void GlobalWindowImpl::FlushPendingNotifications()
+{
+  if (mDocument) {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
+    if (doc)
+      doc->FlushPendingNotifications();
+  }
 }
 
 //*****************************************************************************
