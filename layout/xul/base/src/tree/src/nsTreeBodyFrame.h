@@ -52,6 +52,7 @@
 #include "nsITimer.h"
 #include "nsIReflowCallback.h"
 #include "nsILookAndFeel.h"
+#include "nsValueArray.h"
 
 #include "imgIDecoderObserver.h"
 

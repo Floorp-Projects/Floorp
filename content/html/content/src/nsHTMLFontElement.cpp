@@ -45,7 +45,7 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsHTMLAttributes.h"
-#include "nsCSSDeclaration.h"
+#include "nsCSSStruct.h"
 #include "nsRuleNode.h"
 
 class nsHTMLFontElement : public nsGenericHTMLContainerElement,

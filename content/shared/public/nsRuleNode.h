@@ -44,7 +44,7 @@
 #include "nsIStyleRule.h"
 #include "nsFixedSizeAllocator.h"
 #include "nsIPresContext.h"
-#include "nsCSSDeclaration.h"
+#include "nsCSSStruct.h"
 #include "nsILanguageAtomService.h"
 #include "nsStyleStruct.h"
 
