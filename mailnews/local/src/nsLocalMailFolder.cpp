@@ -658,6 +658,9 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
     else if (mCopyState)
       mCopyState->m_notifyFolderLoaded = PR_TRUE; //defer folder loaded notification
   }
+  // if we have new messages, try the filter plugins.
+  if (NS_SUCCEEDED(rv) && (mFlags & MSG_FOLDER_FLAG_GOT_NEW))
+    (void) CallFilterPlugins();
   return rv;
 }
 
