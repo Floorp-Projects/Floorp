@@ -4713,7 +4713,7 @@ SweepRuleNodeChildren(PLDHashTable *table, PLDHashEntryHdr *hdr,
 {
   ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
   if (entry->mRuleNode->Sweep())
-    return PL_DHASH_REMOVE | PL_DHASH_NEXT;
+    return PL_DHASH_REMOVE; // implies NEXT, unless |ed with STOP
   return PL_DHASH_NEXT;
 }
 
