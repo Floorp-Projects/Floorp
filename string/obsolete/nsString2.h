@@ -370,7 +370,8 @@ float ToFloat(PRInt32* aErrorCode) const;
  * @param   aErrorCode will contain error if one occurs
  * @return  int rep of string value
  */
-PRInt32 ToInteger(PRInt32* aErrorCode,PRUint32 aRadix=10) const;
+PRInt32 ToInteger(PRInt32* aErrorCode) const;
+PRInt32 ToInteger(PRInt32* aErrorCode,PRUint32 aRadix) const;
 
 
 /**********************************************************************

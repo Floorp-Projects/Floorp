@@ -118,6 +118,8 @@ void Subsume(nsStr& aDest,nsStr& aSource){
   else nsStr::Truncate(aDest,0,0);
 }
 
+//#define RICKG_DEBUG
+#undef RICKG_DEBUG 
 #ifdef RICKG_DEBUG
 /********************************************************
  This class's only purpose in life is to test nsString2.
@@ -644,68 +646,183 @@ float nsString2::ToFloat(PRInt32* aErrorCode) const {
 
 /**
  * Perform numeric string to int conversion with given radix.
+ * NOTE: 1. This method mandates that the string is well formed.
+ *       2. This method will return an error if the string you give
+            contains chars outside the range for the specified radix.
+
  * @update	gess 10/01/98
  * @param   aErrorCode will contain error if one occurs
  * @param   aRadix tells us what base to expect the string in.
  * @return  int rep of string value
  */
-PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
+PRInt32 _ToInteger(nsString2& aString,PRInt32* anErrorCode,PRUint32 aRadix) {
 
   //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
   PRInt32 result=0;
 
-  nsAutoString2 theString(*this,eOneByte);
+  char*   cp = aString.mStr + aString.mLength;
+  PRInt32 theMult=1;
 
-  PRInt32   decPt=theString.FindChar(theString,'.',PR_TRUE,0);
-  char*     cp = (kNotFound==decPt) ? theString.mStr + theString.mLength-1 : theString.mStr+decPt-1;
-  char      digit=0;
-  char      theChar;
-//  PRInt32   theShift=0;
-  PRInt32   theMult=1;
-
-  *anErrorCode = (0<theString.mLength) ? NS_OK : NS_ERROR_ILLEGAL_VALUE;
-
-  // Skip trailing non-numeric...
-  while (cp >= theString.mStr) {
-    theChar = toupper(*cp);
-    if((theChar>='0') && (theChar<='9')){
-      break;
-    }
-    else if((theChar>='A') && (theChar<='F')) {
-      break;
-    }
-    cp--;
-  }
+  *anErrorCode = NS_OK;
 
     //now iterate the numeric chars and build our result
-  while(cp>=theString.mStr) {
-    theChar=toupper(*cp--);
+  char theChar=0;
+  char theDigit=0;
+  while(--cp>=aString.mStr){
+    char theChar=*cp;
     if((theChar>='0') && (theChar<='9')){
-      digit=theChar-'0';
+      theDigit=theChar-'0';
     }
     else if((theChar>='A') && (theChar<='F')) {
-      digit=(theChar-'A')+10;
+      if(10==aRadix){
+        *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+        result=0;
+        break;
+      }
+      theDigit=(theChar-'A')+10;
     }
     else if('-'==theChar) {
       result=-result;
       break;
     }
-    else if(('+'==theChar) || (' '==theChar) || ('#'==theChar)) { //stop in a good state if you see this...
+    else if(('+'==theChar) || (' '==theChar)) { //stop in a good state if you see this...
       break;
     }
-    else if(('X'==theChar) && (16==aRadix)) {  
-      //stop in a good state.
+/* The following block can be replaced with the next block
+    else if(('X'==theChar) || ('#'==theChar)) {  
+      if(10==aRadix) {
+        *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
+        result=0;
+      }
       break;
     }
-    else{
+---cut above here...*/
+    else {
+      //we've encountered a char that's not a legal number or sign
       *anErrorCode=NS_ERROR_ILLEGAL_VALUE;
       result=0;
       break;
     }
-    result+=digit*theMult;
+
+    result+=theDigit*theMult;
     theMult*=aRadix;
   }
   
+  return result;
+}
+
+/**
+ * Call this method to extract the rightmost numeric value from the given 
+ * 1-byte input string, and simultaneously determine the radix.
+ * NOTE: This method mandates that the string is well formed.
+ *       Leading and trailing gunk should be removed, and the case upper.
+ * @update	gess 10/01/98
+ * @param   anInputString contains orig string
+ * @param   anOutString contains numeric portion copy of input string
+ * @param   aRadix (an out parm) tells the caller what base we think the string is in.
+ * @return  non-zero error code if this string is non-numeric
+ */
+PRInt32 GetNumericSubstring(nsString2& aString,PRUint32& aRadix) {
+
+  aString.ToUpperCase();
+
+  PRInt32 decPt=aString.FindChar(aString,'.',PR_TRUE,0);
+  char*   cp = (kNotFound==decPt) ? aString.mStr + aString.mLength-1 : aString.mStr+decPt-1;
+  
+  aRadix=10; //assume for starters...
+
+  // Skip trailing non-numeric...
+  while (cp >= aString.mStr) {
+    if((*cp>='0') && (*cp<='9')){
+      break;
+    }
+    else if((*cp>='A') && (*cp<='F')) {
+      aRadix=16;
+      break;
+    }  
+    cp--;
+  }
+  aString.Truncate(cp-aString.mStr+1);
+
+  //ok, now scan through chars until you find the start of this number...
+  //we delimit the number by the presence of: +,-,#,X
+
+  // Skip trailing non-numeric...
+  cp++;
+  while (--cp >= aString.mStr) {
+    if((*cp>='0') && (*cp<='9')){
+      continue;
+    }
+    else if((*cp>='A') && (*cp<='F')) {
+      continue;
+    }
+    else if((*cp>='-') || (*cp>='+')){
+      break;
+    }
+    else {
+      if(('#'==(*cp)) || ('X'==(*cp))) 
+        aRadix=16;
+      cp++; //move back by one
+      break;
+    }
+  }
+  if(cp>aString.mStr)
+    aString.Cut(0,cp-aString.mStr);
+  PRInt32 result=(0==aString.mLength) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+
+  return result;
+}
+
+/**
+ * Perform numeric string to int conversion with given radix.
+ * @update	gess 10/01/98
+ * @param   aErrorCode will contain error if one occurs
+ * @param   aRadix tells us what base to expect the string in.
+ * @return  int rep of string value
+ */
+PRInt32 nsString2::ToInteger(PRInt32* anErrorCode) const {
+
+  /********************************************************************************
+    If you called this version, it's because you don't know which radix your
+    string is stored in (hex, dec, etc.).
+    This method will attempt to figure that out for you, and then call 
+    toInteger(err,radix). 
+    NOTE: If you know your string is in a given radix, then it's better to
+          call toInteger(err,radix) directly, because there are cases where
+          this method cannot make the correct determination. For example,
+          a string that contains "123" can not be differentiated (hex vs. dec).
+   ********************************************************************************/
+
+  //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
+  nsAutoString2 theString(*this,eOneByte);
+  PRUint32  theRadix=10;
+  PRInt32   result=GetNumericSubstring(theString,theRadix);
+
+  if(NS_OK==result){
+    result=_ToInteger(theString,anErrorCode,theRadix);
+  }
+  return result;
+}
+
+/**
+ * Perform decimal numeric string to int conversion.
+ * NOTE: In this version, we use the radix you give, even if it's wrong.
+ * @update	gess 10/01/98
+ * @param   aErrorCode will contain error if one occurs
+ * @param   aRadix tells us what base to expect the given string in.
+ * @return  int rep of string value
+ */
+PRInt32 nsString2::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
+
+  //copy chars to local buffer -- step down from 2 bytes to 1 if necessary...
+  nsAutoString2 theString(*this,eOneByte);
+  PRUint32  theRadix=10;
+  PRInt32   result=GetNumericSubstring(theString,theRadix); //we actually don't use this radix; use given radix instead
+
+  if(NS_OK==result){
+    result=_ToInteger(theString,anErrorCode,aRadix); //note we use the given radix, not the computed one.
+  }
+
   return result;
 }
 
@@ -1020,14 +1137,12 @@ nsString2& nsString2::Insert(const nsString2& aCopy,PRUint32 anOffset,PRInt32 aC
  */
 nsString2& nsString2::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
   if(aCString){
-    if(0<aCount) {
-      nsStr temp;
-      nsStr::Initialize(temp,eOneByte);
-      temp.mStr=(char*)aCString;
-      temp.mLength=nsCRT::strlen(aCString);
-      if(temp.mLength){
-        nsStr::Insert(*this,anOffset,temp,0,aCount,0);
-      }
+    nsStr temp;
+    nsStr::Initialize(temp,eOneByte);
+    temp.mStr=(char*)aCString;
+    temp.mLength=(aCount<0) ? nsCRT::strlen(aCString) :aCount;
+    if(temp.mLength){
+      nsStr::Insert(*this,anOffset,temp,0,aCount,0);
     }
   }
   return *this;  
@@ -1165,7 +1280,7 @@ PRInt32 nsString2::Find(const char* aCString,PRBool aIgnoreCase) const{
   return result;
 }
 
-/**
+/** 
  *  Search for given buffer within this string
  *  
  *  @update  gess 3/25/98
@@ -1996,14 +2111,6 @@ CStringTester::CStringTester() {
       nsCAutoString theCStr(theString);
     }
 
-      //now let's test out various features of out SubsumeStrs...
-    {
-      nsString2 theString("hello");
-
-      nsString2 theString2=theString+" there!"; //a subsumestr should be constructed and returned by operator+()
-      nsSubsumeStr theSubStr=theString2.left(5);
-      int x=5;
-    }
 
     {
       //this test makes sure that autostrings who assume ownership of a buffer, 
@@ -2260,6 +2367,9 @@ CStringTester::CStringTester() {
     nsString2 find2("ijk",theSize);
 
     PRInt32 pos=find1.Find("efg");
+    NS_ASSERTION(pos==4,"Error: Find routine");
+
+    pos=find1.Find("EFG",PR_TRUE);
     NS_ASSERTION(pos==4,"Error: Find routine");
 
     pos=find1.Find('d');
