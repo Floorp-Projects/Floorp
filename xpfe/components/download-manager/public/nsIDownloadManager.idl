@@ -59,6 +59,8 @@ interface nsIDownloadManager : nsISupports {
   *
   * @param aTarget The local file to which the download is being saved.
   *
+  * @param aDisplayName The user-readable description of the download.
+  *
   * @param aPersist The "persist" used to transfer the download.  If set,
   *                 the manager will set its listener to the download item
   *                 and use it for cancellation.  If not set, the client
