@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #include "nsPop3Protocol.h"
 #include "nsFileSpec.h"
 #include "nsFileStream.h"

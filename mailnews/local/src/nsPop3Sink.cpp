@@ -15,6 +15,9 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
+#include "msgCore.h"    // precompiled header...
+
 #include "nsPop3Sink.h"
 #include "prprf.h"
 #include "prlog.h"

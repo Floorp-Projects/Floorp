@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"    // precompiled header...
+
 #include "nsMSGFolderDataSource.h"
 #include "prlog.h"
 #include "nsIRDFService.h"
