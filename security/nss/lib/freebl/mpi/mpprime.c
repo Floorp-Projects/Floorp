@@ -446,7 +446,8 @@ mp_err mpp_make_prime(mp_int *start, mp_size nBits, mp_size strong,
     num_tests = 9;
   } else if (nBits >= 256) {
     num_tests = 13;
-  }
+  } else
+    num_tests = 50;
 
   if (strong) 
     --nBits;
