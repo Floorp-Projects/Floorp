@@ -245,7 +245,7 @@ nsMsgFolder::FindSubFolder(const char *subFolderName, nsIFolder **aFolder)
 		return rv;
 
   // XXX use necko here
-	nsCAutoString uri;
+	nsCAutoString uri("");
 	uri.Append(mURI);
 	uri.Append('/');
 
@@ -518,9 +518,9 @@ nsMsgFolder::parseURI(PRBool needServer)
     // (remove leading / and add .sbd to first n-1 folders)
     // to be appended onto the server's path
       
-    nsCAutoString newPath;
+    nsCAutoString newPath("");
 
-    char *newStr;
+    char *newStr=nsnull;
     char *token =
       nsCRT::strtok(NS_CONST_CAST(char *,(const char*)urlPath), "/", &newStr);
 
@@ -531,9 +531,11 @@ nsMsgFolder::parseURI(PRBool needServer)
       if (nsCRT::strcmp(token, "")==0) continue;
 
         // add .sbd onto the previous path
-      if (haveFirst) newPath+=".sbd";
-        
-      newPath += "/";
+      if (haveFirst) {
+	newPath+=".sbd";
+      	newPath += "/";
+      }
+
       newPath += token;
       haveFirst=PR_TRUE;
 
