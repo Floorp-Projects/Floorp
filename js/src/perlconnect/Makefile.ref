@@ -65,7 +65,7 @@ PC_CFILES =	\
 	$(NULL)
 
 JS.c: JS.xs typemap
-	perl /usr/lib/perl5/ExtUtils/xsubpp -typemap /usr/lib/perl5/ExtUtils/typemap -typemap typemap JS.xs > JS.c
+	perl jsperlbuild.pl
 
 LIB_CFILES  = $(PC_CFILES)
 
@@ -93,12 +93,12 @@ endif
 endif
 
 ifdef USE_MSVC
-LIBRARY = $(OBJDIR)/jsperl.lib
-SHARED_LIBRARY = $(OBJDIR)/jsperl.dll
+LIBRARY = $(OBJDIR)/JS.lib
+SHARED_LIBRARY = $(OBJDIR)/JS.dll
 PROGRAM = $(OBJDIR)/jsperl.exe
 else
-LIBRARY = $(OBJDIR)/jsperl.a
-SHARED_LIBRARY = $(OBJDIR)/jsperl.so
+LIBRARY = $(OBJDIR)/JS.a
+SHARED_LIBRARY = $(OBJDIR)/JS.so
 PROGRAM = $(OBJDIR)/jsperl
 endif
 
