@@ -746,7 +746,7 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 #ifdef DEBUG_NEWS
 	printf("oldest=%d,youngest=%d,total=%d\n",oldest,youngest,total);
 #endif
-
+	PRBool newsrcHasChanged = PR_FALSE;
 	PRInt32 oldUnreadMessages = mNumUnreadMessages;
 	PRInt32 oldTotalMessages = mNumTotalMessages;
 
@@ -771,6 +771,7 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 	/* First, mark all of the articles now known to be expired as read. */
 	if (oldest > 1) { 
 		set->AddRange(1, oldest - 1);
+		newsrcHasChanged = PR_TRUE;
 	}
 
 	/* Now search the newsrc line and figure out how many of these messages are marked as unread. */
@@ -817,8 +818,14 @@ nsMsgNewsFolder::UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRI
 			nsCAutoString newsrcLine(setStr);
         	newsrcLine += MSG_LINEBREAK;
 			rv = SetCachedNewsrcLine((const char *)newsrcLine);
+			NS_ASSERTION(NS_SUCCEEDED(rv),"SetCachedNewsrcLine() failed");
 			delete [] setStr;
 			setStr = nsnull;
+
+			if (newsrcHasChanged) {
+				rv = SetNewsrcHasChanged(PR_TRUE);
+				NS_ASSERTION(NS_SUCCEEDED(rv),"SetNewsrcHasChanged() failed");
+			}
 		}
 	}
 	return rv;
