@@ -21,4 +21,5 @@
   -->
 
 <!ENTITY AdvancedEditButton.label "Advanced Edit...">
+<!ENTITY AdvancedEditButton.tooltip "Edit additional properties for this object">
 <!ENTITY chooseButton.label "Choose File...">
