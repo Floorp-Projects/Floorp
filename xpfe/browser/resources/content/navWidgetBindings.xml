@@ -1,0 +1,135 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://navigator/skin/navWidgets.css"?>
+
+<bindings id="navigatorWidgetBindings"
+          xmlns="http://www.mozilla.org/xbl"
+          xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="urlbar" extends="xul:box">
+    <content flex="1">  
+      <xul:box class="urlbar-container" autostretch="never" flex="1">
+        <xul:box class="urlbar-pre-buttons">
+          <children includes="button"/>
+        </xul:box>
+        <xul:menulist editable="true" class="location-field" flex="1"
+                      autocomplete="true" timeout="300" searchSessionType="urlbar"
+                      inherits="value=content"
+                      tooltip="aTooltip" tooltiptext="fuck" ubattr="field"/>
+        <xul:button class="button-toolbar-3 go-button" value="Go" 
+                    ubattr="go-button" tooltip="aTooltip" tooltiptext="Go"/> 
+        <xul:box class="urlbar-post-buttons">
+          <children includes="button"/>
+        </xul:box>
+      </xul:box>
+    </content>
+    <implementation>
+      
+    </implementation>
+    <handlers>
+      <handler event="command">
+      <![CDATA[
+        switch (event.originalTarget.getAttribute("ubattr")) {
+        case "go-button": 
+          var menulist = this.getElementByAttribute("ubattr", "field");
+          menulist.loadURL();
+          break;
+        case "search-button":
+          this.doSearch();
+          break;
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <binding id="menulist-editable" extends="chrome://global/content/menulistBindings.xml#menulist">
+    <content>
+      <xul:box autostretch="never" valign="middle" flex="1" class="menulist-container">
+        <xul:image class="menulist-icon" inherits="src" emattr="icon"/>
+        <xul:textfield class="menulist-editable-textfield plain" flex="1" emattr="field"
+                       inherits="autocomplete,searchSessionType,timeout,tooltip=fieldtooltip,tooltiptext=fieldtooltiptext,value"/>
+        <xul:menubutton class="menulist-editable-menubutton menubutton-icon" emattr="menubutton">
+          <xul:menupopup class="menulist-editable-menupopup" emattr="menupopup"
+                         popupalign="topright" popupanchor="bottomright">
+            <children includes="template"/>
+          </xul:menupopup>
+        </xul:menubutton>
+      </xul:box>
+    </content>
+  </binding>
+  
+  <binding id="urlbar-menulist" extends="chrome://navigator/content/navWidgetBindings.xml#menulist-editable">
+    <implementation>
+    </implementation>
+    <handlers>
+    
+      <!-- Proxy Icon -->
+      <handler event="draggesture">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("emattr") == "icon") {
+          // Do Drag Processing for Proxy Icon
+        }
+      ]]>
+      </handler>
+      
+      <!-- Location Field -->
+      <handler event="click">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("emattr") == "field")
+          if (event.button == 1) this.doFocus();
+      ]]>
+      </handler>
+      <handler event="blur">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("emattr") == "field")
+          this.doBlur();
+      ]]>
+      </handler>
+      <handler event="keypress">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("emattr") == "field")
+          if (event.keyCode == 13) BrowserLoadURL(this.value);
+      ]]>
+      </handler>
+
+      <!-- Location Bar Type-In History -->
+      <handler event="create">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("emattr") == "menupopup")
+          this.createUBHistory();
+      ]]>
+      </handler>
+      <handler event="command">
+      <![CDATA[
+        if (event.originalTarget.getAttribute("emattr") == "menubutton") {
+          this.goToHistory();
+          return;
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+
+  <!-- XXX work in progress -->
+  <binding id="back-button">
+    <content>
+      <xul:menubutton id="back-button" value="Back" buttontooltiptext="Go Back"
+                      oncommand="gotoHistoryIndex(event);" buttonaction="BrowserBack();" context="backMenu"
+                      class="menubutton-dual toolbar top" crop="right" tooltip="aTooltip" observes="canGoBack">  
+     	  <xul:menupopup oncreate="BrowserBackMenu(event);"/>
+      </xul:menubutton>
+    </content>
+    <handlers>
+      <handler type="command">
+      <![CDATA[
+        if (event.originalTarget.localName == "button") {
+          // internal menubutton
+        }
+      ]]>
+      </handler>
+    </handlers>
+  </binding>
+  
+</bindings>          
+          

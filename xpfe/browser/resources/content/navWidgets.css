@@ -1,0 +1,25 @@
+
+
+box[type="location-field"]
+  {
+    -moz-binding          : url("chrome://navigator/content/navWidgetBindings.xml#urlbar");
+  }
+  
+menulist[editable="true"]
+  {
+    -moz-binding          : url("chrome://navigator/content/navWidgetBindings.xml#menulist-editable");
+  }  
+  
+.location-field
+  {
+    -moz-binding          : url("chrome://navigator/content/navWidgetBindings.xml#urlbar-menulist");
+    -moz-user-focus       : ignore;
+  }  
+  
+/* XXX factor me */
+.textfield-input
+  {
+    -moz-user-focus       : normal;
+  }
+  
+  
