@@ -4026,27 +4026,23 @@ nsTableFrame::GetBorderPadding(const nsSize&           aBasis,
 // XXX: could cache this.  But be sure to check style changes if you do!
 nscoord nsTableFrame::GetCellSpacingX()
 {
-  nscoord cellSpacing = 0;
-  if (!IsBorderCollapse()) {
-    const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
-    if (tableStyle->mBorderSpacingX.GetUnit() == eStyleUnit_Coord) {
-      cellSpacing = tableStyle->mBorderSpacingX.GetCoordValue();
-    }
-  }
-  return cellSpacing;
+  if (IsBorderCollapse())
+    return 0;
+
+  NS_ASSERTION(GetStyleTableBorder()->mBorderSpacingX.GetUnit() == eStyleUnit_Coord,
+               "Not a coord value!");
+  return GetStyleTableBorder()->mBorderSpacingX.GetCoordValue();
 }
 
 // XXX: could cache this. But be sure to check style changes if you do!
 nscoord nsTableFrame::GetCellSpacingY()
 {
-  nscoord cellSpacing = 0;
-  if (!IsBorderCollapse()) {
-    const nsStyleTableBorder* tableStyle = GetStyleTableBorder();
-    if (tableStyle->mBorderSpacingY.GetUnit() == eStyleUnit_Coord) {
-      cellSpacing = tableStyle->mBorderSpacingY.GetCoordValue();
-    }
-  }
-  return cellSpacing;
+  if (IsBorderCollapse())
+    return 0;
+
+  NS_ASSERTION(GetStyleTableBorder()->mBorderSpacingY.GetUnit() == eStyleUnit_Coord,
+               "Not a coord value!");
+  return GetStyleTableBorder()->mBorderSpacingY.GetCoordValue();
 }
 
 /* ----- global methods ----- */
