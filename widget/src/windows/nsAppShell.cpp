@@ -92,19 +92,16 @@ NS_METHOD nsAppShell::Run(void)
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
-    if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
-        ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-        ::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
-        ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (nsToolkit::nsPeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
+        nsToolkit::nsPeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        nsToolkit::nsPeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+        nsToolkit::nsPeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
       keepGoing = (msg.message != WM_QUIT);
 
       if (keepGoing != 0) {
-//#ifdef MOZ_AIMM // not need?
-//      if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
-//#endif
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        nsToolkit::nsDispatchMessage(&msg);
         if (mDispatchListener)
           mDispatchListener->AfterDispatch();
       }
@@ -115,7 +112,7 @@ NS_METHOD nsAppShell::Run(void)
       do {
         queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
       } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+                !::nsToolkit::nsPeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
       
     } else {
       if (!gKeepGoing) {
@@ -158,10 +155,10 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   do {
     // Give priority to system messages (in particular keyboard, mouse,
     // timer, and paint messages).
-    if (::PeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
-        ::PeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
-        ::PeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
-        ::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (nsToolkit::nsPeekMessage(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE) ||
+        nsToolkit::nsPeekMessage(&msg, NULL, WM_MOUSEFIRST, WM_MOUSELAST, PM_REMOVE) || 
+        nsToolkit::nsPeekMessage(&msg, NULL, 0, WM_USER-1, PM_REMOVE) || 
+        nsToolkit::nsPeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
 
       gotMessage = true;
 
@@ -171,7 +168,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
       do {
         queue->FireNextReadyTimer(NS_PRIORITY_LOWEST);
       } while (queue->HasReadyTimers(NS_PRIORITY_LOWEST) && 
-                !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
+                !nsToolkit::nsPeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
 
     } else {
        // Block and wait for any posted application message
@@ -185,9 +182,6 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
     printf("-> %d", msg.message);
 #endif
 
-//#ifdef MOZ_AIMM // not need?
-//  if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
-//#endif
   TranslateMessage(&msg);
   aEvent = &msg;
   aRealEvent = PR_TRUE;
@@ -196,7 +190,7 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
 
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
-  DispatchMessage((MSG *)aEvent);
+  nsToolkit::nsDispatchMessage((MSG *)aEvent);
   return NS_OK;
 }
 

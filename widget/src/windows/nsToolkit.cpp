@@ -61,6 +61,16 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
 {
     switch( reason ) {
         case DLL_PROCESS_ATTACH:
+            //
+            // Set flag of nsToolkit::mIsNT due to using Unicode API.
+            //
+
+            OSVERSIONINFO osversion;
+            ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
+            osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+            ::GetVersionEx(&osversion);
+            nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT) ? PR_TRUE : PR_FALSE;
+
             nsToolkit::mDllInstance = hModule;
 
             //
@@ -79,17 +89,7 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
             wc.lpszMenuName     = NULL;
             wc.lpszClassName    = "nsToolkitClass";
 
-            VERIFY(::RegisterClass(&wc));
-
-            //
-            // Set flag of nsToolkit::mIsNT due to using Unicode API.
-            //
-
-            OSVERSIONINFO osversion;
-            ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
-            osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-            ::GetVersionEx(&osversion);
-            nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT) ? PR_TRUE : PR_FALSE;
+            VERIFY(nsToolkit::nsRegisterClass(&wc));
 
             break;
 
@@ -100,8 +100,8 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
             break;
     
         case DLL_PROCESS_DETACH:
-            //VERIFY(::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
-            ::UnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
+            //VERIFY(nsToolkit::nsUnregisterClass("nsToolkitClass", nsToolkit::mDllInstance));
+            nsToolkit::nsUnregisterClass("nsToolkitClass", nsToolkit::mDllInstance);
             break;
 
     }
@@ -143,9 +143,9 @@ void RunPump(void* arg)
 
     // Process messages
     MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
+    while (nsToolkit::nsGetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        nsToolkit::nsDispatchMessage(&msg);
     }
 }
 
@@ -220,7 +220,7 @@ void nsToolkit::CreateInternalWindow(PRThread *aThread)
     //
     // create the internal window
     //
-    mDispatchWnd = ::CreateWindow("nsToolkitClass",
+    mDispatchWnd = nsToolkit::nsCreateWindow("nsToolkitClass",
                                        "NetscapeDispatchWnd",
                                        WS_DISABLED,
                                        -50, -50,
@@ -316,7 +316,7 @@ LRESULT CALLBACK nsToolkit::WindowProc(HWND hWnd, UINT msg, WPARAM wParam,
             return lResult;
     }
 #endif
-    return ::DefWindowProc(hWnd, msg, wParam, lParam);
+    return nsToolkit::nsDefWindowProc(hWnd, msg, wParam, lParam);
 }
 
 
@@ -368,6 +368,187 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
   }
 
   return rv;
+}
+
+
+//-------------------------------------------------------------------------
+// Wrapper API of CreateWindowEx() for Unicode Window class support
+//-------------------------------------------------------------------------
+
+HWND nsToolkit::nsCreateWindowEx(DWORD dwExStyle,
+                                 LPCSTR lpClassName,
+                                 LPCSTR lpWindowName,
+                                 DWORD dwStyle,
+                                 int x, int y,
+                                 int nWidth, int nHeight,
+                                 HWND hWndParent,
+                                 HMENU hMenu,
+                                 HINSTANCE hInstance,
+                                 LPVOID lpParam)
+{
+    if (!nsToolkit::mIsNT)
+    {
+        // Windows 95/98/Me do not support Unicode API of CreateWindow.
+
+        return ::CreateWindowExA(dwExStyle,
+                                 lpClassName,
+                                 lpWindowName,
+                                 dwStyle,
+                                 x, y,
+                                 nWidth, nHeight,
+                                 hWndParent,
+                                 hMenu,
+                                 hInstance,
+                                 lpParam);
+    }
+
+    HWND hWnd;
+    int len;
+    int needLen;
+    LPWSTR lpClassStr = nsnull;
+    LPWSTR lpWindowStr = nsnull;
+
+    if (lpClassName)
+    {
+        len = lstrlenA(lpClassName) + 1;
+        needLen = ::MultiByteToWideChar(CP_ACP, 0, lpClassName, len, NULL, 0);
+        if (needLen != 0)
+        {
+            lpClassStr = new WCHAR[needLen];
+            ::MultiByteToWideChar(CP_ACP, 0, lpClassName, len, lpClassStr, needLen);
+        }
+    }
+
+    if (lpWindowName)
+    {
+        len = lstrlenA(lpWindowName) + 1;
+        needLen = ::MultiByteToWideChar(CP_ACP, 0, lpWindowName, len, NULL, 0);
+        if (needLen != 0)
+        {
+            lpWindowStr = new WCHAR[needLen];
+            ::MultiByteToWideChar(CP_ACP, 0, lpWindowName, len, lpWindowStr, needLen);
+        }
+    }
+
+    hWnd = ::CreateWindowExW(dwExStyle,
+                             lpClassStr,
+                             lpWindowStr,
+                             dwStyle,
+                             x, y,
+                             nWidth, nHeight,
+                             hWndParent,
+                             hMenu,
+                             hInstance,
+                             lpParam);
+
+    if (lpClassStr)
+        delete lpClassStr;
+
+    if (lpWindowStr)
+        delete lpWindowStr;
+
+    return hWnd;
+}
+
+
+//-------------------------------------------------------------------------
+// Wrapper API of RegisterClass() for Unicode Window class support
+//-------------------------------------------------------------------------
+
+ATOM nsToolkit::nsRegisterClass(CONST WNDCLASS *lpWndClass)
+{
+    if (!nsToolkit::mIsNT)
+    {
+        // Windows 95/98/Me do not support Unicode API of ResigterClass.
+
+        return ::RegisterClassA(lpWndClass);
+    }
+
+     WNDCLASSW wc;
+     int len;
+     int needLen;
+     ATOM ret;
+
+     wc.style            = lpWndClass->style;
+     wc.lpfnWndProc      = lpWndClass->lpfnWndProc;
+     wc.cbClsExtra       = lpWndClass->cbClsExtra;
+     wc.cbWndExtra       = lpWndClass->cbWndExtra;
+     wc.hInstance        = lpWndClass->hInstance;
+     wc.hIcon            = lpWndClass->hIcon;
+     wc.hCursor          = lpWndClass->hCursor;
+     wc.hbrBackground    = lpWndClass->hbrBackground;
+     wc.lpszMenuName     = NULL;
+     wc.lpszClassName    = NULL;
+
+    if (lpWndClass->lpszMenuName)
+    {
+        len = lstrlenA(lpWndClass->lpszMenuName) + 1;
+        needLen = ::MultiByteToWideChar(CP_ACP, 0, lpWndClass->lpszMenuName, len, NULL, 0);
+        if (needLen != 0)
+        {
+            wc.lpszMenuName = new WCHAR[needLen];
+            ::MultiByteToWideChar(CP_ACP, 0, lpWndClass->lpszMenuName, len, (LPWSTR) wc.lpszMenuName, needLen);
+        }
+    }
+
+    if (lpWndClass->lpszClassName)
+    {
+        len = lstrlenA(lpWndClass->lpszClassName) + 1;
+        needLen = ::MultiByteToWideChar(CP_ACP, 0, lpWndClass->lpszClassName, len, NULL, 0);
+        if (needLen != 0)
+        {
+            wc.lpszClassName = new WCHAR[needLen];
+            ::MultiByteToWideChar(CP_ACP, 0, lpWndClass->lpszClassName, len, (LPWSTR) wc.lpszClassName, needLen);
+        }
+    }
+
+    ret = ::RegisterClassW(&wc);
+
+    if (wc.lpszMenuName)
+        delete [] (LPWSTR) wc.lpszMenuName;
+
+    if (wc.lpszClassName)
+        delete [] (LPWSTR) wc.lpszClassName;
+
+    return ret;
+}
+
+
+//-------------------------------------------------------------------------
+// Wrapper API of UnregisterClass() for Unicode Window class support
+//-------------------------------------------------------------------------
+
+BOOL nsToolkit::nsUnregisterClass(LPCSTR lpClassName, HINSTANCE hInstance)
+{
+    if (!nsToolkit::mIsNT)
+    {
+        // Windows 95/98/Me do not support Unicode API of UnResigterClass.
+
+        return ::UnregisterClassA(lpClassName, hInstance);
+    }
+
+    LPWSTR lpClassUnicode;
+    int len;
+    int needLen;
+    BOOL ret;
+
+    if (lpClassName)
+    {
+        len = lstrlenA(lpClassName) + 1;
+        needLen = ::MultiByteToWideChar(CP_ACP, 0, lpClassName, len, NULL, 0);
+        if (needLen)
+        {
+            lpClassUnicode = new WCHAR[needLen];
+            ::MultiByteToWideChar(CP_ACP, 0, lpClassName, len, lpClassUnicode, needLen);
+        }
+    }
+
+    ret = ::UnregisterClassW(lpClassUnicode, hInstance);
+
+    if (lpClassUnicode)
+        delete [] lpClassUnicode;
+
+    return ret;
 }
 
 
