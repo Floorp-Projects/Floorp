@@ -36,6 +36,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsFileTransport.obj            \
         .\$(OBJDIR)\nsFileTransportService.obj     \
         .\$(OBJDIR)\nsSocketTransport.obj          \
+        .\$(OBJDIR)\nsSocketTransportStreams.obj   \
         .\$(OBJDIR)\nsSocketTransportService.obj   \
         .\$(OBJDIR)\nsNetService.obj               \
         .\$(OBJDIR)\nsStandardUrl.obj              \
