@@ -57,9 +57,7 @@
 #include "nsISVGValueObserver.h"
 #include "nsStyleContext.h"
 #include "nsNetUtil.h"
-
-// class nsSVGLinearGradient;
-// class nsSVGRadialGradient;
+#include "nsINameSpaceManager.h"
 
 nsresult NS_NewSVGGenericContainerFrame(nsIPresShell *aPresShell, nsIContent *aContent, nsIFrame **aNewFrame);
 static nsresult GetSVGGradient(nsISVGGradient **result, nsCAutoString& aSpec, 
@@ -103,7 +101,7 @@ public:
   NS_DECL_NSISVGGRADIENT
 
   // Add destructor that releases all stop elements
-  PRBool checkURITarget(const nsAString &);
+  PRBool checkURITarget(nsIAtom *);
   PRBool checkURITarget();
 
 
@@ -288,7 +286,7 @@ nsSVGGradientFrame::GetGradientUnits(PRUint16 *aUnits)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (!checkURITarget(NS_LITERAL_STRING("gradientUnits"))) {
+  if (!checkURITarget(nsSVGAtoms::gradientUnits)) {
     // No, return the values
     aGrad->GetGradientUnits(getter_AddRefs(aEnum));
     aEnum->GetBaseVal(aUnits);
@@ -309,7 +307,7 @@ nsSVGGradientFrame::GetGradientTransform(nsIDOMSVGMatrix **aGradientTransform)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (!checkURITarget(NS_LITERAL_STRING("gradientTransform"))) {
+  if (!checkURITarget(nsSVGAtoms::gradientTransform)) {
     // No, return the values
     aGrad->GetGradientTransform(getter_AddRefs(aTrans));
     nsCOMPtr<nsIDOMSVGTransformList> lTrans;
@@ -332,7 +330,7 @@ nsSVGGradientFrame::GetSpreadMethod(PRUint16 *aSpreadMethod)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (!checkURITarget(NS_LITERAL_STRING("spreadMethod"))) {
+  if (!checkURITarget(nsSVGAtoms::spreadMethod)) {
     // No, return the values
     aGrad->GetSpreadMethod(getter_AddRefs(aEnum));
     aEnum->GetBaseVal(aSpreadMethod);
@@ -364,13 +362,9 @@ nsSVGGradientFrame::GetNextGradient(nsISVGGradient * *aNextGrad, PRUint32 aType)
 
 // Private (helper) methods
 PRBool 
-nsSVGGradientFrame::checkURITarget(const nsAString& attrStr) {
-  nsCOMPtr<nsIDOMSVGGradientElement> aGrad = do_QueryInterface(mContent);
-
+nsSVGGradientFrame::checkURITarget(nsIAtom *attr) {
   // Was the attribute explicitly set?
-  PRBool attr;
-  aGrad->HasAttribute(attrStr, &attr);
-  if (attr) {
+  if (mContent->HasAttr(kNameSpaceID_None, attr)) {
     // Yes, just return
     return PR_FALSE;
   }
@@ -438,7 +432,7 @@ nsSVGLinearGradientFrame::GetX1(float *aX1)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("x1"))) {
+  if (checkURITarget(nsSVGAtoms::x1)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_LINEAR_GRADIENT) == NS_OK) {
@@ -467,7 +461,7 @@ nsSVGLinearGradientFrame::GetY1(float *aY1)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("y1"))) {
+  if (checkURITarget(nsSVGAtoms::y1)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_LINEAR_GRADIENT) == NS_OK) {
@@ -496,7 +490,7 @@ nsSVGLinearGradientFrame::GetX2(float *aX2)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("x2"))) {
+  if (checkURITarget(nsSVGAtoms::x2)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_LINEAR_GRADIENT) == NS_OK) {
@@ -525,7 +519,7 @@ nsSVGLinearGradientFrame::GetY2(float *aY2)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("y2"))) {
+  if (checkURITarget(nsSVGAtoms::y2)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_LINEAR_GRADIENT) == NS_OK) {
@@ -584,7 +578,7 @@ nsSVGRadialGradientFrame::GetCx(float *aCx)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("cx"))) {
+  if (checkURITarget(nsSVGAtoms::cx)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_RADIAL_GRADIENT) == NS_OK) {
@@ -613,7 +607,7 @@ nsSVGRadialGradientFrame::GetCy(float *aCy)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("cy"))) {
+  if (checkURITarget(nsSVGAtoms::cy)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_RADIAL_GRADIENT) == NS_OK) {
@@ -642,7 +636,7 @@ nsSVGRadialGradientFrame::GetR(float *aR)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("r"))) {
+  if (checkURITarget(nsSVGAtoms::r)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_RADIAL_GRADIENT) == NS_OK) {
@@ -671,7 +665,7 @@ nsSVGRadialGradientFrame::GetFx(float *aFx)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("fx"))) {
+  if (checkURITarget(nsSVGAtoms::fx)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_RADIAL_GRADIENT) == NS_OK) {
@@ -702,7 +696,7 @@ nsSVGRadialGradientFrame::GetFy(float *aFy)
     return NS_ERROR_FAILURE;
   }
   // See if we need to get the value from another gradient
-  if (checkURITarget(NS_LITERAL_STRING("fy"))) {
+  if (checkURITarget(nsSVGAtoms::fy)) {
     // Yes, get it from the target
     nsISVGGradient *aNextGrad;
     if (nsSVGGradientFrame::GetNextGradient(&aNextGrad, nsISVGGradient::SVG_RADIAL_GRADIENT) == NS_OK) {
