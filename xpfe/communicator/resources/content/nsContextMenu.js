@@ -339,8 +339,8 @@ nsContextMenu.prototype = {
         // See if the user clicked on MathML
         const NS_MathML = "http://www.w3.org/1998/Math/MathML";
         if ((this.target.nodeType == Node.TEXT_NODE &&
-               this.target.parentNode.namespaceURI == NS_MathML) 
-             || (this.target.namespaceURI == NS_MathML))   
+             this.target.parentNode.namespaceURI == NS_MathML)
+             || (this.target.namespaceURI == NS_MathML))
           this.onMathML = true;
 
         // See if the user clicked in a frame.
