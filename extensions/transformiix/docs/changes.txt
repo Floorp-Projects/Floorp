@@ -1,6 +1,14 @@
 TransforMiiX (TM) 
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+Build 20000326
+
+-- Added Peter Van der Beken's changes to net/URIUtils for integration
+   within Mozilla
+
+-- Added Marina Mechtcheriakova's changes to xml/parser/XMLParser.cpp to fix
+   a Unicode bug in ::startElement. Instead of improperly casting char* 
+   as DOM_CHAR*, the proper String constructor, String(char*) is used
 
 Build 20000322
 -- Added Unicode bug fix from Lidong
