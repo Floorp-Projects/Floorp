@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Owen Taylor <otaylor@redhat.com>
+#                 Gervase Markham <gerv@gerv.net>
 
 use diagnostics;
 use strict;
@@ -28,40 +29,61 @@ use lib qw(.);
 
 require "CGI.pl";
 
-print "Content-type: text/html\n\n";
+# Use the template toolkit (http://www.template-toolkit.org/)
+use Template;
 
-PutHeader("Quips for the impatient", "Add your own clever headline");
+# Create the global template object that processes templates
+my $template = Template->new(
+{
+    INCLUDE_PATH => "template/custom:template/default",
+    RELATIVE => 1,
+    PRE_CHOMP => 1,
+});
 
-print qq{
-The buglist picks a random quip for the headline, and 
-you can extend the quip list.  Type in something clever or
-funny or boring and bonk on the button.
-
-<FORM METHOD=POST ACTION="new_comment.cgi">
-<INPUT SIZE=80 NAME="comment"><BR>
-<INPUT TYPE="submit" VALUE="Add This Quip">
-</FORM>
+# Define the global variables and functions that will be passed to the UI 
+# template.  
+my $vars = 
+{
+    'Param' => \&Param, 
+    'PerformSubsts' => \&PerformSubsts,
 };
 
-if (exists $::FORM{show_quips}) {
+my $action = $::FORM{'action'} || "";
 
-    print qq{
-<H2>Existing headlines</H2>
-};
-
+if ($action eq "show") {
+    # Read in the entire quip list
     if (open (COMMENTS, "<data/comments")) {
-        while (<COMMENTS>) {
-            print $_,"<br>\n";
-        }
+        my @quips;
+        push (@quips, $_) while (<COMMENTS>);        
         close COMMENTS;
+        
+        $vars->{'quips'} = \@quips;
+        $vars->{'show_quips'} = 1;
     }
-    print "<P>";
-} else {
-    print qq{
-For the impatient, you can 
-<A HREF="quips.cgi?show_quips=yes">view the whole quip list</A>.
-};
-    print "<P>";
 }
 
-PutFooter();
+if ($action eq "add") {
+    # Add the quip 
+    my $comment = $::FORM{"quip"};
+    if (!$comment) {
+        DisplayError("Please enter a quip in the text field.");
+        exit();
+    }
+    
+    if ($comment =~ m/</) {
+        DisplayError("Sorry - for security reasons, support for HTML tags has 
+                      been turned off in quips.");
+        exit();
+    }
+
+    open(COMMENTS, ">>data/comments");
+    print COMMENTS $comment . "\n";
+    close(COMMENTS);
+
+    $vars->{'added_quip'} = $comment;
+}
+
+print "Content-type: text/html\n\n";
+$template->process("info/quips.tmpl", $vars)
+  || DisplayError("Template process failed: " . $template->error())
+  && exit;
