@@ -22,27 +22,19 @@
 DEPTH=..\..
 MODULE=docshell_html
 
-MAKE_OBJ_TYPE=DLL
-DLLNAME=htmldshl
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
 XPIDLSRCS=						\
 		.\nsCHTMLDocShell.idl	\
 		.\nsIHTMLDocShell.idl	\
 		$(NULL)
 
-#CPP_OBJS=											\
-#		.\$(OBJDIR)\nsCNativeAppImpl.obj			\
-#		.\$(OBJDIR)\nsCNativeAppModule.obj	\
-#		$(NULL)
+LIBRARY_NAME=htmldocshell_s
 
-#LLIBS=                              \
-#        $(DIST)\lib\xpcom.lib       \
-#        $(LIBNSPR)  
+CPP_OBJS=											\
+		.\$(OBJDIR)\nsHTMLDocShell.obj			\
+		$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
-#install:: $(DLL)
-#	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-#	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
