@@ -184,7 +184,10 @@ my ($server, $port, $localAddr, @nicks, @channels, %channelKeys, $owner,
 my $nick = 0;
 my $sleepdelay = 60;
 my $connectTimeout = 120;
-my $delaytime = 1.3;
+my $delaytime = 1.3; # amount of time to wait between outputs
+my $recentMessageCountLimit = 5; # upper limit
+my $recentMessageCountDecrementRate = 0.2; # how much to take off per $delayTime
+my $recentMessageCountPenalty = 10; # if we hit the limit, bump it up by this much
 my $variablepattern = '[-_:a-zA-Z0-9]+';
 my %users = ('admin' => &newPassword('password')); # default password for admin
 my %userFlags = ('admin' => 3); # bitmask; 0x1 = admin, 0x2 = delete user a soon as other admin authenticates
@@ -550,6 +553,7 @@ sub on_connect {
 
     # enable the drainmsgqueue
     &drainmsgqueue($self);
+    $self->schedule($delaytime, \&lowerRecentMessageCount);
 
     # signal that we are connected (see next two functions)
     $self->{'__mozbot__active'} = 1; # HACK HACK HACK
@@ -831,6 +835,7 @@ sub doLog {
 ################################
 
 my @msgqueue;
+my %recentMessages;
 my $timeLastSetAway = 0; # the time since the away flag was last set, so that we don't set it repeatedly.
 
 # Use this routine, always, instead of the standard "privmsg" routine.  This
@@ -865,48 +870,50 @@ sub drainmsgqueue {
     my $qln = @msgqueue;
     if (@msgqueue > 0) {
         my ($who, $msg, $do) = getnextmsg();
-        my $type;
-        if ($do eq 'msg') {
-            &debug("->$who: $msg"); # XXX this makes logfiles large quickly...
-            $self->privmsg($who, $msg); # it seems 'who' can be an arrayref and it works
-            $type = 'Heard';
-        } elsif ($do eq 'me') {
-            &debug("->$who * $msg"); # XXX
-            $self->me($who, $msg);
-            $type = 'Saw';
-        } elsif ($do eq 'notice') {
-            &debug("=notice=>$who: $msg");
-            $self->notice($who, $msg);
-            # $type = 'XXX';
-        } elsif ($do eq 'ctcpSend') {
-            { local $" = ' '; &debug("->$who CTCP PRIVMSG @$msg"); }
-            my $type = shift @$msg; # @$msg contains (type, args)
-            $self->ctcp($type, $who, @$msg);
-            # $type = 'XXX';
-        } elsif ($do eq 'ctcpReply') {
-            &debug("->$who CTCP NOTICE $msg");
-            $self->ctcp_reply($who, $msg);
-            # $type = 'XXX';
-        } else {
-            &debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
-        }
-        if (defined($type)) {
-            &doLog({
-                'bot' => $self,
-                '_event' => undef,
-                'channel' => &toToChannel($self, $who),
-                'from' => $self->nick,
-                'target' => $who,
-                'user' => undef, # XXX
-                'data' => $msg,
-                'fulldata' => $msg,
-                'to' => $who,
-                'subtype' => undef,
-                'firsttype' => $type,
-                'nick' => $self->nick,
-                'level' => 0,
-                'type' => $type,
-            });
+        unless (weHaveSaidThisTooManyTimesAlready($self, \$who, \$msg, \$do)) {
+            my $type;
+            if ($do eq 'msg') {
+                &debug("->$who: $msg"); # XXX this makes logfiles large quickly...
+                $self->privmsg($who, $msg); # it seems 'who' can be an arrayref and it works
+                $type = 'Heard';
+            } elsif ($do eq 'me') {
+                &debug("->$who * $msg"); # XXX
+                $self->me($who, $msg);
+                $type = 'Saw';
+            } elsif ($do eq 'notice') {
+                &debug("=notice=>$who: $msg");
+                $self->notice($who, $msg);
+                # $type = 'XXX';
+            } elsif ($do eq 'ctcpSend') {
+                { local $" = ' '; &debug("->$who CTCP PRIVMSG @$msg"); }
+                my $type = shift @$msg; # @$msg contains (type, args)
+                $self->ctcp($type, $who, @$msg);
+                # $type = 'XXX';
+            } elsif ($do eq 'ctcpReply') {
+                &debug("->$who CTCP NOTICE $msg");
+                $self->ctcp_reply($who, $msg);
+                # $type = 'XXX';
+            } else {
+                &debug("Unknown action '$do' intended for '$who' (content: '$msg') ignored.");
+            }
+            if (defined($type)) {
+                &doLog({
+                    'bot' => $self,
+                    '_event' => undef,
+                    'channel' => &toToChannel($self, $who),
+                    'from' => $self->nick,
+                    'target' => $who,
+                    'user' => undef, # XXX
+                    'data' => $msg,
+                    'fulldata' => $msg,
+                    'to' => $who,
+                    'subtype' => undef,
+                    'firsttype' => $type,
+                    'nick' => $self->nick,
+                    'level' => 0,
+                    'type' => $type,
+                });
+            }
         }
         if (@msgqueue > 0) {
             if ((@msgqueue % 10 == 0) and (time() - $timeLastSetAway > 5 * $delaytime)) {
@@ -921,6 +928,58 @@ sub drainmsgqueue {
             &bot_back($self); # clear away state
         }
     }
+}
+
+sub weHaveSaidThisTooManyTimesAlready {
+    my($self, $who, $msg, $do) = @_;
+    my $key;
+    if ($$do eq 'ctcpSend') {
+        local $" = ',';
+        $key = "$$who,$$do,@{$$msg}";
+    } else {
+        $key = "$$who,$$do,$$msg";
+    }
+    my $count = ++$recentMessages{$key};
+    if ($count >= $recentMessageCountLimit and
+        $count < $recentMessageCountLimit + 1 and
+        $$do ne 'ctcpSend') {
+        $recentMessages{$key} += $recentMessageCountPenalty;
+        my $text = $$msg;
+        if (length($msg) > 23) { # arbitrary length (XXX)
+            $text = substr($text, 0, 20) . '...';
+        }
+        $$do = 'me';
+        $$msg = "was going to say '$text' but has said it too many times today already";
+    } elsif ($count >= $recentMessageCountLimit) {
+        if ($$do eq 'msg') {
+            &debug("MUTED: ->$$who: $$msg");
+        } elsif ($$do eq 'me') {
+            &debug("MUTED: ->$$who * $$msg"); # XXX
+        } elsif ($$do eq 'notice') {
+            &debug("MUTED: =notice=>$$who: $$msg");
+        } elsif ($$do eq 'ctcpSend') {
+            local $" = ' ';
+            &debug("MUTED: ->$$who CTCP PRIVMSG @{$$msg}");
+        } elsif ($$do eq 'ctcpReply') {
+            &debug("MUTED: ->$$who CTCP NOTICE $$msg");
+        } else {
+            &debug("MUTED: Unknown action '$$do' intended for '$$who' (content: '$$msg') ignored.");
+        }
+        return 1;
+    }
+    return 0;
+}
+
+sub lowerRecentMessageCount {
+    my $self = shift;
+    return unless $self->connected;
+    foreach my $key (keys %recentMessages) {
+        $recentMessages{$key} -= $recentMessageCountDecrementRate;
+        if ($recentMessages{$key} <= 0) {
+            delete $recentMessages{$key};
+        }
+    }
+    $self->schedule($delaytime, \&lowerRecentMessageCount);
 }
 
 # wrap long lines at spaces and hard returns (\n)
