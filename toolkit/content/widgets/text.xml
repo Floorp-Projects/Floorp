@@ -150,7 +150,7 @@
       <property name="accessKey">
         <getter>
           <![CDATA[
-            var accessKey;
+            var accessKey = null;
             var labeledEl = this.labeledControlElement;
             if (labeledEl) {
               accessKey = labeledEl.getAttribute('accesskey');
