@@ -53,6 +53,8 @@
 #include <signal.h>
 #include <assert.h>
 #include <sys/un.h>
+#include "nspr.h"
+#include "nsCRT.h"
 #include "unix_dns.h"
 
 #if defined(AIX) || defined(__linux)
@@ -378,7 +380,7 @@ cancelLookup (int id)
 static void
 blockingGethostbyname (const char *name, int out_fd)
 {
-
+  int i;
     static int firstTime = true;
     if (firstTime)
     {
@@ -387,7 +389,7 @@ blockingGethostbyname (const char *name, int out_fd)
     }
 
 #ifdef GETHOSTBYNAME_DELAY
-    int i = GETHOSTBYNAME_DELAY;
+    i = GETHOSTBYNAME_DELAY;
     sleep(i);
 #endif // GETHOSTBYNAME_DELAY
 
@@ -400,6 +402,18 @@ blockingGethostbyname (const char *name, int out_fd)
 
         *(int *)&buf[0] = (int) DNS_STATUS_GETHOSTBYNAME_OK;
         char *p = buf + sizeof (int);
+
+#if defined(DNS_DEBUG)
+        printf("gethostbyname complete\n");
+        for (i=0; h->h_addr_list[i]; i++);
+        printf("%d addresses for %s\n",i,h->h_name);
+        printf("address: ");
+        for (i = 0; i <= h->h_length; i++){
+          printf("%2.2x", (unsigned char)h->h_addr_list[0][i]);
+        }
+        printf("\n");
+#endif
+
         hostentToBytes (h, p, &size);
         size = size + sizeof (int);
     }
@@ -470,8 +484,11 @@ spawnHelperProcess (const char *name)
   
 int main (int argc, char **argv)
 {
-
-
+/*
+  PRFileDesc* sock = PR_GetInheritedFD(DNS_SOCK_NAME);
+  if (sock == nsnull)
+    return -1;
+*/
     signal (SIGINT, mySignalHandler);  // trap SIGINT
     //  TODO:  more signals need to be trapped.  Will do...
 
@@ -564,6 +581,9 @@ int main (int argc, char **argv)
                 }
                 else if (!strncmp (buffer, "lookup:", 7))
                 {
+#if defined(DNS_DEBUG)
+                  printf("received lookup request for: %s\n",name);
+#endif
                     obj = spawnHelperProcess (name);
                     obj->accept_fd = accept_fd;
                     char hId[5];
@@ -587,13 +607,14 @@ int main (int argc, char **argv)
             {
                 r = read (obj->fd, buffer, BUFSIZ);
                 int status;
-                wait(&status);
-                close (obj->fd);
 
                 // Send the reponse "hostent" back to client.
                 send (obj->accept_fd, buffer, r, 0);
                 close (obj->accept_fd);
                 removeFromDnsQueue (obj);
+
+                wait(&status);
+                close (obj->fd);
             }
         }
     }
