@@ -670,8 +670,10 @@ xpfe/browser/Makefile
 xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
+xpfe/browser/resources/content/unix/Makefile
 xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
+xpfe/browser/resources/locale/en-US/unix/Makefile
 xpfe/appfilelocprovider/Makefile
 xpfe/appfilelocprovider/public/Makefile
 xpfe/appfilelocprovider/src/Makefile
