@@ -562,6 +562,9 @@ JS_SetGCCallback(JSContext *cx, JSGCCallback cb);
 extern JS_PUBLIC_API(JSGCCallback)
 JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb);
 
+extern JS_PUBLIC_API(JSBool)
+JS_IsAboutToBeFinalized(JSContext *cx, void *thing);
+
 /*
  * Add an external string finalizer, one created by JS_NewExternalString (see
  * below) using a type-code returned from this function, and that understands

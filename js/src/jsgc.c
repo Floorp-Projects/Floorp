@@ -214,6 +214,12 @@ gc_find_flags(void *thing)
     return flagp;
 }
 
+JSBool js_IsAboutToBeFinalized(JSContext *cx, void *thing)
+{
+    uint8 flags = *gc_find_flags(thing);
+    return !(flags & (GCF_MARK | GCF_LOCKMASK | GCF_FINAL));
+}
+
 typedef void (*GCFinalizeOp)(JSContext *cx, JSGCThing *thing);
 
 static GCFinalizeOp gc_finalizers[GCX_NTYPES];
@@ -331,7 +337,7 @@ js_FinishGC(JSRuntime *rt)
     JS_FinishArenaPool(&rt->gcArenaPool);
     JS_ArenaFinish();
 
-#if DEBUG        
+#ifdef DEBUG        
     {
         uint32 leakedroots = 0;
         /* Warn (but don't assert) debug builds of any remaining roots. */
@@ -966,12 +972,17 @@ js_GC(JSContext *cx, uintN gcflags)
     /* Avoid deadlock. */
     JS_ASSERT(!JS_IS_RUNTIME_LOCKED(rt));
 #endif
-    if (!(gcflags & GC_LAST_CONTEXT)) {
-        if (rt->gcDisabled)
-            return;
+    
+    /* Don't run gc if it is disabled (unless this is the last context). */
+    if (rt->gcDisabled && !(gcflags & GC_LAST_CONTEXT))
+        return;
 
-        /* Let the API user decide to defer a GC if it wants to. */
-        if (rt->gcCallback && !rt->gcCallback(cx, JSGC_BEGIN))
+    /* 
+     * Let the API user decide to defer a GC if it wants to (unless this
+     * is the last context). Call the callback regardless.
+     */
+    if (rt->gcCallback) {
+        if (!rt->gcCallback(cx, JSGC_BEGIN) && !(gcflags & GC_LAST_CONTEXT))
             return;
     }
 
@@ -1169,6 +1180,9 @@ restart:
         }
     }
 
+    if (rt->gcCallback)
+        (void) rt->gcCallback(cx, JSGC_MARK_END);
+
     /*
      * Sweep phase.
      * Finalize as we sweep, outside of rt->gcLock, but with rt->gcRunning set
@@ -1275,6 +1289,6 @@ out:
     JS_UNLOCK_GC(rt);
 #endif
 
-    if (!(gcflags & GC_LAST_CONTEXT) && rt->gcCallback)
-	(void) rt->gcCallback(cx, JSGC_END);
+    if (rt->gcCallback)
+        (void) rt->gcCallback(cx, JSGC_END);
 }

@@ -1631,6 +1631,13 @@ JS_SetGCCallbackRT(JSRuntime *rt, JSGCCallback cb)
     return oldcb;
 }
 
+JS_PUBLIC_API(JSBool)
+JS_IsAboutToBeFinalized(JSContext *cx, void *thing)
+{
+    JS_ASSERT(thing);
+    return js_IsAboutToBeFinalized(cx, thing);
+}
+
 JS_PUBLIC_API(intN)
 JS_AddExternalStringFinalizer(JSStringFinalizeOp finalizer)
 {
