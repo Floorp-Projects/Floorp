@@ -74,7 +74,7 @@ function validateEmail() {
     if (emailArray.length != 2 ||
         emailArray[0] == "" ||
         emailArray[1] == "") {
-      var alertText = Bundle.GetStringFromName("enterValidEmail");
+      alertText = Bundle.GetStringFromName("enterValidEmail");
       window.alert(alertText);
       return false;
     }

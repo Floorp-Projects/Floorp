@@ -47,7 +47,7 @@ function validate() {
     var hostName = servername.value;
 
     if (parent.AccountExists(userName,hostName,serverType)) {
-      var alertText = Bundle.GetStringFromName("accountExists");
+      alertText = Bundle.GetStringFromName("accountExists");
       window.alert(alertText);
       return false;
     }

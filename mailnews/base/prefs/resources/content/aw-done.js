@@ -46,7 +46,7 @@ function setDivTextFromForm(divid, value) {
     }
 
     // otherwise fill in the .text element
-    var div = document.getElementById(divid+".text");
+    div = document.getElementById(divid+".text");
     if (!div) return;
 
     div.setAttribute("value", value);
