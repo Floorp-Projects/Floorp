@@ -20,9 +20,10 @@ then
     QASCRIPT_DIR=`dirname $0`
 fi
 
-PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
+#FIXME - put back in place for UNIX, remove for NT
+#PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
 
-CVSROOT=:pserver:svbld@cvsserver:/m/src
+CVSROOT=:pserver:svbld@redcvs.red.iplanet.com:/m/src
 
 os_name=`uname -s`
 os_version=`uname -r`
