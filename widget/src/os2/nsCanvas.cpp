@@ -147,6 +147,7 @@ PRBool nsCanvas::OnPaint()
          rc = DispatchWindowEvent( &event);
    
          NS_RELEASE( event.renderingContext);
+         NS_RELEASE( event.widget);
       }
 #else
       RECTL rcl = { 0 };
@@ -171,6 +172,7 @@ PRBool nsCanvas::OnPaint()
          rc = DispatchWindowEvent( &event);
    
          NS_RELEASE( event.renderingContext);
+         NS_RELEASE( event.widget);
       }
 
       WinEndPaint( thePS);
