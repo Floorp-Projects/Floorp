@@ -436,7 +436,7 @@ void nsCSSDisplay::List(FILE* out, PRInt32 aIndent) const
 
 // --- nsCSSMargin -----------------
 
-inline void nsCSSMargin::EnsureBorderColors()
+void nsCSSMargin::EnsureBorderColors()
 {
   if (!mBorderColors) {
     PRInt32 i;
