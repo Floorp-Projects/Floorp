@@ -77,24 +77,30 @@ void nsFontMetricsUnix::RealizeFont()
 
 nscoord nsFontMetricsUnix :: GetWidth(char ch)
 {
-  return mCharWidths[PRUint8(ch)];
+  return 10 ;
+  //return mCharWidths[PRUint8(ch)];
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(PRUnichar ch)
 {
+  return 10 ;
+  /*
   if (ch < 256) {
     return mCharWidths[ch];
   }
-  return 0;/* XXX */
+  return 0;*//* XXX */
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const nsString& aString)
 {
-  return GetWidth(aString.GetUnicode(), aString.Length());
+  return 10 ;
+  //return GetWidth(aString.GetUnicode(), aString.Length());
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
 {
+  return 100 ;
+#if 0
   // XXX use native text measurement routine
   nscoord sum = 0;
   PRUint8 ch;
@@ -102,10 +108,13 @@ nscoord nsFontMetricsUnix :: GetWidth(const char *aString)
     sum += mCharWidths[ch];
   }
   return sum;
+#endif
 }
 
 nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength)
 {
+  return 100;
+#if 0
   // XXX use native text measurement routine
   nscoord sum = 0;
   while (aLength != 0) {
@@ -118,11 +127,13 @@ nscoord nsFontMetricsUnix :: GetWidth(const PRUnichar *aString, PRUint32 aLength
     --aLength;
   }
   return sum;
+#endif
 }
 
 nscoord nsFontMetricsUnix :: GetHeight()
 {
-  return mHeight;
+  return 20;
+  //  return mHeight;
 }
 
 nscoord nsFontMetricsUnix :: GetLeading()
