@@ -880,12 +880,12 @@ run::
 ################################################################################
 ## JAR Manifests
 
-JAR_MANIFEST = manifest.jm
+JAR_MANIFEST = jar.mn
 !if exist($(JAR_MANIFEST))
 
 xinstall:: 
         @echo +++ make: packaging jars from $(JAR_MANIFEST)
-        $(PERL) $(DEPTH)\config\make-jars.pl -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
+        $(PERL) $(DEPTH)\config\make-jars.pl -o $(OBJDIR) -d $(DIST)\bin\chrome < $(JAR_MANIFEST)
 
 !endif
 
