@@ -85,6 +85,9 @@ public:
     PRInt16     Module(void) const;
     void        Module(PRUint16 i_m);
 
+    const char* PostData(void) const;
+    void        PostData(const char* i_data, PRUint32 i_Len);
+
     PRUint32    Size(void) const;
     void        Size(PRUint32 s);
 

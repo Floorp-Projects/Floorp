@@ -27,6 +27,7 @@
  */
 //#include <nsISupports.h>
 #include "nsCacheObject.h"
+#include "nsEnumeration.h"
 
 /* Why the hell is forward decl. not working? */
 //class nsCacheObject;
@@ -37,6 +38,7 @@ static const NS_CACHEMODULE_ID =
 { 0x5d51b24f, 0xe6c2, 0x11d1, { 0xaf, 0xe5, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
 */
 
+class nsCacheIterator;
 class nsCacheModule /*: public nsISupports */
 {
 
@@ -58,11 +60,11 @@ public:
     
     const PRUint32      Entries(void) const;
 
+    nsEnumeration*      Enumeration(void) const;
+
     //TODO move to own interface for both Garbage Collection and Revalidation
     virtual
         void            GarbageCollect(void);
-
-    nsCacheObject*      GetFirstObject(void) const ;//TODO-?/
 
     virtual
         nsCacheObject*  GetObject(const char* i_url) const=0;
@@ -85,20 +87,27 @@ public:
         PRBool          Remove(const PRUint32 i_index) = 0;
 
     virtual
+        PRBool          RemoveAll(void);
+
+    virtual
         PRBool          Revalidate(void) = 0;
 
     const PRUint32      Size(void) const;
     void                Size(const PRUint32 i_size);
 
+    PRUint32            SizeInUse(void) const;
+
     const char*         Trace(void) const;
 
 protected:
 
-    PRUint32    m_Entries;
-    PRUint32    m_Size;
-    PRBool      m_Enabled;
-
-    nsCacheModule* m_pNext;
+    PRUint32            m_Entries;
+    PRUint32            m_Size;
+    PRUint32            m_SizeInUse;
+    PRBool              m_Enabled;
+    nsEnumeration*      m_pEnumeration;
+    nsCacheIterator*    m_pIterator;
+    nsCacheModule*      m_pNext;
 
 private:
     nsCacheModule(const nsCacheModule& cm);
@@ -116,9 +125,17 @@ inline const PRUint32 nsCacheModule::Entries() const
     return m_Entries;
 }
 
-inline nsCacheObject* nsCacheModule::GetFirstObject() const 
+inline 
+nsEnumeration* nsCacheModule::Enumeration(void) const
 {
-    return this->GetObject((PRUint32)0);
+    if (!m_pEnumeration)
+    {
+        PR_ASSERT(m_pIterator);
+        ((nsCacheModule*)this)->m_pEnumeration = new nsEnumeration((nsIterator*)m_pIterator); 
+    }
+    else
+        ((nsCacheModule*)this)->m_pEnumeration->Reset();
+    return m_pEnumeration;
 }
 
 inline PRBool nsCacheModule::IsEnabled(void) const
@@ -149,6 +166,11 @@ inline const PRUint32 nsCacheModule::Size() const
 inline void nsCacheModule::Size(const PRUint32 size)
 {
     m_Size = size;
+}
+
+inline PRUint32 nsCacheModule::SizeInUse(void) const
+{
+    return m_SizeInUse;
 }
 
 #endif // nsCacheModule_h__

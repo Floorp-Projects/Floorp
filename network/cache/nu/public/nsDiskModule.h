@@ -48,7 +48,7 @@ public:
 
     PRBool          Remove(const char* i_url);
     PRBool          Remove(const PRUint32 i_index);
-
+    
     PRBool          Revalidate(void);
 
 private:

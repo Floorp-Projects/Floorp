@@ -34,7 +34,7 @@ nsCachePref::nsCachePref(void):
 {
     //Read all the stuff from pref here. 
     //If this changes to nsPref, here is all that needs to be changed.
-    PRUint32 nTemp;
+    //PRUint32 nTemp;
 	//PREF_GetIntPref("browser.cache.memory_cache_size",&nTemp);
     //*1024
 }
@@ -52,6 +52,16 @@ nsCachePref::BkgSleepTime(void)
 PRUint32 nsCachePref::DiskCacheSize()
 {
     return ThePrefs.m_DiskCacheSize;
+}
+
+PRBool nsCachePref::DiskCacheSSL(void)
+{
+    return ThePrefs.m_bDiskCacheSSL;
+}
+
+void nsCachePref::DiskCacheSSL(PRBool bSet)
+{
+    ThePrefs.m_bDiskCacheSSL = bSet;
 }
 
 const char* nsCachePref::DiskCacheDBFilename(void)

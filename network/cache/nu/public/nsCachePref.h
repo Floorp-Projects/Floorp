@@ -43,6 +43,9 @@ public:
     static const char*      DiskCacheDBFilename(void); /* like Fat.db */
     static const char*      DiskCacheFolder(void);   /* Cache dir */
 
+    static PRBool           DiskCacheSSL(void);
+    static void             DiskCacheSSL(PRBool bSet);
+
     static PRUint32         DiskCacheSize(void);
     static PRUint32         MemCacheSize(void);
 
@@ -65,6 +68,7 @@ private:
     nsCachePref& operator=(const nsCachePref& o);
 
     PRBool                  m_bRevalidateInBkg;
+    PRBool                  m_bDiskCacheSSL;
     nsCachePref::Refresh    m_RefreshFreq;
     PRUint32                m_MemCacheSize;
     PRUint32                m_DiskCacheSize;
