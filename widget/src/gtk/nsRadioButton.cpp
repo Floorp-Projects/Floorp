@@ -88,9 +88,9 @@ NS_METHOD  nsRadioButton::CreateNative(GtkWidget *parentWindow)
 
   gtk_widget_show(mRadioButton);
 
-  SetState(PR_FALSE);
-
   gtk_widget_set_name(mRadioButton, "nsRadioButton");
+
+  gtk_radio_button_set_group(GTK_RADIO_BUTTON(mRadioButton), NULL);
 
   return NS_OK;
 }
@@ -113,7 +113,6 @@ void nsRadioButton::InitCallbacks(char * aName)
                  GDK_POINTER_MOTION_MASK);
 }
 
-
 //-------------------------------------------------------------------------
 //
 // Set this button label
@@ -121,8 +120,12 @@ void nsRadioButton::InitCallbacks(char * aName)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::SetState(const PRBool aState)
 {
-  //  printf("nsRadioButton::SetState(%p,%d)\n",this,aState);
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mRadioButton), aState);
+	GtkToggleButton * item = GTK_TOGGLE_BUTTON(mRadioButton);
+
+  item->active = (gboolean) aState;
+
+  gtk_widget_queue_draw(GTK_WIDGET(item));
+
   return NS_OK;
 }
 
@@ -132,8 +135,9 @@ NS_METHOD nsRadioButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-  int state = GTK_TOGGLE_BUTTON(mRadioButton)->active;
-  return state;
+  aState = (PRBool) GTK_TOGGLE_BUTTON(mRadioButton)->active;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
