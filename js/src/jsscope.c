@@ -367,7 +367,7 @@ js_GetMutableScope(JSContext *cx, JSObject *obj)
 {
     JSScope *scope, *newscope;
 
-    scope = (JSScope *) obj->map;
+    scope = OBJ_SCOPE(obj);
     JS_ASSERT(JS_IS_SCOPE_LOCKED(scope));
     if (scope->object == obj)
 	return scope;

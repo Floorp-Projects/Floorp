@@ -502,7 +502,7 @@ gc_mark(JSRuntime *rt, void *thing)
 	obj = thing;
 	vp = obj->slots;
 	if (vp) {
-	    scope = OBJ_IS_NATIVE(obj) ? (JSScope *) obj->map : NULL;
+	    scope = OBJ_IS_NATIVE(obj) ? OBJ_SCOPE(obj) : NULL;
 	    if (scope) {
 		clasp = JSVAL_TO_PRIVATE(obj->slots[JSSLOT_CLASS]);
 
@@ -550,7 +550,8 @@ gc_mark(JSRuntime *rt, void *thing)
                                         id, js_getter_str);
 #endif
                             GC_MARK(rt,
-                                    JSVAL_TO_GCTHING((jsval)sprop->getter),
+                                    JSVAL_TO_GCTHING((jsval)
+                                        SPROP_GETTER_SCOPE(sprop, scope)),
                                     buf,
                                     prev);
                         }
@@ -560,7 +561,8 @@ gc_mark(JSRuntime *rt, void *thing)
                                         id, js_setter_str);
 #endif
                             GC_MARK(rt,
-                                    JSVAL_TO_GCTHING((jsval)sprop->setter),
+                                    JSVAL_TO_GCTHING((jsval)
+                                        SPROP_SETTER_SCOPE(sprop, scope)),
                                     buf,
                                     prev);
                         }

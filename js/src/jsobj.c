@@ -249,7 +249,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                     (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                     val = JSVAL_NULL;
                     if (attrs & JSPROP_GETTER)
-                        val = (jsval) ((JSScopeProperty *)prop)->getter;
+                        val = (jsval)SPROP_GETTER((JSScopeProperty*)prop, obj2);
                     if (attrs & JSPROP_SETTER) {
                         if (val != JSVAL_NULL) {
                             /* Mark the getter here, then set val to setter. */
@@ -257,7 +257,7 @@ MarkSharpObjects(JSContext *cx, JSObject *obj, JSIdArray **idap)
                                                    NULL)
                                   != NULL);
                         }
-                        val = (jsval) ((JSScopeProperty *)prop)->setter;
+                        val = (jsval)SPROP_SETTER((JSScopeProperty*)prop, obj2);
                     }
                 } else {
                     ok = OBJ_GET_PROPERTY(cx, obj, id, &val);
@@ -486,13 +486,15 @@ js_obj_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 (attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
                 valcnt = 0;
                 if (attrs & JSPROP_GETTER) {
-                    val[valcnt] = (jsval) ((JSScopeProperty *)prop)->getter;
+                    val[valcnt] = (jsval)
+                        SPROP_GETTER((JSScopeProperty *)prop, obj2);
                     gsop[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.getterAtom);
                     valcnt++;
                 }
                 if (attrs & JSPROP_SETTER) {
-                    val[valcnt] = (jsval) ((JSScopeProperty *)prop)->setter;
+                    val[valcnt] = (jsval)
+                        SPROP_SETTER((JSScopeProperty *)prop, obj2);
                     gsop[valcnt] =
                         ATOM_TO_STRING(cx->runtime->atomState.setterAtom);
                     valcnt++;
@@ -1516,9 +1518,9 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
             (sprop->attrs & (JSPROP_GETTER | JSPROP_SETTER))) {
             sprop->attrs |= attrs;
             if (attrs & JSPROP_GETTER)
-                sprop->getter = getter;
+                SPROP_GETTER(sprop, pobj) = getter;
             else
-                sprop->setter = setter;
+                SPROP_SETTER(sprop, pobj) = setter;
             if (propp)
                 *propp = (JSProperty *) sprop;
 #ifdef JS_THREADSAFE
@@ -1610,7 +1612,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     for (;;) {
 	JS_LOCK_OBJ(cx, obj);
 	_SET_OBJ_INFO(obj, file, line);
-	scope = (JSScope *)obj->map;
+	scope = OBJ_SCOPE(obj);
 	if (scope == prevscope)
 	    goto skip;
 	sym = scope->ops->lookup(cx, scope, id, hash);
@@ -1635,7 +1637,7 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 		    JS_LOCK_OBJ(cx, obj);
 		    _SET_OBJ_INFO(obj, file, line);
 		    if (obj2) {
-			scope = (JSScope *)obj2->map;
+			scope = OBJ_SCOPE(obj2);
 			if (MAP_IS_NATIVE(&scope->map))
 			    sym = scope->ops->lookup(cx, scope, id, hash);
 		    }
@@ -1645,14 +1647,14 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 			return JS_FALSE;
 		    JS_LOCK_OBJ(cx, obj);
 		    _SET_OBJ_INFO(obj, file, line);
-		    scope = (JSScope *)obj->map;
+		    scope = OBJ_SCOPE(obj);
 		    if (MAP_IS_NATIVE(&scope->map))
 			sym = scope->ops->lookup(cx, scope, id, hash);
 		}
 	    }
 	}
 	if (sym && (sprop = sym_property(sym)) != NULL) {
-	    JS_ASSERT((JSScope *)obj->map == scope);
+	    JS_ASSERT(OBJ_SCOPE(obj) == scope);
 	    *objp = scope->object;	/* XXXbe hide in jsscope.[ch] */
 #ifdef JS_THREADSAFE
 	    js_HoldScopeProperty(cx, scope, sprop);
@@ -1924,7 +1926,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	JS_UNLOCK_OBJ(cx, obj);
 	while (proto) {
 	    JS_LOCK_OBJ(cx, proto);
-	    protoscope = (JSScope *)proto->map;
+	    protoscope = OBJ_SCOPE(proto);
 	    if (MAP_IS_NATIVE(&protoscope->map)) {
 		protosym = protoscope->ops->lookup(cx, protoscope, id, hash);
 		if (protosym) {
@@ -1952,8 +1954,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 #endif /* JS_HAS_GETTER_SETTER */
 
 			protoid = protosprop->id;
-			protogetter = protosprop->getter;
-			protosetter = protosprop->setter;
+			protogetter = SPROP_GETTER_SCOPE(protosprop,protoscope);
+			protosetter = SPROP_SETTER_SCOPE(protosprop,protoscope);
 			JS_UNLOCK_OBJ(cx, proto);
 			break;
 		    }
@@ -2191,7 +2193,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     }
 
     GC_POKE(cx, LOCKED_OBJ_GET_SLOT(obj, sprop->slot));
-    scope = (JSScope *)obj->map;
+    scope = OBJ_SCOPE(obj);
 
     /*
      * Purge cache only if prop is not about to be destroyed (since
@@ -2203,7 +2205,7 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
     }
 
 #if JS_HAS_OBJ_WATCHPOINT
-    if (sprop->setter == js_watch_set) {
+    if (SPROP_SETTER_SCOPE(sprop, scope) == js_watch_set) {
 	/*
 	 * Keep the symbol around with null value in case of re-set.
 	 * The watchpoint will hold the "deleted" property until it
@@ -2381,7 +2383,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	 * deleted during the iteration.
 	 */
 	JS_LOCK_OBJ(cx, obj);
-	scope = (JSScope *) obj->map;
+	scope = OBJ_SCOPE(obj);
 
 	/*
 	 * If this object shares a scope with its prototype, don't enumerate
@@ -2389,7 +2391,7 @@ js_Enumerate(JSContext *cx, JSObject *obj, JSIterateOp enum_op,
 	 * when the prototype object is enumerated.
 	 */
 	proto_obj = OBJ_GET_PROTO(cx, obj);
-	if (proto_obj && (scope == (JSScope *)proto_obj->map)) {
+	if (proto_obj && scope == OBJ_SCOPE(proto_obj)) {
 	    ida = js_NewIdArray(cx, 0);
 	    if (!ida) {
 		JS_UNLOCK_OBJ(cx, obj);
@@ -2553,7 +2555,7 @@ js_IsDelegate(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 void
 js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop)
 {
-    js_DropScopeProperty(cx, (JSScope *)obj->map, (JSScopeProperty *)prop);
+    js_DropScopeProperty(cx, OBJ_SCOPE(obj), (JSScopeProperty *)prop);
     JS_UNLOCK_OBJ(cx, obj);
 }
 #endif

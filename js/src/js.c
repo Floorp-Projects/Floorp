@@ -976,7 +976,7 @@ DumpScope(JSContext *cx, JSObject *obj, JSHashEnumerator dump, FILE *fp)
     int i;
 
     fprintf(fp, "\n%s scope contents:\n", OBJ_GET_CLASS(cx, obj)->name);
-    scope = (JSScope *)obj->map;
+    scope = OBJ_SCOPE(obj);
     if (!MAP_IS_NATIVE(&scope->map))
 	return;
     if (scope->ops == &js_list_scope_ops) {

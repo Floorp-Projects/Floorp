@@ -469,9 +469,9 @@ call_enumerate(JSContext *cx, JSObject *obj)
 	return JS_TRUE;
 
     /* Reflect actual args for formal parameters, and all local variables. */
-    scope = (JSScope *)fun->object->map;
+    scope = OBJ_SCOPE(fun->object);
     for (sprop = scope->props; sprop; sprop = sprop->next) {
-	getter = sprop->getter;
+	getter = SPROP_GETTER_SCOPE(sprop, scope);
 	if (getter != js_GetArgument && getter != js_GetLocalVariable)
 	    continue;
 
@@ -518,7 +518,7 @@ call_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
     }
 
     if (sprop) {
-	getter = sprop->getter;
+	getter = SPROP_GETTER(sprop, obj2);
 	propid = sprop->id;
 	symid = (jsid) sym_atom(sprop->symbols);
 	OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
@@ -804,7 +804,7 @@ fun_enumProperty(JSContext *cx, JSObject *obj)
      */
 
     JS_LOCK_OBJ(cx, obj);
-    scope = (JSScope *) obj->map;
+    scope = OBJ_SCOPE(obj);
     for (sprop = scope->props; sprop; sprop = sprop->next) {
 	jsval id = sprop->id;
 	if (!JSVAL_IS_INT(id)) {
@@ -1023,13 +1023,15 @@ fun_xdrObject(JSXDRState *xdr, JSObject **objp)
     /* do arguments and local vars */
     if (fun->object) {
 	if (xdr->mode == JSXDR_ENCODE) {
-	    JSScope *scope = (JSScope *) fun->object->map;
+	    JSScope *scope = OBJ_SCOPE(fun->object);
 
 	    for (sprop = scope->props; sprop; sprop = sprop->next) {
-		if (sprop->getter == js_GetArgument) {
+                JSPropertyOp getter = SPROP_GETTER_SCOPE(sprop, scope);
+
+		if (getter == js_GetArgument) {
 		    type = JSXDR_FUNARG;
 		    JS_ASSERT(nargs++ <= fun->nargs);
-		} else if (sprop->getter == js_GetLocalVariable) {
+		} else if (getter == js_GetLocalVariable) {
 		    type = JSXDR_FUNVAR;
 		    JS_ASSERT(nvars++ <= fun->nvars);
 		} else {
@@ -1535,7 +1537,7 @@ Function(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 		}
 		if (sprop && obj2 == obj) {
 #ifdef CHECK_ARGUMENT_HIDING
-		    JS_ASSERT(sprop->getter == js_GetArgument);
+		    JS_ASSERT(SPROP_GETTER(sprop, obj) == js_GetArgument);
 		    OBJ_DROP_PROPERTY(cx, obj2, (JSProperty *)sprop);
 		    JS_ReportErrorNumber(cx, JSREPORT_WARNING,
 					 JSMSG_SAME_FORMAL, ATOM_BYTES(atom));

@@ -165,8 +165,8 @@ struct JSObject {
 
 extern JS_FRIEND_DATA(JSObjectOps) js_ObjectOps;
 extern JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps;
-extern JSClass      js_ObjectClass;
-extern JSClass      js_WithClass;
+extern JSClass  js_ObjectClass;
+extern JSClass  js_WithClass;
 
 struct JSSharpObjectMap {
     jsrefcount  depth;
