@@ -113,6 +113,8 @@ NS_IMPL_RELEASE(nsExpatDTD)
  */
 nsExpatDTD::nsExpatDTD() : nsIDTD() {
   NS_INIT_REFCNT();
+    
+  mExpatParser=0;
   mParser=0;
   mSink=0;
   mFilename;
@@ -131,6 +133,8 @@ nsExpatDTD::~nsExpatDTD(){
   mParser=0; //just to prove we destructed...
   if(mTokenizer)
     delete (nsExpatTokenizer*)mTokenizer;
+  if (mExpatParser)
+    XML_ParserFree(mExpatParser);
 }
 
 /**
@@ -216,8 +220,7 @@ NS_IMETHODIMP nsExpatDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,
   */
 NS_IMETHODIMP nsExpatDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
-
-  /*
+  
   if(aTokenizer) {
     nsITokenizer*  oldTokenizer=mTokenizer;
     mTokenizer=aTokenizer;
@@ -240,7 +243,6 @@ NS_IMETHODIMP nsExpatDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer
     mTokenizer=oldTokenizer;
   }
   else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
-  */
 
   return result;
 }
@@ -279,23 +281,22 @@ nsITokenRecycler* nsExpatDTD::GetTokenRecycler(void){
 
 
 /**
- * Sets up the callbacks for the expat parser encapsulated by nsExpatTokenizer
+ * Sets up the callbacks for the expat parser      
  * @update  nra 2/24/99
  * @param   none
  * @return  none
  */
 void nsExpatDTD::SetupExpatCallbacks(void) {
-  PR_ASSERT( mTokenizer != NULL );
-  mTokenizer->SetElementHandler(HandleStartElement, HandleEndElement);
-  /*
-  mTokenizer->SetCharacterDataHandler(NULL);
-  mTokenizer->SetProcessingInstructionHandler(NULL);
-  mTokenizer->SetDefaultHandler(NULL);
-  mTokenizer->SetUnparsedEntityDeclHandler(NULL);
-  mTokenizer->SetNotationDeclHandler(NULL);
-  mTokenizer->SetExternalEntityRefHandler(NULL);
-  mTokenizer->SetUnknownEncodingHandler(NULL);
-  */
+  if (mExpatParser) {
+    XML_SetElementHandler(mExpatParser, HandleStartElement, HandleEndElement);    
+    XML_SetCharacterDataHandler(mExpatParser, HandleCharacterData);
+    XML_SetProcessingInstructionHandler(mExpatParser, HandleProcessingInstruction);
+    // XML_SetDefaultHandler(mExpatParser, NULL);
+    // XML_SetUnparsedEntityDeclHandler(mExpatParser, NULL);
+    XML_SetNotationDeclHandler(mExpatParser, HandleNotationDecl);
+    // XML_SetExternalEntityRefHandler(mExpatParser, NULL);
+    // XML_SetUnknownEncodingHandler(mExpatParser, NULL, NULL);    
+  }
 }
 
 /**
@@ -306,9 +307,11 @@ void nsExpatDTD::SetupExpatCallbacks(void) {
  */
 nsITokenizer* nsExpatDTD::GetTokenizer(void) {
   if(!mTokenizer) {
-    mTokenizer=new nsExpatTokenizer();
-    if (mTokenizer)
+    mTokenizer=new nsExpatTokenizer(this);
+    mExpatParser = XML_ParserCreate(NULL);
+    if (mExpatParser) {
       SetupExpatCallbacks();
+    }
   }
   return mTokenizer;
 }
@@ -490,6 +493,23 @@ nsresult nsExpatDTD::ReleaseTokenPump(nsITagHandler* aHandler){
   return result;
 }
 
+nsresult nsExpatDTD::ParseXMLBuffer(const char *buffer){
+  nsresult result=NS_OK;
+  if (mExpatParser) {
+    if (!XML_Parse(mExpatParser, buffer, strlen(buffer), PR_FALSE)) {
+      // XXX Add code here to implement error propagation to the
+      // content sink.
+      NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::ParseXMLBuffer(): \
+        Error propogation from expat not yet implemented.");
+      result = NS_ERROR_FAILURE;
+    }
+  }
+  else {
+    result = NS_ERROR_FAILURE;
+  }
+  return result;
+}
+
 /***************************************/
 /* Expat Callback Functions start here */
 /***************************************/
@@ -502,4 +522,56 @@ void nsExpatDTD::HandleStartElement(void *userData, const XML_Char *name, const 
 void nsExpatDTD::HandleEndElement(void *userData, const XML_Char *name)
 {
   NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleEndElement() not yet implemented.");
+}
+
+void nsExpatDTD::HandleCharacterData(void *userData, const XML_Char *s, int len)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleCharacterData() not yet implemented.");
+}
+
+void nsExpatDTD::HandleProcessingInstruction(void *userData, 
+                                             const XML_Char *target, 
+                                             const XML_Char *data)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleProcessingInstruction() not yet implemented.");
+}
+
+void nsExpatDTD::HandleDefault(void *userData, const XML_Char *s, int len)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleDefault() not yet implemented.");
+}
+
+void nsExpatDTD::HandleUnparsedEntityDecl(void *userData, 
+                                          const XML_Char *entityName, 
+                                          const XML_Char *base, 
+                                          const XML_Char *systemId, 
+                                          const XML_Char *publicId,
+                                          const XML_Char *notationName)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleUnparsedEntityDecl() not yet implemented.");
+}
+
+void nsExpatDTD::HandleNotationDecl(void *userData,
+                                    const XML_Char *notationName,
+                                    const XML_Char *base,
+                                    const XML_Char *systemId,
+                                    const XML_Char *publicId)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleNotationDecl() not yet implemented.");
+}
+
+void nsExpatDTD::HandleExternalEntityRef(XML_Parser parser,
+                                         const XML_Char *openEntityNames,
+                                         const XML_Char *base,
+                                         const XML_Char *systemId,
+                                         const XML_Char *publicId)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleExternalEntityRef() not yet implemented.");
+}
+
+void nsExpatDTD::HandleUnknownEncoding(void *encodingHandlerData,
+                                       const XML_Char *name,
+                                       XML_Encoding *info)
+{
+  NS_NOTYETIMPLEMENTED("Error: nsExpatDTD::HandleUnknownEncoding() not yet implemented.");
 }

@@ -28,9 +28,8 @@
 
 #include "nsISupports.h"
 #include "nsHTMLTokenizer.h"
-#include "nsIExpatTokenizer.h"
 #include "prtypes.h"
-#include "xmlparse.h"
+#include "nsExpatDTD.h"
 
 #define NS_EXPATTOKENIZER_IID      \
   {0x483836aa, 0xcabe, 0x11d2, { 0xab, 0xcb, 0x0, 0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
@@ -44,42 +43,20 @@
 #pragma warning( disable : 4275 )
 #endif
 
-CLASS_EXPORT_HTMLPARS nsExpatTokenizer : public nsHTMLTokenizer,
-                                         public nsIExpatTokenizer
-{
+CLASS_EXPORT_HTMLPARS nsExpatTokenizer : public nsHTMLTokenizer {
 public:
-          nsExpatTokenizer();
+          nsExpatTokenizer(nsExpatDTD *aDTD=0);      
   virtual ~nsExpatTokenizer();
 
           NS_DECL_ISUPPORTS
 
   /* nsITokenizer methods */
   virtual nsresult ConsumeToken(nsScanner& aScanner);
-  virtual nsITokenRecycler* GetTokenRecycler(void);
-
-  virtual CToken*           PushTokenFront(CToken* theToken);
-  virtual CToken*           PushToken(CToken* theToken);
-	virtual CToken*           PopToken(void);
-	virtual CToken*           PeekToken(void);
-	virtual PRInt32           GetCount(void);
-	virtual CToken*           GetTokenAt(PRInt32 anIndex);
-
-  /* nsIExpatTokenizer methods to set callbacks on the expat parser */
-  virtual void SetElementHandler(XML_StartElementHandler start, XML_EndElementHandler end);
-  virtual void SetCharacterDataHandler(XML_CharacterDataHandler handler);
-  virtual void SetProcessingInstructionHandler(XML_ProcessingInstructionHandler handler);
-  virtual void SetDefaultHandler(XML_DefaultHandler handler);
-  virtual void SetUnparsedEntityDeclHandler(XML_UnparsedEntityDeclHandler handler);
-  virtual void SetNotationDeclHandler(XML_NotationDeclHandler handler);
-  virtual void SetExternalEntityRefHandler(XML_ExternalEntityRefHandler handler);
-  virtual void SetUnknownEncodingHandler(XML_UnknownEncodingHandler handler, void *encodingHandlerData);
 
 protected:
-  XML_Parser parser;
+  nsExpatDTD *mExpatDTD;
 };
 
 extern NS_HTMLPARS nsresult NS_Expat_Tokenizer(nsIDTD** aInstancePtrResult);
 
 #endif
-
-

@@ -28,6 +28,7 @@
 #define __NS_EXPAT_DTD
 
 #include "nsIDTD.h"
+#include "nsITokenizer.h"
 #include "nsISupports.h"
 #include "nsHTMLTokens.h"
 #include "nshtmlpars.h"
@@ -35,7 +36,6 @@
 #include "nsDeque.h"
 #include "nsIContentSink.h"
 #include "xmlparse.h"
-#include "nsIExpatTokenizer.h"
 
 
 #define NS_EXPAT_DTD_IID      \
@@ -221,11 +221,17 @@ class nsExpatDTD : public nsIDTD {
      * @return  ptr to recycler (or null)
      */
     virtual nsITokenRecycler* GetTokenRecycler(void);
+
+    /**
+     * Parse an XML buffer using expat
+     * @update	nra 2/29/99
+     * @return  NS_ERROR_FAILURE if expat encounters an error, else NS_OK
+     */
+    nsresult ParseXMLBuffer(const char *buffer);
     
 protected:
     /**
-     * Sets up the callbacks for the expat parser encapsulated by nsExpatTokenizer.
-     * Assumes that mTokenizer has been set to nsExpatTokenizer
+     * Sets up the callbacks for the expat parser      
      * @update  nra 2/24/99
      * @param   none
      * @return  none
@@ -235,18 +241,40 @@ protected:
     /* The callback handlers that get called from the expat parser */
     static void HandleStartElement(void *userData, const XML_Char *name, const XML_Char **atts);
     static void HandleEndElement(void *userData, const XML_Char *name);
+    static void HandleCharacterData(void *userData, const XML_Char *s, int len);
+    static void HandleProcessingInstruction(void *userData, 
+      const XML_Char *target, 
+      const XML_Char *data);
+    static void HandleDefault(void *userData, const XML_Char *s, int len);
+    static void HandleUnparsedEntityDecl(void *userData, 
+      const XML_Char *entityName, 
+      const XML_Char *base, 
+      const XML_Char *systemId, 
+      const XML_Char *publicId,
+      const XML_Char *notationName);
+    static void HandleNotationDecl(void *userData,
+      const XML_Char *notationName,
+      const XML_Char *base,
+      const XML_Char *systemId,
+      const XML_Char *publicId);
+    static void HandleExternalEntityRef(XML_Parser parser,
+      const XML_Char *openEntityNames,
+      const XML_Char *base,
+      const XML_Char *systemId,
+      const XML_Char *publicId);
+    static void HandleUnknownEncoding(void *encodingHandlerData,
+      const XML_Char *name,
+      XML_Encoding *info);
   
+    XML_Parser          mExpatParser;
     nsParser*           mParser;
     nsIContentSink*     mSink;
     nsString            mFilename;
     PRInt32             mLineNumber;
-    nsIExpatTokenizer*  mTokenizer;
+    nsITokenizer*       mTokenizer;
 };
 
 extern NS_HTMLPARS nsresult NS_New_Expat_DTD(nsIDTD** aInstancePtrResult);
 
 
-#endif 
-
-
-
+#endif
