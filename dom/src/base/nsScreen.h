@@ -28,7 +28,7 @@
 class ScreenImpl : public nsIScriptObjectOwner, public nsIDOMScreen {
 public:
   ScreenImpl();
-  ~ScreenImpl();
+  virtual ~ScreenImpl();
 
   NS_DECL_ISUPPORTS
 

@@ -30,7 +30,7 @@ class nsIWebShell;
 class HistoryImpl : public nsIScriptObjectOwner, public nsIDOMHistory {
 public:
   HistoryImpl();
-  ~HistoryImpl();
+  virtual ~HistoryImpl();
 
   NS_DECL_ISUPPORTS
 

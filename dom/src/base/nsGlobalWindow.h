@@ -55,7 +55,7 @@ class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObje
 {
 public:
   GlobalWindowImpl();
-  ~GlobalWindowImpl();
+  virtual ~GlobalWindowImpl();
 
   NS_DECL_ISUPPORTS
 
@@ -232,7 +232,7 @@ struct nsTimeoutImpl {
 class NavigatorImpl : public nsIScriptObjectOwner, public nsIDOMNavigator {
 public:
   NavigatorImpl();
-  ~NavigatorImpl();
+  virtual ~NavigatorImpl();
 
   NS_DECL_ISUPPORTS
 
@@ -266,7 +266,7 @@ class LocationImpl : public nsIScriptObjectOwner, public nsIDOMLocation {
 protected:
 public:
   LocationImpl(nsIWebShell *aWebShell);
-  ~LocationImpl();
+  virtual ~LocationImpl();
 
   NS_DECL_ISUPPORTS
 

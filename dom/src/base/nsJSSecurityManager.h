@@ -24,7 +24,7 @@
 class nsJSSecurityManager : public nsIScriptSecurityManager {
 public:
   nsJSSecurityManager();
-  ~nsJSSecurityManager();
+  virtual ~nsJSSecurityManager();
 
   NS_DECL_ISUPPORTS
 
