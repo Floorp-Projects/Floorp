@@ -325,6 +325,9 @@ protected:
     virtual nsresult EndPageLoad(nsIWebProgress * aProgress,
                                  nsIChannel * aChannel,
                                  nsresult aResult);
+
+    nsresult CheckLoadingPermissions(nsISupports *aOwner);
+
 protected:
     PRPackedBool               mAllowSubframes;
     PRPackedBool               mAllowPlugins;
