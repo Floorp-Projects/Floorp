@@ -185,44 +185,6 @@ static void event_processor_callback(gpointer data,
   
 }
 
-#define PREF_NCOLS "browser.ncols"
-#define PREF_INSTALLCMAP "browser.installcmap"
-
-static void
-HandleColormapPrefs( void )
-{
-  PRInt32 ivalue = 0;
-  PRBool bvalue;
-  nsresult rv;
-
-  /* The default is to do nothing. INSTALLCMAP has precedence over
-     NCOLS. Ignore the fact we can't do this if it fails, as it is
-     not critical */
-  nsCOMPtr<nsIPref> prefs = do_GetService(kPrefServiceCID, &rv);
-  if (NS_FAILED(rv) || (!prefs)) 
-    return;
-       
-  /* first check ncols */
- 
-  rv = prefs->GetIntPref(PREF_NCOLS, &ivalue);
-  if (NS_SUCCEEDED(rv) && ivalue >= 0 && ivalue <= 255 ) {
-    if ( ivalue > 6*6*6 ) // workaround for old GdkRGB's
-      ivalue = 6*6*6;
-    gdk_rgb_set_min_colors( ivalue );
-    return;
-  }
-
-  /* next check installcmap */
-
-  rv = prefs->GetBoolPref(PREF_INSTALLCMAP, &bvalue);
-  if (NS_SUCCEEDED(rv)) {
-    if ( PR_TRUE == bvalue )
-      gdk_rgb_set_install( TRUE );  // force it
-    else
-      gdk_rgb_set_min_colors( 0 );
-  }
-}
-  
 //-------------------------------------------------------------------------
 //
 // Create the application shell
@@ -255,6 +217,13 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
       argv = bav;
   }
 
+  nsXPIDLCString cmdResult;
+
+  rv = cmdLineArgs->GetCmdLineValue("-install", getter_Copies(cmdResult));
+  if (NS_SUCCEEDED(rv) && cmdResult) {
+    gdk_rgb_set_install(TRUE);
+  }
+
   gtk_set_locale ();
 
   gtk_init (&argc, &argv);
@@ -263,7 +232,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
   gle_init (&argc, &argv);
 #endif
 
-  HandleColormapPrefs();
   gdk_rgb_init();
 
   return NS_OK;

@@ -1470,6 +1470,7 @@ static void DumpHelp(char *appname)
   printf("%s--gtk-debug=FLAGS%sGtk+ debugging flags to set\n", HELP_SPACER_1, HELP_SPACER_2);
   printf("%s--gtk-no-debug=FLAGS%sGtk+ debugging flags to unset\n", HELP_SPACER_1, HELP_SPACER_2);
   printf("%s--gtk-module=MODULE%sLoad an additional Gtk module\n", HELP_SPACER_1, HELP_SPACER_2);
+  printf("%s-install%sInstall a private colormap\n", HELP_SPACER_1, HELP_SPACER_2);
 
   /* end gtk toolkit options */
 #endif /* MOZ_WIDGET_GTK */
