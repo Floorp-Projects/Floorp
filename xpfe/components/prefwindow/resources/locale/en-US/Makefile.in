@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/pref-advanced.dtd \
-		$(srcdir)/pref-advanced-imageblocking.dtd \
+		$(srcdir)/pref-imageblocking.dtd \
 		$(srcdir)/pref-appearance.dtd \
 		$(srcdir)/pref-applications.dtd \
 		$(srcdir)/pref-cache.dtd \
