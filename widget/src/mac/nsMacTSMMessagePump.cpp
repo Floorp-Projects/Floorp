@@ -187,11 +187,12 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 	DescType				returnedType;
 	nsMacEventHandler*		eventHandler;	
 	Size					actualSize;
-	AEDesc					text;
+	AEDesc					text, hiliteRangeArray;
 	ScriptCode				textScript;
 	long					fixLength;
 	PRBool					rv;
-
+	TextRangeArray*			hiliteRangePtr;
+	
 	//
 	// refcon stores the nsMacEventHandler
 	//
@@ -218,21 +219,47 @@ pascal OSErr nsMacTSMMessagePump::UpdateHandler(const AppleEvent *theAppleEvent,
 						&fixLength,sizeof(fixLength),&actualSize);
 	NS_ASSERTION(err==noErr,"nsMacTSMMessagePump::UpdateHandler: AEGetParamPtr[fixlen] failed.");
   	if (err!=noErr) return err;
+
+  	//
+  	// extract the hilite ranges (optional param)
+  	//
+  	err = AEGetParamDesc(theAppleEvent,keyAEHiliteRange,typeTextRangeArray,&hiliteRangeArray);
+	NS_ASSERTION(err==noErr||err==errAEDescNotFound,"nsMacTSMMessagePump::UpdateHandler: AEGetParamPtr[fixlen] failed.");
+  	if (err==errAEDescNotFound) hiliteRangePtr=NULL;
+  	else if (err==noErr) { ::HLock(hiliteRangeArray.dataHandle); hiliteRangePtr=(TextRangeArray*)*(hiliteRangeArray.dataHandle);}
+  	else return err;
+  	
 #if TARGET_CARBON
-	void* textPtr;
- 	err = AEGetDescData(&text,(unsigned long)typeChar,textPtr,fixLength);
- 	if (err!=noErr) return err; 								 
- 	rv = eventHandler->HandleUpdate((char**)&textPtr,textScript,fixLength);
-#else	
- 	rv = eventHandler->HandleUpdate(text.dataHandle,textScript,fixLength);
+	// еее Fix Me !!!!!
+ 	rv = eventHandler->HandleUpdateInputArea((char*)textPtr,textScript,fixLength,hiliteRangePtr);
+#else
+	::HLock(text.dataHandle);
+	Size text_size = GetHandleSize(text.dataHandle);
+	char* mbcsText = new char[text_size+1];
+	strncpy(mbcsText,*(text.dataHandle),text_size);
+	mbcsText[text_size]=0;
+	
+	//
+	// must pass HandleUpdateInputArea a null-terminated multibyte string, the text size must include the terminator
+	//
+	rv = eventHandler->HandleUpdateInputArea(mbcsText,text_size+1,textScript,fixLength,hiliteRangePtr);
+
 #endif
-	NS_ASSERTION(rv==PR_TRUE,"nsMAcMessagePump::UpdateHandler: HandleUpdated failed.");
+	NS_ASSERTION(rv==PR_TRUE,"nsMacMessagePump::UpdateHandler: HandleUpdated failed.");
 	if (rv!=PR_TRUE) return paramErr;
 	
 	//
 	// clean up
 	//
+#if !TARGET_CARBON
+	::HUnlock(text.dataHandle);
+	::HUnlock(hiliteRangeArray.dataHandle);
+	delete [] mbcsText;
+	
+#endif
+
 	(void)AEDisposeDesc(&text);
+	(void)AEDisposeDesc(&hiliteRangeArray);
 						
 	return noErr;
 }

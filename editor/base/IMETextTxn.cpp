@@ -224,12 +224,14 @@ NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIDOMTextRangeList** aTextR
 NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 {
 		nsresult			result;
-		PRBool				haveSelectedRange;
+		PRBool				haveSelectedRange, haveCaretPosition;
 		PRUint16			textRangeListLength,selectionStart,selectionEnd,
-							textRangeType, i;
+							textRangeType, caretPosition, i;
 		nsIDOMTextRange*	textRange;
 
 		haveSelectedRange = PR_FALSE;
+		haveCaretPosition = PR_FALSE;
+		
 
 #ifdef DEBUG_tague
 		PRUint16 listlen,start,stop,type;
@@ -266,6 +268,11 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 						textRange->GetRangeStart(&selectionStart);
 						textRange->GetRangeEnd(&selectionEnd);
 					}
+					if (textRangeType==nsIDOMTextRange::TEXTRANGE_CARETPOSITION)
+					{
+						haveCaretPosition = PR_TRUE;
+						textRange->GetRangeStart(&caretPosition);
+					}
 				}
 			}
 		}
@@ -275,9 +282,12 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 		if (NS_SUCCEEDED(result) && selection){
 			if (haveSelectedRange) {
 				result = selection->Collapse(mElement,mOffset+selectionStart);
-				result = selection->Extend(mElement,mOffset+selectionEnd+1);
+				result = selection->Extend(mElement,mOffset+selectionEnd);
 			} else {
-				result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
+				if (haveCaretPosition)
+					result = selection->Collapse(mElement,mOffset+caretPosition);
+				else
+					result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
 			}
 		}
 
