@@ -44,7 +44,6 @@
 #include "nsILinkHandler.h"
 #include "nsIJVMPluginTagInfo.h"
 #include "nsIWebShell.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsINameSpaceManager.h"
 #include "nsIEventListener.h"
 #include "nsITimer.h"
@@ -288,6 +287,7 @@ static NS_DEFINE_IID(kILinkHandlerIID, NS_ILINKHANDLER_IID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
+static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 
 PRIntn
 nsObjectFrame::GetSkipSides() const
@@ -686,15 +686,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
         }
 
         // get the nsIPluginHost interface
-        NS_ENSURE_SUCCESS(aPresContext->GetContainer(getter_AddRefs(container)), 
-         NS_ERROR_FAILURE);
-
-        nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
-        NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
-
-        NS_ENSURE_SUCCESS(requestor->GetInterface(NS_GET_IID(nsIPluginHost),
-            getter_AddRefs(pluginHost)), NS_ERROR_FAILURE);
-
+        pluginHost = do_GetService(kCPluginManagerCID);
         mInstanceOwner->SetPluginHost(pluginHost);
         rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
       }
@@ -731,15 +723,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 	      }
 
           // get the nsIPluginHost interface
-          NS_ENSURE_SUCCESS(aPresContext->GetContainer(getter_AddRefs(container)), 
-           NS_ERROR_FAILURE);
-
-          nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
-          NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
-
-          NS_ENSURE_SUCCESS(requestor->GetInterface(NS_GET_IID(nsIPluginHost),
-               getter_AddRefs(pluginHost)), NS_ERROR_FAILURE);
-
+          pluginHost = do_GetService(kCPluginManagerCID);
           mInstanceOwner->SetPluginHost(pluginHost);
           if(pluginHost->IsPluginEnabledForType("application/x-oleobject") == NS_OK)
 	          rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, "application/x-oleobject", fullURL);
@@ -778,15 +762,7 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 		  return rv;
 
     // get the nsIPluginHost interface
-    NS_ENSURE_SUCCESS(aPresContext->GetContainer(getter_AddRefs(container)), 
-     NS_ERROR_FAILURE);
-
-    nsCOMPtr<nsIInterfaceRequestor> requestor(do_QueryInterface(container));
-    NS_ENSURE_TRUE(requestor, NS_ERROR_FAILURE);
-
-    NS_ENSURE_SUCCESS(requestor->GetInterface(NS_GET_IID(nsIPluginHost),
-        getter_AddRefs(pluginHost)), NS_ERROR_FAILURE);
-
+    pluginHost = do_GetService(kCPluginManagerCID);
     mInstanceOwner->SetPluginHost(pluginHost);
 
     mContent->GetTag(atom);
