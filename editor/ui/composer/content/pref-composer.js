@@ -69,7 +69,7 @@ function useNavigatorColors()
       }
     document.getElementById( "aLinkLabel" ).setAttribute( "disabled", "true" );
     document.getElementById( "aLinkMenu" ).setAttribute( "disabled", "true" );
-    document.getElementById( "useDefaults" ).setAttribute( "disabled", "true" );
+    document.getElementById( "useCustomColors" ).setAttribute( "disabled", "true" );
     getColorFromWellAndSetValue("textMenu", "normaltext", false);
     getColorFromWellAndSetValue("linkMenu", "linktext", false);
     getColorFromWellAndSetValue("aLinkMenu", "activelinktext", false);
@@ -90,7 +90,7 @@ function useCustomColors()
       }
     document.getElementById( "aLinkLabel" ).removeAttribute( "disabled" );
     document.getElementById( "aLinkMenu" ).removeAttribute( "disabled" );
-    document.getElementById( "useDefaults" ).removeAttribute( "disabled" );
+    document.getElementById( "useCustomColors" ).removeAttribute( "disabled" );
   }
   
 function useDefaultColors()

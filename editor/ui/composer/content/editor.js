@@ -178,6 +178,9 @@ function EditorStartup(editorType, editorElement)
   // add a listener to be called when document is really done loading
   editorShell.RegisterDocumentStateListener( DocumentStateListener );
 
+  // set up our global prefs object
+  GetPrefsService();
+ 
   // Startup also used by other editor users, such as Message Composer 
   EditorSharedStartup();
 
@@ -186,9 +189,6 @@ function EditorStartup(editorType, editorElement)
   //  such as file-related commands, HTML Source editing, Edit Modes...
   SetupComposerWindowCommands();
 
-  // set up our global prefs object
-  GetPrefsService();
- 
   // Get url for editor content and load it.
   // the editor gets instantiated by the editor shell when the URL has finished loading.
   var url = document.getElementById("args").getAttribute("value");
@@ -231,6 +231,43 @@ function EditorSharedStartup()
 
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
+
+  // Use global prefs if exists, else get service for other editor users
+  var prefs = gPrefs ? gPrefs : GetPrefsService();
+
+  // If not set before, set text and background colors from browser prefs
+  if (gDefaultTextColor == "" || gDefaultBackgroundColor == "")
+  {
+    var useWinColors = false;
+    if (gIsWindows)
+    {
+      // What a pain! In Windows, there's a pref to use system colors
+      //   instead of pref colors
+      try { useWinColors = prefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
+      // dump("Using Windows colors = "+useWinColors+"\n");
+    }
+
+    if (useWinColors)
+    {
+      // TODO: Get system text and windows colors HOW!
+      // Alternative: Can we get the actual text and background colors used by layout?
+    }
+    else
+    {
+      if (gDefaultTextColor == "")
+        try { gDefaultTextColor = prefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
+
+      if (gDefaultBackgroundColor == "")
+        try { gDefaultBackgroundColor = prefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
+    }
+
+    // Last resort is to assume black for text, white for background
+    if (gDefaultTextColor == "")
+      gDefaultTextColor = "#000000";
+    if (gDefaultBackgroundColor == "")
+      gDefaultBackgroundColor = "#FFFFFF";
+  }
+dump(" *** EditorSharedStartup: gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+"\n");
 }
 
 function _EditorNotImplemented()
@@ -307,6 +344,8 @@ function editorSendPage()
   } 
   else if (CheckAndSaveDocument(GetString("SendPageReason")))
     editorSendPage();
+
+  window._content.focus();
 }
 
 /*
@@ -421,7 +460,7 @@ function EditorNewPlaintext()
 function EditorCanClose()
 {
   // Returns FALSE only if user cancels save action
-  dump("Calling EditorCanClose\n");
+  //dump("Calling EditorCanClose\n");
 
   var canClose = CheckAndSaveDocument(GetString("BeforeClosing"));
 
@@ -473,7 +512,6 @@ function EditorSetDocumentCharacterSet(aCharset)
     if((! editorShell.documentModified) &&
        editorShell.editorDocument.location != "about:blank")
     {
-      dump(aCharset);
       editorShell.LoadUrl(editorShell.editorDocument.location);
     }
   }
@@ -618,7 +656,6 @@ function EditorSetFontSize(size)
   {
     editorShell.RemoveTextProperty("font", "size");
   } else {
-    dump("Setting font size\n");
     // Temp: convert from new CSS size strings to old HTML size strings
     switch (size)
     {
@@ -845,7 +882,6 @@ function GetParentTable(element)
 //  but will accept a parent table cell or link if inside one
 function GetSelectedElementOrParentCellOrLink()
 {
-//dump("GetSelectedElementOrParentCell\n");
   var element = editorShell.GetSelectedElement("");
   if (!element)
     element = editorShell.GetElementOrParentByTagName("href",null);
@@ -999,7 +1035,6 @@ function SetDisplayMode(mode)
 
       if (gFormatToolbarHidden != "true")
       {
-// dump("Switching back to visible toolbar. gFormatToolbarHidden = "+gFormatToolbarHidden+"\n");
         gFormatToolbar.setAttribute("hidden", gFormatToolbarHidden);
       }
 
@@ -1061,11 +1096,7 @@ function EditorToggleParagraphMarks()
     try {
       editorShell.DisplayParagraphMarks(checked == "true");
     }
-    catch(e)
-    {
-      dump("Failed to load style sheet for paragraph marks\n");
-      return;
-    }
+    catch(e) { return; }
   }
 }
 
@@ -1261,6 +1292,8 @@ function  getUnicharPref(aPrefName, aDefVal)
 function EditorInitFormatMenu()
 {
   InitObjectPropertiesMenuitem("objectProperties");
+  // Change text on the "Remove styles" and "Remove links"
+  //  for better wording when 
 }
 
 function InitObjectPropertiesMenuitem(id)
@@ -1311,7 +1344,6 @@ function InitObjectPropertiesMenuitem(id)
     }
     menuItem.setAttribute("value", menuStr);
     menuItem.setAttribute("accesskey",GetString("ObjectPropertiesAccessKey"));
-//dump("**** Accesskey for Properties menuitem="+menuItem.getAttribute("accesskey"));
   }
 }
 
@@ -1319,7 +1351,6 @@ function InitParagraphMenu()
 {
   var mixedObj = new Object();
   var state = editorShell.GetParagraphState(mixedObj);
-  //dump("InitParagraphMenu: state="+state+"\n");
   var IDSuffix;
 
   // PROBLEM: When we get blockquote, it masks other styles contained by it
@@ -1338,7 +1369,6 @@ function InitListMenu()
 {
   var mixedObj = new Object();
   var state = editorShell.GetListState(mixedObj);
-  //dump("InitListMenu: state="+state+"\n");
   var IDSuffix = "noList";
   
   if (state.length > 0)
@@ -1469,14 +1499,8 @@ function EditorSetDefaultPrefs()
   var use_custom_colors = false;
   try {
     use_custom_colors = gPrefs.GetBoolPref("editor.use_custom_colors");
-    dump("pref use_custom_colors:" + use_custom_colors + "\n");
   }
-  catch (ex) {
-    dump("problem getting use_custom_colors as bool, hmmm, still confused about its identity?!\n");
-  }
-
-  // We store these for access by toolbar color swatches
-  gDefaultTextColor = gDefaultBackgroundColor = "";
+  catch (ex) {}
 
   if ( use_custom_colors )
   {
@@ -1484,62 +1508,37 @@ function EditorSetDefaultPrefs()
     var bodyelement = GetBodyElement();
 
     // try to get the default color values.  ignore them if we don't have them.
-    var link_color = active_link_color = followed_link_color = "";
+    var text_color = link_color = active_link_color = followed_link_color = background_color = "";
     
-    try { gDefaultTextColor = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
+    try { text_color = gPrefs.CopyCharPref("editor.text_color"); } catch (e) {}
     try { link_color = gPrefs.CopyCharPref("editor.link_color"); } catch (e) {}
     try { active_link_color = gPrefs.CopyCharPref("editor.active_link_color"); } catch (e) {}
     try { followed_link_color = gPrefs.CopyCharPref("editor.followed_link_color"); } catch (e) {}
-    try { gDefaultBackgroundColor = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
+    try { background_color = gPrefs.CopyCharPref("editor.background_color"); } catch(e) {}
 
     // add the color attributes to the body tag.
-    // FIXME:  use the check boxes for each color somehow..
-    if (gDefaultTextColor != "")
-      AddAttrToElem(domdoc, "text", gDefaultTextColor, bodyelement);
+    // and use them for the default text and background colors if not empty
+    if (text_color != "")
+    {
+      AddAttrToElem(domdoc, "text", text_color, bodyelement);
+      gDefaultTextColor = text_color;
+    }
     if (link_color != "")
       AddAttrToElem(domdoc, "link", link_color, bodyelement);
     if (active_link_color != "") 
       AddAttrToElem(domdoc, "alink", active_link_color, bodyelement);
     if (followed_link_color != "")
       AddAttrToElem(domdoc, "vlink", followed_link_color, bodyelement);
-    if (gDefaultBackgroundColor != "")
-      AddAttrToElem(domdoc, "bgcolor", gDefaultBackgroundColor, bodyelement);
+
+    if (background_color != "")
+    {
+      AddAttrToElem(domdoc, "bgcolor", background_color, bodyelement);
+      gDefaultBackgroundColor = background_color
+    }
+
+dump(" *** SetDefaultPrefs: gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+"\n");
   }
 
-dump("* gDefaultTextColor="+gDefaultTextColor+", gDefaultBackgroundColor="+gDefaultBackgroundColor+", IsWindows="+gIsWindows+"\n");
-
-  // If not found above, set text and background colors from browser prefs
-  if (gDefaultTextColor == "" || gDefaultBackgroundColor == "")
-  {
-    var useWinColors = false;
-    if (gIsWindows)
-    {
-      // What a pain! In Windows, there's a pref to use system colors
-      //   instead of pref colors
-      try { useWinColors = gPrefs.GetBoolPref("browser.display.wfe.use_windows_colors"); } catch (e) {}
-dump("Using Windows colors = "+useWinColors+"\n");
-    }
-
-    if (useWinColors)
-    {
-      // TODO: Get system text and windows colors HOW!
-      // Alternative: Can we get the actual text and background colors used by layout?
-    }
-    else
-    {
-      if (gDefaultTextColor == "")
-        try { gDefaultTextColor = gPrefs.CopyCharPref("browser.display.foreground_color"); } catch (e) {}
-
-      if (gDefaultBackgroundColor == "")
-        try { gDefaultBackgroundColor = gPrefs.CopyCharPref("browser.display.background_color"); } catch (e) {}
-    }
-
-    // Last resort is to assume black for text, white for background
-    if (gDefaultTextColor == "")
-      gDefaultTextColor = "#000000";
-    if (gDefaultBackgroundColor == "")
-      gDefaultBackgroundColor = "#FFFFFF";
-  }
 
   // auto-save???
 }
