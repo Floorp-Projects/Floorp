@@ -69,6 +69,178 @@ sub print_time {
   sprintf("%02d/%02d&nbsp;%02d:%02d",$mon+1,$mday,$hour,$minute);
 }
 
+#------------------
+# is_today( $time )
+#
+# Takes a Unix time_t and returns true if it represents a time that has
+# the same 'day of year' and 'year' as today.  Returns true if no arguments
+# were given.
+#
+sub is_today {
+  my ($tt) = @_;
+
+  my $today = 1;
+
+  if ( $tt ) {
+    my $tt_year = (localtime($tt))[5];
+    my $tt_yday = (localtime($tt))[7];
+
+    my $now_year = (localtime())[5];
+    my $now_yday = (localtime())[7];
+
+    if ( ($tt_year ne $now_year) or ($tt_yday ne $now_yday) ) {
+      $today = 0;
+    }
+  }
+
+  return $today;
+}
+
+#---------------------------------
+# both_are_today( $time1, $time2 )
+#
+# Tests both $time1 and $time2 to see if either are not today.  Returns true
+# in that case and false otherwise.
+#
+sub both_are_today {
+  my ($t11, $t22) = @_;
+
+  return 0 if ! is_today($t11);
+  return 0 if ! is_today($t22);
+  return 1;
+}
+
+#---------------------------------
+# get_local_hms( $time, $qualify )
+#
+# Converts a Unix time_t value into a date using format HH:MM.  If $qualify
+# is true, it qualifies the date by prepending mm/DD.  Returns the resulting
+# string.
+#
+sub get_local_hms {
+  my ($t, $need_to_qualify) = @_;
+
+  my (undef,$minute,$hour,$mday,$mon,undef) = localtime($t);
+  my $formatted_date = sprintf("%02d:%02d",$hour,$minute);
+
+  if ($need_to_qualify) {
+    $formatted_date = sprintf("%02d/%02d",$mon+1,$mday) . " " . $formatted_date;
+  }
+
+  return $formatted_date;
+}
+
+#--------------------------------------
+# get_time_difference( $time1, $time2 )
+#
+# Calculates a human-readable difference in time between two Unix time_t
+# values.  Returns the resulting string.
+#
+sub get_time_difference {
+  my ($t11, $t22) = @_;
+
+  $t11 = 0 if !$t11;
+  $t22 = 0 if !$t22;
+
+  # Flip $t11 and $t22 if $t22 isn't later than $t11.
+  if ( $t11 gt $t22 ) {
+    my $temp = $t11;
+    $t11 = $t22;
+    $t22 = $temp;
+  }
+
+  my $time_diff = $t22 - $t11;
+
+  # @time_slots is an array that we will keep our time difference in.
+  #   0 => seconds
+  #   1 => minutes
+  #   2 => hours
+  #   3 => days
+  my @time_slots;
+
+  # Zero out the array.
+  for my $ii ( 0 .. 3 ) {
+    $time_slots[$ii] = 0;
+  }
+  
+  # What's in $time_diff is the difference in seconds.  Modulo 60 to get a
+  # number of seconds within a minute.
+  $time_slots[0] = $time_diff % 60;
+  $time_diff = $time_diff / 60;
+
+  # Now what's left in $time_diff is the difference in minutes.  Modulo 60 to
+  # get a number of minutes within an hour.
+  $time_slots[1] = $time_diff % 60;
+  $time_diff = $time_diff / 60;
+
+  # Now what's left in $time_diff is the difference in hours.  Modulo 24 to get
+  # a number of hours within a day.
+  $time_slots[2] = $time_diff % 24;
+  $time_diff = $time_diff / 24;
+
+  # Now what's left in $time_diff are the number of days.  Floor it to get rid
+  # of any fractional left from previous maths.
+  $time_slots[3] = floor($time_diff);
+
+  format_time_difference(@time_slots);
+}
+
+#--------------------------------------
+# format_time_difference( @time_slots )
+#
+# Called by get_time_difference(), takes its @time_slots arrary and parses it
+# into human-readable text.  Returns the resulting string.
+#
+sub format_time_difference {
+  my @time_slots = @_;
+
+  # As above, @time_slots is an array that holds our time difference.
+  #   0 => seconds
+  #   1 => minutes
+  #   2 => hours
+  #   3 => days
+
+  my @formatted;
+
+  if ( $time_slots[3] eq 1 ) {
+    push(@formatted, "1 day");
+  } elsif ( $time_slots[3] gt 1 ) {
+    push(@formatted, $time_slots[3] . " days");
+  }
+
+  if ( $time_slots[2] eq 1 ) {
+    push(@formatted, "1 hour");
+  } elsif ( $time_slots[2] gt 1 ) {
+    push(@formatted, $time_slots[2] . " hours");
+  }
+
+  if ( $time_slots[1] eq 1 ) {
+    push(@formatted, "1 minute");
+  } elsif ( $time_slots[1] gt 1 ) {
+    push(@formatted, $time_slots[1] . " minutes");
+  }
+
+  # I love that we can track seconds and let the world know, but the unit is
+  # too small to be of utility right now.  Sticking this code in an always-
+  # false conditional in case we want to turn this on in the future.
+  if ( 0 ) {
+    if ( $time_slots[0] eq 1 ) {
+      push(@formatted, "1 second");
+    } elsif ( $time_slots[0] gt 1 ) {
+      push(@formatted, $time_slots[0] . " seconds");
+    }
+  }
+
+  my $formatted_diff;
+  if ( scalar(@formatted) gt 0 ) {
+    $formatted_diff = join(', ', @formatted);
+  } else {
+    $formatted_diff = "no time";
+  }
+
+  return $formatted_diff;
+}
+
 sub url_encode {
   my ($s) = @_;
 
