@@ -136,10 +136,11 @@ void genCyrillicClass(const char* name, const char* charset)
 
 
 int main(int argc, char** argv) {
-   nsresult res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
-                              NS_GET_IID(nsICharsetConverterManager), 
-                              (nsISupports**) & gCCM);
-   if(NS_FAILED(res) && (nsnull != gCCM))
+  nsresult res = nsnull;
+
+  nsCOMPtr<nsICharsetConverterManager> gCCM = do_GetService(kCharsetConverterManagerCID, &res);
+
+  if(NS_FAILED(res) && (nsnull != gCCM))
    {
       printf("cannot locate CharsetConverterManager\n");
       return(-1);
@@ -163,6 +164,5 @@ int main(int argc, char** argv) {
      genCyrillicClass("MacCyrillic", "x-mac-cyrillic");
    footer();
    NS_IF_RELEASE(gKOI8REncoder);
-   nsServiceManager::ReleaseService(kCharsetConverterManagerCID, gCCM);
    return(0);
 };

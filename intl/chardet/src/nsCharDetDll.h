@@ -24,6 +24,11 @@
 #define nsCharDetDll_h__
 
 #include "prtypes.h"
+#include "nsIFactory.h"
+#include "nsICharsetDetector.h"
+#include "nsICharsetDetectionObserver.h"
+#include "nsIStringCharsetDetector.h"
+#include "nsICharsetDetectionAdaptor.h"
 
 extern "C" PRInt32 g_InstanceCount;
 extern "C" PRInt32 g_LockCount;

@@ -23,6 +23,7 @@
 #define nsDebugDetector_h__
 
 #include "nsIFactory.h"
+#include "nsICharsetDetector.h"
 
 
 // {12BB8F18-2389-11d3-B3BF-00805F8A6670}
@@ -39,8 +40,53 @@
 
 
 
-nsIFactory* NEW_1STBLKDBG_DETECTOR_FACTORY();
-nsIFactory* NEW_2NDBLKDBG_DETECTOR_FACTORY();
-nsIFactory* NEW_LASTBLKDBG_DETECTOR_FACTORY();
+typedef enum {
+  k1stBlk,
+  k2ndBlk,
+  klastBlk
+} nsDebugDetectorSel;
+
+class nsDebugDetector : public nsICharsetDetector 
+{
+  NS_DECL_ISUPPORTS
+
+public:  
+  nsDebugDetector(nsDebugDetectorSel aSel);
+  virtual ~nsDebugDetector();
+
+  NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
+
+  NS_IMETHOD DoIt(const char* aBytesArray, PRUint32 aLen, PRBool* oDontFeedMe);
+
+  NS_IMETHOD Done();
+
+protected:
+
+  virtual void Report();
+
+private:
+  PRInt32 mBlks;
+  nsDebugDetectorSel mSel;
+  nsICharsetDetectionObserver* mObserver;
+  PRBool mStop;
+};
+
+class ns1stBlkDbgDetector : public nsDebugDetector
+{
+public:
+    ns1stBlkDbgDetector () : nsDebugDetector(k1stBlk) {} ;
+};
+
+class ns2ndBlkDbgDetector : public nsDebugDetector
+{
+public:
+  ns2ndBlkDbgDetector () : nsDebugDetector(k2ndBlk) {} ;
+};
+
+class nsLastBlkDbgDetector : public nsDebugDetector
+{
+public:
+  nsLastBlkDbgDetector () : nsDebugDetector(klastBlk) {} ;
+};
 
 #endif // nsDebugDetector_h__

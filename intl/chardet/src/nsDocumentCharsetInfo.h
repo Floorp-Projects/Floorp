@@ -26,6 +26,18 @@
 #include "nsIFactory.h"
 #include "nsIDocumentCharsetInfo.h"
 
-nsIFactory * NEW_DOCUMENT_CHARSET_INFO_FACTORY();
+class nsDocumentCharsetInfo : public nsIDocumentCharsetInfo
+{
+public:
+  nsDocumentCharsetInfo ();
+  virtual ~nsDocumentCharsetInfo ();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOCUMENTCHARSETINFO
+
+private:
+  nsCOMPtr<nsIAtom> mForcedCharset;
+  nsCOMPtr<nsIAtom> mParentCharset;
+};
 
 #endif // nsDocumentCharsetInfo_h__
