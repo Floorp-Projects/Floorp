@@ -64,6 +64,7 @@
 #include "nsISupportsArray.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIFrameManager.h"
+#include "nsIAttributeContent.h"
 
 #ifdef INCLUDE_XUL
 #include "nsXULAtoms.h"
@@ -497,12 +498,13 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     *aFrame = imageFrame;
 
   } else {
+
     switch (type) {
     case eStyleContentType_String:
       break;
   
     case eStyleContentType_Attr:
-      {  // XXX for now, prefetch the attr value, this needs to be a special content node
+      {  
         nsIAtom* attrName = nsnull;
         PRInt32 attrNameSpace = kNameSpaceID_None;
         PRInt32 barIndex = contentString.FindChar('|'); // CSS namespace delimiter
@@ -519,10 +521,30 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
         else {
           attrName = NS_NewAtom(contentString);
         }
-        if (attrName) {
-          aContent->GetAttribute(attrNameSpace, attrName, contentString);  // XXX need attr namespace from style
+
+        // Creates the content and frame and return if successful
+        nsresult rv = NS_ERROR_FAILURE;
+        if (nsnull != attrName) {
+          nsIContent* content = nsnull;
+          nsIFrame*   textFrame = nsnull;
+          NS_NewAttributeContent(&content);
+          if (nsnull != content) {
+            nsCOMPtr<nsIAttributeContent> attrContent(do_QueryInterface(content));
+            if (attrContent) {
+              attrContent->Init(aContent, attrNameSpace, attrName);  
+            }
+
+            // Create a text frame and initialize it
+            NS_NewTextFrame(&textFrame);
+            textFrame->Init(*aPresContext, content, aParentFrame, aStyleContext, nsnull);
+
+            // Return the text frame
+            *aFrame = textFrame;
+            rv = NS_OK;
+          }
           NS_RELEASE(attrName);
         }
+        return rv;
       }
       break;
   
@@ -561,23 +583,26 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     case eStyleContentType_NoCloseQuote:
       // XXX Adjust quote depth...
       return NS_OK;
-    }
+    } // switch
   
+
     // Create a text content node
-    nsIContent*           textContent;
+    nsIContent* textContent = nsnull;
     nsIDOMCharacterData*  domData;
+    nsIFrame*             textFrame = nsnull;
     
     NS_NewTextNode(&textContent);
-    textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-    domData->SetData(contentString);
-    NS_RELEASE(domData);
+    if (nsnull != textContent) {
+      textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+      domData->SetData(contentString);
+      NS_RELEASE(domData);
   
-    // Create a text frame and initialize it
-    nsIFrame* textFrame;
-    NS_NewTextFrame(&textFrame);
-    textFrame->Init(*aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
+      // Create a text frame and initialize it
+      NS_NewTextFrame(&textFrame);
+      textFrame->Init(*aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
   
-    NS_RELEASE(textContent);
+      NS_RELEASE(textContent);
+    }
   
     // Return the text frame
     *aFrame = textFrame;
@@ -4477,36 +4502,38 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
   // meaning we need to remove the dummy frame
   PRUint32 numOptions = 0;
   nsresult result = aSelectElement->GetLength(&numOptions);
-  if (1 == numOptions) { 
-    nsIFrame* parentFrame;
-    nsIFrame* childFrame;
-    // Get the childFrame for the added child (option)
-    // then get the child's parent frame which should be an area frame
-    aPresShell->GetPrimaryFrameFor(aChild, &childFrame);
-    childFrame->GetParent(&parentFrame);
+  if (NS_SUCCEEDED(result)) {
+    if (1 == numOptions) { 
+      nsIFrame* parentFrame;
+      nsIFrame* childFrame;
+      // Get the childFrame for the added child (option)
+      // then get the child's parent frame which should be an area frame
+      aPresShell->GetPrimaryFrameFor(aChild, &childFrame);
+      childFrame->GetParent(&parentFrame);
 
-    // Now loop through all the child looking fr the frame whose content 
-    // is equal to the select element's content
-    // this is because when gernated content is created it stuff the parent content
-    // pointer into the generated frame, so in this case it has the select content
-    parentFrame->FirstChild(nsnull, &childFrame);
-    nsCOMPtr<nsIContent> selectContent = do_QueryInterface(aSelectElement);
-    while (nsnull != childFrame) {
-      nsIContent * content;
-      childFrame->GetContent(&content);
+      // Now loop through all the child looking fr the frame whose content 
+      // is equal to the select element's content
+      // this is because when gernated content is created it stuff the parent content
+      // pointer into the generated frame, so in this case it has the select content
+      parentFrame->FirstChild(nsnull, &childFrame);
+      nsCOMPtr<nsIContent> selectContent = do_QueryInterface(aSelectElement);
+      while (nsnull != childFrame) {
+        nsIContent * content;
+        childFrame->GetContent(&content);
       
-      // Found the dummy frame so get the FrameManager and 
-      // delete/remove the dummy frame
-      if (selectContent.get() == content) {
-        nsCOMPtr<nsIFrameManager> frameManager;
-        aPresShell->GetFrameManager(getter_AddRefs(frameManager));
-        frameManager->RemoveFrame(*aPresContext, *aPresShell, parentFrame, nsnull, childFrame);
-        NS_IF_RELEASE(content);
-        return NS_OK;
-      }
+        // Found the dummy frame so get the FrameManager and 
+        // delete/remove the dummy frame
+        if (selectContent.get() == content) {
+          nsCOMPtr<nsIFrameManager> frameManager;
+          aPresShell->GetFrameManager(getter_AddRefs(frameManager));
+          frameManager->RemoveFrame(*aPresContext, *aPresShell, parentFrame, nsnull, childFrame);
+          NS_IF_RELEASE(content);
+          return NS_OK;
+        }
 
-      NS_IF_RELEASE(content);
-      childFrame->GetNextSibling(&childFrame);
+        NS_IF_RELEASE(content);
+        childFrame->GetNextSibling(&childFrame);
+      }
     }
   }
 
@@ -4867,7 +4894,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       childFrame->GetParent(&parentFrame);
       if (NS_SUCCEEDED(result) && shell && parentFrame && 1 == numOptions) { 
   
-        nsCOMPtr<nsIFrameManager> frameManager;
         nsIStyleContext*          styleContext   = nsnull; 
         nsIFrame*                 generatedFrame = nsnull; 
         nsFrameConstructorState   state(aPresContext, nsnull, nsnull, nsnull);
@@ -4878,7 +4904,6 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
                                         styleContext, nsLayoutAtoms::dummyOptionPseudo, 
                                         PR_FALSE, PR_FALSE, &generatedFrame)) { 
           // Add the generated frame to the child list 
-          shell->GetFrameManager(getter_AddRefs(frameManager));
           frameManager->AppendFrames(*aPresContext, *shell, parentFrame, nsnull, generatedFrame);
         }
       } 
@@ -5091,6 +5116,17 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
       view->GetViewManager(viewManager);
     }
     UpdateViewsForTree(aFrame, viewManager, r);
+
+    // XXX Instead of calling this we should really be calling
+    // Invalidate on on the nsFrame (which does this)
+    const nsStyleSpacing* spacing;
+    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    nscoord width;
+    spacing->GetOutlineWidth(width);
+    if (width > 0) {
+      r.Inflate(width, width);
+    }
+
     viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
     aFrame->GetNextInFlow(&aFrame);
