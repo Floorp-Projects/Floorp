@@ -33,9 +33,12 @@ nsImageUnix :: nsImageUnix()
   NS_INIT_REFCNT();
   mImage = nsnull ;
   mImageBits = nsnull;
+  mConvertedBits = nsnull;
+  mBitsForCreate = nsnull;
   mWidth = 0;
   mHeight = 0;
   mDepth = 0;
+  mOriginalDepth = 0;
   mColorMap = nsnull;
 }
 
@@ -47,6 +50,12 @@ nsImageUnix :: ~nsImageUnix()
     XDestroyImage(mImage);
     mImage = nsnull;
   }
+  if(nsnull != mConvertedBits) 
+    {
+    delete[] (PRUint8*)mConvertedBits;
+    mConvertedBits = nsnull;
+    }
+
   if(nsnull != mImageBits)
     {
     delete[] (PRUint8*)mImageBits;
@@ -75,6 +84,9 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
+  mOriginalDepth = aDepth;
+  mOriginalRowBytes = CalcBytesSpan(aWidth);
+  mConverted = PR_FALSE;
 
   ComputePaletteSize(aDepth);
 
@@ -83,7 +95,7 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
 
 printf("******************\nWidth %d  Height %d  Depth %d mSizeImage %d\n", 
                   mWidth, mHeight, mDepth, mSizeImage);
-    mImageBits = (PRUint8*) new PRUint8[mSizeImage * 3]; //KMM - Kludge
+    mImageBits = (PRUint8*) new PRUint8[mSizeImage]; 
 
     mColorMap = new nsColorMap;
 
@@ -190,11 +202,8 @@ PRBool nsImageUnix :: Draw(nsIRenderingContext &aContext,
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
 
-//  if(nsnull == mImage) {
-//    printf("NOT OPTIMIZED YET OOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO\n");
     mImage = nsnull;
     Optimize(aSurface);
-//  }
  
   if (nsnull == mImage)
     return PR_FALSE;
@@ -221,21 +230,29 @@ PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
   return(PR_FALSE);
 }
 
+
+void nsImageUnix::AllocConvertedBits(PRUint32 aSize)
+{
+  if (nsnull == mConvertedBits)
+    mConvertedBits = (PRUint8*) new PRUint8[aSize]; 
+}
+
 //------------------------------------------------------------
 
 void nsImageUnix::ConvertImage(nsDrawingSurface aDrawingSurface)
 {
 nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aDrawingSurface;
 PRUint8			*tempbuffer,*cursrc,*curdest;
-PRInt32			oldrowbytes,x,y;
+PRInt32			x,y;
 PRInt16			red,green,blue,*cur16;
-  
-  if((unixdrawing->depth==24) &&  (mDepth==8))
+
+  mBitsForCreate = mImageBits;
+
+  if((unixdrawing->depth==24) &&  (mOriginalDepth==8))
     {
     printf("Converting the image NOWWWWWWWWWWWWWW\n");
 
     // convert this nsImage to a 24 bit image
-    oldrowbytes = mRowBytes;
     mDepth = 24;
 
     ComputePaletteSize(mDepth);
@@ -243,13 +260,15 @@ PRInt16			red,green,blue,*cur16;
     // create the memory for the image
     ComputMetrics();
 
-    tempbuffer = (PRUint8*) new PRUint8[mSizeImage];
+    AllocConvertedBits(mSizeImage);
+    tempbuffer = mConvertedBits;
+    mBitsForCreate = mConvertedBits;
 
     for(y=0;y<mHeight;y++)
       {
-      cursrc = mImageBits+(y*oldrowbytes);
+      cursrc = mImageBits+(y*mOriginalRowBytes);
       curdest =tempbuffer+(y*mRowBytes);
-      for(x=0;x<oldrowbytes;x++)
+      for(x=0;x<mOriginalRowBytes;x++)
         {
         *curdest = mColorMap->Index[(3*(*cursrc))+2];  // red
         curdest++;
@@ -261,13 +280,6 @@ PRInt16			red,green,blue,*cur16;
         } 
       }
    
-    // assign the new buffer to this nsImage
-
-//KMM BAD    delete[] (PRUint8*)mImageBits;
-//KMM BAD    mImageBits = tempbuffer; 
-     memcpy(mImageBits, tempbuffer, mSizeImage);
-     delete[] tempbuffer;
-
    
     // after we are finished converting the image, build a new color map   
     mColorMap = new nsColorMap;
@@ -279,27 +291,29 @@ PRInt16			red,green,blue,*cur16;
       memset(mColorMap->Index, 0, sizeof(PRUint8) * (3 * mNumPalleteColors));
       }
     }
+ 
 
-  if((unixdrawing->depth==16) && (mDepth==8))
+  if((unixdrawing->depth==16) && (mOriginalDepth==8))
     {
     printf("Converting 8 to 16\n");
 
     // convert this nsImage to a 24 bit image
-    oldrowbytes = mRowBytes;
     mDepth = 16;
 
     ComputePaletteSize(mDepth);
 
     // create the memory for the image
     ComputMetrics();
-    tempbuffer = (PRUint8*) new PRUint8[mSizeImage];
+    AllocConvertedBits(mSizeImage);
+    tempbuffer = mConvertedBits;
+    mBitsForCreate = mConvertedBits;
 
     for(y=0;y<mHeight;y++)
       {
-      cursrc = mImageBits+(y*oldrowbytes);
+      cursrc = mImageBits+(y*mOriginalRowBytes);
       cur16 = (PRInt16*) (tempbuffer+(y*mRowBytes));
 
-      for(x=0;x<oldrowbytes;x++)
+      for(x=0;x<mOriginalRowBytes;x++)
         {
         red = mColorMap->Index[(3*(*cursrc))+2];  // red
         green = mColorMap->Index[(3*(*cursrc))+1];  // green
@@ -311,12 +325,6 @@ PRInt16			red,green,blue,*cur16;
         } 
       }
    
-    // assign the new buffer to this nsImage
-//KMM BAD    delete[] (PRUint8*)mImageBits;
-//KMM BAD    mImageBits = tempbuffer; 
-      memcpy(mImageBits, tempbuffer, mSizeImage); 
-      delete[] tempbuffer;
-
     if (mColorMap != nsnull)
       {
       mColorMap->NumColors = mNumPalleteColors;
@@ -382,7 +390,7 @@ printf("Width %d  Height %d Visual Depth %d  Image Depth %d\n",
 			    unixdrawing->depth,
 			    format,
 			    0,
-			    (char *)mImageBits,
+			    (char *)mBitsForCreate,
 			    (unsigned int)mWidth, 
 			    (unsigned int)mHeight,
 			    32,mRowBytes);
