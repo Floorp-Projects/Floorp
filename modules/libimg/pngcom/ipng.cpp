@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #include "png.h"
@@ -33,11 +46,11 @@
 
 #define MINIMUM_DELAY_TIME 10
 
-static void info_callback(png_structp png_ptr, png_infop info);
-static void row_callback(png_structp png_ptr, png_bytep new_row,
+static void PR_CALLBACK info_callback(png_structp png_ptr, png_infop info);
+static void PR_CALLBACK row_callback(png_structp png_ptr, png_bytep new_row,
                          png_uint_32 row_num, int pass);
-static void end_callback(png_structp png_ptr, png_infop info);
-static void il_png_error_handler(png_structp png_ptr, png_const_charp msg);
+static void PR_CALLBACK end_callback(png_structp png_ptr, png_infop info);
+static void PR_CALLBACK il_png_error_handler(png_structp png_ptr, png_const_charp msg);
 
 int il_debug;
 PRLogModuleInfo *il_log_module = NULL;
