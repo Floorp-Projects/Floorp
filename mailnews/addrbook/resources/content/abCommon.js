@@ -224,13 +224,16 @@ function AbEditSelectedDirectory()
 
 function GetParentRow(aTree, aRow)
 {
-  var level = aTree.view.getLevel(aRow);
+  var row = aRow;
+  var level = aTree.view.getLevel(row);
   var parentLevel = level;
-  while (aRow >= 0 && parentLevel >= level) {
-    parentLevel = aTree.view.getLevel(aRow);
-    --aRow;
+  while (parentLevel >= level) {
+    row--;
+    if (row == -1)
+      return row;
+    parentLevel = aTree.view.getLevel(row);
   }
-  return aRow;
+  return row;
 }
         
 function InitCommonJS()
