@@ -107,7 +107,7 @@ OBJS = \
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
+libs:: $(DLL)
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
     $(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
