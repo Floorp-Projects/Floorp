@@ -41,6 +41,7 @@ nsIStyleFrameConstruction.h
 nsIStyleSet.h
 nsITextFrame.h
 nsLayoutErrors.h
+nsLayoutUtils.h
 nsReflowType.h
 nsStyleChangeList.h
 nsStyleConsts.h

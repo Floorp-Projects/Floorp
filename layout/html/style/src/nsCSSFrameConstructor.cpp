@@ -10336,6 +10336,22 @@ nsCSSFrameConstructor::ProcessRestyledFrames(nsStyleChangeList& aChangeList,
         ApplyRenderingChangeToTree(aPresContext, frame, nsnull, hint);
       }
     }
+#ifdef DEBUG
+    // reget from content since it may have been regenerated...
+    if (content) {
+      nsIFrame* frame;
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+      shell->GetPrimaryFrameFor(content, &frame);
+      if (frame) {
+        nsCOMPtr<nsIFrameManager> frameManager;
+        shell->GetFrameManager(getter_AddRefs(frameManager));
+        frameManager->DebugVerifyStyleTree(aPresContext, frame);
+      }
+    } else {
+      NS_WARNING("Unable to test style tree integrity -- no content node");
+    }
+#endif
   }
   aChangeList.Clear();
   return NS_OK;

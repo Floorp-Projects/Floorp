@@ -68,6 +68,7 @@ nsIStyleContext.h \
 nsIStyleFrameConstruction.h \
 nsIStyleSet.h \
 nsLayoutErrors.h \
+nsLayoutUtils.h \
 nsReflowType.h \
 nsStyleChangeList.h \
 nsStyleConsts.h \

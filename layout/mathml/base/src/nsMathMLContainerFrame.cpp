@@ -674,6 +674,13 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
         fm->ComputeStyleChangeFor(aPresContext, aFrame,
                                   kNameSpaceID_None, nsMathMLAtoms::fontsize,
                                   changeList, minChange, maxChange);
+#ifdef DEBUG
+        // Use the parent frame to make sure we catch in-flows and such
+        nsIFrame* parentFrame;
+        aFrame->GetParent(&parentFrame);
+        fm->DebugVerifyStyleTree(aPresContext,
+                                 parentFrame ? parentFrame : aFrame);
+#endif
       }
     }
   }
