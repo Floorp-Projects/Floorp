@@ -29,6 +29,11 @@ Editor interface to outside world
 0xa3c5ee71, 0x742e, 0x11d2, \
 {0x8f, 0x2c, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94} }
 
+#define NS_IEDITORFACTORY_IID \
+{ /* {E2F4C7F1-864A-11d2-8F38-006008310194}*/ \
+0xe2f4c7f1, 0x864a, 0x11d2, \
+{ 0x8f, 0x38, 0x0, 0x60, 0x8, 0x31, 0x1, 0x94 } }
+
 enum PROPERTIES{NONE = 0,BOLD = 1,NUMPROPERTIES};
 
 /**
@@ -85,10 +90,6 @@ public:
   virtual nsresult Commit(PRBool aCtrlKey)=0;
 
 };
-
-/*Factory Method to create an Editor*/
-
-extern nsresult NS_InitEditor(nsIEditor **, nsIDOMDocument *);
 
 #endif //nsIEditor_h__
 
