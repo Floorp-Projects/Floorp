@@ -845,7 +845,7 @@ $(CHROME_L10N:.\=CLOBBER\.\):
 install:: $(CHROME_TYPE)
 
 $(CHROME_TYPE):
-    echo $@,0,$(MAKEDIR)\$(DIST)\bin\chrome\$(CHROME_DIR) >>$(DIST)\bin\chrome\installed-chrome.txt
+    echo $@,0,$(MAKEDIR)\$(DIST)\bin\chrome\$(CHROME_DIR)\$(CHROME_TYPE) >>$(DIST)\bin\chrome\installed-chrome.txt
 !endif
 
 !endif # chrome
