@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.33 $ 
-# $Date: 2002/04/26 22:40:09 $ 
+# $Revision: 1.34 $ 
+# $Date: 2002/04/26 23:44:55 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -849,13 +849,10 @@ sub apply_db_updates {
     
     if ($buildstatus ne 'not_running') {
 
-      if (
-          ($buildstatus ne 'success') &&
-          ($previous_rec->{'starttime'})
-         ) {
+      if ($previous_rec->{'starttime'}) {
 
-        # If the current build is broken, show what to see what has
-        # changed in VC during the last build.
+        # show what has new has made it into this build, it is also what
+        # has changed in VC during the last build.
 
         $record->{'previousbuildtime'} = $previous_rec->{'starttime'};
 
