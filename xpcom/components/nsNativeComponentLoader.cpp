@@ -787,67 +787,6 @@ nsNativeComponentLoader::CreateCachedDll(const char *location,
 }
 #endif
 
-PRBool
-nsNativeComponentLoader::IsRelativePath(nsIFileSpec *aPath)
-{
-#define USE_GETPARENT
-#ifdef USE_GETPARENT
-    nsFileSpec spec, parent;
-    if (NS_FAILED(aPath->GetFileSpec(&spec)))
-        return PR_FALSE;
-
-#ifdef DEBUG_shaver
-    int iters = 0;
-#endif
-
-    while(1) {
-#ifdef DEBUG_shaver
-        PR_ASSERT(iters < 10);  // XXX sanity
-#endif
-        if (spec == *mComponentsDir)
-            return PR_TRUE;
-        
- 
-        spec.GetParent(parent);
-        if (spec.Failed())     // shouldn't this be an error on parent?
-            return PR_FALSE;
-
-        if (spec == parent)
-            return PR_FALSE;
-        
-        spec = parent;
-
-#ifdef DEBUG_shaver
-        iters++;
-#endif
-    }
-
-#else
-#ifdef XP_MAC
-    /* relative paths on the Mac are rilly rilly hard.  Need more thinking. */
-    return PR_FALSE;
-#endif
-
-    const char *componentsDir = mComponentsDir->GetNativePathCString();
-    char *path;
-
-    if (NS_FAILED(aPath->GetNativePath(&path)))
-        return PR_FALSE;        // can't get path, ergo it's not relative =)
-
-    if  (componentsDir) {
-        int n = strlen(componentsDir);
-        if (!PL_strncmp(path, componentsDir, n)) {
-            nsAllocator::Free(path); // XXX right Free?
-            return PR_TRUE;
-        }
-    }
-
-    /* if we don't have a components dir, or we don't have that as a prefix */
-    nsAllocator::Free(path); // XXX right Free?
-    return PR_FALSE;
-#endif
-}
-
 nsresult
 nsNativeComponentLoader::OnRegister(const nsIID &aCID, const char *aType,
                                     const char *aClassName,
@@ -915,8 +854,11 @@ nsNativeComponentLoader::RegistryNameForSpec(nsIFileSpec *aSpec,
                                              char **aRegistryName)
 {
     nsresult rv;
+    nsFileSpec spec;
+    if (NS_FAILED(rv = aSpec->GetFileSpec(&spec)))
+        return rv;
 
-    if (IsRelativePath(aSpec)){
+    if (spec.IsChildOf(*mComponentsDir)){
         /*
          * According to sfraser, this sort of string magic is ``Mac-safe''.
          * Who knew?

@@ -1520,6 +1520,10 @@ nsComponentManagerImpl::GetLoaderForType(const char *aType,
 
     rv = CreateInstance(progID, nsnull, NS_GET_IID(nsIComponentLoader),	(void **)&loader);
     PR_FREEIF(progID);
+    if (NS_FAILED(rv))
+        return rv;
+
+    rv = loader->Init(this, mRegistry);
 
     if (NS_SUCCEEDED(rv)) {
 	mLoaders->Put(&typeKey, loader);

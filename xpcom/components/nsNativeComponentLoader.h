@@ -38,11 +38,10 @@ class nsNativeComponentLoader : public nsIComponentLoader {
 
     nsNativeComponentLoader();
     virtual ~nsNativeComponentLoader();
-    PRBool IsRelativePath(nsIFileSpec *path);
     nsresult RegistryNameForLib(const char *aLibName,
-                                       char **aRegistryName);
+                                char **aRegistryName);
     nsresult RegistryNameForSpec(nsIFileSpec *aSpec,
-                                        char **aRegistryName);
+                                 char **aRegistryName);
 
  protected:
     nsCOMPtr<nsIRegistry> mRegistry;
