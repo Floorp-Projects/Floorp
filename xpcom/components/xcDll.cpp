@@ -218,30 +218,26 @@ PRBool nsDll::Load(void)
 #ifdef	XP_MAC
         // NSPR path is / separated. This works for all NSPR functions
         // except Load Library. Translate to something NSPR can accepts.
-        char *macFileName = PL_strdup(nsprPath);
-        if (macFileName != NULL)
+        if (nsprPath[0] == '/')
         {
-            if (macFileName[0] == '/')
+            // convert '/' to ':'
+            int c;
+            char* str = nsprPath;
+            while ((c = *str++) != 0)
             {
-                // convert '/' to ':'
-                int c;
-                char* str = macFileName;
-                while ((c = *str++) != 0)
-                {
-                    if (c == '/')
-                        str[-1] = ':';
-                }
-                m_instance = PR_LoadLibrary(&macFileName[1]);		// skip over initial slash
+                if (c == '/')
+                  str[-1] = ':';
             }
-            else
-            {
-                m_instance = PR_LoadLibrary(macFileName);
-            }
-            PL_strfree(macFileName);
+            m_instance = PR_LoadLibrary(&nsprPath[1]);		// skip over initial slash
+        }
+        else
+        {
+            m_instance = PR_LoadLibrary(nsprPath);
         }
 #else
         m_instance = PR_LoadLibrary(nsprPath);
 #endif /* XP_MAC */
+        nsCRT::free(nsprPath);
     }
     return ((m_instance == NULL) ? PR_FALSE : PR_TRUE);
 }
