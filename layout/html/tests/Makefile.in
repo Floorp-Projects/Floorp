@@ -61,6 +61,8 @@ LIBS = \
 	-lpref \
 	-lsecfree \
 	-l$(MOZ_LIB_JS_PREFIX)js \
+	-ljsdom \
+	-lraptorgfx \
 	-lxpcom \
 	-lreg \
 	-lxp \
