@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.6 2002/01/11 17:31:09 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.7 2002/01/31 00:42:43 relyea%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -279,11 +279,6 @@ SECStatus cert_check_crl_version (CERTCrl *crl)
     if (rv == SECFailure)
 	return (rv);
 
-    /* There is no critical extension, but the version is set to v2 */
-    if (version != SEC_CRL_VERSION_1 && hasCriticalExten == PR_FALSE) {
-	PORT_SetError (SEC_ERROR_BAD_DER);
-	return (SECFailure);
-    }
     return (SECSuccess);
 }
 
@@ -363,14 +358,8 @@ CERT_DecodeDERCrl(PRArenaPool *narena, SECItem *derSignedCrl, int type)
 	     (arena, crl, cert_SignedCrlTemplate, derSignedCrl);
 	if (rv != SECSuccess)
 	    break;
-
-#ifdef notdef
-	/*this is a bogus check. all these fields are optional in a V2 cert.*/
-	/* If the version is set to v2, make sure that it contains at
-	   least 1 critical extension either the crl extensions or
-	   crl entry extensions. */
+        /* check for critical extentions */
 	rv =  cert_check_crl_version (&crl->crl);
-#endif
 	break;
 
     case SEC_KRL_TYPE:
