@@ -49,7 +49,7 @@ public class BaseFunction extends IdScriptable implements Function {
         BaseFunction obj = new BaseFunction();
         obj.prototypeFlag = true;
         obj.functionName = "";
-        obj.prototypePropertyAttrs = DONTENUM | READONLY | PERMANENT;
+        obj.isPrototypePropertyImmune = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
 
@@ -97,7 +97,9 @@ public class BaseFunction extends IdScriptable implements Function {
             case Id_name:
                 return DONTENUM | READONLY | PERMANENT;
             case Id_prototype:
-                return prototypePropertyAttrs;
+                return isPrototypePropertyImmune
+                    ? DONTENUM | READONLY | PERMANENT
+                    : DONTENUM;
             case Id_arguments:
                 return EMPTY;
         }
@@ -186,18 +188,19 @@ public class BaseFunction extends IdScriptable implements Function {
      * Make value as DontEnum, DontDelete, ReadOnly
      * prototype property of this Function object
      */
-    public void setImmunePrototypeProperty(Object value) {
+    public void setImmunePrototypeProperty(Object value)
+    {
         prototypeProperty = (value != null) ? value : UniqueTag.NULL_VALUE;
-        prototypePropertyAttrs = DONTENUM | READONLY | PERMANENT;
+        isPrototypePropertyImmune = true;
     }
 
-    protected Scriptable getClassPrototype() {
+    protected Scriptable getClassPrototype()
+    {
         Object protoVal = getPrototypeProperty();
-        if (protoVal == null
-                    || !(protoVal instanceof Scriptable)
-                    || (protoVal == Undefined.instance))
-            protoVal = getClassPrototype(this, "Object");
-        return (Scriptable) protoVal;
+        if (protoVal instanceof Scriptable && protoVal != Undefined.instance) {
+            return (Scriptable) protoVal;
+        }
+        return getClassPrototype(this, "Object");
     }
 
     /**
@@ -525,8 +528,7 @@ public class BaseFunction extends IdScriptable implements Function {
     protected String functionName;
 
     private Object prototypeProperty;
-    private int prototypePropertyAttrs = DONTENUM;
-
+    private boolean isPrototypePropertyImmune;
     private boolean prototypeFlag;
 }
 
