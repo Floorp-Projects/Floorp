@@ -38,7 +38,6 @@ public:
   NS_IMETHOD_(CAPIHandle) GetCAPIHandle();
 
   NS_IMETHOD_(char *) GetCAPIPassword() ;
-  NS_IMETHOD_(NSCalendar *) GetNSCalendar();
 
 protected:
   ~nsCalToolkit();

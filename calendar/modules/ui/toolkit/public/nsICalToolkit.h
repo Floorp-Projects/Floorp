@@ -40,7 +40,6 @@ public:
   NS_IMETHOD_(CAPISession) GetCAPISession() = 0;
   NS_IMETHOD_(CAPIHandle) GetCAPIHandle() = 0;
   NS_IMETHOD_(char *) GetCAPIPassword() = 0 ;
-  NS_IMETHOD_(NSCalendar *) GetNSCalendar() = 0;
 
 };
 

@@ -179,6 +179,7 @@ nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRend
 
   user->GetLayer(layer);
 
+#if 0
   NSCalendar * nscal;
 
   layer->GetCal(nscal); 
@@ -186,6 +187,9 @@ nsEventStatus nsCalMonthViewCanvas :: PaintForeground(nsIRenderingContext& aRend
   nscal->sortComponentsByDTStart(ICalComponent::ICAL_COMPONENT::ICAL_COMPONENT_VEVENT);
 
   nscal->getEventsByRange(evtVctr, *dStart, *dEnd); 
+#endif
+
+  layer->FetchEventsByRange(dStart, dEnd, evtVctr); 
 
   for (j = 0; j < evtVctr->GetSize(); j++)
   {

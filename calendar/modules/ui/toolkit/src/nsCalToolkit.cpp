@@ -105,7 +105,3 @@ char * nsCalToolkit::GetCAPIPassword()
   return (mCalendarShell->GetCAPIPassword());
 }
 
-NSCalendar * nsCalToolkit::GetNSCalendar()
-{
-  return (mCalendarShell->GetNSCalendar());
-}

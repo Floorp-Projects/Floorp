@@ -21,7 +21,6 @@ CPPSRCS = \
 	nsCalUserList.cpp \
 	nsCalList.cpp \
 	nsCalLoggedInUser.cpp \
-	nsCalScheduler.cpp \
 	nsCalSession.cpp \
 	nsCalSessionMgr.cpp \
 	nsCalUser.cpp \

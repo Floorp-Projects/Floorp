@@ -126,7 +126,6 @@ nsCalendarShell::nsCalendarShell()
   mDocumentContainer = nsnull ;
   mObserverManager = nsnull;
   mCAPIPassword = nsnull;
-  mpCalendar = nsnull;
   mpLoggedInUser = nsnull;
   mCommandServer = nsnull;
   mCAPISession = nsnull;
@@ -142,8 +141,6 @@ nsCalendarShell::~nsCalendarShell()
 
   if (mCAPIPassword)
     PR_Free(mCAPIPassword);
-  if (mpCalendar)
-    delete mpCalendar;
   if (mpLoggedInUser)
     delete mpLoggedInUser;
 
@@ -183,7 +180,6 @@ NS_IMPL_RELEASE(nsCalendarShell)
 
 nsresult nsCalendarShell::Init()
 {
-  mScheduler.SetShell(this);
   /*
    * Register class factrories needed for application
    */
@@ -299,8 +295,6 @@ nsresult nsCalendarShell::Logon()
   /*
    * Begin a calendar for the logged in user...
    */
-  mpCalendar = new NSCalendar(0);
-  SetNSCalendar(mpCalendar);
 
  switch(theURL.GetProtocol())
   {
@@ -313,7 +307,6 @@ nsresult nsCalendarShell::Logon()
       nsILayer *pLayer;
       d.prevDay(14);
       d1.nextDay(14);
-      //mScheduler.InitialLoadData();
       mpLoggedInUser->GetLayer(pLayer);
       NS_ASSERTION(0 != pLayer,"null pLayer");
       {
@@ -327,8 +320,6 @@ nsresult nsCalendarShell::Logon()
       }
       pLayer->SetShell(this);
       pLayer->FetchEventsByRange(&d,&d1,&EventList);
-      pLayer->SetCal(mpCalendar);
-      mpCalendar->addEventList(&EventList);
     }
     break;
 
@@ -626,7 +617,6 @@ nsresult nsCalendarShell::LoadUI()
     return res ;
 
   mDocumentContainer->SetApplicationShell((nsIApplicationShell*)this);
-  //((nsCalendarContainer *)mDocumentContainer)->mpCalendarShell = this;
 
   mDocumentContainer->SetToolbarManager(mShellInstance->GetToolbarManager());
 
@@ -703,18 +693,6 @@ CAPISession nsCalendarShell::GetCAPISession()
 {
   return (mCAPISession);
 }
-
-nsresult nsCalendarShell::SetNSCalendar(NSCalendar * aNSCalendar)
-{
-  mpCalendar = aNSCalendar;
-  return NS_OK;
-}
-
-NSCalendar * nsCalendarShell::GetNSCalendar()
-{
-  return (mpCalendar);
-}
-
 
 nsresult nsCalendarShell::Create(int* argc, char ** argv)
 {

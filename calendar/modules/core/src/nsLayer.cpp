@@ -50,7 +50,6 @@
 #include "nspr.h"
 #include "prcvar.h"
 #include "nsCalStreamReader.h"
-#include "nsCalScheduler.h"
 #include "nsCalSessionMgr.h"
 
 static NS_DEFINE_IID(kILayerIID,       NS_ILAYER_IID);
@@ -68,10 +67,17 @@ NS_IMPL_RELEASE(nsLayer)
 
 nsLayer::~nsLayer()
 {
+  if (nsnull != mpCal)
+  {
+    delete mpCal;
+    mpCal = nsnull;
+  }
 }
 
 nsresult nsLayer::Init()
 {
+  mpCal = new NSCalendar(0);
+
   return (NS_OK);
 }
 
@@ -357,7 +363,7 @@ nsresult nsLayer::FetchEventsByRange(
           delete psBuf;
 #endif
           anArray->Add(pEvent);
-          mpShell->mpCalendar->addEvent(pEvent);
+          mpCal->addEvent(pEvent);
         }
       }
     }
@@ -384,7 +390,7 @@ nsresult nsLayer::FetchEventsByRange(
   /*
    * register the calendar...
    */
-  if (NS_OK != (res = mpShell->mCalList.Add(mpShell->mpCalendar)))
+  if (NS_OK != (res = mpShell->mCalList.Add(mpCal)))
     return res;
 
   return NS_OK;

@@ -56,9 +56,6 @@ public:
   NS_IMETHOD SetCAPIPassword(char * aPassword) = 0;
   NS_IMETHOD_(char *) GetCAPIPassword() = 0;
 
-  NS_IMETHOD SetNSCalendar(NSCalendar * aCalendar) = 0;
-  NS_IMETHOD_(NSCalendar *) GetNSCalendar() = 0;
-
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0 ;
 
 };
