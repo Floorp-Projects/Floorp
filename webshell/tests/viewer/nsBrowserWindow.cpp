@@ -887,19 +887,32 @@ static NS_DEFINE_IID(kIRDFServiceIID,           NS_IRDFSERVICE_IID);
   if (NS_FAILED(rv = doc->GetDataBase(db)))
     goto done;
 
+  // XXX Allright, all this hand-coding of data sources is getting
+  // ridiculous and needs to be moved to the RDF back-end. I'll do
+  // that ASAP...
   if (NS_FAILED(rv = service->GetNamedDataSource("rdf:mail", &ds)))
     goto done;
 
   if (NS_FAILED(rv = db->AddDataSource(ds)))
     goto done;
 
-  if (NS_FAILED(rv = service->GetNamedDataSource("resource:/res/rdf/LocalStore.rdf", &ds)))
+  NS_RELEASE(ds);
+
+  if (NS_FAILED(rv = service->GetNamedDataSource("rdf:bookmarks", &ds)))
     goto done;
 
   if (NS_FAILED(rv = db->AddDataSource(ds)))
     goto done;
 
-  if (NS_FAILED(rv = service->GetResource("MailRoot", &root)))
+  NS_RELEASE(ds);
+
+  if (NS_FAILED(rv = service->GetNamedDataSource("resource://res/rdf/LocalStore.rdf", &ds)))
+    goto done;
+
+  if (NS_FAILED(rv = db->AddDataSource(ds)))
+    goto done;
+
+  if (NS_FAILED(rv = service->GetResource("resource://res/rdf/LocalStore.rdf#root", &root)))
     goto done;
 
   if (NS_FAILED(rv = doc->SetRootResource(root)))
