@@ -230,13 +230,13 @@ nsresult nsMailtoUrl::ParseUrl()
   {
     // now parse out the search field...
     nsCAutoString searchPart;
-    m_toPart.Mid(searchPart, startOfSearchPart, -1);
+    PRUint32 numExtraChars = m_toPart.Mid(searchPart, startOfSearchPart, -1);
     if (!searchPart.IsEmpty())
     {
 		  ParseMailtoUrl(searchPart);
       // now we need to strip off the search part from the
       // to part....
-      m_toPart.Cut(startOfSearchPart, -1);
+      m_toPart.Cut(startOfSearchPart, numExtraChars);
     }
 	}
   else if (!m_toPart.IsEmpty())
