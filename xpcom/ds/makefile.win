@@ -35,6 +35,7 @@ EXPORTS =                          \
         nsCRT.h                    \
         nsDeque.h                  \
         nsEnumeratorUtils.h        \
+        nsFixedSizeAllocator.h     \
         nsHashtable.h              \
         nsHashtableEnumerator.h    \
         nsIArena.h                 \
@@ -104,6 +105,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsDeque.obj                   \
         .\$(OBJDIR)\nsEmptyEnumerator.obj         \
         .\$(OBJDIR)\nsEnumeratorUtils.obj         \
+        .\$(OBJDIR)\nsFixedSizeAllocator.obj      \
         .\$(OBJDIR)\nsHashtable.obj               \
         .\$(OBJDIR)\nsHashtableEnumerator.obj     \
         .\$(OBJDIR)\nsObserver.obj                \
