@@ -146,7 +146,7 @@ nsHTTPResponseListener::OnDataAvailable(nsIChannel* channel,
                    ("\tOnDataAvailable [this=%x]. Calling consumer "
                     "OnDataAvailable.\tlength:%d\n", this, i_Length));
 
-            rv = m_pConsumer->OnDataAvailable(channel, m_ResponseContext, i_pStream, 0, 
+            rv = m_pConsumer->OnDataAvailable(m_pConnection, m_ResponseContext, i_pStream, 0, 
                                               i_Length);
         }
     } else {
@@ -193,7 +193,7 @@ nsHTTPResponseListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pCont
     if (NS_SUCCEEDED(rv)) {
         // Pass the notification out to the consumer...
         if (m_pConsumer) {
-            rv = m_pConsumer->OnStartRequest(channel, m_ResponseContext);
+            rv = m_pConsumer->OnStartRequest(m_pConnection, m_ResponseContext);
         } else {
             NS_ERROR("No Stream Listener...");
             rv = NS_ERROR_NULL_POINTER;
@@ -216,7 +216,7 @@ nsHTTPResponseListener::OnStopRequest(nsIChannel* channel,
 
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
-        rv = m_pConsumer->OnStopRequest(channel, m_ResponseContext, i_Status, i_pMsg);
+        rv = m_pConsumer->OnStopRequest(m_pConnection, m_ResponseContext, i_Status, i_pMsg);
     } else {
         NS_ERROR("No Stream Listener...");
         rv = NS_ERROR_NULL_POINTER;

@@ -229,8 +229,11 @@ main(int argc, char* argv[])
   if (NS_FAILED(rv)) return rv;
 
   char *buffer = PR_smprintf("GET %s HTML/1.0%s%s", fileName, CRLF, CRLF);
-//  stream->Fill(buffer, strlen(buffer), &bytesWritten);
+#if 0
+  stream->Fill(buffer, strlen(buffer), &bytesWritten);
+#else
   buf->Write(buffer, strlen(buffer), &bytesWritten);
+#endif
   printf("\n+++ Request is: %s\n", buffer);
 
   // Create the socket transport...

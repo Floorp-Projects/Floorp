@@ -356,8 +356,11 @@ nsresult TestConnection::WriteBuffer(void)
     // Async case...
     //
     if (mStream) {
-//      rv = mStream->Fill(buffer, size, &bytesWritten);
+#if 0
+      rv = mStream->Fill(buffer, size, &bytesWritten);
+#else
       rv = mBuffer->Write(buffer, size, &bytesWritten);
+#endif
 
       // Write the buffer to the server...
       if (NS_SUCCEEDED(rv)) {

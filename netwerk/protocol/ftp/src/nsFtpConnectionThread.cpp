@@ -862,8 +862,11 @@ nsFtpConnectionThread::Run() {
                     while ( !NS_FAILED(rv) && bytes > 0) {
                         PRUint32 writeCnt = 0;
 
-//                        rv = in->Fill(listBuf, bytes, &writeCnt);
+#if 0
+                        rv = in->Fill(listBuf, bytes, &writeCnt);
+#else
                         rv = buf->Write(listBuf, bytes, &writeCnt);
+#endif
                         if (NS_FAILED(rv)) {
                             mState = FTP_ERROR;
                             break;
@@ -979,8 +982,11 @@ nsFtpConnectionThread::Run() {
                     while ( !NS_FAILED(rv) && bytes > 0) {
                         PRUint32 writeCnt = 0;
 
-//                        rv = in->Fill(listBuf, bytes, &writeCnt);
+#if 0
+                        rv = in->Fill(listBuf, bytes, &writeCnt);
+#else
                         rv = buf->Write(listBuf, bytes, &writeCnt);
+#endif
                         if (NS_FAILED(rv)) {
                             mState = FTP_ERROR;
                             break;
