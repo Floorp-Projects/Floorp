@@ -16,7 +16,7 @@
 # Reserved.
 #
 
-## $Id: mozilla,v 1.3 1999/12/15 06:23:49 sspitzer%netscape.com Exp $
+## $Id: mozilla,v 1.4 2000/02/04 23:11:19 sspitzer%netscape.com Exp $
 ## 
 ## Usage:
 ##
@@ -58,10 +58,6 @@ do
       MOZILLA_BIN="./mozilla-bin.pure"
       shift
       ;;
-    -h | --help )
-      script_args="$script_args -h"
-      shift
-      ;;
     -g | --debug)
       script_args="$script_args -g"
       debugging=1
@@ -71,31 +67,11 @@ do
       script_args="$script_args -d $2"
       shift 2
       ;;
-    -*)
-	case $1 in
-		# keep this in synch with 
-		# mozilla/xpfe/bootstrap/nsAppRunner.cpp  
-		# and mozilla/profile/src/nsProfile.cpp
-		-v | --version | -h | --help | -P | -SelectProfile | -CreateProfile | -ProfileManager | -ProfileWizard | -installer | -edit | -mail | -news | -pref | -compose | -editor | -addressbook | -chrome | -f)
-		if [ "x$moreargs" != "x" ]
-		then
-			echo "You can't have $1 and $moreargs"
-			exit 1
-		else
-			moreargs=$1
-		fi
-		shift
-		;;
-	*)
-		echo "Unknown option: $1" 1>&2
-		exit 1
-		;;
-	esac
-      ;;
     *)
-      break
+      moreargs=$1
+      shift
       ;;
- esac
+  esac
 done
 
 # if you are debugging, you can't have moreargs

@@ -54,6 +54,10 @@
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
 
+#include "nsICmdLineHandler.h"
+#include "nsICategoryManager.h"
+#include "nsXPIDLString.h"
+
 static NS_DEFINE_CID(kSoftUpdateCID,     NS_SoftwareUpdate_CID);
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
@@ -61,9 +65,11 @@ static NS_DEFINE_CID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
 
 #define PREF_GENERAL_STARTUP_BROWSER "general.startup.browser"
 #define PREF_GENERAL_STARTUP_MAIL "general.startup.mail"
-#define PREF_GENERAL_STARTUP_NEWS "general.startup.news"
 #define PREF_GENERAL_STARTUP_EDITOR "general.startup.editor"
 #define PREF_GENERAL_STARTUP_CALENDAR "general.startup.calendar"
+
+#define HELP_SPACER_1   "\t"
+#define HELP_SPACER_2   "\t\t"
 
 #ifdef DEBUG
 #include "prlog.h"
@@ -222,7 +228,7 @@ static nsresult HandleEditorStartup( nsICmdLineService* cmdLineArgs, nsIPref *pr
 	return NS_OK;
 }
 
-static nsresult OpenChromURL( char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
+static nsresult OpenChromURL( const char * urlstr, PRInt32 height = NS_SIZETOCONTENT, PRInt32 width = NS_SIZETOCONTENT )
 {
 	nsIURI* url = nsnull;
 	nsresult  rv;
@@ -246,8 +252,6 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
 	nsString withArgs;
 	nsresult rv;
 	PRBool forceLaunchMail = PR_FALSE;
-	PRBool forceLaunchNews = PR_FALSE;
-
 	
 	PRInt32 height  = NS_SIZETOCONTENT;
 	PRInt32 width  = NS_SIZETOCONTENT;
@@ -283,17 +287,6 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
     }
   }
 
-
-  if (heedGeneralStartupPrefs) {
-                prefs->GetBoolPref(PREF_GENERAL_STARTUP_NEWS,&forceLaunchNews);
-  }    
-  rv = cmdLineArgs->GetCmdLineValue("-news", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {
-    if (forceLaunchNews || (cmdResult && (PL_strcmp("1",cmdResult)==0)))
-      OpenChromURL("chrome://messenger/content/", height, width);
-  }
-	
   rv = cmdLineArgs->GetCmdLineValue("-compose", &cmdResult);
   if (NS_SUCCEEDED(rv))
   {
@@ -359,6 +352,146 @@ static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs, nsIPref *p
 	return rv;    
 }
 
+static void DumpArbitraryHelp() 
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
+  if(NS_SUCCEEDED(rv) && catman) {
+#ifdef DEBUG_sspitzer
+    printf("got the category manager\n");
+#endif /* DEBUG_sspitzer */
+    nsCOMPtr<nsISimpleEnumerator> e;
+    rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
+    if(NS_SUCCEEDED(rv) && e) {
+#ifdef DEBUG_sspitzer
+      printf("got the enumerator for all %s\n",COMMAND_LINE_ARGUMENT_HANDLERS);
+#endif /* DEBUG_sspitzer */
+      nsCOMPtr<nsISupports> el;
+      rv = e->GetNext(getter_AddRefs(el));
+      while (NS_SUCCEEDED(rv) && el) {
+        nsCOMPtr <nsICmdLineHandler> handler = do_QueryInterface(el);
+        
+        if (handler) {
+#ifdef DEBUG_sspitzer
+          printf("got a nsICmdLineHandler\n");
+#endif /* DEBUG_sspitzer */
+          nsXPIDLCString commandLineArg;
+          rv = handler->GetCommandLineArgument(getter_Copies(commandLineArg));
+          if (NS_FAILED(rv)) continue;
+          
+          nsXPIDLCString helpText;
+          rv = handler->GetHelpText(getter_Copies(helpText));
+          if (NS_FAILED(rv)) continue;
+
+          if ((const char *)commandLineArg) {
+            printf("%s%s", HELP_SPACER_1,(const char *)commandLineArg);
+            if ((const char *)helpText) {
+              printf("%s%s\n",HELP_SPACER_2,(const char *)helpText);
+            }
+          }
+        }
+        
+        rv = e->GetNext(getter_AddRefs(el));
+      }
+    }
+  }
+  
+#ifdef DEBUG_sspitzer
+  printf("all done dumping arbitrary help\n");
+#endif /* DEBUG_sspitzer */
+  return;    
+}
+
+static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
+{
+	char* cmdResult = nsnull;
+	nsString withArgs;
+	nsresult rv;
+	PRBool forceLaunchTask = PR_FALSE;
+	PRInt32 height  = NS_SIZETOCONTENT;
+	PRInt32 width  = NS_SIZETOCONTENT;
+	char* tempString = NULL;
+
+#ifdef DEBUG_sspitzer
+    printf("start handling arbitrary command line arguments\n");
+#endif /* DEBUG_sspitzer */
+
+	// Get the value of -width option
+	rv = cmdLineArgs->GetCmdLineValue("-width", &tempString);
+	if (NS_FAILED(rv)) return rv;
+	
+	if (tempString)
+      PR_sscanf(tempString, "%d", &width);
+	  
+	// Get the value of -height option
+	rv = cmdLineArgs->GetCmdLineValue("-height", &tempString);
+	if (NS_FAILED(rv)) return rv;
+	
+	  
+	if (tempString)
+		PR_sscanf(tempString, "%d", &height);
+
+  NS_WITH_SERVICE(nsICategoryManager, catman, "mozilla.categorymanager.1", &rv);
+  if(NS_SUCCEEDED(rv) && catman) {
+#ifdef DEBUG_sspitzer
+    printf("got the category manager\n");
+#endif /* DEBUG_sspitzer */
+    nsCOMPtr<nsISimpleEnumerator> e;
+    rv = catman->EnumerateCategory(COMMAND_LINE_ARGUMENT_HANDLERS, getter_AddRefs(e));
+    if(NS_SUCCEEDED(rv) && e) {
+#ifdef DEBUG_sspitzer
+      printf("got the enumerator for all %s\n",COMMAND_LINE_ARGUMENT_HANDLERS);
+#endif /* DEBUG_sspitzer */
+      nsCOMPtr<nsISupports> el;
+      rv = e->GetNext(getter_AddRefs(el));
+      while (NS_SUCCEEDED(rv) && el) {
+        nsCOMPtr <nsICmdLineHandler> handler = do_QueryInterface(el);
+        
+        if (handler) {
+#ifdef DEBUG_sspitzer
+          printf("got a nsICmdLineHandler\n");
+#endif /* DEBUG_sspitzer */
+          nsXPIDLCString commandLineArg;
+          rv = handler->GetCommandLineArgument(getter_Copies(commandLineArg));
+          if (NS_FAILED(rv)) continue;
+          
+          nsXPIDLCString chromeUrlForTask;
+          rv = handler->GetChromeUrlForTask(getter_Copies(chromeUrlForTask));
+          if (NS_FAILED(rv)) continue;
+          
+          nsXPIDLCString prefNameForStartup;
+          rv = handler->GetPrefNameForStartup(getter_Copies(prefNameForStartup));
+          if (NS_FAILED(rv)) continue;
+          
+#ifdef DEBUG_sspitzer
+          printf("got this one:  %s,%s,%s\n",(const char *)commandLineArg,(const char *)chromeUrlForTask,(const char *)prefNameForStartup);
+#endif /* DEBUG_sspitzer */
+
+          if (heedGeneralStartupPrefs) {
+            rv = prefs->GetBoolPref((const char *)prefNameForStartup,&forceLaunchTask);
+            if (NS_FAILED(rv)) {
+              forceLaunchTask = PR_FALSE;
+            }
+          }  
+          
+          rv = cmdLineArgs->GetCmdLineValue((const char *)commandLineArg, &cmdResult);
+          if (NS_SUCCEEDED(rv)) {
+            if (cmdResult && (PL_strcmp("1",cmdResult)==0))
+              OpenChromURL((const char *)chromeUrlForTask,height, width);
+          }
+        }
+        
+        rv = e->GetNext(getter_AddRefs(el));
+      }
+    }
+  }
+  
+#ifdef DEBUG_sspitzer
+  printf("all done handling arbitrary command line arguments\n");
+#endif /* DEBUG_sspitzer */
+  return NS_OK;    
+}
+
 // This should be done by app shell enumeration someday
 static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs )
 {
@@ -374,6 +507,9 @@ static nsresult DoCommandLines( nsICmdLineService* cmdLine, PRBool heedGeneralSt
 	if ( NS_FAILED( rv ) ) return rv;
 	
 	rv = HandleBrowserStartup( cmdLine, prefs, heedGeneralStartupPrefs);
+	if ( NS_FAILED( rv ) ) return rv;
+
+    rv = HandleArbitraryStartup( cmdLine, prefs, heedGeneralStartupPrefs);
 	return rv;
 }
 
@@ -574,26 +710,27 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
 static
 void DumpHelp(char *appname)
 {
-	printf("Usage: %s [ options ... ] [URL]\n", appname);
+  printf("Usage: %s [ options ... ] [URL]\n", appname);
   printf("       where options include:\n");
   printf("\n");
-  printf("  -addressbook     Start with AddressBook window.\n");
-  printf("  -chrome <url>    Open chrome url..\n");
-  printf("  -compose         Start with mail compose window.\n");
-  printf("  -edit            Start with editor.\n");
-  printf("  -height <value>  Set height of startup window to <value>.\n");
-  printf("  -h or -help      Print this message.\n");
-  printf("  -installer       Start with 4.x migration window.\n");
-  printf("  -mail            Start with mail window.\n");
-  printf("  -news            Start with news window.\n");
-  printf("  -pref            Start with pref window.\n");
-  printf("  -width <value>   Set width of startup window to <value>.\n");
-  printf("  -v or -version   Print %s version.\n", appname);
-  printf("  -CreateProfile <profile>    Create and start with <profile>.\n");
-  printf("  -P <profile>     Start with <profile>.\n");
-  printf("  -ProfileWizard   Start with profile wizard.\n");
-  printf("  -ProfileManager  Start with profile manager.\n");
-  printf("  -SelectProfile   Start with profile selection dialog.\n");
+  printf("%s-addressbook%sStart with AddressBook window.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-chrome <url>%sOpen chrome url..\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-compose%sStart with mail compose window.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-edit%sStart with editor.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-height <value>%sSet height of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-h or -help%sPrint this message.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-installer%sStart with 4.x migration window.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-mail%sStart with mail window.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-pref%sStart with pref window.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-width <value>%sSet width of startup window to <value>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-v or -version%sPrint %s version.\n",HELP_SPACER_1,HELP_SPACER_2, appname);
+  printf("%s-CreateProfile <profile>%sCreate and start with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-P <profile>%sStart with <profile>.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-ProfileWizard%sStart with profile wizard.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-ProfileManager%sStart with profile manager.\n",HELP_SPACER_1,HELP_SPACER_2);
+  printf("%s-SelectProfile%sStart with profile selection dialog.\n",HELP_SPACER_1,HELP_SPACER_2);
+
+  DumpArbitraryHelp();
 }
 
 static
