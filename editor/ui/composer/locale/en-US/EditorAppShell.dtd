@@ -21,8 +21,10 @@
   -->
 
 <!-- Window title -->
-<!ENTITY editorWindow.title "Editor">
-<!ENTITY textEditorWindow.title "Text Editor">
+<!-- LOCALIZATION NOTE  mainWindow.title: Do NOT localize "Composer" -->
+<!ENTITY editorWindow.titlemodifier "Composer"> 
+<!ENTITY editorWindow.titlemodifiermenuseparator " - ">
+<!ENTITY textEditorWindow.titlemodifier "Text Editor"> 
 
 <!-- Menu items:  the . means that the menu item isn't implemented yet -->
 
@@ -42,6 +44,9 @@
 <!ENTITY aboutCmd.label ".About">
 
 <!-- Display Mode Toolbar -->
-<!ENTITY displayMode.label "Display Mode:">
-<!ENTITY editModeButton.label "Normal Editing">
-<!ENTITY browserModeButton.label "Edit in Browser Layout">
+<!ENTITY displayMode.label "Edit Mode:">
+<!ENTITY editModeButton.label "Normal">
+<!ENTITY browserModeButton.label "Browser">
+<!ENTITY viewModeButton.label "View Mode:">
+<!ENTITY htmlModeButton.label "HTML Source">
+<!ENTITY treeModeButton.label "Tag Tree">

@@ -65,6 +65,9 @@ function Startup()
 
   // SET FOCUS TO FIRST CONTROL
   dialog.heightInput.focus();
+
+  // Resize window
+  window.sizeToContent();
 }
 
 // Set dialog widgets with attribute data
@@ -79,8 +82,6 @@ function InitDialog()
   // Get the width attribute of the element, stripping out "%"
   // This sets contents of combobox (adds pixel and percent option elements)
   dialog.widthInput.value = InitPixelOrPercentCombobox(globalElement,"width","pixelOrPercentSelect");
-  // Resize window after filling combobox
-  window.sizeToContent();
 
   align = globalElement.getAttribute("align");
   if (align == "center") {

@@ -40,7 +40,8 @@ box#EditorProgessBox {
 }
 
 box#DisplayModeBar {
-  margin-top: -2px;
+  /*margin-top: -2px;*/
+  border-top: 1px solid darkgray;
   min-width:30px;
   background-color: inherit;
 }

@@ -1173,7 +1173,10 @@ nsEditorShell::CheckAndSaveDocument(PRBool *_retval)
         // Ask user if they want to save current changes
         nsAutoString tmp1 = GetString("Save");
         nsAutoString tmp2 = GetString("DontSave");
-        EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), GetString("SaveFilePrompt"),
+        nsAutoString title;
+        GetDocumentTitle(title);
+        nsAutoString saveMsg = GetString("SaveFilePrompt")+" "+"\""+title+"\""+GetString("QuestionMark");
+        EConfirmResult result = ConfirmWithCancel(GetString("SaveDocument"), saveMsg,
                                                   &tmp1, &tmp2);
         if (result == eCancel)
         {
@@ -1216,7 +1219,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
 
         // find out if the doc already has a fileSpec associated with it.
         nsFileSpec    docFileSpec;
-        PRBool mustShowFileDialog = saveAs || (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
+        PRBool noFileSpec = (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
+        PRBool mustShowFileDialog = saveAs || noFileSpec;
         PRBool replacing = !saveAs;
   
         if (mustShowFileDialog)
@@ -1230,7 +1234,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             nsString title;
             res = HTMLDoc->GetTitle(title);
 
-            if (NS_SUCCEEDED(res) && title.Length() == 0)
+            // Prompt for title ONLY for a new blank doc (no filespec yet)
+            if (noFileSpec && NS_SUCCEEDED(res) && title.Length() == 0)
             {
               // Use a "prompt" common dialog to get title string from user
               NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
@@ -1250,7 +1255,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
                   return NS_OK;
                 }
                 //This will call UpdateWindowTitle
-                SetTitle(titleUnicode);
+                SetDocumentTitle(titleUnicode);
+                title = titleUnicode;
                 bUpdateWindowTitle = PR_FALSE;
                 nsCRT::free(titleUnicode);
               }
@@ -1260,14 +1266,16 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, nsIFileWidget::GetIID(), getter_AddRefs(fileWidget));
             if (NS_SUCCEEDED(res) && fileWidget)
             {
-              nsString  promptString = GetString("SaveDocumentAs");
+              nsAutoString  promptString = GetString("SaveDocumentAs");
 
               nsString* titles = nsnull;
               nsString* filters = nsnull;
               nsString* nextTitle;
               nsString* nextFilter;
-              nsString HTMLFiles;
-              nsString TextFiles;
+              nsAutoString HTMLFiles;
+              nsAutoString TextFiles;
+              nsAutoString fileName;
+              nsFileSpec parentPath;
 
               titles = new nsString[2];
               if (!titles)
@@ -1289,15 +1297,50 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
               if (HTMLFiles.Length() == 0 || TextFiles.Length() == 0)
                 goto SkipFilters;
                 
-              *nextTitle++ = "HTML Files";
+              *nextTitle++ = HTMLFiles;
               *nextFilter++ = "*.htm; *.html; *.shtml";
-              *nextTitle++ = "Text Files";
+              *nextTitle++ = TextFiles;
               *nextFilter++ = "*.txt";
               fileWidget->SetFilterList(2, titles, filters);
+              
+              if (noFileSpec)
+              {
+                // Use page title as suggested name for new document
+                if (title.Length() > 0)
+                {
+                  //Replace "bad" filename characteres with "_"
+                  PRUnichar space = (PRUnichar)' ';
+                  PRUnichar dot = (PRUnichar)'.';
+                  PRUnichar bslash = (PRUnichar)'\\';
+                  PRUnichar fslash = (PRUnichar)'/';
+                  PRUnichar amp = (PRUnichar)'@';
+                  PRUnichar colon = (PRUnichar)':';
+                  PRUnichar underscore = (PRUnichar)'_';
+                  title = title.ReplaceChar(space, underscore);
+                  title = title.ReplaceChar(dot, underscore);
+                  title = title.ReplaceChar(bslash, underscore);
+                  title = title.ReplaceChar(fslash, underscore);
+                  title = title.ReplaceChar(amp, underscore);
+                  title = title.ReplaceChar(colon, underscore);
+                  fileName = title + nsString(".html");
+                }
+              } else {
+                char *leafName = docFileSpec.GetLeafName();
+                if (leafName)
+                {
+                  fileName = leafName;
+                  nsCRT::free(leafName);
+                }
+                docFileSpec.GetParent(parentPath);
+
+                // TODO: CHANGE TO THE DIRECTORY OF THE PARENT PATH?
+              }
+              if (fileName.Length() > 0)
+                fileWidget->SetDefaultString(fileName);
 SkipFilters:
               nsFileDlgResults dialogResult;
               // 1ST PARAM SHOULD BE nsIDOMWindow*, not nsIWidget*
-              dialogResult = fileWidget->PutFile(/*mContentWindow*/nsnull, promptString, docFileSpec);
+              dialogResult = fileWidget->PutFile(nsnull, promptString, docFileSpec);
               delete [] titles;
               delete [] filters;
 
@@ -1449,20 +1492,43 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
   if (NS_SUCCEEDED(res))
   {
     nsFileDlgResults dialogResult;
+    nsString* titles = nsnull;
+    nsString* filters = nsnull;
+    nsString* nextTitle;
+    nsString* nextFilter;
+
     if (htmlFilter)
     {
-      nsAutoString titles[] = {"HTML Files"};
-      nsAutoString filters[] = {"*.htm; *.html; *.shtml"};
-      fileWidget->SetFilterList(1, titles, filters);
-      // First param should be Parent window, but type is nsIWidget*
-      // Bug is filed to change this to a more suitable window type
-      dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
+      titles = new nsString[3];
+      filters = new nsString[3];
+      if (!titles || ! filters)
+        return NS_ERROR_OUT_OF_MEMORY;
+      nextTitle = titles;
+      nextFilter = filters;
+      *nextTitle++ = GetString("HTMLFiles");
+      *nextTitle++ = GetString("TextFiles");
+      *nextFilter++ = "*.htm; *.html; *.shtml";
+      *nextFilter++ = "*.txt";
+      fileWidget->SetFilterList(3, titles, filters);
     } else {
-      nsAutoString imgTitles[] = {"Image Files"};
-      nsAutoString imgFilters[] = {"*.gif; *.jpg; *.jpeg; *.png"};
-      fileWidget->SetFilterList(1, imgTitles, imgFilters);
-      dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
+      titles = new nsString[2];
+      filters = new nsString[2];
+      if (!titles || ! filters)
+        return NS_ERROR_OUT_OF_MEMORY;
+      nextTitle = titles;
+      nextFilter = filters;
+      *nextTitle++ = GetString("IMGFiles");
+      *nextFilter++ = "*.gif; *.jpg; *.jpeg; *.png", "*.*";
+      fileWidget->SetFilterList(2, titles, filters);
     }
+    *nextTitle++ = GetString("AllFiles");
+    *nextFilter++ = "*.*";
+    // First param should be Parent window, but type is nsIWidget*
+    // Bug is filed to change this to a more suitable window type
+    dialogResult = fileWidget->GetFile(/*parent*/ nsnull, title, fileSpec);
+    delete [] titles;
+    delete [] filters;
+
     // Do this after we get this from preferences
     //fileWidget->SetDisplayDirectory(aDisplayDirectory);
     
@@ -1485,9 +1551,22 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 NS_IMETHODIMP
 nsEditorShell::UpdateWindowTitle()
 {
+  if (!mContentAreaWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsAutoString windowCaption;
+  nsresult res = GetDocumentTitle(windowCaption);
+  if (NS_SUCCEEDED(res))
+    res = mContentAreaWebShell->SetTitle(windowCaption.GetUnicode());
+  return res;
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetDocumentTitle(nsString& title)
+{
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
-  if (!mEditor && !mContentAreaWebShell)
+  if (!mEditor)
     return res;
 
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
@@ -1495,41 +1574,59 @@ nsEditorShell::UpdateWindowTitle()
     return res;
 
   nsCOMPtr<nsIDOMDocument>  domDoc;
-  editor->GetDocument(getter_AddRefs(domDoc));
-  if (domDoc)
+  res = editor->GetDocument(getter_AddRefs(domDoc));
+  if (NS_SUCCEEDED(res) && domDoc)
   {
     // Get the document title
     nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
     if (HTMLDoc)
-    {
-      nsAutoString windowCaption;
-      HTMLDoc->GetTitle(windowCaption);
-      if (windowCaption.Length() == 0)
-      {
-        // Set the window title to be "untitled"
-        windowCaption = GetString("UntitledWithParens");
-      }
+      res = HTMLDoc->GetTitle(title);
 
-      // Append " - Composer" to the title    
-      windowCaption += (nsString(" ") + GetString("ComposerCaptionSuffix"));
-      res = mContentAreaWebShell->SetTitle(windowCaption.GetUnicode());
-    }
+    // If title is empty, use "untitled"
+    if (title.Length() == 0)
+      title = GetString("untitled");
+  }
+  return res;
+}
+
+// JavaScript version
+NS_IMETHODIMP
+nsEditorShell::GetDocumentTitle(PRUnichar **title)
+{
+  if (!title)
+    return NS_ERROR_NULL_POINTER;
+
+  nsAutoString titleStr;
+  nsresult res = GetDocumentTitle(titleStr);
+  if (NS_SUCCEEDED(res))
+  {
+    *title = titleStr.ToNewUnicode();
+  } else {
+    // Don't fail, just return an empty string    
+    nsAutoString empty("");
+    *title = empty.ToNewUnicode();
+    res = NS_OK;
   }
   return res;
 }
 
 NS_IMETHODIMP
-nsEditorShell::SetTitle(const PRUnichar *title)
+nsEditorShell::SetDocumentTitle(const PRUnichar *title)
 {
   nsresult res = NS_ERROR_NOT_INITIALIZED;
 
   if (!mEditor && !mContentAreaWebShell)
     return res;
 
+  // This should only be allowed for HTML documents
+  if (mEditorType != eHTMLTextEditorType)
+    return NS_ERROR_NOT_IMPLEMENTED;
+
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
   if (!editor)
-    return res;
+    return NS_ERROR_FAILURE;
 
+  nsAutoString titleStr(title);
   nsCOMPtr<nsIDOMDocument>  domDoc;
   res = editor->GetDocument(getter_AddRefs(domDoc));
   
@@ -1541,7 +1638,7 @@ nsEditorShell::SetTitle(const PRUnichar *title)
     {
       // This sets the window title, and saves the title as a member varialble,
       //  but does NOT insert the <title> node.
-      HTMLDoc->SetTitle(nsString(title));
+      HTMLDoc->SetTitle(titleStr);
       
       nsCOMPtr<nsIDOMNodeList> titleList;
       nsCOMPtr<nsIDOMNode>titleNode;
@@ -1590,7 +1687,8 @@ nsEditorShell::SetTitle(const PRUnichar *title)
         if (headNode) 
         {
           PRBool newTitleNode = PR_FALSE;
-          if (!titleNode) {
+          if (!titleNode)
+          {
             // Didn't find one above: Create a new one
             nsCOMPtr<nsIDOMElement>titleElement;
             res = domDoc->CreateElement("title",getter_AddRefs(titleElement));
@@ -1599,23 +1697,24 @@ nsEditorShell::SetTitle(const PRUnichar *title)
               titleNode = do_QueryInterface(titleElement);
               newTitleNode = PR_TRUE;
             }
+            // Note: There should ALWAYS be a <title> in any HTML document,
+            //       so we will insert the node and not make it undoable
+            res = headNode->AppendChild(titleNode, getter_AddRefs(resultNode));
+            if (NS_FAILED(res))
+              return NS_ERROR_FAILURE;
           }
-          if (titleNode)
+          // Append a text node under the TITLE
+          //  only if the title text isn't empty
+          if (titleNode && titleStr.Length() > 0)
           {
-            // Append a text node under the TITLE
             nsCOMPtr<nsIDOMText> textNode;
-            res = domDoc->CreateTextNode(title, getter_AddRefs(textNode));
+            res = domDoc->CreateTextNode(titleStr, getter_AddRefs(textNode));
             if (NS_SUCCEEDED(res) && textNode)
             {
-        
-              // Finally, append the titleNode+child text node to the document <head>
-              // SHOULD THIS GO THROUGH TRANSACTION SYSTEM?
-              // If yes, use: editor->InsertElement(titleNode, headNode, 0) for the created node
-              //   or editor->InsertElement(textNode, headNode, 0) if we already had a title node
-              res = titleNode->AppendChild(textNode,getter_AddRefs(resultNode));
-              // Append the new node to the head
-              if (NS_SUCCEEDED(res) && newTitleNode)
-                res = headNode->AppendChild(titleNode, getter_AddRefs(resultNode));
+              // Go through the editor API so action is undoable
+              res = editor->InsertNode(textNode, headNode, 0);
+              // This is the non-undoable code:
+              //res = titleNode->AppendChild(textNode,getter_AddRefs(resultNode));
             }
           }
         }

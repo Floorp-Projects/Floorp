@@ -21,8 +21,6 @@
    - Contributor(s):
   -->
 
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
 <overlay id="editorOverlay"
@@ -134,7 +132,6 @@
 
 
     <!-- Broadcaster nodes -->
-    <!-- Note: NewEditor items are now in globalOverlay.xul -->
     <broadcaster id="Editor:Open"         value="&openCmd.label;"                           oncommand="EditorOpen()"/>
     <broadcaster id="Editor:Save"         value="&saveCmd.label;"         disabled="true"   oncommand="EditorSave()"/>
     <broadcaster id="Editor:SaveAs"       value="&saveAsCmd.label;"       disabled="false"  oncommand="EditorSaveAs()"/>
@@ -638,7 +635,7 @@
     <titledbutton id="hlineButton" src="&hlineIcon.url;" value="&hruleToolbarCmd.label;" onclick="EditorInsertHLine()"/>
     <titledbutton id="tableButton" src="&tableIcon.url;" value="&tableToolbarCmd.label;" onclick="EditorInsertOrEditTable(true)"/>
     <titledbutton id="linkButton"  src="&linkIcon.url;"  value="&linkToolbarCmd.label;"  onclick="EditorInsertLink()"/>
-    <titledbutton id="namedAnchorButton" src="&targetIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
+    <titledbutton id="namedAnchorButton" src="&anchorIcon.url;" value="&anchorToolbarCmd.label;" onclick="EditorInsertNamedAnchor()"/>
 
     <!-- Formatting toolbar items -->
     <titledbutton style="width:68pt" id="ParagraphPopupButton" value="&paragraphToolbarMenu.label;" class="popup" align="left" popupanchor="bottomleft">
@@ -676,6 +673,7 @@
     <!-- DEBUG only -->
     <menu id="debugMenu" value="&debugMenu.label;">
     <menupopup>
+      <menuitem value="Composer with Test Page" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
       <menuitem value="&outputTextCmd.label;"
              oncommand="EditorGetText()"/>
       <menuitem value="&outputHTMLCmd.label;"

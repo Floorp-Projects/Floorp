@@ -38,11 +38,16 @@
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="EditorOnLoad()"
-        onunload="EditorShutdown()" title="&editorWindow.title;" align="vertical"
+        onunload="EditorShutdown()" 
+        titlemodifier="&editorWindow.titlemodifier;" 
+        titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
+        align="vertical"
         width="640" height="480">
 
   <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
 
+  <!-- Use this when we abandon the default startup page -->
+  <!-- broadcaster id="args" value="about:blank"/ -->
   <broadcaster id="args" value="chrome://editor/content/EditorInitPage.html"/>
   <broadcaster id="canPrint"/>
   
@@ -203,7 +208,7 @@
 
     <editor type="content-primary" id="content-frame" src="about:blank" flex="100%"/>
 
-    <box align="horizontal" id="DisplayModeBar">
+    <box align="horizontal" id="DisplayModeBar" style="padding-top: 0px">
       <spring class="spacer"/>
         <!-- This is a pain: can't use CSS margin to add extra space above text? -->
         <box align="vertical">
