@@ -279,7 +279,7 @@ HistoryImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
   nsresult result = NS_OK;
   nsCOMPtr<nsISHistory>  sHistory;
 
-  GetSessionHistoryfromDocShell(mDocShell, getter_AddRefs(sHistory));
+  GetSessionHistoryFromDocShell(mDocShell, getter_AddRefs(sHistory));
   NS_ENSURE_TRUE(sHistory, NS_ERROR_FAILURE);
 
  	nsCOMPtr<nsISHEntry> shEntry;
