@@ -1546,7 +1546,7 @@ nsCrypto::GenerateCRMFRequest(nsIDOMCRMFObject** aReturn)
 
   args->m_cx         = cx;
   args->m_scope      = JS_GetParent(cx, script_obj);
-  args->m_jsCallback = jsCallback;
+  args->m_jsCallback.Adopt(nsCRT::strdup(jsCallback));
   args->m_principals = principals;
   
   nsCryptoRunnable *cryptoRunnable = new nsCryptoRunnable(args);

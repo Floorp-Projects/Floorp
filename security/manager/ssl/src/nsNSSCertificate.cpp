@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.31 2001/06/14 23:22:54 javi%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.32 2001/06/17 05:28:46 bryner%uiuc.edu Exp $
  */
 
 #include "prmem.h"
@@ -1232,7 +1232,7 @@ ProcessSerialNumberDER(SECItem         *serialItem,
     return rv;
 
   nsXPIDLCString serialNumber;
-  serialNumber = CERT_Hexify(serialItem, 1);
+  serialNumber.Adopt(CERT_Hexify(serialItem, 1));
   if (serialNumber == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
