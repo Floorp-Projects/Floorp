@@ -180,6 +180,7 @@ nsINIParser::FindSection(char *aSection, char **aOutSecPtr)
     char *nextSec = NULL;
     char *secClose = NULL;
     char *nextNL = NULL;
+    int aSectionLen = strlen(aSection);
     mError = E_NO_SEC;
     DUMP("FindSection");
 
@@ -211,7 +212,8 @@ nsINIParser::FindSection(char *aSection, char **aOutSecPtr)
         }
 
         // if section name matches we succeeded
-        if (strncmp(aSection, currChar, strlen(aSection)) == 0)
+        if (strncmp(aSection, currChar, aSectionLen) == 0
+              && secClose-currChar == aSectionLen)
         {
             *aOutSecPtr = secClose + 1;
             mError = OK;
@@ -229,6 +231,7 @@ nsINIParser::FindKey(char *aSecPtr, char *aKey, char *aVal, int *aIOValSize)
     char *secEnd = NULL;
     char *currLine = aSecPtr;
     char *nextEq = NULL;
+    int  aKeyLen = strlen(aKey); 
     mError = E_NO_KEY;
     DUMP("FindKey");
 
@@ -285,7 +288,8 @@ find_end:
         }
 
         // if key matches we succeeded
-        if (strncmp(currLine, aKey, strlen(aKey)) == 0)
+        if (strncmp(currLine, aKey, aKeyLen) == 0
+              && nextEq-currLine == aKeyLen)
         {
             // extract the value and return
             if (*aIOValSize < nextNL - nextEq)
