@@ -253,8 +253,7 @@
             [% IF bug.milestoneurl %]
               <a href="[% bug.milestoneurl FILTER html %]">
             [% END %]
-            <u>T</u>arget Milestone:
-            [% "</a>" IF bug.milestoneurl %]
+            <u>T</u>arget Milestone[% "</a>" IF bug.milestoneurl %]:
           </b>
         </td>
         [% PROCESS select selname = "target_milestone" accesskey => "t" %]
