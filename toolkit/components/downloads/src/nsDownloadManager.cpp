@@ -126,7 +126,11 @@ GetFilePathFromURI(nsIURI *aURI, nsAString &aPath)
 ///////////////////////////////////////////////////////////////////////////////
 // nsDownloadManager
 
+#ifdef XP_WIN
+NS_IMPL_ISUPPORTS4(nsDownloadManager, nsIDownloadManager, nsIXPInstallManagerUI, nsIObserver, nsIAlertListener)
+#else
 NS_IMPL_ISUPPORTS3(nsDownloadManager, nsIDownloadManager, nsIXPInstallManagerUI, nsIObserver)
+#endif
 
 nsDownloadManager::nsDownloadManager() : mBatches(0)
 {
@@ -2129,7 +2133,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
             // click open the download manager and the items they downloaded will have
             // been removed. 
             alerts->ShowAlertNotification(DOWNLOAD_MANAGER_ALERT_ICON, title, message, !removeWhenDone, 
-                                          EmptyString().get(), NS_STATIC_CAST(nsIAlertListener*, mDownloadManager));
+                                          EmptyString().get(), mDownloadManager);
           }
         }
       }
