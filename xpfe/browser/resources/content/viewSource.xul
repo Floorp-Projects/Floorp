@@ -80,7 +80,7 @@
     <menu value="&viewMenu.label;">
 	  <menupopup>
       <menuitem value="&toolbarsCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
-      <menuitem value="&sidebarCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
+      <menupopup id="menu_View_Popup">
       <menuseparator />
       <menuitem value="&enlargeTextSizeCmd.label;" oncommand="NotImplementedYet();" disabled=""/>
       <menuitem value="Reduce Text Size" oncommand="NotImplementedYet();" disabled=""/>

@@ -106,6 +106,13 @@ scrollbar {
 
 toolbox { 
   background-color:#999999; 
+  min-width: 1px;
+  overflow: hidden;
+}
+
+toolbar {
+  min-width: 1px;
+  overflow: hidden;
 } 
 
 :toolbox-normal { 
@@ -430,9 +437,16 @@ titledbutton.toolbar[disabled="true"]:active {
  * status-bar
  */
 box#status-bar {
+  /* Style in XUL used 1px */
 	min-width: 1em;
 	background-color: #CCCCCC;
 	user-focus: ignore;
+  overflow:hidden
+}
+
+box#toolbar_button_box {
+  min-width: 1px; 
+  overflow:hidden
 }
 
 titledbutton.status-bar {
@@ -454,6 +468,8 @@ titledbutton.status-bar:active {
 }
 
 #status-bar-leftcap {
+  /* from XUL */
+  width:8px; 
 	min-width: 8px;
 	max-width: 8px;
 	background-image: url("chrome://global/skin/gray-bottomleft.gif");
@@ -462,6 +478,8 @@ titledbutton.status-bar:active {
 }
 
 #status-bar-rightcap {
+  /* From XUL */
+  width:8px;
 	min-width: 8px;
 	max-width: 8px;
 	background-image: url("chrome://global/skin/gray-bottomright.gif");
@@ -582,6 +600,8 @@ progressmeter {
 
 menubar {
 	background-color: white;
+  min-width: 1px;
+  overflow: hidden;
 }
 
 menu {

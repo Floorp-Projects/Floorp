@@ -134,12 +134,12 @@
 	</splitter>
 
 	<!-- Toolbar boxes -->
-	<box id="toolbar_button_box" align="horizontal" flex="100%" style="min-width: 1px; overflow:hidden"/>
+	<box id="toolbar_button_box" align="horizontal" flex="100%"/>
 	
 	<!-- Status Bar -->
-	<box id="status-bar" align="horizontal" style="min-width: 1px">
-		<box id="status-bar-leftcap" style="width:8px" position="0"/>
-		<box id="status-bar-rightcap" style="width:8px"/>
+	<box id="status-bar" align="horizontal">
+		<box id="status-bar-leftcap" position="0"/>
+		<box id="status-bar-rightcap"/>
 	</box>
 	
 </overlay>		
