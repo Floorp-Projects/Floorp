@@ -261,7 +261,6 @@ WHOAMI		= /usr/bin/whoami
 endif
 endif
 
-# Temporary?
 ifeq ($(OS_ARCH),OpenVMS)
 include $(topsrcdir)/config/$(OS_ARCH).mk
 endif
