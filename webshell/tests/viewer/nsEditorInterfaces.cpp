@@ -78,7 +78,7 @@ nsresult nsEditorKeyListener::GetCharFromKeyCode(PRUint32 aKeyCode, PRBool aIsSh
     }
     return NS_OK;
   }
-  else if (aKeyCode >= 0x30 && aKeyCode <= 0x39) {
+  else if ((aKeyCode >= 0x30 && aKeyCode <= 0x39) || aKeyCode == 0x20) {
       *aChar = (char)aKeyCode;
       return NS_OK;
   }
