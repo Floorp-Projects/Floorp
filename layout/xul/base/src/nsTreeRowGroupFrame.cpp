@@ -66,7 +66,8 @@ NS_NewTreeRowGroupFrame (nsIFrame** aNewFrame)
 nsTreeRowGroupFrame::nsTreeRowGroupFrame()
 :nsTableRowGroupFrame(), mScrollbar(nsnull), mFrameConstructor(nsnull),
  mTopFrame(nsnull), mBottomFrame(nsnull), mIsLazy(PR_FALSE), mIsFull(PR_FALSE), 
- mContentChain(nsnull), mLinkupFrame(nsnull), mShouldHaveScrollbar(PR_FALSE)
+ mContentChain(nsnull), mLinkupFrame(nsnull), mShouldHaveScrollbar(PR_FALSE),
+ mRowGroupHeight(0)
 { }
 
 // Destructor
@@ -623,8 +624,33 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                            nsReflowReason       aReason)
 {
   nsresult rv = NS_OK;
-  // Reflow a scrollbar if we have one.
-  if (mShouldHaveScrollbar && (aReflowState.availSize.height != NS_UNCONSTRAINEDSIZE)) {
+  mRowGroupHeight = aReflowState.availSize.height;
+  return rv;
+}
+
+NS_IMETHODIMP 
+nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
+                                           nsHTMLReflowMetrics& aDesiredSize,
+                                           RowGroupReflowState& aReflowState,
+                                           nsReflowStatus&      aStatus,
+                                           nsReflowReason       aReason)
+{
+  nsresult rv = NS_OK;
+  if (mScrollbar) {
+    nsCOMPtr<nsIContent> scrollbarContent;
+    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
+    nsString value;
+    scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value);
+    if (value == "0" && !mIsFull) {
+      // Nuke the scrollbar.
+      mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
+      mScrollbarList.DeleteFrames(aPresContext);
+      mScrollbar = nsnull;
+    }
+  }
+  
+  if (mShouldHaveScrollbar && (mRowGroupHeight != NS_UNCONSTRAINEDSIZE) &&
+      mIsFull) {
     // Ensure the scrollbar has been created.
     if (!mScrollbar)
       CreateScrollbar(aPresContext);
@@ -660,7 +686,7 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
     nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState, mScrollbar,
                                      kidAvailSize, aReason);
     
-    kidReflowState.mComputedHeight = kidAvailSize.height;
+    kidReflowState.mComputedHeight = mRowGroupHeight;
     rv = ReflowChild(mScrollbar, aPresContext, desiredSize, kidReflowState, aStatus);
     if (NS_FAILED(rv))
       return rv;
@@ -676,33 +702,8 @@ nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
     }
 
     // Place the child
-    nsRect kidRect (xpos, 0, desiredSize.width, aReflowState.availSize.height);
+    nsRect kidRect (xpos, 0, desiredSize.width, mRowGroupHeight);
     mScrollbar->SetRect(kidRect);
-  }
-
-  return rv;
-}
-
-NS_IMETHODIMP 
-nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
-                                           nsHTMLReflowMetrics& aDesiredSize,
-                                           RowGroupReflowState& aReflowState,
-                                           nsReflowStatus&      aStatus,
-                                           nsReflowReason       aReason)
-{
-  nsresult rv = NS_OK;
-  if (mScrollbar) {
-    nsCOMPtr<nsIContent> scrollbarContent;
-    mScrollbar->GetContent(getter_AddRefs(scrollbarContent));
-    nsString value;
-    nsIAtom* hiddenAtom = NS_NewAtom("hidden");
-    scrollbarContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::curpos, value);
-    if (value == "0" && !mIsFull) {
-      // Nuke the scrollbar.
-      mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, mScrollbar);
-      mScrollbarList.DeleteFrames(aPresContext);
-      mScrollbar = nsnull;
-    }
   }
   return rv;
 }
@@ -986,10 +987,12 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext& aPresContext,
   nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
 
   // Go ahead and delete the frame.
-  mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, aChildFrame);
-  mFrames.DeleteFrame(aPresContext, aChildFrame);
-  treeFrame->InvalidateCellMap();
-  treeFrame->InvalidateColumnCache();
+  if (aChildFrame) {
+    mFrameConstructor->RemoveMappingsForFrameSubtree(&aPresContext, aChildFrame);
+    mFrames.DeleteFrame(aPresContext, aChildFrame);
+    treeFrame->InvalidateCellMap();
+    treeFrame->InvalidateColumnCache();
+  }
 
   if (IsLazy() && !treeFrame->IsSlatedForReflow()) {
     treeFrame->SlateForReflow();
