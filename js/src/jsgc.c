@@ -701,18 +701,22 @@ gc_object_class_name(void* thing)
         break;
       }
 
+      case GCX_STRING:
       case GCX_MUTABLE_STRING: {
         JSString *str = (JSString *)thing;
         if (JSSTRING_IS_DEPENDENT(str)) {
             JS_snprintf(depbuf, sizeof depbuf, "start:%u, length:%u",
                         JSSTRDEP_START(str), JSSTRDEP_LENGTH(str));
             className = depbuf;
+        } else {
+            className = "string";
         }
         break;
       }
 
-      default:
-        JS_ASSERT(0);
+      case GCX_DOUBLE:
+        className = "double";
+        break;
     }
 
     return className;
@@ -859,7 +863,8 @@ js_MarkGCThing(JSContext *cx, void *thing, void *arg)
                     jsval nval;
 
                     slot = vp - obj->slots;
-                    for (sprop = scope->lastProp; ; sprop = sprop->parent) {
+                    for (sprop = SCOPE_LAST_PROP(scope); ;
+                         sprop = sprop->parent) {
                         if (!sprop) {
                             switch (slot) {
                               case JSSLOT_PROTO:
