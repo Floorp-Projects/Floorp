@@ -119,7 +119,7 @@ struct XPTHeader {
 #define XPT_MINOR_VERSION 0x00
 
 extern XPT_PUBLIC_API(XPTHeader *)
-XPT_NewHeader(uint32 num_interfaces);
+XPT_NewHeader(uint16 num_interfaces);
 
 /* size of header and annotations */
 extern XPT_PUBLIC_API(uint32)
@@ -156,7 +156,7 @@ XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
  * single XPCOM interface, including all of its methods. 
  */
 struct XPTInterfaceDescriptor {
-    XPTInterfaceDirectoryEntry *parent_interface;
+    uint16                     parent_interface;
     uint16                     num_methods;
     XPTMethodDescriptor        *method_descriptors;
     uint16                     num_constants;
@@ -165,12 +165,12 @@ struct XPTInterfaceDescriptor {
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_GetInterfaceIndexByName(XPTInterfaceDirectoryEntry *ide_block,
-                            uint32 num_interfaces, char *name, 
+                            uint16 num_interfaces, char *name, 
                             uint16 *indexp);
 
 extern XPT_PUBLIC_API(XPTInterfaceDescriptor *)
-XPT_NewInterfaceDescriptor(uint32 parent_interface, uint32 num_methods,
-                           uint32 num_constants);
+XPT_NewInterfaceDescriptor(uint16 parent_interface, uint16 num_methods,
+                           uint16 num_constants);
 
 extern XPT_PUBLIC_API(PRBool)
 XPT_InterfaceDescriptorAddMethods(XPTInterfaceDescriptor *id, uint16 num);
@@ -257,12 +257,12 @@ enum XPTTypeDescriptorTags {
 struct XPTTypeDescriptor {
     XPTTypeDescriptorPrefix prefix;
     union {
-        uint32 interface;
+        uint16 interface;
         uint8  argnum;
     } type;
 };
 
-#define XPT_TYPEDESCRIPTOR_SIZE (1 + 4)
+#define XPT_TYPEDESCRIPTOR_SIZE (1 + 2)
 
 #define XPT_COPY_TYPE(to, from)                                               \
   (to).prefix.flags = (from).prefix.flags;                                    \

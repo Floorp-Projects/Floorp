@@ -32,30 +32,16 @@
 #endif
 
 /* Forward declarations. */
-typedef struct IDEElement IDEElement;
-typedef struct parentElement parentElement;
-IDEElement *create_IDEElement(XPTInterfaceDirectoryEntry *ide);
-void add_IDEElement(IDEElement *e);
-int compare_IIDs(nsID *one, nsID *two);
-parentElement *create_parentElement(XPTInterfaceDirectoryEntry *ide, nsID *iid);
-void add_parentElement(parentElement *p);
+int compare_IDEs_by_IID(XPTInterfaceDirectoryEntry *ide1,
+                        XPTInterfaceDirectoryEntry *ide2);
+int compare_IDEs_by_name(XPTInterfaceDirectoryEntry *ide1,
+                        XPTInterfaceDirectoryEntry *ide2);
+static int compare_IIDs(const void *ap, const void *bp);
+PRBool copy_IDE(XPTInterfaceDirectoryEntry *from, 
+                XPTInterfaceDirectoryEntry *to);
 static void xpt_dump_usage(char *argv[]); 
 
-/* Linker-specific structs. */
-struct IDEElement {
-    struct IDEElement *IDE_next;
-    XPTInterfaceDirectoryEntry  *interface_directory;
-};
-
-struct parentElement {
-    struct parentElement *parent_next;
-    XPTInterfaceDirectoryEntry *child;
-    nsID *parent_iid;
-};
-
 /* Global variables. */
-static IDEElement *first_ide = NULL;
-static parentElement *first_parent = NULL;
 int numberOfInterfaces = 0;
 
 int 
@@ -64,16 +50,15 @@ main(int argc, char **argv)
     XPTState *state;
     XPTCursor curs, *cursor = &curs;
     XPTHeader *header;
-    XPTInterfaceDirectoryEntry *newIDE;
+    XPTInterfaceDirectoryEntry *newIDE, *IDE_array;
     XPTAnnotation *ann;
-    IDEElement *current_ide;
-    parentElement *current_parent;
     uint32 header_sz, len;
     struct stat file_stat;
     size_t flen = 0;
     char *head, *data, *whole;
     FILE *in, *out;
     int i,j;
+    int k = 0;
 
     if (argc < 3) {
         xpt_dump_usage(argv);
@@ -116,26 +101,36 @@ main(int argc, char **argv)
             
             state = XPT_NewXDRState(XPT_DECODE, whole, flen);
             if (!XPT_MakeCursor(state, XPT_HEADER, 0, cursor)) {
-                fprintf(stdout, "MakeCursor failed\n");
+                perror("FAILED: XPT_MakeCursor");
                 return 1;
             }
             if (!XPT_DoHeader(cursor, &header)) {
-                fprintf(stdout, "DoHeader failed\n");
+                perror("FAILED: XPT_DoHeader");
                 return 1;
             }                                        
             
-            for (j=0; j<header->num_interfaces; j++) {
-                newIDE= malloc(sizeof(XPTInterfaceDirectoryEntry));
-                newIDE->iid = header->interface_directory[j].iid;
-                newIDE->name = header->interface_directory[j].name;
-                newIDE->name_space = 
-                    header->interface_directory[j].name_space;
-                newIDE->interface_descriptor = 
-                    header->interface_directory[j].interface_descriptor;
-                    
-                add_IDEElement(create_IDEElement(newIDE));
+            numberOfInterfaces += header->num_interfaces;
+            if (k == 0) {
+                IDE_array = PR_CALLOC(numberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
+            } else {
+                newIDE = PR_REALLOC(IDE_array, numberOfInterfaces * sizeof(XPTInterfaceDirectoryEntry));
+                if (!newIDE) {
+                    perror("FAILED: PR_REALLOC of IDE_array");
+                    return 1;
+                }
+                IDE_array = newIDE;
             }
             
+            for (j=0; j<header->num_interfaces; j++) {
+                if (!copy_IDE(&header->interface_directory[j], 
+                              &IDE_array[k])) {
+                    perror("FAILED: 1st copying of IDE");
+                    return 1;
+                }
+                k++;
+            }
+            
+            PR_FREEIF(header)
             if (state)
                 XPT_DestroyXDRState(state);
             free(whole);
@@ -151,46 +146,13 @@ main(int argc, char **argv)
     header = XPT_NewHeader(numberOfInterfaces);
     ann = XPT_NewAnnotation(XPT_ANN_LAST, NULL, NULL);
     header->annotations = ann;
-    
-    current_parent = first_parent;
-    while (current_parent) {
-        current_ide = first_ide;
-        while (current_ide) {
-            if (compare_IIDs(&current_ide->interface_directory->iid, 
-                             current_parent->parent_iid) == 0) {
-                current_parent->child->interface_descriptor->parent_interface = current_ide->interface_directory;
-                break;
-            }
-            current_ide = current_ide->IDE_next;
-            if (current_ide == NULL) {
-                current_parent->child->interface_descriptor->parent_interface = NULL;
-            }
-        }
-        current_parent = current_parent->parent_next;
-    }
-
-    current_ide = first_ide;
     for (i=0; i<numberOfInterfaces; i++) {
-        if (!current_ide) {
-            header->num_interfaces = i;
-            break;
+        if (!copy_IDE(&IDE_array[i], &header->interface_directory[i])) {
+            perror("FAILED: 2nd copying of IDE");
+            return 1;
         }
-        header->interface_directory[i].iid = 
-            current_ide->interface_directory->iid;
-        header->interface_directory[i].name = 
-            current_ide->interface_directory->name;
-        header->interface_directory[i].name_space = 
-            current_ide->interface_directory->name_space;
-        header->interface_directory[i].interface_descriptor = 
-            current_ide->interface_directory->interface_descriptor;
-        current_ide = current_ide->IDE_next;
     }
-
-    for (current_parent = first_parent; 
-         current_parent != NULL; 
-         current_parent = current_parent->parent_next) {
-    }        
-
+    
     header_sz = XPT_SizeOfHeaderBlock(header); 
 
     state = XPT_NewXDRState(XPT_ENCODE, NULL, 0);
@@ -230,144 +192,55 @@ main(int argc, char **argv)
     if (state)
         XPT_DestroyXDRState(state);
     
-    return 0;
+    return 0;        
 }
 
-IDEElement *
-create_IDEElement(XPTInterfaceDirectoryEntry *ide)
+int 
+compare_IDEs_by_IID(XPTInterfaceDirectoryEntry *ide1,
+                    XPTInterfaceDirectoryEntry *ide2)
 {
-    IDEElement *ide_element;
-    ide_element = (IDEElement *)malloc(sizeof(IDEElement));
-    if (ide_element == NULL) {
-        perror("FAILED: create_IDEElement malloc");
-        return NULL;
-    }
-    ide_element->interface_directory = ide;
-    ide_element->IDE_next = NULL;
-    return ide_element;
-}
+    nsID *one = &ide1->iid;
+    nsID *two = &ide2->iid; 
+    
+    return compare_IIDs(one, two);
+}  
 
-void 
-add_IDEElement(IDEElement *e)
+int 
+compare_IDEs_by_name(XPTInterfaceDirectoryEntry *ide1,
+                    XPTInterfaceDirectoryEntry *ide2)
 {
-    PRBool placed = PR_FALSE;
-    nsID *one = &e->interface_directory->iid;    
-    int comparison;
-    IDEElement *current, *last;
-    XPTInterfaceDescriptor *id;
-    
-    if (first_ide == NULL) {
-        first_ide = e;
-        numberOfInterfaces++;
-        return;
-    }
-
-    last = NULL;
-    current = first_ide; 
-    while (!placed) {
-        nsID *two = &current->interface_directory->iid;
-        comparison = compare_IIDs(one, two);
-        if (comparison > 0) {
-            if (current->IDE_next == NULL) {
-                current->IDE_next = e;
-                numberOfInterfaces++;
-                placed = PR_TRUE;
-            } else {
-                last = current;
-                current = current->IDE_next;
-            }
-        } else {
-            if (comparison < 0) {
-                if (last) {
-                    last->IDE_next = e;
-                } else {
-                    first_ide = e;
-                }
-                e->IDE_next = current;
-                numberOfInterfaces++;
-                placed = PR_TRUE;
-            } else { 
-                placed = PR_TRUE;
-            }
-        }
-    }
-    id = e->interface_directory->interface_descriptor;
-    if (id->parent_interface) {
-        add_parentElement(create_parentElement(e->interface_directory, 
-                                               &id->parent_interface->iid));
-    }
-    return;
+    return strcmp(ide1->name, ide2->name);
 }
-
-parentElement *
-create_parentElement(XPTInterfaceDirectoryEntry *new_child, nsID *new_iid)
+    
+static int
+compare_IIDs(const void *ap, const void *bp)
 {
-    parentElement *parent_element;
-    parent_element = (parentElement *)malloc(sizeof(parentElement));
-    if (!parent_element) {
-        perror("FAILED: create_parentElement malloc");
-        return NULL;
-    }
-    parent_element->child = new_child;
-    parent_element->parent_iid = new_iid;
-    parent_element->parent_next = NULL;
-    return parent_element;
-}
-
-void 
-add_parentElement(parentElement *e)
-{
-    parentElement *p;
-    
-    if (first_parent == NULL) {
-        first_parent = e;
-        return;
-    }
-    
-    for (p=first_parent; p->parent_next != NULL; p = p->parent_next)
-        ;
-    p->parent_next = e;
-    
-    return;
-}
-
-int compare_IIDs(nsID *one, nsID *two) {
+    const nsID *a = ap, *b = bp;
     int i;
-    
-    if (one->m0 > two->m0) {
-        return 1;
-    } else {
-        if (one->m0 < two->m0) {
-            return -1;
-        } else {
-            if (one->m1 > two->m1) {
-                return 1;
-            } else {
-                if (one->m1 < two->m1) {
-                    return -1;
-                } else {
-                    if (one->m2 > two->m2) {
-                        return 1;
-                    } else {
-                        if (one->m2 < two->m2) {
-                            return -1;
-                        } else {
-                            for (i=0; i<8; i++) {
-                                if (one->m3[i] > two->m3[i]) {
-                                    return 1;
-                                } else {
-                                    if (one->m3[i] < two->m3[i]) {
-                                        return -1;
-                                    }
-                                }
-                            }
-                            return 0;
-                        }
-                    }
-                }
-            }
-        }
+#define COMPARE(field) if (a->field > b->field) return 1; \
+                       if (b->field > a->field) return -1;
+    COMPARE(m0);
+    COMPARE(m1);
+    COMPARE(m2);
+    for (i = 0; i < 8; i++) {
+        COMPARE(m3[i]);
     }
+    return 0;
+#undef COMPARE
+}
+
+PRBool
+copy_IDE(XPTInterfaceDirectoryEntry *from, XPTInterfaceDirectoryEntry *to) 
+{
+    if (from == NULL || to == NULL) {
+        return PR_FALSE;
+    }
+    
+    to->iid = from->iid;
+    to->name = from->name;
+    to->name_space = from->name_space;
+    to->interface_descriptor = from->interface_descriptor;
+    return PR_TRUE;
 }
 
 static void
