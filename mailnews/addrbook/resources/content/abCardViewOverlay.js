@@ -364,7 +364,7 @@ function cvAddAddressNodes(node, uri)
         for (var i = node.childNodes.length - 1; i >= 0; i--) {
           node.removeChild(node.childNodes[i]);
         }
-        for (var i = 0;  i < total; i++ ) {
+        for (i = 0;  i < total; i++ ) {
       		var descNode = document.createElement("description");   
           address = addressList.GetElementAt(i).QueryInterface(Components.interfaces.nsIAbCard).primaryEmail;    
           displayName = addressList.GetElementAt(i).QueryInterface(Components.interfaces.nsIAbCard).displayName;  
