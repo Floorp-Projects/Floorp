@@ -336,6 +336,15 @@ var DefaultController =
       case "cmd_saveAsTemplate":
       case "cmd_viewPageSource":
       case "cmd_reload":
+	      if ( GetNumSelectedMessages() > 0)
+        {
+          if (gDBView)
+          {
+             gDBView.getCommandStatus(nsMsgViewCommandType.cmdRequiringMsgBody, enabled, checkStatus);
+              return enabled.value;
+          }
+        }
+        return false;
       case "cmd_markThreadAsRead":
       case "cmd_markAsFlagged":
       case "button_file":

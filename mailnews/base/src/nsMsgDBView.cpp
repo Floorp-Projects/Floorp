@@ -94,6 +94,7 @@ nsMsgDBView::nsMsgDBView()
   m_currentlyDisplayedMsgKey = nsMsgKey_None;
   mNumSelectedRows = 0;
   mSupressMsgDisplay = PR_FALSE;
+  mOfflineMsgSelected = PR_FALSE;
   mIsSpecialFolder = PR_FALSE;
   mIsNews = PR_FALSE;
   mDeleteModel = nsMsgImapDeleteModels::MoveToTrash;
@@ -586,8 +587,13 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
 {
   // if the currentSelection changed then we have a message to display
   PRUint32 numSelected = 0;
-  GetNumSelected(&numSelected);
 
+  GetNumSelected(&numSelected);
+  nsUInt32Array selection;
+  GetSelectedIndices(&selection);
+  nsMsgViewIndex *indices = selection.GetData();
+
+  PRBool offlineMsgSelected = (indices) ? OfflineMsgSelected(indices, numSelected) : PR_FALSE;
   // if only one item is selected then we want to display a message
   if (numSelected == 1)
   {
@@ -608,6 +614,8 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
           UpdateDisplayMessage(msgkey);
       }
     }
+    else
+      numSelected = 0; // selection seems bogus, so set to 0.
   }
 
   // determine if we need to push command update notifications out to the UI or not.
@@ -617,9 +625,10 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
   // (2) it went from 1 to 0
   // (3) it went from 1 to many
   // (4) it went from many to 1 or 0
+  // (5) a different msg was selected - perhaps it was offline or not...
 
-  if (numSelected == mNumSelectedRows || 
-      (numSelected > 1 && mNumSelectedRows > 1) )
+  if ((numSelected == mNumSelectedRows || 
+      (numSelected > 1 && mNumSelectedRows > 1)) && mOfflineMsgSelected == offlineMsgSelected)
   {
 
   }
@@ -628,6 +637,7 @@ NS_IMETHODIMP nsMsgDBView::SelectionChanged()
     mCommandUpdater->UpdateCommandStatus();
   }
   
+  mOfflineMsgSelected = offlineMsgSelected;
   mNumSelectedRows = numSelected;
   return NS_OK;
 }
@@ -1378,6 +1388,12 @@ NS_IMETHODIMP nsMsgDBView::GetCommandStatus(nsMsgViewCommandTypeValue command, P
   case nsMsgViewCommandType::downloadSelectedForOffline:
     *selectable_p = (numindices > 0);
     break;
+  case nsMsgViewCommandType::cmdRequiringMsgBody:
+    {
+    nsMsgViewIndex *indices = selection.GetData();
+    *selectable_p = (numindices > 0) && (!WeAreOffline() || OfflineMsgSelected(indices, numindices));
+    }
+    break;
   case nsMsgViewCommandType::downloadFlaggedForOffline:
   case nsMsgViewCommandType::markAllRead:
     *selectable_p = PR_TRUE;
@@ -1569,8 +1585,8 @@ nsresult nsMsgDBView::DeleteMessages(nsIMsgWindow *window, nsMsgViewIndex *indic
 nsresult nsMsgDBView::DownloadForOffline(nsIMsgWindow *window, nsMsgViewIndex *indices, PRInt32 numIndices)
 {
   nsresult rv = NS_OK;
-	nsCOMPtr<nsISupportsArray> messageArray;
-	NS_NewISupportsArray(getter_AddRefs(messageArray));
+  nsCOMPtr<nsISupportsArray> messageArray;
+  NS_NewISupportsArray(getter_AddRefs(messageArray));
   for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
   {
     nsMsgKey key = m_keys.GetAt(indices[index]);
@@ -1581,8 +1597,9 @@ nsresult nsMsgDBView::DownloadForOffline(nsIMsgWindow *window, nsMsgViewIndex *i
     {
       PRUint32 flags;
       msgHdr->GetFlags(&flags);
-      if (! (flags & MSG_FLAG_OFFLINE))
-        messageArray->AppendElement(msgHdr);
+      if ((flags & MSG_FLAG_OFFLINE))
+        if (! (flags & MSG_FLAG_OFFLINE))
+          messageArray->AppendElement(msgHdr);
     }
   }
   m_folder->DownloadMessagesForOffline(messageArray, window);
@@ -1592,16 +1609,16 @@ nsresult nsMsgDBView::DownloadForOffline(nsIMsgWindow *window, nsMsgViewIndex *i
 nsresult nsMsgDBView::DownloadFlaggedForOffline(nsIMsgWindow *window)
 {
   nsresult rv = NS_OK;
-	nsCOMPtr<nsISupportsArray> messageArray;
-	NS_NewISupportsArray(getter_AddRefs(messageArray));
-    nsCOMPtr <nsISimpleEnumerator> enumerator;
+  nsCOMPtr<nsISupportsArray> messageArray;
+  NS_NewISupportsArray(getter_AddRefs(messageArray));
+  nsCOMPtr <nsISimpleEnumerator> enumerator;
   rv = m_db->EnumerateMessages(getter_AddRefs(enumerator));
   if (NS_SUCCEEDED(rv) && enumerator)
   {
     PRBool hasMore;
-
-	  while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
-	  {
+    
+    while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+    {
       nsCOMPtr <nsIMsgDBHdr> pHeader;
       rv = enumerator->GetNext(getter_AddRefs(pHeader));
       NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
@@ -1621,45 +1638,45 @@ nsresult nsMsgDBView::DownloadFlaggedForOffline(nsIMsgWindow *window)
 // read/unread handling.
 nsresult nsMsgDBView::ToggleReadByIndex(nsMsgViewIndex index)
 {
-	if (!IsValidIndex(index))
-		return NS_MSG_INVALID_DBVIEW_INDEX;
-	return SetReadByIndex(index, !(m_flags[index] & MSG_FLAG_READ));
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  return SetReadByIndex(index, !(m_flags[index] & MSG_FLAG_READ));
 }
 
 nsresult nsMsgDBView::SetReadByIndex(nsMsgViewIndex index, PRBool read)
 {
-	nsresult rv;
-
-	if (!IsValidIndex(index))
-		return NS_MSG_INVALID_DBVIEW_INDEX;
-	if (read) {
-		OrExtraFlag(index, MSG_FLAG_READ);
-        // MarkRead() will clear this flag in the db
-        // and then call OnKeyChange(), but
-        // because we are the instigator of the change
-        // we'll ignore the change.
-        //
-        // so we need to clear it in m_flags
-        // to keep the db and m_flags in sync
-		AndExtraFlag(index, ~MSG_FLAG_NEW);
-    }
-	else {
-		AndExtraFlag(index, ~MSG_FLAG_READ);
-    }
-
+  nsresult rv;
+  
+  if (!IsValidIndex(index))
+    return NS_MSG_INVALID_DBVIEW_INDEX;
+  if (read) {
+    OrExtraFlag(index, MSG_FLAG_READ);
+    // MarkRead() will clear this flag in the db
+    // and then call OnKeyChange(), but
+    // because we are the instigator of the change
+    // we'll ignore the change.
+    //
+    // so we need to clear it in m_flags
+    // to keep the db and m_flags in sync
+    AndExtraFlag(index, ~MSG_FLAG_NEW);
+  }
+  else {
+    AndExtraFlag(index, ~MSG_FLAG_READ);
+  }
+  
   nsCOMPtr <nsIMsgDatabase> dbToUse;
   rv = GetDBForViewIndex(index, getter_AddRefs(dbToUse));
   NS_ENSURE_SUCCESS(rv, rv);
-
-	rv = dbToUse->MarkRead(m_keys[index], read, this);
-	NoteChange(index, 1, nsMsgViewNotificationCode::changed);
-	if (m_sortType == nsMsgViewSortType::byThread)
-	{
-		nsMsgViewIndex threadIndex = ThreadIndexOfMsg(m_keys[index], index, nsnull, nsnull);
-		if (threadIndex != index)
-			NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
-	}
-	return rv;
+  
+  rv = dbToUse->MarkRead(m_keys[index], read, this);
+  NoteChange(index, 1, nsMsgViewNotificationCode::changed);
+  if (m_sortType == nsMsgViewSortType::byThread)
+  {
+    nsMsgViewIndex threadIndex = ThreadIndexOfMsg(m_keys[index], index, nsnull, nsnull);
+    if (threadIndex != index)
+      NoteChange(threadIndex, 1, nsMsgViewNotificationCode::changed);
+  }
+  return rv;
 }
 
 nsresult nsMsgDBView::SetThreadOfMsgReadByIndex(nsMsgViewIndex index, nsMsgKeyArray &keysMarkedRead, PRBool /*read*/)
@@ -4356,6 +4373,17 @@ nsMsgDBView::OnStopCopy(nsresult aStatus)
 }
 // end nsIMsgCopyServiceListener methods
 
+PRBool nsMsgDBView::OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices)
+{
+  nsresult rv = NS_OK;
+  for (nsMsgViewIndex index = 0; index < (nsMsgViewIndex) numIndices; index++)
+  {
+    PRUint32 flags = m_flags.GetAt(indices[index]);
+    if ((flags & MSG_FLAG_OFFLINE))
+      return PR_TRUE;
+  }
+  return PR_FALSE;
+}
 
 nsresult
 nsMsgDBView::GetKeyForFirstSelectedMessage(nsMsgKey *key)

@@ -109,6 +109,7 @@ protected:
   PRBool   mSupressMsgDisplay; // set when the message pane is collapsed
   PRBool   mRemovingRow; // set when we're telling the outline a row is being removed. used to supress msg loading.
                         // during delete/move operations.
+  PRBool  mOfflineMsgSelected;
   virtual const char * GetViewName(void) {return "MsgDBView"; }
   nsresult FetchAuthor(nsIMsgHdr * aHdr, PRUnichar ** aAuthorString);
   nsresult FetchSubject(nsIMsgHdr * aMsgHdr, PRUint32 aFlags, PRUnichar ** aValue);
@@ -244,6 +245,7 @@ protected:
   PRBool IsValidIndex(nsMsgViewIndex index);
   nsresult ToggleIgnored(nsMsgViewIndex * indices, PRInt32 numIndices, PRBool *resultToggleState);
   nsresult GetKeyForFirstSelectedMessage(nsMsgKey *key);
+  PRBool OfflineMsgSelected(nsMsgViewIndex * indices, PRInt32 numIndices);
   PRUnichar * GetString(const PRUnichar *aStringName);
   void InitializeAtomsAndLiterals();
   PRInt32 GetLevelInUnreadView(nsIMsgDBHdr *msgHdr, nsMsgViewIndex startOfThread, nsMsgViewIndex viewIndex);

@@ -168,6 +168,7 @@ interface nsMsgViewCommandType
 
   const nsMsgViewCommandTypeValue selectThread = 18;
   const nsMsgViewCommandTypeValue selectFlagged = 19;
+  const nsMsgViewCommandTypeValue cmdRequiringMsgBody = 20;
 };
 
 [scriptable, uuid(65903eb2-1dd2-11b2-ac45-c5b69c1618d7)]
