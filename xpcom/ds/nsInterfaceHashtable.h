@@ -64,6 +64,15 @@ public:
    *   If the key doesn't exist, pData will be set to nsnull.
    */
   PRBool Get(KeyType aKey, UserDataType* pData) const;
+
+  /**
+   * Gets a weak reference to the hashtable entry.
+   * If no entry is found, nsnull will be returned, and *aFound will be set
+   * to PR_FALSE (if aFound is not null).
+   * Otherwise, the pointer to the component will be returned, and *aFound will
+   * be set to PR_TRUE (if aFound is not null). Do not release this pointer!
+   */
+  Interface* GetWeak(KeyType aKey, PRBool* aFound = nsnull) const;
 };
 
 /**
@@ -86,6 +95,10 @@ public:
    *   If the key doesn't exist, pData will be set to nsnull.
    */
   PRBool Get(KeyType aKey, UserDataType* pData) const;
+
+  // GetWeak does not make sense on a multi-threaded hashtable, where another
+  // thread may remove the entry (and hence release it) as soon as GetWeak
+  // returns
 };
 
 
@@ -121,6 +134,27 @@ nsInterfaceHashtable<KeyClass,Interface>::Get
   return PR_FALSE;
 }
 
+template<class KeyClass,class Interface>
+Interface*
+nsInterfaceHashtable<KeyClass,Interface>::GetWeak
+  (KeyType aKey, PRBool* aFound) const
+{
+  typename nsBaseHashtable<KeyClass, nsCOMPtr<Interface>, Interface*>::EntryType* ent =
+    GetEntry(aKey);
+
+  if (ent)
+  {
+    if (aFound)
+      *aFound = PR_TRUE;
+
+    return ent->mData;
+  }
+
+  // Key does not exist, return nsnull and set aFound to PR_FALSE
+  if (aFound)
+    *aFound = PR_FALSE;
+  return nsnull;
+}
 
 //
 // nsInterfaceHashtableMT definitions
