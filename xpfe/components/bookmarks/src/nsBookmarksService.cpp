@@ -96,6 +96,9 @@
 #ifdef XP_WIN
 #include <SHLOBJ.H>
 #include <INTSHCUT.H>
+#ifdef CompareString
+#undef CompareString
+#endif
 #endif
 
 nsIRDFResource      *kNC_IEFavoritesRoot;
