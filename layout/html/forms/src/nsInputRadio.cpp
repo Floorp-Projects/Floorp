@@ -98,7 +98,7 @@ void
 nsInputRadioFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
 {
   nsInputRadio* content = (nsInputRadio *)mContent; 
-  PRInt32 checkedAttr; 
+  //PRInt32 checkedAttr; 
   //nsContentAttr result = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::checked, checkedAttr); 
   //if ((result == eContentAttr_HasValue) && (PR_FALSE != checkedAttr)) {
   nsIRadioButton* radio;
