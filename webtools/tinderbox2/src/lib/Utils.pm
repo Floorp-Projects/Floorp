@@ -3,8 +3,8 @@
 # General purpose utility functions.  Every project needs a kludge
 # bucket for common access.
 
-# $Revision: 1.6 $ 
-# $Date: 2000/11/09 19:48:05 $ 
+# $Revision: 1.7 $ 
+# $Date: 2000/11/28 00:31:29 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Utils.pm,v $ 
 # $Name:  $ 
@@ -364,6 +364,9 @@ sub log_warning {
 sub atomic_rename_file {
   my ($oldfile, $outfile) = @_;
 
+  # This may be the output of a glob, make it taint safe.
+  $outfile = main::extract_filename_chars($outfile);
+
   (-f $outfile) && 
     (!(unlink($outfile))) &&
       die("Could not unlink: $outfile. $!\n");
@@ -377,6 +380,9 @@ sub atomic_rename_file {
 
 sub overwrite_file {
   my ($outfile, @outdata) = @_;
+
+  # This may be the output of a glob, make it taint safe.
+  $outfile = main::extract_filename_chars($outfile);
 
   my ($dirname) = File::Basename::dirname($outfile);
   my ($basename) = File::Basename::basename($outfile);
@@ -407,6 +413,9 @@ sub overwrite_file {
 
 sub append_file {
   my ($filename, @out);
+
+  # This may be the output of a glob, make it taint safe.
+  $filename = main::extract_filename_chars($filename);
 
   open(FILE, ">>$filename") ||
     die("Could not open: $filename. $!\n");
@@ -537,7 +546,15 @@ sub extract_digits {
 sub extract_filename_chars {
   my ($str) = @_;
 
+  # This may be the output of a glob, make it taint safe.
   $str =~ m/([0-9a-zA-Z\.\-\_\/\:]+)/;
+  $str = $1;
+
+  # Restrict possible directories for added security
+  my ($prefix1) = $FileStructure::TINDERBOX_DATA_DIR;
+  my ($prefix2) = $FileStructure::TINDERBOX_HTML_DIR;
+
+  $str =~ m/^((($prefix1)|($prefix2)).*)/;
   $str = $1;
 
   return $str;
