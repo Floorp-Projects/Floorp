@@ -158,7 +158,7 @@ XFE_NavCenterView::XFE_NavCenterView(XFE_Component *toplevel_component,
   ns->data = this;
 
   m_pane = HT_NewPane(ns);
-  HT_SetPaneFEData(m_pane, this);
+  HT_SetPaneFEData(m_pane, context);
 
   // add our subviews to the list of subviews for command dispatching and
   // deletion.
@@ -392,7 +392,7 @@ XFE_NavCenterView::getSelector(void)
 }
 
  void 
-XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * mask, jint width, jint height)
+XFE_NavCenterView::handleDisplayPixmap(Widget w, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32 height)
 {
    XFE_RDFImage *  rdfImage;
 

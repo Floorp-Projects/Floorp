@@ -248,8 +248,8 @@ public:
 // Handles image display in the new setup
 /*
 void displayImage(MWContext * context, IL_Pixmap * image, 
-                        IL_Pixmap * mask, long int x, long int y,
-                        jint x_offset, jint y_offset, jint width, jint height);
+                        IL_Pixmap * mask, PRInt32 x, PRInt32 y,
+                        PRInt32 x_offset, PRInt32 y_offset,PRInt32  width, PRInt32 height);
 */
 
 protected:

@@ -36,8 +36,8 @@ typedef struct  _callbackClientData {
     Widget   widget;
     Pixmap   image;
     Pixmap   mask;
-    jint     width;
-    jint     height;
+    PRInt32     width;
+    PRInt32     height;
 }callbackClientData;
 
 
@@ -53,7 +53,7 @@ public:
   Boolean  isImageLoaded();
   void     setCompleteCallback(completeCallbackPtr    callback, void * callbackData);
 
-  void XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, long int width, long int height);
+  void XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32  width, PRInt32  height);
   void XFE_RDFImage::RDFNewPixmap(IL_Pixmap * image, Boolean isMask);
   void XFE_RDFImage::RDFImageComplete(IL_Pixmap * image);
 

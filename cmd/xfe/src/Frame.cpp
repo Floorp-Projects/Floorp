@@ -130,8 +130,8 @@ extern "C" {
 	URL_Struct *fe_GetBrowserStartupUrlStruct();
 
     void displayImage(MWContext * context, IL_Pixmap * image, 
-                      IL_Pixmap * mask, long int x, long int y,
-                      jint x_offset, jint y_offset, jint width, jint height);
+                      IL_Pixmap * mask,PRInt32  x,PRInt32  y,
+                      PRInt32 x_offset, PRInt32  y_offset, PRInt32   width, PRInt32   height);
 };
 
 extern MWContext *last_documented_xref_context;
@@ -4966,7 +4966,7 @@ XFE_Frame::zaxis_BelowEH(Widget			shell,
 extern "C"
 {
 void 
-DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, long int x, long int y, jint x_offset, jint y_offset, jint width, jint height) 
+DisplayPixmap(MWContext * context, IL_Pixmap * image, IL_Pixmap * mask, PRInt32  x, PRInt32  y, PRInt32  x_offset,  PRInt32 y_offset, PRInt32  width, PRInt32 height) 
 {
 
    XFE_Frame *    frameHandle=(XFE_Frame *)NULL;
@@ -5078,8 +5078,8 @@ ImageComplete(MWContext * context, IL_Pixmap * image)
 
 void
 displayImage(MWContext * context, IL_Pixmap * image, 
-                        IL_Pixmap * mask, long int x, long int y,
-                        jint x_offset, jint y_offset, jint width, jint height)
+                        IL_Pixmap * mask, PRInt32 x, PRInt32 y,
+                        PRInt32 x_offset, PRInt32 y_offset, PRInt32 width,PRInt32  height)
 {
 
     int32 img_x_offset, img_y_offset;   /* Offset of image in drawable. */

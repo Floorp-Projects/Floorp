@@ -56,7 +56,7 @@ public:
   static void selector_destroy_cb(Widget,XtPointer,XtPointer);
 
 
-  virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, jint width, jint height);
+  virtual void handleDisplayPixmap(Widget, IL_Pixmap *, IL_Pixmap *, PRInt32 width, PRInt32 height);
   virtual void handleNewPixmap(Widget, IL_Pixmap *, Boolean mask);
   virtual void handleImageComplete(Widget, IL_Pixmap *);  
 

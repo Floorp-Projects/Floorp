@@ -33,7 +33,7 @@
 
 extern "C"
 {
-void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , jint , jint , jint , jint , jint , jint) ;
+void DisplayPixmap(MWContext *, IL_Pixmap *, IL_Pixmap * , PRInt32, PRInt32, PRInt32, PRInt32, PRInt32, PRInt32);
 void NewPixmap(MWContext *, IL_Pixmap * image, Boolean mask);
 void ImageComplete(MWContext *, IL_Pixmap * image);
 void fe_load_default_font(MWContext *context);
@@ -207,7 +207,7 @@ XFE_RDFImage::setCompleteCallback(completeCallbackPtr callback,  void * client_d
 
 
 void 
-XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, jint width, jint height)
+XFE_RDFImage::RDFDisplayPixmap(IL_Pixmap * image, IL_Pixmap * mask, PRInt32 width, PRInt32 height)
 {
 	m_image = image;
 	m_mask = mask;
