@@ -39,128 +39,103 @@
 //
 // calICSCalendar.js
 //
-// This is a non-sync ics file. It reads the file pointer to bu uri once,
+// This is a non-sync ics file. It reads the file pointer to by uri when set,
 // then writes it on updates. External changes to the file will be
 // ignored and overwritten.
 //
+// XXX Should do locks, so that external changes ore not overwritten.
 
 const calIOperationListener = Components.interfaces.calIOperationListener;
 const calICalendar = Components.interfaces.calICalendar;
 
+// calICSCalendar inherits from calMemoryCalendar. This is done in
+// createInstance.
+
 function calICSCalendar () {
     this.wrappedJSObject = this;
-    this.mMemoryCalendar = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
-                                     .createInstance(Components.interfaces.calICalendar);
-    this.mICSService = Components.classes["@mozilla.org/calendar/ics-service;1"]
-                                 .getService(Components.interfaces.calIICSService);
-    this.mObserver = new calICSObserver(this);
-    this.mMemoryCalendar.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
+    this.initICSCalendar();
 }
 
 calICSCalendar.prototype = {
-    mMemoryCalendar: null,
-    mUri: null,
     mICSService: null,
     mInitializing: false,
-  
-    QueryInterface: function (aIID) {
-        if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calICalendar))
-        {
-            throw Components.results.NS_ERROR_NO_INTERFACE;
-        }
+    mObserver: null,
 
-        return this;
+    QueryInterface: function (aIID) {
+        if (aIID.equals(Components.interfaces.nsIStreamListener))
+            return this;
+        if (aIID.equals(Components.interfaces.nsIStreamLoaderObserver))
+            return this;
+        if (aIID.equals(Components.interfaces.nsIInterfaceRequestor))
+            return this;
+        if (aIID.equals(Components.interfaces.calICalendar))
+            return this;
+    },
+    
+    initICSCalendar: function() {
+        this.initMemoryCalendar();
+        this.mICSService = Components.classes["@mozilla.org/calendar/ics-service;1"]
+                                     .getService(Components.interfaces.calIICSService);
+        this.mObserver = new calICSObserver(this);
+        this.addObserver(this.mObserver, calICalendar.ITEM_FILTER_TYPE_ALL);
     },
 
-
+    mUri: null,
     get uri() { return this.mUri },
     set uri(aUri) {
-        // Need this listener later, to add the items.
-        var emptyListener =
-        {
-          onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {},
-          onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {}
-        };
+        return this.setICSUri(aUri);
+    },
 
+    setICSUri: function(aUri) {
         // XXX If this ever uses async io, make sure to also make this
-        // async. The ui should not be able to edit the calendar while loading
+        // async. The ui should not be able to edit the calendar while loading.
+        // or just queue the changes from the ui.
         this.mInitializing = true;
-
         this.mUri = aUri;
-        var file = Components.classes["@mozilla.org/file/local;1"]
-                             .createInstance(Components.interfaces.nsILocalFile);
-        file.initWithPath(this.mUri.path);
-        var fileIS = Components.classes["@mozilla.org/network/file-input-stream;1"]
-                               .createInstance(Components.interfaces.nsIFileInputStream);
-        // Wrap in a try block, in case the file isn't found. This isn't fatal
-        // XXX other errors should be fatal!
-        try {
-            fileIS.init(file, -1, -1, 0);
-            var inputStream = Components.classes["@mozilla.org/scriptableinputstream;1"]
-                                        .createInstance(Components.interfaces.nsIScriptableInputStream);
-            inputStream.init(fileIS);
-            var str = inputStream.read(-1);
-            fileIS.close();
+        
+        var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                  .getService(Components.interfaces.nsIIOService);
 
+        var channel = ioService.newChannelFromURI(this.mUri);
+        channel.loadFlags |= Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
+        channel.notificationCallbacks = this;
+
+        var streamLoader = Components.classes["@mozilla.org/network/stream-loader;1"]
+                                     .createInstance(Components.interfaces.nsIStreamLoader);
+        streamLoader.init(channel, this, this);
+    },
+
+    // nsIStreamLoaderObserver impl
+    // Listener for download. Parse the downlaoded file
+    onStreamComplete: function(loader, ctxt, status, resultLength, result)
+    {
+        // XXX ?? Is this ok?
+        this.mItems = new Array();
+
+        var unicodeConverter = Components.classes["@mozilla.org/intl/scriptableunicodeconverter"]
+                                         .createInstance(Components.interfaces.nsIScriptableUnicodeConverter);
+        // ics files are always utf8
+        unicodeConverter.charset = "UTF-8";
+        var str = unicodeConverter.convertFromByteArray(result, result.length);
+        // Wrap parsing in a try block. Will ignore errors. That's a good thing
+        // for non-existing or empty files, but not good for wrong files.
+        // you don't want to accidently overwrite them
+        // XXX Fix that
+        try {
             var calComp = this.mICSService.parseICS(str);
+            // XXX also getting VTODO would be nice
             var subComp = calComp.getFirstSubcomponent("VEVENT");
             while (subComp) {
                 var event = Components.classes["@mozilla.org/calendar/event;1"]
                                       .createInstance(Components.interfaces.calIEvent);
                 event.icalComponent = subComp;
-                this.mMemoryCalendar.addItem(event, emptyListener);
+                this.addItem(event, null);
 
                 subComp = calComp.getNextSubcomponent("VEVENT");
             }
-        } catch(e) {
-        }
+        } catch(e) { }
         this.mInitializing = false;
-    },
-
-    // void addObserver( in calIObserver observer, in unsigned long aItemFilter );
-    addObserver: function (aObserver, aItemFilter) {
-        return this.mMemoryCalendar.addObserver(aObserver, aItemFilter);
-    },
-
-    // void removeObserver( in calIObserver observer );
-    removeObserver: function (aObserver) {
-        return this.mMemoryCalendar.removeObserver(aObserver);
-    },
-
-    // void modifyItem( in calIItemBase aItem, in calIOperationListener aListener );
-    modifyItem: function (aItem, aListener) {
-        var listener = new calICSListener(this, aListener);
-        this.mMemoryCalendar.modifyItem(aItem, listener);
-    },
-
-    // void deleteItem( in string id, in calIOperationListener aListener );
-    deleteItem: function (aItem, aListener) {
-        var listener = new calICSListener(this, aListener);
-        this.mMemoryCalendar.deleteItem(aItem, listener);
-    },
-
-    // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
-    addItem: function (aItem, aListener) {
-        // XXX Need to set the of the new item.
-        // can't set it here, because memoy calendar clones the item,
-        // and doesn't return the clone.
-        var listener = new calICSListener(this, aListener);
-        this.mMemoryCalendar.addItem(aItem, listener);
-    },
-
-    // void getItem( in string aId, in calIOperationListener aListener );
-    getItem: function (aId, aListener) {
-        var listener = new calICSListener(this, aListener);
-        this.mMemoryCalendar.getItem(aId, listener);
-    },
-
-    // void getItems( in unsigned long aItemFilter, in unsigned long aCount, 
-    //                in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
-    //                in calIOperationListener aListener );
-    getItems: function (aItemFilter, aCount, aRangeStart, aRangeEnd, aListener) {
-        var listener = new calICSListener(this, aListener);
-        this.mMemoryCalendar.getItems(aItemFilter, aCount, aRangeStart, aRangeEnd, listener);
+        this.observeOnLoad();
     },
 
     writeICS: function () {
@@ -169,56 +144,97 @@ calICSCalendar.prototype = {
         {
             onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail)
             {
-                if (!savedthis.mUri)
-                     throw Components.results.NS_ERROR_FAILURE;
-
                 var icsStr = calComp.serializeToICS();
-                var file = Components.classes["@mozilla.org/file/local;1"]
-                                     .createInstance(Components.interfaces.nsILocalFile);
-                file.initWithPath(savedthis.mUri.path);
-                var fileOS = Components.classes["@mozilla.org/network/file-output-stream;1"]
-                                       .createInstance(Components.interfaces.nsIFileOutputStream);
-                fileOS.init(file, -1, -1, 0);
-                fileOS.write(icsStr, icsStr.length);
-                fileOS.close();
+
+                var ioService = Components.classes["@mozilla.org/network/io-service;1"]
+                                          .getService(Components.interfaces.nsIIOService);
+                var channel = ioService.newChannelFromURI(savedthis.mUri);
+                channel.notificationCallbacks = savedthis;
+                var uploadChannel = channel.QueryInterface(Components.interfaces.nsIUploadChannel);
+                var postStream = Components.classes["@mozilla.org/io/string-input-stream;1"]
+                                           .createInstance(Components.interfaces.nsIStringInputStream);
+                postStream.setData(icsStr, icsStr.length);
+                uploadChannel.setUploadStream(postStream, "text/calendar", -1);
+                channel.asyncOpen(savedthis, savedthis);
             },
             onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems)
             {
+                var lastmodifed;
                 for (var i=0; i<aCount; i++) {
                     calComp.addSubcomponent(aItems[i].icalComponent);
                 }
             }
         };
 
+        if (this.mInitializing)
+            return;
+        if (!this.mUri)
+            throw Components.results.NS_ERROR_FAILURE;
+dump(">>> WriteICS "+this.mUri.spec+"\n")
+
         var calComp = this.mICSService.createIcalComponent("VCALENDAR");
         calComp.version = "2.0";
         calComp.prodid = "-//Mozilla.org/NONSGML Mozilla Calendar V1.0//EN";
-        this.mMemoryCalendar.getItems(calICalendar.ITEM_FILTER_TYPE_ALL, 0, null, null, listener);
-    }
-
-};
-
-// This wrapper is needed to convert the calendar parameter from the
-// memory to this.
-function calICSListener(aCalendar, aListener) {
-    this.mCalendar = aCalendar;
-    this.mListener = aListener;
-}
-
-calICSListener.prototype = {
-    mCalendar: null,
-    mListener: null,
-
-    onOperationComplete: function(aCalendar, aStatus, aOperationType, aId, aDetail) {
-        if (this.mListener)
-            this.mListener.onOperationComplete(this.mCalendar, aStatus, aOperationType, aId, aDetail)
+        this.getItems(calICalendar.ITEM_FILTER_TYPE_ALL, 0, null, null, listener);
     },
-    onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
-        if (this.mListener)
-            this.mListener.onGetResult(this.mCalendar, aStatus, aItemType, aDetail, aCount, aItems)
-    }
-};
 
+    // nsIStreamListener impl
+    // For after publishing. For error checks
+    
+    // XXX use the onError observer calls
+    onStartRequest: function(request, ctxt) {},
+    onDataAvailable: function(request, ctxt, inStream, sourceOffset, count) {},
+    onStopRequest: function(request, ctxt, status, errorMsg)
+    {
+        ctxt = ctxt.wrappedJSObject;
+        var channel;
+        try {
+            channel = request.QueryInterface(Components.interfaces.nsIHttpChannel);
+            dump(channel.requestSucceeded+"\n");
+        } catch(e) {
+        }
+
+        if (channel && !channel.requestSucceeded) {
+            ctxt.observeOnError(null,
+                                "Publishing the calendar file failed\n" +
+                                  "Status code: "+channel.responseStatus+": "+channel.responseStatusText+"\n");
+        }
+
+        else if (!channel && !Components.isSuccessCode(request.status)) {
+            ctxt.observeOnError(null,
+                                "Publishing the calendar file failed\n" +
+                                  "Status code: "+request.status.toString(16)+"\n");
+        }
+    },
+
+    observeOnLoad: function () {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onLoad ();
+    },
+
+    observeOnError: function (aErrNo, aMessage) {
+        for (var i = 0; i < this.mObservers.length; i++)
+            this.mObservers[i].observer.onError (aErrNo, aMessage);
+    },
+
+    // nsIInterfaceRequestor impl
+    getInterface: function(iid, instance) {
+        if (iid.equals(Components.interfaces.nsIAuthPrompt)) {
+            // use the window watcher service to get a nsIAuthPrompt impl
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher)
+                             .getNewAuthPrompter(window);
+        }
+        else if (iid.equals(Components.interfaces.nsIPrompt)) {
+            // use the window watcher service to get a nsIPrompt impl
+            return Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
+                             .getService(Components.interfaces.nsIWindowWatcher)
+                             .getNewPrompter(window);
+        }
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
+    },
+};
 
 function calICSObserver(aCalendar) {
     this.mCalendar = aCalendar;
@@ -248,7 +264,10 @@ calICSObserver.prototype = {
  **** module registration
  ****/
 
+var gWiredUpPrototype = false;
+
 var calICSCalendarModule = {
+
     mCID: Components.ID("{f8438bff-a3c9-4ed5-b23f-2663b5469abf}"),
     mContractID: "@mozilla.org/calendar/calendar;1?type=ics",
     
@@ -276,6 +295,11 @@ var calICSCalendarModule = {
         createInstance: function (outer, iid) {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
+            if (!gWiredUpPrototype) {
+                var memCal = Components.classes["@mozilla.org/calendar/calendar;1?type=memory"]
+                                       .createInstance(Components.interfaces.calICalendar);
+                calICSCalendar.prototype.__proto__ = memCal.wrappedJSObject.__proto__;
+            }
             return (new calICSCalendar()).QueryInterface(iid);
         }
     },
