@@ -197,7 +197,7 @@ rc4_no_opt(RC4Context *cx, unsigned char *output,
 	Stype tmpSi, tmpSj;
 	register PRUint8 tmpi = cx->i;
 	register PRUint8 tmpj = cx->j;
-	int index;
+	unsigned int index;
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {
 		PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -350,7 +350,7 @@ rc4_wordconv(RC4Context *cx, unsigned char *output,
 	register PRUint8 tmpj = cx->j;
 	unsigned int byteCount;
 	unsigned int bufShift, invBufShift;
-	int i;
+	unsigned int i;
 
 	PORT_Assert(maxOutputLen >= inputLen);
 	if (maxOutputLen < inputLen) {

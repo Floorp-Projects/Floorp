@@ -570,7 +570,7 @@ DES_MakeSchedule( HALF * ks, BYTE * key,   DESDirection direction)
     left  ^= temp << 4; 
 
 void 
-DES_Do1Block(HALF * ks, BYTE * inbuf, BYTE * outbuf)
+DES_Do1Block(HALF * ks, const BYTE * inbuf, BYTE * outbuf)
 {
     register HALF left, right;
     register HALF temp;

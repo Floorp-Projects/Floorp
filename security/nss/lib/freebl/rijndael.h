@@ -30,7 +30,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: rijndael.h,v 1.1 2000/12/19 23:43:10 mcgreer%netscape.com Exp $
+ * $Id: rijndael.h,v 1.2 2001/01/05 22:37:50 mcgreer%netscape.com Exp $
  */
 
 #ifndef _RIJNDAEL_H_
@@ -38,12 +38,12 @@
 
 typedef SECStatus AESFunc(AESContext *cx, unsigned char *output,
                           unsigned int *outputLen, unsigned int maxOutputLen,
-                          unsigned char *input, unsigned int inputLen, 
+                          const unsigned char *input, unsigned int inputLen, 
                           int blocksize);
 
 typedef SECStatus AESBlockFunc(AESContext *cx, 
                                unsigned char *output,
-                               unsigned char *input);
+                               const unsigned char *input);
 
 /* AESContextStr
  *

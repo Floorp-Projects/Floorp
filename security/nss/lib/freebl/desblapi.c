@@ -71,7 +71,7 @@
 #define COPY8BFROMHALF(to, from) COPY8B(to, from, to)
 
 static void 
-DES_ECB(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
+DES_ECB(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     while (len) {
 	DES_Do1Block(cx->ks0, in, out);
@@ -82,7 +82,7 @@ DES_ECB(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
 }
 
 static void 
-DES_EDE3_ECB(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
+DES_EDE3_ECB(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     while (len) {
 	DES_Do1Block(cx->ks0,  in, out);
@@ -95,7 +95,7 @@ DES_EDE3_ECB(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
 }
 
 static void 
-DES_CBCEn(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
+DES_CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     BYTE * bufend = in + len;
     HALF  vec[2];
@@ -112,7 +112,7 @@ DES_CBCEn(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
 }
 
 static void 
-DES_CBCDe(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
+DES_CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     BYTE * bufend;
     HALF oldciphertext[2];
@@ -132,7 +132,7 @@ DES_CBCDe(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
 }
 
 static void 
-DES_EDE3CBCEn(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
+DES_EDE3CBCEn(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     BYTE * bufend = in + len;
     HALF  vec[2];
@@ -151,7 +151,7 @@ DES_EDE3CBCEn(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
 }
 
 static void 
-DES_EDE3CBCDe(DESContext *cx, BYTE *out, BYTE *in, unsigned int len)
+DES_EDE3CBCDe(DESContext *cx, BYTE *out, const BYTE *in, unsigned int len)
 {
     BYTE * bufend;
     HALF oldciphertext[2];
@@ -242,7 +242,7 @@ DES_DestroyContext(DESContext *cx, PRBool freeit)
 
 SECStatus
 DES_Encrypt(DESContext *cx, BYTE *out, unsigned int *outLen,
-            unsigned int maxOutLen, BYTE *in, unsigned int inLen)
+            unsigned int maxOutLen, const BYTE *in, unsigned int inLen)
 {
 
     if (inLen < 0 || (inLen % 8) != 0 || maxOutLen < inLen || !cx || 
@@ -259,7 +259,7 @@ DES_Encrypt(DESContext *cx, BYTE *out, unsigned int *outLen,
 
 SECStatus
 DES_Decrypt(DESContext *cx, BYTE *out, unsigned int *outLen,
-            unsigned int maxOutLen, BYTE *in, unsigned int inLen)
+            unsigned int maxOutLen, const BYTE *in, unsigned int inLen)
 {
 
     if (inLen < 0 || (inLen % 8) != 0 || maxOutLen < inLen || !cx || 

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: alg2268.c,v 1.1 2000/05/27 01:29:35 nelsonb%netscape.com Exp $
+ * $Id: alg2268.c,v 1.2 2001/01/05 22:37:46 mcgreer%netscape.com Exp $
  */
 
 
@@ -47,7 +47,7 @@
 */
 
 typedef SECStatus (rc2Func)(RC2Context *cx, unsigned char *output,
-		           unsigned char *input, unsigned int inputLen);
+		           const unsigned char *input, unsigned int inputLen);
 
 /* forward declarations */
 static rc2Func rc2_EncryptECB;
@@ -348,7 +348,7 @@ rc2_Decrypt1Block(RC2Context *cx, RC2Block *output, RC2Block *input)
 
 static SECStatus
 rc2_EncryptECB(RC2Context *cx, unsigned char *output,
-	       unsigned char *input, unsigned int inputLen)
+	       const unsigned char *input, unsigned int inputLen)
 {
     RC2Block  iBlock;
 
@@ -365,7 +365,7 @@ rc2_EncryptECB(RC2Context *cx, unsigned char *output,
 
 static SECStatus
 rc2_DecryptECB(RC2Context *cx, unsigned char *output,
-	       unsigned char *input, unsigned int inputLen)
+	       const unsigned char *input, unsigned int inputLen)
 {
     RC2Block  iBlock;
 
@@ -382,7 +382,7 @@ rc2_DecryptECB(RC2Context *cx, unsigned char *output,
 
 static SECStatus
 rc2_EncryptCBC(RC2Context *cx, unsigned char *output,
-	       unsigned char *input, unsigned int inputLen)
+	       const unsigned char *input, unsigned int inputLen)
 {
     RC2Block  iBlock;
 
@@ -403,7 +403,7 @@ rc2_EncryptCBC(RC2Context *cx, unsigned char *output,
 
 static SECStatus
 rc2_DecryptCBC(RC2Context *cx, unsigned char *output,
-	       unsigned char *input, unsigned int inputLen)
+	       const unsigned char *input, unsigned int inputLen)
 {
     RC2Block  iBlock;
     RC2Block  oBlock;
@@ -436,7 +436,7 @@ rc2_DecryptCBC(RC2Context *cx, unsigned char *output,
 */
 SECStatus RC2_Encrypt(RC2Context *cx, unsigned char *output,
 		      unsigned int *outputLen, unsigned int maxOutputLen,
-		      unsigned char *input, unsigned int inputLen)
+		      const unsigned char *input, unsigned int inputLen)
 {
     SECStatus rv = SECSuccess;
     if (inputLen) {
@@ -469,7 +469,7 @@ SECStatus RC2_Encrypt(RC2Context *cx, unsigned char *output,
 */
 SECStatus RC2_Decrypt(RC2Context *cx, unsigned char *output,
 		      unsigned int *outputLen, unsigned int maxOutputLen,
-		      unsigned char *input, unsigned int inputLen)
+		      const unsigned char *input, unsigned int inputLen)
 {
     SECStatus rv = SECSuccess;
     if (inputLen) {
