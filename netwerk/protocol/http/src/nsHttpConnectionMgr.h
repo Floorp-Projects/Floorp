@@ -196,18 +196,16 @@ private:
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
     nsresult ProcessNewTransaction(nsHttpTransaction *);
 
-    // SUN WS6U2 needs this to be public
-public:
     // message handlers have this signature
     typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(nsresult, void *);
-
-private:
 
     // nsConnEvent
     //
     // subclass of PLEvent used to marshall events to the socket transport
     // thread.  this class is used to implement PostEvent.
     //
+    class nsConnEvent;
+    friend class nsConnEvent;
     class nsConnEvent : public PLEvent
     {
     public:
