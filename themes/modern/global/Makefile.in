@@ -146,6 +146,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	toolbar.css \
 	tree.css \
 	wizardOverlay.css \
+	splitter.css \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
