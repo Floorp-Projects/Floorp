@@ -47,6 +47,7 @@ class nsHTMLValue;
 class nsAString;
 class nsIAtom;
 
+#define NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM 12
 #define NS_ATTRVALUE_TYPE_MASK (PtrBits(3))
 #define NS_ATTRVALUE_VALUE_MASK (~NS_ATTRVALUE_TYPE_MASK)
 
@@ -55,15 +56,16 @@ public:
   nsAttrValue();
   nsAttrValue(const nsAttrValue& aOther);
   explicit nsAttrValue(const nsAString& aValue);
-  explicit nsAttrValue(nsHTMLValue* aValue);
+  explicit nsAttrValue(const nsHTMLValue& aValue);
   explicit nsAttrValue(nsIAtom* aValue);
   ~nsAttrValue();
 
   void Reset();
   void SetTo(const nsAttrValue& aOther);
   void SetTo(const nsAString& aValue);
-  void SetTo(nsHTMLValue* aValue);
+  void SetTo(const nsHTMLValue& aValue);
   void SetTo(nsIAtom* aValue);
+  void SetToStringOrAtom(const nsAString& aValue);
 
   void SwapValueWith(nsAttrValue& aOther);
 

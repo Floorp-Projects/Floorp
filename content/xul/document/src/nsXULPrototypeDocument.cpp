@@ -69,6 +69,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsDOMCID.h"
 #include "nsArray.h"
+#include "nsContentUtils.h"
 
 
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID,
@@ -438,6 +439,51 @@ nsXULPrototypeDocument::Read(nsIObjectInputStream* aStream)
     return rv;
 }
 
+static nsresult
+GetNodeInfos(nsXULPrototypeElement* aPrototype,
+             nsCOMArray<nsINodeInfo>& aArray)
+{
+    nsresult rv;
+    if (aArray.IndexOf(aPrototype->mNodeInfo) < 0) {
+        if (!aArray.AppendObject(aPrototype->mNodeInfo)) {
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+    }
+
+    // Search attributes
+    PRUint32 i;
+    for (i = 0; i < aPrototype->mNumAttributes; ++i) {
+        nsCOMPtr<nsINodeInfo> ni;
+        nsAttrName* name = &aPrototype->mAttributes[i].mName;
+        if (name->IsAtom()) {
+            rv = aPrototype->mNodeInfo->NodeInfoManager()->
+                GetNodeInfo(name->Atom(), nsnull, kNameSpaceID_None,
+                            getter_AddRefs(ni));
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+        else {
+            ni = name->NodeInfo();
+        }
+
+        if (aArray.IndexOf(ni) < 0) {
+            if (!aArray.AppendObject(ni)) {
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+        }
+    }
+
+    // Search children
+    for (i = 0; i < aPrototype->mNumChildren; ++i) {
+        nsXULPrototypeNode* child = aPrototype->mChildren[i];
+        if (child->mType == nsXULPrototypeNode::eType_Element) {
+            rv = GetNodeInfos(NS_STATIC_CAST(nsXULPrototypeElement*, child),
+                              aArray);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+    }
+
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
@@ -478,7 +524,7 @@ nsXULPrototypeDocument::Write(nsIObjectOutputStream* aStream)
     
     // nsINodeInfo table
     nsCOMArray<nsINodeInfo> nodeInfos;
-    rv |= mNodeInfoManager->GetNodeInfos(&nodeInfos);
+    rv |= GetNodeInfos(mRoot, nodeInfos);
     NS_ENSURE_SUCCESS(rv, rv);
     PRInt32 nodeInfoCount = nodeInfos.Count();
 

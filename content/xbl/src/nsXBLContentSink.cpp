@@ -915,9 +915,10 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
 
   // Copy the attributes into the prototype
   nsCOMPtr<nsIAtom> nameSpacePrefix, nameAtom;
-  
-  for (; *aAtts; aAtts += 2) {
-    const nsDependentString key(aAtts[0]);
+
+  PRUint32 i;  
+  for (i = 0; i < aAttsCount; ++i) {
+    const nsDependentString key(aAtts[i * 2]);
 
     SplitXMLName(key, getter_AddRefs(nameSpacePrefix),
                  getter_AddRefs(nameAtom));
@@ -939,43 +940,19 @@ nsXBLContentSink::AddAttributesToXULPrototype(const PRUnichar **aAtts,
       nameSpacePrefix = nsnull;
     } 
 
-    mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
-                                  getter_AddRefs(attrs->mNodeInfo));
+    if (nameSpaceID == kNameSpaceID_None) {
+      attrs[i].mName.SetTo(nameAtom);
+    }
+    else {
+      nsCOMPtr<nsINodeInfo> ni;
+      mNodeInfoManager->GetNodeInfo(nameAtom, nameSpacePrefix, nameSpaceID,
+                                    getter_AddRefs(ni));
+      attrs[i].mName.SetTo(ni);
+    }
     
-    attrs->mValue.SetValue(nsDependentString(aAtts[1]));
-    ++attrs;
-  }
-
-  // XUL elements may require some additional work to compute
-  // derived information.
-  if (aElement->mNodeInfo->NamespaceEquals(kNameSpaceID_XUL)) {
-    nsAutoString value;
-
-    // Compute the element's class list if the element has a 'class' attribute.
-    rv = aElement->GetAttr(kNameSpaceID_None, nsXULAtoms::clazz, value);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      rv = nsClassList::ParseClasses(&aElement->mClassList, value);
-      if (NS_FAILED(rv)) return rv;
-    }
-
-    // Parse the element's 'style' attribute
-    rv = aElement->GetAttr(kNameSpaceID_None, nsHTMLAtoms::style, value);
-    if (NS_FAILED(rv)) return rv;
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      if (!mCSSParser) {
-          mCSSParser = do_CreateInstance(kCSSParserCID, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-      }
-
-      rv = mCSSParser->ParseStyleAttribute(value, mDocumentURI,
-                             getter_AddRefs(aElement->mInlineStyleRule));
-
-      NS_ASSERTION(NS_SUCCEEDED(rv), "unable to parse style rule");
-      if (NS_FAILED(rv)) return rv;
-    }
+    rv = aElement->SetAttrAt(i, nsDependentString(aAtts[i * 2 + 1]),
+                             mDocumentURI); 
+    NS_ENSURE_SUCCESS(rv, rv);
   }
 
   return NS_OK;

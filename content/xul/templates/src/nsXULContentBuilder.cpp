@@ -70,6 +70,7 @@
 #include "nsXULElement.h"
 #include "nsXULTemplateBuilder.h"
 #include "nsSupportsArray.h"
+#include "nsContentUtils.h"
 
 #include "jsapi.h"
 #include "pldhash.h"

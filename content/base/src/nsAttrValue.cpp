@@ -58,7 +58,7 @@ nsAttrValue::nsAttrValue(const nsAString& aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(nsHTMLValue* aValue)
+nsAttrValue::nsAttrValue(const nsHTMLValue& aValue)
     : mBits(0)
 {
   SetTo(aValue);
@@ -115,11 +115,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
     }
     case eHTMLValue:
     {
-      nsHTMLValue* newVal =
-        new nsHTMLValue(*aOther.GetHTMLValue());
-      if (newVal) {
-        SetTo(newVal);
-      }
+      SetTo(*aOther.GetHTMLValue());
       break;
     }
     case eAtom:
@@ -155,11 +151,13 @@ nsAttrValue::SetTo(const nsAString& aValue)
 }
 
 void
-nsAttrValue::SetTo(nsHTMLValue* aValue)
+nsAttrValue::SetTo(const nsHTMLValue& aValue)
 {
-  NS_ASSERTION(aValue, "null value in nsAttrValue::SetTo");
   Reset();
-  SetValueAndType(aValue, eHTMLValue);
+  nsHTMLValue* htmlValue = new nsHTMLValue(aValue);
+  if (htmlValue) {
+      SetValueAndType(htmlValue, eHTMLValue);
+  }
 }
 
 void
@@ -168,7 +166,24 @@ nsAttrValue::SetTo(nsIAtom* aValue)
   NS_ASSERTION(aValue, "null value in nsAttrValue::SetTo");
   Reset();
   NS_ADDREF(aValue);
-  mBits = NS_REINTERPRET_CAST(PtrBits, aValue) | eAtom;
+  SetValueAndType(aValue, eAtom);
+}
+
+void
+nsAttrValue::SetToStringOrAtom(const nsAString& aValue)
+{
+  PRUint32 len = aValue.Length();
+  // Don't bother with atoms if it's an empty string since
+  // we can store those efficently anyway.
+  if (len && len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
+    nsCOMPtr<nsIAtom> atom = do_GetAtom(aValue);
+    if (atom) {
+      SetTo(atom);
+    }
+  }
+  else {
+    SetTo(aValue);
+  }
 }
 
 void

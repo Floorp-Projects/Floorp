@@ -144,12 +144,6 @@ public:
    */
   virtual nsresult SetDocumentPrincipal(nsIPrincipal* aPrincipal) = 0;
   
-  /**
-   * Populate the given nsCOMArray with all of the nsINodeInfos
-   * managed by this manager.
-   */
-  virtual nsresult GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray) = 0;
-
 protected:
   nsIDocument *mDocument; // WEAK
 };

@@ -490,13 +490,28 @@ public:
   nsresult  ReparseStyleAttribute(void);
   /**
    * Parse a style attr value into a CSS rulestruct (or, if there is no
-   * document, leave it as a string) and return as HTMLValue.
+   * document, leave it as a string) and return as nsAttrValue.
+   * Note: this function is used by other classes than nsGenericHTMLElement
    *
    * @param aValue the value to parse
    * @param aResult the resulting HTMLValue [OUT]
    */
-  nsresult  ParseStyleAttribute(const nsAString& aValue,
-                                nsHTMLValue& aResult);
+  static void ParseStyleAttribute(nsIContent* aContent,
+                                  PRBool aCaseSensitive,
+                                  const nsAString& aValue,
+                                  nsAttrValue& aResult);
+
+  /**
+   * Parse a class attr value into a nsAttrValue. If there is only one class
+   * the resulting type will be an atom. If there are more then one the result
+   * will be an atom-array.
+   * Note: this function is used by other classes than nsGenericHTMLElement
+   *
+   * @param aStr   The attributes string-value to parse.
+   * @param aValue The resulting nsAttrValue [OUT]
+   */
+  static nsresult ParseClassAttribute(const nsAString& aStr,
+                                      nsAttrValue& aValue);
 
   /*
    * Attribute Mapping Helpers

@@ -75,14 +75,13 @@
 #include "nsIXULPrototypeCache.h"
 #include "nsIXULTemplateBuilder.h"
 #include "nsIBoxObject.h"
-#include "nsXULAttributes.h"
 #include "nsIChromeEventHandler.h"
-#include "nsXULAttributeValue.h"
 #include "nsIXBLService.h"
 #include "nsICSSOMFactory.h"
 #include "nsLayoutCID.h"
-
-#include "nsGenericElement.h" // for nsCheapVoidArray
+#include "nsAttrAndChildArray.h"
+#include "nsXULAtoms.h"
+#include "nsAutoPtr.h"
 
 class nsIDocument;
 class nsIRDFService;
@@ -91,9 +90,9 @@ class nsIXULContentUtils;
 class nsIXULPrototypeDocument;
 class nsRDFDOMNodeList;
 class nsString;
-class nsXULAttributes;
 class nsVoidArray;
 class nsIDocShell;
+class nsDOMAttributeMap;
 
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
@@ -121,7 +120,8 @@ class nsXULPrototypeAttribute
 {
 public:
     nsXULPrototypeAttribute()
-        : mEventHandler(nsnull)
+        : mEventHandler(nsnull),
+          mName(nsXULAtoms::id)   // XXX this is a hack, but names have to have a value
     {
         XUL_PROTOTYPE_ATTRIBUTE_METER(gNumAttributes);
         MOZ_COUNT_CTOR(nsXULPrototypeAttribute);
@@ -129,9 +129,9 @@ public:
 
     ~nsXULPrototypeAttribute();
 
-    nsCOMPtr<nsINodeInfo> mNodeInfo;
-    nsXULAttributeValue   mValue;
-    void*                 mEventHandler;
+    nsAttrName mName;
+    nsAttrValue mValue;
+    void* mEventHandler;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
     /**
@@ -241,8 +241,7 @@ public:
           mNumChildren(0),
           mChildren(nsnull),
           mNumAttributes(0),
-          mAttributes(nsnull),
-          mClassList(nsnull)
+          mAttributes(nsnull)
     {
         NS_LOG_ADDREF(this, 1, ClassName(), ClassSize());
     }
@@ -250,7 +249,6 @@ public:
     virtual ~nsXULPrototypeElement()
     {
         delete[] mAttributes;
-        delete mClassList;
         delete[] mChildren;
     }
 
@@ -280,6 +278,8 @@ public:
                                  nsIURI* aDocumentURI,
                                  const nsCOMArray<nsINodeInfo> *aNodeInfos);
 
+    nsresult SetAttrAt(PRUint32 aPos, const nsAString& aValue, nsIURI* aDocumentURI);
+
     PRUint32                 mNumChildren;
     nsXULPrototypeNode**     mChildren;           // [OWNER]
 
@@ -287,12 +287,6 @@ public:
 
     PRUint32                 mNumAttributes;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
-
-    nsCOMPtr<nsICSSStyleRule> mInlineStyleRule;    // [OWNER]
-    nsClassList*             mClassList;
-
-    nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue);
-
 
     static void ReleaseGlobals()
     {
@@ -590,7 +584,7 @@ protected:
 protected:
     // Required fields
     nsXULPrototypeElement*              mPrototype;
-    nsSmallVoidArray                    mChildren;           // [OWNER]
+    nsAttrAndChildArray                 mAttrsAndChildren;   // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
 
     /**
@@ -604,33 +598,35 @@ protected:
      * lazily copied from the prototype when changed.
      */
     struct Slots {
-        Slots(nsXULElement* mElement);
+        Slots();
         ~Slots();
 
         nsCOMPtr<nsINodeInfo>               mNodeInfo;           // [OWNER]
         nsCOMPtr<nsIControllers>            mControllers;        // [OWNER]
+        nsRefPtr<nsDOMCSSDeclaration>       mDOMStyle;           // [OWNER]
 
         /**
          * Contains the mLazyState in the low two bits, and a pointer
-         * to the nsXULAttributes structure in the high bits.
+         * to the nsDOMAttributeMap structure in the high bits.
          */
         PRWord                              mBits;
 
 #define LAZYSTATE_MASK  ((PRWord(1) << LAZYSTATE_BITS) - 1)
 #define ATTRIBUTES_MASK (~LAZYSTATE_MASK)
 
-        nsXULAttributes *
-        GetAttributes() const {
-            return NS_REINTERPRET_CAST(nsXULAttributes *, mBits & ATTRIBUTES_MASK);
+        nsDOMAttributeMap *
+        GetAttributeMap() const {
+            return NS_REINTERPRET_CAST(nsDOMAttributeMap *, mBits & ATTRIBUTES_MASK);
         }
 
         void
-        SetAttributes(nsXULAttributes *aAttributes) {
-            NS_ASSERTION((NS_REINTERPRET_CAST(PRWord, aAttributes) & ~ATTRIBUTES_MASK) == 0,
-                         "nsXULAttributes pointer is unaligned");
+        SetAttributeMap(nsDOMAttributeMap *aAttributeMap) {
+            NS_ASSERTION((NS_REINTERPRET_CAST(PRWord, aAttributeMap) &
+                          ~ATTRIBUTES_MASK) == 0,
+                         "nsDOMAttributeMap pointer is unaligned");
 
             mBits &= ~ATTRIBUTES_MASK;
-            mBits |= NS_REINTERPRET_CAST(PRWord, aAttributes);
+            mBits |= NS_REINTERPRET_CAST(PRWord, aAttributeMap);
         }
 
         LazyState
@@ -658,33 +654,13 @@ protected:
     nsresult EnsureSlots();
 
     /**
-     * Ensure that our mSlots has an mAttributes, creating an
-     * nsXULAttributes object if necessary.
-     */
-    nsresult EnsureAttributes();
-
-    /**
      * Abandon our prototype linkage, and copy all attributes locally
      */
     nsresult MakeHeavyweight();
 
-    /**
-     * Return our private copy of the attribute, if one exists.
-     */
-    nsXULAttribute *FindLocalAttribute(nsINodeInfo *info) const;
-
-    /**
-     * Return our private copy of the attribute, if one exists.
-     */
-    nsXULAttribute *FindLocalAttribute(PRInt32 aNameSpaceID,
-                                       nsIAtom *aName,
-                                       PRInt32 *aIndex = nsnull) const;
-
-    /**
-     * Return our prototype's attribute, if one exists.
-     */
-    nsXULPrototypeAttribute *FindPrototypeAttribute(nsINodeInfo *info) const;
-
+    const nsAttrValue* FindLocalOrProtoAttr(PRInt32 aNameSpaceID,
+                                            nsIAtom *aName) const;
+  
     /**
      * Return our prototype's attribute, if one exists.
      */
@@ -693,15 +669,24 @@ protected:
     /**
      * Add a listener for the specified attribute, if appropriate.
      */
-    nsresult AddListenerFor(nsINodeInfo *aNodeInfo,
-                            PRBool aCompileEventHandlers);
+    void AddListenerFor(const nsAttrName& aName,
+                        PRBool aCompileEventHandlers);
+    void MaybeAddPopupListener(nsIAtom* aLocalName);
 
 
     nsresult HideWindowChrome(PRBool aShouldHide);
 
-    void FinishSetAttr(PRInt32 aAttrNS, nsIAtom* aAttrName,
-                       const nsAString& aOldValue, const nsAString& aNewValue,
-                       PRInt32 aModHint, PRBool aNotify);
+    
+    nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
+                              nsIAtom* aAttribute,
+                              nsIAtom* aPrefix,
+                              const nsAString& aOldValue,
+                              nsAttrValue& aParsedValue,
+                              PRBool aModification,
+                              PRBool aFireMutation,
+                              PRBool aNotify);
+
+    const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
 protected:
     // Internal accessors. These shadow the 'Slots', and return
@@ -709,7 +694,6 @@ protected:
     // delegate.
     nsINodeInfo     *NodeInfo() const    { return mSlots ? mSlots->mNodeInfo          : mPrototype->mNodeInfo; }
     nsIControllers  *Controllers() const { return mSlots ? mSlots->mControllers.get() : nsnull; }
-    nsXULAttributes *Attributes() const  { return mSlots ? mSlots->GetAttributes()    : nsnull; }
 
     void UnregisterAccessKey(const nsAString& aOldValue);
 };

@@ -47,6 +47,8 @@
 #include "nsIHTMLDocument.h"
 #include "nsUnitConversion.h"
 #include "prprf.h"
+#include "nsICSSStyleRule.h"
+#include "nsCSSDeclaration.h"
 
 nsHTMLValue::nsHTMLValue(nsHTMLUnit aUnit)
   : mUnit(aUnit)
@@ -84,11 +86,11 @@ nsHTMLValue::nsHTMLValue(const nsAString& aValue, nsHTMLUnit aUnit)
   SetStringValueInternal(aValue, aUnit);
 }
 
-nsHTMLValue::nsHTMLValue(nsISupports* aValue)
-  : mUnit(eHTMLUnit_ISupports)
+nsHTMLValue::nsHTMLValue(nsICSSStyleRule* aValue)
+  : mUnit(eHTMLUnit_CSSStyleRule)
 {
-  mValue.mISupports = aValue;
-  NS_IF_ADDREF(mValue.mISupports);
+  mValue.mCSSStyleRule = aValue;
+  NS_IF_ADDREF(mValue.mCSSStyleRule);
 }
 
 nsHTMLValue::nsHTMLValue(nscolor aValue)
@@ -145,8 +147,8 @@ PRBool nsHTMLValue::operator==(const nsHTMLValue& aOther) const
     case HTMLUNIT_COLOR:
       return mValue.mColor == aOther.mValue.mColor;
 
-    case HTMLUNIT_ISUPPORTS:
-      return mValue.mISupports == aOther.mValue.mISupports;
+    case HTMLUNIT_CSSSTYLERULE:
+      return mValue.mCSSStyleRule == aOther.mValue.mCSSStyleRule;
 
     case HTMLUNIT_PERCENT:
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -203,8 +205,8 @@ void nsHTMLValue::Reset(void)
       nsCheapStringBufferUtils::Free(mValue.mString);
     }
   }
-  else if (mUnit == eHTMLUnit_ISupports) {
-    NS_IF_RELEASE(mValue.mISupports);
+  else if (mUnit == eHTMLUnit_CSSStyleRule) {
+    NS_IF_RELEASE(mValue.mCSSStyleRule);
   }
   else if (mUnit == eHTMLUnit_AtomArray) {
     delete mValue.mAtomArray;
@@ -265,12 +267,12 @@ void nsHTMLValue::SetStringValue(const nsAString& aValue,
   SetStringValueInternal(aValue, aUnit);
 }
 
-void nsHTMLValue::SetISupportsValue(nsISupports* aValue)
+void nsHTMLValue::SetCSSStyleRuleValue(nsICSSStyleRule* aValue)
 {
   Reset();
-  mUnit = eHTMLUnit_ISupports;
-  mValue.mISupports = aValue;
-  NS_IF_ADDREF(mValue.mISupports);
+  mUnit = eHTMLUnit_CSSStyleRule;
+  mValue.mCSSStyleRule = aValue;
+  NS_IF_ADDREF(mValue.mCSSStyleRule);
 }
 
 void nsHTMLValue::SetColorValue(nscolor aValue)
@@ -312,9 +314,9 @@ nsHTMLValue::InitializeFrom(const nsHTMLValue& aCopy)
       mValue.mColor = aCopy.mValue.mColor;
       break;
 
-    case HTMLUNIT_ISUPPORTS:
-      mValue.mISupports = aCopy.mValue.mISupports;
-      NS_IF_ADDREF(mValue.mISupports);
+    case HTMLUNIT_CSSSTYLERULE:
+      mValue.mCSSStyleRule = aCopy.mValue.mCSSStyleRule;
+      NS_IF_ADDREF(mValue.mCSSStyleRule);
       break;
 
     case HTMLUNIT_PERCENT:
@@ -486,6 +488,18 @@ nsHTMLValue::ToString(nsAString& aResult) const
       }
       return PR_TRUE;
     }
+    case eHTMLUnit_CSSStyleRule:
+    {
+      if (mValue.mCSSStyleRule) {
+        nsCSSDeclaration* decl = mValue.mCSSStyleRule->GetDeclaration();
+        if (decl) {
+          decl->ToString(aResult);
+        }
+      }
+
+      return PR_TRUE;
+    }
+
     default:
       return PR_FALSE;
   }

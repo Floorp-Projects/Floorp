@@ -96,6 +96,15 @@ public:
     }
   }
 
+  void SetTo(nsIAtom* aAtom)
+  {
+    NS_ASSERTION(aAtom, "null atom-name in nsAttrName");
+
+    ReleaseInternalName();
+    mBits = NS_REINTERPRET_CAST(PtrBits, aAtom);
+    NS_ADDREF(aAtom);
+  }
+
   PRBool IsAtom() const
   {
     return !(mBits & NS_ATTRNAME_NODEINFO_BIT);

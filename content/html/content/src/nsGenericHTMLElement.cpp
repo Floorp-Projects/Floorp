@@ -294,16 +294,18 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
       nsHTMLValue val;
       rv = GetHTMLAttribute(nsHTMLAtoms::style, val);
       if (rv == NS_CONTENT_ATTR_HAS_VALUE &&
-          val.GetUnit() == eHTMLUnit_ISupports) {
-        nsCOMPtr<nsISupports> supports(val.GetISupportsValue());
-        nsCOMPtr<nsICSSStyleRule> rule(do_QueryInterface(supports));
+          val.GetUnit() == eHTMLUnit_CSSStyleRule) {
+        nsICSSStyleRule* rule = val.GetCSSStyleRuleValue();
 
         if (rule) {
           nsCOMPtr<nsICSSRule> ruleClone;
           rv = rule->Clone(*getter_AddRefs(ruleClone));
           NS_ENSURE_SUCCESS(rv, rv);
 
-          val.SetISupportsValue(ruleClone);
+          nsCOMPtr<nsICSSStyleRule> styleRule = do_QueryInterface(ruleClone);
+          NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
+
+          val.SetCSSStyleRuleValue(styleRule);
           rv = aDst->SetHTMLAttribute(nsHTMLAtoms::style, val, PR_FALSE);
           NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1540,8 +1542,9 @@ nsGenericHTMLElement::GetNameSpaceID(PRInt32* aID) const
   *aID = kNameSpaceID_XHTML;
 }
 
-static nsresult
-ParseClassAttribute(const nsAString& aStr, nsAttrValue& aValue)
+// static
+nsresult
+nsGenericHTMLElement::ParseClassAttribute(const nsAString& aStr, nsAttrValue& aValue)
 {
   nsAString::const_iterator iter, end;
   aStr.BeginReading(iter);
@@ -1607,11 +1610,7 @@ ParseClassAttribute(const nsAString& aStr, nsAttrValue& aValue)
     }
   } while (iter != end);
 
-  nsHTMLValue* htmlVal = new nsHTMLValue(array);
-  NS_ENSURE_TRUE(htmlVal, NS_ERROR_OUT_OF_MEMORY);
-
-  array.forget();
-  aValue.SetTo(htmlVal);
+  aValue.SetTo(nsHTMLValue(array.forget()));
 
   return NS_OK;
 }
@@ -1658,16 +1657,15 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
   nsAttrValue attrValue;
   if (aNamespaceID == kNameSpaceID_None) {
     nsHTMLValue htmlValue;
-    if ((aAttribute == nsHTMLAtoms::style &&
-         NS_SUCCEEDED(ParseStyleAttribute(aValue, htmlValue))) ||
-        (StringToAttribute(aAttribute, aValue, htmlValue) !=
+    if ((StringToAttribute(aAttribute, aValue, htmlValue) !=
          NS_CONTENT_ATTR_NOT_THERE) ||
         ParseCommonAttribute(aAttribute, aValue, htmlValue)) {
       // string value was mapped to nsHTMLValue, set it that way
-      nsHTMLValue* tmp = new nsHTMLValue(htmlValue);
-      NS_ENSURE_TRUE(tmp, NS_ERROR_OUT_OF_MEMORY);
-
-      attrValue.SetTo(tmp);
+      attrValue.SetTo(htmlValue);
+    }
+    else if (aAttribute == nsHTMLAtoms::style) {
+      ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
+                          aValue, attrValue);
     }
     else if (aAttribute == nsHTMLAtoms::id) {
       nsCOMPtr<nsIAtom> idAtom = do_GetAtom(aValue);
@@ -1682,10 +1680,7 @@ nsGenericHTMLElement::SetAttr(PRInt32 aNamespaceID, nsIAtom* aAttribute,
     else if (aValue.IsEmpty()) {
       // This is a bit evil but there's code out there that only looks for
       // this datatype and not for empty-string.
-      nsHTMLValue* tmp = new nsHTMLValue(eHTMLUnit_Empty);
-      NS_ENSURE_TRUE(tmp, NS_ERROR_OUT_OF_MEMORY);
-
-      attrValue.SetTo(tmp);
+      attrValue.SetTo(nsHTMLValue(eHTMLUnit_Empty));
     }
     else {
       attrValue.SetTo(aValue);
@@ -1879,11 +1874,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     }
   }
 
-
-  nsHTMLValue* htmlVal = new nsHTMLValue(aValue);
-  NS_ENSURE_TRUE(htmlVal, NS_ERROR_OUT_OF_MEMORY);
-
-  nsAttrValue attrValue(htmlVal);
+  nsAttrValue attrValue(aValue);
 
   return SetAttrAndNotify(kNameSpaceID_None, aAttribute, nsnull, oldValueStr,
                           attrValue, modification, hasListeners, aNotify);
@@ -1998,6 +1989,7 @@ nsGenericHTMLElement::GetAttr(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
     case eHTMLUnit_Pixel:
     case eHTMLUnit_Color:
     case eHTMLUnit_Percent:
+    case eHTMLUnit_CSSStyleRule:
     case eHTMLUnit_AtomArray:
       value->ToString(aResult);
       break;
@@ -2191,19 +2183,16 @@ nsGenericHTMLElement::GetInlineStyleRule(nsICSSStyleRule** aStyleRule)
   
   if (attrVal) {
     if (attrVal->GetType() != nsAttrValue::eHTMLValue ||
-        attrVal->GetHTMLValue()->GetUnit() != eHTMLUnit_ISupports) {
+        attrVal->GetHTMLValue()->GetUnit() != eHTMLUnit_CSSStyleRule) {
       ReparseStyleAttribute();
       attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
-      // hopefully value.GetUnit() is now eHTMLUnit_ISupports
+      // hopefully value.GetUnit() is now eHTMLUnit_CSSStyleRule
     }
 
     if (attrVal->GetType() == nsAttrValue::eHTMLValue &&
-        attrVal->GetHTMLValue()->GetUnit() == eHTMLUnit_ISupports) {
-      nsCOMPtr<nsISupports> supports =
-        attrVal->GetHTMLValue()->GetISupportsValue();
-      if (supports) {
-        return CallQueryInterface(supports, aStyleRule);
-      }
+        attrVal->GetHTMLValue()->GetUnit() == eHTMLUnit_CSSStyleRule) {
+      NS_IF_ADDREF(*aStyleRule =
+                   attrVal->GetHTMLValue()->GetCSSStyleRuleValue());
     }
   }
 
@@ -2389,24 +2378,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
                                         const nsHTMLValue& aValue,
                                         nsAString& aResult) const
 {
-  if (nsHTMLAtoms::style == aAttribute) {
-    if (eHTMLUnit_ISupports == aValue.GetUnit()) {
-      nsCOMPtr<nsISupports> rule = aValue.GetISupportsValue();
-      nsCOMPtr<nsICSSStyleRule> cssRule = do_QueryInterface(rule);
-      if (cssRule) {
-        nsCSSDeclaration* decl = cssRule->GetDeclaration();
-        if (decl) {
-          decl->ToString(aResult);
-        } else {
-          aResult.Truncate();
-        }
-      }
-      else {
-        aResult.Assign(NS_LITERAL_STRING("Unknown rule type"));
-      }
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
-  } else if (nsHTMLAtoms::dir == aAttribute) {
+  if (nsHTMLAtoms::dir == aAttribute) {
     nsHTMLValue value;
     nsresult result = GetHTMLAttribute(nsHTMLAtoms::dir, value);
 
@@ -2957,37 +2929,38 @@ nsGenericHTMLElement::AttrToURI(nsIAtom* aAttrName, nsAString& aAbsoluteURI)
 nsresult
 nsGenericHTMLElement::ReparseStyleAttribute()
 {
-  const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
+  const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsHTMLAtoms::style);
   
-  if (attrVal &&
-      (attrVal->GetType() != nsAttrValue::eHTMLValue ||
-       attrVal->GetHTMLValue()->GetUnit() == eHTMLUnit_String)) {
-    nsHTMLValue parsedValue;
+  if (oldVal &&
+      (oldVal->GetType() != nsAttrValue::eHTMLValue ||
+       oldVal->GetHTMLValue()->GetUnit() != eHTMLUnit_CSSStyleRule)) {
+    nsAttrValue attrValue;
     nsAutoString stringValue;
-    attrVal->ToString(stringValue);
-    nsresult rv = ParseStyleAttribute(stringValue, parsedValue);
-    if (NS_SUCCEEDED(rv) && parsedValue.GetUnit() == eHTMLUnit_ISupports) {
-      nsHTMLValue* tmp = new nsHTMLValue(parsedValue);
-      NS_ENSURE_TRUE(tmp, NS_ERROR_OUT_OF_MEMORY);
-
-      // Don't bother going through SetHTMLAttribute, we don't want to fire off
-      // mutation events or document notifications anyway
-      nsAttrValue attrValue(tmp);
-      rv = mAttrsAndChildren.SetAndTakeAttr(nsHTMLAtoms::style, attrValue);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    oldVal->ToString(stringValue);
+    ParseStyleAttribute(this, mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML),
+                        stringValue, attrValue);
+    // Don't bother going through SetHTMLAttribute, we don't want to fire off
+    // mutation events or document notifications anyway
+    nsresult rv = mAttrsAndChildren.SetAndTakeAttr(nsHTMLAtoms::style, attrValue);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
   
   return NS_OK;
 }
 
-nsresult
-nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& aResult)
+void
+nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
+                                          PRBool aCaseSensitive,
+                                          const nsAString& aValue,
+                                          nsAttrValue& aResult)
 {
   nsresult result = NS_OK;
-  NS_ASSERTION(mNodeInfo, "If we don't have a nodeinfo, we are very screwed");
+  NS_ASSERTION(aContent->GetNodeInfo(), "If we don't have a nodeinfo, we are very screwed");
 
-  nsIDocument* doc = GetOwnerDocument();
+  nsIDocument* doc = aContent->GetDocument();
+  if (!doc) {
+    doc = aContent->GetNodeInfo()->GetDocument();
+  }
 
   if (doc) {
     PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise
@@ -3010,11 +2983,11 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
         if (cssParser) {
           // look up our namespace.  If we're XHTML, we need to be case-sensitive
           // Otherwise, we should not be.
-          cssParser->SetCaseSensitive(mNodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+          cssParser->SetCaseSensitive(aCaseSensitive);
         }
       }
       if (cssParser) {
-        nsCOMPtr<nsIURI> baseURI = GetBaseURI();
+        nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
 
         nsCOMPtr<nsICSSStyleRule> rule;
         result = cssParser->ParseStyleAttribute(aValue, baseURI,
@@ -3024,14 +2997,15 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAString& aValue, nsHTMLValue& 
         }
 
         if (rule) {
-          aResult.SetISupportsValue(rule);
-          return NS_OK;
+          aResult.SetTo(nsHTMLValue(rule));
+
+          return;
         }
       }
     }
   }
 
-  return NS_ERROR_FAILURE;
+  aResult.SetTo(aValue);
 }
 
 /**
@@ -4418,7 +4392,10 @@ nsGenericHTMLElement::InternalGetExistingAttrNameFromQName(const nsAString& aStr
   if (mNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
     nsAutoString lower;
     ToLowerCase(aStr, lower);
-    return mAttrsAndChildren.GetExistingAttrNameFromQName(lower);
+    return mAttrsAndChildren.GetExistingAttrNameFromQName(
+      NS_ConvertUTF16toUTF8(lower));
   }
-  return mAttrsAndChildren.GetExistingAttrNameFromQName(aStr);
+
+  return mAttrsAndChildren.GetExistingAttrNameFromQName(
+    NS_ConvertUTF16toUTF8(aStr));
 }

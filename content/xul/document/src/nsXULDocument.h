@@ -55,6 +55,7 @@
 #include "nsIXULDocument.h"
 #include "nsIXULPrototypeDocument.h"
 #include "nsScriptLoader.h"
+#include "nsIStreamListener.h"
 
 class nsIRDFResource;
 class nsIRDFService;

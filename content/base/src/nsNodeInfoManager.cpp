@@ -295,33 +295,6 @@ nsNodeInfoManager::SetDocumentPrincipal(nsIPrincipal* aPrincipal)
   return NS_OK;
 }
 
-nsresult
-nsNodeInfoManager::GetNodeInfos(nsCOMArray<nsINodeInfo> *aArray)
-{
-  PL_HashTableEnumerateEntries(mNodeInfoHash,
-                               GetNodeInfoArrayEnumerator,
-                               aArray);
-  PRInt32 n = aArray->Count();
-  NS_ENSURE_TRUE((PRUint32)n == mNodeInfoHash->nentries, NS_ERROR_OUT_OF_MEMORY);
-
-  return NS_OK;
-}
-
-//static
-PRIntn
-nsNodeInfoManager::GetNodeInfoArrayEnumerator(PLHashEntry* he, PRIntn i,
-                                              void* arg)
-{
-  NS_ASSERTION(arg, "missing array");
-  nsCOMArray<nsINodeInfo> *array = (nsCOMArray<nsINodeInfo> *) arg;
-
-  if (!array->AppendObject((nsINodeInfo*)he->value)) {
-    return HT_ENUMERATE_STOP;
-  }
-
-  return HT_ENUMERATE_NEXT;
-}
-
 void
 nsNodeInfoManager::RemoveNodeInfo(nsNodeInfo *aNodeInfo)
 {

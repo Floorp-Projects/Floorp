@@ -51,8 +51,6 @@ REQUIRES	= xpcom \
 
 CPPSRCS		= \
 		nsRDFDOMNodeList.cpp \
-		nsXULAttributeValue.cpp \
-		nsXULAttributes.cpp \
 		nsXULElement.cpp \
 		nsXULPopupListener.cpp \
 		$(NULL)
@@ -70,6 +68,7 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../../../base/src \
 	-I$(srcdir)/../../../xml/document/src \
 	-I$(srcdir)/../../../html/style/src \
+	-I$(srcdir)/../../../html/content/src \
 	$(NULL)
 
 DEFINES += -D_IMPL_NS_LAYOUT
