@@ -1778,6 +1778,14 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   return NS_OK;
 }
 
+//~~~
+NS_IMETHODIMP nsRenderingContextWin::RetrieveCurrentNativeGraphicData(PRUint32 * ngd)
+{
+  if(ndc != nsnull)
+    *ndc = (PRUint32)mDC;
+  return NS_OK;
+}
+
 #ifdef NS_DEBUG
 //these are used with the routines below
 //to see how our state caching is working... MMP
