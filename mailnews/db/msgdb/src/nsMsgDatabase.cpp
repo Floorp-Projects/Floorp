@@ -2475,9 +2475,9 @@ nsMsgDatabase::EnumerateUnreadMessages(nsISimpleEnumerator* *result)
 }
 
 nsresult  
-nsMsgDatabase::EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 flag)
+nsMsgDatabase::EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 *pFlag)
 {
-    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgFlagSetFilter, &flag);
+    nsMsgDBEnumerator* e = new nsMsgDBEnumerator(this, nsMsgFlagSetFilter, pFlag);
     if (e == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(e);
@@ -3308,7 +3308,11 @@ nsresult nsMsgDatabase::ListAllThreads(nsMsgKeyArray *threadIds)
 NS_IMETHODIMP nsMsgDatabase::ListAllOfflineMsgs(nsMsgKeyArray *outputKeys)
 {
   nsCOMPtr <nsISimpleEnumerator> enumerator;
-  nsresult rv = EnumerateMessagesWithFlag(getter_AddRefs(enumerator), MSG_FLAG_OFFLINE);
+  PRUint32 flag = MSG_FLAG_OFFLINE;
+  // if we change this routine to return an enumerator that generates the keys
+  // one by one, we'll need to somehow make a copy of flag for the enumerator
+  // to own, since the enumerator will persist past the life of flag on the stack.
+  nsresult rv = EnumerateMessagesWithFlag(getter_AddRefs(enumerator), &flag);
   if (NS_SUCCEEDED(rv) && enumerator)
   {
 		PRBool hasMoreElements;

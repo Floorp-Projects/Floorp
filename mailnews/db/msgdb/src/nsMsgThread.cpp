@@ -386,6 +386,8 @@ NS_IMETHODIMP nsMsgThread::GetChildHdrAt(PRInt32 aIndex, nsIMsgDBHdr **result)
 
 	nsIMdbTableRowCursor *rowCursor;
 	ret = m_mdbTable->GetTableRowCursor(m_mdbDB->GetEnv(), pos, &rowCursor);
+  if (ret != 0)
+    return  NS_ERROR_FAILURE;
 
 	ret = rowCursor->NextRow(m_mdbDB->GetEnv(), &resultRow, &pos);
 	NS_RELEASE(rowCursor);
