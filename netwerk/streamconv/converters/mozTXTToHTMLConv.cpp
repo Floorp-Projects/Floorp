@@ -36,12 +36,6 @@
 #include "mozTXTToHTMLConv.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
-#include "nsIPref.h"
-
-#define PREF_MAIL_CONVERT_EMOTICONS "mail.convert_emoticons"
-#define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
-
-static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 
 nsAutoString
 mozTXTToHTMLConv::EscapeChar(const PRUnichar ch)
@@ -820,28 +814,6 @@ mozTXTToHTMLConv::ScanTXT(const nsAutoString& text, PRUint32 whattodo)
   PRBool doURLs = whattodo & kURLs;
   PRBool doGlyphSubstitution = whattodo & kGlyphSubstitution;
   PRBool doStructPhrase = whattodo & kStructPhrase;
-  nsresult rv = NS_OK;
-  PRBool enable_emoticons = PR_TRUE;
-  PRBool enable_structs = PR_TRUE;
-
-  /* look at the prefs, and override if necessary */
-  NS_WITH_SERVICE(nsIPref, prefs, kCPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && (prefs)) {
-	rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_EMOTICONS,&enable_emoticons);
-	if (NS_FAILED(rv)) {
-		enable_emoticons = PR_TRUE;
-	}
-	rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
-	if (NS_FAILED(rv)) {
-		enable_structs = PR_TRUE;
-	}
-  } 
-  if (!enable_emoticons) {
-  	doGlyphSubstitution = enable_emoticons;
-  }
-  if (!enable_structs) {
-  	doStructPhrase = enable_structs;
-  }
 
 #ifdef DEBUG_BenB
 printf("ScanTXT orginal: ");
