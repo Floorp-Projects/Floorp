@@ -94,6 +94,8 @@ private:
   nsCOMPtr <nsIMsgWindow> m_window;
   nsCOMPtr <nsIMsgStatusFeedback> m_statusFeedback;
   nsCOMPtr<nsIStringBundle>   mStringBundle;
+  nsCOMPtr<nsISupports> mOfflineImapSync;
+
 };
 
 #endif

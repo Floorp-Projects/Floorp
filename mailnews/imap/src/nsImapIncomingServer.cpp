@@ -898,27 +898,28 @@ NS_IMETHODIMP nsImapIncomingServer::PerformBiff()
 NS_IMETHODIMP
 nsImapIncomingServer::CloseCachedConnections()
 {
-
-	nsCOMPtr<nsIImapProtocol> connection;
-    PR_CEnterMonitor(this);
-
-	// iterate through the connection cache closing open connections.
-	PRUint32 cnt;
-    nsCOMPtr<nsISupports> aSupport;
-
-    nsresult rv = m_connectionCache->Count(&cnt);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRUint32 i = cnt; i>0; i--)
-	{
-        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i-1));
-        connection = do_QueryInterface(aSupport);
-		if (connection)
-        connection->TellThreadToDie(PR_TRUE);
-	}
-    
-    PR_CExitMonitor(this);
-	return rv;
+  
+  nsCOMPtr<nsIImapProtocol> connection;
+  PR_CEnterMonitor(this);
+  
+  // iterate through the connection cache closing open connections.
+  PRUint32 cnt;
+  nsCOMPtr<nsISupports> aSupport;
+  
+  nsresult rv = m_connectionCache->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  
+  for (PRUint32 i = cnt; i>0; i--)
+  {
+    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i-1));
+    connection = do_QueryInterface(aSupport);
+    if (connection)
+      connection->TellThreadToDie(PR_TRUE);
+  }
+  
+  PR_CExitMonitor(this);
+  mFilterList = nsnull; // clear this to cut shutdown leaks.
+  return rv;
 }
 
 const char *nsImapIncomingServer::GetPFCName()
@@ -3063,6 +3064,43 @@ nsImapIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpace)
   }
   return NS_OK;
 }
+
+// count number of non-busy connections in cache
+NS_IMETHODIMP
+nsImapIncomingServer::GetNumIdleConnections(PRInt32 *aNumIdleConnections)
+{
+  NS_ENSURE_ARG_POINTER(aNumIdleConnections);
+  *aNumIdleConnections = 0;
+  
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIImapProtocol> connection;
+  PRBool isBusy = PR_FALSE;
+  PRBool isInboxConnection;
+  PR_CEnterMonitor(this);
+  
+  PRUint32 cnt;
+  nsCOMPtr<nsISupports> aSupport;
+  
+  rv = m_connectionCache->Count(&cnt);
+  if (NS_FAILED(rv)) return rv;
+  // loop counting idle connections
+  for (PRUint32 i = 0; i < cnt; i++) 
+  {
+    aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+    connection = do_QueryInterface(aSupport);
+    if (connection)
+    {
+      rv = connection->IsBusy(&isBusy, &isInboxConnection);
+      if (NS_FAILED(rv)) 
+        continue;
+      if (!isBusy)
+        (*aNumIdleConnections)++;
+    }
+  }
+  PR_CExitMonitor(this);
+  return rv;
+}
+
 
 /** 
  * Get the preference that tells us whether the imap server in question allows

@@ -186,7 +186,7 @@ nsresult nsMsgOfflineManager::SynchronizeOfflineImapChanges()
   nsresult rv = NS_OK;
 	nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
-  return imapService->PlaybackAllOfflineOperations(m_window, this);
+  return imapService->PlaybackAllOfflineOperations(m_window, this, getter_AddRefs(mOfflineImapSync));
 }
 
 nsresult nsMsgOfflineManager::SendUnsentMessages()
@@ -362,6 +362,8 @@ nsMsgOfflineManager::OnStartRunningUrl(nsIURI * aUrl)
 NS_IMETHODIMP
 nsMsgOfflineManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
+  mOfflineImapSync = nsnull;
+
   AdvanceToNextState(aExitCode);
   return NS_OK;
 }

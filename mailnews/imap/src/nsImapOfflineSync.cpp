@@ -92,7 +92,6 @@ nsImapOfflineSync::OnStopRunningUrl(nsIURI* url, nsresult exitCode)
     rv = ProcessNextOperation();
   else if (m_listener)  // notify main observer.
     m_listener->OnStopRunningUrl(url, exitCode);
-   
 
   return rv;
 }
@@ -862,9 +861,11 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
 #ifdef DEBUG_bienvenu
   printf("done with offline imap sync\n");
 #endif
-  if (m_listener)
-    m_listener->OnStopRunningUrl(nsnull /* don't know url */, rv);
+  nsCOMPtr <nsIUrlListener> saveListener = m_listener;
   m_listener = nsnull;
+
+  if (saveListener)
+    saveListener->OnStopRunningUrl(nsnull /* don't know url */, rv);
   return rv;
 }
 
