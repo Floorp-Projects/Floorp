@@ -696,11 +696,6 @@ alpha*-*-osf*)
     dnl Solves the problems the QNX compiler has with nsCOMPtr.h.
     AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
-    dnl QNX has this wierd concept of strict memory models and
-    dnl defaults to small, which causes the compiler to choke to
-    dnl death on some of our code.  So force it to use the large model.
-    CFLAGS="$CFLAGS -ml"
-    CXXFLAGS="$CXXFLAGS -ml"
     if test "$no_x" = "yes"; then
 	MOZ_WIDGET_TOOLKIT='photon'
 	TK_CFLAGS='-I/usr/nto/include/photon'
