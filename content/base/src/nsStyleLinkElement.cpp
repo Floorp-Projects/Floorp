@@ -163,7 +163,8 @@ const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 NS_IMETHODIMP
-nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument)
+nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument,
+                                     nsICSSLoaderObserver* aObserver)
 {
   if (mDontLoadStyle || !mUpdatesEnabled) {
     return NS_OK;
@@ -314,13 +315,13 @@ nsStyleLinkElement::UpdateStyleSheet(nsIDocument *aOldDocument)
     rv = loader->LoadInlineStyle(thisContent, uin, title, media,
                                  kNameSpaceID_Unknown,
                                  ((blockParser) ? parser.get() : nsnull),
-                                 doneLoading, nsnull);
+                                 doneLoading, aObserver);
   }
   else {
     rv = loader->LoadStyleLink(thisContent, uri, title, media,
                                kNameSpaceID_Unknown,
                                ((blockParser) ? parser.get() : nsnull),
-                               doneLoading, nsnull);
+                               doneLoading, aObserver);
   }
 
   if (NS_SUCCEEDED(rv) && blockParser && !doneLoading) {

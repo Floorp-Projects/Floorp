@@ -48,7 +48,8 @@ public:
   NS_IMETHOD SetStyleSheet(nsIStyleSheet* aStyleSheet);
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aStyleSheet);
   NS_IMETHOD InitStyleLinkElement(nsIParser *aParser, PRBool aDontLoadStyle);
-  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument = nsnull);
+  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument = nsnull,
+                              nsICSSLoaderObserver* aObserver = nsnull);
   NS_IMETHOD SetEnableUpdates(PRBool aEnableUpdates);
   NS_IMETHOD GetCharset(nsAString& aCharset);
 
