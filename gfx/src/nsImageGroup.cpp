@@ -34,7 +34,6 @@
 #include "il_util.h"
 #include "nsIDeviceContext.h"
 #include "nsIStreamListener.h"
-#include "nsILoadGroup.h"
 #include "nsGfxCIID.h"
 
 static NS_DEFINE_IID(kIImageGroupIID, NS_IIMAGEGROUP_IID);
@@ -46,7 +45,7 @@ public:
   ImageGroupImpl(nsIImageManager *aManager);
   virtual ~ImageGroupImpl();
 
-  nsresult Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup);
+  nsresult Init(nsIDeviceContext *aDeviceContext, nsISupports * aLoadContext);
 
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -80,7 +79,6 @@ public:
   nsIDeviceContext *mDeviceContext;
   ilINetContext* mNetContext;
   nsIStreamListener** mListenerRequest;
-  nsILoadGroup* mLoadGroup;
 };
 
 ImageGroupImpl::ImageGroupImpl(nsIImageManager *aManager)
@@ -113,7 +111,6 @@ ImageGroupImpl::~ImageGroupImpl()
   
   NS_IF_RELEASE(mManager);
   NS_IF_RELEASE(mNetContext);
-  NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_IMPL_ISUPPORTS(ImageGroupImpl, kIImageGroupIID)
@@ -168,7 +165,7 @@ ReconnectHack(void* arg, nsIStreamListener* aListener)
 }
 
 nsresult 
-ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup)
+ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsISupports *aLoadContext)
 {
   ilIImageRenderer *renderer;
   nsresult result;
@@ -183,11 +180,8 @@ ImageGroupImpl::Init(nsIDeviceContext *aDeviceContext, nsILoadGroup* aLoadGroup)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mLoadGroup = aLoadGroup;
-  NS_IF_ADDREF(mLoadGroup);
-
   // Create an async net context
-  result = NS_NewImageNetContext(&mNetContext, mLoadGroup, ReconnectHack, this);
+  result = NS_NewImageNetContext(&mNetContext, aLoadContext, ReconnectHack, this);
   if (NS_OK != result) {
     return result;
   }

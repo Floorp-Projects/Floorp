@@ -33,7 +33,7 @@ typedef PRBool (*nsReconnectCB)(void* arg, nsIStreamListener* aListener);
 
 extern "C" NS_GFX_(nsresult)
   NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
-                        nsILoadGroup* aLoadGroup,
+                        nsISupports* aLoadContext,
                         nsReconnectCB aReconnectCallback,
                         void* aReconnectArg);
 

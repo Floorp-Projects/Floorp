@@ -58,7 +58,7 @@ class ImageConsumer;
 class ImageNetContextImpl : public ilINetContext {
 public:
   ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
-                      nsILoadGroup* aLoadGroup,
+                      nsISupports * aLoadContext,
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg);
   virtual ~ImageNetContextImpl();
@@ -95,7 +95,7 @@ public:
 
   nsVoidArray *mRequests;
   NET_ReloadMethod mReloadPolicy;
-  nsWeakPtr mLoadGroup;
+  nsWeakPtr mLoadContext;
   nsReconnectCB mReconnectCallback;
   void* mReconnectArg;
 };
@@ -199,7 +199,9 @@ ImageConsumer::SetParentContentListener(nsIURIContentListener* aParent)
 NS_IMETHODIMP 
 ImageConsumer::GetLoadCookie(nsISupports ** aLoadCookie)
 {
-  *aLoadCookie = nsnull;
+  nsCOMPtr<nsISupports> loadContext = do_QueryReferent(mContext->mLoadContext);
+  *aLoadCookie = loadContext;
+  NS_IF_ADDREF(*aLoadCookie);
   return NS_OK;
 }
 
@@ -504,13 +506,13 @@ ImageConsumer::~ImageConsumer()
 }
 
 ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
-                                         nsILoadGroup* aLoadGroup,
+                                         nsISupports * aLoadContext,
                                          nsReconnectCB aReconnectCallback,
                                          void* aReconnectArg)
 {
   NS_INIT_REFCNT();
   mRequests = nsnull;
-  mLoadGroup = getter_AddRefs(NS_GetWeakReference(aLoadGroup));
+  mLoadContext = getter_AddRefs(NS_GetWeakReference(aLoadContext));
   mReloadPolicy = aReloadPolicy;
   mReconnectCallback = aReconnectCallback;
   mReconnectArg = aReconnectArg;
@@ -527,7 +529,6 @@ ImageNetContextImpl::~ImageNetContextImpl()
     }
     delete mRequests;
   }
-///  NS_IF_RELEASE(mLoadGroup);
 }
 
 NS_IMPL_ISUPPORTS(ImageNetContextImpl, kIImageNetContextIID)
@@ -536,14 +537,14 @@ ilINetContext*
 ImageNetContextImpl::Clone()
 {
   ilINetContext *cx;
-  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
+  nsCOMPtr<nsISupports> loadContext = do_QueryReferent(mLoadContext);
 
   //mReconnectArg is ImageGroup. If GetURL is triggered
   //by timer for animation, ImageGroup may have been unloaded
   //before timer kicks off.
   //mReconnectCallback=nsnull; mReconnectArg=nsnull;
 
-  if (NS_NewImageNetContext(&cx, group, mReconnectCallback, mReconnectArg) == NS_OK)
+  if (NS_NewImageNetContext(&cx, loadContext, mReconnectCallback, mReconnectArg) == NS_OK)
   {
     return cx;
   }
@@ -587,8 +588,9 @@ ImageNetContextImpl::CreateURL(const char *aURL,
                                NET_ReloadMethod aReloadMethod)
 {
   ilIURL *url;
-  nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
-
+ 
+  nsCOMPtr<nsISupports> loadContext (do_QueryReferent(mLoadContext)); 
+  nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
   if (NS_NewImageURL(&url, aURL, group) == NS_OK)
   {
     return url;
@@ -666,7 +668,9 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
       || !(*mReconnectCallback)(mReconnectArg, ic)) {
     // first, create a channel for the protocol....
     nsCOMPtr<nsIChannel> channel;
-    nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mLoadGroup);
+    nsCOMPtr<nsISupports> loadContext (do_QueryReferent(mLoadContext)); 
+    nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
+
     rv = NS_OpenURI(getter_AddRefs(channel), nsurl, group);
     if (NS_FAILED(rv)) goto error;
 
@@ -736,7 +740,7 @@ ImageNetContextImpl::RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
-                      nsILoadGroup* aLoadGroup,
+                      nsISupports * aLoadContext, 
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg)
 {
@@ -746,7 +750,7 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
   }
   
   ilINetContext *cx = new ImageNetContextImpl(TV_IMG_NTWK_SERVER,
-                                              aLoadGroup,
+                                              aLoadContext,
                                               aReconnectCallback,
                                               aReconnectArg);
   if (cx == nsnull) {
