@@ -8,6 +8,8 @@
 #include <windows.h>
 #endif
 
+#include "nsCOMPtr.h"
+
 #include "nsIComponentManager.h" 
 #include "nsMsgCompCID.h"
 #include "nsIMsgCompose.h"
