@@ -110,10 +110,6 @@ function Startup() {
 
     }
   }
-
-  /* initialization OK and Cancel buttons */
-
-  doSetOKCancel(Save, Cancel);
 }
 
 function UpdateMenuListEnable(checkBox) {
