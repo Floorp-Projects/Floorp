@@ -878,6 +878,14 @@ for extension in $MOZ_EXTENSIONS; do
 	    extensions/wallet/walletpreview/Makefile
 	    extensions/wallet/build/Makefile
             " ;;
+        xmlextras ) MAKEFILES_extensions="$MAKEFILES_extensions
+	    extensions/xmlextras/Makefile
+	    extensions/xmlextras/base/Makefile
+	    extensions/xmlextras/base/src/Makefile
+	    extensions/xmlextras/base/public/Makefile
+	    extensions/xmlextras/build/Makefile
+	    extensions/xmlextras/build/src/Makefile
+            " ;;
         xmlterm ) MAKEFILES_extensions="$MAKEFILES_extensions
 	    extensions/xmlterm/Makefile
 	    extensions/xmlterm/base/Makefile
