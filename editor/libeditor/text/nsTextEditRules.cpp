@@ -1043,7 +1043,7 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   if (NS_FAILED(res)) return res;
   for (j = 0; j < nodeCount; j++)
   {
-    isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> brNode, theNode( do_QueryInterface(isupports) );
     nsCOMPtr<nsIDOMCharacterData> textNode( do_QueryInterface(theNode) );
     arrayOfNodes->RemoveElementAt(0);

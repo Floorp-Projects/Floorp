@@ -240,7 +240,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         arrayOfNodes->Count(&listCount);
         for (j = 0; j < listCount; j++)
         {
-          isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
           node = do_QueryInterface(isupports);
           res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
           if (NS_FAILED(res)) return res;
@@ -414,7 +414,7 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
       arrayOfNodes->Count(&listCount);
       for (j = 0; j < (PRInt32)listCount; j++)
       {
-        isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+        isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
         node = do_QueryInterface(isupports);
         res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
         if (NS_FAILED(res)) return res;
@@ -1129,7 +1129,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsStri
         arrayOfNodes->Count(&listCount);
         for (j = 0; j < listCount; j++)
         {
-          isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
           node = do_QueryInterface(isupports);
           res = RemoveStyleInside(node, aProperty, aAttribute);
           if (NS_FAILED(res)) return res;
@@ -1282,7 +1282,7 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
         arrayOfNodes->Count(&listCount);
         for (j = 0; j < listCount; j++)
         {
-          isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
           node = do_QueryInterface(isupports);
           res = RelativeFontChangeOnNode(aSizeChange, node);
           if (NS_FAILED(res)) return res;

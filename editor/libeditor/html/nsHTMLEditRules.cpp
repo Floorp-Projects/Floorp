@@ -481,7 +481,7 @@ nsHTMLEditRules::GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &
   arrayOfNodes->Count(&listCount);
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ul))
@@ -533,7 +533,7 @@ nsHTMLEditRules::GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBo
   arrayOfNodes->Count(&listCount);
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ul) ||
@@ -672,7 +672,7 @@ nsHTMLEditRules::GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)
   arrayOfNodes->Count(&listCount);
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     if (nsHTMLEditUtils::IsList(curNode)     || 
@@ -729,7 +729,7 @@ nsHTMLEditRules::GetParagraphState(PRBool &aMixed, nsString &outFormat)
   PRInt32 i;
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
-    isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
 
     nsAutoString format;
@@ -1697,7 +1697,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
       arrayOfNodes->Count(&listCount);
       for (j = 0; j < listCount; j++)
       {
-        isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+        isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
         somenode = do_QueryInterface(isupports);
         res = DeleteNonTableElements(somenode);
         arrayOfNodes->RemoveElementAt(0);
@@ -1827,7 +1827,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   PRInt32 j;
   for (j=0; j<(PRInt32)listCount; j++)
   {
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(j));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(j));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     // if curNode is not a Break, we're done
     if (!nsHTMLEditUtils::IsBreak(curNode)) 
@@ -1848,7 +1848,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
     {
       for (j=0; j<(PRInt32)listCount; j++)
       {
-        nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(j));
+        nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(j));
         nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
         res = mHTMLEditor->DeleteNode(curNode);
         if (NS_FAILED(res)) return res;
@@ -1877,7 +1877,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   // then look inside of it until we find what we want to make a list out of.
   if (listCount == 1)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
     
     while (nsHTMLEditUtils::IsDiv(curNode)
@@ -1930,7 +1930,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
   {
     // here's where we actually figure out what to do
     nsCOMPtr<nsIDOMNode> newBlock;
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
@@ -2134,7 +2134,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
   arrayOfNodes->Count(&listCount);
   for (i=listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
     if (!mHTMLEditor->IsEditable(testNode))
     {
@@ -2147,7 +2147,7 @@ nsHTMLEditRules::WillRemoveList(nsISelection *aSelection,
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
@@ -2364,7 +2364,7 @@ nsHTMLEditRules::WillIndent(nsISelection *aSelection, PRBool *aCancel, PRBool * 
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
@@ -2469,7 +2469,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
@@ -2799,7 +2799,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   if (!listCount) emptyDiv = PR_TRUE;
   if (listCount == 1)
   {
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(isupports ) );
     if (nsHTMLEditUtils::IsBreak(theNode))
     {
@@ -2864,7 +2864,7 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
   for (i=0; i<(PRInt32)listCount; i++)
   {
     // here's where we actually figure out what to do
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports ) );
     PRInt32 offset;
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
@@ -2950,7 +2950,7 @@ nsHTMLEditRules::AlignInnerBlocks(nsIDOMNode *aNode, const nsString *alignType)
   arrayOfNodes->Count(&listCount);
   for (j = 0; j < listCount; j++)
   {
-    isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     node = do_QueryInterface(isupports);
     res = AlignBlockContents(node, alignType);
     if (NS_FAILED(res)) return res;
@@ -3503,7 +3503,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     // first register ranges for special editor gravity
     for (i = 0; i < (PRInt32)rangeCount; i++)
     {
-      isupports = (dont_AddRef)(inArrayOfRanges->ElementAt(0));
+      isupports = dont_AddRef(inArrayOfRanges->ElementAt(0));
       opRange = do_QueryInterface(isupports);
       nsRangeStore *item = new nsRangeStore();
       if (!item) return NS_ERROR_NULL_POINTER;
@@ -3536,7 +3536,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
   // gather up a list of all the nodes
   for (i = 0; i < (PRInt32)rangeCount; i++)
   {
-    isupports = (dont_AddRef)(inArrayOfRanges->ElementAt(i));
+    isupports = dont_AddRef(inArrayOfRanges->ElementAt(i));
     opRange = do_QueryInterface(isupports);
     
     nsTrivialFunctor functor;
@@ -3556,7 +3556,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     (*outArrayOfNodes)->Count(&listCount);
     for (i=(PRInt32)listCount-1; i>=0; i--)
     {
-      isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
       if ( (nsHTMLEditUtils::IsTableElement(node) && !nsHTMLEditUtils::IsTable(node))
           || (nsHTMLEditUtils::IsListItem(node)))
@@ -3576,7 +3576,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     (*outArrayOfNodes)->Count(&listCount);
     for (i=(PRInt32)listCount-1; i>=0; i--)
     {
-      isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
       if ( (nsHTMLEditUtils::IsTableElement(node) && !nsHTMLEditUtils::IsTable(node)) )
       {
@@ -3600,7 +3600,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
     (*outArrayOfNodes)->Count(&listCount);
     for (i=(PRInt32)listCount-1; i>=0; i--)
     {
-      isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
       nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
       if (!aDontTouchContent && mHTMLEditor->IsInlineNode(node) 
            && mHTMLEditor->IsContainer(node) && !mHTMLEditor->IsTextNode(node))
@@ -3618,7 +3618,7 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
         while (iCount)
         {
           iCount--;
-          isupports = (dont_AddRef)(arrayOfInlines->ElementAt(iCount));
+          isupports = dont_AddRef(arrayOfInlines->ElementAt(iCount));
           (*outArrayOfNodes)->InsertElementAt(isupports, i);
         }
       }
@@ -3743,7 +3743,7 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
   (*outArrayOfNodes)->Count(&listCount);
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
     nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
 
     // Remove all non-editable nodes.  Leave them be.
@@ -3813,7 +3813,7 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfN
   (*outArrayOfNodes)->Count(&listCount);
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
-    nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports = dont_AddRef((*outArrayOfNodes)->ElementAt(i));
     nsCOMPtr<nsIDOMNode> testNode( do_QueryInterface(isupports ) );
 
     // Remove all non-editable nodes.  Leave them be.
@@ -3926,7 +3926,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode,
     
     for (i=0; i< (PRInt32)listCount; i++)
     {
-      isupports = (dont_AddRef)(arrayOfBreaks->ElementAt(i));
+      isupports = dont_AddRef(arrayOfBreaks->ElementAt(i));
       breakNode = do_QueryInterface(isupports);
       if (!breakNode) return NS_ERROR_NULL_POINTER;
       if (!splitDeepNode) return NS_ERROR_NULL_POINTER;
@@ -4001,7 +4001,7 @@ nsHTMLEditRules::MakeTransitionList(nsISupportsArray *inArrayOfNodes,
   
   for (i=0; i<listCount; i++)
   {
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(inArrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports  = dont_AddRef(inArrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> transNode( do_QueryInterface(isupports ) );
     transNode->GetParentNode(getter_AddRefs(curElementParent));
     if (curElementParent != prevElementParent)
@@ -4386,7 +4386,7 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
   for (i=0; i<listCount; i++)
   {
     // get the node to act on, and it's location
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports  = dont_AddRef(arrayOfNodes->ElementAt(i));
     curNode = do_QueryInterface(isupports);
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
@@ -4471,7 +4471,7 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
   for (i=0; i<listCount; i++)
   {
     // get the node to act on, and it's location
-    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsISupports> isupports  = dont_AddRef(arrayOfNodes->ElementAt(i));
     curNode = do_QueryInterface(isupports);
     res = nsEditor::GetNodeLocation(curNode, address_of(curParent), &offset);
     if (NS_FAILED(res)) return res;
@@ -4797,7 +4797,7 @@ nsHTMLEditRules::AdjustSpecialBreaks(PRBool aSafeToAskFrames)
   if (NS_FAILED(res)) return res;
   for (j = 0; j < nodeCount; j++)
   {
-    isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMNode> brNode, theNode( do_QueryInterface(isupports ) );
     arrayOfNodes->RemoveElementAt(0);
     res = CreateMozBR(theNode, 0, address_of(brNode));
@@ -4854,7 +4854,7 @@ nsHTMLEditRules::AdjustWhitespace(nsISelection *aSelection)
   if (NS_FAILED(res)) return res;
   for (j = 0; j < nodeCount; j++)
   {
-    isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
     nsCOMPtr<nsIDOMCharacterData> textNode( do_QueryInterface(isupports ) );
     arrayOfNodes->RemoveElementAt(0);
     res = DoTextNodeWhitespace(textNode, -1, -1);
@@ -5158,7 +5158,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
     if (NS_FAILED(res)) return res;
     for (j = 0; j < nodeCount; j++)
     {
-      isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+      isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
       nsCOMPtr<nsIDOMNode> delNode( do_QueryInterface(isupports ) );
       arrayOfNodes->RemoveElementAt(0);
       res = mHTMLEditor->DeleteNode(delNode);
