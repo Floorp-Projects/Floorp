@@ -268,9 +268,12 @@ nsHelperAppDialog.prototype = {
         } catch(ex) {}
 
 
-        modified = this.replaceInsert( modified, 3, pathString );
         intro.firstChild.nodeValue = "";
         intro.firstChild.nodeValue = modified;
+
+        // Set the location text, which is separate from the intro text so it can be cropped
+        var location = this.dialogElement( "location" );
+        location.value = pathString;
     },
 
     // initAppAndSaveToDiskValues:
