@@ -31,7 +31,8 @@
 #include "NavCenterView.h"
 #include "RDFTreeView.h"
 
-class XFE_RDFView : public XFE_View
+class XFE_RDFView : public XFE_View,
+                    public XFE_RDFBase
 {
 public:
 
@@ -48,28 +49,25 @@ public:
   virtual char *getCellTipString(int /* row */, int /* column */) {return NULL;}
   virtual char *getCellDocString(int /* row */, int /* column */) {return NULL;}
 
-  // Refresh the outliner
-  void refresh(HT_Resource node);
-
   // Open properties dialog
   //void openPropertiesWindow();
   //void closePropertiesWindow();
 
-  // RDF Specific calls
-  void notify(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+  // Override RDFBase notify method
+  void notify(HT_Resource n, HT_Event whatHappened);
 
-	// HT view set/get methods
-	void setHTView(HT_View view);
-    void setHTTitlebarProperties(HT_View view, Widget titleBar);
+  // RDF Specific calls
+  void setHTTitlebarProperties(HT_View view, Widget titleBar);
 
 	// Stand alone set/get methods
 	void setStandAloneState(XP_Bool state);
 	XP_Bool getStandAloneState();
 
-private:
+protected:
+    // Override RDFBase methods
+	virtual void	updateRoot      		();
 
-	// The view as registered in the hypertree
-	HT_View				_ht_rdfView;
+private:
 
 	// The label that displays the currently open pane
 	Widget				_viewLabel;     

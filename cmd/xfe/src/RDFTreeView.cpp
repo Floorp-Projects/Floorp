@@ -164,7 +164,7 @@ XFE_RDFTreeView::XFE_RDFTreeView(XFE_Component *	toplevel,
 								 XFE_View *			parent_view, 
 								 MWContext *		context) :
 	XFE_View(toplevel, parent_view, context),
-	_ht_rdfView(NULL),
+    XFE_RDFBase(),
 	_popup(NULL),
 	_standAloneState(False),
     _isCellEditable(False)
@@ -266,31 +266,11 @@ XFE_RDFTreeView::init_pixmaps(void)
 void
 XFE_RDFTreeView::activate_row(int row)
 {
-  HT_Resource node = HT_GetNthItem(_ht_rdfView, row);
+  HT_Resource node = HT_GetNthItem(_ht_view, row);
 
   if (!node) return;
 
-#if 0
-      if (data->ctrl) 
-        {
-          HT_ToggleSelection(node);	
-          m_outliner->toggleSelected(data->row);
-        } 
-      else if (data->shift) 
-        {
-          HT_SetSelectionRange(node, m_node);
-          m_outliner->trimOrExpandSelection(data->row);
-        } 
-      else 
-        {
-          HT_SetSelection(node);
-          m_outliner->selectItemExclusive(data->row);
-
-        }
-  getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
-#endif /*0*/
-                
-  if (!HT_IsContainer(node)) {
+  if (!HT_IsContainer(node) && !HT_IsSeparator(node)) {
       // Dispatch in new window
       char *s = HT_GetNodeURL (node);
       URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
@@ -328,7 +308,7 @@ XFE_RDFTreeView::resize(XtPointer callData)
 void
 XFE_RDFTreeView::refresh(HT_Resource node)
 {
-  if (!_ht_rdfView) return;
+  if (!_ht_view) return;
 
   XP_ASSERT(HT_IsContainer(node));
   if (!HT_IsContainer(node)) return;
@@ -339,7 +319,7 @@ XFE_RDFTreeView::refresh(HT_Resource node)
     
       HT_Cursor child_cursor = HT_NewCursor(node);
 
-      while (child = HT_GetNextItem(child_cursor))
+      while ( (child = HT_GetNextItem(child_cursor)) )
       {
           add_row(child);
 
@@ -350,7 +330,7 @@ XFE_RDFTreeView::refresh(HT_Resource node)
   }
   else
   {
-      int row = HT_GetNodeIndex(_ht_rdfView, node);
+      int row = HT_GetNodeIndex(_ht_view, node);
 
       XmLTreeDeleteChildren(m_widget, row);
   }
@@ -374,7 +354,7 @@ XFE_RDFTreeView::edit_cell(XtPointer callData)
 		return;
 
 	XmLGridCallbackStruct *cbs = (XmLGridCallbackStruct*)callData;
-    HT_Resource node = HT_GetNthItem (_ht_rdfView, cbs->row);
+    HT_Resource node = HT_GetNthItem (_ht_view, cbs->row);
 
 	if (node && cbs->reason == XmCR_EDIT_COMPLETE)
     {
@@ -418,7 +398,7 @@ XFE_RDFTreeView::select_cb(Widget,
 void
 XFE_RDFTreeView::select_row(int row)
 {
-  HT_Resource node = HT_GetNthItem(_ht_rdfView, row);
+  HT_Resource node = HT_GetNthItem(_ht_view, row);
 
   if (!node) return;
 
@@ -441,7 +421,7 @@ XFE_RDFTreeView::deselect_cb(Widget,
 void
 XFE_RDFTreeView::deselect_row(int row)
 {
-  HT_Resource node = HT_GetNthItem(_ht_rdfView, row);
+  HT_Resource node = HT_GetNthItem(_ht_view, row);
 
   if (!node) return;
 
@@ -449,22 +429,17 @@ XFE_RDFTreeView::deselect_row(int row)
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n, 
-                    HT_Event whatHappened)
+XFE_RDFTreeView::notify(HT_Resource n, HT_Event whatHappened)
 {
   switch (whatHappened) {
   case HT_EVENT_NODE_ADDED:
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_ADDED",
+    D(printf("RDFTreeView::HT_Event: %s on %s\n","NODE_ADDED",
              HT_GetNodeName(n)););
     add_row(n);
     break;
-  case HT_EVENT_NODE_DELETED_DATA:
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_DATA",
-             HT_GetNodeName(n)););
-    break;
   case HT_EVENT_NODE_DELETED_NODATA:
     {
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_DELETED_NODATA",
+    D(printf("RDFTreeView::HT_Event: %s on %s\n","NODE_DELETED_NODATA",
              HT_GetNodeName(n)););
 #ifdef UNDEF
        // Is this a container node?
@@ -476,33 +451,25 @@ XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n,
           HT_GetOpenState(n, &isExpanded);   
        }
    
-       int row = HT_GetNodeIndex(_ht_rdfView, n);    
+       int row = HT_GetNodeIndex(_ht_view, n);    
        delete_row(row);
 #endif  /* UNDEF   */
     break;
     }
-  case HT_EVENT_NODE_VPROP_CHANGED:
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_VPROP_CHANGED",
-             HT_GetNodeName(n)););
-    break;
-  case HT_EVENT_NODE_SELECTION_CHANGED:
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_SELECTION_CHANGED",
-             HT_GetNodeName(n)););
-    break;
   case HT_EVENT_NODE_OPENCLOSE_CHANGED: 
     {
-      D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGED",
+      D(printf("RDFView::HT_Event: %s on %s\n","NODE_OPENCLOSE_CHANGED",
                HT_GetNodeName(n)););
         refresh(n); 
-      Boolean expands =    HT_IsContainer(n);
 
+      Boolean expands =    HT_IsContainer(n);
 
       if (expands)
       {
          PRBool isExpanded = False;
 
          HT_GetOpenState(n, &isExpanded);          
-         int row = HT_GetNodeIndex(_ht_rdfView, n);    
+         int row = HT_GetNodeIndex(_ht_view, n);    
 
          if (isExpanded)   // The node has been opened
          {
@@ -517,41 +484,29 @@ XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n,
                          XmNrowIsExpanded, False, NULL);           
          }
       }
-
-
       break;
     }
-  case HT_EVENT_VIEW_CLOSED:
-    D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_VIEW_CLOSED",
-             HT_GetNodeName(n)););
-    break;
   case HT_EVENT_VIEW_SELECTED:
-    {
-		XP_ASSERT( 0 );
-    }
-    break;
-  case HT_EVENT_NODE_OPENCLOSE_CHANGING:
-    {
-     D(printf("RDFView::HT_Event: %s on %s\n","HT_EVENT_NODE_OPENCLOSE_CHANGING",
-             HT_GetNodeName(n)););
-    break;
+	{
+        setHTView(HT_GetView(n));
+        break;
     }
   case HT_EVENT_NODE_EDIT:
     {
-        int row = HT_GetNodeIndex(_ht_rdfView, n);
+        int row = HT_GetNodeIndex(_ht_view, n);
         XmLGridEditBegin(m_widget, True, row, 0);
         break;
     }
   case HT_EVENT_VIEW_REFRESH:
     {
-       int row = HT_GetNodeIndex(_ht_rdfView, n);
+       int row = HT_GetNodeIndex(_ht_view, n);
        PRBool expands = HT_IsContainer(n);
        PRBool isExpanded = False;
        if (expands) 
           HT_GetOpenState(n, &isExpanded);
        if (expands && isExpanded)
        {
-         if (n == HT_TopNode(_ht_rdfView))
+         if (n == HT_TopNode(_ht_view))
            /* It is the top most node. Delete all rows */
            XmLGridDeleteAllRows(m_widget, XmCONTENT);
          else
@@ -563,45 +518,28 @@ XFE_RDFTreeView::notify(HT_Notification /* ns */, HT_Resource n,
         break;
     }
   default:
-    D(printf("RDFView::HT_Event: Unknown type on %s\n",HT_GetNodeName(n)););
+      // Fall through and let RDFBase handle the event
     break;
   }
+  XFE_RDFBase::notify(n,whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
 void
-XFE_RDFTreeView::setHTView(HT_View htview)
+XFE_RDFTreeView::updateRoot()
 {
-	if (htview == _ht_rdfView)
-	{
-		return;
-	}
-	
-	_ht_rdfView = htview;
-	
-	if (!_ht_rdfView)
-	{
-		return;
-	}
-
 	fill_tree();
-    setHTTreeViewProperties(_ht_rdfView);	
-}
-//////////////////////////////////////////////////////////////////////
-HT_View
-XFE_RDFTreeView::getHTView()
-{
-	return _ht_rdfView;
+    setHTTreeViewProperties(_ht_view);
 }
 //////////////////////////////////////////////////////////////////////
 void
 XFE_RDFTreeView::fill_tree()
 {
   XP_ASSERT(m_widget);
-  if (!_ht_rdfView || !m_widget)
+  if (!_ht_view || !m_widget)
       return;
   
-  int item_count =  HT_GetItemListCount(_ht_rdfView);
-  void * data=NULL;
+  int item_count =  HT_GetItemListCount(_ht_view);
+  //void * data=NULL;
 
     /* This s'd eventually be replaced by the HT property useInlineEditing */
   if (getStandAloneState())
@@ -633,7 +571,7 @@ XFE_RDFTreeView::fill_tree()
   void *token;
   uint32 token_type;
   int ii = 0;
-  HT_Cursor column_cursor = HT_NewColumnCursor (_ht_rdfView);
+  HT_Cursor column_cursor = HT_NewColumnCursor (_ht_view);
   while (HT_GetNextColumn(column_cursor, &column_name, &column_width,
                           &token, &token_type)) {
     add_column(ii, column_name, column_width, token, token_type);
@@ -671,7 +609,7 @@ XFE_RDFTreeView::destroy_tree()
 void
 XFE_RDFTreeView::add_row(int row)
 {
-    HT_Resource node = HT_GetNthItem (_ht_rdfView, row);
+    HT_Resource node = HT_GetNthItem (_ht_view, row);
     add_row(node);
 }
 
@@ -679,8 +617,8 @@ void
 XFE_RDFTreeView::add_row
 (HT_Resource node)
 {
-  //HT_Resource node = GetNthItem (_ht_rdfView, row);
-    int row = HT_GetNodeIndex(_ht_rdfView, node);
+  //HT_Resource node = GetNthItem (_ht_view, row);
+    int row = HT_GetNodeIndex(_ht_view, node);
     char *name = HT_GetNodeName(node);
     int  depth = HT_GetItemIndentation(node);
     Boolean expands =    HT_IsContainer(node);
@@ -835,7 +773,7 @@ XFE_RDFTreeView::expand_row_cb(Widget,
 void
 XFE_RDFTreeView::expand_row(int row)
 {
-    HT_Resource node = HT_GetNthItem (_ht_rdfView, row);
+    HT_Resource node = HT_GetNthItem (_ht_view, row);
      
     HT_SetOpenState (node, (PRBool)TRUE);
 }
@@ -856,7 +794,7 @@ XFE_RDFTreeView::collapse_row_cb(Widget,
 void
 XFE_RDFTreeView::collapse_row(int row)
 {
-    HT_Resource node = HT_GetNthItem (_ht_rdfView, row);
+    HT_Resource node = HT_GetNthItem (_ht_view, row);
      
     HT_SetOpenState (node, (PRBool)FALSE);
 }
@@ -928,7 +866,7 @@ XFE_RDFTreeView::doPopup(XEvent * event)
     _popup = new XFE_RDFPopupMenu("popup",
                                    //getFrame(),
                                    FE_GetToplevelWidget(),
-                                   _ht_rdfView,
+                                   _ht_view,
                                    FALSE, // not isWorkspace
                                    FALSE); // no background commands for now
 		
@@ -1131,9 +1069,10 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
     }
 
 
-
    /* useInlineEditing. This doesn't work now for teh same reason as above */ 
-   HT_GetTemplateData(HT_TopNode(_ht_rdfView),  gNavCenter->useInlineEditing, HT_COLUMN_STRING, &data);
+   HT_GetTemplateData(getRootFolder(),
+                      gNavCenter->useInlineEditing,
+                      HT_COLUMN_STRING, &data);
    if (data)
    {
        /* Decide if cells are editable */
@@ -1142,8 +1081,6 @@ XFE_RDFTreeView::setHTTreeViewProperties( HT_View  view)
 
    Widget  tree = getBaseWidget();
    XtSetValues(tree, av, ac);
-
-
 
 
 
@@ -1204,20 +1141,20 @@ fe_getPixelFromRGB(MWContext * context, char * color, Pixel *pixel)
 }
 };
 
-extern "C"
-{
-void
-treeview_bg_image_cb(XtPointer client_data)
-{
+extern "C" {
+
+    void
+    treeview_bg_image_cb(XtPointer client_data)
+    {
    
-     callbackClientData * cb = (callbackClientData *) client_data;
-     Widget tree = (Widget )cb->widget;
-     Dimension b_width=0, b_height=0;
+        callbackClientData * cb = (callbackClientData *) client_data;
+        Widget tree = (Widget )cb->widget;
+        //Dimension b_width=0, b_height=0;
+        
+        XtVaSetValues(tree, XmNbackgroundPixmap, cb->image, NULL);
+        XP_FREE(cb);
 
-     XtVaSetValues(tree, XmNbackgroundPixmap, cb->image, NULL);
-     XP_FREE(cb);
-
-}
+    }
 
 };   /* extern C  */
 

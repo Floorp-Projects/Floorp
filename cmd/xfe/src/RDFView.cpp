@@ -61,7 +61,6 @@ XFE_RDFView::XFE_RDFView(XFE_Component *	toplevel,
                          XFE_View *			parent_view, 
 						 MWContext *		context) :
 	XFE_View(toplevel, parent_view, context),
-	_ht_rdfView(NULL),
 	_viewLabel(NULL),
 	_controlToolBar(NULL),
 	_addBookmarkControl(NULL),
@@ -161,46 +160,33 @@ XFE_RDFView::~XFE_RDFView()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_RDFView::notify(HT_Notification		ns,
-					HT_Resource			n, 
+XFE_RDFView::updateRoot() 
+{
+    char * label = HT_GetViewName(_ht_view);
+    
+    XP_ASSERT( _rdfTreeView != NULL );
+
+    // XXX  Aurora NEED TO LOCALIZE  XXX
+    XmString xmstr = XmStringCreateLocalized(label);
+    
+    XtVaSetValues(_viewLabel,XmNlabelString,xmstr,NULL);
+        
+    XmStringFree(xmstr);
+        
+    // Set the HT properties
+    setHTTitlebarProperties(_ht_view, _viewLabel);
+}
+
+void
+XFE_RDFView::notify(HT_Resource			n, 
                     HT_Event			whatHappened)
 {
 	// HT_EVENT_VIEW_SELECTED
 	if (whatHappened == HT_EVENT_VIEW_SELECTED)
 	{
-		HT_View		htView = HT_GetView(n);
-		char *		label = HT_GetViewName(htView);
-
-		XP_ASSERT( _rdfTreeView != NULL );
-
-		if (_rdfTreeView->getHTView() != htView)
-		{
-			_rdfTreeView->setHTView(htView);
-
-			// XXX  Aurora NEED TO LOCALIZE  XXX
-			XmString xmstr = XmStringCreateLocalized(label);
-
-			XtVaSetValues(_viewLabel,XmNlabelString,xmstr,NULL);
-
-			XmStringFree(xmstr);
-            // Set the HT properties
-            setHTTitlebarProperties(htView, _viewLabel);
-		}
+        setHTView(HT_GetView(n));
 	}
-	else
-	{
-		XP_ASSERT( _rdfTreeView != NULL );
-
-		_rdfTreeView->notify(ns,n,whatHappened);
-	}
-}
-//////////////////////////////////////////////////////////////////////
-void
-XFE_RDFView::setHTView(HT_View htview)
-{
-	XP_ASSERT( _rdfTreeView != NULL );
-
-	_rdfTreeView->setHTView(htview);
+    _rdfTreeView->notify(n, whatHappened);
 }
 //////////////////////////////////////////////////////////////////////
 void
@@ -210,22 +196,23 @@ XFE_RDFView::closeRdfView_cb(Widget /* w */, XtPointer clientData, XtPointer /* 
   closeRdfViewCBStruct * obj = (closeRdfViewCBStruct *) clientData;
   XFE_NavCenterView * ncview = obj->ncview;
 
-  Widget  selector  = (Widget )ncview->getSelector();
-
 //  Widget nc_base_widget = ncview->getBaseWidget();
   Widget parent = XtParent(obj->rdfview->_controlToolBar);
 
 
 /*   XtVaSetValues(nc_base_widget, XmNresizable, True, NULL); */
   XtUnmanageChild(parent);
-  XtUnmanageChild(selector);  
 
+#ifdef USE_SELECTOR_BAR
+  Widget  selector  = (Widget )ncview->getSelector();
+  XtUnmanageChild(selector);  
   XtVaSetValues(selector, XmNrightAttachment, XmATTACH_FORM, 
                           XmNleftAttachment, XmATTACH_FORM,
                           XmNtopAttachment, XmATTACH_FORM,
                           XmNbottomAttachment, XmATTACH_FORM,
                           NULL);
   XtManageChild(selector);
+#endif /*USE_SELECTOR_BAR*/
 }
 //////////////////////////////////////////////////////////////////////////
 //

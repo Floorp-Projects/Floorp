@@ -47,7 +47,8 @@ protected:
   HT_Pane m_pane;
 };
 
-class XFE_RDFTreeView : public XFE_View
+class XFE_RDFTreeView : public XFE_View,
+                        public XFE_RDFBase
 {
 public:
   XFE_RDFTreeView(XFE_Component *toplevel, Widget parent,
@@ -60,25 +61,22 @@ public:
   // row < 0 indicates heading row; otherwise it is a content row
   // (starting from 0)
   //
-  virtual char *getCellTipString(int /* row */, int /* column */) {return NULL;}
-  virtual char *getCellDocString(int /* row */, int /* column */) {return NULL;}
+  virtual char *getCellTipString(int /*row*/, int /*column*/) {return NULL;}
+  virtual char *getCellDocString(int /*row*/, int /*column*/) {return NULL;}
 
   // Refresh the outliner
   void refresh(HT_Resource node);
+  void updateRoot();
 
   // Open properties dialog
   //void openPropertiesWindow();
   //void closePropertiesWindow();
 
-  // RDF Specific calls
-  void notify(HT_Notification ns, HT_Resource n, HT_Event whatHappened);
+  // Override RDFBase method
+  void notify(HT_Resource n, HT_Event whatHappened);
 
 	
 	void doPopup(XEvent *event);
-
-	// HT view set/get methods
-	void setHTView(HT_View view);
-	HT_View getHTView();
 
 	// Stand alone set/get methods
 	void setStandAloneState(XP_Bool state);
@@ -88,9 +86,6 @@ public:
     void setHTTreeViewProperties(HT_View); 
 
 private:
-
-	// The view as registered in the hypertree
-	HT_View					_ht_rdfView;
 
 	// The popup menu
 	XFE_RDFPopupMenu *		_popup;
