@@ -39,6 +39,7 @@
 <!ENTITY tableCaptionBelow.label          "Below Table">
 <!ENTITY tableCaptionNone.label           "None">
 <!ENTITY tableInheritColor.label           "(Let page color show through)">
+<!ENTITY applyButton.label                 "Apply">
 
 <!ENTITY cellPercent.label                "percent of table">
 <!ENTITY cellSelection.label              "Selection">
