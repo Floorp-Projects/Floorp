@@ -46,7 +46,6 @@ static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSIONHISTORY_CID);
 static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_PC
 
-#define APPSHELL_DLL "appshell.dll"
 #define BROWSER_DLL  "nsbrowser.dll"
 #define EDITOR_DLL "ender.dll"
 
@@ -54,13 +53,11 @@ static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 
 #ifdef XP_MAC
 
-#define APPSHELL_DLL "APPSHELL_DLL"
 #define EDITOR_DLL	"ENDER_DLL"
 
 #else
 
 // XP_UNIX || XP_BEOS
-#define APPSHELL_DLL	"libnsappshell"MOZ_DLL_SUFFIX
 #define APPCORES_DLL	"libappcores"MOZ_DLL_SUFFIX
 #define EDITOR_DLL	"libender"MOZ_DLL_SUFFIX
 
@@ -110,23 +107,6 @@ NS_SetupRegistry_1()
    * webshell/tests/viewer/nsSetupregistry.cpp
    */
   NS_SetupRegistry();
-
-  // APPSHELL_DLL
-
-  // FileLocator registration moved to viewer/nsSetupRegistry.cpp, as
-  // prefs (which viewer uses) needs it.
-  nsComponentManager::RegisterComponentLib(kCAppShellServiceCID, NULL, "component://netscape/appshell/appShellService", APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCCmdLineServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kXPConnectFactoryCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kNetSupportDialogCID, NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kProtocolHelperCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kWindowMediatorCID,
-                                         "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
-                                         APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kSessionHistoryCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-   nsComponentManager::RegisterComponentLib(kCommonDialogsCID,   NULL, "component://netscape/appshell/commonDialogs", APPSHELL_DLL, PR_FALSE, PR_FALSE);
- nsComponentManager::RegisterComponentLib(kDialogParamBlockCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-     nsComponentManager::RegisterComponentLib(kAboutModuleCID,  "about:", NS_ABOUT_MODULE_PROGID_PREFIX, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
   //All Editor registration is done in webshell/tests/viewer/nsSetupregistry.cpp
 
