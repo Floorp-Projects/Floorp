@@ -32,8 +32,6 @@
 #include "nsTLSSocketProvider.h"
 #include "nsKeygenHandler.h"
 
-#include "nsCURILoader.h"
-
 #include "nsSDR.h"
 
 #include "nsPK11TokenDB.h"
@@ -73,34 +71,6 @@ static nsModuleComponentInfo components[] =
     PSM_COMPONENT_CLASSNAME,
     NS_NSSCOMPONENT_CID,
     PSM_COMPONENT_CONTRACTID,
-    nsNSSComponentConstructor
-  },
-  
-  {
-    "NSS Content Handler - application/x-x509-ca-cert",
-    NS_NSSCOMPONENT_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-ca-cert",
-    nsNSSComponentConstructor
-  },
-  
-  {
-    "NSS Content Handler - application/x-x509-server-cert",
-    NS_NSSCOMPONENT_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-server-cert",
-    nsNSSComponentConstructor
-  },
-  
-  {
-    "NSS Content Handler - application/x-x509-user-cert",
-    NS_NSSCOMPONENT_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-user-cert",
-    nsNSSComponentConstructor
-  },
-  
-  {
-    "NSS Content Handler - application/x-x509-email-cert",
-    NS_NSSCOMPONENT_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/x-x509-email-cert",
     nsNSSComponentConstructor
   },
   
