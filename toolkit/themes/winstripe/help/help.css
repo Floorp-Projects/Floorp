@@ -76,11 +76,11 @@ menubutton:not([disabled="true"]):hover:active {
 #helpsidebar-box { width: 200px; }
 
 #help-back-button { -moz-image-region: rect(0px 24px 24px 0px); }
-#help-back-button[buttonover="true"] { -moz-image-region: rect(24px 24px 48px 0px); }
+#help-back-button:hover { -moz-image-region: rect(24px 24px 48px 0px); }
 #help-back-button[disabled="true"] { -moz-image-region: rect(48px 24px 72px 0px); }
 
 #help-forward-button { -moz-image-region: rect(0px 48px 24px 24px); }
-#help-forward-button[buttonover="true"] { -moz-image-region: rect(24px 48px 48px 24px); }
+#help-forward-button:hover { -moz-image-region: rect(24px 48px 48px 24px); }
 #help-forward-button[disabled="true"] { -moz-image-region: rect(48px 48px 72px 24px); }
 
 #help-find-button { -moz-image-region: rect(0px 192px 24px 168px); }
