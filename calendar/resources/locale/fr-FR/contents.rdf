@@ -45,7 +45,7 @@
   </RDF:Seq>
 
   <!-- locale information -->
-  <RDF:Description about="urn:mozilla:fr-FR"
+  <RDF:Description about="urn:mozilla:locale:fr-FR"
                    chrome:displayName="Français"
                    chrome:name="fr-FR">
     <chrome:packages>
