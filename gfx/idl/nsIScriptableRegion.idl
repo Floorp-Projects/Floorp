@@ -1,0 +1,181 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla Communicator.
+ * 
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corp.  Portions created by Netscape are Copyright (C) 1999 Netscape 
+ * Communications Corp.  All Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Mike Pinkerton
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(82d8f400-5bde-11d3-b033-b27a62766bbc)]
+interface nsIScriptableRegion : nsISupports
+{
+  void Init ( ) ;
+
+  /**
+  * copy operator equivalent that takes another region
+  *
+  * @param      region to copy
+  * @return     void
+  *
+  **/
+
+  void SetToRegion ( in nsIScriptableRegion aRegion );
+
+  /**
+  * copy operator equivalent that takes a rect
+  *
+  * @param      aX xoffset of rect to set region to
+  * @param      aY yoffset of rect to set region to
+  * @param      aWidth width of rect to set region to
+  * @param      aHeight height of rect to set region to
+  * @return     void
+  *
+  **/
+
+  void SetToRect ( in long aX, in long aY, in long aWidth, in long aHeight );
+
+  /**
+  * destructively intersect another region with this one
+  *
+  * @param      region to intersect
+  * @return     void
+  *
+  **/
+
+  void IntersectRegion ( in nsIScriptableRegion aRegion ) ;
+
+  /**
+  * destructively intersect a rect with this region
+  *
+  * @param      aX xoffset of rect to intersect with region
+  * @param      aY yoffset of rect to intersect with region
+  * @param      aWidth width of rect to intersect with region
+  * @param      aHeight height of rect to intersect with region
+  * @return     void
+  *
+  **/
+
+  void IntersectRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+
+  /**
+  * destructively union another region with this one
+  *
+  * @param      region to union
+  * @return     void
+  *
+  **/
+
+  void UnionRegion ( in nsIScriptableRegion aRegion ) ;
+
+  /**
+  * destructively union a rect with this region
+  *
+  * @param      aX xoffset of rect to union with region
+  * @param      aY yoffset of rect to union with region
+  * @param      aWidth width of rect to union with region
+  * @param      aHeight height of rect to union with region
+  * @return     void
+  *
+  **/
+
+  void UnionRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+
+  /**
+  * destructively subtract another region with this one
+  *
+  * @param      region to subtract
+  * @return     void
+  *
+  **/
+
+  void SubtractRegion ( in nsIScriptableRegion aRegion ) ;
+
+  /**
+  * destructively subtract a rect from this region
+  *
+  * @param      aX xoffset of rect to subtract with region
+  * @param      aY yoffset of rect to subtract with region
+  * @param      aWidth width of rect to subtract with region
+  * @param      aHeight height of rect to subtract with region
+  * @return     void
+  *
+  **/
+
+  void SubtractRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  
+  /**
+  * is this region empty? i.e. does it contain any pixels
+  *
+  * @param      none
+  * @return     returns whether the region is empty
+  *
+  **/
+
+  boolean IsEmpty ( ) ;
+
+  /**
+  * == operator equivalent i.e. do the regions contain exactly
+  * the same pixels
+  *
+  * @param      region to compare
+  * @return     whether the regions are identical
+  *
+  **/
+
+  boolean IsEqualRegion ( in nsIScriptableRegion aRegion ) ;
+
+  /**
+  * returns the bounding box of the region i.e. the smallest
+  * rectangle that completely contains the region.        
+  *
+  * @param      aX out parameter for xoffset of bounding rect for region
+  * @param      aY out parameter for yoffset of bounding rect for region
+  * @param      aWidth out parameter for width of bounding rect for region
+  * @param      aHeight out parameter for height of bounding rect for region
+  * @return     void
+  *
+  **/
+  void GetBoundingBox ( out long aX, out long aY, out long aWidth, out long aHeight ) ;
+
+  /**
+  * offsets the region in x and y
+  *
+  * @param  xoffset  pixel offset in x
+  * @param  yoffset  pixel offset in y
+  * @return          void
+  *
+  **/
+  void Offset ( in long aXOffset, in long aYOffset ) ;
+
+  /**
+  * does the region intersect the rectangle?
+  *
+  * @param      rect to check for containment
+  * @return     true if the region intersects the rect
+  *
+  **/
+
+  boolean ContainsRect ( in long aX, in long aY, in long aWidth, in long aHeight ) ;
+  
+};
+
+
+%{ C++
+
+%}
