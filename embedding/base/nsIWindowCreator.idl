@@ -39,7 +39,7 @@ interface nsIWindowCreator : nsISupports {
       @param parent parent window, if any. null if not. the newly created
                     window should be made a child/dependent window of
                     the parent, if any (and if the concept applies
-                    to the overlying OS).
+                    to the underlying OS).
       @param chromeFlags chrome features from nsIWebBrowserChrome
       @return the new window
   */
