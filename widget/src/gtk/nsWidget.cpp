@@ -29,11 +29,11 @@
   g.green=NS_GET_G(n); \
   g.blue=NS_GET_R(n);
 
-// #define DBG 1
+//#define DBG 1
 
 nsWidget::nsWidget()
 {
-  // XXX Shouldn't this be done in nsBaseWidget? 
+  // XXX Shouldn't this be done in nsBaseWidget?
   NS_INIT_REFCNT();
   mBackground = NS_RGB(214,214,214);
   mGC = nsnull;
@@ -136,23 +136,41 @@ NS_METHOD nsWidget::IsVisible(PRBool &aState)
 NS_METHOD nsWidget::Move(PRUint32 aX, PRUint32 aY)
 {
 #ifdef DBG
-  g_print("nsWidget::Move(%3d,%3d)   - %s %p\n", aX, aY, mWidget->name, this);
+   g_print("nsWidget::Move(%3d,%3d)   - %s %p\n", aX, aY, mWidget->name, this);
 #endif
   mBounds.x = aX;
   mBounds.y = aY;
   gtk_layout_move(GTK_LAYOUT(mWidget->parent), mWidget, aX, aY);
-  //XtVaSetValues(mWidget, XmNx, aX, XmNy, GetYCoord(aY), nsnull);
   return NS_OK;
 }
 
 NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 #ifdef DBG
-  g_print("nsWidget::Resize(%3d,%3d) - %s %p\n", aWidth, aHeight, mWidget->name, this);
+  g_print("nsWidget::Resize(%3d,%3d) - %s %p %s\n", aWidth, aHeight, mWidget->name, this, aRepaint ? "paint" : "no paint");
 #endif
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   gtk_widget_set_usize(mWidget, aWidth, aHeight);
+  if (aRepaint && GTK_IS_WIDGET (mWidget) &&
+      GTK_WIDGET_REALIZED (GTK_WIDGET(mWidget))) {
+
+    GdkEventExpose event;
+
+    event.type = GDK_EXPOSE;
+    event.send_event = TRUE;
+    event.window = GTK_WIDGET(mWidget)->window;
+    event.area.width = mBounds.width;
+    event.area.height = mBounds.height;
+    event.area.x = 0;
+    event.area.y = 0;
+
+    event.count = 0;
+
+    gdk_window_ref (event.window);
+    gtk_widget_event (GTK_WIDGET(mWidget), (GdkEvent*) &event);
+    gdk_window_unref (event.window);
+  }
   return NS_OK;
 }
 
@@ -218,7 +236,7 @@ NS_METHOD nsWidget::SetForegroundColor(const nscolor &aColor)
     style = gtk_style_copy(mWidget->style);
     style->fg[GTK_STATE_NORMAL] = color;
     gtk_widget_set_style(mWidget, style);
-    
+
     return NS_OK;
 }
 
@@ -251,7 +269,7 @@ NS_METHOD nsWidget::SetBackgroundColor(const nscolor &aColor)
     style = gtk_style_copy(mWidget->style);
     style->bg[GTK_STATE_NORMAL] = color;
     gtk_widget_set_style(mWidget, style);
-    
+
     return NS_OK;
 }
 
@@ -297,20 +315,20 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 {
   if (!mWidget || !mWidget->window)
     return NS_ERROR_FAILURE;
-  
+
   // Only change cursor if it's changing
   if (aCursor != mCursor) {
     GdkCursor *newCursor = 0;
-    
+
     switch(aCursor) {
 	  case eCursor_select:
 	    newCursor = gdk_cursor_new(GDK_XTERM);
 	    break;
-      
+
 	  case eCursor_wait:
 	    newCursor = gdk_cursor_new(GDK_WATCH);
 	    break;
-      
+
 	  case eCursor_hyperlink:
 	    newCursor = gdk_cursor_new(GDK_HAND2);
 	    break;
@@ -343,7 +361,7 @@ NS_METHOD nsWidget::SetCursor(nsCursor aCursor)
 	    NS_ASSERTION(PR_FALSE, "Invalid cursor type");
 	    break;
 	}
-    
+
     if (nsnull != newCursor) {
 	    mCursor = aCursor;
 	    gdk_window_set_cursor(mWidget->window, newCursor);
@@ -475,7 +493,7 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
   gtk_widget_push_colormap(gdk_rgb_get_cmap());
   gtk_widget_push_visual(gdk_rgb_get_visual());
 
-  BaseCreate(aParent, aRect, aHandleEventFunction, aContext, 
+  BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
              aAppShell, aToolkit, aInitData);
 
   if (aParent) {
@@ -511,7 +529,7 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
-  
+
   return NS_OK;
 }
 
