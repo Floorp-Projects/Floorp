@@ -75,25 +75,8 @@
   menubutton.menubutton-dual > menupopup
     {
       min-width           : 0px;
-      border-top          : 0px;
-      border-right        : 1px solid #000000;
-      border-left         : 1px solid #000000;
-      border-bottom       : 1px solid #000000;
     }
     
-  menubutton > menupopup > .menupopup-internal-box
-    {
-      border-top          : 0px;
-      border-right        : 1px inset #CCCCCC;
-      border-left         : 1px inset #CCCCCC;
-      border-bottom       : 1px inset #CCCCCC;
-    }
-    
-  menubutton > menupopup > menuitem
-    {
-      padding             : 0px 0px 0px 3px;
-    }
-
 /** Icon only menubutton.menubutton-duals
  *  class="menubutton.menubutton-dual-icon"
  **/
