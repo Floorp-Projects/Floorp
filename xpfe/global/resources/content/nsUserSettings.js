@@ -70,7 +70,7 @@ var nsPreferences = {
     {
       try
         {
-          return this.mPrefServic.GetIntPref(aPrefName);
+          return this.mPrefService.GetIntPref(aPrefName);
         }
       catch(e)
         {
