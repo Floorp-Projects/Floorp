@@ -160,6 +160,8 @@ viewer:Components:xpcom.xpt
 viewer:Components:XPConnect.shlb 
 viewer:Components:xpconnect.xpt 
 viewer:Components:xpinstall.xpt 
+viewer:Components:autocomplete.shlb 
+viewer:Components:autocomplete.xpt 
 
 viewer:chrome:editor:*
 -viewer:chrome:editor:content:EditorInitPage.html
@@ -180,6 +182,7 @@ viewer:chrome:htmlBindings.xml
 viewer:chrome:platformHTMLBindings.xml
 viewer:chrome:xul.css
 viewer:chrome:xulBindings.xml
+viewer:chrome:autocomplete.xml
 
 viewer:defaults:pref:all.js 
 viewer:defaults:pref:mailnews.js
