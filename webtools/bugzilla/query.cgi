@@ -873,37 +873,37 @@ while (MoreSQLData()) {
 }
 
 my @types = (
-	     ["noop", "---"],
-	     ["equals", "equal to"],
-	     ["notequals", "not equal to"],
-	     ["casesubstring", "contains (case-sensitive) substring"],
-	     ["substring", "contains (case-insensitive) substring"],
-	     ["notsubstring", "does not contain (case-insensitive) substring"],
-	     ["allwordssubstr", "all words as (case-insensitive) substrings"],
-	     ["anywordssubstr", "any words as (case-insensitive) substrings"],
-	     ["regexp", "contains regexp"],
-	     ["notregexp", "does not contain regexp"],
-	     ["lessthan", "less than"],
-	     ["greaterthan", "greater than"],
-	     ["anywords", "any words"],
-	     ["allwords", "all words"],
-	     ["nowords", "none of the words"],
-	     ["changedbefore", "changed before"],
-	     ["changedafter", "changed after"],
-	     ["changedfrom", "changed from"],
-	     ["changedto", "changed to"],
-	     ["changedby", "changed by"],
-	     );
+             ["noop", "---"],
+             ["equals", "equal to"],
+             ["notequals", "not equal to"],
+             ["casesubstring", "contains (case-sensitive) substring"],
+             ["substring", "contains (case-insensitive) substring"],
+             ["notsubstring", "does not contain (case-insensitive) substring"],
+             ["allwordssubstr", "all words as (case-insensitive) substrings"],
+             ["anywordssubstr", "any words as (case-insensitive) substrings"],
+             ["regexp", "contains regexp"],
+             ["notregexp", "does not contain regexp"],
+             ["lessthan", "less than"],
+             ["greaterthan", "greater than"],
+             ["anywords", "any words"],
+             ["allwords", "all words"],
+             ["nowords", "none of the words"],
+             ["changedbefore", "changed before"],
+             ["changedafter", "changed after"],
+             ["changedfrom", "changed from"],
+             ["changedto", "changed to"],
+             ["changedby", "changed by"],
+             );
 
 
 print qq{<A NAME="chart"> </A>\n};
 
 foreach my $cmd (grep(/^cmd-/, keys(%::FORM))) {
     if ($cmd =~ /^cmd-add(\d+)-(\d+)-(\d+)$/) {
-	$::FORM{"field$1-$2-$3"} = "xyzzy";
+        $::FORM{"field$1-$2-$3"} = "xyzzy";
     }
 }
-	
+
 #  foreach my $i (sort(keys(%::FORM))) {
 #      print "$i : " . value_quote($::FORM{$i}) . "<BR>\n";
 #  }
@@ -920,23 +920,23 @@ for ($chart=0 ; exists $::FORM{"field$chart-0-0"} ; $chart++) {
     my @rows;
     my $row;
     for ($row = 0 ; exists $::FORM{"field$chart-$row-0"} ; $row++) {
-	my @cols;
-	my $col;
-	for ($col = 0 ; exists $::FORM{"field$chart-$row-$col"} ; $col++) {
-	    my $key = "$chart-$row-$col";
-	    my $deffield = $::FORM{"field$key"} || "";
-	    my $deftype = $::FORM{"type$key"} || "";
-	    my $defvalue = value_quote($::FORM{"value$key"} || "");
-	    my $line = "";
-	    $line .= "<TD>";
-	    $line .= BuildPulldown("field$key", \@fields, $deffield);
-	    $line .= BuildPulldown("type$key", \@types, $deftype);
-	    $line .= qq{<INPUT NAME="value$key" VALUE="$defvalue">};
-	    $line .= "</TD>\n";
-	    push(@cols, $line);
-	}
-	push(@rows, "<TR>" . join(qq{<TD ALIGN="center"> or </TD>\n}, @cols) .
-	     qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col" $jsmagic></TD></TR>});
+        my @cols;
+        my $col;
+        for ($col = 0 ; exists $::FORM{"field$chart-$row-$col"} ; $col++) {
+            my $key = "$chart-$row-$col";
+            my $deffield = $::FORM{"field$key"} || "";
+            my $deftype = $::FORM{"type$key"} || "";
+            my $defvalue = value_quote($::FORM{"value$key"} || "");
+            my $line = "";
+            $line .= "<TD>";
+            $line .= BuildPulldown("field$key", \@fields, $deffield);
+            $line .= BuildPulldown("type$key", \@types, $deftype);
+            $line .= qq{<INPUT NAME="value$key" VALUE="$defvalue">};
+            $line .= "</TD>\n";
+            push(@cols, $line);
+        }
+        push(@rows, "<TR>" . join(qq{<TD ALIGN="center"> or </TD>\n}, @cols) .
+             qq{<TD><INPUT TYPE="submit" VALUE="Or" NAME="cmd-add$chart-$row-$col" $jsmagic></TD></TR>});
     }
     print qq{
 <HR>

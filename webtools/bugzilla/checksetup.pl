@@ -399,7 +399,7 @@ LocalVar('opsys', '
         "Windows 95",
         "Windows 98",
         "Windows ME",  # Millenium Edition (upgrade of 98)
-	"Windows 2000",
+        "Windows 2000",
         "Windows NT",
         "Mac System 7",
         "Mac System 7.5",
@@ -488,7 +488,7 @@ my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
 
 unless (-d 'data') {
     print "Creating data directory ...\n";
-	# permissions for non-webservergroup are fixed later on
+    # permissions for non-webservergroup are fixed later on
     mkdir 'data', 0770; 
     mkdir 'data/mimedump-tmp', 01777; 
     open FILE, '>>data/comments'; close FILE;
@@ -502,7 +502,7 @@ unless (-d 'data') {
 # a Bugzilla with the old data format, and so upgrade their data files.
 unless (-d 'graphs') {
     print "Creating graphs directory...\n";
-	# permissions for non-webservergroup are fixed later on
+    # permissions for non-webservergroup are fixed later on
     mkdir 'graphs', 0770; 
     # Upgrade data format
     foreach my $in_file (glob("data/mining/*"))
@@ -712,10 +712,10 @@ sub fixPerms {
       if (!(-d $file)) {
         # check if the file is executable.
         if (isExecutableFile($file)) {
-	  #printf ("Changing $file to %o",$exeperm);
+          #printf ("Changing $file to %o",$exeperm);
           chmod $exeperm, $file;
         } else {
-	  #print ("Changing $file to %o", $normperm);
+          #print ("Changing $file to %o", $normperm);
           chmod $normperm, $file;
         }
       }
@@ -2306,29 +2306,29 @@ if ( CountIndexes('keywords') != 3 ) {
 $sth = $dbh->prepare("SELECT count(*) from duplicates");
 $sth->execute();
 if (!($sth->fetchrow_arrayref()->[0])) {
-	# populate table
-	print("Populating duplicates table...\n");
-	
-	$sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
-	        "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
-			" BY longdescs.bug_when");
-	$sth->execute();
+        # populate table
+        print("Populating duplicates table...\n");
 
-	my %dupes;
-	my $key;
-	
-	# Because of the way hashes work, this loop removes all but the last dupe
-	# resolution found for a given bug.
-	while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
-		$dupes{$dupe} = $dupe_of;
-	}
+        $sth = $dbh->prepare("SELECT longdescs.bug_id, thetext FROM longdescs left JOIN bugs using(bug_id) WHERE (thetext " . 
+                "regexp '[.*.]{3,3} This bug has been marked as a duplicate of [[:digit:]]{1,5} [.*.]{3,3}') AND (resolution = 'DUPLICATE') ORDER" .
+                        " BY longdescs.bug_when");
+        $sth->execute();
 
-	foreach $key (keys(%dupes))
-	{
-		$dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
-		$dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
-		#					 BugItsADupeOf   Dupe
-	}
+        my %dupes;
+        my $key;
+
+        # Because of the way hashes work, this loop removes all but the last dupe
+        # resolution found for a given bug.
+        while (my ($dupe, $dupe_of) = $sth->fetchrow_array()) {
+                $dupes{$dupe} = $dupe_of;
+        }
+
+        foreach $key (keys(%dupes))
+        {
+                $dupes{$key} =~ s/.*\*\*\* This bug has been marked as a duplicate of (\d{1,5}) \*\*\*.*?/$1/sm;
+                $dbh->do("INSERT INTO duplicates VALUES('$dupes{$key}', '$key')");
+                #                                        BugItsADupeOf   Dupe
+        }
 }
 
 # 2000-12-18.  Added an 'emailflags' field for storing preferences about
@@ -2401,19 +2401,19 @@ installation has many users.
 ENDTEXT
 
     # Re-crypt everyone's password.
-	  my $sth = $dbh->prepare("SELECT userid, password FROM profiles");
-	  $sth->execute();
+    my $sth = $dbh->prepare("SELECT userid, password FROM profiles");
+    $sth->execute();
 
     my $i = 1;
 
     print "Fixing password #1... ";
-	  while (my ($userid, $password) = $sth->fetchrow_array()) {
+    while (my ($userid, $password) = $sth->fetchrow_array()) {
         my $cryptpassword = $dbh->quote(Crypt($password));
         $dbh->do("UPDATE profiles SET cryptpassword = $cryptpassword WHERE userid = $userid");
         ++$i;
         # Let the user know where we are at every 500 records.
         print "$i... " if !($i%500);
-	  }
+    }
     print "$i... Done.\n";
 
     # Drop the plaintext password field and resize the cryptpassword field.

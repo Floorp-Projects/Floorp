@@ -47,12 +47,12 @@ sub defparams_pl_sillyness {
 
 sub WriteParams {
     foreach my $i (@::param_list) {
-	if (!defined $::param{$i}) {
-	    $::param{$i} = $::param_default{$i};
+        if (!defined $::param{$i}) {
+            $::param{$i} = $::param_default{$i};
             if (!defined $::param{$i}) {
                 die "No default parameter ever specified for $i";
             }
-	}
+        }
     }
     mkdir("data", 0777);
     chmod 0777, "data";
@@ -77,7 +77,7 @@ sub DefParam {
     $::param_type{$id} = $type;
     $::param_default{$id} = $default;
     if (defined $checker) {
-	$::param_checker{$id} = $checker;
+        $::param_checker{$id} = $checker;
     }
 }
 
@@ -85,7 +85,7 @@ sub DefParam {
 sub check_numeric {
     my ($value) = (@_);
     if ($value !~ /^[0-9]+$/) {
-	return "must be a numeric value";
+        return "must be a numeric value";
     }
     return "";
 }
@@ -122,20 +122,20 @@ sub check_shadowdb {
 # b -- A boolean value (either 1 or 0)
 
 DefParam("maintainer",
-	 "The email address of the person who maintains this installation of Bugzilla.",
-	 "t",
+         "The email address of the person who maintains this installation of Bugzilla.",
+         "t",
          'THE MAINTAINER HAS NOT YET BEEN SET');
 
 DefParam("urlbase",
-	 "The URL that is the common initial leading part of all Bugzilla URLs.",
-	 "t",
-	 "http://cvs-mirror.mozilla.org/webtools/bugzilla/",
-	 \&check_urlbase);
+         "The URL that is the common initial leading part of all Bugzilla URLs.",
+         "t",
+         "http://cvs-mirror.mozilla.org/webtools/bugzilla/",
+         \&check_urlbase);
 
 sub check_urlbase {
     my ($url) = (@_);
     if ($url !~ m:^http.*/$:) {
-	return "must be a legal URL, that starts with http and ends with a slash.";
+        return "must be a legal URL, that starts with http and ends with a slash.";
     }
     return "";
 }
@@ -146,20 +146,20 @@ DefParam("cookiepath",
   "/");
 
 DefParam("preferlists",
-	"If this is on, Bugzilla will display most selection options as selection lists. If this is off, Bugzilla will use radio buttons and checkboxes instead.",
-	"b",
-	1);
+        "If this is on, Bugzilla will display most selection options as selection lists. If this is off, Bugzilla will use radio buttons and checkboxes instead.",
+        "b",
+        1);
 
 DefParam("capitalizelists",
-	"If this is on, Bugzilla will capitalize list entries, checkboxes, and radio buttons. If this is off, Bugzilla will leave these items untouched.",
-	"b",
-	0);
+        "If this is on, Bugzilla will capitalize list entries, checkboxes, and radio buttons. If this is off, Bugzilla will leave these items untouched.",
+        "b",
+        0);
 
 
 DefParam("usequip",
-	"If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
-	"b",
-	1);
+        "If this is on, Bugzilla displays a silly quip at the beginning of buglists, and lets users add to the list of quips.",
+        "b",
+        1);
 
 # Added parameter - JMR, 2/16/00
 DefParam("usebuggroups",
@@ -200,7 +200,7 @@ DefParam("despotbaseurl",
 sub check_despotbaseurl {
     my ($url) = (@_);
     if ($url !~ /^http.*cgi$/) {
-	return "must be a legal URL, that starts with http and ends with .cgi";
+        return "must be a legal URL, that starts with http and ends with .cgi";
     }
     return "";
 }
@@ -456,9 +456,9 @@ You will get this message once a day until you've dealt with these bugs!
 
 
 DefParam("defaultquery",
- 	 "This is the default query that initially comes up when you submit a bug.  It's in URL parameter format, which makes it hard to read.  Sorry!",
-	 "t",
-	 "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&order=%22Importance%22");
+          "This is the default query that initially comes up when you submit a bug.  It's in URL parameter format, which makes it hard to read.  Sorry!",
+         "t",
+         "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&order=%22Importance%22");
 
 
 DefParam("letsubmitterchoosepriority",
@@ -485,9 +485,9 @@ DefParam("defaultpriority",
 
 
 DefParam("usetargetmilestone",
-	 "Do you wish to use the Target Milestone field?",
-	 "b",
-	 0);
+         "Do you wish to use the Target Milestone field?",
+         "b",
+         0);
 
 DefParam("nummilestones",
          "If using Target Milestone, how many milestones do you wish to
@@ -508,20 +508,20 @@ DefParam("musthavemilestoneonaccept",
          0);
 
 DefParam("useqacontact",
-	 "Do you wish to use the QA Contact field?",
-	 "b",
-	 0);
+         "Do you wish to use the QA Contact field?",
+         "b",
+         0);
 
 DefParam("usestatuswhiteboard",
-	 "Do you wish to use the Status Whiteboard field?",
-	 "b",
-	 0);
+         "Do you wish to use the Status Whiteboard field?",
+         "b",
+         0);
 
 DefParam("usebrowserinfo",
-	 "Do you want bug reports to be assigned an OS & Platform based on the browser
-	  the user makes the report from?",
-	 "b",
-	 1);
+         "Do you want bug reports to be assigned an OS & Platform based on the browser
+          the user makes the report from?",
+         "b",
+         1);
 
 DefParam("usedependencies",
          "Do you wish to use dependencies (allowing you to mark which bugs depend on which other ones)?",
@@ -642,7 +642,7 @@ DefParam("supportwatchers",
 DefParam("move-enabled",
          "If this is on, Bugzilla will allow certain people to move bugs to the defined database.",
          "b",
-	 0);
+         0);
 DefParam("move-button-text",
          "The text written on the Move button. Explain where the bug is being moved to.",
          "t",

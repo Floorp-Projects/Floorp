@@ -394,10 +394,10 @@ if ($action eq 'new') {
     }
 
     my $initialowner = trim($::FORM{initialowner} || '');
-	#
-	# Now validating to make sure it's too an existing account
-	#
-	DBNameToIdAndCheck($initialowner);
+        #
+        # Now validating to make sure it's too an existing account
+        #
+        DBNameToIdAndCheck($initialowner);
 
     if ($initialowner eq '') {
         print "You must enter an initial owner for the component '$component'. Please press\n";
@@ -431,10 +431,10 @@ if ($action eq 'new') {
             PutTrailer($localtrailer);
             exit;
         }
-	#
-	# Now validating to make sure it's too an existing account
-	#
-	DBNameToIdAndCheck($initialqacontact);
+        #
+        # Now validating to make sure it's too an existing account
+        #
+        DBNameToIdAndCheck($initialqacontact);
     }
 
     # Add the new component
@@ -732,7 +732,7 @@ if ($action eq 'update') {
         unless ($description) {
             print "Sorry, I can't delete the description.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE components
@@ -746,7 +746,7 @@ if ($action eq 'update') {
     if ($initialowner ne $initialownerold) {
         unless ($initialowner) {
             print "Sorry, I can't delete the initial owner.";
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -769,7 +769,7 @@ if ($action eq 'update') {
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
         unless ($initialqacontact) {
             print "Sorry, I can't delete the initial QA contact.";
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
             exit;
         }
@@ -794,13 +794,13 @@ if ($action eq 'update') {
         unless ($component) {
             print "Sorry, I can't delete the product name.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestComponent($product,$component)) {
             print "Sorry, component name '$component' is already in use.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
 

@@ -61,16 +61,16 @@ foreach my $i (@::param_list) {
     print "<tr><td valign=top><input type=checkbox name=reset-$i>Reset</td><td>\n";
     my $value = Param($i);
     SWITCH: for ($::param_type{$i}) {
-	/^t$/ && do {
+        /^t$/ && do {
             print "<input size=80 name=$i value=\"" .
                 value_quote($value) . "\">\n";
             last SWITCH;
-	};
-	/^l$/ && do {
+        };
+        /^l$/ && do {
             print "<textarea wrap=hard name=$i rows=10 cols=80>" .
                 value_quote($value) . "</textarea>\n";
             last SWITCH;
-	};
+        };
         /^b$/ && do {
             my $on;
             my $off;

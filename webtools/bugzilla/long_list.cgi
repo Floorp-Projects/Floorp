@@ -109,7 +109,7 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
             print "<TD COLSPAN=2><B>Target Milestone:</B> $target_milestone\n";
         }
         print "<TR><TD COLSPAN=6><B>URL:</B>&nbsp;";
-	print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
+        print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
         print "<TR><TD COLSPAN=6><B>Summary:</B> " . html_quote($shortdesc) . "\n";
         if (@::legal_keywords) {
             print "<TR><TD><B>Keywords: </B>$keywords</TD></TR>\n";

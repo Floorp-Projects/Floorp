@@ -519,13 +519,13 @@ if ($action eq 'update') {
         unless ($version) {
             print "Sorry, I can't delete the version text.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestVersion($product,$version)) {
             print "Sorry, version '$version' is already in use.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE bugs

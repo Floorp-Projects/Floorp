@@ -1009,10 +1009,10 @@ if ($action eq 'update') {
         SendSQL("UPDATE products SET product=$qp WHERE product=$qpold");
         SendSQL("UPDATE versions SET program=$qp WHERE program=$qpold");
         SendSQL("UPDATE milestones SET product=$qp WHERE product=$qpold");
-	# Need to do an update to groups as well.  If there is a corresponding
-	# bug group, whether usebuggroups is currently set or not, we want to
-	# update it so it will match in the future.  If there is no group, this
-	# update statement will do nothing, so no harm done.  -JMR, 3/8/00
+        # Need to do an update to groups as well.  If there is a corresponding
+        # bug group, whether usebuggroups is currently set or not, we want to
+        # update it so it will match in the future.  If there is no group, this
+        # update statement will do nothing, so no harm done.  -JMR, 3/8/00
         SendSQL("UPDATE groups " .
                 "SET name=$qp, " .
                 "description=".SqlQuote($product." Bugs Access")." ".

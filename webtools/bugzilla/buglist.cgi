@@ -479,23 +479,23 @@ sub GenerateSQL {
              }
          },
 
-	 "^dependson," => sub {
+         "^dependson," => sub {
                 my $table = "dependson_" . $chartid;
-		push(@supptables, "dependencies $table");
-		$ff = "$table.$f";
-		$ref = $funcsbykey{",$t"};
-		&$ref;
+                push(@supptables, "dependencies $table");
+                $ff = "$table.$f";
+                $ref = $funcsbykey{",$t"};
+                &$ref;
                 push(@wherepart, "$table.blocked = bugs.bug_id");
-	 },
+         },
 
-	 "^blocked," => sub {
+         "^blocked," => sub {
                 my $table = "blocked_" . $chartid;
-		push(@supptables, "dependencies $table");
-		$ff = "$table.$f";
-		$ref = $funcsbykey{",$t"};
-		&$ref;
+                push(@supptables, "dependencies $table");
+                $ff = "$table.$f";
+                $ref = $funcsbykey{",$t"};
+                &$ref;
                 push(@wherepart, "$table.dependson = bugs.bug_id");
-	 },
+         },
 
 
          ",equals" => sub {
@@ -831,7 +831,7 @@ CMD: for ($::FORM{'cmdtype'}) {
         last CMD;
     };
     /^editnamed$/ && do {
-	my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
+        my $url = "query.cgi?" . LookupNamedQuery($::FORM{"namedcmd"});
         print qq{Content-type: text/html
 Refresh: 0; URL=$url
 
@@ -971,7 +971,7 @@ DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "bugs.short_de
 DefCol("summaryfull", "bugs.short_desc", "Summary", "bugs.short_desc", 1);
 DefCol("status_whiteboard", "bugs.status_whiteboard", "StatusSummary", "bugs.status_whiteboard", 1);
 DefCol("component", "substring(bugs.component, 1, 8)", "Comp",
-	"bugs.component");
+       "bugs.component");
 DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
 DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");

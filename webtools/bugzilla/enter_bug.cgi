@@ -141,7 +141,7 @@ sub pickplatform {
             /Mozilla.*\(Windows/ && do {return "PC";};
             /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
             /Mozilla.*\(Win/ && do {return "PC";};
-	    /Mozilla.*Windows NT/ && do {return "PC";};
+            /Mozilla.*Windows NT/ && do {return "PC";};
             /Mozilla.*Linux.*86/ && do {return "PC";};
             /Mozilla.*BSD.*86/ && do {return "PC";};
             /Mozilla.*Linux.*alpha/ && do {return "DEC";};
@@ -240,13 +240,13 @@ my $platform_popup = make_popup('rep_platform', \@::legal_platform,
 my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
 
 if (0 == @{$::components{$product}}) {
-	print "<H1>Permission Denied</H1>\n";
-	print "Sorry.  You need to have at least one component for this product\n";
-	print "in order to create a new bug.  Go to the \"Components\" link to create\n";
-	print "a new component\n";
-	print "<P>\n";
-	PutFooter();
-	exit;
+        print "<H1>Permission Denied</H1>\n";
+        print "Sorry.  You need to have at least one component for this product\n";
+        print "in order to create a new bug.  Go to the \"Components\" link to create\n";
+        print "a new component\n";
+        print "<P>\n";
+        PutFooter();
+        exit;
 } elsif (1 == @{$::components{$product}}) {
     # Only one component; just pick it.
     $::FORM{'component'} = $::components{$product}->[0];

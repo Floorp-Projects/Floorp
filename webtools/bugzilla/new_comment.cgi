@@ -43,14 +43,14 @@ if ( (!defined $c) || ($c eq '') ) {
     print "Content-type: text/html\n\n";
     print "<TITLE>Nothing on your mind?</TITLE>";
     print "<H1>Does your mind draw a blank?</H1>";
-	print "<H2> Hit back, and try again...</H2>";
+    print "<H2> Hit back, and try again...</H2>";
     exit 0;
 }
 if ($c =~ m/</) {
-	print "Content-type: text/html\n\n";
-	print "<CENTER><H1>For security reasons, support for tags";
-	print " has been turned off in quips.\n</H1>\n";
-	print "<H2> Hit back, and try again...</H2></CENTER>\n";
+    print "Content-type: text/html\n\n";
+    print "<CENTER><H1>For security reasons, support for tags";
+    print " has been turned off in quips.\n</H1>\n";
+    print "<H2> Hit back, and try again...</H2></CENTER>\n";
     exit 0;
 }
 

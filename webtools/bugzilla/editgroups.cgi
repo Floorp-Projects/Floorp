@@ -50,8 +50,8 @@ sub TestGroup ($)
 
     # does the group exist?
     SendSQL("SELECT name
-	     FROM groups
-	     WHERE name=" . SqlQuote($group));
+             FROM groups
+             WHERE name=" . SqlQuote($group));
     return FetchOneColumn();
 }
 
@@ -76,17 +76,17 @@ sub PutTrailer (@)
     my $num = 0;
     print "<P>\n";
     foreach (@links) {
-	print $_;
-	if ($num == $count) {
-	    print ".\n";
-	}
-	elsif ($num == $count-1) {
-	    print " or ";
-	}
-	else {
-	    print ", ";
-	}
-	$num++;
+        print $_;
+        if ($num == $count) {
+            print ".\n";
+        }
+        elsif ($num == $count-1) {
+            print " or ";
+        }
+        else {
+            print ", ";
+        }
+        $num++;
     }
     PutFooter();
 }
@@ -276,7 +276,7 @@ if ($action eq 'new') {
         ShowError("The group '" . $name . "' already exists.<BR>" .
                   "Please click the <b>Back</b> button and try again.");
         PutFooter();
-	exit;
+        exit;
     }
 
     if ($isactive != 0 && $isactive != 1) {
@@ -284,7 +284,7 @@ if ($action eq 'new') {
                   "a problem with Bugzilla or a bug in your browser.<br>" . 
                   "Please click the <b>Back</b> button and try again.");
         PutFooter();
-	exit;
+        exit;
     }
 
     # Major hack for bit values...  perl can't handle 64-bit ints, so I can't

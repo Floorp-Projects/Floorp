@@ -99,33 +99,33 @@ sub ParseUrlString {
     my %isnull;
     my $remaining = $buffer;
     while ($remaining ne "") {
-	my $item;
-	if ($remaining =~ /^([^&]*)&(.*)$/) {
-	    $item = $1;
-	    $remaining = $2;
-	} else {
-	    $item = $remaining;
-	    $remaining = "";
-	}
+        my $item;
+        if ($remaining =~ /^([^&]*)&(.*)$/) {
+            $item = $1;
+            $remaining = $2;
+        } else {
+            $item = $remaining;
+            $remaining = "";
+        }
 
-	my $name;
-	my $value;
-	if ($item =~ /^([^=]*)=(.*)$/) {
-	    $name = $1;
-	    $value = url_decode($2);
-	} else {
-	    $name = $item;
-	    $value = "";
-	}
-	if ($value ne "") {
-	    if (defined $f->{$name}) {
-		$f->{$name} .= $value;
-		my $ref = $m->{$name};
-		push @$ref, $value;
-	    } else {
-		$f->{$name} = $value;
-		$m->{$name} = [$value];
-	    }
+        my $name;
+        my $value;
+        if ($item =~ /^([^=]*)=(.*)$/) {
+            $name = $1;
+            $value = url_decode($2);
+        } else {
+            $name = $item;
+            $value = "";
+        }
+        if ($value ne "") {
+            if (defined $f->{$name}) {
+                $f->{$name} .= $value;
+                my $ref = $m->{$name};
+                push @$ref, $value;
+            } else {
+                $f->{$name} = $value;
+                $m->{$name} = [$value];
+            }
         } else {
             $isnull{$name} = 1;
         }
@@ -306,7 +306,7 @@ sub ValidateBugID {
     # Finish validation and return if the user is in a role that has access to the bug.
     if ($userid) {
         return 
-	  if ($reporter_accessible && $reporter == $userid)
+          if ($reporter_accessible && $reporter == $userid)
             || ($assignee_accessible && $assignee == $userid)
               || ($qacontact_accessible && $qacontact == $userid);
     }
@@ -391,22 +391,22 @@ sub value_quote {
 sub navigation_header {
     if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "" &&
         defined $::FORM{'id'}) {
-	my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
-	my $cur = lsearch(\@bugs, $::FORM{"id"});
-	print "<B>Bug List:</B> (@{[$cur + 1]} of @{[$#bugs + 1]})\n";
-	print "<A HREF=\"show_bug.cgi?id=$bugs[0]\">First</A>\n";
-	print "<A HREF=\"show_bug.cgi?id=$bugs[$#bugs]\">Last</A>\n";
-	if ($cur > 0) {
-	    print "<A HREF=\"show_bug.cgi?id=$bugs[$cur - 1]\">Prev</A>\n";
-	} else {
-	    print "<I><FONT COLOR=\#777777>Prev</FONT></I>\n";
-	}
-	if ($cur < $#bugs) {
-	    $::next_bug = $bugs[$cur + 1];
-	    print "<A HREF=\"show_bug.cgi?id=$::next_bug\">Next</A>\n";
-	} else {
-	    print "<I><FONT COLOR=\#777777>Next</FONT></I>\n";
-	}
+        my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
+        my $cur = lsearch(\@bugs, $::FORM{"id"});
+        print "<B>Bug List:</B> (@{[$cur + 1]} of @{[$#bugs + 1]})\n";
+        print "<A HREF=\"show_bug.cgi?id=$bugs[0]\">First</A>\n";
+        print "<A HREF=\"show_bug.cgi?id=$bugs[$#bugs]\">Last</A>\n";
+        if ($cur > 0) {
+            print "<A HREF=\"show_bug.cgi?id=$bugs[$cur - 1]\">Prev</A>\n";
+        } else {
+            print "<I><FONT COLOR=\#777777>Prev</FONT></I>\n";
+        }
+        if ($cur < $#bugs) {
+            $::next_bug = $bugs[$cur + 1];
+            print "<A HREF=\"show_bug.cgi?id=$::next_bug\">Next</A>\n";
+        } else {
+            print "<I><FONT COLOR=\#777777>Next</FONT></I>\n";
+        }
         print qq{&nbsp;&nbsp;<A HREF="buglist.cgi?regetlastlist=1">Show list</A>\n};
     }
     print "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<A HREF=query.cgi>Query page</A>\n";
@@ -483,7 +483,7 @@ sub make_checkboxes {
         }
     }
     if (!$found && $default ne "") {
-	$popup .= "<INPUT NAME=$name TYPE=CHECKBOX CHECKED>$default";
+        $popup .= "<INPUT NAME=$name TYPE=CHECKBOX CHECKED>$default";
     }
     return $popup;
 }
@@ -635,7 +635,7 @@ sub make_options {
         exit 0;
               
       } else {
-	$popup .= "<OPTION SELECTED>$default\n";
+        $popup .= "<OPTION SELECTED>$default\n";
       }
     }
     return $popup;
@@ -686,7 +686,7 @@ sub BuildPulldown {
 sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
-	    SqlQuote($login));
+            SqlQuote($login));
     my $result = FetchOneColumn();
     if (!defined $result) {
         $result = "";
@@ -701,7 +701,7 @@ sub quietly_check_login() {
     $::disabledreason = '';
     $::userid = 0;
     if (defined $::COOKIE{"Bugzilla_login"} &&
-	defined $::COOKIE{"Bugzilla_logincookie"}) {
+        defined $::COOKIE{"Bugzilla_logincookie"}) {
         ConnectToDatabase();
         if (!defined $ENV{'REMOTE_HOST'}) {
             $ENV{'REMOTE_HOST'} = $ENV{'REMOTE_ADDR'};
@@ -709,14 +709,14 @@ sub quietly_check_login() {
         SendSQL("SELECT profiles.userid, profiles.groupset, " .
                 "profiles.login_name, " .
                 "profiles.login_name = " .
-		SqlQuote($::COOKIE{"Bugzilla_login"}) .
-		" AND profiles.cryptpassword = logincookies.cryptpassword " .
-		"AND logincookies.hostname = " .
-		SqlQuote($ENV{"REMOTE_HOST"}) .
+                SqlQuote($::COOKIE{"Bugzilla_login"}) .
+                " AND profiles.cryptpassword = logincookies.cryptpassword " .
+                "AND logincookies.hostname = " .
+                SqlQuote($ENV{"REMOTE_HOST"}) .
                 ", profiles.disabledtext " .
-		" FROM profiles, logincookies WHERE logincookies.cookie = " .
-		SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
-		" AND profiles.userid = logincookies.userid");
+                " FROM profiles, logincookies WHERE logincookies.cookie = " .
+                SqlQuote($::COOKIE{"Bugzilla_logincookie"}) .
+                " AND profiles.userid = logincookies.userid");
         my @row;
         if (@row = FetchSQLData()) {
             my ($userid, $groupset, $loginname, $ok, $disabledtext) = (@row);
@@ -1017,10 +1017,10 @@ Content-type: text/html
           print "I need a legitimate e-mail address and password to continue.\n";
         }
         if (!defined $nexturl || $nexturl eq "") {
-	    # Sets nexturl to be argv0, stripping everything up to and
-	    # including the last slash (or backslash on Windows).
-	    $0 =~ m:[^/\\]*$:;
-	    $nexturl = $&;
+            # Sets nexturl to be argv0, stripping everything up to and
+            # including the last slash (or backslash on Windows).
+            $0 =~ m:[^/\\]*$:;
+            $nexturl = $&;
         }
         my $method = "POST";
 # We always want to use POST here, because we're submitting a password and don't
@@ -1120,13 +1120,13 @@ sub PutHeader {
     my ($title, $h1, $h2, $extra, $jscript) = (@_);
 
     if (!defined $h1) {
-	$h1 = $title;
+        $h1 = $title;
     }
     if (!defined $h2) {
-	$h2 = "";
+        $h2 = "";
     }
     if (!defined $extra) {
-	$extra = "";
+       $extra = "";
     }
     $jscript ||= "";
     # If we are shutdown, we want a very basic page to give that
@@ -1347,7 +1347,7 @@ Actions:
         }
     }
     if ($loggedin) {
-    	#a little mandatory SQL, used later on
+        #a little mandatory SQL, used later on
         SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
                 "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
         my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
@@ -1385,7 +1385,7 @@ Edit <a href="userprefs.cgi">prefs</a>
 </TD></TR> 
 };
         
-		#begin preset queries
+        #begin preset queries
         my $mybugstemplate = Param("mybugstemplate");
         my %substs;
         $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
@@ -1458,12 +1458,12 @@ if (defined $ENV{"REQUEST_METHOD"}) {
 
 if (defined $ENV{"HTTP_COOKIE"}) {
     foreach my $pair (split(/;/, $ENV{"HTTP_COOKIE"})) {
-	$pair = trim($pair);
-	if ($pair =~ /^([^=]*)=(.*)$/) {
-	    $::COOKIE{$1} = $2;
-	} else {
-	    $::COOKIE{$pair} = "";
-	}
+        $pair = trim($pair);
+        if ($pair =~ /^([^=]*)=(.*)$/) {
+            $::COOKIE{$1} = $2;
+        } else {
+            $::COOKIE{$pair} = "";
+        }
     }
 }
 

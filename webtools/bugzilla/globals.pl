@@ -102,8 +102,8 @@ sub ConnectToDatabase {
             $name = Param("shadowdb");
             $::dbwritesallowed = 0;
         }
-	$::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
-	    || die "Bugzilla is currently broken. Please try again later. " . 
+        $::db = DBI->connect("DBI:mysql:host=$::db_host;database=$name", $::db_user, $::db_pass)
+            || die "Bugzilla is currently broken. Please try again later. " . 
       "If the problem persists, please contact " . Param("maintainer") .
       ". The error you should quote is: " . $DBI::errstr;
     }
@@ -212,11 +212,11 @@ sub SendSQL {
     SqlLog($str);
     $::currentquery = $::db->prepare($str);
     if (!$::currentquery->execute) {
-    	my $errstr = $::db->errstr;
-	# Cut down the error string to a reasonable.size
-	$errstr = substr($errstr, 0, 100) . ' ... ' . substr($errstr, -100)
-		if length($errstr) > 200;
-	die "$str: " . $errstr;
+        my $errstr = $::db->errstr;
+        # Cut down the error string to a reasonable.size
+        $errstr = substr($errstr, 0, 100) . ' ... ' . substr($errstr, -100)
+                if length($errstr) > 200;
+        die "$str: " . $errstr;
     }
     SqlLog("Done");
     if (!$dontshadow && $iswrite && Param("shadowdb")) {
@@ -240,10 +240,10 @@ sub MoreSQLData {
         return 0;
     }
     if (defined @::fetchahead) {
-	return 1;
+        return 1;
     }
     if (@::fetchahead = $::currentquery->fetchrow_array) {
-	return 1;
+        return 1;
     }
     return 0;
 }
@@ -254,9 +254,9 @@ sub FetchSQLData {
         return;
     }
     if (defined @::fetchahead) {
-	my @result = @::fetchahead;
-	undef @::fetchahead;
-	return @result;
+        my @result = @::fetchahead;
+        undef @::fetchahead;
+        return @result;
     }
     return $::currentquery->fetchrow_array;
 }
@@ -1091,7 +1091,7 @@ sub SplitEnumType {
         while ($guts =~ /^\'([^\']*)\',(.*)$/) {
             push @result, $1;
             $guts = $2;
-	}
+        }
     }
     return @result;
 }

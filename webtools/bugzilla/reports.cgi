@@ -485,9 +485,9 @@ sub daily_stats_filename {
 }
 
 sub show_chart {
-	# if we don't have the graphic mouldes don't even try to go
-	# here. Should probably return some decent error message.
-	return unless $use_gd;
+    # if we don't have the graphic mouldes don't even try to go
+    # here. Should probably return some decent error message.
+    return unless $use_gd;
 
     if (! $FORM{datasets}) {
         die_politely("You didn't select any datasets to plot");

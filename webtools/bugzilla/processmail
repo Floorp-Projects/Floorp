@@ -478,18 +478,18 @@ sub filterEmailGroup ($$$) {
     # relationship to the bug of the person they are watching (if the person they
     # are watching is an owner, their mail is filtered as if they were the owner).
     if (Param("supportwatchers")) {
-	my @watchers;
-	foreach my $person(@emailList) {
-	    my $personId = DBname_to_id($person);
-	    SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
-	    while(MoreSQLData()) {
-	        my ($watcher) = FetchSQLData();
-	        if ($watcher) {
-	            push (@watchers, DBID_to_name($watcher));
-	        }
-	    }
-	}
-	push(@emailList, @watchers);
+        my @watchers;
+        foreach my $person(@emailList) {
+            my $personId = DBname_to_id($person);
+            SendSQL("SELECT watcher FROM watch WHERE watched = $personId");
+            while(MoreSQLData()) {
+                my ($watcher) = FetchSQLData();
+                if ($watcher) {
+                    push (@watchers, DBID_to_name($watcher));
+                }
+            }
+        }
+        push(@emailList, @watchers);
     }
 
 

@@ -56,8 +56,8 @@ sub TestUser ($)
 
     # does the product exist?
     SendSQL("SELECT login_name
-	     FROM profiles
-	     WHERE login_name=" . SqlQuote($user));
+             FROM profiles
+             WHERE login_name=" . SqlQuote($user));
     return FetchOneColumn();
 }
 
@@ -67,15 +67,15 @@ sub CheckUser ($)
 
     # do we have a product?
     unless ($user) {
-	print "Sorry, you haven't specified a user.";
+        print "Sorry, you haven't specified a user.";
         PutTrailer();
-	exit;
+        exit;
     }
 
     unless (TestUser $user) {
-	print "Sorry, user '$user' does not exist.";
+        print "Sorry, user '$user' does not exist.";
         PutTrailer();
-	exit;
+        exit;
     }
 }
 
@@ -209,17 +209,17 @@ sub PutTrailer (@)
     my $num = 0;
     print "<P>\n";
     foreach (@links) {
-	print $_;
-	if ($num == $count) {
-	    print ".\n";
-	}
-	elsif ($num == $count-1) {
-	    print " or ";
-	}
-	else {
-	    print ", ";
-	}
-	$num++;
+        print $_;
+        if ($num == $count) {
+            print ".\n";
+        }
+        elsif ($num == $count-1) {
+            print " or ";
+        }
+        else {
+            print ", ";
+        }
+        $num++;
     }
     PutFooter();
 }
@@ -303,11 +303,11 @@ if ($action eq 'list') {
       } elsif ($::FORM{'matchtype'} eq 'regexp') {
           $query .= "regexp";
           $matchstr = '.'
-	  	unless $matchstr;
+                unless $matchstr;
       } elsif ($::FORM{'matchtype'} eq 'notregexp') {
           $query .= "not regexp";
           $matchstr = '.'
-	  	unless $matchstr;
+                unless $matchstr;
       } else {
           die "Unknown match type";
       }
@@ -335,21 +335,21 @@ if ($action eq 'list') {
         if ($count % 100 == 0) {
             print "</table>$header";
         }
-	my ($user, $realname, $disabledtext) = FetchSQLData();
+        my ($user, $realname, $disabledtext) = FetchSQLData();
         my $s = "";
         my $e = "";
         if ($disabledtext) {
             $s = "<STRIKE>";
             $e = "</STRIKE>";
         }
-	$realname ||= "<FONT COLOR=\"red\">missing</FONT>";
-	print "<TR>\n";
-	print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s$user$e</B></A></TD>\n";
-	print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
+        $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
+        print "<TR>\n";
+        print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=edit&user=", url_quote($user), "\"><B>$s$user$e</B></A></TD>\n";
+        print "  <TD VALIGN=\"top\">$s$realname$e</TD>\n";
         if ($candelete) {
             print "  <TD VALIGN=\"top\"><A HREF=\"editusers.cgi?action=del&user=", url_quote($user), "\">Delete</A></TD>\n";
         }
-	print "</TR>";
+        print "</TR>";
     }
     if ($editall && !Param('useLDAP')) {
         print "<TR>\n";
@@ -452,10 +452,10 @@ if ($action eq 'new') {
         exit;
     }
     if (TestUser($user)) {
-	print "The user '$user' does already exist. Please press\n";
-	print "<b>Back</b> and try again.\n";
+        print "The user '$user' does already exist. Please press\n";
+        print "<b>Back</b> and try again.\n";
         PutTrailer($localtrailer);
-	exit;
+        exit;
     }
     my $passworderror = ValidatePassword($password);
     if ( $passworderror ) {
@@ -509,7 +509,7 @@ if ($action eq 'new') {
     print "To change ${user}'s permissions, go back and <a href=\"editusers.cgi?action=edit&user=" . url_quote($user)."\">edit this user</A>";
     print "<p>\n";
     PutTrailer($localtrailer,
-	"<a href=\"editusers.cgi?action=add\">add</a> another user.");
+        "<a href=\"editusers.cgi?action=add\">add</a> another user.");
     exit;
 
 }
@@ -537,7 +537,7 @@ if ($action eq 'del') {
 
     # display some data about the user
     SendSQL("SELECT realname, groupset FROM profiles
-	     WHERE login_name=" . SqlQuote($user));
+             WHERE login_name=" . SqlQuote($user));
     my ($realname, $groupset) = 
       FetchSQLData();
     $realname ||= "<FONT COLOR=\"red\">missing</FONT>";
@@ -559,12 +559,12 @@ if ($action eq 'del') {
     print "  <TD VALIGN=\"top\">Group set:</TD>\n";
     print "  <TD VALIGN=\"top\">";
     SendSQL("SELECT name
-	     FROM groups
+             FROM groups
              WHERE bit & $groupset = bit
-	     ORDER BY isbuggroup, name");
+             ORDER BY isbuggroup, name");
     my $found = 0;
     while ( MoreSQLData() ) {
-	my ($name) = FetchSQLData();
+        my ($name) = FetchSQLData();
         print "<br>\n" if $found;
         print ucfirst $name;
         $found = 1;
@@ -577,23 +577,23 @@ if ($action eq 'del') {
     my $nodelete = '';
 
     SendSQL("SELECT program, value
-	     FROM components
+             FROM components
              WHERE initialowner=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
-	if ($found) {
-	    print "<BR>\n";
-	} else {
-	    print "<TR>\n";
-	    print "  <TD VALIGN=\"top\">Initial owner:</TD>\n";
-	    print "  <TD VALIGN=\"top\">";
-	}
-	my ($product, $component) = FetchSQLData();
-	print "<a href=\"editcomponents.cgi?product=", url_quote($product),
-		"&component=", url_quote($component),
-		"&action=edit\">$product: $component</a>";
-	$found    = 1;
-	$nodelete = 'initial bug owner';
+        if ($found) {
+            print "<BR>\n";
+        } else {
+            print "<TR>\n";
+            print "  <TD VALIGN=\"top\">Initial owner:</TD>\n";
+            print "  <TD VALIGN=\"top\">";
+        }
+        my ($product, $component) = FetchSQLData();
+        print "<a href=\"editcomponents.cgi?product=", url_quote($product),
+                "&component=", url_quote($component),
+                "&action=edit\">$product: $component</a>";
+        $found    = 1;
+        $nodelete = 'initial bug owner';
     }
     print "</TD>\n</TR>" if $found;
 
@@ -601,23 +601,23 @@ if ($action eq 'del') {
     # Check if the user is an initialqacontact
 
     SendSQL("SELECT program, value
-	     FROM components
+             FROM components
              WHERE initialqacontact=" . DBname_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
-	if ($found) {
-	    print "<BR>\n";
-	} else {
-	    print "<TR>\n";
-	    print "  <TD VALIGN=\"top\">Initial QA contact:</TD>\n";
-	    print "  <TD VALIGN=\"top\">";
-	}
-	my ($product, $component) = FetchSQLData();
-	print "<a href=\"editcomponents.cgi?product=", url_quote($product),
-		"&component=", url_quote($component),
-		"&action=edit\">$product: $component</a>";
-	$found    = 1;
-	$nodelete = 'initial QA contact';
+        if ($found) {
+            print "<BR>\n";
+        } else {
+            print "<TR>\n";
+            print "  <TD VALIGN=\"top\">Initial QA contact:</TD>\n";
+            print "  <TD VALIGN=\"top\">";
+        }
+        my ($product, $component) = FetchSQLData();
+        print "<a href=\"editcomponents.cgi?product=", url_quote($product),
+                "&component=", url_quote($component),
+                "&action=edit\">$product: $component</a>";
+        $found    = 1;
+        $nodelete = 'initial QA contact';
     }
     print "</TD>\n</TR>" if $found;
 
@@ -625,10 +625,10 @@ if ($action eq 'del') {
 
 
     if ($nodelete) {
-	print "<P>You can't delete this user because '$user' is an $nodelete ",
-	      "for at least one product.";
-	PutTrailer($localtrailer);
-	exit;
+        print "<P>You can't delete this user because '$user' is an $nodelete ",
+              "for at least one product.";
+        PutTrailer($localtrailer);
+        exit;
     }
 
 
@@ -665,14 +665,14 @@ if ($action eq 'delete') {
     CheckUser($user);
 
     SendSQL("SELECT userid
-	     FROM profiles
-	     WHERE login_name=" . SqlQuote($user));
+             FROM profiles
+             WHERE login_name=" . SqlQuote($user));
     my $userid = FetchOneColumn();
 
     SendSQL("DELETE FROM profiles
-	     WHERE login_name=" . SqlQuote($user));
+             WHERE login_name=" . SqlQuote($user));
     SendSQL("DELETE FROM logincookies
-	     WHERE userid=" . $userid);
+             WHERE userid=" . $userid);
     print "User deleted.<BR>\n";
 
     PutTrailer($localtrailer);
@@ -693,8 +693,8 @@ if ($action eq 'edit') {
 
     # get data of user
     SendSQL("SELECT realname, groupset, blessgroupset, disabledtext
-	     FROM profiles
-	     WHERE login_name=" . SqlQuote($user));
+             FROM profiles
+             WHERE login_name=" . SqlQuote($user));
     my ($realname, $groupset, $blessgroupset,
         $disabledtext) = FetchSQLData();
 
@@ -740,15 +740,15 @@ if ($action eq 'update') {
 
     my $groupset = "0";
     foreach (keys %::FORM) {
-	next unless /^bit_/;
-	#print "$_=$::FORM{$_}<br>\n";
-	$groupset .= " + $::FORM{$_}";
+        next unless /^bit_/;
+        #print "$_=$::FORM{$_}<br>\n";
+        $groupset .= " + $::FORM{$_}";
     }
     my $blessgroupset = "0";
     foreach (keys %::FORM) {
-	next unless /^blbit_/;
-	#print "$_=$::FORM{$_}<br>\n";
-	$blessgroupset .= " + $::FORM{$_}";
+        next unless /^blbit_/;
+        #print "$_=$::FORM{$_}<br>\n";
+        $blessgroupset .= " + $::FORM{$_}";
     }
 
     CheckUser($userold);
@@ -785,15 +785,15 @@ if ($action eq 'update') {
                        "($u, $::userid, now(), $fieldid, " .
                        " $groupsetold, $groupset)");
            }
-	   print "Updated permissions.\n";
+           print "Updated permissions.\n";
        }
     }
 
     if ($editall && $blessgroupset ne $blessgroupsetold) {
         SendSQL("UPDATE profiles
-		 SET blessgroupset=" . $blessgroupset . "
-		 WHERE login_name=" . SqlQuote($userold));
-	print "Updated ability to tweak permissions of other users.\n";
+                 SET blessgroupset=" . $blessgroupset . "
+                 WHERE login_name=" . SqlQuote($userold));
+        print "Updated ability to tweak permissions of other users.\n";
     }
 
     # Update the database with the user's new password if they changed it.
@@ -812,39 +812,39 @@ if ($action eq 'update') {
     }
     if ($editall && $realname ne $realnameold) {
         SendSQL("UPDATE profiles
-		 SET realname=" . SqlQuote($realname) . "
-		 WHERE login_name=" . SqlQuote($userold));
-	print "Updated real name.<BR>\n";
+                 SET realname=" . SqlQuote($realname) . "
+                 WHERE login_name=" . SqlQuote($userold));
+        print "Updated real name.<BR>\n";
     }
     if ($editall && $disabledtext ne $disabledtextold) {
         SendSQL("UPDATE profiles
-		 SET disabledtext=" . SqlQuote($disabledtext) . "
-		 WHERE login_name=" . SqlQuote($userold));
+                 SET disabledtext=" . SqlQuote($disabledtext) . "
+                 WHERE login_name=" . SqlQuote($userold));
         SendSQL("SELECT userid
-	         FROM profiles
-	         WHERE login_name=" . SqlQuote($user));
+                 FROM profiles
+                 WHERE login_name=" . SqlQuote($user));
         my $userid = FetchOneColumn();
         SendSQL("DELETE FROM logincookies
-	         WHERE userid=" . $userid);
-	print "Updated disabled text.<BR>\n";
+                 WHERE userid=" . $userid);
+        print "Updated disabled text.<BR>\n";
     }
     if ($editall && $user ne $userold) {
-	unless ($user) {
-	    print "Sorry, I can't delete the user's name.";
+        unless ($user) {
+            print "Sorry, I can't delete the user's name.";
             PutTrailer($localtrailer);
-	    exit;
+            exit;
         }
-	if (TestUser($user)) {
-	    print "Sorry, user name '$user' is already in use.";
+        if (TestUser($user)) {
+            print "Sorry, user name '$user' is already in use.";
             PutTrailer($localtrailer);
-	    exit;
+            exit;
         }
 
         SendSQL("UPDATE profiles
-		 SET login_name=" . SqlQuote($user) . "
-		 WHERE login_name=" . SqlQuote($userold));
+                 SET login_name=" . SqlQuote($user) . "
+                 WHERE login_name=" . SqlQuote($userold));
 
-	print "Updated user's name.<BR>\n";
+        print "Updated user's name.<BR>\n";
     }
 
     PutTrailer($localtrailer);

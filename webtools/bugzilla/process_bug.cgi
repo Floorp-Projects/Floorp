@@ -794,12 +794,12 @@ SWITCH: for ($::FORM{'knob'}) {
         last SWITCH;
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
-		SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
+                SendSQL("SELECT resolution FROM bugs WHERE bug_id = $::FORM{'id'}");
         ChangeStatus('REOPENED');
         ChangeResolution('');
-		if (FetchOneColumn() eq 'DUPLICATE') {
-			SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
-		}		
+                if (FetchOneColumn() eq 'DUPLICATE') {
+                        SendSQL("DELETE FROM duplicates WHERE dupe = $::FORM{'id'}");
+                }
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
@@ -1099,7 +1099,7 @@ The changes made were:
                 }
             }
 
-	    if ($me eq 'dependson') {
+            if ($me eq 'dependson') {
                 my @deps   =  @{$deps{'dependson'}};
                 my @blocks =  @{$deps{'blocked'}};
                 my @union = ();
@@ -1109,10 +1109,10 @@ The changes made were:
                 foreach my $b (@deps, @blocks) { $union{$b}++ && $isect{$b}++ }
                 @union = keys %union;
                 @isect = keys %isect;
-		if (@isect > 0) {
+                if (@isect > 0) {
                     my $both;
                     foreach my $i (@isect) {
-                       $both = $both . "#" . $i . " ";	
+                       $both = $both . "#" . $i . " ";
                     }
                     PuntTryAgain("Dependency loop detected!<P>" .
                                  "This bug can't be both blocked and dependent " .

@@ -520,13 +520,13 @@ if ($action eq 'update') {
         unless ($milestone) {
             print "Sorry, I can't delete the milestone text.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         if (TestMilestone($product,$milestone)) {
             print "Sorry, milestone '$milestone' is already in use.";
             PutTrailer($localtrailer);
-	    SendSQL("UNLOCK TABLES");
+            SendSQL("UNLOCK TABLES");
             exit;
         }
         SendSQL("UPDATE bugs

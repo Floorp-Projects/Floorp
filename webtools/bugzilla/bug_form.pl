@@ -65,13 +65,13 @@ select
         reporter,
         bug_file_loc,
         short_desc,
-	target_milestone,
-	qa_contact,
-	status_whiteboard,
+        target_milestone,
+        qa_contact,
+        status_whiteboard,
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
         groupset,
-	delta_ts,
-	sum(votes.count)
+        delta_ts,
+        sum(votes.count)
 from bugs left join votes using(bug_id)
 where bugs.bug_id = $id
 group by bugs.bug_id";
@@ -126,7 +126,7 @@ my $sev_popup = make_options(\@::legal_severity, $bug{'bug_severity'});
 
 
 my $component_popup = make_options($::components{$bug{'product'}},
-				   $bug{'component'});
+                                   $bug{'component'});
 
 my $ccSet = new RelationSet;
 $ccSet->mergeFromDB("select who from cc where bug_id=$id");
@@ -359,13 +359,13 @@ print "
 
 if ($::usergroupset ne '0') {
     SendSQL("select bit, name, description, (bit & $bug{'groupset'} != 0) " .
-	    "from groups where bit & $::usergroupset != 0 " .
-	    "and isbuggroup != 0 " . 
+            "from groups where bit & $::usergroupset != 0 " .
+            "and isbuggroup != 0 " . 
             # Include active groups as well as inactive groups to which
             # the bug already belongs.  This way the bug can be removed
             # from an inactive group but can only be added to active ones.
             "and (isactive = 1 or (bit & $bug{'groupset'} != 0)) " . 
-	    "order by description");
+            "order by description");
     # We only print out a header bit for this section if there are any
     # results.
     my $groupFound = 0;
@@ -459,7 +459,7 @@ if ($status eq $::unconfirmedstate) {
     $canconfirm = UserInGroup("canconfirm") || ($::userid == 0);
     if ($canedit || $canconfirm) {
         print "<INPUT TYPE=radio NAME=knob VALUE=confirm>";
-	print "Confirm bug (change status to <b>NEW</b>)<br>";
+        print "Confirm bug (change status to <b>NEW</b>)<br>";
         $knum++;
     }
 }

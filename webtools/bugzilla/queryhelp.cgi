@@ -19,8 +19,8 @@
 # Rights Reserved.
 #
 # Contributor(s):         Brian Bober <boberb@rpi.edu>
-#			  Terry Weissman <terry@mozilla.org>
-#			  Tara Hernandez <tara@tequilarista.org>
+#                         Terry Weissman <terry@mozilla.org>
+#                         Tara Hernandez <tara@tequilarista.org>
 
 use vars %::FORM;
 
@@ -585,40 +585,40 @@ $line_count = 0;
 $max_table_size = 50;
 my @products;
 
-$tableheader = 	qq{ <p><table border=0><tr><td>
-	<table border="1" width="100%" cellpadding="4" cellspacing="0">
-	<tr bgcolor="#6666FF">
-	<th align="left">Product</th>
-	<th align="left">Description</th></tr> };
+$tableheader =         qq{ <p><table border=0><tr><td>
+        <table border="1" width="100%" cellpadding="4" cellspacing="0">
+        <tr bgcolor="#6666FF">
+        <th align="left">Product</th>
+        <th align="left">Description</th></tr> };
 
 
 print qq{
-	$tableheader
+        $tableheader
 };
 
 
 SendSQL("SELECT product,description FROM products ORDER BY product");
-	while (MoreSQLData()) {
+        while (MoreSQLData()) {
 
-	my ($product, $productdesc) = FetchSQLData();
-	push (@products, $product);
+        my ($product, $productdesc) = FetchSQLData();
+        push (@products, $product);
 
-	$line_count++;
-	if ($line_count > $max_table_size) {
-			print qq{
-			</table>
-			$tableheader
-		};
-	  	$line_count=1;
-	}
+        $line_count++;
+        if ($line_count > $max_table_size) {
+                        print qq{
+                        </table>
+                        $tableheader
+                };
+                  $line_count=1;
+        }
 
-	print qq{ <tr><th>$product</th><td>$productdesc</td></tr> };
+        print qq{ <tr><th>$product</th><td>$productdesc</td></tr> };
 
 
 }
 
 
-print qq{ 	
+print qq{         
 
 </table></td></tr></table> };
 
@@ -642,41 +642,41 @@ entered instead (milestones explained below).
  
 $line_count = 0;
 $tableheader = qq{ 
-	<p>
-	<table border="1" width="100%" cellpadding="4" cellspacing="0">
-	<tr bgcolor="#6666FF">
-	<th align="left">Component</th>
-	<th align="left">Product</th>
-	<th align="left">Description</th></tr>
+        <p>
+        <table border="1" width="100%" cellpadding="4" cellspacing="0">
+        <tr bgcolor="#6666FF">
+        <th align="left">Component</th>
+        <th align="left">Product</th>
+        <th align="left">Description</th></tr>
 };
 
-print qq{ 	
+print qq{         
 <p><a name="component"></a>
 <h4>Component</h4>
 <p>Each product has components, against which bugs can be filed. Components are parts of 
 the product, and are assigned to a module owner. The following lists 
 components and their associated products:
-		$tableheader
+                $tableheader
 };
 foreach $product (@products)
 {
 
-	SendSQL("SELECT value,description FROM components WHERE program=" . SqlQuote($product) . " ORDER BY value");
+        SendSQL("SELECT value,description FROM components WHERE program=" . SqlQuote($product) . " ORDER BY value");
 
-	while (MoreSQLData()) {
+        while (MoreSQLData()) {
 
-		my ($component, $compdesc) = FetchSQLData();
+                my ($component, $compdesc) = FetchSQLData();
 
-		$line_count++;
-		if ($line_count > $max_table_size) {
-				print qq{
-				</table>
-				$tableheader
-			};
-			$line_count=0;
-		}
-		print qq{<tr><th>$component</th><td>$product</td><td>$compdesc</td></tr>};
-	}
+                $line_count++;
+                if ($line_count > $max_table_size) {
+                                print qq{
+                                </table>
+                                $tableheader
+                        };
+                        $line_count=0;
+                }
+                print qq{<tr><th>$component</th><td>$product</td><td>$compdesc</td></tr>};
+        }
 
 }
 
@@ -884,9 +884,9 @@ queries, but it's not the easiest thing to learn (or explain).
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value0-0-0" VALUE=""><INPUT TYPE="button" VALUE="Or" ><INPUT TYPE="button" VALUE="And" 
-	NAME="cmd-add0-1-0"></td></tr>
+        NAME="cmd-add0-1-0"></td></tr>
     
-		<tr><td>&nbsp;</td><td align="center">
+                <tr><td>&nbsp;</td><td align="center">
          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <INPUT TYPE="button" VALUE="Add another boolean chart" NAME="cmd-add1-0-0">
        
@@ -1012,9 +1012,9 @@ Field 3: What the search term is<br>
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value0-0-1" VALUE=""><INPUT TYPE="button" VALUE="Or" NAME="cmd-add0-0-2" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"><INPUT TYPE="button" VALUE="And" 
-	NAME="cmd-add0-1-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
+        NAME="cmd-add0-1-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
     
-		<tr><td>&nbsp;</td><td align="center">
+                <tr><td>&nbsp;</td><td align="center">
          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <INPUT TYPE="button" VALUE="Add another boolean chart" NAME="cmd-add1-0-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;">
        
@@ -1142,9 +1142,9 @@ the query will be anything that matches either of the terms.
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value0-1-0" VALUE=""><INPUT TYPE="button" VALUE="Or" NAME="cmd-add0-1-1" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"><INPUT TYPE="button" VALUE="And" 
-	NAME="cmd-add0-2-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
+        NAME="cmd-add0-2-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
     
-		<tr><td>&nbsp;</td><td align="center">
+                <tr><td>&nbsp;</td><td align="center">
          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <INPUT TYPE="button" VALUE="Add another boolean chart" NAME="cmd-add1-0-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;">
        
@@ -1225,12 +1225,12 @@ can think of the lines of "Or" as having parenthesis around them.
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value0-0-0" VALUE=""><INPUT TYPE="button" VALUE="Or" NAME="cmd-add0-0-1" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"><INPUT TYPE="button" VALUE="And" 
-	NAME="cmd-add0-1-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
+        NAME="cmd-add0-1-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
     
-		<tr>
-		<td colspan="2"><hr></td>
-		</tr><tr><td>&nbsp;</td><td>
-		<SELECT NAME="field1-0-0"><OPTION SELECTED VALUE="noop">---
+                <tr>
+                <td colspan="2"><hr></td>
+                </tr><tr><td>&nbsp;</td><td>
+                <SELECT NAME="field1-0-0"><OPTION SELECTED VALUE="noop">---
 <OPTION VALUE="groupset">groupset
 <OPTION VALUE="bug_id">Bug #
 <OPTION VALUE="short_desc">Summary
@@ -1279,9 +1279,9 @@ can think of the lines of "Or" as having parenthesis around them.
 <OPTION VALUE="changedto">changed to
 <OPTION VALUE="changedby">changed by
 </SELECT><INPUT NAME="value1-0-0" VALUE=""><INPUT TYPE="button" VALUE="Or" NAME="cmd-add1-0-1" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"><INPUT TYPE="button" VALUE="And" 
-	NAME="cmd-add1-1-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
+        NAME="cmd-add1-1-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;"></td></tr>
     
-		<tr><td>&nbsp;</td><td align="center">
+                <tr><td>&nbsp;</td><td align="center">
          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <INPUT TYPE="button" VALUE="Add another boolean chart" NAME="cmd-add2-0-0" ONCLICK="document.forms[0].action='query.cgi#chart' ; document.forms[0].method='POST' ; return 1;">
        
