@@ -21,6 +21,8 @@
 interface nsIChannel;
 interface nsISimpleEnumerator;
 interface nsIStreamObserver;
+interface nsIStreamListener;
+interface nsIInputStream;
 
 /**
  * A load group maintains a collection of active URL requests. 
@@ -36,15 +38,27 @@ interface nsILoadGroup : nsIRequest
     attribute unsigned long DefaultLoadAttributes;
 
     /**
-     * Adds a new channel to the group. This will cause the default load
-     * attributes to be applied to that channel.
+     * Adds the channel to the group, and performs and AsyncRead on the
+     * channel (see nsIChannel for details). The channel is automatically
+     * removed from the group when the async operation completes.
      */
-    void AddChannel(in nsIChannel channel);
+    void AsyncRead(in nsIChannel channel,
+                   in unsigned long startPosition,
+                   in long readCount,
+                   in nsISupports ctxt,
+                   in nsIStreamListener listener);
 
     /**
-     * Removes a channel from the group.
+     * Adds the channel to the group, and performs and AsyncWrite on the
+     * channel (see nsIChannel for details). The channel is automatically
+     * removed from the group when the async operation completes.
      */
-    void RemoveChannel(in nsIChannel channel);
+    void AsyncWrite(in nsIChannel channel,
+                    in nsIInputStream fromStream,
+                    in unsigned long startPosition,
+                    in long writeCount,
+                    in nsISupports ctxt,
+                    in nsIStreamObserver observer);
 
     /**
      * Returns the channels contained directly in this group.

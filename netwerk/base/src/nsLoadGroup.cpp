@@ -335,6 +335,28 @@ nsLoadGroup::SetDefaultLoadAttributes(PRUint32 aDefaultLoadAttributes)
 }
 
 NS_IMETHODIMP
+nsLoadGroup::AsyncRead(nsIChannel *channel, 
+                       PRUint32 startPosition, 
+                       PRInt32 readCount, 
+                       nsISupports *ctxt, 
+                       nsIStreamListener *listener)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsLoadGroup::AsyncWrite(nsIChannel *channel, 
+                        nsIInputStream *fromStream, 
+                        PRUint32 startPosition, 
+                        PRInt32 writeCount, 
+                        nsISupports *ctxt, 
+                        nsIStreamObserver *observer)
+{
+    return NS_OK;
+}
+
+#if 0
+NS_IMETHODIMP
 nsLoadGroup::AddChannel(nsIChannel *channel)
 {
     nsresult rv;
@@ -355,6 +377,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel)
     NS_ASSERTION(mChannels, "Forgot to call AddChannel");
     return mChannels->RemoveElement(channel);
 }
+#endif
 
 NS_IMETHODIMP
 nsLoadGroup::GetChannels(nsISimpleEnumerator * *aChannels)
