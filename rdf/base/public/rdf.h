@@ -61,7 +61,7 @@
  */
 
 #define DEFINE_RDF_VOCAB(ns, prefix, name) \
-static const char* kURI##prefix##_##name = ns #name
+static const char kURI##prefix##_##name[] = ns #name
 
 /**
  * Core RDF vocabularies that we use to define semantics
