@@ -22,6 +22,7 @@
  */
 
 #include "xpidl.h"
+#include "xpidl_typelib.h"
 
 nodeHandler *typelibDispatch()
 {
