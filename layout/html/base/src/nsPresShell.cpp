@@ -1184,7 +1184,7 @@ public:
   // caret handling
   NS_IMETHOD GetCaret(nsICaret **aOutCaret);
   NS_IMETHOD SetCaretEnabled(PRBool aInEnable);
-  NS_IMETHOD SetCaretWidth(PRInt16 twips);
+  NS_IMETHOD SetCaretWidth(PRInt16 aPixels);
   NS_IMETHOD SetCaretReadOnly(PRBool aReadOnly);
   NS_IMETHOD GetCaretEnabled(PRBool *aOutEnabled);
 
@@ -1776,6 +1776,11 @@ PresShell::Destroy()
     mPaintSuppressionTimer = nsnull;
   }
 
+  if (mCaret) {
+    mCaret->Terminate();
+    mCaret = nsnull;
+  }
+  
   // release our pref style sheet, if we have one still
   ClearPreferenceStyleRules();
 
@@ -2725,8 +2730,8 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
 
   // notice that we ignore the result
   NotifyReflowObservers(NS_PRESSHELL_INITIAL_REFLOW);
-  mCaret->EraseCaret();
-  //StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
+  if (mCaret)
+    mCaret->EraseCaret();
   
   WillCauseReflow();
 
@@ -2901,8 +2906,9 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   NotifyReflowObservers(NS_PRESSHELL_RESIZE_REFLOW);
   mViewManager->CacheWidgetChanges(PR_TRUE);
 
-  mCaret->EraseCaret();
-  //StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
+  if (mCaret)
+    mCaret->EraseCaret();
+
   WillCauseReflow();
 
   if (mPresContext) {
@@ -3100,11 +3106,14 @@ PresShell::GetFrameManager(nsIFrameManager** aFrameManager) const
   return NS_OK;
 }
 
+// note that this can return a null caret, but NS_OK
 NS_IMETHODIMP PresShell::GetCaret(nsICaret **outCaret)
 {
-  if (!outCaret || !mCaret)
-    return NS_ERROR_NULL_POINTER;
-  return mCaret->QueryInterface(NS_GET_IID(nsICaret), (void **)outCaret);
+  NS_ENSURE_ARG_POINTER(outCaret);
+  
+  *outCaret = mCaret;
+  NS_IF_ADDREF(*outCaret);
+  return NS_OK;
 }
 
 NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
@@ -3129,17 +3138,21 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 
 NS_IMETHODIMP PresShell::SetCaretWidth(PRInt16 pixels)
 {
-  return mCaret->SetCaretWidth(pixels);
+  if (mCaret)
+    mCaret->SetCaretWidth(pixels);
+  return NS_OK;
 }
 
 NS_IMETHODIMP PresShell::SetCaretReadOnly(PRBool aReadOnly)
 {
-  return mCaret->SetCaretReadOnly(aReadOnly);
+  if (mCaret)
+    mCaret->SetCaretReadOnly(aReadOnly);
+  return NS_OK;
 }
 
 NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)
 {
-  if (!aOutEnabled) { return NS_ERROR_INVALID_ARG; }
+  NS_ENSURE_ARG_POINTER(aOutEnabled);
   *aOutEnabled = mCaretEnabled;
   return NS_OK;
 }
@@ -5755,8 +5768,8 @@ PresShell::Paint(nsIView              *aView,
      
   if (nsnull != frame)
   {
-    mCaret->EraseCaret();
-    //StCaretHider  caretHider(mCaret);			// stack-based class hides caret until dtor.
+    if (mCaret)
+      mCaret->EraseCaret();
 
     // If the frame is absolutely positioned, then the 'clip' property
     // applies
