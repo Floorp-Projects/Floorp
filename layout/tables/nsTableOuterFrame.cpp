@@ -174,7 +174,7 @@ struct OuterTableReflowState {
 
 /* ----------- nsTableOuterFrame ---------- */
 
-
+NS_IMPL_ISUPPORTS_INHERITED(nsTableOuterFrame, nsHTMLContainerFrame, nsITableLayout)
 
 NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext& aPresContext,
                                                      nsIAtom*        aListName,
@@ -1225,6 +1225,25 @@ nsTableOuterFrame::GetFrameType(nsIAtom** aType) const
   *aType = nsLayoutAtoms::tableOuterFrame; 
   NS_ADDREF(*aType);
   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTableOuterFrame::GetCellDataAt(PRInt32 aRowIndex, PRInt32 aColIndex, 
+                                 nsIDOMElement* &aCell,   //out params
+                                 PRInt32& aStartRowIndex, PRInt32& aStartColIndex, 
+                                 PRInt32& aRowSpan, PRInt32& aColSpan,
+                                 PRBool& aIsSelected)
+{
+  if (!mInnerTableFrame) { return NS_ERROR_NOT_INITIALIZED; }
+  nsITableLayout *inner;
+  nsresult result = mInnerTableFrame->QueryInterface(nsITableLayout::GetIID(), (void **)&inner);
+  if (NS_SUCCEEDED(result) && inner)
+  {
+    return (inner->GetCellDataAt(aRowIndex, aColIndex, aCell,
+                                 aStartRowIndex, aStartColIndex, 
+                                 aRowSpan, aColSpan, aIsSelected));
+  }
+  return NS_ERROR_NULL_POINTER;
 }
 
 /* ----- global methods ----- */
