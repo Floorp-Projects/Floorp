@@ -265,6 +265,7 @@
 
 <!ENTITY newTabButton.tooltip           "Opens a new tab">
 <!ENTITY newWindowButton.tooltip        "Opens a new window">
+<!ENTITY sidebarCloseButton.tooltip     "Close sidebar">
 
 <!ENTITY cutButton.tooltip              "Cut">
 <!ENTITY copyButton.tooltip             "Copy">
