@@ -161,8 +161,8 @@ function Startup()
     // eventually we should detect the default language and select it by default
     selectLanguage();
     
-    // Allow user to ask the OS for a DPI if we are under X
-    if (navigator.appVersion.indexOf("X11") != -1)
+    // Allow user to ask the OS for a DPI if we are under X or OS/2
+    if ((navigator.appVersion.indexOf("X11") != -1) || (navigator.appVersion.indexOf("OS/2") != -1))
       {
          document.getElementById( "systemResolution" ).removeAttribute( "hidden" ); 
       }
@@ -175,13 +175,27 @@ function Startup()
     // it if an invalid selection is made (select "Other...", hit Cancel)
     resolution.selectedItem.setAttribute("current", "true");
 
+    var defaultResolution;
+    var otherResolution;
+
+    // On OS/2, 120 is the default system resolution.
+    // 96 is valid, but used only for for 640x480.
+    if (navigator.appVersion.indexOf("OS/2") != -1)
+      {
+        defaultResolution = "120";
+        otherResolution = "96";
+      } else {
+        defaultResolution = "96";
+        otherResolution = "72";
+      }
+
     var dpi = resolution.getAttribute( "dpi" );
-    resolution = document.getElementById( "otherResolution" );
-    resolution.setAttribute( "value", "72" );
-    resolution.setAttribute( "label", dpi.replace(/\$val/, "72" ) );
     resolution = document.getElementById( "defaultResolution" );
-    resolution.setAttribute( "value", "96" );
-    resolution.setAttribute( "label", dpi.replace(/\$val/, "96" ) );
+    resolution.setAttribute( "value", defaultResolution );
+    resolution.setAttribute( "label", dpi.replace(/\$val/, defaultResolution ) );
+    resolution = document.getElementById( "otherResolution" );
+    resolution.setAttribute( "value", otherResolution );
+    resolution.setAttribute( "label", dpi.replace(/\$val/, otherResolution ) );
 
     // Get the pref and set up the dialog appropriately. Startup is called
     // after SetFields so we can't rely on that call to do the business.
