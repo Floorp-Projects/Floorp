@@ -787,6 +787,7 @@ Content-type: text/html
         
         $vars->{'target'} = $nexturl;
         $vars->{'form'} = \%::FORM;
+        $vars->{'mform'} = \%::MFORM;
         
         print "Content-type: text/html\n\n";
         $template->process("account/login.html.tmpl", $vars)
