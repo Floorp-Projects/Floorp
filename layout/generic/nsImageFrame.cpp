@@ -105,12 +105,6 @@
 #endif
 
 
-// Value's for mSuppress
-#define SUPPRESS_UNSET   0
-#define DONT_SUPPRESS    1
-#define SUPPRESS         2
-#define DEFAULT_SUPPRESS 3
-
 // values for image loading icons
 #define NS_ICON_LOADING_IMAGE (0)
 #define NS_ICON_BROKEN_IMAGE  (1)
@@ -1567,21 +1561,6 @@ nsImageFrame::IsServerImageMap()
     mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::ismap, ismap);
 }
 
-PRIntn
-nsImageFrame::GetSuppress()
-{
-  nsAutoString s;
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      mContent->GetAttr(kNameSpaceID_None, nsHTMLAtoms::suppress, s)) {
-    if (s.EqualsIgnoreCase("true")) {
-      return SUPPRESS;
-    } else if (s.EqualsIgnoreCase("false")) {
-      return DONT_SUPPRESS;
-    }
-  }
-  return DEFAULT_SUPPRESS;
-}
-
 //XXX the event come's in in view relative coords, but really should
 //be in frame relative coords by the time it hits our frame.
 
@@ -1678,12 +1657,10 @@ nsImageFrame::GetContentForEvent(nsIPresContext* aPresContext,
     nsPoint p;
     TranslateEventCoords(aPresContext, aEvent->point, p);
     nsAutoString absURL, target, altText;
-    PRBool suppress;
     PRBool inside = PR_FALSE;
     nsCOMPtr<nsIContent> area;
     inside = map->IsInside(p.x, p.y, getter_AddRefs(area),
-                           absURL, target, altText,
-                           &suppress);
+                           absURL, target, altText);
     if (inside && area) {
       *aContent = area;
       NS_ADDREF(*aContent);
@@ -1713,7 +1690,6 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
         nsPoint p;
         TranslateEventCoords(aPresContext, aEvent->point, p);
         nsAutoString absURL, target, altText;
-        PRBool suppress;
         PRBool inside = PR_FALSE;
         // Even though client-side image map triggering happens
         // through content, we need to make sure we're not inside
@@ -1722,12 +1698,10 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
         if (nsnull != map) {
           nsCOMPtr<nsIContent> area;
           inside = map->IsInside(p.x, p.y, getter_AddRefs(area),
-                                 absURL, target, altText,
-                                 &suppress);
+                                 absURL, target, altText);
         }
 
         if (!inside && isServerMap) {
-          suppress = GetSuppress();
           nsCOMPtr<nsIURI> baseURL;
           GetBaseURI(getter_AddRefs(baseURL));
           

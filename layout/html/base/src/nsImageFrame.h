@@ -190,8 +190,6 @@ protected:
 
   PRBool GetAnchorHREFAndTarget(nsString& aHref, nsString& aTarget);
 
-  PRIntn GetSuppress();
-
   void MeasureString(const PRUnichar*     aString,
                      PRInt32              aLength,
                      nscoord              aMaxWidth,
