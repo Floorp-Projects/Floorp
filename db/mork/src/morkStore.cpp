@@ -269,8 +269,7 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
     {
 
       nsIMdbFile* file = mStore_File;
-      if ( file )
-        file->CloseMdbObject(ev->AsMdbEnv());
+      mork_refs refCnt = file->AddStrongRef(ev->AsMdbEnv());
 
       morkAtomSpace::SlotStrongAtomSpace((morkAtomSpace*) 0, ev,
         &mStore_OidAtomSpace);
@@ -285,6 +284,10 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
       nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev,
         &mStore_File);
       
+      refCnt = file->CutStrongRef(ev->AsMdbEnv());
+      if ( refCnt > 0 )
+        file->CloseMdbObject(ev->AsMdbEnv());
+
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_InStream);
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_OutStream);
 

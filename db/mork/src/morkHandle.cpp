@@ -417,6 +417,10 @@ morkHandle::Handle_CutStrongRef(nsIMdbEnv* mev)
 morkHandle::Handle_CloseMdbObject(nsIMdbEnv* mev)
 // called at strong refs zero
 {
+  // if only one ref, Handle_CutStrongRef will clean up better.
+  if (mNode_Uses == 1)
+    return Handle_CutStrongRef(mev);
+
   mdb_err outErr = 0;
   
   if ( this->IsNode() && this->IsOpenNode() )

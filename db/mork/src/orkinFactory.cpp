@@ -383,6 +383,7 @@ orkinFactory::MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv)
 {
   mdb_err outErr = 0;
   nsIMdbEnv* outEnv = 0;
+  mork_bool ownsHeap = (ioHeap == 0);
   if ( !ioHeap )
     ioHeap = new orkinHeap();
 
@@ -397,6 +398,7 @@ orkinFactory::MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv)
 
       if ( newEnv )
       {
+        newEnv->mEnv_OwnsHeap = ownsHeap;
         newEnv->mNode_Refs += morkEnv_kWeakRefCountEnvBonus;
         
         orkinEnv* oenv = orkinEnv::MakeEnv(fenv, newEnv);

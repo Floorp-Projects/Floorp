@@ -215,7 +215,10 @@ morkNode::ZapOld(morkEnv* ev, nsIMdbHeap* ioHeap)
         {
           if ( h->mHandle_Face )
           {
-            ev->mEnv_HandlePool->ZapHandle(ev, h->mHandle_Face);
+            if (ev->mEnv_HandlePool)
+              ev->mEnv_HandlePool->ZapHandle(ev, h->mHandle_Face);
+            else if (h->mHandle_Env && h->mHandle_Env->mEnv_HandlePool)
+              h->mHandle_Env->mEnv_HandlePool->ZapHandle(ev, h->mHandle_Face);
           }
           else
             ev->NilPointerError();

@@ -158,6 +158,11 @@ morkPool::ClosePool(morkEnv* ev) // called by CloseMorkNode();
       while ( (aLink = d->RemoveFirst()) != 0 )
         heap->Free(mev, aLink);
   
+      // if the pool's closed, get rid of the frames in use too.
+      d = &mPool_UsedHandleFrames;
+      while ( (aLink = d->RemoveFirst()) != 0 )
+        heap->Free(mev, aLink);
+  
       this->MarkShut();
     }
     else
@@ -212,6 +217,12 @@ morkPool::ZapHandle(morkEnv* ev, morkHandleFace* ioHandle)
     morkLink* handleLink = (morkLink*) ioHandle;
     mPool_FreeHandleFrames.AddLast(handleLink);
     ++mPool_FreeFramesCount;
+    // lets free all handles to track down leaks 
+    // - uncomment out next 3 lines, comment out above 2
+//      nsIMdbHeap* heap = mPool_Heap;
+//      nsIMdbEnv* mev = ev->AsMdbEnv();
+//      heap->Free(mev, handleLink);
+ 
   }
 }
 
