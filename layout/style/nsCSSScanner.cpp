@@ -67,6 +67,11 @@ const PRUint8 nsCSSScanner::IS_WHITESPACE = 0x20;
 static PRBool gLexTableSetup = PR_FALSE;
 PRUint8 nsCSSScanner::gLexTable[256];
 
+#ifdef CSS_REPORT_PARSE_ERRORS
+static nsIConsoleService *gConsoleService;
+static nsIFactory *gScriptErrorFactory;
+#endif
+
 /* static */
 void
 nsCSSScanner::BuildLexTable()
@@ -168,6 +173,7 @@ nsCSSToken::AppendToString(nsString& aBuffer)
 MOZ_DECL_CTOR_COUNTER(nsCSSScanner)
 
 nsCSSScanner::nsCSSScanner()
+  : mError(mErrorBuf, NS_ARRAY_LENGTH(mErrorBuf), 0)
 {
   MOZ_COUNT_CTOR(nsCSSScanner);
   if (!gLexTableSetup) {
@@ -197,6 +203,36 @@ nsCSSScanner::~nsCSSScanner()
   }
 }
 
+/* static */ PRBool nsCSSScanner::InitGlobals()
+{
+#ifdef CSS_REPORT_PARSE_ERRORS
+  if (gConsoleService && gScriptErrorFactory)
+    return PR_TRUE;
+  
+  nsresult rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &gConsoleService);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+
+  nsCOMPtr<nsIComponentManager> compMgr;
+  rv = NS_GetComponentManager(getter_AddRefs(compMgr));
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  rv = compMgr->GetClassObjectByContractID(NS_SCRIPTERROR_CONTRACTID,
+                                           NS_GET_IID(nsIFactory),
+                                           (void**)&gScriptErrorFactory);
+  NS_ENSURE_SUCCESS(rv, PR_FALSE);
+  NS_ASSERTION(gConsoleService && gScriptErrorFactory,
+               "unexpected null pointer without failure");
+#endif
+  return PR_TRUE;
+}
+
+/* static */ void nsCSSScanner::ReleaseGlobals()
+{
+#ifdef CSS_REPORT_PARSE_ERRORS
+  NS_IF_RELEASE(gConsoleService);
+  NS_IF_RELEASE(gScriptErrorFactory);
+#endif
+}
+
 void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
                         PRUint32 aLineNumber)
 {
@@ -222,15 +258,14 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
 #define REPORT_UNEXPECTED_EOF(err_) \
   AddToError(NS_LITERAL_STRING("Unexpected end of file while searching for ") + err_ + NS_LITERAL_STRING("."))
 
-void nsCSSScanner::AddToError(const nsAString& aErrorText)
+void nsCSSScanner::AddToError(const nsSubstring& aErrorText)
 {
   if (mError.IsEmpty()) {
     mErrorLineNumber = mLineNumber;
     mErrorColNumber = mColNumber;
     mError = aErrorText;
   } else {
-    // XXX nsAutoString is workaround for string hang bug (bug 74709)!
-    mError.Append(NS_LITERAL_STRING("  ") + nsAutoString(aErrorText));
+    mError.Append(NS_LITERAL_STRING("  ") + aErrorText);
   }
 }
 
@@ -250,24 +285,23 @@ void nsCSSScanner::OutputError()
 #endif
 
   // Log it to the JavaScript console
-  nsCOMPtr<nsIConsoleService> consoleService
-    (do_GetService(NS_CONSOLESERVICE_CONTRACTID));
-  nsCOMPtr<nsIScriptError> errorObject
-    (do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
 
-  if (consoleService && errorObject) {
-    nsresult rv;
-    PRUnichar *error = ToNewUnicode(mError);
-    rv = errorObject->Init(error,
-                           NS_ConvertASCIItoUCS2(mFileName.get()).get(),
-                           EmptyString().get(),
-                           mErrorLineNumber,
-                           mErrorColNumber,
-                           0,
-                           "CSS Parser");
-    nsMemory::Free(error);
-    if (NS_SUCCEEDED(rv))
-      consoleService->LogMessage(errorObject);
+  if (InitGlobals()) {
+    nsCOMPtr<nsIScriptError> errorObject;
+    nsresult rv =
+      gScriptErrorFactory->CreateInstance(nsnull, NS_GET_IID(nsIScriptError),
+                                          getter_AddRefs(errorObject));
+    if (NS_SUCCEEDED(rv)) {
+      rv = errorObject->Init(mError.get(),
+                             NS_ConvertASCIItoUCS2(mFileName.get()).get(),
+                             EmptyString().get(),
+                             mErrorLineNumber,
+                             mErrorColNumber,
+                             0,
+                             "CSS Parser");
+      if (NS_SUCCEEDED(rv))
+        gConsoleService->LogMessage(errorObject);
+    }
   }
   ClearError();
 }
