@@ -83,7 +83,6 @@
 //   the baseline) are identifiers displayed in a non-slanted font (i.e., under 
 //   the suggested rules, when both operands are multi-character identifiers). 
 
-
 nsresult
 NS_NewMathMLmoFrame(nsIFrame** aNewFrame)
 {
@@ -119,8 +118,7 @@ nsMathMLmoFrame::Paint(nsIPresContext&      aPresContext,
       NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
     rv = mMathMLChar.Paint(aPresContext, 
                            aRenderingContext,
-                           mStyleContext,
-                           mCharOffset);
+                           mStyleContext);
   }
   else { // let the base class worry about the painting
     rv = nsMathMLContainerFrame::Paint(aPresContext, 
@@ -145,8 +143,6 @@ nsMathMLmoFrame::Init(nsIPresContext&  aPresContext,
   mFlags = 0;
   mLeftSpace = 0.0f; // .27777f;
   mRightSpace = 0.0f; // .27777f;
-  mCharOffset.x = 0;
-  mCharOffset.y = 0;
 
   return rv;
 }
@@ -159,7 +155,7 @@ nsMathMLmoFrame::InitData()
   nsAutoString aData;
   // PRInt32 aLength = 0;
   // kids can be comment-nodes, attribute-nodes, text-nodes...
-  // we use to DOM to ensure that we only look at text-nodes...
+  // we use the DOM to ensure that we only look at text-nodes...
   PRInt32 numKids;
   mContent->ChildCount(numKids);
   for (PRInt32 kid=0; kid<numKids; kid++) {
@@ -241,10 +237,10 @@ nsMathMLmoFrame::InitData()
   }
 
   // If we don't want extra space when we are a script
-//  if (mScriptLevel > 0) {
-//    mLeftSpace = mRightSpace = 0;
-//  }
-
+  if (mScriptLevel > 0) {
+    mLeftSpace /= 2.0f;
+    mRightSpace /= 2.0f;
+  }
 
 // XXX Factor all this in nsMathMLAttributes.cpp
 
@@ -305,10 +301,11 @@ nsMathMLmoFrame::InitData()
 //       On input  - it contains our current size
 //       On output - the same size or the new size that we want
 NS_IMETHODIMP
-nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
-                         nsStretchDirection aStretchDirection,
-                         nsCharMetrics&     aContainerSize,
-                         nsCharMetrics&     aDesiredStretchSize)
+nsMathMLmoFrame::Stretch(nsIPresContext&      aPresContext,
+                         nsIRenderingContext& aRenderingContext,
+                         nsStretchDirection   aStretchDirection,
+                         nsCharMetrics&       aContainerSize,
+                         nsCharMetrics&       aDesiredStretchSize)
 {
   if (0 == mFlags) { // first time...
     InitData();
@@ -319,51 +316,50 @@ nsMathMLmoFrame::Stretch(nsIPresContext&    aPresContext,
     (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
   nscoord em = NSToCoordRound(float(aFont->mFont.size));
 
-  mCharOffset.x = nscoord( mLeftSpace * em );
-  mCharOffset.y = 0;
+  nscoord dx = nscoord( mLeftSpace * em );
+  nscoord dy = 0;
 
-  // check if it makes sense to stretch
-  if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags) &&
-      ((NS_MATHML_OPERATOR_IS_FENCE(mFlags) &&
-        NS_STRETCH_DIRECTION_VERTICAL == aStretchDirection) ||
-       (NS_MATHML_OPERATOR_IS_ACCENT(mFlags) && 
-        NS_STRETCH_DIRECTION_HORIZONTAL == aStretchDirection))) {
-
-    mCharOffset.y = aContainerSize.ascent 
-                  - aDesiredStretchSize.ascent; // XXX temp hack
-
+  // see if it is okay to stretch
+  if (NS_MATHML_OPERATOR_IS_MUTABLE(mFlags)) {
     nsCharMetrics old(aDesiredStretchSize);
-
     // let the MathMLChar stretch itself...
-    mMathMLChar.Stretch(aPresContext, mStyleContext, aStretchDirection,
+    mMathMLChar.Stretch(aPresContext, aRenderingContext,
+                        mStyleContext, aStretchDirection,
                         aContainerSize, aDesiredStretchSize);
 
     if (old == aDesiredStretchSize) { // hasn't changed !
       mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
-      mCharOffset.y = 0;
+    }
+    else {
+      nscoord gap;
+      if (aDesiredStretchSize == NS_STRETCH_DIRECTION_VERTICAL) {
+        gap = aContainerSize.ascent - aDesiredStretchSize.ascent;
+        if (0 < gap) dy += gap;
+      } else if (aDesiredStretchSize == NS_STRETCH_DIRECTION_HORIZONTAL) {
+        gap = (aContainerSize.width - aDesiredStretchSize.width)/2;
+        if (0 < gap) dx += gap;
+      }
+      mMathMLChar.SetRect(nsRect(dx, dy, aDesiredStretchSize.width, 
+                                 aDesiredStretchSize.height));
     }
   }
-  else {
-    mFlags &= ~NS_MATHML_OPERATOR_MUTABLE;
-  }
 
-  // account the spacing
-  aDesiredStretchSize.width += nscoord( (mLeftSpace + mRightSpace) * em );
-
-  // adjust the offsets of our children to leave the spacing
-  if (0 < mCharOffset.x || 0 < mCharOffset.y) {
+  // adjust our children's offsets to leave the spacing
+  if (0 < dx || 0 < dy) {
     nsRect rect;
-    nscoord dx = mCharOffset.x;
     nsIFrame* childFrame = mFrames.FirstChild();
     while (nsnull != childFrame) {
       if (!IsOnlyWhitespace(childFrame)) {
         childFrame->GetRect(rect);
-        childFrame->MoveTo(&aPresContext, dx, rect.y + mCharOffset.y);
+        childFrame->MoveTo(&aPresContext, rect.x + dx, rect.y + dy);
         dx += rect.width; 
       }
       childFrame->GetNextSibling(&childFrame);
     }
   }
+
+  // account the spacing
+  aDesiredStretchSize.width += nscoord( (mLeftSpace + mRightSpace) * em );
 
   return NS_OK;
 }

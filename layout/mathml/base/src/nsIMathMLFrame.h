@@ -43,10 +43,11 @@ public:
   * itself depending on its context
   */
   NS_IMETHOD 
-  Stretch(nsIPresContext&    aPresContext,
-          nsStretchDirection aStretchDirection,
-          nsCharMetrics&     aContainerSize,
-          nsCharMetrics&     aDesiredStretchSize) = 0;
+  Stretch(nsIPresContext&      aPresContext,
+          nsIRenderingContext& aRenderingContext,
+          nsStretchDirection   aStretchDirection,
+          nsCharMetrics&       aContainerSize,
+          nsCharMetrics&       aDesiredStretchSize) = 0;
 
 
  /* SUPPORT FOR SCRIPTING ELEMENTS: */

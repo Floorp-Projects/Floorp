@@ -151,10 +151,11 @@ nsMathMLContainerFrame::ReflowEmptyChild(nsIPresContext& aPresContext,
  */
 
 NS_IMETHODIMP
-nsMathMLContainerFrame::Stretch(nsIPresContext&    aPresContext,
-                                nsStretchDirection aStretchDirection,
-                                nsCharMetrics&     aContainerSize,
-                                nsCharMetrics&     aDesiredStretchSize)
+nsMathMLContainerFrame::Stretch(nsIPresContext&      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                nsStretchDirection   aStretchDirection,
+                                nsCharMetrics&       aContainerSize,
+                                nsCharMetrics&       aDesiredStretchSize)
 {
   return NS_OK; // the Stretch() is only implemented by <mo> and its nsMathMLChar
 }
@@ -253,7 +254,7 @@ nsMathMLContainerFrame::InsertScriptLevelStyleContext(nsIPresContext& aPresConte
             if (newStyleContext && newStyleContext.get() != lastStyleContext) {
               // create a new frame and append it as sole child of the last created frame
               nsIFrame* newFrame = nsnull;
-              NS_NewMathMLContainerFrame(&newFrame);
+              NS_NewMathMLWrapperFrame(&newFrame);
               NS_ASSERTION(newFrame, "Failed to create new frame");
 
               newFrame->Init(aPresContext, childContent, lastFrame, newStyleContext, nsnull);
@@ -455,7 +456,9 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
     nsIMathMLFrame* aMathMLFrame;
     rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
     if (NS_SUCCEEDED(rv) && nsnull != aMathMLFrame) {
-      aMathMLFrame->Stretch(aPresContext, stretchDir, parentSize, childSize);
+      nsIRenderingContext& renderingContext = *aReflowState.rendContext;
+      aMathMLFrame->Stretch(aPresContext, renderingContext, 
+                            stretchDir, parentSize, childSize);
       // store the updated metrics
       childFrame->SetRect(&aPresContext,
                           nsRect(childSize.descent, childSize.ascent,
@@ -495,4 +498,68 @@ nsMathMLContainerFrame::Reflow(nsIPresContext&          aPresContext,
 
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
+}
+
+//==========================
+
+nsresult
+NS_NewMathMLWrapperFrame(nsIFrame** aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsMathMLWrapperFrame* it = new nsMathMLWrapperFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;  
+  return NS_OK;
+}
+
+nsMathMLWrapperFrame::nsMathMLWrapperFrame()
+{
+}
+
+nsMathMLWrapperFrame::~nsMathMLWrapperFrame()
+{
+}
+
+NS_IMETHODIMP
+nsMathMLWrapperFrame::Stretch(nsIPresContext&      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                nsStretchDirection   aStretchDirection,
+                                nsCharMetrics&       aContainerSize,
+                                nsCharMetrics&       aDesiredStretchSize)
+{
+  nsIFrame* childFrame = mFrames.FirstChild();
+  nsIMathMLFrame* aMathMLFrame;
+  nsresult rv = childFrame->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+  if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+    aMathMLFrame->Stretch(aPresContext, aRenderingContext, aStretchDirection, 
+                          aContainerSize, aDesiredStretchSize);
+    childFrame->SetRect(&aPresContext, nsRect(0,0,aDesiredStretchSize.width,aDesiredStretchSize.height));
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMathMLWrapperFrame::Reflow(nsIPresContext&          aPresContext,
+                             nsHTMLReflowMetrics&     aDesiredSize,
+                             const nsHTMLReflowState& aReflowState,
+                             nsReflowStatus&          aStatus)
+{
+  nsresult rv = NS_OK;
+
+  nsReflowStatus childStatus;
+  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
+  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+
+  nsIFrame* childFrame = mFrames.FirstChild();
+  nsHTMLReflowState childReflowState(aPresContext, aReflowState, childFrame, availSize);
+  rv = ReflowChild(childFrame, aPresContext, childDesiredSize, childReflowState, childStatus);
+  childFrame->SetRect(&aPresContext, nsRect(0,0,childDesiredSize.width,childDesiredSize.height));
+  aDesiredSize = childDesiredSize;
+  aStatus = childStatus;
+  return rv;
 }

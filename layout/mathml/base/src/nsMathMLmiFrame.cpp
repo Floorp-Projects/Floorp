@@ -100,7 +100,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
 
   // Get the length of the text content that we enclose  
   // our content can include comment-nodes, attribute-nodes, text-nodes...
-  // we use to DOM to make sure that we are only looking at text-nodes...
+  // we use the DOM to make sure that we are only looking at text-nodes...
   PRInt32 aLength = 0;
   PRInt32 numKids;
   mContent->ChildCount(numKids);
@@ -137,7 +137,7 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext& aPresContext,
   if (newStyleContext && newStyleContext.get() != mStyleContext) {
 
     nsIFrame* newFrame = nsnull;
-    NS_NewMathMLContainerFrame(&newFrame);
+    NS_NewMathMLWrapperFrame(&newFrame);
     NS_ASSERTION(newFrame, "Failed to create new frame");
 
     newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);

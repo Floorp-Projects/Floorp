@@ -115,6 +115,29 @@ nsMathMLmoverFrame::Reflow(nsIPresContext&          aPresContext,
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
+  aDesiredSize.width = PR_MAX(rect[0].width, rect[1].width);
+  
+  /////////////
+  // Ask stretchy children to stretch themselves
+  
+  nsStretchDirection stretchDir = NS_STRETCH_DIRECTION_HORIZONTAL;
+  nsCharMetrics parentSize(aDesiredSize);
+  for (PRInt32 i = 0; i < count; i++) {
+    //////////
+    // Stretch ...
+    // Only directed at frames that implement the nsIMathMLFrame interface
+    nsIMathMLFrame* aMathMLFrame = nsnull;
+    rv = child[i]->QueryInterface(nsIMathMLFrame::GetIID(), (void**)&aMathMLFrame);
+    if (NS_SUCCEEDED(rv) && aMathMLFrame) {
+      nsCharMetrics childSize(rect[i].x, rect[i].y, rect[i].width, rect[i].height);
+      nsIRenderingContext& renderingContext = *aReflowState.rendContext;
+      aMathMLFrame->Stretch(aPresContext, renderingContext, 
+                            stretchDir, parentSize, childSize);
+      // store the updated metrics
+      rect[i] = nsRect(childSize.descent, childSize.ascent,
+                       childSize.width, childSize.height);
+    }
+  }
 
   //////////////////
   // Place Children 

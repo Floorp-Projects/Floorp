@@ -50,10 +50,11 @@ public:
   // This method is called by the parent frame to ask <mo> 
   // to stretch itself.
   NS_IMETHOD
-  Stretch(nsIPresContext&    aPresContext,
-          nsStretchDirection aStretchDirection,
-          nsCharMetrics&     aContainerSize,
-          nsCharMetrics&     aDesiredStretchSize);
+  Stretch(nsIPresContext&      aPresContext,
+          nsIRenderingContext& aRenderingContext,
+          nsStretchDirection   aStretchDirection,
+          nsCharMetrics&       aContainerSize,
+          nsCharMetrics&       aDesiredStretchSize);
 
   // helper method to lookup the operator dictionary and initialize our member data
   void InitData();
@@ -68,7 +69,6 @@ protected:
   nsOperatorFlags mFlags;
   float           mLeftSpace;
   float           mRightSpace;
-  nsPoint         mCharOffset;
 };
 
 #endif /* nsMathMLmoFrame_h___ */

@@ -42,6 +42,7 @@ extern nsresult NS_NewMathMLmunderoverFrame ( nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmmultiscriptsFrame ( nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmstyleFrame ( nsIFrame** aNewFrame );
 extern nsresult NS_NewMathMLmtdFrame ( nsIFrame** aNewFrame );
+extern nsresult NS_NewMathMLmsqrtFrame( nsIFrame** aNewFrame );
 
 inline nsresult NS_NewMathMLContainerFrame( nsIFrame** aNewFrame ) {
   return NS_NewMathMLmrowFrame(aNewFrame);
