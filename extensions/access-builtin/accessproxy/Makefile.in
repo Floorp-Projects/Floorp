@@ -55,14 +55,6 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME	= nsAccessProxy
 
-# Don't install. At the moment we only want to build this extension
-# for inclusion in 3rd party assistive technology installers,
-# not as part of our own installation
-NO_INSTALL = 1                                                                  
-NO_DIST_INSTALL = 1
-
-LOCAL_INCLUDES += -I$(srcdir)/_xpidlgen
-
 CPPSRCS =   \
   nsAccessProxy.cpp	   \
   nsAccessProxyRegistration.cpp \
