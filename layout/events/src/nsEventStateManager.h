@@ -41,11 +41,13 @@ public:
                          nsEventStatus& aStatus);
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext);
+  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame);
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame);
 
   NS_IMETHOD GetActiveLink(nsIContent **aLink);
   NS_IMETHOD SetActiveLink(nsIContent *aLink);
+
 
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame);

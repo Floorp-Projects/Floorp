@@ -105,6 +105,11 @@ typedef PRUint32 nsFrameState;
 // must operate differently.
 #define NS_FRAME_OUTSIDE_CHILDREN 0x00000008
 
+// If this bit is set then a reference to the frame is being held
+// elsewhere.  The frame may want to send a notification when it is
+// destroyed to allow these references to be cleared.
+#define NS_FRAME_EXTERNAL_REFERENCE 0x00000010
+
 //----------------------------------------------------------------------
 
 /**

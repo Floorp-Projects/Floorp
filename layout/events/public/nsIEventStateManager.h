@@ -46,6 +46,7 @@ public:
                          nsEventStatus& aStatus) = 0;
 
   NS_IMETHOD SetPresContext(nsIPresContext* aPresContext) = 0;
+  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
 
   NS_IMETHOD GetEventTarget(nsIFrame **aFrame) = 0;
 

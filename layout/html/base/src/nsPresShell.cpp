@@ -215,6 +215,7 @@ public:
   virtual nsIFrame* FindFrameWithContent(nsIContent* aContent);
   virtual void AppendReflowCommand(nsIReflowCommand* aReflowCommand);
   virtual void ProcessReflowCommands();
+  virtual void ClearFrameRefs(nsIFrame*);
   NS_IMETHOD CreateRenderingContext(nsIFrame *aFrame, nsIRenderingContext *&aContext);
 
   //nsIViewObserver interface
@@ -739,6 +740,16 @@ PresShell::ProcessReflowCommands()
   }
 }
 
+void
+PresShell::ClearFrameRefs(nsIFrame* aFrame)
+{
+  nsIEventStateManager *manager;
+  if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
+    manager->ClearFrameRefs(aFrame);
+    NS_RELEASE(manager);
+  }
+}
+
 NS_IMETHODIMP PresShell :: CreateRenderingContext(nsIFrame *aFrame,
                                                   nsIRenderingContext *&aContext)
 {
@@ -1013,7 +1024,7 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
   
   NS_ASSERTION(!(nsnull == aView), "null view");
 
-  if (mIsDestroying) {
+  if (mIsDestroying || mReflowLockCount > 0) {
     return NS_OK;
   }
 

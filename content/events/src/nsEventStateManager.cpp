@@ -67,6 +67,12 @@ nsEventStateManager::HandleEvent(nsIPresContext& aPresContext,
                                  nsEventStatus& aStatus)
 {
   mCurrentTarget = aTargetFrame;
+
+  nsFrameState state;
+  mCurrentTarget->GetFrameState(state);
+  state |= NS_FRAME_EXTERNAL_REFERENCE;
+  mCurrentTarget->SetFrameState(state);
+
   aStatus = nsEventStatus_eIgnore;
   
   switch (aEvent->message) {
@@ -97,6 +103,18 @@ NS_IMETHODIMP
 nsEventStateManager::SetPresContext(nsIPresContext* aPresContext)
 {
   mPresContext = aPresContext;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventStateManager::ClearFrameRefs(nsIFrame* aFrame)
+{
+  if (aFrame == mLastMouseOverFrame) {
+    mLastMouseOverFrame = nsnull;
+  }
+  else if (aFrame == mCurrentTarget) {
+    mCurrentTarget = nsnull;
+  }
   return NS_OK;
 }
 
@@ -171,7 +189,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
           mLastMouseOverFrame->GetContent(lastContent);
 
           if (lastContent != targetContent) {
-            lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+            //XXX This event should still go somewhere!!
+            if (nsnull != lastContent) {
+              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+            }
           }
 
           //Now dispatch to the frame
@@ -186,7 +207,10 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
 
         //The frame has change but the content may not have.  Check before dispatching to content
         if (lastContent != targetContent) {
-          targetContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+          //XXX This event should still go somewhere!!
+          if (nsnull != targetContent) {
+            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+          }
         }
 
         //Now dispatch to the frame
@@ -196,6 +220,11 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         NS_IF_RELEASE(targetContent);
 
         mLastMouseOverFrame = aTargetFrame;
+
+        nsFrameState state;
+        mLastMouseOverFrame->GetFrameState(state);
+        state |= NS_FRAME_EXTERNAL_REFERENCE;
+        mLastMouseOverFrame->SetFrameState(state);
       }
     }
     break;
