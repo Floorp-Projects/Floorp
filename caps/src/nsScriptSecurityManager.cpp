@@ -2129,11 +2129,11 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
 
 #ifdef DEBUG
     JSCheckAccessOp oldCallback =
+#endif
         JS_SetCheckObjectAccessCallback(rt, CheckJSFunctionCallerAccess);
 
     // For now, assert that no callback was set previously
     NS_ASSERTION(!oldCallback, "Someone already set a JS CheckObjectAccess callback");
-#endif
 }
 
 nsScriptSecurityManager::~nsScriptSecurityManager(void)
