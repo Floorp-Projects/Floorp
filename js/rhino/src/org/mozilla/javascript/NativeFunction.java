@@ -57,7 +57,7 @@ public class NativeFunction extends BaseFunction
      */
     public String decompile(Context cx, int indent, boolean justbody)
     {
-        String encodedSource = getEncodedSource();
+        Object encodedSource = getEncodedSource();
         if (encodedSource == null) {
             return super.decompile(cx, indent, justbody);
         } else {
@@ -97,22 +97,9 @@ public class NativeFunction extends BaseFunction
     /**
      * Get encoded source string.
      */
-    public String getEncodedSource()
+    public Object getEncodedSource()
     {
-        // The following is used only by optimizer, but is here to avoid
-        // introduction of 2 additional classes there
-        Class cl = getClass();
-        try {
-            Method m = cl.getDeclaredMethod("getEncodedSourceImpl",
-                                            new Class[0]);
-            return (String)m.invoke(null, ScriptRuntime.emptyArgs);
-        } catch (NoSuchMethodException ex) {
-            // No source implementation
-            return null;
-        } catch (Exception ex) {
-            // Wrap the rest of exceptions including possible SecurityException
-            throw ScriptRuntime.throwAsUncheckedException(ex);
-        }
+        return null;
     }
 
     /**

@@ -61,7 +61,7 @@ final class InterpretedFunction extends NativeFunction
                                      this, itsData);
     }
 
-    public String getEncodedSource()
+    public Object getEncodedSource()
     {
         return Interpreter.getEncodedSource(itsData);
     }

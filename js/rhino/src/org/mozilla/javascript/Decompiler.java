@@ -287,10 +287,12 @@ public class Decompiler
      * @param indentGap the identation offset for case labels
      *
      */
-    static String decompile(String source,
-                            boolean justFunctionBody,
-                            int indent, int indentGap, int caseGap)
+    public static String decompile(Object sourceObj,
+                                   boolean justFunctionBody,
+                                   int indent, int indentGap, int caseGap)
     {
+        String source = (String)sourceObj;
+        
         int length = source.length();
         if (length == 0) { return ""; }
 

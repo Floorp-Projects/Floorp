@@ -64,7 +64,7 @@ final class InterpretedScript extends NativeScript
                                      this, itsData);
     }
 
-    public String getEncodedSource()
+    public Object getEncodedSource()
     {
         return Interpreter.getEncodedSource(itsData);
     }

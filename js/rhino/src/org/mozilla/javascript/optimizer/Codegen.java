@@ -729,8 +729,8 @@ public class Codegen extends Interpreter {
         // Change Parser if changing ordering.
 
         if (mainCodegen.encodedSource != null) {
-            // generate
-            // public static String getEncodedSourceImpl()
+            // Override NativeFunction.getEncodedSourceg() with
+            // public String getEncodedSource()
             // {
             //     return main_class.getEncodedSourceImpl(START, END);
             // }
@@ -738,9 +738,9 @@ public class Codegen extends Interpreter {
                         | ClassFileWriter.ACC_STATIC;
             String getSourceMethodStr = "getEncodedSourceImpl";
             String mainImplSig = "(II)Ljava/lang/String;";
-            classFile.startMethod(getSourceMethodStr,
-                                  "()Ljava/lang/String;",
-                                  (short)flags);
+            classFile.startMethod("getEncodedSource",
+                                  "()Ljava/lang/Object;",
+                                  ClassFileWriter.ACC_PUBLIC);
             push(scriptOrFn.getEncodedSourceStart());
             push(scriptOrFn.getEncodedSourceEnd());
             classFile.addInvoke(ByteCode.INVOKESTATIC,
@@ -748,8 +748,8 @@ public class Codegen extends Interpreter {
                                 getSourceMethodStr,
                                 mainImplSig);
             addByteCode(ByteCode.ARETURN);
-            // 0: no this and no argument
-            classFile.stopMethod((short)0, null);
+            // 1: this and no argument or locals
+            classFile.stopMethod((short)1, null);
             if (isMainCodegen) {
                 // generate
                 // public static String getEncodedSourceImpl(int start, int end)

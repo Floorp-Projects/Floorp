@@ -1596,7 +1596,7 @@ public class Interpreter
         return presentLines.getKeys();
     }
 
-    static String getEncodedSource(InterpreterData idata)
+    static Object getEncodedSource(InterpreterData idata)
     {
         if (idata.encodedSource == null) {
             return null;
