@@ -45,7 +45,7 @@ const SEC_ASN1Template CERT_TimeChoiceTemplate[] = {
   { 0 }
 };
 
-SEC_ASN1_CHOOSER_IMPLEMENT(CERT_TimeChoiceTemplate);
+SEC_ASN1_CHOOSER_IMPLEMENT(CERT_TimeChoiceTemplate)
 
 const SEC_ASN1Template CERT_ValidityTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -228,7 +228,7 @@ DecodeGeneralizedTime2FormattedAscii (SECItem *generalizedTimeDER,  char *format
 /* decode a SECItem containing either a SEC_ASN1_GENERALIZED_TIME 
    or a SEC_ASN1_UTC_TIME */
 
-SECStatus CERT_DecodeTimeChoice(PRTime* output, SECItem* input)
+SECStatus CERT_DecodeTimeChoice(PRTime* output, const SECItem* input)
 {
     switch (input->type) {
         case siGeneralizedTime:
