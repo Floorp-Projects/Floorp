@@ -36,7 +36,8 @@ sub sillyness {
     $zz = %::FORM;
 }
 
-print "Content-type: text/html\n\n";
+print "Content-type: text/html\n";
+print "Content-disposition: attachement; filename=bugzilla_bug_list.html\n\n";
 PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();

@@ -52,7 +52,8 @@ my %reports =
 	"show_chart" => \&show_chart,
 	);
 
-print "Content-type: text/html\n\n";
+print "Content-type: text/html\n";
+print "Content-disposition: attachment; filename=bugzilla_report.html\n\n";
 
 # If we're here for the first time, give a banner.  Else respect the banner flag.
 if ( (!defined $::FORM{'product'}) || ($::FORM{'banner'})  )
