@@ -50,6 +50,7 @@ OBJS =                                 \
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
 	.\$(OBJDIR)\ActiveXPlugin.obj      \
 	.\$(OBJDIR)\ActiveXPluginInstance.obj \
+	.\$(OBJDIR)\ActiveScriptSite.obj   \
 	.\$(OBJDIR)\LegacyPlugin.obj       \
 	.\$(OBJDIR)\npwin.obj              \
 !endif
@@ -120,6 +121,8 @@ MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
 
 !ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+ActiveScriptSite.cpp: StdAfx.h ActiveScriptSite.h
+
 LegacyPlugin.cpp \
 ActiveXPlugin.cpp \
 ActiveXPluginInstance.cpp: StdAfx.h ActiveXPlugin.h ActiveXPluginInstance.h
