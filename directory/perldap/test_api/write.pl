@@ -1,6 +1,6 @@
 #!/usr/bin/perl -w
 #############################################################################
-# $Id: write.pl,v 1.1 1998/07/24 15:35:52 clayton Exp $
+# $Id: write.pl,v 1.2 1998/07/24 19:01:51 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -21,8 +21,8 @@
 # Contributor(s):
 #
 # DESCRIPTION
-#   testwrite.pl - Test of LDAP Modify Operations in Perl5
-#   Author:  Clayton Donley <donley@cig.mot.com>
+#   write.pl - Test of LDAP Modify Operations in Perl5
+#   Author:  Clayton Donley <donley@wwa.com>
 #
 #   This utility is mostly to demonstrate all the write operations
 #   that can be done with LDAP through this PERL5 module.
@@ -30,17 +30,17 @@
 #############################################################################
 
 use strict;
-use Mozilla::LDAP::API;
+use Mozilla::LDAP::API (:constant :api);
 
 
 # This is the entry we will be adding.  Do not use a pre-existing entry.
-my $ENTRYDN = "cn=Test Guy, o=Motorola, c=US";
+my $ENTRYDN = "cn=Test Guy, o=Org, c=US";
 
 # This is the DN and password for an Administrator
-my $ROOTDN = "cn=DSManager,o=Motorola,c=US";
+my $ROOTDN = "cn=DSManager,o=Org,c=US";
 my $ROOTPW = "";
 
-my $ldap_server = "ilms04.cig.mot.com";
+my $ldap_server = "localhost";
 
 my $ld = ldap_init($ldap_server,LDAP_PORT);
 

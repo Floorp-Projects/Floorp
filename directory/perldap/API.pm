@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.3 1998/07/23 11:05:51 leif Exp $
+# $Id: API.pm,v 1.4 1998/07/24 19:01:47 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -28,7 +28,7 @@ package Mozilla::LDAP::API;
 
 use strict;
 use Carp;
-use vars qw($VERSION @ISA @EXPORT @EXPORT_OK $AUTOLOAD);
+use vars qw($VERSION @ISA %EXPORT_TAGS @EXPORT @EXPORT_OK $AUTOLOAD);
 
 require Exporter;
 require DynaLoader;
@@ -38,9 +38,9 @@ require AutoLoader;
 # Items to export into callers namespace by default. Note: do not export
 # names by default without a very good reason. Use EXPORT_OK instead.
 # Do not simply export all your public functions/methods/constants.
-#@EXPORT
 
-@EXPORT = qw(
+%EXPORT_TAGS = (
+	constant=> [qw(
 	LDAPS_PORT
 	LDAP_ADMINLIMIT_EXCEEDED
 	LDAP_AFFECTS_MULTIPLE_DSAS
@@ -199,7 +199,8 @@ require AutoLoader;
 	LDAP_VERSION1
 	LDAP_VERSION2
 	LDAP_VERSION3
-	LDAP_VERSION_MAX
+	LDAP_VERSION_MAX)],
+	api => [qw(
 	ldap_abandon ldap_add ldap_add_s ldap_ber_free ldap_build_filter
 	ldap_compare ldap_compare_s ldap_count_entries ldap_create_filter
 	ldap_delete ldap_delete_s ldap_dn2ufn ldap_err2string
@@ -220,7 +221,8 @@ require AutoLoader;
 	ldap_set_option ldap_set_rebind_proc ldap_simple_bind
 	ldap_simple_bind_s ldap_sort_entries ldap_unbind ldap_unbind_s
 	ldap_url_parse ldap_url_search ldap_url_search_s ldap_url_search_st
-	ldap_version
+	ldap_version)],
+	apiv3 => [qw(
 	ldap_abandon_ext ldap_add_ext ldap_add_ext_s ldap_compare_ext
 	ldap_compare_ext_s ldap_control_free ldap_controls_count
 	ldap_controls_free ldap_count_messages ldap_count_references
@@ -233,13 +235,22 @@ require AutoLoader;
 	ldap_parse_extended_result ldap_parse_reference ldap_parse_result
 	ldap_parse_sasl_bind_result ldap_parse_sort_control
 	ldap_parse_virtuallist_control ldap_rename ldap_rename_s
-	ldap_sasl_bind ldap_sasl_bind_s ldap_search_ext ldap_search_ext_s
+	ldap_sasl_bind ldap_sasl_bind_s ldap_search_ext ldap_search_ext_s)],
+	ssl => [qw(
 	ldapssl_client_init
 	ldapssl_enable_clientauth
 	ldapssl_clientauth_init
 	ldapssl_init
-	ldapssl_install_routines
+	ldapssl_install_routines)],
 );
+
+# Add Everything in %EXPORT_TAGS to @EXPORT_OK
+@EXPORT_OK = ();
+
+foreach my $EXP (keys %EXPORT_TAGS)
+{
+   push @EXPORT_OK, @{$EXPORT_TAGS{$EXP}};
+}
 
 $VERSION = '0.90';
 

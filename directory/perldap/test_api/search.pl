@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #############################################################################
-# $Id: search.pl,v 1.1 1998/07/24 15:32:08 clayton Exp $
+# $Id: search.pl,v 1.2 1998/07/24 19:01:50 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -25,12 +25,12 @@
 #
 #############################################################################
 
-use Mozilla::LDAP::API;
+use Mozilla::LDAP::API (:api :constant);
 use strict;
 
 
-my $ldap_host = "ilms04.cig.mot.com";
-my $BASEDN = "o=Motorola,c=US";
+my $ldap_host = "localhost";
+my $BASEDN = "o=Org,c=US";
 my $filter = $ARGV[0];
 
 my $attrs = [];
