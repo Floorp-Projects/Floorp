@@ -1540,6 +1540,10 @@ void nsGfxScrollFrameInner::CurPosAttributeChanged(nsIContent* aContent, PRInt32
 nsIScrollableView*
 nsGfxScrollFrameInner::GetScrollableView() const
 {
+  if (!mScrollAreaBox) {
+    return nsnull;
+  }
+
   nsIFrame* frame = nsnull;
   mScrollAreaBox->GetFrame(&frame);
   nsIView* view = frame->GetView();
@@ -2295,10 +2299,13 @@ nsGfxScrollFrameInner::RestoreState(nsIPresState* aState)
     // don't do it now, store it later and do it in layout.
     if (NS_SUCCEEDED(rv)) {
       mRestoreRect.SetRect(x, y, w, h);
+      mDidHistoryRestore = PR_TRUE;
       nsIScrollableView* scrollingView = GetScrollableView();
       if (scrollingView) {
         scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
-        mDidHistoryRestore = PR_TRUE;
+      } else {
+        // Our scrollboxframe probably hasn't been constructed yet.
+        mLastPos = nsPoint(0, 0);
       }
     }
   }
