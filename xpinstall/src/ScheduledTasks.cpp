@@ -187,9 +187,6 @@ REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
 {
 
     REGERR result = 0;
-    char   szValue[512];
-    
-    PL_strcpy(szValue, "Fix for bug #8818");
 
     filename.Delete(PR_FALSE);
     
@@ -203,7 +200,8 @@ REGERR DeleteFileNowOrSchedule(const nsFileSpec& filename)
             {
                 // FIX should be using nsPersistentFileDescriptor!!!
 
-                result = NR_RegSetEntry( reg, newkey, (char*)(const char*)filename.GetNativePathCString(), REGTYPE_ENTRY_FILE, szValue, strlen(szValue));
+                const char *fnamestr = filename.GetNativePathCString();
+                result = NR_RegSetEntry( reg, newkey, (char*)fnamestr, REGTYPE_ENTRY_FILE, (void*)fnamestr, strlen(fnamestr));
                 if (result == REGERR_OK)
                     result = nsInstall::REBOOT_NEEDED;
             }
