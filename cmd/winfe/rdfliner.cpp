@@ -1655,6 +1655,14 @@ void CRDFOutliner::OnPaint()
 		WFE_ParseColor((char*)data, &m_BackgroundColor);
 	else m_BackgroundColor = RGB(240,240,240);
 
+	HT_GetNodeData(top, gNavCenter->showTreeConnections, HT_COLUMN_STRING, &data);
+	if (data)
+	{
+		CString answer((char*)data);
+		if (answer.GetLength() > 0 && (answer.GetAt(0) == 'n' || answer.GetAt(0) == 'N'))
+			m_bHasPipes = FALSE;
+	}
+
 	// Sort foreground color
 	HT_GetNodeData(top, gNavCenter->sortColumnFGColor, HT_COLUMN_STRING, &data);
 	if (data)
@@ -2138,102 +2146,103 @@ int CRDFOutliner::DrawPipes ( int iLineNo, int iColNo, int offset, HDC hdc, void
 	rect.top = iLineNo * m_itemHeight;
 	rect.bottom = rect.top + m_itemHeight;
 
-	if ( m_bHasPipes ) 
+	for ( int i = 0; i < iDepth; i++ )  
 	{
-		for ( int i = 0; i < iDepth; i++ )  
-		{
-			if ( rect.right <= iMaxX ) 
-			{
-				if ( pAncestor && pAncestor[ i ].has_next && i > 0) // Ignore the outermost level.
-				{
-					// Draw the appropriate vertical bar.
-					// bar should be 5 pixels wide. 1 black - 3 gray - 1 black.
-					CDC* pDC = CDC::FromHandle(hdc);
-					CBrush innerBrush(RGB(192,192,192));
-					CBrush outerBrush(RGB(128,128,128));
-					CRect barRect(rect);
-					barRect.left += (iImageWidth - iBarWidth) / 2;
-					barRect.right = barRect.left + iBarWidth;
-					pDC->FrameRect(barRect, &outerBrush);
-					barRect.left += 1;
-					barRect.right -= 1;
-					pDC->FillRect(barRect, &innerBrush);
-				} 
-			}
-			rect.left += iImageWidth;
-			rect.right += iImageWidth;
-		}
-    
 		if ( rect.right <= iMaxX ) 
 		{
-			if (iDepth)
+			if ( m_bHasPipes && pAncestor && pAncestor[ i ].has_next && i > 0) // Ignore the outermost level.
 			{
-				// Draw the vertical bar.
+				// Draw the appropriate vertical bar.
+				// bar should be 5 pixels wide. 1 black - 3 gray - 1 black.
 				CDC* pDC = CDC::FromHandle(hdc);
 				CBrush innerBrush(RGB(192,192,192));
 				CBrush outerBrush(RGB(128,128,128));
 				CRect barRect(rect);
 				barRect.left += (iImageWidth - iBarWidth) / 2;
 				barRect.right = barRect.left + iBarWidth;
-				if (!pAncestor[iDepth].has_next)
-				{
-					barRect.bottom -= 2; // Move away from the divider and even supply a little padding.
-				}
-				if (!pAncestor[iDepth].has_prev)
-				{
-					barRect.top += 1; // Supply a little padding.
-				}
 				pDC->FrameRect(barRect, &outerBrush);
 				barRect.left += 1;
 				barRect.right -= 1;
-				if (!pAncestor[iDepth].has_next)
-				{
-					barRect.bottom -= 1; // Actually get that frame onto the end
-				}
-				if (!pAncestor[iDepth].has_prev)
-				{
-					barRect.top += 1; // Get that frame onto the top.
-				}
-
 				pDC->FillRect(barRect, &innerBrush);
-			}
-			
-			HT_Resource r = (HT_Resource)pLineData;
-			if (r && HT_IsContainer(r))
-			{
-				// Draw the trigger
-				CBrush outerTrigger(RGB(128,128,128));
-				CBrush innerTrigger(RGB(255,255,255));
-				CRect triggerRect(rect);
-				triggerRect.top += (iImageWidth - iTriggerSize) / 2 + 2; // Account for the pixel of padding
-				triggerRect.bottom = triggerRect.top + iTriggerSize;
-				triggerRect.left += (iImageWidth - iTriggerSize) / 2;
-				triggerRect.right = triggerRect.left + iTriggerSize;
-				CDC* pDC = CDC::FromHandle(hdc);
-				pDC->FillRect(triggerRect, &innerTrigger);
-				pDC->FrameRect(triggerRect, &outerTrigger);
-
-				// Draw the horizontal portion of the trigger cross
-				HPEN pen = ::CreatePen(PS_SOLID, 1, RGB(0,0,0));
-				HPEN pOldPen = (HPEN)::SelectObject(hdc, pen);
-				pDC->MoveTo(triggerRect.left + 2, triggerRect.top + (iTriggerSize / 2));
-				pDC->LineTo(triggerRect.right - 2, triggerRect.top + (iTriggerSize / 2));
-
-				// Draw the vertical portion of the trigger cross (only for closed containers)
-				if (!HT_IsContainerOpen(r))
-				{
-					pDC->MoveTo(triggerRect.left + (iTriggerSize / 2), triggerRect.top + 2);
-					pDC->LineTo(triggerRect.left + (iTriggerSize / 2), triggerRect.bottom - 2);
-				}
-
-				::SelectObject(hdc, pOldPen);
-				VERIFY(::DeleteObject(pen));
 			} 
 		}
+		
 		rect.left += iImageWidth;
 		rect.right += iImageWidth;
 	}
-    if ( rect.right <= iMaxX ) {
+    
+	if (rect.right <= iMaxX) 
+	{
+		if (iDepth && m_bHasPipes)
+		{
+			// Draw the vertical bar.
+			CDC* pDC = CDC::FromHandle(hdc);
+			CBrush innerBrush(RGB(192,192,192));
+			CBrush outerBrush(RGB(128,128,128));
+			CRect barRect(rect);
+			barRect.left += (iImageWidth - iBarWidth) / 2;
+			barRect.right = barRect.left + iBarWidth;
+			if (!pAncestor[iDepth].has_next)
+			{
+				barRect.bottom -= 2; // Move away from the divider and even supply a little padding.
+			}
+			if (!pAncestor[iDepth].has_prev)
+			{
+				barRect.top += 1; // Supply a little padding.
+			}
+			pDC->FrameRect(barRect, &outerBrush);
+			barRect.left += 1;
+			barRect.right -= 1;
+			if (!pAncestor[iDepth].has_next)
+			{
+				barRect.bottom -= 1; // Actually get that frame onto the end
+			}
+			if (!pAncestor[iDepth].has_prev)
+			{
+				barRect.top += 1; // Get that frame onto the top.
+			}
+
+			pDC->FillRect(barRect, &innerBrush);
+		}
+	
+		HT_Resource r = (HT_Resource)pLineData;
+		if (r && HT_IsContainer(r))
+		{
+			// Draw the trigger
+			CBrush outerTrigger(RGB(128,128,128));
+			CBrush innerTrigger(RGB(255,255,255));
+			CRect triggerRect(rect);
+			triggerRect.top += (iImageWidth - iTriggerSize) / 2 + 2; // Account for the pixel of padding
+			triggerRect.bottom = triggerRect.top + iTriggerSize;
+			triggerRect.left += (iImageWidth - iTriggerSize) / 2;
+			triggerRect.right = triggerRect.left + iTriggerSize;
+			CDC* pDC = CDC::FromHandle(hdc);
+			pDC->FillRect(triggerRect, &innerTrigger);
+			pDC->FrameRect(triggerRect, &outerTrigger);
+
+			// Draw the horizontal portion of the trigger cross
+			HPEN pen = ::CreatePen(PS_SOLID, 1, RGB(0,0,0));
+			HPEN pOldPen = (HPEN)::SelectObject(hdc, pen);
+			pDC->MoveTo(triggerRect.left + 2, triggerRect.top + (iTriggerSize / 2));
+			pDC->LineTo(triggerRect.right - 2, triggerRect.top + (iTriggerSize / 2));
+
+			// Draw the vertical portion of the trigger cross (only for closed containers)
+			if (!HT_IsContainerOpen(r))
+			{
+				pDC->MoveTo(triggerRect.left + (iTriggerSize / 2), triggerRect.top + 2);
+				pDC->LineTo(triggerRect.left + (iTriggerSize / 2), triggerRect.bottom - 2);
+			}
+
+			::SelectObject(hdc, pOldPen);
+			VERIFY(::DeleteObject(pen));
+		}
+
+		rect.left += iImageWidth;
+		rect.right += iImageWidth;
+	}
+
+    if ( rect.right <= iMaxX ) 
+	{
         idx = TranslateIcon (pLineData);
 		HT_Resource r = (HT_Resource)pLineData;
 		if (idx == HTFE_USE_CUSTOM_IMAGE)
