@@ -2469,19 +2469,31 @@ pk11_FreeSession(PK11Session *session)
 /*
  * handle Token Object stuff
  */
+static void
+pk11_XORHash(unsigned char *key, unsigned char *dbkey, int len)
+{
+   int i;
+
+   for (i=0; i < len-4; i += 4) {
+	key[0] ^= dbkey[i];
+	key[1] ^= dbkey[i+1];
+	key[2] ^= dbkey[i+2];
+	key[3] ^= dbkey[i+3];
+   }
+}
 
 /* Make a token handle for an object and record it so we can find it again */
 CK_OBJECT_HANDLE
 pk11_mkHandle(PK11Slot *slot, SECItem *dbKey, CK_OBJECT_HANDLE class)
 {
-    unsigned char hashBuf[SHA1_LENGTH];
+    unsigned char hashBuf[4];
     CK_OBJECT_HANDLE handle;
     SECItem *key;
 
     handle = class;
     /* there is only one KRL, use a fixed handle for it */
     if (handle != PK11_TOKEN_KRL_HANDLE) {
-	SHA1_HashBuf(hashBuf,dbKey->data,dbKey->len);
+	pk11_XORHash(hashBuf,dbKey->data,dbKey->len);
 	handle = (hashBuf[0] << 24) | (hashBuf[1] << 16) | 
 					(hashBuf[2] << 8)  | hashBuf[3];
 	handle = PK11_TOKEN_MAGIC | class | 
