@@ -268,30 +268,30 @@ NS_METHOD nsBodyFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   // The reflow command should never be target for us
   NS_ASSERTION(aReflowCommand.GetTarget() != this, "bad reflow command target");
 
-  // Compute the column's max size
+  // Compute the child frame's max size
   nsSize  columnMaxSize = GetColumnAvailSpace(aPresContext, mySpacing,
                                               aMaxSize);
 
-  // Pass the command along to our column pseudo frame
+  // Pass the command along to our child frame
   nsIRunaround* reflowRunaround;
-  nsRect        aDesiredRect;
+  nsRect        desiredRect;
 
   NS_ASSERTION(nsnull != mFirstChild, "no first child");
   mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
   reflowRunaround->IncrementalReflow(aPresContext, mSpaceManager,
-    columnMaxSize, aDesiredRect, aReflowCommand, aStatus);
+    columnMaxSize, desiredRect, aReflowCommand, aStatus);
 
-  // Place and size the column
-  aDesiredRect.x += leftInset;
-  aDesiredRect.y += topInset;
-  mFirstChild->SetRect(aDesiredRect);
+  // Place and size the frame
+  desiredRect.x += leftInset;
+  desiredRect.y += topInset;
+  mFirstChild->SetRect(desiredRect);
 
   // Set our last content offset and whether the last content is complete
   // based on the state of the pseudo frame
   SetLastContentOffset(mFirstChild);
 
   // Return our desired size
-  ComputeDesiredSize(aDesiredRect, aMaxSize, mySpacing,
+  ComputeDesiredSize(desiredRect, aMaxSize, mySpacing,
                      isPseudoFrame, aDesiredSize);
 
   mSpaceManager->Translate(-leftInset, -topInset);
@@ -305,9 +305,11 @@ nsBodyFrame::ComputeDesiredSize(const nsRect& aDesiredRect,
                                 PRBool aIsPseudoFrame,
                                 nsReflowMetrics& aDesiredSize)
 {
+  // Note: Bodys used as pseudo-frames shrink wrap
   aDesiredSize.height = PR_MAX(aDesiredRect.YMost(), mSpaceManager->YMost());
-  aDesiredSize.width = PR_MAX(aDesiredRect.XMost(), aMaxSize.width);
+  aDesiredSize.width = aDesiredRect.XMost();
   if (!aIsPseudoFrame) {
+    aDesiredSize.width = PR_MAX(aDesiredSize.width, aMaxSize.width);
     aDesiredSize.height += aSpacing->mBorderPadding.top +
       aSpacing->mBorderPadding.bottom;
   }
