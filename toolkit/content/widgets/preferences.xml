@@ -771,31 +771,33 @@
             // Clone all the preferences elements from the child document and
             // insert them into the pane collection of the parent. 
             var pdoc = window.opener.document;
-            var currentPane = pdoc.documentElement.currentPane;
-            var id = window.location.href + "#childprefs";
-            var childPrefs = pdoc.getElementById(id);
-            if (!childPrefs) {
-              var childPrefs = pdoc.createElement("preferences");
-              currentPane.appendChild(childPrefs);
-              childPrefs.id = id;
-            }
-            var panes = this.preferencePanes;
-            for (var i = 0; i < panes.length; ++i) {
-              var preferences = panes[i].preferences;
-              for (var j = 0; j < preferences.length; ++j) {
-                var prefID = window.location.href + "#" + preferences[j].id;
-                var preference = pdoc.getElementById(prefID);
-                if (!preference) {
-                  var preference = pdoc.createElement("preference");
-                  childPrefs.appendChild(preference);
-                  preference.id       = prefID;
-                  preference.name     = preferences[j].name;
-                  preference.type     = preferences[j].type;
-                  preference.inverted = preferences[j].inverted;
-                  preference.readonly = preferences[j].readonly;
-                  preference.disabled = preferences[j].disabled;
+            if (pdoc.documentElement.localName == "prefwindow") {
+              var currentPane = pdoc.documentElement.currentPane;
+              var id = window.location.href + "#childprefs";
+              var childPrefs = pdoc.getElementById(id);
+              if (!childPrefs) {
+                var childPrefs = pdoc.createElement("preferences");
+                currentPane.appendChild(childPrefs);
+                childPrefs.id = id;
+              }
+              var panes = this.preferencePanes;
+              for (var i = 0; i < panes.length; ++i) {
+                var preferences = panes[i].preferences;
+                for (var j = 0; j < preferences.length; ++j) {
+                  var prefID = window.location.href + "#" + preferences[j].id;
+                  var preference = pdoc.getElementById(prefID);
+                  if (!preference) {
+                    var preference = pdoc.createElement("preference");
+                    childPrefs.appendChild(preference);
+                    preference.id       = prefID;
+                    preference.name     = preferences[j].name;
+                    preference.type     = preferences[j].type;
+                    preference.inverted = preferences[j].inverted;
+                    preference.readonly = preferences[j].readonly;
+                    preference.disabled = preferences[j].disabled;
+                  }
+                  preference.value    = preferences[j].value;
                 }
-                preference.value    = preferences[j].value;
               }
             }
           }

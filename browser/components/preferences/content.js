@@ -11,14 +11,14 @@
 # for the specific language governing rights and limitations under the
 # License.
 # 
-# The Original Code is Mozilla.org Code.
+# The Original Code is the Firefox Preferences System.
 # 
-# The Initial Developer of the Original Code is
-# Doron Rosenberg.
-# Portions created by the Initial Developer are Copyright (C) 2001
+# The Initial Developer of the Original Code is Google Inc.
+# Portions created by the Initial Developer are Copyright (C) 2005
 # the Initial Developer. All Rights Reserved.
 # 
 # Contributor(s):
+#   Ben Goodger <ben@mozilla.org>
 # 
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -33,6 +33,7 @@
 # the terms of any one of the MPL, the GPL or the LGPL.
 # 
 # ***** END LICENSE BLOCK *****
+
 
 const kFontNameFmtSerif         = "font.name.serif.%LANG%";
 const kFontNameFmtSansSerif     = "font.name.sans-serif.%LANG%";
