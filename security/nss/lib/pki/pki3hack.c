@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.31 $ $Date: 2002/02/04 23:04:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.32 $ $Date: 2002/02/06 20:18:18 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -690,8 +690,6 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc)
 	if (nssTrust) {
 	    cc->trust = cert_trust_from_stan_trust(nssTrust, cc->arena);
 	    nssPKIObject_Destroy(&nssTrust->object);
-	} else {
-	    cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
 	}
     } else if (instance) {
 	/* slot */
@@ -728,7 +726,11 @@ STAN_GetCERTCertificate(NSSCertificate *c)
     if (cc) {
 	if (!cc->nssCertificate) {
 	    fill_CERTCertificateFields(c, cc);
-	} else if (!cc->trust) {
+	} else if (!cc->trust && !c->object.cryptoContext) {
+	    /* if it's a perm cert, it might have been stored before the
+	     * trust, so look for the trust again.  But a temp cert can be
+	     * ignored.
+	     */
 	    cc->trust = nssTrust_GetCERTCertTrustForCert(c, cc);
 	}
     }
