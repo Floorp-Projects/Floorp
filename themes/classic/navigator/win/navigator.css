@@ -45,6 +45,13 @@
   {
     padding               : 3px 2px 2px 3px;
   }  
+
+#nav-bar-inner
+  {
+    min-width             : 0px;
+    margin                : 8px 0px 8px 6px;
+  }
+
   
 /*
  * Rules for 'hiding' portions of the chrome for special
