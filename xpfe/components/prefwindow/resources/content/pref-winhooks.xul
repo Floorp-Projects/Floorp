@@ -51,42 +51,42 @@
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingHTML" label="&html.label;" accesskey="&html.accesskey;"/>
+                        <checkbox id="isHandlingHTML" label="&html.label;" accesskey="&html.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingJPEG" label="&jpeg.label;" accesskey="&jpeg.accesskey;"/>
+                        <checkbox id="isHandlingJPEG" label="&jpeg.label;" accesskey="&jpeg.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;"/>
+                        <checkbox id="isHandlingGIF"  label="&gif.label;" accesskey="&gif.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;"/>
+                        <checkbox id="isHandlingPNG"  label="&png.label;" accesskey="&png.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;"/>
+                        <checkbox id="isHandlingXML"  label="&xml.label;" accesskey="&xml.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;"/>
+                        <checkbox id="isHandlingXUL"  label="&xul.label;" accesskey="&xul.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
@@ -102,35 +102,35 @@
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingHTTP"   label="&http.label;" accesskey="&http.accesskey;"/>
+                        <checkbox id="isHandlingHTTP"   label="&http.label;" accesskey="&http.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;"/>
+                        <checkbox id="isHandlingHTTPS"  label="&https.label;" accesskey="&https.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;"/>
+                        <checkbox id="isHandlingFTP"    label="&ftp.label;" accesskey="&ftp.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;"/>
+                        <checkbox id="isHandlingCHROME" label="&chrome.label;" accesskey="&chrome.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
             <treeitem>
                 <treerow>
                     <treecell>
-                        <checkbox id="isHandlingGOPHER" label="&gopher.label;" accesskey="&gopher.accesskey;"/>
+                        <checkbox id="isHandlingGOPHER" label="&gopher.label;" accesskey="&gopher.accesskey;" allowevents="true"/>
                     </treecell>
                 </treerow>
             </treeitem>
