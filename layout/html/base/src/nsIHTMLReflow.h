@@ -75,54 +75,31 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
 
 /**
  * CSS Frame type. Included as part of the reflow state.
- *
- * @see nsHTMLReflowState
- *
- * XXX This requires some more thought. Are these the correct set?
- * XXX Should we treat 'replaced' as a bit flag instead of doubling the
- *     number of enumerators?
  */
-enum nsCSSFrameType {
-  // unknown frame type
-  eCSSFrameType_Unknown,
+typedef PRUint32  nsCSSFrameType;
 
-  // inline, non-replaced elements
-  eCSSFrameType_Inline,
+#define NS_CSS_FRAME_TYPE_UNKNOWN         0
+#define NS_CSS_FRAME_TYPE_INLINE          1
+#define NS_CSS_FRAME_TYPE_BLOCK           2  /* block-level in normal flow */
+#define NS_CSS_FRAME_TYPE_FLOATING        3
+#define NS_CSS_FRAME_TYPE_ABSOLUTE        4
+#define NS_CSS_FRAME_TYPE_INTERNAL_TABLE  5  /* row group frame, row frame, cell frame, ... */
 
-  // inline, replaced elements (e.g., image)
-  eCSSFrameType_InlineReplaced,
+/**
+ * Bit-flag that indicates whether the element is replaced. Applies to inline,
+ * block-level, floating, and absolutely positioned elements
+ */
+#define NS_CSS_FRAME_TYPE_REPLACED        0x8000
 
-  // block-level, non-replaced elements in normal flow
-  eCSSFrameType_Block,
+/**
+ * Helper macros for telling whether items are replaced
+ */
 
-  // block-level, replaced elements in normal flow
-  eCSSFrameType_BlockReplaced,
+#define NS_FRAME_IS_REPLACED(_ft) \
+  (NS_CSS_FRAME_TYPE_REPLACED == ((_ft) & NS_CSS_FRAME_TYPE_REPLACED))
 
-  // floating, non-replaced elements
-  eCSSFrameType_Floating,
-
-  // floating, replaced elements
-  eCSSFrameType_FloatingReplaced,
-
-  // absolutely positioned, non-replaced elements
-  eCSSFrameType_Absolute,
-
-  // absolutely positioned, replaced elements
-  eCSSFrameType_AbsoluteReplaced,
-
-  // internal table element (row group frame, row frame, table cell, ...)
-  eCSSFrameType_InternalTable
-};
-
-// XXX Get rid of the enum
-#define NS_FRAME_IS_REPLACED(_ft)               \
-  ((eCSSFrameType_AbsoluteReplaced == (_ft)) || \
-   (eCSSFrameType_FloatingReplaced == (_ft)) || \
-   (eCSSFrameType_BlockReplaced == (_ft)) ||    \
-   (eCSSFrameType_InlineReplaced == (_ft)))
-
-#define NS_FRAME_IS_NOT_REPLACED(_ft)           \
-  (!NS_FRAME_IS_REPLACED(_ft))
+#define NS_FRAME_REPLACED(_ft) \
+  (NS_CSS_FRAME_TYPE_REPLACED | (_ft))
 
 //----------------------------------------------------------------------
 

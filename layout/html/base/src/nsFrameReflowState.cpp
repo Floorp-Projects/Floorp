@@ -109,44 +109,29 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
   const nsStylePosition* pos;
   frame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)pos);
   if ((nsnull != pos) && (NS_STYLE_POSITION_ABSOLUTE == pos->mPosition)) {
-    if (IsReplaced(tag)) {
-      frameType = eCSSFrameType_AbsoluteReplaced;
-    }
-    else {
-      frameType = eCSSFrameType_Absolute;
-    }
+    frameType = NS_CSS_FRAME_TYPE_ABSOLUTE;
   }
   else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
-    if (IsReplaced(tag)) {
-      frameType = eCSSFrameType_FloatingReplaced;
-    }
-    else {
-      frameType = eCSSFrameType_Floating;
-    }
+    frameType = NS_CSS_FRAME_TYPE_FLOATING;
   }
   else {
     switch (display->mDisplay) {
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
-      frameType = eCSSFrameType_Block;
+      frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
     case NS_STYLE_DISPLAY_INLINE:
     case NS_STYLE_DISPLAY_MARKER:
     case NS_STYLE_DISPLAY_INLINE_TABLE:
-      if (IsReplaced(tag)) {
-        frameType = eCSSFrameType_InlineReplaced;
-      }
-      else {
-        frameType = eCSSFrameType_Inline;
-      }
+      frameType = NS_CSS_FRAME_TYPE_INLINE;
       break;
 
     case NS_STYLE_DISPLAY_RUN_IN:
     case NS_STYLE_DISPLAY_COMPACT:
       // XXX need to look ahead at the frame's sibling
-      frameType = eCSSFrameType_Block;
+      frameType = NS_CSS_FRAME_TYPE_BLOCK;
       break;
 
     case NS_STYLE_DISPLAY_TABLE_CELL:
@@ -157,16 +142,20 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
     case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
     case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
     case NS_STYLE_DISPLAY_TABLE_ROW:
-      frameType = eCSSFrameType_InternalTable;
+      frameType = NS_CSS_FRAME_TYPE_INTERNAL_TABLE;
       break;
 
     case NS_STYLE_DISPLAY_NONE:
     default:
-      frameType = eCSSFrameType_Unknown;
+      frameType = NS_CSS_FRAME_TYPE_UNKNOWN;
       break;
     }
-    NS_IF_RELEASE(tag);
   }
+
+  if (IsReplaced(tag)) {
+    frameType = NS_FRAME_REPLACED(frameType);
+  }
+  NS_IF_RELEASE(tag);
 }
 
 // Helper function that re-calculates the left and right margin based on
@@ -244,7 +233,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   // elements?
   mLineHeight = CalcLineHeight(aPresContext, frame);
 
-  if (eCSSFrameType_Inline == frameType) {
+  // See if it's an inline non-replaced element
+  if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
     // 'width' property doesn't apply to inline non-replaced elements. The
     // 'height' is given by the element's 'line-height' value
     if (mLineHeight >= 0) {
@@ -293,8 +283,8 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     }
 
     // Calculate the computed width and height. This varies by frame type
-    if ((eCSSFrameType_InlineReplaced == frameType) ||
-        (eCSSFrameType_FloatingReplaced == frameType)) {
+    if ((NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == frameType) ||
+        (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_FLOATING) == frameType)) {
       // Inline replaced element and floating replaced element are basically
       // treated the same
       if (eStyleUnit_Auto == widthUnit) {
@@ -312,7 +302,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              computedHeight);
       }
 
-    } else if (eCSSFrameType_Floating == frameType) {
+    } else if (NS_CSS_FRAME_TYPE_FLOATING == frameType) {
       // Floating non-replaced element
       if (eStyleUnit_Auto == widthUnit) {
         // A specified value of 'auto' becomes a computed width of 0
@@ -328,7 +318,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
                              computedHeight);
       }
 
-    } else if (eCSSFrameType_InternalTable == frameType) {
+    } else if (NS_CSS_FRAME_TYPE_INTERNAL_TABLE == frameType) {
       // Internal table elements. The rules vary depending on the type
       const nsStyleDisplay* display;
       frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
@@ -377,7 +367,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   
       // Compute the content width
       if (eStyleUnit_Auto == widthUnit) {
-        if (eCSSFrameType_BlockReplaced == frameType) {
+        if (NS_FRAME_IS_REPLACED(frameType)) {
           // Block-level replaced element in the flow. A specified value of 
           // 'auto' uses the element's intrinsic width
           computedWidth = NS_INTRINSICSIZE;
@@ -403,7 +393,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
   
       // Compute the content height
       if (eStyleUnit_Auto == heightUnit) {
-        if (eCSSFrameType_BlockReplaced == frameType) {
+        if (NS_FRAME_IS_REPLACED(frameType)) {
           computedHeight = NS_INTRINSICSIZE;
         } else {
           computedHeight = NS_AUTOHEIGHT;

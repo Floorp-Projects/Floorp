@@ -3483,7 +3483,7 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
     // CSS2 section 10.3.5: Floating non-replaced elements with an
     // auto width have the computed value of zero. Therefore, don't
     // bother reflowing them.
-    if (NS_FRAME_IS_NOT_REPLACED(aFloaterReflowState.frameType)) {
+    if (!NS_FRAME_IS_REPLACED(aFloaterReflowState.frameType)) {
       // XXX Tables are weird and special, so check for them here...
       const nsStyleDisplay* floaterDisplay;
       aFloaterFrame->GetStyleData(eStyleStruct_Display,
