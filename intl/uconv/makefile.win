@@ -35,6 +35,9 @@ DEPTH=..\..
 
 DIRS=idl public src  \
      ucvlatin \
+!ifdef MOZ_MATHML
+     ucvmath \
+!endif
      ucvibm \
      ucvja \
      ucvcn \
