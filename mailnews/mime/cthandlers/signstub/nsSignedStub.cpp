@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-#include "nsSIGNEDStub.h"
+#include "nsSignedStub.h"
 #include "prmem.h"
 #include "plstr.h"
 #include "mimexpcom.h"
