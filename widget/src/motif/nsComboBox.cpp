@@ -21,7 +21,7 @@
 #include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsStringUtil.h"
-#include "nsDeviceContextUnix.h"
+#include "nsIDeviceContext.h"
 
 #include <Xm/RowColumn.h>
 #include <Xm/PushB.h>
@@ -30,7 +30,6 @@
 
 #define INITIAL_MAX_ITEMS 128
 #define ITEMS_GROWSIZE    128
-
 
 //-------------------------------------------------------------------------
 //
@@ -67,7 +66,8 @@ nsComboBox::~nsComboBox()
 void nsComboBox::SetForegroundColor(const nscolor &aColor)
 {
   nsWindow::SetForegroundColor(aColor);
-  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  PRUint32 pixel;
+  mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mOptionMenu, XtNforeground, pixel, nsnull);
 }
 
@@ -79,7 +79,8 @@ void nsComboBox::SetForegroundColor(const nscolor &aColor)
 void nsComboBox::SetBackgroundColor(const nscolor &aColor)
 {
   nsWindow::SetForegroundColor(aColor);
-  PRUint32 pixel = ((nsDeviceContextUnix *)mContext)->ConvertPixel(aColor);
+  PRUint32 pixel;
+  mContext->ConvertPixel(aColor, pixel);
   XtVaSetValues(mOptionMenu, XtNbackground, pixel, nsnull);
 }
 
