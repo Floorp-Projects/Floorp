@@ -355,28 +355,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
               break;
 
             default:
-              if (aParent && (aInitData->mBorderStyle & eBorderStyle_sheet))
-              {
-                nsWindowType parentType;
-                aParent->GetWindowType(parentType);
-                if (parentType != eWindowType_invisible)
-                {
-                  // Mac OS X sheet support
-                  mIsSheet = PR_TRUE;
-                  windowClass = kSheetWindowClass;
-                  if (aInitData->mBorderStyle & eBorderStyle_resizeh)
-                  {
-                    attributes = kWindowResizableAttributes;
-                  }
-                }
-                else
-                {
-                  windowClass = kDocumentWindowClass;
-                  attributes = kWindowCollapseBoxAttribute;
-                }
-              }
-              else
-              {
                 windowClass = kDocumentWindowClass;
 
                 // we ignore the close flag here, since mac dialogs should never have a close box.
@@ -398,6 +376,37 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
                     break;
                 }
               }
+          }
+        else
+        {
+          windowClass = kMovableModalWindowClass;
+          attributes = kWindowCollapseBoxAttribute;
+        }
+
+        hOffset = kDialogMarginWidth;
+        vOffset = kDialogTitleBarHeight;
+        break;
+
+      case eWindowType_sheet:
+        mIsTopWidgetWindow = PR_TRUE;
+        if (aInitData)
+        {
+          nsWindowType parentType;
+          aParent->GetWindowType(parentType);
+          if (parentType != eWindowType_invisible)
+          {
+            // Mac OS X sheet support
+            mIsSheet = PR_TRUE;
+            windowClass = kSheetWindowClass;
+            if (aInitData->mBorderStyle & eBorderStyle_resizeh)
+            {
+              attributes = kWindowResizableAttributes;
+            }
+          }
+          else
+          {
+            windowClass = kDocumentWindowClass;
+            attributes = kWindowCollapseBoxAttribute;
           }
         }
         else
@@ -509,8 +518,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
   nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
   // We only need a valid aParent if we have a sheet
-  if (!aInitData || (aInitData->mBorderStyle == eBorderStyle_default) ||
-      !(aInitData->mBorderStyle & eBorderStyle_sheet))
+  if (aInitData->mWindowType != eWindowType_sheet)
     aParent = nil;
 
   // init base class

@@ -319,6 +319,16 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
     if (aChromeMask & nsIWebBrowserChrome::CHROME_WINDOW_POPUP)
       widgetInitData.mWindowType = eWindowType_popup;
 
+#ifdef XP_MACOSX
+    // Mac OS X sheet support
+    PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
+                         nsIWebBrowserChrome::CHROME_MODAL;
+    if (aParent && ((aChromeMask & sheetMask) == sheetMask))
+    {
+        widgetInitData.mWindowType = eWindowType_sheet;
+    }
+#endif
+
     widgetInitData.mContentType = eContentTypeUI;                
     // note default chrome overrides other OS chrome settings, but
     // not internal chrome
@@ -348,16 +358,6 @@ nsAppShellService::JustCreateTopWindow(nsIXULWindow *aParent,
         widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_minimize );
       }  
     }
-
-#if TARGET_CARBON
-    // Mac OS X sheet support
-    PRUint32 sheetMask = nsIWebBrowserChrome::CHROME_OPENAS_DIALOG |
-                         nsIWebBrowserChrome::CHROME_MODAL;
-    if (aParent && ((aChromeMask & sheetMask) == sheetMask))
-    {
-        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_sheet );
-    }
-#endif
 
     if (aInitialWidth == nsIAppShellService::SIZE_TO_CONTENT ||
         aInitialHeight == nsIAppShellService::SIZE_TO_CONTENT) {
