@@ -19,7 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Holger Schurig <holgerschurig@nikocity.de>
-#               Terry Weissman <terry@mozilla.org>
+#                 Terry Weissman <terry@mozilla.org>
 #
 # Direct any questions on this source code to
 #
@@ -418,23 +418,12 @@ if ($action eq 'new') {
     my $initialqacontact = trim($::FORM{initialqacontact} || '');
     my $initialqacontactid = DBname_to_id ($initialqacontact);
     if (Param('useqacontact')) {
-        if ($initialqacontact eq '') {
-            print "You must enter an initial QA contact for the component '$component'. Please press\n";
-            print "<b>Back</b> and try again.\n";
-            PutTrailer($localtrailer);
-            exit;
-        }
-
-        if (!$initialqacontactid) {
+        if (!$initialqacontactid && $initialqacontact ne '') {
             print "You must use an existing Bugzilla account as initial QA contact for the component '$component'. Please press\n";
             print "<b>Back</b> and try again.\n";
             PutTrailer($localtrailer);
             exit;
         }
-        #
-        # Now validating to make sure it's too an existing account
-        #
-        DBNameToIdAndCheck($initialqacontact);
     }
 
     # Add the new component
@@ -767,15 +756,8 @@ if ($action eq 'update') {
     }
 
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
-        unless ($initialqacontact) {
-            print "Sorry, I can't delete the initial QA contact.";
-            SendSQL("UNLOCK TABLES");
-            PutTrailer($localtrailer);
-            exit;
-        }
-
         my $initialqacontactid = DBname_to_id($initialqacontact);
-        unless ($initialqacontactid) {
+        if (!$initialqacontactid && $initialqacontact ne '') {
             print "Sorry, you must use an existing Bugzilla account as initial QA contact.";
             SendSQL("UNLOCK TABLES");
             PutTrailer($localtrailer);
