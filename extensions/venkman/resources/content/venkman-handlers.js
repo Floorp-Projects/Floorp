@@ -109,18 +109,13 @@ function con_icline (e)
     console._lastHistoryReferenced = -1;
     console._incompleteLine = "";
 
-    if (e.line[0] == console.prefs["input.commandchar"])
-    {   /* starts with a '/', look up the command */
-        var ary = e.line.substr(1, e.line.length).match (/(\S+)? ?(.*)/);
-        var command = ary[1];
+    var ary = e.line.match (/(\S+)? ?(.*)/);
+    var command = ary[1];
 
-        e.command = command;
-        e.inputData =  ary[2] ? stringTrim(ary[2]) : "";
-        e.line = e.line;
-        console.onInputCommand (e);
-    }
-    else /* no command character */
-        evalInDebuggerScope (e.line);
+    e.command = command;
+    e.inputData =  ary[2] ? stringTrim(ary[2]) : "";
+    e.line = e.line;
+    console.onInputCommand (e);
 
 }
 
@@ -129,6 +124,14 @@ function con_ieval (e)
 {
     if (e.inputData)
         evalInTargetScope (e.inputData)
+    return true;
+}
+
+console.onInputEvalD =
+function con_ievald (e)
+{
+    if (e.inputData)
+        evalInDebuggerScope (e.inputData)
     return true;
 }
 
@@ -174,8 +177,41 @@ function cli_ihelp (e)
     return true;    
 }
 
+console.onInputProps =
+function con_iprops (e, forceDebuggerScope)
+{
+    if (!e.inputData)
+    {
+        display (getMsg(MSN_ERR_REQUIRED_PARAM, MSG_VAL_EXPR));
+        return false;
+    }
+
+    var v;
+    
+    if (forceDebuggerScope)
+        v = evalInDebuggerScope (e.inputData);
+    else
+        v = evalInTargetScope (e.inputData);
+
+    if (!(v instanceof jsdIValue))
+    {
+        display (getMsg(MSN_ERR_INVALID_PARAM, [MSG_VAL_EXPR, String(v)]),
+                 MT_ERROR);
+        return false;
+    }
+    
+    displayProperties(v);
+    return true;
+}
+
+console.onInputPropsD =
+function con_ipropsd (e)
+{
+    return console.onInputProps (e, true);
+}
+            
 console.onInputScope =
-function con_iscope (e)
+function con_iscope ()
 {
     if (!console.frames)
     {
@@ -184,7 +220,7 @@ function con_iscope (e)
     }
     
     if (console.frames[console.currentFrameIndex].scope.propertyCount == 0)
-        display (getMsg (MSN_NO_PROPERTIES, MSG_VAL_SCOPE + " 0"));
+        display (getMsg (MSN_NO_PROPERTIES, MSG_WORD_SCOPE + " 0"));
     else
         displayProperties (console.frames[console.currentFrameIndex].scope);
     
@@ -192,13 +228,13 @@ function con_iscope (e)
 }
 
 console.onInputQuit =
-function con_iquit (e)
+function con_iquit ()
 {
     window.close();
 }
 
 console.onInputWhere =
-function con_iwhere (e)
+function con_iwhere ()
 {
     if (!console.frames)
     {
@@ -245,6 +281,24 @@ function con_slkeypress (e)
             
             break;
             
+        case 33: /* pgup */
+            w = window.frames[0];
+            newOfs = w.pageYOffset - (w.innerHeight / 2);
+            if (newOfs > 0)
+                w.scrollTo (w.pageXOffset, newOfs);
+            else
+                w.scrollTo (w.pageXOffset, 0);
+            break;
+            
+        case 34: /* pgdn */
+            w = window.frames[0];
+            newOfs = w.pageYOffset + (w.innerHeight / 2);
+            if (newOfs < (w.innerHeight + w.pageYOffset))
+                w.scrollTo (w.pageXOffset, newOfs);
+            else
+                w.scrollTo (w.pageXOffset, (w.innerHeight + w.pageYOffset));
+            break;
+
         case 9: /* tab */
             e.preventDefault();
             console.onTabCompleteRequest(e);
@@ -262,7 +316,6 @@ function con_tabcomplete (e)
     var selStart = e.target.selectionStart;
     var selEnd   = e.target.selectionEnd;            
     var v        = e.target.value;
-    var cmdchar  = console.prefs["input.commandchar"];
     
     if (selStart != selEnd) 
     {
@@ -278,12 +331,12 @@ function con_tabcomplete (e)
     var pfx;
     var d;
     
-    if ((v[0] == cmdchar) && (selStart <= firstSpace))
+    if ((selStart <= firstSpace))
     {
-        /* line starts with /, and the cursor is positioned before the
-         * first space, so we're completing a command
+        /* The cursor is positioned before the first space, so we're completing
+         * a command
          */
-        var partialCommand = v.substring(1, firstSpace).toLowerCase();
+        var partialCommand = v.substring(0, firstSpace).toLowerCase();
         var cmds = console._commands.listNames(partialCommand);
 
         if (!cmds)
@@ -292,7 +345,7 @@ function con_tabcomplete (e)
         else if (cmds.length == 1)
         {
             /* partial matched exactly one command */
-            pfx = cmdchar + cmds[0];
+            pfx = cmds[0];
             if (firstSpace == v.length)
                 v =  pfx + " ";
             else
@@ -311,7 +364,7 @@ function con_tabcomplete (e)
             else
                 console._lastTabUp = d;
             
-            pfx = cmdchar + getCommonPfx(cmds);
+            pfx = getCommonPfx(cmds);
             if (firstSpace == v.length)
                 v =  pfx;
             else
@@ -332,6 +385,13 @@ function con_unload (e)
     dd ("Application venkman, 'JavaScript Debugger' unloaded.");
 
     detachDebugger();
+}
+
+console.onWindowKeyPress =
+function con_windowkpress (e)
+{
+    if (e.keyCode == 9) /* tab */
+        console._slInputElement.focus();
 }
 
 window.onresize =
