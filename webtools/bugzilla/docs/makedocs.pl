@@ -74,5 +74,5 @@ MakeDocs('separate HTML', "jade -t sgml -i html -d $LDP_HOME/ldp.dsl\#html " .
 MakeDocs('big HTML', "jade -V nochunks -t sgml -i html -d " .
          "$LDP_HOME/ldp.dsl\#html $JADE_PUB/xml.dcl " .
 	 "../sgml/Bugzilla-Guide.sgml > Bugzilla-Guide.html");
-MakeDocs('big text', "lynx -dump -nolist Bugzilla-Guide.html " .
+MakeDocs('big text', "lynx -dump -justify=off -nolist Bugzilla-Guide.html " .
 	 "> ../txt/Bugzilla-Guide.txt");

@@ -1,0 +1,644 @@
+<HTML
+><HEAD
+><TITLE
+>HTTP Server Configuration</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="OS Specific Installation Notes"
+HREF="os-specific.html"><LINK
+REL="NEXT"
+TITLE="Troubleshooting"
+HREF="troubleshooting.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="os-specific.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="troubleshooting.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="http"
+></A
+>4.4. HTTP Server Configuration</H1
+><P
+>The Bugzilla Team recommends Apache when using Bugzilla, however, any web server
+    that can be configured to run <A
+HREF="glossary.html#gloss-cgi"
+><I
+CLASS="glossterm"
+>CGI</I
+></A
+> scripts
+    should be able to handle Bugzilla. No matter what web server you choose, but
+    especially if you choose something other than Apache, you should be sure to read
+    <A
+HREF="security.html"
+>Section 5.6</A
+>.
+    </P
+><P
+>The plan for this section is to eventually document the specifics of how to lock
+    down permissions on individual web servers.
+    </P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="http-apache"
+></A
+>4.4.1. Apache <SPAN
+CLASS="productname"
+>httpd</SPAN
+></H2
+><P
+>As mentioned above, the Bugzilla Team recommends Apache for use
+      with Bugzilla. You will have to make sure that Apache is properly
+      configured to run the Bugzilla CGI scripts. You also need to make sure
+      that the <TT
+CLASS="filename"
+>.htaccess</TT
+> files created by
+      <B
+CLASS="command"
+>./checksetup.pl</B
+> (shown in <A
+HREF="http.html#http-apache-htaccess"
+>Example 4-1</A
+>
+      for the curious) are allowed to override Apache's normal access
+      permissions or else important password information may be exposed to the
+      Internet.
+      </P
+><P
+>Many Apache installations are not configured to run scripts
+        anywhere but in the <TT
+CLASS="filename"
+>cgi-bin</TT
+>
+        directory; however, we recommend that Bugzilla not be installed in the
+        <TT
+CLASS="filename"
+>cgi-bin</TT
+>, otherwise the static
+        files such as images and <A
+HREF="glossary.html#gloss-javascript"
+><I
+CLASS="glossterm"
+>JavaScript</I
+></A
+>
+        will not work correctly. To allow scripts to run in the normal
+        web space, the following changes should be made to your
+        <TT
+CLASS="filename"
+>httpd.conf</TT
+> file.
+        </P
+><P
+>To allow files with a .cgi extension to be run, make sure the
+        following line exists and is uncommented:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;AddHandler cgi-script .cgi
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>To allow <TT
+CLASS="filename"
+>.htaccess</TT
+> files to override
+        permissions and .cgi files to run in the Bugzilla directory, make sure
+        the following two lines are in a <TT
+CLASS="computeroutput"
+>Directory</TT
+>
+        directive that applies to the Bugzilla directory on your system
+        (either the Bugzilla directory or one of its parents).
+        </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;Options +ExecCGI 
+AllowOverride Limit
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>For more information on Apache and its directives, see the
+          glossary entry on <A
+HREF="glossary.html#gloss-apache"
+><I
+CLASS="glossterm"
+>Apache</I
+></A
+>.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="example"
+><A
+NAME="http-apache-htaccess"
+></A
+><P
+><B
+>Example 4-1. <TT
+CLASS="filename"
+>.htaccess</TT
+> files for Apache</B
+></P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/.htaccess</TT
+>
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# don't allow people to retrieve non-cgi executable files or our private data
+&#60;FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$&#62;
+  deny from all
+&#60;/FilesMatch&#62;
+&#60;FilesMatch ^(localconfig.js|localconfig.rdf)$&#62;
+  allow from all
+&#60;/FilesMatch&#62;
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+> 
+          </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/.htaccess</TT
+> 
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory; the only exception is duplicates.rdf, which is used by
+# duplicates.xul and must be loadable over the web
+deny from all
+&#60;Files duplicates.rdf&#62;
+  allow from all
+&#60;/Files&#62;
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/data/webdot</TT
+>
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# Restrict access to .dot files to the public webdot server at research.att.com 
+# if research.att.com ever changed their IP, or if you use a different
+# webdot server, you'll need to edit this
+&#60;FilesMatch ^[0-9]+\.dot$&#62;
+  Allow from 192.20.225.10
+  Deny from all
+&#60;/FilesMatch&#62;
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+&#60;FilesMatch ^[0-9]+\.(png|gif|jpg|map)$&#62;
+  Allow from all
+&#60;/FilesMatch&#62;
+
+# And no directory listings, either.
+Deny from all
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/Bugzilla/.htaccess</TT
+>
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+><P
+><TT
+CLASS="filename"
+>$BUGZILLA_HOME/template/.htaccess</TT
+>
+          <TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+          </P
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="http-iis"
+></A
+>4.4.2. Microsoft <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+></H2
+><P
+>If you need, or for some reason even want, to use Microsoft's
+      <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+> or
+      <SPAN
+CLASS="productname"
+>Personal Web Server</SPAN
+> you should be able
+      to. You will need to configure them to know how to run CGI scripts,
+      however. This is described in Microsoft Knowledge Base article
+      <A
+HREF="http://support.microsoft.com/support/kb/articles/Q245/2/25.asp"
+TARGET="_top"
+>Q245225 </A
+>
+      for <SPAN
+CLASS="productname"
+>Internet Information Services</SPAN
+> and
+      <A
+HREF="http://support.microsoft.com/support/kb/articles/Q231/9/98.asp"
+TARGET="_top"
+>Q231998</A
+>          
+      for <SPAN
+CLASS="productname"
+>Personal Web Server</SPAN
+>.
+      </P
+><P
+>Also, and this can't be stressed enough, make sure that files such as
+      <TT
+CLASS="filename"
+>localconfig</TT
+> and your <TT
+CLASS="filename"
+>data</TT
+>
+      directory are secured as described in <A
+HREF="security.html"
+>Section 5.6</A
+>.
+      </P
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="http-aol"
+></A
+>4.4.3. AOL Server</H2
+><P
+>Ben FrantzDale reported success using AOL Server with Bugzilla. He
+      reported his experience and what appears below is based on that.
+      </P
+><P
+>AOL Server will have to be configured to run
+      <A
+HREF="glossary.html#gloss-cgi"
+><I
+CLASS="glossterm"
+>CGI</I
+></A
+> scripts, please consult
+      the documentation that came with your server for more information on
+      how to do this.
+      </P
+><P
+>Because AOL Server doesn't support <TT
+CLASS="filename"
+>.htaccess</TT
+>
+      files, you'll have to create a <A
+HREF="glossary.html#gloss-tcl"
+><I
+CLASS="glossterm"
+>TCL</I
+></A
+>
+      script. You should create an <TT
+CLASS="filename"
+>aolserver/modules/tcl/filter.tcl</TT
+>
+      file (the filename shouldn't matter) with the following contents (change
+      <TT
+CLASS="computeroutput"
+>/bugzilla/</TT
+> to the web-based path to
+      your Bugzilla installation):
+      </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/*.pl filter_deny
+ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/processmail filter_deny
+ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
+ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
+
+proc filter_deny { why } {
+    ns_log Notice "filter_deny"
+    return "filter_return"
+}
+      </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="warning"
+><P
+></P
+><TABLE
+CLASS="warning"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/warning.gif"
+HSPACE="5"
+ALT="Warning"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>This doesn't appear to account for everything mentioned in
+        <A
+HREF="security.html"
+>Section 5.6</A
+>. In particular, it doesn't block access
+        to the <TT
+CLASS="filename"
+>data</TT
+> or
+        <TT
+CLASS="filename"
+>template</TT
+> directories. It also
+        doesn't account for the editor backup files that were the topic of
+        <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=186383"
+TARGET="_top"
+>bug
+        186383</A
+>, <A
+HREF="http://online.securityfocus.com/bid/6501"
+TARGET="_top"
+>Bugtraq ID 6501</A
+>,
+        and a partial cause for the 2.16.2 release.
+        </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="os-specific.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="troubleshooting.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>OS Specific Installation Notes</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>Troubleshooting</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>

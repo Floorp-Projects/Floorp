@@ -10,8 +10,8 @@ REL="HOME"
 TITLE="The Bugzilla Guide"
 HREF="index.html"><LINK
 REL="PREVIOUS"
-TITLE="SourceForge"
-HREF="variant-sourceforge.html"></HEAD
+TITLE="How to use this License for your documents"
+HREF="gfdl-howto.html"></HEAD
 ><BODY
 CLASS="glossary"
 BGCOLOR="#FFFFFF"
@@ -39,7 +39,7 @@ WIDTH="10%"
 ALIGN="left"
 VALIGN="bottom"
 ><A
-HREF="variant-sourceforge.html"
+HREF="gfdl-howto.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -70,7 +70,7 @@ CLASS="glossdiv"
 ><H1
 CLASS="glossdiv"
 ><A
-NAME="AEN2371"
+NAME="AEN2267"
 ></A
 >0-9, high ascii</H1
 ><DL
@@ -109,18 +109,16 @@ NAME="gloss-a"
 >A</H1
 ><DL
 ><DT
+><A
+NAME="gloss-apache"
+></A
 ><B
 >Apache</B
 ></DT
 ><DD
 ><P
 >In this context, Apache is the web server most commonly used
-        for serving up 
-        <I
-CLASS="glossterm"
->Bugzilla</I
->
-
+        for serving up Bugzilla 
         pages. Contrary to popular belief, the apache web server has nothing
         to do with the ancient and noble Native American tribe, but instead
         derived its name from the fact that it was 
@@ -128,14 +126,123 @@ CLASS="glossterm"
 CLASS="QUOTE"
 >"a patchy"</SPAN
 >
-
         version of the original 
         <SPAN
 CLASS="acronym"
 >NCSA</SPAN
 >
-
         world-wide-web server.</P
+><P
+></P
+><DIV
+CLASS="variablelist"
+><P
+><B
+>Useful Directives when configuring Bugzilla</B
+></P
+><DL
+><DT
+><TT
+CLASS="computeroutput"
+><A
+HREF="http://httpd.apache.org/docs-2.0/mod/core.html#addhandler"
+TARGET="_top"
+>AddHandler</A
+></TT
+></DT
+><DD
+><P
+>Tell Apache that it's OK to run CGI scripts.</P
+></DD
+><DT
+><TT
+CLASS="computeroutput"
+><A
+HREF="http://httpd.apache.org/docs-2.0/mod/core.html#allowoverride"
+TARGET="_top"
+>AllowOverride</A
+></TT
+>, <TT
+CLASS="computeroutput"
+><A
+HREF="http://httpd.apache.org/docs-2.0/mod/core.html#options"
+TARGET="_top"
+>Options</A
+></TT
+></DT
+><DD
+><P
+>These directives are used to tell Apache many things about
+              the directory they apply to. For Bugzilla's purposes, we need
+              them to allow script execution and <TT
+CLASS="filename"
+>.htaccess</TT
+>
+              overrides.
+              </P
+></DD
+><DT
+><TT
+CLASS="computeroutput"
+><A
+HREF="http://httpd.apache.org/docs-2.0/mod/mod_dir.html#directoryindex"
+TARGET="_top"
+>DirectoryIndex</A
+></TT
+></DT
+><DD
+><P
+>Used to tell Apache what files are indexes. If you can
+              not add <TT
+CLASS="filename"
+>index.cgi</TT
+> to the list of valid files,
+              you'll need to set <TT
+CLASS="computeroutput"
+>$index_html</TT
+> to
+              1 in <TT
+CLASS="filename"
+>localconfig</TT
+> so
+              <B
+CLASS="command"
+>./checksetup.pl</B
+> will create an
+              <TT
+CLASS="filename"
+>index.html</TT
+> that redirects to
+              <TT
+CLASS="filename"
+>index.cgi</TT
+>.
+              </P
+></DD
+><DT
+><TT
+CLASS="computeroutput"
+><A
+HREF="http://httpd.apache.org/docs-2.0/mod/core.html#scriptinterpretersource"
+TARGET="_top"
+>ScriptInterpreterSource</A
+></TT
+></DT
+><DD
+><P
+>Used when running Apache on windows so the shebang line
+              doesn't have to be changed in every Bugzilla script.
+              </P
+></DD
+></DL
+></DIV
+><P
+>For more information about how to configure Apache for Bugzilla,
+        see <A
+HREF="http.html#http-apache"
+>Section 4.4.1</A
+>.
+        </P
 ></DD
 ></DL
 ></DIV
@@ -204,6 +311,26 @@ NAME="gloss-c"
 ></A
 ></H1
 ><DL
+><DT
+><A
+NAME="gloss-cgi"
+></A
+><B
+>Common Gateway Interface</B
+></DT
+> (CGI)<DD
+><P
+><SPAN
+CLASS="acronym"
+>CGI</SPAN
+> is an acronym for Common Gateway Interface. This is
+        a standard for interfacing an external application with a web server. Bugzilla
+        is an example of a <SPAN
+CLASS="acronym"
+>CGI</SPAN
+> application.
+        </P
+></DD
 ><DT
 ><A
 NAME="gloss-component"
@@ -289,9 +416,12 @@ CLASS="glossdiv"
 ><A
 NAME="gloss-g"
 ></A
-></H1
+>G</H1
 ><DL
 ><DT
+><A
+NAME="gloss-groups"
+></A
 ><B
 >Groups</B
 ></DT
@@ -316,6 +446,29 @@ CLASS="glossterm"
 >Bugzilla</I
 >
         database.</P
+></DD
+></DL
+></DIV
+><DIV
+CLASS="glossdiv"
+><H1
+CLASS="glossdiv"
+><A
+NAME="gloss-j"
+></A
+>J</H1
+><DL
+><DT
+><A
+NAME="gloss-javascript"
+></A
+><B
+>JavaScript</B
+></DT
+><DD
+><P
+>JavaScript is cool, we should talk about it.
+        </P
 ></DD
 ></DL
 ></DIV
@@ -542,6 +695,21 @@ CLASS="QUOTE"
         giving you the ability to declare by which milestone a bug will be
         fixed, or an enhancement will be implemented.</P
 ></DD
+><DT
+><A
+NAME="gloss-tcl"
+></A
+><B
+>Tool Command Language</B
+></DT
+> (TCL)<DD
+><P
+>TCL is an open source scripting language available for Windows,
+        Macintosh, and Unix based systems. Bugzilla 1.0 was written in TCL but
+        never released. The first release of Bugzilla was 2.0, which was when
+        it was ported to perl.
+        </P
+></DD
 ></DL
 ></DIV
 ><DIV
@@ -585,7 +753,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 ><A
-HREF="variant-sourceforge.html"
+HREF="gfdl-howto.html"
 ACCESSKEY="P"
 >Prev</A
 ></TD
@@ -609,7 +777,7 @@ VALIGN="top"
 WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
->SourceForge</TD
+>How to use this License for your documents</TD
 ><TD
 WIDTH="34%"
 ALIGN="center"

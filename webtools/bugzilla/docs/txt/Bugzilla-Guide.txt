@@ -5,6 +5,8 @@ Matthew P. Barnson
 
 The Bugzilla Team
 
+   2.17.3 Development Release Edition
+
    2003-01-02
 
    This is the documentation for Bugzilla, the mozilla.org bug-tracking
@@ -14,7 +16,7 @@ The Bugzilla Team
 
    This documentation is maintained in DocBook 4.1.2 XML format. Changes
    are best submitted as plain text or SGML diffs, attached to a bug
-   filed in mozilla.org's Bugzilla.
+   filed in the Bugzilla Documentation compontent.
 
    This is a development version of this guide. Information in it is
    subject to change before the 2.18 release of this guide (which will
@@ -45,8 +47,8 @@ The Bugzilla Team
 
         4.1. Step-by-step Install
         4.2. Optional Additional Configuration
-        4.3. Win32 Installation Notes
-        4.4. Mac OS X Installation Notes
+        4.3. OS Specific Installation Notes
+        4.4. HTTP Server Configuration
         4.5. Troubleshooting
 
    5. Administering Bugzilla
@@ -82,14 +84,25 @@ The Bugzilla Team
         D.5. Perforce SCM
         D.6. SourceForge
 
+   E. GNU Free Documentation License
+
+        0. PREAMBLE
+        1. APPLICABILITY AND DEFINITIONS
+        2. VERBATIM COPYING
+        3. COPYING IN QUANTITY
+        4. MODIFICATIONS
+        5. COMBINING DOCUMENTS
+        6. COLLECTIONS OF DOCUMENTS
+        7. AGGREGATION WITH INDEPENDENT WORKS
+        8. TRANSLATION
+        9. TERMINATION
+        10. FUTURE REVISIONS OF THIS LICENSE
+        How to use this License for your documents
+
    Glossary
 
    List of Examples
-   4-1. Installing ActivePerl ppd Modules on Microsoft Windows
-   4-2. Installing OpenInteract ppd Modules manually on Microsoft Windows
-   4-3. Removing encrypt() for Windows NT Bugzilla version 2.12 or
-          earlier
-
+   4-1. .htaccess files for Apache
    5-1. Upgrading using CVS
    5-2. Upgrading using the tarball
    5-3. Upgrading using patches
@@ -105,376 +118,13 @@ Chapter 1. About This Guide
    under the terms of the GNU Free Documentation License, Version 1.1 or
    any later version published by the Free Software Foundation; with no
    Invariant Sections, no Front-Cover Texts, and with no Back-Cover
-   Texts. A copy of the license is included below.
+   Texts. A copy of the license is included in Appendix E.
 
-   --Copyright (c) 2000-2002 Matthew P. Barnson and The Bugzilla Team
+   --Copyright (c) 2000-2003 Matthew P. Barnson and The Bugzilla Team
 
    If you have any questions regarding this document, its copyright, or
    publishing this document in non-electronic form, please contact The
    Bugzilla Team.
-     _________________________________________________________________
-
-1.1.1. GNU Free Documentation License
-
-   Version 1.1, March 2000
-
-     Copyright (C) 2000 Free Software Foundation, Inc. 59 Temple Place,
-     Suite 330, Boston, MA 02111-1307 USA Everyone is permitted to copy
-     and distribute verbatim copies of this license document, but
-     changing it is not allowed.
-     _________________________________________________________________
-
-0. PREAMBLE
-
-   The purpose of this License is to make a manual, textbook, or other
-   written document "free" in the sense of freedom: to assure everyone
-   the effective freedom to copy and redistribute it, with or without
-   modifying it, either commercially or noncommercially. Secondarily,
-   this License preserves for the author and publisher a way to get
-   credit for their work, while not being considered responsible for
-   modifications made by others.
-
-   This License is a kind of "copyleft", which means that derivative
-   works of the document must themselves be free in the same sense. It
-   complements the GNU General Public License, which is a copyleft
-   license designed for free software.
-
-   We have designed this License in order to use it for manuals for free
-   software, because free software needs free documentation: a free
-   program should come with manuals providing the same freedoms that the
-   software does. But this License is not limited to software manuals; it
-   can be used for any textual work, regardless of subject matter or
-   whether it is published as a printed book. We recommend this License
-   principally for works whose purpose is instruction or reference.
-     _________________________________________________________________
-
-1. APPLICABILITY AND DEFINITIONS
-
-   This License applies to any manual or other work that contains a
-   notice placed by the copyright holder saying it can be distributed
-   under the terms of this License. The "Document", below, refers to any
-   such manual or work. Any member of the public is a licensee, and is
-   addressed as "you".
-
-   A "Modified Version" of the Document means any work containing the
-   Document or a portion of it, either copied verbatim, or with
-   modifications and/or translated into another language.
-
-   A "Secondary Section" is a named appendix or a front-matter section of
-   the Document that deals exclusively with the relationship of the
-   publishers or authors of the Document to the Document's overall
-   subject (or to related matters) and contains nothing that could fall
-   directly within that overall subject. (For example, if the Document is
-   in part a textbook of mathematics, a Secondary Section may not explain
-   any mathematics.) The relationship could be a matter of historical
-   connection with the subject or with related matters, or of legal,
-   commercial, philosophical, ethical or political position regarding
-   them.
-
-   The "Invariant Sections" are certain Secondary Sections whose titles
-   are designated, as being those of Invariant Sections, in the notice
-   that says that the Document is released under this License.
-
-   The "Cover Texts" are certain short passages of text that are listed,
-   as Front-Cover Texts or Back-Cover Texts, in the notice that says that
-   the Document is released under this License.
-
-   A "Transparent" copy of the Document means a machine-readable copy,
-   represented in a format whose specification is available to the
-   general public, whose contents can be viewed and edited directly and
-   straightforwardly with generic text editors or (for images composed of
-   pixels) generic paint programs or (for drawings) some widely available
-   drawing editor, and that is suitable for input to text formatters or
-   for automatic translation to a variety of formats suitable for input
-   to text formatters. A copy made in an otherwise Transparent file
-   format whose markup has been designed to thwart or discourage
-   subsequent modification by readers is not Transparent. A copy that is
-   not "Transparent" is called "Opaque".
-
-   Examples of suitable formats for Transparent copies include plain
-   ASCII without markup, Texinfo input format, LaTeX input format, SGML
-   or XML using a publicly available DTD, and standard-conforming simple
-   HTML designed for human modification. Opaque formats include
-   PostScript, PDF, proprietary formats that can be read and edited only
-   by proprietary word processors, SGML or XML for which the DTD and/or
-   processing tools are not generally available, and the
-   machine-generated HTML produced by some word processors for output
-   purposes only.
-
-   The "Title Page" means, for a printed book, the title page itself,
-   plus such following pages as are needed to hold, legibly, the material
-   this License requires to appear in the title page. For works in
-   formats which do not have any title page as such, "Title Page" means
-   the text near the most prominent appearance of the work's title,
-   preceding the beginning of the body of the text.
-     _________________________________________________________________
-
-2. VERBATIM COPYING
-
-   You may copy and distribute the Document in any medium, either
-   commercially or noncommercially, provided that this License, the
-   copyright notices, and the license notice saying this License applies
-   to the Document are reproduced in all copies, and that you add no
-   other conditions whatsoever to those of this License. You may not use
-   technical measures to obstruct or control the reading or further
-   copying of the copies you make or distribute. However, you may accept
-   compensation in exchange for copies. If you distribute a large enough
-   number of copies you must also follow the conditions in section 3.
-
-   You may also lend copies, under the same conditions stated above, and
-   you may publicly display copies.
-     _________________________________________________________________
-
-3. COPYING IN QUANTITY
-
-   If you publish printed copies of the Document numbering more than 100,
-   and the Document's license notice requires Cover Texts, you must
-   enclose the copies in covers that carry, clearly and legibly, all
-   these Cover Texts: Front-Cover Texts on the front cover, and
-   Back-Cover Texts on the back cover. Both covers must also clearly and
-   legibly identify you as the publisher of these copies. The front cover
-   must present the full title with all words of the title equally
-   prominent and visible. You may add other material on the covers in
-   addition. Copying with changes limited to the covers, as long as they
-   preserve the title of the Document and satisfy these conditions, can
-   be treated as verbatim copying in other respects.
-
-   If the required texts for either cover are too voluminous to fit
-   legibly, you should put the first ones listed (as many as fit
-   reasonably) on the actual cover, and continue the rest onto adjacent
-   pages.
-
-   If you publish or distribute Opaque copies of the Document numbering
-   more than 100, you must either include a machine-readable Transparent
-   copy along with each Opaque copy, or state in or with each Opaque copy
-   a publicly-accessible computer-network location containing a complete
-   Transparent copy of the Document, free of added material, which the
-   general network-using public has access to download anonymously at no
-   charge using public-standard network protocols. If you use the latter
-   option, you must take reasonably prudent steps, when you begin
-   distribution of Opaque copies in quantity, to ensure that this
-   Transparent copy will remain thus accessible at the stated location
-   until at least one year after the last time you distribute an Opaque
-   copy (directly or through your agents or retailers) of that edition to
-   the public.
-
-   It is requested, but not required, that you contact the authors of the
-   Document well before redistributing any large number of copies, to
-   give them a chance to provide you with an updated version of the
-   Document.
-     _________________________________________________________________
-
-4. MODIFICATIONS
-
-   You may copy and distribute a Modified Version of the Document under
-   the conditions of sections 2 and 3 above, provided that you release
-   the Modified Version under precisely this License, with the Modified
-   Version filling the role of the Document, thus licensing distribution
-   and modification of the Modified Version to whoever possesses a copy
-   of it. In addition, you must do these things in the Modified Version:
-
-    A. Use in the Title Page (and on the covers, if any) a title distinct
-       from that of the Document, and from those of previous versions
-       (which should, if there were any, be listed in the History section
-       of the Document). You may use the same title as a previous version
-       if the original publisher of that version gives permission.
-    B. List on the Title Page, as authors, one or more persons or
-       entities responsible for authorship of the modifications in the
-       Modified Version, together with at least five of the principal
-       authors of the Document (all of its principal authors, if it has
-       less than five).
-    C. State on the Title page the name of the publisher of the Modified
-       Version, as the publisher.
-    D. Preserve all the copyright notices of the Document.
-    E. Add an appropriate copyright notice for your modifications
-       adjacent to the other copyright notices.
-    F. Include, immediately after the copyright notices, a license notice
-       giving the public permission to use the Modified Version under the
-       terms of this License, in the form shown in the Addendum below.
-    G. Preserve in that license notice the full lists of Invariant
-       Sections and required Cover Texts given in the Document's license
-       notice.
-    H. Include an unaltered copy of this License.
-    I. Preserve the section entitled "History", and its title, and add to
-       it an item stating at least the title, year, new authors, and
-       publisher of the Modified Version as given on the Title Page. If
-       there is no section entitled "History" in the Document, create one
-       stating the title, year, authors, and publisher of the Document as
-       given on its Title Page, then add an item describing the Modified
-       Version as stated in the previous sentence.
-    J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and likewise
-       the network locations given in the Document for previous versions
-       it was based on. These may be placed in the "History" section. You
-       may omit a network location for a work that was published at least
-       four years before the Document itself, or if the original
-       publisher of the version it refers to gives permission.
-    K. In any section entitled "Acknowledgements" or "Dedications",
-       preserve the section's title, and preserve in the section all the
-       substance and tone of each of the contributor acknowledgements
-       and/or dedications given therein.
-    L. Preserve all the Invariant Sections of the Document, unaltered in
-       their text and in their titles. Section numbers or the equivalent
-       are not considered part of the section titles.
-    M. Delete any section entitled "Endorsements". Such a section may not
-       be included in the Modified Version.
-    N. Do not retitle any existing section as "Endorsements" or to
-       conflict in title with any Invariant Section.
-
-   If the Modified Version includes new front-matter sections or
-   appendices that qualify as Secondary Sections and contain no material
-   copied from the Document, you may at your option designate some or all
-   of these sections as invariant. To do this, add their titles to the
-   list of Invariant Sections in the Modified Version's license notice.
-   These titles must be distinct from any other section titles.
-
-   You may add a section entitled "Endorsements", provided it contains
-   nothing but endorsements of your Modified Version by various
-   parties--for example, statements of peer review or that the text has
-   been approved by an organization as the authoritative definition of a
-   standard.
-
-   You may add a passage of up to five words as a Front-Cover Text, and a
-   passage of up to 25 words as a Back-Cover Text, to the end of the list
-   of Cover Texts in the Modified Version. Only one passage of
-   Front-Cover Text and one of Back-Cover Text may be added by (or
-   through arrangements made by) any one entity. If the Document already
-   includes a cover text for the same cover, previously added by you or
-   by arrangement made by the same entity you are acting on behalf of,
-   you may not add another; but you may replace the old one, on explicit
-   permission from the previous publisher that added the old one.
-
-   The author(s) and publisher(s) of the Document do not by this License
-   give permission to use their names for publicity for or to assert or
-   imply endorsement of any Modified Version.
-     _________________________________________________________________
-
-5. COMBINING DOCUMENTS
-
-   You may combine the Document with other documents released under this
-   License, under the terms defined in section 4 above for modified
-   versions, provided that you include in the combination all of the
-   Invariant Sections of all of the original documents, unmodified, and
-   list them all as Invariant Sections of your combined work in its
-   license notice.
-
-   The combined work need only contain one copy of this License, and
-   multiple identical Invariant Sections may be replaced with a single
-   copy. If there are multiple Invariant Sections with the same name but
-   different contents, make the title of each such section unique by
-   adding at the end of it, in parentheses, the name of the original
-   author or publisher of that section if known, or else a unique number.
-   Make the same adjustment to the section titles in the list of
-   Invariant Sections in the license notice of the combined work.
-
-   In the combination, you must combine any sections entitled "History"
-   in the various original documents, forming one section entitled
-   "History"; likewise combine any sections entitled "Acknowledgements",
-   and any sections entitled "Dedications". You must delete all sections
-   entitled "Endorsements."
-     _________________________________________________________________
-
-6. COLLECTIONS OF DOCUMENTS
-
-   You may make a collection consisting of the Document and other
-   documents released under this License, and replace the individual
-   copies of this License in the various documents with a single copy
-   that is included in the collection, provided that you follow the rules
-   of this License for verbatim copying of each of the documents in all
-   other respects.
-
-   You may extract a single document from such a collection, and
-   distribute it individually under this License, provided you insert a
-   copy of this License into the extracted document, and follow this
-   License in all other respects regarding verbatim copying of that
-   document.
-     _________________________________________________________________
-
-7. AGGREGATION WITH INDEPENDENT WORKS
-
-   A compilation of the Document or its derivatives with other separate
-   and independent documents or works, in or on a volume of a storage or
-   distribution medium, does not as a whole count as a Modified Version
-   of the Document, provided no compilation copyright is claimed for the
-   compilation. Such a compilation is called an "aggregate", and this
-   License does not apply to the other self-contained works thus compiled
-   with the Document, on account of their being thus compiled, if they
-   are not themselves derivative works of the Document.
-
-   If the Cover Text requirement of section 3 is applicable to these
-   copies of the Document, then if the Document is less than one quarter
-   of the entire aggregate, the Document's Cover Texts may be placed on
-   covers that surround only the Document within the aggregate. Otherwise
-   they must appear on covers around the whole aggregate.
-     _________________________________________________________________
-
-8. TRANSLATION
-
-   Translation is considered a kind of modification, so you may
-   distribute translations of the Document under the terms of section 4.
-   Replacing Invariant Sections with translations requires special
-   permission from their copyright holders, but you may include
-   translations of some or all Invariant Sections in addition to the
-   original versions of these Invariant Sections. You may include a
-   translation of this License provided that you also include the
-   original English version of this License. In case of a disagreement
-   between the translation and the original English version of this
-   License, the original English version will prevail.
-     _________________________________________________________________
-
-9. TERMINATION
-
-   You may not copy, modify, sublicense, or distribute the Document
-   except as expressly provided for under this License. Any other attempt
-   to copy, modify, sublicense or distribute the Document is void, and
-   will automatically terminate your rights under this License. However,
-   parties who have received copies, or rights, from you under this
-   License will not have their licenses terminated so long as such
-   parties remain in full compliance.
-     _________________________________________________________________
-
-10. FUTURE REVISIONS OF THIS LICENSE
-
-   The Free Software Foundation may publish new, revised versions of the
-   GNU Free Documentation License from time to time. Such new versions
-   will be similar in spirit to the present version, but may differ in
-   detail to address new problems or concerns. See
-   http://www.gnu.org/copyleft/ .
-
-   Each version of the License is given a distinguishing version number.
-   If the Document specifies that a particular numbered version of this
-   License "or any later version" applies to it, you have the option of
-   following the terms and conditions either of that specified version or
-   of any later version that has been published (not as a draft) by the
-   Free Software Foundation. If the Document does not specify a version
-   number of this License, you may choose any version ever published (not
-   as a draft) by the Free Software Foundation.
-     _________________________________________________________________
-
-How to use this License for your documents
-
-   To use this License in a document you have written, include a copy of
-   the License in the document and put the following copyright and
-   license notices just after the title page:
-
-     Copyright (c) YEAR YOUR NAME. Permission is granted to copy,
-     distribute and/or modify this document under the terms of the GNU
-     Free Documentation License, Version 1.1 or any later version
-     published by the Free Software Foundation; with the Invariant
-     Sections being LIST THEIR TITLES, with the Front-Cover Texts being
-     LIST, and with the Back-Cover Texts being LIST. A copy of the
-     license is included in the section entitled "GNU Free Documentation
-     License".
-
-   If you have no Invariant Sections, write "with no Invariant Sections"
-   instead of saying which ones are invariant. If you have no Front-Cover
-   Texts, write "no Front-Cover Texts" instead of "Front-Cover Texts
-   being LIST"; likewise for Back-Cover Texts.
-
-   If your document contains nontrivial examples of program code, we
-   recommend releasing these examples in parallel under your choice of
-   free software license, such as the GNU General Public License, to
-   permit their use in free software.
      _________________________________________________________________
 
 1.2. Disclaimer
@@ -1013,8 +663,8 @@ Chapter 4. Installation
 
    Bugzilla has been successfully installed under Solaris, Linux, and
    Win32. Win32 is not yet officially supported, but many people have got
-   it working fine. Please see the Win32 Installation Notes for further
-   advice on getting Bugzilla to work on Microsoft Windows.
+   it working fine. Please see Section 4.3.1 for further advice on
+   getting Bugzilla to work on Microsoft Windows.
      _________________________________________________________________
 
 4.1.2. Package List
@@ -1040,8 +690,8 @@ Chapter 4. Installation
          d. Text::Wrap (2001.0131)
          e. File::Spec (0.82)
          f. Data::Dumper (any)
-         g. DBD::mysql (1.2209)
-         h. DBI (1.13)
+         g. DBD::mysql (2.1010)
+         h. DBI (1.32)
          i. Date::Parse (any)
          j. CGI (2.88)
        and, optionally:
@@ -1215,10 +865,11 @@ Chapter 4. Installation
 
    The GD library was written by Thomas Boutell a long while ago to
    programatically generate images in C. Since then it's become the
-   defacto standard for programatic image construction. The Perl bindings
-   to it found in the GD library are used on millions of web pages to
-   generate graphs on the fly. That's what Bugzilla will be using it for
-   so you must install it if you want any of the graphing to work.
+   defacto standard for programmatic image construction. The Perl
+   bindings to it found in the GD library are used on millions of web
+   pages to generate graphs on the fly. That's what Bugzilla will be
+   using it for so you must install it if you want any of the graphing to
+   work.
 
    Note
 
@@ -1246,10 +897,9 @@ Chapter 4. Installation
 
 4.1.6. HTTP Server
 
-   You have a freedom of choice here - Apache, Netscape or any other
-   server on UNIX would do. You can run the web server on a different
-   machine than MySQL, but need to adjust the MySQL "bugs" user
-   permissions accordingly.
+   You have freedom of choice here, pretty much any web server that is
+   capable of running CGI scripts will work. Section 4.4 has more
+   information about configuring web servers to work with Bugzilla.
 
    Note
 
@@ -1257,38 +907,6 @@ Chapter 4. Installation
    Guide installation instructions, in general, assume you are using
    Apache. If you have got Bugzilla working using another webserver,
    please share your experiences with us.
-
-   You'll want to make sure that your web server will run any file with
-   the .cgi extension as a CGI program and not simply display the source
-   code. If you're using Apache that means uncommenting the following
-   line in the httpd.conf file:
-AddHandler cgi-script .cgi
-
-   With Apache you'll also want to make sure that within the httpd.conf
-   file these lines:
-Options +ExecCGI
-AllowOverride Limit
-
-   are in the stanza that covers the directories into which you intend to
-   put the bugzilla .html and .cgi files.
-
-   Note
-
-   AllowOverride Limit allows the use of a Deny statement in the
-   .htaccess file generated by checksetup.pl
-
-   Users of older versions of Apache may find the above lines in the
-   srm.conf and access.conf files, respectively.
-
-   Warning
-
-   There are important files and directories that should not be a served
-   by the HTTP server - most files in the "data" directory and the
-   "localconfig" file. You should configure your HTTP server to not serve
-   these files. Failure to do so will expose critical passwords and other
-   data. Please see .htaccess files and security for details on how to do
-   this for Apache; the checksetup.pl script should create appropriate
-   .htaccess files for you.
      _________________________________________________________________
 
 4.1.7. Bugzilla
@@ -1302,7 +920,7 @@ AllowOverride Limit
    Tip
 
    If you symlink the bugzilla directory into your Apache's HTML
-   heirarchy, you may receive Forbidden errors unless you add the
+   hierarchy, you may receive Forbidden errors unless you add the
    "FollowSymLinks" directive to the <Directory> entry for the HTML root
    in httpd.conf.
 
@@ -1427,7 +1045,7 @@ processmail syncshadowdb
    it defaults to no passwords whatsoever
    it defaults to allowing "File_Priv"
 
-   This means anyone from anywhere on the internet can not only drop the
+   This means anyone from anywhere on the Internet can not only drop the
    database with one SQL command, and they can write as root to the
    system.
 
@@ -1502,7 +1120,7 @@ processmail syncshadowdb
    enable server-side image maps in Apache. Alternatively, you could set
    up a webdot server, or use the AT&T public webdot server (the default
    for the webdotbase param). Note that AT&T's server won't work if
-   Bugzilla is only accessible using HTTPS.
+   Bugzilla is only accessible using HARTS.
      _________________________________________________________________
 
 4.2.2. Bug Graphs
@@ -1702,339 +1320,131 @@ set=ISO-8859-1/i" *.cgi *.pl
    for more information.
      _________________________________________________________________
 
-4.3. Win32 Installation Notes
+4.3. OS Specific Installation Notes
 
-   This section covers installation on Microsoft Windows. Bugzilla has
-   been made to work on Win32 platforms, but the Bugzilla team wish to
-   emphasise that The easiest way to install Bugzilla on
-   Intel-archiecture machines is to install some variant of GNU/Linux,
-   then follow the UNIX installation instructions in this Guide. If you
-   have any influence in the platform choice for running this system,
-   please choose GNU/Linux instead of Microsoft Windows.
+   Many aspects of the Bugzilla installation can be affected by the the
+   operating system you choose to install it on. Sometimes it can be made
+   easier and others more difficult. This section will attempt to help
+   you understand both the difficulties of running on specific operating
+   systems and the utilities available to make it easier.
 
-   Warning
-
-   After that warning, here's the situation for 2.16 and Windows. It
-   doesn't work at all out of the box. You are almost certainly better
-   off getting the 2.17 version from CVS (after consultation with the
-   Bugzilla Team to make sure you are pulling on a stable day) because
-   we'll be doing a load of work to make the Win32 experience more
-   pleasant than it is now.
-
-   If you still want to try this, to have any hope of getting it to work,
-   you'll need to apply the mail patch from bug 124174. After that,
-   you'll need to read the (outdated) installation instructions below,
-   some (probably a lot better) more recent ones kindly provided by Toms
-   Baugis and Jean-Sebastien Guay, and also check the Bugzilla 2.16 Win32
-   update page . If we get time, we'll write some better installation
-   instructions for 2.16 and put them up there. But no promises.
+   If you have anything to add or notes for an operating system not
+   covered, please file a bug in Bugzilla Documentation.
      _________________________________________________________________
 
-4.3.1. Win32 Installation: Step-by-step
+4.3.1. Microsoft Windows
+
+   Making Bugzilla work on windows is still a very painful processes. The
+   Bugzilla Team is working to make it easier, but that goal is not
+   considered a top priority. If you wish to run Bugzilla, we still
+   recommend doing so on a Unix based system such as GNU/Linux. As of
+   this writing, all members of the Bugzilla team and all known large
+   installations run on Unix based systems.
+
+   If after hearing all that, you have enough pain tolerance to attempt
+   installing Bugzilla on Win32, here are some pointers. Because this is
+   a development version of the guide, these instructions are subject to
+   change without notice. In fact, the Bugzilla Team hopes they do as we
+   would like to have Bugzilla resonabally close to "out of the box"
+   compatibility by the 2.18 release.
+     _________________________________________________________________
+
+4.3.1.1. Win32 Perl
+
+   Perl for Windows can be obtained from ActiveState. You should be able
+   to find a compiled binary at
+   http://aspn.activestate.com/ASPN/Downloads/ActivePerl/.
+     _________________________________________________________________
+
+4.3.1.2. Perl Modules on Win32
+
+   Bugzilla on Windows requires the same perl modules found in Section
+   4.1.2. The main difference is that windows uses ppm instead of CPAN.
+C:\perl> ppm <module name>
 
    Note
 
-   You should be familiar with, and cross-reference, the rest of the
-   Bugzilla Installation section while performing your Win32
-   installation.
-
-   Making Bugzilla work on Microsoft Windows is no picnic. Support for
-   Win32 has improved dramatically in the last few releases, but, if you
-   choose to proceed, you should be a very skilled Windows Systems
-   Administrator with strong troubleshooting abilities, a high tolerance
-   for pain, and moderate perl skills. Bugzilla on NT requires hacking
-   source code and implementing some advanced utilities. What follows is
-   the recommended installation procedure for Win32; additional
-   suggestions are provided in Appendix A .
-    1. Install Apache Web Server for Windows, and copy the Bugzilla files
-       somewhere Apache can serve them. Please follow all the
-       instructions referenced in Bugzilla Installation regarding your
-       Apache configuration, particularly instructions regarding the
-       "AddHandler" parameter and "ExecCGI" .
+   The above syntax should work for all modules with the exception of
+   Template Toolkit. The Template Toolkit website suggests using the
+   instructions on OpenInteract's website.
 
    Note
 
-   You may also use Internet Information Server or Personal Web Server
-   for this purpose. However, setup is quite different. If ActivePerl
-   doesn't seem to handle your file associations correctly (for .cgi and
-   .pl files), please consult Appendix A .
-   If you are going to use IIS, if on Windows NT you must be updated to
-   at least Service Pack 4. Windows 2000 ships with a sufficient version
-   of IIS.
-    2. Install ActivePerl for Windows. Check
-       http://aspn.activestate.com/ASPN/Downloads/ActivePerl for a
-       current compiled binary.
-       Please also check the following links to fully understand the
-       status of ActivePerl on Win32: Perl Porting , and Perl on Win32
-       FAQ
-    3. Use ppm from your perl\bin directory to install the following
-       packs: DBI, DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip, GD,
-       AppConfig, and Template. You may need to extract them from .zip
-       format using Winzip or other unzip program first. Most of these
-       additional ppm modules can be downloaded from ActiveState, but
-       AppConfig and Template should be obtained from OpenInteract using
-       the instructions on the Template Toolkit web site .
+   A complete list of modules that can be installed using ppm can be
+   found at http://www.activestate.com/PPMPackages/5.6plus.
+     _________________________________________________________________
 
-   Note
+4.3.1.3. Code changes required to run on win32
 
-   You can find a list of modules at
-   http://www.activestate.com/PPMPackages/zips/5xx-builds-only/ or
-   http://www.activestate.com/PPMPackages/5.6plus
-       The syntax for ppm is: C:> ppm <modulename>
-       Example 4-1. Installing ActivePerl ppd Modules on Microsoft
-       Windows
-       C:> ppm DBD-Mysql 
-       Watch your capitalization!
-       ActiveState's 5.6Plus directory also contains an AppConfig ppm, so
-       you might see the following error when trying to install the
-       version at OpenInteract:
-       Error installing package 'AppConfig': Read a PPD for 'AppConfig',
-       but it is not intended for this build of Perl
-       (MSWin32-x86-multi-thread)
-       If so, download both the tarball and the ppd directly from
-       OpenInteract, then run ppm from within the same directory to which
-       you downloaded those files and install the package by referencing
-       the ppd file explicitly via in the install command, f.e.:
-       Example 4-2. Installing OpenInteract ppd Modules manually on
-       Microsoft Windows
-       install C:\AppConfig.ppd 
-    4. Install MySQL for NT.
+   Unfortunately, Bugzilla still doesn't run "out of the box" on Windows.
+   There is work in progress to make this easier, but until that happens
+   code will have to be modified. This section is an attempt to list the
+   required changes. It is an attempt to be all inclusive, but there may
+   be other changes required. If you find something is missing, please
+   file a bug in Bugzilla Documentation.
+     _________________________________________________________________
 
-   Note
+4.3.1.3.1. Changes to checksetup.pl
 
-   You can download MySQL for Windows NT from MySQL.com . Some find it
-   helpful to use the WinMySqlAdmin utility, included with the download,
-   to set up the database.
-    5. Setup MySQL
-         a. C:> C:\mysql\bin\mysql -u root mysql
-         b. mysql> DELETE FROM user WHERE Host='localhost' AND User='';
-         c. mysql> UPDATE user SET Password=PASSWORD ('new_password')
-            WHERE user='root';
-            "new_password" , above, indicates whatever password you wish
-            to use for your "root" user.
-         d. mysql> GRANT SELECT, INSERT, UPDATE, DELETE, INDEX, ALTER,
-            CREATE, DROP, REFERENCES ON bugs.* to bugs@localhost
-            IDENTIFIED BY 'bugs_password';
-            "bugs_password" , above, indicates whatever password you wish
-            to use for your "bugs" user.
-         e. mysql> FLUSH PRIVILEGES;
-         f. mysql> create database bugs;
-         g. mysql> exit;
-         h. C:> C:\mysql\bin\mysqladmin -u root -p reload
-    6. Edit checksetup.pl in your Bugzilla directory. Change this line:
+   In checksetup.pl, the line reading:
+my $mysql_binaries = `which mysql`;
 
-my $webservergid =
-            getgrnam($my_webservergroup);
+   to
+my $mysql_binaries = "D:\\mysql\\bin\\mysql";
 
-       to
+   And you'll also need to change:
+my $webservergid = getgrnam($my_webservergroup)
 
-my $webservergid =
-          $my_webservergroup;
+   to
+my $webservergid = '8'
+     _________________________________________________________________
 
-       or the name of the group you wish to own the files explicitly:
+4.3.1.3.2. Making mail work
 
-my $webservergid =
-          'Administrators'
+   The easiest way to get mail working is to use the mail patches on bug
+   124174. With any luck, this patch will receive the required reviews
+   and integrated into the main Bugzilla distribution very soon. Until
+   that happens, there's at least one report of this patch working well
+   on Windows.
+     _________________________________________________________________
 
-    7. Run checksetup.pl from the Bugzilla directory.
-    8. Edit localconfig to suit your requirements. Set $db_pass to your
-       "bugs_password" from step 5.d , and $webservergroup to "8" .
+4.3.1.3.3. System Calls
 
-       Note
+   In order to get system calls to work on win32's perl, you need to tell
+   the windows shell what interpreter to use. This is done by changing
+   the system calls. You will need to search all of Bugzilla's code for
+   system calls. To tell perl your interpreter, it needs to be the first
+   argument to the system call. For example, you'll need to change:
+system("./processmail", $id, $exporter);
 
-   Not sure on the "8" for $webservergroup above. If it's wrong, please
-   send corrections.
-    9. Edit defparams.pl to suit your requirements. Particularly, set
-       DefParam("maintainer") and DefParam("urlbase") to match your
-       install.
+   with
+system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
 
-   Note
-
-   This is yet another step I'm not sure of, since the maintainer of this
-   documentation does not maintain Bugzilla on NT. If you can confirm or
-   deny that this step is required, please let me know.
-   10.
-
-   Note
-
-   There are several alternatives to Sendmail that will work on Win32.
-   The one mentioned here is a suggestion , not a requirement. Some other
-   mail packages that can work include BLAT , Windmail , Mercury Sendmail
-   , and the CPAN Net::SMTP Perl module (available in .ppm). Every option
-   requires some hacking of the Perl scripts for Bugzilla to make it
-   work. The option here simply requires the least.
-         1. Download NTsendmail, available from www.ntsendmail.com . You
-            must have a "real" mail server which allows you to relay off
-            it in your $ENV{"NTsendmail"} (which you should probably
-            place in globals.pl)
-         2. Put ntsendmail.pm into your .\perl\lib directory.
-         3. Add to globals.pl:
-
-# these settings configure the NTsendmail
-              process use NTsendmail;
-              $ENV{"NTsendmail"}="your.smtpserver.box";
-              $ENV{"NTsendmail_debug"}=1;
-              $ENV{"NTsendmail_max_tries"}=5;
-
-   Note
-
-   Some mention to also edit $db_pass in globals.pl to be your
-   "bugs_password" . Although this may get you around some problem
-   authenticating to your database, since globals.pl is not normally
-   restricted by .htaccess , your database password is exposed to whoever
-   uses your web server.
-         4. Find and comment out all occurences of " open(SENDMAIL " in
-            your Bugzilla directory. Then replace them with:
-
-# new sendmail functionality my $mail=new
-              NTsendmail; my $from="bugzilla\@your.machine.name.tld"; my
-              $to=$login; my $subject=$urlbase;
-              $mail->send($from,$to,$subject,$msg);
-
-   Note
-
-   Some have found success using the commercial product, Windmail . You
-   could try replacing your sendmail calls with:
-open SENDMAIL,
-                "|\"C:/General/Web/tools/Windmail 4.0 Beta/windmail\" -t >
-                mail.log";
-
-   or something to that effect.
-   11. Change all references in all files from processmail to
-       processmail.pl , and rename processmail to processmail.pl .
-
-   Note
-
-   Many think this may be a change we want to make for main-tree
-   Bugzilla. It's painless for the UNIX folks, and will make the Win32
-   people happier.
-
-   Note
-
-   Some people have suggested using the Net::SMTP Perl module instead of
-   NTsendmail or the other options listed here. You can change
-   processmail.pl to make this work.
-
-my $smtp = Net::SMTP->new('<Name of your SMTP server>');   #connect to SMTP ser
-ver
-$smtp->mail('<your name>@<you smpt server>');# use the sender's adress here
-$smtp->to($tolist); # recipient's address
-$smtp->data();  # Start the mail
-$smtp->datasend($msg);
-$smtp->dataend();   # Finish sending the mail
-$smtp->quit;    # Close the SMTP connection
-$logstr = "$logstr; mail sent to $tolist $cclist";
-}
-
-
-
-
-   here is a test mail program for Net::SMTP:
-
-use Net::SMTP;
- my $smtp = Net::SMTP->new('<Name of your SMTP server', Timeout => 30, Debug
-=> 1, ); # connect to SMTP server
-                 $smtp->auth;
-                $smtp->mail('you@yourcompany.com');# use the sender's adress
-here
-                $smtp->to('someotherAddress@someotherdomain.com'); #
-recipient's address
-                $smtp->data();  # Start the mail
-                $smtp->datasend('test');
-                $smtp->dataend();   # Finish sending the mail
-                $smtp->quit;    # Close the SMTP connection
-exit;
-
-
-
-
-   12.
-
-   Note
-
-   This step is optional if you are using IIS or another web server which
-   only decides on an interpreter based upon the file extension (.pl),
-   rather than the "shebang" line (#/usr/bonsaitools/bin/perl)
-       Modify the path to perl on the first line (#!) of all files to
-       point to your Perl installation, and add "perl" to the beginning
-       of all Perl system calls that use a perl script as an argument.
-       This may take you a while. There is a "setperl.csh" utility to
-       speed part of this procedure, available in the Useful Patches and
-       Utilities for Bugzilla section of The Bugzilla Guide. However, it
-       requires the Cygwin GNU-compatible environment for Win32 be set up
-       in order to work. See http://www.cygwin.com/ for details on
-       obtaining Cygwin.
-   13. Modify the invocation of all system() calls in all perl scripts in
-       your Bugzilla directory. You should specify the full path to perl
-       for each system() call. For instance, change this line in
-       processmail:
-
-
-system ("./processmail",@ARGLIST);
-        </programlisting> to
-        <programlisting>
-system ("C:\\perl\\bin\\perl", "processmail", @ARGLIST);
-
-
+   Notice that the ./ is also removed.
 
    Tip
 
-   If you are using IIS or Personal Web Server, you must add cgi
-   relationships to Properties -> Home directory (tab) -> Application
-   Settings (section) -> Configuration (button), such as:
-
-.cgi to: <perl install directory>\perl.exe %s
-        %s .pl to: <perl install directory>\perl.exe %s %s
-        GET,HEAD,POST
-
-   Change the path to Perl to match your install, of course.
+   The grep command is very helpful in finding these system calls,
+   assuming you have the cygwin utilities.
      _________________________________________________________________
 
-4.3.2. Additional Windows Tips
+4.3.1.4. Serving the web pages
 
-   Tip
+   As is the case on Unix based systems, any web server should be able to
+   handle Bugzilla; however, the Bugzilla Team still recommends Apache
+   whenever asked. No matter what web server you choose, be sure to pay
+   attention to the security notes in Section 5.6. More information on
+   configuring specific web servers can be found in Section 4.4.
 
-   From Andrew Pearson:
+   Note
 
-     You can make Bugzilla work with Personal Web Server for Windows 98
-     and higher, as well as for IIS 4.0. Microsoft has information
-     available at
-     http://support.microsoft.com/support/kb/articles/Q231/9/98.ASP
-
-     Basically you need to add two String Keys in the registry at the
-     following location:
-
-            HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\W3SVC\Paramete
-rs\ScriptMap
-
-     The keys should be called ".pl" and ".cgi", and both should have a
-     value something like: c:/perl/bin/perl.exe "%s" "%s"
-
-     The KB article only talks about .pl, but it goes into more detail
-     and provides a perl test script.
-
-   Tip
-
-   If attempting to run Bugzilla 2.12 or older, you will need to remove
-   encrypt() calls from the Perl source. This is not necessary for
-   Bugzilla 2.13 and later, which includes the current release, Bugzilla
-   &bz-ver;.
-
-   Example 4-3. Removing encrypt() for Windows NT Bugzilla version 2.12
-   or earlier
-
-   Replace this:
-SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) .
-          ", " . SQLQuote(substr($realcryptpwd, 0, 2)) . ")"); my
-          $enteredcryptpwd = FetchOneColumn();
-
-   with this:
-   my $enteredcryptpwd = $enteredpwd
-
-   in cgi.pl.
+   If using Apache on windows, you can set the ScriptInterpreterSource
+   directive in your Apache config, if you don't do this, you'll have to
+   modify the first line of every script to contain your path to perl
+   instead of /usr/bonsaitools/bin/perl.
      _________________________________________________________________
 
-4.4. Mac OS X Installation Notes
+4.3.2. Mac OS X
 
    There are a lot of common libraries and utilities out there that Apple
    did not include with Mac OS X, but which run perfectly well on it. The
@@ -2043,7 +1453,7 @@ SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) .
    The easiest way to get a lot of these is with a program called Fink,
    which is similar in nature to the CPAN installer, but installs common
    GNU utilities. Fink is available from
-   <http://sourceforge.net/projects/fink/>.
+   http://sourceforge.net/projects/fink/.
 
    Follow the instructions for setting up Fink. Once it's installed,
    you'll want to run the following as root: fink install gd
@@ -2073,6 +1483,149 @@ SendSQL("SELECT encrypt(" . SqlQuote($enteredpwd) .
    make test
    make install
    And don't forget to run exit to get back to CPAN.
+     _________________________________________________________________
+
+4.4. HTTP Server Configuration
+
+   The Bugzilla Team recommends Apache when using Bugzilla, however, any
+   web server that can be configured to run CGI scripts should be able to
+   handle Bugzilla. No matter what web server you choose, but especially
+   if you choose something other than Apache, you should be sure to read
+   Section 5.6.
+
+   The plan for this section is to eventually document the specifics of
+   how to lock down permissions on individual web servers.
+     _________________________________________________________________
+
+4.4.1. Apache httpd
+
+   As mentioned above, the Bugzilla Team recommends Apache for use with
+   Bugzilla. You will have to make sure that Apache is properly
+   configured to run the Bugzilla CGI scripts. You also need to make sure
+   that the .htaccess files created by ./checksetup.pl (shown in Example
+   4-1 for the curious) are allowed to override Apache's normal access
+   permissions or else important password information may be exposed to
+   the Internet.
+
+   Many Apache installations are not configured to run scripts anywhere
+   but in the cgi-bin directory; however, we recommend that Bugzilla not
+   be installed in the cgi-bin, otherwise the static files such as images
+   and JavaScript will not work correctly. To allow scripts to run in the
+   normal web space, the following changes should be made to your
+   httpd.conf file.
+
+   To allow files with a .cgi extension to be run, make sure the
+   following line exists and is uncommented:
+AddHandler cgi-script .cgi
+
+   To allow .htaccess files to override permissions and .cgi files to run
+   in the Bugzilla directory, make sure the following two lines are in a
+   Directory directive that applies to the Bugzilla directory on your
+   system (either the Bugzilla directory or one of its parents).
+Options +ExecCGI
+AllowOverride Limit
+
+   Note
+
+   For more information on Apache and its directives, see the glossary
+   entry on Apache.
+
+   Example 4-1. .htaccess files for Apache
+
+   $BUGZILLA_HOME/.htaccess
+# don't allow people to retrieve non-cgi executable files or our private data
+<FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$>
+  deny from all
+</FilesMatch>
+<FilesMatch ^(localconfig.js|localconfig.rdf)$>
+  allow from all
+</FilesMatch>
+
+   $BUGZILLA_HOME/data/.htaccess
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory; the only exception is duplicates.rdf, which is used by
+# duplicates.xul and must be loadable over the web
+deny from all
+<Files duplicates.rdf>
+  allow from all
+</Files>
+
+   $BUGZILLA_HOME/data/webdot
+# Restrict access to .dot files to the public webdot server at research.att.com
+
+# if research.att.com ever changed their IP, or if you use a different
+# webdot server, you'll need to edit this
+<FilesMatch ^[0-9]+\.dot$>
+  Allow from 192.20.225.10
+  Deny from all
+</FilesMatch>
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
+  Allow from all
+</FilesMatch>
+
+# And no directory listings, either.
+Deny from all
+
+   $BUGZILLA_HOME/Bugzilla/.htaccess
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+
+   $BUGZILLA_HOME/template/.htaccess
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+     _________________________________________________________________
+
+4.4.2. Microsoft Internet Information Services
+
+   If you need, or for some reason even want, to use Microsoft's Internet
+   Information Services or Personal Web Server you should be able to. You
+   will need to configure them to know how to run CGI scripts, however.
+   This is described in Microsoft Knowledge Base article Q245225 for
+   Internet Information Services and Q231998 for Personal Web Server.
+
+   Also, and this can't be stressed enough, make sure that files such as
+   localconfig and your data directory are secured as described in
+   Section 5.6.
+     _________________________________________________________________
+
+4.4.3. AOL Server
+
+   Ben FrantzDale reported success using AOL Server with Bugzilla. He
+   reported his experience and what appears below is based on that.
+
+   AOL Server will have to be configured to run CGI scripts, please
+   consult the documentation that came with your server for more
+   information on how to do this.
+
+   Because AOL Server doesn't support .htaccess files, you'll have to
+   create a TCL script. You should create an
+   aolserver/modules/tcl/filter.tcl file (the filename shouldn't matter)
+   with the following contents (change /bugzilla/ to the web-based path
+   to your Bugzilla installation):
+ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/*.pl filter_deny
+ns_register_filter preauth GET /bugzilla/localconfig filter_deny
+ns_register_filter preauth GET /bugzilla/processmail filter_deny
+ns_register_filter preauth GET /bugzilla/syncshadowdb filter_deny
+ns_register_filter preauth GET /bugzilla/runtests.sh filter_deny
+
+proc filter_deny { why } {
+    ns_log Notice "filter_deny"
+    return "filter_return"
+}
+
+   Warning
+
+   This doesn't appear to account for everything mentioned in Section
+   5.6. In particular, it doesn't block access to the data or template
+   directories. It also doesn't account for the editor backup files that
+   were the topic of bug 186383, Bugtraq ID 6501, and a partial cause for
+   the 2.16.2 release.
      _________________________________________________________________
 
 4.5. Troubleshooting
@@ -2647,66 +2200,10 @@ Chapter 5. Administering Bugzilla
        set $create_htaccess to 1 in localconfig. However, the information
        below is provided for those that want to know exactly what is
        created.
-       Note the instructions which follow are Apache-specific. If you use
-       IIS, Netscape, or other non-Apache web servers, please consult
-       your system documentation for how to secure these files from being
-       transmitted to curious users.
-       $BUGZILLA_HOME/.htaccess
-
-# don't allow people to retrieve non-cgi executable files or our private data
-<FilesMatch ^(.*\.pl|.*localconfig.*|processmail|runtests.sh)$>
-  deny from all
-</FilesMatch>
-<FilesMatch ^(localconfig.js|localconfig.rdf)$>
-  allow from all
-</FilesMatch>
-
-
-       $BUGZILLA_HOME/data/.htaccess
-
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory; the only exception is duplicates.rdf, which is used by
-# duplicates.xul and must be loadable over the web
-deny from all
-<Files duplicates.rdf>
-  allow from all
-</Files>
-
-
-       $BUGZILLA_HOME/data/webdot
-
-# Restrict access to .dot files to the public webdot server at research.att.com
-
-# if research.att.com ever changed their IP, or if you use a different
-# webdot server, you'll need to edit this
-<FilesMatch ^[0-9]+\.dot$>
-  Allow from 192.20.225.10
-  Deny from all
-</FilesMatch>
-
-# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
-# .map files
-<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
-  Allow from all
-</FilesMatch>
-
-# And no directory listings, either.
-Deny from all
-
-
-       $BUGZILLA_HOME/Bugzilla/.htaccess
-
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-
-
-       $BUGZILLA_HOME/template/.htaccess
-
-# nothing in this directory is retrievable unless overriden by an .htaccess
-# in a subdirectory
-deny from all
-
+       FIX ME BEFORE RELEASE!!!!! Note the instructions which follow are
+       Apache-specific. If you use IIS, Netscape, or other non-Apache web
+       servers, please consult your system documentation for how to
+       secure these files from being transmitted to curious users.
      _________________________________________________________________
 
 5.7. Template Customization
@@ -4424,11 +3921,11 @@ D.3. Issuezilla
 D.4. Scarab
 
    Scarab is a new open source bug-tracking system built using Java
-   Serlet technology. It is currently at version 1.0 beta 8.
+   Servlet technology. It is currently at version 1.0 beta 13.
 
    URL: http://scarab.tigris.org
 
-   This section last updated 27 Jul 2002
+   This section last updated 18 Jan 2003
      _________________________________________________________________
 
 D.5. Perforce SCM
@@ -4450,6 +3947,369 @@ D.6. SourceForge
    URL: http://www.sourceforge.net
 
    This section last updated 27 Jul 2002
+     _________________________________________________________________
+
+Appendix E. GNU Free Documentation License
+
+   Version 1.1, March 2000
+
+     Copyright (C) 2000 Free Software Foundation, Inc. 59 Temple Place,
+     Suite 330, Boston, MA 02111-1307 USA Everyone is permitted to copy
+     and distribute verbatim copies of this license document, but
+     changing it is not allowed.
+     _________________________________________________________________
+
+0. PREAMBLE
+
+   The purpose of this License is to make a manual, textbook, or other
+   written document "free" in the sense of freedom: to assure everyone
+   the effective freedom to copy and redistribute it, with or without
+   modifying it, either commercially or noncommercially. Secondarily,
+   this License preserves for the author and publisher a way to get
+   credit for their work, while not being considered responsible for
+   modifications made by others.
+
+   This License is a kind of "copyleft", which means that derivative
+   works of the document must themselves be free in the same sense. It
+   complements the GNU General Public License, which is a copyleft
+   license designed for free software.
+
+   We have designed this License in order to use it for manuals for free
+   software, because free software needs free documentation: a free
+   program should come with manuals providing the same freedoms that the
+   software does. But this License is not limited to software manuals; it
+   can be used for any textual work, regardless of subject matter or
+   whether it is published as a printed book. We recommend this License
+   principally for works whose purpose is instruction or reference.
+     _________________________________________________________________
+
+1. APPLICABILITY AND DEFINITIONS
+
+   This License applies to any manual or other work that contains a
+   notice placed by the copyright holder saying it can be distributed
+   under the terms of this License. The "Document", below, refers to any
+   such manual or work. Any member of the public is a licensee, and is
+   addressed as "you".
+
+   A "Modified Version" of the Document means any work containing the
+   Document or a portion of it, either copied verbatim, or with
+   modifications and/or translated into another language.
+
+   A "Secondary Section" is a named appendix or a front-matter section of
+   the Document that deals exclusively with the relationship of the
+   publishers or authors of the Document to the Document's overall
+   subject (or to related matters) and contains nothing that could fall
+   directly within that overall subject. (For example, if the Document is
+   in part a textbook of mathematics, a Secondary Section may not explain
+   any mathematics.) The relationship could be a matter of historical
+   connection with the subject or with related matters, or of legal,
+   commercial, philosophical, ethical or political position regarding
+   them.
+
+   The "Invariant Sections" are certain Secondary Sections whose titles
+   are designated, as being those of Invariant Sections, in the notice
+   that says that the Document is released under this License.
+
+   The "Cover Texts" are certain short passages of text that are listed,
+   as Front-Cover Texts or Back-Cover Texts, in the notice that says that
+   the Document is released under this License.
+
+   A "Transparent" copy of the Document means a machine-readable copy,
+   represented in a format whose specification is available to the
+   general public, whose contents can be viewed and edited directly and
+   straightforwardly with generic text editors or (for images composed of
+   pixels) generic paint programs or (for drawings) some widely available
+   drawing editor, and that is suitable for input to text formatters or
+   for automatic translation to a variety of formats suitable for input
+   to text formatters. A copy made in an otherwise Transparent file
+   format whose markup has been designed to thwart or discourage
+   subsequent modification by readers is not Transparent. A copy that is
+   not "Transparent" is called "Opaque".
+
+   Examples of suitable formats for Transparent copies include plain
+   ASCII without markup, Texinfo input format, LaTeX input format, SGML
+   or XML using a publicly available DTD, and standard-conforming simple
+   HTML designed for human modification. Opaque formats include
+   PostScript, PDF, proprietary formats that can be read and edited only
+   by proprietary word processors, SGML or XML for which the DTD and/or
+   processing tools are not generally available, and the
+   machine-generated HTML produced by some word processors for output
+   purposes only.
+
+   The "Title Page" means, for a printed book, the title page itself,
+   plus such following pages as are needed to hold, legibly, the material
+   this License requires to appear in the title page. For works in
+   formats which do not have any title page as such, "Title Page" means
+   the text near the most prominent appearance of the work's title,
+   preceding the beginning of the body of the text.
+     _________________________________________________________________
+
+2. VERBATIM COPYING
+
+   You may copy and distribute the Document in any medium, either
+   commercially or noncommercially, provided that this License, the
+   copyright notices, and the license notice saying this License applies
+   to the Document are reproduced in all copies, and that you add no
+   other conditions whatsoever to those of this License. You may not use
+   technical measures to obstruct or control the reading or further
+   copying of the copies you make or distribute. However, you may accept
+   compensation in exchange for copies. If you distribute a large enough
+   number of copies you must also follow the conditions in section 3.
+
+   You may also lend copies, under the same conditions stated above, and
+   you may publicly display copies.
+     _________________________________________________________________
+
+3. COPYING IN QUANTITY
+
+   If you publish printed copies of the Document numbering more than 100,
+   and the Document's license notice requires Cover Texts, you must
+   enclose the copies in covers that carry, clearly and legibly, all
+   these Cover Texts: Front-Cover Texts on the front cover, and
+   Back-Cover Texts on the back cover. Both covers must also clearly and
+   legibly identify you as the publisher of these copies. The front cover
+   must present the full title with all words of the title equally
+   prominent and visible. You may add other material on the covers in
+   addition. Copying with changes limited to the covers, as long as they
+   preserve the title of the Document and satisfy these conditions, can
+   be treated as verbatim copying in other respects.
+
+   If the required texts for either cover are too voluminous to fit
+   legibly, you should put the first ones listed (as many as fit
+   reasonably) on the actual cover, and continue the rest onto adjacent
+   pages.
+
+   If you publish or distribute Opaque copies of the Document numbering
+   more than 100, you must either include a machine-readable Transparent
+   copy along with each Opaque copy, or state in or with each Opaque copy
+   a publicly-accessible computer-network location containing a complete
+   Transparent copy of the Document, free of added material, which the
+   general network-using public has access to download anonymously at no
+   charge using public-standard network protocols. If you use the latter
+   option, you must take reasonably prudent steps, when you begin
+   distribution of Opaque copies in quantity, to ensure that this
+   Transparent copy will remain thus accessible at the stated location
+   until at least one year after the last time you distribute an Opaque
+   copy (directly or through your agents or retailers) of that edition to
+   the public.
+
+   It is requested, but not required, that you contact the authors of the
+   Document well before redistributing any large number of copies, to
+   give them a chance to provide you with an updated version of the
+   Document.
+     _________________________________________________________________
+
+4. MODIFICATIONS
+
+   You may copy and distribute a Modified Version of the Document under
+   the conditions of sections 2 and 3 above, provided that you release
+   the Modified Version under precisely this License, with the Modified
+   Version filling the role of the Document, thus licensing distribution
+   and modification of the Modified Version to whoever possesses a copy
+   of it. In addition, you must do these things in the Modified Version:
+
+    A. Use in the Title Page (and on the covers, if any) a title distinct
+       from that of the Document, and from those of previous versions
+       (which should, if there were any, be listed in the History section
+       of the Document). You may use the same title as a previous version
+       if the original publisher of that version gives permission.
+    B. List on the Title Page, as authors, one or more persons or
+       entities responsible for authorship of the modifications in the
+       Modified Version, together with at least five of the principal
+       authors of the Document (all of its principal authors, if it has
+       less than five).
+    C. State on the Title page the name of the publisher of the Modified
+       Version, as the publisher.
+    D. Preserve all the copyright notices of the Document.
+    E. Add an appropriate copyright notice for your modifications
+       adjacent to the other copyright notices.
+    F. Include, immediately after the copyright notices, a license notice
+       giving the public permission to use the Modified Version under the
+       terms of this License, in the form shown in the Addendum below.
+    G. Preserve in that license notice the full lists of Invariant
+       Sections and required Cover Texts given in the Document's license
+       notice.
+    H. Include an unaltered copy of this License.
+    I. Preserve the section entitled "History", and its title, and add to
+       it an item stating at least the title, year, new authors, and
+       publisher of the Modified Version as given on the Title Page. If
+       there is no section entitled "History" in the Document, create one
+       stating the title, year, authors, and publisher of the Document as
+       given on its Title Page, then add an item describing the Modified
+       Version as stated in the previous sentence.
+    J. Preserve the network location, if any, given in the Document for
+       public access to a Transparent copy of the Document, and likewise
+       the network locations given in the Document for previous versions
+       it was based on. These may be placed in the "History" section. You
+       may omit a network location for a work that was published at least
+       four years before the Document itself, or if the original
+       publisher of the version it refers to gives permission.
+    K. In any section entitled "Acknowledgements" or "Dedications",
+       preserve the section's title, and preserve in the section all the
+       substance and tone of each of the contributor acknowledgements
+       and/or dedications given therein.
+    L. Preserve all the Invariant Sections of the Document, unaltered in
+       their text and in their titles. Section numbers or the equivalent
+       are not considered part of the section titles.
+    M. Delete any section entitled "Endorsements". Such a section may not
+       be included in the Modified Version.
+    N. Do not retitle any existing section as "Endorsements" or to
+       conflict in title with any Invariant Section.
+
+   If the Modified Version includes new front-matter sections or
+   appendices that qualify as Secondary Sections and contain no material
+   copied from the Document, you may at your option designate some or all
+   of these sections as invariant. To do this, add their titles to the
+   list of Invariant Sections in the Modified Version's license notice.
+   These titles must be distinct from any other section titles.
+
+   You may add a section entitled "Endorsements", provided it contains
+   nothing but endorsements of your Modified Version by various
+   parties--for example, statements of peer review or that the text has
+   been approved by an organization as the authoritative definition of a
+   standard.
+
+   You may add a passage of up to five words as a Front-Cover Text, and a
+   passage of up to 25 words as a Back-Cover Text, to the end of the list
+   of Cover Texts in the Modified Version. Only one passage of
+   Front-Cover Text and one of Back-Cover Text may be added by (or
+   through arrangements made by) any one entity. If the Document already
+   includes a cover text for the same cover, previously added by you or
+   by arrangement made by the same entity you are acting on behalf of,
+   you may not add another; but you may replace the old one, on explicit
+   permission from the previous publisher that added the old one.
+
+   The author(s) and publisher(s) of the Document do not by this License
+   give permission to use their names for publicity for or to assert or
+   imply endorsement of any Modified Version.
+     _________________________________________________________________
+
+5. COMBINING DOCUMENTS
+
+   You may combine the Document with other documents released under this
+   License, under the terms defined in section 4 above for modified
+   versions, provided that you include in the combination all of the
+   Invariant Sections of all of the original documents, unmodified, and
+   list them all as Invariant Sections of your combined work in its
+   license notice.
+
+   The combined work need only contain one copy of this License, and
+   multiple identical Invariant Sections may be replaced with a single
+   copy. If there are multiple Invariant Sections with the same name but
+   different contents, make the title of each such section unique by
+   adding at the end of it, in parentheses, the name of the original
+   author or publisher of that section if known, or else a unique number.
+   Make the same adjustment to the section titles in the list of
+   Invariant Sections in the license notice of the combined work.
+
+   In the combination, you must combine any sections entitled "History"
+   in the various original documents, forming one section entitled
+   "History"; likewise combine any sections entitled "Acknowledgements",
+   and any sections entitled "Dedications". You must delete all sections
+   entitled "Endorsements."
+     _________________________________________________________________
+
+6. COLLECTIONS OF DOCUMENTS
+
+   You may make a collection consisting of the Document and other
+   documents released under this License, and replace the individual
+   copies of this License in the various documents with a single copy
+   that is included in the collection, provided that you follow the rules
+   of this License for verbatim copying of each of the documents in all
+   other respects.
+
+   You may extract a single document from such a collection, and
+   distribute it individually under this License, provided you insert a
+   copy of this License into the extracted document, and follow this
+   License in all other respects regarding verbatim copying of that
+   document.
+     _________________________________________________________________
+
+7. AGGREGATION WITH INDEPENDENT WORKS
+
+   A compilation of the Document or its derivatives with other separate
+   and independent documents or works, in or on a volume of a storage or
+   distribution medium, does not as a whole count as a Modified Version
+   of the Document, provided no compilation copyright is claimed for the
+   compilation. Such a compilation is called an "aggregate", and this
+   License does not apply to the other self-contained works thus compiled
+   with the Document, on account of their being thus compiled, if they
+   are not themselves derivative works of the Document.
+
+   If the Cover Text requirement of section 3 is applicable to these
+   copies of the Document, then if the Document is less than one quarter
+   of the entire aggregate, the Document's Cover Texts may be placed on
+   covers that surround only the Document within the aggregate. Otherwise
+   they must appear on covers around the whole aggregate.
+     _________________________________________________________________
+
+8. TRANSLATION
+
+   Translation is considered a kind of modification, so you may
+   distribute translations of the Document under the terms of section 4.
+   Replacing Invariant Sections with translations requires special
+   permission from their copyright holders, but you may include
+   translations of some or all Invariant Sections in addition to the
+   original versions of these Invariant Sections. You may include a
+   translation of this License provided that you also include the
+   original English version of this License. In case of a disagreement
+   between the translation and the original English version of this
+   License, the original English version will prevail.
+     _________________________________________________________________
+
+9. TERMINATION
+
+   You may not copy, modify, sublicense, or distribute the Document
+   except as expressly provided for under this License. Any other attempt
+   to copy, modify, sublicense or distribute the Document is void, and
+   will automatically terminate your rights under this License. However,
+   parties who have received copies, or rights, from you under this
+   License will not have their licenses terminated so long as such
+   parties remain in full compliance.
+     _________________________________________________________________
+
+10. FUTURE REVISIONS OF THIS LICENSE
+
+   The Free Software Foundation may publish new, revised versions of the
+   GNU Free Documentation License from time to time. Such new versions
+   will be similar in spirit to the present version, but may differ in
+   detail to address new problems or concerns. See
+   http://www.gnu.org/copyleft/ .
+
+   Each version of the License is given a distinguishing version number.
+   If the Document specifies that a particular numbered version of this
+   License "or any later version" applies to it, you have the option of
+   following the terms and conditions either of that specified version or
+   of any later version that has been published (not as a draft) by the
+   Free Software Foundation. If the Document does not specify a version
+   number of this License, you may choose any version ever published (not
+   as a draft) by the Free Software Foundation.
+     _________________________________________________________________
+
+How to use this License for your documents
+
+   To use this License in a document you have written, include a copy of
+   the License in the document and put the following copyright and
+   license notices just after the title page:
+
+     Copyright (c) YEAR YOUR NAME. Permission is granted to copy,
+     distribute and/or modify this document under the terms of the GNU
+     Free Documentation License, Version 1.1 or any later version
+     published by the Free Software Foundation; with the Invariant
+     Sections being LIST THEIR TITLES, with the Front-Cover Texts being
+     LIST, and with the Back-Cover Texts being LIST. A copy of the
+     license is included in the section entitled "GNU Free Documentation
+     License".
+
+   If you have no Invariant Sections, write "with no Invariant Sections"
+   instead of saying which ones are invariant. If you have no Front-Cover
+   Texts, write "no Front-Cover Texts" instead of "Front-Cover Texts
+   being LIST"; likewise for Back-Cover Texts.
+
+   If your document contains nontrivial examples of program code, we
+   recommend releasing these examples in parallel under your choice of
+   free software license, such as the GNU General Public License, to
+   permit their use in free software.
 
 Glossary
 
@@ -4473,6 +4333,30 @@ A
           fact that it was "a patchy" version of the original NCSA
           world-wide-web server.
 
+          Useful Directives when configuring Bugzilla
+
+        AddHandler
+                Tell Apache that it's OK to run CGI scripts.
+
+        AllowOverride, Options
+                These directives are used to tell Apache many things
+                about the directory they apply to. For Bugzilla's
+                purposes, we need them to allow script execution and
+                .htaccess overrides.
+
+        DirectoryIndex
+                Used to tell Apache what files are indexes. If you can
+                not add index.cgi to the list of valid files, you'll need
+                to set $index_html to 1 in localconfig so ./checksetup.pl
+                will create an index.html that redirects to index.cgi.
+
+        ScriptInterpreterSource
+                Used when running Apache on windows so the shebang line
+                doesn't have to be changed in every Bugzilla script.
+
+          For more information about how to configure Apache for
+          Bugzilla, see Section 4.4.1.
+
 B
 
    Bug
@@ -4490,6 +4374,11 @@ B
    Bugzilla
           Bugzilla is the world-leading free software bug tracking
           system.
+
+   Common Gateway Interface (CGI)
+          CGI is an acronym for Common Gateway Interface. This is a
+          standard for interfacing an external application with a web
+          server. Bugzilla is an example of a CGI application.
 
    Component
           A Component is a subsection of a Product. It should be a narrow
@@ -4512,11 +4401,18 @@ D
           mysqld, the MySQL server, and apache, a web server, are
           generally run as daemons.
 
+G
+
    Groups
           The word "Groups" has a very special meaning to Bugzilla.
           Bugzilla's main security mechanism comes by placing users in
           groups, and assigning those groups certain privileges to view
           bugs in particular Products in the Bugzilla database.
+
+J
+
+   JavaScript
+          JavaScript is cool, we should talk about it.
 
 M
 
@@ -4575,6 +4471,12 @@ T
           facilitates meeting these milestones by giving you the ability
           to declare by which milestone a bug will be fixed, or an
           enhancement will be implemented.
+
+   Tool Command Language (TCL)
+          TCL is an open source scripting language available for Windows,
+          Macintosh, and Unix based systems. Bugzilla 1.0 was written in
+          TCL but never released. The first release of Bugzilla was 2.0,
+          which was when it was ported to perl.
 
 Z
 

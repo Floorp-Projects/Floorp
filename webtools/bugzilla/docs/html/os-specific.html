@@ -1,0 +1,742 @@
+<HTML
+><HEAD
+><TITLE
+>OS Specific Installation Notes</TITLE
+><META
+NAME="GENERATOR"
+CONTENT="Modular DocBook HTML Stylesheet Version 1.76b+
+"><LINK
+REL="HOME"
+TITLE="The Bugzilla Guide"
+HREF="index.html"><LINK
+REL="UP"
+TITLE="Installation"
+HREF="installation.html"><LINK
+REL="PREVIOUS"
+TITLE="Optional Additional Configuration"
+HREF="extraconfig.html"><LINK
+REL="NEXT"
+TITLE="HTTP Server Configuration"
+HREF="http.html"></HEAD
+><BODY
+CLASS="section"
+BGCOLOR="#FFFFFF"
+TEXT="#000000"
+LINK="#0000FF"
+VLINK="#840084"
+ALINK="#0000FF"
+><DIV
+CLASS="NAVHEADER"
+><TABLE
+SUMMARY="Header navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TH
+COLSPAN="3"
+ALIGN="center"
+>The Bugzilla Guide</TH
+></TR
+><TR
+><TD
+WIDTH="10%"
+ALIGN="left"
+VALIGN="bottom"
+><A
+HREF="extraconfig.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="80%"
+ALIGN="center"
+VALIGN="bottom"
+>Chapter 4. Installation</TD
+><TD
+WIDTH="10%"
+ALIGN="right"
+VALIGN="bottom"
+><A
+HREF="http.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+></TABLE
+><HR
+ALIGN="LEFT"
+WIDTH="100%"></DIV
+><DIV
+CLASS="section"
+><H1
+CLASS="section"
+><A
+NAME="os-specific"
+></A
+>4.3. OS Specific Installation Notes</H1
+><P
+>Many aspects of the Bugzilla installation can be affected by the
+    the operating system you choose to install it on. Sometimes it can be made
+    easier and others more difficult. This section will attempt to help you
+    understand both the difficulties of running on specific operating systems
+    and the utilities available to make it easier.
+    </P
+><P
+>If you have anything to add or notes for an operating system not
+    covered, please file a bug in <A
+HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
+TARGET="_top"
+>Bugzilla Documentation</A
+>. 
+    </P
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="os-win32"
+></A
+>4.3.1. Microsoft Windows</H2
+><P
+>Making Bugzilla work on windows is still a very painful processes.
+      The Bugzilla Team is working to make it easier, but that goal is not
+      considered a top priority. If you wish to run Bugzilla, we still
+      recommend doing so on a Unix based system such as GNU/Linux. As of this
+      writing, all members of the Bugzilla team and all known large installations
+      run on Unix based systems.
+      </P
+><P
+>If after hearing all that, you have enough pain tolerance to attempt
+     installing Bugzilla on Win32, here are some pointers.
+     
+       Because this is a development version of the guide, these instructions
+       are subject to change without notice.  In fact, the Bugzilla Team hopes
+       they do as we would like to have Bugzilla resonabally close to "out of
+       the box" compatibility by the 2.18 release.
+      
+      </P
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="win32-perl"
+></A
+>4.3.1.1. Win32 Perl</H3
+><P
+>Perl for Windows can be obtained from <A
+HREF="http://www.activestate.com/"
+TARGET="_top"
+>ActiveState</A
+>. You should be
+        able to find a compiled binary at <A
+HREF="http://aspn.activestate.com/ASPN/Downloads/ActivePerl/"
+TARGET="_top"
+>http://aspn.activestate.com/ASPN/Downloads/ActivePerl/</A
+>.
+        </P
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="win32-perl-modules"
+></A
+>4.3.1.2. Perl Modules on Win32</H3
+><P
+>Bugzilla on Windows requires the same perl modules found in
+        <A
+HREF="stepbystep.html#install-package-list"
+>Section 4.1.2</A
+>. The main difference is that
+        windows uses <B
+CLASS="command"
+>ppm</B
+> instead of CPAN.
+        </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;C:\perl&#62; <B
+CLASS="command"
+>ppm &#60;module name&#62;</B
+>
+        </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The above syntax should work for all modules with the exception
+          of Template Toolkit. The <A
+HREF="http://tt2.org/download.html#win32"
+TARGET="_top"
+>Template Toolkit website</A
+>
+          suggests using the instructions on <A
+HREF="http://openinteract.sourceforge.net/"
+TARGET="_top"
+>OpenInteract's website</A
+>.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>A complete list of modules that can be installed using ppm can
+          be found at <A
+HREF="http://www.activestate.com/PPMPackages/5.6plus"
+TARGET="_top"
+>http://www.activestate.com/PPMPackages/5.6plus</A
+>.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="win32-code-changes"
+></A
+>4.3.1.3. Code changes required to run on win32</H3
+><P
+>Unfortunately, Bugzilla still doesn't run "out of the box" on
+        Windows.  There is work in progress to make this easier, but until that
+        happens code will have to be modified. This section is an attempt to
+        list the required changes.  It is an attempt to be all inclusive, but
+        there may be other changes required.  If you find something is missing,
+        please file a bug in <A
+HREF="http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&component=Documentation"
+TARGET="_top"
+>Bugzilla Documentation</A
+>.
+        </P
+><DIV
+CLASS="section"
+><H4
+CLASS="section"
+><A
+NAME="win32-code-checksetup"
+></A
+>4.3.1.3.1. Changes to <TT
+CLASS="filename"
+>checksetup.pl</TT
+></H4
+><P
+>In <TT
+CLASS="filename"
+>checksetup.pl</TT
+>, the line reading:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;my $mysql_binaries = `which mysql`;
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>to</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;my $mysql_binaries = "D:\\mysql\\bin\\mysql";
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>And you'll also need to change:</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;my $webservergid = getgrnam($my_webservergroup)
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>to</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;my $webservergid = '8'
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+></DIV
+><DIV
+CLASS="section"
+><H4
+CLASS="section"
+><A
+NAME="win32-code-mail"
+></A
+>4.3.1.3.2. Making mail work</H4
+><P
+>The easiest way to get mail working is to use the mail patches
+          on <A
+HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=124174"
+TARGET="_top"
+>bug
+          124174</A
+>. With any luck, this patch will receive the required
+          reviews and integrated into the main Bugzilla distribution very soon.
+          Until that happens, there's at least one report of this patch working
+          well on Windows.
+          </P
+></DIV
+><DIV
+CLASS="section"
+><H4
+CLASS="section"
+><A
+NAME="AEN926"
+></A
+>4.3.1.3.3. System Calls</H4
+><P
+>In order to get system calls to work on win32's perl, you need
+          to tell the windows shell what interpreter to use. This is done by
+          changing the <TT
+CLASS="function"
+>system</TT
+> calls. You will need to
+          search all of Bugzilla's code  for <TT
+CLASS="function"
+>system</TT
+> calls.
+          To tell perl your interpreter, it needs to be the first argument to
+          the <TT
+CLASS="function"
+>system</TT
+> call.  For example, you'll need to
+          change:
+          </P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;system("./processmail", $id, $exporter);
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>with</P
+><TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;system("C:\\perl\\bin\\perl", "processmail", $id, $exporter);
+          </PRE
+></FONT
+></TD
+></TR
+></TABLE
+><P
+>Notice that the <TT
+CLASS="computeroutput"
+>./</TT
+> is also
+          removed.
+          </P
+><DIV
+CLASS="tip"
+><P
+></P
+><TABLE
+CLASS="tip"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/tip.gif"
+HSPACE="5"
+ALT="Tip"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>The <B
+CLASS="command"
+>grep</B
+> command is very helpful in finding
+            these <TT
+CLASS="function"
+>system</TT
+> calls, assuming you have the
+            <SPAN
+CLASS="productname"
+>cygwin</SPAN
+> utilities.
+            </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H3
+CLASS="section"
+><A
+NAME="win32-http"
+></A
+>4.3.1.4. Serving the web pages</H3
+><P
+>As is the case on Unix based systems, any web server should be
+        able to handle Bugzilla; however, the Bugzilla Team still recommends
+        Apache whenever asked. No matter what web server you choose, be sure
+        to pay attention to the security notes in <A
+HREF="security.html"
+>Section 5.6</A
+>.
+        More information on configuring specific web servers can be found in
+        <A
+HREF="http.html"
+>Section 4.4</A
+>.
+        </P
+><DIV
+CLASS="note"
+><P
+></P
+><TABLE
+CLASS="note"
+WIDTH="100%"
+BORDER="0"
+><TR
+><TD
+WIDTH="25"
+ALIGN="CENTER"
+VALIGN="TOP"
+><IMG
+SRC="../images/note.gif"
+HSPACE="5"
+ALT="Note"></TD
+><TD
+ALIGN="LEFT"
+VALIGN="TOP"
+><P
+>If using Apache on windows, you can set the <A
+HREF="http://httpd.apache.org/docs-2.0/mod/core.html#scriptinterpretersource"
+TARGET="_top"
+>ScriptInterpreterSource</A
+>
+          directive in your Apache config, if you don't do this, you'll have
+          to modify the first line of every script to contain your path to
+          perl instead of <TT
+CLASS="filename"
+>/usr/bonsaitools/bin/perl</TT
+>.
+          </P
+></TD
+></TR
+></TABLE
+></DIV
+></DIV
+></DIV
+><DIV
+CLASS="section"
+><H2
+CLASS="section"
+><A
+NAME="os-macosx"
+></A
+>4.3.2. <SPAN
+CLASS="productname"
+>Mac OS X</SPAN
+></H2
+><P
+>There are a lot of common libraries and utilities out there that
+      Apple did not include with Mac OS X, but which run perfectly well on it.
+      The GD library, which Bugzilla needs to do bug graphs, is one of
+      these.</P
+><P
+>The easiest way to get a lot of these is with a program called
+      Fink, which is similar in nature to the CPAN installer, but installs
+      common GNU utilities. Fink is available from
+      <A
+HREF="http://sourceforge.net/projects/fink/"
+TARGET="_top"
+>http://sourceforge.net/projects/fink/</A
+>.</P
+><P
+>Follow the instructions for setting up Fink. Once it's installed,
+      you'll want to run the following as root: 
+      <B
+CLASS="command"
+>fink install gd</B
+>
+      </P
+><P
+>It will prompt you for a number of dependencies, type 'y' and hit
+      enter to install all of the dependencies. Then watch it work.</P
+><P
+>To prevent creating conflicts with the software that Apple installs
+      by default, Fink creates its own directory tree at /sw where it installs
+      most of the software that it installs. This means your libraries and
+      headers for libgd will be at /sw/lib and /sw/include instead of /usr/lib
+      and /usr/local/include. Because of these changed locations for the
+      libraries, the Perl GD module will not install directly via CPAN, because it
+      looks for the specific paths instead of getting them from your
+      environment. But there's a way around that :-)</P
+><P
+>Instead of typing 
+      <SPAN
+CLASS="QUOTE"
+>"install GD"</SPAN
+>
+      at the 
+      <TT
+CLASS="prompt"
+>cpan&#62;</TT
+>
+      prompt, type 
+      <B
+CLASS="command"
+>look GD</B
+>. 
+      This should go through the motions of downloading the latest version of
+      the GD module, then it will open a shell and drop you into the build
+      directory. Apply <A
+HREF="../sgml/gd-makefile.patch"
+TARGET="_top"
+>this patch</A
+> 
+      to the Makefile.PL file (save the
+      patch into a file and use the command 
+      <B
+CLASS="command"
+>patch &#60; patchfile</B
+>.)
+      </P
+><P
+>Then, run these commands to finish the installation of the GD
+      module: 
+      <P
+></P
+><TABLE
+BORDER="0"
+><TBODY
+><TR
+><TD
+>&#13;          <B
+CLASS="command"
+>perl Makefile.PL</B
+>
+        </TD
+></TR
+><TR
+><TD
+>&#13;          <B
+CLASS="command"
+>make</B
+>
+        </TD
+></TR
+><TR
+><TD
+>&#13;          <B
+CLASS="command"
+>make test</B
+>
+        </TD
+></TR
+><TR
+><TD
+>&#13;          <B
+CLASS="command"
+>make install</B
+>
+        </TD
+></TR
+><TR
+><TD
+>And don't forget to run 
+        <B
+CLASS="command"
+>exit</B
+>
+
+        to get back to CPAN.</TD
+></TR
+></TBODY
+></TABLE
+><P
+></P
+>
+      </P
+></DIV
+></DIV
+><DIV
+CLASS="NAVFOOTER"
+><HR
+ALIGN="LEFT"
+WIDTH="100%"><TABLE
+SUMMARY="Footer navigation table"
+WIDTH="100%"
+BORDER="0"
+CELLPADDING="0"
+CELLSPACING="0"
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+><A
+HREF="extraconfig.html"
+ACCESSKEY="P"
+>Prev</A
+></TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="index.html"
+ACCESSKEY="H"
+>Home</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+><A
+HREF="http.html"
+ACCESSKEY="N"
+>Next</A
+></TD
+></TR
+><TR
+><TD
+WIDTH="33%"
+ALIGN="left"
+VALIGN="top"
+>Optional Additional Configuration</TD
+><TD
+WIDTH="34%"
+ALIGN="center"
+VALIGN="top"
+><A
+HREF="installation.html"
+ACCESSKEY="U"
+>Up</A
+></TD
+><TD
+WIDTH="33%"
+ALIGN="right"
+VALIGN="top"
+>HTTP Server Configuration</TD
+></TR
+></TABLE
+></DIV
+></BODY
+></HTML
+>
