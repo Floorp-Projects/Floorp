@@ -222,14 +222,11 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
     PRBool saveQuitOnLastWindowClosing = mQuitOnLastWindowClosing;
     mQuitOnLastWindowClosing = PR_FALSE;
         
-    // If we are in server mode, profile mgr cannot show UI
+    // If we being launched in turbo mode, profile mgr cannot show UI
     rv = profileMgr->StartupWithArgs(aCmdLineService, canInteract);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "StartupWithArgs failed\n");
     if (!canInteract && rv == NS_ERROR_PROFILE_REQUIRES_INTERACTION) {
-        if (mNativeAppSupport) {
-            mNativeAppSupport->SetNeedsProfileUI(PR_TRUE);
-            rv = NS_OK;
-        }
+        NS_WARNING("nsIProfileInternal::StartupWithArgs returned NS_ERROR_PROFILE_REQUIRES_INTERACTION");       
+        rv = NS_OK;
     }
     
     mQuitOnLastWindowClosing = saveQuitOnLastWindowClosing;

@@ -19,6 +19,7 @@ comm.jar:
         content/navigator/metadata.xul                 (resources/content/metadata.xul)
         content/navigator/metadata.js                  (resources/content/metadata.js)
 	content/navigator/personalToolbar.js           (resources/content/personalToolbar.js)
+	content/navigator/turboDialog.xul              (resources/content/turboDialog.xul)
 en-US.jar:
         locale/en-US/navigator/contents.rdf                 (resources/locale/en-US/contents.rdf)
         locale/en-US/navigator/viewSource.dtd               (resources/locale/en-US/viewSource.dtd)
@@ -28,6 +29,8 @@ en-US.jar:
         locale/en-US/navigator/metadata.dtd                 (resources/locale/en-US/metadata.dtd)
         locale/en-US/navigator/metadata.properties          (resources/locale/en-US/metadata.properties)
         locale/en-US/navigator/pageInfo.properties          (resources/locale/en-US/pageInfo.properties)
+        locale/en-US/navigator/turboDialog.dtd              (resources/locale/en-US/turboDialog.dtd)
+        locale/en-US/navigator/turboMenu.properties         (resources/locale/en-US/turboMenu.properties)
 
 US.jar:
         locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)

@@ -272,12 +272,15 @@ menulist[editable="true"] {
 
 .menulist-editable-box {
   border: 1px solid #5D616E;
+  padding: 1px 0px 1px 2px;
 }
 
 html|*.menulist-editable-text {
-  border: none !important;
   margin: 0px !important;
+  border: none !important;
   padding: 0px !important;
+  background-color: inherit;
+  font: inherit;
 }
 
 menulist[editable="true"]> .menulist-editable-box > .menu-dropmarker-box > .menu-dropmarker {

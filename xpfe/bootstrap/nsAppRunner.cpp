@@ -56,8 +56,8 @@
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
 #include "nsIEventQueueService.h"
-#include "nsMPFileLocProvider.h" 
-#include "nsDirectoryServiceDefs.h" 
+#include "nsMPFileLocProvider.h"
+#include "nsDirectoryServiceDefs.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsBuildID.h"
 #include "nsWindowCreator.h"
@@ -79,7 +79,6 @@
 #include "nsIXRemoteClient.h"
 #include "nsIXRemoteService.h"
 #endif
-#define TURBO_PREF "browser.turbo.enabled"
 
 #ifdef NS_TRACE_MALLOC
 #include "nsTraceMalloc.h"
@@ -91,12 +90,8 @@
 #define DEBUG_CMD_LINE
 #endif
 
-// Standalone App defines
-#define STANDALONE_APP_PREF        "profile.standalone_app.enable"
-#define STANDALONE_APP_DIR_PREF    "profile.standalone_app.directory"
-
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
-static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
+static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 #define UILOCALE_CMD_LINE_ARG "-UILocale"
@@ -227,10 +222,10 @@ public:
   {
     // TSM is initialized in InitializeMacToolbox
   };
-	
+
 	~stTSMCloser()
 	{
-#if !TARGET_CARBON	
+#if !TARGET_CARBON
 		(void)CloseTSMAwareApplication();
 #endif
 	}
@@ -255,7 +250,7 @@ static char *sWatcherServiceContractID = "@mozilla.org/embedcomp/window-watcher;
 #if !defined (XP_MAC ) && !defined(NTO) && !defined( XP_PC ) && !defined( XP_BEOS )
 
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
-{	
+{
     nsresult rv = NS_OK;
     if ( aResult ) {
         *aResult = 0;
@@ -305,11 +300,11 @@ static nsresult GetNativeAppSupport(nsINativeAppSupport** aNativeApp)
 {
     NS_ENSURE_ARG_POINTER(aNativeApp);
     *aNativeApp = nsnull;
-    
+
     nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID));
     if (appShellService)
         appShellService->GetNativeAppSupport(aNativeApp);
-    
+
     return *aNativeApp ? NS_OK : NS_ERROR_FAILURE;
 }
 
@@ -494,7 +489,7 @@ LaunchApplicationWithArgs(const char *commandLineArg,
   NS_ENSURE_ARG(aParam);
 
   nsresult rv;
-  
+
   nsCOMPtr<nsICmdLineService> cmdLine =
     do_GetService("@mozilla.org/appshell/commandLineService;1",&rv);
   if (NS_FAILED(rv)) return rv;
@@ -643,13 +638,13 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 	// Get the value of -width option
 	rv = cmdLineArgs->GetCmdLineValue("-width", getter_Copies(tempString));
 	if (NS_FAILED(rv)) return rv;
-	
+
 	if ((const char*)tempString) PR_sscanf(tempString, "%d", &width);
-	
+
 	// Get the value of -height option
 	rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
 	if (NS_FAILED(rv)) return rv;
-	
+
 	if ((const char*)tempString) PR_sscanf(tempString, "%d", &height);
 
   if (heedGeneralStartupPrefs) {
@@ -707,7 +702,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 static nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs)
 {
   nsresult rv;
-	
+
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
@@ -801,19 +796,24 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
   if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator))))
   {
     PRBool more;
-	
+
     windowEnumerator->HasMoreElements(&more);
     if ( !more )
     {
-      // If starting up in server mode, then we do things differently.
-      nsCOMPtr<nsINativeAppSupport> nativeApp;
-      PRBool serverMode = PR_FALSE;
-      rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
-      // Create special Nav window.
-      if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->GetIsServerMode(&serverMode)) && serverMode) {
-         nativeApp->StartServerMode();
-         return NS_OK;
-      } 
+      #ifdef XP_WIN32
+        // If starting up in server mode, then we do things differently.
+        nsCOMPtr<nsINativeAppSupport> nativeApp;
+        rv = GetNativeAppSupport(getter_AddRefs(nativeApp));
+        // Create special Nav window.
+        if (NS_SUCCEEDED(rv)) {
+          PRBool shouldShowUI = PR_TRUE;
+          nativeApp->GetShouldShowUI(&shouldShowUI);
+          if (!shouldShowUI) {
+            nativeApp->StartServerMode();
+            return NS_OK;
+          }
+        }
+      #endif
 
       // No window exists so lets create a browser one
       PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
@@ -826,8 +826,8 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
         return rv;
       if ((const char*)tempString)
         PR_sscanf(tempString, "%d", &width);
-				
-				
+
+
       // Get the value of -height option
       rv = cmdLineArgs->GetCmdLineValue("-height", getter_Copies(tempString));
       if (NS_FAILED(rv))
@@ -835,7 +835,7 @@ static nsresult Ensure1Window( nsICmdLineService* cmdLineArgs)
 
       if ((const char*)tempString)
         PR_sscanf(tempString, "%d", &height);
-				
+
       rv = OpenBrowserWindow(height, width);
     }
   }
@@ -871,76 +871,18 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     return NS_OK;
 }
 
-// Do the righe thing to provide locations depending on whether an
-// application is standalone or not 
 static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
 {
+    // If we are being launched in -turbo mode, we cannot show UI
+    PRBool shouldShowUI = PR_TRUE;
+    nsCOMPtr<nsINativeAppSupport> nativeApp;
+    if (NS_SUCCEEDED(GetNativeAppSupport(getter_AddRefs(nativeApp))))
+      nativeApp->GetShouldShowUI(&shouldShowUI);
     nsresult rv;
+    nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID, &rv));
+    if (NS_FAILED(rv)) return rv;
+    rv = appShellService->DoProfileStartup(cmdLineArgs, shouldShowUI);
 
-    PRBool standaloneApp = PR_FALSE; 
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_FAILED(rv)) return rv; 
-    rv = prefs->GetBoolPref(STANDALONE_APP_PREF, &standaloneApp); 
-    if (NS_SUCCEEDED(rv) && standaloneApp) 
-    { 
-        nsMPFileLocProvider *fileLocProvider = new nsMPFileLocProvider; 
-        NS_ENSURE_TRUE(fileLocProvider, NS_ERROR_OUT_OF_MEMORY); 
-        // Specify the dir that standalone app will use for its "profile" dir 
-        nsCOMPtr<nsIFile> parentDir; 
-
-        PRBool exists = PR_FALSE;
-#ifdef XP_OS2
-        rv = NS_GetSpecialDirectory(NS_OS2_HOME_DIR, getter_AddRefs(parentDir)); 
-      
-        if (NS_SUCCEEDED(rv))
-          rv = parentDir->Exists(&exists);
-        if (NS_FAILED(rv) || !exists)
-          return rv;
-#elif defined(XP_PC)
-        rv = NS_GetSpecialDirectory(NS_WIN_APPDATA_DIR, getter_AddRefs(parentDir)); 
-        if (NS_SUCCEEDED(rv))
-          rv = parentDir->Exists(&exists);
-        if (NS_FAILED(rv) || !exists)
-          {
-            parentDir = nsnull;
-            rv = NS_GetSpecialDirectory(NS_WIN_WINDOWS_DIR, getter_AddRefs(parentDir));
-          }
-        
-        if (NS_FAILED(rv)) 
-          return rv;
-#else
-      rv = NS_GetSpecialDirectory(NS_OS_HOME_DIR, getter_AddRefs(parentDir)); 
-      
-      if (NS_SUCCEEDED(rv))
-        rv = parentDir->Exists(&exists);
-      if (NS_FAILED(rv) || !exists)
-        return rv;
-#endif
-
-        // Get standalone app dir name from prefs and initialize mpfilelocprovider
-        nsXPIDLCString appDir;
-        rv = prefs->CopyCharPref(STANDALONE_APP_DIR_PREF, getter_Copies(appDir));
-        if (NS_FAILED(rv) || (nsCRT::strlen(appDir) == 0)) 
-            return NS_ERROR_FAILURE; 
-        rv = fileLocProvider->Initialize(parentDir, appDir); 
-        if (NS_FAILED(rv)) return rv; 
-
-        rv = prefs->ResetPrefs(); 
-        if (NS_FAILED(rv)) return rv; 
-        rv = prefs->ReadUserPrefs(nsnull); 
-        if (NS_FAILED(rv)) return rv; 
-    } 
-    else 
-    {
-        nsCOMPtr<nsIAppShellService> appShellService(do_GetService(kAppShellServiceCID, &rv));
-        if (NS_FAILED(rv)) return rv;
-        nsCOMPtr<nsINativeAppSupport> nativeAppSupport;
-        PRBool serverMode = PR_FALSE;
-        ::GetNativeAppSupport(getter_AddRefs(nativeAppSupport));
-        if (nativeAppSupport)
-            nativeAppSupport->GetIsServerMode(&serverMode);
-        rv = appShellService->DoProfileStartup(cmdLineArgs, !serverMode);
-    }
     return rv;
 }
 
@@ -976,8 +918,8 @@ static void ShowOSAlertFromFile(int argc, char **argv, const char *alert_filenam
 
   directoryService = do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv)) {
-    rv = directoryService->Get(NS_APP_RES_DIR, 
-                               NS_GET_IID(nsIFile), 
+    rv = directoryService->Get(NS_APP_RES_DIR,
+                               NS_GET_IID(nsIFile),
                                getter_AddRefs(fileName));
     if (NS_SUCCEEDED(rv) && fileName) {
       fileName->Append(alert_filename);
@@ -1005,12 +947,12 @@ static nsresult VerifyInstallation(int argc, char **argv)
   nsresult rv;
   nsCOMPtr<nsILocalFile> registryFile;
 
-  nsCOMPtr<nsIProperties> directoryService = 
+  nsCOMPtr<nsIProperties> directoryService =
            do_GetService(NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv))
     return NS_OK;
-  rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
-                             NS_GET_IID(nsIFile), 
+  rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR,
+                             NS_GET_IID(nsIFile),
                              getter_AddRefs(registryFile));
   if (NS_FAILED(rv) || !registryFile)
     return NS_OK;
@@ -1028,7 +970,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
     char* lastResortMessage = "A previous install did not complete correctly.  Finishing install.";
 
     ShowOSAlertFromFile(argc, argv, CLEANUP_MESSAGE_FILENAME, lastResortMessage);
-    
+
     nsCOMPtr<nsIFile> cleanupUtility;
     registryFile->Clone(getter_AddRefs(cleanupUtility));
     cleanupUtility->SetLeafName(CLEANUP_UTIL);
@@ -1038,7 +980,7 @@ static nsresult VerifyInstallation(int argc, char **argv)
     rv = cleanupProcess->Init(cleanupUtility);
     if (NS_SUCCEEDED(rv))
       rv = cleanupProcess->Run(PR_FALSE,nsnull, 0, nsnull);
-    
+
     //We must exit because all open files must be released by the system
     return NS_ERROR_FAILURE;
   }
@@ -1051,11 +993,11 @@ static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
 
   nsCOMPtr<nsIEntropyCollector> enCol =
     do_GetService(NS_ENTROPYCOLLECTOR_CONTRACTID, &rv);
-  
+
   if (rv == NS_ERROR_ABORT) {
-    // In case the security component can not do its internal initialization, 
+    // In case the security component can not do its internal initialization,
     // we must warn the user and exit.
-    
+
     char *panicMsg = "Could not initialize the browser's security component. "
                      "The most likely cause is problems with files in your "
                      "browser's profile directory. Please check that this "
@@ -1063,9 +1005,9 @@ static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
                      "hard disk is not full or close to full.";
 
     char *panicMessageFilename = "nssifail.txt";
-    
+
     ShowOSAlertFromFile(argc, argv, panicMessageFilename, panicMsg);
-    
+
     return rv;
   }
 
@@ -1260,7 +1202,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize appshell");
   if (NS_FAILED(rv)) return rv;
-  
+
   rv = InitializeWindowCreator();
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to initialize window creator");
   if (NS_FAILED(rv)) return rv;
@@ -1288,20 +1230,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   appShell->CreateHiddenWindow();
   NS_TIMELINE_LEAVE("appShell->CreateHiddenWindow");
 
-  nsCOMPtr<nsINativeAppSupport> nativeApps;
-  rv = GetNativeAppSupport(getter_AddRefs(nativeApps));
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv) && prefs) {
-      PRBool serverMode = PR_FALSE;
-      nativeApps->GetIsServerMode(&serverMode);
-      if (!serverMode) {    // okay, so it's not -turbo
-        prefs->GetBoolPref(TURBO_PREF, &serverMode);
-        nativeApps->SetIsServerMode(serverMode);
-      }
-    }
-  }
-    
   // This will go away once Components are handling there own commandlines
   // if we have no command line arguments, we need to heed the
   // "general.startup.*" prefs
@@ -1447,7 +1375,7 @@ static nsresult DumpVersion(char *appname)
 
   nsXPIDLCString agent;
   httpHandler->GetUserAgent(getter_Copies(agent));
-  
+
   printf("%s", agent.get());
 
   if(buildID) {
@@ -1455,7 +1383,7 @@ static nsresult DumpVersion(char *appname)
   } else {
     printf(" <developer build>\n");
   }
-  
+
   return rv;
 }
 
@@ -1593,7 +1521,7 @@ int main(int argc, char* argv[])
   // They should% return quick, so we deal with them here.
   if (HandleDumpArguments(argc, argv))
     return 0;
- 
+
 #ifdef NS_TRACE_MALLOC
   argc = NS_TraceMallocStartupArgs(argc, argv);
 #endif

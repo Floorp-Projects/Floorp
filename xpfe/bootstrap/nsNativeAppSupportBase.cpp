@@ -26,7 +26,8 @@ nsNativeAppSupportBase::nsNativeAppSupportBase()
     : mRefCnt( 0 ),
       mSplash( 0 ),
       mServerMode( PR_FALSE ),
-      mNeedsProfileUI( PR_FALSE ) {
+      mShouldShowUI( PR_TRUE ),
+      mShownTurboDialog( PR_FALSE ) {
 }
 
 nsNativeAppSupportBase::~nsNativeAppSupportBase() {
@@ -94,15 +95,15 @@ nsNativeAppSupportBase::GetIsServerMode(PRBool *aIsServerMode) {
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportBase::GetNeedsProfileUI(PRBool *aNeedsProfileUI) {
-    NS_ENSURE_ARG_POINTER(aNeedsProfileUI);
-    *aNeedsProfileUI = mNeedsProfileUI;
+nsNativeAppSupportBase::SetShouldShowUI(PRBool aShouldShowUI) {
+    mShouldShowUI = aShouldShowUI;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNativeAppSupportBase::SetNeedsProfileUI(PRBool aNeedsProfileUI) {
-    mNeedsProfileUI = aNeedsProfileUI;
+nsNativeAppSupportBase::GetShouldShowUI(PRBool *aShouldShowUI) {
+    NS_ENSURE_ARG( aShouldShowUI );
+    *aShouldShowUI = mShouldShowUI;
     return NS_OK;
 }
 

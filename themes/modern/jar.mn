@@ -752,6 +752,8 @@ modern.jar:
   skin/modern/navigator/navigatorBindings.xml                      (navigator/navigatorBindings.xml)
   skin/modern/navigator/personalToolbar.css                        (navigator/personalToolbar.css)
   skin/modern/navigator/resources.xml                              (navigator/resources.xml)
+  skin/modern/navigator/turbo-systray.gif                          (navigator/turbo-systray.gif)
+  skin/modern/navigator/turbo.css                                  (navigator/turbo.css)
   skin/modern/navigator/btn1/back-act.gif                          (navigator/btn1/back-act.gif)
   skin/modern/navigator/btn1/back-dis.gif                          (navigator/btn1/back-dis.gif)
   skin/modern/navigator/btn1/back-hov.gif                          (navigator/btn1/back-hov.gif)
