@@ -59,7 +59,7 @@ EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))
 LOCAL_INCLUDES	= -I$(srcdir)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LDOPTS = $(JPEG_LIBS)
+EXTRA_DSO_LDOPTS = $(JPEG_LIBS) $(ZLIB_LIBS)
 else
 override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
