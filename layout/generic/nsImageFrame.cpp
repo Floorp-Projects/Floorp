@@ -342,6 +342,9 @@ NS_IMETHODIMP nsImageFrame::OnDataAvailable(imgIRequest *aRequest, nsIPresContex
 
   mTransform.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
+  r.x += mBorderPadding.left;
+  r.y += mBorderPadding.top;
+
   Invalidate(aPresContext, r, PR_FALSE);
 
   return NS_OK;
