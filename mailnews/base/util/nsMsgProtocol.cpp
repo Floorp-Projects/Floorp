@@ -819,6 +819,8 @@ NS_IMETHODIMP nsMsgFilePostHelper::OnStartRequest(nsIRequest * aChannel, nsISupp
 
 NS_IMETHODIMP nsMsgFilePostHelper::OnStopRequest(nsIRequest * aChannel, nsISupports *ctxt, nsresult aStatus)
 {
+  if (!mProtInstance) return NS_OK; 
+
   if (!mSuspendedPostFileRead)
     mProtInstance->PostDataFinished();
 

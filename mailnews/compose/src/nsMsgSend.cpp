@@ -224,10 +224,12 @@ NS_IMETHODIMP nsMsgComposeAndSend::GetDefaultPrompt(nsIPrompt ** aPrompt)
   /* If we cannot find a prompter, try the mail3Pane window */
   nsCOMPtr<nsIMsgWindow> msgWindow;
   nsCOMPtr <nsIMsgMailSession> mailSession (do_GetService(kMsgMailSessionCID));
+  if (mailSession)
+  {
   mailSession->GetTopmostMsgWindow(getter_AddRefs(msgWindow));
-
   if (msgWindow)
       rv = msgWindow->GetPromptDialog(aPrompt);
+  }
   
   return rv;
 }
