@@ -337,7 +337,6 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray* aSearchPath,
             nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
             if(!file)
                 return PR_FALSE;
-            file->SetFollowLinks(PR_FALSE);
 
             PRBool isFile;
             if(NS_FAILED(file->IsFile(&isFile)) || !isFile)
