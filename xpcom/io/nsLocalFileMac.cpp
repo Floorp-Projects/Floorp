@@ -1555,6 +1555,8 @@ nsLocalFile::GetLeafName(char * *aLeafName)
             leaf++;
 
         *aLeafName = (char*) nsMemory::Clone(leaf, strlen(leaf)+1);
+        if (!*aLeafName)
+            return NS_ERROR_OUT_OF_MEMORY;               
     }
     else
     {
