@@ -283,14 +283,14 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
   if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAll) {
     for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
       ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
-      ::SetControlValue((ControlHandle) itemH, (i==2));
+      ::SetControlValue((ControlHandle) itemH, (i==4));
       ::HiliteControl((ControlHandle)itemH, 0);
     }
   }
   else if (howToEnableFrameUI == nsIPrintOptions::kFrameEnableAsIsAndEach) {
     for (i = ePrintFrameAsIsCheckboxID; i <= ePrintAllFramesCheckboxID; i++){
       ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+i-1, &itemType, &itemH, &itemBox);
-      ::SetControlValue((ControlHandle) itemH, (i==2));
+      ::SetControlValue((ControlHandle) itemH, (i==4));
       if ( i == 3){
         ::HiliteControl((ControlHandle)itemH, 255);
       }
