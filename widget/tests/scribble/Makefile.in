@@ -82,8 +82,6 @@ LIBS := \
 	-lreg \
 	-lremoturl \
 	-lsecfree \
-	-lstubnj \
-	-lstubsj \
 	-ltestdynamic \
 	-lmozutil \
 	-lxp \
@@ -95,6 +93,7 @@ LIBS := \
 	-lraptorplugin \
 	-lmozdbm \
 	$(TK_LIBS) \
+	$(NSPR_LIBS) \
 	$(NULL)
 
 CFLAGS += $(TOOLKIT_CFLAGS)
