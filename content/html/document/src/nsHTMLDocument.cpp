@@ -428,10 +428,11 @@ NS_IMETHODIMP
 nsHTMLDocument::CreateTextNode(const nsString& aData, nsIDOMText** aTextNode)
 {
   nsIHTMLContent* text = nsnull;
-  nsresult        rv = NS_NewHTMLText(&text, aData, aData.Length());
+  nsresult        rv = NS_NewTextNode(&text);
 
   if (NS_OK == rv) {
     rv = text->QueryInterface(kIDOMTextIID, (void**)aTextNode);
+    (*aTextNode)->Append(aData);
   }
 
   return rv;
