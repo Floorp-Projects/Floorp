@@ -28,7 +28,7 @@ namespace JavaScript {
 #define op2(i) (i->itsOperand2)
 #define op3(i) (i->itsOperand3)
 
-JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& args)
+JSValue interpret(InstructionStream& iCode, const JSValues& args)
 {
 	JSValue result;
 	JSValues frame(args);
@@ -71,7 +71,7 @@ JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& a
 		case BRANCH:
 			{
 				Branch* i = static_cast<Branch*>(instruction);
-				pc = iCode.begin() + labels[op1(i)]->itsOffset;
+				pc = iCode.begin() + op1(i);
 			}
 			break;
 		case BRANCH_COND:
@@ -79,7 +79,7 @@ JSValue interpret(InstructionStream& iCode, LabelList& labels, const JSValues& a
 				BranchCond* i = static_cast<BranchCond*>(instruction);
 				// s << "target #" << t->itsOperand1 << ", R" << t->itsOperand2;
 				if (registers[op2(i)].i32)
-					pc = iCode.begin() + labels[op1(i)]->itsOffset;
+					pc = iCode.begin() + op1(i);
 			}
 			break;
 		case ADD:
