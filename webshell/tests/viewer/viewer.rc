@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "resources.h"
 #include "jsconsres.h"
-#include <winres.h>
+#include <winresrc.h>
 
 
 VIEWER MENU DISCARDABLE
@@ -181,8 +181,8 @@ VIEWER MENU DISCARDABLE
     }
     POPUP    "Editor Tests"
     {
-      MENUITEM  "Set Background RED" VIEWER_EDIT_SET_BGCOLOR_RED
-      MENUITEM  "Set Background YELLOW" VIEWER_EDIT_SET_BGCOLOR_YELLOW
+      MENUITEM  "Set Background RED", VIEWER_EDIT_SET_BGCOLOR_RED
+      MENUITEM  "Set Background YELLOW", VIEWER_EDIT_SET_BGCOLOR_YELLOW
     }
   }
 #if defined(PURIFY)
