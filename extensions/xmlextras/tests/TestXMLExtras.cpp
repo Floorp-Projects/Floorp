@@ -22,7 +22,6 @@
  *
  */
 
-
 #include <nsCOMPtr.h>
 #include <nsString.h>
 #include <nsIURI.h>
@@ -36,7 +35,6 @@
 #include "nsIDocument.h"
 
 void usage( ) {
-
   printf( "\n" );
   printf( "Usage:\n" );
   printf( "  TestXMLExtras {parsestr | parse | syncread} xmlfile\n\n" );
