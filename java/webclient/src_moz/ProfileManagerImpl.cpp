@@ -56,84 +56,84 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
            ("ProfileManagerImpl_nativeStartup: entering\n"));
     nsresult rv;
     WebclientContext *wcContext = (WebclientContext *) nativeContext;
-
+    
     PR_ASSERT(wcContext);
-
+    
     // handle the profile manager nonsense
     nsCOMPtr<nsICmdLineService> cmdLine =do_GetService(kCmdLineServiceCID);
     nsCOMPtr<nsIProfile> profile = do_GetService(NS_PROFILE_CONTRACTID);
     if (!cmdLine || !profile) {
-	::util_ThrowExceptionToJava(env, "Can't get the profile manager.");
-	return;
+        ::util_ThrowExceptionToJava(env, "Can't get the profile manager.");
+        return;
     }
     PRInt32 numProfiles=0;
     rv = profile->GetProfileCount(&numProfiles);
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeStartup: GetProfileCount rv: %d\n", 
-	    rv));
-
+            rv));
+    
     char *argv[3];
     int i, argc = 0;
     argv[0] = PL_strdup(nsnull);
     if (numProfiles > 1) {
-	PRUnichar **Names;
-	PRUint32 NamesLen = 0;
-	rv = profile->GetProfileList(&NamesLen, &Names);
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	       ("ProfileManagerImpl_nativeStartup: GetProfileList rv: %d\n", 
-		rv));
-	
-	argv[1] = PL_strdup("-p");
-	if (NS_SUCCEEDED(rv)) {
-	    PR_ASSERT(NamesLen >= 1);
-	    // PENDING(edburns): fix for 70656.  Really we should have a way
-	    // for the embedding app to specify which profile to use.  
-	    // For now we just get the name of the first profile.
-	    char * temp = new char[100]; // de-allocated in following for loop
-	    for (i = 0; Names[0][i] != '\0'; i++) {
-		temp[i] = (char) Names[0][i];
-	    }
-	    nsMemory::Free(Names);
-	    temp[i] = '\0';
-	    argv[2] = temp;
-	    argc = 3;
-	}
-	else {
-	    argv[2] = PL_strdup("default");
-	}    
+        PRUnichar **Names;
+        PRUint32 NamesLen = 0;
+        rv = profile->GetProfileList(&NamesLen, &Names);
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("ProfileManagerImpl_nativeStartup: GetProfileList rv: %d\n", 
+                rv));
+        
+        argv[1] = PL_strdup("-p");
+        if (NS_SUCCEEDED(rv)) {
+            PR_ASSERT(NamesLen >= 1);
+            // PENDING(edburns): fix for 70656.  Really we should have a way
+            // for the embedding app to specify which profile to use.  
+            // For now we just get the name of the first profile.
+            char * temp = new char[100]; // de-allocated in following for loop
+            for (i = 0; Names[0][i] != '\0'; i++) {
+                temp[i] = (char) Names[0][i];
+            }
+            nsMemory::Free(Names);
+            temp[i] = '\0';
+            argv[2] = temp;
+            argc = 3;
+        }
+        else {
+            argv[2] = PL_strdup("default");
+        }    
     }
     else {
-	argc = 1;
+        argc = 1;
     }
     rv = cmdLine->Initialize(argc, argv);
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	   ("ProfileManagerImpl_nativeStartup: commandLineService initialize rv: %d\n", 
-	    rv));
+           ("ProfileManagerImpl_nativeStartup: commandLineService initialize rv: %d\n", 
+            rv));
     
     for (i = 0; i < argc; i++) {
-	nsCRT::free(argv[i]);
+        nsCRT::free(argv[i]);
     }
     if (NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Can't initialize nsICmdLineService.");
-	return;
+        ::util_ThrowExceptionToJava(env, "Can't initialize nsICmdLineService.");
+        return;
     }
     nsCOMPtr<nsIProfileInternal> profileInt = do_QueryInterface(profile);
     if (profileInt) {
-	rv = profileInt->StartupWithArgs(cmdLine, PR_FALSE);
-	PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
-	       ("ProfileManagerImpl_nativeStartup: profileInternal startupWithArgs rv: %d\n", 
-		rv));
-	
-	if (NS_FAILED(rv)) {
-	    ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
-	    return;
-	}
+        rv = profileInt->StartupWithArgs(cmdLine, PR_FALSE);
+        PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
+               ("ProfileManagerImpl_nativeStartup: profileInternal startupWithArgs rv: %d\n", 
+                rv));
+        
+        if (NS_FAILED(rv)) {
+            ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
+            return;
+        }
     }
     else {
-	::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
-	return;
+        ::util_ThrowExceptionToJava(env, "Can't statrup nsIProfile service.");
+        return;
     }
-
+    
     wcContext->sProfile = profile.get();
     NS_ADDREF(wcContext->sProfile);
     wcContext->sProfileInternal = profileInt.get();
@@ -180,11 +180,11 @@ JNIEXPORT jint JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     
     rv = profile->GetProfileCount(&count);
     if (NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Can't get profile count.");
-	return result;
+        ::util_ThrowExceptionToJava(env, "Can't get profile count.");
+        return result;
     }
     result = (jint) count;
-
+    
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeGetProfileCount: exiting\n"));
     return result;
@@ -203,14 +203,14 @@ JNIEXPORT jboolean JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Profi
     jboolean result;
     PRBool exists;
     PRUnichar *profileName = 
-	(PRUnichar *) ::util_GetStringChars(env, profileNameJstr);
+        (PRUnichar *) ::util_GetStringChars(env, profileNameJstr);
     
     rv = profile->ProfileExists(profileName, &exists);
     ::util_ReleaseStringChars(env, profileNameJstr, profileName);
     
     if (NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Can't see if profile exists.");
-	return result;
+        ::util_ThrowExceptionToJava(env, "Can't see if profile exists.");
+        return result;
     }
     
     result = exists == PR_TRUE ? JNI_TRUE : JNI_FALSE;
@@ -231,17 +231,17 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     PR_ASSERT(profile);
     nsresult rv;
     PRUnichar *profileName = 
-	(PRUnichar *) ::util_GetStringChars(env, profileNameJstr);
-
+        (PRUnichar *) ::util_GetStringChars(env, profileNameJstr);
+    
     rv = profile->SetCurrentProfile(profileName);
     ::util_ReleaseStringChars(env, profileNameJstr, profileName);
     
     if (NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Can't set current profile.");
-	return;
+        ::util_ThrowExceptionToJava(env, "Can't set current profile.");
+        return;
     }
     
-
+    
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeSetCurrentProfile: exiting\n"));
 }
@@ -261,12 +261,12 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Profil
     
     rv = profile->GetCurrentProfile(getter_Copies(profileName));
     if (NS_FAILED(rv)) {
-	::util_ThrowExceptionToJava(env, "Can't get current profile.");
-	return result;
+        ::util_ThrowExceptionToJava(env, "Can't get current profile.");
+        return result;
     }
     result = (jstring) ::util_NewString(env, profileName.get(),
-					profileName.Length());
-
+                                        profileName.Length());
+    
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeGetCurrentProfile: exiting\n"));
     return result;
@@ -305,11 +305,11 @@ JNIEXPORT jobjectArray JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_P
         ::util_ThrowExceptionToJava(env, "Can't get profile list.");
         return result;
     }
-
+    
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("ProfileManagerImpl_nativeGetProfileList: exiting\n"));
     return result;
-
+    
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileManagerImpl_nativeCreateNewProfile
@@ -340,7 +340,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_ProfileMa
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, "Can't create new profile.");
     }
-
+    
     ::util_ReleaseStringChars(env, profileNameJstr, profileName);
     if (nsnull != nativeProfileDir) {
         ::util_ReleaseStringChars(env, nativeProfileDirJstr, nativeProfileDir);
