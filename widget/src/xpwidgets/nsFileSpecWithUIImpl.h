@@ -45,6 +45,10 @@ class nsFileSpecWithUIImpl
 	NS_IMETHOD FromFileSpec(const nsIFileSpec *original)
 		{ return mBaseFileSpec ? mBaseFileSpec->FromFileSpec(original) : NS_ERROR_NOT_INITIALIZED; }
 
+  NS_IMETHOD IsChildOf(nsIFileSpec *possibleParent, PRBool *_retval)
+    { return mBaseFileSpec ? mBaseFileSpec->IsChildOf(possibleParent, _retval)
+        : NS_ERROR_NOT_INITIALIZED; }
+
 	NS_IMETHOD GetURLString(char * *aURLString)
 		{ return mBaseFileSpec ? mBaseFileSpec->GetURLString(aURLString) : NS_ERROR_NOT_INITIALIZED; }
 	NS_IMETHOD SetURLString(char * aURLString)
