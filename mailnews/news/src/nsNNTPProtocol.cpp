@@ -862,6 +862,9 @@ NS_IMETHODIMP nsNNTPProtocol::AsyncRead(nsIStreamListener *listener, nsISupports
         MarkCurrentMsgRead();
         if (NS_SUCCEEDED(rv)) // ONLY if we succeeded in actually starting the read should we return
         {
+          // we're not calling nsMsgProtocol::AsyncRead(), which calls nsNNTPProtocol::LoadUrl, so we need to take care of some stuff it does.
+          m_ContentType = "";
+          m_channelListener = nsnull;
           return rv;
         }
       }
@@ -5417,7 +5420,6 @@ nsresult nsNNTPProtocol::CleanupAfterRunningUrl()
     if (mailnewsurl)
       mailnewsurl->SetMemCacheEntry(nsnull);
   }
-
 
   PR_FREEIF(m_path);
   PR_FREEIF(m_responseText);
