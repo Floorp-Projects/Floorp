@@ -1643,15 +1643,32 @@ nsComboboxControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValue
 NS_IMETHODIMP
 nsComboboxControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                          const nsPoint& aPoint,
+                                         nsFramePaintLayer aWhichLayer,
                                          nsIFrame** aFrame)
 {
-  if (nsFormFrame::GetDisabled(this)) {
-    *aFrame = this;
-    return NS_OK;
-  } else {
-    return nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+  PRBool inThisFrame = mRect.Contains(aPoint);
+
+  if (! ((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame) ) {
+    return NS_ERROR_FAILURE;
   }
-  return NS_OK;
+
+  if ( nsFormFrame::GetDisabled(this) && inThisFrame ) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
+    return NS_ERROR_FAILURE;
+  }
+  
+  if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
+    nsresult rv = GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_FOREGROUND, PR_FALSE, aFrame);
+    if (NS_SUCCEEDED(rv)) return rv;
+    return GetFrameForPointUsing(aPresContext, aPoint, nsnull, NS_FRAME_PAINT_LAYER_BACKGROUND, PR_TRUE, aFrame);
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
 

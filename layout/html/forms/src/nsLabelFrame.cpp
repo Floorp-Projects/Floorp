@@ -96,7 +96,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
   NS_IMETHOD GetFor(nsString& aFor);
 
@@ -237,14 +237,19 @@ nsLabelFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                const nsPoint& aPoint,
+                               nsFramePaintLayer aWhichLayer,
                                nsIFrame** aFrame)
 {
-  nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
-  if (nsnull != *aFrame) {
+  nsresult rv = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+  if (rv == NS_OK) {
     nsCOMPtr<nsIFormControlFrame> controlFrame = do_QueryInterface(*aFrame);
     if (!controlFrame) {
       // if the hit frame isn't a form control then
       // check to see if it is an anchor
+
+      // XXX It could be something else that should get the event.  Perhaps
+      // this is better handled by event bubbling?
+
       nsIFrame * parent;
       (*aFrame)->GetParent(&parent);
       while (parent != this && parent != nsnull) {
@@ -252,16 +257,29 @@ nsLabelFrame::GetFrameForPoint(nsIPresContext* aPresContext,
         parent->GetContent(getter_AddRefs(content));
         nsCOMPtr<nsIDOMHTMLAnchorElement> anchorElement(do_QueryInterface(content));
         if (anchorElement) {
-          *aFrame = parent;
-          return NS_OK;
+          nsIStyleContext *psc;
+          parent->GetStyleContext(&psc);
+          if (psc) {
+            const nsStyleDisplay* disp = (const nsStyleDisplay*)
+              psc->GetStyleData(eStyleStruct_Display);
+            if (disp->IsVisible()) {
+              *aFrame = parent;
+              return NS_OK;
+            }
+          }
         }
         parent->GetParent(&parent);
       }
-      *aFrame = this;
+      const nsStyleDisplay* disp = (const nsStyleDisplay*)
+        mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (disp->IsVisible()) {
+        *aFrame = this;
+        return NS_OK;
+      }
     }
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -240,85 +240,52 @@ nsContainerFrame::PaintChild(nsIPresContext*      aPresContext,
 NS_IMETHODIMP
 nsContainerFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                    const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
                                    nsIFrame**     aFrame)
 {
-  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aFrame);
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND), aFrame);
 }
 
 nsresult
 nsContainerFrame::GetFrameForPointUsing(nsIPresContext* aPresContext,
                                         const nsPoint& aPoint,
                                         nsIAtom*       aList,
+                                        nsFramePaintLayer aWhichLayer,
+                                        PRBool         aConsiderSelf,
                                         nsIFrame**     aFrame)
 {
-  nsIFrame* kid;
-  nsRect kidRect;
+  nsIFrame *kid, *hit;
   nsPoint tmp;
-  *aFrame = this;
 
-  nsIFrame *childFrame = 0;
-  nsresult rv = NS_ERROR_FAILURE;
+  PRBool inThisFrame = mRect.Contains(aPoint);
 
-  // Attempt to find the first child that contains the desired
-  // point. We try to use a quick check on the child frames bbox to
-  // avoid a potentially expensive recursion into the child frames
-  // GetFrameForPoint method.
+  if (! ((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame ) ) {
+    return NS_ERROR_FAILURE;
+  }
+
   FirstChild(aPresContext, aList, &kid);
+  *aFrame = nsnull;
+  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
   while (nsnull != kid) {
-    kid->GetRect(kidRect);
-    // Do a quick check and see if the child frame contains the point
-    if (kidRect.Contains(aPoint)) {
-      // The child frame contains the point. Now see if it really
-      // contains the point.
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+    nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
 
-      rv = kid->GetFrameForPoint(aPresContext, tmp, aFrame);
-
-      if (NS_SUCCEEDED(rv) && *aFrame) {
-        // We found the target frame somewhere in the child frame.
-        childFrame = *aFrame;
-        break;
-      }
-      else {
-        // We didn't find the target frame in any of the children,
-        // but save the fact that this kid contains the point.
-        childFrame = kid;
-      }
+    if (NS_SUCCEEDED(rv) && hit) {
+      *aFrame = hit;
     }
     kid->GetNextSibling(&kid);
   }
 
-  //Only keep looking outside if we didn't absolutely find a child leaf node.
-  //This is indicated by the successful return from GetFrameForPoint.  If we
-  //only found a container frame we'll have set childFrame to our best guess
-  //at a container frame but rv will still have failed so we should go on 
-  //looking for the correct leaf frame in the outside children.
-  if (NS_FAILED(rv)) {
-    // Try again, this time looking only inside child frames that have
-    // outside children.
-    FirstChild(aPresContext, aList, &kid);
-    while (nsnull != kid) {
-      nsFrameState state;
-      kid->GetFrameState(&state);
-      if (NS_FRAME_OUTSIDE_CHILDREN & state) {
-        kid->GetRect(kidRect);
-        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-        if (NS_OK == kid->GetFrameForPoint(aPresContext, tmp, aFrame)) {
-          return NS_OK;
-        }
-        else {
-          *aFrame = this;
-        }
-      }
-      kid->GetNextSibling(&kid);
-    }
+  if (*aFrame) {
+    return NS_OK;
   }
 
-  if (childFrame) {
-    // We didn't find any overlapping frames that contain
-    // the point, so just return the original childFrame.
-    *aFrame = childFrame;
-    return NS_OK;
+  if ( inThisFrame && aConsiderSelf ) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
   }
 
   return NS_ERROR_FAILURE;

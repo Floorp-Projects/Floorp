@@ -383,6 +383,16 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTableOuterFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                   const nsPoint& aPoint, 
+                                   nsFramePaintLayer aWhichLayer,
+                                   nsIFrame**     aFrame)
+{
+  // this should act like a block, so we need to override
+  return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
+}
+
 NS_IMETHODIMP nsTableOuterFrame::SetSelected(nsIPresContext* aPresContext,
                                              nsIDOMRange *aRange,
                                              PRBool aSelected,

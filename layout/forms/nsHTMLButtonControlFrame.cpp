@@ -400,10 +400,18 @@ nsHTMLButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsHTMLButtonControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                            const nsPoint& aPoint,
+                                           nsFramePaintLayer aWhichLayer,
                                            nsIFrame** aFrame)
 {
-  *aFrame = this;
-  return NS_OK;
+  if (mRect.Contains(aPoint)) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP

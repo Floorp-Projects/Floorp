@@ -150,17 +150,22 @@ NS_IMETHODIMP nsTreeCellFrame::Reflow(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                   const nsPoint& aPoint, 
+                                  nsFramePaintLayer aWhichLayer,
                                   nsIFrame**     aFrame)
 {
   if (mAllowEvents)
   {
-	  return nsTableCellFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+    return nsTableCellFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
   else
   {
-    nsresult result = nsTableCellFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+    if (! ( mRect.Contains(aPoint) || ( mState & NS_FRAME_OUTSIDE_CHILDREN)) )
+    {
+      return NS_ERROR_FAILURE;
+    }
+    nsresult result = nsTableCellFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
     nsCOMPtr<nsIContent> content;
-    if (*aFrame) {
+    if (result == NS_OK) {
       (*aFrame)->GetContent(getter_AddRefs(content));
       if (content) {
         // This allows selective overriding for subcontent.
@@ -170,8 +175,15 @@ nsTreeCellFrame::GetFrameForPoint(nsIPresContext* aPresContext,
           return result;
       }
     }
-    *aFrame = this; // Capture all events so that we can perform selection and expand/collapse.
-    return NS_OK;
+    if (mRect.Contains(aPoint)) {
+      const nsStyleDisplay* disp = (const nsStyleDisplay*)
+        mStyleContext->GetStyleData(eStyleStruct_Display);
+      if (disp->IsVisible()) {
+        *aFrame = this; // Capture all events so that we can perform selection and expand/collapse.
+        return NS_OK;
+      }
+    }
+    return NS_ERROR_FAILURE;
   }
 }
 

@@ -795,8 +795,7 @@ NS_IMETHODIMP nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags,
     //if no child's bounds matched the event or we consumed but still want
     //default behavior check the view itself. -EDV
     if (nsnull != mClientData && nsnull != obs) {
-      obs->HandleEvent((nsIView *)this, event, aStatus);
-      aHandled = PR_TRUE;
+      obs->HandleEvent((nsIView *)this, event, aStatus, aHandled);
     }
   } 
   /* XXX Just some debug code to see what event are being thrown away because

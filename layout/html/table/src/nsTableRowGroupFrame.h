@@ -135,7 +135,7 @@ public:
    * Return PR_TRUE if a frame containing the point is found.
    * @see nsContainerFrame::GetFrameForPoint
    */
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
    /** calls Reflow for all of its child rows.
     * Rows are all set to the same width and stacked vertically.

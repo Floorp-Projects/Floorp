@@ -28,6 +28,7 @@
 //
 
 #include "nsSpringFrame.h"
+#include "nsIStyleContext.h"
 
 nsresult
 NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
@@ -47,10 +48,23 @@ NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 
 NS_IMETHODIMP  nsSpringFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                              const nsPoint& aPoint, 
+                                             nsFramePaintLayer aWhichLayer,
                                              nsIFrame**     aFrame)
 {
+  if (!mRect.Contains(aPoint)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // always return us (if visible)
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->IsVisible()) {
     *aFrame = this;
     return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+
     /*
   // clicks just go right through springs.
   return NS_ERROR_FAILURE;

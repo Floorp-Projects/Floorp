@@ -52,6 +52,7 @@ public:
 
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, // Overridden to capture events
+                              nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
 
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext,

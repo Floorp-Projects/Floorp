@@ -151,12 +151,14 @@ nsStackFrame::LayoutChildrenInRect(nsRect& aGivenSize, nscoord& aMaxAscent)
 NS_IMETHODIMP  
 nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                              const nsPoint& aPoint, 
+                             nsFramePaintLayer aWhichLayer,
                              nsIFrame**     aFrame)
 {   
-  nsRect r(0,0,mRect.width, mRect.height);
+  nsRect r(mRect);
 
-  // if it is not inside us fail
-  if (!r.Contains(aPoint)) {
+  // if it is not inside us or not in the layer in which we paint, fail
+  if ((aWhichLayer != NS_FRAME_PAINT_LAYER_BACKGROUND) ||
+      (!r.Contains(aPoint))) {
       return NS_ERROR_FAILURE;
   }
 
@@ -176,8 +178,6 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
       return NS_OK;
   }
 
-//  nsPoint tmp;
-  //tmp.MoveTo(aPoint.x - r.x, aPoint.y - r.y);
 
   nsIFrame* first = mFrames.FirstChild();
 
@@ -186,9 +186,11 @@ nsStackFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   // look at the children in reverse order
   nsresult rv;
       
-  if (first)
-      rv = GetStackedFrameForPoint(aPresContext, first, nsRect(0,0,mRect.width, mRect.height), aPoint, aFrame);
-  else
+  if (first) {
+      nsPoint tmp;
+      tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+      rv = GetStackedFrameForPoint(aPresContext, first, nsRect(0,0,mRect.width, mRect.height), tmp, aFrame);
+  } else
       rv = NS_ERROR_FAILURE;
 
   if (!NS_SUCCEEDED(rv)) {
@@ -230,24 +232,18 @@ nsStackFrame::GetStackedFrameForPoint(nsIPresContext* aPresContext,
     // look at all the children is reverse order. Use the stack to do 
     // this.
     nsIFrame* next;
+    nsresult rv;
     aChild->GetNextSibling(&next);   
     if (next != nsnull) {
-       nsresult rv = GetStackedFrameForPoint(aPresContext, next, aRect, aPoint, aFrame);
+       rv = GetStackedFrameForPoint(aPresContext, next, aRect, aPoint, aFrame);
        if (NS_SUCCEEDED(rv) && *aFrame)  
            return rv;
     }
 
-    nsRect childRect;
-    aChild->GetRect(childRect);
-
-    if (childRect.Contains(aPoint)) {
-        nsPoint tmp;
-        tmp.MoveTo(aPoint.x - childRect.x, aPoint.y - childRect.y);
-
-        return aChild->GetFrameForPoint(aPresContext, tmp, aFrame);
-    }
-
-    return NS_ERROR_FAILURE;
+    rv = aChild->GetFrameForPoint(aPresContext, aPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, aFrame);
+    if (NS_SUCCEEDED(rv) && *aFrame)  
+        return rv;
+    return aChild->GetFrameForPoint(aPresContext, aPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, aFrame);
 }
 
 void

@@ -1312,10 +1312,19 @@ nsFrame::GetCursor(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                           const nsPoint& aPoint,
+                          nsFramePaintLayer aWhichLayer,
                           nsIFrame** aFrame)
 {
-  *aFrame = this;
-  return NS_OK;
+  if ((aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) &&
+      (mRect.Contains(aPoint))) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
 }
 
 // Resize and incremental reflow

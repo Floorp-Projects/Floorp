@@ -24,6 +24,7 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIContent.h"
+#include "nsIStyleContext.h"
 
 nsresult
 NS_NewSelectsAreaFrame(nsIPresShell* aShell, nsIFrame** aNewFrame, PRUint32 aFlags)
@@ -90,18 +91,28 @@ nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
 NS_IMETHODIMP
 nsSelectsAreaFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      const nsPoint& aPoint,
+                                     nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
-  nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
 
-  nsIFrame* selectedFrame = *aFrame;
-  
-  while ((nsnull != selectedFrame) && (PR_FALSE == IsOptionElementFrame(selectedFrame))) {
-    selectedFrame->GetParent(&selectedFrame);
-  }  
-  if (nsnull != selectedFrame) {
-    *aFrame = selectedFrame;
+  PRBool inThisFrame = mRect.Contains(aPoint);
+
+  if (!((mState & NS_FRAME_OUTSIDE_CHILDREN) || inThisFrame )) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_OK;
+  nsresult result = nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
+
+  if (result == NS_OK) {
+    nsIFrame* selectedFrame = *aFrame;
+    while ((nsnull != selectedFrame) && (PR_FALSE == IsOptionElementFrame(selectedFrame))) {
+      selectedFrame->GetParent(&selectedFrame);
+    }  
+    if (nsnull != selectedFrame) {
+      *aFrame = selectedFrame;
+    }
+    // else, keep the original result as *aFrame, which could be this frame
+  }
+
+  return result;
 }

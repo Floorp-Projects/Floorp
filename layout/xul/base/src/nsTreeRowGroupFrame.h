@@ -59,7 +59,7 @@ public:
   NS_IMETHOD  TreeInsertFrames(nsIFrame*       aPrevFrame,
                                nsIFrame*       aFrameList);
 
-  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsIFrame** aFrame);
+  NS_IMETHOD  GetFrameForPoint(nsIPresContext* aPresContext, const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
   void PaintChildren(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,

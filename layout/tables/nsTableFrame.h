@@ -187,6 +187,11 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame**     aFrame);
+
   /** nsIFrame method overridden to handle table specifics
   */
   NS_IMETHOD SetSelected(nsIPresContext* aPresContext,

@@ -85,10 +85,13 @@ public:
   NS_IMETHOD  SetAdditionalStyleContext(PRInt32 aIndex, 
                                         nsIStyleContext* aStyleContext);
  
+#if 0
     // Overridden to capture events
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint,
+                              nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
+#endif
 
 /*BEGIN implementations of dragevent handler interface*/
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent);

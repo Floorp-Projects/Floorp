@@ -866,19 +866,21 @@ PRBool nsTreeRowGroupFrame::RowGroupReceivesExcessSpace()
 NS_IMETHODIMP
 nsTreeRowGroupFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                       const nsPoint& aPoint,
+                                      nsFramePaintLayer aWhichLayer,
                                       nsIFrame** aFrame)
 {
+  // XXX Should this be needed?  Shouldn't scrollbars be checked in
+  // general?
   nsPoint tmp;
-  nsRect kidRect;
+  nsresult rv;
   if (mScrollbar) {
-    mScrollbar->GetRect(kidRect);
-    if (kidRect.Contains(aPoint)) {
-      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
-      return mScrollbar->GetFrameForPoint(aPresContext, tmp, aFrame);
-    }
+    tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+    rv = mScrollbar->GetFrameForPoint(aPresContext, tmp, aWhichLayer, aFrame);
+    if (rv == NS_OK)
+      return NS_OK;
   }
 
-  return nsTableRowGroupFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+  return nsTableRowGroupFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
 NS_IMETHODIMP

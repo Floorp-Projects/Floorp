@@ -246,9 +246,10 @@ nsTreeRowFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsTreeRowFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                  const nsPoint& aPoint, // Overridden to capture events
+                                 nsFramePaintLayer aWhichLayer,
                                  nsIFrame**     aFrame)
 {
-  nsresult rv = nsTableRowFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+  nsresult rv = nsTableRowFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   if (mDraggingHeader) {
     mHitFrame = *aFrame;
     *aFrame = this;

@@ -389,7 +389,8 @@ public:
                    const nsRect&        aDirtyRect);
   NS_IMETHOD HandleEvent(nsIView*        aView,
                          nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus);
+                         nsEventStatus*  aEventStatus,
+                         PRBool&         aHandled);
   NS_IMETHOD Scrolled(nsIView *aView);
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
@@ -2958,13 +2959,16 @@ PresShell::PopCurrentEventFrame()
 NS_IMETHODIMP
 PresShell::HandleEvent(nsIView         *aView,
                        nsGUIEvent*     aEvent,
-                       nsEventStatus*  aEventStatus)
+                       nsEventStatus*  aEventStatus,
+                       PRBool&         aHandled)
 {
   void*     clientData;
   nsIFrame* frame;
   nsresult  rv = NS_OK;
   
   NS_ASSERTION(!(nsnull == aView), "null view");
+
+  aHandled = PR_TRUE;  // XXX Is this right?
 
   if (mIsDestroying || mReflowLockCount > 0) {
     return NS_OK;
@@ -2992,10 +2996,58 @@ PresShell::HandleEvent(nsIView         *aView,
         manager->GetFocusedContent(&focusContent);
         if (focusContent)
           GetPrimaryFrameFor(focusContent, &mCurrentEventFrame);
-        else frame->GetFrameForPoint(mPresContext, aEvent->point, &mCurrentEventFrame);
+        else {
+          // XXX This is the way key events seem to work?  Why?????
+          // They spend time doing calls to GetFrameForPoint with the
+          // point as (0,0) (or sometimes something else).
+
+          // XXX If this code is really going to stay, it should
+          // probably go into a separate function, because its just
+          // a duplicate of the code a few lines below:
+
+          // This is because we want to give the point in the same
+          // coordinates as the frame's own Rect, so mRect.Contains(aPoint)
+          // works.  However, this point is relative to the frame's rect, so
+          // we need to add on the origin of the rect.
+          nsPoint eventPoint;
+          frame->GetOrigin(eventPoint);
+          eventPoint += aEvent->point;
+          rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, &mCurrentEventFrame);
+          if (rv != NS_OK) {
+            rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FLOATERS, &mCurrentEventFrame);
+            if (rv != NS_OK) {
+              rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
+              if (rv != NS_OK) {
+                // XXX Is this the right thing to do?
+                mCurrentEventFrame = nsnull;
+                aHandled = PR_FALSE;
+                rv = NS_OK;
+              }
+            }
+          }
+        }
       }
       else {
-        frame->GetFrameForPoint(mPresContext, aEvent->point, &mCurrentEventFrame);
+        // This is because we want to give the point in the same
+        // coordinates as the frame's own Rect, so mRect.Contains(aPoint)
+        // works.  However, this point is relative to the frame's rect, so
+        // we need to add on the origin of the rect.
+        nsPoint eventPoint;
+        frame->GetOrigin(eventPoint);
+        eventPoint += aEvent->point;
+        rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FOREGROUND, &mCurrentEventFrame);
+        if (rv != NS_OK) {
+          rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_FLOATERS, &mCurrentEventFrame);
+          if (rv != NS_OK) {
+            rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
+            if (rv != NS_OK) {
+              // XXX Is this the right thing to do?
+              mCurrentEventFrame = nsnull;
+              aHandled = PR_FALSE;
+              rv = NS_OK;
+            }
+          }
+        }
       }
       NS_IF_RELEASE(mCurrentEventContent);
       if (GetCurrentEventFrame() || focusContent) {
@@ -3064,6 +3116,7 @@ PresShell::HandleEvent(nsIView         *aView,
   }
   else {
     rv = NS_OK;
+    aHandled = PR_FALSE;
   }
 
   return rv;

@@ -115,6 +115,11 @@ public:
                    const nsRect& aDirtyRect,
                    nsFramePaintLayer aWhichLayer);
 
+  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
+                              const nsPoint& aPoint, 
+                              nsFramePaintLayer aWhichLayer,
+                              nsIFrame**     aFrame);
+
   NS_IMETHOD SetSelected(nsIPresContext* aPresContext,
                          nsIDOMRange *aRange,
                          PRBool aSelected,

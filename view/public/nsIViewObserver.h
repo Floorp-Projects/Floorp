@@ -52,11 +52,14 @@ public:
    * @param aEvent - event notification
    * @param aEventStatus - out parameter for event handling
    *                       status
+   * @param aHandled - whether the correct frame was found to
+   *                   handle the event
    * @return error status
    */
   NS_IMETHOD HandleEvent(nsIView *       aView,
                          nsGUIEvent*     aEvent,
-                         nsEventStatus*  aEventStatus) = 0;
+                         nsEventStatus*  aEventStatus,
+                         PRBool&         aHandled) = 0;
 
   /* called when the view has been repositioned due to scrolling
    * @return error status

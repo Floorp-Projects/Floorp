@@ -454,6 +454,60 @@ void nsTableRowFrame::PaintChildren(nsIPresContext*      aPresContext,
   }
 }
 
+/* we overload this here because rows have children that can span outside of themselves.
+ * so the default "get the child rect, see if it contains the event point" action isn't
+ * sufficient.  We have to ask the row if it has a child that contains the point.
+ */
+NS_IMETHODIMP
+nsTableRowFrame::GetFrameForPoint(nsIPresContext* aPresContext,
+                                       const nsPoint& aPoint,
+                                       nsFramePaintLayer aWhichLayer,
+                                       nsIFrame** aFrame)
+{
+  // XXX This would not need to exist (except as a one-liner, to make this
+  // frame work like a block frame) if rows with rowspan cells made the
+  // the NS_FRAME_OUTSIDE_CHILDREN bit of mState set correctly (see
+  // nsIFrame.h).
+
+  // I imagine fixing this would help performance of GetFrameForPoint in
+  // tables.  It may also fix problems with relative positioning.
+
+  // This is basically copied from nsContainerFrame::GetFrameForPointUsing,
+  // except for one bit removed
+
+  nsIFrame *kid, *hit;
+  nsPoint tmp;
+
+  PRBool inThisFrame = mRect.Contains(aPoint);
+
+  FirstChild(aPresContext, nsnull, &kid);
+  *aFrame = nsnull;
+  tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
+  while (nsnull != kid) {
+    nsresult rv = kid->GetFrameForPoint(aPresContext, tmp, aWhichLayer, &hit);
+
+    if (NS_SUCCEEDED(rv) && hit) {
+      *aFrame = hit;
+    }
+    kid->GetNextSibling(&kid);
+  }
+
+  if (*aFrame) {
+    return NS_OK;
+  }
+
+  if ( inThisFrame && (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND)) {
+    const nsStyleDisplay* disp = (const nsStyleDisplay*)
+      mStyleContext->GetStyleData(eStyleStruct_Display);
+    if (disp->IsVisible()) {
+      *aFrame = this;
+      return NS_OK;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 /** returns the height of the tallest child in this row (ignoring any cell with rowspans) */
 nscoord nsTableRowFrame::GetTallestChild() const
 {

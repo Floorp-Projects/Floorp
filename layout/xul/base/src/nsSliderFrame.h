@@ -110,7 +110,7 @@ public:
                          nsEventStatus* aEventStatus);
 
     NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                                const nsPoint& aPoint, nsIFrame** aFrame);
+                                const nsPoint& aPoint, nsFramePaintLayer aWhichLayer, nsIFrame** aFrame);
 
     NS_IMETHOD SetInitialChildList(nsIPresContext* aPresContext,
                                  nsIAtom*        aListName,
