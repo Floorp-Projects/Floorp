@@ -38,7 +38,7 @@
 
 #define HAVE_LCHOWN
 
-#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(LINUX) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(RHAPSODY)
+#if defined(AIX) || defined(BSDI) || defined(HPUX) || defined(linux) || defined(SUNOS4) || defined(SCO) || defined(UNIXWARE) || defined(RHAPSODY)
 #undef HAVE_LCHOWN
 #endif
 
@@ -50,7 +50,7 @@
 #define GETCWD_CAN_MALLOC
 #endif
 
-#ifdef LINUX
+#ifdef linux
 #include <getopt.h>
 #endif
 
