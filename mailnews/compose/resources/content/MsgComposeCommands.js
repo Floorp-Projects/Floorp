@@ -1143,14 +1143,9 @@ function DoCommandClose()
 
 function DoCommandPrint()
 {
-  if (gMsgCompose)
-  {
-    var editorShell = gMsgCompose.editorShell;
-    if (editorShell)
-      try {
-        editorShell.Print();
-      } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
-  }
+  try {
+    NSPrint();
+  } catch(ex) {dump("#PRINT ERROR: " + ex + "\n");}
 }
 
 function DoCommandPreferences()

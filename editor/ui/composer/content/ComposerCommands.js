@@ -2400,7 +2400,7 @@ var nsPrintCommand =
     // In editor.js
     FinishHTMLSource();
     try {
-      window.editorShell.Print();
+      NSPrint();
     } catch (e) {}
   }
 };
