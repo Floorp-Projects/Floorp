@@ -45,6 +45,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prmem.h"
 #include "plstr.h"
 #include "prenv.h"
+#include "prlog.h"
 
 // Universal
 #include <AppleEvents.h>
@@ -512,6 +513,7 @@ OSErr nsAppleEventHandler::HandleOpen1Doc(const FSSpec& inFileSpec, OSType inFil
 			if (s.is_open())
 			{
 				Boolean foundArgs = false;
+				Boolean foundEnv = false;
 				char chars[1024];
 				const char* kCommandLinePrefix = "ARGS:";
 				const char* kEnvVarLinePrefix = "ENV:";
@@ -527,7 +529,7 @@ OSErr nsAppleEventHandler::HandleOpen1Doc(const FSSpec& inFileSpec, OSType inFil
 					else if (PL_strstr(chars, kEnvVarLinePrefix) == chars)
 					{
 						(void)AddToEnvironmentVars(chars + PL_strlen(kEnvVarLinePrefix));
-						foundArgs = true;
+						foundEnv = true;
 					}
 					
 					// Clear the buffer and get the next line from the command line file
@@ -535,9 +537,14 @@ OSErr nsAppleEventHandler::HandleOpen1Doc(const FSSpec& inFileSpec, OSType inFil
 					s.readline(chars, sizeof(chars));
 				} while (PL_strlen(chars));
 				
+				// If we found any environment vars we need to re-init NSPR's logging
+				// so that it knows what the new vars are
+				if (foundEnv)
+					PR_Init_Log();
+
 				// If we found a command line or environment vars we want to return now
 				// raather than trying to open the file as a URL
-				if (foundArgs)
+				if (foundArgs || foundEnv)
 					return noErr;
 			}
 		}
