@@ -2618,11 +2618,14 @@ nsGenericHTMLElement::ParseStyleAttribute(nsIContent* aContent,
   if (doc) {
     PRBool isCSS = PR_TRUE; // assume CSS until proven otherwise
 
-    nsAutoString styleType;
-    doc->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
-    if (!styleType.IsEmpty()) {
-      static const char textCssStr[] = "text/css";
-      isCSS = (styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr) - 1));
+    if (!aContent->IsNativeAnonymous()) {  // native anonymous content
+                                           // always assumes CSS
+      nsAutoString styleType;
+      doc->GetHeaderData(nsHTMLAtoms::headerContentStyleType, styleType);
+      if (!styleType.IsEmpty()) {
+        static const char textCssStr[] = "text/css";
+        isCSS = (styleType.EqualsIgnoreCase(textCssStr, sizeof(textCssStr) - 1));
+      }
     }
 
     if (isCSS) {
