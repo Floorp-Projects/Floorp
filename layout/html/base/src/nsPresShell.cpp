@@ -83,6 +83,7 @@
 #include "nsHTMLToTXTSinkStream.h"
 #include "nsXIFDTD.h"
 #include "nsIFrameSelection.h"
+#include "nsIDOMNSHTMLInputElement.h" //optimization for ::DoXXX commands
 #include "nsViewsCID.h"
 #include "nsIFrameManager.h"
 #include "nsISupportsPrimitives.h"
@@ -2687,16 +2688,45 @@ PresShell::DoCopy()
     nsString buffer;
     nsresult rv;
 
-    nsIDOMSelection* sel;
-    GetSelection(nsISelectionController::SELECTION_NORMAL, &sel);
+    nsCOMPtr<nsIDOMSelection> sel;
+    
+    nsCOMPtr<nsIEventStateManager> manager;
+    nsCOMPtr<nsIContent> content;
+    rv = mPresContext->GetEventStateManager(getter_AddRefs(manager));
+    if (NS_FAILED(rv) || !manager)
+      return rv?rv:NS_ERROR_FAILURE;
+    rv = manager->GetFocusedContent(getter_AddRefs(content));
+    if (NS_SUCCEEDED(rv) && content)
+    {
+    
+      //check to see if we need to get selection from frame
+      //optimization that MAY need to be expanded as more things implement their own "selection"
+      nsCOMPtr<nsIDOMNSHTMLInputElement> htmlElement(do_QueryInterface(content));
+      if (htmlElement)
+      {
+        nsIFrame *htmlInputFrame;
+        rv = GetPrimaryFrameFor(content, &htmlInputFrame);
+        if (NS_FAILED(rv) || !htmlInputFrame)
+          return rv?rv:NS_ERROR_FAILURE;
+        nsCOMPtr<nsISelectionController> selCon;
+        rv = htmlInputFrame->GetSelectionController(mPresContext,getter_AddRefs(selCon));
+        if (NS_FAILED(rv) || !selCon)
+          return rv?rv:NS_ERROR_FAILURE;
+        rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
+      }
+    }
+    if (!sel) //get selection from this PresShell
+      rv = GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel));
       
-    if (sel != nsnull)
-      doc->CreateXIF(buffer,sel);
-    NS_IF_RELEASE(sel);
+    if (NS_FAILED(rv) || !sel)
+      return rv?rv:NS_ERROR_FAILURE;
+
+    doc->CreateXIF(buffer,sel);
 
     // Get the Clipboard
     NS_WITH_SERVICE(nsIClipboard, clipboard, kCClipboardCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) 
+      return rv;
 
     if ( clipboard ) {
       // Create a transferable for putting data on the Clipboard
