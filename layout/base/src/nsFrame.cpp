@@ -228,36 +228,15 @@ nsrefcnt nsFrame::Release(void)
 /////////////////////////////////////////////////////////////////////////////
 // nsIFrame
 
-NS_METHOD nsFrame::DeleteFrame()
+NS_METHOD nsFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  // XXX Wow. All this effort just to stop loading images.
-  // Why is this done in nsFrame instead of some frame class
+  //XXX Why is this done in nsFrame instead of some frame class
   // that actually loads images?
-  nsIView* view = mView;
-  if (nsnull == view) {
-    nsIFrame* parent;
-     
-    GetParentWithView(parent);
-    if (nsnull != parent) {
-      parent->GetView(view);
-    }
-  }
-  if (nsnull != view) {
-    nsIViewManager* vm = view->GetViewManager();
-    nsIPresContext* cx = vm->GetPresContext();
-    // XXX Is this a really good ordering for the releases? MMP
-    NS_RELEASE(vm);
-#if 0
-    if (view != mView)    //if this is the view that we own, let's not release it...
-      NS_RELEASE(view);
-#endif
-    cx->StopLoadImage(this);
-    NS_RELEASE(cx);
-  }
+  aPresContext.StopLoadImage(this);
 
   //Set to prevent event dispatch during destruct
   if (nsnull != mView) {
-    mView->SetFrame(nsnull);
+    mView->SetClientData(nsnull);
   }
 
   delete this;
@@ -1261,11 +1240,17 @@ NS_METHOD nsFrame::GetView(nsIView*& aView) const
 
 NS_METHOD nsFrame::SetView(nsIView* aView)
 {
+  nsresult  rv;
+
   if (nsnull != aView) {
     mView = aView;
-    aView->SetFrame(this);
+    aView->SetClientData(this);
+    rv = NS_OK;
   }
-  return NS_OK;
+  else
+    rv = NS_OK;
+
+  return rv;
 }
 
 // Find the first geometric parent that has a view
