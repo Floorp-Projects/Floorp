@@ -1204,11 +1204,13 @@ void CWizardUI::UpdateGlobals()
 		{
 			/**
 			curWidget = CurrentNode->pageWidgets[i];
+			**/
 			int selectedIndex = ((CComboBox*)curWidget->control)->GetCurSel();
 			char tmpStr[MIN_SIZE];
 			itoa(selectedIndex, tmpStr, 10);
 			curWidget->value = tmpStr;
 
+			/**
 			int selIndex = ((CComboBox*)curWidget->control)->GetCurSel();
 			((CComboBox*)curWidget->control)->GetLBText(selIndex, (char *)(LPCTSTR) selectedCustomization);
 
