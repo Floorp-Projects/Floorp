@@ -39,7 +39,7 @@ function EditorFillContextMenu(event, contextMenuNode)
   InitRemoveStylesMenuitems("removeStylesMenuitem_cm", "removeLinksMenuitem_cm", "removeNamedAnchorsMenuitem_cm");
 
   // This item is present only in context menu:
-  DisableItem("editLink_cm", objectName != "href");
+  SetElementEnabledById("editLink_cm", objectName == "href");
 
   var inCell = IsInTableCell();
   // Set appropriate text for join cells command
