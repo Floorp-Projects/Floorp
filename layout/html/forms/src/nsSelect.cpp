@@ -491,7 +491,7 @@ nsSelect::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                          nsString* aValues, nsString* aNames)
 {
   if ((aMaxNumValues <= 0) || (nsnull == mName)) {
-    NS_ASSERTION(0, "invalid max num values");
+    //NS_ASSERTION(0, "invalid max num values"); // XXX remove this in branch
     return PR_FALSE;
   }
 
