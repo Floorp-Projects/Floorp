@@ -133,11 +133,15 @@ void nsCertTree::ClearCompareHash()
   }
 }
 
-void nsCertTree::InitCompareHash()
+nsresult nsCertTree::InitCompareHash()
 {
   ClearCompareHash();
-  PL_DHashTableInit(&mCompareCache, &gMapOps, nsnull,
-                    sizeof(CompareCacheHashEntry), 128);
+  if (!PL_DHashTableInit(&mCompareCache, &gMapOps, nsnull,
+                         sizeof(CompareCacheHashEntry), 128)) {
+    mCompareCache.ops = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
 }
 
 nsCertTree::~nsCertTree()
@@ -352,14 +356,15 @@ nsCertTree::GetCertsByTypeFromCache(nsINSSCertCache   *aCache,
 NS_IMETHODIMP 
 nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
 {
-  nsresult rv;
   if (mTreeArray) {
     FreeCertArray();
     delete [] mTreeArray;
     mTreeArray = NULL;
     mNumRows = 0;
   }
-  InitCompareHash();
+  nsresult rv = InitCompareHash();
+  if (NS_FAILED(rv)) return rv;
+
   rv = GetCertsByTypeFromCache(aCache, aType, 
                                GetCompareFuncFromCertType(aType), &mCompareCache,
                                getter_AddRefs(mCertArray));
@@ -370,14 +375,15 @@ nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
 NS_IMETHODIMP 
 nsCertTree::LoadCerts(PRUint32 aType)
 {
-  nsresult rv;
   if (mTreeArray) {
     FreeCertArray();
     delete [] mTreeArray;
     mTreeArray = NULL;
     mNumRows = 0;
   }
-  InitCompareHash();
+  nsresult rv = InitCompareHash();
+  if (NS_FAILED(rv)) return rv;
+
   rv = GetCertsByType(aType, 
                       GetCompareFuncFromCertType(aType), &mCompareCache,
                       getter_AddRefs(mCertArray));

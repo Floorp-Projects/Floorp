@@ -72,7 +72,7 @@ public:
     sort_CommonName, sort_IssuedDateDescending, sort_Email, sort_None };
 
 protected:
-  void InitCompareHash();
+  nsresult InitCompareHash();
   void ClearCompareHash();
   void RemoveCacheEntry(void *key);
 
