@@ -36,6 +36,7 @@
   -->
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://navigator/skin/pageInfo.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
@@ -49,6 +50,7 @@
         title="&caption.label;"
         onload="onLoad()"
         class="dialog"
+        minwidth="350"
         persist="screenX screenY"
         screenX="24" screenY="24">
 
@@ -60,158 +62,164 @@
 
   <label id="no-properties" value="&no-properties.label;"/>
   
-  <groupbox id="link-sec">
-    <caption label="&link-sec.label;"/>
+  <vbox id="link-sec">
+    <label value="&link-sec.label;"/>
+    <separator class="groove"/>
     <grid>
       <columns>
+        <column/>
         <column/>
         <column flex="1"/>
       </columns>
       <rows>
         <row id="link-url">
+          <separator orient="vertical"/>
           <label value="&link-url.label; "/>
-          <hbox>
-            <label id="link-url-text" value="" class="text-link" 
-                  onclick="openLink(this)"/>
-            <spacer flex="1"/>
-          </hbox>
+          <textbox readonly="true" id="link-url-text"/>
         </row>
         <row id="link-target">
+          <separator orient="vertical"/>
           <label value="&link-target.label; "/>
-          <label id="link-target-text" value=""/>
+          <textbox readonly="true" id="link-target-text"/>
         </row>
         <row id="link-type">
+          <separator orient="vertical"/>
           <label value="&link-type.label; "/>
-          <label id="link-type-text" value=""/>
+          <textbox readonly="true" id="link-type-text"/>
         </row>
         <row id="link-lang">
+          <separator orient="vertical"/>
           <label value="&link-lang.label; "/>
-          <label id="link-lang-text" value=""/>
+          <textbox readonly="true" id="link-lang-text"/>
         </row>
         <row id="link-rel">
+          <separator orient="vertical"/>
           <label value="&link-rel.label; "/>
-          <label id="link-rel-text" value=""/>
+          <textbox readonly="true" id="link-rel-text"/>
         </row>
         <row id="link-rev">
+          <separator orient="vertical"/>
           <label value="&link-rev.label; "/>
-          <label id="link-rev-text" value=""/>
+          <textbox readonly="true" id="link-rev-text"/>
         </row>
       </rows>
     </grid>
-  </groupbox>
-  <groupbox id="image-sec">
-    <caption label="&image-sec.label;"/>
+    <separator/>
+  </vbox>
+  <vbox id="image-sec">
+    <label value="&image-sec.label;"/>
+    <separator class="groove"/>
     <grid>
       <columns>
+        <column/>
         <column/>
         <column flex="1"/>
       </columns>
       <rows>
         <row id="image-url">
+          <separator orient="vertical"/>
           <label value="&image-url.label; "/>
-          <hbox>
-            <label id="image-url-text" value="" class="text-link" 
-                  onclick="openLink(this)"/>
-            <spacer flex="1"/>
-          </hbox>
+          <textbox readonly="true" id="image-url-text"/>
         </row>
         <row id="image-width">
+          <separator orient="vertical"/>
           <label value="&image-width.label; "/>
-          <hbox>
-            <label id="image-width-text" value=""/>
-            <label value=" &image-pixels.label;"/>
-          </hbox>
+          <textbox readonly="true" id="image-width-text"/>
         </row>
-        <row id="image-height">    
+        <row id="image-height">
+          <separator orient="vertical"/>
           <label value="&image-height.label; "/>
-          <hbox>
-            <label id="image-height-text" value=""/>
-            <label value=" &image-pixels.label;"/>
-          </hbox>
-        </row>
-        <row id="image-desc">
-          <label value="&image-desc.label; "/>
-          <hbox>
-            <label id="image-desc-text" value="" class="text-link" 
-                  onclick="openLink(this)"/>
-            <spacer flex="1"/>
-          </hbox>
+          <textbox readonly="true" id="image-height-text"/>
         </row>
 	<row id="image-filesize">
-	  <label value="&image-filesize.label; "/>
-	  <label id="image-filesize-text" value="&filesize-unknown.label;"/>
+          <separator orient="vertical"/>
+          <label value="&image-filesize.label; "/>
+          <textbox id="image-filesize-text"/>
 	</row>
+        <row id="image-alt">
+          <separator orient="vertical"/>
+          <label value="&image-alt.label; "/>
+          <textbox readonly="true" id="image-alt-text"/>
+        </row>
+        <row id="image-desc">
+          <separator orient="vertical"/>
+          <label value="&image-desc.label; "/>
+          <textbox readonly="true" id="image-desc-text"/>
+        </row>
       </rows>
     </grid>
-  </groupbox>
-  <groupbox id="insdel-sec">
-    <caption label="&insdel-sec.label;"/>
+    <separator/>
+  </vbox>
+  <vbox id="insdel-sec">
+    <label value="&insdel-sec.label;"/>
+    <separator class="groove"/>
     <grid>
       <columns>
+        <column/>
         <column/>
         <column flex="1"/>
       </columns>
       <rows>
         <row id="insdel-cite">
+          <separator orient="vertical"/>
           <label value="&insdel-cite.label; "/>
-          <hbox>
-            <label id="insdel-cite-text" value="" class="text-link" 
-                  onclick="openLink(this)"/>
-            <spacer flex="1"/>
-          </hbox>
+          <textbox readonly="true" id="insdel-cite-text"/>
         </row>
         <row id="insdel-date">
+          <separator orient="vertical"/>
           <label value="&insdel-date.label; "/>
-          <label id="insdel-date-text" value=""/>
+          <textbox readonly="true" id="insdel-date-text"/>
         </row>
       </rows>
     </grid>
-  </groupbox>
-  <groupbox id="quote-sec">
-    <caption label="&quote-sec.label;"/>
+    <separator/>
+  </vbox>
+  <vbox id="quote-sec">
+    <label value="&quote-sec.label;"/>
+    <separator class="groove"/>
     <grid>
       <columns>
+        <column/>
         <column/>
         <column flex="1"/>
       </columns>
       <rows>
         <row id="quote-cite">
+          <separator orient="vertical"/>
           <label value="&quote-cite.label; "/>
-          <hbox>
-            <label id="quote-cite-text" value="" class="text-link" 
-                  onclick="openLink(this)"/>
-            <spacer flex="1"/>
-          </hbox>
+          <textbox readonly="true" id="quote-cite-text"/>
         </row>
       </rows>
     </grid>
-  </groupbox>
-  <groupbox id="misc-sec">
-    <caption label="&misc-sec.label;"/>
+    <separator/>
+  </vbox>
+  <vbox id="misc-sec">
+    <label value="&misc-sec.label;"/>
+    <separator class="groove"/>
     <grid>
       <columns>
+        <column/>
         <column/>
         <column flex="1"/>
       </columns>
       <rows>
         <row id="misc-lang">
+          <separator orient="vertical"/>
           <label value="&misc-lang.label; "/>
-          <label id="misc-lang-text" value=""/>
+          <textbox readonly="true" id="misc-lang-text"/>
         </row>
         <row id="misc-title">
+          <separator orient="vertical"/>
           <label value="&misc-title.label; "/>
-          <hbox>
-          <description id="misc-title-text" width="100%" style="margin: 0px;" flex="1"/>
-          </hbox>
+          <textbox readonly="true" id="misc-title-text"/>
         </row>
         <row id="misc-tblsummary">
+          <separator orient="vertical"/>
           <label value="&misc-tblsummary.label; "/>
-          <label id="misc-tblsummary-text" value=""/>
+          <textbox readonly="true" id="misc-tblsummary-text"/>
         </row>
       </rows>
     </grid>
-  </groupbox>
-
-  <spacer flex="1"/>
-
+    <separator/>
+  </vbox>
  </window>

@@ -4,11 +4,10 @@
 <!ENTITY image-sec.label       "Image Properties">
 <!ENTITY image-url.label       "Location:">
 <!ENTITY image-desc.label      "Description:">
+<!ENTITY image-alt.label       "Alternate text:">
 <!ENTITY image-width.label     "Width:">
 <!ENTITY image-height.label    "Height:">
-<!ENTITY image-pixels.label    "pixels">
 <!ENTITY image-filesize.label  "Size of File:">
-<!ENTITY filesize-unknown.label "Unknown (not cached)">
 <!ENTITY insdel-sec.label      "Insert/Delete Properties">
 <!ENTITY insdel-cite.label     "Info:">
 <!ENTITY insdel-date.label     "Date:">
