@@ -114,10 +114,13 @@ nsXPIDLString::GetSharedBufferHandle() const
       // PrepareForUseAsOutParam and it hasn't been filled in yet?
       mutable_this->mBuffer = GetSharedEmptyBufferHandle();
     else if ( !mBuffer->DataEnd() )
-      // Our handle may not be an nsImportedStringHandle.  However, if it
-      // is not, this cast will still be safe since no other handle will
-      // be in this state.
-      NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get())->RecalculateBoundaries();
+      {
+        // Our handle may not be an nsImportedStringHandle.  However, if it
+        // is not, this cast will still be safe since no other handle will
+        // be in this state.
+        const nsImportedStringHandle<char_type>* handle = NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get());
+        handle->RecalculateBoundaries();
+      }
 
 #if DEBUG_STRING_STATS
     ++sShareCount;
@@ -189,10 +192,13 @@ nsXPIDLCString::GetSharedBufferHandle() const
       // PrepareForUseAsOutParam and it hasn't been filled in yet?
       mutable_this->mBuffer = GetSharedEmptyBufferHandle();
     else if ( !mBuffer->DataEnd() )
-      // Our handle may not be an nsImportedStringHandle.  However, if it
-      // is not, this cast will still be safe since no other handle will
-      // be in this state.
-      NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get())->RecalculateBoundaries();
+      {
+        // Our handle may not be an nsImportedStringHandle.  However, if it
+        // is not, this cast will still be safe since no other handle will
+        // be in this state.
+        const nsImportedStringHandle<char_type>* handle = NS_STATIC_CAST(const nsImportedStringHandle<char_type>*, mBuffer.get());
+        handle->RecalculateBoundaries();
+      }
 
 #if DEBUG_STRING_STATS
     ++sShareCount;
