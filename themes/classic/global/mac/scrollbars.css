@@ -9,7 +9,7 @@ scrollbar {
 
 }
 
-scrollbar[align="vertical"] {
+scrollbar[orient="vertical"] {
     border-right: 1px solid #000000;
     border-top: none;
     border-bottom: none;
@@ -23,7 +23,7 @@ slider {
    background-image: url("chrome://global/skin/slider-bg-horiz.gif");
 }
 
-slider[align="vertical"] {
+slider[orient="vertical"] {
    background-image: url("chrome://global/skin/slider-bg-vert.gif");
 }
 
@@ -74,7 +74,7 @@ thumb[disabled="true"] {
    list-style-image: none;
 }
 
-thumb[align="vertical"] {
+thumb[orient="vertical"] {
   list-style-image: url("chrome://global/skin/scroll-thumb-vert.png");
   border-top: 1px solid #000000;
   border-bottom: 1px solid #000000;
@@ -82,7 +82,7 @@ thumb[align="vertical"] {
   border-right: none;
 }
 
-thumb[align="vertical"]:active {
+thumb[orient="vertical"]:active {
 	background-color: -moz-mac-accentlightshadow;
    list-style-image: url("chrome://global/skin/scroll-thumb-vert-active.png");
 }
@@ -152,33 +152,33 @@ scrollbarbutton[sbattr="scrollbar-down-top"] {
 	border-left: none;
 }
 
-scrollbar[align="vertical"] > scrollbarbutton {
+scrollbar[orient="vertical"] > scrollbarbutton {
     border-left: none;
     border-right: none;
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"] {
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up.gif");
    border-bottom: 1px solid black;
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-active.gif");
 }
 
 
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"],
-scrollbar[align="vertical"] > scrollbarbutton[type="decrement"][disabled="true"]:hover:active {
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"],
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"][disabled="true"]:hover:active {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-up-disabled.gif");
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down.gif");
@@ -186,24 +186,24 @@ scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
    border-bottom: 1px solid black;
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:hover:active {
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"]:hover:active {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-active.gif");
 }
 
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"],
-scrollbar[align="vertical"] > scrollbarbutton[type="increment"][disabled="true"]:hover:active {
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"][disabled="true"],
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"][disabled="true"]:hover:active {
    -moz-user-focus: ignore;
    -moz-user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
 }
 
 /*with double ended scrollbar arrows, must collapse black border between touching arrows to 1px*/
-scrollbar[align="vertical"] > scrollbarbutton[sbattr="scrollbar-up-bottom"] {
+scrollbar[orient="vertical"] > scrollbarbutton[sbattr="scrollbar-up-bottom"] {
 	border-top: 1px solid black;
 	border-bottom: none;
 }
-scrollbar[align="vertical"] > scrollbarbutton[sbattr="scrollbar-down-top"] {
+scrollbar[orient="vertical"] > scrollbarbutton[sbattr="scrollbar-down-top"] {
 	border-top: none;
 }
