@@ -24,22 +24,22 @@
 #include "nsIGenericFactory.h"
 #include "nsIModule.h"
 
-#include "nsImageLoader.h"
+#include "imgLoader.h"
 #include "imgRequest.h"
 #include "imgRequestProxy.h"
 
 // objects that just require generic constructors
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsImageLoader)
+NS_GENERIC_FACTORY_CONSTRUCTOR(imgLoader)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequest)
 NS_GENERIC_FACTORY_CONSTRUCTOR(imgRequestProxy)
 
 static nsModuleComponentInfo components[] =
 {
   { "image loader",
-    NS_IMAGELOADER_CID,
+    NS_IMGLOADER_CID,
     "@mozilla.org/image/loader;1",
-    nsImageLoaderConstructor, },
+    imgLoaderConstructor, },
   { "image request",
     NS_IMGREQUEST_CID,
     "@mozilla.org/image/request/real;1",

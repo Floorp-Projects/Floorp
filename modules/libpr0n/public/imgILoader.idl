@@ -22,32 +22,44 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIOutputStream.idl"
 #include "gfxtypes.idl"
 
+interface imgIDecoderObserver;
 interface imgIRequest;
+interface nsISimpleEnumerator;
+interface nsIStreamListener;
+interface nsIURI;
+interface nsIChannel;
 
 /**
- * nsIImageDecoder interface
+ * imgILoader interface
  *
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, uuid(9eebf43a-1dd1-11b2-953e-f1782f4cbad3)]
-interface nsIImageDecoder : nsIOutputStream
+[scriptable, uuid(4c8cf1e0-1dd2-11b2-aff9-c51cdbfcb6da)]
+interface imgILoader : nsISupports
 {
   /**
-   * Initalize an image decoder.
-   * @param aRequest the request that owns the decoder.
-   *
-   * @note The decode should QI \a aRequest to an nsIImageDecoderObserver
-   * and should send decoder notifications to the request.
-   * The decoder should always pass NULL as the first two parameters to
-   * all of the nsIImageDecoderObserver APIs.
+   * Start the load and decode of an image.
+   * @param uri the URI to load
+   * @param aObserver the observer
+   * @param cx some random data
    */
-  void init(in imgIRequest aRequest);
+  imgIRequest loadImage(in nsIURI uri, in imgIDecoderObserver aObserver, in nsISupports cx);
 
-  /// allows access to the nsIImage we have to put bits in to.
-  readonly attribute imgIRequest request;
+  /**
+   * Start the load and decode of an image.
+   * @param uri the URI to load
+   * @param aObserver the observer
+   * @param cx some random data
+   */
+  imgIRequest loadImageWithChannel(in nsIChannel aChannel, in imgIDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener aListener);
+
+  /**
+   * Returns the channels contained directly in this group.
+   * @note Enumerator element type: imgIRequest.
+   */
+  readonly attribute nsISimpleEnumerator requests;
 };

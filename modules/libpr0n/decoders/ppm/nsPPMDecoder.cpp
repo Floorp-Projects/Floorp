@@ -34,7 +34,7 @@
 
 #include "nsRect.h"
 
-NS_IMPL_ISUPPORTS2(nsPPMDecoder, nsIImageDecoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS2(nsPPMDecoder, imgIDecoder, nsIOutputStream)
 
 
 nsPPMDecoder::nsPPMDecoder()
@@ -53,7 +53,7 @@ nsPPMDecoder::~nsPPMDecoder()
 }
 
 
-/** nsIImageDecoder methods **/
+/** imgIDecoder methods **/
 
 /* void init (in imgIRequest aRequest); */
 NS_IMETHODIMP nsPPMDecoder::Init(imgIRequest *aRequest)

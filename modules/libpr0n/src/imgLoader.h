@@ -23,13 +23,13 @@
 
 //#define LOADER_THREADSAFE 1
 
-#include "nsIImageLoader.h"
+#include "imgILoader.h"
 
 #ifdef LOADER_THREADSAFE
 #include "prlock.h"
 #endif
 
-#define NS_IMAGELOADER_CID \
+#define NS_IMGLOADER_CID \
 { /* 9f6a0d2e-1dd1-11b2-a5b8-951f13c846f7 */         \
      0x9f6a0d2e,                                     \
      0x1dd1,                                         \
@@ -37,14 +37,14 @@
     {0xa5, 0xb8, 0x95, 0x1f, 0x13, 0xc8, 0x46, 0xf7} \
 }
 
-class nsImageLoader : public nsIImageLoader
+class imgLoader : public imgILoader
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIMAGELOADER
 
-  nsImageLoader();
-  virtual ~nsImageLoader();
+  imgLoader();
+  virtual ~imgLoader();
 
 private:
 #ifdef LOADER_THREADSAFE

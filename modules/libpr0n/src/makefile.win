@@ -31,10 +31,10 @@ MAKE_OBJ_TYPE	= DLL
 
 OBJS	= \
 		.\$(OBJDIR)\ImageCache.obj \
-		.\$(OBJDIR)\nsImageLoader.obj \
+		.\$(OBJDIR)\imgLoader.obj \
 		.\$(OBJDIR)\imgRequest.obj \
 		.\$(OBJDIR)\imgRequestProxy.obj \
-		.\$(OBJDIR)\nsImageFactory.obj \
+		.\$(OBJDIR)\ImageFactory.obj \
 		$(NULL)
 
 LLIBS=\

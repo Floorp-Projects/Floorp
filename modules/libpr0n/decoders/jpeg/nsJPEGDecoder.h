@@ -24,13 +24,13 @@
 #ifndef nsJPEGDecoder_h__
 #define nsJPEGDecoder_h__
 
-#include "nsIImageDecoder.h"
+#include "imgIDecoder.h"
 
 #include "nsCOMPtr.h"
 
 #include "gfxIImageContainer.h"
 #include "gfxIImageFrame.h"
-#include "nsIImageDecoderObserver.h"
+#include "imgIDecoderObserver.h"
 #include "imgIRequest.h"
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
@@ -65,7 +65,7 @@ typedef enum {
     JPEG_ERROR    
 } jstate;
 
-class nsJPEGDecoder : public nsIImageDecoder
+class nsJPEGDecoder : public imgIDecoder
 {
 public:
   NS_DECL_ISUPPORTS
@@ -87,7 +87,7 @@ public:
   nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<imgIRequest> mRequest;
 
-  nsCOMPtr<nsIImageDecoderObserver> mObserver;
+  nsCOMPtr<imgIDecoderObserver> mObserver;
 
   struct jpeg_decompress_struct mInfo;
   decoder_error_mgr mErr;

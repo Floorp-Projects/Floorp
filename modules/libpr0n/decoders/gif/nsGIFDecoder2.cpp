@@ -36,9 +36,9 @@
 
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
-// This is an adaptor between GIF2 and nsIImageDecoder
+// This is an adaptor between GIF2 and imgIDecoder
 
-NS_IMPL_ISUPPORTS2(nsGIFDecoder2, nsIImageDecoder, nsIOutputStream);
+NS_IMPL_ISUPPORTS2(nsGIFDecoder2, imgIDecoder, nsIOutputStream);
 
 nsGIFDecoder2::nsGIFDecoder2()
 {
@@ -52,7 +52,7 @@ nsGIFDecoder2::~nsGIFDecoder2(void)
 }
 
 //******************************************************************************
-/** nsIImageDecoder methods **/
+/** imgIDecoder methods **/
 //******************************************************************************
 
 //******************************************************************************

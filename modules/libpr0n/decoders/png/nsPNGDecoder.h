@@ -24,10 +24,10 @@
 #ifndef nsPNGDecoder_h__
 #define nsPNGDecoder_h__
 
-#include "nsIImageDecoder.h"
+#include "imgIDecoder.h"
 
 #include "gfxIImageContainer.h"
-#include "nsIImageDecoderObserver.h"
+#include "imgIDecoderObserver.h"
 #include "gfxIImageFrame.h"
 #include "imgIRequest.h"
 
@@ -44,7 +44,7 @@
     {0xbe, 0x07, 0xd1, 0x6e, 0xeb, 0x4c, 0x50, 0xed} \
 }
 
-class nsPNGDecoder : public nsIImageDecoder
+class nsPNGDecoder : public imgIDecoder
 {
 public:
   NS_DECL_ISUPPORTS
@@ -70,7 +70,7 @@ public:
   nsCOMPtr<gfxIImageContainer> mImage;
   nsCOMPtr<gfxIImageFrame> mFrame;
   nsCOMPtr<imgIRequest> mRequest;
-  nsCOMPtr<nsIImageDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
+  nsCOMPtr<imgIDecoderObserver> mObserver; // this is just qi'd from mRequest for speed
 
   png_structp mPNG;
   png_infop mInfo;

@@ -34,7 +34,7 @@
 
 #include "gfxIImageContainerObserver.h"
 
-NS_IMPL_ISUPPORTS2(nsJPEGDecoder, nsIImageDecoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS2(nsJPEGDecoder, imgIDecoder, nsIOutputStream)
 
 
 void PR_CALLBACK init_source (j_decompress_ptr jd);
@@ -78,7 +78,7 @@ nsJPEGDecoder::~nsJPEGDecoder()
 }
 
 
-/** nsIImageDecoder methods **/
+/** imgIDecoder methods **/
 
 /* void init (in imgIRequest aRequest); */
 NS_IMETHODIMP nsJPEGDecoder::Init(imgIRequest *aRequest)
