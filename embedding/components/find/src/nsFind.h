@@ -76,6 +76,7 @@ protected:
   // Nodes we skip
   static nsIAtom* sCommentAtom;
   static nsIAtom* sScriptAtom;
+  static nsIAtom* sNoframesAtom;
   static nsIAtom* sSelectAtom;
   static nsIAtom* sTextareaAtom;
 

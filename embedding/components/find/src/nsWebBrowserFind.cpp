@@ -121,9 +121,9 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
     nsCOMPtr<nsIDOMWindow> searchFrame = do_QueryReferent(mCurrentSearchFrame);
     NS_ENSURE_TRUE(searchFrame, NS_ERROR_NOT_INITIALIZED);
-    
+
     // first, look in the current frame. If found, return.
-    rv = SearchInFrame(searchFrame, outDidFind);
+    rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
     if (NS_FAILED(rv)) return rv;
     if (*outDidFind)
         return OnFind(searchFrame);     // we are done
@@ -174,21 +174,31 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
         {
             searchFrame = do_GetInterface(curItem, &rv);
             if (NS_FAILED(rv)) break;
-            
+
             OnStartSearchFrame(searchFrame);
 
-            rv = SearchInFrame(searchFrame, outDidFind);
+            rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
             if (NS_FAILED(rv)) return rv;
             if (*outDidFind)
                 return OnFind(searchFrame);     // we are done
-                
+
             OnEndSearchFrame(searchFrame);
         }
-        
+
         if (curItem.get() == startingItem.get())
             doFind = PR_TRUE;       // start looking in frames after this one
     };
 
+    if (!mWrapFind)
+    {
+        // remember where we left off
+        SetCurrentSearchFrame(searchFrame);
+        return NS_OK;
+    }
+
+    // From here on, we're wrapping, first through the other frames,
+    // then finally from the beginning of the starting frame back to
+    // the starting point.
 
     // because nsISimpleEnumerator is totally lame and isn't resettable, I
     // have to make a new one
@@ -207,18 +217,19 @@ NS_IMETHODIMP nsWebBrowserFind::FindNext(PRBool *outDidFind)
 
         if (curItem.get() == startingItem.get())
         {
-            // ideally, we should search the part of the starting frame up
-            // to the point where we left off. We could do this by keeping
-            // its nsIFindAndReplace around.        
+            rv = SearchInFrame(searchFrame, PR_TRUE, outDidFind);
+            if (NS_FAILED(rv)) return rv;
+            if (*outDidFind)
+                return OnFind(searchFrame);        // we are done
             break;
         }
 
         searchFrame = do_GetInterface(curItem, &rv);
         if (NS_FAILED(rv)) break;
-        
+
         OnStartSearchFrame(searchFrame);
 
-        rv = SearchInFrame(searchFrame, outDidFind);
+        rv = SearchInFrame(searchFrame, PR_FALSE, outDidFind);
         if (NS_FAILED(rv)) return rv;
         if (*outDidFind)
             return OnFind(searchFrame);        // we are done
@@ -602,7 +613,9 @@ void nsWebBrowserFind::MoveFocusToCaret(nsIDOMWindow *aWindow)
     This method handles finding in a single window (aka frame).
 
 */
-nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind)
+nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow,
+                                         PRBool aWrapping,
+                                         PRBool* aDidFind)
 {
 #if defined(TEXT_SVCS_TEST) && defined(XP_UNIX) && defined(DEBUG)
     struct timeval timeAtStart;
@@ -722,20 +735,21 @@ nsresult nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, PRBool* aDidFind
 
     nsCOMPtr<nsIDOMRange> foundRange;
 
-    rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon,
-                         PR_FALSE);
+    // If !aWrapping, search from selection to end
+    if (!aWrapping)
+        rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon,
+                             PR_FALSE);
+
+    // If aWrapping, search the part of the starting frame
+    // up to the point where we left off.
+    else
+        rv = GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon,
+                             PR_TRUE);
+
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv =  mFind->Find(mSearchString.get(), searchRange, startPt, endPt,
                       getter_AddRefs(foundRange));
-
-    if (mWrapFind && (NS_FAILED(rv) || !foundRange))
-    {
-        // The selection should still be in the same place.
-        GetSearchLimits(searchRange, startPt, endPt, domDoc, selCon, PR_TRUE);
-        rv =  mFind->Find(mSearchString.get(), searchRange, startPt, endPt,
-                          getter_AddRefs(foundRange));
-    }
 
     if (NS_SUCCEEDED(rv) && foundRange)
     {
