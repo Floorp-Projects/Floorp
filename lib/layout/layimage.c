@@ -2908,7 +2908,7 @@ lo_ImageObserver(XP_Observable observable, XP_ObservableMsg message,
 {
     IL_MessageData *data = (IL_MessageData*)message_data;
     lo_ImageObsClosure *image_obs_closure = (lo_ImageObsClosure *)closure;
-    MWContext *context;
+    MWContext *context=NULL;
     LO_ImageStruct *lo_image;
 #ifdef MOCHA
     LM_ImageEvent mocha_event;
@@ -3072,7 +3072,7 @@ MODULE_PRIVATE int PR_CALLBACK lo_AutoloadPrefChangedFunc(const char *pref,
 MODULE_PRIVATE int PR_CALLBACK lo_AutoloadPrefChangedFunc(const char *pref,
                                                           void *data) 
 {
-	int status;
+	int status=0;
 
 	if (!XP_STRCASECMP(pref,"general.always_load_images")) 
 		status = PREF_GetBoolPref("general.always_load_images",
@@ -3112,7 +3112,7 @@ void lo_GetImage(MWContext *context, IL_GroupContext *img_cx,
     NET_ReloadMethod reload_method;
     IL_NetContext *net_cx = NULL;
     IL_IRGB *trans_pixel;
-    char *image_url, *lowres_image_url, *url_to_fetch;
+    char *image_url, *lowres_image_url=NULL, *url_to_fetch;
 	IL_ImageReq *dummy_ireq;
 
     /* Safety checks. */

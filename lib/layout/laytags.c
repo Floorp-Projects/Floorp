@@ -5346,11 +5346,11 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				LO_TextAttr *attr;
 				PA_Block buff;
 				intn new_size;
-				uint16 new_point_size;
-				uint16 new_font_weight;
+				uint16 new_point_size=0;
+				uint16 new_font_weight=0;
 				char *size_str;
 				char *str;
-				char *new_face;
+				char *new_face=NULL;
 				Bool has_face;
 				Bool has_size;
 				Bool has_point_size;
@@ -6828,7 +6828,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					}
 					else if (!strcasecomp((char *)buff, "prefetch"))
 					{
-						char *prefetchURL;
+						char *prefetchURL=NULL;
 						char *str;
 						PA_Block buff2 = lo_FetchParamValue(context, tag, PARAM_SRC);
 
@@ -6852,7 +6852,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 
 					else if (!strcasecomp((char *)buff, "privacypolicy"))
 					{
-						char *policyURL;
+						char *policyURL=NULL;
 						char *str;
 						PA_Block buff2 = lo_FetchParamValue(context, tag, PARAM_SRC);
 						History_entry *hist;

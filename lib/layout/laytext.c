@@ -7252,7 +7252,7 @@ lo_GetNextTextPosition ( LO_TextBlock * block, uint32 * outWordLength, uint32 * 
 	uint32		lineLength;
 	uint32		nibbleCount;
 	uint32		dataNibbles;
-	int32		wordLength;
+	int32		wordLength=0;
 	uint32 *	breakTable;
 	uint8 *		endTextRun;
 	
@@ -7877,7 +7877,7 @@ void lo_BreakOldTextBlockElement(MWContext *context, lo_DocState *state)
 	int32			old_baseline;
 	int32			old_line_height;
 	int32			adjust;
-	int32			baseline_inc;
+	int32			baseline_inc=0;
 	LO_Element *	tptr;
 	LO_Element *	eptr;
 	LO_Element *	line_ptr;

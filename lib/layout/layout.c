@@ -974,7 +974,7 @@ lo_calc_push_right_for_justify(lo_DocState *state, int32 *remainder)
 	int32 count = -1;  /* start at -1 */
 	int32 push_right;
 	LO_Element *tptr;
-	LO_Element *last;
+	LO_Element *last=NULL;
 
 	tptr = state->line_list;
 
@@ -2145,7 +2145,7 @@ lo_BlockTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
 	int32 doc_id;
 	lo_TopState *top_state;
 	lo_DocState *new_state;
-	char *save_base;
+	char *save_base=NULL;
 
 	/*
 	 * All blocked tags should be at the top level of state
@@ -6564,7 +6564,7 @@ LO_DiscardDocument(MWContext *context)
 	LO_Element *recycle_list;
 	int32 cnt;
 #ifdef MEMORY_ARENAS
-	lo_arena *old_arena;
+	lo_arena *old_arena=NULL;
 #endif /* MEMORY_ARENAS */
 
 	/*
