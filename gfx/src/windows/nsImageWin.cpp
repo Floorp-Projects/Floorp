@@ -58,7 +58,7 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
   if (mNumPalleteColors >= 0)
   {
 	  mBHead = (LPBITMAPINFOHEADER) new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * mNumPalleteColors];
-	  mBHead->biSize = sizeof(BITMAPINFOHEADER);
+    mBHead->biSize = sizeof(BITMAPINFOHEADER);
 	  mBHead->biWidth = aWidth;
 	  mBHead->biHeight = aHeight;
 	  mBHead->biPlanes = 1;
@@ -77,7 +77,17 @@ nsresult nsImageWin :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMa
     this->MakePalette();
 
     if (aMaskRequirements != nsMaskRequirements_kNoMask)
+      {
+      mAlphaWidth=aWidth;
+      mAlphaWidth=aHeight;
       mAlphaBits = new unsigned char[aWidth * aHeight];
+      }
+    else
+      {
+      mAlphaBits = 0;
+      mAlphaWidth=0;
+      mAlphaHeight=0;
+      }
 
     mColorMap = new nsColorMap;
 
@@ -240,14 +250,14 @@ void nsImageWin::CompositeImage(nsIImage *aTheImage, nsPoint *aULLocation)
 // lets build an alpha mask from this image
 PRBool nsImageWin::SetAlphaMask(nsIImage *aTheMask)
 {
-  PRInt32 num;
-  LPBYTE  srcbits;
+PRInt32   num;
+PRUint8   *srcbits;
 
   if (aTheMask && (((nsImageWin*)aTheMask)->mNumBytesPixel == 1))
   {
     mLocation.x = 0;
     mLocation.y = 0;
-    mlphaDepth = 8;
+    mAlphaDepth = 8;
     mAlphaWidth = aTheMask->GetWidth();
     mAlphaHeight = aTheMask->GetWidth();
     num = mAlphaWidth*mAlphaHeight;
@@ -269,32 +279,34 @@ PRBool nsImageWin::SetAlphaMask(nsIImage *aTheMask)
 // line to top.
 void nsImageWin::Comp24to24(nsImageWin *aTheImage, nsPoint *aULLocation)
 {
-  nsRect  arect, srect, drect, irect;
-  PRInt32 dlinespan, slinespan, mlinespan, startx, starty, numbytes, numlines, x, y;
-  LPBYTE  d1, d2, s1, s2, m1, m2;
-  double  a1, a2;
+nsRect    arect,srect,drect,irect;
+PRInt32   dlinespan,slinespan,mlinespan,startx,starty,numbytes,numlines,x,y;
+PRInt16   temp;
+PRUint8   *alphabits, *d1,*d2,*s1,*s2,*m1,*m2;
+double    a1,a2;
 
-  if (mAlphaBits)
-  {
-    x = mLocation.x;
-    y = mLocation.y;
-    arect.SetRect(0, 0, this->GetWidth(), this->GetHeight());
-    srect.SetRect(mLocation.x, mLocation.y, mAlphaWidth, mAlphaHeight);
-    arect.IntersectRect(arect, srect);
-  }
+  if( IsOptimized() )
+    return;
+
+  alphabits = aTheImage->GetAlphaBits();
+  if(alphabits)
+    {
+    arect.SetRect(0,0,this->GetWidth(),this->GetHeight());
+    srect.SetRect(aTheImage->GetAlphaXLoc(),aTheImage->GetAlphaYLoc(),aTheImage->GetAlphaWidth(),aTheImage->GetAlphaHeight());
+    arect.IntersectRect(arect,srect);
+    }
   else
-  {
+    {
     arect.SetRect(0, 0, this->GetWidth(), this->GetHeight());
     x = y = 0;
-  }
+    }
 
   srect.SetRect(aULLocation->x, aULLocation->y, aTheImage->GetWidth(), aTheImage->GetHeight());
   drect = arect;
 
   if (irect.IntersectRect(srect, drect))
-  {
+    {
     // calculate destination information
-
     dlinespan = this->GetLineStride();
     numbytes = this->CalcBytesSpan(irect.width);
     numlines = irect.height;
@@ -313,33 +325,41 @@ void nsImageWin::Comp24to24(nsImageWin *aTheImage, nsPoint *aULLocation)
     starty = aTheImage->GetHeight() - (drect.y + drect.height);
     s1 = aTheImage->GetBits() + (starty * slinespan) + (3 * startx);
 
-    if (mAlphaBits)
-    {
-      mlinespan = this->GetAlphaLineStride();
-      m1 = mAlphaBits;
-      numbytes /= 3;
+    if(alphabits)
+      {
+      mlinespan = aTheImage->GetAlphaLineStride();
+      m1 = alphabits;
+      numbytes/=3;
 
       // now go thru the image and blend (remember, its bottom upwards)
 
       for (y = 0; y < numlines; y++)
-      {
+        {
         s2 = s1;
         d2 = d1;
         m2 = m1;
-
-        for (x = 0; x < numbytes; x++)
-        {
-          a1 = (*m2) * (1.0 / 256.0);
-          a2 = 1.0 - a1;
-          *d2 = (PRUint8)((*d2) * a1 + (*s2) * a2);
+        for(x=0;x<numbytes;x++)
+          {
+          a1 = (*m2)/256.0;
+          a2 = 1.0-a1;
+          temp = ((*d2)*a1 + (*s2)*a2);
+          if(temp>255)
+            temp = 255;
+          *d2 = temp;
           d2++;
           s2++;
           
-          *d2 = (PRUint8)((*d2) * a1 + (*s2) * a2);
+          temp = ((*d2)*a1 + (*s2)*a2);
+          if(temp>255)
+            temp = 255;
+          *d2 = temp;
           d2++;
           s2++;
 
-          *d2 = (PRUint8)((*d2) * a1 + (*s2) * a2);
+          temp = ((*d2)*a1 + (*s2)*a2);
+          if(temp>255)
+            temp = 255;
+          *d2 = temp;
           d2++;
           s2++;
           m2++;
@@ -351,26 +371,111 @@ void nsImageWin::Comp24to24(nsImageWin *aTheImage, nsPoint *aULLocation)
       }
     }
     else
-    {
+      {
       // now go thru the image and blend (remember, its bottom upwards)
 
       for(y = 0; y < numlines; y++)
-      {
+        {
         s2 = s1;
         d2 = d1;
 
         for(x = 0; x < numbytes; x++)
-        {
+          {
           *d2 = (*d2 + *s2) >> 1;
           d2++;
           s2++;
-        }
+          }
 
         s1 += slinespan;
         d1 += dlinespan;
+        }
       }
-    }
   }
+}
+
+//------------------------------------------------------------
+
+nsIImage*      
+nsImageWin::DuplicateImage()
+{
+PRInt32     num,i;
+nsImageWin  *theimage;
+PRUint8     *cpointer;
+
+  if( IsOptimized() )
+    return nsnull;
+
+  theimage = new nsImageWin();
+  NS_ADDREF(theimage);
+
+  // get the header and copy it
+  theimage->mBHead = (LPBITMAPINFOHEADER)new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * theimage->mNumPalleteColors];
+  //*(theimage->mBHead) = *(this->mBHead);
+  num = sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * theimage->mNumPalleteColors;
+  memcpy(theimage->mBHead,this->mBHead,num);
+
+  // set in compute metrics
+  theimage->mSizeImage = this->mSizeImage;
+  theimage->mRowBytes = this->mRowBytes;
+  theimage->mColorTable = (PRUint8 *)this->mBHead + sizeof(BITMAPINFOHEADER);
+  theimage->mNumBytesPixel = this->mNumBytesPixel;
+  theimage->mNumPalleteColors = this->mNumPalleteColors;
+  theimage->mAlphaDepth = this->mAlphaDepth;
+  theimage->mARowBytes = this->mARowBytes;
+  theimage->mAlphaWidth = this->mAlphaWidth;
+  theimage->mAlphaHeight = this->mAlphaHeight;
+  theimage->mLocation = this->mLocation;
+  theimage->mIsOptimized = this->mIsOptimized;
+
+  // set up the memory
+  memset(mColorTable, 0, sizeof(RGBQUAD) * mNumPalleteColors);
+
+    // the bits of the image
+  if(theimage->mSizeImage>0)
+    {
+    theimage->mImageBits = new unsigned char[theimage->mSizeImage];
+    memcpy(theimage->mImageBits,this->mImageBits,theimage->mSizeImage);
+    }
+  else
+    theimage->mImageBits = nsnull;
+
+
+  // bits of the alpha mask
+  num = theimage->mAlphaWidth*theimage->mAlphaHeight;
+  if(num>0)
+    {
+    theimage->mAlphaBits = new unsigned char[num];
+    memcpy(theimage->mImageBits,this->mImageBits,theimage->mSizeImage);
+    }
+  else
+    theimage->mAlphaBits = nsnull;
+
+  theimage->mColorMap = new nsColorMap;
+  if (theimage->mColorMap != nsnull) 
+	  {
+    theimage->mColorMap->NumColors = theimage->mNumPalleteColors;
+    theimage->mColorMap->Index = new PRUint8[3 * theimage->mNumPalleteColors];
+    memset(theimage->mColorMap->Index, 0, sizeof(PRUint8) * (3 * theimage->mNumPalleteColors));
+		}
+
+  cpointer = theimage->mColorTable;
+  for(i = 0; i < theimage->mColorMap->NumColors; i++)
+    {
+		theimage->mColorMap->Index[(3 * i) + 2] = this->mColorMap->Index[(3 * i) + 2];
+		theimage->mColorMap->Index[(3 * i) + 1] = this->mColorMap->Index[(3 * i) + 1];
+		theimage->mColorMap->Index[(3 * i)] = this->mColorMap->Index[(3 * i)];
+
+    *cpointer++ = theimage->mColorMap->Index[(3 * i) + 2];
+		*cpointer++ = theimage->mColorMap->Index[(3 * i) + 1];
+		*cpointer++ = theimage->mColorMap->Index[(3 * i)];
+		*cpointer++ = 0;
+    }
+
+  theimage->MakePalette();
+
+  theimage->mHBitmap = nsnull;    
+
+  return (theimage);
 }
 
 //------------------------------------------------------------
@@ -443,6 +548,8 @@ PRBool nsImageWin :: SetSystemPalette(HDC* aHdc)
 // creates an optimized bitmap, or HBITMAP
 nsresult nsImageWin :: Optimize(nsDrawingSurface aSurface)
 {
+  return NS_OK;                 // TAKE THIS OUT
+
   HDC the_hdc = (HDC)aSurface;
 
   if ((the_hdc != NULL) && !IsOptimized() && (mSizeImage > 0))
@@ -521,6 +628,8 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
 	// this only happens when we need to clean up everything
   if (aCleanUpAll == PR_TRUE)
   {
+  char *temp;
+
     if (mAlphaBits != nsnull)
       delete [] mAlphaBits;
 
@@ -528,13 +637,15 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
       ::DeleteObject(mHBitmap);
 
     if(mBHead)
+      {
       delete[] mBHead;
+      mBHead = nsnull;
+      }
 
     mHBitmap = nsnull;
 
     mAlphaBits = nsnull;
     mIsOptimized = PR_FALSE;
-	  mBHead = nsnull;
 
 	  if (mImageBits != nsnull) 
     {
@@ -542,10 +653,6 @@ void nsImageWin :: CleanUp(PRBool aCleanUpAll)
       mImageBits = nsnull;
     }
   }
-
-  // clean up the DIB
-	if (mImageBits != nsnull) 
-    delete [] mImageBits;
 
 	if (mHPalette != nsnull) 
     ::DeleteObject(mHPalette);

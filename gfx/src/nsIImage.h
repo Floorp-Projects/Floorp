@@ -95,6 +95,30 @@ public:
   virtual PRUint8 * GetAlphaBits() = 0;
 
   /**
+    * Get the width of the alpha mask
+    @return The width in pixels
+    */
+  virtual PRInt32     GetAlphaWidth() = 0;
+
+  /**
+    * Get the height of the alpha mask
+    @return The width in pixels
+    */
+  virtual PRInt32     GetAlphaHeight()  = 0;
+
+  /**
+    * Get the x location of the upper corner of the alpha mask
+    @return The x location in pixels
+    */
+  virtual PRInt32     GetAlphaXLoc() = 0;
+
+  /**
+    * Get the y location of the upper corner of the alpha mask
+    @return The y location in pixels
+    */
+  virtual PRInt32     GetAlphaYLoc() = 0;
+
+  /**
    * Get the number of bytes needed to get to the next scanline for the alpha mask
    @return The number of bytes in each scanline
    */
@@ -174,6 +198,14 @@ public:
    * @param the vertical location
    */
   virtual void  MoveAlphaMask(PRInt32 aX, PRInt32 aY) = 0;
+
+
+  /** 
+   * Duplicate this image and pass back new object to it
+   * @param TheImage is the image to duplicate into this object
+   * @return the new image
+   */
+  virtual nsIImage* DuplicateImage() = 0;
 
   //get the color space metrics for this image
   //virtual NI_ColorSpec * GetColorSpec() = 0;                       fix

@@ -35,19 +35,25 @@ public:
   */
   virtual PRInt32     GetHeight()         { return mBHead->biHeight; }
   virtual PRInt32     GetWidth()          { return mBHead->biWidth; }
-  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
   virtual PRUint8*    GetBits()           { return mImageBits; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                                   PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
-  virtual void CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation);
   virtual nsColorMap* GetColorMap() {return mColorMap;}
   virtual void        ImageUpdated(PRUint8 aFlags, nsRect *aUpdateRect);
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return mIsOptimized; }
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
+  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
+  virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
+  virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
+  virtual PRInt32     GetAlphaXLoc() {return mLocation.x;}
+  virtual PRInt32     GetAlphaYLoc() {return mLocation.y;}
+  virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
+  virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation);
+  
+  virtual nsIImage*   DuplicateImage();
 
   /** 
    * Return the header size of the Device Independent Bitmap(DIB).
@@ -126,9 +132,9 @@ private:
   PRInt32             mSizeImage;         // number of bytes
   PRInt32             mRowBytes;          // number of bytes per row
   PRUint8             *mColorTable;       // color table for the bitmap
-  LPBYTE              mImageBits;         // starting address of DIB bits
-  LPBYTE              mAlphaBits;         // alpha layer if we made one
-  PRInt8              mlphaDepth;         // alpha layer depth
+  PRUint8             *mImageBits;         // starting address of DIB bits
+  PRUint8             *mAlphaBits;         // alpha layer if we made one
+  PRInt8              mAlphaDepth;         // alpha layer depth
   PRInt16             mARowBytes;
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
