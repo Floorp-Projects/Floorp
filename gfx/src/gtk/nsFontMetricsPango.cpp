@@ -951,8 +951,8 @@ nsFontMetricsPango::DrawStringSlowly(const gchar *aText,
         }
 
         for (gint i; i < layoutRun->glyphs->num_glyphs; i++) {
-            gint thisOffset = (gint)(aSpacing[layoutRun->glyphs->log_clusters[i]] / app2dev * PANGO_SCALE);
-            layoutRun->glyphs->glyphs[i].geometry.width += thisOffset;
+            gint thisOffset = (gint)(aSpacing[layoutRun->glyphs->log_clusters[i]] * app2dev * PANGO_SCALE);
+            layoutRun->glyphs->glyphs[i].geometry.width = thisOffset;
             tmpOffset += thisOffset;
         }
 
