@@ -354,19 +354,25 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
       aFrame->GetSize(size);
       align.mXOffset = x;
       AlignBlockHorizontally(size.width, align);
-      // XXX Don't reset "mX". because PlaceBlock() will recompute the
+      // Don't reset "mX". because PlaceBlock() will recompute the
       // x-offset and expects "mX" to be at the left margin edge
       x = align.mXOffset;
     }
+  }
+
+  // If the element is relatively positioned, then adjust x and y accordingly
+  if (NS_STYLE_POSITION_RELATIVE == reflowState.mStylePosition->mPosition) {
+    x += reflowState.mComputedOffsets.left;
+    y += reflowState.mComputedOffsets.top;
   }
 
   // Let frame know that we are reflowing it
   aFrame->WillReflow(mPresContext);
 
   // Position it and its view (if it has one)
-  // Note: Use "x" and not "mX". "x" more accurately represents where we think
-  // it will be placed
-  aFrame->MoveTo(mPresContext, x, mY);
+  // Note: Use "x" and "y" and not "mX" and "mY" because they more accurately
+  // represents where we think the block will be placed
+  aFrame->MoveTo(mPresContext, x, y);
   nsIView*  view;
   aFrame->GetView(mPresContext, &view);
   if (view) {
