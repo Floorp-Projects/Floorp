@@ -373,8 +373,14 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         // The high contrast flag really means -- use this theme and don't override it.
         HIGHCONTRAST contrastThemeInfo;
         contrastThemeInfo.cbSize = sizeof(contrastThemeInfo);
-        SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &contrastThemeInfo, 0);
-        aMetric = (contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0;
+        // Need to check return from SystemParametersInfo since 
+        // SPI_GETHIGHCONTRAST is not supported on Windows NT 
+        if (SystemParametersInfo(SPI_GETHIGHCONTRAST, 0, &contrastThemeInfo, 0)) {
+          aMetric = (contrastThemeInfo.dwFlags & HCF_HIGHCONTRASTON) != 0;
+        }
+        else {
+          aMetric = 0;
+        }
         break;
     case eMetric_ScrollArrowStyle:
         aMetric = eMetric_ScrollArrowStyleSingle;
