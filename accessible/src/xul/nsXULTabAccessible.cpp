@@ -154,7 +154,6 @@ NS_IMETHODIMP nsXULTabBoxAccessible::GetState(PRUint32 *_retval)
 {
   nsAccessible::GetState(_retval);
   *_retval &= ~STATE_FOCUSABLE;
-  *_retval |= STATE_UNAVAILABLE;
   return NS_OK;
 }
 
