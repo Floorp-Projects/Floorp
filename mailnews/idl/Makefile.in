@@ -22,9 +22,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-IDLSRCS = \
-		MailNewsTypes.idl	\
+# MailNewsTypes.idl:  not yet.  talk to alecf
+XPIDLSRCS = \
 		$(NULL)
-
 
 include $(topsrcdir)/config/rules.mk

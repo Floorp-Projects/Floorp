@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE = search
+MODULE = msgsearch
 LIBRARY_NAME=search_s
 
 EXPORTS = nsMsgFilterService.h \

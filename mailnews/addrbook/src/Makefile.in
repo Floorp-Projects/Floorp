@@ -22,8 +22,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=addressbook
-LIBRARY_NAME=mailnewsaddrbook_s
+MODULE=addrbook
+LIBRARY_NAME=addrbook_s
 
 EXPORTS = \
 	nsAbCard.h \

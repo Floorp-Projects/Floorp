@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=localmail
+MODULE=msglocal
 LIBRARY_NAME=localmail
 IS_COMPONENT=1
 
@@ -36,7 +36,7 @@ EXPORTS= \
 
 
 SHARED_LIBRARY_LIBS =	\
-	$(DIST)/lib/liblocalmailbase_s.a	\
+	$(DIST)/lib/libmsglocal_s.a	\
 	$(DIST)/lib/librdfutil_s.a	\
 	$(NULL)
 

@@ -21,8 +21,8 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=localmailbase
-LIBRARY_NAME=localmailbase_s
+MODULE=msglocal
+LIBRARY_NAME=msglocal_s
 
 CPPSRCS = \
 	nsPop3Protocol.cpp \

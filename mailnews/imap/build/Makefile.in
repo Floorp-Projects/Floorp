@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=imap
+MODULE=msgimap
 LIBRARY_NAME=msgimap
 IS_COMPONENT=1
 

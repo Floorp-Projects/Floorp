@@ -20,6 +20,8 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
+MODULE =msgbasetest
+
 include $(DEPTH)/config/autoconf.mk
 
 DIRS = identity accountmanager

@@ -19,6 +19,7 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+MODULE		= mailnews
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -26,7 +27,7 @@ EXPORTS= MailNewsTypes.h\
 		rosetta_mailnews.h\
 		$(NULL)
 
-IDLSRCS = \
+XPIDLSRCS = \
 		$(NULL)
 
 

@@ -19,6 +19,7 @@ DEPTH = ../../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
+MODULE		= msgsearch
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -33,8 +34,9 @@ EXPORTS= \
 		nsMsgSearchCore.h \
 		$(NULL)
 
-IDLSRCS = \
+XPIDLSRCS = \
 		$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk

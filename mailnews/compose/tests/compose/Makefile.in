@@ -20,6 +20,8 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
+MODULE =msgcomposetest
+
 include $(DEPTH)/config/autoconf.mk
 
 CPPSRCS = \

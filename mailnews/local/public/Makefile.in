@@ -20,7 +20,7 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
-MODULE=localmail
+MODULE=msglocal
 
 include $(DEPTH)/config/autoconf.mk
 

@@ -65,7 +65,7 @@ LIBS = \
 	-lgfxps		\
 	-lmozutil \
 	-lmsgbaseutil \
-	$(DIST)/lib/libnntp_s.a	\
+	$(DIST)/lib/libmsgnews_s.a	\
 	$(JPEG_LIBS) \
 	$(PNG_LIBS)  \
 	$(ZLIB_LIBS) \

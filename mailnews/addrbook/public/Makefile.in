@@ -19,7 +19,7 @@ DEPTH = ../../..
 topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
-MODULE		= addressbook
+MODULE		= addrbook
 
 include $(DEPTH)/config/autoconf.mk
 NO_GEN_XPT=1

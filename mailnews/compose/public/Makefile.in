@@ -23,9 +23,8 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 MODULE=msgcompose
 
-IDLSRCS = \
-		nsIMsgCompose.idl \
-		nsIMsgSend.idl \
+# nsIMsgCompose.idl nsIMsgSend.idl soon
+XPIDLSRCS = \
 		$(NULL)
 
 EXPORTS = \

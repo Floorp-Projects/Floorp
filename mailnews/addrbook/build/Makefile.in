@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=addressbook
+MODULE=addrbook
 LIBRARY_NAME=addrbook
 IS_COMPONENT=1
 
@@ -36,7 +36,7 @@ EXPORTS= \
 
 
 SHARED_LIBRARY_LIBS =	\
-	$(DIST)/lib/libmailnewsaddrbook_s.a	\
+	$(DIST)/lib/libaddrbook_s.a	\
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = 	\

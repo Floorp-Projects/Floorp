@@ -20,6 +20,8 @@ topsrcdir	= @top_srcdir@
 VPATH		= @srcdir@
 srcdir		= @srcdir@
 
+MODULE=msgdb
+
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS= \
@@ -36,8 +38,9 @@ EXPORTS= \
 		nsMsgThread.h \
 		$(NULL)
 
-IDLSRCS = \
+XPIDLSRCS = \
 		$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
 include $(topsrcdir)/config/rules.mk

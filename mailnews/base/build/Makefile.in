@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=mailnews
+MODULE=msgbase
 LIBRARY_NAME=mailnews
 IS_COMPONENT=1
 CPPSRCS= \
@@ -34,7 +34,7 @@ EXPORTS = \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/libmailnewsbase_s.a	\
+		$(DIST)/lib/libmsgbase_s.a	\
 		$(DIST)/lib/librdfutil_s.a	\
 		$(NULL)
 

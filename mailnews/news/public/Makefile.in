@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE=news
+MODULE=msgnews
 
 XPIDLSRCS= \
 		nsIMsgOfflineNewsState.idl \
