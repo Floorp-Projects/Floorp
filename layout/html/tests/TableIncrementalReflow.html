@@ -127,7 +127,7 @@ function appendRowWithContent() {
   var rg = document.getElementsByTagName("TBODY")[0];
   var row = document.createElement("TR", null);
   var cell = document.createElement("TD", null);
-  var text = document.createTextNode("here is content in the cell from the script appendRowWithContent\n");
+  var text = document.createTextNode("x\n");
   cell.appendChild(text);
   row.appendChild(cell);
   rg.appendChild(row);  
@@ -149,6 +149,7 @@ function insertCell() {
   var refCell = document.getElementsByTagName("TD")[0];
   var cell = document.createElement("TD", null);
   var text = document.createTextNode("inserted Cell");
+  cell.colSpan=2;
   cell.appendChild(text);
   row.insertBefore(cell, refCell);
   dump("SCRIPT: inserted  CELL as first cell in first row\n");
@@ -175,6 +176,7 @@ function AddALot() {
   var table = document.getElementsByTagName("TABLE")[0];
   var rowGroup = document.createElement("TBODY", null);
   var row = document.createElement("TR", null);
+  var row1 = document.createElement("TR", null);
   var cell1 = document.createElement("TD", null);
   var cell2 = document.createElement("TD", null);
   var cell3 = document.createElement("TD", null);
@@ -185,11 +187,14 @@ function AddALot() {
   var text4 = document.createTextNode("cell4\n");
   cell1.appendChild(text1); cell2.appendChild(text2);
   cell3.appendChild(text3); cell4.appendChild(text4);
-  row.appendChild(cell3); 
-  row.appendChild(cell4);
-  row.insertBefore(cell2, cell3);
-  row.insertBefore(cell1, cell2);
+  row.appendChild(cell3);   row.appendChild(cell4);
+  row.insertBefore(cell2, cell3);  row.insertBefore(cell1, cell2);
+  row1.appendChild(cell2);   row1.appendChild(cell1);
+  row1.insertBefore(cell3, cell2);  row1.insertBefore(cell4, cell3);
   rowGroup.appendChild(row);  
+  rowGroup.appendChild(row);
+  rowGroup.appendChild(row1);
+  rowGroup.appendChild(row1);
   table.appendChild(rowGroup);
   dump("SCRIPT: finished adding\n");
 }
