@@ -189,29 +189,56 @@ foreach $mark (split(',',$mark_arg)) {
 #
 &print_top;
 
+# Print Header
+#
+
 # Print link at top for directory browsing
 #
-$output = "<DIV ALIGN=LEFT>";
-foreach $path (split('/',$rcs_path)) {
-    $link_path .= url_encode2($path);
-    $output .= "<A HREF='rview.cgi?dir=$link_path";
-    $output .= "&cvsroot=$form{'root'}" if defined $form{'root'};
-    $output .= "&rev=$browse_revtag" unless $browse_revtag eq 'HEAD';
-    $output .= "' onmouseover='window.status=\"Browse $link_path\";"
-        ." return true;'>$path</A>/ ";
-    $link_path .= '/';
-}
-$output .= "$file_tail "
-    ." (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
-$output .= " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
-$output .= ">";
-$output .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
-$output .= $revision if $revision;
-$output .= "</A>)";
+print q(
+<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR><TD><A HREF="http://www.mozilla.org/"><IMG
+ SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
+ BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
+<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0 WIDTH="100%">
+ <TR>
+  <TD ALIGN=LEFT VALIGN=CENTER>
+   <NOBR><FONT SIZE="+2"><B>
+    Blame Annotated Source
+   </B></FONT></NOBR>
+   <BR><B>
+);
 
-$output .= "</DIV>";
-EmitHtmlHeader("CVS Blame", $output);
-print "<HR>\n";
+foreach $path (split('/',$rcs_path)) {
+    $link_path .= url_encode2($path).'/' if $path ne 'mozilla';
+    print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path'>$path</a>/ ";
+}
+print "<A HREF='http://lxr.mozilla.org/mozilla/source/$link_path$file_tail'>$file_tail</a> ";
+
+print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
+print " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+print ">";
+print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
+print $revision if $revision;
+print "</A>)";
+
+print qq(
+</B>
+  </TD>
+
+  <TD ALIGN=RIGHT VALIGN=TOP WIDTH="1%">
+   <TABLE BORDER CELLPADDING=10 CELLSPACING=0>
+    <TR>
+     <TD NOWRAP BGCOLOR="#FAFAFA">
+      <A HREF="cvslog.cgi?file=$filename">Full Change Log</A>
+     </TD>
+    </TR>
+   </TABLE>
+  </TD>
+ </TR>
+</TABLE>
+      );
+
+
 
 print $font_tag;
 
@@ -333,8 +360,8 @@ if ($useLayers) {
     $author = $revision_author{$revision};
     $author =~ tr/%/@/;
     print "log$revisionName = \""
-      ."<b>$revision</b> &nbsp;&nbsp;<a href='mailto:$author'>$author</a>"
-	." &nbsp;&nbsp;<b>$revision_ctime{$revision}</b><BR>"
+      ."<b>$revision</b> &lt;<a href='mailto:$author'>$author</a>&gt;"
+	." <b>$revision_ctime{$revision}</b><BR>"
 	  ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
   }
   print "</SCRIPT>";
@@ -350,23 +377,23 @@ if ( $opt_sanitize )
 ## END of main script
 
 sub max {
-    local ($a, $b) = @_;
+    my ($a, $b) = @_;
     return ($a > $b ? $a : $b);
 }
 
 sub print_top {
-    local ($title_text) = "for $file_tail (";
+    my ($title_text) = "for $file_tail (";
     $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
     $title_text .= $revision if $revision;
     $title_text .= ")";
     $title_text =~ s/\(\)//;
 
-    local ($diff_dir_link) = 
+    my ($diff_dir_link) = 
         "cvsview2.cgi?subdir=$rcs_path&files=$file_tail&command=DIRECTORY";
     $diff_dir_link .= "&root=$form{'root'}" if defined $form{'root'};
     $diff_dir_link .= "&branch=$browse_revtag" unless $browse_revtag eq 'HEAD';
 
-    local ($diff_link) = "cvsview2.cgi?diff_mode=context&whitespace_mode=show";
+    my ($diff_link) = "cvsview2.cgi?diff_mode=context&whitespace_mode=show";
     $diff_link .= "&root=$form{'root'}" if defined $form{'root'};
     $diff_link .= "&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail";
     
@@ -407,10 +434,11 @@ function log(event, prev_rev, rev) {
         return true;
     }
 
-    l = document.layers['popup'];
+    var l = document.layers['popup'];
+    var shadow = document.layers['shadow'];
     if (document.loaded) {
-        l.document.write("<TABLE BORDER=0 CELLSPACING=1 CELLPADDING=2><TR><TD BGCOLOR=#FF0000>");
-        l.document.write("<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=4><TR><TD BGCOLOR=#FFFFFF>");
+        l.document.write("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000>");
+        l.document.write("<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><tt>");
         l.document.write(eval("log" + revToName(rev)) + "</TD></TR></TABLE>");
 	l.document.write("</td></tr></table>");
         l.document.close();
@@ -419,9 +447,10 @@ function log(event, prev_rev, rev) {
     if(event.target.y > window.innerHeight + window.pageYOffset - l.clip.height) { 
          l.top = (window.innerHeight + window.pageYOffset - (l.clip.height + 15));
     } else {
-         l.top = event.target.y - 10;
+         l.top = event.target.y - 9;
     }
     l.left = event.target.x + 70;
+
     l.visibility="show";
 
     return true;
@@ -429,20 +458,20 @@ function log(event, prev_rev, rev) {
 
 file_tail = "$file_tail";
 
-initialLayer = "<TABLE BORDER=1 CELLSPACING=1 CELLPADDING=1><TR><TD><B>Page loading...please wait.</B></TD></TR></TABLE>";
+initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A000><TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF><B>Page loading...please wait.</B></TD></TR></TABLE></td></tr></table>";
 
 </SCRIPT>
 </HEAD>
-<BODY onLoad="finishedLoad();">
+<BODY onLoad="finishedLoad();" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
 __TOP__
-  print '<BODY>' if not $useLayers;
+  print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not $useLayers;
 } # print_top
 
 sub print_usage {
-    local ($linenum_message) = '';
-    local ($new_linenum, $src_roots_list);
-    local ($title_text) = "Usage";
+    my ($linenum_message) = '';
+    my ($new_linenum, $src_roots_list);
+    my ($title_text) = "Usage";
 
     if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($form{'set_line'})) {
   
@@ -557,7 +586,7 @@ __BOTTOM__
 
 
 sub link_includes {
-    local ($text) = $_[0];
+    my ($text) = $_[0];
 
     if ($text =~ /\#(\s*)include(\s*)"(.*?)"/) {
         foreach $trial_root (($rcs_path, 'ns/include', 
@@ -588,7 +617,7 @@ sub html_comments_init {
 }
 
 sub leave_html_comments {
-    local ($text) = $_[0];
+    my ($text) = $_[0];
     # Allow HTML in the comments.
     #
     $newtext = "";
