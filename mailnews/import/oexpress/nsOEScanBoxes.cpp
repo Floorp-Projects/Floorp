@@ -400,7 +400,7 @@ PRBool nsOEScanBoxes::Find50MailBoxes( nsIFileSpec* descFile)
 				pEntry->child = 0;
 				pEntry->type = 0;
 				pEntry->sibling = -1;
-				pEntry->mailName = (const char *) (pBytes + strOffset);
+				pEntry->mailName.AssignWithConversion((const char *) (pBytes + strOffset));
 				if (pFileName)
 					pEntry->fileName = pFileName;
 				AddChildEntry( pEntry, localStoreId);
