@@ -765,15 +765,14 @@ if ($my_db_check) {
     my ($sql_vers) = $qh->fetchrow_array;
     $qh->finish;
 
-    my $sql_vok = ((vers_cmp($sql_vers,$sql_want) > -1)
-      && ($sql_vers ne "3.23.29")); # encrypt() is broken in 3.23.29
-    print (($sql_vok ? "ok: " : " "), "found v$sql_vers\n");
-    print "\n";
-    unless ($sql_vok) {
-      die "Your MySQL server is either too old or a known broken version.\n",
-          "   Bugzilla requires version $sql_want or later of MySQL.\n",
-          ($sql_vers eq "3.23.29") ? "Version 3.23.29 has a broken encrypt() command.  3.23.30 fixes this.\n" : "",
-          "   Please visit http://www.mysql.com and download a newer version.\n";
+    # Check what version of MySQL is installed and let the user know
+    # if the version is too old to be used with Bugzilla.
+    if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
+        print "ok: found v$sql_vers\n\n";
+    } else {
+        die "Your MySQL server v$sql_vers is too old./n" . 
+            "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
+            "   Please visit http://www.mysql.com/ and download a newer version.\n";
     }
 
     my @databases = $dbh->func('_ListDBs');
