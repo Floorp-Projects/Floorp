@@ -1256,6 +1256,13 @@ NS_IMETHODIMP nsDocShell::Reload(PRInt32 aReloadType)
           getter_AddRefs(entry)), NS_ERROR_FAILURE);
       NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
    }
+   else {
+	   //May be one of those <META> charset reloads in a composer or Messenger
+      return InternalLoad(mCurrentURI, mReferrerURI, nsnull, nsnull, 
+      nsnull, type);
+
+   }
+
 	   
    return LoadHistoryEntry(entry, type);
 
@@ -3382,6 +3389,8 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
    nsCOMPtr<nsIURI> uri;
    nsCOMPtr<nsIInputStream> postData;
    PRBool repost = PR_TRUE;
+
+   NS_ENSURE_TRUE(aEntry, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(aEntry->GetURI(getter_AddRefs(uri)), NS_ERROR_FAILURE);
    NS_ENSURE_SUCCESS(aEntry->GetPostData(getter_AddRefs(postData)),
