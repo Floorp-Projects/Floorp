@@ -84,34 +84,44 @@ EXES =			\
 all: $(EXES)
 
 dnstest$(EXE): dns.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) dns.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) dns.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) dns.c $(OBJS) $(LIBS) -o $@
 
 ftp$(EXE): ftp.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) ftp.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) ftp.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) ftp.c $(OBJS) $(LIBS) -o $@
 
 grab$(EXE): grab.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) grab.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) grab.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) grab.c $(OBJS) $(LIBS) -o $@
 
 httpd$(EXE): httpd.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) httpd.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) httpd.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) httpd.c $(OBJS) $(LIBS) -o $@
 
 link$(EXE): link.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) link.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) link.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) link.c $(OBJS) $(LIBS) -o $@
 
 pop$(EXE): pop.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) pop.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) pop.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) pop.c $(OBJS) $(LIBS) -o $@
 
 proxy$(EXE): proxy.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) proxy.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) proxy.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) proxy.c $(OBJS) $(LIBS) -o $@
 
 robot$(EXE): robot.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) robot.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) robot.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) robot.c $(OBJS) $(LIBS) -o $@
 
 urltest$(EXE): urltest.c url.$(OBJ) utils.$(OBJ)
-	$(PURIFY) $(CC) $(CFLAGS) urltest.c url.$(OBJ) utils.$(OBJ) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) urltest.c '$$(OBJS)' -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) urltest.c url.$(OBJ) utils.$(OBJ) -o $@
 
 view.cgi$(EXE): cgiview.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) cgiview.c $(OBJS) $(LIBS) -o $@
+	@echo $(PURIFY) $(CC) $(CFLAGS) cgiview.c '$$(OBJS)' $(LIBS) -o $@
+	@$(PURIFY) $(CC) $(CFLAGS) cgiview.c $(OBJS) $(LIBS) -o $@
 
 clean:
 	$(RM) *.$(OBJ) $(EXES)
