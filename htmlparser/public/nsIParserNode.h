@@ -90,14 +90,14 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @update	gess5/11/98
      * @return  string containing node name
      */
-    virtual const nsString& GetName() const =0;  //to get name of tag
+    virtual const nsAString& GetTagName() const = 0;  //to get name of tag
 
     /**
      * Retrieve the text from the given node
      * @update	gess5/11/98
      * @return  string containing node text
      */
-    virtual const nsAString& GetText() const =0;  //get plain text if available
+    virtual const nsAString& GetText() const = 0;  //get plain text if available
 
     /**
      * Retrieve the type of the parser node.
@@ -126,7 +126,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   anIndex is the index of the key you want
      * @return  string containing key.
      */
-    virtual const nsAString& GetKeyAt(PRUint32 anIndex) const =0;
+    virtual const nsAString& GetKeyAt(PRUint32 anIndex) const = 0;
 
     /**
      * Retrieve the value (of key/value pair) at given index
@@ -134,7 +134,7 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @param   anIndex is the index of the value you want
      * @return  string containing value.
      */
-    virtual const nsAString& GetValueAt(PRUint32 anIndex) const =0;
+    virtual const nsAString& GetValueAt(PRUint32 anIndex) const = 0;
 
     /**
      * NOTE: When the node is an entity, this will translate the entity
@@ -175,15 +175,6 @@ class nsIParserNode { // XXX Should be nsAParserNode
      * @return  void
      */
     virtual nsresult ReleaseAll()=0;
-
-    /*
-     * Get and set the ID attribute atom for this node.
-     * See http://www.w3.org/TR/1998/REC-xml-19980210#sec-attribute-types
-     * for the definition of an ID attribute.
-     *
-     */
-    virtual nsresult GetIDAttributeAtom(nsIAtom** aResult) const = 0;
-    virtual nsresult SetIDAttributeAtom(nsIAtom* aID) = 0;
 };
 
 #endif

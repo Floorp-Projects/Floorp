@@ -327,8 +327,6 @@ mozSanitizingHTMLSerializer::AppendElementEnd(nsIDOMElement *aElement,
   return rv;
 }
 
-
-
 NS_IMETHODIMP
 mozSanitizingHTMLSerializer::OpenContainer(const nsIParserNode& aNode)
 {
@@ -339,14 +337,11 @@ mozSanitizingHTMLSerializer::OpenContainer(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseContainer(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseContainer(const nsHTMLTag aTag)
 {
-  PRInt32 type = aNode.GetNodeType();
-  const nsAString& namestr = aNode.GetText();
-  nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
-  
-  mParserNode = NS_CONST_CAST(nsIParserNode*, &aNode);
-  return DoCloseContainer(type);
+  // XXX Why do we need this?
+  // mParserNode = NS_CONST_CAST(nsIParserNode*, &aNode);
+  return DoCloseContainer(aTag);
 }
 
 NS_IMETHODIMP 
@@ -366,9 +361,9 @@ mozSanitizingHTMLSerializer::OpenHTML(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseHTML(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseHTML()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_html);
 }
 
 NS_IMETHODIMP
@@ -407,9 +402,9 @@ mozSanitizingHTMLSerializer::OpenHead(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseHead(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseHead()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_head);
 }
 
 NS_IMETHODIMP 
@@ -419,9 +414,9 @@ mozSanitizingHTMLSerializer::OpenBody(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseBody(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseBody()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_body);
 }
 
 NS_IMETHODIMP 
@@ -431,9 +426,9 @@ mozSanitizingHTMLSerializer::OpenForm(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseForm(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseForm()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_form);
 }
 
 NS_IMETHODIMP 
@@ -443,9 +438,9 @@ mozSanitizingHTMLSerializer::OpenMap(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseMap(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseMap()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_map);
 }
 
 NS_IMETHODIMP 
@@ -455,9 +450,9 @@ mozSanitizingHTMLSerializer::OpenFrameset(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP 
-mozSanitizingHTMLSerializer::CloseFrameset(const nsIParserNode& aNode)
+mozSanitizingHTMLSerializer::CloseFrameset()
 {
-  return CloseContainer(aNode);
+  return CloseContainer(eHTMLTag_frameset);
 }
 
 NS_IMETHODIMP 

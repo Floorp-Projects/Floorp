@@ -443,37 +443,40 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
 
           PRInt32 theIndex=mBodyContext->GetCount()-1;
           eHTMLTags theChild = mBodyContext->TagAt(theIndex); 
-          while(theIndex>0) {             
-            eHTMLTags theParent= mBodyContext->TagAt(--theIndex);
-            CElement *theElement=gElementTable->mElements[theParent];
-            nsCParserNode *theNode=mBodyContext->PeekNode();
+          while (theIndex>0) {             
+            eHTMLTags theParent = mBodyContext->TagAt(--theIndex);
+            CElement *theElement = gElementTable->mElements[theParent];
+            nsCParserNode *theNode = mBodyContext->PeekNode();
             theElement->HandleEndToken(theNode,theChild,mBodyContext,mSink);
-            theChild=theParent;
+            theChild = theParent;
           }
 
-          nsEntryStack *theChildStyles=0;
-          nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);   
-          if(theNode) {
-            mSink->CloseHTML(*theNode);
+          nsEntryStack*  theChildStyles = 0;
+          nsCParserNode* theNode = (nsCParserNode*)mBodyContext->Pop(theChildStyles);   
+          if (theNode) {
+            mSink->CloseHTML();
           }
-
+          NS_ASSERTION(!theChildStyles, "there should no residual style information in this dtd");
+          IF_DELETE(theChildStyles, mNodeAllocator);
         }       
         else {
           //If you're here, then an error occured, but we still have nodes on the stack.
           //At a minimum, we should grab the nodes and recycle them.
           //Just to be correct, we'll also recycle the nodes. 
   
-          while(mBodyContext->GetCount() > 0) {  
+          while (mBodyContext->GetCount() > 0) {  
  
-            nsEntryStack *theChildStyles=0;
-            nsCParserNode* theNode=(nsCParserNode*)mBodyContext->Pop(theChildStyles);
-            if(theNode) {
-              theNode->mUseCount=0;
-              if(theChildStyles) {
+            nsEntryStack *theChildStyles = 0;
+            nsCParserNode* theNode = (nsCParserNode*)mBodyContext->Pop(theChildStyles);
+            if (theNode) {
+              theNode->mUseCount = 0;
+              if (theChildStyles) {
                 delete theChildStyles;
               } 
               IF_FREE(theNode, mNodeAllocator);
             }
+            NS_ASSERTION(!theChildStyles, "there should no residual style information in this dtd");
+            IF_DELETE(theChildStyles, mNodeAllocator);
           }    
         }    
   
@@ -481,7 +484,7 @@ nsresult COtherDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIPar
     } //if aparser  
 
       //No matter what, you need to call did build model.
-    result=aSink->DidBuildModel(0); 
+    result = aSink->DidBuildModel(0); 
 
   } //if asink
   return result; 
@@ -721,7 +724,7 @@ nsresult COtherDTD::HandleStartToken(CToken* aToken) {
           case eHTMLTag_html:  
             if(!mBodyContext->HasOpenContainer(theChildTag)){
               mSink->OpenHTML(*theNode);
-              mBodyContext->Push(theNode,0);
+              mBodyContext->Push(theNode, 0, PR_FALSE);
             } 
             theTagWasHandled=PR_TRUE;   
             break;         

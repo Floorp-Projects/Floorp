@@ -78,22 +78,22 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
-  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody();
   NS_IMETHOD OpenForm(const nsIParserNode& aNode);
-  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm();
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap();
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset();
   NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref) { return NS_OK; }
   NS_IMETHOD_(PRBool) IsFormOnStack() { return PR_FALSE; }
 
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD CloseTopmostContainer();
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
@@ -187,7 +187,7 @@ NS_IMETHODIMP RobotSink::OpenHTML(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseHTML(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseHTML()
 {
   return NS_OK;
 }
@@ -197,7 +197,7 @@ NS_IMETHODIMP RobotSink::OpenHead(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseHead(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseHead()
 {
   return NS_OK;
 }
@@ -207,7 +207,7 @@ NS_IMETHODIMP RobotSink::OpenBody(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseBody(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseBody()
 {
   return NS_OK;
 }
@@ -217,7 +217,7 @@ NS_IMETHODIMP RobotSink::OpenForm(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseForm(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseForm()
 {
   return NS_OK;
 }
@@ -227,7 +227,7 @@ NS_IMETHODIMP RobotSink::OpenMap(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseMap(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseMap()
 {
   return NS_OK;
 }
@@ -237,7 +237,7 @@ NS_IMETHODIMP RobotSink::OpenFrameset(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseFrameset(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseFrameset()
 {
   return NS_OK;
 }
@@ -277,7 +277,7 @@ NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-NS_IMETHODIMP RobotSink::CloseContainer(const nsIParserNode& aNode)
+NS_IMETHODIMP RobotSink::CloseContainer(const nsHTMLTag aTag)
 {
   return NS_OK;
 }

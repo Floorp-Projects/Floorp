@@ -1062,4 +1062,3 @@ void nsHTMLTokenizer::RecordTrailingContent(CStartToken* aStartToken, nsScanner&
     copy_string( aOrigin, theCurrentPosition, beginWriting );
   }
 }
-

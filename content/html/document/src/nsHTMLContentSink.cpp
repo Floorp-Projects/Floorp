@@ -186,12 +186,12 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
     }                                                 \
   PR_END_MACRO
 
-#define SINK_TRACE_NODE(_bit, _msg, _node, _sp, _obj) \
-  _obj->SinkTraceNode(_bit, _msg, _node, _sp, this)
+#define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj) \
+  _obj->SinkTraceNode(_bit, _msg, _tag, _sp, this)
 
 #else
 #define SINK_TRACE(_bit, _args)
-#define SINK_TRACE_NODE(_bit, _msg, _node, _sp, _obj)
+#define SINK_TRACE_NODE(_bit, _msg, _tag, _sp, _obj)
 #endif
 
 #undef SINK_NO_INCREMENTAL
@@ -254,7 +254,7 @@ public:
 
   // nsIHTMLContentSink
   NS_IMETHOD OpenContainer(const nsIParserNode& aNode);
-  NS_IMETHOD CloseContainer(const nsIParserNode& aNode);
+  NS_IMETHOD CloseContainer(const nsHTMLTag aTag);
   NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
   NS_IMETHOD AddComment(const nsIParserNode& aNode);
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
@@ -268,17 +268,17 @@ public:
   NS_IMETHOD EndContext(PRInt32 aID);
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHTML();
   NS_IMETHOD OpenHead(const nsIParserNode& aNode);
-  NS_IMETHOD CloseHead(const nsIParserNode& aNode);
+  NS_IMETHOD CloseHead();
   NS_IMETHOD OpenBody(const nsIParserNode& aNode);
-  NS_IMETHOD CloseBody(const nsIParserNode& aNode);
+  NS_IMETHOD CloseBody();
   NS_IMETHOD OpenForm(const nsIParserNode& aNode);
-  NS_IMETHOD CloseForm(const nsIParserNode& aNode);
+  NS_IMETHOD CloseForm();
   NS_IMETHOD OpenFrameset(const nsIParserNode& aNode);
-  NS_IMETHOD CloseFrameset(const nsIParserNode& aNode);
+  NS_IMETHOD CloseFrameset();
   NS_IMETHOD OpenMap(const nsIParserNode& aNode);
-  NS_IMETHOD CloseMap(const nsIParserNode& aNode);
+  NS_IMETHOD CloseMap();
   NS_IMETHOD GetPref(PRInt32 aTag, PRBool& aPref);
   NS_IMETHOD_(PRBool) IsFormOnStack();
 
@@ -430,7 +430,7 @@ public:
 #ifdef NS_DEBUG
   void SinkTraceNode(PRUint32 aBit,
                      const char* aMsg,
-                     const nsIParserNode& aNode,
+                     const nsHTMLTag aTag,
                      PRInt32 aStackPos,
                      void* aThis);
 #endif
@@ -855,7 +855,7 @@ public:
   nsresult Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot,
                  PRInt32 aNumFlushed, PRInt32 aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
-  nsresult CloseContainer(const nsIParserNode& aNode);
+  nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
   nsresult AddLeaf(nsIHTMLContent* aContent);
   nsresult AddComment(const nsIParserNode& aNode);
@@ -911,26 +911,21 @@ public:
 void
 HTMLContentSink::SinkTraceNode(PRUint32 aBit,
                                const char* aMsg,
-                               const nsIParserNode& aNode,
+                               const nsHTMLTag aTag,
                                PRInt32 aStackPos,
                                void* aThis)
 {
   if (SINK_LOG_TEST(gSinkLogModuleInfo, aBit)) {
-    const char* cp;
-    PRInt32 nt = aNode.GetNodeType();
-    NS_ConvertUCS2toUTF8 flat(aNode.GetText());
-    if ((nt > PRInt32(eHTMLTag_unknown)) &&
-        (nt < PRInt32(eHTMLTag_text)) && mParser) {
-      nsCOMPtr<nsIDTD> dtd;
+    nsCOMPtr<nsIDTD> dtd;
+    if (mParser) {
       mParser->GetDTD(getter_AddRefs(dtd));
-      nsHTMLTag tag = nsHTMLTag(aNode.GetNodeType());
-      flat.AssignWithConversion(dtd->IntTagToStringTag(tag));
+      if (!dtd) 
+        return;
     }
-
-    cp = flat.get();
-
-    PR_LogPrint("%s: this=%p node='%s' stackPos=%d", aMsg, aThis, cp,
-                aStackPos);
+    const char* cp = 
+      NS_ConvertUCS2toUTF8(dtd->IntTagToStringTag(aTag)).get();
+    PR_LogPrint("%s: this=%p node='%s' stackPos=%d", 
+                aMsg, aThis, cp, aStackPos);
   }
 }
 #endif
@@ -1648,7 +1643,10 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   FlushTextAndRelease();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::OpenContainer", aNode, mStackPos, mSink);
+                  "SinkContext::OpenContainer", 
+                  nsHTMLTag(aNode.GetNodeType()), 
+                  mStackPos, 
+                  mSink);
 
   nsresult rv;
   if (mStackPos + 1 > mStackSize) {
@@ -1742,7 +1740,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
 }
 
 nsresult
-SinkContext::CloseContainer(const nsIParserNode& aNode)
+SinkContext::CloseContainer(const nsHTMLTag aTag)
 {
   nsresult result = NS_OK;
 
@@ -1751,7 +1749,8 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   FlushTextAndRelease();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::CloseContainer", aNode, mStackPos - 1, mSink);
+                  "SinkContext::CloseContainer", 
+                  aTag, mStackPos - 1, mSink);
 
   NS_WARN_IF_FALSE(mStackPos > 0,
                    "stack out of bounds. wrong context probably!");
@@ -1839,15 +1838,13 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
   case eHTMLTag_form:
     {
       mSink->mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
-      nsHTMLTag parserNodeType = nsHTMLTag(aNode.GetNodeType());
-
       // If there's a FORM on the stack, but this close tag doesn't
       // close the form, then close out the form *and* close out the
       // next container up. This is since the parser doesn't do fix up
       // of invalid form nesting. When the end FORM tag comes through,
       // we'll ignore it.
-      if (parserNodeType != nodeType) {
-        result = CloseContainer(aNode);
+      if (aTag != nodeType) {
+        result = CloseContainer(aTag);
       }
     }
 
@@ -1886,7 +1883,9 @@ nsresult
 SinkContext::AddLeaf(const nsIParserNode& aNode)
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::AddLeaf", aNode, mStackPos, mSink);
+                  "SinkContext::AddLeaf", 
+                  nsHTMLTag(aNode.GetNodeType()), 
+                  mStackPos, mSink);
 
   nsresult rv = NS_OK;
 
@@ -2013,7 +2012,9 @@ nsresult
 SinkContext::AddComment(const nsIParserNode& aNode)
 {
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "SinkContext::AddLeaf", aNode, mStackPos, mSink);
+                  "SinkContext::AddLeaf", 
+                  nsHTMLTag(aNode.GetNodeType()), 
+                  mStackPos, mSink);
 
   FlushTextAndRelease();
 
@@ -3178,7 +3179,8 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 {
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenHTML", aNode, 0, this);
+                  "HTMLContentSink::OpenHTML", 
+                  eHTMLTag_html, 0, this);
 
   if (mRoot) {
     // Add attributes to the node...if found.
@@ -3195,12 +3197,13 @@ HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
+HTMLContentSink::CloseHTML()
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseHTML()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseHTML", aNode, 0, this);
+                 "HTMLContentSink::CloseHTML", 
+                 eHTMLTag_html, 0, this);
 
   if (mHeadContext) {
     if (mCurrentContext == mHeadContext) {
@@ -3229,7 +3232,8 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenHead()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenHead", aNode, 0, this);
+                  "HTMLContentSink::OpenHead", 
+                  eHTMLTag_head, 0, this);
 
   nsresult rv = NS_OK;
 
@@ -3279,13 +3283,13 @@ HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseHead(const nsIParserNode& aNode)
+HTMLContentSink::CloseHead()
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseHead()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseHead", aNode,
-                  0, this);
+                  "HTMLContentSink::CloseHead", 
+                  eHTMLTag_head, 0, this);
 
   PRInt32 n = mContextStack.Count() - 1;
 
@@ -3305,8 +3309,10 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   MOZ_TIMER_START(mWatch);
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenBody", aNode,
-                  mCurrentContext->mStackPos, this);
+                  "HTMLContentSink::OpenBody", 
+                  eHTMLTag_body,
+                  mCurrentContext->mStackPos, 
+                  this);
   // Add attributes, if any, to the current BODY node
 
   if (mBody) {
@@ -3388,13 +3394,15 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseBody(const nsIParserNode& aNode)
+HTMLContentSink::CloseBody()
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseBody()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseBody", aNode,
-                  mCurrentContext->mStackPos - 1, this);
+                  "HTMLContentSink::CloseBody", 
+                  eHTMLTag_body,
+                  mCurrentContext->mStackPos - 1, 
+                  this);
 
   PRBool didFlush;
   nsresult rv = mCurrentContext->FlushTextAndRelease(&didFlush);
@@ -3410,7 +3418,7 @@ HTMLContentSink::CloseBody(const nsIParserNode& aNode)
              ("HTMLContentSink::CloseBody: layout final body content"));
 
   mCurrentContext->FlushTags(PR_TRUE);
-  mCurrentContext->CloseContainer(aNode);
+  mCurrentContext->CloseContainer(eHTMLTag_body);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseBody()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -3429,8 +3437,10 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   mCurrentContext->FlushTextAndRelease();
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenForm", aNode,
-                  mCurrentContext->mStackPos, this);
+                  "HTMLContentSink::OpenForm", 
+                  eHTMLTag_form,
+                  mCurrentContext->mStackPos, 
+                  this);
 
   // Close out previous form if it's there. If there is one
   // around, it's probably because the last one wasn't well-formed.
@@ -3479,7 +3489,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 // XXX MAYBE add code to place close form tag into the content model
 // for navigator layout compatability.
 NS_IMETHODIMP
-HTMLContentSink::CloseForm(const nsIParserNode& aNode)
+HTMLContentSink::CloseForm()
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseForm()\n"));
   MOZ_TIMER_START(mWatch);
@@ -3487,14 +3497,16 @@ HTMLContentSink::CloseForm(const nsIParserNode& aNode)
   nsresult result = NS_OK;
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseForm", aNode,
-                  mCurrentContext->mStackPos - 1, this);
+                  "HTMLContentSink::CloseForm",
+                  eHTMLTag_form,
+                  mCurrentContext->mStackPos - 1, 
+                  this);
 
   if (mCurrentForm) {
     // if this is a well-formed form, close it too
     if (mCurrentContext->IsCurrentContainer(eHTMLTag_form)) {
       mCurrentContext->FlushTextAndRelease();
-      result = mCurrentContext->CloseContainer(aNode);
+      result = mCurrentContext->CloseContainer(eHTMLTag_form);
       mFlags &= ~NS_SINK_FLAG_FORM_ON_STACK;
     }
 
@@ -3513,8 +3525,10 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::OpenFrameset()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenFrameset", aNode,
-                  mCurrentContext->mStackPos, this);
+                  "HTMLContentSink::OpenFrameset", 
+                  eHTMLTag_frameset,
+                  mCurrentContext->mStackPos, 
+                  this);
 
   nsresult rv = mCurrentContext->OpenContainer(aNode);
 
@@ -3532,18 +3546,20 @@ HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
+HTMLContentSink::CloseFrameset()
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseFrameset()\n"));
   MOZ_TIMER_START(mWatch);
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseFrameset", aNode,
-                  mCurrentContext->mStackPos - 1, this);
+                   "HTMLContentSink::CloseFrameset", 
+                   eHTMLTag_frameset,
+                   mCurrentContext->mStackPos - 1,
+                   this);
 
   SinkContext* sc = mCurrentContext;
   nsIHTMLContent* fs = sc->mStack[sc->mStackPos - 1].mContent;
   PRBool done = fs == mFrameset;
-  nsresult rv = sc->CloseContainer(aNode);
+  nsresult rv = sc->CloseContainer(eHTMLTag_frameset);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseFrameset()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -3564,8 +3580,10 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
   nsresult rv = NS_OK;
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::OpenMap", aNode,
-                  mCurrentContext->mStackPos, this);
+                  "HTMLContentSink::OpenMap", 
+                  eHTMLTag_map,
+                  mCurrentContext->mStackPos, 
+                  this);
 
   // We used to treat MAP elements specially (i.e. they were
   // only parent elements for AREAs), but we don't anymore.
@@ -3580,7 +3598,7 @@ HTMLContentSink::OpenMap(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseMap(const nsIParserNode& aNode)
+HTMLContentSink::CloseMap()
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseMap()\n"));
   MOZ_TIMER_START(mWatch);
@@ -3588,12 +3606,14 @@ HTMLContentSink::CloseMap(const nsIParserNode& aNode)
   nsresult rv = NS_OK;
 
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
-                  "HTMLContentSink::CloseMap", aNode,
-                  mCurrentContext->mStackPos - 1, this);
+                  "HTMLContentSink::CloseMap", 
+                  eHTMLTag_map,
+                  mCurrentContext->mStackPos - 1, 
+                  this);
 
   mCurrentMap = nsnull;
 
-  rv = mCurrentContext->CloseContainer(aNode);
+  rv = mCurrentContext->CloseContainer(eHTMLTag_map);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseMap()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -3639,7 +3659,7 @@ HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
+HTMLContentSink::CloseContainer(const eHTMLTags aTag)
 {
   MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::CloseContainer()\n"));
   MOZ_TIMER_START(mWatch);
@@ -3647,13 +3667,13 @@ HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
   nsresult rv = NS_OK;
 
   // XXX work around parser bug
-  if (eHTMLTag_frameset == aNode.GetNodeType()) {
+  if (eHTMLTag_frameset == aTag) {
     MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseContainer()\n"));
     MOZ_TIMER_STOP(mWatch);
-    return CloseFrameset(aNode);
+    return CloseFrameset();
   }
 
-  rv = mCurrentContext->CloseContainer(aNode);
+  rv = mCurrentContext->CloseContainer(aTag);
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::CloseContainer()\n"));
   MOZ_TIMER_STOP(mWatch);
