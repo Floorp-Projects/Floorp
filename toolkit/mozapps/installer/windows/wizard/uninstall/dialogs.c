@@ -334,7 +334,9 @@ LRESULT CALLBACK DlgProcUninstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
           EnableWindow(GetDlgItem(hDlg, IDWIZNEXT), FALSE);
           EnableWindow(GetDlgItem(hDlg, IDCANCEL), FALSE);
           ParseAllUninstallLogs();
-          VerifyAndDeleteInstallationFolder();
+          // skip directory nuking for now (bug 233625) but may come back
+          // if the issues can be resolved in a better way by bug 281235
+          // VerifyAndDeleteInstallationFolder();
           DestroyWindow(hDlg);
           PostQuitMessage(0);
           break;
