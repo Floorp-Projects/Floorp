@@ -164,6 +164,16 @@ sub _handle_error {
     return 0; # Now let DBI handle raising the error
 }
 
+my $cached_server_version;
+sub server_version {
+    return $cached_server_version if defined($cached_server_version);
+    my $dbh = Bugzilla->dbh;
+    my $sth = $dbh->prepare('SELECT VERSION()');
+    $sth->execute();
+    ($cached_server_version) = $sth->fetchrow_array();
+    return $cached_server_version;
+}
+
 1;
 
 __END__

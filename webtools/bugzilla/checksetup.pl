@@ -1449,6 +1449,11 @@ if ($my_db_check) {
             "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
             "   Please visit http://www.mysql.com/ and download a newer version.\n";
     }
+    if (( $sql_vers =~ /^4\.0\.(\d+)/ ) && ($1 < 2)) {
+        die "\nYour MySQL server is incompatible with Bugzilla.\n" .
+            "   Bugzilla does not support versions 4.x.x below 4.0.2.\n" .
+            "   Please visit http://www.mysql.com/ and download a newer version.\n";
+    }
 
     my @databases = $dbh->func('_ListDBs');
     unless (grep /^$my_db_name$/, @databases) {

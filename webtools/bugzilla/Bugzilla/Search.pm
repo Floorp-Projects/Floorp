@@ -711,7 +711,15 @@ sub init {
              $term = "$ff != $q";
          },
          ",casesubstring" => sub {
-             $term = "INSTR(CAST($ff AS BINARY), CAST($q AS BINARY))";
+             # mysql 4.0.1 and lower do not support CAST
+             # mysql 3.*.* had a case-sensitive INSTR
+             # (checksetup has a check for unsupported versions)
+             my $server_version = Bugzilla::DB->server_version;
+             if ($server_version =~ /^3\./) {
+                 $term = "INSTR($ff ,$q)";
+             } else {
+                 $term = "INSTR(CAST($ff AS BINARY), CAST($q AS BINARY))";
+             }
          },
          ",substring" => sub {
              $term = "INSTR(LOWER($ff), " . lc($q) . ")";
