@@ -33,6 +33,7 @@ XPIDLSRCS=						\
 		.\nsIMarkupDocumentViewer.idl	\
 		.\nsIScrollable.idl		\
 		.\nsITextScroll.idl		\
+		.\nsIWebNavigation.idl		\
 		$(NULL)
 
 LIBRARY_NAME=basedocshell_s
