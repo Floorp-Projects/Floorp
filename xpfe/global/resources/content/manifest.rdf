@@ -9,7 +9,7 @@
 
   <!-- package information -->
   <RDF:Description about="urn:mozilla:package:global"
-        chrome:displayName="Navigator"
+        chrome:displayName="Toolkit"
         chrome:author="mozilla.org"
         chrome:name="global">
   </RDF:Description>
