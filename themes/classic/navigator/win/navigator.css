@@ -221,6 +221,12 @@
     padding-left        : 15px;
   }
 
+.autocomplete-outlinerbody:-moz-outliner-cell-text(comment) 
+ {
+   color: ThreeDShadow;
+ }
+ 
+
 .autocomplete-history-button 
   {
     border              : 1px outset -moz-Dialog;

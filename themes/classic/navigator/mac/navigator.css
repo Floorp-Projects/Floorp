@@ -6,6 +6,8 @@
 @import url(chrome://navigator/skin/personalToolbar.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
 #content
   {
     border-bottom         : 1px solid #000000; 
@@ -225,9 +227,9 @@
   }
 
 .autocomplete-outlinerbody:-moz-outliner-cell-text(comment) 
-  {
-    font-style          : italic;
-  }
+ {
+   color: ThreeDShadow;
+ }
 
 .autocomplete-search-box 
   {
