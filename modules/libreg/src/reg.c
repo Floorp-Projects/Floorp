@@ -3894,7 +3894,6 @@ extern XP_Bool bGlobalRegistry;
 VR_INTERFACE(REGERR) NR_StartupRegistry(void)
 {
     REGERR status = REGERR_OK;
-    HREG reg;
 
 #ifndef STANDALONE_REGISTRY
     if ( reglist_lock == NULL ) {
@@ -3916,18 +3915,10 @@ VR_INTERFACE(REGERR) NR_StartupRegistry(void)
         if ( regStartCount == 1 )
         {
             /* first time only initialization */
-
             vr_findGlobalRegName();
 
-            /* check to see that we have a valid registry */
-            /* or create one if it doesn't exist */
-            if (REGERR_OK == nr_RegOpen("", &reg))
-            {
-                nr_RegClose(reg);
-            }
-
-            /* initialization for version registry */
 #ifndef STANDALONE_REGISTRY
+            /* initialization for version registry */
             vr_lock = PR_NewLock();
             XP_ASSERT( vr_lock != NULL );
 #ifdef XP_UNIX

@@ -71,7 +71,7 @@ LIBRARY=$(OBJDIR)\$(LIBNAME)_s.lib
 #//
 #//------------------------------------------------------------------------
 
-LCFLAGS = -DSTANDALONE_REGISTRY
+LCFLAGS = $(LCFLAGS) -DSTANDALONE_REGISTRY
 
 LINCS= $(LINCS) -I$(PUBLIC)/libreg   \
        $(NULL)
