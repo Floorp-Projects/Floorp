@@ -261,10 +261,6 @@ xfe_dns_done_cb (void *id, void *closure,
      called underneath FE_ClearDNSSelect/DNS_AbortHostLookup, and are
      thus already in netlib.)
    */
-#ifdef NSPR20_DISABLED
-  if (status != 0)
-    NET_ProcessNet (obj->socket, NET_SOCKET_FD);
-#endif 
 
   return 0;
 }

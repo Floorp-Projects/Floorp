@@ -69,10 +69,8 @@ PR_BEGIN_EXTERN_C
 void lo_view_title(MWContext *context, char *title_str) {}
 PR_END_EXTERN_C
 
-#ifdef MOCHA
 void LM_SendImageEvent(MWContext *context, LO_ImageStruct *image_data,
                        void * event) { return;}
-#endif
 
 int NET_URL_Type(const char *URL) {return 0;}
     

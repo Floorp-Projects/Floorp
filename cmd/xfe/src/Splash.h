@@ -30,11 +30,7 @@
 #include "Component.h"
 #include "prmon.h"
 #include "prthread.h"
-#ifndef NSPR20
-#include "prevent.h"
-#else
 #include "plevent.h"
-#endif
 #include "xfe.h"
 #include "icons.h"
 
@@ -82,11 +78,8 @@ private:
   static void splashExpose_eh(Widget, XtPointer, XEvent *, Boolean *);
 
   void splashThreadProc();
-#ifndef NSPR20
-  static void splashThreadProc(void *, void*);
-#else
+
   static void splashThreadProc(void *);
-#endif /* NSPR20 */
 };
 
 

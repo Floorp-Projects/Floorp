@@ -1274,11 +1274,7 @@ xfe_go_get_url_relnotes(void)
                      ? HTTP_BETA_VERSION_PREFIX
                      : H_REL_VERSION_PREFIX;
 
-#ifdef GOLD
-      sprintf(buf, "%sGold.html", fe_version);
-#else
       sprintf(buf, "%s.html", fe_version);
-#endif
 
       for ( ptr = buf; *ptr; ptr++ ) {
           *ptr+= HTTP_OFF;

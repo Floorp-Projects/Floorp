@@ -22,15 +22,9 @@
 #if defined(NSPR) || defined(JAVA)
 #include "prthread.h"
 #include "prmon.h"
-#ifndef NSPR20
-#include "prfile.h"
-#include "prglobal.h"
-#include "prevent.h"
-#else
 #include "prio.h"
 #include "prtypes.h"
 #include "plevent.h"
-#endif /* NSPR20 */
 #include "prlog.h"
 #ifdef JAVA
 #include "java.h"

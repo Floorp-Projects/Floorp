@@ -38,9 +38,7 @@
 #include "prlink.h"
 #include "prthread.h"
 #include "prlog.h"
-#ifdef NSPR20
 #include "prerror.h"
-#endif /* NSPR20 */
 #include "pref_helpers.h"
 #include "edt.h"
 #ifdef JAVA
@@ -494,11 +492,7 @@ static NPX_PlugIn *readPluginInfo(NPX_PlugInList *list, char *filename)
             }
 	}
         else {
-#ifndef NSPR20
-            fct = (char *(*)())PR_FindSymbol("NP_GetMIMEDescription", obj);
-#else
             fct = (char *(*)())PR_FindSymbol(obj, "NP_GetMIMEDescription");
-#endif /* NSPR20 */
             if (fct == NULL ||
                 (newInfo = (*fct)()) == NULL) {
                 int err = PR_UnloadLibrary(obj);
@@ -517,12 +511,7 @@ static NPX_PlugIn *readPluginInfo(NPX_PlugInList *list, char *filename)
 	    currentInfo->Delete = 1;
 	    return NULL;
 	}
-
-#ifndef NSPR20
-	getvalue = (NPError (*)(void *, int, void *)) PR_FindSymbol("NP_GetValue", obj);
-#else
 	getvalue = (NPError (*)(void *, int, void *)) PR_FindSymbol(obj, "NP_GetValue");
-#endif /* NSPR20 */
         if (getvalue != NULL) {
 	    char *value;
 	    NPError err;
@@ -1011,11 +1000,8 @@ FE_LoadPlugin(void *pdesc, NPNetscapeFuncs *funcs, np_handle* handle)
 #endif
 	}
 	else {
-#ifndef NSPR20
-	    f = (NPError(*)(NPNetscapeFuncs *, NPPluginFuncs *)) PR_FindSymbol("NP_Initialize", plugin->dlopen_obj);
-#else
+
 	    f = (NPError(*)(NPNetscapeFuncs *, NPPluginFuncs *)) PR_FindSymbol(plugin->dlopen_obj, "NP_Initialize");
-#endif /* NSPR20 */
 
 	    if (f == NULL) {
 		int err = PR_UnloadLibrary(plugin->dlopen_obj);
@@ -1034,11 +1020,7 @@ FE_LoadPlugin(void *pdesc, NPNetscapeFuncs *funcs, np_handle* handle)
 		return NULL;
 	    }
 
-#ifndef NSPR20
-	    plugin->shutdown = (NPError(*)(void)) PR_FindSymbol("NP_Shutdown", plugin->dlopen_obj);
-#else
 	    plugin->shutdown = (NPError(*)(void)) PR_FindSymbol(plugin->dlopen_obj, "NP_Shutdown");
-#endif /* NSPR20 */
 
 	}
     }

@@ -30,11 +30,7 @@
 #include <Xm/RowColumn.h>
 #include <Xm/Label.h>
 
-#ifdef NSPR20
 #include "private/prpriv.h" /* For PR_NewNamedMonitor */
-#else
-#define PR_INTERVAL_NO_TIMEOUT	LL_MAXINT
-#endif
 
 #ifdef DEBUG_username
 #define D(x) x
@@ -69,13 +65,10 @@ XFE_Splash::XFE_Splash(Widget toplevel)
   m_context = XP_NewContext();
   m_context->fe.data = XP_NEW_ZAP(fe_ContextData);
 
-#ifdef NSPR20
   m_thread = PR_CreateThread(PR_USER_THREAD, splashThreadProc, this,
 							 PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, PR_UNJOINABLE_THREAD,
 							 0);		/* default stack size */
-#else
-  m_thread = PR_CreateThread("splash-thread", 24, 0);
-#endif
+
   m_eventqueue = PR_CreateEventQueue("splash-events", m_thread);
 
   ac = 0;
@@ -139,9 +132,6 @@ XFE_Splash::XFE_Splash(Widget toplevel)
 
 	XtAddEventHandler(m_splashlabel, ExposureMask, False, splashExpose_eh, this);
 
-#ifndef NSPR20
-	PR_Start(m_thread, splashThreadProc, this, NULL);
-#endif
 }
 
 XFE_Splash::~XFE_Splash()
@@ -317,11 +307,9 @@ XFE_Splash::splashThreadProc()
 }
 
 void
-#ifndef NSPR20
-XFE_Splash::splashThreadProc(void *a, void *)
-#else
+
 XFE_Splash::splashThreadProc(void *a)
-#endif /* NSPR20 */
+
 {
 	XFE_Splash *splash = (XFE_Splash*)a;
 	PRMonitor *monitor = splash->getStopMonitor();
@@ -336,9 +324,6 @@ XFE_Splash::splashThreadProc(void *a)
 
 	D(printf ("exiting the splash thread\n");)
 
-#ifndef NSPR20
-	PR_Exit();
-#endif
 }
 
 void

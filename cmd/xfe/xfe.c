@@ -29,15 +29,9 @@
 #include "intl_csi.h"
 #include "selection.h"
 #include "rdf.h"
-#ifdef NSPR20
 #include "private/prpriv.h"	/* for PR_GetMonitorEntryCount */
-#endif /* NSPR20 */
 
-#ifndef NSPR20
-#include <prevent.h>		/* for mocha */
-#else
 #include <plevent.h>		/* for mocha */
-#endif
 #include <prtypes.h>
 #include <libevent.h>
 #include <xp_list.h>
@@ -598,10 +592,6 @@ fe_stream_callback (void *closure, int *source, XtInputId *id)
 #ifdef QUANTIFY
 quantify_start_recording_data();
 #endif /* QUANTIFY */
-
-#ifdef NSPR20_DISABLED
-  NET_ProcessNet (*source, NET_UNKNOWN_FD);
-#endif
 
 #ifdef QUANTIFY
 quantify_stop_recording_data();
