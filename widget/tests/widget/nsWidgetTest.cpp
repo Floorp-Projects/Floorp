@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 //---- Factory Includes & Stuff -----// 
 #include "nsIFactory.h" 
 #include "nsRepository.h" 
@@ -1124,7 +1125,6 @@ nsresult WidgetTest(int *argc, char **argv)
     // register widget classes
     NSRepository::RegisterFactory(kCWindowCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     
-#ifdef NOTNOW       
     NSRepository::RegisterFactory(kCChildCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCCheckButtonCID, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1151,7 +1151,6 @@ nsresult WidgetTest(int *argc, char **argv)
     NSRepository::RegisterFactory(kCDeviceContextIID, GFX_DLL, PR_FALSE, PR_FALSE); 
     NSRepository::RegisterFactory(kCFontMetricsIID, GFX_DLL, PR_FALSE, PR_FALSE); 
     NSRepository::RegisterFactory(kCImageIID, GFX_DLL, PR_FALSE, PR_FALSE); 
-#endif
 
       // Create a application shell
     nsIAppShell *appShell;
@@ -1162,7 +1161,6 @@ nsresult WidgetTest(int *argc, char **argv)
       printf("AppShell is null!\n");
     }
 
-#ifdef NOTNOW
     nsIDeviceContext* deviceContext = 0;
 
     // Create a device context for the widgets
@@ -1542,9 +1540,8 @@ nsresult WidgetTest(int *argc, char **argv)
     // show
     window->Show(PR_TRUE);
     window->SetCursor(eCursor_hyperlink);
-#endif
-	if(appShell)
-    	return(appShell->Run());
+
+    return(appShell->Run());
 }
 
 
