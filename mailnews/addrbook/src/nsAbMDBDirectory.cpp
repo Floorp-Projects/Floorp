@@ -92,6 +92,24 @@ nsresult nsAbMDBDirectory::RemoveCardFromAddressList(nsIAbCard* card)
   nsresult rv = NS_OK;
   PRUint32 listTotal;
   PRInt32 i, j;
+
+  // These checks ensure we don't run into null pointers
+  // as we did when we caused bug 280463.
+  if (!mDatabase)
+  {
+    rv = GetAbDatabase();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (!m_AddressList)
+  {
+    rv = mDatabase->GetMailingListsFromDB(this);
+    NS_ENSURE_SUCCESS(rv, rv);
+    // Ensure that the previous call did set the address list pointer
+    if (!m_AddressList)
+      return NS_ERROR_NULL_POINTER;
+  }
+
   rv = m_AddressList->Count(&listTotal);
   NS_ENSURE_SUCCESS(rv,rv);
 
@@ -100,6 +118,10 @@ nsresult nsAbMDBDirectory::RemoveCardFromAddressList(nsIAbCard* card)
     nsCOMPtr<nsIAbDirectory> listDir(do_QueryElementAt(m_AddressList, i, &rv));
     if (listDir)
     {
+      // First remove the instance in the database
+      mDatabase->DeleteCardFromMailList(listDir, card, PR_FALSE);
+
+      // Now remove the instance in any lists we hold.
       nsCOMPtr <nsISupportsArray> pAddressLists;
       listDir->GetAddressLists(getter_AddRefs(pAddressLists));
       if (pAddressLists)
@@ -466,9 +488,10 @@ NS_IMETHODIMP nsAbMDBDirectory::DeleteCards(nsISupportsArray *cards)
         {
           mDatabase->DeleteCardFromMailList(this, card, PR_TRUE);
 
-          PRUint32 cardTotal;
+          PRUint32 cardTotal = 0;
           PRInt32 i;
-          rv = m_AddressList->Count(&cardTotal);
+          if (m_AddressList)
+            rv = m_AddressList->Count(&cardTotal);
           for (i = cardTotal - 1; i >= 0; i--)
           {            
             nsCOMPtr<nsIAbMDBCard> dbarrayCard(do_QueryElementAt(m_AddressList, i, &rv));
