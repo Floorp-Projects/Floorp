@@ -339,7 +339,7 @@ Contributor(s): ______________________________________. -->
   
              <!-- this is the little page proxy icon --> 
              <!-- display should be turned off right now until functionality is implemented --> 
-              <titledbutton id="page-proxy-button"/> 
+              <titledbutton id="page-proxy-button" ondraggesture="DragProxyIcon(event);"/> 
   
                <!-- this is the urlbar --> 
              <html:input id="urlbar" type="text" chromeclass="location" 
