@@ -234,11 +234,16 @@ script_exec(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	argv[0] = OBJECT_TO_JSVAL(scopeobj);
     }
 
-    /* Emulate eval() by using caller's this, scope chain, and sharp array. */
+    /* Emulate eval() by using caller's this and sharp array. */
+    /* But get the globalObject for the scope - scripts are now
+      supposed to execute there instead of in the invocation scope */
     fp = cx->fp;
     caller = fp->down;
-    if (!scopeobj)
-	scopeobj = caller->scopeChain;
+    if (!scopeobj) {
+        scopeobj = obj;
+        while ((obj = OBJ_GET_PARENT(cx, scopeobj)) != NULL)
+            scopeobj = obj;
+    }
     fp->thisp = caller->thisp;
     JS_ASSERT(fp->scopeChain == caller->scopeChain);
     fp->sharpArray = caller->sharpArray;
