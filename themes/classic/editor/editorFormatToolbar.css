@@ -384,19 +384,19 @@
 }
 
 #InsertAnchorItem {
-  -moz-image-region: rect(143px 64px 159px 48px);
+  -moz-image-region: rect(128px 16px 144px 0);
 }
 
 #InsertAnchorItem:hover {
-  -moz-image-region: rect(159px 16px 175px 0);
+  -moz-image-region: rect(128px 32px 144px 16px);
 }
 
 #InsertImageItem {
-  -moz-image-region: rect(159px 64px 175px 48px);
+  -moz-image-region: rect(144px 16px 160px 0);
 }
 
 #InsertImageItem:hover {
-  -moz-image-region: rect(175px 16px 191px 0);
+  -moz-image-region: rect(144px 32px 160px 16px);
 }
 
 #InsertHRuleItem {
@@ -408,11 +408,11 @@
 }
 
 #InsertTableItem {
-  -moz-image-region: rect(122px 62px 138px 46px);
+  -moz-image-region: rect(112px 16px 128px 0);
 }
 
 #InsertTableItem:hover {
-  -moz-image-region: rect(143px 16px 159px 0);
+  -moz-image-region: rect(112px 32px 128px 16px);
 }
 
 /* ..... smiley menu ..... */
