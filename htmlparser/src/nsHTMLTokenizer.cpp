@@ -694,7 +694,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         
         //XXX - Find a better soution to record content
         //Added _plaintext to fix bug 46054.
-        if((eHTMLTag_textarea==theTag || eHTMLTag_xmp==theTag || eHTMLTag_plaintext==theTag) && !mRecordTrailingContent) {
+        if((eHTMLTag_textarea==theTag || eHTMLTag_xmp==theTag || eHTMLTag_plaintext==theTag || eHTMLTag_noscript==theTag) && !mRecordTrailingContent) {
           mRecordTrailingContent=PR_TRUE;
         }
           

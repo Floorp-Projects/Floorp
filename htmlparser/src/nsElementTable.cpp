@@ -869,7 +869,7 @@ void InitializeElementTable(void) {
 	    /*rootnodes,endrootnodes*/          &gRootTags,&gRootTags,	
       /*autoclose starttags and endtags*/ 0,0,0,0,
       /*parent,incl,exclgroups*/          kBlock, kFlowEntity|kSelf, kNone,	
-      /*special props, prop-range*/       0, kNoPropRange,
+      /*special props, prop-range*/       kLegalOpen, kNoPropRange,
       /*special parents,kids,skip*/       0,0,eHTMLTag_unknown);
 
     Initialize( 
