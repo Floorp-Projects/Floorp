@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= vcard
 LIBRARY_NAME	= vcard
 IS_COMPONENT	= 1
+HAS_EXTRAEXPORTS	= 1
 REQUIRES	= xpcom string mime msgbase msgbaseutil uconv necko intl locale pref js
 
 ifeq ($(USE_SHORT_LIBNAME),1)
