@@ -120,9 +120,9 @@
   <binding id="select-size" extends="chrome://forms/content/select.xml#select-base"
            display="xul:outliner">
     <content orient="vertical">
-      <xul:hbox class="outliner-columns">
+      <xul:outlinercols>
         <xul:outlinercol flex="1"/>
-      </xul:hbox>
+      </xul:outlinercols>
       <xul:outlinerrows class="outliner-rows" flex="1">
         <xul:hbox flex="1" class="outliner-bodybox">
           <xul:outlinerbody flex="1">
