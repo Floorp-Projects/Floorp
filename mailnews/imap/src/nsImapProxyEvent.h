@@ -27,7 +27,6 @@
 #include "prthread.h"
 #include "nsISupports.h"
 #include "nsIURL.h"
-#include "nsIImapLog.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
@@ -35,6 +34,8 @@
 #include "nsIImapIncomingServer.h"
 #include "nsImapCore.h"
 #include "nsIImapUrl.h"
+#include "nsIImapMailFolderSink.h"
+
 
 #include "nsCOMPtr.h"
 class nsImapProxyBase
@@ -49,24 +50,6 @@ public:
     PRThread* m_thread;
     nsIImapProtocol* m_protocol;
 };
-
-class nsImapLogProxy : public nsIImapLog, 
-                       public nsImapProxyBase
-{
-public:
-	nsImapLogProxy(nsIImapLog* aImapLog,
-                 nsIImapProtocol* aProtocol,
-                 nsIEventQueue* aEventQ,
-                 PRThread* aThread);
-	virtual ~nsImapLogProxy();
-
-	NS_DECL_ISUPPORTS
-
-	NS_IMETHOD HandleImapLogData(const char* aLogData);
-
-	nsIImapLog* m_realImapLog;
-};
-
 
 class nsImapExtensionSinkProxy : public nsIImapExtensionSink, 
                              public nsImapProxyBase
@@ -166,17 +149,6 @@ struct nsImapEvent : public PLEvent
   PRBool m_notifyCompletion;
 };
 
-struct nsImapLogProxyEvent : public nsImapEvent
-{
-	nsImapLogProxyEvent(nsImapLogProxy* aProxy, 
-                      const char* aLogData);
-	virtual ~nsImapLogProxyEvent();
-
-	NS_IMETHOD HandleEvent();
-	char *m_logData;
-	nsImapLogProxy *m_proxy;
-};
-
 struct nsImapExtensionSinkProxyEvent : nsImapEvent
 {
     nsImapExtensionSinkProxyEvent(nsImapExtensionSinkProxy* aProxy);
@@ -222,15 +194,15 @@ struct FolderNeedsACLInitializedProxyEvent : nsImapExtensionSinkProxyEvent
 
 struct SetCopyResponseUidProxyEvent : nsImapExtensionSinkProxyEvent
 {
-    SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
-                                 nsMsgKeyArray* aKeyArray, 
-                                 const char* msgIdString,
-                                 nsIImapUrl * aUr);
-    virtual ~SetCopyResponseUidProxyEvent();
-    NS_IMETHOD HandleEvent();
-    nsMsgKeyArray m_copyKeyArray;
-    nsCString m_msgIdString;
-    nsCOMPtr<nsIImapUrl> m_Url;
+  SetCopyResponseUidProxyEvent(nsImapExtensionSinkProxy* aProxy,
+                               nsMsgKeyArray* aKeyArray, 
+                               const char* msgIdString,
+                               nsIImapUrl * aUr);
+  virtual ~SetCopyResponseUidProxyEvent();
+  NS_IMETHOD HandleEvent();
+  nsMsgKeyArray m_copyKeyArray;
+  nsCString m_msgIdString;
+  nsCOMPtr<nsIImapUrl> m_Url;
 };
 
 struct SetAppendMsgUidProxyEvent : nsImapExtensionSinkProxyEvent

@@ -28,7 +28,12 @@
 #include "nsCOMPtr.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsIImapMailFolderSink.h"
 #include "nsIImapServerSink.h"
+#include "nsIImapMessageSink.h"
+#include "nsIImapExtensionSink.h"
+#include "nsIImapMiscellaneousSink.h"
+
 #include "nsXPIDLString.h"
 
 class nsImapUrl : public nsIImapUrl, public nsMsgMailNewsUrl, public nsIMsgMessageUrl
@@ -43,68 +48,13 @@ public:
 	/////////////////////////////////////////////////////////////////////////////// 
 	// we support the nsIImapUrl interface
 	///////////////////////////////////////////////////////////////////////////////
+  NS_DECL_NSIIMAPURL
 
-	NS_IMETHOD Initialize();
-
-	NS_IMETHOD GetImapLog(nsIImapLog ** aImapLog);
-	NS_IMETHOD SetImapLog(nsIImapLog  * aImapLog);
-
-    NS_IMETHOD GetImapMailFolderSink(nsIImapMailFolderSink** aImapMailFolderSink);
-    NS_IMETHOD SetImapMailFolderSink(nsIImapMailFolderSink* aImapMailFolderSink);
-
-    NS_IMETHOD GetImapMessageSink(nsIImapMessageSink** aImapMessageSink);
-    NS_IMETHOD SetImapMessageSink(nsIImapMessageSink* aImapMessageSink);
-
-    NS_IMETHOD GetImapExtensionSink(nsIImapExtensionSink** aImapExtensionSink);
-    NS_IMETHOD SetImapExtensionSink(nsIImapExtensionSink* aImapExtensionSink);
-
-    NS_IMETHOD GetImapMiscellaneousSink(nsIImapMiscellaneousSink** aImapMiscellaneousSink);
-    NS_IMETHOD SetImapMiscellaneousSink(nsIImapMiscellaneousSink* aImapMiscellaneousSink);
-
-    NS_IMETHOD GetImapServerSink(nsIImapServerSink** aImapServerSink);
-    NS_IMETHOD SetImapServerSink(nsIImapServerSink* aImapServerSink);
-
-	NS_IMPL_CLASS_GETSET(ImapAction, nsImapAction, m_imapAction);
-	NS_IMETHOD GetRequiredImapState(nsImapState * aImapUrlState);
-
-	NS_IMETHOD AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory);
-	
-	NS_IMETHOD GetImapPartToFetch(char **result);
-	NS_IMETHOD AllocateCanonicalPath(const char *serverPath, char onlineDelimiter, char **allocatedPath ) ;
-	NS_IMETHOD AllocateServerPath(const char * aCanonicalPath, char aOnlineDelimiter, char ** aAllocatedPath);
-	NS_IMETHOD CreateCanonicalSourceFolderPathString(char **result);
-	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
-	NS_IMETHOD CreateServerDestinationFolderPathString(char **result);
-
-	NS_IMETHOD	CreateSearchCriteriaString(nsCString *aResult);
-	NS_IMETHOD	CreateListOfMessageIdsString(nsCString *result) ;
-	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
-	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
-    NS_IMETHOD GetChildDiscoveryDepth(PRInt32* result);
-    NS_IMETHOD GetOnlineSubDirSeparator(char* separator);
-	NS_IMETHOD SetOnlineSubDirSeparator(char onlineDirSeparator);
-
-	// for enabling or disabling mime parts on demand. Setting this to PR_TRUE says we
-	// can use mime parts on demand, if we chose.
-	NS_IMETHOD	SetAllowContentChange(PRBool allowContentChange);
-	NS_IMETHOD  GetAllowContentChange(PRBool *results);
-
-    NS_IMETHOD SetCopyState(nsISupports* copyState);
-    NS_IMETHOD GetCopyState(nsISupports** copyState);
-    
-    NS_IMETHOD SetMsgFileSpec(nsIFileSpec* fileSpec);
-    NS_IMETHOD GetMsgFileSpec(nsIFileSpec** fileSpec);
-
-    NS_IMETHOD GetMockChannel(nsIImapMockChannel ** aChannel);
-    NS_IMETHOD SetMockChannel(nsIImapMockChannel * aChannel);
-
-	NS_IMETHOD AddChannelToLoadGroup();
-	NS_IMETHOD RemoveChannel(nsresult status);
-
+  // nsIMsgMailNewsUrl override
 	NS_IMETHOD IsUrlType(PRUint32 type, PRBool *isType);
 
-    // nsIMsgMessageUrl
-    NS_DECL_NSIMSGMESSAGEURL
+  // nsIMsgMessageUrl
+  NS_DECL_NSIMSGMESSAGEURL
 
 	// nsImapUrl
 	nsImapUrl();
@@ -127,11 +77,11 @@ protected:
 	void		ParseMsgFlags();
 	void		ParseListOfMessageIds();
 
-    char        *m_sourceCanonicalFolderPathSubString;
-    char        *m_destinationCanonicalFolderPathSubString;
-    char		*m_tokenPlaceHolder;
+  char        *m_sourceCanonicalFolderPathSubString;
+  char        *m_destinationCanonicalFolderPathSubString;
+  char		*m_tokenPlaceHolder;
 	char		*m_urlidSubString;
-    char		m_onlineSubDirSeparator;
+  char		m_onlineSubDirSeparator;
 	char		*m_searchCriteriaString;	// should we use m_search, or is this special?
 
 	PRBool					m_validUrl;
@@ -147,28 +97,27 @@ protected:
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
     
-    // ** jt -- I am not usring nsCOMPtr here because I don't know when the
-    // usr get deleted; netlib has a strange manipulation over the transport
-    // layer; the runningUrl can get swapped; using nsCOMPtr can cause object
-    // never gets freed. 
-	nsIImapLog*	m_imapLog;   // not ref counted
-    nsIImapMailFolderSink* m_imapMailFolderSink;   // not ref counted
-    nsIImapMessageSink*	m_imapMessageSink;   // not ref counted
-    nsIImapExtensionSink*	m_imapExtensionSink;  // not ref counted
-    nsIImapMiscellaneousSink* m_imapMiscellaneousSink;  // not ref counted
+  // ** jt -- I am not usring nsCOMPtr here because I don't know when the
+  // usr get deleted; netlib has a strange manipulation over the transport
+  // layer; the runningUrl can get swapped; using nsCOMPtr can cause object
+  // never gets freed. 
+  nsIImapMailFolderSink* m_imapMailFolderSink;   // not ref counted
+  nsIImapMessageSink*	m_imapMessageSink;   // not ref counted
+  nsIImapExtensionSink*	m_imapExtensionSink;  // not ref counted
+  nsIImapMiscellaneousSink* m_imapMiscellaneousSink;  // not ref counted
 
 	// I AM using nsCOMPtr because I suspect the above problem has gone away.
 	nsCOMPtr <nsIImapServerSink> m_imapServerSink;
 
-    // online message copy support; i don't have a better solution yet
-    nsCOMPtr <nsISupports> m_copyState;   // now, refcounted.
-    nsIFileSpec* m_fileSpec;
-    nsCOMPtr<nsIImapMockChannel> m_mockChannel;
+  // online message copy support; i don't have a better solution yet
+  nsCOMPtr <nsISupports> m_copyState;   // now, refcounted.
+  nsIFileSpec* m_fileSpec;
+  nsCOMPtr<nsIImapMockChannel> m_mockChannel;
 
     // used by save message to disk
 	nsCOMPtr<nsIFileSpec> m_messageFileSpec;
-    PRBool                m_addDummyEnvelope;
-    PRBool                m_canonicalLineEnding; // CRLF
+  PRBool                m_addDummyEnvelope;
+  PRBool                m_canonicalLineEnding; // CRLF
 };
 
 #endif /* nsImapUrl_h___ */

@@ -51,6 +51,7 @@
 #include "nsINetSupportDialogService.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIEventQueueService.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #include "nsITimer.h"
 

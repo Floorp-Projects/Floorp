@@ -72,7 +72,7 @@ public:
 
 	NS_IMETHOD FetchMessage(
                             nsIImapUrl * aUrl,
-                            nsIImapUrl::nsImapAction aImapAction,
+                            nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIURI ** aURL,

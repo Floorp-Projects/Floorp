@@ -65,11 +65,11 @@ public:
                                 nsIURI ** aURL);
 	NS_IMETHOD FetchMessage(
                             nsIImapUrl * aImapUrl,
-                            nsIImapUrl::nsImapAction aImapAction,
+                            nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIURI ** aURL,
-							nsISupports *aConsumer,
+							              nsISupports *aConsumer,
                             const char *messageIdentifierList,
                             PRBool messageIdsAreUID);
 	NS_IMETHOD Noop(nsIEventQueue * aClientEventQueue, 

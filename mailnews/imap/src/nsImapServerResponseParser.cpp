@@ -2134,7 +2134,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 
 	PRBool lastChunk = !chunk || (origin + numberOfCharsInThisChunk >= fTotalDownloadSize);
 
-	nsIImapUrl::nsImapAction imapAction; 
+	nsImapAction imapAction; 
 	fServerConnection.GetCurrentUrl()->GetImapAction(&imapAction);
 	if (!lastCRLFwasCRCRLF && 
 		fServerConnection.GetIOTunnellingEnabled() && 

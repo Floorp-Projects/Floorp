@@ -34,6 +34,13 @@
 #include "nsImapCore.h"
 #include "nsString.h"
 
+// imap event sinks
+#include "nsIImapMailFolderSink.h"
+#include "nsIImapServerSink.h"
+#include "nsIImapMessageSink.h"
+#include "nsIImapExtensionSink.h"
+#include "nsIImapMiscellaneousSink.h"
+
 #include "nsImapServerResponseParser.h"
 #include "nsImapProxyEvent.h"
 #include "nsImapFlagAndUidState.h"
@@ -138,20 +145,18 @@ public:
 
 	// message id string utilities.
 	PRUint32		CountMessagesInIdString(const char *idString);
-	PRUint32		CountMessagesInIdString(nsCString &idString);
 	static	PRBool	HandlingMultipleMessages(const char *messageIdString);
-	static	PRBool	HandlingMultipleMessages(nsCString &messageIdString);
 
 	// used to start fetching a message.
   PRBool GetShouldDownloadArbitraryHeaders();
   char *GetArbitraryHeadersToDownload();
   virtual void AdjustChunkSize();
-  virtual void FetchMessage(nsCString &messageIds, 
-                              nsIMAPeFetchFields whatToFetch,
-                              PRBool idAreUid,
-							                PRUint32 startByte = 0, PRUint32 endByte = 0,
-							                char *part = 0);
-	void FetchTryChunking(nsCString &messageIds,
+  virtual void FetchMessage(const char * messageIds, 
+                            nsIMAPeFetchFields whatToFetch,
+                            PRBool idAreUid,
+							              PRUint32 startByte = 0, PRUint32 endByte = 0,
+							              char *part = 0);
+	void FetchTryChunking(const char * messageIds,
                         nsIMAPeFetchFields whatToFetch,
                         PRBool idIsUid,
 											  char *part,
@@ -181,7 +186,7 @@ public:
 	PRBool  GetPseudoInterrupted();
 	void	PseudoInterrupt(PRBool the_interrupt);
 
-	PRUint32 GetMessageSize(nsCString &messageId, PRBool idsAreUids);
+	PRUint32 GetMessageSize(const char * messageId, PRBool idsAreUids);
   PRBool GetSubscribingNow();
 
 	PRBool	DeathSignalReceived();
@@ -224,19 +229,19 @@ public:
 
 	PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
 
-	void Copy(nsCString &messageList, const char *destinationMailbox, 
+	void Copy(const char * messageList, const char *destinationMailbox, 
                                     PRBool idsAreUid);
-	void Search(nsCString &searchCriteria,  PRBool useUID, 
+	void Search(const char * searchCriteria,  PRBool useUID, 
 									  PRBool notifyHit = PR_TRUE);
 	// imap commands issued by the parser
-	void Store(nsCString &aMessageList, const char * aMessageData, PRBool
+	void Store(const char * aMessageList, const char * aMessageData, PRBool
                aIdsAreUid);
-	void ProcessStoreFlags(nsCString &messageIds,
-                             PRBool idsAreUids,
-                             imapMessageFlagsType flags,
-                             PRBool addFlags);
+	void ProcessStoreFlags(const char * messageIds,
+                         PRBool idsAreUids,
+                         imapMessageFlagsType flags,
+                         PRBool addFlags);
 	void Expunge();
-    void UidExpunge(const char* messageSet);
+  void UidExpunge(const char* messageSet);
 	void Close();
 	void Check();
 	void SelectMailbox(const char *mailboxName);
@@ -290,7 +295,7 @@ private:
 	PRBool			m_gotFEEventCompletion;
 	PRUint32		m_flags;	   // used to store flag information
 	nsCOMPtr<nsIImapUrl>		m_runningUrl; // the nsIImapURL that is currently running
-	nsIImapUrl::nsImapAction	m_imapAction;  // current imap action associated with this connnection...
+	nsImapAction	m_imapAction;  // current imap action associated with this connnection...
 
 	char			*m_userName;
 	char			*m_hostName;
@@ -346,7 +351,6 @@ private:
   nsCOMPtr<nsIMsgIncomingServer>  m_server;
 	nsCOMPtr<nsIImapIncomingServer> m_imapServer;
 
-  nsCOMPtr<nsIImapLog>			m_imapLog;
   nsCOMPtr<nsIImapMailFolderSink> m_imapMailFolderSink;
   nsCOMPtr<nsIImapMessageSink>	m_imapMessageSink;
 

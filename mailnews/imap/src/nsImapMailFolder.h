@@ -42,6 +42,8 @@
 #include "prmon.h"
 #include "nsIEventQueue.h"
 #include "nsIMsgImapMailFolder.h"
+#include "nsIImapMailFolderSink.h"
+#include "nsIImapServerSink.h"
 
 class nsImapMoveCoalescer;
 

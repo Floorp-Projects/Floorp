@@ -396,17 +396,17 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
     nsXPIDLCString msgKey;
 	if (NS_SUCCEEDED(rv))
 	{
-    	nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
+    nsCOMPtr<nsIImapMessageSink> imapMessageSink(do_QueryInterface(folder, &rv));
 		if (NS_SUCCEEDED(rv))
 		{
 			nsCString messageIds;
 
 			AllocateImapUidString(keys->GetArray(), keys->GetSize(), messageIds);
-            nsCOMPtr<nsIImapUrl> imapUrl;
-            nsCAutoString urlSpec;
+      nsCOMPtr<nsIImapUrl> imapUrl;
+      nsCAutoString urlSpec;
 			PRUnichar hierarchySeparator = GetHierarchyDelimiter(folder);
-            rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
-			nsIImapUrl::nsImapAction action;
+      rv = CreateStartOfImapUrl(getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
+			nsImapAction action;
 			if (moveMessage)
 				action = nsIImapUrl::nsImapOnlineToOfflineMove;
 			else
@@ -417,9 +417,9 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
                               aURL, streamSupport, messageIds.GetBuffer(), PR_TRUE);
 			// ### end of copy operation should know how to do the delete.if this is a move
 
-        } // if we got an imap message sink
-    } // if we decomposed the imap message 
-    return rv;
+     } // if we got an imap message sink
+  } // if we decomposed the imap message 
+  return rv;
 }
 
 
@@ -492,7 +492,7 @@ NS_IMETHODIMP nsImapService::SaveMessageToDisk(const char *aMessageURI,
 
 NS_IMETHODIMP
 nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
-                            nsIImapUrl::nsImapAction aImapAction,
+                            nsImapAction aImapAction,
                             nsIMsgFolder * aImapMailFolder, 
                             nsIImapMessageSink * aImapMessage,
                             nsIURI ** aURL,
@@ -1118,8 +1118,8 @@ nsresult
 nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                                 nsIImapUrl* aImapUrl)
 {
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    nsISupports* aInst = nsnull;
+  nsresult rv = NS_ERROR_NULL_POINTER;
+  nsISupports* aInst = nsnull;
 	nsCOMPtr <nsIMsgIncomingServer> incomingServer;
 	nsCOMPtr <nsIImapServerSink> imapServerSink;
 
@@ -1134,41 +1134,36 @@ nsImapService::SetImapUrlSink(nsIMsgFolder* aMsgFolder,
 		if (imapServerSink)
 			aImapUrl->SetImapServerSink(imapServerSink);
 	}
-    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapLog), (void**)&aInst);
-    if (NS_SUCCEEDED(rv) && aInst)
-        aImapUrl->SetImapLog((nsIImapLog*) aInst);
-    NS_IF_RELEASE (aInst);
-    aInst = nsnull;
-    
-    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMailFolderSink), 
-                                   (void**)&aInst);
-    if (NS_SUCCEEDED(rv) && aInst)
-        aImapUrl->SetImapMailFolderSink((nsIImapMailFolderSink*) aInst);
-    NS_IF_RELEASE (aInst);
-    aInst = nsnull;
-    
-    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMessageSink), 
-                                   (void**)&aInst);
-    if (NS_SUCCEEDED(rv) && aInst)
-        aImapUrl->SetImapMessageSink((nsIImapMessageSink*) aInst);
-    NS_IF_RELEASE (aInst);
-    aInst = nsnull;
-    
-    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapExtensionSink), 
-                                   (void**)&aInst);
-    if (NS_SUCCEEDED(rv) && aInst)
-        aImapUrl->SetImapExtensionSink((nsIImapExtensionSink*) aInst);
-    NS_IF_RELEASE (aInst);
-    aInst = nsnull;
-    
-    rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMiscellaneousSink), 
-                                   (void**)&aInst);
-    if (NS_SUCCEEDED(rv) && aInst)
-        aImapUrl->SetImapMiscellaneousSink((nsIImapMiscellaneousSink*) aInst);
-    NS_IF_RELEASE (aInst);
-    aInst = nsnull;
+   
+  rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMailFolderSink), 
+                                 (void**)&aInst);
+  if (NS_SUCCEEDED(rv) && aInst)
+      aImapUrl->SetImapMailFolderSink((nsIImapMailFolderSink*) aInst);
+  NS_IF_RELEASE (aInst);
+  aInst = nsnull;
+  
+  rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMessageSink), 
+                                 (void**)&aInst);
+  if (NS_SUCCEEDED(rv) && aInst)
+      aImapUrl->SetImapMessageSink((nsIImapMessageSink*) aInst);
+  NS_IF_RELEASE (aInst);
+  aInst = nsnull;
+  
+  rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapExtensionSink), 
+                                 (void**)&aInst);
+  if (NS_SUCCEEDED(rv) && aInst)
+      aImapUrl->SetImapExtensionSink((nsIImapExtensionSink*) aInst);
+  NS_IF_RELEASE (aInst);
+  aInst = nsnull;
+  
+  rv = aMsgFolder->QueryInterface(NS_GET_IID(nsIImapMiscellaneousSink), 
+                                 (void**)&aInst);
+  if (NS_SUCCEEDED(rv) && aInst)
+      aImapUrl->SetImapMiscellaneousSink((nsIImapMiscellaneousSink*) aInst);
+  NS_IF_RELEASE (aInst);
+  aInst = nsnull;
 
-    return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

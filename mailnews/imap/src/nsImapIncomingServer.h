@@ -34,8 +34,8 @@
 /* get some implementation from nsMsgIncomingServer */
 class nsImapIncomingServer : public nsMsgIncomingServer,
                              public nsIImapIncomingServer,
-							 public nsIImapServerSink,
-							 public nsIMsgLogonRedirectionRequester
+							              public nsIImapServerSink,
+							              public nsIMsgLogonRedirectionRequester
                              
 {
 public:
@@ -65,18 +65,18 @@ protected:
 	PRBool AllDescendentsAreNoSelect(nsIFolder *parentFolder);
 
 private:
-    nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
+  nsresult CreateImapConnection (nsIEventQueue* aEventQueue,
                                    nsIImapUrl* aImapUrl,
                                    nsIImapProtocol** aImapConnection);
 	nsresult CreateProtocolInstance(nsIEventQueue *aEventQueue, 
                                            nsIImapProtocol ** aImapConnection);
 	nsresult RequestOverrideInfo(nsIMsgWindow *aMsgWindow);
 
-    PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
-    nsCOMPtr<nsISupportsArray> m_connectionCache;
-    nsCOMPtr<nsISupportsArray> m_urlQueue;
+  PRBool ConnectionTimeOut(nsIImapProtocol* aImapConnection);
+  nsCOMPtr<nsISupportsArray> m_connectionCache;
+  nsCOMPtr<nsISupportsArray> m_urlQueue;
 	nsCOMPtr<nsIStringBundle>	m_stringBundle;
-    nsVoidArray					m_urlConsumers;
+  nsVoidArray					m_urlConsumers;
 	PRUint32					m_capability;
 	nsCString					m_manageMailAccountUrl;
 	PRBool						m_waitingForConnectionInfo;

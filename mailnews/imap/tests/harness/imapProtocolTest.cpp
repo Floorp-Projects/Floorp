@@ -46,12 +46,10 @@
 
 #include "nsIImapUrl.h"
 #include "nsIImapProtocol.h"
-#include "nsIImapLog.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"
 #include "nsIImapService.h"
 #include "nsIMsgAccountManager.h"
-#include "nsIImapLog.h"
 #include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
@@ -133,8 +131,7 @@ static NS_DEFINE_CID(kCImapResource, NS_IMAPRESOURCE_CID);
 #define DEFAULT_PORT		IMAP_PORT
 #define DEFAULT_URL_TYPE	"imap://"	/* do NOT change this value until netlib re-write is done...*/
 
-class nsIMAP4TestDriver  : public nsIUrlListener,
-                           public nsIImapLog
+class nsIMAP4TestDriver  : public nsIUrlListener
 {
 public:
 	NS_DECL_ISUPPORTS
@@ -142,9 +139,6 @@ public:
 	// nsIUrlListener support
 	NS_IMETHOD OnStartRunningUrl(nsIURI * aUrl);
 	NS_IMETHOD OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode);
-
-	// nsIImapLog support
-	NS_IMETHOD HandleImapLogData (const char * aLogData);
 
 	nsIMAP4TestDriver(nsIEventQueue *queue);
 	virtual ~nsIMAP4TestDriver();
@@ -233,10 +227,6 @@ nsIMAP4TestDriver::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     if (aIID.Equals(NS_GET_IID(nsIUrlListener)))
     {
         *aInstancePtr = (void*)(nsIUrlListener*)this;
-    }
-    else if (aIID.Equals(NS_GET_IID(nsIImapLog)))
-    {
-        *aInstancePtr = (void*)(nsIImapLog*)this;
     }
     else if (aIID.Equals(kISupportsIID))
     {
@@ -377,18 +367,6 @@ nsresult nsIMAP4TestDriver::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 	return NS_OK;
 }
 
-nsresult nsIMAP4TestDriver::HandleImapLogData (const char * aLogData)
-{
-	// for now, play dumb and just spit out what we were given...
-	if (aLogData)
-	{
-		printf(aLogData);
-		printf("\n");
-	}
-
-	return NS_OK;
-}
-
 
 nsresult nsIMAP4TestDriver::OnExit()
 {
@@ -522,7 +500,6 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_url);
 	if (NS_SUCCEEDED(rv) && m_url)
     {
-        m_url->SetImapLog(this);
 		rv = mailnewsurl->SetSpec(m_urlString); // reset spec
 		mailnewsurl->RegisterListener(this);
 

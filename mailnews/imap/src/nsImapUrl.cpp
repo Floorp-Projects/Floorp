@@ -62,7 +62,6 @@ nsImapUrl::nsImapUrl()
 
   // ** jt - the following are not ref counted
   m_copyState = nsnull;
-  m_imapLog = nsnull;
   m_fileSpec = nsnull;
   m_imapMailFolderSink = nsnull;
   m_imapMessageSink = nsnull;
@@ -95,25 +94,10 @@ NS_IMPL_ADDREF_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
 
 NS_IMPL_RELEASE_INHERITED(nsImapUrl, nsMsgMailNewsUrl)
 
-
-NS_IMETHODIMP
-nsImapUrl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
-    *aInstancePtr = nsnull;
-    if (aIID.Equals(NS_GET_IID(nsIImapUrl)))
-        *aInstancePtr = NS_STATIC_CAST(nsIImapUrl*, this);
-    else if (aIID.Equals(NS_GET_IID(nsIMsgMessageUrl)))
-        *aInstancePtr = NS_STATIC_CAST(nsIMsgMessageUrl*, this);
-
-    if(*aInstancePtr)
-    {
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return nsMsgMailNewsUrl::QueryInterface(aIID, aInstancePtr);
-}
-
+NS_INTERFACE_MAP_BEGIN(nsImapUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIImapUrl)
+   NS_INTERFACE_MAP_ENTRY(nsIMsgMessageUrl)
+NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 
 ////////////////////////////////////////////////////////////////////////////////////
 // Begin nsIImapUrl specific support
@@ -135,22 +119,16 @@ NS_IMETHODIMP nsImapUrl::GetRequiredImapState(nsImapState * aImapUrlState)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::GetImapLog(nsIImapLog ** aImapLog)
+NS_IMETHODIMP nsImapUrl::GetImapAction(nsImapAction * aImapAction)
 {
-	if (aImapLog)
-	{
-		*aImapLog = m_imapLog;
-		NS_IF_ADDREF(*aImapLog );
-	}
-
+  *aImapAction = m_imapAction;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::SetImapLog(nsIImapLog  * aImapLog)
+NS_IMETHODIMP nsImapUrl::SetImapAction(nsImapAction aImapAction)
 {
-    // ** jt - not ref counted; talk to me before you change the code
-    m_imapLog = aImapLog;
-	return NS_OK;
+  m_imapAction = aImapAction;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
@@ -211,7 +189,6 @@ NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
 
 	return NS_OK;
 }
-
 
 NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExtensionSink)
 {
@@ -284,20 +261,21 @@ nsresult nsImapUrl::ParseUrl()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(nsCString *aResult)
+NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(char ** aResult)
 {
   // this method should only be called from the imap thread...
   // o.t. add lock protection..
 	if (nsnull == aResult || !m_searchCriteriaString) 
 		return  NS_ERROR_NULL_POINTER;
-	aResult->Assign(m_searchCriteriaString);
+  *aResult = nsCRT::strdup(m_searchCriteriaString);
 	return NS_OK;
 }
 
 // this method gets called from the UI thread and the imap thread
-NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsCString *aResult) 
+NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(char ** aResult) 
 {
   nsAutoCMonitor(this);
+  nsCAutoString newStr;
 	if (nsnull == aResult || !m_listOfMessageIds) 
 		return  NS_ERROR_NULL_POINTER;
 
@@ -319,7 +297,8 @@ NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsCString *aResult)
 	if (wherePart)
 		bytesToCopy = PR_MIN(bytesToCopy, wherePart - m_listOfMessageIds);
 
-	aResult->Assign(m_listOfMessageIds, bytesToCopy);
+	newStr.Assign(m_listOfMessageIds, bytesToCopy);
+  *aResult = newStr.ToNewCString();
 	return NS_OK;
 }
   

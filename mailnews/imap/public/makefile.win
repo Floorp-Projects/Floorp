@@ -23,28 +23,28 @@ DEPTH=..\..\..
 MODULE= msgimap
 
 XPIDLSRCS =	\
-			.\nsIImapServerSink.idl	\
-			.\nsIImapMessageSink.idl \
+      .\nsIImapUrl.idl            \
+			.\nsIImapServerSink.idl	    \
+			.\nsIImapMessageSink.idl    \
 			.\nsIImapIncomingServer.idl \
 			.\nsIImapFlagAndUidState.idl \
-            .\nsIImapMockChannel.idl	\
-            .\nsIImapProtocol.idl	\
-            .\nsIMailboxSpec.idl	\
-            .\nsIImapMailFolderSink.idl	\
-            .\nsIMsgImapMailFolder.idl  \
+      .\nsIImapMockChannel.idl	  \
+      .\nsIImapProtocol.idl	      \
+      .\nsIMailboxSpec.idl	      \
+      .\nsIImapMailFolderSink.idl	\
+      .\nsIMsgImapMailFolder.idl  \
 			.\nsIMsgLogonRedirector.idl \
 			$(NULL)
 
 ################################################################################
 ## exports
 
-EXPORTS =								\
-			nsIImapUrl.h				\
-			nsIImapLog.h				\
-			nsIIMAPHostSessionList.h	\
-			nsIImapExtensionSink.h		\
+EXPORTS =								          \
+			nsIImapLog.h				        \
+			nsIIMAPHostSessionList.h	  \
+			nsIImapExtensionSink.h		  \
 			nsIImapMiscellaneousSink.h	\
-			nsIImapService.h			\
+			nsIImapService.h			      \
 			$(NULL)
 
 
