@@ -31,11 +31,7 @@ LIBRARY_NAME	= gfxps
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS = img_s mozutil_s
 
-ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS += nggfx
-else
 EXTRA_DSO_LIBS += gkgfx
-endif
 
 CSRCS		= font_metrics.c
 
