@@ -54,10 +54,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsFileStream.h"
 
-#ifdef DEBUG_seth
-#define DEBUG_NEWS 1
-#endif
-
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -70,6 +66,8 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
+#define NEWSGROUP_USERNAME_PREF_PREFIX "newsgroup.username."
+#define NEWSGROUP_PASSWORD_PREF_PREFIX "newsgroup.password."
 #define NEWSRC_FILE_BUFFER_SIZE 1024
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -165,25 +163,21 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
   return rv;
 }
 
-nsresult
-nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *setStr)
+NS_IMETHODIMP
+nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder **child)
 {
-	if (!child)
-		return NS_ERROR_NULL_POINTER;
+	if (!child) return NS_ERROR_NULL_POINTER;
 
-  if (!setStr)
-    return NS_ERROR_NULL_POINTER;
+  if (!setStr) return NS_ERROR_NULL_POINTER;
   
 #ifdef DEBUG_NEWS
   nsCString nameStr(name);
-  printf("AddSubfolder(%s,??,%s)\n",nameStr.GetBuffer(),setStr);
+  printf("AddNewsgroup(%s,??,%s)\n",nameStr.GetBuffer(),setStr);
 #endif
   
 	nsresult rv = NS_OK;
 	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv); 
-
-	if(NS_FAILED(rv))
-		return rv;
+	if(NS_FAILED(rv)) return rv;
 
 	nsCString uri(mURI);
 	uri.Append('/');
@@ -191,26 +185,21 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 
 	nsCOMPtr<nsIRDFResource> res;
 	rv = rdf->GetResource(uri.GetBuffer(), getter_AddRefs(res));
-	if (NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
   
   nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(res, &rv));
-	if (NS_FAILED(rv))
-		return rv;
+	if (NS_FAILED(rv)) return rv;
   
 	folder->SetParent(this);
 
 	rv = folder->SetFlag(MSG_FOLDER_FLAG_NEWSGROUP);
-  if (NS_FAILED(rv))
-    return rv;        
+  if (NS_FAILED(rv)) return rv;        
   
   nsCOMPtr<nsIMsgNewsFolder> newsFolder(do_QueryInterface(res, &rv));
-  if (NS_FAILED(rv))
-    return rv;        
+  if (NS_FAILED(rv)) return rv;        
   
   rv = newsFolder->SetUnreadSetStr(setStr);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
   
 #ifdef DEBUG_NEWS
   char *testStr = nsnull;
@@ -513,9 +502,7 @@ NS_IMETHODIMP nsMsgNewsFolder::CreateSubfolder(const char *newsgroupname)
 		rv = newsDBFactory->Open(dbFileSpec, PR_TRUE, PR_FALSE, getter_AddRefs(newsDB));
 		if (NS_SUCCEEDED(rv) && newsDB) {
 			//Now let's create the actual new folder
-			char *setStr = PR_smprintf("");
-			rv = AddSubfolder(newsgroupname, getter_AddRefs(child), setStr);
-			PR_FREEIF(setStr);
+			rv = AddNewsgroup(newsgroupname, "", getter_AddRefs(child));
             newsDB->SetSummaryValid(PR_TRUE);
             newsDB->Close(PR_TRUE);
         }
@@ -785,30 +772,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgNewsFolder::RememberPassword(const char *password)
-{
-#ifdef HAVE_DB
-  NewsDB *newsDb = nsnull;
-  NewsDB::Open(m_pathName, PR_TRUE, &newsDb);
-  if (newsDb)
-  {
-    newsDb->SetCachedPassword(password);
-    newsDb->Close();
-  }
-#endif
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsMsgNewsFolder::GetRememberedPassword(char ** password)
-{
-  return NS_OK;
-}
-
 /* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
                                               nsIMsgWindow *msgWindow, PRBool deleteStorage)
@@ -1056,9 +1019,8 @@ nsMsgNewsFolder::HandleLine(char* line, PRUint32 line_size)
 
     // we're subscribed, so add it
     nsCOMPtr <nsIMsgFolder> child;
-    nsAutoString currentFolderNameStr(line);
     
-    nsresult rv = AddSubfolder(currentFolderNameStr,getter_AddRefs(child), setStr);
+    nsresult rv = AddNewsgroup(line, setStr, getter_AddRefs(child));
     
     if (NS_FAILED(rv)) return -1;
   }
@@ -1192,44 +1154,134 @@ NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(const char * aUnreadSetStr)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetGroupUsername(char **aGroupUsername)
 {
+    nsresult rv = NS_OK;
+
 	if (!aGroupUsername) return NS_ERROR_NULL_POINTER;
-	if (!mGroupUsername) return NS_ERROR_NOT_INITIALIZED;
 
-	*aGroupUsername = PL_strdup(mGroupUsername);
-	if (!*aGroupUsername) return NS_ERROR_FAILURE;
+	if (!mGroupUsername) {
+        nsCAutoString prefName = NEWSGROUP_USERNAME_PREF_PREFIX;
+        prefName += mURI;
+        rv = GetRememberedPref((const char *)prefName, &mGroupUsername);
+    }
+    
+    if (NS_SUCCEEDED(rv) && mGroupUsername) {
+        *aGroupUsername = PL_strdup(mGroupUsername);
+        if (!*aGroupUsername) return NS_ERROR_FAILURE;
+        rv = NS_OK;
+    }
 
-	return NS_OK;
+	return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::SetGroupUsername(const char *aGroupUsername)
 {
+    nsresult rv;
+
 	if (!aGroupUsername) return NS_ERROR_INVALID_ARG;
 	PR_FREEIF(mGroupUsername);
 
 	mGroupUsername = PL_strdup(aGroupUsername);
 	if (!mGroupUsername) return NS_ERROR_FAILURE;
-	return NS_OK;
+
+    nsCAutoString prefName = NEWSGROUP_USERNAME_PREF_PREFIX;
+    prefName += mURI;
+
+    rv = SetRememberedPref((const char *)prefName, mGroupUsername);
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetGroupPassword(char **aGroupPassword)
 {
+    nsresult rv = NS_OK;
 	if (!aGroupPassword) return NS_ERROR_NULL_POINTER;
-	if (!mGroupPassword) return NS_ERROR_NOT_INITIALIZED;
 
-	*aGroupPassword = PL_strdup(mGroupPassword);
-	if (!*aGroupPassword) return NS_ERROR_FAILURE;
+	if (!mGroupPassword) {
+        nsCAutoString prefName = NEWSGROUP_PASSWORD_PREF_PREFIX;
+        prefName += mURI;
+        rv = GetRememberedPref((const char *)prefName, &mGroupPassword);
+    }
 
-	return NS_OK;
+    if (NS_SUCCEEDED(rv) && mGroupPassword) {
+        *aGroupPassword = PL_strdup(mGroupPassword);
+        if (!*aGroupPassword) return NS_ERROR_FAILURE;
+	    rv = NS_OK;
+    }
+
+    return rv;
 }
-
 
 NS_IMETHODIMP nsMsgNewsFolder::SetGroupPassword(const char *aGroupPassword)
 {
+    nsresult rv;
+
 	if (!aGroupPassword) return NS_ERROR_INVALID_ARG;
 	PR_FREEIF(mGroupPassword);
 
 	mGroupPassword = PL_strdup(aGroupPassword);
 	if (!mGroupPassword) return NS_ERROR_FAILURE;
-	return NS_OK;
+
+    nsCAutoString prefName = NEWSGROUP_PASSWORD_PREF_PREFIX;
+    prefName += mURI;
+
+    rv = SetRememberedPref((const char *)prefName, mGroupPassword);
+	return rv;
 }
 
+nsresult nsMsgNewsFolder::GetRememberedPref(const char *prefName, char **prefValue)
+{
+    PRBool rememberPassword;
+    nsresult rv;
+
+    nsCOMPtr <nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = server->GetRememberPassword(&rememberPassword);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!rememberPassword) {
+        // we weren't supposed to have remembered anything
+        *prefValue = nsnull;
+        return NS_OK;
+    }
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->CopyCharPref(prefName, prefValue);
+#ifdef DEBUG_NEWS
+    if (NS_SUCCEEDED(rv)) {
+        printf("getting %s as %s\n",prefName, prefValue);
+    }
+#endif /* DEBUG_NEWS */
+    return rv;
+}
+
+nsresult nsMsgNewsFolder::SetRememberedPref(const char *prefName, const char *prefValue)
+{
+    PRBool rememberPassword;
+    nsresult rv;
+
+    nsCOMPtr <nsIMsgIncomingServer> server;
+    rv = GetServer(getter_AddRefs(server));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = server->GetRememberPassword(&rememberPassword);
+    if (NS_FAILED(rv)) return rv;
+
+    if (!rememberPassword) {
+        // we aren't supposed to remember this
+        return NS_OK;
+    }
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = prefs->SetCharPref(prefName, prefValue);
+#ifdef DEBUG_NEWS
+    if (NS_SUCCEEDED(rv)) {
+        printf("setting %s as %s\n",prefName, prefValue);
+    }
+#endif /* DEBUG_NEWS */
+	return rv;
+}

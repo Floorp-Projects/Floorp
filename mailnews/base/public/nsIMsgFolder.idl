@@ -214,7 +214,7 @@ interface nsIMsgFolder : nsIFolder {
 	boolean userNeedsToAuthenticateForFolder(in boolean displayOnly);
   	readonly attribute string username;
   	readonly attribute string hostname;
-  
+
 	void setFlag(in unsigned long flag);
 	void clearFlag(in unsigned long flag);
 	boolean getFlag(in unsigned long flag);
@@ -295,6 +295,8 @@ interface nsIMsgNewsFolder : nsISupports {
   attribute string unreadSetStr;
   attribute string groupUsername;
   attribute string groupPassword;
+
+  nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
 };
 
 [scriptable, uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]

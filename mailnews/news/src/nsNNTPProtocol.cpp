@@ -83,10 +83,6 @@
 
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
-#ifdef DEBUG_seth
-#define DEBUG_NEWS 1
-#endif 
-
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
 // which is not currently in the build system
 class nsDummyBufferStream : public nsIInputStream
@@ -4028,9 +4024,10 @@ PRInt32 nsNNTPProtocol::DoCancel()
     rv = dialog->Alert(alertText);
     // XXX:  todo, check rv?
 
+#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
     // just me for now...
     // start of work for bug #8216
-#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
+    //
     // delete the message from the db here.
     nsMsgKey key = nsMsgKey_None;
     rv = m_runningURL->GetMessageKey(&key);

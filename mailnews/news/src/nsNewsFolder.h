@@ -79,10 +79,6 @@ public:
 
 	NS_IMETHOD GetSizeOnDisk(PRUint32 *size);
 
-	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
-	NS_IMETHOD RememberPassword(const char *password);
-	NS_IMETHOD GetRememberedPassword(char ** password);
-
   virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db);
 
  	NS_IMETHOD DeleteMessages(nsISupportsArray *messages, 
@@ -131,6 +127,10 @@ protected:
 	// used for auth news
  	char 		*mGroupUsername;
 	char		*mGroupPassword;
+
+private:
+    nsresult SetRememberedPref(const char *prefName, const char *prefValue);
+    nsresult GetRememberedPref(const char *prefName, char **prefValue);
 };
 
 #endif // nsMsgNewsFolder_h__
