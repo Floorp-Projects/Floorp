@@ -1514,12 +1514,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                 index = kidMatch;
                             }
                         }
-						if (num < ren.max)
-							return matchGreedyKid(state, ren, stop, num, ren.max,
+						if (num == ren.max)
+							// Have matched the exact count required, 
+							// need to match the rest of the regexp.
+							break;						
+						return matchGreedyKid(state, ren, stop, num, ren.max,
                                                         index, lastKid);
-						// Have matched the exact count required, 
-						// need to match the rest of the regexp.
-						break;
                     }
                 case REOP_PLUS: {
                         int kidMatch = matchRENodes(state, (RENode)ren.kid,
