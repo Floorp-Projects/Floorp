@@ -200,7 +200,11 @@ void nsAccessibleTreeWalker::GetNextDOMNode()
     currentNode->GetNextSibling(getter_AddRefs(mState.domNode));
   }
   else if (mState.siblingIndex == eSiblingsWalkFrames) {
-    mState.domNode = mState.frame? do_QueryInterface(mState.frame->GetContent()): nsnull;
+    if (mState.frame) {
+      mState.domNode = do_QueryInterface(mState.frame->GetContent());
+    } else {
+      mState = nsnull;
+    }
   }
   else { 
     mState.siblingList->Item(++mState.siblingIndex, getter_AddRefs(mState.domNode));
