@@ -376,7 +376,7 @@ int main(int argc, char* argv[])
     if (NS_SUCCEEDED(rv))
     {		
 		if (cmdResult) {
-			profstr = "resource:/res/profile/profileManagerContainer.xul"; 
+			profstr = "resource:/res/profile/pm.xul"; 
 		}
     }
 
@@ -397,7 +397,7 @@ int main(int argc, char* argv[])
 #ifdef XP_PC
 			profileService->MigrateProfileInfo(); 
 #endif
-			profstr = "resource:/res/profile/profileManagerContainer.xul";
+			profstr = "resource:/res/profile/pm.xul";
 		}
     }
 
@@ -608,7 +608,7 @@ int main(int argc, char* argv[])
 					profstr = "resource:/res/profile/cpw.xul"; 
 			}
 			else if (numProfiles > 1)
-				profstr = "resource:/res/profile/profileManagerContainer.xul"; 
+				profstr = "resource:/res/profile/pm.xul"; 
 		}
 
 
@@ -631,7 +631,7 @@ int main(int argc, char* argv[])
 
 		  nsCOMPtr<nsIWebShellWindow>  profWindow;
 			rv = profAppShell->CreateTopLevelWindow(nsnull, profURL, PR_TRUE, getter_AddRefs(profWindow),
-				       nsnull, nsnull, NS_SIZETOCONTENT, NS_SIZETOCONTENT);
+				       nsnull, nsnull, profWinWidth, profWinHeight);
 
 			NS_RELEASE(profURL);
 		
