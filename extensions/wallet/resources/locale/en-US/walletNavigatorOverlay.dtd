@@ -10,7 +10,7 @@
 <!ENTITY captureCmd.label             "Save Form Info">
 <!ENTITY captureCmd.accesskey         "S"> 
 <!ENTITY prefillCmd.label             "Fill in Form">
-<!ENTITY prefillCmd.accesskey         "F"> 
+<!ENTITY prefillCmd.accesskey         "n"> 
 
 <!ENTITY walletContentsCmd.label "Edit Form Info">
 <!ENTITY walletContentsCmd.accesskey "E">

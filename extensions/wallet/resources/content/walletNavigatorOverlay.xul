@@ -32,12 +32,11 @@
   <script type="application/x-javascript">
   <![CDATA[
 
-    function initEditItems() {
-
-      // Determine if capture/prefill should be displayed and enabled.
+    function initWalletMenuItems() {
+      // Determine if capture/prefill should be enabled.
       var state = getState(0);
-      setDisabledAttr("edit_capture", (state.capture != enable));
-      setDisabledAttr("edit_prefill", (state.prefill != enable));
+      setDisabledAttr("cmd_walletCapture", (state.capture != enable));
+      setDisabledAttr("cmd_walletPrefill", (state.prefill != enable));
     }
 
 /* form toolbar is out
@@ -86,6 +85,15 @@
   ]]>
   </script>         
 
+  <commandset id="commands">
+    <commandset id="walletMenuItems">
+      <command id="cmd_walletPrefill" label="&prefillCmd.label;" 
+               accesskey="&prefillCmd.accesskey;" oncommand="formPrefill();"/>
+      <command id="cmd_walletCapture" label="&captureCmd.label;" 
+               accesskey="&captureCmd.accesskey;" oncommand="formCapture();"/>
+    </commandset>
+  </commandset>
+
   <!-- menu items -->
 
 <!-- form toolbar is out
@@ -106,17 +114,11 @@
 -->
 
   <!-- edit menu -->
-  <menupopup id="menu_Edit_Popup" onpopupshowing="initEditItems();">
+  <menupopup id="menu_Edit_Popup" onpopupshowing="initWalletMenuItems();">
     <menuseparator insertbefore="menu_PrefsSeparator"/> 
-    <menuitem id="edit_prefill"
-              label="&prefillCmd.label;"
-              accesskey="&prefillCmd.accesskey;"
-              oncommand="formPrefill();"
+    <menuitem command="cmd_walletPrefill"
               insertbefore="menu_PrefsSeparator"/>
-    <menuitem id="edit_capture"
-              label="&captureCmd.label;"
-              accesskey="&captureCmd.accesskey;"
-              oncommand="formCapture();"
+    <menuitem command="cmd_walletCapture"
               insertbefore="menu_PrefsSeparator"/>
   </menupopup>
 
@@ -151,20 +153,14 @@
     </toolbar>
   </hbox>
 -->
-  <menupopup id="taskPopup">
+  <menupopup id="taskPopup" onpopupshowing="initWalletMenuItems();">
     <menu label="&walletFormManager.label;"
           accesskey="&walletFormManager.accesskey;"
           id="wallet"
           insertbefore="navBeginGlobalItems">
       <menupopup>
-        <menuitem id="edit_prefill"
-                  label="&prefillCmd.label;"
-                  accesskey="&prefillCmd.accesskey;"
-                  oncommand="formPrefill();"/>
-        <menuitem id="edit_capture"
-                  label="&captureCmd.label;"
-                  accesskey="&captureCmd.accesskey;"
-                  oncommand="formCapture();"/>
+        <menuitem command="cmd_walletPrefill"/>
+        <menuitem command="cmd_walletCapture"/>
         <menuseparator/>
         <menuitem label="&walletContentsCmd.label;"
                   accesskey="&walletContentsCmd.accesskey;"
@@ -177,6 +173,5 @@
       </menupopup>
     </menu>
   </menupopup>
-
 
 </overlay>
