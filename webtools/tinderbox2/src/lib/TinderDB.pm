@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.12 $ 
-# $Date: 2002/05/03 04:44:05 $ 
+# $Revision: 1.13 $ 
+# $Date: 2002/05/07 22:50:07 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -216,7 +216,7 @@ sub construct_uniform_times_vec {
   # make the last row twice as wide as the rest to encourage a small
   # amount of overlap between adjacent pages.
 
-  @out[$#out] -= $table_spacing_sec;
+  $out[$#out] -= $table_spacing_sec;
 
   return [@out];
 } # construct_uniform_vec
@@ -240,15 +240,7 @@ sub construct_event_times_vec {
       push @out, $db->event_times_vec(@_);
   }
 
-  # Round all times to nearest minute, so that we do not get two times
-  # appearing in the time column which display as the same string.
-  # We do however want times which are odd numbers of minutes.
-
-  @out = map { ( $_ - ($_%60) ) } @out;
-  @out = main::uniq(@out);
-
-  # sort numerically descending
-  @out = sort {$b <=> $a} @out ;
+  @out = main::clean_times(@out);
 
   return [@out];
 } # construct_event_times_vec
@@ -268,7 +260,6 @@ sub construct_build_event_times_vec {
           "Tree: $tree, not defined.");
   }
 
-  my @out;
 
   # we need an eval since the builds may not be configured.
 
@@ -286,19 +277,31 @@ sub construct_build_event_times_vec {
       @out= $build_obj->event_times_vec($start_time, $end_time, $tree);
   };
 
-
-  # Round all times to nearest minute, so that we do not get two times
-  # appearing in the time column which display as the same string.
-  # We do however want times which are odd numbers of minutes.
-
-  @out = map { ( $_ - ($_%60) ) } @out;
-  @out = main::uniq(@out);
-
-  # sort numerically descending
-  @out = sort {$b <=> $a} @out ;
+  @out = main::clean_times(@out);
 
   return [@out];
 } # construct_build_event_times_vec
+
+
+sub construct_times_vec {
+    my ($start_time, $end_time, $tree, ) = @_;
+
+    my ($row_times);
+    if      ($ROW_SPACING_DISIPLINE eq 'uniform') {
+        $row_times = construct_uniform_times_vec($start_time, $end_time, 
+                                                 $TABLE_SPACING,);
+    } elsif ($ROW_SPACING_DISIPLINE eq 'event_driven') {
+        $row_times = construct_event_times_vec($start_time, $end_time, 
+                                               $tree);
+    } elsif ($ROW_SPACING_DISIPLINE eq 'build_event_driven') {
+        $row_times = construct_build_event_times_vec($start_time, $end_time, 
+                                                     $tree);
+    } else {
+        die("unknown row spacing disipline: $ROW_SPACING_DISIPLINE\n");
+    }
+
+    return $row_times;
+}
 
 
 # Our functions for database methods just iterate over the available
@@ -417,16 +420,6 @@ sub status_table_start {
 
   my ($row_times, $tree, ) = @_;
 
-  if ($DEBUG) {
-    ( ($row_times) && (scalar(@{$row_times}) > 5 ) ) ||
-      die("TinderDB::status_table_start(): ".
-          "row_times, not defined.");
-  
-    (TreeData::tree_exists($tree)) ||
-      die("TinderDB::status_table_start(): ".
-          "Tree: $tree, not defined.");
-  }
-
   my (@outrow) = ();
   foreach $db (@{$DB}) {
     $db->status_table_start(@_);
@@ -440,24 +433,6 @@ sub status_table_start {
 sub status_table_row {
 
   my ($row_times, $row_index, $tree, ) = @_;
-
-  if ($DEBUG) {
-    ( ($row_times) && (scalar(@{$row_times}) > 5 ) ) ||
-      die("TinderDB::status_table_row(): ".
-          "row_times, not defined.");
-    
-    ( defined($row_index) ) ||
-      die("TinderDB::status_table_row(): ".
-          "row_index, not defined.");
-    
-    ( ($row_index >= 0) && ($row_index <= $#{ $row_times }) ) ||
-      die("TinderDB::status_table_row(): ".
-          "index is not valid.");
-    
-    (TreeData::tree_exists($tree)) ||
-      die("TinderDB::status_table_row(): ".
-          "Tree: $tree, not defined.");
-  }
 
   my (@outrow) = ();
   foreach $db (@{$DB}) {
@@ -485,23 +460,7 @@ sub status_table_body {
               "Tree: $tree, not defined.");
   }
 
-  # Construct the vector of times which represent the rows.  Either we
-  # do this with uniform spacing or by putting one row for each time
-  # we have data for.
-
-  my ($row_times);
-  if      ($ROW_SPACING_DISIPLINE eq 'uniform') {
-      $row_times = construct_uniform_times_vec($start_time, $end_time, 
-                                               $TABLE_SPACING,);
-  } elsif ($ROW_SPACING_DISIPLINE eq 'event_driven') {
-      $row_times = construct_event_times_vec($start_time, $end_time, 
-                                             $tree);
-  } elsif ($ROW_SPACING_DISIPLINE eq 'build_event_driven') {
-      $row_times = construct_build_event_times_vec($start_time, $end_time, 
-                                                    $tree);
-  } else {
-      die("unknown row spacing disipline: $ROW_SPACING_DISIPLINE\n");
-  }
+  $row_times = construct_times_vec($start_time, $end_time, $tree);
 
   # We must call html_start before we call html_row.  
 
