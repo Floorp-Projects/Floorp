@@ -34,7 +34,6 @@ function FindNextFolder(originalFolderURI)
     var originalFolderResource = RDF.GetResource(originalFolderURI);
     var folder = originalFolderResource.QueryInterface(Components.interfaces.nsIFolder);
     if (!folder) return null;
-    dump("folder = " + folder.URI + "\n");
 
     try {
        var subFolderEnumerator = folder.GetSubFolders();
@@ -42,16 +41,18 @@ function FindNextFolder(originalFolderURI)
        while (!done) {
          var element = subFolderEnumerator.currentItem();
          var currentSubFolder = element.QueryInterface(Components.interfaces.nsIMsgFolder);
-         dump("current folder = " + currentSubFolder.URI + "\n");
-         if (currentSubFolder.getNumUnread(false /* don't descend */) > 0) {
-           dump("if the child has unread, use it.\n");
-           return currentSubFolder.URI;
-         }
-         else if (currentSubFolder.getNumUnread(true /* descend */) > 0) {
-           dump("if the child doesn't have any unread, but it's children do, recurse\n");
-           return FindNextFolder(currentSubFolder.URI);
-         }
 
+         // don't land in the Trash folder.
+         if(!IsSpecialFolder(currentSubFolder, MSG_FOLDER_FLAG_TRASH)) {
+           if (currentSubFolder.getNumUnread(false /* don't descend */) > 0) {
+             // if the child has unread, use it.
+             return currentSubFolder.URI;
+           }
+           else if (currentSubFolder.getNumUnread(true /* descend */) > 0) {
+             // if the child doesn't have any unread, but it's children do, recurse
+             return FindNextFolder(currentSubFolder.URI);
+           }
+         }
          try {
            subFolderEnumerator.next();
          } 
@@ -65,11 +66,7 @@ function FindNextFolder(originalFolderURI)
     }
  
     if (folder.parent && folder.parent.URI) {
-      dump("parent = " + folder.parent.URI + "\n");
       return FindNextFolder(folder.parent.URI);
-    }
-    else {
-      dump("no parent\n");
     }
     return null;
 }
@@ -127,9 +124,7 @@ function GetTopLevelMessageForMessage(message, folder)
 	var topMessage = folder.createMessageFromMsgDBHdr(rootHdr);
 
 	return topMessage;
-
 }
-
 
 function CrossFolderNavigation (type, supportsFolderPane )
 {
@@ -159,7 +154,6 @@ function CrossFolderNavigation (type, supportsFolderPane )
   // this will search the originalFolderURI server twice
   while (!done) 
   {
-     dump("start looking at " + startAtURI + "\n");
      nextFolderURI = FindNextFolder(startAtURI);
      if (!nextFolderURI) 
      {
@@ -216,27 +210,17 @@ function CrossFolderNavigation (type, supportsFolderPane )
 function GoNextMessage(type, startFromBeginning)
 {
   try {
-    dump("XXX GoNextMessage(" + type + "," + startFromBeginning + ")\n");
-
     var outlinerView = gDBView.QueryInterface(Components.interfaces.nsIOutlinerView);
     var outlinerSelection = outlinerView.selection;
     var currentIndex = outlinerSelection.currentIndex;
 
-    dump("XXX outliner selection = " + outlinerSelection + "\n");
-    dump("XXX current Index = " + currentIndex + "\n");
-
     var status = gDBView.navigateStatus(type);
-
-    dump("XXX status = " + status + "\n");
 
     var resultId = new Object;
     var resultIndex = new Object;
     var threadIndex = new Object;
 
     gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
-
-    dump("XXX resultId = " + resultId.value + "\n");
-    dump("XXX resultIndex = " + resultIndex.value + "\n");
 
     // only scroll and select if we found something
     if ((resultId.value != -1) && (resultIndex.value != -1)) {
@@ -251,3 +235,4 @@ function GoNextMessage(type, startFromBeginning)
     dump("XXX ex = " + ex + "\n");
   }
 }
+
