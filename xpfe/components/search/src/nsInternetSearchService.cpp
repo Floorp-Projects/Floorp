@@ -1463,7 +1463,7 @@ InternetSearchDataSource::filterSite(nsIRDFResource *aResource)
 		aRes = do_QueryInterface(isupports);
 		if (!aRes)	return(NS_ERROR_UNEXPECTED);
 
-		if ((aRes == kNC_LastSearchRoot) || (isSearchURI(aRes)))
+		if ((aRes.get() == kNC_LastSearchRoot) || (isSearchURI(aRes)))
 		{
 			array->AppendElement(aRes);
 		}
