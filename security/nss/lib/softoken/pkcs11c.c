@@ -388,9 +388,7 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 
     /* find the key */
     if (keyPtr) {
-	CK_KEY_TYPE kt;
 	unsigned int size;
-	int i;
         key = pk11_ObjectFromHandle(hKey,session);
         if (key == NULL) {
 	    return CKR_KEY_HANDLE_INVALID;
@@ -406,15 +404,28 @@ pk11_InitGeneric(PK11Session *session,PK11SessionContext **contextPtr,
 	att = pk11_FindAttribute(key,CKA_KEY_TYPE);
 	PORT_Assert(att != NULL);
 	size = sizeof(CK_KEY_TYPE);
-	kt = 0;
-	for (i=att->attrib.ulValueLen-1; i>=0; i--) {
+	if (att->attrib.ulValueLen < size) {
+	    CK_KEY_TYPE kt;
+	    int i;
+	    int shift;
 #ifdef IS_LITTLE_ENDIAN
-	    kt |= ((unsigned char *)att->attrib.pValue)[i] << (i*8);
+	    shift = 0;
 #else
-	    kt |= ((unsigned char *)att->attrib.pValue)[i] << ((size-1-i)*8);
+	    shift = (att->attrib.ulValueLen - 1) * 8;
 #endif
+	    kt = 0;
+	    for (i=att->attrib.ulValueLen - 1; i>=0; i--) {
+		kt |= ((unsigned char *)att->attrib.pValue)[i] << shift;
+#ifdef IS_LITTLE_ENDIAN
+		shift += 8;
+#else
+		shift -= 8;
+#endif
+	    }
+	    *keyTypePtr = kt;
+	} else {
+ 	    *keyTypePtr = *((CK_KEY_TYPE *)att->attrib.pValue);
 	}
-	*keyTypePtr = kt;
 	pk11_FreeAttribute(att);
 	*keyPtr = key;
     }
