@@ -53,19 +53,19 @@ function print_page_list($startitem, $enditem, $totalresults, $num_pages, $pagei
 {
   global $searchStr, $section;
 
-  echo"<h3>Results</h3>\n";
+  echo"<h1>Results</h1>\n";
 
   echo "$startitem - $enditem of $totalresults&nbsp;&nbsp;|&nbsp;&nbsp;";
 
   $previd=$pageid-1;
   if ($previd >"0") {
-    echo"<a href=\"?q=$searchStr&section=$section&pageid=$previd\">&#171; Previous</a> &bull; ";
+    echo"<a href=\"?q=$searchStr&amp;section=$section&amp;pageid=$previd\">&#171; Previous</a> &bull; ";
   }
   echo "Page $pageid of $num_pages";
 
   $nextid=$pageid+1;
   if ($pageid <$num_pages) {
-    echo" &bull; <a href=\"?q=$searchStr&section=$section&pageid=$nextid\">Next &#187;</a>";
+    echo" &bull; <a href=\"?q=$searchStr&amp;section=$section&amp;pageid=$nextid\">Next &#187;</a>";
   }
 }
 
@@ -74,12 +74,19 @@ function print_page_list($startitem, $enditem, $totalresults, $num_pages, $pagei
  //----------------------------
  //Detection Override
 $didSearch = 0;
-if ($_GET["q"] || $_GET["pageid"]) $didSearch = 1;
+if ($_GET["q"]) $didSearch = 1;
 
 $items_per_page="10"; //Default Num per Page is 10
 
 //Default PageID is 1
-if (!$_GET["pageid"]) {$pageid="1"; } else { $pageid = $_GET["pageid"]; } 
+if (!$_GET["pageid"]) {
+  $pageid="1";
+}
+else {
+  $pageid = intval($_GET["pageid"]);
+  if($pageid == 0)
+    $pageid = 1;
+}
 
 // grab query string
 if ($_GET["q"]) {
@@ -96,13 +103,13 @@ include"$page_header";
 // Begin Content of the Page Here
 // -----------------------------------------------
 
+?>
+<div id="mBody">
+<?php
 if ($didSearch) {
   // build our query
-  $sql = "FROM `main` TM 
-INNER JOIN version TV ON TM.ID = TV.ID 
-INNER JOIN os TOS ON TV.OSID = TOS.OSID
-INNER JOIN applications TA ON TV.AppID = TA.AppID
-WHERE (TM.name LIKE '%$searchStr%' OR TM.Description LIKE '%$searchStr%') AND (TOS.OSName = '$OS' OR TOS.OSName = 'ALL') AND TA.AppName = '$application'";
+  $sql = "FROM `main` TM
+WHERE (TM.name LIKE '%$searchStr%' OR TM.Description LIKE '%$searchStr%')";
 
   // search extensions/themes/etc
   if($section !== "A") {
@@ -125,7 +132,7 @@ WHERE (TM.name LIKE '%$searchStr%' OR TM.Description LIKE '%$searchStr%') AND (T
   $num_pages = max($num_pages,1);
 
   // Check PageId for Validity
-  $pageid = max($num_pages, min(1, $pageid));
+  $pageid = min($num_pages, max(1, $pageid));
   // Determine startitem,startpoint, enditem
   $startpoint = ($pageid-1) * $items_per_page;
   $startitem = $startpoint + 1;
@@ -138,11 +145,10 @@ WHERE (TM.name LIKE '%$searchStr%' OR TM.Description LIKE '%$searchStr%') AND (T
   // now build the query to get the item details
   // only $items_per_page number results,
   // starting at $startpoint
-  $resultsquery = "SELECT TM.ID, TM.Name, TM.Description, TM.Type, TV.Version
+  $resultsquery = "SELECT TM.ID, TM.Name, TM.Description, TM.Type
 " . $sql ."
-GROUP BY TM.Name
 ORDER BY TM.Name
-LIMIT $startpoint , $items_per_page";
+LIMIT $items_per_page OFFSET $startpoint";
 
   print_page_list($startitem, $enditem, $totalresults, $num_pages, $pageid);
   echo"<br><br>\n";
@@ -152,24 +158,25 @@ LIMIT $startpoint , $items_per_page";
     //---------------------------------
     // Query for items (if there are any)
     if($totalresults > 0) {
+      //XXX this absolutely sucks.  can't we have a function
+      // to get the info URL for an item given its id?
+      $typedirs = array("E"=>"extensions","T"=>"themes","U"=>"update");
+
       $sql_result = mysql_query($resultsquery, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
       while ($row = mysql_fetch_array($sql_result)) {
         $id = $row["ID"];
         $name = $row["Name"];
         $description = $row["Description"];
         $itemtype = $row["Type"];
-        $version = $row["Version"];
 
-        echo "<div class=\"searchresult\">\n";
-	//XXX this absolutely sucks.  can't we have a function
-	// to get the info URL for an item given its id?
-        $typedirs = array("E"=>"extensions","T"=>"themes","U"=>"update");
+        echo "<div class=\"item\">\n";
         $typedir = $typedirs[$itemtype];
-        echo "<h5 class=\"title\"><a href=\"$typedir/moreinfo.php?id=$id\">$name $version</a>";
-        echo "</h5>";
+        echo "<h2 class=\"first\"><a href=\"$typedir/moreinfo.php?id=$id\">";
+        echo htmlspecialchars($name);
+        echo "</a></h2>";
 
         // Description
-        echo substr($description,0,250);
+        echo htmlspecialchars(substr($description,0,250));
         echo"</div>\n";
 
       } //End While Loop
@@ -189,7 +196,15 @@ No items found matching "<?=$searchStr?>".
 <form action="quicksearch.php" method="GET">
 <div class="key-point">
 Search For: <input type="text" name="q">
-<select name="section" id="sectionsearch"><option value="A">Entire Site</option><option value="E">Extensions</option><option value="T">Themes</option><!--<option value="P">Plugins</option><option value="S">Search Engines</option>--></select>
+<select name="section" id="sectionsearch">
+  <option value="A">Entire Site</option>
+  <option value="E">Extensions</option>
+  <option value="T">Themes</option>
+<!--
+  <option value="P">Plugins</option>
+  <option value="S">Search Engines</option>
+-->
+</select>
 <input type="submit" value="search">
 </div>
 </form>
@@ -219,7 +234,7 @@ if ($didSearch) {
 	if ($i==$pageid) {
 	  echo"<span style=\"color: #FF0000\">$i</span>&nbsp;";
 	} else {
-	  echo"<a href=\"?q=$searchStr&section=$section&pageid=$i\">$i</a>&nbsp;";
+	  echo"<a href=\"?q=$searchStr&amp;section=$section&amp;pageid=$i\">$i</a>&nbsp;";
 	}
 
 	$i++;
@@ -228,6 +243,7 @@ if ($didSearch) {
 }
 
 ?>
+</div>
 <?php
 include"$page_footer";
 ?>
