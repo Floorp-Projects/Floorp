@@ -814,6 +814,8 @@ remap_rela_section(Elf32_Rela *rela, Elf32_Word size, Elf32_Word entry_size)
 		 fixup_addr(read_word(rela->r_offset)));
       break;
     case EM_PPC:
+/* Some systems do not have PowerPC relocations defined */
+#ifdef R_PPC_NONE
       switch (type) {
       case R_PPC_RELATIVE:
 	write_word((Elf32_Word *)&rela->r_addend,
@@ -830,7 +832,7 @@ remap_rela_section(Elf32_Rela *rela, Elf32_Word size, Elf32_Word entry_size)
       default:
 	fprintf(stderr, "Warning, unhandled PPC relocation type %d\n", type);
       }
-      
+#endif
       break;
     }
     
