@@ -19,24 +19,52 @@
 
 # Figure out which directory tinderbox is in by looking at argv[0]
 
+use File::Find;
+
 $tinderboxdir = $0;
 $tinderboxdir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
-if ($tinderboxdir eq "") {
-    $tinderboxdir = ".";
-}
-
+$tinderboxdir = '.' if $tinderboxdir eq '';
+$now          = time();
+$expire_time  = $now - 7 * 24 * 60 * 60;
 #print "tinderbox = $tinderboxdir\n"; 
 
-chdir $tinderboxdir || die "Couldn't chdir to $tinderboxdir"; 
+chdir $tinderboxdir or die "Couldn't chdir to $tinderboxdir"; 
 
-#print "cd ok\n";
-
-open FL, "find . -name \"*.gz\" -mtime +7 -print |";
-
-#print "find ok\n";
-
-while( <FL> ){
-    chop();
-    #print "unlink $_\n";
-    unlink $_;
+# Remove files older than 7 days
+#
+sub files_to_remove {
+  unlink if /(?:\.gz|\.brief\.html)$/ or int(-M $_) > 7;
 }
+&find(\&files_to_remove, $tinderboxdir);
+
+# Remove build.dat entries older than 7 days
+#
+sub log_files_to_trim {
+  return unless /^(?:notes.txt|build.dat)$/;
+  warn "Cleaning $File::Find::name\n";
+  my $file = $_;
+  my $range_start = 0;
+  my $line = 1;
+  my $ed_cmds = '';
+  open LOG, "$file";
+  while (<LOG>) {
+    $log_time = (split /\|/)[0];
+    if ($range_start == 0 and $log_time < $expire_time) {
+      $range_start = $line;
+    } elsif ($range_start != 0 and $log_time >= $expire_time) {
+      if ($range_start == $line - 1) {
+        $ed_cmds .= "${range_start}d\n";
+      } else {
+        $ed_cmds .= "$range_start,".($line - 1)."d\n";
+      }
+      $range_start = 0;
+    }
+    $line++;
+  }
+  close LOG;
+  open ED,"| ed $file" or die "died ed'ing: $!\n";
+  print ED "${ed_cmds}w\nq\n";
+  close ED;
+}
+&find(\&log_files_to_trim, $tinderboxdir);
+
