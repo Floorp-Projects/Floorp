@@ -1316,6 +1316,16 @@ NET_ParseNetHelpURL(URL_Struct *URL_s)
 	return -207;
 }
 
+#ifdef XP_UNIX
+PUBLIC NET_StreamClass* NET_ExtViewerConverter ( FO_Present_Types format_out,
+                                                 void       *data_obj,
+                                                 URL_Struct *URL_s,
+                                                 MWContext  *window_id)
+{
+	return NULL;
+}
+#endif
+
 /*
  * From xp_str.c
  */
