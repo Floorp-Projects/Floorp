@@ -31,6 +31,7 @@ use strict;
 sub CGI_pl_sillyness {
     my $zz;
     $zz = %::FILENAME;
+    $zz = %::dontchange;
 }
 
 use CGI::Carp qw(fatalsToBrowser);
@@ -758,7 +759,6 @@ sub PutHeader {
     if (Param("shutdownhtml")) {
         if (!$ignoreshutdown) {
             print Param("shutdownhtml");
-            PutFooter();
             exit;
         }
     }
