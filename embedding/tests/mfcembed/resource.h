@@ -55,10 +55,23 @@
 #define IDC_SCALE                       1028
 #define IDC_SCALE_TXT                   1030
 #define IDC_PRT_BGIMAGES                1031
+#define IDC_PAPER_SIZE_CBX              1032
+#define IDC_UD_PAPER_HGT                1033
+#define IDC_UD_PAPER_WDTH               1034
+#define IDC_UD_WIDTH_LBL                1035
+#define IDC_UD_HEIGHT_LBL               1036
+#define IDC_INCHES_RD                   1037
+#define IDC_MILLI_RD                    1038
+#define IDC_HDR_LEFT_TXT                1039
 #define IDC_MATCH_WHOLE_WORD            1040
+#define IDC_HDR_MID_TXT                 1040
 #define IDC_MATCH_CASE                  1041
+#define IDC_HDR_RIGHT_TXT               1041
 #define IDC_WRAP_AROUND                 1042
+#define IDC_FTR_LEFT_TXT                1042
 #define IDC_SEARCH_BACKWARDS            1043
+#define IDC_FTR_MID_TXT                 1043
+#define IDC_FTR_RIGHT_TXT               1044
 #define IDC_FIND_EDIT                   1152
 #define IDC_RADIO_BLANK_PAGE            1153
 #define IDC_RADIO_HOME_PAGE             1154
@@ -87,9 +100,9 @@
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_3D_CONTROLS                     1
-#define _APS_NEXT_RESOURCE_VALUE        153
+#define _APS_NEXT_RESOURCE_VALUE        154
 #define _APS_NEXT_COMMAND_VALUE         32791
-#define _APS_NEXT_CONTROL_VALUE         1032
+#define _APS_NEXT_CONTROL_VALUE         1042
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

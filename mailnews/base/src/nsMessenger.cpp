@@ -1438,7 +1438,7 @@ NS_IMETHODIMP nsMessenger::DoPrint()
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      rv = viewerFile->Print(PR_FALSE,nsnull);
+      rv = viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
     }
 #ifdef DEBUG_MESSENGER
     else {

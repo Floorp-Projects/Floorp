@@ -70,7 +70,6 @@
 
 // Print Includes
 #include "PrintProgressDialog.h"
-#include "nsPrintSettingsImpl.h"
 #include "PrintSetupDialog.h"
 
 // Mozilla Includes
@@ -155,7 +154,6 @@ CBrowserView::CBrowserView()
 
     m_SecurityState = SECURITY_STATE_INSECURE;
 
-    m_PrintSettings = (nsIPrintSettings*)new nsPrintSettings();
 }
 
 CBrowserView::~CBrowserView()
@@ -268,6 +266,11 @@ HRESULT CBrowserView::CreateBrowser()
 
 	// Finally, show the web browser window
 	mBaseWindow->SetVisibility(PR_TRUE);
+
+	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(mWebBrowser));
+  if (print) {
+    print->GetPrintSettings(getter_AddRefs(m_PrintSettings));
+  }
 
 	return S_OK;
 }
@@ -980,6 +983,16 @@ LRESULT CBrowserView::OnFindMsg(WPARAM wParam, LPARAM lParam)
 
 void CBrowserView::OnFilePrint()
 {
+  nsresult rv;
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv)) 
+  {
+    prefs->SetBoolPref("print.use_native_print_dialog", PR_TRUE);
+    prefs->SetBoolPref("print.show_print_progress", PR_FALSE);
+  }
+  else
+	NS_ASSERTION(PR_FALSE, "Could not get preferences service");
+
   nsCOMPtr<nsIDOMWindow> domWindow;
 	mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
   if(domWindow) {
@@ -1027,6 +1040,13 @@ static float GetFloatFromStr(const char* aStr, float aMaxVal = 1.0)
   }
 }
 
+static PRUnichar* GetUnicodeFromCString(const CString& aStr)
+{
+  nsString str;
+  str.AssignWithConversion(LPCSTR(aStr));
+  return ToNewUnicode(str);
+}
+
 void CBrowserView::OnFilePrintSetup()
 {
   CPrintSetupDialog  dlg(m_PrintSettings);
@@ -1039,6 +1059,40 @@ void CBrowserView::OnFilePrintSetup()
     m_PrintSettings->SetScaling(double(dlg.m_Scaling) / 100.0);
     m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGColors);
     m_PrintSettings->SetPrintBGColors(dlg.m_PrintBGImages);
+
+    short  type;
+    double width;
+    double height;
+    dlg.GetPaperSizeInfo(type, width, height);
+    m_PrintSettings->SetPaperSizeType(type);
+    m_PrintSettings->SetPaperWidth(width);
+    m_PrintSettings->SetPaperHeight(height);
+
+    PRUnichar* uStr;
+    uStr = GetUnicodeFromCString(dlg.m_HeaderLeft);
+    m_PrintSettings->SetHeaderStrLeft(uStr);
+    if (uStr != nsnull) nsMemory::Free(uStr);
+
+    uStr = GetUnicodeFromCString(dlg.m_HeaderMiddle);
+    m_PrintSettings->SetHeaderStrCenter(uStr);
+    if (uStr != nsnull) nsMemory::Free(uStr);
+
+    uStr = GetUnicodeFromCString(dlg.m_HeaderRight);
+    m_PrintSettings->SetHeaderStrRight(uStr);
+    if (uStr != nsnull) nsMemory::Free(uStr);
+
+    uStr = GetUnicodeFromCString(dlg.m_FooterLeft);
+    m_PrintSettings->SetFooterStrLeft(uStr);
+    if (uStr != nsnull) nsMemory::Free(uStr);
+
+    uStr = GetUnicodeFromCString(dlg.m_FooterMiddle);
+    m_PrintSettings->SetFooterStrCenter(uStr);
+    if (uStr != nsnull) nsMemory::Free(uStr);
+
+    uStr = GetUnicodeFromCString(dlg.m_FooterRight);
+    m_PrintSettings->SetFooterStrRight(uStr);
+    if (uStr != nsnull) nsMemory::Free(uStr);
+
   }
 }
 

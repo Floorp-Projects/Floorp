@@ -50,6 +50,7 @@
 #include "nsIPresShell.h"
 #include "nsIPresState.h"
 #include "nsIPrintContext.h"
+#include "nsIPrintPreviewContext.h"
 #include "nsTextTransformer.h"
 
 #include "nsXBLAtoms.h"     // to addref/release table
@@ -209,7 +210,6 @@ MAKE_CTOR(CreateNewFrameUtil,           nsIFrameUtil,           NS_NewFrameUtil)
 MAKE_CTOR(CreateNewLayoutDebugger,      nsILayoutDebugger,      NS_NewLayoutDebugger)
 #endif
 
-MAKE_CTOR(CreateNewPrintPreviewContext, nsIPresContext,         NS_NewPrintPreviewContext)
 MAKE_CTOR(CreateNewCSSFrameConstructor, nsICSSFrameConstructor, NS_CreateCSSFrameConstructor)
 MAKE_CTOR(CreateNewFrameTraversal,      nsIFrameTraversal,      NS_CreateFrameTraversal)
 MAKE_CTOR(CreateNewLayoutHistoryState,  nsILayoutHistoryState,  NS_NewLayoutHistoryState)
@@ -217,6 +217,7 @@ MAKE_CTOR(CreateNewPresShell,           nsIPresShell,           NS_NewPresShell)
 MAKE_CTOR(CreateNewPresState,           nsIPresState,           NS_NewPresState)
 MAKE_CTOR(CreateNewGalleyContext,       nsIPresContext,         NS_NewGalleyContext)
 MAKE_CTOR(CreateNewPrintContext,        nsIPrintContext,        NS_NewPrintContext)
+MAKE_CTOR(CreateNewPrintPreviewContext, nsIPrintPreviewContext, NS_NewPrintPreviewContext)
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
@@ -282,6 +283,11 @@ static nsModuleComponentInfo gComponents[] = {
     NS_PRINTCONTEXT_CID,
     nsnull,
     CreateNewPrintContext },
+
+  { "Print Preview context",
+    NS_PRINTPREVIEWCONTEXT_CID,
+    nsnull,
+    CreateNewPrintPreviewContext },
   // XXX end ick
 
   { "XUL Box Object",

@@ -150,7 +150,6 @@ void CreateViewerMenus(QWidget *aParent, void * data, PRInt32 * aMenuBarHeight)
     InsertMenuItem(file, nsnull, nsnull, 0);
     InsertMenuItem(file, "Print Preview", eventHandler, VIEWER_ONE_COLUMN);
     InsertMenuItem(file, "Print", eventHandler, VIEWER_PRINT);
-    InsertMenuItem(file, "Print Setup", eventHandler, VIEWER_PRINT_SETUP);
     InsertMenuItem(file, nsnull, nsnull, 0);
     InsertMenuItem(file, "&Exit", eventHandler, VIEWER_EXIT);
 

@@ -45,6 +45,9 @@ CHROME_L10N = \
 	.\regionNames.properties \
 	.\commonDialogs.properties \
 	.\plugins.properties \
+	.\printdialog.dtd \
+	.\printPageSetup.dtd \
+	.\printPageSetup.properties \
 	$(NULL)
   
 include <$(DEPTH)\config\rules.mak>

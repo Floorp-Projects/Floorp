@@ -32,7 +32,7 @@
 #include "nsIMsgPrintEngine.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIStreamListener.h"
-#include "nsIPrintListener.h"
+#include "nsIWebProgressListener.h"
 #include "nsIMsgStatusFeedback.h"
 #include "nsIStringBundle.h"
 #include "nsIContentViewerFile.h"
@@ -41,8 +41,7 @@
 
 class nsMsgPrintEngine : public nsIMsgPrintEngine,
                          public nsIWebProgressListener,
-                         public nsSupportsWeakReference,
-                         public nsIPrintListener {
+                         public nsSupportsWeakReference {
 
 public:
   nsMsgPrintEngine();
@@ -56,9 +55,6 @@ public:
 
   // For nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
-
-  // For nIPrintListener
-  NS_DECL_NSIPRINTLISTENER
 
 protected:
 

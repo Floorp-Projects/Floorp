@@ -69,6 +69,8 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
+class nsIPrintSettings;
+
 // Class IDs
 static NS_DEFINE_IID(kChildWindowCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
@@ -795,8 +797,20 @@ PluginViewerImpl::GetSaveable(PRBool *aSaveable)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+#ifdef NS_DEBUG
 NS_IMETHODIMP
-PluginViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener)
+PluginViewerImpl::Print(PRBool            aSilent,
+                        FILE *            aDebugFile, 
+                        nsIPrintSettings* aPrintSettings)
+{
+  return NS_ERROR_FAILURE;
+}
+#endif
+
+NS_IMETHODIMP
+PluginViewerImpl::Print(PRBool            aSilent,
+                        nsIPrintSettings* aPrintSettings,
+                        nsIWebProgressListener* aWebProgressListener)
 {
   nsPluginPrint npprint;
   npprint.mode = nsPluginMode_Full;
@@ -814,7 +828,7 @@ PluginViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintList
 }
 
 NS_IMETHODIMP
-PluginViewerImpl::PrintPreview()
+PluginViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
   return NS_OK;      // XXX: hey, plug in guys!  implement me!
 }

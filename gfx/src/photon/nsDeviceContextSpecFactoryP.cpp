@@ -70,6 +70,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: Init(void)
 //XXX this method needs to do what the API says...
 
 NS_IMETHODIMP nsDeviceContextSpecFactoryPh :: CreateDeviceContextSpec(nsIWidget *aWidget,
+                                  nsIPrintSettings* aPrintSettings,
 																	nsIDeviceContextSpec *&aNewSpec,
 																	PRBool aQuiet)
 {

@@ -69,6 +69,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrintOptionsWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontList)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsScreenManagerWin)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsPrinterEnumeratorWin)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNativeThemeWin)
 
 PRBool
@@ -213,7 +214,11 @@ static nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID,
     "@mozilla.org/gfx/screenmanager;1",
     nsScreenManagerWinConstructor },
-
+  { "Win Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/win;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorWinConstructor },
   { "Native Theme Renderer", 
     NS_THEMERENDERER_CID,
     "@mozilla.org/chrome/chrome-native-theme;1", 

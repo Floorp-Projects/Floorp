@@ -47,7 +47,7 @@
 #include "nsIPresShell.h"
 #include "nsIStyleSet.h"
 #include "nsIFontMetrics.h"
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
 #include "nsPageFrame.h"
 #include "nsIPrintPreviewContext.h"
 #include "nsStyleConsts.h"
@@ -74,6 +74,7 @@ static NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
 #define PRINTING_PROPERTIES "chrome://communicator/locale/printing.properties"
 
 // Print Options
+#include "nsIPrintSettings.h"
 #include "nsIPrintOptions.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
@@ -161,13 +162,8 @@ nsSimplePageSequenceFrame::nsSimplePageSequenceFrame() :
   // XXX this code and the object data member "mIsPrintingSelection" is only needed
   // for the hack for printing selection where we make the page the max size
   nsresult rv;
-   mPageData->mPrintOptions = do_GetService(kPrintOptionsCID, &rv);
+  mPageData->mPrintOptions = do_GetService(kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && mPageData->mPrintOptions) {
-    PRInt16 printType;
-    mPageData->mPrintOptions->GetPrintRange(&printType);
-    mIsPrintingSelection = nsIPrintOptions::kRangeSelection == printType;
-    mPageData->mPrintOptions->GetMarginInTwips(mMargin);
-
     // now get the default font form the print options
     mPageData->mPrintOptions->GetDefaultFont(*mPageData->mHeadFootFont);
   }
@@ -505,15 +501,6 @@ SendStatusNotification(nsIPrintStatusCallback* aStatusCallback,
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::Print(nsIPresContext*         aPresContext,
-                                 nsIPrintOptions*        aPrintOptions,
-                                 nsIPrintStatusCallback* aStatusCallback)
-{
-  NS_ASSERTION(0, "No longer being used.");
-  return NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
 nsSimplePageSequenceFrame::SetOffsets(nscoord aStartOffset, nscoord aEndOffset)
 {
   mStartOffset = aStartOffset;
@@ -568,15 +555,12 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
   // Doing this here so we only have to go get these formats once
   nsAutoString pageNumberFormat;
   // Now go get the Localized Page Formating String
-  nsAutoString propName;
-  propName.AssignWithConversion(aPropName);
-  PRUnichar* uPropName = ToNewUnicode(propName);
+  const PRUnichar* uPropName = NS_ConvertUTF8toUCS2(aPropName).get();
   if (uPropName != nsnull) {
     nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, uPropName, pageNumberFormat);
     if (NS_FAILED(rv)) { // back stop formatting
       pageNumberFormat.AssignWithConversion(aDefPropVal);
     }
-    nsMemory::Free(uPropName);
   }
   // Sets the format into a static data memeber which will own the memory and free it
   PRUnichar* uStr = ToNewUnicode(pageNumberFormat);
@@ -602,20 +586,27 @@ static nsIRegion* CreateRegion()
 
 NS_IMETHODIMP
 nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
-                                      nsIPrintOptions* aPrintOptions)
+                                      nsIPrintSettings* aPrintSettings)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aPrintOptions);
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  if (!mPageData->mPrintSettings) {
+    mPageData->mPrintSettings = aPrintSettings;
+  }
 
   PRInt16 printType;
-  aPrintOptions->GetPrintRange(&printType);
+  aPrintSettings->GetPrintRange(&printType);
   mPrintRangeType = printType;
-  aPrintOptions->GetStartPageRange(&mFromPageNum);
-  aPrintOptions->GetEndPageRange(&mToPageNum);
-  aPrintOptions->GetMarginInTwips(mMargin);
+  mIsPrintingSelection = nsIPrintSettings::kRangeSelection == printType;
+  aPrintSettings->GetMarginInTwips(mMargin);
 
-  mDoingPageRange = nsIPrintOptions::kRangeSpecifiedPageRange == mPrintRangeType ||
-                    nsIPrintOptions::kRangeSelection == mPrintRangeType;
+  aPrintSettings->GetStartPageRange(&mFromPageNum);
+  aPrintSettings->GetEndPageRange(&mToPageNum);
+  aPrintSettings->GetMarginInTwips(mMargin);
+
+  mDoingPageRange = nsIPrintSettings::kRangeSpecifiedPageRange == mPrintRangeType ||
+                    nsIPrintSettings::kRangeSelection == mPrintRangeType;
 
   // If printing a range of pages make sure at least the starting page
   // number is valid
@@ -669,11 +660,11 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
       pageNum++;
     }
   }
-  //printf("***** Setting aPresContext %p is painting selection %d\n", aPresContext, nsIPrintOptions::kRangeSelection == mPrintRangeType);
+  //printf("***** Setting aPresContext %p is painting selection %d\n", aPresContext, nsIPrintSettings::kRangeSelection == mPrintRangeType);
 #endif
 
   // Determine if we are rendering only the selection
-  aPresContext->SetIsRenderingOnlySelection(nsIPrintOptions::kRangeSelection == mPrintRangeType);
+  aPresContext->SetIsRenderingOnlySelection(nsIPrintSettings::kRangeSelection == mPrintRangeType);
 
 
   if (mDoingPageRange) {
@@ -723,7 +714,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
     }
 
     // adjust total number of pages
-    if (nsIPrintOptions::kRangeSelection == mPrintRangeType) {
+    if (nsIPrintSettings::kRangeSelection == mPrintRangeType) {
       totalPages = mToPageNum - mFromPageNum + 1;
     } else {
       totalPages = pageNum - 1;
@@ -754,7 +745,7 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
       pointSize = 10;
     }
   }
-  aPrintOptions->SetFontNamePointSize(fontName, pointSize);
+  mPageData->mPrintOptions->SetFontNamePointSize(fontName, pointSize);
 
   // Doing this here so we only have to go get these formats once
   SetPageNumberFormat("pagenumber",  "%1$d", PR_TRUE);
@@ -769,11 +760,9 @@ nsSimplePageSequenceFrame::StartPrint(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
-nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
-                                         nsIPrintOptions* aPrintOptions)
+nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext)
 {
   NS_ENSURE_ARG_POINTER(aPresContext);
-  NS_ENSURE_ARG_POINTER(aPrintOptions);
 
   // Print each specified page
   // pageNum keeps track of the current page and what pages are printing
@@ -791,8 +780,8 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
   }
 
   PRBool printEvenPages, printOddPages;
-  aPrintOptions->GetPrintOptions(nsIPrintOptions::kOptPrintEvenPages, &printEvenPages);
-  aPrintOptions->GetPrintOptions(nsIPrintOptions::kOptPrintOddPages, &printOddPages);
+  mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintEvenPages, &printEvenPages);
+  mPageData->mPrintSettings->GetPrintOptions(nsIPrintSettings::kPrintOddPages, &printOddPages);
 
   // Begin printing of the document
   nsCOMPtr<nsIDeviceContext> dc;
@@ -865,6 +854,7 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
       nsIFrame* conFrame;
       childFrame->FirstChild(aPresContext, nsnull, &conFrame);
       conFrame->GetView(aPresContext, &containerView);
+      NS_ASSERTION(containerView != nsnull, "Container view can't be null!");
       containerView->GetBounds(containerRect);
       containerRect.y -= mYSelOffset;
       containerRect.height = height-mYSelOffset;
@@ -934,8 +924,8 @@ nsSimplePageSequenceFrame::PrintNextPage(nsIPresContext*  aPresContext,
   }
 
   if (!mSkipPageEnd) {
-    if (nsIPrintOptions::kRangeSelection != mPrintRangeType ||
-        (nsIPrintOptions::kRangeSelection == mPrintRangeType && mPrintThisPage)) {
+    if (nsIPrintSettings::kRangeSelection != mPrintRangeType ||
+        (nsIPrintSettings::kRangeSelection == mPrintRangeType && mPrintThisPage)) {
       mPrintedPageNum++;
     }
 
@@ -965,8 +955,8 @@ nsSimplePageSequenceFrame::DoPageEnd(nsIPresContext*  aPresContext)
     }
   }
 
-  if (nsIPrintOptions::kRangeSelection != mPrintRangeType ||
-      (nsIPrintOptions::kRangeSelection == mPrintRangeType && mPrintThisPage)) {
+  if (nsIPrintSettings::kRangeSelection != mPrintRangeType ||
+      (nsIPrintSettings::kRangeSelection == mPrintRangeType && mPrintThisPage)) {
     mPrintedPageNum++;
   }
 

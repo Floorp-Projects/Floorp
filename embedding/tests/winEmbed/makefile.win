@@ -39,6 +39,7 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  shistory \
 		  webbrowserpersist \
+		  gfx \
 		  $(NULL)
 
 PROGRAM         = .\$(OBJDIR)\$(MODULE).exe

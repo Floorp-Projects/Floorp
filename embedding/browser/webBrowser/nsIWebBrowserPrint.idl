@@ -24,8 +24,7 @@
 
 interface nsIDOMWindow;
 interface nsIPrintSettings;
-interface nsIPrintListener;
-
+interface nsIWebProgressListener;
 
 /**
  * The nsIWebBrowserPrint
@@ -33,6 +32,22 @@ interface nsIPrintListener;
 [scriptable, uuid(9A7CA4B0-FBBA-11d4-A869-00105A183419)]
 interface nsIWebBrowserPrint : nsISupports
 {
+  /**
+   * Returns a PrintSettings object 
+   * Creates a new the first time, if one doesn't exist.
+   * then returns the same object each time after that
+   * unless a different object was set into it.
+   */
+  attribute nsIPrintSettings printSettings;
+
+  /**
+   * This returns the current settings that was last used for printing
+   * or page setup. For peinring, the print engine always sets the PrintSettings
+   * from whoever is printing into the global settings
+   * for page setup it is the responsibilitity of those implementing page setup
+   * to set their setting into the global settings
+   */
+  attribute nsIPrintSettings globalPrintSettings;
 
   /**
    * Print the specified DOM window
@@ -40,9 +55,9 @@ interface nsIWebBrowserPrint : nsISupports
    * aDOMWindow - The DOM window to print
    * aThePrintOptions - Printer Settings for the print job
    */
-  void Print(in nsIDOMWindow aDOMWindow,
-             in nsIPrintSettings aThePrintSettings, 
-             in nsIPrintListener aPrintListsner);
+  void print(in nsIDOMWindow aDOMWindow,
+             in nsIPrintSettings aThePrintSettings,
+			 in nsIWebProgressListener aWPListener);
 
   /**
    * Print Preview the specified DOM window
@@ -50,10 +65,9 @@ interface nsIWebBrowserPrint : nsISupports
    * aDOMWindow - The DOM window to print preview
    * aThePrintOptions - Printer Settings for the print preview
    */
-  void PrintPreview(in nsIDOMWindow aDOMWindow,
+  void printPreview(in nsIDOMWindow aDOMWindow,
                     in nsIPrintSettings aThePrintSettings);
 
-  void Cancel();
-
+  void cancel();
 
 };

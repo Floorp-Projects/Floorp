@@ -43,14 +43,9 @@
 #include "nsGfxCIID.h"
 #include "nsLayoutAtoms.h"
 #include "prlog.h"
+#include "nsIPrintSettings.h"
 
-// Print Options
-#include "nsIPrintOptions.h"
-#include "nsGfxCIID.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
-
-class PrintPreviewContext : public nsPresContext {
+class PrintPreviewContext : public nsPresContext, nsIPrintPreviewContext {
 public:
   PrintPreviewContext();
   ~PrintPreviewContext();
@@ -66,10 +61,13 @@ public:
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
+  NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS);
+  NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS);
 
 protected:
   nsRect mPageDim;
   PRBool mCanPaginatedScroll;
+  nsCOMPtr<nsIPrintSettings> mPrintSettings;
 };
 
 PrintPreviewContext::PrintPreviewContext() :
@@ -147,8 +145,27 @@ PrintPreviewContext::SetPageDim(nsRect* aPageDim)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+PrintPreviewContext::SetPrintSettings(nsIPrintSettings * aPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+  mPrintSettings = aPrintSettings;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+PrintPreviewContext::GetPrintSettings(nsIPrintSettings * *aPrintSettings)
+{
+  NS_ENSURE_ARG_POINTER(aPrintSettings);
+
+  *aPrintSettings = mPrintSettings;
+  NS_IF_ADDREF(*aPrintSettings);
+
+  return NS_OK;
+}
+
 NS_EXPORT nsresult
-NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult)
+NS_NewPrintPreviewContext(nsIPrintPreviewContext** aInstancePtrResult)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
@@ -160,5 +177,5 @@ NS_NewPrintPreviewContext(nsIPresContext** aInstancePtrResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  return it->QueryInterface(NS_GET_IID(nsIPresContext), (void **) aInstancePtrResult);
+  return it->QueryInterface(NS_GET_IID(nsIPrintPreviewContext), (void **) aInstancePtrResult);
 }

@@ -40,7 +40,7 @@ EmbedPrintListener::~EmbedPrintListener()
 {
 }
 
-NS_IMPL_ISUPPORTS1(EmbedPrintListener, nsIPrintListener)
+NS_IMPL_ISUPPORTS1(EmbedPrintListener, nsIWebProgressListener)
 
 nsresult
 EmbedPrintListener::Init(EmbedPrivate *aOwner)
@@ -72,26 +72,39 @@ EmbedPrintListener::InvokePrintCallback(int status, unsigned int cur, unsigned i
 	PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
 }
 
-/* void OnStartPrinting (); */
-NS_IMETHODIMP 
-EmbedPrintListener::OnStartPrinting()
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aStateFlags, in unsigned long aStatus); */
+NS_IMETHODIMP EmbedPrintListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
 {
-	InvokePrintCallback(Pt_MOZ_PRINT_START, 0, 0);
-    return NS_OK;
+  if (aStatus == nsIWebProgressListener::STATE_START) {
+	  InvokePrintCallback(Pt_MOZ_PRINT_START, 0, 0);
+
+  } else if (aStatus == nsIWebProgressListener::STATE_STOP) {
+	  InvokePrintCallback(Pt_MOZ_PRINT_COMPLETE, 0, 0);
+  }
+  return NS_OK;
 }
 
-/* void OnProgressPrinting (in PRUint32 aProgress, in PRUint32 aProgressMax); */
-NS_IMETHODIMP 
-EmbedPrintListener::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
+/* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
+NS_IMETHODIMP EmbedPrintListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
-	InvokePrintCallback(Pt_MOZ_PRINT_PROGRESS, aProgress, aProgressMax);
-    return NS_OK;
+	InvokePrintCallback(Pt_MOZ_PRINT_PROGRESS, aCurTotalProgress, aMaxTotalProgress);
+  return NS_OK;
 }
 
-/* void OnEndPrinting (in PRUint32 aStatus); */
-NS_IMETHODIMP 
-EmbedPrintListener::OnEndPrinting(PRUint32 aStatus)
+/* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
+NS_IMETHODIMP EmbedPrintListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
-	InvokePrintCallback(Pt_MOZ_PRINT_COMPLETE, 0, 0);
-    return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
+NS_IMETHODIMP EmbedPrintListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+NS_IMETHODIMP EmbedPrintListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }

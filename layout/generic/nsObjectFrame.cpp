@@ -94,11 +94,10 @@
 #include "nsIContentViewer.h"
 #include "nsIDocShell.h"
 #include "npapi.h"
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
 #include "nsGfxCIID.h"
 #include "nsHTMLUtils.h"
 #include "nsUnicharUtils.h"
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // headers for plugin scriptability
 #include "nsIScriptGlobalObject.h"
@@ -1659,9 +1658,9 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
     window.type  =  windowless ? nsPluginWindowType_Drawable : nsPluginWindowType_Window;
 
     // get a few things
-    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-    NS_ENSURE_TRUE(printService, NS_ERROR_FAILURE);
-    printService->GetMarginInTwips(margin);
+    nsCOMPtr<nsIPrintSettings> printSettings;
+    thePrinterContext->GetPrintSettings(getter_AddRefs(printSettings));
+    printSettings->GetMarginInTwips(margin);
 
     aPresContext->GetTwipsToPixels(&t2p);
     GetOffsetFromView(aPresContext, origin, &parentWithView);
@@ -1700,7 +1699,9 @@ nsObjectFrame::Paint(nsIPresContext*      aPresContext,
 #elif defined (XP_UNIX)
     // UNIX does things completely differently
     PRUnichar *printfile = nsnull;
-    printService->GetToFileName(&printfile);
+    if (printSettings) {
+      printSettings->GetToFileName(&printfile);
+    }
     if (!printfile) 
       return NS_OK; // XXX what to do on UNIX when we don't have a PS file???? 
 

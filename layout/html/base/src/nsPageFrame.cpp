@@ -48,6 +48,7 @@
 #include "nsIDeviceContext.h"
 #include "nsReadableUtils.h"
 #include "nsIPrintPreviewContext.h"
+#include "nsIPrintContext.h"
 
 #include "nsIView.h" // view flags for clipping
 #include "nsCSSRendering.h"
@@ -63,7 +64,7 @@
 #include "nsIFontMetrics.h"
 
 // Print Options
-#include "nsIPrintOptions.h"
+#include "nsIPrintSettings.h"
 #include "nsGfxCIID.h"
 #include "nsIServiceManager.h"
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
@@ -124,20 +125,23 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
   // (Also skip it if we are doing PrintPreview)
   nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
   if (!ppContext) {
-    nsresult rv;
-    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      PRInt16 printRangeType = nsIPrintOptions::kRangeAllPages; 
-      printService->GetPrintRange(&printRangeType);
-      // make sure we are printing the selection
-      if (printRangeType == nsIPrintOptions::kRangeSelection) {
-        nsIView* view;
-        aChildList->GetView(aPresContext, &view);
-        if (view == nsnull) {
-          nsCOMPtr<nsIStyleContext> styleContext;
-          aChildList->GetStyleContext(getter_AddRefs(styleContext));
-          nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aChildList,
-                                                   styleContext, nsnull, PR_TRUE);
+    nsCOMPtr<nsIPrintContext> prtContext = do_QueryInterface(aPresContext);
+    if (prtContext) {
+      nsCOMPtr<nsIPrintSettings> printSettings;
+      prtContext->GetPrintSettings(getter_AddRefs(printSettings));
+      if (printSettings) {
+        PRInt16 printRangeType = nsIPrintSettings::kRangeAllPages; 
+        printSettings->GetPrintRange(&printRangeType);
+        // make sure we are printing the selection
+        if (printRangeType == nsIPrintSettings::kRangeSelection) {
+          nsIView* view;
+          aChildList->GetView(aPresContext, &view);
+          if (view == nsnull) {
+            nsCOMPtr<nsIStyleContext> styleContext;
+            aChildList->GetStyleContext(getter_AddRefs(styleContext));
+            nsHTMLContainerFrame::CreateViewForFrame(aPresContext, aChildList,
+                                                     styleContext, nsnull, PR_TRUE);
+          }
         }
       }
     }
@@ -375,7 +379,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   if (kTitle != nsnull) {
     if (aStr.Find(kTitle) > -1) {
       PRUnichar * uTitle;
-      mPD->mPrintOptions->GetTitle(&uTitle);   // creates memory
+      mPD->mPrintSettings->GetTitle(&uTitle);   // creates memory
       SubstValueForCode(aNewStr, kTitle, uTitle);
       nsMemory::Free(uTitle);
       nsMemory::Free(kTitle);
@@ -388,7 +392,7 @@ nsPageFrame::ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr)
   if (kDocURL != nsnull) {
     if (aStr.Find(kDocURL) > -1) {
       PRUnichar * uDocURL;
-      mPD->mPrintOptions->GetDocURL(&uDocURL);   // creates memory
+      mPD->mPrintSettings->GetDocURL(&uDocURL);   // creates memory
       SubstValueForCode(aNewStr, kDocURL, uDocURL);
       nsMemory::Free(uDocURL);
       nsMemory::Free(kDocURL);
@@ -410,15 +414,15 @@ nscoord nsPageFrame::GetXPosition(nsIRenderingContext& aRenderingContext,
 
   nscoord x = aRect.x;
   switch (aJust) {
-    case nsIPrintOptions::kJustLeft:
+    case nsIPrintSettings::kJustLeft:
       x += mPD->mExtraMargin.left + mPD->mHeadFooterGap;
       break;
 
-    case nsIPrintOptions::kJustCenter:
+    case nsIPrintSettings::kJustCenter:
       x += (aRect.width - width) / 2;
       break;
 
-    case nsIPrintOptions::kJustRight:
+    case nsIPrintSettings::kJustRight:
       x += aRect.width - width - mPD->mExtraMargin.right - mPD->mHeadFooterGap;
       break;
   } // switch
@@ -459,13 +463,13 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
   nscoord strSpace = aRect.width / numStrs;
 
   if (!aStr1.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustLeft, aStr1, aRect, aAscent, aHeight, strSpace);
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustLeft, aStr1, aRect, aAscent, aHeight, strSpace);
   }
   if (!aStr2.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustCenter, aStr2, aRect, aAscent, aHeight, strSpace);
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustCenter, aStr2, aRect, aAscent, aHeight, strSpace);
   }
   if (!aStr3.IsEmpty()) {
-    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintOptions::kJustRight, aStr3, aRect, aAscent, aHeight, strSpace);
+    DrawHeaderFooter(aRenderingContext, aFrame, aHeaderFooter, nsIPrintSettings::kJustRight, aStr3, aRect, aAscent, aHeight, strSpace);
   }
 }
 
@@ -536,16 +540,15 @@ nsPageFrame::DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
     aRenderingContext.PopState(clipEmpty);
 #ifdef DEBUG_PRINTING
     PRINT_DEBUG_MSG2("Page: %p", this);
-    char * s = ToNewCString(str);
+    const char * s = NS_ConvertUCS2toUTF8(str).get();
     if (s) {
       PRINT_DEBUG_MSG2(" [%s]", s);
-      nsMemory::Free(s);
     }
     char justStr[64];
     switch (aJust) {
-      case nsIPrintOptions::kJustLeft:strcpy(justStr, "Left");break;
-      case nsIPrintOptions::kJustCenter:strcpy(justStr, "Center");break;
-      case nsIPrintOptions::kJustRight:strcpy(justStr, "Right");break;
+      case nsIPrintSettings::kJustLeft:strcpy(justStr, "Left");break;
+      case nsIPrintSettings::kJustCenter:strcpy(justStr, "Center");break;
+      case nsIPrintSettings::kJustRight:strcpy(justStr, "Right");break;
     } // switch
     PRINT_DEBUG_MSG2(" HF: %s ", aHeaderFooter==eHeader?"Header":"Footer");
     PRINT_DEBUG_MSG2(" JST: %s ", justStr);
@@ -629,8 +632,17 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 #endif
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer && !mSupressHF) {
+    // For PrintPreview the 
+    if (!mPD->mPrintSettings) {
+      nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(aPresContext);
+      if (ppContext) {
+        ppContext->GetPrintSettings(getter_AddRefs(mPD->mPrintSettings));
+      }
+    }
+    NS_ASSERTION(mPD->mPrintSettings, "Must have a good PrintSettings here!");
+
     // get the current margin
-    mPD->mPrintOptions->GetMarginInTwips(mMargin);
+    mPD->mPrintSettings->GetMarginInTwips(mMargin);
 
     rect.SetRect(0, 0, mRect.width - mPD->mShadowSize.width, mRect.height - mPD->mShadowSize.height);
 
@@ -670,20 +682,20 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
 
     // print document headers and footers
     PRUnichar * headers[3];
-    mPD->mPrintOptions->GetHeaderStrLeft(&headers[0]);   // creates memory
-    mPD->mPrintOptions->GetHeaderStrCenter(&headers[1]); // creates memory
-    mPD->mPrintOptions->GetHeaderStrRight(&headers[2]);  // creates memory
-    DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintOptions::kJustLeft, 
+    mPD->mPrintSettings->GetHeaderStrLeft(&headers[0]);   // creates memory
+    mPD->mPrintSettings->GetHeaderStrCenter(&headers[1]); // creates memory
+    mPD->mPrintSettings->GetHeaderStrRight(&headers[2]);  // creates memory
+    DrawHeaderFooter(aRenderingContext, this, eHeader, nsIPrintSettings::kJustLeft, 
                      nsAutoString(headers[0]), nsAutoString(headers[1]), nsAutoString(headers[2]), 
                      rect, ascent, visibleHeight);
     PRInt32 i;
     for (i=0;i<3;i++) nsMemory::Free(headers[i]);
 
     PRUnichar * footers[3];
-    mPD->mPrintOptions->GetFooterStrLeft(&footers[0]);   // creates memory
-    mPD->mPrintOptions->GetFooterStrCenter(&footers[1]); // creates memory
-    mPD->mPrintOptions->GetFooterStrRight(&footers[2]);  // creates memory
-    DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, 
+    mPD->mPrintSettings->GetFooterStrLeft(&footers[0]);   // creates memory
+    mPD->mPrintSettings->GetFooterStrCenter(&footers[1]); // creates memory
+    mPD->mPrintSettings->GetFooterStrRight(&footers[2]);  // creates memory
+    DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintSettings::kJustRight, 
                      nsAutoString(footers[0]), nsAutoString(footers[1]), nsAutoString(footers[2]), 
                      rect, ascent, visibleHeight);
     for (i=0;i<3;i++) nsMemory::Free(footers[i]);

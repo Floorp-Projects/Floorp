@@ -935,36 +935,39 @@ BOOL CALLBACK abortproc( HDC hdc, int iError )
 NS_IMETHODIMP nsDeviceContextWin :: GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                                         nsIDeviceContext *&aContext)
 {
-  char *devicename;
-  char *drivername;
-  HGLOBAL hdevmode;
-  DEVMODE *devmode;
-
-  //XXX this API should take an CID, use the repository and
-  //then QI for the real object rather than casting... MMP
-
-  aContext = new nsDeviceContextWin();
-  if(nsnull != aContext){
-    NS_ADDREF(aContext);
+  nsDeviceContextWin* devConWin = new nsDeviceContextWin(); //ref count 0 
+  if (devConWin != nsnull) {
+    // this will ref count it
+    nsresult rv = devConWin->QueryInterface(NS_GET_IID(nsIDeviceContext), (void**)&aContext);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "This has to support nsIDeviceContext");
   } else {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  ((nsDeviceContextWin *)aContext)->mSpec = aDevice;
+  devConWin->mSpec = aDevice;
   NS_ADDREF(aDevice);
  
-  ((nsDeviceContextSpecWin *)aDevice)->GetDeviceName(devicename);
-  ((nsDeviceContextSpecWin *)aDevice)->GetDriverName(drivername);
-  ((nsDeviceContextSpecWin *)aDevice)->GetDEVMODE(hdevmode);
+  char*   devicename;
+  char*   drivername;
 
-  devmode = (DEVMODE *)::GlobalLock(hdevmode);
-  HDC dc = ::CreateDC(drivername, devicename, NULL, devmode);
+  nsDeviceContextSpecWin* devSpecWin = NS_STATIC_CAST(nsDeviceContextSpecWin*, aDevice);
+  devSpecWin->GetDeviceName(devicename); // sets pointer do not free
+  devSpecWin->GetDriverName(drivername); // sets pointer do not free
 
-//  ::SetAbortProc(dc, (ABORTPROC)abortproc);
+  HDC dc = NULL;
+  if (devSpecWin->IsDEVMODEGlobalHandle()) {
+    HGLOBAL hGlobal;
+    devSpecWin->GetGlobalDevMode(hGlobal);
+    LPDEVMODE devmode = (DEVMODE *)::GlobalLock(hGlobal);
+    dc = ::CreateDC(drivername, devicename, NULL, devmode);
+    ::GlobalUnlock(hGlobal);
+  } else {
+    LPDEVMODE devmode;
+    devSpecWin->GetDevMode(devmode);
+    dc = ::CreateDC(drivername, devicename, NULL, devmode);
+  }
 
-  ::GlobalUnlock(hdevmode);
-
-  return ((nsDeviceContextWin *)aContext)->Init(dc, this);
+  return devConWin->Init(dc, this); // take ownership of the DC
 }
 
 NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
@@ -978,13 +981,33 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
     titleStr = aTitle;
     char *title = GetACPString(titleStr);
 
+    char* docName = nsnull;
+    nsresult  rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+    if (printService) {
+      PRBool printToFile = PR_FALSE;
+      printService->GetPrintToFile(&printToFile);
+      if (printToFile) {
+        PRUnichar* uStr;
+        printService->GetToFileName(&uStr);
+        if (uStr != nsnull) {
+          nsAutoString str(uStr);
+          if (str.Length() > 0) {
+            docName = ToNewCString(str);
+          }
+          nsMemory::Free(uStr);
+        }
+      }
+    }
     docinfo.cbSize = sizeof(docinfo);
     docinfo.lpszDocName = title != nsnull?title:"Mozilla Document";
-#ifdef DEBUG_rods
+
+#ifdef DEBUG_rodsX
     docinfo.lpszOutput = "p.ps";
 #else
-    docinfo.lpszOutput = NULL;
+    docinfo.lpszOutput = docName;
 #endif
+
     docinfo.lpszDatatype = NULL;
     docinfo.fwType = 0;
 
@@ -993,9 +1016,8 @@ NS_IMETHODIMP nsDeviceContextWin :: BeginDocument(PRUnichar * aTitle)
     else
       rv = NS_ERROR_FAILURE;
 
-    if (title != nsnull) {
-      delete [] title;
-    }
+    if (title != nsnull) delete [] title;
+    if (docName != nsnull) nsMemory::Free(docName);
   }
 
   return rv;

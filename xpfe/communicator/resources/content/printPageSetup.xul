@@ -24,6 +24,7 @@ Contributor(s):
   Dan Rosen <dr@netscape.com>
   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
   Asko Tontti <atontti@cc.hut.fi>
+  Rod Spears <rods@netscape.com>
 
 -->
 
@@ -48,21 +49,25 @@ Contributor(s):
     </columns>
 
     <rows>
-      <row>
+     <row>
+      <hbox align="center" pack="end">
         <label id="paperLabel" value="&paperInput.label;"/>
-        <menulist id="paperList" flex ="1">
-          <menupopup/>
-        </menulist>
-      </row>
+      </hbox>
+      <menulist id="paperList" flex ="1">
+        <menupopup/>
+      </menulist>
+     </row>
 
      <row>
+      <hbox align="center" pack="end">
        <label id="orientationLabel" value="&orientationGroup.label;"/>
-        <menulist id="orientation" flex ="1">
-          <menupopup>
-            <menuitem label="&portraitItem.label;" value="0"/>
-            <menuitem label="&landscapeItem.label;" value="1"/>
-          </menupopup>
-        </menulist>
+      </hbox>
+      <menulist id="orientation" flex ="1">
+        <menupopup>
+          <menuitem label="&portraitItem.label;" value="0"/>
+          <menuitem label="&landscapeItem.label;" value="1"/>
+        </menupopup>
+      </menulist>
      </row>
 
     </rows>
@@ -84,19 +89,19 @@ Contributor(s):
         <hbox>
           <hbox align="center">
             <label id="topLabel" control="topInput" value="&topInput.label;"/>
-            <textbox id="topInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id="topInput" style="width:5em;" onkeyup="checkDouble(this)"/>
           </hbox>
           <hbox align="center">
             <label id="bottomLabel" control="bottomInput" value="&bottomInput.label;"/>
-            <textbox id="bottomInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id="bottomInput" style="width:5em;" onkeyup="checkDouble(this)"/>
           </hbox>
           <hbox align="center">
             <label id="leftLabel" control="leftInput" value="&leftInput.label;"/>
-            <textbox id="leftInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id="leftInput" style="width:5em;" onkeyup="checkDouble(this)"/>
           </hbox>
           <hbox align="center">
             <label id="rightLabel" control="rightInput" value="&rightInput.label;"/>
-            <textbox id="rightInput" style="width:5em;" onkeyup="checkValid(this.id)"/>
+            <textbox id="rightInput" style="width:5em;" onkeyup="checkDouble(this)"/>
           </hbox>
         </hbox>
         </groupbox>
@@ -121,16 +126,22 @@ Contributor(s):
             </columns>
             <rows>
               <row>
-                <label id="hLeftLabel" control="hLeftInput" value="&leftInput.label;"/>
-                <textbox id="hLeftInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+                <hbox align="center" pack="end">
+                  <label id="hLeftLabel" control="hLeftInput" value="&leftInput.label;"/>
+                </hbox>
+                <textbox id="hLeftInput" style="width:10em;" onkeyup="checkDouble(this)"/>
               </row>
               <row>
-                <label id="hCenterLabel" control="hCenterInput" value="&centerInput.label;"/>
-                <textbox id="hCenterInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+                <hbox align="center" pack="end">
+                  <label id="hCenterLabel" control="hCenterInput" value="&centerInput.label;"/>
+                </hbox>
+                <textbox id="hCenterInput" style="width:10em;" onkeyup="checkDouble(this)"/>
               </row>
               <row>
-                <label id="hRightLabel" control="hRightInput" value="&rightInput.label;"/>
-                <textbox id="hRightInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+                <hbox align="center" pack="end">
+                  <label id="hRightLabel" control="hRightInput" value="&rightInput.label;"/>
+                </hbox>
+                <textbox id="hRightInput" style="width:10em;" onkeyup="checkDouble(this)"/>
               </row>
             </rows>
           </grid>
@@ -154,16 +165,22 @@ Contributor(s):
             </columns>
             <rows>
               <row>
-                <label id="fLeftLabel" control="fLeftInput" value="&leftInput.label;"/>
-                <textbox id="fLeftInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+                <hbox align="center" pack="end">
+                  <label id="fLeftLabel" control="fLeftInput" value="&leftInput.label;"/>
+                </hbox>
+                <textbox id="fLeftInput" style="width:10em;" onkeyup="checkDouble(this)"/>
               </row>
               <row>
-                <label id="fCenterLabel" control="fCenterInput" value="&centerInput.label;"/>
-                <textbox id="fCenterInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+                <hbox align="center" pack="end">
+                  <label id="fCenterLabel" control="fCenterInput" value="&centerInput.label;"/>
+                </hbox>
+                <textbox id="fCenterInput" style="width:10em;" onkeyup="checkDouble(this)"/>
               </row>
               <row>
-                <label id="fRightLabel" control="fRightInput" value="&rightInput.label;"/>
-                <textbox id="fRightInput" style="width:10em;" onkeyup="checkValid(this.id)"/>
+                <hbox align="center" pack="end">
+                  <label id="fRightLabel" control="fRightInput" value="&rightInput.label;"/>
+                </hbox>
+                <textbox id="fRightInput" style="width:10em;" onkeyup="checkDouble(this)"/>
               </row>
             </rows>
           </grid>
@@ -185,9 +202,13 @@ Contributor(s):
         </columns>
         <rows>
           <row>
-            <label id="scalingLabel" control="scalingInput" value="&scalingInput.label;" disabled="true"/>
-            <textbox id="scalingInput" style="width:4em;" onkeyup="checkValid(this.id)" disabled="true"/>
-            <label id="scalingLabelPost" control="scalingInputPost" value="&scalingInputPost.label;" disabled="true"/>
+            <hbox align="center">
+              <label id="scalingLabel" control="scalingInput" value="&scalingInput.label;" disabled="true"/>
+            </hbox>
+            <textbox id="scalingInput" style="width:4em;" onkeyup="checkDouble(this)" disabled="true"/>
+            <hbox align="center">
+              <label id="scalingLabelPost" control="scalingInputPost" value="&scalingInputPost.label;" disabled="true"/>
+            </hbox>
           </row>
         </rows>
       </grid>

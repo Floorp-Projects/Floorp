@@ -30,7 +30,7 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["nglayoutDebugWindow",
+    var _elementIDs = ["nglayoutDebugWindow", "nglayoutUseNativePrintDialog", "printUseGlobalPrintSettings",
                        "debugXULBoxes", "browserDOMWindowDumpEnabled", 
                        "javascriptOptionsStrict", "nglayoutDebugUseXBLForms", 
                        "nglayoutDebugEnableXPCOMRefcntLog", "showAboutAsStupidModalWindow",
@@ -40,10 +40,27 @@
         
   <groupbox align="start">
     <caption label="&widgetRendering.label;"/>
-    <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
-              prefstring="nglayout.widget.debugWindow"/>
-    <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
-              prefstring="xul.debug.box"/>
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column/>
+      </columns>
+
+      <rows>
+        <row align="center">
+          <checkbox id="nglayoutDebugWindow" label="&debugWindow.label;"
+                    prefstring="nglayout.widget.debugWindow"/>
+          <checkbox id="nglayoutUseNativePrintDialog" label="&useNativePrintDialog.label;"
+                    prefstring="print.use_native_print_dialog"/>
+        </row>
+        <row align="center">
+          <checkbox id="debugXULBoxes" label="&debugXULBox.label;"
+                    prefstring="xul.debug.box"/>
+          <checkbox id="printUseGlobalPrintSettings" label="&printUseGlobalPrintSettings.label;"
+                    prefstring="print.use_global_printsettings"/>
+        </row>
+      </rows>
+    </grid>
   </groupbox>
 
   <!-- nothing on this page has accesskeys because this is a temporary debug

@@ -10,3 +10,6 @@ nsISelectionListener.idl
 nsISelectionPrivate.idl
 nsIScriptLoader.idl
 nsIScriptLoaderObserver.idl
+nsIPrintProgress.idl
+nsIPrintStatusFeedback.idl
+nsIPrintProgressParams.idl

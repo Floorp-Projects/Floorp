@@ -173,7 +173,6 @@ public:
 
   void ShowPrintPreview(PRInt32 aID);
   void DoPrint(void);
-  void DoPrintSetup(void);
   void DoTableInspector(void);
   void DoImageInspector(void);
 

@@ -67,7 +67,7 @@ typedef void * nsNativeDeviceContext;
 #define NS_ERROR_GFX_PRINTER_CMD_FAILURE            \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+2)
 /* no printer available (e.g. cannot find _any_ printer) */
-#define NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE  \
+#define NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAILABLE  \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+3)
 /* _specified_ (by name) printer not found */
 #define NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND         \
@@ -93,6 +93,9 @@ typedef void * nsNativeDeviceContext;
 /* print-to-file: I/O error while printing to file */
 #define NS_ERROR_GFX_PRINTER_FILE_IO_ERROR          \
   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+12)
+/* print preview: needs at least one printer */
+#define NS_ERROR_GFX_PRINTER_PRINTPREVIEW          \
+  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GFX,NS_ERROR_GFX_PRINTER_BASE+13)
 
 /**
  * Conts need for Print Preview

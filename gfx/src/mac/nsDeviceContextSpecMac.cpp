@@ -73,6 +73,7 @@ static long             prFirstItem;                  // our first item in the e
 static PItemUPP         prPItemProc;                  // store the old item handler here
 static PRBool           gPrintSelection;
 static UserItemUPP      gDrawListUPP = nsnull;
+static nsIPrintSettings	*gPrintSettings;
 
 
 typedef struct dialog_item_struct {
@@ -179,38 +180,38 @@ Handle  itemH;
     
     if (((TPPrDlg)aDialog)->fDone)
     {
-      nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
+      //nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
       // cleanup and set the print options to what we want
-      if (printOptionsService)
+      if (gPrintSettings)
       {
         // print selection
         ::GetDialogItem(aDialog, firstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          printOptionsService->SetPrintRange(nsIPrintOptions::kRangeSelection);
+          gPrintSettings->SetPrintRange(nsIPrintOptions::kRangeSelection);
         } else {
-          printOptionsService->SetPrintRange(nsIPrintOptions::kRangeAllPages);
+          gPrintSettings->SetPrintRange(nsIPrintOptions::kRangeAllPages);
         }
         
         // print frames as is
         ::GetDialogItem(aDialog, firstItem+ePrintFrameAsIsCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          printOptionsService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
+          gPrintSettings->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
         }
         
         // selected frame
         ::GetDialogItem(aDialog, firstItem+ePrintSelectedFrameCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          printOptionsService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
+          gPrintSettings->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
         }
         
         // print all frames
         ::GetDialogItem(aDialog, firstItem+ePrintAllFramesCheckboxID-1, &itemType, &itemH, &itemBox);
         value = ::GetControlValue((ControlHandle)itemH);
         if (1==value){
-          printOptionsService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+          gPrintSettings->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
         }        
       }
     }
@@ -263,11 +264,11 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
 
   prFirstItem = AppendToDialog(gPrtJobDialog, DITL_ADDITIONS);
 
-  nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
+  //nsCOMPtr<nsIPrintOptions> printOptionsService = do_GetService("@mozilla.org/gfx/printoptions;1");
 
-  if (printOptionsService) {
-    printOptionsService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
-    printOptionsService->GetHowToEnableFrameUI(&howToEnableFrameUI);
+  if (gPrintSettings) {
+    gPrintSettings->GetPrintOptions(nsIPrintSettings::kEnableSelectionRB, &isOn);
+    gPrintSettings->GetHowToEnableFrameUI(&howToEnableFrameUI);
   }
 
   ::GetDialogItem((DialogPtr) gPrtJobDialog, prFirstItem+ePrintSelectionCheckboxID-1, &itemType, &itemH, &itemBox);
@@ -324,8 +325,10 @@ static pascal TPPrDlg MyJobDlgInit(THPrint aHPrint)
  *  Initialize the nsDeviceContextSpecMac
  *  @update   dc 05/04/2001
  */
-NS_IMETHODIMP nsDeviceContextSpecMac::Init(PRBool aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecMac::Init(nsIPrintSettings* aPS, PRBool aQuiet)
 {
+	mPrintSettings = aPS;
+
 #if !TARGET_CARBON
 
   if (aQuiet)

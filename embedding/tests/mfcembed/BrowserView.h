@@ -49,6 +49,7 @@
 #endif
 
 #include "IBrowserFrameGlue.h"
+#include "nsIPrintSettings.h"
 
 /////////////////////////////////////////////////////////////////////////////
 // CBrowserView window
@@ -57,7 +58,6 @@ class CBrowserFrame;
 class CBrowserImpl;
 class CFindDialog;
 class CPrintProgressDialog;
-class nsIPrintSettings;
 
 class CBrowserView : public CWnd
 {
@@ -146,7 +146,7 @@ public:
 
 	// Generated message map functions
 protected:
-	nsIPrintSettings* m_PrintSettings;
+	nsCOMPtr<nsIPrintSettings> m_PrintSettings;
 
 	//{{AFX_MSG(CBrowserView)
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);

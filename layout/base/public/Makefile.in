@@ -78,7 +78,6 @@ endif
 
 XPIDLSRCS	= \
 		nsIChromeEventHandler.idl	\
-		nsIPrintListener.idl        \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -898,10 +898,6 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
     DoPrint();
     break;
 
-  case VIEWER_PRINT_SETUP:
-    DoPrintSetup();
-    break;
-
   case VIEWER_TABLE_INSPECTOR:
     DoTableInspector();
     break;
@@ -2195,7 +2191,7 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      viewerFile->PrintPreview();
+      viewerFile->PrintPreview(nsnull);
     }
   }
 }
@@ -2210,65 +2206,9 @@ void nsBrowserWindow::DoPrint(void)
   {
     nsCOMPtr<nsIContentViewerFile> viewerFile = do_QueryInterface(viewer);
     if (viewerFile) {
-      viewerFile->Print(PR_FALSE,0);
+      viewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener*)nsnull);
     }
   }
-}
-
-//---------------------------------------------------------------
-void nsBrowserWindow::DoPrintSetup()
-{
-  if (mXPDialog) {
-    NS_RELEASE(mXPDialog);
-    //mXPDialog->SetVisible(PR_TRUE);
-    //return;
-  }
-
-  nsString printHTML(NS_LITERAL_STRING("resource:/res/samples/printsetup.html"));
-  nsRect rect(0, 0, 375, 510);
-  nsString title(NS_LITERAL_STRING("Print Setup"));
-
-  nsXPBaseWindow * dialog = nsnull;
-  nsresult rv = nsComponentManager::CreateInstance(kXPBaseWindowCID, nsnull,
-                                             kIXPBaseWindowIID,
-                                             (void**) &dialog);
-  if (rv == NS_OK) {
-    dialog->Init(eXPBaseWindowType_dialog, mAppShell, printHTML,
-                 title, rect, PRUint32(~0), PR_FALSE);
-    dialog->SetVisible(PR_TRUE);
-    if (NS_OK == dialog->QueryInterface(kIXPBaseWindowIID, (void**)&mXPDialog)) {
-    }
-  }
-
-  mPrintSetupInfo.mPortrait         = PR_TRUE;
-  mPrintSetupInfo.mBevelLines       = PR_TRUE;
-  mPrintSetupInfo.mBlackText        = PR_FALSE;
-  mPrintSetupInfo.mBlackLines       = PR_FALSE;
-  mPrintSetupInfo.mLastPageFirst    = PR_FALSE;
-  mPrintSetupInfo.mPrintBackgrounds = PR_FALSE;
-  mPrintSetupInfo.mTopMargin        = 0.50;
-  mPrintSetupInfo.mBottomMargin     = 0.50;
-  mPrintSetupInfo.mLeftMargin       = 0.50;
-  mPrintSetupInfo.mRightMargin      = 0.50;
-
-  mPrintSetupInfo.mDocTitle         = PR_TRUE;
-  mPrintSetupInfo.mDocLocation      = PR_TRUE;
-
-  mPrintSetupInfo.mHeaderText.Assign(NS_LITERAL_STRING("Header Text"));
-  mPrintSetupInfo.mFooterText.Assign(NS_LITERAL_STRING("Footer Text"));
-
-  mPrintSetupInfo.mPageNum          = PR_TRUE;
-  mPrintSetupInfo.mPageTotal        = PR_TRUE;
-  mPrintSetupInfo.mDatePrinted      = PR_TRUE;
-
-
-  nsPrintSetupDialog * printSetupDialog = new nsPrintSetupDialog(this);
-  if (nsnull != printSetupDialog) {
-    dialog->AddWindowListener(printSetupDialog);
-  }
-  printSetupDialog->SetSetupInfo(mPrintSetupInfo);
-  //NS_IF_RELEASE(dialog);
-
 }
 
 //---------------------------------------------------------------

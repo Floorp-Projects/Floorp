@@ -42,6 +42,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsMsgPrintEngine.h"
 #include "nsMsgBaseCID.h"
+#include "nsIDocumentLoader.h"
 
 // Interfaces Needed
 #include "nsIBaseWindow.h"
@@ -68,11 +69,10 @@ nsMsgPrintEngine::~nsMsgPrintEngine()
 }
 
 // Implement AddRef and Release
-NS_IMPL_ISUPPORTS4(nsMsgPrintEngine,
+NS_IMPL_ISUPPORTS3(nsMsgPrintEngine,
                          nsIMsgPrintEngine, 
                          nsIWebProgressListener, 
-                         nsISupportsWeakReference,
-                         nsIPrintListener);
+                         nsISupportsWeakReference);
 
 // nsIWebProgressListener implementation
 NS_IMETHODIMP
@@ -93,62 +93,71 @@ nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress,
     }
 
     if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
-      // Now, fire off the print operation!
-      rv = NS_ERROR_FAILURE;
+      // if aWebProgress is a documentloader than the notification from
+      // loading the documents. If it is NULL (or not a DocLoader) then it 
+      // it coming from Printing
+      nsCOMPtr<nsIDocumentLoader> docLoader(do_QueryInterface(aWebProgress));
+      if (docLoader) {
+        // Now, fire off the print operation!
+        rv = NS_ERROR_FAILURE;
 
-      // Tell the user the message is loaded...
-      PRUnichar *msg = GetString(NS_LITERAL_STRING("MessageLoaded").get());
-      SetStatusMessage( msg );
-      if (msg) nsCRT::free(msg);
+        // Tell the user the message is loaded...
+        PRUnichar *msg = GetString(NS_LITERAL_STRING("MessageLoaded").get());
+        SetStatusMessage( msg );
+        if (msg) nsCRT::free(msg);
 
-      NS_ASSERTION(mDocShell,"can't print, there is no docshell");
-      if ( (!mDocShell) || (!aRequest) ) 
-      {
-        return StartNextPrintOperation();
-      }
-      nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
-      if (!aChannel) return NS_ERROR_FAILURE;
-
-      // Make sure this isn't just "about:blank" finishing....
-      nsCOMPtr<nsIURI> originalURI = nsnull;
-      if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) && originalURI)
-      {
-        nsXPIDLCString spec;
-
-        if (NS_SUCCEEDED(originalURI->GetSpec(getter_Copies(spec))) && spec)
-        {      
-          if (!nsCRT::strcasecmp(spec, "about:blank"))
-          {
-            return StartNextPrintOperation();
-          }
-        }
-      }
-
-      mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
-      if (mContentViewer) 
-      {
-        mViewerFile = do_QueryInterface(mContentViewer);
-        if (mViewerFile) 
+        NS_ASSERTION(mDocShell,"can't print, there is no docshell");
+        if ( (!mDocShell) || (!aRequest) ) 
         {
-          if (mCurrentlyPrintingURI == 0)
-            rv = mViewerFile->Print(PR_FALSE, nsnull, (nsIPrintListener *)this);
-          else
-            rv = mViewerFile->Print(PR_TRUE, nsnull, (nsIPrintListener *)this);
+          return StartNextPrintOperation();
+        }
+        nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
+        if (!aChannel) return NS_ERROR_FAILURE;
 
-          if (NS_FAILED(rv))
-          {
-            mViewerFile = nsnull;
-            mContentViewer = nsnull;
-            OnEndPrinting(rv);
-          }
-          else
-          {
-            // Tell the user we started printing...
-            msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
-            SetStatusMessage( msg );
-            if (msg) nsCRT::free(msg);
+        // Make sure this isn't just "about:blank" finishing....
+        nsCOMPtr<nsIURI> originalURI = nsnull;
+        if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))) && originalURI)
+        {
+          nsXPIDLCString spec;
+
+          if (NS_SUCCEEDED(originalURI->GetSpec(getter_Copies(spec))) && spec)
+          {      
+            if (!nsCRT::strcasecmp(spec, "about:blank"))
+            {
+              return StartNextPrintOperation();
+            }
           }
         }
+
+        mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
+        if (mContentViewer) 
+        {
+          mViewerFile = do_QueryInterface(mContentViewer);
+          if (mViewerFile) 
+          {
+            if (mCurrentlyPrintingURI == 0)
+              rv = mViewerFile->Print(PR_FALSE, nsnull, (nsIWebProgressListener *)this);
+            else
+              rv = mViewerFile->Print(PR_TRUE, nsnull, (nsIWebProgressListener *)this);
+
+            if (NS_FAILED(rv))
+            {
+              mViewerFile = nsnull;
+              mContentViewer = nsnull;
+              StartNextPrintOperation();
+            }
+            else
+            {
+              // Tell the user we started printing...
+              msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
+              SetStatusMessage( msg );
+              if (msg) nsCRT::free(msg);
+            }
+          }
+        }
+      } else {
+        StartNextPrintOperation();
+        rv = NS_OK;
       }
     }
   }
@@ -362,25 +371,6 @@ nsMsgPrintEngine::SetupObserver()
       (void) progress->AddProgressListener((nsIWebProgressListener *)this);
     }
   }
-}
-
-NS_IMETHODIMP
-nsMsgPrintEngine::OnStartPrinting(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgPrintEngine::OnProgressPrinting(PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgPrintEngine::OnEndPrinting(PRUint32 aStatus)
-{
-  StartNextPrintOperation();
-  return NS_OK;
 }
 
 nsresult
