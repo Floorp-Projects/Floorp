@@ -56,14 +56,6 @@ class nsBoxLayoutState;
 class nsIScrollableFrame : public nsIScrollableViewProvider {
 public:
 
-  enum nsScrollPref {
-    Auto = 0,
-    NeverScroll,
-    AlwaysScroll,
-    AlwaysScrollVertical,
-    AlwaysScrollHorizontal
-  };
-
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
 
   /**
