@@ -299,6 +299,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     printf(" content returned desired width %d given avail width %d\n",
             kidSize.width, availSize.width);
   }
+#endif
+
   // Nav4 hack for 0 dimensioned cells.  
   // Empty cells are assigned a width and height of 4px
   // see testcase "cellHeights.html"
@@ -321,7 +323,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
     if (gsDebug) printf ("setting child height from 0 to %d for nav4 compatibility\n", NSIntPixelsToTwips(4, p2t));
   }
   // end Nav4 hack for 0 dimensioned cells
-#endif
+
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
     if (nsnull!=pMaxElementSize)
@@ -354,10 +356,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   // next determine the cell's width
   nscoord cellWidth = kidSize.width;      // at this point, we've factored in the cell's style attributes
 
-  if (NS_UNCONSTRAINEDSIZE!=availSize.width)  // only add in insets if we previously subtracted them out
-  {
-    cellWidth += leftInset + rightInset;    // factor in insets
-  }
+  // add the insets into the cell width (in both the constrained-width and unconstrained-width cases
+  cellWidth += leftInset + rightInset;    // factor in border and padding
 
   // set the cell's desired size and max element size
   aDesiredSize.width = cellWidth;
@@ -473,13 +473,10 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
   // if the border color is white, then shift to grey
   if (borderColor == 0xFFFFFFFF)
     borderColor = 0xFFC0C0C0;
-
- 
   aSpacingStyle.SetBorderColor(NS_SIDE_TOP, borderColor);
   aSpacingStyle.SetBorderColor(NS_SIDE_LEFT, borderColor);
   aSpacingStyle.SetBorderColor(NS_SIDE_BOTTOM, borderColor);
   aSpacingStyle.SetBorderColor(NS_SIDE_RIGHT, borderColor);
-
 
   //adjust the border style based on the table rules attribute
   const nsStyleTable* tableStyle;
@@ -494,7 +491,16 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext,
     aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_NONE);
     break;
   case NS_STYLE_TABLE_RULES_GROUPS:
+#ifdef NS_DEBUG
+    printf("warning: NS_STYLE_TABLE_RULES_GROUPS used but not yet implemented.\n");
+#endif
     // XXX: it depends on which cell this is!
+    /*
+    for h-sides, walk up content parent list to row and see what "index in parent" row is.
+    if it is 0 or last, then draw the rule.  otherwise, don't.  Probably just compare
+    against FirstChild and LastChild.
+    for v-sides, do the same thing only for col and colgroup.
+    */
     /*
     aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
     aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
