@@ -675,9 +675,6 @@ JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
 #ifdef DEBUG
-#ifndef MOZILLA_CLIENT
-    JS_ASSERT(rt->contextList.next == &rt->contextList);
-#else
     /* Don't hurt everyone in leaky ol' Mozilla with a fatal JS_ASSERT! */
     if (rt->contextList.next != &rt->contextList) {
         JSContext *cx, *iter = NULL;
@@ -688,7 +685,6 @@ JS_DestroyRuntime(JSRuntime *rt)
 "JS API usage error: %u contexts left in runtime upon JS_DestroyRuntime.\n",
                 cxcount);
     }
-#endif
 #endif
 
     js_FinishAtomState(&rt->atomState);
