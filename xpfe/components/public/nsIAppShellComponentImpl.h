@@ -26,6 +26,8 @@
 #include "nsICmdLineService.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
+#include "nsIModule.h"
+#include "nsIGenericFactory.h"
 #include "nsIRegistry.h"
 #include "pratom.h"
 #include "nsCOMPtr.h"
@@ -84,12 +86,7 @@ private:
 #define NS_DEFINE_MODULE_INSTANCE_COUNTER() \
 PRInt32 nsInstanceCounter::mInstanceCount = 0; \
 PRInt32 nsInstanceCounter::mLockCount = 0; \
-/* NSCanUnload implementation */\
-extern "C" NS_EXPORT PRBool \
-NSCanUnload( nsISupports* ) { \
-      return nsInstanceCounter::CanUnload(); \
-} \
-
+\
 // Declare component-global class.
 class nsAppShellComponentImpl {
 public:
@@ -99,28 +96,15 @@ public:
     virtual PRBool Is_Service() { return PR_TRUE; }
     // Override this to perform initialization for your component.
     NS_IMETHOD DoInitialization() { return NS_OK; }
-    static nsresult SetServiceManager( nsISupports *aServiceMgr ) {
-        nsresult rv = NS_OK;
-        // Remember service manager first time we see it.
-        if ( !mServiceMgr ) {
-            // Convert to proper interface.
-            rv = aServiceMgr->QueryInterface( nsIServiceManager::GetIID(),
-                                              (void**)&mServiceMgr );
-        }
-        return rv;
-    }
     static nsIAppShellService *GetAppShell() {
         if ( !mAppShell ) {
-            if ( mServiceMgr ) {
-                nsCID cid = NS_APPSHELL_SERVICE_CID;
-                mServiceMgr->GetService( cid,
+            nsCID cid = NS_APPSHELL_SERVICE_CID;
+            nsServiceManager::GetService( cid,
                                          nsIAppShellService::GetIID(),
                                          (nsISupports**)&mAppShell );
-            }
         }
         return mAppShell;
     }
-    static nsIServiceManager  *mServiceMgr;
     static nsIAppShellService *mAppShell;
     static nsICmdLineService  *mCmdLine;
     #ifdef NS_DEBUG
@@ -130,7 +114,6 @@ public:
 }; // nsAppShellComponent
 
 #define NS_DEFINE_COMPONENT_GLOBALS() \
-nsIServiceManager  *nsAppShellComponentImpl::mServiceMgr = 0; \
 nsIAppShellService *nsAppShellComponentImpl::mAppShell   = 0; \
 nsICmdLineService  *nsAppShellComponentImpl::mCmdLine    = 0;
 
@@ -160,8 +143,8 @@ className::Initialize( nsIAppShellService *anAppShell, \
     nsresult rv = NS_OK; \
     mAppShell = anAppShell; \
     mCmdLine  = aCmdLineService; \
-    if ( mServiceMgr && Is_Service() ) { \
-        rv = mServiceMgr->RegisterService( progId, this ); \
+    if ( Is_Service() ) { \
+        rv = nsServiceManager::RegisterService( progId, this ); \
     } \
     if ( NS_SUCCEEDED( rv ) ) { \
         rv = DoInitialization(); \
@@ -172,12 +155,8 @@ className::Initialize( nsIAppShellService *anAppShell, \
 NS_IMETHODIMP \
 className::Shutdown() { \
     nsresult rv = NS_OK; \
-    if ( mServiceMgr ) { \
-        if ( Is_Service() ) { \
-            rv = mServiceMgr->UnregisterService( progId ); \
-        } \
-        mServiceMgr->Release(); \
-        mServiceMgr = 0; \
+    if ( Is_Service() ) { \
+        rv = nsServiceManager::UnregisterService( progId ); \
     } \
     return rv; \
 } \
@@ -283,32 +262,38 @@ NS_IMETHODIMP \
 className##Factory::LockFactory(PRBool aLock) { \
       return nsInstanceCounter::LockFactory( aLock ); \
 } \
+class className##Module : public nsIModule { \
+public: \
+    className##Module() { \
+        NS_INIT_REFCNT(); \
+    } \
+    virtual ~className##Module() { \
+    } \
+    NS_DECL_ISUPPORTS \
+    NS_DECL_NSIMODULE \
+}; \
+NS_IMPL_ISUPPORTS1(className##Module, nsIModule) \
 /* NSRegisterSelf implementation */\
-extern "C" NS_EXPORT nsresult \
-NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) { \
+NS_IMETHODIMP \
+className##Module::RegisterSelf(nsIComponentManager *compMgr, \
+                                nsIFileSpec *path, \
+                                const char *registryLocation, \
+                                const char *componentType) \
+{ \
     nsresult rv = NS_OK; \
     /* WARNING: Dont remember service manager. */ \
     /* Get the component manager service. */ \
  \
-    nsCID cid = NS_COMPONENTMANAGER_CID; \
-    nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServiceMgr, &rv)); \
     if (NS_FAILED(rv)) return rv; \
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, cid, &rv); \
-    if (NS_FAILED(rv)) \
-    { \
-        DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%X\n", (int)rv ); \
-        return rv; \
-    } \
- \
     /* Register our component. */ \
-    rv = compMgr->RegisterComponent( className::GetCID(), #className, \
+    rv = compMgr->RegisterComponentSpec( className::GetCID(), #className, \
                                           progId, path, PR_TRUE, PR_TRUE ); \
     if ( NS_SUCCEEDED( rv ) ) { \
         DEBUG_PRINTF( PR_STDOUT, #className " registration successful\n" ); \
         if ( autoInit ) { \
             /* Add to appshell component list. */ \
             nsIRegistry *registry; \
-            rv = servMgr->GetService( NS_REGISTRY_PROGID, \
+            rv = nsServiceManager::GetService( NS_REGISTRY_PROGID, \
                                       nsIRegistry::GetIID(), \
                                       (nsISupports**)&registry ); \
             if ( NS_SUCCEEDED( rv ) ) { \
@@ -336,12 +321,12 @@ NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) { \
  \
     return rv; \
 } \
-/* NSUnregisterSelf implementation */ \
-extern "C" NS_EXPORT nsresult \
-NSUnregisterSelf( nsISupports* aServiceMgr, const char* path ) { \
+/* UnregisterSelf implementation */ \
+NS_IMETHODIMP \
+className##Module::UnregisterSelf( nsIComponentManager *compMgr, \
+                                   nsIFileSpec* path, \
+                                   const char *registryLocation) { \
     nsresult rv = NS_OK; \
-    nsCID cid = NS_COMPONENTMANAGER_CID; \
-    NS_WITH_SERVICE1(nsIComponentManager, compMgr, aServiceMgr, cid, &rv); \
     if (NS_FAILED(rv)) \
     { \
         DEBUG_PRINTF( PR_STDOUT, #className " registration failed, GetService rv=0x%X\n", (int)rv ); \
@@ -349,7 +334,7 @@ NSUnregisterSelf( nsISupports* aServiceMgr, const char* path ) { \
     } \
  \
     /* Unregister our component. */ \
-    rv = compMgr->UnregisterComponent( className::GetCID(), path ); \
+    rv = compMgr->UnregisterComponentSpec( className::GetCID(), path ); \
     if ( NS_SUCCEEDED( rv ) ) { \
         DEBUG_PRINTF( PR_STDOUT, #className " unregistration successful\n" ); \
     } else { \
@@ -358,25 +343,20 @@ NSUnregisterSelf( nsISupports* aServiceMgr, const char* path ) { \
  \
     return rv; \
 } \
-/* NSGetFactory implementation */\
-extern "C" NS_EXPORT nsresult \
-NSGetFactory( nsISupports *aServiceMgr, \
+/* GetFactory implementation */\
+NS_IMETHODIMP \
+className##Module::GetClassObject( nsIComponentManager *compMgr, \
               const nsCID &aClass, \
-              const char  *aClassName, \
-              const char  *aProgID, \
-              nsIFactory* *aFactory ) { \
+              const nsIID &aIID, \
+              void **aFactory ) { \
     nsresult rv = NS_OK; \
-    rv = className::SetServiceManager( aServiceMgr ); \
     if ( NS_SUCCEEDED( rv ) ) { \
         if ( aFactory ) { \
             className##Factory *factory = new className##Factory(); \
             if ( factory ) { \
-                rv = factory->QueryInterface( nsIFactory::GetIID(), (void**)aFactory ); \
-                if ( NS_FAILED( rv ) ) { \
-                    DEBUG_PRINTF( PR_STDOUT, #className " NSGetFactory failed, QueryInterface rv=0x%X\n", (int)rv ); \
-                    /* Delete this bogus factory. */\
-                    delete factory; \
-                } \
+                NS_ADDREF(factory); \
+                rv = factory->QueryInterface( aIID, (void**)aFactory ); \
+                NS_RELEASE(factory); \
             } else { \
                 rv = NS_ERROR_OUT_OF_MEMORY; \
             } \
@@ -386,6 +366,11 @@ NSGetFactory( nsISupports *aServiceMgr, \
     } \
     return rv; \
 } \
+NS_IMETHODIMP \
+className##Module::CanUnload( nsIComponentManager*, PRBool* canUnload) { \
+      if (!canUnload) return NS_ERROR_NULL_POINTER; \
+      *canUnload = nsInstanceCounter::CanUnload(); \
+} \
 NS_IMPL_IAPPSHELLCOMPONENTIMPL_CTORDTOR( className ) \
-
+NS_IMPL_NSGETMODULE(className##Module)
 #endif
