@@ -1880,7 +1880,19 @@ nsWidget::OnButtonReleaseSignal(GdkEventButton * aGdkButtonEvent)
 
   InitMouseEvent(aGdkButtonEvent, event, eventType);
 
-  event.widget = sButtonMotionTarget ? sButtonMotionTarget : this;
+  if (sButtonMotionTarget) {
+    gint diffX = 0;
+    gint diffY = 0;
+
+    diffX = (gint) aGdkButtonEvent->x_root - sButtonMotionRootX;
+    diffY = (gint) aGdkButtonEvent->y_root - sButtonMotionRootY;
+    
+    event.widget = sButtonMotionTarget;
+
+    // see comments in nsWidget::OnMotionNotifySignal
+    event.point.x = nscoord(sButtonMotionWidgetX + diffX);
+    event.point.y = nscoord(sButtonMotionWidgetY + diffY);
+  }
 
   NS_ADDREF(event.widget);
   NS_STATIC_CAST(nsWidget*,event.widget)->DispatchMouseEvent(event);
