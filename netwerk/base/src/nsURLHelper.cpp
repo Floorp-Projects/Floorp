@@ -21,16 +21,17 @@
 #include "prprf.h"
 #include "nsCRT.h"
 #include "nsIAllocator.h"
+#include "nsIIOService.h"
 
-/* This array tells which chars has to be escaped */
+/* This array tells which chars have to be escaped */
 
 const int EscapeChars[256] =
 /*      0    1    2    3    4    5    6    7    8    9    A    B    C    D    E    F */
 {
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,       /* 0x */
         0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,  	    /* 1x */
-        0,1023,   0, 512, 761,   0,1023,   0,1023,1023,1023,1023,1023,1023, 959,1016,       /* 2x   !"#$%&'()*+,-./	 */
-     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1008, 896,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
+        0,1023,   0, 512, 761,   0,1023,   0,1023,1023,1023,1023,1023,1023, 959, 912,       /* 2x   !"#$%&'()*+,-./	 */
+     1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 912, 896,   0,1008,   0, 768,       /* 3x  0123456789:;<=>?	 */
       992,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 4x  @ABCDEFGHIJKLMNO  */
      1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023, 896, 896, 896, 896,1023,       /* 5x  PQRSTUVWXYZ[\]^_	 */
         0,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,1023,       /* 6x  `abcdefghijklmno	 */
@@ -52,6 +53,30 @@ const int EscapeChars[256] =
 #define HEX_ESCAPE '%'
 
 /* returns an escaped string */
+
+/* use the following masks to specify which 
+   part of an URL you want to escape: 
+
+   url_Scheme        =     1
+   url_Username      =     2
+   url_Password      =     4
+   url_Host          =     8
+   url_Directory     =    16
+   url_FileBaseName  =    32
+   url_FileExtension =    64
+   url_Param         =   128
+   url_Query         =   256
+   url_Ref           =   512
+*/
+
+/* by default this function will not escape parts of a string
+   that already look escaped, which means it already includes 
+   a valid hexcode. This is done to avoid multiple escapes of
+   a string. Use the following mask to force escaping of a 
+   string:
+ 
+   url_Forced        =  1024
+*/
 NS_NET nsresult 
 nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
 {
@@ -64,6 +89,10 @@ nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
     char* hexChars = "0123456789ABCDEF";
     static const char CheckHexChars[] = "0123456789ABCDEFabcdef";
     int len = PL_strlen(str);
+    PRBool forced = PR_FALSE;
+
+    if (mask & nsIIOService::url_Forced)
+        forced = PR_TRUE;
 
     register const unsigned char* src = (const unsigned char *) str;
 
@@ -88,7 +117,7 @@ nsURLEscape(const char* str, PRInt16 mask, nsCString &result)
 
       /* if the char has not to be escaped or whatever follows % is 
          a valid escaped string, just copy the char */
-      if (IS_OK(c) || (c == HEX_ESCAPE && (pc1) && (pc2) &&
+      if (IS_OK(c) || (c == HEX_ESCAPE && !(forced) && (pc1) && (pc2) &&
          PL_strpbrk(pc1, CheckHexChars) != 0 &&  
          PL_strpbrk(pc2, CheckHexChars) != 0)) {
 		  tempBuffer[tempBufferPos++]=c;

@@ -293,6 +293,31 @@ nsIOService::SetOffline(PRBool offline)
 ////////////////////////////////////////////////////////////////////////////////
 // URL parsing utilities
 
+/* encode characters into % escaped hexcodes */
+
+/* use the following masks to specify which 
+   part of an URL you want to escape: 
+
+   url_Scheme        =     1
+   url_Username      =     2
+   url_Password      =     4
+   url_Host          =     8
+   url_Directory     =    16
+   url_FileBaseName  =    32
+   url_FileExtension =    64
+   url_Param         =   128
+   url_Query         =   256
+   url_Ref           =   512
+*/
+
+/* by default this function will not escape parts of a string
+   that already look escaped, which means it already includes 
+   a valid hexcode. This is done to avoid multiple escapes of
+   a string. Use the following mask to force escaping of a 
+   string:
+ 
+   url_Forced        =  1024
+*/
 NS_IMETHODIMP
 nsIOService::Escape(const char *str, PRInt16 mask, char** result)
 {
