@@ -3184,7 +3184,9 @@ nsHttpChannel::GetCacheFile(nsIFile **cacheFile)
 NS_IMETHODIMP
 nsHttpChannel::IsFromCache(PRBool *value)
 {
-    *value = (mCacheReadRequest != nsnull);
+    // return false if reading a partial cache entry; the data isn't entirely
+    // from the cache!
+    *value = (mCacheReadRequest && !mCachedContentIsPartial);
     return NS_OK;
 }
 
