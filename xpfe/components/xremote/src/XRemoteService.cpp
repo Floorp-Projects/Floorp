@@ -47,6 +47,8 @@
 #include <nsIURI.h>
 #include <nsNetUtil.h>
 #include <nsIWindowMediator.h>
+#include <nsCExternalHandlerService.h>
+#include <nsIExternalProtocolService.h>
 
 NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
@@ -649,11 +651,41 @@ XRemoteService::GetComposeLocation(const char **_retval)
   return NS_OK;
 }
 
+PRBool
+XRemoteService::MayOpenURL(const nsCString &aURL)
+{
+  // by default, we assume nothing can be loaded.
+  PRBool allowURL= PR_FALSE;
+
+  nsCOMPtr<nsIIOService> ios = do_GetIOService();
+  if (ios) {
+    nsCAutoString scheme;
+    ios->ExtractScheme(aURL, scheme);
+    if (!scheme.IsEmpty()) {
+      nsCOMPtr<nsIExternalProtocolService> extProtService =
+          do_GetService(NS_EXTERNALPROTOCOLSERVICE_CONTRACTID);
+      if (extProtService) {
+        // if the given URL scheme corresponds to an exposed protocol, then we
+        // can try to load it.  otherwise, we must not.
+        PRBool isExposed;
+        nsresult rv = extProtService->IsExposedProtocol(scheme.get(), &isExposed);
+        if (NS_SUCCEEDED(rv) && isExposed)
+          allowURL = PR_TRUE; // ok, we can load this URL.
+      }
+    }
+  }
+  return allowURL;
+}
+
 nsresult
 XRemoteService::OpenURL(nsCString &aArgument,
 			nsIDOMWindowInternal *aParent,
 			PRBool aOpenBrowser)
 {
+  // check if we can handle this type of URL
+  if (!MayOpenURL(aArgument))
+    return NS_ERROR_ABORT;
+
   // the eventual toplevel target of the load
   nsCOMPtr<nsIDOMWindowInternal> finalWindow = aParent;
 

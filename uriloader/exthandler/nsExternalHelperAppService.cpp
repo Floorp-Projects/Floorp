@@ -910,6 +910,40 @@ NS_IMETHODIMP nsExternalHelperAppService::ExternalProtocolHandlerExists(const ch
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsExternalHelperAppService::IsExposedProtocol(const char * aProtocolScheme, PRBool * aResult)
+{
+  // by default, no protocol is exposed.  i.e., by default all link clicks must
+  // go through the external protocol service.  most applications override this
+  // default behavior.
+  *aResult = PR_FALSE;
+
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs)
+  {
+    PRBool val;
+    nsresult rv;
+
+    // check the per protocol setting first.  it always takes precidence.
+    // if not set, then use the global setting.
+
+    nsCAutoString name;
+    name = NS_LITERAL_CSTRING("network.protocol-handler.expose.")
+         + nsDependentCString(aProtocolScheme);
+    rv = prefs->GetBoolPref(name.get(), &val);
+    if (NS_SUCCEEDED(rv))
+    {
+      *aResult = val;
+    }
+    else
+    {
+      rv = prefs->GetBoolPref("network.protocol-handler.expose-all", &val);
+      if (NS_SUCCEEDED(rv) && val)
+        *aResult = PR_TRUE;
+    }
+  }
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
 {
   // this method should only be implemented by each OS specific implementation of this service.

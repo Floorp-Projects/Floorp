@@ -1,3 +1,4 @@
+/* vim:set ts=8 sw=2 et cindent: */
 /*
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -99,54 +100,6 @@ XRemoteClient::Init (void)
 }
 
 NS_IMETHODIMP
-XRemoteClient::SendCommand (const char *aCommand, PRBool *aWindowFound)
-{
-  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommand"));
-
-  *aWindowFound = PR_TRUE;
-
-  // find the remote window
-  Window window = FindWindow();
-
-  // no window?  let the caller know.
-  if (!window) {
-    *aWindowFound = PR_FALSE;
-    return NS_OK;
-  }
-
-  // make sure we get the right events on that window
-  XSelectInput(mDisplay, window,
-	       (PropertyChangeMask|StructureNotifyMask));
-  
-  nsresult rv;
-  PRBool destroyed = PR_FALSE;
-
-  // get the lock on the window
-  rv = GetLock(window, &destroyed);
-
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  // send our command
-  rv = DoSendCommand(window, aCommand, &destroyed);
-
-  // if the window was destroyed, don't bother trying to free the
-  // lock.
-  if (destroyed)
-    return NS_ERROR_FAILURE;
-
-  // doesn't really matter what this returns
-  FreeLock(window);
-
-  // if we failed above we had to free the lock - return the error
-  // now.
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 XRemoteClient::Shutdown (void)
 {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::Shutdown"));
@@ -164,32 +117,36 @@ XRemoteClient::Shutdown (void)
   return NS_OK;
 }
 
-Window
-XRemoteClient::FindWindow(void)
+NS_IMETHODIMP
+XRemoteClient::SendCommand (const char *aCommand, PRBool *aWindowFound)
 {
+  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommand"));
+
   Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
   Window root2, parent, *kids;
   unsigned int nkids;
-  Window result = 0;
   int i;
+
+  *aWindowFound = PR_FALSE;
   
   if (!XQueryTree(mDisplay, root, &root2, &parent, &kids, &nkids)) {
     PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	   ("XQueryTree failed in XRemoteClient::FindWindow"));
-    return 0;
+	   ("XQueryTree failed in XRemoteClient::SendCommand"));
+    return NS_OK;
   }
 
   if (!(kids && nkids)) {
     PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("root window has no children"));
-    return 0;
+    return NS_OK;
   }
 
+  nsresult rv = NS_OK;
   for (i=nkids-1; i >= 0; i--) {
     Atom type;
     int format;
     unsigned long nitems, bytesafter;
     unsigned char *data_return = 0;
-    Window w;
+    Window w, result = 0;
     w = kids[i];
     // find the inner window with WM_STATE on it
     w = CheckWindow(w);
@@ -224,11 +181,8 @@ XRemoteClient::FindWindow(void)
 
 	  // if the IDs are equal then this is the window we want.  if
 	  // they aren't fall through to the next loop iteration.
-	  if (!strcmp(logname, (const char *)data_return)) {
-	    XFree(data_return);
+	  if (!strcmp(logname, (const char *)data_return))
 	    result = w;
-	    break;
-	  }
 
 	  XFree(data_return);
 	}
@@ -238,14 +192,40 @@ XRemoteClient::FindWindow(void)
       // it.
       else {
 	result = w;
-	break;
+      }
+
+      if (result) {
+        // ok, let the caller know that we at least found a window.
+        *aWindowFound = PR_TRUE;
+
+        // make sure we get the right events on that window
+        XSelectInput(mDisplay, result,
+                     (PropertyChangeMask|StructureNotifyMask));
+        
+        PRBool destroyed = PR_FALSE;
+
+        // get the lock on the window
+        rv = GetLock(result, &destroyed);
+
+        if (NS_SUCCEEDED(rv)) {
+          // send our command
+          rv = DoSendCommand(result, aCommand, &destroyed);
+
+          // if the window was destroyed, don't bother trying to free the
+          // lock.
+          if (!destroyed)
+            FreeLock(result); // doesn't really matter what this returns
+
+          // if accepted then we're done...
+          if (NS_SUCCEEDED(rv))
+            break;
+        }
       }
     }
   }
 
-  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("FindWindow returning 0x%lx\n", result));
-
-  return result;
+  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("SendCommand returning 0x%x\n", rv));
+  return rv;
 }
 
 Window

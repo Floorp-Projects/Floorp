@@ -504,9 +504,22 @@ pref("network.protocol-handler.external.javascript", false);
 pref("network.protocol-handler.external.ms-help", false);
 pref("network.protocol-handler.external.vnd.ms.radio", false);
 
+// An exposed protocol handler is one that can be used in all contexts.  A
+// non-exposed protocol handler is one that can only be used internally by the
+// application.  For example, a non-exposed protocol would not be loaded by the
+// application in response to a link click or a X-remote openURL command.
+// Instead, it would be deferred to the system's external protocol handler.
+// Only internal/built-in protocol handlers can be marked as exposed.
+
+// This pref controls the default settings.  Per protocol settings can be used
+// to override this value.
+pref("network.protocol-handler.expose-all", true);
+
+// Example: make IMAP an exposed protocol
+// pref("network.protocol-handler.expose.imap", true);
+
 pref("network.hosts.smtp_server",           "mail");
 pref("network.hosts.pop_server",            "mail");
-pref("network.protocols.useSystemDefaults",   false); // set to true if user links should use system default handlers
 
 // <http>
 pref("network.http.version", "1.1");	  // default
