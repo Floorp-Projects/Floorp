@@ -3842,7 +3842,7 @@ nsFrame::GetFrameFromDirection(nsIPresContext* aPresContext, nsPeekOffsetStruct 
 #else
   //if we are a container frame we MUST init with last leaf for eDirNext
   //
-  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF, aPresContext, traversedFrame, pos->mScrollViewStop);
+  result = NS_NewFrameTraversal(getter_AddRefs(frameTraversal), LEAF, aPresContext, traversedFrame, aPos->mScrollViewStop);
 #endif
   if (NS_FAILED(result))
     return result;
