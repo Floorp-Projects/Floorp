@@ -90,6 +90,7 @@ const long kMinSearchPaneHeight = 80;
     // wait for |-completeSetup| to be called to lazily complete our setup
     mSetupComplete = NO;
   }
+  return self;
 }
 
 - (void)dealloc
