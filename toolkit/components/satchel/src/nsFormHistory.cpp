@@ -76,7 +76,6 @@ nsFormHistory::nsFormHistory() :
   mStore(nsnull),
   mTable(nsnull)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFormHistory::~nsFormHistory()

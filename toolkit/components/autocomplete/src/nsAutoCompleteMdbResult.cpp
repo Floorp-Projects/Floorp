@@ -45,7 +45,6 @@ nsAutoCompleteMdbResult::nsAutoCompleteMdbResult() :
   mDefaultIndex(-1),
   mSearchResult(nsIAutoCompleteResult::RESULT_IGNORED)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsAutoCompleteMdbResult::~nsAutoCompleteMdbResult()

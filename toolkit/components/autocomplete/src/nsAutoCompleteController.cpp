@@ -59,8 +59,6 @@ nsAutoCompleteController::nsAutoCompleteController() :
   mRowCount(0),
   mSearchesOngoing(0)
 {
-  NS_INIT_ISUPPORTS();
-
   mSearches = do_CreateInstance("@mozilla.org/supports-array;1");
   mResults = do_CreateInstance("@mozilla.org/supports-array;1");
 }
