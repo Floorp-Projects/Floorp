@@ -52,18 +52,22 @@ while (<DATA>) {
 
 # Output the RDF
 #
-my $fh_rdf = new FileHandle(">out.rdf");
-my $fh_dtd = new FileHandle(">out.dtd");
+print '<?xml version="1.0"?>'."\n"
+     ."<!DOCTYPE RDF\n"
+     ."[\n";
+print_entities(\%items);
+print "]>\n";
 
-print $fh_rdf qq(  <RDF:Seq about="urn:sidebar:master-panel-list">\n);
+print '<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"'
+         .'  xmlns:NC="http://home.netscape.com/NC-rdf#">';
+print qq(  <RDF:Seq about="urn:sidebar:master-panel-list">\n);
 for my $child (@{$items{'master-panel-list'}->{children}}) {
-  print_structure($fh_rdf, $child, '  ');
+  print_structure($child, '  ');
 }
-print $fh_rdf qq(  </RDF:Seq>\n);
-print_items($fh_rdf, $fh_dtd, \%items);
+print qq(  </RDF:Seq>\n);
+print_items(\%items);
 
-$fh_rdf->close;
-$fh_dtd->close;
+print "</RDF:RDF>\n";
 
 # end of main
 #############################################################
@@ -95,47 +99,55 @@ sub parse_line {
   } elsif (/^panel\|/) {
     $rec->{content_url} = $content_url;
   }
-  $items->{$id} = $rec;
+  $items->{"$id"} = $rec;
   push @{$items->{$parent}->{children}}, $rec;
 }
 
+sub print_entities {
+  my ($items) = @_;
+  for my $id (sort keys %{$items}) {
+    my $item = $items->{$id};
+
+    print_entity($item);
+  }
+}
+
 sub print_structure {
-  my ($fh, $item, $depth) = @_;
+  my ($item, $depth) = @_;
   $depth = '' unless defined $depth;
 
   if ($item->{type} eq 'panel-group') {
-    print $fh qq(\n  $depth<RDF:li>\n);
-    print $fh qq(    $depth<RDF:Seq about="$item->{urn}">\n);
+    print qq(\n  $depth<RDF:li>\n);
+    print qq(    $depth<RDF:Seq about="$item->{urn}">\n);
     for my $child (@{$item->{children}}) {
-      print_structure($fh, $child, $depth.'    ');
+      print_structure($child, $depth.'    ');
     }
-    print $fh qq(    $depth</RDF:Seq>\n);
-    print $fh qq(  $depth</RDF:li>\n);
+    print qq(    $depth</RDF:Seq>\n);
+    print qq(  $depth</RDF:li>\n);
   } else {
-    print $fh qq(  $depth<RDF:li resource="$item->{urn}" />\n);
+    print qq(  $depth<RDF:li resource="$item->{urn}" />\n);
   }
 }
 
 sub print_items {
-  my ($fh_rdf, $fh_dtd, $items) = @_;
+  my ($items) = @_;
   for my $id (sort keys %{$items}) {
     my $item = $items->{$id};
     next unless $item->{type} eq 'panel-group';
     next if $item->{label} eq '';
-    print_item($fh_rdf, $fh_dtd, $item);
+    print_item($item);
   }
   for my $id (sort keys %{$items}) {
     my $item = $items->{$id};
     next if $item->{type} eq 'panel-group';
-    print_item($fh_rdf, $fh_dtd, $item);
+    print_item($item);
   }
 }
 
 sub print_item {
-  my ($fh_rdf, $fh_dtd, $item) = @_;
-  my $output = '';
+  my ($item) = @_;
 
-  $output = "\n"
+  my $output = "\n"
              . "  <RDF:Description about='$item->{urn}'>\n"
              . "    <NC:title>&$item->{entity};</NC:title>\n";
   if ($item->{type} eq 'panel') {
@@ -148,6 +160,14 @@ sub print_item {
   }
   $output .= "  </RDF:Description>\n";
 
+  print $output;
+}
+
+sub print_entity {
+  my ($item) = @_;
+
+  return unless $item->{entity};
+
   my $entity = '';
   if ($item->{label} =~ /^"[^\"]+"$/) {
     $entity .= "<!-- LOCALIZATION NOTE $item->{entity}: DONT_TRANSLATE -->\n";
@@ -155,9 +175,10 @@ sub print_item {
     $entity .= "<!-- LOCALIZATION NOTE $item->{entity}: Do NOT localize $1 -->\n";
   }
   $item->{label} =~ s/\"//g;
+
   $entity .= sprintf qq{<!ENTITY %-40s "$item->{label}">\n}, $item->{entity};
-  print $fh_rdf $output;
-  print $fh_dtd $entity;
+
+  print $entity;
 }
 
 __DATA__
@@ -191,7 +212,6 @@ nc-panel|Local Movies|localmovie|sports-entertainment
 nc-panel|Sports|sports|sports-entertainment
 
 panel-group|Applications|applications|master-panel-list
-nc-panel|Calculator|calculator|applications
 nc-panel|Calendar|calendar|applications
 nc-panel|Delivery|delivery|applications
 nc-panel|"Netcenter" Apps|netcenterservices|applications
