@@ -3347,22 +3347,26 @@ nsComputedDOMStyle::GetBorderColorFor(PRUint8 aSide, nsIFrame *aFrame,
     PRBool transparent;
     PRBool foreground;
     border->GetBorderColor(aSide, color, transparent, foreground);
-    if (foreground) {
-      const nsStyleColor* colorStruct = nsnull;
-      GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)colorStruct,
-                   aFrame);
-      color = colorStruct->mColor;
+    if (transparent) {
+      val->SetIdent(NS_LITERAL_STRING("transparent"));
+    } else {
+      if (foreground) {
+        const nsStyleColor* colorStruct = nsnull;
+        GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)colorStruct,
+                     aFrame);
+        color = colorStruct->mColor;
+      }
+
+      nsDOMCSSRGBColor *rgb = nsnull;
+      rgb = GetDOMCSSRGBColor(color);
+      if (!rgb) {
+        delete val;
+
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      val->SetColor(rgb);
     }
-
-    nsDOMCSSRGBColor *rgb = nsnull;
-    rgb = GetDOMCSSRGBColor(color);
-    if (!rgb) {
-      delete val;
-
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    val->SetColor(rgb);
   } else {
     val->SetString(NS_LITERAL_STRING(""));
   }
