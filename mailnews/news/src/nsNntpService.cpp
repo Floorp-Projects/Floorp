@@ -781,6 +781,10 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
 	nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(aUrl);
 	if (nntpUrl)
 		nntpUrl->SetNewsAction(nsINntpUrl::ActionGetNewNews);
+	nsCOMPtr<nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(aUrl);
+	if (mailNewsUrl)
+		mailNewsUrl->SetUpdatingFolder(PR_TRUE);
+
     rv = RunNewsUrl(aUrl, nsnull);  
 	
 	if (_retval)
