@@ -17,7 +17,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  *
  * Created: Will Scullin <scullin@netscape.com>, 20 Nov 1997.
- * Modified: Jeff Galyan <jeffrey.galyan@sun.com>, 31 Dec 1998
+ * Modified: Giao Nguyen <grail@cafebabe.org>, 20, Jan 1999.
  */
 
 package grendel.ui;
@@ -133,9 +133,9 @@ public class NewFolderDialog extends GeneralDialog {
 
     // XXX This is a stupid hack because PageUI doesn't to a resource lookup
     // on it's title. Bleh.
-    String title = "PageUI";
+    String title = "folderLabel";
       try {
-	title = (String) model.getAttribute(title.substring(1));
+	title = (String) model.getAttribute(title);
       } catch (NoSuchElementException e) {}
  
     setTitle(title);
