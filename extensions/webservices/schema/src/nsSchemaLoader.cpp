@@ -627,7 +627,7 @@ nsSchemaLoader::Load(const nsAString& schemaURI,
                      nsISchema **_retval)
 {
   NS_ENSURE_ARG_POINTER(_retval);
-
+  
   nsCOMPtr<nsIURI> resolvedURI;
   nsresult rv = GetResolvedURI(schemaURI, "load", getter_AddRefs(resolvedURI));
   if (NS_FAILED(rv)) {
@@ -760,6 +760,19 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  nsAutoString targetNamespace;
+  schema->GetTargetNamespace(targetNamespace);
+  nsStringKey key(targetNamespace);
+  nsCOMPtr<nsISupports> old = getter_AddRefs(mSchemas.Get(&key));
+  nsCOMPtr<nsISchema> os = do_QueryInterface(old);
+  
+  if (os) {
+    *_retval = os;
+    NS_ADDREF(*_retval);
+    
+    return NS_OK;
+  }
+
   rv = schemaInst->Init();
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -837,9 +850,6 @@ nsSchemaLoader::ProcessSchemaElement(nsIDOMElement* aElement,
     return rv;
   }
 
-  nsAutoString targetNamespace;
-  schema->GetTargetNamespace(targetNamespace);
-  nsStringKey key(targetNamespace);
   mSchemas.Put(&key, schema);
 
   *_retval = schema;
