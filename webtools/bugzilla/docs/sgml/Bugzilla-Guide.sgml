@@ -28,7 +28,28 @@
 <!ENTITY bzg-auth "The Bugzilla Team">
 <!ENTITY bzg-bugs "<ulink url='http://bugzilla.mozilla.org/enter_bug.cgi?product=Bugzilla&amp;component=Documentation'>Bugzilla</ulink>">
 <!ENTITY mysql "http://www.mysql.com/">
-<!ENTITY perl-ver "5.6.1">
+<!ENTITY newest-perl-ver "5.8">
+
+<!-- For minimum versions -->
+<!ENTITY min-mysql-ver "3.23.6">
+<!ENTITY min-perl-ver "5.6">
+<!ENTITY min-template-ver "2.08">
+<!ENTITY min-file-temp-ver "1.804">
+<!ENTITY min-appconfig-ver "1.52">
+<!ENTITY min-text-wrap-ver "2001.0131">
+<!ENTITY min-file-spec-ver "0.82">
+<!ENTITY min-data-dumper-ver "any">
+<!ENTITY min-dbd-mysql-ver "1.2209">
+<!ENTITY min-dbi-ver "1.13">
+<!ENTITY min-date-parse-ver "any">
+<!ENTITY min-cgi-ver "2.88">
+<!-- Optional modules -->
+<!ENTITY min-gd-ver "1.20">
+<!ENTITY min-gd-chart-ver "any">
+<!ENTITY min-gd-text-align-ver "any">
+<!ENTITY min-chart-base-ver "0.99c">
+<!ENTITY min-xml-parser-ver "any">
+<!ENTITY min-mime-parser-ver "any">
 
 ]>
 

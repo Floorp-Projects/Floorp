@@ -38,14 +38,14 @@
 <listitem>
   <para>
     <ulink url="http://www.mysql.com/">MySQL database server</ulink>
-    (3.22.5 or greater)
+    (&min-mysql-ver; or greater)
   </para>
 </listitem>
 
 <listitem>
   <para>
     <ulink url="http://www.perl.org">Perl</ulink>
-    (5.005 or greater, 5.6.1 is recommended if you wish to
+    (&min-perl-ver;, 5.6.1 is recommended if you wish to
     use Bundle::Bugzilla)
   </para>
 </listitem>
@@ -57,14 +57,15 @@
     <listitem>
       <para>
         <ulink url="http://www.template-toolkit.org">Template</ulink>
-        (v2.07)
+        (v&min-template-ver;)
       </para>
     </listitem>
 
     <listitem>
       <para>
         <ulink url="http://www.perldoc.com/perl5.6/lib/File/Temp.html">
-	File::Temp</ulink> (v1.804) (Prerequisite for Template)
+	File::Temp</ulink>
+        (&min-file-temp-ver;) (Prerequisite for Template)
       </para>
     </listitem>
 
@@ -72,14 +73,14 @@
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/AppConfig/">AppConfig 
         </ulink>
-        (v1.52)
+        (&min-appconfig-ver;)
       </para>
     </listitem>
 
     <listitem>
       <para>
         <ulink url="http://www.cpan.org/authors/id/MUIR/modules/Text-Tabs%2BWrap-2001.0131.tar.gz">Text::Wrap</ulink> 
-        (v2001.0131)
+        (&min-text-wrap-ver;)
       </para>
     </listitem>
 
@@ -87,7 +88,7 @@
       <para>
         <ulink url="http://search.cpan.org/search?dist=File-Spec">File::Spec 
         </ulink>
-        (v0.8.2)
+        (&min-file-spec-ver;)
       </para>
     </listitem>
 
@@ -95,7 +96,7 @@
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/Data/">Data::Dumper 
         </ulink> 
-        (any)
+        (&min-data-dumper-ver;)
       </para>
     </listitem>
 
@@ -103,14 +104,14 @@
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/Mysql/">DBD::mysql
         </ulink> 
-        (v1.2209)
+        (&min-dbd-mysql-ver;)
       </para>
     </listitem>
 
     <listitem>
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/DBI/">DBI</ulink> 
-        (v1.13)
+        (&min-dbi-ver;)
       </para>
     </listitem>
 
@@ -118,14 +119,15 @@
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/Date/">Date::Parse
         </ulink> 
-        (any)
+        (&min-date-parse-ver;)
       </para>
     </listitem>
 
     <listitem>
       <para>
-        CGI::Carp 
-        (any)
+        <ulink url="http://www.cpan.org/modules/by-module/CGI/">CGI
+        </ulink> 
+        (&min-cgi-ver;)
       </para>
     </listitem>
 
@@ -135,7 +137,21 @@
     <listitem>
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/GD/">GD</ulink>
-        (v1.19) for bug charting
+        (&min-gd-ver;) for bug charting
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        GD::Chart
+        (&min-gd-chart-ver;) for bug charting
+      </para>
+    </listitem>
+
+    <listitem>
+      <para>
+        GD::Text::Align
+        (&min-gd-text-align-ver;) for bug charting
       </para>
     </listitem>
 
@@ -143,21 +159,21 @@
       <para>
         <ulink url="http://www.cpan.org/modules/by-module/Chart/">Chart::Base 
         </ulink>
-        (v0.99c) for bug charting
+        (&min-chart-base-ver;) for bug charting
       </para>
     </listitem>
 
     <listitem>
       <para>
         XML::Parser 
-        (any) for the XML interface
+        (&min-xml-parser-ver;) for the XML interface
       </para>
     </listitem>
 
     <listitem>
       <para>
         MIME::Parser 
-        (any) for the email interface
+        (&min-mime-parser-ver;) for the email interface
       </para>
     </listitem>
   </orderedlist>          
@@ -289,10 +305,10 @@
       Perl can be got in source form from 
       <ulink url="http://www.perl.com">perl.com</ulink> for the rare 
       *nix systems which don't have it. 
-      Although Bugzilla runs with all post-5.005
-      versions of Perl, it's a good idea to be up to the very latest version
+      Although Bugzilla runs with perl &min-perl-ver;,
+      it's a good idea to be up to the very latest version
       if you can when running Bugzilla. As of this writing, that is Perl
-      version &perl-ver;.</para>
+      version &newest-perl-ver;.</para>
 
       <tip id="bundlebugzilla"
       xreflabel="Using Bundle::Bugzilla instead of manually installing Perl modules">
@@ -500,10 +516,8 @@
       <para>When you install Template Toolkit, you'll get asked various
       questions about features to enable. The defaults are fine, except
       that it is recommended you use the high speed XS Stash of the Template
-      Toolkit, in order to achieve best performance.  However, there are
-      known problems with XS Stash and Perl 5.005_02 and lower.  If you
-      wish to use these older versions of Perl, please use the regular
-      stash.</para>
+      Toolkit, in order to achieve best performance.
+      </para>
     </section> 
 
     
@@ -1178,9 +1192,15 @@ bash# perl -pi -e "s/Content-Type\: text\/html/Content-Type\: text\/html\; chars
       <quote>ISO-8859-1</quote>, above, to 
       <quote>UTF-8</quote>.</para>
       
-      <para>Note: using &lt;meta&gt; tags to set the charset is not
-      recommended, as there's a bug in Netscape 4.x which causes pages
-      marked up in this way to load twice.</para>
+      <note>
+        <para>Using &lt;meta&gt; tags to set the charset is not
+        recommended, as there's a bug in Netscape 4.x which causes pages
+        marked up in this way to load twice. See 
+        <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=126266">bug
+        126266</ulink> for more information including progress toward making
+        bugzilla charset aware by default.
+        </para>
+      </note>
     </section>    
     
     <section id="htaccess" xreflabel=".htaccess files and security">
