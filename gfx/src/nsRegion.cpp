@@ -106,7 +106,21 @@ RgnRectMemoryAllocator::~RgnRectMemoryAllocator ()
     FreeChunk (tmp);
   }
 
+#if 0
+  /*
+   * As a static object this class outlives any library which would implement 
+   * locking. So we intentionally leak the 'lock'.
+   *
+   * Currently RgnRectMemoryAllocator is only used from the primary thread,
+   * so we aren't using a lock which means that there is no lock to leak.
+   * If we ever switch to multiple GUI threads (e.g. one per window), 
+   * we'd probably use one allocator per window-thread to avoid the 
+   * locking overhead and just require consumers not to pass regions 
+   * across threads/windows, which would be a reasonable restriction 
+   * because they wouldn't be useful outside their window.
+   */
   DestroyLock();
+#endif
 }
 
 nsRegion::RgnRect* RgnRectMemoryAllocator::Alloc ()
