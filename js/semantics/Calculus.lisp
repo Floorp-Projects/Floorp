@@ -22,7 +22,7 @@
 (defvar *trace-variables* nil)
 
 
-#+mcl (dolist (indent-spec '((production . 3) (letexc . 1) (deftype . 1)))
+#+mcl (dolist (indent-spec '((production . 3) (rule . 2) (letexc . 1) (deftype . 1)))
         (pushnew indent-spec ccl:*fred-special-indent-alist* :test #'equal))
 
 
@@ -536,6 +536,12 @@
   `(get ,symbol :deftype ,@(and default (list default))))
 
 
+; Return true if this symbol's symbol-type-definition is user-defined.
+; This macro is appropriate for use with setf.
+(defmacro symbol-type-user-defined (symbol)
+  `(get ,symbol 'type-user-defined))
+
+
 ; Call f on each type definition, including forward-referenced types, in the world.
 ; f takes two arguments:
 ;   the symbol
@@ -743,7 +749,7 @@
           (type-parameters oneof-type))))
 
 
-; Look up a oneof type given one of its tag and the corresponding field type.
+; Look up a oneof type given one of its tags and the corresponding field type.
 ; Signal an error if there is no such type or there is more than one matching type.
 (defun lookup-oneof-tag (world tag field-type)
   (let ((data (gethash (cons tag field-type) (world-oneof-tags world))))
@@ -771,7 +777,8 @@
 
 ; Provide a new symbol for the type.  A type can have zero or more names.
 ; Signal an error if the name is already used.
-(defun add-type-name (world type symbol)
+; user-defined is true if this is a user-defined type rather than a predefined type.
+(defun add-type-name (world type symbol user-defined)
   (assert-true (symbol-in-world world symbol))
   (when (symbol-type-definition symbol)
     (error "Attempt to redefine type ~A" symbol))
@@ -781,6 +788,8 @@
     (setf (type-name-serial-number type) (world-n-type-names world)))
   (incf (world-n-type-names world))
   (setf (symbol-type-definition symbol) type)
+  (when user-defined
+    (setf (symbol-type-user-defined symbol) t))
   (export-symbol symbol))
 
 
@@ -1064,14 +1073,16 @@
   (value-code nil :read-only t)            ;Lisp expression that computes the value of this primitive
   (appearance nil :read-only t)            ;One of the possible primitive appearances (see below)
   (markup1 nil :read-only t)               ;Markup (item or list) for this primitive
-  (markup2 nil :read-only t)               ;:unary primitives: markup (item or list) for this primitive's closer
-  ;                                        ;:infix primitives: true if spaces should be put around primitive
+  (markup2 nil :read-only t)               ;:global primitives:  name to use for an external reference
+  ;                                        ;:unary primitives:   markup (item or list) for this primitive's closer
+  ;                                        ;:infix primitives:   true if spaces should be put around primitive
   (level nil :read-only t)                 ;Precedence level of markup for this primitive
   (level1 nil :read-only t)                ;Precedence level required for first argument of this primitive
   (level2 nil :read-only t))               ;Precedence level required for second argument of this primitive
 
 ;appearance is one of the following:
-; :global      The primitive appears as a regular, global function or constant; its markup is in markup1
+; :global      The primitive appears as a regular, global function or constant; its markup is in markup1.
+;                If this primitive should generate an external reference, markup2 contains the name to use for the reference
 ; :infix       The primitive is an infix binary primitive; its markup is in markup1; if markup2 is true, put spaces around markup1
 ; :unary       The primitive is a prefix and/or suffix unary primitive; the prefix is in markup1 and suffix in markup2
 ; :phantom     The primitive disappears when emitting markup for it
@@ -1305,6 +1316,8 @@
 ;;; emitting markup for expressions.  Expression forms are prefixed with an expr-annotation symbol
 ;;; to indicate their kinds.  These symbols are in their own package to avoid potential confusion
 ;;; with keywords, variable names, terminals, etc.
+;;;
+;;; Some special forms are extended to include parsed type information for the benefit of markup logic.
 (eval-when (:compile-toplevel :load-toplevel :execute)
   (defpackage "EXPR-ANNOTATION"
     (:use)
@@ -1796,10 +1809,11 @@
                        (if has-value-expr
                          (scan-value world type-env value-expr)
                          (values nil (world-void-type world) nil))
-    (values
-     `(cons ',tag ,value-code)
-     (lookup-oneof-tag world tag value-type)
-     (list 'expr-annotation:special-form special-form tag value-annotated-expr))))
+    (let ((type (lookup-oneof-tag world tag value-type)))
+      (values
+       `(cons ',tag ,value-code)
+       type
+       (list 'expr-annotation:special-form special-form tag value-annotated-expr type)))))
 
 
 ; (typed-oneof <type-expr> <tag> <value-expr>)
@@ -1814,7 +1828,7 @@
         (values
          `(cons ',tag ,value-code)
          type
-         (list 'expr-annotation:special-form special-form type-expr tag value-annotated-expr))))))
+         (list 'expr-annotation:special-form special-form type-expr tag value-annotated-expr type))))))
 
 
 ; (case <oneof-expr> (<tag-spec> <value-expr>) (<tag-spec> <value-expr>) ... (<tag-spec> <value-expr>))
@@ -1881,7 +1895,7 @@
        `(let ((,oneof-var ,oneof-code))
           (ecase (car ,oneof-var) ,@(nreverse case-codes)))
        body-type
-       (list* 'expr-annotation:special-form special-form oneof-annotated-expr (nreverse case-annotated-exprs))))))
+       (list* 'expr-annotation:special-form special-form oneof-annotated-expr oneof-type (nreverse case-annotated-exprs))))))
     
 
 ; (select <tag> <oneof-expr>)
@@ -1892,7 +1906,7 @@
       (values
        `(select-field ',tag ,oneof-code)
        field-type
-       (list 'expr-annotation:special-form special-form tag oneof-annotated-expr)))))
+       (list 'expr-annotation:special-form special-form tag oneof-annotated-expr oneof-type)))))
 
 (defun select-field (tag value)
   (if (eq (car value) tag)
@@ -1907,7 +1921,7 @@
       (values
        `(eq ',tag (car ,oneof-code))
        (world-boolean-type world)
-       (list 'expr-annotation:special-form special-form tag oneof-annotated-expr)))))
+       (list 'expr-annotation:special-form special-form tag oneof-annotated-expr oneof-type)))))
 
 
 ;;; Tuples
@@ -1936,7 +1950,7 @@
       (values
        (list 'nth (position tag (type-tags tuple-type)) tuple-code)
        field-type
-       (list 'expr-annotation:special-form special-form tag tuple-annotated-expr)))))
+       (list 'expr-annotation:special-form special-form tag tuple-annotated-expr tuple-type)))))
 
 
 ;;; Addresses
@@ -2047,7 +2061,7 @@
          (type (scan-type world type-expr t)))
     (unless (typep type 'type)
       (error "~:W undefined in type definition of ~A" type-expr symbol))
-    (add-type-name world type symbol)))
+    (add-type-name world type symbol t)))
 
 
 ; (define <name> <type> <value> <destructured>)
@@ -2127,6 +2141,7 @@
      (lexer preprocess-lexer)
      (grammar-argument preprocess-grammar-argument)
      (production preprocess-production)
+     (rule preprocess-rule)
      (exclude preprocess-exclude))
     
     (:macro
@@ -2136,6 +2151,7 @@
     (:command
      (%section scan-% depict-%section)
      (%subsection scan-% depict-%subsection)
+     (%text scan-% depict-%text)
      (grammar-argument scan-% depict-grammar-argument)
      (%rule scan-% depict-%rule)
      (%charclass scan-% depict-%charclass)
@@ -2253,7 +2269,10 @@
     (code-to-character (-> (integer) character) #'code-char)
     (character-to-code (-> (character) integer) #'char-code)
     
-    (string-equal (-> (string string) boolean) #'string=)))
+    (string-equal (-> (string string) boolean) #'string=)
+
+    (is-ordinary-initial-identifier-character (-> (character) boolean) #'ordinary-initial-identifier-character?)
+    (is-ordinary-continuing-identifier-character (-> (character) boolean) #'ordinary-continuing-identifier-character?)))
 
 
 ; Return the tail end of the lambda list for make-primitive.  The returned list always starts with
@@ -2277,7 +2296,8 @@
          (:phantom
           (assert-true (null args))
           (list ':level 0)))))
-    `(:global :markup1 ((:global-variable ,(symbol-lower-mixed-case-name name))) :level 0)))
+    (let ((name (symbol-lower-mixed-case-name name)))
+      `(:global :markup1 ((:global-variable ,name)) :markup2 ,name :level 0))))
 
   
 ; Create a world with the given name and set up the built-in properties of its symbols.
@@ -2298,8 +2318,8 @@
                (third primitive-spec)
                (process-primitive-spec-appearance name (cdddr primitive-spec)))))
     (dolist (type-spec *default-types*)
-      (add-type-name world (make-type world (cdr type-spec) nil nil) (world-intern world (car type-spec))))
-    (add-type-name world (make-vector-type world (make-type world :character nil nil)) (world-intern world 'string))
+      (add-type-name world (make-type world (cdr type-spec) nil nil) (world-intern world (car type-spec)) nil))
+    (add-type-name world (make-vector-type world (make-type world :character nil nil)) (world-intern world 'string) nil)
     world))
 
 
@@ -2737,7 +2757,7 @@
 ; (production <lhs> <rhs> <name> (<action-spec-1> <body-1>) ... (<action-spec-n> <body-n>))
 ;   ==>
 ; grammar:
-;   (<lhs> <rhs> <name>);
+;   (<lhs> <rhs> <name>)
 ; commands:
 ;   (%rule <lhs>)
 ;   (action <action-spec-1> <name> <body-1>)
@@ -2754,6 +2774,64 @@
                      (list 'action (first action) name (second action)))
                  actions))
    t))
+
+
+; (rule <general-grammar-symbol>
+;       ((<action-name-1> <type-1>) ... (<action-name-n> <type-n>))
+;   (production <lhs-1> <rhs-1> <name-1> (<action-spec-1-1> <body-1-1>) ... (<action-spec-1-n> <body-1-n>))
+;   ...
+;   (production <lhs-m> <rhs-m> <name-m> (<action-spec-m-1> <body-m-1>) ... (<action-spec-m-n> <body-m-n>)))
+;   ==>
+; grammar:
+;   (<lhs-1> <rhs-1> <name-1>)
+;   ...
+;   (<lhs-m> <rhs-m> <name-m>)
+; commands:
+;   (%rule <lhs-1>)
+;   ...
+;   (%rule <lhs-m>)
+;   (declare-action <action-name-1> <general-grammar-symbol> <type-1>)
+;      (action <action-spec-1-1> <name-1> <body-1-1>)
+;      ...
+;      (action <action-spec-m-1> <name-m> <body-m-1>)
+;   ...
+;   (declare-action <action-name-n> <general-grammar-symbol> <type-n>)
+;      (action <action-spec-1-n> <name-1> <body-1-n>)
+;      ...
+;      (action <action-spec-m-n> <name-m> <body-m-n>)
+(defun preprocess-rule (preprocessor-state command general-grammar-symbol action-declarations &rest productions)
+  (declare (ignore command))
+  (assert-type action-declarations (list (tuple symbol t)))
+  (preprocess-ensure-grammar preprocessor-state)
+  (labels
+    ((actions-match (action-declarations actions)
+       (or (and (endp action-declarations) (endp actions))
+           (let ((declared-action-name (caar action-declarations))
+                 (action-name (caar actions)))
+             (when (consp action-name)
+               (setq action-name (first action-name)))
+             (and (eq declared-action-name action-name)
+                  (actions-match (rest action-declarations) (rest actions)))))))
+    
+    (let ((commands-reverse nil))
+      (dolist (production productions)
+        (assert-true (eq (first production) 'production))
+        (let ((lhs (second production))
+              (rhs (third production))
+              (name (assert-type (fourth production) symbol))
+              (actions (assert-type (cddddr production) (list (tuple t t)))))
+          (unless (actions-match action-declarations actions)
+            (error "Action name mismatch: ~S vs. ~S" action-declarations actions))
+          (push (list lhs rhs name) (preprocessor-state-grammar-source-reverse preprocessor-state))
+          (push (list '%rule lhs) commands-reverse)))
+      (dotimes (i (length action-declarations))
+        (let ((action-declaration (nth i action-declarations)))
+          (push (list 'declare-action (first action-declaration) general-grammar-symbol (second action-declaration)) commands-reverse)
+          (dolist (production productions)
+            (let ((name (fourth production))
+                  (action (nth (+ i 4) production)))
+              (push (list 'action (first action) name (second action)) commands-reverse)))))
+      (values (nreverse commands-reverse) t))))
 
 
 ; (exclude <lhs> ... <lhs>)
