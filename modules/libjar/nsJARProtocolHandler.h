@@ -43,6 +43,7 @@
 #include "nsIJARURI.h"
 #include "nsIZipReader.h"
 #include "nsIMIMEService.h"
+#include "nsWeakReference.h"
 #include "nsCOMPtr.h"
 
 #define NS_JARPROTOCOLHANDLER_CID					 \
@@ -55,6 +56,7 @@
 
 
 class nsJARProtocolHandler : public nsIJARProtocolHandler
+                           , public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS

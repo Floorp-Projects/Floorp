@@ -91,6 +91,7 @@ nsJARChannel::~nsJARChannel()
         nsCRT::free(mContentType);
     if (mJAREntry)
         nsCRT::free(mJAREntry);
+    NS_IF_RELEASE(mJARProtocolHandler);
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS7(nsJARChannel,
@@ -127,7 +128,7 @@ nsJARChannel::Init(nsJARProtocolHandler* aHandler, nsIURI* uri)
     mURI = do_QueryInterface(uri, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    mJARProtocolHandler = aHandler;
+    NS_ADDREF(mJARProtocolHandler = aHandler);
     return NS_OK;
 }
 
