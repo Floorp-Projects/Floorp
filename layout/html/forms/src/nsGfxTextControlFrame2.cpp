@@ -584,16 +584,16 @@ public:
   NS_IMETHOD WordMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD LineMove(PRBool aForward, PRBool aExtend);
   NS_IMETHOD IntraLineMove(PRBool aForward, PRBool aExtend);
-  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend){return NS_OK;}//*
-  NS_IMETHOD CompleteScroll(PRBool aForward){return NS_OK;}//*
-  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend){return NS_OK;}//*
-  NS_IMETHOD ScrollPage(PRBool aForward){return NS_OK;}//*
-  NS_IMETHOD ScrollLine(PRBool aForward){return NS_OK;}//*
-  NS_IMETHOD ScrollHorizontal(PRBool aLeft){return NS_OK;}//*
+  NS_IMETHOD PageMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD CompleteScroll(PRBool aForward);
+  NS_IMETHOD CompleteMove(PRBool aForward, PRBool aExtend);
+  NS_IMETHOD ScrollPage(PRBool aForward);
+  NS_IMETHOD ScrollLine(PRBool aForward);
+  NS_IMETHOD ScrollHorizontal(PRBool aLeft);
   NS_IMETHOD SelectAll(void);
   NS_IMETHOD CheckVisibility(nsIDOMNode *node, PRInt16 startOffset, PRInt16 EndOffset, PRBool *_retval);
 
-  //NSIFRAMSELECTION INTERFACES
+  // NSIFRAMESELECTION INTERFACES
   NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) ;
   NS_IMETHOD ShutDown() ;
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGuiEvent) ;
@@ -622,6 +622,7 @@ public:
   NS_IMETHOD GetHint(nsIFrameSelection::HINT *aHint);
   NS_IMETHOD SetHint(nsIFrameSelection::HINT aHint);
   NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollableView);
+  NS_IMETHOD GetScrollableView(nsIScrollableView **aScrollableView);
 #ifdef IBMBIDI
   NS_IMETHOD GetPrevNextBidiLevels(nsIPresContext *aPresContext,
                                    nsIContent *aNode,
@@ -863,6 +864,144 @@ nsTextInputSelectionImpl::IntraLineMove(PRBool aForward, PRBool aExtend)
 
 
 NS_IMETHODIMP
+nsTextInputSelectionImpl::PageMove(PRBool aForward, PRBool aExtend)
+{
+#if XXXXX_WORK_TO_BE_COMPLETED_XXXXX
+  // XXX: this code needs to be finished or rewritten
+  // expected bahavior for PageMove is to scroll AND move the caret
+  nsIScrollableView *scrollableView;
+  nsresult result;
+  nscoord containerHeight, containerWidth, lineHeight;
+  nsPoint oldLocation;
+
+  result = GetScrollableView(&scrollableView);
+  if (NS_FAILED(result))
+    return result;
+  if (!scrollableView)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // find out where we are; determine amount to page up/down
+  result = scrollableView->GetScrollPosition(oldLocation.x, oldLocation.y);
+  if (NS_FAILED(result))
+    return result;
+
+  result = scrollableView->GetLineHeight(&lineHeight);
+  if (NS_FAILED(result))
+    return result;
+
+  result = scrollableView->GetContainerSize(&containerWidth, &containerHeight);
+  if (NS_SUCCEEDED(result))
+  {
+    // scroll this amount backwards
+    if (!aForward)
+      containerHeight = 0 - containerHeight;
+
+    nsPoint desiredLocation(oldLocation.x, oldLocation.y + containerHeight - lineHeight);
+    result = scrollableView->ScrollTo(desiredLocation.x, desiredLocation.y, NS_VMREFRESH_NO_SYNC);
+
+    // grab the parent / root DIV for this text widget
+    nsCOMPtr<nsIContent> parentDIV;
+    result = GetLimiter(getter_AddRefs(parentDIV));
+    if (NS_FAILED(result))
+      return result;
+    if (!parentDIV)
+      return NS_ERROR_UNEXPECTED;
+
+    // now we know how much to move up/down, we need to look into the content and 
+    // figure out where that coordinate is and then place the caret at that location
+    nsCOMPtr<nsIContent> content;
+    result = frame->GetContentAndOffsetsFromPoint(presContext, desiredLocation, getter_AddRefs(content), startOffset, endOffset, beginFrameContent);
+    result = GetFrameForNodeOffset(content, PRInt32 aOffset, HINT aHint, nsIFrame **aReturnFrame, PRInt32 *aReturnOffset)
+  }
+  
+  return result;
+#else
+  return ScrollPage(aForward);
+#endif
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::CompleteScroll(PRBool aForward)
+{
+  nsIScrollableView *scrollableView;
+  nsresult result;
+  result = GetScrollableView(&scrollableView);
+  if (NS_FAILED(result))
+    return result;
+  if (!scrollableView)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return scrollableView->ScrollByWhole(!aForward); //TRUE = top, aForward TRUE=bottom
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
+{
+  // grab the parent / root DIV for this text widget
+  nsresult result;
+  nsCOMPtr<nsIContent> parentDIV;
+  result = GetLimiter(getter_AddRefs(parentDIV));
+  if (NS_FAILED(result))
+    return result;
+  if (!parentDIV)
+    return NS_ERROR_UNEXPECTED;
+
+  // make the caret be either at the very beginning (0) or the very end
+  PRInt32 offset = 0;
+  if (aForward)
+    parentDIV->ChildCount(offset);
+
+  result = mFrameSelection->HandleClick(parentDIV, offset, offset, aExtend, PR_FALSE, aExtend);
+
+  // if we got this far, attempt to scroll no matter what the above result is
+  return CompleteScroll(aForward);
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::ScrollPage(PRBool aForward)
+{
+  nsIScrollableView *scrollableView;
+  nsresult result;
+  result = GetScrollableView(&scrollableView);
+  if (NS_FAILED(result))
+    return result;
+  if (!scrollableView)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  return scrollableView->ScrollByPages(aForward ? 1 : -1);
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::ScrollLine(PRBool aForward)
+{
+  nsIScrollableView *scrollableView;
+  nsresult result;
+  result = GetScrollableView(&scrollableView);
+  if (NS_FAILED(result))
+    return result;
+  if (!scrollableView)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // will we have bug #7354 because we aren't forcing an update here?
+  return scrollableView->ScrollByLines(0, aForward ? 1 : -1);
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::ScrollHorizontal(PRBool aLeft)
+{
+  nsIScrollableView *scrollableView;
+  nsresult result;
+  result = GetScrollableView(&scrollableView);
+  if (NS_FAILED(result))
+    return result;
+  if (!scrollableView)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  // will we have bug #7354 because we aren't forcing an update here?
+  return scrollableView->ScrollByLines(aLeft ? -1 : 1, 0);
+}
+
+NS_IMETHODIMP
 nsTextInputSelectionImpl::SelectAll()
 {
   if (mFrameSelection)
@@ -1053,6 +1192,13 @@ NS_IMETHODIMP nsTextInputSelectionImpl::SetScrollableView(nsIScrollableView *aSc
 {
   if(mFrameSelection) 
     return mFrameSelection->SetScrollableView(aScrollableView);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsTextInputSelectionImpl::GetScrollableView(nsIScrollableView **aScrollableView)
+{
+  if(mFrameSelection) 
+    return mFrameSelection->GetScrollableView(aScrollableView);
   return NS_ERROR_FAILURE;
 }
 
