@@ -7320,66 +7320,52 @@ Please verify that your Advanced Preferences are set correctly and try again.")
 
 ResDef(XP_EDT_ADD_COLUMNS_STATUS, XP_MSG_BASE + 1170,
        "Add %d column(s) to the table")
-
 ResDef(XP_EDT_ADD_ROWS_STATUS, XP_MSG_BASE + 1171,
        "Add %d rows(s) to the table")
-
 ResDef(XP_EDT_PERCENT_CELL, XP_MSG_BASE + 1172,
        "% of parent cell  ")
-
 ResDef(XP_EDT_PERCENT_TABLE, XP_MSG_BASE + 1173,
        "% of table  ")
-
 ResDef(XP_EDT_SEL_TABLE, XP_MSG_BASE + 1174,
        "Click to select table")
-
 ResDef(XP_EDT_SEL_TABLE_EXTRA, XP_MSG_BASE + 1175,
        " (Also press Ctrl to select all cells instead)")
-
 ResDef(XP_EDT_SEL_COL, XP_MSG_BASE + 1176,
        "Click to select all cells in column")
-
 ResDef(XP_EDT_SEL_ROW, XP_MSG_BASE + 1177,
        "Click to select all cells in row")
-
 ResDef(XP_EDT_SEL_CELL, XP_MSG_BASE + 1178,
        "Click to select or deselect cell")
-
 ResDef(XP_EDT_SEL_ALL_CELLS, XP_MSG_BASE + 1179,
        "Click to select all cells in table")
-
 ResDef(XP_EDT_SIZE_TABLE_WIDTH, XP_MSG_BASE + 1180,
        "Drag to change width of table")
-
 ResDef(XP_EDT_SIZE_TABLE_HEIGHT, XP_MSG_BASE + 1181,
        "Drag to change height of table")
-
 ResDef(XP_EDT_SIZE_COL, XP_MSG_BASE + 1182,
        "Drag to change width of column to the left")
-
 ResDef(XP_EDT_SIZE_ROW, XP_MSG_BASE + 1183,
        "Drag to change height of row above")
-
 ResDef(XP_EDT_ADD_ROWS, XP_MSG_BASE + 1184,
        "Drag down to add more rows to the table")
-
 ResDef(XP_EDT_ADD_COLS, XP_MSG_BASE + 1185,
        "Drag right to add more columns to the table")
-
 ResDef(XP_EDT_DRAG_TABLE, XP_MSG_BASE + 1186,
        "Relocate caret or drag selected table or cells")
-
 ResDef(XP_EDT_NOT_ALL_CELLS_PASTED, XP_MSG_BASE + 1187,
        "Not all cells in source were pasted\n")
-
 ResDef(XP_EDT_CLICK_TO_SELECT_IMAGE, XP_MSG_BASE + 1188,
        "Click to select the image before you can drag it")
-
 ResDef(XP_EDT_CLICK_AND_DRAG_IMAGE, XP_MSG_BASE + 1189,
        "Click mouse button down and drag to move or copy image")
-
 ResDef(XP_EDT_SEL_LINE, XP_MSG_BASE + 1190,
        "Click to select the entire line to the right")
+ResDef(XP_EDT_SIZE_WIDTH, XP_MSG_BASE + 1191,
+       "Drag to change the width of object")
+ResDef(XP_EDT_SIZE_HEIGHT, XP_MSG_BASE + 1192,
+       "Drag to change the height of object")
+ResDef(XP_EDT_SIZE_CORNER, XP_MSG_BASE + 1193,
+       "Drag to change width and height of object [Press Ctrl to not constrain aspect ratio]")
 
 ResDef(XP_EDT_CHARSET_LABEL, (XP_MSG_BASE + 1200),
 "The character set label of this page is '%s'.")
