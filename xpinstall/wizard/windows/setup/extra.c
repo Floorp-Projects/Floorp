@@ -5393,8 +5393,8 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   if(ParseCommandLine(lpszCmdLine))
     return(1);
 
-  if(CheckInstances())
-    return(1);
+//  if(CheckInstances())
+//    return(1);
 
   if(GetPrivateProfileString("Messages", "MSG_INIT_SETUP", "", szMsgInitSetup, sizeof(szMsgInitSetup), szFileIniInstall))
     ShowMessage(szMsgInitSetup, TRUE);
