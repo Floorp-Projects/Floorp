@@ -29,7 +29,11 @@
 
   <keyset id="editMenuKeys">
     <key id="key_undo" key="&undoCmd.key;" modifiers="accel" command="cmd_undo"/>
+#ifdef XP_UNIX
+    <key id="key_redo" key="&undoCmd.key;" modifiers="accel,shift" command="cmd_redo"/>
+#else
     <key id="key_redo" key="&redoCmd.key;" modifiers="accel" command="cmd_redo"/>
+#endif
     <key id="key_cut" key="&cutCmd.key;" modifiers="accel" command="cmd_cut"/>
     <key id="key_copy" key="&copyCmd.key;" modifiers="accel" command="cmd_copy"/>
     <key id="key_paste" key="&pasteCmd.key;" modifiers="accel" command="cmd_paste"/>

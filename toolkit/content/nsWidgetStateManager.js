@@ -260,7 +260,7 @@ nsWidgetStateManager.prototype =
     var element = gCurrentWindow.document.getElementById(aElementID);
     wsm.generic_Set(element, aDataObject);
     if ("value" in aDataObject)
-      element.value = aDataObject.value;
+      element.selectedItem = element.getElementsByAttribute("value", aDataObject.value)[0];
     if ("disabled" in aDataObject)
       element.disabled = aDataObject.disabled;
   },

@@ -29,6 +29,8 @@ CHROME_DEPS = buildconfig.html
 
 include $(DEPTH)/config/autoconf.mk
 
+DEFINES += -DMOZ_APP_VERSION=$(MOZ_APP_VERSION)
+
 include $(topsrcdir)/config/rules.mk
 
 distclean::

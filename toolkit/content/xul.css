@@ -15,17 +15,18 @@
   display: -moz-box;
 }
 
+/* hide the content, but don't destroy the frames.  Make sure this
+comes before any rules involving "hidden"  */
+*[collapsed="true"], *[moz-collapsed="true"] {
+  visibility: collapse;
+}
+
+/* The rule for hidden comes AFTER the rule for collapsed.  That way if
+both are specified on an element, the hidden rule wins. */
 /* hide the content and destroy the frame */
 *[hidden="true"] {
   display: none;
 }
-
-/* hide the content, but don't destroy the frames */
-*[collapsed="true"], 
-*[moz-collapsed="true"] {
-  visibility: collapse;
-}
-
 
 /* ::::::::::
    :: Rules for 'hiding' portions of the chrome for special
@@ -144,6 +145,10 @@ iframe {
 
 browser {
   -moz-binding: url("chrome://global/content/bindings/browser.xml#browser");
+}
+
+browsermessage {
+  -moz-binding: url("chrome://global/content/bindings/browser.xml#browsermessage"); 
 }
 
 tabbrowser {
@@ -272,10 +277,6 @@ menuitem {
 
 menuitem.menuitem-iconic {
   -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic");
-}
-
-menuitem[description] {
-  -moz-binding: url("chrome://global/content/bindings/menu.xml#menuitem-iconic-desc-noaccel");
 }
 
 menuitem[type="checkbox"],
@@ -470,6 +471,10 @@ listbox {
   height: 200px;
 }
 
+listhead, listrows, listboxbody {
+  -moz-user-focus: none;
+}
+
 listhead {
   -moz-box-orient: vertical;
 }
@@ -517,6 +522,7 @@ treecol.treecol-image {
 tree > treechildren {
   display: -moz-box;
   -moz-binding: url("chrome://global/content/bindings/tree.xml#treebody");
+  -moz-user-focus: none;
   -moz-user-select: none;
   -moz-box-flex: 1;
 }
@@ -595,10 +601,6 @@ progressmeter {
   -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter");
 }
 
-progressmeter[mode="undetermined"] {
-  -moz-binding: url("chrome://global/content/bindings/progressmeter.xml#progressmeter-undetermined");
-}
-
 /********** basic rule for anonymous content that needs to pass box properties through
  ********** to an insertion point parent that holds the real kids **************/
 
@@ -628,12 +630,8 @@ label.text-link {
   -moz-user-focus: normal;
 }
 
-label[control], label.radio-label, label.checkbox-label {
+label[control] {
   -moz-binding: url("chrome://global/content/bindings/text.xml#label-control");
-}
-
-html|span.accesskey {
-  text-decoration: underline;
 }
 
 /********** textbox **********/
@@ -780,10 +778,6 @@ menulist[editable] {
   -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-editable");
 }
 
-menulist[type="description"] {
-  -moz-binding: url("chrome://global/content/bindings/menulist.xml#menulist-description");
-}
-
 html|*.menulist-editable-input {
   -moz-appearance: none !important;
 }
@@ -809,8 +803,6 @@ grippy {
 .tree-splitter {
   width: 0px;
   max-width: 0px;
-  min-width: 0% ! important;
-  min-height: 0% ! important;
   -moz-box-ordinal-group: 2147483646;
 }
 
@@ -838,8 +830,6 @@ scrollbar[value="hidden"] {
 
 scrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#scrollbox");
-  /* This makes it scrollable! */
-  overflow:hidden ! important;
 }
 
 arrowscrollbox {
@@ -866,6 +856,10 @@ statusbarpanel {
 
 .statusbarpanel-iconic {
   -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel-iconic");
+}
+
+.statusbarpanel-iconic-text {
+  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel-iconic-text");
 }
 
 .statusbarpanel-menu-iconic {

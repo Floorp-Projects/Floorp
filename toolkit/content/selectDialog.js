@@ -75,10 +75,11 @@ function selectDialogOnLoad() {
     }
   }
 
-  document.title = param.GetString( 0 );
+  var windowTitle = param.GetString( 0 );
+  window.title = windowTitle;
 
   list = document.getElementById("list");
-  numItems = param.GetInt( 2 );
+  numItems = param.GetInt( 2 )
 
   var i;
   for ( i = 2; i <= numItems+1; i++ ) {

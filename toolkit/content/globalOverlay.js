@@ -47,17 +47,24 @@ function goQuitApplication()
   var windowManager = Components.classes['@mozilla.org/appshell/window-mediator;1'].getService();
   var windowManagerInterface = windowManager.QueryInterface( Components.interfaces.nsIWindowMediator);
   var enumerator = windowManagerInterface.getEnumerator( null );
-  var appStartup = Components.classes['@mozilla.org/toolkit/app-startup;1'].
-                     getService(Components.interfaces.nsIAppStartup);
+  var appShell = Components.classes['@mozilla.org/appshell/appShellService;1'].getService();
+  appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService );
+
+  var nativeAppSupport = null;
+  try {
+    nativeAppSupport = appShell.nativeAppSupport;
+  }
+  catch ( ex ) {
+  }
 
   while ( enumerator.hasMoreElements()  )
   {
      var domWindow = enumerator.getNext();
      if (("tryToClose" in domWindow) && !domWindow.tryToClose())
-       return false;
+       return false;          
      domWindow.close();
   };
-  appStartup.quit(Components.interfaces.nsIAppStartup.eAttemptQuit);
+  appShell.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
   return true;
 }
 
@@ -89,7 +96,8 @@ function goDoCommand(command)
       controller.doCommand(command);
   }
   catch (e) {
-    dump("An error occurred executing the " + command + " command\n" + e + "\n");
+    dump("An error occurred executing the "+command+" command\n");
+    dump(e+"\n")
   }
 }
 
