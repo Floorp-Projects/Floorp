@@ -51,6 +51,7 @@ static NS_DEFINE_CID(kRDFServiceCID,            NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerUtilsCID,     NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_CID(kRDFBookmarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_IID(kIRDFBookmarkDataSourceIID,NS_IRDFBOOKMARKDATASOURCE_IID);
+static NS_DEFINE_IID(kISupportsIID,             NS_ISUPPORTS_IID);
 
 static const char kURINC_BookmarksRoot[]         = "NC:BookmarksRoot"; // XXX?
 static const char kURINC_IEFavoritesRoot[]       = "NC:IEFavoritesRoot"; // XXX?
@@ -896,7 +897,8 @@ BookmarkDataSourceImpl::QueryInterface(REFNSIID iid, void **result)
 
 	*result = nsnull;
 	if (iid.Equals(kIRDFDataSourceIID) ||
-		iid.Equals(kIRDFBookmarkDataSourceIID))
+		iid.Equals(kIRDFBookmarkDataSourceIID) ||
+        iid.Equals(kISupportsIID))
 	{
 		*result = NS_STATIC_CAST(nsIRDFBookmarkDataSource *, this);
 		AddRef();
