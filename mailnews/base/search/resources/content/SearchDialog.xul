@@ -84,7 +84,6 @@ Rights Reserved.
 
       <box flex="1">
         <box id="searchTermListBox" flex="1"/>
-        
         <box orient="vertical">
            <spring flex="1"/>
            <button label="&searchButton.label;" id="search-button" oncommand="onSearchButton(event);"/>
@@ -96,11 +95,17 @@ Rights Reserved.
     
     <splitter id="gray_horizontal_splitter" collapse="after"  persist="state"/>
     
-    <titledbox orient="vertical" class="dialog box-padded" flex="1">
+    <titledbox orient="horizontal" class="dialog box-padded" flex="1">
        <label value="&results.label;"/>
        <box id="searchTermListBox" orient="vertical" flex="1">
             <outliner id="threadOutliner" flex="1" context="threadPaneContext"/>
        </box>
+       <box orient="vertical">
+            <spring flex="1" />
+            <button label="&openButton.label;" id="openButton" observes="cmd_open"/>
+            <button label="&deleteButton.label;" id="deleteButton" observes="cmd_delete"/>
+            <spring flex="1" />
+       </box>      
     </titledbox>
 
     <box align="left">
@@ -167,8 +172,7 @@ Rights Reserved.
     </box>
         
     <box autostretch="never" align="right">
-      <button label="&openButton.label;" id="openButton" observes="cmd_open"/>
-      <button label="Delete" id="deleteButton" observes="cmd_delete"/>
+
       <button label="&closeButton.label;" oncommand="window.close();"/>
     </box>
   
