@@ -3285,3 +3285,14 @@ nsFontEnumeratorGTK::EnumerateFonts(const char* aLangGroup,
   // XXX still need to implement aLangGroup and aGeneric
   return EnumFonts(langGroup, aGeneric, aCount, aResult);
 }
+NS_IMETHODIMP
+nsFontEnumeratorGTK::HaveFontFor(const char* aLangGroup, PRBool* aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_FALSE;
+  NS_ENSURE_ARG_POINTER(aLangGroup);
+
+  *aResult = PR_TRUE; // always return true for now.
+  // Finish me - ftang
+  return NS_OK;
+}
