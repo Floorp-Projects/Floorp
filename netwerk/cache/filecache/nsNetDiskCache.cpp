@@ -905,7 +905,11 @@ nsNetDiskCache::removeAllFiles (const char *dir, const char *tagFile)
 	while ((de = PR_ReadDir (dp, PR_SKIP_BOTH)) != NULL)
 	{
 		if (tagFile != NULL
+#if defined(VMS)
+			&& !strcasecmp (de -> name, tagFile))
+#else
 			&& !strcmp (de -> name, tagFile))
+#endif
 			continue;
 
 		fileName.Truncate ();
