@@ -64,6 +64,7 @@ function themeSelect()
 {
   var tree = document.getElementById("skinsTree");
   var selectedItem = tree.selectedItems.length ? tree.selectedItems[0] : null;
+  var applyButton = document.getElementById("applySkin");
   if (selectedItem && selectedItem.getAttribute("skin") == "true") {
     var themeName = selectedItem.getAttribute("displayName");
     var nameField = document.getElementById("displayName");
@@ -77,16 +78,19 @@ function themeSelect()
     while (description.hasChildNodes())
       description.removeChild(description.firstChild);
     description.appendChild(descText);
-    var applyButton = document.getElementById("applySkin");
     var uninstallButton = document.getElementById("uninstallSkin");
     var applyLabel = gPrefutilitiesBundle.getString("applyThemePrefix");
     var uninstallLabel = gPrefutilitiesBundle.getString("uninstallThemePrefix");
+    applyButton.removeAttribute("disabled");
     applyLabel = applyLabel.replace(/%theme_name%/, themeName);
     uninstallLabel = uninstallLabel.replace(/%theme_name%/, themeName);
     applyButton.label = applyLabel;
     uninstallButton.label = uninstallLabel;
     var locType = selectedItem.getAttribute("loctype");
     uninstallButton.disabled = (locType == "install");
+  }
+  else {
+    applyButton.setAttribute("disabled", true);
   }
 }
 
