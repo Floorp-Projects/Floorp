@@ -32,9 +32,8 @@
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
-//NS_IMPL_QUERY_INTERFACE(nsWindow, kIWidgetIID)
-//NS_IMPL_ADDREF(nsWindow)
-//NS_IMPL_RELEASE(nsWindow)
+NS_IMPL_ADDREF(nsWindow)
+NS_IMPL_RELEASE(nsWindow)
 
 
 
@@ -44,7 +43,7 @@ static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 // nsWindow constructor
 //
 //-------------------------------------------------------------------------
-nsWindow::nsWindow(nsISupports *aOuter):
+nsWindow::nsWindow() : nsIWidget(),
   mEventListener(nsnull),
   mMouseListener(nsnull),
   mToolkit(nsnull),
@@ -65,11 +64,7 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mResized = PR_FALSE;
 
    // Setup for possible aggregation
-  if (aOuter)
-    mOuter = aOuter;
-  else
-    mOuter = &mInner;
-  mRefCnt = 1; // FIXTHIS 
+  NS_INIT_REFCNT();
 
   mShown = PR_FALSE;
   mVisible = PR_FALSE;
@@ -864,7 +859,7 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
-  event->widgetSupports = mOuter;
+  event->widgetSupports = this;
 
   if (nsnull != mEventCallback) {
     result = ConvertStatus((*mEventCallback)(event));
@@ -1371,33 +1366,15 @@ PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
   return(aNewY);
 }
 
-//-------------------------------------------------------------------------
-//
-//
-//
-//-------------------------------------------------------------------------
-nsrefcnt nsWindow::AddRefObject(void) 
-{ 
-  return ++mRefCnt; 
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//
-//-------------------------------------------------------------------------
-nsrefcnt nsWindow::ReleaseObject(void) 
-{ 
-  return (--mRefCnt) ? mRefCnt : (delete this, 0); 
-}
 
 
-//-------------------------------------------------------------------------
-//
-//
-//
-//-------------------------------------------------------------------------
-nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @param aIID -- the name of the 
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+*/ 
+nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (NULL == aInstancePtr) {
         return NS_ERROR_NULL_POINTER;
@@ -1405,14 +1382,14 @@ nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
 
     static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
     if (aIID.Equals(kIWidgetIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)this);
+        *aInstancePtr = (void*) ((nsIWidget*)(nsISupports*)this);
         AddRef();
         return NS_OK;
     }
 
     static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
     if (aIID.Equals(kISupportsIID)) {
-        *aInstancePtr = (void*) ((nsISupports*)&mInner);
+        *aInstancePtr = (void*) ((nsISupports*)this);
         AddRef();
         return NS_OK;
     }
@@ -1420,35 +1397,6 @@ nsresult nsWindow::QueryObject(const nsIID& aIID, void** aInstancePtr)
     return NS_NOINTERFACE;
 }
 
-//-------------------------------------------------------------------------
-//
-// nsISupports methods
-//
-//-------------------------------------------------------------------------
-nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-    return mOuter->QueryInterface(aIID, aInstancePtr);
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-nsrefcnt nsWindow::AddRef(void)
-{
-    return mOuter->AddRef();
-}
-
-//-------------------------------------------------------------------------
-//
-// 
-//
-//-------------------------------------------------------------------------
-nsrefcnt nsWindow::Release(void)
-{
-    return mOuter->Release();
-}
 
 //-------------------------------------------------------------------------
 //
@@ -1630,4 +1578,72 @@ void nsWindow::Enumerator::GrowArray()
     memset(newArray, 0, sizeof(PRInt32) * mArraySize);
     memcpy(newArray, mChildrens, (mArraySize>>1) * sizeof(PRInt32));
     mChildrens = newArray;
+}
+
+/*
+ * Convert an nsPoint into mac local coordinated.
+ * The tree hierarchy is navigated upwards, changing
+ * the x,y offset by the parent's coordinates
+ *
+ */
+void nsWindow::LocalToWindowCoordinate(nsPoint& aPoint)
+{
+	nsIWidget* 	parent = GetParent();
+  nsRect 			bounds;
+  
+	while (parent)
+	{
+		parent->GetBounds(bounds);
+		aPoint.x += bounds.x;
+		aPoint.y += bounds.y;	
+		parent = parent->GetParent();
+	}
+}
+
+/* 
+ * Convert an nsRect's local coordinates to global coordinates
+ */
+void nsWindow::LocalToWindowCoordinate(nsRect& aRect)
+{
+	nsIWidget* 	parent = GetParent();
+  nsRect 			bounds;
+  
+	while (parent)
+	{
+		parent->GetBounds(bounds);
+		aRect.x += bounds.x;
+		aRect.y += bounds.y;	
+		parent = parent->GetParent();
+	}
+}
+
+/* 
+ * Convert a nsString to a PascalStr255
+ */
+void nsWindow::StringToStr255(const nsString& aText, Str255& aStr255)
+{
+  char buffer[256];
+	
+	aText.ToCString(buffer,255);
+		
+	PRInt32 len = strlen(buffer);
+	memcpy(&aStr255[1],buffer,len);
+	aStr255[0] = len;
+	
+		
+}
+
+
+/* 
+ * Convert a nsString to a PascalStr255
+ */
+void nsWindow::Str255ToString(const Str255& aStr255, nsString& aText)
+{
+  char 		buffer[256];
+	PRInt32 len = aStr255[0];
+  
+	memcpy(buffer,&aStr255[1],len);
+	buffer[len] = 0;
+
+	aText = buffer;		
 }
