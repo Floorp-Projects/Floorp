@@ -19,6 +19,10 @@
 
 DEPTH=..\..\..
 
-DIRS=nsinstall nszip setuprsc setup
+DIRS=nsinstall setuprsc setup
+
+!ifndef MOZ_NO_MFC
+DIRS=$(DIRS) nszip
+!endif
 
 include <$(DEPTH)\config\rules.mak>
