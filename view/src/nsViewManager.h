@@ -244,7 +244,6 @@ private:
   void ReparentWidgets(nsIView* aView, nsIView *aParent);
   nsIRenderingContext *CreateRenderingContext(nsView &aView);
   void AddRectToDirtyRegion(nsView* aView, const nsRect &aRect) const;
-  void UpdateTransCnt(nsView *oldview, nsView *newview);
 
   PRBool UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamagedRect, nsView* aIgnoreWidgetView);
 
@@ -254,11 +253,11 @@ private:
                nsIRegion *region, PRUint32 aUpdateFlags);
   void DefaultRefresh(nsView* aView, const nsRect* aRect);
   void RenderViews(nsView *aRootView, nsIRenderingContext& aRC, const nsRegion& aRegion,
-                   PRBool &aResult);
+                   PRBool aRCIsOffscreen);
 
   void RenderDisplayListElement(DisplayListElement2* element,
                                 nsIRenderingContext &aRC,
-                                BlendingBuffers* aBuffers);
+                                BlendingBuffers* aBuffers, const nsRect& aTranslucentArea);
 
   void PaintView(nsView *aView, nsIRenderingContext &aRC, nscoord x, nscoord y,
                  const nsRect &aDamageRect);
@@ -268,20 +267,26 @@ private:
                                           PRUint32 aUpdateFlags, nscoord aY1, nscoord aY2, PRBool aInCutOut);
 
   BlendingBuffers* CreateBlendingBuffers(nsIRenderingContext *aRC,
-                                         PRBool aTranslucentWindow);
+                                         PRBool aTranslucentWindow, PRBool aTranslucentViews,
+                                         const nsRect& aTranslucentArea);
 
   void ReparentViews(DisplayZTreeNode* aNode);
-  void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing, PRBool aCaptured);
+  void BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool aEventProcessing,
+                        PRBool aCaptured, nsAutoVoidArray* aDisplayList);
   void BuildEventTargetList(nsAutoVoidArray &aTargets, nsView* aView, nsGUIEvent* aEvent, PRBool aCaptured);
 
-  PRBool CreateDisplayList(nsView *aView, PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult, nscoord aOriginX, nscoord aOriginY,
+  PRBool CreateDisplayList(nsView *aView,
+                           PRBool aReparentedViewsPresent, DisplayZTreeNode* &aResult,
+                           nscoord aOriginX, nscoord aOriginY,
                            PRBool aInsideRealView, nsView *aRealView, const nsRect *aDamageRect,
-                           nsView *aTopView, nscoord aX, nscoord aY, PRBool aPaintFloaters, PRBool aEventProcessing);
-  PRBool AddToDisplayList(nsView *aView, DisplayZTreeNode* &aParent, nsRect &aClipRect,
-    nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY, PRBool aAssumeIntersection);
-  void ReapplyClipInstructions(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex);
-  nsresult OptimizeDisplayList(const nsRegion& aDirtyRegion,
-                               nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn);
+                           nsView *aTopView, nscoord aX, nscoord aY,
+                           PRBool aPaintFloaters, PRBool aEventProcessing);
+  PRBool AddToDisplayList(nsView *aView,
+                          DisplayZTreeNode* &aParent, nsRect &aClipRect,
+                          nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,
+                          PRBool aAssumeIntersection);
+  void OptimizeDisplayList(nsAutoVoidArray* aDisplayList, const nsRegion& aDirtyRegion,
+                           nsRect& aFinalTransparentRect, nsRegion& aOpaqueRgn);
     // Remove redundant PUSH/POP_CLIP pairs.
   void ComputeViewOffset(nsView *aView, nsPoint *aOrigin);
 
@@ -294,11 +299,10 @@ private:
 
   void PauseTimer(void);
   void RestartTimer(void);
-  void OptimizeDisplayListClipping(PRBool aHaveClip, nsRect& aClipRect, PRInt32& aIndex,
+  void OptimizeDisplayListClipping(nsAutoVoidArray* aDisplayList, PRBool aHaveClip,
+                                   nsRect& aClipRect, PRInt32& aIndex,
                                    PRBool& aAnyRendered);
-#ifdef NS_DEBUG
-	void ShowDisplayList(PRInt32 flatlen);
-#endif
+  void ShowDisplayList(nsAutoVoidArray* aDisplayList);
 
   // Utilities
 
@@ -375,7 +379,6 @@ private:
   float             mPixelsToTwips;
   nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
-  PRInt32           mTransCnt;
   PRBool            mRefreshEnabled;
   PRBool            mPainting;
   PRBool            mRecursiveRefreshPending;
@@ -383,10 +386,6 @@ private:
   nsView            *mKeyGrabber;
   PRInt32           mUpdateCnt;
   PRInt32           mUpdateBatchCnt;
-  PRInt32           mDisplayListCount;
-  nsAutoVoidArray   mDisplayList;
-  PRInt32           mTranslucentViewCount;
-  nsRect            mTranslucentArea;       // bounding box of all translucent views.
   nsIScrollableView *mRootScrollable;
   PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;
