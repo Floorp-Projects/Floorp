@@ -295,7 +295,7 @@ NS_IMETHODIMP nsChromeEntryEnumerator::GetNext(nsISupports **aResult)
   chromeEntry->SetPreviewImageURL(previewImageURL.GetUnicode());
   
   // XXX Give a handle so that we can enumerate the
-  // components we affect
+  // components we affect.
 
   nsCOMPtr<nsISupports> sup;
   sup = do_QueryInterface(chromeEntry, &rv);
@@ -1507,23 +1507,44 @@ nsChromeRegistry::GetEnumeratorForType(const nsCAutoString& type, nsISimpleEnume
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetSkins(nsISimpleEnumerator** aResult)
+nsChromeRegistry::GetInstalledSkins(nsISimpleEnumerator** aResult)
 {
-	nsCAutoString type("skins");
+	nsCAutoString type("skins-all");
   return GetEnumeratorForType(type, aResult);
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetPackages(nsISimpleEnumerator** aResult)
+nsChromeRegistry::GetInstalledPackages(nsISimpleEnumerator** aResult)
 {
-  nsCAutoString type("packages");
+  nsCAutoString type("packages-all");
   return GetEnumeratorForType(type, aResult);
 }
 
 NS_IMETHODIMP
-nsChromeRegistry::GetLocales(nsISimpleEnumerator** aResult)
+nsChromeRegistry::GetInstalledLocales(nsISimpleEnumerator** aResult)
 {
-  nsCAutoString type("locales");
+  nsCAutoString type("locales-all");
+	return GetEnumeratorForType(type, aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetSelectedSkins(nsISimpleEnumerator** aResult)
+{
+	nsCAutoString type("skins-user");
+  return GetEnumeratorForType(type, aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetSelectedPackages(nsISimpleEnumerator** aResult)
+{
+  nsCAutoString type("packages-user");
+  return GetEnumeratorForType(type, aResult);
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetSelectedLocales(nsISimpleEnumerator** aResult)
+{
+  nsCAutoString type("locales-user");
 	return GetEnumeratorForType(type, aResult);
 }
 
