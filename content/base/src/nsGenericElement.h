@@ -126,6 +126,9 @@ public:
 
   void Init(nsIContent* aOuterContentObject, nsINodeInfo *aNodeInfo);
 
+  // free globals, to be called from module destructor
+  static void Shutdown();
+
   // Implementation for nsIDOMNode
   nsresult    GetNodeValue(nsAWritableString& aNodeValue);
   nsresult    SetNodeValue(const nsAReadableString& aNodeValue);

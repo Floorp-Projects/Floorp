@@ -383,6 +383,12 @@ nsGenericElement::GetScriptObjectFactory(nsIDOMScriptObjectFactory **aResult)
   return result;
 }
 
+/* static */ void
+nsGenericElement::Shutdown()
+{
+  NS_IF_RELEASE(gScriptObjectFactory); // assigns null
+}
+
 nsGenericElement::nsGenericElement() : mContent(nsnull), mDocument(nsnull),
                                        mParent(nsnull), mNodeInfo(nsnull),
                                        mDOMSlots(nsnull), mContentID(0)
