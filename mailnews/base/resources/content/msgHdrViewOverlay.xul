@@ -55,7 +55,7 @@ Rights Reserved.
 <hbox id="msgHeaderView" persist="state">
 <grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
   <columns>
-    <column class="collapsedToggleHdrBox" align="center" pack="center">
+    <column class="collapsedToggleHdrBox" align="top" pack="center">
       <image id="toggleHeaderView" class="collapsedHeaderViewButton"
           onclick="ToggleHeaderView();"/>
     </column>
@@ -89,7 +89,7 @@ Rights Reserved.
 <hbox id="expandedHeaderView" class="header-part1" flex="1" collapsed="true">
   <vbox flex="1">
     <hbox id="expandedsubjectBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="center">
+      <hbox class="headerValueBox" align="top">
         <image id="toggleHeaderView" class="expandHeaderViewButton" 
           onclick="ToggleHeaderView();"/>
         <spacer flex="1"/>
@@ -120,30 +120,36 @@ Rights Reserved.
 		</hbox>
 
     <hbox id="expandedtoBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="center">
+      <hbox class="headerValueBox" align="top">
+       <hbox align="center">
         <image class="showMoreAddressesButton" id="expandedtoToggleIcon" 
              onclick="ToggleLongShortAddresses('expandedtoToggleIcon','expandedtoValue', 'expandedtoValueLong');"/>
         <text class="headerdisplayname" value="&toField.label;"/>
+      </hbox>       
       </hbox>       
       <html id="expandedtoValue"  class="headerValue" flex="1"/>
       <html id="expandedtoValueLong" class="headerValue" collapsed="true" flex="1"/>
 		</hbox>
 			
     <hbox id="expandedccBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="center">
+      <hbox class="headerValueBox" align="top">
+        <hbox align="center">
          <image class="showMoreAddressesButton" id="expandedccToggleIcon"
              onclick="ToggleLongShortAddresses('expandedccToggleIcon', 'expandedccValue', 'expandedccValueLong');"/>
          <text class="headerdisplayname" value="&ccField.label;"/>
+      </hbox>
       </hbox>
       <html id="expandedccValue" class="headerValue" flex="1"/>
       <html id="expandedccValueLong" class="headerValue" collapsed="true" flex="1"/>
 	  </hbox>
 
      <hbox id="expandedbccBox" class="headerBox" collapsed="true">
-      <hbox class="headerValueBox" align="center">
+      <hbox class="headerValueBox" align="top">
+        <hbox align="center">
          <image class="showMoreAddressesButton" id="expandedbccToggleIcon"
              onclick="ToggleLongShortAddresses('expandedbccToggleIcon', 'expandedbccValue', 'expandedbccValueLong');"/>
          <text class="headerdisplayname" value="&bccField.label;"/>
+        </hbox>
       </hbox>
       <html id="expandedbccValue" class="headerValue" flex="1"/>
       <html id="expandedbccValueLong" class="headerValue" collapsed="true" flex="1"/>
