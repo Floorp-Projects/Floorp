@@ -1825,12 +1825,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     /**
      * The prototype of this object.
      */
-    protected Scriptable prototype;
+    private Scriptable prototype;
 
     /**
      * The parent scope of this object.
      */
-    protected Scriptable parent;
+    private Scriptable parent;
 
     private static final Object HAS_STATIC_ACCESSORS = Void.TYPE;
     private static final Slot REMOVED = new Slot();
