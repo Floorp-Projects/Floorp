@@ -160,11 +160,11 @@ FINAL_LINK_COMP_NAMES = $(DEPTH)/config/final-link-comp-names
 
 # The use of LIB_PREFIX for OS/2 VA builds is inconsistent 
 # due to bug 114748, so use _NSS_LIB_PREFIX instead
-ifeq ($(MOZ_OS2_TOOLS),VACPP)
-NSS_LIB_PREFIX=lib
-else
+#ifeq ($(MOZ_OS2_TOOLS),VACPP)
+#NSS_LIB_PREFIX=lib
+#else
 NSS_LIB_PREFIX=$(LIB_PREFIX)
-endif
+#endif
 
 # 
 # NSS libs needed for final link in static build
