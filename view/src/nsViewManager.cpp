@@ -293,20 +293,27 @@ void nsViewManager :: Composite()
 {
 }
 
-void nsViewManager :: UpdateView(nsIView *aView, nsRegion *region, PRUint32 aUpdateFlags)
+void nsViewManager :: UpdateView(nsIView *aView, nsRegion *aRegion, PRUint32 aUpdateFlags)
 {
+  if (aRegion == nsnull)
+  {
+    nsRect  trect;
+
+    aView->GetBounds(trect);
+    UpdateView(aView, trect, aUpdateFlags);
+  }
 }
 
-void nsViewManager :: UpdateView(nsIView *aView, nsRect *rect, PRUint32 aUpdateFlags)
+void nsViewManager :: UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags)
 {
-  nsRect  trect = *rect;
+  nsRect  trect = aRect;
   nsIView *par = aView;
   nscoord x, y;
 
   if (gsDebug)
   {
     printf("ViewManager::UpdateView: %x, rect ", aView);
-    stdout << *rect;
+    stdout << trect;
     printf("\n");
   }
 
@@ -376,9 +383,35 @@ void nsViewManager :: InsertChild(nsIView *parent, nsIView *child, nsIView *sibl
 
   if ((nsnull != parent) && (nsnull != child))
   {
-    //XXX this is really dumb but it will at least do something
+    PRInt32 numkids = parent->GetChildCount();
+    nsIView *kid = nsnull, *prev = nsnull;
 
-    parent->InsertChild(child, nsnull);
+    //verify that the sibling exists...
+
+    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    {
+      kid = parent->GetChild(cnt);
+
+      if (kid == sibling)
+        break;
+
+      prev = kid;
+    }
+
+    if (nsnull != kid)
+    {
+      //it's there, so do the insertion
+
+      if (PR_TRUE == above)
+        parent->InsertChild(child, prev);
+      else
+        parent->InsertChild(child, sibling);
+    }
+
+    //and mark this area as dirty if the view is visible...
+
+    if (child->GetVisibility() != nsViewVisibility_kHide)
+      UpdateView(child, nsnull, 0);
   }
 }
 
@@ -424,9 +457,9 @@ void nsViewManager :: MoveViewTo(nsIView *aView, nscoord aX, nscoord aY)
     aView->GetBounds(bounds);
   	nsRect oldArea(oldX, oldY, bounds.width, bounds.height);
   	nsIView* parent = aView->GetParent();  // no addref
-	  UpdateView(parent, &oldArea, 0);
+	  UpdateView(parent, oldArea, 0);
 	  nsRect newArea(aX, aY, bounds.width, bounds.height); 
-	  UpdateView(parent, &newArea, 0);
+	  UpdateView(parent, newArea, 0);
   }
 }
 
