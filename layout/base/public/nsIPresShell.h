@@ -99,15 +99,29 @@ public:
    */
   NS_IMETHOD StyleChangeReflow() = 0;
 
-  virtual nsIFrame* GetRootFrame() = 0;
+  NS_IMETHOD GetRootFrame(nsIFrame*& aFrame) const = 0;
 
   /**
    * Returns the page sequence frame associated with the frame hierarchy.
    * Returns NULL if not a paginated view.
    */
-  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) = 0;
+  NS_IMETHOD GetPageSequenceFrame(nsIPageSequenceFrame*& aPageSequenceFrame) const = 0;
 
-  virtual nsIFrame* FindFrameWithContent(nsIContent* aContent) = 0;
+  /**
+   * Returns the primary frame associated with the content object.
+   *
+   * The primary frame is the frame that is most closely associated with the
+   * content. A frame is more closely associated with the content that another
+   * frame if the one frame contains directly or indirectly the other frame (e.g.,
+   * when a frame is scrolled there is a scroll frame that contains the frame
+   * being scrolled). The primary frame is always the first-in-flow.
+   *
+   * In the case of absolutely positioned elements and floated elements,
+   * the primary frame is the frame that is out of the flow and not the
+   * placeholder frame.
+   */
+  NS_IMETHOD GetPrimaryFrameFor(nsIContent* aContent,
+                                nsIFrame*&  aPrimaryFrame) const = 0;
 
   /**
    * Get/Set the placeholder frame associated with the specified frame.

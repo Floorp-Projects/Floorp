@@ -1098,7 +1098,7 @@ nsGenericElement::RenderFrame()
     nsIPresShell* shell;
     shell = mDocument->GetShellAt(i);
     nsIFrame* frame;
-    frame = shell->FindFrameWithContent(mContent);
+    shell->GetPrimaryFrameFor(mContent, frame);
     while (nsnull != frame) {
       nsIViewManager* vm;
       nsIView* view;

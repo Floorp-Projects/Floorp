@@ -2299,7 +2299,8 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
     fprintf(out, "webshell=%p \n", aWebShell);
     nsIPresShell* shell = GetPresShellFor(aWebShell);
     if (nsnull != shell) {
-      nsIFrame* root = shell->GetRootFrame();
+      nsIFrame* root;
+      shell->GetRootFrame(root);
       if (nsnull != root) {
         nsIListFilter *filter = nsIFrame::GetFilter(aFilterName);
         root->List(out, 0, filter);
@@ -2398,7 +2399,8 @@ nsBrowserWindow::DumpStyleContexts(FILE* out)
     if (nsnull == styleSet) {
       fputs("null style set\n", out);
     } else {
-      nsIFrame* root = shell->GetRootFrame();
+      nsIFrame* root;
+      shell->GetRootFrame(root);
       if (nsnull == root) {
 	      fputs("null root frame\n", out);
             } else {
@@ -2471,7 +2473,7 @@ nsBrowserWindow::ShowFrameSize()
 	    return;
 	  }
 	  nsIFrame* root;
-	  root = shell->GetRootFrame();
+	  shell->GetRootFrame(root);
 	  if (nsnull != root) {
 	    root->SizeOf(szh);
 	    PRUint32 totalSize;

@@ -1888,8 +1888,10 @@ static void RefreshContentFrames(nsIPresContext& aPresContext,
   //-------------------------------------
   // Undraw all the current selected frames
   // XXX Kludge for now
-  nsIPresShell * shell     = aPresContext.GetShell();
-  nsIFrame     * rootFrame = shell->GetRootFrame();
+  nsIPresShell *shell     = aPresContext.GetShell();
+  nsIFrame     *rootFrame;
+   
+  shell->GetRootFrame(rootFrame);
 
   PRBool foundStart = PR_FALSE;
   for (PRInt32 i=0;i<fMax;i++) {
@@ -2102,8 +2104,9 @@ static void resetContentTrackers() {
 static void RefreshFromContentTrackers(nsIPresContext& aPresContext) {
 
   PRInt32 i;
-  nsIPresShell * shell = aPresContext.GetShell();
-  nsIFrame     * rootFrame = shell->GetRootFrame();
+  nsIPresShell *shell = aPresContext.GetShell();
+  nsIFrame     *rootFrame;
+  shell->GetRootFrame(rootFrame);
   for (i=0;i<fTrackerRemoveListMax;i++) {
     RefreshAllContentFrames(rootFrame, fTrackerContentArrayRemoveList[i]);
     //ForceDrawFrame((nsFrame *)shell->FindFrameWithContent(fTrackerContentArrayRemoveList[i]));

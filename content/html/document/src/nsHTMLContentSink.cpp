@@ -1941,7 +1941,8 @@ HTMLContentSink::ScrollToRef()
     for (i = 0; i < ns; i++) {
       nsIPresShell* shell = mDocument->GetShellAt(i);
       if (nsnull != shell) {
-        nsIFrame* frame = shell->FindFrameWithContent(mRefContent);
+        nsIFrame* frame;
+        shell->GetPrimaryFrameFor(mRefContent, frame);
         if (nsnull != frame) {
           nsIViewManager* vm = shell->GetViewManager();
           if (nsnull != vm) {

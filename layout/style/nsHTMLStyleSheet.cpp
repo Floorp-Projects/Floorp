@@ -2207,7 +2207,9 @@ nsIFrame*
 HTMLStyleSheetImpl::GetFrameFor(nsIPresShell* aPresShell, nsIPresContext* aPresContext,
                                 nsIContent* aContent)
 {
-  nsIFrame* frame = aPresShell->FindFrameWithContent(aContent);
+  // Get the primary frame associated with the content
+  nsIFrame* frame;
+  aPresShell->GetPrimaryFrameFor(aContent, frame);
 
   if (nsnull != frame) {
     // If the primary frame is a scroll frame, then get the scrolled frame.
@@ -2375,7 +2377,7 @@ FindPreviousSibling(nsIPresShell* aPresShell,
   for (PRInt32 index = aIndexInContainer - 1; index >= 0; index--) {
     nsIContent* precedingContent;
     aContainer->ChildAt(index, precedingContent);
-    prevSibling = aPresShell->FindFrameWithContent(precedingContent);
+    aPresShell->GetPrimaryFrameFor(precedingContent, prevSibling);
     NS_RELEASE(precedingContent);
 
     if (nsnull != prevSibling) {
@@ -2409,7 +2411,7 @@ FindNextSibling(nsIPresShell* aPresShell,
   for (PRInt32 index = aIndexInContainer + 1; index < count; index++) {
     nsIContent* nextContent;
     aContainer->ChildAt(index, nextContent);
-    nextSibling = aPresShell->FindFrameWithContent(nextContent);
+    aPresShell->GetPrimaryFrameFor(nextContent, nextSibling);
     NS_RELEASE(nextContent);
 
     if (nsnull != nextSibling) {
@@ -2454,7 +2456,7 @@ HTMLStyleSheetImpl::ContentInserted(nsIPresContext* aPresContext,
     // XXX This won't always be true if there's auto-generated before/after
     // content
     isAppend = PR_TRUE;
-    parentFrame = shell->FindFrameWithContent(aContainer);
+    shell->GetPrimaryFrameFor(aContainer, parentFrame);
 
   } else {
     // Use the prev sibling if we have it; otherwise use the next sibling.
@@ -2544,7 +2546,8 @@ HTMLStyleSheetImpl::ContentRemoved(nsIPresContext* aPresContext,
   nsresult      rv = NS_OK;
 
   // Find the child frame
-  nsIFrame* childFrame = shell->FindFrameWithContent(aChild);
+  nsIFrame* childFrame;
+  shell->GetPrimaryFrameFor(aChild, childFrame);
 
   if (nsnull != childFrame) {
     // Get the parent frame.
@@ -2645,7 +2648,8 @@ HTMLStyleSheetImpl::ContentChanged(nsIPresContext* aPresContext,
   nsresult      rv = NS_OK;
 
   // Find the child frame
-  nsIFrame* frame = shell->FindFrameWithContent(aContent);
+  nsIFrame* frame;
+  shell->GetPrimaryFrameFor(aContent, frame);
 
   // Notify the first frame that maps the content. It will generate a reflow
   // command
@@ -2675,7 +2679,9 @@ HTMLStyleSheetImpl::AttributeChanged(nsIPresContext* aPresContext,
   nsresult  result = NS_OK;
 
   nsIPresShell* shell = aPresContext->GetShell();
-  nsIFrame* frame = shell->FindFrameWithContent(aContent);
+  nsIFrame*     frame;
+   
+  shell->GetPrimaryFrameFor(aContent, frame);
 
   if (nsnull != frame) {
     PRBool  restyle = PR_FALSE;
@@ -2755,7 +2761,8 @@ HTMLStyleSheetImpl::StyleRuleChanged(nsIPresContext* aPresContext,
                                      PRInt32 aHint)
 {
   nsIPresShell* shell = aPresContext->GetShell();
-  nsIFrame* frame = shell->GetRootFrame();
+  nsIFrame* frame;
+  shell->GetRootFrame(frame);
 
   PRBool reframe  = PR_FALSE;
   PRBool reflow   = PR_FALSE;

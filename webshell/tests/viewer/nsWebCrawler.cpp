@@ -279,7 +279,8 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
   if ((nsnull != mFilter) || (mOutputDir.Length() > 0)) {
     nsIPresShell* shell = GetPresShell();
     if (nsnull != shell) {
-      nsIFrame* root = shell->GetRootFrame();
+      nsIFrame* root;
+      shell->GetRootFrame(root);
       if (nsnull != root) {
         nsIListFilter *filter = nsIFrame::GetFilter(mFilter);
         if (mOutputDir.Length() > 0)
