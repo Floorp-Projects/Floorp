@@ -74,8 +74,14 @@ public:
                     nsIRDFResource* aProperty, nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
     NS_IMETHOD CreateWidgetItem(nsIContent* aElement, nsIRDFResource* aProperty,
 				nsIRDFResource* aValue, PRInt32 aNaturalOrderPos);
-    NS_IMETHOD UpdateWidgetItemAttribute(nsIContent *templateNode, nsIContent* aTreeItemElement,
-				PRBool isUnique, nsIRDFResource* aProperty, nsIRDFNode* aValue);
+
+    enum eUpdateAction { eSet, eClear };
+
+    NS_IMETHOD UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
+                                         nsIContent* aTreeItemElement,
+                                         eUpdateAction aAction,
+                                         nsIRDFResource* aProperty,
+                                         nsIRDFNode* aValue);
 
     // nsIRDFObserver interface
     NS_IMETHOD OnAssert(nsIRDFResource* aSource,
@@ -211,7 +217,7 @@ protected:
 
     static nsIAtom* kSubcontainmentAtom;
     static nsIAtom* kRootcontainmentAtom;
-    static nsIAtom* kTreeTemplateAtom;
+    static nsIAtom* kTemplateAtom;
     static nsIAtom* kRuleAtom;
     static nsIAtom* kTreeContentsGeneratedAtom;
     static nsIAtom* kTextAtom;
