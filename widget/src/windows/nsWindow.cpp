@@ -4094,6 +4094,8 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 					break;
 
 				case WM_IME_CHAR: 
+					// We receive double byte char code. No need to worry about the <Shift>
+					mIsShiftDown = PR_FALSE;
 					result = OnIMEChar((BYTE)(wParam>>8), 
 						(BYTE) (wParam & 0x00FF), 
 						lParam);
@@ -5655,9 +5657,15 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
   size_t  length;
   int err = 0;
 
-  charToConvert[0] = aByte1;
-  charToConvert[1] = aByte2;
-  length=2;
+  if (aByte1) {
+    charToConvert[0] = aByte1;
+    charToConvert[1] = aByte2;
+    length=2;
+  }
+  else  {
+    charToConvert[0] = aByte2;
+    length=1;
+  }
   err = ::MultiByteToWideChar(gCurrentKeyboardCP, MB_PRECOMPOSED, charToConvert, length,
 	  &uniChar, 1);
 
@@ -6186,7 +6194,7 @@ BOOL nsWindow::OnIMESetContext(BOOL aActive, LPARAM& aISC)
 	if(! aActive)
 		ResetInputState();
 
-	if (USE_OVERTHESPOT_IME(gKeyboardLayout))
+	if (!USE_OVERTHESPOT_IME(gKeyboardLayout))
 		aISC &= ~ ISC_SHOWUICOMPOSITIONWINDOW;
 
 	// We still return false here because we need to pass the 
