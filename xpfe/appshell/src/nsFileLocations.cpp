@@ -155,7 +155,7 @@ struct DirectoryTable DirectoryTable[] =
 //========================================================================================
 
 //----------------------------------------------------------------------------------------
-static nsresult GetChromeLocale(PRUnichar** lc_name)
+static nsresult GetChromeLocale(const char *aPackage, PRUnichar** lc_name)
 // Inquire the current chrome UI locale 
 //----------------------------------------------------------------------------------------
 {
@@ -164,7 +164,7 @@ static nsresult GetChromeLocale(PRUnichar** lc_name)
   nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
 
   if (NS_SUCCEEDED(rv)) {
-      nsString tmpstr; tmpstr.AssignWithConversion("navigator");
+      nsAutoString tmpstr; tmpstr.AssignWithConversion(aPackage);
       rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), lc_name);
   }
   return rv;
@@ -395,7 +395,7 @@ static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
 #endif
 
     nsXPIDLString lc_name;
-    nsresult rv = GetChromeLocale(getter_Copies(lc_name));
+    nsresult rv = GetChromeLocale("global-region", getter_Copies(lc_name));
     if (NS_SUCCEEDED(rv)) {
         nsFileSpec tmpdir; 
         tmpdir = cwd;
