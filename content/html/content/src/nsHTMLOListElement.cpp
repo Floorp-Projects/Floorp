@@ -151,6 +151,7 @@ nsGenericHTMLElement::EnumTable kListTypeTable[] = {
 };
 
 nsGenericHTMLElement::EnumTable kOldListTypeTable[] = {
+  { "1", NS_STYLE_LIST_STYLE_OLD_DECIMAL },
   { "A", NS_STYLE_LIST_STYLE_OLD_UPPER_ALPHA },
   { "a", NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA },
   { "I", NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN },
@@ -189,6 +190,7 @@ nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::type) {
     PRInt32 v = aValue.GetIntValue();
     switch (v) {
+      case NS_STYLE_LIST_STYLE_OLD_DECIMAL:
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ROMAN:
       case NS_STYLE_LIST_STYLE_OLD_UPPER_ROMAN:
       case NS_STYLE_LIST_STYLE_OLD_LOWER_ALPHA:
