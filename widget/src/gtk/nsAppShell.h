@@ -44,6 +44,8 @@ class nsAppShell : public nsIAppShell
     NS_IMETHOD          Spindown();
     NS_IMETHOD          GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
     NS_IMETHOD          DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
+    NS_IMETHOD          EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
+                          nsIWidget *aWidget, PRBool *aForWindow);
     NS_IMETHOD		Exit();
     NS_IMETHOD		SetDispatchListener(nsDispatchListener* aDispatchListener);
     virtual void*	GetNativeData(PRUint32 aDataType);
