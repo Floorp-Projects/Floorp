@@ -64,10 +64,14 @@ nsX400Parser::nsX400Parser(const char* psValue)
 
 nsX400Parser::~nsX400Parser()
 {
+  DestroyAllEntries();
+  if (mppKeys)
+  {
+    delete [] mppKeys;
+  }
+
   if (mppVals)
     delete [] mppVals;
-  if (mppKeys)
-    delete [] mppKeys;
 }
 
 nsresult nsX400Parser::Init()
@@ -89,6 +93,13 @@ nsresult nsX400Parser::GetValue(char** aStr)
 {
   Assemble();
   *aStr = msValue.GetBuffer();
+  return NS_OK;
+}
+
+nsresult nsX400Parser::GetValue(JulianString& aStr)
+{
+  Assemble();
+  aStr = msValue;
   return NS_OK;
 }
 
@@ -239,6 +250,19 @@ nsresult nsX400Parser::DestroyEntry(PRInt32 i)
   return NS_OK;
 }
 
+nsresult nsX400Parser::DestroyAllEntries()
+{
+  /*
+   * delete anything in the old arrays...
+   */
+  if (0 != mppKeys && 0 != mppVals)
+  {
+    for (size_t i = 0; i < (size_t)miLength; i++)
+      DestroyEntry((PRInt32)i);
+  }
+  return NS_OK;
+}
+
 /**
  * Delete an entry.
  */
@@ -302,11 +326,7 @@ nsresult nsX400Parser::Parse()
   /*
    * delete anything in the old arrays...
    */
-  if (0 != mppKeys)
-  {
-    for (i = 0; i < (size_t)miLength; i++)
-      DestroyEntry((PRInt32)i);
-  }
+  DestroyAllEntries();
 
   /*
    *  Parse off parts until done...

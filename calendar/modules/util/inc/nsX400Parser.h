@@ -96,6 +96,12 @@ private:
   nsresult        DestroyEntry(PRInt32 aIndex);
 
   /**
+   * Destroy all key/value pairs
+   * @return       NS_OK on success
+   */
+  nsresult        DestroyAllEntries();
+
+  /**
    * @return       the current number of key/value pairs.
    */
   PRInt32         GetLength()   { return miLength; }
@@ -125,6 +131,13 @@ public:
    * @return        NS_OK on success
    */
   nsresult        GetValue(char** aStr);
+
+  /**
+   * Get the newly assembled string
+   * @param aStr    reference to the string object.
+   * @return        NS_OK on success
+   */
+  nsresult        GetValue(JulianString& aStr);
 
   /**
    * Set the supplied key to have the supplied value. Add the key
