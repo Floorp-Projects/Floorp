@@ -42,7 +42,7 @@
     <tree id="bookmarksTree" context="contextual" ref="NC:BookmarksRoot"
           style="height: 100%; width:100%;"
           datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
-          onclick="clicked(event, event.target.parentNode.parentNode)">
+          onclick="return clicked(event, event.target.parentNode.parentNode)">
 
       <template>
         <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
