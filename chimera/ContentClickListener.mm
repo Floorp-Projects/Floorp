@@ -50,6 +50,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentEvent.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIDOMNSHTMLElement.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMHTMLCollection.h"
@@ -158,6 +159,7 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
     sel->GetOptions(getter_AddRefs(options));
     PRUint32 count;
     options->GetLength(&count);
+    PRInt32 selIndex = 0;
     for (PRUint32 i = 0; i < count; i++) {
       nsCOMPtr<nsIDOMNode> node;
       options->Item(i, getter_AddRefs(node));
@@ -175,54 +177,58 @@ ContentClickListener::MouseDown(nsIDOMEvent* aEvent)
       [menuItem setTag: contentID];
       PRBool selected;
       option->GetSelected(&selected);
-      if (selected)
+      if (selected) {
         [menuItem setState: NSOnState];
-
+        selIndex = i;
+      }
       CHOptionSelector* optSelector = [[CHOptionSelector alloc] initWithSelect: sel];
       [menuItem setTarget: optSelector];
       [menuItem setAction: @selector(selectOption:)];
     }
-/*
-    // We need to get the select frame's view.
-    nsIFrame* frame = nsnull;
-    nsCOMPtr<nsIContent> selContent(do_QueryInterface(target));
-    nsCOMPtr<nsIDocument> doc;
-    selContent->GetDocument(*getter_AddRefs(doc));
-    if (!doc) {
-      printf("No doc.\n");
-      return NS_OK;
-    }
 
-    PRInt32 numShells = doc->GetNumberOfShells();
-    printf("Number of shells is: %d\n", numShells);
+    nsCOMPtr<nsIDOMNSHTMLElement> nsSel(do_QueryInterface(sel));
+    PRInt32 left, top, height;
+    PRInt32 clientX, clientY;
+    nsSel->GetOffsetLeft(&left);
+    nsSel->GetOffsetTop(&top);
+    nsSel->GetOffsetHeight(&height);
 
-    nsCOMPtr<nsIPresShell> presShell;
-    doc->GetShellAt(0, getter_AddRefs(presShell));
-    if (!presShell) {
-      printf("No pres shell.\n");
-      return NS_OK;
-    }
-
-    presShell->GetPrimaryFrameFor(selContent, &frame);
-    nsCOMPtr<nsIPresContext> presContext;
-    presShell->GetPresContext(getter_AddRefs(presContext));
-    nsIView* view = nsnull;
-    if (!frame) {
-      printf("no frame.\n");
-      return NS_OK;
+    nsCOMPtr<nsIDOMElement> currOffsetParent;
+    nsSel->GetOffsetParent(getter_AddRefs(currOffsetParent));
+    while (currOffsetParent) {
+      nsCOMPtr<nsIDOMNSHTMLElement> currNS(do_QueryInterface(currOffsetParent));
+      PRInt32 currLeft, currTop;
+      currNS->GetOffsetLeft(&currLeft);
+      currNS->GetOffsetTop(&currTop);
+      left += currLeft;
+      top += currTop;
+      currNS->GetOffsetParent(getter_AddRefs(currOffsetParent));
     }
     
-    frame->GetView(presContext, &view);
-    if (!view)
-      printf("Crap.\n");
-    nsCOMPtr<nsIWidget> widget;
-    if (view)
-      view->GetWidget(*getter_AddRefs(widget));
-    if (!widget)
-      printf("Crap again.\n");
-  */
+    nsCOMPtr<nsIDOMMouseEvent> msEvent(do_QueryInterface(aEvent));
+    msEvent->GetClientX(&clientX);
+    msEvent->GetClientY(&clientY);
+
+    PRInt32 xDelta = clientX - left;
+    PRInt32 yDelta = top + height - clientY;
     
-    [NSMenu popUpContextMenu: menu withEvent: [NSApp currentEvent] forView: [[mBrowserController window] contentView]];
+#define XMENUOFFSET 20
+#define MENUHEIGHT 20
+    
+    xDelta += XMENUOFFSET;
+    yDelta -= MENUHEIGHT*(selIndex+1);
+    
+    NSEvent* event = [NSApp currentEvent];
+    NSPoint point = [event locationInWindow];
+    point.x -= xDelta;
+    point.y -= yDelta;
+
+    NSEvent* mouseEvent = [NSEvent mouseEventWithType: NSLeftMouseDown location: point
+                                        modifierFlags: 0 timestamp: [event timestamp]
+                                         windowNumber: [event windowNumber] context: [event context]
+                                          eventNumber: [event eventNumber] clickCount: [event clickCount] 																						 pressure: [event pressure]];
+      
+    [NSMenu popUpContextMenu: menu withEvent: mouseEvent forView: [[mBrowserController window] contentView]];
     
   }
   return NS_OK;
