@@ -112,25 +112,8 @@ nsJARFactory::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_OK;
 }
 
-/* The omnipresent AddRef method */
-NS_IMETHODIMP
-nsJARFactory::AddRef(void)
-{
-  return ++mRefCnt;
-}
-
-/* The ever-popular Release method */
-NS_IMETHODIMP
-nsJARFactory::Release(void)
-{
-  if (--mRefCnt ==0)
-  {
-    delete this;
-    return 0; // Don't access mRefCnt after deleting!
-  }
-  return mRefCnt;
-}
-
+NS_IMPL_ADDREF(nsJARFactory);
+NS_IMPL_RELEASE(nsJARFactory);
 /*------------------------------------------------------------------------*/
 /* The JARFactory CreateInstance Method
 /*------------------------------------------------------------------------*/
