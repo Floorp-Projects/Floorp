@@ -569,11 +569,29 @@ void nsDocAccessible::RemoveContentDocListeners()
   target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeInsertedIntoDocument"), this, PR_TRUE);
   target->RemoveEventListener(NS_LITERAL_STRING("DOMNodeRemovedFromDocument"), this, PR_TRUE);
 
+  if (mScrollWatchTimer) {
+    mScrollWatchTimer->Cancel();
+    mScrollWatchTimer = nsnull;
+  }
+
+  if (mDocLoadTimer) {
+    mDocLoadTimer->Cancel();
+    mDocLoadTimer = nsnull;
+  }
+
   nsCOMPtr<nsISupports> container;
   mDocument->GetContainer(getter_AddRefs(container));
-  nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(container);
-  if (commandManager) {
-    commandManager->RemoveCommandObserver(this, "obs_documentCreated");
+  nsCOMPtr<nsIDocShellTreeItem> docShellTreeItem(do_QueryInterface(container));
+  if (!docShellTreeItem)
+    return;
+
+  PRInt32 itemType;
+  docShellTreeItem->GetItemType(&itemType);
+  if (itemType == nsIDocShellTreeItem::typeContent) {
+    nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(container);
+    if (commandManager) {
+      commandManager->RemoveCommandObserver(this, "obs_documentCreated");
+    }
   }
 }
 
