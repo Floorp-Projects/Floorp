@@ -878,7 +878,7 @@ nsDirectoryService::GetFile(const char *prop, PRBool *persistent, nsIFile **_ret
     }
     else if (inAtom == nsDirectoryService::sDefaultDownloadDirectory)
     {
-        NS_NewLocalFile(EmptyString(), PR_TRUE, getter_AddRefs(localFile));
+        NS_NewLocalFile(nsString(), PR_TRUE, getter_AddRefs(localFile));
         nsCOMPtr<nsILocalFileMac> localMacFile(do_QueryInterface(localFile));
 
         if (localMacFile)
