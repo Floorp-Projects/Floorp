@@ -324,6 +324,8 @@ typedef void
  * newly created by the PL_DHASH_ADD call that just succeeded.  If placement
  * new or similar initialization is required, define an initEntry hook.  Of
  * course, the clearEntry hook must zero or null appropriately.
+ *
+ * XXX assumes 0 is null for pointer types.
  */
 struct PLDHashTableOps {
     /* Mandatory hooks.  All implementations must provide these. */
@@ -477,7 +479,7 @@ typedef enum PLDHashOperator {
  * Otherwise, entry->keyHash has been set so that PL_DHASH_ENTRY_IS_BUSY(entry)
  * is true, and it is up to the caller to initialize the key and value parts
  * of the entry sub-type, if they have not been set already (i.e. if entry was
- * not already in the table).
+ * not already in the table, and if the optional initEntry hook was not used).
  *
  * To remove an entry identified by key from table, call:
  *
@@ -523,6 +525,23 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  *
  * If etor calls PL_DHashTableOperate on table, it must return PL_DHASH_STOP;
  * otherwise undefined behavior results.
+ *
+ * If any enumerator returns PL_DHASH_REMOVE, table->entryStore may be shrunk
+ * or compressed after enumeration, but before PL_DHashTableEnumerate returns.
+ * Such an enumerator therefore can't safely set aside entry pointers, but an
+ * enumerator that never returns PL_DHASH_REMOVE can set pointers to entries
+ * aside, e.g., to avoid copying live entries into an array of the entry type.
+ * Copying entry pointers is cheaper, and safe so long as the caller of such a
+ * "stable" Enumerate doesn't use the set-aside pointers after any call either
+ * to PL_DHashTableOperate, or to an "unstable" form of Enumerate, which might
+ * grow or shrink entryStore.
+ *
+ * If your enumerator wants to remove certain entries, but set aside pointers
+ * to other entries that it retains, it can use PL_DHashTableRawRemove on the
+ * entries to be removed, returning PL_DHASH_NEXT to skip them.  Likewise, if
+ * you want to remove entries, but for some reason you do not want entryStore
+ * to be shrunk or compressed, you can call PL_DHashTableRawRemove safely on
+ * the entry being enumerated, rather than returning PL_DHASH_REMOVE.
  */
 typedef PLDHashOperator
 (* PR_CALLBACK PLDHashEnumerator)(PLDHashTable *table, PLDHashEntryHdr *hdr,

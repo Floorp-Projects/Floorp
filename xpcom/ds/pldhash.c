@@ -587,6 +587,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
 {
     char *entryAddr, *entryLimit;
     PRUint32 i, capacity, entrySize;
+    PRBool didRemove;
     PLDHashEntryHdr *entry;
     PLDHashOperator op;
 
@@ -595,6 +596,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
     capacity = PL_DHASH_TABLE_SIZE(table);
     entryLimit = entryAddr + capacity * entrySize;
     i = 0;
+    didRemove = PR_FALSE;
     while (entryAddr < entryLimit) {
         entry = (PLDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
@@ -602,6 +604,7 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
             if (op & PL_DHASH_REMOVE) {
                 METER(table->stats.removeEnums++);
                 PL_DHashTableRawRemove(table, entry);
+                didRemove = PR_TRUE;
             }
             if (op & PL_DHASH_STOP)
                 break;
@@ -612,11 +615,14 @@ PL_DHashTableEnumerate(PLDHashTable *table, PLDHashEnumerator etor, void *arg)
     /*
      * Shrink or compress if a quarter or more of all entries are removed, or
      * if the table is underloaded according to the configured minimum alpha,
-     * and is not minimal-size already.
+     * and is not minimal-size already.  Do this only if we removed above, so
+     * non-removing enumerations can count on stable table->entryStore until
+     * the next Operate or removing-Enumerate.
      */
-    if (table->removedCount >= capacity >> 2 ||
-        (capacity > PL_DHASH_MIN_SIZE &&
-         table->entryCount <= MIN_LOAD(table, capacity))) {
+    if (didRemove &&
+        (table->removedCount >= capacity >> 2 ||
+         (capacity > PL_DHASH_MIN_SIZE &&
+          table->entryCount <= MIN_LOAD(table, capacity)))) {
         METER(table->stats.enumShrinks++);
         capacity = table->entryCount;
         capacity += capacity >> 1;

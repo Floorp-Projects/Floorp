@@ -586,6 +586,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
 {
     char *entryAddr, *entryLimit;
     uint32 i, capacity, entrySize;
+    JSBool didRemove;
     JSDHashEntryHdr *entry;
     JSDHashOperator op;
 
@@ -594,6 +595,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
     capacity = JS_DHASH_TABLE_SIZE(table);
     entryLimit = entryAddr + capacity * entrySize;
     i = 0;
+    didRemove = JS_FALSE;
     while (entryAddr < entryLimit) {
         entry = (JSDHashEntryHdr *)entryAddr;
         if (ENTRY_IS_LIVE(entry)) {
@@ -601,6 +603,7 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
             if (op & JS_DHASH_REMOVE) {
                 METER(table->stats.removeEnums++);
                 JS_DHashTableRawRemove(table, entry);
+                didRemove = JS_TRUE;
             }
             if (op & JS_DHASH_STOP)
                 break;
@@ -611,11 +614,14 @@ JS_DHashTableEnumerate(JSDHashTable *table, JSDHashEnumerator etor, void *arg)
     /*
      * Shrink or compress if a quarter or more of all entries are removed, or
      * if the table is underloaded according to the configured minimum alpha,
-     * and is not minimal-size already.
+     * and is not minimal-size already.  Do this only if we removed above, so
+     * non-removing enumerations can count on stable table->entryStore until
+     * the next Operate or removing-Enumerate.
      */
-    if (table->removedCount >= capacity >> 2 ||
-        (capacity > JS_DHASH_MIN_SIZE &&
-         table->entryCount <= MIN_LOAD(table, capacity))) {
+    if (didRemove &&
+        (table->removedCount >= capacity >> 2 ||
+         (capacity > JS_DHASH_MIN_SIZE &&
+          table->entryCount <= MIN_LOAD(table, capacity)))) {
         METER(table->stats.enumShrinks++);
         capacity = table->entryCount;
         capacity += capacity >> 1;
