@@ -1,0 +1,29 @@
+{
+    IBClasses = (
+        {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
+        {
+            CLASS = NSPreferencePane; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                "_firstKeyView" = NSView; 
+                "_initialKeyView" = NSView; 
+                "_lastKeyView" = NSView; 
+                "_window" = NSWindow; 
+            }; 
+            SUPERCLASS = NSObject; 
+        }, 
+        {
+            ACTIONS = {checkboxClicked = id; chooseDownloadFolder = id; }; 
+            CLASS = OrgMozillaChimeraPreferenceDownloads; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {
+                mAutoCloseDLManager = NSButton; 
+                mDownloadFolder = NSPopUpButton; 
+                mEnableHelperApps = NSButton; 
+            }; 
+            SUPERCLASS = PreferencePaneBase; 
+        }, 
+        {CLASS = PreferencePaneBase; LANGUAGE = ObjC; SUPERCLASS = NSPreferencePane; }
+    ); 
+    IBVersion = 1; 
+}
