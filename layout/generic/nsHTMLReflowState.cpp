@@ -36,6 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsStyleConsts.h"
+#include "nsCSSAnonBoxes.h"
 #include "nsFrame.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
@@ -1359,20 +1360,22 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
 /* Get the height based on the viewport of the containing block specified 
  * in aReflowState when the containing block has mComputedHeight == NS_AUTOHEIGHT
  * This will walk up the chain of containing blocks looking for a computed height
- * until it finds the canvas frame, or it encounters a frame that is not a block
- * or and area frame. This handles compatibility with IE (see bug 85016)
+ * until it finds the canvas frame, or it encounters a frame that is not a block,
+ * area, or scroll frame. This handles compatibility with IE (see bug 85016 and bug 219693)
  *
- *  When the argument aRestrictToFirstLevel is TRUE, we stop looking after the first parent 
- *  block or area frame. When FALSE, we look all the way up the frame tree, through nested 
- *  blocks and area frames, and always find a real height. This is needed for percentage-height
- *  images in unconstrained blocks, like DIVs (see bugzilla bug 85016)
+ *  When the argument aRestrictToFirstLevel is TRUE, we stop looking after the second parent 
+ *  block, area, or scroll frame. When FALSE, we look all the way up the frame tree, through nested 
+ *  block, area, and scroll frames, and always find a real height. This is needed for percentage-height
+ *  images in unconstrained blocks, like DIVs (see bugzilla bug 85016).
+ *
+ *  When we encounter scrolledContent area frames, we skip over them, since they are guaranteed to not be useful for computing the containing block.
  */
 nscoord
 CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
                                PRBool aRestrictToFirstLevel)
 {
-  nsHTMLReflowState* firstBlockRS = nsnull; // a candidate for body frame
-  nsHTMLReflowState* firstAreaRS  = nsnull; // a candidate for html frame
+  nsHTMLReflowState* firstAncestorRS = nsnull; // a candidate for html frame
+  nsHTMLReflowState* secondAncestorRS = nsnull; // a candidate for body frame
   
   // initialize the default to NS_AUTOHEIGHT as this is the containings block
   // computed height when this function is called. It is possible that we 
@@ -1385,25 +1388,25 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
     rs->frame->GetFrameType(getter_AddRefs(frameType));
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
-    if (nsLayoutAtoms::blockFrame == frameType.get()) {
-      if (aRestrictToFirstLevel && firstBlockRS) {
+    if (nsLayoutAtoms::blockFrame == frameType ||
+        nsLayoutAtoms::areaFrame == frameType ||
+        nsLayoutAtoms::scrollFrame == frameType) {
+      if (nsLayoutAtoms::areaFrame == frameType) {
+        nsCOMPtr<nsIAtom> pseudo = rs->frame->GetStyleContext()->GetPseudoType();
+        if (pseudo == nsCSSAnonBoxes::scrolledContent) {
+          continue;
+        }
+      }
+      if (aRestrictToFirstLevel && firstAncestorRS && secondAncestorRS) {
         break;
       }
-      firstBlockRS = (nsHTMLReflowState*)rs;
+      secondAncestorRS = firstAncestorRS;
+      firstAncestorRS = (nsHTMLReflowState*)rs;
       if (NS_AUTOHEIGHT == rs->mComputedHeight) {
         continue;
       }
     }
-    else if (nsLayoutAtoms::areaFrame == frameType.get()) {
-      if (aRestrictToFirstLevel && firstAreaRS) {
-        break;
-      }
-      firstAreaRS = (nsHTMLReflowState*)rs;
-      if (NS_AUTOHEIGHT == rs->mComputedHeight) {
-        continue;
-      }
-    }
-    else if (nsLayoutAtoms::canvasFrame == frameType.get()) {
+    else if (nsLayoutAtoms::canvasFrame == frameType) {
       // Use scroll frames' computed height if we have one, this will
       // allow us to get viewport height for native scrollbars.
       nsHTMLReflowState* scrollState = (nsHTMLReflowState *)rs->parentReflowState;
@@ -1413,7 +1416,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
         rs = scrollState;
       }
     }
-    else if (nsLayoutAtoms::pageContentFrame == frameType.get()) {
+    else if (nsLayoutAtoms::pageContentFrame == frameType) {
       nsIFrame* prevInFlow;
       rs->frame->GetPrevInFlow(&prevInFlow);
       // only use the page content frame for a height basis if it is the first in flow
@@ -1426,35 +1429,35 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
 
     // if the ancestor is the page content frame then the percent base is 
     // the avail height, otherwise it is the computed height
-    result = (nsLayoutAtoms::pageContentFrame == frameType.get())
+    result = (nsLayoutAtoms::pageContentFrame == frameType)
              ? rs->availableHeight : rs->mComputedHeight;
     // if unconstrained - don't sutract borders - would result in huge height
     if (NS_AUTOHEIGHT == result) return result;
 
     // if we got to the canvas or page content frame, then subtract out 
     // margin/border/padding for the BODY and HTML elements
-    if ((nsLayoutAtoms::canvasFrame == frameType.get()) || 
-        (nsLayoutAtoms::pageContentFrame == frameType.get())) {
+    if ((nsLayoutAtoms::canvasFrame == frameType) || 
+        (nsLayoutAtoms::pageContentFrame == frameType)) {
 
-      result -= GetVerticalMarginBorderPadding(firstBlockRS); 
-      result -= GetVerticalMarginBorderPadding(firstAreaRS); 
+      result -= GetVerticalMarginBorderPadding(firstAncestorRS); 
+      result -= GetVerticalMarginBorderPadding(secondAncestorRS); 
 
 #ifdef DEBUG
-      // make sure the Area is the HTML and the Block is the BODY
-      if (firstBlockRS) {
-        nsIContent* frameContent = firstBlockRS->frame->GetContent();
+      // make sure the first ancestor is the HTML and the second is the BODY
+      if (firstAncestorRS) {
+        nsIContent* frameContent = firstAncestorRS->frame->GetContent();
         if (frameContent) {
           nsCOMPtr<nsIAtom> contentTag;
           frameContent->GetTag(getter_AddRefs(contentTag));
-          NS_ASSERTION(contentTag.get() == nsHTMLAtoms::body, "block is not BODY");
+          NS_ASSERTION(contentTag == nsHTMLAtoms::html, "First ancestor is not HTML");
         }
       }
-      if (firstAreaRS) {
-        nsIContent* frameContent = firstAreaRS->frame->GetContent();
+      if (secondAncestorRS) {
+        nsIContent* frameContent = secondAncestorRS->frame->GetContent();
         if (frameContent) {
           nsCOMPtr<nsIAtom> contentTag;
           frameContent->GetTag(getter_AddRefs(contentTag));
-          NS_ASSERTION(contentTag.get() == nsHTMLAtoms::html, "Area frame is not HTML element");
+          NS_ASSERTION(contentTag == nsHTMLAtoms::body, "Second ancestor is not BODY");
         }
       }
 #endif
@@ -1462,12 +1465,12 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
     }
     // if we got to the html frame, then subtract out 
     // margin/border/padding for the BODY element
-    else if (nsLayoutAtoms::areaFrame == frameType.get()) {
+    else if (nsLayoutAtoms::areaFrame == frameType) {
       // make sure it is the body
       nsCOMPtr<nsIAtom> fType;
       rs->parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
-      if (nsLayoutAtoms::canvasFrame == fType.get()) {
-        result -= GetVerticalMarginBorderPadding(firstBlockRS);
+      if (nsLayoutAtoms::canvasFrame == fType) {
+        result -= GetVerticalMarginBorderPadding(secondAncestorRS);
       }
     }
     break;
