@@ -91,6 +91,8 @@ var gBrowser = null;
 var gContextMenu = null;
 
 var gChromeState = null; // chrome state before we went into print preview
+
+var gFormFillPrefListener = null;
 var gFormHistory = null;
 var gFormFillEnabled = true;
 
@@ -427,11 +429,9 @@ function delayedStartup()
   toolbox.customizeDone = BrowserToolboxCustomizeDone;
 
   // Enable/Disable Form Fill
+  gFormFillPrefListener = new FormFillPrefListener();
   var pbi = gPrefService.QueryInterface(Components.interfaces.nsIPrefBranchInternal);
   pbi.addObserver(gFormFillPrefListener.domain, gFormFillPrefListener, false);
-
-  // Initialize
-  gFormFillPrefListener.toggleFormFill();
 
   pbi.addObserver(gHomeButton.prefDomain, gHomeButton, false);
   gHomeButton.updateTooltip();
@@ -511,7 +511,12 @@ function Shutdown()
     appCore.close();
 }
 
-const gFormFillPrefListener =
+function FormFillPrefListener()
+{
+  gBrowser.attachFormFill();
+}
+
+FormFillPrefListener.prototype =
 {
   domain: "browser.formfill.enable",
   observe: function (aSubject, aTopic, aPrefName)
@@ -529,10 +534,6 @@ const gFormFillPrefListener =
     }
     catch (e) {
     }
-    if (gFormFillEnabled)
-      gBrowser.attachFormFill();
-    else
-      gBrowser.detachFormFill();
     gBrowser.setAttribute("autocompleteenabled", gFormFillEnabled);
 
     var searchBar = document.getElementById("search-bar");

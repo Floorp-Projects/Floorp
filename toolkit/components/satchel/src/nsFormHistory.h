@@ -92,9 +92,14 @@ protected:
   
   PR_STATIC_CALLBACK(int) SortComparison(const void *v1, const void *v2, void *closureVoid);
 
+  static PRBool FormHistoryEnabled();
+
   static nsFormHistory *gFormHistory;
   static nsIMdbFactory *gMdbFactory;
-  
+
+  static PRBool gFormHistoryEnabled;
+  static PRBool gPrefsInitialized;
+
   nsIMdbEnv* mEnv;
   nsIMdbStore* mStore;
   nsIMdbTable* mTable;
