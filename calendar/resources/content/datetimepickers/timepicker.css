@@ -1,4 +1,4 @@
-@import url("chrome://calendar/skin/timepicker/timepicker.css");
+@import url("chrome://calendar/skin/datetimepickers/timepicker.css");
 
 timepicker {
   -moz-binding: url("chrome://calendar/content/datetimepickers/timepicker.xbl#timepicker");
@@ -7,31 +7,3 @@ timepicker-grids {
   -moz-binding: url("chrome://calendar/content/datetimepickers/timepicker.xbl#timepicker-grids");
 }
 
-.menu-right
-{
-  visibility : hidden;
-}
-
-/*--------------------------------------------------------------------
- *   Time button (modified from skin/eventDialog.css)
- *-------------------------------------------------------------------*/
-
-.oe-time-picker-button-class
-  {
-    background-image        : url("chrome://calendar/skin/datetimepickers/clock_up.gif");
-    background-repeat       : no-repeat;
-  }
-.oe-time-picker-button-class[disabled="true"],
-.oe-time-picker-button-class[disabled="true"]:hover,
-.oe-time-picker-button-class[disabled="true"]:hover:active
-  {
-    background-image        : url("chrome://calendar/skin/datetimepickers/clock_disabled.gif");
-  }
-.oe-time-picker-button-class:hover
-  {
-    background-image        : url("chrome://calendar/skin/datetimepickers/clock_hover.gif");
-  }
-.oe-time-picker-button-class:hover:active
-  {
-    background-image        : url("chrome://calendar/skin/datetimepickers/clock_down.gif");
-  }

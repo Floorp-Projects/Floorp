@@ -106,12 +106,13 @@
          [this comment is outside the <content> so it won't become a
           node that interferes with navigation to interior nodes.] -->
     <content id="content">
-      <xul:hbox flex="1" id="hbox">
-	<xul:textbox id="textbox" xbl:inherits="disabled"
+      <xul:hbox flex="1" id="hbox" class="timepicker-box-class">
+	<xul:textbox xbl:inherits="disabled" class="timepicker-text-class"
+         id="textbox"
 	 onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.kTimePicker.parseTextBoxTime(false);"
 	 onblur="this.parentNode.parentNode.kTimePicker.parseTextBoxTime(true);"/>
 	<xul:menu id="button" xbl:inherits="disabled"
-	 class="oe-time-picker-button-class">
+	 class="timepicker-button-class">
  	  <xul:menupopup popupanchor="bottomright" popupalign="topright"
            onpopupshowing="onPopup(this)">
             <xul:timepicker-grids />

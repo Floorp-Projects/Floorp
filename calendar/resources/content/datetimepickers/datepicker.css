@@ -1,33 +1,8 @@
 @import url("chrome://calendar/content/datetimepickers/minimonth.css");
 
+@import url("chrome://calendar/skin/datetimepickers/datepicker.css");
+
 datepicker {
   -moz-binding: url("chrome://calendar/content/datetimepickers/datepicker.xbl#datepicker");
-  max-height: 200px;
 }
 
-/*--------------------------------------------------------------------
- *   Date button (modified from skin/eventDialog.css)
- *-------------------------------------------------------------------*/
-
-.datepicker-button {
-  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_up.gif" );
-  background-repeat   : no-repeat;
-}
-.datepicker-button[disabled="true"],
-.datepicker-button[disabled="true"]:hover,
-.datepicker-button[disabled="true"]:hover:active {
-   background-image : url( "chrome://calendar/skin/datetimepickers/calendar_disabled.gif" );
-}
-
-.datepicker-button:hover {
-  background-image : url( "chrome://calendar/skin/datetimepickers/calendar_hover.gif" );
-}
-
-.datepicker-button:hover:active {
-   background-image : url( "chrome://calendar/skin/datetimepickers/calendar_down.gif" );
-}
-
-.menu-right
-{
-   visibility        : hidden;
-}

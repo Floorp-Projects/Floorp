@@ -95,12 +95,14 @@
          [this comment is outside the <content> so it won't become a
           node that interferes with navigation to interior nodes.] -->
         <content id="content">
-        <xul:hbox flex="1" id="hbox">
-            <xul:textbox id="textbox" xbl:inherits="disabled"
+        <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
+            <xul:textbox id="textbox" class="datepicker-text-class"
+                xbl:inherits="disabled"
                 onkeypress="if (event.keyCode == 13) this.parentNode.parentNode.kDatePicker.parseTextBoxDate(false);"
                 onblur="this.parentNode.parentNode.kDatePicker.parseTextBoxDate(true);"/>
 
-            <xul:menu class="datepicker-button" xbl:inherits="disabled">
+            <xul:menu class="datepicker-button-class"
+                xbl:inherits="disabled">
                 <xul:menupopup popupanchor="bottomright" popupalign="topright" 
                     onpopupshowing="onPopup()">
                     <xul:minimonth onchange="this.kDatePicker.clickDate(this); "/>
