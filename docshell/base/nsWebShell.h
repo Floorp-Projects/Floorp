@@ -83,8 +83,13 @@ public:
     // nsIWebShell
     NS_IMETHOD SetContainer(nsIWebShellContainer* aContainer);
     NS_IMETHOD GetContainer(nsIWebShellContainer*& aResult);
-    NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
 
+    // nsIWebShellContainer::GetContainer overrides an
+    // nsIDocumentLoader method, so redeclare and forward
+    NS_IMETHOD GetContainer(nsISupports** aContainer) {
+        return nsDocLoader::GetContainer(aContainer);
+    }
+    
     // nsILinkHandler
     NS_IMETHOD OnLinkClick(nsIContent* aContent,
         nsLinkVerb aVerb,
@@ -139,7 +144,6 @@ protected:
     PRThread *mThread;
 
     nsIWebShellContainer* mContainer;
-    nsCOMPtr<nsIDocumentLoader> mDocLoader;
 
     eCharsetReloadState mCharsetReloadState;
 

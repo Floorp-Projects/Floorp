@@ -55,7 +55,6 @@
 #include "nsIStreamListener.h"
 #include "nsIMIMEService.h"
 #include "nsILoadGroup.h"
-#include "nsCURILoader.h"
 #include "nsIWebProgressListener.h"
 #include "nsIDownload.h"
 #include "nsReadableUtils.h"
@@ -1453,10 +1452,6 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   aChannel->SetLoadGroup(nsnull);
   aChannel->SetNotificationCallbacks(nsnull);
 
-  nsCOMPtr<nsIURILoader> uriLoader(do_GetService(NS_URI_LOADER_CONTRACTID));
-  if (!uriLoader)
-    return;
-
   // we need to store off the original (pre redirect!) channel that initiated the load. We do
   // this so later on, we can pass any refresh urls associated with the original channel back to the 
   // window context which started the whole process. More comments about that are listed below....
@@ -1465,8 +1460,8 @@ void nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
   // the default load channel associated with the original load group. Unfortunately because
   // a redirect may have occurred, the doc loader is the only one with a ptr to the original channel 
   // which is what we really want....
-  nsCOMPtr<nsIDocumentLoader> origContextLoader;
-  uriLoader->GetDocumentLoaderForContext(mWindowContext, getter_AddRefs(origContextLoader));
+  nsCOMPtr<nsIDocumentLoader> origContextLoader =
+    do_GetInterface(mWindowContext);
   if (origContextLoader)
     origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
 }

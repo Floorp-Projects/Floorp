@@ -50,6 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nscore.h"
 #include "nsWeakPtr.h"
+#include "nsAutoPtr.h"
 
 #include "nsIDOMWindow.h"
 
@@ -62,6 +63,7 @@
 #include "nsISocketTransport.h"
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 
 #if defined(PR_LOGGING)
 //
@@ -128,7 +130,7 @@ struct nsListenerInfo {
 };
 
 
-nsDocLoaderImpl::nsDocLoaderImpl()
+nsDocLoader::nsDocLoader()
   : mListenerInfoList(8)
 {
 #if defined(PR_LOGGING)
@@ -137,7 +139,6 @@ nsDocLoaderImpl::nsDocLoaderImpl()
   }
 #endif /* PR_LOGGING */
 
-  mContainer = nsnull;
   mParent    = nsnull;
 
   mIsLoadingDocument = PR_FALSE;
@@ -167,14 +168,14 @@ nsDocLoaderImpl::nsDocLoaderImpl()
 }
 
 nsresult
-nsDocLoaderImpl::SetDocLoaderParent(nsDocLoaderImpl *aParent)
+nsDocLoader::SetDocLoaderParent(nsDocLoader *aParent)
 {
   mParent = aParent;
   return NS_OK; 
 }
 
 nsresult
-nsDocLoaderImpl::Init()
+nsDocLoader::Init()
 {
   if (!mRequestInfoHash.ops) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -189,7 +190,7 @@ nsDocLoaderImpl::Init()
   return NS_OK;
 }
 
-nsDocLoaderImpl::~nsDocLoaderImpl()
+nsDocLoader::~nsDocLoader()
 {
 		/*
 			|ClearWeakReferences()| here is intended to prevent people holding weak references
@@ -200,31 +201,14 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 			An alternative would be incrementing our refcount (consider it a compressed flag
 			saying "Don't re-destroy.").  I haven't yet decided which is better. [scc]
 		*/
+  // XXXbz now that NS_IMPL_RELEASE stabilizes by setting refcount to 1, is
+  // this needed?
   ClearWeakReferences();
 
   Destroy();
 
   PR_LOG(gDocLoaderLog, PR_LOG_DEBUG,
          ("DocLoader:%p: deleted.\n", this));
-
-  PRInt32 count = mChildList.Count();
-  // if the doc loader still has children...we need to enumerate the
-  // children and make them null out their back ptr to the parent doc
-  // loader
-  if (count > 0)
-  {
-    for (PRInt32 i=0; i < count; i++)
-    {
-      nsIDocumentLoader* loader = mChildList.ObjectAt(i);
-
-      if (loader) {
-        // This is a safe cast, as we only put nsDocLoaderImpl objects into the
-        // array
-        NS_STATIC_CAST(nsDocLoaderImpl*, loader)->SetDocLoaderParent(nsnull);
-      }
-    }
-    mChildList.Clear();
-  }
 
   if (mRequestInfoHash.ops) {
     PL_DHashTableFinish(&mRequestInfoHash);
@@ -235,10 +219,10 @@ nsDocLoaderImpl::~nsDocLoaderImpl()
 /*
  * Implementation of ISupports methods...
  */
-NS_IMPL_THREADSAFE_ADDREF(nsDocLoaderImpl)
-NS_IMPL_THREADSAFE_RELEASE(nsDocLoaderImpl)
+NS_IMPL_THREADSAFE_ADDREF(nsDocLoader)
+NS_IMPL_THREADSAFE_RELEASE(nsDocLoader)
 
-NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
+NS_INTERFACE_MAP_BEGIN(nsDocLoader)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoader)
@@ -248,13 +232,16 @@ NS_INTERFACE_MAP_BEGIN(nsDocLoaderImpl)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIHttpEventSink)
    NS_INTERFACE_MAP_ENTRY(nsISecurityEventSink)
+   if (aIID.Equals(kThisImplCID))
+     foundInterface = NS_STATIC_CAST(nsIDocumentLoader *, this);
+   else
 NS_INTERFACE_MAP_END
 
 
 /*
  * Implementation of nsIInterfaceRequestor methods...
  */
-NS_IMETHODIMP nsDocLoaderImpl::GetInterface(const nsIID& aIID, void** aSink)
+NS_IMETHODIMP nsDocLoader::GetInterface(const nsIID& aIID, void** aSink)
 {
   nsresult rv = NS_ERROR_NO_INTERFACE;
 
@@ -271,43 +258,36 @@ NS_IMETHODIMP nsDocLoaderImpl::GetInterface(const nsIID& aIID, void** aSink)
   return rv;
 }
 
-
-
-
-NS_IMETHODIMP
-nsDocLoaderImpl::CreateDocumentLoader(nsIDocumentLoader** anInstance)
+/* static */
+already_AddRefed<nsDocLoader>
+nsDocLoader::GetAsDocLoader(nsISupports* aSupports)
 {
-
-  nsresult rv = NS_OK;
-  *anInstance = nsnull;
-  
-  nsDocLoaderImpl * newLoader = new nsDocLoaderImpl();
-  NS_ENSURE_TRUE(newLoader, NS_ERROR_OUT_OF_MEMORY);
-  
-  NS_ADDREF(newLoader);
-
-  // Initialize now that we have a reference
-  rv = newLoader->Init();
-
-  if (NS_SUCCEEDED(rv)) {
-    rv = newLoader->SetDocLoaderParent(this);
+  if (!aSupports) {
+    return nsnull;
   }
   
-  if (NS_SUCCEEDED(rv)) {
-    rv = mChildList.AppendObject(newLoader) 
-       ? NS_OK : NS_ERROR_FAILURE;
-  }
-  
-  if (NS_SUCCEEDED(rv)) {
-    rv = CallQueryInterface(newLoader, anInstance);
-  }
-  
-  NS_RELEASE(newLoader);
-  return rv;
+  nsDocLoader* ptr;
+  CallQueryInterface(aSupports, &ptr);
+  return ptr;
+}
+
+/* static */
+nsresult
+nsDocLoader::AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDocumentLoader> docLoaderService =
+    do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsRefPtr<nsDocLoader> rootDocLoader = GetAsDocLoader(docLoaderService);
+  NS_ENSURE_TRUE(rootDocLoader, NS_ERROR_UNEXPECTED);
+
+  return rootDocLoader->AddChildLoader(aDocLoader);
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::Stop(void)
+nsDocLoader::Stop(void)
 {
   nsresult rv = NS_OK;
   PRInt32 count, i;
@@ -319,7 +299,7 @@ nsDocLoaderImpl::Stop(void)
 
   nsCOMPtr<nsIDocumentLoader> loader;
   for (i=0; i < count; i++) {
-    loader = mChildList.ObjectAt(i);
+    loader = ChildAt(i);
 
     if (loader) {
       (void) loader->Stop();
@@ -334,7 +314,7 @@ nsDocLoaderImpl::Stop(void)
 
 
 PRBool
-nsDocLoaderImpl::IsBusy()
+nsDocLoader::IsBusy()
 {
   nsresult rv;
 
@@ -361,11 +341,11 @@ nsDocLoaderImpl::IsBusy()
   count = mChildList.Count();
 
   for (i=0; i < count; i++) {
-    nsIDocumentLoader* loader = mChildList.ObjectAt(i);
+    nsIDocumentLoader* loader = ChildAt(i);
 
-    // This is a safe cast, because we only put nsDocLoaderImpl objects into the
+    // This is a safe cast, because we only put nsDocLoader objects into the
     // array
-    if (loader && NS_STATIC_CAST(nsDocLoaderImpl*, loader)->IsBusy())
+    if (loader && NS_STATIC_CAST(nsDocLoader*, loader)->IsBusy())
         return PR_TRUE;
   }
 
@@ -373,27 +353,15 @@ nsDocLoaderImpl::IsBusy()
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::SetContainer(nsISupports* aContainer)
+nsDocLoader::GetContainer(nsISupports** aResult)
 {
-  // This is a weak reference...
-  mContainer = aContainer;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocLoaderImpl::GetContainer(nsISupports** aResult)
-{
-   NS_ENSURE_ARG_POINTER(aResult);
-
-   *aResult = mContainer;
-   NS_IF_ADDREF(*aResult);
+   NS_ADDREF(*aResult = NS_STATIC_CAST(nsIDocumentLoader*, this));
 
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::GetLoadGroup(nsILoadGroup** aResult)
+nsDocLoader::GetLoadGroup(nsILoadGroup** aResult)
 {
   nsresult rv = NS_OK;
 
@@ -406,26 +374,23 @@ nsDocLoaderImpl::GetLoadGroup(nsILoadGroup** aResult)
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocLoaderImpl::Destroy()
+void
+nsDocLoader::Destroy()
 {
   Stop();
 
-// Remove the document loader from the parent list of loaders...
+  // Remove the document loader from the parent list of loaders...
   if (mParent) 
   {
-    mParent->RemoveChildGroup(this);
-    mParent = nsnull;
+    mParent->RemoveChildLoader(this);
   }
 
   // Release all the information about network requests...
   ClearRequestInfoHash();
 
   // Release all the information about registered listeners...
-  PRInt32 i, count;
-
-  count = mListenerInfoList.Count();
-  for(i=0; i<count; i++) {
+  PRInt32 count = mListenerInfoList.Count();
+  for(PRInt32 i = 0; i < count; i++) {
     nsListenerInfo *info =
       NS_STATIC_CAST(nsListenerInfo*, mListenerInfoList.ElementAt(i));
 
@@ -440,11 +405,33 @@ nsDocLoaderImpl::Destroy()
   if (mLoadGroup)
     mLoadGroup->SetGroupObserver(nsnull);
 
-  return NS_OK;
+  DestroyChildren();
+}
+
+void
+nsDocLoader::DestroyChildren()
+{
+  PRInt32 i, count;
+  
+  count = mChildList.Count();
+  // if the doc loader still has children...we need to enumerate the
+  // children and make them null out their back ptr to the parent doc
+  // loader
+  for (i=0; i < count; i++)
+  {
+    nsIDocumentLoader* loader = ChildAt(i);
+
+    if (loader) {
+      // This is a safe cast, as we only put nsDocLoader objects into the
+      // array
+      NS_STATIC_CAST(nsDocLoader*, loader)->SetDocLoaderParent(nsnull);
+    }
+  }
+  mChildList.Clear();
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
+nsDocLoader::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 {
   // called each time a request is added to the group.
 
@@ -527,7 +514,7 @@ nsDocLoaderImpl::OnStartRequest(nsIRequest *request, nsISupports *aCtxt)
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest, 
+nsDocLoader::OnStopRequest(nsIRequest *aRequest, 
                                nsISupports *aCtxt, 
                                nsresult aStatus)
 {
@@ -666,17 +653,25 @@ nsDocLoaderImpl::OnStopRequest(nsIRequest *aRequest,
 }
 
 
-nsresult nsDocLoaderImpl::RemoveChildGroup(nsDocLoaderImpl* aLoader)
+nsresult nsDocLoader::RemoveChildLoader(nsDocLoader* aChild)
 {
-  nsresult rv = NS_OK;
-
+  nsresult rv = mChildList.RemoveElement(aChild) ? NS_OK : NS_ERROR_FAILURE;
   if (NS_SUCCEEDED(rv)) {
-    mChildList.RemoveObject((nsIDocumentLoader*)aLoader);
+    aChild->SetDocLoaderParent(nsnull);
   }
   return rv;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
+nsresult nsDocLoader::AddChildLoader(nsDocLoader* aChild)
+{
+  nsresult rv = mChildList.AppendElement(aChild) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  if (NS_SUCCEEDED(rv)) {
+    aChild->SetDocLoaderParent(this);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsDocLoader::GetDocumentChannel(nsIChannel ** aChannel)
 {
   if (!mDocumentRequest) {
     *aChannel = nsnull;
@@ -687,7 +682,7 @@ NS_IMETHODIMP nsDocLoaderImpl::GetDocumentChannel(nsIChannel ** aChannel)
 }
 
 
-void nsDocLoaderImpl::DocLoaderIsEmpty()
+void nsDocLoader::DocLoaderIsEmpty()
 {
   if (mIsLoadingDocument) {
     /* In the unimagineably rude circumstance that onload event handlers
@@ -733,7 +728,7 @@ void nsDocLoaderImpl::DocLoaderIsEmpty()
   }
 }
 
-void nsDocLoaderImpl::doStartDocumentLoad(void)
+void nsDocLoader::doStartDocumentLoad(void)
 {
 
 #if defined(DEBUG)
@@ -759,7 +754,7 @@ void nsDocLoaderImpl::doStartDocumentLoad(void)
                     NS_OK);
 }
 
-void nsDocLoaderImpl::doStartURLLoad(nsIRequest *request)
+void nsDocLoader::doStartURLLoad(nsIRequest *request)
 {
 #if defined(DEBUG)
   nsCAutoString buffer;
@@ -778,7 +773,7 @@ void nsDocLoaderImpl::doStartURLLoad(nsIRequest *request)
                     NS_OK);
 }
 
-void nsDocLoaderImpl::doStopURLLoad(nsIRequest *request, nsresult aStatus)
+void nsDocLoader::doStopURLLoad(nsIRequest *request, nsresult aStatus)
 {
 #if defined(DEBUG)
   nsCAutoString buffer;
@@ -797,7 +792,7 @@ void nsDocLoaderImpl::doStopURLLoad(nsIRequest *request, nsresult aStatus)
                     aStatus);
 }
 
-void nsDocLoaderImpl::doStopDocumentLoad(nsIRequest *request,
+void nsDocLoader::doStopDocumentLoad(nsIRequest *request,
                                          nsresult aStatus)
 {
 #if defined(DEBUG)
@@ -839,7 +834,7 @@ void nsDocLoaderImpl::doStopDocumentLoad(nsIRequest *request,
 // get web progress returns our web progress listener or if
 // we don't have one, it will look up the doc loader hierarchy
 // to see if one of our parent doc loaders has one.
-nsresult nsDocLoaderImpl::GetParentWebProgressListener(nsDocLoaderImpl * aDocLoader, nsIWebProgressListener ** aWebProgress)
+nsresult nsDocLoader::GetParentWebProgressListener(nsDocLoader * aDocLoader, nsIWebProgressListener ** aWebProgress)
 {
   // if we got here, there is no web progress to return
   *aWebProgress = nsnull;
@@ -848,7 +843,7 @@ nsresult nsDocLoaderImpl::GetParentWebProgressListener(nsDocLoaderImpl * aDocLoa
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *aListener,
+nsDocLoader::AddProgressListener(nsIWebProgressListener *aListener,
                                      PRUint32 aNotifyMask)
 {
   nsresult rv;
@@ -874,7 +869,7 @@ nsDocLoaderImpl::AddProgressListener(nsIWebProgressListener *aListener,
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *aListener)
+nsDocLoader::RemoveProgressListener(nsIWebProgressListener *aListener)
 {
   nsresult rv;
 
@@ -890,36 +885,20 @@ nsDocLoaderImpl::RemoveProgressListener(nsIWebProgressListener *aListener)
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::GetDOMWindow(nsIDOMWindow **aResult)
+nsDocLoader::GetDOMWindow(nsIDOMWindow **aResult)
 {
-  nsresult rv = NS_OK;
-
-  *aResult = nsnull;
-  //
-  // The DOM Window is available from the associated container (ie DocShell)
-  // if one is available...
-  //
-  if (mContainer) {
-    nsCOMPtr<nsIDOMWindow> window(do_GetInterface(mContainer, &rv));
-
-    *aResult = window;
-    NS_IF_ADDREF(*aResult);
-  } else {
-    rv = NS_ERROR_FAILURE;
-  }
-
-  return rv;
+  return CallGetInterface(this, aResult);
 }
 
 NS_IMETHODIMP
-nsDocLoaderImpl::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
+nsDocLoader::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
 {
   *aIsLoadingDocument = mIsLoadingDocument;
 
   return NS_OK;
 }
 
-PRInt32 nsDocLoaderImpl::GetMaxTotalProgress()
+PRInt32 nsDocLoader::GetMaxTotalProgress()
 {
   PRInt32 count = 0;
   PRInt32 individualProgress, newMaxTotal;
@@ -932,11 +911,11 @@ PRInt32 nsDocLoaderImpl::GetMaxTotalProgress()
   for (PRInt32 i=0; i < count; i++) 
   {
     individualProgress = 0;
-    docloader = mChildList.ObjectAt(i);
+    docloader = ChildAt(i);
     if (docloader)
     {
-      // Cast is safe since all children are nsDocLoaderImpl too
-      individualProgress = ((nsDocLoaderImpl *) docloader.get())->GetMaxTotalProgress();
+      // Cast is safe since all children are nsDocLoader too
+      individualProgress = ((nsDocLoader *) docloader.get())->GetMaxTotalProgress();
     }
     if (individualProgress < 0) // if one of the elements doesn't know it's size
                                 // then none of them do
@@ -961,7 +940,7 @@ PRInt32 nsDocLoaderImpl::GetMaxTotalProgress()
 // then turns around and makes the right web progress calls based on this information.
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *aRequest, nsISupports* ctxt, 
+NS_IMETHODIMP nsDocLoader::OnProgress(nsIRequest *aRequest, nsISupports* ctxt, 
                                           PRUint32 aProgress, PRUint32 aProgressMax)
 {
   nsRequestInfo *info;
@@ -1052,7 +1031,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnProgress(nsIRequest *aRequest, nsISupports* ctx
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIRequest* aRequest, nsISupports* ctxt, 
+NS_IMETHODIMP nsDocLoader::OnStatus(nsIRequest* aRequest, nsISupports* ctxt, 
                                         nsresult aStatus, const PRUnichar* aStatusArg)
 {
   //
@@ -1089,7 +1068,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnStatus(nsIRequest* aRequest, nsISupports* ctxt,
   return NS_OK;
 }
 
-void nsDocLoaderImpl::ClearInternalProgress()
+void nsDocLoader::ClearInternalProgress()
 {
   ClearRequestInfoHash();
 
@@ -1100,13 +1079,13 @@ void nsDocLoaderImpl::ClearInternalProgress()
 }
 
 
-void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
-                                           nsIRequest *request,
-                                           PRInt32 aProgress,
-                                           PRInt32 aProgressMax,
-                                           PRInt32 aProgressDelta,
-                                           PRInt32 aTotalProgress,
-                                           PRInt32 aMaxTotalProgress)
+void nsDocLoader::FireOnProgressChange(nsDocLoader *aLoadInitiator,
+                                       nsIRequest *request,
+                                       PRInt32 aProgress,
+                                       PRInt32 aProgressMax,
+                                       PRInt32 aProgressDelta,
+                                       PRInt32 aTotalProgress,
+                                       PRInt32 aMaxTotalProgress)
 {
   if (mIsLoadingDocument) {
     mCurrentTotalProgress += aProgressDelta;
@@ -1167,10 +1146,10 @@ void nsDocLoaderImpl::FireOnProgressChange(nsDocLoaderImpl *aLoadInitiator,
 }
 
 
-void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
-                                        nsIRequest *aRequest,
-                                        PRInt32 aStateFlags,
-                                        nsresult aStatus)
+void nsDocLoader::FireOnStateChange(nsIWebProgress *aProgress,
+                                    nsIRequest *aRequest,
+                                    PRInt32 aStateFlags,
+                                    nsresult aStatus)
 {
   //
   // Remove the STATE_IS_NETWORK bit if necessary.
@@ -1234,10 +1213,10 @@ void nsDocLoaderImpl::FireOnStateChange(nsIWebProgress *aProgress,
 
 
 
-NS_IMETHODIMP
-nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
-                                      nsIRequest* aRequest,
-                                      nsIURI *aUri)
+void
+nsDocLoader::FireOnLocationChange(nsIWebProgress* aWebProgress,
+                                  nsIRequest* aRequest,
+                                  nsIURI *aUri)
 {
   /*                                                                           
    * First notify any listeners of the new state info...
@@ -1273,15 +1252,13 @@ nsDocLoaderImpl::FireOnLocationChange(nsIWebProgress* aWebProgress,
   if (mParent) {
     mParent->FireOnLocationChange(aWebProgress, aRequest, aUri);
   }
-
-  return NS_OK;
 }
 
 void
-nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
-                                    nsIRequest* aRequest,
-                                    nsresult aStatus,
-                                    const PRUnichar* aMessage)
+nsDocLoader::FireOnStatusChange(nsIWebProgress* aWebProgress,
+                                nsIRequest* aRequest,
+                                nsresult aStatus,
+                                const PRUnichar* aMessage)
 {
   /*                                                                           
    * First notify any listeners of the new state info...
@@ -1319,7 +1296,7 @@ nsDocLoaderImpl::FireOnStatusChange(nsIWebProgress* aWebProgress,
 }
 
 nsListenerInfo * 
-nsDocLoaderImpl::GetListenerInfo(nsIWebProgressListener *aListener)
+nsDocLoader::GetListenerInfo(nsIWebProgressListener *aListener)
 {
   PRInt32 i, count;
   nsListenerInfo *info;
@@ -1339,7 +1316,7 @@ nsDocLoaderImpl::GetListenerInfo(nsIWebProgressListener *aListener)
   return nsnull;
 }
 
-nsresult nsDocLoaderImpl::AddRequestInfo(nsIRequest *aRequest)
+nsresult nsDocLoader::AddRequestInfo(nsIRequest *aRequest)
 {
   if (!PL_DHashTableOperate(&mRequestInfoHash, aRequest, PL_DHASH_ADD)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -1348,7 +1325,7 @@ nsresult nsDocLoaderImpl::AddRequestInfo(nsIRequest *aRequest)
   return NS_OK;
 }
 
-nsRequestInfo * nsDocLoaderImpl::GetRequestInfo(nsIRequest *aRequest)
+nsRequestInfo * nsDocLoader::GetRequestInfo(nsIRequest *aRequest)
 {
   nsRequestInfo *info =
     NS_STATIC_CAST(nsRequestInfo *,
@@ -1375,7 +1352,7 @@ RemoveInfoCallback(PLDHashTable *table, PLDHashEntryHdr *hdr, PRUint32 number,
   return PL_DHASH_REMOVE;
 }
 
-void nsDocLoaderImpl::ClearRequestInfoHash(void)
+void nsDocLoader::ClearRequestInfoHash(void)
 {
   if (!mRequestInfoHash.ops || !mRequestInfoHash.entryCount) {
     // No hash, or the hash is empty, nothing to do here then...
@@ -1405,14 +1382,15 @@ CalcMaxProgressCallback(PLDHashTable *table, PLDHashEntryHdr *hdr,
   return PL_DHASH_NEXT;
 }
 
-PRInt32 nsDocLoaderImpl::CalculateMaxProgress()
+PRInt32 nsDocLoader::CalculateMaxProgress()
 {
   PRInt32 max = 0;
   PL_DHashTableEnumerate(&mRequestInfoHash, CalcMaxProgressCallback, &max);
   return max;
 }
 
-NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChannel *aNewChannel)
+NS_IMETHODIMP nsDocLoader::OnRedirect(nsIHttpChannel *aOldChannel,
+                                      nsIChannel *aNewChannel)
 {
   if (aOldChannel)
   {
@@ -1452,8 +1430,8 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChanne
  * Implementation of nsISecurityEventSink method...
  */
 
-NS_IMETHODIMP nsDocLoaderImpl::OnSecurityChange(nsISupports * aContext,
-                                                PRUint32 aState)
+NS_IMETHODIMP nsDocLoader::OnSecurityChange(nsISupports * aContext,
+                                            PRUint32 aState)
 {
   //
   // Fire progress notifications out to any registered nsIWebProgressListeners.  
@@ -1503,7 +1481,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnSecurityChange(nsISupports * aContext,
 
 
 #if 0
-void nsDocLoaderImpl::DumpChannelInfo()
+void nsDocLoader::DumpChannelInfo()
 {
   nsChannelInfo *info;
   PRInt32 i, count;

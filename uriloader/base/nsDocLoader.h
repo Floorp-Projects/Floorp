@@ -63,26 +63,41 @@ struct nsRequestInfo;
 struct nsListenerInfo;
 
 /****************************************************************************
- * nsDocLoaderImpl implementation...
+ * nsDocLoader implementation...
  ****************************************************************************/
 
-class nsDocLoaderImpl : public nsIDocumentLoader, 
-                        public nsIRequestObserver,
-                        public nsSupportsWeakReference,
-                        public nsIProgressEventSink,
-                        public nsIWebProgress,
-                        public nsIInterfaceRequestor,
-                        public nsIHttpEventSink,
-                        public nsISecurityEventSink
+#define NS_THIS_DOCLOADER_IMPL_CID                 \
+ { /* 2f7f940d-d67e-40bc-b1ba-8c46de2b4cec */         \
+     0x2f7f940d,                                      \
+     0xd67e,                                          \
+     0x40bc,                                          \
+     {0xb1, 0xba, 0x8c, 0x46, 0xde, 0x2b, 0x4c, 0xec} \
+ }
+
+class nsDocLoader : public nsIDocumentLoader, 
+                    public nsIRequestObserver,
+                    public nsSupportsWeakReference,
+                    public nsIProgressEventSink,
+                    public nsIWebProgress,
+                    public nsIInterfaceRequestor,
+                    public nsIHttpEventSink,
+                    public nsISecurityEventSink
 {
 public:
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_THIS_DOCLOADER_IMPL_CID);
 
-    nsDocLoaderImpl();
+    nsDocLoader();
 
-    nsresult Init();
+    virtual nsresult Init();
 
-    // for nsIGenericFactory:
-    static NS_IMETHODIMP Create(nsISupports *aOuter, const nsIID &aIID, void **aResult);
+    static already_AddRefed<nsDocLoader> GetAsDocLoader(nsISupports* aSupports);
+    // Needed to deal with ambiguous inheritance from nsISupports...
+    static nsISupports* GetAsSupports(nsDocLoader* aDocLoader) {
+        return NS_STATIC_CAST(nsIDocumentLoader*, aDocLoader);
+    }
+
+    // Add aDocLoader as a child to the docloader service.
+    static nsresult AddDocLoaderAsChildOfRoot(nsDocLoader* aDocLoader);
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIDOCUMENTLOADER
@@ -100,16 +115,36 @@ public:
     NS_DECL_NSIHTTPEVENTSINK
 
     // Implementation specific methods...
-protected:
-    virtual ~nsDocLoaderImpl();
 
-    nsresult SetDocLoaderParent(nsDocLoaderImpl * aLoader);
-    nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
+    // Remove aChild from our childlist.  This nulls out the child's mParent
+    // pointer.
+    nsresult RemoveChildLoader(nsDocLoader *aChild);
+    // Add aChild to our child list.  This will set aChild's mParent pointer to
+    // |this|.
+    nsresult AddChildLoader(nsDocLoader* aChild);
+    nsDocLoader* GetParent() const { return mParent; }
+
+protected:
+    virtual ~nsDocLoader();
+
+    virtual nsresult SetDocLoaderParent(nsDocLoader * aLoader);
+
     void DocLoaderIsEmpty();
 
     PRBool IsBusy();
 
-    void FireOnProgressChange(nsDocLoaderImpl* aLoadInitiator,
+    void Destroy();
+    virtual void DestroyChildren();
+
+    nsIDocumentLoader* ChildAt(PRInt32 i) {
+        return NS_STATIC_CAST(nsDocLoader*, mChildList[i]);
+    }
+
+    nsIDocumentLoader* SafeChildAt(PRInt32 i) {
+        return NS_STATIC_CAST(nsDocLoader*, mChildList.SafeElementAt(i));
+    }
+
+    void FireOnProgressChange(nsDocLoader* aLoadInitiator,
                               nsIRequest *request,
                               PRInt32 aProgress,
                               PRInt32 aProgressMax,
@@ -127,6 +162,10 @@ protected:
                             nsresult aStatus,
                             const PRUnichar* aMessage);
 
+    void FireOnLocationChange(nsIWebProgress* aWebProgress,
+                              nsIRequest* aRequest,
+                              nsIURI *aUri);
+
     void doStartDocumentLoad();
     void doStartURLLoad(nsIRequest *request);
     void doStopURLLoad(nsIRequest *request, nsresult aStatus);
@@ -135,10 +174,9 @@ protected:
     // get web progress returns our web progress listener or if
     // we don't have one, it will look up the doc loader hierarchy
     // to see if one of our parent doc loaders has one.
-    nsresult GetParentWebProgressListener(nsDocLoaderImpl * aDocLoader, nsIWebProgressListener ** aWebProgres);
+    nsresult GetParentWebProgressListener(nsDocLoader * aDocLoader, nsIWebProgressListener ** aWebProgres);
 
 protected:
-
     // IMPORTANT: The ownership implicit in the following member
     // variables has been explicitly checked and set using nsCOMPtr
     // for owning pointers and raw COM interface pointers for weak
@@ -146,9 +184,8 @@ protected:
     // class, please make the ownership explicit (pinkerton, scc).
   
     nsCOMPtr<nsIRequest>       mDocumentRequest;       // [OWNER] ???compare with document
-    nsISupports*               mContainer;             // [WEAK] it owns me!
 
-    nsDocLoaderImpl*           mParent;                // [WEAK]
+    nsDocLoader*               mParent;                // [WEAK]
 
     nsVoidArray                mListenerInfoList;
     /*
@@ -159,11 +196,11 @@ protected:
     PRBool mIsLoadingDocument;
 
     nsCOMPtr<nsILoadGroup>        mLoadGroup;
-    nsCOMArray<nsIDocumentLoader> mChildList;
+    // We hold weak refs to all our kids
+    nsVoidArray                   mChildList;
 
     // The following member variables are related to the new nsIWebProgress 
     // feedback interfaces that travis cooked up.
-    nsCOMPtr<nsIWebProgressListener> mProgressListener;
     PRInt32 mProgressStateFlags;
 
     PRInt32 mCurrentSelfProgress;

@@ -59,12 +59,12 @@
 #include "nsGlobalHistory2Adapter.h"
 
 // docshell
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWebShell, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultURIFixup)
 
 // uriloader
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoaderImpl, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDocLoader, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsOSHelperAppService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsExternalProtocolHandler)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBlockedExternalProtocolHandler)
@@ -102,9 +102,8 @@ static const nsModuleComponentInfo gDocShellModuleInfo[] = {
 
     // uriloader
   { "Netscape URI Loader Service", NS_URI_LOADER_CID, NS_URI_LOADER_CONTRACTID, nsURILoaderConstructor, },
-  { "Netscape Doc Loader", NS_DOCUMENTLOADER_CID, NS_DOCUMENTLOADER_CONTRACTID, nsDocLoaderImplConstructor, },
   { "Netscape Doc Loader Service", NS_DOCUMENTLOADER_SERVICE_CID, NS_DOCUMENTLOADER_SERVICE_CONTRACTID, 
-     nsDocLoaderImplConstructor, },
+     nsDocLoaderConstructor, },
   { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALHELPERAPPSERVICE_CONTRACTID, 
      nsOSHelperAppServiceConstructor, },
   { "Netscape External Helper App Service", NS_EXTERNALHELPERAPPSERVICE_CID, NS_EXTERNALPROTOCOLSERVICE_CONTRACTID, 

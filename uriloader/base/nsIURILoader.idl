@@ -40,7 +40,6 @@
 interface nsIURIContentListener;
 interface nsIURI;
 interface nsILoadGroup;
-interface nsIDocumentLoader;
 interface nsIProgressEventSink;
 interface nsIChannel;
 interface nsIRequest;
@@ -68,7 +67,7 @@ interface nsIInterfaceRequestor;
  * or helper app. Or it may hand the url off to an OS registered 
  * application. 
  */
-[scriptable, uuid(b90c6e12-48a0-4954-8eb3-b6e0075d4e4f)]
+[scriptable, uuid(5cf6420c-74f3-4a7c-bc1d-f5756d79ea07)]
 interface nsIURILoader : nsISupports
 {
   /**
@@ -112,10 +111,5 @@ interface nsIURILoader : nsISupports
    * Stops an in progress load
    */
   void stop(in nsISupports aLoadCookie);
-  
-  /**
-   * XXXbiesi is this really needed?
-   */
-  nsIDocumentLoader getDocumentLoaderForContext (in nsIInterfaceRequestor aWindowContext);
 };
 

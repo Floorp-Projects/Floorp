@@ -114,7 +114,6 @@ nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull),
    mPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_NONE),
    mStream(nsnull),
    mParentWidget(nsnull),
-   mParent(nsnull),
    mListenerArray(nsnull)
 #if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)
    , mTopLevelWidget(nsnull)
@@ -521,41 +520,14 @@ NS_IMETHODIMP nsWebBrowser::SetItemType(PRInt32 aItemType)
 
 NS_IMETHODIMP nsWebBrowser::GetParent(nsIDocShellTreeItem** aParent)
 {
-   NS_ENSURE_ARG_POINTER(aParent);
-
-   *aParent = mParent;
-   NS_IF_ADDREF(*aParent);
-
+   *aParent = nsnull;
    return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowser::SetParent(nsIDocShellTreeItem* aParent)
-{
-  // null aParent is ok
-   
-  /* Note this doesn't do an addref on purpose.  This is because the parent
-   is an implied lifetime.  We don't want to create a cycle by refcounting
-   the parent.*/
-  mParent = aParent;
-  return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowser::GetSameTypeParent(nsIDocShellTreeItem** aParent)
 {
-   NS_ENSURE_ARG_POINTER(aParent);
    *aParent = nsnull;
 
-   if(!mParent)
-      return NS_OK;
-      
-   PRInt32  parentType;
-   NS_ENSURE_SUCCESS(mParent->GetItemType(&parentType), NS_ERROR_FAILURE);
-
-   if(typeContentWrapper == parentType)
-      {
-      *aParent = mParent;
-      NS_ADDREF(*aParent);
-      }                   
    return NS_OK;
 }
 

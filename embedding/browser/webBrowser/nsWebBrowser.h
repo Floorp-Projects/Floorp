@@ -181,7 +181,6 @@ protected:
 
    //Weak Reference interfaces...
    nsIWidget*                 mParentWidget;
-   nsIDocShellTreeItem*       mParent; 
    nsVoidArray *              mListenerArray;
    
 #if (defined(XP_MAC) || defined(XP_MACOSX)) && !defined(MOZ_WIDGET_COCOA)

@@ -48,7 +48,7 @@ interface nsIDocShellTreeOwner;
  * node or a leaf. 
  */
 
-[scriptable, uuid(B52AE780-A966-11d3-AFC7-00A024FFC08C)]
+[scriptable, uuid(1b3416f3-0ec6-49e6-8bdf-77bfdbc4a102)]
 interface nsIDocShellTreeItem : nsISupports
 {
 	/*
@@ -81,17 +81,9 @@ interface nsIDocShellTreeItem : nsISupports
 	attribute long itemType;
 
 	/*
-	Parent DocShell..  Note Implementers of this interface should NOT effect
-	the lifetime of the parent DocShellTreeItem by holding this reference as it
-	creates a cycle.  Parents when releasing this interface should set the
-	parent to nsnull.  Implementers of this interface are guaranteed that when
-	parent is set that the pointer is valid without having to addref.
-
-	Further note however when others try to Get the interface you should add
-	ref it before handing it to them.
+	Parent DocShell.
 	*/
 	readonly attribute nsIDocShellTreeItem parent;
-	[noscript] void setParent(in nsIDocShellTreeItem parent);
 
 	/*
 	This is call returns the same thing parent does however if the parent is

@@ -77,6 +77,8 @@
 
 #include "nsMimeTypes.h"
 
+#include "nsDocLoader.h"
+
 static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 #ifdef PR_LOGGING
 PRLogModuleInfo* nsURILoader::mLog = nsnull;
@@ -845,13 +847,32 @@ NS_IMETHODIMP nsURILoader::OpenURI(nsIChannel *channel,
 
   if (!loader) return NS_ERROR_OUT_OF_MEMORY;
 
-  nsCOMPtr<nsIInterfaceRequestor> loadCookie;
-  SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookie));
-
   // Set the correct loadgroup on the channel
-  nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(loadCookie));
-  channel->SetLoadGroup(loadGroup);
+  nsCOMPtr<nsILoadGroup> loadGroup(do_GetInterface(aWindowContext));
 
+  if (!loadGroup) {
+    // XXXbz This context is violating what we'd like to be the new uriloader
+    // api.... Set up a nsDocLoader to handle the loadgroup for this context.
+    // This really needs to go away!    
+    nsCOMPtr<nsIURIContentListener> listener(do_GetInterface(aWindowContext));
+    if (listener) {
+      nsCOMPtr<nsISupports> cookie;
+      listener->GetLoadCookie(getter_AddRefs(cookie));
+      if (!cookie) {
+        nsRefPtr<nsDocLoader> newDocLoader = new nsDocLoader();
+        nsresult rv = newDocLoader->Init();
+        if (NS_FAILED(rv))
+          return rv;
+        rv = nsDocLoader::AddDocLoaderAsChildOfRoot(newDocLoader);
+        if (NS_FAILED(rv))
+          return rv;
+        listener->SetLoadCookie(nsDocLoader::GetAsSupports(newDocLoader));
+      }
+    }
+  }        
+    
+  channel->SetLoadGroup(loadGroup);
+  
   // now instruct the loader to go ahead and open the url
   return loader->Open(channel);
 }
@@ -867,93 +888,6 @@ NS_IMETHODIMP nsURILoader::Stop(nsISupports* aLoadCookie)
   if (docLoader) {
     rv = docLoader->Stop();
   }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsURILoader::GetDocumentLoaderForContext(nsIInterfaceRequestor * aWindowContext,
-                                         nsIDocumentLoader ** aDocLoader)
-{
-  nsresult rv;
-  nsCOMPtr<nsIInterfaceRequestor> loadCookieForWindow;
-
-  // Initialize the [out] parameter...
-  *aDocLoader = nsnull;
-
-  NS_ENSURE_ARG(aWindowContext);
-
-  rv = SetupLoadCookie(aWindowContext, getter_AddRefs(loadCookieForWindow));
-  if (NS_FAILED(rv)) return rv;
-  
-  rv = CallGetInterface(loadCookieForWindow.get(), aDocLoader);
-  return rv;
-}
-
-nsresult nsURILoader::SetupLoadCookie(nsIInterfaceRequestor * aWindowContext, 
-                                      nsIInterfaceRequestor ** aLoadCookie)
-{
-  // first, see if we have already set a load cookie on the cnt listener..
-  // i.e. if this isn't the first time we've tried to run a url through this window
-  // context then we don't need to create another load cookie, we can reuse the first one.
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsISupports> loadCookie;
-
-  // Initialize the [out] parameter...
-  *aLoadCookie = nsnull;
-
-  nsCOMPtr<nsIURIContentListener> cntListener (do_GetInterface(aWindowContext));
-  if (cntListener) {
-    // Get the load cookie for the requested window context...
-    rv = cntListener->GetLoadCookie(getter_AddRefs(loadCookie));
-
-    //
-    // If we don't have a load cookie for this window context yet, then 
-    // go create one! In order to create a load cookie, we need to get
-    // the parent's load cookie if there is one...
-    //
-    if (!loadCookie) {
-      nsCOMPtr<nsIURIContentListener> parentListener;
-      nsCOMPtr<nsIDocumentLoader>     parentDocLoader;
-      nsCOMPtr<nsIDocumentLoader>     newDocLoader;
-
-      // Try to get the parent's load cookie...
-      cntListener->GetParentContentListener(getter_AddRefs(parentListener));
-      if (parentListener) {
-        rv = parentListener->GetLoadCookie(getter_AddRefs(loadCookie));
-
-        // if we had a parent cookie use it to help with the creation process      
-        if (loadCookie) {
-          parentDocLoader = do_GetInterface(loadCookie);
-        }
-      }
-      // If there is no parent DocLoader, then use the global DocLoader
-      // service as the parent...
-      if (!parentDocLoader) {
-        parentDocLoader = do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID, &rv);
-      }
-      if (NS_FAILED(rv)) return rv;
-
-      //
-      // Create a new document loader.  The document loader represents
-      // the load cookie which the uriloader hands out...
-      //
-      rv = parentDocLoader->CreateDocumentLoader(getter_AddRefs(newDocLoader));
-      if (NS_FAILED(rv)) return rv;
-
-      newDocLoader->QueryInterface(NS_GET_IID(nsIInterfaceRequestor), 
-                                   getter_AddRefs(loadCookie)); 
-      rv = cntListener->SetLoadCookie(loadCookie);
-    } // if we don't have  a load cookie already
-  } // if we have a cntListener
-
-  // loadCookie may be null - for example, <a target="popupWin"> if popupWin is
-  // not a defined window.  The following prevents a crash (Bug 32898)
-  if (loadCookie) {
-    rv = CallQueryInterface(loadCookie, aLoadCookie);
-  } else {
-    rv = NS_ERROR_UNEXPECTED;
-  }
-
   return rv;
 }
 
