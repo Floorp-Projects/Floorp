@@ -468,6 +468,16 @@ JS_XDRValue(JSXDRState *xdr, jsval *vp)
 	if (!JS_XDRUint32(xdr, (uint32 *)vp))
 	    return JS_FALSE;
 	break;
+    case JSVAL_INT: {
+	uint32 i;
+	if (xdr->mode == JSXDR_ENCODE)
+	    i = JSVAL_TO_INT(*vp);
+	if (!JS_XDRUint32(xdr, &i))
+	    return JS_FALSE;
+	if (xdr->mode == JSXDR_DECODE)
+	    *vp = INT_TO_JSVAL(i);
+	break;
+    }
       default:
 	JS_ReportError(xdr->cx, "unknown jsval type %#lx for XDR", type);
 	return JS_FALSE;
