@@ -39,6 +39,7 @@ CPPSRCS =				\
 	nsJSNamedNodeMap.cpp		\
 	nsJSNode.cpp			\
 	nsJSNodeList.cpp		\
+	nsJSNotation.cpp		\
 	nsJSProcessingInstruction.cpp	\
 	nsJSText.cpp			\
 	nsJSStyleSheet.cpp		\

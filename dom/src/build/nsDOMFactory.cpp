@@ -44,6 +44,8 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"		   
 #include "nsIDOMProcessingInstruction.h"	   
+#include "nsIDOMEntity.h"	   
+#include "nsIDOMNotation.h"	   
 #include "nsIDOMText.h"
 #include "nsIDOMHTMLAnchorElement.h"
 #include "nsIDOMHTMLAppletElement.h"	   
@@ -273,6 +275,16 @@ public:
                                                nsISupports *aPI, 
                                                nsISupports *aParent, 
                                                void** aReturn);
+  
+  NS_IMETHOD    NewScriptEntity(nsIScriptContext *aContext, 
+                                nsISupports *aPI, 
+                                nsISupports *aParent, 
+                                void** aReturn);
+  
+  NS_IMETHOD    NewScriptNotation(nsIScriptContext *aContext, 
+                                  nsISupports *aPI, 
+                                  nsISupports *aParent, 
+                                  void** aReturn);
   
 };
 
@@ -547,6 +559,26 @@ nsDOMScriptObjectFactory::NewScriptProcessingInstruction(nsIScriptContext *aCont
                                                          void** aReturn)
 {
   return NS_NewScriptProcessingInstruction(aContext, aPI, aParent, aReturn);
+}
+
+
+NS_IMETHODIMP    
+nsDOMScriptObjectFactory::NewScriptEntity(nsIScriptContext *aContext, 
+                                          nsISupports *aPI, 
+                                          nsISupports *aParent, 
+                                          void** aReturn)
+{
+  return NS_NewScriptEntity(aContext, aPI, aParent, aReturn);
+}
+
+
+NS_IMETHODIMP    
+nsDOMScriptObjectFactory::NewScriptNotation(nsIScriptContext *aContext, 
+                                            nsISupports *aPI, 
+                                            nsISupports *aParent, 
+                                            void** aReturn)
+{
+  return NS_NewScriptNotation(aContext, aPI, aParent, aReturn);
 }
 
 
