@@ -258,7 +258,6 @@ nsresult nsNNTPNewsgroupStub::SetSubscribed(PRBool aSubscribed)
 {
 	if (aSubscribed)
 	{
-		printf("Setting is subscribed for newsgroup %s to %s. \n", m_groupName, aSubscribed ? "TRUE" : "FALSE" );
 		m_isSubscribed = aSubscribed;
 	}
 
