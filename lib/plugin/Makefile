@@ -33,7 +33,7 @@ CPPSRCS		= npwplat.cpp
 REQUIRES	+= xp libfont os2font jtools
 endif
 
-CSRCS		+= npglue.c
+CPPSRCS		+= npglue.cpp
 
 include $(DEPTH)/config/rules.mk
 
