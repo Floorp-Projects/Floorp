@@ -141,6 +141,10 @@ function pm_removeobserver(observer)
 PrefManager.prototype.onPrefChanged =
 function pm_prefchanged(prefName, realValue, oldValue)
 {
+    // We're only interested in prefs we actually know about.
+    if (!(prefName in this.prefRecords))
+        return;
+
     for (var i = 0; i < this.observers.length; i++)
         this.observers[i].onPrefChanged(prefName, realValue, oldValue);
 }
