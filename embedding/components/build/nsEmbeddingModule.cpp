@@ -21,14 +21,17 @@
  */
 
 #include "nsIGenericFactory.h"
+#include "nsPromptService.h"
 #include "nsWindowWatcher.h"
 #include "nsAppStartupNotifier.h"
 
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPromptService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsWindowWatcher, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppStartupNotifier)
 
 static nsModuleComponentInfo components[] = {
 
+  { "Prompt Service", NS_PROMPTSERVICE_CID, NS_PROMPTSERVICE_CONTRACTID, nsPromptServiceConstructor },
   { "Window Watcher", NS_WINDOWWATCHER_CID, NS_WINDOWWATCHER_CONTRACTID, nsWindowWatcherConstructor },
   { NS_APPSTARTUPNOTIFIER_CLASSNAME, NS_APPSTARTUPNOTIFIER_CID, NS_APPSTARTUPNOTIFIER_CONTRACTID, nsAppStartupNotifierConstructor }
 };
