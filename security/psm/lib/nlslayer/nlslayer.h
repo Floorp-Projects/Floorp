@@ -50,7 +50,9 @@ PRBool nlsUnicodeToASCII(unsigned char * inBuf, unsigned int inBufBytes,
 							unsigned int * outBufLen);
 PRBool nlsASCIIToUnicode(unsigned char * inBuf, unsigned int inBufBytes,
 							unsigned char * outBuf, unsigned int maxOutBufLen,
-							unsigned int * outBufLen);
+							unsigned int * outBufLen);							
+char *xpcomGetProcessDir(void);
+
 
 #endif /* _NLSLAYER_H_ */
 
