@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<!--PW?? Nodes that are not referenced at a lower level do not need an ID-->
+<!--PW?? But - what about see also's i.e. xrefs within the index?'-->
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:nc="http://home.netscape.com/NC-rdf#">
+
+<!-- NAVIGATOR HELP SECTION -->
+  <rdf:Description about="urn:root">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="a" nc:name="A" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="b" nc:name="B" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="c" nc:name="C" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="d" nc:name="D" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="e" nc:name="E" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="f" nc:name="F" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="g" nc:name="G" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="h" nc:name="H" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="i" nc:name="I" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="j" nc:name="J" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="k" nc:name="K" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="l" nc:name="L" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="m" nc:name="M" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="n" nc:name="N" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="o" nc:name="O" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="p" nc:name="P" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="q" nc:name="Q" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="r" nc:name="R" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="s" nc:name="S" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="t" nc:name="T" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="u" nc:name="U" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="v" nc:name="V" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="w" nc:name="W" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="x" nc:name="X" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="y" nc:name="Y" nc:link=""/> </rdf:li>
+        <rdf:li> <rdf:Description ID="z" nc:name="Z" nc:link=""/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+</rdf:RDF>
+
+
+
+
