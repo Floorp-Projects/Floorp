@@ -43,7 +43,7 @@ package org.mozilla.javascript;
  * @see org.mozilla.javascript.NativeCall
  * @author Norris Boyd
  */
-class Arguments extends ScriptableObject {
+class Arguments extends IdScriptable {
 
     public Arguments(NativeCall activation) {
         this.activation = activation;
@@ -53,38 +53,27 @@ class Arguments extends ScriptableObject {
         setPrototype(ScriptableObject.getObjectPrototype(parent));
 
         args = activation.getOriginalArguments();
-        int length = args.length;
-        Object callee = activation.funObj;
+        lengthObj = new Integer(args.length);
 
-        defineProperty("length", new Integer(length),
-                       ScriptableObject.DONTENUM);
-        defineProperty("callee", callee, ScriptableObject.DONTENUM);
+        NativeFunction funObj = activation.funObj;
+        calleeObj = funObj;
 
-        hasCaller = (activation.funObj.version <= Context.VERSION_1_3 &&
-                     activation.funObj.version != Context.VERSION_DEFAULT);
+        if (funObj.version <= Context.VERSION_1_3
+            && funObj.version != Context.VERSION_DEFAULT)
+        {
+            callerObj = null;
+        }else {
+            callerObj = NOT_FOUND;
+        }
     }
 
     public String getClassName() {
         return "Arguments";
     }
 
-    public boolean has(String name, Scriptable start) {
-        return (hasCaller && name.equals("caller")) || super.has(name, start);
-    }
-
     public boolean has(int index, Scriptable start) {
         Object[] args = activation.getOriginalArguments();
         return (0 <= index && index < args.length) || super.has(index, start);
-    }
-
-    public Object get(String name, Scriptable start) {
-        if (hasCaller && name.equals("caller")) {
-            NativeCall caller = activation.caller;
-            if (caller == null || caller.originalArgs == null)
-                return null;
-            return caller.get("arguments", caller);
-        }
-        return super.get(name, start);
     }
 
     public Object get(int index, Scriptable start) {
@@ -94,10 +83,10 @@ class Arguments extends ScriptableObject {
                 String argName = f.argNames[index];
                 for (int i=index+1; i < f.argNames.length; i++) {
                     if (argName.equals(f.argNames[i])) {
-                        // duplicate parameter name, must use initial 
+                        // duplicate parameter name, must use initial
                         // parameter value
                         Object[] orig = activation.getOriginalArguments();
-                        return index < orig.length ? orig[index] 
+                        return index < orig.length ? orig[index]
                                                    : Undefined.instance;
                     }
                 }
@@ -106,15 +95,6 @@ class Arguments extends ScriptableObject {
             return args[index];
         }
         return super.get(index, start);
-    }
-
-    public void put(String name, Scriptable start, Object value) {
-        if (name.equals("caller")) {
-            // Set "hasCaller" to false so that we won't look up a
-            // computed value.
-            hasCaller = false;
-        }
-        super.put(name, start, value);
     }
 
     public void put(int index, Scriptable start, Object value) {
@@ -129,12 +109,6 @@ class Arguments extends ScriptableObject {
         super.put(index, start, value);
     }
 
-    public void delete(String name) {
-        if (name.equals("caller"))
-            hasCaller = false;
-        super.delete(name);
-    }
-
     public void delete(int index) {
         if (0 <= index && index < args.length) {
             NativeFunction f = activation.funObj;
@@ -145,7 +119,114 @@ class Arguments extends ScriptableObject {
         }
     }
 
+    protected int getIdDefaultAttributes(int id) {
+        switch (id) {
+            case Id_callee:
+            case Id_caller:
+            case Id_length:
+                return DONTENUM;
+        }
+        return super.getIdDefaultAttributes(id);
+    }
+
+    protected boolean hasIdValue(int id) {
+        switch (id) {
+            case Id_callee: return calleeObj != NOT_FOUND;
+            case Id_length: return lengthObj != NOT_FOUND;
+            case Id_caller: return callerObj != NOT_FOUND;
+        }
+        return super.hasIdValue(id);
+    }
+
+    protected Object getIdValue(int id) {
+        switch (id) {
+            case Id_callee: return calleeObj;
+            case Id_length: return lengthObj;
+            case Id_caller: {
+                Object value = callerObj;
+                if (value == UniqueTag.NULL_VALUE) { value = null; }
+                else if (value == null) {
+                    NativeCall caller = activation.caller;
+                    if (caller == null || caller.originalArgs == null) {
+                        value = null;
+                    }else {
+                        value = caller.get("arguments", caller);
+                    }
+                }
+                return value;
+            }
+        }
+        return super.getIdValue(id);
+    }
+
+    protected void setIdValue(int id, Object value) {
+        switch (id) {
+            case Id_callee: calleeObj = value; return;
+            case Id_length: lengthObj = value; return;
+            case Id_caller:
+                callerObj = (value != null) ? value : UniqueTag.NULL_VALUE;
+                return;
+        }
+        super.setIdValue(id, value);
+    }
+
+    protected void deleteIdValue(int id) {
+        switch (id) {
+            case Id_callee: calleeObj = NOT_FOUND; return;
+            case Id_length: lengthObj = NOT_FOUND; return;
+            case Id_caller: callerObj = NOT_FOUND; return;
+        }
+        super.deleteIdValue(id);
+    }
+
+    protected String getIdName(int id) {
+        switch (id) {
+            case Id_callee: return "callee";
+            case Id_length: return "length";
+            case Id_caller: return "caller";
+        }
+        return null;
+    }
+
+// #string_id_map#
+
+    private static final int
+        Id_callee           = 1,
+        Id_length           = 2,
+        Id_caller           = 3,
+
+        MAX_INSTANCE_ID     = 3;
+
+    { setMaxId(MAX_INSTANCE_ID); }
+
+    protected int mapNameToId(String s) {
+        int id;
+// #generated# Last update: 2002-04-09 20:46:33 CEST
+        L0: { id = 0; String X = null; int c;
+            if (s.length()==6) {
+                c=s.charAt(5);
+                if (c=='e') { X="callee";id=Id_callee; }
+                else if (c=='h') { X="length";id=Id_length; }
+                else if (c=='r') { X="caller";id=Id_caller; }
+            }
+            if (X!=null && X!=s && !X.equals(s)) id = 0;
+        }
+// #/generated#
+        return id;
+    }
+
+// #/string_id_map#
+
+
+// Fields to hold caller, callee and length properties,
+// where NOT_FOUND value tags deleted properties.
+// In addition if callerObj == NULL_VALUE, it tags null for scripts, as
+// initial callerObj == null means access to caller arguments available
+// only in JS <= 1.3 scripts
+    private Object callerObj;
+    private Object calleeObj;
+    private Object lengthObj;
+
     private NativeCall activation;
     private Object[] args;
-    private boolean hasCaller;
 }
