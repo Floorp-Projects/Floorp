@@ -702,7 +702,12 @@ public:
                                 nsCOMPtr<nsIDOMNode> *outNode = 0,
                                 PRInt32 *outOffset = 0);
 
-  nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset, PRInt32 *outOffset);
+  nsresult SplitNodeDeep(nsIDOMNode *aNode, 
+                         nsIDOMNode *aSplitPointParent, 
+                         PRInt32 aSplitPointOffset,
+                         PRInt32 *outOffset,
+                         nsCOMPtr<nsIDOMNode> *outLeftNode = 0,
+                         nsCOMPtr<nsIDOMNode> *outRightNode = 0);
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsCOMPtr<nsIDOMNode> *aOutJoinNode, PRInt32 *outOffset); 
 
   nsresult GetString(const nsString& name, nsString& value);

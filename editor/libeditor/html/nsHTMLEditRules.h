@@ -132,11 +132,16 @@ protected:
                                    PRInt32 inOperationType);
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
+                                   nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
   nsresult MakeTransitionList(nsISupportsArray *inArrayOfNodes, 
                                    nsVoidArray *inTransitionArray);
                                    
   nsresult ShouldMakeEmptyBlock(nsIDOMSelection *aSelection, const nsString *blockTag, PRBool *outMakeEmpty);
   nsresult ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString *aBlockTag);
+  nsresult MakeBlockquote(nsISupportsArray *arrayOfNodes);
+  nsresult SplitAsNeeded(const nsString *aTag, nsCOMPtr<nsIDOMNode> *inOutParent, PRInt32 *inOutOffset);
+  nsresult AddTerminatingBR(nsIDOMNode *aBlock);
 
   nsresult JoinNodesSmart( nsIDOMNode *aNodeLeft, 
                            nsIDOMNode *aNodeRight, 

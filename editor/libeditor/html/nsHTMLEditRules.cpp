@@ -163,6 +163,10 @@ nsHTMLEditRules::BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   if (!mActionNesting)
   {
     mDocChangeRange = nsnull;  // clear out our accounting of what changed
+    // total hack to clear mUtilRange.  This is because there is the
+    // unposition call is not available thru nsIDOMRange.idl
+    nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
+                                                    getter_AddRefs(mUtilRange));
     // turn off caret
     nsCOMPtr<nsIPresShell> pres;
     mEditor->GetPresShell(getter_AddRefs(pres));
@@ -1072,6 +1076,9 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
   nsresult res = WillInsert(aSelection, aCancel);
   if (NS_FAILED(res)) return res;
 
+  nsAutoString listType;
+  listType.AssignWithConversion( aOrdered ? "ol" : "ul" );
+  
   // initialize out param
   // we want to ignore result of WillInsert()
   *aCancel = PR_FALSE;
@@ -1093,23 +1100,15 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     if (NS_FAILED(res)) return res;
     
     // make sure we can put a list here
-    nsAutoString listType;
-    listType.AssignWithConversion( aOrdered ? "ol" : "ul" );
-    if (mEditor->CanContainTag(parent,listType))
-    {
-      res = mEditor->CreateNode(listType, parent, offset, getter_AddRefs(theList));
-      if (NS_FAILED(res)) return res;
-      res = mEditor->CreateNode(NS_ConvertASCIItoUCS2("li"), theList, 0, getter_AddRefs(theListItem));
-      if (NS_FAILED(res)) return res;
-      // put selection in new list item
-      res = aSelection->Collapse(theListItem,0);
-      *aHandled = PR_TRUE;
-    }
-    else
-    {
-      // cant make list here - cancel the operation.
-      *aCancel = PR_TRUE;
-    }
+    res = SplitAsNeeded(&listType, &parent, &offset);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->CreateNode(listType, parent, offset, getter_AddRefs(theList));
+    if (NS_FAILED(res)) return res;
+    res = mEditor->CreateNode(NS_ConvertASCIItoUCS2("li"), theList, 0, getter_AddRefs(theListItem));
+    if (NS_FAILED(res)) return res;
+    // put selection in new list item
+    res = aSelection->Collapse(theListItem,0);
+    *aHandled = PR_TRUE;
     return res;
   }
   
@@ -1227,6 +1226,28 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
     if (NS_FAILED(res)) return res;
   
+    // if curNode is a Break, delete it, and quit remembering prev list item
+    if (nsHTMLEditUtils::IsBreak(curNode)) 
+    {
+      res = mEditor->DeleteNode(curNode);
+      if (NS_FAILED(res)) return res;
+      prevListItem = 0;
+      continue;
+    }
+    // if curNode is an empty inline container, delete it
+    else if (mEditor->IsInlineNode(curNode) && mEditor->IsContainer(curNode)) 
+    {
+      PRBool bEmpty;
+      res = IsEmptyNode( curNode, &bEmpty);
+      if (NS_FAILED(res)) return res;
+      if (bEmpty)
+      {
+        res = mEditor->DeleteNode(curNode);
+        if (NS_FAILED(res)) return res;
+        continue;
+      }
+    }
+    
     if (transitionList[i] &&                                      // transition node
         ((((i+1)<(PRInt32)listCount) && transitionList[i+1]) ||   // and next node is transistion node
         ( i+1 >= (PRInt32)listCount)))                            // or there is no next node
@@ -1282,21 +1303,14 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection,
     // or if this node doesn't go in list we used earlier.
     if (!curList || transitionList[i])
     {
-      res = mEditor->CreateNode(NS_ConvertASCIItoUCS2( aOrdered ? "ol" : "ul" ), curParent, offset, getter_AddRefs(curList));
+      res = SplitAsNeeded(&listType, &curParent, &offset);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->CreateNode(listType, curParent, offset, getter_AddRefs(curList));
       if (NS_FAILED(res)) return res;
       // curList is now the correct thing to put curNode in
       prevListItem = 0;
     }
   
-    // if curNode is a Break, delete it, and quit remembering prev list item
-    if (nsHTMLEditUtils::IsBreak(curNode)) 
-    {
-      res = mEditor->DeleteNode(curNode);
-      if (NS_FAILED(res)) return res;
-      prevListItem = 0;
-      continue;
-    }
-    
     // if curNode isn't a list item, we must wrap it in one
     nsCOMPtr<nsIDOMNode> listItem;
     if (!nsHTMLEditUtils::IsListItem(curNode))
@@ -1475,8 +1489,12 @@ nsHTMLEditRules::WillMakeBasicBlock(nsIDOMSelection *aSelection,
   if (NS_FAILED(res)) return res;                                 
                                      
   // Ok, now go through all the nodes and make the right kind of blocks, 
-  // or whatever is approriate.  Wohoo!
-  res = ApplyBlockStyle(arrayOfNodes, aBlockType);
+  // or whatever is approriate.  Wohoo! 
+  // Note: blockquote is handled a little differently
+  if (aBlockType->EqualsWithConversion("blockquote"))
+    res = MakeBlockquote(arrayOfNodes);
+  else
+    res = ApplyBlockStyle(arrayOfNodes, aBlockType);
   return res;
 }
 
@@ -1561,6 +1579,8 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool
         nsAutoString listTag;
         nsEditor::GetTagString(curParent,listTag);
         // create a new nested list of correct type
+        res = SplitAsNeeded(&listTag, &curParent, &offset);
+        if (NS_FAILED(res)) return res;
         res = mEditor->CreateNode(listTag, curParent, offset, getter_AddRefs(curList));
         if (NS_FAILED(res)) return res;
         // curList is now the correct thing to put curNode in
@@ -1580,20 +1600,15 @@ nsHTMLEditRules::WillIndent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBool
       if (!curQuote || transitionList[i])
       {
         nsAutoString quoteType; quoteType.AssignWithConversion("blockquote");
-        if (mEditor->CanContainTag(curParent,quoteType))
-        {
-          res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
-          if (NS_FAILED(res)) return res;
-          // set style to not have unwanted vertical margins
-          nsCOMPtr<nsIDOMElement> quoteElem = do_QueryInterface(curQuote);
-          res = mEditor->SetAttribute(quoteElem, NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 40px;"));
-          if (NS_FAILED(res)) return res;
-          // curQuote is now the correct thing to put curNode in
-        }
-        else
-        {
-          printf("trying to put a blockquote in a bad place\n");     
-        }
+        res = SplitAsNeeded(&quoteType, &curParent, &offset);
+        if (NS_FAILED(res)) return res;
+        res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curQuote));
+        if (NS_FAILED(res)) return res;
+        // set style to not have unwanted vertical margins
+        nsCOMPtr<nsIDOMElement> quoteElem = do_QueryInterface(curQuote);
+        res = mEditor->SetAttribute(quoteElem, NS_ConvertASCIItoUCS2("style"), NS_ConvertASCIItoUCS2("margin: 0 0 0 40px;"));
+        if (NS_FAILED(res)) return res;
+        // curQuote is now the correct thing to put curNode in
       }
         
       // tuck the node into the end of the active blockquote
@@ -1704,6 +1719,8 @@ nsHTMLEditRules::WillOutdent(nsIDOMSelection *aSelection, PRBool *aCancel, PRBoo
       {
         if (nsHTMLEditUtils::IsBlockquote(n))
         {
+          res = AddTerminatingBR(n);
+          if (NS_FAILED(res)) return res;
           mEditor->RemoveContainer(n);
           break;
         }
@@ -1937,6 +1954,8 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
     nsAutoString divType; divType.AssignWithConversion("div");
     res = mEditor->GetStartNodeAndOffset(aSelection, &parent, &offset);
     if (NS_FAILED(res)) return res;
+    res = SplitAsNeeded(&divType, &parent, &offset);
+    if (NS_FAILED(res)) return res;
     res = mEditor->CreateNode(divType, parent, offset, getter_AddRefs(theDiv));
     if (NS_FAILED(res)) return res;
     // set up the alignment on the div
@@ -2021,6 +2040,8 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
     if (!curDiv || transitionList[i])
     {
       nsAutoString divType; divType.AssignWithConversion("div");
+      res = SplitAsNeeded(&divType, &curParent, &offset);
+      if (NS_FAILED(res)) return res;
       res = mEditor->CreateNode(divType, curParent, offset, getter_AddRefs(curDiv));
       if (NS_FAILED(res)) return res;
       // set up the alignment on the div
@@ -2491,25 +2512,20 @@ nsHTMLEditRules::GetPromotedPoint(RulesEndpoint aWhere, nsIDOMNode *aNode, PRInt
     if (!nsEditor::IsBlockNode(node))
     {
       nsCOMPtr<nsIDOMNode> block = nsEditor::GetBlockNodeParent(node);
-//    if (IsBody(block))
-//    {
-        nsCOMPtr<nsIDOMNode> nextNode;
-        nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
-        while (nextNode)
+      nsCOMPtr<nsIDOMNode> nextNode;
+      nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
+      while (nextNode)
+      {
+        if (nsHTMLEditUtils::IsBreak(nextNode) && !nsHTMLEditUtils::HasMozAttr(nextNode))
         {
-          if (nsHTMLEditUtils::IsBreak(nextNode) && !nsHTMLEditUtils::HasMozAttr(nextNode))
-            break;
-          if (nsEditor::IsBlockNode(nextNode))
-            break;
           node = nextNode;
-          nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
+          break;
         }
-//    }
-//    else
-//    {
-        // just grap the whole block
-//      node = block;
-//    }
+        if (nsEditor::IsBlockNode(nextNode))
+          break;
+        node = nextNode;
+        nextNode = nsEditor::NextNodeInBlock(node, nsEditor::kIterForward);
+      }
     }
     
     // finding the real end for this point.  look up the tree for as long as we are the 
@@ -2668,6 +2684,38 @@ nsHTMLEditRules::GetNodesForOperation(nsISupportsArray *inArrayOfRanges,
       if (NS_FAILED(res)) return res;
     }
   }
+  // post process the list to break up inline containers that contain br's.
+  // but only for operations that might care, like making lists or para's...
+  if ( (inOperationType == kMakeBasicBlock)  ||
+       (inOperationType == kMakeList) )
+  {
+    PRUint32 listCount;
+    (*outArrayOfNodes)->Count(&listCount);
+    for (i=(PRInt32)listCount-1; i>=0; i--)
+    {
+      nsCOMPtr<nsISupports> isupports = (dont_AddRef)((*outArrayOfNodes)->ElementAt(i));
+      nsCOMPtr<nsIDOMNode> node( do_QueryInterface(isupports) );
+      if (mEditor->IsInlineNode(node) && mEditor->IsContainer(node))
+      {
+        nsCOMPtr<nsISupportsArray> arrayOfInlines;
+        res = BustUpInlinesAtBRs(node, &arrayOfInlines);
+        if (NS_FAILED(res)) return res;
+        // put these nodes in outArrayOfNodes, replacing the current node
+        (*outArrayOfNodes)->RemoveElementAt((PRUint32)i);
+        // i sure wish nsISupportsArray had an IsEmpty() and DeleteLastElement()
+        // calls.  For that matter, if I could just insert one nsISupportsArray
+        // into another at a given position, that would do everything I need here.
+        PRUint32 iCount;
+        arrayOfInlines->Count(&iCount);
+        while (iCount)
+        {
+          iCount--;
+          isupports = (dont_AddRef)(arrayOfInlines->ElementAt(iCount));
+          (*outArrayOfNodes)->InsertElementAt(isupports, i);
+        }
+      }
+    }
+  }
   return res;
 }
 
@@ -2703,6 +2751,116 @@ nsHTMLEditRules::GetChildNodesForOperation(nsIDOMNode *inNode,
     isupports = do_QueryInterface(node);
     (*outArrayOfNodes)->AppendElement(isupports);
     if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////
+// BustUpInlinesAtBRs: 
+//                       
+nsresult 
+nsHTMLEditRules::BustUpInlinesAtBRs(nsIDOMNode *inNode, 
+                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes)
+{
+  if (!inNode || !outArrayOfNodes) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_NewISupportsArray(getter_AddRefs(*outArrayOfNodes));
+  if (NS_FAILED(res)) return res;
+  
+  // first step is to build up a list of all the break nodes inside 
+  // the inline container.
+  nsCOMPtr<nsISupportsArray> arrayOfBreaks;
+  res = NS_NewISupportsArray(getter_AddRefs(arrayOfBreaks));
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIContentIterator> iter;
+  nsCOMPtr<nsIContent> cNode = do_QueryInterface(inNode);
+  res = nsComponentManager::CreateInstance(kContentIteratorCID,
+                                           nsnull,
+                                           NS_GET_IID(nsIContentIterator), 
+                                           getter_AddRefs(iter));
+  if (NS_FAILED(res)) return res;
+  res = iter->Init(cNode);
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsISupports> isupports;
+
+  while (NS_ENUMERATOR_FALSE == iter->IsDone())
+  {
+    nsCOMPtr<nsIDOMNode> node;
+    nsCOMPtr<nsIContent> content;
+    res = iter->CurrentNode(getter_AddRefs(content));
+    if (NS_FAILED(res)) return res;
+    node = do_QueryInterface(content);
+    if (!node) return NS_ERROR_FAILURE;
+    if (nsHTMLEditUtils::IsBreak(node))
+    {
+      isupports = do_QueryInterface(node);
+      arrayOfBreaks->AppendElement(isupports);
+    }
+    res = iter->Next();
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // if there aren't and breaks, just put inNode itself in the array
+  PRUint32 listCount;
+  arrayOfBreaks->Count(&listCount);
+  if (!listCount)
+  {
+    isupports = do_QueryInterface(inNode);
+    (*outArrayOfNodes)->AppendElement(isupports);
+    if (NS_FAILED(res)) return res;
+  }
+  else
+  {
+    // else we need to bust up inNode along all the breaks
+    nsCOMPtr<nsIDOMNode> breakNode;
+    nsCOMPtr<nsIDOMNode> inlineParentNode;
+    nsCOMPtr<nsIDOMNode> leftNode;
+    nsCOMPtr<nsIDOMNode> rightNode;
+    nsCOMPtr<nsIDOMNode> splitDeepNode = inNode;
+    nsCOMPtr<nsIDOMNode> splitParentNode;
+    PRInt32 splitOffset, resultOffset, i;
+    inNode->GetParentNode(getter_AddRefs(inlineParentNode));
+    
+    for (i=0; i<listCount; i++)
+    {
+      isupports = (dont_AddRef)(arrayOfBreaks->ElementAt(i));
+      breakNode = do_QueryInterface(isupports);
+      if (!breakNode) return NS_ERROR_NULL_POINTER;
+      if (!splitDeepNode) return NS_ERROR_NULL_POINTER;
+      res = nsEditor::GetNodeLocation(breakNode, &splitParentNode, &splitOffset);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->SplitNodeDeep(splitDeepNode, splitParentNode, splitOffset,
+                          &resultOffset, &leftNode, &rightNode);
+      if (NS_FAILED(res)) return res;
+      // put left node in node list
+      if (leftNode)
+      {
+        // might not be a left node.  a break might have been at the very
+        // beginning of inline container, in which case splitnodedeep
+        // would not actually split anything
+        isupports = do_QueryInterface(leftNode);
+        (*outArrayOfNodes)->AppendElement(isupports);
+        if (NS_FAILED(res)) return res;
+      }
+      // move break outside of container and also put in node list
+      res = mEditor->MoveNode(breakNode, inlineParentNode, resultOffset);
+      if (NS_FAILED(res)) return res;
+      isupports = do_QueryInterface(breakNode);
+      (*outArrayOfNodes)->AppendElement(isupports);
+      if (NS_FAILED(res)) return res;
+      // now rightNode becomes the new node to split
+      splitDeepNode = rightNode;
+    }
+    // now tack on remaining rightNode, if any, to the list
+    if (rightNode)
+    {
+      isupports = do_QueryInterface(rightNode);
+      (*outArrayOfNodes)->AppendElement(isupports);
+      if (NS_FAILED(res)) return res;
+    }
   }
   return res;
 }
@@ -3213,6 +3371,89 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
 }
 
 
+
+
+///////////////////////////////////////////////////////////////////////////
+// MakeBlockquote:  put the list of nodes into one or more blockquotes.  
+//                       
+nsresult 
+nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
+{
+  // the idea here is to put the nodes into a minimal number of 
+  // blockquotes.  When the user blockquotes something, they expect
+  // one blockquote.  That may not be possible (for instance, if they
+  // have two table cells selected, you need two blockquotes inside the cells).
+  
+  if (!arrayOfNodes) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  
+  nsCOMPtr<nsIDOMNode> curNode, curParent, curBlock, newBlock;
+  PRInt32 offset;
+  PRUint32 listCount;
+  
+  arrayOfNodes->Count(&listCount);
+  nsCOMPtr<nsIDOMNode> prevParent;
+  
+  PRUint32 i;
+  for (i=0; i<listCount; i++)
+  {
+    // get the node to act on, and it's location
+    nsCOMPtr<nsISupports> isupports  = (dont_AddRef)(arrayOfNodes->ElementAt(i));
+    curNode = do_QueryInterface(isupports);
+    res = nsEditor::GetNodeLocation(curNode, &curParent, &offset);
+    if (NS_FAILED(res)) return res;
+
+    // if the node is a table element or list item, dive inside
+    if ( (mEditor->IsTableElement(curNode) && !(mEditor->IsTable(curNode))) || 
+         nsHTMLEditUtils::IsListItem(curNode) )
+    {
+      curBlock = 0;  // forget any previous block
+      // recursion time
+      nsCOMPtr<nsISupportsArray> childArray;
+      res = GetChildNodesForOperation(curNode, &childArray);
+      if (NS_FAILED(res)) return res;
+      res = MakeBlockquote(childArray);
+      if (NS_FAILED(res)) return res;
+    }
+    
+    // if the node has different parent than previous node,
+    // further nodes in a new parent
+    if (prevParent)
+    {
+      nsCOMPtr<nsIDOMNode> curParent;
+      curNode->GetParentNode(getter_AddRefs(curParent));
+      if (curParent != prevParent)
+      {
+        curBlock = 0;  // forget any previous blockquote node we were using
+        prevParent = curParent;
+      }
+    }
+    else     
+    {
+      curNode->GetParentNode(getter_AddRefs(prevParent));
+    }
+    
+    // if no curBlock, make one
+    if (!curBlock)
+    {
+      nsAutoString quoteType; quoteType.AssignWithConversion("blockquote");
+      res = SplitAsNeeded(&quoteType, &curParent, &offset);
+      if (NS_FAILED(res)) return res;
+      res = mEditor->CreateNode(quoteType, curParent, offset, getter_AddRefs(curBlock));
+      if (NS_FAILED(res)) return res;
+    }
+      
+    PRUint32 blockLen;
+    res = mEditor->GetLengthOfDOMNode(curBlock, blockLen);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->MoveNode(curNode, curBlock, blockLen);
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
+
+
+
 ///////////////////////////////////////////////////////////////////////////
 // ApplyBlockStyle:  do whatever it takes to make the list of nodes into 
 //                   one or more blocks of type blockTag.  
@@ -3274,9 +3515,9 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
       curBlock = 0;  // forget any previous block used for previous inline nodes
       if (bNoParent)
       {
-//        nsCOMPtr<nsIDOMNode> brNode;
-//        res = mEditor->CreateBR(curParent, offset+1, &brNode);
-//        if (NS_FAILED(res)) return res;
+        // make sure we have a normal br at end of block
+        res = AddTerminatingBR(curNode);
+        if (NS_FAILED(res)) return res;
         res = mEditor->RemoveContainer(curNode); 
       }
       else
@@ -3332,6 +3573,8 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
       // if no curBlock, make one
       if (!curBlock)
       {
+        res = SplitAsNeeded(aBlockTag, &curParent, &offset);
+        if (NS_FAILED(res)) return res;
         res = mEditor->CreateNode(*aBlockTag, curParent, offset, getter_AddRefs(curBlock));
         if (NS_FAILED(res)) return res;
       }
@@ -3352,6 +3595,85 @@ nsHTMLEditRules::ApplyBlockStyle(nsISupportsArray *arrayOfNodes, const nsString 
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// SplitAsNeeded:  given a tag name, split inOutParent up to the point   
+//                 where we can insert the tag.  Adjust inOutParent and
+//                 inOutOffset to pint to new location for tag.
+nsresult 
+nsHTMLEditRules::SplitAsNeeded(const nsString *aTag, 
+                               nsCOMPtr<nsIDOMNode> *inOutParent,
+                               PRInt32 *inOutOffset)
+{
+  if (!aTag || !inOutParent || !inOutOffset) return NS_ERROR_NULL_POINTER;
+  if (!*inOutParent) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode> tagParent, temp, splitNode, parent = *inOutParent;
+  nsresult res = NS_OK;
+   
+  // check that we have a place that can legally contain the tag
+  while (!tagParent)
+  {
+    // sniffing up the parent tree until we find 
+    // a legal place for the block
+    if (!parent) break;
+    if (mEditor->CanContainTag(parent, *aTag))
+    {
+      tagParent = parent;
+    }
+    splitNode = parent;
+    parent->GetParentNode(getter_AddRefs(temp));
+    parent = temp;
+  }
+  if (!tagParent)
+  {
+    // could not find a place to build tag!
+    return NS_ERROR_FAILURE;
+  }
+  if (tagParent != *inOutParent)
+  {
+    // we found a place for block, but above curParent.  We need to split
+    // up to blockParent.
+    res = mEditor->SplitNodeDeep(splitNode, *inOutParent, *inOutOffset, inOutOffset);
+    if (NS_FAILED(res)) return res;
+    *inOutParent = tagParent;
+  }
+  return res;
+}      
+
+///////////////////////////////////////////////////////////////////////////
+// AddTerminatingBR:  place an ordinary br node at the end of aBlock,   
+//                  if it doens't already have one.  If it has a moz-BR,
+//                  simply convertit to a normal br.  
+nsresult 
+nsHTMLEditRules::AddTerminatingBR(nsIDOMNode *aBlock)
+{
+  if (!aBlock) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIDOMNode> last;
+  nsresult res = mEditor->GetLastEditableChild(aBlock, &last);
+  if (last && nsHTMLEditUtils::IsBreak(last))
+  {
+    if (nsHTMLEditUtils::IsMozBR(last))
+    {
+      // need to convert a br
+      nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(last);
+      res = mEditor->RemoveAttribute(elem, NS_ConvertASCIItoUCS2("type")); 
+      if (NS_FAILED(res)) return res;
+    }
+    else // we have what we want, we're done
+    {
+      return res;
+    }
+  }
+  else // need to add a br
+  {
+    PRUint32 len;
+    nsCOMPtr<nsIDOMNode> brNode;
+    res = mEditor->GetLengthOfDOMNode(aBlock, len);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->CreateBR(aBlock, len, &brNode);
+    if (NS_FAILED(res)) return res;
+  }
+  return res;
+}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -4133,23 +4455,10 @@ nsHTMLEditRules::PopListItem(nsIDOMNode *aListItem, PRBool *aOutOfList)
   if (!nsHTMLEditUtils::IsList(curParPar)
       && nsHTMLEditUtils::IsListItem(curNode)) 
   {
-    nsCOMPtr<nsIDOMNode> lastChild;
-    res = mEditor->GetLastEditableChild(curNode, &lastChild);
+    res = AddTerminatingBR(curNode);
     if (NS_FAILED(res)) return res;
     res = mEditor->RemoveContainer(curNode);
     if (NS_FAILED(res)) return res;
-    if (mEditor->IsInlineNode(lastChild) && !(nsHTMLEditUtils::IsBreak(lastChild)))
-    {
-      // last thing inside of the listitem wasn't a block node.
-      // insert a BR to preserve the illusion of block boundaries
-      nsCOMPtr<nsIDOMNode> node, brNode;
-      PRInt32 theOffset;
-      res = nsEditor::GetNodeLocation(lastChild, &node, &theOffset);
-      if (NS_FAILED(res)) return res;
-      // last ePrevious param causes selection to be set before the break
-      res = mEditor->CreateBR(node, theOffset+1, &brNode, nsIEditor::ePrevious);
-      if (NS_FAILED(res)) return res;
-    }
     *aOutOfList = PR_TRUE;
   }
   return res;
@@ -4227,8 +4536,9 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   
   if (!mDocChangeRange)
   {
-    mDocChangeRange = do_QueryInterface(aRange);
-    return NS_OK;
+    // clone aRange.  
+    res = aRange->Clone(getter_AddRefs(mDocChangeRange));
+    return res;
   }
   else
   {

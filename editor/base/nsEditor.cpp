@@ -345,7 +345,7 @@ nsSelectionState::SelAdjSplitNode(nsIDOMNode *aOldRightNode, PRInt32 aOffset, ns
   if (NS_FAILED(result)) return result;
   
   // first part is same as inserting aNewLeftnode
-  result = SelAdjInsertNode(parent,offset);
+  result = SelAdjInsertNode(parent,offset-1);
   if (NS_FAILED(result)) return result;
 
   // next step is to check for range enpoints inside aOldRightNode
@@ -4690,13 +4690,18 @@ nsresult
 nsEditor::SplitNodeDeep(nsIDOMNode *aNode, 
                         nsIDOMNode *aSplitPointParent, 
                         PRInt32 aSplitPointOffset,
-                        PRInt32 *outOffset)
+                        PRInt32 *outOffset,
+                        nsCOMPtr<nsIDOMNode> *outLeftNode,
+                        nsCOMPtr<nsIDOMNode> *outRightNode)
 {
   if (!aNode || !aSplitPointParent || !outOffset) return NS_ERROR_NULL_POINTER;
   nsCOMPtr<nsIDOMNode> nodeToSplit = do_QueryInterface(aSplitPointParent);
   nsCOMPtr<nsIDOMNode> tempNode, parentNode;  
   PRInt32 offset = aSplitPointOffset;
   nsresult res;
+  
+  if (outLeftNode)  *outLeftNode  = nsnull;
+  if (outRightNode) *outRightNode = nsnull;
   
   while (nodeToSplit)
   {
@@ -4717,6 +4722,8 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
       bDoSplit = PR_TRUE;
       res = SplitNode(nodeToSplit, offset, getter_AddRefs(tempNode));
       if (NS_FAILED(res)) return res;
+      if (outRightNode) *outRightNode = nodeToSplit;
+      if (outLeftNode)  *outLeftNode  = tempNode;
     }
 
     res = nodeToSplit->GetParentNode(getter_AddRefs(parentNode));
@@ -4724,9 +4731,15 @@ nsEditor::SplitNodeDeep(nsIDOMNode *aNode,
     if (!parentNode) return NS_ERROR_FAILURE;
     
     if (!bDoSplit && offset)  // must be "end of text node" case, we didn't split it, just move past it
+    {
       offset = GetIndexOf(parentNode, nodeToSplit) +1;
+      if (outLeftNode)  *outLeftNode  = nodeToSplit;
+    }
     else
+    {
       offset = GetIndexOf(parentNode, nodeToSplit);
+      if (outRightNode) *outRightNode = nodeToSplit;
+    }
     
     if (nodeToSplit.get() == aNode)  // we split all the way up to (and including) aNode; we're done
       break;
