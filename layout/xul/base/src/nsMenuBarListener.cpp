@@ -50,6 +50,7 @@ NS_IMPL_RELEASE(nsMenuBarListener)
 
 ////////////////////////////////////////////////////////////////////////
 nsMenuBarListener::nsMenuBarListener(nsMenuBarFrame* aMenuBar) 
+:mAltKeyDown(PR_FALSE)
 {
   NS_INIT_REFCNT();
   mMenuBarFrame = aMenuBar;
@@ -186,21 +187,47 @@ nsMenuBarListener::MouseOut(nsIDOMEvent* aMouseEvent)
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyUp(nsIDOMEvent* aMouseEvent)
-{
+nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
+{  
+  // On a press of the ALT key by itself, we toggle the menu's 
+  // active/inactive state.
+  // Get the ascii key code.
+  nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
+  PRUint32 theChar;
+	theEvent->GetKeyCode(&theChar);
+  if (theChar == 18 && mAltKeyDown) {
+    // The ALT key was down and is now up.
+    mAltKeyDown = PR_FALSE;
+    mMenuBarFrame->ToggleMenuActiveState();
+  }
   return NS_OK; // means I am NOT consuming event
 }
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyDown(nsIDOMEvent* aMouseEvent)
+nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
+  nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
+  PRUint32 theChar;
+	theEvent->GetKeyCode(&theChar);
+  if (theChar == 18) {
+    // The ALT key just went down. Track this.
+    mAltKeyDown = PR_TRUE;
+  }
+
   return NS_OK; // means I am NOT consuming event
 }
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsMenuBarListener::KeyPress(nsIDOMEvent* aMouseEvent)
+nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  nsCOMPtr<nsIDOMUIEvent> theEvent = do_QueryInterface(aKeyEvent);
+
+  // On a press of the ALT key by itself, we toggle the menu's 
+  // active/inactive state.
+  // Test Alt attribute
+	PRBool isAlt = PR_FALSE;
+	theEvent->GetAltKey(&isAlt);
   return NS_OK; // means I am NOT consuming event
 }

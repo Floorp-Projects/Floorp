@@ -28,6 +28,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIDocument.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsXULAtoms.h"
 
 //
 // NS_NewMenuBarFrame
@@ -87,4 +88,46 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
   target->AddEventListenerByIID((nsIDOMMouseMotionListener*)mMenuBarListener, nsIDOMMouseMotionListener::GetIID());
 
   return rv;
+}
+
+void
+nsMenuBarFrame::ToggleMenuActiveState()
+{
+  if (IsActive()) {
+    // Deactivate the menu bar
+    mIsActive = PR_FALSE;
+    if (mCurrentMenu) {
+      // Deactivate the menu.
+      mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+      mCurrentMenu = nsnull;
+    }
+  }
+  else {
+    // Activate the menu bar
+    mIsActive = PR_TRUE;
+
+    // Set the active menu to be the top left item (e.g., the File menu).
+    // We use an attribute called "active" to track the current active menu.
+    nsCOMPtr<nsIContent> firstMenuItem;
+    GetFirstMenuItem(getter_AddRefs(firstMenuItem));
+    if (firstMenuItem) {
+      // Activate the item.
+      firstMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+
+      // Track this item for keyboard navigation.
+      mCurrentMenu = firstMenuItem.get();
+    }
+  }
+}
+
+void 
+nsMenuBarFrame::GetFirstMenuItem(nsIContent** aMenuItem)
+{
+  PRInt32 childCount;
+  *aMenuItem = nsnull;
+  mContent->ChildCount(childCount);
+  if (childCount > 0) {
+    // We have at least one menu item. Good. Fetch it.
+    mContent->ChildAt(0, *aMenuItem);
+  }
 }

@@ -56,7 +56,8 @@ public:
   NS_DECL_ISUPPORTS
 
 protected:
-  nsMenuBarFrame* mMenuBarFrame;
+  nsMenuBarFrame* mMenuBarFrame; // The menu bar object.
+  PRBool mAltKeyDown;            // Whether or not the ALT key is currently down.
 };
 
 

@@ -26,10 +26,10 @@
 #include "prtypes.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
-
 #include "nsToolbarFrame.h"
-
 #include "nsMenuBarListener.h"
+
+class nsIContent;
 
 nsresult NS_NewMenuBarFrame(nsIFrame** aResult) ;
 
@@ -46,10 +46,13 @@ public:
 
 // Non-interface helpers
   PRBool IsActive() { return mIsActive; };
+  void ToggleMenuActiveState();
+  void GetFirstMenuItem(nsIContent** aResult);
 
 protected:
-  nsMenuBarListener* mMenuBarListener;
-  PRBool mIsActive;
+  nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
+  PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
+  nsIContent* mCurrentMenu; // The current menu that is active.
 }; // class nsMenuBarFrame
 
 #endif
