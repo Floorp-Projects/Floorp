@@ -264,9 +264,16 @@ function DropOnFolderTree(event)
 	{
         if (isNews)
         {
+            try
+            {
             messenger.CopyMessages(treeDatabase,
                                    sourceRescource,
                                    targetNode, messageList, false);
+            }
+            catch(e);
+            {
+            dump ( "Exception : CopyMessages \n");
+            }
         }
         else
         {
@@ -280,9 +287,16 @@ function DropOnFolderTree(event)
 				else
 					gNextMessageAfterDelete = null;
 			}
+                        try {
 			messenger.CopyMessages(treeDatabase,
 									   sourceRescource,
 									   targetNode, messageList, !ctrlKeydown);
+                           }
+                           catch(e)
+                           {
+                              gNextMessageAfterDelete = null;
+                              dump ( "Exception : CopyMessages \n");
+                           }
         }
 	}
 	else
@@ -296,9 +310,16 @@ function DropOnFolderTree(event)
 			else
 				gNextMessageAfterDelete = null;
 		}
+                try {
 		messenger.CopyMessages(treeDatabase,
 							   sourceRescource,
 							   targetNode, messageList, !ctrlKeydown);
+                }
+                 catch(e)
+                 { 
+                   gNextMessageAfterDelete = null;
+                   dump ( "Exception : CopyMessages \n");
+                 }
 	}
 
 	return(false);
@@ -313,3 +334,4 @@ function DropOnThreadTree(event)
     
 	return false;
 }
+

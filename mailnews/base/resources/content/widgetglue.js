@@ -103,7 +103,15 @@ function RenameFolder(name,uri)
 	if (uri && (uri != "") && name && (name != "")) {
                 var selectedFolder = GetResourceFromUri(uri);
                 folderTree.clearItemSelection();
-                messenger.RenameFolder(GetFolderDatasource(), selectedFolder, name);
+                try
+                {
+                    messenger.RenameFolder(GetFolderDatasource(), selectedFolder, name);
+                }
+                catch(e)
+                {
+                    dump ("Exception : RenameFolder \n");
+                }
+
         }
         else {
                 dump("no name or nothing selected\n");
@@ -141,7 +149,13 @@ function MsgEmptyTrash()
                         tree.clearItemSelection();
                         RefreshThreadTreeView();
                     }
-                    messenger.EmptyTrash(tree.database, folder.resource);
+                    try {
+                          messenger.EmptyTrash(tree.database, folder.resource);
+                      }
+                      catch(e)
+                       {  
+                          dump ("Exception : messenger.EmptyTrash \n");
+                       }
                     if (trashSelected)
                     {
                         trashElement = document.getElementById(trashUri);
@@ -193,7 +207,14 @@ function MsgCompactFolder()
                     folderuri = folder.getAttribute('id');
                     dump(folderuri + "\n");
                     dump("folder = " + folder.localName + "\n"); 
-                    messenger.CompactFolder(tree.database, folder.resource);
+                    try
+                    {
+                      messenger.CompactFolder(tree.database, folder.resource);
+                    }
+                    catch(e)
+                    {
+                      dump ("Exception : messenger.CompactFolder \n");
+                    }
                 }
             }
             if (!isImap && selectedFolderUri && selectedFolderUri != "")
@@ -268,6 +289,5 @@ function LastToClose()
     else
         return false;
 }
-
 
 

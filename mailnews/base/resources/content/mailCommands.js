@@ -47,7 +47,16 @@ function DoRDFCommand(dataSource, command, srcArray, argumentArray)
 
 	var commandResource = RDF.GetResource(command);
 	if(commandResource)
+                try {
 		dataSource.DoCommand(srcArray, commandResource, argumentArray);
+                }
+                catch(e)
+                { 
+				   if ( command == "http://home.netscape.com/NC-rdf#ReallyDelete" || command == "http://home.netscape.com/NC-rdf#Delete" || command == "http://home.netscape.com/NC-rdf#Move" ) {
+				      gNextMessageAfterDelete =null;
+					  }
+                      dump (" Exception : In mail commands\n");
+                }
 }
 
 //Converts an array of messages into an nsISupportsArray of resources. 
@@ -514,4 +523,3 @@ function ViewPageSource(messages)
 							"view-source" );
 	}
 }
-

@@ -687,9 +687,14 @@ nsMsgFolderDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 		}
       }
     }
+	else 
+	{
+		rv = NS_ERROR_NOT_IMPLEMENTED;
+	}
   }
   //for the moment return NS_OK, because failure stops entire DoCommand process.
-  return NS_OK;
+  return rv;
+  //return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolderDataSource::OnItemAdded(nsISupports *parentItem, nsISupports *item, const char* viewString)
@@ -1520,11 +1525,12 @@ nsresult nsMsgFolderDataSource::DoCopyToFolder(nsIMsgFolder *dstFolder, nsISuppo
 	NS_WITH_SERVICE(nsIMsgCopyService, copyService, kMsgCopyServiceCID, &rv); 
 	if(NS_SUCCEEDED(rv))
 	{
-		copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
+		rv = copyService->CopyMessages(srcFolder, messageArray, dstFolder, isMove, 
                               nsnull, msgWindow);
 
 	}
-	return NS_OK;
+	return rv;
+	//return NS_OK;
 }
 
 nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
@@ -1700,5 +1706,4 @@ nsresult nsMsgFolderDataSource::GetFolderSortOrder(nsIMsgFolder *folder, PRInt32
 	return NS_OK;
 
 }
-
 
