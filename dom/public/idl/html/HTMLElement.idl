@@ -8,4 +8,11 @@
             attribute  DOMString            dir;
             attribute  DOMString            className;
 	    readonly attribute CSSStyleDeclaration style;
+
+	    /* Temporary till we find a place for them */
+	    readonly attribute int offsetTop;
+            readonly attribute int offsetLeft;
+            readonly attribute int offsetWidth;
+            readonly attribute int offsetHeight;
+            readonly attribute Element offsetParent;
  };

@@ -34,6 +34,7 @@
 #include "nsCOMPtr.h"
 #include "nsDOMPropEnums.h"
 #include "nsString.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 
@@ -41,6 +42,7 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kICSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 
@@ -53,7 +55,12 @@ enum HTMLElement_slots {
   HTMLELEMENT_LANG = -3,
   HTMLELEMENT_DIR = -4,
   HTMLELEMENT_CLASSNAME = -5,
-  HTMLELEMENT_STYLE = -6
+  HTMLELEMENT_STYLE = -6,
+  HTMLELEMENT_OFFSETTOP = -7,
+  HTMLELEMENT_OFFSETLEFT = -8,
+  HTMLELEMENT_OFFSETWIDTH = -9,
+  HTMLELEMENT_OFFSETHEIGHT = -10,
+  HTMLELEMENT_OFFSETPARENT = -11
 };
 
 /***********************************************************************/
@@ -172,6 +179,92 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMCSSStyleDeclaration* prop;
         nsresult result = NS_OK;
         result = a->GetStyle(&prop);
+        if (NS_SUCCEEDED(result)) {
+          // get the js object
+          nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case HTMLELEMENT_OFFSETTOP:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_OFFSETTOP, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRInt32 prop;
+        nsresult result = NS_OK;
+        result = a->GetOffsetTop(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case HTMLELEMENT_OFFSETLEFT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_OFFSETLEFT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRInt32 prop;
+        nsresult result = NS_OK;
+        result = a->GetOffsetLeft(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case HTMLELEMENT_OFFSETWIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_OFFSETWIDTH, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRInt32 prop;
+        nsresult result = NS_OK;
+        result = a->GetOffsetWidth(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case HTMLELEMENT_OFFSETHEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_OFFSETHEIGHT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        PRInt32 prop;
+        nsresult result = NS_OK;
+        result = a->GetOffsetHeight(&prop);
+        if (NS_SUCCEEDED(result)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return nsJSUtils::nsReportError(cx, obj, result);
+        }
+        break;
+      }
+      case HTMLELEMENT_OFFSETPARENT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLELEMENT_OFFSETPARENT, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
+        }
+        nsIDOMElement* prop;
+        nsresult result = NS_OK;
+        result = a->GetOffsetParent(&prop);
         if (NS_SUCCEEDED(result)) {
           // get the js object
           nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -352,6 +445,11 @@ static JSPropertySpec HTMLElementProperties[] =
   {"dir",    HTMLELEMENT_DIR,    JSPROP_ENUMERATE},
   {"className",    HTMLELEMENT_CLASSNAME,    JSPROP_ENUMERATE},
   {"style",    HTMLELEMENT_STYLE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetTop",    HTMLELEMENT_OFFSETTOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetLeft",    HTMLELEMENT_OFFSETLEFT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetWidth",    HTMLELEMENT_OFFSETWIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetHeight",    HTMLELEMENT_OFFSETHEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"offsetParent",    HTMLELEMENT_OFFSETPARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
