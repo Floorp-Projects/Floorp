@@ -166,11 +166,11 @@ native_netscape_javascript_JSObject_getMember(
 
     if (! name ||
         ! (cstr = JRI_GetStringPlatformChars(env, name,
-                       NULL, 0);
+                                             NULL, 0))) {
 
     /* XXX - temporarily replace arguments so we can compile
        (const jbyte *) cx->charSetName,
-       (jint) cx->charSetNameLength);
+       (jint) cx->charSetNameLength))) {
     */
 
         /* FIXME this should be an error of some sort */
@@ -247,11 +247,11 @@ native_netscape_javascript_JSObject_setMember(
 
     if (! name ||
         ! (cstr = JRI_GetStringPlatformChars(env, name,
-                                             NULL, 0) {
+                                             NULL, 0))) {
 
     /* XXX - temporarily replace arguments so we can compile
        (const jbyte *) cx->charSetName,
-       (jint) cx->charSetNameLength);
+       (jint) cx->charSetNameLength))) {
     */
 
         js_throwJSException(env, "illegal member name");
@@ -319,7 +319,7 @@ native_netscape_javascript_JSObject_removeMember(
 #ifdef JAVA
     if (! name ||
         ! (cstr = JRI_GetStringPlatformChars(env, name,
-                                             NULL, 0) {
+                                             NULL, 0))) {
 
     /* XXX - temporarily replace arguments so we can compile
        (const jbyte *) cx->charSetName,
@@ -368,11 +368,11 @@ native_netscape_javascript_JSObject_call(
 
     if (! method ||
         ! (cstr = JRI_GetStringPlatformChars(env, method,
-                                             NULL, 0) {
+                                             NULL, 0))) {
 
     /* XXX - temporarily replace arguments so we can compile
        (const jbyte *) cx->charSetName,
-       (jint) cx->charSetNameLength);
+       (jint) cx->charSetNameLength))) {
     */
         /* FIXME this should be an error of some sort */
         js_throwJSException(env, "illegal member name");
@@ -442,11 +442,11 @@ native_netscape_javascript_JSObject_eval(
 
     if (! s ||
         ! (cstr = JRI_GetStringPlatformChars(env, s,
-                                             NULL, 0) {
+                                             NULL, 0))) {
 
     /* XXX - temporarily replace arguments so we can compile
        (const jbyte *) cx->charSetName,
-       (jint) cx->charSetNameLength) {
+       (jint) cx->charSetNameLength))) {
     */
         /* FIXME this should be an error of some sort */
         js_throwJSException(env, "illegal eval string");

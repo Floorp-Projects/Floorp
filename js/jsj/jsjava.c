@@ -2716,7 +2716,9 @@ scanJSJavaReflectionEntry(PRHashEntry *he, int i, void *arg)
 
     /* scan the handle */
     if (1 /* jso != JSO_REFLECTION_IN_PROGRESS */) {
-	JSJava *java = JSVAL_TO_PRIVATE(OBJ_GET_SLOT(jso, JSSLOT_PRIVATE));
+      /* XXX - fur - temporary change to allow compilation
+         JSJava *java = JSVAL_TO_PRIVATE(OBJ_GET_SLOT(jso, JSSLOT_PRIVATE)); */
+	JSJava *java = JSVAL_TO_PRIVATE(jso->slots[JSSLOT_PRIVATE]);
 
 	args->gcInfo->livePointer((void *)java->handle);
     }
