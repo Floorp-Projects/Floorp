@@ -269,6 +269,8 @@ public:
 
     NS_IMETHOD OnFull(nsIBuffer* buffer) = 0;
 
+    NS_IMETHOD OnWrite(nsIBuffer*, PRUint32 amount) = 0;
+
     NS_IMETHOD OnEmpty(nsIBuffer* buffer) = 0;
 };
 

@@ -496,15 +496,21 @@ NS_IMETHODIMP
 nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                         PRUint32 *writeCount)
 {
-    nsAutoCMonitor mon(this);
-    nsresult rv;
-    if (mReaderClosed)
-        return NS_BASE_STREAM_CLOSED;
+    nsresult rv = NS_OK;
 
-    if (NS_FAILED(mCondition))
-        return mCondition;
-
+    PR_CEnterMonitor(this);
     *writeCount = 0;
+
+    if (mReaderClosed) {
+        rv = NS_BASE_STREAM_CLOSED;
+        goto done;
+    }
+
+    if (NS_FAILED(mCondition)) {
+        rv = mCondition;
+        goto done;
+    }
+
     while (count > 0) {
         PRUint32 writeBufLen;
         char* writeBuf;
@@ -513,7 +519,8 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
             // if we failed to allocate a new segment, we're probably out
             // of memory, but we don't care -- just report what we were
             // able to write so far
-            return (*writeCount == 0) ? rv : NS_OK;
+            rv = (*writeCount == 0) ? rv : NS_OK;
+            goto done;
         }
 
         writeBufLen = PR_MIN(writeBufLen, count);
@@ -523,7 +530,8 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
             if (rv == NS_BASE_STREAM_WOULD_BLOCK || readCount == 0) {
                 // if the place we're putting the data would block (probably ran
                 // out of room) just return what we were able to write so far
-                return (*writeCount == 0) ? rv : NS_OK;
+                rv = (*writeCount == 0) ? rv : NS_OK;
+                goto done;
             }
             if (NS_FAILED(rv)) {
                 // save the failure condition so that we can get it again later
@@ -531,7 +539,8 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                 NS_ASSERTION(NS_SUCCEEDED(rv2), "SetCondition failed");
                 // if we failed to read just report what we were
                 // able to write so far
-                return (*writeCount == 0) ? rv : NS_OK;
+                rv = (*writeCount == 0) ? rv : NS_OK;
+                goto done;
             }
             NS_ASSERTION(readCount <= writeBufLen, "reader returned bad readCount");
             writeBuf += readCount;
@@ -549,7 +558,13 @@ nsBuffer::WriteSegments(nsReadSegmentFun reader, void* closure, PRUint32 count,
                 mWriteCursor += readCount;
         }
     }
-    return NS_OK;
+done:
+    PR_CExitMonitor(this);
+
+    if (mObserver && *writeCount) {
+        mObserver->OnWrite(this, *writeCount);
+    }
+    return rv;
 }
 
 static NS_METHOD
