@@ -1121,7 +1121,7 @@ nsIFontMetrics  *fMetrics;
 	    mFontMetrics->GetMaxAscent(ascent);
 	    y += ascent;
       mTMatrix->TransformCoord(&x, &y);
-	    PostscriptTextOut((const char *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
+	    PostscriptTextOut((PRUnichar *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
       aX += *aSpacing++;
       aString++;
     }
@@ -1131,7 +1131,7 @@ nsIFontMetrics  *fMetrics;
 	  mFontMetrics->GetMaxAscent(ascent);
 	  y += ascent;
     mTMatrix->TransformCoord(&x, &y);
-	  PostscriptTextOut((const char *)aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
+	  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
   }
 
   fMetrics = mFontMetrics;
@@ -1328,48 +1328,47 @@ nsAutoString    fontFamily;
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextPS.h
- *	@update 12/21/98 dwc
+ *	@update 3/24/2000 yueheng.xu@intel.com
  */
 void 
 nsRenderingContextPS :: PostscriptTextOut(const char *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing, PRBool aIsUnicode)
 {
-int             ptr = 0;
-unsigned int    i;
-char            *buf = 0;
 nscoord         fontHeight = 0;
-//nscoord 	yCoord;
 const nsFont    *font;
 
   mFontMetrics->GetHeight(fontHeight);
   mFontMetrics->GetFont(font);
 
-  //yCoord = aY + (fontHeight / 2);
-	//nscoord ascent = 0;
-	//mFontMetrics->GetMaxAscent(ascent);
-  // convert the ascent to points
-  //ascent = ascent/20;
-
-
-  //yCoord = aY + ascent;
-
   mPSObj->moveto(aX, aY);
-  if (PR_TRUE == aIsUnicode) {
-    //XXX: Investigate how to really do unicode with Postscript
-	  // Just remove the extra byte per character and draw that instead
-    buf = new char[aLength];
-
-    for (i = 0; i < aLength; i++) {
-      buf[i] = aString[ptr];
-	    ptr+=2;
-	  }
-	mPSObj->show(buf, aLength, "");
-	delete buf;
-  } else {
-    mPSObj->show((char *)aString, aLength, "");
+  if (PR_TRUE != aIsUnicode) {
+	  mPSObj->show(aString, aLength, "");	
   }
 }
+
+
+/** ---------------------------------------------------
+ *  See documentation in nsRenderingContextPS.h
+ *	@update 3/24/2000 yueheng.xu@intel.com
+ */
+void 
+nsRenderingContextPS :: PostscriptTextOut(const PRUnichar *aString, PRUint32 aLength,
+                                    nscoord aX, nscoord aY, PRInt32 aFontID,
+                                    const nscoord* aSpacing, PRBool aIsUnicode)
+{
+nscoord         fontHeight = 0;
+const nsFont    *font;
+
+  mFontMetrics->GetHeight(fontHeight);
+  mFontMetrics->GetFont(font);
+
+  mPSObj->moveto(aX, aY);
+  if (PR_TRUE == aIsUnicode) {  
+	   mPSObj->show(aString, aLength, "");
+  }
+}
+
 
 
 #ifdef NOTNOW
