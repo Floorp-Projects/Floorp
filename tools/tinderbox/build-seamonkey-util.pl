@@ -1,11 +1,63 @@
 #!/usr/bin/perl
+#
+# Requires: tinder-defaults.pl
+#
+# Intent: This is becoming a general-purpose tinderbox
+#         script, specific uses (mozilla, commercial, etc.) should
+#         set variables and then call into this script.
+#
+# Status: In the process of re-arranging things so a commercial
+#         version can re-use this script.
+#
 
 require 5.000;
 
 use Sys::Hostname;
 use strict;
 
-package TinderboxClientUtils;
+package TinderUtils;
+
+{
+
+  my $tinder_defaults = "tinder-defaults.pl";
+
+
+sub InitVars {
+    local $_;
+    for (@ARGV) {
+        # Save DATA section for printing the example.
+        return if /^--example-config$/;
+    }
+    no strict 'vars';
+
+	open DEFAULTS, $tinder_defaults or print "can't open $tinder_defaults, $?\n";
+	
+    while (<DEFAULTS>) {
+      package Settings;
+      #warn "config:$_";
+      eval;
+    }
+
+	close DEFAULTS;
+
+}
+
+sub PrintExampleConfig {
+    local $_;
+    print "#- tinder-config.pl - Tinderbox configuration file.\n";
+    print "#-    Uncomment the variables you need to set.\n";
+    print "#-    The default values are the same as the commented variables.\n";
+    print "\n";
+    
+	open DEFAULTS, $tinder_defaults or print "can't open $tinder_defaults, $!\n";
+    while (<DEFAULTS>) {
+        s/^\$/\#\$/;
+        print;
+    }
+	close DEFAULTS;
+}
+
+}
 
 sub GetSystemInfo {
     $Settings::OS = `uname -s`;

@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.90 $ ';
+$::Version = '$Revision: 1.91 $ ';
 
 # "use strict" complains if we do not define these.
 # They are not initialized here. The default values are after "__END__".
@@ -47,46 +47,20 @@ END_USAGE
 }
 
 {
-    InitVars();
+    TinderUtils::InitVars();
     my $args = ParseArgs();
     ConditionalArgs();
-    TinderboxClientUtils::GetSystemInfo();
-    TinderboxClientUtils::LoadConfig();
+    TinderUtils::GetSystemInfo();
+    TinderUtils::LoadConfig();
     ApplyArgs($args); # Apply command-line arguments after the config file.
-    TinderboxClientUtils::SetupEnv();
-    TinderboxClientUtils::SetupPath();
+    TinderUtils::SetupEnv();
+    TinderUtils::SetupPath();
     BuildIt();
 }
 
 # End of main
 #======================================================================
 
-sub InitVars {
-    local $_;
-    for (@ARGV) {
-        # Save DATA section for printing the example.
-        return if /^--example-config$/;
-    }
-    no strict 'vars';
-    while (<DATA>) {
-      package Settings;
-      #warn "config:$_";
-      eval;
-    }
-}
-
-sub PrintExampleConfig {
-    local $_;
-    print "#- tinder-config.pl - Tinderbox configuration file.\n";
-    print "#-    Uncomment the variables you need to set.\n";
-    print "#-    The default values are the same as the commented variables.\n";
-    print "\n";
-    
-    while (<DATA>) {
-        s/^\$/\#\$/;
-        print;
-    }
-}
 
 sub ParseArgs {
     PrintUsage() if $#ARGV == -1;
@@ -95,7 +69,7 @@ sub ParseArgs {
     while (my $arg = shift @ARGV) {
         $Settings::BuildDepend = 0, next if $arg eq '--clobber';
         $Settings::BuildDepend = 1, next if $arg eq '--depend';
-        PrintExampleConfig(), exit if $arg eq '--example-config';
+        TinderUtils::PrintExampleConfig(), exit if $arg eq '--example-config';
         PrintUsage(), exit if $arg eq '--help' or $arg eq '-h';
         $args->{ReportStatus} = 0, next if $arg eq '--noreport';
         $args->{ReportFinalStatus} = 0, next if $arg eq '--nofinalreport';
@@ -782,63 +756,3 @@ sub BloatTest {
     
     return 'success';
 }
-
-
-__END__
-#- PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
-$BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
-
-#- You'll need to change these to suit your machine's needs
-$BaseDir       = '/builds/tinderbox/SeaMonkey';
-$DisplayServer = ':0.0';
-
-#- Default values of command-line opts
-#-
-$BuildDepend       = 1;      # Depend or Clobber
-$ReportStatus      = 1;      # Send results to server, or not
-$ReportFinalStatus = 1;      # Finer control over $ReportStatus.
-$UseTimeStamp      = 1;      # Use the CVS 'pull-by-timestamp' option, or not
-$BuildOnce         = 0;      # Build once, don't send results to server
-$RunTest           = 1;      # Run the smoke tests on successful build, or not
-$TestOnly          = 0;      # Only run tests, don't pull/build
-# Tests
-$AliveTest = 1;
-$ViewerTest = 0;
-$BloatTest = 0;
-$DomToTextConversionTest = 0;
-$MailNewsTest = 0;
-$MozConfigFileName = 'mozconfig';
-$MozProfileName = 'mozProfile';
-
-#- Set these to what makes sense for your system
-$Make          = 'gmake';       # Must be GNU make
-$MakeOverrides = '';
-$mail          = '/bin/mail';
-$CVS           = 'cvs -q';
-$CVSCO         = 'checkout -P';
-
-#- Set these proper values for your tinderbox server
-$Tinderbox_server = 'tinderbox-daemon@tinderbox.mozilla.org';
-
-#-
-#- The rest should not need to be changed
-#-
-
-#- Minimum wait period from start of build to start of next build in minutes.
-$BuildSleep = 10;
-
-#- Until you get the script working. When it works,
-#- change to the tree you're actually building
-$BuildTree  = 'MozillaTest'; 
-
-$BuildName = '';
-$BuildTag = '';
-$BuildConfigDir = 'mozilla/config';
-$Topsrcdir = 'mozilla';
-$BinaryName = 'mozilla-bin';
-$ShellOverride = ''; # Only used if the default shell is too stupid
-$ConfigureArgs = '';
-$ConfigureEnvArgs = '';
-$Compiler = 'gcc';
-$NSPRArgs = '';
-$ShellOverride = '';
