@@ -722,13 +722,13 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
       pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
       getter_AddRefs(eventQ));
     nsCOMPtr <nsIURI> url;
-    rv = imapService->SelectFolder(eventQ, this, this, msgWindow, getter_AddRefs(url));
-    if (url && m_urlListener)
+    rv = imapService->SelectFolder(eventQ, this, m_urlListener, msgWindow, getter_AddRefs(url));
+    if (url)
     {
       nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(url);
       if (mailnewsUrl)
       {
-        mailnewsUrl->RegisterListener(m_urlListener);
+        mailnewsUrl->RegisterListener(this);
         m_urlListener = nsnull;
       }
     }
