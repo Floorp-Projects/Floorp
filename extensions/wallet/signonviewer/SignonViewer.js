@@ -34,10 +34,12 @@ var goneSS              = ""; // signon
 var goneIS              = ""; // ignored site
 var goneNP              = ""; // nopreview
 var goneNC              = ""; // nocapture
-var deleted_signons_count = 1;
-var deleted_rejects_count = 1;
-var deleted_nopreviews_count = 1;
-var deleted_nocaptures_count = 1;
+var deleted_signons_count = 0;
+var deleted_rejects_count = 0;
+var deleted_nopreviews_count = 0;
+var deleted_nocaptures_count = 0;
+var nopreviews_count = 0;
+var nocaptures_count = 0;
 var pref;
 
 // function : <SignonViewer.js>::Startup();
@@ -172,10 +174,16 @@ function LoadSignons()
 // purpose  : deletes a particular signon
 function DeleteSignon()
 {
-  deleted_signons_count += document.getElementById("signonstree").selectedItems.length;
+  var signonstree = document.getElementById("signonstree");
+  deleted_signons_count += signonstree.selectedItems.length;
+  var newIndex = signonstree.selectedIndex;
   goneSS += DeleteItemSelected('signonstree','signon_','savesignonlist');
+  var netSignonsCount = signons.length - deleted_signons_count;
+  if (netSignonsCount) {
+    signonstree.selectedIndex = (newIndex < netSignonsCount) ? newIndex : netSignonsCount-1;
+  }
   DoButtonEnabling("signonstree");
-  if (deleted_signons_count >= signons.length) {
+  if (netSignonsCount <= 0) {
     document.getElementById("removeAllSignons").setAttribute("disabled","true");
   }
 }
@@ -230,10 +238,16 @@ function LoadReject()
 // purpose  : deletes ignored site(s)
 function DeleteIgnoredSite()
 {
-  deleted_rejects_count += document.getElementById("ignoretree").selectedItems.length;
+  var ignoretree = document.getElementById("ignoretree");
+  deleted_rejects_count += ignoretree.selectedItems.length;
+  var newIndex = ignoretree.selectedIndex;
   goneIS += DeleteItemSelected('ignoretree','reject_','ignoredlist');
+  var netRejectsCount = rejects.length - deleted_rejects_count;
+  if (netRejectsCount) {
+    ignoretree.selectedIndex = (newIndex < netRejectsCount) ? newIndex : netRejectsCount-1;
+  }
   DoButtonEnabling("ignoretree");
-  if (deleted_rejects_count >= rejects.length) {
+  if (netRejectsCount <= 0) {
     document.getElementById("removeAllSites").setAttribute("disabled","true");
   }
 }
@@ -267,7 +281,8 @@ function LoadNopreview()
     currSignon = RemoveHTMLFormatting(currSignon);
     AddItem("nopreviewlist",[currSignon],"nopreview_",i-1);
   }
-  if (deleted_nopreviews_count >= nopreviewList.length) {
+  nopreviews_count = nopreviewList.length-1;
+  if (nopreviews_count == 0) {
     document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
   }
 }
@@ -276,10 +291,16 @@ function LoadNopreview()
 // purpose  : deletes no-preview entry(s)
 function DeleteNoPreviewForm()
 {
-  deleted_nopreviews_count += document.getElementById("nopreviewtree").selectedItems.length;
+  var nopreviewtree = document.getElementById("nopreviewtree");
+  deleted_nopreviews_count += nopreviewtree.selectedItems.length;
+  var newIndex = nopreviewtree.selectedIndex;
   goneNP += DeleteItemSelected('nopreviewtree','nopreview_','nopreviewlist');
+  var netNopreviewsCount = nopreviews_count - deleted_nopreviews_count;
+  if (netNopreviewsCount) {
+    nopreviewtree.selectedIndex = (newIndex < netNopreviewsCount) ? newIndex : netNopreviewsCount-1;
+  }
   DoButtonEnabling("nopreviewtree");
-  if (deleted_nopreviews_count >= nopreviewList.length) {
+  if (netNopreviewsCount <= 0) {
     document.getElementById("removeAllNopreviews").setAttribute("disabled","true");
   }
 }
@@ -313,7 +334,8 @@ function LoadNocapture()
     currSignon = RemoveHTMLFormatting(currSignon);
     AddItem("nocapturelist",[currSignon],"nocapture_",i-1);
   }
-  if (deleted_nocaptures_count >= nocaptureList.length) {
+  nocaptures_count = nocaptureList.length-1;
+  if (nocaptures_count == 0) {
     document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
   }
 }
@@ -322,10 +344,16 @@ function LoadNocapture()
 // purpose  : deletes no-capture entry(s)
 function DeleteNoCaptureForm()
 {
-  deleted_nocaptures_count += document.getElementById("nocapturetree").selectedItems.length;
+  var nocapturetree = document.getElementById("nocapturetree");
+  deleted_nocaptures_count += nocapturetree.selectedItems.length;
+  var newIndex = nocapturetree.selectedIndex;
   goneNC += DeleteItemSelected('nocapturetree','nocapture_','nocapturelist');
+  var netNocapturesCount = nocaptures_count - deleted_nocaptures_count;
+  if (netNocapturesCount) {
+    nocapturetree.selectedIndex = (newIndex < netNocapturesCount) ? newIndex : netNocapturesCount-1;
+  }
   DoButtonEnabling("nocapturetree");
-  if (deleted_nocaptures_count >= nocaptureList.length) {
+  if (netNocapturesCount <= 0) {
     document.getElementById("removeAllNocaptures").setAttribute("disabled","true");
   }
 }

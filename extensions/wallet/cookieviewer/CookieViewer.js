@@ -248,7 +248,9 @@ function ViewCookieSelected( e )
 // purpose  : deletes all the cookies that are selected
 function DeleteCookieSelected() {
   // delete selected item
-  deleted_cookies_count += document.getElementById("cookietree").selectedItems.length;
+  var cookietree = document.getElementById("cookietree");
+  deleted_cookies_count += cookietree.selectedItems.length;
+  var newIndex = cookietree.selectedIndex;
   gone_c += DeleteItemSelected("cookietree", "cookietree_", "cookieList");
   // set fields
   var rows = ["ifl_name","ifl_value","ifl_host","ifl_path","ifl_isSecure","ifl_expires"];
@@ -257,12 +259,17 @@ function DeleteCookieSelected() {
     var row = document.getElementById(rows[k]);
     row.setAttribute("value","");
   }
-  if( !document.getElementById("cookietree").selectedItems.length ) {
+  var netCookieCount = cookies.length - deleted_cookies_count;
+  if (netCookieCount) {
+    cookietree.selectedIndex =
+      (newIndex < netCookieCount) ? newIndex : netCookieCount-1;
+  }
+  if( !cookietree.selectedItems.length ) {
     if( !document.getElementById("removeCookies").disabled ) {
       document.getElementById("removeCookies").setAttribute("disabled", "true")
     }
   }
-  if (deleted_cookies_count >= cookies.length) {
+  if (netCookieCount <= 0) {
     document.getElementById("removeAllCookies").setAttribute("disabled","true");
   }
 }
@@ -376,15 +383,22 @@ function ViewCookiePermissionSelected()
 
 function DeleteCookiePermissionSelected()
 {
-  deleted_cookie_permissions_count +=
-    document.getElementById("cookiepermissionstree").selectedItems.length;
+  var cookiepermissiontree = document.getElementById("cookiepermissionstree");
+  deleted_cookie_permissions_count += cookiepermissiontree.selectedItems.length;
+  var newIndex = cookiepermissiontree.selectedIndex;
   gone_p += DeleteItemSelected('cookiepermissionstree', 'cookiepermtree_', 'cookiePermList');
-  if( !document.getElementById("cookiepermissionstree").selectedItems.length ) {
+  var netCookiePermissionCount =
+    cookie_permissions_count - deleted_cookie_permissions_count;
+  if (netCookiePermissionCount) {
+    cookiepermissiontree.selectedIndex =
+      (newIndex < netCookiePermissionCount) ? newIndex : netCookiePermissionCount-1;
+  }
+  if( !cookiepermissiontree.selectedItems.length ) {
     if( !document.getElementById("removePermissions").disabled ) {
       document.getElementById("removePermissions").setAttribute("disabled", "true")
     }
   }
-  if (deleted_cookie_permissions_count >= cookie_permissions_count) {
+  if (netCookiePermissionCount <= 0) {
     document.getElementById("removeAllPermissions").setAttribute("disabled","true");
   }
 }
@@ -409,15 +423,22 @@ function ViewImagePermissionSelected()
 
 function DeleteImagePermissionSelected()
 {
-  deleted_image_permissions_count
-    += document.getElementById("imagepermissionstree").selectedItems.length;
+  var imagepermissiontree = document.getElementById("imagepermissionstree");
+  deleted_image_permissions_count += imagepermissiontree.selectedItems.length;
+  var newIndex = imagepermissiontree.selectedIndex;
   gone_i += DeleteItemSelected('imagepermissionstree', 'imagepermtree_', 'imagePermList');
-  if( !document.getElementById("imagepermissionstree").selectedItems.length ) {
+  var netImagePermissionCount =
+    image_permissions_count - deleted_image_permissions_count;
+  if (netImagePermissionCount) {
+    imagepermissiontree.selectedIndex =
+      (newIndex < netImagePermissionCount) ? newIndex : netImagePermissionCount-1;
+  }
+  if( !imagepermissiontree.selectedItems.length ) {
     if( !document.getElementById("removeImages").disabled ) {
       document.getElementById("removeImages").setAttribute("disabled", "true")
     }
   }
-  if (deleted_image_permissions_count >= image_permissions_count) {
+  if (netImagePermissionCount <= 0) {
     document.getElementById("removeAllImages").setAttribute("disabled","true");
   }
 }
