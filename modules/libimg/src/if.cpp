@@ -1874,14 +1874,11 @@ IL_GetImage(const char* image_url,
     ic->net_cx->AddReferer(url);
 #endif
 
-#if 0
-/* This change is not fully merged from the MODULAR_IMGLIB_BRANCH landing. */
     /* EXTREME HACK ALERT!
        Special signal for Composer (Editor)
        This will be used in IL_ViewStream to tell we are an editor
        and use IL_NewStream instead (as we did in 4.06 code) */
-    urls->owner_id = (int)flags;
-#endif
+    url->SetOwnerId((int)flags);
     
     ic->is_looping = FALSE;
     ic->url = url;
