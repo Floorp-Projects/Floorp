@@ -45,9 +45,12 @@
 #include "nsIObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPCScriptNotify.h"
+#include "nsITimerCallback.h"
 
 
-class nsJSContext : public nsIScriptContext, public nsIXPCScriptNotify
+class nsJSContext : public nsIScriptContext,
+                    public nsIXPCScriptNotify,
+                    public nsITimerCallback
 {
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -127,10 +130,15 @@ public:
   NS_IMETHOD SetGCOnDestruction(PRBool aGCOnDestruction);
 
   NS_DECL_NSIXPCSCRIPTNOTIFY
+
+  NS_IMETHOD_(void) Notify(nsITimer *timer);
+
 protected:
   nsresult InitClasses();
   nsresult InitializeExternalClasses();
   nsresult InitializeLiveConnectClasses();
+
+  void FireGCTimer();
 
 private:
   JSContext *mContext;
@@ -165,24 +173,20 @@ private:
 
 class nsIJSRuntimeService;
 
-class nsJSEnvironment: public nsIObserver {
+class nsJSEnvironment
+{
 private:
-  JSRuntime *mRuntime;
-  nsIJSRuntimeService* mRuntimeService; /* XXXbe nsCOMPtr to service */
+  static JSRuntime *sRuntime;
+  static nsIJSRuntimeService *sRuntimeService;
 
 public:
-  static nsJSEnvironment *sTheEnvironment;
-
-  nsJSEnvironment();
-  virtual ~nsJSEnvironment();
-
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIOBSERVER
-
-  nsIScriptContext* GetNewContext();
+  static nsresult Init();
 
   static nsJSEnvironment *GetScriptingEnvironment();
 
+  static nsresult CreateNewContext(nsIScriptContext **aContext);
+
+  static void ShutDown();
 };
 
 /* prototypes */

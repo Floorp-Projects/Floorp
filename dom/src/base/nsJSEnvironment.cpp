@@ -73,6 +73,7 @@
 #include "nsGUIEvent.h"
 #include "nsScriptNameSpaceManager.h"
 #include "nsIThread.h"
+#include "nsITimer.h"
 #include "nsDOMClassInfo.h"
 
 #ifdef MOZ_LOGGING
@@ -92,6 +93,13 @@ static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gJSDiagnostics = nsnull;
 #endif
+
+
+#define NS_GC_DELAY                2000 // ms
+#define NS_FIRST_GC_DELAY          10000 // ms
+
+static nsITimer *sGCTimer = nsnull;
+static PRBool sReadyForGC = PR_FALSE;
 
 nsScriptNameSpaceManager *gNameSpaceManager;
 
@@ -431,13 +439,26 @@ nsJSContext::~nsJSContext()
   // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
   if (xpc) {
-    xpc->ReleaseJSContext(mContext, !mGCOnDestruction);
+    PRBool do_gc = mGCOnDestruction && !sGCTimer && sReadyForGC;
+
+    xpc->ReleaseJSContext(mContext, !do_gc);
   } else {
     ::JS_DestroyContext(mContext);
   }
 }
 
-NS_IMPL_ISUPPORTS2(nsJSContext, nsIScriptContext, nsIXPCScriptNotify)
+// QueryInterface implementation for nsJSContext
+NS_INTERFACE_MAP_BEGIN(nsJSContext)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptContext)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptNotify)
+  NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptContext)
+NS_INTERFACE_MAP_END
+
+
+NS_IMPL_ADDREF(nsJSContext)
+NS_IMPL_RELEASE(nsJSContext)
+
 
 NS_IMETHODIMP
 nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
@@ -1411,7 +1432,8 @@ nsJSContext::IsContextInitialized()
 NS_IMETHODIMP
 nsJSContext::GC()
 {
-  ::JS_GC(mContext);
+  FireGCTimer();
+
   return NS_OK;
 }
 
@@ -1532,20 +1554,55 @@ nsJSContext::ScriptExecuted()
   return ScriptEvaluated(PR_FALSE);
 }
 
-nsJSEnvironment *nsJSEnvironment::sTheEnvironment = nsnull;
-
-nsJSEnvironment *
-nsJSEnvironment::GetScriptingEnvironment()
+NS_IMETHODIMP_(void)
+nsJSContext::Notify(nsITimer *timer)
 {
-  if (nsnull == sTheEnvironment) {
-    sTheEnvironment = new nsJSEnvironment();
-    NS_IF_ADDREF(sTheEnvironment); // released in |Observe|
-  }
-  return sTheEnvironment;
+  NS_ASSERTION(mContext, "No context in nsJSContext::Notify()!");
+
+  ::JS_GC(mContext);
+
+  sReadyForGC = PR_TRUE;
+
+  NS_RELEASE(sGCTimer);
 }
 
+void
+nsJSContext::FireGCTimer()
+{
+  if (sGCTimer) {
+    // There's already a timer for GC'ing, just clear newborn roots
+    // and return
+
+    ::JS_ClearNewbornRoots(mContext);
+
+    return;
+  }
+
+  nsComponentManager::CreateInstance("@mozilla.org/timer;1",
+                                     nsnull,
+                                     NS_GET_IID(nsITimer),
+                                     (void **)&sGCTimer);
+
+  if (!sGCTimer) {
+    NS_WARNING("Failed to create timer");
+
+    ::JS_GC(mContext);
+
+    return;
+  }
+
+  static PRBool first = PR_TRUE;
+
+  sGCTimer->Init(this, first ? NS_FIRST_GC_DELAY : NS_GC_DELAY,
+                 NS_PRIORITY_LOWEST);
+
+  first = PR_FALSE;
+}
+
+nsIJSRuntimeService *nsJSEnvironment::sRuntimeService = nsnull;
+JSRuntime *nsJSEnvironment::sRuntime = nsnull;
+
 const char kJSRuntimeServiceContractID[] = "@mozilla.org/js/xpc/RuntimeService;1";
-static int globalCount;
 static PRThread *gDOMThread;
 
 static JSGCCallback gOldJSGCCallback;
@@ -1558,31 +1615,23 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
   return gOldJSGCCallback ? gOldJSGCCallback(cx, status) : JS_TRUE;
 }
 
-nsJSEnvironment::nsJSEnvironment()
+// static
+nsresult nsJSEnvironment::Init()
 {
-  NS_INIT_ISUPPORTS();
+  static PRBool isInitialized = PR_FALSE;
 
-  // So that we get deleted on XPCOM shutdown, set up an
-  // observer.
-  nsresult rv;
-  nsCOMPtr<nsIObserverService> observerService = 
-           do_GetService("@mozilla.org/observer-service;1", &rv);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "going to leak a nsJSEnvironment");
-  if (NS_SUCCEEDED(rv))
-  {
-    observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
+  if (isInitialized) {
+    return NS_OK;
   }
 
-  mRuntimeService = nsnull;
-  rv = nsServiceManager::GetService(kJSRuntimeServiceContractID,
-                                    NS_GET_IID(nsIJSRuntimeService),
-                                    (nsISupports**)&mRuntimeService);
+  nsresult rv = nsServiceManager::GetService(kJSRuntimeServiceContractID,
+                                             NS_GET_IID(nsIJSRuntimeService),
+                                             (nsISupports**)&sRuntimeService);
   // get the JSRuntime from the runtime svc, if possible
-  if (NS_FAILED(rv))
-    return;                     // XXX swallow error! need Init()?
-  rv = mRuntimeService->GetRuntime(&mRuntime);
-  if (NS_FAILED(rv))
-    return;                     // XXX swallow error! need Init()?
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = sRuntimeService->GetRuntime(&sRuntime);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   gDOMThread = PR_GetCurrentThread();
 
@@ -1599,8 +1648,10 @@ nsJSEnvironment::nsJSEnvironment()
   }
 #endif
 
-  NS_ASSERTION(!gOldJSGCCallback, "nsJSEnvironment created more than once");
-  gOldJSGCCallback = ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
+  NS_ASSERTION(!gOldJSGCCallback,
+               "nsJSEnvironment initialized more than once");
+
+  gOldJSGCCallback = ::JS_SetGCCallbackRT(sRuntime, DOMGCCallback);
 
   // Set these global xpconnect options...
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
@@ -1615,67 +1666,73 @@ nsJSEnvironment::nsJSEnvironment()
   nsCOMPtr<nsILiveConnectManager> manager = 
            do_GetService(nsIJVMManager::GetCID(), &rv);
 
-  // Should the JVM manager perhaps define methods for starting up LiveConnect?
+  // Should the JVM manager perhaps define methods for starting up
+  // LiveConnect?
   if (NS_SUCCEEDED(rv) && manager != nsnull) {
     PRBool started = PR_FALSE;
-    rv = manager->StartupLiveConnect(mRuntime, started);
+    rv = manager->StartupLiveConnect(sRuntime, started);
   }
 
-  globalCount++;
+  isInitialized = NS_SUCCEEDED(rv);
+
+  return rv;
 }
 
-nsJSEnvironment::~nsJSEnvironment()
+// static
+void nsJSEnvironment::ShutDown()
 {
-  if (--globalCount == 0) {
-    delete gNameSpaceManager;
-    gNameSpaceManager = nsnull;
+  if (sGCTimer) {
+    // We're being shut down, if we have a GC timer scheduled, cancel
+    // it. The DOM factory will do one final GC once it's shut down.
+
+    sGCTimer->Cancel();
+
+    NS_RELEASE(sGCTimer);
   }
 
-  if (mRuntimeService)
+  delete gNameSpaceManager;
+  gNameSpaceManager = nsnull;
+
+  if (sRuntimeService) {
     nsServiceManager::ReleaseService(kJSRuntimeServiceContractID,
-                                     mRuntimeService);
+                                     sRuntimeService);
+  }
 }
 
-NS_IMPL_ISUPPORTS1(nsJSEnvironment,nsIObserver);
-
-NS_IMETHODIMP nsJSEnvironment::Observe(nsISupports *aSubject,
-                                       const char *aTopic,
-                                       const PRUnichar *someData)
+// static
+nsresult
+nsJSEnvironment::CreateNewContext(nsIScriptContext **aContext)
 {
-  NS_ASSERTION(!nsCRT::strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID),
-               "not shutdown");
-  NS_RELEASE_THIS(); // release ref from |GetScriptingEnvironment|
+  *aContext = new nsJSContext(sRuntime);
+  NS_ENSURE_TRUE(*aContext, NS_ERROR_OUT_OF_MEMORY);
+
+  NS_ADDREF(*aContext);
   return NS_OK;
-}
-
-nsIScriptContext* nsJSEnvironment::GetNewContext()
-{
-  nsIScriptContext *context;
-  context = new nsJSContext(mRuntime);
-  NS_ADDREF(context);
-  return context;
 }
 
 nsresult
 NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
                        nsIScriptContext **aContext)
 {
-  nsJSEnvironment *environment = nsJSEnvironment::GetScriptingEnvironment();
-  if (!environment)
-    return NS_ERROR_OUT_OF_MEMORY;
+  nsresult rv = nsJSEnvironment::Init();
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  nsIScriptContext *scriptContext = environment->GetNewContext();
-  if (!scriptContext)
-    return NS_ERROR_OUT_OF_MEMORY;
-  *aContext = scriptContext;
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  rv = nsJSEnvironment::CreateNewContext(getter_AddRefs(scriptContext));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Bind the script context and the global object
-  nsresult rv = scriptContext->InitContext(aGlobal);
+  rv = scriptContext->InitContext(aGlobal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aGlobal) {
     rv = aGlobal->SetContext(scriptContext);
+    NS_ENSURE_SUCCESS(rv, rv);
   }
+
+  *aContext = scriptContext;
+
+  NS_ADDREF(*aContext);
 
   return rv;
 }

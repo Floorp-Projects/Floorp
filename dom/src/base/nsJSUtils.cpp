@@ -177,11 +177,7 @@ nsJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
   while ((parent = ::JS_GetParent(aContext, glob)))
     glob = parent;
 
-#ifdef JS_THREADSAFE
-  clazz = ::JS_GetClass(aContext, glob);
-#else
-  clazz = ::JS_GetClass(glob);
-#endif
+  clazz = JS_GET_CLASS(aContext, glob);
 
   if (!clazz ||
       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
