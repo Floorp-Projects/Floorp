@@ -24,13 +24,9 @@
 
 #include <LowMem.h>
 
-// This should be in LowMem.h
-#ifndef LMSetStackLowPoint
-#define LMSetStackLowPoint(value)		\
-	*((UInt32 *)(0x110)) = (value)
-#endif
 
-PRThread *gPrimaryThread = NULL;
+TimerUPP	gTimerCallbackUPP	= NULL;
+PRThread *	gPrimaryThread		= NULL;
 
 PR_IMPLEMENT(PRThread *) PR_GetPrimaryThread()
 {
@@ -111,16 +107,7 @@ void _MD_InitStack(PRThreadStack *ts, int redZoneBytes)
 	((UInt32 *)ts->stackBottom)[0] = 0xCAFEBEEF;
 #else
 #pragma unused (ts)
-#endif
-	
-	/*
-	**	Turn off the snack stiffer.  The NSPR stacks are allocated in the 
-	**	application's heap; this throws the stack sniffer for a tizzy.
-	**	Note that the sniffer does not run on machines running the thread manager.
-	**	Yes, we will blast the low-mem every time a new stack is created.  We can afford
-	**	a couple extra cycles.
-	*/
-	LMSetStackLowPoint(0);
+#endif	
 	}
 
 extern void _MD_ClearStack(PRThreadStack *ts)
@@ -176,71 +163,17 @@ pascal void TimerCallback(TMTaskPtr tmTaskPtr)
 	PrimeTime((QElemPtr)tmTaskPtr, kMacTimerInMiliSecs);
 }
 
-#if GENERATINGCFM
-
-RoutineDescriptor 	gTimerCallbackRD = BUILD_ROUTINE_DESCRIPTOR(uppTimerProcInfo, &TimerCallback);
-
-#else
-
-asm void gTimerCallbackRD(void)
-{
-	//	Check out LocalA5.  If it is zero, then
-	//	it is our first time through, and we should
-	//	store away our A5.  If not, then we are
-	//	a real time manager callback, so we should
-	//	store away A5, set up our local a5, jsr
-	//	to our callback, and then restore the
-	//	previous A5.
-	
-	lea			LocalA5, a0
-	move.l		(a0), d0
-	cmpi.l		#0, d0
-	bne			TimerProc
-	
-	move.l		a5, (a0)
-	rts
-
-TimerProc:
-	
-	//	Save A5, restore our local A5
-	
-	move.l		a5, -(sp)
-	move.l		d0, a5 
-	
-	//	Jump to our C routine
-	
-	move.l 		a1, -(sp)
-	jsr 		TimerCallback
-	
-	//	Restore the previous A5
-	
-	move.l		(sp)+, a5
-
-	rts
-
-LocalA5:
-
-	dc.l		0
-	
-}
-
-#endif
 
 void _MD_StartInterrupts(void)
 {
 	gPrimaryThread = _PR_MD_CURRENT_THREAD();
 
-	//	If we are not generating CFM-happy code, then make sure that 
-	//	we call our callback wrapper once so that we can
-	//	save away our A5.
-
-#if !GENERATINGCFM
-	gTimerCallbackRD();
-#endif
+	if ( !gTimerCallbackUPP )
+		gTimerCallbackUPP = NewTimerProc(TimerCallback);
 
 	//	Fill in the Time Manager queue element
 	
-	gTimeManagerTaskElem.tmAddr = (TimerUPP)&gTimerCallbackRD;
+	gTimeManagerTaskElem.tmAddr = (TimerUPP)gTimerCallbackUPP;
 	gTimeManagerTaskElem.tmCount = 0;
 	gTimeManagerTaskElem.tmWakeUp = 0;
 	gTimeManagerTaskElem.tmReserved = 0;
