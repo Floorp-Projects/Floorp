@@ -290,7 +290,7 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
 
     nsXPIDLCString accountKey;
     account->GetKey(getter_Copies(accountKey));
-    nsCStringKey key(accountKey);
+    nsStringKey key(accountKey);
     
     // check for uniqueness
     nsCOMPtr<nsIMsgIncomingServer> server;

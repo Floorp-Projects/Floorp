@@ -101,24 +101,7 @@ nsresult nsObserverService::GetObserverList(const nsString& aTopic, nsIObserverL
     }
 
 
-	// Safely convert to a C-string 
-    char buf[128];
-    char* topic = buf;
-    char *temp = 0;
-
-    if (aTopic.Length() >= sizeof(buf))
-        topic = temp = new char[aTopic.Length() + 1];
-
-    if (topic == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    aTopic.ToCString(topic, aTopic.Length() + 1);
-
-	nsCStringKey key(topic);
-
-    if ( temp ) {
-        delete [] temp;
-    }
+	 nsStringKey key(aTopic);
 
     nsIObserverList *topicObservers = nsnull;
     if (mObserverTopicTable->Exists(&key)) {

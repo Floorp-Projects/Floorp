@@ -800,7 +800,7 @@ nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
         return NS_ERROR_NULL_POINTER;
     }
     
-    nsCStringKey key(aProgID);
+    nsStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
     if (cid)
     {
@@ -827,7 +827,7 @@ nsComponentManagerImpl::HashProgID(const char *aProgID, const nsCID &aClass)
 nsDll* nsComponentManagerImpl::CreateCachedDllName(const char *dllName)
 {
     // Check our dllCollection for a dll with matching name
-    nsCStringKey key(dllName);
+    nsStringKey key(dllName);
     nsDll *dll = (nsDll *) mDllStore->Get(&key);
     
     if (dll == NULL)
@@ -869,7 +869,7 @@ nsDll* nsComponentManagerImpl::CreateCachedDll(const char *persistentDescriptor,
                                                PRUint32 modDate, PRUint32 fileSize)
 {
     // Check our dllCollection for a dll with matching name
-    nsCStringKey key(persistentDescriptor);
+    nsStringKey key(persistentDescriptor);
     nsDll *dll = (nsDll *) mDllStore->Get(&key);
     
     if (dll == NULL)
@@ -1135,7 +1135,7 @@ nsComponentManagerImpl::ProgIDToCLSID(const char *aProgID, nsCID *aClass)
     // keep the ProgID to CID cache up-to-date. However, doing this
     // significantly improves performance, so it'll do for now.
 
-    nsCStringKey key(aProgID);
+    nsStringKey key(aProgID);
     nsCID* cid = (nsCID*) mProgIDs->Get(&key);
     if (cid) {
         if (cid == &kNoCID) {
@@ -1856,7 +1856,7 @@ nsComponentManagerImpl::AutoRegisterComponent(RegistrationTime when, nsIFileSpec
     rv = component->GetPersistentDescriptorString(&persistentDescriptor);
     if (NS_FAILED(rv)) return rv;
     autoStringFree delete_persistentDescriptor(persistentDescriptor, autoStringFree::nsCRT_String_Delete);
-    nsCStringKey key(persistentDescriptor);
+    nsStringKey key(persistentDescriptor);
 
     // Check if dll is one that we have already seen
     nsDll *dll = (nsDll *) mDllStore->Get(&key);

@@ -504,7 +504,7 @@ nsBrowsingProfile::GetCategoryID(nsIRDFResource* category, PRUint16 *result)
 nsresult
 nsBrowsingProfile::RecordHit(const char* categoryURL, PRUint16 id)
 {
-    nsCStringKey key(categoryURL);
+    nsStringKey key(categoryURL);
     nsCategory* cat = NS_STATIC_CAST(nsCategory*, mCategories.Get(&key));
     if (cat == nsnull) {
         nsCategory* cat = new nsCategory;

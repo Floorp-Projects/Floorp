@@ -142,20 +142,21 @@ public:
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsCStringKey: Where keys are char*'s
+// nsStringKey: Where keys are PRUnichar* or char*
 // Some uses: hashing ProgIDs, filenames, URIs
 
-#include "plstr.h"
+#include "nsString.h"
 
-class NS_COM nsCStringKey : public nsHashKey {
+class NS_COM nsStringKey : public nsHashKey {
 protected:
-  char  mBuf[64];
-  char* mStr;
+  nsAutoString mStr;
 
 public:
-  nsCStringKey(const char* str);
+  nsStringKey(const char* str);
+  nsStringKey(const PRUnichar* str);
+  nsStringKey(const nsStr& str);
 
-  ~nsCStringKey(void);
+  ~nsStringKey(void);
 
   PRUint32 HashValue(void) const;
 
@@ -164,5 +165,6 @@ public:
   nsHashKey* Clone() const;
 
 };
+
 
 #endif
