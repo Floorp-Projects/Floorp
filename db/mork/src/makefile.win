@@ -1,0 +1,127 @@
+#!nmake
+#
+# The contents of this file are subject to the Netscape Public License
+# Version 1.0 (the "NPL"); you may not use this file except in
+# compliance with the NPL.  You may obtain a copy of the NPL at
+# http://www.mozilla.org/NPL/
+#
+# Software distributed under the NPL is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+# for the specific language governing rights and limitations under the
+# NPL.
+#
+# The Initial Developer of this code under the NPL is Netscape
+# Communications Corporation.  Portions created by Netscape are
+# Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+# Reserved.
+
+DEPTH=..\..\..\..
+IGNORE_MANIFEST=1
+
+include <$(DEPTH)\config\config.mak>
+
+LIBRARY_NAME=mork
+MODULE= mailnews
+REQUIRES=rdf
+
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+
+CPPSRCS=    orkinCell.cpp\
+			orkinEnv.cpp\
+			orkinFactory.cpp\
+			orkinPortTableCursor.cpp\
+			orkinRow.cpp\
+			orkinRowCellCursor.cpp\
+			orkinStore.cpp\
+			orkinTable.cpp\
+			orkinTableRowCursor.cpp\
+			orkinThumb.cpp\
+#			morkAtomSpace.cpp\
+#			morkBlob.cpp\
+#			morkBuilder.cpp\
+#			morkCellObject.cpp\
+#			morkCursor.cpp \
+#			moreDeque.cpp\
+#			morkEnv.cpp\
+#			morkFactory.cpp\
+#			morkFile.cpp\
+#			morkHandle.cpp\
+#			morkMap.cpp\
+#			morkNode.cpp\
+#			morkNodeMap.cpp\
+#			morkObject.cpp\
+#			morkParser.cpp\
+#			morkPool.cpp\
+#			morkPort.cpp\
+#			morkQuaser.cpp\
+#			morkRow.cpp\
+#			morkRowObject.cpp\
+#			morkRowSpace.cpp\
+#			morkSink.cpp\
+#			morkSpace.cpp\
+#			morkStore.cpp\
+#			morkStream.cpp\
+#			morkTable.cpp\
+#			morkThumb.cpp\
+#			morkYarn.cpp\
+			$(NULL)
+
+CPP_OBJS=   .\$(OBJDIR)\orkinCell.obj\
+			.\$(OBJDIR)\orkinEnv.obj\
+			.\$(OBJDIR)\orkinFactory.obj\
+			.\$(OBJDIR)\orkinPortTableCursor.obj\
+			.\$(OBJDIR)\orkinRow.obj\
+			.\$(OBJDIR)\orkinRowCellCursor.obj\
+			.\$(OBJDIR)\orkinStore.obj\
+			.\$(OBJDIR)\orkinTable.obj\
+			.\$(OBJDIR)\orkinTableRowCursor.obj\
+			.\$(OBJDIR)\orkinThumb.obj\
+#			.\$(OBJDIR)\morkAtomSpace.obj  \
+#			.\$(OBJDIR)\morkBlob.obj\
+#			.\$(OBJDIR)\morkBuilder.obj\
+#			.\$(OBJDIR)\morkCellObject.obj\
+#			.\$(OBJDIR)\morkCursor.obj\
+#			.\$(OBJDIR)\moreDeque.obj\
+#			.\$(OBJDIR)\morkCursor.obj\
+#			.\$(OBJDIR)\morkEnv.obj\
+#			.\$(OBJDIR)\morkFactory.obj\
+#			.\$(OBJDIR)\morkFile.obj\
+#			.\$(OBJDIR)\morkHandle.obj\
+#			.\$(OBJDIR)\morkMap.obj\
+#			.\$(OBJDIR)\morkNode.obj\
+#			.\$(OBJDIR)\morkNodeMap.obj\
+#			.\$(OBJDIR)\morkParser.obj\
+#			.\$(OBJDIR)\morkPool.obj\
+#			.\$(OBJDIR)\morkPort.obj\
+#			.\$(OBJDIR)\morkQuaser.obj\
+#			.\$(OBJDIR)\morkRow.obj\
+#			.\$(OBJDIR)\morkRowObject.obj\
+#			.\$(OBJDIR)\morkRowSpace.obj\
+#			.\$(OBJDIR)\morkSink.obj\
+#			.\$(OBJDIR)\morkSpace.obj\
+#			.\$(OBJDIR)\morkStore.obj\
+#			.\$(OBJDIR)\morkStream.obj\
+#			.\$(OBJDIR)\morkTable.obj\
+#			.\$(OBJDIR)\morkThumb.obj\
+#			.\$(OBJDIR)\morkYarn.obj\
+			$(NULL)
+
+
+EXPORTS=	\
+			$(NULL)
+
+
+LINCS=-I$(PUBLIC)\xpcom 
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
