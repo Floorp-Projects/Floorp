@@ -26,7 +26,7 @@
 #define INITGUID
 #include <initguid.h>
 #include <shlguid.h>
-#include "Guid.h"
+#include "ngprefs.h"
 #pragma data_seg()
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE, DWORD, LPVOID);
