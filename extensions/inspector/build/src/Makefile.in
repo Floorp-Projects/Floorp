@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  $(NULL)
 IS_COMPONENT = 1
-MODULE_NAME	= nsInspectorModule
 
 CPPSRCS 	= \
 		nsInspectorModule.cpp \
