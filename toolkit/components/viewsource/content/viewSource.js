@@ -572,6 +572,21 @@ function BrowserSetForcedCharacterSet(aCharset)
   PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
 }
 
+// fix for bug #229503
+// we need to define BrowserSetForcedDetector() so that we can
+// change auto-detect options in the "View | Character Encoding" menu.
+// As with BrowserSetForcedCharacterSet(), call PageLoader.loadPage() 
+// instead of BrowserReloadWithFlags()
+function BrowserSetForcedDetector(doReload)
+{
+  getBrowser().documentCharsetInfo.forcedDetector = true; 
+  if (doReload)
+  {
+    var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+    PageLoader.loadPage(PageLoader.currentDescriptor, pageLoaderIface.DISPLAY_NORMAL);
+  }
+}
+
 function getMarkupDocumentViewer()
 {
   return gBrowser.markupDocumentViewer;
