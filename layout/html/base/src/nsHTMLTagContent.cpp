@@ -215,10 +215,19 @@ nsContentAttr nsHTMLTagContent::GetAttribute(const nsString& aName,
   return result;
 }
 
-nsContentAttr nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
-                                                  nsHTMLValue& aValue,
-                                                  nsString& aResult) const
+nsContentAttr
+nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
+                                    nsHTMLValue& aValue,
+                                    nsString& aResult) const
 {
+  if (nsHTMLAtoms::style == aAttribute) {
+    if (eHTMLUnit_ISupports == aValue.GetUnit()) {
+      nsIStyleRule* rule = (nsIStyleRule*) aValue.GetISupportsValue();
+      // rule->ToString(str);
+      aResult = "XXX style rule ToString goes here";
+      return eContentAttr_HasValue;
+    }
+  }
   aResult.Truncate();
   return eContentAttr_NotThere;
 }
@@ -226,8 +235,9 @@ nsContentAttr nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
 // Note: Subclasses should override to parse the value string; in
 // addition, when they see an unknown attribute they should call this
 // so that global attributes are handled (like CLASS, ID, STYLE, etc.)
-void nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
-                                    const nsString& aValue)
+void
+nsHTMLTagContent::SetAttribute(nsIAtom* aAttribute,
+                               const nsString& aValue)
 {
   if (nsnull == mAttributes) {
     NS_NewHTMLAttributes(&mAttributes, this);
