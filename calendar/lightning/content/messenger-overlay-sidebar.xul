@@ -4,6 +4,8 @@
 
 <overlay xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
+<script type="application/x-javascript" src="chrome://calendar/content/calendarUtils.js"/>
+<script type="application/x-javascript" src="chrome://calendar/content/calendarCreation.js"/>
 <script type="application/x-javascript" src="chrome://lightning/content/calendar-management.js"/>
 
 <vbox id="folderPaneBox">

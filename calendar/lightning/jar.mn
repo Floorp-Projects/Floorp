@@ -4,3 +4,8 @@ lightning.jar:
 
 en-US.jar:
   locale/en-US/lightning/lightning.dtd				(locale/lightning.dtd)
+
+calendar.jar:
+  content/calendar/calendarCreation.xul		(/calendar/resources/content/calendarCreation.xul) 
+  content/calendar/calendarCreation.js		(/calendar/resources/content/calendarCreation.js) 
+  content/calendar/calendarUtils.js		(/calendar/resources/content/calendarUtils.js) 

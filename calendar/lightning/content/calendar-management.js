@@ -1,3 +1,8 @@
+function ltnNewCalendar()
+{
+    openCalendarWizard(ltnSetTreeView);
+}
+
 function getCalendarManager()
 {
     return Components.classes["@mozilla.org/calendar/manager;1"].getService(Components.interfaces.calICalendarManager);
