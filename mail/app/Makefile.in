@@ -200,6 +200,10 @@ endif
 libs::
 	touch $(DIST)/bin/.autoreg
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),photon)
+LIBS += -lphexlib
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 ifdef MOZ_DEBUG
