@@ -423,6 +423,7 @@ GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
     {
         char line[256];
         fprintf(gOutFile, prompt);
+        fflush(gOutFile);
         if (fgets(line, 256, fh) == NULL)
             return JS_FALSE;
         strcpy(bufp, line);
