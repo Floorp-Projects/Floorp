@@ -19,8 +19,8 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Ethan Hugg
- * Milen Nankov
+ *   Ethan Hugg
+ *   Milen Nankov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the

@@ -1,44 +1,44 @@
 /* ***** BEGIN LICENSE BLOCK *****
-* Version: NPL 1.1/GPL 2.0/LGPL 2.1
-*
-* The contents of this file are subject to the Netscape Public License
-* Version 1.1 (the "License"); you may not use this file except in
-* compliance with the License. You may obtain a copy of the License at
-* http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS IS" basis,
-* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-* for the specific language governing rights and limitations under the
-* License.
-*
-* The Original Code is JavaScript Engine testing utilities.
-*
-* The Initial Developer of the Original Code is Netscape Communications Corp.
-* Portions created by the Initial Developer are Copyright (C) 2001
-* the Initial Developer. All Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com
-*
-* Alternatively, the contents of this file may be used under the terms of
-* either the GNU General Public License Version 2 or later (the "GPL"), or
-* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-* in which case the provisions of the GPL or the LGPL are applicable instead
-* of those above. If you wish to allow use of your version of this file only
-* under the terms of either the GPL or the LGPL, and not to allow others to
-* use your version of this file under the terms of the NPL, indicate your
-* decision by deleting the provisions above and replace them with the notice
-* and other provisions required by the GPL or the LGPL. If you do not delete
-* the provisions above, a recipient may use your version of this file under
-* the terms of any one of the NPL, the GPL or the LGPL.
-*
-* ***** END LICENSE BLOCK *****
-*
-*
-* Date: 26 Nov 2001
-* SUMMARY: JS should not crash on this code
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=111557
-*
-*/
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is JavaScript Engine testing utilities.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK *****
+ *
+ *
+ * Date: 26 Nov 2001
+ * SUMMARY: JS should not crash on this code
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=111557
+ *
+ */
 //-----------------------------------------------------------------------------
 var bug = 111557;
 var summary = "Just seeing that we don't crash on this code -";
@@ -4433,8 +4433,8 @@ var top = this;
 // http://www.treemenu.com/
 
 /******************************************************************************
-* Define the MenuItem object.                                                 *
-******************************************************************************/
+ * Define the MenuItem object.                                                 *
+ ******************************************************************************/
 
 function MTMenuItem(text, url, target,nsearchID, icon) {
   this.text = text;
@@ -4478,8 +4478,8 @@ function getChildrenChecked(item, selected)
 }
 
 /******************************************************************************
-* Define the Menu object.                                                     *
-******************************************************************************/
+ * Define the Menu object.                                                     *
+ ******************************************************************************/
 
 function MTMenu() {
   this.items   = new Array();
@@ -4491,8 +4491,8 @@ function MTMAddItem(item) {
 }
 
 /******************************************************************************
-* Define the icon list, addIcon function and MTMIcon item.                    *
-******************************************************************************/
+ * Define the icon list, addIcon function and MTMIcon item.                    *
+ ******************************************************************************/
 
 function IconList() {
   this.items = new Array();
@@ -4510,9 +4510,9 @@ function MTMIcon(iconfile, match, type) {
 }
 
 /******************************************************************************
-* Global variables.  Not to be altered unless you know what you're doing.     *
-* User-configurable options are at the end of this document.                  *
-******************************************************************************/
+ * Global variables.  Not to be altered unless you know what you're doing.     *
+ * User-configurable options are at the end of this document.                  *
+ ******************************************************************************/
 
 var MTMLoaded = false;
 var MTMLevel;
@@ -4550,20 +4550,20 @@ var MTMWinSize, MTMyval;
 var MTMOutputString = "";
 
 /******************************************************************************
-* Code that picks up frame names of frames in the parent frameset.            *
-******************************************************************************/
+ * Code that picks up frame names of frames in the parent frameset.            *
+ ******************************************************************************/
 
 
 /******************************************************************************
-* Dummy function for sub-menus without URLs                                   *
-* Thanks to Michel Plungjan for the advice. :)                                *
-******************************************************************************/
+ * Dummy function for sub-menus without URLs                                   *
+ * Thanks to Michel Plungjan for the advice. :)                                *
+ ******************************************************************************/
 
 function myVoid() { ; }
 
 /******************************************************************************
-* Functions to draw the menu.                                                 *
-******************************************************************************/
+ * Functions to draw the menu.                                                 *
+ ******************************************************************************/
 
 function MTMSubAction(SubItem, ReturnValue) {
 
@@ -5049,8 +5049,8 @@ function MTMTrackTarget(thisTarget) {
 
 
 /******************************************************************************
-* User-configurable options.                                                  *
-******************************************************************************/
+ * User-configurable options.                                                  *
+ ******************************************************************************/
 
 // Menu table width, either a pixel-value (number) or a percentage value.
 var MTMTableWidth = "100%";
@@ -5116,8 +5116,8 @@ var MTMSubsAutoClose = false;
 var MTMTimeOut = 25;
 
 /******************************************************************************
-* User-configurable list of icons.                                            *
-******************************************************************************/
+ * User-configurable list of icons.                                            *
+ ******************************************************************************/
 
 var MTMIconList = null;
 MTMIconList = new IconList();
@@ -5126,8 +5126,8 @@ MTMIconList = new IconList();
 //MTMIconList.addIcon(new MTMIcon("menu_link_pdf.gif", ".pdf", "post"));
 
 /******************************************************************************
-* User-configurable menu.                                                     *
-******************************************************************************/
+ * User-configurable menu.                                                     *
+ ******************************************************************************/
 
 
 // navigation link is an object used to store the extracted information from 

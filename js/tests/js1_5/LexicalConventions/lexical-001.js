@@ -1,39 +1,39 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-* implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. All
-* Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com  
-*                            26 November 2000
-*
-*
-*SUMMARY: Testing numeric literals that begin with 0. 
-*This test arose from Bugzilla bug 49233.
-*The best explanation is from jsscan.c:                
-*
-*     "We permit 08 and 09 as decimal numbers, which makes 
-*     our behaviour a superset of the ECMA numeric grammar.  
-*     We might not always be so permissive, so we warn about it."
-*
-*Thus an expression 010 will evaluate, as always, as an octal (to 8).
-*However, 018 will evaluate as a decimal, to 18. Even though the
-*user began the expression as an octal, he later used a non-octal
-*digit. We forgive this and assume he intended a decimal. If the
-*JavaScript "strict" option is set though, we will give a warning.
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com  
+ *                            26 November 2000
+ *
+ *
+ *SUMMARY: Testing numeric literals that begin with 0. 
+ *This test arose from Bugzilla bug 49233.
+ *The best explanation is from jsscan.c:                
+ *
+ *     "We permit 08 and 09 as decimal numbers, which makes 
+ *     our behaviour a superset of the ECMA numeric grammar.  
+ *     We might not always be so permissive, so we warn about it."
+ *
+ *Thus an expression 010 will evaluate, as always, as an octal (to 8).
+ *However, 018 will evaluate as a decimal, to 18. Even though the
+ *user began the expression as an octal, he later used a non-octal
+ *digit. We forgive this and assume he intended a decimal. If the
+ *JavaScript "strict" option is set though, we will give a warning.
+ */
 //-------------------------------------------------------------------------------------------------
 var bug = '49233';
 var summary = 'Testing numeric literals that begin with 0';

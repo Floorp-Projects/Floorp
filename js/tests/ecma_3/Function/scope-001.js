@@ -1,35 +1,36 @@
 /*
-* The contents of this file are subject to the Netscape Public
-* License Version 1.1 (the "License"); you may not use this file
-* except in compliance with the License. You may obtain a copy of
-* the License at http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS
-* IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-* implied. See the License for the specific language governing
-* rights and limitations under the License.
-*
-* The Original Code is mozilla.org code.
-*
-* The Initial Developer of the Original Code is Netscape
-* Communications Corporation.  Portions created by Netscape are
-* Copyright (C) 1998 Netscape Communications Corporation. All
-* Rights Reserved.
-*
-* Contributor(s): pschwartau@netscape.com, rogerl@netscape.com
-* Date: 28 May 2001
-*
-* SUMMARY:  Functions are scoped statically, not dynamically
-*
-* See ECMA Section 10.1.4 Scope Chain and Identifier Resolution
-* (This section defines the scope chain of an execution context)
-*
-* See ECMA Section 12.10 The with Statement
-*
-* See ECMA Section 13 Function Definition
-* (This section defines the scope chain of a function object as that
-*  of the running execution context when the function was declared)
-*/
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): pschwartau@netscape.com, rogerl@netscape.com
+ *
+ * Date: 28 May 2001
+ *
+ * SUMMARY:  Functions are scoped statically, not dynamically
+ *
+ * See ECMA Section 10.1.4 Scope Chain and Identifier Resolution
+ * (This section defines the scope chain of an execution context)
+ *
+ * See ECMA Section 12.10 The with Statement
+ *
+ * See ECMA Section 13 Function Definition
+ * (This section defines the scope chain of a function object as that
+ *  of the running execution context when the function was declared)
+ */
 //-------------------------------------------------------------------------------------------------
 var UBound = 0;
 var bug = '(none)';

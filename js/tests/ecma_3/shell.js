@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Rob Ginda rginda@netscape.com
+ *   Rob Ginda rginda@netscape.com
  */
 
 var FAILED = "FAILED!: ";

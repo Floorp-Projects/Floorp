@@ -1,57 +1,57 @@
 /* ***** BEGIN LICENSE BLOCK *****
-* Version: NPL 1.1/GPL 2.0/LGPL 2.1
-*
-* The contents of this file are subject to the Netscape Public License
-* Version 1.1 (the "License"); you may not use this file except in
-* compliance with the License. You may obtain a copy of the License at
-* http://www.mozilla.org/NPL/
-*
-* Software distributed under the License is distributed on an "AS IS" basis,
-* WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-* for the specific language governing rights and limitations under the
-* License.
-*
-* The Original Code is JavaScript Engine testing utilities.
-*
-* The Initial Developer of the Original Code is Netscape Communications Corp.
-* Portions created by the Initial Developer are Copyright (C) 2001
-* the Initial Developer. All Rights Reserved.
-*
-* Contributor(s): khanson@netscape.com
-*
-* Alternatively, the contents of this file may be used under the terms of
-* either the GNU General Public License Version 2 or later (the "GPL"), or
-* the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-* in which case the provisions of the GPL or the LGPL are applicable instead
-* of those above. If you wish to allow use of your version of this file only
-* under the terms of either the GPL or the LGPL, and not to allow others to
-* use your version of this file under the terms of the NPL, indicate your
-* decision by deleting the provisions above and replace them with the notice
-* and other provisions required by the GPL or the LGPL. If you do not delete
-* the provisions above, a recipient may use your version of this file under
-* the terms of any one of the NPL, the GPL or the LGPL.
-*
-* ***** END LICENSE BLOCK *****
-*
-*
-* Date: 19 Nov 2001
-* SUMMARY: Regression test for bug 80981.
-* See http://bugzilla.mozilla.org/show_bug.cgi?id=80981
-* "Need extended jump bytecode to avoid "script too large" errors, etc."
-*
-* Before this bug was fixed, the script below caused a run-time error because
-* its switch statement was too big. After the fix, SpiderMonkey should compile
-* this script just fine. The same fix has not been made in Rhino, however,
-* so it will continue to error there...
-*
-* If you ever run this test against an old SpiderMonkey shell to see the bug,
-* you should run it interactively: i.e. launch the JS shell manually, and load
-* the test manually. Do not run it via the test driver jsDriverl.pl. Why? -
-* before the fix for bug 97646, the JS shell would error on this script, but
-* would NOT give non-0 exit code. As a result, the test driver couldn't detect
-* the error (it looks for non-0 exit codes).
-*
-*/
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is JavaScript Engine testing utilities.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications Corp.
+ * Portions created by the Initial Developer are Copyright (C) 2001
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s): khanson@netscape.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK *****
+ *
+ *
+ * Date: 19 Nov 2001
+ * SUMMARY: Regression test for bug 80981.
+ * See http://bugzilla.mozilla.org/show_bug.cgi?id=80981
+ * "Need extended jump bytecode to avoid "script too large" errors, etc."
+ *
+ * Before this bug was fixed, the script below caused a run-time error because
+ * its switch statement was too big. After the fix, SpiderMonkey should compile
+ * this script just fine. The same fix has not been made in Rhino, however,
+ * so it will continue to error there...
+ *
+ * If you ever run this test against an old SpiderMonkey shell to see the bug,
+ * you should run it interactively: i.e. launch the JS shell manually, and load
+ * the test manually. Do not run it via the test driver jsDriverl.pl. Why? -
+ * before the fix for bug 97646, the JS shell would error on this script, but
+ * would NOT give non-0 exit code. As a result, the test driver couldn't detect
+ * the error (it looks for non-0 exit codes).
+ *
+ */
 //-----------------------------------------------------------------------------
 var i2 = 3011;
 var n = new Array (i2);
