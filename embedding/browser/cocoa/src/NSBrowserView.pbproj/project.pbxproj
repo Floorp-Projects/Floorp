@@ -3,15 +3,16 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 34;
+	objectVersion = 38;
 	objects = {
 		014CEA440018CDF011CA2923 = {
 			buildRules = (
 			);
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				DEBUGGING_SYMBOLS = YES;
 				OPTIMIZATION_CFLAGS = "-O0";
-				OTHER_CFLAGS = "\U0001 -DDEBUG -DTRACING";
+				OTHER_CFLAGS = "\U0001 -DDEBUG -DTRACING -DMOZ_DEBUG";
 			};
 			isa = PBXBuildStyle;
 			name = Development;
@@ -46,8 +47,8 @@
 		};
 		034768E0FF38A50411DB9C8B = {
 			isa = PBXFrameworkReference;
-			path = NSBrowserView.framework;
-			refType = 2;
+			path = CHBrowserView.framework;
+			refType = 3;
 		};
 //030
 //031
@@ -74,6 +75,7 @@
 		};
 		0867D691FE84028FC02AAC07 = {
 			children = (
+				F57D38AE0330DCA001026D5D,
 				08FB77AEFE84172EC02AAC07,
 				F6BA6D4C01B2EFCE01A962F7,
 				089C1665FE841158C02AAC07,
@@ -108,15 +110,17 @@
 				0867D6A2FE84028FC02AAC07,
 			);
 			buildSettings = {
+				DEBUGGING_SYMBOLS = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
-				HEADER_SEARCH_PATHS = "../../../../dist/include/profile ../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
+				HEADER_SEARCH_PATHS = "../../../../dist/include/mimetype ../../../../dist/include/find ../../../../dist/include/webbrowserpersist ../../../../dist/include/commandhandler ../../../../dist/include/exthandler ../../../../dist/include/helperAppDlg ../../../../dist/include/profile ../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
 				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib";
-				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"";
+				OPTIMIZATION_CFLAGS = "-O2";
+				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"  -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
-				PRODUCT_NAME = NSBrowserView;
+				PRODUCT_NAME = CHBrowserView;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
 				WRAPPER_EXTENSION = framework;
@@ -128,15 +132,15 @@
 			productName = NSBrowserView;
 			productReference = 034768E0FF38A50411DB9C8B;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
-<!DOCTYPE plist SYSTEM \"file://localhost/System/Library/DTDs/PropertyList.dtd\">
-<plist version=\"0.9\">
+<!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
 <dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleDocumentTypes</key>
 	<array/>
 	<key>CFBundleExecutable</key>
-	<string>NSBrowserView</string>
+	<string>CHBrowserView</string>
 	<key>CFBundleIconFile</key>
 	<string></string>
 	<key>CFBundleIdentifier</key>
@@ -159,10 +163,20 @@
 		0867D69DFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F6BA6D4B01B2EF8B01A962F7,
+				F57D389F0330DAB701026D5D,
+				F57D38A10330DAB701026D5D,
+				F57D38A30330DAB701026D5D,
+				F57D38A50330DAB701026D5D,
+				F57D38A70330DAB701026D5D,
+				F57D38A90330DAB701026D5D,
+				F57D38AC0330DC9701026D5D,
+				F57D38B90330E3E601026D5D,
+				F57D38BA0330E3E601026D5D,
+				F57D38BB0330E3E701026D5D,
+				F52978A70371981B01026DCE,
 			);
 			isa = PBXHeadersBuildPhase;
-			name = Headers;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0867D69EFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -171,17 +185,25 @@
 				F64C5F2901B5904701A962F7,
 			);
 			isa = PBXResourcesBuildPhase;
-			name = "Bundle Resources";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0867D69FFE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
-				F68BA93201AC680701A962F7,
-				F6BA6D4001B20A7D01A962F7,
 				F64C5F1B01B58AC001A962F7,
+				F57D38A00330DAB701026D5D,
+				F57D38A20330DAB701026D5D,
+				F57D38A40330DAB701026D5D,
+				F57D38A60330DAB701026D5D,
+				F57D38A80330DAB701026D5D,
+				F57D38AD0330DC9701026D5D,
+				F57D38B60330E3E101026D5D,
+				F57D38B70330E3E201026D5D,
+				F57D38B80330E3E301026D5D,
+				F52978A60371981A01026DCE,
 			);
 			isa = PBXSourcesBuildPhase;
-			name = Sources;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0867D6A0FE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
@@ -190,14 +212,14 @@
 				F6BA6D6001B3008E01A962F7,
 			);
 			isa = PBXFrameworksBuildPhase;
-			name = "Frameworks & Libraries";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0867D6A2FE84028FC02AAC07 = {
 			buildActionMask = 2147483647;
 			files = (
 			);
 			isa = PBXRezBuildPhase;
-			name = "ResourceManager Resources";
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		0867D6A5FE840307C02AAC07 = {
 			isa = PBXFrameworkReference;
@@ -237,9 +259,12 @@
 		};
 		08FB77AEFE84172EC02AAC07 = {
 			children = (
-				F68BA93101AC680701A962F7,
+				F57D38B30330E1D801026D5D,
 				F64C5F1A01B58AC001A962F7,
-				F6BA6D3F01B20A7D01A962F7,
+				F57D38950330DAB701026D5D,
+				F57D38970330DAB701026D5D,
+				F57D38990330DAB701026D5D,
+				F52978A50371981701026DCE,
 				F6BA6D4401B2115301A962F7,
 			);
 			isa = PBXGroup;
@@ -284,6 +309,299 @@
 //102
 //103
 //104
+//F50
+//F51
+//F52
+//F53
+//F54
+		F52978A40371981701026DCE = {
+			isa = PBXFileReference;
+			path = CHClickListener.h;
+			refType = 2;
+		};
+		F52978A50371981701026DCE = {
+			isa = PBXFileReference;
+			path = CHClickListener.mm;
+			refType = 2;
+		};
+		F52978A60371981A01026DCE = {
+			fileRef = F52978A50371981701026DCE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F52978A70371981B01026DCE = {
+			fileRef = F52978A40371981701026DCE;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38940330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHBrowserListener.h;
+			refType = 2;
+		};
+		F57D38950330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHBrowserListener.mm;
+			refType = 2;
+		};
+		F57D38960330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHBrowserService.h;
+			refType = 2;
+		};
+		F57D38970330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHBrowserService.mm;
+			refType = 2;
+		};
+		F57D38980330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHBrowserView.h;
+			refType = 2;
+		};
+		F57D38990330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHBrowserView.mm;
+			refType = 2;
+		};
+		F57D389A0330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHDownloadFactories.h;
+			refType = 2;
+		};
+		F57D389B0330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHDownloadFactories.mm;
+			refType = 2;
+		};
+		F57D389C0330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHDownloadProgressDisplay.h;
+			refType = 2;
+		};
+		F57D389D0330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = CHDownloadProgressDisplay.mm;
+			refType = 2;
+		};
+		F57D389E0330DAB701026D5D = {
+			isa = PBXFileReference;
+			path = nsAlertController.h;
+			refType = 2;
+		};
+		F57D389F0330DAB701026D5D = {
+			fileRef = F57D38940330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38A00330DAB701026D5D = {
+			fileRef = F57D38950330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38A10330DAB701026D5D = {
+			fileRef = F57D38960330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38A20330DAB701026D5D = {
+			fileRef = F57D38970330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38A30330DAB701026D5D = {
+			fileRef = F57D38980330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38A40330DAB701026D5D = {
+			fileRef = F57D38990330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38A50330DAB701026D5D = {
+			fileRef = F57D389A0330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38A60330DAB701026D5D = {
+			fileRef = F57D389B0330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38A70330DAB701026D5D = {
+			fileRef = F57D389C0330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38A80330DAB701026D5D = {
+			fileRef = F57D389D0330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38A90330DAB701026D5D = {
+			fileRef = F57D389E0330DAB701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38AA0330DC9701026D5D = {
+			isa = PBXFileReference;
+			path = "NSString+Utils.h";
+			refType = 2;
+		};
+		F57D38AB0330DC9701026D5D = {
+			isa = PBXFileReference;
+			path = "NSString+Utils.mm";
+			refType = 2;
+		};
+		F57D38AC0330DC9701026D5D = {
+			fileRef = F57D38AA0330DC9701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38AD0330DC9701026D5D = {
+			fileRef = F57D38AB0330DC9701026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38AE0330DCA001026D5D = {
+			children = (
+				F57D38AA0330DC9701026D5D,
+				F57D38AB0330DC9701026D5D,
+			);
+			isa = PBXGroup;
+			name = Extensions;
+			path = "";
+			refType = 4;
+		};
+		F57D38AF0330DFF201026D5D = {
+			isa = PBXFileReference;
+			path = SaveHeaderSniffer.h;
+			refType = 2;
+		};
+		F57D38B00330DFF201026D5D = {
+			isa = PBXFileReference;
+			path = SaveHeaderSniffer.mm;
+			refType = 2;
+		};
+		F57D38B10330E1D101026D5D = {
+			isa = PBXFileReference;
+			path = nsDownloadListener.h;
+			refType = 2;
+		};
+		F57D38B20330E1D101026D5D = {
+			isa = PBXFileReference;
+			path = nsDownloadListener.mm;
+			refType = 2;
+		};
+		F57D38B30330E1D801026D5D = {
+			children = (
+				F57D389B0330DAB701026D5D,
+				F57D389D0330DAB701026D5D,
+				F57D38B00330DFF201026D5D,
+				F57D38B20330E1D101026D5D,
+				F57D38B50330E25501026D5D,
+			);
+			isa = PBXGroup;
+			name = Download;
+			refType = 4;
+		};
+		F57D38B40330E25501026D5D = {
+			isa = PBXFileReference;
+			path = ProgressDlgController.h;
+			refType = 2;
+		};
+		F57D38B50330E25501026D5D = {
+			isa = PBXFileReference;
+			path = ProgressDlgController.mm;
+			refType = 2;
+		};
+		F57D38B60330E3E101026D5D = {
+			fileRef = F57D38B00330DFF201026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38B70330E3E201026D5D = {
+			fileRef = F57D38B20330E1D101026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38B80330E3E301026D5D = {
+			fileRef = F57D38B50330E25501026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57D38B90330E3E601026D5D = {
+			fileRef = F57D38AF0330DFF201026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38BA0330E3E601026D5D = {
+			fileRef = F57D38B10330E1D101026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		F57D38BB0330E3E701026D5D = {
+			fileRef = F57D38B40330E25501026D5D;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+//F50
+//F51
+//F52
+//F53
+//F54
 //F60
 //F61
 //F62
@@ -321,28 +639,6 @@
 			settings = {
 			};
 		};
-		F68BA93101AC680701A962F7 = {
-			isa = PBXFileReference;
-			path = NSBrowserView.mm;
-			refType = 4;
-		};
-		F68BA93201AC680701A962F7 = {
-			fileRef = F68BA93101AC680701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BA6D3F01B20A7D01A962F7 = {
-			isa = PBXFileReference;
-			path = nsCocoaBrowserService.mm;
-			refType = 2;
-		};
-		F6BA6D4001B20A7D01A962F7 = {
-			fileRef = F6BA6D3F01B20A7D01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BA6D4401B2115301A962F7 = {
 			isa = PBXFileReference;
 			name = libembed_base_s.a;
@@ -355,23 +651,18 @@
 			settings = {
 			};
 		};
-		F6BA6D4A01B2EF8B01A962F7 = {
-			isa = PBXFileReference;
-			path = NSBrowserView.h;
-			refType = 2;
-		};
-		F6BA6D4B01B2EF8B01A962F7 = {
-			fileRef = F6BA6D4A01B2EF8B01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-				ATTRIBUTES = (
-					Public,
-				);
-			};
-		};
 		F6BA6D4C01B2EFCE01A962F7 = {
 			children = (
-				F6BA6D4A01B2EF8B01A962F7,
+				F52978A40371981701026DCE,
+				F57D38940330DAB701026D5D,
+				F57D38960330DAB701026D5D,
+				F57D38980330DAB701026D5D,
+				F57D389A0330DAB701026D5D,
+				F57D389C0330DAB701026D5D,
+				F57D38AF0330DFF201026D5D,
+				F57D389E0330DAB701026D5D,
+				F57D38B10330E1D101026D5D,
+				F57D38B40330E25501026D5D,
 			);
 			isa = PBXGroup;
 			name = Headers;
