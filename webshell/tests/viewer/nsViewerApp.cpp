@@ -53,6 +53,7 @@ nsViewerApp::nsViewerApp()
   mRepeatCount = 1;
   mNumSamples = 10;
   mAllowPlugins = PR_TRUE;
+  mIsInitialized = PR_FALSE;
 }
 
 nsViewerApp::~nsViewerApp()
@@ -91,6 +92,12 @@ void
 nsViewerApp::Destroy()
 {
   NS_IF_RELEASE(mCrawler);
+
+  // Only shutdown if Initialize has been called...
+  if (PR_TRUE == mIsInitialized) {
+    NS_ShutdownINetService();
+    mIsInitialized = PR_FALSE;
+  }
 }
 
 nsresult
@@ -153,6 +160,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);
 
+  mIsInitialized = PR_TRUE;
   return rv;
 }
 
