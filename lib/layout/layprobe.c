@@ -18,13 +18,13 @@
 
 
 /* 
- * Defines the abstraction of a layout probe object that gives information about 
+ * Implements the abstraction of a layout probe object that gives information about 
  * layout elements.  No mutilation of the layout elements is allowed by this
  * probe.  Each FE uses this API to satisfy requests for layout information. 
  *
  */
 
-#include "structs.h"
+#include "layprobe.h"
 
 /* 
  * Constructor/Destructor for probe 
@@ -32,10 +32,16 @@
  */
 
 /* Probe state is created.  Probe position gets set to "nothing". */
-long LO_QA_CreateProbe( MWContext *context );
+long LO_QA_CreateProbe( MWContext *context )
+{
+	return 0;
+}
 
 /* Probe state is destroyed. */
-void LO_QA_DestroyProbe( long probeID );
+void LO_QA_DestroyProbe( long probeID )
+{
+
+}
 
 
 /*
@@ -44,14 +50,20 @@ void LO_QA_DestroyProbe( long probeID );
  */
 
 /* Sets probe position to first layout element in document. */
-Bool LO_QA_GotoFirstElement( long probeID );
+Bool LO_QA_GotoFirstElement( long probeID )
+{
+	return FALSE;
+}
 
 /* 
 	If the probe has just been created, the next element is the first layout element in the document.
 	If there is a next element, the function returns TRUE and sets the probe position to the next element.
 	If there is no next element, the function returns FALSE and resets the probe position to nothing. 
 */
-Bool LO_QA_GotoNextElement( long probeID );
+Bool LO_QA_GotoNextElement( long probeID )
+{
+	return FALSE;
+}
 
 /* 	
 	Sets probe position and returns TRUE or false based on the following table:
@@ -64,7 +76,10 @@ Bool LO_QA_GotoNextElement( long probeID );
 	Any other element			No change							FALSE	
  */
 
-Bool LO_QA_GotoChildElement( long probeID );
+Bool LO_QA_GotoChildElement( long probeID )
+{
+	return FALSE;
+}
 
 /* 	
 	Sets probe position and returns TRUE or false based on the following table:
@@ -77,13 +92,19 @@ Bool LO_QA_GotoChildElement( long probeID );
 	Any other element			No change							FALSE	
  */
 
-Bool LO_QA_GotoParentElement( long probeID );
+Bool LO_QA_GotoParentElement( long probeID )
+{
+	return FALSE;
+}
 
 /*
 	Gets the layout element type that the probe is positioned on.
 	Returns FALSE if the probe is not positioned on any element, else returns TRUE. 
 */
-Bool LO_QA_GetElementType( long probeID, int *type );
+Bool LO_QA_GetElementType( long probeID, int *type )
+{
+	return FALSE;
+}
 
 /* 
  * Functions to return the current layout element's position and dimensions.
@@ -94,18 +115,57 @@ Bool LO_QA_GetElementType( long probeID, int *type );
 	Each of these functions return TRUE if the probe position is set to a layout element,
 	otherwise, they return FALSE.
 */
-Bool LO_QA_GetElementXPosition( long probeID, long *x );
-Bool LO_QA_GetElementYPosition( long probeID, long *y );
-Bool LO_QA_GetElementWidth( long probeID, long *width );
-Bool LO_QA_GetElementHeight( long probeID, long *height );
+Bool LO_QA_GetElementXPosition( long probeID, long *x )
+{
+	return FALSE;
+}
 
-Bool LO_QA_HasURL( long probeID, Bool *hasURL );
-Bool LO_QA_HasText( long probeID, Bool *hasText );
-Bool LO_QA_HasColor( long probeID, Bool *hasColor );
-Bool LO_QA_HasChild( long probeID, Bool *hasChild );
-Bool LO_QA_HasParent( long probeID, Bool *hasParent );
+Bool LO_QA_GetElementYPosition( long probeID, long *y )
+{
+	return FALSE;
+}
 
-Bool LO_QA_GetText( long probeID, char **text );
-Bool LO_QA_GetURL( long probeID, char **url );
+Bool LO_QA_GetElementWidth( long probeID, long *width )
+{
+	return FALSE;
+}
 
+Bool LO_QA_GetElementHeight( long probeID, long *height )
+{
+	return FALSE;
+}
 
+Bool LO_QA_HasURL( long probeID, Bool *hasURL )
+{
+	return FALSE;
+}
+
+Bool LO_QA_HasText( long probeID, Bool *hasText )
+{
+	return FALSE;
+}
+
+Bool LO_QA_HasColor( long probeID, Bool *hasColor )
+{
+	return FALSE;
+}
+
+Bool LO_QA_HasChild( long probeID, Bool *hasChild )
+{
+	return FALSE;
+}
+
+Bool LO_QA_HasParent( long probeID, Bool *hasParent )
+{
+	return FALSE;
+}
+
+Bool LO_QA_GetText( long probeID, char **text )
+{
+	return FALSE;
+}
+
+Bool LO_QA_GetURL( long probeID, char **url )
+{
+	return FALSE;
+}
