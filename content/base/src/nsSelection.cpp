@@ -42,6 +42,8 @@
 #include "nsIDOMKeyEvent.h"
 #include "nsITableLayout.h"
 #include "nsITableCellLayout.h"
+#include "nsIDOMNodeList.h"
+#include "nsITextContent.h"
 
 #include "nsIDOMSelectionListener.h"
 #include "nsIContentIterator.h"
@@ -191,6 +193,26 @@ public:
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
   NS_IMETHOD   CopyRangeToAnchorFocus(nsIDOMRange *aRange);
+  
+  // helpers for ContainsNode()
+  enum Endpoint
+  {
+    kStart,
+    kEnd
+  };
+  nsresult PromoteRange(nsIDOMRange *inRange);
+  nsresult GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
+                                  nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset);
+  nsCOMPtr<nsIDOMNode> GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset);
+  PRBool IsTextNode(nsIDOMNode *aNode);
+  PRBool IsBody(nsIDOMNode* aNode);
+  nsresult GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset);
+  PRBool IsFirstNode(nsIDOMNode *aNode);
+  PRBool IsLastNode(nsIDOMNode *aNode);
+  nsresult GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount); 
+  PRBool IsEmptyTextContent(nsIDOMNode* aNode);
+
+
 //  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame);
@@ -1240,7 +1262,7 @@ nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
   
   if (!aNode) 
   {
-    NS_NOTREACHED("null node passed to nsHTMLEditRules::GetTag()");
+    NS_NOTREACHED("null node passed to GetTag()");
     return atom;
   }
   
@@ -5208,14 +5230,26 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
   for (PRUint32 i=0; i < cnt; ++i)
   {
     nsCOMPtr<nsISupports> element = dont_AddRef(mRangeArray->ElementAt(i));
-    nsCOMPtr<nsIDOMRange>	range = do_QueryInterface(element);
+    nsCOMPtr<nsIDOMRange> newrange,	range = do_QueryInterface(element);
     if (!range)
       return NS_ERROR_UNEXPECTED;
+      
+    // For bug 46554: since the only callers of ContainsNode() is the copy code from document, 
+    // I'm altering the semantics of this routine.  Now it will consider any node whose 
+    // children are all selected to be selected itself.  This is to help the user get 
+    // what they expect when copying html.
+    
+    rv = range->CloneRange(getter_AddRefs(newrange));
+    if (NS_FAILED(rv)) return rv;
+    if (!newrange) return NS_ERROR_NULL_POINTER;
 
+    rv = PromoteRange(newrange);
+    if (NS_FAILED(rv)) return rv;
+    
     nsCOMPtr<nsIContent> content (do_QueryInterface(aNode));
     if (content)
     {
-      if (IsNodeIntersectsRange(content, range))
+      if (IsNodeIntersectsRange(content, newrange))
       {
         // If recursive, then we're done -- IsNodeIntersectsRange does the right thing
         if (aRecursive)
@@ -5227,7 +5261,7 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
         // else not recursive -- node itself must be contained,
         // so we need to do more checking
         PRBool nodeStartsBeforeRange, nodeEndsAfterRange;
-        if (NS_SUCCEEDED(CompareNodeToRange(content, range,
+        if (NS_SUCCEEDED(CompareNodeToRange(content, newrange,
                                             &nodeStartsBeforeRange,
                                             &nodeEndsAfterRange)))
         {
@@ -5251,6 +5285,313 @@ nsDOMSelection::ContainsNode(nsIDOMNode* aNode, PRBool aRecursive, PRBool* aYes)
     }
   }
   return NS_OK;
+}
+
+
+nsresult 
+nsDOMSelection::PromoteRange(nsIDOMRange *inRange)
+{
+  if (!inRange) return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> startNode, endNode;
+  PRInt32 startOffset, endOffset;
+  
+  res = inRange->GetStartContainer(getter_AddRefs(startNode));
+  if (NS_FAILED(res)) return res;
+  res = inRange->GetStartOffset(&startOffset);
+  if (NS_FAILED(res)) return res;
+  res = inRange->GetEndContainer(getter_AddRefs(endNode));
+  if (NS_FAILED(res)) return res;
+  res = inRange->GetEndOffset(&endOffset);
+  if (NS_FAILED(res)) return res;
+  
+  nsCOMPtr<nsIDOMNode> opStartNode;
+  nsCOMPtr<nsIDOMNode> opEndNode;
+  PRInt32 opStartOffset, opEndOffset;
+  nsCOMPtr<nsIDOMRange> opRange;
+  
+  res = GetPromotedPoint( kStart, startNode, startOffset, &opStartNode, &opStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = GetPromotedPoint( kEnd, endNode, endOffset, &opEndNode, &opEndOffset);
+  if (NS_FAILED(res)) return res;
+  res = inRange->SetStart(opStartNode, opStartOffset);
+  if (NS_FAILED(res)) return res;
+  res = inRange->SetEnd(opEndNode, opEndOffset);
+  return res;
+} 
+
+nsresult
+nsDOMSelection::GetPromotedPoint(Endpoint aWhere, nsIDOMNode *aNode, PRInt32 aOffset, 
+                                  nsCOMPtr<nsIDOMNode> *outNode, PRInt32 *outOffset)
+{
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> node = aNode;
+  nsCOMPtr<nsIDOMNode> parent = aNode;
+  PRInt32 offset = aOffset;
+  
+  // defualt values
+  *outNode = node;
+  *outOffset = offset;
+
+  if (aWhere == kStart)
+  {
+    // some special casing for text nodes
+    if (IsTextNode(aNode))  
+    {
+      res = GetNodeLocation(aNode, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      node = GetChildAt(parent,offset);
+    }
+    if (!node) node = parent;
+
+    // finding the real start for this point.  look up the tree for as long as we are the 
+    // first node in the container, and as long as we haven't hit the body node.
+    if (!IsBody(node))
+    {
+      res = GetNodeLocation(node, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+      while ((IsFirstNode(node)) && (!IsBody(parent)))
+      {
+        node = parent;
+        res = GetNodeLocation(node, &parent, &offset);
+        if (NS_FAILED(res)) return res;
+      } 
+      *outNode = parent;
+      *outOffset = offset;
+      return res;
+    }
+  }
+  
+  if (aWhere == kEnd)
+  {
+    // some special casing for text nodes
+    if (IsTextNode(aNode))  
+    {
+      res = GetNodeLocation(aNode, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      if (offset) offset--; // we want node _before_ offset
+      node = GetChildAt(parent,offset);
+    }
+    if (!node) node = parent;
+    
+    // finding the real end for this point.  look up the tree for as long as we are the 
+    // last node in the container, and as long as we haven't hit the body node.
+    if (!IsBody(node))
+    {
+      res = GetNodeLocation(node, &parent, &offset);
+      if (NS_FAILED(res)) return res;
+      while ((IsLastNode(node)) && (!IsBody(parent)))
+      {
+        node = parent;
+        res = GetNodeLocation(node, &parent, &offset);
+        if (NS_FAILED(res)) return res;
+      } 
+      *outNode = parent;
+      offset++;  // add one since this in an endpoint - want to be AFTER node.
+      *outOffset = offset;
+      return res;
+    }
+  }
+  
+  return res;
+}
+
+nsCOMPtr<nsIDOMNode> 
+nsDOMSelection::GetChildAt(nsIDOMNode *aParent, PRInt32 aOffset)
+{
+  nsCOMPtr<nsIDOMNode> resultNode;
+  
+  if (!aParent) 
+    return resultNode;
+  
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aParent);
+  nsCOMPtr<nsIContent> cChild;
+  NS_PRECONDITION(content, "null content in nsDOMSelection::GetChildAt");
+  
+  if (NS_FAILED(content->ChildAt(aOffset, *getter_AddRefs(cChild))))
+    return resultNode;
+  
+  resultNode = do_QueryInterface(cChild);
+  return resultNode;
+}
+
+PRBool
+nsDOMSelection::IsTextNode(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  PRUint16 nodeType;
+  aNode->GetNodeType(&nodeType);
+  if (nodeType == nsIDOMNode::TEXT_NODE)
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
+PRBool 
+nsDOMSelection::IsBody(nsIDOMNode* aNode)
+{
+  if (aNode)
+  {
+    nsAutoString tag;
+    nsCOMPtr<nsIAtom> atom;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aNode);
+    if (content)
+      content->GetTag(*getter_AddRefs(atom));
+    if (atom)
+    {
+      atom->ToString(tag);
+      tag.ToLowerCase();
+      if (tag.EqualsWithConversion("body"))
+      {
+        return PR_TRUE;
+      }
+    }
+  }
+  return PR_FALSE;
+}
+
+nsresult 
+nsDOMSelection::GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset)
+{
+  NS_ASSERTION((inChild && outParent && outOffset), "bad args");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (inChild && outParent && outOffset)
+  {
+    result = inChild->GetParentNode(getter_AddRefs(*outParent));
+    if ((NS_SUCCEEDED(result)) && (*outParent))
+    {
+      nsCOMPtr<nsIContent> content = do_QueryInterface(*outParent);
+      nsCOMPtr<nsIContent> cChild = do_QueryInterface(inChild);
+      if (!cChild || !content) return NS_ERROR_NULL_POINTER;
+      result = content->IndexOf(cChild, *outOffset);
+    }
+  }
+  return result;
+}
+
+PRBool
+nsDOMSelection::IsFirstNode(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset, j=0;
+  nsresult res = GetNodeLocation(aNode, &parent, &offset);
+  if (NS_FAILED(res)) 
+  {
+    NS_NOTREACHED("failure in IsFirstNode");
+    return PR_FALSE;
+  }
+  if (offset == 0)  // easy case, we are first dom child
+    return PR_TRUE;
+  if (!parent)  
+    return PR_TRUE;
+  
+  // need to check if any nodes before us are really visible.
+  // Mike wrote something for me along these lines in nsSelectionController,
+  // but I don't think it's ready for use yet - revisit.
+  // HACK: for now, simply consider all whitespace text nodes to be 
+  // invisible formatting nodes.
+  nsCOMPtr<nsIDOMNodeList> childList;
+  nsCOMPtr<nsIDOMNode> child;
+
+  res = parent->GetChildNodes(getter_AddRefs(childList));
+  if (NS_FAILED(res) || !childList) 
+  {
+    NS_NOTREACHED("failure in IsFirstNode");
+    return PR_TRUE;
+  }
+  while (j < offset)
+  {
+    childList->Item(j, getter_AddRefs(child));
+    if (IsEmptyTextContent(child)) 
+      return PR_FALSE;
+    j++;
+  }
+  return PR_TRUE;
+}
+
+
+PRBool
+nsDOMSelection::IsLastNode(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset,j;
+  PRUint32 numChildren;
+  nsresult res = GetNodeLocation(aNode, &parent, &offset);
+  if (NS_FAILED(res)) 
+  {
+    NS_NOTREACHED("failure in IsLastNode");
+    return PR_FALSE;
+  }
+  GetLengthOfDOMNode(parent, numChildren); 
+  if (offset+1 == (PRInt32)numChildren) // easy case, we are last dom child
+    return PR_TRUE;
+  if (!parent)
+    return PR_TRUE;
+  // need to check if any nodes after us are really visible.
+  // Mike wrote something for me along these lines in nsSelectionController,
+  // but I don't think it's ready for use yet - revisit.
+  // HACK: for now, simply consider all whitespace text nodes to be 
+  // invisible formatting nodes.
+  j = offset+1;
+  nsCOMPtr<nsIDOMNodeList>childList;
+  nsCOMPtr<nsIDOMNode> child;
+  res = parent->GetChildNodes(getter_AddRefs(childList));
+  if (NS_FAILED(res) || !childList) 
+  {
+    NS_NOTREACHED("failure in IsLastNode");
+    return PR_TRUE;
+  }
+  while (j < (PRInt32)numChildren)
+  {
+    childList->Item(j, getter_AddRefs(child));
+    if (IsEmptyTextContent(child)) 
+      return PR_FALSE;
+    j++;
+  }
+  return PR_TRUE;
+}
+
+nsresult
+nsDOMSelection::GetLengthOfDOMNode(nsIDOMNode *aNode, PRUint32 &aCount) 
+{
+  aCount = 0;
+  if (!aNode) { return NS_ERROR_NULL_POINTER; }
+  nsresult result=NS_OK;
+  nsCOMPtr<nsIDOMCharacterData>nodeAsChar;
+  nodeAsChar = do_QueryInterface(aNode);
+  if (nodeAsChar) {
+    nodeAsChar->GetLength(&aCount);
+  }
+  else
+  {
+    PRBool hasChildNodes;
+    aNode->HasChildNodes(&hasChildNodes);
+    if (PR_TRUE==hasChildNodes)
+    {
+      nsCOMPtr<nsIDOMNodeList>nodeList;
+      result = aNode->GetChildNodes(getter_AddRefs(nodeList));
+      if (NS_SUCCEEDED(result) && nodeList) {
+        nodeList->GetLength(&aCount);
+      }
+    }
+  }
+  return result;
+}
+
+PRBool
+nsDOMSelection::IsEmptyTextContent(nsIDOMNode* aNode)
+{
+  PRBool result = PR_FALSE;
+  nsCOMPtr<nsITextContent> tc(do_QueryInterface(aNode));
+  if (tc) {
+    tc->IsOnlyWhitespace(&result);
+  }
+  return result;
 }
 
 nsresult
