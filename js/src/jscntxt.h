@@ -66,8 +66,8 @@ struct JSRuntime {
 
     /* Garbage collector state, used by jsgc.c. */
     JSArenaPool         gcArenaPool;
-    JSHashTable         *gcRootsHash;
-    JSHashTable         *gcLocksHash;
+    JSDHashTable        gcRootsHash;
+    JSDHashTable        *gcLocksHash;
     JSGCThing           *gcFreeList;
     jsrefcount          gcDisabled;
     uint32              gcBytes;

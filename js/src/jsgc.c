@@ -249,8 +249,6 @@ js_ChangeExternalStringFinalizer(JSStringFinalizeOp oldop,
 #define GC_ROOTS_SIZE   256
 #define GC_FINALIZE_LEN 1024
 
-static JSHashNumber   gc_hash_root(const void *key);
-
 JSBool
 js_InitGC(JSRuntime *rt, uint32 maxbytes)
 {
@@ -271,11 +269,10 @@ js_InitGC(JSRuntime *rt, uint32 maxbytes)
 
     JS_InitArenaPool(&rt->gcArenaPool, "gc-arena", GC_ARENA_SIZE,
 		     sizeof(JSGCThing));
-    rt->gcRootsHash = JS_NewHashTable(GC_ROOTS_SIZE, gc_hash_root,
-				      JS_CompareValues, JS_CompareValues,
-				      NULL, NULL);
-    if (!rt->gcRootsHash)
-	return JS_FALSE;
+    if (!JS_DHashTableInit(&rt->gcRootsHash, JS_DHashGetStubOps(), NULL,
+                           sizeof(JSGCRootHashEntry), GC_ROOTS_SIZE)) {
+        return JS_FALSE;
+    }
     rt->gcLocksHash = NULL;     /* create lazily */
     rt->gcMaxBytes = maxbytes;
     return JS_TRUE;
@@ -311,17 +308,18 @@ js_DumpGCStats(JSRuntime *rt, FILE *fp)
 #endif
 
 #if DEBUG
-JS_STATIC_DLL_CALLBACK(intN)
-js_root_printer(JSHashEntry *he, intN i, void *arg)
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+js_root_printer(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 i, void *arg)
 {
     uint32 *leakedroots = (uint32 *)arg;
+    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
 
-    *leakedroots += 1;
+    (*leakedroots)++;
     fprintf(stderr,
             "JS engine warning: leaking GC root \'%s\' at %p\n",
-            he->value ? (char *)he->value : "", he->key);
+            rhe->name ? (char *)rhe->name : "", rhe->root);
 
-    return HT_ENUMERATE_NEXT;
+    return JS_DHASH_NEXT;
 }
 #endif
 
@@ -342,8 +340,8 @@ js_FinishGC(JSRuntime *rt)
         uint32 leakedroots = 0;
 
         /* Warn (but don't assert) debug builds of any remaining roots. */
-        JS_HashTableEnumerateEntries(rt->gcRootsHash, js_root_printer,
-                                     &leakedroots);
+        JS_DHashTableEnumerate(&rt->gcRootsHash, js_root_printer,
+                               &leakedroots);
         if (leakedroots > 0) {
             if (leakedroots == 1) {
                 fprintf(stderr,
@@ -361,10 +359,9 @@ js_FinishGC(JSRuntime *rt)
     }
 #endif
 
-    JS_HashTableDestroy(rt->gcRootsHash);
-    rt->gcRootsHash = NULL;
+    JS_DHashTableFinish(&rt->gcRootsHash);
     if (rt->gcLocksHash) {
-        JS_HashTableDestroy(rt->gcLocksHash);
+        JS_DHashTableDestroy(rt->gcLocksHash);
         rt->gcLocksHash = NULL;
     }
     rt->gcFreeList = NULL;
@@ -383,6 +380,7 @@ JSBool
 js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
 {
     JSBool ok;
+    JSGCRootHashEntry *rhe;
 
     /*
      * Due to the long-standing, but now removed, use of rt->gcLock across the
@@ -406,7 +404,15 @@ js_AddRootRT(JSRuntime *rt, void *rp, const char *name)
         } while (rt->gcLevel > 0);
     }
 #endif
-    ok = (JS_HashTableAdd(rt->gcRootsHash, rp, (void *)name) != NULL);
+    rhe = (JSGCRootHashEntry *) JS_DHashTableOperate(&rt->gcRootsHash, rp,
+                                                     JS_DHASH_ADD);
+    if (rhe) {
+        rhe->root = rp;
+        rhe->name = name;
+        ok = JS_TRUE;
+    } else {
+        ok = JS_FALSE;
+    }
     JS_UNLOCK_GC(rt);
     return ok;
 }
@@ -427,7 +433,7 @@ js_RemoveRoot(JSRuntime *rt, void *rp)
         } while (rt->gcLevel > 0);
     }
 #endif
-    JS_HashTableRemove(rt->gcRootsHash, rp);
+    (void) JS_DHashTableOperate(&rt->gcRootsHash, rp, JS_DHASH_REMOVE);
     rt->gcPoke = JS_TRUE;
     JS_UNLOCK_GC(rt);
     return JS_TRUE;
@@ -528,26 +534,13 @@ retry:
     return thing;
 }
 
-static JSHashNumber
-gc_hash_thing(const void *key)
-{
-    JSHashNumber num = (JSHashNumber) key;	/* help lame MSVC1.5 on Win16 */
-
-    return num >> JSVAL_TAGBITS;
-}
-
-#define gc_lock_get_count(he)   ((jsrefcount)(he)->value)
-#define gc_lock_set_count(he,n) ((jsrefcount)((he)->value = (void *)(n)))
-#define gc_lock_increment(he)   gc_lock_set_count(he, gc_lock_get_count(he)+1)
-#define gc_lock_decrement(he)   gc_lock_set_count(he, gc_lock_get_count(he)-1)
-
 JSBool
 js_LockGCThing(JSContext *cx, void *thing)
 {
     JSRuntime *rt;
     uint8 *flagp, flags, lockbits;
     JSBool ok;
-    JSHashEntry **hep, *he;
+    JSGCLockHashEntry *lhe;
 
     if (!thing)
 	return JS_TRUE;
@@ -564,31 +557,36 @@ js_LockGCThing(JSContext *cx, void *thing)
             /* Objects may require "deep locking", i.e., rooting by value. */
             if (lockbits == 0) {
                 if (!rt->gcLocksHash) {
-                    rt->gcLocksHash = JS_NewHashTable(GC_ROOTS_SIZE,
-                                                      gc_hash_thing,
-                                                      JS_CompareValues,
-                                                      JS_CompareValues,
-                                                      NULL, NULL);
+                    rt->gcLocksHash = 
+                        JS_NewDHashTable(JS_DHashGetStubOps(), NULL,
+                                         sizeof(JSGCLockHashEntry),
+                                         GC_ROOTS_SIZE);
                     if (!rt->gcLocksHash)
                         goto outofmem;
                 } else {
-                    JS_ASSERT(!JS_HashTableLookup(rt->gcLocksHash, thing));
+#ifdef DEBUG
+                    JSDHashEntryHdr *hdr = 
+                        JS_DHashTableOperate(rt->gcLocksHash, thing,
+                                             JS_DHASH_LOOKUP);
+                    JS_ASSERT(JS_DHASH_ENTRY_IS_FREE(hdr));
+#endif
                 }
-                he = JS_HashTableAdd(rt->gcLocksHash, thing, NULL);
-                if (!he)
+                lhe = (JSGCLockHashEntry *)
+                    JS_DHashTableOperate(rt->gcLocksHash, thing, JS_DHASH_ADD);
+                if (!lhe)
                     goto outofmem;
-                gc_lock_set_count(he, 1);
+                lhe->thing = thing;
+                lhe->count = 1;
                 *flagp = (uint8)(flags + GCF_LOCK);
             } else {
                 JS_ASSERT(lockbits == GCF_LOCK);
-                hep = JS_HashTableRawLookup(rt->gcLocksHash,
-                                            gc_hash_thing(thing),
-                                            thing);
-                he = *hep;
-                JS_ASSERT(he);
-                if (he) {
-                    JS_ASSERT(gc_lock_get_count(he) >= 1);
-                    gc_lock_increment(he);
+                lhe = (JSGCLockHashEntry *)
+                    JS_DHashTableOperate(rt->gcLocksHash, thing,
+                                         JS_DHASH_LOOKUP);
+                JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
+                if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr) {
+                    JS_ASSERT(lhe->count >= 1);
+                    lhe->count++;
                 }
             }
         } else {
@@ -614,7 +612,7 @@ js_UnlockGCThing(JSContext *cx, void *thing)
 {
     JSRuntime *rt;
     uint8 *flagp, flags, lockbits;
-    JSHashEntry **hep, *he;
+    JSGCLockHashEntry *lhe;
 
     if (!thing)
 	return JS_TRUE;
@@ -630,13 +628,14 @@ js_UnlockGCThing(JSContext *cx, void *thing)
             /* Defend against a call on an unlocked object. */
             if (lockbits != 0) {
                 JS_ASSERT(lockbits == GCF_LOCK);
-                hep = JS_HashTableRawLookup(rt->gcLocksHash,
-                                            gc_hash_thing(thing),
-                                            thing);
-                he = *hep;
-                JS_ASSERT(he);
-                if (he && gc_lock_decrement(he) == 0) {
-                    JS_HashTableRawRemove(rt->gcLocksHash, hep, he);
+                lhe = (JSGCLockHashEntry *)
+                    JS_DHashTableOperate(rt->gcLocksHash, thing,
+                                         JS_DHASH_LOOKUP);
+                JS_ASSERT(JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr));
+                if (JS_DHASH_ENTRY_IS_BUSY(&lhe->hdr) &&
+                    --lhe->count == 0) {
+                    (void) JS_DHashTableOperate(rt->gcLocksHash, thing,
+                                                JS_DHASH_REMOVE);
                     *flagp = (uint8)(flags & ~GCF_LOCKMASK);
                 }
             }
@@ -884,18 +883,11 @@ out:
     METER(rt->gcStats.depth--);
 }
 
-static JSHashNumber
-gc_hash_root(const void *key)
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+gc_root_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
 {
-    JSHashNumber num = (JSHashNumber) key;	/* help lame MSVC1.5 on Win16 */
-
-    return num >> 2;
-}
-
-JS_STATIC_DLL_CALLBACK(intN)
-gc_root_marker(JSHashEntry *he, intN i, void *arg)
-{
-    jsval *rp = (jsval *)he->key;
+    JSGCRootHashEntry *rhe = (JSGCRootHashEntry *)hdr;
+    jsval *rp = (jsval *)rhe->root;
     jsval v = *rp;
 
     /* Ignore null object and scalar values. */
@@ -914,29 +906,30 @@ gc_root_marker(JSHashEntry *he, intN i, void *arg)
                 break;
             }
         }
-        if (!root_points_to_gcArenaPool && he->value) {
+        if (!root_points_to_gcArenaPool && rhe->name) {
             fprintf(stderr,
 "JS API usage error: the address passed to JS_AddNamedRoot currently holds an\n"
 "invalid jsval.  This is usually caused by a missing call to JS_RemoveRoot.\n"
 "The root's name is \"%s\".\n",
-                    (const char *) he->value);
+                    rhe->name);
         }
         JS_ASSERT(root_points_to_gcArenaPool);
 #endif
 
-        GC_MARK(cx, JSVAL_TO_GCTHING(v), he->value ? he->value : "root", NULL);
+        GC_MARK(cx, JSVAL_TO_GCTHING(v), rhe->name ? rhe->name : "root", NULL);
     }
-    return HT_ENUMERATE_NEXT;
+    return JS_DHASH_NEXT;
 }
 
-JS_STATIC_DLL_CALLBACK(intN)
-gc_lock_marker(JSHashEntry *he, intN i, void *arg)
+JS_STATIC_DLL_CALLBACK(JSDHashOperator)
+gc_lock_marker(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 num, void *arg)
 {
-    void *thing = (void *)he->key;
+    JSGCLockHashEntry *lhe = (JSGCLockHashEntry *)hdr;
+    void *thing = (void *)lhe->thing;
     JSContext *cx = (JSContext *)arg;
 
     GC_MARK(cx, thing, "locked object", NULL);
-    return HT_ENUMERATE_NEXT;
+    return JS_DHASH_NEXT;
 }
 
 JS_FRIEND_API(void)
@@ -1116,9 +1109,9 @@ restart:
     /*
      * Mark phase.
      */
-    JS_HashTableEnumerateEntries(rt->gcRootsHash, gc_root_marker, cx);
+    JS_DHashTableEnumerate(&rt->gcRootsHash, gc_root_marker, cx);
     if (rt->gcLocksHash)
-        JS_HashTableEnumerateEntries(rt->gcLocksHash, gc_lock_marker, cx);
+        JS_DHashTableEnumerate(rt->gcLocksHash, gc_lock_marker, cx);
     js_MarkAtomState(&rt->atomState, gcflags, gc_mark_atom_key_thing, cx);
     iter = NULL;
     while ((acx = js_ContextIterator(rt, &iter)) != NULL) {
