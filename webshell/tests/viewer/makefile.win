@@ -148,6 +148,7 @@ install:: $(PROGRAM)
 	$(MAKE_INSTALL) samples\test10.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test11.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test12.html $(DIST)\bin\res\samples
+	$(MAKE_INSTALL) samples\test13.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_pr.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\test_gfx.html $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) samples\toolbarTest1.xul $(DIST)\bin\res\samples
