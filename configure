@@ -9559,5 +9559,10 @@ rm -fr confdefs* $ac_clean_files
 test "$no_create" = yes || ${CONFIG_SHELL-/bin/sh} $CONFIG_STATUS || exit 1
 
 
-
-
+if test ! "$MOZ_NATIVE_NSPR"
+then
+  rm -f nsprpub/config/my_config.mk
+  rm -f nsprpub/config/my_overrides.mk
+  cp build/unix/nspr_my_config.mk nsprpub/config/my_config.mk
+  cp build/unix/nspr_my_overrides.mk nsprpub/config/my_overrides.mk
+fi
