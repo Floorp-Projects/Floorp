@@ -43,6 +43,10 @@
 #include "npapi.h"
 #include "nsISupports.h"
 
+#ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
+#include "XPConnect.h"
+#endif
+
 // Plugin types supported
 enum PluginInstanceType
 {
@@ -59,7 +63,7 @@ struct PluginInstanceData {
         CActiveScriptSiteInstance *pScriptSite;
         struct {
             CControlSiteInstance *pControlSite;
-            CControlEventSinkInstance *pControlEventSink;
+            nsEventSinkInstance  *pControlEventSink;
         };
     };
     char *szUrl;
