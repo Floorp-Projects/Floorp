@@ -19,6 +19,8 @@
  *   Ben "Count XULula" Goodger <rgoodger@ihug.co.nz>
  */
 
+window.doneLoading = false; 
+ 
 /** class PrefWindow ( string frame_id );
  *  - purpose: object representing the state of the prefs window
  *  - in:      string representing the panel content frame
@@ -72,6 +74,7 @@ function PREF_onload()
   // this.wsm.PageData.splice(0);    // brutally empty the PageData Array
   if( window.queuedTag )
     this.onpageload( window.queuedTag );
+  
 }
 
 /** void onok();
@@ -275,6 +278,10 @@ function PREF_onpageload( tag )
     }
   } 
   this.wsm.SetPageData( tag, false );  // do not set extra elements, accept hard coded defaults
+
+  // run startup function on panel if one is available.
+  if( window.frames[ this.contentFrame ].Startup )
+    window.frames[ this.contentFrame ].Startup();
 }
 
 /** class ChromeFolder ( string root );
