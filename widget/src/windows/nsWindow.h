@@ -336,6 +336,7 @@ public:
     NS_IMETHOD              SetFocus(PRBool aRaise);
     NS_IMETHOD              GetBounds(nsRect &aRect);
     NS_IMETHOD              GetClientBounds(nsRect &aRect);
+    NS_IMETHOD              GetScreenBounds(nsRect &aRect);
     NS_IMETHOD              SetBackgroundColor(const nscolor &aColor);
     virtual nsIFontMetrics* GetFont(void);
     NS_IMETHOD              SetFont(const nsFont &aFont);
