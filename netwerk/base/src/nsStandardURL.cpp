@@ -347,6 +347,10 @@ nsStandardURL::InitGlobalObjects()
                 nsCOMPtr<nsIObserver> obs( new nsPrefObserver() );
                 pbi->AddObserver(NS_NET_PREF_ESCAPEUTF8, obs.get(), PR_FALSE); 
                 pbi->AddObserver(NS_NET_PREF_ENABLEIDN, obs.get(), PR_FALSE); 
+                // initialize IDN
+                nsCOMPtr<nsIIDNService> serv(do_GetService(NS_IDNSERVICE_CONTRACTID));
+                if (serv)
+                    NS_ADDREF(gIDNService = serv.get());
             }
         }
     }

@@ -44,6 +44,8 @@
 #include "nsIServiceManager.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIObserverService.h"
 #include "punycode.h"
 
 //-----------------------------------------------------------------------------
@@ -52,13 +54,55 @@ static const PRUint32 kMaxDNSNodeLen = 63;
 
 //-----------------------------------------------------------------------------
 
+#define NS_NET_PREF_IDNTESTBED "network.IDN_testbed"
+#define NS_NET_PREF_IDNPREFIX  "network.IDN_prefix"
 
 //-----------------------------------------------------------------------------
 // nsIDNService
 //-----------------------------------------------------------------------------
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(nsIDNService, nsIIDNService)
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsIDNService,
+                              nsIIDNService,
+                              nsIObserver,
+                              nsISupportsWeakReference);
+
+nsresult nsIDNService::Init()
+{
+  nsCOMPtr<nsIPrefBranchInternal> prefInternal(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (prefInternal) {
+    prefInternal->AddObserver(NS_NET_PREF_IDNTESTBED, this, PR_TRUE); 
+    prefInternal->AddObserver(NS_NET_PREF_IDNPREFIX, this, PR_TRUE); 
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsIDNService::Observe(nsISupports *aSubject,
+                                    const char *aTopic,
+                                    const PRUnichar *aData)
+{
+  if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
+    nsCOMPtr<nsIPrefBranch> prefBranch( do_QueryInterface(aSubject) );
+    if (prefBranch) {
+      // to support test environment which is a temporary testing environment
+      // until IDN is actually deployed
+      if (NS_LITERAL_STRING(NS_NET_PREF_IDNTESTBED).Equals(aData)) {
+        PRBool val;
+        if (NS_SUCCEEDED(prefBranch->GetBoolPref(NS_NET_PREF_IDNTESTBED, &val)))
+          mMultilingualTestBed = val;
+      }
+      else if (NS_LITERAL_STRING(NS_NET_PREF_IDNPREFIX).Equals(aData)) {
+        nsXPIDLCString prefix;
+        if (NS_SUCCEEDED(prefBranch->GetCharPref(NS_NET_PREF_IDNPREFIX, getter_Copies(prefix))) &&
+            prefix.Length() <= kACEPrefixLen)
+          PL_strncpyz(nsIDNService::mACEPrefix, prefix.get(), kACEPrefixLen + 1);
+      }
+    }
+  }
+
+  return NS_OK;
+}
 
 nsIDNService::nsIDNService()
 {
@@ -71,30 +115,6 @@ nsIDNService::nsIDNService()
   strcpy(mACEPrefix, kIDNSPrefix);
 
   mMultilingualTestBed = PR_FALSE;
-
-  nsCOMPtr<nsIPrefService> prefService(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (prefService) {
-    nsCOMPtr<nsIPrefBranch> prefBranch;
-    prefService->GetBranch(nsnull, getter_AddRefs(prefBranch));
-    if (prefBranch) {
-
-      // to support test environment which is a temporary testing environment
-      // until IDN is actually deployed
-      PRBool value;
-      rv = prefBranch->GetBoolPref("network.IDN_testbed", &value);
-      if (NS_SUCCEEDED(rv))
-        mMultilingualTestBed = value;
-
-      // read prefix from pref
-      nsXPIDLCString prefix;
-      rv = prefBranch->GetCharPref("network.IDN_prefix", getter_Copies(prefix));
-      if (NS_SUCCEEDED(rv) && 
-        prefix.Length() <= kACEPrefixLen) {
-        strncpy(mACEPrefix, prefix.get(), kACEPrefixLen);
-        mACEPrefix[sizeof(mACEPrefix)-1] = '\0';
-      }
-    }
-  }
 
   if (idn_success != idn_nameprep_create(NULL, &mNamePrepHandle))
     mNamePrepHandle = nsnull;
