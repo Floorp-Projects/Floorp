@@ -223,7 +223,9 @@ var	SecondsPerMinute =	60;
 var	msPerSecond	=		1000;
 var	msPerMinute	=		60000;		//	msPerSecond	* SecondsPerMinute
 var	msPerHour =			3600000;	//	msPerMinute	* MinutesPerHour
-var             TZ_DIFF	= getTimeZoneDiff();
+var             TZ_DIFF	= getTimeZoneDiff();  // offset of tester's timezone from UTC
+var             TZ_PST = -8;  // offset of Pacific Standard Time from UTC
+var             PST_DIFF = TZ_DIFF - TZ_PST;  // offset of tester's timezone from PST
 var	TIME_1970	 = 0;
 var	TIME_2000	 = 946684800000;
 var	TIME_1900	 = -2208988800000;
@@ -238,6 +240,58 @@ var	TIME_1900	 = -2208988800000;
 function getTimeZoneDiff()
 {
   return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
+}
+
+
+/* 
+ * Date test "ResultArrays" are hard-coded for Pacific Standard Time. 
+ * We must adjust them for the tester's own timezone -
+ */
+function adjustResultArray(ResultArray, msMode)
+{
+  // If the tester's system clock is in PST, no need to continue - 
+  if (!PST_DIFF) {return;} 
+
+  /* The date testcases instantiate Date objects in two different ways:
+   *
+   *        millisecond mode: e.g.   dt = new Date(10000000);
+   *        year-month-day mode:  dt = new Date(2000, 5, 1, ...);
+   *
+   * In the first case, the date is measured from Time 0 in Greenwich (i.e. UTC).
+   * In the second case, it is measured with reference to the tester's local timezone.
+   *
+   * In the first case we must correct those values expected for local measurements,
+   * like dt.getHours() etc. No correction is necessary for dt.getUTCHours() etc.
+   * 
+   * In the second case, it is exactly the other way around -
+  */ 
+  if (msMode)
+  {
+    // The hard-coded UTC milliseconds from Time 0 derives from a UTC date.
+    // Shift to the right by the offset between UTC and the tester.
+    var t = ResultArray[TIME]  +  TZ_DIFF*msPerHour;
+
+    // Use our date arithmetic functions to determine the local hour, day, etc. 
+    ResultArray[HOURS] = HourFromTime(t); 
+    ResultArray[DAY] = WeekDay(t);
+    ResultArray[DATE] = DateFromTime(t);
+    ResultArray[MONTH] = MonthFromTime(t);
+    ResultArray[YEAR] = YearFromTime(t);  
+  }
+  else
+  {
+    // The hard-coded UTC milliseconds from Time 0 derives from a PST date.
+    // Shift to the left by the offset between PST and the tester.
+    var t = ResultArray[TIME]  -  PST_DIFF*msPerHour;
+
+    // Use our date arithmetic functions to determine the UTC hour, day, etc. 
+    ResultArray[TIME] = t;
+    ResultArray[UTC_HOURS] = HourFromTime(t); 
+    ResultArray[UTC_DAY] = WeekDay(t);
+    ResultArray[UTC_DATE] = DateFromTime(t);
+    ResultArray[UTC_MONTH] = MonthFromTime(t);
+    ResultArray[UTC_YEAR] = YearFromTime(t);
+  }
 }
 
 
