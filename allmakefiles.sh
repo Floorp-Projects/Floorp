@@ -293,6 +293,7 @@ modules/libimg/src/Makefile
 modules/libimg/gifcom/Makefile
 modules/libimg/jpgcom/Makefile
 modules/libimg/pngcom/Makefile  
+modules/libimg/mngcom/Makefile  
 "
 
 MAKEFILES_libjar="
@@ -773,6 +774,9 @@ if [ ! "$SYSTEM_PNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
 fi
 
+if [ "$SYSTEM_MNG" ]; then
+    MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/mng/Makefile"
+fi
 
 #
 #  java/
@@ -864,15 +868,6 @@ if [ "$MOZ_LDAP_XPCOM" ]; then
 	directory/xpcom/base/src/Makefile
 "
 fi
-
-# libimg/mng
-if [ "$MOZ_MNG" ]; then
-    MAKEFILES_libimg="$MAKEFILES_libimg
-	modules/libimg/mng/Makefile
-	modules/libimg/mngcom/Makefile
-"
-fi
-
 
 # modules/staticmod
 

@@ -73,7 +73,8 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10002
+MOZPNG=10008
+MOZMNG="((0<<16)|(9<<8)|(4))"
 NSPR_VERSION=4
 
 dnl Set the minimum version of toolkit libs used by mozilla
@@ -377,6 +378,8 @@ MOZ_ZLIB_CFLAGS=
 MOZ_ZLIB_LIBS='-L$(DIST)/lib -lz'
 MOZ_PNG_CFLAGS=
 MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
+MOZ_MNG_CFLAGS=
+MOZ_MNG_LIBS='-L$(DIST)/lib -lmng'
 
 MOZ_JS_LIBS='-lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
@@ -816,6 +819,7 @@ case "$target" in
     MOZ_JPEG_LIBS='$(DIST)/lib/jpeg.$(LIB_SUFFIX)'
     MOZ_ZLIB_LIBS='$(DIST)/lib/z.$(LIB_SUFFIX)'
     MOZ_PNG_LIBS='$(DIST)/lib/png.$(LIB_SUFFIX)'
+    MOZ_MNG_LIBS='$(DIST)/lib/mng.$(LIB_SUFFIX)'
     MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
     OS_ARCH=OS2
     OS_TARGET=OS2
@@ -3603,14 +3607,6 @@ MOZ_ARG_ENABLE_BOOL(svg,
   AC_DEFINE(MOZ_SVG))
 
 dnl
-dnl --disable mng
-dnl
-MOZ_MNG=1
-MOZ_ARG_DISABLE_BOOL(mng,
-[  --disable-mng            Disable MNG ],
-  MOZ_MNG= )
-
-dnl
 dnl --enable xsl
 dnl
 MOZ_ARG_ENABLE_BOOL(xsl,
@@ -3737,7 +3733,6 @@ AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(MOZ_MATHML)
 AC_SUBST(MOZ_SVG)
 AC_SUBST(MOZ_XSL)
-AC_SUBST(MOZ_MNG)
 AC_SUBST(MOZ_MONOLITHIC_TOOLKIT)
 AC_SUBST(MOZ_JS_LIBS)
 AC_SUBST(MOZ_SECURITY)
@@ -3903,6 +3898,47 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
+dnl system MNG Support
+dnl ========================================================
+AC_ARG_WITH(mng, 
+[  --with-mng[=\$dir]       Use system libmng [installed at prefix \$dir]],
+        MNG_DIR=$withval)
+
+_SAVE_CFLAGS=$CFLAGS
+_SAVE_LDFLAGS=$LDFLAGS
+_SAVE_LIBS=$LIBS
+CFLAGS="-I${MNG_DIR}/include $ZLIB_CFLAGS $CFLAGS"
+LDFLAGS="-L${MNG_DIR}/lib $ZLIB_LIBS -lz $LDFLAGS"
+if test "$MNG_DIR" = no; then
+    SYSTEM_MNG=
+else
+    AC_CHECK_LIB(mng, mng_initialize, [SYSTEM_MNG=1 MNG_LIBS="-lmng $MNG_LIBS"],
+                 SYSTEM_MNG=, $MNG_LIBS)
+fi
+if test "$SYSTEM_MNG" = 1; then
+    LIBS="$MNG_LIBS $LIBS"
+    AC_TRY_RUN(
+	#include <stdio.h>
+	#include <sys/types.h>
+	#include <libmng.h>
+	int main () {
+	    #if (((MNG_VERSION_MAJOR)<<16)|((MNG_VERSION_MINOR)<<8)|(MNG_VERSION_RELEASE)) >= $MOZMNG
+		exit(0);
+	    #else
+		exit(1);
+	    #endif
+	}
+	, SYSTEM_MNG=1, [SYSTEM_MNG= MNG_CFLAGS= MNG_LIBS=], SYSTEM_MNG= ) 
+    rm -f core
+fi
+CFLAGS=$_SAVE_CFLAGS
+LDFLAGS=$_SAVE_LDFLAGS
+LIBS=$_SAVE_LIBS
+
+if test "${MNG_DIR}" -a -d "${MNG_DIR}" -a "$SYSTEM_MNG" = 1; then
+    MNG_CFLAGS="-I${MNG_DIR}/include"
+    MNG_LIBS="-L${MNG_DIR}/lib ${MNG_LIBS}"
+fi
 
 dnl Disable profile at startup, hack for tinderbox.
 if test "$MOZ_BYPASS_PROFILE_AT_STARTUP"; then
@@ -4000,6 +4036,7 @@ dnl fi
 AC_SUBST(SYSTEM_MAKEDEPEND)
 AC_SUBST(SYSTEM_JPEG)
 AC_SUBST(SYSTEM_PNG)
+AC_SUBST(SYSTEM_MNG)
 AC_SUBST(SYSTEM_ZLIB)
 
 AC_SUBST(JPEG_CFLAGS)
@@ -4008,6 +4045,8 @@ AC_SUBST(ZLIB_CFLAGS)
 AC_SUBST(ZLIB_LIBS)
 AC_SUBST(PNG_CFLAGS)
 AC_SUBST(PNG_LIBS)
+AC_SUBST(MNG_CFLAGS)
+AC_SUBST(MNG_LIBS)
 
 AC_SUBST(MOZ_JPEG_CFLAGS)
 AC_SUBST(MOZ_JPEG_LIBS)
@@ -4015,6 +4054,8 @@ AC_SUBST(MOZ_ZLIB_CFLAGS)
 AC_SUBST(MOZ_ZLIB_LIBS)
 AC_SUBST(MOZ_PNG_CFLAGS)
 AC_SUBST(MOZ_PNG_LIBS)
+AC_SUBST(MOZ_MNG_CFLAGS)
+AC_SUBST(MOZ_MNG_LIBS)
 
 AC_SUBST(NSPR_INCLUDE_DIR)
 AC_SUBST(NSPR_CFLAGS)
