@@ -1995,124 +1995,59 @@ nsresult nsRange::InsertNode(nsIDOMNode* aN)
   return tStartContainer->InsertBefore(aN, tChildNode, getter_AddRefs(tResultNode));
 }
 
-nsresult nsRange::SurroundContents(nsIDOMNode* aN)
+nsresult nsRange::SurroundContents(nsIDOMNode* aNewParent)
 {
-  VALIDATE_ACCESS(aN);
+  VALIDATE_ACCESS(aNewParent);
   
-  nsresult res;
+  // Extract the contents within the range.
 
-  //get start offset, and start container
-  PRInt32 tStartOffset;
-  this->GetStartOffset(&tStartOffset);
-  nsCOMPtr<nsIDOMNode> tStartContainer;
-  res = GetStartContainer(getter_AddRefs(tStartContainer));
-  if(NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMDocumentFragment> docFrag;
 
-  //get end offset, and end container
-  PRInt32 tEndOffset;
-  this->GetEndOffset(&tEndOffset);
-  nsCOMPtr<nsIDOMNode> tEndContainer;
-  res = GetEndContainer(getter_AddRefs(tEndContainer));
-  if(NS_FAILED(res)) return res;
+  nsresult res = ExtractContents(getter_AddRefs(docFrag));
 
-  //prep start
-  PRUint16 tStartNodeType;
-  tStartContainer->GetNodeType(&tStartNodeType);
-  if( (nsIDOMNode::CDATA_SECTION_NODE == tStartNodeType) ||
-      (nsIDOMNode::TEXT_NODE == tStartNodeType) )
+  if (NS_FAILED(res)) return res;
+  if (!docFrag) return NS_ERROR_FAILURE;
+
+  // Spec says we need to remove all of aNewParent's
+  // children prior to insertion.
+
+  nsCOMPtr<nsIDOMNodeList> children;
+  res = aNewParent->GetChildNodes(getter_AddRefs(children));
+
+  if (NS_FAILED(res)) return res;
+  if (!children) return NS_ERROR_FAILURE;
+
+  PRUint32 numChildren = 0;
+  res = children->GetLength(&numChildren);
+  if (NS_FAILED(res)) return res;
+
+  nsCOMPtr<nsIDOMNode> tmpNode;
+
+  while (numChildren)
   {
-    nsCOMPtr<nsIDOMText> tStartContainerText = do_QueryInterface(tStartContainer);
-    nsCOMPtr<nsIDOMText> tTempText;
-    res = tStartContainerText->SplitText(tStartOffset, getter_AddRefs(tTempText));
-    if(NS_FAILED(res)) return res;
-    tStartOffset = 0;
-    tStartContainer = do_QueryInterface(tTempText);
+    nsCOMPtr<nsIDOMNode> child;
+    res = children->Item(--numChildren, getter_AddRefs(child));
+
+    if (NS_FAILED(res)) return res;
+    if (!child) return NS_ERROR_FAILURE;
+
+    res = aNewParent->RemoveChild(child, getter_AddRefs(tmpNode));
+    if (NS_FAILED(res)) return res;
   }
 
-  //prep end
-  PRUint16 tEndNodeType;
-  tEndContainer->GetNodeType(&tEndNodeType);
-  if( (nsIDOMNode::CDATA_SECTION_NODE == tEndNodeType) ||
-      (nsIDOMNode::TEXT_NODE == tEndNodeType) )
-  {
-    nsCOMPtr<nsIDOMText> tEndContainerText = do_QueryInterface(tEndContainer);
-    nsCOMPtr<nsIDOMText> tTempText;
-    res = tEndContainerText->SplitText(tEndOffset, getter_AddRefs(tTempText));
-    if(NS_FAILED(res)) return res;
+  // Insert aNewParent at the range's start point.
 
-    tEndContainer = do_QueryInterface(tTempText);
-  }
-
-  //get ancestor info
-  nsCOMPtr<nsIDOMNode> tAncestorContainer;
-  this->GetCommonAncestorContainer(getter_AddRefs(tAncestorContainer));
-
-  PRUint16 tCommonAncestorType;
-  tAncestorContainer->GetNodeType(&tCommonAncestorType);
-
-  nsCOMPtr<nsIDOMNode>tempNode;
-  nsCOMPtr<nsIDOMNode>tRangeContentsNode;
-  nsCOMPtr<nsIDOMDocument> document;
-  res = mStartParent->GetOwnerDocument(getter_AddRefs(document));
+  res = InsertNode(aNewParent);
   if (NS_FAILED(res)) return res;
 
-  // Create a new document fragment in the context of this document,
-  // which might be null
-  nsCOMPtr<nsIDOMDocumentFragment> docfrag;
+  // Append the content we extracted under aNewParent.
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
-
-  res = NS_NewDocumentFragment(getter_AddRefs(docfrag), doc);
+  res = aNewParent->AppendChild(docFrag, getter_AddRefs(tmpNode));
   if (NS_FAILED(res)) return res;
 
-  res = this->ExtractContents(getter_AddRefs(docfrag));
-  if (NS_FAILED(res)) return res;
+  // Select aNewParent, and its contents.
 
-  tRangeContentsNode = do_QueryInterface(docfrag);
-  aN->AppendChild(tRangeContentsNode, getter_AddRefs(tempNode));
-
-  if( (nsIDOMNode::CDATA_SECTION_NODE == tCommonAncestorType) ||
-      (nsIDOMNode::TEXT_NODE == tCommonAncestorType) )
-  {//easy stuff here
-    this->InsertNode(aN);
-  }
-  else
-  {//hard stuff here
-    nsCOMPtr<nsIDOMNodeList>tChildList;
-    res = tAncestorContainer->GetChildNodes(getter_AddRefs(tChildList));
-    PRUint32 i,tNumChildren;
-    tChildList->GetLength(&tNumChildren);
-
-    PRBool tFound = PR_FALSE;
-    PRInt16 tResult;
-    for(i = 0; (i < tNumChildren && !tFound); i++)
-    {
-      ComparePoint(tAncestorContainer, i, &tResult);
-      if(tResult == 0)
-      {
-        tFound = PR_TRUE;
-        break;
-      }
-    }
-
-    if(tFound)
-    {
-      nsCOMPtr<nsIDOMNode> tChild;
-      tChildList->Item(i, getter_AddRefs(tChild));
-      tAncestorContainer->InsertBefore(aN, tChild, getter_AddRefs(tempNode));
-    }
-    else // there is an error this may need to be updated later
-      this->InsertNode(aN);
-
-    // re-define the range so that it contains the same content as it did before
-    tEndOffset = GetNodeLength(tEndContainer);
-    if (tEndOffset == -1)  // failure code
-      return NS_ERROR_FAILURE;
-      
-    this->DoSetRange(tStartContainer, 0, tEndContainer, tEndOffset);
-  }
-  this->SelectNode(aN);
-  return NS_OK;
+  return SelectNode(aNewParent);
 }
 
 nsresult nsRange::ToString(nsAString& aReturn)
