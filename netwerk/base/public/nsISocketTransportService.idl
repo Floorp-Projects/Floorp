@@ -98,9 +98,14 @@ interface nsISocketTransportService : nsISupports
     {0x92, 0xb6, 0x00, 0x10, 0x5a, 0x1b, 0x0d, 0x64} \
 }
 
+// if a socket connection attempt fails (eg. no server listening at specified host:port)
 #define NS_ERROR_CONNECTION_REFUSED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 13)
 
+// if a socket connection was lost due to a timeout error (eg. PR_Poll times out)
 #define NS_ERROR_NET_TIMEOUT NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 14)
+
+// if a socket connection was lost due to a network reset (eg. PR_Poll sets PR_POLL_ERR)
+#define NS_ERROR_NET_RESET NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 20)
 
 /**
  * Status nsresult codes: used with nsIProgressEventSink::OnStatus 
