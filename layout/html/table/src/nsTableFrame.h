@@ -451,6 +451,11 @@ public:
   virtual PRInt32  GetEffectiveColSpan(const nsTableCellFrame& aCell,
                                        nsCellMap*              aCellMap = nsnull) const;
 
+  /** indicate whether the row has more than one cell that either originates
+    * or is spanned from the rows above
+    */
+  PRBool HasMoreThanOneCell(PRInt32 aRowIndex) const;
+
   /** return the value of the COLS attribute, adjusted for the 
     * actual number of columns in the table
     */

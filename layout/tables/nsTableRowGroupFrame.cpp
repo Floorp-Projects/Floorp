@@ -534,26 +534,6 @@ nsTableRowGroupFrame::DidResizeRows(nsIPresContext&          aPresContext,
   }
 }
 
-static PRBool
-HasMoreThanOneCell(nsTableCellMap* aCellMap, 
-                   PRInt32         aRowIndex)
-{
-  if (aCellMap) {
-    CellData* cellData;
-    PRInt32 colIndex = 0;
-    PRInt32 count = 0;
-    do {
-	    cellData = aCellMap->GetDataAt(aRowIndex, colIndex);
-	    if (cellData && (cellData->GetCellFrame() || cellData->IsRowSpan()))
-		    count++;
-      if (count > 1) 
-        return PR_TRUE;
-      colIndex++;
-    } while(cellData);
-  }
-  return PR_FALSE;
-}   
-
 static void
 CacheRowHeightsForPrinting(nsIPresContext*  aPresContext,
                            nsTableRowFrame* aFirstRow)
@@ -655,7 +635,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
     UpdateHeights(rowInfo[rowIndex], nonPctHeight, heightOfRows, heightOfUnStyledRows);
 
     if (!rowInfo[rowIndex].hasStyleHeight) {
-      if (isPaginated || HasMoreThanOneCell(tableFrame->GetCellMap(), rowIndex + startRowIndex)) {
+      if (isPaginated || tableFrame->HasMoreThanOneCell(rowIndex + startRowIndex)) {
         rowInfo[rowIndex].isSpecial = PR_TRUE;
         // iteratate the row's cell frames to see if any do not have rowspan > 1
         nsTableCellFrame* cellFrame = rowFrame->GetFirstCell();
