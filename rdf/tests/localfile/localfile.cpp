@@ -70,7 +70,7 @@
 #define PARSER_DLL "raptorhtmlpars.dll"
 #define RDF_DLL    "rdf.dll"
 #define XPCOM_DLL  "xpcom32.dll"
-#elif defined(XP_UNIX)
+#elif defined(XP_UNIX) || defined(XP_BEOS)
 #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
 #define LAYOUT_DLL "libraptorhtml"MOZ_DLL_SUFFIX
 #define NETLIB_DLL "libnetlib"MOZ_DLL_SUFFIX

@@ -851,7 +851,7 @@ FileSystemDataSource::GetVolumeList(nsISimpleEnumerator** aResult)
 	}
 #endif
 
-#ifdef	XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 	gRDFService->GetResource("file:///", getter_AddRefs(vol));
 	volumes->AppendElement(vol);
 #endif
