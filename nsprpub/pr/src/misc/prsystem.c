@@ -196,13 +196,13 @@ PR_IMPLEMENT(PRInt32) PR_GetNumberOfProcessors( void )
     rc = sysctl( mib, 2, &numCpus, &len, NULL, 0 );
     if ( -1 == rc )  {
         numCpus = -1; /* set to -1 for return value on error */
-        PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
+        _PR_MD_MAP_DEFAULT_ERROR( _MD_ERRNO() );
     }
 #elif defined(HPUX)
     numCpus = mpctl( MPC_GETNUMSPUS, 0, 0 );
     if ( numCpus < 1 )  {
         numCpus = -1; /* set to -1 for return value on error */
-        PR_SetError( PR_UNKNOWN_ERROR, _MD_ERRNO());
+        _PR_MD_MAP_DEFAULT_ERROR( _MD_ERRNO() );
     }
 #elif defined(IRIX)
     numCpus = sysconf( _SC_NPROC_ONLN );
