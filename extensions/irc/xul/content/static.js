@@ -417,7 +417,7 @@ function initHost(obj)
     obj.munger.addRule ("bugzilla-link", /(?:\s|\W|^)(bug\s+#?\d{3,6})/i,
                         insertBugzillaLink);
     obj.munger.addRule ("channel-link",
-                    /(?:\s|\W|^)[@+]?(#[^<>\[\]()\"\s]*[^:,.<>\[\]()\'\"\s])/i,
+                /(?:\s|\W|^)[@+]?(#[^<>\[\](){}\"\s]*[^:,.<>\[\](){}\'\"\s])/i,
                         insertChannelLink);
     
     obj.munger.addRule ("face",
