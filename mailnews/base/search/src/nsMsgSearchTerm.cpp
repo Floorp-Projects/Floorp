@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Seth Spitzer <sspitzer@netscape.com>
+ *   Jungshik Shin <jshin@mailaps.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -65,6 +66,7 @@
 #include "nsISupportsObsolete.h"
 #include "nsNetCID.h"
 #include "nsIFileStreams.h"
+#include "nsUnicharUtils.h"
 //---------------------------------------------------------------------------
 // nsMsgSearchTerm specifies one criterion, e.g. name contains phil
 //---------------------------------------------------------------------------
@@ -935,94 +937,64 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
   PRBool result = PR_FALSE;
   
   nsresult err = NS_OK;
-  nsCAutoString n_str;
-  const char *utf8 = stringToMatch;
-  if(nsMsgSearchOp::IsEmpty != m_operator)	// Save some performance for opIsEmpty
+  nsAutoString utf16StrToMatch;
+  nsAutoString needle; 
+
+  // Save some performance for opIsEmpty
+  if(nsMsgSearchOp::IsEmpty != m_operator)  
   {
-    n_str = m_value.string;
+    NS_ASSERTION(IsUTF8(nsDependentCString(m_value.string)),
+                        "m_value.string is not UTF-8");
+    CopyUTF8toUTF16(m_value.string, needle);
+
     if (charset != nsnull)
     {
-      nsAutoString out;
-      ConvertToUnicode(charset, stringToMatch ? stringToMatch : "", out);
-      utf8 = ToNewUTF8String(out);
+      ConvertToUnicode(charset, stringToMatch ? stringToMatch : "",
+                       utf16StrToMatch);
+    }
+    else { 
+      NS_ASSERTION(IsUTF8(nsDependentCString(stringToMatch)),
+                   "stringToMatch is not UTF-8");
+      CopyUTF8toUTF16(stringToMatch, utf16StrToMatch);
     }
   }
   
   switch (m_operator)
   {
   case nsMsgSearchOp::Contains:
-    if ((nsnull != utf8) && ((n_str.get())[0]) && /* INTL_StrContains(csid, n_header, n_str) */
-      PL_strcasestr(utf8, n_str.get()))
+    if (CaseInsensitiveFindInReadable(needle, utf16StrToMatch))
       result = PR_TRUE;
     break;
   case nsMsgSearchOp::DoesntContain:
-    if ((nsnull != utf8) && ((n_str.get())[0]) &&  /* !INTL_StrContains(csid, n_header, n_str) */
-      !PL_strcasestr(utf8, n_str.get()))
+    if(!CaseInsensitiveFindInReadable(needle, utf16StrToMatch))
       result = PR_TRUE;
     break;
   case nsMsgSearchOp::Is:
-    if(utf8)
-    {
-      if ((n_str.get())[0])
-      {
-        if (n_str.EqualsIgnoreCase(utf8) /* INTL_StrIs(csid, n_header, n_str)*/ )
-          result = PR_TRUE;
-      }
-      else if (utf8[0] == '\0') // Special case for "is <the empty string>"
-        result = PR_TRUE;
-    }
+    if(needle.Equals(utf16StrToMatch, nsCaseInsensitiveStringComparator()))
+      result = PR_TRUE;
     break;
   case nsMsgSearchOp::Isnt:
-    if(utf8)
-    {
-      if ((n_str.get())[0])
-      {
-        if (!n_str.EqualsIgnoreCase(utf8)/* INTL_StrIs(csid, n_header, n_str)*/ )
-          result = PR_TRUE;
-      }
-      else if (utf8[0] != '\0') // Special case for "isn't <the empty string>"
-        result = PR_TRUE;
-    }
+    if(!needle.Equals(utf16StrToMatch, nsCaseInsensitiveStringComparator()))
+      result = PR_TRUE;
     break;
   case nsMsgSearchOp::IsEmpty:
-    if (!PL_strlen(utf8))
+    // For IsEmpty, we didn't copy stringToMatch to utf16StrToMatch.
+    if (!PL_strlen(stringToMatch))
       result = PR_TRUE;
     break;
   case nsMsgSearchOp::BeginsWith:
-#ifdef DO_I18N_YET
-    if((nsnull != n_str) && (nsnull != utf8) && INTL_StrBeginWith(csid, utf8, n_str))
+    if (StringBeginsWith(utf16StrToMatch, needle,
+                         nsCaseInsensitiveStringComparator()))
       result = PR_TRUE;
-#else
-    // ### DMB - not the  most efficient way to do this.
-    if (PL_strncmp(utf8, n_str.get(), n_str.Length()) == 0)
-      result = PR_TRUE;
-#endif
     break;
   case nsMsgSearchOp::EndsWith: 
-    {
-      PRUint32 searchStrLen = (PRUint32) PL_strlen(utf8);
-      if (n_str.Length() <= searchStrLen)
-      {
-        PRInt32 sourceStrOffset = searchStrLen - n_str.Length();
-        if (PL_strcmp(utf8 + sourceStrOffset, n_str.get()) == 0)
-          result = PR_TRUE;
-      }
-    }
-#ifdef DO_I18N_YET
-    {
-      if((nsnull != n_str) && (nsnull != utf8) && INTL_StrEndWith(csid, utf8, n_str))
-        result = PR_TRUE;
-    }
-#else
-    
-#endif
+    if (StringEndsWith(utf16StrToMatch, needle,
+                       nsCaseInsensitiveStringComparator()))
+      result = PR_TRUE;
     break;
   default:
     NS_ASSERTION(PR_FALSE, "invalid operator matching search results");
   }
-  
-  if (utf8 != nsnull && utf8 != stringToMatch)
-    free((void *)utf8);
   
   *pResult = result;
   return err;
