@@ -90,6 +90,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug56024.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug56024.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug56201.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug56563.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug57300.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug57378.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug57828.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug57828.html
