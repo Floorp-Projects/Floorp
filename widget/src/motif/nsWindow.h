@@ -110,6 +110,7 @@ public:
     NS_IMETHOD            Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
     NS_IMETHOD            Update();
     virtual void*           GetNativeData(PRUint32 aDataType);
+    virtual void FreeNativeData(void * data, PRUint32 aDataType);//~~~
     virtual nsIRenderingContext* GetRenderingContext();
     NS_IMETHOD            SetColorMap(nsColorMap *aColorMap);
     virtual nsIDeviceContext* GetDeviceContext();
