@@ -1515,18 +1515,17 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
               (keyEvent->keyCode == NS_VK_RETURN ||
                keyEvent->keyCode == NS_VK_ENTER) &&
               (mType == NS_FORM_INPUT_TEXT ||
-               mType == NS_FORM_INPUT_PASSWORD)) {
+               mType == NS_FORM_INPUT_PASSWORD ||
+               mType == NS_FORM_INPUT_FILE)) {
 
-            if (mForm) {
-              nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
-              if (primaryFrame) {
-                nsITextControlFrame* textFrame = nsnull;
-                CallQueryInterface(primaryFrame, &textFrame);
-
-                // Fire onChange (if necessary)
-                if (textFrame) {
-                  textFrame->CheckFireOnChange();
-                }
+            nsIFrame* primaryFrame = GetPrimaryFrame(PR_FALSE);
+            if (primaryFrame) {
+              nsITextControlFrame* textFrame = nsnull;
+              CallQueryInterface(primaryFrame, &textFrame);
+              
+              // Fire onChange (if necessary)
+              if (textFrame) {
+                textFrame->CheckFireOnChange();
               }
             }
 
