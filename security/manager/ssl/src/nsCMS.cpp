@@ -615,7 +615,7 @@ NS_IMETHODIMP nsCMSEncoder::Start(nsICMSMessage *aMsg, NSSCMSContentCallback cb,
 NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, PRInt32 aLen)
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Update\n"));
-  if (NSS_CMSEncoder_Update(m_ecx, aBuf, aLen) != SECSuccess) {
+  if (!m_ecx || NSS_CMSEncoder_Update(m_ecx, aBuf, aLen) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Update - can't update encoder\n"));
     return NS_ERROR_FAILURE;
   }
@@ -626,7 +626,7 @@ NS_IMETHODIMP nsCMSEncoder::Update(const char *aBuf, PRInt32 aLen)
 NS_IMETHODIMP nsCMSEncoder::Finish()
 {
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Finish\n"));
-  if (NSS_CMSEncoder_Finish(m_ecx) != SECSuccess) {
+  if (!m_ecx || NSS_CMSEncoder_Finish(m_ecx) != SECSuccess) {
     PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("nsCMSEncoder::Finish - can't finish encoder\n"));
     return NS_ERROR_FAILURE;
   }
