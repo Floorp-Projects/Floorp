@@ -51,7 +51,6 @@
 #include "nsPoint.h" // mCurrent/mDefaultScrollbarPreferences
 #include "nsString.h"
 
-#define SH_IN_FRAMES 1
 // Threshold value in ms for META refresh based redirects
 #define REFRESH_REDIRECT_TIMER 15000
 
@@ -200,18 +199,10 @@ protected:
       nsIStreamListener** aContentHandler, nsIContentViewer** aViewer);
    NS_IMETHOD SetupNewViewer(nsIContentViewer* aNewViewer);
 
-#ifdef SH_IN_FRAMES
    NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
       nsISupports* owner, PRBool inheritOwnerFromDocument, PRBool stopActiveDoc,
       const char* aWindowTarget=nsnull, 
       nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, PRUint32 aLoadType=LOAD_NORMAL, nsISHEntry * aSHEntry = nsnull);
-#else
-   NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrerURI, 
-      nsISupports* owner, PRBool inheritOwnerFromDocument, PRBool stopActiveDoc,
-      const char* aWindowTarget=nsnull, 
-      nsIInputStream* aPostData=nsnull, nsIInputStream* aHeadersData=nsnull, PRUint32 aLoadType=LOAD_NORMAL);
-#endif
-
    NS_IMETHOD CreateFixupURI(const PRUnichar* aStringURI, nsIURI** aURI);
    NS_IMETHOD GetCurrentDocumentOwner(nsISupports** aOwner);
    NS_IMETHOD DoURILoad(nsIURI* aURI, nsIURI* aReferrer, nsISupports *aOwner,
@@ -236,11 +227,8 @@ protected:
                                         nsISHEntry **aNewEntry);   
 
    NS_IMETHOD UpdateCurrentSessionHistory();
-#ifdef SH_IN_FRAMES
+
    NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadType);
-#else
-   NS_IMETHOD LoadHistoryEntry(nsISHEntry* aEntry);
-#endif 
 //   NS_IMETHOD GetCurrentSHE(PRInt32 aChildOffset, nsISHEntry ** aResult);
    NS_IMETHOD PersistLayoutHistoryState();
    NS_IMETHOD CloneAndReplace(nsISHEntry * srcEntry, PRUint32 aCloneID,

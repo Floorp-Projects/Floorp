@@ -117,8 +117,6 @@ typedef unsigned long HMTX;
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
 
-#define SH_IN_FRAMES 1
-
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -377,11 +375,7 @@ nsWebShell::Embed(nsIContentViewer* aContentViewer,
                   const char* aCommand,
                   nsISupports* aExtraInfo)
 {
-#ifdef SH_IN_FRAMES
 	return nsDocShell::Embed(aContentViewer, aCommand, aExtraInfo);
-#else
-   return SetupNewViewer(aContentViewer);
-#endif /* SH_IN_FRAMES */
 }
 
 NS_IMETHODIMP
@@ -522,11 +516,8 @@ NS_IMETHODIMP nsWebShell::GoTo(PRInt32 aIndex)
    NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
    UpdateCurrentSessionHistory();  
-#ifdef SH_IN_FRAMES
+
    NS_ENSURE_SUCCESS(LoadHistoryEntry(entry, LOAD_HISTORY), NS_ERROR_FAILURE);
-#else
-   NS_ENSURE_SUCCESS(LoadHistoryEntry(entry), NS_ERROR_FAILURE);
-#endif
 
    return NS_OK;
 }
@@ -830,13 +821,8 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
             return;
         }
 
-#ifdef SH_IN_FRAMES
 		InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, PR_FALSE, target, aPostDataStream, 
                  aHeadersDataStream, LOAD_LINK, nsnull); 
-#else
-        InternalLoad(uri, mCurrentURI, nsnull, PR_TRUE, target, 
-                     aPostDataStream, aHeadersDataStream, LOAD_LINK); 
-#endif  /* SH_IN_FRAMES */
       }
       break;
     case eLinkVerb_Embed:

@@ -1494,7 +1494,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRUint32 aReloadFlags)
 {
     NS_ASSERTION(((aReloadFlags & 0xf) == 0), "Reload command not updated to use load flags!");
 
-#ifdef SH_IN_FRAMES
+
    // XXX Honor the reload type
    //NS_ENSURE_STATE(mCurrentURI);
 
@@ -1503,28 +1503,7 @@ NS_IMETHODIMP nsDocShell::Reload(PRUint32 aReloadFlags)
    if ( aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
         aReloadFlags & LOAD_FLAGS_BYPASS_PROXY )
    	type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
-#if 0
-   nsCOMPtr<nsISHEntry> entry;
-   if (OSHE) {
-	   /* We should fall here in most cases including subframes & refreshes */
-	   entry = OSHE;
-   } else if (mSessionHistory) {
-	   /* In case we fail above, as a last ditch effort, we 
-	    * reload the whole page.
-		*/
-	  PRInt32 index = -1;
-      NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&index), NS_ERROR_FAILURE);
-      NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(index, PR_FALSE,
-          getter_AddRefs(entry)), NS_ERROR_FAILURE);
-      NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
-   }
-   else {
-	   //May be one of those <META> charset reloads in a composer or Messenger
-      return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
-                          nsnull, nsnull, type);
 
-   }
-#else
    // OK. Atleast for the heck of it, pollmann says that he doesn't crash
    // in bug 45297 if he just did the following, instead of the one in #if 0.
    // If this really keeps the crash from re-occuring, may be this can stay. However 
@@ -1532,30 +1511,6 @@ NS_IMETHODIMP nsDocShell::Reload(PRUint32 aReloadFlags)
    
    return InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                        nsnull, nsnull, type);
-#endif /* 0 */
-
-	   
-  // return LoadHistoryEntry(entry, type);
-
-
-#else
-
-   // XXX Honor the reload type
-   NS_ENSURE_STATE(mCurrentURI);
-
-   // XXXTAB Convert reload type to our type
-   LoadType type = LOAD_RELOAD_NORMAL;
-   if ( aReloadFlags & LOAD_FLAGS_BYPASS_CACHE &&
-        aReloadFlags & LOAD_FLAGS_BYPASS_PROXY )
-   	type = LOAD_RELOAD_BYPASS_PROXY_AND_CACHE;
-
-   UpdateCurrentSessionHistory();
-
-   NS_ENSURE_SUCCESS(InternalLoad(mCurrentURI, mReferrerURI, nsnull, PR_TRUE, PR_FALSE,
-                                  nsnull, nsnull, nsnull, type), 
-                     NS_ERROR_FAILURE);
-   return NS_OK;
-#endif  /* SH_IN_FRAMES  */
  
 }
 
@@ -2525,7 +2480,6 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
                                     const char      * aCommand,
                                     nsISupports     * aExtraInfo)
 {
-#ifdef SH_IN_FRAMES
 	// Save the LayoutHistoryState of the previous document, before
 	// setting up new document
 	PersistLayoutHistoryState();
@@ -2565,9 +2519,6 @@ NS_IMETHODIMP nsDocShell::Embed(nsIContentViewer* aContentViewer,
     }
   }
     return NS_OK;
-#else
-   return SetupNewViewer(aContentViewer);
-#endif  /* SH_IN_FRAMES */
 }
 
 //*****************************************************************************
@@ -2808,11 +2759,8 @@ NS_IMETHODIMP nsDocShell::CreateContentViewer(const char* aContentType,
          currentLoadGroup->RemoveRequest(request, nsnull, nsnull, nsnull);
       
       }
-#ifdef SH_IN_FRAMES
+
    NS_ENSURE_SUCCESS(Embed(viewer, "", (nsISupports *) nsnull), NS_ERROR_FAILURE);
-#else
-   NS_ENSURE_SUCCESS(SetupNewViewer(viewer), NS_ERROR_FAILURE);
-#endif  /* SH_IN_FRAMES */
 
    mEODForCurrentDocument = PR_FALSE; // clear the current flag
    return NS_OK;
@@ -2994,48 +2942,6 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 
 // XXX: It looks like the LayoutState gets restored again in Embed()
 //      right after the call to SetupNewViewer(...)
-#ifndef SH_IN_FRAMES
-    // Restore up any HistoryLayoutState this page might have.
-    nsresult rv = NS_OK;
-	PRBool updateHistory = PR_TRUE;
-
-    // Determine if this type of load should update history   
-    switch(mLoadType)
-    {
-    case LOAD_HISTORY:
-    case LOAD_RELOAD_NORMAL:
-    case LOAD_RELOAD_BYPASS_CACHE:
-    case LOAD_RELOAD_BYPASS_PROXY:
-    case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-        updateHistory = PR_FALSE;
-        break;
-    default:
-        break;
-    } 
-    if (mSessionHistory && !updateHistory) {
-      PRInt32 index = 0;
-      mSessionHistory->GetIndex(&index);
-      if (-1 < index) {
- 
-        nsCOMPtr<nsISHEntry> entry;
-        rv = mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(entry));
-        if (NS_SUCCEEDED(rv) && entry) {
- 
-          nsCOMPtr<nsILayoutHistoryState> layoutState;
-          rv = entry->GetLayoutHistoryState(getter_AddRefs(layoutState));
-          if (NS_SUCCEEDED(rv) && layoutState) {
- 
-            nsCOMPtr<nsIPresShell> presShell;
-            rv = GetPresShell(getter_AddRefs(presShell));
-            if (NS_SUCCEEDED(rv) && presShell) {
- 
-              rv = presShell->SetHistoryState(layoutState);
-            }
-          }
-        }
-      }
-    }
-#endif  /* SH_IN_FRAMES */
 
    mContentViewer->Show();
 
@@ -3048,17 +2954,10 @@ NS_IMETHODIMP nsDocShell::SetupNewViewer(nsIContentViewer* aNewViewer)
 //*****************************************************************************
 // nsDocShell: Site Loading
 //*****************************************************************************   
-#ifdef SH_IN_FRAMES
 NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
    nsISupports* aOwner, PRBool aInheritOwner, PRBool aStopActiveDoc, const char* aWindowTarget, 
    nsIInputStream* aPostData, nsIInputStream* aHeadersData,
    PRUint32 aLoadType, nsISHEntry * aSHEntry)
-#else
-NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   nsISupports* aOwner, PRBool aInheritOwner, PRBool aStopActiveDoc, const char* aWindowTarget, 
-   nsIInputStream* aPostData, nsIInputStream* aHeadersData,
-   PRUint32 aLoadType)
-#endif
 {
     if (mDisallowPopupWindows && aWindowTarget && aWindowTarget[0] != '\0')
     {
@@ -3137,12 +3036,10 @@ NS_IMETHODIMP nsDocShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
     }
 
     mLoadType = aLoadType;
-#ifdef SH_IN_FRAMES
 // XXX: I think that LSHE should *always* be set to the new Entry.
 //      Even if it is null...
 //   if (aSHEntry)
 	   LSHE = aSHEntry;
-#endif
 
     nsDocShellInfoLoadType loadCmd = ConvertLoadTypeToDocShellLoadInfo(mLoadType);
     NS_ENSURE_SUCCESS(DoURILoad(aURI, aReferrer, aOwner, aInheritOwner,
@@ -4093,11 +3990,7 @@ NS_IMETHODIMP nsDocShell::UpdateCurrentSessionHistory()
    
 }
 
-#ifdef SH_IN_FRAMES
 NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry, PRUint32 aLoadType)
-#else
-NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
-#endif
 {
    nsCOMPtr<nsIURI> uri;
    nsCOMPtr<nsIInputStream> postData;
@@ -4134,17 +4027,9 @@ NS_IMETHODIMP nsDocShell::LoadHistoryEntry(nsISHEntry* aEntry)
     }
     
 
-#ifdef SH_IN_FRAMES
    NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, PR_TRUE, PR_FALSE, nsnull, 
                                   postData, nsnull, aLoadType, aEntry),
       NS_ERROR_FAILURE);
-#else
-   NS_ENSURE_SUCCESS(InternalLoad(uri, nsnull, nsnull, nsnull, PR_TRUE, PR_FALSE,
-                                  postData, nsnull, 
-                                  LOAD_HISTORY),
-      NS_ERROR_FAILURE);
-#endif 
-
    return NS_OK;
 }
 
