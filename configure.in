@@ -4656,6 +4656,10 @@ if test "$MOZ_DEBUG"; then
     AC_DEFINE(MOZ_REFLOW_PERF_DSP)
 fi
 
+if test "$ACCESSIBILITY" -a "$MOZ_ENABLE_GTK2" ; then
+    AC_DEFINE(MOZ_ACCESSIBILITY_ATK)
+fi
+
 # Used for LD_LIBRARY_PATH of run_viewer target
 LIBS_PATH=
 for lib_arg in $NSPR_LIBS $TK_LIBS; do
