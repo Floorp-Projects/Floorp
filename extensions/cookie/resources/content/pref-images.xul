@@ -62,7 +62,11 @@
       enabled = false;
     }
     if (!enabled)
+    {
       document.getElementById("haveImageBlocking").setAttribute("hidden", "true");
+      if (!document.getElementById("networkImageDisableImagesInMailNews"))
+        document.getElementById("haveImageBlockingOrMailnews").setAttribute("hidden", "true");
+    }
   }
 
   function setDisables()
@@ -71,11 +75,9 @@
     setWarnAboutImagesEnabled(imageBehavior.value != "2");
 
     // if mailnews is installed then we will have networkImageDisableImagesInMailNews checkbox
-    if (document.getElementById('networkImageDisableImagesInMailNews'))
-    {
-      var networkImageDisableImagesInMailNews = document.getElementById("networkImageDisableImagesInMailNews");
+    var networkImageDisableImagesInMailNews = document.getElementById("networkImageDisableImagesInMailNews");
+    if (networkImageDisableImagesInMailNews)
       networkImageDisableImagesInMailNews.disabled = (imageBehavior.value == 2); 
-    }
   }
 
   function setWarnAboutImagesEnabled(aEnabled)
@@ -93,6 +95,7 @@
   </script>
 
   <broadcaster id="haveImageBlocking"/>
+  <broadcaster id="haveImageBlockingOrMailnews"/>
 
   <groupbox id="imagesArea">
     <caption label="&imageBlocking.label;"/>
@@ -113,7 +116,7 @@
              oncommand="setDisables();"/>
     </radiogroup>
 
-    <separator id="networkImagesBehaviorSeparator" observes="haveImageBlocking"/>
+    <separator id="networkImagesBehaviorSeparator" observes="haveImageBlockingOrMailnews"/>
 
 <!--
     <vbox align="start">
