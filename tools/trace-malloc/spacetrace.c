@@ -256,6 +256,17 @@ int showHelp(void)
 "                                By default, there is no <text> restriction.\n"
                    "\n", ST_SUBSTRING_MATCH_MAX);
 
+        PR_fprintf(PR_STDOUT, "%s",
+" -r<category-rules-filename>                   Set the category rules file.\n"
+"              This file contains rules about how to categorize allocations.\n"
+"                                                The default is 'rules.txt'.\n"
+                   "\n");
+        PR_fprintf(PR_STDOUT, "%s",
+" -f<focus-category-name>                 Set the category name to focus on.\n"
+"     Focus all reports on allocations that belong to a particular category.\n"
+"                                             The default is 'All' category.\n"
+                   "\n");
+
         /*
         ** Showed something.
         */
@@ -845,6 +856,44 @@ int initOptions(int aArgCount, char** aArgArray)
                         {
                             retval = __LINE__;
                         }
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        globals.mOptions.mShowHelp = __LINE__;
+                    }
+                }
+                break;
+
+                case 'r':
+                {
+                    /*
+                    ** rules file for categorization
+                    */
+                    if('\0' != aArgArray[traverse][2])
+                    {
+                        if (globals.mOptions.mCategoryFile)
+                            free(globals.mOptions.mCategoryFile);
+                        globals.mOptions.mCategoryFile = strdup(&aArgArray[traverse][2]);
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        globals.mOptions.mShowHelp = __LINE__;
+                    }
+                }
+                break;
+
+                case 'f':
+                {
+                    /*
+                    ** focus on category
+                    */
+                    if('\0' != aArgArray[traverse][2])
+                    {
+                        if (globals.mOptions.mCategoryName)
+                            free(globals.mOptions.mCategoryName);
+                        globals.mOptions.mCategoryName = strdup(&aArgArray[traverse][2]);
                     }
                     else
                     {
@@ -5957,11 +6006,10 @@ int serverMode(tmreader* aTMR)
 
                 PR_fprintf(PR_STDOUT, "Peak memory used: %s bytes\n", FormatNumber(globals.mPeakMemoryUsed));
                 PR_fprintf(PR_STDOUT, "Total calls     : %s",
-                           FormatNumber(globals.mMallocCount + globals.mCallocCount + globals.mReallocCount + globals.mFreeCount));
+                           FormatNumber(globals.mMallocCount + globals.mCallocCount + globals.mReallocCount));
                 PR_fprintf(PR_STDOUT, " [%s", FormatNumber(globals.mMallocCount));
                 PR_fprintf(PR_STDOUT, " + %s", FormatNumber(globals.mCallocCount));
-                PR_fprintf(PR_STDOUT, " + %s", FormatNumber(globals.mReallocCount));
-                PR_fprintf(PR_STDOUT, " + %s]\n", FormatNumber(globals.mFreeCount));
+                PR_fprintf(PR_STDOUT, " + %s]\n", FormatNumber(globals.mReallocCount));
 
                 /*
                 ** Keep accepting until we know otherwise.
