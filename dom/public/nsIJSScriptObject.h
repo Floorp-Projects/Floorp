@@ -49,8 +49,6 @@ public:
   virtual PRBool    Resolve(JSContext *aContext, jsval aID) = 0;
   virtual PRBool    Convert(JSContext *aContext, jsval aID) = 0;
   virtual void      Finalize(JSContext *aContext) = 0;
-  virtual PRBool    Construct(JSContext *cx, JSObject *obj, uintN argc, 
-                              jsval *argv, jsval *rval) = 0;
 };
 
 #endif // nsIJSScriptObject_h__

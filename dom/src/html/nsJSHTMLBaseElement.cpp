@@ -287,18 +287,7 @@ static JSFunctionSpec HTMLBaseElementMethods[] =
 PR_STATIC_CALLBACK(JSBool)
 HTMLBaseElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLBaseElement *a = (nsIDOMHTMLBaseElement*)JS_GetPrivate(cx, obj);
-  PRBool result = PR_TRUE;
-  
-  if (nsnull != a) {
-    // get the js object
-    nsIJSScriptObject *object;
-    if (NS_OK == a->QueryInterface(kIJSScriptObjectIID, (void**)&object)) {
-      result = object->Construct(cx, obj, argc, argv, rval);
-      NS_RELEASE(object);
-    }
-  }
-  return (result == PR_TRUE) ? JS_TRUE : JS_FALSE;
+  return JS_TRUE;
 }
 
 
