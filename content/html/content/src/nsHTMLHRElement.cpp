@@ -73,7 +73,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericLeafContent mInner;
+  nsGenericHTMLLeafElement mInner;
 };
 
 nsresult
@@ -133,7 +133,7 @@ NS_IMPL_BOOL_ATTR(nsHTMLHRElement, NoShade, noshade, eSetAttrNotify_Render)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Size, size, eSetAttrNotify_Reflow)
 NS_IMPL_STRING_ATTR(nsHTMLHRElement, Width, width, eSetAttrNotify_Reflow)
 
-static nsHTMLGenericContent::EnumTable kAlignTable[] = {
+static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_CENTER },
@@ -146,12 +146,12 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
                             nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::width) {
-    nsHTMLGenericContent::ParseValueOrPercent(aValue, aResult,
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
                                               eHTMLUnit_Pixel);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    nsHTMLGenericContent::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel);
+    nsGenericHTMLElement::ParseValue(aValue, 1, 100, aResult, eHTMLUnit_Pixel);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::noshade) {
@@ -159,7 +159,7 @@ nsHTMLHRElement::StringToAttribute(nsIAtom* aAttribute,
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    if (nsHTMLGenericContent::ParseEnumValue(aValue, kAlignTable, aResult)) {
+    if (nsGenericHTMLElement::ParseEnumValue(aValue, kAlignTable, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -173,7 +173,7 @@ nsHTMLHRElement::AttributeToString(nsIAtom* aAttribute,
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::EnumValueToString(aValue, kAlignTable, aResult);
+      nsGenericHTMLElement::EnumValueToString(aValue, kAlignTable, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -207,7 +207,7 @@ nsHTMLHRElement::MapAttributesInto(nsIStyleContext* aContext,
       pos->mWidth.SetPercentValue(value.GetPercentValue());
     }
   }
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

@@ -85,7 +85,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLLeafElement mInner;
 };
 
 nsresult
@@ -174,7 +174,7 @@ nsHTMLIFrameElement::MapAttributesInto(nsIStyleContext* aContext,
                                        nsIPresContext* aPresContext)
 {
   // XXX write me
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

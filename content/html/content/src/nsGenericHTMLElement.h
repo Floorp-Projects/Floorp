@@ -16,8 +16,8 @@
  * Corporation.  Portions created by Netscape are Copyright (C) 1998
  * Netscape Communications Corporation.  All Rights Reserved.
  */
-#ifndef nsHTMLGenericContent_h___
-#define nsHTMLGenericContent_h___
+#ifndef nsGenericHTMLElement_h___
+#define nsGenericHTMLElement_h___
 
 #include "nsIDOMHTMLElement.h"
 #include "nsIContent.h"
@@ -51,9 +51,9 @@ enum nsSetAttrNotify {
   eSetAttrNotify_Restart = 3
 };
 
-struct nsHTMLGenericContent {
-  nsHTMLGenericContent();
-  ~nsHTMLGenericContent();
+struct nsGenericHTMLElement {
+  nsGenericHTMLElement();
+  ~nsGenericHTMLElement();
 
   void Init(nsIHTMLContent* aOuterContentObject, nsIAtom* aTag);
 
@@ -212,8 +212,14 @@ struct nsHTMLGenericContent {
 
   static PRBool ParseAlignValue(const nsString& aString, nsHTMLValue& aResult);
 
+  static PRBool ParseDivAlignValue(const nsString& aString,
+                                   nsHTMLValue& aResult);
+
   static PRBool AlignValueToString(const nsHTMLValue& aValue,
                                    nsString& aResult);
+
+  static PRBool DivAlignValueToString(const nsHTMLValue& aValue,
+                                      nsString& aResult);
 
   static PRBool ParseImageAttribute(nsIAtom* aAttribute,
                                     const nsString& aString,
@@ -233,6 +239,9 @@ struct nsHTMLGenericContent {
                                     nsIPresContext* aPresContext,
                                     nscolor aBorderColors[4]);
 
+  void MapBackgroundAttributesInto(nsIStyleContext* aContext,
+                                   nsIPresContext* aPresContext);
+
   // Up pointer to the real content object that we are
   // supporting. Sometimes there is work that we just can't do
   // ourselves, so this is needed to ask the real object to do the
@@ -249,12 +258,12 @@ struct nsHTMLGenericContent {
 
 //----------------------------------------------------------------------
 
-struct nsHTMLGenericLeafContent : public nsHTMLGenericContent {
-  nsHTMLGenericLeafContent();
-  ~nsHTMLGenericLeafContent();
+struct nsGenericHTMLLeafElement : public nsGenericHTMLElement {
+  nsGenericHTMLLeafElement();
+  ~nsGenericHTMLLeafElement();
 
   nsresult CopyInnerTo(nsIHTMLContent* aSrcContent,
-                       nsHTMLGenericLeafContent* aDest);
+                       nsGenericHTMLLeafElement* aDest);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
@@ -329,12 +338,12 @@ struct nsHTMLGenericLeafContent : public nsHTMLGenericContent {
 
 //----------------------------------------------------------------------
 
-struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
-  nsHTMLGenericContainerContent();
-  ~nsHTMLGenericContainerContent();
+struct nsGenericHTMLContainerElement : public nsGenericHTMLElement {
+  nsGenericHTMLContainerElement();
+  ~nsGenericHTMLContainerElement();
 
   nsresult CopyInnerTo(nsIHTMLContent* aSrcContent,
-                       nsHTMLGenericContainerContent* aDest);
+                       nsGenericHTMLContainerElement* aDest);
 
   // Remainder of nsIDOMHTMLElement (and nsIDOMNode)
   nsresult    Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn);
@@ -371,8 +380,8 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
 
 /**
  * Mostly implement the nsIDOMNode API by forwarding the methods to a
- * generic content object (either nsHTMLGenericLeafContent or
- * nsHTMLGenericContainerContent)
+ * generic content object (either nsGenericHTMLLeafElement or
+ * nsGenericHTMLContainerContent)
  *
  * Note that classes using this macro will need to implement:
  *       NS_IMETHOD CloneNode(nsIDOMNode** aReturn);
@@ -435,8 +444,8 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
 
 /**
  * Implement the nsIDOMElement API by forwarding the methods to a
- * generic content object (either nsHTMLGenericLeafContent or
- * nsHTMLGenericContainerContent)
+ * generic content object (either nsGenericHTMLLeafElement or
+ * nsGenericHTMLContainerContent)
  */
 #define NS_IMPL_IDOMELEMENT_USING_GENERIC(_g)                                 \
   NS_IMETHOD GetTagName(nsString& aTagName) {                                 \
@@ -471,8 +480,8 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
 
 /**
  * Implement the nsIDOMHTMLElement API by forwarding the methods to a
- * generic content object (either nsHTMLGenericLeafContent or
- * nsHTMLGenericContainerContent)
+ * generic content object (either nsGenericHTMLLeafElement or
+ * nsGenericHTMLContainerContent)
  */
 #define NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(_g)       \
   NS_IMETHOD GetId(nsString& aId) {                     \
@@ -508,8 +517,8 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
 
 /**
  * Implement the nsIDOMEventReceiver API by forwarding the methods to a
- * generic content object (either nsHTMLGenericLeafContent or
- * nsHTMLGenericContainerContent)
+ * generic content object (either nsGenericHTMLLeafElement or
+ * nsGenericHTMLContainerContent)
  */
 #define NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(_g)                     \
   NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener,           \
@@ -529,8 +538,8 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
 
 /**
  * Implement the nsIScriptObjectOwner API by forwarding the methods to a
- * generic content object (either nsHTMLGenericLeafContent or
- * nsHTMLGenericContainerContent)
+ * generic content object (either nsGenericHTMLLeafElement or
+ * nsGenericHTMLContainerContent)
  */
 #define NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(_g)     \
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, \
@@ -685,6 +694,71 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
   NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,              \
                                nsIPresContext* aPresContext);
 
+#define NS_IMPL_IHTMLCONTENT_USING_GENERIC2(_g)                        \
+  NS_IMETHOD Compact() {                                               \
+    return _g.Compact();                                               \
+  }                                                                    \
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute, const nsString& aValue, \
+                          PRBool aNotify) {                            \
+    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  }                                                                    \
+  NS_IMETHOD SetAttribute(nsIAtom* aAttribute,                         \
+                          const nsHTMLValue& aValue, PRBool aNotify) { \
+    return _g.SetAttribute(aAttribute, aValue, aNotify);               \
+  }                                                                    \
+  NS_IMETHOD UnsetAttribute(nsIAtom* aAttribute) {                     \
+    return _g.UnsetAttribute(aAttribute);                              \
+  }                                                                    \
+  NS_IMETHOD GetAttribute(nsIAtom *aAttribute,                         \
+                          nsString &aResult) const {                   \
+    return _g.GetAttribute(aAttribute, aResult);                       \
+  }                                                                    \
+  NS_IMETHOD GetAttribute(nsIAtom* aAttribute,                         \
+                          nsHTMLValue& aValue) const {                 \
+    return _g.GetAttribute(aAttribute, aValue);                        \
+  }                                                                    \
+  NS_IMETHOD GetAllAttributeNames(nsISupportsArray* aArray,            \
+                                  PRInt32& aResult) const {            \
+    return _g.GetAllAttributeNames(aArray, aResult);                   \
+  }                                                                    \
+  NS_IMETHOD GetAttributeCount(PRInt32& aResult) const {               \
+    return _g.GetAttributeCount(aResult);                              \
+  }                                                                    \
+  NS_IMETHOD  SetID(nsIAtom* aID) {                                    \
+    return _g.SetID(aID);                                              \
+  }                                                                    \
+  NS_IMETHOD GetID(nsIAtom*& aResult) const {                          \
+    return _g.GetID(aResult);                                          \
+  }                                                                    \
+  NS_IMETHOD SetClass(nsIAtom* aClass) {                               \
+    return _g.SetClass(aClass);                                        \
+  }                                                                    \
+  NS_IMETHOD GetClass(nsIAtom*& aResult) const {                       \
+    return _g.GetClass(aResult);                                       \
+  }                                                                    \
+  NS_IMETHOD GetStyleRule(nsIStyleRule*& aResult);                     \
+  NS_IMETHOD ToHTMLString(nsString& aResult) const {                   \
+    return _g.ToHTMLString(aResult);                                   \
+  }                                                                    \
+  NS_IMETHOD ToHTML(FILE* out) const {                                 \
+    return _g.ToHTML(out);                                             \
+  }                                                                    \
+  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,                \
+                         nsIFrame*        aParentFrame,                \
+                         nsIStyleContext* aStyleContext,               \
+                         nsIFrame*&       aResult) {                   \
+    return _g.CreateFrame(aPresContext, aParentFrame, aStyleContext,   \
+                          aResult);                                    \
+  }                                                                    \
+  NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,                    \
+                               const nsString& aValue,                 \
+                               nsHTMLValue& aResult);                  \
+  NS_IMETHOD AttributeToString(nsIAtom* aAttribute,                    \
+                               nsHTMLValue& aValue,                    \
+                               nsString& aResult) const;               \
+  NS_IMETHOD MapAttributesInto(nsIStyleContext* aContext,              \
+                               nsIPresContext* aPresContext);
+
 /**
  * This macro implements the portion of query interface that is
  * generic to all html content objects.
@@ -811,4 +885,4 @@ struct nsHTMLGenericContainerContent : public nsHTMLGenericContent {
     return mInner.SetAttr(nsHTMLAtoms::_atom, value, _notify); \
   }
 
-#endif /* nsHTMLLeafContent_h___ */
+#endif /* nsGenericHTMLElement_h___ */

@@ -30,9 +30,9 @@
 static NS_DEFINE_IID(kIDOMHTMLOListElementIID, NS_IDOMHTMLOLISTELEMENT_IID);
 
 class nsHTMLOListElement : public nsIDOMHTMLOListElement,
-                    public nsIScriptObjectOwner,
-                    public nsIDOMEventReceiver,
-                    public nsIHTMLContent
+                           public nsIScriptObjectOwner,
+                           public nsIDOMEventReceiver,
+                           public nsIHTMLContent
 {
 public:
   nsHTMLOListElement(nsIAtom* aTag);
@@ -71,7 +71,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -127,41 +127,92 @@ nsHTMLOListElement::CloneNode(nsIDOMNode** aReturn)
 }
 
 NS_IMPL_BOOL_ATTR(nsHTMLOListElement, Compact, compact, eSetAttrNotify_Reflow)
-NS_IMPL_INT_ATTR(nsHTMLOListElement, Start, compact, eSetAttrNotify_Reflow)
-NS_IMPL_STRING_ATTR(nsHTMLOListElement, Type, compact, eSetAttrNotify_Reflow)
+NS_IMPL_INT_ATTR(nsHTMLOListElement, Start, start, eSetAttrNotify_Reflow)
+NS_IMPL_STRING_ATTR(nsHTMLOListElement, Type, type, eSetAttrNotify_Reflow)
+
+nsGenericHTMLElement::EnumTable kListTypeTable[] = {
+  { "none", NS_STYLE_LIST_STYLE_NONE },
+  { "disc", NS_STYLE_LIST_STYLE_DISC },
+  { "circle", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "round", NS_STYLE_LIST_STYLE_CIRCLE },
+  { "square", NS_STYLE_LIST_STYLE_SQUARE },
+  { "decimal", NS_STYLE_LIST_STYLE_DECIMAL },
+  { "lower-roman", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { "upper-roman", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "lower-alpha", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "upper-alpha", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "A", NS_STYLE_LIST_STYLE_UPPER_ALPHA },
+  { "a", NS_STYLE_LIST_STYLE_LOWER_ALPHA },
+  { "I", NS_STYLE_LIST_STYLE_UPPER_ROMAN },
+  { "i", NS_STYLE_LIST_STYLE_LOWER_ROMAN },
+  { 0 }
+};
 
 NS_IMETHODIMP
 nsHTMLOListElement::StringToAttribute(nsIAtom* aAttribute,
-                               const nsString& aValue,
-                               nsHTMLValue& aResult)
+                                      const nsString& aValue,
+                                      nsHTMLValue& aResult)
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::type) {
+    if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
+                                              aResult)) {
+      aResult.SetIntValue(NS_STYLE_LIST_STYLE_DECIMAL, eHTMLUnit_Enumerated);
+    }
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::start) {
+    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::compact) {
+    aResult.SetEmptyValue();
+    return NS_CONTENT_ATTR_NO_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLOListElement::AttributeToString(nsIAtom* aAttribute,
-                               nsHTMLValue& aValue,
-                               nsString& aResult) const
+                                      nsHTMLValue& aValue,
+                                      nsString& aResult) const
 {
-  // XXX write me
+  if (aAttribute == nsHTMLAtoms::type) {
+    nsGenericHTMLElement::EnumValueToString(aValue, kListTypeTable, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLOListElement::MapAttributesInto(nsIStyleContext* aContext,
-                               nsIPresContext* aPresContext)
+                                      nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    nsStyleList* list = (nsStyleList*)
+      aContext->GetMutableStyleData(eStyleStruct_List);
+
+    // type: enum
+    GetAttribute(nsHTMLAtoms::type, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      list->mListStyleType = value.GetIntValue();
+    }
+
+    // compact: empty
+    GetAttribute(nsHTMLAtoms::compact, value);
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      // XXX set
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLOListElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                            nsEvent* aEvent,
-                            nsIDOMEvent** aDOMEvent,
-                            PRUint32 aFlags,
-                            nsEventStatus& aEventStatus)
+                                   nsEvent* aEvent,
+                                   nsIDOMEvent** aDOMEvent,
+                                   PRUint32 aFlags,
+                                   nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

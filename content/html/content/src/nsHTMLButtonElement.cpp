@@ -82,7 +82,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -162,7 +162,7 @@ nsHTMLButtonElement::StringToAttribute(nsIAtom* aAttribute,
                                        nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::tabindex) {
-    nsHTMLGenericContent::ParseValue(aValue, 0, 32767, aResult,
+    nsGenericHTMLElement::ParseValue(aValue, 0, 32767, aResult,
                                      eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
@@ -181,7 +181,7 @@ NS_IMETHODIMP
 nsHTMLButtonElement::MapAttributesInto(nsIStyleContext* aContext,
                                        nsIPresContext* aPresContext)
 {
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

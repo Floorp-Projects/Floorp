@@ -69,7 +69,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericLeafContent mInner;
+  nsGenericHTMLLeafElement mInner;
 };
 
 nsresult
@@ -147,7 +147,7 @@ NS_IMETHODIMP
 nsHTMLBaseElement::MapAttributesInto(nsIStyleContext* aContext,
                                      nsIPresContext* aPresContext)
 {
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP

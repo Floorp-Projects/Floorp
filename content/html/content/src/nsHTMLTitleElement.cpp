@@ -1,152 +1,160 @@
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
-#include "nsHTMLParts.h"
-#include "nsHTMLContainer.h"
-#include "nsFrame.h"
+#include "nsIDOMHTMLTitleElement.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
+#include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsIStyleContext.h"
+#include "nsStyleConsts.h"
+#include "nsIPresContext.h"
 #include "nsXIFConverter.h"
 
-#define nsHTMLTitleElementSuper nsHTMLTagContent
+static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
 
-class nsHTMLTitleElement : public nsHTMLTitleElementSuper {
+class nsHTMLTitleElement : public nsIDOMHTMLTitleElement,
+                           public nsIScriptObjectOwner,
+                           public nsIDOMEventReceiver,
+                           public nsIHTMLContent
+{
 public:
-  nsHTMLTitleElement(nsIAtom* aTag, const nsString& aTitle);
+  nsHTMLTitleElement(nsIAtom* aTag);
+  ~nsHTMLTitleElement();
 
-  NS_IMETHOD CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult);
+  // nsISupports
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  // nsIDOMNode
+  NS_IMPL_IDOMNODE_USING_GENERIC(mInner)
 
+  // nsIDOMElement
+  NS_IMPL_IDOMELEMENT_USING_GENERIC(mInner)
 
-  NS_IMETHOD BeginConvertToXIF(nsXIFConverter& aConverter) const;
-  NS_IMETHOD ConvertContentToXIF(nsXIFConverter& aConverter) const;
-  NS_IMETHOD FinishConvertToXIF(nsXIFConverter& aConverter) const;
+  // nsIDOMHTMLElement
+  NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
+
+  // nsIDOMHTMLTitleElement
+  NS_IMETHOD GetText(nsString& aType);
+  NS_IMETHOD SetText(const nsString& aType);
+
+  // nsIScriptObjectOwner
+  NS_IMPL_ISCRIPTOBJECTOWNER_USING_GENERIC(mInner)
+
+  // nsIDOMEventReceiver
+  NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC(mInner)
+
+  // nsIContent
+  NS_IMPL_ICONTENT_USING_GENERIC(mInner)
+
+  // nsIHTMLContent
+  NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  virtual ~nsHTMLTitleElement();
-  nsString mTitle;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
-NS_NewHTMLTitle(nsIHTMLContent** aInstancePtrResult,
-                nsIAtom* aTag, const nsString& aTitle)
+NS_NewHTMLTitleElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIHTMLContent* it = new nsHTMLTitleElement(aTag, aTitle);
+  nsIHTMLContent* it = new nsHTMLTitleElement(aTag);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  return it->QueryInterface(kIHTMLContentIID, (void **) aInstancePtrResult);
+  return it->QueryInterface(kIHTMLContentIID, (void**) aInstancePtrResult);
 }
 
-nsHTMLTitleElement::nsHTMLTitleElement(nsIAtom* aTag, const nsString& aTitle)
-  : nsHTMLTitleElementSuper(aTag), mTitle(aTitle)
+nsHTMLTitleElement::nsHTMLTitleElement(nsIAtom* aTag)
 {
+  NS_INIT_REFCNT();
+  mInner.Init(this, aTag);
 }
 
 nsHTMLTitleElement::~nsHTMLTitleElement()
 {
 }
 
-NS_IMETHODIMP
-nsHTMLTitleElement::CreateFrame(nsIPresContext*  aPresContext,
-                         nsIFrame*        aParentFrame,
-                         nsIStyleContext* aStyleContext,
-                         nsIFrame*&       aResult)
+NS_IMPL_ADDREF(nsHTMLTitleElement)
+
+NS_IMPL_RELEASE(nsHTMLTitleElement)
+
+nsresult
+nsHTMLTitleElement::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  nsIFrame* frame;
-  nsFrame::NewFrame(&frame, this, aParentFrame);
-  if (nsnull == frame) {
+  NS_IMPL_HTML_CONTENT_QUERY_INTERFACE(aIID, aInstancePtr, this)
+  if (aIID.Equals(kIDOMHTMLTitleElementIID)) {
+    nsIDOMHTMLTitleElement* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    mRefCnt++;
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
+}
+
+nsresult
+nsHTMLTitleElement::CloneNode(nsIDOMNode** aReturn)
+{
+  nsHTMLTitleElement* it = new nsHTMLTitleElement(mInner.mTag);
+  if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  frame->SetStyleContext(aPresContext, aStyleContext);
-  aResult = frame;
-  return NS_OK;
+  mInner.CopyInnerTo(this, &it->mInner);
+  return it->QueryInterface(kIDOMNodeIID, (void**) aReturn);
+}
+
+NS_IMPL_STRING_ATTR(nsHTMLTitleElement, Text, text, eSetAttrNotify_Reflow)
+
+NS_IMETHODIMP
+nsHTMLTitleElement::StringToAttribute(nsIAtom* aAttribute,
+                                      const nsString& aValue,
+                                      nsHTMLValue& aResult)
+{
+  return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
-nsHTMLTitleElement::List(FILE* out, PRInt32 aIndent) const
+nsHTMLTitleElement::AttributeToString(nsIAtom* aAttribute,
+                                      nsHTMLValue& aValue,
+                                      nsString& aResult) const
 {
-  NS_PRECONDITION(nsnull != mDocument, "bad content");
-
-  PRInt32 index;
-  for (index = aIndent; --index >= 0; ) fputs("  ", out);
-
-  nsIAtom* tag;
-  GetTag(tag);
-  if (tag != nsnull) {
-    nsAutoString buf;
-    tag->ToString(buf);
-    fputs(buf, out);
-    NS_RELEASE(tag);
-  }
-
-  ListAttributes(out);
-
-  fprintf(out, " RefCount=%d<", mRefCnt);
-  fputs(mTitle, out);
-  fputs(">\n", out);
-  return NS_OK;
-}
-
-/**
- * Translate the content object into the (XIF) XML Interchange Format
- * XIF is an intermediate form of the content model, the buffer
- * will then be parsed into any number of formats including HTML, TXT, etc.
- * These methods must be called in the following order:
-   
-      BeginConvertToXIF
-      ConvertContentToXIF
-      EndConvertToXIF
- */
-
-NS_IMETHODIMP
-nsHTMLTitleElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
-{
-  if (nsnull != mTag)
-  {
-    nsAutoString name;
-    mTag->ToString(name);
-    aConverter.BeginContainer(name);
-  }
-  return NS_OK;
+  return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
-nsHTMLTitleElement::ConvertContentToXIF(nsXIFConverter& aConverter) const
+nsHTMLTitleElement::MapAttributesInto(nsIStyleContext* aContext,
+                                      nsIPresContext* aPresContext)
 {
-  aConverter.AddContent(mTitle);
-  return NS_OK;
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
-nsHTMLTitleElement::FinishConvertToXIF(nsXIFConverter& aConverter) const
+nsHTMLTitleElement::HandleDOMEvent(nsIPresContext& aPresContext,
+                                   nsEvent* aEvent,
+                                   nsIDOMEvent** aDOMEvent,
+                                   PRUint32 aFlags,
+                                   nsEventStatus& aEventStatus)
 {
-  if (nsnull != mTag)
-  {  
-    nsAutoString name;
-    mTag->ToString(name);
-    aConverter.EndContainer(name);
-  }
-  return NS_OK;
+  return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                               aFlags, aEventStatus);
 }

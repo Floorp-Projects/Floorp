@@ -32,9 +32,9 @@
 static NS_DEFINE_IID(kIDOMHTMLParagraphElementIID, NS_IDOMHTMLPARAGRAPHELEMENT_IID);
 
 class nsHTMLParagraphElement : public nsIDOMHTMLParagraphElement,
-                        public nsIScriptObjectOwner,
-                        public nsIDOMEventReceiver,
-                        public nsIHTMLContent
+                               public nsIScriptObjectOwner,
+                               public nsIDOMEventReceiver,
+                               public nsIHTMLContent
 {
 public:
   nsHTMLParagraphElement(nsIAtom* aTag);
@@ -69,7 +69,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -128,11 +128,11 @@ NS_IMPL_STRING_ATTR(nsHTMLParagraphElement, Align, align, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLParagraphElement::StringToAttribute(nsIAtom* aAttribute,
-                                   const nsString& aValue,
-                                   nsHTMLValue& aResult)
+                                          const nsString& aValue,
+                                          nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsHTMLGenericContent::ParseAlignValue(aValue, aResult)) {
+    if (nsGenericHTMLElement::ParseDivAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -141,12 +141,12 @@ nsHTMLParagraphElement::StringToAttribute(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLParagraphElement::AttributeToString(nsIAtom* aAttribute,
-                                   nsHTMLValue& aValue,
-                                   nsString& aResult) const
+                                          nsHTMLValue& aValue,
+                                          nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::AlignValueToString(aValue, aResult);
+      nsGenericHTMLElement::DivAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -155,18 +155,26 @@ nsHTMLParagraphElement::AttributeToString(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLParagraphElement::MapAttributesInto(nsIStyleContext* aContext,
-                                   nsIPresContext* aPresContext)
+                                          nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mTextAlign = value.GetIntValue();
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLParagraphElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                                nsEvent* aEvent,
-                                nsIDOMEvent** aDOMEvent,
-                                PRUint32 aFlags,
-                                nsEventStatus& aEventStatus)
+                                       nsEvent* aEvent,
+                                       nsIDOMEvent** aDOMEvent,
+                                       PRUint32 aFlags,
+                                       nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

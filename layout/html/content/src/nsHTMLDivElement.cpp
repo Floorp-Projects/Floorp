@@ -27,14 +27,14 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 
-// XXX missing nav attributes
+// XXX support missing nav attributes? gutter, cols, width
 
 static NS_DEFINE_IID(kIDOMHTMLDivElementIID, NS_IDOMHTMLDIVELEMENT_IID);
 
 class nsHTMLDivElement : public nsIDOMHTMLDivElement,
-                  public nsIScriptObjectOwner,
-                  public nsIDOMEventReceiver,
-                  public nsIHTMLContent
+                         public nsIScriptObjectOwner,
+                         public nsIDOMEventReceiver,
+                         public nsIHTMLContent
 {
 public:
   nsHTMLDivElement(nsIAtom* aTag);
@@ -69,7 +69,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -128,25 +128,38 @@ NS_IMPL_STRING_ATTR(nsHTMLDivElement, Align, align, eSetAttrNotify_Reflow)
 
 NS_IMETHODIMP
 nsHTMLDivElement::StringToAttribute(nsIAtom* aAttribute,
-                             const nsString& aValue,
-                             nsHTMLValue& aResult)
+                                    const nsString& aValue,
+                                    nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::align) {
-    if (nsHTMLGenericContent::ParseAlignValue(aValue, aResult)) {
+    if (nsGenericHTMLElement::ParseDivAlignValue(aValue, aResult)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
+  }
+  if (aAttribute == nsHTMLAtoms::cols) {
+    nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::gutter) {
+    nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::width) {
+    nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult,
+                                              eHTMLUnit_Pixel);
+    return NS_CONTENT_ATTR_HAS_VALUE;
   }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLDivElement::AttributeToString(nsIAtom* aAttribute,
-                             nsHTMLValue& aValue,
-                             nsString& aResult) const
+                                    nsHTMLValue& aValue,
+                                    nsString& aResult) const
 {
   if (aAttribute == nsHTMLAtoms::align) {
     if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
-      nsHTMLGenericContent::AlignValueToString(aValue, aResult);
+      nsGenericHTMLElement::DivAlignValueToString(aValue, aResult);
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
@@ -155,18 +168,26 @@ nsHTMLDivElement::AttributeToString(nsIAtom* aAttribute,
 
 NS_IMETHODIMP
 nsHTMLDivElement::MapAttributesInto(nsIStyleContext* aContext,
-                             nsIPresContext* aPresContext)
+                                    nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
+      text->mTextAlign = value.GetIntValue();
+    }
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLDivElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                          nsEvent* aEvent,
-                          nsIDOMEvent** aDOMEvent,
-                          PRUint32 aFlags,
-                          nsEventStatus& aEventStatus)
+                                 nsEvent* aEvent,
+                                 nsIDOMEvent** aDOMEvent,
+                                 PRUint32 aFlags,
+                                 nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);

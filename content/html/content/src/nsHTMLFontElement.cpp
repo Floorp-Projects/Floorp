@@ -23,16 +23,18 @@
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsIDeviceContext.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsStyleUtil.h"
 #include "nsIPresContext.h"
 
 static NS_DEFINE_IID(kIDOMHTMLFontElementIID, NS_IDOMHTMLFONTELEMENT_IID);
 
 class nsHTMLFontElement : public nsIDOMHTMLFontElement,
-                   public nsIScriptObjectOwner,
-                   public nsIDOMEventReceiver,
-                   public nsIHTMLContent
+                          public nsIScriptObjectOwner,
+                          public nsIDOMEventReceiver,
+                          public nsIHTMLContent
 {
 public:
   nsHTMLFontElement(nsIAtom* aTag);
@@ -71,7 +73,7 @@ public:
   NS_IMPL_IHTMLCONTENT_USING_GENERIC(mInner)
 
 protected:
-  nsHTMLGenericContainerContent mInner;
+  nsGenericHTMLContainerElement mInner;
 };
 
 nsresult
@@ -135,33 +137,182 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
                               const nsString& aValue,
                               nsHTMLValue& aResult)
 {
-  // XXX write me
+  if ((aAttribute == nsHTMLAtoms::size) ||
+      (aAttribute == nsHTMLAtoms::pointSize) ||
+      (aAttribute == nsHTMLAtoms::fontWeight)) {
+    nsAutoString tmp(aValue);
+    PRInt32 ec, v = tmp.ToInteger(&ec);
+    tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
+    PRUnichar ch = tmp.First();
+    aResult.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
+                        eHTMLUnit_Integer : eHTMLUnit_Enumerated);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
+  if (aAttribute == nsHTMLAtoms::color) {
+    nsGenericHTMLElement::ParseColor(aValue, aResult);
+    return NS_CONTENT_ATTR_HAS_VALUE;
+  }
   return NS_CONTENT_ATTR_NOT_THERE;
 }
 
 NS_IMETHODIMP
 nsHTMLFontElement::AttributeToString(nsIAtom* aAttribute,
-                              nsHTMLValue& aValue,
-                              nsString& aResult) const
+                                     nsHTMLValue& aValue,
+                                     nsString& aResult) const
 {
-  // XXX write me
+  if ((aAttribute == nsHTMLAtoms::size) ||
+      (aAttribute == nsHTMLAtoms::pointSize) ||
+      (aAttribute == nsHTMLAtoms::fontWeight)) {
+    aResult.Truncate();
+    if (aValue.GetUnit() == eHTMLUnit_Enumerated) {
+      aResult.Append(aValue.GetIntValue(), 10);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+    else if (aValue.GetUnit() == eHTMLUnit_Integer) {
+      PRInt32 value = aValue.GetIntValue();
+      if (value >= 0) {
+        aResult.Append('+');
+      }
+      aResult.Append(value, 10);
+      return NS_CONTENT_ATTR_HAS_VALUE;
+    }
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
 NS_IMETHODIMP
 nsHTMLFontElement::MapAttributesInto(nsIStyleContext* aContext,
-                              nsIPresContext* aPresContext)
+                                     nsIPresContext* aPresContext)
 {
-  // XXX write me
-  return NS_OK;
+  if (nsnull != mInner.mAttributes) {
+    nsHTMLValue value;
+    nsStyleFont* font = (nsStyleFont*)
+      aContext->GetMutableStyleData(eStyleStruct_Font);
+    const nsStyleFont* parentFont = font;
+    nsIStyleContext* parentContext = aContext->GetParent();
+    if (nsnull != parentContext) {
+      parentFont = (const nsStyleFont*)
+        parentContext->GetStyleData(eStyleStruct_Font);
+    }
+    const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
+    const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
+
+    // face: string list
+    GetAttribute(nsHTMLAtoms::face, value);
+    if (value.GetUnit() == eHTMLUnit_String) {
+
+      nsIDeviceContext* dc = aPresContext->GetDeviceContext();
+      if (nsnull != dc) {
+        nsAutoString  familyList;
+
+        value.GetStringValue(familyList);
+          
+        font->mFont.name = familyList;
+        nsAutoString face;
+        if (NS_OK == dc->FirstExistingFont(font->mFont, face)) {
+          if (face.EqualsIgnoreCase("monospace")) {
+            font->mFont = font->mFixedFont;
+          }
+          else {
+            font->mFixedFont.name = familyList;
+          }
+        }
+        else {
+          font->mFont.name = defaultFont.name;
+          font->mFixedFont.name= defaultFixedFont.name;
+        }
+        font->mFlags |= NS_STYLE_FONT_FACE_EXPLICIT;
+        NS_RELEASE(dc);
+      }
+    }
+
+    // pointSize: int, enum
+    GetAttribute(nsHTMLAtoms::pointSize, value);
+    if (value.GetUnit() == eHTMLUnit_Integer) {
+      // XXX should probably sanitize value
+      font->mFont.size = parentFont->mFont.size +
+        NSIntPointsToTwips(value.GetIntValue());
+      font->mFixedFont.size = parentFont->mFixedFont.size +
+        NSIntPointsToTwips(value.GetIntValue());
+      font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
+    }
+    else if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      font->mFont.size = NSIntPointsToTwips(value.GetIntValue());
+      font->mFixedFont.size = NSIntPointsToTwips(value.GetIntValue());
+      font->mFlags |= NS_STYLE_FONT_SIZE_EXPLICIT;
+    }
+    else {
+      // size: int, enum , NOTE: this does not count as an explicit size
+      // also this has no effect if font is already explicit
+      if (0 == (font->mFlags & NS_STYLE_FONT_SIZE_EXPLICIT)) {
+        GetAttribute(nsHTMLAtoms::size, value);
+        if ((value.GetUnit() == eHTMLUnit_Integer) ||
+            (value.GetUnit() == eHTMLUnit_Enumerated)) { 
+          PRInt32 size = value.GetIntValue();
+        
+          if (value.GetUnit() == eHTMLUnit_Integer) { // int (+/-)
+            size = 3 + size;  // XXX should be BASEFONT, not three
+          }
+          size = ((0 < size) ? ((size < 8) ? size : 7) : 1); 
+          PRInt32 scaler = aPresContext->GetFontScaler();
+          float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+          font->mFont.size =
+            nsStyleUtil::CalcFontPointSize(size, (PRInt32)defaultFont.size,
+                                           scaleFactor);
+          font->mFixedFont.size =
+            nsStyleUtil::CalcFontPointSize(size,
+                                           (PRInt32)defaultFixedFont.size,
+                                           scaleFactor);
+        }
+      }
+    }
+
+    // fontWeight: int, enum
+    GetAttribute(nsHTMLAtoms::fontWeight, value);
+    if (value.GetUnit() == eHTMLUnit_Integer) { // +/-
+      PRInt32 weight = parentFont->mFont.weight + value.GetIntValue();
+      font->mFont.weight =
+        ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+      font->mFixedFont.weight =
+        ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      PRInt32 weight = value.GetIntValue();
+      weight = ((100 < weight) ? ((weight < 700) ? weight : 700) : 100);
+      font->mFont.weight = weight;
+      font->mFixedFont.weight = weight;
+    }
+
+    // color: color
+    GetAttribute(nsHTMLAtoms::color, value);
+    if (value.GetUnit() == eHTMLUnit_Color) {
+      nsStyleColor* color = (nsStyleColor*)
+        aContext->GetMutableStyleData(eStyleStruct_Color);
+      color->mColor = value.GetColorValue();
+    }
+    else if (value.GetUnit() == eHTMLUnit_String) {
+      nsAutoString buffer;
+      value.GetStringValue(buffer);
+      char cbuf[40];
+      buffer.ToCString(cbuf, sizeof(cbuf));
+
+      nsStyleColor* color = (nsStyleColor*)
+        aContext->GetMutableStyleData(eStyleStruct_Color);
+      NS_ColorNameToRGB(cbuf, &(color->mColor));
+    }
+
+    NS_IF_RELEASE(parentContext);
+  }
+  return mInner.MapAttributesInto(aContext, aPresContext);
 }
 
 NS_IMETHODIMP
 nsHTMLFontElement::HandleDOMEvent(nsIPresContext& aPresContext,
-                           nsEvent* aEvent,
-                           nsIDOMEvent** aDOMEvent,
-                           PRUint32 aFlags,
-                           nsEventStatus& aEventStatus)
+                                  nsEvent* aEvent,
+                                  nsIDOMEvent** aDOMEvent,
+                                  PRUint32 aFlags,
+                                  nsEventStatus& aEventStatus)
 {
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
