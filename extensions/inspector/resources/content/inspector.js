@@ -158,7 +158,7 @@ InspectorApp.prototype =
   
   showOpenURLDialog: function()
   {
-    var url = prompt("Enter a URL:", "");
+    var url = prompt("Enter a URL:", "http://");
     if (url) {
       this.gotoURL(url);
     }
