@@ -42,9 +42,15 @@ LINCS=-I$(PUBLIC)\xpcom \
       -I$(PUBLIC)\base \
       -I$(PUBLIC)\raptor
 
+LLIBS=					\
+ $(DIST)\lib\raptorbase.lib
+
 MAKE_OBJ_TYPE = DLL
 DLLNAME = txmgr
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
+
+MISCDEP =				\
+ $(DIST)\lib\raptorbase.lib
 
 LCFLAGS = \
         $(LCFLAGS) \
