@@ -2965,8 +2965,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
   printf("nsWebShell::OnEndDocumentLoad:%p: loader=%p url=%s status=%d\n", this, loader, spec, aStatus);
 #endif  
 
-  if (!mProcessedEndDocumentLoad &&
-      loader == mDocLoader) {
+  if (!mProcessedEndDocumentLoad) {
     mProcessedEndDocumentLoad = PR_TRUE;    
 
     if (nsnull != mScriptGlobal) {
