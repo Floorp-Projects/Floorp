@@ -30,9 +30,9 @@
 
 <!-- These are in the location box. -->
 <!ENTITY locationBox.label "Image Information">
-<!ENTITY locationEditField.label "Image URL">
+<!ENTITY locationEditField.label "Image URL:">
 <!ENTITY locationEditField.tooltip "Type the image's filename or location">
-<!ENTITY altTextEditField.label "Alternative Text">
+<!ENTITY altTextEditField.label "Alternative Text:">
 <!ENTITY altTextEditField.tooltip "Type text to display in place of the image">
 
 <!ENTITY MoreFewerButton.tooltip "Display more or fewer properties to edit">
@@ -50,17 +50,17 @@
 
 <!-- These controls are in the Image Map box of the expanded area -->
 <!ENTITY imagemapBox.label "Image Map">
-<!ENTITY removeImageMapButton.label "Remove Image Map">
-<!ENTITY editImageMapButton.label "Edit Image Map...">
+<!ENTITY removeImageMapButton.label "Remove">
+<!ENTITY editImageMapButton.label "Edit...">
 <!ENTITY editImageMapButton.tooltip "Create clickable hotspots for this image">
 
 <!-- These are the options for image alignment -->
 <!ENTITY alignment.label "Align Text to Image">
-<!ENTITY bottomPopup.value "at the bottom">
-<!ENTITY topPopup.value "at the top">
-<!ENTITY centerPopup.value "in the center">
-<!ENTITY wrapRightPopup.value "wrap to the right">
-<!ENTITY wrapLeftPopup.value "wrap to the left">
+<!ENTITY bottomPopup.value "At the bottom">
+<!ENTITY topPopup.value "At the top">
+<!ENTITY centerPopup.value "In the center">
+<!ENTITY wrapRightPopup.value "Wrap to the right">
+<!ENTITY wrapLeftPopup.value "Wrap to the left">
 
 <!-- These controls are in the Spacing Box of the expanded area -->
 <!ENTITY spacingBox.label "Spacing">

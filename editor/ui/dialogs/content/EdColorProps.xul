@@ -136,7 +136,7 @@
     <columns><column/><column flex="1"/></columns>
     <rows>
       <row autostretch="never" valign="middle" style="margin-bottom: 5px">
-        <textfield id="BackgroundImageInput" onchange="ChangeBackgroundImage()"
+        <textfield id="BackgroundImageInput" onkeyup="ChangeBackgroundImage()"
          tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" 
          style="min-width : 18em"/>
         <!-- from EdDialogOverlay.xul -->

@@ -126,6 +126,7 @@ function SetTextfieldFocus(textfield)
 function ShowInputErrorMessage(message)
 {
   editorShell.AlertWithTitle(GetString("InputError"), message);
+  window.focus();
 }
 
 function GetString(name)
@@ -571,7 +572,9 @@ function onAdvancedEdit()
     // Open the AdvancedEdit dialog, passing in the element to be edited
     //  (the copy named "globalElement")
     window.openDialog("chrome://editor/content/EdAdvancedEdit.xul", "_blank", "chrome,close,titlebar,modal,resizable=yes", "", globalElement);
-    if (window.AdvancedEditOK) {
+    window.focus();
+    if (window.AdvancedEditOK)
+    {
       // Copy edited attributes to the dialog widgets:
       InitDialog();
     }
@@ -787,7 +790,7 @@ function GetLocalFileURL(filterType)
   }
   
   // Convert native filepath to the URL format
-  fs = GetScriptFileSpec();
+  var fs = GetScriptFileSpec();
   if (fs)
   {
 dump(fp.file.path+" = native file path\n");
