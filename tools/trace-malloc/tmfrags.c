@@ -732,7 +732,7 @@ int simpleHeapEvent(TMState* inStats, HeapEventType inType, unsigned mTimestamp,
     /*
     **  Set the most basic object details.
     */
-    initHeapObject(&inObject);
+    initHeapObject(&newObject);
     newObject.mHeapOffset = inHeapID;
     newObject.mSize = inSize;
     if(FREE == inType)
