@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
 
 <!DOCTYPE window
@@ -19,10 +19,7 @@
         title="&selectAddressWindow.title;"
         style="width:100%;height:100%">
 
-<html:script src="resource:/res/mailnews/messenger/widgetglue.js"/>
-<html:script src="resource:/res/mailnews/messenger/commandglue.js"/>
-<html:script src="resource:/res/mailnews/messenger/shareglue.js"/>
-<html:script src="resource:/res/mailnews/addrbook/addressbook.js"/>
+<html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 
 
 	<box id="header" align="vertical" style="width:100%;height:100%">
@@ -37,7 +34,7 @@
 			<spring style="width: 10px"/>
 		</box>
 
-		<html:iframe src="resource:/res/mailnews/addrbook/selectaddress.html" name="bigframe" flex="100%" />
+		<html:iframe src="chrome://addressbook/content/selectaddress.html" name="bigframe" flex="100%" />
 		
 	</box>
 </window>

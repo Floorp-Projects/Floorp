@@ -16,7 +16,7 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<html:script src="chrome://addressbook/content/addressbook.js"/>
+<html:script language="javascript" src="chrome://addressbook/content/addressbook.js"/>
 
 
 <tree rdf:datasources="rdf:addressdirectory rdf:addresscard" id="resultTree" onclick="DisplayCardViewPane(event.target.parentNode)">
