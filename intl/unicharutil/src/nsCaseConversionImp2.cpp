@@ -201,28 +201,36 @@ nsresult nsCaseConversionImp2::ToUpper(
   return NS_OK;
 }
 
-nsresult nsCaseConversionImp2::ToLower(
-  PRUnichar aChar, PRUnichar* aReturn
+// a non-virtual version of ToLower
+static PRUnichar FastToLower(
+  PRUnichar aChar
 )
 {
   if( IS_ASCII(aChar)) // optimize for ASCII
   {
      if(IS_ASCII_UPPER(aChar))
-        *aReturn = aChar + 0x0020;
+        return aChar + 0x0020;
      else
-        *aReturn = aChar;
+        return aChar;
   } 
   else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
   {
-    *aReturn = aChar;
+    return aChar;
   } 
   else
   {
-    *aReturn = gLowerMap->Map(aChar);
+    return gLowerMap->Map(aChar);
   } 
   return NS_OK;
 }
 
+nsresult nsCaseConversionImp2::ToLower(
+  PRUnichar aChar, PRUnichar* aReturn
+)
+{
+  *aReturn = FastToLower(aChar);
+  return NS_OK;
+}
 nsresult nsCaseConversionImp2::ToTitle(
   PRUnichar aChar, PRUnichar* aReturn
 )
@@ -287,24 +295,7 @@ nsresult nsCaseConversionImp2::ToLower(
 {
   PRUint32 i;
   for(i=0;i<aLen;i++) 
-  {
-    PRUnichar aChar = anArray[i];
-    if( IS_ASCII(aChar)) // optimize for ASCII
-    {
-       if(IS_ASCII_UPPER(aChar))
-          aReturn[i] = aChar + 0x0020;
-       else
-          aReturn[i] = aChar;
-    } 
-    else if( IS_NOCASE_CHAR(aChar)) // optimize for block which have no case
-    {
-          aReturn[i] = aChar;
-    } 
-    else 
-    {
-      aReturn[i] = gLowerMap->Map(aChar);
-    }
-  }
+    aReturn[i] = FastToLower(anArray[i]);
   return NS_OK;
 }
 
@@ -437,7 +428,39 @@ NS_IMETHODIMP nsCaseConversionImp2::ToTitle
   return NS_OK;
 }
 
+// implementation moved from the old nsCRT routine
+NS_IMETHODIMP
+nsCaseConversionImp2::CaseInsensitiveCompare(const PRUnichar *aLeft,
+                                             const PRUnichar *aRight,
+                                             PRUint32 aCount, PRInt32* aResult)
+{
+  if (!aLeft || !aRight)
+    return NS_ERROR_INVALID_POINTER;
 
+  // assume equality. We bail early if no equality
+  *aResult = 0;
+  
+  if (aCount) {
+    do {
+      PRUnichar c1 = *aLeft++;
+      PRUnichar c2 = *aRight++;
+      
+      if (c1 != c2) {
+        c1 = FastToLower(c1);
+        c2 = FastToLower(c2);
+        if (c1 != c2) {
+          if (c1 < c2) {
+            *aResult = -1;
+            return NS_OK;
+          }
+          *aResult = 1;
+          return NS_OK;
+        }
+      }
+    } while (--aCount != 0);
+  }
+  return NS_OK;
+}
 
 nsCaseConversionImp2::nsCaseConversionImp2()
 {
