@@ -46,11 +46,19 @@ menupopup, popup
     padding               : 1px;
   }  
   
-menupopup > menu, popup > menu,
-menupopup > menuitem, popup > menuitem
+menupopup > menu,
+menupopup > menuitem
   {
     max-width             : 60em; /* should move to content */
     min-width             : 14em; /* should move to content */
+    margin                : 0px;
+  }
+
+popup > menu,
+popup > menuitem
+  {
+    max-width             : 60em; /* should move to content */
+    min-width             : 8em; /* should move to content */
     margin                : 0px;
   }
 
