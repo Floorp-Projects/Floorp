@@ -368,6 +368,7 @@ NS_METHOD nsListBox::CreateNative(GtkWidget *parentWindow)
   // to handle scrolling
   mWidget = gtk_scrolled_window_new (nsnull, nsnull);
   gtk_widget_set_name(mWidget, "nsListBox");
+  gtk_container_set_border_width(GTK_CONTAINER(mWidget), 0);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (mWidget),
                                   GTK_POLICY_NEVER,
                                   GTK_POLICY_AUTOMATIC);

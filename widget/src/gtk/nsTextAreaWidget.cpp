@@ -44,6 +44,8 @@ nsTextAreaWidget::nsTextAreaWidget()
 //-------------------------------------------------------------------------
 nsTextAreaWidget::~nsTextAreaWidget()
 {
+  gtk_widget_destroy(mTextWidget);
+  mTextWidget = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -54,11 +56,21 @@ nsTextAreaWidget::~nsTextAreaWidget()
 NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 {
   PRBool oldIsReadOnly;
-  mWidget = gtk_text_new(PR_FALSE, PR_FALSE);
-  gtk_text_set_word_wrap(GTK_TEXT(mWidget), PR_TRUE);
-  gtk_widget_set_name(mWidget, "nsTextAreaWidget");
+  mWidget = gtk_scrolled_window_new(nsnull, nsnull);
+  gtk_container_set_border_width(GTK_CONTAINER(mWidget), 0);
+  gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(mWidget),
+                                 GTK_POLICY_NEVER,
+                                 GTK_POLICY_ALWAYS);
+  
+  mTextWidget = gtk_text_new(nsnull, nsnull);
+  gtk_text_set_word_wrap(GTK_TEXT(mTextWidget), PR_TRUE);
+  gtk_widget_set_name(mTextWidget, "nsTextAreaWidget");
+  gtk_widget_show(mTextWidget);
   SetPassword(mIsPassword);
   SetReadOnly(mIsReadOnly, oldIsReadOnly);
+
+  gtk_container_add(GTK_CONTAINER(mWidget), mTextWidget);
+
   return NS_OK;
 }
 
