@@ -27,6 +27,13 @@
 #include "nsIThread.h"
 #include "nsPIEventQueueChain.h"
 
+#include "prlog.h"
+
+#if defined(PR_LOGGING)
+extern PRLogModuleInfo* gEventQueueLog;
+extern PRUint32 gEventQueueLogCount;
+#endif
+
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -128,7 +135,7 @@ nsIEventQueue* EventQueueEntry::GetEventQueue(void)
   if (mQueue) {
     nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(mQueue));
     if (ourChain)
-      ourChain->GetYoungestActive(&answer);
+      ourChain->GetYoungest(&answer);
     else {
       NS_ADDREF(mQueue);
       answer = mQueue;
@@ -254,6 +261,10 @@ nsEventQueueServiceImpl::nsEventQueueServiceImpl()
   mEventQTable   = new nsHashtable(16);
   mEventQMonitor = PR_NewMonitor();
   mBaseEntry     = 0;
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+  if (!gEventQueueLog)
+    gEventQueueLog = PR_NewLogModule("nseventqueue");
+#endif
 }
 
 nsEventQueueServiceImpl::~nsEventQueueServiceImpl()
@@ -351,6 +362,14 @@ nsEventQueueServiceImpl::AddEventQueueEntry(EventQueueEntry *aEntry)
     aEntry->Link(last);
   } else
     mBaseEntry = aEntry;
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+    PLEventQueue *equeue;
+    nsCOMPtr<nsIEventQueue> iqueue = aEntry->GetEventQueue();
+    iqueue->GetPLEventQueue(&equeue);
+    PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+           ("EventQueue: Service add queue entry [queue=%lx]",(long)equeue));
+    ++gEventQueueLogCount;
+#endif
 }
 
 void
@@ -361,6 +380,14 @@ nsEventQueueServiceImpl::RemoveEventQueueEntry(EventQueueEntry *aEntry)
     mBaseEntry = aEntry->Next();
   mEnumerator.Skip(aEntry);
   aEntry->Unlink();
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+    PLEventQueue *equeue;
+    nsCOMPtr<nsIEventQueue> iqueue = aEntry->GetEventQueue();
+    iqueue->GetPLEventQueue(&equeue);
+    PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+           ("EventQueue: Service remove queue entry [queue=%lx]",(long)equeue));
+    ++gEventQueueLogCount;
+#endif
 }
 
 NS_IMETHODIMP
@@ -436,6 +463,13 @@ nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
   if (NS_SUCCEEDED(rv)) {
     *aNewQueue = evQueueEntry->GetEventQueue();
     NS_ADDREF(evQueueEntry);
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+    PLEventQueue *equeue;
+    (*aNewQueue)->GetPLEventQueue(&equeue);
+    PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+           ("EventQueue: Service push queue [queue=%lx]",(long)equeue));
+    ++gEventQueueLogCount;
+#endif
   }
 
 done:
@@ -461,8 +495,16 @@ nsEventQueueServiceImpl::PopThreadEventQueue(nsIEventQueue *aQueue)
 
     NS_RELEASE2(evQueueEntry, refcnt);
     // If this wasn't the last reference, we must be popping.
-    if (refcnt > 0)
+    if (refcnt > 0) {
+#if defined(PR_LOGGING) && defined(DEBUG_danm)
+      PLEventQueue *equeue;
+      aQueue->GetPLEventQueue(&equeue);
+      PR_LOG(gEventQueueLog, PR_LOG_DEBUG,
+             ("EventQueue: Service pop queue [queue=%lx]",(long)equeue));
+    ++gEventQueueLogCount;
+#endif
       evQueueEntry->RemoveQueue(aQueue);
+    }
   } else {
     rv = NS_ERROR_FAILURE;
   }
