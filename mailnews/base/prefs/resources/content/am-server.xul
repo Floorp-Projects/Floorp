@@ -61,6 +61,8 @@
 
   <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer"
             value="&deleteOnServer.label;"/>
+  <checkbox wsm_persist="true" id="pop3.emptyTrashOnExit"
+            value="&emptyTrashOnExit.label;"/>
 
   <!-- IMAP -->
   <box iscontrolcontainer="true">
