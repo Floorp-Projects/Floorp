@@ -52,6 +52,10 @@
 if [ -z "$QASCRIPT_DIR" ]
 then
 	QASCRIPT_DIR=`dirname $0`
+	if [ "$QASCRIPT_DIR" = '.' ]
+	then
+		QASCRIPT_DIR=`pwd`
+	fi
 fi
 export QASCRIPT_DIR
 
