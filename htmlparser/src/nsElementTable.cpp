@@ -175,7 +175,7 @@ CTagList  gTableElemKids(sizeof(gTableElemList)/sizeof(eHTMLTag_unknown),gTableE
 static eHTMLTags gTRList[]=   {eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script,eHTMLTag_input};
 CTagList  gTRKids(sizeof(gTRList)/sizeof(eHTMLTag_unknown),gTRList);
  
-CTagList  gTBodyKids(3,0,eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input);
+CTagList  gTBodyKids(4,0,eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input,eHTMLTag_script);
 CTagList  gULKids(2,0,eHTMLTag_li,eHTMLTag_p);
 
 
