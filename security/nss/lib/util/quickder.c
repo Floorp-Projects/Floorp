@@ -898,6 +898,10 @@ SECStatus SEC_QuickDERDecodeItem(PRArenaPool* arena, void* dest,
         {
             PORT_ArenaRelease(arena, savpos);
         }
+        else
+        {
+            PORT_ArenaUnmark(arena, savpos);
+        }
     }
 
     return rv;
