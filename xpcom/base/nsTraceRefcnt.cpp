@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   L. David Baron (dbaron@fas.harvard.edu)
  */
 
 #include "nsISupports.h"
@@ -80,6 +81,7 @@ NS_MeanAndStdDev(double n, double sumOfValues, double sumOfSquaredValues,
 
 #ifdef NS_BUILD_REFCNT_LOGGING
 #include "plhash.h"
+#include "prmem.h"
 
 #if defined(NS_MT_SUPPORTED)
 #include "prlock.h"
@@ -111,6 +113,7 @@ static FILE *gBloatLog = nsnull;
 static FILE *gRefcntsLog = nsnull;
 static FILE *gAllocLog = nsnull;
 static FILE *gLeakyLog = nsnull;
+static FILE *gCOMPtrLog = nsnull;
 
 #define XPCOM_REFCNT_TRACK_BLOAT  0x1
 #define XPCOM_REFCNT_LOG_ALL      0x2
@@ -120,6 +123,63 @@ static FILE *gLeakyLog = nsnull;
 // Should only use this on NS_LOSING_ARCHITECTURE...
 #define XPCOM_REFCNT_LOG_CALLS    0x10
 #define XPCOM_REFCNT_LOG_NEW      0x20
+
+struct serialNumberRecord {
+  PRInt32 serialNumber;
+  PRInt32 refCount;
+  PRInt32 COMPtrCount;
+};
+
+// These functions are copied from nsprpub/lib/ds/plhash.c, with one
+// change to free the serialNumberRecord.
+
+static void * PR_CALLBACK
+SerialNumberAllocTable(void *pool, PRSize size)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    return PR_MALLOC(size);
+}
+
+static void PR_CALLBACK
+SerialNumberFreeTable(void *pool, void *item)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    PR_Free(item);
+}
+
+static PLHashEntry * PR_CALLBACK
+SerialNumberAllocEntry(void *pool, const void *key)
+{
+#if defined(XP_MAC)
+#pragma unused (pool,key)
+#endif
+
+    return PR_NEW(PLHashEntry);
+}
+
+static void PR_CALLBACK
+SerialNumberFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+#if defined(XP_MAC)
+#pragma unused (pool)
+#endif
+
+    if (flag == HT_FREE_ENTRY) {
+        PR_Free(NS_REINTERPRET_CAST(serialNumberRecord*,he->value));
+        PR_Free(he);
+    }
+}
+
+static PLHashAllocOps serialNumberHashAllocOps = {
+    SerialNumberAllocTable, SerialNumberFreeTable,
+    SerialNumberAllocEntry, SerialNumberFreeEntry
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -367,7 +427,17 @@ GetBloatEntry(const char* aTypeName, PRUint32 aInstanceSize)
 
 static PRIntn PR_CALLBACK DumpSerialNumbers(PLHashEntry* aHashEntry, PRIntn aIndex, void* aClosure)
 {
-  fprintf((FILE*) aClosure, "%d\n", PRInt32(aHashEntry->value));
+  serialNumberRecord* record = NS_REINTERPRET_CAST(serialNumberRecord *,aHashEntry->value);
+#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
+  fprintf((FILE*) aClosure, "%d (%d references; %d from COMPtrs)\n",
+                            record->serialNumber,
+                            record->refCount,
+                            record->COMPtrCount);
+#else
+  fprintf((FILE*) aClosure, "%d (%d references)\n",
+                            record->serialNumber,
+                            record->refCount);
+#endif
   return HT_ENUMERATE_NEXT;
 }
 
@@ -498,14 +568,46 @@ static PRInt32 GetSerialNumber(void* aPtr, PRBool aCreate)
 #endif
   PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
   if (hep && *hep) {
-    return PRInt32((*hep)->value);
+    return PRInt32((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->serialNumber);
   }
   else if (aCreate) {
-    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(aPtr), aPtr, (void*)(++gNextSerialNumber));
+    serialNumberRecord *record = PR_NEW(serialNumberRecord);
+    record->serialNumber = ++gNextSerialNumber;
+    record->refCount = 0;
+    record->COMPtrCount = 0;
+    PL_HashTableRawAdd(gSerialNumbers, hep, PLHashNumber(aPtr), aPtr, NS_REINTERPRET_CAST(void*,record));
     return gNextSerialNumber;
   }
   else {
     return 0;
+  }
+}
+
+static PRInt32* GetRefCount(void* aPtr)
+{
+#ifdef GC_LEAK_DETECTOR
+  // need to disguise this pointer, so the table won't keep the object alive.
+  aPtr = (void*) ~PLHashNumber(aPtr);
+#endif
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
+  if (hep && *hep) {
+    return &((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->refCount);
+  } else {
+    return nsnull;
+  }
+}
+
+static PRInt32* GetCOMPtrCount(void* aPtr)
+{
+#ifdef GC_LEAK_DETECTOR
+  // need to disguise this pointer, so the table won't keep the object alive.
+  aPtr = (void*) ~PLHashNumber(aPtr);
+#endif
+  PLHashEntry** hep = PL_HashTableRawLookup(gSerialNumbers, PLHashNumber(aPtr), aPtr);
+  if (hep && *hep) {
+    return &((NS_REINTERPRET_CAST(serialNumberRecord*,(*hep)->value))->COMPtrCount);
+  } else {
+    return nsnull;
   }
 }
 
@@ -610,6 +712,22 @@ static void InitTraceLog(void)
   }
 
   const char* classes = getenv("XPCOM_MEM_LOG_CLASSES");
+
+#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
+  if (classes) {
+    (void)InitLog("XPCOM_MEM_COMPTR_LOG", "nsCOMPtr", &gCOMPtrLog);
+  } else {
+    if (getenv("XPCOM_MEM_COMPTR_LOG")) {
+      fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- but XPCOM_MEM_LOG_CLASSES is not defined\n");
+    }
+  }
+#else
+  const char* comptr_log = getenv("XPCOM_MEM_COMPTR_LOG");
+  if (comptr_log) {
+    fprintf(stdout, "### XPCOM_MEM_COMPTR_LOG defined -- but it will not work without dynamic_cast\n");
+  }
+#endif
+
   if (classes) {
     // if XPCOM_MEM_LOG_CLASSES was set to some value, the value is interpreted
     // as a list of class names to track
@@ -642,7 +760,7 @@ static void InitTraceLog(void)
                                      HashNumber,
                                      PL_CompareValues,
                                      PL_CompareValues,
-                                     NULL, NULL);
+                                     &serialNumberHashAllocOps, NULL);
 
 
   }
@@ -658,8 +776,8 @@ static void InitTraceLog(void)
     if (NS_WARN_IF_FALSE(gObjectsToLog, "out of memory")) {
       fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- unable to log specific objects\n");
     }
-    else if (! (gRefcntsLog || gAllocLog)) {
-      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- but neither XPCOM_MEM_REFCNT_LOG nor XPCOM_MEM_ALLOC_LOG is defined\n");
+    else if (! (gRefcntsLog || gAllocLog || gCOMPtrLog)) {
+      fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- but none of XPCOM_MEM_(REFCNT|ALLOC|COMPTR)_LOG is defined\n");
     }
     else {
       fprintf(stdout, "### XPCOM_MEM_LOG_OBJECTS defined -- only logging these objects: ");
@@ -669,14 +787,25 @@ static void InitTraceLog(void)
         if (cm) {
           *cm = '\0';
         }
-        PRInt32 serialno = 0;
+        PRInt32 top = 0;
+        PRInt32 bottom = 0;
         while (*cp) {
-          serialno *= 10;
-          serialno += *cp - '0';
+          if (*cp == '-') {
+            bottom = top;
+            top = 0;
+            ++cp;
+          }
+          top *= 10;
+          top += *cp - '0';
           ++cp;
         }
-        PL_HashTableAdd(gObjectsToLog, (const void*)serialno, (void*)1);
-        fprintf(stdout, "%d ", serialno);
+        if (!bottom) {
+          bottom = top;
+        }
+        for(PRInt32 serialno = bottom; serialno <= top; serialno++) {
+          PL_HashTableAdd(gObjectsToLog, (const void*)serialno, (void*)1);
+          fprintf(stdout, "%d ", serialno);
+        }
         if (!cm) break;
         *cm = ',';
         cp = cm + 1;
@@ -686,7 +815,7 @@ static void InitTraceLog(void)
   }
 
 
-  if (gBloatLog || gRefcntsLog || gAllocLog || gLeakyLog) {
+  if (gBloatLog || gRefcntsLog || gAllocLog || gLeakyLog || gCOMPtrLog) {
     gLogging = PR_TRUE;
   }
 
@@ -908,8 +1037,11 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
     if (--skip <= 0) {
       Dl_info info;
       int ok = dladdr((void*) pc, &info);
-      if (ok < 0)
-        break;
+      if (!ok) {
+        fprintf(aStream, "UNKNOWN 0x%08X\n", (char*)pc);
+        bp = nextbp;
+        continue;
+      }
 
       const char * symbol = info.dli_sname;
 
@@ -1178,6 +1310,10 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
     PRInt32 serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, aRefCnt == 1);
+      PRInt32* count = GetRefCount(aPtr);
+      if(count)
+        (*count)++;
+
     }
 
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
@@ -1234,6 +1370,10 @@ nsTraceRefcnt::LogRelease(void* aPtr,
     PRInt32 serialno = 0;
     if (gSerialNumbers && loggingThisType) {
       serialno = GetSerialNumber(aPtr, PR_FALSE);
+      PRInt32* count = GetRefCount(aPtr);
+      if(count)
+        (*count)--;
+
     }
 
     PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
@@ -1444,6 +1584,86 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
       fprintf(gAllocLog, "\n<%s> 0x%08X %d Dtor (%d)\n",
              aType, PRInt32(aPtr), serialno, aInstanceSize);
       WalkTheStack(gAllocLog);
+    }
+#endif
+
+    UNLOCK_TRACELOG();
+  }
+#endif
+}
+
+NS_COM void
+nsTraceRefcnt::LogAddCOMPtr(void* aCOMPtr,
+                            void* aObject)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  // This is a very indirect way of finding out what the class is
+  // of the object being logged.  If we're logging a specific type,
+  // then 
+  if (!gTypesToLog || !gSerialNumbers) {
+    return;
+  }
+  PRInt32 serialno = GetSerialNumber(aObject, PR_FALSE);
+  if (serialno == 0) {
+    return;
+  }
+
+  if (!gInitialized)
+    InitTraceLog();
+  if (gLogging) {
+    LOCK_TRACELOG();
+
+    PRInt32* count = GetCOMPtrCount(aObject);
+    if(count)
+      (*count)++;
+
+#ifndef NS_LOSING_ARCHITECTURE
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+
+    if (gCOMPtrLog && loggingThisObject) {
+      fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrAddRef %d 0x%08X\n",
+              PRInt32(aObject), serialno, count?(*count):-1, PRInt32(aCOMPtr));
+      WalkTheStack(gCOMPtrLog);
+    }
+#endif
+
+    UNLOCK_TRACELOG();
+  }
+#endif
+}
+
+NS_COM void
+nsTraceRefcnt::LogReleaseCOMPtr(void* aCOMPtr,
+                                void* aObject)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING
+  // This is a very indirect way of finding out what the class is
+  // of the object being logged.  If we're logging a specific type,
+  // then 
+  if (!gTypesToLog || !gSerialNumbers) {
+    return;
+  }
+  PRInt32 serialno = GetSerialNumber(aObject, PR_FALSE);
+  if (serialno == 0) {
+    return;
+  }
+
+  if (!gInitialized)
+    InitTraceLog();
+  if (gLogging) {
+    LOCK_TRACELOG();
+
+    PRInt32* count = GetCOMPtrCount(aObject);
+    if(count)
+      (*count)--;
+
+#ifndef NS_LOSING_ARCHITECTURE
+    PRBool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
+
+    if (gCOMPtrLog && loggingThisObject) {
+      fprintf(gCOMPtrLog, "\n<?> 0x%08X %d nsCOMPtrRelease %d 0x%08X\n",
+              PRInt32(aObject), serialno, count?(*count):-1, PRInt32(aCOMPtr));
+      WalkTheStack(gCOMPtrLog);
     }
 #endif
 
