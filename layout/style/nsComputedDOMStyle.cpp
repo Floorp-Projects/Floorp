@@ -1466,7 +1466,6 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
     }
     else {
       nsAutoString decorationString;
-      PRBool multipleValues = PR_FALSE;
       if (text->mTextDecoration & NS_STYLE_TEXT_DECORATION_UNDERLINE) {
         const nsAFlatCString& decoration=
           nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_UNDERLINE,
@@ -1477,7 +1476,6 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
         if (!decorationString.IsEmpty()) {
           decorationString.Append(PRUnichar(' '));
         }
-        multipleValues = PR_TRUE;
         const nsAFlatCString& decoration=
           nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_OVERLINE,
                                          nsCSSProps::kTextDecorationKTable);
@@ -1487,7 +1485,6 @@ nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
         if (!decorationString.IsEmpty()) {
           decorationString.Append(PRUnichar(' '));
         }
-        multipleValues = PR_TRUE;
         const nsAFlatCString& decoration=
           nsCSSProps::SearchKeywordTable(NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
                                          nsCSSProps::kTextDecorationKTable);
