@@ -7059,15 +7059,15 @@ nsImapMailFolder::GetCanFileMessages(PRBool *aCanFileMessages)
     rv = server->GetCanFileMessagesOnServer(aCanFileMessages);
 
   if (*aCanFileMessages)
+    rv = nsMsgFolder::GetCanFileMessages(aCanFileMessages);
+
+  if (*aCanFileMessages)
   {
     PRBool noSelect;
     GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, &noSelect);
     *aCanFileMessages = (noSelect) ? PR_FALSE : GetFolderACL()->GetCanIInsertInFolder();
     return NS_OK;
   }
-  if (*aCanFileMessages)
-    rv = nsMsgFolder::GetCanFileMessages(aCanFileMessages);
-
   return rv;
 }
 
