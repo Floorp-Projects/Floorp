@@ -243,8 +243,10 @@
          }
          else {
            var parentIndex = this.treeBoxObject.view.getParentIndex(this.currentIndex);
-           if (parentIndex >= 0)
+           if (parentIndex >= 0) {
              this.treeBoxObject.selection.select(parentIndex);
+             this.treeBoxObject.ensureRowIsVisible(parentIndex);
+           }
          }
         ]]>
       </handler>
