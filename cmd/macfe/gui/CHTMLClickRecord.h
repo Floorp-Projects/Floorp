@@ -72,6 +72,7 @@ class CHTMLClickRecord
 
 		Boolean				IsClickOnAnchor(void) const;
 		Boolean				IsClickOnEdge(void) const;
+		Boolean				IsClickOnSelection(void) const { return mClickIsInSelection; };
 		
 		const char*			GetClickURL() const { return (const char*)mClickURL; }
 		
@@ -90,7 +91,7 @@ class CHTMLClickRecord
 		CL_Layer*			mLayer;
 		EClickKind			mClickKind;
 		
-
+		Boolean				mClickIsInSelection;		// true if mElement is selected
 
 		cstring				mClickURL;
 		cstring				mImageURL;

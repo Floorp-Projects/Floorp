@@ -37,14 +37,17 @@ CHTMLClickRecord::CHTMLClickRecord(
 	CNSContext* 		inContext,
 	LO_Element* 		inElementelement,
 	CL_Layer* 			inLayer)
+	: 
+	mLocalWhere(inLocalWhere), 
+	mImageWhere(inImageWhere), 
+	mElement(inElementelement),
+	mAnchorData(NULL), 
+	mContext(inContext), 
+	mLayer(inLayer), 
+	mClickKind(eWaiting),
+	mClickIsInSelection(false)	
 {
-	mLocalWhere = inLocalWhere;
-	mImageWhere = inImageWhere;
-	mElement = inElementelement;
-	mAnchorData= NULL;
-	mContext = inContext;
-	mLayer = inLayer;
-	mClickKind = eWaiting;
+
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
@@ -88,20 +91,18 @@ void CHTMLClickRecord::Recalc(void)
 EClickKind CHTMLClickRecord::CalcImageClick(void)
 {
 	EClickKind	theKind;
-//	SPoint32	localWhere;
 	
 	// Get the image URL
 	PA_LOCK(mImageURL, char *, (char*)mElement->lo_image.image_url);
 	PA_UNLOCK(loImage->image_url);
 	
-	// Where was the click?
-/*
-	localWhere.h = mLocalWhere.h;
-	localWhere.v = mLocalWhere.v;
-*/
 	// find with layer coordinates (mImageWhere) not local coordinates
 	theKind = FindImagePart ( *mContext, &mElement->lo_image, &mImageWhere,
 		&mClickURL, &mWindowTarget, mAnchorData );
+	
+	// is this image in the selection? ¥¥¥ THIS DOESN'T WORK because layout doesn't
+	// mark images as in the selection...one day...
+	//mClickIsInSelection = (mElement->lo_image.image_attr->attrmask & LO_ELE_SELECTED) != 0;
 			
 	return theKind;
 }
@@ -123,6 +124,9 @@ EClickKind CHTMLClickRecord::CalcTextClick(void)
 		PA_UNLOCK(mElement->lo_text.anchor_href->target);
 		}
 
+	// is this click in the selection?
+	mClickIsInSelection = (mElement->lo_text.ele_attrmask & LO_ELE_SELECTED) != 0;
+	
 	return theKind;
 }
 
@@ -153,6 +157,7 @@ Boolean	CHTMLClickRecord::IsClickOnEdge(void) const
 {
 	return (mClickKind == eEdge);
 }
+
 
 #if 0
 
@@ -259,6 +264,9 @@ void CHTMLClickRecord::CalculatePosition()
 // Snarfed from mclick.cp
 // Figures out everything (anchors, click kind) about the current cursor position
 // called only once -- this is completely horrible
+// 
+// Figure all this out even if the click is in the selection because we'll still
+// need it if the selection click isn't a drag.
 //-----------------------------------
 {
 	if ( mClickKind != eWaiting )
@@ -272,7 +280,7 @@ void CHTMLClickRecord::CalculatePosition()
 
 	if ( mElement->type == LO_IMAGE )
 	{
-		// ¥ click in the image. Complicated case:
+		// ¥ click in the image. Complicated case:	
 		mClickKind = FindImagePart(*mContext, &mElement->lo_image, &mImageWhere, &mImageURL, &mWindowTarget, mAnchorData);
 	}
 	else if ( mElement->type == LO_TEXT && mElement->lo_text.anchor_href )
