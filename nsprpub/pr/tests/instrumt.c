@@ -200,11 +200,27 @@ static void PR_CALLBACK CountSomething( void *arg )
 static void CounterTest( void )
 {
     PRThread *t1, *t2, *t3, *t4;
+    PRIntn i = 0;
     PR_DEFINE_COUNTER( tc );
+    PR_DEFINE_COUNTER( zCounter );
 
     PR_LOG( lm, msgLevel,
         ("Begin CounterTest"));
     
+    /*
+    ** Test Get and Set of a counter.
+    **
+    */
+    PR_CREATE_COUNTER( zCounter, "Atomic", "get/set test", "test get and set of counter" );
+    PR_SET_COUNTER( zCounter, 9 );
+    PR_GET_COUNTER( i, zCounter );
+    if ( i != 9 )
+    {
+        failed = PR_TRUE;
+        PR_LOG( lm, msgLevel,
+            ("Counter set/get failed"));
+    }
+
     activeThreads += 4;
     PR_CREATE_COUNTER( hCounter, "Atomic", "SMP Tests", "test atomic nature of counter" );
 
@@ -455,6 +471,9 @@ PRIntn main(PRIntn argc, char *argv[])
     {
         printf("PASS\n");
     }
+
+
+    PR_DESTROY_COUNTER( hCounter );
 
     PR_DestroyMonitor( mon );
 
