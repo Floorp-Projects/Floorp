@@ -34,7 +34,7 @@
 /*
  * CMS signedData methods.
  *
- * $Id: cmssigdata.c,v 1.21 2003/12/02 05:46:27 jpierre%netscape.com Exp $
+ * $Id: cmssigdata.c,v 1.22 2003/12/04 00:36:47 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -260,10 +260,12 @@ NSS_CMSSignedData_Encode_AfterData(NSSCMSSignedData *sigd)
 
     /* did we have digest calculation going on? */
     if (cinfo->digcx) {
-	rv = NSS_CMSDigestContext_FinishMultiple(cinfo->digcx, poolp, &(sigd->digests));
-	if (rv != SECSuccess)
-	    goto loser;		/* error has been set by NSS_CMSDigestContext_FinishMultiple */
+	rv = NSS_CMSDigestContext_FinishMultiple(cinfo->digcx, poolp, 
+	                                         &(sigd->digests));
+	/* error has been set by NSS_CMSDigestContext_FinishMultiple */
 	cinfo->digcx = NULL;
+	if (rv != SECSuccess)
+	    goto loser;		
     }
 
     signerinfos = sigd->signerInfos;
@@ -398,24 +400,28 @@ NSS_CMSSignedData_Decode_BeforeData(NSSCMSSignedData *sigd)
 }
 
 /*
- * NSS_CMSSignedData_Decode_AfterData - do all the necessary things to a SignedData
- *     after all the encapsulated data was passed through the decoder.
+ * NSS_CMSSignedData_Decode_AfterData - do all the necessary things to a 
+ *   SignedData after all the encapsulated data was passed through the decoder.
  */
 SECStatus
 NSS_CMSSignedData_Decode_AfterData(NSSCMSSignedData *sigd)
 {
+    SECStatus rv = SECSuccess;
+
     PORT_Assert(sigd);
     if (!sigd) {
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
+
     /* did we have digest calculation going on? */
     if (sigd->contentInfo.digcx) {
-	if (NSS_CMSDigestContext_FinishMultiple(sigd->contentInfo.digcx, sigd->cmsg->poolp, &(sigd->digests)) != SECSuccess)
-	    return SECFailure;	/* error has been set by NSS_CMSDigestContext_FinishMultiple */
+	rv = NSS_CMSDigestContext_FinishMultiple(sigd->contentInfo.digcx, 
+				       sigd->cmsg->poolp, &(sigd->digests));
+	/* error set by NSS_CMSDigestContext_FinishMultiple */
 	sigd->contentInfo.digcx = NULL;
     }
-    return SECSuccess;
+    return rv;
 }
 
 /*
@@ -659,6 +665,7 @@ NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i,
     NSSCMSContentInfo *cinfo;
     SECOidData *algiddata;
     SECItem *contentType, *digest;
+    SECOidTag oidTag;
     SECStatus rv;
 
     PORT_Assert(sigd);
@@ -678,18 +685,11 @@ NSS_CMSSignedData_VerifySignerInfo(NSSCMSSignedData *sigd, int i,
 
     /* find digest and contentType for signerinfo */
     algiddata = NSS_CMSSignerInfo_GetDigestAlg(signerinfo);
-    if (!algiddata)
-    	return SECFailure;  /* error code is set */
-    digest = NSS_CMSSignedData_GetDigestValue(sigd, algiddata->offset);
-    if (!digest) {
-	PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
-    	return SECFailure;
-    }
+    oidTag = algiddata ? algiddata->offset : SEC_OID_UNKNOWN;
+    digest = NSS_CMSSignedData_GetDigestValue(sigd, oidTag);
+    /* NULL digest is acceptable. */
     contentType = NSS_CMSContentInfo_GetContentTypeOID(cinfo);
-    if (!contentType) {
-	PORT_SetError(SEC_ERROR_PKCS7_BAD_SIGNATURE);
-    	return SECFailure;
-    }
+    /* NULL contentType is acceptable. */
 
     /* now verify signature */
     rv = NSS_CMSSignerInfo_Verify(signerinfo, digest, contentType);
@@ -925,6 +925,13 @@ NSS_CMSSignedData_SetDigests(NSSCMSSignedData *sigd,
 	if (idx < 0) {
 	    PORT_SetError(SEC_ERROR_DIGEST_NOT_FOUND);
 	    return SECFailure;
+	}
+	if (!digests[idx]) {
+	    /* We have no digest for this algorithm, probably because it is 
+	    ** unrecognized or unsupported.  We'll ignore this here.  If this 
+	    ** digest is needed later, an error will be be generated then.
+	    */
+	    continue;
 	}
 
 	/* found it - now set it */
