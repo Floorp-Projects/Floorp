@@ -32,8 +32,9 @@
   windowtype="sidebar:customize"
   align="vertical">
 
-  <!-- Dialog title -->
   <html:script src="chrome://sidebar/content/customize.js" />
+
+  <!-- Dialog title -->
   <html:div class="title">
     &sidebar.customize.title.label;
   </html:div>
@@ -54,9 +55,7 @@
 
       <html:div style="width:15em;height:15em" flex="1*">
         <tree id="other-panels" size="10"
-          datasources="chrome://sidebar/content/local-panels.rdf
-                       chrome://sidebar/content/remote-panels.rdf"
-          ref="urn:sidebar:master-panel-list"
+          datasources="rdf:null"
           indent="true"
           style="width:100%;height:100%">
     
@@ -104,9 +103,8 @@
 
       <box align="horizontal" class="box-group" flex="1*">
         <html:div style="width:15em;height:15em" flex="1*">
-          <tree id="selected-panels" onclick="selectChange();"
-            datasources="chrome://sidebar/content/local-panels.rdf
-                         chrome://sidebar/content/remote-panels.rdf"
+          <tree id="current-panels" onclick="selectChange();"
+            datasources="rdf:null"
             style="width:100%;height:100%">
 
             <template>
@@ -128,7 +126,7 @@
 
             <!-- We explicitly create a 'treechildren' so we can refer
                  to it from the script -->
-            <treechildren id="selected-panels-root"/> 
+            <treechildren id="current-panels-root"/> 
           </tree>
         </html:div>
 

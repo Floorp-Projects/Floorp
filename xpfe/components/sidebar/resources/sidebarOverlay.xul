@@ -40,7 +40,7 @@
     </splitter>
 
     <box id="sidebar-panels" align="vertical" flex="1*"
-      datasources="chrome://sidebar/content/local-panels.rdf 
+      datasources="chrome://sidebar/content/local-panels.rdf
                    chrome://sidebar/content/remote-panels.rdf"
       ref="urn:sidebar:current-panel-list" 
       persist='open-panel-src'>
@@ -61,7 +61,7 @@
 
   <!-- Splitter on the right of sidebar -->
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
-    chromeclass="extrachrome" onclick="dumpStats();">
+    chromeclass="extrachrome">
     <box id="topright-cap" align="vertical">
       <spring flex="100%"/>
     </box>

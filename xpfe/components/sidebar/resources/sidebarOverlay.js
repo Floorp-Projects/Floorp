@@ -32,7 +32,7 @@ var sidebar = new Object;
 
 function debug(msg) {
   // uncomment for noise
-  // dump(msg+"\n");
+  //dump(msg+"\n");
 }
 
 var panel_observer = new Object;
@@ -84,8 +84,9 @@ function getSidebarDatasourceURI(panels_file_id) {
 }
 
 function sidebarOverlayInit() {
-  sidebar.datasource_uri = getSidebarDatasourceURI(PANELS_RDF_FILE);
-  sidebar.resource = 'urn:sidebar:current-panel-list';
+  sidebar.datasource_uri  = getSidebarDatasourceURI(PANELS_RDF_FILE);
+  sidebar.resource        = 'urn:sidebar:current-panel-list';
+  sidebar.master_resource = 'urn:sidebar:master-panel-list';
 
   // Initialize the display
   var sidebar_element = document.getElementById('sidebar-box')
@@ -113,7 +114,7 @@ function sidebarOverlayInit() {
     panels.database.AddObserver(panel_observer);
 
     // XXX This is a hack to force re-display
-    panels.setAttribute('ref', 'urn:sidebar:current-panel-list');
+    panels.setAttribute('ref', sidebar.resource);
 
     sidebarOpenDefaultPanel(100, 0);
   }
@@ -185,7 +186,6 @@ function enableCustomize() {
 
 function sidebarCustomize() {
   // Use a single sidebar customize dialog
-
   var cwindowManager = Components.classes['component://netscape/rdf/datasource?name=window-mediator'].getService();
   var iwindowManager = Components.interfaces.nsIWindowMediator;
   var windowManager  = cwindowManager.QueryInterface(iwindowManager);
@@ -198,17 +198,19 @@ function sidebarCustomize() {
   } else {
     debug("Open a new customize dialog");
 
-    if (true == gDisableCustomize) {
-      debug("Recently opened one. Wait a little bit.");
-      return;
-    }
-    gDisableCustomize = true;
+    if (false == gDisableCustomize) {
+      gDisableCustomize = true;
 
-    customizeWindow = window.openDialog(
-                        'chrome://sidebar/content/customize.xul',
-                        '_blank','chrome',
-                        sidebar.datasource_uri, sidebar.resource);
-    setTimeout(enableCustomize, 2000);
+      var panels = document.getElementById('sidebar-panels');
+      var datasources = panels.getAttribute('datasources');
+      
+      customizeWindow = window.openDialog(
+                          'chrome://sidebar/content/customize.xul',
+                          '_blank','chrome',
+                          datasources, sidebar.master_resource,
+                          sidebar.datasource_uri, sidebar.resource);
+      setTimeout(enableCustomize, 2000);
+    }
   }
 }
 
@@ -230,51 +232,6 @@ function sidebarShowHide() {
   // Immediately save persistent values
   document.persist('sidebar-box', 'hidden');
   document.persist('sidebar-box', 'width');
-}
-
-function dumpAttributes(node) {
-  var attributes = node.attributes
-
-  if (!attributes || attributes.length == 0) {
-    debug("no attributes")
-  }
-  for (var ii=0; ii < attributes.length; ii++) {
-    var attr = attributes.item(ii)
-    debug("attr "+ii+": "+ attr.name +"="+attr.value)
-  }
-}
-
-function dumpStats() {
-  var box = document.getElementById('sidebar-box');
-  var splitter = document.getElementById('sidebar-splitter');
-  var style = box.getAttribute('style')
-
-  var visibility = style.match('visibility:([^;]*)')
-  if (visibility) {
-    visibility = visibility[1]
-  }
-  debug("sidebar-box.style="+style)
-  debug("sidebar-box.visibility="+visibility)
-  debug('sidebar-box.width='+box.getAttribute('width'))
-  debug('sidebar-box attrs\n---------------------')
-  dumpAttributes(box)
-  debug('sidebar-splitter attrs\n--------------------------')
-  dumpAttributes(splitter)
-}
-
-function dumpTree(node, depth) {
-  var indent = "| | | | | | | | | | | | | | | | | | | | | | | | | | | | | + "
-  var kids = node.childNodes
-  debug(indent.substr(indent.length - depth*2))
-
-  // Print your favorite attributes here
-  debug(node.nodeName)
-  debug(" "+node.getAttribute('id'))
-  debug("")
-
-  for (var ii=0; ii < kids.length; ii++) {
-    dumpTree(kids[ii], depth + 1)
-  }
 }
 
 // Install our load handler
