@@ -30,6 +30,8 @@
 
 //#define DEBUG_REFS
 
+static NS_DEFINE_IID(kIHTMLAttributesIID, NS_IHTML_ATTRIBUTES_IID);
+
 struct HTMLAttribute {
   HTMLAttribute(void)
     : mAttribute(nsnull),
@@ -946,7 +948,7 @@ NS_IMPL_ADDREF(HTMLAttributesImpl)
 NS_IMPL_RELEASE(HTMLAttributesImpl)
 #endif
 
-NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, NS_IHTML_ATTRIBUTES_IID);
+NS_IMPL_QUERY_INTERFACE(HTMLAttributesImpl, kIHTMLAttributesIID);
 
 const PRUnichar kNullCh = PRUnichar('\0');
 
