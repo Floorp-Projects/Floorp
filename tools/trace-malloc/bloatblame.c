@@ -49,7 +49,7 @@
 static char   *program;
 static int    sort_by_direct = 0;
 static int    do_tree_dump = 0;
-static uint32 min_subtotal = 0;
+static int32  min_subtotal = 0;
 
 static int accum_byte(uint32 *uip)
 {
@@ -216,8 +216,8 @@ struct graphnode {
     graphedge   *in;
     graphedge   *out;
     graphnode   *up;
-    uint32      direct;         /* bytes allocated by this node's code */
-    uint32      total;          /* direct + bytes from all descendents */
+    int32       direct;         /* bytes allocated by this node's code */
+    int32       total;          /* direct + bytes from all descendents */
     int         visited;        /* flag used during walk_callsite_tree */
 };
 
@@ -229,8 +229,8 @@ struct graphnode {
 struct graphedge {
     graphedge   *next;
     graphnode   *node;
-    uint32      direct;
-    uint32      total;
+    int32       direct;
+    int32       total;
 };
 
 struct callsite {
@@ -240,8 +240,8 @@ struct callsite {
     callsite    *kids;
     graphnode   *method;
     uint32      offset;
-    uint32      direct;
-    uint32      total;
+    int32       direct;
+    int32       total;
 };
 
 #define callsite_serial(site)    ((uint32) (site)->entry.key)
@@ -379,7 +379,7 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
                             plib = pcomp->up;
                             if (plib && plib != lib) {
                                 if (!lib->visited)
-                                    plib->total += site->total;
+                                    lib->total += site->total;
                                 connect_nodes(plib, lib, site);
                             }
                             lib->visited = 1;
@@ -393,10 +393,10 @@ static void walk_callsite_tree(callsite *site, int level, int kidnum, FILE *fp)
     }
 
     if (do_tree_dump) {
-        fprintf(fp, "%c%*s%3d %3d %s %lu %lu\n",
+        fprintf(fp, "%c%*s%3d %3d %s %lu %ld\n",
                 site->kids ? '+' : '-', level, "", level, kidnum,
                 meth ? graphnode_name(meth) : "???",
-                (unsigned long)site->direct, (unsigned long)site->total);
+                (unsigned long)site->direct, (long)site->total);
     }
     nkids = 0;
     for (kid = site->kids; kid; kid = kid->siblings) {
@@ -426,7 +426,7 @@ static PRIntn tabulate_node(PLHashEntry *he, PRIntn i, void *arg)
 static int node_table_compare(const void *p1, const void *p2)
 {
     const graphnode *node1, *node2;
-    uint32 key1, key2;
+    int32 key1, key2;
 
     node1 = *(const graphnode**) p1;
     node2 = *(const graphnode**) p2;
@@ -437,25 +437,23 @@ static int node_table_compare(const void *p1, const void *p2)
         key1 = node1->total;
         key2 = node2->total;
     }
-    if (key1 < key2)
-        return 1;
-    if (key1 > key2)
-        return -1;
-    return 0;
+    return key2 - key1;
 }
 
 static const char *prettybig(uint32 num, char *buf, size_t limit)
 {
-    if (num > 1000000)
+    if (num >= 1000000000)
+        PR_snprintf(buf, limit, "%1.2fG", (double) num / 1e9);
+    else if (num >= 1000000)
         PR_snprintf(buf, limit, "%1.2fM", (double) num / 1e6);
-    else if (num > 1000)
+    else if (num >= 1000)
         PR_snprintf(buf, limit, "%1.2fK", (double) num / 1e3);
     else
         PR_snprintf(buf, limit, "%lu", (unsigned long) num);
     return buf;
 }
 
-static double percent(uint32 num, uint32 total)
+static double percent(int32 num, int32 total)
 {
     if (num == 0)
         return 0.0;
@@ -496,7 +494,7 @@ static void sort_graphedge_list(graphedge **currp)
 
 static void dump_graphedge_list(graphedge *list, FILE *fp)
 {
-    uint32 total;
+    int32 total;
     graphedge *edge;
     char buf[32];
 
@@ -538,12 +536,8 @@ static void dump_graph(PLHashTable *hashtbl, const char *title, FILE *fp)
             title);
 
     for (i = 0; i < count; i++) {
-        graphnode *node;
+        graphnode *node = table[i];
 
-        node = table[i];
-        /* XXX cast out bogusly large components (threading confusion? */
-        if (node->total > calltree_root.total)
-            continue;
         /* Don't bother with truly puny nodes. */
         if (node->total < min_subtotal)
             break;
