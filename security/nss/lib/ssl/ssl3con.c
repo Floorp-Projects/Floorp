@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.16 2001/02/07 00:34:54 nelsonb%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.17 2001/03/16 23:25:59 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -1327,6 +1327,7 @@ spec_locked_loser:
 
 	    if (!(flags & ssl_SEND_FLAG_FORCE_INTO_BUFFER)) {
 
+		ss->handshakeBegun = 1;
 		count = ssl_SendSavedWriteData(ss, &ss->pendingBuf,
 		                               &ssl_DefSend);
 		if (count < 0 && PR_GetError() != PR_WOULD_BLOCK_ERROR) {
@@ -1335,6 +1336,7 @@ spec_locked_loser:
 		}
 	    }
 	} else if (write->len > 0) {
+	    ss->handshakeBegun = 1;
 	    count = ssl_DefSend(ss, write->buf, write->len,
 				flags & ~ssl_SEND_FLAG_MASK);
 	    if (count < 0) {
@@ -1455,12 +1457,12 @@ ssl3_HandleNoCertificate(sslSocket *ss)
     /* If the server has required client-auth blindly but doesn't
      * actually look at the certificate it won't know that no
      * certificate was presented so we shutdown the socket to ensure
-     * an error.  We only do this if we aren't connected because
-     * if we're redoing the handshake we know the server is paying
-     * attention to the certificate.
+     * an error.  We only do this if we haven't already completed the
+     * first handshake because if we're redoing the handshake we 
+     * know the server is paying attention to the certificate.
      */
     if ((ss->requireCertificate == 1) ||
-	(!ss->connected && (ss->requireCertificate > 1))) {
+	(!ss->firstHsDone && (ss->requireCertificate > 1))) {
 	PRFileDesc * lower;
 
 	ss->sec->uncache(ss->sec->ci.sid);
@@ -4616,7 +4618,7 @@ ssl3_HandleClientHello(sslSocket *ss, SSL3Opaque *b, PRUint32 length)
 	 */
 	if ((sid->peerCert == NULL) && ss->requestCertificate &&
 	    ((ss->requireCertificate == 1) ||
-	     ((ss->requireCertificate == 2) && !ss->connected))) {
+	     ((ss->requireCertificate == 2) && !ss->firstHsDone))) {
 
 	    ++ssl3stats.hch_sid_cache_not_ok;
 	    ss->sec->uncache(sid);
@@ -6494,9 +6496,9 @@ xmit_loser:
 
     ssl_ReleaseXmitBufLock(ss);	/*************************************/
 
-    /* we're connected now. */
+    /* The first handshake is now completed. */
     ss->handshake           = NULL;
-    ss->connected           = PR_TRUE;
+    ss->firstHsDone         = PR_TRUE;
     ss->gather->writeOffset = 0;
     ss->gather->readOffset  = 0;
 
@@ -7445,7 +7447,8 @@ ssl3_ConstructV2CipherSpecsHack(sslSocket *ss, unsigned char *cs, int *size)
 }
 
 /*
-** If ssl3 socket is connected and in idle state, then start a new handshake.
+** If ssl3 socket has completed the first handshake, and is in idle state, 
+** then start a new handshake.
 ** If flushCache is true, the SID cache will be flushed first, forcing a
 ** "Full" handshake (not a session restart handshake), to be done.
 **
@@ -7460,7 +7463,7 @@ ssl3_RedoHandshake(sslSocket *ss, PRBool flushCache)
 
     PORT_Assert( ssl_HaveSSL3HandshakeLock(ss) );
 
-    if (!ss->connected ||
+    if (!ss->firstHsDone ||
         ((ss->version >= SSL_LIBRARY_VERSION_3_0) &&
 	 ss->ssl3 && (ss->ssl3->hs.ws != idle_handshake))) {
 	PORT_SetError(SSL_ERROR_HANDSHAKE_NOT_COMPLETED);

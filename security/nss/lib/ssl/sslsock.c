@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.13 2001/02/09 02:11:31 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.14 2001/03/16 23:26:06 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -897,6 +897,7 @@ SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd)
 {
     sslSocket * ns = NULL;
     PRStatus    rv;
+    PRNetAddr   addr;
 
     if (model == NULL) {
 	/* Just create a default socket if we're given NULL for the model */
@@ -922,6 +923,10 @@ SSL_ImportFD(PRFileDesc *model, PRFileDesc *fd)
 #ifdef _WIN32
     PR_Sleep(PR_INTERVAL_NO_WAIT);     /* workaround NT winsock connect bug. */
 #endif
+    ns = ssl_FindSocket(fd);
+    PORT_Assert(ns);
+    if (ns)
+	ns->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ns, &addr));
     return fd;
 }
 
@@ -984,10 +989,13 @@ ssl_Accept(PRFileDesc *fd, PRNetAddr *sockaddr, PRIntervalTime timeout)
     if ( ns->useSecurity ) {
 	if ( ns->handshakeAsClient ) {
 	    ns->handshake = ssl2_BeginClientHandshake;
+	    ss->handshaking = sslHandshakingAsClient;
 	} else {
 	    ns->handshake = ssl2_BeginServerHandshake;
+	    ss->handshaking = sslHandshakingAsServer;
 	}
     }
+    ns->TCPconnected = 1;
     return newfd;
 
 loser:
@@ -1236,6 +1244,7 @@ ssl_GetPeerInfo(sslSocket *ss)
     if (rv < 0) {
 	return SECFailure;
     }
+    ss->TCPconnected = 1;
     /* we have to mask off the high byte because AIX is lame */
     if ((sin.inet.family & 0xff) == PR_AF_INET) {
         PR_ConvertIPv4AddrToIPv6(sin.inet.ip, &ci->peer);
@@ -1277,13 +1286,16 @@ SSL_SetSockPeerID(PRFileDesc *fd, char *peerID)
     return SECSuccess;
 }
 
+#define PR_POLL_RW (PR_POLL_WRITE | PR_POLL_READ)
+
 static PRInt16 PR_CALLBACK
-ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *out_flags)
+ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *p_out_flags)
 {
     sslSocket *ss;
-    PRInt16    ret_flags = how_flags;	/* should select on these flags. */
+    PRInt16    new_flags = how_flags;	/* should select on these flags. */
+    PRNetAddr  addr;
 
-    *out_flags = 0;
+    *p_out_flags = 0;
     ss = ssl_GetPrivate(fd);
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in SSL_Poll",
@@ -1291,27 +1303,73 @@ ssl_Poll(PRFileDesc *fd, PRInt16 how_flags, PRInt16 *out_flags)
 	return 0;	/* don't poll on this socket */
     }
 
-    if ((ret_flags & PR_POLL_WRITE) && 
-        ss->useSecurity && 
-	!ss->connected && 
-	   /* XXX There needs to be a better test than the following. */
-	   /* Don't check ss->securityHandshake. */
-	(ss->handshake || ss->nextHandshake)) {
-    	/* The user is trying to write, but the handshake is blocked waiting
-	 * to read, so tell NSPR NOT to poll on write.
-	 */
-	ret_flags ^=  PR_POLL_WRITE;	/* don't select on write. */
-	ret_flags |=  PR_POLL_READ;	/* do    select on read. */
+    if (ss->useSecurity && 
+	ss->handshaking != sslHandshakingUndetermined &&
+        !ss->firstHsDone &&
+	(how_flags & PR_POLL_RW)) {
+	if (!ss->TCPconnected) {
+	    ss->TCPconnected = (PR_SUCCESS == ssl_DefGetpeername(ss, &addr));
+	}
+	/* If it's not connected, then presumably the application is polling
+	** on read or write appropriately, so don't change it. 
+	*/
+	if (ss->TCPconnected) {
+	    if (!ss->handshakeBegun) {
+		/* If the handshake has not begun, poll on read or write 
+		** based on the local application's role in the handshake,
+		** not based on what the application requested.
+		*/
+		new_flags &= ~PR_POLL_RW;
+		if (ss->handshaking == sslHandshakingAsClient) {
+		    new_flags |= PR_POLL_WRITE;
+		} else { /* handshaking as server */
+		    new_flags |= PR_POLL_READ;
+		}
+	    } else 
+	    /* First handshake is in progress */
+	    if (ss->lastWriteBlocked) {
+		if (new_flags & PR_POLL_READ) {
+		    /* The caller is waiting for data to be received, 
+		    ** but the initial handshake is blocked on write, or the 
+		    ** client's first handshake record has not been written.
+		    ** The code should select on write, not read.
+		    */
+		    new_flags ^=  PR_POLL_READ;	   /* don't select on read. */
+		    new_flags |=  PR_POLL_WRITE;   /* do    select on write. */
+		}
+	    } else if (new_flags & PR_POLL_WRITE) {
+		    /* The caller is trying to write, but the handshake is 
+		    ** blocked waiting for data to read, and the first 
+		    ** handshake has been sent.  so do NOT to poll on write.
+		    */
+		    new_flags ^=  PR_POLL_WRITE;   /* don't select on write. */
+		    new_flags |=  PR_POLL_READ;	   /* do    select on read. */
+	    }
+	}
+    } else if ((new_flags & PR_POLL_READ) && (SSL_DataPending(fd) > 0)) {
+	*p_out_flags = PR_POLL_READ;	/* it's ready already. */
+	return new_flags;
+    } 
+    if (new_flags && (fd->lower->methods->poll != NULL)) {
+	PRInt16    lower_out_flags = 0;
+	PRInt16    lower_new_flags;
+        lower_new_flags = fd->lower->methods->poll(fd->lower, new_flags, 
+					           &lower_out_flags);
+	if ((lower_new_flags & lower_out_flags) && (how_flags != new_flags)) {
+	    PRInt16 out_flags = lower_out_flags & ~PR_POLL_RW;
+	    if (lower_out_flags & PR_POLL_READ) 
+		out_flags |= PR_POLL_WRITE;
+	    if (lower_out_flags & PR_POLL_WRITE) 
+		out_flags |= PR_POLL_READ;
+	    *p_out_flags = out_flags;
+	    new_flags = how_flags;
+	} else {
+	    *p_out_flags = lower_out_flags;
+	    new_flags    = lower_new_flags;
+	}
     }
 
-    if ((ret_flags & PR_POLL_READ) && (SSL_DataPending(fd) > 0)) {
-	*out_flags = PR_POLL_READ;	/* it's ready already. */
-
-    } else if (ret_flags && (fd->lower->methods->poll != NULL)) {
-        ret_flags = fd->lower->methods->poll(fd->lower, ret_flags, out_flags);
-    }
-
-    return ret_flags;
+    return new_flags;
 }
 
 
