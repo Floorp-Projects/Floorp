@@ -379,10 +379,7 @@ static NS_DEFINE_CID(kRDFServiceCID,       NS_RDFSERVICE_CID);
             return NS_ERROR_UNEXPECTED;
     }
 
-    rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
-                                            nsnull,
-                                            NS_GET_IID(nsIRDFDataSource),
-                                            (void**) &mInner);
+    mInner = do_CreateInstance(kRDFXMLDataSourceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mInner);

@@ -1551,13 +1551,12 @@ nsMsgLocalMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgD
 		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 
 
-	nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+    nsresult rv;
+    nsCOMPtr<nsIMsgDatabase> mailDBFactory( do_CreateInstance(kCMailDB, &rv) );
 	nsCOMPtr<nsIMsgDatabase> mailDB;
-
-	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		openErr = mailDBFactory->Open(mPath, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &mailDB);
+        openErr = mailDBFactory->Open(mPath, PR_FALSE, PR_FALSE, getter_AddRefs(mailDB));
 	}
 
     *db = mailDB;

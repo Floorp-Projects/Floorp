@@ -730,12 +730,11 @@ nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDataba
   if(!db || !folderInfo)
 		return NS_ERROR_NULL_POINTER;	//ducarroz: should we use NS_ERROR_INVALID_ARG?
 		
-	nsCOMPtr <nsIMsgDatabase> newsDBFactory;
+  nsresult rv;
+  nsCOMPtr<nsIMsgDatabase> newsDBFactory( do_CreateInstance(kCNewsDB, &rv) );
 	nsCOMPtr<nsIMsgDatabase> newsDB;
-
-	nsresult rv = nsComponentManager::CreateInstance(kCNewsDB, nsnull, NS_GET_IID(nsIMsgDatabase), getter_AddRefs(newsDBFactory));
 	if (NS_SUCCEEDED(rv) && newsDBFactory) {
-		openErr = newsDBFactory->Open(mPath, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) &newsDB);
+    openErr = newsDBFactory->Open(mPath, PR_FALSE, PR_FALSE, getter_AddRefs(newsDB));
 	}
   else {
     return rv;

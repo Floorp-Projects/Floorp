@@ -1349,8 +1349,7 @@ nsWebShell::SelectAll(void)
   if (NS_FAILED(rv) || !doc) return rv;
 
 
-  nsCOMPtr<nsIDOMHTMLDocument> htmldoc;
-  rv = doc->QueryInterface(NS_GET_IID(nsIDOMHTMLDocument), (void**)&htmldoc);
+  nsCOMPtr<nsIDOMHTMLDocument> htmldoc( do_QueryInterface(doc) );
   if (NS_FAILED(rv) || !htmldoc) return rv;
 
   nsCOMPtr<nsIDOMHTMLElement>bodyElement;

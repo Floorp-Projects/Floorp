@@ -1241,11 +1241,9 @@ void nsAppShell::HandleDragMotionEvent(XEvent *event, nsWidget *aWidget) {
   nsMouseEvent mevent;
   PRBool currentlyDragging = PR_FALSE;
 
-  nsCOMPtr<nsIDragService> dragService;
+  nsresult rv;
+  nsCOMPtr<nsIDragService> dragService( do_GetService(kCDragServiceCID, &rv) );
   nsCOMPtr<nsIDragSessionXlib> dragServiceXlib;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports**)&dragService);
   if (NS_SUCCEEDED(rv)) {
     dragServiceXlib = do_QueryInterface(dragService);
     if (dragServiceXlib) {
@@ -1272,10 +1270,8 @@ void nsAppShell::HandleDragEnterEvent(XEvent *event, nsWidget *aWidget) {
   nsMouseEvent enterEvent;
   PRBool currentlyDragging = PR_FALSE;
 
-  nsCOMPtr<nsIDragService> dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports**)&dragService);
+  nsresult rv;
+  nsCOMPtr<nsIDragService> dragService( do_GetService(kCDragServiceCID, &rv) );
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsIDragSessionXlib> dragServiceXlib;
     dragServiceXlib = do_QueryInterface(dragService);
@@ -1303,10 +1299,8 @@ void nsAppShell::HandleDragLeaveEvent(XEvent *event, nsWidget *aWidget) {
   nsMouseEvent leaveEvent;
   PRBool currentlyDragging = PR_FALSE;
   
-  nsCOMPtr<nsIDragService> dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports**)&dragService);
+  nsresult rv;
+  nsCOMPtr<nsIDragService> dragService( do_GetService(kCDragServiceCID, &rv) );
 
   // FIXME: Not sure if currentlyDragging is required. KenF
   if (NS_SUCCEEDED(rv)) {
@@ -1336,10 +1330,8 @@ void nsAppShell::HandleDragDropEvent(XEvent *event, nsWidget *aWidget) {
   nsMouseEvent mevent;
   PRBool currentlyDragging = PR_FALSE;
 
-  nsCOMPtr<nsIDragService> dragService;
-  nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                             nsIDragService::GetIID(),
-                                             (nsISupports**)&dragService);
+  nsresult rv;
+  nsCOMPtr<nsIDragService> dragService( do_GetService(kCDragServiceCID, &rv) );
 
   // FIXME: Dont think the currentlyDragging check is required. KenF
   if (NS_SUCCEEDED(rv)) {

@@ -258,8 +258,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   nsRect r(0, 0, aInitialWidth, aInitialHeight);
   
   // Create top level window
-  rv = nsComponentManager::CreateInstance(kWindowCID, nsnull, NS_GET_IID(nsIWidget),
-                                    (void**)&mWindow);
+  mWindow = do_CreateInstance(kWindowCID, &rv);
   if (NS_OK != rv) {
     return rv;
   }

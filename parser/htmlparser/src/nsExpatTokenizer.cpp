@@ -681,7 +681,7 @@ void nsExpatTokenizer::HandleUnparsedEntityDecl(void *userData,
 // relative to the current process directory).  For the latter case, aDTD is set
 // to the file: url that points to the DTD file found in the local DTD directory.
 static PRBool
-IsLoadableDTD(nsIURI** aDTD)
+IsLoadableDTD(nsCOMPtr<nsIURI>* aDTD)
 {
   char* scheme = nsnull;
   PRBool isLoadable = PR_FALSE;
@@ -720,9 +720,7 @@ IsLoadableDTD(nsIURI** aDTD)
           nsCOMPtr<nsIURI> dtdURI;
           res = NS_NewURI(getter_AddRefs(dtdURI), dtdFile.GetURLString());
           if (NS_SUCCEEDED(res) && nsnull != dtdURI) {
-            NS_IF_RELEASE(*aDTD);
             *aDTD = dtdURI;
-            NS_ADDREF(*aDTD);
             isLoadable = PR_TRUE;
           }
         }
@@ -744,10 +742,10 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
   nsCOMPtr<nsIURI> baseURI;  
   rv = NS_NewURI(getter_AddRefs(baseURI), aBaseURL);
   if (NS_SUCCEEDED(rv) && nsnull != baseURI) {
-    nsCOMPtr<nsIURI> uri = nsnull;
+    nsCOMPtr<nsIURI> uri;
     rv = NS_NewURI(getter_AddRefs(uri), aURLStr, baseURI);
-    if (NS_SUCCEEDED(rv) && nsnull != uri) {
-      if (IsLoadableDTD((nsIURI**) &uri)) {
+    if (NS_SUCCEEDED(rv) && uri) {
+      if (IsLoadableDTD(address_of(uri))) {
         rv = NS_OpenURI(in, uri);
         char* absURL = nsnull;
         uri->GetSpec(&absURL);

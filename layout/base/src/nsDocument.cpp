@@ -3526,11 +3526,7 @@ nsDocument::GetDTD(nsIDTD** aDTD) const
     rv = doctype->GetName(doctypename);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIParser> parser;
-    rv = nsComponentManager::CreateInstance(kCParserCID, 
-                                            nsnull, 
-                                            kCParserIID, 
-                                            (void **)&parser);
+    nsCOMPtr<nsIParser> parser( do_CreateInstance(kCParserCID, &rv) );
     if (NS_FAILED(rv)) return rv;
     if (!parser) return NS_ERROR_FAILURE;
 
