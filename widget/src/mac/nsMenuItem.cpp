@@ -210,6 +210,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
  // Create(widget, GetNativeParent(), aLabel, aCommand);
   aParent->AddMenuItem(this);
 */
+  SetLabel(aLabel);
   return NS_OK;
 }
 
