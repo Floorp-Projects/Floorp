@@ -49,18 +49,14 @@ function AbResultsPaneOnClick(event)
     var t = event.originalTarget;
 
     if (t.localName == "treecol") {
-      var sortDirection = kDefaultDescending;
+      var sortDirection;      
+      var currentDirection = t.getAttribute("sortDirection");
 
-      if (gAbView) {
-        var node = document.getElementById(gAbView.URI);
-        if (node) {
-          sortDirection = node.getAttribute("sortDirection");
-        }
-        if (sortDirection == kDefaultDescending)
+      if (currentDirection == kDefaultDescending)
           sortDirection = kDefaultAscending;
         else 
           sortDirection = kDefaultDescending;
-      }
+
       SortAndUpdateIndicators(t.id, sortDirection);
     }
     else if (t.localName == "treechildren") {

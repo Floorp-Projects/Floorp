@@ -323,9 +323,7 @@ function AbDelete()
 
 function AbNewCard(abListItem)
 {
-  var selectedAB = GetSelectedAddressBookDirID(abListItem);
-
-  goNewCardDialog(selectedAB);
+  goNewCardDialog(GetSelectedDirectory());
 }
 
 // NOTE, will return -1 if more than one card selected, or no cards selected.
@@ -367,10 +365,10 @@ function AbEditCard(card)
     return;
 
   if (card.isMailList) {
-    goEditListDialog(gAbView.URI, card, card.mailListURI, UpdateCardView);
+    goEditListDialog(GetSelectedDirectory(), card, card.mailListURI, UpdateCardView);
   }
   else {
-    goEditCardDialog(gAbView.URI, card, UpdateCardView);
+    goEditCardDialog(GetSelectedDirectory(), card, UpdateCardView);
   }
 }
 
@@ -443,8 +441,8 @@ function GetSelectedAddressesFromDirTree()
   var addresses = "";
 
   if (dirTree.currentIndex >= 0) {
-    var selected = dirTree.contentView.getItemAtIndex(dirTree.currentIndex);
-    var mailingListUri = selected.id;
+    var selectedResource = dirTree.builderView.getResourceAtIndex(dirTree.currentIndex);
+    var mailingListUri = selectedResource.Value;
     var directory = GetDirectoryFromURI(mailingListUri);
     if (directory.isMailList) {
       var listCardsCount = directory.addressLists.Count();
@@ -568,17 +566,11 @@ function GetSelectedAbCards()
 
 function SelectFirstAddressBook()
 {
-  // this can fail if the dirTree box is collapsed at startup
-  // and only the results pane (and card view pane) are showing
-  try {
-    dirTree.treeBoxObject.selection.select(0);
+  dirTree.view.selection.select(0);
+
     ChangeDirectoryByURI(GetSelectedDirectory());
-  }
-  catch (ex) {
-    ChangeDirectoryByURI(kPersonalAddressbookURI);
     gAbResultsTree.focus();
   }
-}
 
 function SelectFirstCard()
 {
@@ -658,6 +650,9 @@ function SetAbView(uri, sortColumn, sortDirection)
   
   var boxObject = GetAbResultsBoxObject();
   boxObject.view = gAbView.QueryInterface(Components.interfaces.nsITreeView);
+
+  UpdateSortIndicators(sortColumn, sortDirection);
+  
   return actualSortColumn;
 }
 
@@ -666,6 +661,8 @@ function GetAbView()
   return gAbView;
 }
 
+// this will return the complete search uri if a quick search is currently being 
+// done. to get the uri of the directory only, use GetSelectedDirectory().
 function GetAbViewURI()
 {
   if (gAbView)
@@ -679,12 +676,11 @@ function ChangeDirectoryByURI(uri)
   if (!uri)
     uri = kPersonalAddressbookURI;
 
-  if (gAbView && gAbView.URI == uri)
+  if (gAbView && GetAbViewURI() == uri)
     return;
   
-  var dataNode = document.getElementById(uri);
-  var sortColumn = dataNode ? dataNode.getAttribute("sortColumn") : kDefaultSortColumn;
-  var sortDirection = dataNode ? dataNode.getAttribute("sortDirection") : kDefaultAscending;
+  var sortColumn = gAbResultsTree.getAttribute("sortCol");
+  var sortDirection = document.getElementById(sortColumn).getAttribute("sortDirection");
   
   var actualSortColumn = SetAbView(uri, sortColumn, sortDirection);
 
@@ -703,25 +699,13 @@ function ChangeDirectoryByURI(uri)
 
 function AbSortAscending()
 {
-  var sortColumn = kDefaultSortColumn;
-
-  if (gAbView) {
-    var node = document.getElementById(gAbView.URI);
-    sortColumn = node.getAttribute("sortColumn");
-  }
-
+  var sortColumn = gAbResultsTree.getAttribute("sortCol");
   SortAndUpdateIndicators(sortColumn, kDefaultAscending);
 }
 
 function AbSortDescending()
 {
-  var sortColumn = kDefaultSortColumn;
-
-  if (gAbView) {
-    var node = document.getElementById(gAbView.URI);
-    sortColumn = node.getAttribute("sortColumn");
-  }
-
+  var sortColumn = gAbResultsTree.getAttribute("sortCol");
   SortAndUpdateIndicators(sortColumn, kDefaultDescending);
 }
 
@@ -746,19 +730,6 @@ function SortAndUpdateIndicators(sortColumn, sortDirection)
 
   if (gAbView)
     gAbView.sortBy(sortColumn, sortDirection);
-
-  SaveSortSetting(sortColumn, sortDirection);
-}
-
-function SaveSortSetting(column, direction)
-{
-  if ((dirTree || abList) && gAbView) {
-    var node = document.getElementById(gAbView.URI);
-    if (node) {
-      node.setAttribute("sortColumn", column);
-      node.setAttribute("sortDirection", direction);
-    }
-  }
 }
 
 function UpdateSortIndicators(colID, sortDirection)
@@ -769,6 +740,7 @@ function UpdateSortIndicators(colID, sortDirection)
     sortedColumn = document.getElementById(colID);
     if (sortedColumn) {
       sortedColumn.setAttribute("sortDirection",sortDirection);
+      gAbResultsTree.setAttribute("sortCol", colID);
     }
   }
 
@@ -790,37 +762,7 @@ function InvalidateResultsPane()
 
 function AbNewList(abListItem)
 {
-  var selectedAB = GetSelectedAddressBookDirID(abListItem);
-
-  goNewListDialog(selectedAB);
-}
-
-function GetSelectedAddressBookDirID(abListItem)
-{
-  var selectedAB;
-  // this can fail if the dirTree box is collapsed at startup
-  // and only the results pane (and card view pane) are showing
-  try {
-    var abDirEntries = document.getElementById(abListItem);
-
-    if (abDirEntries && abDirEntries.localName == "tree" && abDirEntries.currentIndex >= 0) {
-      var selected = abDirEntries.contentView.getItemAtIndex(abDirEntries.currentIndex);
-      selectedAB = selected.id;
-    }
-
-    // request could be coming from the context menu of addressbook panel in sidebar
-    // addressbook dirs are listed as menu item. So, get the selected item id.
-    if (!selectedAB && abDirEntries && abDirEntries.localName == "menulist" && abDirEntries.selectedItem)
-      selectedAB = abDirEntries.selectedItem.getAttribute("id");
-
-    // if we do not have a selected ab still, use personal addressbook
-    if (!selectedAB)
-      selectedAB = kPersonalAddressbookURI;
-  }
-  catch (ex) {
-    selectedAB = kPersonalAddressbookURI;
-  }
-  return selectedAB;
+  goNewListDialog(GetSelectedDirectory());
 }
 
 function goNewListDialog(selectedAB)
@@ -938,17 +880,13 @@ function DirPaneHasFocus()
 
 function GetSelectedDirectory()
 {
-  // this can fail if the dirTree box is collapsed at startup
-  // and only the results pane (and card view pane) are showing
-  try {
+  if (abList)
+    return abList.selectedItem.id;
+  else {
     if (dirTree.currentIndex < 0)
       return null;
-
-    var selected = dirTree.contentView.getItemAtIndex(dirTree.currentIndex);
-    return selected.id;
-  }
-  catch (ex) {
-    return kPersonalAddressbookURI;
+    var selected = dirTree.builderView.getResourceAtIndex(dirTree.currentIndex)
+    return selected.Value;
   }
 }
 

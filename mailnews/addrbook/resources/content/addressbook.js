@@ -152,7 +152,7 @@ function OnLoadAddressBook()
   SetupAbCommandUpdateHandlers();
 
   //workaround - add setTimeout to make sure dynamic overlays get loaded first
-  setTimeout('SelectFirstAddressBook()',0);
+  setTimeout('OnLoadDirTree()', 0);
 
   // if the pref is locked disable the menuitem New->LDAP directory
   if (gPrefs.prefIsLocked("ldap_2.disable_button_add"))
@@ -163,6 +163,13 @@ function OnLoadAddressBook()
   var addrbookSession = Components.classes["@mozilla.org/addressbook/services/session;1"].getService().QueryInterface(Components.interfaces.nsIAddrBookSession);
   // this listener only cares when a directory is removed
   addrbookSession.addAddressBookListener(gAddressBookAbListener, Components.interfaces.nsIAbListener.directoryRemoved);
+}
+
+function OnLoadDirTree() {
+  var treeBuilder = dirTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
+  treeBuilder.addObserver(abDirTreeObserver);
+
+  SelectFirstAddressBook();
 }
 
 function GetCurrentPrefs()
@@ -321,7 +328,7 @@ function AbPrintCardInternal(doPrintPreview, msgType)
     return;
 
   var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
-  var uri = GetAbViewURI();
+  var uri = GetSelectedDirectory();
   if (!uri)
     return;
 
@@ -375,7 +382,7 @@ function CreatePrintCardUrl(card)
 function AbPrintAddressBookInternal(doPrintPreview, msgType)
 {
   var addressbook = Components.classes["@mozilla.org/addressbook;1"].createInstance(Components.interfaces.nsIAddressBook);
-  var uri = GetAbViewURI();
+  var uri = GetSelectedDirectory();
   if (!uri)
     return;
 
@@ -467,7 +474,7 @@ function AbDeleteDirectory()
       if (parentRow == -1)
         parentId = "moz-abdirectory://";
       else	
-        parentId = dirTree.contentView.getItemAtIndex(parentRow).id;
+        parentId = dirTree.builderView.getResourceAtIndex(parentRow).Value;
 
       var parentDir = GetDirectoryFromURI(parentId);
       parentArray.AppendElement(parentDir);
@@ -536,6 +543,7 @@ function onAdvancedAbSearch()
 function onEnterInSearchBar()
 {
   ClearCardViewPane();
+  gSearchInput.select();
 
   if (!gQueryURIFormat)
     gQueryURIFormat = gPrefs.getComplexValue("mail.addr_book.quicksearchquery.format", 
@@ -544,9 +552,8 @@ function onEnterInSearchBar()
   var searchURI = GetSelectedDirectory();
   if (!searchURI) return;
 
-  var dataNode = document.getElementById(searchURI);
-  var sortColumn = dataNode.getAttribute("sortColumn");
-  var sortDirection = dataNode.getAttribute("sortDirection");
+  var sortColumn = gAbView.sortColumn;
+  var sortDirection = gAbView.sortDirection;
 
   /*
    XXX todo, handle the case where the LDAP url

@@ -36,13 +36,12 @@ Contributors:
   <!-- FIX ME - remove document.commandDispatcher.updateCommands() when tree selection calls this automatically -->
   <tree id="dirTree" class="abDirectory plain" seltype="single"
       datasources="rdf:addressdirectory" ref="moz-abdirectory://"
+      flags="dont-build-content"
       hidecolumnpicker="true"
       onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('addrbook-select');"
       onclick="DirPaneClick(event);"
       ondblclick="DirPaneDoubleClick(event);"
-      onblur="goOnEvent(this,'blur')"
-      ondragover="nsDragAndDrop.dragOver(event, abDirTreeObserver);"
-      ondragdrop="nsDragAndDrop.drop(event, abDirTreeObserver);">
+      onblur="goOnEvent(this,'blur')">
       
     <treecols>
       <treecol id="DirCol" flex="1" primary="true" label="&dirTreeHeader.label;"/>
@@ -51,7 +50,7 @@ Contributors:
     <template>
       <rule>
         <conditions>
-          <content uri="?container"/>
+          <treeitem uri="?container"/>
           <member container="?container" child="?member"/>
         </conditions>
 

@@ -63,7 +63,9 @@
   <vbox id="results_box" flex="1">
     <hbox id="panel-bar" class="toolbar" align="center">
 	  <label value="&lookIn.label;"/>
-      <menulist id="addressbookList" oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1">
+      <menulist id="addressbookList" 
+                oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1"
+                persist="selectedAB">
         <menupopup id="addressbookList-menupopup" 
           datasources="rdf:addressdirectory" 
           ref="moz-abdirectory://">
@@ -84,18 +86,18 @@
       onkeypress="onAbSearchKeyPress(event);"/>
 	</hbox>
 
-<tree id="abResultsTree" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain">
+    <tree id="abResultsTree" flex="1" context="composeMail" onclick="AbResultsPaneOnClick(event);" class="plain"
+          sortCol="GeneratedName" persist="sortCol">
   <treecols>
     <!-- these column ids must match up to the mork column names, see nsIAddrDatabase.idl -->
     <treecol id="GeneratedName" class="sortDirectionIndicator" 
-      persist="hidden ordinal width" flex="1" label="&GeneratedName.label;" primary="true"/>
+          persist="hidden ordinal width sortDirection" flex="1" label="&GeneratedName.label;" primary="true"/>
     <splitter class="tree-splitter"/>
     <treecol id="PrimaryEmail" class="sortDirectionIndicator" 
-      persist="hidden ordinal width" 
+          persist="hidden ordinal width sortDirection" 
       hiddenbydefault="true"
       flex="1" label="&PrimaryEmail.label;"/>
   </treecols>
-
   <treechildren/>
 </tree>
 

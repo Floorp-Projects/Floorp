@@ -65,33 +65,71 @@ var abResultsPaneObserver = {
   }
 };
 
+
+var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
+
 var abDirTreeObserver = {
-  onDragStart: function (aEvent, aXferData, aDragAction)
+    canDropOn: function(index)
+    {
+      var targetResource = dirTree.builderView.getResourceAtIndex(index);
+      var targetURI = targetResource.Value;
+
+      var srcURI = GetSelectedDirectory();
+
+      if (targetURI == srcURI)
+        return false;
+
+      // determine if we dragging from a mailing list on a directory x to the parent (directory x).
+      // if so, don't allow the drop
+      var result = srcURI.split(targetURI);
+      if (result != srcURI) 
+        return false;
+
+      // check if we can write to the target directory 
+      // LDAP is readonly
+      var targetDirectory = GetDirectoryFromURI(targetURI);
+      if (!targetDirectory.isMailList && 
+          (!(targetDirectory.operations & targetDirectory.opWrite)))
+        return false;      
+      
+      return true;
+    },
+
+    canDropBeforeAfter: function(index, before)
     {
     },
 
-  onDrop: function (aEvent, aXferData, aDragSession)
+    onDrop: function(row, orientation)
     {
-	    var xferData = aXferData.data.split("\n");
-
-      var row = {}, col = {}, obj = {};
-      dirTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
-      if (row.value >= dirTree.view.rowCount || row.value < 0) return;
+      var dragSession = dragService.getCurrentSession();
+      if (!dragSession)
+        return false;
       
-      var item = dirTree.contentView.getItemAtIndex(row.value);
-      var targetURI = item.id;
-      var directory = GetDirectoryFromURI(targetURI);
+      var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+      trans.addDataFlavor("moz/abcard");
 
-      var abView = GetAbView();
+      for (var i = 0; i < dragSession.numDropItems; i++) {
+        dragSession.getData(trans, i);
+        var dataObj = new Object();
+        var flavor = new Object();
+        var len = new Object();
+        trans.getAnyTransferData(flavor, dataObj, len);
+        if (dataObj)
+          dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+        else
+          continue;
         
-      var rows = xferData[0].split(",");
+        var transData = dataObj.data.split("\n");
+        var rows = transData[0].split(",");
       var numrows = rows.length;
-      var srcURI = GetAbViewURI();
 
-      if (srcURI == targetURI) {
-        // should not be here
-        return;
-      }
+        var targetResource = dirTree.builderView.getResourceAtIndex(row);
+        var targetURI = targetResource.Value;
+
+        var srcURI = GetSelectedDirectory();
+
+        if (srcURI == targetURI)
+          return; // should not be here
 
       var result;
       var needToCopyCard = true;
@@ -119,60 +157,53 @@ var abDirTreeObserver = {
           needToCopyCard = false;
       }
 
+        var abView = GetAbView();
+        var directory = GetDirectoryFromURI(targetURI);
+
       for (var i=0;i<numrows;i++) {
         var card = abView.getCardFromRow(rows[i]);
         directory.dropCard(card, needToCopyCard);
       }
       var statusText = document.getElementById("statusText");
-      // XXX get this approved, move it to a string bundle
-      statusText.setAttribute("label", i + " Card(s) Copied");
+        var cardsCopiedText = gAddressBookBundle.getFormattedString("cardsCopied", [i]);
+        statusText.setAttribute("label", cardsCopiedText);        
+      }
+
     },
 
-  onDragExit: function (aEvent, aDragSession)
+    onToggleOpenState: function()
     {
     },
 
-  onDragOver: function (aEvent, aFlavour, aDragSession)
+    onCycleHeader: function(colID, elt)
     {
-      aDragSession.canDrop = false;
-      if (aEvent.target.localName != "treechildren")
-        return false;
+    },
       
-      var row = {}, col = {}, obj = {};
-      dirTree.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
-      if (row.value >= dirTree.view.rowCount || row.value < 0)
-        return false;
+    onCycleCell: function(row, colID)
+    {
+    },
       
-      var item = dirTree.contentView.getItemAtIndex(row.value);
-      var targetURI = item.id;
-      var srcURI = GetAbViewURI();
-
-      // you can't drop a card onto the directory it comes from
-      if (targetURI == srcURI)
-        return false;
-
-      // determine if we dragging from a mailing list on a directory x to the parent (directory x).
-      // if so, don't allow the drop
-      var result = srcURI.split(targetURI);
-      if (result != srcURI) 
-        return false;
-
-      // check if we can write to the target directory 
-      // LDAP is readonly
-      var targetDirectory = GetDirectoryFromURI(targetURI);
-      if (!targetDirectory.isMailList && 
-          (!(targetDirectory.operations & targetDirectory.opWrite)))
-        return false
-
-      aDragSession.canDrop = true;
-      return true;
+    onSelectionChanged: function()
+    {
     },
 
-  getSupportedFlavours: function ()
+    isEditable: function(row, colID)
+    {        
+    },
+
+    onSetCellText: function(row, colID, value)
+    {
+    },
+
+    onPerformAction: function(action)
+    {
+    },
+
+    onPerformActionOnRow: function(action, row)
+    {
+    },
+
+    onPerformActionOnCell: function(action, row, colID)
   {
-      var flavourSet = new FlavourSet();
-      flavourSet.appendFlavour("moz/abcard");
-      return flavourSet;
   }
-};
-
+}
