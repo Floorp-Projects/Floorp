@@ -67,5 +67,5 @@ HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
 
-export:: install
+export:: libs
 

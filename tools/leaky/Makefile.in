@@ -73,7 +73,7 @@ include $(topsrcdir)/config/rules.mk
 all:: $(OTHER_LIBRARIES)
 
 # Make sure install depends on files that rules.mk doesn't know about.
-install:: $(OTHER_LIBRARIES)
+libs:: $(OTHER_LIBRARIES)
 
 # Make sure libs depends on files that rules.mk doesn't know about.
 libs:: $(OTHER_LIBRARIES)
@@ -98,6 +98,6 @@ test:
 	@echo LIBPRELOAD = $(LIBPRELOAD)
 	@echo TARGETS = $(TARGETS)
 
-install:: $(OTHER_LIBRARIES) $(RESOURCES)
+libs:: $(OTHER_LIBRARIES) $(RESOURCES)
 	$(INSTALL) -m 555 $(OTHER_LIBRARIES) $(DIST)/lib
 	$(INSTALL) $(RESOURCES) $(DIST)/bin/res/leaky

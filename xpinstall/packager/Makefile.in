@@ -108,7 +108,7 @@ MOZILLA_BIN	= $(DIST)/bin/mozilla$(BIN_SUFFIX)
 OSPACKAGE	= os2
 endif
 
-all export libs install:: $(TARGETS)
+all export libs:: $(TARGETS)
 
 $(PACKAGE): $(MOZILLA_BIN)
 	@rm -rf $(DIST)/$(MOZ_PKG_APPNAME) $(DIST)/$(PKG_BASENAME).tar $@ $(EXCLUDE_LIST)

@@ -38,5 +38,5 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-install:: $(TARGETS)
+libs:: $(TARGETS)
 	$(INSTALL) $(srcdir)/htmlBindings.xml $(DIST)/bin/res/builtin

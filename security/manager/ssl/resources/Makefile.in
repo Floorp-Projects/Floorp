@@ -28,6 +28,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(REGCHROME) content pipnss pipnss.jar
 	$(REGCHROME) locale en-US/pipnss en-US.jar

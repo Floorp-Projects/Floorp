@@ -85,5 +85,5 @@ ifeq ($(OS_ARCH),Linux)
 DEFINES += -D_BSD_SOURCE
 endif
 
-install::
+libs::
 	$(INSTALL) $(JSFILES) $(DIST)/bin/components

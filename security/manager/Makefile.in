@@ -71,7 +71,7 @@ depend dependclean export::
 	$(MAKE) -C ssl $@
 	$(MAKE) -C pki $@
 
-install::
+libs::
 	$(MAKE) -C $(topsrcdir)/security/coreconf $(DEFAULT_GMAKE_FLAGS)
 	cd $(DIST)/lib; cp -f libmozdbm_s.$(LIB_SUFFIX) libdbm.$(LIB_SUFFIX)
 	$(MAKE) -C $(topsrcdir)/security/nss/lib $(DEFAULT_GMAKE_FLAGS)

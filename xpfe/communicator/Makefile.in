@@ -40,7 +40,7 @@ CHROME_PLATFORM = unix
 endif
 endif
 
-install::
+libs::
 	@$(REGCHROME) content communicator comm.jar
 	@$(REGCHROME) content communicator-region comm.jar
 	@$(REGCHROME) content communicator-platform comm.jar

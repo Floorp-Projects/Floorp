@@ -36,7 +36,7 @@ include $(topsrcdir)/config/rules.mk
 
 export::
 
-install:: $(DLL)
+libs:: $(DLL)
 	$(INSTALL) -m 444 $(DLL) $(DIST)/bin
 
 # XXX Have to copy files because rc and link386 are too stupid for a mirror tree build

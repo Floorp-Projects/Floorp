@@ -38,6 +38,6 @@ LIBS		= \
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) samples/picstest1.html $(DIST)/bin/res/samples
 

@@ -356,7 +356,7 @@ endif
 # 
 
 # Print out any options loaded from mozconfig.
-all build checkout clean depend distclean export install realclean::
+all build checkout clean depend distclean export libs install realclean::
 	@if test -f .mozconfig.out; then \
 	  cat .mozconfig.out; \
 	  rm -f .mozconfig.out; \
@@ -594,7 +594,7 @@ build::  $(OBJDIR)/Makefile $(OBJDIR)/config.status
 # Other targets
 
 # Pass these target onto the real build system
-install export clean realclean distclean:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
+install export libs clean realclean distclean:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
 	$(MOZ_MAKE) $@
 
 cleansrcdir:
@@ -615,4 +615,4 @@ cleansrcdir:
 # (! IS_FIRST_CHECKOUT)
 endif
 
-.PHONY: checkout real_checkout depend build export install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything
+.PHONY: checkout real_checkout depend build export libs install clean realclean distclean cleansrcdir pull_all build_all clobber clobber_all pull_and_build_all everything

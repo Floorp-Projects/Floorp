@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) $(srcdir)/htmlEntityVersions.properties $(DIST)/bin/res/entityTables
 	$(INSTALL) $(srcdir)/html40Latin1.properties $(DIST)/bin/res/entityTables
 	$(INSTALL) $(srcdir)/html40Symbols.properties $(DIST)/bin/res/entityTables

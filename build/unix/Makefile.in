@@ -33,5 +33,5 @@ export::
 	chmod 755 mozilla-config
 	$(INSTALL) -m 755 mozilla-config $(DIST)/bin
 
-install:: $(srcdir)/run-mozilla.sh
+libs:: $(srcdir)/run-mozilla.sh
 	$(INSTALL) $< $(DIST)/bin

@@ -24,7 +24,7 @@ topsrcdir	= @top_srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-install::
+libs::
 	$(INSTALL) $(XPDIST)/idl/nsISupports.idl ./idl
 	$(INSTALL) $(XPDIST)/idl/nsrootidl.idl ./idl
 

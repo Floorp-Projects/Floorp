@@ -115,7 +115,7 @@ ICON_FILES	= \
 		$(srcdir)/mozicon16.xpm \
 		$(NULL)
 
-install::
+libs::
 	$(INSTALL) $(ICON_FILES) $(DIST)/bin/icons
 
 

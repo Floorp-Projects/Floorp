@@ -38,7 +38,7 @@ LLFLAGS=                        \
     /machine:i386               \
     $(NULL)
 
-install:: $(PROGRAM)
+libs:: $(PROGRAM)
 	$(INSTALL) $(PROGRAM) $(DIST)/bin
 
 	-mkdir test1

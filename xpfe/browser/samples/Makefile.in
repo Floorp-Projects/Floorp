@@ -42,6 +42,6 @@ EXPORT_RESOURCE_SAMPLES = \
 
 include $(topsrcdir)/config/rules.mk
 
-install:: 
+libs:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
 

@@ -82,7 +82,7 @@ XMLTERM_SCRIPTS = \
 	$(srcdir)/xcat \
 	$(NULL)
 
-install:: 
+libs:: 
 	$(INSTALL) -m 555 $(XMLTERM_SCRIPTS) $(DIST)/bin
 
 xpi::

@@ -120,6 +120,6 @@ ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_XOPEN_SOURCE=500
 endif
 
-install:: $(EXPORT_RESOURCE)
+libs:: $(EXPORT_RESOURCE)
 	$(INSTALL) $^ $(DIST)/bin/res
 
