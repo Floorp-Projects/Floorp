@@ -708,7 +708,7 @@ HRESULT CMozillaBrowser::CheckBinDirPath()
 	}
 
 	// TODO store string in resource
-	UINT nAnswer = MessageBox(
+	UINT nAnswer = ::MessageBox(NULL,
 		_T("The browser control does not know where the Mozilla is installed "
 		   "and may not function correctly.\n"
  		   "Do you want to locate Mozilla now?"),
@@ -1537,6 +1537,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 		USES_CONVERSION;
 		char *szPostData = OLE2A(PostData->bstrVal);
 #if 0
+		// TODO fix
 		// Create post data from string
 		NS_NewPostData(PR_FALSE, szPostData, &pIPostData);
 #endif
@@ -1565,8 +1566,7 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Navigate(BSTR URL, VARIANT __RPC_FAR 
 				return spOther->Navigate2(&vURL, &vFlags, TargetFrameName, PostData, Headers);
 			}
 		}
-
-		// Can't open a new window without client suppot
+		// Can't open a new window without client support
 		return E_NOTIMPL;
 	}
 	if (lFlags & navNoHistory)
@@ -1602,14 +1602,11 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::Refresh(void)
 {
 	NG_TRACE_METHOD(CMozillaBrowser::Refresh);
 
-//Uneccessary since this gets called again in Refresh2
-#if 0
 	if (!IsValid())
 	{
 		NG_ASSERT(0);
 		RETURN_E_UNEXPECTED();
 	}
-#endif
 
 	// Reload the page
 	CComVariant vRefreshType(REFRESH_NORMAL);
