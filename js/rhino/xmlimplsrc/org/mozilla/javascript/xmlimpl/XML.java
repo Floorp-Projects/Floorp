@@ -50,7 +50,7 @@ import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
 import org.apache.xmlbeans.XmlOptions;
 
-class XML extends XMLObjectImpl
+class XML extends XMLObjectImpl implements Wrapper
 {
     final static class XScriptAnnotation extends XmlBookmark
     {
@@ -245,31 +245,24 @@ class XML extends XMLObjectImpl
 
     static XML createFromJS(XMLLibImpl lib, Object inputObject)
     {
-        if (inputObject instanceof Wrapper) {
-            Object wrapped = ((Wrapper)inputObject).unwrap();
-            if (wrapped instanceof XmlObject) {
-                return createFromXmlObject(lib, (XmlObject)wrapped);
-            }
-            if (wrapped instanceof XmlCursor) {
-                return createXML(lib, (XmlCursor)wrapped);
-            }
-        }
-
         XmlObject xo;
         boolean isText = false;
         String frag;
 
-        if (inputObject == null || inputObject instanceof Undefined)
-        {
+        if (inputObject == null || inputObject == Undefined.instance) {
             frag = "";
-        }
-        else if (inputObject instanceof XMLObjectImpl)
-        {
+        } else if (inputObject instanceof XMLObjectImpl) {
             // todo: faster way for XMLObjects?
             frag = ((XMLObjectImpl) inputObject).toXMLString(0);
-        }
-        else
-        {
+        } else {
+            if (inputObject instanceof Wrapper) {
+                // Note: the check has to be done after the check for
+                //  XMLObjectImpl as XML also implements Wrapper
+                Object wrapped = ((Wrapper)inputObject).unwrap();
+                if (wrapped instanceof XmlObject) {
+                    return createFromXmlObject(lib, (XmlObject)wrapped);
+                }
+            }
             frag = ScriptRuntime.toString(inputObject);
         }
 
@@ -3060,6 +3053,22 @@ todo need to handle namespace prefix not found in XML look for namespace type in
             return ScriptRuntime.toObjectOrNull(cx, src);
         }
         return null;
+    }
+
+    //
+    // Implementation of Wrapper
+    //
+
+    public Object unwrap()
+    {
+        XmlObject xo;
+        XmlCursor cursor = newCursor();
+        try {
+            xo = cursor.getObject();
+        } finally {
+            cursor.dispose();
+        }
+        return xo;
     }
 
 }

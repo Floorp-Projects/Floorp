@@ -71,6 +71,9 @@ public final class XMLLibImpl extends XMLLib
 
     public static void init(Context cx, Scriptable scope, boolean sealed)
     {
+        // To force LinkageError if XmlObject is not available
+        XmlObject.class.getName();
+
         XMLLibImpl lib = new XMLLibImpl(scope);
         XMLLib bound = lib.bindToScope(scope);
         if (bound == lib) {
@@ -637,4 +640,11 @@ public final class XMLLibImpl extends XMLLib
         return constructNamespace(cx, uriValue);
     }
 
+    public Scriptable wrapAsXMLOrNull(Context cx, Object javaObject)
+    {
+        if (javaObject instanceof XmlObject) {
+            return XML.createFromXmlObject(this, (XmlObject)javaObject);
+        }
+        return super.wrapAsXMLOrNull(cx, javaObject);
+    }
 }
