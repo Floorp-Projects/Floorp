@@ -18,7 +18,7 @@
 
 #include "nsHTTPConnection.h"
 #include "netCore.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 #include "nsIHTTPHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
