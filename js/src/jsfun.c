@@ -254,7 +254,7 @@ args_enumerate(JSContext *cx, JSObject *obj)
 }
 
 JSClass js_ArgumentsClass = {
-    js_Arguments_str,
+    (char *)js_Arguments_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     args_getProperty, args_setProperty,
@@ -578,7 +578,7 @@ call_convert(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 }
 
 JSClass js_CallClass = {
-    js_Call_str,
+    (char *)js_Call_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     call_getProperty, call_setProperty,
@@ -1044,7 +1044,7 @@ fun_hasInstance(JSContext *cx, JSObject *obj, jsval v, JSBool *bp)
 #endif /* !JS_HAS_INSTANCEOF */
 
 JSClass js_FunctionClass = {
-    js_Function_str,
+    (char *)js_Function_str,
     JSCLASS_HAS_PRIVATE | JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  fun_delProperty,
     fun_getProperty,  JS_PropertyStub,

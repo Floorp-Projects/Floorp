@@ -383,7 +383,7 @@ str_resolve(JSContext *cx, JSObject *obj, jsval id)
 }
 
 static JSClass string_class = {
-    js_String_str,
+    (char *)js_String_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  str_delProperty,  str_getProperty,  JS_PropertyStub,
     str_enumerate,    str_resolve,      JS_ConvertStub,   JS_FinalizeStub,

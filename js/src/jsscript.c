@@ -623,7 +623,7 @@ script_call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 JS_FRIEND_DATA(JSClass) js_ScriptClass = {
-    js_Script_str,
+    (char *)js_Script_str,
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   script_finalize,
