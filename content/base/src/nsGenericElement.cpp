@@ -3080,7 +3080,8 @@ nsGenericContainerElement::SetAttr(nsINodeInfo* aNodeInfo,
     }
 
     if (aNotify) {
-      PRInt32 modHint = modification ? nsIDOMMutationEvent::MODIFICATION : nsIDOMMutationEvent::ADDITION;
+      PRInt32 modHint = modification ? PRInt32(nsIDOMMutationEvent::MODIFICATION)
+                                     : PRInt32(nsIDOMMutationEvent::ADDITION);
       mDocument->AttributeChanged(this, nameSpaceID, name, modHint, 
                                   NS_STYLE_HINT_UNKNOWN);
       mDocument->EndUpdate();
