@@ -166,7 +166,11 @@ NS_IMETHODIMP nsXULTreeAccessible::Shutdown()
 
 NS_IMETHODIMP nsXULTreeAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_OUTLINE;
+  PRInt32 colCount = 0;
+  if (NS_SUCCEEDED(GetColumnCount(mTree, &colCount)) && (colCount > 1))
+    *_retval = ROLE_TREE_TABLE;
+  else
+    *_retval = ROLE_OUTLINE;
   return NS_OK;
 }
 
@@ -401,6 +405,15 @@ NS_IMETHODIMP nsXULTreeAccessible::GetCachedTreeitemAccessible(PRInt32 aRow, nsI
   return NS_OK;
 }
 
+nsresult nsXULTreeAccessible::GetColumnCount(nsITreeBoxObject* aBoxObject, PRInt32* aCount)
+{
+  NS_ENSURE_TRUE(aBoxObject, NS_ERROR_FAILURE);
+  nsCOMPtr<nsITreeColumns> treeColumns;
+  nsresult rv = aBoxObject->GetColumns(getter_AddRefs(treeColumns));
+  NS_ENSURE_TRUE(treeColumns, NS_ERROR_FAILURE);
+  return treeColumns->GetCount(aCount);
+}
+
 // ---------- nsXULTreeitemAccessible ---------- 
 
 nsXULTreeitemAccessible::nsXULTreeitemAccessible(nsIAccessible *aParent, nsIDOMNode *aDOMNode, nsIWeakReference *aShell, PRInt32 aRow, nsITreeColumn* aColumn)
@@ -458,7 +471,11 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetUniqueID(void **aUniqueID)
 
 NS_IMETHODIMP nsXULTreeitemAccessible::GetRole(PRUint32 *_retval)
 {
-  *_retval = ROLE_OUTLINEITEM;
+  PRInt32 colCount = 0;
+  if (NS_SUCCEEDED(nsXULTreeAccessible::GetColumnCount(mTree, &colCount)) && colCount > 1)
+    *_retval = ROLE_CELL;
+  else
+    *_retval = ROLE_OUTLINEITEM;
   return NS_OK;
 }
 
@@ -505,31 +522,37 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetState(PRUint32 *_retval)
   mTree->GetLastVisibleRow(&lastVisibleRow);
   if (mRow < firstVisibleRow || mRow > lastVisibleRow)
     *_retval |= STATE_INVISIBLE;
+  else
+    *_retval |= STATE_SHOWING;
 
   return NS_OK;
 }
 
-// Only one actions available
+// "activate" action is available for all treeitems
+// "expand/collapse" action is avaible for treeitem which is container
 NS_IMETHODIMP nsXULTreeitemAccessible::GetNumActions(PRUint8 *_retval)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
-
-  *_retval = eNo_Action;
-
   PRBool isContainer;
   mTreeView->IsContainer(mRow, &isContainer);
   if (isContainer)
+    *_retval = eDouble_Action;
+  else
     *_retval = eSingle_Action;
 
   return NS_OK;
 }
 
-// Return the name of our only action
+// Return the name of our actions
 NS_IMETHODIMP nsXULTreeitemAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
   if (index == eAction_Click) {
+    nsAccessible::GetTranslatedString(NS_LITERAL_STRING("activate"), _retval);
+    return NS_OK;
+  }
+  else if (index == eAction_Expand) {
     PRBool isContainer, isContainerOpen;
     mTreeView->IsContainer(mRow, &isContainer);
     if (isContainer) {
@@ -586,12 +609,17 @@ NS_IMETHODIMP nsXULTreeitemAccessible::GetNextSibling(nsIAccessible **aNextSibli
   rv = mColumn->GetNext(getter_AddRefs(column));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  if (!column && mRow < rowCount - 1) {
-    row++;
-    nsCOMPtr<nsITreeColumns> cols;
-    mTree->GetColumns(getter_AddRefs(cols));
-    if (cols)
-      cols->GetFirstColumn(getter_AddRefs(column));
+  if (!column) {
+    if (mRow < rowCount -1) {
+      row++;
+      nsCOMPtr<nsITreeColumns> cols;
+      mTree->GetColumns(getter_AddRefs(cols));
+      if (cols)
+        cols->GetFirstColumn(getter_AddRefs(column));
+    } else {
+      // the next sibling of the last treeitem is null
+      return NS_OK;
+    }
   }
 #else
   if (++row >= rowCount) {
@@ -649,8 +677,21 @@ NS_IMETHODIMP nsXULTreeitemAccessible::DoAction(PRUint8 index)
 {
   NS_ENSURE_TRUE(mTree && mTreeView, NS_ERROR_FAILURE);
 
-  if (index == eAction_Click)
-    return mTreeView->ToggleOpenState(mRow);
+  if (index == eAction_Click) {
+    nsCOMPtr<nsITreeSelection> selection;
+    mTreeView->GetSelection(getter_AddRefs(selection));
+    if (selection) {
+      nsresult rv = selection->Select(mRow);
+      mTree->EnsureRowIsVisible(mRow);
+      return rv;
+    }
+  }
+  else if (index == eAction_Expand) {
+    PRBool isContainer;
+    mTreeView->IsContainer(mRow, &isContainer);
+    if (isContainer)
+      return mTreeView->ToggleOpenState(mRow);
+  }
 
   return NS_ERROR_INVALID_ARG;
 }
