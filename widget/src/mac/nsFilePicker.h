@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
+ *   Steve Dagley <sdagley@netscape.com>
  */
 
 #ifndef nsFilePicker_h__
@@ -52,6 +53,8 @@ public:
   NS_IMETHOD SetDefaultExtension(const PRUnichar * aDefaultExtension);
   NS_IMETHOD GetDisplayDirectory(nsILocalFile * *aDisplayDirectory);
   NS_IMETHOD SetDisplayDirectory(nsILocalFile * aDisplayDirectory);
+  NS_IMETHOD GetFilterIndex(PRInt32 *aFilterIndex);
+  NS_IMETHOD SetFilterIndex(PRInt32 aFilterIndex);
   NS_IMETHOD GetFile(nsILocalFile * *aFile);
   NS_IMETHOD GetFileURL(nsIFileURL * *aFileURL);
   NS_IMETHOD Show(PRInt16 *_retval); 
@@ -69,8 +72,19 @@ protected:
   PRInt16 GetLocalFile(const nsString & inTitle, FSSpec* outFileSpec);
   PRInt16 GetLocalFolder(const nsString & inTitle, FSSpec* outFileSpec);
   void MapFilterToFileTypes ( ) ;
+#if TARGET_CARBON
+  void SetupFormatMenuItems (NavDialogCreationOptions* dialogCreateOptions) ;
+#else
+  void SetupFormatMenuItems (NavDialogOptions* dialogOptions) ;
+#endif
   Boolean IsTypeInFilterList ( ResType inType ) ;
   Boolean IsExtensionInFilterList ( StrFileName & inFileName ) ;
+  void HandleShowPopupMenuSelect( NavCBRecPtr callBackParms ) ;
+  
+    // filter routine for file dialog events
+  static pascal void FileDialogEventHandlerProc( NavEventCallbackMessage msg,
+                                                 NavCBRecPtr cbRec,
+                                                 NavCallBackUserData callbackUD ) ;
   
     // filter routine for file types
   static pascal Boolean FileDialogFilterProc ( AEDesc* theItem, void* info,
@@ -92,7 +106,8 @@ protected:
   NavTypeListPtr         mTypeLists[kMaxTypeListCount];
 
   static OSType          sCurrentProcessSignature;
-
+  
+  PRInt32                mSelectedType;
 };
 
 #endif // nsFilePicker_h__
