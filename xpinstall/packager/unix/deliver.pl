@@ -39,17 +39,36 @@
 #==============================================================================
 
 use Cwd;
+use Getopt::Std;
+use File::Path;
+getopts('o:s:');
 
 #// constants
 $SUBDIR = "mozilla-installer";
 $_DEPTH  = "../../..";
+
+# Determine topsrcdir
 $_orig = cwd();
-chdir($_DEPTH); # resolve absolute path
-$TREETOP = cwd();
+if (defined($opt_s)) {
+    chdir($opt_s) || die "chdir($opt_s): $!\n";
+} else {
+    chdir($_DEPTH); # resolve absolute path
+}
+$topsrcdir = cwd();    
 chdir($_orig);
 
-$WIZARD = $TREETOP."/xpinstall/wizard/unix/src2";
-$ROOT   = $TREETOP."/installer";
+# Determine topobjdir
+if (defined($opt_o)) {
+    chdir($opt_o) || die "chdir($opt_o): $!\n";
+} else {
+    chdir($_DEPTH); # resolve absolute path
+}
+$topobjdir = cwd();    
+chdir($_orig);
+
+$WIZSRC = $topsrcdir."/xpinstall/wizard/unix/src2";
+$WIZARD = $topobjdir."/xpinstall/wizard/unix/src2";
+$ROOT   = $topobjdir."/installer";
 $STAGE  = $ROOT."/stage";
 $RAW    = $ROOT."/raw";
 $XPI    = $RAW."/xpi";
@@ -95,7 +114,7 @@ mkdir($STUB, 0777)  || die "--- deliver.pl: couldn't mkdir stub: $!";
 if ($aBuildWizard eq "buildwizard")
 {
     chdir($WIZARD);
-    system($TREETOP."/build/autoconf/update-makefile.sh");
+    system($topsrcdir."/build/autoconf/update-makefile.sh");
 
     #// make unix wizard
     system("make");
@@ -103,11 +122,11 @@ if ($aBuildWizard eq "buildwizard")
 }
 
 #// deliver wizard to staging area (mozilla/installer/stage)
-copy("$WIZARD/mozilla-installer", $RAW);
+copy("$WIZSRC/mozilla-installer", $RAW);
 copy("$WIZARD/mozilla-installer-bin", $RAW);
-copy("$WIZARD/installer.ini", $RAW);
-copy("$WIZARD/README", $RAW);
-copy("$WIZARD/MPL-1.1.txt", $RAW);
+copy("$WIZSRC/installer.ini", $RAW);
+copy("$WIZSRC/README", $RAW);
+copy("$WIZSRC/MPL-1.1.txt", $RAW);
 chmod(0755, "$RAW/mozilla-installer"); #// ensure shell script is executable
 
 spew("Completed delivering wizard");
@@ -116,27 +135,20 @@ spew("Completed delivering wizard");
 #-------------------------------------------------------------------------
 #   Make .xpis
 #-------------------------------------------------------------------------
-#// create a "bin" symlink in $TREETOP/dist/mozilla that points to ".".
-#// this ensures that binaries in dist/bin remain unstripped.
-symlink(".", "$TREETOP/dist/mozilla/bin");
-
 #// call pkgcp.pl
-chdir("$TREETOP/xpinstall/packager");
-system("perl pkgcp.pl -o unix -s $TREETOP/dist/mozilla -d $STAGE -f $TREETOP/xpinstall/packager/packages-unix -v");
+chdir("$topsrcdir/xpinstall/packager");
+system("perl pkgcp.pl -o unix -s $topobjdir/dist -d $STAGE -f $topsrcdir/xpinstall/packager/packages-unix -v");
 spew("Completed copying build files");
 
 #// call xptlink.pl to make big .xpt files/component
-system("perl xptlink.pl -o unix -s $TREETOP/dist -d $STAGE -v");
+system("perl xptlink.pl -o unix -s $topobjdir/dist -d $STAGE -v");
 spew("Completed xptlinking"); 
 
-#// call makeall.pl tunneling args (delivers .xpis to mozilla/installer/stage)
-chdir("$TREETOP/xpinstall/packager/unix");
+#// call makeall.pl tunneling args (delivers .xpis to $topobjdir/installer/stage)
+chdir("$topsrcdir/xpinstall/packager/unix");
 system("perl makeall.pl $aVersion $aURLPath $STAGE $XPI");
-system("mv $TREETOP/xpinstall/packager/unix/config.ini $RAW");
+system("mv $topsrcdir/xpinstall/packager/unix/config.ini $RAW");
 spew("Completed making .xpis");
-
-#// clean up our symlink
-unlink("$TREETOP/dist/mozilla/bin");
 
 #-------------------------------------------------------------------------
 #   Package stub and sea
