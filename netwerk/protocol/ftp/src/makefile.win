@@ -22,7 +22,6 @@ REQUIRES	= xpcom \
 		  string \
 		  exthandler \
 		  mimetype \
-		  wallet \
 		  pref \
 		  intl \
 		  nkcache \
