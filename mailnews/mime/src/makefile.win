@@ -169,6 +169,7 @@ LINCS=$(LINCS)  -I.                         		\
 			   -I$(PUBLIC)\raptor		\
 			   -I$(PUBLIC)\mime		\
 			   -I$(PUBLIC)\mailnews         \
+			   -I$(PUBLIC)\uconv\
 			   $(NULL)
 
 #//------------------------------------------------------------------------
