@@ -55,6 +55,7 @@
 #include "nsIChannel.h"
 #include "nsIDOMWindow.h"
 #include "nsString.h"
+#include "nsCRT.h"
 
 /****************************************************************
  ************************ nsCookiePermission ********************
