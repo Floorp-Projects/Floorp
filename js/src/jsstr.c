@@ -564,7 +564,7 @@ static JSBool
 str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     JSString *str;
-    int32 i;
+    jsdouble d = 0.0;
     size_t index;
     jschar buf[2];
 
@@ -573,12 +573,15 @@ str_charAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 	return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    if (!js_ValueToECMAInt32(cx, argv[0], &i))
-	return JS_FALSE;
-    if (i < 0 || str->length <= (size_t)i) {
+    if (argc) {
+        if (!js_ValueToNumber(cx, argv[0], &d))                                     
+            return JS_FALSE;
+        d = js_DoubleToInteger(d);
+    }
+    if (d < 0 || str->length <= d) {
 	*rval = JS_GetEmptyStringValue(cx);
     } else {
-	index = (size_t)i;
+	index = (size_t)d;
 	buf[0] = str->chars[index];
 	buf[1] = 0;
 	str = js_NewStringCopyN(cx, buf, 1, 0);
@@ -594,7 +597,7 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	       jsval *rval)
 {
     JSString *str;
-    int32 i;
+    jsdouble d = 0.0;
     size_t index;
 
     str = js_ValueToString(cx, OBJECT_TO_JSVAL(obj));
@@ -602,12 +605,15 @@ str_charCodeAt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 	return JS_FALSE;
     argv[-1] = STRING_TO_JSVAL(str);
 
-    if (!js_ValueToECMAInt32(cx, argv[0], &i))
-	return JS_FALSE;
-    if (i < 0 || str->length <= (size_t)i) {
+    if (argc) {
+        if (!js_ValueToNumber(cx, argv[0], &d))                                     
+            return JS_FALSE;
+        d = js_DoubleToInteger(d);
+    }
+    if (d < 0 || str->length <= d) {
 	*rval = JS_GetNaNValue(cx);
     } else {
-	index = (size_t)i;
+	index = (size_t)d;
 	*rval = INT_TO_JSVAL((jsint)str->chars[index]);
     }
     return JS_TRUE;
