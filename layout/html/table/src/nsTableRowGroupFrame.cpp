@@ -918,6 +918,31 @@ nsTableRowGroupFrame::SplitSpanningCells(nsIPresContext&          aPresContext,
   return tallestCell;
 }
 
+nsIFrame* GetNextRow(nsIFrame& aFrame)
+{
+  nsIFrame* rowFrame;
+  for (aFrame.GetNextSibling(&rowFrame); rowFrame; rowFrame->GetNextSibling(&rowFrame)) {
+    nsCOMPtr<nsIAtom> fType;
+    rowFrame->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::tableRowFrame == fType.get()) {
+      return rowFrame;
+    }
+  }
+  return nsnull;
+}
+
+nsIFrame* GetFirstRow(nsTableRowGroupFrame& aRowGroupFrame)
+{
+  for (nsIFrame* rowFrame = aRowGroupFrame.GetFirstFrame(); rowFrame; rowFrame = GetNextRow(*rowFrame)) {
+    nsCOMPtr<nsIAtom> fType;
+    rowFrame->GetFrameType(getter_AddRefs(fType));
+    if (nsLayoutAtoms::tableRowFrame == fType.get()) {
+      return rowFrame;
+    }
+  }
+  return nsnull;
+}
+
 nsresult
 nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
                                     nsHTMLReflowMetrics&     aDesiredSize,
@@ -946,7 +971,7 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
 
   // Walk each of the row frames looking for the first row frame that
   // doesn't fit in the available space
-  for (nsIFrame* rowFrame = GetFirstFrame(); rowFrame; GetNextFrame(rowFrame, &rowFrame)) {
+  for (nsIFrame* rowFrame = GetFirstRow(*this); rowFrame; rowFrame = GetNextRow(*rowFrame)) {
     PRBool rowIsOnCurrentPage = PR_TRUE;
     PRBool degenerateRow = PR_FALSE;
     nsRect bounds;
@@ -975,7 +1000,10 @@ nsTableRowGroupFrame::SplitRowGroup(nsIPresContext*          aPresContext,
         if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
           // the row frame is incomplete and all of the cells' block frames have split
           CreateContinuingRowFrame(*aPresContext, *styleSet.get(), *rowFrame, &contRowFrame);
-          aDesiredSize.height += aTableFrame->GetCellSpacingY() + desiredSize.height;
+          aDesiredSize.height += desiredSize.height;
+          if (prevRowFrame) {
+            aDesiredSize.height += aTableFrame->GetCellSpacingY();
+          }
         } 
         else if (0 == desiredSize.height) {
           // the row frame is complete because it had no cells originating in it.

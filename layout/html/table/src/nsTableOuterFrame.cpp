@@ -1469,6 +1469,15 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aOuterRS);
 #endif
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+
+  // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
+  nscoord availHeight = aOuterRS.availableHeight;
+  if (NS_UNCONSTRAINEDSIZE != availHeight) {
+    availHeight = nsTableFrame::RoundToPixel(availHeight, p2t, eAlwaysRoundDown);
+  }
+
   nsresult rv = NS_OK;
   PRUint8 captionSide = GetCaptionSide();
 

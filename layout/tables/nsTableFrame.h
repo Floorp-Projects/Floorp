@@ -60,6 +60,8 @@ class nsHTMLValue;
 struct nsTableReflowState;
 struct nsStylePosition;
 
+enum nsPixelRound {eAlwaysRoundUp=0, eAlwaysRoundDown, eRoundUpIfHalfOrMore};
+
 #ifdef DEBUG_TABLE_REFLOW_TIMING
 #ifdef WIN32
 #include <windows.h>
@@ -201,9 +203,9 @@ public:
                   nsIFrame*        aPrevInFlow);
 
 
-  static nscoord RoundToPixel(nscoord aValue,
-                              float   aPixelToTwips,
-                              PRBool  aRoundUp = PR_FALSE);
+  static nscoord RoundToPixel(nscoord      aValue,
+                              float        aPixelToTwips,
+                              nsPixelRound aRound= eAlwaysRoundUp);
 
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 

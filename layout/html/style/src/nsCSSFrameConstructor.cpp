@@ -10923,6 +10923,12 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell* aPresShell,
                                                styleContext, nsnull, PR_FALSE);
     }
 
+  } else if (nsLayoutAtoms::imageFrame == frameType) {
+    rv = NS_NewImageFrame(aPresShell, &newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(aPresContext, content, aParentFrame, styleContext, aFrame);
+    }
+
   } else {
     NS_ASSERTION(PR_FALSE, "unexpected frame type");
     rv = NS_ERROR_UNEXPECTED;

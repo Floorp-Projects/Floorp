@@ -60,6 +60,7 @@
 #include "nsFormFrame.h"
 #include "nsFormControlFrame.h"
 #include "nsGUIEvent.h"
+#include "nsLayoutAtoms.h"
 #ifdef ACCESSIBILITY
 #include "nsIAccessibilityService.h"
 #endif
@@ -100,6 +101,8 @@ public:
   NS_IMETHOD HandleEvent(nsIPresContext* aPresContext, 
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
+
+  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -250,6 +253,15 @@ nsrefcnt nsImageControlFrame::Release(void)
 {
   NS_WARNING("not supported");
   return 1;
+}
+
+NS_IMETHODIMP
+nsImageControlFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::imageControlFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -236,7 +236,7 @@ nsImageFrame::Destroy(nsIPresContext* aPresContext)
 
   mListener = nsnull;
 
-  return nsLeafFrame::Destroy(aPresContext);
+  return nsSplittableFrame::Destroy(aPresContext);
 }
 
 
@@ -248,9 +248,8 @@ nsImageFrame::Init(nsIPresContext*  aPresContext,
                    nsIStyleContext* aContext,
                    nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent,
-                                   aContext, aPrevInFlow);
-
+  nsresult  rv = nsSplittableFrame::Init(aPresContext, aContent, aParent,
+                                         aContext, aPrevInFlow);
   // See if we have a SRC attribute
   nsAutoString src;
   nsresult ca;
@@ -761,8 +760,43 @@ nsImageFrame::GetInnerArea(nsIPresContext* aPresContext,
   aInnerArea.y = mBorderPadding.top;
   aInnerArea.width = mRect.width -
     (mBorderPadding.left + mBorderPadding.right);
-  aInnerArea.height = mRect.height -
-    (mBorderPadding.top + mBorderPadding.bottom);
+  aInnerArea.height = (!mPrevInFlow && !mNextInFlow) 
+    ? mRect.height - mBorderPadding.top - mBorderPadding.bottom : mComputedSize.height;
+}
+
+NS_IMETHODIMP
+nsImageFrame::ContentChanged(nsIPresContext* aPresContext,
+                             nsIContent*     aChild,
+                             nsISupports*    aSubContent)
+{
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  mState |= NS_FRAME_IS_DIRTY;
+  return mParent->ReflowDirtyChild(shell, this);
+}
+
+// get the offset into the content area of the image where aImg starts if it is a continuation.
+nscoord 
+nsImageFrame::GetContinuationOffset(nscoord* aWidth) const
+{
+  nscoord offset = 0;
+  if (aWidth) {
+    *aWidth = 0;
+  }
+
+  if (mPrevInFlow) {
+    for (nsIFrame* prevInFlow = mPrevInFlow ; prevInFlow; prevInFlow->GetPrevInFlow(&prevInFlow)) {
+      nsRect rect;
+      prevInFlow->GetRect(rect);
+      if (aWidth) {
+        *aWidth = rect.width;
+      }
+      offset += rect.height;
+    }
+    offset -= mBorderPadding.top;
+    offset = PR_MAX(0, offset);
+  }
+  return offset;
 }
 
 NS_IMETHODIMP
@@ -779,14 +813,41 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 
+  aStatus = NS_FRAME_COMPLETE;
+
   // see if we have a frozen size (i.e. a fixed width and height)
   HaveFixedSize(aReflowState, mSizeConstrained);
 
   if (aReflowState.reason == eReflowReason_Initial)
     mGotInitialReflow = PR_TRUE;
 
+  // get the desired size of the complete image
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
-  AddBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
+
+  // add borders and padding
+  mBorderPadding   = aReflowState.mComputedBorderPadding;
+  aMetrics.width  += mBorderPadding.left + mBorderPadding.right;
+  aMetrics.height += mBorderPadding.top + mBorderPadding.bottom;
+  
+  if (mPrevInFlow) {
+    nscoord y = GetContinuationOffset(&aMetrics.width);
+    aMetrics.height -= y + mBorderPadding.top;
+    aMetrics.height = PR_MAX(0, aMetrics.height);
+  }
+
+  if ((NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) && 
+      (aMetrics.height > aReflowState.availableHeight)) { 
+    nsCOMPtr<nsIAtom> fType;
+    GetFrameType(getter_AddRefs(fType));
+    // split an image frame but not an image control frame
+    if (nsLayoutAtoms::imageFrame == fType.get()) {
+      aMetrics.height = aReflowState.availableHeight;
+      aStatus = NS_FRAME_NOT_COMPLETE;
+    }
+  }
+  aMetrics.ascent  = aMetrics.height;
+  aMetrics.descent = 0;
+
   if (nsnull != aMetrics.maxElementSize) {
     // If we have a percentage based width, then our MES width is 0
     if (eStyleUnit_Percent == aReflowState.mStylePosition->mWidth.GetUnit()) {
@@ -799,7 +860,6 @@ nsImageFrame::Reflow(nsIPresContext*          aPresContext,
   if (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH) {
     aMetrics.mMaximumWidth = aMetrics.width;
   }
-  aStatus = NS_FRAME_COMPLETE;
 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                   ("exit nsImageFrame::Reflow: size=%d,%d",
@@ -1038,8 +1098,27 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
 
 
     // First paint background and borders
-    nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       aWhichLayer);
+    if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
+      const nsStyleVisibility* vis = 
+        (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
+      if (vis->IsVisibleOrCollapsed()) {
+        const nsStyleBackground* myColor = (const nsStyleBackground*)
+          mStyleContext->GetStyleData(eStyleStruct_Background);
+        const nsStyleBorder* myBorder = (const nsStyleBorder*)
+          mStyleContext->GetStyleData(eStyleStruct_Border);
+        const nsStyleOutline* myOutline = (const nsStyleOutline*)
+          mStyleContext->GetStyleData(eStyleStruct_Outline);
+        nsRect rect(0, 0, mRect.width, mRect.height);
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *myColor, *myBorder, 0, 0);
+
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *myBorder, mStyleContext, 0);
+
+        nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *myBorder, *myOutline, mStyleContext, 0);
+      }
+    }
 
     nsCOMPtr<imgIContainer> imgCon;
 
@@ -1078,23 +1157,51 @@ nsImageFrame::Paint(nsIPresContext*      aPresContext,
         }
 
         if (imgCon) {
-          nsPoint p(inner.x, inner.y);
+          nscoord offsetY = 0; 
+          nsSize  size(inner.width, inner.height);
+          // if the image is split account for y-offset, border, padding
+          if (mPrevInFlow || mNextInFlow) {
+            if (mPrevInFlow) {
+              offsetY = GetContinuationOffset();
+            }
+            size.height = mRect.height;
+            if (!mPrevInFlow) {
+              size.height -= mBorderPadding.top;
+            }
+            if (!mNextInFlow) {
+              size.height -= mBorderPadding.bottom;
+            }
+          }
+
           if (mLoads[0].mIntrinsicSize == mComputedSize) {
+            nsPoint p(inner.x, inner.y);
             inner.IntersectRect(inner, aDirtyRect);
             nsRect r(inner.x, inner.y, inner.width, inner.height);
             r.x -= mBorderPadding.left;
             r.y -= mBorderPadding.top;
+            if (mPrevInFlow) {
+              r.y = offsetY;
+              p.y = 0;
+            }
             aRenderingContext.DrawImage(imgCon, &r, &p);
           } else {
             nsTransform2D trans;
             trans.SetToScale((float(mLoads[0].mIntrinsicSize.width) / float(inner.width)),
                              (float(mLoads[0].mIntrinsicSize.height) / float(inner.height)));
 
-            nsRect r(0, 0, inner.width, inner.height);
+            nsRect r(0, offsetY, size.width, size.height);
 
             trans.TransformCoord(&r.x, &r.y, &r.width, &r.height);
 
             nsRect d(inner.x, inner.y, mComputedSize.width, mComputedSize.height);
+            // if the image is split account for y-offset, border, padding
+            if (mPrevInFlow || mNextInFlow) {
+              if (mPrevInFlow) {
+                d.y -= mBorderPadding.top;
+              }
+              d.height = size.height;
+            }
+
             aRenderingContext.DrawScaledImage(imgCon, &r, &d);
           }
         }
@@ -1421,7 +1528,7 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
       break;
   }
 
-  return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsSplittableFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 //XXX This will need to be rewritten once we have content for areas
@@ -1458,8 +1565,8 @@ nsImageFrame::AttributeChanged(nsIPresContext* aPresContext,
                                PRInt32 aModType, 
                                PRInt32 aHint)
 {
-  nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
-                                              aNameSpaceID, aAttribute, aModType, aHint);
+  nsresult rv = nsSplittableFrame::AttributeChanged(aPresContext, aChild,
+                                                    aNameSpaceID, aAttribute, aModType, aHint);
   if (NS_OK != rv) {
     return rv;
   }

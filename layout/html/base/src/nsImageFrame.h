@@ -37,7 +37,7 @@
 #ifndef nsImageFrame_h___
 #define nsImageFrame_h___
 
-#include "nsLeafFrame.h"
+#include "nsSplittableFrame.h"
 #include "nsString.h"
 #include "nsAReadableString.h"
 #include "nsIPresContext.h"
@@ -83,7 +83,7 @@ struct ImageLoad {
   nsTransform2D mTransform;
 };
 
-#define ImageFrameSuper nsLeafFrame
+#define ImageFrameSuper nsSplittableFrame
 
 class nsImageFrame : public ImageFrameSuper, public nsIImageFrame {
 public:
@@ -108,6 +108,10 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
   
+  NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
+                             nsIContent*     aChild,
+                             nsISupports*    aSubContent);
+
   NS_IMETHOD CanContinueTextRun(PRBool& aContinueTextRun) const;
 
 
@@ -220,7 +224,7 @@ private:
   nsresult LoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest);
   nsresult RealLoadImage(const nsAReadableString& aSpec, nsIPresContext *aPresContext, imgIRequest *aRequest);
   inline int GetImageLoad(imgIRequest *aRequest);
-
+  nscoord GetContinuationOffset(nscoord* aWidth = 0) const;
 
   nsImageMap*         mImageMap;
 
