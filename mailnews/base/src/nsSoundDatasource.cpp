@@ -49,11 +49,24 @@
 #include "nsCRT.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsIFileURL.h"
+#include "nsISimpleEnumerator.h"
+#include "nsNetCID.h"
+#include "nsIFile.h"
+#include "nsILocalFile.h"
 
 #define SOUND_ROOT "moz-mailsounds://"
 #define DEFAULT_SOUND_URL "_moz_mailbeep"
 #define DEFAULT_SOUND_URL_NAME "System New Mail Sound"  // move to string bundle
 #define PREF_NEW_MAIL_URL "mail.biff.play_sound.url"
+#define WAV_EXTENSION ".wav"
+#define WAV_EXTENSION_LENGTH 4
+#define FILE_SCHEME "file://"
+#define FILE_SCHEME_LEN 7
+
+#ifdef XP_WIN32
+#include <windows.h> 
+#endif
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
@@ -132,8 +145,11 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
   if (property == kNC_Name.get()) {
     nsCOMPtr<nsIRDFLiteral> name;
     if (strcmp(value.get(), DEFAULT_SOUND_URL)) {
+      char *lastSlash = strrchr(value.get(), '/');
       // turn "file://C|/winnt/media/foo.wav" into "foo".
-      rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(value).get(), getter_AddRefs(name));
+      nsCAutoString soundName(lastSlash + 1);
+      soundName.Truncate(soundName.Length() - WAV_EXTENSION_LENGTH);
+      rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(soundName).get(), getter_AddRefs(name));
     }
     else {
       rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(DEFAULT_SOUND_URL_NAME).get(), getter_AddRefs(name));
@@ -172,6 +188,26 @@ nsSoundDatasource::GetTarget(nsIRDFResource *source,
 	return(NS_RDF_NO_VALUE);
 }
 
+#ifdef XP_WIN
+BYTE * GetValueBytes( HKEY hKey, const char *pValueName)
+{
+	LONG	err;
+	DWORD	bufSz;
+	LPBYTE	pBytes = NULL;
+
+	err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, NULL, &bufSz); 
+	if (err == ERROR_SUCCESS) {
+		pBytes = new BYTE[bufSz];
+		err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, pBytes, &bufSz);
+		if (err != ERROR_SUCCESS) {
+			delete [] pBytes;
+			pBytes = NULL;
+		}
+	}
+	return( pBytes);
+}
+#endif
+
 NS_IMETHODIMP
 nsSoundDatasource::GetTargets(nsIRDFResource *source,
 				nsIRDFResource *property,
@@ -208,20 +244,66 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     rv = children->AppendElement(res);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    // todo, get these from the system
-    // for windows, check the registry:
-    // HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\MediaPath -> C:\WINNT\Media
-    // for mac, get a list of system sounds (beep, chirp, drop, etc)
-    // for linux, not sure
-    rv = mRDFService->GetResource("file:///C:/WINNT/Media/chimes.wav", getter_AddRefs(res));
-    NS_ENSURE_SUCCESS(rv,rv);
-    rv = children->AppendElement(res);
+#ifdef XP_WIN
+    nsCAutoString soundFolder;
+    
+    HKEY sKey;
+	  if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion", 0, KEY_QUERY_VALUE, &sKey) == ERROR_SUCCESS) {
+		  BYTE *pBytes = GetValueBytes( sKey, "MediaPath");
+	  	if (pBytes) {
+		  	soundFolder = (const char *)pBytes;
+		  	delete [] pBytes;
+      }
+		  ::RegCloseKey( sKey);
+    }
+
+    nsCOMPtr <nsILocalFile> directory = do_CreateInstance (NS_LOCAL_FILE_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    rv = mRDFService->GetResource("file:///C:/WINNT/Media/ringin.wav", getter_AddRefs(res));
+    rv = directory->InitWithPath(NS_ConvertASCIItoUCS2(soundFolder));
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = children->AppendElement(res);
+
+    nsCOMPtr <nsISimpleEnumerator> dirEntries;
+    rv = directory->GetDirectoryEntries(getter_AddRefs(dirEntries));
     NS_ENSURE_SUCCESS(rv,rv);
+
+    if (dirEntries) {
+      PRBool hasMore = PR_FALSE;
+      PRInt32 dirCount = 0, fileCount = 0;
+ 
+      while (NS_SUCCEEDED(dirEntries->HasMoreElements(&hasMore)) && hasMore) {
+        nsCOMPtr <nsISupports> nextItem;
+        dirEntries->GetNext(getter_AddRefs(nextItem));
+        nsCOMPtr <nsIFile> theFile = do_QueryInterface(nextItem);
+   
+        PRBool isDirectory;
+        theFile->IsDirectory(&isDirectory);
+   
+        if (!isDirectory) {
+          nsCOMPtr<nsIFileURL> theFileURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID, &rv);
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          rv = theFileURL->SetFile(theFile);
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          nsXPIDLCString theFileSpec;
+          rv = theFileURL->GetSpec(theFileSpec);
+          NS_ENSURE_SUCCESS(rv,rv);
+          
+          // if it doesn't end with .wav, or it contains a %20, skip it.
+          if (!strstr(theFileSpec.get(),"%20") && (theFileSpec.Length() > WAV_EXTENSION_LENGTH)) {
+            if (strcmp(theFileSpec.get() + theFileSpec.Length() - WAV_EXTENSION_LENGTH, WAV_EXTENSION) == 0) {
+              rv = mRDFService->GetResource(theFileSpec.get(), getter_AddRefs(res));
+              NS_ENSURE_SUCCESS(rv,rv);
+              
+              rv = children->AppendElement(res);
+              NS_ENSURE_SUCCESS(rv,rv);
+            }
+          }
+        }
+      }
+    }
+#endif
 
     // add entry for the pref specified one, if a file:// url
     // if not, it's a system sound, and we already added it.
@@ -236,7 +318,7 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
     rv = prefBranch->GetCharPref(PREF_NEW_MAIL_URL,getter_Copies(soundURLSpec));
     NS_ENSURE_SUCCESS(rv,rv);
 
-    if (!strncmp(soundURLSpec.get(), "file://", 7)) {
+    if (!strncmp(soundURLSpec.get(), FILE_SCHEME, FILE_SCHEME_LEN)) {
       rv = mRDFService->GetResource(soundURLSpec.get(), getter_AddRefs(res));
       NS_ENSURE_SUCCESS(rv,rv);
       rv = children->AppendElement(res);
@@ -264,9 +346,12 @@ nsSoundDatasource::GetTargets(nsIRDFResource *source,
   }
   else if (property == kNC_Name.get()) {
     nsCOMPtr<nsIRDFLiteral> name;
-    if (strcmp(value.get(), DEFAULT_SOUND_URL) == 0) {
+    if (strcmp(value.get(), DEFAULT_SOUND_URL)) {
+      char *lastSlash = strrchr(value.get(), '/');
       // turn "file://C|/winnt/media/foo.wav" into "foo".
-      rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(value).get(), getter_AddRefs(name));
+      nsCAutoString soundName(lastSlash + 1);
+      soundName.Truncate(soundName.Length() - WAV_EXTENSION_LENGTH);
+      rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(soundName).get(), getter_AddRefs(name));
     }
     else {
       rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2(DEFAULT_SOUND_URL_NAME).get(), getter_AddRefs(name));
