@@ -96,10 +96,6 @@ static NS_DEFINE_CID(kMenuItemCID, NS_MENUITEM_CID);
 class nsDummyMenuItemX : public nsISupports {
 public:
     NS_DECL_ISUPPORTS
-
-    nsDummyMenuItemX()
-    {
-    }
 };
 
 NS_IMETHODIMP_(nsrefcnt) nsDummyMenuItemX::AddRef() { return ++mRefCnt; }
