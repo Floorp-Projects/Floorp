@@ -81,6 +81,12 @@ XP_BEGIN_PROTOS
 
 extern int XP_RegExpValid(char *exp);
 
+
+/* return values for the search routines */
+#define MATCH 0
+#define NOMATCH 1
+#define ABORTED -1
+
 /*
  * shexp_match 
  * 
@@ -88,6 +94,7 @@ extern int XP_RegExpValid(char *exp);
  *
  * Returns 0 on match and 1 on non-match.
  */
+
 extern int XP_RegExpMatch(char *str, char *exp, Bool case_insensitive);
 
 /*
