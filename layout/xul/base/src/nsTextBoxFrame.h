@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Peter Annema <disttsc@bart.nl>
  */
 #ifndef nsTextBoxFrame_h___
 #define nsTextBoxFrame_h___
@@ -48,51 +49,62 @@ public:
                    nsIFrame*        asPrevInFlow);
 
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aHint);
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aHint);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
-  virtual void UpdateAttributes(nsIPresContext*  aPresContext, nsIAtom* aAttribute, PRBool& aResize, PRBool& aRedraw, PRBool& aUpdateAccessUnderline);
+  virtual void UpdateAttributes(nsIPresContext*  aPresContext,
+                                nsIAtom*         aAttribute,
+                                PRBool&          aResize,
+                                PRBool&          aRedraw);
 
- 
-  NS_IMETHOD  Paint(nsIPresContext* aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect& aDirtyRect,
-                    nsFramePaintLayer aWhichLayer);
 
- 
+  NS_IMETHOD Paint(nsIPresContext*      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect,
+                   nsFramePaintLayer    aWhichLayer);
+
+
   virtual ~nsTextBoxFrame();
 protected:
 
-  void UpdateAccessUnderline();
+  void UpdateAccessTitle();
+  void UpdateAccessIndex();
 
-  NS_IMETHOD  PaintTitle(nsIPresContext* aPresContext,
-                         nsIRenderingContext& aRenderingContext,
-                         const nsRect& aDirtyRect,
-                         nsFramePaintLayer aWhichLayer,
-                         const nsRect& aTextRect);
+  NS_IMETHOD PaintTitle(nsIPresContext*      aPresContext,
+                        nsIRenderingContext& aRenderingContext,
+                        const nsRect&        aDirtyRect,
+                        const nsRect&        aRect);
 
-  virtual void LayoutTitle(nsIPresContext* aPresContext,
-                                   nsIRenderingContext& aRenderingContext,
-                                   const nsRect& aDirtyRect,
-                                   nsFramePaintLayer aWhichLayer,
-                                   const nsRect& aTextRect);
+  virtual void LayoutTitle(nsIPresContext*      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsRect&        aRect);
+
+  virtual void CalculateUnderline(nsIRenderingContext& aRenderingContext);
 
   virtual void CalcTextSize(nsBoxLayoutState& aBoxLayoutState);
 
   nsTextBoxFrame(nsIPresShell* aShell);
 
-  virtual void CalculateTitleForWidth(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, nscoord aWidth);
-  virtual void GetTextSize(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsString& aString, nsSize& aSize, nscoord& aAscent);
+  virtual void CalculateTitleForWidth(nsIPresContext*      aPresContext,
+                                      nsIRenderingContext& aRenderingContext,
+                                      nscoord              aWidth);
+
+  virtual void GetTextSize(nsIPresContext*      aPresContext,
+                           nsIRenderingContext& aRenderingContext,
+                           const nsString&      aString,
+                           nsSize&              aSize,
+                           nscoord&             aAscent);
 
 private:
 
   CroppingStyle mCropType;
   nsString mTitle;
   nsString mCroppedTitle;
+  nsString mAccessKey;
   nscoord mTitleWidth;
   nsAccessKeyInfo* mAccessKeyInfo;
   PRBool mNeedsRecalc;
