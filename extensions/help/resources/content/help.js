@@ -507,19 +507,26 @@ function doFind() {
     }
 
   }
- emptySearch = true; 	
+ emptySearch = true;
   // search TOC
   var resultsDS =  Components.classes["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].createInstance(Components.interfaces.nsIRDFDataSource);
   var tree = document.getElementById("help-toc-tree");
   var sourceDS = tree.database;
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
-  // search additional search datasources                                       
+  // search additional search datasources
   if (searchDatasources != "rdf:null") {
     if (!searchDS)
       searchDS = loadCompositeDS(searchDatasources);
     doFindOnDatasource(resultsDS, searchDS, RDF_ROOT, 0);
   }
+
+  // search index.
+  tree = document.getElementById("help-index-tree");
+  sourceDS = tree.database;
+  if (!sourceDS) // If the index has never been displayed this will be null.
+    sourceDS = loadCompositeDS(tree.datasources);
+  doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
 
   // search glossary.
   tree = document.getElementById("help-glossary-tree");
@@ -527,7 +534,7 @@ function doFind() {
   if (!sourceDS) // If the glossary has never been displayed this will be null (sigh!).
     sourceDS = loadCompositeDS(tree.datasources);
   doFindOnDatasource(resultsDS, sourceDS, RDF_ROOT, 0);
-  
+
   if (emptySearch)
 		assertSearchEmpty(resultsDS);
   // Add the datasource to the search tree
