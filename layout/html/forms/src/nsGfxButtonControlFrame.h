@@ -107,6 +107,8 @@ private:
   nscoord mSuggestedWidth;
   nscoord mSuggestedHeight;
   nsCOMPtr<nsITextContent> mTextContent;
+
+  PRBool mDefaultValueWasChanged;
 };
 
 
