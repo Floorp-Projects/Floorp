@@ -76,11 +76,11 @@ struct ViewFEData {
 // 
 
 class CRDFCoordinator :	public LView,
-						public LListener, public LCommander, LBroadcaster,
+						public LListener, public LCommander, public LBroadcaster,
 						public CRDFNotificationHandler
 {
 protected:
-		// protected to prevent anyone from instantiating once of these by itself.
+		// protected to prevent anyone from instantiating one of these by itself.
 					CRDFCoordinator(LStream* inStream);
 	virtual			~CRDFCoordinator();
 	
@@ -130,7 +130,7 @@ protected:
 	PaneIDT					mColumnHeaderID;	// column header pane
 	PaneIDT					mTitleStripID;		// title strip pane
 	PaneIDT					mTitleCommandID;	// title command pane
-	
+
 	CHyperTreeFlexTable*	mTreePane;
 	LPane*					mColumnHeaders;
 	CNavCenterTitle*		mTitleStrip;
@@ -169,7 +169,10 @@ public:
 		// access to the shelf that comprised the NavCenter. This wrapper class
 		// allows you to easily slide in/out the shelf or check if it is open.
 	CShelf& NavCenterShelf() const { return *mNavCenter; } ;
-
+	
+		// create the pane with |inNode| as the root of the view
+	virtual void	BuildHTPane ( HT_Resource inNode ) ;
+	
 protected:
 
 	virtual void	FinishCreateSelf ( ) ;
@@ -196,6 +199,7 @@ class CShackRDFCoordinator : public CRDFCoordinator
 {
 public:
 	enum { class_ID = 'RCoS', pane_ID = 'RCoS' };
+	enum { res_ID = 9503 } ;
 
 					CShackRDFCoordinator(LStream* inStream);
 	virtual			~CShackRDFCoordinator();
@@ -226,6 +230,9 @@ public:
 					CWindowRDFCoordinator(LStream* inStream);
 	virtual			~CWindowRDFCoordinator();
 
+	virtual void	BuildHTPane ( HT_Resource inNode ) ;
+	virtual void	BuildHTPane ( RDF_Resource inNode ) ;
+
 protected:
 
 	virtual void	FinishCreateSelf ( ) ;
@@ -237,20 +244,33 @@ protected:
 
 
 //
-// class CPopupRDFCoordinator
+// class CPopdownRDFCoordinator
 //
-// Use this when the tree is popped up from a container on the toolbars. This knows
+// Use this when the tree is popped down from a container on the toolbars. This knows
 // how to create itself from an HT_Resource.
 //
 
-class CPopupRDFCoordinator : public CRDFCoordinator
+class CPopdownRDFCoordinator : public CRDFCoordinator
 {
 public:
 	enum { class_ID = 'RCoP', pane_ID = 'RCoP' };
+	enum { res_ID = 9504 } ;
+	enum { msg_ClosePopdownTree = 'clos' };
 
-					CPopupRDFCoordinator(LStream* inStream);
-	virtual			~CPopupRDFCoordinator();
+					CPopdownRDFCoordinator(LStream* inStream);
+	virtual			~CPopdownRDFCoordinator();
 
 	virtual void	BuildHTPane ( HT_Resource inNode ) ;
 
-}; // CPopupRDFCoordinator
+protected:
+
+	virtual void	FinishCreateSelf();
+	virtual	void	ListenToMessage( MessageT inMessage, void *ioParam);
+	virtual void	FindCommandStatus(
+									CommandT inCommand,
+									Boolean	&outEnabled,
+									Boolean	&outUsesMark,
+									Char16	&outMark,
+									Str255	outName);
+
+}; // CPopdownRDFCoordinator

@@ -79,9 +79,11 @@ ViewFEData :: ~ViewFEData ( )
 
 CRDFCoordinator::CRDFCoordinator(LStream* inStream)
 :	LView(inStream),
-//	LDragAndDrop ( GetMacPort(), this ),
 	mTreePane(NULL),
-	mHTPane(NULL)
+	mHTPane(NULL),
+	mColumnHeaders(NULL),
+	mTitleStrip(NULL),
+	mTitleCommandArea(NULL)
 {
 	*inStream >> mTreePaneID;
 	*inStream >> mColumnHeaderID;
@@ -306,7 +308,7 @@ void CRDFCoordinator::HandleNotification(
 			// needs some work.....
 			if ( view == mTreePane->GetHTView() ) {
 				TableIndexT rowToEdit = URDFUtilities::HTRowToPPRow( HT_GetNodeIndex(view, node) );
-//				mTreePane->DoInlineEditing(	rowToEdit );			
+				mTreePane->DoInlineEditing( rowToEdit );			
 			}
 			break;
 		}
@@ -550,9 +552,6 @@ CDockedRDFCoordinator :: CDockedRDFCoordinator(LStream* inStream)
 {
 	// don't create the HT_pane until we actually need it (someone opens a node
 	// and the want it to be docked).
-	//
-	//¥¥¥NOTE: We now need to create it somewhere because it will be null until someone
-	//¥¥¥       puts the code in.
 }
 
 
@@ -665,6 +664,40 @@ CDockedRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
 } // ListenToMessage
 
 
+//
+// BuildHTPane
+//
+// Create a new pane with |inNode| as the root. Delete the old pane if it exists
+// 
+void
+CDockedRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
+{
+	// are we already displaying this one? If so, bail.
+	HT_View currView = mTreePane->GetHTView();
+	if ( currView && inNode == HT_TopNode(currView) )
+		return;
+		
+	// out with the old
+	if ( HTPane() ) {
+		UnregisterNavCenter();
+		HT_DeletePane ( mHTPane );
+	}
+	
+	// in with the new
+	mHTPane = CreateHTPane ( inNode );
+	if ( mHTPane ) {
+		ShowOrHideColumnHeaders();
+		
+		// we don't get a view selected event like other trees, so setup the tree 
+		// view to point to the already selected view in HT and broadcast to tell 
+		// the title bar to update the title.
+		SelectView ( HT_GetSelectedView(mHTPane) );
+	}
+	
+
+} // BuildHTPane
+
+
 #pragma mark -
 
 
@@ -719,29 +752,11 @@ CWindowRDFCoordinator :: FinishCreateSelf ( )
 {
 	CRDFCoordinator::FinishCreateSelf();
 	
-	// just create a default pane. We have to do this _after_ FinishCreateSelf()
-	// because HT can send us notifications that rely on the tree view, etc being
-	// initialized.
-	mHTPane = CreateHTPane();
-	ShowOrHideColumnHeaders();
-
 } // FinishCreateSelf
 
 
-#pragma mark -
-
-
-CPopupRDFCoordinator :: CPopupRDFCoordinator ( LStream* inStream )
-	: CRDFCoordinator ( inStream )
-{
-}
-
-CPopupRDFCoordinator :: ~CPopupRDFCoordinator ( )
-{
-}
-
 void
-CPopupRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
+CWindowRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 {
 	mHTPane = CreateHTPane ( inNode );
 	if ( mHTPane ) {
@@ -754,3 +769,120 @@ CPopupRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
 	}
 
 } // BuildHTPane
+
+void
+CWindowRDFCoordinator :: BuildHTPane ( RDF_Resource inNode )
+{
+	mHTPane = CreateHTPane ( inNode );
+	if ( mHTPane ) {
+		ShowOrHideColumnHeaders();
+		
+		// we don't get a view selected event like other trees, so setup the tree 
+		// view to point to the already selected view in HT and broadcast to tell 
+		// the title bar to update the title.
+		SelectView ( HT_GetSelectedView(mHTPane) );
+	}
+
+} // BuildHTPane
+
+
+#pragma mark -
+
+
+CPopdownRDFCoordinator :: CPopdownRDFCoordinator ( LStream* inStream )
+	: CRDFCoordinator ( inStream )
+{
+}
+
+CPopdownRDFCoordinator :: ~CPopdownRDFCoordinator ( )
+{
+}
+
+
+//
+// BuildHTPane
+//
+// Creates a new HT Pane rooted at the given resource. This can (and should) be called
+// to switch the HT_Pane of a popdown that has already been created. It will correctly
+// clean up after itself before making the new pane.
+//
+void
+CPopdownRDFCoordinator :: BuildHTPane ( HT_Resource inNode )
+{
+	// out with the old
+	if ( mHTPane )
+		HT_DeletePane ( mHTPane );
+
+	// in with the new
+	mHTPane = CreateHTPane ( inNode );
+	if ( mHTPane ) {
+		ShowOrHideColumnHeaders();
+		
+		// we don't get a view selected event like other trees, so setup the tree 
+		// view to point to the already selected view in HT and broadcast to tell 
+		// the title bar to update the title.
+		SelectView ( HT_GetSelectedView(mHTPane) );
+	}
+
+} // BuildHTPane
+
+
+//
+// FinishCreateSelf
+//
+// Setup ourselves as a listener for the "close" button so we can pass along the
+// message to the browser window.
+//
+void
+CPopdownRDFCoordinator :: FinishCreateSelf ( )
+{
+	CRDFCoordinator::FinishCreateSelf();
+	
+	// If the close caption is there, register this class as a listener so we get the
+	// close message
+	LBroadcaster* closeCaption = 
+			dynamic_cast<LBroadcaster*>(FindPaneByID(CNavCenterCommandStrip::kClosePaneID));
+	if ( closeCaption )
+		closeCaption->AddListener(this);
+
+} // FinishCreateSelf
+
+
+//
+// FindCommandStatus
+//
+// All menu commands, etc should be disabled.
+//
+void
+CPopdownRDFCoordinator :: FindCommandStatus ( 
+									CommandT inCommand,
+									Boolean	&outEnabled,
+									Boolean	&outUsesMark,
+									Char16	&outMark,
+									Str255	outName)
+{
+	outEnabled = false;
+	outUsesMark = false;
+
+} // FindCommandStatus
+
+
+//
+// ListenToMessage
+//
+// Handle the message to close up the tree.
+//
+void
+CPopdownRDFCoordinator :: ListenToMessage ( MessageT inMessage, void *ioParam )
+{
+	// pass through the message up to the browser window that can actually do
+	// something about closing this popdown
+	if ( inMessage == CPopdownFlexTable::msg_ClosePopdownTree ||
+		inMessage == CNavCenterCommandStrip::msg_CloseShelfNow ) {
+		BroadcastMessage ( msg_ClosePopdownTree );
+	}
+	else
+		CRDFCoordinator::ListenToMessage ( inMessage, ioParam );
+
+} // ListenToMessage
+
