@@ -1823,9 +1823,9 @@ void printValue(LogModuleObject &f, void *valPtr, const Type &superType, int max
         if (!str)
             return;
         UT_OBJECTLOG(f, PR_LOG_ALWAYS, ("%s", str));
-#if 0
-        PR_smprintf_free(str);  // XXX - Should be PR_smprintf_free() when that function is implemented
-#endif
+
+        PR_smprintf_free(str);
+
         break;
         
     case tkBoolean:
