@@ -494,8 +494,7 @@ nsContainerFrame::PositionFrameView(nsPresContext* aPresContext,
     if (parentView) {
       // If the parent view is scrollable, then adjust the origin by
       // the parent's scroll position.
-      nsIScrollableView* scrollable = nsnull;
-      CallQueryInterface(parentView, &scrollable);
+      nsIScrollableView* scrollable = parentView->ToScrollableView();
       if (scrollable) {
         nscoord scrollX = 0, scrollY = 0;
         scrollable->GetScrollPosition(scrollX, scrollY);

@@ -54,6 +54,8 @@ class nsScrollPortView : public nsView, public nsIScrollableView
 public:
   nsScrollPortView(nsViewManager* aViewManager = nsnull);
 
+  virtual nsIScrollableView* ToScrollableView() { return this; }
+
   NS_IMETHOD QueryInterface(REFNSIID aIID,
                             void** aInstancePtr);
 

@@ -73,7 +73,6 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
-#include "nsIScrollableView.h"
 #include "nsListControlFrame.h"
 #include "nsContentCID.h"
 #ifdef ACCESSIBILITY
@@ -529,8 +528,8 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     nsRect rect = mDropdownFrame->GetRect();
     rect.x = rect.y = 0;
     viewManager->ResizeView(view, rect);
-    nsIScrollableView* scrollingView;
-    if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView))) {
+    nsIScrollableView* scrollingView = view->ToScrollableView();
+    if (scrollingView) {
       scrollingView->ComputeScrollOffsets(PR_TRUE);
     }
     viewManager->SetViewVisibility(view, nsViewVisibility_kShow);

@@ -767,7 +767,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
     do {
       //is this a scrollable view?
       if (!scrollableView)
-        theView->QueryInterface(NS_GET_IID(nsIScrollableView), (void **)&scrollableView);
+        scrollableView = theView->ToScrollableView();
 
       if (theView->HasWidget())
       {

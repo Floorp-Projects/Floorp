@@ -401,7 +401,7 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
   NS_ASSERTION(aView, "GetNearestScrollingView expects a non-null view");
   nsIScrollableView* scrollableView = nsnull;
   for (; aView; aView = aView->GetParent()) {
-    CallQueryInterface(aView, &scrollableView);
+    scrollableView = aView->ToScrollableView();
     if (scrollableView) {
       nsPresContext::ScrollbarStyles ss =
         nsLayoutUtils::ScrollbarStylesOfView(scrollableView);

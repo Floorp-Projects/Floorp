@@ -1592,9 +1592,9 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
         // If we have a view check if it's scrollable. If not,
         // just use the view size itself
         if (view) {
-            nsIScrollableView* scrollableView;
+            nsIScrollableView* scrollableView = view->ToScrollableView();
 
-            if (NS_SUCCEEDED(CallQueryInterface(view, &scrollableView))) {
+            if (scrollableView) {
                 scrollableView->GetScrolledView(view);
             }
 

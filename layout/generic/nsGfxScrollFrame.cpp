@@ -1518,12 +1518,8 @@ nsGfxScrollFrameInner::GetScrollableView() const
   nsIView* view = mScrollAreaBox->GetView();
   if (!view) return nsnull;
 
-  nsIScrollableView* scrollingView;
-#ifdef DEBUG
-  nsresult result =
-#endif
-  CallQueryInterface(view, &scrollingView);
-  NS_ASSERTION(NS_SUCCEEDED(result),
+  nsIScrollableView* scrollingView = view->ToScrollableView();
+  NS_ASSERTION(scrollingView,
                "assertion gfx scrollframe does not contain a scrollframe");
   return scrollingView;
 }

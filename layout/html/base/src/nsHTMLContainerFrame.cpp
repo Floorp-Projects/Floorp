@@ -559,8 +559,8 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
 
   // Insert the view into the view hierarchy. If the parent view is a
   // scrolling view we need to do this differently
-  nsIScrollableView*  scrollingView;
-  if (NS_SUCCEEDED(CallQueryInterface(parentView, &scrollingView))) {
+  nsIScrollableView*  scrollingView = parentView->ToScrollableView();
+  if (scrollingView) {
     scrollingView->SetScrolledView(view);
   } else {
     nsIView* insertBefore = nsLayoutUtils::FindSiblingViewFor(parentView, aFrame);

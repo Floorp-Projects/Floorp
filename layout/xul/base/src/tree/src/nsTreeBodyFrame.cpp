@@ -840,8 +840,7 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
   nsIView* parentView = nsLeafBoxFrame::GetView()->GetParent()->GetParent();
 
   if (parentView) {
-    nsIScrollableView* scrollView = nsnull;
-    CallQueryInterface(parentView, &scrollView);
+    nsIScrollableView* scrollView = parentView->ToScrollableView();
     if (scrollView) {
       nscoord scrollX = 0, scrollY = 0;
       scrollView->GetScrollPosition(scrollX, scrollY);
