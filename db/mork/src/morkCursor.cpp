@@ -93,6 +93,8 @@ morkCursor::morkCursor(morkEnv* ev,
     mNode_Derived = morkDerived_kCursor;
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(morkCursor, morkObject, nsIMdbCursor);
+
 /*public non-poly*/ void
 morkCursor::CloseCursor(morkEnv* ev) // called by CloseMorkNode();
 {
@@ -111,8 +113,107 @@ morkCursor::CloseCursor(morkEnv* ev) // called by CloseMorkNode();
     ev->NilPointerError();
 }
 
+// { ----- begin ref counting for well-behaved cyclic graphs -----
+NS_IMETHODIMP
+morkCursor::GetWeakRefCount(nsIMdbEnv* mev, // weak refs
+  mdb_count* outCount)
+{
+  *outCount = WeakRefsOnly();
+  return NS_OK;
+}  
+NS_IMETHODIMP
+morkCursor::GetStrongRefCount(nsIMdbEnv* mev, // strong refs
+  mdb_count* outCount)
+{
+  *outCount = StrongRefsOnly();
+  return NS_OK;
+}
+// ### TODO - clean up this cast, if required
+NS_IMETHODIMP
+morkCursor::AddWeakRef(nsIMdbEnv* mev)
+{
+  return morkNode::AddWeakRef((morkEnv *) mev);
+}
+NS_IMETHODIMP
+morkCursor::AddStrongRef(nsIMdbEnv* mev)
+{
+  return morkNode::AddStrongRef((morkEnv *) mev);
+}
+
+NS_IMETHODIMP
+morkCursor::CutWeakRef(nsIMdbEnv* mev)
+{
+  return morkNode::CutWeakRef((morkEnv *) mev);
+}
+NS_IMETHODIMP
+morkCursor::CutStrongRef(nsIMdbEnv* mev)
+{
+  return morkNode::CutStrongRef((morkEnv *) mev);
+}
+
+  
+NS_IMETHODIMP
+morkCursor::CloseMdbObject(nsIMdbEnv* mev)
+{
+  return morkNode::CloseMdbObject((morkEnv *) mev);
+}
+
+NS_IMETHODIMP
+morkCursor::IsOpenMdbObject(nsIMdbEnv* mev, mdb_bool* outOpen)
+{
+  *outOpen = IsOpenNode();
+  return NS_OK;
+}
+NS_IMETHODIMP
+morkCursor::IsFrozenMdbObject(nsIMdbEnv* mev, mdb_bool* outIsReadonly)
+{
+  *outIsReadonly = IsFrozen();
+  return NS_OK;
+}
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
+
+NS_IMETHODIMP
+morkCursor::GetCount(nsIMdbEnv* mev, mdb_count* outCount)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+morkCursor::GetSeed(nsIMdbEnv* mev, mdb_seed* outSeed)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+morkCursor::SetPos(nsIMdbEnv* mev, mdb_pos inPos)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+morkCursor::GetPos(nsIMdbEnv* mev, mdb_pos* outPos)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+morkCursor::SetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool inFail)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+morkCursor::GetDoFailOnSeedOutOfSync(nsIMdbEnv* mev, mdb_bool* outFail)
+{
+  NS_ASSERTION(PR_FALSE, "not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

@@ -99,6 +99,7 @@ morkThumb::CloseMorkNode(morkEnv* ev) // CloseThumb() only if open
 /*public virtual*/
 morkThumb::~morkThumb() // assert CloseThumb() executed earlier
 {
+  CloseMorkNode(mMorkEnv);
   MORK_ASSERT(mThumb_Magic==0);
   MORK_ASSERT(mThumb_Store==0);
   MORK_ASSERT(mThumb_File==0);
@@ -137,6 +138,8 @@ morkThumb::morkThumb(morkEnv* ev,
   }
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(morkThumb, morkObject, nsIMdbThumb);
+
 /*public non-poly*/ void
 morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
 {
@@ -152,7 +155,7 @@ morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
       morkWriter::SlotStrongWriter((morkWriter*) 0, ev, &mThumb_Writer);
       nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev, &mThumb_File);
       morkStore::SlotStrongStore((morkStore*) 0, ev, &mThumb_Store);
-      morkPort::SlotStrongPort((morkPort*) 0, ev, &mThumb_SourcePort);
+      morkStore::SlotStrongPort((morkPort*) 0, ev, &mThumb_SourcePort);
       this->MarkShut();
     }
     else
@@ -164,6 +167,51 @@ morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
 
 // } ===== end morkNode methods =====
 // ````` ````` ````` ````` ````` 
+
+// { ===== begin nsIMdbThumb methods =====
+NS_IMETHODIMP
+morkThumb::GetProgress(nsIMdbEnv* mev, mdb_count* outTotal,
+  mdb_count* outCurrent, mdb_bool* outDone, mdb_bool* outBroken)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    GetProgress(ev, outTotal, outCurrent, outDone, outBroken);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkThumb::DoMore(nsIMdbEnv* mev, mdb_count* outTotal,
+  mdb_count* outCurrent, mdb_bool* outDone, mdb_bool* outBroken)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    DoMore(ev, outTotal, outCurrent, outDone, outBroken);
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+NS_IMETHODIMP
+morkThumb::CancelAndBreakThumb(nsIMdbEnv* mev)
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = morkEnv::FromMdbEnv(mev);
+  if ( ev )
+  {
+    mThumb_Done = morkBool_kTrue;
+    mThumb_Broken = morkBool_kTrue;
+    CloseMorkNode(ev); // should I close this here?
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+// } ===== end nsIMdbThumb methods =====
 
 /*static*/ void morkThumb::NonThumbTypeError(morkEnv* ev)
 {
@@ -198,23 +246,6 @@ morkThumb::CloseThumb(morkEnv* ev) // called by CloseMorkNode();
 /*static*/ void morkThumb::NilThumbSourcePortError(morkEnv* ev)
 {
   ev->NewError("nil mThumb_SourcePort");
-}
-
-nsIMdbThumb*
-morkThumb::AcquireThumbHandle(morkEnv* ev)
-{
-  nsIMdbThumb* outThumb = 0;
-  orkinThumb* t = (orkinThumb*) mObject_Handle;
-  if ( t ) // have an old handle?
-    t->AddStrongRef(ev->AsMdbEnv());
-  else // need new handle?
-  {
-    t = orkinThumb::MakeThumb(ev, this);
-    mObject_Handle = t;
-  }
-  if ( t )
-    outThumb = t;
-  return outThumb;
 }
 
 /*static*/ morkThumb*

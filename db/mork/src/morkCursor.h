@@ -51,7 +51,7 @@
 
 #define morkDerived_kCursor  /*i*/ 0x4375 /* ascii 'Cu' */
 
-class morkCursor : public morkObject { // collection iterator
+class morkCursor : public morkObject, public nsIMdbCursor{ // collection iterator
 
 // public: // slots inherited from morkObject (meant to inform only)
   // nsIMdbHeap*     mNode_Heap;
@@ -68,6 +68,48 @@ class morkCursor : public morkObject { // collection iterator
   // morkHandle*  mObject_Handle;  // weak ref to handle for this object
 
 public: // state is public because the entire Mork system is private
+  NS_DECL_ISUPPORTS_INHERITED;
+
+  // { ----- begin attribute methods -----
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
+  // } ----- end attribute methods -----
+
+  // { ----- begin ref counting for well-behaved cyclic graphs -----
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+    mdb_count* outCount);  
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+    mdb_count* outCount);
+
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
+
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
+  
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  // } ----- end ref counting -----
+  
+// } ===== end nsIMdbObject methods =====
+
+// { ===== begin nsIMdbCursor methods =====
+
+  // { ----- begin attribute methods -----
+  NS_IMETHOD GetCount(nsIMdbEnv* ev, mdb_count* outCount); // readonly
+  NS_IMETHOD GetSeed(nsIMdbEnv* ev, mdb_seed* outSeed);    // readonly
+  
+  NS_IMETHOD SetPos(nsIMdbEnv* ev, mdb_pos inPos);   // mutable
+  NS_IMETHOD GetPos(nsIMdbEnv* ev, mdb_pos* outPos);
+  
+  NS_IMETHOD SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail);
+  NS_IMETHOD GetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail);
+  // } ----- end attribute methods -----
+
+// } ===== end nsIMdbCursor methods =====
+    
+  // } ----- end attribute methods -----
+
   mork_seed  mCursor_Seed;
   mork_pos   mCursor_Pos;
   mork_bool  mCursor_DoFailOnSeedOutOfSync;

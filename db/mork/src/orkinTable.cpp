@@ -88,6 +88,10 @@
 #include "orkinStore.h"
 #endif
 
+#ifndef _MORKROWOBJECT_
+#include "morkRowObject.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 /* public virtual*/
@@ -148,7 +152,9 @@ orkinTable::CanUseTable(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinTable);
+
+/*virtual*/ nsrefcnt
 orkinTable::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -158,7 +164,7 @@ orkinTable::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinTable::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -581,7 +587,7 @@ orkinTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
         // cursor->mCursor_Seed = (mork_seed) inRowPos;
         outCursor = cursor->AcquireTableRowCursorHandle(ev);
       }
-      cursor->CutStrongRef(ev);
+      cursor->CutStrongRef(mev);
     }
       
     outErr = ev->AsErr();
@@ -672,13 +678,9 @@ orkinTable::RowToPos( // test for the table position of a row member
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkRow* row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
-    {
-      morkTable* table = (morkTable*) mHandle_Object;
-      pos = table->ArrayHasOid(ev, &row->mRow_Oid);
-    }
+    morkRow* row = (morkRow*) ioRow;
+    morkTable* table = (morkTable*) mHandle_Object;
+    pos = table->ArrayHasOid(ev, &row->mRow_Oid);
     outErr = ev->AsErr();
   }
   if ( outPos )
@@ -793,12 +795,9 @@ orkinTable::AddRow( // make sure the row with inOid is a table member
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkRow* row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
-    {
-      ((morkTable*) mHandle_Object)->AddRow(ev, row);
-    }
+    morkRowObject *rowObj = (morkRowObject *) ioRow;
+    morkRow* row = rowObj->mRowObject_Row;
+    ((morkTable*) mHandle_Object)->AddRow(ev, row);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -814,14 +813,11 @@ orkinTable::HasRow( // test for the table position of a row member
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkRow* row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
-    {
-      morkTable* table = (morkTable*) mHandle_Object;
-      if ( outBool )
-        *outBool = table->MapHasOid(ev, &row->mRow_Oid);
-    }
+    morkRowObject *rowObj = (morkRowObject *) ioRow;
+    morkRow* row = rowObj->mRowObject_Row;
+    morkTable* table = (morkTable*) mHandle_Object;
+    if ( outBool )
+      *outBool = table->MapHasOid(ev, &row->mRow_Oid);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -837,12 +833,9 @@ orkinTable::CutRow( // make sure the row with inOid is not a member
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkRow* row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
-    {
-      ((morkTable*) mHandle_Object)->CutRow(ev, row);
-    }
+    morkRowObject *rowObj = (morkRowObject *) ioRow;
+    morkRow* row = rowObj->mRowObject_Row;
+    ((morkTable*) mHandle_Object)->CutRow(ev, row);
     outErr = ev->AsErr();
   }
   return outErr;
@@ -1134,13 +1127,10 @@ orkinTable::MoveRow( // change position of row in unsorted table
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    morkRow* row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
-    {
-      morkTable* table = (morkTable*) mHandle_Object;
-      actualPos = table->MoveRow(ev, row, inHintFromPos, inToPos);
-    }
+    morkRowObject *rowObj = (morkRowObject *) ioRow;
+    morkRow* row = rowObj->mRowObject_Row;
+    morkTable* table = (morkTable*) mHandle_Object;
+    actualPos = table->MoveRow(ev, row, inHintFromPos, inToPos);
     outErr = ev->AsErr();
   }
   if ( outActualPos )

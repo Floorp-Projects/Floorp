@@ -98,10 +98,7 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
-  
+ 
 public: // construction:
 
   static orkinFactory* MakeGlobalFactory();
@@ -129,36 +126,33 @@ public: // type identification
   
 public:
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
+  NS_DECL_ISUPPORTS
 
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -166,7 +160,7 @@ public:
 // { ===== begin nsIMdbFactory methods =====
 
   // { ----- begin file methods -----
-  virtual mdb_err OpenOldFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+  NS_IMETHOD OpenOldFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
     const char* inFilePath,
     mdb_bool inFrozen, nsIMdbFile** acqFile);
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
@@ -176,7 +170,7 @@ public:
   // files must be opened is considered a subclass specific detail, and
   // other portions or Mork source code don't want to know how it's done.
 
-  virtual mdb_err CreateNewFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+  NS_IMETHOD CreateNewFile(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
     const char* inFilePath,
     nsIMdbFile** acqFile);
   // Choose some subclass of nsIMdbFile to instantiate, in order to read
@@ -188,25 +182,25 @@ public:
   // } ----- end file methods -----
 
   // { ----- begin env methods -----
-  virtual mdb_err MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv); // new env
+  NS_IMETHOD MakeEnv(nsIMdbHeap* ioHeap, nsIMdbEnv** acqEnv); // new env
   // ioHeap can be nil, causing a MakeHeap() style heap instance to be used
   // } ----- end env methods -----
 
   // { ----- begin heap methods -----
-  virtual mdb_err MakeHeap(nsIMdbEnv* ev, nsIMdbHeap** acqHeap); // new heap
+  NS_IMETHOD MakeHeap(nsIMdbEnv* ev, nsIMdbHeap** acqHeap); // new heap
   // } ----- end heap methods -----
 
   // { ----- begin compare methods -----
-  virtual mdb_err MakeCompare(nsIMdbEnv* ev, nsIMdbCompare** acqCompare); // ASCII
+  NS_IMETHOD MakeCompare(nsIMdbEnv* ev, nsIMdbCompare** acqCompare); // ASCII
   // } ----- end compare methods -----
 
   // { ----- begin row methods -----
-  virtual mdb_err MakeRow(nsIMdbEnv* ev, nsIMdbHeap* ioHeap, nsIMdbRow** acqRow); // new row
+  NS_IMETHOD MakeRow(nsIMdbEnv* ev, nsIMdbHeap* ioHeap, nsIMdbRow** acqRow); // new row
   // ioHeap can be nil, causing the heap associated with ev to be used
   // } ----- end row methods -----
   
   // { ----- begin port methods -----
-  virtual mdb_err CanOpenFilePort(
+  NS_IMETHOD CanOpenFilePort(
     nsIMdbEnv* ev, // context
     // const char* inFilePath, // the file to investigate
     // const mdbYarn* inFirst512Bytes,
@@ -214,7 +208,7 @@ public:
     mdb_bool* outCanOpen, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion); // informal file format description
     
-  virtual mdb_err OpenFilePort(
+  NS_IMETHOD OpenFilePort(
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     // const char* inFilePath, // the file to open for readonly import
@@ -224,14 +218,14 @@ public:
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then call nsIMdbFactory::ThumbToOpenPort() to get the port instance.
 
-  virtual mdb_err ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort()
+  NS_IMETHOD ThumbToOpenPort( // redeeming a completed thumb from OpenFilePort()
     nsIMdbEnv* ev, // context
     nsIMdbThumb* ioThumb, // thumb from OpenFilePort() with done status
     nsIMdbPort** acqPort); // acquire new port object
   // } ----- end port methods -----
   
   // { ----- begin store methods -----
-  virtual mdb_err CanOpenFileStore(
+  NS_IMETHOD CanOpenFileStore(
     nsIMdbEnv* ev, // context
     // const char* inFilePath, // the file to investigate
     // const mdbYarn* inFirst512Bytes,
@@ -240,7 +234,7 @@ public:
     mdb_bool* outCanOpenAsPort, // whether OpenFilePort() might succeed
     mdbYarn* outFormatVersion); // informal file format description
     
-  virtual mdb_err OpenFileStore( // open an existing database
+  NS_IMETHOD OpenFileStore( // open an existing database
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     // const char* inFilePath, // the file to open for general db usage
@@ -250,13 +244,13 @@ public:
   // Call nsIMdbThumb::DoMore() until done, or until the thumb is broken, and
   // then call nsIMdbFactory::ThumbToOpenStore() to get the store instance.
     
-  virtual mdb_err
+  NS_IMETHOD
   ThumbToOpenStore( // redeem completed thumb from OpenFileStore()
     nsIMdbEnv* ev, // context
     nsIMdbThumb* ioThumb, // thumb from OpenFileStore() with done status
     nsIMdbStore** acqStore); // acquire new db store object
   
-  virtual mdb_err CreateNewFileStore( // create a new db with minimal content
+  NS_IMETHOD CreateNewFileStore( // create a new db with minimal content
     nsIMdbEnv* ev, // context
     nsIMdbHeap* ioHeap, // can be nil to cause ev's heap attribute to be used
     // const char* inFilePath, // name of file which should not yet exist

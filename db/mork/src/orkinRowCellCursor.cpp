@@ -166,7 +166,9 @@ orkinRowCellCursor::CanUseRowCellCursor(nsIMdbEnv* mev, mork_bool inMutable,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinRowCellCursor);
+
+/*virtual*/ nsrefcnt
 orkinRowCellCursor::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -176,7 +178,7 @@ orkinRowCellCursor::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinRowCellCursor::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -382,24 +384,20 @@ orkinRowCellCursor::SetRow(nsIMdbEnv* mev, nsIMdbRow* ioRow)
   if ( ev )
   {
     morkRowCellCursor* cursor = (morkRowCellCursor*) mHandle_Object;
-    row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
+    row = (morkRow *) ioRow;
+    morkStore* store = row->GetRowSpaceStore(ev);
+    if ( store )
     {
-      morkStore* store = row->GetRowSpaceStore(ev);
-      if ( store )
+      morkRowObject* rowObj = row->AcquireRowObject(ev, store);
+      if ( rowObj )
       {
-        morkRowObject* rowObj = row->AcquireRowObject(ev, store);
-        if ( rowObj )
-        {
-          morkRowObject::SlotStrongRowObject((morkRowObject*) 0, ev,
-            &cursor->mRowCellCursor_RowObject);
-            
-          cursor->mRowCellCursor_RowObject = rowObj; // take this strong ref
-          cursor->mCursor_Seed = row->mRow_Seed;
+        morkRowObject::SlotStrongRowObject((morkRowObject*) 0, ev,
+          &cursor->mRowCellCursor_RowObject);
           
-          row->GetCell(ev, cursor->mRowCellCursor_Col, &cursor->mCursor_Pos);
-        }
+        cursor->mRowCellCursor_RowObject = rowObj; // take this strong ref
+        cursor->mCursor_Seed = row->mRow_Seed;
+        
+        row->GetCell(ev, cursor->mRowCellCursor_Col, &cursor->mCursor_Pos);
       }
     }
     outErr = ev->AsErr();

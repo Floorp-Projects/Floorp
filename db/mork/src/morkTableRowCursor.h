@@ -56,7 +56,7 @@
 class orkinTableRowCursor;
 #define morkDerived_kTableRowCursor  /*i*/ 0x7243 /* ascii 'rC' */
 
-class morkTableRowCursor : public morkCursor { // row iterator
+class morkTableRowCursor : public morkCursor, public nsIMdbTableRowCursor { // row iterator
 
 // public: // slots inherited from morkObject (meant to inform only)
   // nsIMdbHeap*     mNode_Heap;
@@ -93,6 +93,47 @@ private: // copying is not allowed
   morkTableRowCursor(const morkTableRowCursor& other);
   morkTableRowCursor& operator=(const morkTableRowCursor& other);
 
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+
+  // { ----- begin attribute methods -----
+  NS_IMETHOD GetCount(nsIMdbEnv* ev, mdb_count* outCount); // readonly
+  NS_IMETHOD GetSeed(nsIMdbEnv* ev, mdb_seed* outSeed);    // readonly
+  
+  NS_IMETHOD SetPos(nsIMdbEnv* ev, mdb_pos inPos);   // mutable
+  NS_IMETHOD GetPos(nsIMdbEnv* ev, mdb_pos* outPos);
+  
+  NS_IMETHOD SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail);
+  NS_IMETHOD GetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail);
+
+  // } ----- end attribute methods -----
+    NS_IMETHOD GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable);
+  // } ----- end attribute methods -----
+
+  // { ----- begin duplicate row removal methods -----
+  NS_IMETHOD CanHaveDupRowMembers(nsIMdbEnv* ev, // cursor might hold dups?
+    mdb_bool* outCanHaveDups);
+    
+  NS_IMETHOD MakeUniqueCursor( // clone cursor, removing duplicate rows
+    nsIMdbEnv* ev, // context
+    nsIMdbTableRowCursor** acqCursor);    // acquire clone with no dups
+  // } ----- end duplicate row removal methods -----
+
+  // { ----- begin oid iteration methods -----
+  NS_IMETHOD NextRowOid( // get row id of next row in the table
+    nsIMdbEnv* ev, // context
+    mdbOid* outOid, // out row oid
+    mdb_pos* outRowPos);    // zero-based position of the row in table
+  // } ----- end oid iteration methods -----
+
+  // { ----- begin row iteration methods -----
+  NS_IMETHOD NextRow( // get row cells from table for cells already in row
+    nsIMdbEnv* ev, // context
+    nsIMdbRow** acqRow, // acquire next row in table
+    mdb_pos* outRowPos);    // zero-based position of the row in table
+  // } ----- end row iteration methods -----
+
+
 public: // dynamic type identification
   mork_bool IsTableRowCursor() const
   { return IsNode() && mNode_Derived == morkDerived_kTableRowCursor; }
@@ -100,9 +141,6 @@ public: // dynamic type identification
 
 public: // typing
   static void NonTableRowCursorTypeError(morkEnv* ev);
-
-public: // handle attachment
-  orkinTableRowCursor* AcquireTableRowCursorHandle(morkEnv* ev);
 
 public: // oid only iteration
   mdb_pos NextRowOid(morkEnv* ev, mdbOid* outOid);
@@ -112,8 +150,6 @@ public: // other table row cursor methods
   virtual mork_bool CanHaveDupRowMembers(morkEnv* ev);
   virtual mork_count GetMemberCount(morkEnv* ev);
 
-  virtual orkinTableRowCursor* AcquireUniqueRowCursorHandle(morkEnv* ev);
-  
   virtual morkRow* NextRow(morkEnv* ev, mdbOid* outOid, mdb_pos* outPos);
 
 public: // typesafe refcounting inlines calling inherited morkNode methods

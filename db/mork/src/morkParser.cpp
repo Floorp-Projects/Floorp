@@ -1191,18 +1191,19 @@ mork_bool morkParser::FindGroupEnd(morkEnv* ev)
   return foundEnd && ev->Good();
 }
 
-void morkParser::ReadGroup(morkEnv* ev)
+void morkParser::ReadGroup(morkEnv* mev)
 {
+  nsIMdbEnv *ev = mev->AsMdbEnv();
   int next = 0;
-  mParser_GroupId = this->ReadHex(ev, &next);
+  mParser_GroupId = this->ReadHex(mev, &next);
   if ( next == '{' )
   {
     morkStream* s = mParser_Stream;
      register int c;
-    if ( (c = s->Getc(ev)) == '@' )
+    if ( (c = s->Getc(mev)) == '@' )
     {
     	// we really need the following span inside morkBuilder::OnNewGroup():
-      this->StartSpanOnThisByte(ev, &mParser_GroupSpan);
+      this->StartSpanOnThisByte(mev, &mParser_GroupSpan);
       mork_pos startPos = mParser_GroupSpan.mSpan_Start.mPlace_Pos;
 
       // if ( !store->mStore_FirstCommitGroupPos )
@@ -1210,25 +1211,26 @@ void morkParser::ReadGroup(morkEnv* ev)
       // else if ( !store->mStore_SecondCommitGroupPos )
       //   store->mStore_SecondCommitGroupPos = startPos;
       
-      if ( this->FindGroupEnd(ev) )
+      if ( this->FindGroupEnd(mev) )
       {
-        s->Seek(ev, startPos);
-        if ( ev->Good() )
+        mork_pos outPos;
+        s->Seek(ev, startPos, &outPos);
+        if ( mev->Good() )
         {
-          this->OnNewGroup(ev, mParser_GroupSpan.mSpan_Start,
+          this->OnNewGroup(mev, mParser_GroupSpan.mSpan_Start,
             mParser_GroupId);
           
-          this->ReadContent(ev, /*inInsideGroup*/ morkBool_kTrue);
+          this->ReadContent(mev, /*inInsideGroup*/ morkBool_kTrue);
 
-          this->OnGroupCommitEnd(ev, mParser_GroupSpan);
+          this->OnGroupCommitEnd(mev, mParser_GroupSpan);
         }
       }
     }
     else
-      ev->NewError("expected '@' after @$${id{");
+      mev->NewError("expected '@' after @$${id{");
   }
   else
-    ev->NewError("expected '{' after @$$id");
+    mev->NewError("expected '{' after @$$id");
     
 }
 
@@ -1356,40 +1358,46 @@ void morkParser::ReadDict(morkEnv* ev)
     mParser_State = morkParser_kDoneState;
 }
 
-void morkParser::EndSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan)
+void morkParser::EndSpanOnThisByte(morkEnv* mev, morkSpan* ioSpan)
 {
-  mork_pos here = mParser_Stream->Tell(ev);
-  if ( ev->Good() )
+  mork_pos here;
+  nsIMdbEnv *ev = mev->AsMdbEnv();
+  nsresult rv = mParser_Stream->Tell(ev, &here);
+  if (NS_SUCCEEDED(rv) && mev->Good() )
   {
     this->SetHerePos(here);
     ioSpan->SetEndWithEnd(mParser_PortSpan);
   }
 }
 
-void morkParser::EndSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan)
+void morkParser::EndSpanOnLastByte(morkEnv* mev, morkSpan* ioSpan)
 {
-  mork_pos here = mParser_Stream->Tell(ev);
+  mork_pos here;
+  nsIMdbEnv *ev = mev->AsMdbEnv();
+  nsresult rv= mParser_Stream->Tell(ev, &here);
   if ( here > 0 ) // positive?
     --here;
   else
     here = 0;
     
-  if ( ev->Good() )
+  if ( mev->Good() )
   {
     this->SetHerePos(here);
     ioSpan->SetEndWithEnd(mParser_PortSpan);
   }
 }
 
-void morkParser::StartSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan)
+void morkParser::StartSpanOnLastByte(morkEnv* mev, morkSpan* ioSpan)
 {
-  mork_pos here = mParser_Stream->Tell(ev);
+  mork_pos here;
+  nsIMdbEnv *ev = mev->AsMdbEnv();
+  nsresult rv = mParser_Stream->Tell(ev, &here);
   if ( here > 0 ) // positive?
     --here;
   else
     here = 0;
     
-  if ( ev->Good() )
+  if ( mev->Good() )
   {
     this->SetHerePos(here);
     ioSpan->SetStartWithEnd(mParser_PortSpan);
@@ -1397,10 +1405,12 @@ void morkParser::StartSpanOnLastByte(morkEnv* ev, morkSpan* ioSpan)
   }
 }
 
-void morkParser::StartSpanOnThisByte(morkEnv* ev, morkSpan* ioSpan)
+void morkParser::StartSpanOnThisByte(morkEnv* mev, morkSpan* ioSpan)
 {
-  mork_pos here = mParser_Stream->Tell(ev);
-  if ( ev->Good() )
+  mork_pos here;
+  nsIMdbEnv *ev = mev->AsMdbEnv();
+  nsresult rv = mParser_Stream->Tell(ev, &here);
+  if ( NS_SUCCEEDED(rv) && mev->Good() )
   {
     this->SetHerePos(here);
     ioSpan->SetStartWithEnd(mParser_PortSpan);
@@ -1474,22 +1484,24 @@ morkParser::OnPortState(morkEnv* ev)
 }
 
 void
-morkParser::OnStartState(morkEnv* ev)
+morkParser::OnStartState(morkEnv* mev)
 {
   morkStream* s = mParser_Stream;
+  nsIMdbEnv *ev = mev->AsMdbEnv();
   if ( s && s->IsNode() && s->IsOpenNode() )
   {
-    s->Seek(ev, 0);
-    if ( ev->Good() )
+    mork_pos outPos;
+    nsresult rv = s->Seek(ev, 0, &outPos);
+    if (NS_SUCCEEDED(rv) && mev->Good() )
     {
-      this->StartParse(ev);
+      this->StartParse(mev);
       mParser_State = morkParser_kPortState;
     }
   }
   else
-    ev->NilPointerError();
+    mev->NilPointerError();
 
-  if ( ev->Bad() )
+  if ( mev->Bad() )
     mParser_State = morkParser_kBrokenState;
 }
 

@@ -83,7 +83,29 @@ morkEnv::CloseMorkNode(morkEnv* ev) /*i*/ // CloseEnv() only if open
 /*public virtual*/
 morkEnv::~morkEnv() /*i*/ // assert CloseEnv() executed earlier
 {
-  MORK_ASSERT(mEnv_SelfAsMdbEnv==0);
+  CloseMorkNode(mMorkEnv);
+  if (mEnv_Heap)
+  {
+    mork_bool ownsHeap = mEnv_OwnsHeap;
+    nsIMdbHeap*saveHeap = mEnv_Heap;
+
+    if (ownsHeap)
+    {
+#ifdef MORK_DEBUG_HEAP_STATS
+      printf("%d blocks remaining \n", ((orkinHeap *) saveHeap)->HeapBlockCount());
+      mork_u4* array = (mork_u4*) this;
+      array -= 3;
+      // null out heap ptr in mem block so we won't crash trying to use it to
+      // delete the env.
+      *array = nsnull;
+#endif // MORK_DEBUG_HEAP_STATS
+      // whoops, this is our heap - hmm. Can't delete it, or not allocate env's from
+      // an orkinHeap.
+      delete saveHeap;
+    }
+
+  }
+//  MORK_ASSERT(mEnv_SelfAsMdbEnv==0);
   MORK_ASSERT(mEnv_ErrorHook==0);
 }
 
@@ -174,6 +196,7 @@ morkEnv::morkEnv(morkEnv* ev, /*i*/
     ev->NilPointerError();
 }
 
+NS_IMPL_ISUPPORTS_INHERITED1(morkEnv, morkObject, nsIMdbEnv);
 /*public non-poly*/ void
 morkEnv::CloseEnv(morkEnv* ev) /*i*/ // called by CloseMorkNode();
 {
@@ -190,8 +213,21 @@ morkEnv::CloseEnv(morkEnv* ev) /*i*/ // called by CloseMorkNode();
       morkPool* savePool = mEnv_HandlePool;
       morkPool::SlotStrongPool((morkPool*) 0, ev, &mEnv_HandlePool);
       // free the pool
-      if (savePool && mEnv_Heap)
-        mEnv_Heap->Free(this->AsMdbEnv(), savePool);
+      if (mEnv_SelfAsMdbEnv)
+      {
+        if (savePool && mEnv_Heap)
+          mEnv_Heap->Free(this->AsMdbEnv(), savePool);
+      }
+      else
+      {
+        if (savePool)
+        {
+          if (savePool->IsOpenNode())
+            savePool->CloseMorkNode(ev);
+          delete savePool;
+        }
+        // how do we free this? might need to get rid of asserts.
+      }
       // mEnv_Factory is NOT refcounted
       
       this->MarkShut();
@@ -355,23 +391,6 @@ morkEnv::FreeString(nsIMdbHeap* ioHeap, char* ioString)
     this->NilPointerError();
 }
 
-nsIMdbEnv*
-morkEnv::AcquireEnvHandle(morkEnv* ev)
-{
-  nsIMdbEnv* outEnv = 0;
-  orkinEnv* e = (orkinEnv*) mObject_Handle;
-  if ( e ) // have an old handle?
-    e->AddStrongRef(ev->AsMdbEnv());
-  else // need new handle?
-  {
-    e = orkinEnv::MakeEnv(ev, this);
-    mObject_Handle = e;
-  }
-  if ( e )
-    outEnv = e;
-  return outEnv;
-}
-
 void
 morkEnv::NewErrorAndCode(const char* inString, mork_u2 inCode)
 {
@@ -494,27 +513,16 @@ morkEnv::FromMdbEnv(nsIMdbEnv* ioEnv) // dynamic type checking
     // Note this cast is expected to perform some address adjustment of the
     // pointer, so oenv likely does not equal ioEnv.  Do not cast to void*
     // first to force an exactly equal pointer (we tried it and it's wrong).
-    orkinEnv* oenv = (orkinEnv*) ioEnv;
-    if ( oenv->IsHandle() )
+    morkEnv* ev = (morkEnv*) ioEnv;
+    if ( ev && ev->IsEnv() )
     {
-      if ( oenv->IsOpenNode() )
+      if ( ev->DoAutoClear() )
       {
-        morkEnv* ev = (morkEnv*) oenv->mHandle_Object;
-        if ( ev && ev->IsEnv() )
-        {
-          if ( ev->DoAutoClear() )
-          {
-            ev->mEnv_ErrorCount = 0;
-            ev->mEnv_WarningCount = 0;
-            ev->mEnv_ErrorCode = 0;
-          }
-          outEnv = ev;
-        }
-        else
-          MORK_ASSERT(outEnv);
-       }
-      else
-        MORK_ASSERT(outEnv);
+        ev->mEnv_ErrorCount = 0;
+        ev->mEnv_WarningCount = 0;
+        ev->mEnv_ErrorCode = 0;
+      }
+      outEnv = ev;
     }
     else
       MORK_ASSERT(outEnv);
@@ -523,6 +531,142 @@ morkEnv::FromMdbEnv(nsIMdbEnv* ioEnv) // dynamic type checking
     MORK_ASSERT(outEnv);
   return outEnv;
 }
+
+
+NS_IMETHODIMP
+morkEnv::GetErrorCount(mdb_count* outCount,
+  mdb_bool* outShouldAbort)
+{
+  if ( outCount )
+    *outCount = mEnv_ErrorCount;
+  if ( outShouldAbort )
+    *outShouldAbort = mEnv_ShouldAbort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::GetWarningCount(mdb_count* outCount,
+  mdb_bool* outShouldAbort)
+{
+  if ( outCount )
+    *outCount = mEnv_WarningCount;
+  if ( outShouldAbort )
+    *outShouldAbort = mEnv_ShouldAbort;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::GetEnvBeVerbose(mdb_bool* outBeVerbose)
+{
+  NS_ENSURE_ARG_POINTER(outBeVerbose);
+  *outBeVerbose = mEnv_BeVerbose;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::SetEnvBeVerbose(mdb_bool inBeVerbose)
+{
+  mEnv_BeVerbose = inBeVerbose;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::GetDoTrace(mdb_bool* outDoTrace)
+{
+  NS_ENSURE_ARG_POINTER(outDoTrace);
+  *outDoTrace = mEnv_DoTrace;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::SetDoTrace(mdb_bool inDoTrace)
+{
+  mEnv_DoTrace = inDoTrace;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::GetAutoClear(mdb_bool* outAutoClear)
+{
+  NS_ENSURE_ARG_POINTER(outAutoClear);
+  *outAutoClear = DoAutoClear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::SetAutoClear(mdb_bool inAutoClear)
+{
+  if ( inAutoClear )
+    EnableAutoClear();
+  else
+    DisableAutoClear();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::GetErrorHook(nsIMdbErrorHook** acqErrorHook)
+{
+  NS_ENSURE_ARG_POINTER(acqErrorHook);
+  *acqErrorHook = mEnv_ErrorHook;
+  NS_IF_ADDREF(mEnv_ErrorHook);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::SetErrorHook(
+  nsIMdbErrorHook* ioErrorHook) // becomes referenced
+{
+  mEnv_ErrorHook = ioErrorHook;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::GetHeap(nsIMdbHeap** acqHeap)
+{
+  NS_ENSURE_ARG_POINTER(acqHeap);
+  nsIMdbHeap* outHeap = 0;
+  nsIMdbHeap* heap = mEnv_Heap;
+  if ( heap && heap->HeapAddStrongRef(this) == 0 )
+    outHeap = heap;
+
+  if ( acqHeap )
+    *acqHeap = outHeap;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::SetHeap(
+  nsIMdbHeap* ioHeap) // becomes referenced
+{
+  nsIMdbHeap_SlotStrongHeap(ioHeap, this, &mEnv_Heap);
+  return NS_OK;
+}
+// } ----- end attribute methods -----
+
+NS_IMETHODIMP
+morkEnv::ClearErrors() // clear errors beore re-entering db API
+{
+  mEnv_ErrorCount = 0;
+  mEnv_ErrorCode = 0;
+  mEnv_ShouldAbort = morkBool_kFalse;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::ClearWarnings() // clear warning
+{
+  mEnv_WarningCount = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+morkEnv::ClearErrorsAndWarnings() // clear both errors & warnings
+{
+  ClearMorkErrorsAndWarnings();
+  return NS_OK;
+}
+// } ===== end nsIMdbEnv methods =====
 
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789

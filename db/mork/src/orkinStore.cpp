@@ -155,7 +155,10 @@ orkinStore::CanUseStore(nsIMdbEnv* mev,
 }
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+
+NS_IMPL_QUERY_INTERFACE0(orkinStore);
+
+/*virtual*/ nsrefcnt
 orkinStore::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -165,7 +168,7 @@ orkinStore::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinStore::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -1171,8 +1174,8 @@ orkinStore::LargeCommit( // save important changes if at all possible
     
     if ( thumb )
     {
-      outThumb = orkinThumb::MakeThumb(ev, thumb);
-      thumb->CutStrongRef(ev);
+      outThumb = thumb;
+      thumb->AddRef();
     }
       
     outErr = ev->AsErr();
@@ -1212,8 +1215,8 @@ orkinStore::SessionCommit( // save all changes if large commits delayed
     
     if ( thumb )
     {
-      outThumb = orkinThumb::MakeThumb(ev, thumb);
-      thumb->CutStrongRef(ev);
+      outThumb = thumb;
+      thumb->AddRef();
     }
     outErr = ev->AsErr();
   }
@@ -1242,8 +1245,8 @@ orkinStore::CompressCommit( // commit and make db smaller if possible
     morkThumb* thumb = morkThumb::Make_CompressCommit(ev, heap, store, doCollect);
     if ( thumb )
     {
-      outThumb = orkinThumb::MakeThumb(ev, thumb);
-      thumb->CutStrongRef(ev);
+      outThumb = thumb;
+      thumb->AddRef();
       store->mStore_CanWriteIncremental = morkBool_kTrue;
     }
       

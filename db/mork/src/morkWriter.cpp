@@ -260,7 +260,7 @@ morkWriter::MakeWriterStream(morkEnv* ev) // give writer a suitable stream
                 morkWriter_kStreamBufSize, frozen);
           }
           else
-            bud->CutStrongRef(ev->AsMdbEnv());
+            bud->Release();
         }
       }
         
@@ -269,7 +269,7 @@ morkWriter::MakeWriterStream(morkEnv* ev) // give writer a suitable stream
         if ( ev->Good() )
           mWriter_Stream = stream;
         else
-          stream->CutStrongRef(ev);
+          stream->CutStrongRef(ev->AsMdbEnv());
       }
     }
     else
@@ -493,6 +493,7 @@ void
 morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
 {
   morkStream* stream = mWriter_Stream;
+  nsIMdbEnv *mdbev = ev->AsMdbEnv();
   mork_scope scope = ioSpace->SpaceScope();
   if ( scope < 0x80 )
   {
@@ -536,7 +537,9 @@ morkWriter::WriteAtomSpaceAsDict(morkEnv* ev, morkAtomSpace* ioSpace)
           mork_size pending = yarn.mYarn_Fill + size + 
             morkWriter_kYarnEscapeSlop + 4;
           this->IndentOverMaxLine(ev, pending, morkWriter_kDictAliasDepth);
-          mWriter_LineSize += stream->Write(ev, buf, size+1); //  + '('
+          mork_size bytesWritten;
+          stream->Write(mdbev, buf, size+1, &bytesWritten); //  + '('
+          mWriter_LineSize += bytesWritten;
           
           pending -= ( size + 1 );
           this->IndentOverMaxLine(ev, pending, morkWriter_kDictAliasValueDepth);
@@ -788,6 +791,7 @@ morkWriter::OnNothingDone(morkEnv* ev)
 mork_bool
 morkWriter::StartGroup(morkEnv* ev)
 {
+  nsIMdbEnv *mdbev = ev->AsMdbEnv();
   morkStream* stream = mWriter_Stream;
   mWriter_DidStartGroup = morkBool_kTrue;
   mWriter_DidEndGroup = morkBool_kFalse;
@@ -821,14 +825,16 @@ morkWriter::StartGroup(morkEnv* ev)
   morkStore* store = mWriter_Store;
   if ( store ) // might need to capture commit group position?
   {
-    mork_pos groupPos = stream->Tell(ev);
+    mork_pos groupPos;
+    stream->Tell(mdbev, &groupPos);
     if ( !store->mStore_FirstCommitGroupPos )
       store->mStore_FirstCommitGroupPos = groupPos;
     else if ( !store->mStore_SecondCommitGroupPos )
       store->mStore_SecondCommitGroupPos = groupPos;
   }
   
-  stream->Write(ev, buf, idFill + 6); // '@$${' + idFill + '{@'
+  mork_size bytesWritten;
+  stream->Write(mdbev, buf, idFill + 6, &bytesWritten); // '@$${' + idFill + '{@'
   stream->PutLineBreak(ev);
   mWriter_LineSize = 0;
   
@@ -840,6 +846,8 @@ morkWriter::CommitGroup(morkEnv* ev)
 {
   if ( mWriter_DidStartGroup )
   {
+    nsIMdbEnv *mdbev = ev->AsMdbEnv();
+    mork_size bytesWritten;
     morkStream* stream = mWriter_Stream;
   
     if ( mWriter_LineSize )
@@ -852,7 +860,7 @@ morkWriter::CommitGroup(morkEnv* ev)
     
     mork_fill bufFill = mWriter_GroupBufFill;
     if ( bufFill )
-      stream->Write(ev, mWriter_GroupBuf, bufFill);
+      stream->Write(mdbev, mWriter_GroupBuf, bufFill, &bytesWritten);
 
     stream->Putc(ev, '}');
     stream->Putc(ev, '@');
@@ -890,10 +898,13 @@ morkWriter::OnDirtyAllDone(morkEnv* ev)
 {
   if ( ev->Good() )
   {
+    nsIMdbEnv *mdbev = ev->AsMdbEnv();
     morkStream* stream = mWriter_Stream;
+    mork_pos resultPos;
     if ( mWriter_NeedDirtyAll ) // compress commit
     {
-      stream->Seek(ev, 0); // beginning of stream
+
+      stream->Seek(mdbev, 0, &resultPos); // beginning of stream
       stream->PutStringThenNewline(ev, morkWriter_kFileHeader);
       mWriter_LineSize = 0;
     }
@@ -902,7 +913,7 @@ morkWriter::OnDirtyAllDone(morkEnv* ev)
       mork_pos eos = stream->Length(ev); // length is end of stream
       if ( ev->Good() )
       {
-        stream->Seek(ev, eos); // goto end of stream
+        stream->Seek(mdbev, eos, &resultPos); // goto end of stream
         if ( eos < 128 ) // maybe need file header?
         {
           stream->PutStringThenNewline(ev, morkWriter_kFileHeader);
@@ -1293,7 +1304,7 @@ morkWriter::OnContentDone(morkEnv* ev)
     mWriter_Store->mStore_SecondCommitGroupPos = 0;
   }
   
-  stream->Flush(ev);
+  stream->Flush(ev->AsMdbEnv());
   nsIMdbFile* bud = mWriter_Bud;
   if ( bud )
   {
@@ -1321,6 +1332,7 @@ morkWriter::OnWritingDone(morkEnv* ev)
 mork_bool
 morkWriter::PutTableChange(morkEnv* ev, const morkTableChange* inChange)
 {
+  nsIMdbEnv *mdbev = ev->AsMdbEnv();
   if ( inChange->IsAddRowTableChange() )
   {
     this->PutRow(ev, inChange->mTableChange_Row ); // row alone means add
@@ -1340,7 +1352,9 @@ morkWriter::PutTableChange(morkEnv* ev, const morkTableChange* inChange)
     mork_size posSize = ev->TokenAsHex(p, inChange->mTableChange_Pos);
     p += posSize;
     *p++ = ' ';
-    mWriter_LineSize += mWriter_Stream->Write(ev, buf, posSize + 2);
+    mork_size bytesWritten;
+    mWriter_Stream->Write(mdbev, buf, posSize + 2, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
   }
   else
     inChange->UnknownChangeError(ev);
@@ -1455,6 +1469,7 @@ morkWriter::WriteTokenToTokenMetaCell(morkEnv* ev,
   char buf[ 128 ]; // buffer for staging the two hex IDs
   char* p = buf;
 
+  mork_size bytesWritten;
   if ( inCol < 0x80 )
   {
     stream->Putc(ev, '(');
@@ -1469,7 +1484,9 @@ morkWriter::WriteTokenToTokenMetaCell(morkEnv* ev,
     mork_size colSize = ev->TokenAsHex(p, inCol);
     p += colSize;
     *p++ = (char) valSep;
-    mWriter_LineSize += stream->Write(ev, buf, colSize + 3);
+    stream->Write(ev->AsMdbEnv(), buf, colSize + 3, &bytesWritten);
+    
+    mWriter_LineSize += bytesWritten;
   }
 
   if ( isKindCol )
@@ -1480,7 +1497,8 @@ morkWriter::WriteTokenToTokenMetaCell(morkEnv* ev,
     *p++ = ':';
     *p++ = 'c';
     *p++ = ')';
-    mWriter_LineSize += stream->Write(ev, buf, valSize + 3);
+    stream->Write(ev->AsMdbEnv(), buf, valSize + 3, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
   }
   else
   {
@@ -1556,8 +1574,10 @@ morkWriter::ChangeDictAtomScope(morkEnv* ev, mork_scope inScope)
 
     mork_size pending = scopeSize + 6;
     this->IndentOverMaxLine(ev, pending, morkWriter_kDictAliasDepth);
-    
-    mWriter_LineSize += stream->Write(ev, buf, pending);
+    mork_size bytesWritten;
+
+    stream->Write(ev->AsMdbEnv(), buf, pending, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
       
     mWriter_DictAtomScope = inScope;
   }
@@ -1598,8 +1618,9 @@ morkWriter::ChangeRowForm(morkEnv* ev, mork_cscode inNewForm)
 
     mork_size pending = formSize + 6;
     this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
-    
-    mWriter_LineSize += stream->Write(ev, buf, pending);
+    mork_size bytesWritten;
+    stream->Write(ev->AsMdbEnv(), buf, pending, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
       
     mWriter_RowForm = inNewForm;
   }
@@ -1641,7 +1662,9 @@ morkWriter::ChangeDictForm(morkEnv* ev, mork_cscode inNewForm)
     mork_size pending = formSize + 6;
     this->IndentOverMaxLine(ev, pending, morkWriter_kDictAliasDepth);
     
-    mWriter_LineSize += stream->Write(ev, buf, pending);
+    mork_size bytesWritten;
+    stream->Write(ev->AsMdbEnv(), buf, pending, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
       
     mWriter_DictForm = inNewForm;
   }
@@ -1749,8 +1772,11 @@ morkWriter::StartTable(morkEnv* ev, morkTable* ioTable)
       *p++ = '/'; // punct=9
       *p++ = ' '; // punct=10
     }
-    mWriter_LineSize += stream->Write(ev, buf, oidSize + punctSize);
-    
+    mork_size bytesWritten;
+
+    stream->Write(ev->AsMdbEnv(), buf, oidSize + punctSize, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
+
     mork_kind tk = mWriter_TableKind;
     if ( tk )
     {
@@ -1853,7 +1879,9 @@ morkWriter::PutRowDict(morkEnv* ev, morkRow* ioRow)
           this->IndentAsNeeded(ev, morkWriter_kDictAliasDepth);
           morkBookAtom* ba = (morkBookAtom*) atom;
           mork_size size = ev->TokenAsHex(idBuf, ba->mBookAtom_Id);
-          mWriter_LineSize += stream->Write(ev, buf, size+1); // '('
+          mork_size bytesWritten;
+          stream->Write(ev->AsMdbEnv(), buf, size+1, &bytesWritten); // '('
+          mWriter_LineSize += bytesWritten;
 
           if ( atom->AliasYarn(&yarn) )
           {
@@ -1973,6 +2001,7 @@ morkWriter::PutCell(morkEnv* ev, morkCell* ioCell, mork_bool inWithVal)
   buf[ 1 ] = '^'; // column is always a hex ID
   
   mork_size colSize = 0; // the size of col hex ID
+  mork_size bytesWritten;
   
   morkAtom* atom = (inWithVal)? ioCell->GetAtom() : (morkAtom*) 0;
   
@@ -2009,13 +2038,15 @@ morkWriter::PutCell(morkEnv* ev, morkCell* ioCell, mork_bool inWithVal)
       }
       *p++ = ')';
       mork_size distance = (mork_size) (p - buf);
-      mWriter_LineSize += stream->Write(ev, buf, distance);
+      stream->Write(ev->AsMdbEnv(), buf, distance, &bytesWritten);
+      mWriter_LineSize += bytesWritten;
     }
     else
     {
       p += valSize;
       *p = ')';
-      mWriter_LineSize += stream->Write(ev, buf, colSize + valSize + 4);
+      stream->Write(ev->AsMdbEnv(), buf, colSize + valSize + 4, &bytesWritten);
+      mWriter_LineSize += bytesWritten;
     }
 
     if ( atom->IsAtomDirty() )
@@ -2030,7 +2061,9 @@ morkWriter::PutCell(morkEnv* ev, morkCell* ioCell, mork_bool inWithVal)
       morkWriter_kYarnEscapeSlop + 2;
     this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
 
-    mWriter_LineSize += stream->Write(ev, buf, colSize + 2);
+    mork_size bytesWritten;
+    stream->Write(ev->AsMdbEnv(), buf, colSize + 2, &bytesWritten);
+    mWriter_LineSize += bytesWritten;
 
     pending -= ( colSize + 2 );
     this->IndentOverMaxLine(ev, pending, morkWriter_kRowCellDepth);
@@ -2069,6 +2102,7 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
   {
     mWriter_RowForm = mWriter_TableForm;
 
+    mork_size bytesWritten;
     morkStream* stream = mWriter_Stream;
     char buf[ 128 + 16 ]; // buffer for staging hex
     char* p = buf;
@@ -2125,7 +2159,8 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
         *p++ = '/'; // punct=8
         *p++ = ' '; // punct=9
       }
-      mWriter_LineSize += stream->Write(ev, buf, ridSize + punctSize);
+      stream->Write(ev->AsMdbEnv(), buf, ridSize + punctSize, &bytesWritten);
+      mWriter_LineSize += bytesWritten;
       
       // special case situation where row puts exactly one column:
       if ( !rowRewrite && mWriter_Incremental && ioRow->HasRowDelta() )
@@ -2169,7 +2204,8 @@ morkWriter::PutRow(morkEnv* ev, morkRow* ioRow)
       else
         ridSize = ev->OidAsHex(p, *roid);
 
-      mWriter_LineSize += stream->Write(ev, buf, ridSize);
+      stream->Write(ev->AsMdbEnv(), buf, ridSize, &bytesWritten);
+      mWriter_LineSize += bytesWritten;
       stream->Putc(ev, ' ');
       ++mWriter_LineSize;
     }

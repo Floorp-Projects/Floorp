@@ -110,10 +110,11 @@ public:
 **| but this is always done in a separate slot that explicitly refcounts,
 **| so we avoid confusing what is meant by the mNode_Heap slot.
 |*/
-class morkNode { // base class for constructing Mork object graphs
+class morkNode /*: public nsISupports */ { // base class for constructing Mork object graphs
 
 public: // state is public because the entire Mork system is private
   
+//  NS_DECL_ISUPPORTS;
   nsIMdbHeap*    mNode_Heap;     // NON-refcounted heap pointer
 
   mork_base      mNode_Base;     // must equal morkBase_kNode
@@ -150,7 +151,6 @@ public: // inlines for weird mNode_Mutable and mNode_Load constants
 public: // morkNode memory management methods
   static void* MakeNew(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev);
   
-  static void OnDeleteAssert(void* ioAddress); // cannot operator delete()
   void ZapOld(morkEnv* ev, nsIMdbHeap* ioHeap); // replaces operator delete()
   // this->morkNode::~morkNode(); // first call polymorphic destructor
   // if ( ioHeap ) // was this node heap allocated?
@@ -160,9 +160,6 @@ public: // morkNode memory management operators
   void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
   { return morkNode::MakeNew(inSize, ioHeap, ev); }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkNode instances.  Call ZapOld() instead.
 
 protected: // construction without an anv needed for first env constructed:
   morkNode(const morkUsage& inUsage, nsIMdbHeap* ioHeap);
@@ -187,7 +184,8 @@ public: // morkNode virtual methods
 public: // morkNode construction
   morkNode(morkEnv* ev, const morkUsage& inUsage, nsIMdbHeap* ioHeap);
   void CloseNode(morkEnv* ev); // called by CloseMorkNode();
-
+  mdb_err CloseMdbObject(morkEnv *ev);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv *ev);
 private: // copying is not allowed
   morkNode(const morkNode& other);
   morkNode& operator=(const morkNode& other);
@@ -223,8 +221,8 @@ public: // other morkNode methods
   mork_refs  WeakRefsOnly() const { return (mork_refs) ( mNode_Refs - mNode_Uses ); }
 
   // (this refcounting derives from public domain IronDoc node refcounts)
-  mork_refs    AddStrongRef(morkEnv* ev);
-  mork_refs    CutStrongRef(morkEnv* ev);
+  virtual mork_refs    AddStrongRef(morkEnv* ev);
+  virtual mork_refs    CutStrongRef(morkEnv* ev);
   mork_refs    AddWeakRef(morkEnv* ev);
   mork_refs    CutWeakRef(morkEnv* ev);
 

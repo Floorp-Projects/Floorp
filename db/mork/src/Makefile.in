@@ -33,20 +33,7 @@ REQUIRES	= xpcom \
 FORCE_STATIC_LIB=1
 
 CPPSRCS		= \
-		orkinCell.cpp \
-		orkinCompare.cpp \
-		orkinEnv.cpp \
-		orkinFactory.cpp \
-		orkinFile.cpp \
 		orkinHeap.cpp \
-		orkinPortTableCursor.cpp \
-		orkinRow.cpp \
-		orkinRowCellCursor.cpp \
-		orkinSorting.cpp \
-		orkinStore.cpp \
-		orkinTable.cpp \
-		orkinTableRowCursor.cpp \
-		orkinThumb.cpp \
 		morkArray.cpp \
 		morkAtom.cpp \
 		morkAtomMap.cpp \
@@ -70,15 +57,12 @@ CPPSRCS		= \
 		morkObject.cpp \
 		morkParser.cpp \
 		morkPool.cpp \
-		morkQuickSort.cpp \
 		morkRow.cpp \
 		morkRowCellCursor.cpp \
 		morkRowMap.cpp \
 		morkRowObject.cpp \
 		morkRowSpace.cpp \
 		morkSink.cpp \
-		morkSorting.cpp \
-		morkSortingRowCursor.cpp \
 		morkSpace.cpp \
 		morkStore.cpp \
 		morkStream.cpp \

@@ -213,9 +213,10 @@ orkinCell::CanUseCell(nsIMdbEnv* mev, mork_bool inMutable,
   return outEnv;
 }
 
-
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinCell);
+
+/*virtual*/ nsrefcnt
 orkinCell::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -225,7 +226,7 @@ orkinCell::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinCell::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;

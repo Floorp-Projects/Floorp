@@ -82,7 +82,7 @@ orkinHeap::Alloc(nsIMdbEnv* mev, // allocate a piece of memory
 {
 #ifdef MORK_DEBUG_HEAP_STATS
   mdb_size realSize = inSize;
-  inSize += 8; // sizeof(mork_u4) * 2
+  inSize += 12; // sizeof(mork_u4) * 3
   ++sHeap_AllocCount;
 #endif /*MORK_DEBUG_HEAP_STATS*/
 
@@ -94,7 +94,9 @@ orkinHeap::Alloc(nsIMdbEnv* mev, // allocate a piece of memory
 #ifdef MORK_DEBUG_HEAP_STATS
   else
   {
+    printf("%lx allocating %d\n", this, realSize);
     mork_u4* array = (mork_u4*) block;
+    *array++ = (mork_u4) this;
     *array++ = realSize;
     *array++ = orkinHeap_kTag;
     block = array;
@@ -137,7 +139,7 @@ orkinHeap::Free(nsIMdbEnv* mev, // free block allocated earlier by Alloc()
   if ( inBlock )
   {
 #ifdef MORK_DEBUG_HEAP_STATS
-    morkEnv* ev = morkEnv::FromMdbEnv(mev);
+    morkEnv* ev = 0; //morkEnv::FromMdbEnv(mev);
     mork_u4* array = (mork_u4*) inBlock;
     if ( *--array != orkinHeap_kTag )
     {
@@ -145,8 +147,9 @@ orkinHeap::Free(nsIMdbEnv* mev, // free block allocated earlier by Alloc()
         ev->NewWarning("heap block tag not hEaP");
     }
     mork_u4 realSize = *--array;
-    inBlock = array;
+    inBlock = --array; // skip over heap ptr too.
     
+    printf("%lx freeing %d\n", this, realSize);
     if ( sHeap_BlockCount )
       --sHeap_BlockCount;
     else if ( ev ) 

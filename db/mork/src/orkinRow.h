@@ -99,9 +99,6 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
   
 public: // construction:
 
@@ -121,36 +118,32 @@ public: // type identification
   mork_bool IsOrkinRowHandle() const
   { return this->IsHandle() && this->IsOrkinRow(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -158,31 +151,31 @@ public: // type identification
 // { ===== begin nsIMdbCollection methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetSeed(nsIMdbEnv* ev,
+  NS_IMETHOD GetSeed(nsIMdbEnv* ev,
     mdb_seed* outSeed);    // member change count
-  virtual mdb_err GetCount(nsIMdbEnv* ev,
+  NS_IMETHOD GetCount(nsIMdbEnv* ev,
     mdb_count* outCount); // member count
 
-  virtual mdb_err GetPort(nsIMdbEnv* ev,
+  NS_IMETHOD GetPort(nsIMdbEnv* ev,
     nsIMdbPort** acqPort); // collection container
   // } ----- end attribute methods -----
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetCursor( // make a cursor starting iter at inMemberPos
+  NS_IMETHOD GetCursor( // make a cursor starting iter at inMemberPos
     nsIMdbEnv* ev, // context
     mdb_pos inMemberPos, // zero-based ordinal pos of member in collection
     nsIMdbCursor** acqCursor); // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin ID methods -----
-  virtual mdb_err GetOid(nsIMdbEnv* ev,
+  NS_IMETHOD GetOid(nsIMdbEnv* ev,
     mdbOid* outOid); // read object identity
-  virtual mdb_err BecomeContent(nsIMdbEnv* ev,
+  NS_IMETHOD BecomeContent(nsIMdbEnv* ev,
     const mdbOid* inOid); // exchange content
   // } ----- end ID methods -----
 
   // { ----- begin activity dropping methods -----
-  virtual mdb_err DropActivity( // tell collection usage no longer expected
+  NS_IMETHOD DropActivity( // tell collection usage no longer expected
     nsIMdbEnv* ev);
   // } ----- end activity dropping methods -----
 
@@ -191,71 +184,71 @@ public: // type identification
 // { ===== begin nsIMdbRow methods =====
 
   // { ----- begin cursor methods -----
-  virtual mdb_err GetRowCellCursor( // make a cursor starting iteration at inRowPos
+  NS_IMETHOD GetRowCellCursor( // make a cursor starting iteration at inRowPos
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     nsIMdbRowCellCursor** acqCursor); // acquire new cursor instance
   // } ----- end cursor methods -----
 
   // { ----- begin column methods -----
-  virtual mdb_err AddColumn( // make sure a particular column is inside row
+  NS_IMETHOD AddColumn( // make sure a particular column is inside row
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to add
     const mdbYarn* inYarn); // cell value to install
 
-  virtual mdb_err CutColumn( // make sure a column is absent from the row
+  NS_IMETHOD CutColumn( // make sure a column is absent from the row
     nsIMdbEnv* ev, // context
     mdb_column inColumn); // column to ensure absent from row
 
-  virtual mdb_err CutAllColumns( // remove all columns from the row
+  NS_IMETHOD CutAllColumns( // remove all columns from the row
     nsIMdbEnv* ev); // context
   // } ----- end column methods -----
 
   // { ----- begin cell methods -----
-  virtual mdb_err NewCell( // get cell for specified column, or add new one
+  NS_IMETHOD NewCell( // get cell for specified column, or add new one
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to add
     nsIMdbCell** acqCell); // cell column and value
     
-  virtual mdb_err AddCell( // copy a cell from another row to this row
+  NS_IMETHOD AddCell( // copy a cell from another row to this row
     nsIMdbEnv* ev, // context
     const nsIMdbCell* inCell); // cell column and value
     
-  virtual mdb_err GetCell( // find a cell in this row
+  NS_IMETHOD GetCell( // find a cell in this row
     nsIMdbEnv* ev, // context
     mdb_column inColumn, // column to find
     nsIMdbCell** acqCell); // cell for specified column, or null
     
-  virtual mdb_err EmptyAllCells( // make all cells in row empty of content
+  NS_IMETHOD EmptyAllCells( // make all cells in row empty of content
     nsIMdbEnv* ev); // context
   // } ----- end cell methods -----
 
   // { ----- begin row methods -----
-  virtual mdb_err AddRow( // add all cells in another row to this one
+  NS_IMETHOD AddRow( // add all cells in another row to this one
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioSourceRow); // row to union with
     
-  virtual mdb_err SetRow( // make exact duplicate of another row
+  NS_IMETHOD SetRow( // make exact duplicate of another row
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioSourceRow); // row to duplicate
   // } ----- end row methods -----
 
   // { ----- begin blob methods -----  
-  virtual mdb_err SetCellYarn(nsIMdbEnv* ev, // synonym for AddColumn()
+  NS_IMETHOD SetCellYarn(nsIMdbEnv* ev, // synonym for AddColumn()
     mdb_column inColumn, // column to write
     const mdbYarn* inYarn);   // reads from yarn slots
   // make this text object contain content from the yarn's buffer
   
-  virtual mdb_err GetCellYarn(nsIMdbEnv* ev, 
+  NS_IMETHOD GetCellYarn(nsIMdbEnv* ev, 
     mdb_column inColumn, // column to read 
     mdbYarn* outYarn);  // writes some yarn slots 
   // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
   
-  virtual mdb_err AliasCellYarn(nsIMdbEnv* ev, 
+  NS_IMETHOD AliasCellYarn(nsIMdbEnv* ev, 
     mdb_column inColumn, // column to alias
     mdbYarn* outYarn); // writes ALL yarn slots
   
-  virtual mdb_err NextCellYarn(nsIMdbEnv* ev, // iterative version of GetCellYarn()
+  NS_IMETHOD NextCellYarn(nsIMdbEnv* ev, // iterative version of GetCellYarn()
     mdb_column* ioColumn, // next column to read
     mdbYarn* outYarn);  // writes some yarn slots 
   // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
@@ -271,7 +264,7 @@ public: // type identification
   // and the iteration has ended, ioColumn will return a zero token again.
   // So iterating over cells starts and ends with a zero column token.
 
-  virtual mdb_err SeekCellYarn( // resembles nsIMdbRowCellCursor::SeekCell()
+  NS_IMETHOD SeekCellYarn( // resembles nsIMdbRowCellCursor::SeekCell()
     nsIMdbEnv* ev, // context
     mdb_pos inPos, // position of cell in row sequence
     mdb_column* outColumn, // column for this particular cell

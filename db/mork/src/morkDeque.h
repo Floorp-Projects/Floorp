@@ -154,8 +154,6 @@ public: // link memory management operators
   void* operator new(size_t inSize, nsIMdbHeap& ioHeap, morkEnv* ev)
   { return morkLink::MakeNewLink(inSize, ioHeap, ev); }
   
-  void operator delete(void* ioAddress) // DO NOT CALL THIS, hope to crash:
-  { ((morkLink*) 0)->ZapOldLink((morkEnv*) 0, (nsIMdbHeap*) 0); } // boom
 };
 
 /*=============================================================================

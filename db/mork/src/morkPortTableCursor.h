@@ -56,8 +56,9 @@
 class orkinPortTableCursor;
 #define morkDerived_kPortTableCursor  /*i*/ 0x7443 /* ascii 'tC' */
 
-class morkPortTableCursor : public morkCursor { // row iterator
-
+class morkPortTableCursor : public morkCursor, public nsIMdbPortTableCursor { // row iterator
+public:
+  NS_DECL_ISUPPORTS_INHERITED
 // public: // slots inherited from morkObject (meant to inform only)
   // nsIMdbHeap*     mNode_Heap;
   // mork_able    mNode_Mutable; // can this node be modified?
@@ -77,12 +78,32 @@ class morkPortTableCursor : public morkCursor { // row iterator
   // mork_u1    mCursor_Pad[ 3 ]; // explicitly pad to u4 alignment
 
 public: // state is public because the entire Mork system is private
+  // { ----- begin attribute methods -----
+  NS_IMETHOD SetPort(nsIMdbEnv* ev, nsIMdbPort* ioPort); // sets pos to -1
+  NS_IMETHOD GetPort(nsIMdbEnv* ev, nsIMdbPort** acqPort);
+  
+  NS_IMETHOD SetRowScope(nsIMdbEnv* ev, // sets pos to -1
+    mdb_scope inRowScope);
+  NS_IMETHOD GetRowScope(nsIMdbEnv* ev, mdb_scope* outRowScope); 
+  // setting row scope to zero iterates over all row scopes in port
+    
+  NS_IMETHOD SetTableKind(nsIMdbEnv* ev, // sets pos to -1
+    mdb_kind inTableKind);
+  NS_IMETHOD GetTableKind(nsIMdbEnv* ev, mdb_kind* outTableKind);
+  // setting table kind to zero iterates over all table kinds in row scope
+  // } ----- end attribute methods -----
+
+  // { ----- begin table iteration methods -----
+  NS_IMETHOD NextTable( // get table at next position in the db
+    nsIMdbEnv* ev, // context
+    nsIMdbTable** acqTable); // the next table in the iteration
+  // } ----- end table iteration methods -----
   morkStore*    mPortTableCursor_Store;  // weak ref to store
   
   mdb_scope     mPortTableCursor_RowScope;
   mdb_kind      mPortTableCursor_TableKind;
   
-  // We only care if LastTablle is non-nil, so it is not refcounted;
+  // We only care if LastTable is non-nil, so it is not refcounted;
   // so you must never access table state or methods using LastTable:
   
   morkTable* mPortTableCursor_LastTable; // nil or last table (no refcount)
@@ -125,8 +146,11 @@ public: // other cursor methods
 
   static void NilCursorStoreError(morkEnv* ev);
   static void NonPortTableCursorTypeError(morkEnv* ev);
+
+ morkEnv* CanUsePortTableCursor(nsIMdbEnv* mev,
+  mork_bool inMutable, mdb_err* outErr) const;
+
   
-  orkinPortTableCursor* AcquirePortTableCursorHandle(morkEnv* ev);
   morkRowSpace* NextSpace(morkEnv* ev);
   morkTable* NextTable(morkEnv* ev);
 

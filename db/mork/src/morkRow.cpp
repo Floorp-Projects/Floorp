@@ -86,6 +86,7 @@
 
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
+
 // notifications regarding row changes:
 
 void morkRow::NoteRowAddCol(morkEnv* ev, mork_column inColumn)
@@ -265,7 +266,7 @@ morkRow::AcquireRowObject(morkEnv* ev, morkStore* ioStore)
 {
   morkRowObject* ro = mRow_Object;
   if ( ro ) // need new row object?
-    ro->AddStrongRef(ev);
+    ro->AddRef();
   else
   {
     nsIMdbHeap* heap = ioStore->mPort_Heap;
@@ -273,6 +274,7 @@ morkRow::AcquireRowObject(morkEnv* ev, morkStore* ioStore)
       morkRowObject(ev, morkUsage::kHeap, heap, this, ioStore);
 
     morkRowObject::SlotWeakRowObject(ro, ev, &mRow_Object);
+    ro->AddRef();
   }
   return ro;
 }
@@ -280,14 +282,7 @@ morkRow::AcquireRowObject(morkEnv* ev, morkStore* ioStore)
 nsIMdbRow*
 morkRow::AcquireRowHandle(morkEnv* ev, morkStore* ioStore)
 {
-  morkRowObject* object = this->AcquireRowObject(ev, ioStore);
-  if ( object )
-  {
-    nsIMdbRow* rowHandle = object->AcquireRowHandle(ev);
-    object->CutStrongRef(ev);
-    return rowHandle;
-  }
-  return (nsIMdbRow*) 0;
+  return AcquireRowObject(ev, ioStore);
 }
 
 nsIMdbCell*
@@ -300,7 +295,7 @@ morkRow::AcquireCellHandle(morkEnv* ev, morkCell* ioCell,
   if ( cellObj )
   {
     nsIMdbCell* cellHandle = cellObj->AcquireCellHandle(ev);
-    cellObj->CutStrongRef(ev);
+//    cellObj->CutStrongRef(ev->AsMdbEnv());
     return cellHandle;
   }
   return (nsIMdbCell*) 0;
@@ -955,9 +950,9 @@ morkRow::NewRowCellCursor(morkEnv* ev, mdb_pos inPos)
             outCursor = cursor;
           }
           else
-            cursor->CutStrongRef(ev);
+            cursor->CutStrongRef(ev->mEnv_SelfAsMdbEnv);
         }
-        rowObj->CutStrongRef(ev); // always cut ref (cursor has its own)
+        rowObj->Release(); // always cut ref (cursor has its own)
       }
     }
   }

@@ -334,7 +334,6 @@ morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
         if ( mRowSpace_NextTableId <= inTid )
           mRowSpace_NextTableId = inTid + 1;
       }
-      table->CutStrongRef(ev); // always cut ref; AddTable() adds its own
         
       if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
         this->MaybeDirtyStoreAndSpace(); // morkTable does already
@@ -376,7 +375,7 @@ morkRowSpace::NewTable(morkEnv* ev, mork_kind inTableKind,
           if ( mRowSpace_Tables.AddTable(ev, table) )
             outTable = table;
           else
-            table->CutStrongRef(ev);
+            table->Release();
 
           if ( this->IsRowSpaceClean() && store->mStore_CanDirty )
             this->MaybeDirtyStoreAndSpace(); // morkTable does already

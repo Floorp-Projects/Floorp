@@ -59,7 +59,7 @@
 
 #define morkDerived_kFile     /*i*/ 0x4669 /* ascii 'Fi' */
 
-class morkFile /*d*/ : public morkObject { /* ````` simple file API ````` */
+class morkFile /*d*/ : public morkObject, public nsIMdbFile { /* ````` simple file API ````` */
 
 // public: // slots inherited from morkNode (meant to inform only)
   // nsIMdbHeap*    mNode_Heap;
@@ -96,6 +96,7 @@ protected: // protected morkFile members (similar to public domain IronDoc)
   
 // { ===== begin morkNode interface =====
 public: // morkNode virtual methods
+  NS_DECL_ISUPPORTS_INHERITED;
   virtual void CloseMorkNode(morkEnv* ev); // CloseFile() only if open
   virtual ~morkFile(); // assert that CloseFile() executed earlier
   
@@ -134,53 +135,6 @@ public: // public static standard file creation entry point
   // files must be opened is considered a subclass specific detail, and
   // other portions or Mork source code don't want to know how it's done.
   
-// ````` ````` ````` `````   ````` ````` ````` `````  
-public: // virtual morkFile methods
-
-  virtual void Steal(morkEnv* ev, nsIMdbFile* ioThief) = 0;
-  // Steal: tell this file to close any associated i/o stream in the file
-  // system, because the file ioThief intends to reopen the file in order
-  // to provide the MDB implementation with more exotic file access than is
-  // offered by the nsIMdbFile alone.  Presumably the thief knows enough
-  // from Path() in order to know which file to reopen.  If Steal() is
-  // successful, this file should probably delegate all future calls to
-  // the nsIMdbFile interface down to the thief files, so that even after
-  // the file has been stolen, it can still be read, written, or forcibly
-  // closed (by a call to CloseMdbObject()).
-  
-  virtual void BecomeTrunk(morkEnv* ev);
-  // If this file is a file version branch created by calling AcquireBud(),
-  // BecomeTrunk() causes this file's content to replace the original
-  // file's content, typically by assuming the original file's identity.
-  // This default implementation of BecomeTrunk() does nothing, and this
-  // is appropriate behavior for files which are not branches, and is
-  // also the right behavior for files returned from AcquireBud() which are
-  // in fact the original file that has been truncated down to zero length.
-
-  virtual morkFile*  AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap) = 0;
-  // AcquireBud() starts a new "branch" version of the file, empty of content,
-  // so that a new version of the file can be written.  This new file
-  // can later be told to BecomeTrunk() the original file, so the branch
-  // created by budding the file will replace the original file.  Some
-  // file subclasses might initially take the unsafe but expedient
-  // approach of simply truncating this file down to zero length, and
-  // then returning the same morkFile pointer as this, with an extra
-  // reference count increment.  Note that the caller of AcquireBud() is
-  // expected to eventually call CutStrongRef() on the returned file
-  // in order to release the strong reference.  High quality versions
-  // of morkFile subclasses will create entirely new files which later
-  // are renamed to become the old file, so that better transactional
-  // behavior is exhibited by the file, so crashes protect old files.
-  // Note that AcquireBud() is an illegal operation on readonly files.
-  
-  virtual mork_pos   Length(morkEnv* ev) const = 0; // eof
-  virtual mork_pos   Tell(morkEnv* ev) const = 0;
-  virtual mork_size  Read(morkEnv* ev, void* outBuf, mork_size inSize) = 0;
-  virtual mork_pos   Seek(morkEnv* ev, mork_pos inPos) = 0;
-  virtual mork_size  Write(morkEnv* ev, const void* inBuf, mork_size inSize) = 0;
-  virtual void       Flush(morkEnv* ev) = 0;
-    
-// ````` ````` ````` `````   ````` ````` ````` `````  
 public: // non-poly morkFile methods
 
   nsIMdbFile* AcquireFileHandle(morkEnv* ev); // mObject_Handle
@@ -234,6 +188,47 @@ public: // typesafe refcounting inlines calling inherited morkNode methods
   static void SlotStrongFile(morkFile* me,
     morkEnv* ev, morkFile** ioSlot)
   { morkNode::SlotStrongNode((morkNode*) me, ev, (morkNode**) ioSlot); }
+public:
+  virtual mork_pos   Length(morkEnv* ev) const = 0; // eof
+  // nsIMdbFile methods
+  NS_IMETHOD Tell(nsIMdbEnv* ev, mdb_pos* outPos) const = 0;
+  NS_IMETHOD Seek(nsIMdbEnv* ev, mdb_pos inPos, mdb_pos *outPos) = 0;
+  NS_IMETHOD Eof(nsIMdbEnv* ev, mdb_pos* outPos);
+  // } ----- end pos methods -----
+
+  // { ----- begin read methods -----
+  NS_IMETHOD Read(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+    mdb_size* outActualSize) = 0;
+  NS_IMETHOD Get(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+    mdb_pos inPos, mdb_size* outActualSize);
+  // } ----- end read methods -----
+    
+  // { ----- begin write methods -----
+  NS_IMETHOD  Write(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+    mdb_size* outActualSize) = 0;
+  NS_IMETHOD  Put(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+    mdb_pos inPos, mdb_size* outActualSize);
+  NS_IMETHOD  Flush(nsIMdbEnv* ev) = 0;
+  // } ----- end attribute methods -----
+    
+  // { ----- begin path methods -----
+  NS_IMETHOD  Path(nsIMdbEnv* ev, mdbYarn* outFilePath);
+  // } ----- end path methods -----
+    
+  // { ----- begin replacement methods -----
+  NS_IMETHOD  Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief) = 0;
+  NS_IMETHOD  Thief(nsIMdbEnv* ev, nsIMdbFile** acqThief);
+  // } ----- end replacement methods -----
+
+  // { ----- begin versioning methods -----
+  NS_IMETHOD BecomeTrunk(nsIMdbEnv* ev) = 0;
+
+  NS_IMETHOD AcquireBud(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    nsIMdbFile** acqBud) = 0; 
+  // } ----- end versioning methods -----
+
+// } ===== end nsIMdbFile methods =====
+
 };
 
 /*=============================================================================
@@ -281,48 +276,39 @@ public: // compatible with the morkFile::OpenOldFile() entry point
   static morkStdioFile* CreateNewStdioFile(morkEnv* ev, nsIMdbHeap* ioHeap,
     const char* inFilePath);
 
-// ````` ````` ````` `````   ````` ````` ````` `````  
-public: // virtual ab_File methods
-
-  virtual void Steal(morkEnv* ev, nsIMdbFile* ioThief);
-  // Steal: tell this file to close any associated i/o stream in the file
-  // system, because the file ioThief intends to reopen the file in order
-  // to provide the MDB implementation with more exotic file access than is
-  // offered by the nsIMdbFile alone.  Presumably the thief knows enough
-  // from Path() in order to know which file to reopen.  If Steal() is
-  // successful, this file should probably delegate all future calls to
-  // the nsIMdbFile interface down to the thief files, so that even after
-  // the file has been stolen, it can still be read, written, or forcibly
-  // closed (by a call to CloseMdbObject()).
-
-  virtual void BecomeTrunk(morkEnv* ev);
-  // If this file is a file version branch created by calling AcquireBud(),
-  // BecomeTrunk() causes this file's content to replace the original
-  // file's content, typically by assuming the original file's identity.
-
-  virtual morkFile*  AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap);
-  // AcquireBud() starts a new "branch" version of the file, empty of content,
-  // so that a new version of the file can be written.  This new file
-  // can later be told to BecomeTrunk() the original file, so the branch
-  // created by budding the file will replace the original file.  Some
-  // file subclasses might initially take the unsafe but expedient
-  // approach of simply truncating this file down to zero length, and
-  // then returning the same morkFile pointer as this, with an extra
-  // reference count increment.  Note that the caller of AcquireBud() is
-  // expected to eventually call CutStrongRef() on the returned file
-  // in order to release the strong reference.  High quality versions
-  // of morkFile subclasses will create entirely new files which later
-  // are renamed to become the old file, so that better transactional
-  // behavior is exhibited by the file, so crashes protect old files.
-  // Note that AcquireBud() is an illegal operation on readonly files.
-
   virtual mork_pos   Length(morkEnv* ev) const; // eof
-  virtual mork_pos   Tell(morkEnv* ev) const;
-  virtual mork_size  Read(morkEnv* ev, void* outBuf, mork_size inSize);
-  virtual mork_pos   Seek(morkEnv* ev, mork_pos inPos);
-  virtual mork_size  Write(morkEnv* ev, const void* inBuf, mork_size inSize);
-  virtual void       Flush(morkEnv* ev);
+
+  NS_IMETHOD Tell(nsIMdbEnv* ev, mdb_pos* outPos) const;
+  NS_IMETHOD Seek(nsIMdbEnv* ev, mdb_pos inPos, mdb_pos *outPos);
+//  NS_IMETHOD Eof(nsIMdbEnv* ev, mdb_pos* outPos);
+  // } ----- end pos methods -----
+
+  // { ----- begin read methods -----
+  NS_IMETHOD Read(nsIMdbEnv* ev, void* outBuf, mdb_size inSize,
+    mdb_size* outActualSize);
     
+  // { ----- begin write methods -----
+  NS_IMETHOD  Write(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+    mdb_size* outActualSize);
+//  NS_IMETHOD  Put(nsIMdbEnv* ev, const void* inBuf, mdb_size inSize,
+//    mdb_pos inPos, mdb_size* outActualSize);
+  NS_IMETHOD  Flush(nsIMdbEnv* ev);
+  // } ----- end attribute methods -----
+    
+  NS_IMETHOD  Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief);
+   
+
+  // { ----- begin versioning methods -----
+  NS_IMETHOD BecomeTrunk(nsIMdbEnv* ev);
+
+  NS_IMETHOD AcquireBud(nsIMdbEnv* ev, nsIMdbHeap* ioHeap,
+    nsIMdbFile** acqBud); 
+  // } ----- end versioning methods -----
+
+// } ===== end nsIMdbFile methods =====
+
+// ````` ````` ````` `````   ````` ````` ````` `````  
+
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected non-poly morkStdioFile methods
 

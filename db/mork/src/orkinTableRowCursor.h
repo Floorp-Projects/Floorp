@@ -100,9 +100,6 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
   
 public: // construction:
 
@@ -121,36 +118,32 @@ public: // type identification
   mork_bool IsOrkinTableRowCursorHandle() const
   { return this->IsHandle() && this->IsOrkinTableRowCursor(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
-
+  NS_DECL_ISUPPORTS
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -158,14 +151,14 @@ public: // type identification
 // { ===== begin nsIMdbCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetCount(nsIMdbEnv* ev, mdb_count* outCount); // readonly
-  virtual mdb_err GetSeed(nsIMdbEnv* ev, mdb_seed* outSeed);    // readonly
+  NS_IMETHOD GetCount(nsIMdbEnv* ev, mdb_count* outCount); // readonly
+  NS_IMETHOD GetSeed(nsIMdbEnv* ev, mdb_seed* outSeed);    // readonly
   
-  virtual mdb_err SetPos(nsIMdbEnv* ev, mdb_pos inPos);   // mutable
-  virtual mdb_err GetPos(nsIMdbEnv* ev, mdb_pos* outPos);
+  NS_IMETHOD SetPos(nsIMdbEnv* ev, mdb_pos inPos);   // mutable
+  NS_IMETHOD GetPos(nsIMdbEnv* ev, mdb_pos* outPos);
   
-  virtual mdb_err SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail);
-  virtual mdb_err GetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail);
+  NS_IMETHOD SetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool inFail);
+  NS_IMETHOD GetDoFailOnSeedOutOfSync(nsIMdbEnv* ev, mdb_bool* outFail);
   // } ----- end attribute methods -----
 
 // } ===== end nsIMdbCursor methods =====
@@ -173,28 +166,28 @@ public: // type identification
 // { ===== begin nsIMdbTableRowCursor methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable);
+  NS_IMETHOD GetTable(nsIMdbEnv* ev, nsIMdbTable** acqTable);
   // } ----- end attribute methods -----
 
   // { ----- begin oid iteration methods -----
-  virtual mdb_err NextRowOid( // get row id of next row in the table
+  NS_IMETHOD NextRowOid( // get row id of next row in the table
     nsIMdbEnv* ev, // context
     mdbOid* outOid, // out row oid
     mdb_pos* outRowPos);    // zero-based position of the row in table
   // } ----- end oid iteration methods -----
 
   // { ----- begin row iteration methods -----
-  virtual mdb_err NextRow( // get row cells from table for cells already in row
+  NS_IMETHOD NextRow( // get row cells from table for cells already in row
     nsIMdbEnv* ev, // context
     nsIMdbRow** acqRow, // acquire next row in table
     mdb_pos* outRowPos);    // zero-based position of the row in table
   // } ----- end row iteration methods -----
 
   // { ----- begin duplicate row removal methods -----
-  virtual mdb_err CanHaveDupRowMembers(nsIMdbEnv* ev, // cursor might hold dups?
+  NS_IMETHOD CanHaveDupRowMembers(nsIMdbEnv* ev, // cursor might hold dups?
     mdb_bool* outCanHaveDups);
     
-  virtual mdb_err MakeUniqueCursor( // clone cursor, removing duplicate rows
+  NS_IMETHOD MakeUniqueCursor( // clone cursor, removing duplicate rows
     nsIMdbEnv* ev, // context
     nsIMdbTableRowCursor** acqCursor);    // acquire clone with no dups
     // Note that MakeUniqueCursor() is never necessary for a cursor which was

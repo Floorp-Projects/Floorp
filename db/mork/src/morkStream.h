@@ -136,7 +136,7 @@ public: // typing
 // ````` ````` ````` `````   ````` ````` ````` `````  
 public: // virtual morkFile methods
 
-  virtual void Steal(morkEnv* ev, nsIMdbFile* ioThief);
+  NS_IMETHOD Steal(nsIMdbEnv* ev, nsIMdbFile* ioThief);
   // Steal: tell this file to close any associated i/o stream in the file
   // system, because the file ioThief intends to reopen the file in order
   // to provide the MDB implementation with more exotic file access than is
@@ -147,12 +147,12 @@ public: // virtual morkFile methods
   // the file has been stolen, it can still be read, written, or forcibly
   // closed (by a call to CloseMdbObject()).
 
-  virtual void BecomeTrunk(morkEnv* ev);
+  NS_IMETHOD BecomeTrunk(nsIMdbEnv* ev);
   // If this file is a file version branch created by calling AcquireBud(),
   // BecomeTrunk() causes this file's content to replace the original
   // file's content, typically by assuming the original file's identity.
 
-  virtual morkFile*  AcquireBud(morkEnv* ev, nsIMdbHeap* ioHeap);
+  NS_IMETHOD AcquireBud(nsIMdbEnv* ev, nsIMdbHeap* ioHeap, nsIMdbFile** acqBud);
   // AcquireBud() starts a new "branch" version of the file, empty of content,
   // so that a new version of the file can be written.  This new file
   // can later be told to BecomeTrunk() the original file, so the branch
@@ -168,12 +168,12 @@ public: // virtual morkFile methods
   // behavior is exhibited by the file, so crashes protect old files.
   // Note that AcquireBud() is an illegal operation on readonly files.
   
-  virtual mork_pos   Length(morkEnv* ev) const; // eof
-  virtual mork_pos   Tell(morkEnv* ev) const;
-  virtual mork_size  Read(morkEnv* ev, void* outBuf, mork_size inSize);
-  virtual mork_pos   Seek(morkEnv* ev, mork_pos inPos);
-  virtual mork_size  Write(morkEnv* ev, const void* inBuf, mork_size inSize);
-  virtual void       Flush(morkEnv* ev);
+  virtual mork_pos Length(morkEnv* ev) const; // eof
+  NS_IMETHOD  Tell(nsIMdbEnv* ev, mork_pos *aOutPos  ) const;
+  NS_IMETHOD  Read(nsIMdbEnv* ev, void* outBuf, mork_size inSize, mork_size *aOutCount);
+  NS_IMETHOD  Seek(nsIMdbEnv* ev, mork_pos inPos, mork_pos *aOutPos);
+  NS_IMETHOD  Write(nsIMdbEnv* ev, const void* inBuf, mork_size inSize, mork_size *aOutCount);
+  NS_IMETHOD  Flush(nsIMdbEnv* ev);
     
 // ````` ````` ````` `````   ````` ````` ````` `````  
 protected: // protected non-poly morkStream methods (for char io)

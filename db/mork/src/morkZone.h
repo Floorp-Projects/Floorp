@@ -306,15 +306,15 @@ protected: // zone utilities
 
 // { ===== begin nsIMdbHeap methods =====
 public:
-  virtual mdb_err Alloc(nsIMdbEnv* ev, // allocate a piece of memory
+  NS_IMETHOD Alloc(nsIMdbEnv* ev, // allocate a piece of memory
     mdb_size inSize,   // requested size of new memory block 
     void** outBlock);  // memory block of inSize bytes, or nil
     
-  virtual mdb_err Free(nsIMdbEnv* ev, // free block allocated earlier by Alloc()
+  NS_IMETHOD Free(nsIMdbEnv* ev, // free block allocated earlier by Alloc()
     void* inBlock);
     
-  virtual mdb_err HeapAddStrongRef(nsIMdbEnv* ev); // does nothing
-  virtual mdb_err HeapCutStrongRef(nsIMdbEnv* ev); // does nothing
+  NS_IMETHOD HeapAddStrongRef(nsIMdbEnv* ev); // does nothing
+  NS_IMETHOD HeapCutStrongRef(nsIMdbEnv* ev); // does nothing
 // } ===== end nsIMdbHeap methods =====
   
 // { ===== begin morkNode interface =====

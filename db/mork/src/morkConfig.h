@@ -134,7 +134,7 @@
 #define MORK_CONFIG_PTR_SIZE_4 1 /* sizeof(void*) == 4 */
 #endif
 
-//define MORK_DEBUG_HEAP_STATS 1 /* analyze per-block heap usage */
+// #define MORK_DEBUG_HEAP_STATS 1 /* analyze per-block heap usage */
 
 /* ===== ===== ===== ===== line characters ===== ===== ===== ===== */
 #define mork_kCR 0x0D

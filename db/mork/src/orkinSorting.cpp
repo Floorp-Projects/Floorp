@@ -156,7 +156,9 @@ orkinSorting::CanUseSorting(nsIMdbEnv* mev,
 
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinSorting);
+
+/*virtual*/ nsrefcnt
 orkinSorting::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -166,7 +168,7 @@ orkinSorting::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinSorting::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;

@@ -96,9 +96,6 @@ protected: // morkHandle memory management operators
   void* operator new(size_t inSize, morkHandleFace* ioFace)
   { MORK_USED_1(inSize); return ioFace; }
   
-  void operator delete(void* ioAddress)
-  { morkNode::OnDeleteAssert(ioAddress); }
-  // do NOT call delete on morkHandle instances.  They are collected.
   
 public: // construction:
 
@@ -119,36 +116,33 @@ public: // type identification
   mork_bool IsOrkinCellHandle() const
   { return this->IsHandle() && this->IsOrkinCell(); }
 
-// { ===== begin nsIMdbISupports methods =====
-  virtual mdb_err AddRef(); // add strong ref with no
-  virtual mdb_err Release(); // cut strong ref
-// } ===== end nsIMdbObject methods =====
+  NS_DECL_ISUPPORTS
 
 // { ===== begin nsIMdbObject methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
+  NS_IMETHOD IsFrozenMdbObject(nsIMdbEnv* ev, mdb_bool* outIsReadonly);
   // same as nsIMdbPort::GetIsPortReadonly() when this object is inside a port.
   // } ----- end attribute methods -----
 
   // { ----- begin factory methods -----
-  virtual mdb_err GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
+  NS_IMETHOD GetMdbFactory(nsIMdbEnv* ev, nsIMdbFactory** acqFactory); 
   // } ----- end factory methods -----
 
   // { ----- begin ref counting for well-behaved cyclic graphs -----
-  virtual mdb_err GetWeakRefCount(nsIMdbEnv* ev, // weak refs
+  NS_IMETHOD GetWeakRefCount(nsIMdbEnv* ev, // weak refs
     mdb_count* outCount);  
-  virtual mdb_err GetStrongRefCount(nsIMdbEnv* ev, // strong refs
+  NS_IMETHOD GetStrongRefCount(nsIMdbEnv* ev, // strong refs
     mdb_count* outCount);
 
-  virtual mdb_err AddWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err AddStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD AddStrongRef(nsIMdbEnv* ev);
 
-  virtual mdb_err CutWeakRef(nsIMdbEnv* ev);
-  virtual mdb_err CutStrongRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutWeakRef(nsIMdbEnv* ev);
+  NS_IMETHOD CutStrongRef(nsIMdbEnv* ev);
   
-  virtual mdb_err CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
-  virtual mdb_err IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
+  NS_IMETHOD CloseMdbObject(nsIMdbEnv* ev); // called at strong refs zero
+  NS_IMETHOD IsOpenMdbObject(nsIMdbEnv* ev, mdb_bool* outOpen);
   // } ----- end ref counting -----
   
 // } ===== end nsIMdbObject methods =====
@@ -156,28 +150,28 @@ public: // type identification
 // { ===== begin nsIMdbBlob methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetBlob(nsIMdbEnv* ev,
+  NS_IMETHOD SetBlob(nsIMdbEnv* ev,
     nsIMdbBlob* ioBlob); // reads inBlob slots
   // when inBlob is in the same suite, this might be fastest cell-to-cell
   
-  virtual mdb_err ClearBlob( // make empty (so content has zero length)
+  NS_IMETHOD ClearBlob( // make empty (so content has zero length)
     nsIMdbEnv* ev);
   // clearing a yarn is like SetYarn() with empty yarn instance content
   
-  virtual mdb_err GetBlobFill(nsIMdbEnv* ev,
+  NS_IMETHOD GetBlobFill(nsIMdbEnv* ev,
     mdb_fill* outFill);  // size of blob 
   // Same value that would be put into mYarn_Fill, if one called GetYarn()
   // with a yarn instance that had mYarn_Buf==nil and mYarn_Size==0.
   
-  virtual mdb_err SetYarn(nsIMdbEnv* ev, 
+  NS_IMETHOD SetYarn(nsIMdbEnv* ev, 
     const mdbYarn* inYarn);   // reads from yarn slots
   // make this text object contain content from the yarn's buffer
   
-  virtual mdb_err GetYarn(nsIMdbEnv* ev, 
+  NS_IMETHOD GetYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn);  // writes some yarn slots 
   // copy content into the yarn buffer, and update mYarn_Fill and mYarn_Form
   
-  virtual mdb_err AliasYarn(nsIMdbEnv* ev, 
+  NS_IMETHOD AliasYarn(nsIMdbEnv* ev, 
     mdbYarn* outYarn); // writes ALL yarn slots
   // AliasYarn() reveals sensitive internal text buffer state to the caller
   // by setting mYarn_Buf to point into the guts of this text implementation.
@@ -219,10 +213,10 @@ public: // type identification
 // { ===== begin nsIMdbCell methods =====
 
   // { ----- begin attribute methods -----
-  virtual mdb_err SetColumn(nsIMdbEnv* ev, mdb_column inColumn); 
-  virtual mdb_err GetColumn(nsIMdbEnv* ev, mdb_column* outColumn);
+  NS_IMETHOD SetColumn(nsIMdbEnv* ev, mdb_column inColumn); 
+  NS_IMETHOD GetColumn(nsIMdbEnv* ev, mdb_column* outColumn);
   
-  virtual mdb_err GetCellInfo(  // all cell metainfo except actual content
+  NS_IMETHOD GetCellInfo(  // all cell metainfo except actual content
     nsIMdbEnv* ev, 
     mdb_column* outColumn,           // the column in the containing row
     mdb_fill*   outBlobFill,         // the size of text content in bytes
@@ -232,38 +226,38 @@ public: // type identification
   // Checking all cell metainfo is a good way to avoid forcing a large cell
   // in to memory when you don't actually want to use the content.
   
-  virtual mdb_err GetRow(nsIMdbEnv* ev, // parent row for this cell
+  NS_IMETHOD GetRow(nsIMdbEnv* ev, // parent row for this cell
     nsIMdbRow** acqRow);
-  virtual mdb_err GetPort(nsIMdbEnv* ev, // port containing cell
+  NS_IMETHOD GetPort(nsIMdbEnv* ev, // port containing cell
     nsIMdbPort** acqPort);
   // } ----- end attribute methods -----
 
   // { ----- begin children methods -----
-  virtual mdb_err HasAnyChild( // does cell have a child instead of text?
+  NS_IMETHOD HasAnyChild( // does cell have a child instead of text?
     nsIMdbEnv* ev,
     mdbOid* outOid,  // out id of row or table (or unbound if no child)
     mdb_bool* outIsRow); // nonzero if child is a row (rather than a table)
 
-  virtual mdb_err GetAnyChild( // access table of specific attribute
+  NS_IMETHOD GetAnyChild( // access table of specific attribute
     nsIMdbEnv* ev, // context
     nsIMdbRow** acqRow, // child row (or null)
     nsIMdbTable** acqTable); // child table (or null)
 
 
-  virtual mdb_err SetChildRow( // access table of specific attribute
+  NS_IMETHOD SetChildRow( // access table of specific attribute
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow); // inRow must be bound inside this same db port
 
-  virtual mdb_err GetChildRow( // access row of specific attribute
+  NS_IMETHOD GetChildRow( // access row of specific attribute
     nsIMdbEnv* ev, // context
     nsIMdbRow** acqRow); // acquire child row (or nil if no child)
 
 
-  virtual mdb_err SetChildTable( // access table of specific attribute
+  NS_IMETHOD SetChildTable( // access table of specific attribute
     nsIMdbEnv* ev, // context
     nsIMdbTable* inTable); // table must be bound inside this same db port
 
-  virtual mdb_err GetChildTable( // access table of specific attribute
+  NS_IMETHOD GetChildTable( // access table of specific attribute
     nsIMdbEnv* ev, // context
     nsIMdbTable** acqTable); // acquire child table (or nil if no child)
   // } ----- end children methods -----

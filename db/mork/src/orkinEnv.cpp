@@ -60,6 +60,10 @@
 #include "orkinEnv.h"
 #endif
 
+#ifndef _ORKINHEAP_
+#include "orkinHeap.h"
+#endif
+
 //3456789_123456789_123456789_123456789_123456789_123456789_123456789_123456789
 
 /* public virtual*/
@@ -146,7 +150,9 @@ orkinEnv::CanUseEnv(mork_bool inMutable, mdb_err* outErr) const
 
 
 // { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+NS_IMPL_QUERY_INTERFACE0(orkinEnv);
+
+/*virtual*/ nsrefcnt
 orkinEnv::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -156,7 +162,7 @@ orkinEnv::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinEnv::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -234,7 +240,12 @@ orkinEnv::CloseMdbObject(nsIMdbEnv* mev)
 
     ev->mEnv_Heap->Free(this, ev);
     if (ownsHeap)
+    {
+#ifdef MORK_DEBUG_HEAP_STATS
+      printf("%d blocks remaining \n", ((orkinHeap *) saveHeap)->HeapBlockCount());
+#endif // MORK_DEBUG_HEAP_STATS
       delete saveHeap;
+    }
 
   }
   return ret;

@@ -113,6 +113,7 @@ orkinRow::orkinRow(morkEnv* ev, // morkUsage is morkUsage_kPool
     morkRowObject* ioObject)  // must not be nil, the object for this handle
 : morkHandle(ev, ioFace, ioObject, morkMagic_kRow)
 {
+  NS_INIT_REFCNT();
   // do not modify mNode_Derived; leave it equal to morkDerived_kHandle
 }
 
@@ -204,8 +205,10 @@ orkinRow::CanUseRowStore(morkEnv* ev) const
 }
 
 
-// { ===== begin nsIMdbISupports methods =====
-/*virtual*/ mdb_err
+// { ===== begin nsISupports methods =====
+NS_IMPL_QUERY_INTERFACE1(orkinRow, nsIMdbRow);
+
+/*virtual*/ nsrefcnt
 orkinRow::AddRef() // add strong ref with no
 {
   morkEnv* ev = mHandle_Env;
@@ -215,7 +218,7 @@ orkinRow::AddRef() // add strong ref with no
     return morkEnv_kNonEnvTypeError;
 }
 
-/*virtual*/ mdb_err
+/*virtual*/ nsrefcnt
 orkinRow::Release() // cut strong ref
 {
   morkEnv* ev = mHandle_Env;
@@ -456,7 +459,7 @@ orkinRow::GetRowCellCursor( // make a cursor starting iteration at inRowPos
         outCursor = cursor->AcquireRowCellCursorHandle(ev);
       }
       else
-        cursor->CutStrongRef(ev);
+        cursor->CutStrongRef(mev);
     }
     outErr = ev->AsErr();
   }
@@ -576,10 +579,9 @@ orkinRow::AddCell( // copy a cell from another row to this row
   if ( ev )
   {
     morkCell* cell = 0;
-    orkinCell* ocell = (orkinCell*) inCell; // must verify this cast:
-    if ( ocell->CanUseCell(mev, morkBool_kFalse, &outErr, &cell) )
+    morkCellObject* cellObj = (morkCellObject*) inCell;
+    if ( cellObj->CanUseCell(mev, morkBool_kFalse, &outErr, &cell) )
     {
-      morkCellObject* cellObj = (morkCellObject*) ocell->mHandle_Object;
 
       morkRow* cellRow = cellObj->mCellObject_Row;
       if ( cellRow )

@@ -105,6 +105,7 @@ NS_IMETHODIMP nsMorkFactoryFactory::GetMdbFactory(nsIMdbFactory **aFactory)
 	if (!gMDBFactory)
 		gMDBFactory = MakeMdbFactory();
 	*aFactory = gMDBFactory;
+        NS_IF_ADDREF(gMDBFactory);
 	return (gMDBFactory) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
