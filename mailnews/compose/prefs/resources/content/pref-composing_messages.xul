@@ -99,7 +99,7 @@
               pref="true" preftype="string" prefstring="mailnews.send_default_charset"
               prefattribute="data">
       <template>
-        <menupopup oncreate="dump('CREATE MENU NOW\n');">
+        <menupopup>
           <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
         </menupopup>
       </template>
