@@ -1857,9 +1857,8 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
         if (mRefreshEnabled) {
           // If an ancestor widget was hidden and then shown, we could
           // have a delayed resize to handle.
-          if (view == mRootView &&
-              mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
-              IsViewVisible(view)) {
+          if (mDelayedResize != nsSize(NSCOORD_NONE, NSCOORD_NONE) &&
+              IsViewVisible(mRootView)) {
             DoSetWindowDimensions(mDelayedResize.width, mDelayedResize.height);
             mDelayedResize.SizeTo(NSCOORD_NONE, NSCOORD_NONE);
             
