@@ -952,8 +952,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       if (inTextControl)
       {
         nsLineBox *currentLine=nsnull;
-        nsresult rv = nsBlockFrame::GetCurrentLine(mBlockRS, &currentLine);
-        if (NS_SUCCEEDED(rv) && currentLine) {
+        // use localResult because a failure here should not be propagated to my caller
+        nsresult localResult = nsBlockFrame::GetCurrentLine(mBlockRS, &currentLine);
+        if (NS_SUCCEEDED(localResult) && currentLine) {
           currentLine->SetForceInvalidate(PR_TRUE);
         }
       }
