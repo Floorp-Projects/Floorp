@@ -57,9 +57,9 @@ DLLFLAGS += -DEF:jss.def
 #RESNAME = jss.rc
 
 EXTRA_SHARED_LIBS += \
-    $(DIST)/lib/nss/nss3.lib
-    $(DIST)/lib/nss/smime3.lib
-    $(DIST)/lib/nss/ssl3.lib
+    $(DIST)/lib/nss/nss3.lib \
+    $(DIST)/lib/nss/smime3.lib \
+    $(DIST)/lib/nss/ssl3.lib \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)plc4.lib \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)plds4.lib \
     $(DIST)/lib/$(NSPR31_LIB_PREFIX)nspr4.lib \
