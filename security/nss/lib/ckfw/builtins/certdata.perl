@@ -31,8 +31,7 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.3 $ $Date: 2000/04/19 22:07:08 $ $Name:  $';
-use strict;
+my $cvs_id = '@(#) $RCSfile: certdata.perl,v $ $Revision: 1.4 $ $Date: 2000/05/09 18:31:16 $ $Name:  $';
 
 my %constants;
 my $count = 0;
