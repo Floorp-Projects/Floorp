@@ -3015,6 +3015,7 @@ nsContextMenu.prototype = {
     },
     initSaveItems : function () {
         this.showItem( "context-savepage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink ));
+        this.showItem( "context-sendpage", !( this.inDirList || this.isTextSelected || this.onTextInput || this.onLink ));
 
         // Save link depends on whether we're in a link.
         this.showItem( "context-savelink", this.onSaveableLink );
@@ -3023,6 +3024,9 @@ nsContextMenu.prototype = {
         this.showItem( "context-saveimage", this.onImage );
         
         this.showItem( "context-sendimage", this.onImage );
+        
+        // Send link depends on whether we're in a link.
+        this.showItem( "context-sendlink", this.onSaveableLink );   
     },
     initViewItems : function () {
         // View source is always OK, unless in directory listing.
@@ -3449,9 +3453,15 @@ nsContextMenu.prototype = {
     saveLink : function () {
         saveURL( this.linkURL(), this.linkText(), null, true, true );
     },
+    sendLink : function () {
+        sendLink( this.linkURL(), "" ); // we don't know the title of the link so pass in an empty string
+    },
     // Save URL of clicked-on image.
     saveImage : function () {
         saveURL( this.imageURL, null, "SaveImageTitle", false );
+    },
+    sendImage : function () {
+        sendLink(this.imageURL, "" ); 
     },
     toggleImageBlocking : function (aBlock) {
       var nsIPermissionManager = Components.interfaces.nsIPermissionManager;
@@ -4209,6 +4219,27 @@ function charsetLoadListener (event)
         gPrevCharset = gLastBrowserCharset;
         gLastBrowserCharset = charset;
     }
+}
+
+// a generic method which can be used to pass arbitrary urls to the operating system.
+// aURL --> a nsIURI which represents the url to launch
+function launchExternalUrl(aURL)
+{
+  var extProtocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].getService(Components.interfaces.nsIExternalProtocolService);
+  if (extProtocolSvc)
+    extProtocolSvc.loadUrl(aURL);
+}
+
+function sendLink(url, title)
+{
+  // generate a mailto url based on the url and the url's title
+  var mailtoUrl = url ? "mailto:?body=" + url + "&subject=" + escape(title) : "mailto:";
+
+  var ioService = Components.classes["@mozilla.org/network/io-service;1"].getService(Components.interfaces.nsIIOService);
+  var uri = ioService.newURI(mailtoUrl, null, null);
+
+  // now pass this url to the operating system
+  launchExternalUrl(uri); 
 }
 
 #ifdef XP_MACOSX
