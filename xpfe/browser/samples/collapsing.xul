@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="collapsing.css" type="text/css"?> 
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+	align="horizontal"
+	onload="onWindowLoad()"> 
+
+	<html:script>
+	function onWindowLoad() {
+		verifyControls();
+	}
+	function verifyControls() {
+		var aolSite = window.frames["AOLSite"];
+		var nsSite = window.frames["NetcenterSite"];
+		if(aolSite==null)
+			window.alert("Our AOL Frame isn't in the DOM!");
+		if(nsSite == null)
+			window.alert("Our Netcenter Frame isn't in the DOM!");
+	}
+	function cmdHideAOL(){
+		verifyControls();
+		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideAOL");		
+		verifyControls();
+	}
+
+	function cmdHideNetcenter() {
+		verifyControls();
+		window.document.getElementById("ShowSite").setAttribute("sitemode", "hideNetcenter");
+		verifyControls();
+	}
+	</html:script>
+
+	<broadcaster id="ShowSite" sitemode="hideNetcenter" />
+	<observes element="ShowSite" attribute="sitemode" />
+	
+	<box align="vertical" id="AOLBox" flex="1">
+		<html:iframe flex="1" name="AOLSite" src="http://www.aol.com"/>
+		<html:input type="BUTTON" value="Show Netcenter" onclick="cmdHideAOL()"/>
+	</box>
+	<box align="vertical" id="NetcenterBox" flex="1">
+		<html:iframe flex="1" name="NetcenterSite" src="http://www.netscape.com"/>
+		<html:input type="BUTTON" value="Show AOL" onclick="cmdHideNetcenter()"/>
+	</box>
+	
+</window>
