@@ -1646,6 +1646,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const char *aString, PRUint32
                                                   nscoord aX, nscoord aY,
                                                   const nscoord* aSpacing)
 {
+   return DrawString(aString, aLength, aX, aY, aSpacing);
 }
 
 NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRUint32 aLength,
@@ -1653,6 +1654,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: DrawString2(const PRUnichar *aString, PRU
                                                   PRInt32 aFontID,
                                                   const nscoord* aSpacing)
 {
+   return DrawString(aString, aLength, aX, aY, aFontID, aSpacing);
 }
 
 // Image drawing: just proxy on to the image object, so no worries yet.
