@@ -410,14 +410,12 @@ XPT_DumpInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor *id,
 
         parent_ide = &header->interface_directory[id->parent_interface - 1];
 
-#ifndef XP_MAC        
         if (parent_ide) {
             fprintf(stdout, "%*sParent: %s::%s\n", indent, " ", 
                     parent_ide->name_space ? 
                     parent_ide->name_space : "", 
                     parent_ide->name);
         }
-#endif
     }
 
     if (verbose_mode) {
