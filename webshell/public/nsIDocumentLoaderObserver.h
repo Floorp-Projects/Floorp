@@ -78,10 +78,6 @@ public:
    */
   NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus) = 0;
 
-  /**
-   * Notify the observer that all connections are complete
-   */
-  NS_IMETHOD OnConnectionsComplete() = 0;
 };
 
 
