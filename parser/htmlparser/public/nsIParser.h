@@ -53,7 +53,7 @@
 #include "nsIDTD.h"
 #include "nsIInputStream.h"
 #include "nsHashtable.h"
-
+#include "nsVoidArray.h"
 
 #define NS_IPARSER_IID      \
   {0x355cbba0, 0xbf7d,  0x11d1,  \
@@ -110,15 +110,6 @@ typedef enum {
 } nsCharsetSource;
 
 enum eStreamState {eNone,eOnStart,eOnDataAvail,eOnStop};
-
-
-class nsITagStack {
-public:
-  virtual void        Push(PRUnichar* aTag)=0;
-  virtual PRUnichar*  Pop(void)=0;
-  virtual PRUnichar*  TagAt(PRUint32 anIndex)=0;
-  virtual PRUint32    GetSize(void)=0;
-};
 
 /** 
  *  FOR DEBUG PURPOSE ONLY
@@ -200,14 +191,6 @@ class nsIParser : public nsISupports {
 
     virtual nsIParserFilter* SetParserFilter(nsIParserFilter* aFilter) = 0;
 
-    /**
-     * Call this to get a newly constructed tagstack
-     * @update	gess 5/05/99
-     * @param   aTagStack is an out parm that will contain your result
-     * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
-     */
-    virtual nsresult  CreateTagStack(nsITagStack** aTagStack)=0;
-
     /** 
      * Get the channel associated with this parser
      * @update harishd,gagan 07/17/01
@@ -251,7 +234,12 @@ class nsIParser : public nsISupports {
     
     virtual nsresult  Terminate(void) = 0;
 
-    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect)=0;
+    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,
+                                    void* aKey,
+                                    nsVoidArray& aTagStack,
+                                    PRUint32 anInsertPos,
+                                    const nsString& aContentType,
+                                    nsDTDMode aMode=eDTDMode_autodetect) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time

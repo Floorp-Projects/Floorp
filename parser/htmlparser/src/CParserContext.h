@@ -48,10 +48,11 @@
 #include "nsIParser.h"
 #include "nsIURL.h"
 #include "nsIDTD.h"
-#include "nsScanner.h"
 #include "nsIStreamListener.h"
-#include "nsString.h"
 #include "nsIRequest.h"
+#include "nsScanner.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
 
 /**
  * Note that the parser is given FULL access to all
@@ -78,30 +79,28 @@ public:
 
     void  SetMimeType(nsAReadableString& aMimeType);
 
-    CParserContext*     mPrevContext;
-    nsDTDMode           mDTDMode;
-    eParserDocType      mDocType;
-    nsAutoString        mMimeType;
-
-    eStreamState        mStreamListenerState; //this is really only here for debug purposes.
-    PRBool              mMultipart;
-    eContextType        mContextType;
-    eAutoDetectResult   mAutoDetectStatus;
-    eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
-    
-    // Why is mRequest a strong reference? Refer to bug 102376
     nsCOMPtr<nsIRequest> mRequest; // provided by necko to differnciate different input streams
-
-    nsScanner*          mScanner;
-    nsIDTD*             mDTD;
-    nsIDTD*             mValidator;
-
-    char*               mTransferBuffer;
+                                   // why is mRequest strongly referenced? see bug 102376.
+    nsIDTD*              mDTD;
+    nsIDTD*              mValidator;
     nsIRequestObserver*  mListener;
 
-    void*               mKey;
-    PRUint32            mTransferBufferSize;
-    PRBool              mCopyUnused;
+    char*                mTransferBuffer;
+    void*                mKey;
+    CParserContext*      mPrevContext;
+    nsScanner*           mScanner;
+    nsAutoString         mMimeType;
+    nsDTDMode            mDTDMode;
+    
+    eParserDocType       mDocType;
+    eStreamState         mStreamListenerState; //this is really only here for debug purposes.
+    eContextType         mContextType;
+    eAutoDetectResult    mAutoDetectStatus;
+    eParserCommands      mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
+
+    PRBool               mMultipart;
+    PRBool               mCopyUnused;
+    PRUint32             mTransferBufferSize;
 };
 
 

@@ -19,19 +19,24 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..
+DEPTH =..\..\..
+REQUIRES = \
+	 xpcom     \
+	 htmlparser\
+	 necko     \
+	 string    \
+	 $NULL
 
-
-MAKE_OBJ_TYPE   = EXE
+MAKE_OBJ_TYPE = EXE
 PROGRAM = .\$(OBJDIR)\TestParser.exe
 
-OBJS =					\
-	.\$(OBJDIR)\TestParser.obj	\
+OBJS = \
+	.\$(OBJDIR)\TestParser.obj\
 	$(NULL)
 
 
-LLIBS=					\
- $(DIST)\lib\xpcom.lib	        \
+LLIBS = \
+ $(DIST)\lib\xpcom.lib	\
  $(LIBNSPR)				\
  $(NULL)
 

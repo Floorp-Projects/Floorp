@@ -215,7 +215,12 @@ class nsParser : public nsIParser,
      */
     virtual nsresult Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsAReadableString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
 
-    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,void* aKey,nsITagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,
+                                    void* aKey,
+                                    nsVoidArray& aTagStack,
+                                    PRUint32 anInsertPos,
+                                    const nsString& aContentType,
+                                    nsDTDMode aMode=eDTDMode_autodetect);
 
 
     /**
@@ -294,14 +299,6 @@ class nsParser : public nsIParser,
      * @return
      */
     virtual nsITokenizer* GetTokenizer(void);
-
-    /**
-     * Call this to get a newly constructed tagstack
-     * @update	gess 5/05/99
-     * @param   aTagStack is an out parm that will contain your result
-     * @return  NS_OK if successful, or NS_HTMLPARSER_MEMORY_ERROR on error
-     */
-    virtual nsresult  CreateTagStack(nsITagStack** aTagStack);
 
     /** 
      * Get the channel associated with this parser
