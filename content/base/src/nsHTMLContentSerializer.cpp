@@ -302,7 +302,21 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
 
     attrName->ToString(nameStr);
     
-    SerializeAttr(nsAutoString(), nameStr, valueStr, aStr);
+    PRBool doTreatAsCDATA = 
+                 (attrName.get() == nsHTMLAtoms::onblur)      || (attrName.get() == nsHTMLAtoms::onchange)
+              || (attrName.get() == nsHTMLAtoms::onclick)     || (attrName.get() == nsHTMLAtoms::ondblclick)
+              || (attrName.get() == nsHTMLAtoms::onfocus)     || (attrName.get() == nsHTMLAtoms::onkeydown)
+              || (attrName.get() == nsHTMLAtoms::onkeypress)  || (attrName.get() == nsHTMLAtoms::onkeyup)
+              || (attrName.get() == nsHTMLAtoms::onload)      || (attrName.get() == nsHTMLAtoms::onmousedown)
+              || (attrName.get() == nsHTMLAtoms::onmousemove) || (attrName.get() == nsHTMLAtoms::onmouseout)
+              || (attrName.get() == nsHTMLAtoms::onmouseover) || (attrName.get() == nsHTMLAtoms::onmouseup)
+              || (attrName.get() == nsHTMLAtoms::onreset)     || (attrName.get() == nsHTMLAtoms::onselect)
+              || (attrName.get() == nsHTMLAtoms::onsubmit)    || (attrName.get() == nsHTMLAtoms::onunload)
+              || (attrName.get() == nsHTMLAtoms::onabort)     || (attrName.get() == nsHTMLAtoms::onerror)
+              || (attrName.get() == nsHTMLAtoms::onpaint)     || (attrName.get() == nsHTMLAtoms::onresize)
+              || (attrName.get() == nsHTMLAtoms::onscroll);
+
+    SerializeAttr(nsAutoString(), nameStr, valueStr, aStr, !doTreatAsCDATA);
   }
 }
 
@@ -678,6 +692,8 @@ nsHTMLContentSerializer::LineBreakBeforeOpen(nsIAtom* aName,
       aName == nsHTMLAtoms::meta  ||
       aName == nsHTMLAtoms::link  ||
       aName == nsHTMLAtoms::style ||
+      aName == nsHTMLAtoms::select ||
+      aName == nsHTMLAtoms::option ||
       aName == nsHTMLAtoms::script ||
       aName == nsHTMLAtoms::html) {
     return PR_TRUE;
@@ -723,6 +739,7 @@ nsHTMLContentSerializer::LineBreakAfterOpen(nsIAtom* aName,
       (aName == nsHTMLAtoms::meta) ||
       (aName == nsHTMLAtoms::link) ||
       (aName == nsHTMLAtoms::script) ||
+      (aName == nsHTMLAtoms::select) ||
       (aName == nsHTMLAtoms::img) ||
       (aName == nsHTMLAtoms::map) ||
       (aName == nsHTMLAtoms::area) ||
@@ -748,6 +765,7 @@ nsHTMLContentSerializer::LineBreakBeforeClose(nsIAtom* aName,
       (aName == nsHTMLAtoms::ul) ||
       (aName == nsHTMLAtoms::ol) ||
       (aName == nsHTMLAtoms::dl) ||
+      (aName == nsHTMLAtoms::select) ||
       (aName == nsHTMLAtoms::table) ||
       (aName == nsHTMLAtoms::tbody)) {
     return PR_TRUE;
@@ -772,11 +790,14 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
       (aName == nsHTMLAtoms::th) ||
       (aName == nsHTMLAtoms::td) ||
       (aName == nsHTMLAtoms::pre) ||
+      (aName == nsHTMLAtoms::a) ||
       (aName == nsHTMLAtoms::title) ||
       (aName == nsHTMLAtoms::li) ||
       (aName == nsHTMLAtoms::dt) ||
       (aName == nsHTMLAtoms::dd) ||
       (aName == nsHTMLAtoms::blockquote) ||
+      (aName == nsHTMLAtoms::select) ||
+      (aName == nsHTMLAtoms::option) ||
       (aName == nsHTMLAtoms::p) ||
       (aName == nsHTMLAtoms::map) ||
       (aName == nsHTMLAtoms::div)) {

@@ -357,7 +357,8 @@ void
 nsXMLContentSerializer::SerializeAttr(const nsAReadableString& aPrefix,
                                       const nsAReadableString& aName,
                                       const nsAReadableString& aValue,
-                                      nsAWritableString& aStr)
+                                      nsAWritableString& aStr,
+                                      PRBool aDoEscapeEntities)
 {
   AppendToString(PRUnichar(' '), aStr);
   if (aPrefix.Length() > 0) {
@@ -369,7 +370,7 @@ nsXMLContentSerializer::SerializeAttr(const nsAReadableString& aPrefix,
   AppendToString(NS_LITERAL_STRING("=\""), aStr);
 
   mInAttribute = PR_TRUE;
-  AppendToString(aValue, aStr, PR_TRUE);
+  AppendToString(aValue, aStr, aDoEscapeEntities);
   mInAttribute = PR_FALSE;
 
   AppendToString(NS_LITERAL_STRING("\""), aStr);
@@ -451,7 +452,7 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   // If we had to add a new namespace declaration, serialize
   // and push it on the namespace stack
   if (addNSAttr) {
-    SerializeAttr(xmlnsStr, tagPrefix, tagNamespaceURI, aStr);
+    SerializeAttr(xmlnsStr, tagPrefix, tagNamespaceURI, aStr, PR_TRUE);
     PushNameSpaceDecl(tagPrefix, tagNamespaceURI, aElement);
   }
 
@@ -488,10 +489,10 @@ nsXMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
     
     if (elementNamespaceID == kNameSpaceID_HTML && nameStr.Equals(NS_LITERAL_STRING("xmlns:xmlns")))
       nameStr.Assign(kXMLNS); // XXX Shouldn't need this hack, breaks case where there really is xmlns:xmlns
-    SerializeAttr(prefixStr, nameStr, valueStr, aStr);
+    SerializeAttr(prefixStr, nameStr, valueStr, aStr, PR_TRUE);
     
     if (addNSAttr) {
-      SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr);
+      SerializeAttr(xmlnsStr, prefixStr, uriStr, aStr, PR_TRUE);
       PushNameSpaceDecl(prefixStr, uriStr, aElement);
     }
   }
