@@ -221,6 +221,7 @@ BEGIN
             MENUITEM "&Home Page",                  ID_VIEW_GOTO_HOME
         END
         MENUITEM "&Stop",                       ID_VIEW_STOP
+        MENUITEM "&Refresh",                    ID_VIEW_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "Sour&ce",                     ID_VIEW_VIEWSOURCE
     END

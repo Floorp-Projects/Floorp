@@ -323,3 +323,15 @@ void CRegMozCtlDlg::OnAutomatic()
 	m_edtComponentPath.EnableWindow(!m_bAutomatic);
 	m_btnPickComponentPath.EnableWindow(!m_bAutomatic);
 }
+
+CString CRegMozCtlDlg::GetSystemPath()
+{
+	// TODO
+	return _T("");
+}
+
+BOOL CRegMozCtlDlg::SetSystemPath(const CString &szNewPath)
+{
+	// TODO
+	return TRUE;
+}
