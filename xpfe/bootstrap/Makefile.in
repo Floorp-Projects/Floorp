@@ -25,6 +25,11 @@ MODULE		= apprunner
 
 include $(DEPTH)/config/autoconf.mk
 
+ifeq ($(MOZ_TOOLKIT),beos)
+BEOS_PROGRAM_RESOURCE = apprunner-beos.rsrc
+endif
+
+
 TOOLKIT_GFX_LIB     = -lgfx$(MOZ_TOOLKIT)
 TOOLKIT_WIDGET_LIB  = -lwidget$(MOZ_TOOLKIT)
 
