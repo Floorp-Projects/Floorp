@@ -366,7 +366,7 @@ NS_IMETHODIMP nsSmtpProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 {
 	// what can we do? we can close the stream?
 	m_urlInProgress = PR_FALSE;  // don't close the connection...we may be re-using it.
-	// CloseConnection();
+	m_runningURL->SetUrlState(PR_FALSE, NS_OK);
 
 	// and we want to mark ourselves for deletion or some how inform our protocol manager that we are 
 	// available for another url if there is one....
