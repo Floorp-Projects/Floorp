@@ -3023,7 +3023,7 @@ XULDocumentImpl::CreatePopupDocument(nsIContent* aPopupElement, nsIDocument** aR
 
     // Now the popup will happily use its own XUL builder to churn out nodal
     // clones of the popup content.  They will get their own event handlers
-    // (properly scoped to the new global popup window context), and will have
+    // (properly scoped to the new global popup window context), and will
     // belong to the popup document instead.  If this works, it will be
     // more righteous than Star Wars Episode I.
 
