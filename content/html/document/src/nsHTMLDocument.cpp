@@ -2341,6 +2341,10 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
 
+  // We don't have to flush before we do the initial hashtable lookup, since if
+  // the id is already in the hashtable it couldn't have been removed without
+  // us being notified (all removals notify immediately, as far as I can tell).
+  // So do the lookup first.
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aElementId,
@@ -2348,6 +2352,31 @@ nsHTMLDocument::GetElementById(const nsAString& aElementId,
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
   nsIContent *e = entry->mIdContent;
+
+  if (e == ID_NOT_IN_DOCUMENT) {
+    // Now we have to flush.  It could be that we have a cached "not in
+    // document" but more content has been added to the document since.  Note
+    // that we have to flush notifications, so that the entry will get updated
+    // properly.
+    
+    // Make sure to stash away the current generation so we can check whether
+    // the table changes when we flush.
+    PRUint32 generation = mIdAndNameHashTable.generation;
+  
+    FlushPendingNotifications(Flush_ContentAndNotify);
+
+    if (generation != mIdAndNameHashTable.generation) {
+      // Table changed, so the entry pointer is no longer valid; look up the
+      // entry again, adding if necessary (the adding may be necessary in case
+      // the flush actually deleted entries).
+      entry =
+        NS_STATIC_CAST(IdAndNameMapEntry *,
+                       PL_DHashTableOperate(&mIdAndNameHashTable, &aElementId,
+                                            PL_DHASH_ADD));
+      NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+      e = entry->mIdContent;
+    }
+  }
 
   if (e == ID_NOT_IN_DOCUMENT) {
     // We've looked for this id before and we didn't find it, so it
@@ -3226,7 +3255,10 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
   // table changes when we flush.
   PRUint32 generation = mIdAndNameHashTable.generation;
   
-  FlushPendingNotifications(Flush_Content);
+  // If we already have an entry->mContentList, we need to flush out
+  // notifications too, so that it will get updated properly.
+  FlushPendingNotifications(entry->mContentList ?
+                              Flush_ContentAndNotify : Flush_Content);
 
   if (generation != mIdAndNameHashTable.generation) {
     // Table changed, so the entry pointer is no longer valid; look up the
