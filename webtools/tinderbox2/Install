@@ -33,12 +33,15 @@ A quick overview of the files:
 *) Run ./configure. When configure is done you will have a Makefile
 and a config.out.  Although Tinderbox consists entirely of perl
 scripts we must substitute some values into the source code to make it
-executable.You may wish to change the default directories in configure
+executable.  You may wish to change the default directories in configure
 for some of the makefile variables.  Please read config.out and make
 any changes which need to be made for your system.
 
-*) run make to create executable versions of the source code in the
+*) run 'make' to create executable versions of the source code in the
 ./build directory.
+
+*) run 'make compile_bin_code' to ensure that the code will compile when
+it is installed.
 
 *) run the test programs as described in /build/test/ReadMe to ensure
 that you have configured the program correctly.
