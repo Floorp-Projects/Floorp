@@ -1,0 +1,40 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://global/skin/tasksOverlay.css" type="text/css"?> 
+
+
+
+<!DOCTYPE  window SYSTEM "chrome://global/locale/charsetOverlay.dtd">
+
+
+<overlay id="charsetOverlay"
+		 xmlns:html="http://www.w3.org/TR/REC-html40"
+		 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script language="JavaScript" src="chrome://global/content/charsetOverlay.js"/>
+
+	<!-- Charset Menu -->
+	<menu id="charsetMenu" value="&charsetMenu.label;"  datasources="rdf:charset-menu" ref="NC:CharsetMenuRoot" open="true">
+        <template>
+          <rule iscontainer="true" isempty="false">
+		    <menupopup>
+              <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+			</menupopup>
+          </rule>
+          <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
+            <menupopup>
+			  <menuseparator uri="..." />
+			</menupopup>
+          </rule>
+          <rule>
+		    <menupopup>
+              <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="SetDefaultCharacterSet(event.target)"/>
+			</menupopup>
+          </rule>
+        </template>
+
+       <menupopup>
+	  </menupopup>
+	</menu>
+
+</overlay>		
