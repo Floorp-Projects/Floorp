@@ -14,8 +14,8 @@ objs = 	hash.o \
 	world.o \
 	vmtypes.o \
 	debugger.o \
-    xmlparser.o \
-    icodeasm.o
+	xmlparser.o \
+	icodeasm.o
 
 test_objs = hash.o \
 	icodeasm.o \
@@ -29,7 +29,7 @@ test_objs = hash.o \
 	utilities.o \
 	world.o \
 	vmtypes.o \
-    xmlparser.o \
+	xmlparser.o \
 	debugger.o
 
 gc_path = ../../gc/boehm/
