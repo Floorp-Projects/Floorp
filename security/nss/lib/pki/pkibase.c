@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.10 $ $Date: 2002/07/31 02:00:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.11 $ $Date: 2002/08/01 01:21:28 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -861,11 +861,15 @@ nssPKIObjectCollection_GetObjects
 	    if (!node->object) {
 		link = PR_NEXT_LINK(link);
 		PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
+		collection->size--;
 		continue;
 	    }
 	    node->haveObject = PR_TRUE;
 	}
 	rvObjects[i++] = nssPKIObject_AddRef(node->object);
+	if (i >= rvSize) {
+	    break; /* we have all we asked for */
+	}
 	link = PR_NEXT_LINK(link);
     }
     return PR_SUCCESS;
@@ -888,6 +892,7 @@ nssPKIObjectCollection_Traverse
 	    if (!node->object) {
 		link = PR_NEXT_LINK(link);
 		PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
+		collection->size--;
 		continue;
 	    }
 	    node->haveObject = PR_TRUE;
@@ -931,6 +936,7 @@ nssPKIObjectCollection_AddInstanceAsObject
 	node->object = (*collection->createObject)(node->object);
 	if (!node->object) {
 	    PR_REMOVE_LINK(&node->link); /*remove bogus object from list*/
+	    collection->size--;
 	    return PR_FAILURE;
 	}
 	node->haveObject = PR_TRUE;
@@ -979,8 +985,11 @@ cert_getUIDFromObject(nssPKIObject *o, NSSItem *uid)
      */
     NSSDER *derCert;
     derCert = nssCertificate_GetEncoding(c);
-    uid[0] = *derCert;
+    uid[0].data = NULL; uid[0].size = 0;
     uid[1].data = NULL; uid[1].size = 0;
+    if (derCert == NULL) {
+	uid[0] = *derCert;
+    }
 #else
     NSSDER *issuer, *serial;
     issuer = nssCertificate_GetIssuer(c);
