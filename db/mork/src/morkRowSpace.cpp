@@ -284,8 +284,7 @@ morkRowSpace::NewTableWithTid(morkEnv* ev, mork_tid inTid,
         if ( mRowSpace_NextTableId <= inTid )
           mRowSpace_NextTableId = inTid + 1;
       }
-      else
-        table->CutStrongRef(ev);
+      table->CutStrongRef(ev);
     }
   }
   else
