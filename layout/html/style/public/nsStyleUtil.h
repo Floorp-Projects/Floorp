@@ -37,6 +37,8 @@ public:
   static PRInt32 FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePointSize, 
                                         float aScalingFactor);
 
+  static PRInt32 ConstrainFontWeight(PRInt32 aWeight);
+
   static const nsStyleColor* FindNonTransparentBackground(nsIStyleContext* aContext);
 };
 

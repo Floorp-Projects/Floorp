@@ -158,6 +158,29 @@ PRInt32 nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
   return index;
 }
 
+PRInt32 
+nsStyleUtil::ConstrainFontWeight(PRInt32 aWeight)
+{
+  aWeight = ((aWeight < 100) ? 100 : ((aWeight > 900) ? 900 : aWeight));
+  PRInt32 base = ((aWeight / 100) * 100);
+  PRInt32 step = (aWeight % 100);
+  PRBool  negativeStep = PRBool(50 < step);
+  PRInt32 maxStep;
+  if (negativeStep) {
+    step = 100 - step;
+    maxStep = (base / 100);
+    base += 100;
+  }
+  else {
+    maxStep = ((900 - base) / 100);
+  }
+  if (maxStep < step) {
+    step = maxStep;
+  }
+  return (base + ((negativeStep) ? -step : step));
+}
+
+
 const nsStyleColor* nsStyleUtil::FindNonTransparentBackground(nsIStyleContext* aContext)
 {
   const nsStyleColor* result = nsnull;
