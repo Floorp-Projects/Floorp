@@ -25,7 +25,9 @@
 #include "nsCRT.h"
 #include "nsImageNet.h"
 #include "nsCOMPtr.h"
+#include "nsIPref.h"
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kIImageManagerIID, NS_IIMAGEMANAGER_IID);
 
 class ImageManagerImpl : public nsIImageManager {
@@ -59,7 +61,22 @@ ImageManagerImpl::ImageManagerImpl()
   NS_INIT_REFCNT();
   NS_NewImageSystemServices(getter_AddRefs(mSS));
   IL_Init(mSS);
-  IL_SetCacheSize(2048L * 1024L);
+  
+  PRInt32 cacheSize  = (1024L * 2048L);
+  
+  nsresult res = NS_ERROR_FAILURE;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res);
+  if (prefs)
+  {
+      PRInt32 tempSize;
+      res = prefs->GetIntPref("browser.cache.image_cache_size", &tempSize);
+      if ( NS_SUCCEEDED(res) )
+      {
+        cacheSize = tempSize * 1024L;
+      }
+  }
+
+  IL_SetCacheSize(cacheSize);
 }
 
 ImageManagerImpl::~ImageManagerImpl()
