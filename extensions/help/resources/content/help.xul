@@ -71,8 +71,8 @@
 
         <tabcontrol orient="vertical" flex="1">
           <tabbox orient="horizontal">
-            <tab value="Contents"/>
-            <tab value="Index"/>
+            <tab label="&tab1.label;"/>
+            <tab label="&tab2.label;"/>
           </tabbox>
           <tabpanel flex="1">
             <box id="help-toc">

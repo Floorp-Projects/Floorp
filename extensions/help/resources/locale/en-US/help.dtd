@@ -12,3 +12,5 @@
 <!ENTITY t2.label       "do you need help with?" >
 <!ENTITY t3.label       "Click one:" >
 
+<!ENTITY tab1.label       "Contents">
+<!ENTITY tab2.label       "Index">
