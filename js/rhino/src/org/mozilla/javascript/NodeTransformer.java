@@ -416,7 +416,7 @@ public class NodeTransformer {
                     Node asn = (Node) irFactory.createAssignment(
                                         TokenStream.NOP, n, init, null,
                                         false);
-                    Node pop = new Node(TokenStream.POP, asn, node.getDatum());
+                    Node pop = new Node(TokenStream.POP, asn, node.getLineno());
                     result.addChildToBack(pop);
                 }
                 iterator.replaceCurrent(result);
@@ -525,24 +525,26 @@ public class NodeTransformer {
                     vars.addLocal(name, createVariableObject(name, false));
             }
         }
-        String name = tree.getString();
-        if (inFunction && ((FunctionNode) tree).getFunctionType() ==
-                          FunctionNode.FUNCTION_EXPRESSION &&
-            name != null && name.length() > 0 && vars.hasVariable(name))
-        {
-            // A function expression needs to have its name as a variable
-            // (if it isn't already allocated as a variable). See
-            // ECMA Ch. 13.  We add code to the beginning of the function
-            // to initialize a local variable of the function's name
-            // to the function value.
-            vars.addLocal(name, createVariableObject(name, false));
-            Node block = tree.getLastChild();
-            Node setFn = new Node(TokenStream.POP,
-                            new Node(TokenStream.SETVAR,
-                                new Node(TokenStream.STRING, name),
-                                new Node(TokenStream.PRIMARY,
-                                         TokenStream.THISFN)));
-            block.addChildrenToFront(setFn);
+        if (inFunction) {
+            FunctionNode fn = (FunctionNode)tree;
+            String name = fn.getFunctionName();
+            if (fn.getFunctionType() == FunctionNode.FUNCTION_EXPRESSION
+                && name != null && name.length() > 0 && vars.hasVariable(name))
+            {
+                // A function expression needs to have its name as a variable
+                // (if it isn't already allocated as a variable). See
+                // ECMA Ch. 13.  We add code to the beginning of the function
+                // to initialize a local variable of the function's name
+                // to the function value.
+                vars.addLocal(name, createVariableObject(name, false));
+                Node block = tree.getLastChild();
+                Node setFn = new Node(TokenStream.POP,
+                                new Node(TokenStream.SETVAR,
+                                    Node.newString(name),
+                                    new Node(TokenStream.PRIMARY,
+                                             TokenStream.THISFN)));
+                block.addChildrenToFront(setFn);
+            }
         }
     }
 
@@ -702,10 +704,7 @@ public class NodeTransformer {
                                  Node tree, boolean isError,
                                  Scriptable scope)
     {
-        Object obj = stmt.getDatum();
-        int lineno = 0;
-        if (obj != null && obj instanceof Integer)
-            lineno = ((Integer) obj).intValue();
+        int lineno = stmt.getLineno();
         Object prop = tree == null
                       ? null
                       : tree.getProp(Node.SOURCENAME_PROP);

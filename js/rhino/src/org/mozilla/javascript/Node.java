@@ -56,6 +56,21 @@ public class Node implements Cloneable {
         double number;
     }
 
+    static class StringNode extends Node {
+
+        StringNode(int type, String str) {
+            super(type);
+            this.str = str;
+        }
+
+        StringNode(int nodeType, Node left, Node right, String str) {
+            super(nodeType, left, right);
+            this.str = str;
+        }
+
+        String str;
+    }
+
     public Node(int nodeType) {
         type = nodeType;
     }
@@ -85,31 +100,34 @@ public class Node implements Cloneable {
 
     public Node(int nodeType, int value) {
         type = nodeType;
-        this.datum = new Integer(value);
-    }
-
-    public Node(int nodeType, String str) {
-        type = nodeType;
-        this.datum = str;
+        intDatum = value;
     }
 
     public Node(int nodeType, Node child, int value) {
         this(nodeType, child);
-        this.datum = new Integer(value);
+        intDatum = value;
     }
 
-    public Node(int nodeType, Node child, Object datum) {
-        this(nodeType, child);
-        this.datum = datum;
-    }
-
-    public Node(int nodeType, Node left, Node right, Object datum) {
+    public Node(int nodeType, Node left, Node right, int value) {
         this(nodeType, left, right);
-        this.datum = datum;
+        intDatum = value;
+    }
+
+    public Node(int nodeType, Node left, Node mid, Node right, int value) {
+        this(nodeType, left, mid, right);
+        intDatum = value;
     }
 
     public static Node newNumber(double number) {
         return new NumberNode(number);
+    }
+
+    public static Node newString(String str) {
+        return new StringNode(TokenStream.STRING, str);
+    }
+
+    public static Node newString(int type, String str) {
+        return new StringNode(type, str);
     }
 
     public int getType() {
@@ -396,20 +414,27 @@ public class Node implements Cloneable {
         }
     }
 
-    public Object getDatum() {
-        return datum;
+    public int getOperation() {
+        switch (type) {
+            case TokenStream.EQOP:
+            case TokenStream.RELOP:
+            case TokenStream.UNARYOP:
+            case TokenStream.PRIMARY:
+                return intDatum;
+        }
+        Context.codeBug();
+        return 0;
     }
 
-    public void setDatum(Object datum) {
-        this.datum = datum;
-    }
-
-    public Number getNumber() {
-        return (Number)datum;
-    }
-
-    public int getInt() {
-        return ((Number) datum).intValue();
+    public int getLineno() {
+        switch (type) {
+            case TokenStream.EQOP:
+            case TokenStream.RELOP:
+            case TokenStream.UNARYOP:
+            case TokenStream.PRIMARY:
+                Context.codeBug();
+        }
+        return intDatum;
     }
 
     /** Can only be called when <tt>getType() == TokenStream.NUMBER</tt> */
@@ -417,8 +442,9 @@ public class Node implements Cloneable {
         return ((NumberNode)this).number;
     }
 
+    /** Can only be called when <tt>this instanceof StringNode</tt> */
     public String getString() {
-        return (String) datum;
+        return ((StringNode)this).str;
     }
 
     public Node cloneNode() {
@@ -438,16 +464,30 @@ public class Node implements Cloneable {
     public String toString() {
         if (Context.printTrees) {
             StringBuffer sb = new StringBuffer(TokenStream.tokenToName(type));
-            if (type == TokenStream.TARGET) {
-                sb.append(' ');
-                sb.append(hashCode());
-            } else if (type == TokenStream.NUMBER) {
-                sb.append(' ');
-                sb.append(getDouble());
+            if (this instanceof StringNode) {
+                   sb.append(' ');
+                   sb.append(getString());
+
+            } else {
+                switch (type) {
+                    case TokenStream.TARGET:
+                        sb.append(' ');
+                        sb.append(hashCode());
+                        break;
+                    case TokenStream.NUMBER:
+                        sb.append(' ');
+                        sb.append(getDouble());
+                        break;
+                    case TokenStream.FUNCTION:
+                        FunctionNode fn = (FunctionNode)this;
+                        sb.append(' ');
+                        sb.append(fn.getFunctionName());
+                        break;
+                }
             }
-            if (datum != null) {
+            if (intDatum != -1) {
                 sb.append(' ');
-                sb.append(datum.toString());
+                sb.append(intDatum);
             }
             if (props == null)
                 return sb.toString();
@@ -523,7 +563,7 @@ public class Node implements Cloneable {
     protected Node next;     // next sibling
     protected Node first;    // first element of a linked list of children
     protected Node last;     // last element of a linked list of children
-    private Object datum;    // encapsulated data; depends on type
+    private int intDatum = -1;    // encapsulated int data; depends on type
     private UintMap props;
 }
 

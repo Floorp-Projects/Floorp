@@ -538,9 +538,12 @@ public class Block {
                 break;
             case TokenStream.GETPROP : {
                     Node baseChild = n.getFirstChild();
-                    if (baseChild != null) localCSE(n, baseChild, theCSETable, theFunction);
-                    if ((baseChild.getType() == TokenStream.PRIMARY)
-                            && (baseChild.getInt() == TokenStream.THIS)) {
+                    if (baseChild != null) {
+                        localCSE(n, baseChild, theCSETable, theFunction);
+                    }
+                    if (baseChild.getType() == TokenStream.PRIMARY
+                        && baseChild.getOperation() == TokenStream.THIS)
+                    {
                         Node nameChild = baseChild.getNextSibling();
                         if (nameChild.getType() == TokenStream.STRING) {
                             String theName = nameChild.getString();

@@ -249,10 +249,7 @@ public class Interpreter {
     }
 
     private int updateLineNumber(Node node, int iCodeTop) {
-        Object datum = node.getDatum();
-        if (datum == null || !(datum instanceof Number))
-            return iCodeTop;
-        int lineno = ((Number) datum).intValue();
+        int lineno = node.getLineno();
         if (lineno != itsLineNumber && lineno >= 0) {
             itsLineNumber = lineno;
             iCodeTop = addByte(LINE_ICODE, iCodeTop);
@@ -391,7 +388,7 @@ public class Interpreter {
                     iCodeTop = generateICode(child, iCodeTop);
                     child = child.getNextSibling();
                     iCodeTop = generateICode(child, iCodeTop);
-                    int op = node.getInt();
+                    int op = node.getOperation();
                     if (version == Context.VERSION_1_2) {
                         if (op == TokenStream.EQ)
                             op = TokenStream.SHEQ;
@@ -602,7 +599,7 @@ public class Interpreter {
 
             case TokenStream.UNARYOP :
                 iCodeTop = generateICode(child, iCodeTop);
-                switch (node.getInt()) {
+                switch (node.getOperation()) {
                     case TokenStream.VOID :
                         iCodeTop = addByte(TokenStream.POP, iCodeTop);
                         iCodeTop = addByte(TokenStream.UNDEFINED, iCodeTop);
@@ -982,7 +979,7 @@ public class Interpreter {
                 break;
 
             case TokenStream.PRIMARY:
-                iCodeTop = addByte(node.getInt(), iCodeTop);
+                iCodeTop = addByte(node.getOperation(), iCodeTop);
                 itsStackDepth++;
                 if (itsStackDepth > itsData.itsMaxStack)
                     itsData.itsMaxStack = itsStackDepth;

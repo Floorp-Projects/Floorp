@@ -464,8 +464,8 @@ public class Optimizer {
                     markDCPNumberContext(lChild);
                     markDCPNumberContext(rChild);
 
-                    if ((n.getInt() == TokenStream.INSTANCEOF)
-                            || (n.getInt() == TokenStream.IN)) {
+                    int op = n.getOperation();
+                    if (op == TokenStream.INSTANCEOF || op == TokenStream.IN) {
                         if (lType == TypeEvent.NumberType) {
                             if (!convertParameter(lChild)) {
                                 n.removeChild(lChild);
@@ -792,18 +792,18 @@ public class Optimizer {
                 }
                 else if (lt == TokenStream.STRING && rt == TokenStream.STRING) {
                       // string + string
-                    replace = new Node(TokenStream.STRING,
+                    replace = Node.newString(
                         lChild.getString() + rChild.getString());
                 }
                 else if (lt == TokenStream.STRING && rt == TokenStream.NUMBER) {
                     // string + num
-                    replace = new Node(TokenStream.STRING,
+                    replace = Node.newString(
                         lChild.getString() +
                         ScriptRuntime.numberToString(rChild.getDouble(), 10));
                 }
                 else if (lt == TokenStream.NUMBER && rt == TokenStream.STRING) {
                     // num + string
-                    replace = new Node(TokenStream.STRING,
+                    replace = Node.newString(
                         ScriptRuntime.numberToString(lChild.getDouble(), 10) +
                         rChild.getString());
                 }
@@ -974,7 +974,7 @@ public class Optimizer {
         int result = 0;
         int type = node.getType();
         if (type == TokenStream.PRIMARY) {
-            int id = node.getInt();
+            int id = node.getOperation();
             if (id == TokenStream.FALSE || id == TokenStream.NULL
                 || id == TokenStream.UNDEFINED)
             {

@@ -38,7 +38,7 @@ package org.mozilla.javascript;
 
 import java.util.*;
 
-public class FunctionNode extends Node {
+public class FunctionNode extends Node.StringNode {
 
     public FunctionNode(String name, Node left, Node right) {
         super(TokenStream.FUNCTION, left, right, name);
@@ -46,7 +46,7 @@ public class FunctionNode extends Node {
     }
 
     public String getFunctionName() {
-        return getString();
+        return str;
     }
 
     public VariableTable getVariableTable() {
