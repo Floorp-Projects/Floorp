@@ -237,10 +237,6 @@ CNSContext::~CNSContext()
 
 	if (mContext.INTL_CSIInfo != NULL)
 		XP_FREE(mContext.INTL_CSIInfo);
-
-	if (CFrontApp::GetApplication()->GetNetcasterContext() == &mContext) {
-		CFrontApp::GetApplication()->SetNetcasterContext(NULL);
-	}	
 }
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
