@@ -1451,6 +1451,8 @@ extern "C" JSBool pref_InitInitialObjects()
 {
     JSBool funcResult;
     nsresult rv;
+    PRBool exists;
+    
     NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
     if (NS_FAILED(rv))
     	return JS_TRUE;
@@ -1500,14 +1502,23 @@ extern "C" JSBool pref_InitInitialObjects()
 		goto done;
 	}
 	
-    worked = (JSBool)(pref_OpenFileSpec(
-    	specialChild,
-    	PR_FALSE,
-    	PR_FALSE,
-    	PR_FALSE,
-    	PR_FALSE) == PREF_NOERROR);
-	NS_ASSERTION(worked, "initpref.js not parsed successfully");
-	// Keep this child
+    if (NS_FAILED(specialChild->Exists(&exists)))
+	{
+		funcResult = JS_FALSE;
+		goto done;
+	}
+
+    if (exists)
+    {
+        worked = (JSBool)(pref_OpenFileSpec(
+    	    specialChild,
+    	    PR_FALSE,
+    	    PR_FALSE,
+    	    PR_FALSE,
+    	    PR_FALSE) == PREF_NOERROR);
+	    NS_ASSERTION(worked, "initpref.js not parsed successfully");
+    }
+    // Keep this child
 
 #ifdef DEBUG_prefs
     printf("Parsing default JS files.\n");
@@ -1604,9 +1615,13 @@ extern "C" JSBool pref_InitInitialObjects()
 		if (NS_FAILED(specialChild2->AppendRelativeUnixPath((char*)specialFiles[k])))
 	    	continue;
 
+
 #ifdef DEBUG_prefs
             printf("Parsing %s\n", specialFiles[k]);
 #endif /* DEBUG_prefs */
+
+        if (NS_FAILED(specialChild2->Exists(&exists)))
+	    	continue;
 
 	    worked = (JSBool)(pref_OpenFileSpec(
     		specialChild2,
