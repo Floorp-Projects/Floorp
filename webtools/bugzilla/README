@@ -267,6 +267,12 @@ documentation.
 After you've tweaked the permissions, run "mysqladmin reload" to make
 sure that the database server knows to look at your new permission list.
 
+Or, at the mysql prompt:
+
+mysql> flush privileges;
+
+You must explictly tell mysql to reload permissions before running checksetup.pl.
+
 Next, you can just run the magic checksetup.pl script.  (Many thanks
 to Holger Schurig <holgerschurig@nikocity.de> for writing this script!)
 It will make sure things have reasonable permissions, set up the "data"
