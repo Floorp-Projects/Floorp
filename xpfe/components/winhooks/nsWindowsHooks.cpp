@@ -48,8 +48,8 @@ const char *xulExts[] = { ".xul", 0 };
 const char *htmExts[] = { ".htm", ".html", 0 };
 
 static FileTypeRegistryEntry
-    jpg( jpgExts, "MozillaJPEG", "Mozilla JPEG Image File" ),
-    gif( gifExts, "MozillaGIF",  "Mozilla GIF Image File"  ),
+    jpg( jpgExts, "MozillaJPEG", "Mozilla Joint Photographic Experts Group Image File" ),
+    gif( gifExts, "MozillaGIF",  "Mozilla Graphics Interchange Format Image File" ),
     png( pngExts, "MozillaPNG",  "Mozilla Portable Network Graphic Image File" ),
     xml( xmlExts, "MozillaXML",  "Mozilla XML File Document" ),
     xul( xulExts, "MozillaXUL",  "Mozilla XUL File Document" );
