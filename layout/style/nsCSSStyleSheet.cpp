@@ -3952,7 +3952,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       if (result) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
-          if (localTrue == (NS_COMFALSE == data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {
+          if (localTrue == (!data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {
             result = PR_FALSE;
             break;
           }

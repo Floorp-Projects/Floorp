@@ -2265,13 +2265,13 @@ nsGenericHTMLElement::GetClasses(nsVoidArray& aArray) const
   return NS_OK;
 }
 
-nsresult
+NS_IMETHODIMP_(PRBool)
 nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
-  if (nsnull != mAttributes) {
+  if (mAttributes) {
     return mAttributes->HasClass(aClass, aCaseSensitive);
   }
-  return NS_COMFALSE;
+  return PR_FALSE;
 }
 
 nsresult

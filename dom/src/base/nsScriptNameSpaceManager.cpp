@@ -308,7 +308,7 @@ nsScriptNameSpaceManager::FillHashWithDOMInterfaces()
   nsCOMPtr<nsIInterfaceInfo> if_info;
   nsXPIDLCString if_name;
 
-  for ( ; domInterfaces->IsDone() == NS_COMFALSE; domInterfaces->Next()) {
+  for ( ; domInterfaces->IsDone() == NS_ENUMERATOR_FALSE; domInterfaces->Next()) {
     rv = domInterfaces->CurrentItem(getter_AddRefs(entry));
     NS_ENSURE_SUCCESS(rv, rv);
 

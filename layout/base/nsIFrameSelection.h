@@ -155,16 +155,14 @@ public:
    */
   NS_IMETHOD ShutDown() = 0;
 
-  /** HandleKeyEvent will accept an event and frame and 
-   *  will return NS_OK if it handles the event or NS_COMFALSE if not.
+  /** HandleKeyEvent will accept an event.
    *  <P>DOES NOT ADDREF<P>
    *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
    *  @param aFrame is the frame that MAY handle the event
    */
   NS_IMETHOD HandleTextEvent(nsGUIEvent *aGuiEvent) = 0;
 
-  /** HandleKeyEvent will accept an event and frame and 
-   *  will return NS_OK if it handles the event or NS_COMFALSE if not.
+  /** HandleKeyEvent will accept an event and a PresContext.
    *  <P>DOES NOT ADDREF<P>
    *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
    *  @param aFrame is the frame that MAY handle the event

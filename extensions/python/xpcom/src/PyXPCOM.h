@@ -60,6 +60,9 @@ extern nsIID Py_nsIID_NULL;
 **************************************************************************
 *************************************************************************/
 
+#define NS_PYXPCOM_NO_SUCH_METHOD \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_PYXPCOM, 0)
+
 // The exception object (loaded from the xpcom .py code)
 extern PYXPCOM_EXPORT PyObject *PyXPCOM_Error;
 

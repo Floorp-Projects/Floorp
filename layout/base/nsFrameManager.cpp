@@ -74,6 +74,7 @@
 #include "nsUnicharUtils.h"
 #include "nsPrintfCString.h"
 #include "nsDummyLayoutRequest.h"
+#include "nsLayoutErrors.h"
 
   #ifdef DEBUG
     //#define NOISY_DEBUG

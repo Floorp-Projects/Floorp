@@ -68,13 +68,6 @@ typedef void
 // Option flags for GetFrameProperty() member function
 #define NS_IFRAME_MGR_REMOVE_PROP   0x0001
 
-// nsresult error codes for frame property functions
-#define NS_IFRAME_MGR_PROP_NOT_THERE \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 1)
-
-#define NS_IFRAME_MGR_PROP_OVERWRITTEN \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT, 2)
-
 /**
  * Frame manager interface. The frame manager serves two purposes:
  * <li>provides a service for mapping from content to frame and from out-of-flow

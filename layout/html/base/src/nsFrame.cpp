@@ -96,6 +96,7 @@
 #include "nsILookAndFeel.h"
 #include "nsLayoutCID.h"
 #include "nsWidgetsCID.h"     // for NS_LOOKANDFEEL_CID
+#include "nsLayoutErrors.h"
 
 static NS_DEFINE_CID(kPrefCID,     NS_PREF_CID);//for triple click pref
 static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
@@ -3357,7 +3358,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIPresContext* aPresContext,
                     aPos->mContentOffsetEnd = aPos->mContentOffset;
                     //result frame is the result frames parent.
                     resultFrame->GetParent(&aPos->mResultFrame);
-                    return NS_COMFALSE;
+                    return NS_POSITION_BEFORE_TABLE;
                   }
                 }
               }

@@ -2419,7 +2419,7 @@ nsresult nsMsgDBEnumerator::PrefetchNext()
     else
       flags = 0;
   } 
-  while (mFilter && mFilter(mResultHdr, mClosure) != NS_OK && !(flags & MSG_FLAG_EXPUNGED));
+  while (mFilter && NS_FAILED(mFilter(mResultHdr, mClosure)) && !(flags & MSG_FLAG_EXPUNGED));
   
   if (mResultHdr) 
   {
@@ -2601,7 +2601,7 @@ nsresult nsMsgDBThreadEnumerator::PrefetchNext()
 			if (numChildren == 0)
 				continue;
 		}
-		if (mFilter && mFilter(mResultThread) != NS_OK)
+		if (mFilter && NS_FAILED(mFilter(mResultThread)))
 			continue;
 		else
 			break;
@@ -2642,7 +2642,7 @@ nsMsgFlagSetFilter(nsIMsgDBHdr *msg, void *closure)
   PRUint32 msgFlags, desiredFlags;
   desiredFlags = * (PRUint32 *) closure;
   msg->GetFlags(&msgFlags);
-  return (msgFlags & desiredFlags) ? NS_OK : NS_COMFALSE;
+  return (msgFlags & desiredFlags) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 static nsresult
@@ -2653,7 +2653,7 @@ nsMsgUnreadFilter(nsIMsgDBHdr* msg, void* closure)
     nsresult rv = db->IsHeaderRead(msg, &wasRead);
     if (NS_FAILED(rv)) 
 		return rv;
-    return !wasRead ? NS_OK : NS_COMFALSE;
+    return !wasRead ? NS_OK : NS_ERROR_FAILURE;
 }
 
 nsresult  
@@ -2686,7 +2686,7 @@ nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
     nsresult rv = db->IsHeaderRead(msg, &wasRead);
     if (NS_FAILED(rv))
         return rv;
-    return wasRead ? NS_OK : NS_COMFALSE;
+    return wasRead ? NS_OK : NS_ERROR_FAILURE;
 }
 
 // note that we can't just use EnumerateMessagesWithFlag(MSG_FLAG_READ) because we need

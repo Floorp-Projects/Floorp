@@ -802,7 +802,7 @@ nsresult nsMsgThreadEnumerator::Prefetch()
         nsMsgKey parentKey;
         nsMsgKey curKey;
         
-        if (mFilter && mFilter(mResultHdr, mClosure) != NS_OK) {
+        if (mFilter && NS_FAILED(mFilter(mResultHdr, mClosure))) {
           mResultHdr = nsnull;
           continue;
         }
@@ -867,7 +867,7 @@ nsMsgThreadUnreadFilter(nsIMsgDBHdr* msg, void* closure)
     nsresult rv = db->IsHeaderRead(msg, &wasRead);
     if (NS_FAILED(rv))
         return rv;
-    return !wasRead ? NS_OK : NS_COMFALSE;
+    return !wasRead ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsMsgThread::EnumerateUnreadMessages(nsMsgKey parentKey, nsISimpleEnumerator* *result)

@@ -33,6 +33,7 @@ EXPORTS		= \
 nsIContent.h \
 nsIAnonymousContent.h \
 nsIContentIterator.h \
+nsContentErrors.h \
 nsContentPolicyUtils.h \
 nsContentUtils.h \
 nsIDocument.h \

@@ -184,7 +184,7 @@ public:
 
     // Style Helpers
     nsresult GetClasses(nsVoidArray& aArray) const;
-    nsresult HasClass(nsIAtom* aClass) const;
+    PRBool HasClass(nsIAtom* aClass) const;
 
     nsresult SetClassList(nsClassList* aClassList);
     nsresult UpdateClassList(const nsAString& aValue);

@@ -517,7 +517,7 @@ static nsresult do_dispatch(
 	method = PyObject_GetAttrString(real_ob, (char *)szMethodName);
 	if ( !method ) {
 		PyErr_Clear();
-		ret = NS_COMFALSE;
+		ret = NS_PYXPCOM_NO_SUCH_METHOD;
 		goto done;
 	}
 	// Make the call
@@ -564,7 +564,7 @@ nsresult PyG_Base::InvokeNativeViaPolicy(
 	nsresult nr = InvokeNativeViaPolicyInternal(szMethodName, ppResult, szFormat, va);
 	va_end(va);
 
-	if (nr==NS_COMFALSE) {
+	if (nr == NS_PYXPCOM_NO_SUCH_METHOD) {
 		// Only problem was missing method.
 		PyErr_Format(PyExc_AttributeError, "The object does not have a '%s' function.", szMethodName);
 	}
@@ -587,7 +587,7 @@ nsresult PyG_Base::InvokeNativeGetViaPolicy(
 	strncat(buf, szPropertyName, sizeof(buf)*sizeof(buf[0])-strlen(buf)-1);
 	buf[sizeof(buf)/sizeof(buf[0])-1] = '\0';
 	ret = InvokeNativeViaPolicyInternal(buf, ppResult, nsnull, nsnull);
-	if (ret == NS_COMFALSE) {
+	if (ret == NS_PYXPCOM_NO_SUCH_METHOD) {
 		// No method of that name - just try a property.
 		// Bit to a hack here to maintain the use of a policy.
 		// We actually get the policies underlying object
@@ -637,7 +637,7 @@ nsresult PyG_Base::InvokeNativeSetViaPolicy(
 	va_start(va, szPropertyName);
 	ret = InvokeNativeViaPolicyInternal(buf, NULL, "O", va);
 	va_end(va);
-	if (ret == NS_COMFALSE) {
+	if (ret == NS_PYXPCOM_NO_SUCH_METHOD) {
 		// No method of that name - just try a property.
 		// Bit to a hack here to maintain the use of a policy.
 		// We actually get the policies underlying object

@@ -79,7 +79,4 @@ extern NS_EXPORT nsresult
 extern NS_EXPORT nsresult
   NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult);
 
-#define NS_HTML_STYLE_PROPERTY_NOT_THERE \
-  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,2)
-
 #endif /* nsIHTMLStyleSheet_h___ */

@@ -68,6 +68,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
 #include "nsThemeConstants.h"
+#include "nsContentErrors.h"
 
 #include "prprf.h"
 

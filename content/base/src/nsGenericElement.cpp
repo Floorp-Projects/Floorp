@@ -2234,10 +2234,10 @@ nsGenericElement::GetClasses(nsVoidArray& aArray) const
   return NS_OK;
 }
 
-NS_IMETHODIMP
+NS_IMETHODIMP_(PRBool)
 nsGenericElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {
-  return NS_COMFALSE;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP

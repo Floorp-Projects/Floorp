@@ -89,6 +89,8 @@
 #define NS_ERROR_MODULE_DOM_XPATH  22
 #define NS_ERROR_MODULE_DOM_RANGE  23
 #define NS_ERROR_MODULE_URILOADER  24
+#define NS_ERROR_MODULE_CONTENT    25
+#define NS_ERROR_MODULE_PYXPCOM    26
 
 /* NS_ERROR_MODULE_GENERAL should be used by modules that do not
  * care if return code values overlap. Callers of methods that
@@ -149,9 +151,6 @@
 
 /* Standard "it worked" return value */
 #define NS_OK                              0
-
-/* The backwards COM false. This is deprecated, please do not use */
-#define NS_COMFALSE                        1
 
 #define NS_ERROR_BASE                      ((nsresult) 0xC1F30000)
 
