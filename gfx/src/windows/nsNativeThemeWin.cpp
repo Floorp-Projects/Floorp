@@ -57,6 +57,11 @@
 #include "nsUnicharUtils.h"
 #include <malloc.h>
 
+/* 
+ * The following constants are used to determine how a widget is drawn using
+ * Windows' Theme API. For more information on theme parts and states see
+ * http://msdn.microsoft.com/library/default.asp?url=/library/en-us/shellcc/platform/commctls/userex/topics/partsandstates.asp
+ */
 #define THEME_COLOR 204
 #define THEME_FONT  210
 
@@ -66,6 +71,10 @@
 #define TS_ACTIVE    3
 #define TS_DISABLED  4
 #define TS_FOCUSED   5
+
+// Toolbarbutton constants
+#define TB_CHECKED       5
+#define TB_HOVER_CHECKED 6
 
 // Button constants
 #define BP_BUTTON    1
@@ -442,11 +451,19 @@ nsNativeThemeWin::GetThemePartAndState(nsIFrame* aFrame, PRUint8 aWidgetType,
       PRInt32 eventState = GetContentState(aFrame, aWidgetType);
       if (eventState & NS_EVENT_STATE_HOVER && eventState & NS_EVENT_STATE_ACTIVE)
         aState = TS_ACTIVE;
-      else if (eventState & NS_EVENT_STATE_HOVER)
-        aState = TS_HOVER;
-      else 
-        aState = TS_NORMAL;
-      
+      else if (eventState & NS_EVENT_STATE_HOVER) {
+        if (IsCheckedButton(aFrame))
+          aState = TB_HOVER_CHECKED;
+        else
+          aState = TS_HOVER;
+      }
+      else {
+        if (IsCheckedButton(aFrame))
+          aState = TB_CHECKED;
+        else
+          aState = TS_NORMAL;
+      }
+     
       return NS_OK;
     }
     case NS_THEME_SCROLLBAR_BUTTON_UP:
