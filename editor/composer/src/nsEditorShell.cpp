@@ -244,6 +244,7 @@ nsEditorShell::nsEditorShell()
 ,  mParserObserver(nsnull)
 ,  mStateMaintainer(nsnull)
 ,  mEditorController(nsnull)
+,  mComposerController(nsnull)
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
 ,  mCloseWindowWhenLoaded(PR_FALSE)
@@ -366,7 +367,12 @@ nsEditorShell::ResetEditingState()
   {
     mEditorController->SetCommandRefCon(nsnull);
   }
-  
+
+  if (mComposerController)
+  {
+    mComposerController->SetCommandRefCon(nsnull);
+  }
+
   mEditorType = eUninitializedEditorType;
   mEditor = 0;  // clear out the nsCOMPtr
 
@@ -499,11 +505,11 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   }
   
   // set the editor in the editor controller  
+  nsCOMPtr<nsISupports> editorAsISupports = do_QueryInterface(editor);
   if (mEditorController)
-  {
-    nsCOMPtr<nsISupports> editorAsISupports = do_QueryInterface(editor);
     mEditorController->SetCommandRefCon(editorAsISupports);
-  }
+  if (mComposerController)
+    mComposerController->SetCommandRefCon(editorAsISupports);
 
   rv = editor->PostCreate();
   if (NS_FAILED(rv)) return rv;
@@ -683,15 +689,16 @@ nsEditorShell::SetContentWindow(nsIDOMWindowInternal* aWin)
   }
   
   {
-    // the second is a composer controller, and takes an nsIEditorShell as the refCon
+    // the second is a composer controller
     nsCOMPtr<nsIController> controller = do_CreateInstance("@mozilla.org/editor/composercontroller;1", &rv);
     if (NS_FAILED(rv)) return rv;  
     nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
-    
-    nsCOMPtr<nsISupports> shellAsISupports = do_QueryInterface((nsIEditorShell*)this);
-    rv = editorController->Init(shellAsISupports);
+    nsCOMPtr<nsISupports> editorAsISupports = do_QueryInterface(mEditor);
+    rv = editorController->Init(editorAsISupports);    // we set the editor later when we have one
     if (NS_FAILED(rv)) return rv;
-    
+
+    mComposerController = editorController;   // temp weak link, so we can get it and set the editor later
+
     rv = controllers->InsertControllerAt(eComposerController, controller);
     if (NS_FAILED(rv)) return rv;  
   }
