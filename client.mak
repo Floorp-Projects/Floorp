@@ -124,14 +124,6 @@ NSPR_CO_FLAGS=-r NSPRPUB_CLIENT_BRANCH
 
 CVSCO_NSPR = cvs -q $(CVS_FLAGS) co $(NSPR_CO_FLAGS) -P
 
-NSPR_CONFIGURE = configure --with-mozilla \
-                 --includedir=$(MOZ_DIST_FLIPPED)/include \
-                 --bindir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/bin \
-                 --libdir=$(MOZ_DIST_FLIPPED)/$(MOZ_OBJDIR)/lib
-!if !defined(MOZ_DEBUG)
-NSPR_CONFIGURE=$(NSPR_CONFIGURE) --enable-optimize --disable-debug
-!endif
-
 #//------------------------------------------------------------------------
 #// Figure out how to pull NSS and PSM libs.
 #// If no NSS_CO_TAG or PSM_CO_TAG is specified, use the default static tag
@@ -227,24 +219,20 @@ pull_clientmak:
 # nmake has to be hardcoded, or we have to depend on mozilla/config
 # being pulled already to figure out what $(NMAKE) should be.
 
-$(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\configure $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\configure.in
-	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	sh $(NSPR_CONFIGURE)
-
 clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
 build_all: build_nspr build_seamonkey
 
-distclean: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status
+distclean: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	gmake distclean
+	gmake -f gmakefile.win distclean MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)
 	nmake /f client.mak clobber_psm
 	nmake /f client.mak clobber_seamonkey
 		
-clobber_nspr: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status
+clobber_nspr: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	gmake clobber
+	gmake -f gmakefile.win clobber_all MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 
 clobber_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
@@ -255,7 +243,7 @@ clobber_xpconnect:
 	-rd /s /q dist
 	set DIST_DIRS=1
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	nmake -f makefile.win clobber_all
+	gmake -f gmakefile.win clobber_all  MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\include
 	nmake -f makefile.win clobber_all
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\modules\libreg
@@ -294,9 +282,9 @@ depend_xpconnect:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\js\src
 	nmake -f makefile.win depend
 
-build_nspr: $(MOZ_SRC)\$(MOZ_TOP)\nsprpub\config.status
+build_nspr: 
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
-	gmake
+	gmake -f gmakefile.win MOZ_SRC_FLIPPED=$(MOZ_SRC_FLIPPED)
 
 build_psm:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
