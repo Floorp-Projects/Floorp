@@ -119,6 +119,17 @@ protected:
                             nsSize*              aMaxElementSize,
                             nsSize&              aKidMaxElementSize);
 
+  void ShrinkWrapChildren(nsIPresContext* aPresContext, 
+                          nsReflowMetrics& aDesiredSize,
+                          nsSize* aMaxElementSize);
+
+  void SetRowHeight(nsIPresContext* aPresContext,
+                    nsIFrame*       aRowFrame,
+                    PRInt32         aRowIndex,
+                    nscoord         aRowHeight,
+                    nscoord         aMaxCellHeight,
+                    PRBool&         aHasRowSpanningCell);
+
   /**
    * Reflow the frames we've already created
    *
