@@ -50,16 +50,33 @@ function Init()
     var service = enumerator.GetNext();
     service = service.QueryInterface(Components.interfaces.nsIRDFResource);
 
-    addOption(registry, service);
+    addOption(registry, service, false);
   }
   enableButtons();
 }
 
-function addOption(registry, service) {
+function addOption(registry, service, selectIt) {
   
   var option_title = getAttr(registry, service, 'title');
   var option_customize = getAttr(registry, service, 'customize');
   var option_content   = getAttr(registry, service, 'content');
+
+  // Check to see if the panel already exists  
+  var list = document.getElementById('selectList'); 
+  var list_length = list.childNodes.length;
+	
+  for (var ii=0; ii < list_length; ii++) {
+    //dump(list.childNodes.item(ii).getAttribute('title') + '\n');
+
+    var content   = list.childNodes.item(ii).getAttribute('content');
+
+    if (content == option_content) {
+      if (selectIt) {
+        list.selectedIndex = ii;
+      }
+      return;
+    }
+  }
 
   var optionSelect = createOptionTitle(option_title);
   var option = document.createElement('html:option');
@@ -67,12 +84,13 @@ function addOption(registry, service) {
   option.setAttribute('title', option_title);
   option.setAttribute('customize', option_customize);
   option.setAttribute('content', option_content);
-  
  
   option.appendChild(optionSelect);
 
-  var sideoption = document.getElementById('selectList');
-  sideoption.appendChild(option);
+  list.appendChild(option);
+  if (selectIt) {
+    list.selectedIndex = list_length;
+  }
 }
 
 function createOptionTitle(titletext)
@@ -185,11 +203,19 @@ function CustomizePanel()
 
 function RemovePanel()
 {
-  var list  = document.getElementById('selectList');	
-  var index = list.selectedIndex;
+  var list        = document.getElementById('selectList');	
+  var index       = list.selectedIndex;
+
   if (index != -1) {
     // XXX prompt user
     list.options[index] = null;
+
+    // Clean up the selection
+    if (index == list.length) {
+      list.selectedIndex = index - 1;
+    } else {
+      list.selectedIndex = index;
+    }
   }
   enableSave();
 }
@@ -214,12 +240,12 @@ function Save()
     //datasource.Init(FileURL);
     datasource.Init(sidebar.db);
     datasource.Open(true);
-    dump("datasource = " + datasource + ", opened for the first time.\n");
+    //dump("datasource = " + datasource + ", opened for the first time.\n");
   }
   catch (ex) {
       //datasource = RDF.GetDataSource(FileURL);
     datasource = RDF.GetDataSource(sidebar.db);
-    dump("datasource = " + datasource + ", using registered datasource.\n");
+    //dump("datasource = " + datasource + ", using registered datasource.\n");
   }
 
   // Create a "container" wrapper around the "NC:BrowserSidebarRoot"
@@ -228,7 +254,7 @@ function Save()
   container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
 
   container.Init(datasource, RDF.GetResource(sidebar.resource));
-  dump("initialized container " + container + " on " + sidebar.resource+"\n");
+  //dump("initialized container " + container + " on " + sidebar.resource+"\n");
 
   // Remove all the current panels
   //
@@ -243,23 +269,23 @@ function Save()
   // Add the new panel list
   //
   var count = container.GetCount();
-  dump("container has " + count + " elements\n");
+  //dump("container has " + count + " elements\n");
 
   var list = document.getElementById('selectList'); 
   var list_length = list.childNodes.length;
 	
   for (var ii=0; ii < list_length; ii++, count++) {
-    dump(list.childNodes.item(ii).getAttribute('title') + '\n');
+    //dump(list.childNodes.item(ii).getAttribute('title') + '\n');
 
     var title     = list.childNodes.item(ii).getAttribute('title');
     var content   = list.childNodes.item(ii).getAttribute('content');
     var customize = list.childNodes.item(ii).getAttribute('customize');
 
     var element = RDF.GetResource(FileURL + "#" + count);
-    dump(FileURL + "#" + count + "\n");
+    //dump(FileURL + "#" + count + "\n");
 	
     container.AppendElement(element);
-    dump("appended " + element + " to the container\n");
+    //dump("appended " + element + " to the container\n");
 
     // Now make some sidebar-ish assertions about it...
     datasource.Assert(element,
@@ -275,12 +301,12 @@ function Save()
                       RDF.GetLiteral(customize),
                       true);
 
-    dump("added assertions about " + element + "\n");
+    //dump("added assertions about " + element + "\n");
   }
 
   // Now serialize it back to disk
   datasource.Flush();
-  dump("wrote " + FileURL + " back to disk.\n");
+  //dump("wrote " + FileURL + " back to disk.\n");
 
   //window.close();
 }
@@ -304,6 +330,7 @@ function AddPanel()
   var tree = document.getElementById('other-panels');
   var database = tree.database;
   var select_list = document.getElementsByAttribute("selected", "true");
+  var isFirstAddition = true;
   for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++) {
     var node = select_list[nodeIndex];
     if (!node)    break;
@@ -311,7 +338,8 @@ function AddPanel()
     if (!id)      break;
     var rdfNode = RDF.GetResource(id);
     if (!rdfNode) break;
-    addOption(database,rdfNode);
+    addOption(database, rdfNode, isFirstAddition);
+    isFirstAddition = false;
   }
   enableSave();
 }
