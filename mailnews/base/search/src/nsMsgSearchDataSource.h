@@ -40,10 +40,12 @@ public:
     NS_DECL_NSIMSGSEARCHNOTIFY
 
     NS_IMETHOD GetURI(char **aResult);
+
     NS_IMETHOD GetTargets(nsIRDFResource *aSource,
                           nsIRDFResource *aProperty,
                           PRBool aTruthValue,
                           nsISimpleEnumerator **aResult);
+
     NS_IMETHOD HasAssertion(nsIRDFResource *aSource,
                             nsIRDFResource *aProperty,
                             nsIRDFNode *aTarget,
@@ -57,6 +59,8 @@ public:
 private:
     nsCOMPtr<nsIRDFResource> mSearchRoot;
     nsCOMPtr<nsIMsgSearchSession> mSearchSession;
+
+    nsCOMPtr<nsISupportsArray> mSearchResults;
 
     PRUint32 mURINum;
 

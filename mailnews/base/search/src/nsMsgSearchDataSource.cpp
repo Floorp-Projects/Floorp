@@ -28,6 +28,11 @@
 #include "nsIMessage.h"
 #include "nsIMsgHdr.h"
 #include "nsIMsgSearchSession.h"
+#include "nsEnumeratorUtils.h"
+
+#ifdef DEBUG_alecf
+#include "nsXPIDLString.h"
+#endif
 
 nsCOMPtr<nsIRDFResource> nsMsgSearchDataSource::kNC_MessageChild;
 nsrefcnt nsMsgSearchDataSource::gInstanceCount = 0;
@@ -49,6 +54,12 @@ nsMsgSearchDataSource::Init()
     }
 
     mURINum = gCurrentURINum++;
+    
+    nsCAutoString uri("mailsearch:#");
+    uri.AppendInt(mURINum);
+    getRDFService()->GetResource(uri.GetBuffer(), getter_AddRefs(mSearchRoot));
+
+    NS_NewISupportsArray(getter_AddRefs(mSearchResults));
     return NS_OK;
 }
 
@@ -68,6 +79,10 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
 {
     nsresult rv;
 
+#ifdef DEBUG
+    printf("nsMsgSearchDataSource::OnSearchHit!!\n");
+#endif
+    
     nsCOMPtr<nsIMessage> message;
     folder->CreateMessageFromMsgDBHdr(aMsgHdr, getter_AddRefs(message));
     
@@ -76,6 +91,9 @@ nsMsgSearchDataSource::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
     nsCOMPtr<nsIRDFResource> messageResource =
       do_QueryInterface(message, &rv);
 
+    // remember that we got this, so we can later answer HasAssertion()
+    mSearchResults->AppendElement(NS_STATIC_CAST(nsISupports*,messageResource.get()));
+    
     // should probably try to cache this with an in-memory datasource
     // or something
     NotifyObservers(mSearchRoot, kNC_MessageChild, messageResource, PR_TRUE, PR_FALSE);
@@ -103,11 +121,7 @@ nsMsgSearchDataSource::GetSearchSession(nsIMsgSearchSession** aResult)
 NS_IMETHODIMP
 nsMsgSearchDataSource::GetURI(char * *aURI)
 {
-    nsCAutoString uri("mailsearch:#");
-    uri.AppendInt(mURINum);
-    
-    *aURI = uri.ToNewCString();
-    return NS_OK;
+    return mSearchRoot->GetValue(aURI);
 }
 
 
@@ -118,8 +132,7 @@ nsMsgSearchDataSource::GetTargets(nsIRDFResource *aSource,
                                   PRBool aTruthValue,
                                   nsISimpleEnumerator **aResult)
 {
-    // decode the search results?
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_NewArrayEnumerator(aResult, mSearchResults);
 }
 
 
@@ -131,7 +144,51 @@ nsMsgSearchDataSource::HasAssertion(nsIRDFResource *aSource,
                                     PRBool aTruthValue,
                                     PRBool *aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    if (!aTruthValue) return NS_RDF_NO_VALUE;
+    nsresult rv;
+    
+#ifdef DEBUG_alecf
+    nsXPIDLCString sourceVal;
+    aSource->GetValueConst(getter_Shares(sourceVal));
+
+    nsXPIDLCString propVal;
+    aProperty->GetValueConst(getter_Shares(propVal));
+
+    nsCOMPtr<nsIRDFResource> targetRes(do_QueryInterface(aTarget, &rv));
+    nsXPIDLCString targetVal;
+    if (NS_SUCCEEDED(rv))
+        targetRes->GetValueConst(getter_Shares(targetVal));
+
+    printf("HasAssertion(%s, %s, %s..)?\n",
+           (const char*)sourceVal,
+           (const char*)propVal,
+           (const char*)targetVal ? (const char*)targetVal : "(null)");
+        
+#endif
+
+    if (aSource == mSearchRoot.get() &&
+        aProperty == kNC_MessageChild.get()) {
+#ifdef DEBUG_alecf
+        printf("I care about this one.\n");
+#endif
+
+        PRInt32 indexOfResource;
+        mSearchResults->GetIndexOf(NS_STATIC_CAST(nsISupports*,aTarget),
+                                    &indexOfResource);
+
+        if (indexOfResource != -1) {
+#ifdef DEBUG_alecf
+            printf("And it's a success!\n");
+#endif
+            *aResult = PR_TRUE;
+            return NS_OK;
+        }
+    }
+    
+    
+    return NS_RDF_NO_VALUE;
 }
 
 
@@ -140,6 +197,15 @@ NS_IMETHODIMP
 nsMsgSearchDataSource::ArcLabelsOut(nsIRDFResource *aSource,
                                     nsISimpleEnumerator **aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+    
+    if (aSource == mSearchRoot.get()) {
+        rv = NS_NewSingletonEnumerator(aResult, kNC_MessageChild);
+    }
+
+    else
+        rv = NS_NewEmptyEnumerator(aResult);
+
+    return rv;
 }
 
