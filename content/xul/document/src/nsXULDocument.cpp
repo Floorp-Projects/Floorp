@@ -2112,11 +2112,13 @@ nsXULDocument::StartLayout(void)
 {
     if (!mRootContent) {
 #ifdef PR_LOGGING
-        nsCAutoString urlspec;
-        mDocumentURI->GetSpec(urlspec);
+        if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING)) {
+            nsCAutoString urlspec;
+            mDocumentURI->GetSpec(urlspec);
 
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
-               ("xul: unable to layout '%s'; no root content", urlspec.get()));
+            PR_LOG(gXULLog, PR_LOG_WARNING,
+                   ("xul: unable to layout '%s'; no root content", urlspec.get()));
+        }
 #endif
         return NS_OK;
     }
@@ -2562,16 +2564,18 @@ nsXULDocument::PrepareToWalk()
 
     if (! proto) {
 #ifdef PR_LOGGING
-        nsCOMPtr<nsIURI> url;
-        rv = mCurrentPrototype->GetURI(getter_AddRefs(url));
-        if (NS_FAILED(rv)) return rv;
+        if (PR_LOG_TEST(gXULLog, PR_LOG_ERROR)) {
+            nsCOMPtr<nsIURI> url;
+            rv = mCurrentPrototype->GetURI(getter_AddRefs(url));
+            if (NS_FAILED(rv)) return rv;
 
-        nsCAutoString urlspec;
-        rv = url->GetSpec(urlspec);
-        if (NS_FAILED(rv)) return rv;
+            nsCAutoString urlspec;
+            rv = url->GetSpec(urlspec);
+            if (NS_FAILED(rv)) return rv;
 
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
-               ("xul: error parsing '%s'", urlspec.get()));
+            PR_LOG(gXULLog, PR_LOG_ERROR,
+                   ("xul: error parsing '%s'", urlspec.get()));
+        }
 #endif
 
         return NS_OK;
@@ -3261,13 +3265,13 @@ nsXULDocument::CreateElementFromPrototype(nsXULPrototypeElement* aPrototype,
     nsresult rv = NS_OK;
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS)) {
+    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
         nsAutoString tagstr;
         aPrototype->mNodeInfo->GetQualifiedName(tagstr);
 
         nsCAutoString tagstrC;
         tagstrC.AssignWithConversion(tagstr);
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
+        PR_LOG(gXULLog, PR_LOG_NOTICE,
                ("xul: creating <%s> from prototype",
                 tagstrC.get()));
     }
@@ -3599,11 +3603,13 @@ nsXULDocument::OverlayForwardReference::Resolve()
     if (NS_FAILED(rv)) return eResolve_Error;
 
 #ifdef PR_LOGGING
-    nsCAutoString idC;
-    idC.AssignWithConversion(id);
-    PR_LOG(gXULLog, PR_LOG_ALWAYS,
-           ("xul: overlay resolved '%s'",
-            idC.get()));
+    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
+        nsCAutoString idC;
+        idC.AssignWithConversion(id);
+        PR_LOG(gXULLog, PR_LOG_NOTICE,
+               ("xul: overlay resolved '%s'",
+                idC.get()));
+    }
 #endif
 
     mResolved = PR_TRUE;
@@ -3747,13 +3753,13 @@ nsXULDocument::OverlayForwardReference::Merge(nsIContent* aTargetNode,
 nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
 {
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS) && !mResolved) {
+    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
         nsAutoString id;
         mOverlay->GetAttr(kNameSpaceID_None, nsXULAtoms::id, id);
 
         nsCAutoString idC;
         idC.AssignWithConversion(id);
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
+        PR_LOG(gXULLog, PR_LOG_WARNING,
                ("xul: overlay failed to resolve '%s'",
                 idC.get()));
     }
@@ -3782,7 +3788,7 @@ nsXULDocument::BroadcasterHookup::Resolve()
 nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
 {
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS) && !mResolved) {
+    if (PR_LOG_TEST(gXULLog, PR_LOG_WARNING) && !mResolved) {
         // Tell the world we failed
         nsresult rv;
 
@@ -3813,7 +3819,7 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         tagstrC.AssignWithConversion(tagStr);
         attributeC.AssignWithConversion(attribute);
         broadcasteridC.AssignWithConversion(broadcasterID);
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
+        PR_LOG(gXULLog, PR_LOG_WARNING,
                ("xul: broadcaster hookup failed <%s attribute='%s'> to %s",
                 tagstrC.get(),
                 attributeC.get(),
@@ -3951,7 +3957,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
 
 #ifdef PR_LOGGING
     // Tell the world we succeeded
-    if (PR_LOG_TEST(gXULLog, PR_LOG_ALWAYS)) {
+    if (PR_LOG_TEST(gXULLog, PR_LOG_NOTICE)) {
         nsCOMPtr<nsIContent> content =
             do_QueryInterface(listener);
 
@@ -3967,7 +3973,7 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         tagstrC.AssignWithConversion(tagStr);
         attributeC.AssignWithConversion(attribute);
         broadcasteridC.AssignWithConversion(broadcasterID);
-        PR_LOG(gXULLog, PR_LOG_ALWAYS,
+        PR_LOG(gXULLog, PR_LOG_NOTICE,
                ("xul: broadcaster hookup <%s attribute='%s'> to %s",
                 tagstrC.get(),
                 attributeC.get(),

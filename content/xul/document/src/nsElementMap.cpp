@@ -120,7 +120,7 @@ nsElementMap::nsElementMap()
         gMapLog = PR_NewLogModule("nsElementMap");
 
 
-    PR_LOG(gMapLog, PR_LOG_ALWAYS,
+    PR_LOG(gMapLog, PR_LOG_NOTICE,
            ("xulelemap(%p) created", this));
 #endif
 }
@@ -134,7 +134,7 @@ nsElementMap::~nsElementMap()
         PL_HashTableDestroy(mMap);
     }
 
-    PR_LOG(gMapLog, PR_LOG_ALWAYS,
+    PR_LOG(gMapLog, PR_LOG_NOTICE,
            ("xulelemap(%p) destroyed", this));
 }
 
@@ -197,13 +197,13 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
                 // potentially causing unnecessary reflow.
                 //NS_ERROR("element was already in the map");
 #ifdef PR_LOGGING
-                if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+                if (PR_LOG_TEST(gMapLog, PR_LOG_NOTICE)) {
                     const char *tagname;
                     aContent->Tag()->GetUTF8String(&tagname);
 
                     nsCAutoString aidC; 
                     aidC.AssignWithConversion(id, aID.Length());
-                    PR_LOG(gMapLog, PR_LOG_ALWAYS,
+                    PR_LOG(gMapLog, PR_LOG_NOTICE,
                            ("xulelemap(%p) dup    %s[%p] <-- %s\n",
                             this,
                             tagname,
@@ -226,13 +226,13 @@ nsElementMap::Add(const nsAString& aID, nsIContent* aContent)
     }
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+    if (PR_LOG_TEST(gMapLog, PR_LOG_NOTICE)) {
         const char *tagname;
         aContent->Tag()->GetUTF8String(&tagname);
 
         nsCAutoString aidC; 
         aidC.AssignWithConversion(id, aID.Length());
-        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+        PR_LOG(gMapLog, PR_LOG_NOTICE,
                ("xulelemap(%p) add    %s[%p] <-- %s\n",
                 this,
                 tagname,
@@ -256,13 +256,13 @@ nsElementMap::Remove(const nsAString& aID, nsIContent* aContent)
     const PRUnichar *id = flatID.get();
 
 #ifdef PR_LOGGING
-    if (PR_LOG_TEST(gMapLog, PR_LOG_ALWAYS)) {
+    if (PR_LOG_TEST(gMapLog, PR_LOG_NOTICE)) {
         const char *tagname;
         aContent->Tag()->GetUTF8String(&tagname);
 
         nsCAutoString aidC; 
         aidC.AssignWithConversion(id);
-        PR_LOG(gMapLog, PR_LOG_ALWAYS,
+        PR_LOG(gMapLog, PR_LOG_NOTICE,
                ("xulelemap(%p) remove  %s[%p] <-- %s\n",
                 this,
                 tagname,

@@ -225,18 +225,20 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
     if (updater->mElement == aElement) {
 
 #ifdef NS_DEBUG
-      nsCAutoString eventsC, targetsC, aeventsC, atargetsC; 
-      eventsC.AssignWithConversion(updater->mEvents);
-      targetsC.AssignWithConversion(updater->mTargets);
-      CopyUTF16toUTF8(aEvents, aeventsC);
-      CopyUTF16toUTF8(aTargets, atargetsC);
-      PR_LOG(gLog, PR_LOG_ALWAYS,
-             ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
-              this, aElement,
-              eventsC.get(),
-              targetsC.get(),
-              aeventsC.get(),
-              atargetsC.get()));
+      if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+        nsCAutoString eventsC, targetsC, aeventsC, atargetsC; 
+        eventsC.AssignWithConversion(updater->mEvents);
+        targetsC.AssignWithConversion(updater->mTargets);
+        CopyUTF16toUTF8(aEvents, aeventsC);
+        CopyUTF16toUTF8(aTargets, atargetsC);
+        PR_LOG(gLog, PR_LOG_NOTICE,
+               ("xulcmd[%p] replace %p(events=%s targets=%s) with (events=%s targets=%s)",
+                this, aElement,
+                eventsC.get(),
+                targetsC.get(),
+                aeventsC.get(),
+                atargetsC.get()));
+      }
 #endif
 
       // If the updater was already in the list, then replace
@@ -251,15 +253,17 @@ nsXULCommandDispatcher::AddCommandUpdater(nsIDOMElement* aElement,
     updater = updater->mNext;
   }
 #ifdef NS_DEBUG
-  nsCAutoString aeventsC, atargetsC; 
-  CopyUTF16toUTF8(aEvents, aeventsC);
-  CopyUTF16toUTF8(aTargets, atargetsC);
+  if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+    nsCAutoString aeventsC, atargetsC; 
+    CopyUTF16toUTF8(aEvents, aeventsC);
+    CopyUTF16toUTF8(aTargets, atargetsC);
 
-  PR_LOG(gLog, PR_LOG_ALWAYS,
-         ("xulcmd[%p] add     %p(events=%s targets=%s)",
-          this, aElement,
-          aeventsC.get(),
-          atargetsC.get()));
+    PR_LOG(gLog, PR_LOG_NOTICE,
+           ("xulcmd[%p] add     %p(events=%s targets=%s)",
+            this, aElement,
+            aeventsC.get(),
+            atargetsC.get()));
+  }
 #endif
 
   // If we get here, this is a new updater. Append it to the list.
@@ -284,14 +288,16 @@ nsXULCommandDispatcher::RemoveCommandUpdater(nsIDOMElement* aElement)
   while (updater) {
     if (updater->mElement == aElement) {
 #ifdef NS_DEBUG
-      nsCAutoString eventsC, targetsC; 
-      eventsC.AssignWithConversion(updater->mEvents);
-      targetsC.AssignWithConversion(updater->mTargets);
-      PR_LOG(gLog, PR_LOG_ALWAYS,
-             ("xulcmd[%p] remove  %p(events=%s targets=%s)",
-              this, aElement,
-              eventsC.get(),
-              targetsC.get()));
+      if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+        nsCAutoString eventsC, targetsC; 
+        eventsC.AssignWithConversion(updater->mEvents);
+        targetsC.AssignWithConversion(updater->mTargets);
+        PR_LOG(gLog, PR_LOG_NOTICE,
+               ("xulcmd[%p] remove  %p(events=%s targets=%s)",
+                this, aElement,
+                eventsC.get(),
+                targetsC.get()));
+      }
 #endif
 
       *link = updater->mNext;
@@ -352,12 +358,14 @@ nsXULCommandDispatcher::UpdateCommands(const nsAString& aEventName)
       continue;
 
 #ifdef NS_DEBUG
-    nsCAutoString aeventnameC; 
-    CopyUTF16toUTF8(aEventName, aeventnameC);
-    PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("xulcmd[%p] update %p event=%s",
-            this, updater->mElement,
-            aeventnameC.get()));
+    if (PR_LOG_TEST(gLog, PR_LOG_NOTICE)) {
+      nsCAutoString aeventnameC; 
+      CopyUTF16toUTF8(aEventName, aeventnameC);
+      PR_LOG(gLog, PR_LOG_NOTICE,
+             ("xulcmd[%p] update %p event=%s",
+              this, updater->mElement,
+              aeventnameC.get()));
+    }
 #endif
 
     PRUint32 count = document->GetNumberOfShells();

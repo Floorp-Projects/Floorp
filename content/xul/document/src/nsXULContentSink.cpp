@@ -359,7 +359,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
             nsINameSpace* nameSpace = (nsINameSpace*)mNameSpaceStack[i];
 
 #ifdef PR_LOGGING
-            if (PR_LOG_TEST(gLog, PR_LOG_ALWAYS)) {
+            if (PR_LOG_TEST(gLog, PR_LOG_WARNING)) {
                 nsAutoString uri;
                 nsCOMPtr<nsIAtom> prefixAtom;
 
@@ -379,7 +379,7 @@ XULContentSinkImpl::~XULContentSinkImpl()
                 char* prefixStr = ToNewCString(prefix);
                 char* uriStr = ToNewCString(uri);
 
-                PR_LOG(gLog, PR_LOG_ALWAYS,
+                PR_LOG(gLog, PR_LOG_WARNING,
                        ("xul: warning: unclosed namespace '%s' (%s)",
                         prefixStr, uriStr));
 
@@ -829,7 +829,7 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
 
   case eInEpilog:
   case eInScript:
-      PR_LOG(gLog, PR_LOG_ALWAYS,
+      PR_LOG(gLog, PR_LOG_WARNING,
              ("xul: warning: unexpected tags in epilog at line %d",
              aLineNumber));
       rv = NS_ERROR_UNEXPECTED; // XXX
@@ -1281,7 +1281,7 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     if (aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XHTML) || 
         aNodeInfo->Equals(nsHTMLAtoms::script, kNameSpaceID_XUL)) {
-        PR_LOG(gLog, PR_LOG_ALWAYS,
+        PR_LOG(gLog, PR_LOG_ERROR,
                ("xul: script tag not allowed as root content element"));
 
         return NS_ERROR_UNEXPECTED;
@@ -1293,12 +1293,14 @@ XULContentSinkImpl::OpenRoot(const PRUnichar** aAttributes,
 
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
-        nsAutoString anodeC;
-        aNodeInfo->GetName(anodeC);
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("xul: unable to create element '%s' at line %d",
-                NS_ConvertUCS2toUTF8(anodeC).get(),
-                -1)); // XXX pass in line number
+        if (PR_LOG_TEST(gLog, PR_LOG_ERROR)) {
+            nsAutoString anodeC;
+            aNodeInfo->GetName(anodeC);
+            PR_LOG(gLog, PR_LOG_ERROR,
+                   ("xul: unable to create element '%s' at line %d",
+                    NS_ConvertUCS2toUTF8(anodeC).get(),
+                    -1)); // XXX pass in line number
+        }
 #endif
 
         return rv;
@@ -1334,12 +1336,14 @@ XULContentSinkImpl::OpenTag(const PRUnichar** aAttributes,
 
     if (NS_FAILED(rv)) {
 #ifdef PR_LOGGING
-        nsAutoString anodeC;
-        aNodeInfo->GetName(anodeC);
-        PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("xul: unable to create element '%s' at line %d",
-                NS_ConvertUCS2toUTF8(anodeC).get(),
-                aLineNumber));
+        if (PR_LOG_TEST(gLog, PR_LOG_ERROR)) {
+            nsAutoString anodeC;
+            aNodeInfo->GetName(anodeC);
+            PR_LOG(gLog, PR_LOG_ERROR,
+                   ("xul: unable to create element '%s' at line %d",
+                    NS_ConvertUCS2toUTF8(anodeC).get(),
+                    aLineNumber));
+        }
 #endif
 
         return rv;
