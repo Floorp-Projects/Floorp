@@ -59,6 +59,51 @@ class nsIAccessible;
 class nsIContent;
 
 /**
+ * Event Struct Types
+ */
+#define NS_EVENT               1
+#define NS_GUI_EVENT           2
+#define NS_SIZE_EVENT          3
+#define NS_SIZEMODE_EVENT      4
+#define NS_ZLEVEL_EVENT        5
+#define NS_PAINT_EVENT         6
+#define NS_SCROLLBAR_EVENT     7
+#define NS_INPUT_EVENT         8
+#define NS_KEY_EVENT           9
+#define NS_MOUSE_EVENT        10
+#define NS_MENU_EVENT         11
+#define NS_DRAGDROP_EVENT     12
+#define NS_TEXT_EVENT         13
+#define NS_COMPOSITION_START  14
+#define NS_COMPOSITION_END    15
+#define NS_MOUSE_SCROLL_EVENT 16
+#define NS_COMPOSITION_QUERY  17
+#define NS_SCROLLPORT_EVENT   18
+#define NS_RECONVERSION_QUERY 19
+#define NS_ACCESSIBLE_EVENT   20
+#define NS_FORM_EVENT         21
+#define NS_FOCUS_EVENT        22
+#define NS_POPUP_EVENT        23
+
+
+#define NS_EVENT_FLAG_NONE                0x0000
+#define NS_EVENT_FLAG_INIT                0x0001
+#define NS_EVENT_FLAG_BUBBLE              0x0002
+#define NS_EVENT_FLAG_CAPTURE             0x0004
+#define NS_EVENT_FLAG_STOP_DISPATCH       0x0008
+#define NS_EVENT_FLAG_NO_DEFAULT          0x0010
+#define NS_EVENT_FLAG_CANT_CANCEL         0x0020
+#define NS_EVENT_FLAG_CANT_BUBBLE         0x0040
+#define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
+#define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
+#define NS_EVENT_FLAG_SYSTEM_EVENT        0x0200
+
+#define NS_APP_EVENT_FLAG_NONE      0x0000
+#define NS_APP_EVENT_FLAG_HANDLED   0x0001 // Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
+
+#define NS_EVENT_TYPE_NULL                   0
+
+/**
  * Return status for event processors, nsEventStatus, is defined in
  * nsEvent.h.
  */
@@ -86,6 +131,16 @@ enum nsWindowZ {
  */
 
 struct nsEvent {
+  nsEvent()
+    : eventStructType(NS_EVENT),
+      message(NS_EVENT_TYPE_NULL),
+      time(0),
+      flags(NS_EVENT_FLAG_NONE),
+      internalAppFlags(NS_APP_EVENT_FLAG_NONE),
+      userType(nsnull)
+  {
+  }
+
   /// See event struct types
   PRUint8     eventStructType;
   /// See GUI MESSAGES,
@@ -336,33 +391,6 @@ enum nsDragDropEventStatus {
 
 
 /**
- * Event Struct Types
- */
-#define NS_EVENT               1
-#define NS_GUI_EVENT           2
-#define NS_SIZE_EVENT          3
-#define NS_SIZEMODE_EVENT      4
-#define NS_ZLEVEL_EVENT        5
-#define NS_PAINT_EVENT         6
-#define NS_SCROLLBAR_EVENT     7
-#define NS_INPUT_EVENT         8
-#define NS_KEY_EVENT           9
-#define NS_MOUSE_EVENT        10
-#define NS_MENU_EVENT         11
-#define NS_DRAGDROP_EVENT     12
-#define NS_TEXT_EVENT         13
-#define NS_COMPOSITION_START  14
-#define NS_COMPOSITION_END    15
-#define NS_MOUSE_SCROLL_EVENT 16
-#define NS_COMPOSITION_QUERY  17
-#define NS_SCROLLPORT_EVENT   18
-#define NS_RECONVERSION_QUERY 19
-#define NS_ACCESSIBLE_EVENT   20
-#define NS_FORM_EVENT         21
-#define NS_FOCUS_EVENT        22
-#define NS_POPUP_EVENT        23
-
- /**
  * GUI MESSAGES
  */
  //@{
@@ -690,20 +718,6 @@ enum nsDragDropEventStatus {
 #define NS_VK_QUOTE          nsIDOMKeyEvent::DOM_VK_QUOTE
 
 #define NS_VK_META           nsIDOMKeyEvent::DOM_VK_META
-
-#define NS_EVENT_FLAG_NONE                0x0000
-#define NS_EVENT_FLAG_INIT                0x0001
-#define NS_EVENT_FLAG_BUBBLE              0x0002
-#define NS_EVENT_FLAG_CAPTURE             0x0004
-#define NS_EVENT_FLAG_STOP_DISPATCH       0x0008
-#define NS_EVENT_FLAG_NO_DEFAULT          0x0010
-#define NS_EVENT_FLAG_CANT_CANCEL         0x0020
-#define NS_EVENT_FLAG_CANT_BUBBLE         0x0040
-#define NS_PRIV_EVENT_FLAG_SCRIPT         0x0080
-#define NS_EVENT_FLAG_NO_CONTENT_DISPATCH 0x0100
-
-#define NS_APP_EVENT_FLAG_NONE      0x0000
-#define NS_APP_EVENT_FLAG_HANDLED   0x0001 // Similar to NS_EVENT_FLAG_NO_DEFAULT, but it allows focus
 
 // IME Constants  -- keep in synch with nsIDOMTextRange.h
 #define NS_TEXTRANGE_CARETPOSITION				0x01
