@@ -1728,7 +1728,7 @@ class UpdateContext implements Runnable {
         db.context.disableUpdate();
         int frameCount = contextData.getFrameCount();
         ctx.removeAllItems();
-        toolTips.clear();
+        toolTips.removeAllElements();
         for (int i = 0; i < frameCount; i++) {
             FrameHelper frame = contextData.getFrame(i);
             String sourceName = frame.getSourceName();
@@ -2201,7 +2201,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     /* ContextListener interface */
 
-    java.util.HashSet contexts = new java.util.HashSet();
+    ObjToIntMap contexts = new ObjToIntMap();
 
     static Thread mainThread; // thread used to run the shell
 
@@ -2228,9 +2228,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
         // from its thread (we cause that to happen below
         // in interrupted)
         synchronized (contexts) {
-            if (!contexts.contains(cx)) {
+            if (!contexts.has(cx)) {
                 if (cx.getDebugger() == this) {
-                    contexts.add(cx);
+                    contexts.put(cx, 1);
                 }
             }
         }
@@ -2252,9 +2252,9 @@ public class Main extends JFrame implements Debugger, ContextListener {
     public void doBreak() {
         breakFlag = true;
         synchronized (contexts) {
-            Iterator iter = contexts.iterator();
-            while (iter.hasNext()) {
-                Context cx = (Context)iter.next();
+            ObjToIntMap.Iterator iter = contexts.newIterator();
+            for (iter.start(); !iter.done(); iter.next()) {
+                Context cx = (Context)iter.getKey();
                 ContextData.get(cx).breakNextLine = true;
             }
         }
@@ -2333,7 +2333,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
                 sourceName.substring(0, sourceName.length() - 6);
             Vector v = (Vector)sourceNames.get(origSourceName);
             if (v != null) {
-                SourceEntry prev = (SourceEntry)v.get(v.size() - 1);
+                SourceEntry prev = (SourceEntry)v.elementAt(v.size() - 1);
                 source = prev.source;
                 SourceEntry entry = new SourceEntry(source, fnOrScript);
                 v.addElement(entry);
@@ -2602,7 +2602,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
     }
 
     static void swingInvoke(Runnable f) {
-        if (java.awt.EventQueue.isDispatchThread()) {
+        if (SwingUtilities.isEventDispatchThread()) {
             f.run();
             return;
         }
@@ -2680,7 +2680,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
 
     void interrupted(Context cx) {
         synchronized (swingMonitor) {
-            if (java.awt.EventQueue.isDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 dispatcherIsWaiting++;
                 if (nonDispatcherWaiting) {
                     // Another thread is stopped in the debugger
@@ -2791,7 +2791,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
             line = frame.getLineNumber();
             int enterCount = 0;
             boolean isDispatchThread =
-                java.awt.EventQueue.isDispatchThread();
+                SwingUtilities.isEventDispatchThread();
 
             if (!isDispatchThread) {
                 // detach cx from its thread so the debugger (in the awt
@@ -2922,7 +2922,7 @@ public class Main extends JFrame implements Debugger, ContextListener {
         } while (false);
         synchronized (swingMonitor) {
             isInterrupted = false;
-            if (java.awt.EventQueue.isDispatchThread()) {
+            if (SwingUtilities.isEventDispatchThread()) {
                 dispatcherIsWaiting--;
             } else {
                 nonDispatcherWaiting = false;
@@ -2948,9 +2948,12 @@ public class Main extends JFrame implements Debugger, ContextListener {
             try {
                 String result = dlg.getSelectedFile().getCanonicalPath();
                 CWD = dlg.getSelectedFile().getParentFile();
-                java.lang.System.setProperty("user.dir", CWD.getPath());
+                Properties props = System.getProperties();
+                props.put("user.dir", CWD.getPath());
+                System.setProperties(props);
                 return result;
-            } catch (IOException ignored) {
+            }catch (IOException ignored) {
+            }catch (SecurityException ignored) {
             }
         }
         return null;
