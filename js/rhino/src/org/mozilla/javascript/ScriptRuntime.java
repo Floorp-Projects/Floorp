@@ -600,11 +600,11 @@ public class ScriptRuntime {
      *
      * See ECMA 9.5.
      */
-    public static int toInt32(Object val) {
-        // short circuit for common small values; TokenStream
-        // returns them as Bytes.
-        if (val instanceof Byte)
-            return ((Number)val).intValue();
+    public static int toInt32(Object val)
+    {
+        // short circuit for common integer values
+        if (val instanceof Integer)
+            return ((Integer)val).intValue();
 
         return toInt32(toNumber(val));
     }
