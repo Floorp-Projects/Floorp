@@ -54,6 +54,7 @@ EXPORTS=						\
 	nsMsgServiceProvider.h	\
 	nsSubscribeDataSource.h	\
 	nsMsgPrintEngine.h	\
+	nsMsgRDFUtils.h		\
 	$(NULL)
 
 
