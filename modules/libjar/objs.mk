@@ -31,6 +31,7 @@ MODULES_LIBJAR_LCPPSRCS = \
 MODULES_LIBJAR_LEXPORTS = \
 		zipfile.h \
 		zipstub.h \
+		zipstruct.h \
 		$(NULL)
 
 MODULES_LIBJAR_LXPIDLSRCS = \

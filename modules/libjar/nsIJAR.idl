@@ -79,6 +79,8 @@ interface nsIJAR : nsISupports
      * be called before getPrincipal.
      */
     void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal);   
+    
+    readonly attribute PRUInt32 manifestEntriesCount;
 
 };
 
