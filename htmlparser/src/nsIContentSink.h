@@ -49,6 +49,9 @@ class nsIParser;
 
 class nsIContentSink : public nsISupports {
 public:
+
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENT_SINK_IID)
+
   /**
    * This method gets called when the parser begins the process
    * of building the content model via the content sink.
