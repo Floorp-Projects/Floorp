@@ -162,7 +162,7 @@ void
 nsFileControlFrame::Reset(nsIPresContext* aPresContext)
 {
   if (mTextFrame) {
-    mTextFrame->Reset();
+    mTextFrame->Reset(aPresContext);
   }
 }
 

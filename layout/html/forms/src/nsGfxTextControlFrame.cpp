@@ -635,7 +635,7 @@ nsGfxTextControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues
 
 
 void 
-nsGfxTextControlFrame::Reset() 
+nsGfxTextControlFrame::Reset(nsIPresContext* aPresContext) 
 {
   nsAutoString value;
   nsresult valStatus = GetText(&value, PR_TRUE);

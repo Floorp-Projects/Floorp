@@ -319,7 +319,7 @@ nsNativeTextControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumVal
 
 
 void 
-nsNativeTextControlFrame::Reset() 
+nsNativeTextControlFrame::Reset(nsIPresContext* aPresContext) 
 {
   if (!mWidget) {
     return;

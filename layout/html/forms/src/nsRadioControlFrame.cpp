@@ -157,7 +157,7 @@ nsRadioControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 }
 
 void 
-nsRadioControlFrame::Reset() 
+nsRadioControlFrame::Reset(nsIPresContext* aPresContext) 
 {
   PRBool checked = PR_TRUE;
   GetDefaultCheckState(&checked);

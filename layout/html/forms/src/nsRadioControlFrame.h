@@ -62,7 +62,7 @@ public:
                                 nsString* aValues, nsString* aNames);
 
   virtual void MouseUp(nsIPresContext* aPresContext);
-  virtual void Reset();
+  virtual void Reset(nsIPresContext* aPresContext);
   virtual const nsIID& GetCID();
 
   virtual const nsIID& GetIID();
