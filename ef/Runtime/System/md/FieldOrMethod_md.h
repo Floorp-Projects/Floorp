@@ -18,30 +18,32 @@
 #ifndef _FIELD_OR_METHOD_MD_H_
 #define _FIELD_OR_METHOD_MD_H_
 
-#if defined(XP_PC) || defined(LINUX) || defined(FREEBSD)
+#ifdef GENERATE_FOR_X86
 #define PC_ONLY(x) x
 #else
 #define PC_ONLY(x) 
 #endif
 
-#if defined(XP_PC) 
-#	define prepareArg(i, arg) _asm { push arg }     // Prepare the ith argument
-#	define callFunc(func) _asm { call func }        // Call function func
-#	define getReturnValue(ret) _asm {mov ret, eax}  // Put return value into ret
-#elif defined(LINUX) || defined(FREEBSD)
-#	define prepareArg(i, arg) __asm__ ("pushl %0" : /* no outputs */ : "g" (arg))     // Prepare the ith argument
-#	define callFunc(func) __asm__ ("call *%0" : /* no outputs */ : "r" (func))        // Call function func
-#	define getReturnValue(ret) __asm__ ("movl %%eax,%0" : "=g" (ret) : /* no inputs */)  // Put return value into ret
+#ifdef GENERATE_FOR_X86
+    #ifdef __GNUC__
+        #define prepareArg(i, arg) __asm__ ("pushl %0" : /* no outputs */ : "g" (arg))     // Prepare the ith argument
+        #define callFunc(func) __asm__ ("call *%0" : /* no outputs */ : "r" (func))        // Call function func
+        #define getReturnValue(ret) __asm__ ("movl %%eax,%0" : "=g" (ret) : /* no inputs */)  // Put return value into ret
+    #else   // !__GNUC__
+        #define prepareArg(i, arg) _asm { push arg }     // Prepare the ith argument
+        #define callFunc(func) _asm { call func }        // Call function func
+        #define getReturnValue(ret) _asm {mov ret, eax}  // Put return value into ret
+    #endif
 #elif defined(GENERATE_FOR_PPC)
-#	ifdef XP_MAC
-#		define prepareArg(i, arg) 
-#		define callFunc(func) 
-#		define getReturnValue(ret)  ret = 0
-#	else
-#		define prepareArg(i, arg) 
-#		define callFunc(func) 
-#		define getReturnValue(ret)  ret = 0
-#	endif
+    #ifdef XP_MAC
+        #define prepareArg(i, arg) 
+        #define callFunc(func) 
+        #define getReturnValue(ret)  ret = 0
+    #else
+        #define prepareArg(i, arg) 
+        #define callFunc(func) 
+        #define getReturnValue(ret)  ret = 0
+    #endif
 #endif
 
 

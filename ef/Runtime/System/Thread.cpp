@@ -407,7 +407,7 @@ void Thread::_stop(JavaObject* exc)
 			ce = ca.lookupByRange(ip);
 		}
 		if (ce != NULL) { // REPLACE
-#if defined(XP_PC) || defined(LINUX) || defined(FREEBSD)
+#ifdef GENERATE_FOR_X86
 			ip = new(*pool) Uint8[10];
 			ip[0] = 0xf;                  // 0x0f0b is an illegal instruction
 			ip[1] = 0xb;

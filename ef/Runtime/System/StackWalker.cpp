@@ -124,7 +124,7 @@ getMethod()
 // Return the address of the function that called the getCallerPC
 extern Uint8* getCallerPC()
 {
-#if defined(WIN32) || defined(LINUX) || defined(FREEBSD)
+#ifdef GENERATE_FOR_X86
 	Uint8** myEBP;
 	
 	INLINE_GET_EBP(myEBP);
@@ -132,7 +132,7 @@ extern Uint8* getCallerPC()
 	Uint8** calleeEBP = (Uint8**) *myEBP;			// get the callee's EBP
 	Uint8* retAddress = (Uint8*) *(calleeEBP + 1);
 	return retAddress;
-#else	// WIN32 || LINUX || FREEBSD
+#else	// !GENERATE_FOR_X86
 	return 0;
 #endif
 }
