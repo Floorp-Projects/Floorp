@@ -4,5 +4,5 @@
 
 cd /usr/lib/mozilla-minimo
 export LD_LIBRARY_PATH=/usr/lib/mozilla-minimo
-exec ./Minimo http://www.mozilla.org/projects/minimo/home.html
+exec ./Minimo file:///usr/lib/mozilla-minimo/startpage/start.html 
 
