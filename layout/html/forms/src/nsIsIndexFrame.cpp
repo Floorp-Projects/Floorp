@@ -557,23 +557,33 @@ nsIsIndexFrame::GetStateType(nsIPresContext* aPresContext, nsIStatefulFrame::Sta
 NS_IMETHODIMP
 nsIsIndexFrame::SaveState(nsIPresContext* aPresContext, nsIPresState** aState)
 {
-  // Construct a pres state.
-  NS_NewPresState(aState); // The addref happens here.
-  
-  // This string will hold a single item, whether or not we're checked.
-  nsAutoString stateString;
-  GetInputValue(aPresContext, stateString);
-  (*aState)->SetStateProperty(NS_ConvertASCIItoUCS2("value"), stateString);
+  NS_ENSURE_ARG_POINTER(aState);
 
-  return NS_OK;
+  // Get the value string
+  nsAutoString stateString;
+  nsresult res =  GetInputValue(aPresContext, stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  if (! stateString.IsEmpty()) {
+
+    // Construct a pres state and store value in it.
+    res = NS_NewPresState(aState);
+    NS_ENSURE_SUCCESS(res, res);
+    res = (*aState)->SetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  }
+
+  return res;
 }
 
 NS_IMETHODIMP
 nsIsIndexFrame::RestoreState(nsIPresContext* aPresContext, nsIPresState* aState)
 {
-  nsAutoString string;
-  aState->GetStateProperty(NS_ConvertASCIItoUCS2("value"), string);
-  SetInputValue(aPresContext, string);
+  NS_ENSURE_ARG_POINTER(aState);
 
-  return NS_OK;
+  // Set the value to the stored state.
+  nsAutoString stateString;
+  nsresult res = aState->GetStateProperty(NS_LITERAL_STRING("value"), stateString);
+  NS_ENSURE_SUCCESS(res, res);
+
+  return SetInputValue(aPresContext, stateString);
 }
