@@ -313,7 +313,6 @@ private:
 #endif
 
     void process(Node* node,
-                 Node* context,
                  const String& mode,
                  ProcessorState* ps);
 
@@ -336,6 +335,12 @@ private:
     void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* actualParams = NULL);
     void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps, NamedMap* actualParams);
 
+    void processMatchedTemplate(Node* aXslTemplate,
+                                Node* aNode,
+                                NamedMap* aParams,
+                                const String& aMode,
+                                ProcessorState::ImportFrame* aFrame,
+                                ProcessorState* aPs);
     /**
      * Invokes the default template for the specified node
      * @param node  context node
