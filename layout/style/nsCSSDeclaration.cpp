@@ -94,7 +94,7 @@ void nsCSSFont::List(FILE* out, PRInt32 aIndent) const
 // --- support -----------------
 
 #define CSS_IF_COPY(val, type) \
-  if (aCopy.##val) (val) = new type(*(aCopy.##val));
+  if (aCopy.val) (val) = new type(*(aCopy.val));
 
 nsCSSValueList::nsCSSValueList(void)
   : mValue(),
