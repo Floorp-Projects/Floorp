@@ -267,7 +267,7 @@ sub match_field {
         next if !defined($vars->{'mform'}->{$field});
 
         # Skip it if this is a --do_not_change-- field
-        next if $dontchange eq $vars->{'form'}->{$field};
+        next if $dontchange && $dontchange eq $vars->{'form'}->{$field};
 
         # We need to move the query to $raw_field, where it will be split up,
         # modified by the search, and put back into $::FORM and $::MFORM
