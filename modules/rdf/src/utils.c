@@ -594,8 +594,8 @@ RDF_ReadCookies(char * filename)
 		if(*cookie == CR || *cookie == LF || *cookie == 0)
 			continue;
 
-		/* remove the '\n' from the end of the cookie */
-		XP_StripLine(cookie);
+		/* remove the '\n' from the end of the cookie 
+		XP_StripLine(cookie); */
 
         /* construct a new cookie resource
          */
