@@ -68,7 +68,7 @@ show index from descs;
 	
 create table people (
     id mediumint not null auto_increment primary key,
-    who varchar(32) not null,
+    who varchar(32) binary not null,
 
     unique(who)
 );
@@ -79,7 +79,7 @@ show index from people;
 	
 create table repositories (
     id mediumint not null auto_increment primary key,
-    repository varchar(64) not null,
+    repository varchar(64) binary not null,
 
     unique(repository)
 );
@@ -91,7 +91,7 @@ show index from repositories;
 
 create table dirs (
     id mediumint not null auto_increment primary key,
-    dir varchar(128) not null,
+    dir varchar(128) binary not null,
 
     unique(dir)
 );
@@ -102,7 +102,7 @@ show index from dirs;
 
 create table files (
     id mediumint not null auto_increment primary key,
-    file varchar(128) not null,
+    file varchar(128) binary not null,
 
     unique(file)
 );
@@ -114,7 +114,7 @@ show index from files;
 
 create table branches (
     id mediumint not null auto_increment primary key,
-    branch varchar(64) not null,
+    branch varchar(64) binary not null,
 
     unique(branch)
 );
@@ -131,8 +131,8 @@ create table checkins (
 	repositoryid mediumint not null,
 	dirid mediumint not null,
 	fileid mediumint not null,
-	revision varchar(32) not null,
-	stickytag varchar(255) not null,
+	revision varchar(32) binary not null,
+	stickytag varchar(255) binary not null,
 	branchid mediumint not null,
 	addedlines int not null,
 	removedlines int not null,
@@ -156,7 +156,7 @@ create table tags (
 	branchid mediumint not null,
 	dirid mediumint not null,
 	fileid mediumint not null,
-	revision varchar(32) not null,
+	revision varchar(32) binary not null,
 
 	unique(repositoryid,dirid,fileid,branchid,revision),
 	index(repositoryid),

@@ -10,6 +10,21 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+11/9/99 I have discovered that Bonsai gets all screwed up if you have multiple
+files with the same name but different capitalization in your directory.  This
+is because the tables were all defined to have case-independent strings, but
+you want them to be case-dependent.  To fix, feed the following to mysql:
+
+	alter table dirs change column dir dir varchar(128) binary not null;
+	alter table files change column file file varchar(128) binary not null;
+	alter table people change column who who varchar(32) binary not null;
+	alter table repositories change column repository repository varchar(64) binary not null;
+	alter table branches change column branch branch varchar(64) binary not null;
+	alter table checkins change column revision revision varchar(32) binary not null, change column stickytag stickytag varchar(255) binary not null;
+	alter table tags change column revision revision varchar(32) binary not null;
+
+
+
 10/12/99 Apparently, newer alphas of MySQL won't allow you to have
 "when" as a column name.  So, I have had to rename a column in the
 checkins table.  You must feed the below to mysql or you won't
