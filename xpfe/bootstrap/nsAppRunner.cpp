@@ -125,6 +125,12 @@ apprunner_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
   extern void InstallUnixSignalHandlers(const char *ProgramName);
 #endif
 
+#if defined(XP_OS2)
+/* Adding globals that OS/2 doesn't have so we can port the DDE code */
+char **__argv;
+int   __argc;
+#endif /* XP_OS2 */
+
 #if defined(XP_BEOS)
 
 #include <AppKit.h>
@@ -1517,6 +1523,11 @@ int main(int argc, char* argv[])
 #if defined(XP_UNIX) || defined(XP_BEOS)
   InstallUnixSignalHandlers(argv[0]);
 #endif
+
+#if defined(XP_OS2)
+  __argc = argc;
+  __argv = argv;
+#endif /* XP_OS2 */
 
 #if defined(XP_BEOS)
   if (NS_OK != InitializeBeOSApp())
