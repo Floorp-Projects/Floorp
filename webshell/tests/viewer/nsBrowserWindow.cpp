@@ -2656,6 +2656,7 @@ nsBrowserWindow::DoEditorTest(nsIWebShell *aWebShell, PRInt32 aCommandID)
 #ifdef NS_DEBUG
 #include "nsIContent.h"
 #include "nsIFrame.h"
+#include "nsIFrameDebug.h"
 #include "nsIStyleContext.h"
 #include "nsIStyleSet.h"
 
@@ -2766,7 +2767,10 @@ DumpFramesRecurse(nsIWebShell* aWebShell, FILE* out, nsString *aFilterName)
         nsIPresContext* presContext;
         shell->GetPresContext(&presContext);
 
-        root->List(presContext, out, 0);
+        nsIFrameDebug* fdbg;
+        if (NS_SUCCEEDED(root->QueryInterface(nsIFrameDebug::GetIID(), (void**)&fdbg))) {
+          fdbg->List(presContext, out, 0);
+        }
         NS_IF_RELEASE(presContext);
       }
       NS_RELEASE(shell);
@@ -2916,8 +2920,11 @@ GatherFrameDataSizes(nsISizeOfHandler* aHandler, nsIFrame* aFrame)
     nsCOMPtr<nsIAtom> frameType;
     aFrame->GetFrameType(getter_AddRefs(frameType));
     PRUint32 frameDataSize;
-    aFrame->SizeOf(aHandler, &frameDataSize);
-    aHandler->AddSize(frameType, frameDataSize);
+    nsIFrameDebug* fdbg;
+    if (NS_SUCCEEDED(aFrame->QueryInterface(nsIFrameDebug::GetIID(), (void**) &fdbg))) {
+      fdbg->SizeOf(aHandler, &frameDataSize);
+      aHandler->AddSize(frameType, frameDataSize);
+    }
 
     // And all of its children
     PRInt32 listIndex = 0;
