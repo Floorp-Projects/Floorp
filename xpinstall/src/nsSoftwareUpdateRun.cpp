@@ -58,6 +58,8 @@ static JSClass global_class =
 
 
 extern PRInt32 InitXPInstallObjects(JSContext *jscontext, JSObject *global, const char* jarfile, const char* args);
+extern nsresult InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
+extern nsresult InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
@@ -249,10 +251,9 @@ static nsresult SetupInstallContext(const char* jarFile,
 
     // Add our Install class to this context
     InitXPInstallObjects(cx, glob, jarFile, args);
+    InitInstallVersionClass(cx, glob, nsnull);
+    InitInstallTriggerGlobalClass(cx, glob, nsnull);
 
-    // Fix:  We have to add Version and Trigger to this context!!
-    
-    
     *jsRT   = rt;
     *jsCX   = cx;
     *jsGlob = glob;

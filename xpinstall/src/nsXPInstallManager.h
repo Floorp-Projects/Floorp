@@ -101,6 +101,7 @@ class nsXPInstallManager : public nsIXPINotifier, public nsIStreamListener
         nsXPITriggerInfo*   mTriggers;
         nsXPITriggerItem*   mItem;
         PRUint32            mNextItem;
+        PRBool              mFinalizing;
 
         nsCOMPtr<nsIXPIProgressDlg>  mDlg;
         nsCOMPtr<nsIXPIProgressDlg>  mProxy;
