@@ -192,8 +192,6 @@ nsHistoryEntry::~nsHistoryEntry()
 
 nsresult
 nsHistoryEntry::DestroyChildren() {
-   nsHistoryEntry * hEntry=nsnull;
-   nsHistoryEntry * parent=nsnull;
 
   PRInt32 i, n;
 
@@ -337,8 +335,6 @@ nsHistoryEntry::AddChild(nsHistoryEntry* aChild)
 nsresult 
 nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISessionHistory * aSHist) {
 
-   nsHistoryEntry * hEntry = nsnull;
-   const PRUnichar * name = nsnull;
    const PRUnichar * url = nsnull;
 
 
@@ -351,7 +347,7 @@ nsHistoryEntry::Create(nsIWebShell * aWebShell, nsHistoryEntry * aParent, nsISes
    //Save the webshell id
    SetWebShell(aWebShell);
    
-   if (APP_DEBUG) printf("SessionHistory::Create Creating Historyentry %x  for webshell %x, parent entry = %x\n", this, aWebShell, aParent);
+   if (APP_DEBUG) printf("SessionHistory::Create Creating Historyentry %x  for webshell %x, parent entry = %x\n", (unsigned int)this, (unsigned int)aWebShell, (unsigned int) aParent);
 
    if (aParent)
      aParent->AddChild(this);
@@ -483,7 +479,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
          mHistoryList->GetLoadingFlag(isLoadingDoc);
      
          if ((isInSHist && isLoadingDoc) || aIsReload) {
-            if (APP_DEBUG) printf("SessionHistory::Load Loading URL %s in webshell %x\n", cSURL->ToNewCString(), prev);
+            if (APP_DEBUG) printf("SessionHistory::Load Loading URL %s in webshell %x\n", cSURL->ToNewCString(), (unsigned int) prev);
 
             /* Get the child count of the webshell for a later use */
             PRInt32  ccount=0;
@@ -509,7 +505,7 @@ nsHistoryEntry::Load(nsIWebShell * aPrevEntry, PRBool aIsReload) {
        /* Mark the changed flag to false. This is used in the end to determine
         * whether we are done with the whole loading process for this history
         */
-       if (APP_DEBUG) printf("SessionHistory::Load URLs in webshells %x & %x match \n", mWS, prev);
+       if (APP_DEBUG) printf("SessionHistory::Load URLs in webshells %x & %x match \n", (unsigned int) mWS, (unsigned int) prev);
    }
 
    /* Make sure the child windows are in par */
@@ -887,15 +883,15 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
              if (newEntry) {
                 if ((mHistoryLength - (mHistoryCurrentIndex+1)) > 0) {
                 /* We are somewhere in the middle of the history and a
-                 *  new page was visited. Purge all entries from the current 
+                 * new page was visited. Purge all entries from the current 
                  * index till the end of the list and append the current 
                  * page to the list
                  */
 
                 for(int i=mHistoryLength-1; i>mHistoryCurrentIndex; i--) {
-                   nsHistoryEntry * hEntry = (nsHistoryEntry *)mHistoryEntries.ElementAt(i);
-                   //NS_IF_RELEASE(hEntry);
-                   delete hEntry;
+                   nsHistoryEntry * hiEntry = (nsHistoryEntry *)mHistoryEntries.ElementAt(i);
+                   //NS_IF_RELEASE(hiEntry);
+                   delete hiEntry;
                    mHistoryEntries.RemoveElementAt(i);
                    mHistoryLength--;
                  }
@@ -943,14 +939,12 @@ nsSessionHistory::add(nsIWebShell * aWebShell)
 NS_IMETHODIMP
 nsSessionHistory::Goto(PRInt32 aGotoIndex, nsIWebShell * prev, PRBool aIsReload)
 {
-   nsresult rv = NS_OK;
    PRBool result = PR_FALSE;
-   int prevIndex = 0;
 
    if ((aGotoIndex < 0) ||  (aGotoIndex >= mHistoryLength))
       return NS_ERROR_NULL_POINTER;
 
-   nsHistoryEntry * hPrevEntry=nsnull, * hCurrentEntry = nsnull;
+   nsHistoryEntry * hCurrentEntry = nsnull;
 
    //get a handle to the current page to be passed to nsHistoryEntry
    // as the previous page.
@@ -1013,7 +1007,6 @@ nsSessionHistory::Reload(nsIWebShell * aPrev, nsURLReloadType aReloadType)
 NS_IMETHODIMP
 nsSessionHistory::GoBack(nsIWebShell * aPrev)
 {
-   nsresult rv = NS_OK;
    //nsHistoryEntry * hEntry=nsnull;
 
    if (mHistoryCurrentIndex <= 0) 
@@ -1027,9 +1020,6 @@ nsSessionHistory::GoBack(nsIWebShell * aPrev)
 NS_IMETHODIMP
 nsSessionHistory::GoForward(nsIWebShell * aPrev)
 {
-   nsresult rv = NS_OK;
-   PRInt32  prevIndex = 0;
-
    if (mHistoryCurrentIndex == mHistoryLength-1)
       return NS_ERROR_FAILURE;
 

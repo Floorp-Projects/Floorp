@@ -493,8 +493,6 @@ NS_IMETHODIMP nsBrowserAppCore::CreateMenuItem(
   nsString menuitemCmd("gotoHistoryIndex(");
   menuitemCmd.Append(aIndex);
   menuitemCmd += ")";  
-  const char * actionhandler = menuitemCmd.ToNewCString();
-
   if (APP_DEBUG) printf("nsBrowserAppCore::CreateMenuItem Setting action handler to %s\n", menuitemCmd.ToNewCString());
   nsString attrName("oncommand");
   rv = menuItemElement->SetAttribute(attrName, menuitemCmd);
@@ -782,7 +780,7 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
             rv = childList->Item(i, &child);
 			if (!NS_SUCCEEDED(rv) ||  !child) {
 				printf("nsBrowserAppCore::ClearHistoryPopup, Could not get child\n");
-				NS_ERROR_FAILURE;
+				return NS_ERROR_FAILURE;
 			}
 			// Get element out of the node
 			nsCOMPtr<nsIDOMElement> childElement(do_QueryInterface(child));
@@ -799,16 +797,16 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
                 rv = menu->RemoveChild(child, &ret);
 			    if (NS_SUCCEEDED(rv)) {
 				   if (ret) {
-				      if (APP_DEBUG) printf("nsBrowserAppCore::ClearHistoryPopup Child %x removed from the popuplist \n", child);			          
+				      if (APP_DEBUG) printf("nsBrowserAppCore::ClearHistoryPopup Child %x removed from the popuplist \n", (unsigned int) child);			          
 					  NS_IF_RELEASE(child);					  
 				   }
 				   else {
-				      printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", child);
+				      printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child);
 				   }
 				}  // NS_SUCCEEDED(rv)
 			    else
 				{
-				   printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", child);
+				   printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child);
                    return NS_ERROR_FAILURE;
 				}				  
 			    NS_IF_RELEASE(ret);
@@ -1329,8 +1327,8 @@ nsBrowserAppCore::LoadInitialPage(void)
   if (!argsElement) {
   // Couldn't get the "args" element from the xul file. Load a blank page
      if (APP_DEBUG) printf("Couldn't find args element\n");
-     nsString * url = new nsString("about:blank"); 
-     rv = LoadUrl(nsString(urlstr));
+     nsString url = nsString("about:blank"); 
+     rv = LoadUrl(url);
      return rv;
   }
 
@@ -1855,7 +1853,6 @@ nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader,
 #endif
 {
   nsresult rv = NS_OK;
-  PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
 #ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
