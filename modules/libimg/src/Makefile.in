@@ -28,24 +28,24 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= img
 LIBRARY_NAME	= img
 
-REQUIRES	= $(JPEG_REQUIRES) $(PNG_REQUIRES) $(ZLIB_REQUIRES)
 LOCAL_INCLUDES	= -I$(srcdir) $(PNG_CFLAGS) $(ZLIB_CFLAGS)
 EXTRA_LIBS	= $(PNG_LIBS) $(ZLIB_LIBS)
 
-CPPSRCS		= ilNetReader.cpp \
-		  color.cpp \
-		  colormap.cpp \
-		  dither.cpp \
-		  gif.cpp \
-		  if.cpp \
-		  ilclient.cpp \
-		  il_util.cpp \
-		  jpeg.cpp \
-		  scale.cpp \
-		  xbm.cpp \
-		  ipng.cpp \
-		  png_png.cpp \
-		  $(NULL)
+CPPSRCS		= \
+	ilNetReader.cpp \
+	color.cpp \
+	colormap.cpp \
+	dither.cpp \
+	gif.cpp \
+	if.cpp \
+	ilclient.cpp \
+	il_util.cpp \
+	jpeg.cpp \
+	scale.cpp \
+	xbm.cpp \
+	ipng.cpp \
+	png_png.cpp \
+	$(NULL)
 
 ifdef STANDALONE_IMAGE_LIB
 
@@ -61,8 +61,6 @@ CPPSRCS		+= dummy_nc.cpp \
 		  external.cpp \
 		  $(NULL)
 
-REQUIRES	+= jtools java dbm util img layer js xpcom
-
 #
 # Generate MIMGCB.c (and similar sources) here.
 # MIMGCB.h is generated in ../public/_jmc/
@@ -73,25 +71,9 @@ endif
 
 EXPORTS		= PIMGCB.h PPSIMGCB.h
 
-ifdef NU_CACHE
-REQUIRES 	+= cache
-endif
-
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
-
-symbols::
-	@echo "LIBRARY_NAME     is $(LIBRARY_NAME)"
-	@echo "LIBRARY          is $(LIBRARY)"
-	@echo  "DIST		is $(DIST)"
 
 NO_STATIC_LIB=1
 
 include $(topsrcdir)/config/rules.mk
 
-#
-# This is about as far from the right way of doing things as you can get.
-# HACK larubbio fix me
-#
-ifdef STANDALONE_IMAGE_LIB
-CC = $(CCC)
-endif
