@@ -26,6 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= init.d
+
 # This code removes the console from release builds
 # (unless you've set MOZ_WINCONSOLE=1).
 ifndef MOZ_WINCONSOLE

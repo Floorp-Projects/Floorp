@@ -703,6 +703,7 @@ xpfe/appshell/Makefile
 xpfe/appshell/src/Makefile
 xpfe/appshell/public/Makefile
 xpfe/bootstrap/Makefile
+xpfe/bootstrap/init.d/Makefile
 xpfe/bootstrap/appleevents/Makefile
 xpfe/browser/Makefile
 xpfe/browser/src/Makefile
