@@ -1997,8 +1997,13 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 
   static const char      htmlBreak[] = "<BR>";
   static const char      dashes[] = "-- ";
-  static const char      divopen[] = "<div class=signature>";
-  static const char      divclose[] = "</div>";
+  static const char      htmlsigopen[] = "<div class=\"signature\">";
+  static const char      htmlsigclose[] = "</div>";    /* XXX: Due to a bug in
+                             4.x' HTML editor, it will not be able to
+                             break this HTML sig, if quoted (for the user to
+                             interleave a comment). */
+  static const char      preopen[] = "<pre class=\"signature\">";
+  static const char      preclose[] = "</pre>";
 
   if (imageSig)
   {
@@ -2007,7 +2012,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     if (m_composeHTML)
     {
       sigOutput.AppendWithConversion(htmlBreak);
-      sigOutput.AppendWithConversion(divopen);
+      sigOutput.AppendWithConversion(htmlsigopen);
       sigOutput.AppendWithConversion(dashes);
       sigOutput.AppendWithConversion(htmlBreak);
       sigOutput.AppendWithConversion("<img src=\"file:///");
@@ -2015,7 +2020,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
               much. Better construct the URL with some service. */
       sigOutput.AppendWithConversion(testSpec);
       sigOutput.AppendWithConversion("\" border=0>");
-      sigOutput.AppendWithConversion(divclose);
+      sigOutput.AppendWithConversion(htmlsigclose);
     }
   }
   else
@@ -2037,11 +2042,10 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     if (m_composeHTML)
     {
       sigOutput.AppendWithConversion(htmlBreak);
-      sigOutput.AppendWithConversion(divopen);
-      if (!htmlSig)
-      {
-        sigOutput.AppendWithConversion("<pre>");
-      }
+      if (htmlSig)
+        sigOutput.AppendWithConversion(htmlsigopen);
+      else
+        sigOutput.AppendWithConversion(preopen);
     }
     else
       sigOutput.AppendWithConversion(CRLF);
@@ -2056,10 +2060,13 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
     sigOutput.Append(sigData);
          //DELETEME: I18N: Converting down (2byte->1byte) OK?
 
-    if ( (m_composeHTML) && (!htmlSig) )
-      sigOutput.AppendWithConversion("</pre>");
     if (m_composeHTML)
-      sigOutput.AppendWithConversion(divclose);
+    {
+      if (htmlSig)
+        sigOutput.AppendWithConversion(htmlsigclose);
+      else
+        sigOutput.AppendWithConversion(preclose);
+    }
   }
 
   aMsgBody->Append(sigOutput);
@@ -2855,42 +2862,37 @@ nsresult nsMsgCompose::SetSignature(nsIMsgIdentity *identity)
   {
     if (m_composeHTML)
     {
-      //In html, the signature is inside a div whith the class=signature, it's must be the last node
-      nsAutoString tagLocalName;
-      node->GetLocalName(tagLocalName);
-      if (tagLocalName.EqualsWithConversion("DIV"))
+      //In html, the signature is inside an element with the class=signature, it's must be the last node
+      nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
+      if (element)
       {
-        nsCOMPtr<nsIDOMElement> element = do_QueryInterface(node);
-        if (element)
+        nsAutoString attributeName;
+        nsAutoString attributeValue;
+        attributeName.AssignWithConversion("class");
+
+        rv = element->GetAttribute(attributeName, attributeValue);
+        if (NS_SUCCEEDED(rv))
         {
-          nsAutoString attributeName;
-          nsAutoString attributeValue;
-          attributeName.AssignWithConversion("class");
-
-          rv = element->GetAttribute(attributeName, attributeValue);
-          if (NS_SUCCEEDED(rv))
+          if (attributeValue.Find("signature", PR_TRUE) != kNotFound)
           {
-            if (attributeValue.EqualsWithConversion("signature", PR_TRUE))
+            //Now, I am sure I get the right node!
+            editor->BeginTransaction();
+            node->GetPreviousSibling(getter_AddRefs(tempNode));
+            rv = editor->DeleteNode(node);
+            if (NS_FAILED(rv))
             {
-              //Now, I am sure I get the right node!
-              editor->BeginTransaction();
-              node->GetPreviousSibling(getter_AddRefs(tempNode));
-              rv = editor->DeleteNode(node);
-              if (NS_FAILED(rv))
-              {
-                editor->EndTransaction();
-                return rv;
-              }
-
-              //Also, remove the <br> right before the signature.
-              if (tempNode)
-              {
-                tempNode->GetLocalName(tagLocalName);
-                if (tagLocalName.EqualsWithConversion("BR"))
-                  editor->DeleteNode(tempNode);
-              }
               editor->EndTransaction();
-           }
+              return rv;
+            }
+
+            //Also, remove the <br> right before the signature.
+            if (tempNode)
+            {
+              tempNode->GetLocalName(tagLocalName);
+              if (tagLocalName.EqualsWithConversion("BR"))
+                editor->DeleteNode(tempNode);
+            }
+            editor->EndTransaction();
           }
         }
       }
