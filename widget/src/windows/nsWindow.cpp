@@ -116,6 +116,17 @@ static NS_DEFINE_CID(kCClipboardCID,       NS_CLIPBOARD_CID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
+// When we build we are currently (11/27/01) setting the WINVER to 0x0400
+// Which means we do not compile in the system resource for the HAND cursor
+// this enables us still define the resource and if it isn't there then we will
+// get our own hand cursor.
+// 32649 is the resource number as defined by WINUSER.H for this cursor
+// if the resource is defined by the build env. then it will find it when asked
+// if not, then we get our own cursor.
+#ifndef IDC_HAND
+#define IDC_HAND MAKEINTRESOURCE(32649)
+#endif
+
 ////////////////////////////////////////////////////
 // Manager for Registering and unregistering OLE
 // This is needed for drag & drop & Clipboard support
@@ -2014,7 +2025,10 @@ NS_METHOD nsWindow::SetCursor(nsCursor aCursor)
       break;
 
     case eCursor_hyperlink: {
-      newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_SELECTANCHOR));
+      newCursor = ::LoadCursor(NULL, IDC_HAND);
+      if (!newCursor) {
+        newCursor = ::LoadCursor(nsToolkit::mDllInstance, MAKEINTRESOURCE(IDC_SELECTANCHOR));
+      }
       break;
     }
 
