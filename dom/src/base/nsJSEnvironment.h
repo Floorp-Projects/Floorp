@@ -54,7 +54,7 @@ private:
 
   static int PR_CALLBACK JSOptionChangedCallback(const char *pref, void *data);
 
-  static JSBool PR_CALLBACK DOMBranchCallback(JSContext *cx, JSScript *script);
+  static JSBool JS_DLL_CALLBACK DOMBranchCallback(JSContext *cx, JSScript *script);
   
 public:
   nsJSContext(JSRuntime *aRuntime);
@@ -162,6 +162,6 @@ public:
 };
 
 /* prototypes */
-void PR_CALLBACK NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
+void JS_DLL_CALLBACK NS_ScriptErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 
 #endif /* nsJSEnvironment_h___ */
