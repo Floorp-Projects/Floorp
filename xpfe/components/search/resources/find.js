@@ -87,7 +87,7 @@ function saveSearch()
 
 	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-	if (bmks)	bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE);
+	if (bmks)	bmks.AddBookmark(searchURL, searchTitle, bmks.BOOKMARK_FIND_TYPE, null);
 
 	return(true);
 }

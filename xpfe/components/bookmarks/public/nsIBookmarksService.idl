@@ -37,9 +37,11 @@ interface nsIBookmarksService : nsISupports
 
     void	ReadBookmarks();
     boolean	IsBookmarked(in string aURI);
-    void	AddBookmark(in string aURI, in wstring aTitle, in long bmType);
-    void	UpdateBookmarkLastVisitedDate(in string aURL);
+    void	AddBookmark(in string aURI, in wstring aTitle, in long bmType, in wstring docCharset);
+    void	UpdateBookmarkLastVisitedDate(in string aURL, in wstring docCharset);
     string	FindShortcut(in wstring aName);
+    wstring	GetLastCharset(in string aURI);
+
 };
 
 %{C++

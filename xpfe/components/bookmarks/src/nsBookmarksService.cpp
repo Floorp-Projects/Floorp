@@ -142,6 +142,7 @@ static const char kBookmarkCommand[]              = "http://home.netscape.com/NC
 PRInt32 gRefCnt;
 nsIRDFService		*gRDF;
 nsIRDFContainerUtils	*gRDFC;
+nsICharsetAlias* gCharsetAlias;
 
 nsIRDFResource		*kNC_Bookmark;
 nsIRDFResource		*kNC_BookmarkSeparator;
@@ -168,6 +169,7 @@ nsIRDFResource		*kWEB_Status;
 nsIRDFResource		*kWEB_LastPingDate;
 nsIRDFResource		*kWEB_LastPingETag;
 nsIRDFResource		*kWEB_LastPingModDate;
+nsIRDFResource    *kWEB_LastCharset;
 nsIRDFResource		*kWEB_LastPingContentLen;
 
 nsIRDFResource		*kNC_Parent;
@@ -205,6 +207,13 @@ bm_AddRefGlobals()
 		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get RDF container utils");
 		if (NS_FAILED(rv)) return rv;
 
+		rv = nsServiceManager::GetService(kCharsetAliasCID,
+						  NS_GET_IID(nsICharsetAlias),
+						  (nsISupports**) &gCharsetAlias);
+		
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get charset alias service");
+		if (NS_FAILED(rv)) return rv;
+
 		gRDF->GetResource(kURINC_BookmarksRoot,                   &kNC_BookmarksRoot);
 		gRDF->GetResource(kURINC_IEFavoritesRoot,                 &kNC_IEFavoritesRoot);
 		gRDF->GetResource(kURINC_NewBookmarkFolder,               &kNC_NewBookmarkFolder);
@@ -227,6 +236,7 @@ bm_AddRefGlobals()
 
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastModifiedDate",   &kWEB_LastModifiedDate);
 		gRDF->GetResource(WEB_NAMESPACE_URI "LastVisitDate",      &kWEB_LastVisitDate);
+    gRDF->GetResource(WEB_NAMESPACE_URI "LastCharset",        &kWEB_LastCharset);
 
 		gRDF->GetResource(WEB_NAMESPACE_URI "Schedule",           &kWEB_Schedule);
 		gRDF->GetResource(WEB_NAMESPACE_URI "status",             &kWEB_Status);
@@ -271,6 +281,12 @@ bm_ReleaseGlobals()
 			gRDFC = nsnull;
 		}
 
+		if (gCharsetAlias)
+		{
+			nsServiceManager::ReleaseService(kCharsetAliasCID, gCharsetAlias);
+			gCharsetAlias = nsnull;
+		}
+
 		NS_IF_RELEASE(kNC_Bookmark);
 		NS_IF_RELEASE(kNC_BookmarkSeparator);
 		NS_IF_RELEASE(kNC_BookmarkAddDate);
@@ -291,14 +307,15 @@ bm_ReleaseGlobals()
 		NS_IF_RELEASE(kRDF_nextVal);
 		NS_IF_RELEASE(kWEB_LastModifiedDate);
 		NS_IF_RELEASE(kWEB_LastVisitDate);
+    NS_IF_RELEASE(kNC_Parent);
+
 		NS_IF_RELEASE(kWEB_Schedule);
 		NS_IF_RELEASE(kWEB_Status);
 		NS_IF_RELEASE(kWEB_LastPingDate);
 		NS_IF_RELEASE(kWEB_LastPingETag);
 		NS_IF_RELEASE(kWEB_LastPingModDate);
 		NS_IF_RELEASE(kWEB_LastPingContentLen);
-		NS_IF_RELEASE(kNC_Parent);
-
+    NS_IF_RELEASE(kWEB_LastCharset);
 		NS_IF_RELEASE(kNC_BookmarkCommand_NewBookmark);
 		NS_IF_RELEASE(kNC_BookmarkCommand_NewFolder);
 		NS_IF_RELEASE(kNC_BookmarkCommand_NewSeparator);
@@ -391,7 +408,8 @@ public:
 			     PRInt32          aLastModifiedDate,
 			     const char*      aShortcutURL,
 			     nsIRDFResource*  aNodeType,
-			     nsIRDFResource** bookmarkNode);
+			     nsIRDFResource** bookmarkNode,
+           const PRUnichar* aCharset);
 
 	nsresult SetIEFavoritesRoot(const char *IEFavoritesRootURL)
 	{
@@ -535,6 +553,7 @@ static const char kTargetEquals[]          = "TARGET=\"";
 static const char kAddDateEquals[]         = "ADD_DATE=\"";
 static const char kLastVisitEquals[]       = "LAST_VISIT=\"";
 static const char kLastModifiedEquals[]    = "LAST_MODIFIED=\"";
+static const char kLastCharsetEquals[]     = "LAST_CHARSET=\"";
 static const char kShortcutURLEquals[]     = "SHORTCUTURL=\"";
 static const char kScheduleEquals[]        = "SCHEDULE=\"";
 static const char kLastPingEquals[]        = "LAST_PING=\"";
@@ -908,11 +927,10 @@ BookmarkParser::ParseMetaTag(const nsString &aLine, nsIUnicodeDecoder **decoder)
 	content.Mid(charset, start, content.Length() - start);
 	if (charset.Length() < 1)	return(NS_ERROR_UNEXPECTED);
 
-	NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &rv);
-	if (NS_SUCCEEDED(rv) && (calias))
+	if (gCharsetAlias)
 	{
 		nsAutoString	charsetName;
-		if (NS_SUCCEEDED(rv = calias->GetPreferred(charset, charsetName)))
+		if (NS_SUCCEEDED(rv = gCharsetAlias->GetPreferred(charset, charsetName)))
 		{
 			if (charsetName.Length() > 0)
 			{
@@ -1044,16 +1062,31 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 		}
 	}
 
-	// 7. Parse the shortcut URL (and always lowercase them before storing internally)
+  // 7. Parse the last doc charset
+  
+  PRUnichar*  docCharset = nsnull;
+  {
+    nsAutoString s;
+    ParseAttribute(aLine, kLastCharsetEquals, sizeof(kLastCharsetEquals) - 1, s);
+    if ((s.Length() > 0) && gCharsetAlias)
+    {
+          nsresult rv = gCharsetAlias->GetPreferred(s, s);
+
+          if (NS_SUCCEEDED(rv) && (s.Length()>0)) 
+              docCharset = s.ToNewUnicode();
+    }
+  }
+
+	// 8. Parse the shortcut URL (and always lowercase them before storing internally)
 	nsAutoString	shortcut;
 	ParseAttribute(aLine, kShortcutURLEquals, sizeof(kShortcutURLEquals) -1, shortcut);
 	shortcut.ToLowerCase();
 
-	// 8. Parse the schedule
+	// 9. Parse the schedule
 	nsAutoString	schedule;
 	ParseAttribute(aLine, kScheduleEquals, sizeof(kScheduleEquals) -1, schedule);
 
-	// 9. Parse the last ping date
+	// 10. Parse the last ping date
 	PRInt32 lastPingDate = 0;
 	{
 		nsAutoString s;
@@ -1064,19 +1097,19 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 		}
 	}
 
-	// 10. Parse the ping ETag
+	// 11. Parse the ping ETag
 	nsAutoString	pingETag;
 	ParseAttribute(aLine, kPingETagEquals, sizeof(kPingETagEquals) -1, pingETag);
 
-	// 11. Parse the ping LastMod date
+	// 12. Parse the ping LastMod date
 	nsAutoString	pingLastMod;
 	ParseAttribute(aLine, kPingLastModEquals, sizeof(kPingLastModEquals) -1, pingLastMod);
 
-	// 12. Parse the Ping Content Length
+	// 13. Parse the Ping Content Length
 	nsAutoString	pingContentLength;
 	ParseAttribute(aLine, kPingContentLenEquals, sizeof(kPingContentLenEquals) -1, pingContentLength);
 
-	// 13. Parse the Ping Status
+	// 14. Parse the Ping Status
 	nsAutoString	pingStatus;
 	ParseAttribute(aLine, kPingStatusEquals, sizeof(kPingStatusEquals) -1, pingStatus);
 
@@ -1094,7 +1127,7 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 		char *cShortcutURL = shortcut.ToNewCString();	// Note: can be null
 
 		rv = AddBookmark(aContainer, cURL, name.GetUnicode(), addDate, lastVisitDate,
-				lastModifiedDate, cShortcutURL, nodeType, bookmarkNode);
+				lastModifiedDate, cShortcutURL, nodeType, bookmarkNode, docCharset);
 
 		if (NS_SUCCEEDED(rv))
 		{
@@ -1214,8 +1247,7 @@ BookmarkParser::ParseBookmark(const nsString &aLine, const nsCOMPtr<nsIRDFContai
 }
 
 
-
-    // Now create the bookmark
+// Now create the bookmark
 nsresult
 BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
                             const char*      aURL,
@@ -1225,7 +1257,8 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
                             PRInt32          aLastModifiedDate,
                             const char*      aShortcutURL,
                             nsIRDFResource*  aNodeType,
-                            nsIRDFResource** bookmarkNode)
+                            nsIRDFResource** bookmarkNode,
+                            const PRUnichar* aCharset)
 {
 	nsresult	rv;
 	nsAutoString	fullURL; fullURL.AssignWithConversion(aURL);
@@ -1299,6 +1332,23 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	AssertTime(bookmark, kWEB_LastVisitDate, aLastVisitDate);
 	AssertTime(bookmark, kWEB_LastModifiedDate, aLastModifiedDate);
 
+  if ((nsnull != aCharset) && (*aCharset != PRUnichar('\0')))
+  {
+         nsCOMPtr<nsIRDFLiteral> charsetliteral;
+         if (NS_FAILED(rv = gRDF->GetLiteral(aCharset, getter_AddRefs(charsetliteral))))
+         {
+                 NS_ERROR("unable to create literal for bookmark document charset");
+         }
+         if (NS_SUCCEEDED(rv))
+         {
+                 rv = mDataSource->Assert(bookmark, kWEB_LastCharset, charsetliteral, PR_TRUE);
+                 if (rv != NS_RDF_ASSERTION_ACCEPTED)
+                 {
+                         NS_ERROR("unable to set bookmark document charset");
+                 }
+         }
+  }
+
 	if ((nsnull != aShortcutURL) && (*aShortcutURL != '\0'))
 	{
 		nsCOMPtr<nsIRDFLiteral> shortcutLiteral;
@@ -1326,7 +1376,6 @@ BookmarkParser::AddBookmark(nsCOMPtr<nsIRDFContainer> aContainer,
 	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
 	return(rv);
 }
-
 
 
 nsresult
@@ -2209,7 +2258,6 @@ void
 nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 {
 	nsBookmarksService *bmks = NS_STATIC_CAST(nsBookmarksService *, aClosure);
-	nsresult			rv;
 	if (!bmks)	return;
 
 	if ((bmks->mBookmarksAvailable == PR_TRUE) && (bmks->mDirty == PR_TRUE))
@@ -2219,6 +2267,7 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 
 	if (bmks->busySchedule == PR_FALSE)
 	{
+		nsresult			rv;
 		nsCOMPtr<nsIRDFResource>	bookmark;
 		if (NS_SUCCEEDED(rv = bmks->GetBookmarkToPing(getter_AddRefs(bookmark))) && (bookmark))
 		{
@@ -2763,16 +2812,20 @@ NS_IMPL_QUERY_INTERFACE6(nsBookmarksService,
 
 
 NS_IMETHODIMP
-nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitle, PRInt32 bmType)
+nsBookmarksService::AddBookmark(const char *aURI,
+                                const PRUnichar *aOptionalTitle, 
+                                PRInt32 bmType,
+                                const PRUnichar *aCharset)
 {
 	// XXX Constructing a parser object to do this is bad.
 	// We need to factor AddBookmark() into its own little
 	// routine or something.
 
+  nsresult rv;
+
 	BookmarkParser parser;
 	parser.Init(nsnull, mInner, mPersonalToolbarName);
 
-	nsresult rv;
 
 	nsCOMPtr<nsIRDFContainer> container;
 	rv = nsComponentManager::CreateInstance(kRDFContainerCID,
@@ -2808,14 +2861,15 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 	LL_L2I(now32, now64);
 
 	rv = parser.AddBookmark(container, aURI, aOptionalTitle, now32,
-				0L, 0L, nsnull, kNC_Bookmark, nsnull);
+				0L, 0L, nsnull, kNC_Bookmark, nsnull, aCharset);
 
 	if (NS_FAILED(rv)) return(rv);
 
 	mDirty = PR_TRUE;
 	Flush();
 
-	return(NS_OK);
+  return(NS_OK);
+
 }
 
 
@@ -2863,9 +2917,50 @@ nsBookmarksService::IsBookmarked(const char *aURI, PRBool *isBookmarkedFlag)
 }
 
 
+NS_IMETHODIMP
+nsBookmarksService::GetLastCharset(const char *aURI,  PRUnichar **aLastCharset)
+{
+	if (!aURI)		  return(NS_ERROR_UNEXPECTED);
+	if (!mInner)		return(NS_ERROR_UNEXPECTED);
+	NS_PRECONDITION(aLastCharset != nsnull, "null ptr");
+	if (!aLastCharset)	return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIRDFResource>	bookmark;
+	nsresult			rv = nsnull;
+
+	if (NS_SUCCEEDED(rv = gRDF->GetResource(aURI, getter_AddRefs(bookmark) )))
+	{
+		PRBool			isBookmark = PR_FALSE;
+
+		// Note: always use mInner!! Otherwise, could get into an infinite loop
+		// due to Assert/Change calling UpdateBookmarkLastModifiedDate()
+		if (NS_SUCCEEDED(rv = mInner->HasAssertion(bookmark, kRDF_type, kNC_Bookmark,
+			PR_TRUE, &isBookmark)) && (isBookmark == PR_TRUE))
+		{
+      nsCOMPtr<nsIRDFNode>	lastCharactersetNode;
+
+			if (NS_SUCCEEDED(rv = mInner->GetTarget(bookmark, kWEB_LastCharset, PR_TRUE,
+				getter_AddRefs(lastCharactersetNode))) && (rv != NS_RDF_NO_VALUE))
+      {
+	        nsCOMPtr<nsIRDFLiteral>	charsetLiteral = do_QueryInterface(lastCharactersetNode);
+
+	        if (!charsetLiteral)	return(NS_ERROR_NO_INTERFACE);	        
+	        if (NS_FAILED(rv = charsetLiteral->GetValue(aLastCharset))) return(rv);
+	        if (!*aLastCharset)	return(NS_ERROR_NULL_POINTER);
+          return(NS_OK);
+			}
+
+    }
+
+  }
+
+	*aLastCharset = nsnull;
+	return NS_RDF_NO_VALUE;
+}
+
 
 NS_IMETHODIMP
-nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
+nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL, const PRUnichar *aCharset)
 {
 	nsCOMPtr<nsIRDFResource>	bookmark;
 	nsresult			rv;
@@ -2896,6 +2991,31 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 					rv = mInner->Assert(bookmark, kWEB_LastVisitDate, now, PR_TRUE);
 				}
 
+        //piggy-backing last charset...
+        if ((nsnull != aCharset) && (*aCharset != PRUnichar('\0')))
+        {
+               nsCOMPtr<nsIRDFLiteral> charsetliteral;
+               if (NS_FAILED(rv = gRDF->GetLiteral(aCharset, getter_AddRefs(charsetliteral))))
+               {
+                       NS_ERROR("unable to create literal for bookmark document charset");
+               }
+
+               if (NS_SUCCEEDED(rv))
+               {
+          				nsCOMPtr<nsIRDFNode>	lastCharacterset;
+
+				          if (NS_SUCCEEDED(rv = mInner->GetTarget(bookmark, kWEB_LastCharset, PR_TRUE,
+					          getter_AddRefs(lastCharacterset))) && (rv != NS_RDF_NO_VALUE))
+                  {
+					          rv = mInner->Change(bookmark, kWEB_LastCharset, lastCharacterset, charsetliteral);
+				          }
+				          else
+				          {
+					          rv = mInner->Assert(bookmark, kWEB_LastCharset, charsetliteral, PR_TRUE);
+				          }
+               }
+        } 
+
 				// also update bookmark's "status"!
 				nsCOMPtr<nsIRDFNode>	currentStatusNode;
 				if (NS_SUCCEEDED(rv = mInner->GetTarget(bookmark, kWEB_Status, PR_TRUE,
@@ -2907,6 +3027,8 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 
 //				mDirty = PR_TRUE;
 			}
+
+
 		}
 	}
 	return(rv);
@@ -4553,6 +4675,9 @@ nsBookmarksService::WriteBookmarksContainer(nsIRDFDataSource *ds, nsOutputFileSt
 
 							// output PING_LAST_MODIFIED
 							WriteBookmarkProperties(ds, strm, child, kWEB_LastPingModDate, kPingLastModEquals, PR_FALSE);
+
+              // output LAST_CHARSET
+              WriteBookmarkProperties(ds, strm, child, kWEB_LastCharset, kLastCharsetEquals, PR_FALSE);
 
 							// output PING_CONTENT_LEN
 							WriteBookmarkProperties(ds, strm, child, kWEB_LastPingContentLen, kPingContentLenEquals, PR_FALSE);
