@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.195 $ ';
+$::UtilsVersion = '$Revision: 1.196 $ ';
 
 package TinderUtils;
 
@@ -1931,12 +1931,13 @@ sub QATest {
     # Settle OS.
     run_system_cmd("sync; sleep 10", 35);
     
-    $layout_time = FileBasedTest($test_name,
-                                 $build_dir,
-                                 [@$args, $url],
-                                 $Settings::QATestTimeout,
-                                 "FAILED_XXX", # No failure, we will post-process the data.
-                                 0, 0); # Timeout means failure
+    my $rv;
+    $rv = FileBasedTest($test_name,
+                        $build_dir,
+                        [@$args, $url],
+                        $Settings::QATestTimeout,
+                        "FAILED_XXX", # No failure here, post-process the data.
+                        0, 0); # Timeout means failure
 
     # Post-process log of test output.
 
