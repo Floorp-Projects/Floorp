@@ -105,7 +105,7 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
     char params[36];
 
     if (modal) {  // if you change this, remember to change the buffer size above.
-	    strcpy(params, "menubar=no,height=%d,width=%d,modal");
+	    strcpy(params, "menubar=no,height=%d,width=%d,dependent");
     } else {
 		strcpy(params, "menubar=no,height=%d,width=%d");
 	}
@@ -120,8 +120,12 @@ nsPSMUIHandlerImpl::DisplayURI(PRInt32 width, PRInt32 height, PRBool modal, cons
 	argv = JS_PushArguments(jsContext, &stackPtr, "sss", urlStr, "_blank", buffer);
 	if (argv) {
 		// open the window
-		nsIDOMWindowInternal	*newWindow;
-		parentWindow->Open(jsContext, argv, 3, &newWindow);
+		nsIDOMWindowInternal *newWindow;
+		if (modal && win) {
+			parentWindow->OpenDialog(jsContext, argv, 3, &newWindow);
+		} else {
+			parentWindow->Open(jsContext, argv, 3, &newWindow);
+		}
         newWindow->ResizeTo(width, height);
         JS_PopArguments(jsContext, stackPtr);
 	}
