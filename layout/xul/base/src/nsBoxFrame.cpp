@@ -78,8 +78,13 @@
 #include "nsIBindingManager.h"
 #include "nsIScrollableFrame.h"
 #include "nsWidgetsCID.h"
+#include "nsLayoutAtoms.h"
+#include "nsViewsCID.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
 
 //define DEBUG_REDRAW
 
@@ -2204,5 +2209,172 @@ nsBoxFrameInner::GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize)
   rect.Inflate(margin);
   aSize.width = rect.width;
   aSize.height = rect.height;
+  return NS_OK;
+}
+
+/**
+ * Boxed don't support fixed positionioning of their children.
+ */
+nsresult
+nsBoxFrame::CreateViewForFrame(nsIPresContext* aPresContext,
+                             nsIFrame* aFrame,
+                             nsIStyleContext* aStyleContext,
+                             PRBool aForce)
+{
+  nsIView* view;
+  aFrame->GetView(aPresContext, &view);
+  // If we don't yet have a view, see if we need a view
+  if (nsnull == view) {
+    PRInt32 zIndex = 0;
+    PRBool  autoZIndex = PR_FALSE;
+    PRBool  fixedBackgroundAttachment = PR_FALSE;
+
+    // Get nsStyleColor and nsStyleDisplay
+    const nsStyleColor* color = (const nsStyleColor*)
+      aStyleContext->GetStyleData(eStyleStruct_Color);
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      aStyleContext->GetStyleData(eStyleStruct_Display);
+
+    if (color->mOpacity != 1.0f) {
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+        ("nsHTMLContainerFrame::CreateViewForFrame: frame=%p opacity=%g",
+         aFrame, color->mOpacity));
+      aForce = PR_TRUE;
+    }
+
+    // See if the frame has a fixed background attachment
+    if (NS_STYLE_BG_ATTACHMENT_FIXED == color->mBackgroundAttachment) {
+      aForce = PR_TRUE;
+      fixedBackgroundAttachment = PR_TRUE;
+    }
+    
+    // See if the frame is a scrolled frame
+    if (!aForce) {
+      nsIAtom*  pseudoTag;
+      aStyleContext->GetPseudoType(pseudoTag);
+      if (pseudoTag == nsLayoutAtoms::scrolledContentPseudo) {
+        NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+          ("nsHTMLContainerFrame::CreateViewForFrame: scrolled frame=%p", aFrame));
+        aForce = PR_TRUE;
+      }
+      NS_IF_RELEASE(pseudoTag);
+    }
+
+    if (aForce) {
+      // Create a view
+      nsIFrame* parent;
+
+      aFrame->GetParentWithView(aPresContext, &parent);
+      NS_ASSERTION(parent, "GetParentWithView failed");
+      nsIView* parentView;
+   
+      parent->GetView(aPresContext, &parentView);
+      NS_ASSERTION(parentView, "no parent with view");
+
+      // Create a view
+      static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
+      static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
+
+      nsresult result = nsComponentManager::CreateInstance(kViewCID, 
+                                                     nsnull, 
+                                                     kIViewIID, 
+                                                     (void **)&view);
+      if (NS_OK == result) {
+        nsIViewManager* viewManager;
+        parentView->GetViewManager(viewManager);
+        NS_ASSERTION(nsnull != viewManager, "null view manager");
+
+        // Initialize the view
+        nsRect bounds;
+        aFrame->GetRect(bounds);
+        view->Init(viewManager, bounds, parentView);
+
+        // If the frame has a fixed background attachment, then indicate that the
+        // view's contents should be repainted and not bitblt'd
+        if (fixedBackgroundAttachment) {
+          PRUint32  viewFlags;
+          view->GetViewFlags(&viewFlags);
+          view->SetViewFlags(viewFlags | NS_VIEW_PUBLIC_FLAG_DONT_BITBLT);
+        }
+        
+        // Insert the view into the view hierarchy. If the parent view is a
+        // scrolling view we need to do this differently
+        nsIScrollableView*  scrollingView;
+        if (NS_SUCCEEDED(parentView->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+          scrollingView->SetScrolledView(view);
+        } else {
+          viewManager->InsertChild(parentView, view, zIndex);
+
+          if (autoZIndex) {
+            viewManager->SetViewAutoZIndex(view, PR_TRUE);
+          }
+        }
+
+        // See if the view should be hidden
+        PRBool  viewIsVisible = PR_TRUE;
+        PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+                  NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+
+        if (NS_STYLE_VISIBILITY_COLLAPSE == display->mVisible) {
+          viewIsVisible = PR_FALSE;
+        }
+        else if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+          // If it has a widget, hide the view because the widget can't deal with it
+          nsIWidget* widget = nsnull;
+          view->GetWidget(widget);
+          if (widget) {
+            viewIsVisible = PR_FALSE;
+            NS_RELEASE(widget);
+          }
+          else {
+            // If it's a container element, then leave the view visible, but
+            // mark it as having transparent content. The reason we need to
+            // do this is that child elements can override their parent's
+            // hidden visibility and be visible anyway.
+            //
+            // Because this function is called before processing the content
+            // object's child elements, we can't tell if it's a leaf by looking
+            // at whether the frame has any child frames
+            nsCOMPtr<nsIContent> content;
+            PRBool      result = PR_FALSE;
+
+            aFrame->GetContent(getter_AddRefs(content));
+            if (content) {
+              content->CanContainChildren(result);
+            }
+
+            if (result) {
+              // The view needs to be visible, but marked as having transparent
+              // content
+              viewHasTransparentContent = PR_TRUE;
+            } else {
+              // Go ahead and hide the view
+              viewIsVisible = PR_FALSE;
+            }
+          }
+        }
+
+        if (viewIsVisible) {
+          if (viewHasTransparentContent) {
+            viewManager->SetViewContentTransparency(view, PR_TRUE);
+          }
+
+        } else {
+          view->SetVisibility(nsViewVisibility_kHide);
+        }
+
+        viewManager->SetViewOpacity(view, color->mOpacity);
+        NS_RELEASE(viewManager);
+      }
+
+      // Remember our view
+      aFrame->SetView(aPresContext, view);
+
+      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+        ("nsBoxFrame::CreateViewForFrame: frame=%p view=%p",
+         aFrame));
+      return result;
+    }
+  }
   return NS_OK;
 }
