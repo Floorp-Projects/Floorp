@@ -185,7 +185,7 @@ nsHistoryEntry::nsHistoryEntry()
    mParent = nsnull;
    mURL = nsnull;
    mName = nsnull;
-   mChildren = (nsVoidArray)0;
+// mChildren = (nsVoidArray)0;
 
 //  NS_INIT_REFCNT();
 }
@@ -737,12 +737,12 @@ private:
 
 nsSessionHistory::nsSessionHistory()
 {
-                  mHistoryLength = 0;
-                  mHistoryCurrentIndex = -1;
-                  mIsLoadingDoc = 0;
-                  mHistoryEntryInLoad = (nsHistoryEntry *) nsnull; 
-                  mInterimPage = (nsHistoryEntry *) nsnull;
-                  mHistoryEntries = (nsVoidArray)0;
+  mHistoryLength = 0;
+  mHistoryCurrentIndex = -1;
+  mIsLoadingDoc = 0;
+  mHistoryEntryInLoad = (nsHistoryEntry *) nsnull; 
+  mInterimPage = (nsHistoryEntry *) nsnull;
+//mHistoryEntries = (nsVoidArray)0;
   NS_INIT_REFCNT();
 }
 
