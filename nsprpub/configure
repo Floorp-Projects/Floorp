@@ -2892,9 +2892,9 @@ EOF
 EOF
 
     if test -n "$USE_64"; then
-        MDCPUCFG=_solaris64.cfg
+        MDCPUCFG_H=_solaris64.cfg
     else
-        MDCPUCFG=_solaris32.cfg
+        MDCPUCFG_H=_solaris32.cfg
     fi
     PR_MD_CSRCS=solaris.c
     DSO_LDOPTS='-G -h $(notdir $@)'
@@ -3417,10 +3417,6 @@ echo "configure:3400: checking whether ${CC-cc} accepts -pthread" >&5
 #define _REENTRANT 1
 EOF
 
-	    if test -n "$GNU_CC"; then
-	        CFLAGS="$CFLAGS -mt"
-	        CXXFLAGS="$CXXFLAGS -mt"
-	    fi
 	    ;;
     *-freebsd*)
 	    cat >> confdefs.h <<\EOF
@@ -3470,12 +3466,12 @@ EOF
     esac
 
     echo $ac_n "checking for pthread_create""... $ac_c" 1>&6
-echo "configure:3474: checking for pthread_create" >&5
+echo "configure:3470: checking for pthread_create" >&5
 if eval "test \"`echo '$''{'ac_cv_func_pthread_create'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3479 "configure"
+#line 3475 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char pthread_create(); below.  */
@@ -3498,7 +3494,7 @@ pthread_create();
 
 ; return 0; }
 EOF
-if { (eval echo configure:3502: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3498: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_pthread_create=yes"
 else
@@ -3517,7 +3513,7 @@ else
   echo "$ac_t""no" 1>&6
 
        echo $ac_n "checking for pthread_create in -lpthread""... $ac_c" 1>&6
-echo "configure:3521: checking for pthread_create in -lpthread" >&5
+echo "configure:3517: checking for pthread_create in -lpthread" >&5
 ac_lib_var=`echo pthread'_'pthread_create | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3525,7 +3521,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-lpthread  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3529 "configure"
+#line 3525 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3536,7 +3532,7 @@ int main() {
 pthread_create()
 ; return 0; }
 EOF
-if { (eval echo configure:3540: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3536: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else
@@ -3635,12 +3631,12 @@ EOF
 esac
 
 echo $ac_n "checking for dlopen""... $ac_c" 1>&6
-echo "configure:3639: checking for dlopen" >&5
+echo "configure:3635: checking for dlopen" >&5
 if eval "test \"`echo '$''{'ac_cv_func_dlopen'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
 else
   cat > conftest.$ac_ext <<EOF
-#line 3644 "configure"
+#line 3640 "configure"
 #include "confdefs.h"
 /* System header to define __stub macros and hopefully few prototypes,
     which can conflict with char dlopen(); below.  */
@@ -3663,7 +3659,7 @@ dlopen();
 
 ; return 0; }
 EOF
-if { (eval echo configure:3667: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3663: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_func_dlopen=yes"
 else
@@ -3682,7 +3678,7 @@ else
   echo "$ac_t""no" 1>&6
 
     echo $ac_n "checking for dlopen in -ldl""... $ac_c" 1>&6
-echo "configure:3686: checking for dlopen in -ldl" >&5
+echo "configure:3682: checking for dlopen in -ldl" >&5
 ac_lib_var=`echo dl'_'dlopen | sed 'y%./+-%__p_%'`
 if eval "test \"`echo '$''{'ac_cv_lib_$ac_lib_var'+set}'`\" = set"; then
   echo $ac_n "(cached) $ac_c" 1>&6
@@ -3690,7 +3686,7 @@ else
   ac_save_LIBS="$LIBS"
 LIBS="-ldl  $LIBS"
 cat > conftest.$ac_ext <<EOF
-#line 3694 "configure"
+#line 3690 "configure"
 #include "confdefs.h"
 /* Override any gcc2 internal prototype to avoid an error.  */
 /* We use char because int might match the return type of a gcc2
@@ -3701,7 +3697,7 @@ int main() {
 dlopen()
 ; return 0; }
 EOF
-if { (eval echo configure:3705: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
+if { (eval echo configure:3701: \"$ac_link\") 1>&5; (eval $ac_link) 2>&5; } && test -s conftest${ac_exeext}; then
   rm -rf conftest*
   eval "ac_cv_lib_$ac_lib_var=yes"
 else

@@ -634,9 +634,9 @@ case "$target" in
     AC_DEFINE(__svr4__)
     AC_DEFINE(SOLARIS)
     if test -n "$USE_64"; then
-        MDCPUCFG=_solaris64.cfg
+        MDCPUCFG_H=_solaris64.cfg
     else
-        MDCPUCFG=_solaris32.cfg
+        MDCPUCFG_H=_solaris32.cfg
     fi
     PR_MD_CSRCS=solaris.c
     DSO_LDOPTS='-G -h $(notdir $@)'
@@ -881,10 +881,6 @@ if test -n "$USE_PTHREADS"; then
 	    ;;
     *-solaris*)
 	    AC_DEFINE(_REENTRANT)
-	    if test -n "$GNU_CC"; then
-	        CFLAGS="$CFLAGS -mt"
-	        CXXFLAGS="$CXXFLAGS -mt"
-	    fi
 	    ;;
     *-freebsd*)
 	    AC_DEFINE(_REENTRANT)
