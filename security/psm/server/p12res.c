@@ -71,7 +71,6 @@ SSM_UnicodeConversion(SECItem *dest, SECItem *src,
     }
 
     dest->data = SSM_ZNEW_ARRAY(unsigned char, allocLen);
-
     if(!SSM_UCS2_ASCIIConversion(toUnicode, src->data, src->len,
                                  dest->data, allocLen, &dest->len,
                                  swapBytes)) {
@@ -79,7 +78,6 @@ SSM_UnicodeConversion(SECItem *dest, SECItem *src,
         dest->data = NULL;
         return SECFailure;
     }
-
     return SECSuccess;
 }
 
@@ -393,10 +391,10 @@ PRBool
 SSM_UCS2_ASCIIConversion(PRBool toUnicode, 
                          unsigned char *inBuf,
                          unsigned int inBufLen,
-			 unsigned char *outBuf,
+                         unsigned char *outBuf,
                          unsigned int maxOutBufLen, 
                          unsigned int *outBufLen, 
-			 PRBool swapBytes)
+                         PRBool swapBytes)
 {
     if (!inBuf || !outBuf || !outBufLen) {
         return PR_FALSE;
@@ -415,7 +413,16 @@ SSM_UCS2_ASCIIConversion(PRBool toUnicode,
 #endif
 	rv = nlsASCIIToUnicode(inBuf, inBufLen, 
 				    outBuf, maxOutBufLen, outBufLen);
+    if (swapBytes) {
+        unsigned int i;
+        char tmp;
 
+        for (i=0; i<outBufLen; i+=2) {
+            tmp = outBuf[i];
+            outBuf[i]   = outBuf[i+1];
+            outBuf[i+1] = tmp;
+        }
+    }
 #ifdef DEBUG
 	outLen = *outBufLen;
 	fprintf(stderr,"output: outBuf= ");

@@ -1248,8 +1248,15 @@ void SSM_InitNLS(char *dataDirectory)
                                SSM_PassVariable);
     SSM_RegisterKeywordHandler("_ocsp_responder_list",
                                SSM_OCSPResponderList);
-	SSM_RegisterKeywordHandler("_renewal_cert_info",
-							SSM_RenewalCertInfoHandler);
+    SSM_RegisterKeywordHandler("_renewal_cert_info",
+                               SSM_RenewalCertInfoHandler);
+    SSM_RegisterKeywordHandler("_emailAddresses",
+                               SSM_FillTextWithEmails);
+    SSM_RegisterKeywordHandler("_certIssuerWindowName",
+                               SSM_MakeUniqueNameForIssuerWindow);
+    SSM_RegisterKeywordHandler("_windowOffset",
+                               SSM_GetWindowOffset);
+
 #if 0
     TestNLS();
 #endif

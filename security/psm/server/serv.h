@@ -157,6 +157,9 @@ char * SSM_ConvertStringToHTMLString(char * string);
 
 SSMStatus SSM_CopyCMTItem(CMTItem *dest, CMTItem *source);
 
+SSMStatus
+SSM_PrettyPrintDER(PRFileDesc *out, SECItem *derItem, PRBool raw);
+
 #ifdef XP_UNIX
 void SSM_ReleaseLockFile();
 #endif /*XP_UNIX*/

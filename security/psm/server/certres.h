@@ -116,6 +116,9 @@ SSMStatus SSM_ObtainNewCertSite(SSMTextGenContext * cx);
 SSMStatus SSM_ProcessLDAPRequestHandler(HTTPRequest * req);
 SSMStatus SSM_LDAPServerListKeywordHandler(SSMTextGenContext * cx);
 SSMStatus SSM_ProcessLDAPWindow(HTTPRequest * req);
+SSMStatus SSM_ShowCertIssuer(HTTPRequest *req);
+SSMStatus SSM_GetWindowOffset(SSMTextGenContext *cx);
+SSMStatus SSM_PrettyPrintCert(HTTPRequest *req);
 
 SSMStatus
 SSM_ProcessCertUIAction(HTTPRequest * req, CERTCertificate * cert);
@@ -125,6 +128,8 @@ int SSM_CertListCount(CERTCertList *certList);
 
 SSMStatus SSM_OCSPOptionsKeywordHandler(SSMTextGenContext *cx);
 SSMStatus SSM_OCSPDefaultResponderKeywordHandler(SSMTextGenContext *cx);
+SSMStatus SSM_FillTextWithEmails(SSMTextGenContext *cx);
+SSMStatus SSM_MakeUniqueNameForIssuerWindow(SSMTextGenContext *cx);
 
 SSMStatus 
 SSM_CompleteLDAPLookup(SSMControlConnection *ctrl, char * ldapserver, 

@@ -724,8 +724,10 @@ SSMStatus SSM_DeleteCertHandler(HTTPRequest * req)
  
   /* check which button was clicked */
   rv = SSM_HTTPParamValue(req, "do_cancel", &value);
-  if (rv == SSM_SUCCESS) 
+  if (rv == SSM_SUCCESS) {
+    req->ctrlconn->super.super.m_buttonType = SSM_BUTTON_CANCEL;
     goto done;
+  }
   
   rv = SSM_HTTPParamValue(req, "do_ok", &value);
   if (rv == SSM_SUCCESS) {
@@ -741,7 +743,7 @@ SSMStatus SSM_DeleteCertHandler(HTTPRequest * req)
   SSM_DEBUG("DeleteCertHandler: can't figure out which button was clicked in DeleteCert dialog!\n");
     
 done:
-  SSM_NotifyUIEvent((SSMResource *)req->ctrlconn);
+  SSM_NotifyUIEvent(&req->ctrlconn->super.super);
   return rv;
 }
 
@@ -770,7 +772,7 @@ SSMStatus SSM_ProcessCertDeleteButton(HTTPRequest * req)
   SSM_LockUIEvent(&req->ctrlconn->super.super);
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "cert", "delete_cert", 
 					target, params, &target->m_clientContext);
-  SSM_WaitUIEvent((SSMResource *)req->ctrlconn, PR_INTERVAL_NO_TIMEOUT);
+  SSM_WaitUIEvent(&req->ctrlconn->super.super, PR_INTERVAL_NO_TIMEOUT);
   /* See if the user canceled, if so send back HTTP_NO_CONTENT
    * so security advisor doesn't redraw the same content.
    */
@@ -2156,7 +2158,9 @@ SSMStatus SSM_ProcessLDAPWindow(HTTPRequest * req)
 {
   SSMStatus rv = SSM_FAILURE;
   SSMResource * target = NULL;
-  char **ldap_servers, **ptr;
+  char **ldap_servers, **ptr, *params = NULL;
+  SSMHTTPParamMultValues emailAddresses={NULL, NULL, 0};
+  int i;
 
   if (!req || !req->ctrlconn) 
     goto loser;
@@ -2172,16 +2176,36 @@ SSMStatus SSM_ProcessLDAPWindow(HTTPRequest * req)
   }
     
   target = (req->target ? req->target : (SSMResource *) req->ctrlconn);
+  /*
+   * Let's see if there were some email addresses passed along to this
+   * dialog that we should pre-fill the window with.
+   */
+  rv  = SSM_HTTPParamValueMultiple(req, "emailAddresses", &emailAddresses);
+  if (rv == SSM_SUCCESS && emailAddresses.numValues > 0) {
+    char *tmp;
+
+    /* There are some email addresses that need to be passed on. */
+    for (i=0; i<emailAddresses.numValues; i++) {
+      tmp = PR_smprintf("%s%s%s", (params)?params:"", (params)?",":"",
+			           emailAddresses.values[i]);
+      PR_FREEIF(params);
+      params = tmp;
+    }
+    tmp = SSM_ConvertStringToHTMLString(params);
+    PR_Free(params);
+    params = PR_smprintf("emailAddresses=%s", tmp);
+    PR_Free(tmp);
+  }
   /* send UI event to bring up the dialog */
-  SSM_LockUIEvent(&req->ctrlconn->super.super);
+  SSM_LockUIEvent(target);
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
 					"ldap_request", target, 
-					NULL, &target->m_clientContext);
+					params, &target->m_clientContext);
   if (rv != SSM_SUCCESS) { 
-    SSM_UnlockUIEvent(&req->ctrlconn->super.super);
+    SSM_UnlockUIEvent(target);
     goto loser;
   }
-  SSM_WaitUIEvent(&req->ctrlconn->super.super, PR_INTERVAL_NO_TIMEOUT);
+  SSM_WaitUIEvent(target, PR_INTERVAL_NO_TIMEOUT);
   /*  if (req->ctrlconn->super.super.m_buttonType == SSM_BUTTON_CANCEL) {
       SSM_HTTPReportError(req, HTTP_NO_CONTENT);
       goto loser;
@@ -2196,8 +2220,17 @@ SSMStatus SSM_ProcessLDAPWindow(HTTPRequest * req)
   PR_Free(ldap_servers);
   
  loser:
-  if (req)
-    SSM_RefreshRefererPage(req);
+  if (req) {
+    if (req->target->m_buttonType == SSM_BUTTON_CANCEL) {
+      SSM_HTTPReportError(req, HTTP_NO_CONTENT);
+    } else {
+      SSM_RefreshRefererPage(req);
+    }
+  }
+  /* Don't free the values stored in the individual array because
+   * those are owned by the request structure.
+   */
+  PR_FREEIF(emailAddresses.values);
   return rv;
 }
 
@@ -2205,7 +2238,8 @@ SSMStatus SSM_ProcessLDAPRequestHandler(HTTPRequest * req)
 {
   SSMStatus rv = SSM_FAILURE;
   char * tmpStr = NULL, *emailaddr, *ldapserver;
-  char* key = NULL;
+  char* key = NULL, *currEmail, *cursor;
+  PRBool updateList = PR_FALSE;
 
   /* make sure you got the right baseRef */
   rv = SSM_HTTPParamValue(req, "baseRef", &tmpStr);
@@ -2213,18 +2247,18 @@ SSMStatus SSM_ProcessLDAPRequestHandler(HTTPRequest * req)
       PL_strcmp(tmpStr, "windowclose_doclose_js") != 0) {
     goto loser;
   }
-
   /* Close the window */
   rv = SSM_HTTPDefaultCommandHandler(req);
   if (rv != SSM_SUCCESS) 
     SSM_DEBUG("UI_ProcessLDAPRequest: can't close the window !\n");
 
+
   rv = SSM_HTTPParamValue(req, "do_cancel", &tmpStr);
   if (rv == SSM_SUCCESS && tmpStr) {
-    req->ctrlconn->super.super.m_buttonType = SSM_BUTTON_CANCEL;
+    req->target->m_buttonType = SSM_BUTTON_CANCEL;
     goto loser;
   }
-  req->ctrlconn->super.super.m_buttonType = SSM_BUTTON_OK;
+  req->target->m_buttonType = SSM_BUTTON_OK;
 
   rv = SSM_HTTPParamValue(req, "emailaddress", &emailaddr);
   if (rv != SSM_SUCCESS) {
@@ -2243,15 +2277,45 @@ SSMStatus SSM_ProcessLDAPRequestHandler(HTTPRequest * req)
   if (key == NULL) {
       goto loser;
   }
+  /*
+   * Now let's loop over the each entry looking for the certs.
+   */
+  cursor = currEmail = emailaddr;
+  while (cursor != NULL && *cursor != '\0') {
+    char oldCursorVal;
 
-  rv = SSM_CompleteLDAPLookup(req->ctrlconn, key, emailaddr);
-  if (rv == SSM_SUCCESS) 
+    cursor = PL_strpbrk(currEmail, " ,");
+    if (cursor != NULL) {
+      oldCursorVal = *cursor;
+      *cursor = '\0';
+    }
+    rv = SSM_CompleteLDAPLookup(req->ctrlconn, key, currEmail);
+    if (rv == SSM_SUCCESS) {
+      updateList = PR_TRUE;
+    }
+    if (cursor != NULL) {
+      *cursor = oldCursorVal;
+      cursor++;
+    }
+    /*
+     * Jump over all of the white space and commas.
+     */
+    while (cursor && *cursor && isspace(*cursor))
+      cursor++;
+    while (cursor && *cursor == ',') {
+      cursor++;
+      while (cursor && *cursor && isspace(*cursor))
+	cursor++;
+    }
+    currEmail = cursor;
+  }
+  if (updateList) 
     SSM_ChangeCertSecAdvisorList(req, emailaddr, certHashAdd);
   else 
     SSM_DEBUG("UI_ProcessLDAPRequest: can't import new cert into the db!\n");
   
  loser:
-  SSM_NotifyUIEvent(&req->ctrlconn->super.super);
+  SSM_NotifyUIEvent(req->target);
   PR_FREEIF(key);
   return rv;
 }
@@ -2493,4 +2557,186 @@ char * SSM_GetCAPolicyString(char * org, unsigned long noticeNum, void * arg)
   PR_FREEIF(alphaorg);
   PR_FREEIF(key);
   return value?PL_strdup(value):NULL;
+}
+
+SSMStatus
+SSM_FillTextWithEmails(SSMTextGenContext *cx)
+{
+  SSMStatus rv;
+  char *emails;
+
+  rv = SSM_HTTPParamValue(cx->m_request, "emailAddresses", &emails);
+  PR_FREEIF(cx->m_result);
+  if (rv == SSM_SUCCESS) {
+    cx->m_result = PL_strdup(emails);
+  } else {
+    cx->m_result = PL_strdup("");
+  }
+  return SSM_SUCCESS;
+}
+
+SSMStatus
+SSM_GetWindowOffset(SSMTextGenContext *cx)
+{
+  char *offset=NULL;
+  SSMStatus rv;
+  int offsetVal;
+  
+  rv = SSM_HTTPParamValue(cx->m_request, "windowOffset", &offset);
+  if (rv != SSM_SUCCESS) {
+    offsetVal = 0;
+  } else {
+    offsetVal = atoi (offset);
+  }
+  offsetVal += 20;
+  PR_FREEIF(cx->m_result);
+  cx->m_result = PR_smprintf("%d", offsetVal);
+  return SSM_SUCCESS;
+}
+
+SSMStatus
+SSM_MakeUniqueNameForIssuerWindow(SSMTextGenContext *cx)
+{
+  SSMResourceCert *certres;
+  CERTCertificate *issuer;
+  char *certHex=NULL, *issuerHex=NULL;
+
+  if (!SSM_IsAKindOf(cx->m_request->target, SSM_RESTYPE_CERTIFICATE)) {
+    return SSM_FAILURE;
+  }
+  certres = (SSMResourceCert*)cx->m_request->target;
+  issuer = CERT_FindCertIssuer(certres->cert,PR_Now(),certUsageAnyCA);
+  certHex = CERT_Hexify(&certres->cert->serialNumber,0);
+  if (issuer != NULL) {
+    issuerHex = CERT_Hexify(&issuer->serialNumber,0);
+    CERT_DestroyCertificate(issuer);
+  }
+  PR_FREEIF(cx->m_result);
+  cx->m_result = PR_smprintf("%s%s", certHex, (issuerHex) ? issuerHex : "");
+  PR_FREEIF(issuerHex);
+  PR_Free(certHex);
+  return SSM_SUCCESS;
+}
+
+SSMStatus 
+SSM_ShowCertIssuer(HTTPRequest *req)
+{
+  SSMResourceCert *certres;
+  SSMResource *issuerRes=NULL;
+  CERTCertificate *issuer=NULL;
+  char *tmpl = NULL, *finalText=NULL;
+  SSMTextGenContext *cx=NULL;
+  SSMStatus rv;
+  SSMResourceID issuerResID;
+  char *htmlString=NULL, *params = NULL, *offsetString;
+  int offset;
+
+  if (!SSM_IsAKindOf(req->target, SSM_RESTYPE_CERTIFICATE)) {
+    goto loser;
+  }
+  certres = (SSMResourceCert*)req->target;
+  issuer = CERT_FindCertIssuer(certres->cert, PR_Now(), certUsageAnyCA);
+  if (issuer == NULL) {
+    /*
+     * Instead of bailing out entirely, pop up a dialog that let's the
+     * user know the issuer was not found.
+     */
+    
+    params = PR_smprintf("get?baseRef=issuer_not_found&target=%d",
+			 req->target->m_id);
+  } else {
+    
+    rv = (SSMStatus) SSM_CreateResource(SSM_RESTYPE_CERTIFICATE, (void*)issuer,
+					req->ctrlconn, &issuerResID, &issuerRes);
+    if (rv != SSM_SUCCESS) {
+      goto loser;
+    }
+
+    rv = SSM_HTTPParamValue(req, "windowOffset", &offsetString);
+    if (rv != SSM_SUCCESS) {
+      offset = 0;
+    } else {
+      offset = atoi (offsetString);
+    }
+    
+    /*  Now let's build up the URL*/
+    htmlString = SSM_ConvertStringToHTMLString(issuer->nickname);
+    params = PR_smprintf("get?baseRef=cert_view&target=%1$d&windowOffset=%2$d", 
+			 issuerResID, offset);
+    PR_Free(htmlString);
+    htmlString = NULL;
+  } 
+  rv =SSMTextGen_NewTopLevelContext(req, &cx);
+  if (rv != SSM_SUCCESS) {
+    goto loser;
+  }
+  rv = SSM_GetAndExpandText(cx, "refresh_window_content", &tmpl);
+  if (rv != SSM_SUCCESS) {
+    goto loser;
+  }
+  finalText = PR_smprintf(tmpl, params);
+  SSM_HTTPSendOKHeader(req, NULL, "text/html");
+  SSM_HTTPSendUTF8String(req, finalText);
+  PR_FREEIF(tmpl);
+  PR_Free(finalText);
+  SSMTextGen_DestroyContext(cx);
+  req->sentResponse = PR_TRUE;
+  return SSM_SUCCESS;
+ loser:
+  PR_FREEIF(tmpl);
+  PR_FREEIF(finalText);
+  if (cx != NULL) {
+    SSMTextGen_DestroyContext(cx);
+  }
+  return SSM_FAILURE;
+}
+
+SSMStatus SSM_PrettyPrintCert(HTTPRequest *req)
+{
+    SSMResource *res;
+    SSMResourceCert *certres;
+    SSMStatus rv;
+    char *prefix=NULL, *suffix=NULL, *certName;
+    SSMTextGenContext *cx=NULL;
+
+    res = req->target;
+    if (!SSM_IsAKindOf(res, SSM_RESTYPE_CERTIFICATE)) {
+        return SSM_FAILURE;
+    }
+    certres = (SSMResourceCert*)res;
+    rv = SSMTextGen_NewTopLevelContext(req, &cx);
+    if (rv != SSM_SUCCESS) {
+        goto loser;
+    }
+    rv = SSM_GetAndExpandText(cx, "certPrettyPrefix", &prefix);
+    if (rv != SSM_SUCCESS) {
+      goto loser;
+    }
+    rv = SSM_GetAndExpandText(cx, "certPrettySuffix", &suffix);
+    if (rv != SSM_SUCCESS) {
+      goto loser;
+    }
+    rv = SSM_HTTPSendOKHeader(req, NULL, "text/html");
+    if (rv != SSM_SUCCESS) {
+      goto loser;
+    }
+    rv = SSM_HTTPSendUTF8String(req, prefix);
+    if (rv != SSM_SUCCESS) {
+      goto loser;
+    }
+    certName = (certres->cert->nickname) ? certres->cert->nickname :
+                                           certres->cert->emailAddr;
+    SSM_HTTPSendUTF8String(req, certName);
+    SSM_HTTPSendUTF8String(req, "\n\n");
+    SSM_PrettyPrintDER(req->sock, &certres->cert->derCert, 0);
+    SSM_HTTPSendUTF8String(req, suffix);
+    req->sentResponse = PR_TRUE;
+    return SSM_SUCCESS;
+ loser:
+    if (cx != NULL) {
+      SSMTextGen_DestroyContext(cx);
+    }
+    PR_FREEIF(prefix);
+    PR_FREEIF(suffix);
+    return SSM_FAILURE; 
 }
