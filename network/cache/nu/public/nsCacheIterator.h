@@ -46,6 +46,11 @@ nsCacheIterator::nsCacheIterator(nsCacheModule* i_pModule): m_pModule(i_pModule)
 }
 
 inline
+nsCacheIterator::~nsCacheIterator()
+{
+}
+
+inline
 PRBool nsCacheIterator::IsDone(void) const
 {
     if (m_pModule)

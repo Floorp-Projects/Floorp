@@ -18,6 +18,7 @@
 DEPTH=../../../..
 
 EXPORTS =               \
+	nsMonitorable.h		\
 	nsMemModule.h 		\
 	nsCacheManager.h 	\
     nsDiskModule.h 		\

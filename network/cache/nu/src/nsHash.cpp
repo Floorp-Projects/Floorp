@@ -16,7 +16,7 @@
  * Reserved.
  */
 
-#include <prmem.h>
+#include "prmem.h"
 #include "nsHash.h"
 
 //

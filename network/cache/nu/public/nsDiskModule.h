@@ -32,7 +32,7 @@ class nsDiskModule : public nsCacheModule
 {
 
 public:
-    nsDiskModule(const PRUint32 size = nsCachePref::DiskCacheSize());
+    nsDiskModule(const PRUint32 size = nsCachePref::GetInstance()->DiskCacheSize());
     ~nsDiskModule();
 
     // Cache module interface
@@ -46,10 +46,19 @@ public:
     nsCacheObject*  GetObject(const PRUint32 i_index) const;
     nsCacheObject*  GetObject(const char* i_url) const;
 
+    PRUint32        Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len);
+
+    PRBool          ReduceSizeTo(const PRUint32 i_NewSize);
+
     PRBool          Remove(const char* i_url);
     PRBool          Remove(const PRUint32 i_index);
-    
+
+    // To do cleanup set size to zero. Else initialize disk cache
+    void            SetSize(const PRUint32 i_size);
+
     PRBool          Revalidate(void);
+
+    PRUint32        Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len);
 
 private:
     enum sync_frequency

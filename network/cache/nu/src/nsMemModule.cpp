@@ -16,9 +16,9 @@
  * Reserved.
  */
 
-#include <prtypes.h>
-#include <plstr.h>
-#include <prlog.h>
+#include "prtypes.h"
+#include "plstr.h"
+#include "prlog.h"
 
 #include "nsMemModule.h"
 #include "nsMemCacheObject.h"
@@ -37,7 +37,7 @@ nsMemModule::nsMemModule(const PRUint32 size):
     m_pFirstObject(0),
     nsCacheModule(size)
 {
-    Size(size);
+    SetSize(size);
 }
 
 nsMemModule::~nsMemModule()
@@ -60,26 +60,29 @@ PRBool nsMemModule::AddObject(nsCacheObject* io_pObject)
 #endif
 
     if (io_pObject)
-	{
-		if (m_pFirstObject) 
-		{
-			LastObject()->Next(new nsMemCacheObject(io_pObject)); 
-		}
-		else
-		{
-			m_pFirstObject = new nsMemCacheObject(io_pObject);
-		}
-		m_Entries++;
+    {
+        MonitorLocker ml(this);
+        if (m_pFirstObject) 
+        {
+            LastObject()->Next(new nsMemCacheObject(io_pObject)); 
+        }
+        else
+        {
+            m_pFirstObject = new nsMemCacheObject(io_pObject);
+        }
+        m_Entries++;
 
         io_pObject->Module(nsCacheManager::MEM);
 
         return PR_TRUE;
-	}
-	return PR_FALSE;
+    }
+    return PR_FALSE;
 }
 
 PRBool nsMemModule::Contains(const char* i_url) const
 {
+    MonitorLocker ml((nsMonitorable*)this);
+
     if (m_pFirstObject && i_url && *i_url)
     {
         nsMemCacheObject* pObj = m_pFirstObject;
@@ -97,6 +100,8 @@ PRBool nsMemModule::Contains(const char* i_url) const
 
 PRBool nsMemModule::Contains(nsCacheObject* i_pObject) const
 {
+    MonitorLocker ml((nsMonitorable*)this);
+
     if (i_pObject && *i_pObject->Address())
     {
         return this->Contains(i_pObject->Address());
@@ -104,64 +109,10 @@ PRBool nsMemModule::Contains(nsCacheObject* i_pObject) const
     return 0;
 }
 
-nsCacheObject* nsMemModule::GetObject(const PRUint32 i_index) const
-{
-	nsMemCacheObject* pNth = 0;
-	if (m_pFirstObject)
-	{
-		PRUint32 index = 0;
-		pNth = m_pFirstObject;
-		while (pNth->Next() && (index++ != i_index ))
-		{
-			pNth = pNth->Next();
-		}
-	}
-	return pNth->ThisObject();
-}
-
-nsCacheObject* nsMemModule::GetObject(const char* i_url) const
-{
-	if (m_pFirstObject && i_url && *i_url)
-	{
-		nsMemCacheObject* pObj = m_pFirstObject;
-		int inlen = PL_strlen(i_url);
-		do
-		{
-			if (0 == PL_strncasecmp(pObj->ThisObject()->Address(), i_url, inlen))
-				return pObj->ThisObject();
-			pObj = pObj->Next();
-		}
-		while (pObj);
-	}
-	return 0;
-}
-
-nsMemCacheObject* nsMemModule::LastObject(void) const
-{
-	nsMemCacheObject* pLast = 0;
-	if (m_pFirstObject)
-	{
-		pLast = m_pFirstObject;
-		while (pLast->Next())
-			pLast = pLast->Next();
-	}
-	return pLast;
-}
-
-PRBool nsMemModule::Remove(const char* i_url)
-{
-    //TODO
-    return PR_FALSE;
-}
-
-PRBool nsMemModule::Remove(const PRUint32 i_index)
-{
-    //TODO
-    return PR_FALSE;
-}
-
 void nsMemModule::GarbageCollect(void)
 {
+    MonitorLocker ml(this);
+
     if (m_Entries > 0)
     {
         nsEnumeration* pEnum = Enumeration();
@@ -178,6 +129,82 @@ void nsMemModule::GarbageCollect(void)
             ++index;
         }
     }
+}
+
+nsCacheObject* nsMemModule::GetObject(const PRUint32 i_index) const
+{
+    MonitorLocker ml((nsMonitorable*)this);
+    nsMemCacheObject* pNth = 0;
+    if (m_pFirstObject)
+    {
+        PRUint32 index = 0;
+        pNth = m_pFirstObject;
+        while (pNth->Next() && (index++ != i_index ))
+        {
+            pNth = pNth->Next();
+        }
+    }
+    return pNth->ThisObject();
+}
+
+nsCacheObject* nsMemModule::GetObject(const char* i_url) const
+{
+    MonitorLocker ml((nsMonitorable*)this);
+    if (m_pFirstObject && i_url && *i_url)
+    {
+        nsMemCacheObject* pObj = m_pFirstObject;
+        int inlen = PL_strlen(i_url);
+        do
+        {
+            if (0 == PL_strncasecmp(pObj->ThisObject()->Address(), i_url, inlen))
+                return pObj->ThisObject();
+            pObj = pObj->Next();
+        }
+        while (pObj);
+    }
+    return 0;
+}
+
+nsMemCacheObject* nsMemModule::LastObject(void) const
+{
+    MonitorLocker ml((nsMonitorable*)this);
+    
+    nsMemCacheObject* pLast = 0;
+    if (m_pFirstObject)
+    {
+        pLast = m_pFirstObject;
+        while (pLast->Next())
+            pLast = pLast->Next();
+    }
+    return pLast;
+}
+
+PRUint32 nsMemModule::Read(nsCacheObject* pObject, char* o_Buffer, PRUint32 len)
+{
+    return 0;
+}
+
+PRBool nsMemModule::ReduceSizeTo(const PRUint32 i_NewSize)
+{
+    //TODO
+    return PR_TRUE;
+}
+
+PRBool nsMemModule::Remove(const char* i_url)
+{
+    //TODO
+    return PR_FALSE;
+}
+
+PRBool nsMemModule::Remove(const PRUint32 i_index)
+{
+    //TODO
+    return PR_FALSE;
+}
+
+PRUint32 nsMemModule::Write(nsCacheObject* pObject, const char* i_Buffer, PRUint32 len)
+{
+    return 0;
 }
 
 /*

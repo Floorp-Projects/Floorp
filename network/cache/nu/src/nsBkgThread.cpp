@@ -17,7 +17,7 @@
  */
 
 #include "nsBkgThread.h"
-#include <prlog.h>
+#include "prlog.h"
 
 static void PR_CALLBACK RunFunction(void* arg);
 

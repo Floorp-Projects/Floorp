@@ -16,9 +16,6 @@
  * Reserved.
  */
 
-#include <xp_core.h>
-#include <xp_str.h>
-
 #include "nsCacheModule.h"
 #include "nsCacheTrace.h"
 #include "nsCacheIterator.h"
@@ -35,6 +32,7 @@
 
 nsCacheModule::nsCacheModule(const PRUint32 i_size=DEFAULT_SIZE):
     m_Size(i_size),
+    m_pEnumeration(0),
     m_pNext(0),
     m_Entries(0)
 {
@@ -64,8 +62,16 @@ void nsCacheModule::GarbageCollect(void)
 {
 }
 
+PRBool nsCacheModule::ReduceSizeTo(const PRUint32 i_NewSize)
+{
+	MonitorLocker ml(this);
+    //TODO
+    return PR_TRUE;
+}
+
 PRBool nsCacheModule::RemoveAll(void)
 {
+	MonitorLocker ml(this);
     PRBool status = PR_TRUE;
     while (m_Entries > 0)
     {
@@ -74,15 +80,18 @@ PRBool nsCacheModule::RemoveAll(void)
     return status;
 }
 
+#if 0
+// Caller must free this 
 const char* nsCacheModule::Trace() const
 {
     char linebuffer[128];
     char* total;
 
-    sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
+    PR_sprintf(linebuffer, "nsCacheModule: Objects = %d\n", Entries());
 
-    total = new char[strlen(linebuffer) + 1];
+    total = new char[PR_strlen(linebuffer) + 1];
     strcpy(total, linebuffer);
 
     return total;
 }
+#endif

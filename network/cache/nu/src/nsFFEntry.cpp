@@ -17,8 +17,8 @@
  */
 
 #include "nsFFEntry.h"
-#include <prmem.h>
-#include <prlog.h>
+#include "prmem.h"
+#include "prlog.h"
 
 nsFFEntry::nsFFEntry():
     m_ID(0),

@@ -29,8 +29,9 @@
 #   include "nsISupports.h"
 #endif
 
-#include <prlog.h>
+#include "prlog.h"
 
+#include "nsMonitorable.h"
 #include "nsCacheModule.h"
 #include "nsCacheObject.h"
 
@@ -39,7 +40,7 @@ class nsDiskModule;
 class nsCachePref;
 class nsCacheBkgThd;
 
-class nsCacheManager //: public nsISupports
+class nsCacheManager : public nsMonitorable //: public nsISupports
 {
 
 public:
@@ -54,39 +55,58 @@ public:
     nsCacheManager();
     ~nsCacheManager();
 
-    PRInt32         AddModule(nsCacheModule* i_cacheModule);
-    
-    PRBool          Contains(const char* i_url) const;
+    PRInt32                 AddModule(nsCacheModule* i_cacheModule);
+                            // InsertModule
+    PRBool                  Contains(const char* i_url) const;
     
     /* Number of modules in the cache manager */
-    PRInt32         Entries() const;
+    PRInt16                 Entries() const;
     
     /* Singleton */
-    static nsCacheManager* 
-                    GetInstance();
+    static nsCacheManager*  GetInstance();
     
-    nsCacheObject*  GetObject(const char* i_url) const;
-    nsCacheModule*  GetModule(PRInt32 i_index) const;
+    nsCacheObject*          GetObj(const char* i_url) const;
 
-    nsMemModule*    GetMemModule() const;
-    nsDiskModule*   GetDiskModule() const;
+    nsCacheModule*          GetModule(PRInt16 i_index) const;
 
-    PRBool          IsOffline(void) const;
+    nsMemModule*            GetMemModule() const;
+    nsDiskModule*           GetDiskModule() const;
 
-    void            Offline(PRBool bSet);
+    PRBool                  IsOffline(void) const;
 
-    const char*     Trace() const;
+    void                    Offline(PRBool bSet);
+
+    PRBool                  Remove(const char* i_url);
+
+    const char*             Trace() const;
 
     /* Performance measure- microseconds */
-    PRUint32        WorstCaseTime(void) const;
+    PRUint32                WorstCaseTime(void) const;
 
 protected:
-    void            Init();
-    nsCacheModule*
-                    LastModule() const;
+    
+    PRBool                  ContainsExactly(const char* i_url) const;
+
+    void                    Init();
+  
+    nsCacheModule*          LastModule() const;
+    //PRBool                  Lock(void);
+    //void                    Unlock(void);
+
+/*
+    class MgrMonitor
+    {
+    public:
+        MgrMonitor() { nsCacheManager::GetInstance()->Lock();}
+        ~MgrMonitor() { nsCacheManager::GetInstance()->Unlock();}
+    };
+
+    friend MgrMonitor;
+*/
 
 private:
-    nsCacheModule*  m_pFirstModule;
+    nsCacheModule*      m_pFirstModule;
+    PRMonitor*          m_pMonitor;
 
     nsCacheManager(const nsCacheManager& cm);
     nsCacheManager& operator=(const nsCacheManager& cm);
@@ -97,8 +117,8 @@ private:
 inline
 nsDiskModule* nsCacheManager::GetDiskModule() const
 {
-    PR_ASSERT(m_pFirstModule && m_pFirstModule->Next());
-    return (m_pFirstModule) ? (nsDiskModule*) m_pFirstModule->Next() : NULL;
+    PR_ASSERT(m_pFirstModule && m_pFirstModule->NextModule());
+    return (m_pFirstModule) ? (nsDiskModule*) m_pFirstModule->NextModule() : NULL;
 }
 
 inline
@@ -114,10 +134,35 @@ PRBool nsCacheManager::IsOffline(void) const
     return m_bOffline;
 }
 
+/*
+inline
+PRBool nsCacheManager::Lock(void)
+{
+    if (!m_pMonitor)
+    {
+        m_pMonitor = PR_NewMonitor();
+        if (!m_pMonitor)
+            return PR_FALSE;
+    }
+    PR_EnterMonitor(m_pMonitor);
+    return PR_TRUE;
+}
+*/
+
 inline
 void  nsCacheManager::Offline(PRBool i_bSet) 
 {
     m_bOffline = i_bSet;
 }
+
+/*
+inline
+void nsCacheManager::Unlock(void)
+{
+    PR_ASSERT(m_pMonitor);
+    if (m_pMonitor)
+        PR_ExitMonitor(m_pMonitor);
+}
+*/
 
 #endif

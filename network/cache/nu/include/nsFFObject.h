@@ -19,7 +19,7 @@
 #ifndef nsFFObject_h__
 #define nsFFObject_h__
 
-#include <prtypes.h>
+#include "prtypes.h"
 
 class nsFFObject
 {

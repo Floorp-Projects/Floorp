@@ -21,12 +21,8 @@
  * 
  */
 
-#include <prtypes.h>
-#include <prinrval.h>
-
-#include <xp_core.h>
-#include <xpassert.h> 
-#include <xp_str.h>
+#include "prtypes.h"
+#include "prinrval.h"
 
 #include "nsCacheManager.h"
 #include "nsCacheTrace.h"
@@ -36,6 +32,7 @@
 #include "nsDiskModule.h"
 #include "nsCacheBkgThd.h"
 
+/* TODO move this to InitNetLib */
 static nsCacheManager TheManager;
 
 nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_bOffline(PR_FALSE)
@@ -49,9 +46,13 @@ nsCacheManager::~nsCacheManager()
     {
         m_pBkgThd->Stop();
         delete m_pBkgThd;
+        m_pBkgThd = 0;
     }
     if (m_pFirstModule)
+    {
         delete m_pFirstModule;
+        m_pFirstModule = 0;
+    }
 }
 
 nsCacheManager* 
@@ -60,6 +61,7 @@ nsCacheManager::GetInstance()
     return &TheManager;
 }
 
+#if 0
 /* Caller must free returned char* */
 const char* 
 nsCacheManager::Trace() const
@@ -74,18 +76,20 @@ nsCacheManager::Trace() const
     strcpy(total, linebuffer);
     return total;
 }
+#endif
 
 PRInt32 
 nsCacheManager::AddModule(nsCacheModule* pModule)
 {
+    MonitorLocker ml(this);
     if (pModule) 
     {
-    if (m_pFirstModule)
-        LastModule()->Next(pModule);
-    else
-        m_pFirstModule = pModule;
+        if (m_pFirstModule)
+            LastModule()->NextModule(pModule);
+        else
+            m_pFirstModule = pModule;
 
-    return Entries()-1;
+        return Entries()-1;
     }
     else
         return -1;
@@ -93,6 +97,24 @@ nsCacheManager::AddModule(nsCacheModule* pModule)
 
 PRBool 
 nsCacheManager::Contains(const char* i_url) const
+{
+    MonitorLocker ml((nsMonitorable*)this);
+    // Add logic to check for IMAP type URLs, byteranges, and search with / appended as well...
+    // TODO 
+    PRBool bStatus = ContainsExactly(i_url);
+    if (!bStatus)
+    {
+        // try alternate stuff
+        /*
+        char* extraBytes;
+        char extraBytesSeparator;
+        */
+    }
+    return bStatus;
+}
+
+PRBool
+nsCacheManager::ContainsExactly(const char* i_url) const
 {
     if (m_pFirstModule)
     {
@@ -103,15 +125,16 @@ nsCacheManager::Contains(const char* i_url) const
             {
                 return PR_TRUE;
             }
-            pModule = pModule->Next();
+            pModule = pModule->NextModule();
         }
     }
     return PR_FALSE;
 }
 
 nsCacheObject* 
-nsCacheManager::GetObject(const char* i_url) const
+nsCacheManager::GetObj(const char* i_url) const
 {
+    MonitorLocker ml((nsMonitorable*)this);
     if (m_pFirstModule) 
     {
         nsCacheModule* pModule = m_pFirstModule;
@@ -121,20 +144,21 @@ nsCacheManager::GetObject(const char* i_url) const
             obj = pModule->GetObject(i_url);
             if (obj)
                 return obj;
-            pModule = pModule->Next();
+            pModule = pModule->NextModule();
         }
     }
     return 0;
 }
 
-PRInt32 
+PRInt16 
 nsCacheManager::Entries() const
 {
+    MonitorLocker ml((nsMonitorable*)this);
     if (m_pFirstModule) 
     {
-        PRInt32 count=1;
+        PRInt16 count=1;
         nsCacheModule* pModule = m_pFirstModule;
-        while (pModule = pModule->Next()) 
+        while (pModule = pModule->NextModule()) 
         {
             count++;
         }
@@ -144,13 +168,14 @@ nsCacheManager::Entries() const
 }
 
 nsCacheModule* 
-nsCacheManager::GetModule(PRInt32 i_index) const
+nsCacheManager::GetModule(PRInt16 i_index) const
 {
+    MonitorLocker ml((nsMonitorable*)this);
     if ((i_index < 0) || (i_index >= Entries()))
         return 0;
     nsCacheModule* pModule = m_pFirstModule;
     PR_ASSERT(pModule);
-    for (PRInt32 i=0; i<i_index; pModule = pModule->Next())
+    for (PRInt16 i=0; i<i_index; pModule = pModule->NextModule())
     {
         i++;
         PR_ASSERT(pModule);
@@ -161,36 +186,64 @@ nsCacheManager::GetModule(PRInt32 i_index) const
 void 
 nsCacheManager::Init() 
 {
+    MonitorLocker ml(this);
     if (m_pFirstModule)
         delete m_pFirstModule;
 
-    m_pFirstModule = new nsMemModule(nsCachePref::MemCacheSize());
+    m_pFirstModule = new nsMemModule(nsCachePref::GetInstance()->MemCacheSize());
     PR_ASSERT(m_pFirstModule);
-    nsDiskModule* pTemp = new nsDiskModule(nsCachePref::DiskCacheSize());
-    PR_ASSERT(pTemp);
-    m_pFirstModule->Next(pTemp);
-    m_pBkgThd = new nsCacheBkgThd(PR_SecondsToInterval(nsCachePref::BkgSleepTime()));
-    PR_ASSERT(m_pBkgThd);
+    if (m_pFirstModule)
+    {
+        nsDiskModule* pTemp = new nsDiskModule(nsCachePref::GetInstance()->DiskCacheSize());
+        PR_ASSERT(pTemp);
+        m_pFirstModule->NextModule(pTemp);
+        m_pBkgThd = new nsCacheBkgThd(PR_SecondsToInterval(nsCachePref::GetInstance()->BkgSleepTime()));
+        PR_ASSERT(m_pBkgThd);
+    }
 }
 
 nsCacheModule* 
 nsCacheManager::LastModule() const 
 {
+    MonitorLocker ml((nsMonitorable*)this);
     if (m_pFirstModule) 
     {
         nsCacheModule* pModule = m_pFirstModule;
-        while(pModule->Next()) {
-            pModule = pModule->Next();
+        while(pModule->NextModule()) {
+            pModule = pModule->NextModule();
         }
         return pModule;
     }
     return 0;
 }
 
+PRBool
+nsCacheManager::Remove(const char* i_url)
+{
+    MonitorLocker ml(this);
+    PRBool bStatus = PR_FALSE;
+    if (m_pFirstModule)
+    {
+        nsCacheModule* pModule = m_pFirstModule;
+        bStatus |= pModule->Remove(i_url);
+        if (bStatus)
+            return bStatus;
+        while(pModule->NextModule()) {
+            pModule = pModule->NextModule();
+            if (bStatus)
+                return bStatus;
+        }
+    }
+    return bStatus;
+}
+
 PRUint32 
 nsCacheManager::WorstCaseTime(void) const 
 {
     PRIntervalTime start = PR_IntervalNow();
-    while (this->Contains("a vague string that should not be in any of the modules"));
+    if (this->Contains("a vague string that should not be in any of the modules"))
+    {
+        PR_ASSERT(0);
+    }
     return PR_IntervalToMicroseconds(PR_IntervalNow() - start);
 }

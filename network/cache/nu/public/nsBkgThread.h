@@ -20,8 +20,8 @@
 #define nsBkgThread_h__
 
 //#include "nsISupports.h"
-#include <prthread.h>
-#include <prinrval.h>
+#include "prthread.h"
+#include "prinrval.h"
 
 /*
     Creates a background thread that maintains odd 

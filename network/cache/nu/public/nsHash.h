@@ -19,7 +19,7 @@
 #ifndef nsHash_h__
 #define nsHash_h__
 
-#include <plhash.h>
+#include "plhash.h"
 
 class nsHashKey {
 protected:

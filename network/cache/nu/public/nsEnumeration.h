@@ -56,6 +56,11 @@ nsEnumeration::nsEnumeration(nsIterator* iter):m_pIter(iter)
 }
 
 inline
+nsEnumeration::~nsEnumeration()
+{
+}
+
+inline
 PRBool nsEnumeration::HasMoreElements(void)
 {
     if (m_pIter) //remove this check for optimization?

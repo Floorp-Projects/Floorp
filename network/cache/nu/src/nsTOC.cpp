@@ -17,9 +17,9 @@
  */
 
 #include "nsTOC.h"
-#include <plstr.h>
-#include <memory.h>
-#include <prlog.h>
+#include "plstr.h"
+#include "memory.h"
+#include "prlog.h"
 
 static const PRUint32 kTOC_FLAT_FILE_VERSION = 1;
 static const PRUint32 kTOC_MAGIC_NUMBER = 19712809;
