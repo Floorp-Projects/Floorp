@@ -154,7 +154,7 @@ DefParam("blurbhtml",
          "l",
          "This is <B>Bugzilla</B>: the Mozilla bug system.  For more 
 information about what Bugzilla is and what it can do, see 
-<A HREF=\"http://www.mozilla.org/>mozilla.org\"</A>'s
+<A HREF=\"http://www.mozilla.org/\">mozilla.org</A>'s
 <A HREF=\"http://www.mozilla.org/bugs/\"><B>bug pages</B></A>.");
 
 
