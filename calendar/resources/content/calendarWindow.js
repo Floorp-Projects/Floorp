@@ -359,7 +359,8 @@ CalendarWindow.prototype.setSelectedDate = function calWin_setSelectedDate( date
    this.selectedDate = new Date( date );
 
    /* on some machines, we need to check for .selectedItem first */
-   if( document.getElementById( "event-filter-menulist" ).selectedItem &&
+   if( document.getElementById( "event-filter-menulist" ) && 
+       document.getElementById( "event-filter-menulist" ).selectedItem &&
        document.getElementById( "event-filter-menulist" ).selectedItem.value == "current" )
    {
       //redraw the top tree
