@@ -943,28 +943,26 @@ function displayAttachmentsForExpandedView()
   if (numAttachments > 0 && !gBuildAttachmentsForCurrentMsg)
   {
     var attachmentList = document.getElementById('attachmentList');
+
     for (index in currentAttachments)
     {
       var attachment = currentAttachments[index];
 
       // we need to create a listitem to insert the attachment
       // into the attachment list..
-      var item = document.createElement("listitem");
+      var item = attachmentList.appendItem(attachment.displayName,"");
       item.setAttribute("class", "listitem-iconic"); 
-      item.setAttribute("label", attachment.displayName);
       item.setAttribute("tooltip", "attachmentListTooltip");
-
       item.attachment = cloneAttachment(attachment);
-
       item.setAttribute("attachmentUrl", attachment.url);
       item.setAttribute("attachmentContentType", attachment.contentType);
       item.setAttribute("attachmentUri", attachment.uri);
       setApplicationIconForAttachment(attachment, item);
-      attachmentList.appendChild(item);
-    } // for each attachment
+    } // for each attachment   
+
     gBuildAttachmentsForCurrentMsg = true;
   }
-
+   
   var expandedAttachmentBox = document.getElementById('expandedAttachmentBox');
   expandedAttachmentBox.collapsed = numAttachments <= 0;
 }
@@ -1128,7 +1126,7 @@ function ClearAttachmentList()
   list.clearSelection();
 
   while (list.childNodes.length) 
-    list.removeChild(list.firstChild);
+    list.removeItemAt(list.childNodes.length - 1);
 }
 
 function ShowEditMessageButton() 

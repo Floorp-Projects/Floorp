@@ -143,7 +143,7 @@ Rights Reserved.
 
   <vbox id="expandedAttachmentBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
     <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
-    <listbox id="attachmentList" flex="2"
+    <listbox id="attachmentList" rows="3" style="overflow: auto;"
               onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext"/>
   </vbox>
 </hbox>
