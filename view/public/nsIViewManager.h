@@ -511,21 +511,6 @@ public:
   NS_IMETHOD FlushPendingInvalidates()=0;
 
 
-  /**
-   * Set the default background color that the view manager should use
-   * to paint otherwise unowned areas. If the color isn't known, just set
-   * it to zero (which means 'transparent' since the color is RGBA).
-   *
-   * @param aColor the default background color
-   */
-  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor)=0;
-
-  /**
-   * Retrieve the default background color.
-   *
-   * @param aColor the default background color
-   */
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor)=0;
 };
 
 //when the refresh happens, should it be double buffered?

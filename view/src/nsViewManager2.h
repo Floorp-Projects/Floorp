@@ -151,8 +151,6 @@ public:
   NS_IMETHOD AllowDoubleBuffering(PRBool aDoubleBuffer);
   NS_IMETHOD IsPainting(PRBool& aIsPainting);
   NS_IMETHOD FlushPendingInvalidates();
-  NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
-  NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor);
   nsresult ProcessInvalidateEvent();
   static PRInt32 GetViewManagerCount();
   static const nsVoidArray* GetViewManagerArray();
