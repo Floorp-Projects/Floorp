@@ -125,6 +125,12 @@ ifdef MOZ_FULLCIRCLE
 XP_LIBS			+= $(FULLCIRCLE_LIBS)
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
+XP_LIBS			+= -llibxpfelocation_s
+else
+XP_LIBS			+= -lxpfelocation_s
+endif
+
 LIBS			= \
 			$(UNIX_VIEWER_TK_LIBS) \
 			$(GTK_GLUE) \
