@@ -1133,7 +1133,7 @@ SSM_WaitingOnData(PRPollDesc *pds, PRIntn numPDs)
     int i;
 
     for (i=0; i<numPDs;i++) {
-      if ((pds[i].in_flags & PR_POLL_READ) == 1) {
+      if (pds[i].in_flags & PR_POLL_READ) {
 	retVal = PR_TRUE;
 	break;
       }
