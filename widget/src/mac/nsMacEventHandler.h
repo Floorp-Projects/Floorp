@@ -51,7 +51,7 @@ public:
 		virtual PRBool	HandleUpdate(Handle textHandle,ScriptCode script,long fixedLength);
 		
 protected:
-#ifdef tague_keyboard_patch
+#if 1
 		virtual void InitializeKeyEvent(nsKeyEvent& aKeyEvent, EventRecord& aOSEvent, nsWindow* focusedWidget, PRUint32 message);
 		virtual PRBool IsSpecialRaptorKey(UInt32 macKeyCode);
 		virtual void ConvertKeyEventToUnicode(nsKeyEvent& aKeyEvent,EventRecord& aOSEvent);

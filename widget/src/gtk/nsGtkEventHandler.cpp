@@ -214,7 +214,7 @@ void UninitExposeEvent(GdkEventExpose *aGEE,
 
 //==============================================================
 
-#ifdef tague_keyboard_patch
+#if 1
 PRUint32 nsConvertCharCodeToUnicode(gchar* gdkString)
 {
   //
@@ -625,7 +625,7 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 #endif
 }
 
-#ifdef tague_keyboard_patch
+#if 1
 //==============================================================
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
