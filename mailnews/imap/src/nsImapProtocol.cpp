@@ -7406,7 +7406,7 @@ void nsImapProtocol::GetQuotaDataIfSupported(const char *aBoxName)
 
   nsresult quotarv = SendData(quotacommand.get());
   if (NS_SUCCEEDED(quotarv))
-    ParseIMAPandCheckForNewMail();
+    ParseIMAPandCheckForNewMail(nsnull, PR_TRUE); // don't display errors.
 }
 
 PRBool
