@@ -829,7 +829,6 @@ case "$target" in
     AC_DEFINE(HAVE_BSD_FLOCK)
     CFLAGS="$CFLAGS -Wmost -fno-common"
     if echo $OS_TEST | grep -c 86 2>/dev/null; then
-        CFLAGS="$CFLAGS -mno-486"
         AC_DEFINE(i386)
         CPU_ARCH=i386
     else
