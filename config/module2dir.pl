@@ -131,7 +131,10 @@ sub dir_for_required_component {
 my $list_only_mode = 0;
 my $opt_list_only;
 {
-  PrintUsage() if $#ARGV == -1;
+
+  # Add stdin to the commandline.  This makes commandline-only mode hang,
+  # call it a bug.  Not sure how to get around this.
+  push (@ARGV, split(' ',<STDIN>));
 
   PrintUsage() if !GetOptions('list-only' => \$opt_list_only);
 
