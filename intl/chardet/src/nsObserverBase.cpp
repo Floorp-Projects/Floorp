@@ -30,6 +30,7 @@
 #include "nsObserverBase.h"
 #include "nsIParser.h"
 #include "nsString.h"
+#include "nsIDocShell.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -44,38 +45,42 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
    
    nsresult rv  = NS_OK;
 
-   nsCOMPtr<nsIWebShellServices> wss=nsnull;
    nsAutoString theKey;
    
-   theKey.AssignWithConversion("webshell"); // Key to find webshell service from the bundle. 
+   theKey.AssignWithConversion("docshell"); // Key to find docshell from the bundle. 
     
    nsCOMPtr<nsISupportsParserBundle> bundle=do_QueryInterface(aParserBundle);
 
    if (bundle) {
+     nsCOMPtr<nsIDocShell> docshell=nsnull;
      nsresult res = NS_OK;
  	     
-     res=bundle->GetDataFromBundle(theKey,getter_AddRefs(wss));
+     res=bundle->GetDataFromBundle(theKey,getter_AddRefs(docshell));
      if(NS_SUCCEEDED(res)) {
+       nsCOMPtr<nsIWebShellServices> wss=nsnull;
+       wss=do_QueryInterface(docshell,&res);  // Query webshell service through docshell.
+       if(NS_SUCCEEDED(res)) {
 
 #ifndef DONT_INFORM_WEBSHELL
-       // ask the webshellservice to load the URL
-       if(NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
-         rv=res;
+         // ask the webshellservice to load the URL
+         if(NS_FAILED( res = wss->SetRendering(PR_FALSE) ))
+           rv=res;
 
-       // XXX nisheeth, uncomment the following two line to see the reent problem
+         // XXX nisheeth, uncomment the following two line to see the reent problem
 
-       else if(NS_FAILED(res = wss->StopDocumentLoad())){
-	       rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-       }
+         else if(NS_FAILED(res = wss->StopDocumentLoad())){
+	         rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+         }
 
-       else if(NS_FAILED(res = wss->ReloadDocument(charset, source))) {
-	       rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
-       }
-       else
-         rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
+         else if(NS_FAILED(res = wss->ReloadDocument(charset, source))) {
+	         rv = wss->SetRendering(PR_TRUE); // turn on the rendering so at least we will see something.
+         }
+         else
+           rv = NS_ERROR_HTMLPARSER_STOPPARSING; // We're reloading a new document...stop loading the current.
 #endif
 
+       }
      }
-   }
+  }
    return rv;
 }
