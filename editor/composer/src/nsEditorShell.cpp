@@ -549,7 +549,6 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   return rv;
 }
 
-
 // tell the appcore what type of editor to instantiate
 // this must be called before the editor has been instantiated,
 // otherwise, an error is returned.
@@ -1175,9 +1174,16 @@ nsEditorShell::CheckOpenWindowForURLMatch(const PRUnichar* inFileURL, nsIDOMWind
   if (!inCheckWindow) return NS_ERROR_NULL_POINTER;
   *aDidFind = PR_FALSE;
   
+
   // get an nsFileSpec from the URL
-  nsFileURL    fileURL(inFileURL);
-  nsFileSpec   fileSpec(fileURL);
+  // This assumes inFileURL is "file://" format
+  //nsFileURL    fileURL(inFileURL);
+  //nsFileSpec   fileSpec(inFilePath);
+
+  // Instead, assume inFileURL is native path and use the
+  //  nsFilePath to convert to something nsFileSpec can handle
+  nsFilePath filePath(inFileURL);
+  nsFileSpec fileSpec(filePath);
   
   nsCOMPtr<nsIDOMWindow> contentWindow;
   inCheckWindow->GetContent(getter_AddRefs(contentWindow));
@@ -1327,6 +1333,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             }
           }
 
+// #if 0 Replace this with nsIFilePicker code 
+
           nsCOMPtr<nsIFileWidget>  fileWidget;
           res = nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, 
                                                    NS_GET_IID(nsIFileWidget), 
@@ -1454,6 +1462,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
              NS_ASSERTION(0, "Failed to get file widget");
             return res;
           }
+//#endif end replace with nsIFilePicker block
 
           // Set the new URL for the webshell
           if (mContentAreaWebShell)
@@ -1669,14 +1678,11 @@ nsEditorShell::UpdateWindowTitle()
         nsFileSpec docFileSpec;
         if (NS_SUCCEEDED(diskDoc->GetFileSpec(docFileSpec)))
         {
-          char *name = docFileSpec.GetLeafName();
-          if (name)
-          {
-            windowCaption += " [";
-            windowCaption += name;
-            windowCaption += "]";
-            nsCRT::free(name);
-          }
+          nsAutoString name;
+          docFileSpec.GetLeafName(name);
+          windowCaption += " [";
+          windowCaption += name;
+          windowCaption += "]";
         }
       }
     }

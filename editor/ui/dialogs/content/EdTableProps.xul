@@ -150,7 +150,7 @@
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" for="TableImageInput" value="&image.label;"/>
               <html:input type="text" id="TableImageInput" flex="1"/>
-              <button class="dialog" value="&ChooseImage.label;" id="bgimage.button"/>
+              <button class="dialog" value="&ChooseImage.label;" id="TableImageButton" oncommand="ChooseCellImage()"/>
           </box>
 <!-- Not sure if we will support this
           <box valign="middle" autostretch="never">
@@ -276,9 +276,9 @@
           </box>
           <spring class="spacer"/>
           <box valign="middle" autostretch="never">
-            <text class="MinWidth50" align="left" for="CellImageInput" value="&image.label;"/>
+            <text class="MinWidth50" align="left" for="CellImageInput" value="&image.label;" />
             <html:input type="text" id="CellImageInput" flex="1"/>
-            <button class="dialog" value="&ChooseImage.label;" id="cellbgimage.button"/>
+            <button class="dialog" value="&ChooseImage.label;" id="CellImageButton" oncommand="ChooseCellImage()"/>
           </box>
 <!-- Not sure if we will support this
           <box valign="middle" autostretch="never">

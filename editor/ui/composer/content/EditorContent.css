@@ -51,10 +51,29 @@ span {
   background-position: center left;
 }
 
+/* Force border display for empty cells 
+   and tables with 0 border
+*/
 table {
   empty-cells: show;
 }
 
-table[empty-cells=show] {
+table[empty-cells], table[border="0"] {
   border: 1px dotted red;
+}
+
+/* Also force border for cell children 
+   Problem: what if children have a border?
+*/
+table[border="0"] > td, table[border="0"] > th {
+  border: 1px dotted red;
+}
+
+/* For ease in caret placement, 
+   have a minimum cell width 
+   BUG - DOESN'T WORK!
+   Note: Setting "width" works
+*/
+td, th {
+  min-width: 10px;
 }

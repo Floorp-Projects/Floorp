@@ -183,7 +183,7 @@ function chooseFile()
 {
   // Get a local file, converted into URL format
 
-  fileName = editorShell.GetLocalFileURL(window, "img");
+  fileName = GetLocalFileURL("img");
   if (fileName && fileName != "") {
     dialog.srcInput.value = fileName;
     doOverallEnabling();

@@ -421,7 +421,8 @@ nsInterfaceState::UpdateParagraphState(const char* observerName, const char* att
       parent = do_QueryInterface(temp);
     }
   }
-  if (!anchorNodeBlockParent) return NS_ERROR_NULL_POINTER;
+  if (!anchorNodeBlockParent)  // return NS_ERROR_NULL_POINTER;
+    anchorNodeBlockParent = anchorNode;
 
   nsAutoString tagName;
 

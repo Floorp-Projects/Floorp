@@ -77,10 +77,8 @@ function Startup()
     anchorElement = editorShell.GetElementOrParentByTagName("href", imageElement);
     if (anchorElement)
     {
-dump("Existing image link"+anchorElement+"\n");
       if (anchorElement.childNodes.length > 1)
       {
-dump("Copying existing image link\n");
         // If there are other children, then we want to break
         //  this image away by inserting a new link around it,
         //  so make a new node and copy existing attributes
@@ -226,7 +224,7 @@ function InitDialog()
 function chooseFile()
 {
   // Get a local file, converted into URL format
-  fileName = editorShell.GetLocalFileURL(window, "html");
+  fileName = GetLocalFileURL("html");
   if (fileName) {
     dialog.hrefInput.value = fileName;
   }
@@ -259,17 +257,15 @@ function FillListboxes()
   var firstHeading = true;
   for (var j = 1; j <= 6; j++) {
     var headingList = editorShell.editorDocument.getElementsByTagName("h"+String(j));
-    dump(headingList+" Count= "+headingList.length+"\n");
     if (headingList.length > 0) {
-      dump("HELLO\n");
       var heading = headingList.item(0);
 
       // Skip headings that already have a named anchor as their first child
       //  (this may miss nearby anchors, but at least we don't insert another
       //   under the same heading)
       var child = heading.firstChild;
-      if( child && child.name )
-        dump(child.name+" = Child.name. Length="+child.name.length+"\n");
+//      if( child && child.name )
+//        dump(child.name+" = Child.name. Length="+child.name.length+"\n");
       if (child && child.nodeName == "A" && child.name && (child.name.length>0)) {
         continue;
       }
@@ -307,9 +303,7 @@ function FillListboxes()
 
 function GetExistingHeadingIndex(text)
 {
-  dump("Heading text: "+text+"\n");
   for (var i=0; i < dialog.HeadingsList.length; i++) {
-    dump("HeadingListItem"+i+": "+dialog.HeadingsList.options[i].value+"\n");
     if (dialog.HeadingsList.options[i].value == text)
       return i;
   }
@@ -339,11 +333,9 @@ function ValidateData()
     // Set the HREF directly on the editor document's anchor node
     //  or on the newly-created node if insertNew is true
     globalElement.setAttribute("href",href);
-    dump("HREF:"+href+"|\n");
   } else if (insertNew) {
     // We must have a URL to insert a new link
     //NOTE: We accept an empty HREF on existing link to indicate removing the link
-    dump("Empty HREF error\n");
     ShowInputErrorMessage(GetString("EmptyHREFError"));
     return false;
   }
@@ -391,7 +383,6 @@ function onOK()
         //  so insert a link node as parent of this
         //  (may be text, image, or other inline content)
         try {
-dump("InsertLink around selection\n");
           editorShell.InsertLinkAroundSelection(anchorElement);
         } catch (e) {
           dump("Exception occured in InsertElementAtSelection\n");
@@ -402,7 +393,6 @@ dump("InsertLink around selection\n");
       if (href[0] == "#") {
         var name = href.substr(1);
         var index = GetExistingHeadingIndex(name);
-        dump("Heading name="+name+" Index="+index+"\n");
         if (index >= 0) {
           // We need to create a named anchor 
           //  and insert it as the first child of the heading element
@@ -412,7 +402,7 @@ dump("InsertLink around selection\n");
             anchorNode.name = name;
             // Remember to use editorShell method so it is undoable!
             editorShell.InsertElement(anchorNode, headNode, 0);
-            dump("Anchor node created and inserted under heading\n");
+dump("Anchor node created and inserted under heading\n");
           }
         } else {
           dump("HREF is a heading but is not in the list!\n");

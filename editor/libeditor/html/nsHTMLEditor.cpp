@@ -762,65 +762,51 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
 {
   if (!outHandled) return NS_ERROR_NULL_POINTER;
   *outHandled = PR_FALSE;
-  // find selection start
-  nsCOMPtr<nsIDOMSelection> selection;
 
-  nsresult res = GetSelection(getter_AddRefs(selection));
+  // Find enclosing table cell from the selection (cell may be the selected element)
+  nsCOMPtr<nsIDOMElement> cellElement;
+  nsresult res = GetElementOrParentByTagName("td", nsnull, getter_AddRefs(cellElement));
   if (NS_FAILED(res)) return res;
-  nsCOMPtr<nsIDOMNode> parent;
-  PRInt32 selOffset;
-  res = GetStartNodeAndOffset(selection, &parent, &selOffset);
+  // Do nothing -- we didn't find a table cell
+  if (!cellElement) return NS_OK;
+
+  // find enclosing table
+  nsCOMPtr<nsIDOMNode> tbl = GetEnclosingTable(cellElement);
+  if (!tbl) return res;
+
+  // advance to next cell
+  // first create an iterator over the table
+  nsCOMPtr<nsIContentIterator> iter;
+  res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+                                           NS_GET_IID(nsIContentIterator), 
+                                           getter_AddRefs(iter));
   if (NS_FAILED(res)) return res;
-  if (!parent) return res;
-  nsCOMPtr<nsIDOMNode> selNode = GetChildAt(parent, selOffset);
-  if (!selNode) selNode = parent;
-  
-  // is it in a table block of some kind?
-  nsCOMPtr<nsIDOMNode> block;
-  if (IsBlockNode(selNode)) block = selNode;
-  else block = GetBlockNodeParent(selNode);
-  if (!block) return res;
-  
-  if (IsTableElement(block))
+  if (!iter) return NS_ERROR_NULL_POINTER;
+  nsCOMPtr<nsIContent> cTbl = do_QueryInterface(tbl);
+  nsCOMPtr<nsIContent> cBlock = do_QueryInterface(cellElement);
+  res = iter->Init(cTbl);
+  if (NS_FAILED(res)) return res;
+  // position iter at block
+  res = iter->PositionAt(cBlock);
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode> node;
+  nsCOMPtr<nsIContent> cNode;
+  do
   {
-    // find enclosing table
-    nsCOMPtr<nsIDOMNode> tbl;
-    if (IsTable(block)) tbl = block;
-    else tbl = GetEnclosingTable(block);
-    if (!tbl) return res;
-    // advance to next cell
-    // first create an iterator over the table
-    nsCOMPtr<nsIContentIterator> iter;
-    res = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
-                                                NS_GET_IID(nsIContentIterator), 
-                                                getter_AddRefs(iter));
+    if (inIsShift) res = iter->Prev();
+    else res = iter->Next();
     if (NS_FAILED(res)) return res;
-    if (!iter) return NS_ERROR_NULL_POINTER;
-    nsCOMPtr<nsIContent> cTbl = do_QueryInterface(tbl);
-    nsCOMPtr<nsIContent> cBlock = do_QueryInterface(block);
-    res = iter->Init(cTbl);
+    res = iter->CurrentNode(getter_AddRefs(cNode));
     if (NS_FAILED(res)) return res;
-    // position iter at block
-    res = iter->PositionAt(cBlock);
-    if (NS_FAILED(res)) return res;
-    nsCOMPtr<nsIDOMNode> node;
-    nsCOMPtr<nsIContent> cNode;
-    do
+    node = do_QueryInterface(cNode);
+    if (IsTableCell(node) && (GetEnclosingTable(node) == tbl))
     {
-      if (inIsShift) res = iter->Prev();
-      else res = iter->Next();
+      res = CollapseSelectionToDeepestNonTableFirstChild(nsnull, node);
       if (NS_FAILED(res)) return res;
-      res = iter->CurrentNode(getter_AddRefs(cNode));
-      if (NS_FAILED(res)) return res;
-      node = do_QueryInterface(cNode);
-      if (IsTableCell(node) && (GetEnclosingTable(node) == tbl))
-      {
-        selection->Collapse(node, 0);
-        *outHandled = PR_TRUE;
-        return NS_OK;
-      }
-    } while (iter->IsDone() == NS_ENUMERATOR_FALSE);
-  }
+      *outHandled = PR_TRUE;
+      return NS_OK;
+    }
+  } while (iter->IsDone() == NS_ENUMERATOR_FALSE);
   return NS_OK;
 }
 
@@ -2036,6 +2022,41 @@ nsresult nsHTMLEditor::GetAbsoluteOffsetsForPoints(nsIDOMNode *aInStartNode,
   }
   NS_POSTCONDITION(aOutStartOffset <= aOutEndOffset, "start > end");
   return result;
+}
+
+nsresult 
+nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSelection, nsIDOMNode *aNode)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  nsresult res;
+
+  nsCOMPtr<nsIDOMSelection> selection;
+  if (aSelection)
+  {
+    selection = aSelection;
+  } else {
+    res = GetSelection(getter_AddRefs(selection));
+    if (NS_FAILED(res)) return res;
+    if (!selection) return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIDOMNode> node = aNode;
+  nsCOMPtr<nsIDOMNode> child;
+  
+  do {
+    node->GetFirstChild(getter_AddRefs(child));
+    
+    if (child)
+    {
+      // Stop if we find a table
+      //  don't want to go into nested tables
+      if (IsTable(child)) break;
+      node = child;
+    }
+  }
+  while (child);
+
+  selection->Collapse(node,0);
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsHTMLEditor::DeleteSelection(nsIEditor::EDirection aAction)
@@ -5349,7 +5370,6 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
   }
   return tbl;
 }
-
 
 NS_IMETHODIMP
 nsHTMLEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode)

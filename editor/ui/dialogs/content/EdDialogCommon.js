@@ -118,29 +118,24 @@ function AppendStringToList(list, string)
   SELECT and HTMLSELECT don't work!
 */
 
-// "value" may be a number or string type
-
 function ValidateNumberString(value, minValue, maxValue)
 {
   // Get the number version (strip out non-numbers)
-
-  value = value.replace(/\D+/g, "");
-  number = value - 0;
-  if ((value+"") != "") {
-    if (number && number >= minValue && number <= maxValue ){
-
+  if (value.length > 0)
+  {
+    // Extract just numeric characters
+    var number = Number(value.replace(/\D+/g, ""));
+    if (number >= minValue && number <= maxValue )
+    {
       // Return string version of the number
-
-      return number + "";
+      return String(number);
     }
+    var message = editorShell.GetString("ValidateNumber");
+    // Replace variable placeholders in message with number values
+    message = ((message.replace(/%n%/,number)).replace(/%min%/,minValue)).replace(/%max%/,maxValue);
+    ShowInputErrorMessage(message);
   }
-  message = editorShell.GetString("ValidateNumber");
-  // Replace variable placeholders in message with number values
-  message = ((message.replace(/%n%/,number)).replace(/%min%/,minValue)).replace(/%max%/,maxValue);
-  ShowInputErrorMessage(message);
-
   // Return an empty string to indicate error
-
   return "";
 }
 
@@ -605,6 +600,49 @@ function GetPrefs()
   catch(ex)
   {
 	  dump("failed to get prefs service!\n");
+  }
+  return null;
+}
+
+function GetScriptFileSpec()
+{
+  var fs = Components.classes["component://netscape/filespec"].createInstance();
+  fs = fs.QueryInterface(Components.interfaces.nsIFileSpec);
+  fs.unixStyleFilePath = "journal.js";
+  return fs;
+}
+
+const nsIFilePicker = Components.interfaces.nsIFilePicker;
+
+function GetLocalFileURL(filterType)
+{
+  var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
+  fp.init(window, editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
+
+  if (filterType == "img")
+    fp.setFilters(nsIFilePicker.filterImages);
+  else
+    // While we allow "All", include filters that prefer HTML and Text files
+    fp.setFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+  
+  /* doesn't handle *.shtml files */
+  try {
+    fp.show();
+    /* need to handle cancel (uncaught exception at present) */
+  }
+  catch (ex) {
+    dump("filePicker.chooseInputFile threw an exception\n");
+    return null;
+  }
+  
+  // Convert native filepath to the URL format
+  fs = GetScriptFileSpec();
+  if (fs)
+  {
+dump(fp.file.path+" = native file path\n");
+    fs.nativePath = fp.file.path;
+dump(fs.URLString+" = URL string\n");
+    return fs.URLString;
   }
   return null;
 }
