@@ -1273,10 +1273,10 @@ case "$target" in
         CFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9"
         CXXFLAGS="/Q /qlibansi /Gm+ /Su4 /Mp /Tl9 /Gx+"
         MOZ_DEBUG_FLAGS="/Ti+"
-        MOZ_OPTIMIZE_FLAGS="/O+ /qtune=pentium /qarch=pentium"
+        MOZ_OPTIMIZE_FLAGS="/O+ /Gl+ /G5 /qarch=pentium"
         LDFLAGS="/NOL /M"
         MOZ_DEBUG_LDFLAGS="/DE"
-        MOZ_OPTIMIZE_LDFLAGS="/EXEPACK:2 /PACKCODE /PACKDATA"
+        MOZ_OPTIMIZE_LDFLAGS="/OPTFUNC /EXEPACK:2 /PACKCODE /PACKDATA"
         DSO_LDOPTS=''
         IMPLIB='implib /NOL /NOI'
         FILTER='cppfilt -q -B -P'
