@@ -41,7 +41,7 @@
 #include "pratom.h"
 #include "nsIComponentManager.h"
 #include "nsIComponentManager.h"
-#include "nsIDialogParamBlock.h"
+#include "nsIPromptService.h"
 #include "nsIServiceManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContext.h"
@@ -212,7 +212,6 @@
 #define PREF_FILE_NAME_IN_5x "prefs.js"
 
 #define PREF_MIGRATION_PROGRESS_URL "chrome://communicator/content/profile/profileMigrationProgress.xul"
-#define PREF_MIGRATION_NO_SPACE_URL "chrome://communicator/content/profile/no_space.xul"
 
 typedef struct
 {
@@ -425,7 +424,7 @@ extern "C" void ProfileMigrationController(void *data)
           migrator->mErrorCode = rv;
           return;
         }
-        choice++;// Increment choice to match the RETRY=1, CREATE_NEW=2 and CANCEL=3 format
+        choice++;// Increment choice to match the RETRY=1, CANCEL=2 and CREATE_NEW=3 format
       }
     }
 
@@ -466,29 +465,33 @@ NS_IMETHODIMP
 nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
 {
   nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
+  nsCOMPtr<nsIStringBundleService> bundleService = do_GetService(kStringBundleServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID, &rv));
-  if (NS_FAILED(rv)) return rv;
-  
-  ioParamBlock->SetInt(0,3); //set the Retry, CreateNew and Cancel buttons
-  
-  // WindowWatcher can work with or without parent window
-  nsCOMPtr<nsIDOMWindow> newWindow;
-  rv = windowWatcher->OpenWindow(mPMProgressWindow,
-                                 PREF_MIGRATION_NO_SPACE_URL,
-                                 "_blank",
-                                 "dialog,chrome,centerscreen,modal,titlebar",
-                                 ioParamBlock,
-                                 getter_AddRefs(newWindow));
+  nsCOMPtr<nsIStringBundle> bundle;
+  rv = bundleService->CreateBundle(MIGRATION_PROPERTIES_URL, getter_AddRefs(bundle));
   if (NS_FAILED(rv)) return rv;
 
-  // Now get which button was pressed from the ParamBlock
-  if (NS_SUCCEEDED(rv))
-      ioParamBlock->GetInt( 0, choice );
-      
-  return NS_OK;
+  nsXPIDLString noSpaceTitle, noSpaceText, retryLabel, createNewLabel;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noSpace.title").get(), getter_Copies(noSpaceTitle));
+  if (NS_FAILED(rv)) return rv;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("noSpace.text").get(), getter_Copies(noSpaceText));
+  if (NS_FAILED(rv)) return rv;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("retry.label").get(), getter_Copies(retryLabel));
+  if (NS_FAILED(rv)) return rv;
+  rv = bundle->GetStringFromName(NS_LITERAL_STRING("createNew.label").get(), getter_Copies(createNewLabel));
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIPromptService> promptService = do_GetService("@mozilla.org/embedcomp/prompt-service;1", &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  const PRUint32 buttons =
+    (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_0)+
+    (nsIPromptService::BUTTON_TITLE_CANCEL * nsIPromptService::BUTTON_POS_1)+
+    (nsIPromptService::BUTTON_TITLE_IS_STRING * nsIPromptService::BUTTON_POS_2);
+  return promptService->ConfirmEx(mPMProgressWindow, noSpaceTitle, noSpaceText,
+                                  buttons, retryLabel, nsnull, createNewLabel,
+                                  nsnull, nsnull, choice);
 }
 
 
