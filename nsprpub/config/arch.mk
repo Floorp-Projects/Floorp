@@ -36,6 +36,9 @@ endif
 ifeq ($(OS_ARCH),BSD_386)
 OS_ARCH		:= BSD_OS
 endif
+ifeq ($(OS_ARCH),dgux)
+OS_ARCH		:= DGUX
+endif
 ifeq ($(OS_ARCH),IRIX64)
 OS_ARCH		:= IRIX
 endif

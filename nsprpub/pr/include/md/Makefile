@@ -107,7 +107,7 @@ ifeq ($(OS_ARCH),NCR)
 MDCPUCFG_H = _ncr.cfg
 endif
 
-ifeq ($(OS_ARCH),dgux)
+ifeq ($(OS_ARCH),DGUX)
 MDCPUCFG_H = _dgux.cfg
 endif
 
