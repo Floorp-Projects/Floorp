@@ -854,7 +854,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
   for (PRInt32 i = 0; i < ac; i++) {
-    // Get upper-cased key
+    // Get lower-cased key
     const nsAString& key = aNode.GetKeyAt(i);
     k.Assign(key);
     ToLowerCase(k);
