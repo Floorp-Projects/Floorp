@@ -649,15 +649,18 @@ NS_IMETHODIMP	nsWindow::Update()
 
 			// recursively scan through its children to draw them too
 			nsIEnumerator* children = GetChildren();
-			if (children)
+      if (children)
 			{
-				children->Reset();
-				nsWindow* child = (nsWindow*)children->Next();
-				while (child)
+        nsWindow* child;
+				children->First();
+				do
 				{
-					child->Update();
-					child = (nsWindow*)children->Next();
+          if (NS_SUCCEEDED(children->CurrentItem(&child)))  {
+					  child->Update();
+					  child = (nsWindow*)children->Next();
+          }
 				}
+        while (NS_SUCCEEDED(children->Next()));			
 				delete children;
 			}
 			NS_RELEASE(renderingContext);		// this restores the origin to (0, 0)
@@ -949,19 +952,23 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 		nsIEnumerator* children = GetChildren();
 		if (children)
 		{
-			children->Reset();
-			nsWindow* child = (nsWindow*)children->Next();
-			while (child)
+			children->First();
+			nsWindow* child;
+			do
 			{
-				nsWindow* deeperHit = child->FindWidgetHit(aThePoint);
-				if (deeperHit)
-				{
-					widgetHit = deeperHit;
-					break;
-				}
-				else
-					child = (nsWindow*)children->Next();
+        if (NS_SUCCEEDED(children->CurrentItem(&child))
+        {
+				  nsWindow* deeperHit = child->FindWidgetHit(aThePoint);
+				  if (deeperHit)
+				  {
+					  widgetHit = deeperHit;
+					  break;
+				  }
+				  else
+					  child = (nsWindow*)children->Next();
+        }
 			}
+      while (NS_SUCCEEDED(children->Next()));
 			delete children;
 		}
 	}
