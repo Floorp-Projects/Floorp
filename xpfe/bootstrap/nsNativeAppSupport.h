@@ -17,8 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
  
+#include "prtypes.h"
  
 void NS_ShowSplashScreen();
 void NS_HideSplashScreen();
 
-bool NS_CanRun();
+PRBool NS_CanRun();

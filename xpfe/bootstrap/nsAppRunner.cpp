@@ -135,9 +135,9 @@ void NS_HideSplashScreen()
 {
 }
 
-bool NS_CanRun() 
+PRBool NS_CanRun() 
 {
-	return true;
+	return PR_TRUE;
 }
 #endif 
 /*
@@ -152,6 +152,9 @@ static int TranslateReturnValue(nsresult aResult)
   return 1;
 }
 
+#ifdef XP_MAC
+#include "nsCommandLineServiceMac.h"
+#endif
 
 extern "C" void NS_SetupRegistry_1();
 
@@ -745,9 +748,13 @@ static nsresult main1(int argc, char* argv[])
  
   InitFullCircle();
 
-#if XP_MAC 
-  stTSMCloser  tsmCloser;
-#endif
+ #if XP_MAC 
+    stTSMCloser  tsmCloser;
+  
+  InitializeMacCommandLine( argc, argv);
+
+ #endif
+
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
 
