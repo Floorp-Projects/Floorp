@@ -140,11 +140,10 @@ interface nsIMsgAccountManager : nsISupports {
   void WriteToFolderCache(in nsIMsgFolderCache folderCache);
 
   void CloseCachedConnections();
-  void EmptyTrashOnExit();
+  void CleanupOnExit();
   void SetFolderDoingEmptyTrash(in nsIMsgFolder folder);
   boolean GetEmptyTrashInProgress();
 
-  void CleanupInboxOnExit();
   void SetFolderDoingCleanupInbox(in nsIMsgFolder folder);
   boolean GetCleanupInboxInProgress();
 

@@ -59,6 +59,7 @@
 #include "nsIRDFService.h"
 #include "nsRDFCID.h"
 #include "nsIImapIncomingServer.h" 
+#include "nsIImapUrl.h"
 
 #if defined(DEBUG_alecf_) || defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_ACCOUNTMANAGER 1
@@ -892,157 +893,119 @@ PRBool nsMsgAccountManager::writeFolderCache(nsHashKey *aKey, void *aData,
 }
 
 // enumeration for empty trash on exit
-PRBool PR_CALLBACK nsMsgAccountManager::emptyTrashOnExit(nsHashKey *aKey, void *aData,
+PRBool PR_CALLBACK nsMsgAccountManager::CleanupOnExit(nsHashKey *aKey, void *aData,
                                              void *closure)
 {
-    nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
-    PRBool emptyTrashOnExit = PR_FALSE;
+  nsIMsgIncomingServer *server = (nsIMsgIncomingServer*)aData;
+  PRBool emptyTrashOnExit = PR_FALSE;
+  PRBool cleanupInboxOnExit = PR_FALSE;
+  nsresult rv, rv1, rv2;
     
-    server->GetEmptyTrashOnExit(&emptyTrashOnExit);
-    if (emptyTrashOnExit)
-    {
-        nsCOMPtr<nsIFolder> root;
-        server->GetRootFolder(getter_AddRefs(root));
-        nsXPIDLCString type;
-        server->GetType(getter_Copies(type));
-        if (root)
-        {
-            nsCOMPtr<nsIMsgFolder> folder;
-            folder = do_QueryInterface(root);
-            if (folder)
-            {
-                nsXPIDLCString passwd;
-                PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :
-                                 PR_FALSE);
-                if (isImap)
-                    server->GetPassword(getter_Copies(passwd));
-                if (!isImap || (isImap && passwd && 
-                                nsCRT::strlen((const char*) passwd)))
-                {
-                    nsCOMPtr<nsIUrlListener> urlListener;
-                    nsresult rv;
-                    NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                                    kMsgAccountManagerCID, &rv);
-                    if (NS_FAILED(rv)) return rv;
-                    NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                                    kEventQueueServiceCID, &rv);
-                    if (NS_FAILED(rv)) return rv;
-                    nsCOMPtr<nsIEventQueue> eventQueue;
-                    pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                           getter_AddRefs(eventQueue)); 
-
-                    if (isImap)
-                    {
-                        accountManager->SetFolderDoingEmptyTrash(folder);
-                        urlListener = do_QueryInterface(accountManager, &rv);
-                    }
-                    rv = folder->EmptyTrash(nsnull, urlListener);
-                    if (NS_SUCCEEDED(rv) && isImap && urlListener)
-                    {
-                      PRBool inProgress = PR_FALSE;
-                      accountManager->GetEmptyTrashInProgress(&inProgress);
-                      while (inProgress)
-                      {
-                        accountManager->GetEmptyTrashInProgress(&inProgress);
-                        PR_CEnterMonitor(folder);
-                        PR_CWait(folder, 1000UL);
-                        PR_CExitMonitor(folder);
-                        if (eventQueue)
-                          eventQueue->ProcessPendingEvents();
-                      }
-                    }
-                }
-            }
-        }
-    }
-	return PR_TRUE;
-}
-
-PRBool PR_CALLBACK nsMsgAccountManager::cleanupInboxOnExit(nsHashKey *aKey, void *aData,
-                                             void *closure)
-{
-  nsCOMPtr<nsIFolder> root;
-  nsIMsgIncomingServer *msgserver = (nsIMsgIncomingServer*)aData;
-  msgserver->GetRootFolder(getter_AddRefs(root));
-  nsXPIDLCString type;
-  msgserver->GetType(getter_Copies(type));
-  if (root)
+  server->GetEmptyTrashOnExit(&emptyTrashOnExit);
+  nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(server);
+  if (imapserver)
+    imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
+  if (emptyTrashOnExit || cleanupInboxOnExit)
   {
-    nsCOMPtr<nsIMsgFolder> folder;
-    folder = do_QueryInterface(root);
-    if (folder)
+    nsCOMPtr<nsIFolder> root;
+    server->GetRootFolder(getter_AddRefs(root));
+    nsXPIDLCString type;
+    server->GetType(getter_Copies(type));
+    if (root)
     {
-      nsXPIDLCString passwd;
-      PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :PR_FALSE);
-      if (isImap) 
+      nsCOMPtr<nsIMsgFolder> folder;
+      folder = do_QueryInterface(root);
+      if (folder)
       {
-        nsCOMPtr <nsIImapIncomingServer> imapserver = do_QueryInterface(msgserver);
-        if (imapserver)
-        {
-          PRBool cleanupInboxOnExit = PR_FALSE;
-          
-          imapserver->GetCleanupInboxOnExit(&cleanupInboxOnExit);
-          if (cleanupInboxOnExit)
-          {
-            msgserver->GetPassword(getter_Copies(passwd));
-            if (isImap &&  passwd && nsCRT::strlen((const char*) passwd))
-            {
-              nsresult rv;
-              nsCOMPtr<nsIEnumerator> aEnumerator;
-              folder->GetSubFolders(getter_AddRefs(aEnumerator));
-              nsCOMPtr<nsISupports> aSupport;
-              rv = aEnumerator->First();
-              while (NS_SUCCEEDED(rv))
-              { 
-                rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
-                nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
-                PRUnichar *folderName = nsnull;
-                inboxFolder->GetName(&folderName);
-                if (folderName && nsCRT::strcasecmp(folderName, "INBOX") ==0)
-                {
-                  nsCOMPtr<nsIUrlListener> urlListener;
-                  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
-                    kMsgAccountManagerCID, &rv);
-                  if (NS_FAILED(rv)) return rv;
-                  NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                    kEventQueueServiceCID, &rv);
-                  
-                  if (NS_FAILED(rv)) return rv;
-                  nsCOMPtr<nsIEventQueue> eventQueue;
-                  pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                    getter_AddRefs(eventQueue)); 
-                  
-                  urlListener = do_QueryInterface(accountManager, &rv);
-                  
-                  rv = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
-                  if (NS_SUCCEEDED(rv) && isImap && urlListener)
-                  {
-                    PRBool inProgress = PR_FALSE;
-                    accountManager->SetFolderDoingCleanupInbox(inboxFolder);
-                    accountManager->GetCleanupInboxInProgress(&inProgress);
-                    while (inProgress)
-                    {
-                      accountManager->GetCleanupInboxInProgress(&inProgress);
-                      PR_CEnterMonitor(inboxFolder);
-                      PR_CWait(folder, 1000UL);
-                      PR_CExitMonitor(inboxFolder);
-                      if (eventQueue)
-                        rv = eventQueue->ProcessPendingEvents();
-                    }
-                  }
-                  break;
+         nsXPIDLCString passwd;
+         PRBool isImap = (type ? PL_strcmp(type, "imap") == 0 :
+                          PR_FALSE);
+         if (isImap)
+           server->GetPassword(getter_Copies(passwd));
+         if (!isImap || (isImap && passwd && 
+                        nsCRT::strlen((const char*) passwd)))
+         {
+           nsCOMPtr<nsIUrlListener> urlListener;
+           NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                           kMsgAccountManagerCID, &rv);
+           if (NS_FAILED(rv)) return rv;
+           NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+                           kEventQueueServiceCID, &rv);
+           if (NS_FAILED(rv)) return rv;
+           nsCOMPtr<nsIEventQueue> eventQueue;
+           pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                    getter_AddRefs(eventQueue)); 
+           if (isImap)
+             urlListener = do_QueryInterface(accountManager, &rv);
+                    
+           if (isImap && cleanupInboxOnExit)
+           {
+             nsCOMPtr<nsIEnumerator> aEnumerator;
+             folder->GetSubFolders(getter_AddRefs(aEnumerator));
+             nsCOMPtr<nsISupports> aSupport;
+             rv = aEnumerator->First();
+             while (NS_SUCCEEDED(rv))
+             {  
+               rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+               nsCOMPtr<nsIMsgFolder>inboxFolder = do_QueryInterface(aSupport);
+               PRUnichar *folderName = nsnull;
+               inboxFolder->GetName(&folderName);
+               if (folderName && nsCRT::strcasecmp(folderName, "INBOX") ==0)
+               {
+                 rv1 = inboxFolder->Compact(urlListener, nsnull /* msgwindow */);
+                 if (NS_SUCCEEDED(rv1))
+                   accountManager->SetFolderDoingCleanupInbox(inboxFolder);
+                 break;
                 }
                 else
                   rv = aEnumerator->Next();
-              }
-            }
-          }
-        }
-      }
-	  }
-  }
-  return PR_TRUE;
+             }
+           }
+                          
+           if (emptyTrashOnExit)
+           {
+             rv2 = folder->EmptyTrash(nsnull, urlListener);
+             if (isImap && NS_SUCCEEDED(rv2))
+               accountManager->SetFolderDoingEmptyTrash(folder);
+           }
+                    
+           if (isImap && urlListener)
+           {
+             PRBool inProgress = PR_FALSE;
+             if (cleanupInboxOnExit && NS_SUCCEEDED(rv1))
+             {
+               accountManager->GetCleanupInboxInProgress(&inProgress);
+               while (inProgress)
+               {
+                 accountManager->GetCleanupInboxInProgress(&inProgress);
+                 PR_CEnterMonitor(folder);
+                 PR_CWait(folder, 1000UL);
+                 PR_CExitMonitor(folder);
+                 if (eventQueue)
+                   eventQueue->ProcessPendingEvents();
+               }
+             }
+             if (emptyTrashOnExit && NS_SUCCEEDED(rv2))
+             {
+               accountManager->GetEmptyTrashInProgress(&inProgress);
+               while (inProgress)
+               {
+                 accountManager->GetEmptyTrashInProgress(&inProgress);
+                 PR_CEnterMonitor(folder);
+                 PR_CWait(folder, 1000UL);
+                 PR_CExitMonitor(folder);
+                 if (eventQueue)
+                   eventQueue->ProcessPendingEvents();
+               }
+             }
+           } 
+         }
+       }     
+     }
+   }
+   return PR_TRUE;
 }
+
 
 // enumaration for closing cached connections.
 PRBool nsMsgAccountManager::closeCachedConnections(nsHashKey *aKey, void *aData, void *closure)
@@ -1408,16 +1371,9 @@ nsMsgAccountManager::CloseCachedConnections()
 }
 
 NS_IMETHODIMP
-nsMsgAccountManager::EmptyTrashOnExit()
+nsMsgAccountManager::CleanupOnExit()
 {
-	m_incomingServers.Enumerate(emptyTrashOnExit, nsnull);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsMsgAccountManager::CleanupInboxOnExit()
-{
-	m_incomingServers.Enumerate(cleanupInboxOnExit,nsnull);
+	m_incomingServers.Enumerate(CleanupOnExit,nsnull);
 	return NS_OK;
 }
 
@@ -2037,23 +1993,41 @@ nsMsgAccountManager::OnStartRunningUrl(nsIURI * aUrl)
 NS_IMETHODIMP
 nsMsgAccountManager::OnStopRunningUrl(nsIURI * aUrl, nsresult aExitCode)
 {
-  if (m_folderDoingEmptyTrash) 
+  if (aUrl)
   {
-    PR_CEnterMonitor(m_folderDoingEmptyTrash);
-    PR_CNotifyAll(m_folderDoingEmptyTrash);
-    m_emptyTrashInProgress = PR_FALSE;
-    PR_CExitMonitor(m_folderDoingEmptyTrash);
-    m_folderDoingEmptyTrash = nsnull;  //reset to nsnull;
-  }
-  else if (m_folderDoingCleanupInbox)
-  {
-    PR_CEnterMonitor(m_folderDoingCleanupInbox);
-    PR_CNotifyAll(m_folderDoingCleanupInbox);
-    m_cleanupInboxInProgress = PR_FALSE;
-    PR_CExitMonitor(m_folderDoingCleanupInbox);
-    m_folderDoingCleanupInbox=nsnull;   //reset to nsnull
-  }
-  return NS_OK;
+    nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl); 
+    if (imapUrl)
+    {
+      nsImapAction imapAction = nsIImapUrl::nsImapTest;
+      imapUrl->GetImapAction(&imapAction);
+      switch(imapAction)
+      {
+        case nsIImapUrl::nsImapExpungeFolder:
+          if (m_folderDoingCleanupInbox)
+          {
+            PR_CEnterMonitor(m_folderDoingCleanupInbox);
+            PR_CNotifyAll(m_folderDoingCleanupInbox);
+            m_cleanupInboxInProgress = PR_FALSE;
+            PR_CExitMonitor(m_folderDoingCleanupInbox);
+            m_folderDoingCleanupInbox=nsnull;   //reset to nsnull
+          }
+          break;
+        case nsIImapUrl::nsImapDeleteAllMsgs:
+          if (m_folderDoingEmptyTrash) 
+          {
+            PR_CEnterMonitor(m_folderDoingEmptyTrash);
+            PR_CNotifyAll(m_folderDoingEmptyTrash);
+            m_emptyTrashInProgress = PR_FALSE;
+            PR_CExitMonitor(m_folderDoingEmptyTrash);
+            m_folderDoingEmptyTrash = nsnull;  //reset to nsnull;
+          }
+          break;
+        default:
+          break;
+       } 
+     }
+   }
+   return NS_OK;
 }
 
 NS_IMETHODIMP

@@ -126,12 +126,8 @@ private:
   static PRBool PR_CALLBACK hashUnloadServer(nsHashKey *aKey, void *aData,
                                      void *closure);
 
-  // empty trash on exit
-  static PRBool PR_CALLBACK emptyTrashOnExit(nsHashKey *aKey, void *aData,
-                                     void *closure);
-  
-  // cleanup inbox on exit
-  static PRBool PR_CALLBACK cleanupInboxOnExit(nsHashKey *aKey, void *aData,
+  // clean up on exit
+  static PRBool PR_CALLBACK CleanupOnExit(nsHashKey *aKey, void *aData,
                                      void *closure);
   //
   // account enumerators
