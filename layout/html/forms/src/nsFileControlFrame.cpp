@@ -33,7 +33,6 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresState.h"
-#include "nsIFileWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsIView.h"
@@ -42,7 +41,6 @@
 #include "nsIFormControl.h"
 #include "nsINameSpaceManager.h"
 #include "nsCOMPtr.h"
-#include "nsFileSpec.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocument.h"
@@ -53,10 +51,10 @@
 #include "nsIStatefulFrame.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsIDOMWindow.h"
+#include "nsIFilePicker.h"
 
 
-static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
-static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 static NS_DEFINE_IID(kIFormControlFrameIID, NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID,     NS_IDOMMOUSELISTENER_IID);
@@ -211,24 +209,6 @@ nsFileControlFrame::GetType(PRInt32* aType) const
   return NS_OK;
 }
 
-// XXX this should be removed when nsView exposes it
-nsIWidget* GetWindowTemp(nsIView *aView);
-nsIWidget*
-nsFileControlFrame::GetWindowTemp(nsIView *aView)
-{
-  nsIWidget *window = nsnull;
-
-  nsIView *ancestor = aView;
-  while (nsnull != ancestor) {
-    ancestor->GetWidget(window);
-	  if (nsnull != window) {
-	    return window;
-	  }
-	  ancestor->GetParent(ancestor);
-  }
-  return nsnull;
-}
-
 
 void 
 nsFileControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -256,44 +236,92 @@ nsFileControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 nsresult 
 nsFileControlFrame::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  nsIView*   parentView;
-  nsresult result = NS_OK;
-  nsIFrame *parentWithView;
-  if (NS_SUCCEEDED(mTextFrame->GetParentWithView(mPresContext, &parentWithView)) && parentWithView)
-  {
-    parentWithView->GetView(mPresContext,&parentView);
-  }
+  nsresult result;
 
-  nsIWidget* parentWidget = GetWindowTemp(parentView);
- 
-  nsIFileWidget *fileWidget = nsnull;
-  
-  nsString title; 
+  // Get parent nsIDOMWindow object.
+  nsCOMPtr<nsIContent> content;
+  result = GetContent(getter_AddRefs(content));
+  if (!content)
+    return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocument> doc;
+  result = content->GetDocument(*getter_AddRefs(doc));
+  if (!doc)
+    return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  result = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  if (!scriptGlobalObject)
+    return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> parentWindow = do_QueryInterface(scriptGlobalObject);
+  if (!parentWindow)
+    return NS_ERROR_FAILURE;
+
+  // Get Loc title
+  nsString title;
   nsFormControlHelper::GetLocalizedString("FileUpload", title);
 
-  nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
-  
-  if (fileWidget) {
-    nsString titles[1]; 
-    nsString filters[1]; 
-    nsFormControlHelper::GetLocalizedString("AllFilesTitle", titles[0]);
-    nsFormControlHelper::GetLocalizedString("AllFilesFilter", filters[0]);
-    fileWidget->SetFilterList(1, titles, filters);
+  nsCOMPtr<nsIFilePicker> filePicker = do_CreateInstance("component://mozilla/filepicker");
+  if (!filePicker)
+    return NS_ERROR_FAILURE;
 
-    fileWidget->Create(parentWidget, title, eMode_load, nsnull, nsnull);
-    result = fileWidget->Show();
+  result = filePicker->Init(parentWindow, title.GetUnicode(), nsIFilePicker::modeOpen);
+  if (NS_FAILED(result))
+    return result;
 
-    if (result) {
-      nsFileSpec fileSpec;
-      fileWidget->GetFile(fileSpec);
-      nsAutoString  pathName;
-      fileSpec.GetNativePathString(pathName);
-      mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
+  // Set filter "All Files"
+  filePicker->AppendFilters(nsIFilePicker::filterAll);
+
+  // Set default directry and filename
+  nsAutoString defaultName;
+  GetProperty(nsHTMLAtoms::value, defaultName);
+
+  nsCOMPtr<nsILocalFile> currentFile = do_CreateInstance("component://mozilla/file/local");
+  if (currentFile && !defaultName.IsEmpty()) {
+    result = currentFile->InitWithUnicodePath(defaultName.GetUnicode());
+    if (NS_SUCCEEDED(result)) {
+      PRUnichar *leafName = nsnull;
+      currentFile->GetUnicodeLeafName(&leafName);
+      if (leafName) {
+        filePicker->SetDefaultString(leafName);
+        //nsAllocator::Free(leafName);
+      }
+
+      // set directory
+      nsCOMPtr<nsIFile> parentFile;
+      currentFile->GetParent(getter_AddRefs(parentFile));
+      if (parentFile) {
+        nsCOMPtr<nsILocalFile> parentLocalFile = do_QueryInterface(parentFile, &result);
+        if (parentLocalFile)
+          filePicker->SetDisplayDirectory(parentLocalFile);
+      }
     }
-    NS_RELEASE(fileWidget);
   }
-  NS_RELEASE(parentWidget);
-  return NS_OK;
+
+  // Open dialog
+  PRInt16 mode;
+  result = filePicker->Show(&mode);
+  if (NS_FAILED(result))
+    return result;
+  if (mode == nsIFilePicker::returnCancel)
+    return NS_OK;
+
+  // Set property
+  nsCOMPtr<nsILocalFile> localFile;
+  result = filePicker->GetFile(getter_AddRefs(localFile));
+  if (localFile) {
+    PRUnichar *nativePath;
+    result = localFile->GetUnicodePath(&nativePath);
+    if (nativePath) {
+      nsAutoString pathName(nativePath);
+      mTextFrame->SetProperty(mPresContext, nsHTMLAtoms::value, pathName);
+      //nsAllocator::Free(nativePath);
+      return NS_OK;
+    }
+  }
+
+  return NS_FAILED(result) ? result : NS_ERROR_FAILURE;
 }
 
 
@@ -319,7 +347,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
   // The Areaframe takes care of all our reflow 
   // except for when style is used to change its size.
   nsresult rv = nsAreaFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv) && mTextFrame != nsnull) {
     nsIFrame * child;
     FirstChild(aPresContext, nsnull, &child);
     while (child == mTextFrame) {
@@ -386,6 +414,7 @@ nsNewFrame*
 nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* aStart)
 {
   nsNewFrame* result = nsnull;
+#ifndef DEBUG_NEWFRAME
   // find the text control frame.
   nsIFrame* childFrame = nsnull;
   aStart->FirstChild(aPresContext, nsnull, &childFrame);
@@ -421,6 +450,9 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
   }
 
   return result;
+#else
+  return nsnull;
+#endif
 }
 
 PRIntn
@@ -513,6 +545,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                                      nsFramePaintLayer aWhichLayer,
                                      nsIFrame** aFrame)
 {
+#ifndef DEBUG_NEWFRAME
   if ( nsFormFrame::GetDisabled(this) && mRect.Contains(aPoint) ) {
     const nsStyleDisplay* disp = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -523,6 +556,7 @@ nsFileControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   } else {
     return nsAreaFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
   }
+#endif
   return NS_OK;
 }
 
