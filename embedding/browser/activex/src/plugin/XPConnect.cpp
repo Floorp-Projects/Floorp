@@ -329,7 +329,8 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
         {
             nsCAutoString value;
             aIn->GetAsAUTF8String(value);
-            nsAutoString valueWide; valueWide.AssignWithConversion(value.get());
+            nsAutoString valueWide;
+            CopyUTF8toUTF16(value, valueWide);
             aOut->vt = VT_BSTR;
             aOut->bstrVal = SysAllocString(valueWide.get());
         }

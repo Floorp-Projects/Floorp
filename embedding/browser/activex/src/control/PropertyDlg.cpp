@@ -107,7 +107,8 @@ LRESULT CPPageDlg::OnInitDialog(UINT uMsg, WPARAM wParam,  LPARAM lParam, BOOL& 
 
         nsCOMPtr<nsIMIMEInfo> mimeInfo;
         nsCAutoString contentType;
-        contentType.AssignWithConversion(mType);
+        // MIME Types are ASCII.
+        LossyCopyUTF16toASCII(mType, contentType);
         mimeService->GetFromTypeAndExtension(contentType, EmptyCString(), getter_AddRefs(mimeInfo));
         if (mimeInfo)
         {
