@@ -240,11 +240,13 @@ void nsBrowserController::doUpdateToolbarState(void)
 //----------------------------------------------------------------------
 
 // Entry point to create nsBrowserController factory instances...
+NS_DEF_FACTORY(BrowserController,nsBrowserController)
+
 
 nsresult NS_NewBrowserControllerFactory(nsIFactory** aResult)
 {
   nsresult rv = NS_OK;
-  nsIFactory* inst = new nsFactory<nsBrowserController>();
+  nsIFactory* inst = new nsBrowserControllerFactory;
   if (nsnull == inst) {
     rv = NS_ERROR_OUT_OF_MEMORY;
   }
