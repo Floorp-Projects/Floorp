@@ -25,7 +25,6 @@
 #define IDD_FECONVERTIMAGE              103
 #define IDD_LOCATION_DLG                104
 #define IDD_PAGE_TITLE                  105
-#define IDD_TABLE_INSERT                136
 #define IDC_FONTFACE_COMBO              213
 #define IDC_AUTO_SAVE_MINUTES           214
 #define IDC_PUBLISH_USER_NAME           217
@@ -48,6 +47,7 @@
 #define IDC_HR_SAVE_DEFAULT             630
 #define IDC_AUTO_SAVE                   630
 #define ID_LIST_FONTCOLOR               640
+#define IDD_CHANGE_ENCODING             670
 #define IDC_ROWS                        1000
 #define IDC_ERROR_WORD                  1000
 #define IDC_CONVERTLIST                 1000
@@ -102,6 +102,10 @@
 #define IDC_CHANGE_SEL_CAPTION          1068
 #define IDC_INSERT_COUNT                1076
 #define IDC_TABLE_PAD                   1077
+#define IDC_CONVERT_CHARSET             1081
+#define IDC_CHANGE_METATAG              1082
+#define IDC_CONVERT_CHARSET_EXTRA       1083
+#define IDC_CHANGE_METATAG_EXTRA        1084
 #define IDC_DEFAULT_COLOR               1100
 #define IDC_COLOR_1                     1101
 #define IDC_COLOR_2                     1102
@@ -178,8 +182,8 @@
 #define IDC_TABLE_COLUMNS               2007
 #define IDD_PREF_EDITOR                 2008
 #define IDD_HINT_DLG                    2022
-#define IDC_HREF_FILE                   2023
 #define IDD_GET_TABLE_COLUMNS           2023
+#define IDC_HREF_FILE                   2023
 #define IDD_PROPS_HRULE                 2024
 #define IDC_ANCHOR_EDIT                 2026
 #define IDC_HREF_UNLINK                 2036
@@ -420,14 +424,16 @@
 #define IDS_PASTE_TEXT_PLAIN            59462
 #define IDS_PASTE_TEXT_NEW_TABLE        59463
 #define IDS_PASTE_TEXT_REPLACE_CELLS    59464
+#define IDS_CONVERT_CHARSET             62111
+#define IDS_CHANGE_METATAG              62112
 
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        137
+#define _APS_NEXT_RESOURCE_VALUE        138
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1081
+#define _APS_NEXT_CONTROL_VALUE         1085
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

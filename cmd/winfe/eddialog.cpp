@@ -35,6 +35,13 @@
 #undef THIS_FILE
 static char BASED_CODE THIS_FILE[] = __FILE__;
 #endif
+// For XP Strings
+extern "C" {
+#include "xpgetstr.h"
+#define WANT_ENUM_STRING_IDS
+#include "allxpstr.h"
+#undef WANT_ENUM_STRING_IDS
+}
 
 extern char *EDT_NEW_DOC_NAME;
 
@@ -1462,8 +1469,106 @@ void CGetColumnsDlg::DoDataExchange(CDataExchange* pDX)
 	//}}AFX_DATA_MAP
 }
 
-ED_CharsetEncode FE_EncodingDialog(MWContext* pMWContext)
+// Global XP interface to the encoding/charset dialog
+// Replaces previous FE_Confirm dialog to give option
+//   of NOT converting characters, but just changing the "charset"
+//   value in the Content-Type metatag 
+//   (easier for user than using MetaTag editing property page (CDocMetaPage) in edprops.cpp)
+ED_CharsetEncode FE_EncodingDialog(MWContext* pMWContext, char *pCharSet)
 {
-    // TODO: Implement this!
-    return ED_ENCODE_CANCEL;
+    ED_CharsetEncode result = ED_ENCODE_CANCEL;
+    CNetscapeEditView* pView = (CNetscapeEditView*)WINCX(pMWContext)->GetView();
+    if( pView )
+    {
+        CEncodeDlg dlg(GET_DLG_PARENT(pView), pCharSet);
+    
+        if( dlg.DoModal() == IDOK )
+        {
+            // Radio button value determines the result   
+            result = dlg.m_iEncode == 0 ? ED_ENCODE_CHANGE_CHARSET :ED_ENCODE_CHANGE_METATAG;
+        }
+    }
+    return result;
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// CEncodeDlg dialog
+
+
+CEncodeDlg::CEncodeDlg(CWnd* pParent, 
+              char *pCharSet )
+	: CDialog(CEncodeDlg::IDD, pParent),
+    m_pCharSet(pCharSet)
+{
+	//{{AFX_DATA_INIT(CEncodeDlg)
+	m_iEncode = 0;
+	//}}AFX_DATA_INIT
+}
+
+
+void CEncodeDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	//{{AFX_DATA_MAP(CEncodeDlg)
+	DDX_Radio(pDX, IDC_CONVERT_CHARSET, m_iEncode);
+	//}}AFX_DATA_MAP
+}
+
+
+BEGIN_MESSAGE_MAP(CEncodeDlg, CDialog)
+	//{{AFX_MSG_MAP(CEncodeDlg)
+	ON_BN_CLICKED(ID_HELP, OnHelp)
+	//}}AFX_MSG_MAP
+#ifdef XP_WIN32
+    ON_WM_HELPINFO()
+#endif //XP_WIN32
+END_MESSAGE_MAP()
+
+BOOL CEncodeDlg::OnInitDialog() 
+{
+    m_ResourceSwitcher.Reset();
+    // Set the text for the radio buttons
+    CString csTemp;
+    csTemp.Format(szLoadString(IDS_CONVERT_CHARSET), m_pCharSet); 
+    GetDlgItem(IDC_CONVERT_CHARSET)->SetWindowText(csTemp);
+
+    csTemp.Format(szLoadString(IDS_CHANGE_METATAG), m_pCharSet); 
+    GetDlgItem(IDC_CHANGE_METATAG)->SetWindowText(csTemp);
+
+    // Extra descriptive text under each radio button - use XP strings
+    GetDlgItem(IDC_CONVERT_CHARSET_EXTRA)->SetWindowText(XP_GetString(XP_EDT_CHARSET_CONVERT_PAGE));
+    GetDlgItem(IDC_CHANGE_METATAG_EXTRA)->SetWindowText(XP_GetString(XP_EDT_CHARSET_SET_METATAG));
+    
+    UpdateData(FALSE);
+  	
+    CDialog::OnInitDialog();
+	return TRUE;  // return TRUE unless you set the focus to a control
+	              // EXCEPTION: OCX Property Pages should return FALSE
+}
+
+void CEncodeDlg::OnHelp() 
+{
+    // TODO: NEED NEW HELP ID FOR THIS DIALOG
+    //NetHelp(HELP_CHANGE_CHARSET);
+}
+
+
+
+#ifdef XP_WIN32
+BOOL CEncodeDlg::OnHelpInfo(HELPINFO *)//32bit messagemapping.
+{
+    OnHelp();
+    return TRUE;
+}
+#endif//XP_WIN32
+
+
+
+void CEncodeDlg::OnOK() 
+{
+    if( !UpdateData(TRUE) )
+        return;
+
+	CDialog::OnOK();
+}
+

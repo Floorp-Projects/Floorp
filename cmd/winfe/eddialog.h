@@ -524,4 +524,45 @@ protected:
     
 };
 
+/////////////////////////////////////////////////////////////////////////////
+// CEncodeDlg dialog
+
+class CEncodeDlg : public CDialog
+{
+// Construction
+public:
+	CEncodeDlg(CWnd* pParent, char *pCharSet );
+// Dialog Data
+	//{{AFX_DATA(CEncodeDlg)
+	enum { IDD = IDD_CHANGE_ENCODING };
+	int    m_iEncode;
+	//}}AFX_DATA
+
+private:    
+    // This will change resource hInstance to Editor dll (in constructor)
+    CEditorResourceSwitcher m_ResourceSwitcher;
+    char *m_pCharSet;
+
+// Overrides
+	// ClassWizard generated virtual function overrides
+	//{{AFX_VIRTUAL(CEncodeDlg)
+	protected:
+	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV support
+	//}}AFX_VIRTUAL
+
+// Implementation
+protected:
+
+	// Generated message map functions
+	//{{AFX_MSG(CEncodeDlg)
+	virtual BOOL OnInitDialog();
+	virtual void OnOK();
+	afx_msg void OnHelp();
+	//}}AFX_MSG
+#ifdef XP_WIN32
+    afx_msg BOOL OnHelpInfo(HELPINFO *);
+#endif
+	DECLARE_MESSAGE_MAP()
+};
+
 #endif // EDDIALOG_H

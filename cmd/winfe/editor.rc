@@ -323,6 +323,8 @@ IDC_ARROW_RIGHT         CURSOR  DISCARDABLE     "res\\arrow_rt.cur"
 STRINGTABLE PRELOAD DISCARDABLE 
 BEGIN
     ID_MERGE_TABLE_CELLS    "Join the boundaries and contents of cells into one larger cell"
+    IDS_CONVERT_CHARSET     "&Convert the current page to '%s'"
+    IDS_CHANGE_METATAG      "C&hange the character set label to '%s'"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 

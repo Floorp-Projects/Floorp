@@ -726,6 +726,7 @@
 #define IDC_TIMELEFT                    661
 #define IDC_CHECK4                      662
 #define IDC_CHECK4_BY_DATE              662
+#define IDD_CHANGE_ENCODING             670
 #define IDB_TREEITEM                    700
 #define IDB_TREEFOLDERCLOSED            701
 #define IDB_TREEFOLDEROPEN              702
@@ -3478,6 +3479,8 @@
 #define IDS_OLE_CANTUSE_VIEWER          62095
 #define IDS_OLE_CANTUSE_HANDLER         62096
 #define IDS_OLE_CANTUSE_VIEWER2         62110
+#define IDS_CONVERT_CHARSET             62111
+#define IDS_CHANGE_METATAG              62112
 #define IDS_LANGUAGE_THAI   	        62120
 #define IDS_LANGUAGE_VIETNAMESE_VIQR    62121
 #define IDS_LANGUAGE_VIETNAMESE_VISCII  62122

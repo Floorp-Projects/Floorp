@@ -329,7 +329,9 @@ void CMainFrame::RefreshNewEncoding(int16 csid, BOOL bIgnore)
       else 
 #endif /* EDITOR */      
       {
-        GetMainContext()->NiceReload();
+        // Must use NET_NORMAL_RELOAD else reload uses NET_RESIZE_RELOAD
+        // and the text is not updated
+        GetMainContext()->NiceReload(NET_NORMAL_RELOAD);
       }
     }
   }

@@ -1836,9 +1836,9 @@ void CGenericFrame::LoadUrlEditor(char * pUrl,
             // Call Editor Plugin to possibly replace the supplied URL
             //   or do source file locking
             
-            //EDT_PreOpen(GetMainContext()->GetContext(), (char*)(LPCSTR(csURL)), &FinishLoadUrlEditor, pData);
+            EDT_PreOpen(GetMainContext()->GetContext(), (char*)(LPCSTR(csURL)), &FinishLoadUrlEditor, pData);
             //TODO: REMOVE THIS - TEMP - SKIP PLUGIN TO AVOID NSPR20 PROBLEMS????
-            FinishLoadUrlEditor(FALSE, (char*)(LPCSTR(csURL)), pData);
+            //FinishLoadUrlEditor(FALSE, (char*)(LPCSTR(csURL)), pData);
         } else {
             // No URL address given - Don't go through plugin
             FinishLoadUrlEditor(FALSE, NULL, pData);
