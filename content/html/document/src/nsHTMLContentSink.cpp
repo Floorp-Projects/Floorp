@@ -229,9 +229,10 @@ NS_NewHTMLNOTUSEDElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo)
 static const contentCreatorCallback sContentCreatorCallbacks[] = {
   NS_NewHTMLUnknownElement,
 #include "nsHTMLTagList.h"
-};
 #undef HTML_TAG
 #undef HTML_OTHER
+  NS_NewHTMLUnknownElement
+};
 
 class SinkContext;
 
