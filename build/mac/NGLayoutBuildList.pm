@@ -418,7 +418,7 @@ sub BuildLayoutProjects()
 	MakeAlias(":mozilla:layout:html:base:src:broken-image.gif",							"$html_dir");
 
 	my($throbber_dir) = "$resource_dir" . "throbber:";
-	BuildResourceAliases(":mozilla:webshell:tests:viewer:throbber:",					"$throbber_dir");
+	BuildResourceAliases(":mozilla:xpfe:xpviewer:src:resources:throbber:",				"$throbber_dir");
 	
 	my($samples_dir) = "$resource_dir" . "samples:";
 	BuildResourceAliases(":mozilla:webshell:tests:viewer:samples:",						"$samples_dir");
