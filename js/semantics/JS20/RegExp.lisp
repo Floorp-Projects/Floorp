@@ -53,25 +53,11 @@
                (:control-letter (++ (#\A #\B #\C #\D #\E #\F #\G #\H #\I #\J #\K #\L #\M #\N #\O #\P #\Q #\R #\S #\T #\U #\V #\W #\X #\Y #\Z)
                                     (#\a #\b #\c #\d #\e #\f #\g #\h #\i #\j #\k #\l #\m #\n #\o #\p #\q #\r #\s #\t #\u #\v #\w #\x #\y #\z))
                                 (($default-action $default-action)))
-               ((:pattern-character normal) (- :non-terminator (#\^ #\$ #\\ #\. #\* #\+ #\? #\( #\) #\[ #\] #\{ #\} #\|))
+               (:pattern-character (- :non-terminator (#\^ #\$ #\\ #\. #\* #\+ #\? #\( #\) #\[ #\] #\{ #\} #\|))
+                                   (($default-action $default-action)))
+               ((:class-character dash) (- :non-terminator (#\\ #\]))
                 (($default-action $default-action)))
-               ((:pattern-character non-decimal-digit) (- (:pattern-character normal) :decimal-digit)
-                (($default-action $default-action)))
-               ((:pattern-character non-octal-digit) (- (:pattern-character normal) :octal-digit)
-                (($default-action $default-action)))
-               ((:range-character any normal) (- :non-terminator (#\\ #\]))
-                (($default-action $default-action)))
-               ((:range-character any non-decimal-digit) (- (:range-character any normal) :decimal-digit)
-                (($default-action $default-action)))
-               ((:range-character any non-octal-digit) (- (:range-character any normal) :octal-digit)
-                (($default-action $default-action)))
-               ((:range-character no-caret normal) (- (:range-character any normal) (#\^))
-                (($default-action $default-action)))
-               ((:range-character no-dash normal) (- (:range-character any normal) (#\-))
-                (($default-action $default-action)))
-               ((:range-character no-dash non-decimal-digit) (- (:range-character no-dash normal) :decimal-digit)
-                (($default-action $default-action)))
-               ((:range-character no-dash non-octal-digit) (- (:range-character no-dash normal) :octal-digit)
+               ((:class-character no-dash) (- (:class-character dash) (#\-))
                 (($default-action $default-action)))
                (:identity-escape (- :non-terminator :unicode-alphanumeric)
                                  (($default-action $default-action))))
@@ -100,14 +86,14 @@
        
        (deftype r-e-result (oneof (success r-e-match) failure))
        (deftype r-e-match (tuple (end-index integer)
-                            (captured (vector capture))))
+                            (captures (vector capture))))
        (%text :semantics
          "A " (:type r-e-match) " holds an intermediate state during the pattern-matching process. "
          (:field end-index r-e-match)
          " is the index of the next input character to be matched by the next component in a regular expression pattern. "
          "If we are at the end of the pattern, " (:field end-index r-e-match)
          " is one plus the index of the last matched input character. "
-         (:field captured r-e-match)
+         (:field captures r-e-match)
          " is a zero-based array of the strings captured so far by capturing parentheses.")
        
        (deftype capture (oneof (present string)
@@ -120,7 +106,7 @@
          "If a match is possible, it returns a " (:field success r-e-result) " result that contains the final "
          (:type r-e-match) " state; if no match is possible, it returns a " (:field failure r-e-result) " result.")
        
-       (deftype matcher (-> (r-e-input r-e-match integer continuation) r-e-result))
+       (deftype matcher (-> (r-e-input r-e-match continuation) r-e-result))
        (%text :semantics
          "A " (:type matcher)
          " is a function that attempts to match a middle portion of the pattern against the input string, "
@@ -130,30 +116,30 @@
          "If the continuation returns " (:field failure r-e-result) ", the matcher function may call it repeatedly, "
          "trying various alternatives at pattern choice points.")
        (%text :semantics
-         "The " (:type r-e-input) " parameter contains the input string and is merely passed down to subroutines. "
-         "The " (:type integer) " parameter contains the number of capturing left parentheses seen so far in the "
+         "The " (:type r-e-input) " parameter contains the input string and is merely passed down to subroutines.")
+       
+       (deftype matcher-generator (-> (integer) matcher))
+       (%text :semantics
+         "A " (:type matcher-generator)
+         " is a function executed at the time the regular expression is compiled that returns a matcher for a part "
+         "of the pattern. The " (:type integer) " parameter contains the number of capturing left parentheses seen so far in the "
          "pattern and is used to assign static, consecutive numbers to capturing parentheses.")
        
-       (define (sequence-matcher (matcher1 matcher) (paren-count1 integer) (matcher2 matcher)) matcher
-         (function ((t r-e-input) (x r-e-match) (p integer) (c continuation))
-           (let ((d continuation (function ((y r-e-match))
-                                   (matcher2 t y (+ p paren-count1) c))))
-             (matcher1 t x p d))))
+       (deftype char-set-generator (-> (integer) (set character)))
        (%text :semantics
-         (:global sequence-matcher) " returns a " (:type matcher)
-         " that matches the concatenation of the patterns matched by "
-         (:local matcher1) " and " (:local matcher2) ". "
-         (:local paren-count1) " is the number of capturing left parentheses inside "
-         (:local matcher2) "'s pattern.")
+         "A " (:type char-set-generator)
+         " is a function executed at the time the regular expression is compiled that returns a set of "
+         "characters that are accepted by a part of the pattern. The " (:type integer)
+         " argument contains the number of capturing left parentheses seen so far in the pattern.")
        
        (define (character-set-matcher (acceptance-set (set character))) matcher   ;*********ignore case?
-         (function ((t r-e-input) (x r-e-match) (p integer :unused) (c continuation))
+         (function ((t r-e-input) (x r-e-match) (c continuation))
            (let ((i integer (& end-index x))
                  (s string (& str t)))
              (if (= i (length s))
                (oneof failure)
                (if (character-set-member (nth s i) acceptance-set)
-                 (c (tuple r-e-match (+ i 1) (& captured x)))
+                 (c (tuple r-e-match (+ i 1) (& captures x)))
                  (oneof failure))))))
        (%text :semantics
          (:global character-set-matcher) " returns a " (:type matcher)
@@ -174,14 +160,17 @@
        
        (rule :regular-expression-pattern ((exec (-> (r-e-input integer) r-e-result)))
          (production :regular-expression-pattern (:disjunction) regular-expression-pattern-disjunction
-           ((exec (t r-e-input) (index integer))
-            ((match :disjunction)
-             t
-             (tuple r-e-match index (fill-capture (count-parens :disjunction)))
-             0
-             (function ((x r-e-match)) (oneof success x))))))
+           (exec
+            (let ((match matcher ((gen-matcher :disjunction) 0)))
+              (function ((t r-e-input) (index integer))
+                (match
+                 t
+                 (tuple r-e-match index (fill-capture (count-parens :disjunction)))
+                 success-continuation))))))
        
        (%print-actions)
+       (define (success-continuation (x r-e-match)) r-e-result
+         (oneof success x))
        (define (fill-capture (i integer)) (vector capture)
          (if (= i 0)
            (vector-of capture)
@@ -190,67 +179,82 @@
        
        (%subsection "Disjunctions")
        
-       (rule :disjunction ((match matcher) (count-parens integer))
-         (production :disjunction ((:alternative normal)) disjunction-one
-           (match (match :alternative))
+       (rule :disjunction ((gen-matcher matcher-generator) (count-parens integer))
+         (production :disjunction (:alternative) disjunction-one
+           (gen-matcher (gen-matcher :alternative))
            (count-parens (count-parens :alternative)))
-         (production :disjunction ((:alternative normal) #\| :disjunction) disjunction-more
-           ((match (t r-e-input) (x r-e-match) (p integer) (c continuation))
-            (case ((match :alternative) t x p c)
-              ((success y r-e-match) (oneof success y))
-              (failure ((match :disjunction) t x (+ p (count-parens :alternative)) c))))
+         (production :disjunction (:alternative #\| :disjunction) disjunction-more
+           ((gen-matcher (paren-index integer))
+            (let ((match1 matcher ((gen-matcher :alternative) paren-index))
+                  (match2 matcher ((gen-matcher :disjunction) (+ paren-index (count-parens :alternative)))))
+              (function ((t r-e-input) (x r-e-match) (c continuation))
+                (case (match1 t x c)
+                  ((success y r-e-match) (oneof success y))
+                  (failure (match2 t x c))))))
            (count-parens (+ (count-parens :alternative) (count-parens :disjunction)))))
        
        (%print-actions)
        
        
-       (%subsection "Quantifiers")
+       (%subsection "Alternatives")
        
-       (grammar-argument :lambda normal non-decimal-digit non-octal-digit)
-       
-       (rule (:alternative :lambda) ((match matcher) (count-parens integer))
-         (production (:alternative :lambda) () alternative-none
-           ((match (t r-e-input :unused) (x r-e-match) (p integer :unused) (c continuation))
-            (c x))
+       (rule :alternative ((gen-matcher matcher-generator) (count-parens integer))
+         (production :alternative () alternative-none
+           ((gen-matcher (paren-index integer :unused))
+            (function ((t r-e-input :unused) (x r-e-match) (c continuation))
+              (c x)))
            (count-parens 0))
-         (production (:alternative :lambda) (:assertion (:alternative normal)) alternative-assertion
-           ((match (t r-e-input) (x r-e-match) (p integer) (c continuation))
-            (if ((test-assertion :assertion) t x)
-              ((match :alternative) t x p c)
-              (oneof failure)))
-           (count-parens (count-parens :alternative)))
-         (production (:alternative :lambda) ((:ordinary-atom :lambda) (:alternative normal)) alternative-ordinary-atom
-           (match (sequence-matcher (match :ordinary-atom) (count-parens :ordinary-atom) (match :alternative)))
-           (count-parens (+ (count-parens :ordinary-atom) (count-parens :alternative))))
-         (production (:alternative :lambda) (:one-digit-escape (:alternative non-decimal-digit)) alternative-one-digit-escape
-           (match (sequence-matcher (match :one-digit-escape) 0 (match :alternative)))
-           (count-parens (count-parens :alternative)))
-         (production (:alternative :lambda) (:short-octal-escape (:alternative non-octal-digit)) alternative-short-octal-escape
-           (match (sequence-matcher (match :short-octal-escape) 0 (match :alternative)))
-           (count-parens (count-parens :alternative)))
-         (production (:alternative :lambda) ((:atom :lambda) :quantifier (:alternative normal)) alternative-quantified-atom
-           (match
-            (let ((min integer (minimum :quantifier))
+         (production :alternative (:alternative :term) alternative-some
+           ((gen-matcher (paren-index integer))
+            (let ((match1 matcher ((gen-matcher :alternative) paren-index))
+                  (match2 matcher ((gen-matcher :term) (+ paren-index (count-parens :alternative)))))
+              (function ((t r-e-input) (x r-e-match) (c continuation))
+                (let ((d continuation (function ((y r-e-match))
+                                        (match2 t y c))))
+                  (match1 t x d)))))
+           (count-parens (+ (count-parens :alternative) (count-parens :term)))))
+       
+       (%print-actions)
+       
+       
+       (%subsection "Terms")
+       
+       (rule :term ((gen-matcher matcher-generator) (count-parens integer))
+         (production :term (:assertion) term-assertion
+           ((gen-matcher (paren-index integer :unused))
+            (function ((t r-e-input) (x r-e-match) (c continuation))
+              (if ((test-assertion :assertion) t x)
+                (c x)
+                (oneof failure))))
+           (count-parens 0))
+         (production :term (:atom) term-atom
+           (gen-matcher (gen-matcher :atom))
+           (count-parens (count-parens :atom)))
+         (production :term (:atom :quantifier) term-quantified-atom
+           ((gen-matcher (paren-index integer))
+            (let ((match matcher ((gen-matcher :atom) paren-index))
+                  (min integer (minimum :quantifier))
                   (max limit (maximum :quantifier))
-                  (lazy boolean (lazy :quantifier)))
+                  (greedy boolean (greedy :quantifier)))
               (if (case max
                     ((finite m integer) (< m min))
                     (infinite false))
                 (bottom matcher)
-                (let ((looper matcher (repeat-matcher (match :atom) min max lazy (count-parens :atom))))
-                  (sequence-matcher looper (count-parens :atom) (match :alternative))))))
-           (count-parens (+ (count-parens :atom) (count-parens :alternative)))))
+                (repeat-matcher match min max greedy paren-index (count-parens :atom)))))
+           (count-parens (count-parens :atom))))
+       
+       (%print-actions)
        
        
-       (rule :quantifier ((minimum integer) (maximum limit) (lazy boolean))
+       (rule :quantifier ((minimum integer) (maximum limit) (greedy boolean))
          (production :quantifier (:quantifier-prefix) quantifier-eager
            (minimum (minimum :quantifier-prefix))
            (maximum (maximum :quantifier-prefix))
-           (lazy false))
-         (production :quantifier (:quantifier-prefix #\?) quantifier-lazy
+           (greedy true))
+         (production :quantifier (:quantifier-prefix #\?) quantifier-greedy
            (minimum (minimum :quantifier-prefix))
            (maximum (maximum :quantifier-prefix))
-           (lazy true)))
+           (greedy false)))
        
        (rule :quantifier-prefix ((minimum integer) (maximum limit))
          (production :quantifier-prefix (#\*) quantifier-prefix-zero-or-more
@@ -286,11 +290,11 @@
          (if (= n-parens 0)
            x
            (let ((y r-e-match (tuple r-e-match (& end-index x)
-                                     (set-nth (& captured x) p (oneof absent)))))
+                                     (set-nth (& captures x) p (oneof absent)))))
              (reset-parens y (+ p 1) (- n-parens 1)))))
        
-       (define (repeat-matcher (body matcher) (min integer) (max limit) (lazy boolean) (n-body-parens integer)) matcher
-         (function ((t r-e-input) (x r-e-match) (p integer) (c continuation))
+       (define (repeat-matcher (body matcher) (min integer) (max limit) (greedy boolean) (paren-index integer) (n-body-parens integer)) matcher
+         (function ((t r-e-input) (x r-e-match) (c continuation))
            (if (case max
                  ((finite m integer) (= m 0))
                  (infinite false))
@@ -304,17 +308,17 @@
                                              (new-max limit (case max
                                                               ((finite m integer) (oneof finite (- m 1)))
                                                               (infinite (oneof infinite)))))
-                                         ((repeat-matcher body new-min new-max lazy n-body-parens) t y p c)))))
-                   (xr r-e-match (reset-parens x p n-body-parens)))
+                                         ((repeat-matcher body new-min new-max greedy paren-index n-body-parens) t y c)))))
+                   (xr r-e-match (reset-parens x paren-index n-body-parens)))
                (if (/= min 0)
-                 (body t xr p d)
-                 (if lazy
+                 (body t xr d)
+                 (if greedy
+                   (case (body t xr d)
+                     ((success z r-e-match) (oneof success z))
+                     (failure (c x)))
                    (case (c x)
                      ((success z r-e-match) (oneof success z))
-                     (failure (body t xr p d)))
-                   (case (body t xr p d)
-                     ((success z r-e-match) (oneof success z))
-                     (failure (c x)))))))))
+                     (failure (body t xr d)))))))))
        
        (%print-actions)
        
@@ -338,137 +342,69 @@
        (%print-actions)
        
        (define (at-word-boundary (i integer) (s string)) boolean
-         (or (= i 0)
-             (or (= i (length s))
-                 (xor (character-set-member (nth s (- i 1)) re-word-characters)
-                      (character-set-member (nth s i) re-word-characters)))))
+         (if (or (= i 0) (= i (length s)))
+           true
+           (xor (character-set-member (nth s (- i 1)) re-word-characters)
+                (character-set-member (nth s i) re-word-characters))))
        
        
        (%section "Atoms")
        
-       (rule (:atom :lambda) ((match matcher) (count-parens integer))
-         (production (:atom :lambda) ((:ordinary-atom :lambda)) atom-ordinary-atom
-           (match (match :ordinary-atom))
-           (count-parens (count-parens :ordinary-atom)))
-         (production (:atom :lambda) (:one-digit-escape) atom-one-digit-escape
-           (match (match :one-digit-escape))
+       (rule :atom ((gen-matcher matcher-generator) (count-parens integer))
+         (production :atom (:pattern-character) atom-pattern-character
+           ((gen-matcher (paren-index integer :unused))
+            (character-matcher ($default-action :pattern-character)))
            (count-parens 0))
-         (production (:atom :lambda) (:short-octal-escape) atom-short-octal-escape
-           (match (match :short-octal-escape))
-           (count-parens 0)))
-       
-       (rule (:ordinary-atom :lambda) ((match matcher) (count-parens integer))
-         (production (:ordinary-atom :lambda) (:compound-atom) atom-compound-atom
-           (match (match :compound-atom))
-           (count-parens (count-parens :compound-atom)))
-         (production (:ordinary-atom :lambda) ((:pattern-character :lambda)) atom-pattern-character
-           (match (character-matcher ($default-action :pattern-character)))
-           (count-parens 0)))
-       
-       (%charclass (:pattern-character normal))
-       (%charclass (:pattern-character non-decimal-digit))
-       (%charclass (:pattern-character non-octal-digit))
-       
-       (rule :compound-atom ((match matcher) (count-parens integer))
-         (production :compound-atom (#\( :disjunction #\)) compound-atom-parentheses
-           ((match (t r-e-input) (x r-e-match) (p integer) (c continuation))
-            (let ((d continuation
-                     (function ((y r-e-match))
-                       (let ((updated-captured (vector capture)
-                                               (set-nth (& captured y) p (oneof present (subseq (& str t) (& end-index x) (- (& end-index y) 1))))))
-                         (c (tuple r-e-match (& end-index y) updated-captured))))))
-              ((match :disjunction) t x (+ p 1) d)))
+         (production :atom (#\.) atom-dot
+           ((gen-matcher (paren-index integer :unused))
+            (character-set-matcher non-terminators))
+           (count-parens 0))
+         (production :atom (#\\ :atom-escape) atom-atom-escape
+           (gen-matcher (gen-matcher :atom-escape))
+           (count-parens 0))
+         (production :atom (:character-class) atom-character-class
+           ((gen-matcher (paren-index integer))
+            (let ((a (set character) ((acceptance-set :character-class) paren-index)))
+              (character-set-matcher a)))
+           (count-parens 0))
+         (production :atom (#\( :disjunction #\)) atom-parentheses
+           ((gen-matcher (paren-index integer))
+            (let ((match matcher ((gen-matcher :disjunction) (+ paren-index 1))))
+              (function ((t r-e-input) (x r-e-match) (c continuation))
+                (let ((d continuation
+                         (function ((y r-e-match))
+                           (let ((updated-captures (vector capture)
+                                                   (set-nth (& captures y) paren-index
+                                                            (oneof present (subseq (& str t) (& end-index x) (- (& end-index y) 1))))))
+                             (c (tuple r-e-match (& end-index y) updated-captures))))))
+                  (match t x d)))))
            (count-parens (+ (count-parens :disjunction) 1)))
-         (production :compound-atom (#\( #\? #\: :disjunction #\)) compound-atom-non-capturing-parentheses
-           (match (match :disjunction))
-           (count-parens (count-parens :disjunction)))
-         (production :compound-atom (#\.) compound-atom-dot
-           (match (character-set-matcher non-terminators)) ;******** Check it
-           (count-parens 0))
-         (production :compound-atom (:character-class) compound-atom-character-class
-           ((match (t r-e-input) (x r-e-match) (p integer) (c continuation))
-            (let ((a (set character) ((acceptance-set :character-class) (length (& captured x)))))
-              ((character-set-matcher a) t x p c)))
-           (count-parens 0))
-         (production :compound-atom (:character-escape) compound-atom-character-escape
-           (match (character-matcher (character-value :character-escape)))
-           (count-parens 0))
-         (production :compound-atom (:two-digit-escape) compound-atom-two-digit-escape
-           (match (match :two-digit-escape))
-           (count-parens 0))
-         (production :compound-atom (:character-class-escape) compound-atom-character-class-escape
-           (match (character-set-matcher (acceptance-set :character-class-escape)))
-           (count-parens 0)))
+         (production :atom (#\( #\? #\: :disjunction #\)) atom-non-capturing-parentheses
+           (gen-matcher (gen-matcher :disjunction))
+           (count-parens (count-parens :disjunction))))
+       
+       (%charclass :pattern-character)
        (%print-actions)
        
        
        (%section "Escapes")
        
-       (rule :character-escape ((character-value character))
-         (production :character-escape (:control-escape) character-escape-control
-           (character-value (character-value :control-escape)))
-         (production :character-escape (#\\ #\c :control-letter) character-escape-control-letter
-           (character-value (code-to-character (bitwise-and (character-to-code ($default-action :control-letter)) 31))))
-         (production :character-escape (:three-digit-escape) character-escape-three-digit
-           (character-value (character-value :three-digit-escape)))
-         (production :character-escape (:hex-escape) character-escape-hex
-           (character-value (character-value :hex-escape)))
-         (production :character-escape (#\\ :identity-escape) character-escape-non-escape
-           (character-value ($default-action :identity-escape))))
-       
-       (%charclass :control-letter)
-       (%charclass :identity-escape)
-       
-       (rule :control-escape ((character-value character))
-         (production :control-escape (#\\ #\f) control-escape-form-feed (character-value #?000C))
-         (production :control-escape (#\\ #\n) control-escape-new-line (character-value #?000A))
-         (production :control-escape (#\\ #\r) control-escape-return (character-value #?000D))
-         (production :control-escape (#\\ #\t) control-escape-tab (character-value #?0009))
-         (production :control-escape (#\\ #\v) control-escape-vertical-tab (character-value #?000B)))
+       (rule :atom-escape ((gen-matcher matcher-generator))
+         (production :atom-escape (:decimal-or-octal-escape) atom-escape-decimal-or-octal
+           ((gen-matcher (paren-index integer))
+            (case ((escape-value :decimal-or-octal-escape) paren-index)
+              ((octal-character c character) (character-matcher c))
+              ((backreference n integer) (backreference-matcher n)))))
+         (production :atom-escape (:character-escape) atom-escape-character
+           ((gen-matcher (paren-index integer :unused))
+            (character-matcher (character-value :character-escape))))
+         (production :atom-escape (:character-class-escape) atom-escape-character-class
+           ((gen-matcher (paren-index integer :unused))
+            (character-set-matcher (acceptance-set :character-class-escape)))))
        (%print-actions)
        
-       (%subsection "Numeric Escapes")
-       
-       (rule :one-digit-escape ((match matcher))
-         (production :one-digit-escape (#\\ :decimal-digit) one-digit-escape-1
-           (match
-            (let ((n integer (digit-value :decimal-digit)))
-              (if (= n 0)
-                (character-matcher #?0000)
-                (backreference-matcher n))))))
-       
-       (rule :short-octal-escape ((character-value (-> (integer) character)) (match matcher))
-         (production :short-octal-escape (#\\ :zero-to-three :octal-digit) short-octal-escape-2
-           ((character-value (n-capturing-parens integer))
-            (let ((n integer (+ (* 10 (digit-value :zero-to-three)) (digit-value :octal-digit))))
-              (if (and (>= n 10) (<= n n-capturing-parens))
-                (bottom character)
-                (code-to-character (+ (* 8 (digit-value :zero-to-three)) (digit-value :octal-digit))))))
-           ((match (t r-e-input) (x r-e-match) (p integer) (c continuation))
-            (let ((n integer (+ (* 10 (digit-value :zero-to-three)) (digit-value :octal-digit))))
-              (if (and (>= n 10) (<= n (length (& captured x))))
-                ((backreference-matcher n) t x p c)
-                ((character-matcher (code-to-character (+ (* 8 (digit-value :zero-to-three)) (digit-value :octal-digit))))
-                 t x p c))))))
-       
-       (rule :two-digit-escape ((match matcher))
-         (production :two-digit-escape (#\\ :zero-to-three :eight-or-nine) two-digit-escape-under-40
-           (match (backreference-matcher (+ (* 10 (digit-value :zero-to-three)) (digit-value :eight-or-nine)))))
-         (production :two-digit-escape (#\\ :four-to-nine :decimal-digit) two-digit-escape-over-40
-           (match (backreference-matcher (+ (* 10 (digit-value :four-to-nine)) (digit-value :decimal-digit))))))
-       
-       (rule :three-digit-escape ((character-value character))
-         (production :three-digit-escape (#\\ :zero-to-three :octal-digit :octal-digit) three-digit-escape-3
-           (character-value (code-to-character (+ (+ (* 64 (digit-value :zero-to-three))
-                                                     (* 8 (digit-value :octal-digit 1)))
-                                                  (digit-value :octal-digit 2))))))
-       (%charclass :zero-to-three)
-       (%charclass :four-to-nine)
-       (%charclass :octal-digit)
-       (%charclass :eight-or-nine)
-       
        (define (backreference-matcher (n integer)) matcher
-         (function ((t r-e-input) (x r-e-match) (p integer :unused) (c continuation))
+         (function ((t r-e-input) (x r-e-match) (c continuation))
            (case (nth-backreference x n)
              ((present ref string)
               (let ((i integer (& end-index x))
@@ -477,21 +413,96 @@
                   (if (> j (length s))
                     (oneof failure)
                     (if (string-equal (subseq s i (- j 1)) ref)   ;*********ignore case?
-                      (c (tuple r-e-match j (& captured x)))
+                      (c (tuple r-e-match j (& captures x)))
                       (oneof failure))))))
              (absent (oneof failure)))))
        
        (define (nth-backreference (x r-e-match) (n integer)) capture
-         (if (and (> n 0) (<= n (length (& captured x))))
-           (nth (& captured x) (- n 1))
+         (if (and (> n 0) (<= n (length (& captures x))))
+           (nth (& captures x) (- n 1))
            (bottom capture)))
+       
+       
+       (rule :character-escape ((character-value character))
+         (production :character-escape (:control-escape) character-escape-control
+           (character-value (character-value :control-escape)))
+         (production :character-escape (#\c :control-letter) character-escape-control-letter
+           (character-value (code-to-character (bitwise-and (character-to-code ($default-action :control-letter)) 31))))
+         (production :character-escape (:hex-escape) character-escape-hex
+           (character-value (character-value :hex-escape)))
+         (production :character-escape (:identity-escape) character-escape-identity
+           (character-value ($default-action :identity-escape))))
+       
+       (%charclass :control-letter)
+       (%charclass :identity-escape)
+       
+       (rule :control-escape ((character-value character))
+         (production :control-escape (#\f) control-escape-form-feed (character-value #?000C))
+         (production :control-escape (#\n) control-escape-new-line (character-value #?000A))
+         (production :control-escape (#\r) control-escape-return (character-value #?000D))
+         (production :control-escape (#\t) control-escape-tab (character-value #?0009))
+         (production :control-escape (#\v) control-escape-vertical-tab (character-value #?000B)))
        (%print-actions)
        
+       
+       (%subsection "Decimal and Octal Escapes")
+       
+       (deftype escape-value (oneof (octal-character character)
+                                    (backreference integer)))
+       (%text :semantics
+         "An " (:type escape-value)
+         " represents the interpretation of a " (:character-literal #\\) " followed by one, two, or three "
+         "decimal or octal digits. If the escape is interpreted as an octal character code, the "
+         (:action escape-value) " action returns an " (:field octal-character escape-value)
+         "; if the escape is interpreted as a decimal backreference to a prior set of capturing parentheses, the "
+         (:action escape-value) " action returns a " (:field backreference escape-value) ".")
+       
+       (rule :decimal-or-octal-escape ((escape-value (-> (integer) escape-value)))
+         (production :decimal-or-octal-escape (:decimal-digit (:- :decimal-digit)) decimal-or-octal-escape-one-digit
+           ((escape-value (paren-index integer))
+            (let ((n integer (digit-value :decimal-digit)))
+              (if (= n 0)
+                (oneof octal-character #?0000)
+                (if (> n paren-index)
+                  (bottom escape-value)
+                  (oneof backreference n))))))
+         (production :decimal-or-octal-escape (:zero-to-three :octal-digit (:- :octal-digit)) decimal-or-octal-escape-short-octal-escape
+           ((escape-value (paren-index integer))
+            (two-digit-escape-value paren-index (digit-value :zero-to-three) (digit-value :octal-digit))))
+         (production :decimal-or-octal-escape (:zero-to-three :eight-or-nine) decimal-or-octal-escape-two-digit-under-40
+           ((escape-value (paren-index integer))
+            (two-digit-escape-value paren-index (digit-value :zero-to-three) (digit-value :eight-or-nine))))
+         (production :decimal-or-octal-escape (:four-to-nine :decimal-digit) decimal-or-octal-escape-two-digit-over-40
+           ((escape-value (paren-index integer))
+            (two-digit-escape-value paren-index (digit-value :four-to-nine) (digit-value :decimal-digit))))
+         (production :decimal-or-octal-escape (:zero-to-three :octal-digit :octal-digit) decimal-or-octal-escape-three-digit
+           ((escape-value (paren-index integer :unused))
+            (oneof octal-character (code-to-character (+ (+ (* 64 (digit-value :zero-to-three))
+                                                            (* 8 (digit-value :octal-digit 1)))
+                                                         (digit-value :octal-digit 2)))))))
+       
+       (%charclass :zero-to-three)
+       (%charclass :four-to-nine)
+       (%charclass :octal-digit)
+       (%charclass :eight-or-nine)
+       (%print-actions)
+       
+       (define (two-digit-escape-value (paren-index integer) (digit1 integer) (digit2 integer)) escape-value
+         (let ((n integer (+ (* 10 digit1) digit2)))
+           (if (and (>= n 10) (<= n paren-index))
+             (oneof backreference n)
+             (if (and (< digit1 8) (< digit2 8))
+               (oneof octal-character (code-to-character (+ (* 8 digit1) digit2)))
+               (bottom escape-value)))))
+       
+       
+       (%subsection "Hexadecimal Escapes")
+       
        (rule :hex-escape ((character-value character))
-         (production :hex-escape (#\\ #\x :hex-digit :hex-digit) hex-escape-2
+         (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
            (character-value (code-to-character (+ (* 16 (hex-value :hex-digit 1))
                                                   (hex-value :hex-digit 2)))))
-         (production :hex-escape (#\\ #\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
+         (production :hex-escape (#\u :hex-digit :hex-digit :hex-digit :hex-digit) hex-escape-4
            (character-value (code-to-character (+ (+ (+ (* 4096 (hex-value :hex-digit 1))
                                                         (* 256 (hex-value :hex-digit 2)))
                                                      (* 16 (hex-value :hex-digit 3)))
@@ -503,80 +514,51 @@
        (%subsection "Character Class Escapes")
        
        (rule :character-class-escape ((acceptance-set (set character)))
-         (production :character-class-escape (#\\ #\s) character-class-escape-whitespace
+         (production :character-class-escape (#\s) character-class-escape-whitespace
            (acceptance-set re-whitespaces))
-         (production :character-class-escape (#\\ #\S) character-class-escape-non-whitespace
+         (production :character-class-escape (#\S) character-class-escape-non-whitespace
            (acceptance-set (character-set-difference (set-of-ranges character #?0000 #?FFFF) re-whitespaces)))
-         (production :character-class-escape (#\\ #\d) character-class-escape-digit
+         (production :character-class-escape (#\d) character-class-escape-digit
            (acceptance-set re-digits))
-         (production :character-class-escape (#\\ #\D) character-class-escape-non-digit
+         (production :character-class-escape (#\D) character-class-escape-non-digit
            (acceptance-set (character-set-difference (set-of-ranges character #?0000 #?FFFF) re-digits)))
-         (production :character-class-escape (#\\ #\w) character-class-escape-word
+         (production :character-class-escape (#\w) character-class-escape-word
            (acceptance-set re-word-characters))
-         (production :character-class-escape (#\\ #\W) character-class-escape-non-word
+         (production :character-class-escape (#\W) character-class-escape-non-word
            (acceptance-set (character-set-difference (set-of-ranges character #?0000 #?FFFF) re-word-characters))))
        (%print-actions)
        
        
        (%section "User-Specified Character Classes")
        
-       (grammar-argument :sigma any no-caret no-dash)
+       (rule :character-class ((acceptance-set char-set-generator))
+         (production :character-class (#\[ (:- #\^) :class-ranges #\]) character-class-positive
+           (acceptance-set (acceptance-set :class-ranges)))
+         (production :character-class (#\[ #\^ :class-ranges #\]) character-class-negative
+           ((acceptance-set (paren-index integer))
+            (character-set-difference (set-of-ranges character #?0000 #?FFFF) ((acceptance-set :class-ranges) paren-index)))))
        
-       (rule :character-class ((acceptance-set (-> (integer) (set character))))
-         (production :character-class (#\[ (:class-ranges no-caret) #\]) character-class-positive
-           ((acceptance-set (n-capturing-parens integer))
-            ((acceptance-set :class-ranges) n-capturing-parens)))
-         (production :character-class (#\[ #\^ (:class-ranges any) #\]) character-class-negative
-           ((acceptance-set (n-capturing-parens integer))
-            (character-set-difference (set-of-ranges character #?0000 #?FFFF) ((acceptance-set :class-ranges) n-capturing-parens)))))
-       
-       (exclude (:class-ranges no-dash))
-       (rule (:class-ranges :sigma) ((acceptance-set (-> (integer) (set character))))
-         (production (:class-ranges :sigma) () class-ranges-none
-           ((acceptance-set (n-capturing-parens integer :unused))
+       (rule :class-ranges ((acceptance-set char-set-generator))
+         (production :class-ranges () class-ranges-none
+           ((acceptance-set (paren-index integer :unused))
             (set-of character)))
-         (production (:class-ranges :sigma) ((:range-list :sigma normal)) class-ranges-some
-           ((acceptance-set (n-capturing-parens integer))
-            ((acceptance-set :range-list) n-capturing-parens))))
+         (production :class-ranges ((:nonempty-class-ranges dash)) class-ranges-some
+           (acceptance-set (acceptance-set :nonempty-class-ranges))))
        
-       (exclude (:range-list no-caret non-decimal-digit))
-       (exclude (:range-list no-caret non-octal-digit))
-       (rule (:range-list :sigma :lambda) ((acceptance-set (-> (integer) (set character))))
-         (production (:range-list :sigma :lambda) ((:final-range-atom :sigma :lambda)) range-list-final-range-atom
-           ((acceptance-set (n-capturing-parens integer))
-            ((acceptance-set :final-range-atom) n-capturing-parens)))
-         (production (:range-list :sigma :lambda) ((:ordinary-range-atom :sigma :lambda) (:range-list-suffix normal)) range-list-ordinary-range-atom
-           ((acceptance-set (n-capturing-parens integer))
-            (let ((a (set character) (acceptance-set :ordinary-range-atom)))
-              ((acceptance-set :range-list-suffix) n-capturing-parens a))))
-         (production (:range-list :sigma :lambda) (:zero-escape (:range-list-suffix non-decimal-digit)) range-list-zero-escape
-           ((acceptance-set (n-capturing-parens integer))
-            (let ((a (set character) (set-of character (character-value :zero-escape))))
-              ((acceptance-set :range-list-suffix) n-capturing-parens a))))
-         (production (:range-list :sigma :lambda) (:short-octal-escape (:range-list-suffix non-octal-digit)) range-list-short-octal-escape
-           ((acceptance-set (n-capturing-parens integer))
-            (let ((a (set character) (set-of character ((character-value :short-octal-escape) n-capturing-parens))))
-              ((acceptance-set :range-list-suffix) n-capturing-parens a)))))
+       (grammar-argument :delta dash no-dash)
        
-       (rule (:range-list-suffix :lambda) ((acceptance-set (-> (integer (set character)) (set character))))
-         (production (:range-list-suffix :lambda) ((:range-list no-dash :lambda)) range-list-suffix-list
-           ((acceptance-set (n-capturing-parens integer) (low (set character)))
-            (character-set-union low ((acceptance-set :range-list) n-capturing-parens))))
-         (production (:range-list-suffix :lambda) (#\- (:range-atom any normal)) range-list-final-range
-           ((acceptance-set (n-capturing-parens integer) (low (set character)))
-            (character-range low ((acceptance-set :range-atom) n-capturing-parens))))
-         (production (:range-list-suffix :lambda) (#\- (:ordinary-range-atom any normal) (:range-list any normal)) range-list-suffix-ordinary-range-atom
-           ((acceptance-set (n-capturing-parens integer) (low (set character)))
-            (let ((range (set character) (character-range low (acceptance-set :ordinary-range-atom))))
-              (character-set-union range ((acceptance-set :range-list) n-capturing-parens)))))
-         (production (:range-list-suffix :lambda) (#\- :zero-escape (:range-list any non-decimal-digit)) range-list-suffix-zero-escape
-           ((acceptance-set (n-capturing-parens integer) (low (set character)))
-            (let ((range (set character) (character-range low (set-of character (character-value :zero-escape)))))
-              (character-set-union range ((acceptance-set :range-list) n-capturing-parens)))))
-         (production (:range-list-suffix :lambda) (#\- :short-octal-escape (:range-list any non-octal-digit)) range-list-suffix-short-octal-escape
-           ((acceptance-set (n-capturing-parens integer) (low (set character)))
-            (let ((range (set character) (character-range low (set-of character ((character-value :short-octal-escape) n-capturing-parens)))))
-              (character-set-union range ((acceptance-set :range-list) n-capturing-parens))))))
+       (rule (:nonempty-class-ranges :delta) ((acceptance-set char-set-generator))
+         (production (:nonempty-class-ranges :delta) ((:class-atom dash)) nonempty-class-ranges-final
+           (acceptance-set (acceptance-set :class-atom)))
+         (production (:nonempty-class-ranges :delta) ((:class-atom :delta) (:nonempty-class-ranges no-dash)) nonempty-class-ranges-non-final
+           ((acceptance-set (paren-index integer))
+            (character-set-union ((acceptance-set :class-atom) paren-index)
+                                 ((acceptance-set :nonempty-class-ranges) paren-index))))
+         (production (:nonempty-class-ranges :delta) ((:class-atom :delta) #\- (:class-atom dash) :class-ranges) nonempty-class-ranges-range
+           ((acceptance-set (paren-index integer))
+            (let ((range (set character) (character-range ((acceptance-set :class-atom 1) paren-index)
+                                                          ((acceptance-set :class-atom 2) paren-index))))
+              (character-set-union range ((acceptance-set :class-ranges) paren-index))))))
        (%print-actions)
        
        (define (character-range (low (set character)) (high (set character))) (set character)
@@ -591,62 +573,31 @@
        
        (%subsection "Character Class Range Atoms")
        
-       (exclude (:final-range-atom no-caret non-decimal-digit))
-       (exclude (:final-range-atom no-caret non-octal-digit))
-       (rule (:final-range-atom :sigma :lambda) ((acceptance-set (-> (integer) (set character))))
-         (production (:final-range-atom any :lambda) ((:range-atom any :lambda)) final-range-atom-any
-           ((acceptance-set (n-capturing-parens integer))
-            ((acceptance-set :range-atom) n-capturing-parens)))
-         (production (:final-range-atom no-caret :lambda) ((:range-atom no-caret :lambda)) final-range-atom-no-caret
-           ((acceptance-set (n-capturing-parens integer))
-            ((acceptance-set :range-atom) n-capturing-parens)))
-         (production (:final-range-atom no-dash :lambda) ((:range-atom any :lambda)) final-range-atom-no-dash
-           ((acceptance-set (n-capturing-parens integer))
-            ((acceptance-set :range-atom) n-capturing-parens))))
+       (rule (:class-atom :delta) ((acceptance-set char-set-generator))
+         (production (:class-atom :delta) ((:class-character :delta)) class-atom-character
+           ((acceptance-set (paren-index integer :unused))
+            (set-of character ($default-action :class-character))))
+         (production (:class-atom :delta) (#\\ :class-escape) class-atom-escape
+           (acceptance-set (acceptance-set :class-escape))))
        
-       (exclude (:range-atom no-caret non-decimal-digit))
-       (exclude (:range-atom no-caret non-octal-digit))
-       (exclude (:range-atom no-dash normal))
-       (exclude (:range-atom no-dash non-decimal-digit))
-       (exclude (:range-atom no-dash non-octal-digit))
-       (rule (:range-atom :sigma :lambda) ((acceptance-set (-> (integer) (set character))))
-         (production (:range-atom :sigma :lambda) ((:ordinary-range-atom :sigma :lambda)) range-atom-ordinary
-           ((acceptance-set (n-capturing-parens integer :unused))
-            (acceptance-set :ordinary-range-atom)))
-         (production (:range-atom :sigma :lambda) (:zero-escape) range-atom-zero-escape
-           ((acceptance-set (n-capturing-parens integer :unused))
-            (set-of character (character-value :zero-escape))))
-         (production (:range-atom :sigma :lambda) (:short-octal-escape) range-atom-short-octal-escape
-           ((acceptance-set (n-capturing-parens integer))
-            (set-of character ((character-value :short-octal-escape) n-capturing-parens)))))
+       (%charclass (:class-character dash))
+       (%charclass (:class-character no-dash))
        
-       (exclude (:ordinary-range-atom no-caret non-decimal-digit))
-       (exclude (:ordinary-range-atom no-caret non-octal-digit))
-       (rule (:ordinary-range-atom :sigma :lambda) ((acceptance-set (set character)))
-         (production (:ordinary-range-atom :sigma :lambda) ((:range-character :sigma :lambda)) ordinary-range-atom-character
-           (acceptance-set (set-of character ($default-action :range-character))))
-         (production (:ordinary-range-atom :sigma :lambda) (:range-escape) ordinary-range-atom-range-escape
-           (acceptance-set (acceptance-set :range-escape))))
-       
-       (%charclass (:range-character any normal))
-       (%charclass (:range-character any non-decimal-digit))
-       (%charclass (:range-character any non-octal-digit))
-       (%charclass (:range-character no-caret normal))
-       (%charclass (:range-character no-dash normal))
-       (%charclass (:range-character no-dash non-decimal-digit))
-       (%charclass (:range-character no-dash non-octal-digit))
-       
-       (rule :range-escape ((acceptance-set (set character)))
-         (production :range-escape (#\\ #\b) range-escape-backspace
-           (acceptance-set (set-of character #?0008)))
-         (production :range-escape (:character-escape) range-escape-character-escape
-           (acceptance-set (set-of character (character-value :character-escape))))
-         (production :range-escape (:character-class-escape) range-escape-character-class-escape
-           (acceptance-set (acceptance-set :character-class-escape))))
-       
-       (rule :zero-escape ((character-value character))
-         (production :zero-escape (#\\ #\0) zero-escape-0
-           (character-value #?0000)))
+       (rule :class-escape ((acceptance-set char-set-generator))
+         (production :class-escape (:decimal-or-octal-escape) class-escape-decimal-or-octal
+           ((acceptance-set (paren-index integer))
+            (case ((escape-value :decimal-or-octal-escape) paren-index)
+              ((octal-character c character) (set-of character c))
+              ((backreference n integer :unused) (bottom (set character))))))
+         (production :class-escape (#\b) class-escape-backspace
+           ((acceptance-set (paren-index integer :unused))
+            (set-of character #?0008)))
+         (production :class-escape (:character-escape) class-escape-character-escape
+           ((acceptance-set (paren-index integer :unused))
+            (set-of character (character-value :character-escape))))
+         (production :class-escape (:character-class-escape) class-escape-character-class-escape
+           ((acceptance-set (paren-index integer :unused))
+            (acceptance-set :character-class-escape))))
        (%print-actions)
        )))
   
@@ -703,6 +654,7 @@
 (run-regexp "(\\s)" "aac xa deac")
 (run-regexp "[01234]+aa+" "93-43aabbc")
 (run-regexp "[\\101A-ae-]+" "93ABC-@ezy43abc")
+(run-regexp "[\\181A-ae-]+" "93ABC-@ezy43abc")
 (run-regexp "b[ace]+" "baaaacecfe")
 (run-regexp "b[^a]+" "baaaabc")
 
