@@ -405,6 +405,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "-ascii",             &FLG_NONE,    &Unknown       },
   { "-ibm pc",            &FLG_NONE,    &Unknown       },
   { "adobe-fontspecific", &FLG_NONE,    &Special       },
+  { "ansi-1251",          &FLG_NONE,    &CP1251        },
   { "big5-0",             &FLG_ZHTW,    &Big5          },
   { "big5-1",             &FLG_ZHTW,    &Big5          },
   { "big5.et-0",          &FLG_ZHTW,    &Big5          },
