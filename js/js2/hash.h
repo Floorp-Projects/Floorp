@@ -212,15 +212,10 @@ namespace JavaScript {
 		GenericHashEntry **bp = ht.buckets + h;
 		Entry *e;
 
-		while ((e = static_cast<Entry *>(*bp)) != 0) {
-			if (e->keyHash == kh && e->data == key) {
-				entry = e;
-				backpointer = bp;
-				return;
-			}
+		while ((e = static_cast<Entry *>(*bp)) != 0 && !(e->keyHash == kh && e->data == key))
 			bp = &e->next;
-		}
-		entry = 0;
+		entry = e;
+		backpointer = bp;
 	}
 
 
