@@ -28,6 +28,7 @@
 interface nsIBookmarksService : nsISupports
 {
     void AddBookmark(in string aURI, in wstring aTitle);
+    void UpdateBookmarkLastVisitedDate(in string aURL);
     string FindShortcut(in wstring aName);
 };
 
