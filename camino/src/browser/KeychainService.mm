@@ -781,7 +781,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
     if (!doc)
       return NS_OK;
     
-    nsIURI* docURL = doc->GetDocumentURL();
+    nsIURI* docURL = doc->GetDocumentURI();
     if (!docURL)
       return NS_OK;
 
@@ -949,7 +949,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
       // a username/password stored in the keychain for this host and
       // pre-fill the fields if that's the case.
       //
-      nsIURI* docURL = doc->GetDocumentURL();
+      nsIURI* docURL = doc->GetDocumentURI();
       if (!docURL)
         return;
   
