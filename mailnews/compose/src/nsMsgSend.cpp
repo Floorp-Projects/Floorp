@@ -61,11 +61,14 @@
 #include "nsCOMPtr.h"
 #include "nsIDNSService.h"
 #include "mozITXTToHTMLConv.h"
+#include "nsIMsgStatusFeedback.h"
+#include "nsIMsgMailSession.h"
+
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
 // for these two interfaces 
 //
-
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -188,6 +191,20 @@ nsMsgComposeAndSend::nsMsgComposeAndSend() :
   mRemoteAttachmentCount = 0;
   mCompFieldLocalAttachments = 0;
   mCompFieldRemoteAttachments = 0;
+
+
+  // note: it is okay to return a null status feedback and not return an error
+  // it's possible the url really doesn't have status feedback
+  nsresult    rv;
+  NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+  if (NS_SUCCEEDED(rv))
+  {
+    nsCOMPtr<nsIMsgWindow>    msgWindow;
+
+    mailSession->GetTemporaryMsgWindow(getter_AddRefs(msgWindow));
+    if (msgWindow)
+      msgWindow->GetStatusFeedback(getter_AddRefs(mFeedback));  
+  }
 
 	NS_INIT_REFCNT();
 }
@@ -350,6 +367,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	PRBool shouldDeleteDeliveryState = PR_TRUE;
 	PRInt32 status;
   PRUint32    i;
+  PRUnichar     *msg;
 	char *headers = 0;
 	PRFileDesc  *in_file = 0;
 	PRBool multipart_p = PR_FALSE;
@@ -931,6 +949,11 @@ nsMsgComposeAndSend::GatherMimeAttachments()
     }
 
 	}
+
+  // Tell the user we are creating the message...
+  msg = ComposeGetStringByID(NS_MSG_CREATING_MESSAGE);
+  SetStatusMessage( msg );
+  PR_FREEIF(msg);
 
 	// OK, now actually write the structure we've carefully built up.
 	status = toppart->Write();
@@ -2109,6 +2132,29 @@ nsMsgComposeAndSend::HackAttachments(const nsMsgAttachmentData *attachments,
       // This only returns a failure code if NET_GetURL was not called
       // (and thus no exit routine was or will be called.) 
       //
+
+      // Display some feedback to user...
+      char          *printfString = nsnull;
+      PRUnichar     *progressMsg = nsnull;
+      PRUnichar     *msg = nsnull;
+
+      msg = ComposeGetStringByID(NS_MSG_GATHERING_ATTACHMENT);
+      nsCAutoString cProgressString(msg);
+      if (m_attachments[i].m_real_name)
+        printfString = PR_smprintf(cProgressString, m_attachments[i].m_real_name);
+      else
+        printfString = PR_smprintf(cProgressString, "");
+
+      if (printfString)
+      {
+        nsString formattedString(printfString);
+        progressMsg = nsCRT::strdup(formattedString.GetUnicode());	
+        PR_smprintf_free(printfString);  
+      }
+
+      PR_FREEIF(msg);
+      SetStatusMessage(progressMsg);
+
       int status = m_attachments[i].SnarfAttachment(mCompFields);
       if (status < 0)
         return status;
@@ -2345,6 +2391,12 @@ nsMsgComposeAndSend::Init(
 						  const nsMsgAttachedFile *preloaded_attachments)
 {
 	nsresult      rv = NS_OK;
+  PRUnichar     *msg;
+
+  // Tell the user we are assembling the message...
+  msg = ComposeGetStringByID(NS_MSG_ASSEMBLING_MESSAGE);
+  SetStatusMessage( msg );
+  PR_FREEIF(msg);
 
   // 
   // The Init() method should initialize a send operation for full
@@ -3759,4 +3811,22 @@ nsMsgComposeAndSend::StartMessageCopyOperation(nsIFileSpec        *aFileSpec,
   rv = mCopyObj->StartCopyOperation(mUserIdentity, aFileSpec, mode, 
                                     this, uri, mMsgToReplace);
   return rv;
+}
+
+nsresult
+nsMsgComposeAndSend::SetStatusMessage(PRUnichar *aMsgString)
+{
+  PRUnichar     *progressMsg;
+
+  if ( (!mFeedback) || (!aMsgString) )
+    return NS_OK;
+
+  nsString  formattedString(aMsgString);
+
+  // lossy, but what can we do?
+  nsCAutoString cProgressString(aMsgString);
+  progressMsg = nsCRT::strdup(formattedString.GetUnicode());
+  mFeedback->ShowStatusString(progressMsg);
+
+  return NS_OK;
 }

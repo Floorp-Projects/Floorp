@@ -647,7 +647,7 @@ nsMsgSendPart::Write()
   }
   else if (m_filespec) 
   {
-    nsIOFileStream  myStream(*m_filespec);
+    nsInputFileStream   myStream(*m_filespec);
 
     if (!myStream.is_open())
     {

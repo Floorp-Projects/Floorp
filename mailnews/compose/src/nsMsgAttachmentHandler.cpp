@@ -34,35 +34,29 @@
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
 
-
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 ///////////////////////////////////////////////////////////////////////////
-// RICHIE_MAC - for the Mac, when can we get rid of this stuff?
-///////////////////////////////////////////////////////////////////////////
-// AT SOME POINT, WE NEED TO FIGURE OUT A SOLUTION FOR THIS MAC ONLY STUFF
+// Mac Specific Attachment Handling for AppleDouble Encoded Files
 ///////////////////////////////////////////////////////////////////////////
 #ifdef XP_MAC
 #include "xp.h"                 // mac only
 #include "errors.h"
 #include "m_cvstrm.h"
-//
-// Need a routine for the Mac to see if this is a Mac file?
-//
-static PRBool
-nsMsgIsMacFile(char *filename)
-{
-  return PR_FALSE;
-}
 
-//
-// Need a routine for the Mac to get type information
-//
-void
-MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding)
-{
-  *useDefault = PR_TRUE;
-}
+////////////////////////////////////////////////////////////////////////////
+// GET RID OF THIS STUFF!!!!
+////////////////////////////////////////////////////////////////////////////
+PRBool nsMsgIsMacFile(char *filename) { return PR_FALSE; }
+void   MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding) { *useDefault = PR_TRUE;}
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+/**********
+extern PRBool       nsMsgIsMacFile(char *filename);
+extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
+**********/
+
 #endif /* XP_MAC */
 
 //
@@ -428,6 +422,7 @@ FetcherURLDoneCallback(nsIURI* aURL, nsresult aStatus,
   else
     return NS_OK;
 }
+
 nsresult 
 nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
 {
@@ -872,3 +867,4 @@ nsMsgAttachmentHandler::UseUUEncode_p(void)
   else
     return PR_FALSE;
 }
+

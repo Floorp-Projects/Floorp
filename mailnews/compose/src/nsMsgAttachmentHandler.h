@@ -27,6 +27,7 @@
 #include "nsURLFetcher.h"
 #include "nsIMimeConverter.h"
 #include "nsMsgCompFields.h"
+#include "nsIMsgStatusFeedback.h"
 
 // Forward declarations...
 class    nsMsgComposeAndSend;

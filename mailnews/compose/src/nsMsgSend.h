@@ -137,6 +137,7 @@
 #include "nsIDOMNode.h"
 #include "nsIEditorShell.h"
 #include "nsIUrlListener.h"
+#include "nsIMsgStatusFeedback.h"
 #if 0
 #include "nsMsgCopy.h"
 #endif
@@ -324,6 +325,8 @@ public:
                           nsMsgDeliverMode                  mode,
                           nsIMsgSendListener                **aListenerArray);
 
+  nsresult    SetStatusMessage(PRUnichar *aMsgString);     // Status message method
+
   //
   // All vars necessary for this implementation
   //
@@ -394,6 +397,8 @@ public:
 
   PRUint32                mCompFieldLocalAttachments;     // the number of file:// attachments in the comp fields
   PRUint32                mCompFieldRemoteAttachments;    // the number of remote attachments in the comp fields
+
+  nsCOMPtr <nsIMsgStatusFeedback> mFeedback;              // Tell the user something why don't ya'
 
   //
   // attachment states and other info...
