@@ -642,4 +642,7 @@ NOFRAMES {
   color: white;
   border: 1px dotted white;
 }
->>>>>>> 3.87
+
+:-MOZ-ANONYMOUS-BLOCK {
+  display: block;
+}
