@@ -37,8 +37,10 @@
 
 package org.mozilla.javascript.regexp;
 
-import org.mozilla.javascript.*;
 import java.lang.reflect.Method;
+import java.io.Serializable;
+
+import org.mozilla.javascript.*;
 
 /**
  * This class implements the RegExp native object.
@@ -2239,7 +2241,10 @@ class CompilerState {
 }
 
 
-class RENode {
+class RENode implements Serializable {
+
+    static final long serialVersionUID = -5896495686381169903L;
+
     public static final int ANCHORED = 0x01;    /* anchored at the front */
     public static final int SINGLE   = 0x02;    /* matches a single char */
     public static final int NONEMPTY = 0x04;    /* does not match empty string */

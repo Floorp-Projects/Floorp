@@ -49,6 +49,8 @@ import java.lang.reflect.InvocationTargetException;
 
 public class FunctionObject extends NativeFunction {
 
+    static final long serialVersionUID = -4074285335521944312L;
+
     /**
      * Create a JavaScript function object from a Java method.
      *
@@ -515,7 +517,7 @@ public class FunctionObject extends NativeFunction {
             }
             try {
                 return invoker.invoke(thisObj, args);
-            } catch (RuntimeException e) {
+            } catch (Exception e) {
                 throw new InvocationTargetException(e);
             }
         } 

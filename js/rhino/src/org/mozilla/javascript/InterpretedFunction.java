@@ -35,10 +35,14 @@
 
 package org.mozilla.javascript;
 
-import java.util.*;
+import java.io.Serializable;
 import org.mozilla.javascript.debug.DebuggableScript;
 
-class InterpretedFunction extends NativeFunction implements DebuggableScript {
+class InterpretedFunction extends NativeFunction 
+                          implements DebuggableScript, Serializable 
+{
+
+    static final long serialVersionUID = -6235150451107527319L;
     
     InterpretedFunction(Context cx,
                         InterpreterData theData, 
@@ -122,4 +126,4 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
     InterpreterData itsData;
     Scriptable itsClosure;
 }
-    
+ 

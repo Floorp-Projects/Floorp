@@ -36,9 +36,11 @@
 
 package org.mozilla.javascript;
 
-import java.util.Vector;
+import java.io.Serializable;
 
-class InterpreterData {
+class InterpreterData implements Serializable {
+
+    static final long serialVersionUID = 4815333329084415557L;
     
     static final int INITIAL_MAX_ICODE_LENGTH = 1024;
     static final int INITIAL_STRINGTABLE_SIZE = 64;

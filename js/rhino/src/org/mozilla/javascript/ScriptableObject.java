@@ -41,6 +41,7 @@ package org.mozilla.javascript;
 
 import java.lang.reflect.*;
 import java.util.Hashtable;
+import java.io.*;
 
 /**
  * This is the default implementation of the Scriptable interface. This
@@ -56,7 +57,9 @@ import java.util.Hashtable;
  * @author Norris Boyd
  */
 
-public abstract class ScriptableObject implements Scriptable {
+public abstract class ScriptableObject implements Scriptable, Serializable {
+
+    static final long serialVersionUID = 2762574228534679611L;
 
     /**
      * The empty property attribute.
@@ -1766,6 +1769,12 @@ public abstract class ScriptableObject implements Scriptable {
         return result;
     }
 
+    private void readObject(ObjectInputStream in) 
+        throws IOException, ClassNotFoundException
+    {
+        in.defaultReadObject();
+        lastAccess = REMOVED;
+    }
     
     /**
      * The prototype of this object.
@@ -1785,9 +1794,9 @@ public abstract class ScriptableObject implements Scriptable {
     private int count;
 
     // cache; may be removed for smaller memory footprint
-    private Slot lastAccess = REMOVED;
+    transient private Slot lastAccess = REMOVED;
 
-    private static class Slot {
+    private static class Slot implements Serializable {
         static final int HAS_GETTER  = 0x01;
         static final int HAS_SETTER  = 0x02;
         

@@ -35,6 +35,8 @@
 
 package org.mozilla.javascript;
 
+import java.io.Serializable;
+
 /**
  * Map to associate non-negative integers to objects or integers.
  * The map does not synchronize any of its operation, so either use
@@ -45,7 +47,9 @@ package org.mozilla.javascript;
  *
  */
 
-class UintMap {
+class UintMap implements Serializable {
+
+    static final long serialVersionUID = -55740507849272970L;
 
 // Map implementation via hashtable,
 // follows "The Art of Computer Programming" by Donald E. Knuth
