@@ -2737,14 +2737,14 @@ nsresult nsPluginInstanceOwner::DispatchFocusToPlugin(nsIDOMEvent* aFocusEvent)
     nsEvent * theEvent;
     privateEvent->GetInternalNSEvent(&theEvent);
     if (theEvent) {
-      if (theEvent->eventStructType & NS_GUI_EVENT) {
-        nsGUIEvent* focusEvent = (nsGUIEvent *)theEvent;
-        nsEventStatus rv = ProcessEvent(*focusEvent);
-        if (nsEventStatus_eConsumeNoDefault == rv) {
-          aFocusEvent->PreventDefault();
-          aFocusEvent->PreventBubble();
-          return NS_ERROR_FAILURE; // means consume event
-        }
+      nsGUIEvent focusEvent;
+      memset(&focusEvent, 0, sizeof(focusEvent));
+      focusEvent.message = theEvent->message; // we only care about the message in ProcessEvent
+      nsEventStatus rv = ProcessEvent(focusEvent);
+      if (nsEventStatus_eConsumeNoDefault == rv) {
+        aFocusEvent->PreventDefault();
+        aFocusEvent->PreventBubble();
+        return NS_ERROR_FAILURE; // means consume event
       }
     }
     else NS_ASSERTION(PR_FALSE, "nsPluginInstanceOwner::DispatchFocusToPlugin failed, focusEvent null");   
