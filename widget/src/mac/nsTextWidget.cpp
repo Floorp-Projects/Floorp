@@ -18,6 +18,7 @@
 
 #include "nsTextWidget.h"
 #include <ToolUtils.h>
+#include <Appearance.h>
 
 NS_IMPL_ADDREF(nsTextWidget);
 NS_IMPL_RELEASE(nsTextWidget);
@@ -153,8 +154,28 @@ PRBool nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 //-------------------------------------------------------------------------
 PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 {
+	// hack: if Enter is pressed, pass Return
+	switch (aEvent.message)
+	{
+		case NS_KEY_DOWN:
+		case NS_KEY_UP:
+		{
+  			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
+			if (keyEvent->keyCode == 0x03)
+			{
+				keyEvent->keyCode = NS_VK_RETURN;
+				EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
+				if (theOSEvent)
+					theOSEvent->message = (theOSEvent->message & ~charCodeMask) + NS_VK_RETURN;
+			}
+			break;
+		}
+	}
+
+	// dispatch the message
 	PRBool eventHandled = Inherited::DispatchWindowEvent(aEvent);
 
+	// handle the message here if nobody else processed it already
 	if ((! eventHandled) && (mTE != nsnull))
 	{
 		switch (aEvent.message)
@@ -258,6 +279,12 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 					//::TEActivate(mTE);
 					ActivateControl(mControl);
 					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNextPart);
+						nsRect rect = mBounds;
+						rect.x = rect.y = 0;
+						Rect macRect;
+						nsRectToMacRect(rect, macRect);
+						::InsetRect(&macRect, 2, 2);
+						::DrawThemeFocusRect(&macRect, true);
 					EndDraw();
 					StartIdling();
 					break;
@@ -268,6 +295,13 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 					StopIdling();
 					StartDraw();
 					//::TEDeactivate(mTE);
+					OSErr err = SetKeyboardFocus(mWindowPtr, mControl, kControlFocusNoPart);
+						nsRect rect = mBounds;
+						rect.x = rect.y = 0;
+						Rect macRect;
+						nsRectToMacRect(rect, macRect);
+						::InsetRect(&macRect, 2, 2);
+						::DrawThemeFocusRect(&macRect, false);
 					DeactivateControl(mControl);
 					EndDraw();
 					break;
@@ -275,32 +309,33 @@ PRBool nsTextWidget::DispatchWindowEvent(nsGUIEvent &aEvent)
 
 				case NS_KEY_DOWN:
 				{
-		  		char theChar;
-		  		unsigned short theKey;
-		  		unsigned short theModifiers;
-		  		EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
-		  		if (theOSEvent)
-		  		{
-		  			theChar = (theOSEvent->message & charCodeMask);
-		  			theKey  = (theOSEvent->message & keyCodeMask) >> 8;
-		  			theModifiers = theOSEvent->modifiers;
-		  		}
-		  		else
-		  		{
+			  		char theChar;
+			  		unsigned short theKey;
+			  		unsigned short theModifiers;
+			  		EventRecord* theOSEvent = (EventRecord*)aEvent.nativeMsg;
 		  			nsKeyEvent* keyEvent = (nsKeyEvent*)&aEvent;
-		  			theChar = keyEvent->keyCode;
-		  			theKey  = 0;		// what else?
-		  			if (keyEvent->isShift)		theModifiers = shiftKey;
-		  			if (keyEvent->isControl)	theModifiers |= controlKey;
-		  			if (keyEvent->isAlt)			theModifiers |= optionKey;
-		  		}
-		  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextWidget is a single line editor
-		  		{
+			  		if (theOSEvent)
+			  		{
+			  			theChar = (theOSEvent->message & charCodeMask);
+			  			theKey  = (theOSEvent->message & keyCodeMask) >> 8;
+			  			theModifiers = theOSEvent->modifiers;
+			  		}
+			  		else
+			  		{
+			  			theChar = keyEvent->keyCode;
+			  			theKey  = 0;		// what else?
+			  			if (keyEvent->isShift)		theModifiers = shiftKey;
+			  			if (keyEvent->isControl)	theModifiers |= controlKey;
+			  			if (keyEvent->isAlt)		theModifiers |= optionKey;
+
+			  		}
+			  		if (theChar != NS_VK_RETURN)	// don't pass Return: nsTextWidget is a single line editor
+			  		{
 						StartDraw();		  			
-		  			::HandleControlKey(mControl, theKey, theChar, theModifiers);
+			  			::HandleControlKey(mControl, theKey, theChar, theModifiers);
 						EndDraw();
-		  			eventHandled = PR_TRUE;
-		  		}
+			  			eventHandled = PR_TRUE;
+			  		}
 					break;
 				}
 		}
@@ -317,13 +352,13 @@ PRBool nsTextWidget::OnPaint(nsPaintEvent &aEvent)
 	Inherited::OnPaint(aEvent);
 	
 	/* draw a box.*/
-	if (mVisible)
+	if (mVisible && mIsReadOnly)
 	{
-			nsRect ctlRect = mBounds;
-			ctlRect.x = ctlRect.y = 0;
-			//ctlRect.Deflate(1, 1);
-			mTempRenderingContext->SetColor(NS_RGB(0, 0, 0));
-			mTempRenderingContext->DrawRect(ctlRect);
+		nsRect ctlRect = mBounds;
+		ctlRect.x = ctlRect.y = 0;
+		//ctlRect.Deflate(1, 1);
+		mTempRenderingContext->SetColor(NS_RGB(0, 0, 0));
+		mTempRenderingContext->DrawRect(ctlRect);
 	}
 	
 	return PR_FALSE;
@@ -598,9 +633,12 @@ void	nsTextWidget::RepeatAction(const EventRecord& inMacEvent)
 //-------------------------------------------------------------------------
 void nsTextWidget::GetRectForMacControl(nsRect &outRect)
 {
-		outRect = mBounds;
-		outRect.x = outRect.y = 0;
-		// inset to make space for border
+	outRect = mBounds;
+	outRect.x = outRect.y = 0;
+	// inset to make space for border
+	if (mIsReadOnly)
 		outRect.Deflate(1, 1);
+	else
+		outRect.Deflate(4, 4);
 }
 
