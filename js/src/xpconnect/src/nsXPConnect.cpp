@@ -29,6 +29,8 @@
 static NS_DEFINE_IID(kXPConnectIID, NS_IXPCONNECT_IID);
 NS_IMPL_ISUPPORTS(nsXPConnect, kXPConnectIID)
 
+const char* XPC_COMPONENTS_STR = "Components";
+
 nsXPConnect* nsXPConnect::mSelf = NULL;
 
 static NS_DEFINE_IID(kAllocatorCID, NS_ALLOCATOR_CID);
@@ -192,18 +194,24 @@ nsXPConnect::~nsXPConnect()
 
 NS_IMETHODIMP
 nsXPConnect::InitJSContext(JSContext* aJSContext,
-                            JSObject* aGlobalJSObj)
+                            JSObject* aGlobalJSObj,
+                            JSBool AddComponentsObject)
 {
-    if(aJSContext)
+    if(!aJSContext)
     {
-        if(!aGlobalJSObj)
-            aGlobalJSObj = JS_GetGlobalObject(aJSContext);
-        if(aGlobalJSObj &&
-           !mContextMap->Find(aJSContext) &&
-           NewContext(aJSContext, aGlobalJSObj))
-        {
-            return NS_OK;
-        }
+        XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed with null pointer"));
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if(!aGlobalJSObj)
+        aGlobalJSObj = JS_GetGlobalObject(aJSContext);
+    if(aGlobalJSObj &&
+       !mContextMap->Find(aJSContext) &&
+       NewContext(aJSContext, aGlobalJSObj)&&
+       (!AddComponentsObject || 
+        NS_SUCCEEDED(AddNewComponentsObject(aJSContext, aGlobalJSObj))))
+    {
+        return NS_OK;
     }
     XPC_LOG_ERROR(("nsXPConnect::InitJSContext failed"));
     return NS_ERROR_FAILURE;
@@ -213,6 +221,7 @@ NS_IMETHODIMP
 nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
+                          JSBool AddComponentsObject,
                           nsIXPConnectWrappedNative** aWrapper)
 {
     nsXPCWrappedNative* wrapper = NULL;
@@ -224,7 +233,9 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
         if(wrapper)
         {
             if(JS_InitStandardClasses(aJSContext, wrapper->GetJSObject()) &&
-               xpcc->Init(wrapper->GetJSObject()))
+               xpcc->Init(wrapper->GetJSObject()) &&
+               (!AddComponentsObject || 
+                NS_SUCCEEDED(AddNewComponentsObject(aJSContext, NULL))))
             {
                 *aWrapper = wrapper;
                 return NS_OK;
@@ -241,6 +252,49 @@ nsXPConnect::InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
     XPC_LOG_ERROR(("nsXPConnect::InitJSContextWithNewWrappedGlobal failed"));
     *aWrapper = NULL;
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsXPConnect::AddNewComponentsObject(JSContext* aJSContext,
+                                    JSObject* aGlobalJSObj)
+{
+    JSBool success;
+
+    if(!aJSContext)
+    {
+        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed with null pointer"));
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if(!aGlobalJSObj && !(aGlobalJSObj = JS_GetGlobalObject(aJSContext)))
+    {
+        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - no global object"));
+        return NS_ERROR_FAILURE;
+    }
+
+    nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
+    if(!comp)
+    {
+        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - could create component object"));
+        return NS_ERROR_FAILURE;
+    }
+
+    nsIXPConnectWrappedNative* comp_wrapper;
+    if(NS_FAILED(WrapNative(aJSContext, comp,
+                            nsIXPCComponents::GetIID(), &comp_wrapper)))
+    {
+        XPC_LOG_ERROR(("nsXPConnect::AddNewComponentsObject failed - could not build wrapper"));
+        NS_RELEASE(comp);
+        return NS_ERROR_FAILURE;
+    }
+    JSObject* comp_jsobj;
+    comp_wrapper->GetJSObject(&comp_jsobj);
+    jsval comp_jsval = OBJECT_TO_JSVAL(comp_jsobj);
+    success = JS_SetProperty(aJSContext, aGlobalJSObj, 
+                             "Components", &comp_jsval);
+    NS_RELEASE(comp_wrapper);
+    NS_RELEASE(comp);
+    return success ? NS_OK : NS_ERROR_FAILURE;
 }
 
 XPCContext*

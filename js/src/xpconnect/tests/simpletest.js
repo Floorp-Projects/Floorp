@@ -35,7 +35,7 @@ print("equality test       "+ (id1.equals(id2) ?    "passed" : "failed"));
 
 function nsID(str)
 {
-    var id = Components.classes.nsIID.newInstance();
+    var id = Components.classes.nsIID.createInstance();
     id = id.QueryInterface(Components.interfaces.nsIJSID);
     id.init(str);
     return id;

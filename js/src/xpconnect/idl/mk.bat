@@ -2,7 +2,7 @@
 xpidl -w -m header -o ..\public\nsrootidl           nsrootidl.idl
 xpidl -w -m header -o ..\public\xpccomponents       xpccomponents.idl
 xpidl -w -m header -o ..\public\xpcjsid             xpcjsid.idl
-xpidl -w -m header -o ..\tests\xpctest              xpctest.idl
+xpidl -w -m header -o ..\public\xpctest             xpctest.idl
 
 xpidl -w -m typelib -o ..\typelib\xpccomponents     xpccomponents.idl
 xpidl -w -m typelib -o ..\typelib\xpcjsid           xpcjsid.idl

@@ -93,7 +93,7 @@ XPCJSThrower::ThrowBadResultException(JSContext* cx,
 
     format = mFormats[XPCJSError::NATIVE_RETURNED_FAILURE].format;
 
-    sz = JS_smprintf("%s %x", format, result);
+    sz = JS_smprintf("%s 0x%x", format, result);
 
     if(sz && mVerbose)
         Verbosify(cx, clazz, desc, &sz, PR_TRUE);

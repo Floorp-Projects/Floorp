@@ -1204,11 +1204,13 @@ JSBool
 nsXPCWrappedNativeClass::InitForContext(XPCContext* xpcc)
 {
     // XXX do we really want this class init'd this way? access to ctor?
+/* NO
     if (!JS_InitClass(xpcc->GetJSContext(), xpcc->GetGlobalObject(),
         0, &WrappedNative_class, 0, 0,
         0, 0,
         0, 0))
         return JS_FALSE;
+*/
     return JS_TRUE;
 }
 

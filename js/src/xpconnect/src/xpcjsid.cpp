@@ -409,7 +409,7 @@ nsJSCID::toString(char **_retval)
 }
 
 NS_IMETHODIMP
-nsJSCID::newInstance(nsISupports **_retval)
+nsJSCID::createInstance(nsISupports **_retval)
 {
     if(!_retval)
         return NS_ERROR_NULL_POINTER;
@@ -422,6 +422,26 @@ nsJSCID::newInstance(nsISupports **_retval)
                                               nsISupports::GetIID(),
                                               (void**) _retval);
 }
+
+// XXX this does not yet address the issue of using the SM to release
+// XXX this does not yet address the issue of security protections
+// XXX we'll need to make createInstance and getService dynamic to 
+// support both of these issues
+
+NS_IMETHODIMP
+nsJSCID::getService(nsISupports **_retval)
+{
+    if(!_retval)
+        return NS_ERROR_NULL_POINTER;
+
+    *_retval = NULL;
+    if(mID.Equals(GetInvalidIID()))
+        return NS_ERROR_FAILURE;
+    
+    return nsServiceManager::GetService(mID, 
+                                        nsISupports::GetIID(),
+                                        _retval, NULL);
+}        
 
 /***************************************************************************/
 // additional utilities...

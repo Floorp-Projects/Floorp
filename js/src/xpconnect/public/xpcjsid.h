@@ -22,10 +22,7 @@
 
 class nsIJSID : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IJSID_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSID_IID)
 
   /* readonly attribute string name; */
   NS_IMETHOD GetName(char * *aName) = 0;
@@ -64,10 +61,7 @@ class nsIJSID : public nsISupports {
 
 class nsIJSIID : public nsIJSID {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IJSIID_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSIID_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -85,13 +79,13 @@ class nsIJSIID : public nsIJSID {
 
 class nsIJSCID : public nsIJSID {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IJSCID_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IJSCID_IID)
 
-  /* nsISupports newInstance (); */
-  NS_IMETHOD newInstance(nsISupports **_retval) = 0;
+  /* nsISupports createInstance (); */
+  NS_IMETHOD createInstance(nsISupports **_retval) = 0;
+
+  /* nsISupports getService (); */
+  NS_IMETHOD getService(nsISupports **_retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

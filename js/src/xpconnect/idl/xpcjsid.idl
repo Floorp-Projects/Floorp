@@ -44,7 +44,8 @@ interface nsIJSIID : nsIJSID
 [scriptable, uuid(e3a24a60-d651-11d2-9843-006008962422)]
 interface nsIJSCID : nsIJSID
 {
-    nsISupports newInstance();
+    nsISupports createInstance();
+    nsISupports getService();
 };
 
 /* this goes into the C++ header verbatim. */

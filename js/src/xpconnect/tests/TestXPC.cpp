@@ -522,8 +522,9 @@ int main()
     if (!JS_DefineFunctions(jscontext, glob, glob_functions))
         return 1;
 
-    xpc->InitJSContext(jscontext, glob);
+    xpc->InitJSContext(jscontext, glob, JS_TRUE);
 
+#if 0
     nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
     if(!comp)
     {
@@ -543,7 +544,7 @@ int main()
     JS_SetProperty(jscontext, glob, "Components", &comp_jsval);
     NS_RELEASE(comp_wrapper);
     NS_RELEASE(comp);
-
+#endif
 
     char* txt[] = {
       "load('simpletest.js');",
@@ -578,12 +579,12 @@ int main()
 */
     // new code where global object is a wrapped xpcom object
     if(NS_SUCCEEDED(xpc->InitJSContextWithNewWrappedGlobal(
-                                    jscontext, foo, nsITestXPCFoo::GetIID(), &wrapper)))
+                jscontext, foo, nsITestXPCFoo::GetIID(), JS_TRUE, &wrapper)))
     {
         wrapper->GetJSObject(&glob);
         JS_DefineFunctions(jscontext, glob, glob_functions);
 
-
+#if 0
         nsIXPCComponents* comp = XPC_GetXPConnectComponentsObject();
         if(!comp)
         {
@@ -603,7 +604,7 @@ int main()
         JS_SetProperty(jscontext, glob, "Components", &comp_jsval);
         NS_RELEASE(comp_wrapper);
         NS_RELEASE(comp);
-
+#endif
 
         nsTestXPCFoo* fool = new nsTestXPCFoo();
         xpc->WrapNative(jscontext, fool, nsITestXPCFoo2::GetIID(), &fool_wrapper);

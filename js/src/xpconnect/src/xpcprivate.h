@@ -44,7 +44,8 @@
 #include "xpcjsid.h"
 #include "prlong.h"
 
-extern const char* XPC_VAL_STR; // 'value' property name for out params
+extern const char* XPC_VAL_STR;        // 'value' property name for out params
+extern const char* XPC_COMPONENTS_STR; // 'Components' property name
 
 /***************************************************************************/
 
@@ -54,12 +55,17 @@ class nsXPConnect : public nsIXPConnect
     NS_DECL_ISUPPORTS
 
     NS_IMETHOD InitJSContext(JSContext* aJSContext,
-                             JSObject* aGlobalJSObj);
+                             JSObject* aGlobalJSObj,
+                             JSBool AddComponentsObject);
 
     NS_IMETHOD InitJSContextWithNewWrappedGlobal(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
+                          JSBool AddComponentsObject,
                           nsIXPConnectWrappedNative** aWrapper);
+
+    NS_IMETHOD AddNewComponentsObject(JSContext* aJSContext,
+                                      JSObject* aGlobalJSObj);
 
     NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
@@ -530,6 +536,7 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
     NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
     NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
     NS_IMETHOD DebugDump(int depth);
+    NS_IMETHOD SetFinalizeListener(nsIXPConnectFinalizeListener* aListener);
 
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,
@@ -564,6 +571,7 @@ private:
     nsIXPCScriptable* mDynamicScriptable;   // only set in root!
     nsXPCWrappedNative* mRoot;
     nsXPCWrappedNative* mNext;
+    nsIXPConnectFinalizeListener* mFinalizeListener;
 };
 
 /***************************************************************************/
@@ -670,8 +678,11 @@ public:
     /* boolean init (in string idString); */
     NS_IMETHOD init(const char *idString, PRBool *_retval);
 
-    /* nsISupports newInstance (); */
-    NS_IMETHOD newInstance(nsISupports **_retval);
+    /* nsISupports createInstance (); */
+    NS_IMETHOD createInstance(nsISupports **_retval);
+
+    /* nsISupports getService (); */
+    NS_IMETHOD getService(nsISupports **_retval);
 
     /* string toString (); */
     NS_IMETHOD toString(char **_retval);

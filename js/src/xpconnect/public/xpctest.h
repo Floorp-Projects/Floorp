@@ -22,18 +22,18 @@
 
 class nsITestXPCFoo : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_ITESTXPCFOO_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTXPCFOO_IID)
 
   /* long Test (in long p1, in long p2); */
   NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32 *_retval) = 0;
 
   /* void Test2 (); */
   NS_IMETHOD Test2() = 0;
+
   enum { one = 1 };
+
   enum { five = 5 };
+
   enum { six = 6 };
 
 #ifdef XPIDL_JS_STUBS
@@ -52,10 +52,7 @@ class nsITestXPCFoo : public nsISupports {
 
 class nsITestXPCFoo2 : public nsITestXPCFoo {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_ITESTXPCFOO2_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTXPCFOO2_IID)
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
@@ -73,10 +70,7 @@ class nsITestXPCFoo2 : public nsITestXPCFoo {
 
 class nsIEcho : public nsISupports {
  public: 
-  static const nsIID& GetIID() {
-    static nsIID iid = NS_IECHO_IID;
-    return iid;
-  }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IECHO_IID)
 
   /* void SetReceiver (in nsIEcho aReceiver); */
   NS_IMETHOD SetReceiver(nsIEcho *aReceiver) = 0;
