@@ -433,10 +433,13 @@ function delayedStartup()
   } else {
     // set the element in command dispatcher so focus will restore properly
     // when the window does become active
-    if (element instanceof Components.interfaces.nsIDOMElement)
-      document.commandDispatcher.focusedElement = element;
-    else if (element instanceof Components.interfaces.nsIDOMWindow)
+    if (element instanceof Components.interfaces.nsIDOMWindow) {
       document.commandDispatcher.focusedWindow = element;
+      document.commandDispatcher.focusedElement = null;
+    } else if (element instanceof Components.interfaces.nsIDOMElement) {
+      document.commandDispatcher.focusedWindow = element.ownerDocument.defaultView;
+      document.commandDispatcher.focusedElement = element;
+    }
   }
 
   SetPageProxyState("invalid", null);
