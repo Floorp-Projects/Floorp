@@ -233,7 +233,10 @@ sub BuildIt {
 	  if (&BinaryExists($fe)) {
 	    print LOG "export binary exists, build successful. Testing...\n";
 	    #return 0 if no problem, else 333 for a runtime error
+	    # i suspect RunSmokeTest of foul play... it didn't exit after
+	    # runnin the binary!
 	    $BuildStatus = &RunSmokeTest($fe);
+	    # $BuildStatus = 0;
 	  }
 	  else {
 	    print LOG "export binary missing, build FAILED\n";
@@ -350,7 +353,7 @@ sub BinaryExists {
     $BinName = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . $BinaryName{"$fe"};
     
     print LOG $BinName . "\n"; 
-    if ((-e $BinName) && (-x $BinName) && (-s $BinName)) {
+    if ((-e $BinName) && (-s $BinName)) {
 	1;
     }
     else {
@@ -443,19 +446,18 @@ sub PrintEnv {
 sub RunSmokeTest {
     my($fe) = @_;
     my($Binary);
-    $fe = 'x' if (!defined($fe));
 
-    $Binary = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . 'dist/bin/apprunner';
-	$BinaryDir = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '/dist/bin';
+    $Binary =  'grendel.Main';
+    $BinaryDir = $BuildDir . '/' . $TopLevel . '/' . $Topsrcdir . '/' . $BuildObjName . '';
     print LOG $BinName . "\n";
 	
-	system("cp -r $BinaryDir $BuildDir/smoketest");
-
    $waittime = 30;
 
    $pid = fork;
 
-   exec $Binary if !$pid;
+    system("java $Binary") if !$pid;
+# can't just run the Main.class file!   exec $Binary if !$pid;
+    exit if !$pid;
 
    # parent - wait $waittime seconds then check on child
    sleep $waittime;
