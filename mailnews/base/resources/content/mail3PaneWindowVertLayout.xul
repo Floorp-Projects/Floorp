@@ -42,7 +42,7 @@ Rights Reserved.
         titlemenuseparator="&titleSeperator.label;"
 		onload="OnLoadMessenger()"
 		onunload="OnUnloadMessenger()"
-		align="vertical"
+		orient="vertical"
         width="750"
         height="500"
         persist="width height screenX screenY"
@@ -310,11 +310,11 @@ Rights Reserved.
   <!-- The main mail three pane frame -->
 
 
-	<box align="horizontal" style="height:100px" flex="1">
+	<box orient="horizontal" style="height:100px" flex="1">
 		<box id="sidebar-box"/>
 		<splitter id="sidebar-splitter" state="collapsed"/>
           
-		<box align="vertical" flex="1">
+		<box orient="vertical" flex="1">
 			<box align ="horizontal" flex="1">
 				<tree id="folderTree" flex="1" style="width:0px" context="folderPaneContext"/>
 				<splitter class="gray-horizontal-splitter" collapse="after"  persist="state"/>
@@ -325,18 +325,16 @@ Rights Reserved.
 			 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
 			<!-- msg header view -->
-			<box id="messagepanebox" align="vertical" flex="4" persist="collapsed">
+			<box id="messagepanebox" orient="vertical" flex="4" persist="collapsed">
 				<toolbox id="msgHeaderView"/>
     
 				<!-- message view -->
 				<iframe id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank"/>
 			</box>	
-			<box id="status-bar">
-				<text value="&unreadCountText.label;"/>
-				<text id="unreadMessageCount" style="min-width: 5px"/>
-				<text value="&totalCountText.label;"/>
-				<text id="totalMessageCount" style="min-width: 5px"/>
-			</box>
+			<statusbar id="status-bar">
+				<statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
+				<statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
+			</statusbar>
 		</box>
 	</box>
 
