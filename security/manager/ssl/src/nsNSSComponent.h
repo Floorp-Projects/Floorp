@@ -178,6 +178,10 @@ private:
 
   nsresult InitializeNSS();
   nsresult ShutdownNSS();
+
+#ifdef XP_MACOSX
+  void TryCFM2MachOMigration(nsIFile *cfmPath, nsIFile *machoPath);
+#endif
   
   enum AlertIdentifier {
     ai_nss_init_problem, 
