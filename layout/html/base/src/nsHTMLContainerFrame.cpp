@@ -186,12 +186,53 @@ NS_METHOD nsHTMLContainerFrame::ContentAppended(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-#if 0
-void nsHTMLContainerFrame::AdjustIndexInParents(nsIContent*   aChild,
-                                                PRInt32       aIndexInParent,
-                                                ContentChange aChange)
+static PRBool
+HasSameMapping(nsIFrame* aFrame, nsIContent* aContent)
 {
-  // Walk each child
+  nsIContent* content;
+  PRBool      result;
+
+  aFrame->GetContent(content);
+  result = content == aContent;
+  NS_RELEASE(content);
+  return result;
+}
+
+enum ContentChangeType  {ContentInserted, ContentDeleted};
+
+static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
+                                 nsIContent*       aContainer,
+                                 PRInt32           aIndexInParent,
+                                 ContentChangeType aChange)
+{
+  // Walk each child and check if its index-in-parent needs to be
+  // adjusted
+  nsIFrame* childFrame;
+  for (aContainerFrame->FirstChild(childFrame);
+       nsnull != childFrame;
+       childFrame->GetNextSibling(childFrame))
+  {
+    // Is the child a pseudo-frame?
+    if (HasSameMapping(childFrame, aContainer)) {
+      // Don't change the pseudo frame's index-in-parent, but go change the
+      // index-in-parent of its children
+      AdjustIndexInParents(childFrame, aContainer, aIndexInParent, aChange);
+    } else {
+      PRInt32 index;
+
+      childFrame->GetIndexInParent(index);
+
+      if (::ContentInserted == aChange) {
+        if (index >= aIndexInParent) {
+          childFrame->SetIndexInParent(index + 1);
+        }
+      } else {
+        if (index > aIndexInParent) {
+          childFrame->SetIndexInParent(index - 1);
+        }
+      }
+    }
+  }
 }
 
 NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
@@ -202,9 +243,28 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
 {
   // Adjust the index-in-parent of each frame that follows the child that was
   // inserted
-  AdjustIndexInParents(aChild, aIndexInParent, ContentInserted);
+  PRBool                isPseudoFrame = IsPseudoFrame();
+  nsHTMLContainerFrame* frame = this;
+
+  while (nsnull != frame) {
+    // Do a quick check to see whether any of the child frames need their
+    // index-in-parent adjusted. Note that this assumes a linear mapping of
+    // content to frame
+    if (mLastContentOffset >= aIndexInParent) {
+      AdjustIndexInParents(frame, aContainer, aIndexInParent, ::ContentInserted);
+  
+      // If the frame is being used as a pseudo-frame then make sure to propagate
+      // the content offsets back up the tree
+      if (isPseudoFrame) {
+        frame->PropagateContentOffsets();
+      }
+    }
+
+    frame->GetNextInFlow((nsIFrame*&)frame);
+  }
+
+  return NS_OK;
 }
-#endif
 
 #if 0
 nsIFrame::ReflowStatus

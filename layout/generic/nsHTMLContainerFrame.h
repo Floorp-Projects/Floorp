@@ -46,6 +46,12 @@ public:
                              nsIPresContext* aPresContext,
                              nsIContent* aContainer);
 
+  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInParent);
+
 protected:
   virtual ~nsHTMLContainerFrame();
 

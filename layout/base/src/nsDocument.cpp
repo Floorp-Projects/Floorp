@@ -587,7 +587,7 @@ nsresult nsDocument::CreateElement(nsString &aTagName,
                                     nsIDOMAttributeList *aAttributes, 
                                     nsIDOMElement **aElement)
 {
-  //XXX TBI
+  //XXX TBI (currently there's a cheesy implementation in nsHTMLDocument)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
