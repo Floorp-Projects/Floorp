@@ -39,7 +39,10 @@
 #define nsColor_h___
 
 #include "gfxCore.h"
-#include "nsStringFwd.h"
+
+class nsAString;
+class nsString;
+class nsCString;
 
 // A color is a 32 bit unsigned integer with four components: R, G, B
 // and A.
@@ -95,7 +98,7 @@ extern "C" NS_GFX_(PRBool) NS_LooseHexToRGB(const nsString& aBuf, nscolor* aResu
 // The returned string is always 7 characters including a '#' character.
 extern "C" NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult);
 extern "C" NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
-                                          nsAFlatCString& aResult);
+                                          nsCString& aResult);
 
 // Translate a color name to a color. Return true if it parses ok,
 // otherwise return false.

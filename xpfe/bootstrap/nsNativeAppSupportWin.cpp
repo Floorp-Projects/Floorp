@@ -36,6 +36,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsStringSupport.h"
+
 // For server mode systray icon.
 #include "nsIStringBundle.h"
 
@@ -72,12 +74,6 @@
 #include "nsXPFEComponentsCID.h"
 
 struct JSContext;
-
-#ifdef XPCOM_GLUE
-#include "nsStringSupport.h"
-#else
-#include "nsString.h"
-#endif
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -677,7 +673,8 @@ nsNativeAppSupportWin::CheckConsole() {
               int rv = ::GetModuleFileName( NULL, fileName, sizeof fileName );
               nsCAutoString regvalueholder;
               regvalueholder.Assign((char *) regvalue);
-              if ((regvalueholder.Find(fileName, PR_TRUE) != kNotFound) && (regvalueholder.Find("-turbo", PR_TRUE) != kNotFound) ) {
+              if ((FindInString(regvalueholder, fileName, PR_TRUE) != kNotFound) &&
+                  (FindInString(regvalueholder, "-turbo", PR_TRUE) != kNotFound) ) {
                   mServerMode = PR_TRUE;
                   mShouldShowUI = PR_TRUE;
               }
@@ -936,7 +933,7 @@ struct MessageWindow {
                                                         1, getter_Copies( dialogTitle ) );
 
              }
-             if ( dialogMsg.get() && dialogTitle.get() && brandName.get() ) {
+             if ( !dialogMsg.IsEmpty() && !dialogTitle.IsEmpty() && !brandName.IsEmpty() ) {
                  nsCOMPtr<nsIPromptService> dialog( do_GetService( "@mozilla.org/embedcomp/prompt-service;1" ) );
                  if ( dialog ) {
                      PRBool reallyDisable;
@@ -1364,7 +1361,7 @@ static void escapeQuotes( nsString &aString ) {
     PRInt32 offset = -1;
     while( 1 ) {
        // Find next '"'.
-       offset = aString.FindChar( '"', ++offset );
+       offset = FindCharInString(aString, '"', ++offset );
        if ( offset == kNotFound ) {
            // No more quotes, exit.
            break;
@@ -1431,7 +1428,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     nsCAutoString windowID;
                     ParseDDEArg(hsz2, 2, windowID);
                     // "0" means to open the URL in a new window.
-                    if ( windowID.Equals( "0" ) ) {
+                    if ( strcmp(windowID.get(), "0" ) == 0 ) {
                         new_window = PR_TRUE;
                     }
 
@@ -1515,12 +1512,12 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                         nsCAutoString   outpt( NS_LITERAL_CSTRING("\"") );
                         // Now copy the URL converting the Unicode string
                         // to a single-byte ASCII string
-                        outpt.Append( NS_LossyConvertUCS2toASCII( url ) );
+                        outpt.Append( NS_LossyConvertUTF16toASCII( url ) );
                         // Add the "," used to separate the URL and the page
                         // title
                         outpt.Append( NS_LITERAL_CSTRING("\",\"") );
                         // Now copy the current page title to the return string
-                        outpt.Append( NS_LossyConvertUCS2toASCII( title ));
+                        outpt.Append( NS_LossyConvertUTF16toASCII( title ));
                         // Fill out the return string with the remainin ",""
                         outpt.Append( NS_LITERAL_CSTRING( "\",\"\"" ));
 
@@ -1542,8 +1539,9 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                     ParseDDEArg(hsz2, 0, windowID);
                     // 4294967295 is decimal for 0xFFFFFFFF which is also a
                     //   correct value to do that Activate last window stuff
-                    if ( windowID.Equals( "-1" ) ||
-                         windowID.Equals( "4294967295" ) ) {
+                    const char *wid = windowID.get();
+                    if ( strcmp(wid, "-1" ) == 0 ||
+                         strcmp(wid, "4294967295" ) == 0 ) {
                         // We only support activating the most recent window (or a new one).
                         ActivateLastWindow();
                         // Return pseudo window ID.
@@ -1601,7 +1599,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
             ParseDDEArg((const char*) request, 2, windowID);
 
             // "0" means to open the URL in a new window.
-            if ( windowID.Equals( "0" ) ) {
+            if ( strcmp(windowID.get(), "0" ) == 0 ) {
                 new_window = PR_TRUE;
             }
 
@@ -1660,7 +1658,7 @@ void nsNativeAppSupportWin::ParseDDEArg( const char* args, int index, nsCString&
             // If this arg is quoted, then go to closing quote.
             offset = advanceToEndOfQuotedArg( args, offset, argLen);
             // Find next comma.
-            offset = temp.FindChar( ',', offset );
+            offset = FindCharInString(temp, ',', offset );
             if ( offset == kNotFound ) {
                 // No more commas, give up.
                 aString = args;
@@ -1677,7 +1675,7 @@ void nsNativeAppSupportWin::ParseDDEArg( const char* args, int index, nsCString&
         // the argument we want.
         PRInt32 end = advanceToEndOfQuotedArg( args, offset++, argLen );
         // Find next comma (or end of string).
-        end = temp.FindChar( ',', end );
+        end = FindCharInString(temp, ',', end );
         if ( end == kNotFound ) {
             // Arg is the rest of the string.
             end = argLen;
@@ -1763,26 +1761,26 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // first see if there is a url
     nsXPIDLCString arg;
     rv = args->GetURLToLoad(getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
+    if (NS_SUCCEEDED(rv) && !arg.IsEmpty() ) {
       // Launch browser.
 #if MOZ_DEBUG_DDE
-      printf( "Launching browser on url [%s]...\n", (const char*)arg );
+      printf( "Launching browser on url [%s]...\n", arg.get() );
 #endif
       if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
-        (void)OpenBrowserWindow( arg, newWindow );
+        (void)OpenBrowserWindow( arg.get(), newWindow );
       return;
     }
 
 
     // ok, let's try the -chrome argument
     rv = args->GetCmdLineValue("-chrome", getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
+    if (NS_SUCCEEDED(rv) && !arg.IsEmpty() ) {
       // Launch chrome.
 #if MOZ_DEBUG_DDE
-      printf( "Launching chrome url [%s]...\n", (const char*)arg );
+      printf( "Launching chrome url [%s]...\n", arg.get() );
 #endif
       if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
-        (void)OpenWindow( arg, "" );
+        (void)OpenWindow( arg.get(), "" );
       return;
     }
 
@@ -1790,7 +1788,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // profile manager to appear, but only if there are no windows open
 
     rv = args->GetCmdLineValue( "-profilemanager", getter_Copies(arg));
-    if ( NS_SUCCEEDED(rv) && (const char*)arg ) { // -profilemanager on command line
+    if ( NS_SUCCEEDED(rv) && !arg.IsEmpty() ) { // -profilemanager on command line
       nsCOMPtr<nsIDOMWindowInternal> window;
       GetMostRecentWindow(0, getter_AddRefs(window));
       if (!window) { // there are no open windows
@@ -1800,7 +1798,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
     // try for the "-kill" argument, to shut down the server
     rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
-    if ( NS_SUCCEEDED(rv) && (const char*)arg ) {
+    if ( NS_SUCCEEDED(rv) && !arg.IsEmpty() ) {
       // Turn off server mode.
       nsCOMPtr<nsIAppStartup> appStartup
         (do_GetService(NS_APPSTARTUP_CONTRACTID, &rv));
@@ -1821,7 +1819,7 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // check wheather it is a MAPI request.  If yes, don't open any new
     // windows and just return.
     rv = args->GetCmdLineValue(MAPI_STARTUP_ARG, getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg) {
+    if (NS_SUCCEEDED(rv) && !arg.IsEmpty()) {
       nativeApp->EnsureProfile(args);
       return;
     }
@@ -1880,14 +1878,10 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-    if (NS_FAILED(rv) || !defaultArgs) return;
+    if (NS_FAILED(rv) || defaultArgs.IsEmpty()) return;
 
-    if (defaultArgs) {
-      NS_LossyConvertUCS2toASCII url( defaultArgs );
-      OpenBrowserWindow(url.get());
-    } else {
-      OpenBrowserWindow("about:blank");
-    }
+    NS_LossyConvertUTF16toASCII url( defaultArgs );
+    OpenBrowserWindow(url.get());
 }
 
 // Parse command line args according to MS spec
@@ -2121,7 +2115,7 @@ printf( "Setting ddexec subkey entries\n" );
   PRBool canInteract = PR_TRUE;
   nsXPIDLCString arg;
   if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg)))) {
-    if ((const char*)arg) {
+    if (!arg.IsEmpty()) {
       canInteract = PR_FALSE;
     }
   }
@@ -2318,7 +2312,7 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
             break;
         }
         // Set href.
-        nsAutoString url; url.AssignWithConversion( args );
+        NS_ConvertASCIItoUTF16 url( args );
         if ( NS_FAILED( location->SetHref( url ) ) ) {
             break;
         }
@@ -2334,7 +2328,7 @@ nsNativeAppSupportWin::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     if (NS_FAILED(rv)) return rv;
 
     // Last resort is to open a brand new window.
-    return OpenWindow( chromeUrlForTask, args );
+    return OpenWindow( chromeUrlForTask.get(), args );
 }
 
 void AppendMenuItem( HMENU& menu, PRInt32 aIdentifier, const nsString& aText ) {
@@ -2371,7 +2365,7 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
             brandBundle->GetStringFromName( NS_LITERAL_STRING( "brandShortName" ).get(),
                                             getter_Copies( tooltip ) );
             ::strncpy( mIconData.szTip,
-                       NS_LossyConvertUCS2toASCII(tooltip).get(),
+                       NS_LossyConvertUTF16toASCII(tooltip).get(),
                        sizeof mIconData.szTip - 1 );
         }
         // Build menu.
@@ -2394,44 +2388,44 @@ nsNativeAppSupportWin::SetupSysTrayIcon() {
                 const PRUnichar* formatStrings[] = { tooltip.get() };
                 turboBundle->FormatStringFromName( NS_LITERAL_STRING( "Exit" ).get(), formatStrings, 1,
                                                    getter_Copies( text ) );
-                exitText = (const PRUnichar*)text;
+                exitText = text;
             }
             turboBundle->GetStringFromName( NS_LITERAL_STRING( "Disable" ).get(),
                                             getter_Copies( text ) );
-            disableText = (const PRUnichar*)text;
+            disableText = text;
             turboBundle->GetStringFromName( NS_LITERAL_STRING( "Navigator" ).get(),
                                             getter_Copies( text ) );
-            navigatorText = (const PRUnichar*)text;
+            navigatorText = text;
             turboBundle->GetStringFromName( NS_LITERAL_STRING( "Editor" ).get(),
                                             getter_Copies( text ) );
-            editorText = (const PRUnichar*)text;
+            editorText = text;
         }
         if (isMail) {
             mailBundle->GetStringFromName( NS_LITERAL_STRING( "MailNews" ).get(),
                                            getter_Copies( text ) );
-            mailText = (const PRUnichar*)text;
+            mailText = text;
             mailBundle->GetStringFromName( NS_LITERAL_STRING( "Addressbook" ).get(),
                                            getter_Copies( text ) );
-            addressbookText = (const PRUnichar*)text;
+            addressbookText = text;
         }
 
         if ( exitText.IsEmpty() )
-            exitText.AssignLiteral( "E&xit Mozilla" );
+            exitText.Assign( NS_LITERAL_STRING("E&xit Mozilla") );
 
         if ( disableText.IsEmpty() )
-            disableText.AssignLiteral( "&Disable Quick Launch" );
+            disableText.Assign( NS_LITERAL_STRING("&Disable Quick Launch") );
 
         if ( navigatorText.IsEmpty() )
-            navigatorText.AssignLiteral( "&Navigator" );
+            navigatorText.Assign( NS_LITERAL_STRING("&Navigator") );
 
         if ( editorText.IsEmpty() )
-            editorText.AssignLiteral( "&Composer" );
+            editorText.Assign( NS_LITERAL_STRING("&Composer") );
 
         if ( isMail ) {
             if ( mailText.IsEmpty() )
-              mailText.AssignLiteral( "&Mail && Newsgroups" );
+              mailText.Assign( NS_LITERAL_STRING("&Mail && Newsgroups") );
             if ( addressbookText.IsEmpty() )
-              addressbookText.AssignLiteral( "&Address Book" );
+              addressbookText.Assign( NS_LITERAL_STRING("&Address Book") );
         }
         // Create menu and add item.
         mTrayIconMenu = ::CreatePopupMenu();

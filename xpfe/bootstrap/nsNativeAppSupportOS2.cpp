@@ -44,6 +44,8 @@
 #define INCL_DOSERRORS
 #include <os2.h>
 
+#include "nsStringSupport.h"
+
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportOS2.h"
 #include "nsICmdLineService.h"
@@ -74,12 +76,6 @@
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
 #include "nsXPFEComponentsCID.h"
-
-#ifdef XPCOM_GLUE
-#include "nsStringSupport.h"
-#else
-#include "nsString.h"
-#endif
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
@@ -1475,7 +1471,7 @@ static void escapeQuotes( nsString &aString ) {
     PRInt32 offset = -1;
     while( 1 ) {
        // Find next '"'.
-       offset = aString.FindChar( '"', ++offset );
+       offset = FindCharInString( aString, '"', ++offset );
        if ( offset == kNotFound ) {
            // No more quotes, exit.
            break;
@@ -1772,7 +1768,7 @@ void nsNativeAppSupportOS2::ParseDDEArg( const char* args, int index, nsCString&
             // If this arg is quoted, then go to closing quote.
             offset = advanceToEndOfQuotedArg( args, offset, argLen);
             // Find next comma.
-            offset = temp.FindChar( ',', offset );
+            offset = FindCharInString( temp, ',', offset );
             if ( offset == kNotFound ) {
                 // No more commas, give up.
                 aString = args;
@@ -1789,7 +1785,7 @@ void nsNativeAppSupportOS2::ParseDDEArg( const char* args, int index, nsCString&
         // the argument we want.
         PRInt32 end = advanceToEndOfQuotedArg( args, offset++, argLen );
         // Find next comma (or end of string).
-        end = temp.FindChar( ',', end );
+        end = FindCharInString( temp, ',', end );
         if ( end == kNotFound ) {
             // Arg is the rest of the string.
             end = argLen;
@@ -1874,13 +1870,13 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     // first see if there is a url
     nsXPIDLCString arg;
     rv = args->GetURLToLoad(getter_Copies(arg));
-    if (NS_SUCCEEDED(rv) && (const char*)arg ) {
+    if (NS_SUCCEEDED(rv) && !arg.IsEmpty() ) {
       // Launch browser.
 #if MOZ_DEBUG_DDE
-      printf( "Launching browser on url [%s]...\n", (const char*)arg );
+      printf( "Launching browser on url [%s]...\n", arg.get() );
 #endif
       if (NS_SUCCEEDED(nativeApp->EnsureProfile(args)))
-        (void)OpenBrowserWindow( arg, newWindow );
+        (void)OpenBrowserWindow( arg.get(), newWindow );
       return;
     }
 
@@ -1983,14 +1979,10 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
 
     nsXPIDLString defaultArgs;
     rv = handler->GetDefaultArgs(getter_Copies(defaultArgs));
-    if (NS_FAILED(rv) || !defaultArgs) return;
+    if (NS_FAILED(rv) || defaultArgs.IsEmpty()) return;
 
-    if (defaultArgs) {
-      NS_LossyConvertUCS2toASCII url( defaultArgs );
-      OpenBrowserWindow(url.get());
-    } else {
-      OpenBrowserWindow("about:blank");
-    }
+    NS_LossyConvertUCS2toASCII url( defaultArgs );
+    OpenBrowserWindow(url.get());
 }
 
 // Parse command line args according to MS spec
@@ -2176,7 +2168,7 @@ nsNativeAppSupportOS2::EnsureProfile(nsICmdLineService* args)
   PRBool canInteract = PR_TRUE;
   nsXPIDLCString arg;
   if (NS_SUCCEEDED(args->GetCmdLineValue("-silent", getter_Copies(arg)))) {
-    if ((const char*)arg) {
+    if (!arg.IsEmpty()) {
       canInteract = PR_FALSE;
     }
   }
@@ -2348,7 +2340,7 @@ nsNativeAppSupportOS2::OpenBrowserWindow( const char *args, PRBool newWindow ) {
     if (NS_FAILED(rv)) return rv;
 
     // Last resort is to open a brand new window.
-    return OpenWindow( chromeUrlForTask, args );
+    return OpenWindow( chromeUrlForTask.get(), args );
 }
 
 //   This opens a special browser window for purposes of priming the pump for

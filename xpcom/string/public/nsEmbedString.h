@@ -40,108 +40,12 @@
 #ifndef nsEmbedString_h___
 #define nsEmbedString_h___
 
-#ifndef MOZILLA_STRICT_API
-#error nsEmbedString requires defining MOZILLA_STRICT_API
-#endif
-
 #include "nsStringAPI.h"
 
-class nsEmbedString : public nsStringContainer
-  {
-    public:
-      typedef nsEmbedString    self_type;
-      typedef nsAString        abstract_string_type;
-    
-      nsEmbedString()
-        {
-          NS_StringContainerInit(*this);
-        }
+/**
+ * compatibility
+ */
+typedef nsString  nsEmbedString;
+typedef nsCString nsEmbedCString;
 
-      nsEmbedString(const self_type& aString)
-        {
-          NS_StringContainerInit(*this);
-          NS_StringCopy(*this, aString);
-        }
-
-      explicit
-      nsEmbedString(const abstract_string_type& aReadable)
-        {
-          NS_StringContainerInit(*this);
-          NS_StringCopy(*this, aReadable);
-        }
-
-      explicit
-      nsEmbedString(const char_type* aData, size_type aLength = PR_UINT32_MAX)
-        {
-          NS_StringContainerInit(*this);
-          NS_StringSetData(*this, aData, aLength);
-        }
-      
-      ~nsEmbedString()
-        {
-          NS_StringContainerFinish(*this);
-        }
-
-      const char_type* get() const
-        {
-          const char_type* data;
-          NS_StringGetData(*this, &data);
-          return data;
-        }
-      
-      self_type& operator=(const self_type& aString)              { Assign(aString);   return *this; }
-      self_type& operator=(const abstract_string_type& aReadable) { Assign(aReadable); return *this; }
-      self_type& operator=(const char_type* aPtr)                 { Assign(aPtr);      return *this; }
-      self_type& operator=(char_type aChar)                       { Assign(aChar);     return *this; }
-  };
-
-class nsEmbedCString : public nsCStringContainer
-  {
-    public:
-      typedef nsEmbedCString   self_type;
-      typedef nsACString       abstract_string_type;
-    
-      nsEmbedCString()
-        {
-          NS_CStringContainerInit(*this);
-        }
-
-      nsEmbedCString(const self_type& aString)
-        {
-          NS_CStringContainerInit(*this);
-          NS_CStringCopy(*this, aString);
-        }
-
-      explicit
-      nsEmbedCString(const abstract_string_type& aReadable)
-        {
-          NS_CStringContainerInit(*this);
-          NS_CStringCopy(*this, aReadable);
-        }
-
-      explicit
-      nsEmbedCString(const char_type* aData, size_type aLength = PR_UINT32_MAX)
-        {
-          NS_CStringContainerInit(*this);
-          NS_CStringSetData(*this, aData, aLength);
-        }
-      
-      ~nsEmbedCString()
-        {
-          NS_CStringContainerFinish(*this);
-        }
-
-      const char_type* get() const
-        {
-          const char_type* data;
-          NS_CStringGetData(*this, &data);
-          return data;
-        }
-      
-      self_type& operator=(const self_type& aString)              { Assign(aString);   return *this; }
-      self_type& operator=(const abstract_string_type& aReadable) { Assign(aReadable); return *this; }
-      self_type& operator=(const char_type* aPtr)                 { Assign(aPtr);      return *this; }
-      self_type& operator=(char_type aChar)                       { Assign(aChar);     return *this; }
-  };
-
-#endif // !defined(nsEmbedString_h___)
+#endif

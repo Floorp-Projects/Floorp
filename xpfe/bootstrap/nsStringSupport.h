@@ -37,321 +37,91 @@
 #ifndef nsStringSupport_h__
 #define nsStringSupport_h__
 
-/**
- * This file attempts to implement the subset of string classes and methods
- * used by xpfe/bootstrap in terms of the frozen string API.
- *
- * This code exists to allow xpfe/bootstrap to be optionally compiled as a
- * standalone embedder of the GRE.  However, since the module can also be built
- * statically or as a non-GRE application, it is necessary to support compiling
- * it directly against the internal xpcom string classes.  Hence, this layer of
- * indirection ;-)
- */
+#ifdef MOZILLA_STRICT_API
 
-#include "nsEmbedString.h"
+#include "nsStringAPI.h"
 #include "nsMemory.h"
 #include "prprf.h"
 #include "plstr.h"
 
-// rename class names that are redefined here
-#define nsCString                     nsCString_local
-#define nsCAutoString                 nsCAutoString_local
-#define nsDependentCString            nsDependentCString_local
-#define nsXPIDLCString                nsXPIDLCString_local
-#define nsCGetterCopies               nsCGetterCopies_local
-#define nsString                      nsString_local
-#define nsAutoString                  nsAutoString_local
-#define nsDependentString             nsDependentString_local
-#define nsXPIDLString                 nsXPIDLString_local
-#define nsGetterCopies                nsGetterCopies_local
-#define NS_ConvertUCS2toUTF8          NS_ConvertUCS2toUTF8_local
-#define NS_ConvertASCIItoUTF16        NS_ConvertASCIItoUTF16_local
-#define NS_LossyConvertUCS2toASCII    NS_LossyConvertUCS2toASCII_local
-#define getter_Copies                 getter_Copies_local
-
+#ifndef kNotFound
 #define kNotFound -1
-
-class nsCString : public nsEmbedCString
-  {
-    public:
-      nsCString() {}
-      nsCString(const char *s)
-        {
-          Assign(s);
-        }
-      void AppendInt(PRInt32 value)
-        {
-          char buf[32];
-          PR_snprintf(buf, sizeof(buf), "%d", value);
-          Append(buf);
-        }
-      PRBool IsEmpty()
-        {
-          return Length() == 0;
-        }
-      PRInt32 FindChar(char c, PRUint32 offset = 0)
-        {
-          NS_ASSERTION(offset <= Length(), "invalid offset");
-          const char *data = get();
-          for (const char *p = data + offset; *p; ++p)
-            if (*p == c)
-              return p - data;
-          return kNotFound;
-        }
-      PRInt32 Find(const char *needle, PRBool ignoreCase = PR_FALSE)
-        {
-          const char *data = get(), *p;
-          if (ignoreCase)
-            p = PL_strcasestr(data, needle);
-          else
-            p = PL_strstr(data, needle);
-          return p ? p - data : kNotFound;
-        }
-      PRBool Equals(const char *s)
-        {
-          return strcmp(get(), s) == 0;
-        }
-  };
-
-class nsDependentCString : public nsCString
-  {
-    public:
-      nsDependentCString(const char *data)
-        {
-          Assign(data); // XXX forced to copy
-        }
-      nsDependentCString(const char *data, PRUint32 len)
-        {
-          Assign(data, len); // XXX forced to copy
-        }
-  };
-
-class nsCAutoString : public nsCString
-  {
-    public:
-      nsCAutoString() {}
-      nsCAutoString(const char *data)
-        {
-          Assign(data); 
-        }
-      nsCAutoString(const nsCString &s)
-        {
-          Assign(s);
-        }
-  };
-
-class nsString : public nsEmbedString
-  {
-    public:
-      nsString() {}
-      PRBool IsEmpty()
-        {
-          return Length() == 0;
-        }
-      PRInt32 FindChar(PRUnichar c, PRUint32 offset = 0)
-        {
-          NS_ASSERTION(offset <= Length(), "invalid offset");
-          const PRUnichar *data = get();
-          for (const PRUnichar *p = data + offset; *p; ++p)
-            if (*p == c)
-              return p - data;
-          return kNotFound;
-        }
-  };
-
-class nsDependentString : public nsString
-  {
-    public:
-      nsDependentString(const PRUnichar *data)
-        {
-          Assign(data); // XXX forced to copy
-        }
-  };
-
-class nsAutoString : public nsString
-  {
-    public:
-      void AssignWithConversion(const char *data)
-        {
-          AssignLiteral(data);
-        }
-      void AssignLiteral(const char *data)
-        {
-          NS_CStringToUTF16(nsEmbedCString(data), NS_CSTRING_ENCODING_ASCII, *this);
-        }
-      nsAutoString &operator=(const PRUnichar *s)
-        {
-          Assign(s);
-          return *this;
-        }
-  };
-
-class nsXPIDLCString : public nsCString
-  {
-    public:
-      nsXPIDLCString() : mVoided(PR_TRUE) {}
-
-      const char *get() const
-        { 
-          return mVoided ? nsnull : nsEmbedCString::get();
-        }
-      operator const char*() const
-        {
-          return get();
-        }
-
-      void Adopt(char *data)
-        {
-          if (data)
-            {
-              // XXX unfortunately, we don't have a better way to do this.
-              Assign(data);
-              nsMemory::Free(data);
-              mVoided = PR_FALSE;
-            }
-          else
-            {
-              Cut(0, PR_UINT32_MAX);
-              mVoided = PR_TRUE;
-            }
-        }
-        
-    private:
-      PRBool mVoided;
-  };
-
-class nsCGetterCopies
-  {
-    public:
-      typedef char char_type;
-
-      nsCGetterCopies(nsXPIDLCString& str)
-        : mString(str), mData(nsnull) {}
-
-      ~nsCGetterCopies()
-        {
-          mString.Adopt(mData); // OK if mData is null
-        }
-
-      operator char_type**()
-        {
-          return &mData;
-        }
-
-    private:
-      nsXPIDLCString& mString;
-      char_type*      mData;
-  };
-
-inline
-nsCGetterCopies
-getter_Copies( nsXPIDLCString& aString )
-  {
-    return nsCGetterCopies(aString);
-  }
-
-class nsXPIDLString : public nsString
-  {
-    public:
-      nsXPIDLString() : mVoided(PR_TRUE) {}
-
-      const PRUnichar *get() const
-        { 
-          return mVoided ? nsnull : nsEmbedString::get();
-        }
-      operator const PRUnichar*() const
-        {
-          return get();
-        }
-
-      void Adopt(PRUnichar *data)
-        {
-          if (data)
-            {
-              // XXX unfortunately, we don't have a better way to do this.
-              Assign(data);
-              nsMemory::Free(data);
-              mVoided = PR_FALSE;
-            }
-          else
-            {
-              Cut(0, PR_UINT32_MAX);
-              mVoided = PR_TRUE;
-            }
-        }
-        
-    private:
-      PRBool mVoided;
-  };
-
-class nsGetterCopies
-  {
-    public:
-      typedef PRUnichar char_type;
-
-      nsGetterCopies(nsXPIDLString& str)
-        : mString(str), mData(nsnull) {}
-
-      ~nsGetterCopies()
-        {
-          mString.Adopt(mData); // OK if mData is null
-        }
-
-      operator char_type**()
-        {
-          return &mData;
-        }
-
-    private:
-      nsXPIDLString& mString;
-      char_type*     mData;
-  };
-
-inline
-nsGetterCopies
-getter_Copies( nsXPIDLString& aString )
-  {
-    return nsGetterCopies(aString);
-  }
-
-class NS_ConvertUCS2toUTF8 : public nsCString
-  {
-    public:
-      NS_ConvertUCS2toUTF8(const nsAString &str)
-        {
-          NS_UTF16ToCString(str, NS_CSTRING_ENCODING_UTF8, *this);
-        }
-  };
-
-class NS_LossyConvertUCS2toASCII : public nsCString
-  {
-    public:
-      NS_LossyConvertUCS2toASCII(const nsAString &str)
-        {
-          NS_UTF16ToCString(str, NS_CSTRING_ENCODING_ASCII, *this);
-        }
-  };
-
-class NS_ConvertASCIItoUTF16 : public nsString
-  {
-    public:
-      NS_ConvertASCIItoUTF16(const char *str, PRUint32 len)
-        {
-          nsEmbedCString temp;
-          temp.Assign(str, len);
-          NS_CStringToUTF16(temp, NS_CSTRING_ENCODING_ASCII, *this);
-        }
-  };
-
-#define NS_LITERAL_CSTRING(s) nsDependentCString(s)
-
-#ifdef HAVE_CPP_2BYTE_WCHAR_T
-#define NS_LITERAL_STRING(s) nsDependentString((const PRUnichar*)L##s)
-#else
-#define NS_LITERAL_STRING(s) NS_ConvertASCIItoUTF16(s, sizeof(s)-1)
 #endif
 
-#define EmptyCString() nsCString()
-#define EmptyString() nsString()
+inline void
+AppendIntToString(nsCString &str, PRInt32 value)
+{
+  char buf[32];
+  PR_snprintf(buf, sizeof(buf), "%d", value);
+  str.Append(buf);
+}
+
+inline PRInt32
+FindCharInString(nsCString &str, char c, PRUint32 offset = 0)
+{
+  NS_ASSERTION(offset <= str.Length(), "invalid offset");
+  const char *data = str.get();
+  for (const char *p = data + offset; *p; ++p)
+    if (*p == c)
+      return p - data;
+  return kNotFound;
+}
+
+inline PRInt32
+FindCharInString(nsString &str, PRUnichar c, PRUint32 offset = 0)
+{
+  NS_ASSERTION(offset <= str.Length(), "invalid offset");
+  const PRUnichar *data = str.get();
+  for (const PRUnichar *p = data + offset; *p; ++p)
+    if (*p == c)
+      return p - data;
+  return kNotFound;
+}
+
+inline PRInt32
+FindInString(nsCString &str, const char *needle, PRBool ignoreCase = PR_FALSE)
+{
+  const char *data = str.get(), *p;
+  if (ignoreCase)
+    p = PL_strcasestr(data, needle);
+  else
+    p = PL_strstr(data, needle);
+  return p ? p - data : kNotFound;
+}
+
+typedef nsCString nsCAutoString;
+typedef nsString nsAutoString;
+typedef nsCString nsXPIDLCString;
+typedef nsString nsXPIDLString;
+
+#else // MOZILLA_STRICT_API
+
+#include "nsString.h"
+
+inline void
+AppendIntToString(nsCString &str, PRInt32 value)
+{
+  str.AppendInt(value);
+}
+
+inline PRInt32
+FindCharInString(nsCString &str, char c, PRUint32 offset = 0)
+{
+  return str.FindChar(c, offset);
+}
+
+inline PRInt32
+FindCharInString(nsString &str, PRUnichar c, PRUint32 offset = 0)
+{
+  return str.FindChar(c, offset);
+}
+
+inline PRInt32
+FindInString(nsCString &str, const char *needle, PRBool ignoreCase = PR_FALSE)
+{
+  return str.Find(needle, ignoreCase);
+}
+
+#endif // MOZILLA_STRICT_API
 
 #endif // !nsStringSupport_h__

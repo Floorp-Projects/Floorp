@@ -39,10 +39,9 @@
 
 #ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
-#include "nsStringSupport.h"
-#else
-#include "nsString.h"
 #endif
+
+#include "nsStringSupport.h"
 
 #include "nsXPCOM.h"
 #include "nsIServiceManager.h"
@@ -532,11 +531,11 @@ static nsresult OpenWindow(const nsCString& aChromeURL,
   nsCAutoString features("chrome,dialog=no,all");
   if (aHeight != nsIAppShellService::SIZE_TO_CONTENT) {
     features.Append(",height=");
-    features.AppendInt(aHeight);
+    AppendIntToString(features, aHeight);
   }
   if (aWidth != nsIAppShellService::SIZE_TO_CONTENT) {
     features.Append(",width=");
-    features.AppendInt(aWidth);
+    AppendIntToString(features, aWidth);
   }
 
 #ifdef DEBUG_CMD_LINE
@@ -570,13 +569,13 @@ static void DumpArbitraryHelp()
         rv = catman->GetCategoryEntry(COMMAND_LINE_ARGUMENT_HANDLERS,
                                       entryString.get(),
                                       getter_Copies(contractidString));
-        if (NS_FAILED(rv) || !((const char *)contractidString)) break;
+        if (NS_FAILED(rv) || contractidString.IsEmpty()) break;
 
 #ifdef DEBUG_CMD_LINE
-        printf("cmd line handler contractid = %s\n", (const char *)contractidString);
+        printf("cmd line handler contractid = %s\n", contractidString.get());
 #endif /* DEBUG_CMD_LINE */
 
-        nsCOMPtr <nsICmdLineHandler> handler(do_GetService((const char *)contractidString, &rv));
+        nsCOMPtr <nsICmdLineHandler> handler(do_GetService(contractidString.get(), &rv));
 
         if (handler) {
           nsXPIDLCString commandLineArg;
@@ -587,16 +586,16 @@ static void DumpArbitraryHelp()
           rv = handler->GetHelpText(getter_Copies(helpText));
           if (NS_FAILED(rv)) continue;
 
-          if ((const char *)commandLineArg) {
-            printf("%s%s", HELP_SPACER_1,(const char *)commandLineArg);
+          if (!commandLineArg.IsEmpty()) {
+            printf("%s%s", HELP_SPACER_1, commandLineArg.get());
 
             PRBool handlesArgs = PR_FALSE;
             rv = handler->GetHandlesArgs(&handlesArgs);
             if (NS_SUCCEEDED(rv) && handlesArgs) {
               printf(" <url>");
             }
-            if ((const char *)helpText) {
-              printf("%s%s\n",HELP_SPACER_2,(const char *)helpText);
+            if (!helpText.IsEmpty()) {
+              printf("%s%s\n", HELP_SPACER_2, helpText.get());
             }
           }
         }
@@ -635,27 +634,27 @@ LaunchApplicationWithArgs(const char *commandLineArg,
   if (NS_FAILED(rv)) return rv;
 
 #ifdef DEBUG_CMD_LINE
-  printf("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,(const char *)chromeUrlForTask);
+  printf("XXX got this one:\t%s\n\t%s\n\n",commandLineArg,chromeUrlForTask.get());
 #endif /* DEBUG_CMD_LINE */
 
   nsXPIDLCString cmdResult;
   rv = cmdLineArgs->GetCmdLineValue(commandLineArg, getter_Copies(cmdResult));
   if (NS_FAILED(rv)) return rv;
 #ifdef DEBUG_CMD_LINE
-  printf("%s, cmdResult = %s\n",commandLineArg,(const char *)cmdResult);
+  printf("%s, cmdResult = %s\n",commandLineArg,cmdResult.get());
 #endif /* DEBUG_CMD_LINE */
 
   PRBool handlesArgs = PR_FALSE;
   rv = handler->GetHandlesArgs(&handlesArgs);
   if (handlesArgs) {
-    if ((const char *)cmdResult) {
-      if (PL_strcmp("1",(const char *)cmdResult)) {
+    if (!cmdResult.IsEmpty()) {
+      if (strcmp("1", cmdResult.get())) {
         PRBool openWindowWithArgs = PR_TRUE;
         rv = handler->GetOpenWindowWithArgs(&openWindowWithArgs);
         if (NS_FAILED(rv)) return rv;
 
         if (openWindowWithArgs) {
-          nsAutoString cmdArgs; cmdArgs.AssignWithConversion(cmdResult);
+          NS_ConvertASCIItoUTF16 cmdArgs(cmdResult);
 #ifdef DEBUG_CMD_LINE
           printf("opening %s with %s\n", chromeUrlForTask.get(), "OpenWindow");
 #endif /* DEBUG_CMD_LINE */
@@ -686,8 +685,8 @@ LaunchApplicationWithArgs(const char *commandLineArg,
     }
   }
   else {
-    if (NS_SUCCEEDED(rv) && (const char*)cmdResult) {
-      if (PL_strcmp("1",cmdResult) == 0) {
+    if (NS_SUCCEEDED(rv) && !cmdResult.IsEmpty()) {
+      if (strcmp("1", cmdResult.get()) == 0) {
         rv = OpenWindow(chromeUrlForTask, width, height);
         if (NS_FAILED(rv)) return rv;
       }
@@ -821,7 +820,7 @@ static char kMatchOSLocalePref[] = "intl.locale.matchOS";
 nsresult
 getCountry(const nsAString& lc_name, nsAString& aCountry)
 {
-#ifdef XPCOM_GLUE
+#ifdef MOZILLA_STRICT_API
   const PRUnichar *begin = lc_name.BeginReading();
   const PRUnichar *end   = lc_name.EndReading();
   while (begin != end) {
@@ -880,38 +879,36 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
     nsXPIDLCString cmdUI;
     rv = cmdLineArgs->GetCmdLineValue(UILOCALE_CMD_LINE_ARG, getter_Copies(cmdUI));
     if (NS_SUCCEEDED(rv)){
-        if (cmdUI) {
-            nsCAutoString UILocaleName(cmdUI);
+        if (!cmdUI.IsEmpty()) {
             nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if (chromeRegistry)
-                rv = chromeRegistry->SelectLocale(UILocaleName, PR_FALSE);
+                rv = chromeRegistry->SelectLocale(cmdUI, PR_FALSE);
         }
     }
     // match OS when no cmdline override
-    if (!cmdUI && matchOS) {
+    if (cmdUI.IsEmpty() && matchOS) {
       nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);
-        rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(uiLang), PR_FALSE);
+        rv = chromeRegistry->SelectLocale(NS_ConvertUTF16toUTF8(uiLang), PR_FALSE);
       }
     }
 
     nsXPIDLCString cmdContent;
     rv = cmdLineArgs->GetCmdLineValue(CONTENTLOCALE_CMD_LINE_ARG, getter_Copies(cmdContent));
     if (NS_SUCCEEDED(rv)){
-        if (cmdContent) {
-            nsCAutoString contentLocaleName(cmdContent);
+        if (!cmdContent.IsEmpty()) {
             nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
             if(chromeRegistry)
-                rv = chromeRegistry->SelectLocale(contentLocaleName, PR_FALSE);
+                rv = chromeRegistry->SelectLocale(cmdContent, PR_FALSE);
         }
     }
     // match OS when no cmdline override
-    if (!cmdContent && matchOS) {
+    if (cmdContent.IsEmpty() && matchOS) {
       nsCOMPtr<nsIChromeRegistrySea> chromeRegistry = do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);        
-        rv = chromeRegistry->SelectLocale(NS_ConvertUCS2toUTF8(country), PR_FALSE);
+        rv = chromeRegistry->SelectLocale(NS_ConvertUTF16toUTF8(country), PR_FALSE);
       }
     }
 
@@ -951,7 +948,7 @@ static nsresult InitializeProfileService(nsICmdLineService *cmdLineArgs)
     if (shouldShowUI) {
       nsXPIDLCString arg;
       if (NS_SUCCEEDED(cmdLineArgs->GetCmdLineValue("-silent", getter_Copies(arg)))) {
-        if ((const char*)arg) {
+        if (!arg.IsEmpty()) {
           shouldShowUI = PR_FALSE;
         }
       }
@@ -1277,7 +1274,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   
 	if (obsService)
   {
-    nsAutoString userMessage; userMessage.AssignLiteral("Creating first window...");
+    NS_NAMED_LITERAL_STRING(userMessage, "Creating first window...");
     obsService->NotifyObservers(nsnull, "startup_user_notifcations", userMessage.get());
   }
   
