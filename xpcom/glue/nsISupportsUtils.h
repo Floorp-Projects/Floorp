@@ -1261,7 +1261,7 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
   NS_ENSURE_TRUE((arg) >= min, NS_ERROR_INVALID_ARG)
 
 #define NS_ENSURE_ARG_MAX(arg, max) \
-  NS_ENSURE_TRUE((arg) <= min, NS_ERROR_INVALID_ARG)
+  NS_ENSURE_TRUE((arg) <= max, NS_ERROR_INVALID_ARG)
 
 #define NS_ENSURE_ARG_RANGE(arg, min, max) \
   NS_ENSURE_TRUE(((arg) >= min) && ((arg) <= max), NS_ERROR_INVALID_ARG)
