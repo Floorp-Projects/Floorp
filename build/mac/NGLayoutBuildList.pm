@@ -187,7 +187,7 @@ sub BuildDist()
 	if ($main::CLOBBER_DIST_ALL)
 	{
 		print "Clobbering ALL files inside :mozilla:dist:\n";
-		EmptyTree($distdirectory);
+		EmptyTree($distdirectory.":");
 	}
 	else
 	{
