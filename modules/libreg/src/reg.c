@@ -2339,9 +2339,9 @@ VR_INTERFACE(REGERR) NR_RegSetUsername(const char *name)
 VR_INTERFACE(REGERR) NR_RegGetUniqueName(HREG hReg, char* outbuf, uint32 buflen)
 {
     PRUint64    one;
-    PRUint64    tmp;
     REGERR      err;
     REGFILE*    reg;
+    static PRUint64 uniqkey;
 
     /* verify parameters */
     err = VERIFY_HREG( hReg );
@@ -2356,12 +2356,14 @@ VR_INTERFACE(REGERR) NR_RegGetUniqueName(HREG hReg, char* outbuf, uint32 buflen)
     if ( buflen <= (sizeof(PRUint64)*2) )
         return REGERR_BUFTOOSMALL;
 
-    PR_snprintf(outbuf,buflen,"%llx",reg->uniqkey);
+    if ( LL_IS_ZERO(uniqkey) )
+        uniqkey = PR_Now();
+
+    PR_snprintf(outbuf,buflen,"%llx",uniqkey);
 
     /* increment counter for next time */
     LL_I2L(one,1);
-    LL_ADD(tmp, reg->uniqkey, one);
-    reg->uniqkey = tmp;
+    LL_ADD(uniqkey, uniqkey, one);
 
     return REGERR_OK;
 }
