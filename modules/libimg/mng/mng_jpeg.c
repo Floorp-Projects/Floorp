@@ -23,6 +23,8 @@
 /* *                                                                        * */
 /* *             0.5.3 - 06/17/2000 - G.Juyn                                * */
 /* *             - added tracing of JPEG calls                              * */
+/* *             0.5.3 - 06/24/2000 - G.Juyn                                * */
+/* *             - fixed inclusion of IJG read/write code                   * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -55,20 +57,25 @@
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 void mng_init_source (j_decompress_ptr cinfo)
 {
   return;                              /* nothing needed */
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 boolean mng_fill_input_buffer (j_decompress_ptr cinfo)
 {
   return FALSE;                        /* force IJG routine to return to caller */
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 void mng_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
 {
   if (num_bytes > 0)                   /* ignore fony calls */
@@ -93,13 +100,16 @@ void mng_skip_input_data (j_decompress_ptr cinfo, long num_bytes)
 
   return;
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 void mng_term_source (j_decompress_ptr cinfo)
 {
   return;                              /* nothing needed */
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 
@@ -141,16 +151,7 @@ mng_retcode mngjpeg_initialize (mng_datap pData)
   MNG_TRACE (pData, MNG_FN_JPEG_INITIALIZE, MNG_LC_START)
 #endif
                                        /* allocate space for JPEG structures if necessary */
-#if defined(MNG_SUPPORT_WRITE) || defined(MNG_ACCESS_CHUNKS)
-  if (pData->pJPEGcerr  == MNG_NULL)
-    MNG_ALLOC (pData, pData->pJPEGcerr,  sizeof (mngjpeg_error ))
-  if (pData->pJPEGcinfo == MNG_NULL)
-    MNG_ALLOC (pData, pData->pJPEGcinfo, sizeof (mngjpeg_comp  ))
-                                       /* enable reverse addressing */
-  pData->pJPEGcinfo->client_data = pData;
-#endif
-
-#if defined(MNG_SUPPORT_DISPLAY) || defined(MNG_ACCESS_CHUNKS)
+#ifdef MNG_INCLUDE_JNG_READ
   if (pData->pJPEGderr  == MNG_NULL)
     MNG_ALLOC (pData, pData->pJPEGderr,  sizeof (mngjpeg_error ))
   if (pData->pJPEGdsrc  == MNG_NULL)
@@ -159,6 +160,15 @@ mng_retcode mngjpeg_initialize (mng_datap pData)
     MNG_ALLOC (pData, pData->pJPEGdinfo, sizeof (mngjpeg_decomp))
                                        /* enable reverse addressing */
   pData->pJPEGdinfo->client_data = pData;
+#endif
+
+#ifdef MNG_INCLUDE_JNG_WRITE
+  if (pData->pJPEGcerr  == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGcerr,  sizeof (mngjpeg_error ))
+  if (pData->pJPEGcinfo == MNG_NULL)
+    MNG_ALLOC (pData, pData->pJPEGcinfo, sizeof (mngjpeg_comp  ))
+                                       /* enable reverse addressing */
+  pData->pJPEGcinfo->client_data = pData;
 #endif
                                        /* initialize temporary buffer parms */
   pData->iJPEGbufmax      = MNG_JPEG_MAXBUF;
@@ -207,25 +217,27 @@ mng_retcode mngjpeg_cleanup (mng_datap pData)
     MNG_ERRORJ (pData, iRetcode)       /* then IJG-lib issued an error */
 #endif    
 
-#ifdef MNG_SUPPORT_WRITE
+#ifdef MNG_INCLUDE_JNG_READ
+  if (pData->bJPEGdecompress)          /* still decompressing something ? */
+    jpeg_destroy_decompress (pData->pJPEGdinfo);
+#endif
+
+#ifdef MNG_INCLUDE_JNG_WRITE
   if (pData->bJPEGcompress)            /* still compressing something ? */
     jpeg_destroy_compress (pData->pJPEGcinfo);
 #endif
-
-  if (pData->bJPEGdecompress)          /* still decompressing something ? */
-    jpeg_destroy_decompress (pData->pJPEGdinfo);
 
 #endif /* MNG_INCLUDE_IJG6B */
                                        /* cleanup temporary buffer */
   MNG_FREE (pData, pData->pJPEGbuf, pData->iJPEGbufmax)
                                        /* cleanup space for JPEG structures */
-#if defined(MNG_SUPPORT_DISPLAY) || defined(MNG_ACCESS_CHUNKS)
+#ifdef MNG_INCLUDE_JNG_READ
   MNG_FREE (pData, pData->pJPEGdinfo, sizeof (mngjpeg_decomp))
   MNG_FREE (pData, pData->pJPEGdsrc,  sizeof (mngjpeg_source))
   MNG_FREE (pData, pData->pJPEGderr,  sizeof (mngjpeg_error ))
 #endif
 
-#if defined(MNG_SUPPORT_WRITE) || defined(MNG_ACCESS_CHUNKS)
+#ifdef MNG_INCLUDE_JNG_WRITE
   MNG_FREE (pData, pData->pJPEGcinfo, sizeof (mngjpeg_comp  ))
   MNG_FREE (pData, pData->pJPEGcerr,  sizeof (mngjpeg_error ))
 #endif
@@ -247,6 +259,7 @@ mng_retcode mngjpeg_cleanup (mng_datap pData)
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 mng_retcode mngjpeg_decompressinit (mng_datap pData)
 {
 #if defined(MNG_INCLUDE_IJG6B) && defined(MNG_USE_SETJMP)
@@ -299,9 +312,11 @@ mng_retcode mngjpeg_decompressinit (mng_datap pData)
 
   return MNG_NOERROR;
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 mng_retcode mngjpeg_decompressdata (mng_datap  pData,
                                     mng_uint32 iRawsize,
                                     mng_uint8p pRawdata)
@@ -541,9 +556,11 @@ mng_retcode mngjpeg_decompressdata (mng_datap  pData,
 
   return MNG_NOERROR;
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 
+#ifdef MNG_INCLUDE_JNG_READ
 mng_retcode mngjpeg_decompressfree (mng_datap pData)
 {
 #if defined(MNG_INCLUDE_IJG6B) && defined(MNG_USE_SETJMP)
@@ -577,6 +594,7 @@ mng_retcode mngjpeg_decompressfree (mng_datap pData)
 
   return MNG_NOERROR;
 }
+#endif /* MNG_INCLUDE_JNG_READ */
 
 /* ************************************************************************** */
 

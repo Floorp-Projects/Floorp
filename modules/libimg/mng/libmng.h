@@ -150,6 +150,10 @@
 /* *             0.5.3 - 06/21/2000 - G.Juyn                                * */
 /* *             - added get/set for speedtype to facilitate testing        * */
 /* *             - added get for imagelevel during processtext callback     * */
+/* *             0.5.3 - 06/24/2000 - G.Juyn                                * */
+/* *             - fixed inclusion of IJG read/write code                   * */
+/* *             0.5.3 - 06/26/2000 - G.Juyn                                * */
+/* *             - changed userdata variable to mng_ptr                     * */
 /* *                                                                        * */
 /* ************************************************************************** */
 
@@ -191,6 +195,15 @@
 #define MNG_INCLUDE_JNG
 #define MNG_INCLUDE_IJG6B
 #define MNG_USE_SETJMP
+#endif
+
+#ifdef MNG_INCLUDE_JNG
+#if defined(MNG_SUPPORT_DISPLAY) || defined(MNG_ACCESS_CHUNKS)
+#define MNG_INCLUDE_JNG_READ
+#endif
+#if defined(MNG_SUPPORT_WRITE) || defined(MNG_ACCESS_CHUNKS)
+#define MNG_INCLUDE_JNG_WRITE
+#endif
 #endif
 
 #ifdef MNG_FULL_CMS
@@ -301,7 +314,7 @@ MNG_EXT mng_uint8 MNG_DECL mng_version_release (void);
 /* library initialization function */
 /* must be the first called before anything can be done at all */
 /* initializes internal datastructure(s) */
-MNG_EXT mng_handle  MNG_DECL mng_initialize      (mng_int32     iUserdata,
+MNG_EXT mng_handle  MNG_DECL mng_initialize      (mng_ptr       pUserdata,
                                                   mng_memalloc  fMemalloc,
                                                   mng_memfree   fMemfree,
                                                   mng_traceproc fTraceproc);
@@ -556,7 +569,7 @@ MNG_EXT mng_processarow   MNG_DECL mng_getcb_processarow   (mng_handle hHandle);
 /* Application data pointer */
 /* provided for application use; not used by the library */
 MNG_EXT mng_retcode MNG_DECL mng_set_userdata        (mng_handle        hHandle,
-                                                      mng_int32         iUserdata);
+                                                      mng_ptr           pUserdata);
 
 /* The style of the drawing- & background-canvas */
 /* only used for displaying images */
@@ -694,7 +707,7 @@ MNG_EXT mng_retcode MNG_DECL mng_set_speed           (mng_handle        hHandle,
 /* ************************************************************************** */
 
 /* see _set_ */
-MNG_EXT mng_int32   MNG_DECL mng_get_userdata        (mng_handle        hHandle);
+MNG_EXT mng_ptr     MNG_DECL mng_get_userdata        (mng_handle        hHandle);
 
 /* Network Graphic header details */
 /* these get filled once the graphics header is processed,
