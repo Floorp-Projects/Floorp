@@ -968,7 +968,7 @@ sub SqlifyDate {
     my $date = str2time($str);
     if (!defined($date)) {
         $::vars->{'date'} = $str;
-        ThrowUserError("illegal_date");
+        &::ThrowUserError("illegal_date");
     }
     return time2str("%Y-%m-%d %H:%M:%S", $date);
 }
