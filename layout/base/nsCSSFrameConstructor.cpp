@@ -13327,7 +13327,9 @@ ProcessRestyle(nsISupports* aContent,
   if (aData.mRestyleHint & eReStyle_Self) {
     shell->FrameConstructor()->RestyleElement(context, content, primaryFrame,
                                               aData.mChangeHint);
-  } else if (aData.mChangeHint != NS_STYLE_HINT_NONE) {
+  } else if (aData.mChangeHint != NS_STYLE_HINT_NONE &&
+             (primaryFrame ||
+              (aData.mChangeHint & nsChangeHint_ReconstructFrame))) {
     // Don't need to recompute style; just apply the hint
     nsStyleChangeList changeList;
     changeList.AppendChange(primaryFrame, content, aData.mChangeHint);
