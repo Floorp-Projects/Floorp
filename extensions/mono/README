@@ -50,6 +50,7 @@ There's one piece missing to this puzzle (other than all the other
 pieces): we need to generate metadata-only interface assemblies for
 people to compile C# against, because our TypeResolve/AssemblyResolve
 tricks are not enough to get us wired into the compiler.
+tools/generate-interfaces.cs is that tool, mostly.
 
 Other things that are missing:
 - AString support
