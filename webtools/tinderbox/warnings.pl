@@ -66,6 +66,8 @@ for $br (last_successful_builds($tree)) {
   my ($total_warnings, $time_str) = print_warnings_as_html($fh, $br);
   $fh->close;
 
+  next unless $total_warnings > 0;
+
   # Make it live
   use File::Copy 'move';
   move($warn_file, "$tree/warnings.html");
@@ -132,6 +134,9 @@ sub last_successful_builds {
   my @build_records = ();
   my $br;
 
+  $maxdate = time;
+  $mindate = $maxdate - 5*60*60; # Go back 5 hours
+  
   print STDERR "Loading build data...";
   &load_data;
   print STDERR "done\n";
