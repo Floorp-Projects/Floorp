@@ -1053,19 +1053,15 @@ function doContextCmd(cmdName)
     {
         try
         {
-            var picker_uri = "component://netscape/filespecwithui";
-            var filePicker = Components.classes[picker_uri].createInstance();
-            if (filePicker) {
-                filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-            }
+            var picker_uri = "component://mozilla/filepicker";
+            var filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
             if (!filePicker) return false;
 
             var promptStr = get_localized_string("SelectImport");
-            // 2 = html filter
-            filePicker.chooseInputFile(promptStr, 2, "", "");
-            var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
-            if (!filespec) return false;
-            var filename = filespec.URLString;
+            filePicker.init(window, promptStr, nsIFilePicker.modeOpen);
+            filePicker.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+            if (filePicker.show() != nsIFilePicker.returnCancel)
+              var filename = filePicker.fileURL.spec;
             if ((!filename) || (filename == "")) return false;
 
             debug("Import: '" + filename + "'\n");
@@ -1080,24 +1076,22 @@ function doContextCmd(cmdName)
     {
         try
         {
-            var picker_uri = "component://netscape/filespecwithui";
-            var filePicker = Components.classes[picker_uri].createInstance();
-            if (filePicker) {
-                filePicker = filePicker.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-            }
+            var picker_uri = "component://mozilla/filepicker";
+            var filePicker = Components.classes[picker_uri].createInstance(nsIFilePicker);
             if (!filePicker) return false;
 
             var promptStr = get_localized_string("EnterExport");
-            // 2 = html filter
-            filePicker.chooseOutputFile(promptStr, "bookmarks.html", 2); 
-
-            var filespec = filePicker.QueryInterface(Components.interfaces.nsIFileSpec);
-            if (!filespec) return false;
-            var filename = filespec.URLString;
-            if ((!filename) || (filename == "")) return false;
-
-            debug("Export: '" + filename + "'\n");
-            urlVal = filename;
+            filePicker.init(window, promptStr, nsIFilePicker.modeSave);
+            filePicker.defaultString = "bookmarks.html";
+            filePicker.appendFilters(nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
+            if (filePicker.show() != nsIFilePicker.returnCancel &&
+                filePicker.fileURL.spec &&
+                filePicker.fileURL.spec.length > 0) {
+              urlVal = filePicker.fileURL.spec;
+              debug("Export: '" + urlVal + "'\n");
+            } else {
+              return false;
+            }
         }
         catch(ex)
         {
