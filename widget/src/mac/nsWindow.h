@@ -113,6 +113,7 @@ public:
     virtual void         	EndDraw();
     virtual PRBool          OnPaint(nsPaintEvent &event);
 		NS_IMETHOD				Update();
+		virtual void			UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext);
     
     virtual void  ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY);
 	virtual void  LocalToWindowCoordinate(nsPoint& aPoint);
@@ -156,23 +157,19 @@ protected:
 
 protected:
   nsIWidget*			mParent;
-  
   PRBool     	 		mVisible;
   PRBool     	 		mEnabled;
+  PRInt32					mPreferredWidth;
+  PRInt32					mPreferredHeight;
+  nsIFontMetrics*	mFontMetrics;
+  nsIMenuBar* 		mMenuBar;
+	RgnHandle				mWindowRegion;				// the region defining this window
+	WindowPtr				mWindowPtr;
+	PRBool					mDestroyCalled;
 
-  PRInt32				mPreferredWidth;
-  PRInt32				mPreferredHeight;
-
-  nsIFontMetrics*		mFontMetrics;
-  nsIMenuBar* 			mMenuBar;
+	PRBool								mDrawing;
   nsIRenderingContext*  mTempRenderingContext;
-
-// MAC SPECIFIC MEMBERS
-protected:
-	RgnHandle			mWindowRegion;				// the region defining this window
-	WindowPtr			mWindowPtr;
-	PRBool				mDrawing;
-	PRBool				mDestroyCalled;
+  PRBool							  mTempRenderingContextMadeHere;
 };
 
 // =============================================================================
