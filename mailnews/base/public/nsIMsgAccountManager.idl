@@ -30,7 +30,6 @@ interface nsIMsgAccountManager : nsISupports {
   nsIMsgAccount createAccount();
   nsIMsgAccount getAccount(in string key);
     
-  /* void AddAccount(in nsIMsgAccount account); */
   void RemoveAccount(in nsIMsgAccount account);
 
   /*
@@ -69,10 +68,6 @@ interface nsIMsgAccountManager : nsISupports {
    * array of nsIMsgAccount
    */
   readonly attribute nsISupportsArray accounts;
-
-  /* Each account will have a unique key, which should not change
-   * for the life of the account. */
-  string getAccountKey(in nsIMsgAccount account);
 
   /* list of all identities in all accounts
    * array of nsIMsgIdentity
