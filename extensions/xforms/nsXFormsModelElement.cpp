@@ -67,6 +67,7 @@
 #include "nsXFormsUtils.h"
 
 #include "nsISchemaLoader.h"
+#include "nsISchema.h"
 #include "nsAutoPtr.h"
 
 #ifdef DEBUG_beaufour
@@ -85,6 +86,7 @@ static nsIAtom* sModelPropsList[eModel__count];
 nsXFormsModelElement::nsXFormsModelElement()
   : mElement(nsnull),
     mSchemaCount(0),
+    mSchemaTotal(0),
     mPendingInstanceCount(0)
 {
 }
@@ -104,6 +106,7 @@ nsXFormsModelElement::OnDestroyed()
   RemoveModelFromDocument();
 
   mElement = nsnull;
+  mSchemas = nsnull;
   return NS_OK;
 }
 
@@ -213,16 +216,14 @@ nsXFormsModelElement::DoneAddingChildren()
   nsAutoString schemaList;
   mElement->GetAttribute(NS_LITERAL_STRING("schema"), schemaList);
   if (!schemaList.IsEmpty()) {
-    nsCOMPtr<nsISchemaLoader> loader = do_GetService(NS_SCHEMALOADER_CONTRACTID);
-    NS_ENSURE_TRUE(loader, NS_ERROR_FAILURE);
-
+    NS_ENSURE_TRUE(mSchemas, NS_ERROR_FAILURE);
     // Parse the space-separated list.
     PRUint32 offset = 0;
     nsCOMPtr<nsIContent> content = do_QueryInterface(mElement);
     nsRefPtr<nsIURI> baseURI = content->GetBaseURI();
 
     while (1) {
-      ++mSchemaCount;
+      ++mSchemaTotal;
       PRInt32 index = schemaList.FindChar(PRUnichar(' '), offset);
 
       nsCOMPtr<nsIURI> newURI;
@@ -239,7 +240,7 @@ nsXFormsModelElement::DoneAddingChildren()
       nsCAutoString uriSpec;
       newURI->GetSpec(uriSpec);
 
-      rv = loader->LoadAsync(NS_ConvertUTF8toUTF16(uriSpec), this);
+      rv = mSchemas->LoadAsync(NS_ConvertUTF8toUTF16(uriSpec), this);
       if (NS_FAILED(rv)) {
         // this is a fatal error
         nsXFormsUtils::DispatchEvent(mElement, eEvent_LinkException);
@@ -317,6 +318,8 @@ nsXFormsModelElement::OnCreated(nsIXTFGenericElementWrapper *aWrapper)
 
   nsresult rv = mMDG.Init();
   NS_ENSURE_SUCCESS(rv, rv);
+
+  mSchemas = do_GetService(NS_SCHEMALOADER_CONTRACTID);
 
   return NS_OK;
 }
@@ -403,7 +406,7 @@ nsXFormsModelElement::Refresh()
 NS_IMETHODIMP
 nsXFormsModelElement::OnLoad(nsISchema* aSchema)
 {
-  mSchemas.AppendObject(aSchema);
+  mSchemaCount++;
   if (IsComplete()) {
     nsresult rv = FinishConstruction();
     NS_ENSURE_SUCCESS(rv, rv);

@@ -113,14 +113,15 @@ private:
 
   NS_HIDDEN_(void)     RemoveModelFromDocument();
 
-  PRBool IsComplete() const { return (mSchemas.Count() == mSchemaCount
+  PRBool IsComplete() const { return (mSchemaTotal == mSchemaCount
                                       && mPendingInstanceCount == 0);  }
 
-  nsIDOMElement           *mElement;
-  nsCOMArray<nsISchema>    mSchemas;
+  nsIDOMElement            *mElement;
+  nsCOMPtr<nsISchemaLoader> mSchemas;
   nsVoidArray              mFormControls;
 
   PRInt32 mSchemaCount;
+  PRInt32 mSchemaTotal;
   PRInt32 mPendingInstanceCount;
   
   nsXFormsMDG mMDG;
