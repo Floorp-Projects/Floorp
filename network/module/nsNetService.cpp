@@ -48,6 +48,7 @@ extern "C" {
 #include "nsIEventQueueService.h"
 #include "nsXPComCIID.h"
 #include "nsCRT.h"
+#include "nsSocketTransport.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -1034,7 +1035,21 @@ nsNetlibService::CreateURL(nsIURL* *aURL,
     return protocolURLFactory->CreateURL(aURL, aSpec, aContextURL, aContainer, aGroup);
 }
 
+NS_IMETHODIMP nsNetlibService::CreateSocketTransport(nsITransport **aTransport, PRUint32 aPortToUse, const char * aHostName)
+{
+	nsSocketTransport *pNSSocketTransport = NULL;
 
+	NS_DEFINE_IID(kITransportIID, NS_ITRANSPORT_IID);
+
+	pNSSocketTransport = new nsSocketTransport(aPortToUse, aHostName);
+	if (pNSSocketTransport->QueryInterface(kITransportIID, (void**)aTransport) != NS_OK) {
+    // then we're trying get a interface other than nsISupports and
+    // nsITransport
+    return NS_ERROR_FAILURE;
+	}
+ 
+	return NS_OK;
+}
 
 
 NS_IMETHODIMP
