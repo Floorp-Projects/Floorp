@@ -60,37 +60,52 @@
 			<titledbutton class="dialog push" value="&view.label;" align="left" onclick="openit();"/>
 	</html:div>
 	<html:div id="manual-proxy" style="display: none">
-	<box align="horizontal">
-		<html:div>
-		&ftp.label;
-		</html:div>
-		<html:input name="ftpproxy" type="text" id="pref:string:network.proxy.ftp" size="20" />
-		<spring flex="100%"/>
-		<html:div>
+	<html:table width="100%">
+		<html:tr>
+		   <html:td>
+			&ftp.label;
+           </html:td>
+		   <html:td>
+		   <html:input name="ftpproxy" type="text" id="pref:string:network.proxy.ftp" size="20" />
+		   </html:td>
+		<html:td>
 		&port.label;
-		</html:div>
+		</html:td>
+		<html:td>
 		<html:input name="ftpproxyport" type="text" id="pref:0:int:network.proxy.ftp_port" size="5" />
-	</box>	
+		</html:td>
+	</html:tr>	
 	
-	<box align="horizontal">
-		<html:div>
+	<html:tr>
+		<html:td>
 		&http.label;
-		</html:div>
-		<html:input name="httpproxy" type="text" id="pref:string:network.proxy.http" size="20" />
-		<spring flex="100%"/>
-		<html:div>
-		&port.label;
-		</html:div>
-		<html:input name="httpproxyport" type="text" id="pref:0:int:network.proxy.http_port" size="5" />
-	</box>
+		</html:td>
+		<html:td>
+		  <html:input name="httpproxy" type="text" id="pref:string:network.proxy.http" size="20" />
+		</html:td>
+		<html:td>
+		  &port.label;
+		</html:td>
+		<html:td>
+		  <html:input name="httpproxyport" type="text" id="pref:0:int:network.proxy.http_port" size="5" />
+	    </html:td>
+	</html:tr>
+	 <html:tr>
+		<html:td>
+		&noproxy.label;
+		</html:td>
+		<html:td>
+		<html:input name="noproxy" type="text" id="pref:string:network.proxy.none" size="20" />
+	    </html:td>
+	  </html:tr>
+	</html:table>
+
 	<!-- Not supporting gopher -->
 <!--	<box align="horizontal">
 		<html:div>
 		&gopher.label;
 		</html:div>
-		<html:input name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
-		<spring flex="100%"/>
-		<html:div>
+		<html:inv>
 		&port.label;
 		</html:div>
 		<html:input name="gopherproxyport" type="text" id="pref:string:network.proxy.gopher_port" size="5" />
@@ -108,17 +123,14 @@
 		</html:div>
 		<html:input name="waisproxyport" type="text" id="pref:string:network.proxy.wais_port" size="5" />  
 	</box>  -->
-	<box align="horizontal">
+<!--	<box align="put name="gopherproxy" type="text" id="pref:string:network.proxy.gopher" size="20" />
+		<spring flex="100%"/>
+		<html:dihorizontal">
 		<html:div>
 		&direct.label;
 		</html:div>
-	</box>
-	<box align="horizontal">
-		<html:div>
-		&noproxy.label;
-		</html:div>
-		<html:input name="noproxy" type="text" id="pref:string:network.proxy.none" size="30" />
-	</box>
+	</box>   -->
+	 
 	<!-- No supporting at this point  -->
 <!--	<box align="horizontal">
 		<html:div>
@@ -131,6 +143,7 @@
 		</html:div>
 		<html:input name="socksport" type="text" id="pref:string:network.socks.port" size="5" />
 	</box>  -->
+	
 	</html:div>
 
 			<html:div>
@@ -138,17 +151,14 @@
 				<html:label for="pref:2:int:network.proxy.type" accesskey="a" tabindex="0">
 				&autoTypeRadio.label;
 				</html:label>
-				<titledbutton class="dialog push" value="&reload.label;" align="left"/>
+				
 			</html:div>
-
-
-
 
 			<html:div>
 				&configAutoconfigText.label;
 				<html:input name="" type="text" size="15" id="pref:0:string:network.proxy.autoconfig_url" />
 			</html:div>
-				<spring flex="100%"/><titledbutton class="dialog push" value="&view.label;" align="right"/>
+				<spring flex="1"/><titledbutton class="dialog push" value="&reload.label;" align="right"/>
 		</html:fieldset>
 	</box>
 </html:div>
