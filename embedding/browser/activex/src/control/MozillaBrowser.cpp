@@ -76,7 +76,6 @@ static HANDLE s_hHackedNonReentrancy = NULL;
   {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
 
 static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
-static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 
 // Macros to return errors from bad calls to the automation
 // interfaces and sets a descriptive string on IErrorInfo so VB programmers
@@ -1434,27 +1433,27 @@ HRESULT CMozillaBrowser::UnloadBrowserHelpers()
 // Print document
 HRESULT CMozillaBrowser::PrintDocument(BOOL promptUser)
 {
-    nsresult rv;
-
-    PRBool oldPrintSilent = PR_FALSE;
-    nsCOMPtr<nsIPrintOptions> printService = 
-             do_GetService(kPrintOptionsCID, &rv);
-    if (printService)
-    {
-        printService->GetPrintSilent(&oldPrintSilent);
-        printService->SetPrintSilent(promptUser ? PR_FALSE : PR_TRUE);
-    }
-
     // Print the contents
     nsCOMPtr<nsIWebBrowserPrint> browserAsPrint = do_GetInterface(mWebBrowser);
+    NS_ASSERTION(browserAsPrint, "No nsIWebBrowserPrint!");
+
+    PRBool oldPrintSilent = PR_FALSE;
+    nsCOMPtr<nsIPrintSettings> printSettings;
+    browserAsPrint->GetGlobalPrintSettings(getter_AddRefs(printSettings));
+    if (printSettings) 
+    {
+        printSettings->GetPrintSilent(&oldPrintSilent);
+        printSettings->SetPrintSilent(promptUser ? PR_FALSE : PR_TRUE);
+    }
+
     PrintListener *listener = new PrintListener;
     nsCOMPtr<nsIWebProgressListener> printListener = do_QueryInterface(listener);
-    browserAsPrint->Print(nsnull, nsnull);
+    browserAsPrint->Print(printSettings, nsnull);
     listener->WaitForComplete();
 
-    if (printService)
+    if (printSettings)
     {
-        printService->SetPrintSilent(oldPrintSilent);
+        printSettings->SetPrintSilent(oldPrintSilent);
     }
     
     return S_OK;

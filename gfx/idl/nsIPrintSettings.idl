@@ -59,6 +59,36 @@
 
 interface nsIPrintSettings : nsISupports
 {
+  /**
+   * PrintSettings to be Saved Navigation Constants
+   */
+  const unsigned long kInitSaveOddEvenPages   = 0x00000001;
+  const unsigned long kInitSaveHeaderLeft     = 0x00000002;
+  const unsigned long kInitSaveHeaderCenter   = 0x00000004;
+  const unsigned long kInitSaveHeaderRight    = 0x00000008;
+  const unsigned long kInitSaveFooterLeft     = 0x00000010;
+  const unsigned long kInitSaveFooterCenter   = 0x00000020;
+  const unsigned long kInitSaveFooterRight    = 0x00000040;
+  const unsigned long kInitSaveBGColors       = 0x00000080;
+  const unsigned long kInitSaveBGImages       = 0x00000100;
+  const unsigned long kInitSavePaperSize      = 0x00000200;
+  const unsigned long kInitSavePaperName      = 0x00000400;
+  const unsigned long kInitSavePaperSizeUnit  = 0x00000800;
+  const unsigned long kInitSavePaperSizeType  = 0x00001000;
+  const unsigned long kInitSavePaperData      = 0x00002000;
+  const unsigned long kInitSavePaperWidth     = 0x00004000;
+  const unsigned long kInitSavePaperHeight    = 0x00008000;
+
+  const unsigned long kInitSaveReversed       = 0x00010000;
+  const unsigned long kInitSaveInColor        = 0x00020000;
+  const unsigned long kInitSaveOrientation    = 0x00040000;
+  const unsigned long kInitSavePrintCommand   = 0x00080000;
+  const unsigned long kInitSavePrinterName    = 0x00100000;
+  const unsigned long kInitSavePrintToFile    = 0x00200000;
+  const unsigned long kInitSaveToFileName     = 0x00400000;
+  const unsigned long kInitSavePageDelay      = 0x00800000;
+  const unsigned long kInitSaveMargins        = 0x01000000;
+  const unsigned long kInitSaveAll            = 0xFFFFFFFF;
 
   /* Print Option Flags for Bit Field*/
   const long kPrintOddPages     = 0x00000001;
@@ -171,6 +201,7 @@ interface nsIPrintSettings : nsISupports
   attribute boolean shrinkToFit;	     /* shrinks content to fit on page      */
 
   /* Additional XP Related */
+  attribute wstring paperName;     /* name of paper */
   attribute short   paperSizeType; /* use native data or is defined here */
   attribute short   paperData;     /* native data value */
   attribute double  paperWidth;    /* width of the paper in inches or mm */

@@ -3239,10 +3239,12 @@ DocumentViewerImpl::ReflowPrintObject(PrintObject * aPO, PRBool aDoCalcShrink)
     return rv;
   }
 
+  aPO->mPresContext->SetTurnOffScaledTwips(PR_FALSE);
   rv = document->CreateShell(aPO->mPresContext, aPO->mViewManager, aPO->mStyleSet, getter_AddRefs(aPO->mPresShell));
   if (NS_FAILED(rv)) {
     return rv;
   }
+  aPO->mPresContext->SetTurnOffScaledTwips(PR_TRUE);
 
   PRInt32 pageWidth, pageHeight;
   mPrt->mPrintDocDC->GetDeviceSurfaceDimensions(pageWidth, pageHeight);
@@ -3828,7 +3830,7 @@ DocumentViewerImpl::FindXMostFrameInList(nsIPresContext* aPresContext,
       rect.y += aY;
       nscoord xMost = rect.XMost();
 
-#ifdef DEBUG_PRINTING_X // keep this here but leave it turned off
+#ifdef DEBUG_PRINTING // keep this here but leave it turned off
       nsAutoString tmp;
       nsIFrameDebug*  frameDebug;
       if (NS_SUCCEEDED(CallQueryInterface(child, &frameDebug))) {
@@ -3839,7 +3841,7 @@ DocumentViewerImpl::FindXMostFrameInList(nsIPresContext* aPresContext,
 
       if (xMost > aMaxWidth) {
         aMaxWidth = xMost;
-#ifdef DEBUG_PRINTING_X // keep this here but leave it turned off
+#ifdef DEBUG_PRINTING // keep this here but leave it turned off
         printf("%p - %d %s ", child, aMaxWidth, NS_LossyConvertUCS2toASCII(tmp).get());
         if (aList == nsLayoutAtoms::overflowList) printf(" nsLayoutAtoms::overflowList\n");
         if (aList == nsLayoutAtoms::floaterList) printf(" nsLayoutAtoms::floaterList\n");
@@ -5532,7 +5534,7 @@ NS_IMETHODIMP
 DocumentViewerImpl::PrintPreview(nsIPrintSettings* aPrintSettings)
 {
   nsresult rv = NS_OK;
-
+printf("DocumentViewerImpl::PrintPreview\n");
 #if defined(XP_PC) && defined(DEBUG_rods) && defined(DEBUG_PRINTING)
   if (!mIsDoingPrintPreview) {
     RemoveFilesInDir(".\\");
@@ -7354,36 +7356,6 @@ DocumentViewerImpl::GetCurrentPrintSettings(nsIPrintSettings * *aCurrentPrintSet
   return NS_OK;
 }
 
-/* attribute nsIPrintSettings globalPrintSettingsValues; */
-NS_IMETHODIMP 
-DocumentViewerImpl::GetGlobalPrintSettingsValues(nsIPrintSettings * *aGlobalPrintSettingsValues)
-{
-  NS_ENSURE_ARG_POINTER(aGlobalPrintSettingsValues);
-  NS_ENSURE_ARG_POINTER(*aGlobalPrintSettingsValues);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  if (aGlobalPrintSettingsValues && *aGlobalPrintSettingsValues) {
-    nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-    if (NS_SUCCEEDED(rv)) {
-      rv = printService->GetPrintSettingsValues(aGlobalPrintSettingsValues);
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP 
-DocumentViewerImpl::SetGlobalPrintSettingsValues(nsIPrintSettings * aGlobalPrintSettingsValues)
-{
-  NS_ENSURE_ARG_POINTER(aGlobalPrintSettingsValues);
-
-  nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = printService->SetPrintSettingsValues(aGlobalPrintSettingsValues);
-  }
-  return rv;
-}
-
 /* void cancel (); */
 NS_IMETHODIMP 
 DocumentViewerImpl::Cancel()
@@ -7396,6 +7368,29 @@ DocumentViewerImpl::Cancel()
   return NS_OK;
 }
 
+/* void initPrintSettingsFromPrefs (in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags); */
+NS_IMETHODIMP 
+DocumentViewerImpl::InitPrintSettingsFromPrefs(nsIPrintSettings *aPrintSettings, PRBool aUsePrinterNamePrefix, PRUint32 aFlags)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && printService) {
+    return printService->InitPrintSettingsFromPrefs(aPrintSettings, aUsePrinterNamePrefix, aFlags);
+  }
+  return NS_OK;
+}
+
+/* void savePrintSettingsToPrefs (in nsIPrintSettings aPrintSettings, in boolean aUsePrinterNamePrefix, in unsigned long aFlags); */
+NS_IMETHODIMP 
+DocumentViewerImpl::SavePrintSettingsToPrefs(nsIPrintSettings *aPrintSettings, PRBool aUsePrinterNamePrefix, PRUint32 aFlags)
+{
+  nsresult rv;
+  nsCOMPtr<nsIPrintOptions> printService = do_GetService(kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && printService) {
+    return printService->SavePrintSettingsToPrefs(aPrintSettings, aUsePrinterNamePrefix, aFlags);
+  }
+  return NS_OK;
+}
 
 /** ---------------------------------------------------
  *  Get the Focused Frame for a documentviewer
