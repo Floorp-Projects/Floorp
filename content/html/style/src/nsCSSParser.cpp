@@ -2154,20 +2154,29 @@ void CSSParserImpl::ParsePseudoSelector(PRInt32&  aDataMask,
 
   // stash away some info about this pseudo so we only have to get it once.
 #ifdef MOZ_XUL
+  // If a tree pseudo-element is using the function syntax, it will
+  // get isTree set here and will pass the check below that only
+  // allows functions if they are in our list of things allowed to be
+  // functions.  If it is _not_ using the function syntax, isTree will
+  // be false, and it will still pass that check.  So the tree
+  // pseudo-elements are allowed to be either functions or not, as
+  // desired.
   PRBool isTree = (eCSSToken_Function == mToken.mType) &&
                   IsTreePseudoElement(pseudo);
 #endif
   PRBool isPseudoElement = nsCSSPseudoElements::IsPseudoElement(pseudo);
   PRBool isAnonBox = nsCSSAnonBoxes::IsAnonBox(pseudo);
 
-  // If it's a function token, it better be on our "ok" list
-  if (eCSSToken_Function == mToken.mType &&
+  // If it's a function token, it better be on our "ok" list, and if the name
+  // is that of a function pseudo it better be a function token
+  if ((eCSSToken_Function == mToken.mType) !=
+      (
 #ifdef MOZ_XUL
-      !isTree &&
+       isTree ||
 #endif
-      nsCSSPseudoClasses::notPseudo != pseudo &&
-      nsCSSPseudoClasses::lang != pseudo) { // There are no other function pseudos
-    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Expected identifier for function pseudo-class or pseudo-element but found"));
+       nsCSSPseudoClasses::notPseudo == pseudo ||
+       nsCSSPseudoClasses::lang == pseudo)) { // There are no other function pseudos
+    REPORT_UNEXPECTED_TOKEN(NS_LITERAL_STRING("Function token for non-function pseudo-class or pseudo-element, or the other way around, when reading"));
     UngetToken();
     aParsingStatus = SELECTOR_PARSING_STOPPED_ERROR;
     return;
