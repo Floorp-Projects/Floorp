@@ -37,9 +37,17 @@ PR_BEGIN_EXTERN_C
 PR_PUBLIC_API(void)
 java_netscape_security_getTargetDetails(const char *charSetName, char* targetName, 
                                         char** details, char **risk);
+/* XXXXXXXX Begin oF HACK */
+
+#ifdef XXX
+extern int CAPS_TARGET_RISK_COLOR_HIGH;
+#endif
+
+extern char* capsGetString(int id);
+/* XXXXXXXX end oF HACK */
+
 PR_END_EXTERN_C
 
-extern int CAPS_TARGET_RISK_COLOR_HIGH;
 
 extern PRBool CreateSystemTargets(nsPrincipal *sysPrin);
 
@@ -53,7 +61,8 @@ public:
 
 	nsTarget(char *name, nsPrincipal *prin, 
              PRInt32 risk = JavaSecUI_targetRiskHigh(), 
-             char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), 
+             /* XXX: char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), */
+             char *riskColor = "High",
              char *description = NULL, 
              char *detailDescription = NULL,
              char *url = NULL, 
@@ -65,7 +74,8 @@ public:
 
 	nsTarget(char *name, nsPrincipal *prin, 
              PRInt32 risk = JavaSecUI_targetRiskHigh(), 
-             char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), 
+             /* XXX: char *riskColor = JavaSecUI_getString(CAPS_TARGET_RISK_COLOR_HIGH), */
+             char *riskColor = "High",
              int desc_id = 0, 
              int detail_desc_id = 0,
              int help_url_id = 0, 

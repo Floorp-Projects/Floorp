@@ -23,6 +23,7 @@
 #include "prlog.h"
 #include "prprf.h"
 #include "plbase64.h"
+#include "plstr.h"
 #include "jpermission.h"
 
 #ifdef ENABLE_RDF
@@ -70,11 +71,13 @@ PR_BEGIN_EXTERN_C
 
 PRBool CMGetBoolPref(char * pref_name) 
 {
+#ifdef MOZ_SECURITY
   XP_Bool pref;
 
   if (PREF_GetBoolPref(pref_name, &pref) >=0) {
     return pref;
   }
+#endif /* MOZ_SECURITY */
   return FALSE;
 }
 PR_END_EXTERN_C
@@ -328,7 +331,6 @@ PRBool nsPrivilegeManager::enablePrincipalPrivilegeHelper(void *context,
 {
   nsPrincipalArray* callerPrinArray;
   nsPrincipal *useThisPrin = NULL;
-  char *err;
 
   /* Get the registered target */
   nsTarget *targ = nsTarget::findTarget(target);
@@ -819,7 +821,7 @@ const char * nsPrivilegeManager::getAllPrincipalsString(void)
   itsPrinNameToPrincipalTable->Enumerate(getPrincipalString);
   if (gListOfPrincipals) {
     /* Make a copy of the principals and return it */
-    principalStrings = XP_AppendStr(principalStrings, gListOfPrincipals);
+    principalStrings = PL_strdup(gListOfPrincipals);
     PR_Free(gListOfPrincipals);
   }
   gListOfPrincipals = NULL;

@@ -16,6 +16,8 @@
 # Reserved.
 
 IGNORE_MANIFEST=1
+
+
 #//------------------------------------------------------------------------
 #//
 #// Makefile to build 
@@ -31,17 +33,16 @@ IGNORE_MANIFEST=1
 #//------------------------------------------------------------------------
 DEPTH= ..\..
 
-!ifndef MAKE_OBJ_TYPE
-MAKE_OBJ_TYPE=DLL
-!endif
-
 #//------------------------------------------------------------------------
 #//
 #// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
 #//
 #//------------------------------------------------------------------------
-LIBNAME=libcaps
-PDBFILE=$(LIBNAME).pdb
+
+MAKE_OBJ_TYPE=DLL
+
+DLLNAME=caps
+DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 #//------------------------------------------------------------------------
 #// 
@@ -49,18 +50,22 @@ PDBFILE=$(LIBNAME).pdb
 #//
 #//------------------------------------------------------------------------
 
-OBJS=                                       \
+C_OBJS=                                     \
     .\$(OBJDIR)\nsZip.obj                   \
+    .\$(OBJDIR)\nsLoadZig.obj               \
+    .\$(OBJDIR)\jpermission.obj             \
+    $(NULL)
+
+
+CPP_OBJS=                                       \
     .\$(OBJDIR)\nsUserDialogHelper.obj      \
     .\$(OBJDIR)\nsZig.obj                   \
-    .\$(OBJDIR)\nsLoadZig.obj               \
     .\$(OBJDIR)\nsPrincipal.obj             \
     .\$(OBJDIR)\nsPrivilege.obj             \
     .\$(OBJDIR)\nsPrivilegeManager.obj      \
     .\$(OBJDIR)\nsPrivilegeTable.obj        \
     .\$(OBJDIR)\nsSystemPrivilegeTable.obj  \
     .\$(OBJDIR)\nsTarget.obj                \
-    .\$(OBJDIR)\jpermission.obj             \
     .\$(OBJDIR)\nsUserTarget.obj            \
     .\$(OBJDIR)\admin.obj                   \
     .\$(OBJDIR)\nsCaps.obj                  \
@@ -79,7 +84,6 @@ OBJS=                                       \
 #//
 #//------------------------------------------------------------------------
 
-LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 
 #//------------------------------------------------------------------------
 #//
@@ -88,17 +92,11 @@ LIBRARY= .\$(OBJDIR)\$(LIBNAME).lib
 #//
 #//------------------------------------------------------------------------
 LINCS= $(LINCS) \
-#
-# For Win16 the following include directories are copied into 
-# ns/dist/public/win16
-#
-!if "$(MOZ_BITS)" == "32"
 		-I$(PUBLIC)\js \
 		-I$(PUBLIC)\nspr \
 		-I$(PUBLIC)\xpcom \
 		-I$(PUBLIC)\security \
 		-I$(PUBLIC)\libimg   \
-!endif
 		-I$(PUBLIC)\jar \
 		-I$(PUBLIC)\zlib \
 		-I$(PUBLIC)\pref \
@@ -109,6 +107,15 @@ LINCS= $(LINCS) \
 #		-I$(PUBLIC)\rdf \
 		$(NULL)
 
+LLIBS = \
+	$(LIBNSPR)			\
+	$(DIST)\lib\libplc21.lib	\
+	$(DIST)\lib\xpcom32.lib         \
+	$(DIST)\lib\xplib.lib           \
+	$(ZIPLIB)                       \
+	$(NULL)
+
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
@@ -116,12 +123,7 @@ LINCS= $(LINCS) \
 #//------------------------------------------------------------------------
 include <$(DEPTH)/config/rules.mak>
 
-libs::$(LIBRARY) 
-    $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-export::
-
-install:: export libs
-
-clobber::
+install::  $(DLL)
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 

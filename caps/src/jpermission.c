@@ -65,9 +65,10 @@ java_netscape_security_getCert(char *prinStr)
 PR_PUBLIC_API(nsPermState) 
 nsJSJavaDisplayDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCert, void*cert)
 {
+  nsPermState ret_val=nsPermState_NotSet;
+#ifdef MOZ_SECURITY
   void * context = XP_FindSomeContext(); 
   PRIntervalTime sleep = (PRIntervalTime)PR_INTERVAL_NO_TIMEOUT;
-  nsPermState ret_val=nsPermState_NotSet;
 
   PR_CEnterMonitor((void *)&gPermState);
   /* XXX: The following is a hack, we should passs gPrincipalCert to SECNAV_... code,
@@ -82,5 +83,6 @@ nsJSJavaDisplayDialog(char *prinStr, char *targetStr, char *riskStr, PRBool isCe
   PR_CExitMonitor((void *)&gPermState);
 
   PR_Sleep(500000);
+#endif /* MOZ_SECURITY */
   return ret_val;
 }
