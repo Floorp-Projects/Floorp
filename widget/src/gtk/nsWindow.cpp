@@ -1042,8 +1042,8 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
   // set our background color to make people happy.
 
-  //  SetBackgroundColor(NS_RGB(192,192,192));
-  gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
+  SetBackgroundColor(NS_RGB(192,192,192));
+  //gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
 
   // track focus changes if we have a mozarea
