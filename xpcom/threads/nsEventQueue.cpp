@@ -17,19 +17,37 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include "nsCOMPtr.h"
 #include "nsEventQueue.h"
+#include "nsIServiceManager.h"
+#include "nsIObserverService.h"
+#include "nsString2.h"
+
+// in a real system, these would be members in a header class...
+static char *gActivatedNotification = "nsIEventQueueActivated";
+static char *gDestroyedNotification = "nsIEventQueueDestroyed";
 
 nsEventQueueImpl::nsEventQueueImpl()
 {
   NS_INIT_REFCNT();
+  AddRef(); 
+  // eventqueue ownership model is a little unusual. it addrefs
+  // itself, but when linked into a chain after the head, it releases
+  // itself, so when it goes dark and empty (unused) it will be
+  // deleted.
 
   mEventQueue = NULL;
-	
+  mYoungerQueue = NULL;
+  mElderQueue = NULL;
+  mAcceptingEvents = PR_TRUE;
+  mCouldHaveEvents = PR_TRUE;
 }
 
 nsEventQueueImpl::~nsEventQueueImpl()
 {
-  if (NULL != mEventQueue) {
+  Unlink();
+  if (mEventQueue != NULL) {
+    NotifyObservers(gDestroyedNotification);
     PL_DestroyEventQueue(mEventQueue);
   }
 }
@@ -38,35 +56,80 @@ NS_IMETHODIMP
 nsEventQueueImpl::Init()
 {
   mEventQueue = PL_CreateNativeEventQueue("Thread event queue...", PR_GetCurrentThread());
-	return NS_OK;
+  NotifyObservers(gActivatedNotification);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventQueueImpl::InitFromPLQueue(PLEventQueue* aQueue)
 {
-	mEventQueue = aQueue;
-	return NS_OK;
+  mEventQueue = aQueue;
+  NotifyObservers(gActivatedNotification);
+  return NS_OK;
 }
 
 /* nsISupports interface implementation... */
-NS_IMPL_ISUPPORTS1(nsEventQueueImpl,nsIEventQueue)
+NS_IMPL_ISUPPORTS2(nsEventQueueImpl,nsIEventQueue,nsPIEventQueueChain)
 
 /* nsIEventQueue interface implementation... */
+
+NS_IMETHODIMP
+nsEventQueueImpl::StopAcceptingEvents()
+{
+  NS_ASSERTION(mElderQueue, "attempted to disable eldest queue in chain");
+  mAcceptingEvents = PR_FALSE;
+  CheckForDeactivation();
+  return NS_OK;
+}
+
+// utility funtion to send observers a notification
+void
+nsEventQueueImpl::NotifyObservers(const char *aTopic)
+{
+  nsresult rv;
+  nsAutoString topic(aTopic);
+  nsISupports *us = NS_STATIC_CAST(nsISupports *,(NS_STATIC_CAST(nsIEventQueue *,this)));
+
+  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_SUCCEEDED(rv))
+    os->Notify(us, topic.GetUnicode(), NULL);
+}
 
 NS_IMETHODIMP_(PRStatus)
 nsEventQueueImpl::PostEvent(PLEvent* aEvent)
 {
-	return PL_PostEvent(mEventQueue, aEvent);
+  if (!mAcceptingEvents) {
+    PRStatus rv = PR_FAILURE;
+    NS_ASSERTION(mElderQueue, "event dropped because event chain is dead");
+    if (mElderQueue) {
+      nsCOMPtr<nsIEventQueue> elder(do_QueryInterface(mElderQueue));
+      if (elder)
+        rv = elder->PostEvent(aEvent);
+    }
+    return rv;
+  }
+  return PL_PostEvent(mEventQueue, aEvent);
 }
 
 NS_IMETHODIMP
 nsEventQueueImpl::PostSynchronousEvent(PLEvent* aEvent, void** aResult)
 {
-  void* result = PL_PostSynchronousEvent(mEventQueue, aEvent);
-	if (aResult)
-  {
-    *aResult = result;
+  if (!mAcceptingEvents) {
+    nsresult rv = NS_ERROR_NO_INTERFACE;
+    NS_ASSERTION(mElderQueue, "event dropped because event chain is dead");
+    if (mElderQueue) {
+      nsCOMPtr<nsIEventQueue> elder(do_QueryInterface(mElderQueue));
+      if (elder)
+        rv = elder->PostSynchronousEvent(aEvent, aResult);
+      return rv;
+    }
+    return NS_ERROR_ABORT;
   }
+
+  void* result = PL_PostSynchronousEvent(mEventQueue, aEvent);
+  if (aResult)
+    *aResult = result;
+
   return NS_OK;
 }
 
@@ -115,8 +178,8 @@ nsEventQueueImpl::IsQueueOnCurrentThread(PRBool *aResult)
 NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
-	PL_ProcessPendingEvents(mEventQueue);
-	return NS_OK;
+  PL_ProcessPendingEvents(mEventQueue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -129,22 +192,23 @@ nsEventQueueImpl::EventLoop()
 NS_IMETHODIMP
 nsEventQueueImpl::EventAvailable(PRBool& aResult)
 {
-	aResult = PL_EventAvailable(mEventQueue);
-	return NS_OK;
+  aResult = PL_EventAvailable(mEventQueue);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventQueueImpl::GetEvent(PLEvent** aResult)
 {
-	*aResult = PL_GetEvent(mEventQueue);
-	return NS_OK;
+  *aResult = PL_GetEvent(mEventQueue);
+  CheckForDeactivation();
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventQueueImpl::HandleEvent(PLEvent* aEvent)
 {
-    PL_HandleEvent(aEvent);
-    return NS_OK;
+  PL_HandleEvent(aEvent);
+  return NS_OK;
 }
 
 NS_IMETHODIMP_(PRInt32) 
@@ -167,3 +231,98 @@ nsEventQueueImpl::Create(nsISupports *aOuter,
   }
   return rv;
 }
+
+// ---------------- nsPIEventQueueChain -----------------
+
+NS_IMETHODIMP
+nsEventQueueImpl::AppendQueue(nsIEventQueue *aQueue)
+{
+  nsresult      rv;
+  nsIEventQueue *end;
+  nsCOMPtr<nsPIEventQueueChain> queueChain(do_QueryInterface(aQueue));
+
+  if (!aQueue)
+    return NS_ERROR_NO_INTERFACE;
+
+/* this would be nice
+  NS_ASSERTION(aQueue->mYoungerQueue == NULL && aQueue->mElderQueue == NULL,
+               "event queue repeatedly appended to queue chain");
+*/
+  rv = NS_ERROR_NO_INTERFACE;
+
+  // XXX probably wants a threadlock
+  GetYoungest(&end); // addrefs. released by Unlink.
+  nsCOMPtr<nsPIEventQueueChain> endChain(do_QueryInterface(end));
+  if (endChain) {
+    endChain->SetYounger(queueChain);
+    queueChain->SetElder(endChain);
+    NS_RELEASE(aQueue); // the addref from the constructor
+    rv = NS_OK;
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::Unlink()
+{
+  nsPIEventQueueChain *young = mYoungerQueue,
+                      *old = mElderQueue;
+
+  // this is probably OK, but for now let's at least know if it happens
+  NS_ASSERTION(!mYoungerQueue, "event queue chain broken in middle");
+
+  // break links early in case the Release cascades back onto us
+  mYoungerQueue = 0;
+  mElderQueue = 0;
+
+  if (young)
+    young->SetElder(old);
+  if (old) {
+    old->SetYounger(young);
+    if (!young)
+      NS_RELEASE(mElderQueue); // release addref from AppendQueue
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::GetYoungest(nsIEventQueue **aQueue)
+{
+  if (mYoungerQueue)
+    return mYoungerQueue->GetYoungest(aQueue);
+
+  nsIEventQueue *answer = NS_STATIC_CAST(nsIEventQueue *, this);
+  NS_ADDREF(answer);
+  *aQueue = answer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::GetYoungestActive(nsIEventQueue **aQueue)
+{
+  nsIEventQueue *answer = NULL;
+
+  if (mYoungerQueue)
+    mYoungerQueue->GetYoungestActive(&answer);
+  if (answer == NULL && mAcceptingEvents && mCouldHaveEvents) {
+    answer = NS_STATIC_CAST(nsIEventQueue *, this);
+    NS_ADDREF(answer);
+  }
+  *aQueue = answer;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::SetYounger(nsPIEventQueueChain *aQueue)
+{
+  mYoungerQueue = aQueue;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsEventQueueImpl::SetElder(nsPIEventQueueChain *aQueue)
+{
+  mElderQueue = aQueue;
+  return NS_OK;
+}
+

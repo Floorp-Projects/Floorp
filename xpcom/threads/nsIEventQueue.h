@@ -46,14 +46,14 @@ public:
     NS_IMETHOD ProcessPendingEvents() = 0;
     NS_IMETHOD EventLoop() = 0;
 
-	NS_IMETHOD EventAvailable(PRBool& aResult) = 0;
-	NS_IMETHOD GetEvent(PLEvent** aResult) = 0;
+    NS_IMETHOD EventAvailable(PRBool& aResult) = 0;
+    NS_IMETHOD GetEvent(PLEvent** aResult) = 0;
     NS_IMETHOD HandleEvent(PLEvent* aEvent) = 0;
 
     NS_IMETHOD_(PRInt32) GetEventQueueSelectFD() = 0;
 
-	NS_IMETHOD Init() = 0;
-	NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue) = 0;
+    NS_IMETHOD Init() = 0;
+    NS_IMETHOD InitFromPLQueue(PLEventQueue* aQueue) = 0;
 
     NS_IMETHOD EnterMonitor() = 0;
     NS_IMETHOD ExitMonitor() = 0;
@@ -62,6 +62,10 @@ public:
     NS_IMETHOD GetPLEventQueue(PLEventQueue** aEventQueue) = 0;
 
     NS_IMETHOD IsQueueOnCurrentThread(PRBool *aResult) = 0;
+
+    // effectively kill the queue. warning: the queue is allowed to delete
+    // itself any time after this.
+    NS_IMETHOD StopAcceptingEvents() = 0;
 };
 
 #endif /* nsIEventQueue_h___ */

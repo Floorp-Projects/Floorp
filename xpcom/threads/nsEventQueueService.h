@@ -27,31 +27,6 @@ class nsIEventQueue;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// XXX move to nsID.h or nsHashtable.h? (copied from nsComponentManager.cpp)
-class ThreadKey: public nsHashKey {
-private:
-  const PRThread* id;
-  
-public:
-  ThreadKey(const PRThread* aID) {
-    id = aID;
-  }
-  
-  PRUint32 HashValue(void) const {
-    return (PRUint32)id;
-  }
-
-  PRBool Equals(const nsHashKey *aKey) const {
-    return (id == ((const ThreadKey *) aKey)->id);
-  }
-
-  nsHashKey *Clone(void) const {
-    return new ThreadKey(id);
-  }
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 /* This class is used with the EventQueueEntries to allow us to nest
    event queues */
 class EventQueueStack
@@ -67,33 +42,6 @@ public:
 private:
 	nsIEventQueue* mEventQueue;
 	EventQueueStack* mNextQueue;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-/*
- * This class maintains the data associated with each entry in the EventQueue
- * service's hash table...
- *
- * It derives from nsISupports merely as a convienence since the entries are
- * reference counted...
- */
-class EventQueueEntry : public nsISupports 
-{
-public:
-  EventQueueEntry();
-  virtual ~EventQueueEntry();
-
-  // nsISupports interface...
-  NS_DECL_ISUPPORTS
-
-  nsIEventQueue* GetEventQueue(void);
-  
-	void PushQueue(void);
-  void PopQueue(void);
-
-private: 
-	EventQueueStack* mQueueStack;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -117,8 +65,8 @@ public:
 
   NS_IMETHOD CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsIEventQueue** aResult);
 
-  NS_IMETHOD PushThreadEventQueue(void);
-  NS_IMETHOD PopThreadEventQueue(void);
+  NS_IMETHOD PushThreadEventQueue(nsIEventQueue **aNewQueue);
+  NS_IMETHOD PopThreadEventQueue(nsIEventQueue *aQueue);
 
 #ifdef XP_MAC
   NS_IMETHOD ProcessEvents();

@@ -21,54 +21,62 @@
 #include "prmon.h"
 #include "nsComponentManager.h"
 #include "nsIEventQueue.h"
+#include "nsPIEventQueueChain.h"
 
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 
-EventQueueStack::EventQueueStack(EventQueueStack* next)
-:mNextQueue(next)
-{
-  // Create our thread queue using the component manager
-	if (NS_FAILED(nsComponentManager::CreateInstance(kEventQueueCID, NULL, NS_GET_IID(nsIEventQueue),
-		(void**)&mEventQueue))) {
-		mEventQueue = NULL;
-	}
+////////////////////////////////////////////////////////////////////////////////
 
-	if (mEventQueue) {
-		if (NS_FAILED(mEventQueue->Init()))
-			mEventQueue = NULL;
-	}
-}
+// XXX move to nsID.h or nsHashtable.h? (copied from nsComponentManager.cpp)
+class ThreadKey: public nsHashKey {
+private:
+  const PRThread* id;
+  
+public:
+  ThreadKey(const PRThread* aID) {
+    id = aID;
+  }
+  
+  PRUint32 HashValue(void) const {
+    return (PRUint32)id;
+  }
 
-EventQueueStack::~EventQueueStack()
-{
-	// Destroy our thread queue.
-	NS_IF_RELEASE(mEventQueue);
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (id == ((const ThreadKey *) aKey)->id);
+  }
 
-	if (mNextQueue)
-	{
-		delete mNextQueue;
-	}
-}
-
-nsIEventQueue* EventQueueStack::GetEventQueue()
-{
-	if (mEventQueue) {
-		NS_ADDREF(mEventQueue);
-	}
-	return mEventQueue;
-}
-
-EventQueueStack* EventQueueStack::GetNext()
-{
-	return mNextQueue;
-}
-
-void EventQueueStack::SetNext(EventQueueStack* aStack)
-{
-	mNextQueue = aStack;
-}
+  nsHashKey *Clone(void) const {
+    return new ThreadKey(id);
+  }
+};
 
 ////////////////////////////////////////////////////////////////////////////////
+
+/*
+ * EventQueueEntry maintains the data associated with each entry in
+ * the EventQueue service's hash table...
+ *
+ * It derives from nsISupports merely as a convienence since the entries are
+ * reference counted...
+ */
+class EventQueueEntry : public nsISupports 
+{
+public:
+  EventQueueEntry();
+  virtual ~EventQueueEntry();
+
+  // nsISupports interface...
+  NS_DECL_ISUPPORTS
+
+  nsIEventQueue* GetEventQueue(void); // addrefs!
+  nsresult       MakeNewQueue(nsIEventQueue **aQueue);
+  
+  nsresult       AddQueue(void);
+  void           RemoveQueue(nsIEventQueue *aQueue); // queue goes dark, and is released
+
+private: 
+  nsIEventQueue *mQueue;
+};
 
 /* nsISupports interface implementation... */
 NS_IMPL_ISUPPORTS0(EventQueueEntry)
@@ -76,42 +84,77 @@ NS_IMPL_ISUPPORTS0(EventQueueEntry)
 EventQueueEntry::EventQueueEntry()
 {
   NS_INIT_REFCNT();
-
-	mQueueStack = new EventQueueStack();
+  MakeNewQueue(&mQueue);
+  NS_ASSERTION(mQueue, "EventQueueEntry constructor failed");
 }
 
 EventQueueEntry::~EventQueueEntry()
 {
-  // Delete our stack
-	delete mQueueStack;
+  NS_IF_RELEASE(mQueue);
 }
 
+// Return the active event queue on our chain
 nsIEventQueue* EventQueueEntry::GetEventQueue(void)
 {
-	// Return the current event queue on our stack.
   nsIEventQueue* answer = NULL;
-	if (mQueueStack)
-		answer = mQueueStack->GetEventQueue(); // This call addrefs the queue
-	return answer;
+
+  if (mQueue) {
+    nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(mQueue));
+    if (ourChain)
+      ourChain->GetYoungestActive(&answer);
+    else {
+      NS_ADDREF(mQueue);
+      answer = mQueue;
+    }
+  }
+  return answer;
 }
 
-void EventQueueEntry::PushQueue(void)
+nsresult EventQueueEntry::MakeNewQueue(nsIEventQueue **aQueue)
 {
-	// Make a new thread queue, connect it to our current stack, and then
-	// set it to be the top of our stack.
-	mQueueStack = new EventQueueStack(mQueueStack);
+  nsIEventQueue *queue = 0;
+  nsresult      rv;
+
+  rv = nsComponentManager::CreateInstance(kEventQueueCID, NULL,
+                NS_GET_IID(nsIEventQueue), (void**) &queue);
+
+  if (NS_SUCCEEDED(rv)) {
+    rv = queue->Init();
+    if (NS_FAILED(rv)) {
+      NS_RELEASE(queue);
+      queue = 0;  // redundant, but makes me feel better
+    }
+  }
+  *aQueue = queue;
+  return rv;
 }
 
-void EventQueueEntry::PopQueue(void)
+nsresult EventQueueEntry::AddQueue(void)
 {
-	EventQueueStack* popped = mQueueStack;
-	if (mQueueStack) {
-		mQueueStack = mQueueStack->GetNext();
-		popped->SetNext(NULL);
-	}
+  nsIEventQueue *newQueue = NULL;
+  nsresult      rv = NS_ERROR_NOT_INITIALIZED;
 
-	// This will result in the queue being released.
-	delete popped;
+  if (mQueue) {
+    rv = MakeNewQueue(&newQueue);
+
+    // add it to our chain of queues
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsPIEventQueueChain> ourChain(do_QueryInterface(mQueue));
+      if (ourChain)
+        ourChain->AppendQueue(newQueue);
+      else
+        NS_RELEASE(newQueue);
+    }
+  }
+  return rv;
+}
+
+void EventQueueEntry::RemoveQueue(nsIEventQueue *aQueue)
+{
+  aQueue->StopAcceptingEvents();
+  NS_RELEASE(aQueue);
+  // it's now gone dark, and will be deleted and unlinked as soon as
+  // everyone else lets go
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -173,7 +216,7 @@ nsEventQueueServiceImpl::CreateThreadEventQueue(void)
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
-  /* Only create one event queue per thread... */
+  /* create only one event queue chain per thread... */
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
   if (NULL == evQueueEntry) {
     evQueueEntry = new EventQueueEntry();  
@@ -240,17 +283,21 @@ nsEventQueueServiceImpl::CreateFromPLEventQueue(PLEventQueue* aPLEventQueue, nsI
 	return NS_OK;
 }
 
+// create new event queue, append it to the current thread's chain of event queues.
+// return it, addrefed.
 NS_IMETHODIMP
-nsEventQueueServiceImpl::PushThreadEventQueue()
+nsEventQueueServiceImpl::PushThreadEventQueue(nsIEventQueue **aNewQueue)
 {
-	nsresult rv = NS_OK;
+  nsresult rv = NS_OK;
   ThreadKey  key(PR_GetCurrentThread());
   EventQueueEntry* evQueueEntry;
+
+  NS_ASSERTION(aNewQueue, "PushThreadEventQueue called with null param");
+  *aNewQueue = NULL;
 
   /* Enter the lock which protects the EventQ hashtable... */
   PR_EnterMonitor(mEventQMonitor);
 
-  /* Only create one event queue per thread... */
   evQueueEntry = (EventQueueEntry*)mEventQTable->Get(&key);
   if (NULL == evQueueEntry) {
     evQueueEntry = new EventQueueEntry();  
@@ -260,13 +307,16 @@ nsEventQueueServiceImpl::PushThreadEventQueue()
     }
     mEventQTable->Put(&key, evQueueEntry);
   }
-	else {
-			// An entry was already present. We need to push a new
-			// queue onto our stack.
-			evQueueEntry->PushQueue();
-	}
+  else {
+    // An entry was already present. We need to push a new
+    // queue onto our stack.
+    rv = evQueueEntry->AddQueue();
+  }
 
-  NS_ADDREF(evQueueEntry);
+  if (NS_SUCCEEDED(rv)) {
+    *aNewQueue = evQueueEntry->GetEventQueue();
+    NS_ADDREF(evQueueEntry);
+  }
 
 done:
   // Release the EventQ lock...
@@ -274,8 +324,9 @@ done:
   return rv;
 }
 
+// disable and release the given queue (though the last one won't be released)
 NS_IMETHODIMP
-nsEventQueueServiceImpl::PopThreadEventQueue(void)
+nsEventQueueServiceImpl::PopThreadEventQueue(nsIEventQueue *aQueue)
 {
   nsresult rv = NS_OK;
   ThreadKey key(PR_GetCurrentThread());
@@ -293,10 +344,11 @@ nsEventQueueServiceImpl::PopThreadEventQueue(void)
     if (0 == refcnt) {
       mEventQTable->Remove(&key);
     }
-		else {
-			// We must be popping.
-			evQueueEntry->PopQueue();
-		}
+    else {
+      // We must be popping. (note: doesn't this always want to be executed?)
+      // aQueue->ProcessPendingEvents(); // (theoretically not necessary)
+      evQueueEntry->RemoveQueue(aQueue);
+    }
   } else {
     rv = NS_ERROR_FAILURE;
   }
