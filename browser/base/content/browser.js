@@ -2009,25 +2009,45 @@ var personalToolbarDNDObserver = {
 
   onDrop: function (aEvent, aXferData, aDragSession)
   {
-    this.onDragRemoveFeedBack(aEvent.originalTarget);
-    var bt          = document.getElementById("bookmarks-toolbar");
-    var selection   = BookmarksUtils.getSelectionFromXferData(aDragSession);
+    var target = aEvent.originalTarget;
+    this.onDragRemoveFeedBack(target);
+
+    var bt        = document.getElementById("bookmarks-toolbar");
+    var selection = BookmarksUtils.getSelectionFromXferData(aDragSession);
 
     // if the personal toolbar does not exist, recreate it
-    if (aEvent.originalTarget == "bookmarks-toolbar") {
+    if (target == "bookmarks-toolbar") {
       //BookmarksUtils.recreatePersonalToolbarFolder(transactionSet);
       //target = { parent: "NC:PersonalToolbarFolder", index: 1 };
     } else {
       var orientation = bt.getBTOrientation(aEvent);
-      var target      = bt.getBTTarget(aEvent.originalTarget, orientation);
+      var selTarget   = bt.getBTTarget(aEvent.originalTarget, orientation);
     }
 
     const kDSIID      = Components.interfaces.nsIDragService;
     const kCopyAction = kDSIID.DRAGDROP_ACTION_COPY + kDSIID.DRAGDROP_ACTION_LINK;
+
+    // hide the 'open in tab' menuseparator because bookmarks
+    // can be inserted after it if they are dropped after the last bookmark
+    // a more comprehensive fix would be in the menupopup template builder
+    var menuTarget = target.parentNode;
+    if (menuTarget.hasChildNodes() &&
+        menuTarget.lastChild.id == "openintabs-menuitem") {
+      menuTarget.removeChild(menuTarget.lastChild.previousSibling);
+    }
+
     if (aDragSession.dragAction & kCopyAction)
-      BookmarksUtils.insertSelection("drag", selection, target, true);
+      BookmarksUtils.insertSelection("drag", selection, selTarget, true);
     else
-      BookmarksUtils.moveSelection("drag", selection, target);
+      BookmarksUtils.moveSelection("drag", selection, selTarget);
+
+    // show again the menuseparator
+    if (menuTarget.hasChildNodes() &&
+        menuTarget.lastChild.id == "openintabs-menuitem") {
+      var element = document.createElementNS(XUL_NS, "menuseparator");
+      menuTarget.insertBefore(element, menuTarget.lastChild);
+    }
+
   },
 
   canDrop: function (aEvent, aDragSession)
@@ -2244,16 +2264,17 @@ var personalToolbarDNDObserver = {
 
   onDragRemoveFeedBack: function (aTarget)
   { 
+    var newTarget;
     if (aTarget.localName == "hbox") { 
       // hit when dropping in the bt or between the last visible bookmark 
       // and the chevron
       var bt = document.getElementById("bookmarks-toolbar");
-      var newTarget = bt.getLastVisibleBookmark();
+      newTarget = bt.getLastVisibleBookmark();
       if (newTarget)
         newTarget.removeAttribute("dragover-right");
     } else if (aTarget.localName == "stack") {
       var bt = document.getElementById("bookmarks-toolbar");
-      var newTarget = bt.getLastVisibleBookmark();
+      newTarget = bt.getLastVisibleBookmark();
       newTarget.removeAttribute("dragover-right");
     } else {
       aTarget.removeAttribute("dragover-left");
