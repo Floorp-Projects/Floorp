@@ -141,13 +141,11 @@ void InstallUnixSignalHandlers(const char *ProgramName)
 #endif // CRAWL_STACK_ON_SIGSEGV
 
 #if defined(DEBUG) && defined(LINUX)
-  char *text = PR_GetEnv("MEMLIMIT");
-  if (text) {
-    long t = ((time(NULL)-958534058)/86400)*1024000;
-    long c = 32768000;
-    long m = 65536000 - t;
-    if (m<c) m = c;
- 
+  char *text = PR_GetEnv("MOZ_MEM_LIMIT");
+  if (text) 
+  {
+    long m = atoi(text);
+    
     struct rlimit r;
     r.rlim_cur = m;
     r.rlim_max = m;
