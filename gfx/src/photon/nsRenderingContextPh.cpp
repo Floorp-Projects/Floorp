@@ -999,7 +999,8 @@ NS_IMETHODIMP nsRenderingContextPh :: FillRect(nscoord aX, nscoord aY, nscoord a
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(const nsRect& aRect)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
+//	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
+  InvertRect( aRect.x, aRect.y, aRect.width, aRect.height );
 
   return NS_OK;
 }
@@ -1007,7 +1008,16 @@ nsRenderingContextPh :: InvertRect(const nsRect& aRect)
 NS_IMETHODIMP 
 nsRenderingContextPh :: InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
+int oldcolor;
+
+//	NS_NOTYETIMPLEMENTED("nsRenderingContextPh::InvertRect");
+  printf ("invert rect: %d %d %d %d\n",aX,aY,aWidth,aHeight);
+
+  oldcolor=PgSetFillColor(Pg_INVERT_COLOR);
+  PgSetDrawMode(Pg_DRAWMODE_XOR);
+  FillRect( aX, aY, aWidth, aHeight );
+  PgSetDrawMode(Pg_DRAWMODE_OPAQUE);
+  PgSetFillColor(oldcolor);
 
   return NS_OK;
 }
