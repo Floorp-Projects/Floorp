@@ -565,7 +565,7 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 #if defined(DEBUG_profile)
     printf("ProfileManager : GetCurrentProfileDir\n");
 #endif
-    char *profileName;
+    char *profileName = nsnull;
 
     rv = GetCurrentProfile(&profileName);
 
@@ -589,7 +589,9 @@ NS_IMETHODIMP nsProfile::GetCurrentProfileDir(nsFileSpec* profileDir)
 	}
 
 
-   	PR_DELETE(profileName);
+    if (profileName) {
+   	    PR_DELETE(profileName);
+    }
     
     return rv;
 }
