@@ -96,7 +96,7 @@ nsUndoCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aPara
 }
 
 NS_IMETHODIMP 
-nsUndoCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsUndoCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -134,7 +134,7 @@ nsRedoCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aPara
 }
 
 NS_IMETHODIMP 
-nsRedoCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsRedoCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -170,7 +170,7 @@ nsCutCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aParam
 }
 
 NS_IMETHODIMP 
-nsCutCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsCutCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -215,7 +215,7 @@ nsCutOrDeleteCommand::DoCommandParams(const char *aCommandName, nsICommandParams
 }
 
 NS_IMETHODIMP 
-nsCutOrDeleteCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsCutOrDeleteCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -251,7 +251,7 @@ nsCopyCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aPara
 }
 
 NS_IMETHODIMP 
-nsCopyCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsCopyCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -295,7 +295,7 @@ nsCopyOrDeleteCommand::DoCommandParams(const char *aCommandName, nsICommandParam
 }
 
 NS_IMETHODIMP 
-nsCopyOrDeleteCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsCopyOrDeleteCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -341,7 +341,7 @@ nsPasteCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aPar
 }
 
 NS_IMETHODIMP 
-nsPasteCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsPasteCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -415,7 +415,7 @@ nsDeleteCommand::DoCommandParams(const char *aCommandName, nsICommandParams *aPa
 }
 
 NS_IMETHODIMP 
-nsDeleteCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsDeleteCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -451,7 +451,7 @@ nsSelectAllCommand::DoCommandParams(const char *aCommandName, nsICommandParams *
 }
 
 NS_IMETHODIMP 
-nsSelectAllCommand::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsSelectAllCommand::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);
@@ -577,7 +577,7 @@ nsSelectionMoveCommands::DoCommandParams(const char *aCommandName, nsICommandPar
 }
 
 NS_IMETHODIMP 
-nsSelectionMoveCommands::GetCommandState(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
+nsSelectionMoveCommands::GetCommandStateParams(const char *aCommandName, nsICommandParams *aParams, nsISupports *aCommandRefCon)
 {
   PRBool canUndo;
   IsCommandEnabled(aCommandName, aCommandRefCon, &canUndo);

@@ -86,11 +86,13 @@ NS_IMETHODIMP nsComposerController::Init(nsISupports *aCommandRefCon)
   nsresult  rv;
  
   // get our ref to the singleton command manager
+  // This will create mCommandManager and register commands if not already done.
   rv = GetComposerCommandManager(getter_AddRefs(mCommandManager));  
   if (NS_FAILED(rv)) return rv;  
 
   mCommandRefCon = aCommandRefCon;     // no addref  
-  
+
+  // the following (7?) lines can be removed when the JS commands are stateless and in C++
   mCommandManager = do_CreateInstance(NS_CONTROLLERCOMMANDMANAGER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
@@ -273,7 +275,7 @@ nsresult nsComposerController::GetComposerCommandManager(nsIControllerCommandMan
 }
 
 
-//GetCommandState
+// GetCommandStateWithParams
 /*
 cmd_bold,cmd_italic,cmd_underline ->state commands
 state_start : true,false
@@ -281,16 +283,16 @@ state_end   : true,false
 state_all   : true,false
 state_mixed : true,false
 */
-/* void getCommandState (in DOMString aCommandName, inout nsICommandParams aCommandParams); */
-NS_IMETHODIMP nsComposerController::GetCommandState(const char *aCommand, nsICommandParams *aCommandParams)
+/* void getCommandStateWithParams (in DOMString aCommandName, inout nsICommandParams aCommandParams); */
+NS_IMETHODIMP nsComposerController::GetCommandStateWithParams(const char *aCommand, nsICommandParams *aCommandParams)
 {
   if (!mCommandRefCon || !mCommandManager)
     return NS_ERROR_NOT_INITIALIZED;
   return mCommandManager->GetCommandState(aCommand,aCommandParams,mCommandRefCon);
 }
 
-/* void doCommand (in DOMString aCommandName, in nsICommandParams aCommandParams); */
-NS_IMETHODIMP nsComposerController::DoCommand(const char *aCommand, nsICommandParams *aCommandParams)
+/* void doCommandWithParams (in DOMString aCommandName, in nsICommandParams aCommandParams); */
+NS_IMETHODIMP nsComposerController::DoCommandWithParams(const char *aCommand, nsICommandParams *aCommandParams)
 {
   if (!mCommandRefCon || !mCommandManager)
     return NS_ERROR_NOT_INITIALIZED;

@@ -208,12 +208,12 @@ NS_IMETHODIMP nsEditorController::DoCommand(const char *aCommand)
   return mCommandManager->DoCommand(aCommand, mCommandRefCon);
 }
 
-NS_IMETHODIMP nsEditorController::DoCommand(const char *aCommand, nsICommandParams *aParams)
+NS_IMETHODIMP nsEditorController::DoCommandWithParams(const char *aCommand, nsICommandParams *aParams)
 {
   return mCommandManager->DoCommandParams(aCommand, aParams, mCommandRefCon);
 }
 
-NS_IMETHODIMP nsEditorController::GetCommandState(const char *aCommand, nsICommandParams *aParams)
+NS_IMETHODIMP nsEditorController::GetCommandStateWithParams(const char *aCommand, nsICommandParams *aParams)
 {
   return mCommandManager->GetCommandState(aCommand, aParams, mCommandRefCon);
 }
