@@ -84,7 +84,7 @@
   ]]>
   </script>
 
-  <label value="&mouseWheelPanel.label;"/>
+  <description>&mouseWheelPanel.label;</description>
 
   <separator class="thin"/>
   
