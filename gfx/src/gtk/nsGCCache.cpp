@@ -76,7 +76,7 @@ void nsGCCache::Flush(unsigned long flags)
 
 GdkGC *nsGCCache::GetGCFromDW(GdkWindow *window, GdkGCValues *gcv, GdkGCValuesMask flags, GdkRegion *clipRegion)
 {
-  static int numCalls = 0;
+  //  static int numCalls = 0;
   int i;
   for (i = 0;
        i < (gc_cache_wrapped_p ? countof (gc_cache) : gc_cache_fp);

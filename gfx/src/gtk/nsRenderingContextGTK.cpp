@@ -497,7 +497,9 @@ GdkGC *nsRenderingContextGTK::GetGC()
 void nsRenderingContextGTK::UpdateGC()
 {
   GdkGCValues values;
-  unsigned int valuesMask;
+  GdkGCValuesMask valuesMask;
+
+  memset(&values, 0, sizeof(GdkGCValues));
 
   values.font = mCurrentFont;
   values.foreground.pixel = gdk_rgb_xpixel_from_rgb(NS_TO_GDK_RGB(mCurrentColor));
@@ -521,7 +523,7 @@ void nsRenderingContextGTK::UpdateGC()
 
   mGC = gcCache->GetClipGC(mSurface->GetDrawable(), 
                            &values,
-                           (GdkGCValuesMask)valuesMask,
+                           valuesMask,
                            rgn);
 
 
