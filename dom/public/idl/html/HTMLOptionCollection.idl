@@ -1,0 +1,9 @@
+ interface NSHTMLOptionCollection : HTMLCollection {
+ /* IID: { 0xa6cf9114, 0x15b3, 0x11d2, \
+  { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32 } } */
+
+            attribute  unsigned long        length;
+            attribute  long                 selectedIndex;
+   Node                      item(in unsigned long index);
+   Node                      namedItem(in DOMString name);
+};

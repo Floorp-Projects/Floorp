@@ -43,6 +43,7 @@ nsIDOMHTMLModElement.h
 nsIDOMHTMLOListElement.h
 nsIDOMHTMLObjectElement.h
 nsIDOMHTMLOptGroupElement.h
+nsIDOMNSHTMLOptionCollection.h
 nsIDOMHTMLOptionElement.h
 nsIDOMHTMLParagraphElement.h
 nsIDOMHTMLParamElement.h

@@ -707,7 +707,12 @@
     "nshtmlformelement.item", \
     "nshtmlformelement.nameditem", \
     "nshtmlinputelement.controllers", \
+    "nshtmloptioncollection.item", \
+    "nshtmloptioncollection.length", \
+    "nshtmloptioncollection.nameditem", \
+    "nshtmloptioncollection.selectedindex", \
     "nshtmlselectelement.item", \
+    "nshtmlselectelement.nameditem", \
     "nshtmltextareaelement.controllers", \
     "nslocation.reload", \
     "nslocation.replace", \
