@@ -441,8 +441,6 @@ then
 	echo
 fi
 
-AC_PROG_MAKE_SET
-
 AC_PATH_XTRA
 
 dnl Check in X11 include directory too.
