@@ -307,12 +307,12 @@ class PyXPCOM_GatewayWeakReference;
 // This interface is needed primarily to give us a known vtable base.
 // If we QI a Python object for this interface, we can safely cast the result
 // to a PyG_Base.  Any other interface, we do now know which vtable we will get.
-// Later, we may get some internal functions
-// (eg, win32com allows us to get the underlying Python object, but
-// we should try and avoid that if possible.
+// We also allow the underlying PyObject to be extracted
 class nsIInternalPython : public nsISupports {
- public: 
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINTERNALPYTHON_IID)
+public: 
+	NS_DEFINE_STATIC_IID_ACCESSOR(NS_IINTERNALPYTHON_IID)
+	// Get the underlying Python object with new reference added
+	virtual PyObject *UnwrapPythonObject(void) = 0;
 };
 
 // This is roughly equivilent to PyGatewayBase in win32com
@@ -322,6 +322,7 @@ class PYXPCOM_EXPORT PyG_Base : public nsIInternalPython, public nsISupportsWeak
 public:
 	NS_DECL_ISUPPORTS
 	NS_DECL_NSISUPPORTSWEAKREFERENCE
+	PyObject *UnwrapPythonObject(void);
 
 	// A static "constructor" - the real ctor is protected.
 	static nsresult CreateNew(PyObject *pPyInstance, 
@@ -350,6 +351,7 @@ public:
 	// Helpers for "native" interfaces.
 	// Not used by the generic stub interface.
 	nsresult HandleNativeGatewayError(const char *szMethodName);
+
 	// These data members used by the converter helper functions - hence public
 	nsIID m_iid;
 	PyObject * m_pPyObject;
@@ -462,7 +464,10 @@ private:
 };
 
 // Misc converters.
+PyObject *PyObject_FromXPTType( const nsXPTType *d);
+// XPTTypeDescriptor derived from XPTType - latter is automatically processed via PyObject_FromXPTTypeDescriptor XPTTypeDescriptor 
 PyObject *PyObject_FromXPTTypeDescriptor( const XPTTypeDescriptor *d);
+
 PyObject *PyObject_FromXPTParamDescriptor( const XPTParamDescriptor *d);
 PyObject *PyObject_FromXPTMethodDescriptor( const XPTMethodDescriptor *d);
 PyObject *PyObject_FromXPTConstant( const XPTConstDescriptor *d);

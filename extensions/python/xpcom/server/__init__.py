@@ -40,6 +40,10 @@ def WrapObject(ob, iid, policy = None, bWrapClient = 1):
         ob = tracer(ob)
     return _xpcom.WrapObject(policy( ob, iid ), iid, bWrapClient)
 
+# Unwrap a Python object back into the Python object
+def UnwrapObject(ob):
+    return _xpcom.UnwrapObject(ob)._obj_
+
 # Create the main module for the Python loader.
 # This is a once only init process, and the returned object
 # if used to load all other Python components.
