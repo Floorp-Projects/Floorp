@@ -160,18 +160,18 @@
   function hideElementById(id)
   {
     var elm = document.getElementById(id);
-    if (!elm) return;
-
-    elm.style.setProperty('display', 'none', '');
+    if (elm) {
+      elm.style.display = 'none';
+    }
   }
 
   function showElementById(id, val)
   {
     var elm = document.getElementById(id);
-    if (!elm) return;
-
-    if (!val) val = 'inline';
-    elm.style.setProperty('display', val, '');
+    if (elm) {
+      if (!val) val = 'inline';
+      elm.style.display = val;
+    }
   }
 
   function normalizeComments()
@@ -181,15 +181,14 @@
 
     var small = document.getElementById('smallCommentFrame');
     var big = document.getElementById('editFrame');
-    if ( small.style.getProperty('display') == 'none' )
+    if ( small.style.display == 'none' )
     {
       small.parentNode.removeChild(small);
     }
-    if ( big.style.getProperty('display') == 'none' )
+    if ( big.style.display == 'none' )
     {
       big.parentNode.removeChild(big);
     }
-    
   }
 </script>
 
