@@ -31,17 +31,9 @@
 #include "nsISupports.idl"
 #include "nsIURI.idl"
 
-%{C++
-#define NS_MIMEINFO_CID                           \
-{ /* {95df6583-0001-11d4-a12b-a66ef662f0bc} */         \
-    0x95df6583,                                      \
-    0x0001,                                          \
-    0x11d4,                                          \
-    { 0xa1, 0x2b, 0xa6, 0x6e, 0xf6, 0x62, 0xf0, 0xbc } \
-}
-#define NS_MIMEINFO_PROGID \
-"component://netscape/mime-info"
-%}
+interface nsIFile;
+
+typedef long nsMIMEInfoHandleAction;
 
 [scriptable, uuid(6A57EAE0-2FE8-11d3-A164-0050041CAF44)]
 interface nsIMIMEInfo : nsISupports {
@@ -111,4 +103,36 @@ interface nsIMIMEInfo : nsISupports {
      * @returns TRUE if the two are considered equal
      */
 	boolean Equals(in nsIMIMEInfo aMIMEInfo);
+
+	/* Returns a nsIFile that points to the application the user has said
+	 * they want associated with this content type. This is not always guarunteed
+	 * to be set!!
+	 */
+	attribute nsIFile preferredApplicationHandler;
+
+	/* a pretty name description of the associated application */
+	attribute wstring applicationDescription;
+
+	const long saveToDisk = 0;
+    const long alwaysAsk = 1;
+    const long useHelperApp = 2;
+	const long handleInternally = 3;
+
+	/* preferredAction is how the user specified they would like to handle
+	 * this content type: save to disk, use specified helper app or always ask.
+	 * do we need a separate flag for handle internally?
+	 */
+	attribute nsMIMEInfoHandleAction preferredAction;
 };
+
+%{C++
+#define NS_MIMEINFO_CID                           \
+{ /* {95df6583-0001-11d4-a12b-a66ef662f0bc} */         \
+    0x95df6583,                                      \
+    0x0001,                                          \
+    0x11d4,                                          \
+    { 0xa1, 0x2b, 0xa6, 0x6e, 0xf6, 0x62, 0xf0, 0xbc } \
+}
+
+#define NS_MIMEINFO_PROGID "component://netscape/mime-info"
+%}

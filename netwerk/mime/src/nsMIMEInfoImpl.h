@@ -26,10 +26,11 @@
 #include "nsIAtom.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsIFile.h"
 #include "nsCOMPtr.h"
 
 class nsMIMEInfoImpl : public nsIMIMEInfo {
-
+public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIMIMEINFO
 
@@ -46,7 +47,9 @@ class nsMIMEInfoImpl : public nsIMIMEInfo {
 		PRUint32						mMacType, mMacCreator; // Mac file type and creator
 protected:
     nsCString					 mMIMEType;
-
+    nsCOMPtr<nsIFile>  mPreferredApplication; // preferred application associated with this type.
+    nsMIMEInfoHandleAction mPreferredAction; // preferred action to associate with this type
+    nsString               mPreferredAppDescription;
 };
 
 #endif //__nsmimeinfoimpl_h___
