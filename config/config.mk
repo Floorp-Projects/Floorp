@@ -86,7 +86,12 @@ endif
 ifneq (,$(filter FreeBSD HP-UX IRIX Linux NetBSD OSF1 SunOS,$(OS_ARCH)))
 OS_VERS		:= $(suffix $(OS_RELEASE))
 OS_RELEASE	:= $(basename $(OS_RELEASE))
+
+# Allow the user to ignore the OS_VERSION, which is usually irrelevant.
+ifndef MOZILLA_CONFIG_IGNORE_OS_VERSION
 OS_VERSION	:= $(shell echo $(OS_VERS) | sed 's/-.*//')
+endif
+
 endif
 
 OS_CONFIG	:= $(OS_ARCH)$(OS_RELEASE)
