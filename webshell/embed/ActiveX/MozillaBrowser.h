@@ -53,7 +53,8 @@ int operator ==(const Property&, const Property&);
 class CWebShellContainer;
 
 // Commands sent via WM_COMMAND
-#define ID_PRINT 1
+#define ID_PRINT     1
+#define ID_PAGESETUP 2
 
 // Some definitions which are used to make firing events easier
 #define CDWebBrowserEvents1 CProxyDWebBrowserEvents<CMozillaBrowser>
@@ -138,8 +139,8 @@ BEGIN_MSG_MAP(CMozillaBrowser)
 	MESSAGE_HANDLER(WM_PAINT, OnPaint)
 	MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
 	MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-
 	COMMAND_ID_HANDLER(ID_PRINT, OnPrint)
+	COMMAND_ID_HANDLER(ID_PAGESETUP, OnPageSetup)
 END_MSG_MAP()
 
 // Windows message handlers
@@ -147,6 +148,7 @@ END_MSG_MAP()
 	LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 	LRESULT OnPrint(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
+	LRESULT OnPageSetup(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL& bHandled);
 
 // ISupportsErrorInfo
 	STDMETHOD(InterfaceSupportsErrorInfo)(REFIID riid);
@@ -180,6 +182,10 @@ protected:
 	virtual BOOL IsValid();
 
 public:
+// IOleObject overrides
+	virtual HRESULT STDMETHODCALLTYPE CMozillaBrowser::GetClientSite(IOleClientSite **ppClientSite);
+
+
 // IWebBrowser implementation
     virtual HRESULT STDMETHODCALLTYPE GoBack(void);
     virtual HRESULT STDMETHODCALLTYPE GoForward(void);
