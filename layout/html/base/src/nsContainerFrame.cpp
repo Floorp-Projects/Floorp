@@ -285,30 +285,36 @@ NS_METHOD nsContainerFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
 // Helper member functions
 
 /**
- * Reflow a child frame and return the status of the reflow. If the
- * child is complete and it has next-in-flows (it was a splittable child)
- * then delete the next-in-flows.
+ * Queries the child frame for the nsIHTMLReflow interface and if it's
+ * supported invokes the WillReflow() and Reflow() member functions. If
+ * the reflow succeeds and the child frame is complete, deletes any
+ * next-in-flows using DeleteChildsNextInFlow()
  */
-nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
-                                             nsIPresContext*      aPresContext,
-                                             nsHTMLReflowMetrics& aDesiredSize,
-                                             const nsHTMLReflowState& aReflowState)
+nsresult
+nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
+                              nsIPresContext&          aPresContext,
+                              nsHTMLReflowMetrics&     aDesiredSize,
+                              const nsHTMLReflowState& aReflowState,
+                              nsReflowStatus&          aStatus)
 {
-  nsReflowStatus status;
-                                                  
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
-#ifdef NS_DEBUG
-  nsFrameState  kidFrameState;
 
-  aKidFrame->GetFrameState(kidFrameState);
-  NS_ASSERTION(kidFrameState & NS_FRAME_IN_REFLOW, "kid frame is not in reflow");
-#endif
+  // Query for the nsIHTMLReflow interface
   nsIHTMLReflow*  htmlReflow;
-  if (NS_OK == aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    htmlReflow->Reflow(*aPresContext, aDesiredSize, aReflowState, status);
+  nsresult        result;
+
+  result = aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+  if (NS_FAILED(result)) {
+    return result;
   }
 
-  if (NS_FRAME_IS_COMPLETE(status)) {
+  // Send the WillReflow notification, and reflow the child frame
+  htmlReflow->WillReflow(aPresContext);
+  result = htmlReflow->Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+
+  // If the reflow was successful and the child frame is complete, delete any
+  // next-in-flows
+  if (NS_SUCCEEDED(result) && NS_FRAME_IS_COMPLETE(aStatus)) {
     nsIFrame* kidNextInFlow;
      
     aKidFrame->GetNextInFlow(kidNextInFlow);
@@ -318,10 +324,11 @@ nsReflowStatus nsContainerFrame::ReflowChild(nsIFrame*            aKidFrame,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aKidFrame->GetGeometricParent(parent);
-      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(*aPresContext, aKidFrame);
+      ((nsContainerFrame*)parent)->DeleteChildsNextInFlow(aPresContext, aKidFrame);
     }
   }
-  return status;
+
+  return result;
 }
 
 /**
@@ -401,7 +408,7 @@ nsContainerFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext, nsIFrame*
     aChild->SetNextSibling(nextSibling);
   }
 
-  // Delete the next-in-flow frame and adjust its parents child count
+  // Delete the next-in-flow frame
   WillDeleteNextInFlowFrame(nextInFlow);
   nextInFlow->DeleteFrame(aPresContext);
 

@@ -1535,17 +1535,13 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     nsHTMLReflowMetrics desiredSize(nsnull);
     // XXX Correctly compute the available space...
     nsHTMLReflowState kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
-    nsIHTMLReflow*    htmlReflow;
 
-    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      aStatus = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
+    ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
-      // Resize the row group frame
-      nsRect  kidRect;
-      kidFrame->GetRect(kidRect);
-      kidFrame->SizeTo(desiredSize.width, desiredSize.height);
-    }
+    // Resize the row group frame
+    nsRect  kidRect;
+    kidFrame->GetRect(kidRect);
+    kidFrame->SizeTo(desiredSize.width, desiredSize.height);
 
 #if 1
     // XXX For the time being just fall through and treat it like a
@@ -1681,38 +1677,33 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
       }
       nsSize maxKidElementSize(0,0);
       nsHTMLReflowState kidReflowState(kidFrame, aReflowState, availSize);
-      nsIHTMLReflow* htmlReflow;
 
-      if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        PRInt32 yCoord = y;
-        if (NS_UNCONSTRAINEDSIZE!=yCoord)
-          yCoord+= topInset;
-        htmlReflow->WillReflow(*aPresContext);
-        result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+      PRInt32 yCoord = y;
+      if (NS_UNCONSTRAINEDSIZE!=yCoord)
+        yCoord+= topInset;
+      ReflowChild(kidFrame, *aPresContext, kidSize, kidReflowState, result);
 
-        // Place the child since some of its content fit in us.
-        if (PR_TRUE==gsDebugNT) {
-          printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
-                  this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
-        }
-        kidFrame->SetRect(nsRect(leftInset, yCoord,
-                                 kidSize.width, kidSize.height));
-        if (NS_UNCONSTRAINEDSIZE==kidSize.height)
-          y = NS_UNCONSTRAINEDSIZE;
-        else
-          y += kidSize.height;
-        if (kidMaxSize.width > maxSize.width) {
-          maxSize.width = kidMaxSize.width;
-        }
-        if (kidMaxSize.height > maxSize.height) {
-          maxSize.height = kidMaxSize.height;
-        }
+      // Place the child since some of its content fit in us.
+      if (PR_TRUE==gsDebugNT) {
+        printf ("%p: reflow of row group returned desired=%d,%d, max-element=%d,%d\n",
+                this, kidSize.width, kidSize.height, kidMaxSize.width, kidMaxSize.height);
+      }
+      kidFrame->SetRect(nsRect(leftInset, yCoord, kidSize.width, kidSize.height));
+      if (NS_UNCONSTRAINEDSIZE==kidSize.height)
+        y = NS_UNCONSTRAINEDSIZE;
+      else
+        y += kidSize.height;
+      if (kidMaxSize.width > maxSize.width) {
+        maxSize.width = kidMaxSize.width;
+      }
+      if (kidMaxSize.height > maxSize.height) {
+        maxSize.height = kidMaxSize.height;
+      }
 
-        if (NS_FRAME_IS_NOT_COMPLETE(result)) {
-          // If the child didn't finish layout then it means that it used
-          // up all of our available space (or needs us to split).
-          break;
-        }
+      if (NS_FRAME_IS_NOT_COMPLETE(result)) {
+        // If the child didn't finish layout then it means that it used
+        // up all of our available space (or needs us to split).
+        break;
       }
     }
   }
@@ -1998,42 +1989,38 @@ PRBool nsTableFrame::ReflowMappedChildren( nsIPresContext*        aPresContext,
       // Reflow the child into the available space
       nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                         reason);
-      nsIHTMLReflow* htmlReflow;
 
-      if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        htmlReflow->WillReflow(*aPresContext);
-        nscoord x = aState.leftInset + kidMargin.left;
-        nscoord y = aState.topInset + aState.y + topMargin;
-        status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-        // Did the child fit?
-        if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
-        {
-          // The child is too wide to fit in the available space, and it's
-          // not our first child
-          PushChildren(kidFrame, prevKidFrame);
-          result = PR_FALSE;
-          break;
-        }
+      nscoord x = aState.leftInset + kidMargin.left;
+      nscoord y = aState.topInset + aState.y + topMargin;
+      ReflowChild(kidFrame, *aPresContext, desiredSize, kidReflowState, status);
+      // Did the child fit?
+      if ((kidFrame != mFirstChild) && (desiredSize.height > kidAvailSize.height))
+      {
+        // The child is too wide to fit in the available space, and it's
+        // not our first child
+        PushChildren(kidFrame, prevKidFrame);
+        result = PR_FALSE;
+        break;
+      }
 
-        // Place the child after taking into account it's margin
-        aState.y += topMargin;
-        nsRect kidRect (x, y, desiredSize.width, desiredSize.height);
-        if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
-            NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
-            NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-        {
-          // we don't want to adjust the maxElementSize if this is an initial reflow
-          // it was set by the TableLayoutStrategy and shouldn't be changed.
-          nsSize *requestedMaxElementSize = nsnull;
-          if (eReflowReason_Initial != aState.reflowState.reason)
-            requestedMaxElementSize = aMaxElementSize;
-          PlaceChild(aPresContext, aState, kidFrame, kidRect,
-                     requestedMaxElementSize, kidMaxElementSize);
-          if (bottomMargin < 0) {
-            aState.prevMaxNegBottomMargin = -bottomMargin;
-          } else {
-            aState.prevMaxPosBottomMargin = bottomMargin;
-          }
+      // Place the child after taking into account it's margin
+      aState.y += topMargin;
+      nsRect kidRect (x, y, desiredSize.width, desiredSize.height);
+      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
+          NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
+          NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
+      {
+        // we don't want to adjust the maxElementSize if this is an initial reflow
+        // it was set by the TableLayoutStrategy and shouldn't be changed.
+        nsSize *requestedMaxElementSize = nsnull;
+        if (eReflowReason_Initial != aState.reflowState.reason)
+          requestedMaxElementSize = aMaxElementSize;
+        PlaceChild(aPresContext, aState, kidFrame, kidRect,
+                   requestedMaxElementSize, kidMaxElementSize);
+        if (bottomMargin < 0) {
+          aState.prevMaxNegBottomMargin = -bottomMargin;
+        } else {
+          aState.prevMaxPosBottomMargin = bottomMargin;
         }
       }
       childCount++;
@@ -2143,38 +2130,34 @@ PRBool nsTableFrame::PullUpChildren(nsIPresContext*      aPresContext,
     }
     nsHTMLReflowState  kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                       eReflowReason_Resize);
-    nsIHTMLReflow* htmlReflow;
 
-    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(*aPresContext);
-      status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+    ReflowChild(kidFrame, *aPresContext, kidSize, kidReflowState, status);
 
-      // Did the child fit?
-      if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
-        // The child is too wide to fit in the available space, and it's
-        // not our first child
-        result = PR_FALSE;
-        break;
-      }
+    // Did the child fit?
+    if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
+      // The child is too wide to fit in the available space, and it's
+      // not our first child
+      result = PR_FALSE;
+      break;
+    }
 
-      // Advance y by the topMargin between children. Zero out the
-      // topMargin in case this frame is continued because
-      // continuations do not have a top margin. Update the prev
-      // bottom margin state in the body reflow state so that we can
-      // apply the bottom margin when we hit the next child (or
-      // finish).
-      //aState.y += topMargin;
-      nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-      //kidRect.x += kidMol->margin.left;
-      kidRect.y += aState.y;
-      const nsStyleDisplay *childDisplay;
-      kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
-      if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
-          NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
-          NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
-      {
-        PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
-      }
+    // Advance y by the topMargin between children. Zero out the
+    // topMargin in case this frame is continued because
+    // continuations do not have a top margin. Update the prev
+    // bottom margin state in the body reflow state so that we can
+    // apply the bottom margin when we hit the next child (or
+    // finish).
+    //aState.y += topMargin;
+    nsRect kidRect (0, 0, kidSize.width, kidSize.height);
+    //kidRect.x += kidMol->margin.left;
+    kidRect.y += aState.y;
+    const nsStyleDisplay *childDisplay;
+    kidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == childDisplay->mDisplay ||
+        NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP == childDisplay->mDisplay )
+    {
+      PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
     }
 
     // Remove the frame from its current parent

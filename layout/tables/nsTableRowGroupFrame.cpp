@@ -301,40 +301,36 @@ PRBool nsTableRowGroupFrame::ReflowMappedChildren( nsIPresContext*      aPresCon
 
     // Reflow the child into the available space
     nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize);
-    nsIHTMLReflow*    htmlReflow;
 
-    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(*aPresContext);
-      if (gsDebug) printf("%p RG reflowing child %d (frame=%p) with avail width = %d\n",
-                          this, debugCounter, kidFrame, kidAvailSize.width);
-      status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-      if (gsDebug) printf("%p RG child %d (frame=%p) returned desired width = %d\n",
-                          this, debugCounter, kidFrame, desiredSize.width);
+    if (gsDebug) printf("%p RG reflowing child %d (frame=%p) with avail width = %d\n",
+                        this, debugCounter, kidFrame, kidAvailSize.width);
+    ReflowChild(kidFrame, *aPresContext, desiredSize, kidReflowState, status);
+    if (gsDebug) printf("%p RG child %d (frame=%p) returned desired width = %d\n",
+                        this, debugCounter, kidFrame, desiredSize.width);
 
-      // Did the child fit?
-      if ((kidFrame != mFirstChild) &&
-          ((kidAvailSize.height <= 0) ||
-           (desiredSize.height > kidAvailSize.height)))
-      {
-        // The child's height is too big to fit at all in our remaining space,
-        // and it's not our first child.
-        //
-        // Note that if the width is too big that's okay and we allow the
-        // child to extend horizontally outside of the reflow area
-        PushChildren(kidFrame, prevKidFrame);
-        result = PR_FALSE;
-        break;
-      }
+    // Did the child fit?
+    if ((kidFrame != mFirstChild) &&
+        ((kidAvailSize.height <= 0) ||
+         (desiredSize.height > kidAvailSize.height)))
+    {
+      // The child's height is too big to fit at all in our remaining space,
+      // and it's not our first child.
+      //
+      // Note that if the width is too big that's okay and we allow the
+      // child to extend horizontally outside of the reflow area
+      PushChildren(kidFrame, prevKidFrame);
+      result = PR_FALSE;
+      break;
+    }
 
-      // Place the child after taking into account it's margin
-      nsRect kidRect (kidMargin.left, aState.y, desiredSize.width, desiredSize.height);
-      PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
-                 kidMaxElementSize);
-      if (bottomMargin < 0) {
-        aState.prevMaxNegBottomMargin = -bottomMargin;
-      } else {
-        aState.prevMaxPosBottomMargin = bottomMargin;
-      }
+    // Place the child after taking into account it's margin
+    nsRect kidRect (kidMargin.left, aState.y, desiredSize.width, desiredSize.height);
+    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
+               kidMaxElementSize);
+    if (bottomMargin < 0) {
+      aState.prevMaxNegBottomMargin = -bottomMargin;
+    } else {
+      aState.prevMaxPosBottomMargin = bottomMargin;
     }
 
 		// Remember where we just were in case we end up pushing children
@@ -453,27 +449,23 @@ PRBool nsTableRowGroupFrame::PullUpChildren(nsIPresContext*      aPresContext,
     }
     nsHTMLReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize,
                                      eReflowReason_Resize);
-    nsIHTMLReflow*    htmlReflow;
 
-    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(*aPresContext);
-      status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+    ReflowChild(kidFrame, *aPresContext, kidSize, kidReflowState, status);
 
-      // Did the child fit?
-      if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
-        // The child is too wide to fit in the available space, and it's
-        // not our first child
-        result = PR_FALSE;
-        break;
-      }
-
-      // Place the child
-      //aState.y += topMargin;
-      nsRect kidRect (0, 0, kidSize.width, kidSize.height);
-      //kidRect.x += kidMol->margin.left;
-      kidRect.y += aState.y;
-      PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
+    // Did the child fit?
+    if ((kidSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
+      // The child is too wide to fit in the available space, and it's
+      // not our first child
+      result = PR_FALSE;
+      break;
     }
+
+    // Place the child
+    //aState.y += topMargin;
+    nsRect kidRect (0, 0, kidSize.width, kidSize.height);
+    //kidRect.x += kidMol->margin.left;
+    kidRect.y += aState.y;
+    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, *pKidMaxElementSize);
 
     // Remove the frame from its current parent
     kidFrame->GetNextSibling(nextInFlow->mFirstChild);
@@ -780,21 +772,17 @@ nsTableRowGroupFrame::Reflow(nsIPresContext&          aPresContext,
     // XXX Correctly compute the available space...
     nsHTMLReflowState   kidReflowState(kidFrame, aReflowState, aReflowState.maxSize);
     nsHTMLReflowMetrics desiredSize(nsnull);
-    nsIHTMLReflow* htmlReflow;
 
-    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-      htmlReflow->WillReflow(aPresContext);
-      aStatus = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
+    ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
-      // Resize the row frame
-      nsRect  kidRect;
-      kidFrame->GetRect(kidRect);
-      kidFrame->SizeTo(desiredSize.width, desiredSize.height);
+    // Resize the row frame
+    nsRect  kidRect;
+    kidFrame->GetRect(kidRect);
+    kidFrame->SizeTo(desiredSize.width, desiredSize.height);
 
-      // Adjust the frames that follow...
-      AdjustSiblingsAfterReflow(&aPresContext, state, kidFrame, desiredSize.height -
-                                oldKidRect.height);
-    }
+    // Adjust the frames that follow...
+    AdjustSiblingsAfterReflow(&aPresContext, state, kidFrame, desiredSize.height -
+                              oldKidRect.height);
 
     // Return of desired size
     aDesiredSize.width = aReflowState.maxSize.width;
