@@ -442,7 +442,7 @@ nsNSSComponent::InitializeNSS()
   rv = profilePath->GetPath(getter_Copies(profileStr));
   if (NS_FAILED(rv)) 
     return rv;
-     
+  
   NSS_InitReadWrite(profileStr);
   NSS_SetDomesticPolicy();
   //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
@@ -482,6 +482,7 @@ nsNSSComponent::InitializeNSS()
   setOCSPOptions(mPref);
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
+  mNSSInitialized = PR_TRUE;
   return NS_OK;
 }
 
@@ -697,6 +698,9 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
 NS_IMETHODIMP
 nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
 {
+  if (!mNSSInitialized)
+      return NS_ERROR_NOT_INITIALIZED;
+
   PK11_RandomUpdate(entropy, bufLen);
   return NS_OK;
 }
