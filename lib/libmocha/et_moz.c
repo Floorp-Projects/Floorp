@@ -37,9 +37,6 @@
 #include "netcache.h"
 #include "secnav.h"
 
-#ifdef XP_MAC	/* we need this header for a prototype, but I'm not sure if its the correct one */
-#include "secstubn.h"
-#endif
 
 #define IL_CLIENT
 #include "libimg.h"             /* Image Library public API. */
