@@ -958,6 +958,7 @@ PRInt32 nsString::ToInteger(PRInt32* anErrorCode,PRUint32 aRadix) const {
  * @param   aString: nsStr to be appended
  * @return  this
  */
+#ifndef NEW_STRING_APIS
 nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
   if(this!=&aString){
     nsStr::Truncate(*this,0);
@@ -970,7 +971,7 @@ nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
   }
   return *this;
 }
-
+#endif
 
 /**
  * assign given char* to this string

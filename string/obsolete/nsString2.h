@@ -443,9 +443,15 @@ public:
    * Functionally equivalent to assign or operator=
    * 
    */
-  nsString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
-  nsString& SetString(const nsString& aString,PRInt32 aLength=-1) {return Assign(aString,aLength);}
+#ifdef NEW_STRING_APIS
+  nsString& SetString(const char* aString,PRInt32 aLength=-1) {Assign(aString); return *this;}
+  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {Assign(aString); return *this;}
+  nsString& SetString(const nsString& aString,PRInt32 aLength=-1) {Assign(aString); return *this;}
+#else
+  nsString& SetString(const char* aString,PRInt32 aLength=-1) {return Assign(aString, aLength);}
+  nsString& SetString(const PRUnichar* aString,PRInt32 aLength=-1) {return Assign(aString, aLength);}
+  nsString& SetString(const nsString& aString,PRInt32 aLength=-1) {return Assign(aString, aLength);}
+#endif
 
   /**
    * assign given string to this string
@@ -455,7 +461,9 @@ public:
 
    * @return  this
    */
+#ifndef NEW_STRING_APIS
   nsString& Assign(const nsStr& aString,PRInt32 aCount=-1);
+#endif
   nsString& Assign(const char* aString,PRInt32 aCount=-1);
   nsString& Assign(const PRUnichar* aString,PRInt32 aCount=-1);
   nsString& Assign(char aChar);
@@ -875,12 +883,14 @@ public:
     nsAutoString(PRUnichar aChar);
     virtual ~nsAutoString();
 
+#ifndef NEW_STRING_APIS
     nsAutoString& operator=(const nsStr& aString) {nsString::Assign(aString); return *this;}
     nsAutoString& operator=(const nsAutoString& aString) {nsString::Assign(aString); return *this;}
     nsAutoString& operator=(const char* aCString) {nsString::Assign(aCString); return *this;}
     nsAutoString& operator=(char aChar) {nsString::Assign(aChar); return *this;}
     nsAutoString& operator=(const PRUnichar* aBuffer) {nsString::Assign(aBuffer); return *this;}
     nsAutoString& operator=(PRUnichar aChar) {nsString::Assign(aChar); return *this;}
+#endif
 
     /**
      * Retrieve the size of this string
