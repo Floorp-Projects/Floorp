@@ -69,6 +69,9 @@ static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
 
+const char* MRJPlugin::PLUGIN_VERSION = "eerieQuarkDoll.v.b1";
+
+
 #pragma export on
 
 nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aProgID, nsIFactory **aFactory)
