@@ -232,20 +232,14 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
   mDebugHook = nsnull;
 #endif
 
-  frame->GetStyleData(eStyleStruct_Position,
-                      (const nsStyleStruct*&)mStylePosition);
-  frame->GetStyleData(eStyleStruct_Display,
-                      (const nsStyleStruct*&)mStyleDisplay);
-  frame->GetStyleData(eStyleStruct_Visibility,
-                      (const nsStyleStruct*&)mStyleVisibility);
-  frame->GetStyleData(eStyleStruct_Border,
-                      (const nsStyleStruct*&)mStyleBorder);
-  frame->GetStyleData(eStyleStruct_Margin,
-                      (const nsStyleStruct*&)mStyleMargin);
-  frame->GetStyleData(eStyleStruct_Padding,
-                      (const nsStyleStruct*&)mStylePadding);
-  frame->GetStyleData(eStyleStruct_Text,
-                      (const nsStyleStruct*&)mStyleText);
+  GetStyleData(frame, &mStylePosition);
+  GetStyleData(frame, &mStyleDisplay);
+  GetStyleData(frame, &mStyleVisibility);
+  GetStyleData(frame, &mStyleBorder);
+  GetStyleData(frame, &mStyleMargin);
+  GetStyleData(frame, &mStylePadding);
+  GetStyleData(frame, &mStyleText);
+
   mFrameType = DetermineFrameType(frame, mStyleDisplay);
   InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
 }
@@ -2152,12 +2146,12 @@ ComputeLineHeight(nsIRenderingContext* aRenderingContext,
 
   nscoord lineHeight = -1;
 
-  const nsStyleText* text = (const nsStyleText*)
-    aStyleContext->GetStyleData(eStyleStruct_Text);
-  const nsStyleFont* font = (const nsStyleFont*)
-    aStyleContext->GetStyleData(eStyleStruct_Font);
-  const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)aStyleContext->GetStyleData(eStyleStruct_Visibility);
+  const nsStyleText* text;
+  GetStyleData(aStyleContext, &text);
+  const nsStyleFont* font;
+  GetStyleData(aStyleContext, &font);
+  const nsStyleVisibility* vis;
+  GetStyleData(aStyleContext, &vis);
   
   nsStyleUnit unit = text->mLineHeight.GetUnit();
 
