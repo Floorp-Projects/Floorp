@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public bookmarks find history related ucth xfer prefwindow
+DIRS = public bookmarks find history sidebar related ucth xfer prefwindow
 
 include $(topsrcdir)/config/config.mk
 
