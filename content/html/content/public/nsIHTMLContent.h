@@ -55,7 +55,10 @@ struct nsRuleData;
 typedef void (*nsMapRuleToAttributesFunc)(const nsIHTMLMappedAttributes* aAttributes, 
                                           nsRuleData* aData);
 
-// Abstract interface for all html content
+/**
+ * Abstract interface for all HTML content, including functions to get and set
+ * nsHTMLValue attributes, among other things
+ */
 class nsIHTMLContent : public nsIXMLContent
 {
 public:
@@ -67,18 +70,65 @@ public:
    */
   NS_IMETHOD Compact() = 0;
 
+  /**
+   * Set an attribute to an HTMLValue type.  (Assumes namespace
+   * kNameSpaceID_None).
+   *
+   * @param aAttribute the attribute to set
+   * @param aValue the value to set it to
+   * @param aNotify whether to notify the document of the change
+   */
   NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute,
                               const nsHTMLValue& aValue,
                               PRBool aNotify) = 0;
 
+  /**
+   * Get an attribute as HTMLValue type
+   *
+   * @param aAttribute the attribute to get
+   * @param aValue the attribute value [OUT]
+   * @throws NS_CONTENT_ATTR_HAS_VALUE if the attribute was found
+   * @throws NS_CONTENT_ATTR_NOT_THERE if the attribute was not found
+   */
   NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
                               nsHTMLValue& aValue) const = 0;
+  /**
+   * Get a function that maps attributes into style rules (meant to be
+   * overridden).  The function must have args / return values like this:
+   *
+   * void MyFunc(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aData);
+   *
+   * @param aMapRuleFunc the mapping function [OUT]
+   */
   NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const = 0;
 
+  /**
+   * Turn an attribute value into string based on the type of attribute
+   * (does not need to do standard types such as string, integer, pixel,
+   * color ...).  Called by GetAttr().
+   *
+   * @param aAttribute the attribute to convert
+   * @param aValue the value to convert
+   * @param aResult the string [OUT]
+   * @throws NS_CONTENT_ATTR_HAS_VALUE if the value was successfully converted
+   * @throws NS_CONTENT_ATTR_NOT_THERE if the value could not be converted
+   * @see nsGenericHTMLElement::GetAttr
+   */
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const = 0;
 
+  /**
+   * Convert an attribute string value to attribute type based on the type of
+   * attribute.  Called by SetAttr().
+   *
+   * @param aAttribute to attribute to convert
+   * @param aValue the string value to convert
+   * @param aResult the HTMLValue [OUT]
+   * @throws NS_CONTENT_ATTR_HAS_VALUE if the string was successfully converted
+   * @throws NS_CONTENT_ATTR_NOT_THERE if the string could not be converted
+   * @see nsGenericHTMLElement::SetAttr
+   */
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
                                nsHTMLValue& aResult) = 0;
@@ -88,6 +138,8 @@ public:
    * of content. Generally, this is the document's base URL,
    * but certain content carries a local base for backward
    * compatibility.
+   *
+   * @param aBaseURL the base URL [OUT]
    */
   NS_IMETHOD GetBaseURL(nsIURI*& aBaseURL) const = 0;
 
@@ -96,6 +148,8 @@ public:
    * of content. Generally, this is the document's base target,
    * but certain content carries a local base for backward
    * compatibility.
+   *
+   * @param aBaseTarget the base target [OUT]
    */
   NS_IMETHOD GetBaseTarget(nsAString& aBaseTarget) const = 0;
 };
