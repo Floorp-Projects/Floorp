@@ -269,6 +269,7 @@
 <!ENTITY formatmenu.accesskey "o">
 
 <!-- Font Face SubMenu -->
+<!ENTITY FontFaceSelect.tooltip "Font tooltip for formatting toolbar">
 <!ENTITY fontfaceMenu.label "Font">
 <!ENTITY formatfontmenu.accesskey "f">
 <!ENTITY fontVarWidth.label "Variable Width">
@@ -283,6 +284,7 @@
 <!ENTITY fontcourier.accesskey "c">
 
 <!-- Font Size SubMenu -->
+<!ENTITY FontSizeSelect.tooltip "Font Size tooltip for formatting toolbar">
 <!ENTITY decreaseFontSize.label "Decrease">
 <!ENTITY decreasefontsize.accesskey "d">
 <!ENTITY decreaseFontSize.keybinding "[">
@@ -411,6 +413,7 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY paragraphDfnDescCmd.label "Description">
 <!ENTITY paragraphdesc.accesskey "d">
 <!-- Shared by Heading and Paragraph menu, and in toolbar menulist -->
+<!ENTITY ParagraphSelect.tooltip "tooltip for Paragraph menu on formatting toolbar">
 <!ENTITY normalCmd.label "Normal">
 <!ENTITY normal.accesskey "n">
 <!ENTITY advancedPropertiesCmd.label "Advanced Properties...">
@@ -565,6 +568,8 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY anchorToolbarCmd.label "Anchor">
 <!ENTITY anchorToolbarCmd.tooltip "Edit Selected Anchor or Insert New Anchor (Target)">
 <!ENTITY textColorCaption.label "Text Color">
+<!ENTITY TextColorPopupButton.tooltip "Text Color tooltip">
+<!ENTITY BackColorPopupButton.tooltip "Page Background Color tooltip">
 
 <!-- editor toolbar -->
 <!ENTITY decreaseFontSizeToolbarCmd.tooltip "Decrease Font Size">
@@ -576,7 +581,7 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 <!ENTITY numberListToolbarCmd.tooltip "Make Numbered List">
 <!ENTITY outdentToolbarCmd.tooltip "Outdent Text (Move to the left)">
 <!ENTITY indentToolbarCmd.tooltip "Indent Text (Move to the right)">
-<!ENTITY alignmentToolbarCmd.tooltip "Set Alignment of Text">
+<!ENTITY AlignPopupButton.tooltip "Set Alignment of Text">
 
 <!-- formatting toolbar not used, but may be in future -->
 <!ENTITY formatToolbar.boldChar "B">
@@ -592,6 +597,11 @@ Menu item text for "[Page|Table|Cell] Background color" is filled from
 
 <!-- Display Mode Toolbar -->
 <!ENTITY normalMode.label "Normal">
+<!ENTITY normalMode.tooltip "Normal Edit Mode (Default)">
 <!ENTITY previewMode.label "Edit Preview">
+<!ENTITY previewMode.tooltip "Edit Preview Mode (???)">
 <!ENTITY showAllTags.label "Show All Tags">
+<!ENTITY showAllTags.tooltip "Show All Tags Mode (Edit with each html tag iconified)">
 <!ENTITY sourceMode.label "HTML Source">
+<!ENTITY sourceMode.tooltip "HTML Source (Edit the Raw HTML Source)">
+<!ENTITY ToggleEditModeType.tooltip "Change between icon and text labeled tabs">
