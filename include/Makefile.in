@@ -25,7 +25,6 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 EXPORTS         = \
-		csid.h \
 		npapi.h \
 		npupp.h \
                 platform.h \
