@@ -485,7 +485,7 @@ if [ test $res != 0 ]; then
     _SAVE_LDFLAGS=$LDFLAGS
     LDFLAGS="$LDFLAGS -L$QTDIR/lib"
     AC_CHECK_LIB(qt, set_new_handler, 
-	[FE_QT_LIBS="-lqt" FE_QT_CFLAGS='-I$(QTDIR)/include'],
+	[FE_QT_LIBS="-L$(QTDIR)/lib -lqt" FE_QT_CFLAGS='-I$(QTDIR)/include'],
 	[MISSING_QT=1])
     LDFLAGS=$_SAVE_LDFLAGS 
     AC_PATH_PROG(MOC, moc, /bin/true)
