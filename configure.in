@@ -358,6 +358,10 @@ alpha*-*-linux*)
     fi
     ;;
 
+*-openvms*) 
+    DLL_SUFFIX="exe"
+    ;;
+
 alpha*-*-osf*)
     if test "$GNU_CC"; then
         DSO_LDOPTS='-shared -Wl,-soname -Wl,$(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
@@ -369,6 +373,10 @@ alpha*-*-osf*)
         MKSHLIB_FORCE_ALL='-all'
         MKSHLIB_UNFORCE_ALL='-none'
     fi
+    ;;
+
+*-rhapsody*) 
+    DLL_SUFFIX="dylib"
     ;;
 
 *-sco*) 
@@ -1851,8 +1859,8 @@ AC_SUBST(MKSHLIB_FORCE_ALL)
 AC_SUBST(MKSHLIB_UNFORCE_ALL)
 AC_SUBST(DSO_CFLAGS)
 AC_SUBST(DSO_LDOPTS)
-AC_DEFINE_UNQUOTED(MOZ_DLL_SUFFIX, $DLL_SUFFIX)
 AC_SUBST(DLL_SUFFIX)
+AC_DEFINE(MOZ_DLL_SUFFIX, ".$DLL_SUFFIX")
 
 if test "$USING_HCC"; then
    CC='${topsrcdir}/build/hcc'
