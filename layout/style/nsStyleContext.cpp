@@ -434,7 +434,8 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
 
 template <class T>
 inline void
-DoStructDifference(nsStyleContext* aThisContext,
+DoStructDifference(T*,
+                   nsStyleContext* aThisContext,
                    nsStyleContext* aOtherContext,
                    PRBool aDoCompare,
                    nsChangeHint aMaxHint,
@@ -476,19 +477,19 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // causing the maximal difference, a FRAMECHANGE.
   // FRAMECHANGE Structs: Display, XUL, Content, UserInterface,
   // Visibility, Quotes
-  DoStructDifference<nsStyleDisplay>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleDisplay*, nsnull), this, aOther, compare, maxHint, hint);
 #ifdef INCLUDE_XUL
-  DoStructDifference<nsStyleXUL>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleXUL*, nsnull), this, aOther, compare, maxHint, hint);
 #endif
-  DoStructDifference<nsStyleContent>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleUserInterface>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleVisibility>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleContent*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleUserInterface*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleVisibility*, nsnull), this, aOther, compare, maxHint, hint);
 #ifdef MOZ_SVG
-  DoStructDifference<nsStyleSVG>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleSVG*, nsnull), this, aOther, compare, maxHint, hint);
 #endif
   // If the quotes implementation is ever going to change we might not need
   // a framechange here and a reflow should be sufficient.  See bug 35768.
-  DoStructDifference<nsStyleQuotes>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleQuotes*, nsnull), this, aOther, compare, maxHint, hint);
 
   // At this point, we know that the worst kind of damage we could do is
   // a reflow.
@@ -497,16 +498,16 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // The following structs cause (as their maximal difference) a reflow
   // to occur.  REFLOW Structs: Font, Margin, Padding, Border, List,
   // Position, Text, TextReset, Table, TableBorder
-  DoStructDifference<nsStyleFont>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleMargin>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStylePadding>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleBorder>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleList>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStylePosition>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleText>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleTextReset>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleTable>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleTableBorder>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleFont*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleMargin*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStylePadding*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleBorder*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleList*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStylePosition*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleText*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleTextReset*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleTable*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleTableBorder*, nsnull), this, aOther, compare, maxHint, hint);
 
   // At this point, we know that the worst kind of damage we could do is
   // a re-render (i.e., a VISUAL change).
@@ -515,10 +516,10 @@ nsStyleContext::CalcStyleDifference(nsStyleContext* aOther)
   // The following structs cause (as their maximal difference) a
   // re-render to occur.  VISUAL Structs: Color, Background, Outline,
   // UIReset
-  DoStructDifference<nsStyleColor>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleBackground>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleOutline>(this, aOther, compare, maxHint, hint);
-  DoStructDifference<nsStyleUIReset>(this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleColor*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleBackground*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleOutline*, nsnull), this, aOther, compare, maxHint, hint);
+  DoStructDifference(NS_STATIC_CAST(nsStyleUIReset*, nsnull), this, aOther, compare, maxHint, hint);
 
   return hint;
 }
