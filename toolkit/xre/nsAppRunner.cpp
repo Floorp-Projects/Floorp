@@ -331,7 +331,8 @@ enum ArgResult {
 static void RemoveArg(char **argv)
 {
   do {
-    *argv = *(++argv);
+    *argv = *(argv + 1);
+    ++argv;
   } while (*argv);
 
   --gArgc;
