@@ -446,9 +446,9 @@ NS_IMETHODIMP nsCaret::DrawAtPosition(nsIDOMNode* aNode, PRInt32 aOffset)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCaret::SetOptimizeDrawCaret(PRBool aOptimzeDrawCaret)
+NS_IMETHODIMP nsCaret::SetOptimizeDrawCaret(PRBool aOptimizeDrawCaret)
 {
-  mOptimizeDrawCaret = aOptimzeDrawCaret;
+  mOptimizeDrawCaret = aOptimizeDrawCaret;
   return NS_OK;
 }
 
