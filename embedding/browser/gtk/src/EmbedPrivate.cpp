@@ -69,6 +69,7 @@
 
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsIAccessibilityService.h"
+#include "nsIAccessible.h"
 #include "nsIDOMDocument.h"
 #endif
 
