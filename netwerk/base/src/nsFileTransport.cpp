@@ -951,7 +951,7 @@ nsFileTransport::Process(void)
 #ifdef PR_LOGGING
             msg += (const char*)mSpec;
 #endif
-            (void)mProgress->OnStatus(this, mContext, msg.mUStr);
+            (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
         }
         mContext = null_nsCOMPtr();
 
@@ -1095,7 +1095,7 @@ nsFileTransport::Process(void)
 #ifdef PR_LOGGING
             msg += (const char*)mSpec;
 #endif
-            (void)mProgress->OnStatus(this, mContext, msg.mUStr);
+            (void)mProgress->OnStatus(this, mContext, msg.GetUnicode());
         }
         mContext = null_nsCOMPtr();
 

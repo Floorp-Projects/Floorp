@@ -2061,7 +2061,7 @@ nsSocketTransport::fireStatus(PRUint32 aCode)
 
   return mEventSink ? mEventSink->OnStatus(this,
                                            mReadContext, 
-                                           mesg.mUStr) // this gets freed elsewhere.
+                                           mesg.GetUnicode()) // this gets freed elsewhere.
                     : NS_ERROR_FAILURE;
 }
 
