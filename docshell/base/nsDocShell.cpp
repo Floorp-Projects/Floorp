@@ -2727,6 +2727,8 @@ NS_IMETHODIMP nsDocShell::DoURILoad(nsIURI* aURI, nsIURI* aReferrerURI,
               aURI->GetScheme(&scheme);
               if (PL_strcasecmp(scheme, jsSchemeName) == 0)
                   channel->SetOwner(aOwner);
+              if (scheme)
+                  nsCRT::free(scheme);
           }
           else
           { // Also set owner for data: URLs
