@@ -25,6 +25,10 @@
 // {12BB8F15-2389-11d3-B3BF-00805F8A6670}
 #define NS_ISTRINGCHARSETDETECTOR_IID \
 { 0x12bb8f15, 0x2389, 0x11d3, { 0xb3, 0xbf, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70 } }
+
+
+#define NS_STRING_CHARSET_DETECTOR_PROGID_BASE "component://netscape/intl/stringcharsetdetect?type="
+
 /*
   This interface is similar to nsICharsetDetector
   The difference is it is for line base detection instead of block based 
