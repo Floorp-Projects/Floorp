@@ -18,7 +18,7 @@
 <!ENTITY alwaysAsk.label       "Always ask before opening this type of file">
 <!ENTITY alwaysAsk.accesskey   "l">
 
-<!ENTITY saveToDisk.label      "Save this file to Disk">
+<!ENTITY saveToDisk.label      "Save this file to disk">
 <!ENTITY saveToDisk.accesskey  "d">
 
 <!-- LOCALIZATION NOTE:  do not localize "#1" -->
