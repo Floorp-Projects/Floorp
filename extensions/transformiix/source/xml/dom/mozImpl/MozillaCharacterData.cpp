@@ -37,7 +37,6 @@
 CharacterData::CharacterData(nsIDOMCharacterData* aCharData, Document* aOwner) :
         Node(aCharData, aOwner)
 {
-    nsCharacterData = aCharData;
 }
 
 /**
@@ -48,25 +47,17 @@ CharacterData::~CharacterData()
 }
 
 /**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aCharData the nsIDOMCharacterData you want to wrap
- */
-void CharacterData::setNSObj(nsIDOMCharacterData* aCharData)
-{
-    Node::setNSObj(aCharData);
-    nsCharacterData = aCharData;
-}
-
-/**
  * Call nsIDOMCharacterData::GetData to retrieve the character data.
  *
  * @return the character data
  */
 const String& CharacterData::getData()
 {
+    NSI_FROM_TX(CharacterData)
+
     nodeValue.clear();
-    nsCharacterData->GetData(nodeValue.getNSString());
+    if (nsCharacterData)
+        nsCharacterData->GetData(nodeValue.getNSString());
     return nodeValue;
 }
 
@@ -77,7 +68,10 @@ const String& CharacterData::getData()
  */
 void CharacterData::setData(const String& aData)
 {
-    nsCharacterData->SetData(aData.getConstNSString());
+    NSI_FROM_TX(CharacterData)
+
+    if (nsCharacterData)
+        nsCharacterData->SetData(aData.getConstNSString());
 }
 
 /**
@@ -87,9 +81,11 @@ void CharacterData::setData(const String& aData)
  */
 Int32 CharacterData::getLength() const
 {
+    NSI_FROM_TX(CharacterData)
     UInt32 length = 0;
 
-    nsCharacterData->GetLength(&length);
+    if (nsCharacterData)
+        nsCharacterData->GetLength(&length);
     return length;
 }
 
@@ -106,8 +102,11 @@ Int32 CharacterData::getLength() const
 String& CharacterData::substringData(Int32 aOffset, Int32 aCount,
                     String& aDest)
 {
+    NSI_FROM_TX(CharacterData)
+
     aDest.clear();
-    nsCharacterData->SubstringData(aOffset, aCount, aDest.getNSString());
+    if (nsCharacterData)
+        nsCharacterData->SubstringData(aOffset, aCount, aDest.getNSString());
     return aDest;
 }
 
@@ -118,7 +117,10 @@ String& CharacterData::substringData(Int32 aOffset, Int32 aCount,
  */
 void CharacterData::appendData(const String& aSource)
 {
-    nsCharacterData->AppendData(aSource.getConstNSString());
+    NSI_FROM_TX(CharacterData)
+
+    if (nsCharacterData)
+        nsCharacterData->AppendData(aSource.getConstNSString());
 }
 
 /**
@@ -129,7 +131,10 @@ void CharacterData::appendData(const String& aSource)
  */
 void CharacterData::insertData(Int32 aOffset, const String& aSource)
 {
-    nsCharacterData->InsertData(aOffset, aSource.getConstNSString());
+    NSI_FROM_TX(CharacterData)
+
+    if (nsCharacterData)
+        nsCharacterData->InsertData(aOffset, aSource.getConstNSString());
 }
 
 /**
@@ -140,7 +145,10 @@ void CharacterData::insertData(Int32 aOffset, const String& aSource)
  */
 void CharacterData::deleteData(Int32 aOffset, Int32 aCount)
 {
-    nsCharacterData->DeleteData(aOffset, aCount);
+    NSI_FROM_TX(CharacterData)
+
+    if (nsCharacterData)
+        nsCharacterData->DeleteData(aOffset, aCount);
 }
 
 /**
@@ -153,5 +161,8 @@ void CharacterData::deleteData(Int32 aOffset, Int32 aCount)
 void CharacterData::replaceData(Int32 aOffset, Int32 aCount,
         const String& aSource)
 {
-    nsCharacterData->ReplaceData(aOffset, aCount, aSource.getConstNSString());
+    NSI_FROM_TX(CharacterData)
+
+    if (nsCharacterData)
+        nsCharacterData->ReplaceData(aOffset, aCount, aSource.getConstNSString());
 }

@@ -38,7 +38,6 @@
 EntityReference::EntityReference(nsIDOMEntityReference* aEntityReference,
         Document* aOwner) : Node(aEntityReference, aOwner)
 {
-    nsEntityReference = aEntityReference;
 }
 
 /**
@@ -46,15 +45,4 @@ EntityReference::EntityReference(nsIDOMEntityReference* aEntityReference,
  */
 EntityReference::~EntityReference()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aEntityReference the nsIDOMEntityReference you want to wrap
- */
-void EntityReference::setNSObj(nsIDOMEntityReference* aEntityReference)
-{
-    Node::setNSObj(aEntityReference);
-    nsEntityReference = aEntityReference;
 }

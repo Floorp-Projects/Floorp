@@ -36,7 +36,6 @@
  */
 Text::Text(nsIDOMText* aText, Document* aOwner) : CharacterData(aText, aOwner)
 {
-    nsText = aText;
 }
 
 /**
@@ -44,17 +43,6 @@ Text::Text(nsIDOMText* aText, Document* aOwner) : CharacterData(aText, aOwner)
  */
 Text::~Text()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aText the nsIDOMText you want to wrap
- */
-void Text::setNSObj(nsIDOMText* aText)
-{
-    CharacterData::setNSObj(aText);
-    nsText = aText;
 }
 
 /**
@@ -66,6 +54,7 @@ void Text::setNSObj(nsIDOMText* aText)
  */
 Text* Text::splitText(Int32 aOffset)
 {
+    NSI_FROM_TX_NULL_CHECK(Text)
     nsCOMPtr<nsIDOMText> split;
 
     if (NS_SUCCEEDED(nsText->SplitText(aOffset, getter_AddRefs(split))))

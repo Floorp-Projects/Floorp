@@ -40,7 +40,6 @@ ProcessingInstruction::ProcessingInstruction(
             Document* aOwner) :
         Node (aProcInstr, aOwner)
 {
-    nsProcessingInstruction = aProcInstr;
 }
 
 /**
@@ -51,17 +50,6 @@ ProcessingInstruction::~ProcessingInstruction()
 }
 
 /**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aProcInstr the nsIDOMProcessingInstruction you want to wrap
- */
-void ProcessingInstruction::setNSObj(nsIDOMProcessingInstruction* aProcInstr)
-{
-    Node::setNSObj(aProcInstr);
-    nsProcessingInstruction = aProcInstr;
-}
-
-/**
  * Call nsIDOMProcessingInstruction::GetTarget to retrieve the target of the
  * processing instruction.
  *
@@ -69,8 +57,11 @@ void ProcessingInstruction::setNSObj(nsIDOMProcessingInstruction* aProcInstr)
  */
 const String& ProcessingInstruction::getTarget()
 {
+    NSI_FROM_TX(ProcessingInstruction)
+
     target.clear();
-    nsProcessingInstruction->GetTarget(target.getNSString());
+    if (nsProcessingInstruction)
+        nsProcessingInstruction->GetTarget(target.getNSString());
     return target;
 }
 
@@ -82,8 +73,11 @@ const String& ProcessingInstruction::getTarget()
  */
 const String& ProcessingInstruction::getData()
 {
+    NSI_FROM_TX(ProcessingInstruction)
+
     data.clear();
-    nsProcessingInstruction->GetData(data.getNSString());
+    if (nsProcessingInstruction)
+        nsProcessingInstruction->GetData(data.getNSString());
     return data;
 }
 
@@ -95,5 +89,8 @@ const String& ProcessingInstruction::getData()
  */
 void ProcessingInstruction::setData(const String& aData)
 {
-    nsProcessingInstruction->SetData(aData.getConstNSString());
+    NSI_FROM_TX(ProcessingInstruction)
+
+    if (nsProcessingInstruction)
+        nsProcessingInstruction->SetData(aData.getConstNSString());
 }

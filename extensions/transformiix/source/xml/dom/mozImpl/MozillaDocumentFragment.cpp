@@ -39,7 +39,6 @@ DocumentFragment::DocumentFragment(nsIDOMDocumentFragment* aDocFragment,
             Document* aOwner) :
         Node(aDocFragment, aOwner)
 {
-    nsDocumentFragment = aDocFragment;
 }
 
 /**
@@ -47,15 +46,4 @@ DocumentFragment::DocumentFragment(nsIDOMDocumentFragment* aDocFragment,
  */
 DocumentFragment::~DocumentFragment()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aDocFragment the nsIDOMDocumentFragment you want to wrap
- */
-void DocumentFragment::setNSObj(nsIDOMDocumentFragment* aDocFragment)
-{
-    Node::setNSObj(aDocFragment);
-    nsDocumentFragment = aDocFragment;
 }

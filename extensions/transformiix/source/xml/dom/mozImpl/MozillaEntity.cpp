@@ -36,7 +36,6 @@
  */
 Entity::Entity(nsIDOMEntity* aEntity, Document* aOwner) : Node (aEntity, aOwner)
 {
-    nsEntity = aEntity;
 }
 
 /**
@@ -47,26 +46,18 @@ Entity::~Entity()
 }
 
 /**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aEntity the nsIDOMEntity you want to wrap
- */
-void Entity::setNSObj(nsIDOMEntity* aEntity)
-{
-    Node::setNSObj(aEntity);
-    nsEntity = aEntity;
-}
-
-/**
  * Call nsIDOMElement::GetPublicId to retrieve the public id for this entity.
  *
  * @return the entity's public id
  */
 const String& Entity::getPublicId()
 {
-  publicId.clear();
-  nsEntity->GetPublicId(publicId.getNSString());
-  return publicId;
+    NSI_FROM_TX(Entity)
+
+    publicId.clear();
+    if (nsEntity)
+        nsEntity->GetPublicId(publicId.getNSString());
+    return publicId;
 }
 
 /**
@@ -76,9 +67,12 @@ const String& Entity::getPublicId()
  */
 const String& Entity::getSystemId()
 {
-  systemId.clear();
-  nsEntity->GetSystemId(systemId.getNSString());
-  return systemId;
+    NSI_FROM_TX(Entity)
+
+    systemId.clear();
+    if (nsEntity)
+        nsEntity->GetSystemId(systemId.getNSString());
+    return systemId;
 }
 
 /**
@@ -89,7 +83,10 @@ const String& Entity::getSystemId()
  */
 const String& Entity::getNotationName()
 {
-  notationName.clear();
-  nsEntity->GetNotationName(notationName.getNSString());
-  return notationName;
+    NSI_FROM_TX(Entity)
+
+    notationName.clear();
+    if (nsEntity)
+        nsEntity->GetNotationName(notationName.getNSString());
+    return notationName;
 }

@@ -91,6 +91,59 @@ class Notation;
 class ProcessingInstruction;
 class Text;
 
+
+/**
+ * This macro creates a nsCOMPtr to a specific interface for the
+ * wrapper's Mozilla object. The nsCOMPtr will be named like the
+ * supplied class with "ns" as a prefix.
+ */
+#define NSI_FROM_TX(_txClass)                                         \
+nsCOMPtr<nsIDOM##_txClass> ns##_txClass(do_QueryInterface(nsObject));
+
+/**
+ * This macro creates a nsCOMPtr to a specific interface for the
+ * wrapper's Mozilla object. It returns NULL if the interface is
+ * unavailable (or the wrapper's Mozilla object is nsnull). The
+ * nsCOMPtr will be named like the supplied class with "ns" as a
+ * prefix.
+ */
+#define NSI_FROM_TX_NULL_CHECK(_txClass)                   \
+NSI_FROM_TX(_txClass)                                      \
+if (!ns##_txClass) return NULL;
+
+
+/**
+ * This macro can be used to declare a createWrapper implementation
+ * for the supplied wrapper class. This macro should only be used
+ * in MozillaDocument.
+ */
+#define IMPL_CREATE_WRAPPER(_txClass)                      \
+IMPL_CREATE_WRAPPER2(_txClass, create##_txClass)
+
+/**
+ * This macro can be used to declare a createWrapper implementation
+ * for the supplied wrapper class. The function parameter defines
+ * the function name for the implementation function. This macro
+ * should only be used in MozillaDocument.
+ */
+#define IMPL_CREATE_WRAPPER2(_txClass, _function)          \
+_txClass* Document::_function(nsIDOM##_txClass* aNsObject) \
+{                                                          \
+    _txClass* wrapper = NULL;                              \
+                                                           \
+    if (aNsObject)                                         \
+    {                                                      \
+        nsISupportsKey key(aNsObject);                     \
+        wrapper = (_txClass*)wrapperHashTable->Get(&key);  \
+                                                           \
+        if (!wrapper)                                      \
+            wrapper = new _txClass(aNsObject, this);       \
+    }                                                      \
+                                                           \
+    return wrapper;                                        \
+}
+
+
 /**
  * Base wrapper class for a Mozilla object. Owns the Mozilla object through an
  * nsCOMPtr<nsISupports>.
@@ -98,11 +151,11 @@ class Text;
 class MozillaObjectWrapper : public MITREObject
 {
     public:
-        MozillaObjectWrapper(nsISupports* aNsObject, Document* aaOwner);
+        MozillaObjectWrapper(nsISupports* aNsObject, Document* aOwner);
         ~MozillaObjectWrapper();
 
         void setNSObj(nsISupports* aNsObject);
-        void setNSObj(nsISupports* aNsObject, Document* aaOwner);
+        void setNSObj(nsISupports* aNsObject, Document* aOwner);
 
         nsISupports* getNSObj() const;
    
@@ -110,8 +163,6 @@ class MozillaObjectWrapper : public MITREObject
         // We want to maintain a pointer back to the aOwner document for memory
         // management.
         Document* ownerDocument;
-
-    private:
         nsCOMPtr<nsISupports> nsObject;
 };
 
@@ -121,15 +172,10 @@ class MozillaObjectWrapper : public MITREObject
 class DOMImplementation : public MozillaObjectWrapper
 {
     public:
-        DOMImplementation(nsIDOMDOMImplementation* aDomImpl, Document* aaOwner);
+        DOMImplementation(nsIDOMDOMImplementation* aDomImpl, Document* aOwner);
         ~DOMImplementation();
 
-        void setNSObj(nsIDOMDOMImplementation* aDomImpl);
-
         MBool hasFeature(const String& aFeature, const String& aVersion) const;
-
-    private:
-        nsIDOMDOMImplementation* nsDOMImpl;
 };
 
 /**
@@ -160,8 +206,6 @@ class Node : public MozillaObjectWrapper
         virtual ~Node();
 
         void setNSObj(nsIDOMNode* aNode);
-        void setNSObj(nsIDOMNode* aNode, Document* aOwner);
-        nsIDOMNode* getNSNode();
 
         // Read functions
         virtual const String& getNodeName();
@@ -194,9 +238,6 @@ class Node : public MozillaObjectWrapper
     protected:
         String nodeName;
         String nodeValue;
-
-    private:
-        nsIDOMNode* nsNode;
 };
 
 /**
@@ -208,13 +249,8 @@ class NodeList : public MozillaObjectWrapper
         NodeList(nsIDOMNodeList* aNodeList, Document* aOwner);
         ~NodeList();
 
-        void setNSObj(nsIDOMNodeList* aNodeList);
-
         Node* item(UInt32 aIndex);
         UInt32 getLength();
-
-    protected:
-        nsIDOMNodeList* nsNodeList;
 };
 
 
@@ -227,16 +263,11 @@ class NamedNodeMap : public MozillaObjectWrapper
         NamedNodeMap(nsIDOMNamedNodeMap* aNamedNodeMap, Document* aOwner);
         ~NamedNodeMap();
 
-        void setNSObj(nsIDOMNamedNodeMap* aNamedNodeMap);
-
         Node* getNamedItem(const String& aName);
         Node* setNamedItem(Node* aNode);
         Node* removeNamedItem(const String& aName);
         Node* item(UInt32 aIndex);
         UInt32 getLength();
-
-    private:
-        nsIDOMNamedNodeMap* nsNamedNodeMap;
 };
 
 /**
@@ -248,11 +279,6 @@ class DocumentFragment : public Node
         DocumentFragment(nsIDOMDocumentFragment* aDocFragment,
                     Document* aOwner);
         ~DocumentFragment();
-
-        void setNSObj(nsIDOMDocumentFragment* aDocFragment);
-
-    private:
-        nsIDOMDocumentFragment* nsDocumentFragment;
 };
 
 /**
@@ -264,8 +290,6 @@ class Document : public Node
         Document();
         Document(nsIDOMDocument* aDocument);
         ~Document();
-
-        void setNSObj(nsIDOMDocument* aNode);
 
         PRBool inHashTableDeletion();
 
@@ -332,14 +356,15 @@ class Document : public Node
         Element* createElementNS(const String& aNamespaceURI,
                     const String& aTagName);
 
+        Attr* createAttributeNS(const String& aNamespaceURI,
+                    const String& aName);
+
         Element* getElementById(const String aID);
 
         //Override to return documentBaseURI
         String getBaseURI();
 
     private:
-        nsIDOMDocument* nsDocument;
-
         PRBool bInHashTableDeletion;
 
         nsObjectHashtable *wrapperHashTable;
@@ -354,8 +379,6 @@ class Element : public Node
         Element(nsIDOMElement* aElement, Document* aOwner);
         ~Element();
 
-        void setNSObj(nsIDOMElement* aElement);
-
         const String& getTagName();
         const String& getAttribute(const String& aName);
         void setAttribute(const String& aName, const String& aValue);
@@ -368,8 +391,6 @@ class Element : public Node
         NodeList* getElementsByTagName(const String& aName);
         void normalize();
 
-    private:
-        nsIDOMElement* nsElement;
 };
 
 /**
@@ -381,16 +402,11 @@ class Attr : public Node
         Attr(nsIDOMAttr* aAttr, Document* aOwner);
         ~Attr();
 
-        nsIDOMAttr* getNSAttr();
-        void setNSObj(nsIDOMAttr* aAttr);
-
         const String& getName();
         MBool getSpecified() const;
         const String& getValue();
         void setValue(const String& aNewValue);
 
-    private:
-        nsIDOMAttr* nsAttr;
 };
 
 /**
@@ -401,8 +417,6 @@ class CharacterData : public Node
     public:
         CharacterData(nsIDOMCharacterData* aCharData, Document* aOwner);
         ~CharacterData();
-
-        void setNSObj(nsIDOMCharacterData* aCharData);
 
         const String& getData();
         void setData(const String& aSource);
@@ -415,7 +429,7 @@ class CharacterData : public Node
         void replaceData(Int32 aOffset, Int32 aCount, const String& aSource);
 
     private:
-        nsIDOMCharacterData* nsCharacterData;
+        String nodeValue;
 };
 
 /**
@@ -427,12 +441,7 @@ class Text : public CharacterData
         Text(nsIDOMText* aText, Document* aOwner);
         ~Text();
 
-        void setNSObj(nsIDOMText* aText);
-
         Text* splitText(Int32 aOffset);
-
-    private:
-        nsIDOMText* nsText;
 };
 
 /**
@@ -443,11 +452,6 @@ class Comment : public CharacterData
     public:
         Comment(nsIDOMComment* aComment, Document* aOwner);
         ~Comment();
-
-        void setNSObj(nsIDOMComment* aComment);
-
-    private:
-        nsIDOMComment* nsComment;
 };
 
 /**
@@ -458,11 +462,6 @@ class CDATASection : public Text
     public:
         CDATASection(nsIDOMCDATASection* aCdataSection, Document* aOwner);
         ~CDATASection();
-
-        void setNSObj(nsIDOMCDATASection* aCdataSection);
-
-    private:
-        nsIDOMCDATASection* nsCDATASection;
 };
 
 /**
@@ -475,16 +474,12 @@ class ProcessingInstruction : public Node
                    Document* aOwner);
         ~ProcessingInstruction();
 
-        void setNSObj(nsIDOMProcessingInstruction* aProcInstr);
-
         const String& getTarget();
         const String& getData();
 
         void setData(const String& aData);
 
     private:
-        nsIDOMProcessingInstruction* nsProcessingInstruction;
-
         String target;
         String data;
 };
@@ -498,14 +493,10 @@ class Notation : public Node
         Notation(nsIDOMNotation* aNotation, Document* aOwner);
         ~Notation();
 
-        void setNSObj(nsIDOMNotation* aNotation);
-
         const String& getPublicId();
         const String& getSystemId();
 
     private:
-        nsIDOMNotation* nsNotation;
-
         String publicId;
         String systemId;
 };
@@ -519,15 +510,11 @@ class Entity : public Node
         Entity(nsIDOMEntity* aEntity, Document* aOwner);
         ~Entity();
 
-        void setNSObj(nsIDOMEntity* aEntity);
-
         const String& getPublicId();
         const String& getSystemId();
         const String& getNotationName();
 
     private:
-        nsIDOMEntity* nsEntity;
-
         String publicId;
         String systemId;
         String notationName;
@@ -542,11 +529,6 @@ class EntityReference : public Node
         EntityReference(nsIDOMEntityReference* aEntityReference,
                     Document* aOwner);
         ~EntityReference();
-
-        void setNSObj(nsIDOMEntityReference* aEntityReference);
-
-    private:
-        nsIDOMEntityReference* nsEntityReference;
 };
 
 /**
@@ -559,14 +541,10 @@ class DocumentType : public Node
         DocumentType(nsIDOMDocumentType* aDocumentType, Document* aOwner);
         ~DocumentType();
 
-        void setNSObj(nsIDOMDocumentType* aDocumentType);
-
         const String& getName();
         NamedNodeMap* getEntities();
         NamedNodeMap* getNotations();
 
-    private:
-       nsIDOMDocumentType* nsDocumentType;
 };
 
 // NULL string for use by Element::getAttribute() for when the attribute

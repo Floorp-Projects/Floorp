@@ -41,7 +41,7 @@ nsNodeSet::nsNodeSet(NodeSet* aNodeSet) {
 
     if (aNodeSet) {
         for (int i=0; i < aNodeSet->size(); i++) {
-            mNodes.AppendElement(aNodeSet->get(i)->getNSNode());
+            mNodes.AppendElement(aNodeSet->get(i)->getNSObj());
         }
     }
 }

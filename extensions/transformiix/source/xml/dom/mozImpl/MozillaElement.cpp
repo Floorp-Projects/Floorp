@@ -37,7 +37,6 @@
 Element::Element(nsIDOMElement* aElement, Document* aOwner) :
         Node(aElement, aOwner)
 {
-    nsElement = aElement;
 }
 
 /**
@@ -48,25 +47,17 @@ Element::~Element()
 }
 
 /**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aElement the nsIDOMElement you want to wrap
- */
-void Element::setNSObj(nsIDOMElement* aElement)
-{
-    Node::setNSObj(aElement);
-    nsElement = aElement;
-}
-
-/**
  * Call nsIDOMElement::GetTagName to retrieve the tag name for this element.
  *
  * @return the element's tag name
  */
 const String& Element::getTagName()
 {
+    NSI_FROM_TX(Element)
+
     nodeName.clear();
-    nsElement->GetTagName(nodeName.getNSString());
+    if (nsElement)
+        nsElement->GetTagName(nodeName.getNSString());
     return nodeName;
 }
 
@@ -96,7 +87,10 @@ const String& Element::getAttribute(const String& aName)
  */
 void Element::setAttribute(const String& aName, const String& aValue)
 {
-    nsElement->SetAttribute(aName.getConstNSString(), aValue.getConstNSString());
+    NSI_FROM_TX(Element)
+
+    if (nsElement)
+        nsElement->SetAttribute(aName.getConstNSString(), aValue.getConstNSString());
 }
 
 /**
@@ -110,8 +104,12 @@ void Element::setAttribute(const String& aName, const String& aValue)
 void Element::setAttributeNS(const String& aNamespaceURI, const String& aName,
         const String& aValue)
 {
-    nsElement->SetAttributeNS(aNamespaceURI.getConstNSString(),
-            aName.getConstNSString(), aValue.getConstNSString());
+    NSI_FROM_TX(Element)
+
+    if (nsElement)
+        nsElement->SetAttributeNS(aNamespaceURI.getConstNSString(),
+                                  aName.getConstNSString(),
+                                  aValue.getConstNSString());
 }
 
 /**
@@ -123,21 +121,25 @@ void Element::setAttributeNS(const String& aNamespaceURI, const String& aName,
  */
 void Element::removeAttribute(const String& aName)
 {
-    nsCOMPtr<nsIDOMAttr> attr;
-    Attr* attrWrapper = NULL;
+    NSI_FROM_TX(Element)
 
-    // First, get the nsIDOMAttr object from the nsIDOMElement object
-    nsElement->GetAttributeNode(aName.getConstNSString(), getter_AddRefs(attr));
+    if (nsElement) {
+        nsCOMPtr<nsIDOMAttr> attr;
+        Attr* attrWrapper = NULL;
 
-    // Second, remove the attribute wrapper object from the hash table if it is
-    // there.  It might not be if the attribute was created using
-    // Element::setAttribute. If it was removed, then delete it.
-    attrWrapper = (Attr*)ownerDocument->removeWrapper(attr);
-    if (attrWrapper)
-        delete attrWrapper;
+        // First, get the nsIDOMAttr object from the nsIDOMElement object
+        nsElement->GetAttributeNode(aName.getConstNSString(), getter_AddRefs(attr));
 
-    // Lastly, have the Mozilla object remove the attribute
-    nsElement->RemoveAttribute(aName.getConstNSString());
+        // Second, remove the attribute wrapper object from the hash table if it is
+        // there.  It might not be if the attribute was created using
+        // Element::setAttribute. If it was removed, then delete it.
+        attrWrapper = (Attr*)ownerDocument->removeWrapper(attr);
+        if (attrWrapper)
+            delete attrWrapper;
+
+        // Lastly, have the Mozilla object remove the attribute
+        nsElement->RemoveAttribute(aName.getConstNSString());
+    }
 }
 
 /**
@@ -150,6 +152,7 @@ void Element::removeAttribute(const String& aName)
  */
 Attr* Element::getAttributeNode(const String& aName)
 {
+    NSI_FROM_TX_NULL_CHECK(Element)
     nsCOMPtr<nsIDOMAttr> attr;
 
     if (NS_SUCCEEDED(nsElement->GetAttributeNode(aName.getConstNSString(),
@@ -169,9 +172,11 @@ Attr* Element::getAttributeNode(const String& aName)
  */
 Attr* Element::setAttributeNode(Attr* aNewAttr)
 {
+    NSI_FROM_TX_NULL_CHECK(Element)
+    nsCOMPtr<nsIDOMAttr> newAttr(do_QueryInterface(aNewAttr->getNSObj()));
     nsCOMPtr<nsIDOMAttr> returnAttr;
 
-    if (NS_SUCCEEDED(nsElement->SetAttributeNode(aNewAttr->getNSAttr(),
+    if (NS_SUCCEEDED(nsElement->SetAttributeNode(newAttr,
             getter_AddRefs(returnAttr))))
         return (Attr*)ownerDocument->createWrapper(returnAttr);
     else
@@ -189,10 +194,12 @@ Attr* Element::setAttributeNode(Attr* aNewAttr)
  */
 Attr* Element::removeAttributeNode(Attr* aOldAttr)
 {
+    NSI_FROM_TX_NULL_CHECK(Element)
+    nsCOMPtr<nsIDOMAttr> oldAttr(do_QueryInterface(aOldAttr->getNSObj()));
     nsCOMPtr<nsIDOMAttr> removedAttr;
     Attr* attrWrapper = NULL;
 
-    if (NS_SUCCEEDED(nsElement->RemoveAttributeNode(aOldAttr->getNSAttr(),
+    if (NS_SUCCEEDED(nsElement->RemoveAttributeNode(oldAttr,
             getter_AddRefs(removedAttr))))
     {
         attrWrapper = (Attr*)ownerDocument->removeWrapper(aOldAttr);
@@ -214,6 +221,7 @@ Attr* Element::removeAttributeNode(Attr* aOldAttr)
  */
 NodeList* Element::getElementsByTagName(const String& aName)
 {
+    NSI_FROM_TX_NULL_CHECK(Element)
     nsCOMPtr<nsIDOMNodeList> list;
 
     if (NS_SUCCEEDED(nsElement->GetElementsByTagName(aName.getConstNSString(),
@@ -228,5 +236,8 @@ NodeList* Element::getElementsByTagName(const String& aName)
  */
 void Element::normalize()
 {
-    nsElement->Normalize(); 
+    NSI_FROM_TX(Element)
+
+    if (nsElement)
+        nsElement->Normalize(); 
 }

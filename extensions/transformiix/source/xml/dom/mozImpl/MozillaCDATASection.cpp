@@ -37,7 +37,6 @@
 CDATASection::CDATASection(nsIDOMCDATASection* aCdataSection, Document* aOwner) :
     Text(aCdataSection, aOwner)
 {
-    nsCDATASection = aCdataSection;
 }
 
 /**
@@ -45,15 +44,4 @@ CDATASection::CDATASection(nsIDOMCDATASection* aCdataSection, Document* aOwner) 
  */
 CDATASection::~CDATASection()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aCdataSection the nsIDOMCDATASection you want to wrap
- */
-void CDATASection::setNSObj(nsIDOMCDATASection* aCdataSection)
-{
-    Text::setNSObj(aCdataSection);
-    nsCDATASection = aCdataSection;
 }

@@ -38,13 +38,13 @@
  * Olivier Gerardin
  *    -- Changed behavior of passing parameters to templates
  *
- * $Id: XSLTProcessor.cpp,v 1.37 2001/03/07 00:42:57 axel%pike.org Exp $
+ * $Id: XSLTProcessor.cpp,v 1.38 2001/04/03 12:21:45 peterv%netscape.com Exp $
  */
 
 #include "XSLTProcessor.h"
 #ifdef MOZ_XSL
 #include "nsIObserverService.h"
-#include "nslog.h"
+//#include "nslog.h"
 #else
 #include "TxLog.h"
 #endif
@@ -56,7 +56,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.37 $ $Date: 2001/03/07 00:42:57 $
+ * @version $Revision: 1.38 $ $Date: 2001/04/03 12:21:45 $
 **/
 
 /**
@@ -883,7 +883,7 @@ void XSLTProcessor::processAction
                 Attr* modeAttr = actionElement->getAttributeNode(MODE_ATTR);
                 if ( modeAttr ) mode = new String(modeAttr->getValue());
                 String selectAtt  = actionElement->getAttribute(SELECT_ATTR);
-                if ( selectAtt.length() == 0 ) selectAtt = "* | text()";
+                if ( selectAtt.length() == 0 ) selectAtt = "node()";
                 pExpr = ps->getPatternExpr(selectAtt);
                 ExprResult* exprResult = pExpr->evaluate(node, ps);
                 NodeSet* nodeSet = 0;
@@ -1723,8 +1723,8 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
 } //-- xslCopyOf
 
 #ifdef MOZ_XSL
-#define PRINTF NS_LOG_PRINTF(XSLT)
-#define FLUSH  NS_LOG_FLUSH(XSLT)
+//#define PRINTF NS_LOG_PRINTF(XSLT)
+//#define FLUSH  NS_LOG_FLUSH(XSLT)
 NS_IMETHODIMP
 XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
                                nsIDOMNode* aStyleDOM,
@@ -1761,9 +1761,9 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
 
         docURL->GetSpec(&urlString);
         String documentBase(urlString);
-        NS_IMPL_LOG(XSLT)
-        PRINTF("Transforming with stylesheet %s",documentBase.toCharArray());
-        FLUSH();
+//        NS_IMPL_LOG(XSLT)
+//        PRINTF("Transforming with stylesheet %s",documentBase.toCharArray());
+//        FLUSH();
         ps->setDocumentBase(documentBase);
         nsCRT::free(urlString);
         NS_IF_RELEASE(docURL);
@@ -1797,7 +1797,7 @@ XSLTProcessor::TransformDocument(nsIDOMNode* aSourceDOM,
             Node* docElement = resultDocument->getDocumentElement();
             nsIDOMNode* nsDocElement;
             if (docElement) {
-                nsDocElement = docElement->getNSNode();
+                nsDocElement = NS_STATIC_CAST(nsIDOMNode*, docElement->getNSObj());
             }
             else {
                 nsDocElement = nsnull;

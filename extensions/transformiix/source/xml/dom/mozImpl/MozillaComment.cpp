@@ -37,7 +37,6 @@
 Comment::Comment(nsIDOMComment* aComment, Document* aOwner) :
     CharacterData(aComment, aOwner)
 {
-    nsComment = aComment;
 }
 
 /**
@@ -45,15 +44,4 @@ Comment::Comment(nsIDOMComment* aComment, Document* aOwner) :
  */
 Comment::~Comment()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aComment the nsIDOMComment you want to wrap
- */
-void Comment::setNSObj(nsIDOMComment* aComment)
-{
-    CharacterData::setNSObj(aComment);
-    nsComment = aComment;
 }

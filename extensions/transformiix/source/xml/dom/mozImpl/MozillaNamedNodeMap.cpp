@@ -38,7 +38,6 @@ NamedNodeMap::NamedNodeMap(nsIDOMNamedNodeMap* aNamedNodeMap,
             Document* aOwner) :
         MozillaObjectWrapper(aNamedNodeMap, aOwner)
 {
-    nsNamedNodeMap = aNamedNodeMap;
 }
 
 /**
@@ -46,17 +45,6 @@ NamedNodeMap::NamedNodeMap(nsIDOMNamedNodeMap* aNamedNodeMap,
  */
 NamedNodeMap::~NamedNodeMap()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aNamedNodeMap the nsIDOMNamedNodeMap you want to wrap
- */
-void NamedNodeMap::setNSObj(nsIDOMNamedNodeMap* aNamedNodeMap)
-{
-    MozillaObjectWrapper::setNSObj(aNamedNodeMap);
-    nsNamedNodeMap = aNamedNodeMap;
 }
 
 /**
@@ -69,6 +57,7 @@ void NamedNodeMap::setNSObj(nsIDOMNamedNodeMap* aNamedNodeMap)
  */
 Node* NamedNodeMap::getNamedItem(const String& aName)
 {
+    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
     nsCOMPtr<nsIDOMNode> node;
 
     if (NS_SUCCEEDED(nsNamedNodeMap->GetNamedItem(aName.getConstNSString(),
@@ -87,9 +76,11 @@ Node* NamedNodeMap::getNamedItem(const String& aName)
  */
 Node* NamedNodeMap::setNamedItem(Node* aNode)
 {
+    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
+    nsCOMPtr<nsIDOMNode> nsNode(do_QueryInterface(aNode->getNSObj()));
     nsCOMPtr<nsIDOMNode> node;
 
-    if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(aNode->getNSNode(),
+    if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(nsNode,
                 getter_AddRefs(node))))
         return ownerDocument->createWrapper(node);
     else
@@ -106,6 +97,7 @@ Node* NamedNodeMap::setNamedItem(Node* aNode)
  */
 Node* NamedNodeMap::removeNamedItem(const String& aName)
 {
+    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
     nsCOMPtr<nsIDOMNode> node;
 
     if (NS_SUCCEEDED(nsNamedNodeMap->RemoveNamedItem(aName.getConstNSString(),
@@ -124,6 +116,7 @@ Node* NamedNodeMap::removeNamedItem(const String& aName)
  */
 Node* NamedNodeMap::item(UInt32 aIndex)
 {
+    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
     nsCOMPtr<nsIDOMNode> node;
 
     if (NS_SUCCEEDED(nsNamedNodeMap->Item(aIndex, getter_AddRefs(node))))
@@ -139,8 +132,10 @@ Node* NamedNodeMap::item(UInt32 aIndex)
  */
 UInt32 NamedNodeMap::getLength()
 {
+    NSI_FROM_TX(NamedNodeMap)
     UInt32 length = 0;
 
-    nsNamedNodeMap->GetLength(&length);
+    if (nsNamedNodeMap)
+        nsNamedNodeMap->GetLength(&length);
     return length;
 }

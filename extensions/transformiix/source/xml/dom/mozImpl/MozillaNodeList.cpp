@@ -37,7 +37,6 @@
 NodeList::NodeList(nsIDOMNodeList* aNodeList, Document* aOwner) :
         MozillaObjectWrapper(aNodeList, aOwner)
 {
-    nsNodeList = aNodeList;
 }
 
 /**
@@ -45,17 +44,6 @@ NodeList::NodeList(nsIDOMNodeList* aNodeList, Document* aOwner) :
  */
 NodeList::~NodeList()
 {
-}
-
-/**
- * Wrap a different Mozilla object with this wrapper.
- *
- * @param aNodeList the nsIDOMNodeList you want to wrap
- */
-void NodeList::setNSObj(nsIDOMNodeList* aNodeList)
-{
-    MozillaObjectWrapper::setNSObj(aNodeList);
-    nsNodeList = aNodeList;
 }
 
 /**
@@ -67,6 +55,7 @@ void NodeList::setNSObj(nsIDOMNodeList* aNodeList)
  */
 Node* NodeList::item(UInt32 aIndex)
 {
+    NSI_FROM_TX_NULL_CHECK(NodeList)
     nsCOMPtr<nsIDOMNode> node;
 
     if (NS_SUCCEEDED(nsNodeList->Item(aIndex, getter_AddRefs(node))))
@@ -82,8 +71,10 @@ Node* NodeList::item(UInt32 aIndex)
  */
 UInt32 NodeList::getLength()
 {
+    NSI_FROM_TX(NodeList)
     UInt32 length = 0;
 
-    nsNodeList->GetLength(&length);
+    if (nsNodeList)
+        nsNodeList->GetLength(&length);
     return length;
 }
