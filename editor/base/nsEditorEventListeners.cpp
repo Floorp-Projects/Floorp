@@ -1093,15 +1093,13 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
       rv = nsComponentManager::CreateInstance(kCTransferableCID, nsnull, 
                                               nsITransferable::GetIID(), 
                                               (void**) getter_AddRefs(trans));
-      if (NS_OK == rv) {
+      if ( NS_SUCCEEDED(rv) && trans ) {
         // Add the text Flavor to the transferable, 
         // because that is the only type of data we are looking for at the moment
         nsAutoString textMime(kTextMime);
         trans->AddDataFlavor(&textMime);
         //genericTrans->AddDataFlavor(mImageDataFlavor);
 
-        // Query to get the standard interface that the drag service knows about
-        nsCOMPtr<nsITransferable> trans (do_QueryInterface(trans));
         if (trans) {
 
           // Fill the transferable with our requested data flavor
@@ -1117,6 +1115,7 @@ nsTextEditorDragListener::DragDrop(nsIDOMEvent* aMouseEvent)
           if (str) {
             stuffToPaste.SetString(str, len);
             mEditor->InsertText(stuffToPaste);
+            dragSession->SetCanDrop(PR_TRUE);
           }
 
           // XXX This is where image support might go
