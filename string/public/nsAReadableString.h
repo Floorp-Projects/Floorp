@@ -1356,15 +1356,10 @@ Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
     to implement the virtual functions of readables.
   */
 
-  /*
-    I probably need to add |operator+()| for appropriate |CharT| and |CharT*| comparisons, since
-    automatic conversion to a literal string will not happen.
-  */
-
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
-Concat( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
+operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
     return nsPromiseConcatenation<CharT>(lhs, rhs, lhs.GetFragmentIdentifierMask()<<1);
   }
@@ -1372,25 +1367,9 @@ Concat( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<
 template <class CharT>
 inline
 nsPromiseConcatenation<CharT>
-Concat( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return nsPromiseConcatenation<CharT>(lhs, rhs);
-  }
-
-template <class CharT>
-inline
-nsPromiseConcatenation<CharT>
-operator+( const nsPromiseConcatenation<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
-  {
-    return Concat(lhs, rhs);
-  }
-
-template <class CharT>
-inline
-nsPromiseConcatenation<CharT>
 operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    return Concat(lhs, rhs);
+    return nsPromiseConcatenation<CharT>(lhs, rhs);
   }
 
 
@@ -1405,7 +1384,8 @@ operator+( const basic_nsAReadableString<CharT>& lhs, const basic_nsAReadableStr
       }
 
   #define NS_DEF_DERIVED_STRING_OPERATOR_PLUS(_StringT, _CharT) \
-    NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_StringT, _StringT, _CharT)
+    NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_StringT, _StringT, _CharT) \
+    NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(nsPromiseConcatenation<_CharT>, _StringT, _CharT)
 
   #define NS_DEF_2_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)  \
     NS_DEF_DERIVED_STRING_STRING_OPERATOR_PLUS(_String1T, _String2T, _CharT)  \
