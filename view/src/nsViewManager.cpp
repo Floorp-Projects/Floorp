@@ -1163,34 +1163,46 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
     return;
   }
 
-  for (nsIWidget* childWidget = widget->GetFirstChild();
-       childWidget;
-       childWidget = childWidget->GetNextSibling()) {
-    PRBool widgetVisible;
-    childWidget->IsVisible(widgetVisible);
-    if (widgetVisible) {
-      nsView* view = nsView::GetViewFor(childWidget);
-      if (view && view->GetVisibility() == nsViewVisibility_kShow
-          && !view->GetFloating()) {
-        nsRect bounds = view->GetBounds();
-        if (bounds.width > 0 && bounds.height > 0) {
-          nsView* viewParent = view->GetParent();
+  nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
+  if (!children) {
+    return;
+  }
+
+  children->First();
+  do {
+    nsCOMPtr<nsISupports> child;
+    if (!NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+      return;
+    }
+
+    nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
+    if (childWidget) {
+      PRBool widgetVisible;
+      childWidget->IsVisible(widgetVisible);
+      if (widgetVisible) {
+        nsView* view = nsView::GetViewFor(childWidget);
+        if (view && view->GetVisibility() == nsViewVisibility_kShow
+            && !view->GetFloating()) {
+          nsRect bounds = view->GetBounds();
+          if (bounds.width > 0 && bounds.height > 0) {
+            nsView* viewParent = view->GetParent();
             
-          while (viewParent && viewParent != aRootView) {
-            viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
-            viewParent = viewParent->GetParent();
-          }
+            while (viewParent && viewParent != aRootView) {
+              viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
+              viewParent = viewParent->GetParent();
+            }
             
-          // maybe we couldn't get the view into the coordinate
-          // system of aRootView (maybe it's not a descendant
-          // view of aRootView?); if so, don't use it
-          if (viewParent) {
-            aRgn.Or(aRgn, bounds);
+            // maybe we couldn't get the view into the coordinate
+            // system of aRootView (maybe it's not a descendant
+            // view of aRootView?); if so, don't use it
+            if (viewParent) {
+              aRgn.Or(aRgn, bounds);
+            }
           }
         }
       }
     }
-  }
+  } while (NS_SUCCEEDED(children->Next()));
 }
 
 PRBool nsViewManager::BuildRenderingDisplayList(nsIView* aRootView,
@@ -1616,24 +1628,32 @@ PRBool nsViewManager::UpdateWidgetArea(nsView *aWidgetView, const nsRect &aDamag
   }
 
   PRBool childCovers = PR_FALSE;
-  for (nsIWidget* childWidget = widget->GetFirstChild();
-       childWidget;
-       childWidget = childWidget->GetNextSibling()) {
-    nsView* view = nsView::GetViewFor(childWidget);
-    if (nsnull != view) {
-      nsRect damage = bounds;
-      nsView* vp = view;
-      while (vp != aWidgetView && nsnull != vp) {
-        vp->ConvertFromParentCoords(&damage.x, &damage.y);
-        vp = vp->GetParent();
-      }
+  nsCOMPtr<nsIEnumerator> children(dont_AddRef(widget->GetChildren()));
+  if (children) {
+    children->First();
+    do {
+      nsCOMPtr<nsISupports> child;
+      if (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child)))) {
+        nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
+        if (childWidget) {
+          nsView* view = nsView::GetViewFor(childWidget);
+          if (nsnull != view) {
+            nsRect damage = bounds;
+            nsView* vp = view;
+            while (vp != aWidgetView && nsnull != vp) {
+              vp->ConvertFromParentCoords(&damage.x, &damage.y);
+              vp = vp->GetParent();
+            }
             
-      if (nsnull != vp) { // vp == nsnull means it's in a different hierarchy so we ignore it
-        if (UpdateWidgetArea(view, damage, aIgnoreWidgetView)) {
-          childCovers = PR_TRUE;
+            if (nsnull != vp) { // vp == nsnull means it's in a different hierarchy so we ignore it
+              if (UpdateWidgetArea(view, damage, aIgnoreWidgetView)) {
+                childCovers = PR_TRUE;
+              }
+            }
+          }
         }
       }
-    }
+    } while (NS_SUCCEEDED(children->Next()));
   }
 
   if (!childCovers) {

@@ -39,6 +39,7 @@
 
 #include "nsRect.h"
 #include "nsIWidget.h"
+#include "nsIEnumerator.h"
 #include "nsIMouseListener.h"
 #include "nsIEventListener.h"
 #include "nsIMenuListener.h"
@@ -46,6 +47,7 @@
 #include "nsIAppShell.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
+#include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsGUIEvent.h"
 
@@ -78,6 +80,7 @@ public:
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget* aNewParent);
   virtual nsIWidget*      GetParent(void);
+  virtual nsIEnumerator*  GetChildren();
   virtual void            AddChild(nsIWidget* aChild);
   virtual void            RemoveChild(nsIWidget* aChild);
 
@@ -172,7 +175,26 @@ protected:
   nsRect*           mOriginalBounds;
   PRInt32           mZIndex;
   nsSizeMode        mSizeMode;
+
+    // keep the list of children
+  nsCOMArray<nsIWidget> mChildren;
     
+  class Enumerator : public nsIBidirectionalEnumerator {
+  public:
+    NS_DECL_ISUPPORTS
+
+    Enumerator(nsBaseWidget & inParent);
+    virtual ~Enumerator();
+
+    NS_DECL_NSIENUMERATOR
+    NS_DECL_NSIBIDIRECTIONALENUMERATOR
+
+  private:
+    PRInt32       mCurrentPosition;
+    nsBaseWidget& mParent;
+  };
+  friend class Enumerator;
+
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...
     // see nsSwitchToUIThread

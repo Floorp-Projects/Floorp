@@ -298,9 +298,21 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
 nsWindow::~nsWindow()
 {
 	// notify the children that we're gone
-	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
-    childWindow->mParent = nsnull;
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
+	if (children)
+	{
+		children->First();
+		do
+		{
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			{
+				nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
+				NS_RELEASE(child);
+
+				childWindow->mParent = nsnull;
+    	}
+		} while (NS_SUCCEEDED(children->Next()));			
 	}
 
 	mDestructorCalled = PR_TRUE;
@@ -1725,27 +1737,36 @@ void nsWindow::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
 	// and it does for the most part. However; certain cases, such as overlapping
 	// areas that are handled by different view managers, don't properly clip siblings.
 #ifdef FRONT_TO_BACK
-#	define FIRST_CHILD() (mFirstChild)
-#	define NEXT_CHILD(child) (child->GetNextSibling())
+#	define FIRST_CHILD(children) (children->Last())
+#	define NEXT_CHILD(children) (children->Prev())
 #else
-#	define FIRST_CHILD() (mLastChild)
-#	define NEXT_CHILD(child) (child->GetPrevSibling())
+#	define FIRST_CHILD(children) (children->First())
+#	define NEXT_CHILD(children) (children->Next())
 #endif
 
 	// recursively draw the children
-	for (nsIWidget* kid = FIRST_CHILD(); kid; kid = NEXT_CHILD(kid)) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+	nsCOMPtr<nsIBidirectionalEnumerator> children(getter_AddRefs((nsIBidirectionalEnumerator*)GetChildren()));
+	if (children) {
+		FIRST_CHILD(children);
+		do {
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child))) {
+				nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
 
-		nsRect childBounds;
-		childWindow->GetBounds(childBounds);
+				nsRect childBounds;
+				childWindow->GetBounds(childBounds);
 
-		// redraw only the intersection of the child rect and the update rect
-		nsRect intersection;
-		if (intersection.IntersectRect(aRect, childBounds))
-		{
-			intersection.MoveBy(-childBounds.x, -childBounds.y);
-			childWindow->UpdateWidget(intersection, aContext);
-		}
+				// redraw only the intersection of the child rect and the update rect
+				nsRect intersection;
+				if (intersection.IntersectRect(aRect, childBounds))
+				{
+					intersection.MoveBy(-childBounds.x, -childBounds.y);
+					childWindow->UpdateWidget(intersection, aContext);
+				}
+				
+				NS_RELEASE(child);
+    		}
+		} while (NS_SUCCEEDED(NEXT_CHILD(children)));
 	}
 
 #undef FIRST_CHILD
@@ -1935,14 +1956,25 @@ NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 scrollChildren:
 	//--------
 	// Scroll the children
-	for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
+	if (children)
+	{
+		children->First();
+		do
+		{
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+			{
+				nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
+				NS_RELEASE(child);
 
-		nsRect bounds;
-		childWindow->GetBounds(bounds);
-		bounds.x += aDx;
-		bounds.y += aDy;
-		childWindow->SetBounds(bounds);
+				nsRect bounds;
+				childWindow->GetBounds(bounds);
+				bounds.x += aDx;
+				bounds.y += aDy;
+				childWindow->SetBounds(bounds);
+  		}
+		} while (NS_SUCCEEDED(children->Next()));			
 	}
 
 	// recalculate the window regions
@@ -2182,29 +2214,33 @@ void nsWindow::CalcWindowRegions()
 	::CopyRgn(mWindowRegion, mVisRegion);
 
 	// clip the children out of the visRegion
-	if (mFirstChild)
+	nsCOMPtr<nsIEnumerator> children ( getter_AddRefs(GetChildren()) );
+	if (children)
 	{
 		StRegionFromPool childRgn;
 		if (childRgn != nsnull) {
-			nsIWidget* child = mFirstChild;
+			children->First();
 			do
 			{
-				nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, child);
+				nsISupports* child;
+				if (NS_SUCCEEDED(children->CurrentItem(&child)))
+				{
+					nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
+					NS_RELEASE(child);
 					
-				PRBool visible;
-				childWindow->IsVisible(visible);
-				if (visible) {
-					nsRect childRect;
-					childWindow->GetBounds(childRect);
+					PRBool visible;
+					childWindow->IsVisible(visible);
+					if (visible) {
+						nsRect childRect;
+						childWindow->GetBounds(childRect);
 
-					Rect macRect;
-					::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
-					::RectRgn(childRgn, &macRect);
-					::DiffRgn(mVisRegion, childRgn, mVisRegion);
+						Rect macRect;
+						::SetRect(&macRect, childRect.x, childRect.y, childRect.XMost(), childRect.YMost());
+						::RectRgn(childRgn, &macRect);
+						::DiffRgn(mVisRegion, childRgn, mVisRegion);
+					}
 				}
-				
-				child = child->GetNextSibling();
-			} while (child);
+			} while (NS_SUCCEEDED(children->Next()));
 		}
 	}
 }
@@ -2306,16 +2342,29 @@ nsWindow*  nsWindow::FindWidgetHit(Point aThePoint)
 
 	nsWindow* widgetHit = this;
 
-	// traverse through all the nsWindows to find out who got hit, lowest level of course
-	for (nsIWidget* kid = mLastChild; kid; kid = kid->GetPrevSibling()) {
-		nsWindow* childWindow = NS_STATIC_CAST(nsWindow*, kid);
-		
-		nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
-		if (deeperHit)
+	nsCOMPtr<nsIEnumerator> normalEnum ( getter_AddRefs(GetChildren()) );
+	nsCOMPtr<nsIBidirectionalEnumerator> children ( do_QueryInterface(normalEnum) );
+	if (children)
+	{
+		// traverse through all the nsWindows to find out who got hit, lowest level of course
+		children->Last();
+		do
 		{
-			widgetHit = deeperHit;
-			break;
+			nsISupports* child;
+			if (NS_SUCCEEDED(children->CurrentItem(&child)))
+      {
+      	nsWindow* childWindow = static_cast<nsWindow*>(static_cast<nsIWidget*>(child));
+				NS_RELEASE(child);
+
+			  nsWindow* deeperHit = childWindow->FindWidgetHit(aThePoint);
+			  if (deeperHit)
+			  {
+				  widgetHit = deeperHit;
+				  break;
+			  }
+      }
 		}
+    while (NS_SUCCEEDED(children->Prev()));
 	}
 
 	return widgetHit;

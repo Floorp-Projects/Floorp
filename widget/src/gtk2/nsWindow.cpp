@@ -346,13 +346,21 @@ nsWindow::Destroy(void)
 
     NativeShow(PR_FALSE);
 
-    // walk the list of children and call destroy on them.  Have to be
-    // careful, though -- calling destroy on a kid may actually remove
-    // it from our child list, losing its sibling links.
-    for (nsIWidget* kid = mFirstChild; kid; ) {
-        nsIWidget* next = kid->GetNextSibling();
-        kid->Destroy();
-        kid = next;
+    // walk the list of children and call destroy on them.
+    nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+    if (children) {
+        nsCOMPtr<nsISupports> isupp;
+        nsCOMPtr<nsIWidget> child;
+        while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))
+                            && isupp)) {
+            child = do_QueryInterface(isupp);
+            if (child) {
+                child->Destroy();
+            }
+
+            if (NS_FAILED(children->Next()))
+                break;
+        }
     }
 
 #ifdef USE_XIM
@@ -827,12 +835,25 @@ nsWindow::Scroll(PRInt32  aDx,
     moz_drawingarea_scroll(mDrawingarea, aDx, aDy);
 
     // Update bounds on our child windows
-    for (nsIWidget* kid = mFirstChild; kid; kid = kid->GetNextSibling()) {
-        nsRect bounds;
-        kid->GetBounds(bounds);
-        bounds.x += aDx;
-        bounds.y += aDy;
-        NS_STATIC_CAST(nsBaseWidget*, kid)->SetBounds(bounds);
+    nsCOMPtr<nsIEnumerator> children = dont_AddRef(GetChildren());
+    if (children) {
+        nsCOMPtr<nsISupports> isupp;
+        nsCOMPtr<nsIWidget> child;
+        while (NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(isupp))
+                            && isupp)) {
+            child = do_QueryInterface(isupp);
+            if (child) {
+                nsRect bounds;
+                child->GetBounds(bounds);
+                bounds.x += aDx;
+                bounds.y += aDy;
+                NS_STATIC_CAST(nsBaseWidget*, 
+                               (nsIWidget*)child)->SetBounds(bounds);
+            }
+
+            if (NS_FAILED(children->Next()))
+                break;
+        }
     }
 
     // Process all updates so that everything is drawn.
