@@ -391,23 +391,6 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
 
       ++(mSendLater->mTotalSentSuccessfully);
     }
-    else
-    {
-/*TODO
-      if (mSendReport)
-      {
-        // shame we can't get access to a prompt interface from here...=(
-        mSendReport->SetError(nsIMsgSendReport::process_Current, aStatus, PR_FALSE);
-        mSendReport->DisplayReport(nsnull, PR_TRUE, PR_TRUE, &aStatus);
-      }
-      else
-*/
-      {
-        // shame we can't get access to a prompt interface from here...=(
-        if (aStatus != NS_ERROR_BUT_DONT_SHOW_ALERT &&  aStatus != NS_ERROR_ABORT)
-          nsMsgDisplayMessageByID(nsnull, NS_ERROR_SEND_FAILED);
-      }  
-    }
 
     // Regardless, we will still keep trying to send the rest...
     rv = mSendLater->StartNextMailFileSend();

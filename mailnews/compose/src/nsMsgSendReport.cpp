@@ -342,10 +342,15 @@ NS_IMETHODIMP nsMsgSendReport::DisplayReport(nsIPrompt *prompt, PRBool showError
     if (!currMessage.IsEmpty())
     {
       nsAutoString temp((const PRUnichar *)dialogMessage);  // Because of bug 74726, we cannot use directly an XPIDLString
-      if (! dialogMessage.IsEmpty())
-        temp.Append(NS_LITERAL_STRING("\n"));
-      temp.Append(currMessage);
-      dialogMessage.Adopt(temp.ToNewUnicode());
+
+      //Don't need to repeat ourself!
+      if (! currMessage.Equals(temp))
+      {
+        if (! dialogMessage.IsEmpty())
+          temp.Append(NS_LITERAL_STRING("\n"));
+        temp.Append(currMessage);
+        dialogMessage.Adopt(temp.ToNewUnicode());
+      }
     }
       
     if (askToGoBackToCompose)

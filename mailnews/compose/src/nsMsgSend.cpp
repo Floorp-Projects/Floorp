@@ -2819,7 +2819,7 @@ SendDeliveryCallback(nsIURI *aUrl, nsresult aExitCode, nsMsgDeliveryType deliver
     {
   	  if (NS_FAILED(aExitCode))
   		  if (aExitCode != NS_ERROR_ABORT && !NS_IS_MSG_ERROR(aExitCode))
-  			  aExitCode = NS_ERROR_SEND_FAILED;
+  			  aExitCode = NS_ERROR_POST_FAILED;
       
       msgSend->DeliverAsNewsExit(aUrl, aExitCode);
     }
