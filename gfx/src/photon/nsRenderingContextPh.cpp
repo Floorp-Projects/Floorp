@@ -1,3 +1,5 @@
+void *Mask;
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -134,6 +136,7 @@ nsRenderingContextPh :: nsRenderingContextPh()
   mP2T = 1.0f;
   mWidget = nsnull;
   mPhotonFontName = nsnull;
+  Mask = nsnull;
 
   //default objects
   //state management
@@ -1439,6 +1442,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
   ApplyClipping(mSurface->GetGC());
   res = aImage->Draw( *this, mSurface, x, y, w, h );
 
+Mask = aImage->GetAlphaBits();
   return res;
 }
 
@@ -1461,6 +1465,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, nscoord aX, ns
   mSurface->Select();
   ApplyClipping(mSurface->GetGC());
   res = aImage->Draw( *this, mSurface, x, y, w, h );
+Mask = aImage->GetAlphaBits();
   return res;
 }
 
@@ -1481,6 +1486,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, const nsRect& 
   mSurface->Select();
   ApplyClipping(mSurface->GetGC());
   res = aImage->Draw(*this,mSurface,sr.x,sr.y,sr.width,sr.height, dr.x,dr.y,dr.width,dr.height);
+Mask = aImage->GetAlphaBits();
 
   return res;
 }
@@ -1499,6 +1505,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawImage(nsIImage *aImage, const nsRect& 
   mSurface->Select();
   ApplyClipping(mSurface->GetGC());
   res = aImage->Draw(*this,mSurface,tr.x,tr.y,tr.width,tr.height);
+Mask = aImage->GetAlphaBits();
 
   return res;
 }
