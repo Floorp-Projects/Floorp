@@ -615,7 +615,8 @@ nsHTTPHandler::nsHTTPHandler():
     mRequestTimeout (DEFAULT_HTTP_REQUEST_TIMEOUT),
     mConnectTimeout (DEFAULT_HTTP_CONNECT_TIMEOUT),
     mMaxAllowedKeepAlives (DEFAULT_MAX_ALLOWED_KEEPALIVES),
-    mMaxAllowedKeepAlivesPerServer (DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER)
+    mMaxAllowedKeepAlivesPerServer (DEFAULT_MAX_ALLOWED_KEEPALIVES_PER_SERVER),
+    mProxySSLConnectAllowed (PR_FALSE)
 {
     NS_INIT_REFCNT ();
     SetAcceptEncodings (DEFAULT_ACCEPT_ENCODINGS);
@@ -1370,6 +1371,10 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_PROXY_PIPELINING;
     }
 
+    rv = mPrefs->GetBoolPref("network.http.proxy.ssl.connect", &cVar);
+    if (NS_SUCCEEDED (rv))
+        mProxySSLConnectAllowed = cVar;
+
     mPrefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
     mPrefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
     mPrefs->GetIntPref("network.http.keep-alive.max-connections", &mMaxAllowedKeepAlives);
@@ -1564,5 +1569,16 @@ nsHTTPHandler::Check4BrokenHTTPServers(const char * a_Server, PRUint32 * a_Capab
             break;
         }
     }
+    return NS_OK;
+}
+
+
+nsresult
+nsHTTPHandler::GetProxySSLConnectAllowed (PRBool *a_Allowed)
+{
+    if (a_Allowed == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    *a_Allowed = mProxySSLConnectAllowed;
     return NS_OK;
 }

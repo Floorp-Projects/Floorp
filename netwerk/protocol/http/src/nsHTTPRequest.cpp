@@ -62,7 +62,10 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
     mRequestSpec(0),
     mHandler (i_Handler),
     mAbortStatus(NS_OK),
-    mHeadersFormed (PR_FALSE)
+    mHeadersFormed (PR_FALSE),
+    mPort (-1),
+    mDoingProxySSLConnect  (PR_FALSE),
+    mProxySSLConnectAllowed(PR_FALSE)
 {   
     NS_INIT_REFCNT();
 
@@ -73,15 +76,28 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
 
 #if defined(PR_LOGGING)
   nsXPIDLCString urlCString; 
-  mURI->GetSpec(getter_Copies(urlCString));
+    mURI->GetSpec(getter_Copies(urlCString));
   
-  PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
+    PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
          ("Creating nsHTTPRequest [this=%x] for URI: %s.\n", 
            this, (const char *)urlCString));
 #endif
   
-    mHandler->GetHttpVersion(&mVersion);
-    mHandler->GetKeepAliveTimeout(&mKeepAliveTimeout);
+    mHandler -> GetHttpVersion(&mVersion);
+    mHandler -> GetKeepAliveTimeout(&mKeepAliveTimeout);
+    mHandler -> GetProxySSLConnectAllowed (&mProxySSLConnectAllowed);
+
+    mURI -> GetSpec (getter_Copies (mSpec));
+    mURI -> GetHost (getter_Copies (mHost));
+    mURI -> GetPort (&mPort);
+
+    if (mPort == -1)
+    {
+        if (!PL_strcasecmp (mSpec, "https"))
+            mPort = 443;
+        else
+            mPort = 80;
+    }
 }
     
 
@@ -249,6 +265,14 @@ nsresult
 nsHTTPRequest::SetOverrideRequestSpec(const char* i_Spec)
 {
     CRTFREEIF(mRequestSpec);
+    
+    if (i_Spec)
+    {
+        // proxy case
+        if (!PL_strcasecmp (mSpec, "https") && mProxySSLConnectAllowed)
+            mDoingProxySSLConnect = PR_TRUE;
+    }
+    
     return DupString(&mRequestSpec, i_Spec);
 }
 
@@ -264,18 +288,13 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
     if (mHeadersFormed)
         return NS_OK;
 
-    nsXPIDLCString host;
-    mURI->GetHost(getter_Copies(host));
-    PRInt32 port = -1;
-    mURI->GetPort(&port);
-
     // Send Host header by default
     if (HTTP_ZERO_NINE != mVersion)
     {
-        if (-1 != port)
+        if (-1 != mPort)
         {
             char* tempHostPort = 
-                PR_smprintf("%s:%d", (const char*)host, port);
+                PR_smprintf("%s:%d", (const char*)mHost, mPort);
             if (tempHostPort)
             {
                 SetHeader(nsHTTPAtoms::Host, tempHostPort);
@@ -284,7 +303,7 @@ nsHTTPRequest::formHeaders(PRUint32 capabilities)
             }
         }
         else
-            SetHeader(nsHTTPAtoms::Host, host);
+            SetHeader(nsHTTPAtoms::Host, mHost);
     }
 
     // Add the user-agent 
@@ -375,43 +394,55 @@ nsHTTPRequest::formBuffer(nsCString * requestBuffer, PRUint32 capabilities)
     nsXPIDLCString autoBuffer;
     nsresult rv;
 
-    
     nsString methodString;
     nsCString cp;
 
-    mMethod -> ToString     (methodString);
-    cp.AssignWithConversion (methodString);
-
-    requestBuffer->Append ( cp);
-    requestBuffer->Append (" ");
-
-    // Request spec gets set for proxied cases-
-    if (!mRequestSpec)
+    if (mDoingProxySSLConnect)
     {
-        rv = mURI->GetPath(getter_Copies(autoBuffer));
-        requestBuffer->Append(autoBuffer);
+        requestBuffer -> Append ("CONNECT ");
+        requestBuffer -> Append ( mHost);
+        requestBuffer -> Append (":");
+
+        char tmp[20];
+        sprintf (tmp, "%u", mPort);
+        requestBuffer -> Append (tmp);
     }
     else
-        requestBuffer->Append(mRequestSpec);
-    
-    //if (mRequestSpec) 
-    /*
-    else
     {
-        if (aIsProxied) {
-            rv = mURI->GetSpec(getter_Copies(autoBuffer));
-        } else {
+        mMethod -> ToString     (methodString);
+        cp.AssignWithConversion (methodString);
+
+        requestBuffer->Append ( cp);
+        requestBuffer->Append (" ");
+
+        // Request spec gets set for proxied cases-
+        if (!mRequestSpec)
+        {
             rv = mURI->GetPath(getter_Copies(autoBuffer));
+            requestBuffer->Append(autoBuffer);
         }
-        mRequestBuffer.Append(autoBuffer);
+        else
+            requestBuffer->Append(mRequestSpec);
+    
+        //if (mRequestSpec) 
+        /*
+        else
+        {
+            if (aIsProxied) {
+                rv = mURI->GetSpec(getter_Copies(autoBuffer));
+            } else {
+                rv = mURI->GetPath(getter_Copies(autoBuffer));
+            }
+            mRequestBuffer.Append(autoBuffer);
+        }
+        */
+    
+        //Trim off the # portion if any...
+        int refLocation = requestBuffer->RFind("#");
+    
+        if (-1 != refLocation)
+            requestBuffer->Truncate(refLocation);
     }
-    */
-    
-    //Trim off the # portion if any...
-    int refLocation = requestBuffer->RFind("#");
-    
-    if (-1 != refLocation)
-        requestBuffer->Truncate(refLocation);
 
     char * httpVersion = " HTTP/1.0" CRLF;
 
@@ -724,7 +755,8 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
                     nsHTTPResponseListener* pListener = new nsHTTPServerListener(
                             req->mConnection, 
                             mHandler, 
-                            this);
+                            this,
+                            req -> mDoingProxySSLConnect);
                     if (pListener)
                     {
                         NS_ADDREF  (pListener);
@@ -838,11 +870,27 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
 }
 
 nsresult
-nsHTTPPipelinedRequest::RestartRequest()
+nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
 {
     nsresult rval = NS_ERROR_FAILURE;
 
     PR_LOG (gHTTPLog, PR_LOG_DEBUG, ("nsHTTPPipelinedRequest::RestartRequest() [this=%x], mTotalProcessed=%u\n", this, mTotalProcessed));
+
+    if (aType == REQUEST_RESTART_SSL)
+    {
+        mTotalWritten = 0;
+        mMustCommit   = PR_TRUE;
+        mListener     =  nsnull;
+
+        // in case of SSL proxies we can't pipeline
+        nsHTTPRequest * req = (nsHTTPRequest *) mRequests->ElementAt (0);
+        req -> mDoingProxySSLConnect = PR_FALSE;
+        NS_RELEASE (req);
+        //
+        // XXX/ruslan: need to tell the transport to switch into SSL mode
+        //
+        return WriteRequest (mInputStream);
+    }
 
     if (mTotalProcessed == 0)
     {
@@ -969,6 +1017,9 @@ nsHTTPPipelinedRequest::AddToPipeline(nsHTTPRequest *aRequest)
     }
 
     if (! ( mCapabilities & (nsIHTTPProtocolHandler::ALLOW_PROXY_PIPELINING|nsIHTTPProtocolHandler::ALLOW_PIPELINING) ))
+        mMustCommit = PR_TRUE;
+
+    if (aRequest -> mDoingProxySSLConnect)
         mMustCommit = PR_TRUE;
 
     aRequest->mPipelinedRequest  = this;
