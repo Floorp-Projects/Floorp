@@ -29,7 +29,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsFileSpec.h"
-
+#include "nsCRT.h"
 #include "nsISupportsArray.h"
 #include "nsISupportsPrimitives.h"
 
@@ -537,8 +537,89 @@ nsClipboard::SelectionReceiver (GtkWidget *aWidget,
 
   if (type.Equals("COMPOUND_TEXT")) {
 #ifdef DEBUG_CLIPBOARD
-    g_print("COMPOUND_TEXT\n");
+    g_print("        Copying mSelectionData pointer -- \n");
 #endif
+    mSelectionData = *aSD;
+
+    char *data = (char*)aSD->data;
+    PRInt32 len = (PRInt32)aSD->length;
+
+    int status = 0;
+    XTextProperty prop;
+
+#ifdef DEBUG_CLIPBOARD
+    g_print("        Converted text from COMPOUND_TEXT to platform locale\n");
+    g_print("        data is %s\n", data);
+    g_print("        len is %d\n", len);
+#endif
+
+    prop.value = data;
+    prop.nitems = len;
+    prop.encoding = XInternAtom(GDK_DISPLAY(), "COMPOUND_TEXT", FALSE);
+    prop.format = 8;
+
+    char **tmpData;
+    int foo;
+    status = XmbTextPropertyToTextList(GDK_DISPLAY(), &prop, &tmpData, &foo);
+
+    if (foo > 1)
+      printf("\n\n\n\n\n\nblah blah blah blah\n\n\n\n\n\n\n");
+
+    PRInt32 numberOfBytes = 0;
+
+    if (status == Success) {
+      data = tmpData[0];
+      numberOfBytes = nsCRT::strlen(NS_REINTERPRET_CAST(const PRUnichar *, data)) * 2;
+#ifdef DEBUG_CLIPBOARD
+      g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  numberOfBytes is %d\n", *tmpData,
+              numberOfBytes);
+#endif
+    }
+
+    nsresult rv;
+    PRInt32 outUnicodeLen;
+    PRUnichar *unicodeData;
+
+#ifdef DEBUG_CLIPBOARD
+    g_print("        Converting from current locale to unicode\n");
+#endif
+
+    static nsCOMPtr<nsIUnicodeDecoder> decoder;
+    static PRBool hasConverter = PR_FALSE;
+    if ( !hasConverter ) {
+      // get the charset
+      nsAutoString platformCharset;
+      nsCOMPtr <nsIPlatformCharset> platformCharsetService = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+      if (NS_SUCCEEDED(rv))
+        rv = platformCharsetService->GetCharset(kPlatformCharsetSel_Menu, platformCharset);
+      if (NS_FAILED(rv))
+        platformCharset.AssignWithConversion("ISO-8859-1");
+      
+      // get the decoder
+      NS_WITH_SERVICE(nsICharsetConverterManager, ccm, NS_CHARSETCONVERTERMANAGER_PROGID, &rv);  
+      rv = ccm->GetUnicodeDecoder(&platformCharset, getter_AddRefs(decoder));
+      
+      hasConverter = PR_TRUE;
+    }
+  
+    // Estimate out length and allocate the buffer based on a worst-case estimate, then do
+    // the conversion. 
+    decoder->GetMaxLength(data, numberOfBytes, &outUnicodeLen);   // |outUnicodeLen| is number of chars
+    if (outUnicodeLen) {
+      unicodeData = NS_REINTERPRET_CAST(PRUnichar*, nsAllocator::Alloc((outUnicodeLen + 1) * sizeof(PRUnichar)));
+      if ( unicodeData ) {
+        PRInt32 numberTmp = numberOfBytes;
+        rv = decoder->Convert(data, &numberTmp, unicodeData, &outUnicodeLen);
+        if (numberTmp != numberOfBytes)
+          printf("didn't consume all the bytes\n");
+
+        (unicodeData)[outUnicodeLen] = '\0';    // null terminate. Convert() doesn't do it for us
+      }
+    } // if valid length
+
+
+    mSelectionData.data = NS_REINTERPRET_CAST(guchar*,unicodeData);
+    mSelectionData.length = numberOfBytes;
   }
   else if (type.Equals("UTF8_STRING")) {
     mSelectionData = *aSD;
