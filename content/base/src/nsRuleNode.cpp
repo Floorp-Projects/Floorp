@@ -2109,18 +2109,32 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct,
 
   // line-height: normal, number, length, percent, inherit
   if (eCSSUnit_Percent == textData.mLineHeight.GetUnit()) {
-    aInherited = PR_TRUE;
-    const nsStyleFont* font = aContext->GetStyleFont();
-    text->mLineHeight.SetCoordValue((nscoord)((float)(font->mSize) *
-                                     textData.mLineHeight.GetPercentValue()));
+    inherited = PR_TRUE;
+    // Use |mFont.size| to pick up minimum font size.
+    text->mLineHeight.SetCoordValue(
+        nscoord(float(aContext->GetStyleFont()->mFont.size) *
+                textData.mLineHeight.GetPercentValue()));
   } else {
     SetCoord(textData.mLineHeight, text->mLineHeight, parentText->mLineHeight,
              SETCOORD_LH | SETCOORD_FACTOR | SETCOORD_NORMAL,
              aContext, mPresContext, inherited);
     if (textData.mLineHeight.IsFixedLengthUnit() ||
-        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel)
-      text->mLineHeight.SetCoordValue(nsStyleFont::ZoomText(mPresContext,
-                                           text->mLineHeight.GetCoordValue()));
+        textData.mLineHeight.GetUnit() == eCSSUnit_Pixel) {
+      nscoord lh = nsStyleFont::ZoomText(mPresContext,
+                                         text->mLineHeight.GetCoordValue());
+      nscoord minimumFontSize = 0;
+      mPresContext->GetCachedIntPref(kPresContext_MinimumFontSize,
+                                     minimumFontSize);
+      if (minimumFontSize > 0 && !IsChrome(mPresContext)) {
+        // If we applied a minimum font size, scale the line height by
+        // the same ratio.  (If we *might* have applied a minimum font
+        // size, we can't cache in the rule tree.)
+        inherited = PR_TRUE;
+        const nsStyleFont *font = aContext->GetStyleFont();
+        lh = float(lh) * float(font->mFont.size) / float(font->mSize);
+      }
+      text->mLineHeight.SetCoordValue(lh);
+    }
   }
 
 
