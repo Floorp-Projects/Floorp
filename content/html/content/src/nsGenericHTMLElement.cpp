@@ -1475,6 +1475,15 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { 0 }
 };
 
+static nsGenericHTMLElement::EnumTable kCompatDivAlignTable[] = {
+  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
+  { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
+  { "justify", NS_STYLE_TEXT_ALIGN_JUSTIFY },
+  { 0 }
+};
+
 static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
@@ -1584,14 +1593,22 @@ PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsString& aString,
                                          nsHTMLValue& aResult)
 {
+#if XXX_no_nav_compat
   return ParseEnumValue(aString, kDivAlignTable, aResult);
+#else
+  return ParseEnumValue(aString, kCompatDivAlignTable, aResult);
+#endif
 }
 
 PRBool
 nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
                                             nsString& aResult)
 {
+#if XXX_no_nav_compat
   return EnumValueToString(aValue, kDivAlignTable, aResult);
+#else
+  return EnumValueToString(aValue, kCompatDivAlignTable, aResult);
+#endif
 }
 
 PRBool
