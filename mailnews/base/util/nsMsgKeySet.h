@@ -40,6 +40,8 @@
 
 #include "msgCore.h"
 
+class nsMsgKeyArray;
+
 // nsMsgKeySet represents a set of articles.  Typically, it is the set of
 // read articles from a .newsrc file, but it can be used for other purposes
 // too.
@@ -99,6 +101,14 @@ public:
   void  SetLastMember(PRInt32 highWaterMark);
   // For debugging only...
   PRInt32 getLength() {return m_length;}
+
+  /**
+   * Return a copy of this as an nsMsgKeyArray, which is much easier for
+   * callers to manipulate.  Normal XPCOM calling conventions, although the
+   * array itself isn't refcounted, so the caller should free when done
+   * using NS_DELETEXPCOM().
+   */
+  nsresult ToMsgKeyArray(nsMsgKeyArray **aArray);
   
 #ifdef DEBUG
   static void RunTests();

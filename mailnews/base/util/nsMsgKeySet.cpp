@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -16,7 +16,7 @@
  *
  * The Initial Developer of the Original Code is 
  * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 1998
+ * Portions created by the Initial Developer are Copyright (C) 1998, 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
@@ -42,6 +42,7 @@
 #include "nsMsgKeySet.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "nsMsgKeyArray.h"
 
 #if defined(DEBUG_seth_) || defined(DEBUG_sspitzer_)
 #define DEBUG_MSGKEYSET 1
@@ -1174,7 +1175,66 @@ nsMsgKeySet::LastMissingRange(PRInt32 min, PRInt32 max,
   return 0;
 }
 
+/**
+ * Return a copy of this as an nsMsgKeyArray, which is much easier for
+ * callers to manipulate.  Normal XPCOM calling conventions, although the
+ * array itself isn't refcounted, so the caller should free when done
+ * using NS_DELETEXPCOM().
+ */
+nsresult 
+nsMsgKeySet::ToMsgKeyArray(nsMsgKeyArray **aArray)
+{
+    PRInt32 size;
+    PRInt32 *head;
+    PRInt32 *tail;
+    PRInt32 *end;
+    PRInt32 last_art = -1;
 
+    nsMsgKeyArray *array;
+    NS_NEWXPCOM(array, nsMsgKeyArray);
+    if (!array) 
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    size = m_length;
+    head = m_data;
+    tail = head;
+    end = head + size;
+
+    while (tail < end) {
+        PRInt32 from;
+        PRInt32 to;
+
+        if (*tail < 0) {
+            /* it's a range */
+            from = tail[1];
+            to = from + (-(tail[0]));
+            tail += 2;
+        }
+        else /* it's a literal */
+            {
+                from = *tail;
+                to = from;
+                tail++;
+            }
+        if (from == 0) {
+            from = 1;               /* See 'hack' comment above  ### */
+        }
+        if (from <= last_art) from = last_art + 1;
+        if (from <= to) {
+            if (from < to) {
+                for (PRInt32 i = from; i < to ; ++i ) {
+                    array->Add(i);
+                }
+            } else {
+                array->Add(from);
+            }
+            last_art = to;
+        }
+    }
+
+    *aArray = array;
+    return NS_OK;
+}
 
 
 #ifdef DEBUG /* A lot of test cases for the above */

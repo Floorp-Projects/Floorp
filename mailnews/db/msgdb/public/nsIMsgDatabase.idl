@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -273,5 +273,15 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   attribute unsigned long msgHdrCacheSize;
 
   void setFolderStream(in nsIOFileStream aFileStream);
+
+  /**
+   * The list of messages currently in the NEW state.
+   * 
+   * If there are no such messages, a null pointer may be returned.
+   * Note that the since the structure itself is not refcounted, 
+   * the caller should free when done using NS_DELETEXPCOM().
+   */
+  [noscript]
+  readonly attribute nsMsgKeyArrayPtr newList;
 };
 

@@ -4425,3 +4425,20 @@ NS_IMETHODIMP nsMsgDatabase::SetFolderStream(nsIOFileStream *aFileStream)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/**
+ * [noscript] readonly attribute nsMsgKeySetPtr newList;
+ */
+NS_IMETHODIMP
+nsMsgDatabase::GetNewList(nsMsgKeyArray * *aNewList)
+{
+    NS_ENSURE_ARG_POINTER(aNewList);
+
+    if (m_newSet) {
+        return m_newSet->ToMsgKeyArray(aNewList);
+    }
+
+    // if there were no new messages, signal this by returning a null pointer
+    //
+    *aNewList = 0;
+    return NS_OK;
+}
