@@ -21,11 +21,11 @@
  *   Scott Collins <scc@mozilla.org> (original author)
  */
 
-/* nsCommonString.h --- a string implementation that shares its underlying storage */
+/* nsSharableString.h --- a string implementation that shares its underlying storage */
 
 
-#ifndef nsCommonString_h___
-#define nsCommonString_h___
+#ifndef nsSharableString_h___
+#define nsSharableString_h___
 
 #ifndef nsAFlatString_h___
 #include "nsAFlatString.h"
@@ -41,19 +41,19 @@
    * Not yet ready for non-|const| access
    */
 
-class NS_COM nsCommonString
+class NS_COM nsSharableString
     : public nsAFlatString
   {
     public:
-      typedef nsCommonString    self_type;
+      typedef nsSharableString  self_type;
       typedef PRUnichar         char_type;
       typedef nsAString         string_type;
 
     public:
-      nsCommonString() { }
-      nsCommonString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
-      explicit nsCommonString( const string_type& aReadable ) { assign(aReadable); }
-      explicit nsCommonString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
+      nsSharableString() { }
+      nsSharableString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
+      explicit nsSharableString( const string_type& aReadable ) { assign(aReadable); }
+      explicit nsSharableString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
 
       self_type&
       operator=( const string_type& aReadable )
@@ -71,19 +71,19 @@ class NS_COM nsCommonString
   };
 
 
-class NS_COM nsCommonCString
+class NS_COM nsSharableCString
     : public nsAFlatCString
   {
     public:
-      typedef nsCommonCString   self_type;
+      typedef nsSharableCString self_type;
       typedef char              char_type;
       typedef nsACString        string_type;
 
     public:
-      nsCommonCString() { }
-      nsCommonCString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
-      explicit nsCommonCString( const string_type& aReadable ) { assign(aReadable); }
-      explicit nsCommonCString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
+      nsSharableCString() { }
+      nsSharableCString( const self_type& aOther ) : mBuffer(aOther.mBuffer) { }
+      explicit nsSharableCString( const string_type& aReadable ) { assign(aReadable); }
+      explicit nsSharableCString( const nsSharedBufferHandle<char_type>* aHandle ) : mBuffer(aHandle) { }
 
       self_type&
       operator=( const string_type& aReadable )
@@ -101,4 +101,4 @@ class NS_COM nsCommonCString
   };
 
 
-#endif /* !defined(nsCommonString_h___) */
+#endif /* !defined(nsSharableString_h___) */

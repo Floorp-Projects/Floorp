@@ -23,11 +23,11 @@
 
 //-------1---------2---------3---------4---------5---------6---------7---------8
 
-#include "nsCommonString.h"
+#include "nsSharableString.h"
 // #include "nsBufferHandleUtils.h"
 
 void
-nsCommonString::assign( const string_type& aReadable )
+nsSharableString::assign( const string_type& aReadable )
   {
     const nsSharedBufferHandle<char_type>* handle = aReadable.GetSharedBufferHandle();
     if ( !handle )
@@ -36,13 +36,13 @@ nsCommonString::assign( const string_type& aReadable )
   }
 
 const nsSharedBufferHandle<PRUnichar>*
-nsCommonString::GetSharedBufferHandle() const
+nsSharableString::GetSharedBufferHandle() const
   {
     return mBuffer.get();
   }
 
 void
-nsCommonCString::assign( const string_type& aReadable )
+nsSharableCString::assign( const string_type& aReadable )
   {
     const nsSharedBufferHandle<char_type>* handle = aReadable.GetSharedBufferHandle();
     if ( !handle )
@@ -51,7 +51,7 @@ nsCommonCString::assign( const string_type& aReadable )
   }
 
 const nsSharedBufferHandle<char>*
-nsCommonCString::GetSharedBufferHandle() const
+nsSharableCString::GetSharedBufferHandle() const
   {
     return mBuffer.get();
   }
