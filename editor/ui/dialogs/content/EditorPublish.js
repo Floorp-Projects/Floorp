@@ -29,7 +29,6 @@ var gPublishSiteData;
 var gReturnData;
 var gDefaultSiteIndex = -1;
 var gDefaultSiteName;
-var gPreviousDefaultSite;
 var gPreviousDefaultDir;
 var gPreviousTitle;
 var gSettingsChanged = false;
@@ -84,7 +83,6 @@ function Startup()
   
   gPublishSiteData = GetPublishSiteData();
   gDefaultSiteName = GetDefaultPublishSiteName();
-  gPreviousDefaultSite = gDefaultSiteName;
 
   var addNewSite = false;
   if (gPublishSiteData)
@@ -116,7 +114,7 @@ function Startup()
       {
         var dirObj = {};
         var siteIndex = FindSiteIndexAndDocDir(gPublishSiteData, docUrl, dirObj);
-        
+
         // Select this site only if the same as user's intended site, or there wasn't one
         if (siteIndex != -1 && (gInitialSiteIndex == -1 || siteIndex == gInitialSiteIndex))
         {
@@ -146,8 +144,7 @@ function Startup()
         if (publishData)
         {
           filename = publishData.filename;
-          // With new remote sites, Site Name is: host (scheme)
-          gDialog.SiteNameInput.value    = GetHost(docUrl) + " (" + GetScheme(docUrl) + ")";
+          gDialog.SiteNameInput.value    = publishData.siteName;
           gDialog.PublishUrlInput.value  = publishData.publishUrl;
           gDialog.BrowseUrlInput.value   = publishData.browseUrl;
           gDialog.UsernameInput.value    = publishData.username;
@@ -162,7 +159,7 @@ function Startup()
   } catch (e) {}
 
   gDialog.PageTitleInput.value = gPreviousTitle;
-  gDialog.FilenameInput.value = filename;
+  gDialog.FilenameInput.value = unescape(filename);
   
   if (!addNewSite)
   {
@@ -267,9 +264,6 @@ function SelectSiteList()
         AppendStringToMenulist(gDialog.OtherDirList, gPublishSiteData[selectedSiteIndex].dirList[i]);
       }
     }
-    gDialog.DocDirList.value = gPublishSiteData[selectedSiteIndex].docDir;
-    gDialog.OtherDirList.value = gPublishSiteData[selectedSiteIndex].otherDir;
-
     gDialog.DocDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].docDir);
     gDialog.OtherDirList.value = FormatDirForPublishing(gPublishSiteData[selectedSiteIndex].otherDir);
     publishOtherFiles = gPublishSiteData[selectedSiteIndex].publishOtherFiles;
@@ -463,6 +457,7 @@ function ValidateSettings()
     gPublishSiteData[siteIndex].otherDir = "";
     gPublishSiteData[siteIndex].dirList = [""];
     gPublishSiteData[siteIndex].publishOtherFiles = true;
+    gPublishSiteData[siteIndex].previousSiteName = siteName;
     newSite = true;
   }
   gPublishSiteData[siteIndex].siteName = siteName;
@@ -499,10 +494,17 @@ function ValidateSettings()
   {
     // Update selected item if sitename changed 
     var selectedItem = gDialog.SiteList.selectedItem;
-    if (selectedItem && selectedItem.getAttribute("label") != siteName)
+    if (selectedItem)
     {
-      selectedItem.setAttribute("label", siteName);
-      gDialog.SiteList.setAttribute("label", siteName);
+      var oldName = selectedItem.getAttribute("label");
+      if (oldName != siteName)
+      {
+        selectedItem.setAttribute("label", siteName);
+        gDialog.SiteList.setAttribute("label", siteName);
+        gSettingsChanged = true;
+        if (oldName == gDefaultSiteName)
+          gDefaultSiteName = siteName;
+      }
     }
   }
   
@@ -522,6 +524,7 @@ function ValidateSettings()
 
   // Fill return data object
   gReturnData.siteName = siteName;
+  gReturnData.previousSiteName = gPublishSiteData[siteIndex].previousSiteName;
   gReturnData.publishUrl = publishUrl;
   gReturnData.browseUrl = browseUrl;
   gReturnData.username = username;

@@ -288,6 +288,7 @@ function UpdateSettings()
     gPublishSiteData[gCurrentSiteIndex].docDir = "";
     gPublishSiteData[gCurrentSiteIndex].otherDir = "";
     gPublishSiteData[gCurrentSiteIndex].dirList = [""];
+    gPublishSiteData[gCurrentSiteIndex].previousSiteName = newName;
   }
 
   gPublishSiteData[gCurrentSiteIndex].siteName = newName;
