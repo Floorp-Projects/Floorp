@@ -55,12 +55,6 @@ EXPORT_LIBRARY = 1
 IS_COMPONENT = 1
 MODULE_NAME	= nsAccessProxy
 
-# Don't install. At the moment we only want to build this extension
-# for inclusion in 3rd party assistive technology installers, 
-# not as part of our own installation
-NO_INSTALL = 1
-NO_DIST_INSTALL = 1
-
 CPPSRCS =   \
   nsAccessProxy.cpp	   \
   nsAccessProxyRegistration.cpp \
@@ -69,6 +63,8 @@ CPPSRCS =   \
 XPIDLSRCS	= nsIAccessProxy.idl
 
 include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES += -I$(SRCDIR)/_xpidlgen
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
