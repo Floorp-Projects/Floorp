@@ -5566,7 +5566,7 @@ from the network, or save to a file and then play from the file?
 *documentFonts.charsetlang*jis_x0212-1990:		Japanese
 *documentFonts.charsetlang*koi8-r:			Cyrillic
 *documentFonts.charsetlang*windows-1251:		Cyrillic
-*documentFonts.charsetlang*koi8-r:			Ukrainian
+*documentFonts.charsetlang*koi8-u:			Ukrainian
 *documentFonts.charsetlang*ks_c_5601-1987:		Korean
 *documentFonts.charsetlang*x-cns11643-1110:		Traditional Chinese
 *documentFonts.charsetlang*x-cns11643-1:		Traditional Chinese
