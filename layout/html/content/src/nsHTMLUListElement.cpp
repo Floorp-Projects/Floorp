@@ -29,6 +29,7 @@
 #include "nsIHTMLAttributes.h"
 
 extern nsGenericHTMLElement::EnumTable kListTypeTable[];
+extern nsGenericHTMLElement::EnumTable kOtherListTypeTable[];
 
 static NS_DEFINE_IID(kIDOMHTMLUListElementIID, NS_IDOMHTMLULISTELEMENT_IID);
 
@@ -138,7 +139,10 @@ nsHTMLUListElement::StringToAttribute(nsIAtom* aAttribute,
   if (aAttribute == nsHTMLAtoms::type) {
     if (!nsGenericHTMLElement::ParseEnumValue(aValue, kListTypeTable,
                                               aResult)) {
-      aResult.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
+      if (!nsGenericHTMLElement::ParseCaseSensitiveEnumValue(aValue,
+                                  kOtherListTypeTable, aResult)) {
+        aResult.SetIntValue(NS_STYLE_LIST_STYLE_BASIC, eHTMLUnit_Enumerated);
+      }
     }
     return NS_CONTENT_ATTR_HAS_VALUE;
   }

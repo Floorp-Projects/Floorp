@@ -205,6 +205,10 @@ public:
                                EnumTable* aTable,
                                nsHTMLValue& aResult);
 
+  static PRBool ParseCaseSensitiveEnumValue(const nsString& aValue,
+                                            EnumTable* aTable,
+                                            nsHTMLValue& aResult);
+
   static PRBool EnumValueToString(const nsHTMLValue& aValue,
                                   EnumTable* aTable,
                                   nsString& aResult);

@@ -29,6 +29,7 @@
 #include "nsISizeOfHandler.h"
 #include "nsDOMEvent.h"
 #include "nsIDOMScriptObjectFactory.h"
+#include "prprf.h"
 
 // XXX share all id's in this dir
 
@@ -468,8 +469,9 @@ nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
     } else if (ch == '\t') {
       aBuf.Append("\\t");
     } else if ((ch < ' ') || (ch >= 127)) {
-      aBuf.Append("\\0");
-      aBuf.Append((PRInt32)ch, 8);
+      char buf[10];
+      PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
+      aBuf.Append(buf);
     } else {
       aBuf.Append(ch);
     }
