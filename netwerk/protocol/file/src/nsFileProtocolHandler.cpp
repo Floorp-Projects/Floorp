@@ -82,7 +82,7 @@ NS_IMETHODIMP
 nsFileProtocolHandler::ReadURLFile(nsIFile* aFile, nsIURI** aURI)
 {
 // IUniformResourceLocator isn't supported by VC5 (bless its little heart)
-#if !defined(XP_WIN) || _MSC_VER < 1200
+#if !defined(XP_WIN) || _MSC_VER < 1200 || defined (WINCE)
     return NS_ERROR_NOT_AVAILABLE;
 #else
     nsAutoString path;
