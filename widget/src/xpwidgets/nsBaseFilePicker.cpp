@@ -158,7 +158,12 @@ nsBaseFilePicker::AppendFilters(PRInt32 aFilterMask)
     stringBundle->GetStringFromName(NS_LITERAL_STRING("xulFilter").get(), getter_Copies(filter));
     AppendFilter(title, filter);
   }
-
+  if (aFilterMask & filterApps) {
+    stringBundle->GetStringFromName(NS_LITERAL_STRING("appsTitle").get(), getter_Copies(title));
+    // Pass the magic string "..apps" to the platform filepicker, which it
+    // should recognize and do the correct platform behavior for.
+    AppendFilter(title, NS_LITERAL_STRING("..apps").get());
+  }
   return NS_OK;
 }
 

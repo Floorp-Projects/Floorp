@@ -93,7 +93,10 @@ function filepickerLoad() {
 
     for (var i = 0; i < numFilters; i++) {
       var menuItem = document.createElement("menuitem");
-      menuItem.setAttribute("label", filterTitles[i] + " (" + filterTypes[i] + ")");
+      if (filterTypes[i] == "..apps")
+        menuItem.setAttribute("label", filterTitles[i]);
+      else
+        menuItem.setAttribute("label", filterTitles[i] + " (" + filterTypes[i] + ")");
       menuItem.setAttribute("filters", filterTypes[i]);
       filterPopup.appendChild(menuItem);
     }
