@@ -537,6 +537,8 @@ NS_IMETHODIMP nsWebShellWindow::CreateMenu(nsIMenuBar * aMenuBar,
       nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
       oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
     } // end menu item innner loop
+    // The parent owns us, so we can release
+    NS_RELEASE(pnsMenu);
   }
 
   return NS_OK;
@@ -606,6 +608,9 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
       }
 #endif
     }
+    
+    // The parent owns us, so we can release
+    NS_RELEASE(pnsMenuItem);
   } 
   return NS_OK;
 }
@@ -665,6 +670,9 @@ void nsWebShellWindow::LoadSubMenu(
       nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
       oldmenuitemNode->GetNextSibling(getter_AddRefs(menuitemNode));
     } // end menu item innner loop
+    
+    // The parent owns us, so we can release
+    NS_RELEASE(pnsMenu);
   }     
 }
 
@@ -686,24 +694,15 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
     nsIMenuBar * pnsMenuBar = nsnull;
     rv = nsComponentManager::CreateInstance(kMenuBarCID, nsnull, kIMenuBarIID, (void**)&pnsMenuBar);
     if (NS_OK == rv) {
-      if (nsnull != pnsMenuBar) {
-        //pnsMenuBar->Create(aParentWindow);
-      
+      if (nsnull != pnsMenuBar) {      
         // set pnsMenuBar as a nsMenuListener on aParentWindow
         nsCOMPtr<nsIMenuListener> menuListener;
         pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
-        //aParentWindow->AddMenuListener(menuListener);
 
         //fake event
         nsMenuEvent fake;
         menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
                   
-        // Give the aParentWindow this nsMenuBar to hold onto.
-        //aParentWindow->SetMenuBar(pnsMenuBar);
-      
-        // HACK: force a paint for now
-        //pnsMenuBar->Paint();
-       
       } // end if ( nsnull != pnsMenuBar )
     }
   } // end if (menuBar)
@@ -757,7 +756,7 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
           oldmenuNode->GetNextSibling(getter_AddRefs(menuNode));
         } // end while (nsnull != menuNode)
           
-        // Give the aParentWindow this nsMenuBar to hold onto.
+        // Give the aParentWindow this nsMenuBar to own.
         aParentWindow->SetMenuBar(pnsMenuBar);
       
         // HACK: force a paint for now
@@ -768,6 +767,9 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
         Handle tempMenuBar = ::GetMenuBar(); // Get a copy of the menu list
 		pnsMenuBar->SetNativeData((void*)tempMenuBar);
 		#endif
+
+        // The parent owns the menubar, so we can release it		
+		NS_RELEASE(pnsMenuBar);
     } // end if ( nsnull != pnsMenuBar )
     }
   } // end if (menuBar)

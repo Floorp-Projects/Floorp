@@ -35,7 +35,6 @@
 
 #define DEBUG_MENUSDEL 1
 //----------------------------------------------------------------------
-
 // Class IID's
 
 // IID's
@@ -44,21 +43,19 @@ static NS_DEFINE_IID(kISupportsIID,            NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIXULCommandIID,          NS_IXULCOMMAND_IID);
 
 //----------------------------------------------------------------------
-
 nsXULCommand::nsXULCommand()
 {
   NS_INIT_REFCNT();
   mMenuItem  = nsnull;
-
 }
 
 //----------------------------------------------------------------------
 nsXULCommand::~nsXULCommand()
 {
-  NS_IF_RELEASE(mMenuItem);
+  //NS_IF_RELEASE(mMenuItem);
 }
 
-
+//----------------------------------------------------------------------
 NS_IMPL_ADDREF(nsXULCommand)
 NS_IMPL_RELEASE(nsXULCommand)
 
@@ -112,7 +109,7 @@ NS_IMETHODIMP nsXULCommand::SetCommand(const nsString & aStrCmd)
 NS_IMETHODIMP nsXULCommand::SetMenuItem(nsIMenuItem * aMenuItem)
 {
   mMenuItem = aMenuItem;
-  NS_ADDREF(mMenuItem);
+  //NS_ADDREF(mMenuItem);
   return NS_OK;
 }
 
@@ -179,14 +176,14 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::SetWebShell(nsIWebShell * aWebShell)
 {
-  mWebShell = do_QueryInterface(aWebShell);
+  mWebShell = aWebShell;
   return NS_OK;
 }
 
 //----------------------------------------------------------------------
 NS_IMETHODIMP nsXULCommand::SetDOMElement(nsIDOMElement * aDOMElement)
 {
-  mDOMElement = do_QueryInterface(aDOMElement);
+  mDOMElement = aDOMElement;
   return NS_OK;
 }
 
@@ -218,15 +215,10 @@ nsEventStatus nsXULCommand::MenuDeselected(const nsMenuEvent & aMenuEvent)
 }
 
 nsEventStatus nsXULCommand::MenuConstruct(
-
     const nsMenuEvent & aMenuEvent,
-
     nsIWidget         * aParentWindow, 
-
     void              * menubarNode,
-
 	void              * aWebShell)
-
 {
   DoCommand();
   return nsEventStatus_eConsumeNoDefault;

@@ -98,6 +98,8 @@ nsWindow::~nsWindow()
 	}
 			
 	NS_IF_RELEASE(mTempRenderingContext);
+	
+	NS_IF_RELEASE(mMenuBar);
 	NS_IF_RELEASE(mMenuListener);
 	
 	if (mPluginPort != nsnull) {
@@ -199,6 +201,8 @@ NS_IMETHODIMP nsWindow::Destroy()
 
 	nsBaseWidget::OnDestroy();
 	nsBaseWidget::Destroy();
+	
+	NS_IF_RELEASE(mMenuBar);
 	SetMenuBar(nsnull);
 
 	ReportDestroyEvent();	// beard: this seems to cause the window to be deleted. moved all release code to destructor.
@@ -378,7 +382,7 @@ NS_IMETHODIMP nsWindow::SetColorMap(nsColorMap *aColorMap)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
 {
-  if (mMenuBar != nsnull)
+  if (mMenuBar)
     mMenuBar->SetParent(nsnull);
   NS_IF_RELEASE(mMenuBar);
   NS_IF_ADDREF(aMenuBar);

@@ -97,9 +97,8 @@ protected:
   nsIWidget    * mTarget;
 
   nsIMenuListener * mXULCommandListener;
-  PRBool      mIsSeparator;
+  PRBool            mIsSeparator;
   nsIMenuListener * mListener;
-
 };
 
 #endif // nsMenuItem_h__
