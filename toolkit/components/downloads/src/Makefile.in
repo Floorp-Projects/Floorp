@@ -45,6 +45,7 @@ REQUIRES  = xpcom \
             appshell \
             dom \
             toolkitcomps \
+            xpinstall \
             $(NULL)
             
 ifeq ($(OS_ARCH),WINNT)

@@ -41,6 +41,7 @@
 #define downloadmanager___h___
 
 #include "nsIDownloadManager.h"
+#include "nsIXPInstallManagerUI.h"
 #include "nsIDownloadProgressListener.h"
 #include "nsIDownload.h"
 #include "nsIRDFDataSource.h"
@@ -50,6 +51,7 @@
 #include "nsIDOMEventListener.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIWebProgressListener.h"
+#include "nsIXPIProgressDialog.h"
 #include "nsIURI.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsILocalFile.h"
@@ -65,9 +67,13 @@
 #include "nsIAlertsService.h"
 #endif
 
-enum DownloadState { NOTSTARTED = -1, DOWNLOADING, FINISHED, FAILED, CANCELED, PAUSED };
+typedef PRInt16 DownloadState;
+
+class nsXPIProgressListener;
+class nsDownload;
 
 class nsDownloadManager : public nsIDownloadManager,
+                          public nsIXPInstallManagerUI,
                           public nsIObserver
 #ifdef XP_WIN
                           , public nsIAlertListener
@@ -76,6 +82,7 @@ class nsDownloadManager : public nsIDownloadManager,
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIDOWNLOADMANAGER
+  NS_DECL_NSIXPINSTALLMANAGERUI
   NS_DECL_NSIOBSERVER
 #ifdef XP_WIN
   NS_DECL_NSIALERTLISTENER
@@ -90,12 +97,14 @@ public:
   static PRInt32 PR_CALLBACK BuildActiveDownloadsList(nsHashKey* aKey, void* aData, void* aClosure);
   nsresult DownloadEnded(const PRUnichar* aPersistentDescriptor, const PRUnichar* aMessage); 
 
+public:
+  nsresult AssertProgressInfoFor(const PRUnichar* aPersistentDescriptor);
+
 protected:
   nsresult GetDownloadsContainer(nsIRDFContainer** aResult);
   nsresult GetProfileDownloadsFileURL(nsCString& aDownloadsFileURL);
   nsresult GetDataSource(nsIRDFDataSource** aDataSource);
   nsresult DownloadStarted(const PRUnichar* aPersistentDescriptor);
-  nsresult AssertProgressInfoFor(const PRUnichar* aPersistentDescriptor);
   nsresult GetInternalListener(nsIDownloadProgressListener** aListener);
   nsresult PauseResumeDownload(const PRUnichar* aPath, PRBool aPause);
   nsresult RemoveDownload(nsIRDFResource* aDownload);
@@ -113,6 +122,28 @@ protected:
   PRBool   NeedsUIUpdate() { return mListener != nsnull; }
   PRInt32  GetRetentionBehavior();
 
+  static PRBool IsInFinalStage(DownloadState aState)
+  {
+    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED ||
+           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING ||
+           aState == nsIXPInstallManagerUI::INSTALL_INSTALLING;
+  };
+
+  static PRBool IsInProgress(DownloadState aState) 
+  {
+    return aState == nsIDownloadManager::DOWNLOAD_NOTSTARTED || 
+           aState == nsIDownloadManager::DOWNLOAD_DOWNLOADING || 
+           aState == nsIDownloadManager::DOWNLOAD_PAUSED || 
+           aState == nsIXPInstallManagerUI::INSTALL_DOWNLOADING ||
+           aState == nsIXPInstallManagerUI::INSTALL_INSTALLING;
+  };
+
+  static PRBool CompletedSuccessfully(DownloadState aState)
+  {
+    return aState == nsIDownloadManager::DOWNLOAD_FINISHED || 
+           aState == nsIXPInstallManagerUI::INSTALL_FINISHED;
+  };
+
 private:
   nsCOMPtr<nsIDownloadProgressListener> mListener;
   nsCOMPtr<nsIRDFDataSource> mDataSource;
@@ -123,7 +154,32 @@ private:
   PRInt32 mBatches;
   nsHashtable mCurrDownloads;
   
+  nsXPIProgressListener* mXPIProgress;
+  
   friend class nsDownload;
+};
+
+class nsXPIProgressListener : public nsIXPIProgressDialog
+{
+public:
+  NS_DECL_NSIXPIPROGRESSDIALOG
+  NS_DECL_ISUPPORTS
+
+  nsXPIProgressListener() { };
+  nsXPIProgressListener(nsDownloadManager* aManager);
+  virtual ~nsXPIProgressListener();
+
+  void AddDownload(nsIDownload* aDownload);
+  PRBool HasActiveXPIOperations();
+
+protected:
+  void RemoveDownloadAtIndex(PRUint32 aIndex);
+
+  inline void AssertProgressInfoForDownload(nsDownload* aDownload);
+
+private:
+  nsDownloadManager* mDownloadManager;
+  nsCOMPtr<nsISupportsArray> mDownloads;
 };
 
 class nsDownload : public nsIDownload,
@@ -137,6 +193,10 @@ public:
   nsDownload();
   virtual ~nsDownload();
 
+public:
+  nsresult GetDownloadState(DownloadState* aState);
+  nsresult SetDownloadState(DownloadState aState);
+
 protected:
   nsresult SetDownloadManager(nsDownloadManager* aDownloadManager);
   nsresult SetDialogListener(nsIWebProgressListener* aInternalListener);
@@ -147,8 +207,6 @@ protected:
   nsresult SetTarget(nsILocalFile* aTarget);
   nsresult SetSource(nsIURI* aSource);
   nsresult GetTransferInformation(PRInt32* aCurr, PRInt32* aMax);
-  nsresult GetDownloadState(DownloadState* aState);
-  nsresult SetDownloadState(DownloadState aState);
   nsresult SetMIMEInfo(nsIMIMEInfo* aMIMEInfo);
   nsresult SetStartTime(PRInt64 aStartTime);
 

@@ -205,7 +205,12 @@ var gDownloadObserver = {
       var installObserver = windowArgs.QueryElementAt(1, Components.interfaces.nsISupportsInterfacePointer);
       installObserver = installObserver.data.QueryInterface(Components.interfaces.nsIObserver);
       XPInstallDownloadManager.addDownloads(params, installObserver);
-      break;      
+      break;  
+    case "xpinstall-dialog-close":
+      var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
+      gCanAutoClose = mgr.hasActiveXPIOperations;
+      autoClose();
+      break;          
     }
   }
 };
@@ -434,16 +439,18 @@ function Startup()
   observerService.addObserver(gDownloadObserver, "dl-done",   false);
   observerService.addObserver(gDownloadObserver, "dl-cancel", false);
   observerService.addObserver(gDownloadObserver, "dl-failed", false);  
-  observerService.addObserver(gDownloadObserver, "dl-start", false);  
+  observerService.addObserver(gDownloadObserver, "dl-start",  false);  
   observerService.addObserver(gDownloadObserver, "xpinstall-download-started", false);  
+  observerService.addObserver(gDownloadObserver, "xpinstall-dialog-close",     false);
   
   // Now look and see if we're being opened by XPInstall
   if ("arguments" in window) {
     try {
       var params = window.arguments[0].QueryInterface(Components.interfaces.nsIDialogParamBlock);
       var installObserver = window.arguments[1].QueryInterface(Components.interfaces.nsIObserver);
-      gCanAutoClose = false;
       XPInstallDownloadManager.addDownloads(params, installObserver);
+      var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
+      gCanAutoClose = mgr.hasActiveXPIOperations;
     }
     catch (e) { }
   }
@@ -479,16 +486,6 @@ function Shutdown()
 // XPInstall
 
 var XPInstallDownloadManager = {
-  _XPInstallDownloads: [],
-  _XPInstallProgressListener: null,
-  
-  init: function ()
-  {
-    this._XPInstallProgressListener = new XPInstallProgressListener(this._XPInstallDownloads);
-  },
-  
-  
-
   addDownloads: function (aParams, aObserver)
   {
     var numXPInstallItems = aParams.GetInt(1);
@@ -498,6 +495,8 @@ var XPInstallDownloadManager = {
 
     var mimeService = Components.classes["@mozilla.org/uriloader/external-helper-app-service;1"].getService(Components.interfaces.nsIMIMEService);
     
+    var xpinstallManager = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
+
     var xpiString = "";
     for (var i = 0; i < numXPInstallItems;) {
       // Pretty Name
@@ -520,85 +519,15 @@ var XPInstallDownloadManager = {
       var mimeInfo = mimeService.getFromTypeAndExtension(null, url.fileExtension);
       
       var download = gDownloadManager.addDownload(uri, localTarget, displayName, mimeInfo, 0, null);
-      this._XPInstallDownloads.push(download);
+      xpinstallManager.addDownload(download);
       
       // Advance the enumerator
       var certName = aParams.GetString(i++);
     }
 
-    // Store the list of things we're downloading so we can reinitialize the FE
-    // properly if the window is closed and then reopened.  
-    var pref = Components.classes["@mozilla.org/preferences-service;1"]
-                        .getService(Components.interfaces.nsIPrefBranch);
-    var str = Components.classes["@mozilla.org/pref-localizedstring;1"].createInstance(Components.interfaces.nsIPrefLocalizedString);
-    str.data = xpiString;                      
-    pref.setComplexValue(PREF_BDM_CLOSEWHENDONE, Components.interfaces.nsIPrefLocalizedString, str);
-
-    aObserver.observe(this._XPInstallProgressListener, "xpinstall-progress", "open");  
+    aObserver.observe(xpinstallManager.xpiProgress, "xpinstall-progress", "open");  
   }
 }
-
-function XPInstallProgressListener(aDownloads)
-{
-  this._XPInstallDownloads = aDownloads;
-}
-
-// implements nsIXPIProgressDialog
-XPInstallProgressListener.prototype = {
-  onStateChange: function (aIndex, aState, aValue)
-  {
-    const nsIXPIPD = Components.interfaces.nsIXPIProgressDialog;
-    const nsIWPL = Components.interfaces.nsIWebProgressListener;
-    
-    var wpl = this._XPInstallDownloads[aIndex].QueryInterface(nsIWPL);
-    
-    switch (aState) {
-    case nsIXPIPD.DOWNLOAD_START:
-      wpl.onStateChange(null, null, nsIWPL.STATE_START, 0);
-      break;
-    case nsIXPIPD.DOWNLOAD_DONE:
-      break;
-    case nsIXPIPD.INSTALL_START:
-      break;
-    case nsIXPIPD.INSTALL_DONE:
-      wpl.onStateChange(null, null, nsIWPL.STATE_STOP, 0);
-      break;
-    case nsIXPIPD.DIALOG_CLOSE:
-      // Close now, if we're allowed to. 
-      gCanAutoClose = true;
-
-      var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"].getService(Components.interfaces.nsIStringBundleService);
-      var brandBundle = sbs.createBundle("chrome://global/locale/brand.properties");
-      var xpinstallBundle = sbs.createBundle("chrome://mozapps/locale/xpinstall/xpinstallConfirm.properties");
-      var brandShortName = brandBundle.GetStringFromName("brandShortName");
-      var message = xpinstallBundle.formatStringFromName("installComplete", [brandShortName], 1);
-      var title = xpinstallBundle.GetStringFromName("installCompleteTitle");
-      
-      var promptSvc = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
-      promptSvc.alert(null, title, message);
-
-      autoClose();
-      break;
-    }
-  },
-  
-  onProgress: function (aIndex, aValue, aMaxValue)
-  {
-    const nsIWPL = Components.interfaces.nsIWebProgressListener;
-    
-    var wpl = this._XPInstallDownloads[aIndex].QueryInterface(nsIWPL);
-    wpl.onProgressChange(null, null, 0, 0, aValue, aMaxValue);
-  },
-
-  QueryInterface: function( iid )
-  {
-    if (!iid.equals(Components.interfaces.nsISupports) &&
-        !iid.equals(Components.interfaces.nsIXPIProgressDialog))
-      throw Components.results.NS_ERROR_NO_INTERFACE;
-
-    return this;
-  }
-};
 
 ///////////////////////////////////////////////////////////////////////////////
 // View Context Menus

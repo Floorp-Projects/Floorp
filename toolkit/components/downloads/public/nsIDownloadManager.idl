@@ -53,6 +53,13 @@ interface nsISupportsArray;
 
 [scriptable, uuid(9be66cc0-1dd1-11b2-8617-e3a3ed26e3b0)]
 interface nsIDownloadManager : nsISupports {
+  // Download States
+  const short DOWNLOAD_NOTSTARTED       = -1;
+  const short DOWNLOAD_DOWNLOADING      = 0;
+  const short DOWNLOAD_FINISHED         = 1;
+  const short DOWNLOAD_FAILED           = 2;
+  const short DOWNLOAD_CANCELED         = 3;
+  const short DOWNLOAD_PAUSED           = 4;
 
   // Methods called by clients to carry out various managing functions
 
