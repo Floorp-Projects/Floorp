@@ -28,6 +28,7 @@
 #include "nsConnectionGroup.h"
 #include <ctype.h>      // for isalpha
 #include "nsCOMPtr.h"
+#include "nsXPComCIID.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
@@ -165,7 +166,7 @@ nsNetService::NewUrl(const char* aSpec,
     rv = GetProtocolHandler(scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewUrl(aSpec, aBaseUrl, result);
+    rv = handler->NewUrl(aSpec, result, aBaseUrl);
     //NS_RELEASE(handler);
     return rv;
 }
