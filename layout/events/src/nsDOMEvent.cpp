@@ -26,9 +26,10 @@ static NS_DEFINE_IID(kIDOMNSEventIID, NS_IDOMNSEVENT_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 
 static char* mEventNames[] = {
-  "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover", "onmouseout",
-  "onmousemove", "onkeydown", "onkeyup", "onkeypress", "onfocus", "onblur", 
-  "onload", "onunload", "onabort", "onerror", "onsubmit", "onreset"
+  "onmousedown", "onmouseup", "onclick", "ondblclick", "onmouseover",
+  "onmouseout", "onmousemove", "onkeydown", "onkeyup", "onkeypress",
+  "onfocus", "onblur", "onload", "onunload", "onabort", "onerror",
+  "onsubmit", "onreset", "onpaint"
 };
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent) {
@@ -334,6 +335,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_submit];
   case NS_FORM_RESET:
     return mEventNames[eDOMEvents_reset];
+  case NS_PAINT:
+    return mEventNames[eDOMEvents_paint];
   default:
     break;
   }
