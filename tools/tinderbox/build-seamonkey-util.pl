@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
 
-$::UtilsVersion = '$Revision: 1.169 $ ';
+$::UtilsVersion = '$Revision: 1.170 $ ';
 
 package TinderUtils;
 
@@ -1578,7 +1578,13 @@ sub fork_and_log {
 
     unless ($pid) { # child
         $ENV{HOME} = $home if ($Settings::OS ne "BeOS");
+
+        # Explicitly set cwd to home dir.
+        chdir $home or die "chdir($home): $!\n";
+
+        # Now cd to dir where binary is..
         chdir $dir or die "chdir($dir): $!\n";
+
         open STDOUT, ">$logfile";
         open STDERR, ">&STDOUT";
         select STDOUT; $| = 1;  # make STDOUT unbuffered
