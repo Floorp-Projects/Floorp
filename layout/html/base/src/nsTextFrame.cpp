@@ -3878,7 +3878,7 @@ nsTextFrame::GetChildFrameContainingOffset(PRInt32 inContentOffset,
     }
   }
 
-  if (inContentOffset < mContentOffset) //could happen with floaters!
+  if (inContentOffset < mContentOffset) //could happen with floats!
   {
     result = GetPrevInFlow(outChildFrame);
     if (NS_SUCCEEDED(result) && *outChildFrame)

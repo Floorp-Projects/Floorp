@@ -71,8 +71,8 @@ nsBlockBandData::Init(nsSpaceManager* aSpaceManager,
   aSpaceManager->GetTranslation(mSpaceManagerX, mSpaceManagerY);
 
   mSpace = aSpace;
-  mLeftFloaters = 0;
-  mRightFloaters = 0;
+  mLeftFloats = 0;
+  mRightFloats = 0;
   return NS_OK;
 }
 
@@ -87,7 +87,7 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
   if (NS_FAILED(rv)) { return rv; }
 
   // Compute the bounding rect of the available space, i.e. space
-  // between any left and right floaters.
+  // between any left and right floats.
   ComputeAvailSpaceRect();
   aResult = mAvailSpace;
 #ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
@@ -142,7 +142,7 @@ nsBlockBandData::GetBandData(nscoord aY)
 
 /**
  * Computes the bounding rect of the available space, i.e. space
- * between any left and right floaters. Uses the current trapezoid
+ * between any left and right floats. Uses the current trapezoid
  * data, see nsISpaceManager::GetBandData(). Also updates member
  * data "availSpace".
  */
@@ -157,22 +157,22 @@ nsBlockBandData::ComputeAvailSpaceRect()
     mAvailSpace.y = 0;
     mAvailSpace.width = 0;
     mAvailSpace.height = 0;
-    mLeftFloaters = 0;
-    mRightFloaters = 0;
+    mLeftFloats = 0;
+    mRightFloats = 0;
     return;
   }
 
   nsBandTrapezoid* trapezoid = mTrapezoids;
   nsBandTrapezoid* rightTrapezoid = nsnull;
 
-  PRInt32 leftFloaters = 0;
-  PRInt32 rightFloaters = 0;
+  PRInt32 leftFloats = 0;
+  PRInt32 rightFloats = 0;
   if (mCount > 1) {
-    // If there's more than one trapezoid that means there are floaters
+    // If there's more than one trapezoid that means there are floats
     PRInt32 i;
 
     // Examine each trapezoid in the band, counting up the number of
-    // left and right floaters. Use the right-most floater to
+    // left and right floats. Use the right-most float to
     // determine where the right edge of the available space is.
     NS_PRECONDITION(mCount<=mSize, "bad state, count > size");
     for (i = 0; i < mCount; i++) {
@@ -188,10 +188,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
             nsIFrame* f = (nsIFrame*) trapezoid->mFrames->ElementAt(j);
             const nsStyleDisplay* display = f->GetStyleDisplay();
             if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-              leftFloaters++;
+              leftFloats++;
             }
             else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-              rightFloaters++;
+              rightFloats++;
               if ((nsnull == rightTrapezoid) && (i > 0)) {
                 rightTrapezoid = &mTrapezoids[i - 1];
               }
@@ -200,10 +200,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
         } else {
           const nsStyleDisplay* display = trapezoid->mFrame->GetStyleDisplay();
           if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-            leftFloaters++;
+            leftFloats++;
           }
           else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-            rightFloaters++;
+            rightFloats++;
             if ((nsnull == rightTrapezoid) && (i > 0)) {
               rightTrapezoid = &mTrapezoids[i - 1];
             }
@@ -213,14 +213,14 @@ nsBlockBandData::ComputeAvailSpaceRect()
     }
   }
   else if (mTrapezoids[0].mState != nsBandTrapezoid::Available) {
-    // We have a floater using up all the available space
-    leftFloaters = 1;
+    // We have a float using up all the available space
+    leftFloats = 1;
   }
 #ifdef REALLY_NOISY_COMPUTEAVAILSPACERECT
-  printf("band %p has floaters %d, %d\n", this, leftFloaters, rightFloaters);
+  printf("band %p has floats %d, %d\n", this, leftFloats, rightFloats);
 #endif
-  mLeftFloaters = leftFloaters;
-  mRightFloaters = rightFloaters;
+  mLeftFloats = leftFloats;
+  mRightFloats = rightFloats;
 
   if (nsnull != rightTrapezoid) {
     trapezoid = rightTrapezoid;
@@ -233,8 +233,8 @@ nsBlockBandData::ComputeAvailSpaceRect()
     if (nsBandTrapezoid::OccupiedMultiple == trapezoid->mState) {
       // It's not clear what coordinate to use when there is no
       // available space and the space is multiply occupied...So: If
-      // any of the floaters that are a part of the trapezoid are left
-      // floaters then we move over to the right edge of the
+      // any of the floats that are a part of the trapezoid are left
+      // floats then we move over to the right edge of the
       // unavaliable space.
       PRInt32 j, numFrames = trapezoid->mFrames->Count();
       NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
@@ -291,9 +291,9 @@ nsBlockBandData::ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType)
   return result;
 }
 
-// XXX optimization? use mFloaters to avoid doing anything
+// XXX optimization? use mFloats to avoid doing anything
 nscoord
-nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
+nsBlockBandData::ClearFloats(nscoord aY, PRUint8 aBreakType)
 {
   for (;;) {
     nsresult rv = GetBandData(aY);
@@ -305,7 +305,7 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
     // Compute aYS as aY in space-manager "root" coordinates.
     nscoord aYS = aY + mSpaceManagerY;
 
-    // Find the largest frame YMost for the appropriate floaters in
+    // Find the largest frame YMost for the appropriate floats in
     // this band.
     nscoord yMost = aYS;
     PRInt32 i;
@@ -332,7 +332,7 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
     }
 
     // If yMost is unchanged (aYS) then there were no appropriate
-    // floaters in the band. Time to stop clearing.
+    // floats in the band. Time to stop clearing.
     if (yMost == aYS) {
       break;
     }
@@ -347,8 +347,8 @@ void nsBlockBandData::List()
   printf("nsBlockBandData %p sm=%p, sm coord = (%d,%d), mSpace = (%d,%d)\n",
           this, mSpaceManager, mSpaceManagerX, mSpaceManagerY,
           mSpace.width, mSpace.height);
-  printf("  availSpace=(%d, %d, %d, %d), floaters l=%d r=%d\n",
+  printf("  availSpace=(%d, %d, %d, %d), floats l=%d r=%d\n",
           mAvailSpace.x, mAvailSpace.y, mAvailSpace.width, mAvailSpace.height,
-          mLeftFloaters, mRightFloaters);
+          mLeftFloats, mRightFloats);
 }
 #endif

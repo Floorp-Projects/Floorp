@@ -1985,7 +1985,7 @@ nsTextControlFrame::Paint(nsIPresContext*      aPresContext,
   if (aWhichLayer == NS_FRAME_PAINT_LAYER_FOREGROUND) {
     rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
     if (NS_FAILED(rv)) return rv;
-    rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATERS);
+    rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);
     if (NS_FAILED(rv)) return rv;
     rv = nsStackFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
   }
@@ -2006,7 +2006,7 @@ nsTextControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv))
       return NS_OK;
     rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,
-                                        NS_FRAME_PAINT_LAYER_FLOATERS, aFrame);
+                                        NS_FRAME_PAINT_LAYER_FLOATS, aFrame);
     if (NS_SUCCEEDED(rv))
       return NS_OK;
     rv = nsStackFrame::GetFrameForPoint(aPresContext, aPoint,

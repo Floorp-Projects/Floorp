@@ -129,10 +129,10 @@ nsLineBox::Cleanup()
 
 #ifdef DEBUG
 static void
-ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
+ListFloats(FILE* out, PRInt32 aIndent, const nsFloatCacheList& aFloats)
 {
   nsAutoString frameName;
-  nsFloaterCache* fc = aFloaters.Head();
+  nsFloatCache* fc = aFloats.Head();
   while (fc) {
     nsFrame::IndentBy(out, aIndent);
     nsPlaceholderFrame* ph = fc->mPlaceholder;
@@ -148,7 +148,7 @@ ListFloaters(FILE* out, PRInt32 aIndent, const nsFloaterCacheList& aFloaters)
         }
       }
       fprintf(out, " %s region={%d,%d,%d,%d} combinedArea={%d,%d,%d,%d}",
-              fc->mIsCurrentLineFloater ? "cl" : "bcl",
+              fc->mIsCurrentLineFloat ? "cl" : "bcl",
               fc->mRegion.x, fc->mRegion.y,
               fc->mRegion.width, fc->mRegion.height,
               fc->mCombinedArea.x, fc->mCombinedArea.y,
@@ -187,7 +187,7 @@ nsLineBox::StateToString(char* aBuf, PRInt32 aBufSize) const
               IsBlock() ? "block" : "inline",
               IsDirty() ? "dirty" : "clean",
               IsPreviousMarginDirty() ? "prevmargindirty" : "prevmarginclean",
-              IsImpactedByFloater() ? "impacted" : "not impacted",
+              IsImpactedByFloat() ? "impacted" : "not impacted",
               IsLineWrapped() ? "wrapped" : "not wrapped",
               BreakTypeToString(GetBreakType()),
               mAllFlags);
@@ -231,9 +231,9 @@ nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
   }
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  if (HasFloaters()) {
-    fputs("> floaters <\n", out);
-    ListFloaters(out, aIndent + 1, mInlineData->mFloaters);
+  if (HasFloats()) {
+    fputs("> floats <\n", out);
+    ListFloats(out, aIndent + 1, mInlineData->mFloats);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
   }
   fputs(">\n", out);
@@ -390,7 +390,7 @@ nsLineBox::MaybeFreeData()
 {
   if (mData && (mData->mCombinedArea == mBounds)) {
     if (IsInline()) {
-      if (mInlineData->mFloaters.IsEmpty()) {
+      if (mInlineData->mFloats.IsEmpty()) {
         delete mInlineData;
         mInlineData = nsnull;
       }
@@ -403,53 +403,53 @@ nsLineBox::MaybeFreeData()
 }
 
 // XXX get rid of this???
-nsFloaterCache*
-nsLineBox::GetFirstFloater()
+nsFloatCache*
+nsLineBox::GetFirstFloat()
 {
-  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
-  return mInlineData ? mInlineData->mFloaters.Head() : nsnull;
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floats");
+  return mInlineData ? mInlineData->mFloats.Head() : nsnull;
 }
 
 // XXX this might be too eager to free memory
 void
-nsLineBox::FreeFloaters(nsFloaterCacheFreeList& aFreeList)
+nsLineBox::FreeFloats(nsFloatCacheFreeList& aFreeList)
 {
-  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floats");
   if (IsInline()) {
     if (mInlineData) {
-      aFreeList.Append(mInlineData->mFloaters);
+      aFreeList.Append(mInlineData->mFloats);
       MaybeFreeData();
     }
   }
 }
 
 void
-nsLineBox::AppendFloaters(nsFloaterCacheFreeList& aFreeList)
+nsLineBox::AppendFloats(nsFloatCacheFreeList& aFreeList)
 { 
-  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floats");
   if (IsInline()) {
     if (aFreeList.NotEmpty()) {
       if (!mInlineData) {
         mInlineData = new ExtraInlineData(mBounds);
       }
       if (mInlineData) {
-        mInlineData->mFloaters.Append(aFreeList);
+        mInlineData->mFloats.Append(aFreeList);
       }
     }
   }
 }
 
 PRBool
-nsLineBox::RemoveFloater(nsIFrame* aFrame)
+nsLineBox::RemoveFloat(nsIFrame* aFrame)
 {
-  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floaters");
+  NS_ABORT_IF_FALSE(IsInline(), "block line can't have floats");
   if (IsInline() && mInlineData) {
-    nsFloaterCache* fc = mInlineData->mFloaters.Find(aFrame);
+    nsFloatCache* fc = mInlineData->mFloats.Find(aFrame);
     if (fc) {
       // Note: the placeholder is part of the line's child list
       // and will be removed later.
       fc->mPlaceholder->SetOutOfFlowFrame(nsnull);
-      mInlineData->mFloaters.Remove(fc);
+      mInlineData->mFloats.Remove(fc);
       MaybeFreeData();
       return PR_TRUE;
     }
@@ -970,21 +970,21 @@ nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber)
 
 //----------------------------------------------------------------------
 
-nsFloaterCacheList::~nsFloaterCacheList()
+nsFloatCacheList::~nsFloatCacheList()
 {
-  nsFloaterCache* floater = mHead;
-  while (floater) {
-    nsFloaterCache* next = floater->mNext;
-    delete floater;
-    floater = next;
+  nsFloatCache* fc = mHead;
+  while (fc) {
+    nsFloatCache* next = fc->mNext;
+    delete fc;
+    fc = next;
   }
   mHead = nsnull;
 }
 
-nsFloaterCache*
-nsFloaterCacheList::Tail() const
+nsFloatCache*
+nsFloatCacheList::Tail() const
 {
-  nsFloaterCache* fc = mHead;
+  nsFloatCache* fc = mHead;
   while (fc) {
     if (!fc->mNext) {
       break;
@@ -995,9 +995,9 @@ nsFloaterCacheList::Tail() const
 }
 
 void
-nsFloaterCacheList::Append(nsFloaterCacheFreeList& aList)
+nsFloatCacheList::Append(nsFloatCacheFreeList& aList)
 {
-  nsFloaterCache* tail = Tail();
+  nsFloatCache* tail = Tail();
   if (tail) {
     tail->mNext = aList.mHead;
   }
@@ -1008,10 +1008,10 @@ nsFloaterCacheList::Append(nsFloaterCacheFreeList& aList)
   aList.mTail = nsnull;
 }
 
-nsFloaterCache*
-nsFloaterCacheList::Find(nsIFrame* aOutOfFlowFrame)
+nsFloatCache*
+nsFloatCacheList::Find(nsIFrame* aOutOfFlowFrame)
 {
-  nsFloaterCache* fc = mHead;
+  nsFloatCache* fc = mHead;
   while (fc) {
     if (fc->mPlaceholder->GetOutOfFlowFrame() == aOutOfFlowFrame) {
       break;
@@ -1022,10 +1022,10 @@ nsFloaterCacheList::Find(nsIFrame* aOutOfFlowFrame)
 }
 
 void
-nsFloaterCacheList::Remove(nsFloaterCache* aElement)
+nsFloatCacheList::Remove(nsFloatCache* aElement)
 {
-  nsFloaterCache** fcp = &mHead;
-  nsFloaterCache* fc;
+  nsFloatCache** fcp = &mHead;
+  nsFloatCache* fc;
   while (nsnull != (fc = *fcp)) {
     if (fc == aElement) {
       *fcp = fc->mNext;
@@ -1038,7 +1038,7 @@ nsFloaterCacheList::Remove(nsFloaterCache* aElement)
 //----------------------------------------------------------------------
 
 void
-nsFloaterCacheFreeList::Append(nsFloaterCacheList& aList)
+nsFloatCacheFreeList::Append(nsFloatCacheList& aList)
 {
   if (mTail) {
     mTail->mNext = aList.mHead;
@@ -1050,10 +1050,10 @@ nsFloaterCacheFreeList::Append(nsFloaterCacheList& aList)
   aList.mHead = nsnull;
 }
 
-nsFloaterCache*
-nsFloaterCacheFreeList::Alloc()
+nsFloatCache*
+nsFloatCacheFreeList::Alloc()
 {
-  nsFloaterCache* fc = mHead;
+  nsFloatCache* fc = mHead;
   if (mHead) {
     if (mHead == mTail) {
       mHead = mTail = nsnull;
@@ -1064,42 +1064,42 @@ nsFloaterCacheFreeList::Alloc()
     fc->mNext = nsnull;
   }
   else {
-    fc = new nsFloaterCache();
+    fc = new nsFloatCache();
   }
   return fc;
 }
 
 void
-nsFloaterCacheFreeList::Append(nsFloaterCache* aFloater)
+nsFloatCacheFreeList::Append(nsFloatCache* aFloat)
 {
-  aFloater->mNext = nsnull;
+  aFloat->mNext = nsnull;
   if (mTail) {
-    mTail->mNext = aFloater;
-    mTail = aFloater;
+    mTail->mNext = aFloat;
+    mTail = aFloat;
   }
   else {
-    mHead = mTail = aFloater;
+    mHead = mTail = aFloat;
   }
 }
 
 //----------------------------------------------------------------------
 
-MOZ_DECL_CTOR_COUNTER(nsFloaterCache)
+MOZ_DECL_CTOR_COUNTER(nsFloatCache)
 
-nsFloaterCache::nsFloaterCache()
+nsFloatCache::nsFloatCache()
   : mPlaceholder(nsnull),
-    mIsCurrentLineFloater(PR_TRUE),
+    mIsCurrentLineFloat(PR_TRUE),
     mMargins(0, 0, 0, 0),
     mOffsets(0, 0, 0, 0),
     mCombinedArea(0, 0, 0, 0),
     mNext(nsnull)
 {
-  MOZ_COUNT_CTOR(nsFloaterCache);
+  MOZ_COUNT_CTOR(nsFloatCache);
 }
 
 #ifdef NS_BUILD_REFCNT_LOGGING
-nsFloaterCache::~nsFloaterCache()
+nsFloatCache::~nsFloatCache()
 {
-  MOZ_COUNT_DTOR(nsFloaterCache);
+  MOZ_COUNT_DTOR(nsFloatCache);
 }
 #endif

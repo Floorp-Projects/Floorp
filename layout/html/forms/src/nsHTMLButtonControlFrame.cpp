@@ -363,7 +363,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
 
 #if 0 // old way
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATERS);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
 
 #else // temporary
@@ -384,7 +384,7 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext*      aPresContext,
   aRenderingContext.SetClipRect(rect, nsClipCombine_kIntersect, clipEmpty);
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_BACKGROUND);
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATERS);
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FLOATS);
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, NS_FRAME_PAINT_LAYER_FOREGROUND);
 
   aRenderingContext.PopState(clipEmpty);

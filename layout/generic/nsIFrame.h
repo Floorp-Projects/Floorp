@@ -103,7 +103,7 @@ typedef void
 
 /**
  * Indication of how the frame can be split. This is used when doing runaround
- * of floaters, and when pulling up child frames from a next-in-flow.
+ * of floats, and when pulling up child frames from a next-in-flow.
  *
  * The choices are splittable, not splittable at all, and splittable in
  * a non-rectangular fashion. This last type only applies to block-level
@@ -265,7 +265,7 @@ enum nsSpread {
 // For HTML reflow we rename with the different paint layers are
 // actually used for.
 #define NS_FRAME_PAINT_LAYER_BACKGROUND eFramePaintLayer_Underlay
-#define NS_FRAME_PAINT_LAYER_FLOATERS   eFramePaintLayer_Content
+#define NS_FRAME_PAINT_LAYER_FLOATS   eFramePaintLayer_Content
 #define NS_FRAME_PAINT_LAYER_FOREGROUND eFramePaintLayer_Overlay
 #define NS_FRAME_PAINT_LAYER_DEBUG      eFramePaintLayer_Overlay
 

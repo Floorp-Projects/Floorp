@@ -362,9 +362,9 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
   }
 
   /* We build a different reflow context based on the width attribute of the block,
-   * if it's a floater.
-   * Auto-width floaters need to have their containing-block size set explicitly,
-   * factoring in other floaters that impact it.  
+   * if it's a float.
+   * Auto-width floats need to have their containing-block size set explicitly,
+   * factoring in other floats that impact it.  
    * It's possible this should be quirks-only.
    * All other blocks proceed normally.
    */
@@ -439,7 +439,7 @@ nsBlockReflowContext::ReflowBlock(const nsRect&       aSpace,
                    aFrameRS.mComputedBorderPadding.right;
     }
 
-    // if this is an unconstrained width reflow, then just place the floater at the left margin
+    // if this is an unconstrained width reflow, then just place the float at the left margin
     if (NS_UNCONSTRAINEDSIZE == mSpace.width)
       x = mSpace.x;
     else
@@ -682,7 +682,7 @@ nsBlockReflowContext::PlaceBlock(const nsHTMLReflowState& aReflowState,
     // always fit. Note: don't force the width to 0
     aInFlowBounds = nsRect(x, y, mMetrics.width, 0);
 
-    // Retain combined area information in case we contain a floater
+    // Retain combined area information in case we contain a float
     // and nothing else.
     aCombinedRect = mMetrics.mOverflowArea;
     aCombinedRect.x += x;

@@ -5759,7 +5759,7 @@ PresShell::Paint(nsIView              *aView,
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_BACKGROUND);
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
-                      NS_FRAME_PAINT_LAYER_FLOATERS);
+                      NS_FRAME_PAINT_LAYER_FLOATS);
     rv = frame->Paint(mPresContext, aRenderingContext, aDirtyRect,
                       NS_FRAME_PAINT_LAYER_FOREGROUND);
                       
@@ -6073,7 +6073,7 @@ PresShell::HandleEvent(nsIView         *aView,
                                    &mCurrentEventFrame);
       if (NS_FAILED(rv)) {
         rv = frame->GetFrameForPoint(mPresContext, eventPoint,
-                                     NS_FRAME_PAINT_LAYER_FLOATERS,
+                                     NS_FRAME_PAINT_LAYER_FLOATS,
                                      &mCurrentEventFrame);
         if (NS_FAILED(rv)) {
           rv = frame->GetFrameForPoint(mPresContext, eventPoint,

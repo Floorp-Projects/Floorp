@@ -276,7 +276,7 @@ private:
                            nscoord aOriginX, nscoord aOriginY,
                            PRBool aInsideRealView, nsView *aRealView, const nsRect *aDamageRect,
                            nsView *aTopView, nscoord aX, nscoord aY,
-                           PRBool aPaintFloaters, PRBool aEventProcessing);
+                           PRBool aPaintFloats, PRBool aEventProcessing);
   PRBool AddToDisplayList(nsView *aView,
                           DisplayZTreeNode* &aParent, nsRect &aClipRect,
                           nsRect& aDirtyRect, PRUint32 aFlags, nscoord aAbsX, nscoord aAbsY,

@@ -2403,7 +2403,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
     nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        NS_FRAME_PAINT_LAYER_BACKGROUND);
     nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                       NS_FRAME_PAINT_LAYER_FLOATERS);
+                       NS_FRAME_PAINT_LAYER_FLOATS);
     nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
                        NS_FRAME_PAINT_LAYER_FOREGROUND);
 

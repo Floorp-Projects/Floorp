@@ -60,8 +60,8 @@ public:
   // space manager translation.
   nsresult GetAvailableSpace(nscoord aY, nsRect& aResult);
 
-  // Clear any current floaters, returning a new Y coordinate
-  nscoord ClearFloaters(nscoord aY, PRUint8 aBreakType);
+  // Clear any current floats, returning a new Y coordinate
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType);
 
   // Get the raw trapezoid count for this band.
   PRInt32 GetTrapezoidCount() const {
@@ -72,18 +72,18 @@ public:
     return &mTrapezoids[aIndex];
   }
 
-  // Get the number of floaters that are impacting the current
+  // Get the number of floats that are impacting the current
   // band. Note that this value is relative to the current translation
-  // in the space manager which means that some floaters may be hidden
+  // in the space manager which means that some floats may be hidden
   // by the translation and therefore won't be in the count.
-  PRInt32 GetFloaterCount() const {
-    return mLeftFloaters + mRightFloaters;
+  PRInt32 GetFloatCount() const {
+    return mLeftFloats + mRightFloats;
   }
-  PRInt32 GetLeftFloaterCount() const {
-    return mLeftFloaters;
+  PRInt32 GetLeftFloatCount() const {
+    return mLeftFloats;
   }
-  PRInt32 GetRightFloaterCount() const {
-    return mRightFloaters;
+  PRInt32 GetRightFloatCount() const {
+    return mRightFloats;
   }
 
 #ifdef DEBUG
@@ -110,14 +110,14 @@ protected:
   // Trapezoids used during band processing
   nsBandTrapezoid mData[NS_BLOCK_BAND_DATA_TRAPS];
 
-  // Bounding rect of available space between any left and right floaters
+  // Bounding rect of available space between any left and right floats
   nsRect mAvailSpace;
 
-  // Number of left/right floaters in the current band. Note that this
-  // number may be less than the total number of floaters present in
+  // Number of left/right floats in the current band. Note that this
+  // number may be less than the total number of floats present in
   // the band, if our translation in the space manager "hides" some
-  // floaters.
-  PRInt32 mLeftFloaters, mRightFloaters;
+  // floats.
+  PRInt32 mLeftFloats, mRightFloats;
 
   void ComputeAvailSpaceRect();
   PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);

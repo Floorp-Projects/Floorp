@@ -412,12 +412,12 @@ nsFormControlFrame::Paint(nsIPresContext*      aPresContext,
       return rv;
 
     rv = nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_FLOATERS);
+                            NS_FRAME_PAINT_LAYER_FLOATS);
     if (NS_FAILED(rv))
       return rv;
     // draw selection borders when appropriate
     rv = nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            NS_FRAME_PAINT_LAYER_FLOATERS);
+                            NS_FRAME_PAINT_LAYER_FLOATS);
     if (NS_FAILED(rv))
       return rv;
 
@@ -445,7 +445,7 @@ nsFormControlFrame::GetFrameForPoint(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv))
       return NS_OK;
     rv = nsLeafFrame::GetFrameForPoint(aPresContext, aPoint,
-                                       NS_FRAME_PAINT_LAYER_FLOATERS, aFrame);
+                                       NS_FRAME_PAINT_LAYER_FLOATS, aFrame);
     if (NS_SUCCEEDED(rv))
       return NS_OK;
     rv = nsLeafFrame::GetFrameForPoint(aPresContext, aPoint,

@@ -969,7 +969,7 @@ nsSpaceManager::PushState()
   // of mBandList and mFrameInfoMap and restore them when pop is
   // called, but I'm not sure it's worth the effort/bloat at this
   // point, since this push/pop mechanism is only used to undo any
-  // floaters that were added during the unconstrained reflow
+  // floats that were added during the unconstrained reflow
   // in nsBlockReflowContext::DoReflowBlock(). (See bug 96736)
   //
   // It should also be noted that the state for mFloatDamage is

@@ -1917,8 +1917,8 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.width  = mRect.width;
     aDesiredSize.height = mRect.height;
 
-    // for floaters, our view has not been positioned yet as we have not been placed
-    //  - the block code will position our views after the floater is placed
+    // for floats, our view has not been positioned yet as we have not been placed
+    //  - the block code will position our views after the float is placed
     if (aOuterRS.mStyleDisplay &&
         !aOuterRS.mStyleDisplay->IsFloating()) {
       // We know our view (if we have one) has been positioned

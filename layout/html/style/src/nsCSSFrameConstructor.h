@@ -658,8 +658,8 @@ protected:
   nsIFrame* GetAbsoluteContainingBlock(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
 
-  nsIFrame* GetFloaterContainingBlock(nsIPresContext* aPresContext,
-                                      nsIFrame*       aFrame);
+  nsIFrame* GetFloatContainingBlock(nsIPresContext* aPresContext,
+                                    nsIFrame*       aFrame);
 
 
   // Build a scroll frame: 

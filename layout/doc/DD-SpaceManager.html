@@ -28,7 +28,7 @@ a  canvas. &nbsp;The primary goal of the Space Manager is to provide information
  <br>
   There are three important parts to the Space Manger API: the parts that 
 deal with the coordinate space of the Space Manager, the parts that deal with
-the regions managed by the Space Manager, and the parts that manage floater
+the regions managed by the Space Manager, and the parts that manage float
 impact intervals.<br>
  <br>
   The class nsSpaceManager is declared in the file <a href="http://lxr.mozilla.org/seamonkey/source/layout/base/src/nsSpaceManager.h">
@@ -75,7 +75,7 @@ terminated.<br>
  
 <pre>  /**<br>   * Returns a band starting at the specified y-offset. The band data<br>   * indicates which parts of the band are available, and which parts<br>   * are unavailable<br>   *<br>   * The band data that is returned is in the coordinate space of the<br>   * local coordinate system.<br>   *<br>   * The local coordinate space origin, the y-offset, and the max size<br>   * describe a rectangle that's used to clip the underlying band of<br>   * available space, i.e.<br>   * {0, aYOffset, aMaxSize.width, aMaxSize.height} in the local<br>   * coordinate space<br>   *<br>   * @param   aYOffset the y-offset of where the band begins. The coordinate is<br>   *            relative to the upper-left corner of the local coordinate space<br>   * @param   aMaxSize the size to use to constrain the band data<br>   * @param   aBandData [in,out] used to return the list of trapezoids that<br>   *            describe the available space and the unavailable space<br>   * @return  NS_OK if successful and NS_ERROR_FAILURE if the band data is not<br>   *            not large enough. The 'count' member of the band data struct<br>   *            indicates how large the array of trapezoids needs to be<br>   */<br>  nsresult GetBandData(nscoord       aYOffset,<br>                       const nsSize&amp; aMaxSize,<br>                       nsBandData&amp;   aBandData) const;<br><br>  /**<br>   * Add a rectangular region of unavailable space. The space is<br>   * relative to the local coordinate system.<br>   *<br>   * The region is tagged with a frame<br>   *<br>   * @param   aFrame the frame used to identify the region. Must not be NULL<br>   * @param   aUnavailableSpace the bounding rect of the unavailable space<br>   * @return  NS_OK if successful<br>   *          NS_ERROR_FAILURE if there is already a region tagged with aFrame<br>   */<br>  nsresult AddRectRegion(nsIFrame*     aFrame,<br>                         const nsRect&amp; aUnavailableSpace);<br><br>  /**<br>   * Resize the rectangular region associated with aFrame by the specified<br>   * deltas. The height change always applies to the bottom edge or the existing<br>   * rect. You specify whether the width change applies to the left or right edge<br>   *<br>   * Returns NS_OK if successful, NS_ERROR_INVALID_ARG if there is no region<br>   * tagged with aFrame<br>   */<br>  enum AffectedEdge {LeftEdge, RightEdge};<br>  nsresult ResizeRectRegion(nsIFrame*    aFrame,<br>                            nscoord      aDeltaWidth,<br>                            nscoord      aDeltaHeight,<br>                            AffectedEdge aEdge = RightEdge);<br><br>  /**<br>   * Offset the region associated with aFrame by the specified amount.<br>   *<br>   * Returns NS_OK if successful, NS_ERROR_INVALID_ARG if there is no region<br>   * tagged with aFrame<br>   */<br>  nsresult OffsetRegion(nsIFrame* aFrame, nscoord dx, nscoord dy);<br><br>  /**<br>   * Remove the region associated with aFrane.<br>   *<br>   * Returns NS_OK if successful and NS_ERROR_INVALID_ARG if there is no region<br>   * tagged with aFrame<br>   */<br>  nsresult RemoveRegion(nsIFrame* aFrame);<br><br>  /**<br>   * Clears the list of regions representing the unavailable space.<br>   */<br>  void ClearRegions();<br></pre>
  
-<h4>Floater Impact</h4>
+<h4>Float Impact</h4>
  
 <pre>  /**<br>   * Methods for dealing with the propagation of float damage during<br>   * reflow.<br>   */<br>  PRBool HasFloatDamage()<br>  {<br>    return !mFloatDamage.IsEmpty();<br>  }<br><br>  void IncludeInDamage(nscoord aIntervalBegin, nscoord aIntervalEnd)<br>  {<br>    mFloatDamage.IncludeInterval(aIntervalBegin + mY, aIntervalEnd + mY);<br>  }<br><br>  PRBool IntersectsDamage(nscoord aIntervalBegin, nscoord aIntervalEnd)<br>  {<br>    return mFloatDamage.Intersects(aIntervalBegin + mY, aIntervalEnd + mY);<br>  }<br></pre>
  
@@ -225,7 +225,7 @@ might be worth verifying that the final result of the inserts is a correctly
 ordered liest of bandRects (debug mode only).</i><br>
  
 <h4>Algorithm 3: RemoveRegion</h4>
- When a floater is removed, the Space Manager is notified by a call to RemoveRegion,
+ When a float is removed, the Space Manager is notified by a call to RemoveRegion,
 passing in the frame that is being removed.<br>
 <ul>
   <li>Get the FrameInfo for the frame passed in. If not found, an error is

@@ -50,24 +50,24 @@ job. The classes that are considered part of the Space Manager are:<br>
 frame  in the context of a Reflow, and to associate it with the BlockReflowState
  so it is passed down to child frames' reflow methods. After reflow, the
 Space  Manager is destroyed. &nbsp;During reflow, the space manager stores
-the space  taken up by floaters (UpdateSpaceManager in nsBlockFrame) and
+the space  taken up by floats (UpdateSpaceManager in nsBlockFrame) and
 provides information  about the space available for other elements (GetAvailableSpace
 in nsBlockReflowState).  &nbsp;<br>
  <br>
  Additionally, there is a need to manage impacts to lines caused by
 changes to floated elements. &nbsp;This is referred to as Propagation
-of Floater Damage and is handled by the Block Frame, making use of the
+of Float Damage and is handled by the Block Frame, making use of the
 Space Manager. When a float is incrementally reflowed, the Space
-Manger is notified if the floater's region has changed. If so, the
+Manger is notified if the float's region has changed. If so, the
 vertical space that has been affected (including both the float's old
 region and the float's new region) is noted in the internal
-nsIntervalSet as potential floater damage (the method is
+nsIntervalSet as potential float damage (the method is
 IncludeInDamage).  During the incremental reflow of dirty lines the
 block frame may encounter lines that are NOT dirty. In this case the
-Space Manager is also asked if &nbsp;there is any floater damage, and
+Space Manager is also asked if &nbsp;there is any float damage, and
 if there is then the block further checks to see if that damage
 intersects the area of the non-dirty line, marking it dirty if there
-is intersection. &nbsp;Thus, changes to floaters on other lines may
+is intersection. &nbsp;Thus, changes to floats on other lines may
 cause impact to otherwise clean lines, and the Space Manager
 facilitates the detection of this.  <h2>Data Model</h2>
  
@@ -81,12 +81,12 @@ facilitates the detection of this.  <h2>Data Model</h2>
    
   <ul>
      <li>nsSpaceManager: The central point of management of the space taken
- up by floaters in a block</li>
+ up by floats in a block</li>
      <li>nsBandData: Provides information about the frames occupying a band
  of occupied or available space</li>
      <li>nsBlockBandData: A specialization of nsBandData that is used by
-nsBlockReflowState   to determine the available space, floater impacts, and
-where floaters are  cleared. &nbsp;Essentially a CSS-specific wrapper for
+nsBlockReflowState   to determine the available space, float impacts, and
+where floats are  cleared. &nbsp;Essentially a CSS-specific wrapper for
 generic nsBandData.</li>
      <li>BandRect: Keeps the bounds of a band, along with the frames associated
  with the band. &nbsp;BandRects are a linked list (provided by PRCListStr
@@ -130,17 +130,17 @@ BlockReflowState  instance after the new one has been destroyed. &nbsp;Thus,
 Space Managers  are effectively 'nested' during reflow, with each new block
 introducing its  own Space Manager.   
 
-  <h4>Use Case 2: Floater is added to the Space Manager</h4>  After a Space Manager is created for a block context's reflow chain, a
-floated  block may be added to it. &nbsp;This happens in the method <i>nsBlockReflowState::RecoverFloaters</i> and 
-<i>nsBlockReflowState::FlowAndPlaceFloater</i> (formerly this was done in nsBlockFrame::UpdateSpaceManager). &nbsp;<br>
+  <h4>Use Case 2: Float is added to the Space Manager</h4>  After a Space Manager is created for a block context's reflow chain, a
+floated  block may be added to it. &nbsp;This happens in the method <i>nsBlockReflowState::RecoverFloats</i> and 
+<i>nsBlockReflowState::FlowAndPlaceFloat</i> (formerly this was done in nsBlockFrame::UpdateSpaceManager). &nbsp;<br>
 <br>
-The general algorightm in <i>nsBlockReflowState::RecoverFloaters</i> is:<br>
+The general algorightm in <i>nsBlockReflowState::RecoverFloats</i> is:<br>
    
   <ul>
      <li>For each line in the block, see if it has floated blocks</li>
-     <li>If floaters are in the line, iterate over the floaters and add each
+     <li>If floats are in the line, iterate over the floats and add each
  one to the Space Manger via the AddRectRegion method. &nbsp;The actual rect
- for the frame is cached in an nsFloaterCache so it does not have to be recomputed.</li>
+ for the frame is cached in an nsFloatCache so it does not have to be recomputed.</li>
      <li>If the block has any block children, then translate the Space Manager
  to the child block's origin and update the space manager in the context
 for the child block, recursively. When done with the child, restore the Space
@@ -150,19 +150,19 @@ origin.&nbsp;       <br>
    
   </ul><br>
 
-The general algorightm in <i>nsBlockReflowState::FlowAndPlaceFloater</i> is:<br>
+The general algorightm in <i>nsBlockReflowState::FlowAndPlaceFloat</i> is:<br>
 <ul>
   <li>The region that the float currently occupies is recorded.</li>
   <li>The band of available space is searched (with nsBlockReflowState::GetAvailableSpace);</li>
-  <li>The floater frame that is get from the passed nsFloaterCache argument is reflowed
+  <li>The float frame that is get from the passed nsFloatCache argument is reflowed
   and its rect is retriven with GetRect;</li>
-  <li>The floaters margins are added;</li>
-  <li>Check if the floater can be placed in the acutal band: if not advance to the next band;</li>
-  <li>Check the floater type and if it can be added to the space manager;</li>
-  <li>Align the floater to its containing block top if rule 
+  <li>The floats margins are added;</li>
+  <li>Check if the float can be placed in the acutal band: if not advance to the next band;</li>
+  <li>Check the float type and if it can be added to the space manager;</li>
+  <li>Align the float to its containing block top if rule 
       <a href="http://www.w3.org/TR/REC-CSS2/visuren.html#float-position">CSS2/9.5.1/4</a>
       is not respected;</li>
-  <li>Add the floater using <i>nsSpaceManager::AddRectRegion</i> </li>
+  <li>Add the float using <i>nsSpaceManager::AddRectRegion</i> </li>
   <li>Compare the area that the float used to occupy with the area that it now occupies: if different,
       record the vertically affected interval using <i>nsSpaceManager::IncludeInDamage</i></li>
 </ul>
@@ -176,7 +176,7 @@ works for reflowing an inline frame within a block (this also occurs for
 reflowing a block frame and, partially, for preparing for a resize reflow).<br>
    
   <ul>
-     <li>nsBlockFrame first frees all floater information for the line that
+     <li>nsBlockFrame first frees all float information for the line that
  is being reflowed.</li>
      <li>GetAvailableSpace is called on the BlockReflowState</li>
      <li>the BlockReflowState calls GetAvailableSpace on its BlockBandData
@@ -193,26 +193,26 @@ and determines the right-most edge of the available space.</li>
    
   </ul>
    
-  <h4>Use Case 4: Propagation of Floater Damage: detecting and handling floater 
+  <h4>Use Case 4: Propagation of Float Damage: detecting and handling float 
 damage</h4>
   This process is driven by the Block Frame.<br>
    
   <ul>
      <li>A non-dirty line is encountered by the Block Frame in ReflowDirtyLines</li>
-     <li>Block Frame calls its PropagateFloaterDamage method</li>
-     <li>The Space Manger is checked to see if ther is any floater damage</li>
+     <li>Block Frame calls its PropagateFloatDamage method</li>
+     <li>The Space Manger is checked to see if ther is any float damage</li>
      <li>If there is, then the block frame asks the Space Manager if the
-line in question intersects the floater damage</li>
+line in question intersects the float damage</li>
      <li>If the line does intersect a damage interval, then the line is marked 
 dirty</li>
      <li>If the line does not intersect a damage interval, it may still be 
 marked dirty if:</li>
      
     <ul>
-       <li>it was impacted by floaters before, but is not any longer</li>
-       <li>it was not impacted by floaters befre, but is now</li>
+       <li>it was impacted by floats before, but is not any longer</li>
+       <li>it was not impacted by floats befre, but is now</li>
        <li><a name="block-line-impact"></a>
- it is impacted by floaters and is a block<br>
+ it is impacted by floats and is a block<br>
        </li>
      
     </ul>
@@ -231,7 +231,7 @@ private (compiles fine)</li>
  no subclasses. Should be private (compiles fine)</li>
      <li>nsBlockFrame::Paint is mucking with nsBlockBandData in and #if 0
 block - remove that and the include (compiles fine)</li>
-     <li>nsSpaceManger has no way of clearing the floater damage interval 
+     <li>nsSpaceManger has no way of clearing the float damage interval 
 set - this might be needed if the SpaceManager persists beyond a Reflow</li>
   </ul>
    <br>

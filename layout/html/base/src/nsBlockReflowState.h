@@ -68,29 +68,29 @@ public:
 
   void GetAvailableSpace(nscoord aY);
 
-  void InitFloater(nsLineLayout&       aLineLayout,
-                   nsPlaceholderFrame* aPlaceholderFrame,
-                   nsReflowStatus&     aReflowStatus);
+  void InitFloat(nsLineLayout&       aLineLayout,
+                 nsPlaceholderFrame* aPlaceholderFrame,
+                 nsReflowStatus&     aReflowStatus);
 
-  void AddFloater(nsLineLayout&       aLineLayout,
-                  nsPlaceholderFrame* aPlaceholderFrame,
-                  PRBool              aInitialReflow,
-                  nsReflowStatus&     aReflowStatus);
+  void AddFloat(nsLineLayout&       aLineLayout,
+                nsPlaceholderFrame* aPlaceholderFrame,
+                PRBool              aInitialReflow,
+                nsReflowStatus&     aReflowStatus);
 
-  PRBool CanPlaceFloater(const nsRect& aFloaterRect, PRUint8 aFloats);
+  PRBool CanPlaceFloat(const nsRect& aFloatRect, PRUint8 aFloats);
 
-  void FlowAndPlaceFloater(nsFloaterCache* aFloaterCache,
-                           PRBool*         aIsLeftFloater,
-                           nsReflowStatus& aReflowStatus);
+  void FlowAndPlaceFloat(nsFloatCache* aFloatCache,
+                         PRBool*         aIsLeftFloat,
+                         nsReflowStatus& aReflowStatus);
 
-  PRBool PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aFloaters);
+  PRBool PlaceBelowCurrentLineFloats(nsFloatCacheList& aFloats);
 
   // called when clearing a line with a break type caused by a BR past
-  // floats, and also used internally by ClearPastFloaters
-  void ClearFloaters(nscoord aY, PRUint8 aBreakType);
+  // floats, and also used internally by ClearPastFloats
+  void ClearFloats(nscoord aY, PRUint8 aBreakType);
 
   // called when clearing a block past floats
-  PRBool ClearPastFloaters(PRUint8 aBreakType);
+  PRBool ClearPastFloats(PRUint8 aBreakType);
 
   PRBool IsAdjacentWithTop() const {
     return mY == mReflowState.mComputedBorderPadding.top;
@@ -117,7 +117,7 @@ public:
                               nsRect& aResult);
 
 protected:
-  void RecoverFloaters(nsLineList::iterator aLine, nscoord aDeltaY);
+  void RecoverFloats(nsLineList::iterator aLine, nscoord aDeltaY);
 
 public:
   void RecoverStateFrom(nsLineList::iterator aLine, nscoord aDeltaY);
@@ -126,7 +126,7 @@ public:
     mLineNumber++;
   }
 
-  PRBool IsImpactedByFloater() const;
+  PRBool IsImpactedByFloat() const;
 
   nsLineBox* NewLineBox(nsIFrame* aFrame, PRInt32 aCount, PRBool aIsBlock);
 
@@ -150,7 +150,7 @@ public:
   // placed <b>after</b> taking into account the blocks border and
   // padding. This, therefore, represents the inner "content area" (in
   // spacemanager coordinates) where child frames will be placed,
-  // including child blocks and floaters.
+  // including child blocks and floats.
   nscoord mSpaceManagerX, mSpaceManagerY;
 
   // XXX get rid of this
@@ -184,10 +184,10 @@ public:
   // The maximum x-most of each line
   nscoord mKidXMost;
 
-  // The combined area of all floaters placed so far
-  nsRect mFloaterCombinedArea;
+  // The combined area of all floats placed so far
+  nsRect mFloatCombinedArea;
 
-  nsFloaterCacheFreeList mFloaterCacheFreeList;
+  nsFloatCacheFreeList mFloatCacheFreeList;
 
   // Previous child. This is used when pulling up a frame to update
   // the sibling list.
@@ -210,16 +210,16 @@ public:
   // Temporary line-reflow state. This state is used during the reflow
   // of a given line, but doesn't have meaning before or after.
 
-  // The list of floaters that are "current-line" floaters. These are
+  // The list of floats that are "current-line" floats. These are
   // added to the line after the line has been reflowed, to keep the
   // list fiddling from being N^2.
-  nsFloaterCacheFreeList mCurrentLineFloaters;
+  nsFloatCacheFreeList mCurrentLineFloats;
 
-  // The list of floaters which are "below current-line"
-  // floaters. These are reflowed/placed after the line is reflowed
+  // The list of floats which are "below current-line"
+  // floats. These are reflowed/placed after the line is reflowed
   // and placed. Again, this is done to keep the list fiddling from
   // being N^2.
-  nsFloaterCacheFreeList mBelowCurrentLineFloaters;
+  nsFloatCacheFreeList mBelowCurrentLineFloats;
 
   nscoord mMaxElementWidth;
   nscoord mMaximumWidth;
@@ -243,7 +243,7 @@ public:
 
   PRInt16 mFlags;
  
-  PRUint8 mFloaterBreakType;
+  PRUint8 mFloatBreakType;
 
   void SetFlag(PRUint32 aFlag, PRBool aValue)
   {

@@ -1762,7 +1762,7 @@ NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRU
   // if this is a floating view, it isn't covered by any widgets other than
   // its children. In that case we walk up to its parent widget and use
   // that as the root to update from. This also means we update areas that
-  // may be outside the parent view(s), which is necessary for floaters.
+  // may be outside the parent view(s), which is necessary for floats.
   if (view->GetFloating()) {
     nsView* widgetParent = view;
 
@@ -2179,15 +2179,15 @@ void nsViewManager::BuildDisplayList(nsView* aView, const nsRect& aRect, PRBool 
   ComputePlaceholderContainment(displayRoot);
 
   // Create the Z-ordered view tree
-  PRBool paintFloaters;
+  PRBool paintFloats;
   if (aEventProcessing) {
-    paintFloaters = PR_TRUE;
+    paintFloats = PR_TRUE;
   } else {
-    paintFloaters = displayRoot->GetFloating();
+    paintFloats = displayRoot->GetFloating();
   }
   CreateDisplayList(displayRoot, PR_FALSE, zTree, PR_FALSE, origin.x, origin.y,
                     aView, &aRect, nsnull, displayRootOrigin.x, displayRootOrigin.y,
-                    paintFloaters, aEventProcessing);
+                    paintFloats, aEventProcessing);
 
   // Reparent any views that need reparenting in the Z-order tree
   ReparentViews(zTree);
@@ -3377,7 +3377,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
                                         DisplayZTreeNode* &aResult, PRBool aInsideRealView,
                                         nscoord aOriginX, nscoord aOriginY, nsView *aRealView,
                                         const nsRect *aDamageRect, nsView *aTopView,
-                                        nscoord aX, nscoord aY, PRBool aPaintFloaters,
+                                        nscoord aX, nscoord aY, PRBool aPaintFloats,
                                         PRBool aEventProcessing)
 {
   PRBool retval = PR_FALSE;
@@ -3455,9 +3455,9 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
 
   // Don't paint floating views unless the root view being painted is a floating view.
   // This is important because we may be asked to paint
-  // a window that's behind a transient floater; in this case we must paint the real window
-  // contents, not the floater contents (bug 63496)
-  if (!aPaintFloaters && aView->GetFloating()) {
+  // a window that's behind a transient float; in this case we must paint the real window
+  // contents, not the float contents (bug 63496)
+  if (!aPaintFloats && aView->GetFloating()) {
     return PR_FALSE;
   }
 
@@ -3494,7 +3494,7 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
       DisplayZTreeNode* createdNode;
       retval = CreateDisplayList(childView, aReparentedViewsPresent, createdNode,
                                  aInsideRealView,
-                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, pos.x, pos.y, aPaintFloaters,
+                                 aOriginX, aOriginY, aRealView, aDamageRect, aTopView, pos.x, pos.y, aPaintFloats,
                                  aEventProcessing);
       if (createdNode != nsnull) {
         EnsureZTreeNodeCreated(aView, aResult);
