@@ -41,6 +41,7 @@
 #include "nsAuthEngine.h"
 #include "nsIServiceManager.h"
 #include "nsISocketTransport.h"
+#include "nsIPSMSocketInfo.h"
 #include "plstr.h"
 
 #if defined(PR_LOGGING)
@@ -884,6 +885,16 @@ nsHTTPPipelinedRequest::RestartRequest(PRUint32 aType)
         //
         // XXX/ruslan: need to tell the transport to switch into SSL mode
         //
+        nsCOMPtr<nsISupports> securityInfo;
+        rval = mTransport->GetSecurityInfo(getter_AddRefs(securityInfo));
+        if (NS_FAILED(rval)) return rval;
+
+        nsCOMPtr<nsIPSMSocketInfo> psmSocketInfo = do_QueryInterface(securityInfo, &rval);
+        if (NS_FAILED(rval)) return rval;
+
+        rval = psmSocketInfo->ProxyStepUp();
+        if (NS_FAILED(rval)) return rval;
+
         return WriteRequest(mInputStream);
     }
 
