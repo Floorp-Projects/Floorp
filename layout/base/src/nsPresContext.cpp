@@ -30,6 +30,7 @@
 #include "nsIDocument.h"
 #include "nsIFrame.h"
 #include "nsIStyleContext.h"
+#include "nsLayoutAtoms.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -67,6 +68,7 @@ nsPresContext::nsPresContext()
                       NSIntPointsToTwips(10))
 {
   NS_INIT_REFCNT();
+  nsLayoutAtoms::AddrefAtoms();
   mCompatibilityMode = eCompatibility_NavQuirks;
 
 #ifdef _WIN32
@@ -108,6 +110,7 @@ nsPresContext::~nsPresContext()
   }
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mBaseURL);
+  nsLayoutAtoms::ReleaseAtoms();
 }
 
 nsrefcnt
