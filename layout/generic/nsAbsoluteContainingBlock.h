@@ -109,8 +109,7 @@ public:
                              const nsHTMLReflowState& aReflowState,
                              nscoord                  aContainingBlockWidth,
                              nscoord                  aContainingBlockHeight,
-                             PRBool&                  aWasHandled,
-                             nsRect&                  aChildBounds);
+                             PRBool&                  aWasHandled);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
                      nsIPresContext* aPresContext);

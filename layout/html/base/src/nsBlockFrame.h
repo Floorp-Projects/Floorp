@@ -248,6 +248,9 @@ protected:
                                 nsBlockReflowState&  aState,
                                 nsHTMLReflowMetrics& aMetrics);
 
+  void ComputeCombinedArea(const nsHTMLReflowState& aReflowState,
+                           nsHTMLReflowMetrics& aMetrics);
+
   /** add the frames in aFrameList to this block after aPrevSibling
     * this block thinks in terms of lines, but the frame construction code
     * knows nothing about lines at all. So we need to find the line that
