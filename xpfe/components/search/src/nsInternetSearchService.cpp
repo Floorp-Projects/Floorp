@@ -1808,14 +1808,19 @@ InternetSearchDataSource::GetData(nsString data, char *sectionToFind, char *attr
 			value = line.Trim(" \t");
 
 			// strip of any enclosing quotes
-			if (value[0] == PRUnichar('\"'))
+			PRUnichar	quoteChar;
+			PRBool		foundQuoteChar = PR_FALSE;
+
+			if ((value[0] == PRUnichar('\"')) || (value[0] == PRUnichar('\'')))
 			{
+				foundQuoteChar = PR_TRUE;
+				quoteChar = value[0];
 				value.Cut(0,1);
 			}
 			len = value.Length();
-			if (len > 0)
+			if ((len > 0) && (foundQuoteChar == PR_TRUE))
 			{
-				if (value[len-1] == PRUnichar('\"'))
+				if (value[len-1] == quoteChar)
 				{
 					value.SetLength(len-1);
 				}
