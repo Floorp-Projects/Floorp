@@ -49,11 +49,6 @@ interface nsIMsgWindow;
 
 interface nsIMsgFolderCompactor :  nsISupports
 {
-  void Init(in nsIMsgFolder folder, in string baseMsgUri, in nsIMsgDatabase db,
-                           in nsIFileSpec pathSpec, in nsIMsgWindow aMsgWindow);
-  void startCompactingAll(in nsISupportsArray aArrayOfFoldersToCompact, in nsIMsgWindow aMsgWindow, in boolean compactOfflineAlso, in nsISupportsArray aOfflineFolderArray);
-  // we probably want to add the ability to set an enumerator to determine which
-  // messages to copy over in the compaction process.
-  void StartCompacting();
-  void FinishCompact();
+  void compact(in nsIMsgFolder aFolder, in nsIMsgWindow aMsgWindow);
+  void compactAll(in nsISupportsArray aArrayOfFoldersToCompact, in nsIMsgWindow aMsgWindow, in boolean compactOfflineAlso, in nsISupportsArray aOfflineFolderArray);
 };

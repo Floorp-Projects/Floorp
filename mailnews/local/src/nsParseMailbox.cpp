@@ -110,39 +110,24 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
     nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(ctxt, &rv);
 
     nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(ctxt);
+    nsCOMPtr<nsIMsgFolder> folder = do_QueryReferent(m_folder);
 
-    if (NS_SUCCEEDED(rv) && runningUrl)
+    if (NS_SUCCEEDED(rv) && runningUrl && folder)
     {
         url->GetStatusFeedback(getter_AddRefs(m_statusFeedback));
 
         // okay, now fill in our event sinks...Note that each getter ref counts before
         // it returns the interface to us...we'll release when we are done
 
-        nsCAutoString fileName; // may be shortened by NS_UnescapeURL
-        url->GetFilePath(fileName);
-        
-        nsCAutoString folderName; // may be shortened by NS_UnescapeURL
-        url->GetFileName(folderName);
-        if (!folderName.IsEmpty())
+        folder->GetName(getter_Copies(m_folderName));
+
+        nsCOMPtr<nsIFileSpec> path;
+        folder->GetPath(getter_AddRefs(path));
+       
+        if (path)
         {
-            NS_UnescapeURL(folderName);
-
-#if 0
-            // convert from OS native charset to unicode
-            rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), folderName.get(), m_folderName);
-            if (NS_FAILED(rv))
-                m_folderName.AssignWithConversion(folderName);
-#endif
-            // folderName is UTF-8
-            m_folderName = NS_ConvertUTF8toUCS2(folderName.get());
-        }
-
-        if (!fileName.IsEmpty())
-        {
-            NS_UnescapeURL(fileName);
-            nsFilePath dbPath(fileName.get());
-            nsFileSpec dbName(dbPath);
-
+            nsFileSpec dbName;
+            path->GetFileSpec(&dbName);
             // the size of the mailbox file is our total base line for measuring progress
             m_graph_progress_total = dbName.GetFileSize();
             UpdateStatusText(LOCAL_STATUS_SELECTING_MAILBOX);
@@ -151,9 +136,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
             rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
             if (NS_SUCCEEDED(rv) && mailDB)
             {
-                nsCOMPtr <nsIFileSpec> dbFileSpec;
-                NS_NewFileSpecWithSpec(dbName, getter_AddRefs(dbFileSpec));
-                rv = mailDB->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+                //Use OpenFolderDB to always open the db so that db's m_folder is set correctly.
+                rv = mailDB->OpenFolderDB(folder, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
                 if (m_mailDB)
                     m_mailDB->AddListener(this);
             }
@@ -279,10 +263,18 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(nsnull, PR_FALSE)
 	m_updateAsWeGo = PR_TRUE;
 	m_ignoreNonMailFolder = PR_FALSE;
 	m_isRealMailFolder = PR_TRUE;
+  m_folder=nsnull;
+
 }
 
 nsMsgMailboxParser::~nsMsgMailboxParser()
 {
+}
+
+void nsMsgMailboxParser::SetFolder(nsIMsgFolder *aFolder)
+{
+  if (aFolder)
+    m_folder = getter_AddRefs(NS_GetWeakReference(aFolder));
 }
 
 void nsMsgMailboxParser::UpdateStatusText (PRUint32 stringID)

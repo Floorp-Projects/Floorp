@@ -352,6 +352,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsIUrl
 	nsMsgMailboxParser *parser = new nsMsgMailboxParser;
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
+  parser->SetFolder(this);
 	rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, listener, nsnull);
 
 	return rv;
@@ -908,48 +909,27 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener, nsIMsg
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && folderCompactor)
     if (aFolderArray)
-       rv = folderCompactor->StartCompactingAll(aFolderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
+       rv = folderCompactor->CompactAll(aFolderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
     else if (folderArray)
-       rv = folderCompactor->StartCompactingAll(folderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
+       rv = folderCompactor->CompactAll(folderArray, aMsgWindow, aCompactOfflineAlso, aOfflineFolderArray);  
   return rv;
 }
 
-// **** jefft -- needs to provide nsIMsgWindow for the compact status
-// update; come back later
 NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow)
 {
   nsresult rv;
   nsCOMPtr <nsIMsgFolderCompactor> folderCompactor =  do_CreateInstance(NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && folderCompactor)
   {
-    nsresult rv = NS_ERROR_FAILURE;
-    nsCOMPtr<nsIMsgDatabase> db;
-    nsCOMPtr<nsIDBFolderInfo> folderInfo;
     PRUint32 expungedBytes = 0;
-    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-    nsCOMPtr<nsIFileSpec> pathSpec;
 
-    rv = GetExpungedBytes(&expungedBytes);
-
+    GetExpungedBytes(&expungedBytes);
     // check if we need to compact the folder
-    if (expungedBytes > 0)
-    {
-      rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
-      if (NS_FAILED(rv)) return rv;
 
-      rv = GetPath(getter_AddRefs(pathSpec));
-    
-      if (NS_SUCCEEDED(rv)) 
-      {
-        rv = folderCompactor->Init(this, mBaseMessageURI, db, pathSpec, aMsgWindow);
-        if (NS_SUCCEEDED(rv))
-          rv = folderCompactor->StartCompacting();
-      }
-    }
+    if (expungedBytes > 0)
+      rv = folderCompactor->Compact(this, aMsgWindow);
     else
       rv = NotifyCompactCompleted();
-
-    return rv;
   }
   return rv;
 }

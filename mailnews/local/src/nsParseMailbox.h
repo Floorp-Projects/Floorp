@@ -54,6 +54,7 @@
 #include "nsTime.h"
 #include "nsFileSpec.h"
 #include "nsIDBChangeListener.h"
+#include "nsIWeakReference.h"
 
 #include "nsIMsgFilterList.h"
 #include "nsIMsgFilterHitNotify.h"
@@ -174,7 +175,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSIDBCHANGELISTENER
 
-
+  void      SetFolder(nsIMsgFolder *aFolder); 
 	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = dont_QueryInterface(mailDB); }
 
 	void			SetIncrementalUpdate(PRBool update) {m_updateAsWeGo = update;}
@@ -205,7 +206,7 @@ protected:
 	void					FreeBuffers();
 
 	// data
-    nsString        m_folderName;
+    nsXPIDLString        m_folderName;
 	nsXPIDLCString		m_inboxUri;
 	nsByteArray		m_inputStream;
 	PRInt32			m_obuffer_size;
@@ -221,6 +222,7 @@ private:
 		// the following flag is used to determine when a url is currently being run. It is cleared on calls
 	// to ::StopBinding and it is set whenever we call Load on a url
 	PRBool	m_urlInProgress;	
+  nsWeakPtr m_folder; 
 
 };
 

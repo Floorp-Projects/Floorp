@@ -63,17 +63,22 @@ public:
 //  virtual nsresult Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgDatabase *db,
 //                           nsIFileSpec *pathSpec);
   // virtual nsresult FinishCompact();
+protected:
   virtual nsresult InitDB(nsIMsgDatabase *db);
-  nsresult CompactHelper(nsIMsgFolder *folder);
+  virtual nsresult StartCompacting();
+  virtual nsresult FinishCompact();
   void CloseOutputStream();
   void  CleanupTempFilesAfterError();
 
+  nsresult Init(nsIMsgFolder *aFolder, const char* aBaseMsgUri, nsIMsgDatabase *aDb,
+                            nsIFileSpec *aPathSpec, nsIMsgWindow *aMsgWindow);
   nsresult GetMessage(nsIMsgDBHdr **message);
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
   nsresult ShowStatusMsg(const PRUnichar *aMsg);
   nsresult ReleaseFolderLock();
   void     ShowCompactingStatusMsg();
   nsresult CompactNextFolder();
+  
 
   char *m_baseMessageUri; // base message uri
   nsCString m_messageUri; // current message uri being copy
@@ -104,13 +109,14 @@ public:
 
   nsOfflineStoreCompactState(void);
   virtual ~nsOfflineStoreCompactState(void);
-  virtual nsresult InitDB(nsIMsgDatabase *db);
-
-  NS_IMETHOD StartCompacting();
   NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                     nsresult status);
 
-  NS_IMETHODIMP FinishCompact();
+protected:
+    virtual nsresult InitDB(nsIMsgDatabase *db);
+    virtual nsresult StartCompacting();
+    virtual nsresult FinishCompact();
+
 };
 
 
