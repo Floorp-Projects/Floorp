@@ -200,7 +200,7 @@ ssl_cov()
                
   p=""
 
-  cat ${SSLCOV} | while read tls param testname
+  while read tls param testname
   do
       p=`echo "$testname" | sed -e "s/ .*//"`   #sonmi, only run extended test on SSL3 and TLS
       
@@ -226,7 +226,7 @@ ssl_cov()
           rm ${TMP}/$HOST.tmp.$$ 2>/dev/null
           html_msg $ret 0 "${testname}"
       fi
-  done
+  done < ${SSLCOV}
 
   kill_selfserv
   html "</TABLE><BR>"
@@ -239,7 +239,7 @@ ssl_auth()
 {
   html_head "SSL Client Authentication $NORM_EXT"
 
-  cat ${SSLAUTH} | while read value sparam cparam testname
+  while read value sparam cparam testname
   do
       if [ $value != "#" ]; then
           cparam=`echo $cparam | sed -e 's;_; ;g' -e "s/TestUser/$USER_NICKNAME/g" `
@@ -259,7 +259,7 @@ ssl_auth()
                    "produced a returncode of $ret, expected is $value"
           kill_selfserv
       fi
-  done
+  done < ${SSLAUTH}
 
   html "</TABLE><BR>"
 }
@@ -272,7 +272,7 @@ ssl_stress()
 {
   html_head "SSL Stress Test $NORM_EXT"
 
-  cat ${SSLSTRESS} | while read value sparam cparam testname
+  while read value sparam cparam testname
   do
       p=`echo "$testname" | sed -e "s/Stress //" -e "s/ .*//"`   #sonmi, only run extended test on SSL3 and TLS
       if [ "$p" = "SSL2" -a "$NORM_EXT" = "Extended test" ] ; then
@@ -299,7 +299,7 @@ ssl_stress()
           fi
           kill_selfserv
       fi
-  done
+  done < ${SSLSTRESS}
 
   html "</TABLE><BR>"
 }
