@@ -30,7 +30,7 @@
 #include <sys/mman.h>
 
 #ifdef _PR_POLL_AVAILABLE
-#include <sys/poll.h>
+#include <poll.h>
 #endif
 
 /* To get FIONREAD */

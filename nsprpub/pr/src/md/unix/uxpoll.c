@@ -25,7 +25,7 @@
 
 #include <fcntl.h>
 #ifdef _PR_USE_POLL
-#include <sys/poll.h>
+#include <poll.h>
 #endif
 
 #if defined(_PR_USE_POLL)

@@ -18,7 +18,7 @@
 
 #include "primpl.h"
 #if defined(_PR_POLL_AVAILABLE)
-#include <sys/poll.h>
+#include <poll.h>
 #endif
 #include <errno.h>
 

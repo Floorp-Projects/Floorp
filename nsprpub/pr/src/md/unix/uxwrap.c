@@ -303,7 +303,7 @@ int select(int width, fd_set *rd, fd_set *wr, fd_set *ex, struct timeval *tv)
  *-----------------------------------------------------------------------
  */
 
-#include <sys/poll.h>
+#include <poll.h>
 
 #if defined(AIX4_1)
 int wrap_poll(void *listptr, unsigned long nfds, long timeout)
