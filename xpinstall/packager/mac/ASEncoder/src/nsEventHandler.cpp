@@ -138,6 +138,20 @@ nsEventHandler::HandleKeyDown()
 				menuChoice |= rMenuItemASDecode;
 				break;
 				
+			case 'F':
+			case 'f':
+				menuChoice = rMenuFile;
+				menuChoice <<= 16;
+				menuChoice |= rMenuItemASEncodeFolder;
+				break;
+				
+			case 'O':
+			case 'o':
+				menuChoice = rMenuFile;
+				menuChoice <<= 16;
+				menuChoice |= rMenuItemASDecodeFolder;
+				break;
+				
 			case 'Q':
 			case 'q':
 				menuChoice = rMenuFile;
@@ -213,7 +227,25 @@ nsEventHandler::HandleMenuChoice(SInt32 aChoice)
 						}
 					}
 					break;
-						
+					
+				case rMenuItemASEncodeFolder:	/* AS Encode Folder... */
+					err = selector.SelectFolder(&file);
+					if (err == noErr)
+					{
+						nsAppleSingleEncoder encoder;
+						err = encoder.EncodeFolder(&file);
+					}
+					break;
+					
+				case rMenuItemASDecodeFolder:	/* AS Decode Folder... */
+					err = selector.SelectFolder(&file);
+					if (err == noErr)
+					{
+						nsAppleSingleDecoder decoder;
+						err = decoder.DecodeFolder(&file);
+					}
+					break;
+					
 				case rMenuItemQuit:			 	/* Quit */
 					nsASEApp::SetCompletionStatus(true);
 					break;
