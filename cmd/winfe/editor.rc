@@ -340,7 +340,7 @@ BEGIN
     ID_COMBO_FONTFACE       "Change font face\nFont"
     ID_COMBO_FONTCOLOR      "Change font color. Press Alt to change Background Color\nFont Color [+Alt for Background]"
     ID_COMBO_PARA           "Change paragraph or heading style\nParagraph style"
-    ID_OPEN_NAV_WINDOW      "Display current page in a new Browser window\nDisplay page in Browser\nBrowse"
+    ID_OPEN_NAV_WINDOW      "Display current page in a Browser window\nPreview page in Browser\nPreview"
     IDS_LINK_TO_FILE        "Link to File"
     IDS_ANCHOR_IMAGE_FILE   "Select Anchor Image File"
     IDS_ANCHOR_IMAGE        "Linked image:"

@@ -475,6 +475,10 @@ public:
 
 	// Helper for erasing text structures
 	BOOL	EraseTextBkgnd(HDC pDC, RECT&, LO_TextStruct*);
+    // Break out code in OnMouseMove handler so it can be used
+    //  during dragging in the Editor
+    BOOL CheckAndScrollWindow(int32 xVal, int32 yVal, CL_Layer *layer, int32 iBorderThreshhold = 0);
+
 };
 
 //	Global variables

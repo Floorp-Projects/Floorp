@@ -312,8 +312,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_COMMAND(ID_DELETE_TABLE_COLUMN,OnDeleteTableColumn)
     ON_COMMAND(ID_DELETE_TABLE_CELL,OnDeleteTableCell)
     ON_COMMAND(ID_DELETE_TABLE_CAPTION,OnDeleteTableCaption)
-    ON_COMMAND(ID_TOGGLE_TABLE_BORDER,OnToggleTableBorder)
-    ON_COMMAND(ID_TOGGLE_HEADER_CELL,OnToggleHeaderCell)
     ON_COMMAND(ID_PROPS_TABLE,OnPropsTable)
     ON_COMMAND(ID_PROPS_TABLE_ROW,OnPropsTableRow)
     ON_COMMAND(ID_PROPS_TABLE_COLUMN,OnPropsTableColumn)
@@ -396,8 +394,8 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE, OnUpdateInsertTable)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_ROW, OnUpdateInsertTableRow)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_ROW_ABOVE, OnUpdateInsertTableRow)
-    ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_CELL, OnUpdateInsertTableCell)
-    ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_CELL_BEFORE, OnUpdateInsertTableCell)
+    ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_CELL, OnUpdateInsertTableColumn)
+    ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_CELL_BEFORE, OnUpdateInsertTableColumn)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_COLUMN, OnUpdateInsertTableColumn)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_COLUMN_BEFORE, OnUpdateInsertTableColumn)
     ON_UPDATE_COMMAND_UI(ID_INSERT_TABLE_CAPTION, OnUpdateInsertTableCaption)
@@ -406,8 +404,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_DELETE_TABLE_COLUMN, OnUpdateInTableColumn)
     ON_UPDATE_COMMAND_UI(ID_DELETE_TABLE_CELL, OnUpdateInTableCell)
     ON_UPDATE_COMMAND_UI(ID_DELETE_TABLE_CAPTION, OnUpdateInTableCaption)
-    ON_UPDATE_COMMAND_UI(ID_TOGGLE_TABLE_BORDER, OnUpdateToggleTableBorder)
-    ON_UPDATE_COMMAND_UI(ID_TOGGLE_HEADER_CELL, OnUpdateToggleHeaderCell)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TABLE, OnUpdateInTable)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TABLE_ROW, OnUpdateInTableRow)
     ON_UPDATE_COMMAND_UI(ID_PROPS_TABLE_COLUMN, OnUpdateInTableColumn)
@@ -420,28 +416,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
 	ON_UPDATE_COMMAND_UI(ID_LOCAL_POPUP, OnCanInteract)
 	ON_UPDATE_COMMAND_UI(ID_FILE_EDITSOURCE, OnCanInteract)
 	ON_UPDATE_COMMAND_UI(ID_GO_PUBLISH_LOCATION, OnCanInteract)
-    // Paragraph tags cover whole range starting from P_TEXT (=0),
-    //  but "Normal" is first menu item (tag = P_PARAGRAPH)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_NSDT), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_HEADER_1), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_HEADER_2), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_HEADER_3), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_HEADER_4), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_HEADER_5), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_HEADER_6), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_PARAGRAPH), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_DESC_TEXT), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_ADDRESS), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_PREFORMAT), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_DESC_TITLE), OnUpdateParagraphMenu)
-    ON_UPDATE_COMMAND_UI((ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE), OnUpdateParagraphMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE), OnUpdateFontSizeMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE+1), OnUpdateFontSizeMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE+2), OnUpdateFontSizeMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE+3), OnUpdateFontSizeMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE+4), OnUpdateFontSizeMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE+5), OnUpdateFontSizeMenu)
-	ON_UPDATE_COMMAND_UI((ID_FORMAT_FONTSIZE_BASE+6), OnUpdateFontSizeMenu)
 #ifdef _IME_COMPOSITION
     ON_WM_LBUTTONDOWN()
     #ifdef WIN32
@@ -1032,8 +1006,6 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
     CNetscapeView::OnKillFocus(pOldWin); 
 }
 
-
-
 BOOL CNetscapeEditView::ShouldParentHandle(UINT nID, int nCode)
 {
     LPARAM t_param(0);
@@ -1046,10 +1018,10 @@ BOOL CNetscapeEditView::ShouldParentHandle(UINT nID, int nCode)
     return FALSE;
 }
 
-
-
 BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo) 
 {
+    MWContext *pMWContext = GET_MWCONTEXT;
+
     // was this a windows menu selection ?
     switch (nCode)
     {
@@ -1059,7 +1031,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             uint32 CategoryId, PluginId;
             if (GetPluginInfo(nID, &CategoryId, &PluginId))
             {
-                if (!EDT_PerformPlugin(GET_MWCONTEXT, CategoryId, PluginId, NULL, NULL))
+                if (!EDT_PerformPlugin(pMWContext, CategoryId, PluginId, NULL, NULL))
                     MessageBox(szLoadString(IDS_ERR_LAUNCH_EDITOR_PLUGIN), NULL, MB_ICONSTOP);
                 
                 return TRUE;            // the message was handled here
@@ -1069,7 +1041,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         else if(nID >= ID_EDIT_HISTORY_BASE && nID <= (ID_EDIT_HISTORY_BASE + MAX_EDIT_HISTORY_LOCATIONS))
         {
             char * pURL = NULL;
-            if( EDT_GetEditHistory(GET_MWCONTEXT, nID-ID_EDIT_HISTORY_BASE, &pURL, NULL) )
+            if( EDT_GetEditHistory(pMWContext, nID-ID_EDIT_HISTORY_BASE, &pURL, NULL) )
             {
                 FE_LoadUrl(pURL, LOAD_URL_COMPOSER);
                 return TRUE;
@@ -1077,7 +1049,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         }
         else if (nID == ID_STOP_EDITOR_PLUGIN)
         {
-            EDT_StopPlugin(GET_MWCONTEXT);
+            EDT_StopPlugin(pMWContext);
             return TRUE;
         }
         // Dynamically-built font face menu items
@@ -1092,7 +1064,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
                 pFace = wfe_ppTrueTypeFonts[nID - ID_FORMAT_FONTFACE_BASE-2];
             }
             // Change the font face
-            EDT_SetFontFace(GET_MWCONTEXT, NULL, iIndex, pFace);
+            EDT_SetFontFace(pMWContext, NULL, iIndex, pFace);
             // Trigger update of toolbar combobox
             m_EditState.bFontFaceMaybeChanged = TRUE;
             return TRUE;
@@ -1104,7 +1076,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
                 t == P_UNUM_LIST ||
                 t == P_NUM_LIST ||
                 t == P_DESC_LIST ){
-                EDT_ToggleList(GET_MWCONTEXT, t);
+                EDT_ToggleList(pMWContext, t);
                 return TRUE;
             }
             OnFormatParagraph(nID);
@@ -1115,12 +1087,12 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             OnCharacterStyle(nID);
             return TRUE;
         }
-        else if( nID >= ID_FORMAT_FONTSIZE_BASE && nID <= ID_FORMAT_FONTSIZE_BASE+6)
+        else if( nID >= ID_FORMAT_FONTSIZE_BASE && nID < ID_FORMAT_FONTSIZE_BASE+MAX_FONT_SIZE)
         {
             OnFontSize(nID);
             return TRUE;
         }
-        else if( nID >= ID_FORMAT_POINTSIZE_BASE && nID <= ID_FORMAT_POINTSIZE_BASE+14)
+        else if( nID >= ID_FORMAT_POINTSIZE_BASE && nID <= ID_FORMAT_POINTSIZE_BASE+MAX_FONT_POINTSIZE_COUNT)
         {
             OnPointSize(nID);
             return TRUE;
@@ -1148,7 +1120,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
 
         if (nID >= ID_EDITOR_PLUGINS_BASE && nID < ID_EDITOR_PLUGINS_BASE + MAX_EDITOR_PLUGINS)
         {
-            pCmdUI->Enable(CAN_INTERACT && !EDT_IsPluginActive(GET_MWCONTEXT));
+            pCmdUI->Enable(CAN_INTERACT && !EDT_IsPluginActive(pMWContext));
             return TRUE;
         }
         else if(nID >= ID_EDIT_HISTORY_BASE && nID <= (ID_EDIT_HISTORY_BASE + MAX_EDIT_HISTORY_LOCATIONS))
@@ -1158,7 +1130,7 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         }
         else if (nID == ID_STOP_EDITOR_PLUGIN)
         {
-            pCmdUI->Enable(EDT_IsPluginActive(GET_MWCONTEXT));
+            pCmdUI->Enable(EDT_IsPluginActive(pMWContext));
             return TRUE;
         }
         else if (IsEncodingMenu(nID))
@@ -1174,21 +1146,52 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         else if (nID >= ID_FORMAT_FONTFACE_BASE && nID < (ID_FORMAT_FONTFACE_BASE+MAX_TRUETYPE_FONTS+3))
         {
             // Hopefully, the cached index is up to date!
+            //pCmdUI->SetCheck(nID == (UINT)ID_FORMAT_FONTSIZE_BASE(m_EditState.iFontIndex + ID_FORMAT_FONTFACE_BASE));
             pCmdUI->SetCheck(nID == (UINT)(m_EditState.iFontIndex + ID_FORMAT_FONTFACE_BASE));
-            pCmdUI->Enable(CAN_INTERACT);
+            pCmdUI->Enable(CAN_INTERACT && EDT_CanSetCharacterAttribute(pMWContext));
+            return TRUE;
+        }
+        else if (nID >= ID_FORMAT_FONTSIZE_BASE && nID < (ID_FORMAT_FONTSIZE_BASE+MAX_FONT_SIZE))
+        {
+            EDT_CharacterData * pData = EDT_GetCharacterData(pMWContext);
+            // Don't check an HTML size item if we actually have a POINT-SIZE value
+            if(pData && (pData->iPointSize == 0 || (pData->mask & TF_FONT_POINT_SIZE) == 0) )
+            {
+                int iFontSizeIndex = EDT_GetFontSize(pMWContext) - 1;
+                pCmdUI->SetCheck((UINT)(pData->iSize-1) == (nID - ID_FORMAT_FONTSIZE_BASE));
+            }
+            pCmdUI->Enable(CAN_INTERACT && EDT_CanSetCharacterAttribute(pMWContext));
+            return TRUE;
+        }
+        else if (pCmdUI->m_pMenu && nID >= ID_FORMAT_POINTSIZE_BASE && nID <= (ID_FORMAT_POINTSIZE_BASE+MAX_FONT_POINTSIZE_COUNT))
+        {
+            EDT_CharacterData * pData = EDT_GetCharacterData(pMWContext);
+            if(pData && pData->iPointSize && (pData->mask & TF_FONT_SIZE) && (pData->mask & TF_FONT_POINT_SIZE))
+            {
+                // Get the size from the menu item
+                char pMenuItem[16];
+                pCmdUI->m_pMenu->GetMenuString(nID, pMenuItem, 16, MF_BYCOMMAND);
+                int iMenuSize = atoi(pMenuItem);
+                pCmdUI->SetCheck(iMenuSize == pData->iPointSize);
+            }
+            pCmdUI->Enable(CAN_INTERACT && EDT_CanSetCharacterAttribute(pMWContext));
             return TRUE;
         }
         else if( nID > ID_FORMAT_PARAGRAPH_BASE && nID <= ID_FORMAT_PARAGRAPH_END )
         {
             TagType t = TagType(nID - ID_FORMAT_PARAGRAPH_BASE);
 	        if( t == P_BLOCKQUOTE ||
-                t == P_UNUM_LIST || //P_DIRECTORY ||
-                t == P_NUM_LIST ||  //P_MENU ||
+                t == P_UNUM_LIST ||
+                t == P_NUM_LIST ||
                 t == P_DESC_LIST)
             {
                 UpdateListMenuItem(pCmdUI, t);
                 return TRUE;
             }
+            TagType nParagraphFormat = EDT_GetParagraphFormatting(pMWContext);
+            pCmdUI->SetCheck(nParagraphFormat == (TagType)(pCmdUI->m_nID - ID_FORMAT_PARAGRAPH_BASE));
+            pCmdUI->Enable(CAN_INTERACT  && !EDT_IsJavaScript(pMWContext));
+            return TRUE;
         }
         else if( nID >= ID_FORMAT_CHAR_BOLD && nID <= ID_FORMAT_CHAR_BLINK )
         {
@@ -2119,17 +2122,6 @@ void CNetscapeEditView::OnEditDelete()
             ReportCopyError(iResult);
         }
     }
-}
-
-void CNetscapeEditView::OnCopyStyle()
-{
-    EDT_CopyStyle(GET_MWCONTEXT);
-}
-
-void CNetscapeEditView::OnUpdateCopyStyle(CCmdUI* pCmdUI)
-{
-    //TODO: CHECK FOR TEXT ELEMENT?
-    pCmdUI->Enable(CAN_INTERACT);
 }
 
 // Use this for any commands that are enabled most of the time

@@ -27,9 +27,6 @@
 #include "edprops.h"
 #include "edtrccln.h"
 
-// Matches size of custom colors in Windows color picker
-#define	MAX_FONT_COLOR	16
-
 // Global for app - called during startup
 BOOL FE_FindPreviousInstance(LPCSTR szURL, BOOL bStartEditor);
 

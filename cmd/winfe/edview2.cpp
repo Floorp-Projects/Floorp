@@ -707,16 +707,6 @@ void CNetscapeEditView::OnSelendokParagraphCombo()
 }
 
 
-// No paragraph buttons on toolbar -- just in menu
-void CNetscapeEditView::OnUpdateParagraphMenu(CCmdUI* pCmdUI)
-{   
-    TagType nParagraphFormat = EDT_GetParagraphFormatting( GET_MWCONTEXT );
-		
-    pCmdUI->SetCheck(nParagraphFormat == (TagType)(pCmdUI->m_nID - ID_FORMAT_PARAGRAPH_BASE));
-    pCmdUI->Enable(CAN_INTERACT  && !EDT_IsJavaScript(GET_MWCONTEXT));
-}
-
-
 void CNetscapeEditView::OnUpdateParagraphComboBox(CCmdUI* pCmdUI)
 {
 	if ( m_EditState.bParaFormatMaybeChanged && 
@@ -869,13 +859,6 @@ void CNetscapeEditView::OnFontSize(UINT nID)
 }
 
 // Menu only:
-void CNetscapeEditView::OnUpdateFontSizeMenu(CCmdUI* pCmdUI)
-{
-    int iFontSizeIndex = EDT_GetFontSize( GET_MWCONTEXT ) - 1;
-    pCmdUI->SetCheck((UINT)iFontSizeIndex == (pCmdUI->m_nID - ID_FORMAT_FONTSIZE_BASE));
-    pCmdUI->Enable(CAN_INTERACT && EDT_CanSetCharacterAttribute(GET_MWCONTEXT));
-}
-
 void CNetscapeEditView::OnSelendokFontSizeCombo()
 {
     MWContext *pMWContext = GET_MWCONTEXT;
@@ -959,6 +942,9 @@ void CNetscapeEditView::OnUpdateFontSizeComboBox(CCmdUI* pCmdUI)
         int	iFontSize = 0;
     	if( pMWContext )
         {
+            char * pSize = NULL;
+            char pSizeNotInList[16];
+
             EDT_CharacterData * pData = EDT_GetCharacterData(pMWContext);
             if(pData)
             {
@@ -3309,21 +3295,6 @@ void CNetscapeEditView::OnInsertTableCellBefore()
     }
 }
 
-void CNetscapeEditView::OnUpdateInsertTableCell(CCmdUI* pCmdUI)
-{
-    if( EDT_IsInsertPointInTableRow(GET_MWCONTEXT) )
-    {
-        EDT_TableData* pData = EDT_GetTableData( GET_MWCONTEXT );
-        if(pData){
-            pCmdUI->Enable(pData->iRows < MAX_TABLE_ROWS && 
-                           pData->iColumns < MAX_TABLE_COLUMNS);
-            EDT_FreeTableData(pData);
-            return;
-        }
-    }
-    pCmdUI->Enable(FALSE);
-}
-
 // DeleteTableCell
 
 void CNetscapeEditView::OnDeleteTableCell()
@@ -3334,71 +3305,6 @@ void CNetscapeEditView::OnDeleteTableCell()
 void CNetscapeEditView::OnUpdateInTableCell(CCmdUI* pCmdUI)
 {
     pCmdUI->Enable(EDT_IsInsertPointInTableRow(GET_MWCONTEXT));
-}
-
-// ToggleTableBorder
-
-void CNetscapeEditView::OnToggleTableBorder()
-{
-    Bool bInTable = EDT_IsInsertPointInTable(GET_MWCONTEXT);
-    Bool bCheck = FALSE;
-    if ( bInTable ) {
-        EDT_TableData* pData = EDT_GetTableData(GET_MWCONTEXT);
-        if ( pData ) {
-            bCheck = pData->iBorderWidth > 0;
-            intn iNewBorder = 1;
-            if ( bCheck ) {
-                iNewBorder = 0;
-            }
-            pData->iBorderWidth = iNewBorder;
-            EDT_SetTableData(GET_MWCONTEXT, pData);
-            EDT_FreeTableData(pData);
-        }
-    }
-}
-
-void CNetscapeEditView::OnUpdateToggleTableBorder(CCmdUI* pCmdUI)
-{
-    Bool bInTable = EDT_IsInsertPointInTable(GET_MWCONTEXT);
-    Bool bCheck = FALSE;
-    if ( bInTable ) {
-        EDT_TableData* pData = EDT_GetTableData(GET_MWCONTEXT);
-        if ( pData ) {
-            bCheck = pData->iBorderWidth > 0;
-            EDT_FreeTableData(pData);
-        }
-    }
-    pCmdUI->SetCheck(bCheck );
-    pCmdUI->Enable(bInTable);
-}
-
-void CNetscapeEditView::OnToggleHeaderCell()
-{
-    Bool bInTableCell = EDT_IsInsertPointInTableCell(GET_MWCONTEXT);
-    Bool bCheck = FALSE;
-    if ( bInTableCell ) {
-        EDT_TableCellData* pData = EDT_GetTableCellData(GET_MWCONTEXT);
-        if ( pData ) {
-            pData->bHeader = ! pData->bHeader;
-            EDT_SetTableCellData(GET_MWCONTEXT, pData);
-            EDT_FreeTableCellData(pData);
-        }
-    }
-}
-
-void CNetscapeEditView::OnUpdateToggleHeaderCell(CCmdUI* pCmdUI)
-{
-    Bool bInTableCell = EDT_IsInsertPointInTableCell(GET_MWCONTEXT);
-    Bool bCheck = FALSE;
-    if ( bInTableCell ) {
-        EDT_TableCellData* pData = EDT_GetTableCellData(GET_MWCONTEXT);
-        if ( pData ) {
-            bCheck = pData->bHeader;
-            EDT_FreeTableCellData(pData);
-        }
-    }
-    pCmdUI->SetCheck(bCheck );
-    pCmdUI->Enable(bInTableCell);
 }
 
 // Table Properties
@@ -4661,7 +4567,24 @@ DROPEFFECT CEditViewDropTarget::OnDragOver(CWnd* pWnd,
             case FE_DRAG_IMAGE:
             case FE_DRAG_TEXT:
                 int32 xVal, yVal;        
-                pView->ClientToDocXY( cPoint, &xVal, &yVal );        
+                pView->ClientToDocXY( cPoint, &xVal, &yVal );
+                // Check if near a border (within 10 pixels) and we should scroll the window
+                while( pContext->CheckAndScrollWindow(xVal, yVal, 0, 10) )
+                {
+                    // Get current mouse location and convert to doc coordinates
+                    POINT point;
+                    GetCursorPos(&point);
+                    pView->ScreenToClient(&point);
+                    cPoint.x = point.x;
+                    cPoint.y = point.y;
+                    pView->ClientToDocXY( cPoint, &xVal, &yVal );
+
+                    EDT_PositionDropCaret(pMWContext, xVal, yVal);
+                    // Delay 20 millisecs between each cycle so it doesn't scroll too fast
+                    DWORD startTime = timeGetTime();
+                    do { FEU_StayingAlive(); }
+                    while( timeGetTime() - startTime < 20 );
+                }
 
                 // Note: This will also handle feedback for where to drop table/cells
                 if( EDT_PositionDropCaret(pMWContext, xVal, yVal) )

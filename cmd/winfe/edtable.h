@@ -26,12 +26,6 @@
 #include "edtrccln.h"
 #include "edprops.h" // For CColorButton
 
-// Limits on table parameters
-#define MAX_TABLE_ROWS    100
-#define MAX_TABLE_COLUMNS 100
-// This is also limit used for cell size, padding, and borders
-#define MAX_TABLE_PIXELS  10000
-
 ////////////////////////////////////////////////////
 // Property Pages for Tabbed Table dialogs
 class CTablePage : public CNetscapePropertyPage

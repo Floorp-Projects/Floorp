@@ -62,6 +62,10 @@ char * wfe_GetFontSizeString(MWContext * pMWContext, int iSize,  BOOL bFixedWidt
 
 #define   MAX_TRUETYPE_FONTS  100
 
+// Matches size of custom colors in Windows color picker
+#define	MAX_FONT_COLOR	16
+#define	MAX_FONT_POINTSIZE_COUNT 14
+
 // Currently 10 columns of 7 colors each
 // Now defined in edttypes.h
 //#define   MAX_NS_COLORS        70

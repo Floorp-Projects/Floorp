@@ -61,7 +61,7 @@ BEGIN
         MENUITEM "P&ublish...",                 ID_FILE_PUBLISH
         MENUITEM SEPARATOR
         MENUITEM "Sen&d Page",                  ID_FILE_MAILTO
-        MENUITEM "&Browse Page"                 ID_OPEN_NAV_WINDOW
+        MENUITEM "Preview in &Browser"          ID_OPEN_NAV_WINDOW
         MENUITEM SEPARATOR
         MENUITEM "Page Se&tup...",             ID_FILE_PAGE_SETUP
         MENUITEM "Print Pre&view",              ID_FILE_PRINT_PREVIEW
@@ -250,8 +250,9 @@ BEGIN
 	        MENUITEM "&Right",                     ID_ALIGN_TABLE_RIGHT
         END
         MENUITEM SEPARATOR
-        // "&Join..." or "Spli&t Cell"
+        // Join selected cells or with cell to the right
         MENUITEM "{&J}"                            ID_MERGE_TABLE_CELLS
+        MENUITEM "Spli&t Cell"                     ID_SPLIT_TABLE_CELL
         // "&Convert Text To Table" or "&Convert Table To Text"
         MENUITEM "{&C}"                            ID_TABLE_TEXT_CONVERT
         MENUITEM SEPARATOR
@@ -635,8 +636,9 @@ BEGIN
 	        MENUITEM "&Right",                     ID_ALIGN_TABLE_RIGHT
         END
         MENUITEM SEPARATOR
-        // "&Join..." or "Spli&t Cell"
+        // Join selected cells or with cell to the right
         MENUITEM "{&J}"                            ID_MERGE_TABLE_CELLS
+        MENUITEM "Spli&t Cell"                     ID_SPLIT_TABLE_CELL
         // "&Convert Text To Table" or "&Convert Table To Text"
         MENUITEM "{&C}"                            ID_TABLE_TEXT_CONVERT
         MENUITEM SEPARATOR

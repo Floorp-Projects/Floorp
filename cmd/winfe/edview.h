@@ -322,7 +322,6 @@ protected:
     afx_msg void OnCancelComboBox();
     afx_msg void OnIncreaseFontSize();
     afx_msg void OnDecreaseFontSize();
-    afx_msg void OnUpdateFontSizeMenu(CCmdUI* pCmdUI);
     afx_msg void OnSelendokFontSizeCombo();
     afx_msg void OnUpdateParagraphComboBox(CCmdUI* pCmdUI);
 	afx_msg void OnUpdateFontFaceComboBox(CCmdUI* pCmdUI);
@@ -425,17 +424,12 @@ protected:
     afx_msg void OnUpdateInTableColumn(CCmdUI* pCmdUI);
     afx_msg void OnInsertTableCell();
     afx_msg void OnInsertTableCellBefore();
-    afx_msg void OnUpdateInsertTableCell(CCmdUI* pCmdUI);
     afx_msg void OnDeleteTableCell();
     afx_msg void OnUpdateInTableCell(CCmdUI* pCmdUI);
     afx_msg void OnInsertTableCaption();
     afx_msg void OnUpdateInsertTableCaption(CCmdUI* pCmdUI);
     afx_msg void OnDeleteTableCaption();
     afx_msg void OnUpdateInTableCaption(CCmdUI* pCmdUI);
-    afx_msg void OnToggleTableBorder();
-    afx_msg void OnUpdateToggleTableBorder(CCmdUI* pCmdUI);
-    afx_msg void OnToggleHeaderCell();
-    afx_msg void OnUpdateToggleHeaderCell(CCmdUI* pCmdUI);
     afx_msg void OnPropsTable();
     afx_msg void OnPropsTableRow();
     afx_msg void OnPropsTableColumn();
@@ -472,8 +466,6 @@ protected:
     afx_msg void OnUpdatePasteCharacterStyle(CCmdUI* pCmdUI);
     afx_msg void OnGoToDefaultPublishLocation();
     afx_msg	void OnEditCopy();
-    afx_msg void OnCopyStyle();
-    afx_msg void OnUpdateCopyStyle(CCmdUI* pCmdUI);
     afx_msg	void OnEditCut();
     afx_msg	void OnEditDelete();
     afx_msg	void OnEditPaste();
@@ -508,9 +500,6 @@ protected:
     // Keep these outside of AFX_MSG - they use calculated
     //   or use a range of IDs and are not understood by App/Class wizards
     afx_msg void OnFormatParagraph( UINT nID );
-	afx_msg void OnUpdateParagraphMenu(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateParagraphControls(CCmdUI* pCmdUI);
-	afx_msg void OnUpdateCharacterControls(CCmdUI* pCmdUI);
     afx_msg void OnFontColorMenu(UINT nID);
     //afx_msg void OnUpdateFontSize(CCmdUI* pCmdUI);
     afx_msg void OnUpdateInsertMenu(CCmdUI* pCmdUI);

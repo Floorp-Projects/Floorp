@@ -3238,10 +3238,10 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
   XP_ASSERT(0);
 #else
 
-    MWContext  * context  = GetContext();
+    MWContext  * pMWContext  = GetContext();
 
     BOOL bTextSet = FALSE;
-    BOOL bIsEditor = EDT_IS_EDITOR(context);
+    BOOL bIsEditor = EDT_IS_EDITOR(pMWContext);
     
     LO_Element *pElement = GetLayoutElement(xyPoint, layer);
     if (pElement && (pElement->type == LO_IMAGE)) {
@@ -3257,7 +3257,7 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
 
     // don't do anything if we are waiting for the netlib to get
     //   into gear
-    if (context->waitingMode) {
+    if (pMWContext->waitingMode) {
         // Change cursor only if not doing internal drag
         if( !m_bDragging ){
             SetCursor(theApp.LoadStandardCursor(IDC_WAIT));
@@ -3278,7 +3278,8 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
             // We must fire an event to setup CLOSURE struct
             //   and call mouse_closure_callback
             FireMouseOverEvent(NULL, xVal, yVal, layer);
-            goto MOUSE_TIMER;
+            // Allow autoscrolling when mouse leaves window
+            goto CHECK_SCROLL_WINDOW;
         }
         if( EDT_IS_SIZING )
         {
@@ -3286,7 +3287,7 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
             
             BOOL bLock = !(BOOL)(uFlags & MK_CONTROL);
             XP_Rect new_rect;
-            if( EDT_GetSizingRect(context, xVal, yVal, bLock, &new_rect) )
+            if( EDT_GetSizingRect(pMWContext, xVal, yVal, bLock, &new_rect) )
             {
                 // Remove last sizing feedback
                 DisplaySelectionFeedback(LO_ELE_SELECTED, m_rectSizing);
@@ -3301,17 +3302,19 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
             }
             // Status text was set by XP code, so set flag here
             bTextSet = TRUE;
+            //TODO: If we can figure out how to do rubber-banding 
+            //  while scrolling the window, we can jump to CHECK_SCROLL_WINDOW;
             goto MOUSE_TIMER;
         }
         // Check for cell selection only if not starting drag of table cells
-        if( !EDT_IsDraggingTable(context) )
+        if( !EDT_IsDraggingTable(pMWContext) )
         {
             // We are not currently selecting cells, so get the cell we may be over
             // Note: This will return cell and ED_HIT_SIZE_COL if inbetween columns,
             //    so check that because we don't want to select cell if just before the left edge
             LO_Element *pCellElement = NULL;
             // Mouse move test with left button down - extend selection to other cells
-            ED_HitType iTableHit = EDT_GetTableHitRegion(context, xVal, yVal, &pCellElement, FALSE);
+            ED_HitType iTableHit = EDT_GetTableHitRegion(pMWContext, xVal, yVal, &pCellElement, FALSE);
             if( m_pStartSelectionCell && pCellElement && 
                 (iTableHit != ED_HIT_SIZE_COL) &&
                 pCellElement->type == LO_CELL && (pCellElement != m_pStartSelectionCell) )
@@ -3323,14 +3326,14 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
                     // So switch to cell-selection mode. 
                     // 1st FALSE param means clear any other selection (shouldn't be any)
                     //     (last param is used to extend selection)
-                    EDT_SelectTableElement(context, m_pStartSelectionCell->lo_any.x, m_pStartSelectionCell->lo_any.y,
+                    EDT_SelectTableElement(pMWContext, m_pStartSelectionCell->lo_any.x, m_pStartSelectionCell->lo_any.y,
                                            m_pStartSelectionCell, ED_HIT_SEL_CELL, FALSE, FALSE);
                 }
                 // Select new cell as well: If previously selecting, last param = TRUE
                 //  and we append this cell
-                EDT_SelectTableElement(context, xVal, yVal, pCellElement, ED_HIT_SEL_CELL, 
+                EDT_SelectTableElement(pMWContext, xVal, yVal, pCellElement, ED_HIT_SEL_CELL, 
                                        FALSE, m_pStartSelectionCell != NULL);
-                goto MOUSE_TIMER;
+                goto CHECK_SCROLL_WINDOW; //MOUSE_TIMER;
             }
         }
 #endif // EDITOR
@@ -3353,6 +3356,8 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
 
                     // Get and drag the selection
                     DragSelection();
+                    // Unfortunately, the Window doesn't scroll
+                    //  during dragging
                     // Don't do anything else if we are dragging!
                     goto MOUSE_TIMER;
                 }
@@ -3362,7 +3367,7 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
                 {
                     // TODO: There's a bug in extending the selection:
                     //       It looses the selection on an object, such as an image
-                    EDT_ExtendSelection(context, xVal, yVal);
+                    EDT_ExtendSelection(pMWContext, xVal, yVal);
                 } else 
 #endif // EDITOR
                 {
@@ -3371,52 +3376,10 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
             }
         }
 
-		int32 lYPos = GetOriginY();
-		int32 lXPos = GetOriginX();
-	    int32 xCur = xVal;
-	    int32 yCur = yVal;
-#ifdef LAYERS
-        if (layer)
-        {
-			int32 layer_x_offset = CL_GetLayerXOrigin(layer);
-			int32 layer_y_offset = CL_GetLayerYOrigin(layer);
-
-		    xCur += layer_x_offset;
-		    yCur += layer_y_offset;
-		}
-#endif // LAYERS
-		if(xCur < GetOriginX())	{
-			lXPos = xCur;
-		}
-		else if(xCur > GetWidth() + GetOriginX())	{
-			lXPos = xCur - GetWidth();
-		}
-
-		if(yCur < GetOriginY())	{
-			lYPos = yCur;
-		}
-		else if(yVal > GetHeight() + GetOriginY())	{
-			lYPos = yCur - GetHeight();
-		}
-
-		//	Validate position recommendations, and reposition if necessary.
-		if(lXPos > GetDocumentWidth() - GetWidth())	{
-			lXPos = GetDocumentWidth() - GetWidth();
-		}
-		if(lXPos < 0)	{
-			lXPos = GetOriginX();
-		}
-		if(lYPos > GetDocumentHeight() - GetHeight())	{
-			lYPos = GetDocumentHeight() - GetHeight();
-		}
-		if(lYPos < 0)	{
-			lYPos = GetOriginY();
-		}
-
-		if(lYPos != GetOriginY() || lXPos != GetOriginX())	{
-			//	Reposition.
-			SetDocPosition(context, FE_VIEW, lXPos, lYPos);
-		}
+CHECK_SCROLL_WINDOW:
+        // The last param is distance from edge of client area where scrolling will start.
+        // Set to 0 (or remove to use 0 default) for 4.x behavior
+        CheckAndScrollWindow(xVal, yVal, layer);
 
         // We need to unhighlight an anchor if we highlighted it on buttonDown
         // The anchor element is held within the last_armed_xref global
@@ -3515,15 +3478,15 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
                 m_pLastImageObject = NULL;
                 
                 // This prevents closing source frame during drag and drop
-                BOOL bWaitingMode = context->waitingMode;
-                context->waitingMode = TRUE;
+                BOOL bWaitingMode = pMWContext->waitingMode;
+                pMWContext->waitingMode = TRUE;
                 
                 // We supply the DropSource object instead of default behavior
                 // (we don't need return value, do we?)
                 pDataSource->DoDragDrop(DROPEFFECT_COPY | DROPEFFECT_LINK | DROPEFFECT_MOVE | DROPEFFECT_SCROLL,
                                         NULL, pDropSource);
                 
-                context->waitingMode = bWaitingMode;
+                pMWContext->waitingMode = bWaitingMode;
                 m_bDragging = FALSE;
 
 				// After dragging, moving mouse in browser acts like button is down,
@@ -3548,7 +3511,7 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
 			LO_ImageStruct *pImage = (LO_ImageStruct *)m_pLastImageObject;
     	    char *pImageURL = NULL;
 
-            HGLOBAL hImageData = WFE_CreateCopyImageData(context, pImage);
+            HGLOBAL hImageData = WFE_CreateCopyImageData(pMWContext, pImage);
             if ( hImageData ) {
 
                 // make sure we have a clipboard format defined
@@ -3577,13 +3540,13 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
                 HCURSOR hCursor = GetCursor();
 
                 // This prevents closing source frame during drag and drop
-                BOOL bWaitingMode = context->waitingMode;
-                context->waitingMode = TRUE;
+                BOOL bWaitingMode = pMWContext->waitingMode;
+                pMWContext->waitingMode = TRUE;
 
                 pDataSource->DoDragDrop(DROPEFFECT_COPY | DROPEFFECT_MOVE | DROPEFFECT_SCROLL,
                                         NULL, pDropSource);
                 
-                context->waitingMode = bWaitingMode;
+                pMWContext->waitingMode = bWaitingMode;
                 SetCursor(hCursor);
                 m_bDragging = FALSE;
 
@@ -3604,7 +3567,7 @@ CWinCX::OnMouseMoveForLayerCX(UINT uFlags, CPoint& cpPoint,
         // If there are connections being initiated (i.e. the watch 
         //   cursor is up) don't blow away the text so that the netlib 
         //   messages persist in the status bar
-        if(context->waitingMode)
+        if(pMWContext->waitingMode)
             goto MOUSE_TIMER;
 
 #ifdef LAYERS
@@ -3628,7 +3591,7 @@ MOUSE_TIMER:
     //  Have the mouse timer handler do some dirty work.
     //  Please don't return in the above code, I'd like this to get called
     //      in all cases with the state of the buttons set correctly.
-    MouseTimerData mt(context);
+    MouseTimerData mt(pMWContext);
     FEU_MouseTimer(&mt);
 #endif /* MOZ_NGLAYOUT */
 }
@@ -4902,6 +4865,80 @@ void CWinCX::SetDocDimension(MWContext *pContext, int iLocation, int32 lWidth, i
 #endif /* EDITOR */    
 }
 
+// Formerly within OnMouseMoveForLayerCX. Moved out for reuse when dragging a selection in Editor
+// iBorderThresshold allows scrolling to occur when cursor is within that distance of a border,
+//   rather than having to be outside the client area (needed to work during dragNdrop)
+BOOL CWinCX::CheckAndScrollWindow(int32 xVal, int32 yVal, CL_Layer *layer, int32 iBorderThreshhold)
+{
+    int32 iCurrentOriginY = GetOriginY();
+    int32 iCurrentOriginX = GetOriginX();
+	int32 iNewOriginY = iCurrentOriginY;
+	int32 iNewOriginX = iCurrentOriginX;
+	int32 xCur = xVal;
+	int32 yCur = yVal;
+    // Must use actual client dimensions
+    // (should be same as GetClientRect results)
+    int32 iHeight = GetHeight();
+    int32 iWidth = GetWidth();
+    if( IsHScrollBarOn() )
+        iWidth -= sysInfo.m_iScrollWidth;
+    if( IsVScrollBarOn() )
+        iHeight -= sysInfo.m_iScrollHeight;
+#if 0
+// Use this to confirm that our current sizes are correct
+    RECT rectClient;
+    CGenericView *pView = GetView();
+    if(!pView)
+        return FALSE;
+    pView->GetClientRect(&rectClient);
+    XP_ASSERT(iHeight == rectClient.bottom - rectClient.top);
+    XP_ASSERT(iWidth == rectClient.right - rectClient.left);
+#endif
+
+#ifdef LAYERS
+    if (layer)
+    {
+		int32 layer_x_offset = CL_GetLayerXOrigin(layer);
+		int32 layer_y_offset = CL_GetLayerYOrigin(layer);
+
+		xCur += layer_x_offset;
+		yCur += layer_y_offset;
+	}
+#endif // LAYERS
+	if(xCur < iCurrentOriginX + iBorderThreshhold)
+		iNewOriginX = xCur - iBorderThreshhold;
+	else if(xCur > iWidth + iCurrentOriginX - iBorderThreshhold)
+		iNewOriginX = xCur - iWidth + iBorderThreshhold;
+
+	if(yCur < iCurrentOriginY + iBorderThreshhold)
+		iNewOriginY = yCur - iBorderThreshhold;
+	else if(yVal > iHeight + iCurrentOriginY - iBorderThreshhold)
+		iNewOriginY = yCur - iHeight + iBorderThreshhold;
+
+    int32 iDocWidth = GetDocumentWidth(); 
+    int32 iDocHeight = GetDocumentHeight();
+
+	//	Validate position recommendations for limits
+	if(iNewOriginX > iDocWidth - iWidth)
+		iNewOriginX = iDocWidth - iWidth;
+	if(iNewOriginX < 0)
+		iNewOriginX = iCurrentOriginX;
+	if(iNewOriginY > iDocHeight - iHeight)
+		iNewOriginY = iDocHeight - iHeight;
+	if(iNewOriginY < 0)
+		iNewOriginY = iCurrentOriginY;
+
+	if(iNewOriginY != iCurrentOriginY || iNewOriginX != iCurrentOriginX)
+    {
+		//	Reposition.
+		MWContext *pMWContext = GetContext();
+        SetDocPosition(GetContext(), FE_VIEW, iNewOriginX, iNewOriginY);
+        // Return TRUE only if we really scrolled
+        return (GetOriginY() != iCurrentOriginY) || (GetOriginX() != iCurrentOriginX);
+	}
+    return FALSE;
+}
+
 //
 // Fake scroll messages so that we use scrollwindowex() to move the window
 //   so that our form elements actually move
@@ -4918,6 +4955,13 @@ void CWinCX::SetDocPosition(MWContext *pContext, int iLocation, int32 lX, int32 
 
     int32 lRemY = GetOriginY();
     int32 lRemX = GetOriginX();
+    // cmanske: We must use the width MINUS any scrollbars!
+    int32 iWidth = m_lWidth;
+    int32 iHeight = m_lHeight;
+    if( IsHScrollBarOn() )
+        iWidth -= sysInfo.m_iScrollWidth;
+    if( IsVScrollBarOn() )
+        iHeight -= sysInfo.m_iScrollHeight;
 
     //  Call the base.
     CDCCX::SetDocPosition(pContext, iLocation, lX, lY);
@@ -4930,13 +4974,13 @@ void CWinCX::SetDocPosition(MWContext *pContext, int iLocation, int32 lX, int32 
     //  Make sure there is a need to scroll before attempting to scroll.
 
     // scroll to the correct Y location
-    if((m_lDocHeight - m_lHeight > 0) && lRemY != lY) {
-        iPos = (int) ((double) lY * (double) GetPageY() / (double) (m_lDocHeight - m_lHeight));
+    if((m_lDocHeight - iHeight > 0) && lRemY != lY) {
+        iPos = (int) ((double) lY * (double) GetPageY() / (double) (m_lDocHeight - iHeight));
         Scroll(SB_VERT, SB_THUMBTRACK, iPos, NULL);
     }
     else if ( EDT_IS_EDITOR( pContext ) ){
-        if((m_lDocHeight - m_lHeight > 0)) {
-            iPos = (int) ((double) lY * (double) GetPageY() / (double) (m_lDocHeight - m_lHeight));
+        if((m_lDocHeight - iHeight > 0)) {
+            iPos = (int) ((double) lY * (double) GetPageY() / (double) (m_lDocHeight - iHeight));
             Scroll(SB_VERT, SB_THUMBTRACK, iPos, NULL);
         }
         else    {
@@ -4946,13 +4990,13 @@ void CWinCX::SetDocPosition(MWContext *pContext, int iLocation, int32 lX, int32 
         
 
     // now do X
-    if((m_lDocWidth - m_lWidth > 0) && lRemX != lX) {
-        iPos = (int) ((double) lX * (double) GetPageX() / (double) (m_lDocWidth - m_lWidth));
+    if((m_lDocWidth - iWidth > 0) && lRemX != lX) {
+        iPos = (int) ((double) lX * (double) GetPageX() / (double) (m_lDocWidth - iWidth));
         Scroll(SB_HORZ, SB_THUMBTRACK, iPos, NULL);
     }
     else if( EDT_IS_EDITOR(pContext) ){
-        if((m_lDocWidth - m_lWidth > 0)) {
-            iPos = (int) ((double) lX * (double) GetPageX() / (double) (m_lDocWidth - m_lWidth));
+        if((m_lDocWidth - iWidth > 0)) {
+            iPos = (int) ((double) lX * (double) GetPageX() / (double) (m_lDocWidth - iWidth));
             Scroll(SB_HORZ, SB_THUMBTRACK, iPos, NULL);
         }
         else    {
