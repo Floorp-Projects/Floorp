@@ -148,16 +148,20 @@ struct JSScopeProperty {
     (((sprop)->attrs & JSPROP_GETTER)                                         \
      ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_GETTER(sprop,obj2)),    \
                        0, 0, vp)                                              \
-     : SPROP_GETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
+     : (SPROP_GETTER(sprop,obj2) != JS_PropertyStub)                          \
+     ? SPROP_GETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp)   \
+     : JS_TRUE)
 
 #define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_SETTER)                                         \
      ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL(SPROP_SETTER(sprop,obj2)),    \
                        1, vp, vp)                                             \
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
-       ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                  \
-                               JSMSG_GETTER_ONLY, NULL), JS_FALSE)            \
-       : SPROP_SETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp))
+     ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
+                             JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
+     : (SPROP_SETTER(sprop,obj2) != JS_PropertyStub)                          \
+     ? SPROP_SETTER(sprop,obj2)(cx, OBJ_THIS_OBJECT(cx,obj), sprop->id, vp)   \
+     : JS_TRUE)
 
 extern JSScope *
 js_GetMutableScope(JSContext *cx, JSObject *obj);

@@ -96,9 +96,8 @@ struct JSTreeContext {              /* tree context for semantic checks */
 #define TCF_RETURN_VOID     0x08    /* function has 'return;' */
 #define TCF_IN_FOR_INIT     0x10    /* parsing init expr of for; exclude 'in' */
 #define TCF_FUN_VS_VAR      0x20    /* function and var with same name */
-#define TCF_FUN_SETS_ARGS   0x40    /* function assigns to 'arguments' */
-#define TCF_FUN_HEAVYWEIGHT 0x80    /* function needs Call object per call */
-#define TCF_FUN_FLAGS       0xe0    /* flags to propagate from FunctionBody */
+#define TCF_FUN_HEAVYWEIGHT 0x40    /* function needs Call object per call */
+#define TCF_FUN_FLAGS       0x60    /* flags to propagate from FunctionBody */
 
 #define TREE_CONTEXT_INIT(tc)                                                 \
     ((tc)->flags = TCF_TOP_LEVEL, (tc)->tryCount = 0, (tc)->topStmt = NULL,   \

@@ -289,3 +289,11 @@ OPDEF(JSOP_FINALLY,     134,"finally",    NULL,       1,  0,  0,  0,  JOF_BYTE)
  * value when popping scopes while returning from catch blocks.
  */
 OPDEF(JSOP_SWAP,        135,"swap",       NULL,       1,  2,  2,  0,  JOF_BYTE)
+
+/*
+ * Bytecodes that avoid making an arguments object in most cases:
+ * JSOP_ARGSUB gets arguments[i] from fp->argv, iff i is in [0, fp->argc-1].
+ * JSOP_ARGCNT returns fp->argc.
+ */
+OPDEF(JSOP_ARGSUB,      136,"argsub",     NULL,       3,  0,  1, 12,  JOF_QARG |JOF_NAME)
+OPDEF(JSOP_ARGCNT,      137,"argcnt",     NULL,       1,  0,  1, 12,  JOF_BYTE)
