@@ -48,7 +48,16 @@ CPPSRCS =  \
 	   org_mozilla_xpcom_Utilities.cpp \
 	   $(NULL)
 
-CXXFLAGS  := -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public $(CXXFLAGS) 
+JDKINCLUDE= -I$(JDKHOME)/include
+ifeq ($(OS_ARCH), Linux)
+	JDKINCLUDE += -I$(JDKHOME)/include/linux
+endif
+ifeq ($(OS_ARCH), SunOS)
+	JDKINCLUDE += -I$(JDKHOME)/include/solaris
+endif
+
+CXXFLAGS  := $(JDKINCLUDE) $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public $(CXXFLAGS) 
+
 
 DSO_LDOPTS += \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
@@ -77,4 +86,5 @@ include $(topsrcdir)/config/rules.mk
 CCC += $(CXXFLAGS) # I want to have $(JDKHOME)/include before $(DIST) include
 
 
-
+test:
+	echo $(OS_ARCH)
