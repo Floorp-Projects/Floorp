@@ -1271,9 +1271,11 @@ cookie_CheckPrefs(nsIURI         *aHostURI,
   // otherwise, we test both firstURI and currentURI.
   // this needs to be revisited when we get firstURI behaving correctly
   // in all cases.
+  // XXX removed the aFirstURI check, to make cookies from javascript work
+  // bug 198870
   if (gCookiePrefObserver->mCookiesDisabledForMailNews &&
-      (!aFirstURI ||
-       cookie_IsFromMailNews(firstURIScheme) ||
+      aFirstURI &&
+      (cookie_IsFromMailNews(firstURIScheme) ||
        cookie_IsFromMailNews(currentURIScheme))) {
     COOKIE_LOGFAILURE(aCookieHeader ? SET_COOKIE : GET_COOKIE, aHostURI, aCookieHeader ? "" : aCookieHeader, "cookies disabled for mailnews");
     return nsICookie::STATUS_REJECTED;
