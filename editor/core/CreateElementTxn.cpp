@@ -44,6 +44,7 @@ CreateElementTxn::~CreateElementTxn()
 {
   NS_IF_RELEASE(mDoc);
   NS_IF_RELEASE(mParent);
+  NS_IF_RELEASE(mNewNode);
 }
 
 nsresult CreateElementTxn::Do(void)
@@ -59,7 +60,8 @@ nsresult CreateElementTxn::Do(void)
     if (CreateElementTxn::eAppend==mOffsetInParent)
     {
       result = mParent->AppendChild(mNewNode, &resultNode);
-      //XXX: do we need to do anything with resultNode? release a refcount?
+      if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
+        NS_RELEASE(resultNode); // this object already holds a ref from CreateElement
     }
     else
     {
@@ -71,7 +73,8 @@ nsresult CreateElementTxn::Do(void)
         if ((NS_SUCCEEDED(result)) && (nsnull!=mRefNode))
         {
           result = mParent->InsertBefore(mNewNode, mRefNode, &resultNode);
-          //XXX: do we need to do anything with resultNode? release a refcount?
+          if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
+            NS_RELEASE(resultNode); // this object already holds a ref from CreateElement
         }
       }
     }
@@ -81,13 +84,20 @@ nsresult CreateElementTxn::Do(void)
 
 nsresult CreateElementTxn::Undo(void)
 {
-  return NS_OK;//(mParent->InsertData(mOffset, mDeletedText));
+  nsIDOMNode *resultNode=nsnull;
+  nsresult result = mParent->RemoveChild(mNewNode, &resultNode);
+  if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
+    NS_RELEASE(resultNode);
+  return result;
 }
 
 nsresult CreateElementTxn::Redo(void)
 {
   nsIDOMNode *resultNode=nsnull;
-  return (mParent->InsertBefore(mNewNode, mRefNode, &resultNode));
+  nsresult result = mParent->InsertBefore(mNewNode, mRefNode, &resultNode);
+   if ((NS_SUCCEEDED(result)) && (nsnull!=resultNode))
+    NS_RELEASE(resultNode);
+   return result;
 }
 
 nsresult CreateElementTxn::GetIsTransient(PRBool *aIsTransient)
