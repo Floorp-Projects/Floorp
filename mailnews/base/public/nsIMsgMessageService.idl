@@ -80,4 +80,11 @@ interface nsIMsgMessageService : nsISupports {
 %}
 	void SaveMessageToDisk(in string aMessageURI, in nsIFileSpec aFile, in boolean aGenerateDummyEnvelope, 
 							in nsIUrlListener aUrlListener, out nsIURI aURL);
+
+    /////////////////////////////////////////////////////////////////////
+	// GetUrlForUri: when you have a uri and you would like to convert that
+	// to a url which can be run through necko, you can use this method.
+	// the Uri MUST refer to a message and not a folder! 
+
+	void GetUrlForUri(in string aMessageURI, out nsIURI aURL);
 };
