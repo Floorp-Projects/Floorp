@@ -172,7 +172,7 @@ public:
 
    nsIScrollableView* GetScrollableView(nsIPresContext* aPresContext);
 
-  void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY);
+  void ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags);
 
   void SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisible);
 
@@ -199,6 +199,7 @@ public:
   PRPackedBool mFirstPass;
   PRPackedBool mIsRoot;
   PRPackedBool mNeverReflowed;
+  PRPackedBool mScrollingInitiated;
 };
 
 NS_IMPL_ISUPPORTS2(nsGfxScrollFrameInner, nsIDocumentObserver, nsIScrollPositionListener)
@@ -226,6 +227,7 @@ nsGfxScrollFrame::nsGfxScrollFrame(nsIPresShell* aShell, nsIDocument* aDocument,
     mPresContext = nsnull;
     mInner->mIsRoot = PR_FALSE;
     mInner->mNeverReflowed = PR_TRUE;
+    mInner->mScrollingInitiated = PR_FALSE;
     SetLayoutManager(nsnull);
 }
 
@@ -936,6 +938,11 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
                               PRInt32         aModType,
                               nsChangeHint    aHint) 
 {
+   // Don't reenter if we're getting this attribute change notification
+   // because we caused the view to scroll and the view is telling
+   // us about it.
+   if (mScrollingInitiated) return NS_OK;
+  
    if (mHScrollbarBox && mVScrollbarBox)
    {
      nsIFrame* hframe = nsnull;
@@ -989,10 +996,24 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
           s->GetScrollPosition(curPosX, curPosY);
           if ((x*mOnePixel) == curPosX && (y*mOnePixel) == curPosY)
             return NS_OK;
+
+          PRBool isSmooth = vcontent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth)
+            || hcontent->HasAttr(kNameSpaceID_None, nsXULAtoms::smooth);
         
-          s->RemoveScrollPositionListener(this);
-          ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel);
-          s->AddScrollPositionListener(this);
+          // Remember that we asked the view to scroll, so we don't need to
+          // take notice of any attribute change caused by the view's scrolling
+          // action.
+          mScrollingInitiated = PR_TRUE;
+          ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel, isSmooth ? NS_VMREFRESH_SMOOTHSCROLL : 0);
+          if (isSmooth) {
+            // Make sure an attribute-setting callback occurs even if the view didn't actually move yet
+            // We need to make sure other listeners see that the scroll position is not (yet)
+            // what they thought it was.
+            s->GetScrollPosition(curPosX, curPosY);
+            ScrollPositionDidChange(s, curPosX, curPosY);
+          }
+          mScrollingInitiated = PR_FALSE;
+
           // Fire the onScroll event now that we have scrolled
           nsCOMPtr<nsIPresShell> presShell;
           mOuter->mPresContext->GetShell(getter_AddRefs(presShell));
@@ -1012,7 +1033,6 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
 
    return NS_OK;
 }
-
 
 nsIScrollableView*
 nsGfxScrollFrameInner::GetScrollableView(nsIPresContext* aPresContext)
@@ -1476,7 +1496,6 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
         SetAttribute(mVScrollbarBox, nsXULAtoms::curpos, 0);
     }
 
-
     mVScrollbarBox->GetPrefSize(aState, vSize);
   }
 
@@ -1556,10 +1575,10 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
 }
 
 void
-nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY)
+nsGfxScrollFrameInner::ScrollbarChanged(nsIPresContext* aPresContext, nscoord aX, nscoord aY, PRUint32 aFlags)
 {
   nsIScrollableView* scrollable = GetScrollableView(aPresContext);
-  scrollable->ScrollTo(aX,aY, NS_SCROLL_PROPERTY_ALWAYS_BLIT);
+  scrollable->ScrollTo(aX, aY, aFlags);
  // printf("scrolling to: %d, %d\n", aX, aY);
 }
 
@@ -1648,17 +1667,18 @@ nsGfxScrollFrameInner::SetScrollbarVisibility(nsIBox* aScrollbar, PRBool aVisibl
   PRBool old = PR_TRUE;
 
   nsAutoString value;
-
+  
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, value))
     old = PR_FALSE;
   
   if (aVisible == old)
     return;
 
-  if (!aVisible)
+  if (!aVisible) {
      content->SetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, NS_LITERAL_STRING("true"), PR_TRUE);
-  else
+  } else {
      content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::collapsed, PR_TRUE);
+  }
 
   nsCOMPtr<nsIScrollbarFrame> scrollbar(do_QueryInterface(aScrollbar));
   if (scrollbar) {

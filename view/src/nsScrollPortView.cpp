@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Neil Cronin (neil@rackle.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -51,11 +51,20 @@
 #include "nsIScrollPositionListener.h"
 #include "nsIRegion.h"
 #include "nsViewManager.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
+#include "nsCOMPtr.h"
+#include "nsIServiceManagerUtils.h"
+
+#include <math.h>
 
 static NS_DEFINE_IID(kWidgetCID, NS_CHILD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
 
+#define SMOOTH_SCROLL_MSECS_PER_FRAME 10
+#define SMOOTH_SCROLL_FRAMES    10
+
+#define SMOOTH_SCROLL_PREF_NAME "general.smoothScroll"
 
 nsScrollPortView::nsScrollPortView()
 {
@@ -63,6 +72,7 @@ nsScrollPortView::nsScrollPortView()
   mOffsetXpx = mOffsetYpx = 0;
 
   mListeners = nsnull;
+  mSmoothScroll = nsnull;
 }
 
 nsScrollPortView::~nsScrollPortView()
@@ -79,6 +89,8 @@ nsScrollPortView::~nsScrollPortView()
        mViewManager->SetRootScrollableView(nsnull);
      }
   }
+
+  delete mSmoothScroll;
 }
 
 nsresult nsScrollPortView::QueryInterface(const nsIID& aIID, void** aInstancePtr)
@@ -208,117 +220,182 @@ NS_IMETHODIMP nsScrollPortView::GetScrollPreference(nsScrollPreference &aScrollP
   return nsScrollPreference_kNeverScroll;
 }
 
-NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
-{
-  // do nothing if the we aren't scrolling.
-  if (aX == mOffsetX && aY == mOffsetY)
-    return NS_OK;
+static void ComputeVelocities(PRInt32 aCurVelocity, nscoord aCurPos, nscoord aDstPos,
+                              PRInt32* aVelocities) {
+  PRInt32 absCurVelocity;
+  PRInt32 direction;
 
-  nsSize  scrolledSize;
-  PRInt32 dxPx = 0, dyPx = 0;
-
-  // convert to pixels
-  nsIDeviceContext  *dev;
-  float             t2p;
-  float             p2t;
-
-  mViewManager->GetDeviceContext(dev);
-  dev->GetAppUnitsToDevUnits(t2p); 
-  dev->GetDevUnitsToAppUnits(p2t);
+  if (aCurPos < aDstPos) {
+    direction = 1;
+    if (aCurVelocity < 0) {
+      absCurVelocity = 0;
+    } else {
+      absCurVelocity = aCurVelocity;
+    }
+  } else {
+    direction = -1;
+    if (aCurVelocity > 0) {
+      absCurVelocity = 0;
+    } else {
+      absCurVelocity = -aCurVelocity;
+    }
+  }
   
-  NS_RELEASE(dev);
+  PRInt32 absDistance = direction*(aDstPos - aCurPos);
+  
+  // The target velocity is the velocity we want to reach at frame N/2. We choose the
+  // target velocity so that after coming to a stop at frame N, we will have reached
+  // the scroll destination (actually we'll overshoot because of rounding, but that's
+  // the idea).
+  // It's chosen to satisfy
+  //    aDstPos - aCurPos = N/2 (aTargetVelocity/2) + N/2 ((aCurVelocity + aTargetVelocity)/2)
+  //   distance travelled     avg. velocity in 1st half      avg. velocity in 2nd half
+  PRInt32 absTargetVelocity = (PRInt32)ceil(2.0*absDistance/SMOOTH_SCROLL_FRAMES - 0.5*absCurVelocity);
 
-  // Update the scrolled view's position
+  // if we're going too fast already, slow down to the target velocity
+  if (absCurVelocity > absTargetVelocity) {
+    absCurVelocity = absTargetVelocity;
+  }
 
+  PRInt32 i;
+  const int halfFrames = SMOOTH_SCROLL_FRAMES/2;
+  for (i = 0; i < halfFrames; i++) {
+    aVelocities[i*2] = PR_MAX(0, absCurVelocity + (absTargetVelocity*i + halfFrames - 1)/halfFrames);
+  }
+  for (i = halfFrames; i < halfFrames*2; i++) {
+    aVelocities[i*2] = PR_MAX(0, (absTargetVelocity*(halfFrames*2 - (i - 1)) + halfFrames - 1)/halfFrames);
+  }
+
+  PRInt32 total = 0;
+  for (i = 0; i < SMOOTH_SCROLL_FRAMES; i++) {
+    total += aVelocities[i*2];
+  }
+  PRInt32 leftover = total - absDistance;
+  NS_ASSERTION(leftover >= 0, "Lost some distance due to rounding? We should have been rounding up only");
+
+  while (leftover > 0) {
+    for (i = SMOOTH_SCROLL_FRAMES - 1; i >= 0; i--) {
+      if (aVelocities[i*2] > 0) {
+        aVelocities[i*2]--;
+        leftover--;
+        if (leftover <= 0) {
+          break;
+        }
+      }
+    }
+  }
+  
+  for (i = 0; i < SMOOTH_SCROLL_FRAMES; i++) {
+    aVelocities[i*2] *= direction;
+  }
+}
+  
+static nsresult ClampScrollValues(nscoord& aX, nscoord& aY, nsScrollPortView* aThis) {
   // make sure the new position in in bounds
-  nsView* scrolledView = GetScrolledView();
-
-#ifdef DEBUG_pollmann
-  NS_ASSERTION(scrolledView, "no scrolled view");
-#endif
-
+  nsView* scrolledView = aThis->GetScrolledView();
   if (!scrolledView) return NS_ERROR_FAILURE;
+  
+  nsSize scrolledSize;
   scrolledView->GetDimensions(scrolledSize);
-
+  
   nsSize portSize;
-  GetDimensions(portSize);
-
+  aThis->GetDimensions(portSize);
+  
   nscoord maxX = scrolledSize.width - portSize.width;
   nscoord maxY = scrolledSize.height - portSize.height;
-
+  
   if (aX > maxX)
     aX = maxX;
-
+  
   if (aY > maxY)
     aY = maxY;
-
+  
   if (aX < 0)
     aX = 0;
-
+  
   if (aY < 0)
     aY = 0;
-
-  // convert aX and aY in pixels
-  nscoord aXpx = NSTwipsToIntPixels(aX, t2p);
-  nscoord aYpx = NSTwipsToIntPixels(aY, t2p);
-
-  aX = NSIntPixelsToTwips(aXpx,p2t);
-  aY = NSIntPixelsToTwips(aYpx,p2t);
-
+  
+  return NS_OK;
+}
+  
+/*
+ * this method wraps calls to ScrollToImpl(), either in one shot or incrementally,
+ *  based on the setting of the smooth scroll pref
+ */
+NS_IMETHODIMP nsScrollPortView::ScrollTo(nscoord aDestinationX, nscoord aDestinationY,
+                                         PRUint32 aUpdateFlags)
+{
   // do nothing if the we aren't scrolling.
-  // this needs to be rechecked because of the clamping and
-  // rounding
-  if (aX == mOffsetX && aY == mOffsetY)
+  if (aDestinationX == mOffsetX && aDestinationY == mOffsetY) {
+    // kill any in-progress smooth scroll
+    delete mSmoothScroll;
+    mSmoothScroll = nsnull;
     return NS_OK;
+  }
+  
+  if ((aUpdateFlags & NS_VMREFRESH_SMOOTHSCROLL) == 0
+      || !IsSmoothScrollingEnabled()) {
+    // Smooth scrolling is not allowed, so we'll kill any existing smooth-scrolling process
+    // and do an instant scroll
+    delete mSmoothScroll;
+    mSmoothScroll = nsnull;
+    return ScrollToImpl(aDestinationX, aDestinationY, aUpdateFlags);
+  }
 
-  // figure out the diff by comparing old pos to new
-  dxPx = mOffsetXpx - aXpx;
-  dyPx = mOffsetYpx - aYpx;
- 
-  // notify the listeners.
-  PRUint32 listenerCount;
-  const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
-  nsIScrollPositionListener* listener;
-  if (nsnull != mListeners) {
-    if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-          listener->ScrollPositionWillChange(this, aX, aY);
-          NS_RELEASE(listener);
-        }
+  PRInt32 currentVelocityX;
+  PRInt32 currentVelocityY;
+
+  if (mSmoothScroll) {
+    currentVelocityX = mSmoothScroll->mVelocities[mSmoothScroll->mFrameIndex*2];
+    currentVelocityY = mSmoothScroll->mVelocities[mSmoothScroll->mFrameIndex*2 + 1];
+  } else {
+    currentVelocityX = 0;
+    currentVelocityY = 0;
+
+    mSmoothScroll = new SmoothScroll;
+    if (mSmoothScroll) {
+      mSmoothScroll->mScrollAnimationTimer = do_CreateInstance("@mozilla.org/timer;1");
+      if (!mSmoothScroll->mScrollAnimationTimer) {
+        delete mSmoothScroll;
+        mSmoothScroll = nsnull;
+      } else {
+        mSmoothScroll->mScrollAnimationTimer->InitWithFuncCallback(
+          SmoothScrollAnimationCallback, this, SMOOTH_SCROLL_MSECS_PER_FRAME,
+          nsITimer::TYPE_REPEATING_PRECISE);
       }
     }
-  }
-
-  if (nsnull != scrolledView)
-  {
-    // move the scrolled view to the new location
-    scrolledView->SetPosition(-aX, -aY);
-
-    // store old position in pixels. We need to do this to make sure there is no
-    // round off errors. This could cause weird scrolling.
-    mOffsetXpx = aXpx;
-    mOffsetYpx = aYpx;
-
-    // store the new position
-    mOffsetX = aX;
-    mOffsetY = aY;
-  }
-
-  Scroll(scrolledView, dxPx, dyPx, t2p, 0);
-
-  // notify the listeners.
-  if (nsnull != mListeners) {
-    if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
-      for (PRUint32 i = 0; i < listenerCount; i++) {
-        if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
-          listener->ScrollPositionDidChange(this, aX, aY);
-          NS_RELEASE(listener);
-        }
-      }
+    if (!mSmoothScroll) {
+      // some allocation failed. Scroll the normal way.
+      return ScrollToImpl(aDestinationX, aDestinationY, aUpdateFlags);
     }
+  
+    mSmoothScroll->mDestinationX = mOffsetX;
+    mSmoothScroll->mDestinationY = mOffsetY;
+    mSmoothScroll->mVelocities = new PRInt32[SMOOTH_SCROLL_FRAMES*2];
   }
 
+  // need to store these so we know when to stop scrolling
+  // Treat the desired scroll destination as an offset
+  // relative to the current position. This makes things
+  // work when someone starts a smooth scroll
+  // while an existing smooth scroll has not yet been
+  // completed.
+  mSmoothScroll->mDestinationX += aDestinationX - mOffsetX;
+  mSmoothScroll->mDestinationY += aDestinationY - mOffsetY;
+  mSmoothScroll->mFrameIndex = 0;
+  ClampScrollValues(mSmoothScroll->mDestinationX, mSmoothScroll->mDestinationY, this);
+
+  // compute velocity vectors
+  ComputeVelocities(currentVelocityX, mOffsetX,
+                    mSmoothScroll->mDestinationX, mSmoothScroll->mVelocities);
+  ComputeVelocities(currentVelocityY, mOffsetY,
+                    mSmoothScroll->mDestinationY, mSmoothScroll->mVelocities + 1);
+
+  // call a scroll immediately, don't wait for the timer to callback.
+  // this improves responsiveness
+  IncrementalScroll();
+  
   return NS_OK;
 }
 
@@ -447,9 +524,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollByLines(PRInt32 aNumLinesX, PRInt32 aNumLi
   nscoord dx = mLineHeight*aNumLinesX;
   nscoord dy = mLineHeight*aNumLinesY;
 
-  ScrollTo(mOffsetX + dx, mOffsetY + dy, 0);
-
-  return NS_OK;
+  return ScrollTo(mOffsetX + dx, mOffsetY + dy, NS_VMREFRESH_SMOOTHSCROLL);
 }
 
 NS_IMETHODIMP nsScrollPortView::ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPagesY)
@@ -465,9 +540,7 @@ NS_IMETHODIMP nsScrollPortView::ScrollByPages(PRInt32 aNumPagesX, PRInt32 aNumPa
   dx *= aNumPagesX;
   dy *= aNumPagesY;
 
-  ScrollTo(mOffsetX + dx, mOffsetY + dy, 0);
-    
-  return NS_OK;
+  return ScrollTo(mOffsetX + dx, mOffsetY + dy, NS_VMREFRESH_SMOOTHSCROLL);
 }
 
 NS_IMETHODIMP nsScrollPortView::ScrollByWhole(PRBool aTop)
@@ -563,4 +636,143 @@ NS_IMETHODIMP nsScrollPortView::Paint(nsIRenderingContext& aRC, const nsIRegion&
   aRC.PopState(clipEmpty);
     
   return rv;
+}
+
+NS_IMETHODIMP nsScrollPortView::ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
+{
+  PRInt32           dxPx = 0, dyPx = 0;
+  
+  // convert to pixels
+  nsIDeviceContext  *dev;
+  float             t2p;
+  float             p2t;
+
+  mViewManager->GetDeviceContext(dev);
+  dev->GetAppUnitsToDevUnits(t2p); 
+  dev->GetDevUnitsToAppUnits(p2t);
+  
+  NS_RELEASE(dev);
+
+  // Update the scrolled view's position
+  nsresult rv = ClampScrollValues(aX, aY, this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  
+  // convert aX and aY in pixels
+  nscoord aXpx = NSTwipsToIntPixels(aX, t2p);
+  nscoord aYpx = NSTwipsToIntPixels(aY, t2p);
+  
+  aX = NSIntPixelsToTwips(aXpx,p2t);
+  aY = NSIntPixelsToTwips(aYpx,p2t);
+  
+  // do nothing if the we aren't scrolling.
+  // this needs to be rechecked because of the clamping and
+  // rounding
+  if (aX == mOffsetX && aY == mOffsetY) {
+    return NS_OK;
+  }
+
+  // figure out the diff by comparing old pos to new
+  dxPx = mOffsetXpx - aXpx;
+  dyPx = mOffsetYpx - aYpx;
+
+  // notify the listeners.
+  PRUint32 listenerCount;
+  const nsIID& kScrollPositionListenerIID = NS_GET_IID(nsIScrollPositionListener);
+  nsIScrollPositionListener* listener;
+  if (nsnull != mListeners) {
+    if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
+      for (PRUint32 i = 0; i < listenerCount; i++) {
+        if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
+          listener->ScrollPositionWillChange(this, aX, aY);
+          NS_RELEASE(listener);
+        }
+      }
+    }
+  }
+  
+  nsView* scrolledView = GetScrolledView();
+  if (!scrolledView) return NS_ERROR_FAILURE;
+
+  // move the scrolled view to the new location
+  scrolledView->SetPosition(-aX, -aY);
+      
+  // store old position in pixels. We need to do this to make sure there is no
+  // round off errors. This could cause weird scrolling.
+  mOffsetXpx = aXpx;
+  mOffsetYpx = aYpx;
+      
+  // store the new position
+  mOffsetX = aX;
+  mOffsetY = aY;
+  
+  Scroll(scrolledView, dxPx, dyPx, t2p, 0);
+  
+  // notify the listeners.
+  if (nsnull != mListeners) {
+    if (NS_SUCCEEDED(mListeners->Count(&listenerCount))) {
+      for (PRUint32 i = 0; i < listenerCount; i++) {
+        if (NS_SUCCEEDED(mListeners->QueryElementAt(i, kScrollPositionListenerIID, (void**)&listener))) {
+          listener->ScrollPositionDidChange(this, aX, aY);
+          NS_RELEASE(listener);
+        }
+      }
+    }
+  }
+ 
+  return NS_OK;
+}
+
+/************************
+ *
+ * smooth scrolling methods
+ *
+ ***********************/
+
+PRBool nsScrollPortView::IsSmoothScrollingEnabled() {
+  nsCOMPtr<nsIPrefBranch> prefs = do_GetService(NS_PREFSERVICE_CONTRACTID);
+  if (prefs) {
+    PRBool enabled;
+    nsresult rv = prefs->GetBoolPref(SMOOTH_SCROLL_PREF_NAME, &enabled);
+    if (NS_SUCCEEDED(rv)) {
+      return enabled;
+    }
+  }
+  return PR_FALSE;
+}
+
+/*
+ * Callback function from timer used in nsScrollPortView::DoSmoothScroll
+ * this cleans up the target coordinates and incrementally calls 
+ * nsScrollPortView::ScrollTo
+ */
+void
+nsScrollPortView::SmoothScrollAnimationCallback (nsITimer *aTimer, void* anInstance) 
+{
+  nsScrollPortView* self = NS_STATIC_CAST(nsScrollPortView*, anInstance);
+  if (self) {
+    self->IncrementalScroll();
+  }
+}
+
+/*
+ * manages data members and calls to ScrollTo from the (static) SmoothScrollAnimationCallback method
+ */ 
+void
+nsScrollPortView::IncrementalScroll()
+{
+  if (!mSmoothScroll) {
+    return;
+  }
+
+  if (mSmoothScroll->mFrameIndex < SMOOTH_SCROLL_FRAMES) {
+    ScrollToImpl(mOffsetX + mSmoothScroll->mVelocities[mSmoothScroll->mFrameIndex*2],
+                 mOffsetY + mSmoothScroll->mVelocities[mSmoothScroll->mFrameIndex*2 + 1],
+                 0);
+    mSmoothScroll->mFrameIndex++;
+  } else {
+    delete mSmoothScroll;
+    mSmoothScroll = nsnull;
+  }
 }

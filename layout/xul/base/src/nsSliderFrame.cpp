@@ -608,7 +608,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        if (isMouseOutsideThumb)
        {
          // XXX see bug 81586
-         SetCurrentPosition(scrollbar, thumbFrame, (int) (mThumbStart / onePixel / mRatio));
+         SetCurrentPosition(scrollbar, thumbFrame, (int) (mThumbStart / onePixel / mRatio), PR_FALSE);
          return NS_OK;
        }
 
@@ -620,7 +620,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        pospx = nscoord(pospx/mRatio);
 
        // set it
-       SetCurrentPosition(scrollbar, thumbFrame, pospx);
+       SetCurrentPosition(scrollbar, thumbFrame, pospx, PR_FALSE);
 
     }
     break;
@@ -666,7 +666,7 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
     pospx = nscoord(pospx/mRatio);
 
     // set it
-    SetCurrentPosition(scrollbar, thumbFrame, pospx);
+    SetCurrentPosition(scrollbar, thumbFrame, pospx, PR_FALSE);
 
     // hack to start dragging
 
@@ -762,7 +762,7 @@ nsSliderFrame::PageUpDown(nsIFrame* aThumbFrame, nscoord change)
 
   nscoord pageIncrement = GetPageIncrement(scrollbar);
   PRInt32 curpos = GetCurrentPosition(scrollbar);
-  SetCurrentPosition(scrollbar, aThumbFrame, curpos + change*pageIncrement);
+  SetCurrentPosition(scrollbar, aThumbFrame, curpos + change*pageIncrement, PR_TRUE);
 }
 
 // called when the current position changed and we need to update the thumb's location
@@ -836,8 +836,21 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
     return NS_OK;
 }
 
+static void UpdateAttribute(nsIContent* aScrollbar, nscoord aNewPos, PRBool aNotify, PRBool aIsSmooth) {
+  nsAutoString str;
+  str.AppendInt(aNewPos);
+  
+  if (aIsSmooth) {
+    aScrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
+  }
+  aScrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, str, aNotify);
+  if (aIsSmooth) {
+    aScrollbar->UnsetAttr(kNameSpaceID_None, nsXULAtoms::smooth, PR_FALSE);
+  }
+}
+
 void
-nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord newpos)
+nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord newpos, PRBool aIsSmooth)
 {
 
    // get our current position and max position from our content node
@@ -859,19 +872,13 @@ nsSliderFrame::SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, 
     scrollbarFrame->GetScrollbarMediator(getter_AddRefs(mediator));
     if (mediator) {
       mediator->PositionChanged(GetCurrentPosition(scrollbar), newpos);
-      nsAutoString newposStr;
-      newposStr.AppendInt(newpos);
-      scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, newposStr, PR_FALSE);
+      UpdateAttribute(scrollbar, newpos, PR_FALSE, aIsSmooth);
       CurrentPositionChanged(mPresContext);
       return;
     }
   }
 
-  nsAutoString newposStr;
-  newposStr.AppendInt(newpos);
-
-  // set the new position
-  scrollbar->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, newposStr, PR_TRUE);
+  UpdateAttribute(scrollbar, newpos, PR_TRUE, aIsSmooth);
 
 #ifdef DEBUG_SLIDER
   printf("Current Pos=%d\n",newpos);
@@ -1020,7 +1027,7 @@ nsSliderFrame::MouseDown(nsIDOMEvent* aMouseEvent)
     GetContentOf(scrollbarBox, getter_AddRefs(scrollbar));
 
     // set it
-    SetCurrentPosition(scrollbar, thumbFrame, pospx);
+    SetCurrentPosition(scrollbar, thumbFrame, pospx, PR_FALSE);
   }
 
   RemoveListener();

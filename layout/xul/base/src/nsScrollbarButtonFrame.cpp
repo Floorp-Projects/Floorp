@@ -205,9 +205,10 @@ nsScrollbarButtonFrame::MouseClicked()
     nsAutoString curposStr;
     curposStr.AppendInt(curpos);
 
+    content->SetAttr(kNameSpaceID_None, nsXULAtoms::smooth, NS_LITERAL_STRING("true"), PR_FALSE);
     content->SetAttr(kNameSpaceID_None, nsXULAtoms::curpos, curposStr, PR_TRUE);
-   }
-
+    content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::smooth, PR_FALSE);
+  }
 }
 
 nsresult

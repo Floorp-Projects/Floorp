@@ -551,5 +551,7 @@ public:
 #define NS_VMREFRESH_IMMEDIATE          0x0002
 //prevent "sync painting"
 #define NS_VMREFRESH_NO_SYNC            0x0004
+//animate scroll operation
+#define NS_VMREFRESH_SMOOTHSCROLL       0x0008
 
 #endif  // nsIViewManager_h___

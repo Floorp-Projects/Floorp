@@ -40,6 +40,8 @@
 
 #include "nsView.h"
 #include "nsIScrollableView.h"
+#include "nsCOMPtr.h"
+#include "nsITimer.h"
 
 class nsISupportsArray;
 
@@ -99,6 +101,30 @@ public:
 private:
   NS_IMETHOD_(nsrefcnt) AddRef(void);
   NS_IMETHOD_(nsrefcnt) Release(void);
+  NS_IMETHOD  ScrollToImpl(nscoord aX, nscoord aY, PRUint32 aUpdateFlags);
+
+  class SmoothScroll {
+  public:
+    SmoothScroll() { mVelocities = nsnull; }
+    ~SmoothScroll() {
+      if (mScrollAnimationTimer) mScrollAnimationTimer->Cancel();
+       delete[] mVelocities;
+     }
+
+     nsCOMPtr<nsITimer> mScrollAnimationTimer;
+     PRInt32            mFrameIndex;
+     PRInt32*           mVelocities;
+     nscoord            mDestinationX;
+     nscoord            mDestinationY;
+   };
+
+   // data members
+   SmoothScroll*        mSmoothScroll;
+
+   // methods
+   void        IncrementalScroll();
+   PRBool      IsSmoothScrollingEnabled();
+   static void SmoothScrollAnimationCallback(nsITimer *aTimer, void* aESM);
 
 protected:
   virtual ~nsScrollPortView();
@@ -107,7 +133,7 @@ protected:
   void AdjustChildWidgets(nsScrollPortView *aScrolling, nsView *aView, nscoord aDx, nscoord aDy, float aScale);
   void Scroll(nsView *aScrolledView, PRInt32 aDx, PRInt32 aDy, float scale, PRUint32 aUpdateFlags);
   PRBool CannotBitBlt(nsView* aScrolledView);
-protected:
+
   nscoord             mOffsetX, mOffsetY;
   nscoord             mOffsetXpx, mOffsetYpx;
   PRUint32            mScrollProperties;
