@@ -27,7 +27,7 @@
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
-
+<?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
 
@@ -152,7 +152,7 @@
     </tr>
     </table>
     
-<!-- ////////////////////// Advanced controls table ///////////////////////////////// -->
+<!-- ////////////////////// "More" controls table ///////////////////////////////// -->
 
 <div id="MoreRow" style="visibility: inherit; display: block;">
    <table>
@@ -331,16 +331,7 @@
             </tr>
           </table>
         </fieldset>
-
-  <button 
-                id              = "AdvancedButton" 
-                class           = "disabled" 
-                onclick         = "onAdvanced()">
-
-          &AdvancedEditButton.label;
-        </button>  
-
-     </td>
+      </td>
       <td align="right">
 
               <!-- IMAGE ALIGNMENT -->
@@ -495,8 +486,11 @@
   </tr>
 </table>
 
+<!-- from EdDialogOverlay -->
+<xul:box id="advancedEditButton"/>
 <!-- ////////////////////////// OK CANCEL Box /////////////////////////////// -->
 
+  <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 
 

@@ -56,7 +56,6 @@
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
 #include "nsIDocumentEncoder.h"
-#include "nsIPref.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
 #include "nsIImage.h"
@@ -81,6 +80,7 @@
 // Misc
 #include "TextEditorTest.h"
 #include "nsEditorUtils.h"
+#include "nsIPref.h"
 
 #include "prprf.h"
 

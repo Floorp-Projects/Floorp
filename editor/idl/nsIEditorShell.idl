@@ -77,8 +77,23 @@ interface nsIEditorShell : nsISupports
   /* Commands */
   void NewWindow();
   void Open();
+
+  /** 
+   *  @param saveAs false to try to save to existing file
+   *          If document is not already saved, it is treated as true
+   *          so filename is prompted.
+   *  @param saveCopy       
+   *          true if we are saving off a copy of the document
+   *          without changing the disk file associated with the doc.
+   *          This would correspond to a 'Save Copy As' menu command
+   *          (currently not in our UI)
+   */  
+  void SaveDocument(in boolean saveAs, in boolean saveCopy);
+  /** This is SaveDocument(false, false) */
   void Save();
+  /** This is SaveDocument(true, false) */
   void SaveAs();
+
   void CloseWindow();
   void Print();
   void Exit();
@@ -100,6 +115,10 @@ interface nsIEditorShell : nsISupports
   
   void Find();
   void FindNext();
+
+  /* General Utilities */
+  /* Get string from the Editor's localized string bundle */
+  wstring GetString(in wstring name);
 
   /* Charset Menu */
   wstring GetDocumentCharacterSet();

@@ -524,12 +524,14 @@ function EditorInsertText(textToInsert)
 
 function EditorInsertHTML()
 {
-  window.openDialog("chrome://editor/content/EdInsSrc.xul","InsSrcDlg", "chrome", "");
+  window.openDialog("chrome://editor/content/EdInsSrc.xul","InsSrcDlg", "chrome,close,titlebar,modal", "");
+  contentWindow.focus();
 }
 
 function EditorInsertLink()
 {
   window.openDialog("chrome://editor/content/EdLinkProps.xul","LinkDlg", "chrome,close,titlebar,modal");
+  dump("***************** Finished InsertLink dialog\n");
   contentWindow.focus();
 }
 
@@ -720,13 +722,12 @@ function EditorToggleDisplayStyle()
   if (EditorDisplayStyle) {
     EditorDisplayStyle = false;
     styleSheet = "resource:/res/ua.css";
-    //TODO: Where do we store localizable JS strings?
-    buttonText = "Edit Mode";
+    buttonText = editorShell.GetString("EditMode");
   }
   else {
     EditorDisplayStyle = true;
     styleSheet = "chrome://editor/content/EditorContent.css"
-    buttonText = "Preview";
+    buttonText = editorShell.GetString("Preview");
   }
   //TODO: THIS IS NOT THE RIGHT THING TO DO!
   EditorApplyStyleSheet(styleSheet);
@@ -749,18 +750,27 @@ function CheckSpelling()
   {
     dump("Check Spelling starting...\n");
     // Start the spell checker module. Return is first misspelled word
-    firstMisspelledWord = spellChecker.StartSpellChecking();
-    dump(firstMisspelledWord+"\n");
-    if( firstMisspelledWord == "")
-    {
-      // No misspelled word - tell user
-      window.openDialog("chrome://editor/content/EdMessage.xul", "NoSpellError", "chrome,close,titlebar,modal", "", "No misspelled word was found.", "Check Spelling");
-      spellChecker.CloseSpellChecking();
-    } else {
-      dump("We found a MISSPELLED WORD\n");
-      // Set spellChecker variable on window
-      window.spellChecker = spellChecker;
-      window.openDialog("chrome://editor/content/EdSpellCheck.xul", "SpellDlg", "chrome,close,titlebar,modal", "", firstMisspelledWord);
+    try {
+      firstMisspelledWord = spellChecker.StartSpellChecking();
+      dump(firstMisspelledWord+"\n");
+      if( firstMisspelledWord == "")
+      {
+        // No misspelled word - tell user
+        window.openDialog("chrome://editor/content/EdMessage.xul", "NoSpellError", 
+                          "chrome,close,titlebar,modal", "",
+                          editorShell.GetString("NoMisspelledWord"), 
+                          editorShell.GetString("CheckSpelling"));
+      
+        spellChecker.CloseSpellChecking();
+      } else {
+        dump("We found a MISSPELLED WORD\n");
+        // Set spellChecker variable on window
+        window.spellChecker = spellChecker;
+        window.openDialog("chrome://editor/content/EdSpellCheck.xul", "SpellDlg", "chrome,close,titlebar,modal", "", firstMisspelledWord);
+      }
+    }
+    catch(ex) { 
+      dump("*** Exception error from Spell Checker\n");
     }
   }
   contentWindow.focus();

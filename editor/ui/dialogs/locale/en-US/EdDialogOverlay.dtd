@@ -20,6 +20,4 @@
    - Contributor(s): 
   -->
 
-<!ENTITY tableWindow.title "Table Properties">
-<!ENTITY tableTab.label "Table">
-<!ENTITY cellTab.label "Cells">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">

@@ -48,6 +48,7 @@ EXPORT_RESOURCE_CONTENT = \
   $(srcdir)/EdTableProps.js \
   $(srcdir)/EdMessage.xul \
   $(srcdir)/EdMessage.js \
+  $(srcdir)/EdDialogOverlay.xul \
 	$(NULL)
 
 install::

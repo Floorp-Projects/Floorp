@@ -21,7 +21,6 @@
 #include "nsISupports.h"
 #include "nscore.h"
 
-
 #define NS_IEDITOR_IID \
 {/* A3C5EE71-742E-11d2-8F2C-006008310194*/ \
 0xa3c5ee71, 0x742e, 0x11d2, \
@@ -39,12 +38,14 @@ class nsITransaction;
 class nsIOutputStream;
 class nsIEditActionListener;
 class nsIDocumentStateListener;
+class nsFileSpec;
 
 class nsIEditor  : public nsISupports
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IEDITOR_IID; return iid; }
 
+	typedef enum {eSaveFileText = 0, eSaveFileHTML = 1 } ESaveFileType;
 
   /* An enum used to describe how to collpase a non-collapsed selection */
   typedef enum {
@@ -108,20 +109,7 @@ public:
   NS_IMETHOD DeleteSelection(ESelectionCollapseDirection aAction)=0;
 
 
-  /* ------------ Document info methods -------------- */
-
-  /** Respond to the menu 'Save' command; this may put up save UI if the document
-    * hasn't been saved yet.
-   */
-  NS_IMETHOD Save()=0;
-  
-  /** Respond to the menu 'Save As' command; this will put up save UI
-   * @param aSavingCopy        true if we are saving off a copy of the document
-   *                           without changing the disk file associated with the doc.
-   *                           This would correspond to a 'Save Copy As' menu command.
-   */  
-  NS_IMETHOD SaveAs(PRBool aSavingCopy)=0;
-
+  /* ------------ Document info and file methods -------------- */
   /** Returns true if the document is modifed and needs saving */
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified)=0;
 
@@ -130,6 +118,21 @@ public:
 
   /** Sets the current 'Save' document character set */
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet)=0;
+
+  /** Save document to a file
+   *       Note: No UI is used
+   *  @param aFileSpec
+   *          The file to save to
+   *  @param aReplaceExisting
+   *          true if replacing an existing file, otherwise false.
+   *          If false and aFileSpec exists, SaveFile returns an error.
+   *  @param aSaveCopy       
+   *          true if we are saving off a copy of the document
+   *          without changing the disk file associated with the doc.
+   *          This would correspond to a 'Save Copy As' menu command
+   *          (currently not in our UI)
+   */
+  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, ESaveFileType aSaveFileType)=0;
 
   /* ------------ Transaction methods -------------- */
 

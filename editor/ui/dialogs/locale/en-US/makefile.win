@@ -29,6 +29,7 @@ install::
 	$(MAKE_INSTALL) EditorSpellCheck.dtd             $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) EditorTableProperties.dtd        $(DIST)\bin\chrome\editor\locale\en-US
 	$(MAKE_INSTALL) EdNamedAnchorProperties.dtd      $(DIST)\bin\chrome\editor\locale\en-US
+	$(MAKE_INSTALL) EdDialogOverlay.dtd              $(DIST)\bin\chrome\editor\locale\en-US
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorHLineProperties.dtd 
@@ -40,3 +41,4 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorSpellCheck.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EditorTableProperties.dtd 
   rm -f $(DIST)\bin\chrome\editor\locale\en-US\EdNamedAnchorProperties.dtd 
+  rm -f $(DIST)\bin\chrome\editor\locale\en-US\EdDialogOverlay.dtd 

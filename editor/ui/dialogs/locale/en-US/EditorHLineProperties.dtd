@@ -37,6 +37,3 @@
 
 <!ENTITY threeDShading.label "3-D Shading">
 <!ENTITY saveSettings.label "Save Settings">
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">
-<!ENTITY AdvancedEditButton.label "Advanced Edit...">

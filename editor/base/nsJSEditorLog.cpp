@@ -392,20 +392,6 @@ nsJSEditorLog::ScrollIntoView(PRBool aScrollToBegin)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-NS_IMETHODIMP
-nsJSEditorLog::Save()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsJSEditorLog::SaveAs(PRBool aSavingCopy)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
 NS_IMETHODIMP
 nsJSEditorLog::Cut()
 {

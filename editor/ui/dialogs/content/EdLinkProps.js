@@ -115,8 +115,7 @@ function initDialog()
       if (parent) {
         anchorElement = parent;
         insertNew = false;
-        // GET THIS FROM STRING BUNDLE
-        linkCaption.data = "Link image:"
+        linkCaption.data = editorShell.GetString("LinkImage");
         // Link source string is the source URL of image
         // TODO: THIS STILL DOESN'T HANDLE MULTIPLE SELECTED IMAGES!
         linkMessage.data = imageElement.getAttribute("src");;
@@ -187,6 +186,7 @@ function RemoveLink()
 
 function onOK()
 {
+  dump("***** Clicked OK in link props dialog\n");
   // TODO: VALIDATE FIELDS BEFORE COMMITING CHANGES
 
   href = TrimString(hrefInput.value);

@@ -142,9 +142,7 @@ function ValidateNumberString(value, minValue, maxValue)
 
 function ShowInputErrorMessage(message)
 {
-  // This is NOT MODAL as of 7/16/99!
-
-  window.openDialog("chrome://editor/content/EdMessage.xul", "MsgDlg", "chrome", "", message, "Input Error");
+  window.openDialog("chrome://editor/content/EdMessage.xul", "MsgDlg", "chrome,close,titlebar,modal", "", message, "Input Error");
 }
 
 function TrimStringLeft(string)
@@ -414,10 +412,10 @@ function GetSelectionAsText()
 // from the advanced edit button which points to a non existant onAdvanced() function
 // Well now it exists -pete
 
-function onAdvanced(){
+function onAdvancedEdit(){
 
 
-dump("\n\ncomming soon . . .\nthe \"onAdvanced\" function\n\n");
+dump("\n\ncomming soon . . .\nthe \"onAdvancedEdit\" function\n\n");
 
 
 

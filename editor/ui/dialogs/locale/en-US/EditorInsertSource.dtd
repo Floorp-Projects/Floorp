@@ -25,5 +25,3 @@
 
 <!ENTITY sourceFieldset.label "HTML Source">
 <!ENTITY sourceEditField.label "Enter HTML source to insert:">
-<!ENTITY OKButton.label "OK">
-<!ENTITY CancelButton.label "Cancel">

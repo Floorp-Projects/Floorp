@@ -64,7 +64,6 @@ public:
   NS_IMETHOD SetMaxTextLength(PRInt32 aMaxTextLength);
   NS_IMETHOD GetMaxTextLength(PRInt32& aMaxTextLength);
 
-
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
                              const nsString *aAttribute,
                              const nsString *aValue);

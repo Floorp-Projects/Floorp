@@ -32,8 +32,6 @@
 #include "nsIDOMEventListener.h"
 #include "nsIDOMRange.h"
 #include "nsIPrivateTextRange.h"
-
-#include "nsIStringBundle.h"
 #include "nsITransactionManager.h"
 #include "TransactionFactory.h"
 #include "nsIComponentManager.h"
@@ -61,13 +59,11 @@ class JoinElementTxn;
 class EditAggregateTxn;
 class nsVoidArray;
 class nsISupportsArray;
-class nsIPref;
-class nsIStringBundleService;
-class nsIStringBundle;
 class nsILocale;
 class IMETextTxn;
 class AddStyleSheetTxn;
 class RemoveStyleSheetTxn;
+class nsFileSpec;
 
 //This is the monitor for the editor.
 PRMonitor *GetEditorMonitor();
@@ -125,11 +121,10 @@ public:
   NS_IMETHOD EndTransaction();
 
   // file handling
-  NS_IMETHOD Save();
-  NS_IMETHOD SaveAs(PRBool aSavingCopy);
   NS_IMETHOD GetDocumentModified(PRBool *outDocModified);
   NS_IMETHOD GetDocumentCharacterSet(PRUnichar** characterSet);
   NS_IMETHOD SetDocumentCharacterSet(const PRUnichar* characterSet);
+  NS_IMETHOD SaveFile(nsFileSpec *aFileSpec, PRBool aReplaceExisting, PRBool aSaveCopy, ESaveFileType aSaveFileType);
 
   // these are pure virtual in this base class
   NS_IMETHOD Cut() = 0;
@@ -361,10 +356,6 @@ protected:
 // document after a change via the DOM - gpk 2/13/99
   void HACKForceRedraw(void);
 
-// file handling utils
-
-  NS_IMETHOD SaveDocument(PRBool saveAs, PRBool saveCopy);
-
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin);
 
 public:
@@ -575,8 +566,6 @@ public:
   nsresult SplitNodeDeep(nsIDOMNode *aNode, nsIDOMNode *aSplitPointParent, PRInt32 aSplitPointOffset, PRInt32 *outOffset);
   nsresult JoinNodeDeep(nsIDOMNode *aLeftNode, nsIDOMNode *aRightNode, nsIDOMSelection *aSelection); 
 
-  nsresult GetString(const nsString& name, nsString& value);
-
   nsresult BeginUpdateViewBatch(void);
   nsresult EndUpdateViewBatch(void);
 
@@ -601,7 +590,6 @@ protected:
 
   nsVoidArray*                  mActionListeners;
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;
-  nsCOMPtr<nsIStringBundle>     mStringBundle;
 
   PRInt8                        mDocDirtyState;		// -1 = not initialized
 
