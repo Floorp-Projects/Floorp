@@ -247,8 +247,8 @@
                             <menulist crop="none" oncommand="repeatUnitCommand( this )" labelnumber="labelplural"  id="repeat-length-units" disable-controller="repeat">
                                 <menupopup>
                                     <menuitem label="&repeat.units.days;"   labelplural="&repeat.units.days;"   labelsingular="&repeat.units.days.singular;"   id="repeat-length-days"   value="days" />
-                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"  id="repeat-length-weeks"  value="weeks" selected="true" />
-                                    <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;" id="repeat-length-months" value="months"  />
+                                    <menuitem label="&repeat.units.weeks;"  labelplural="&repeat.units.weeks;"  labelsingular="&repeat.units.weeks.singular;"  id="repeat-length-weeks"  value="weeks"/>
+                                    <menuitem label="&repeat.units.months;" labelplural="&repeat.units.months;" labelsingular="&repeat.units.months.singular;" id="repeat-length-months" value="months"/>
                                     <menuitem label="&repeat.units.years;"  labelplural="&repeat.units.years;"  labelsingular="&repeat.units.years.singular;"  id="repeat-length-years"  value="years" />
                                 </menupopup>
                             </menulist>

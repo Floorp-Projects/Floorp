@@ -188,7 +188,11 @@ function loadCalendarEventDialog()
    
    setFieldValue( "repeat-checkbox", gEvent.recur, "checked");
    setFieldValue( "repeat-length-field", gEvent.recurInterval );
-   setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
+   if( gEvent.recurUnits )
+       setFieldValue( "repeat-length-units", gEvent.recurUnits );  //don't put the extra "value" element here, or it won't work.
+   else
+       setFieldValue( "repeat-length-units", "weeks" );
+
    setFieldValue( "repeat-forever-radio", (gEvent.recurForever != undefined && gEvent.recurForever != false), "selected" );
    setFieldValue( "repeat-until-radio", (gEvent.recurForever == undefined || gEvent.recurForever == false), "selected" );
    
@@ -321,8 +325,6 @@ function onOKCommand()
       }
    }
 
-   
-   
    // :TODO: REALLY only do this if the alarm or start settings change.?
    //if the end time is later than the start time... alert the user using text from the dtd.
 
