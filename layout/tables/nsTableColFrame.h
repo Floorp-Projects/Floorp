@@ -54,10 +54,10 @@ public:
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   /** return the index of the column the col represents.  always >= 0 */
-  virtual int GetColumnIndex ();
+  virtual PRInt32 GetColumnIndex ();
 
   /** return the number of the columns the col represents.  always >= 0 */
-  virtual int GetSpan ();
+  virtual PRInt32 GetSpan ();
 
   /** set the index of the column this content object represents.  must be >= 0 */
   virtual void SetColumnIndex (int aColIndex);
@@ -115,7 +115,7 @@ inline void nsTableColFrame::InitColFrame(PRInt32 aColIndex)
   mColIndex = aColIndex;
 }
 
-inline nsTableColFrame::GetColumnIndex()
+inline PRInt32 nsTableColFrame::GetColumnIndex()
 { return mColIndex; }
 
 inline void nsTableColFrame::SetColumnIndex (int aColIndex)
