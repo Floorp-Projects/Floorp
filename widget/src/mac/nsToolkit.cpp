@@ -268,6 +268,24 @@ nsToolkit :: IsAppInForeground ( )
 
 
 //
+// Return true if we are on Mac OS X, caching the result after the first call
+//
+bool
+nsToolkit :: OnMacOSX()
+{
+  static PRBool gInitVer = PR_FALSE;
+  static PRBool gOnMacOSX = PR_FALSE;
+  if(! gInitVer) {
+    long version;
+    OSErr err = ::Gestalt(gestaltSystemVersion, &version);
+    gOnMacOSX = (err == noErr && version >= 0x00001000);
+    gInitVer = PR_TRUE;
+  }
+  return gOnMacOSX;
+}
+
+
+//
 // GetTopWidget
 //
 // We've stashed the nsIWidget for the given windowPtr in the data 

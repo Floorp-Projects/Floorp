@@ -22,6 +22,7 @@
 
 #include "nsISupports.idl"
 
+interface nsIMenuBar;
 
 //
 // nsPIWidgetMac
@@ -38,6 +39,9 @@ interface nsPIWidgetMac : nsISupports
     // Recomputes the zoomed window size taking things such as window chrome,
     // dock position, menubar, and finder icons into account
   void CalculateAndSetZoomedSize ( );
+
+    // Obtain the menubar for a window
+  nsIMenuBar GetMenuBar ( );
   
 }; // nsPIWidgetMac
 

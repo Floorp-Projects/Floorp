@@ -68,6 +68,8 @@
 #include "nsGfxUtils.h"
 #include "nsRegionPool.h"
 
+#include <Gestalt.h>
+
 #if PINK_PROFILING
 #include "profilerutils.h"
 #endif
@@ -113,6 +115,7 @@ nsWindow::nsWindow() : nsBaseWidget() , nsDeleteObserved(this), nsIKBStateContro
 	WIDGET_SET_CLASSNAME("nsWindow");
 
   mParent = nsnull;
+  mIsTopWidgetWindow = PR_FALSE;
   mBounds.SetRect(0,0,0,0);
 
   mResizingChildren = PR_FALSE;
@@ -320,6 +323,7 @@ NS_IMETHODIMP nsWindow::Destroy()
 //-------------------------------------------------------------------------
 nsIWidget* nsWindow::GetParent(void)
 {
+  if (mIsTopWidgetWindow) return nsnull;
   NS_IF_ADDREF(mParent);
   return  mParent;
 }
@@ -420,6 +424,15 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
                                          PRBool *aForWindow)
 {
+#if TARGET_CARBON
+    if (nsToolkit::OnMacOSX())
+    {
+        // Mac OS X sheet support
+        *aForWindow = PR_TRUE;
+        return NS_OK;
+    }
+#endif
+
 	*aForWindow = PR_FALSE;
 	EventRecord *theEvent = (EventRecord *) aEvent;
 
@@ -798,7 +811,7 @@ NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 	if ((mBounds.x != aX) || (mBounds.y != aY))
 	{
 		// Invalidate the current location (unless it's the top-level window)
-		if (mParent != nsnull)
+		if ((mParent != nsnull) && (!mIsTopWidgetWindow))
 			Invalidate(PR_FALSE);
 	  	
 		// Set the bounds
@@ -926,8 +939,10 @@ static void blinkRect(Rect* r)
 
 	::ClipRect(r);
 	::InvertRect(r);
-	UInt32 end = ::TickCount() + 5;
-	while (::TickCount() < end) ;
+	// to make this work under Mac OS X as well as earlier,
+	// need to give time to the OS to allow screen to update
+	EventRecord ev;
+	::WaitNextEvent(nullEvent, &ev, 5L, nsnull);
 	::InvertRect(r);
 
 	if (oldClip != NULL)
@@ -942,8 +957,10 @@ static void blinkRgn(RgnHandle rgn)
 
 	::SetClip(rgn);
 	::InvertRgn(rgn);
-	UInt32 end = ::TickCount() + 5;
-	while (::TickCount() < end) ;
+	// to make this work under Mac OS X as well as earlier,
+	// need to give time to the OS to allow screen to update
+	EventRecord ev;
+	::WaitNextEvent(nullEvent, &ev, 5L, nsnull);
 	::InvertRgn(rgn);
 
 	if (oldClip != NULL)
@@ -2152,7 +2169,11 @@ void nsWindow::CalcWindowRegions()
 	// intersect with all the parents
 	nsWindow* parent = (nsWindow*)mParent;
 	nsPoint origin(-mBounds.x, -mBounds.y);
-	while (parent)
+
+	// must stop enumerating when hitting a native window boundary
+	if (!mIsTopWidgetWindow)
+	{
+		while (parent && (!parent->mIsTopWidgetWindow))
 	{
 		if (parent->mWindowRegion)
 		{
@@ -2163,6 +2184,7 @@ void nsWindow::CalcWindowRegions()
 		origin.x -= parent->mBounds.x;
 		origin.y -= parent->mBounds.y;
 		parent = (nsWindow*)parent->mParent;
+		}
 	}
 
 	//------

@@ -96,7 +96,7 @@ void nsChildWindow::CalcWindowRegions()
 	Inherited::CalcWindowRegions();
 
 	// clip the siblings out of the window region and visRegion 
-	if (mClipSiblings && mParent) {
+	if (mClipSiblings && mParent && !mIsTopWidgetWindow) {
 		// need to walk the siblings backwards, to get clipping right.
 		nsCOMPtr<nsIBidirectionalEnumerator> siblings = getter_AddRefs((nsIBidirectionalEnumerator*)mParent->GetChildren());
 		if (siblings && NS_SUCCEEDED(siblings->Last())) {
