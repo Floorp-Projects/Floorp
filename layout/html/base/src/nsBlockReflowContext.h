@@ -24,6 +24,7 @@
 
 #include "nsIFrame.h"
 #include "nsHTMLReflowState.h"
+#include "nsHTMLReflowMetrics.h"
 
 class nsBlockFrame;
 class nsIFrame;

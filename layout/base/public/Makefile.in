@@ -31,6 +31,7 @@ XPIDL_MODULE	= layout_base
 
 EXPORTS		= \
 nslayout.h \
+nsHTMLReflowMetrics.h \
 nsHTMLReflowState.h \
 nsIAutoCopy.h \
 nsICaret.h \

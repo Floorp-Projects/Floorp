@@ -29,6 +29,8 @@
 #include "nsBlockBandData.h"
 #include "nsLineBox.h"
 
+class nsBlockFrame;
+
 class nsBlockReflowState {
 public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,
