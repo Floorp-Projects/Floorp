@@ -174,20 +174,31 @@ function getNormalizedURL(url)
 function selectMenulistFolder(aEvent)
 {
   gSelectedFolder = RDF.GetResource(aEvent.target.id);
-  if (!gBookmarksTree.collapsed) {
-    gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = true;
-    gBookmarksTree.treeBoxObject.selection.clearSelection();
-    gBookmarksTree.selectResource(gSelectedFolder);
-    var index = gBookmarksTree.treeBuilder.getIndexOfResource(gSelectedFolder);
-    gBookmarksTree.treeBoxObject.ensureRowIsVisible(index);
-    gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = false;
-  }
+  if (!gBookmarksTree.collapsed)
+    selectFolder(gSelectedFolder);
 }
 
 function selectTreeFolder()
 {
-  gSelectedFolder = gBookmarksTree._selection.item[0];
-  gMenulist.label = BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name");
+  var resource = gBookmarksTree.currentResource;
+  if (resource == gSelectedFolder)
+    return;
+  gSelectedFolder = resource;
+  var menuitem = document.getElementById(gSelectedFolder.Value);
+  gMenulist.selectedItem = menuitem;
+  if (!menuitem)
+    gMenulist.label = BookmarksUtils.getProperty(gSelectedFolder, NC_NS+"Name");
+}
+
+function selectFolder(aFolder)
+{
+  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = true;
+  gBookmarksTree.treeBoxObject.selection.clearSelection();
+  gBookmarksTree.selectResource(aFolder);
+  var index = gBookmarksTree.currentIndex;
+  gBookmarksTree.treeBoxObject.ensureRowIsVisible(index);
+  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = false;
+# triggers a select event that will provoke a call to selectTreeFolder()
 }
 
 function expandTree()
@@ -199,10 +210,11 @@ function expandTree()
     document.documentElement.buttons = "accept,cancel";
   else {
     document.documentElement.buttons = "accept,cancel,extra2";
-    gBookmarksTree.focus();
 #   always open the bookmark root folder
     if (!gBookmarksTree.treeBoxObject.view.isContainerOpen(0))
       gBookmarksTree.treeBoxObject.view.toggleOpenState(0);
+    selectFolder(gSelectedFolder);
+    gBookmarksTree.focus();
   }
   gBookmarksTree.collapsed = willCollapse;
   sizeToContent();
@@ -221,10 +233,9 @@ function newFolder()
   // we should use goDoCommand, but the current way of inserting
   // resources do not insert in folders.
   //goDoCommand("cmd_bm_newfolder");
-  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = true;
-  gBookmarksTree.treeBoxObject.selection.clearSelection();
   var target = BookmarksUtils.getTargetFromFolder(gSelectedFolder);
   var folder = BookmarksCommand.createNewFolder(target);
-  gBookmarksTree.selectResource(folder);
-  gBookmarksTree.treeBoxObject.selection.selectEventsSuppressed = false;
+  if (!BMSVC.isBookmarkedResource(folder))
+    return; // new folder cancelled
+  selectFolder(folder);
 }
