@@ -200,10 +200,6 @@ function DropOnTree ( event )
   // target is the <treecell>, and "ref/id" is on the <treeitem> two levels above
   var treeItem = event.target.parentNode.parentNode;
   if (!treeItem)  return(false);
-  var targetID = getAbsoluteID(treeRoot, treeItem);
-  if (!targetID)  return(false);
-  var targetNode = RDF.GetResource(targetID, true);
-  if (!targetNode)  return(false);
 
   // get drop hint attributes
   var dropBefore = treeItem.getAttribute("dd-droplocation");
@@ -218,24 +214,32 @@ function DropOnTree ( event )
   // calculate parent container node
   var containerItem = treeItem;
   if (dropAction != "on")
+  {
     containerItem = treeItem.parentNode.parentNode;
+  }
 
-	// magical fix for bug # 33546
+	// magical fix for bug # 33546: handle dropping after open container
 	if (treeItem.getAttribute("container") == "true")
 	{
 		if (treeItem.getAttribute("open") == "true")
 		{
 			if (dropAction == "after")
 			{
+				dropAction = "before";
 				containerItem = treeItem;
-				if (treeItem.childNodes.length > 0)
+
+				// find <treechildren>, drop before first child
+				var treeChildren = treeItem;
+				treeItem = null;
+				for (var x = 0; x < treeChildren.childNodes.length; x++)
 				{
-					treeItem = treeItem.childNodes[0].childNodes[0];
+					if (treeChildren.childNodes[x].tagName == "treechildren")
+					{
+						treeItem = treeChildren.childNodes[x].childNodes[0];
+						break;
+					}
 				}
-				else
-				{
-					treeItem = null;
-				}
+
 				if (!treeItem)
 				{
 					dropAction = "on";
@@ -244,6 +248,11 @@ function DropOnTree ( event )
 			}
 		}
 	}
+
+  var targetID = getAbsoluteID(treeRoot, treeItem);
+  if (!targetID)  return(false);
+  var targetNode = RDF.GetResource(targetID, true);
+  if (!targetNode)  return(false);
 
   var containerID = getAbsoluteID(treeRoot, containerItem);
   if (!containerID) return(false);
@@ -403,7 +412,7 @@ function DropOnTree ( event )
     if (remote)
     {
       remote.Flush();
-      dump("Wrote out bookmark changes.");
+      dump("Wrote out bookmark changes.\n");
     }
   }
 
