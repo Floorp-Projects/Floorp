@@ -175,6 +175,7 @@ Rights Reserved.
 <!ENTITY threadsWithUnreadCmd.accesskey "t">  
 <!ENTITY watchedThreadsWithUnreadCmd.label "Watched Threads With Unread">  
 <!ENTITY watchedThreadsWithUnreadCmd.accesskey "w">  
+<!ENTITY ignoredThreadsCmd.label "Ignored Threads">  
 <!ENTITY headersMenu.label "Headers"> 
 <!ENTITY headersMenu.accesskey "h"> 
 <!ENTITY headersAllCmd.label "All">  
@@ -346,7 +347,7 @@ Rights Reserved.
 <!ENTITY moveMsgMenu.accesskey "m">  
 <!ENTITY copyMsgMenu.label "Copy Message">  
 <!ENTITY copyMsgMenu.accesskey "c">  
-<!ENTITY killThreadMenu.label "Kill Thread">
+<!ENTITY killThreadMenu.label "Ignore Thread">
 <!ENTITY killThreadMenu.accesskey "k">
 <!ENTITY killThreadMenu.key "k">
 <!ENTITY watchThreadMenu.label "Watch Thread">

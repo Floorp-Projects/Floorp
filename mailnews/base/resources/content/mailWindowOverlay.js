@@ -176,6 +176,9 @@ function InitViewMessagesMenu()
   var watchedTheadsWithUnreadMenuItem = document.getElementById("viewWatchedThreadsWithUnreadMenuItem");
   if(watchedTheadsWithUnreadMenuItem)
       watchedTheadsWithUnreadMenuItem.setAttribute("checked", viewType == nsMsgViewType.eShowWatchedThreadsWithUnread);
+  var ignoredTheadsMenuItem = document.getElementById("viewIgnoredThreadsMenuItem");
+  if(ignoredTheadsMenuItem)
+      ignoredTheadsMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kShowIgnored) != 0);
 }
 
 function InitMessageMenu()

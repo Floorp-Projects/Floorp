@@ -346,7 +346,13 @@ function SwitchView(command)
       CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowWatchedThreadsWithUnread, nsMsgViewFlagsType.kThreadedDisplay,
             nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
    break;
-    case "cmd_viewKilledThreads":
+    case "cmd_viewIgnoredThreads":
+      if (viewFlags & nsMsgViewFlagsType.kShowIgnored)
+        viewFlags = viewFlags & ~nsMsgViewFlagsType.kShowIgnored;
+      else
+        viewFlags = viewFlags | nsMsgViewFlagsType.kShowIgnored;
+      CreateDBView(msgWindow.openFolder, nsMsgViewType.eShowAllThreads, viewFlags,
+            nsMsgViewSortType.byThread, nsMsgViewSortOrder.ascending);
     break;
   }
 

@@ -99,6 +99,7 @@ Rights Reserved.
    <command id="cmd_viewUnreadMsgs" oncommand="goDoCommand('cmd_viewUnreadMsgs')" disabled="true"/>
    <command id="cmd_viewThreadsWithUnread" oncommand="goDoCommand('cmd_viewThreadsWithUnread')" disabled="true"/>
    <command id="cmd_viewWatchedThreadsWithUnread" oncommand="goDoCommand('cmd_viewWatchedThreadsWithUnread')" disabled="true"/>
+   <command id="cmd_viewIgnoredThreads" oncommand="goDoCommand('cmd_viewIgnoredThreads')" disabled="true"/>
    <command id="cmd_sortByThread" oncommand="goDoCommand('cmd_sortByThread')" disabled="true"/>
 
 </commandset>
@@ -895,6 +896,7 @@ Rights Reserved.
            label="&threadsMsgsCmd.label;"
            accesskey="&threadsMsgsCmd.accesskey;"
            observes="cmd_sortByThread"/>
+          <menuitem id="viewIgnoredThreadsMenuItem" type="checkbox" label="&ignoredThreadsCmd.label;" disabled="true" observes="cmd_viewIgnoredThreads"/>
           <menuseparator/>
           <menuitem label="&expandAllThreadsCmd.label;" accesskey="&expandAllThreadsCmd.accesskey;" key="key_expandAllThreads" disabled="true" observes="cmd_expandAllThreads"/>
           <menuitem label="&collapseAllThreadsCmd.label;" accesskey="&collapseAllThreadsCmd.accesskey;" key="key_collapseAllThreads" disabled="true" observes="cmd_collapseAllThreads"/>

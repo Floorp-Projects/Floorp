@@ -210,6 +210,7 @@ var DefaultController =
 			case "cmd_viewUnreadMsgs":
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
+      case "cmd_viewIgnoredThreads":
       case "cmd_undo":
       case "cmd_redo":
 			case "cmd_expandAllThreads":
@@ -369,6 +370,7 @@ var DefaultController =
       case "cmd_viewUnreadMsgs":
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
+      case "cmd_viewIgnoredThreads":
         return true;
       case "cmd_undo":
       case "cmd_redo":
@@ -494,6 +496,7 @@ var DefaultController =
       case "cmd_viewThreadsWithUnread":
       case "cmd_viewWatchedThreadsWithUnread":
 			case "cmd_viewUnreadMsgs":
+      case "cmd_viewIgnoredThreads":
 				SwitchView(command);
 				break;
 			case "cmd_undo":
