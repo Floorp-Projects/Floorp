@@ -34,7 +34,6 @@ CPPSRCS		= \
                 nsJARInputStream.cpp \
 		nsZipArchive.cpp \
 		nsJAR.cpp \
-		nsJARStubs.cpp \
 		nsJARFactory.cpp \
 		nsWildCard.cpp \
 		$(NULL)

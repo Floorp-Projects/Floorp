@@ -45,6 +45,14 @@ interface nsIZipEntry : nsISupports
 [scriptable, uuid(6ff6a966-9632-11d3-8cd9-0060b0fc14a3)]
 interface nsIZipReader : nsISupports
 {
+
+    const short NOT_SIGNED         = 0;
+    const short VALID              = 1;
+    const short INVALID_SIG        = 2;
+    const short INVALID_UNKNOWN_CA = 3;
+    const short INVALID_MANIFEST   = 4;
+    const short INVALID_ENTRY      = 5;
+
     /**
      * Initializes a zip reader after construction.
      */
@@ -88,14 +96,15 @@ interface nsIZipReader : nsISupports
     nsIInputStream getInputStream(in string zipEntry);
 
     /**
-     * Returns an object describing the owner (origin and/or signer) of 
+     * Returns an object describing the entity which signed 
      * an entry. parseManifest must be called first. If aEntryName is an
      * entry in the jar, getInputStream must be called after parseManifest.
      * If aEntryName is an external file which has meta-information 
      * stored in the jar, verifyExternalFile (not yet implemented) must 
      * be called before getPrincipal.
      */
-    nsIPrincipal getPrincipal(in string aEntryName);
+    void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal,
+                                 out short result);
 };
 
 %{C++

@@ -76,32 +76,30 @@ class nsJAR : public nsIZipReader
   
   private:
     //-- Private data members
-    nsCOMPtr<nsIFile>   mZipFile;      // The zip/jar file on disk
-    nsZipArchive        mZip;          // The underlying zip archive
-    nsObjectHashtable   mManifestData; // Stores metadata for each entry
-    PRBool              step1Complete; // True if manifest has been parsed
-    nsISupports*        mVerificationService;
+    nsCOMPtr<nsIFile>        mZipFile;      // The zip/jar file on disk
+    nsZipArchive             mZip;          // The underlying zip archive
+    nsObjectHashtable        mManifestData; // Stores metadata for each entry
+    PRBool                   step1Complete; // True if manifest has been parsed
 
     //-- Private functions
     nsresult CreateInputStream(const char* aFilename, nsJAR* aJAR, 
                                nsIInputStream** is);
-    nsresult LoadEntry(const char* aFilename, const char** aBuf, 
+    nsresult LoadEntry(const char* aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
-    nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType, 
-                          nsIPrincipal* aPrincipal = nsnull);
+    nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType,
+                          nsIPrincipal* aPrincipal, PRInt16 aPreStatus);
     nsresult VerifyEntry(const char* aEntryName, char* aEntryData, 
                          PRUint32 aLen);
 
-    //-- Debugging
-    void DumpMetadata(const char* aMessage);
-
-    //-- The following private functions are implemented in nsJARStubs.cpp
-    static PRBool SupportsRSAVerification();
     nsresult CalculateDigest(const char* aInBuf, PRUint32 aInBufLen,
                              char** digest);
-    nsresult VerifySignature(const char* sfBuf, const char* rsaBuf,
-                             PRUint32 rsaBufLen, nsIPrincipal** aPrincipal);
+    nsresult VerifySignature(const char* sfBuf, PRUint32 sfBufLen,
+                             const char* rsaBuf, PRUint32 rsaBufLen, 
+                             nsIPrincipal** aPrincipal, PRInt16* status);
+
+    //-- Debugging
+    void DumpMetadata(const char* aMessage);
 };
 
 /**
