@@ -86,7 +86,7 @@ function SetupHTMLEditorCommands()
   gHTMLEditorCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
   gHTMLEditorCommandManager.registerCommand("cmd_FinishHTMLSource",   nsFinishHTMLSource);
   gHTMLEditorCommandManager.registerCommand("cmd_CancelHTMLSource",   nsCancelHTMLSource);
-gHTMLEditorCommandManager.registerCommand("cmd_smiley",             nsSetSmiley);
+  gHTMLEditorCommandManager.registerCommand("cmd_smiley",             nsSetSmiley);
 }
 
 function SetupComposerWindowCommands()
@@ -870,73 +870,82 @@ var nsObjectPropertiesCommand =
   }
 };
 
+
 //-----------------------------------------------------------------------------------
 var nsSetSmiley =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var selection = window.editorShell.editorSelection;
-    var focNode   = selection.focusNode;
-    var userChoice = selection.isCollapsed && (focNode.nodeType == Node.TEXT_NODE);
+    return ( window.editorShell && window.editorShell.documentEditable);
 
-    return (userChoice && window.editorShell && window.editorShell.documentEditable);
   },
 
   doCommand: function(aCommand)
   {
-    var prevChar;
-    var nextChar;
-
-    var leftAdd;
-    var rightAdd;
-
-    var curNode;
-
-    var endRightNode;
-
+	
     var commandNode = document.getElementById(aCommand);
-    var smileyCode  = commandNode.getAttribute("state");
 
-        var selection = window.editorShell.editorSelection;
-    var focusInd  = selection.focusOffset;
+    var smileyCode = commandNode.getAttribute("state");
 
-
-    if (selection)
+    var strSml;
+    switch(smileyCode)
     {
-      var focusN = selection.focusNode;
+        case ":-)": strSml="s1"; 
+        break;
+        case ":-(": strSml="s2";
+        break;
+        case ";-)": strSml="s3";
+        break;
+        case ";-P": strSml="s4";
+        break;
+        case ":)":  strSml="s5";
+        break;
+        case ":(":  strSml="s6";
+        break;
+        case ";)":  strSml="s7";
+        break;
+        default:	strSml="";
+        break;
 
-      var  outputText = focusN.nodeValue;
-
-      prevChar = outputText.charAt(focusInd - 1);
-      nextChar = outputText.charAt(focusInd);
-
-      switch(prevChar)
-      {
-        case "":
-        case " ":
-                 leftAdd ="";
-                 break;
-        default:
-                 leftAdd = " " ;
-                 break;
-      }
-
-      switch(nextChar)
-      {
-        case "":
-        case " ":
-                 rightAdd ="";
-                 break;
-        default:
-                 rightAdd = " " ;
-                 break;
-      }
-
-
-       editorShell.InsertSource(leftAdd + smileyCode + rightAdd);
-       window._content.focus();
     }
-   }
+
+    try 
+    {
+      var selection = window.editorShell.editorSelection;
+
+      if (!selection)
+        return;
+	
+      var extElement = editorShell.CreateElementWithDefaults("span");
+      if (!extElement)
+        return;
+	
+      extElement.setAttribute("-moz-smiley", strSml);
+
+	
+      var intElement = editorShell.CreateElementWithDefaults("span");
+      if (!intElement)
+        return;
+
+      var txtElement =  document.createTextNode(smileyCode);
+      if (!txtElement)
+		return;
+
+      intElement.appendChild (txtElement);
+      extElement.appendChild (intElement);
+
+
+      editorShell.InsertElementAtSelection(extElement,true);
+      window._content.focus();		
+
+    } 
+    catch (e) 
+    {
+        dump("Exception occured in smiley InsertElementAtSelection\n");
+    }
+	
+  }
+
 };
 
 

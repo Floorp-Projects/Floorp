@@ -49,3 +49,52 @@ table[empty-cells],
   border: 1px dotted red;
 }
 
+/* smileys */
+span[-moz-smiley] {
+  min-height: 17px; margin-left: 2px; margin-top: 2px;
+  padding-left: 20px; 
+  background-repeat: no-repeat; 
+  background-position: center center;
+
+
+}
+
+span[-moz-smiley] > span {
+
+    display: none;
+}
+
+
+
+span[-moz-smiley="s1"] {
+  background-image: url(chrome://editor/content/images/smile.gif);
+}
+
+
+span[-moz-smiley="s2"] {
+  background-image: url(chrome://editor/content/images/frown.gif);
+}
+
+
+span[-moz-smiley="s3"] {
+  background-image: url(chrome://editor/content/images/wink.gif);
+}
+
+
+span[-moz-smiley="s4"] { 
+  background-image: url(chrome://editor/content/images/sick.gif);
+}
+
+span[-moz-smiley="s5"] {
+  background-image: url(chrome://editor/content/images/smile.gif);
+}
+
+span[-moz-smiley="s6"] {
+  background-image: url(chrome://editor/content/images/frown.gif);
+}
+
+
+span[-moz-smiley="s7"] {
+  background-image: url(chrome://editor/content/images/wink.gif);
+}
+
