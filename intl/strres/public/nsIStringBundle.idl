@@ -1,0 +1,51 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL. You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "nsIEnumerator.idl"
+#include "nsILocale.idl"
+
+%{C++
+
+#include "nsILocale.h"
+
+// Define Progid and CID
+// {D85A17C1-AA7C-11d2-9B8C-00805F8A16D9}
+#define NS_STRINGBUNDLESERVICE_CID \
+{ 0xd85a17c1, 0xaa7c, 0x11d2, \
+  { 0x9b, 0x8c, 0x0, 0x80, 0x5f, 0x8a, 0x16, 0xd9 } }
+
+#define NS_STRINGBUNDLE_PROGID "component://netscape/intl/stringbundle"
+%}
+
+[scriptable, uuid(D85A17C2-AA7C-11d2-9B8C-00805F8A16D9)]
+interface nsIStringBundle : nsISupports
+{
+  void GetStringFromID(in long aID, out wstring aResult);
+  void GetStringFromName([const] in wstring aName, out wstring aResult);
+  void GetEnumeration(out nsIBidirectionalEnumerator elements);
+};
+
+[scriptable, uuid(D85A17C0-AA7C-11d2-9B8C-00805F8A16D9)]
+interface nsIStringBundleService : nsISupports
+{
+   void CreateBundle([const] in string aURLSpec, in nsILocale aLocale,
+                     [retval] out nsIStringBundle aResult);
+   void CreateXPCBundle([const] in string aURLSpec, [const] in wstring aLocaleName,
+                     [retval] out nsIStringBundle aResult);
+};
