@@ -17,6 +17,7 @@
  */
 
 #include "nsRegionMac.h"
+#include "prmem.h"
 
 static NS_DEFINE_IID(kRegionIID, NS_IREGION_IID);
 
@@ -178,6 +179,95 @@ PRBool nsRegionMac :: ContainsRect(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt
 
 PRBool nsRegionMac :: ForEachRect(nsRectInRegionFunc *func, void *closure)
 {
+/* This is a minor adaptation of code written by Hugh Fisher
+   and published in the RegionToRectangles example in the InfoMac archives.
+   ported to raptor from old macfe. MMP
+*/
+#define EndMark 	32767
+#define MaxY		32767
+#define StackMax	1024
+
+	typedef struct {
+		short	size;
+		Rect	bbox;
+		short	data[];
+		} ** Internal;
+	
+	Internal region;
+	short	 width, xAdjust, y, index, x1, x2, x;
+	nsRect	 box;
+	short	 stackStorage[1024];
+	short *	 buffer;
+	
+	region = (Internal)mRegion;
+	
+	/* Check for plain rectangle */
+	if ((**region).size == 10) {
+		box.x = (**region).bbox.left;
+		box.y = (**region).bbox.top;
+		box.width = (**region).bbox.right - box.x;
+		box.height = (**region).bbox.bottom - box.y;
+		(*func)(closure, box);
+		return PR_FALSE;
+	}
+	/* Got to scale x coordinates into range 0..something */
+	xAdjust = (**region).bbox.left;
+	width = (**region).bbox.right - xAdjust;
+	/* Most regions will be less than 1024 pixels wide */
+	if (width < StackMax)
+		buffer = stackStorage;
+	else {
+		buffer = (short *)PR_Malloc(width * 2);
+		if (buffer == NULL)
+			/* Truly humungous region or very low on memory.
+			   Quietly doing nothing seems to be the
+			   traditional Quickdraw response. */
+			return PR_FALSE;
+	}
+	/* Initialise scan line list to bottom edges */
+	for (x = (**region).bbox.left; x < (**region).bbox.right; x++)
+		buffer[x - xAdjust] = MaxY;
+	index = 0;
+	/* Loop until we hit an empty scan line */
+	while ((**region).data[index] != EndMark) {
+		y = (**region).data[index];
+		index ++;
+		/* Loop through horizontal runs on this line */
+		while ((**region).data[index] != EndMark) {
+			x1 = (**region).data[index];
+			index ++;
+			x2 = (**region).data[index];
+			index ++;
+			x = x1;
+			while (x < x2) {
+				if (buffer[x - xAdjust] < y) {
+					/* We have a bottom edge - how long for? */
+					box.x = x;
+					box.y  = buffer[x - xAdjust];
+					while (x < x2 && buffer[x - xAdjust] == box.y) {
+						buffer[x - xAdjust] = MaxY;
+						x ++;
+					}
+					/* Pass to client proc */
+					box.width  = x - box.x;
+					box.height = y - box.y;
+					(*func)(closure, box);
+				} else {
+					/* This becomes a top edge */
+					buffer[x - xAdjust] = y;
+					x ++;
+				}
+			}
+		}
+		index ++;
+	}
+	/* Clean up after ourselves */
+	if (width >= StackMax)
+		PR_Free((void *)buffer);
+#undef EndMark
+#undef MaxY
+#undef StackMax
+
   return PR_FALSE;
 }
 

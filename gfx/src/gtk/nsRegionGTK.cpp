@@ -206,6 +206,8 @@ PRBool nsRegionGTK::ForEachRect(nsRectInRegionFunc *func, void *closure)
   BOX *pbox;
   nsRect rect;
 
+  //code lifted from old xfe. MMP
+
   NS_ASSERTION(!(nsnull == func), "no callback");
 
   pbox = pRegion->rects;
@@ -214,9 +216,9 @@ PRBool nsRegionGTK::ForEachRect(nsRectInRegionFunc *func, void *closure)
   while (nbox--)
   {
     rect.x = pbox->x1;
-    rect.width = (pbox->x2 - pbox->x1) + 1;
+    rect.width = (pbox->x2 - pbox->x1);
     rect.y = pbox->y1;
-    rect.height = (pbox->y2 - pbox->y1) + 1;
+    rect.height = (pbox->y2 - pbox->y1);
     (*func)(closure, rect);
     pbox++;
   }
