@@ -2139,6 +2139,18 @@
 			settings = {
 			};
 		};
+		F53A902202C1127A01A967F3 = {
+			isa = PBXFileReference;
+			name = liboji.dylib;
+			path = ../modules/oji/src/liboji.dylib;
+			refType = 2;
+		};
+		F53A902402C1137901A967F3 = {
+			fileRef = F53A902202C1127A01A967F3;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		F53E012902AEE91C01A967F3 = {
 			isa = PBXFileReference;
 			path = BookmarkInfoController.h;
@@ -6652,6 +6664,7 @@
 				F6BD645001B315FA01A962F7,
 				F655020201B480F201A962F7,
 				F517941F027F3F2901A967DF,
+				F53A902202C1127A01A967F3,
 			);
 			isa = PBXGroup;
 			name = "Gecko Components";
@@ -6795,6 +6808,7 @@
 				F5179421027F3FD301A967DF,
 				F6BD64B601B3167601A962F7,
 				F655020401B4812301A962F7,
+				F53A902402C1137901A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
