@@ -31,6 +31,9 @@
 
 use FileHandle;
 
+# This is for gunzip (should add a configure script to handle this).
+$ENV{PATH} .= ":/usr/local/bin";
+
 $debug = 1 if $ARGV[0] eq '--debug';
 
 if ($debug) {
