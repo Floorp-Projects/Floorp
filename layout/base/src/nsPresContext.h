@@ -19,19 +19,6 @@
  *
  * Contributor(s): 
  *   IBM Corporation 
- * 
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date         Modified by     Description of modification
- * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
- * 04/20/2000   IBM Corp.       OS/2 VisualAge build.
- *
  */
 #ifndef nsPresContext_h___
 #define nsPresContext_h___
@@ -158,8 +145,6 @@ public:
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
   NS_IMETHOD GetDeviceContext(nsIDeviceContext** aResult) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);
-  NS_IMETHOD GetDefaultDirection(PRUint8* aDirection);
-  NS_IMETHOD SetDefaultDirection(PRUint8 aDirection);
   NS_IMETHOD GetLanguage(nsILanguageAtom** aLanguage);
   NS_IMETHOD GetLanguageSpecificTransformType(
               nsLanguageSpecificTransformType* aType);
@@ -250,7 +235,6 @@ protected:
   PRPackedBool          mIsVisual;                // is the Bidi text mode visual
   PRPackedBool          mIsBidiSystem;            // is the system capable of doing Bidi reordering
 #endif // IBMBIDI
-  PRUint8               mDefaultDirection;
   PRPackedBool          mIsRenderingOnlySelection;
 
 #ifdef IBMBIDI

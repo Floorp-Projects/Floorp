@@ -19,18 +19,6 @@
  *
  * Contributor(s): 
  *   IBM Corporation 
- * 
- * This Original Code has been modified by IBM Corporation.
- * Modifications made by IBM described herein are
- * Copyright (c) International Business Machines
- * Corporation, 2000
- *
- * Modifications to Mozilla code or documentation
- * identified per MPL Section 3.3
- *
- * Date         Modified by     Description of modification
- * 03/20/2000   IBM Corp.       BiDi - ability to change the default direction of the browser
- *
  */
 #include "nsCOMPtr.h"
 #include "nsPresContext.h"
@@ -157,7 +145,6 @@ nsPresContext::nsPresContext()
   mDefaultBackgroundImageAttachment = NS_STYLE_BG_ATTACHMENT_SCROLL;
   mDefaultBackgroundImageRepeat = NS_STYLE_BG_REPEAT_XY;
   mDefaultBackgroundImageOffsetX = mDefaultBackgroundImageOffsetY = 0;
-  mDefaultDirection = NS_STYLE_DIRECTION_LTR;
   mLanguageSpecificTransformType = eLanguageSpecificTransformType_Unknown;
   mIsRenderingOnlySelection = PR_FALSE;
 #ifdef IBMBIDI
@@ -366,10 +353,6 @@ nsPresContext::GetUserPreferences()
   // * use fonts?
   if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.use_document_fonts", &prefInt))) {
     mUseDocumentFonts = prefInt == 0 ? PR_FALSE : PR_TRUE;
-  }
-  // * direction
-  if (NS_SUCCEEDED(mPrefs->GetIntPref("browser.display.direction", &prefInt))) {
-    mDefaultDirection = prefInt;
   }
   
   GetFontPreferences();
@@ -1429,13 +1412,6 @@ nsPresContext::GetEventStateManager(nsIEventStateManager** aManager)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPresContext::GetDefaultDirection(PRUint8* aDirection)
-{
-  *aDirection = mDefaultDirection;
-  return NS_OK;
-}
-
 #ifdef IBMBIDI
 //ahmed
 NS_IMETHODIMP
@@ -1567,13 +1543,6 @@ nsPresContext::GetBidiCharset(nsAutoString &aCharSet)
 //Mohamed End
 
 #endif //IBMBIDI
-
-NS_IMETHODIMP
-nsPresContext::SetDefaultDirection(PRUint8 aDirection)
-{
-  mDefaultDirection = aDirection;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 nsPresContext::GetLanguage(nsILanguageAtom** aLanguage)
