@@ -1303,7 +1303,7 @@ NET_I_XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
             if (rv != NS_OK)
                 return -1;
             status = PR_GetFileInfo(path, &fileInfo);
-            delete path;
+            PR_Free(path);
             delete newName;
             if (status == PR_SUCCESS) {
                 // transfer the pr stat info over to the xp stat object.
@@ -1318,7 +1318,7 @@ NET_I_XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
     	
             if (!newName) return -1;
             result = _stat( newName, info );
-            delete newName;
+            PR_Free(newName);
             break;
         }
         default:
