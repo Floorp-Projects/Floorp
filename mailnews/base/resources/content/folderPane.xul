@@ -41,6 +41,7 @@
 		<treeitem uri="..." 
 		  SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
 		  BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
+		  IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
           ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
 	  		<treerow >
 				<treecell treeallowevents="true">

@@ -54,9 +54,6 @@ FolderInboxShareO.gif
 FolderMailServer.gif
 FolderNew.gif
 FolderNewO.gif
-FolderNewsServer.gif
-FolderNewsServerNew.gif
-FolderNewsServerSecure.gif
 FolderNewsgroup.gif
 FolderNewsgroupNew.gif
 FolderO.gif
@@ -78,3 +75,7 @@ FolderTrash.gif
 FolderTrashO.gif
 FolderTrashShare.gif
 FolderTrashShareO.gif
+Server.gif
+ServerNews.gif
+ServerNewsLock.gif
+ServerRemote.gif

@@ -58,9 +58,6 @@ install::
 	$(MAKE_INSTALL) FolderMailServer.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderNew.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderNewO.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNewsServer.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNewsServerNew.gif			$(DIST)\bin\chrome\messenger\skin\default
-	$(MAKE_INSTALL) FolderNewsServerSecure.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderNewsgroup.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderNewsgroupNew.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderO.gif			$(DIST)\bin\chrome\messenger\skin\default
@@ -82,6 +79,10 @@ install::
 	$(MAKE_INSTALL) FolderTrashO.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderTrashShare.gif			$(DIST)\bin\chrome\messenger\skin\default
 	$(MAKE_INSTALL) FolderTrashShareO.gif			$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) Server.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) ServerNews.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) ServerNewsLock.gif				$(DIST)\bin\chrome\messenger\skin\default
+	$(MAKE_INSTALL) ServerRemote.gif				$(DIST)\bin\chrome\messenger\skin\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\skin\default\messenger.css

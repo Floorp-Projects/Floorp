@@ -67,9 +67,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/FolderMailServer.gif \
 	$(srcdir)/FolderNew.gif \
 	$(srcdir)/FolderNewO.gif \
-	$(srcdir)/FolderNewsServer.gif \
-	$(srcdir)/FolderNewsServerNew.gif \
-	$(srcdir)/FolderNewsServerSecure.gif \
 	$(srcdir)/FolderNewsgroup.gif \
 	$(srcdir)/FolderNewsgroupNew.gif \
 	$(srcdir)/FolderO.gif \
@@ -91,6 +88,10 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/FolderTrashO.gif \
 	$(srcdir)/FolderTrashShare.gif \
 	$(srcdir)/FolderTrashShareO.gif \
+	$(srcdir)/Server.gif \
+	$(srcdir)/ServerNews.gif \
+	$(srcdir)/ServerRemote.gif \
+	$(srcdir)/ServerNewsLock.gif \
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
