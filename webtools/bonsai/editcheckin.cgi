@@ -34,7 +34,11 @@ require 'CGI.pl';
 
 LoadCheckins();
 
-my $info = eval("\\%" . $::FORM{'id'});
+# Make sure checkin id is in designated format
+my $form_id = $::FORM{'id'};
+die("Invalid checkin id.\n") unless ($form_id =~ m/^::checkin_\d+_\d+$/);
+
+my $info = eval("\\%" . $form_id);
 
 print "Content-type: text/html
 
@@ -80,6 +84,7 @@ sub CheckString {
 
 my $isopen = CheckString($info->{'treeopen'});
 my $isclosed = CheckString(!$info->{'treeopen'});
+my $infolog = $info->{'log'} || "";
 
 print qq{
 <tr><td align=right><b>Tree state:</b></td>
@@ -88,7 +93,7 @@ print qq{
 <td><INPUT TYPE=radio NAME=treeopen VALUE=0 $isclosed>Closed
 </td></tr><tr>
 <td align=right valign=top><B>Log message:</B></td>
-<td><TEXTAREA NAME=log ROWS=10 COLS=80>$info->{'log'}</TEXTAREA></td></tr>
+<td><TEXTAREA NAME=log ROWS=10 COLS=80>$infolog</TEXTAREA></td></tr>
 </table>
 <INPUT TYPE=CHECKBOX NAME=nukeit>Check this box to blow away this checkin entirely.<br>
 
