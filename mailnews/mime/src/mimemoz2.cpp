@@ -2114,7 +2114,7 @@ nsresult GetMailNewsFont(MimeObject *obj, PRBool styleFixed,  PRInt32 *fontPixel
    flags: see nsIDocumentEncoder.h
 */
 // TODO: |printf|s?
-/* <copy from="mozilla/htmlparser/test/outsinks/Convert.cpp"
+/* <copy from="mozilla/parser/htmlparser/test/outsinks/Convert.cpp"
          author="akk"
          adapted-by="Ben Bucksch"
          comment=" 'This code would not have been possible without akk.' ;-P.

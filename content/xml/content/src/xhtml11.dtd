@@ -21,7 +21,7 @@
 
 <!--
   * Predefined HTML entities to be loaded when parsing XHTML documents.
-  * The contents match mozilla/htmlparser/src/nsHTMLEntityList.h,
+  * The contents match mozilla/parser/htmlparser/src/nsHTMLEntityList.h,
   * except that Navigator entity extensions are not included.
  -->
 
