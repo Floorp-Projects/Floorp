@@ -109,4 +109,14 @@ interface nsIDocShell : nsISupports
 	outermost DocShell.
 	*/
 	readonly attribute nsIDocShell rootDocShell;
+
+	/**
+	* Set/Get the document scale factor.  When setting this attribute, a
+	* NS_ERROR_NOT_IMPLEMENTED error may be returned by implementations
+	* not supporting zoom.  Implementations not supporting zoom should return
+	* 1.0 all the time for the Get operation.  1.0 by the way is the default
+	* of zoom.  This means 100% of normal scaling or in other words normal size
+	* no zoom. 
+	*/
+	attribute float zoom;
 };
