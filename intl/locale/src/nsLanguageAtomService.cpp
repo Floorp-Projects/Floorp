@@ -137,9 +137,6 @@ nsLanguageAtomService::LookupCharSet(const char *aCharSet, nsresult *aError)
       return nsnull;
     }
   }
-  if (!mUnicode) {
-    mUnicode = do_GetAtom("x-unicode");
-  }
 
   nsCOMPtr<nsIAtom> langGroup;
   mCharSets->GetCharsetLangGroup(aCharSet, getter_AddRefs(langGroup));
@@ -149,17 +146,6 @@ nsLanguageAtomService::LookupCharSet(const char *aCharSet, nsresult *aError)
 
     return nsnull;
   }
-#if !defined(XP_BEOS)
-  if (langGroup == mUnicode) {
-    langGroup = GetLocaleLanguageGroup(&res);
-    if (NS_FAILED(res)) {
-      if (aError)
-        *aError = res;
-
-      return nsnull;
-    }
-  }
-#endif
 
   // transfer reference to raw pointer
   nsIAtom *raw = nsnull;

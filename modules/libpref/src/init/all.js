@@ -768,6 +768,11 @@ pref("bidi.characterset", 1);
 pref("layout.word_select.eat_space_to_next_word", false);
 pref("layout.word_select.stop_at_punctuation", true);
 
+// pref to control whether or not to replace backslashes with Yen signs
+// in documents encoded in one of Japanese legacy encodings (EUC-JP, 
+// Shift_JIS, ISO-2022-JP)
+pref("layout.enable_japanese_specific_transform", false);
+
 // pref to force frames to be resizable
 pref("layout.frames.force_resizability", false);
 

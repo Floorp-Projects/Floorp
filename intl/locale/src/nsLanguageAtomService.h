@@ -73,5 +73,4 @@ protected:
   nsInterfaceHashtable<nsStringHashKey, nsIAtom> mLangs;
   nsCOMPtr<nsIStringBundle> mLangGroups;
   nsCOMPtr<nsIAtom> mLocaleLangGroup;
-  nsCOMPtr<nsIAtom> mUnicode;
 };
