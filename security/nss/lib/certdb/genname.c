@@ -75,9 +75,11 @@ const SEC_ASN1Template CERT_NameConstraintSubtreeExcludedTemplate[] = {
 static const SEC_ASN1Template CERTNameConstraintsTemplate[] = {
     { SEC_ASN1_SEQUENCE, 0, NULL, sizeof(CERTNameConstraints) },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 0, 
-          offsetof(CERTNameConstraints, DERPermited), CERT_NameConstraintSubtreeSubTemplate},
+          offsetof(CERTNameConstraints, DERPermited), 
+	  CERT_NameConstraintSubtreeSubTemplate},
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONTEXT_SPECIFIC | 1, 
-          offsetof(CERTNameConstraints, DERExcluded), CERT_NameConstraintSubtreeSubTemplate},
+          offsetof(CERTNameConstraints, DERExcluded), 
+	  CERT_NameConstraintSubtreeSubTemplate},
     { 0, }
 };
 
@@ -92,7 +94,7 @@ static const SEC_ASN1Template CERTOthNameTemplate[] = {
 };
 
 static const SEC_ASN1Template CERTOtherNameTemplate[] = {
-    { SEC_ASN1_CONTEXT_SPECIFIC | 0 ,
+    { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_CONSTRUCTED | 0 ,
       offsetof(CERTGeneralName, name.OthName), CERTOthNameTemplate, 
       sizeof(CERTGeneralName) }
 };
@@ -120,7 +122,7 @@ static const SEC_ASN1Template CERT_DNSNameTemplate[] = {
 };
 
 static const SEC_ASN1Template CERT_X400AddressTemplate[] = {
-    { SEC_ASN1_CONTEXT_SPECIFIC | 3,
+    { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_CONSTRUCTED | 3,
           offsetof(CERTGeneralName, name.other), SEC_AnyTemplate,
           sizeof (CERTGeneralName)}
 };
@@ -133,7 +135,7 @@ static const SEC_ASN1Template CERT_DirectoryNameTemplate[] = {
 
 
 static const SEC_ASN1Template CERT_EDIPartyNameTemplate[] = {
-    { SEC_ASN1_CONTEXT_SPECIFIC | 5,
+    { SEC_ASN1_CONTEXT_SPECIFIC | SEC_ASN1_CONSTRUCTED | 5,
           offsetof(CERTGeneralName, name.other), SEC_AnyTemplate,
           sizeof (CERTGeneralName)}
 };
