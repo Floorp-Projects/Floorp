@@ -327,10 +327,10 @@ case "$target" in
         AC_LANG_RESTORE
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | grep -i version | sed -e 's|.* [vV]ersion ||' | sed -e 's|[ ]*$||'`
+        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
         _CC_MAJOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $ 1 }'`
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | grep -i version | sed -e 's|.* [vV]ersion ||' | sed -e 's|[ ]*$||'`
+        CXX_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
         _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | awk -F\. '{ print $ 1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
