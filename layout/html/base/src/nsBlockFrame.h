@@ -295,6 +295,28 @@ protected:
     */
   nsresult PrepareChildIncrementalReflow(nsBlockReflowState& aState);
 
+  /**
+   * Retarget an inline incremental reflow from continuing frames that
+   * will be destroyed.
+   *
+   * @param aState |aState.mNextRCFrame| contains the next frame in
+   * the reflow path; this will be ``rewound'' to either the target
+   * frame's primary frame, or to the first continuation frame after a
+   * ``hard break''. In other words, it will be set to the closest
+   * continuation which will not be destroyed by the unconstrained
+   * reflow. The remaining frames in the reflow path for
+   * |aState.mReflowState.reflowCommand| will be altered similarly.
+   *
+   * @param aLine is initially the line box that contains the target
+   * frame. It will be ``rewound'' in lockstep with
+   * |aState.mNextRCFrame|.
+   *
+   * @param aPrevInFlow points to the target frame's prev-in-flow.
+   */
+  void RetargetInlineIncrementalReflow(nsBlockReflowState &aState,
+                                       line_iterator &aLine,
+                                       nsIFrame *aPrevInFlow);
+
   /** set up the conditions necessary for an resize reflow
     * the primary task is to mark the minimumly sufficient lines dirty. 
     */
