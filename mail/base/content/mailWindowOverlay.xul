@@ -311,6 +311,8 @@
   <key id="key_markNotJunk" key="&markAsNotJunkCmd.key;"             oncommand="goDoCommand('cmd_markAsNotJunk');"
        modifiers="shift"/>
 
+  <key id="key_groupBySort" key="&groupBySortCmd.key;" oncommand="MsgGroupBySort();"/>
+
 #ifdef MOZ_WIDGET_GTK2
   <key id="key_markAllRead" key="&markAllReadCmd.key;"               oncommand="goDoCommand('cmd_markAllRead');" modifiers="shift"/>
 #else
@@ -1226,7 +1228,7 @@
               <menuseparator/>
               <menuitem id="sortThreaded" type="radio" name="threaded" label="&sortThreaded.label;" accesskey="&sortThreaded.accesskey;" oncommand="MsgSortThreaded();"/>
               <menuitem id="sortUnthreaded" type="radio" name="threaded" label="&sortUnthreaded.label;" accesskey="&sortUnthreaded.accesskey;" oncommand="MsgSortUnthreaded();"/>
-              <menuitem id="groupBySort" type="radio" name="group" label="&groupBySort.label;" accesskey="&groupBySort.accesskey;" oncommand="MsgGroupBySort();"/>
+              <menuitem id="groupBySort" type="radio" name="group" key="key_groupBySort" label="&groupBySort.label;" accesskey="&groupBySort.accesskey;" oncommand="MsgGroupBySort();"/>
             </menupopup>
           </menu>
 
