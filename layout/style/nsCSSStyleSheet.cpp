@@ -879,8 +879,6 @@ static PRBool SetStyleSheetReference(nsISupports* aElement, void* aSheet)
   return PR_TRUE;
 }
 
-MOZ_DECL_CTOR_COUNTER(XX);
-
 CSSStyleSheetInner::CSSStyleSheetInner(nsICSSStyleSheet* aParentSheet)
   : mSheets(),
     mURL(nsnull),
@@ -1088,7 +1086,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl()
     mScriptObject(nsnull),
     mRuleProcessors(nsnull)
 {
-  MOZ_COUNT_CTOR(CSSStyleSheetImpl);
   NS_INIT_REFCNT();
 
   mInner = new CSSStyleSheetInner(this);
@@ -1111,7 +1108,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
     mInner(aCopy.mInner),
     mRuleProcessors(nsnull)
 {
-  MOZ_COUNT_CTOR(CSSStyleSheetImpl);
   NS_INIT_REFCNT();
 
   mInner->AddSheet(this);
@@ -1146,7 +1142,6 @@ CSSStyleSheetImpl::CSSStyleSheetImpl(const CSSStyleSheetImpl& aCopy)
 
 CSSStyleSheetImpl::~CSSStyleSheetImpl()
 {
-  MOZ_COUNT_DTOR(CSSStyleSheetImpl);
   NS_IF_RELEASE(mMedia);
   if (mFirstChild) {
     CSSStyleSheetImpl* child = mFirstChild;
@@ -2128,13 +2123,10 @@ NS_HTML nsresult
 // CSS Style rule processor implementation
 //
 
-MOZ_DECL_CTOR_COUNTER(CSSRuleProcessor);
-
 CSSRuleProcessor::CSSRuleProcessor(void)
   : mSheets(nsnull),
     mMediumCascadeTable(nsnull)
 {
-  MOZ_COUNT_CTOR(CSSRuleProcessor);
   NS_INIT_REFCNT();
 }
 
@@ -2149,7 +2141,6 @@ DropProcessorReference(nsISupports* aSheet, void* aProcessor)
 
 CSSRuleProcessor::~CSSRuleProcessor(void)
 {
-  MOZ_COUNT_DTOR(CSSRuleProcessor);
   if (mSheets) {
     mSheets->EnumerateForwards(DropProcessorReference, this);
     NS_RELEASE(mSheets);
