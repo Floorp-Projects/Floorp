@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.35 $ $Date: 2002/04/18 17:30:03 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.36 $ $Date: 2002/05/20 18:05:10 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -814,7 +814,9 @@ nssBestCertificate_Callback
 	     * what the trust values are for the cert.
 	     * Ignore the returned pointer, the refcount is in c anyway.
 	     */
-	    (void)STAN_GetCERTCertificate(c);
+	    if (STAN_GetCERTCertificate(c) == NULL) {
+		return PR_FAILURE;
+	    }
 #endif
 	    if (dc->matchUsage(dc, best->usage)) {
 		best->cert = nssCertificate_AddRef(c);

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.6 $ $Date: 2002/05/07 14:58:12 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.7 $ $Date: 2002/05/20 18:05:11 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -360,7 +360,9 @@ nssCertificateArray_Destroy
 #ifdef NSS_3_4_CODE
 	    if ((*certp)->decoding) {
 		CERTCertificate *cc = STAN_GetCERTCertificate(*certp);
-		CERT_DestroyCertificate(cc);
+		if (cc) {
+		    CERT_DestroyCertificate(cc);
+		}
 		continue;
 	    }
 #endif
@@ -906,6 +908,9 @@ nssPKIObjectCollection_AddInstanceAsObject
     }
     if (!node->haveObject) {
 	node->object = (*collection->createObject)(node->object);
+	if (!node->object) {
+	    return PR_FAILURE;
+	}
 	node->haveObject = PR_TRUE;
     }
 #ifdef NSS_3_4_CODE
@@ -932,8 +937,10 @@ cert_destroyObject(nssPKIObject *o)
 #ifdef NSS_3_4_CODE
     if (c->decoding) {
 	CERTCertificate *cc = STAN_GetCERTCertificate(c);
-	CERT_DestroyCertificate(cc);
-	return;
+	if (cc) {
+	    CERT_DestroyCertificate(cc);
+	    return;
+	} /* else destroy it as NSSCertificate below */
     }
 #endif
     nssCertificate_Destroy(c);
@@ -1002,7 +1009,10 @@ cert_createObject(nssPKIObject *o)
     NSSCertificate *cert;
     cert = nssCertificate_Create(o);
 #ifdef NSS_3_4_CODE
-    (void)STAN_GetCERTCertificate(cert);
+    if (STAN_GetCERTCertificate(cert) == NULL) {
+	nssCertificate_Destroy(cert);
+	return (nssPKIObject *)NULL;
+    }
     /* In 3.4, have to maintain uniqueness of cert pointers by caching all
      * certs.  Cache the cert here, before returning.  If it is already
      * cached, take the cached entry.

@@ -1130,6 +1130,9 @@ loser:
     while (stanCert) {
 	SECItem derCert;
 	CERTCertificate *cCert = STAN_GetCERTCertificate(stanCert);
+	if (!cCert) {
+	    goto loser;
+	}
 	derCert.len = (unsigned int)stanCert->encoding.size;
 	derCert.data = (unsigned char *)stanCert->encoding.data;
 	SECITEM_CopyItem(arena, &chain->certs[i], &derCert);
@@ -1150,7 +1153,9 @@ loser:
     stanCert = stanChain[i];
     while (stanCert) {
 	CERTCertificate *cCert = STAN_GetCERTCertificate(stanCert);
-	CERT_DestroyCertificate(cCert);
+	if (cCert) {
+	    CERT_DestroyCertificate(cCert);
+	}
 	stanCert = stanChain[++i];
     }
     nss_ZFreeIf(stanChain);
