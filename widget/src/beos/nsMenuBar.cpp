@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMenuBar.h"
@@ -48,7 +49,7 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsIMenuBar::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenuBar))) {
     *aInstancePtr = (void*) ((nsIMenuBar*) this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -60,7 +61,7 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIMenuListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {
     *aInstancePtr = (void*) ((nsIMenuListener*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -250,15 +251,15 @@ nsEventStatus nsMenuBar::MenuConstruct(
   nsIMenuBar * pnsMenuBar = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID,
                                                    nsnull,
-                                                   nsIMenuBar::GetIID(),
+                                                   NS_GET_IID(nsIMenuBar),
                                                    (void**)&pnsMenuBar);
   if (NS_OK == rv) {
     if (nsnull != pnsMenuBar) {
       pnsMenuBar->Create(aParentWindow);
 
       // set pnsMenuBar as a nsMenuListener on aParentWindow
-      nsCOMPtr<nsIMenuListener> menuListener;
-      pnsMenuBar->QueryInterface(nsIMenuListener::GetIID(), getter_AddRefs(menuListener));
+      nsCOMPtr<nsIMenuListener> menuListener = 
+        do_QueryInterface(pnsMenuBar);
       aParentWindow->AddMenuListener(menuListener);
 
       nsCOMPtr<nsIDOMNode> menuNode;
@@ -275,7 +276,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 
             // Create nsMenu
             nsIMenu * pnsMenu = nsnull;
-            rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, nsIMenu::GetIID(), (void**)&pnsMenu);
+            rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, NS_GET_IID(nsIMenu), (void**)&pnsMenu);
             if (NS_OK == rv) {
               // Call Create
               nsISupports * supports = nsnull;

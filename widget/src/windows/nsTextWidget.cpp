@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsTextWidget.h"
@@ -71,7 +72,7 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-    if (result == NS_NOINTERFACE && aIID.Equals(nsCOMTypeInfo<nsITextWidget>::GetIID())) {
+    if (result == NS_NOINTERFACE && aIID.Equals(NS_GET_IID(nsITextWidget))) {
         *aInstancePtr = (void*) ((nsITextWidget*)this);
         NS_ADDREF_THIS();
         result = NS_OK;

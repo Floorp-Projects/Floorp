@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <X11/Xlib.h>
@@ -1343,7 +1344,7 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
     static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
                                               nsnull,
-                                              nsIRenderingContext::GetIID(),
+                                              NS_GET_IID(nsIRenderingContext),
 					      (void **)&event.renderingContext))
       {
         event.renderingContext->Init(mContext, this);

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsListBox.h"
@@ -32,13 +32,13 @@ nsresult nsListBox::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 
    if( result == NS_NOINTERFACE)
    {
-      if( aIID.Equals( nsIListBox::GetIID()))
+      if( aIID.Equals( NS_GET_IID(nsIListBox)))
       {
          *aInstancePtr = (void*) ((nsIListBox*)this);
          NS_ADDREF_THIS();
          result = NS_OK;
       }
-      else if( aIID.Equals( nsIListWidget::GetIID()))
+      else if( aIID.Equals( NS_GET_IID(nsIListWidget)))
       {
          *aInstancePtr = (void*) ((nsIListWidget*)this);
          NS_ADDREF_THIS();

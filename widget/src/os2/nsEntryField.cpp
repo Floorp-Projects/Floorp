@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsEntryField.h"
@@ -28,7 +28,7 @@ nsresult nsEntryField::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 {
    nsresult result = nsWindow::QueryInterface( aIID, aInstancePtr);
 
-   if( result == NS_NOINTERFACE && aIID.Equals( nsITextWidget::GetIID()))
+   if( result == NS_NOINTERFACE && aIID.Equals( NS_GET_IID(nsITextWidget)))
    {
       *aInstancePtr = (void*) ((nsITextWidget*)this);
       NS_ADDREF_THIS();

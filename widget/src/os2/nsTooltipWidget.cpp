@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsTooltipWidget.h"
@@ -30,7 +30,7 @@ nsresult nsTooltipWidget::QueryInterface( const nsIID &aIID, void **aInstancePtr
 {
    nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-   if( result == NS_NOINTERFACE && aIID.Equals( nsITooltipWidget::GetIID()))
+   if( result == NS_NOINTERFACE && aIID.Equals( NS_GET_IID(nsITooltipWidget)))
    {
       *aInstancePtr = (void*) ((nsITooltipWidget*)this);
       NS_ADDREF_THIS();

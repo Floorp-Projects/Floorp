@@ -16,13 +16,13 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsWidgetDefs.h"
 #include "nsSound.h"
 
-NS_IMPL_ISUPPORTS(nsSound,nsISound::GetIID())
+NS_IMPL_ISUPPORTS(nsSound,NS_GET_IID(nsISound))
 
 nsSound::nsSound()
 {}
@@ -46,6 +46,6 @@ nsresult NS_NewSound( nsISound** aSound)
       return NS_ERROR_NULL_POINTER;
 
    nsSound *pSound = new nsSound;
-   return pSound->QueryInterface( nsISound::GetIID(), (void**) aSound);
+   return pSound->QueryInterface( NS_GET_IID(nsISound), (void**) aSound);
 }
 #endif

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMotifAppContextService.h"
@@ -33,7 +34,7 @@ nsMotifAppContextService::~nsMotifAppContextService()
 
 NS_IMPL_ADDREF(nsMotifAppContextService)
 NS_IMPL_RELEASE(nsMotifAppContextService)
-NS_IMPL_QUERY_INTERFACE(nsMotifAppContextService, nsCOMTypeInfo<nsIMotifAppContextService>::GetIID())
+NS_IMPL_QUERY_INTERFACE(nsMotifAppContextService, NS_GET_IID(nsIMotifAppContextService))
 
 NS_IMETHODIMP
 nsMotifAppContextService::SetAppContext(XtAppContext aAppContext)

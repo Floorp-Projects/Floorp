@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nscore.h"
@@ -31,7 +32,7 @@
 
 #include <QuickTimeComponents.h>
 
-NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
+NS_IMPL_ISUPPORTS(nsSound, NS_GET_IID(nsISound));
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

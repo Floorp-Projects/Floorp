@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsFileSpecWithUIImpl.h"
@@ -92,7 +93,7 @@ nsFileSpecWithUIImpl::nsFileSpecWithUIImpl()
 	nsresult rv = nsComponentManager::CreateInstance(
 		(const char*)NS_FILESPEC_PROGID,
 		(nsISupports*)nsnull,
-		(const nsID&)nsCOMTypeInfo<nsIFileSpec>::GetIID(),
+		(const nsID&)NS_GET_IID(nsIFileSpec),
 		(void**)getter_AddRefs(mBaseFileSpec));
 	NS_ASSERTION(NS_SUCCEEDED(rv), "ERROR: Could not make a file spec.");
 }
@@ -118,7 +119,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseOutputFile(
     nsresult rv = nsComponentManager::CreateInstance(
     	kCFileWidgetCID,
         nsnull,
-        nsCOMTypeInfo<nsIFileWidget>::GetIID(),
+        NS_GET_IID(nsIFileWidget),
         (void**)getter_AddRefs(fileWidget));
     if (NS_FAILED(rv))
     	return rv;
@@ -252,7 +253,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseInputFile(
   nsCOMPtr<nsIFileWidget> fileWidget; 
   rv = nsComponentManager::CreateInstance(kCFileWidgetCID,
                                           nsnull,
-                                          nsCOMTypeInfo<nsIFileWidget>::GetIID(),
+                                          NS_GET_IID(nsIFileWidget),
                                           (void**)getter_AddRefs(fileWidget));
   if (NS_FAILED(rv))
 		return rv;
@@ -279,7 +280,7 @@ NS_IMETHODIMP nsFileSpecWithUIImpl::ChooseDirectory(const char *title, char **_r
     nsresult rv = nsComponentManager::CreateInstance(
     	kCFileWidgetCID,
         nsnull,
-        nsCOMTypeInfo<nsIFileWidget>::GetIID(),
+        NS_GET_IID(nsIFileWidget),
         (void**)getter_AddRefs(fileWidget));
 	if (NS_FAILED(rv))
 		return rv;

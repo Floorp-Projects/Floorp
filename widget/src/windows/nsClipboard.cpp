@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsClipboard.h"
@@ -443,7 +444,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
                 nsIImage * image;
                 nsresult rv = nsComponentManager::CreateInstance(kCImageCID, nsnull, 
-                                          nsCOMTypeInfo<nsIImage>::GetIID(), 
+                                          NS_GET_IID(nsIImage), 
                                           (void**) &image);
                 if (NS_OK == rv) {
                   // pull the size informat out of the BITMAPINFO header and

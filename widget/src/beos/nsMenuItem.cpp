@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMenuItem.h"
@@ -159,7 +160,7 @@ NS_METHOD nsMenuItem::Create(nsISupports *aParent,
 
   if(aParent) {
     nsIMenu * menu;
-    aParent->QueryInterface(nsIMenu::GetIID(), (void**) &menu);
+    aParent->QueryInterface(NS_GET_IID(nsIMenu), (void**) &menu);
     mMenuParent = menu;
     NS_RELEASE(menu);
   }

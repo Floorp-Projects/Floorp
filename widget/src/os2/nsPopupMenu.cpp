@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // popup menu
@@ -35,7 +35,7 @@ nsresult nsPopupMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
    *aInstancePtr = 0;
 
-   if( aIID.Equals(nsIPopupMenu::GetIID()))
+   if( aIID.Equals(NS_GET_IID(nsIPopupMenu)))
    {
       *aInstancePtr = (void*) ((nsIPopUpMenu*) this);
       NS_ADDREF_THIS();

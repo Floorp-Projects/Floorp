@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsMacWindow.h"
@@ -125,7 +126,7 @@ nsMacWindow :: DragTrackingHandler ( DragTrackingMessage theMessage, WindowPtr t
 		{
 			// get our drag service for the duration of the drag.
 			nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                       					nsIDragService::GetIID(),
+                                       					NS_GET_IID(nsIDragService),
       	                            					(nsISupports **)&sDragService);
       	    NS_ASSERTION ( sDragService, "Couldn't get a drag service, we're in biiig trouble" );
 
@@ -226,7 +227,7 @@ nsMacWindow :: DragReceiveHandler (WindowPtr theWindow, void *handlerRefCon,
 	// drag session to see what we should return to the OS (drag accepted or not).
 	nsIDragService* dragService;
 	nsresult rv = nsServiceManager::GetService(kCDragServiceCID,
-                                       			nsIDragService::GetIID(),
+                                       			NS_GET_IID(nsIDragService),
       	                            			(nsISupports **)&dragService);
 	if ( NS_SUCCEEDED(rv) && dragService ) {
 		nsCOMPtr<nsIDragSession> dragSession;

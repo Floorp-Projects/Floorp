@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * Frank Tang <ftang@netsape.com>
+ *   Frank Tang <ftang@netsape.com>
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsGtkIMEHelper.h"
 #include "nsIUnicodeDecoder.h"
@@ -71,7 +72,7 @@ void nsGtkIMEHelper::SetupUnicodeDecoder()
     nsICharsetConverterManager* manager = nsnull;
     nsresult res = nsServiceManager::
       GetService(kCharsetConverterManagerCID,
-                 nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
+                 NS_GET_IID(nsICharsetConverterManager),
                  (nsISupports**)&manager);
     if (manager && NS_SUCCEEDED(res)) {
       manager->GetUnicodeDecoder(&charset, &mDecoder);

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsUnixToolkitService.h"  
@@ -64,7 +65,7 @@ nsUnixToolkitService::~nsUnixToolkitService()
 
 NS_IMPL_ADDREF(nsUnixToolkitService)
 NS_IMPL_RELEASE(nsUnixToolkitService)
-NS_IMPL_QUERY_INTERFACE(nsUnixToolkitService, nsCOMTypeInfo<nsIUnixToolkitService>::GetIID())
+NS_IMPL_QUERY_INTERFACE(nsUnixToolkitService, NS_GET_IID(nsIUnixToolkitService))
 
 //////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP

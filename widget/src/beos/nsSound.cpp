@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 
@@ -33,7 +34,7 @@
 #include <Entry.h>
 #include <Beep.h>
 
-NS_IMPL_ISUPPORTS(nsSound, nsCOMTypeInfo<nsISound>::GetIID());
+NS_IMPL_ISUPPORTS(nsSound, NS_GET_IID(nsISound));
 
 ////////////////////////////////////////////////////////////////////////
 nsSound::nsSound()

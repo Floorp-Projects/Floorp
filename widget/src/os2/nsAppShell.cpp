@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAppShell.h"
@@ -94,7 +94,7 @@ class nsAppshellManager
 
 static nsAppshellManager *pManager = nsnull;
 
-NS_IMPL_ISUPPORTS(nsAppShell, nsIAppShell::GetIID())
+NS_IMPL_ISUPPORTS(nsAppShell, NS_GET_IID(nsIAppShell))
 
 // nsAppShell constructor
 nsAppShell::nsAppShell()

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsString.h"
@@ -391,7 +392,7 @@ nsXIFFormatConverter::ConvertFromXIFToHTML(const nsAutoString & aFromStr, nsAuto
   nsCOMPtr<nsIParser> parser;
   nsresult rv = nsComponentManager::CreateInstance(kCParserCID, 
                                              nsnull, 
-                                             nsIParser::GetIID(), 
+                                             NS_GET_IID(nsIParser), 
                                              getter_AddRefs(parser));
   if ( !parser )
     return rv;

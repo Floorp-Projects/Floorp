@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsTimerMotif.h"
@@ -150,7 +151,7 @@ nsTimerMotif::EnsureAppContext()
     
     rv = nsComponentManager::CreateInstance(kCMotifAppContextServiceCID,
                                             nsnull,
-                                            nsIMotifAppContextService::GetIID(),
+                                            NS_GET_IID(nsIMotifAppContextService),
                                             (void **)& ac_service);
     
     NS_ASSERTION(rv == NS_OK,"Cannot obtain app context service.");

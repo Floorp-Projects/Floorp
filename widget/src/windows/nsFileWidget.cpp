@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Define so header files for openfilename are included
@@ -82,7 +83,7 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIFileWidget>::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIFileWidget))) {
     *aInstancePtr = (void*) ((nsIFileWidget*)this);
     NS_ADDREF_THIS();
     return NS_OK;

@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // Push button control; don't really come any simpler than this...
@@ -31,7 +31,7 @@ nsresult nsPushButton::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 {
   nsresult result = nsWindow::QueryInterface( aIID, aInstancePtr);
 
-  if( result == NS_NOINTERFACE && aIID.Equals( nsIButton::GetIID()))
+  if( result == NS_NOINTERFACE && aIID.Equals( NS_GET_IID(nsIButton)))
   {
      *aInstancePtr = (void*) ((nsIButton*)this);
      NS_ADDREF_THIS();

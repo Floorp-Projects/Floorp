@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include "nsITimer.h"
 #include "nsUnixTimerCIID.h"
@@ -135,7 +136,7 @@ GetTimerCID()
     nsresult rv = 
       nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
                                          nsnull,
-                                         nsIUnixToolkitService::GetIID(),
+                                         NS_GET_IID(nsIUnixToolkitService),
                                          (void **) &unixToolkitService);
     
     NS_ASSERTION(rv == NS_OK,"Cannot obtain unix toolkit service.");

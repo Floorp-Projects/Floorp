@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include <Xm/CascadeBG.h>
@@ -54,7 +55,7 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                          
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(nsIMenuItem::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenuItem))) {
     *aInstancePtr = (void*)(nsIMenuItem*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -64,7 +65,7 @@ nsresult nsMenuItem::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIMenuListener::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {
     *aInstancePtr = (void*)(nsIMenuListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -134,7 +135,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
   // Bump the ref count on the parent, since it gets released unconditionally..
   NS_ADDREF(parent);
   while (1) {
-    if (NS_OK == parent->QueryInterface(nsIMenu::GetIID(),(void**)&menu)) {
+    if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIMenu),(void**)&menu)) {
       NS_RELEASE(parent);
       if (NS_OK != menu->GetParent(parent)) {
         NS_RELEASE(menu);
@@ -142,7 +143,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       }
       NS_RELEASE(menu);
 
-    } else if (NS_OK == parent->QueryInterface(nsIPopUpMenu::GetIID(),(void**)&popup)) {
+    } else if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIPopUpMenu),(void**)&popup)) {
       if (NS_OK != popup->GetParent(widget)) {
         widget =  nsnull;
       } 
@@ -150,7 +151,7 @@ nsIWidget * nsMenuItem::GetMenuBarParent(nsISupports * aParent)
       NS_RELEASE(popup);
       return widget;
 
-    } else if (NS_OK == parent->QueryInterface(nsIMenuBar::GetIID(),(void**)&menuBar)) {
+    } else if (NS_OK == parent->QueryInterface(NS_GET_IID(nsIMenuBar),(void**)&menuBar)) {
       if (NS_OK != menuBar->GetParent(widget)) {
         widget =  nsnull;
       } 
@@ -263,7 +264,7 @@ NS_METHOD nsMenuItem::Create(nsISupports *aParent,
 
   if(aParent) {
     nsIMenu * menu;
-    aParent->QueryInterface(nsIMenu::GetIID(), (void**) &menu);
+    aParent->QueryInterface(NS_GET_IID(nsIMenu), (void**) &menu);
     mMenuParent = menu;
     NS_RELEASE(menu);
   }

@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 #include "nsAppShell.h"
@@ -74,7 +75,7 @@ nsAppShell::~nsAppShell()
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS(nsAppShell, nsIAppShell::GetIID());
+NS_IMPL_ISUPPORTS(nsAppShell, NS_GET_IID(nsIAppShell));
 
 //-------------------------------------------------------------------------
 NS_METHOD 
@@ -328,7 +329,7 @@ nsAppShell::GfxToolkit nsAppShell::GetGfxToolkit()
     
         rv = nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
                                                 nsnull,
-                                                nsIUnixToolkitService::GetIID(),
+                                                NS_GET_IID(nsIUnixToolkitService),
                                                 (void **) &unixToolkitService);
   
         NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");

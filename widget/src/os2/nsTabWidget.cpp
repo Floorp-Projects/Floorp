@@ -16,7 +16,7 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
+ *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 // C++ interface
@@ -35,7 +35,7 @@ nsresult nsTabWidget::QueryInterface( const nsIID &aIID, void **aInstancePtr)
 {
    nsresult result = nsWindow::QueryInterface( aIID, aInstancePtr);
 
-   if( result == NS_NOINTERFACE && aIID.Equals( nsITabWidget::GetIID()))
+   if( result == NS_NOINTERFACE && aIID.Equals( NS_GET_IID(nsITabWidget)))
    {
       *aInstancePtr = (void*) ((nsITabWidget*)this);
       NS_ADDREF_THIS();
