@@ -257,6 +257,16 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
+void nsPageFrame::SetClipRect(nsRect* aClipRect) 
+{
+  mClipRect = *aClipRect; 
+  nsIFrame*           firstFrame  = mFrames.FirstChild();
+  nsPageContentFrame* contentPage = NS_STATIC_CAST(nsPageContentFrame*, firstFrame);
+  NS_ASSERTION(contentPage, "There should always be a content page");
+  contentPage->SetClipRect(aClipRect);
+}
+
+
 NS_IMETHODIMP
 nsPageFrame::GetFrameType(nsIAtom** aType) const
 {

@@ -88,7 +88,7 @@ public:
   virtual void  SetPageNumInfo(PRInt32 aPageNumber, PRInt32 aTotalPages);
 
   virtual void  SuppressHeadersAndFooters(PRBool aDoSup) { mSupressHF = aDoSup; }
-  virtual void  SetClipRect(nsRect* aClipRect)           { mClipRect = *aClipRect; }
+  virtual void  SetClipRect(nsRect* aClipRect);
 
   virtual void SetSharedPageData(nsSharedPageData* aPD) { mPD = aPD; }
 

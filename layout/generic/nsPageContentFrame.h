@@ -61,6 +61,8 @@ public:
 
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
+  virtual void  SetClipRect(nsRect* aClipRect) { mClipRect = *aClipRect; }
+
   /**
    * Get the "type" of the frame
    *
@@ -73,6 +75,9 @@ public:
   NS_IMETHOD  GetFrameName(nsAString& aResult) const;
 #endif
 
+protected:
+  nsPageContentFrame();
+  nsRect mClipRect;
 };
 
 #endif /* nsPageContentFrame_h___ */

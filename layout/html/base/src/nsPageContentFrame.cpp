@@ -69,6 +69,11 @@ NS_NewPageContentFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+nsPageContentFrame::nsPageContentFrame() :
+  mClipRect(-1, -1, -1, -1)
+{
+}
+
 NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
                                   nsHTMLReflowMetrics&     aDesiredSize,
                                   const nsHTMLReflowState& aReflowState,
@@ -157,13 +162,23 @@ nsPageContentFrame::Paint(nsIPresContext*      aPresContext,
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags)
 {
-  PRBool clipEmpty;
   aRenderingContext.PushState();
-  nsRect rect(0, 0, mRect.width, mRect.height);
+
+  nsRect rect;
+  if (mClipRect.width != -1 || mClipRect.height != -1) {
+    rect = mClipRect;
+  } else {
+    rect = mRect;
+  }
+  rect.x = 0;
+  rect.y = 0;
+  PRBool clipEmpty;
   aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
 
   nsresult rv = nsContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
   aRenderingContext.PopState(clipEmpty);
+
   return rv;
 }
 
