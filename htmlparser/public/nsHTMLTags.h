@@ -54,6 +54,10 @@ enum nsHTMLTag {
   /* this enum must be first and must be zero */
   eHTMLTag_unknown = 0,
 #include "nsHTMLTagList.h"
+
+  /* can't be moved into nsHTMLTagList since gcc3.4 doesn't like a
+     comma at the end of enum list*/
+  eHTMLTag_userdefined
 };
 #undef HTML_TAG
 #undef HTML_OTHER
