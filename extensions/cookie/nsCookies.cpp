@@ -61,6 +61,22 @@
 // until this point, we have an evil hack:
 #include "nsIHttpChannelInternal.h"  
 
+#ifdef MOZ_LOGGING
+// in order to do logging, the following environment variables need to be set:
+//
+//    set NSPR_LOG_MODULES=cookie:3 -- shows rejected cookies
+//    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
+//    set NSPR_LOG_FILE=c:\cookie.log
+//
+// this next define has to appear before the include of prolog.h
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#include "prlog.h"
+#endif
+
+#if defined(PR_LOGGING)
+PRLogModuleInfo* gCookieLog = nsnull;
+#endif /* PR_LOGGING */
+
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
 #define MAX_BYTES_PER_COOKIE 4096  /* must be at least 1 */
@@ -169,6 +185,58 @@ get_current_time()
 
     return current_time_in_seconds;
   }
+
+#if defined(PR_LOGGING)
+#define SET_COOKIE PR_TRUE
+#define GET_COOKIE PR_FALSE
+PRIVATE void
+cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char * cookieString, const char * reason) {
+  if (!gCookieLog) {
+    gCookieLog = PR_NewLogModule("cookie");
+  }
+  nsCAutoString spec;
+  nsresult result = curURL->GetSpec(spec);
+
+  PR_LOG(gCookieLog, PR_LOG_WARNING,
+    ("%s%s%s\n", "===== ", set_cookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT", " ====="));
+  PR_LOG(gCookieLog, PR_LOG_WARNING,("request URL: %s\n", spec.get()));
+  if (set_cookie) {
+    PR_LOG(gCookieLog, PR_LOG_WARNING,("cookie string: %s\n", cookieString));
+  }
+  time_t curTime = get_current_time();
+  PR_LOG(gCookieLog, PR_LOG_WARNING,("current time (gmt): %s", asctime(gmtime(&curTime))));
+  PR_LOG(gCookieLog, PR_LOG_WARNING,("rejected because %s\n", reason));
+  PR_LOG(gCookieLog, PR_LOG_WARNING,("\n"));
+}
+
+PRIVATE void
+cookie_LogSuccess(PRBool set_cookie, nsIURI * curURL, const char * cookieString, cookie_CookieStruct * cookie) {
+  if (!gCookieLog) {
+    gCookieLog = PR_NewLogModule("cookie");
+  }
+  nsCAutoString spec;
+  nsresult result = curURL->GetSpec(spec);
+
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,
+    ("%s%s%s\n", "===== ", set_cookie ? "COOKIE ACCEPTED" : "COOKIE SENT", " ====="));
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("request URL: %s\n", spec.get()));
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("cookie string: %s\n", cookieString));
+  time_t curTime = get_current_time();
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("current time (gmt): %s", asctime(gmtime(&curTime))));
+
+  if (set_cookie) {
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("----------------\n"));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("name: %s\n", cookie->name));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("value: %s\n", cookie->cookie));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("%s: %s\n", cookie->isDomain ? "domain" : "host", cookie->host));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("path: %s\n", cookie->path));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("expires (gmt): %s",
+           cookie->expires ? asctime(gmtime(&cookie->expires)) : "at end of session"));
+    PR_LOG(gCookieLog, PR_LOG_DEBUG,("is secure: %s\n", cookie->isSecure ? "true" : "false"));
+  }
+  PR_LOG(gCookieLog, PR_LOG_DEBUG,("\n"));
+}
+#endif
 
 PRBool PR_CALLBACK deleteCookie(void *aElement, void *aData) {
   cookie_CookieStruct *cookie = (cookie_CookieStruct*)aElement;
@@ -677,6 +745,9 @@ COOKIE_GetCookie(nsIURI * address) {
 
   /* disable cookies if the user's prefs say so */
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address, "", "Cookies are disabled");
+#endif
     return nsnull;
   }
 
@@ -686,24 +757,39 @@ COOKIE_GetCookie(nsIURI * address) {
 
   /* Don't let ftp sites read cookies (could be a security issue) */
   PRBool isFtp;
-  if (NS_FAILED(address->SchemeIs("ftp", &isFtp)) || isFtp)
-      return nsnull;
-
+  if (NS_FAILED(address->SchemeIs("ftp", &isFtp)) || isFtp) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address, "", "ftp sites cannot read cookies");
+#endif
+    return nsnull;
+  }
   /* search for all cookies */
   if (cookie_list == nsnull) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address, "", "Cookie list is empty");
+#endif
     return nsnull;
   }
   nsCAutoString host, path;
   // Get host and path
   nsresult result = address->GetHost(host);
   if (NS_FAILED(result)) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address, "", "GetHost failed");
+#endif
     return nsnull;
   }
   if ((host.RFindChar(' ') != -1) || (host.RFindChar('\t') != -1)) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address,  "", "Host has embedded space character");
+#endif
     return nsnull;
   }
   result = address->GetPath(path);
   if (NS_FAILED(result)) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address, "", "GetPath failed");
+#endif
     return nsnull;
   }
 
@@ -783,6 +869,9 @@ COOKIE_GetCookie(nsIURI * address) {
   PR_FREEIF(name);
 
   /* may be nsnull */
+#if defined(PR_LOGGING)
+  cookie_LogSuccess(GET_COOKIE, address, rv, nsnull);
+#endif
   return(rv);
 }
 
@@ -991,6 +1080,9 @@ COOKIE_GetCookieFromHttp(nsIURI * address, nsIURI * firstAddress) {
      * have to resort to two prefs
      */
 
+#if defined(PR_LOGGING)
+    cookie_LogFailure(GET_COOKIE, address, "", "Originating server test failed");
+#endif
     return nsnull;
   }
   return COOKIE_GetCookie(address);
@@ -1038,16 +1130,26 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
   nsresult rv;
   rv = curURL->GetHost(cur_host);
   if (NS_FAILED(rv)) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "GetHost failed");
+#endif
     return;
   }
 
   /* Don't let ftp sites set cookies (could be a security issue) */
   PRBool isFtp;
-  if (NS_FAILED(curURL->SchemeIs("ftp", &isFtp)) || isFtp)
-      return;
+  if (NS_FAILED(curURL->SchemeIs("ftp", &isFtp)) || isFtp) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "ftp sites cannot set cookies");
+#endif
+    return;
+  }
 
   rv = curURL->GetPath(cur_path);
   if (NS_FAILED(rv)) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "GetPath failed");
+#endif
     return;
   }
 
@@ -1068,12 +1170,18 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
   }
 */
   if(cookie_GetBehaviorPref() == PERMISSION_DontUse) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookies are disabled");
+#endif
     return;
   }
 
 //printf("\nSetCookieString(URL '%s', header '%s') time %d == %s\n",curURL,setCookieHeader,timeToExpire,asctime(gmtime(&timeToExpire)));
   if(cookie_GetLifetimePref() == COOKIE_Discard) {
     if(cookie_GetLifetimeTime() < timeToExpire) {
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookie lifetime test failed");
+#endif
       return;
     }
   }
@@ -1179,6 +1287,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
         PR_Free(domain_from_header);
         // TRACEMSG(("DOMAIN failed two dot test"));
         nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+        cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Failed the two-dot test");
+#endif
         return;
       }
 
@@ -1192,6 +1303,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
         PR_FREEIF(path_from_header);
         PR_Free(domain_from_header);
         nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+        cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Host is not in the domain");
+#endif
         return;
       }
 
@@ -1225,6 +1339,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
           PR_FREEIF(path_from_header);
           PR_Free(domain_from_header);
           nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+          cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Host minus domain failed the no-dot test");
+#endif
           return;
         }
       }
@@ -1264,6 +1381,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       PR_FREEIF(path_from_header);
       PR_FREEIF(host_from_header);
       nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Failed the path test");
+#endif
       return;
     }
 #endif
@@ -1321,6 +1441,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     PR_FREEIF(name_from_header);
     PR_FREEIF(cookie_from_header);
     nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Unable to allocate memory for new cookie");
+#endif
     return;
   }
 
@@ -1357,6 +1480,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     PR_FREEIF(name_from_header);
     PR_FREEIF(cookie_from_header);
     nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookies blocked for this site");
+#endif
     return;
   }
 
@@ -1396,6 +1522,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       PR_FREEIF(name_from_header);
       PR_FREEIF(cookie_from_header);
       nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Unable to allocate memory for new cookie");
+#endif
       return;
     }
     
@@ -1419,6 +1548,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
         PR_FREEIF(cookie_from_header);
         PR_Free(prev_cookie);
         nsCRT::free(setCookieHeaderInternal);
+#if defined(PR_LOGGING)
+        cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Unable to allocate memory for cookie list");
+#endif
         return;
       }
     }
@@ -1440,6 +1572,9 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
       /* no shorter strings found in list */
       cookie_list->InsertElementAt(prev_cookie, 0);
     }
+#if defined(PR_LOGGING)
+        cookie_LogSuccess(SET_COOKIE, curURL, setCookieHeader, prev_cookie);
+#endif
   }
 
   /* At this point we know a cookie has changed. Make a note to write the cookies to file. */
@@ -1465,10 +1600,19 @@ COOKIE_SetCookieString(nsIURI * aURL, nsIPrompt *aPrompter, const char * setCook
 
   if (aHttpChannel) {
     nsCOMPtr<nsIHttpChannelInternal> httpInternal = do_QueryInterface(aHttpChannel);
-    if (!httpInternal) return;
-    
+    if (!httpInternal) {
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, aURL, setCookieHeader, "unable to QueryInterface httpInternal");
+#endif
+      return;
+    }
     rv = httpInternal->GetDocumentURI(getter_AddRefs(pFirstURL));
-    if (NS_FAILED(rv)) return;
+    if (NS_FAILED(rv)) {
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, aURL, setCookieHeader, "unable to determine first URL");
+#endif
+      return;
+    }
   }
   COOKIE_SetCookieStringFromHttp(aURL, pFirstURL, aPrompter, setCookieHeader, 0, aHttpChannel);
 }
@@ -1516,6 +1660,9 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
       nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
       if (os)
         os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "P3P test failed");
+#endif
       return;
     }
   }
@@ -1524,12 +1671,19 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
       cookie_isForeign(curURL, firstURL)) {
     /* it's a foreign cookie so don't set the cookie */
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Originating server test failed");
+#endif
     return;
   }
 
   /* check if a Mail/News message is setting the cookie */
-  if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL))
+  if (cookie_GetDisableCookieForMailNewsPref() && cookie_isFromMailNews(firstURL)) {
+#if defined(PR_LOGGING)
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Cookies disabled for mailnews");
+#endif
     return;
+  }
 
   /* Determine when the cookie should expire. This is done by taking the difference between 
    * the server time and the time the server wants the cookie to expire, and adding that 
@@ -1572,7 +1726,6 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
     }
   }
 
-
   /* If max-age attribute is present, it overrides expires attribute */
 #define MAXAGE "max-age"
   ptr = PL_strcasestr(setCookieHeader, MAXAGE);
@@ -1582,6 +1735,9 @@ COOKIE_SetCookieStringFromHttp(nsIURI * curURL, nsIURI * firstURL, nsIPrompt *aP
       ptr++;
     }
     if (*ptr++ != '=') {
+#if defined(PR_LOGGING)
+      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "max-age is not followed by an equal sign");
+#endif
       return;  // invalid syntax: max-age but no equal sign
     }
     while (isspace(*ptr)) { // skip over white space again
