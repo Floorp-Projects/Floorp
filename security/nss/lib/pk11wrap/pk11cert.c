@@ -2341,9 +2341,9 @@ loser:
     return NULL;
 }
 
-static SECMODCallOnceType keyIDHashCallOnce;
+static PRCallOnceType keyIDHashCallOnce;
 
-static SECStatus PR_CALLBACK
+static PRStatus PR_CALLBACK
 pk11_keyIDHash_populate(void *wincx)
 {
     CERTCertList     *certList;
@@ -2352,7 +2352,7 @@ pk11_keyIDHash_populate(void *wincx)
 
     certList = PK11_ListCerts(PK11CertListUser, wincx);
     if (!certList) {
-	return SECFailure;
+	return PR_FAILURE;
     }
 
     for (node = CERT_LIST_HEAD(certList);
@@ -2366,7 +2366,7 @@ pk11_keyIDHash_populate(void *wincx)
 	}
     }
     CERT_DestroyCertList(certList);
-    return SECSuccess;
+    return PR_SUCCESS;
 }
 
 /*
@@ -2379,11 +2379,11 @@ PK11_FindCertAndKeyByRecipientListNew(NSSCMSRecipient **recipientlist, void *win
 {
     CERTCertificate *cert;
     NSSCMSRecipient *rl;
-    SECStatus srv;
+    PRStatus rv;
     int rlIndex;
 
-    srv = SECMOD_CallOnce(&keyIDHashCallOnce, pk11_keyIDHash_populate, wincx);
-    if (srv != SECSuccess)
+    rv = PR_CallOnceWithArg(&keyIDHashCallOnce, pk11_keyIDHash_populate, wincx);
+    if (rv != PR_SUCCESS)
 	return -1;
 
     cert = pk11_AllFindCertObjectByRecipientNew(recipientlist, wincx, &rlIndex);
@@ -4155,55 +4155,4 @@ CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
 	SEC_DestroyCrl (newCrl);
     }
     return (crl);
-}
-
-/*
- * This code takes the NSPR CallOnce functionality and modifies it so 
- * that we can pass an argument to our function
- */
-static struct {
-    PRLock *ml;
-    PRCondVar *cv;
-} mod_init;
-
-void SECMOD_InitCallOnce(void) {
-    mod_init.ml = PR_NewLock();
-    PORT_Assert(NULL != mod_init.ml);
-    mod_init.cv = PR_NewCondVar(mod_init.ml);
-    PORT_Assert(NULL != mod_init.cv);
-}
-
-void SECMOD_CleanupCallOnce(void)
-{
-    if (mod_init.ml) {
-	PR_DestroyLock(mod_init.ml);
-	mod_init.ml = NULL;
-    }
-    if (mod_init.cv) {
-	PR_DestroyCondVar(mod_init.cv);
-	mod_init.cv = NULL;
-    }
-}
-
-SECStatus SECMOD_CallOnce(SECMODCallOnceType *once,
-                          SECMODCallOnceFN    func,
-                          void               *arg)
-{
-
-    if (!once->initialized) {
-	if (PR_AtomicSet(&once->inProgress, 1) == 0) {
-	    once->status = (PRStatus)(*func)(arg);
-	    PR_Lock(mod_init.ml);
-	    once->initialized = 1;
-	    PR_NotifyAllCondVar(mod_init.cv);
-	    PR_Unlock(mod_init.ml);
-	} else {
-	    PR_Lock(mod_init.ml);
-	    while (!once->initialized) {
-		PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
-	    }
-	    PR_Unlock(mod_init.ml);
-	}
-    }
-    return once->status;
 }
