@@ -52,6 +52,7 @@
     commandupdater="true"
     events="focus,tree-select"
     oncommandupdate="CommandUpdate_Bookmarks()"/>
+  <commandset id="selectEditMenuItems"/>
   <commandset id="globalEditMenuItems">
     <command id="bm_cmd_find" oncommand="return OpenBookmarksFind();"/>
     <command id="bm_cmd_properties" oncommand="return BookmarkProperties();"/>
@@ -68,7 +69,6 @@
   <broadcaster id="bm_cmd_saveas"/>
   <!-- Edit Menu -->
   <broadcaster id="cmd_undo"/>
-  <broadcaster id="cmd_redo"/>
   <broadcaster id="cmd_cut"/>
   <broadcaster id="cmd_copy"/>
   <broadcaster id="cmd_paste"/>
@@ -87,7 +87,6 @@
     observes="bm_cmd_saveas"/>
   <!-- Edit Menu -->
   <key id="key_undo"/>
-  <key id="key_redo"/>
   <key id="key_cut"/>
   <key id="key_copy"/>
   <key id="key_paste"/>
@@ -144,12 +143,37 @@
   </menu>
 
   <menu id="menu_View">
-    <menupopup>
-      <menuitem value="&menuitem.newbookmarkfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setnewbookmarkfolder');" />
-      <menuitem value="&menuitem.newinternetsearchfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setnewsearchfolder');" />
-      <menuitem value="&menuitem.personaltoolbarfolder.label;" oncommand="return doContextCmd('http://home.netscape.com/NC-rdf#command?cmd=setpersonaltoolbarfolder');" />
+    <menupopup oncreate="fillViewMenu(this)">
+      <menuitem type="radio" name="sort_column" id="unsorted_menuitem"
+        value="&menuitem.view.unsorted.label;"
+        oncommand="return SetSortDirection('natural');"/>
+      <menuseparator id="fill_after_this_node" collapsed="true" />
+      <menuseparator id="fill_before_this_node"/>
+      <menuitem type="radio" name="sort_direction" id="sort_ascending"
+        value="&menuitem.view.ascending.label;"
+        oncommand="return SetSortDirection('ascending');"/>
+      <menuitem type="radio" name="sort_direction" id="sort_descending"
+        value="&menuitem.view.descending.label;"
+        oncommand="return SetSortDirection('descending');"/>
+      <menuseparator/>
+      <menu value="&menuitem.view.show_columns.label;">
+        <menupopup
+          oncreate="BuildTreePopup(document.getElementById('theColumns'), 
+                                   document.getElementById('headRow'), this,
+                                   document.getElementById('popupCell'))"/>
+      </menu>
+      <menuseparator/>
+      <menuitem value="&menuitem.newbookmarkfolder.label;"
+        oncommand="return doContextCmd(NC+'command?cmd=setnewbookmarkfolder')"/>
+      <menuitem value="&menuitem.newinternetsearchfolder.label;"
+        oncommand="return doContextCmd(NC+'command?cmd=setnewsearchfolder')"/>
+      <menuitem value="&menuitem.personaltoolbarfolder.label;"
+        oncommand="return doContextCmd(NC+'command?cmd=setpersonaltoolbarfolder')"/>
     </menupopup>
   </menu>
+  <menu id="tasksMenu" accesskey="t" />
+  <menu id="menu_Help" accesskey="h" />
+
 </menubar>
 </toolbox>
 
@@ -207,7 +231,7 @@
              web:status="rdf:http://home.netscape.com/WEB-rdf#status"
              rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type"
              loading="rdf:http://home.netscape.com/NC-rdf#loading" />
-           <treecell 
+           <treecell crop="center"
              value="rdf:http://home.netscape.com/NC-rdf#URL"/>
            <treecell
              value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
@@ -226,31 +250,31 @@
   </template>
 
   <treecolgroup id="theColumns">
-    <treecol id="NameColumn" sortSeparators="true"
-      persist="hidden width" width="4*"
+    <treecol id="Name"
+      sortSeparators="true" persist="hidden width" width="4*"
       rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="URLColumn" sortSeparators="true"
-      persist="hidden width" width="4*"
+    <treecol id="URL"
+      sortSeparators="true" persist="hidden width" width="4*"
       rdf:resource="http://home.netscape.com/NC-rdf#URL"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="ShortcutURLColumn" sortSeparators="true"
-      persist="hidden width" width="1*"
+    <treecol id="ShortcutURL"
+      sortSeparators="true" persist="hidden width" width="1*"
       rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="DescriptionColumn" sortSeparators="true"
-      persist="hidden width" width="1*"
+    <treecol id="Description"
+      sortSeparators="true" persist="hidden width" width="1*"
       rdf:resource="http://home.netscape.com/NC-rdf#Description"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="LastVisitColumn" sortSeparators="true"
-      persist="hidden width" width="1*"
+    <treecol id="LastVisitDate"
+      sortSeparators="true" persist="hidden width" width="1*"
       rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="AddedOnColumn" sortSeparators="true"
-      persist="hidden width" width="1*"
+    <treecol id="BookmarkAddDate"
+      sortSeparators="true" persist="hidden width" width="1*"
       rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
-    <treecol id="LastModColumn" sortSeparators="true"
-      persist="hidden width" width="1*"
+    <treecol id="LastModifiedDate"
+      sortSeparators="true" persist="hidden width" width="1*"
       rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"
       rdf:resource2="http://home.netscape.com/NC-rdf#Name"/>
     <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
@@ -258,25 +282,49 @@
 
   <treehead>
     <treerow id="headRow">
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.lastvisit.label;" onclick="return doSort('astVisitColumn');" observes="LastVisitColumn" />
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
-      <treecell class="treecell-header sortDirectionIndicator" value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.name.label;"
+        onclick="return TriStateColumnSort('Name');"
+        observes="Name" />
+      <treecell class="treecell-header sortDirectionIndicator" 
+        value="&tree.header.url.label;"
+        onclick="return TriStateColumnSort('URL');"
+        observes="URL" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.shortcut.label;"
+        onclick="return TriStateColumnSort('ShortcutURL');"
+        observes="ShortcutURL" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.description.label;" 
+        onclick="return TriStateColumnSort('Description');"
+        observes="Description" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.lastvisit.label;"
+        onclick="return TriStateColumnSort('LastVisitDate');"
+        observes="LastVisitDate" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.addedon.label;"
+        onclick="return TriStateColumnSort('BookmarkAddDate');"
+        observes="BookmarkAddDate" />
+      <treecell class="treecell-header sortDirectionIndicator"
+        value="&tree.header.lastmod.label;" 
+        onclick="return TriStateColumnSort('LastModifiedDate');" 
+        observes="LastModifiedDate" />
       <treecell class="treecell-header" allowevents="true" id="popupCell">
         <menu>
           <image class="treecell-popup-icon"/>
           <menupopup popupanchor="bottomright" 
             popupalign="topright"
-            oncreate="BuildTreePopup(document.getElementById('theColumns'), document.getElementById('headRow'), this,
-            document.getElementById('popupCell'))"/>
+            oncreate="BuildTreePopup(document.getElementById('theColumns'), 
+                                     document.getElementById('headRow'), this,
+                                     document.getElementById('popupCell'))"/>
         </menu>
       </treecell>
     </treerow>
   </treehead>
-  <treechildren id="treechildren-bookmarks" onclick="return OpenURL(event, event.target.parentNode.parentNode, 'bookmarksTree');"/>
+  <treechildren id="treechildren-bookmarks" 
+   onclick="return OpenURL(event, event.target.parentNode.parentNode, 
+                           'bookmarksTree');"/>
 </tree>
 
 <!--
