@@ -248,8 +248,8 @@ nsWebShellWindow::~nsWebShellWindow()
   PR_DestroyLock(mSPTimerLock);
 }
 
-NS_IMPL_ADDREF(nsWebShellWindow);
-NS_IMPL_RELEASE(nsWebShellWindow);
+NS_IMPL_THREADSAFE_ADDREF(nsWebShellWindow);
+NS_IMPL_THREADSAFE_RELEASE(nsWebShellWindow);
 
 NS_INTERFACE_MAP_BEGIN(nsWebShellWindow)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebShellContainer)
