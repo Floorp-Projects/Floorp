@@ -347,6 +347,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord x = deadSpaceMargin.left;
   nscoord y = deadSpaceMargin.top;// Running y-offset for each page
 
+  nsSize reflowPageSize(0,0);
+
   // See if it's an incremental reflow command
   if (eReflowReason_Incremental == aReflowState.reason) {
     // XXX Skip Incremental reflow, 
@@ -380,6 +382,8 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
       // Place and size the page. If the page is narrower than our
       // max width then center it horizontally
       ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, x, y, 0, status);
+
+      reflowPageSize.SizeTo(kidSize.width, kidSize.height);
 
       FinishReflowChild(kidFrame, aPresContext, nsnull, kidSize, x, y, 0);
       y += kidSize.height;
@@ -453,7 +457,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Return our desired size
   aDesiredSize.height  = y;
-  aDesiredSize.width   = pageSize.width+deadSpaceMargin.left+shadowSize.width;
+  aDesiredSize.width   = reflowPageSize.width+deadSpaceMargin.right+shadowSize.width+extraMargin.right+extraMargin.left;
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
 
