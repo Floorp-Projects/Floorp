@@ -375,19 +375,25 @@ nsContextMenu.prototype = {
     // Copy link/image url to clipboard.
     copyToClipboard : function ( text ) {
         // Get clipboard.
-        var clipboard = getServiceById( "{8B5314BA-DB01-11d2-96CE-0060B0FB9956}",
-                                        "nsIClipboard" );
+        var clipboard = Components
+                          .classes["component://netscape/widget/clipboard"]
+                            .getService ( Components.interfaces.nsIClipboard );
         // Create tranferable that will transfer the text.
-        var transferable = createInstanceById( "{8B5314BC-DB01-11d2-96CE-0060B0FB9956}",
-                                               "nsITransferable" );
-        transferable.addDataFlavor( "text/plain" );
-        // Create wrapper for text.
-        var data = createInstance( "component://netscape/supports-string",
-                                   "nsISupportsString" );
-        data.data = text ;
-        transferable.setTransferData( "text/plain", data, text.length * 2 );
-        // Put on clipboard.
-        clipboard.setData( transferable, null );
+        var transferable = Components
+                             .classes["component://netscape/widget/transferable"]
+                               .createInstance( Components.interfaces.nsITransferable );
+        if ( clipboard && transferable ) {
+          transferable.addDataFlavor( "text/plain" );
+          // Create wrapper for text.
+          var data = createInstance( "component://netscape/supports-string",
+                                      "nsISupportsString" );
+          if ( data ) {
+            data.data = text ;
+            transferable.setTransferData( "text/plain", data, text.length );
+            // Put on clipboard.
+            clipboard.setData( transferable, null );
+          }
+        }
     },
     // Save specified URL in user-selected file.
     savePage : function ( url ) {
