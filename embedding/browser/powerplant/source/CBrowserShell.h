@@ -43,7 +43,6 @@
 
 class CBrowserWindow;
 class CURIContentListener;
-class CFindComponent;
 class nsIContentViewer;
 class nsIClipboardCommands;
 
@@ -136,12 +135,11 @@ protected:
    
    void                     HandleMouseMoved(const EventRecord& inMacEvent);
    void                     AdjustFrame();
-   NS_METHOD                EnsureFinder();
-   virtual Boolean          GetFindParams(nsString& searchText,
-                                          PRBool& caseSensitive,
-                                          PRBool& searchBackwards,
-                                          PRBool& wrapSearch,
-                                          PRBool& entireWord);
+   virtual Boolean          DoFindDialog(nsString& searchText,
+                                         PRBool& findBackwards,
+                                         PRBool& wrapFind,
+                                         PRBool& entireWord,
+                                         PRBool& caseSensitive);
    NS_METHOD                GetClipboardHandler(nsIClipboardCommands **aCommand);
    
    Boolean                  HasFormElements();
@@ -154,8 +152,6 @@ protected:
    nsCOMPtr<nsIWebBrowser>       mWebBrowser;            // The thing we actually create
    nsCOMPtr<nsIBaseWindow>       mWebBrowserAsBaseWin;   // Convenience interface to above 
    nsCOMPtr<nsIWebNavigation>    mWebBrowserAsWebNav;    // Ditto
-   
-   CFindComponent*            mFinder;
 };
 
 

@@ -30,6 +30,7 @@
 #include "nsWidgetsCID.h"
 #include "nsRepeater.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsIWebBrowserChrome.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
@@ -46,13 +47,13 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIWebBrowserFind.h"
 
 #include <UModalDialogs.h>
 #include <LStream.h>
 
 #include "ApplIDs.h"
 #include "CBrowserWindow.h"
-#include "CFindComponent.h"
 #include "UMacUnicode.h"
 
 // PowerPlant
@@ -74,8 +75,7 @@ nsMacMessageSink	CBrowserShell::mMessageSink;
 //***    CBrowserShell: constructors/destructor
 //*****************************************************************************
 
-CBrowserShell::CBrowserShell() :
-   mFinder(nsnull)
+CBrowserShell::CBrowserShell()
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -85,8 +85,7 @@ CBrowserShell::CBrowserShell() :
 
 CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
 						  	 const SViewInfo	&inViewInfo) :
-    LView(inPaneInfo, inViewInfo),
-    mFinder(nsnull)
+    LView(inPaneInfo, inViewInfo)
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -95,8 +94,7 @@ CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
 
 
 CBrowserShell::CBrowserShell(LStream*	inStream) :
-	LView(inStream),
-	mFinder(nsnull)
+	LView(inStream)
 {
 	*inStream >> (StringPtr) mInitURL;
 	
@@ -108,8 +106,6 @@ CBrowserShell::CBrowserShell(LStream*	inStream) :
 
 CBrowserShell::~CBrowserShell()
 {
-    delete mFinder;
-
     // nsCOMPtr destructors, do your thing
 }
 
@@ -601,31 +597,34 @@ NS_METHOD CBrowserShell::LoadURL(const nsString& urlText)
 
 Boolean CBrowserShell::Find()
 {
-    // Make sure we have a finder
-    nsresult rv = EnsureFinder();
-    if (NS_FAILED(rv))   // Throw an exception??
-      return FALSE;
+    nsresult rv;
+    nsXPIDLString stringBuf;
+    PRBool  findBackwards;
+    PRBool  wrapFind;
+    PRBool  entireWord;
+    PRBool  matchCase;
 
-    // Get the current find params from it
-    nsString  searchString;
-    PRBool   caseSensitive;
-    PRBool   wrapSearch;
-    PRBool   seachBackwards;
-    PRBool   entireWord;
+    nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
+    if (!finder) return FALSE;
+    finder->GetSearchString(getter_Copies(stringBuf));
+    finder->GetFindBackwards(&findBackwards);    
+    finder->GetWrapFind(&wrapFind);    
+    finder->GetEntireWord(&entireWord);    
+    finder->GetMatchCase(&matchCase);    
 
-    mFinder->GetLastSearchString(searchString);
-    mFinder->GetLastCaseSensitive(caseSensitive);
-    mFinder->GetLastWrapSearch(wrapSearch);
-    mFinder->GetLastSearchBackwards(seachBackwards);
-    mFinder->GetLastEntireWord(entireWord);
+    Boolean     result = FALSE;
+    nsString    searchString(stringBuf.get());
 
-    Boolean   result = FALSE;
-
-    if (GetFindParams(searchString, caseSensitive, seachBackwards, wrapSearch, entireWord))
+    if (DoFindDialog(searchString, findBackwards, wrapFind, entireWord, matchCase))
     {
         PRBool  didFind;
 
-        mFinder->Find(searchString, caseSensitive, seachBackwards, wrapSearch, entireWord, didFind);
+        finder->SetSearchString(searchString.GetUnicode());
+        finder->SetFindBackwards(findBackwards);    
+        finder->SetWrapFind(wrapFind);    
+        finder->SetEntireWord(entireWord);    
+        finder->SetMatchCase(matchCase);    
+        rv = finder->FindNext(&didFind);
         result = (NS_SUCCEEDED(rv) && didFind);
         if (!result)
           ::SysBeep(1);
@@ -635,20 +634,25 @@ Boolean CBrowserShell::Find()
 
 
 Boolean CBrowserShell::Find(const nsString& searchString,
-                                Boolean caseSensitive,
-                                Boolean searchBackwards,
-                                Boolean wrapSearch,
-                                Boolean entireWord)
+                            Boolean findBackwards,
+                            Boolean wrapFind,
+                            Boolean entireWord,
+                            Boolean matchCase)
 {
-    // Make sure we have a finder
-    nsresult rv = EnsureFinder();
-    if (NS_FAILED(rv))   // Throw an exception??
-    return FALSE;
+    nsresult    rv;
+    Boolean     result;
+    PRBool      didFind;
 
-    Boolean   result;
-    PRBool   didFind;
+    nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
+    if (!finder) return FALSE;
 
-    rv = mFinder->Find(searchString, caseSensitive, searchBackwards, wrapSearch, entireWord, didFind);
+    finder->SetSearchString(searchString.GetUnicode());
+    finder->SetFindBackwards(findBackwards);    
+    finder->SetWrapFind(wrapFind);    
+    finder->SetEntireWord(entireWord);    
+    finder->SetMatchCase(matchCase);    
+
+    rv = finder->FindNext(&didFind);
     result = (NS_SUCCEEDED(rv) && didFind);
     if (!result)
         ::SysBeep(1);
@@ -658,29 +662,26 @@ Boolean CBrowserShell::Find(const nsString& searchString,
 
 Boolean CBrowserShell::CanFindNext()
 {
-    if (!mFinder)
-        return FALSE;
-
     nsresult    rv;
-    PRBool      canDo;
-     
-    rv = mFinder->CanFindNext(canDo);
-    return (NS_SUCCEEDED(rv) && canDo);
+
+    nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
+    if (!finder) return FALSE;
+    
+    nsXPIDLString searchStr;
+    rv = finder->GetSearchString(getter_Copies(searchStr));
+    return (NS_SUCCEEDED(rv) && nsCRT::strlen(searchStr) != 0);
 }
 
 
 Boolean CBrowserShell::FindNext()
 {
-    if (!mFinder)
-    {
-        SignalStringLiteral_("This should not be called until Find is called");
-        return FALSE;
-    }
+    nsresult    rv;
+    Boolean     result;
+    PRBool      didFind;
 
-    Boolean   result;
-    PRBool   didFind;
-
-    nsresult rv = mFinder->FindNext(didFind);
+    nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
+    if (!finder) return FALSE;
+    rv = finder->FindNext(&didFind);
     result = (NS_SUCCEEDED(rv) && didFind);
     if (!result)
         ::SysBeep(1);
@@ -711,34 +712,11 @@ void CBrowserShell::AdjustFrame()
 }
 
 
-NS_METHOD CBrowserShell::EnsureFinder()
-{
-    nsCOMPtr<nsIDocShell> ourDocShell(do_GetInterface(mWebBrowser));
-
-    if (mFinder)
-    {
-        // For now, we have to clear the context each time.
-        // The finder should be a nsIDocumentLoaderObserver and then
-        // it could clear itself when the contents of our docshell changed.
-
-        mFinder->SetContext(nsnull);
-        mFinder->SetContext(ourDocShell);
-        return NS_OK;
-    }
-      
-    mFinder = new CFindComponent;
-    NS_ENSURE_TRUE(mFinder, NS_ERROR_OUT_OF_MEMORY);   
-    mFinder->SetContext(ourDocShell);
-
-    return NS_OK;
-}
-
-
-Boolean CBrowserShell::GetFindParams(nsString& searchText,
-                                     PRBool& caseSensitive,
-                                     PRBool& searchBackwards,
-                                     PRBool& wrapSearch,
-                                     PRBool& entireWord)
+Boolean CBrowserShell::DoFindDialog(nsString& searchText,
+                                     PRBool& findBackwards,
+                                     PRBool& wrapFind,
+                                     PRBool& entireWord,
+                                     PRBool& caseSensitive)
 {
     enum
     {
@@ -777,10 +755,10 @@ Boolean CBrowserShell::GetFindParams(nsString& searchText,
         entireWordCheck->SetValue(entireWord ? 1 : 0);
         wrapAroundCheck = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID(kWrapAroundCheck));
         ThrowIfNot_(wrapAroundCheck);
-        wrapAroundCheck->SetValue(wrapSearch ? 1 : 0);
+        wrapAroundCheck->SetValue(wrapFind ? 1 : 0);
         backwardsCheck = dynamic_cast<LCheckBox*>(theDialog->FindPaneByID(kSearchBackwardsCheck));
         ThrowIfNot_(backwardsCheck);
-        backwardsCheck->SetValue(searchBackwards ? 1 : 0);
+        backwardsCheck->SetValue(findBackwards ? 1 : 0);
 
         theDialog->Show();
 
@@ -801,8 +779,8 @@ Boolean CBrowserShell::GetFindParams(nsString& searchText,
 
                 caseSensitive = caseSensCheck->GetValue() ? TRUE : FALSE;
                 entireWord = entireWordCheck->GetValue() ? TRUE : FALSE;
-                wrapSearch = wrapAroundCheck->GetValue() ? TRUE : FALSE;
-                searchBackwards = backwardsCheck->GetValue() ? TRUE : FALSE;
+                wrapFind = wrapAroundCheck->GetValue() ? TRUE : FALSE;
+                findBackwards = backwardsCheck->GetValue() ? TRUE : FALSE;
 
                 result = TRUE;
                 break;
