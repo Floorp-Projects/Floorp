@@ -2255,8 +2255,10 @@ nsHTMLInputElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   if (mType == NS_FORM_INPUT_SUBMIT && value.IsEmpty() &&
       !HasAttr(kNameSpaceID_None, nsHTMLAtoms::value)) {
     // Get our default value, which is the same as our default label
+    nsXPIDLString defaultValue;
     nsContentUtils::GetLocalizedString(nsContentUtils::eFORMS_PROPERTIES,
-                                       "Submit", value);
+                                       "Submit", defaultValue);
+    value = defaultValue;
   }
       
   //
