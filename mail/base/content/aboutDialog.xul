@@ -37,6 +37,7 @@
 # ***** END LICENSE BLOCK ***** -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/aboutDialog.css" type="text/css"?> 
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
@@ -47,10 +48,11 @@
 
 <dialog xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="aboutDialog"
         buttons="accept"
         onload="onLoad();"
         title="&aboutDialog.title;"
-        style="width: 20em; height: 16.3em;"> 
+        style="width: 300px; height: 16.3em;"> 
 
     <script type="application/x-javascript">
       <![CDATA[
@@ -76,21 +78,26 @@
       ]]>
     </script>
 
-    <vbox align="center" flex="1">
+    <vbox flex="1" id="clientBox">
       <image src="chrome://messenger/content/about-thunderbird.png"/>
 
-      <hbox>
-        <vbox>
-          <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
-          <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important; font-weight: bold;" tabindex="2"/>
-        </vbox>
-      </hbox>
+      <vbox id="detailsBox" align="center" flex="1">
+        <separator class="thin"/>
 
-      <separator class="thin"/>
+        <hbox>
+          <vbox>
+            <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
+            <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important;" tabindex="2"/>
+          </vbox>
+        </hbox>
 
-      <html:a id="copyrightLink" onclick="return loadExternalLink();" href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
+        <separator class="thin"/>
+
+        <html:a id="copyrightLink" onclick="return loadExternalLink();" href="&copyrightLink;" style="display: block; color: blue; text-decoration: underline;" tabindex="3">&copyright;</html:a>
+      </vbox>
     </vbox>
-    <separator class="groove"/>
+    
+    <separator class="groove" id="groove"/>
     
     <!-- Localizable strings (from .dtd) -->
     <strings style="display:none;">
