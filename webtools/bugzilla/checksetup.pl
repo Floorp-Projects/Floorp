@@ -1877,6 +1877,15 @@ if (!$class_count) {
 # Update the tables to the current definition
 ###########################################################################
 
+# BEGIN LEGACY CHECKS
+# The checks in this block are only run on old MySQL databases.
+# The checks after this block are cross-db compatible.
+# Look for "END LEGACY CHECKS" to find the end of this block.
+
+# Both legacy code and modern code need this variable.
+my @admins = ();
+if ($dbh->isa('Bugzilla::DB::Mysql')) {
+
 # really old fields that were added before checksetup.pl existed
 # but aren't in very old bugzilla's (like 2.1)
 # Steve Stock (sstock@iconnect-inc.com)
@@ -2935,7 +2944,6 @@ sub ListBits {
     return @res;
 }
 
-my @admins = ();
 # The groups system needs to be converted if groupset exists
 if ($dbh->bz_get_field_def("profiles", "groupset")) {
     $dbh->bz_add_field('groups', 'last_changed', 'datetime not null');
@@ -3837,6 +3845,10 @@ $dbh->bz_change_field_type('bugs', 'votes', 'mediumint not null default 0');
 
 # 2005-03-03 travis@sedsystems.ca -- Bug 41972
 add_setting ("display_quips", {"on" => 1, "off" => 2 }, "on" );
+
+} # END LEGACY CHECKS
+
+
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.
