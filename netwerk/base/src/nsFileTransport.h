@@ -24,7 +24,7 @@
 #include "plevent.h"
 
 class nsFileTransportService;
-class nsIInputStream;
+class nsIBaseStream;
 class nsIString;
 class nsIByteBufferInputStream;
 
@@ -57,9 +57,10 @@ public:
     virtual ~nsFileTransport();
 
     enum State {
-        STARTING,
-        RUNNING,
-        SUSPENDED,
+        START_READ,
+        READING,
+        START_WRITE,
+        WRITING,
         ENDING,
         ENDED
     };
@@ -77,9 +78,10 @@ protected:
     nsIStreamListener*          mListener;
     nsFileTransportService*     mService;
     State                       mState;
+    PRBool                      mSuspended;
 
     // state variables:
-    nsIInputStream*             mFileStream;
+    nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/writing
     nsIByteBufferInputStream*   mBufferStream;
     nsresult                    mStatus;
 };
