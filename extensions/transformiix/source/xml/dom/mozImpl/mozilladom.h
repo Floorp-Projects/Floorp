@@ -47,7 +47,7 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 #include "pldhash.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "TxObject.h"
 
 #define kTxNsNodeIndexOffset 0x00000000;

@@ -246,9 +246,8 @@ void txXMLOutput::startElement(const nsAString& aName,
     mCDATASections.push((void*)mInCDATASection);
     mInCDATASection = MB_FALSE;
 
-    nsIAtom* localName = TX_GET_ATOM(aName);
+    nsCOMPtr<nsIAtom> localName = do_GetAtom(aName);
     txExpandedName currentElement(aNsID, localName);
-    TX_IF_RELEASE_ATOM(localName);
     txListIterator iter(&(mOutputFormat.mCDATASectionElements));
     while (iter.hasNext()) {
         if (currentElement == *(txExpandedName*)iter.next()) {

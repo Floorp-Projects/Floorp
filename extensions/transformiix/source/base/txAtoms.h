@@ -39,7 +39,7 @@
 #ifndef TRANSFRMX_ATOMS_H
 #define TRANSFRMX_ATOMS_H
 
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "baseutils.h"
 
 /*

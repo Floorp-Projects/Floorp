@@ -131,6 +131,6 @@ ExprResult* DocumentFunctionCall::evaluate(txIEvalContext* aContext)
 nsresult DocumentFunctionCall::getNameAtom(nsIAtom** aAtom)
 {
     *aAtom = txXSLTAtoms::document;
-    TX_ADDREF_ATOM(*aAtom);
+    NS_ADDREF(*aAtom);
     return NS_OK;
 }

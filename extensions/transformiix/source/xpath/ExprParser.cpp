@@ -326,17 +326,16 @@ Expr* ExprParser::createFilterExpr(ExprLexer& lexer, txIParseContext* aContext)
             break;
         case Token::VAR_REFERENCE :
             {
-                nsIAtom *prefix, *lName;
+                nsCOMPtr<nsIAtom> prefix, lName;
                 PRInt32 nspace;
-                nsresult rv = resolveQName(tok->value, prefix, aContext,
-                                           lName, nspace);
+                nsresult rv = resolveQName(tok->value, *getter_AddRefs(prefix),
+                                           aContext, *getter_AddRefs(lName),
+                                           nspace);
                 if (NS_FAILED(rv)) {
                     // XXX error report namespace resolve failed
                     return 0;
                 }
                 expr = new VariableRefExpr(prefix, lName, nspace);
-                TX_IF_RELEASE_ATOM(prefix);
-                TX_IF_RELEASE_ATOM(lName);
             }
             break;
         case Token::L_PAREN:
@@ -490,16 +489,15 @@ Expr* ExprParser::createFunctionCall(ExprLexer& lexer,
         fnCall = new NumberFunctionCall(NumberFunctionCall::FLOOR);
     }
     else {
-        nsIAtom *prefix, *lName;
+        nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 namespaceID;
-        rv = resolveQName(tok->value, prefix, aContext, lName, namespaceID);
+        rv = resolveQName(tok->value, *getter_AddRefs(prefix), aContext,
+                          *getter_AddRefs(lName), namespaceID);
         if (NS_FAILED(rv)) {
             // XXX error report namespace resolve failed
             return 0;
         }
         rv = aContext->resolveFunctionCall(lName, namespaceID, fnCall);
-        TX_IF_RELEASE_ATOM(prefix);
-        TX_IF_RELEASE_ATOM(lName);
 
         // XXX this should be removed once we don't return
         // NS_ERROR_NOT_IMPLEMENTED for unparsed-entity-uri(). As should the
@@ -640,10 +638,12 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
             case Token::CNAME :
                 {
                     // resolve QName
-                    nsIAtom *prefix, *lName;
+                    nsCOMPtr<nsIAtom> prefix, lName;
                     PRInt32 nspace;
-                    nsresult rv = resolveQName(tok->value, prefix, aContext,
-                                               lName, nspace);
+                    nsresult rv = resolveQName(tok->value,
+                                               *getter_AddRefs(prefix),
+                                               aContext,
+                                               *getter_AddRefs(lName), nspace);
                     if (NS_FAILED(rv)) {
                         // XXX error report namespace resolve failed
                         return 0;
@@ -658,8 +658,6 @@ LocationStep* ExprParser::createLocationStep(ExprLexer& lexer,
                                                       Node::ELEMENT_NODE);
                             break;
                     }
-                    TX_IF_RELEASE_ATOM(prefix);
-                    TX_IF_RELEASE_ATOM(lName);
                 }
                 if (!nodeTest) {
                     //XXX ErrorReport: out of memory
@@ -1019,22 +1017,21 @@ nsresult ExprParser::resolveQName(const nsAString& aQName,
     aNamespace = kNameSpaceID_None;
     PRInt32 idx = aQName.FindChar(':');
     if (idx > 0) {
-        aPrefix = TX_GET_ATOM(Substring(aQName, 0, (PRUint32)idx));
+        aPrefix = NS_NewAtom(Substring(aQName, 0, (PRUint32)idx));
         if (!aPrefix) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        aLocalName = TX_GET_ATOM(Substring(aQName, (PRUint32)idx + 1,
-                                           aQName.Length() - (idx + 1)));
+        aLocalName = NS_NewAtom(Substring(aQName, (PRUint32)idx + 1,
+                                          aQName.Length() - (idx + 1)));
         if (!aLocalName) {
-            TX_RELEASE_ATOM(aPrefix);
-            aPrefix = 0;
+            NS_RELEASE(aPrefix);
             return NS_ERROR_OUT_OF_MEMORY;
         }
         return aContext->resolveNamespacePrefix(aPrefix, aNamespace);
     }
     // the lexer dealt with idx == 0
     aPrefix = 0;
-    aLocalName = TX_GET_ATOM(aQName);
+    aLocalName = NS_NewAtom(aQName);
     if (!aLocalName) {
         return NS_ERROR_OUT_OF_MEMORY;
     }

@@ -25,7 +25,7 @@
 
 #include "Expr.h"
 #include "ExprResult.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "txIXPathContext.h"
 
 /**
@@ -176,15 +176,13 @@ MBool FunctionCall::requireParams(int paramCountMin, txIEvalContext* aContext)
 **/
 void FunctionCall::toString(nsAString& aDest)
 {
-    nsIAtom* functionNameAtom = 0;
+    nsCOMPtr<nsIAtom> functionNameAtom;
     nsAutoString functionName;
-    if (!NS_SUCCEEDED(getNameAtom(&functionNameAtom)) ||
-        !TX_GET_ATOM_STRING(functionNameAtom, functionName)) {
+    if (NS_FAILED(getNameAtom(getter_AddRefs(functionNameAtom))) ||
+        NS_FAILED(functionNameAtom->ToString(functionName))) {
         NS_ASSERTION(0, "Can't get function name.");
-        TX_IF_RELEASE_ATOM(functionNameAtom);
         return;
     }
-    TX_RELEASE_ATOM(functionNameAtom);
 
     aDest.Append(functionName);
     aDest.Append(PRUnichar('('));

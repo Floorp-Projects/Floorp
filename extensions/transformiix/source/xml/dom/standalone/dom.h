@@ -39,7 +39,7 @@
 #endif
 
 #include "List.h"
-#include "txAtom.h"
+#include "nsIAtom.h"
 #include "baseutils.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -431,7 +431,7 @@ class Element : public NodeDefinition
             Document* aOwner);
 
     AttrMap mAttributes;
-    nsIAtom* mLocalName;
+    nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespaceID;
 };
 
@@ -470,7 +470,7 @@ class Attr : public NodeDefinition
 
     Element* ownerElement;
 
-    nsIAtom* mLocalName;
+    nsCOMPtr<nsIAtom> mLocalName;
     PRInt32 mNamespaceID;
 };
 
@@ -495,7 +495,7 @@ class ProcessingInstruction : public NodeDefinition
     ProcessingInstruction(const nsAString& theTarget, const nsAString& theData,
                           Document* owner);
 
-    nsIAtom* mLocalName;
+    nsCOMPtr<nsIAtom> mLocalName;
 };
 
 class txNamespaceManager

@@ -95,6 +95,6 @@ MBool Attr::getLocalName(nsIAtom** aLocalName)
     }
     *aLocalName = mLocalName;
     NS_ENSURE_TRUE(*aLocalName, MB_FALSE);
-    TX_ADDREF_ATOM(*aLocalName);
+    NS_ADDREF(*aLocalName);
     return MB_TRUE;
 }
