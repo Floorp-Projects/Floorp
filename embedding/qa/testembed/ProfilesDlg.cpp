@@ -133,8 +133,8 @@ CProfilesDlg::CProfilesDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CProfilesDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CProfilesDlg)
-    m_bAtStartUp = FALSE;
-	m_bAskAtStartUp = FALSE;
+    m_bAtStartUp = TRUE;
+	m_bAskAtStartUp = TRUE;
 	//}}AFX_DATA_INIT
 }
 
@@ -203,7 +203,7 @@ BOOL CProfilesDlg::OnInitDialog()
 
     m_ProfileList.SetCurSel(selectedRow);
 
-    if (m_bAtStartUp)
+	if (m_bAtStartUp)
     {
         GetDlgItem(IDCANCEL)->EnableWindow(FALSE);
     }
@@ -270,6 +270,7 @@ void CProfilesDlg::OnRenameProfile()
 void CProfilesDlg::OnDeleteProfile() 
 {
     int itemIndex = m_ProfileList.GetCurSel();
+
     ASSERT(itemIndex != LB_ERR);
     if (itemIndex == LB_ERR)
         return;
@@ -281,12 +282,12 @@ void CProfilesDlg::OnDeleteProfile()
     //NS_WITH_SERVICE(nsIProfile, profileService, NS_PROFILE_CONTRACTID, &rv);
     nsCOMPtr<nsIProfile> profileService(do_GetService(NS_PROFILE_CONTRACTID,&rv));
 
-    ASSERT(NS_SUCCEEDED(rv));
+	ASSERT(NS_SUCCEEDED(rv));
     if (NS_SUCCEEDED(rv))
     {
         USES_CONVERSION;
 
-        rv = profileService->DeleteProfile(T2W(selectedProfile), PR_TRUE);
+	    rv = profileService->DeleteProfile(T2W(selectedProfile), PR_TRUE);
         ASSERT(NS_SUCCEEDED(rv));
         if (NS_SUCCEEDED(rv))
         {
