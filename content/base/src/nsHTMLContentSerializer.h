@@ -63,17 +63,17 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   void SerializeAttributes(nsIContent* aContent,
                            nsIAtom* aTagName,
                            nsAWritableString& aStr);
-  void AppendToString(const PRUnichar* aStr,
-                      PRInt32 aLength,
-                      nsAWritableString& aOutputStr);
-  void AppendToString(const nsAReadableString& aStr,
-                      PRInt32 aLength,
-                      nsAWritableString& aOutputStr,
-                      PRBool aTranslateEntities = PR_FALSE);
-  void AppendToStringWrapped(const nsAReadableString& aStr,
-                             PRInt32 aLength,
-                             nsAWritableString& aOutputStr,
-                             PRBool aTranslateEntities);
+  virtual void AppendToString(const PRUnichar* aStr,
+                              PRInt32 aLength,
+                              nsAWritableString& aOutputStr);
+  virtual void AppendToString(const PRUnichar aChar,
+                              nsAWritableString& aOutputStr);
+  virtual void AppendToString(const nsAReadableString& aStr,
+                              nsAWritableString& aOutputStr,
+                              PRBool aTranslateEntities = PR_FALSE);
+  virtual void AppendToStringWrapped(const nsAReadableString& aStr,
+                                     nsAWritableString& aOutputStr,
+                                     PRBool aTranslateEntities);
   PRBool HasLongLines(const nsString& text);
 
   nsCOMPtr<nsIParserService> mParserService;
@@ -92,7 +92,6 @@ class nsHTMLContentSerializer : public nsXMLContentSerializer {
   PRInt32   mMaxColumn;
   
   nsString  mLineBreak;
-  PRInt32   mLineBreakLen;
 };
 
 extern nsresult NS_NewHTMLContentSerializer(nsIContentSerializer** aSerializer);

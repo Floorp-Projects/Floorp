@@ -112,19 +112,15 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn)
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
       && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows/mail
     mLineBreak.AssignWithConversion("\r\n");
-    mLineBreakLen = 2;
   }
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) { // Mac
     mLineBreak.AssignWithConversion("\r");
-    mLineBreakLen = 1;
   }
   else if (mFlags & nsIDocumentEncoder::OutputLFLineBreak) { // Unix/DOM
     mLineBreak.AssignWithConversion("\n");
-    mLineBreakLen = 1;
   }
   else {
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
-    mLineBreakLen = NS_LINEBREAK_LEN;
   }
 
   mPreLevel = 0;
@@ -144,20 +140,14 @@ nsHTMLContentSerializer::AppendText(nsIDOMText* aText,
 
   nsresult rv;
   rv = AppendTextData((nsIDOMNode*)aText, aStartOffset, 
-                      aEndOffset, data);
+                      aEndOffset, data, PR_TRUE);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
 
   if (mPreLevel || (!mDoFormat && !HasLongLines(data))) {
-    AppendToString(data,
-                   data.Length(),
-                   aStr,
-                   PR_TRUE);
+    AppendToString(data, aStr);
   }
   else {
-    AppendToStringWrapped(data,
-                          data.Length(),
-                          aStr,
-                          PR_TRUE);
+    AppendToStringWrapped(data, aStr, PR_FALSE);
   }
 
   return NS_OK;
@@ -254,7 +244,7 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   }
 
   if (LineBreakBeforeOpen(name, hasDirtyAttr)) {
-    AppendToString(mLineBreak, mLineBreakLen, aStr);
+    AppendToString(mLineBreak, aStr);
     mColPos = 0;
   }
 
@@ -264,18 +254,18 @@ nsHTMLContentSerializer::AppendElementStart(nsIDOMElement *aElement,
   
   StartIndentation(name, hasDirtyAttr, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kLessThan), -1, aStr);
+  AppendToString(NS_LITERAL_STRING(kLessThan), aStr);
 
   nsXPIDLString sharedName;
   name->GetUnicode(getter_Shares(sharedName));
-  AppendToString(sharedName, nsCRT::strlen(sharedName), aStr);
+  AppendToString(sharedName, -1, aStr);
 
   SerializeAttributes(content, name, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kGreaterThan), -1, aStr);
+  AppendToString(NS_LITERAL_STRING(kGreaterThan), aStr);
 
   if (LineBreakAfterOpen(name, hasDirtyAttr)) {
-    AppendToString(mLineBreak, mLineBreakLen, aStr);
+    AppendToString(mLineBreak, aStr);
     mColPos = 0;
   }
     
@@ -314,18 +304,18 @@ nsHTMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   }
 
   if (LineBreakBeforeClose(name, hasDirtyAttr)) {
-    AppendToString(mLineBreak, mLineBreakLen, aStr);
+    AppendToString(mLineBreak, aStr);
     mColPos = 0;
   }
 
   EndIndentation(name, hasDirtyAttr, aStr);
 
-  AppendToString(NS_LITERAL_STRING(kEndTag), -1, aStr);
+  AppendToString(NS_LITERAL_STRING(kEndTag), aStr);
   AppendToString(sharedName, -1, aStr);
-  AppendToString(NS_LITERAL_STRING(kGreaterThan), -1, aStr);
+  AppendToString(NS_LITERAL_STRING(kGreaterThan), aStr);
 
   if (LineBreakAfterClose(name, hasDirtyAttr)) {
-    AppendToString(mLineBreak, mLineBreakLen, aStr);
+    AppendToString(mLineBreak, aStr);
     mColPos = 0;
   }
 
@@ -345,19 +335,31 @@ nsHTMLContentSerializer::AppendToString(const PRUnichar* aStr,
   
   mColPos += length;
 
-  aOutputStr.Append(aStr);
+  aOutputStr.Append(aStr, length);
+}
+
+void 
+nsHTMLContentSerializer::AppendToString(const PRUnichar aChar,
+                                        nsAWritableString& aOutputStr)
+{
+  if (mBodyOnly && !mInBody) {
+    return;
+  }
+
+  mColPos += 1;
+
+  aOutputStr.Append(aChar);
 }
 
 void 
 nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
-                                               PRInt32 aLength,
                                                nsAWritableString& aOutputStr,
                                                PRBool aTranslateEntities)
 {
-  PRInt32 length = (aLength == -1) ? aStr.Length() : aLength;
+  PRInt32 length = aStr.Length();
 
   if ((mColPos + length) < mMaxColumn) {
-    AppendToString(aStr, length, aOutputStr, aTranslateEntities);
+    AppendToString(aStr, aOutputStr, aTranslateEntities);
   }
   else {
     nsAutoString line;
@@ -377,22 +379,20 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
       if (indx == kNotFound)
       {
         if (strOffset == 0) {
-          AppendToString(aStr, length, aOutputStr, aTranslateEntities);
+          AppendToString(aStr, aOutputStr, aTranslateEntities);
         }
         else {
           lineLength = length - strOffset;
           aStr.Right(line, lineLength);
-          AppendToString(line, lineLength, 
-                         aOutputStr, aTranslateEntities);
+          AppendToString(line, aOutputStr, aTranslateEntities);
         }
         done = PR_TRUE;
       }
       else {
         lineLength = indx - strOffset;
         aStr.Mid(line, strOffset, lineLength);
-        AppendToString(line, lineLength, 
-                       aOutputStr, aTranslateEntities);
-        AppendToString(mLineBreak, mLineBreakLen, aOutputStr);
+        AppendToString(line, aOutputStr, aTranslateEntities);
+        AppendToString(mLineBreak, aOutputStr);
         strOffset = indx+1;
         mColPos = 0;
       }
@@ -402,7 +402,6 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
 
 void
 nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
-                                        PRInt32 aLength,
                                         nsAWritableString& aOutputStr,
                                         PRBool aTranslateEntities)
 {
@@ -411,9 +410,8 @@ nsHTMLContentSerializer::AppendToString(const nsAReadableString& aStr,
   }
 
   nsresult rv;
-  PRInt32 length = (aLength == -1) ? aStr.Length() : aLength;
   
-  mColPos += length;
+  mColPos += aStr.Length();
 
   if (aTranslateEntities) {
     nsCOMPtr<nsIEntityConverter> converter;
