@@ -154,9 +154,9 @@ function SelectAddressOKButton()
     return false;
   }
   // reset the UI in compose window
-  msgCompFields.SetTo(toAddress);
-  msgCompFields.SetCc(ccAddress);
-  msgCompFields.SetBcc(bccAddress);
+  msgCompFields.to = toAddress;
+  msgCompFields.cc = ccAddress;
+  msgCompFields.bcc = bccAddress;
   top.composeWindow.CompFields2Recipients(top.msgCompFields);
 
   return true;
