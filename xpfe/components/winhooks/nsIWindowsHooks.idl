@@ -167,7 +167,8 @@ interface nsIWindowsHooks : nsISupports {
     // service is called.
     //   aParent - parent window for any dialogs that
     //             will appear
-    void checkSettings( in nsIDOMWindowInternal aParent );
+    //   Returns true if the windows integration dialog was shown
+    boolean checkSettings( in nsIDOMWindowInternal aParent );
 
     /**
      * Returns true if the "(appname) QuickLaunch" value is in the
