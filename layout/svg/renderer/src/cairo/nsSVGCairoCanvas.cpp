@@ -48,13 +48,21 @@
 #include "nsTransform2D.h"
 #include "nsPresContext.h"
 #include "nsRect.h"
-#include "nsRenderingContextGTK.h"
 #include "nsISVGCairoSurface.h"
-#include <gdk/gdkx.h>
 #include <cairo.h>
+
+#ifdef XP_MACOSX
+#include "nsIDrawingSurfaceMac.h"
+extern "C" {
+#include <cairo-quartz.h>
+}
+#else
+#include "nsRenderingContextGTK.h"
+#include <gdk/gdkx.h>
 extern "C" {
 #include <cairo-xlib.h>
 }
+#endif
 
 /**
  * \addtogroup cairo_renderer Cairo Rendering Engine
@@ -88,6 +96,11 @@ private:
   PRUint32 mWidth, mHeight;
   nsVoidArray mSurfaceStack;
   PRUint16 mRenderMode;
+
+#ifdef XP_MACOSX
+  nsCOMPtr<nsIDrawingSurfaceMac> mSurface;
+  CGContextRef mQuartzRef;
+#endif
 };
 
 
@@ -117,15 +130,40 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   mMozContext = ctx;
   NS_ASSERTION(mMozContext, "empty rendering context");
 
+  mCR = cairo_create();
+
+#ifdef XP_MACOSX
+  nsIDrawingSurface *surface;
+  ctx->GetDrawingSurface(&surface);
+  mSurface = do_QueryInterface(surface);
+  surface->GetDimensions(&mWidth, &mHeight);
+  mQuartzRef = mSurface->StartQuartzDrawing();
+
+  CGrafPtr port;
+  mSurface->GetGrafPtr(&port);
+  Rect portRect;
+  ::GetPortBounds(port, &portRect);
+
+#ifdef DEBUG_tor
+  fprintf(stderr, "CAIRO: DS=0x%08x port x=%d y=%d w=%d h=%d\n",
+          mSurface.get(), portRect.right, portRect.top,
+          portRect.right - portRect.left, portRect.bottom - portRect.top);
+#endif
+
+  ::SyncCGContextOriginWithPort(mQuartzRef, port);
+  cairo_set_target_quartz_context(mCR, mQuartzRef,
+                                  portRect.right - portRect.left,
+                                  portRect.bottom - portRect.top);
+#else
   nsDrawingSurfaceGTK *surface;
   ctx->GetDrawingSurface((nsIDrawingSurface**)&surface);
   surface->GetSize(&mWidth, &mHeight);
   GdkDrawable *drawable = surface->GetDrawable();
 
-  mCR = cairo_create();
   cairo_set_target_drawable(mCR,
                             GDK_WINDOW_XDISPLAY(drawable),
                             GDK_WINDOW_XWINDOW(drawable));
+#endif
 
   // get the translation set on the rendering context. It will be in
   // displayunits (i.e. pixels*scale), *not* pixels:
@@ -135,12 +173,23 @@ nsSVGCairoCanvas::Init(nsIRenderingContext *ctx,
   xform->GetTranslation(&dx, &dy);
   cairo_translate(mCR, dx, dy);
 
+#ifdef DEBUG_tor
+  fprintf(stderr, "cairo translate: %f %f\n", dx, dy);
+
+  fprintf(stderr, "cairo dirty: %d %d %d %d\n",
+                  dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
+#endif
+
+// the following should be done for all platforms, but clipping
+// is broken in the cairo quartz backend as of cairo-0.3.0
+#ifndef XP_MACOSX
   // clip to dirtyRect
   cairo_new_path(mCR);
   cairo_rectangle(mCR,
                   dirtyRect.x, dirtyRect.y, dirtyRect.width, dirtyRect.height);
   cairo_clip(mCR);
   cairo_new_path(mCR);
+#endif
 
   mRenderMode = SVG_RENDER_MODE_NORMAL;
 
@@ -231,6 +280,10 @@ nsSVGCairoCanvas::Clear(nscolor color)
 NS_IMETHODIMP
 nsSVGCairoCanvas::Flush()
 {
+#ifdef XP_MACOSX
+  if (mSurface)
+    mSurface->EndQuartzDrawing(mQuartzRef);
+#endif
   return NS_OK;
 }
 
