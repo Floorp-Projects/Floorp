@@ -609,6 +609,7 @@ nsStorageTransport::nsReadRequest::OnStopRequest(nsIRequest *aRequest,
     mListener = 0;
     mListenerContext = 0;
     mListenerProxy = 0;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
