@@ -73,22 +73,26 @@ function ThreadPaneOnClick(event)
 
 function ThreadPaneDoubleClick(treeitem,isClick)
 {
+	var loadedFolder;
+	var messageArray;
+	var messageUri;
+
 	if(IsSpecialFolderSelected("Drafts"))
 	{
-		var loadedFolder = GetLoadedMsgFolder();
-		var messageArray = GetSelectedMessages();
+		loadedFolder = GetLoadedMsgFolder();
+		messageArray = GetSelectedMessages();
 
 		ComposeMessage(msgComposeType.Draft, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
 	else if(IsSpecialFolderSelected("Templates"))
 	{
-		var loadedFolder = GetLoadedMsgFolder();
-		var messageArray = GetSelectedMessages();
+		loadedFolder = GetLoadedMsgFolder();
+		messageArray = GetSelectedMessages();
 		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
 	else if(isClick)
 	{
-		var messageUri = treeitem.getAttribute("id");
+		messageUri = treeitem.getAttribute("id");
 		MsgOpenNewWindowForMessage(messageUri, null);
 	}
 	else
@@ -100,7 +104,7 @@ function ThreadPaneDoubleClick(treeitem,isClick)
 		for(var i = 0; i < numMessages; i++)
 		{
 			var messageNode = selectedMessages[i];
-			var messageUri = messageNode.getAttribute("id");
+			messageUri = messageNode.getAttribute("id");
 			if(messageUri)
 			{
 				MsgOpenNewWindowForMessage(messageUri, null);
