@@ -20,7 +20,7 @@
 #include "nsMsgAppCore.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIDOMBaseAppCore.h"
-
+#include "nsJSMsgAppCore.h"
 
 static NS_DEFINE_IID(kIMsgAppCoreIID, NS_IDOMMSGAPPCORE_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
@@ -46,8 +46,9 @@ public:
   NS_IMETHOD GetNewMail();
 
 private:
-  nsString m_Id;
   
+  nsString mId;
+  void *mScriptObject;
 };
 
 //
@@ -56,7 +57,8 @@ private:
 nsMsgAppCore::nsMsgAppCore()
 {
   NS_INIT_REFCNT();
-
+  mScriptObject = nsnull;
+  
 }
 
 nsMsgAppCore::~nsMsgAppCore()
@@ -110,8 +112,18 @@ nsMsgAppCore::QueryInterface(REFNSIID aIID,void** aInstancePtr)
 nsresult
 nsMsgAppCore::GetScriptObject(nsIScriptContext *aContext, void **aScriptObject)
 {
+  NS_PRECONDITION(nsnull != aScriptObject, "null arg");
+  nsresult res = NS_OK;
+  if (nsnull == mScriptObject) 
+  {
+      res = NS_NewScriptMsgAppCore(aContext, 
+                                   (nsISupports *)(nsIDOMMsgAppCore*)this, 
+                                   nsnull, 
+                                   &mScriptObject);
+  }
 
-  return NS_OK;
+  *aScriptObject = mScriptObject;
+  return res;
 }
 
 nsresult
@@ -127,7 +139,7 @@ nsMsgAppCore::SetScriptObject(void* aScriptObject)
 nsresult
 nsMsgAppCore::Init(const nsString& aId)
 {
-  m_Id = aId;
+  mId = aId;
   return NS_OK;
 }
 
@@ -135,7 +147,7 @@ nsMsgAppCore::Init(const nsString& aId)
 nsresult
 nsMsgAppCore::GetId(nsString& aId)
 {
-  aId = m_Id;
+  aId = mId;
   return NS_OK;
 }
 
@@ -145,7 +157,7 @@ nsMsgAppCore::GetId(nsString& aId)
 nsresult
 nsMsgAppCore::GetNewMail()
 {
-
+  printf("nsMsgAppCore::GetNewMail()\n");
   return NS_OK;
 }
                               
