@@ -32,7 +32,7 @@ REQUIRES        = mozreg \
 ## exports
 
 EXPORTS =                         \
-        nsCategoryManagerUtil.h   \
+        nsCategoryManagerUtils.h   \
         nsComponentManagerObsolete.h \
         nsComponentManagerUtils.h \
         nsIComponentManagerUtils.h \
