@@ -239,7 +239,7 @@ function LocalFile(file, mode, perms, tmp)
     {
         this.outputStream = 
             classes[FILEOUT_CTRID].createInstance(nsIFileOutputStream);
-        this.outputStream.init(this.localFile, mode, perms);
+        this.outputStream.init(this.localFile, mode, perms, 0);
     }
     
     if (mode & (MODE_RDONLY | MODE_RDWR))
