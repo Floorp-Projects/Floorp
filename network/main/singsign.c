@@ -190,7 +190,7 @@ si_GetSignonRememberingPref(void)
            we need to reload the signon data */
         if (si_list_invalid)
         {
-                /* set si_list_invalid to FALSE first because SI_RemoveAllSignonData 
+                /* set si_list_invalid to FALSE first because SI_RemoveAllSignonData
                    calls si_GetSignonRememberingPref */
             si_list_invalid = FALSE;
             SI_RemoveAllSignonData();
@@ -1071,7 +1071,7 @@ SI_StartOfForm() {
 OSStatus PR_CALLBACK
 si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userContext ) {
         Bool    *listInvalid = (Bool*)userContext;
-        
+
         *listInvalid = TRUE;
 }
 #endif
@@ -1104,25 +1104,25 @@ si_LoadSignonDataFromKeychain() {
     KCProtocolType      protocol = kNetscapeProtocolType;
     OSStatus            status = noErr;
     KCSearchRef         searchRef = NULL;
-        
+
     /* initialize the submit structure */
     submit.name_array = (PA_Block)name_array;
     submit.value_array = (PA_Block)value_array;
     submit.type_array = (PA_Block)type_array;
-    
+
     /* set up the attribute list */
     attrList.count = 2;
     attrList.attr = attr;
     attr[0].tag = kClassKCItemAttr;
     attr[0].data = &itemClass;
     attr[0].length = sizeof(itemClass);
-    
+
     attr[1].tag = kProtocolKCItemAttr;
     attr[1].data = &protocol;
     attr[1].length = sizeof(protocol);
-    
+
     status = KCFindFirstItem( &attrList, &searchRef, &itemRef );
-    
+
     if (status == noErr)
     {
         /* if we found a Netscape item, let's assume notice has been given */
@@ -1134,42 +1134,42 @@ si_LoadSignonDataFromKeychain() {
     }
 
     si_lock_signon_list();
-        while(status == noErr) 
-        {       
+        while(status == noErr)
+        {
                 char            *value;
                 uint16          i = 0;
                 uint32          actualSize;
                 KCItemFlags     flags;
                 Boolean         reject = FALSE;
-                
+
                 submit.value_cnt = 0;
 
                 /* first find out if it is a reject entry */
                 attr[0].tag = kFlagsKCItemAttr;
                 attr[0].length = sizeof( KCItemFlags );
                 attr[0].data = &flags;
-                
+
                 status = KCGetAttribute( itemRef, attr, nil );
                 if (status != noErr)
                         break;
-                        
+
                 if (flags & kNegativeKCItemFlag)
                 {
                         reject = TRUE;
                 }
-                
+
                 /* get the server name */
                 attr[0].tag = kServerKCItemAttr;
                 attr[0].length = BUFFER_SIZE;
                 attr[0].data = buffer;
-                
+
                 status = KCGetAttribute( itemRef, attr, &actualSize );
                 if (status != noErr)
                         break;
-                        
+
                 /* null terminate */
                 buffer[actualSize] = 0;
-                
+
                 URLName = NULL;
                 StrAllocCopy(URLName, buffer);
 
@@ -1179,10 +1179,10 @@ si_LoadSignonDataFromKeychain() {
                         status = KCGetData( itemRef, BUFFER_SIZE, buffer, &actualSize );
                         if (status != noErr)
                                 break;
-                                
+
                         /* null terminate */
                         buffer[actualSize] = 0;
-                        
+
                         /* parse for '=' which separates the name and value */
                         for (i = 0; i < XP_STRLEN(buffer); i++)
                         {
@@ -1200,12 +1200,12 @@ si_LoadSignonDataFromKeychain() {
                         StrAllocCopy(name_array[submit.value_cnt], buffer);
                         StrAllocCopy(value_array[submit.value_cnt], value);
                 }
-                
+
                 /* get the account attribute */
                 attr[0].tag = kAccountKCItemAttr;
                 attr[0].length = BUFFER_SIZE;
                 attr[0].data = buffer;
-                
+
                 status = KCGetAttribute( itemRef, attr, &actualSize );
                 if (status != noErr)
                         break;
@@ -1225,7 +1225,7 @@ si_LoadSignonDataFromKeychain() {
                                         break;
                                 }
                         }
-                        
+
                         submit.value_cnt++;
                     name_array[submit.value_cnt] = NULL;
                     value_array[submit.value_cnt] = NULL;
@@ -1233,12 +1233,12 @@ si_LoadSignonDataFromKeychain() {
                         type_array[submit.value_cnt] = FORM_TYPE_TEXT;
                         StrAllocCopy(name_array[submit.value_cnt], buffer);
                         StrAllocCopy(value_array[submit.value_cnt], value);
-                        
+
                     /* check for overruning of the arrays */
                     if (submit.value_cnt >= MAX_ARRAY_SIZE) {
                                 break;
                         }
-                
+
                         submit.value_cnt++;
                         /* store the info for this URL into memory-resident data structure */
                         if (!URLName || XP_STRLEN(URLName) == 0) {
@@ -1262,32 +1262,32 @@ si_LoadSignonDataFromKeychain() {
                 reject = FALSE;         /* reset reject flag */
                 XP_FREE(URLName);
                 KCReleaseItemRef( &itemRef );
-                
+
             status = KCFindNextItem( searchRef, &itemRef );
 
         }
     si_unlock_signon_list();
-    
+
         if (searchRef)
                 KCReleaseSearchRef( &searchRef );
-                
+
     /* Register a callback with the Keychain if we haven't already done so. */
-       
+
     if (si_kcUPP == NULL)
     {
             si_kcUPP = NewKCCallbackProc( si_KeychainCallback );
             if (!si_kcUPP)
                 return memFullErr;
-                
+
             KCAddCallback( si_kcUPP, kLockKCEventMask + kDeleteKCEventMask + kUpdateKCEventMask, &si_list_invalid );
             /* Note that the callback is not necessarily removed.  We take advantage of the fact that the
                Keychain will clean up the callback when the app goes away. It is explicitly removed when
                the signon preference is turned off. */
         }
-        
+
         if (status == errKCItemNotFound)
                 status = 0;
-        
+
         return (status);
 }
 #endif
@@ -1314,7 +1314,7 @@ SI_LoadSignonData(char * filename) {
     if (!si_GetSignonRememberingPref()) {
         return 0;
     }
-    
+
 #ifdef APPLE_KEYCHAIN
         if (KeychainManagerAvailable())
                 return si_LoadSignonDataFromKeychain();
@@ -1460,16 +1460,16 @@ si_SaveSignonDataInKeychain() {
     KCAttribute attr;
     KCItemFlags flags = kInvisibleKCItemFlag + kNegativeKCItemFlag;
     uint32              actualLength;
-        
+
         /* save off the reject list */
     if (si_reject_list) {
                 list_ptr = si_reject_list;
                 while((reject = (si_Reject *) XP_ListNextObject(list_ptr))!=0) {
-                    status = kcaddinternetpassword( reject->URLName, nil, reject->userName, kAnyPort, kNetscapeProtocolType, 
+                    status = kcaddinternetpassword( reject->URLName, nil, reject->userName, kAnyPort, kNetscapeProtocolType,
                                                                                 kAnyAuthType, 0, nil, &itemRef );
                     if (status != noErr && status != errKCDuplicateItem)
                         return(status);
-                    
+
                     if (status == noErr)
                     {
                             /* make the item invisible so the user doesn't see it and negative
@@ -1477,21 +1477,21 @@ si_SaveSignonDataInKeychain() {
                                 attr.tag = kFlagsKCItemAttr;
                                 attr.data = &flags;
                                 attr.length = sizeof( flags );
-                                
+
                                 status = KCSetAttribute( itemRef, &attr );
                             if (status != noErr)
                                 return(status);
-                                
+
                             status = KCUpdateItem( itemRef );
                             if (status != noErr)
                                 return(status);
-                                
+
                             KCReleaseItemRef( &itemRef );
                         }
                 }
     }
 
-        
+
         /* save off the passwords */
 
         if((si_signon_list)) {
@@ -1525,11 +1525,11 @@ si_SaveSignonDataInKeychain() {
                                         }
                                         attribute = account;
                                         }
-                                        
+
                                 XP_STRCPY( attribute, data->name );
                                 XP_STRCAT( attribute, "=" );
                                 XP_STRCAT( attribute, data->value );
-                                        
+
                                 }
                                 /* if it's already there, we just want to change the password */
                                 status = kcfindinternetpassword( URL->URLName, nil, account, kAnyPort, kNetscapeProtocolType, kAnyAuthType,
@@ -1539,7 +1539,7 @@ si_SaveSignonDataInKeychain() {
                                         status = KCSetData( itemRef, XP_STRLEN( password ), password );
                                         if (status != noErr)
                                                 return(status);
-                                        
+
                                         status = KCUpdateItem( itemRef );
                                         KCReleaseItemRef( &itemRef );
                                 }
@@ -1553,7 +1553,7 @@ si_SaveSignonDataInKeychain() {
                             if (password)
                                 XP_FREE( password );
                             account = password = nil;
-                            
+
                             if (status != noErr)
                                 return(status);
                     }
@@ -1594,7 +1594,7 @@ si_SaveSignonDataLocked(char * filename) {
     if(si_anonymous) {
         return(-1);
     }
-    
+
 #ifdef APPLE_KEYCHAIN
         if (KeychainManagerAvailable())
                 return si_SaveSignonDataInKeychain();
@@ -1847,7 +1847,7 @@ SI_RestoreOldSignonData
     if (!si_GetSignonRememberingPref()){
         return;
     }
-    
+
     /* get URL */
     si_lock_signon_list();
     url = si_GetURL(URLName);
@@ -1903,8 +1903,9 @@ SI_RestoreOldSignonData
         /* restore the data from previous time this URL was visited */
         data_ptr = user->signonData_list;
         while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
-            if(XP_STRCMP(data->name,
-                    (char *)form_element->element_data->ele_text.name)==0) {
+            char * fieldName =
+                (char *)form_element->element_data->ele_text.name;
+            if(fieldName && XP_STRCMP(data->name, fieldName)==0) {
 #ifdef XP_MAC
                 StrAllocCopy(
                     (char *)form_element->element_data->ele_text.default_text,
@@ -2438,13 +2439,13 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
     if (!strings) {
         return;
     }
-    
+
 #ifdef APPLE_KEYCHAIN
         /* If the Keychain has been locked or an item deleted or updated,
            we need to reload the signon data */
         if (si_list_invalid)
         {
-                /* set si_list_invalid to FALSE first because SI_RemoveAllSignonData 
+                /* set si_list_invalid to FALSE first because SI_RemoveAllSignonData
                    calls si_GetSignonRememberingPref */
             si_list_invalid = FALSE;
             SI_RemoveAllSignonData();
