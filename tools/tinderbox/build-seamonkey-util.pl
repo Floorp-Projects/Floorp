@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.193 $ ';
+$::UtilsVersion = '$Revision: 1.194 $ ';
 
 package TinderUtils;
 
@@ -2209,7 +2209,11 @@ sub PrintSize($$) {
         # Figure out how many decimal places to show.
         # Only doing a few cases here, for normal range
         # of test numbers.
-        if ($num < 10**($sigs-5)) {
+
+        # Handle zero case first.
+        if ($num == 0) {
+          $rv = "0";
+        } elsif ($num < 10**($sigs-5)) {
           $rv = sprintf "%.5f", ($num);
         } elsif ($num < 10**($sigs-4)) {
           $rv = sprintf "%.4f", ($num);
