@@ -82,6 +82,12 @@ nsThread::~nsThread()
 
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p destroyed\n", this));
+#if defined(PR_LOGGING)
+    if (this == gMainThread) {
+        delete nsIThreadLog;
+        nsIThreadLog = nsnull;
+    }
+#endif
 }
 
 void
