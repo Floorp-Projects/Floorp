@@ -76,8 +76,7 @@ typedef enum
 class nsIView : public nsISupports
 {
 public:
-
-  static const nsIID& GetIID() { static nsIID iid = NS_IVIEW_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IVIEW_IID)
 
   /**
    * Initialize the view
