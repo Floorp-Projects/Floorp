@@ -53,10 +53,14 @@ void Init(void)
 	Str255		 	winTitle;
 	ThreadID		tid;
 	ThreadState		state;
+	OSErr			err = noErr;
 	
 	gDone = false;
 	InitManagers();
 	InitControlsObject();	
+	err = NavLoad();
+	if (err!=noErr)
+		SysBeep(10);	// XXX better error handling
 
 #ifdef SDINST_IS_DLL
 	if (!InitSDLib())
@@ -296,6 +300,7 @@ void Shutdown(void)
 	long 		MIWMagic = 0;
 		
 	UnloadSDLib(&gConnID);
+	NavUnload();
 	
 /* deallocate config object */
 	// TO DO	
@@ -332,6 +337,7 @@ void Shutdown(void)
 	if (MIWMagic != kMIWMagic)
 		if (gWPtr)
 			BringToFront(gWPtr);
+
 	if (gWPtr)
 	{
 		HideWindow(gWPtr);

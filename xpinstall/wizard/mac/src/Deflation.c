@@ -37,11 +37,11 @@ static short	currCoreFile = 0;
  *-----------------------------------------------------------*/
 
 OSErr
-ExtractCoreFile(void)
+ExtractCoreFile(short tgtVRefNum, long tgtDirID)
 {
 	OSErr 					err = noErr;
 	StringPtr 				coreFile, coreDirPath, extractedFile, pdir;
- 	short 					fullPathLen, tgtVRefNum;
+ 	short 					fullPathLen;
  	Handle 					fullPathH;
  	void					*hZip, *hFind;
  	PRInt32					rv;
@@ -49,11 +49,7 @@ ExtractCoreFile(void)
  	char					filename[255] = "\0", dir[255] = "\0", *lastslash;
  	Ptr						fullPathStr;
  	FSSpec					coreDirFSp, extractedFSp, outFSp, extractedDir;
- 	long					coreDirID, tgtDirID, extractedDirID;
- 	
- 	// err = GetCWD(&tgtDirID, &tgtVRefNum);
- 	tgtDirID = gControls->opt->dirID;
- 	tgtVRefNum = gControls->opt->vRefNum;
+ 	long					coreDirID, extractedDirID;
  	
 	/* if there's a core file... */
 	HLock(gControls->cfg->coreFile);
@@ -136,7 +132,7 @@ ExtractCoreFile(void)
 			return err;
 		HLock(fullPathH);
 		fullPathStr = NewPtrClear(fullPathLen + strlen(filename) + 1);
-		strcat(fullPathStr, *fullPathH);
+		strncat(fullPathStr, *fullPathH, fullPathLen);
 		strcat(fullPathStr, filename);	/* tack on filename to dirpath */
 		*(fullPathStr+fullPathLen+strlen(filename)) = '\0';
 		rv = ZIP_ExtractFile( hZip, filename, fullPathStr );
@@ -287,7 +283,7 @@ ForceMoveFile(short vRefNum, long parID, ConstStr255Param name, long newDirID)
 }
 
 OSErr
-CleanupExtractedFiles(void)
+CleanupExtractedFiles(short tgtVRefNum, long tgtDirID)
 {
 	OSErr		err = noErr;
 	FSSpec		coreDirFSp;
@@ -300,7 +296,7 @@ CleanupExtractedFiles(void)
 		// just need to delete the core dir and its contents
 		
 		pcoreDir = CToPascal(*gControls->cfg->coreDir);
-		err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, pcoreDir, &coreDirFSp);
+		err = FSMakeFSSpec(tgtVRefNum, tgtDirID, pcoreDir, &coreDirFSp);
 		if (err == noErr)
 		{
 			err = FSpDelete( &coreDirFSp );
