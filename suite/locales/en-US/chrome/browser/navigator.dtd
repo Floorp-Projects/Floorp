@@ -11,8 +11,6 @@
 <!ENTITY defaultHomepage.url "www.mozilla.org" >
 
 <!-- LOCALIZATION NOTE  fileMenu.label: Localize all the menu labels with accesskeys but not commandkeys. e.g.  "File" -> "XXXX(F)" in Japanese -->
-<!ENTITY fileMenu.label "File">
-<!ENTITY fileMenu.accesskey "f">
 <!ENTITY browserCmd.label "New Browser Window">
 <!ENTITY browserCmd.accesskey "n">
 <!ENTITY browserCmd.commandkey "n">
@@ -51,20 +49,10 @@
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "p">
 <!ENTITY printCmd.commandkey "p">
-<!ENTITY closeCmd.label "Close">
-<!ENTITY closeCmd.accesskey "c">
-<!ENTITY closeCmd.commandkey "w">
 <!ENTITY quitCmd.label "Quit">
 <!ENTITY quitCmd.accesskey "q">
 <!ENTITY quitCmd.commandkey "q">
 
-<!ENTITY editMenu.label "Edit">
-<!ENTITY undoCmd.label "Undo">
-<!ENTITY redoCmd.label "Redo">
-<!ENTITY cutCmd.label "Cut">
-<!ENTITY copyCmd.label "Copy">
-<!ENTITY pasteCmd.label "Paste">
-<!ENTITY deleteCmd.label "Delete">
 <!-- LOCALIZATION NOTE   walletMenu.label: Do NOT localize below line -->
 <!ENTITY walletMenu.label "Wallet">
 <!ENTITY walletSafeFillCmd.label "Safe Form Fill">
@@ -75,7 +63,6 @@
 <!ENTITY walletDisplayCookiesCmd.label "Display Cookies...">
 <!ENTITY walletSamplesCmd.label "Samples">
 <!ENTITY walletChangePasswordCmd.label "Change Password...">
-<!ENTITY selectAllCmd.label "Select All">
 <!ENTITY viewMenu.label "View">
 <!ENTITY toolbarsCmd.label "Toolbars">
 <!-- LOCALIZATION NOTE   sidebarCmd.label: Do NOT localize below line -->
