@@ -472,13 +472,16 @@ PRInt32 nsInstallFile::CompleteFileMove()
     int    result         = 0;
     char   *temp;
     PRBool bAlreadyExists = PR_FALSE;
+    PRBool bIsEqual = PR_FALSE;
     
     if (mExtractedFile == nsnull) 
     {
         return nsInstall::UNEXPECTED_ERROR;
     }
    	
-    if ( mExtractedFile == mFinalFile ) 
+    
+    mExtractedFile->Equals(mFinalFile, &bIsEqual);
+    if ( bIsEqual ) 
     {
         /* No need to rename, they are the same */
         result = nsInstall::SUCCESS;
