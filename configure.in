@@ -3253,6 +3253,20 @@ MOZ_ARG_DISABLE_BOOL(mailnews,
     MOZ_MAIL_NEWS= )
 AC_SUBST(MOZ_MAIL_NEWS)
 
+dnl ========================================================
+dnl static mail build off by default 
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(static-mail,
+[  --enable-static-mail Enable static mail build support],
+    MOZ_STATIC_MAIL_BUILD=1,
+    MOZ_STATIC_MAIL_BUILD= )
+
+if test "$MOZ_STATIC_MAIL_BUILD"; then
+    AC_DEFINE(MOZ_STATIC_MAIL_BUILD)
+fi
+
+AC_SUBST(MOZ_STATIC_MAIL_BUILD)
+
 dnl =========================================================
 dnl = LDAP
 dnl =========================================================
@@ -3279,6 +3293,10 @@ dnl = Thunderbird
 dnl ========================================================
 if test "$MOZ_THUNDERBIRD"; then
    AC_DEFINE(MOZ_THUNDERBIRD)
+   
+   MOZ_STATIC_MAIL_BUILD=1
+   AC_DEFINE(MOZ_STATIC_MAIL_BUILD)
+   
    MOZ_XUL_APP=1
    AC_DEFINE(MOZ_XUL_APP)
 fi
