@@ -1646,15 +1646,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         fType = f->GetType();
         if (nsLayoutAtoms::scrollFrame == fType) {
           // Use the scroll frame's computed height instead
-          aContainingBlockHeight =
-            ((nsHTMLReflowState*)cbrs->parentReflowState)->mComputedHeight;
+          aContainingBlockHeight = cbrs->parentReflowState->mComputedHeight;
         }
         else {
           fType = cbrs->frame->GetType();
           if (IS_TABLE_CELL(fType)) {
             // use the cell's computed height 
-            aContainingBlockHeight =
-              ((nsHTMLReflowState*)cbrs)->mComputedHeight;
+            aContainingBlockHeight = cbrs->mComputedHeight;
           }
         }
       }
@@ -1707,7 +1705,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
         // used to be called exclusively.
         if (NS_FRAME_REPLACED(NS_CSS_FRAME_TYPE_INLINE) == mFrameType) {
           // Get the containing block reflow state
-          const nsHTMLReflowState* cbrs = parentReflowState->mCBReflowState;
           NS_ASSERTION(nsnull != cbrs, "no containing block");
           // in quirks mode, get the cb height using the special quirk method
           if (eCompatibility_NavQuirks == aPresContext->CompatibilityMode()) {
