@@ -1442,6 +1442,19 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
                 NS_RELEASE(builder);
             }
         }
+
+        // Propagate the out-of-band notification to each PresShell's
+        // anonymous content as well. This ensures that there aren't
+        // any accidental script references left in anonymous content
+        // keeping the document alive. (While not strictly necessary
+        // -- the PresShell owns us -- it's tidy.)
+        for (PRInt32 count = mPresShells.Count() - 1; count >= 0; --count) {
+            nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[count]);
+            if (! shell)
+                continue;
+
+            shell->ReleaseAnonymousContent();
+        }
     }
 
     mScriptGlobalObject = aScriptGlobalObject;

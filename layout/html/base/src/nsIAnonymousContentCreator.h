@@ -50,11 +50,6 @@ public:
      NS_IMETHOD CreateAnonymousContent(nsIPresContext* aPresContext,
                                        nsISupportsArray& aAnonymousItems)=0;
 
-     // Needed to unroot script objects in anonymous content
-     NS_IMETHOD SetDocumentForAnonymousContent(nsIDocument* aDocument,
-                                               PRBool aDeep,
-                                               PRBool aCompileEventHandlers) = 0;
-
      // If the creator doesn't want to create special fframe ro frame hierarchy
      // then it should null out the style content arg and return NS_ERROR_FAILURE
      NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,

@@ -1977,22 +1977,6 @@ nsGfxTextControlFrame2::CreateAnonymousContent(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-nsGfxTextControlFrame2::SetDocumentForAnonymousContent(nsIDocument* aDocument,
-                                                       PRBool aDeep,
-                                                       PRBool aCompileEventHandlers)
-{
-  if (mEditor) {
-    nsCOMPtr<nsIDOMElement> root;
-    mEditor->GetRootElement(getter_AddRefs(root));
-    if (root) {
-      nsCOMPtr<nsIContent> rootContent( do_QueryInterface(root) );
-      rootContent->SetDocument(aDocument, aDeep, aCompileEventHandlers);
-    }
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGfxTextControlFrame2::Reflow(nsIPresContext*   aPresContext,
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,

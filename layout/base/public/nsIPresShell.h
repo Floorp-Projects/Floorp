@@ -66,6 +66,7 @@ class nsIFrameManager;
 class nsILayoutHistoryState;
 class nsIArena;
 class nsIReflowCallback;
+class nsISupportsArray;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -428,6 +429,35 @@ public:
   NS_IMETHOD GetGeneratedContentIterator(nsIContent*          aContent,
                                          GeneratedContentType aType,
                                          nsIContentIterator** aIterator) const = 0;
+
+
+  /**
+   * Store the nsIAnonymousContentCreator-generated anonymous
+   * content that's associated with an element.
+   * @param aContent the element with which the anonymous
+   *   content is to be associated with
+   * @param aAnonymousElements an array of nsIContent
+   *   objects, or null to indicate that any anonymous
+   *   content should be dissociated from the aContent
+   */
+  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements) = 0;
+
+  /**
+   * Retrieve the nsIAnonymousContentCreator-generated anonymous
+   * content that's associated with an element.
+   * @param aContent the element for which to retrieve the
+   *   associated anonymous content
+   * @param aAnonymousElements an array of nsIContent objects,
+   *   or null to indicate that there are no anonymous elements
+   *   associated with aContent
+   */
+  NS_IMETHOD GetAnonymousContentFor(nsIContent* aContent, nsISupportsArray** aAnonymousElements) = 0;
+
+  /**
+   * Release all nsIAnonymousContentCreator-generated
+   * anonymous content associated with the shell.
+   */
+  NS_IMETHOD ReleaseAnonymousContent() = 0;
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add

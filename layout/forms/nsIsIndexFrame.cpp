@@ -241,15 +241,6 @@ nsIsIndexFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
   return result;
 }
 
-NS_IMETHODIMP
-nsIsIndexFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
-                                                   PRBool aDeep,
-                                                   PRBool aCompileEventHandlers)
-{
-  // XXX WRITE ME
-  return NS_OK;
-}
-
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsIsIndexFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)

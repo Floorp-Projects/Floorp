@@ -38,6 +38,7 @@
 #include "nsIContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDocument.h"
+#include "nsIPresShell.h"
 #include "nsIXMLContentSink.h"
 #include "nsLayoutCID.h"
 #include "nsXMLDocument.h"
@@ -203,8 +204,6 @@ public:
   NS_IMETHOD ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
                                nsIDocument* aNewDocument);
 
-  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements);
-
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult);
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult);
@@ -251,7 +250,6 @@ protected:
   nsSupportsHashtable* mBindingTable;
   nsSupportsHashtable* mDocumentTable;
   nsSupportsHashtable* mLoadingDocTable;
-  nsSupportsHashtable* mAnonymousContentTable;
 
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
 };
@@ -272,7 +270,6 @@ nsBindingManager::nsBindingManager(void)
   
   mDocumentTable = nsnull;
   mLoadingDocTable = nsnull;
-  mAnonymousContentTable = nsnull;
 
   mAttachedQueue = nsnull;
 }
@@ -282,7 +279,6 @@ nsBindingManager::~nsBindingManager(void)
   delete mBindingTable;
   delete mDocumentTable;
   delete mLoadingDocTable;
-  delete mAnonymousContentTable;
 }
 
 NS_IMETHODIMP
@@ -324,6 +320,10 @@ NS_IMETHODIMP
 nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocument,
                                     nsIDocument* aNewDocument)
 {
+  NS_PRECONDITION(aOldDocument != nsnull, "no old document");
+  if (! aOldDocument)
+    return NS_ERROR_NULL_POINTER;
+
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aContent, getter_AddRefs(binding));
   if (binding) {
@@ -336,13 +336,14 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
     }
   }
 
-  if (mAnonymousContentTable) {
+  for (PRInt32 i = aOldDocument->GetNumberOfShells() - 1; i >= 0; --i) {
+    nsCOMPtr<nsIPresShell> shell = dont_AddRef( aOldDocument->GetShellAt(i) );
+    NS_ASSERTION(shell != nsnull, "Zoiks! nsIPresShell::ShellAt() broke");
+
     // See if the element has nsIAnonymousContentCreator-created
     // anonymous content...
-    nsISupportsKey key(aContent);
-
-    nsCOMPtr<nsISupportsArray> anonymousElements =
-      getter_AddRefs(NS_REINTERPRET_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
+    nsCOMPtr<nsISupportsArray> anonymousElements;
+    shell->GetAnonymousContentFor(aContent, getter_AddRefs(anonymousElements));
 
     if (anonymousElements) {
       // ...yep, so be sure to update the doc pointer in those
@@ -361,48 +362,6 @@ nsBindingManager::ChangeDocumentFor(nsIContent* aContent, nsIDocument* aOldDocum
       }
     }
   }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBindingManager::SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements)
-{
-  NS_PRECONDITION(aContent != nsnull, "null ptr");
-  if (! aContent)
-    return NS_ERROR_NULL_POINTER;
-
-  if (!mAnonymousContentTable)
-    mAnonymousContentTable = new nsSupportsHashtable;
-
-  nsISupportsKey key(aContent);
-
-  nsCOMPtr<nsISupportsArray> oldAnonymousElements =
-    getter_AddRefs(NS_STATIC_CAST(nsISupportsArray*, mAnonymousContentTable->Get(&key)));
-
-  if (oldAnonymousElements && aAnonymousElements) {
-    // If we're trying to set anonymous content for an element that
-    // already had anonymous content, then we need to be sure to clean
-    // up after the old content. (This can happen, for example, when a
-    // reframe occurs.)
-    PRUint32 count;
-    oldAnonymousElements->Count(&count);
-
-    while (PRInt32(--count) >= 0) {
-      nsCOMPtr<nsISupports> isupports( getter_AddRefs(oldAnonymousElements->ElementAt(count)) );
-      nsCOMPtr<nsIContent> content( do_QueryInterface(isupports) );
-      NS_ASSERTION(content != nsnull, "not an nsIContent");
-      if (! content)
-        continue;
-
-      content->SetDocument(nsnull, PR_TRUE, PR_TRUE);
-    }
-  }
-
-  if (aAnonymousElements)
-    mAnonymousContentTable->Put(&key, aAnonymousElements);
-  else
-    mAnonymousContentTable->Remove(&key);
 
   return NS_OK;
 }

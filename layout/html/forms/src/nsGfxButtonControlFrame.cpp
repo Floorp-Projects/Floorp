@@ -445,15 +445,6 @@ nsGfxButtonControlFrame::CreateFrameFor(nsIPresContext*   aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsGfxButtonControlFrame::SetDocumentForAnonymousContent(nsIDocument* aDocument,
-                                                        PRBool aDeep,
-                                                        PRBool aCompileEventHandlers)
-{
-  // XXX WRITE ME
-  return NS_OK;
-}
-
 // Frames are not refcounted, no need to AddRef
 NS_IMETHODIMP
 nsGfxButtonControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)

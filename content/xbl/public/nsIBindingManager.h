@@ -73,18 +73,6 @@ public:
                                nsIDocument* aNewDocument) = 0;
 
 
-  /**
-   * Notify the binding manager that an element has
-   * nsIAnonymousContentCreator-generated anonymous
-   * content associated with it.
-   * @param aContent the element with which the anonymous
-   *   content is to be associated with.
-   * @param aAnonymousElements an array of nsIContent
-   *   objects, or null to indicate that any anonymous
-   *   content should be dissociated from the aContent.
-   */
-  NS_IMETHOD SetAnonymousContentFor(nsIContent* aContent, nsISupportsArray* aAnonymousElements) = 0;
-
   NS_IMETHOD ResolveTag(nsIContent* aContent, PRInt32* aNameSpaceID, nsIAtom** aResult) = 0;
 
   NS_IMETHOD GetInsertionPoint(nsIContent* aParent, nsIContent* aChild, nsIContent** aResult) = 0;

@@ -106,7 +106,6 @@
 #include "nsIDOMWindowInternal.h"
 
 #include "nsIDOMElement.h"
-#include "nsIAnonymousContentCreator.h"
 
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kDOMScriptObjectFactoryCID, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -1696,26 +1695,17 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
       }
     }
 
-    // XXX You thought that was a hack?  Let's unroot the scrollbars
-    // around the root element.  The frame that created the anonymous
-    // content for them isn't the primary frame for any element, so
-    // we do it here.  This tries not to have too much knowledge of
-    // how scrollbars are implemented today by actually checking all
-    // the frames up to the top.
-    nsCOMPtr<nsIPresShell> shell( dont_AddRef(GetShellAt(0)) );
-    if (shell) {
-      nsIFrame *kidFrame = nsnull;
-      shell->GetPrimaryFrameFor(mRootContent, &kidFrame);
-      while (kidFrame) {
-        // XXX Don't release a frame!
-        nsCOMPtr<nsIAnonymousContentCreator> acc( do_QueryInterface(kidFrame) );
-        if (acc) {
-          acc->SetDocumentForAnonymousContent(nsnull, PR_TRUE, PR_TRUE);
-        }
-        nsIFrame *parentFrame;
-        kidFrame->GetParent(&parentFrame);
-        kidFrame = parentFrame;
-      }
+    // Propagate the out-of-band notification to each PresShell's
+    // anonymous content as well. This ensures that there aren't any
+    // accidental script references left in anonymous content keeping
+    // the document alive. (While not strictly necessary -- the
+    // PresShell owns us -- it's tidy.)
+    for (count = mPresShells.Count() - 1; count >= 0; --count) {
+      nsIPresShell* shell = NS_STATIC_CAST(nsIPresShell*, mPresShells[count]);
+      if (! shell)
+        continue;
+
+      shell->ReleaseAnonymousContent();
     }
   }
 
