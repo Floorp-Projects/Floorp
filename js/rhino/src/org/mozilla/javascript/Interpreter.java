@@ -2370,10 +2370,62 @@ switch (op) {
     case Token.GE :
     case Token.LE :
     case Token.GT :
-    case Token.LT :
+    case Token.LT : {
         --stackTop;
-        do_cmp(frame, stackTop, op);
+        Object rhs = stack[stackTop + 1];
+        Object lhs = stack[stackTop];
+        boolean valBln;
+      object_compare:
+        {
+          number_compare:
+            {
+                double rDbl, lDbl;
+                if (rhs == DBL_MRK) {
+                    rDbl = sDbl[stackTop + 1];
+                    lDbl = stack_double(frame, stackTop);
+                } else if (lhs == DBL_MRK) {
+                    rDbl = ScriptRuntime.toNumber(rhs);
+                    lDbl = sDbl[stackTop];
+                } else {
+                    break number_compare;
+                }
+                switch (op) {
+                  case Token.GE:
+                    valBln = (lDbl >= rDbl);
+                    break object_compare;
+                  case Token.LE:
+                    valBln = (lDbl <= rDbl);
+                    break object_compare;
+                  case Token.GT:
+                    valBln = (lDbl > rDbl);
+                    break object_compare;
+                  case Token.LT:
+                    valBln = (lDbl < rDbl);
+                    break object_compare;
+                  default:
+                    throw Kit.codeBug();
+                }
+            }
+            switch (op) {
+              case Token.GE:
+                valBln = ScriptRuntime.cmp_LE(rhs, lhs);
+                break;
+              case Token.LE:
+                valBln = ScriptRuntime.cmp_LE(lhs, rhs);
+                break;
+              case Token.GT:
+                valBln = ScriptRuntime.cmp_LT(rhs, lhs);
+                break;
+              case Token.LT:
+                valBln = ScriptRuntime.cmp_LT(lhs, rhs);
+                break;
+              default:
+                throw Kit.codeBug();
+            }
+        }
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
+    }
     case Token.IN : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
@@ -2395,15 +2447,66 @@ switch (op) {
         continue Loop;
     }
     case Token.EQ :
-    case Token.NE :
+    case Token.NE : {
         --stackTop;
-        do_eq(frame, stackTop, op);
+        boolean valBln;
+        Object rhs = stack[stackTop + 1];
+        Object lhs = stack[stackTop];
+        if (rhs == DBL_MRK) {
+            if (lhs == DBL_MRK) {
+                valBln = (sDbl[stackTop] == sDbl[stackTop + 1]);
+            } else {
+                valBln = ScriptRuntime.eqNumber(sDbl[stackTop + 1], lhs);
+            }
+        } else {
+            if (lhs == DBL_MRK) {
+                valBln = ScriptRuntime.eqNumber(sDbl[stackTop], rhs);
+            } else {
+                valBln = ScriptRuntime.eq(lhs, rhs);
+            }
+        }
+        valBln ^= (op == Token.NE);
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
+    }
     case Token.SHEQ :
-    case Token.SHNE :
+    case Token.SHNE : {
         --stackTop;
-        do_sheq(frame, stackTop, op);
+        Object rhs = stack[stackTop + 1];
+        Object lhs = stack[stackTop];
+        boolean valBln;
+      shallow_compare: {
+            double rdbl, ldbl;
+            if (rhs == DBL_MRK) {
+                rdbl = sDbl[stackTop + 1];
+                if (lhs == DBL_MRK) {
+                    ldbl = sDbl[stackTop];
+                } else if (lhs instanceof Number) {
+                    ldbl = ((Number)lhs).doubleValue();
+                } else {
+                    valBln = false;
+                    break shallow_compare;
+                }
+            } else if (lhs == DBL_MRK) {
+                ldbl = sDbl[stackTop];
+                if (rhs == DBL_MRK) {
+                    rdbl = sDbl[stackTop + 1];
+                } else if (rhs instanceof Number) {
+                    rdbl = ((Number)rhs).doubleValue();
+                } else {
+                    valBln = false;
+                    break shallow_compare;
+                }
+            } else {
+                valBln = ScriptRuntime.shallowEq(lhs, rhs);
+                break shallow_compare;
+            }
+            valBln = (ldbl == rdbl);
+        }
+        valBln ^= (op == Token.SHNE);
+        stack[stackTop] = ScriptRuntime.wrapBoolean(valBln);
         continue Loop;
+    }
     case Token.IFNE :
         if (stack_boolean(frame, stackTop--)) {
             frame.pc += 2;
@@ -2657,14 +2760,44 @@ switch (op) {
         ++frame.pc;
         continue Loop;
     }
-    case Token.GETELEM :
+    case Token.GETELEM : {
         --stackTop;
-        do_getElem(frame, stackTop, cx);
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) {
+            lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        }
+        Object value;
+        Object id = stack[stackTop + 1];
+        if (id != DBL_MRK) {
+            value = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
+        } else {
+            double d = sDbl[stackTop + 1];
+            value = ScriptRuntime.getObjectIndex(lhs, d, cx, frame.scope);
+        }
+        stack[stackTop] = value;
         continue Loop;
-    case Token.SETELEM :
+    }
+    case Token.SETELEM : {
         stackTop -= 2;
-        do_setElem(frame, stackTop, cx);
+        Object rhs = stack[stackTop + 2];
+        if (rhs == DBL_MRK) {
+            rhs = ScriptRuntime.wrapNumber(sDbl[stackTop + 2]);
+        }
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) {
+            lhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
+        }
+        Object value;
+        Object id = stack[stackTop + 1];
+        if (id != DBL_MRK) {
+            value = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, frame.scope);
+        } else {
+            double d = sDbl[stackTop + 1];
+            value = ScriptRuntime.setObjectIndex(lhs, d, rhs, cx, frame.scope);
+        }
+        stack[stackTop] = value;
         continue Loop;
+    }
     case Icode_ELEM_INC_DEC: {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = ScriptRuntime.wrapNumber(sDbl[stackTop]);
@@ -2809,7 +2942,7 @@ switch (op) {
         }
 
         if (op == Token.REF_CALL) {
-            Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
+            Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2,
                                             indexReg);
             stack[stackTop] = ScriptRuntime.referenceCall(fun, funThisObj,
                                                           outArgs, cx,
@@ -2840,7 +2973,7 @@ switch (op) {
                     // bad iteraction with GC.
                     callParentFrame = frame.parentFrame;
                 }
-                initFrame(cx, calleeScope, funThisObj, stack, frame.sDbl,
+                initFrame(cx, calleeScope, funThisObj, stack, sDbl,
                           stackTop + 2, indexReg, ifun, callParentFrame,
                           calleeFrame);
                 if (op == Icode_TAIL_CALL) {
@@ -2882,7 +3015,7 @@ switch (op) {
             }
         }
 
-        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 2,
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 2,
                                         indexReg);
         stack[stackTop] = fun.call(cx, calleeScope, funThisObj, outArgs);
 
@@ -2902,7 +3035,7 @@ switch (op) {
             if (frame.fnOrScript.securityDomain == f.securityDomain) {
                 Scriptable newInstance = f.createObject(cx, frame.scope);
                 CallFrame calleeFrame = new CallFrame();
-                initFrame(cx, frame.scope, newInstance, stack, frame.sDbl,
+                initFrame(cx, frame.scope, newInstance, stack, sDbl,
                           stackTop + 1, indexReg, f, frame,
                           calleeFrame);
 
@@ -2927,8 +3060,7 @@ switch (op) {
             }
         }
 
-        Object[] outArgs = getArgsArray(stack, frame.sDbl, stackTop + 1,
-                                        indexReg);
+        Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, indexReg);
         stack[stackTop] = fun.construct(cx, frame.scope, outArgs);
         continue Loop;
     }
@@ -3829,185 +3961,6 @@ switch (op) {
             stack[stackTop] = UniqueTag.DOUBLE_MARK;
             sDbl[stackTop] = lDbl + d;
         }
-    }
-
-    private static void do_cmp(CallFrame frame, int i, int op)
-    {
-        Object rhs = frame.stack[i + 1];
-        Object lhs = frame.stack[i];
-        boolean result;
-      object_compare:
-        {
-          number_compare:
-            {
-                double rDbl, lDbl;
-                if (rhs == UniqueTag.DOUBLE_MARK) {
-                    rDbl = frame.sDbl[i + 1];
-                    lDbl = stack_double(frame, i);
-                } else if (lhs == UniqueTag.DOUBLE_MARK) {
-                    rDbl = ScriptRuntime.toNumber(rhs);
-                    lDbl = frame.sDbl[i];
-                } else {
-                    break number_compare;
-                }
-                switch (op) {
-                  case Token.GE:
-                    result = (lDbl >= rDbl);
-                    break object_compare;
-                  case Token.LE:
-                    result = (lDbl <= rDbl);
-                    break object_compare;
-                  case Token.GT:
-                    result = (lDbl > rDbl);
-                    break object_compare;
-                  case Token.LT:
-                    result = (lDbl < rDbl);
-                    break object_compare;
-                  default:
-                    throw Kit.codeBug();
-                }
-            }
-            switch (op) {
-              case Token.GE:
-                result = ScriptRuntime.cmp_LE(rhs, lhs);
-                break;
-              case Token.LE:
-                result = ScriptRuntime.cmp_LE(lhs, rhs);
-                break;
-              case Token.GT:
-                result = ScriptRuntime.cmp_LT(rhs, lhs);
-                break;
-              case Token.LT:
-                result = ScriptRuntime.cmp_LT(lhs, rhs);
-                break;
-              default:
-                throw Kit.codeBug();
-            }
-        }
-        frame.stack[i] = ScriptRuntime.wrapBoolean(result);
-    }
-
-    private static void do_eq(CallFrame frame, int i, int op)
-    {
-        boolean result;
-        Object rhs = frame.stack[i + 1];
-        Object lhs = frame.stack[i];
-        if (rhs == UniqueTag.DOUBLE_MARK) {
-            if (lhs == UniqueTag.DOUBLE_MARK) {
-                result = (frame.sDbl[i] == frame.sDbl[i + 1]);
-            } else {
-                result = ScriptRuntime.eqNumber(frame.sDbl[i + 1], lhs);
-            }
-        } else {
-            if (lhs == UniqueTag.DOUBLE_MARK) {
-                result = ScriptRuntime.eqNumber(frame.sDbl[i], rhs);
-            } else {
-                result = ScriptRuntime.eq(lhs, rhs);
-            }
-        }
-        result ^= (op == Token.NE);
-        frame.stack[i] = ScriptRuntime.wrapBoolean(result);
-    }
-
-    private static void do_sheq(CallFrame frame, int i, int op)
-    {
-        Object rhs = frame.stack[i + 1];
-        Object lhs = frame.stack[i];
-        boolean result;
-      double_compare: {
-            double rdbl, ldbl;
-            if (rhs == UniqueTag.DOUBLE_MARK) {
-                rdbl = frame.sDbl[i + 1];
-                if (lhs == UniqueTag.DOUBLE_MARK) {
-                    ldbl = frame.sDbl[i];
-                } else if (lhs instanceof Number) {
-                    ldbl = ((Number)lhs).doubleValue();
-                } else {
-                    result = false;
-                    break double_compare;
-                }
-            } else if (lhs == UniqueTag.DOUBLE_MARK) {
-                ldbl = frame.sDbl[i];
-                if (rhs == UniqueTag.DOUBLE_MARK) {
-                    rdbl = frame.sDbl[i + 1];
-                } else if (rhs instanceof Number) {
-                    rdbl = ((Number)rhs).doubleValue();
-                } else {
-                    result = false;
-                    break double_compare;
-                }
-            } else {
-                result = ScriptRuntime.shallowEq(lhs, rhs);
-                break double_compare;
-            }
-            result = ldbl == rdbl;
-        }
-        result ^= (op == Token.SHNE);
-        frame.stack[i] = ScriptRuntime.wrapBoolean(result);
-    }
-
-    private static void do_getElem(CallFrame frame, int i, Context cx)
-    {
-        Object lhs = frame.stack[i];
-        if (lhs == UniqueTag.DOUBLE_MARK) {
-            lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
-        }
-        Object result;
-        Object id = frame.stack[i + 1];
-        if (id != UniqueTag.DOUBLE_MARK) {
-            result = ScriptRuntime.getObjectElem(lhs, id, cx, frame.scope);
-        } else {
-            double val = frame.sDbl[i + 1];
-            if (lhs == null || lhs == Undefined.instance) {
-                throw ScriptRuntime.undefReadError(
-                          lhs, ScriptRuntime.toString(val));
-            }
-            Scriptable obj = (lhs instanceof Scriptable)
-                             ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(cx, frame.scope, lhs);
-            int index = (int)val;
-            if (index == val) {
-                result = ScriptRuntime.getObjectIndex(obj, index, cx);
-            } else {
-                String s = ScriptRuntime.toString(val);
-                result = ScriptRuntime.getObjectProp(obj, s, cx);
-            }
-        }
-        frame.stack[i] = result;
-    }
-
-    private static void do_setElem(CallFrame frame, int i, Context cx)
-    {
-        Object rhs = frame.stack[i + 2];
-        if (rhs == UniqueTag.DOUBLE_MARK) {
-            rhs = ScriptRuntime.wrapNumber(frame.sDbl[i + 2]);
-        }
-        Object lhs = frame.stack[i];
-        if (lhs == UniqueTag.DOUBLE_MARK) {
-            lhs = ScriptRuntime.wrapNumber(frame.sDbl[i]);
-        }
-        Object result;
-        Object id = frame.stack[i + 1];
-        if (id != UniqueTag.DOUBLE_MARK) {
-            result = ScriptRuntime.setObjectElem(lhs, id, rhs, cx, frame.scope);
-        } else {
-            double val = frame.sDbl[i + 1];
-            if (lhs == null || lhs == Undefined.instance) {
-                throw ScriptRuntime.undefWriteError(
-                          lhs, ScriptRuntime.toString(val), rhs);
-            }
-            Scriptable obj = (lhs instanceof Scriptable)
-                             ? (Scriptable)lhs
-                             : ScriptRuntime.toObject(cx, frame.scope, lhs);
-            int index = (int)val;
-            if (index == val) {
-                result = ScriptRuntime.setObjectIndex(obj, index, rhs, cx);
-            } else {
-                String s = ScriptRuntime.toString(val);
-                result = ScriptRuntime.setObjectProp(obj, s, rhs, cx);
-            }
-        }
-        frame.stack[i] = result;
     }
 
     private static Object[] getArgsArray(Object[] stack, double[] sDbl,

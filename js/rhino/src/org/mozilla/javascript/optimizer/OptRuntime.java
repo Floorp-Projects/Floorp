@@ -46,51 +46,6 @@ public final class OptRuntime extends ScriptRuntime
     public static final Double oneObj = new Double(1.0);
     public static final Double minusOneObj = new Double(-1.0);
 
-    public static Object getObjectIndex(Object obj, double dblIndex,
-                                        Context cx, Scriptable scope)
-    {
-        if (obj == null || obj == Undefined.instance) {
-            throw undefReadError(obj, toString(dblIndex));
-        }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, scope, obj);
-        }
-
-        int index = (int)dblIndex;
-        if ((double)index == dblIndex) {
-            return getObjectIndex(sobj, index, cx);
-        } else {
-            String s = toString(dblIndex);
-            return getObjectProp(sobj, s, cx);
-        }
-    }
-
-    public static Object setObjectIndex(Object obj, double dblIndex,
-                                        Object value,
-                                        Context cx, Scriptable scope)
-    {
-        if (obj == null || obj == Undefined.instance) {
-            throw undefWriteError(obj, String.valueOf(dblIndex), value);
-        }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(cx, scope, obj);
-        }
-
-        int index = (int)dblIndex;
-        if ((double)index == dblIndex) {
-            return setObjectIndex(sobj, index, value, cx);
-        } else {
-            String s = toString(dblIndex);
-            return setObjectProp(sobj, s, value, cx);
-        }
-    }
-
     /**
      * Implement ....() call shrinking optimizer code.
      */

@@ -2011,7 +2011,7 @@ class BodyCodegen
                 cfw.addALoad(contextLocal);
                 cfw.addALoad(variableObjectLocal);
                 if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-                    addOptRuntimeInvoke(
+                    addScriptRuntimeInvoke(
                         "getObjectIndex",
                         "(Ljava/lang/Object;D"
                         +"Lorg/mozilla/javascript/Context;"
@@ -3754,7 +3754,7 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         cfw.addALoad(contextLocal);
         cfw.addALoad(variableObjectLocal);
         if (indexIsNumber) {
-            addOptRuntimeInvoke(
+            addScriptRuntimeInvoke(
                 "setObjectIndex",
                 "(Ljava/lang/Object;"
                 +"D"
