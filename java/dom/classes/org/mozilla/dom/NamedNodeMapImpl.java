@@ -25,7 +25,7 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.DOMException;
 
-public class NamedNodeMapImpl extends NodeImpl implements NamedNodeMap {
+public class NamedNodeMapImpl implements NamedNodeMap {
 
     // instantiated from JNI only
     private NamedNodeMapImpl() {}
