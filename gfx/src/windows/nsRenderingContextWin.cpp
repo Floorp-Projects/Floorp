@@ -41,6 +41,50 @@
 // in the current logical palette. This has no effect on a non-palette device
 #define PALETTERGB_COLORREF(c)  (0x02000000 | (c))
 
+
+
+typedef struct lineddastructtag
+{
+   int   nDottedPixel;
+   HDC   dc;
+   COLORREF crColor;
+} lineddastruct;
+
+
+void CALLBACK LineDDAFunc(int x,int y,LONG lData)
+{
+  lineddastruct * dda_struct = (lineddastruct *) lData;
+  
+  if (dda_struct->nDottedPixel == 1) 
+  {
+    dda_struct->nDottedPixel = 0;
+    
+    if (GetDeviceCaps(dda_struct->dc, RASTERCAPS) & (RC_BITBLT)) 
+    {   
+      RECT    rcClip ;
+      
+      if (GetClipBox(dda_struct->dc, &rcClip) != ERROR)
+      {
+        POINT pt ;
+        
+        pt.x = x ;
+        pt.y = y ;
+        
+        if (PtInRect(&rcClip, pt))       
+        {
+          SetPixel(dda_struct->dc,x,y,dda_struct->crColor);
+        }
+      }    
+    }    
+  }
+  else
+  {
+    dda_struct->nDottedPixel = 1;
+  }    
+}   
+
+
+
 class GraphicsState
 {
 public:
@@ -58,8 +102,11 @@ public:
   HFONT           mFont;
   nscolor         mPenColor;
   HPEN            mSolidPen;
+  HPEN            mDashedPen;
+  HPEN            mDottedPen;
   PRInt32         mFlags;
   nscolor         mTextColor;
+  nsLineStyle     mLineStyle;
 };
 
 GraphicsState :: GraphicsState()
@@ -74,8 +121,11 @@ GraphicsState :: GraphicsState()
   mFont = NULL;
   mPenColor = NS_RGB(0, 0, 0);
   mSolidPen = NULL;
+  mDashedPen = NULL;
+  mDottedPen = NULL;
   mFlags = ~FLAGS_ALL;
   mTextColor = RGB(0, 0, 0);
+  mLineStyle = nsLineStyle_kSolid;
 }
 
 GraphicsState :: GraphicsState(GraphicsState &aState) :
@@ -90,8 +140,11 @@ GraphicsState :: GraphicsState(GraphicsState &aState) :
   mFont = NULL;
   mPenColor = aState.mPenColor;
   mSolidPen = NULL;
+  mDashedPen = NULL;
+  mDottedPen = NULL;
   mFlags = ~FLAGS_ALL;
   mTextColor = aState.mTextColor;
+  mLineStyle = aState.mLineStyle;
 }
 
 GraphicsState :: ~GraphicsState()
@@ -115,6 +168,18 @@ GraphicsState :: ~GraphicsState()
   {
     ::DeleteObject(mSolidPen);
     mSolidPen = NULL;
+  }
+
+  if (NULL != mDashedPen)
+  {
+    ::DeleteObject(mDashedPen);
+    mDashedPen = NULL;
+  }
+
+  if (NULL != mDottedPen)
+  {
+    ::DeleteObject(mDottedPen);
+    mDottedPen = NULL;
   }
 }
 
@@ -276,6 +341,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mCurrPenColor = NULL;
   mNullPen = NULL;
   mCurrTextColor = RGB(0, 0, 0);
+  mCurrLineStyle = nsLineStyle_kSolid;
 #ifdef NS_DEBUG
   mInitialized = PR_FALSE;
 #endif
@@ -289,6 +355,7 @@ nsRenderingContextWin :: nsRenderingContextWin()
   PushState();
 
   mP2T = 1.0f;
+
 }
 
 nsRenderingContextWin :: ~nsRenderingContextWin()
@@ -381,6 +448,7 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
   mTMatrix = nsnull;
   mDC = NULL;
   mMainDC = NULL;
+
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextWin, kRenderingContextIID)
@@ -566,8 +634,11 @@ void nsRenderingContextWin :: PushState(void)
     state->mFont = NULL;
     state->mPenColor = mStates->mPenColor;
     state->mSolidPen = NULL;
+    state->mDashedPen = NULL;
+    state->mDottedPen = NULL;
     state->mFlags = ~FLAGS_ALL;
     state->mTextColor = mStates->mTextColor;
+    state->mLineStyle = mStates->mLineStyle;
 
     mStates = state;
   }
@@ -620,6 +691,10 @@ PRBool nsRenderingContextWin :: PopState(void)
       oldstate->mSolidBrush = NULL;
       oldstate->mFont = NULL;
       oldstate->mSolidPen = NULL;
+      oldstate->mDashedPen = NULL;
+      oldstate->mDottedPen = NULL;
+
+      SetLineStyle(mStates->mLineStyle);
     }
     else
       mTMatrix = nsnull;
@@ -767,6 +842,19 @@ nscolor nsRenderingContextWin :: GetColor() const
   return mCurrentColor;
 }
 
+nsresult nsRenderingContextWin :: SetLineStyle(nsLineStyle aLineStyle)
+{
+  mCurrLineStyle = aLineStyle;
+  return NS_OK;
+}
+
+nsresult nsRenderingContextWin :: GetLineStyle(nsLineStyle &aLineStyle)
+{
+  aLineStyle = mCurrLineStyle;
+  return NS_OK;
+}
+
+
 void nsRenderingContextWin :: SetFont(const nsFont& aFont)
 {
   NS_IF_RELEASE(mFontMetrics);
@@ -865,17 +953,35 @@ void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
 
 void nsRenderingContextWin :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return;
+
 	mTMatrix->TransformCoord(&aX0,&aY0);
 	mTMatrix->TransformCoord(&aX1,&aY1);
 
-  SetupSolidPen();
+  SetupPen();
 
-  ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
-  ::LineTo(mDC, (int)(aX1), (int)(aY1));
+  if (nsLineStyle_kDotted == mCurrLineStyle)
+  {
+    lineddastruct dda_struct;
+
+    dda_struct.nDottedPixel = 1;
+    dda_struct.dc = mDC;
+    dda_struct.crColor = mColor;
+
+    LineDDA((int)(aX0),(int)(aY0),(int)(aX1),(int)(aY1),(LINEDDAPROC) LineDDAFunc,(long)&dda_struct);
+
+  } else {
+    ::MoveToEx(mDC, (int)(aX0), (int)(aY0), NULL);
+    ::LineTo(mDC, (int)(aX1), (int)(aY1));
+  }
 }
 
 void nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return;
+
   // First transform nsPoint's into POINT's; perform coordinate space
   // transformation at the same time
   POINT pts[20];
@@ -895,7 +1001,7 @@ void nsRenderingContextWin :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNum
 	}
 
   // Draw the polyline
-  SetupSolidPen();
+  SetupPen();
   ::Polyline(mDC, pp0, int(aNumPoints));
 
   // Release temporary storage if necessary
@@ -980,7 +1086,7 @@ void nsRenderingContextWin::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoi
 		mTMatrix->TransformCoord((int*)&pp->x,(int*)&pp->y);
 	}
 
-  // Outline the polygon
+  // Outline the polygon - note we are implicitly ignoring the linestyle here
   LOGBRUSH lb;
   lb.lbStyle = BS_NULL;
   lb.lbColor = 0;
@@ -1040,9 +1146,13 @@ void nsRenderingContextWin :: DrawEllipse(const nsRect& aRect)
 
 void nsRenderingContextWin :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return;
+
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  SetupSolidPen();
+  SetupPen();
+
   HBRUSH oldBrush = (HBRUSH)::SelectObject(mDC, ::GetStockObject(NULL_BRUSH));
   
   ::Ellipse(mDC, aX, aY, aX + aWidth, aY + aHeight);
@@ -1073,12 +1183,15 @@ void nsRenderingContextWin :: DrawArc(const nsRect& aRect,
 void nsRenderingContextWin :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  if (nsLineStyle_kNone == mCurrLineStyle)
+    return;
+
   PRInt32 quad1, quad2, sx, sy, ex, ey, cx, cy;
   float   anglerad, distance;
 
   mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
-  SetupSolidPen();
+  SetupPen();
   SetupSolidBrush();
 
   // figure out the the coordinates of the arc from the angle
@@ -1330,9 +1443,41 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
   }
 }
 
+HPEN nsRenderingContextWin :: SetupPen()
+{
+  HPEN pen;
+
+  switch(mCurrLineStyle)
+  {
+    case nsLineStyle_kSolid:
+      pen = SetupSolidPen();
+      break;
+
+    case nsLineStyle_kDashed:
+      pen = SetupDashedPen();
+      break;
+
+    case nsLineStyle_kDotted:
+      pen = SetupDottedPen();
+      break;
+
+    case nsLineStyle_kNone:
+      pen = NULL;
+      break;
+
+    default:
+      pen = SetupSolidPen();
+      break;
+
+  }
+
+  return pen;
+}
+
+
 HPEN nsRenderingContextWin :: SetupSolidPen(void)
 {
-  if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen))
+  if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mSolidPen))
   {
     HPEN  tpen = ::CreatePen(PS_SOLID, 0, PALETTERGB_COLORREF(mColor));
 
@@ -1343,6 +1488,56 @@ HPEN nsRenderingContextWin :: SetupSolidPen(void)
 
     mStates->mSolidPen = mCurrPen = tpen;
     mStates->mPenColor = mCurrPenColor = mCurrentColor;
+//printf("pens: %d\n", ++numpen);
+  }
+
+  return mCurrPen;
+}
+
+HPEN nsRenderingContextWin :: SetupDashedPen(void)
+{
+  if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDashedPen))
+  {
+    HPEN  tpen = ::CreatePen(PS_DASH, 0, PALETTERGB_COLORREF(mColor));
+
+    ::SelectObject(mDC, tpen);
+
+    if (NULL != mCurrPen)
+      ::DeleteObject(mCurrPen);
+
+    mStates->mDashedPen = mCurrPen = tpen;
+    mStates->mPenColor  = mCurrPenColor = mCurrentColor;
+//printf("pens: %d\n", ++numpen);
+  }
+
+  return mCurrPen;
+}
+
+HPEN nsRenderingContextWin :: SetupDottedPen(void)
+{
+  if ((mCurrentColor != mCurrPenColor) || (NULL == mCurrPen) || (mCurrPen != mStates->mDottedPen))
+  {
+    HPEN  tpen = ::CreatePen(PS_DOT, 0, PALETTERGB_COLORREF(mColor));
+
+    ::SelectObject(mDC, tpen);
+
+    if (NULL != mCurrPen)
+      ::DeleteObject(mCurrPen);
+
+    mStates->mDottedPen = mCurrPen = tpen;
+    mStates->mPenColor = mCurrPenColor = mCurrentColor;
+
+    /*
+     * This is actually real fun.  Windows does not draw dotted lines with Pen's
+     * directly (Go ahead, try it, you'll get dashes).
+     *
+     * the trick is to install a callback and actually put the pixels in
+     * directly. This function will get called for each pixel in the line.
+     *
+     */
+
+
+
 //printf("pens: %d\n", ++numpen);
   }
 

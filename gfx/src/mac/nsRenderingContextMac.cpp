@@ -512,6 +512,21 @@ nscolor nsRenderingContextMac :: GetColor() const
 
 //------------------------------------------------------------------------
 
+nsresult nsRenderingContextMac :: SetLineStyle(nsLineStyle aLineStyle)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------------------
+
+nsresult nsRenderingContextMac :: GetLineStyle(nsLineStyle &aLineStyle)
+{
+  return NS_OK;
+}
+
+
+//------------------------------------------------------------------------
+
 void nsRenderingContextMac :: SetFont(const nsFont& aFont)
 {
 	NS_IF_RELEASE(mFontMetrics);
