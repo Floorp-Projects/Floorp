@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roger B. Sidje <rbs@maths.uq.edu.au>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *
  *
@@ -39,6 +40,7 @@
 
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsILanguageAtomService.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsICharRepresentable.h"
@@ -55,11 +57,6 @@
 #include "plhash.h"
 #include "prprf.h"
 
-#define NS_FONT_TYPE_UNKNOWN          -1
-#define NS_FONT_TYPE_UNICODE           0
-#define NS_FONT_TYPE_NON_UNICODE       1
-
-
 #define NOT_SETUP 0x33
 static PRBool gIsWIN95 = NOT_SETUP;
 
@@ -73,58 +70,47 @@ static PRBool gIsWIN95 = NOT_SETUP;
 //#define NS_REPLACEMENT_CHAR  PRUnichar(0x00BF) // Inverted question mark
 //#define NS_REPLACEMENT_CHAR  PRUnichar(0x25AD) // White rectangle
 
-enum nsCharSet
+enum eCharset
 {
-  eCharSet_DEFAULT = 0,
-  eCharSet_ANSI,
-  eCharSet_EASTEUROPE,
-  eCharSet_RUSSIAN,
-  eCharSet_GREEK,
-  eCharSet_TURKISH,
-  eCharSet_HEBREW,
-  eCharSet_ARABIC,
-  eCharSet_BALTIC,
-  eCharSet_THAI,
-  eCharSet_SHIFTJIS,
-  eCharSet_GB2312,
-  eCharSet_HANGEUL,
-  eCharSet_CHINESEBIG5,
-  eCharSet_JOHAB,
-  eCharSet_COUNT
+  eCharset_DEFAULT = 0,
+  eCharset_ANSI,
+  eCharset_EASTEUROPE,
+  eCharset_RUSSIAN,
+  eCharset_GREEK,
+  eCharset_TURKISH,
+  eCharset_HEBREW,
+  eCharset_ARABIC,
+  eCharset_BALTIC,
+  eCharset_THAI,
+  eCharset_SHIFTJIS,
+  eCharset_GB2312,
+  eCharset_HANGEUL,
+  eCharset_CHINESEBIG5,
+  eCharset_JOHAB,
+  eCharset_COUNT
 };
 
-struct nsCharSetInfo
+struct nsCharsetInfo
 {
   char*    mName;
   PRUint16 mCodePage;
   char*    mLangGroup;
-  void     (*GenerateMap)(nsCharSetInfo* aSelf);
+  void     (*GenerateMap)(nsCharsetInfo* aSelf);
   PRUint32* mMap;
 };
 
-static void GenerateDefault(nsCharSetInfo* aSelf);
-static void GenerateSingleByte(nsCharSetInfo* aSelf);
-static void GenerateMultiByte(nsCharSetInfo* aSelf);
+static void GenerateDefault(nsCharsetInfo* aSelf);
+static void GenerateSingleByte(nsCharsetInfo* aSelf);
+static void GenerateMultiByte(nsCharsetInfo* aSelf);
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
-static int gInitializedGlobalFonts = 0;
-PRUint32* nsFontMetricsWin::gEmptyMap = nsnull;
-
-nsGlobalFont* nsFontMetricsWin::gGlobalFonts = nsnull;
-static int gGlobalFontsAlloc = 0;
-int nsFontMetricsWin::gGlobalFontsCount = 0;
-
-static int gInitializedFontMaps = 0;
-PLHashTable* nsFontMetricsWin::gFontMaps = nsnull;
-
-static int gInitializedFamilyNames = 0;
+nsVoidArray* nsFontMetricsWin::gGlobalFonts = nsnull;
 PLHashTable* nsFontMetricsWin::gFamilyNames = nsnull;
-
-//-- Font weight
-static int gInitializedFontWeights = 0;
 PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
+PLHashTable* nsFontMetricsWin::gFontMaps = nsnull;
+PRUint32* nsFontMetricsWin::gEmptyMap = nsnull;
 
 #define NS_MAX_FONT_WEIGHT 900
 #define NS_MIN_FONT_WEIGHT 100
@@ -133,10 +119,11 @@ PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
 #define CHAR_BUFFER_SIZE 1024
 
 static nsIPersistentProperties* gFontEncodingProperties = nsnull;
-static nsICharsetConverterManager2* gCharSetManager = nsnull;
-static nsIPref* gPref = nsnull;
+static nsICharsetConverterManager2* gCharsetManager = nsnull;
 static nsIUnicodeEncoder* gUserDefinedConverter = nsnull;
+static nsIPref* gPref = nsnull;
 
+static nsIAtom* gUsersLocale = nsnull;
 static nsIAtom* gUserDefined = nsnull;
 static nsIAtom* gJA = nsnull;
 static nsIAtom* gKO = nsnull;
@@ -155,12 +142,11 @@ static BOOL gCheckZHCNFont = PR_FALSE;
 static BOOL gHaveZHCNFont = PR_FALSE;
 static BOOL gHitZHCNCase = PR_FALSE;
 
-
 static int gInitialized = 0;
 
 static PRUint32 gUserDefinedMap[2048];
 
-static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
+static nsCharsetInfo gCharsetInfo[eCharset_COUNT] =
 {
   { "DEFAULT",     0,    "",               GenerateDefault },
   { "ANSI",        1252, "x-western",      GenerateSingleByte },
@@ -182,13 +168,12 @@ static nsCharSetInfo gCharSetInfo[eCharSet_COUNT] =
 static void
 FreeGlobals(void)
 {
-  // XXX complete this
-
   gInitialized = 0;
 
   NS_IF_RELEASE(gFontEncodingProperties);
-  NS_IF_RELEASE(gCharSetManager);
+  NS_IF_RELEASE(gCharsetManager);
   NS_IF_RELEASE(gPref);
+  NS_IF_RELEASE(gUsersLocale);
   NS_IF_RELEASE(gUserDefined);
   NS_IF_RELEASE(gUserDefinedConverter);
   NS_IF_RELEASE(gJA);
@@ -199,36 +184,40 @@ FreeGlobals(void)
   // free CMap
   if (nsFontMetricsWin::gFontMaps) {
     PL_HashTableDestroy(nsFontMetricsWin::gFontMaps);
+    nsFontMetricsWin::gFontMaps = nsnull;
     if (nsFontMetricsWin::gEmptyMap) {
       PR_Free(nsFontMetricsWin::gEmptyMap);
       nsFontMetricsWin::gEmptyMap = nsnull;
     }
-    nsFontMetricsWin::gFontMaps = nsnull;
-    gInitializedFontMaps = 0;
   }
 
   if (nsFontMetricsWin::gGlobalFonts) {
-    for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
-      delete nsFontMetricsWin::gGlobalFonts[i].name;
+    for (int i = nsFontMetricsWin::gGlobalFonts->Count()-1; i >= 0; --i) {
+      nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
+      delete font;
     }
-    PR_Free(nsFontMetricsWin::gGlobalFonts);
+    delete nsFontMetricsWin::gGlobalFonts;
     nsFontMetricsWin::gGlobalFonts = nsnull;
-    gGlobalFontsAlloc = 0;
-    nsFontMetricsWin::gGlobalFontsCount = 0;
   }
 
   // free FamilyNames
   if (nsFontMetricsWin::gFamilyNames) {
     PL_HashTableDestroy(nsFontMetricsWin::gFamilyNames);
     nsFontMetricsWin::gFamilyNames = nsnull;
-    gInitializedFamilyNames = 0;
   }
 
   // free Font weight
   if (nsFontMetricsWin::gFontWeights) {
     PL_HashTableDestroy(nsFontMetricsWin::gFontWeights);
     nsFontMetricsWin::gFontWeights = nsnull;
-    gInitializedFontWeights = 0;
+  }
+
+  // free generated charset maps
+  for (int i = 0; i < eCharset_COUNT; ++i) {
+    if (gCharsetInfo[i].mMap) {
+      PR_Free(gCharsetInfo[i].mMap);
+      gCharsetInfo[i].mMap = nsnull;
+    }
   }
 }
 
@@ -240,6 +229,7 @@ public:
   nsFontCleanupObserver() { NS_INIT_ISUPPORTS(); }
   virtual ~nsFontCleanupObserver() {}
 };
+
 NS_IMPL_ISUPPORTS1(nsFontCleanupObserver, nsIObserver);
 
 NS_IMETHODIMP nsFontCleanupObserver::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const PRUnichar *someData)
@@ -279,8 +269,8 @@ InitGlobals(void)
   }
 
   nsServiceManager::GetService(kCharsetConverterManagerCID,
-    NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharSetManager);
-  if (!gCharSetManager) {
+    NS_GET_IID(nsICharsetConverterManager2), (nsISupports**) &gCharsetManager);
+  if (!gCharsetManager) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
   }
@@ -289,6 +279,19 @@ InitGlobals(void)
   if (!gPref) {
     FreeGlobals();
     return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsILanguageAtomService> langService;
+  langService = do_GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID);
+  if (langService) {
+    langService->GetLocaleLanguageGroup(&gUsersLocale);
+  }
+  if (!gUsersLocale) {
+    gUsersLocale = NS_NewAtom("x-western");
+  }
+  if (!gUsersLocale) {
+    FreeGlobals();
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   gUserDefined = NS_NewAtom(USER_DEFINED);
@@ -317,16 +320,16 @@ InitGlobals(void)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  //register an oberver to take care of cleanup
+  //register an observer to take care of cleanup
   gFontCleanupObserver = new nsFontCleanupObserver();
   NS_ASSERTION(gFontCleanupObserver, "failed to create observer");
   if (gFontCleanupObserver) {
-     // register for shutdown
-     nsresult rv;
-     nsCOMPtr<nsIObserverService> observerService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv);
-     if (NS_SUCCEEDED(rv)) {
-        rv = observerService->AddObserver(gFontCleanupObserver, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
-     }    
+    // register for shutdown
+    nsresult rv;
+    nsCOMPtr<nsIObserverService> observerService(do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &rv));
+    if (NS_SUCCEEDED(rv)) {
+      rv = observerService->AddObserver(gFontCleanupObserver, NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID).get());
+    }    
   }
   
   gInitialized = 1;
@@ -339,7 +342,7 @@ CheckFontLangGroup(
      nsIAtom* lang1, nsIAtom* lang2, const char* lang3, PRBool& hit,
      PRBool& check, PRBool& have)
 {
-  if ((!have) && (!hit) && (lang1 == lang2)) {
+  if (!have && !hit && (lang1 == lang2)) {
      hit = PR_TRUE; // so next time we don't bother to ask
      if (!check) {
        nsFontEnumeratorWin enumerator;
@@ -352,56 +355,49 @@ CheckFontLangGroup(
        NS_ASSERTION(NS_SUCCEEDED(res), "cannot get the font package proxy");
        NS_ASSERTION(proxy, "cannot get the font package proxy");
        if (proxy) {
-          char fontpackageid[256];
-          sprintf(fontpackageid, "lang:%s", lang3);
-          res = proxy->NeedFontPackage(fontpackageid);
-          NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
+         char fontpackageid[256];
+         PR_snprintf(fontpackageid, sizeof(fontpackageid), lang3);
+         res = proxy->NeedFontPackage(fontpackageid);
+         NS_ASSERTION(NS_SUCCEEDED(res), "cannot notify missing font package ");
        }
      }
   }
 }
 
-nsFontMetricsWin :: nsFontMetricsWin()
+nsFontMetricsWin::nsFontMetricsWin()
 {
   NS_INIT_REFCNT();
-  mSpaceWidth = 0;
 }
   
-nsFontMetricsWin :: ~nsFontMetricsWin()
+nsFontMetricsWin::~nsFontMetricsWin()
 {
-  // do not free mGeneric here
-
-  if (nsnull != mFont) {
-    delete mFont;
-    mFont = nsnull;
+  // delete the map of the substitute font since it is not in the gFontMaps hashtable
+  // @see nsFontMetricsWin[A]::LoadSubstituteFont()
+  if (mSubstituteFont && mSubstituteFont->mMap) {
+    PR_Free(mSubstituteFont->mMap);
+    mSubstituteFont->mMap = nsnull;
   }
-
+  mSubstituteFont = nsnull; // released below
   mFontHandle = nsnull; // released below
 
-  if (mLoadedFonts) {
-    nsFontWin** font = mLoadedFonts;
-    nsFontWin** end = &mLoadedFonts[mLoadedFontsCount];
-    while (font < end) {
-      delete *font;
-      font++;
-    }
-    PR_Free(mLoadedFonts);
-    mLoadedFonts = nsnull;
+  for (PRInt32 i = mLoadedFonts.Count()-1; i >= 0; --i) {
+    delete (nsFontWin*)mLoadedFonts[i];
   }
+  mLoadedFonts.Clear();
 
   mDeviceContext = nsnull;
 }
 
 #ifdef LEAK_DEBUG
 nsrefcnt
-nsFontMetricsWin :: AddRef()
+nsFontMetricsWin::AddRef()
 {
   NS_PRECONDITION(mRefCnt != 0, "resurrecting a dead object");
   return ++mRefCnt;
 }
 
 nsrefcnt
-nsFontMetricsWin :: Release()
+nsFontMetricsWin::Release()
 {
   NS_PRECONDITION(mRefCnt != 0, "too many release's");
   if (--mRefCnt == 0) {
@@ -417,18 +413,20 @@ NS_IMPL_ISUPPORTS1(nsFontMetricsWin, nsIFontMetrics)
 #endif
 
 NS_IMETHODIMP
-nsFontMetricsWin :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
+nsFontMetricsWin::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   nsIDeviceContext *aContext)
 {
   nsresult res;
   if (!gInitialized) {
     res = InitGlobals();
+    //XXXrbs this should be a fatal startup error
     NS_ASSERTION(NS_SUCCEEDED(res), "No font at all has been created");
     if (NS_FAILED(res)) {
       return res;
     }
   }
-  mFont = new nsFont(aFont);
+
+  mFont = aFont;
   mLangGroup = aLangGroup;
 
   // do special checking for the following lang group
@@ -437,52 +435,28 @@ nsFontMetricsWin :: Init(const nsFont& aFont, nsIAtom* aLangGroup,
   CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW", gHitZHTWCase, gCheckZHTWFont, gHaveZHTWFont);
   CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN", gHitZHCNCase, gCheckZHCNFont, gHaveZHCNFont);
 
-  mIndexOfSubstituteFont = -1;
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextWin *)aContext;
-  RealizeFont();
-  return NS_OK;
+  return RealizeFont();
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: Destroy()
+nsFontMetricsWin::Destroy()
 {
   mDeviceContext = nsnull;
   return NS_OK;
 }
 
-nsresult nsFontMetricsWin :: GetSpaceWidth(nscoord &aSpaceWidth)
-{
-  aSpaceWidth = mSpaceWidth;
-  return NS_OK;
-}
-
 void
-nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight)
+nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
+  PRBool aSizeOnly, PRBool aSkipZoom)
 {
-  // Fill in logFont structure; stolen from awt
-  logFont->lfWidth          = 0; 
-  logFont->lfEscapement     = 0;
-  logFont->lfOrientation    = 0;
-  logFont->lfUnderline      = 
-    (mFont->decorations & NS_FONT_DECORATION_UNDERLINE)
-    ? TRUE : FALSE; 
-  logFont->lfStrikeOut      =
-    (mFont->decorations & NS_FONT_DECORATION_LINE_THROUGH)
-    ? TRUE : FALSE; 
-  logFont->lfCharSet        = (mIsUserDefined ? ANSI_CHARSET: DEFAULT_CHARSET);
-  logFont->lfOutPrecision   = OUT_TT_PRECIS;
-  logFont->lfClipPrecision  = CLIP_DEFAULT_PRECIS;
-  logFont->lfQuality        = DEFAULT_QUALITY;
-  logFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
-  logFont->lfWeight = aWeight;
-  logFont->lfItalic = (mFont->style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE))
-    ? TRUE : FALSE;   // XXX need better oblique support
-
   float app2dev, app2twip, scale;
   mDeviceContext->GetAppUnitsToDevUnits(app2dev);
   float textZoom = 1.0;
-  mDeviceContext->GetTextZoom(textZoom);
+  if (!aSkipZoom) {
+    mDeviceContext->GetTextZoom(textZoom);
+  }
   if (nsDeviceContextWin::gRound) {
     mDeviceContext->GetDevUnitsToTwips(app2twip);
     mDeviceContext->GetCanonicalPixelScale(scale);
@@ -490,7 +464,7 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight)
 
     // This interesting bit of code rounds the font size off to the floor point
     // value. This is necessary for proper font scaling under windows.
-    PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont->size*app2twip));
+    PRInt32 sizePoints = NSTwipsToFloorIntPoints(nscoord(mFont.size*app2twip));
     float rounded = ((float)NSIntPointsToTwips(sizePoints)) / app2twip;
 
     // round font size off to floor point size to be windows compatible
@@ -501,8 +475,30 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight)
     //logFont->lfHeight = - LONG(rounded * app2dev * textZoom);
   }
   else {
-    logFont->lfHeight = - NSToIntRound(mFont->size * app2dev * textZoom);
+    logFont->lfHeight = - NSToIntRound(mFont.size * app2dev * textZoom);
   }
+
+  // Quick return if we came here just to compute the font size
+  if (aSizeOnly) return;
+
+  // Fill in logFont structure; stolen from awt
+  logFont->lfWidth          = 0; 
+  logFont->lfEscapement     = 0;
+  logFont->lfOrientation    = 0;
+  logFont->lfUnderline      =
+    (mFont.decorations & NS_FONT_DECORATION_UNDERLINE)
+    ? TRUE : FALSE;
+  logFont->lfStrikeOut      =
+    (mFont.decorations & NS_FONT_DECORATION_LINE_THROUGH)
+    ? TRUE : FALSE;
+  logFont->lfCharSet        = mIsUserDefined ? ANSI_CHARSET : DEFAULT_CHARSET;
+  logFont->lfOutPrecision   = OUT_TT_PRECIS;
+  logFont->lfClipPrecision  = CLIP_DEFAULT_PRECIS;
+  logFont->lfQuality        = DEFAULT_QUALITY;
+  logFont->lfPitchAndFamily = DEFAULT_PITCH | FF_DONTCARE;
+  logFont->lfWeight = aWeight;
+  logFont->lfItalic = (mFont.style & (NS_FONT_STYLE_ITALIC | NS_FONT_STYLE_OBLIQUE))
+    ? TRUE : FALSE;   // XXX need better oblique support
 
 #ifdef NS_DEBUG
   // Make Purify happy
@@ -530,7 +526,7 @@ GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
 {
   PRUint16 glyphIndex = 0;
   PRUint16 i;
-  for (i = 0; i < segCount; i++) {
+  for (i = 0; i < segCount; ++i) {
     if (endCode[i] >= aChar) {
       break;
     }
@@ -554,14 +550,14 @@ GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
   return glyphIndex;
 }
 
-enum nsGetNameError
+enum eGetNameError
 {
   eGetName_OK = 0,
   eGetName_GDIError,
   eGetName_OtherError
 };
 
-static nsGetNameError
+static eGetNameError
 GetNAME(HDC aDC, nsString* aName)
 {
   DWORD len = GetFontData(aDC, NAME, 0, nsnull, 0);
@@ -588,7 +584,7 @@ GetNAME(HDC aDC, nsString* aName)
   PRUint16 i;
   PRUint16 idLength;
   PRUint16 idOffset;
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n; ++i) {
     PRUint16 platform = GET_SHORT(p);
     p += 2;
     PRUint16 encoding = GET_SHORT(p);
@@ -610,7 +606,7 @@ GetNAME(HDC aDC, nsString* aName)
   }
   p = buf + offset + idOffset;
   idLength /= 2;
-  for (i = 0; i < idLength; i++) {
+  for (i = 0; i < idLength; ++i) {
     PRUnichar c = GET_SHORT(p);
     p += 2;
     aName->Append(c);
@@ -673,7 +669,7 @@ GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
     DWORD longLen = ((len / 4) - 1);
     *aMaxGlyph = longLen;
     PRUint32* longBuf = (PRUint32*) buf;
-    for (PRUint32 i = 0; i < longLen; i++) {
+    for (PRUint32 i = 0; i < longLen; ++i) {
       if (longBuf[i] == longBuf[i+1]) {
         buf[i] = 1;
       }
@@ -686,7 +682,7 @@ GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
     DWORD shortLen = ((len / 2) - 1);
     *aMaxGlyph = shortLen;
     PRUint16* shortBuf = (PRUint16*) buf;
-    for (PRUint16 i = 0; i < shortLen; i++) {
+    for (PRUint16 i = 0; i < shortLen; ++i) {
       if (shortBuf[i] == shortBuf[i+1]) {
         buf[i] = 1;
       }
@@ -706,7 +702,7 @@ GetSpaces(HDC aDC, PRUint32* aMaxGlyph)
 
 // The following is a workaround for a Japanese Windows 95 problem.
 
-PRUint8 bitToCharSet[64] =
+static PRUint8 gBitToCharset[64] =
 {
 /*00*/ ANSI_CHARSET,
 /*01*/ EASTEUROPE_CHARSET,
@@ -774,268 +770,267 @@ PRUint8 bitToCharSet[64] =
 /*63*/ DEFAULT_CHARSET
 };
 
-static nsCharSet gCharSetToIndex[256] =
+static eCharset gCharsetToIndex[256] =
 {
-  /* 000 */ eCharSet_ANSI,
-  /* 001 */ eCharSet_DEFAULT,
-  /* 002 */ eCharSet_DEFAULT, // SYMBOL
-  /* 003 */ eCharSet_DEFAULT,
-  /* 004 */ eCharSet_DEFAULT,
-  /* 005 */ eCharSet_DEFAULT,
-  /* 006 */ eCharSet_DEFAULT,
-  /* 007 */ eCharSet_DEFAULT,
-  /* 008 */ eCharSet_DEFAULT,
-  /* 009 */ eCharSet_DEFAULT,
-  /* 010 */ eCharSet_DEFAULT,
-  /* 011 */ eCharSet_DEFAULT,
-  /* 012 */ eCharSet_DEFAULT,
-  /* 013 */ eCharSet_DEFAULT,
-  /* 014 */ eCharSet_DEFAULT,
-  /* 015 */ eCharSet_DEFAULT,
-  /* 016 */ eCharSet_DEFAULT,
-  /* 017 */ eCharSet_DEFAULT,
-  /* 018 */ eCharSet_DEFAULT,
-  /* 019 */ eCharSet_DEFAULT,
-  /* 020 */ eCharSet_DEFAULT,
-  /* 021 */ eCharSet_DEFAULT,
-  /* 022 */ eCharSet_DEFAULT,
-  /* 023 */ eCharSet_DEFAULT,
-  /* 024 */ eCharSet_DEFAULT,
-  /* 025 */ eCharSet_DEFAULT,
-  /* 026 */ eCharSet_DEFAULT,
-  /* 027 */ eCharSet_DEFAULT,
-  /* 028 */ eCharSet_DEFAULT,
-  /* 029 */ eCharSet_DEFAULT,
-  /* 030 */ eCharSet_DEFAULT,
-  /* 031 */ eCharSet_DEFAULT,
-  /* 032 */ eCharSet_DEFAULT,
-  /* 033 */ eCharSet_DEFAULT,
-  /* 034 */ eCharSet_DEFAULT,
-  /* 035 */ eCharSet_DEFAULT,
-  /* 036 */ eCharSet_DEFAULT,
-  /* 037 */ eCharSet_DEFAULT,
-  /* 038 */ eCharSet_DEFAULT,
-  /* 039 */ eCharSet_DEFAULT,
-  /* 040 */ eCharSet_DEFAULT,
-  /* 041 */ eCharSet_DEFAULT,
-  /* 042 */ eCharSet_DEFAULT,
-  /* 043 */ eCharSet_DEFAULT,
-  /* 044 */ eCharSet_DEFAULT,
-  /* 045 */ eCharSet_DEFAULT,
-  /* 046 */ eCharSet_DEFAULT,
-  /* 047 */ eCharSet_DEFAULT,
-  /* 048 */ eCharSet_DEFAULT,
-  /* 049 */ eCharSet_DEFAULT,
-  /* 050 */ eCharSet_DEFAULT,
-  /* 051 */ eCharSet_DEFAULT,
-  /* 052 */ eCharSet_DEFAULT,
-  /* 053 */ eCharSet_DEFAULT,
-  /* 054 */ eCharSet_DEFAULT,
-  /* 055 */ eCharSet_DEFAULT,
-  /* 056 */ eCharSet_DEFAULT,
-  /* 057 */ eCharSet_DEFAULT,
-  /* 058 */ eCharSet_DEFAULT,
-  /* 059 */ eCharSet_DEFAULT,
-  /* 060 */ eCharSet_DEFAULT,
-  /* 061 */ eCharSet_DEFAULT,
-  /* 062 */ eCharSet_DEFAULT,
-  /* 063 */ eCharSet_DEFAULT,
-  /* 064 */ eCharSet_DEFAULT,
-  /* 065 */ eCharSet_DEFAULT,
-  /* 066 */ eCharSet_DEFAULT,
-  /* 067 */ eCharSet_DEFAULT,
-  /* 068 */ eCharSet_DEFAULT,
-  /* 069 */ eCharSet_DEFAULT,
-  /* 070 */ eCharSet_DEFAULT,
-  /* 071 */ eCharSet_DEFAULT,
-  /* 072 */ eCharSet_DEFAULT,
-  /* 073 */ eCharSet_DEFAULT,
-  /* 074 */ eCharSet_DEFAULT,
-  /* 075 */ eCharSet_DEFAULT,
-  /* 076 */ eCharSet_DEFAULT,
-  /* 077 */ eCharSet_DEFAULT, // MAC
-  /* 078 */ eCharSet_DEFAULT,
-  /* 079 */ eCharSet_DEFAULT,
-  /* 080 */ eCharSet_DEFAULT,
-  /* 081 */ eCharSet_DEFAULT,
-  /* 082 */ eCharSet_DEFAULT,
-  /* 083 */ eCharSet_DEFAULT,
-  /* 084 */ eCharSet_DEFAULT,
-  /* 085 */ eCharSet_DEFAULT,
-  /* 086 */ eCharSet_DEFAULT,
-  /* 087 */ eCharSet_DEFAULT,
-  /* 088 */ eCharSet_DEFAULT,
-  /* 089 */ eCharSet_DEFAULT,
-  /* 090 */ eCharSet_DEFAULT,
-  /* 091 */ eCharSet_DEFAULT,
-  /* 092 */ eCharSet_DEFAULT,
-  /* 093 */ eCharSet_DEFAULT,
-  /* 094 */ eCharSet_DEFAULT,
-  /* 095 */ eCharSet_DEFAULT,
-  /* 096 */ eCharSet_DEFAULT,
-  /* 097 */ eCharSet_DEFAULT,
-  /* 098 */ eCharSet_DEFAULT,
-  /* 099 */ eCharSet_DEFAULT,
-  /* 100 */ eCharSet_DEFAULT,
-  /* 101 */ eCharSet_DEFAULT,
-  /* 102 */ eCharSet_DEFAULT,
-  /* 103 */ eCharSet_DEFAULT,
-  /* 104 */ eCharSet_DEFAULT,
-  /* 105 */ eCharSet_DEFAULT,
-  /* 106 */ eCharSet_DEFAULT,
-  /* 107 */ eCharSet_DEFAULT,
-  /* 108 */ eCharSet_DEFAULT,
-  /* 109 */ eCharSet_DEFAULT,
-  /* 110 */ eCharSet_DEFAULT,
-  /* 111 */ eCharSet_DEFAULT,
-  /* 112 */ eCharSet_DEFAULT,
-  /* 113 */ eCharSet_DEFAULT,
-  /* 114 */ eCharSet_DEFAULT,
-  /* 115 */ eCharSet_DEFAULT,
-  /* 116 */ eCharSet_DEFAULT,
-  /* 117 */ eCharSet_DEFAULT,
-  /* 118 */ eCharSet_DEFAULT,
-  /* 119 */ eCharSet_DEFAULT,
-  /* 120 */ eCharSet_DEFAULT,
-  /* 121 */ eCharSet_DEFAULT,
-  /* 122 */ eCharSet_DEFAULT,
-  /* 123 */ eCharSet_DEFAULT,
-  /* 124 */ eCharSet_DEFAULT,
-  /* 125 */ eCharSet_DEFAULT,
-  /* 126 */ eCharSet_DEFAULT,
-  /* 127 */ eCharSet_DEFAULT,
-  /* 128 */ eCharSet_SHIFTJIS,
-  /* 129 */ eCharSet_HANGEUL,
-  /* 130 */ eCharSet_JOHAB,
-  /* 131 */ eCharSet_DEFAULT,
-  /* 132 */ eCharSet_DEFAULT,
-  /* 133 */ eCharSet_DEFAULT,
-  /* 134 */ eCharSet_GB2312,
-  /* 135 */ eCharSet_DEFAULT,
-  /* 136 */ eCharSet_CHINESEBIG5,
-  /* 137 */ eCharSet_DEFAULT,
-  /* 138 */ eCharSet_DEFAULT,
-  /* 139 */ eCharSet_DEFAULT,
-  /* 140 */ eCharSet_DEFAULT,
-  /* 141 */ eCharSet_DEFAULT,
-  /* 142 */ eCharSet_DEFAULT,
-  /* 143 */ eCharSet_DEFAULT,
-  /* 144 */ eCharSet_DEFAULT,
-  /* 145 */ eCharSet_DEFAULT,
-  /* 146 */ eCharSet_DEFAULT,
-  /* 147 */ eCharSet_DEFAULT,
-  /* 148 */ eCharSet_DEFAULT,
-  /* 149 */ eCharSet_DEFAULT,
-  /* 150 */ eCharSet_DEFAULT,
-  /* 151 */ eCharSet_DEFAULT,
-  /* 152 */ eCharSet_DEFAULT,
-  /* 153 */ eCharSet_DEFAULT,
-  /* 154 */ eCharSet_DEFAULT,
-  /* 155 */ eCharSet_DEFAULT,
-  /* 156 */ eCharSet_DEFAULT,
-  /* 157 */ eCharSet_DEFAULT,
-  /* 158 */ eCharSet_DEFAULT,
-  /* 159 */ eCharSet_DEFAULT,
-  /* 160 */ eCharSet_DEFAULT,
-  /* 161 */ eCharSet_GREEK,
-  /* 162 */ eCharSet_TURKISH,
-  /* 163 */ eCharSet_DEFAULT, // VIETNAMESE
-  /* 164 */ eCharSet_DEFAULT,
-  /* 165 */ eCharSet_DEFAULT,
-  /* 166 */ eCharSet_DEFAULT,
-  /* 167 */ eCharSet_DEFAULT,
-  /* 168 */ eCharSet_DEFAULT,
-  /* 169 */ eCharSet_DEFAULT,
-  /* 170 */ eCharSet_DEFAULT,
-  /* 171 */ eCharSet_DEFAULT,
-  /* 172 */ eCharSet_DEFAULT,
-  /* 173 */ eCharSet_DEFAULT,
-  /* 174 */ eCharSet_DEFAULT,
-  /* 175 */ eCharSet_DEFAULT,
-  /* 176 */ eCharSet_DEFAULT,
-  /* 177 */ eCharSet_HEBREW,
-  /* 178 */ eCharSet_ARABIC,
-  /* 179 */ eCharSet_DEFAULT,
-  /* 180 */ eCharSet_DEFAULT,
-  /* 181 */ eCharSet_DEFAULT,
-  /* 182 */ eCharSet_DEFAULT,
-  /* 183 */ eCharSet_DEFAULT,
-  /* 184 */ eCharSet_DEFAULT,
-  /* 185 */ eCharSet_DEFAULT,
-  /* 186 */ eCharSet_BALTIC,
-  /* 187 */ eCharSet_DEFAULT,
-  /* 188 */ eCharSet_DEFAULT,
-  /* 189 */ eCharSet_DEFAULT,
-  /* 190 */ eCharSet_DEFAULT,
-  /* 191 */ eCharSet_DEFAULT,
-  /* 192 */ eCharSet_DEFAULT,
-  /* 193 */ eCharSet_DEFAULT,
-  /* 194 */ eCharSet_DEFAULT,
-  /* 195 */ eCharSet_DEFAULT,
-  /* 196 */ eCharSet_DEFAULT,
-  /* 197 */ eCharSet_DEFAULT,
-  /* 198 */ eCharSet_DEFAULT,
-  /* 199 */ eCharSet_DEFAULT,
-  /* 200 */ eCharSet_DEFAULT,
-  /* 201 */ eCharSet_DEFAULT,
-  /* 202 */ eCharSet_DEFAULT,
-  /* 203 */ eCharSet_DEFAULT,
-  /* 204 */ eCharSet_RUSSIAN,
-  /* 205 */ eCharSet_DEFAULT,
-  /* 206 */ eCharSet_DEFAULT,
-  /* 207 */ eCharSet_DEFAULT,
-  /* 208 */ eCharSet_DEFAULT,
-  /* 209 */ eCharSet_DEFAULT,
-  /* 210 */ eCharSet_DEFAULT,
-  /* 211 */ eCharSet_DEFAULT,
-  /* 212 */ eCharSet_DEFAULT,
-  /* 213 */ eCharSet_DEFAULT,
-  /* 214 */ eCharSet_DEFAULT,
-  /* 215 */ eCharSet_DEFAULT,
-  /* 216 */ eCharSet_DEFAULT,
-  /* 217 */ eCharSet_DEFAULT,
-  /* 218 */ eCharSet_DEFAULT,
-  /* 219 */ eCharSet_DEFAULT,
-  /* 220 */ eCharSet_DEFAULT,
-  /* 221 */ eCharSet_DEFAULT,
-  /* 222 */ eCharSet_THAI,
-  /* 223 */ eCharSet_DEFAULT,
-  /* 224 */ eCharSet_DEFAULT,
-  /* 225 */ eCharSet_DEFAULT,
-  /* 226 */ eCharSet_DEFAULT,
-  /* 227 */ eCharSet_DEFAULT,
-  /* 228 */ eCharSet_DEFAULT,
-  /* 229 */ eCharSet_DEFAULT,
-  /* 230 */ eCharSet_DEFAULT,
-  /* 231 */ eCharSet_DEFAULT,
-  /* 232 */ eCharSet_DEFAULT,
-  /* 233 */ eCharSet_DEFAULT,
-  /* 234 */ eCharSet_DEFAULT,
-  /* 235 */ eCharSet_DEFAULT,
-  /* 236 */ eCharSet_DEFAULT,
-  /* 237 */ eCharSet_DEFAULT,
-  /* 238 */ eCharSet_EASTEUROPE,
-  /* 239 */ eCharSet_DEFAULT,
-  /* 240 */ eCharSet_DEFAULT,
-  /* 241 */ eCharSet_DEFAULT,
-  /* 242 */ eCharSet_DEFAULT,
-  /* 243 */ eCharSet_DEFAULT,
-  /* 244 */ eCharSet_DEFAULT,
-  /* 245 */ eCharSet_DEFAULT,
-  /* 246 */ eCharSet_DEFAULT,
-  /* 247 */ eCharSet_DEFAULT,
-  /* 248 */ eCharSet_DEFAULT,
-  /* 249 */ eCharSet_DEFAULT,
-  /* 250 */ eCharSet_DEFAULT,
-  /* 251 */ eCharSet_DEFAULT,
-  /* 252 */ eCharSet_DEFAULT,
-  /* 253 */ eCharSet_DEFAULT,
-  /* 254 */ eCharSet_DEFAULT,
-  /* 255 */ eCharSet_DEFAULT  // OEM
+  /* 000 */ eCharset_ANSI,
+  /* 001 */ eCharset_DEFAULT,
+  /* 002 */ eCharset_DEFAULT, // SYMBOL
+  /* 003 */ eCharset_DEFAULT,
+  /* 004 */ eCharset_DEFAULT,
+  /* 005 */ eCharset_DEFAULT,
+  /* 006 */ eCharset_DEFAULT,
+  /* 007 */ eCharset_DEFAULT,
+  /* 008 */ eCharset_DEFAULT,
+  /* 009 */ eCharset_DEFAULT,
+  /* 010 */ eCharset_DEFAULT,
+  /* 011 */ eCharset_DEFAULT,
+  /* 012 */ eCharset_DEFAULT,
+  /* 013 */ eCharset_DEFAULT,
+  /* 014 */ eCharset_DEFAULT,
+  /* 015 */ eCharset_DEFAULT,
+  /* 016 */ eCharset_DEFAULT,
+  /* 017 */ eCharset_DEFAULT,
+  /* 018 */ eCharset_DEFAULT,
+  /* 019 */ eCharset_DEFAULT,
+  /* 020 */ eCharset_DEFAULT,
+  /* 021 */ eCharset_DEFAULT,
+  /* 022 */ eCharset_DEFAULT,
+  /* 023 */ eCharset_DEFAULT,
+  /* 024 */ eCharset_DEFAULT,
+  /* 025 */ eCharset_DEFAULT,
+  /* 026 */ eCharset_DEFAULT,
+  /* 027 */ eCharset_DEFAULT,
+  /* 028 */ eCharset_DEFAULT,
+  /* 029 */ eCharset_DEFAULT,
+  /* 030 */ eCharset_DEFAULT,
+  /* 031 */ eCharset_DEFAULT,
+  /* 032 */ eCharset_DEFAULT,
+  /* 033 */ eCharset_DEFAULT,
+  /* 034 */ eCharset_DEFAULT,
+  /* 035 */ eCharset_DEFAULT,
+  /* 036 */ eCharset_DEFAULT,
+  /* 037 */ eCharset_DEFAULT,
+  /* 038 */ eCharset_DEFAULT,
+  /* 039 */ eCharset_DEFAULT,
+  /* 040 */ eCharset_DEFAULT,
+  /* 041 */ eCharset_DEFAULT,
+  /* 042 */ eCharset_DEFAULT,
+  /* 043 */ eCharset_DEFAULT,
+  /* 044 */ eCharset_DEFAULT,
+  /* 045 */ eCharset_DEFAULT,
+  /* 046 */ eCharset_DEFAULT,
+  /* 047 */ eCharset_DEFAULT,
+  /* 048 */ eCharset_DEFAULT,
+  /* 049 */ eCharset_DEFAULT,
+  /* 050 */ eCharset_DEFAULT,
+  /* 051 */ eCharset_DEFAULT,
+  /* 052 */ eCharset_DEFAULT,
+  /* 053 */ eCharset_DEFAULT,
+  /* 054 */ eCharset_DEFAULT,
+  /* 055 */ eCharset_DEFAULT,
+  /* 056 */ eCharset_DEFAULT,
+  /* 057 */ eCharset_DEFAULT,
+  /* 058 */ eCharset_DEFAULT,
+  /* 059 */ eCharset_DEFAULT,
+  /* 060 */ eCharset_DEFAULT,
+  /* 061 */ eCharset_DEFAULT,
+  /* 062 */ eCharset_DEFAULT,
+  /* 063 */ eCharset_DEFAULT,
+  /* 064 */ eCharset_DEFAULT,
+  /* 065 */ eCharset_DEFAULT,
+  /* 066 */ eCharset_DEFAULT,
+  /* 067 */ eCharset_DEFAULT,
+  /* 068 */ eCharset_DEFAULT,
+  /* 069 */ eCharset_DEFAULT,
+  /* 070 */ eCharset_DEFAULT,
+  /* 071 */ eCharset_DEFAULT,
+  /* 072 */ eCharset_DEFAULT,
+  /* 073 */ eCharset_DEFAULT,
+  /* 074 */ eCharset_DEFAULT,
+  /* 075 */ eCharset_DEFAULT,
+  /* 076 */ eCharset_DEFAULT,
+  /* 077 */ eCharset_DEFAULT, // MAC
+  /* 078 */ eCharset_DEFAULT,
+  /* 079 */ eCharset_DEFAULT,
+  /* 080 */ eCharset_DEFAULT,
+  /* 081 */ eCharset_DEFAULT,
+  /* 082 */ eCharset_DEFAULT,
+  /* 083 */ eCharset_DEFAULT,
+  /* 084 */ eCharset_DEFAULT,
+  /* 085 */ eCharset_DEFAULT,
+  /* 086 */ eCharset_DEFAULT,
+  /* 087 */ eCharset_DEFAULT,
+  /* 088 */ eCharset_DEFAULT,
+  /* 089 */ eCharset_DEFAULT,
+  /* 090 */ eCharset_DEFAULT,
+  /* 091 */ eCharset_DEFAULT,
+  /* 092 */ eCharset_DEFAULT,
+  /* 093 */ eCharset_DEFAULT,
+  /* 094 */ eCharset_DEFAULT,
+  /* 095 */ eCharset_DEFAULT,
+  /* 096 */ eCharset_DEFAULT,
+  /* 097 */ eCharset_DEFAULT,
+  /* 098 */ eCharset_DEFAULT,
+  /* 099 */ eCharset_DEFAULT,
+  /* 100 */ eCharset_DEFAULT,
+  /* 101 */ eCharset_DEFAULT,
+  /* 102 */ eCharset_DEFAULT,
+  /* 103 */ eCharset_DEFAULT,
+  /* 104 */ eCharset_DEFAULT,
+  /* 105 */ eCharset_DEFAULT,
+  /* 106 */ eCharset_DEFAULT,
+  /* 107 */ eCharset_DEFAULT,
+  /* 108 */ eCharset_DEFAULT,
+  /* 109 */ eCharset_DEFAULT,
+  /* 110 */ eCharset_DEFAULT,
+  /* 111 */ eCharset_DEFAULT,
+  /* 112 */ eCharset_DEFAULT,
+  /* 113 */ eCharset_DEFAULT,
+  /* 114 */ eCharset_DEFAULT,
+  /* 115 */ eCharset_DEFAULT,
+  /* 116 */ eCharset_DEFAULT,
+  /* 117 */ eCharset_DEFAULT,
+  /* 118 */ eCharset_DEFAULT,
+  /* 119 */ eCharset_DEFAULT,
+  /* 120 */ eCharset_DEFAULT,
+  /* 121 */ eCharset_DEFAULT,
+  /* 122 */ eCharset_DEFAULT,
+  /* 123 */ eCharset_DEFAULT,
+  /* 124 */ eCharset_DEFAULT,
+  /* 125 */ eCharset_DEFAULT,
+  /* 126 */ eCharset_DEFAULT,
+  /* 127 */ eCharset_DEFAULT,
+  /* 128 */ eCharset_SHIFTJIS,
+  /* 129 */ eCharset_HANGEUL,
+  /* 130 */ eCharset_JOHAB,
+  /* 131 */ eCharset_DEFAULT,
+  /* 132 */ eCharset_DEFAULT,
+  /* 133 */ eCharset_DEFAULT,
+  /* 134 */ eCharset_GB2312,
+  /* 135 */ eCharset_DEFAULT,
+  /* 136 */ eCharset_CHINESEBIG5,
+  /* 137 */ eCharset_DEFAULT,
+  /* 138 */ eCharset_DEFAULT,
+  /* 139 */ eCharset_DEFAULT,
+  /* 140 */ eCharset_DEFAULT,
+  /* 141 */ eCharset_DEFAULT,
+  /* 142 */ eCharset_DEFAULT,
+  /* 143 */ eCharset_DEFAULT,
+  /* 144 */ eCharset_DEFAULT,
+  /* 145 */ eCharset_DEFAULT,
+  /* 146 */ eCharset_DEFAULT,
+  /* 147 */ eCharset_DEFAULT,
+  /* 148 */ eCharset_DEFAULT,
+  /* 149 */ eCharset_DEFAULT,
+  /* 150 */ eCharset_DEFAULT,
+  /* 151 */ eCharset_DEFAULT,
+  /* 152 */ eCharset_DEFAULT,
+  /* 153 */ eCharset_DEFAULT,
+  /* 154 */ eCharset_DEFAULT,
+  /* 155 */ eCharset_DEFAULT,
+  /* 156 */ eCharset_DEFAULT,
+  /* 157 */ eCharset_DEFAULT,
+  /* 158 */ eCharset_DEFAULT,
+  /* 159 */ eCharset_DEFAULT,
+  /* 160 */ eCharset_DEFAULT,
+  /* 161 */ eCharset_GREEK,
+  /* 162 */ eCharset_TURKISH,
+  /* 163 */ eCharset_DEFAULT, // VIETNAMESE
+  /* 164 */ eCharset_DEFAULT,
+  /* 165 */ eCharset_DEFAULT,
+  /* 166 */ eCharset_DEFAULT,
+  /* 167 */ eCharset_DEFAULT,
+  /* 168 */ eCharset_DEFAULT,
+  /* 169 */ eCharset_DEFAULT,
+  /* 170 */ eCharset_DEFAULT,
+  /* 171 */ eCharset_DEFAULT,
+  /* 172 */ eCharset_DEFAULT,
+  /* 173 */ eCharset_DEFAULT,
+  /* 174 */ eCharset_DEFAULT,
+  /* 175 */ eCharset_DEFAULT,
+  /* 176 */ eCharset_DEFAULT,
+  /* 177 */ eCharset_HEBREW,
+  /* 178 */ eCharset_ARABIC,
+  /* 179 */ eCharset_DEFAULT,
+  /* 180 */ eCharset_DEFAULT,
+  /* 181 */ eCharset_DEFAULT,
+  /* 182 */ eCharset_DEFAULT,
+  /* 183 */ eCharset_DEFAULT,
+  /* 184 */ eCharset_DEFAULT,
+  /* 185 */ eCharset_DEFAULT,
+  /* 186 */ eCharset_BALTIC,
+  /* 187 */ eCharset_DEFAULT,
+  /* 188 */ eCharset_DEFAULT,
+  /* 189 */ eCharset_DEFAULT,
+  /* 190 */ eCharset_DEFAULT,
+  /* 191 */ eCharset_DEFAULT,
+  /* 192 */ eCharset_DEFAULT,
+  /* 193 */ eCharset_DEFAULT,
+  /* 194 */ eCharset_DEFAULT,
+  /* 195 */ eCharset_DEFAULT,
+  /* 196 */ eCharset_DEFAULT,
+  /* 197 */ eCharset_DEFAULT,
+  /* 198 */ eCharset_DEFAULT,
+  /* 199 */ eCharset_DEFAULT,
+  /* 200 */ eCharset_DEFAULT,
+  /* 201 */ eCharset_DEFAULT,
+  /* 202 */ eCharset_DEFAULT,
+  /* 203 */ eCharset_DEFAULT,
+  /* 204 */ eCharset_RUSSIAN,
+  /* 205 */ eCharset_DEFAULT,
+  /* 206 */ eCharset_DEFAULT,
+  /* 207 */ eCharset_DEFAULT,
+  /* 208 */ eCharset_DEFAULT,
+  /* 209 */ eCharset_DEFAULT,
+  /* 210 */ eCharset_DEFAULT,
+  /* 211 */ eCharset_DEFAULT,
+  /* 212 */ eCharset_DEFAULT,
+  /* 213 */ eCharset_DEFAULT,
+  /* 214 */ eCharset_DEFAULT,
+  /* 215 */ eCharset_DEFAULT,
+  /* 216 */ eCharset_DEFAULT,
+  /* 217 */ eCharset_DEFAULT,
+  /* 218 */ eCharset_DEFAULT,
+  /* 219 */ eCharset_DEFAULT,
+  /* 220 */ eCharset_DEFAULT,
+  /* 221 */ eCharset_DEFAULT,
+  /* 222 */ eCharset_THAI,
+  /* 223 */ eCharset_DEFAULT,
+  /* 224 */ eCharset_DEFAULT,
+  /* 225 */ eCharset_DEFAULT,
+  /* 226 */ eCharset_DEFAULT,
+  /* 227 */ eCharset_DEFAULT,
+  /* 228 */ eCharset_DEFAULT,
+  /* 229 */ eCharset_DEFAULT,
+  /* 230 */ eCharset_DEFAULT,
+  /* 231 */ eCharset_DEFAULT,
+  /* 232 */ eCharset_DEFAULT,
+  /* 233 */ eCharset_DEFAULT,
+  /* 234 */ eCharset_DEFAULT,
+  /* 235 */ eCharset_DEFAULT,
+  /* 236 */ eCharset_DEFAULT,
+  /* 237 */ eCharset_DEFAULT,
+  /* 238 */ eCharset_EASTEUROPE,
+  /* 239 */ eCharset_DEFAULT,
+  /* 240 */ eCharset_DEFAULT,
+  /* 241 */ eCharset_DEFAULT,
+  /* 242 */ eCharset_DEFAULT,
+  /* 243 */ eCharset_DEFAULT,
+  /* 244 */ eCharset_DEFAULT,
+  /* 245 */ eCharset_DEFAULT,
+  /* 246 */ eCharset_DEFAULT,
+  /* 247 */ eCharset_DEFAULT,
+  /* 248 */ eCharset_DEFAULT,
+  /* 249 */ eCharset_DEFAULT,
+  /* 250 */ eCharset_DEFAULT,
+  /* 251 */ eCharset_DEFAULT,
+  /* 252 */ eCharset_DEFAULT,
+  /* 253 */ eCharset_DEFAULT,
+  /* 254 */ eCharset_DEFAULT,
+  /* 255 */ eCharset_DEFAULT  // OEM
 };
 
-
-PRUint8 charSetToBit[eCharSet_COUNT] =
+static PRUint8 gCharsetToBit[eCharset_COUNT] =
 {
 	-1,  // DEFAULT
 	 0,  // ANSI_CHARSET,
@@ -1080,10 +1075,10 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIAtom> charset;
-  rv = gCharSetManager->GetCharsetAtom(value.get(), getter_AddRefs(charset));
+  rv = gCharsetManager->GetCharsetAtom(value.get(), getter_AddRefs(charset));
   if (NS_FAILED(rv)) return rv;
 
-  rv = gCharSetManager->GetUnicodeEncoder(charset, aConverter);
+  rv = gCharsetManager->GetUnicodeEncoder(charset, aConverter);
   if (NS_FAILED(rv)) return rv;
   return (*aConverter)->SetOutputErrorBehavior((*aConverter)->kOnError_Replace, nsnull, '?');
 }
@@ -1091,12 +1086,12 @@ GetConverter(const char* aFontName, nsIUnicodeEncoder** aConverter)
 // This function uses the charset converter manager to fill the map for the
 // font whose name is given
 static int
-GetMap(const char* aFontName, PRUint32* aMap)
+FillMap(const char* aFontName, PRUint32* aMap)
 {
   // see if we know something about the converter of this font 
   nsCOMPtr<nsIUnicodeEncoder> converter;
   if (NS_SUCCEEDED(GetConverter(aFontName, getter_AddRefs(converter)))) {
-    nsCOMPtr<nsICharRepresentable> mapper = do_QueryInterface(converter);
+    nsCOMPtr<nsICharRepresentable> mapper(do_QueryInterface(converter));
     if (mapper && NS_SUCCEEDED(mapper->FillInfo(aMap))) {
       return 1;
     }
@@ -1107,7 +1102,7 @@ GetMap(const char* aFontName, PRUint32* aMap)
 class nsFontInfo : public PLHashEntry
 {
 public:
-  nsFontInfo(int aFontType, PRUint8 aCharset, PRUint32* aMap)
+  nsFontInfo(eFontType aFontType, PRUint8 aCharset, PRUint32* aMap)
   {
     mType = aFontType;
     mCharset = aCharset;
@@ -1118,7 +1113,7 @@ public:
 #endif
   };
 
-  int       mType;
+  eFontType mType;
   PRUint8   mCharset;
   PRUint32* mMap;
 #ifdef MOZ_MATHML
@@ -1148,7 +1143,7 @@ PR_STATIC_CALLBACK(void) fontmap_FreeTable(void *pool, void *item)
 
 PR_STATIC_CALLBACK(PLHashEntry*) fontmap_AllocEntry(void *pool, const void *key)
 {
- return new nsFontInfo(NS_FONT_TYPE_UNICODE, DEFAULT_CHARSET, nsnull);
+ return new nsFontInfo(eFontType_Unicode, DEFAULT_CHARSET, nsnull);
 }
 
 PR_STATIC_CALLBACK(void) fontmap_FreeEntry(void *pool, PLHashEntry *he, PRUint32 flag)
@@ -1171,24 +1166,29 @@ PLHashAllocOps fontmap_HashAllocOps = {
   fontmap_AllocEntry, fontmap_FreeEntry
 };
 
+// Maps that are successfully returned by GetCMAP() are also cached in the
+// gFontMaps hashtable and these are possibly shared. They are going to be
+// deleted by the cleanup observer. You don't need to delete a map upon
+// calling GetCMAP (even if you subsequently fail to create a current font
+// with it). Otherwise, you will leave a dangling pointer in the gFontMaps
+// hashtable.
 PRUint32*
-nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUint8* aCharset)
+nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, eFontType* aFontType, PRUint8* aCharset)
 {
-  if (!gInitializedFontMaps) {
+  if (!gFontMaps) {
     gFontMaps = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, &fontmap_HashAllocOps,
       nsnull);
     if (!gFontMaps) { // error checking
       return nsnull;
     }
-    gEmptyMap = (PRUint32*) PR_Calloc(2048, 4);
-    if (!nsFontMetricsWin::gEmptyMap) {
+    gEmptyMap = (PRUint32*) PR_Calloc(2048, 4); // deleted in FreeGlobals()
+    if (!gEmptyMap) {
       PL_HashTableDestroy(gFontMaps);
       gFontMaps = nsnull;
       return nsnull;
     }
-    gInitializedFontMaps = 1;
   }
-  nsString* name = new nsString();
+  nsString* name = new nsString(); // deleted by fontmap_FreeEntry
   if (!name) {
     return nsnull;
   }
@@ -1196,15 +1196,15 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   nsFontInfo* info;
   PLHashEntry *he, **hep = NULL; // shouldn't be NULL, using it as a flag to catch bad changes
   PLHashNumber hash;
-  nsGetNameError ret = GetNAME(aDC, name);
+  eGetNameError ret = GetNAME(aDC, name);
   if (ret == eGetName_OK) {
     // lookup the hashtable (if we miss, the computed hash and hep are fed back in HT-RawAdd)
     hash = HashKey(name);
     hep = PL_HashTableRawLookup(gFontMaps, hash, name);
     he = *hep;
     if (he) {
-      delete name;
       // an identical map has already been added
+      delete name;
       info = NS_STATIC_CAST(nsFontInfo *, he);
       if (aCharset) {
         *aCharset = info->mCharset;
@@ -1214,7 +1214,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
       }
       return info->mMap;
     }
-    map = (PRUint32*) PR_Calloc(2048, 4);
+    map = (PRUint32*) PR_Calloc(2048, 4); // deleted by fontmap_FreeEntry
     if (!map) {
       delete name;
       return nsnull;
@@ -1227,28 +1227,30 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     if (charset & (~0xFF)) {
       return gEmptyMap;
     }
-    else {
-      int j = gCharSetToIndex[charset];
-      
-      //default charset is not dependable, skip it at this time
-      if (j == eCharSet_DEFAULT)
-        return gEmptyMap;
-      PRUint32* charSetMap = gCharSetInfo[j].mMap;
-      if (!charSetMap) {
-        charSetMap = (PRUint32*) PR_Calloc(2048, 4);
-        if (charSetMap) {
-          gCharSetInfo[j].mMap = charSetMap;
-          gCharSetInfo[j].GenerateMap(&gCharSetInfo[j]);
-        }
-        else {
-          return gEmptyMap;
-        }
-      }
-      if (aFontType) {
-        *aFontType = NS_FONT_TYPE_UNICODE;
-      }
-      return charSetMap;
+    int j = gCharsetToIndex[charset];
+    
+    //default charset is not dependable, skip it at this time
+    if (j == eCharset_DEFAULT) {
+      return gEmptyMap;
     }
+    PRUint32* charsetMap = gCharsetInfo[j].mMap;
+    if (!charsetMap) {
+      charsetMap = (PRUint32*) PR_Calloc(2048, 4); // deleted in FreeGlobals()
+      if (charsetMap) {
+        gCharsetInfo[j].mMap = charsetMap;
+        gCharsetInfo[j].GenerateMap(&gCharsetInfo[j]);
+      }
+      else {
+        return gEmptyMap;
+      }
+    }
+    if (aCharset) {
+      *aCharset = charset;
+    }
+    if (aFontType) {
+      *aFontType = eFontType_Unicode;
+    }
+    return charsetMap;   
   }
   else {
     // return an empty map, so that we never try this font again
@@ -1280,7 +1282,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
   p += 2;
   PRUint16 i;
   PRUint32 offset;
-  for (i = 0; i < n; i++) {
+  for (i = 0; i < n; ++i) {
     PRUint16 platformID = GET_SHORT(p);
     p += 2;
     PRUint16 encodingID = GET_SHORT(p);
@@ -1301,9 +1303,9 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
             *aCharset = DEFAULT_CHARSET;
           }
           if (aFontType) {
-            *aFontType = NS_FONT_TYPE_NON_UNICODE;
+            *aFontType = eFontType_NonUnicode;
           }
-          if (!GetMap(aShortName, map)) {
+          if (!FillMap(aShortName, map)) {
             PR_Free(map);
             map = gEmptyMap;
           }
@@ -1314,7 +1316,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
           he = PL_HashTableRawAdd(gFontMaps, hep, hash, name, nsnull);
           if (he) {   
             info = NS_STATIC_CAST(nsFontInfo*, he);
-            info->mType = NS_FONT_TYPE_NON_UNICODE;
+            info->mType = eFontType_NonUnicode;
             info->mMap = map;
             he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
             return map;
@@ -1331,9 +1333,9 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
           *aCharset = SYMBOL_CHARSET;
         }
         if (aFontType) {
-          *aFontType = NS_FONT_TYPE_NON_UNICODE;
+          *aFontType = eFontType_NonUnicode;
         }
-        if (!GetMap(aShortName, map)) {
+        if (!FillMap(aShortName, map)) {
           PR_Free(map);
           map = gEmptyMap;
         }
@@ -1345,7 +1347,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
         if (he) {
           info = NS_STATIC_CAST(nsFontInfo*, he);
           info->mCharset = SYMBOL_CHARSET;
-          info->mType = NS_FONT_TYPE_NON_UNICODE;
+          info->mType = eFontType_NonUnicode;
           info->mMap = map;
           he->value = info;    // so PL_HashTableLookup returns an nsFontInfo*
           return map;
@@ -1396,7 +1398,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     spacesInitialized = 1;
     SET_SPACE(0x0020);
     SET_SPACE(0x00A0);
-    for (PRUint16 c = 0x2000; c <= 0x200B; c++) {
+    for (PRUint16 c = 0x2000; c <= 0x200B; ++c) {
       SET_SPACE(c);
     }
     SET_SPACE(0x3000);
@@ -1410,11 +1412,11 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     return nsnull;
   }
 
-  for (i = 0; i < segCount; i++) {
+  for (i = 0; i < segCount; ++i) {
     if (idRangeOffset[i]) {
       PRUint16 startC = startCode[i];
       PRUint16 endC = endCode[i];
-      for (PRUint32 c = startC; c <= endC; c++) {
+      for (PRUint32 c = startC; c <= endC; ++c) {
         PRUint16* g =
           (idRangeOffset[i]/2 + (c - startC) + &idRangeOffset[i]);
         if ((PRUint8*) g < end) {
@@ -1440,7 +1442,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     }
     else {
       PRUint16 endC = endCode[i];
-      for (PRUint32 c = startCode[i]; c <= endC; c++) {
+      for (PRUint32 c = startCode[i]; c <= endC; ++c) {
         PRUint16 glyph = idDelta[i] + c;
         if (glyph < maxGlyph) {
           if (isSpace[glyph]) {
@@ -1465,7 +1467,7 @@ nsFontMetricsWin::GetCMAP(HDC aDC, const char* aShortName, int* aFontType, PRUin
     *aCharset = DEFAULT_CHARSET;
   }
   if (aFontType) {
-    *aFontType = NS_FONT_TYPE_UNICODE;
+    *aFontType = eFontType_Unicode;
   }
 
   // XXX Need to check if an identical map has already been added - Bug 75260
@@ -1535,7 +1537,7 @@ GetGlyphIndices(HDC              aDC,
     p += 2;
     PRUint16 i;
     PRUint32 offset;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; ++i) {
       PRUint16 platformID = GET_SHORT(p);
       p += 2;
       PRUint16 encodingID = GET_SHORT(p);
@@ -1571,7 +1573,7 @@ GetGlyphIndices(HDC              aDC,
       nsAutoString name;
       nsFontInfo* info;
       if (GetNAME(aDC, &name) == eGetName_OK) {
-        info = (nsFontInfo*) PL_HashTableLookup(nsFontMetricsWin::gFontMaps, &name);
+        info = (nsFontInfo*)PL_HashTableLookup(nsFontMetricsWin::gFontMaps, &name);
         if (info) {
           info->mCMAP.mData = buf;
           info->mCMAP.mLength = len;
@@ -1596,7 +1598,7 @@ GetGlyphIndices(HDC              aDC,
     p += 2;
     PRUint16 i;
     PRUint32 offset;
-    for (i = 0; i < n; i++) {
+    for (i = 0; i < n; ++i) {
       PRUint16 platformID = GET_SHORT(p);
       p += 2;
       PRUint16 encodingID = GET_SHORT(p);
@@ -1621,7 +1623,7 @@ GetGlyphIndices(HDC              aDC,
       result = new PRUint16[aLength];
       if (!result) return nsnull;
     }
-    for (i = 0; i < aLength; i++) {
+    for (i = 0; i < aLength; ++i) {
       result[i] = GetGlyphIndex(segCount, endCode, startCode,
                                 idRangeOffset, idDelta, end, 
                                 aString[i]);
@@ -1642,7 +1644,7 @@ GetGlyphIndices(HDC              aDC,
 // nsGlyphAgent provides an interface to hide these details, and it
 // also hides the parameters/setup needed to call GetGlyphOutline.
 
-enum nsGlyphAgentEnum {
+enum eGlyphAgent {
   eGlyphAgent_UNKNOWN = -1,
   eGlyphAgent_UNICODE,
   eGlyphAgent_ANSI
@@ -1665,7 +1667,7 @@ public:
   ~nsGlyphAgent()
   {}
 
-  nsGlyphAgentEnum GetState()
+  eGlyphAgent GetState()
   {
     return mState;
   }
@@ -1681,7 +1683,7 @@ public:
 private:
   MAT2 mMat;    // glyph transform matrix (always identity in our context)
 
-  nsGlyphAgentEnum mState; 
+  eGlyphAgent mState; 
                 // eGlyphAgent_UNKNOWN : glyph agent is not yet fully initialized
                 // eGlyphAgent_UNICODE : this platform implements GetGlyphOutlineW()
                 // eGlyphAgent_ANSI : this platform doesn't implement GetGlyphOutlineW()
@@ -1725,17 +1727,16 @@ nsGlyphAgent::GetGlyphMetrics(HDC           aDC,
   if (eGlyphAgent_UNICODE == mState) {
     return GetGlyphOutlineW(aDC, aChar, GGO_METRICS, aGlyphMetrics, 0, nsnull, &mMat);
   }
-  else {
-    // we are on a platform that doesn't implement GetGlyphOutlineW()
-    // (see Q241358: The GetGlyphOutlineW Function Fails on Windows 95 & 98
-    //  http://support.microsoft.com/support/kb/articles/Q241/3/58.ASP)
-    // we will use glyph indices as a work around.
-    if (0 == aGlyphIndex) { // caller doesn't know the glyph index, so find it
-      GetGlyphIndices(aDC, nsnull, &aChar, 1, &aGlyphIndex, 1);
-    }
-    if (0 < aGlyphIndex) {
-      return GetGlyphOutlineA(aDC, aGlyphIndex, GGO_METRICS | GGO_GLYPH_INDEX, aGlyphMetrics, 0, nsnull, &mMat);
-    }
+
+  // Otherwise, we are on a platform that doesn't implement GetGlyphOutlineW()
+  // (see Q241358: The GetGlyphOutlineW Function Fails on Windows 95 & 98
+  // http://support.microsoft.com/support/kb/articles/Q241/3/58.ASP)
+  // we will use glyph indices as a work around.
+  if (0 == aGlyphIndex) { // caller doesn't know the glyph index, so find it
+    GetGlyphIndices(aDC, nsnull, &aChar, 1, &aGlyphIndex, 1);
+  }
+  if (0 < aGlyphIndex) {
+    return GetGlyphOutlineA(aDC, aGlyphIndex, GGO_METRICS | GGO_GLYPH_INDEX, aGlyphMetrics, 0, nsnull, &mMat);
   }
 
   // if we ever reach here, something went wrong in GetGlyphIndices() above
@@ -1775,7 +1776,6 @@ public:
 
 private:
   PRBool mUnderlinedOrStrikeOut;
-
 };
 
 // Subclass for non-unicode fonts that need a mapping table and uses
@@ -1838,13 +1838,95 @@ private:
   PRBool mDisplayUnicode;
 };
 
+void
+nsFontMetricsWin::InitMetricsFor(HDC aDC, nsFontWin* aFont)
+{
+  float dev2app;
+  mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+
+  TEXTMETRIC metrics;
+  ::GetTextMetrics(aDC, &metrics);
+  aFont->mMaxAscent = NSToCoordRound(metrics.tmAscent * dev2app);
+  aFont->mMaxDescent = NSToCoordRound(metrics.tmDescent * dev2app);
+}
+
+HFONT
+nsFontMetricsWin::CreateFontHandle(HDC aDC, LOGFONT* aLogFont)
+{
+  /*
+   * According to http://msdn.microsoft.com/library/
+   * CreateFontIndirectW is only supported on NT/2000
+   */
+  if (mFont.sizeAdjust <= 0) {
+    // Quick return for the common case where no adjustement is needed
+    return ::CreateFontIndirect(aLogFont);
+  }
+
+  // Adjust the aspect-value so that the x-height of the final font
+  // is mFont.size * mFont.sizeAdjust
+
+  PRInt32 dummy = 0;
+  nscoord baseSize = mFont.size; 
+  nscoord size72 = NSIntPointsToTwips(72); // large value improves accuracy
+  mFont.size = size72;
+  nscoord baselfHeight = aLogFont->lfHeight;
+  FillLogFont(aLogFont, dummy, PR_TRUE, PR_TRUE);
+
+  HFONT hfont = ::CreateFontIndirect(aLogFont);
+  mFont.size = baseSize;
+  aLogFont->lfHeight = baselfHeight;
+
+  if (hfont) {
+    HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+    char name[sizeof(aLogFont->lfFaceName)];
+    if (::GetTextFace(aDC, sizeof(name), name) &&
+        !strcmpi(name, aLogFont->lfFaceName)) {
+      float dev2app;
+      mDeviceContext->GetDevUnitsToAppUnits(dev2app);
+
+      // Get the x-height
+      nscoord xheight72;
+      OUTLINETEXTMETRIC oMetrics;
+      TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
+      if (0 < ::GetOutlineTextMetrics(aDC, sizeof(oMetrics), &oMetrics)) {
+        xheight72 = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 50% of ascent, best guess for true type
+        GLYPHMETRICS gm;
+        DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUnichar('x'), 0, &gm);
+        if (GDI_ERROR != len && gm.gmptGlyphOrigin.y > 0) {
+          xheight72 = NSToCoordRound(gm.gmptGlyphOrigin.y * dev2app);
+        }
+      }
+      else {
+        ::GetTextMetrics(aDC, &metrics);
+        xheight72 = NSToCoordRound((float)metrics.tmAscent * dev2app * 0.56f); // 56% of ascent, best guess for non-true type
+      }
+      ::SelectObject(aDC, (HGDIOBJ)oldFont);  
+
+      // Apply the adjustment
+      float adjust = mFont.sizeAdjust / (float(xheight72) / float(size72));
+      mFont.size = NSToCoordRound(float(baseSize) * adjust);
+      FillLogFont(aLogFont, dummy, PR_TRUE);
+
+      hfont = ::CreateFontIndirect(aLogFont);
+
+      // restore the original values before leaving
+      mFont.size = baseSize;
+      aLogFont->lfHeight = baselfHeight;
+      return hfont;
+    }
+    ::SelectObject(aDC, (HGDIOBJ)oldFont);  
+    ::DeleteObject((HFONT)hfont);  
+  }
+  return nsnull;
+}
+
 nsFontWin*
 nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
 {
-  LOGFONT logFont;
-
   PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
-  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
+  LOGFONT logFont;
   FillLogFont(&logFont, weight);
  
   /*
@@ -1856,155 +1938,103 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
   WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
-  /*
-   * According to http://msdn.microsoft.com/library/
-   * CreateFontIndirectW is only supported on NT/2000
-   */
-  HFONT hfont = ::CreateFontIndirect(&logFont);
-
+  HFONT hfont = CreateFontHandle(aDC, &logFont);
   if (hfont) {
-    if (mLoadedFontsCount == mLoadedFontsAlloc) {
-      int newSize = 2 * (mLoadedFontsAlloc ? mLoadedFontsAlloc : 1);
-      nsFontWin** newPointer = (nsFontWin**) PR_Realloc(mLoadedFonts,
-        newSize * sizeof(nsFontWin*));
-      if (newPointer) {
-        mLoadedFonts = newPointer;
-        mLoadedFontsAlloc = newSize;
-      }
-      else {
-        ::DeleteObject(hfont);
-        return nsnull;
-      }
-    }
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, (HGDIOBJ) hfont);
+    HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
     char name[sizeof(logFont.lfFaceName)];
-    if ((!::GetTextFace(aDC, sizeof(name), name)) ||
+    if (::GetTextFace(aDC, sizeof(name), name) &&
         // MJA strcmp(name, logFont.lfFaceName)) {
-        strcmpi(name, logFont.lfFaceName)) {
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
-    PRUint8 charset = DEFAULT_CHARSET;
-    int fontType = NS_FONT_TYPE_UNKNOWN;
-    PRUint32* map = GetCMAP(aDC, logFont.lfFaceName, &fontType, &charset);
-    if (!map) {
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
-    nsFontWin* font = nsnull;
-    if (mIsUserDefined) {
-      font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedMap,
-                                     gUserDefinedConverter);
-    }
-    else if (NS_FONT_TYPE_UNICODE == fontType) {
-      font = new nsFontWinUnicode(&logFont, hfont, map);
-    }
-    else if (NS_FONT_TYPE_NON_UNICODE == fontType) {
-      nsCOMPtr<nsIUnicodeEncoder> converter;
-      if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
-#if 0
-// RBS trying to reset hfont with this piece of code causes GDI to be confused
-        if (DEFAULT_CHARSET != charset) {
-          ::SelectObject(aDC, (HGDIOBJ) oldFont);
-          ::DeleteObject(hfont);
-          logFont.lfCharSet = charset;
-          hfont = ::CreateFontIndirect(&logFont);
+        !strcmpi(name, logFont.lfFaceName)) {
+      eFontType fontType = eFontType_UNKNOWN;
+      PRUint32* map = GetCMAP(aDC, logFont.lfFaceName, &fontType, nsnull);
+      if (map) {
+        nsFontWin* font = nsnull;
+        if (mIsUserDefined) {
+          font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedMap,
+                                         gUserDefinedConverter);
         }
-#endif
-        font = new nsFontWinNonUnicode(&logFont, hfont, map, converter);
+        else if (eFontType_Unicode == fontType) {
+          font = new nsFontWinUnicode(&logFont, hfont, map);
+        }
+        else if (eFontType_NonUnicode == fontType) {
+          nsCOMPtr<nsIUnicodeEncoder> converter;
+          if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
+            font = new nsFontWinNonUnicode(&logFont, hfont, map, converter);
+          }
+        }
+        if (font) {
+          InitMetricsFor(aDC, font);
+          mLoadedFonts.AppendElement(font);
+          ::SelectObject(aDC, (HGDIOBJ)oldFont);  
+          return font;
+        }
+        // do not free 'map', it is cached in the gFontMaps hashtable and
+        // it is going to be deleted by the cleanup observer
       }
-    }
-    if (!font) {
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
-    mLoadedFonts[mLoadedFontsCount++] = font;
-    ::SelectObject(aDC, (HGDIOBJ) oldFont);
-
-    return font;
+      ::SelectObject(aDC, (HGDIOBJ)oldFont);
+    }  
+    ::DeleteObject(hfont);
   }
-
   return nsnull;
 }
 
 nsFontWin*
-nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem)
+nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
 {
+  PRUint16 weightTable = LookForFontWeightTable(aDC, &aGlobalFont->name);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
   LOGFONT logFont;
-  HFONT hfont;
-
-  PRUint16 weightTable = LookForFontWeightTable(aDC, aGlobalFontItem->name);
-  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
   FillLogFont(&logFont, weight);
-  logFont.lfCharSet = aGlobalFontItem->logFont.lfCharSet;
-  logFont.lfPitchAndFamily = aGlobalFontItem->logFont.lfPitchAndFamily;
-  strcpy(logFont.lfFaceName, aGlobalFontItem->logFont.lfFaceName);;
-  hfont = ::CreateFontIndirect(&logFont);
+  logFont.lfCharSet = aGlobalFont->logFont.lfCharSet;
+  logFont.lfPitchAndFamily = aGlobalFont->logFont.lfPitchAndFamily;
+  strcpy(logFont.lfFaceName, aGlobalFont->logFont.lfFaceName);
 
+  HFONT hfont = CreateFontHandle(aDC, &logFont);
   if (hfont) {
-    if (mLoadedFontsCount == mLoadedFontsAlloc) {
-      int newSize = 2 * (mLoadedFontsAlloc ? mLoadedFontsAlloc : 1);
-      nsFontWin** newPointer = (nsFontWin**) PR_Realloc(mLoadedFonts,
-        newSize * sizeof(nsFontWin*));
-      if (newPointer) {
-        mLoadedFonts = (nsFontWin**) newPointer;
-        mLoadedFontsAlloc = newSize;
-      }
-      else {
-        ::DeleteObject(hfont);
-        return nsnull;
-      }
-    }
-
     nsFontWin* font = nsnull;
-  
     if (mIsUserDefined) {
       font = new nsFontWinNonUnicode(&logFont, hfont, gUserDefinedMap,
                                      gUserDefinedConverter);
     }
-    else if (NS_FONT_TYPE_UNICODE == aGlobalFontItem->fonttype) {
-      font = new nsFontWinUnicode(&logFont, hfont, aGlobalFontItem->map);
+    else if (eFontType_Unicode == aGlobalFont->fonttype) {
+      font = new nsFontWinUnicode(&logFont, hfont, aGlobalFont->map);
     }
-    else if (NS_FONT_TYPE_NON_UNICODE == aGlobalFontItem->fonttype) {
+    else if (eFontType_NonUnicode == aGlobalFont->fonttype) {
       nsCOMPtr<nsIUnicodeEncoder> converter;
       if (NS_SUCCEEDED(GetConverter(logFont.lfFaceName, getter_AddRefs(converter)))) {
-        font = new nsFontWinNonUnicode(&logFont, hfont, aGlobalFontItem->map, converter);
+        font = new nsFontWinNonUnicode(&logFont, hfont, aGlobalFont->map, converter);
       }
     }
-
-    if (!font) {
-      ::DeleteObject(hfont);
-      return nsnull;
+    if (font) {
+      HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+      InitMetricsFor(aDC, font);
+      mLoadedFonts.AppendElement(font);
+      ::SelectObject(aDC, (HGDIOBJ)oldFont);
+      return font;
     }
-
-    mLoadedFonts[mLoadedFontsCount++] = font;
-
-    return font;
+    ::DeleteObject((HGDIOBJ)hfont);
   }
-
   return nsnull;
 }
 
-
-static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
-  DWORD fontType, LPARAM closure)
+static int CALLBACK 
+enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
+         DWORD fontType, LPARAM closure)
 {
   // XXX ignore vertical fonts
   if (logFont->lfFaceName[0] == '@') {
     return 1;
   }
 
-  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
-    if (!strcmp(nsFontMetricsWin::gGlobalFonts[i].logFont.lfFaceName,
-                logFont->lfFaceName)) {
+  for (int i = nsFontMetricsWin::gGlobalFonts->Count()-1; i >= 0; --i) {
+    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
+    if (!strcmp(font->logFont.lfFaceName, logFont->lfFaceName)) {
       // work-around for Win95/98 problem 
-      int charSetSigBit = charSetToBit[gCharSetToIndex[logFont->lfCharSet]];
-      if (charSetSigBit >= 0) {
-        DWORD charsetSigAdd = 1 << charSetSigBit;
-        nsFontMetricsWin::gGlobalFonts[i].signature.fsCsb[0] |= charsetSigAdd;
+      int charsetSigBit = gCharsetToBit[gCharsetToIndex[logFont->lfCharSet]];
+      if (charsetSigBit >= 0) {
+        DWORD charsetSigAdd = 1 << charsetSigBit;
+        font->signature.fsCsb[0] |= charsetSigAdd;
       }
       return 1;
     }
@@ -2012,35 +2042,23 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
 
   // XXX make this smarter: don't add font to list if we already have a font
   // with the same font signature -- erik
-  if (nsFontMetricsWin::gGlobalFontsCount == gGlobalFontsAlloc) {
-    int newSize = 2 * (gGlobalFontsAlloc ? gGlobalFontsAlloc : 1);
-    nsGlobalFont* newPointer = (nsGlobalFont*)
-      PR_Realloc(nsFontMetricsWin::gGlobalFonts, newSize*sizeof(nsGlobalFont));
-    if (newPointer) {
-      nsFontMetricsWin::gGlobalFonts = newPointer;
-      gGlobalFontsAlloc = newSize;
-    }
-    else {
-      return 0;
-    }
-  }
-
-  nsGlobalFont* font =                                                          
-    &nsFontMetricsWin::gGlobalFonts[nsFontMetricsWin::gGlobalFontsCount];
 
   PRUnichar name[LF_FACESIZE];
   name[0] = 0;
   MultiByteToWideChar(CP_ACP, 0, logFont->lfFaceName,
     strlen(logFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
-  font->name = new nsString(name);
-  if (!font->name) {
+
+  nsGlobalFont* font = new nsGlobalFont;
+  if (!font) {
     return 0;
   }
+  font->name.Assign(name);
   font->map = nsnull;
   font->logFont = *logFont;
-  font->flags = 0;
   font->signature.fsCsb[0] = 0;
   font->signature.fsCsb[1] = 0;
+  font->fonttype = eFontType_UNKNOWN;
+  font->flags = 0;
 
   if (fontType & TRUETYPE_FONTTYPE) {
     font->flags |= NS_GLOBALFONT_TRUETYPE;
@@ -2049,17 +2067,17 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
     font->flags |= NS_GLOBALFONT_SYMBOL;
   }
 
-  int charSetSigBit = charSetToBit[gCharSetToIndex[logFont->lfCharSet]];
-  if (charSetSigBit >= 0) {
-    DWORD charsetSigAdd = 1 << charSetSigBit;
+  int charsetSigBit = gCharsetToBit[gCharsetToIndex[logFont->lfCharSet]];
+  if (charsetSigBit >= 0) {
+    DWORD charsetSigAdd = 1 << charsetSigBit;
     font->signature.fsCsb[0] |= charsetSigAdd;
   }
 
-  ++nsFontMetricsWin::gGlobalFontsCount;
+  nsFontMetricsWin::gGlobalFonts->AppendElement(font);
   return 1;
 }
 
-static int
+static int PR_CALLBACK
 CompareGlobalFonts(const void* aArg1, const void* aArg2, void* aClosure)
 {
   const nsGlobalFont* font1 = (const nsGlobalFont*)aArg1;
@@ -2085,11 +2103,13 @@ CompareGlobalFonts(const void* aArg1, const void* aArg2, void* aClosure)
   return weight1 - weight2;
 }
 
-nsGlobalFont*
+nsVoidArray*
 nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
 {
-  if (!gInitializedGlobalFonts) {
-    gInitializedGlobalFonts = 1;
+  if (!gGlobalFonts) {
+    gGlobalFonts = new nsVoidArray();
+    if (!gGlobalFonts) return nsnull;
+
     LOGFONT logFont;
     logFont.lfCharSet = DEFAULT_CHARSET;
     logFont.lfFaceName[0] = 0;
@@ -2102,8 +2122,7 @@ nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
     EnumFontFamiliesEx(aDC, &logFont, enumProc, nsnull, 0);
 
     // Sort the global list of fonts to put the 'preferred' fonts first
-    NS_QuickSort(gGlobalFonts, gGlobalFontsCount, sizeof(nsGlobalFont),
-                 CompareGlobalFonts, nsnull);
+    gGlobalFonts->Sort(CompareGlobalFonts, nsnull);
   }
 
   return gGlobalFonts;
@@ -2112,24 +2131,26 @@ nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
 int
 nsFontMetricsWin::SameAsPreviousMap(int aIndex)
 {
-  for (int i = 0; i < aIndex; i++) {
-    if (gGlobalFonts[i].flags & NS_GLOBALFONT_SKIP) {
+  nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(aIndex);
+  for (int i = 0; i < aIndex; ++i) {
+    nsGlobalFont* tmp = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
+    if (tmp->flags & NS_GLOBALFONT_SKIP) {
       continue;
     }
-    if (gGlobalFonts[i].map == gGlobalFonts[aIndex].map) {
-      gGlobalFonts[aIndex].flags |= NS_GLOBALFONT_SKIP;
+    if (tmp->map == font->map) {
+      font->flags |= NS_GLOBALFONT_SKIP;
       return 1;
     }
-    PRUint32* map1 = gGlobalFonts[i].map;
-    PRUint32* map2 = gGlobalFonts[aIndex].map;
+    PRUint32* map1 = tmp->map;
+    PRUint32* map2 = font->map;
     int j;
-    for (j = 0; j < 2048; j++) {
+    for (j = 0; j < 2048; ++j) {
       if (map1[j] != map2[j]) {
         break;
       }
     }
     if (j == 2048) {
-      gGlobalFonts[aIndex].flags |= NS_GLOBALFONT_SKIP;
+      font->flags |= NS_GLOBALFONT_SKIP;
       return 1;
     }
   }
@@ -2146,33 +2167,35 @@ nsFontMetricsWin::FindGlobalFont(HDC aDC, PRUnichar c)
       return nsnull;
     }
   }
-  for (int i = 0; i < gGlobalFontsCount; i++) {
-    if (gGlobalFonts[i].flags & NS_GLOBALFONT_SKIP) {
+  int count = gGlobalFonts->Count();
+  for (int i = 0; i < count; ++i) {
+    nsGlobalFont* font = (nsGlobalFont*)gGlobalFonts->ElementAt(i);
+    if (font->flags & NS_GLOBALFONT_SKIP) {
       continue;
     }
-    if (!gGlobalFonts[i].map) {
-      HFONT font = ::CreateFontIndirect(&gGlobalFonts[i].logFont);
-      if (!font) {
+    if (!font->map) {
+      // don't adjust here, we just want to quickly get the CMAP. Adjusting
+      // is meant to only happen when loading the final font in LoadFont()
+      HFONT hfont = ::CreateFontIndirect(&font->logFont);
+      if (!hfont) {
         continue;
       }
-      HFONT oldFont = (HFONT) ::SelectObject(aDC, font);
-      gGlobalFonts[i].map = GetCMAP(aDC, gGlobalFonts[i].logFont.lfFaceName,
-        &(gGlobalFonts[i].fonttype), nsnull);
+      HFONT oldFont = (HFONT)::SelectObject(aDC, hfont);
+      font->map = GetCMAP(aDC, font->logFont.lfFaceName, &font->fonttype, nsnull);
       ::SelectObject(aDC, oldFont);
-      ::DeleteObject(font);
-      if (!gGlobalFonts[i].map || gGlobalFonts[i].map == gEmptyMap) {
-        gGlobalFonts[i].flags |= NS_GLOBALFONT_SKIP;
+      ::DeleteObject(hfont);
+      if (!font->map || font->map == gEmptyMap) {
+        font->flags |= NS_GLOBALFONT_SKIP;
         continue;
       }
       if (SameAsPreviousMap(i)) {
         continue;
       }
     }
-    if (FONT_HAS_GLYPH(gGlobalFonts[i].map, c)) {
-      return LoadGlobalFont(aDC, &(gGlobalFonts[i]));
+    if (FONT_HAS_GLYPH(font->map, c)) {
+      return LoadGlobalFont(aDC, font);
     }
   }
-
   return nsnull;
 }
 
@@ -2192,7 +2215,7 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
   // Assumptions: 
   // The nsFontInfo of the "substitute font" is not in the hashtable!
   // This way, its name doesn't matter since it cannot be retrieved with
-  // a lookup in the hashtable. We only know its index in mLoadedFonts[]
+  // a lookup in the hashtable. We only know its entry in mLoadedFonts[]
   // (Notice that the nsFontInfo of the font that is picked as the
   // "substitute font" *can* be in the hashtable, and as expected, its 
   // own map can be retrieved with the normal lookup).
@@ -2201,59 +2224,55 @@ nsFontMetricsWin::FindSubstituteFont(HDC aDC, PRUnichar c)
   // XXX Is it worth having another subclass which has a converter? 
   // Such a variant may allow to display a boxed question mark, etc.
 
-  if (0 <= mIndexOfSubstituteFont) {
-    NS_ASSERTION(mLoadedFonts[mIndexOfSubstituteFont], "null substitute font");
-    if (mLoadedFonts[mIndexOfSubstituteFont]) {
-      ADD_GLYPH(mLoadedFonts[mIndexOfSubstituteFont]->mMap, c);
-      return mLoadedFonts[mIndexOfSubstituteFont];
-    }
-    return nsnull;
+  if (mSubstituteFont) {
+    ADD_GLYPH(mSubstituteFont->mMap, c);
+    return mSubstituteFont;
   }
 
   // The "substitute font" has not yet been created... 
   // The first unicode font (no converter) that has the
   // replacement char is taken and placed as the substitute font.
 
-  int i;
-  for (i = 0; i < mLoadedFontsCount; i++) {
-    nsFontWin* font = mLoadedFonts[i];
+  int count = mLoadedFonts.Count();
+  for (int i = 0; i < count; ++i) {
     nsAutoString name;
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, font->mFont);
-    nsGetNameError res = GetNAME(aDC, &name);
+    nsFontWin* font = (nsFontWin*)mLoadedFonts[i];
+    HFONT oldFont = (HFONT)::SelectObject(aDC, font->mFont);
+    eGetNameError res = GetNAME(aDC, &name);
     ::SelectObject(aDC, oldFont);
     if (res != eGetName_OK) {
-    	continue;
-    }
-    nsFontInfo* info = (nsFontInfo*)PL_HashTableLookup(nsFontMetricsWin::gFontMaps, &name);
-    if (!info || info->mType != NS_FONT_TYPE_UNICODE) {
       continue;
     }
-    if (FONT_HAS_GLYPH(font->mMap, NS_REPLACEMENT_CHAR))
-    {
-    	// XXX if the mode is to display unicode points "&#xNNNN;", should we check
-    	// that the substitute font also has glyphs for '&', '#', 'x', ';' and digits?
-    	// (Because this is a unicode font, those glyphs should in principle be there.)
+    nsFontInfo* info = (nsFontInfo*)PL_HashTableLookup(gFontMaps, &name);
+    if (!info || info->mType != eFontType_Unicode) {
+      continue;
+    }
+    if (FONT_HAS_GLYPH(font->mMap, NS_REPLACEMENT_CHAR)) {
+      // XXX if the mode is to display unicode points "&#xNNNN;", should we check
+      // that the substitute font also has glyphs for '&', '#', 'x', ';' and digits?
+      // (Because this is a unicode font, those glyphs should in principle be there.)
       name.AssignWithConversion(font->mName);
       font = LoadSubstituteFont(aDC, &name);
       if (font) {
         ADD_GLYPH(font->mMap, c);
+        mSubstituteFont = font;
         return font;
       }
     }
   }
 
   // if we ever reach here, the replacement char should be changed to a more common char
-  NS_ASSERTION(0, "Could not provide a substititute font");
+  NS_ERROR("Could not provide a substititute font");
   return nsnull;
 }
 
 nsFontWin*
 nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
-  LOGFONT logFont;
-
   PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
-  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
+  LOGFONT logFont;
   FillLogFont(&logFont, weight);
  
   /*
@@ -2265,47 +2284,24 @@ nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
   WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
-  /*
-   * According to http://msdn.microsoft.com/library/
-   * CreateFontIndirectW is only supported on NT/2000
-   */
-  HFONT hfont = ::CreateFontIndirect(&logFont);
-
+  HFONT hfont = CreateFontHandle(aDC, &logFont);
   if (hfont) {
-    if (mLoadedFontsCount == mLoadedFontsAlloc) {
-      int newSize = 2 * (mLoadedFontsAlloc ? mLoadedFontsAlloc : 1);
-      nsFontWin** newPointer = (nsFontWin**) PR_Realloc(mLoadedFonts,
-        newSize * sizeof(nsFontWin*));
-      if (newPointer) {
-        mLoadedFonts = newPointer;
-        mLoadedFontsAlloc = newSize;
-      }
-      else {
-        ::DeleteObject(hfont);
-        return nsnull;
-      }
-    }
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, (HGDIOBJ) hfont);
-    nsFontWin* font = nsnull;
-    PRUint32* map = (PRUint32*) PR_Calloc(2048, 4);
+    PRUint32* map = (PRUint32*)PR_Calloc(2048, 4); // deleted in ~nsFontMetricsWin()
     if (map) {
       // XXX 'displayUnicode' has to be initialized based on the desired rendering mode
       PRBool displayUnicode = PR_FALSE;
-      font = new nsFontWinSubstitute(&logFont, hfont, map, displayUnicode);
+      nsFontWin* font = new nsFontWinSubstitute(&logFont, hfont, map, displayUnicode);
+      if (font) {
+        HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+        InitMetricsFor(aDC, font);
+        mLoadedFonts.AppendElement(font);
+        ::SelectObject(aDC, (HGDIOBJ)oldFont);
+        return font;
+      }
+      PR_Free(map);
     }
-    if (!font) {
-      if (map) PR_Free(map);
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
-    mIndexOfSubstituteFont = mLoadedFontsCount; // got the index
-    mLoadedFonts[mLoadedFontsCount++] = font;
-    ::SelectObject(aDC, (HGDIOBJ) oldFont);
-
-    return font;
+    ::DeleteObject((HGDIOBJ)hfont);
   }
-
   return nsnull;
 }
 
@@ -2325,7 +2321,6 @@ nsFontMetricsWin::LoadSubstituteFont(HDC aDC, nsString* aName)
 // entry rather than doing a separate allocation for the
 // fontName and weight.
 
-
 class nsFontWeightEntry : public PLHashEntry
 {
 public:
@@ -2337,8 +2332,7 @@ static PLHashNumber
 HashKeyFontWeight(const void* aFontWeightEntry)
 {
   const nsString* string = &((const nsFontWeightEntry*) aFontWeightEntry)->mFontName;
-  return (PLHashNumber)
-    nsCRT::HashCode(string->get());
+  return (PLHashNumber)nsCRT::HashCode(string->get());
 }
 
 static PRIntn
@@ -2346,7 +2340,6 @@ CompareKeysFontWeight(const void* aFontWeightEntry1, const void* aFontWeightEntr
 {
   const nsString* str1 = &((const nsFontWeightEntry*) aFontWeightEntry1)->mFontName;
   const nsString* str2 = &((const nsFontWeightEntry*) aFontWeightEntry2)->mFontName;
-
   return nsCRT::strcmp(str1->get(), str2->get()) == 0;
 }
 
@@ -2373,7 +2366,7 @@ PR_STATIC_CALLBACK(void) fontweight_FreeEntry(void *pool, PLHashEntry *he, PRUin
 {
   if (flag == HT_FREE_ENTRY)  {
     nsFontWeightEntry *fontWeightEntry = NS_STATIC_CAST(nsFontWeightEntry *, he);
-    delete (fontWeightEntry);
+    delete fontWeightEntry;
   }
 }
 
@@ -2393,12 +2386,7 @@ PRBool nsFontMetricsWin::IsFontWeightAvailable(PRInt32 aWeight, PRUint16 aWeight
   PRInt32 normalizedWeight = aWeight / 100;
   NS_ASSERTION((aWeight >= 100) && (aWeight <= 900), "Invalid font weight passed");
   PRUint16 bitwiseWeight = 1 << (normalizedWeight - 1);
-  if (bitwiseWeight & aWeightTable) {
-    return PR_TRUE;
-  }
-  else {
-    return PR_FALSE;
-  }
+  return (bitwiseWeight & aWeightTable) != 0;
 }
 
 typedef struct {
@@ -2407,27 +2395,26 @@ typedef struct {
   int      mFontCount;
 } nsFontWeightInfo;
 
-static int CALLBACK nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRIC * metrics,
-  DWORD fontType, LPARAM closure)
+static int CALLBACK
+nsFontWeightCallback(const LOGFONT* logFont, const TEXTMETRIC * metrics,
+                     DWORD fontType, LPARAM closure)
 {
-  // printf("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
-  
+// printf("Name %s Log font sizes %d\n",logFont->lfFaceName,logFont->lfWeight);
   nsFontWeightInfo* weightInfo = (nsFontWeightInfo*)closure;
-  if (NULL != metrics) {
+  if (metrics) {
     int pos = metrics->tmWeight / 100;
       // Set a bit to indicate the font weight is available
     if (weightInfo->mFontCount == 0)
       weightInfo->mLogFont = *logFont;
     nsFontMetricsWin::SetFontWeight(metrics->tmWeight / 100,
       &weightInfo->mWeights);
-    weightInfo->mFontCount++;
+    ++weightInfo->mFontCount;
   }
-
   return TRUE; // Keep looking for more weights.
 }
 
-
-static void SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
+static void
+SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
 {
   int weight, weightCount;
 
@@ -2440,7 +2427,7 @@ static void SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
   weightCount = 0;
   for (weight = 100; weight <= 900; weight += 100) {
     if (nsFontMetricsWin::IsFontWeightAvailable(weight, aWeightInfo->mWeights))
-      weightCount++;
+      ++weightCount;
   }
 
   // If the font does not exist (weightCount == 0) or
@@ -2472,29 +2459,24 @@ static void SearchSimulatedFontWeight(HDC aDC, nsFontWeightInfo* aWeightInfo)
   }
 }
 
-
 PRUint16 
-nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName) {
-
-    // Look for all of the weights for a given font.
+nsFontMetricsWin::GetFontWeightTable(HDC aDC, nsString* aFontName)
+{
+  // Look for all of the weights for a given font.
   LOGFONT logFont;
   logFont.lfCharSet = DEFAULT_CHARSET;
-
   WideCharToMultiByte(CP_ACP, 0, aFontName->get(), aFontName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
- 
   logFont.lfPitchAndFamily = 0;
 
   nsFontWeightInfo weightInfo;
   weightInfo.mWeights = 0;
   weightInfo.mFontCount = 0;
-   ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weightInfo, 0);
+  ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weightInfo, 0);
   SearchSimulatedFontWeight(aDC, &weightInfo);
- //  printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weightInfo.mWeights, weightInfo.mWeights);
+//  printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weightInfo.mWeights, weightInfo.mWeights);
   return weightInfo.mWeights;
 }
-
-
 
 // Calculate the closest font weight. This is necessary because we need to
 // control the mapping of logical font weight to available weight to handle both CSS2
@@ -2507,38 +2489,37 @@ PRInt32
 nsFontMetricsWin::GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable)
 {
   // Algorithm used From CSS2 section 15.5.1 Mapping font weight values to font names
-  PRInt32 newWeight = aWeight;
-   // Check for exact match
-  if ((aWeight > 0) && (nsFontMetricsWin::IsFontWeightAvailable(aWeight, aWeightTable))) {
+
+  // Check for exact match
+  if ((aWeight > 0) && IsFontWeightAvailable(aWeight, aWeightTable)) {
     return aWeight;
   }
 
-    // Find lighter and darker weights to be used later.
+  // Find lighter and darker weights to be used later.
 
-    // First look for lighter
+  // First look for lighter
+  PRBool done = PR_FALSE;
   PRInt32 lighterWeight = 0;
   PRInt32 proposedLighterWeight = PR_MAX(0, aWeight - 100);
-
-  PRBool done = PR_FALSE;
-  while ((PR_FALSE == done) && (proposedLighterWeight >= 100)) {
-    if (nsFontMetricsWin::IsFontWeightAvailable(proposedLighterWeight, aWeightTable)) {
+  while (!done && (proposedLighterWeight >= 100)) {
+    if (IsFontWeightAvailable(proposedLighterWeight, aWeightTable)) {
       lighterWeight = proposedLighterWeight;
       done = PR_TRUE;
     } else {
-      proposedLighterWeight-= 100;
+      proposedLighterWeight -= 100;
     }
   }
 
-     // Now look for darker
-  PRInt32 darkerWeight = 0;
+  // Now look for darker
   done = PR_FALSE;
+  PRInt32 darkerWeight = 0;
   PRInt32 proposedDarkerWeight = PR_MIN(aWeight + 100, 900);
-  while ((PR_FALSE == done) && (proposedDarkerWeight <= 900)) {
-    if (nsFontMetricsWin::IsFontWeightAvailable(proposedDarkerWeight, aWeightTable)) {
+  while (!done && (proposedDarkerWeight <= 900)) {
+    if (IsFontWeightAvailable(proposedDarkerWeight, aWeightTable)) {
       darkerWeight = proposedDarkerWeight;
       done = PR_TRUE;   
     } else {
-      proposedDarkerWeight+= 100;
+      proposedDarkerWeight += 100;
     }
   }
 
@@ -2553,55 +2534,35 @@ nsFontMetricsWin::GetClosestWeight(PRInt32 aWeight, PRUint16 aWeightTable)
   // This is not inlcluded in the CSS spec so I'll treat it in a consistent
   // manner with unassigned '300', '200' and '100'
 
-
   if (aWeight <= 500) {
-    if (0 != lighterWeight) {
-      return lighterWeight;
-    }
-    else {
-      return darkerWeight;
-    }
+    return lighterWeight ? lighterWeight : darkerWeight;
+  } 
 
-  } else {
-
-    // Automatically chose the bolder weight if the next lighter weight
-    // makes it normal. (i.e goes over the normal to bold threshold.)
+  // Automatically chose the bolder weight if the next lighter weight
+  // makes it normal. (i.e goes over the normal to bold threshold.)
 
   // From CSS2 section 15.5.1 
   // if any of the values '600', '700', '800', or '900' remains unassigned, 
   // they are assigned to the same face as the next darker assigned keyword, 
   // if any, or the next lighter one otherwise.
-
-    if (0 != darkerWeight) {
-      return darkerWeight;
-    } else {
-      return lighterWeight;
-    }
-  }
-
-  return aWeight;
+  return darkerWeight ? darkerWeight : lighterWeight;
 }
-
-
 
 PRInt32
 nsFontMetricsWin::GetBolderWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable)
 {
   PRInt32 newWeight = aWeight;
- 
   PRInt32 proposedWeight = aWeight + 100; // Start 1 bolder than the current
-  for (PRInt32 j = 0; j < aDistance; j++) {
-    PRBool aFoundAWeight = PR_FALSE;
-    while ((proposedWeight <= NS_MAX_FONT_WEIGHT) && (PR_FALSE == aFoundAWeight)) {
-      if (nsFontMetricsWin::IsFontWeightAvailable(proposedWeight, aWeightTable)) {
-         // 
+  for (PRInt32 j = 0; j < aDistance; ++j) {
+    PRBool foundWeight = PR_FALSE;
+    while (!foundWeight && (proposedWeight <= NS_MAX_FONT_WEIGHT)) {
+      if (IsFontWeightAvailable(proposedWeight, aWeightTable)) {
         newWeight = proposedWeight; 
-        aFoundAWeight = PR_TRUE;
+        foundWeight = PR_TRUE;
       }
-      proposedWeight+=100; 
+      proposedWeight += 100; 
     }
   }
-
   return newWeight;
 }
 
@@ -2609,47 +2570,40 @@ PRInt32
 nsFontMetricsWin::GetLighterWeight(PRInt32 aWeight, PRInt32 aDistance, PRUint16 aWeightTable)
 {
   PRInt32 newWeight = aWeight;
- 
   PRInt32 proposedWeight = aWeight - 100; // Start 1 lighter than the current
-  for (PRInt32 j = 0; j < aDistance; j++) {
-    PRBool aFoundAWeight = PR_FALSE;
-    while ((proposedWeight >= NS_MIN_FONT_WEIGHT) && (PR_FALSE == aFoundAWeight)) {
-      if (nsFontMetricsWin::IsFontWeightAvailable(proposedWeight, aWeightTable)) {
-         // 
+  for (PRInt32 j = 0; j < aDistance; ++j) {
+    PRBool foundWeight = PR_FALSE;
+    while (!foundWeight && (proposedWeight >= NS_MIN_FONT_WEIGHT)) {
+      if (IsFontWeightAvailable(proposedWeight, aWeightTable)) {
         newWeight = proposedWeight; 
-        aFoundAWeight = PR_TRUE;
+        foundWeight = PR_TRUE;
       }
-      proposedWeight-=100; 
+      proposedWeight -= 100; 
     }
   }
-
   return newWeight;
 }
 
-
 PRInt32
-nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable) {
-
-   // The remainder is used to determine whether to make
-   // the font lighter or bolder
-
+nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable)
+{
+  // The remainder is used to determine whether to make
+  // the font lighter or bolder
   PRInt32 remainder = aWeight % 100;
   PRInt32 normalizedWeight = aWeight / 100;
   PRInt32 selectedWeight = 0;
 
-    // No remainder, so get the closest weight
+  // No remainder, so get the closest weight
   if (remainder == 0) {
     selectedWeight = GetClosestWeight(aWeight, aWeightTable);
   } else {
-
     NS_ASSERTION((remainder < 10) || (remainder > 90), "Invalid bolder or lighter value");
-
     if (remainder < 10) {
       PRInt32 weight = GetClosestWeight(normalizedWeight * 100, aWeightTable);
       selectedWeight = GetBolderWeight(weight, remainder, aWeightTable);
     } else {
-       // Have to add back 1 for the lighter weight since aWeight really refers to the 
-       // whole number. eq. 398 really means 2 lighter than font weight 400.
+      // Have to add back 1 for the lighter weight since aWeight really refers to the 
+      // whole number. eq. 398 really means 2 lighter than font weight 400.
       PRInt32 weight = GetClosestWeight((normalizedWeight + 1) * 100, aWeightTable);
       selectedWeight = GetLighterWeight(weight, 100-remainder, aWeightTable);
     }
@@ -2659,17 +2613,14 @@ nsFontMetricsWin::GetFontWeight(PRInt32 aWeight, PRUint16 aWeightTable) {
   return selectedWeight;
 }
 
-
 PRUint16
 nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
 {
-    // Initialize the font weight table if need be.
-  if (!gInitializedFontWeights) {
-    gInitializedFontWeights = 1;
+  // Initialize the font weight table if need be.
+  if (!gFontWeights) {
     gFontWeights = PL_NewHashTable(0, HashKeyFontWeight, CompareKeysFontWeight, nsnull, &fontweight_HashAllocOps,
       nsnull);
     if (!gFontWeights) {
-      gInitializedFontWeights = 0;
       return 0;
     }
   }
@@ -2677,7 +2628,7 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
   // Use lower case name for hash table searches. This eliminates
   // keeping multiple font weights entries when the font name varies 
   // only by case.
-  nsAutoString low; low.Assign(*aName);
+  nsAutoString low(*aName);
   low.ToLowerCase();
 
    // See if the font weight has already been computed.
@@ -2714,7 +2665,6 @@ nsFontMetricsWin::LookForFontWeightTable(HDC aDC, nsString* aName)
   return 0;
 }
 
-
 // ------------ End of font weight utilities
 
 nsFontWin*
@@ -2726,7 +2676,6 @@ nsFontMetricsWin::FindUserDefinedFont(HDC aDC, PRUnichar aChar)
       return font;
     }
   }
-
   return nsnull;
 }
 
@@ -2790,12 +2739,10 @@ PLHashAllocOps familyname_HashAllocOps = {
 PLHashTable*
 nsFontMetricsWin::InitializeFamilyNames(void)
 {
-  if (!gInitializedFamilyNames) {
-    gInitializedFamilyNames = 1;
+  if (!gFamilyNames) {
     gFamilyNames = PL_NewHashTable(0, HashKey, CompareKeys, nsnull, &familyname_HashAllocOps,
       nsnull);
     if (!gFamilyNames) {
-      gInitializedFamilyNames = 0;
       return nsnull;
     }
     nsFontFamilyName* f = gFamilyNameTable;
@@ -2805,9 +2752,8 @@ nsFontMetricsWin::InitializeFamilyNames(void)
       if (name && winName) {
         name->AssignWithConversion(f->mName);
         winName->AssignWithConversion(f->mWinName);
-        if (PL_HashTableAdd(gFamilyNames, name, (void*) winName))  
-        { 
-          f++;
+        if (PL_HashTableAdd(gFamilyNames, name, (void*) winName)) { 
+          ++f;
           continue;
         }
       }
@@ -2830,9 +2776,10 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
     }
   }
   while (mFontsIndex < mFonts.Count()) {
-    if (mFontIsGeneric[mFontsIndex]) {
+    if (mFontsIndex == mGenericIndex) {
       return nsnull;
     }
+
     nsString* name = mFonts.StringAt(mFontsIndex++);
     nsAutoString low(*name);
     low.ToLowerCase();
@@ -2845,132 +2792,138 @@ nsFontMetricsWin::FindLocalFont(HDC aDC, PRUnichar aChar)
       return font;
     }
   }
-
   return nsnull;
 }
 
 nsFontWin*
-nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
+nsFontMetricsWin::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
 {
-  if (*aName) {
-    int found = 0;
-    int i;
-    for (i = 0; i < mLoadedFontsCount; i++) {
-      nsFontWin* font = mLoadedFonts[i];
-      if (!strcmp(font->mName, *aName)) {
-        found = 1;
-        break;
-      }
-    }
-    if (found) {
-      nsMemory::Free(*aName);
-      *aName = nsnull;
+  for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
+    if (aName->EqualsIgnoreCase(((nsFontWin*)mLoadedFonts[i])->mName)) {
       return nsnull;
     }
-    PRUnichar name[LF_FACESIZE] = { 0 };
-    PRUnichar format[] = { '%', 's', 0 };
-    PRUint32 n = nsTextFormatter::snprintf(name, LF_FACESIZE, format, *aName);
-    nsMemory::Free(*aName);
-    *aName = nsnull;
-    if (n && (n != (PRUint32) -1)) {
-      nsAutoString  fontName(name);
-
-      nsFontWin* font = LoadFont(aDC, &fontName);
-      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
-        return font;
-      }
-    }
   }
-
+  nsFontWin* font = LoadFont(aDC, aName);
+  if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+    return font;
+  }
   return nsnull;
 }
 
-typedef struct PrefEnumInfo
+struct GenericFontEnumContext
 {
-  PRUnichar         mChar;
   HDC               mDC;
+  PRUnichar         mChar;
   nsFontWin*        mFont;
   nsFontMetricsWin* mMetrics;
-} PrefEnumInfo;
+};
 
-void
-PrefEnumCallback(const char* aName, void* aClosure)
+static PRBool PR_CALLBACK
+GenericFontEnumCallback(const nsString& aFamily, PRBool aGeneric, void* aData)
 {
-  PrefEnumInfo* info = (PrefEnumInfo*) aClosure;
-  if (info->mFont) {
-    return;
+  GenericFontEnumContext* context = (GenericFontEnumContext*)aData;
+  HDC dc = context->mDC;
+  PRUnichar ch = context->mChar;
+  nsFontMetricsWin* metrics = context->mMetrics;
+  context->mFont = metrics->LoadGenericFont(dc, ch, (nsString*)&aFamily);
+  if (context->mFont) {
+    return PR_FALSE; // stop enumerating the list
   }
-  PRUnichar ch = info->mChar;
-  HDC dc = info->mDC;
-  nsFontMetricsWin* metrics = info->mMetrics;
-  char* value = nsnull;
-  gPref->CopyCharPref(aName, &value);
-  nsFontWin* font = metrics->LoadGenericFont(dc, ch, &value);
-  if (font) {
-    info->mFont = font;
-  }
-  else {
-    gPref->CopyDefaultCharPref(aName, &value);
-    font = metrics->LoadGenericFont(dc, ch, &value);
-    if (font) {
-      info->mFont = font;
-    }
-  }
+  return PR_TRUE; // don't stop
 }
+
+#define MAKE_FONT_PREF_KEY(_pref, _s0, _s1) \
+ _pref.Assign(_s0); \
+ _pref.Append(_s1);
 
 nsFontWin*
 nsFontMetricsWin::FindGenericFont(HDC aDC, PRUnichar aChar)
 {
   if (mTriedAllGenerics) {
+    // don't bother anymore because mLoadedFonts[] already has all our generic fonts
     return nsnull;
   }
-  nsAutoString prefix;
-  prefix.AssignWithConversion("font.name.");
-  prefix.Append(*mGeneric);
-  char name[128];
+
+  nsAutoString langGroup;
+  nsCAutoString generic_dot_langGroup;
+
+  // This is a nifty hook that we will use to just iterate over
+  // the list of names using the callback mechanism of nsFont...
+  nsFont font("", 0, 0, 0, 0, 0);
+
+  nsresult res;
+  nsCAutoString pref;
+  nsXPIDLString value;
+
+  // Get the fonts in the element's language group  
+  // . font.name.[generic].[langGroup]
+  // . font.name-list.[generic].[langGroup]
+
   if (mLangGroup) {
-    nsAutoString pref = prefix;
-    pref.AppendWithConversion('.');
-    const PRUnichar* langGroup = nsnull;
-    mLangGroup->GetUnicode(&langGroup);
-    pref.Append(langGroup);
-    pref.ToCString(name, sizeof(name));
-    char* value = nsnull;
-    gPref->CopyCharPref(name, &value);
-    nsFontWin* font = LoadGenericFont(aDC, aChar, &value);
-    if (font) {
-      return font;
-    }
-    gPref->CopyDefaultCharPref(name, &value);
-    font = LoadGenericFont(aDC, aChar, &value);
-    if (font) {
-      return font;
+    mLangGroup->ToString(langGroup);
+    generic_dot_langGroup.Assign(NS_ConvertUCS2toUTF8(mGeneric));
+    generic_dot_langGroup.Append('.');
+    generic_dot_langGroup.Append(NS_ConvertUCS2toUTF8(langGroup));
+
+    // font.name.[generic].[langGroup]
+    // the current user' selected font, it gives the first preferred font
+    MAKE_FONT_PREF_KEY(pref, "font.name.", generic_dot_langGroup);
+    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
+    if (NS_SUCCEEDED(res)) {
+      font.name.Assign(value);
     }
 
-    //let's try fall back list
-    PRInt32 i = strlen(name);
-    char ch;
-    name[i+2] = '\0';
-    name[i] = '.';
-    for (ch = '1'; ch <= '9'; ch++)
-    {
-       name[i+1] = ch;
-       if (NS_FAILED(gPref->CopyCharPref(name, &value)))
-         break;
-       font = LoadGenericFont(aDC, aChar, &value);
-       if (font)
-         return font;
+    // font.name-list.[generic].[langGroup]
+    // the pre-built list of default fonts, it gives alternative fonts
+    MAKE_FONT_PREF_KEY(pref, "font.name-list.", generic_dot_langGroup);
+    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
+    if (NS_SUCCEEDED(res)) {
+      font.name.Append((PRUnichar)',');
+      font.name.Append(value);
+    }
+  }
+
+  // Get extra alternative fonts in the user's locale's language group
+  // . font.name.[generic].[locale's langGroup]
+  // . font.name-list.[generic].[locale's langGroup]
+
+  if (gUsersLocale != mLangGroup) {
+    gUsersLocale->ToString(langGroup);
+    generic_dot_langGroup.Assign(NS_ConvertUCS2toUTF8(mGeneric));
+    generic_dot_langGroup.Append('.');
+    generic_dot_langGroup.Append(NS_ConvertUCS2toUTF8(langGroup));
+
+    MAKE_FONT_PREF_KEY(pref, "font.name.", generic_dot_langGroup);
+    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
+    if (NS_SUCCEEDED(res)) {
+      font.name.Append((PRUnichar)',');
+      font.name.Append(value);
     }
 
+    MAKE_FONT_PREF_KEY(pref, "font.name-list.", generic_dot_langGroup);
+    res = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));      
+    if (NS_SUCCEEDED(res)) {
+      font.name.Append((PRUnichar)',');
+      font.name.Append(value);
+    }
   }
-  prefix.ToCString(name, sizeof(name));
-  PrefEnumInfo info = { aChar, aDC, nsnull, this };
-  gPref->EnumerateChildren(name, PrefEnumCallback, &info);
-  if (info.mFont) {
-    return info.mFont;
+
+  // Iterate over the list of names using the callback mechanism of nsFont...
+  GenericFontEnumContext context = {aDC, aChar, nsnull, this};
+  font.EnumerateFamilies(GenericFontEnumCallback, &context);
+  if (context.mFont) { // a suitable font was found
+    return context.mFont;
   }
+
+#ifdef DEBUG_rbs
+  nsCAutoString lang; lang.Assign(NS_ConvertUCS2toUTF8(langGroup));
+  nsCAutoString generic; generic.Assign(NS_ConvertUCS2toUTF8(mGeneric));
+  nsCAutoString family; family.Assign(NS_ConvertUCS2toUTF8(mFont.name));
+  printf("FindGenericFont missed:U+%04X langGroup:%s generic:%s mFont.name:%s\n", 
+         aChar, lang.get(), generic.get(), family.get());
+#endif
+
   mTriedAllGenerics = 1;
-
   return nsnull;
 }
 
@@ -2990,8 +2943,20 @@ nsFontMetricsWin::FindFont(HDC aDC, PRUnichar aChar)
       }
     }
   }
-
   return font;
+}
+
+nsFontWin*
+nsFontMetricsWin::GetFontFor(HFONT aHFONT)
+{
+  int count = mLoadedFonts.Count();
+  for (int i = 0; i < count; ++i) {
+    nsFontWin* font = (nsFontWin*)mLoadedFonts[i];
+    if (font->mFont == aHFONT)
+      return font;
+  }
+  NS_ERROR("Cannot find the font that owns the handle");
+  return nsnull;
 }
 
 static PRBool
@@ -2999,12 +2964,12 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
 {
   nsFontMetricsWin* metrics = (nsFontMetricsWin*) aData;
   metrics->mFonts.AppendString(aFamily);
-  metrics->mFontIsGeneric.AppendElement((void*) aGeneric);
   if (aGeneric) {
-    metrics->mGeneric = metrics->mFonts.StringAt(metrics->mFonts.Count() - 1);
-    metrics->mGeneric->ToLowerCase();
+    metrics->mGeneric.Assign(aFamily);
+    metrics->mGeneric.ToLowerCase();
     return PR_FALSE; // stop
   }
+  ++metrics->mGenericIndex;
 
   return PR_TRUE; // don't stop
 }
@@ -3013,16 +2978,16 @@ FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
  *  See documentation in nsFontMetricsWin.h
  *	@update 05/28/99 dwc
  */
+
 nsresult
 nsFontMetricsWin::RealizeFont()
 {
-nsresult res;
-HWND  win = NULL;
-HDC   dc = NULL;
-HDC   dc1 = NULL;
+  nsresult rv;
+  HWND win = NULL;
+  HDC  dc = NULL;
+  HDC  dc1 = NULL;
 
-  
-  if (NULL != mDeviceContext->mDC){
+  if (mDeviceContext->mDC){
     // XXX - DC If we are printing, we need to get the printer HDC and a screen HDC
     // The screen HDC is because there seems to be a bug or requirment that the 
     // GetFontData() method call have a screen HDC, some printers HDC's return nothing
@@ -3037,62 +3002,55 @@ HDC   dc1 = NULL;
     dc1 = dc;
   }
 
-  mFont->EnumerateFamilies(FontEnumCallback, this); 
-  PRUnichar* value = nsnull;
-  if (!mGeneric) {
-    gPref->CopyUnicharPref("font.default", &value);
-    if (value) {
-      mDefaultFont = value;
-      nsMemory::Free(value);
-      value = nsnull;
+  mFont.EnumerateFamilies(FontEnumCallback, this); 
+
+  nsCAutoString pref;
+  nsXPIDLString value;
+
+  // set a fallback generic font if the font-family list didn't have one
+  if (mGeneric.IsEmpty()) {
+    rv = gPref->CopyUnicharPref("font.default", getter_Copies(value));
+    if (NS_SUCCEEDED(rv)) {
+      mGeneric.Assign(value);
     }
     else {
-      mDefaultFont.AssignWithConversion("serif");
+      mGeneric.Assign(NS_LITERAL_STRING("serif"));
     }
-    mGeneric = &mDefaultFont;
   }
 
   if (mLangGroup.get() == gUserDefined) {
     if (!gUserDefinedConverter) {
       nsCOMPtr<nsIAtom> charset;
-      res = gCharSetManager->GetCharsetAtom2("x-user-defined",
+      rv = gCharsetManager->GetCharsetAtom2("x-user-defined",
         getter_AddRefs(charset));
-      if (NS_SUCCEEDED(res)) {
-        res = gCharSetManager->GetUnicodeEncoder(charset,
-                                                 &gUserDefinedConverter);
-        if (NS_SUCCEEDED(res)) {
-          res = gUserDefinedConverter->SetOutputErrorBehavior(
-            gUserDefinedConverter->kOnError_Replace, nsnull, '?');
-          nsCOMPtr<nsICharRepresentable> mapper =
-            do_QueryInterface(gUserDefinedConverter);
-          if (mapper) {
-            res = mapper->FillInfo(gUserDefinedMap);
-          }
-        }
-        else {
-          return res;
-        }
-      }
-      else {
-        return res;
+      if (NS_FAILED(rv)) return rv;
+      rv = gCharsetManager->GetUnicodeEncoder(charset, &gUserDefinedConverter);
+      if (NS_FAILED(rv)) return rv;
+      gUserDefinedConverter->SetOutputErrorBehavior(
+        gUserDefinedConverter->kOnError_Replace, nsnull, '?');
+      nsCOMPtr<nsICharRepresentable> mapper =
+        do_QueryInterface(gUserDefinedConverter);
+      if (mapper) {
+        rv = mapper->FillInfo(gUserDefinedMap);
       }
     }
 
-    nsCAutoString name("font.name.");
-    name.AppendWithConversion(*mGeneric);
-    name.Append('.');
-    name.Append(USER_DEFINED);
-    gPref->CopyUnicharPref(name.get(), &value);
-    if (value) {
-      mUserDefined = value;
-      nsMemory::Free(value);
-      value = nsnull;
+    // See if this is a special user-defined font encoding by checking:
+    // font.name.[generic].x-user-def
+    pref.Assign("font.name.");
+    pref.AppendWithConversion(mGeneric);
+    pref.Append(".x-user-def");
+    rv = gPref->CopyUnicharPref(pref.get(), getter_Copies(value));
+    if (NS_SUCCEEDED(rv)) {
+      mUserDefined.Assign(value);
       mIsUserDefined = 1;
     }
   }
 
   nsFontWin* font = FindFont(dc1, 'a');
   if (!font) {
+    //XXXrbs isn't this equivalent to ReleaseDC(win, dc1)???
+    ::ReleaseDC(win, mDeviceContext->mDC ? dc : dc1);
     return NS_ERROR_FAILURE;
   }
   mFontHandle = font->mFont;
@@ -3103,7 +3061,7 @@ HDC   dc1 = NULL;
   float dev2app;
   mDeviceContext->GetDevUnitsToAppUnits(dev2app);
   OUTLINETEXTMETRIC oMetrics;
-  TEXTMETRIC&  metrics = oMetrics.otmTextMetrics;
+  TEXTMETRIC& metrics = oMetrics.otmTextMetrics;
   nscoord onePixel = NSToCoordRound(1 * dev2app);
 
   if (0 < ::GetOutlineTextMetrics(dc, sizeof(oMetrics), &oMetrics)) {
@@ -3152,45 +3110,47 @@ HDC   dc1 = NULL;
   mMaxAdvance = NSToCoordRound(metrics.tmMaxCharWidth * dev2app);
   mAveCharWidth = PR_MAX(1, NSToCoordRound(metrics.tmAveCharWidth * dev2app));
 
-   // Cache the width of a single space.
+  // Cache the width of a single space.
   SIZE  size;
   ::GetTextExtentPoint32(dc, " ", 1, &size);
   mSpaceWidth = NSToCoordRound(size.cx * dev2app);
 
   ::SelectObject(dc, oldfont);
 
-  if (NULL == mDeviceContext->mDC){
-    ::ReleaseDC(win, dc);
-  } else {
-    ::ReleaseDC(win,dc1);
-  }
+  ::ReleaseDC(win, mDeviceContext->mDC ? dc : dc1);
+  return NS_OK;
+}
 
+nsresult
+nsFontMetricsWin::GetSpaceWidth(nscoord& aSpaceWidth)
+{
+  aSpaceWidth = mSpaceWidth;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetXHeight(nscoord& aResult)
+nsFontMetricsWin::GetXHeight(nscoord& aResult)
 {
   aResult = mXHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetSuperscriptOffset(nscoord& aResult)
+nsFontMetricsWin::GetSuperscriptOffset(nscoord& aResult)
 {
   aResult = mSuperscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetSubscriptOffset(nscoord& aResult)
+nsFontMetricsWin::GetSubscriptOffset(nscoord& aResult)
 {
   aResult = mSubscriptOffset;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
+nsFontMetricsWin::GetStrikeout(nscoord& aOffset, nscoord& aSize)
 {
   aOffset = mStrikeoutOffset;
   aSize = mStrikeoutSize;
@@ -3198,7 +3158,7 @@ nsFontMetricsWin :: GetStrikeout(nscoord& aOffset, nscoord& aSize)
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetUnderline(nscoord& aOffset, nscoord& aSize)
+nsFontMetricsWin::GetUnderline(nscoord& aOffset, nscoord& aSize)
 {
   aOffset = mUnderlineOffset;
   aSize = mUnderlineSize;
@@ -3206,92 +3166,95 @@ nsFontMetricsWin :: GetUnderline(nscoord& aOffset, nscoord& aSize)
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetHeight(nscoord &aHeight)
+nsFontMetricsWin::GetHeight(nscoord &aHeight)
 {
   aHeight = mMaxHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetNormalLineHeight(nscoord &aHeight)
+nsFontMetricsWin::GetNormalLineHeight(nscoord &aHeight)
 {
   aHeight = mEmHeight + mLeading;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetLeading(nscoord &aLeading)
+nsFontMetricsWin::GetLeading(nscoord &aLeading)
 {
   aLeading = mLeading;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetEmHeight(nscoord &aHeight)
+nsFontMetricsWin::GetEmHeight(nscoord &aHeight)
 {
   aHeight = mEmHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetEmAscent(nscoord &aAscent)
+nsFontMetricsWin::GetEmAscent(nscoord &aAscent)
 {
   aAscent = mEmAscent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetEmDescent(nscoord &aDescent)
+nsFontMetricsWin::GetEmDescent(nscoord &aDescent)
 {
   aDescent = mEmDescent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetMaxHeight(nscoord &aHeight)
+nsFontMetricsWin::GetMaxHeight(nscoord &aHeight)
 {
   aHeight = mMaxHeight;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetMaxAscent(nscoord &aAscent)
+nsFontMetricsWin::GetMaxAscent(nscoord &aAscent)
 {
   aAscent = mMaxAscent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetMaxDescent(nscoord &aDescent)
+nsFontMetricsWin::GetMaxDescent(nscoord &aDescent)
 {
   aDescent = mMaxDescent;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetMaxAdvance(nscoord &aAdvance)
+nsFontMetricsWin::GetMaxAdvance(nscoord &aAdvance)
 {
   aAdvance = mMaxAdvance;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFontMetricsWin :: GetFont(const nsFont *&aFont)
+nsFontMetricsWin::GetAveCharWidth(nscoord &aAveCharWidth)
 {
-  aFont = mFont;
+  aAveCharWidth = mAveCharWidth;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontMetricsWin::GetFont(const nsFont *&aFont)
+{
+  aFont = &mFont;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsFontMetricsWin::GetLangGroup(nsIAtom** aLangGroup)
 {
-  if (!aLangGroup) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
+  NS_ENSURE_ARG_POINTER(aLangGroup);
   *aLangGroup = mLangGroup;
   NS_IF_ADDREF(*aLangGroup);
-
   return NS_OK;
 }
 
@@ -3302,12 +3265,165 @@ nsFontMetricsWin::GetFontHandle(nsFontHandle &aHandle)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsFontMetricsWin::GetAveCharWidth(nscoord &aAveCharWidth)
+nsresult
+nsFontMetricsWin::ResolveForwards(HDC                  aDC,
+                                  const PRUnichar*     aString,
+                                  PRUint32             aLength,
+                                  nsFontSwitchCallback aFunc, 
+                                  void*                aData)
 {
-  aAveCharWidth = mAveCharWidth;
+  PRBool running;
+  const PRUnichar* firstChar = aString;
+  const PRUnichar* lastChar  = aString + aLength;
+  const PRUnichar* currChar  = firstChar;
+
+  nsFontWin* currFont;
+  nsFontWin* prevFont;
+  PRInt32 i, j, count;
+
+  i = 0;
+  while (firstChar < lastChar) {
+    // see if one of our loaded fonts can represent the current character
+    // we need to repeatedly get the count here because it can change on the way
+    count = mLoadedFonts.Count();
+    while (i < count) {
+      currFont = (nsFontWin*)mLoadedFonts[i];
+      if (!FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
+        // advance to the next loaded font
+        ++i;
+      }
+      else {
+        // see if we can keep the same font for adjacent characters. We can
+        // do so only if the font can represent these chars AND none of the
+        // previous fonts can represent these chars
+        while (++currChar < lastChar) {
+          j = 0;
+          if (!FONT_HAS_GLYPH(currFont->mMap, *currChar)) 
+            break;
+          for (; j < i; ++j) {
+            prevFont = (nsFontWin*)mLoadedFonts[j];
+            if (FONT_HAS_GLYPH(prevFont->mMap, *currChar)) {
+              // Another font was found, we cannot use the current font for this char
+              goto callback;
+            }
+          }
+        }
+
+callback:
+        // We have a substring that can be represented with the same font, and
+        // we are about to switch fonts, it is time to notify our caller.
+        nsFontSwitch fontSwitch = {currFont};
+        running = (*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData);
+
+        if (!running || currChar == lastChar) return NS_OK;
+
+        // continue with the next substring, re-using the available loaded fonts
+        i = j; // quick jump to the candidate font for the current char
+        firstChar = currChar;
+      }
+    }
+
+    // load additional fonts, retaining the last font index i from where
+    // we will keep advancing
+    currFont = FindFont(aDC, *currChar);
+    if (currFont == mSubstituteFont) {
+      // Exception to the font index... the substitute font can be anywhere
+      // inside mLoadedFonts[]. When it is returned from the second time onwards,
+      // the number of loaded fonts is constant, so we need to set the running
+      // index so that we can enter the "while (i < count)" loop above
+      // and advance from there
+      i = mLoadedFonts.IndexOf(mSubstituteFont);
+      continue;
+    }
+
+    // bail out if something weird happened, this error must never happen
+    NS_ASSERTION(currFont, "Could not find a font");
+    if (!currFont) return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
+
+nsresult
+nsFontMetricsWin::ResolveBackwards(HDC                  aDC,
+                                   const PRUnichar*     aString,
+                                   PRUint32             aLength,
+                                   nsFontSwitchCallback aFunc, 
+                                   void*                aData)
+{
+  PRBool running;
+  const PRUnichar* firstChar = aString + aLength - 1;
+  const PRUnichar* lastChar  = aString - 1;
+  const PRUnichar* currChar  = firstChar;
+
+  nsFontWin* currFont;
+  nsFontWin* prevFont;
+  PRInt32 i, j, count;
+
+  i = 0;
+  while (firstChar > lastChar) {
+    // see if one of our loaded fonts can represent the current character
+    // we need to repeatedly get the count here because it can change on the way
+    count = mLoadedFonts.Count();
+    while (i < count) {
+      currFont = (nsFontWin*)mLoadedFonts[i];
+      if (!FONT_HAS_GLYPH(currFont->mMap, *currChar)) {
+        // advance to the next loaded font
+        ++i;
+      }
+      else {
+        // see if we can keep the same font for adjacent characters. We can
+        // do so only if the font can represent these chars AND none of the
+        // previous fonts can represent these chars
+        while (--currChar > lastChar) {
+          j = 0;
+          if (!FONT_HAS_GLYPH(currFont->mMap, *currChar))
+            break;
+          for (; j < i; ++j) {
+            prevFont = (nsFontWin*)mLoadedFonts[j];
+            if (FONT_HAS_GLYPH(prevFont->mMap, *currChar)) {
+              // Another font was found, we cannot use the current font for this char
+              goto callback;
+            }
+          }
+        } 
+
+callback:
+        // We have a substring that can be represented with the same font, and
+        // we are about to switch fonts, it is time to notify our caller.
+        nsFontSwitch fontSwitch = {currFont};
+        running = (*aFunc)(&fontSwitch, currChar + 1, firstChar - currChar, aData);
+
+        if (!running || currChar == lastChar) return NS_OK;
+
+        // continue with the next substring, re-using the available loaded fonts
+        i = j; // quick jump to the candidate font for the current char
+        firstChar = currChar;
+      }
+    }
+
+    // load additional fonts, retaining the last font index i from where
+    // we will keep advancing
+    currFont = FindFont(aDC, *currChar);
+    if (currFont == mSubstituteFont) {
+      // Exception to the font index... the substitute font can be anywhere
+      // inside mLoadedFonts[]. When it is returned from the second time onwards,
+      // the number of loaded fonts is constant, so we need to set the running
+      // index so that we can enter the "while (i < count)" loop above
+      // and advance from there
+      i = mLoadedFonts.IndexOf(mSubstituteFont);
+      continue;
+    }
+
+    // bail out if something weird happened, this error must never happen
+    NS_ASSERTION(currFont, "Could not find a font");
+    if (!currFont) return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+//
 
 nsFontWin::nsFontWin(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap)
 {
@@ -3333,11 +3449,7 @@ nsFontWinUnicode::nsFontWinUnicode(LOGFONT* aLogFont, HFONT aFont,
 // unicode TrueType fonts with underline or strikeout correctly.
 // @see  nsFontWinUnicode::DrawString
   NS_ASSERTION(aLogFont != NULL, "Null logfont passed to nsFontWinUnicode constructor");
-  if ((aLogFont->lfUnderline) || (aLogFont->lfStrikeOut)) {
-    mUnderlinedOrStrikeOut = PR_TRUE;
-  } else {
-    mUnderlinedOrStrikeOut = PR_FALSE;
-  }
+  mUnderlinedOrStrikeOut = aLogFont->lfUnderline || aLogFont->lfStrikeOut;
 }
 
 nsFontWinUnicode::~nsFontWinUnicode()
@@ -3356,7 +3468,6 @@ void
 nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-
   // Due to a bug in WIN95 unicode rendering of truetype fonts
   // with underline or strikeout, we need to set a clip rect
   // to prevent the underline and/or strikethru from being rendered
@@ -3368,8 +3479,7 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   // used. HTML text frames draw the underlines or strikeout rather
   // than relying on loading and underline or strikeout font so very
   // few fonts should have mUnderlinedOrStrikeOut set.
-  if (mUnderlinedOrStrikeOut)
-  {
+  if (mUnderlinedOrStrikeOut) {
      //XXX: This code to test the OS version
      //was lifted out of nsRenderingContext
      //It really should be moved to a common location that both
@@ -3388,10 +3498,9 @@ nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
       }
     }
 
-    if (gIsWIN95)
-    {
-        // Clip out the extra underline/strikethru caused by the
-        // bug in WIN95.
+    if (gIsWIN95) {
+      // Clip out the extra underline/strikethru caused by the
+      // bug in WIN95.
       SIZE size;
       ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
       RECT clipRect;
@@ -3417,63 +3526,61 @@ nsFontWinUnicode::GetBoundingMetrics(HDC                aDC,
                                      nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (aString && 0 < aLength) {
-    PRUint16 str[CHAR_BUFFER_SIZE];
-    PRUint16* pstr = (PRUint16*)&str;
+  PRUint16 str[CHAR_BUFFER_SIZE];
+  PRUint16* pstr = (PRUint16*)&str;
 
-    // at this stage, the glyph agent should have already been initialized
-    // given that it was used to compute the x-height in RealizeFont()
-    NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
-    if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
-      // we are on a platform that doesn't implement GetGlyphOutlineW() 
-      // we need to use glyph indices
-      pstr = GetGlyphIndices(aDC, &mCMAP, aString, aLength, str, CHAR_BUFFER_SIZE);
-      if (!pstr) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-
-    // measure the string
-    nscoord descent;
-    GLYPHMETRICS gm;                                                
-    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, aString[0], pstr[0], &gm);
-    if (GDI_ERROR == len) {
+  // at this stage, the glyph agent should have already been initialized
+  // given that it was used to compute the x-height in RealizeFont()
+  NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
+  if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
+    // we are on a platform that doesn't implement GetGlyphOutlineW() 
+    // we need to use glyph indices
+    pstr = GetGlyphIndices(aDC, &mCMAP, aString, aLength, str, CHAR_BUFFER_SIZE);
+    if (!pstr) {
       return NS_ERROR_UNEXPECTED;
     }
-    // flip sign of descent for cross-platform compatibility
-    descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-    aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-    aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-    aBoundingMetrics.descent = descent;
-    aBoundingMetrics.width = gm.gmCellIncX;
-
-    if (1 < aLength) {
-      // loop over each glyph to get the ascent and descent
-      PRUint32 i;
-      for (i = 1; i < aLength; i++) {
-        len = gGlyphAgent.GetGlyphMetrics(aDC, aString[i], pstr[i], &gm);
-        if (GDI_ERROR == len) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        // flip sign of descent for cross-platform compatibility
-        descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-        if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-          aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-        if (aBoundingMetrics.descent < descent)
-          aBoundingMetrics.descent = descent;
-      }
-      // get the final rightBearing and width. Possible kerning is taken into account.
-      SIZE size;
-      ::GetTextExtentPointW(aDC, aString, aLength, &size);
-      aBoundingMetrics.width = size.cx;
-      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    }
-
-    if (pstr != str) {
-      delete[] pstr;
-    }
   }
+
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;                                                
+  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, aString[0], pstr[0], &gm);
+  if (GDI_ERROR == len) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = descent;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < aLength) {
+    // loop over each glyph to get the ascent and descent
+    for (PRUint32 i = 1; i < aLength; ++i) {
+      len = gGlyphAgent.GetGlyphMetrics(aDC, aString[i], pstr[i], &gm);
+      if (GDI_ERROR == len) {
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent < descent)
+        aBoundingMetrics.descent = descent;
+    }
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPointW(aDC, aString, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  }
+
+  if (pstr != str) {
+    delete[] pstr;
+  }
+
   return NS_OK;
 }
 
@@ -3501,46 +3608,44 @@ PRInt32
 nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUint32 aLength)
 {
-  if (mConverter && aString && 0 < aLength) {
-    char str[CHAR_BUFFER_SIZE];
-    char* pstr = str;
-    if (aLength > CHAR_BUFFER_SIZE) {
-      pstr = new char[aLength];
-      if (!pstr) return 0;
-    }
-    PRInt32 srcLength = aLength, destLength = aLength;
-    mConverter->Convert(aString, &srcLength, pstr, &destLength);
-
-    SIZE size;
-    ::GetTextExtentPoint32A(aDC, pstr, aLength, &size);
-
-    if (pstr != str) {
-      delete[] pstr;
-    }
-    return size.cx;
+  char str[CHAR_BUFFER_SIZE];
+  char* pstr = str;
+  if (aLength > CHAR_BUFFER_SIZE) {
+    pstr = new char[aLength];
+    if (!pstr) return 0;
   }
-  return 0;
+
+  PRInt32 srcLength = aLength, destLength = aLength;
+  mConverter->Convert(aString, &srcLength, pstr, &destLength);
+
+  SIZE size;
+  ::GetTextExtentPoint32A(aDC, pstr, aLength, &size);
+
+  if (pstr != str) {
+    delete[] pstr;
+  }
+
+  return size.cx;
 }
 
 void
 nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  if (mConverter && aString && 0 < aLength) {
-    char str[CHAR_BUFFER_SIZE];
-    char* pstr = str;
-    if (aLength > CHAR_BUFFER_SIZE) {
-      pstr = new char[aLength];
-      if (!pstr) return;
-    }
-    PRInt32 srcLength = aLength, destLength = aLength;
-    mConverter->Convert(aString, &srcLength, pstr, &destLength);
+  char str[CHAR_BUFFER_SIZE];
+  char* pstr = str;
+  if (aLength > CHAR_BUFFER_SIZE) {
+    pstr = new char[aLength];
+    if (!pstr) return;
+  }
 
-    ::ExtTextOutA(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
+  PRInt32 srcLength = aLength, destLength = aLength;
+  mConverter->Convert(aString, &srcLength, pstr, &destLength);
 
-    if (pstr != str) {
-      delete[] pstr;
-    }
+  ::ExtTextOutA(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
+
+  if (pstr != str) {
+    delete[] pstr;
   }
 }
 
@@ -3552,57 +3657,63 @@ nsFontWinNonUnicode::GetBoundingMetrics(HDC                aDC,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (mConverter && aString && 0 < aLength) {
-    char str[CHAR_BUFFER_SIZE];
-    char* pstr = str;
-    if (aLength > CHAR_BUFFER_SIZE) {
-      pstr = new char[aLength];
-      if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
-    }
-    PRInt32 srcLength = aLength, destLength = aLength;
-    mConverter->Convert(aString, &srcLength, pstr, &destLength);
+  char str[CHAR_BUFFER_SIZE];
+  char* pstr = str;
+  if (aLength > CHAR_BUFFER_SIZE) {
+    pstr = new char[aLength];
+    if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+  }
 
-    // measure the string
-    nscoord descent;
-    GLYPHMETRICS gm;
-    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
-    if (GDI_ERROR == len) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    // flip sign of descent for cross-platform compatibility
-    descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-    aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-    aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-    aBoundingMetrics.descent = descent;
-    aBoundingMetrics.width = gm.gmCellIncX;
+  PRInt32 srcLength = aLength, destLength = aLength;
+  mConverter->Convert(aString, &srcLength, pstr, &destLength);
 
-    if (1 < aLength) {
-      // loop over each glyph to get the ascent and descent
-      PRUint32 i;
-      for (i = 1; i < aLength; i++) {
-        len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[i]), &gm);
-        if (GDI_ERROR == len) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        // flip sign of descent for cross-platform compatibility
-        descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-        if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-          aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-        if (aBoundingMetrics.descent < descent)
-          aBoundingMetrics.descent = descent;
-      }
-      // get the final rightBearing and width. Possible kerning is taken into account.
-      SIZE size;
-      ::GetTextExtentPointA(aDC, pstr, aLength, &size);
-      aBoundingMetrics.width = size.cx;
-      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
-    }
-
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;
+  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
+  if (GDI_ERROR == len) {
     if (pstr != str) {
       delete[] pstr;
     }
+    return NS_ERROR_UNEXPECTED;
   }
+
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = descent;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < aLength) {
+    // loop over each glyph to get the ascent and descent
+    for (PRUint32 i = 1; i < aLength; ++i) {
+      len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[i]), &gm);
+      if (GDI_ERROR == len) {
+        if (pstr != str) {
+          delete[] pstr;
+        }
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent < descent)
+        aBoundingMetrics.descent = descent;
+    }
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPointA(aDC, pstr, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+  }
+
+  if (pstr != str) {
+    delete[] pstr;
+  }
+
   return NS_OK;
 }
 
@@ -3642,11 +3753,11 @@ SubstituteChars(PRBool           aDisplayUnicode,
     }
     char cbuf[10];
     PRUint32 count = 0;
-    for (PRUint32 i = 0; i < aLength; i++) {
+    for (PRUint32 i = 0; i < aLength; ++i) {
       // the substitute font should also have glyphs for '&', '#', 'x', ';' and digits
       PR_snprintf(cbuf, sizeof(cbuf), "&#x%04X;", aString[i]);
-      for (PRUint32 j = 0; j < 8; j++)
-        result[count++] = PRUnichar(cbuf[j]); 
+      for (PRUint32 j = 0; j < 8; ++j, ++count)
+        result[count] = PRUnichar(cbuf[j]); 
     }
     *aCount = count;
   }
@@ -3655,7 +3766,7 @@ SubstituteChars(PRBool           aDisplayUnicode,
       result = new PRUnichar[aLength];
       if (!result) return nsnull;
     }
-    for (PRUint32 i = 0; i < aLength; i++)
+    for (PRUint32 i = 0; i < aLength; ++i)
       result[i] = NS_REPLACEMENT_CHAR;
     *aCount = aLength;
   }
@@ -3666,40 +3777,34 @@ PRInt32
 nsFontWinSubstitute::GetWidth(HDC aDC, const PRUnichar* aString,
   PRUint32 aLength)
 {
-  if (aString && 0 < aLength) {
-    PRUnichar str[CHAR_BUFFER_SIZE];
-    PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
-                             aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-    if (!pstr) return 0;
+  PRUnichar str[CHAR_BUFFER_SIZE];
+  PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
+                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
+  if (!pstr) return 0;
 
-    SIZE size;
-    ::GetTextExtentPoint32W(aDC, pstr, aLength, &size);
+  SIZE size;
+  ::GetTextExtentPoint32W(aDC, pstr, aLength, &size);
 
-    if (pstr != str) {
-      delete[] pstr;
-    }
-
-    return size.cx;
+  if (pstr != str) {
+    delete[] pstr;
   }
 
-  return 0;
+  return size.cx;
 }
 
 void
 nsFontWinSubstitute::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  if (aString && 0 < aLength) {
-    PRUnichar str[CHAR_BUFFER_SIZE];
-    PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
-                             aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-    if (!pstr) return;
+  PRUnichar str[CHAR_BUFFER_SIZE];
+  PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
+                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
+  if (!pstr) return;
 
-    ::ExtTextOutW(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
+  ::ExtTextOutW(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
 
-    if (pstr != str) {
-      delete[] pstr;
-    }
+  if (pstr != str) {
+    delete[] pstr;
   }
 }
 
@@ -3711,70 +3816,82 @@ nsFontWinSubstitute::GetBoundingMetrics(HDC                aDC,
                                         nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (aString && 0 < aLength) {
-    PRUnichar str[CHAR_BUFFER_SIZE];
-    PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
-                             aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
-    if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
-    PRUint16 s[CHAR_BUFFER_SIZE];
-    PRUint16* ps = (PRUint16*)&s;
+  PRUnichar str[CHAR_BUFFER_SIZE];
+  PRUnichar* pstr = SubstituteChars(mDisplayUnicode,
+                           aString, aLength, str, CHAR_BUFFER_SIZE, &aLength);
+  if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
+  PRUint16 s[CHAR_BUFFER_SIZE];
+  PRUint16* ps = (PRUint16*)&s;
 
-    // at this stage, the glyph agent should have already been initialized
-    // given that it was used to compute the x-height in RealizeFont()
-    NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
-    if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
-      // we are on a platform that doesn't implement GetGlyphOutlineW() 
-      // we need to use glyph indices
-      ps = GetGlyphIndices(aDC, &mCMAP, str, aLength, s, CHAR_BUFFER_SIZE);
-      if (!ps) {
-        return NS_ERROR_UNEXPECTED;
-      }
-    }
-
-    // measure the string
-    nscoord descent;
-    GLYPHMETRICS gm;
-    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[0], ps[0], &gm);
-    if (GDI_ERROR == len) {
+  // at this stage, the glyph agent should have already been initialized
+  // given that it was used to compute the x-height in RealizeFont()
+  NS_ASSERTION(gGlyphAgent.GetState() != eGlyphAgent_UNKNOWN, "Glyph agent is not yet initialized");
+  if (gGlyphAgent.GetState() != eGlyphAgent_UNICODE) {
+    // we are on a platform that doesn't implement GetGlyphOutlineW() 
+    // we need to use glyph indices
+    ps = GetGlyphIndices(aDC, &mCMAP, str, aLength, s, CHAR_BUFFER_SIZE);
+    if (!ps) {
       return NS_ERROR_UNEXPECTED;
     }
-    // flip sign of descent for cross-platform compatibility
-    descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-    aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-    aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-    aBoundingMetrics.descent = descent;
-    aBoundingMetrics.width = gm.gmCellIncX;
+  }
 
-    if (1 < aLength) {
-      // loop over each glyph to get the ascent and descent
-      PRUint32 i;
-      for (i = 1; i < aLength; i++) {
-        len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[i], ps[i], &gm);        
-        if (GDI_ERROR == len) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        // flip sign of descent for cross-platform compatibility
-        descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-        if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-          aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-        if (aBoundingMetrics.descent < descent)
-          aBoundingMetrics.descent = descent;
-      }
-      // get the final rightBearing and width. Possible kerning is taken into account.
-      SIZE size;
-      ::GetTextExtentPointW(aDC, pstr, aLength, &size);
-      aBoundingMetrics.width = size.cx;
-      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    }
-
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;
+  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[0], ps[0], &gm);
+  if (GDI_ERROR == len) {
     if (pstr != str) {
       delete[] pstr;
-    }
+    }  
     if (ps != s) {
       delete[] ps;
     }
+    return NS_ERROR_UNEXPECTED;
   }
+
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = descent;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < aLength) {
+    // loop over each glyph to get the ascent and descent
+    for (PRUint32 i = 1; i < aLength; ++i) {
+      len = gGlyphAgent.GetGlyphMetrics(aDC, pstr[i], ps[i], &gm);        
+      if (GDI_ERROR == len) {
+        if (pstr != str) {
+          delete[] pstr;
+        }
+        if (ps != s) {
+          delete[] ps;
+        }
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent < descent)
+        aBoundingMetrics.descent = descent;
+    }
+
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPointW(aDC, pstr, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  }
+
+  if (pstr != str) {
+    delete[] pstr;
+  }
+  if (ps != s) {
+    delete[] ps;
+  }
+
   return NS_OK;
 }
 
@@ -3789,24 +3906,24 @@ nsFontWinSubstitute::DumpFontInfo()
 #endif
 
 static void
-GenerateDefault(nsCharSetInfo* aSelf)
+GenerateDefault(nsCharsetInfo* aSelf)
 { 
 #ifdef NS_DEBUG
   printf("%s defaulted\n", aSelf->mName);
 #endif
   PRUint32* map = aSelf->mMap;
-  for (int i = 0; i < 2048; i++) {
+  for (int i = 0; i < 2048; ++i) {
     map[i] = 0xFFFFFFFF;
   }
 }
 
 static void
-GenerateSingleByte(nsCharSetInfo* aSelf)
+GenerateSingleByte(nsCharsetInfo* aSelf)
 { 
   PRUint8 mb[256];
   PRUint16 wc[256];
   int i;
-  for (i = 0; i < 256; i++) {
+  for (i = 0; i < 256; ++i) {
     mb[i] = i;
   }
   int len = MultiByteToWideChar(aSelf->mCodePage, 0, (char*) mb, 256, wc, 256);
@@ -3816,16 +3933,16 @@ GenerateSingleByte(nsCharSetInfo* aSelf)
   }
 #endif
   PRUint32* map = aSelf->mMap;
-  for (i = 0; i < 256; i++) {
+  for (i = 0; i < 256; ++i) {
     ADD_GLYPH(map, wc[i]);
   }
 }
 
 static void
-GenerateMultiByte(nsCharSetInfo* aSelf)
+GenerateMultiByte(nsCharsetInfo* aSelf)
 { 
   PRUint32* map = aSelf->mMap;
-  for (PRUint16 c = 0; c < 0xFFFF; c++) {
+  for (PRUint16 c = 0; c < 0xFFFF; ++c) {
     BOOL defaulted = FALSE;
     WideCharToMultiByte(aSelf->mCodePage, 0, &c, 1, nsnull, 0, nsnull,
       &defaulted);
@@ -3836,19 +3953,18 @@ GenerateMultiByte(nsCharSetInfo* aSelf)
 }
 
 static int
-HaveConverterFor(PRUint8 aCharSet)
+HaveConverterFor(PRUint8 aCharset)
 {
   PRUint16 wc = 'a';
   char mb[8];
-  if (WideCharToMultiByte(gCharSetInfo[gCharSetToIndex[aCharSet]].mCodePage, 0,
+  if (WideCharToMultiByte(gCharsetInfo[gCharsetToIndex[aCharset]].mCodePage, 0,
                           &wc, 1, mb, sizeof(mb), nsnull, nsnull)) {
     return 1;
   }
-
   // remove from table, since we can't support it anyway
-  for (int i = 0; i < sizeof(bitToCharSet); i++) {
-    if (bitToCharSet[i] == aCharSet) {
-      bitToCharSet[i] = DEFAULT_CHARSET;
+  for (int i = sizeof(gBitToCharset)-1; i >= 0; --i) {
+    if (gBitToCharset[i] == aCharset) {
+      gBitToCharset[i] = DEFAULT_CHARSET;
     }
   }
 
@@ -3858,6 +3974,8 @@ HaveConverterFor(PRUint8 aCharSet)
 int
 nsFontWinA::GetSubsets(HDC aDC)
 {
+  mSubsetsCount = 0;
+
   FONTSIGNATURE signature;
   if (::GetTextCharsetInfo(aDC, &signature, 0) == DEFAULT_CHARSET) {
     return 0;
@@ -3865,35 +3983,35 @@ nsFontWinA::GetSubsets(HDC aDC)
 
   int dword;
   DWORD* array = signature.fsCsb;
-  mSubsetsCount = 0;
   int i = 0;
-  for (dword = 0; dword < 2; dword++) {
-    for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
+  for (dword = 0; dword < 2; ++dword) {
+    for (int bit = 0; bit < sizeof(DWORD) * 8; ++bit, ++i) {
       if ((array[dword] >> bit) & 1) {
-        PRUint8 charSet = bitToCharSet[i];
+        PRUint8 charset = gBitToCharset[i];
 #ifdef DEBUG_FONT_SIGNATURE
-        printf("  %02d %s\n", i, gCharSetInfo[gCharSetToIndex[charSet]].mName);
+        printf("  %02d %s\n", i, gCharsetInfo[gCharsetToIndex[charset]].mName);
 #endif
-        if (charSet != DEFAULT_CHARSET) {
-          if (HaveConverterFor(charSet)) {
-            mSubsetsCount++;
-          }
+        if ((charset != DEFAULT_CHARSET) && HaveConverterFor(charset)) {
+          ++mSubsetsCount;
         }
       }
-      i++;
     }
   }
 
+  if (!mSubsetsCount) {
+    return 0;
+  }
   mSubsets = (nsFontSubset**) PR_Calloc(mSubsetsCount, sizeof(nsFontSubset*));
   if (!mSubsets) {
     mSubsetsCount = 0;
     return 0;
   }
+
   int j;
-  for (j = 0; j < mSubsetsCount; j++) {
+  for (j = 0; j < mSubsetsCount; ++j) {
     mSubsets[j] = new nsFontSubset();
     if (!mSubsets[j]) {
-      for (j = j - 1; j >= 0; j--) {
+      for (j = j - 1; j >= 0; --j) {
         delete mSubsets[j];
       }
       PR_Free(mSubsets);
@@ -3903,20 +4021,16 @@ nsFontWinA::GetSubsets(HDC aDC)
     }
   }
 
-  i = 0;
-  j = 0;
-  for (dword = 0; dword < 2; dword++) {
-    for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
+  i = j = 0;
+  for (dword = 0; dword < 2; ++dword) {
+    for (int bit = 0; bit < sizeof(DWORD) * 8; ++bit, ++i) {
       if ((array[dword] >> bit) & 1) {
-        PRUint8 charSet = bitToCharSet[i];
-        if (charSet != DEFAULT_CHARSET) {
-          if (HaveConverterFor(charSet)) {
-            mSubsets[j]->mCharSet = charSet;
-            j++;
-          }
+        PRUint8 charset = gBitToCharset[i];
+        if ((charset != DEFAULT_CHARSET) && HaveConverterFor(charset)) {
+          mSubsets[j]->mCharset = charset;
+          ++j;
         }
       }
-      i++;
     }
   }
 
@@ -3930,25 +4044,50 @@ nsFontSubset::nsFontSubset()
 
 nsFontSubset::~nsFontSubset()
 {
+  // our map is not in the gFontMaps hashtable
+  // @see nsFontSubset::Load()
   if (mMap) {
     PR_Free(mMap);
     mMap = nsnull;
   }
 }
 
+void
+nsFontSubset::Convert(const PRUnichar* aString, PRUint32 aLength,
+  char** aResult /*IN/OUT*/, int* aResultLength /*IN/OUT*/)
+{
+  int len = *aResultLength; // current available len of aResult
+  *aResultLength = 0;
+
+  // Get the number of bytes needed for the conversion
+  int nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
+                               *aResult, 0, nsnull, nsnull);
+  if (!nb) return;
+  if (nb > len) {
+    // Allocate a bigger array that the caller should free
+    *aResult = new char[nb];
+    if (!*aResult) return;
+  }
+  // Convert the Unicode string to ANSI
+  *aResultLength = WideCharToMultiByte(mCodePage, 0, aString, aLength,
+                                       *aResult, nb, nsnull, nsnull);
+}
+
 PRInt32
 nsFontSubset::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
 {
-  // XXX allocate on heap if string is too long
-  char str[1024];
-  int len = WideCharToMultiByte(mCodePage, 0, aString, aLength, str,
-    sizeof(str), nsnull, nsnull);
+  char str[CHAR_BUFFER_SIZE];
+  char* pstr = str;
+  int len = CHAR_BUFFER_SIZE;
+  Convert(aString, aLength, &pstr, &len);
   if (len) {
     SIZE size;
-    ::GetTextExtentPoint32A(aDC, str, len, &size);
+    ::GetTextExtentPoint32A(aDC, pstr, len, &size);
+    if (pstr != str) {
+      delete[] pstr;
+    }
     return size.cx;
   }
-
   return 0;
 }
 
@@ -3956,12 +4095,15 @@ void
 nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  // XXX allocate on heap if string is too long
-  char str[1024];
-  int len = WideCharToMultiByte(mCodePage, 0, aString, aLength, str,
-    sizeof(str), nsnull, nsnull);
+  char str[CHAR_BUFFER_SIZE];
+  char* pstr = str;
+  int len = CHAR_BUFFER_SIZE;
+  Convert(aString, aLength, &pstr, &len);
   if (len) {
-    ::ExtTextOutA(aDC, aX, aY, 0, NULL, str, len, NULL);
+    ::ExtTextOutA(aDC, aX, aY, 0, NULL, pstr, len, NULL);
+    if (pstr != str) {
+      delete[] pstr;
+    }
   }
 }
 
@@ -3973,71 +4115,60 @@ nsFontSubset::GetBoundingMetrics(HDC                aDC,
                                  nsBoundingMetrics& aBoundingMetrics)
 {
   aBoundingMetrics.Clear();
-  if (aString && 0 < aLength) {
-    char str[CHAR_BUFFER_SIZE];
-    char* pstr = str;
-    // Get number of bytes needed for the conversion
-    int nb;
-    nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
-                             pstr, 0, nsnull, nsnull);
-    if (!nb) return NS_ERROR_UNEXPECTED;
-    if (nb > CHAR_BUFFER_SIZE) {
-      pstr = new char[nb];
-      if (!pstr) return NS_ERROR_OUT_OF_MEMORY;
-    }
-    // Convert the string Unicode to ANSI
-    nb = WideCharToMultiByte(mCodePage, 0, aString, aLength,
-                             pstr, nb, nsnull, nsnull);
-    if (!nb) return NS_ERROR_UNEXPECTED;
-    nb--; //ignore the null terminator
+  char str[CHAR_BUFFER_SIZE];
+  char* pstr = str;
+  int length = CHAR_BUFFER_SIZE;
+  Convert(aString, aLength, &pstr, &length);
+  if (!length) return NS_ERROR_UNEXPECTED;
 
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
-
-    // measure the string
-    nscoord descent;
-    GLYPHMETRICS gm;
-    DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
-    if (GDI_ERROR == len) {
-      return NS_ERROR_UNEXPECTED;
-    }
-    // flip sign of descent for cross-platform compatibility
-    descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-    aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
-    aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
-    aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-    aBoundingMetrics.descent = descent;
-    aBoundingMetrics.width = gm.gmCellIncX;
-
-    if (1 < nb) {
-      // loop over each glyph to get the ascent and descent
-      int i;
-      for (i = 1; i < nb; i++) {
-        len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
-        if (GDI_ERROR == len) {
-          return NS_ERROR_UNEXPECTED;
-        }
-        // flip sign of descent for cross-platform compatibility
-        descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
-        if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
-          aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
-        if (aBoundingMetrics.descent > descent)
-          aBoundingMetrics.descent = descent;
-      }
-      // get the final rightBearing and width. Possible kerning is taken into account.
-
-      SIZE size;
-      ::GetTextExtentPointA(aDC, pstr, aLength, &size);
-      aBoundingMetrics.width = size.cx;
-      aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
-
-    }
-
+  // measure the string
+  nscoord descent;
+  GLYPHMETRICS gm;
+  DWORD len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
+  if (GDI_ERROR == len) {
     if (pstr != str) {
       delete[] pstr;
     }
-
-    ::SelectObject(aDC, oldFont);
+    return NS_ERROR_UNEXPECTED;
   }
+
+  // flip sign of descent for cross-platform compatibility
+  descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+  aBoundingMetrics.leftBearing = gm.gmptGlyphOrigin.x;
+  aBoundingMetrics.rightBearing = gm.gmptGlyphOrigin.x + gm.gmBlackBoxX;
+  aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+  aBoundingMetrics.descent = descent;
+  aBoundingMetrics.width = gm.gmCellIncX;
+
+  if (1 < length) {
+    // loop over each glyph to get the ascent and descent
+    for (int i = 1; i < length; ++i) {
+      len = gGlyphAgent.GetGlyphMetrics(aDC, PRUint8(pstr[0]), &gm);
+      if (GDI_ERROR == len) {
+        if (pstr != str) {
+          delete[] pstr;
+        }
+        return NS_ERROR_UNEXPECTED;
+      }
+      // flip sign of descent for cross-platform compatibility
+      descent = -(nscoord(gm.gmptGlyphOrigin.y) - nscoord(gm.gmBlackBoxY));
+      if (aBoundingMetrics.ascent < gm.gmptGlyphOrigin.y)
+        aBoundingMetrics.ascent = gm.gmptGlyphOrigin.y;
+      if (aBoundingMetrics.descent > descent)
+        aBoundingMetrics.descent = descent;
+    }
+
+    // get the final rightBearing and width. Possible kerning is taken into account.
+    SIZE size;
+    ::GetTextExtentPointA(aDC, pstr, aLength, &size);
+    aBoundingMetrics.width = size.cx;
+    aBoundingMetrics.rightBearing = size.cx - gm.gmCellIncX + gm.gmBlackBoxX;
+  }
+
+  if (pstr != str) {
+    delete[] pstr;
+  }
+
   return NS_OK;
 }
 
@@ -4050,6 +4181,41 @@ nsFontSubset::DumpFontInfo()
 }
 #endif // NS_DEBUG
 #endif
+
+class nsFontSubsetSubstitute : public nsFontSubset
+{
+public:
+  nsFontSubsetSubstitute();
+  virtual ~nsFontSubsetSubstitute();
+
+  // overloaded method to convert all chars to the replacement char
+  virtual void Convert(const PRUnichar* aString, PRUint32 aLength,
+                       char** aResult, int* aResultLength);
+};
+
+nsFontSubsetSubstitute::nsFontSubsetSubstitute()
+  : nsFontSubset()
+{
+}
+
+nsFontSubsetSubstitute::~nsFontSubsetSubstitute()
+{
+  if (mMap) {
+    PR_Free(mMap);
+    mMap = nsnull;
+  }
+}
+
+void
+nsFontSubsetSubstitute::Convert(const PRUnichar* aString, PRUint32 aLength,
+  char** aResult, int* aResultLength)
+{
+  nsAutoString tmp;
+  for (PRUint32 i = 0; i < aLength; ++i) {
+    tmp.Append(NS_REPLACEMENT_CHAR);
+  }
+  nsFontSubset::Convert(tmp.get(), aLength, aResult, aResultLength);
+}
 
 nsFontWinA::nsFontWinA(LOGFONT* aLogFont, HFONT aFont, PRUint32* aMap)
   : nsFontWin(aLogFont, aFont, aMap)
@@ -4064,10 +4230,10 @@ nsFontWinA::~nsFontWinA()
 {
   if (mSubsets) {
     nsFontSubset** subset = mSubsets;
-    nsFontSubset** endSubsets = &mSubsets[mSubsetsCount];
+    nsFontSubset** endSubsets = subset + mSubsetsCount;
     while (subset < endSubsets) {
       delete *subset;
-      subset++;
+      ++subset;
     }
     PR_Free(mSubsets);
     mSubsets = nsnull;
@@ -4077,7 +4243,7 @@ nsFontWinA::~nsFontWinA()
 PRInt32
 nsFontWinA::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
 {
-  NS_ASSERTION(0, "must call nsFontSubset's GetWidth");
+  NS_ERROR("must call nsFontSubset's GetWidth");
   return 0;
 }
 
@@ -4085,7 +4251,7 @@ void
 nsFontWinA::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  NS_ASSERTION(0, "must call nsFontSubset's DrawString");
+  NS_ERROR("must call nsFontSubset's DrawString");
 }
 
 #ifdef MOZ_MATHML
@@ -4095,7 +4261,7 @@ nsFontWinA::GetBoundingMetrics(HDC                aDC,
                                PRUint32           aLength,
                                nsBoundingMetrics& aBoundingMetrics)
 {
-  NS_ASSERTION(0, "must call nsFontSubset's GetBoundingMetrics");
+  NS_ERROR("must call nsFontSubset's GetBoundingMetrics");
   return NS_ERROR_FAILURE;
 }
 
@@ -4103,7 +4269,7 @@ nsFontWinA::GetBoundingMetrics(HDC                aDC,
 void 
 nsFontWinA::DumpFontInfo()
 {
-  NS_ASSERTION(0, "must call nsFontSubset's DumpFontInfo");
+  NS_ERROR("must call nsFontSubset's DumpFontInfo");
 }
 #endif // NS_DEBUG
 #endif
@@ -4111,10 +4277,10 @@ nsFontWinA::DumpFontInfo()
 nsFontWin*
 nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
 {
-  LOGFONT logFont;
-
   PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
-  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
+  LOGFONT logFont;
   FillLogFont(&logFont, weight);
 
   /*
@@ -4126,148 +4292,127 @@ nsFontMetricsWinA::LoadFont(HDC aDC, nsString* aName)
   WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
     logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
-  /*
-   * According to http://msdn.microsoft.com/library/
-   * CreateFontIndirectW is only supported on NT/2000
-   */
-  HFONT hfont = ::CreateFontIndirect(&logFont);
-
+  HFONT hfont = CreateFontHandle(aDC, &logFont);
   if (hfont) {
-    if (mLoadedFontsCount == mLoadedFontsAlloc) {
-      int newSize = 2 * (mLoadedFontsAlloc ? mLoadedFontsAlloc : 1);
-      nsFontWinA** newPointer = (nsFontWinA**) PR_Realloc(mLoadedFonts,
-        newSize * sizeof(nsFontWinA*));
-      if (newPointer) {
-        mLoadedFonts = (nsFontWin**) newPointer;
-        mLoadedFontsAlloc = newSize;
-      }
-      else {
-        ::DeleteObject(hfont);
-        return nsnull;
-      }
-    }
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, (HGDIOBJ) hfont);
-    char name[sizeof(logFont.lfFaceName)];
-    if ((!::GetTextFace(aDC, sizeof(name), name)) ||
-        strcmp(name, logFont.lfFaceName)) {
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
-    PRUint32* map = GetCMAP(aDC, logFont.lfFaceName, nsnull, nsnull);
-    if (!map) {
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
-    nsFontWinA* font = new nsFontWinA(&logFont, hfont, map);
-    if (!font) {
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
-    }
 #ifdef DEBUG_FONT_SIGNATURE
     printf("%s\n", logFont.lfFaceName);
 #endif
-    if (!font->GetSubsets(aDC)) {
-      delete font;
-      ::SelectObject(aDC, (HGDIOBJ) oldFont);
-      ::DeleteObject(hfont);
-      return nsnull;
+    HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+    char name[sizeof(logFont.lfFaceName)];
+    if (::GetTextFace(aDC, sizeof(name), name) &&
+        !strcmpi(name, logFont.lfFaceName)) {
+      PRUint32* map = GetCMAP(aDC, logFont.lfFaceName, nsnull, nsnull);
+      if (map) {
+        nsFontWinA* font = new nsFontWinA(&logFont, hfont, map);
+        if (font) {
+          if (font->GetSubsets(aDC)) {
+            // XXX InitMetricsFor(aDC, font) is not here, except if
+            // we can assume that it is the same for all subsets?
+            mLoadedFonts.AppendElement(font);
+            ::SelectObject(aDC, (HGDIOBJ)oldFont);
+            return font;
+          }
+          delete font;
+        }
+        // do not free 'map', it is cached in the gFontMaps hashtable and
+        // it is going to be deleted by the cleanup observer
+      }
     }
-    mLoadedFonts[mLoadedFontsCount++] = font;
-    ::SelectObject(aDC, (HGDIOBJ) oldFont);
-
-    return font;
+    ::SelectObject(aDC, (HGDIOBJ)oldFont);
+    ::DeleteObject(hfont);
   }
-
   return nsnull;
 }
 
 nsFontWin*
-nsFontMetricsWinA::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem)
+nsFontMetricsWinA::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
 {
-  /*
-   * According to http://msdn.microsoft.com/library/
-   * CreateFontIndirectW is only supported on NT/2000
-   */
+  PRUint16 weightTable = LookForFontWeightTable(aDC, &aGlobalFont->name);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
   LOGFONT logFont;
-  HFONT hfont;
-
-  PRUint16 weightTable = LookForFontWeightTable(aDC, aGlobalFontItem->name);
-  PRInt32 weight = GetFontWeight(mFont->weight, weightTable);
   FillLogFont(&logFont, weight);
-  logFont.lfCharSet = aGlobalFontItem->logFont.lfCharSet;
-  logFont.lfPitchAndFamily = aGlobalFontItem->logFont.lfPitchAndFamily;
-  strcpy(logFont.lfFaceName, aGlobalFontItem->logFont.lfFaceName);;
-  hfont = ::CreateFontIndirect(&logFont);
+  logFont.lfCharSet = aGlobalFont->logFont.lfCharSet;
+  logFont.lfPitchAndFamily = aGlobalFont->logFont.lfPitchAndFamily;
+  strcpy(logFont.lfFaceName, aGlobalFont->logFont.lfFaceName);;
 
+  HFONT hfont = CreateFontHandle(aDC, &logFont);
   if (hfont) {
-    if (mLoadedFontsCount == mLoadedFontsAlloc) {
-      int newSize = 2 * (mLoadedFontsAlloc ? mLoadedFontsAlloc : 1);
-      nsFontWinA** newPointer = (nsFontWinA**) PR_Realloc(mLoadedFonts,
-        newSize * sizeof(nsFontWinA*));
-      if (newPointer) {
-        mLoadedFonts = (nsFontWin**) newPointer;
-        mLoadedFontsAlloc = newSize;
+    nsFontWinA* font = new nsFontWinA(&logFont, hfont, aGlobalFont->map);
+    if (font) {
+      if (font->GetSubsets(aDC)) {
+        // XXX InitMetricsFor(aDC, font) is not here, except if
+        // we can assume that it is the same for all subsets?
+        mLoadedFonts.AppendElement(font);
+        return font;
       }
-      else {
-        ::DeleteObject(hfont);
-        return nsnull;
-      }
-    }
-
-    nsFontWinA* font = new nsFontWinA(&logFont, hfont, aGlobalFontItem->map);
-    if (!font)
-      return nsnull;
-
-    if (!font->GetSubsets(aDC)) {
       delete font;
-      return nsnull;
     }
-    mLoadedFonts[mLoadedFontsCount++] = font;
-
-    return font;
+    ::DeleteObject(hfont);
   }
-
   return nsnull;
 }
 
-
 int
-nsFontSubset::Load(nsFontWinA* aFont)
+nsFontSubset::Load(HDC aDC, nsFontMetricsWinA* aFontMetricsWinA, nsFontWinA* aFont)
 {
   LOGFONT* logFont = &aFont->mLogFont;
-  logFont->lfCharSet = mCharSet;
-  HFONT hfont = ::CreateFontIndirect(logFont);
+  logFont->lfCharSet = mCharset;
+
+  HFONT hfont = aFontMetricsWinA->CreateFontHandle(aDC, logFont);
   if (hfont) {
-    int i = gCharSetToIndex[mCharSet];
-    PRUint32* charSetMap = gCharSetInfo[i].mMap;
-    if (!charSetMap) {
-      charSetMap = (PRUint32*) PR_Calloc(2048, 4);
-      if (charSetMap) {
-        gCharSetInfo[i].mMap = charSetMap;
-        gCharSetInfo[i].GenerateMap(&gCharSetInfo[i]);
+    int i = gCharsetToIndex[mCharset];
+    PRUint32* charsetMap = gCharsetInfo[i].mMap;
+    if (!charsetMap) {
+      charsetMap = (PRUint32*) PR_Calloc(2048, 4); // deleted in FreeGlobals()
+      if (charsetMap) {
+        gCharsetInfo[i].mMap = charsetMap;
+        gCharsetInfo[i].GenerateMap(&gCharsetInfo[i]);
       }
       else {
         ::DeleteObject(hfont);
         return 0;
       }
     }
-    mMap = (PRUint32*) PR_Calloc(2048, 4);
+    mMap = (PRUint32*) PR_Calloc(2048, 4); // deleted in ~nsFontSubset()
     if (!mMap) {
       ::DeleteObject(hfont);
       return 0;
     }
     PRUint32* fontMap = aFont->mMap;
-    for (int j = 0; j < 2048; j++) {
-      mMap[j] = (charSetMap[j] & fontMap[j]);
+    for (int j = 0; j < 2048; ++j) {
+      mMap[j] = (charsetMap[j] & fontMap[j]);
     }
-    mCodePage = gCharSetInfo[i].mCodePage;
+    mCodePage = gCharsetInfo[i].mCodePage;
     mFont = hfont;
+
+    //XXX can we safely assume the same metrics for all subsets and remove this?
+    HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+    aFontMetricsWinA->InitMetricsFor(aDC, this);
+    ::SelectObject(aDC, (HGDIOBJ)oldFont);
+
     return 1;
   }
   return 0;
+}
+
+nsFontWin*
+nsFontMetricsWinA::GetFontFor(HFONT aHFONT)
+{
+  int count = mLoadedFonts.Count();
+  for (int i = 0; i < count; ++i) {
+    nsFontWinA* font = (nsFontWinA*)mLoadedFonts[i];
+    nsFontSubset** subset = font->mSubsets;
+    nsFontSubset** endSubsets = subset + font->mSubsetsCount;
+    while (subset < endSubsets) {
+      if ((*subset)->mFont == aHFONT) {
+        return *subset;
+      }
+      ++subset;
+    }
+  }
+  NS_ERROR("Cannot find the font that owns the handle");
+  return nsnull;
 }
 
 nsFontWin*
@@ -4278,33 +4423,32 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUnichar aChar)
       return nsnull;
     }
   }
-
   while (mFontsIndex < mFonts.Count()) {
-    if (mFontIsGeneric[mFontsIndex]) {
+    if (mFontsIndex == mGenericIndex) {
       return nsnull;
     }
     nsString* name = mFonts.StringAt(mFontsIndex++);
     nsAutoString low(*name);
     low.ToLowerCase();
-    nsString* winName = (nsString*) PL_HashTableLookup(gFamilyNames, &low);
+    nsString* winName = (nsString*)PL_HashTableLookup(gFamilyNames, &low);
     if (!winName) {
       winName = name;
     }
-    nsFontWinA* font = (nsFontWinA*) LoadFont(aDC, winName);
+    nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, winName);
     if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
       nsFontSubset** subset = font->mSubsets;
-      nsFontSubset** endSubsets = &(font->mSubsets[font->mSubsetsCount]);
+      nsFontSubset** endSubsets = subset + font->mSubsetsCount;
       while (subset < endSubsets) {
         if (!(*subset)->mMap) {
-          if (!(*subset)->Load(font)) {
-            subset++;
+          if (!(*subset)->Load(aDC, this, font)) {
+            ++subset;
             continue;
           }
         }
         if (FONT_HAS_GLYPH((*subset)->mMap, aChar)) {
           return *subset;
         }
-        subset++;
+        ++subset;
       }
     }
   }
@@ -4313,48 +4457,28 @@ nsFontMetricsWinA::FindLocalFont(HDC aDC, PRUnichar aChar)
 }
 
 nsFontWin*
-nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
+nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName)
 {
-  if (*aName) {
-    int found = 0;
-    int i;
-    for (i = 0; i < mLoadedFontsCount; i++) {
-      nsFontWin* font = mLoadedFonts[i];
-      if (!strcmp(font->mName, *aName)) {
-        found = 1;
-        break;
-      }
-    }
-    if (found) {
-      nsMemory::Free(*aName);
-      *aName = nsnull;
+  for (int i = mLoadedFonts.Count()-1; i >= 0; --i) {
+    if (aName->EqualsIgnoreCase(((nsFontWinA*)mLoadedFonts[i])->mName)) {
       return nsnull;
     }
-    PRUnichar name[LF_FACESIZE] = { 0 };
-    PRUnichar format[] = { '%', 's', 0 };
-    PRUint32 n = nsTextFormatter::snprintf(name, LF_FACESIZE, format, *aName);
-    nsMemory::Free(*aName);
-    *aName = nsnull;
-    if (n && (n != (PRUint32) -1)) {
-      nsAutoString fontName(name);
-
-      nsFontWinA* font = (nsFontWinA*) LoadFont(aDC, &fontName);
-      if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
-        nsFontSubset** subset = font->mSubsets;
-        nsFontSubset** endSubsets = &(font->mSubsets[font->mSubsetsCount]);
-        while (subset < endSubsets) {
-          if (!(*subset)->mMap) {
-            if (!(*subset)->Load(font)) {
-              subset++;
-              continue;
-            }
-          }
-          if (FONT_HAS_GLYPH((*subset)->mMap, aChar)) {
-            return *subset;
-          }
-          subset++;
+  }
+  nsFontWinA* font = (nsFontWinA*)LoadFont(aDC, aName);
+  if (font && FONT_HAS_GLYPH(font->mMap, aChar)) {
+    nsFontSubset** subset = font->mSubsets;
+    nsFontSubset** endSubsets = subset + font->mSubsetsCount;
+    while (subset < endSubsets) {
+      if (!(*subset)->mMap) {
+        if (!(*subset)->Load(aDC, this, font)) {
+          ++subset;
+          continue;
         }
       }
+      if (FONT_HAS_GLYPH((*subset)->mMap, aChar)) {
+        return *subset;
+      }
+      ++subset;
     }
   }
 
@@ -4364,24 +4488,23 @@ nsFontMetricsWinA::LoadGenericFont(HDC aDC, PRUnichar aChar, char** aName)
 static int
 SystemSupportsChar(PRUnichar aChar)
 {
-  int i;
-  for (i = 0; i < sizeof(bitToCharSet); i++) {
-    PRUint8 charSet = bitToCharSet[i];
-    if (charSet != DEFAULT_CHARSET) {
-      if (HaveConverterFor(charSet)) {
-        int j = gCharSetToIndex[charSet];
-        PRUint32* charSetMap = gCharSetInfo[j].mMap;
-        if (!charSetMap) {
-          charSetMap = (PRUint32*) PR_Calloc(2048, 4);
-          if (charSetMap) {
-            gCharSetInfo[j].mMap = charSetMap;
-            gCharSetInfo[j].GenerateMap(&gCharSetInfo[j]);
+  for (int i = 0; i < sizeof(gBitToCharset); ++i) {
+    PRUint8 charset = gBitToCharset[i];
+    if (charset != DEFAULT_CHARSET) {
+      if (HaveConverterFor(charset)) {
+        int j = gCharsetToIndex[charset];
+        PRUint32* charsetMap = gCharsetInfo[j].mMap;
+        if (!charsetMap) {
+          charsetMap = (PRUint32*) PR_Calloc(2048, 4); // deleted in FreeGlobals()
+          if (charsetMap) {
+            gCharsetInfo[j].mMap = charsetMap;
+            gCharsetInfo[j].GenerateMap(&gCharsetInfo[j]);
           }
           else {
             return 0;
           }
         }
-        if (FONT_HAS_GLYPH(charSetMap, aChar)) {
+        if (FONT_HAS_GLYPH(charsetMap, aChar)) {
           return 1;
         }
       }
@@ -4402,48 +4525,55 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
   if (!SystemSupportsChar(c)) {
     return nsnull;
   }
-  for (int i = 0; i < gGlobalFontsCount; i++) {
-    if (gGlobalFonts[i].flags & NS_GLOBALFONT_SKIP) {
+  int count = gGlobalFonts->Count();
+  for (int i = 0; i < count; ++i) {
+    nsGlobalFont* globalFont = (nsGlobalFont*)gGlobalFonts->ElementAt(i); 
+    if (globalFont->flags & NS_GLOBALFONT_SKIP) {
       continue;
     }
-    if (!gGlobalFonts[i].map) {
-      HFONT font = ::CreateFontIndirect(&gGlobalFonts[i].logFont);
-      if (!font) {
+    if (!globalFont->map) {
+      // don't adjust here, we just want to quickly get the CMAP. Adjusting
+      // is meant to only happen when loading the final font in LoadFont()
+      HFONT hfont = ::CreateFontIndirect(&globalFont->logFont);
+      if (!hfont) {
         continue;
       }
-      HFONT oldFont = (HFONT) ::SelectObject(aDC, font);
-      gGlobalFonts[i].map = GetCMAP(aDC, gGlobalFonts[i].logFont.lfFaceName,
-        nsnull, nsnull);
+      HFONT oldFont = (HFONT)::SelectObject(aDC, hfont);
+      globalFont->map = GetCMAP(aDC, globalFont->logFont.lfFaceName, nsnull, nsnull);
       ::SelectObject(aDC, oldFont);
-      ::DeleteObject(font);
-      if (!gGlobalFonts[i].map || gGlobalFonts[i].map == gEmptyMap) {
-        gGlobalFonts[i].flags |= NS_GLOBALFONT_SKIP;
+      ::DeleteObject(hfont);
+      if (!globalFont->map || globalFont->map == gEmptyMap) {
+        globalFont->flags |= NS_GLOBALFONT_SKIP;
         continue;
       }
       if (SameAsPreviousMap(i)) {
         continue;
       }
     }
-    if (FONT_HAS_GLYPH(gGlobalFonts[i].map, c)) {
-      nsFontWinA* font = (nsFontWinA*) LoadFont(aDC, gGlobalFonts[i].name);
-      if (font) {
-        nsFontSubset** subset = font->mSubsets;
-        nsFontSubset** endSubsets = &(font->mSubsets[font->mSubsetsCount]);
-        while (subset < endSubsets) {
-          if (!(*subset)->mMap) {
-            if (!(*subset)->Load(font)) {
-              subset++;
-              continue;
-            }
-          }
-          if (FONT_HAS_GLYPH((*subset)->mMap, c)) {
-            return *subset;
-          }
-          subset++;
-        }
-        mLoadedFontsCount--;
-        delete font;
+    if (FONT_HAS_GLYPH(globalFont->map, c)) {
+      nsFontWinA* font = (nsFontWinA*)LoadGlobalFont(aDC, globalFont);
+      if (!font) {
+        // disable this global font because when LoadGlobalFont() fails,
+        // this means that no subset of interest was found in the font
+        globalFont->flags |= NS_GLOBALFONT_SKIP;
+        continue;
       }
+      nsFontSubset** subset = font->mSubsets;
+      nsFontSubset** endSubsets = subset + font->mSubsetsCount;
+      while (subset < endSubsets) {
+        if (!(*subset)->mMap) {
+          if (!(*subset)->Load(aDC, this, font)) {
+            ++subset;
+            continue;
+          }
+        }
+        if (FONT_HAS_GLYPH((*subset)->mMap, c)) {
+          return *subset;
+        }
+        ++subset;
+      }
+      mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
+      delete font;
     }
   }
 
@@ -4453,15 +4583,223 @@ nsFontMetricsWinA::FindGlobalFont(HDC aDC, PRUnichar c)
 nsFontWin*
 nsFontMetricsWinA::FindSubstituteFont(HDC aDC, PRUnichar aChar)
 {
-  // XXX Write me.
+  // @see nsFontMetricsWin::FindSubstituteFont() for the general idea behind
+  // this function. The fundamental difference here in nsFontMetricsWinA is
+  // that the substitute font is setup as a 'wrapper' around a 'substitute
+  // subset' that has a glyph for the replacement character. This allows
+  // a transparent integration with all the other 'A' functions. 
+
+  if (mSubstituteFont) {
+    nsFontWinA* substituteFont = (nsFontWinA*)mSubstituteFont;
+    ADD_GLYPH(substituteFont->mMap, aChar);
+    ADD_GLYPH(substituteFont->mSubsets[0]->mMap, aChar);
+    return mSubstituteFont;
+  }
+
+  int count = mLoadedFonts.Count();
+  for (int i = 0; i < count; ++i) {
+    nsFontWinA* font = (nsFontWinA*)mLoadedFonts[i];
+    if (FONT_HAS_GLYPH(font->mMap, NS_REPLACEMENT_CHAR)) {
+      nsFontSubset** subset = font->mSubsets;
+      nsFontSubset** endSubsets = subset + font->mSubsetsCount;
+      for (; subset < endSubsets; ++subset) {
+        if ((*subset)->mMap && FONT_HAS_GLYPH((*subset)->mMap, NS_REPLACEMENT_CHAR)) {
+          // make a substitute font from this one
+          nsAutoString name;
+          name.AssignWithConversion(font->mName);
+          nsFontWinA* substituteFont = (nsFontWinA*)LoadSubstituteFont(aDC, &name);
+          if (substituteFont) {
+            nsFontSubset* substituteSubset = substituteFont->mSubsets[0];
+            substituteSubset->mCharset = (*subset)->mCharset;
+            if (substituteSubset->Load(aDC, this, substituteFont)) {
+              ADD_GLYPH(substituteFont->mMap, aChar);
+              ADD_GLYPH(substituteFont->mSubsets[0]->mMap, aChar);
+              mSubstituteFont = (nsFontWin*)substituteFont;
+              return mSubstituteFont;
+            }
+            mLoadedFonts.RemoveElementAt(mLoadedFonts.Count()-1);
+            PR_Free(substituteFont->mMap);
+            substituteFont->mMap = nsnull;
+            delete substituteFont;
+          }
+        }
+      }
+    }
+  }
+
+  // if we ever reach here, the replacement char should be changed to a more common char
+  NS_ERROR("Could not provide a substititute font");
   return nsnull;
 }
 
 nsFontWin*
 nsFontMetricsWinA::LoadSubstituteFont(HDC aDC, nsString* aName)
 {
-  // XXX Write me.
+  PRUint16 weightTable = LookForFontWeightTable(aDC, aName);
+  PRInt32 weight = GetFontWeight(mFont.weight, weightTable);
+
+  LOGFONT logFont;
+  FillLogFont(&logFont, weight);
+
+  logFont.lfFaceName[0] = 0;
+  WideCharToMultiByte(CP_ACP, 0, aName->get(), aName->Length() + 1,
+    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
+
+  HFONT hfont = CreateFontHandle(aDC, &logFont);
+  if (hfont) {
+    HFONT oldFont = (HFONT)::SelectObject(aDC, (HGDIOBJ)hfont);
+    char name[sizeof(logFont.lfFaceName)];
+    if (::GetTextFace(aDC, sizeof(name), name) &&
+        !strcmpi(name, logFont.lfFaceName)) {
+      PRUint32* map = (PRUint32*)PR_Calloc(2048, 4); // deleted in ~nsFontMetricsWin()
+      if (map) {
+        nsFontWinA* font = new nsFontWinA(&logFont, hfont, map);
+        if (font) {
+          font->mSubsets = (nsFontSubset**)PR_Calloc(1, sizeof(nsFontSubset*));
+          if (font->mSubsets) {
+            nsFontSubsetSubstitute* subset = new nsFontSubsetSubstitute();
+            if (subset) {
+              font->mSubsetsCount = 1;
+              font->mSubsets[0] = subset;
+              mLoadedFonts.AppendElement(font);
+              ::SelectObject(aDC, (HGDIOBJ)oldFont);
+              return font;
+            }
+            PR_Free(font->mSubsets);
+            font->mSubsets = nsnull;
+          }
+          delete font;
+        }
+        PR_Free(map);
+      }
+    }
+    ::SelectObject(aDC, (HGDIOBJ)oldFont);
+    ::DeleteObject(hfont);
+  }
   return nsnull;
+}
+
+nsresult
+nsFontMetricsWinA::ResolveForwards(HDC                  aDC,
+                                   const PRUnichar*     aString,
+                                   PRUint32             aLength,
+                                   nsFontSwitchCallback aFunc, 
+                                   void*                aData)
+{
+  PRBool running;
+  const PRUnichar* firstChar = aString;
+  const PRUnichar* lastChar  = aString + aLength;
+  const PRUnichar* currChar  = firstChar;
+
+  nsFontSubset* currFont;
+  nsFontSubset** subset;
+  nsFontSubset** endSubsets;
+  PRInt32 i, j, count;
+
+  i = 0;
+  while (firstChar < lastChar) {
+    // see if one of our loaded fonts can represent the current character
+    // we need to repeatedly get the count here because it can change on the way
+    count = mLoadedFonts.Count();
+    while (i < count) {
+      nsFontWinA* font = (nsFontWinA*)mLoadedFonts[i];
+      if (!FONT_HAS_GLYPH(font->mMap, *currChar)) {
+        // advance to the next loaded font
+        ++i;
+      }
+      else {
+        subset = font->mSubsets;
+        endSubsets = subset + font->mSubsetsCount;
+        while (subset < endSubsets) {
+          if (!(*subset)->mMap) {
+            if (!(*subset)->Load(aDC, this, font)) {
+              ++subset;
+              continue;
+            }
+          }
+          if (FONT_HAS_GLYPH((*subset)->mMap, *currChar)) {
+            // we found a subset that can represent the current character
+            currFont = *subset;
+            // see if we can keep the same subset for adjacent characters. We
+            // can do so only if the subset can represent these chars AND none
+            // of the previous fonts can represent these chars
+            while (++currChar < lastChar) {
+              j = 0;
+              if (!FONT_HAS_GLYPH(currFont->mMap, *currChar))
+                break;
+              for (; j < i; ++j) {
+                // NOTE: we are overwriting variables here (we now *know* that we
+                // will break out of the bigger outer loop after the callback...)
+                font = (nsFontWinA*)mLoadedFonts[j];
+                if (FONT_HAS_GLYPH(font->mMap, *currChar)) {
+                  subset = font->mSubsets;
+                  endSubsets = subset + font->mSubsetsCount;
+                  while (subset < endSubsets) {
+                    if (!(*subset)->mMap) {
+                      if (!(*subset)->Load(aDC, this, font)) {
+                        ++subset;
+                        continue;
+                      }
+                    }
+                    if (FONT_HAS_GLYPH((*subset)->mMap, *currChar)) {
+                      // Another font was found, we cannot use the
+                      // current font for this char
+                      goto callback;
+                    }
+                    ++subset;
+                  }
+                }
+              }
+            }
+callback:
+            // We have a substring that can be represented with the same font, and
+            // we are about to switch fonts, it is time to notify our caller.
+            nsFontSwitch fontSwitch = {currFont};
+            running = (*aFunc)(&fontSwitch, firstChar, currChar - firstChar, aData);
+
+            if (!running || currChar == lastChar) return NS_OK;
+
+            // continue with the next substring, re-using the available loaded fonts
+            i = j; // quick jump to the candidate font for the current char
+            firstChar = currChar;
+
+            break;
+          }    
+          ++subset;
+        }
+      }
+    }
+
+    // load additional fonts, retaining the last font index i from where
+    // we will keep advancing
+    currFont = (nsFontSubset*)FindFont(aDC, *currChar);
+    if (currFont == mSubstituteFont) {
+      // Exception to the font index... the substitute font can be anywhere
+      // inside mLoadedFonts[]. When it is returned from the second time onwards,
+      // the number of loaded fonts is constant, so we need to set the running
+      // index so that we can enter the "while (i < count)" loop above
+      // and advance from there
+      i = mLoadedFonts.IndexOf(mSubstituteFont);
+      continue;
+    }
+
+    // bail out if something weird happened, this error must never happen
+    NS_ASSERTION(currFont, "Could not find a font");
+    if (!currFont) return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsFontMetricsWinA::ResolveBackwards(HDC                  aDC,
+                                    const PRUnichar*     aString,
+                                    PRUint32             aLength,
+                                    nsFontSwitchCallback aFunc, 
+                                    void*                aData)
+{
+  NS_NOTREACHED("nsFontMetricsWinA::ResolveBackwards() not implemented");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 // The Font Enumerator
@@ -4479,7 +4817,6 @@ static int
 InitializeFontEnumerator(void)
 {
   gInitializedFontEnumerator = 1;
-
   if (!nsFontMetricsWin::gGlobalFonts) {
     HDC dc = ::GetDC(nsnull);
     if (!nsFontMetricsWin::InitializeGlobalFonts(dc)) {
@@ -4506,18 +4843,11 @@ CompareFontNames(const void* aArg1, const void* aArg2, void* aClosure)
 NS_IMETHODIMP
 nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
 {
-  if (aCount) {
-    *aCount = 0;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aResult) {
-    *aResult = nsnull;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aCount);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aCount = 0;
+  *aResult = nsnull;
 
   if (!gInitializedFontEnumerator) {
     if (!InitializeFontEnumerator()) {
@@ -4525,15 +4855,16 @@ nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     }
   }
 
-  PRUnichar** array = (PRUnichar**)
-    nsMemory::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
+  int count = nsFontMetricsWin::gGlobalFonts->Count();
+  PRUnichar** array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
-  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
-    PRUnichar* str = nsFontMetricsWin::gGlobalFonts[i].name->ToNewUnicode();
+  for (int i = 0; i < count; ++i) {
+    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
+    PRUnichar* str = font->name.ToNewUnicode();
     if (!str) {
-      for (i = i - 1; i >= 0; i--) {
+      for (i = i - 1; i >= 0; --i) {
         nsMemory::Free(array[i]);
       }
       nsMemory::Free(array);
@@ -4542,10 +4873,9 @@ nsFontEnumeratorWin::EnumerateAllFonts(PRUint32* aCount, PRUnichar*** aResult)
     array[i] = str;
   }
 
-  NS_QuickSort(array, nsFontMetricsWin::gGlobalFontsCount, sizeof(PRUnichar*),
-    CompareFontNames, nsnull);
+  NS_QuickSort(array, count, sizeof(PRUnichar*), CompareFontNames, nsnull);
 
-  *aCount = nsFontMetricsWin::gGlobalFontsCount;
+  *aCount = count;
   *aResult = array;
 
   return NS_OK;
@@ -4558,15 +4888,15 @@ SignatureMatchesLangGroup(FONTSIGNATURE* aSignature,
   int dword;
   DWORD* array = aSignature->fsCsb;
   int i = 0;
-  for (dword = 0; dword < 2; dword++) {
-    for (int bit = 0; bit < sizeof(DWORD) * 8; bit++) {
+  for (dword = 0; dword < 2; ++dword) {
+    for (int bit = 0; bit < sizeof(DWORD) * 8; ++bit) {
       if ((array[dword] >> bit) & 1) {
-        if (!strcmp(gCharSetInfo[gCharSetToIndex[bitToCharSet[i]]].mLangGroup,
+        if (!strcmp(gCharsetInfo[gCharsetToIndex[gBitToCharset[i]]].mLangGroup,
                     aLangGroup)) {
           return 1;
         }
       }
-      i++;
+      ++i;
     }
   }
 
@@ -4577,58 +4907,21 @@ static int
 FontMatchesGenericType(nsGlobalFont* aFont, const char* aGeneric,
   const char* aLangGroup)
 {
-  if (!strcmp(aLangGroup, "ja")) {
-    return 1;
-  }
-  else if (!strcmp(aLangGroup, "zh-TW")) {
-    return 1;
-  }
-  else if (!strcmp(aLangGroup, "zh-CN")) {
-    return 1;
-  }
-  else if (!strcmp(aLangGroup, "ko")) {
-    return 1;
-  }
-  else if (!strcmp(aLangGroup, "th")) {
-    return 1;
-  }
-  else if (!strcmp(aLangGroup, "he")) {
-    return 1;
-  }
-  else if (!strcmp(aLangGroup, "ar")) {
-    return 1;
-  }
+  if (!strcmp(aLangGroup, "ja"))    return 1;
+  if (!strcmp(aLangGroup, "zh-TW")) return 1;
+  if (!strcmp(aLangGroup, "zh-CN")) return 1;
+  if (!strcmp(aLangGroup, "ko"))    return 1;
+  if (!strcmp(aLangGroup, "th"))    return 1;
+  if (!strcmp(aLangGroup, "he"))    return 1;
+  if (!strcmp(aLangGroup, "ar"))    return 1;
 
   switch (aFont->logFont.lfPitchAndFamily & 0xF0) {
-  case FF_DONTCARE:
-    return 0;
-  case FF_ROMAN:
-    if (!strcmp(aGeneric, "serif")) {
-      return 1;
-    }
-    return 0;
-  case FF_SWISS:
-    if (!strcmp(aGeneric, "sans-serif")) {
-      return 1;
-    }
-    return 0;
-  case FF_MODERN:
-    if (!strcmp(aGeneric, "monospace")) {
-      return 1;
-    }
-    return 0;
-  case FF_SCRIPT:
-    if (!strcmp(aGeneric, "cursive")) {
-      return 1;
-    }
-    return 0;
-  case FF_DECORATIVE:
-    if (!strcmp(aGeneric, "fantasy")) {
-      return 1;
-    }
-    return 0;
-  default:
-    return 0;
+    case FF_DONTCARE:   return 0;
+    case FF_ROMAN:      return !strcmp(aGeneric, "serif");
+    case FF_SWISS:      return !strcmp(aGeneric, "sans-serif");
+    case FF_MODERN:     return !strcmp(aGeneric, "monospace");
+    case FF_SCRIPT:     return !strcmp(aGeneric, "cursive");
+    case FF_DECORATIVE: return !strcmp(aGeneric, "fantasy");
   }
 
   return 0;
@@ -4638,21 +4931,13 @@ NS_IMETHODIMP
 nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
   const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult)
 {
-  if ((!aLangGroup) || (!aGeneric)) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aCount) {
-    *aCount = 0;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aResult) {
-    *aResult = nsnull;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aLangGroup);
+  NS_ENSURE_ARG_POINTER(aGeneric);
+  NS_ENSURE_ARG_POINTER(aCount);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aCount = 0;
+  *aResult = nsnull;
 
   if ((!strcmp(aLangGroup, "x-unicode")) ||
       (!strcmp(aLangGroup, "x-user-def"))) {
@@ -4665,27 +4950,26 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
     }
   }
 
-  PRUnichar** array = (PRUnichar**)
-    nsMemory::Alloc(nsFontMetricsWin::gGlobalFontsCount * sizeof(PRUnichar*));
+  int count = nsFontMetricsWin::gGlobalFonts->Count();
+  PRUnichar** array = (PRUnichar**)nsMemory::Alloc(count * sizeof(PRUnichar*));
   if (!array) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
   int j = 0;
-  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
-    if (SignatureMatchesLangGroup(&nsFontMetricsWin::gGlobalFonts[i].signature,
-                                  aLangGroup) &&
-        FontMatchesGenericType(&nsFontMetricsWin::gGlobalFonts[i], aGeneric,
-                               aLangGroup)) {
-      PRUnichar* str = nsFontMetricsWin::gGlobalFonts[i].name->ToNewUnicode();
+  for (int i = 0; i < count; ++i) {
+    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
+    if (SignatureMatchesLangGroup(&font->signature, aLangGroup) &&
+        FontMatchesGenericType(font, aGeneric, aLangGroup)) {
+      PRUnichar* str = font->name.ToNewUnicode();
       if (!str) {
-        for (j = j - 1; j >= 0; j--) {
+        for (j = j - 1; j >= 0; --j) {
           nsMemory::Free(array[j]);
         }
         nsMemory::Free(array);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       array[j] = str;
-      j++;
+      ++j;
     }
   }
 
@@ -4700,15 +4984,10 @@ nsFontEnumeratorWin::EnumerateFonts(const char* aLangGroup,
 NS_IMETHODIMP
 nsFontEnumeratorWin::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 {
-  if (aResult) {
-    *aResult = PR_FALSE;
-  }
-  else {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if ((!aLangGroup)) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aLangGroup);
+  NS_ENSURE_ARG_POINTER(aResult);
+
+  *aResult = PR_FALSE;
   if ((!strcmp(aLangGroup, "x-unicode")) ||
       (!strcmp(aLangGroup, "x-user-def"))) {
     *aResult = PR_TRUE;
@@ -4719,10 +4998,10 @@ nsFontEnumeratorWin::HaveFontFor(const char* aLangGroup, PRBool* aResult)
       return NS_ERROR_FAILURE;
     }
   }
-  for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
-    if (SignatureMatchesLangGroup(&nsFontMetricsWin::gGlobalFonts[i].signature,
-                                  aLangGroup))
-    {
+  int count = nsFontMetricsWin::gGlobalFonts->Count();
+  for (int i = 0; i < count; ++i) {
+    nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
+    if (SignatureMatchesLangGroup(&font->signature, aLangGroup)) {
        *aResult = PR_TRUE;
        return NS_OK;
     }
@@ -4734,47 +5013,45 @@ NS_IMETHODIMP
 nsFontEnumeratorWin::UpdateFontList(PRBool *updateFontList)
 {
   PRBool haveFontForLang = PR_FALSE;
-  int charSetCounter = 0;
+  int charsetCounter = 0;
   PRUint16 maskBitBefore = 0;
 
   // initialize updateFontList
   *updateFontList = PR_FALSE;
 
   // iterate langGoup; skip DEFAULT
-  for (charSetCounter = 1; charSetCounter < eCharSet_COUNT; charSetCounter++) {
-    HaveFontFor(gCharSetInfo[charSetCounter].mLangGroup, &haveFontForLang);
-    if (haveFontForLang)  {
-      maskBitBefore |= PR_BIT(charSetCounter);
+  for (charsetCounter = 1; charsetCounter < eCharset_COUNT; ++charsetCounter) {
+    HaveFontFor(gCharsetInfo[charsetCounter].mLangGroup, &haveFontForLang);
+    if (haveFontForLang) {
+      maskBitBefore |= PR_BIT(charsetCounter);
       haveFontForLang = PR_FALSE;
     }
   }
-  
-  // delete gGlobalFont
+
+  // delete gGlobalFonts
   if (nsFontMetricsWin::gGlobalFonts) {
-    for (int i = 0; i < nsFontMetricsWin::gGlobalFontsCount; i++) {
-      delete nsFontMetricsWin::gGlobalFonts[i].name;
+    for (int i = nsFontMetricsWin::gGlobalFonts->Count()-1; i >= 0; --i) {
+      nsGlobalFont* font = (nsGlobalFont*)nsFontMetricsWin::gGlobalFonts->ElementAt(i);
+      delete font;
     }
-    PR_Free(nsFontMetricsWin::gGlobalFonts);
+    delete nsFontMetricsWin::gGlobalFonts;
     nsFontMetricsWin::gGlobalFonts = nsnull;
-    gGlobalFontsAlloc = 0;
-    nsFontMetricsWin::gGlobalFontsCount = 0;
-    gInitializedGlobalFonts = 0;
   }
 
-  // reconstruct gGlobalFont
+  // reconstruct gGlobalFonts
   HDC dc = ::GetDC(nsnull);
   if (!nsFontMetricsWin::InitializeGlobalFonts(dc)) {
     ::ReleaseDC(nsnull, dc);
     return NS_ERROR_FAILURE;
   }
   ::ReleaseDC(nsnull, dc);
-  
+
   PRUint16 maskBitAfter = 0;
   // iterate langGoup again; skip DEFAULT
-  for (charSetCounter = 1; charSetCounter < eCharSet_COUNT; charSetCounter++) {
-    HaveFontFor(gCharSetInfo[charSetCounter].mLangGroup, &haveFontForLang);
-    if (haveFontForLang)  {
-      maskBitAfter |= PR_BIT(charSetCounter);
+  for (charsetCounter = 1; charsetCounter < eCharset_COUNT; ++charsetCounter) {
+    HaveFontFor(gCharsetInfo[charsetCounter].mLangGroup, &haveFontForLang);
+    if (haveFontForLang) {
+      maskBitAfter |= PR_BIT(charsetCounter);
       haveFontForLang = PR_FALSE;
     }
   }
