@@ -50,7 +50,7 @@ typedef int PRInt32;
 
 #define CLASS_NAME                      "Uninstall"
 #define FILE_INI_UNINSTALL              "uninstall.ini"
-#define FILE_LOG_INSTALL                "install.log"
+#define FILE_LOG_INSTALL                "install_wizard.log"
 #define WIZ_TEMP_DIR                    "ns_temp"
 
 /* WTD: What To Do */

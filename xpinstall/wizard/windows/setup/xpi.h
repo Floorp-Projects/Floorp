@@ -29,7 +29,7 @@
 #define BAR_SPACING   2
 #define BAR_WIDTH     6
 
-typedef HRESULT (_cdecl *XpiInit)(const char *, pfnXPIProgress);
+typedef HRESULT (_cdecl *XpiInit)(const char *, const char *aLogName, pfnXPIProgress);
 typedef HRESULT (_cdecl *XpiInstall)(const char *, const char *, long);
 typedef void    (_cdecl *XpiExit)(void);
 

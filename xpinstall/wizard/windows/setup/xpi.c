@@ -175,7 +175,7 @@ HRESULT SmartUpdateJars()
       AppendBackSlash(szBuf, sizeof(szBuf));
       lstrcat(szBuf, sgProduct.szSubPath);
     }
-    hrResult = pfnXpiInit(szBuf, cbXPIProgress);
+    hrResult = pfnXpiInit(szBuf, FILE_INSTALL_LOG, cbXPIProgress);
 
     ShowMessage(szMsgSmartUpdateStart, FALSE);
     InitProgressDlg();
