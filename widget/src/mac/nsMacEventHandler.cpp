@@ -1310,6 +1310,21 @@ PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, Event
     {
       keyPressEvent.charCode = text[i];
 
+      // control key is special in that it doesn't give us letters
+      // it generates a charcode of 0x01 for control-a
+      // so we offset to do the right thing for gecko (as in HandleKeyEvent)
+      // this doesn't happen for us in InitializeKeyEvent because we pass
+      // PR_FALSE so no character translation occurs.
+      // I'm guessing we don't want to do the translation there because
+      // translation already occurred for the string passed to this method.
+      if (keyPressEvent.isControl && keyPressEvent.charCode <= 26)       
+      {
+        if (keyPressEvent.isShift)
+          keyPressEvent.charCode += 'A' - 1;
+        else
+          keyPressEvent.charCode += 'a' - 1;
+      }
+
       // this block of code is triggered when user presses
       // a combination such as command-shift-M
       if (keyPressEvent.isShift && keyPressEvent.charCode <= 'z' && keyPressEvent.charCode >= 'a') 
