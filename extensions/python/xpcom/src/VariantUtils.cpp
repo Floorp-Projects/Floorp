@@ -1659,7 +1659,6 @@ PyObject *PyXPCOM_InterfaceVariantHelper::MakePythonResult()
 	for (i=0;i<m_num_array;i++) {
 		PythonTypeDescriptor &td = m_python_type_desc_array[i];
 		if (!td.is_auto_out) {
-			nsXPTCVariant &ns_v = m_var_array[i];
 			if (XPT_PD_IS_OUT(td.param_flags) || XPT_PD_IS_DIPPER(td.param_flags))
 				n_results++;
 			if (XPT_PD_IS_RETVAL(td.param_flags))
@@ -1952,7 +1951,6 @@ PyObject *PyXPCOM_GatewayVariantHelper::MakeSingleParam(int index, PythonTypeDes
 ****/
 	  case nsXPTType::T_ARRAY: {
 		void *t = DEREF_IN_OR_OUT(ns_v.val.p, void *);
-		PRUint32 seq_size = GetSizeIs(index, PR_FALSE);
 		if (t==NULL) {
 			ret = Py_None;
 			Py_INCREF(Py_None);
@@ -2074,7 +2072,6 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 	NS_ABORT_IF_FALSE(pi->IsOut() || pi->IsDipper(), "The value must be marked as [out] (or a dipper) to be back-filled!");
 	NS_ABORT_IF_FALSE(!pi->IsShared(), "Dont know how to back-fill a shared out param");
 	nsXPTCMiniVariant &ns_v = m_params[index];
-	PyObject *ret = NULL;
 
 	nsXPTType typ = pi->GetType();
 	PyObject* val_use = NULL;
