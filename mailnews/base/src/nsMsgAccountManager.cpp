@@ -978,10 +978,10 @@ nsMsgAccountManager::getAccountList(nsISupports *element, void *aData)
   if (NS_FAILED(rv)) return PR_TRUE;
 
   if ((*accountList).IsEmpty())
-    (*accountList) += key;
+    (*accountList).Append(key);
   else {
     (*accountList) += ',';
-    (*accountList) += key;
+    (*accountList).Append(key);
   }
 
   return PR_TRUE;

@@ -145,7 +145,7 @@ ConvertBufToPlainText(nsString &aConBuf)
   nsString    convertedText;
   nsIParser   *parser;
 
-  if (aConBuf == "")
+  if (aConBuf.IsEmpty())
     return NS_OK;
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
@@ -804,7 +804,7 @@ nsMessenger::SaveAs(const char* url, PRBool asFile, nsIMsgIdentity* identity, ns
             aListener->m_outputFormat = saveAsFileType == 1 ? TEXT_HTML : TEXT_PLAIN;
             
             // Mark the fact that we need to do charset handling/text conversion!
-            if (aListener->m_outputFormat == TEXT_PLAIN)
+            if (aListener->m_outputFormat.Equals(TEXT_PLAIN))
                 aListener->m_doCharsetConversion = PR_TRUE;
             
             channelSupport = do_QueryInterface(aListener->m_channel);
@@ -1693,7 +1693,7 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     // If we need text/plain, then we need to convert the HTML and then convert
     // to the systems charset
     //
-    if (m_outputFormat == TEXT_PLAIN)
+    if (m_outputFormat.Equals(TEXT_PLAIN))
     {
       ConvertBufToPlainText(m_msgBuffer);
       rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(nsMsgI18NFileSystemCharset()), 
@@ -1754,7 +1754,7 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
       //
       if (NS_SUCCEEDED(rv))
       {
-        if ( (m_doCharsetConversion) && (m_outputFormat == TEXT_PLAIN) )
+        if ( (m_doCharsetConversion) && (m_outputFormat.Equals(TEXT_PLAIN)) )
         {
           PRUnichar       *u = nsnull; 
           nsAutoString    fmt("%s");

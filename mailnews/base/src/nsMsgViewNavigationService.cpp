@@ -62,7 +62,7 @@ static PRBool UnreadMessageNavigationFunction(nsIDOMXULElement *message, navigat
 	nsAutoString resultStr;
 
 	message->GetAttribute(unreadStr, resultStr);
-	return(resultStr == "true");
+	return(resultStr.Equals("true"));
 }
 
 static PRBool FlaggedMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
@@ -71,7 +71,7 @@ static PRBool FlaggedMessageNavigationFunction(nsIDOMXULElement *message, naviga
 	nsAutoString resultStr;
 
 	message->GetAttribute(flaggedStr, resultStr);
-	return(resultStr == "flagged");
+	return(resultStr.Equals("flagged"));
 }
 
 static PRBool NewMessageNavigationFunction(nsIDOMXULElement *message, navigationInfoPtr info)
@@ -80,7 +80,7 @@ static PRBool NewMessageNavigationFunction(nsIDOMXULElement *message, navigation
 	nsAutoString resultStr;
 
 	message->GetAttribute(statusStr, resultStr);
-	return(resultStr == "new");
+	return(resultStr.Equals("new"));
 }
 
 //resource functions
@@ -113,7 +113,7 @@ static nsresult GetMessageValue(nsIRDFResource *message, nsString& propertyURI, 
 
 		rv = literal->GetValue(getter_Copies(valueStr));
 		if(NS_SUCCEEDED(rv))
-			value = valueStr;
+			value.Assign(valueStr);
 	}
 	return rv;
 }
@@ -134,7 +134,7 @@ static PRBool UnreadMessageNavigationResourceFunction(nsIRDFResource *message, n
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
-	return(isUnreadValue == "true");
+	return(isUnreadValue.Equals("true"));
 }
 
 static PRBool FlaggedMessageNavigationResourceFunction(nsIRDFResource *message, navigationInfoPtr info)
@@ -147,7 +147,7 @@ static PRBool FlaggedMessageNavigationResourceFunction(nsIRDFResource *message, 
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
-	return(flaggedValue == "flagged");
+	return(flaggedValue.Equals("flagged"));
 }
 
 static PRBool NewMessageNavigationResourceFunction(nsIRDFResource *message, navigationInfoPtr info)
@@ -160,7 +160,7 @@ static PRBool NewMessageNavigationResourceFunction(nsIRDFResource *message, navi
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
-	return(statusValue == "new");
+	return(statusValue.Equals("new"));
 }
 
 //Thread navigation functions.
@@ -415,7 +415,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::FindFirstMessage(nsIDOMXULTreeElement 
 		if(NS_FAILED(rv))
 			return rv;
 
-		if(nodeName == "treechildren")
+		if(nodeName.Equals("treechildren"))
 		{
 			//Get the treechildren's first child.  This is the first message
 			nsCOMPtr<nsIDOMNode> firstChild;
@@ -606,7 +606,7 @@ nsresult nsMsgViewNavigationService::FindNextMessageInThreads(nsIDOMNode *startM
 		return rv;
 
 	//if we're on the top level and a thread function has been passed in, we might be able to search faster.
-	if(parentNodeName != "treeitem" && info->navThreadFunction)
+	if(!parentNodeName.Equals("treeitem") && info->navThreadFunction)
 	{
 		return GetNextMessageByThread(startElement, info, nextMessage);
 
@@ -681,7 +681,7 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 	if(NS_FAILED(rv))
 		return rv;
 
-	isParentOpen = (openResult == "true");
+	isParentOpen = (openResult.Equals("true"));
 	//First we'll deal with the case where the parent is open.  In this case we can use DOM calls.
 	if(isParentOpen)
 	{
@@ -909,7 +909,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::OpenTreeitemAndDescendants(nsIDOMNode 
 			if(NS_FAILED(rv))
 				return rv;
 
-			if(nodeName == "treechildren")
+			if(nodeName.Equals("treechildren"))
 			{
 				nsCOMPtr<nsIDOMNodeList> treechildrenChildNodes;
 				rv = treeitemChild->GetChildNodes(getter_AddRefs(treechildrenChildNodes));
@@ -930,7 +930,7 @@ NS_IMETHODIMP nsMsgViewNavigationService::OpenTreeitemAndDescendants(nsIDOMNode 
 
 					nsAutoString treechildrenChildNodeName;
 					rv = treechildrenChild->GetNodeName(treechildrenChildNodeName);
-					if(treechildrenChildNodeName == "treeitem")
+					if(treechildrenChildNodeName.Equals("treeitem"))
 					{
 						nsCOMPtr<nsIDOMElement> childElement = do_QueryInterface(treechildrenChild);
 						if(!childElement)
@@ -1221,7 +1221,7 @@ nsresult nsMsgViewNavigationService::FindNextInAncestors(nsIDOMNode *startMessag
 	if(NS_FAILED(rv))
 		return rv;
 
-	while(parentNodeName == "treeitem")
+	while(parentNodeName.Equals("treeitem"))
 	{
 		nsCOMPtr<nsIDOMNode> nextSibling;
 		rv = parent->GetNextSibling(getter_AddRefs(nextSibling));

@@ -244,7 +244,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
 			nsXPIDLString prettyName;
 			rv = folder->GetPrettyName(getter_Copies(prettyName));
 			if (NS_SUCCEEDED(rv))
-			  str = prettyName;
+			  str.Assign(prettyName);
 		}
       }
     }
@@ -311,7 +311,7 @@ nsMsgAccountManagerDataSource::GetTarget(nsIRDFResource *source,
       str = "ServerSettings";
   }
   
-  if (str!="")
+  if (!str.IsEmpty())
     rv = createNode(str, target, getRDFService());
   //if we have an empty string and we don't have an error value, then 
   //we don't have a value for RDF.

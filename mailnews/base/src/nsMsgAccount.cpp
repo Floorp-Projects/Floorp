@@ -130,7 +130,7 @@ nsMsgAccount::createIncomingServer()
   // get the servertype
   // ex) mail.server.myserver.type = imap
   nsCAutoString serverTypePref("mail.server.");
-  serverTypePref += serverKey;
+  serverTypePref.Append(serverKey);
   serverTypePref += ".type";
   
   nsXPIDLCString serverType;
