@@ -115,15 +115,34 @@
 /**
  * status-bar
  */
-  #status-bar 
+
+  statusbar
     {
-      border-top          : 1px solid #FFFFFF;
-      border-bottom       : 1px solid #9D9D9D;
+      background-color    : #DDDDDD;
+      overflow            : hidden;
+      min-width           : 1px;
+      border-left         : 1px solid #9D9D9D;
+      border-right        : 1px solid #FFFFFF;
+      border-bottom       : 1px solid #FFFFFF;
+    }
+  
+  statusbarpanel
+    {
       border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
       border-right        : 1px solid #9D9D9D;
-  	  background-color    : #DDDDDD;
-  	  user-focus          : ignore;
-      overflow            : hidden
+      border-bottom       : 1px solid #9D9D9D;
+      padding             : 0px 4px 0px 4px;
+    }
+    
+  .statusbarpanel-icononly
+    {
+      padding             : 0px;
+    }
+    
+  .statusbar-panel-icon
+    {
+      list-style-image    : inherit;
     }
 
 /**
@@ -154,29 +173,41 @@
     {
       min-width           : 100px;
       margin              : 0px 4px 0px 4px;
-      border              : 1px inset #CCCCCC;
+      border-left         : 1px solid #9D9D9D;
+      border-top          : 1px solid #9D9D9D;
+      border-right        : 1px solid #FFFFFF;
+      border-bottom       : 1px solid #FFFFFF;
     }
 
   progressmeter > .progressmeter-internal-box 
     {
       border              : 1px solid #000000;
     }
+    
+
+  .progressmeter-statusbar 
+    {
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
+      margin              : 0px;
+    }
+    
+  .progressmeter-statusbar > .progressmeter-internal-box
+    {
+      border              : 1px solid #DDDDDD;
+    }  
 
 /* progress indicators */
   .progress-bar 
     {
-	  background-color    : #6699cc;
-      border-right        : 1px outset #6699cc;
+	    background-color    : #9D9D9D;
     }
   
-  .progress-remainder 
-    {
-	    background-color    : #999999;
-    }
-
   .progress-text 
     {
-      max-height          : 1.5em;
+      visibility          : collapse;
     }
 
 /** XUL <scrollbar> element **/

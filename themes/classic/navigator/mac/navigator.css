@@ -8,15 +8,12 @@
 #content
   {
     border-left           : 1px solid #000000;
-    border-top            : 1px solid #000000;
-    border-right          : 1px solid #DDDDDD;
-    border-bottom         : 1px solid #DDDDDD;
+    border-bottom         : 1px solid #000000;
   }
 
 #browser
   {
     border-left           : 1px solid #9D9D9D;
-    border-right          : 1px solid #FFFFFF;
   }  
   
 
@@ -180,7 +177,7 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 /*all the urlbar stuff*/
 #page-proxy-button 
   {
-	  list-style-image      : url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
+	  list-style-image      : url("chrome://communicator/skin/bookmarks/location.gif"); 
 	  cursor                : grab;
   } 
 

@@ -4,7 +4,14 @@
 
 scrollbar {
    behavior: url("chrome://global/skin/classicBindings.xml#scrollbar");
-   border: 1px solid #000000;
+   border-top: 1px solid black;
+}
+
+scrollbar[align="vertical"] {
+    border-right: none;
+    border-top: none;
+    border-bottom: none;
+    border-left: 1px solid black;
 }
 
 slider {
@@ -114,6 +121,7 @@ scrollbarbutton[type="increment"] {
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-right.gif");
    border-left: 1px solid black;
+   border-right: 1px solid black;
 }
 
 scrollbarbutton[type="increment"]:active {
@@ -160,6 +168,7 @@ scrollbar[align="vertical"] > scrollbarbutton[type="increment"] {
    user-select: none;
    list-style-image: url("chrome://global/skin/scroll-down.gif");
    border-top: 1px solid black;
+   border-bottom: 1px solid black;
 }
 
 scrollbar[align="vertical"] > scrollbarbutton[type="increment"]:active {

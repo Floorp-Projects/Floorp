@@ -179,14 +179,22 @@
       visibility          : collapse;
     }
 
-  progressmeter 
+  progressmeter
     {
       min-width           : 100px;
+      border-left         : 1px solid threedshadow;
+      border-top          : 1px solid threedshadow;
+      border-right        : 1px solid threedhighlight;
+      border-bottom       : 1px solid threedhighlight;
+      background-color    : threedface;
+    }
+
+  .progressmeter-statusbar 
+    {
       border-left         : 1px solid threedhighlight;
       border-top          : 1px solid threedhighlight;
       border-right        : 1px solid threedshadow;
       border-bottom       : 1px solid threedshadow;
-      background-color    : threedface;
     }
     
   .progress-text 

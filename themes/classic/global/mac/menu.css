@@ -189,8 +189,8 @@ menuitem[checked="true"][menuactive="true"]
  **/
 .tooltip
   {
-    background-color      : #FFFFCC;
-    border                : none;
+    background-color      : #CCFFFF;
+    border                : 1px outset #CCCFFFF;
     color                 : #000000;
     font                  : 7pt geneva;
     padding               : 0px 5px 3px 4px;
