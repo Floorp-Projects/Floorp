@@ -191,12 +191,7 @@ protected:
 public:
   // helper routines
   
-  static PRBool        InSameDoc(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   static PRInt32       IndexOf(nsIDOMNode* aNode);
-  static PRInt32       FillArrayWithAncestors(nsVoidArray* aArray,nsIDOMNode* aNode);
-  static PRInt32       GetAncestorsAndOffsets(nsIDOMNode* aNode, PRInt32 aOffset,
-                                              nsVoidArray* aAncestorNodes, nsVoidArray* aAncestorOffsets);
-  static nsCOMPtr<nsIDOMNode>   CommonParent(nsIDOMNode* aNode1, nsIDOMNode* aNode2);
   static nsresult      GetDOMNodeFromContent(nsIContent* inContentNode, nsCOMPtr<nsIDOMNode>* outDomNode);
   static nsresult      GetContentFromDOMNode(nsIDOMNode* inDomNode, nsCOMPtr<nsIContent>* outContentNode);
   static nsresult      PopRanges(nsIDOMNode* aDestNode, PRInt32 aOffset, nsIContent* aSourceNode);

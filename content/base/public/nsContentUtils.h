@@ -39,6 +39,7 @@
 
 #include "jspubtd.h"
 #include "nsAString.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMScriptObjectFactory.h"
 
 class nsIScriptContext;
@@ -58,7 +59,65 @@ public:
                                          nsIDocument *aNewDocument,
                                          nsIDocument *aOldDocument);
 
-  static PRBool IsCallerChrome();
+  static PRBool   IsCallerChrome();
+
+  /*
+   * Returns true if the nodes are both in the same document.
+   * Returns false if either node is not in a document, or the nodes are not
+   * in the same document.
+   */
+  static PRBool   InSameDoc(nsIDOMNode *aNode,
+                            nsIDOMNode *aOther);
+
+  /*
+   * This method fills the |aArray| with all ancestor nodes of |aNode|
+   * including |aNode| at the zero index.
+   *
+   * These elements were |nsIDOMNode*|s before casting to |void*| and must
+   * be cast back to |nsIDOMNode*| on usage, or bad things will happen.
+   */
+  static nsresult GetAncestors(nsIDOMNode* aNode,
+                               nsVoidArray* aArray);
+
+  /*
+   * This method fills |aAncestorNodes| with all ancestor nodes of |aNode|
+   * including |aNode| (QI'd to nsIContent) at the zero index.
+   * For each ancestor, there is a corresponding element in |aAncestorOffsets|
+   * which is the IndexOf the child in relation to its parent.
+   *
+   * The elements of |aAncestorNodes| were |nsIContent*|s before casting to 
+   * |void*| and must be cast back to |nsIContent*| on usage, or bad things
+   * will happen.
+   *
+   * This method just sucks.
+   */
+  static nsresult GetAncestorsAndOffsets(nsIDOMNode* aNode,
+                                         PRInt32 aOffset,
+                                         nsVoidArray* aAncestorNodes,
+                                         nsVoidArray* aAncestorOffsets);
+
+  /*
+   * The out parameter, |aCommonAncestor| will be the closest node, if any,
+   * to both |aNode| and |aOther| which is also an ancestor of each.
+   */
+  static nsresult GetCommonAncestor(nsIDOMNode *aNode,
+                                    nsIDOMNode *aOther,
+                                    nsIDOMNode** aCommonAncestor);
+
+  /*
+   * |aDifferentNodes| will contain up to 3 elements.
+   * The first, if present, is the common ancestor of |aNode| and |aOther|.
+   * The second, if present, is the ancestor node of |aNode| which is
+   * closest to the common ancestor, but not an ancestor of |aOther|.
+   * The third, if present, is the ancestor node of |aOther| which is
+   * closest to the common ancestor, but not an ancestor of |aNode|.
+   *
+   * These elements were |nsIDOMNode*|s before casting to void* and must
+   * be cast back to |nsIDOMNode*| on usage, or bad things will happen.
+   */
+  static nsresult GetFirstDifferentAncestors(nsIDOMNode *aNode,
+                                             nsIDOMNode *aOther,
+                                             nsVoidArray* aDifferentNodes);
 
   // These are copied from nsJSUtils.h
 

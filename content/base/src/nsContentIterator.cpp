@@ -56,6 +56,7 @@
 #include "nsContentCID.h"
 #include "nsLayoutCID.h"
 #include "nsVoidArray.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -1197,8 +1198,10 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   }
   
   // cache ancestors
-  nsRange::GetAncestorsAndOffsets(startParent, startIndx, &mStartNodes, &mStartOffsets);
-  nsRange::GetAncestorsAndOffsets(endParent, endIndx, &mEndNodes, &mEndOffsets);
+  nsContentUtils::GetAncestorsAndOffsets(startParent, startIndx,
+                                         &mStartNodes, &mStartOffsets);
+  nsContentUtils::GetAncestorsAndOffsets(endParent, endIndx,
+                                         &mEndNodes, &mEndOffsets);
 
   // find first node in range
   aRange->GetStartOffset(&indx);

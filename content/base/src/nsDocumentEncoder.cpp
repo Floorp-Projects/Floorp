@@ -59,7 +59,6 @@
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMNodeList.h"
 #include "nsIDOMRange.h"
-#include "nsRange.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetConverterManager2.h"
 #include "nsHTMLAtoms.h"
@@ -73,6 +72,7 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
@@ -859,9 +859,12 @@ nsDocumentEncoder::SerializeRangeToString(nsIDOMRange *aRange,
   mEndNodes.Clear();
   mEndOffsets.Clear();
 
-  nsRange::FillArrayWithAncestors(&mCommonAncestors, mCommonParent);
-  nsRange::GetAncestorsAndOffsets(startParent, startOffset, &mStartNodes, &mStartOffsets);
-  nsRange::GetAncestorsAndOffsets(endParent, endOffset, &mEndNodes, &mEndOffsets);
+  nsContentUtils::GetAncestors(mCommonParent, &mCommonAncestors);
+  nsContentUtils::GetAncestorsAndOffsets(startParent, startOffset,
+                                         &mStartNodes, &mStartOffsets);
+  nsContentUtils::GetAncestorsAndOffsets(endParent, endOffset,
+                                         &mEndNodes, &mEndOffsets);
+
   nsCOMPtr<nsIContent> commonContent = do_QueryInterface(mCommonParent);
   mStartRootIndex = mStartNodes.IndexOf(commonContent);
   mEndRootIndex = mEndNodes.IndexOf(commonContent);
