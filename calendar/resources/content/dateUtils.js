@@ -491,6 +491,8 @@ DateFormater.prototype.parseTimeOfDay = function( timeString )
     endDateTime: exclusive end of timeInterval.
         If isAllDay for one day, endDateTime is midnight next day, so displayed
         end date will be one day earlier.
+    relativeToDate: optional -- show only time if starts and ends on this date.
+        defaults to today if non-date supplied.
 
     Examples (with user date format yyyy-MM-dd, time format HH:mm)
       1999-12-31 00:00, 2000-01-01 00:00, true  --> "1999-12-31"
@@ -499,34 +501,48 @@ DateFormater.prototype.parseTimeOfDay = function( timeString )
       1999-12-31 20:00, 1999-12-31 22:00, false --> "1999-12-31 20:00--22:00"
       1999-12-31 00:00, 2000-01-01 00:00, false --> "1999-12-31 00:00 -- 2001-01-01 00:00"
  **/
-DateFormater.prototype.formatInterval = function( startDateTime, endDateTime, isAllDay ) {
+DateFormater.prototype.formatInterval = function( startDateTime, endDateTime, isAllDay, relativeToDate ) {
   if (isAllDay) { 
     endDateTime = new Date(endDateTime); // don't modify parameter
     endDateTime.setDate(endDateTime.getDate() - 1);
   }
-  var sameDay = (startDateTime.getFullYear() == endDateTime.getFullYear() &&
-                 startDateTime.getMonth() == endDateTime.getMonth() &&
-                 startDateTime.getDay() == endDateTime.getDay());
+  var sameDay = this.isOnSameDate(startDateTime, endDateTime);
   var sameTime = (startDateTime.getHours() == endDateTime.getHours() &&
                   startDateTime.getMinutes() == endDateTime.getMinutes());
+  if (sameDay && relativeToDate && !(relativeToDate instanceof Date)) {
+    relativeToDate = new Date();
+  }
   return (isAllDay
           ? (sameDay
              // just one day
-             ? this.getFormatedDate(startDateTime)
-             // range of days
+             ? (relativeToDate && this.isOnSameDate(startDateTime, relativeToDate)
+                // on relativeToDate: "All Day"
+                ? this.dateStringBundle.GetStringFromName("AllDay")
+                // other date, or no relativeTo: just date without time
+                : this.getFormatedDate(startDateTime))
+             // range of days, always give dates without times
              : this.makeRange(this.getFormatedDate(startDateTime),
                               this.getFormatedDate(endDateTime)))
           : (sameDay
              ? (sameTime
                 // just one date time
-                ? this.formatDateTime(startDateTime)
+                ? this.formatDateTime(startDateTime, relativeToDate)
                 // range of times on same day
-                : this.formatDateTime(startDateTime, false, 
+                : this.formatDateTime(startDateTime, relativeToDate, 
                                       this.makeRange(this.getFormatedTime(startDateTime),
                                                      this.getFormatedTime(endDateTime))))
              // range across different days
              : this.makeRange(this.formatDateTime(startDateTime),
                               this.formatDateTime(endDateTime))));
+}
+
+/** Return true if date1 and date2 have the same date, month, and fullyear,
+    (disregards time and timezone). **/
+DateFormater.prototype.isOnSameDate = function isOnSameDate(date1, date2) {
+  // For speed, test greatest probability of being different first.
+  return (date1.getDate() == date2.getDate() &&
+          date1.getMonth() == date2.getMonth() &&
+          date1.getFullYear() == date2.getFullYear());
 }
 
 /** PRIVATE makeRange takes two strings and concatenates them with
@@ -548,26 +564,30 @@ DateFormater.prototype.makeRange = function makeRange(fromString, toString) {
 
 /** PUBLIC formatDateTime formats both date and time from datetime in pref order.
     If timeString is not null (such as "All Day"), it is used instead of time. 
-    if omitDateIfToday is true, date is omitted if date is today.
-    If date is not today, date is more relevant than time, so default is
+    if relativeToDate is given, date is omitted if same date.
+      Today's date will be used if relativeToDate is true but not a Date.
+    If date is different, date is more relevant than time, so default is
     formatted DATE TIME so date is visible in columns too narrow to show both,
     Override by setting preference calendar.date.formatTimeBeforeDate=true.
 
    "DDD, DD MMM YYYY" "HH:mm"
     Tue, 31 Dec 1999 21:00
-    Tue, 31 Dec 1999 All Day      (called with "All Day" timeString)
+    Tue, 31 Dec 1999 All Day      (called with allDayOrTimeString=true)
     Tue, 31 Dec 1999 21:00--22:00 (called by formatInterval with "21:00--22:00" timeString)
-    21:00   (called with datetime 21:00 today, with omitDateIfToday true, and no timeString)
-    All Day (called with datetime 0:00 today, with omitDateIfToday true, with timeString "All Day")
+    21:00   (called with datetime 21:00 today, with relativeToDate today, and no timeString)
+    All Day (called with datetime 0:00 today, with relativeToDate today, with timeString "All Day")
  **/
-DateFormater.prototype.formatDateTime = function formatDateTime(datetime, omitDateIfToday, timeString) { 
-  var formattedTime = (timeString || this.getFormatedTime( datetime ));
-  if (omitDateIfToday) { 
-    var today = new Date();
-    if (datetime.getFullYear() == today.getFullYear() &&
-        datetime.getMonth() == today.getMonth() &&
-        datetime.getDate() == today.getDate()) {
-      // if today, just show time (or "All day")
+DateFormater.prototype.formatDateTime = function formatDateTime(datetime, relativeToDate, allDayOrTimeString) { 
+  var formattedTime =
+    (! allDayOrTimeString ?                   this.getFormatedTime( datetime ) :
+     typeof(allDayOrTimeString) == "string" ? allDayOrTimeString               :
+     allDayOrTimeString instanceof String ?   allDayOrTimeString               :
+     this.dateStringBundle.GetStringFromName("AllDay"));
+  if (relativeToDate) { 
+    if (!(relativeToDate instanceof Date))
+      relativeToDate = new Date();
+    if (this.isOnSameDate(datetime, relativeToDate)) {
+      // if same day, just show time (or "All day")
       return formattedTime;
     }
   }

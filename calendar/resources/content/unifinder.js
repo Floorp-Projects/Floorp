@@ -225,8 +225,7 @@ function finishCalendarUnifinder( )
 
 function formatUnifinderEventDateTime( datetime, isAllDay )
 {
-  var allDayString = (isAllDay && gCalendarBundle.getString("AllDay"));
-  return gCalendarWindow.dateFormater.formatDateTime( datetime, true, allDayString );
+  return gCalendarWindow.dateFormater.formatDateTime( datetime, true, isAllDay );
 }
 
 
