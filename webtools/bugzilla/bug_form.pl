@@ -304,15 +304,15 @@ if (@::legal_keywords) {
 }
 
 print "<tr><td align=right><B>Attachments:</b></td>\n";
-SendSQL("select attach_id, creation_ts, description from attachments where bug_id = $id");
+SendSQL("select attach_id, creation_ts, mimetype, description from attachments where bug_id = $id");
 while (MoreSQLData()) {
-    my ($attachid, $date, $desc) = (FetchSQLData());
+    my ($attachid, $date, $mimetype, $desc) = (FetchSQLData());
     if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
         $date = "$3/$4/$2 $5:$6";
     }
     my $link = "showattachment.cgi?attach_id=$attachid";
     $desc = value_quote($desc);
-    print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc</td></tr><tr><td></td>};
+    print qq{<td><a href="$link">$date</a></td><td colspan=6>$desc&nbsp&nbsp&nbsp($mimetype)</td></tr><tr><td></td>};
 }
 print "<td colspan=7><a href=\"createattachment.cgi?id=$id\">Create a new attachment</a> (proposed patch, testcase, etc.)</td></tr></table>\n";
 
