@@ -48,10 +48,6 @@ ifndef MOZ_SECURITY
 DIRS		+= security
 endif
 
-ifdef MOZ_SMARTUPDATE
-DIRS		+= softupdt
-endif
-
 ifdef MOZ_OJI
 DIRS		+= oji
 endif

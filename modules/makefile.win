@@ -57,9 +57,6 @@ DIRS=                   \
 !endif
 	zlib            \
 !endif
-!ifdef MOZ_SMARTUPDATE
-	softupdt        \
-!endif
 	progress	\
 !if ("$(MOZ_BITS)" == "16")
 	libmem          \
