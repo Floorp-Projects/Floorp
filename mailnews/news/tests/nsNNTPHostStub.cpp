@@ -698,7 +698,7 @@ nsresult nsNNTPHostStub::GetGroupList(char ** retVal)
 	return NS_OK;
 }
 
-extern "C"{
+NS_BEGIN_EXTERN_C
 
 nsresult NS_NewNNTPHost(nsINNTPHost ** aInstancePtr, const char * name, PRUint32 port)
 {
@@ -712,4 +712,5 @@ nsresult NS_NewNNTPHost(nsINNTPHost ** aInstancePtr, const char * name, PRUint32
 
 	return rv;
 }
-}
+
+NS_END_EXTERN_C
