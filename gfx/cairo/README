@@ -18,3 +18,5 @@ PATCHES:
   font-backend.diff - upstream patch to configure.in to make sure
     that a font backend is available.
 
+  stdint.diff - add checking for appropriate stdint.h/inttypes.h
+    header to include.  Needed for AIX.

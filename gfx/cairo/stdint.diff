@@ -1,0 +1,96 @@
+? cairo/autom4te.cache
+Index: libpixman/src/pixman.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/libpixman/src/pixman.h,v
+retrieving revision 1.1
+diff -u -8 -p -r1.1 pixman.h
+--- libpixman/src/pixman.h	24 Feb 2005 20:08:55 -0000	1.1
++++ libpixman/src/pixman.h	11 Mar 2005 17:27:47 -0000
+@@ -79,17 +79,17 @@ SOFTWARE.
+  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+  * PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
+ 
+ #if defined (__SVR4) && defined (__sun)
+ # include <sys/int_types.h>
+ #else
+-# if defined (__OpenBSD__)
++# if defined (__OpenBSD__) || defined (_AIX)
+ #  include <inttypes.h>
+ # else 
+ #  include <stdint.h>
+ # endif
+ #endif
+ 
+ 
+ #if defined(__cplusplus) || defined(c_plusplus)
+Index: cairo/src/cairo-wideint.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairo-wideint.h,v
+retrieving revision 1.1
+diff -u -8 -p -r1.1 cairo-wideint.h
+--- cairo/src/cairo-wideint.h	24 Feb 2005 20:08:53 -0000	1.1
++++ cairo/src/cairo-wideint.h	11 Mar 2005 17:27:47 -0000
+@@ -33,17 +33,25 @@
+  * Contributor(s):
+  *	Keith R. Packard <keithp@keithp.com>
+  *
+  */
+ 
+ #ifndef CAIRO_WIDEINT_H
+ #define CAIRO_WIDEINT_H
+ 
+-#include <stdint.h>
++#if defined (__SVR4) && defined (__sun)
++# include <sys/int_types.h>
++#else
++# if defined (__OpenBSD__) || defined (_AIX)
++#  include <inttypes.h>
++# else 
++#  include <stdint.h>
++# endif
++#endif
+ 
+ /*
+  * 64-bit datatypes.  Two separate implementations, one using
+  * built-in 64-bit signed/unsigned types another implemented
+  * as a pair of 32-bit ints
+  */
+ 
+ #define I cairo_private
+Index: cairo/src/cairoint.h
+===================================================================
+RCS file: /cvsroot/mozilla/gfx/cairo/cairo/src/cairoint.h,v
+retrieving revision 1.1
+diff -u -8 -p -r1.1 cairoint.h
+--- cairo/src/cairoint.h	24 Feb 2005 20:08:53 -0000	1.1
++++ cairo/src/cairoint.h	11 Mar 2005 17:27:47 -0000
+@@ -49,17 +49,26 @@
+ #include "config.h"
+ #endif
+ 
+ #include <assert.h>
+ #include <stdlib.h>
+ #include <string.h>
+ #include <math.h>
+ #include <limits.h>
+-#include <stdint.h>
++
++#if defined (__SVR4) && defined (__sun)
++# include <sys/int_types.h>
++#else
++# if defined (__OpenBSD__) || defined (_AIX)
++#  include <inttypes.h>
++# else 
++#  include <stdint.h>
++# endif
++#endif
+ 
+ #include "cairo.h"
+ 
+ #if __GNUC__ >= 3 && defined(__ELF__)
+ # define slim_hidden_proto(name)	slim_hidden_proto1(name, INT_##name)
+ # define slim_hidden_def(name)		slim_hidden_def1(name, INT_##name)
+ # define slim_hidden_proto1(name, internal)				\
+   extern __typeof (name) name						\
