@@ -34,6 +34,7 @@ class nsIContentViewerContainer;
 class nsIStreamListener;
 class nsIStreamObserver;
 class nsIDocumentLoaderObserver;
+class nsIDocument;
 
 /* f43ba260-0737-11d2-beb9-00805f8a66dc */
 #define NS_IDOCUMENTLOADERFACTORY_IID   \
@@ -67,6 +68,11 @@ public:
                               nsISupports* aExtraInfo,
                               nsIStreamListener** aDocListenerResult,
                               nsIContentViewer** aDocViewerResult) = 0;
+
+    NS_IMETHOD CreateInstanceForDocument(nsIContentViewerContainer* aContainer,
+                                         nsIDocument* aDocument,
+                                         const char *aCommand,
+                                         nsIContentViewer** aDocViewerResult) = 0;
 };
 
 //----------------------------------------------------------------------
