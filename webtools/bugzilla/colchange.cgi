@@ -53,8 +53,11 @@ if (Param("useclassification")) {
     push(@masterlist, "classification");
 }
 
-push(@masterlist, ("product", "component", "version", "op_sys", "votes"));
+push(@masterlist, ("product", "component", "version", "op_sys"));
 
+if (Param("usevotes")) {
+    push (@masterlist, "votes");
+}
 if (Param("usebugaliases")) {
     unshift(@masterlist, "alias");
 }
