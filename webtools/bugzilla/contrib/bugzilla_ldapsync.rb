@@ -4,7 +4,7 @@
 # and makes nice bugzilla user entries out of them. Also disables Bugzilla users
 # that are not found in LDAP.
 
-# $Id: bugzilla_ldapsync.rb,v 1.1 2003/04/22 04:11:32 justdave%syndicomm.com Exp $
+# $Id: bugzilla_ldapsync.rb,v 1.2 2003/04/26 16:35:04 jake%bugzilla.org Exp $
 
 require 'ldap'
 require 'dbi'
@@ -50,7 +50,7 @@ noRemove = optHash['--noremove'] || nil
 defaultPass = optHash['--defaultpass'] || 'bugzilla'
 
 if (! dbPassword)
-    puts "bugzilla_ldapsync (c) 2003 Thomas Stromberg <thomas+bugzilla@stromberg.org>"
+    puts "bugzilla_ldapsync v1.3 (c) 2003 Thomas Stromberg <thomas+bugzilla@stromberg.org>"
     puts ""
     puts " -d | --dbname        name of MySQL database            [#{dbName}]"
     puts " -u | --dbuser        username for MySQL database       [#{dbUser}]"
@@ -78,8 +78,8 @@ if (checkMode)
 end
     
 
-bugzillaUsers = Array.new
-ldapUsers = Array.new
+bugzillaUsers = Hash.new
+ldapUsers = Hash.new
 encPassword = defaultPass.crypt('xx')
 sqlNewUser = "INSERT INTO profiles VALUES ('', ?, '#{encPassword}', ?, '', 1, NULL, '0000-00-00 00:00:00');"
 
@@ -87,8 +87,12 @@ sqlNewUser = "INSERT INTO profiles VALUES ('', ?, '#{encPassword}', ?, '', 1, NU
 dbh = DBI.connect("DBI:Mysql:#{dbName}", dbUser, dbPassword)
 
 # select all e-mail addresses where there is no disabledtext defined. Only valid users, please!
-dbh.select_all('select login_name from profiles WHERE disabledtext = ""') { |row|
-	bugzillaUsers.push(row[0].downcase)
+dbh.select_all('select login_name, realname, disabledtext from profiles') { |row|
+    login = row[0].downcase
+    bugzillaUsers[login] = Hash.new
+    bugzillaUsers[login]['desc'] = row[1]
+    bugzillaUsers[login]['disabled'] = row[2]
+    #puts "bugzilla has #{login} - \"#{bugzillaUsers[login]['desc']}\" (#{bugzillaUsers[login]['disabled']})"
 }
 
 
@@ -116,33 +120,64 @@ LDAP::Conn.new(ldapHost, 389).bind{|conn|
 			else
 				desc = entry.vals("cn")[0]
 			end
-
-			# slash out apostrophes. This is not how we are supposed to do it.
-			desc.sub!('\'', "\\'")
+            
+            # take care of the whitespace.
+            desc.sub!("\s+$", "")
+            desc.sub!("^\s+", "")
+            
+            # dumb hack. should be properly escaped, and apostrophes should never ever ever be in email.
 			email.sub!("\'", "%")
 			email.sub!('%', "\'")
-            ldapUsers.push(email.downcase)
-            
-            # while we are in this loop, lets go ahead and add the new users to Bugzilla
-			if (! bugzillaUsers.include?(email.downcase)) 
-                if (! checkMode) 
-    				dbh.do(sqlNewUser, email, desc)
-                end
-                puts "added #{email} - #{desc}"
-			end
-		end
+            email=email.downcase
+            ldapUsers[email.downcase] = Hash.new
+            ldapUsers[email.downcase]['desc'] = desc
+            ldapUsers[email.downcase]['disabled'] = nil
+            #puts "ldap has #{email} - #{ldapUsers[email.downcase]['desc']}"
+        end
 	}
 }
 
 # This is the loop that takes the users that we found in Bugzilla originally, and 
 # checks to see if they are still in the LDAP server. If they are not, away they go!
+
+ldapUsers.each_key { |user|
+    # user does not exist at all.
+    #puts "checking ldap user #{user}"
+    if (! bugzillaUsers[user])
+        puts "+ Adding #{user} - #{ldapUsers[user]['desc']}"
+
+        if (! checkMode) 
+            dbh.do(sqlNewUser, user, ldapUsers[user]['desc'])
+        end
+        
+        # short-circuit now.
+        next
+     end
+
+     if (bugzillaUsers[user]['desc'] != ldapUsers[user]['desc'])
+     puts "* Changing #{user} from \"#{bugzillaUsers[user]['desc']}\" to \"#{ldapUsers[user]['desc']}\""
+         if (! checkMode)
+            # not efficient.
+            dbh.do("UPDATE profiles SET realname = ? WHERE login_name = ?", ldapUsers[user]['desc'], user)
+         end
+     end
+
+     if (bugzillaUsers[user]['disabled'].length > 0)
+         puts "+ Enabling #{user} (was \"#{bugzillaUsers[user]['disabled']}\")" 
+         if (! checkMode)
+             dbh.do("UPDATE profiles SET disabledtext = NULL WHERE login_name=\"#{user}\"")
+         end
+     end
+}
+
 if (! noRemove)
-    bugzillaUsers.each { |user|
-        if (! ldapUsers.include?(user))
+    bugzillaUsers.each_key { |user|
+        if ((bugzillaUsers[user]['disabled'].length < 1) && (! ldapUsers[user]))
+            puts "- Disabling #{user} (#{bugzillaUsers[user]['disabled']})"
+
             if (! checkMode)
-                 dbh.do("UPDATE profiles SET disabledtext = \'auto-disabled by sync\' WHERE login_name=\"#{user}\"")
+                 dbh.do("UPDATE profiles SET disabledtext = \'auto-disabled by ldap sync\' WHERE login_name=\"#{user}\"")
             end
-            puts "disabled #{user}"
         end
     }
 end
