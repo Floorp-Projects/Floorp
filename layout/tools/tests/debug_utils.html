@@ -1,1 +1,110 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd"><html><head>	<title>Layout Debug Utilities</title></head><script type="application/x-javascript" language="Javascript">const nsIFrameDebugObject = Components.interfaces.nsIFrameDebugObject;function SetShowFrameBorders(inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.showFrameBorders = inShow;}function SetShowEventTargetBorders(inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.showEventTargetFrameBorder = inShow;}function SetShowReflowStats(theWindow, inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.setShowReflowStats(theWindow, inShow);}function DumpFrames(){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpFrames(window, null);}function DumpContent(){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpContent(window, null);}function DumpViews(){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpViews(window, null);}function DumpWebShells(){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpWebShells(window, null);}</script><body><h1>Layout Debug Utils</h1><p>Note that these only work in debug builds</h1><h2>Global settings</h2><form name="globalsform"><div><input type="checkbox" id="showBordersCheck" name="showBordersCheck"    onchange="SetShowFrameBorders(document.globalsform.showBordersCheck.checked)"></input><label for="showBordersCheck">Show Frame Borders</label></div><div><input type="checkbox"    id="showEventTargetCheck"    name="showEventTargetCheck"    onchange="SetShowEventTargetBorders(document.globalsform.showEventTargetCheck.checked)"></input><label for="showEventTargetCheck">Show Event Target Borders</label></div></form><h2>Per-Window settings</h2><form name="windowform"><input type="checkbox"    id="showReflowStatsCheck"    name="showReflowStatsCheck"    onchange="SetShowReflowStats(window, document.windowform.showReflowStatsCheck.checked)"></input><label for="showReflowStatsCheck">Show Reflow Stats</label></form><h2>Dumping</h2><form name="dumpform"><div><input type="button" value="Dump Frames" onclick="DumpFrames()"><input type="button" value="Dump Content" onclick="DumpContent()"><input type="button" value="Dump Views" onclick="DumpViews()"><input type="button" value="Dump WebShells" onclick="DumpWebShells()"></div></form></body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+	<title>Layout Debug Utilities</title>
+</head>
+<script type="application/x-javascript" language="Javascript">
+
+const nsIFrameDebugObject = Components.interfaces.nsIFrameDebugObject;
+
+function SetShowFrameBorders(inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.showFrameBorders = inShow;
+}
+
+function SetShowEventTargetBorders(inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.showEventTargetFrameBorder = inShow;
+}
+
+function SetShowReflowStats(theWindow, inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.setShowReflowStats(theWindow, inShow);
+}
+
+function DumpFrames()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpFrames(window, null);
+}
+
+function DumpContent()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpContent(window, null);
+}
+
+function DumpViews()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpViews(window, null);
+}
+
+function DumpWebShells()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpWebShells(window, null);
+}
+
+</script>
+
+<body>
+<h1>Layout Debug Utils</h1>
+
+<p>Note that these only work in debug builds</h1>
+
+<h2>Global settings</h2>
+
+<form name="globalsform">
+<div>
+<input type="checkbox" id="showBordersCheck" name="showBordersCheck"
+    onchange="SetShowFrameBorders(document.globalsform.showBordersCheck.checked)"></input>
+<label for="showBordersCheck">Show Frame Borders</label>
+</div>
+<div>
+<input type="checkbox"
+    id="showEventTargetCheck"
+    name="showEventTargetCheck"
+    onchange="SetShowEventTargetBorders(document.globalsform.showEventTargetCheck.checked)"></input>
+<label for="showEventTargetCheck">Show Event Target Borders</label>
+</div>
+</form>
+
+<h2>Per-Window settings</h2>
+
+<form name="windowform">
+<input type="checkbox"
+    id="showReflowStatsCheck"
+    name="showReflowStatsCheck"
+    onchange="SetShowReflowStats(window, document.windowform.showReflowStatsCheck.checked)"></input>
+<label for="showReflowStatsCheck">Show Reflow Stats</label>
+</form>
+
+<h2>Dumping</h2>
+
+<form name="dumpform">
+<div>
+<input type="button" value="Dump Frames" onclick="DumpFrames()">
+<input type="button" value="Dump Content" onclick="DumpContent()">
+<input type="button" value="Dump Views" onclick="DumpViews()">
+<input type="button" value="Dump WebShells" onclick="DumpWebShells()">
+</div>
+
+</form>
+
+
+
+</body>
+</html>
+

@@ -1,1 +1,107 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd"><html><head>	<title>Control Frame</title></head><script type="application/x-javascript" language="Javascript">const nsIFrameDebugObject = Components.interfaces.nsIFrameDebugObject;function SetShowFrameBorders(inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.showFrameBorders = inShow;}function SetShowEventTargetBorders(inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.showEventTargetFrameBorder = inShow;}function SetShowReflowStats(theWindow, inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.setShowReflowStats(theWindow, inShow);}function DumpFrames(inWindow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpFrames(inWindow, null);}function DumpContent(inWindow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpContent(inWindow, null);}function DumpViews(inWindow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpViews(inWindow, null);}function DumpWebShells(inWindow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.dumpWebShells(inWindow, null);}function InputKey(inEvent){  if (inEvent.keyCode == KeyEvent.DOM_VK_ENTER || inEvent.keyCode == KeyEvent.DOM_VK_RETURN)  {    var pageFrame = window.frames.pageframe;    pageFrame.location.href = document.dumpform.urlfield.value;    inEvent.preventDefault();   // avoid form submit on hitting return  }}function IframeLoaded(){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  document.dumpform.urlfield.value = window.frames.pageframe.location.href;}function SetShowFrameBorders(inShow){  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);  debugObject.showFrameBorders = inShow;}</script><body><form name="dumpform"><div style="margin-bottom: 5px">URL: <input type="text" size="100" name="urlfield" value="http://www.mozilla.org" onkeypress="InputKey(event)"></input></div><div><input type="button" value="Dump Frames" onclick="DumpFrames(window.frames.pageframe)"><input type="button" value="Dump Content" onclick="DumpContent(window.frames.pageframe)"><input type="button" value="Dump Views" onclick="DumpViews(window.frames.pageframe)"><input type="button" value="Dump WebShells" onclick="DumpWebShells(window.frames.pageframe)"><input type="checkbox" id="showBordersCheck" name="showBordersCheck"    onchange="SetShowFrameBorders(document.dumpform.showBordersCheck.checked)"></input><label for="showBordersCheck">Show Frame Borders</label></div></form><iframe name="pageframe" style="border: 1px solid black; width:800px; height:800px;" onload="IframeLoaded()"></iframe></body></html>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/1999/REC-html401-19991224/loose.dtd">
+<html>
+<head>
+	<title>Control Frame</title>
+</head>
+
+<script type="application/x-javascript" language="Javascript">
+
+const nsIFrameDebugObject = Components.interfaces.nsIFrameDebugObject;
+
+function SetShowFrameBorders(inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.showFrameBorders = inShow;
+}
+
+function SetShowEventTargetBorders(inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.showEventTargetFrameBorder = inShow;
+}
+
+function SetShowReflowStats(theWindow, inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.setShowReflowStats(theWindow, inShow);
+}
+
+function DumpFrames(inWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpFrames(inWindow, null);
+}
+
+function DumpContent(inWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpContent(inWindow, null);
+}
+
+function DumpViews(inWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpViews(inWindow, null);
+}
+
+function DumpWebShells(inWindow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.dumpWebShells(inWindow, null);
+}
+
+function InputKey(inEvent)
+{
+  if (inEvent.keyCode == KeyEvent.DOM_VK_ENTER || inEvent.keyCode == KeyEvent.DOM_VK_RETURN)
+  {
+    var pageFrame = window.frames.pageframe;
+    pageFrame.location.href = document.dumpform.urlfield.value;
+    inEvent.preventDefault();   // avoid form submit on hitting return
+  }
+}
+
+function IframeLoaded()
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  document.dumpform.urlfield.value = window.frames.pageframe.location.href;
+}
+
+function SetShowFrameBorders(inShow)
+{
+  netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+  var debugObject = Components.classes["@mozilla.org/layout_debug/framedebugobject;1"].createInstance(nsIFrameDebugObject);
+  debugObject.showFrameBorders = inShow;
+}
+</script>
+
+<body>
+
+<form name="dumpform">
+<div style="margin-bottom: 5px">
+URL: <input type="text" size="100" name="urlfield" value="http://www.mozilla.org" onkeypress="InputKey(event)"></input>
+</div>
+<div>
+<input type="button" value="Dump Frames" onclick="DumpFrames(window.frames.pageframe)">
+<input type="button" value="Dump Content" onclick="DumpContent(window.frames.pageframe)">
+<input type="button" value="Dump Views" onclick="DumpViews(window.frames.pageframe)">
+<input type="button" value="Dump WebShells" onclick="DumpWebShells(window.frames.pageframe)">
+
+<input type="checkbox" id="showBordersCheck" name="showBordersCheck"
+    onchange="SetShowFrameBorders(document.dumpform.showBordersCheck.checked)"></input>
+<label for="showBordersCheck">Show Frame Borders</label>
+</div>
+</form>
+
+<iframe name="pageframe" style="border: 1px solid black; width:800px; height:800px;" onload="IframeLoaded()"></iframe>
+
+</body>
+</html>
+
