@@ -70,7 +70,7 @@ thumb:active {
 
 thumb[orient="vertical"] {
   min-width: 0;
-  min-height: 10px;
+  min-height: 16px;
   background-image: url("chrome://global/skin/scrollbar/thumb-vrt.png");
 }
 
@@ -81,18 +81,18 @@ thumb[orient="vertical"]:active {
 /* ::::: thumb (horizontal) ::::: */
 
 thumb {
-  min-height: 14px;
+  min-height: 16px;
 }
 
 thumb[orient="horizontal"] {
-  min-width: 14px;
+  min-width: 16px;
 }
 
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border: 2px solid;
   -moz-border-top-colors: #000000 #FFFFFF;
   -moz-border-right-colors: #000000 #BBBBBB;
