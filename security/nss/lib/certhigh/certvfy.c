@@ -70,7 +70,7 @@ CERT_CertTimesValid(CERTCertificate *c)
 	return(SECSuccess);
     }
     
-    /* get current UTC time */
+    /* get current time */
     now = PR_Now();
     rv = CERT_GetCertTimes(c, &notBefore, &notAfter);
     

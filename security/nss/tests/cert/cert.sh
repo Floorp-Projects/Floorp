@@ -339,7 +339,7 @@ cert_CA()
   #
   CU_ACTION="Creating CA Cert $NICKNAME "
   CU_SUBJECT=$ALL_CU_SUBJECT
-  certu -S -n $NICKNAME -t $TRUSTARG -v 60 $SIGNER -d ${LPROFILE} -1 -2 -5 \
+  certu -S -n $NICKNAME -t $TRUSTARG -v 600 $SIGNER -d ${LPROFILE} -1 -2 -5 \
         -f ${R_PWFILE} -z ${R_NOISE_FILE} -m $CERTSERIAL 2>&1 <<CERTSCRIPT
 5
 9
@@ -618,7 +618,7 @@ MODSCRIPT
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
   CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140-1, L=Mountain View, ST=California, C=US"
-  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -m 500 -z "${R_NOISE_FILE}" 2>&1
+  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -v 600 -m 500 -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: FIPS passed"
   fi

@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.36 2003/08/30 01:07:21 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.37 2003/09/19 04:08:48 jpierre%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -151,8 +151,8 @@ static const SEC_ASN1Template cert_CrlEntryTemplate[] = {
 	  0, NULL, sizeof(CERTCrlEntry) },
     { SEC_ASN1_INTEGER,
 	  offsetof(CERTCrlEntry,serialNumber) },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrlEntry,revocationDate) },
+    { SEC_ASN1_INLINE,
+	  offsetof(CERTCrlEntry,revocationDate), CERT_TimeChoiceTemplate },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_SEQUENCE_OF,
 	  offsetof(CERTCrlEntry, extensions),
 	  SEC_CERTExtensionTemplate},
@@ -171,10 +171,10 @@ const SEC_ASN1Template CERT_CrlTemplate[] = {
     { SEC_ASN1_INLINE,
 	  offsetof(CERTCrl,name),
 	  CERT_NameTemplate },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrl,lastUpdate) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrl,nextUpdate) },
+    { SEC_ASN1_INLINE,
+	  offsetof(CERTCrl,lastUpdate), CERT_TimeChoiceTemplate },
+    { SEC_ASN1_INLINE | SEC_ASN1_OPTIONAL,
+	  offsetof(CERTCrl,nextUpdate), CERT_TimeChoiceTemplate },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_SEQUENCE_OF,
 	  offsetof(CERTCrl,entries),
 	  cert_CrlEntryTemplate },
@@ -197,10 +197,10 @@ const SEC_ASN1Template CERT_CrlTemplateNoEntries[] = {
     { SEC_ASN1_INLINE,
 	  offsetof(CERTCrl,name),
 	  CERT_NameTemplate },
-    { SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrl,lastUpdate) },
-    { SEC_ASN1_OPTIONAL | SEC_ASN1_UTC_TIME,
-	  offsetof(CERTCrl,nextUpdate) },
+    { SEC_ASN1_INLINE,
+	  offsetof(CERTCrl,lastUpdate), CERT_TimeChoiceTemplate },
+    { SEC_ASN1_INLINE | SEC_ASN1_OPTIONAL,
+	  offsetof(CERTCrl,nextUpdate), CERT_TimeChoiceTemplate },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_SEQUENCE_OF |
       SEC_ASN1_SKIP }, /* skip entries */
     { SEC_ASN1_OPTIONAL | SEC_ASN1_CONSTRUCTED | SEC_ASN1_CONTEXT_SPECIFIC |
@@ -216,8 +216,10 @@ const SEC_ASN1Template CERT_CrlTemplateEntriesOnly[] = {
     { SEC_ASN1_SKIP | SEC_ASN1_INTEGER | SEC_ASN1_OPTIONAL },
     { SEC_ASN1_SKIP },
     { SEC_ASN1_SKIP },
-    { SEC_ASN1_SKIP | SEC_ASN1_UTC_TIME },
-    { SEC_ASN1_SKIP | SEC_ASN1_OPTIONAL | SEC_ASN1_UTC_TIME },
+    { SEC_ASN1_SKIP | SEC_ASN1_INLINE,
+        offsetof(CERTCrl,lastUpdate), CERT_TimeChoiceTemplate },
+    { SEC_ASN1_SKIP | SEC_ASN1_INLINE | SEC_ASN1_OPTIONAL,
+        offsetof(CERTCrl,nextUpdate), CERT_TimeChoiceTemplate },
     { SEC_ASN1_OPTIONAL | SEC_ASN1_SEQUENCE_OF,
 	  offsetof(CERTCrl,entries),
 	  cert_CrlEntryTemplate }, /* decode entries */
@@ -1873,8 +1875,8 @@ CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer, SECItem* dp,
             /* check the time if we have one */
             if (entry->revocationDate.data && entry->revocationDate.len) {
                 int64 revocationDate = 0;
-                if (SECSuccess == DER_UTCTimeToTime(&revocationDate,
-                                                    &entry->revocationDate)) {
+                if (SECSuccess == CERT_DecodeTimeChoice(&revocationDate,
+                                                        &entry->revocationDate)) {
                     /* we got a good revocation date, only consider the
                        certificate revoked if the time we are inquiring about
                        is past the revocation date */
