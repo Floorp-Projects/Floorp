@@ -317,7 +317,6 @@ public:
   BackstagePass(nsIPrincipal *prin) :
     mPrincipal(prin)
   {
-    NS_INIT_ISUPPORTS(); 
   }
 
   virtual ~BackstagePass() { }
@@ -338,7 +337,6 @@ public:
 
   BackstagePass()
   {
-    NS_INIT_ISUPPORTS(); 
   }
 
   virtual ~BackstagePass() { }
@@ -384,7 +382,6 @@ mozJSComponentLoader::mozJSComponentLoader()
       mGlobals(nsnull),
       mInitialized(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 static PRIntn PR_CALLBACK

@@ -48,7 +48,6 @@ NS_IMPL_ISUPPORTS1(nsCategoryImp, nsIUGenCategory);
 
 nsCategoryImp::nsCategoryImp()
 {
-   NS_INIT_ISUPPORTS();
 }
 
 nsCategoryImp::~nsCategoryImp()

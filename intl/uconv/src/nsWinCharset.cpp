@@ -57,7 +57,6 @@ NS_IMPL_ISUPPORTS1(nsPlatformCharset, nsIPlatformCharset)
 nsPlatformCharset::nsPlatformCharset()
 {
   NS_TIMELINE_START_TIMER("nsPlatformCharset()");
-  NS_INIT_ISUPPORTS();
 
   UINT acp = ::GetACP();
   PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);

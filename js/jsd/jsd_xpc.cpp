@@ -860,7 +860,6 @@ jsdProperty::jsdProperty (JSDContext *aCx, JSDProperty *aProperty) :
 {
     DEBUG_CREATE ("jsdProperty", gPropertyCount);
     mValid = (aCx && aProperty);
-    NS_INIT_ISUPPORTS();
     mLiveListEntry.value = this;
     jsds_InsertEphemeral (&gLiveProperties, &mLiveListEntry);
 }
@@ -966,7 +965,6 @@ jsdScript::jsdScript (JSDContext *aCx, JSDScript *aScript) : mValid(PR_FALSE),
                                                              mFirstPC(0)
 {
     DEBUG_CREATE ("jsdScript", gScriptCount);
-    NS_INIT_ISUPPORTS();
 
     if (mScript) {
         /* copy the script's information now, so we have it later, when it
@@ -1457,7 +1455,6 @@ jsdContext::jsdContext (JSDContext *aJSDCx, JSContext *aJSCx,
                                               mJSCx(aJSCx), mISCx(aISCx)
 {
     DEBUG_CREATE ("jsdContext", gContextCount);
-    NS_INIT_ISUPPORTS();
     mLiveListEntry.value = this;
     mLiveListEntry.key   = NS_STATIC_CAST (void *, aJSCx);
     jsds_InsertEphemeral (&gLiveContexts, &mLiveListEntry);
@@ -1627,7 +1624,6 @@ jsdStackFrame::jsdStackFrame (JSDContext *aCx, JSDThreadState *aThreadState,
 {
     DEBUG_CREATE ("jsdStackFrame", gFrameCount);
     mValid = (aCx && aThreadState && aStackFrameInfo);
-    NS_INIT_ISUPPORTS();
     if (mValid) {
         mLiveListEntry.key = aStackFrameInfo;
         mLiveListEntry.value = this;
@@ -1917,7 +1913,6 @@ jsdValue::jsdValue (JSDContext *aCx, JSDValue *aValue) : mValid(PR_TRUE),
                                                          mValue(aValue)
 {
     DEBUG_CREATE ("jsdValue", gValueCount);
-    NS_INIT_ISUPPORTS();
     mLiveListEntry.value = this;
     jsds_InsertEphemeral (&gLiveValues, &mLiveListEntry);
 }
@@ -3210,7 +3205,6 @@ class jsdASObserver : public nsIObserver
 
     jsdASObserver ()
     {
-        NS_INIT_ISUPPORTS();
     }    
 };
 

@@ -47,7 +47,6 @@
 nsJSRuntimeServiceImpl::nsJSRuntimeServiceImpl() :
     mRuntime(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsJSRuntimeServiceImpl::~nsJSRuntimeServiceImpl() {

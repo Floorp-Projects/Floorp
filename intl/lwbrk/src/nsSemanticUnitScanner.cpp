@@ -43,7 +43,6 @@ NS_IMPL_ISUPPORTS1(nsSemanticUnitScanner, nsISemanticUnitScanner)
 
 nsSemanticUnitScanner::nsSemanticUnitScanner() : nsSampleWordBreaker()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

@@ -670,7 +670,6 @@ NS_IMPL_ISUPPORTS1(FullTrustSecMan, nsIXPCSecurityManager);
 
 FullTrustSecMan::FullTrustSecMan()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP
@@ -741,7 +740,7 @@ public:
     NS_DECL_NSIXPCTESTNOISY
     NS_DECL_NSIXPCSCRIPTABLE
 
-    TestGlobal(){NS_INIT_ISUPPORTS();}
+    TestGlobal(){}
 
 };
 
@@ -782,7 +781,6 @@ NS_IMPL_ISUPPORTS1(nsXPCFunctionThisTranslator, nsIXPCFunctionThisTranslator)
 
 nsXPCFunctionThisTranslator::nsXPCFunctionThisTranslator()
 {
-  NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 

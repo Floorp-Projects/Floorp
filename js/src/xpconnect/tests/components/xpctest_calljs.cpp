@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS2_CI(xpcTestCallJS, nsIXPCTestCallJS, nsIXPCScriptable);
 #include "xpc_map_end.h" /* This will #undef the above */
 
 xpcTestCallJS :: xpcTestCallJS() {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 };
 

@@ -180,7 +180,6 @@ NS_IMPL_ISUPPORTS2(nsTestXPCFoo, nsITestXPCFoo, nsITestXPCFoo2)
 nsTestXPCFoo::nsTestXPCFoo()
     : mFoo(NULL)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 
@@ -216,7 +215,6 @@ NS_IMPL_ISUPPORTS1(MySecMan, nsIXPCSecurityManager)
 MySecMan::MySecMan()
     : mMode(OK_ALL)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

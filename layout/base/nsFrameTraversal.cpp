@@ -248,7 +248,6 @@ NS_NewFrameTraversal(nsIBidirectionalEnumerator **aEnumerator,
 
 nsFrameTraversal::nsFrameTraversal()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsFrameTraversal::~nsFrameTraversal()
@@ -277,7 +276,6 @@ nsFrameIterator::nsFrameIterator()
   mLast = nsnull;
   mCurrent = nsnull;
   mStart = nsnull;
-  NS_INIT_ISUPPORTS();
 }
 
 

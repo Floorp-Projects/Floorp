@@ -49,7 +49,6 @@ public:
 
 xpcstringtest::xpcstringtest()
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

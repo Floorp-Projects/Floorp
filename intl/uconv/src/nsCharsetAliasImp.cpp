@@ -56,7 +56,6 @@ NS_IMPL_ISUPPORTS1(nsCharsetAlias2, nsICharsetAlias);
 //--------------------------------------------------------------
 nsCharsetAlias2::nsCharsetAlias2()
 {
-  NS_INIT_ISUPPORTS();
   mDelegate = nsnull; // delay the load of mDelegate untill we need it.
 }
 //--------------------------------------------------------------

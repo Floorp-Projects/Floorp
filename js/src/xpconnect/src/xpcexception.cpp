@@ -139,7 +139,6 @@ nsXPCException::nsXPCException()
       mInner(nsnull),
       mInitialized(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     MOZ_COUNT_CTOR(nsXPCException);
 }
 

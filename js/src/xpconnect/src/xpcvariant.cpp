@@ -42,7 +42,6 @@ NS_IMPL_ISUPPORTS2_CI(XPCVariant, XPCVariant, nsIVariant)
 XPCVariant::XPCVariant()
     : mJSVal(JSVAL_VOID)
 {
-    NS_INIT_ISUPPORTS();
     nsVariant::Initialize(&mData);
 }
 

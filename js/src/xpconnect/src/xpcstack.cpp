@@ -110,7 +110,6 @@ XPCJSStackFrame::XPCJSStackFrame()
         mLineno(0),
         mLanguage(nsIProgrammingLanguage::UNKNOWN)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 XPCJSStackFrame::~XPCJSStackFrame()

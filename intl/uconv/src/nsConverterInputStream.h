@@ -70,7 +70,7 @@ class nsConverterInputStream : nsIConverterInputStream {
         mLeftOverBytes(0),
         mUnicharDataOffset(0),
         mUnicharDataLength(0),
-        mRecoverFromErrors(PR_FALSE) { NS_INIT_ISUPPORTS(); }
+        mRecoverFromErrors(PR_FALSE) { }
     
     virtual ~nsConverterInputStream() {}
 

@@ -54,8 +54,6 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mDestroyJSContextInDestructor(JS_FALSE),
         mCallerLanguage(callerLanguage)
 {
-    NS_INIT_ISUPPORTS();
-
     if(!mXPC)
         return;
 

@@ -43,7 +43,6 @@
 #include "nsLWBRKDll.h"
 nsSampleWordBreaker::nsSampleWordBreaker()
 {
-  NS_INIT_ISUPPORTS();
 }
 nsSampleWordBreaker::~nsSampleWordBreaker()
 {

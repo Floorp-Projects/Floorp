@@ -491,7 +491,6 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF(mIdentity);
 
     NS_ASSERTION(mMaybeProto, "bad ctor param");
@@ -511,7 +510,6 @@ XPCWrappedNative::XPCWrappedNative(nsISupports* aIdentity,
       mFlatJSObject((JSObject*)JSVAL_ONE), // non-null to pass IsValid() test
       mScriptableInfo(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF(mIdentity);
 
     NS_ASSERTION(aScope, "bad ctor param");
@@ -2985,7 +2983,6 @@ XPCJSObjectHolder::GetJSObject(JSObject** aJSObj)
 XPCJSObjectHolder::XPCJSObjectHolder(JSContext* cx, JSObject* obj)
     : mRuntime(JS_GetRuntime(cx)), mJSObj(obj)
 {
-    NS_INIT_ISUPPORTS();
     JS_AddNamedRoot(cx, &mJSObj, "XPCJSObjectHolder::mJSObj");
 }
 

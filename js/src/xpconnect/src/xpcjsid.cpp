@@ -48,7 +48,6 @@ char nsJSID::gNoString[] = "";
 nsJSID::nsJSID()
     : mID(GetInvalidIID()), mNumber(gNoString), mName(gNoString)
 {
-    NS_INIT_ISUPPORTS();
 };
 
 nsJSID::~nsJSID()
@@ -253,7 +252,7 @@ class SharedScriptableHelperForJSIID : public nsIXPCScriptable
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIXPCSCRIPTABLE
-    SharedScriptableHelperForJSIID() {NS_INIT_ISUPPORTS();}
+    SharedScriptableHelperForJSIID() {}
 };
 
 NS_INTERFACE_MAP_BEGIN(SharedScriptableHelperForJSIID)
@@ -396,7 +395,6 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsJSIID, nsIJSID, nsIJSIID)
 nsJSIID::nsJSIID(nsIInterfaceInfo* aInfo)
     : mInfo(aInfo)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsJSIID::~nsJSIID() {}
@@ -654,7 +652,7 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsJSCID, nsIJSID, nsIJSCID)
 #define XPC_MAP_FLAGS               0
 #include "xpc_map_end.h" /* This will #undef the above */
 
-nsJSCID::nsJSCID()  {NS_INIT_ISUPPORTS();}
+nsJSCID::nsJSCID()  {}
 nsJSCID::~nsJSCID() {}
 
 NS_IMETHODIMP nsJSCID::GetName(char * *aName)

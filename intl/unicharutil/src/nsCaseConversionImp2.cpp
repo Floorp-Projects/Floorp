@@ -470,7 +470,6 @@ nsCaseConversionImp2::nsCaseConversionImp2()
     gUpperMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToUpper[0]), gToUpperItems);
     gLowerMap = new nsCompressedMap(NS_REINTERPRET_CAST(PRUnichar*, &gToLower[0]), gToLowerItems);
   }
-  NS_INIT_ISUPPORTS();
 }
 
 nsCaseConversionImp2::~nsCaseConversionImp2()

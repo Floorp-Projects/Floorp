@@ -208,7 +208,6 @@ static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
 
 nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl()

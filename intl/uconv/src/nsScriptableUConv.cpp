@@ -60,7 +60,6 @@ NS_IMPL_ISUPPORTS1(nsScriptableUnicodeConverter, nsIScriptableUnicodeConverter)
 
 nsScriptableUnicodeConverter::nsScriptableUnicodeConverter()
 {
-  NS_INIT_ISUPPORTS();
   PR_AtomicIncrement(&gInstanceCount);
 }
 

@@ -52,7 +52,6 @@ private:
 xpcarraytest::xpcarraytest()
     : mReceiver(NULL)
 {
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 }
 

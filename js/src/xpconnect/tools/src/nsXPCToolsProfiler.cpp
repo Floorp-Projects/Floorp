@@ -140,7 +140,6 @@ nsXPCToolsProfiler::nsXPCToolsProfiler()
         mFileTable(new nsHashtable(128, PR_FALSE)),
         mScriptTable(new nsHashtable(256, PR_FALSE))
 {
-    NS_INIT_ISUPPORTS();
     InitializeRuntime();
 }
 

@@ -160,7 +160,6 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCCallContext& ccx, REFNSIID aIID,
       mDescriptors(nsnull)
 {
     NS_ADDREF(mInfo);
-    NS_INIT_ISUPPORTS();
     NS_ADDREF_THIS();
 
     {   // scoped lock
@@ -393,7 +392,6 @@ xpcProperty::xpcProperty(const PRUnichar* aName, PRUint32 aNameLen,
                          nsIVariant* aValue)
     : mName(aName, aNameLen), mValue(aValue)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 /* readonly attribute AString name; */
@@ -417,7 +415,6 @@ NS_IMPL_ISUPPORTS1(xpcPropertyBagEnumerator, nsISimpleEnumerator)
 xpcPropertyBagEnumerator::xpcPropertyBagEnumerator(PRUint32 count)
     : mIndex(0), mCount(0)
 {
-    NS_INIT_ISUPPORTS();
     mArray.SizeTo(count);
 }
 
