@@ -1093,6 +1093,8 @@ XXX ...couldn't get this to work...
             return obj->isNestedFunction();
         }
 
+		bool isPossibleUncheckedFunction(FunctionDefinition *f);
+
         void defineTempVariable(Reference *&readRef, Reference *&writeRef, JSType *type)
         {
             ASSERT(dynamic_cast<Activation *>(mScopeStack.back()));

@@ -2237,6 +2237,9 @@ BinaryOpEquals:
             }
             fnc->setArgCounts(reqArgCount, optArgCount, (f->function.restParameter != NULL));
 
+			if (mScopeChain->isPossibleUncheckedFunction(&f->function))
+				fnc->setIsPrototype(true);
+
             m_cx->buildRuntimeForFunction(f->function, fnc);
             ByteCodeGen bcg(m_cx, mScopeChain);
             bcg.genCodeForFunction(f->function, f->pos, fnc, false, NULL);

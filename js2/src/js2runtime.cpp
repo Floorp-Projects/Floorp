@@ -786,6 +786,33 @@ JS2Runtime::ByteCodeModule *Context::genCode(StmtNode *p, String /*sourceName*/)
     return result;
 }
 
+/*  Make sure that:
+     the function is not a class or interface member; 
+     the function has no optional, named, or rest parameters; 
+     none of the function's parameters has a declared type; 
+     the function does not have a declared return type; 
+     the function is not a getter or setter. 
+*/
+bool ScopeChain::isPossibleUncheckedFunction(FunctionDefinition *f)
+{
+	bool result = false;
+    if ((f->resultType == NULL)
+			&& (f->restParameter == NULL)
+			&& (f->optParameters == NULL)
+			&& (f->prefix == FunctionName::normal)
+			&& (topClass() == NULL)) {
+		result = true;
+		VariableBinding *b = f->parameters;
+		while (b) {
+			if (b->type != NULL) {
+				result = false;
+				break;
+			}
+			b = b->next;
+		}
+	}
+	return result;
+}
 
 //  The first pass over the tree - it just installs the names of each declaration
 void ScopeChain::collectNames(StmtNode *p)
@@ -900,20 +927,8 @@ void ScopeChain::collectNames(StmtNode *p)
             */
             if (!isPrototype
                     && (!isOperator)
-                    && (f->function.resultType == NULL)
-                    && (f->function.restParameter == NULL)
-                    && (f->function.optParameters == NULL)
-                    && (f->function.prefix == FunctionName::normal)
-                    && (topClass() == NULL)) {
+					&& isPossibleUncheckedFunction(&f->function)) {
                 isPrototype = true;
-                VariableBinding *b = f->function.parameters;
-                while (b) {
-                    if (b->type != NULL) {
-                        isPrototype = false;
-                        break;
-                    }
-                    b = b->next;
-                }
             }
 
             JSFunction *fnc = new JSFunction(NULL, this);
