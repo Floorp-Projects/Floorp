@@ -181,7 +181,7 @@ nsMonumentIterator::GetNextObelisk(nsObeliskLayout** aObelisk, PRBool aSearchChi
 
 nsBoxSizeListNodeImpl::~nsBoxSizeListNodeImpl()
 {
-
+    MOZ_COUNT_DTOR(nsBoxSizeListNodeImpl);
 }
 
 void
@@ -227,6 +227,7 @@ nsBoxSizeListNodeImpl::nsBoxSizeListNodeImpl(nsIBox* aBox):mNext(nsnull),
                                                            mRefCount(0),
                                                            mIsSet(PR_FALSE)
 {
+    MOZ_COUNT_CTOR(nsBoxSizeListNodeImpl);
 }
 
 nsBoxSizeList* 
@@ -270,10 +271,12 @@ nsBoxSizeListImpl::nsBoxSizeListImpl(nsIBox* aBox):nsBoxSizeListNodeImpl(aBox),
                                                    mListener(nsnull), 
                                                    mListenerBox(nsnull)
 {
+    MOZ_COUNT_CTOR(nsBoxSizeListImpl);
 }
 
 nsBoxSizeListImpl::~nsBoxSizeListImpl()
 {
+    MOZ_COUNT_DTOR(nsBoxSizeListImpl);
 }
 
 void
