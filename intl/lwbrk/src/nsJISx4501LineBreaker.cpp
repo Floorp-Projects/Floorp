@@ -196,19 +196,35 @@ static PRUint16 gPair[MAX_CLASSES] = {
 };
 
 
-#define GETCLASSFROMTABLE(t, l) ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f)
+static inline int
+GETCLASSFROMTABLE(PRUint32* t, PRUint16 l)
+{
+  return ((((t)[(l>>3)]) >> ((l & 0x0007)<<2)) & 0x000f);
+}
 
 #define CLASS_THAI 9
 
 
 
-#define IS_HALFWIDTH_IN_JISx4501_CLASS3(u) ((0xff66 <= (u)) && ((u) <= 0xff70))
+static inline int
+IS_HALFWIDTH_IN_JISx4501_CLASS3(PRUnichar u)
+{
+  return ((0xff66 <= (u)) && ((u) <= 0xff70));
+}
 
-#define IS_CJK_CHAR(u) ((0x1100 <= (u) && (u) <= 0x11ff) || \
-	                     (0x2e80 <= (u) && (u) <= 0xd7ff) || \
-								(0xf900 <= (u) && (u) <= 0xfaff) )
+static inline int
+IS_CJK_CHAR(PRUnichar u)
+{
+  return ((0x1100 <= (u) && (u) <= 0x11ff) ||
+          (0x2e80 <= (u) && (u) <= 0xd7ff) ||
+          (0xf900 <= (u) && (u) <= 0xfaff) );
+}
 
-#define IS_SPACE(u) ((u) == 0x0020 || (u) == 0x0009)
+static inline int
+IS_SPACE(PRUnichar u)
+{
+  return ((u) == 0x0020 || (u) == 0x0009 || (u) == 0x000a || (u) == 0x000d);
+}
 
 PRInt8 nsJISx4501LineBreaker::GetClass(PRUnichar u)
 {
