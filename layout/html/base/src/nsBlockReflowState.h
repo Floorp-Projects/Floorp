@@ -4368,24 +4368,6 @@ nsBlockFrame::FixParentAndView(nsIPresContext* aPresContext, nsIFrame* aFrame)
   }
 }
 
-static nsISpaceManager*
-FindSpaceManager(nsIFrame* aFrame)
-{
-  nsISpaceManager* spaceManager;
-  while (aFrame) {
-    nsIAreaFrame* af;
-    nsresult rv = aFrame->QueryInterface(kIAreaFrameIID, (void**) &af);
-    if (NS_SUCCEEDED(rv)) {
-      af->GetSpaceManager(&spaceManager);
-      if (spaceManager) {
-        return spaceManager;
-      }
-    }
-    aFrame->GetParent(&aFrame);
-  }
-  return nsnull;
-}
-
 NS_IMETHODIMP
 nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
                           nsIPresShell&   aPresShell,
@@ -4394,17 +4376,16 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
 {
   nsresult rv = NS_OK;
 
+#ifdef NOISY_REFLOW_REASON
+    ListTag(stdout);
+    printf(": remove ");
+    nsFrame::ListTag(stdout, aOldFrame);
+    printf("\n");
+#endif
+
   if (nsLayoutAtoms::floaterList == aListName) {
     // Remove floater from the floater list first
     mFloaters.RemoveFrame(aOldFrame);
-
-    // Find nearest space-manager and remove the floater from its
-    // region list
-    nsCOMPtr<nsISpaceManager> spaceManager =
-      getter_AddRefs(FindSpaceManager(this));
-    if (spaceManager) {
-      spaceManager->RemoveRegion(aOldFrame);
-    }
 
     // Find which line contains the floater
     nsLineBox* line = mLines;
@@ -4427,21 +4408,14 @@ nsBlockFrame::RemoveFrame(nsIPresContext& aPresContext,
       line->MarkDirty();
       line = line->mNext;
     }
-
-    // We will reflow *after* removing the placeholder (which is done 2nd)
-    return NS_OK;
   }
   else if (nsnull != aListName) {
-    return NS_ERROR_INVALID_ARG;
+    rv = NS_ERROR_INVALID_ARG;
+  }
+  else {
+    rv = DoRemoveFrame(&aPresContext, aOldFrame);
   }
 
-#ifdef NOISY_REFLOW_REASON
-  ListTag(stdout);
-  printf(": remove ");
-  nsFrame::ListTag(stdout, aOldFrame);
-  printf("\n");
-#endif
-  rv = DoRemoveFrame(&aPresContext, aOldFrame);
   if (NS_SUCCEEDED(rv)) {
     // Generate reflow command to reflow the dirty lines
     nsIReflowCommand* reflowCmd = nsnull;
