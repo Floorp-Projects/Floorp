@@ -194,8 +194,6 @@ Rights Reserved.
 </popupset>
 <popupset id="aTooltipSet"/>
 
-<keyset id="defaultKeySet"/> <!-- defined in editorOverlay.xul-->
-
 <keyset id="msgComposeKeySet">
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
@@ -206,8 +204,30 @@ Rights Reserved.
 	<key id="key_quit"/>
 	
 	<!-- Edit Menu -->
+  <key id="key_undo"/>
+  <key id="key_redo"/>
+  <key id="key_cut"/>
+  <key id="key_copy"/>
+  <key id="key_paste"/>
+  <key id="pastequotationkb"/>
+  <key id="key_delete"/>
+  <key id="key_selectAll"/>
 	<key id="key_find" xulkey="true" key="&findCmd.key;"  observes="cmd_find"/>
 	<key id="key_findNext" xulkey="true" key="&findAgainCmd.key;" observes="cmd_findNext"/>
+  <key id="key_preferences"/>
+
+	<!-- Format Menu -->
+  <key id="boldkb"/>
+  <key id="italickb"/>
+  <key id="underlinekb"/>
+
+  <key id="fontfixedwidthkb"/>
+  <key id="increaseindentkb"/>
+  <key id="decreaseindentkb"/>
+
+  <key id="removestyleskb"/>
+  <key id="decreasefontsizekb"/>
+  <key id="increasefontsizekb"/>
 
 	<!-- Options Menu -->
 	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
