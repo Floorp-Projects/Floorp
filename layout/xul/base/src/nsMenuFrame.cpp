@@ -38,7 +38,7 @@
 // Wrapper for creating a new menu popup container
 //
 nsresult
-NS_NewMenuFrame(nsIFrame** aNewFrame, PRInt32 aFlags)
+NS_NewMenuFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {

@@ -31,7 +31,7 @@
 #include "nsFrameList.h"
 #include "nsIMenuParent.h"
 
-nsresult NS_NewMenuFrame(nsIFrame** aResult, PRInt32 aFlags) ;
+nsresult NS_NewMenuFrame(nsIFrame** aResult, PRUint32 aFlags) ;
 
 class nsMenuBarFrame;
 class nsMenuPopupFrame;
