@@ -519,7 +519,7 @@ void CTests::OnInterfacesNsishistory()
    nsresult rv;
    PRInt32 numEntries = 5;
    PRInt32 theIndex;
-   PRInt32 theMaxLength = 1;
+   PRInt32 theMaxLength = 100;
 
    CString shString;
 
@@ -734,6 +734,7 @@ void CTests::PurgeHistoryTest(nsISHistory* theSessionHistory, PRInt32 numEntries
 {
    rv = theSessionHistory->PurgeHistory(numEntries);
    CQaUtils::RvTestResult(rv, "PurgeHistory() test", 2);
+   CQaUtils::FormatAndPrintOutput("Number of entries removed = ", numEntries, 2);
 }
 
 // ***********************************************************************
@@ -1085,6 +1086,7 @@ void CTests::OnInterfacesNsirequest()
 
 		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
 
+
 		if (UriTable[i].reqPend == TRUE)
 			IsPendingReqTest(theRequest);
 
@@ -1184,6 +1186,7 @@ void CTests::GetLoadGroupTest(nsIRequest *request)
 	rv = theLoadGroup->GetRequests(getter_AddRefs(theSimpEnum));
     CQaUtils::RvTestResult(rv, "nsIRequest:: LoadGroups' GetRequests() rv test", 1);
 }
+
 
 // ***********************************************************************
 //DHARMA	- nsIClipboardCommands

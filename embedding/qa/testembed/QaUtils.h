@@ -52,7 +52,7 @@ public:
 	void static RequestName(nsIRequest *, nsCString &, int displayMethod=1);
 	void static WebProgDOMWindowTest(nsIWebProgress *, const char *, 
 									 int displayMethod=1);
-	void static GetTheUri(nsIURI *, int);
+	void static GetTheUri(nsIURI *, int displayMethod=1);
 
 	nsresult rv;
 
