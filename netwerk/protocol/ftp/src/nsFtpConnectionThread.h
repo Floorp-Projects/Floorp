@@ -41,18 +41,18 @@
 
 // ftp states
 typedef enum _FTP_STATE {
-
-// Internal states
-    FTP_CONNECT,
+///////////////////////
+//// Internal states
+///////////////////////
     FTP_READ_BUF,
 
-// Command states
+///////////////////////
+//// Command channel connection setup states
+///////////////////////
     FTP_S_USER,		// send username
     FTP_R_USER,
     FTP_S_PASS,		// send password
     FTP_R_PASS,
-//	FTP_S_REST,		// send restart
-//	FTP_R_REST,
 	FTP_S_SYST,		// send system (interrogates server)
 	FTP_R_SYST,
     FTP_S_ACCT,		// send account
@@ -61,11 +61,15 @@ typedef enum _FTP_STATE {
 	FTP_R_MACB,
 	FTP_S_PWD ,		// send parent working directory (pwd)
 	FTP_R_PWD ,
-    FTP_S_PASV,		// send passive
+
+///////////////////////
+//// Data channel connection setup states
+///////////////////////
+    FTP_S_PASV,     // send passsive
     FTP_R_PASV,
-    FTP_S_PORT,		// send port
-    FTP_R_PORT,
-    FTP_COMPLETE
+    FTP_S_PORT,     // send port
+    FTP_R_PORT
+
 } FTP_STATE;
 
 // higher level ftp actions
@@ -89,33 +93,36 @@ public:
     nsresult Init(nsIThread* aThread);
 
 	// user level setup
+    nsresult SetAction(FTP_ACTION aAction);
+    nsresult SetUsePasv(PRBool aUsePasv);
 
 private:
     nsresult Read(void);
     void SetSystInternals(void);
 
-	PLEventQueue*		mEventQueue;            // used to communicate outside this thread
-//    nsIThread*          mThread;                // the worker thread
+	PLEventQueue*		mEventQueue;        // used to communicate outside this thread
 
-	FTP_STATE			mState;                 // the current state
-    FTP_STATE           mNextState;             // the next state
+    FTP_STATE			mState;             // the current state
+    FTP_STATE           mNextState;         // the next state
+    FTP_ACTION          mAction;            // the higher level action
     nsIInputStream*     mInStream;
     nsIOutputStream*    mOutStream;
-    PRInt32             mResponseCode;          // the last command response code.
-	nsString2			mResponseMsg;			// the last command response text
+    PRInt32             mResponseCode;      // the last command response code.
+	nsString2			mResponseMsg;       // the last command response text
     nsString2           mUsername;
     nsString2           mPassword;
 
 // these members should be hung off of a specific transport connection
     PRInt32             mServerType;
     PRBool              mPasv;
-	PRBool				mList;					// use LIST instead of NLST
+	PRBool				mList;              // use LIST instead of NLST
 // end "these ...."
 
     PRBool              mConnected;
-	PRBool			    mUseDefaultPath;		// use PWD to figure out path
+	PRBool			    mUseDefaultPath;    // use PWD to figure out path
+    PRBool              mUsePasv;           // use a passive data connection.
     nsIUrl*             mUrl;
 
-    nsIStreamListener*  mListener;              // the listener we want to call
-                                                // during our event firing.
+    nsIStreamListener*  mListener;          // the listener we want to call
+                                            // during our event firing.
 };

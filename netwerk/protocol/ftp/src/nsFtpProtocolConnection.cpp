@@ -114,6 +114,8 @@ nsFtpProtocolConnection::Open(void) {
     nsIThread* workerThread = nsnull;
     nsFtpConnectionThread* protocolInterpreter = 
         new nsFtpConnectionThread(mEventQueue, mListener);
+    NS_ASSERTION(protocolInterpreter, "ftp protocol interpreter alloc failed");
+    NS_ADDREF(protocolInterpreter);
 
     if (!protocolInterpreter)
         return NS_ERROR_OUT_OF_MEMORY;
@@ -124,6 +126,7 @@ nsFtpProtocolConnection::Open(void) {
     // XXX not sure this is necessary.
     protocolInterpreter->Init(workerThread);
 
+    NS_RELEASE(protocolInterpreter);
     return NS_OK;
 }
 

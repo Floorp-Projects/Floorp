@@ -26,8 +26,7 @@
     { 0xaef15d51, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
 
 
-class nsIFtpProtocolHandler : public nsIProtocolHandler
-{
+class nsIFtpProtocolHandler : public nsIProtocolHandler {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFTPPROTOCOLHANDLER_IID);
 

@@ -20,6 +20,7 @@
 #define nsIFtpProtocolConnection_h___
 
 #include "nsIProtocolConnection.h"
+#include "nsIStreamListener.h"
 
 // {25029495-F132-11d2-9588-00805F369F95}
 #define NS_IFTPPROTOCOLCONNECTION_IID               \
@@ -32,7 +33,6 @@ public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFTPPROTOCOLCONNECTION_IID);
 
     // PRE connect
-    NS_IMETHOD UsePASV(PRBool aComm) = 0;
 
     // POST connect
 
@@ -40,6 +40,9 @@ public:
     NS_IMETHOD Get(void) = 0;
 
     NS_IMETHOD Put(void) = 0;
+
+    NS_IMETHOD SetStreamListener(nsIStreamListener* aListener) = 0;
+
 };
 
 #endif /* nsIIFtpProtocolConnection_h___ */
