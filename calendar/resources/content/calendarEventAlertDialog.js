@@ -294,9 +294,7 @@ function snoozeAlarm( Event )
 
 function getFormatedDate( date )
 {
-   var monthDayString = gDateFormatter.getFormatedDate( date );
-   
-   return  monthDayString + ", " + date.getFullYear();
+   return( gDateFormatter.getFormatedDate( date ) );
 }
 
 
