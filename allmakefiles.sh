@@ -643,6 +643,10 @@ xpfe/global/resources/content/unix/Makefile
 xpfe/global/resources/locale/Makefile
 xpfe/global/resources/locale/en-US/Makefile
 xpfe/global/resources/locale/en-US/unix/Makefile
+xpfe/communicator/Makefile
+xpfe/communicator/resources/Makefile
+xpfe/communicator/skin/Makefile
+
 #
 # End of XPFE Makefiles
 #
