@@ -267,10 +267,6 @@ InitFontEncodingProperties(void)
       }
     }
   }
-  if (NS_FAILED(rv)) {
-    FreeGlobals();
-    return rv;
-  }
   return rv;
 }
 
