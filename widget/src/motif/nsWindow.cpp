@@ -40,7 +40,13 @@
 
 #include "stdio.h"
 
+#include "Xm/DialogS.h"
+#include "Xm/RowColumn.h"
+#include "Xm/Form.h"
+
 #define DBG 0
+
+Widget gFirstTopLevelWindow = 0;
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
 
@@ -285,10 +291,27 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
   
   Widget frameParent = 0;
   if (!aNativeParent) {
-    mainWindow = ::XtVaCreateManagedWidget("mainWindow",
+
+    if (gFirstTopLevelWindow == 0) {
+      mainWindow = ::XtVaCreateManagedWidget("mainWindow",
 					   xmMainWindowWidgetClass,
 					   parentWidget, 
   					   nsnull);
+       gFirstTopLevelWindow = mainWindow;
+    }
+    else {
+       Widget shell = ::XtVaCreatePopupShell(" ",
+       xmDialogShellWidgetClass,
+        parentWidget, 0);
+      XtVaSetValues(shell, 
+             XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
+      mainWindow = ::XtVaCreateManagedWidget("mainWindow",
+					   xmMainWindowWidgetClass,
+					   shell, 
+  					   nsnull);
+      XtVaSetValues(mainWindow, XmNwidth, aRect.width, XmNheight, aRect.height, nsnull);
+
+    }
 
     frameParent = mainWindow;
 
@@ -305,7 +328,6 @@ void nsWindow::CreateWindow(nsNativeWindow aNativeParent,
 				    XmNmarginWidth, 0,
 				    nsnull);
 
-	      
 
   mWidget = frame ;
 
