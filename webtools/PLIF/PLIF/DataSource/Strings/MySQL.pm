@@ -127,7 +127,6 @@ sub setupInstall {
     my $helper = $self->helper($app);
     $self->dump(9, 'about to configure string data source...');
     if (not $helper->tableExists($app, $self->database($app), 'stringVariants')) {
-        $self->debug('going to create \'stringVariants\' table');
         $app->output->setupProgress('dataSource.strings.stringVariants');
         $self->database($app)->execute('
             CREATE TABLE stringVariants (
@@ -148,7 +147,6 @@ sub setupInstall {
         # check its schema is up to date
     }
     if (not $helper->tableExists($app, $self->database($app), 'strings')) {
-        $self->debug('going to create \'strings\' table');
         $app->output->setupProgress('dataSource.strings.strings');
         $self->database($app)->execute('
             CREATE TABLE strings (
