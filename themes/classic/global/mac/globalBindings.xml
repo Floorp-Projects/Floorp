@@ -34,22 +34,33 @@
   <binding id="tabs-closebutton" 
            extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:spacer class="tabs-left-cap"/>
-      <xul:stack>
-        <xul:spacer class="tabs-left"/>
-        <xul:toolbarbutton class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
+      <xul:stack flex="1" class="tabs-stack">
+        <xul:vbox>
+          <xul:spacer flex="1"/>
+          <xul:hbox class="tabs-bottom" align="center"/>
+        </xul:vbox>
+        <xul:vbox>
+          <xul:hbox>
+            <xul:spacer class="tabs-left-cap"/>
+            <xul:stack>
+              <xul:spacer class="tabs-left"/>
+              <xul:toolbarbutton class="tabs-newbutton" xbl:inherits="oncommand=onnewtab,tooltiptext=tooltiptextnew"/>
+            </xul:stack>
+            <xul:hbox flex="1" style="min-width: 1px;">
+              <children/>
+              <xul:spacer class="tabs-right" flex="1"/>
+            </xul:hbox>
+            <xul:stack>
+              <xul:spacer class="tabs-right"/>
+              <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
+                <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
+              </xul:hbox>
+            </xul:stack>
+            <xul:spacer class="tabs-right-cap"/>
+          </xul:hbox>
+          <xul:spacer class="tabs-bottom-spacer"/>
+        </xul:vbox>
       </xul:stack>
-      <xul:hbox flex="1" style="min-width: 1px;">
-        <children/>
-        <xul:spacer class="tabs-right" flex="1"/>
-      </xul:hbox>
-      <xul:stack>
-        <xul:spacer class="tabs-right"/>
-        <xul:hbox class="tabs-closebutton-box" align="center" pack="end">
-          <xul:toolbarbutton class="tabs-closebutton close-button" xbl:inherits="disabled=disableclose,oncommand=onclosetab"/>
-        </xul:hbox>
-      </xul:stack>
-      <xul:spacer class="tabs-right-cap"/>
     </content>
   </binding>
 

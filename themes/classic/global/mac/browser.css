@@ -1,12 +1,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.tabbrowser-strip {
-  padding-bottom: 3px;
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: ThreeDShadow;
-}
-
 .tabbrowser-tabs {
   padding-top: 1px;
 }
@@ -14,6 +8,20 @@
 .tabs-left,
 .tabs-right {
   width: 3px;
+}
+
+.tabs-bottom {
+  -moz-appearance: tabpanels;
+  height: 4px;
+}
+
+.tabs-stack {
+  border-bottom: 1px solid;
+  -moz-border-bottom-colors: ThreeDShadow;
+}
+
+.tabs-bottom-spacer {
+  height: 2px;
 }
 
 .tab-icon {
