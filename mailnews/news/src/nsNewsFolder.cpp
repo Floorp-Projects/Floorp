@@ -230,6 +230,7 @@ nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child, char *set
 	if(folderSupports)
 		mSubFolders->AppendElement(folderSupports);
 	*child = folder;
+	folder->SetParent(this);
 	NS_ADDREF(*child);
 
 	return rv;
