@@ -86,7 +86,8 @@ function event_tracer (e)
             break;
 
         case "dcc-chat":
-            name = e.destObject.host + ":" + e.destObject.port;
+        case "dcc-file":
+            name = e.destObject.localIP + ":" + e.destObject.port;
             if (e.type == "rawdata")
                 data = "'" + e.data + "'";
             break;

@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is ChatZilla.
+   -
+   - The Initial Developer of the Original Code is James Ross.
+   - Portions created by the Initial Developer are Copyright (C) 2004
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   James Ross <silver@warwickcompsoc.co.uk>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<!DOCTYPE dialog SYSTEM "chrome://chatzilla/locale/config.dtd">
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="config.css" type="text/css"?>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    xmlns:html="http://www.w3.org/1999/xhtml"
+    windowtype="irc:chatzilla:config"
+    buttons="accept,cancel,extra1"
+    extra1Label="&dialog.apply;"
+    ondialogaccept="gPrefWindow.onOK();"
+    ondialogcancel="gPrefWindow.onCancel();"
+    ondialogextra1="gPrefWindow.onApply();"
+    onload="setupButtons(); gPrefWindow.onLoad();"
+    onunload="gPrefWindow.onClose();"
+    title="&window.title;">
+
+  <script src="chrome://global/content/strres.js"/>
+  <script src="chrome://chatzilla/content/lib/js/utils.js"/>
+  <script src="chrome://chatzilla/content/lib/js/file-utils.js"/>
+  <script src="chrome://chatzilla/content/lib/js/pref-manager.js"/>
+  <script src="chrome://chatzilla/content/lib/js/message-manager.js"/>
+  <script src="chrome://chatzilla/content/prefs.js"/>
+  <script src="chrome://chatzilla/content/messages.js"/>
+  <script src="config.js"/>
+
+  <tooltip id="czPrefTip" orient="vertical" 
+      onpopupshowing="return gPrefWindow.onTooltipPopupShowing(this);">
+    <vbox>
+      <label id="czPrefTipTitle" class="header">.</label>
+      <label id="czPrefTipLabel">.</label>
+    </vbox>
+    <spacer flex="1"/>
+  </tooltip>
+  
+  <deck id="loadDeck" flex="1">
+    <vbox flex="1" align="center" pack="center">
+      <label class="loading" value="&loading.label;"/>
+    </vbox>
+    <hbox flex="1">
+      <vbox id="pref-objects">
+        <tree id="pref-tree-object" flex="1" seltype="single" 
+            hidecolumnpicker="true" onselect="gPrefWindow.onSelectObject();">
+          <treecols>
+            <treecol id="pref-col-name" primary="true" flex="1" 
+                hideheader="true"/>
+          </treecols>
+          <treechildren id="pref-tree"/>
+        </tree>
+        <hbox>
+          <button label="&object.add.label;" tooltiptext="&object.add.hint;" 
+              accesskey="&object.add.accesskey;" flex="1" 
+              oncommand="gPrefWindow.onAddObject();"/>
+          <button label="&object.del.label;" tooltiptext="&object.del.hint;" 
+              accesskey="&object.del.accesskey;" flex="1" 
+              oncommand="gPrefWindow.onDeleteObject();" id="object-delete"/>
+        </hbox>
+      </vbox>
+      <vbox flex="1">
+        <dialogheader id="pref-header" title=""/>
+        <deck flex="1" id="pref-object-deck"/>
+        <hbox align="center">
+          <button label="&object.reset.label;" tooltiptext="&object.reset.hint;"
+              accesskey="&object.reset.accesskey;" 
+              oncommand="gPrefWindow.onResetObject();"/>
+          <spacer flex="1"/>
+          <html:a onclick="" target="_blank" href="&homepage.url;" 
+              style="display: block; color: blue; text-decoration: 
+              underline;">&homepage.label;</html:a>
+        </hbox>
+      </vbox>
+    </hbox>
+  </deck>
+</dialog>

@@ -96,12 +96,12 @@ a.chatzilla-link:visited {
     color: lightgreen;
 }
 
-.msg-data[msg-type="JOIN"]  a.chatzilla-link,
-.msg-data[msg-type="PART"]  a.chatzilla-link {
+.msg[msg-type="JOIN"] .msg-data a.chatzilla-link,
+.msg[msg-type="PART"] .msg-data a.chatzilla-link {
     color: lightcyan;
 }
 
-.msg-data[msg-type="KICK"]  a.chatzilla-link {
+.msg[msg-type="KICK"] .msg-data a.chatzilla-link {
     color: #ff5700;
 }
 
@@ -133,63 +133,63 @@ a.chatzilla-link:visited {
     color: white !important;                /* a message (channel and query   */
 }                                           /* views)                         */
 
-.msg-data[mark="even"] {                    /* use even/odd marks to create a */
+.msg[mark="even"] .msg-data {                    /* use even/odd marks to create a */
     color: white;                           /* subtle brightness change when  */
 }                                           /* the speaker changes.           */
 
-.msg-data[msg-type="JOIN"],
-.msg-data[msg-type="PART"] {
+.msg[msg-type="JOIN"] .msg-data,
+.msg[msg-type="PART"] .msg-data {
     color: lightblue;
 }
 
-.msg-data[msg-type="PART"] {
+.msg[msg-type="PART"] .msg-data {
     color: lightblue;
 }
 
-.msg-data[msg-type="HELLO"] {
+.msg[msg-type="HELLO"] .msg-data {
     color: yellow;
 }
 
-.msg-data[msg-type="ERROR"] {
+.msg[msg-type="ERROR"] .msg-data {
     background: red;
     color: white;
 }
 
-.msg-data[msg-type="USAGE"] {
+.msg[msg-type="USAGE"] .msg-data {
     color: white;
 }
 
-.msg-data[msg-type="ACTION"] {
+.msg[msg-type="ACTION"] .msg-data {
     color: #6ac9ee;
 }
 
-.msg-data[msg-type="NICK"] {
+.msg[msg-type="NICK"] .msg-data {
     color: #96fa94;
 }
 
-.msg-data[msg-type="NOTICE"],
-.msg-data[msg-type="MODE"] {
+.msg[msg-type="NOTICE"] .msg-data,
+.msg[msg-type="MODE"] .msg-data {
     color: #60e066;
 }
 
-.msg-data[msg-type="NOTICE"] a.chatzilla-link,
-.msg-data[msg-type="MODE"] a.chatzilla-link {
+.msg[msg-type="NOTICE"] .msg-data a.chatzilla-link,
+.msg[msg-type="MODE"] .msg-data a.chatzilla-link {
     color: #6dff74;
 }
 
-.msg-data[msg-type="KICK"] {
+.msg[msg-type="KICK"] .msg-data {
     color: #d85d24;
 }
 
-.msg-data[msg-type="QUIT"] {
+.msg[msg-type="QUIT"] .msg-data {
     color: #f7b183;
 }
 
 /* important="true" means that the message has text from your /stalk list in
  * it, has your nickname in it, or was spoken by someone in your /stalk list.
  */
-.msg-user[important="true"],
-.msg-data[important="true"] {
+.msg[important="true"] .msg-user,
+.msg[important="true"] .msg-data {
     background: #333333 !important;
 }
 
@@ -198,39 +198,39 @@ a.chatzilla-link:visited {
     color: blue;
 }
 
-.msg-user[msg-user$="ME!"]:before,
-.msg-user[msg-user$="ME!"]:after {
+.msg[msg-user$="ME!"] .msg-user:before,
+.msg[msg-user$="ME!"] .msg-user:after {
     color: #6afc73;
 }
 
-.msg-user[msg-type="ACTION"]:before,
-.msg-user[msg-type="ACTION"]:after {
+.msg[msg-type="ACTION"] .msg-user:before,
+.msg[msg-type="ACTION"] .msg-user:after {
     color: cyan;
 }
 
-.msg-user[msg-type="NOTICE"]:before,
-.msg-user[msg-type="NOTICE"]:after {
+.msg[msg-type="NOTICE"] .msg-user:before,
+.msg[msg-type="NOTICE"] .msg-user:after {
     color: #6afc73;
 }
 
 /* private messages *not* in a query window */
-.msg-user[dest-type="IRCUser"]:before,
-.msg-user[dest-type="IRCUser"]:after {
+.msg[dest-type="IRCUser"] .msg-user:before,
+.msg[dest-type="IRCUser"] .msg-user:after {
     color: #6afc73;
 }
 
-.msg-user[msg-dest$="ME!"]:before,
-.msg-user[msg-dest$="ME!"]:after {
+.msg[msg-dest$="ME!"] .msg-user:before,
+.msg[msg-dest$="ME!"] .msg-user:after {
     color: magenta;
 }
 
 /* private messages in a query window */
-.msg-user[view-type="IRCUser"]:before,
-.msg-user[view-type="IRCUser"]:after {
+.msg[view-type="IRCUser"] .msg-user:before,
+.msg[view-type="IRCUser"] .msg-user:after {
     color: white;
 }
 
-.msg-user[view-type="IRCUser"][msg-user$="ME!"]:before,
-.msg-user[view-type="IRCUser"][msg-user$="ME!"]:after {
+.msg[view-type="IRCUser"][msg-user$="ME!"] .msg-user:before,
+.msg[view-type="IRCUser"][msg-user$="ME!"] .msg-user:after {
     color: #6afc73;
 }

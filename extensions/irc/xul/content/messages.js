@@ -44,7 +44,7 @@ function initMessages()
     client.messageManager = new MessageManager();
     client.defaultBundle = client.messageManager.addBundle(path);
 
-    client.name = MSG_CLIENT_NAME;
+    client.displayName = client.name = MSG_CLIENT_NAME;
     client.responseCodeMap =
         {
             "HELLO": MSG_RSP_HELLO,

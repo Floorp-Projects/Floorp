@@ -52,6 +52,15 @@
     <script src="chrome://communicator/content/contentAreaUtils.js"/>
     <script src="chrome://communicator/content/contentAreaDD.js"/>
 
+    <script><![CDATA[
+        /* utils.js overloads the standard JS messages with prompt service 
+         * calls, which require the locale support to have loaded. This next 
+         * line is needed so that the onLoad function in handlers.js can 
+         * display the "error loading ChatZilla" message even if the locale
+         * support is what failed to load.
+         */
+        window.baseAlert = window.alert;
+    ]]></script>
     <script src="chrome://chatzilla/content/lib/js/utils.js"/>
     <script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
     <script src="chrome://chatzilla/content/lib/js/events.js"/>
@@ -62,6 +71,7 @@
     <script src="chrome://chatzilla/content/lib/js/irc.js"/>
     <script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
     <script src="chrome://chatzilla/content/lib/js/file-utils.js"/>
+    <script src="chrome://chatzilla/content/lib/js/dcc.js"/>
     <script src="chrome://chatzilla/content/lib/xul/munger.js"/>
 
     <script src="chrome://chatzilla/content/static.js"/>

@@ -75,6 +75,12 @@ var headers = {
         fields: ["container", "url-anchor", "serverstr", "title",
                  "descnodes"],
         update: updateUser
+    },
+    
+    IRCDCCChat: {
+        prefix: "dcc-chat-",
+        fields: ["container", "url-anchor", "remotestr", "title"],
+        update: updateDCCChat
     }
 };
 
@@ -417,4 +423,20 @@ function updateUser()
     {
         setText("descnodes", "");
     }
+}
+
+function updateDCCChat()
+{
+    var source;
+    if (view.user)
+        source = view.user.displayName;
+    else
+        source = MSG_UNKNOWN;
+
+    if (view.state == 3)
+        setText("remotestr", view.remoteIP + ":" + view.port, true);
+    else
+        setText("remotestr", null, true);
+
+    setText("title", getMsg(MSG_TITLE_USER, [view.user.displayName, source]));
 }

@@ -61,7 +61,14 @@ function initCommands()
          ["cmd-copy-link-url", cmdCopyLinkURL,                               0],
          ["cmd-selectall",     cmdSelectAll,                                 0],
          ["op",                cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
+         ["dcc-accept",        cmdDCCAccept,                       CMD_CONSOLE],
+         ["dcc-chat",          cmdDCCChat,          CMD_NEED_NET | CMD_CONSOLE],
+         ["dcc-close",         cmdDCCClose,                        CMD_CONSOLE],
+         ["dcc-decline",       cmdDCCDecline,                      CMD_CONSOLE],
+         ["dcc-list",          cmdDCCList,                         CMD_CONSOLE],
+         ["dcc-send",          cmdDCCSend,          CMD_NEED_NET | CMD_CONSOLE],
          ["deop",              cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
+         ["describe",          cmdDescribe,         CMD_NEED_SRV | CMD_CONSOLE],
          ["hop",               cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["dehop",             cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
          ["voice",             cmdChanUserMode,    CMD_NEED_CHAN | CMD_CONSOLE],
@@ -117,6 +124,7 @@ function initCommands()
          ["quote",             cmdQuote,            CMD_NEED_SRV | CMD_CONSOLE],
          ["rlist",             cmdRlist,            CMD_NEED_SRV | CMD_CONSOLE],
          ["reload-ui",         cmdReloadUI,                                  0],
+         ["say",               cmdSay,              CMD_NEED_SRV | CMD_CONSOLE],
          ["server",            cmdServer,                          CMD_CONSOLE],
          ["squery",            cmdSquery,           CMD_NEED_SRV | CMD_CONSOLE],
          ["stalk",             cmdStalk,                           CMD_CONSOLE],
@@ -194,8 +202,8 @@ function initCommands()
                                                    "message", "params", "font", 
                                                    "reason", "expression",
                                                    "ircCommand", "prefValue",
-                                                   "newTopic", "commandList"],
-                                                  "rest");
+                                                   "newTopic", "commandList",
+                                                   "file"], "rest");
     client.commandManager.argTypes["plugin"] = parsePlugin;
 }
 
@@ -885,8 +893,10 @@ function cmdTestDisplay(e)
         var me = e.server.me;
         var sampleUser = {TYPE: "IRCUser", nick: "ircmonkey",
                           name: "IRCMonkey", properNick: "IRCMonkey",
+                          displayName: "IRCMonkey",
                           host: ""};
-        var sampleChannel = {TYPE: "IRCChannel", name: "#mojo"};
+        var sampleChannel = {TYPE: "IRCChannel", name: "#mojo", 
+                             displayName: "#mojo"};
 
         function test (from, to)
         {
@@ -1030,6 +1040,8 @@ function cmdDeleteView(e)
     
     if (e.view.TYPE == "IRCChannel" && e.view.active)
         e.view.part();
+    if (e.view.TYPE == "IRCDCCChat" && e.view.active)
+        e.view.disconnect();
 
     if (client.viewsArray.length < 2)
     {
@@ -1043,6 +1055,11 @@ function cmdDeleteView(e)
         var i = deleteTab (tb);
         if (i != -1)
         {
+            if (e.view.logFile)
+            {
+                e.view.logFile.close();
+                e.view.logFile = null;
+            }
             delete e.view.messageCount;
             delete e.view.messages;
             client.deck.removeChild(e.view.frame);
@@ -1230,10 +1247,19 @@ function cmdMe(e)
         display(getMsg(MSG_ERR_IMPROPER_VIEW, "me"), MT_ERROR);
         return;
     }
+    
+    var msg = filterOutput(e.action, "ACTION", "ME!");
+    e.sourceObject.display(msg, "ACTION", "ME!", e.sourceObject);
+    e.sourceObject.act(msg);
+}
 
-    e.action = filterOutput (e.action, "ACTION", "ME!");
-    display (e.action, "ACTION", "ME!", e.sourceObject);
-    e.sourceObject.act (e.action);
+function cmdDescribe(e)
+{
+    var target = e.server.addTarget(e.target);
+    
+    var msg = filterOutput(e.action, "ACTION", "ME!");
+    e.sourceObject.display(msg, "ACTION", "ME!", target);
+    target.act(msg);
 }
 
 function cmdMotif(e)
@@ -1328,8 +1354,15 @@ function cmdListPlugins(e)
         return;
     }
 
-    for (var i = 0; i < client.plugins.length; ++i)
-        listPlugin(client.plugins[i], i);
+    if (client.plugins.length > 0)
+    {
+        for (var i = 0; i < client.plugins.length; ++i)
+            listPlugin(client.plugins[i], i);
+    }
+    else
+    {
+        display(MSG_NO_PLUGINS);
+    }
 }
 
 function cmdRlist(e)
@@ -1363,13 +1396,26 @@ function cmdQuery(e)
     return user;
 }
 
+function cmdSay(e)
+{
+    if (!("say" in e.sourceObject))
+    {
+        display(getMsg(MSG_ERR_IMPROPER_VIEW, "say"), MT_ERROR);
+        return;
+    }
+    
+    var msg = filterOutput(e.message, "PRIVMSG", "ME!");
+    e.sourceObject.display(msg, "PRIVMSG", "ME!", e.sourceObject);
+    e.sourceObject.say(msg, e.sourceObject);
+}
+
 function cmdMsg(e)
 {
-    var usr = e.server.addUser(e.nickname);
-
+    var target = e.server.addTarget(e.nickname);
+    
     var msg = filterOutput(e.message, "PRIVMSG", "ME!");
-    usr.display(e.message, "PRIVMSG", "ME!", usr);
-    usr.say(e.message, e.sourceObject);
+    e.sourceObject.display(msg, "PRIVMSG", "ME!", target);
+    target.say(msg, target);
 }
 
 function cmdNick(e)
@@ -1459,7 +1505,8 @@ function cmdGotoURL(e)
 
 function cmdCTCP(e)
 {
-    e.server.ctcpTo (e.target, e.code, e.params);
+    var obj = e.server.addTarget(e.target);
+    obj.ctcp(e.code, e.params);
 }
 
 function cmdJoin(e)
@@ -1504,8 +1551,8 @@ function cmdJoin(e)
             e.key = channel.mode.key
     }    
 
-    if (e.channelName[0].search(/[#&+!]/) != 0)
-        e.channelName = "#" + e.channelName;
+    if (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1)
+        e.channelName = e.server.channelTypes[0] + e.channelName;
 
     var charset = e.charset ? e.charset : e.network.prefs["charset"];
     e.channel = e.server.addChannel(e.channelName, charset);
@@ -1541,8 +1588,8 @@ function cmdLeave(e)
 
     if (e.channelName)
     {
-        if (e.channelName[0].search(/[#&+!]/) != 0)
-            e.channelName = "#" + e.channelName;
+        if (arrayIndexOf(e.server.channelTypes, e.channelName[0]) == -1)
+            e.channelName = e.server.channelTypes[0] + e.channelName;
 
         e.channelName = fromUnicode(e.channelName, e.network);
         var key = e.server.toLowerCase(e.channelName);
@@ -1826,6 +1873,14 @@ function cmdPref (e)
         msg = MSG_FMT_PREF;
     }
 
+    var ary = pm.listPrefs(e.prefName);
+    if (ary.length == 0)
+    {
+        display (getMsg(MSG_ERR_UNKNOWN_PREF, [e.prefName]),
+                 MT_ERROR);
+        return false;
+    }
+
     if (e.prefValue == "-")
         e.deletePref = true;
         
@@ -1883,14 +1938,6 @@ function cmdPref (e)
     }
     else
     {
-        var ary = pm.listPrefs(e.prefName);
-        if (ary.length == 0)
-        {
-            display (getMsg(MSG_ERR_UNKNOWN_PREF, [e.prefName]),
-                     MT_ERROR);
-            return false;
-        }
-
         for (var i = 0; i < ary.length; ++i)
         {
             var value;
@@ -2133,7 +2180,7 @@ function cmdSupports(e)
     
     if ("channelTypes" in server)
         display(getMsg(MSG_SUPPORTS_CHANTYPES, 
-                       keys(server.channelTypes).join(MSG_COMMASP)));
+                       server.channelTypes.join(MSG_COMMASP)));
     if ("channelModes" in server)
     {
         display(getMsg(MSG_SUPPORTS_CHANMODESA, 
@@ -2351,4 +2398,305 @@ function cmdFont(e)
         
         dispatch("font-size", { fontSize: val });
     }
+}
+
+function cmdDCCChat(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+    
+    if (!e.nickname && !e.user)
+        return display(MSG_DCC_ERR_NOUSER);
+    
+    var user;
+    if (e.nickname)
+        user = e.server.addUser(e.nickname);
+    else
+        user = e.server.addUser(e.user.nick);
+    
+    var u = client.dcc.addUser(user);
+    var c = client.dcc.addChat(u, client.dcc.getNextPort());
+    c.request();
+    
+    display(getMsg(MSG_DCCCHAT_SENT_REQUEST, [u.properNick, c.localIP, 
+                                              c.port]));
+    return true;
+}
+
+function cmdDCCClose(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+    
+    // If there is no nickname specified, use current view.
+    if (!e.nickname)
+    {
+        if (client.currentObject.TYPE == "IRCDCCChat")
+            return client.currentObject.abort();
+        // ...if there is one.
+        return display(MSG_DCC_ERR_NOCHAT);
+    }
+    
+    if (e.type)
+        e.type = [e.type.toLowerCase()];
+    else
+        e.type = ["chat", "file"];
+    
+    // Go ask the DCC code for some matching requets.
+    var list = client.dcc.getMatches
+              (e.nickname, e.file, e.type, [DCC_DIR_GETTING, DCC_DIR_SENDING], 
+               [DCC_STATE_REQUESTED, DCC_STATE_ACCEPTED, DCC_STATE_CONNECTED]);
+    
+    // Disconnect if only one match.
+    if (list.length == 1)
+        return list[0].abort();
+    
+    // Oops, couldn't figure the user's requets out, so give them some help.
+    display(getMsg(MSG_DCC_ACCEPTED_MATCHES, [list.length]));
+    display(MSG_DCC_MATCHES_HELP);
+    return true;
+}
+
+function cmdDCCSend(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+    
+    const DIRSVC_CID = "@mozilla.org/file/directory_service;1";
+    const nsIProperties = Components.interfaces.nsIProperties;
+    
+    if (!e.nickname && !e.user)
+        return display(MSG_DCC_ERR_NOUSER);
+    
+    // Accept the request passed in...
+    var file;
+    if (!e.file)
+    {
+        var pickerRv = pickOpen(MSG_DCCFILE_SEND);
+        if (pickerRv.reason == PICK_CANCEL)
+            return false;
+        file = pickerRv.file;
+    }
+    else
+    {
+        // Wrap in try/catch because nsILocalFile creation throws a freaking 
+        // error if it doesn't get a FULL path.
+        try
+        {
+            file = nsLocalFile(e.file);
+        }
+        catch(ex)
+        {
+            // Ok, try user's home directory.
+            var fl = Components.classes[DIRSVC_CID].getService(nsIProperties);
+            file = fl.get("Home", Components.interfaces.nsILocalFile);
+            
+            // Another freaking try/catch wrapper.
+            try
+            {
+                // NOTE: This is so pathetic it can't cope with any path 
+                // separators in it, so don't even THINK about lobing a 
+                // relative path at it.
+                file.append(e.file);
+                
+                // Wow. We survived.
+            }
+            catch (ex)
+            {
+                return display(MSG_DCCFILE_ERR_NOTFOUND);
+            }
+        }
+    }
+    if (!file.exists())
+        return display(MSG_DCCFILE_ERR_NOTFOUND);
+    if (!file.isFile())
+        return display(MSG_DCCFILE_ERR_NOTAFILE);
+    if (!file.isReadable())
+        return display(MSG_DCCFILE_ERR_NOTREADABLE);
+    
+    var user;
+    if (e.nickname)
+        user = e.server.addUser(e.nickname);
+    else
+        user = e.server.addUser(e.user.nick);
+    
+    var u = client.dcc.addUser(user);
+    var c = client.dcc.addFileTransfer(u, client.dcc.getNextPort());
+    c.request(file);
+    
+    display(getMsg(MSG_DCCFILE_SENT_REQUEST, [u.properNick, c.localIP, 
+                                              c.port, file.leafName, c.size]));
+    return true;
+}
+
+function cmdDCCList(e) {
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+    
+    var counts = { pending: 0, connected: 0, failed: 0 };
+    var k;
+    
+    // Get all the DCC sessions.
+    var list = client.dcc.getMatches();
+    
+    for (k = 0; k < list.length; k++) {
+        var c = list[k];
+        var type = c.TYPE.substr(6, c.TYPE.length - 6);
+        
+        var dir = MSG_UNKNOWN;
+        var tf = MSG_UNKNOWN;
+        if (c.state.dir == DCC_DIR_SENDING)
+        {
+            dir = MSG_DCCLIST_DIR_OUT;
+            tf = MSG_DCCLIST_TO;
+        }
+        else if (c.state.dir == DCC_DIR_GETTING)
+        {
+            dir = MSG_DCCLIST_DIR_IN;
+            tf = MSG_DCCLIST_FROM;
+        }
+        
+        var state = MSG_UNKNOWN;
+        switch (c.state.state)
+        {
+            case DCC_STATE_REQUESTED:
+                state = MSG_DCC_STATE_REQUEST;
+                counts.pending++;
+                break;
+            case DCC_STATE_ACCEPTED:
+                state = MSG_DCC_STATE_ACCEPT;
+                counts.connected++;
+                break;
+            case DCC_STATE_DECLINED:
+                state = MSG_DCC_STATE_DECLINE;
+                break;
+            case DCC_STATE_CONNECTED:
+                state = MSG_DCC_STATE_CONNECT;
+                counts.connected++;
+                break;
+            case DCC_STATE_DONE:
+                state = MSG_DCC_STATE_DISCONNECT;
+                break;
+            case DCC_STATE_ABORTED:
+                state = MSG_DCC_STATE_ABORT;
+                counts.failed++;
+                break;
+            case DCC_STATE_FAILED:
+                state = MSG_DCC_STATE_FAIL;
+                counts.failed++;
+                break;
+        }
+        display(getMsg(MSG_DCCLIST_LINE, [k + 1, state, dir, type, tf, c.name, 
+                                          c.remoteIP, c.port]));
+    }
+    display(getMsg(MSG_DCCLIST_SUMMARY, [counts.pending, counts.connected, 
+                                         counts.failed]));
+    return true;
+}
+
+function cmdDCCAccept(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+    
+    function accept(c)
+    {
+        if (c.TYPE == "IRCDCCChat")
+            return c.accept();
+        
+        // Accept the request passed in...
+        var filename = c.filename;
+        var ext = "*";
+        var m = filename.match(/...\.([a-z]+)$/i);
+        if (m)
+            ext = "*." + m[1];
+        
+        var pickerRv = pickSaveAs(getMsg(MSG_DCCFILE_SAVE_TO, filename), 
+                                  ["$all", ext], filename);
+        if (pickerRv.reason == PICK_CANCEL)
+            return false;
+        c.accept(pickerRv.file);
+        
+        if (c.TYPE == "CIRCDCCChat")
+            display(getMsg(MSG_DCCCHAT_ACCEPTED, [c.name, c.remoteIP, c.port]));
+        else
+            display(getMsg(MSG_DCCFILE_ACCEPTED, [c.name, c.remoteIP, c.port]));
+        return true;
+    };
+    
+    // If there is no nickname specified, use the "last" item.
+    // This is the last DCC request that arrvied.
+    if (!e.nickname && client.dcc.last)
+    {
+        if ((new Date() - client.dcc.lastTime) >= 10000)
+            return accept(client.dcc.last);
+        return display(MSG_DCC_ERR_ACCEPT_TIME);
+    }
+    
+    if (e.type)
+        e.type = [e.type.toLowerCase()];
+    else
+        e.type = ["chat", "file"];
+    
+    // Go ask the DCC code for some matching requets.
+    var list = client.dcc.getMatches(e.nickname, e.file, e.type, 
+                                     [DCC_DIR_GETTING], [DCC_STATE_REQUESTED]);
+    // Accept if only one match.
+    if (list.length == 1)
+        return accept(list[0]);
+    
+    // Oops, couldn't figure the user's requets out, so give them some help.
+    display(getMsg(MSG_DCC_PENDING_MATCHES, [list.length]));
+    display(MSG_DCC_MATCHES_HELP);
+    return true;
+}
+
+function cmdDCCDecline(e)
+{
+    if (!jsenv.HAS_SERVER_SOCKETS)
+        return display(MSG_DCC_NOT_POSSIBLE);
+    if (!client.prefs["dcc.enabled"])
+        return display(MSG_DCC_NOT_ENABLED);
+    
+    function decline(c)
+    {
+        // Decline the request passed in...
+        c.decline();
+        if (c.TYPE == "CIRCDCCChat")
+            display(getMsg(MSG_DCCCHAT_DECLINED, [c.name, c.remoteIP, c.port]));
+        else
+            display(getMsg(MSG_DCCFILE_DECLINED, [c.name, c.remoteIP, c.port]));
+    };
+    
+    // If there is no nickname specified, use the "last" item.
+    // This is the last DCC request that arrvied.
+    if (!e.nickname && client.dcc.last)
+    {
+        return decline(client.dcc.last);
+    }
+    
+    if (!e.type)
+        e.type = ["chat", "file"];
+    
+    // Go ask the DCC code for some matching requets.
+    var list = client.dcc.getMatches(e.nickname, e.file, e.type, 
+                                     [DCC_DIR_GETTING], [DCC_STATE_REQUESTED]);
+    // Decline if only one match.
+    if (list.length == 1)
+        return decline(list[0]);
+    
+    // Oops, couldn't figure the user's requets out, so give them some help.
+    display(getMsg(MSG_DCC_PENDING_MATCHES, [list.length]));
+    display(MSG_DCC_MATCHES_HELP);
+    return true;
 }

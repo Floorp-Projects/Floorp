@@ -41,12 +41,16 @@ const PREF_RELOAD = true;
 const PREF_WRITETHROUGH = true;
 const PREF_CHARSET = "utf-8";   // string prefs stored in this charset
 
-function PrefRecord (name, defaultValue, label, help)
+function PrefRecord(name, defaultValue, label, help, group)
 {
     this.name = name;
     this.defaultValue = defaultValue;
     this.help = help;
     this.label = label ? label : name;
+    this.group = group ? group : "";
+    // Prepend the group 'general' if there isn't one already.
+    if (this.group.match(/^(\.|$)/))
+        this.group = "general" + this.group;
     this.realValue = null;
 }
 
@@ -174,6 +178,7 @@ function pm_addprefs(prefSpecs)
     for (var i = 0; i < prefSpecs.length; ++i)
     {
         this.addPref(prefSpecs[i][0], prefSpecs[i][1],
+                     3 in prefSpecs[i] ? prefSpecs[i][3] : null, null,
                      2 in prefSpecs[i] ? prefSpecs[i][2] : null);
     }
 }
@@ -370,16 +375,16 @@ function pm_reset(prefName)
 }
 
 PrefManager.prototype.addPref =
-function pm_addpref(prefName, defaultValue, setter, bundle)
+function pm_addpref(prefName, defaultValue, setter, bundle, group)
 {
     var prefManager = this;
     if (!bundle)
         bundle = this.defaultBundle;
-
+    
     function updateArrayPref() { prefManager.updateArrayPref(prefName); };
     function prefGetter() { return prefManager.getPref(prefName); };
     function prefSetter(value) { return prefManager.setPref(prefName, value); };
-
+    
     if (!ASSERT(!(prefName in this.defaultValues),
                 "Preference already exists: " + prefName))
     {
@@ -391,17 +396,22 @@ function pm_addpref(prefName, defaultValue, setter, bundle)
     
     if (defaultValue instanceof Array)
         defaultValue.update = updateArrayPref;
-
-    var label = getMsgFrom(bundle, "pref." + prefName + ".label", null, name);
+    
+    var label = getMsgFrom(bundle, "pref." + prefName + ".label", null, prefName);
     var help  = getMsgFrom(bundle, "pref." + prefName + ".help", null, 
                            MSG_NO_HELP);
-
+    
+    if (label == prefName)
+        dd("WARNING: !!! Preference without label: " + prefName);
+    if (help == MSG_NO_HELP)
+        dd("WARNING: Preference without help text: " + prefName);
+    
     this.prefRecords[prefName] = new PrefRecord (prefName, defaultValue, 
-                                                 label, help);
-
+                                                 label, help, group);
+    
     this.prefNames.push(prefName);
     this.prefNames.sort();
-
+    
     this.prefs.__defineGetter__(prefName, prefGetter);
     this.prefs.__defineSetter__(prefName, setter);
 }

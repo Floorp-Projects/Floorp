@@ -197,7 +197,7 @@ function mmgr_showpop (event)
         catch (ex)
         {
             dd ("caught exception evaling '" + node.getAttribute("id") + "'.'" +
-                attr + "'\n" + ex);
+                attr + "': '" + expr + "'\n" + ex);
         }
         return true;
     };

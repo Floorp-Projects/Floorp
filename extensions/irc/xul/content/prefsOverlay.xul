@@ -36,53 +36,16 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
+   
+<!--
+   - This file isn't used any more, and is only here to prevent the Mozilla
+   - preferences window from breaking.
+   -->
 
 <!DOCTYPE overlay SYSTEM "chrome://chatzilla/locale/pref-irc.dtd">
 
 <overlay id="ovCZPrefs" 
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  
-  <treechildren id="panelChildren">
-    <treeitem container="true" id="chatzillaItem" insertbefore="advancedItem">
-      <treerow>
-        <treecell url="chrome://chatzilla/content/prefpanel/pref-irc.xul" 
-            label="&pref-irc.window.title;"/>
-      </treerow>
-      <treechildren id="chatzillaChildren">
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://chatzilla/content/prefpanel/startup.xul" 
-                label="&startup.window.title;"/>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://chatzilla/content/prefpanel/interface.xul" 
-                label="&interface.window.title;"/>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://chatzilla/content/prefpanel/appearance.xul" 
-                label="&appearance.window.title;"/>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://chatzilla/content/prefpanel/stalk.xul" 
-                label="&stalk.window.title;"/>
-          </treerow>
-        </treeitem>
-        <treeitem>
-          <treerow>
-            <treecell url="chrome://chatzilla/content/prefpanel/sound.xul" 
-                label="&sound.window.title;"/>
-          </treerow>
-        </treeitem>
-      </treechildren>
-    </treeitem>
-  </treechildren>
-
 </overlay>
 
         

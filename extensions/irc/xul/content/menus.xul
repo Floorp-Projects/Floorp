@@ -117,7 +117,7 @@
             <menuitem id="menu_selectAll"/>
             <menuseparator/>
             <menuitem id="menu_preferences"
-              oncommand="goPreferences('chatzillaItem', 'chrome://chatzilla/content/prefpanel/pref-irc.xul', 'chatzillaItem');"/>
+              oncommand="window.openDialog('chrome://chatzilla/content/config.xul', '', 'chrome,resizable,dialog=no', window);"/>
           </menupopup>
         </menu> 
   

@@ -90,35 +90,35 @@ a.chatzilla-link {
     color: #2ec908;
 }
 
-.msg-data[msg-type="PRIVMSG"],
-.msg-data[msg-type="ACTION"] {
+.msg[msg-type="PRIVMSG"] .msg-data,
+.msg[msg-type="ACTION"] .msg-data {
     background-color: #F0F0F0;
 }
 
-.msg-data[msg-type="HELLO"] a.chatzilla-link {
+.msg[msg-type="HELLO"] .msg-data a.chatzilla-link {
     color: #d7d9dd;
 }
 
-.msg-data[msg-type="JOIN"] a.chatzilla-link,
-.msg-data[msg-type="PART"] a.chatzilla-link {
+.msg[msg-type="JOIN"] .msg-data a.chatzilla-link,
+.msg[msg-type="PART"] .msg-data a.chatzilla-link {
     font-weight: bold;
     color: #11c411;
 }
 
-.msg-data[msg-type="ERROR"] a.chatzilla-link {
+.msg[msg-type="ERROR"] .msg-data a.chatzilla-link {
     font-weight: bold;
     color: white;
 }
 
-.msg-data[msg-type="KICK"]  a.chatzilla-link {
+.msg[msg-type="KICK"] .msg-data a.chatzilla-link {
     color: #aa0d08;
 }
 
-.msg-data[msg-type="NOTICE"]  a.chatzilla-link {
+.msg[msg-type="NOTICE"] .msg-data a.chatzilla-link {
     color: #d64444;
 }
 
-.msg-data[msg-type="QUIT"]  a.chatzilla-link {
+.msg[msg-type="QUIT"] .msg-data a.chatzilla-link {
     color: #c46907;
 }
 
@@ -152,12 +152,12 @@ a.chatzilla-link {
     font-weight: bold;                      /* views)                         */
 }                     
  
-.msg-data[mark="even"] {                    /* use even/odd marks to create a */
+.msg[mark="even"] .msg-data {               /* use even/odd marks to create a */
     color: #555555;                         /* subtle brightness change when  */
 }                                           /* the speaker changes.           */
 
-.msg-data[msg-type="JOIN"],
-.msg-data[msg-type="PART"] {
+.msg[msg-type="JOIN"] .msg-data,
+.msg[msg-type="PART"] .msg-data {
     color: #0e9e0e;
     background-color: #c3f7c3; 
     font-weight: bold;
@@ -165,52 +165,52 @@ a.chatzilla-link {
     /*border: thin darkblue solid;*/
 }
 
-.msg-data[msg-type="QUIT"] {
+.msg[msg-type="QUIT"] .msg-data {
     background: #fff196;
     color: #ff8d02;
     font-weight: bold;
     -moz-border-radius: 5px 5px 5px 5px;
 }
 
-.msg-data[msg-type="HELLO"] {
+.msg[msg-type="HELLO"] .msg-data {
     background: #1342a5;
     color: white;
     -moz-border-radius: 5px 5px 5px 5px;
     font-weight: bold;
 }
 
-.msg-data[msg-type="ERROR"] {
+.msg[msg-type="ERROR"] .msg-data {
     -moz-border-radius: 5px 5px 5px 5px;
     background: #a8221e;
     color: white;
 }
 
-.msg-data[msg-type="USAGE"] {
+.msg[msg-type="USAGE"] .msg-data {
     color: black;
 }
 
-.msg-data[msg-type="ACTION"] {
+.msg[msg-type="ACTION"] .msg-data {
     color: black;
     font-style: italic;
 }
 
-.msg-data[msg-type="NICK"] {
+.msg[msg-type="NICK"] .msg-data {
     color: #4e8387;
     background-color: #d5e9ea;
     font-weight: bold;
 }
 
-.msg-data[msg-type="NOTICE"] {
+.msg[msg-type="NOTICE"] .msg-data {
     color: #ae4141;
     font-weight: bold;
 }
 
-.msg-data[msg-type="MODE"] {
+.msg[msg-type="MODE"] .msg-data {
     color: #2709ed;
     font-weight: bold;
 }
 
-.msg-data[msg-type="KICK"] {
+.msg[msg-type="KICK"] .msg-data {
     color: #ff1a0a;
     background: #ffdbcc;
     font-weight: bold;
@@ -220,12 +220,12 @@ a.chatzilla-link {
 /* important="true" means that the message has text from your /stalk list in
  * it, has your nickname in it, or was spoken by someone in your /stalk list.
  */
-.msg-user[important="true"] {
+.msg[important="true"] .msg-user {
     background: #d4d8d4;
     -moz-border-radius: 5px 0px 0px 5px;
 }
 
-.msg-data[important="true"] {
+.msg[important="true"] .msg-data {
     background: #eaefeb;
 }
 
@@ -236,7 +236,7 @@ a.chatzilla-link {
     color: #777499;
 }
 
-.msg-user[msg-user$="ME!"]:before,               /* the decoration around MY   */
-.msg-user[msg-user$="ME!"]:after {               /* nick                       */
+.msg[msg-user$="ME!"] .msg-user:before,         /* the decoration around MY   */
+.msg[msg-user$="ME!"] .msg-user:after {         /* nick                       */
     color: #843c6c;
 }

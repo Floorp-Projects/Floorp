@@ -451,31 +451,31 @@ a.chatzilla-link:hover {
  * ACTION: when a user performs a /me.
  * NOTIFY: when a server or user sends you a notification.
  */
-.msg-data[msg-user="|"],                     /* messages from common "bulk    */
-.msg-data[msg-user="||"],                    /* paste" nicks                  */
-.msg-data[msg-user="|||"],
-.msg-data[msg-user="]"],
-.msg-data[msg-user="["],
-.msg-data[msg-type="372"],                   /* MOTD                          */
-.msg-data[msg-type="EVAL-IN"],               /* /eval results                 */
-.msg-data[msg-type="EVAL-OUT"] {
+.msg[msg-user="|"] .msg-data,                /* messages from common "bulk    */
+.msg[msg-user="||"] .msg-data,               /* paste" nicks                  */
+.msg[msg-user="|||"] .msg-data,
+.msg[msg-user="]"] .msg-data,
+.msg[msg-user="["] .msg-data,
+.msg[msg-type="372"] .msg-data,              /* MOTD                          */
+.msg[msg-type="EVAL-IN"] .msg-data,          /* /eval results                 */
+.msg[msg-type="EVAL-OUT"] .msg-data {
     font-size: 90%;
     font-family: monospace;
 }
 
-.msg-data[msg-type="USAGE"] {
+.msg[msg-type="USAGE"] .msg-data {
     font-style: italic;
 }
 
-.msg-data[msg-type="HELP"] {
+.msg[msg-type="HELP"] .msg-data {
     font-weight: normal;
 }
 
-.msg-user[msg-type="ACTION"] {
+.msg[msg-type="ACTION"] .msg-user {
     font-style: italic;
 }
 
-.msg-user[important="true"] {
+.msg[important="true"] .msg-user {
     font-weight: bold;
 }
 
@@ -490,50 +490,50 @@ a.chatzilla-link:hover {
 .msg-user:after {
     content: ">";
 }
-.msg-user[important="true"]:before {
+.msg[important="true"] .msg-user:before {
     font-weight: bold;
 }
-.msg-user[important="true"]:after {
+.msg[important="true"] .msg-user:after {
     font-weight: bold;
 }
-.msg-user[msg-user$="ME!"]:before {
+.msg[msg-user$="ME!"] .msg-user:before {
     content: "<";
 }
-.msg-user[msg-user$="ME!"]:after {
+.msg[msg-user$="ME!"] .msg-user:after {
     content: ">";
 }
-.msg-user[msg-type="ACTION"]:before,
-.msg-user[msg-type="ACTION"]:after {
+.msg[msg-type="ACTION"] .msg-user:before,
+.msg[msg-type="ACTION"] .msg-user:after {
     content: "";
 }
-.msg-user[msg-type="NOTICE"]:before {
+.msg[msg-type="NOTICE"] .msg-user:before {
     content: "[";
 }
-.msg-user[msg-type="NOTICE"]:after {
+.msg[msg-type="NOTICE"] .msg-user:after {
     content: "]";
 }
 
 /* private messages *not* in a query window */
-.msg-user[dest-type="IRCUser"]:before {
+.msg[dest-type="IRCUser"] .msg-user:before {
     content: "to(";
 }
-.msg-user[msg-dest$="ME!"]:before {
+.msg[dest-type="IRCUser"][msg-dest$="ME!"] .msg-user:before {
     content: "from(";
 }
-.msg-user[dest-type="IRCUser"]:after {
+.msg[dest-type="IRCUser"] .msg-user:after {
     content: ")";
 }
 
 /* private messages in a query window */
-.msg-user[view-type="IRCUser"]:before {
+.msg[view-type="IRCUser"] .msg-user:before {
     content: "{";
 }
-.msg-user[view-type="IRCUser"]:after {
+.msg[view-type="IRCUser"] .msg-user:after {
     content: "}";
 }
-.msg-user[view-type="IRCUser"][msg-user$="ME!"]:before {
+.msg[view-type="IRCUser"][msg-dest$="ME!"] .msg-user:before {
     content: "{";
 }
-.msg-user[view-type="IRCUser"][msg-user$="ME!"]:after {
+.msg[view-type="IRCUser"][msg-dest$="ME!"] .msg-user:after {
     content: "}";
 }

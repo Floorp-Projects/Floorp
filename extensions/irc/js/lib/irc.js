@@ -80,6 +80,7 @@ function decodeParam(number, charsetOrObject)
 function CIRCNetwork (name, serverList, eventPump)
 {
     this.name = name;
+    this.displayName = name;
     this.servers = new Object();
     this.serverList = new Array();
     this.ignoreList = new Object();
@@ -495,6 +496,16 @@ function serv_logout(reason)
     this.connection.disconnect();
 }
 
+CIRCServer.prototype.addTarget =
+function serv_addtarget(name)
+{
+    if (arrayIndexOf(this.channelTypes, name[0]) != -1) {
+        return this.addChannel(name);
+    } else {
+        return this.addUser(name);
+    }
+}
+
 CIRCServer.prototype.addChannel =
 function serv_addchan(unicodeName, charset)
 {
@@ -669,7 +680,10 @@ function serv_disconnect(e)
     e.destObject = this.parent;
 
     for (var c in this.channels)
+    {
         this.channels[c].users = new Object();
+        this.channels[c].active = false;
+    }
 
     this.connection = null;
     this.isConnected = false;
@@ -1027,7 +1041,7 @@ function serv_001 (e)
     this.supports.chidlen = 5;
     /* Make sure it's possible to tell if we've actually got a 005 message. */
     this.supports.rpl_isupport = false;
-    this.channelTypes = { '#': true, '&': true };
+    this.channelTypes = [ '#', '&' ];
     /* This next one isn't in the isupport draft, but instead is defaulting to
      * the codes we understand. It should be noted, some servers include the
      * mode characters (o, h, v) in the 'a' list, although the draft spec says
@@ -1108,7 +1122,7 @@ function serv_005 (e)
     {
         this.channelTypes = [];
         for (m = 0; m < this.supports.chantypes.length; m++)
-            this.channelTypes[this.supports.chantypes[m]] = true;
+            this.channelTypes.push( this.supports.chantypes[m] );
     }
     
     if ("prefix" in this.supports)
@@ -1155,18 +1169,6 @@ function serv_005 (e)
 }
 
 
-/* TOPIC reply */
-CIRCServer.prototype.on332 =
-function serv_332 (e)
-{
-    e.channel = new CIRCChannel (this, e.params[2]);
-    e.channel.topic = toUnicode(e.params[3], e.channel);
-    e.destObject = e.channel;
-    e.set = "channel";
-
-    return true;
-}
-
 /* whois name */
 CIRCServer.prototype.on311 =
 function serv_311 (e)
@@ -1175,6 +1177,8 @@ function serv_311 (e)
     e.user.desc = e.decodeParam(6, e.user);
     e.destObject = this.parent;
     e.set = "network";
+    
+    this.pendingWhoisLines = e.user;
 }
     
 /* whois server */
@@ -1197,6 +1201,53 @@ function serv_317 (e)
 
     e.destObject = this.parent;
     e.set = "network";
+}
+
+/* whois channel list */
+CIRCServer.prototype.on319 =
+function serv_319(e)
+{
+    e.user = new CIRCUser(this, e.params[2]);
+    
+    e.destObject = this.parent;
+    e.set = "network";
+}
+
+/* end of whois */
+CIRCServer.prototype.on318 =
+function serv_318(e)
+{
+    e.user = new CIRCUser(this, e.params[2]);
+    
+    if ("pendingWhoisLines" in this)
+        delete this.pendingWhoisLines;
+    
+    e.destObject = this.parent;
+    e.set = "network";
+}
+
+/* TOPIC reply - no topic set */
+CIRCServer.prototype.on331 =
+function serv_331 (e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.channel.topic = "";
+    e.destObject = e.channel;
+    e.set = "channel";
+
+    return true;
+}
+
+/* TOPIC reply - topic set */
+CIRCServer.prototype.on332 =
+function serv_332 (e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.channel.topic = toUnicode(e.params[3], e.channel);
+    e.destObject = e.channel;
+    e.set = "channel";
+
+    return true;
 }
 
 /* topic information */
@@ -1320,14 +1371,118 @@ function serv_324 (e)
     return true;
 }
 
+/* channel ban entry */
+CIRCServer.prototype.on367 = 
+function serv_367(e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.destObject = e.channel;
+    e.set = "channel";
+    e.ban = e.params[3];
+    e.user = new CIRCUser(this, e.params[4]);
+    e.banTime = new Date (Number(e.params[5]) * 1000);
+    
+    if (typeof e.channel.bans[e.ban] == "undefined")
+    {
+        e.channel.bans[e.ban] = {host: e.ban, user: e.user, time: e.banTime };
+        var ban_evt = new CEvent("channel", "ban", e.channel, "onBan");
+        ban_evt.channel = e.channel;
+        ban_evt.ban = e.ban;
+        ban_evt.source = e.user;
+        this.parent.eventPump.addEvent(ban_evt);
+    }
+    
+    return true;
+}
+
+/* channel ban list end */
+CIRCServer.prototype.on368 = 
+function serv_368(e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.destObject = e.channel;
+    e.set = "channel";
+    
+    /* This flag is cleared in a timeout (which occurs right after the current 
+     * message has been processed) so that the new event target (the channel)
+     * will still have the flag set when it executes.
+     */
+    if ("pendingBanList" in e.channel)
+        setTimeout(function() { delete e.channel.pendingBanList; }, 0);
+    
+    return true;
+}
+
+/* channel except entry */
+CIRCServer.prototype.on348 = 
+function serv_348(e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.destObject = e.channel;
+    e.set = "channel";
+    
+    return true;
+}
+
+/* channel except list end */
+CIRCServer.prototype.on349 = 
+function serv_349(e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.destObject = e.channel;
+    e.set = "channel";
+    
+    if ("pendingExceptList" in e.channel)
+        setTimeout(function (){ delete e.channel.pendingExceptList; }, 0);
+    
+    return true;
+}
+
+/* don't have operator perms */
+CIRCServer.prototype.on482 = 
+function serv_482(e)
+{
+    e.channel = new CIRCChannel (this, e.params[2]);
+    e.destObject = e.channel;
+    e.set = "channel";
+    
+    /* Some servers (e.g. Hybrid) don't let you get the except list without ops,
+     * so we might be waiting for this list forever otherwise.
+     */
+    if ("pendingExceptList" in e.channel)
+        setTimeout(function (){ delete e.channel.pendingExceptList; }, 0);
+    
+    return true;
+}
+
+/* userhost reply */
+CIRCServer.prototype.on302 = 
+function serv_302(e)
+{
+    var list = e.params[2].split(/\s+/);
+    
+    for (var i = 0; i < list.length; i++)
+    {
+        //  <reply> ::= <nick>['*'] '=' <'+'|'-'><hostname>
+        // '*' == IRCop. '+' == here, '-' == away.
+        var data = list[i].match(/^(.*)(\*?)=([-+])(.*)@(.*)$/);
+        if (data)
+            this.addUser(data[1], data[4], data[5]);
+    }
+    
+    e.destObject = this.parent;
+    e.set = "network";
+    
+    return true;
+}
+
 /* user changed the mode */
 CIRCServer.prototype.onMode = 
 function serv_mode (e)
 {
     e.destObject = this;
     /* modes are not allowed in +channels -> no need to test that here.. */
-    if ((e.params[1][0] == "#") || (e.params[1][0] == "&") ||
-        (e.params[1][0] == "!"))
+    if (arrayIndexOf(this.channelTypes, e.params[1][0]) != -1)
     {
         e.channel = new CIRCChannel (this, e.params[1]);
         if ("user" in e && e.user)
@@ -1347,7 +1502,7 @@ function serv_mode (e)
 CIRCServer.prototype.onUserMode = 
 function serv_usermode (e)
 {
-    e.user = new CIRCUser(this.parent, e.params[1])
+    e.user = new CIRCUser(this, e.params[1])
     e.user.modestr = e.params[2];
     e.destObject = this.parent;
     e.set = "network";
@@ -1631,22 +1786,44 @@ function serv_kick (e)
 }
 
 CIRCServer.prototype.onJoin = 
-function serv_join (e)
+function serv_join(e)
 {
-    e.channel = new CIRCChannel (this, e.params[1]);
-    if (e.user == this.me)
-        e.server.sendData ("MODE " + e.channel.encodedName + "\n" /* +
-                           "BANS " + e.channel.encodedName + "\n" */);
-    e.user = new CIRCChanUser (e.channel, e.user.nick);
+    e.channel = new CIRCChannel(this, e.params[1]);
+    e.user = new CIRCChanUser(e.channel, e.user.nick);
+    
     if (userIsMe(e.user))
     {
+        // Give us the channel mode!
+        e.server.sendData("MODE " + e.channel.encodedName + "\n");
+        
+        // Get a full list of bans and exceptions, if supported.
+        if (arrayContains(this.channelModes.a, "b"))
+        {
+            e.server.sendData("MODE " + e.channel.encodedName + " +b\n");
+            e.channel.pendingBanList = true;
+        }
+        if (arrayContains(this.channelModes.a, "e"))
+        {
+            e.server.sendData("MODE " + e.channel.encodedName + " +e\n");
+            e.channel.pendingExceptList = true;
+        }
+        
+        /* Clean up the topic, since servers don't always send RPL_NOTOPIC
+         * (no topic set) when joining a channel without a topic. In fact, 
+         * the RFC even fails to mention sending a RPL_NOTOPIC after a join!
+         */
+        e.channel.topic = "";
+        e.channel.topicBy = null;
+        e.channel.topicDate = null;
+        
+        // And we're in!
         e.channel.active = true;
         e.channel.joined = true;
     }
-
+    
     e.destObject = e.channel;
     e.set = "channel";
-
+    
     return true;
 }
 
@@ -1689,8 +1866,7 @@ function serv_notice (e)
         return true;
     }
         
-    if ((e.params[1][0] == "#") || (e.params[1][0] == "&") ||
-        (e.params[1][0] == "+") || (e.params[1][0] == "!"))
+    if (arrayIndexOf(this.channelTypes, e.params[1][0]) != -1)
     {
         e.channel = new CIRCChannel(this, e.params[1]);
         e.user = new CIRCChanUser (e.channel, e.user.nick);
@@ -1721,8 +1897,7 @@ function serv_privmsg (e)
 {
     /* setting replyTo provides a standard place to find the target for     */
     /* replys associated with this event.                                   */
-    if ((e.params[1][0] == "#") || (e.params[1][0] == "&") ||
-        (e.params[1][0] == "+") || (e.params[1][0] == "!"))
+    if (arrayIndexOf(this.channelTypes, e.params[1][0]) != -1)
     {
         e.channel = new CIRCChannel(this, e.params[1]);
         e.user = new CIRCChanUser(e.channel, e.user.nick);
@@ -1806,6 +1981,9 @@ function serv_ctcp (e)
         dd ("dropping spoofed reply.");
         return false;
     }
+    
+    e.CTCPCode = toUnicode(e.CTCPCode, e.replyTo);
+    e.CTCPData = toUnicode(e.CTCPData, e.replyTo);
     
     e.type = "ctcp-" + e.CTCPCode;
     e.destMethod = "onCTCP" + ary[1][0].toUpperCase() +
@@ -1917,7 +2095,13 @@ function serv_dccchat (e)
         return false;
 
     e.id = ary[2];
-    e.port = ary[3];
+    // Checky longword --> dotted IP conversion.
+    var host = Number(e.id).toString(16);
+    e.host = Number("0x" + host.substr(0, 2)) + "." + 
+             Number("0x" + host.substr(2, 2)) + "." + 
+             Number("0x" + host.substr(4, 2)) + "." + 
+             Number("0x" + host.substr(6, 2));
+    e.port = Number(ary[3]);
     e.destObject = e.replyTo;
     e.set = (e.replyTo == e.user) ? "user" : "channel";
     
@@ -1927,15 +2111,27 @@ function serv_dccchat (e)
 CIRCServer.prototype.onDCCSend = 
 function serv_dccsend (e)
 {
-    var ary = e.DCCData.match (/(\S+) (\d+) (\d+) (\d+)/);
-
+    var ary = e.DCCData.match(/(\S+) (\d+) (\d+) (\d+)/);
+    
+    /* Just for mIRC: filenames with spaces may be enclosed in double-quotes.
+     * (though by default it replaces spaces with underscores, but we might as
+     * well cope). */
+    if (ary[1][0] == '"')
+        ary = e.DCCData.match(/"(.+)" (\d+) (\d+) (\d+)/);
+    
     if (ary == null)
         return false;
     
     e.file = ary[1];
     e.id   = ary[2];
-    e.port = ary[3];
-    e.size = ary[4];
+    // Cheeky longword --> dotted IP conversion.
+    var host = Number(e.id).toString(16);
+    e.host = Number("0x" + host.substr(0, 2)) + "." + 
+             Number("0x" + host.substr(2, 2)) + "." + 
+             Number("0x" + host.substr(4, 2)) + "." + 
+             Number("0x" + host.substr(6, 2));
+    e.port = Number(ary[3]);
+    e.size = Number(ary[4]);
     e.destObject = e.replyTo;
     e.set = (e.replyTo == e.user) ? "user" : "channel";
 
@@ -1960,6 +2156,7 @@ function CIRCChannel (parent, encodedName, unicodeName)
         this.unicodeName = unicodeName;
     else
         this.unicodeName = toUnicode(encodedName, this);
+    this.displayName = this.unicodeName;
 
     this.users = new Object();
     this.bans = new Object();
@@ -1995,6 +2192,14 @@ function chan_geturl ()
         target = ecmaEscape(this.normalizedName);
 
     return this.parent.parent.getURL(target);
+}
+
+CIRCChannel.prototype.rehome =
+function chan_rehome(newParent)
+{
+    delete this.parent.channels[this.normalizedName];
+    this.parent = newParent;
+    this.parent.channels[this.normalizedName] = this;
 }
 
 CIRCChannel.prototype.addUser = 
@@ -2101,7 +2306,8 @@ function chan_ctcpto (code, msg, type)
     msg = msg || "";
     type = type || "PRIVMSG";
     
-    this.parent.messageTo(type, this.encodedName, fromUnicode(msg, this), code);
+    this.parent.ctcpTo(this.encodedName, fromUnicode(code, this), 
+                       fromUnicode(msg, this), type);
 }
 
 CIRCChannel.prototype.join = 
@@ -2303,6 +2509,7 @@ function CIRCUser (parent, nick, name, host)
     this.parent = parent;
     this.nick = nick;
     this.properNick = properNick;
+    this.displayName = properNick;
     this.name = name;
     this.host = host;
     this.connectionHost = null;
@@ -2323,10 +2530,19 @@ function usr_geturl ()
     return this.parent.parent.getURL(this.nick) + ",isnick";
 }
 
+CIRCUser.prototype.rehome =
+function usr_rehome(newParent)
+{
+    delete this.parent.users[this.nick];
+    this.parent = newParent;
+    this.parent.users[this.nick] = this;
+}
+
 CIRCUser.prototype.changeNick =
 function usr_changenick (nick)
 {
     this.properNick = nick;
+    this.displayName = nick;
     this.nick = this.parent.toLowerCase(nick);
 }
 
@@ -2365,7 +2581,8 @@ function usr_ctcp (code, msg, type)
     msg = msg || "";
     type = type || "PRIVMSG";
     
-    this.parent.messageTo(type, this.name, fromUnicode(msg, this), code);
+    this.parent.ctcpTo(this.nick, fromUnicode(code, this), 
+                       fromUnicode(msg, this), type);
 }
 
 CIRCUser.prototype.whois =

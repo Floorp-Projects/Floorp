@@ -48,33 +48,33 @@
     background-color: white;
 }
 
-.msg-data[msg-type="ACTION"] {
+.msg[msg-type="ACTION"] .msg-data {
     font-style: italic;
 }
 
-.msg-type[msg-type="JOIN"],
-.msg-type[msg-type="PART"],
-.msg-type[msg-type="QUIT"] {
+.msg[msg-type="JOIN"] .msg-type,
+.msg[msg-type="PART"] .msg-type,
+.msg[msg-type="QUIT"] .msg-type {
     font-weight: bold;
 }
 
-.msg-data[msg-type="QUIT"] {
+.msg[msg-type="QUIT"] .msg-data {
     font-variant: small-caps;
     font-weight: bold;
 }
 
-.msg-data[msg-type="JOIN"],
-.msg-data[msg-type="PART"] {
+.msg[msg-type="JOIN"] .msg-data,
+.msg[msg-type="PART"] .msg-data {
     font-variant: small-caps;
 }
 
-.msg-data[msg-type="HELLO"],
-.msg-type[msg-type="NICK"],
-.msg-data[msg-type="NOTICE"] {
+.msg[msg-type="HELLO"] .msg-data,
+.msg[msg-type="NICK"] .msg-type,
+.msg[msg-type="NOTICE"] .msg-data {
     font-weight: bold;
 }
 
-.msg-data[msg-type="NICK"] {
+.msg[msg-type="NICK"] .msg-data {
     font: 10pt courier;
 }
 
@@ -86,11 +86,11 @@
     font-weight: bolder;
 }
 
-.msg-user[dest-type="IRCUser"],
-.msg-user[dest-type="IRCUser"][msg-dest$="ME!"] {
+.msg[dest-type="IRCUser"] .msg-user,
+.msg[dest-type="IRCUser"][msg-dest$="ME!"] .msg-user {
     font-style: italic;
 }
 
-.msg-user[msg-user$="ME!"] {
+.msg[msg-user$="ME!"] .msg-user {
     font-weight: bold;
 }

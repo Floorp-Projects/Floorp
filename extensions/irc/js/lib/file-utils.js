@@ -310,11 +310,12 @@ function LocalFile(file, mode, perms, tmp)
     
     if (mode & (MODE_RDONLY | MODE_RDWR))
     {
-        var is = classes[FILEIN_CTRID].createInstance(nsIFileInputStream);
-        is.init(this.localFile, mode, perms, tmp);
+        this.baseInputStream = 
+            classes[FILEIN_CTRID].createInstance(nsIFileInputStream);
+        this.baseInputStream.init(this.localFile, mode, perms, tmp);
         this.inputStream =
             classes[SCRIPTSTREAM_CTRID].createInstance(nsIScriptableInputStream);
-        this.inputStream.init(is);
+        this.inputStream.init(this.baseInputStream);
     }    
 }
 

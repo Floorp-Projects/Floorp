@@ -43,6 +43,7 @@ const NS_ERROR_MODULE_NETWORK = 2152398848;
 const NS_ERROR_UNKNOWN_HOST = NS_ERROR_MODULE_NETWORK + 30;
 const NS_ERROR_CONNECTION_REFUSED = NS_ERROR_MODULE_NETWORK + 13;
 const NS_ERROR_NET_TIMEOUT = NS_ERROR_MODULE_NETWORK + 14;
+const NS_ERROR_NET_RESET = NS_ERROR_MODULE_NETWORK + 20;
 
 const NS_NET_STATUS_RESOLVING_HOST = NS_ERROR_MODULE_NETWORK + 3;
 const NS_NET_STATUS_CONNECTED_TO = NS_ERROR_MODULE_NETWORK + 4;
@@ -50,18 +51,50 @@ const NS_NET_STATUS_SENDING_TO = NS_ERROR_MODULE_NETWORK + 5;
 const NS_NET_STATUS_RECEIVING_FROM = NS_ERROR_MODULE_NETWORK + 6;
 const NS_NET_STATUS_CONNECTING_TO = NS_ERROR_MODULE_NETWORK + 7;
 
-function toScriptableInputStream (i)
-{
-    var si = Components.classes["@mozilla.org/scriptableinputstream;1"];
-    
-    si = si.createInstance();
-    si = si.QueryInterface(Components.interfaces.nsIScriptableInputStream);
-    si.init(i);
+const nsIScriptableInputStream = Components.interfaces.nsIScriptableInputStream;
 
-    return si;    
+const nsIBinaryInputStream = Components.interfaces.nsIBinaryInputStream;
+const nsIBinaryOutputStream = Components.interfaces.nsIBinaryOutputStream;
+
+function toSInputStream(stream, binary)
+{
+    var sstream;
+    
+    if (binary)
+    {
+        sstream = Components.classes["@mozilla.org/binaryinputstream;1"];
+        sstream = sstream.createInstance(nsIBinaryInputStream);
+        sstream.setInputStream(stream);
+    }
+    else
+    {
+        sstream = Components.classes["@mozilla.org/scriptableinputstream;1"];
+        sstream = sstream.createInstance(nsIScriptableInputStream);
+        sstream.init(stream);
+    }
+    
+    return sstream;
 }
 
-function CBSConnection ()
+function toSOutputStream(stream, binary)
+{
+    var sstream;
+    
+    if (binary)
+    {
+        sstream = Components.classes["@mozilla.org/binaryoutputstream;1"];
+        sstream = sstream.createInstance(Components.interfaces.nsIBinaryOutputStream);
+        sstream.setOutputStream(stream);
+    }
+    else
+    {
+        sstream = stream;
+    }
+    
+    return sstream;
+}
+
+function CBSConnection (binary)
 {
     var sockServiceClass =
         Components.classesByID["{c07e81e0-ef12-11d2-92b6-00105a1b0d64}"];
@@ -77,7 +110,11 @@ function CBSConnection ()
         (Components.interfaces.nsISocketTransportService);
 
     this.wrappedJSObject = this;
+    this.binaryMode = binary || false;
 
+    //if (!ASSERT(!this.binaryMode || jsenv.HAS_WORKING_BINARY_STREAMS, 
+    //            "Unable to use binary streams in this build."))
+    //    return null;
 }
 
 CBSConnection.prototype.connect =
@@ -126,12 +163,15 @@ function bc_connect(host, port, bind, tcp_flag, observer)
             this._outputStream = this._transport.openOutputStream(0, -1, 0);
             if (!this._outputStream)
                 throw "Error getting output stream.";
-            this._inputStream =
-                toScriptableInputStream(this._transport.openInputStream(0,
-                                                                        -1, 0));
+            this._sOutputStream = toSOutputStream(this._outputStream, 
+                                                  this.binaryMode);
+            
+            this._inputStream = this._transport.openInputStream(0, -1, 0);
             if (!this._inputStream)
                 throw "Error getting input stream.";
-        }    
+            this._sInputStream = toSInputStream(this._inputStream, 
+                                                this.binaryMode);
+        }
     }
     else
     {
@@ -153,9 +193,14 @@ function bc_connect(host, port, bind, tcp_flag, observer)
             this._transport.openOutputStream(openFlags, 4096, -1);
         if (!this._outputStream)
             throw "Error getting output stream.";
+        this._sOutputStream = toSOutputStream(this._outputStream, 
+                                              this.binaryMode);
+        
         this._inputStream = this._transport.openInputStream(openFlags, 0, 0);
         if (!this._inputStream)
             throw "Error getting input stream.";
+        this._sInputStream = toSInputStream(this._inputStream, 
+                                            this.binaryMode);
     }
 
     this.connectDate = new Date();
@@ -163,6 +208,109 @@ function bc_connect(host, port, bind, tcp_flag, observer)
 
     return this.isConnected;
   
+}
+
+CBSConnection.prototype.listen =
+function bc_listen(port, observer)
+{
+    var serverSockClass =
+        Components.classes["@mozilla.org/network/server-socket;1"];
+    
+    if (!serverSockClass)
+        throw ("Couldn't get server socket class.");
+    
+    var serverSock = serverSockClass.createInstance();
+    if (!serverSock)
+        throw ("Couldn't get server socket.");
+    
+    this._serverSock = serverSock.QueryInterface
+        (Components.interfaces.nsIServerSocket);
+    
+    this._serverSock.init(port, false, -1);
+    
+    this._serverSockListener = new SocketListener(this, observer);
+    
+    this._serverSock.asyncListen(this._serverSockListener);
+    
+    this.port = this._serverSock.port;
+    
+    return true;
+}
+
+CBSConnection.prototype.accept =
+function bc_accept(transport, observer)
+{
+    this._transport = transport;
+    this.host = this._transport.host.toLowerCase();
+    this.port = this._transport.port;
+    //this.bind = bind;
+    //this.tcp_flag = tcp_flag;
+
+    if (jsenv.HAS_STREAM_PROVIDER)
+    {
+        if (jsenv.HAS_NSPR_EVENTQ) 
+        {   /* we've got an event queue, so start up an async write */
+            this._streamProvider = new StreamProvider (observer);
+            this._write_req =
+                this._transport.asyncWrite (this._streamProvider, this,
+                                            0, -1, 0);
+        }
+        else
+        {
+            /* no nspr event queues in this environment, we can't use async
+             * calls, so set up the streams. */
+            this._outputStream = this._transport.openOutputStream(0, -1, 0);
+            if (!this._outputStream)
+                throw "Error getting output stream.";
+            this._sOutputStream = toSOutputStream(this._outputStream, 
+                                                  this.binaryMode);
+            
+            //this._scriptableInputStream = 
+            this._inputStream = this._transport.openInputStream(0, -1, 0);
+            if (!this._inputStream)
+                throw "Error getting input stream.";
+            this._sInputStream = toSInputStream(this._inputStream, 
+                                                this.binaryMode);
+        }
+    }
+    else
+    {
+        /* if we don't have an event queue, then all i/o must be blocking */
+        var openFlags;
+        if (jsenv.HAS_NSPR_EVENTQ)
+            openFlags = 0;
+        else
+            openFlags = Components.interfaces.nsITransport.OPEN_BLOCKING;
+
+        /* no limit on the output stream buffer */
+        this._outputStream = 
+            this._transport.openOutputStream(openFlags, 4096, -1);
+        if (!this._outputStream)
+            throw "Error getting output stream.";
+        this._sOutputStream = toSOutputStream(this._outputStream, 
+                                              this.binaryMode);
+        
+        this._inputStream = this._transport.openInputStream(openFlags, 0, 0);
+        if (!this._inputStream)
+            throw "Error getting input stream.";
+        this._sInputStream = toSInputStream(this._inputStream, 
+                                            this.binaryMode);
+    }
+
+    this.connectDate = new Date();
+    this.isConnected = true;
+    
+    // Clean up listening socket.
+    this._serverSock.close();
+
+    return this.isConnected;
+}
+
+CBSConnection.prototype.close =
+function bc_close()
+{
+    if ("_serverSock" in this && this._serverSock)
+        this._serverSock.close();
 }
 
 CBSConnection.prototype.disconnect =
@@ -202,7 +350,10 @@ function bc_readdata(timeout, count)
 
     try
     {
-        rv = this._scriptableInputStream.read (count);
+        if (this.binaryMode)
+            rv = this._sInputStream.readBytes(count);
+        else
+            rv = this._sInputStream.read(count);
     }
     catch (ex)
     {
@@ -258,7 +409,10 @@ function bc_senddatanow(str)
     
     try
     {
-        this._outputStream.write(str, str.length);
+        if (this.binaryMode)
+            this._sOutputStream.writeBytes(str, str.length);
+        else
+            this._sOutputStream.write(str, str.length);
         rv = true;
     }
     catch (ex)
@@ -377,10 +531,25 @@ function sl_dataavail (request, ctxt, inStr, sourceOffset, count)
         return;
     }
 
-    if (!("_scriptableInputStream" in ctxt))
-        ctxt._scriptableInputStream = toScriptableInputStream (inStr);
-
     if (this._observer)
         this._observer.onStreamDataAvailable(request, inStr, sourceOffset,
                                              count);
+}
+
+function SocketListener(connection, observer)
+{
+    this._connection = connection;
+    this._observer = observer;
+}
+
+SocketListener.prototype.onSocketAccepted =
+function sl_onSocketAccepted(socket, transport)
+{
+    this._observer.onSocketAccepted(socket, transport);
+}
+SocketListener.prototype.onStopListening =
+function sl_onStopListening(socket, status)
+{
+    delete this._connection._serverSockListener;
+    delete this._connection._serverSock;
 }

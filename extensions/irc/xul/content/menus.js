@@ -111,9 +111,10 @@ function initMenus()
         getContext: getDefaultContext,
         items:
         [
-         ["delete-view", {enabledif: "client.viewsArray.length > 1"}],
-         ["quit"],
+         ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
+         ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
          ["disconnect"],
+         ["quit"],
          ["-"],
          [navigator.platform.search(/win/i) == -1 ? 
           "quit-mozilla" : "exit-mozilla"]
@@ -143,17 +144,15 @@ function initMenus()
         [
          [">popup:showhide"],
          ["-"],
+         ["clear-view"],
+         ["hide-view", {enabledif: "client.viewsArray.length > 1"}],
          ["toggle-oas",
                  {type: "checkbox",
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
-         ["clear-view"],
-         ["delete-view",
-                 {visibleif: "!cx.channel || !cx.channel.active",
-                  enabledif: "client.viewsArray.length > 1"}],
-         ["leave",       {visibleif: "cx.channel && cx.channel.active"}],
          ["-"],
          [">popup:motifs"],
          [">popup:fonts"],
+         ["-"],
          ["toggle-ccm",
                  {type: "checkbox",
                   checkedif: "client.prefs['collapseMsgs']"}],
@@ -229,19 +228,26 @@ function initMenus()
         ]
     };
 
-    var isopish = "(cx.channel.iAmOp() || cx.channel.iAmHalfOp())";
+    // Me is op.
+    var isop    = "(cx.channel.iAmOp()) && ";
+    // Me is op or half-op.
+    var isopish = "(cx.channel.iAmOp() || cx.channel.iAmHalfOp()) && ";
+    // Server has half-ops.
+    var shop    = "(cx.server.supports.prefix.indexOf('h') > 0) && ";
 
     client.menuSpecs["popup:opcommands"] = {
         label: MSG_MNU_OPCOMMANDS,
         items:
         [
-         ["op",         {enabledif: isopish + " && !cx.user.isOp"}],
-         ["deop",       {enabledif: isopish + " && cx.user.isOp"}],
-         ["voice",      {enabledif: isopish + " && !cx.user.isVoice"}],
-         ["devoice",    {enabledif: isopish + " && cx.user.isVoice"}],
+         ["op",         {visibleif: isop           + "!cx.user.isOp"}],
+         ["deop",       {visibleif: isop           + "cx.user.isOp"}],
+         ["hop",        {visibleif: isopish + shop + "!cx.user.isHalfOp"}],
+         ["dehop",      {visibleif: isopish + shop + "cx.user.isHalfOp"}],
+         ["voice",      {visibleif: isopish        + "!cx.user.isVoice"}],
+         ["devoice",    {visibleif: isopish        + "cx.user.isVoice"}],
          ["-"],
-         ["kick",       {enabledif: isopish}],
-         ["kick-ban",       {enabledif: isopish}]
+         ["kick",       {enabledif: "(" + isop + "1) || (" + isopish + "!cx.user.isOp)"}],
+         ["kick-ban",   {enabledif: "(" + isop + "1) || (" + isopish + "!cx.user.isOp)"}]
         ]
     };
 
@@ -255,7 +261,7 @@ function initMenus()
          ["toggle-umode", {type: "checkbox",
                            checkedif: "client.prefs['showModeSymbols']"}],
          ["-"],
-         [">popup:opcommands", {enabledif: "cx.channel && " + isopish}],
+         [">popup:opcommands", {enabledif: "cx.channel && " + isopish + "cx.user"}],
          ["whois"],
          ["query"],
          ["version"],
@@ -277,20 +283,20 @@ function initMenus()
          ["cmd-copy", {visibleif: "!" + urlenabled, enabledif: textselected }],
          ["cmd-selectall", {visibleif: "!" + urlenabled }],
          ["-"],
-         ["leave", 
-                 {enabledif: "cx.TYPE == 'IRCChannel'"}],
-         ["delete-view", {enabledif: "client.viewsArray.length > 1"}],
-         ["disconnect"],
+         ["clear-view"],
+         ["hide-view", {enabledif: "client.viewsArray.length > 1"}],
+         ["toggle-oas",
+                 {type: "checkbox",
+                  checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
          ["-"],
-         [">popup:opcommands", {enabledif: "cx.channel && " + isopish}],
+         [">popup:opcommands", {enabledif: "cx.channel && " + isopish + "cx.user"}],
          ["whois"],
          ["query"],
          ["version"],
          ["-"],
-         [">popup:motifs"],
-         ["toggle-oas",
-                 {type: "checkbox",
-                  checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
+         ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
+         ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
+         ["disconnect"]
         ]
     };
 
@@ -298,14 +304,15 @@ function initMenus()
         getContext: getTabContext,
         items:
         [
-         ["leave", 
-                 {enabledif: "cx.TYPE == 'IRCChannel'"}],
-         ["delete-view", {enabledif: "client.viewsArray.length > 1"}],
-         ["disconnect"],
-         ["-"],
+         ["clear-view"],
+         ["hide-view", {enabledif: "client.viewsArray.length > 1"}],
          ["toggle-oas",
                  {type: "checkbox",
                   checkedif: "isStartupURL(cx.sourceObject.getURL())"}],
+         ["-"],
+         ["leave", {visibleif: "cx.TYPE == 'IRCChannel'"}],
+         ["delete-view", {visibleif: "cx.TYPE != 'IRCChannel'"}],
+         ["disconnect"]
         ]
     };
 

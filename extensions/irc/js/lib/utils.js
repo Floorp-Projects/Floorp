@@ -105,6 +105,7 @@ jsenv.HAS_RHINO = (typeof defineClass == "function");
 jsenv.HAS_DOCUMENT = (typeof document == "object");
 jsenv.HAS_NSPR_EVENTQ = jsenv.HAS_DOCUMENT;
 jsenv.HAS_STREAM_PROVIDER = ("nsIStreamProvider" in Components.interfaces);
+jsenv.HAS_SERVER_SOCKETS = ("nsIServerSocket" in Components.interfaces);
 
 function dumpObject (o, pfx, sep)
 {
@@ -425,7 +426,7 @@ function encodeChar(ch)
 
 function escapeFileName(fileName)
 {
-    return fileName.replace(/[^\w\d.,#\-_]/g, encodeChar);
+    return fileName.replace(/[^\w\d.,#\-_%]/g, encodeChar);
 }
 
 function getCommonPfx (list)
