@@ -270,7 +270,7 @@ static const PRUnichar sHTMLTagUnicodeName_xmp[] =
 
 // static array of unicode tag names
 #define HTML_TAG(_tag) sHTMLTagUnicodeName_##_tag,
-static const PRUnichar* kTagUnicodeTable[] = {
+static const PRUnichar* const kTagUnicodeTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
@@ -279,7 +279,7 @@ static const PRUnichar* kTagUnicodeTable[] = {
 #ifdef DEBUG
 // static array of ASCII tag names for debugging purposes
 #define HTML_TAG(_tag) #_tag,
-static const char* kTagASCIIDebugTable[] = {
+static const char* const kTagASCIIDebugTable[] = {
 #include "nsHTMLTagList.h"
 };
 #undef HTML_TAG
@@ -507,6 +507,6 @@ public:
    }
 };
 
-nsTestTagTable validateTagTable;
+static const nsTestTagTable validateTagTable;
 
 #endif

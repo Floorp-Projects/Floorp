@@ -114,8 +114,8 @@ static NS_DEFINE_IID(kClassIID,     NS_VIEWSOURCE_HTML_IID);
 // bug 22022 - these are used to toggle 'Wrap Long Lines' on the viewsource
 // window by selectively setting/unsetting the following class defined in
 // viewsource.css; the setting is remembered between invocations using a pref.
-static const char* kBodyId = "viewsource";
-static const char* kBodyClassWrap = "wrap";
+static const char kBodyId[] = "viewsource";
+static const char kBodyClassWrap[] = "wrap";
 
 /**
  *  This method gets called as part of our COM-like interfaces.

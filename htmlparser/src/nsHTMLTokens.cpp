@@ -2051,7 +2051,7 @@ CEntityToken::ConsumeEntity(PRUnichar aChar,
  */
 #define NOT_USED 0xfffd
 
-static PRUint16 PA_HackTable[] = {
+static const PRUint16 PA_HackTable[] = {
 	0x20ac,  /* EURO SIGN */
 	NOT_USED,
 	0x201a,  /* SINGLE LOW-9 QUOTATION MARK */

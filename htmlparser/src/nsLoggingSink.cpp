@@ -49,7 +49,7 @@ static NS_DEFINE_IID(kILoggingSinkIID, NS_ILOGGING_SINK_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 // list of tags that have skipped content
-static char gSkippedContentTags[] = {
+static const char gSkippedContentTags[] = {
   eHTMLTag_style,
   eHTMLTag_script,
   eHTMLTag_server,

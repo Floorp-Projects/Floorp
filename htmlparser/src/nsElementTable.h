@@ -195,15 +195,15 @@ struct nsHTMLElement {
 
   static  PRInt32 GetIndexOfChildOrSynonym(nsDTDContext& aContext,eHTMLTags aChildTag);
 
-  TagList*        GetSynonymousTags(void) const {return mSynonymousTags;}
-  TagList*        GetRootTags(void) const {return mRootNodes;}
-  TagList*        GetEndRootTags(void) const {return mEndRootNodes;}
-  TagList*        GetAutoCloseStartTags(void) const {return mAutocloseStart;}
-  TagList*        GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
+  const TagList*  GetSynonymousTags(void) const {return mSynonymousTags;}
+  const TagList*  GetRootTags(void) const {return mRootNodes;}
+  const TagList*  GetEndRootTags(void) const {return mEndRootNodes;}
+  const TagList*  GetAutoCloseStartTags(void) const {return mAutocloseStart;}
+  const TagList*  GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
   eHTMLTags       GetCloseTargetForEndTag(nsDTDContext& aContext,PRInt32 anIndex) const;
 
-  TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
-  TagList*        GetSpecialParents(void) const {return mSpecialParents;}
+  const TagList*        GetSpecialChildren(void) const {return mSpecialKids;}
+  const TagList*        GetSpecialParents(void) const {return mSpecialParents;}
 
   PRBool          IsMemberOf(PRInt32 aType) const;
   PRBool          ContainsSet(PRInt32 aType) const;
@@ -239,19 +239,19 @@ struct nsHTMLElement {
   eHTMLTags       mTagID;
   eHTMLTags       mRequiredAncestor;
   eHTMLTags       mExcludingAncestor; //If set, the presence of the excl-ancestor prevents this from opening.
-  TagList*        mRootNodes;         //These are the tags above which you many not autoclose a START tag
-  TagList*        mEndRootNodes;      //These are the tags above which you many not autoclose an END tag
-  TagList*        mAutocloseStart;    //these are the start tags that you can automatically close with this START tag
-  TagList*        mAutocloseEnd;      //these are the start tags that you can automatically close with this END tag
-  TagList*        mSynonymousTags;    //These are morally equivalent; an end tag for one can close a start tag for another (like <Hn>)
-  TagList*        mExcludableParents; //These are the TAGS that cannot contain you
+  const TagList*  mRootNodes;         //These are the tags above which you many not autoclose a START tag
+  const TagList*        mEndRootNodes;      //These are the tags above which you many not autoclose an END tag
+  const TagList*        mAutocloseStart;    //these are the start tags that you can automatically close with this START tag
+  const TagList*        mAutocloseEnd;      //these are the start tags that you can automatically close with this END tag
+  const TagList*        mSynonymousTags;    //These are morally equivalent; an end tag for one can close a start tag for another (like <Hn>)
+  const TagList*        mExcludableParents; //These are the TAGS that cannot contain you
   int             mParentBits;        //defines groups that can contain this element
   int             mInclusionBits;     //defines parental and containment rules
   int             mExclusionBits;     //defines things you CANNOT contain
   int             mSpecialProperties; //used for various special purposes...
   PRUint32        mPropagateRange;    //tells us how far a parent is willing to prop. badly formed children
-  TagList*        mSpecialParents;    //These are the special tags that contain this tag (directly)
-  TagList*        mSpecialKids;       //These are the extra things you can contain
+  const TagList*  mSpecialParents;    //These are the special tags that contain this tag (directly)
+  const TagList*  mSpecialKids;       //These are the extra things you can contain
   eHTMLTags       mSkipTarget;        //If set, then we skip all content until this tag is seen
   ContainFunc     mCanBeContained;
 }; 
