@@ -117,7 +117,7 @@ NETLIB_LIBS		= \
 			$(NULL)
 else
 NETLIB_LIBS = \
-			$(DIST)/lib/libneckoutil_s.a \
+			-lneckoutil_s \
 			$(NULL)
 endif
 
