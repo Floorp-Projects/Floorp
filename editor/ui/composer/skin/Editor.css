@@ -85,7 +85,7 @@ button.PopupButton:active {
   border: 1px inset;
 }
 
-a[name][href=""] {
+a[name] {
   display: list-item; 
   list-style-image: url(chrome://editor/skin/images/ED_Left.gif); 
   list-style-position: inside;
