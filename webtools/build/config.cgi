@@ -228,7 +228,7 @@ sub print_configure_form {
     </b></font>
     </td></tr><tr><td>
     The mozilla Unix build system is designed to build without any user set
-    options. However, should you need to configure an option, the
+    options. However, should you need to tweak an option, the
     Configurator is here to help.
     This form produces a script that you can use to configure your build. 
     The script saves you the trouble of setting environment 
@@ -271,7 +271,7 @@ sub print_configure_form {
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@" checked>
     <code>mozilla</code></td><td> Build in the source tree. (default)<br></td></tr><tr><td>
     <input type="radio" name="MOZ_OBJDIR" value="\@TOPSRCDIR\@/obj-\@CONFIG_GUESS\@">
-    <code>mozilla/obj-\@CONFIG_GUESS\@</code> </td><td>Use directory like&nbsp; <code>mozilla/obj-i686-pc-linux-gnu.</code><br>
+    <code>mozilla/obj-`config.guess`</code> </td><td>(e.g. <code>mozilla/obj-i686-pc-linux-gnu)</code><br>
     </td></tr></table>
     </td></tr>
 
