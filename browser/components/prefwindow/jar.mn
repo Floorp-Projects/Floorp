@@ -59,7 +59,6 @@ en-US.jar:
     locale/en-US/browser/pref/pref-privacy.dtd             (locale/pref-privacy.dtd)
     locale/en-US/browser/pref/pref-popups.dtd              (locale/pref-popups.dtd)
     locale/en-US/browser/pref/pref-smart_browsing.dtd      (locale/pref-smart_browsing.dtd)
-    locale/en-US/browser/pref/pref-smartupdate.dtd         (locale/pref-smartupdate.dtd)
     locale/en-US/browser/pref/prefutilities.properties     (locale/prefutilities.properties)
     locale/en-US/browser/pref/preftree.dtd                 (locale/preftree.dtd)
     locale/en-US/browser/pref/pref.dtd                     (locale/pref.dtd)
