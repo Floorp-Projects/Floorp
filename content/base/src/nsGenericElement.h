@@ -230,6 +230,7 @@ public:
  */
 class nsNode3Tearoff : public nsIDOM3Node
 {
+public:
   NS_DECL_ISUPPORTS
 
   NS_DECL_NSIDOM3NODE
@@ -237,6 +238,12 @@ class nsNode3Tearoff : public nsIDOM3Node
   nsNode3Tearoff(nsIContent *aContent) : mContent(aContent)
   {
   }
+
+  static nsresult GetTextContent(nsIDocument *aDoc,
+                                 nsIDOMNode *aNode,
+                                 nsAString &aTextContent);
+
+protected:
   virtual ~nsNode3Tearoff() {};
 
 private:

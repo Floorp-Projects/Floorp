@@ -163,7 +163,7 @@ public:
   NS_DECL_NSIDOMNODE
 
   // nsIDOM3Node interface
-  NS_DECL_NSIDOM3NODE
+  NS_IMETHOD GetBaseURI(nsAString& aBaseURI);
 
   // nsIDOMHTMLDocument interface
   NS_IMETHOD GetTitle(nsAString & aTitle);

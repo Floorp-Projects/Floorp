@@ -150,8 +150,8 @@ public:
                        const nsAString& aVersion,
                        PRBool* aReturn);
   nsresult GetBaseURI(nsAString& aURI);
-  nsresult LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                 nsAString& aPrefix);
+  nsresult LookupPrefix(const nsAString& aNamespaceURI,
+                        nsAString& aPrefix);
   nsresult LookupNamespaceURI(const nsAString& aNamespacePrefix,
                               nsAString& aNamespaceURI);
 
@@ -392,10 +392,10 @@ private:
   NS_IMETHOD GetBaseURI(nsAString& aURI) {                                  \
     return nsGenericDOMDataNode::GetBaseURI(aURI);                          \
   }                                                                         \
-  NS_IMETHOD LookupNamespacePrefix(const nsAString& aNamespaceURI,          \
-                                   nsAString& aPrefix) {                    \
-    return nsGenericDOMDataNode::LookupNamespacePrefix(aNamespaceURI,       \
-                                                       aPrefix);            \
+  NS_IMETHOD LookupPrefix(const nsAString& aNamespaceURI,                   \
+                          nsAString& aPrefix) {                             \
+    return nsGenericDOMDataNode::LookupPrefix(aNamespaceURI,                \
+                                              aPrefix);                     \
   }                                                                         \
   NS_IMETHOD LookupNamespaceURI(const nsAString& aNamespacePrefix,          \
                                 nsAString& aNamespaceURI) {                 \

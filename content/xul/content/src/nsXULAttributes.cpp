@@ -193,7 +193,6 @@ nsXULAttribute::Create(nsIContent* aContent,
 NS_INTERFACE_MAP_BEGIN(nsXULAttribute)
     NS_INTERFACE_MAP_ENTRY(nsIDOMAttr)
     NS_INTERFACE_MAP_ENTRY(nsIDOMNode)
-    NS_INTERFACE_MAP_ENTRY(nsIDOM3Node)
     NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMAttr)
     NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(XULAttr)
 NS_INTERFACE_MAP_END
@@ -390,49 +389,6 @@ nsXULAttribute::IsSupported(const nsAString& aFeature,
   NS_NOTYETIMPLEMENTED("write me");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
-
-// nsIDOM3Node interface
-
-NS_IMETHODIMP
-nsXULAttribute::GetBaseURI(nsAString &aURI)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULAttribute::CompareDocumentPosition(nsIDOMNode* aOther,
-                                        PRUint16* aReturn)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULAttribute::IsSameNode(nsIDOMNode* aOther,
-                           PRBool* aReturn)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-NS_IMETHODIMP
-nsXULAttribute::LookupNamespacePrefix(const nsAString& aNamespaceURI,
-                                      nsAString& aPrefix)
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsXULAttribute::LookupNamespaceURI(const nsAString& aNamespacePrefix,
-                                   nsAString& aNamespaceURI) 
-{
-  NS_NOTYETIMPLEMENTED("write me");
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 // nsIDOMAttr interface
 
