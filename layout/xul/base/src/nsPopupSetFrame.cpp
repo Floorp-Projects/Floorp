@@ -190,7 +190,9 @@ nsPopupSetFrame::Destroy(nsPresContext* aPresContext)
     // Actually remove each popup from the list as we go. This
     // keeps things consistent so reentering won't crash us
     while (mPopupList) {
-      mPopupList->mPopupFrame->Destroy(aPresContext);
+      if (mPopupList->mPopupFrame) {
+        mPopupList->mPopupFrame->Destroy(aPresContext);
+      }
 
       nsPopupFrameList* temp = mPopupList;
       mPopupList = mPopupList->mNextPopup;
