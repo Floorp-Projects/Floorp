@@ -1102,8 +1102,7 @@ public class ScriptRuntime {
     public static Scriptable getBase(Scriptable scope, String id) {
         Scriptable obj = scope;
         while (obj != null) {
-            Object result = ScriptableObject.getProperty(obj, id);
-            if (result != Scriptable.NOT_FOUND)
+            if (ScriptableObject.hasProperty(obj, id))
                 return obj;
             obj = obj.getParentScope();
         }
