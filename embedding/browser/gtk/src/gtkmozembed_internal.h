@@ -23,6 +23,7 @@
 #define gtkmozembed_internal_h
 
 #include <nsIWebBrowser.h>
+#include <nsXPCOM.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +33,7 @@ extern void  gtk_moz_embed_get_nsIWebBrowser  (GtkMozEmbed *embed, nsIWebBrowser
 extern PRUnichar *gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed);
 extern PRUnichar *gtk_moz_embed_get_js_status_unichar (GtkMozEmbed *embed);
 extern PRUnichar *gtk_moz_embed_get_link_message_unichar (GtkMozEmbed *embed);
-
+extern void gtk_moz_embed_set_directory_service_provider (nsIDirectoryServiceProvider *appFileLocProvider);
 
 #ifdef __cplusplus
 }
