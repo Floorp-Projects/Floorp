@@ -97,8 +97,6 @@ NS_IMETHODIMP nsPK11Token::Logout()
 /* readonly attribute long minimumPasswordLength; */
 NS_IMETHODIMP nsPK11Token::GetMinimumPasswordLength(PRInt32 *aMinimumPasswordLength)
 {
-  nsresult rv = NS_OK;
-
   *aMinimumPasswordLength = PK11_GetMinimumPwdLength(mSlot);
 
   return NS_OK;
@@ -119,7 +117,7 @@ NS_IMETHODIMP nsPK11Token::CheckPassword(const PRUnichar *password, PRBool *_ret
 /* void initPassword (in wstring initialPassword); */
 NS_IMETHODIMP nsPK11Token::InitPassword(const PRUnichar *initialPassword)
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
     SECStatus status;
 
     status = PK11_InitPin(mSlot, "", NS_ConvertUCS2toUTF8(initialPassword));
@@ -184,7 +182,7 @@ NS_IMETHODIMP nsPK11TokenDB::GetInternalKeyToken(nsIPK11Token **_retval)
 {
   nsresult rv = NS_OK;
   PK11SlotInfo *slot = 0;
-  nsCOMPtr<nsPK11Token> token;
+  nsCOMPtr<nsIPK11Token> token;
 
   slot = PK11_GetInternalKeySlot();
   if (!slot) { rv = NS_ERROR_FAILURE; goto done; }
@@ -237,7 +235,7 @@ NS_IMETHODIMP nsPK11TokenDB::ListTokens(nsIEnumerator* *_retval)
   if (!list) { rv = NS_ERROR_FAILURE; goto done; }
 
   for (le = PK11_GetFirstSafe(list); le; le = PK11_GetNextSafe(list, le, PR_FALSE)) {
-    nsCOMPtr<nsPK11Token> token = new nsPK11Token(le->slot);
+    nsCOMPtr<nsIPK11Token> token = new nsPK11Token(le->slot);
 
     array->AppendElement(token);
   }
