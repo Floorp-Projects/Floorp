@@ -2,8 +2,6 @@
 @import url(chrome://communicator/content/sidebar/sidebarOverlay.css);
 @import url(chrome://communicator/skin/sidebar/sidebar.css);
 
-/* ADDED FROM KOMODO */
-
 /* Separator classes taken from formatting.css */
 /* groovy separators (50% size) */
   separator.groovy,
@@ -50,84 +48,47 @@ browser, editor, iframe {
 }
 
 #helpBackButton {
-	list-style-image: url("chrome://navigator/skin/back.gif"); 
+	list-style-image: url("chrome://navigator/skin/btn1/back.gif");
+ 
 }
 #helpBackButton[disabled="true"] {
-	list-style-image: url("chrome://navigator/skin/back-disabled.gif");
+	list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
 }
 
 #helpBackButton[disabled="true"]:hover {
-	list-style-image: url("chrome://navigator/skin/back-disabled.gif");
+	list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
 }
 
 #helpBackButton:hover
   {
-    list-style-image      : url("chrome://navigator/skin/back-hover.gif");
+    list-style-image      : url("chrome://navigator/skin/btn1/back-hov.gif");
+
   }
 #helpBackButton:active
   {
-    list-style-image      : url("chrome://navigator/skin/back-clicked.gif");
+    list-style-image      : url("chrome://navigator/skin/btn1/back-act.gif");
   }
 
 #helpForwardButton {
-	list-style-image: url("chrome://navigator/skin/forward.gif"); 
+	list-style-image: url("chrome://navigator/skin/btn1/forward.gif");
+ 
 }
 #helpForwardButton[disabled="true"] {
-	list-style-image: url("chrome://navigator/skin/forward-disabled.gif");
+	list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
+
 }	
 
 #helpForwardButton[disabled="true"]:hover {
-	list-style-image: url("chrome://navigator/skin/forward-disabled.gif");
+	list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
+
 }	
 
 #helpForwardButton:hover
   {
-    list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
+     list-style-image      : url("chrome://navigator/skin/btn1/forward-hov.gif");
   }
 #helpForwardButton:active
   {
-    list-style-image      : url("chrome://navigator/skin/forward-clicked.gif");
+    list-style-image      : url("chrome://navigator/skin/btn1/forward-act.gif");
   }
-
-#toc {
-	background-color: lightgrey;
-}
-
-#marquee {
- 	color: white;
- 	font-size: 14pt;
- 	font-weight: bold;
-}
-
-.item {
-	margin-top: .07in;
-	margin-bottom: .125in;
-	padding-top: .075in;
-	margin-left: .025in;
-	// background-color: #336699;
-  	color: gray;
-}
-
-
-.item:selected {
-	font-weight: bold;
-}
-
-.subitem {
-	font-weight: normal;
-	padding-top: .075in;
-	margin-left: .075in;
-}
-
-
-box .subitem:hover {
-	background-color: #336699;
-  	color: white;
-}
-
-#nav-bar, #nav {
-	background-color: lightgrey;
-}
-
-
 
