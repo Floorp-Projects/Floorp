@@ -44,6 +44,8 @@
 #include "nsHTMLValue.h"
 #include "nsIWebShell.h"
 
+#include "nsCSSFrameConstructor.h"
+
 class nsIFrame;
 class nsIDOMSelection;
 
@@ -546,8 +548,16 @@ protected:
                           nsIFrame*            aFrame,
                           nsFramePaintLayer    aWhichLayer);
 
+  NS_IMETHOD FirstChild(nsIAtom *aListName, nsIFrame **aFirstChild) const;
+  
+  NS_IMETHOD GetAdditionalChildListName(PRInt32 aIndex,
+                                        nsIAtom** aListName) const;
+  NS_IMETHOD Destroy(nsIPresContext *aPresContext);
+
 public:
   void SetShouldSetFocus() { mDidSetFocus = PR_FALSE; };
+  void SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
+    { mFrameConstructor = aConstructor; } // not owner - do not addref!
 
 protected:
   nsCOMPtr<nsIWebShell> mWebShell;
@@ -567,6 +577,7 @@ protected:
   nsCOMPtr<nsIEnderEventListener> mEventListener;  // ref counted
   nsEnderFocusListenerForContent *mFocusListenerForContent; // ref counted
 
+  nsCSSFrameConstructor *mFrameConstructor;
   nsIFrame *mDisplayFrame;
   nsCOMPtr<nsITextContent> mDisplayContent;
  
