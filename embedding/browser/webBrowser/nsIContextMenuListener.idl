@@ -37,20 +37,33 @@ interface nsIDOMNode;
 interface nsIContextMenuListener : nsISupports
 {
     const unsigned long CONTEXT_NONE     = 0;
-    const unsigned long CONTEXT_DEFAULT  = 1;
-    const unsigned long CONTEXT_LINK     = 2;
-    const unsigned long CONTEXT_IMAGE    = 4;
-    const unsigned long CONTEXT_DOCUMENT = 8;
-    const unsigned long CONTEXT_TEXT     = 16;
-    const unsigned long CONTEXT_OTHER    = 32;
-    const unsigned long CONTEXT_INPUT    = 64;
+    const unsigned long CONTEXT_LINK     = 1;
+    const unsigned long CONTEXT_IMAGE    = 2;
+    const unsigned long CONTEXT_DOCUMENT = 4;
+    const unsigned long CONTEXT_TEXT     = 8;
+    const unsigned long CONTEXT_INPUT    = 16;
 
     /**
-	 * Called when the user attempts to display a context menu, e.g. by
-	 * right-clicking on a link. The combination of flags indicates what was
-	 * clicked on, the DOM event and node objects allow the client to interrogate
-	 * for more information if they like.
-	 */
+     * Called when the user attempts to display a context menu, e.g. by
+     * right-clicking on a link. The combination of flags indicates what was
+     * clicked on, the DOM event and node objects allow the client to interrogate
+     * for more information if they like.
+     *
+     * The following table describes what aNode points two given a particular
+     * aContextFlag. No other combinations are possible.
+     *
+     * aContextFlag                  |  aNode
+     * ------------------------------+-----------------
+     * CONTEXT_LINK                  |  <A>
+     * CONTEXT_IMAGE                 |  <IMG>
+     * CONTEXT_IMAGE | CONTEXT_LINK  |  <IMG> *
+     * CONTEXT_INPUT                 |  <INPUT>
+     * CONTEXT_TEXT                  |  <TEXTAREA>
+     * CONTEXT_DOCUMENT              |  <HTML>
+     *
+     * * <A> node is guaranteed to be an ancestor of this node
+     *
+     */
     void OnShowContextMenu(in unsigned long aContextFlags, in nsIDOMEvent aEvent, in nsIDOMNode aNode);
 };
 
