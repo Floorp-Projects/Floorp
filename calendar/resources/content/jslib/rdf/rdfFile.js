@@ -57,14 +57,6 @@ RDFFile.prototype._file_init = function (aPath, aFlags, aNameSpace, aID) {
      aID = "JSLIB";
   }
 
-  var filename = aPath;
-
-  if(filename.substr(0,7) == "file://") {
-     var fu = new FileUtils();
-     filename = fu.urltoPath(filename);
-  }
-
-  dump("file: "+filename+"\n");
   // Ensure we have a base RDF file to work with
   var rdf_file = new File(aPath);
 
@@ -91,7 +83,13 @@ RDFFile.prototype._file_init = function (aPath, aFlags, aNameSpace, aID) {
   rdf_file.close();
 
   // Get a reference to the available datasources
-  this._rdf_init("file://"+filename, aFlags);
+  var serv = Components.classes["@mozilla.org/network/io-service;1"].
+             getService(Components.interfaces.nsIIOService);
+  if (!serv) {
+      throw Components.results.ERR_FAILURE;
+  }
+  var uri = serv.newFileURI(rdf_file.nsIFile);
+  this._rdf_init(uri.spec, aFlags);
 };
 
 jslib_debug('*** load: '+JS_RDFFILE_FILE+' OK');

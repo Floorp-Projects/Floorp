@@ -37,7 +37,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifndef WIN32
+#ifdef XP_MAC
+#include <stdlib.h> // for atol
+#else
 #include <unistd.h>
+#endif
 #endif
 
 #include "oeICalEventImpl.h"
@@ -46,6 +50,8 @@
 #include "plbase64.h"
 #include "nsMsgCompCID.h"
 #include "nsAbBaseCID.h"
+#include "nsIAbCard.h"
+#include "nsIMsgAttachment.h"
 
 #define strcasecmp strcmp
 
@@ -2427,7 +2433,7 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 }
 
 /********************************************************************************************/
-#include <nsIServiceManager.h>
+#include "nsIServiceManager.h"
  
 NS_IMPL_ADDREF(oeICalEventDisplayImpl)
 NS_IMPL_RELEASE(oeICalEventDisplayImpl)

@@ -37,9 +37,10 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIMsgAttachment.idl"
-#include "nsIAbCard.idl"
 #include "nsISupportsArray.idl"
+
+interface nsIAbCard;
+interface nsIMsgAttachment;
 interface nsISimpleEnumerator;
 
 /**
