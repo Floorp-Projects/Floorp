@@ -50,6 +50,7 @@ function copySelectionToClipboard()
 	// build a url that encodes all the select nodes as well as their parent nodes
 	var url="";
 	var text="";
+	var html="";
 
 	for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
 	{
@@ -74,9 +75,21 @@ function copySelectionToClipboard()
 		if (isContainerFlag == false)
 		{
 			var type = node.getAttribute("type");
-			if (type != "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+			if (type == "http://home.netscape.com/NC-rdf#BookmarkSeparator")
+			{
+				// Note: can't encode separators in text, just html
+				html += "<hr><p>";
+			}
+			else
 			{
 				text += ID + "\r";
+			
+				html += "<a href='" + ID + "'>";
+				if (theName != "")
+				{
+					html += theName;
+				}
+				html += "</a><p>";
 			}
 		}
 	}
@@ -112,6 +125,18 @@ function copySelectionToClipboard()
 		textData.data = text;
 		trans.setTransferData ( "text/unicode", textData, text.length*2 );			// double byte data
 	}
+
+	if (html != "")
+	{
+		trans.addDataFlavor("text/html");
+
+		var htmlData = Components.classes["component://netscape/supports-wstring"].createInstance();
+		if ( htmlData )	htmlData = htmlData.QueryInterface(Components.interfaces.nsISupportsWString);
+		if (!htmlData)	return(false);
+		htmlData.data = html;
+		trans.setTransferData ( "text/html", htmlData, html.length*2 );			// double byte data
+	}
+
 	clip.setData(trans, null);
 
 	return(true);
