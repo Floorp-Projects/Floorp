@@ -25,6 +25,8 @@
 #include "nsIAddrDatabase.h"
 #include "nsAddrDatabase.h"
 
+class nsIPref;
+
 class nsAbAddressCollecter : public nsIAbAddressCollecter
 {
 public:
@@ -35,6 +37,8 @@ public:
 	NS_IMETHOD	CollectAddress(const char *address);
 
 	nsresult OpenHistoryAB(nsIAddrDatabase **aDatabase);
+	nsresult IsDomainExcluded(const char *address, nsIPref *pPref, PRBool *bExclude);
+	nsresult SplitFullName (const char *fullName, char **firstName, char **lastName);
 protected:
 	nsCOMPtr <nsIAddrDatabase> m_historyAB;
 

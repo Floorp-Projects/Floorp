@@ -26,6 +26,7 @@
 #include "nsIPref.h"
 #include "nsIAddrBookSession.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsXPIDLString.h"
   
   // For the new pref API's
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
@@ -53,7 +54,7 @@ nsAbAddressCollecter::~nsAbAddressCollecter()
 NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 {
 	nsresult rv;
-	PRBool collectAddresses;
+	PRBool collectAddresses = PR_TRUE;
 
     NS_WITH_SERVICE(nsIPref, pPref, kPrefCID, &rv); 
     if (NS_FAILED(rv) || !pPref) 
@@ -87,31 +88,59 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 		char *curName = names;
 		char *curAddress = addresses;
 		char *excludeDomainList = nsnull;
-		PRUint32 numAddresses;
 
-		rv = pPref->CopyCharPref("mail.address_collection_ignore_domain_list", &excludeDomainList);
-		if (NS_SUCCEEDED(rv)) 
+		for (PRUint32 i = 0; i < numAddresses; i++)
 		{
-			for (PRUint32 i = 0; i < numAddresses; i++)
-			{
-				nsCOMPtr<nsIAbCard> senderCard;
-				rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(senderCard));
-				if (NS_SUCCEEDED(rv) && senderCard)
-				{
-					senderCard->SetDisplayName(curName);
-					senderCard->SetPrimaryEmail(curAddress);
-					senderCard->AddCardToDatabase("abdirectory://history.mab");
-				}
-				curName += strlen(curName) + 1;
-				curAddress += strlen(curAddress) + 1;
-			}
-			PR_FREEIF(addresses);
-			PR_FREEIF(names);
-			PR_FREEIF(excludeDomainList);
-		}
-	}
+			PRBool exclude;
 
-// pref("mail.address_collection_ignore_domain_list","");
+			rv = IsDomainExcluded(curAddress, pPref, &exclude);
+			if (NS_SUCCEEDED(rv) && !exclude)
+			{
+				nsCOMPtr <nsIAbCard> existingCard;
+
+				rv = m_historyAB->GetCardForEmailAddress(curAddress, getter_AddRefs(existingCard));
+
+				if (!existingCard)
+				{
+					nsCOMPtr<nsIAbCard> senderCard;
+					rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(senderCard));
+					if (NS_SUCCEEDED(rv) && senderCard)
+					{
+						if (curName && nsCRT::strlen(curName) > 0)
+						{
+							senderCard->SetDisplayName(curName);
+						}
+						else
+						{
+							nsCAutoString senderFromEmail(curAddress);
+							PRInt32 atSignIndex = senderFromEmail.FindChar('@');
+							if (atSignIndex > 0)
+							{
+								senderFromEmail.Truncate(atSignIndex + 1);
+								senderCard->SetDisplayName(senderFromEmail);
+							}
+						}
+						senderCard->SetPrimaryEmail(curAddress);
+						senderCard->AddCardToDatabase("abdirectory://history.mab");
+					}
+				}
+				else
+				{
+					char *displayName = nsnull;
+
+					rv = existingCard->GetDisplayName(&displayName);
+					if (NS_SUCCEEDED(rv) && displayName)
+					{
+					}
+				}
+			}
+			curName += strlen(curName) + 1;
+			curAddress += strlen(curAddress) + 1;
+		}
+		PR_FREEIF(addresses);
+		PR_FREEIF(names);
+		PR_FREEIF(excludeDomainList);
+	}
 
 	return NS_OK;
 }
@@ -131,12 +160,90 @@ nsresult nsAbAddressCollecter::OpenHistoryAB(nsIAddrDatabase **aDatabase)
 	
 	if (dbPath)
 	{
-		(*dbPath) += "Collected Addresses.mab";
+		(*dbPath) += "history.mab";
 
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_FALSE, aDatabase, PR_TRUE);
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
 	}
 	return rv;
+}
+
+nsresult nsAbAddressCollecter::IsDomainExcluded(const char *address, nsIPref *pPref, PRBool *bExclude)
+{
+	if (!bExclude)
+		return NS_ERROR_NULL_POINTER;
+
+	*bExclude = PR_FALSE;
+
+	nsXPIDLCString excludedDomainList;
+	nsresult rv = pPref->CopyCharPref("mail.address_collection_ignore_domain_list",
+                                   getter_Copies(excludedDomainList));
+
+	if (NS_FAILED(rv) || !excludedDomainList || !excludedDomainList[0]) 
+		return NS_OK;
+
+	nsCAutoString incomingDomain(address);
+	PRInt32 atSignIndex = incomingDomain.RFindChar('@');
+	if (atSignIndex > 0)
+	{
+		incomingDomain.Cut(0, atSignIndex + 1);
+
+		char *token = nsnull;
+		char *rest = NS_CONST_CAST(char*,(const char*)excludedDomainList);
+		nsCAutoString str;
+
+		token = nsCRT::strtok(rest, ",", &rest);
+		while (token && *token) 
+		{
+			str = token;
+			str.StripWhitespace();
+
+			if (!str.IsEmpty()) 
+			{
+				if (str.Equals(incomingDomain))
+				{
+					*bExclude = PR_TRUE;
+					break;
+				}
+			}
+			str = "";
+			token = nsCRT::strtok(rest, ",", &rest);
+		}
+	}
+	return rv;
+}
+
+nsresult nsAbAddressCollecter::SplitFullName (const char *fullName, char **firstName, char **lastName)
+{
+    if (fullName)
+    {
+        *firstName = nsCRT::strdup(fullName);
+        if (NULL == *firstName)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        char *plastSpace = *firstName;
+        char *walkName = *firstName;
+        char *plastName = nsnull;
+
+        while (walkName && *walkName)
+        {
+            if (*walkName == ' ')
+            {
+                plastSpace = walkName;
+                plastName = ++plastSpace;
+            }
+            
+            walkName++;
+        }
+
+        if (plastName) 
+        {
+            *plastSpace = '\0';
+            *lastName = nsCRT::strdup (plastName);
+        }
+    }
+
+    return NS_OK;
 }
