@@ -14,7 +14,7 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -642,7 +642,10 @@ nsXULDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
                            getter_AddRefs(parser));
         if (NS_FAILED(rv)) return rv;
 
-        mIsWritingFastLoad = PR_TRUE;
+        // Predicate mIsWritingFastLoad on the XUL cache being enabled,
+        // so we don't have to re-check whether the cache is enabled all
+        // the time.
+        mIsWritingFastLoad = useXULCache;
 
         nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser, &rv);
         NS_ASSERTION(NS_SUCCEEDED(rv), "parser doesn't support nsIStreamListener");
@@ -740,7 +743,6 @@ nsXULDocument::EndLoad()
         // its load completion via proto->AwaitLoadDone().
         rv = mCurrentPrototype->NotifyLoadDone();
         if (NS_FAILED(rv)) return rv;
-
     }
 
     // Now walk the prototype to build content.
@@ -3081,21 +3083,21 @@ nsXULDocument::ResumeWalk()
         // - Ben Goodger
         //
         // We don't abort on failure here because there are too many valid
-        // cases that can return failure, and the null-ness of |proto| is enough
-        // to trigger the fail-safe parse-from-disk solution. Example failure cases
-        // (for reference) include:
+        // cases that can return failure, and the null-ness of |proto| is
+        // enough to trigger the fail-safe parse-from-disk solution.
+        // Example failure cases (for reference) include:
         //
-        // NS_ERROR_NOT_AVAILABLE: the URI cannot be found in the FastLoad cache,
+        // NS_ERROR_NOT_AVAILABLE: the URI was not found in the FastLoad file,
         //                         parse from disk
-        // other: the FastLoad cache file, XUL.mfl, could not be found, probably
-        //        due to being accessed before a profile has been selected (e.g.
-        //        loading chrome for the profile manager itself). This must be
-        //        parsed from disk.
+        // other: the FastLoad file, XUL.mfl, could not be found, probably
+        //        due to being accessed before a profile has been selected
+        //        (e.g. loading chrome for the profile manager itself).
+        //        The .xul file must be parsed from disk.
 
-        PRBool cache;
-        gXULCache->GetEnabled(&cache);
+        PRBool useXULCache;
+        gXULCache->GetEnabled(&useXULCache);
 
-        if (cache && mCurrentPrototype) {
+        if (useXULCache && mCurrentPrototype) {
             NS_ASSERTION(IsChromeURI(uri), "XUL cache hit on non-chrome URI?");
             PRBool loaded;
             rv = mCurrentPrototype->AwaitLoadDone(this, &loaded);
@@ -3127,7 +3129,10 @@ nsXULDocument::ResumeWalk()
             rv = PrepareToLoadPrototype(uri, "view", nsnull, getter_AddRefs(parser));
             if (NS_FAILED(rv)) return rv;
 
-            mIsWritingFastLoad = PR_TRUE;
+            // Predicate mIsWritingFastLoad on the XUL cache being enabled,
+            // so we don't have to re-check whether the cache is enabled all
+            // the time.
+            mIsWritingFastLoad = useXULCache;
 
             nsCOMPtr<nsIStreamListener> listener = do_QueryInterface(parser);
             if (! listener)
@@ -3153,7 +3158,7 @@ nsXULDocument::ResumeWalk()
             // each time.  We must do this after NS_OpenURI and AsyncOpen,
             // or chrome code will wrongly create a cached chrome channel
             // instead of a real one.
-            if (cache && IsChromeURI(uri)) {
+            if (useXULCache && IsChromeURI(uri)) {
                 rv = gXULCache->PutPrototype(mCurrentPrototype);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -3179,10 +3184,7 @@ nsXULDocument::ResumeWalk()
 
     StartLayout();
 
-    PRBool useXULCache;
-    gXULCache->GetEnabled(&useXULCache);
-
-    if (useXULCache && mIsWritingFastLoad && IsChromeURI(mDocumentURL))
+    if (mIsWritingFastLoad && IsChromeURI(mDocumentURL))
         gXULCache->WritePrototype(mMasterPrototype);
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
@@ -3325,42 +3327,11 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
         // nsXULContentSink.cpp) would have already deserialized a non-null
         // script->mJSObject, causing control flow at the top of LoadScript
         // not to reach here.
-        //
-        // Start and Select the .js document in the FastLoad multiplexor
-        // before serializing script data under scriptProto->Compile, and
-        // End muxing afterward.
         nsCOMPtr<nsIURI> uri = scriptProto->mSrcURI;
-
-        nsCOMPtr<nsIFastLoadService> fastLoadService;
-        PRBool useXULCache;
-        gXULCache->GetEnabled(&useXULCache);
-        if (useXULCache)
-            gXULCache->GetFastLoadService(getter_AddRefs(fastLoadService));
-
-        nsresult rv2 = NS_OK;
-        if (fastLoadService) {
-            nsCAutoString urispec;
-            uri->GetAsciiSpec(urispec);
-            rv2 = fastLoadService->StartMuxedDocument(uri, urispec.get(),
-                                                      nsIFastLoadService::NS_FASTLOAD_WRITE);
-            NS_ASSERTION(rv2 != NS_ERROR_NOT_AVAILABLE, "reading FastLoad?!");
-            if (NS_SUCCEEDED(rv2)) {
-                nsCOMPtr<nsIURI> oldURI;
-                fastLoadService->SelectMuxedDocument(uri, getter_AddRefs(oldURI));
-            }
-        }
 
         nsString stringStr; stringStr.AssignWithConversion(string, stringLen);
         rv = scriptProto->Compile(stringStr.get(), stringLen, uri, 1, this,
                                   mCurrentPrototype);
-
-        // End muxing the .js file into the FastLoad file.  We don't Abort
-        // the FastLoad process here, when writing, as we do when reading.
-        // XXXbe maybe we should...
-        // NB: we don't need to Select mDocumentURL again, because scripts
-        // load after their including prototype document has fully loaded.
-        if (fastLoadService && NS_SUCCEEDED(rv2))
-            fastLoadService->EndMuxedDocument(uri);
 
         aStatus = rv;
         if (NS_SUCCEEDED(rv) && scriptProto->mJSObject) {
@@ -3393,6 +3364,24 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
             if (useXULCache && IsChromeURI(mDocumentURL)) {
                 gXULCache->PutScript(scriptProto->mSrcURI,
                                      NS_REINTERPRET_CAST(void*, scriptProto->mJSObject));
+            }
+
+            if (mIsWritingFastLoad && mCurrentPrototype != mMasterPrototype) {
+                // If we are loading an overlay script, try to serialize
+                // it to the FastLoad file here.  Master scripts will be
+                // serialized when the master prototype document gets
+                // written, at the bottom of ResumeWalk.  That way, master
+                // out-of-line scripts are serialized in the same order that
+                // they'll be read, in the FastLoad file, which reduces the
+                // number of seeks that dump the underlying stream's buffer.
+                //
+                // Ignore the return value, as we don't need to propagate
+                // a failure to write to the FastLoad file, because this
+                // method aborts that whole process on error.
+                nsCOMPtr<nsIScriptContext> scriptContext;
+                mScriptGlobalObject->GetContext(getter_AddRefs(scriptContext));
+                if (scriptContext)
+                    scriptProto->SerializeOutOfLine(nsnull, scriptContext);
             }
         }
         // ignore any evaluation errors

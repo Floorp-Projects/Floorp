@@ -14,7 +14,7 @@
  *
  * The Original Code is Mozilla Communicator client code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -195,7 +195,7 @@ public:
     Type                     mType;
 
     PRInt32                  mRefCnt;
-          
+
     virtual ~nsXULPrototypeNode() {}
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
@@ -206,11 +206,11 @@ public:
                                  nsISupportsArray* aNodeInfos) = 0;
 
     void AddRef() { ++mRefCnt; };
-    void Release() 
-    { 
-        --mRefCnt; 
-        if (mRefCnt == 0) 
-            delete this; 
+    void Release()
+    {
+        --mRefCnt;
+        if (mRefCnt == 0)
+            delete this;
     };
     virtual void ReleaseSubtree() { Release(); };
 
@@ -242,7 +242,7 @@ public:
         delete[] mChildren;
     }
 
-    virtual void ReleaseSubtree() 
+    virtual void ReleaseSubtree()
     {
       if (mChildren) {
         for (PRInt32 i = mNumChildren-1; i >= 0; i--) {
@@ -277,8 +277,8 @@ public:
     nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsAString& aValue);
 
 
-    static void ReleaseGlobals() 
-    { 
+    static void ReleaseGlobals()
+    {
         NS_IF_RELEASE(sCSSParser);
     }
 
@@ -305,12 +305,14 @@ public:
     virtual nsresult Serialize(nsIObjectOutputStream* aStream,
                                nsIScriptContext* aContext,
                                nsISupportsArray* aNodeInfos);
+    nsresult SerializeOutOfLine(nsIObjectOutputStream* aStream,
+                                nsIScriptContext* aContext);
     virtual nsresult Deserialize(nsIObjectInputStream* aStream,
                                  nsIScriptContext* aContext,
                                  nsIURI* aDocumentURI,
                                  nsISupportsArray* aNodeInfos);
-    virtual nsresult DeserializeOutOfLineScript(nsIObjectInputStream* aInput,
-                                                nsIScriptContext* aContext);
+    nsresult DeserializeOutOfLine(nsIObjectInputStream* aInput,
+                                  nsIScriptContext* aContext);
 
     nsresult Compile(const PRUnichar* aText, PRInt32 aTextLength,
                      nsIURI* aURI, PRUint16 aLineNo,
@@ -325,9 +327,9 @@ public:
     JSObject*                mJSObject;
     const char*              mLangVersion;
 
-    static void ReleaseGlobals() 
-    { 
-        NS_IF_RELEASE(sXULPrototypeCache); 
+    static void ReleaseGlobals()
+    {
+        NS_IF_RELEASE(sXULPrototypeCache);
     }
 
 protected:
@@ -402,7 +404,7 @@ public:
 
     // nsISupports
     NS_DECL_ISUPPORTS
-       
+
     // nsIContent (from nsIStyledContent)
     NS_IMETHOD GetDocument(nsIDocument*& aResult) const;
     NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileEventHandlers);
@@ -431,7 +433,7 @@ public:
     NS_IMETHOD GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, nsIAtom*& aPrefix, nsAString& aResult) const;
     NS_IMETHOD_(PRBool) HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
     NS_IMETHOD UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotify);
-    NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID, 
+    NS_IMETHOD GetAttrNameAt(PRInt32 aIndex, PRInt32& aNameSpaceID,
                              nsIAtom*& aName, nsIAtom*& aPrefix) const;
     NS_IMETHOD GetAttrCount(PRInt32& aResult) const;
 #ifdef DEBUG
@@ -449,7 +451,7 @@ public:
     NS_IMETHOD SetContentID(PRUint32 aID);
 
     NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
-    NS_IMETHOD RangeRemove(nsIDOMRange* aRange); 
+    NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
     NS_IMETHOD GetRangeList(nsVoidArray*& aResult) const;
     NS_IMETHOD SetFocus(nsIPresContext* aPresContext);
     NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext);
@@ -480,10 +482,10 @@ public:
     NS_IMETHOD ClearLazyState(LazyState aFlags);
     NS_IMETHOD GetLazyState(LazyState aFlag, PRBool& aValue);
     NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsAString& aValue);
-    
+
     // nsIDOMNode (from nsIDOMElement)
     NS_DECL_NSIDOMNODE
-  
+
     // nsIDOMElement
     NS_DECL_NSIDOMELEMENT
 
@@ -641,7 +643,7 @@ protected:
     nsresult AddListenerFor(nsINodeInfo *aNodeInfo,
                             PRBool aCompileEventHandlers);
 
-    
+
     nsresult HideWindowChrome(PRBool aShouldHide);
 
 protected:

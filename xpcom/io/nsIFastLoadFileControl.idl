@@ -85,6 +85,12 @@ interface nsIFastLoadFileControl : nsISupports
     void        startMuxedDocument(in nsISupports aURI, in string aURISpec);
     nsISupports selectMuxedDocument(in nsISupports aURI);
     void        endMuxedDocument(in nsISupports aURI);
+
+    /**
+     * Return true if aURISpec identifies a muxed document in the FastLoad
+     * file, false otherwise.
+     */
+    boolean     hasMuxedDocument(in string aURISpec);
 };
 
 [scriptable, uuid(652ecec6-d40b-45b6-afef-641d6c63a35b)]

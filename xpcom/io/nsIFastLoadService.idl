@@ -106,6 +106,12 @@ interface nsIFastLoadService : nsISupports
 
     [noscript] void writeFastLoadPtr(in nsIObjectOutputStream aOutputStream,
                                      in nsISupports aPtr);
+
+    /**
+     * Return true if aURISpec identifies a muxed document in the FastLoad
+     * file, false otherwise.
+     */
+    boolean     hasMuxedDocument(in string aURISpec);
 };
 
 %{C++

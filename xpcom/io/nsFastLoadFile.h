@@ -290,6 +290,14 @@ class nsFastLoadFileReader
     // Override Read so we can demultiplex a document interleaved with others.
     NS_IMETHOD Read(char* aBuffer, PRUint32 aCount, PRUint32 *aBytesRead);
 
+    // Override ReadSegments too, as nsBinaryInputStream::ReadSegments does
+    // not call through our overridden Read method -- it calls directly into
+    // the underlying input stream.
+    NS_IMETHODIMP nsFastLoadFileReader::ReadSegments(nsWriteSegmentFun aWriter,
+                                                     void* aClosure,
+                                                     PRUint32 aCount,
+                                                     PRUint32 *aResult);
+
     nsresult ReadHeader(nsFastLoadHeader *aHeader);
 
     /**
