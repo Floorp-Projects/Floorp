@@ -52,6 +52,8 @@
       <separator />
       <menuitem name="Find..." onclick="EditorFind(true)"/>
       <menuitem name="Find Again" onclick="EditorFind(false)"/>
+      <separator />
+      <menuitem name="Show Clipboard" onclick="EditorShowClipboard()"/>
    </menu>
 
     <menu name="View">
