@@ -1,0 +1,175 @@
+<?xml version="1.0"?> <!-- -*- Mode: HTML -*- --> 
+
+# ***** BEGIN LICENSE BLOCK *****
+# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#
+# The contents of this file are subject to the Mozilla Public License Version
+# 1.1 (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+# http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS IS" basis,
+# WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+# for the specific language governing rights and limitations under the
+# License.
+#
+# The Original Code is Mozilla Firebird about dialog.
+#
+# The Initial Developer of the Original Code is
+# Blake Ross (blake@blakeross.com).
+# Portions created by the Initial Developer are Copyright (C) 2002
+# the Initial Developer. All Rights Reserved.
+#
+# Contributor(s):
+#
+# Alternatively, the contents of this file may be used under the terms of
+# either the GNU General Public License Version 2 or later (the "GPL"), or
+# the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+# in which case the provisions of the GPL or the LGPL are applicable instead
+# of those above. If you wish to allow use of your version of this file only
+# under the terms of either the GPL or the LGPL, and not to allow others to
+# use your version of this file under the terms of the MPL, indicate your
+# decision by deleting the provisions above and replace them with the notice
+# and other provisions required by the LGPL or the GPL. If you do not delete
+# the provisions above, a recipient may use your version of this file under
+# the terms of any one of the MPL, the GPL or the LGPL.
+#
+# ***** END LICENSE BLOCK ***** -->
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+
+<!DOCTYPE dialog SYSTEM "chrome://browser/locale/setWallpaper.dtd">
+
+<dialog xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        id="aboutDialog"
+        buttons="accept,cancel"
+        buttonlabelaccept="&setWallpaper.title;"
+        onload="onLoad();"
+        ondialogaccept="onAccept();"
+        title="&setWallpaper.title;"
+        style="width: 299px"> 
+    
+    <script type="application/x-javascript">
+      <![CDATA[
+        const xulNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
+        const winHooks = Components.interfaces.nsIWindowsHooks;
+        var gMode = winHooks.WALLPAPER_STRETCH;
+        var gMonitor;
+        var gWidth, gHeight;
+
+        function HexToR(h) { return parseInt((cutHex(h)).substring(0,2),16) }
+        function HexToG(h) { return parseInt((cutHex(h)).substring(2,4),16) }
+        function HexToB(h) { return parseInt((cutHex(h)).substring(4,6),16) }
+        function cutHex(h) { return (h.charAt(0)=="#") ? h.substring(1,7) : h}
+
+        function RGBToHex(r, g, b) {
+          var rHex = r.toString(16).toUpperCase();
+          var gHex = g.toString(16).toUpperCase();
+          var bHex = b.toString(16).toUpperCase();
+
+          if (rHex.length == 1) rHex ='0' + rHex;
+          if (gHex.length == 1) gHex ='0' + gHex;
+          if (bHex.length == 1) bHex ='0' + bHex;
+
+          return '#' + rHex + gHex + bHex;
+        }       
+        
+       function onLoad() {
+          var winhooks = Components.classes["@mozilla.org/winhooks;1"].
+                       getService(Components.interfaces.nsIWindowsHooks);
+          gMonitor = document.getElementById("monitor");
+          var color = winhooks.getDesktopColor();
+          const rMask = 4294901760;
+          const gMask = 65280;
+          const bMask = 255;
+          var r = (color & rMask) >> 16;
+          var g = (color & gMask) >> 8;
+          var b = (color & bMask);
+          gMonitor.style.backgroundColor = RGBToHex(r, g, b);
+          gWidth = window.arguments[0].width;
+          gHeight = window.arguments[0].height;
+          var img = document.createElementNS(xulNS, "image");
+          img.id = "wallpaperImg";
+          img.setAttribute("src", window.arguments[0].src);
+          gMonitor.appendChild(img);
+          stretchImage();
+          
+          var colorpicker = document.getElementById("desktopColor");
+          colorpicker.color = RGBToHex(r, g, b);
+        }
+        
+        function stretchImage() {
+          var img = gMonitor.firstChild.cloneNode(false);
+          gMonitor.removeChild(gMonitor.firstChild);
+          img.width = parseInt(gMonitor.style.width);
+          img.height = parseInt(gMonitor.style.height);
+          gMonitor.appendChild(img);
+        }
+        
+        function tileImage() {
+          // XXXBlake Waiting on caillon to implement background-size
+        }
+        
+        function centerImage() {
+           var img = gMonitor.firstChild.cloneNode(false);
+           gMonitor.removeChild(gMonitor.firstChild);
+           var width = gWidth*gMonitor.boxObject.width/screen.width;
+           var height = gHeight*gMonitor.boxObject.height/screen.height;
+           img.width = Math.floor(width);
+           img.height = Math.floor(height);
+           gMonitor.appendChild(img);
+        }
+          
+        function onAccept() {
+          var pos = parseInt(document.getElementById("menuPosition").value);
+          var winhooks = Components.classes["@mozilla.org/winhooks;1"].
+                       getService(Components.interfaces.nsIWindowsHooks);
+          winhooks.setImageAsWallpaper(window.arguments[0], false, pos);
+          
+          var colorpicker = document.getElementById("desktopColor");
+          var r = HexToR(colorpicker.color);
+          var g = HexToG(colorpicker.color);
+          var b = HexToB(colorpicker.color);
+          winhooks.setDesktopColor((r << 16) | (g << 8) | b);
+        }
+        
+        function updatePreviewColor(color) {
+          gMonitor.style.backgroundColor = color;
+        }
+        
+        function onPositionChange(val) {
+          gMode = parseInt(val);
+          if (gMode == winHooks.WALLPAPER_TILE)
+            tileImage();
+          else if (gMode == winHooks.WALLPAPER_STRETCH)
+            stretchImage();
+          else
+            centerImage();
+        }
+      ]]>
+    </script>
+
+    <hbox align="center" id="foo">
+      <label value="&position.label;"/>
+      <menulist id="menuPosition" label="&position.label;" oncommand="onPositionChange(this.value);">
+        <menupopup>
+          <menuitem label="&center.label;"  value="2"/>
+          <menuitem label="&tile.label;"    value="0"/>
+          <menuitem label="&stretch.label;" value="1" selected="true"/>
+        </menupopup>
+      </menulist>
+      <spacer flex="1"/>
+      <label value="&color.label;"/>
+      <colorpicker type="button" id="desktopColor" onchange="updatePreviewColor(this.color);"/> 
+    </hbox>
+    <groupbox align="center">
+      <caption label="&preview.label;"/>
+      <stack>
+        <vbox id="monitor" align="center" pack="center"
+              style="width: 153px !important; height: 114px !important;"
+              left="13" top="17"/>
+        <image src="chrome://browser/content/monitor.png"/>
+      </stack>
+    </groupbox>
+</dialog>
