@@ -199,9 +199,21 @@ ssl_cov()
           is_selfserv_alive
           echo "tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} \\"
           echo "        -f -d . < ${REQUEST_FILE}"
-          tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
+          if [ `uname -n` = "dump" ] ; then
+              echo "workaround for dump to avoid client and server writes at "
+              echo "       the same time"
+              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+              tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
+                  -d . < ${REQUEST_FILE} >${TMP}/dump.tmp.$$  2>&1
+              ret=$?
+              cat ${TMP}/dump.tmp.$$ 
+              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+          else
+              tstclnt -p ${PORT} -h ${HOST} -c ${param} ${TLS_FLAG} -f \
                   -d . < ${REQUEST_FILE}
-          html_msg $? 0 "${testname}"
+              ret=$?
+          fi
+          html_msg $ret 0 "${testname}"
       fi
   done
 
@@ -224,8 +236,19 @@ ssl_auth()
 
           echo "tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} \\"
           echo "        < ${REQUEST_FILE}"
-          tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} < ${REQUEST_FILE}
-          ret=$?
+          if [ `uname -n` = "dump" ] ; then
+              echo "workaround for dump to avoid client and server writes at "
+              echo "       the same time"
+              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+              tstclnt -p ${PORT} -h ${HOST} -f ${cparam} \
+                  -d . < ${REQUEST_FILE} >${TMP}/dump.tmp.$$  2>&1
+              ret=$?
+              cat ${TMP}/dump.tmp.$$ 
+              rm ${TMP}/dump.tmp.$$ 2>/dev/null
+          else
+            tstclnt -p ${PORT} -h ${HOST} -f -d . ${cparam} < ${REQUEST_FILE}
+            ret=$?
+          fi
 
           # the NT client does not return the same error code as Unix
           # FIXME - this is a serious bug in the NT testclient
