@@ -471,7 +471,8 @@ nsViewerApp::GetAppCodeName(nsString& aAppCodeName)
 NS_IMETHODIMP
 nsViewerApp::GetAppVersion(nsString& aAppVersion)
 {
-  aAppVersion.SetString("4.05 [en] (Windows;I)");
+  //This seems kinda wrong in x-platform code
+  aAppVersion.SetString("4.05 [en] (WinNT;I)");
   return NS_OK;
 }
  
@@ -492,6 +493,7 @@ nsViewerApp::GetLanguage(nsString& aLanguage)
 NS_IMETHODIMP    
 nsViewerApp::GetPlatform(nsString& aPlatform)
 {
+  //This seems kinda wrong in x-platform code
   aPlatform.SetString("Win32");
   return NS_OK;
 }
