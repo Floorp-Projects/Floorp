@@ -384,9 +384,17 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
   if (aEvent->message == NS_KEY_PRESS && !IsDisabled()) {
     nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
     PRUint32 keyCode = keyEvent->keyCode;
+#ifdef XP_MACOSX
+    // On mac, open menulist on either up/down arrow or space (w/o Cmd pressed)
+    if (!IsOpen() && ((keyEvent->charCode == NS_VK_SPACE && !keyEvent->isMeta) ||
+        (keyCode == NS_VK_UP || keyCode == NS_VK_DOWN)))
+      OpenMenu(PR_TRUE);
+#else
+    // On other platforms, toggle menulist on unmodified F4 or Alt arrow
     if ((keyCode == NS_VK_F4 && !keyEvent->isAlt) ||
         ((keyCode == NS_VK_UP || keyCode == NS_VK_DOWN) && keyEvent->isAlt))
-      OpenMenu(!IsOpen()); // Toggle menulist on unmodified F4 or Alt arrow
+      OpenMenu(!IsOpen());
+#endif
   }
   else if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN && !IsDisabled() && IsMenu() ) {
     PRBool isMenuBar = PR_FALSE;
