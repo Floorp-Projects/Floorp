@@ -25,6 +25,9 @@
 #include "prlog.h"
 #include "plstr.h"
 
+#define NS_IMPL_IDS
+#include "nsIServiceManager.h"
+#include "nsICharsetConverterManager.h"
 
 // BEGIN EXTERNAL DEPENDANCY
 #define XP_MEMCPY memcpy
@@ -38,7 +41,6 @@
 #define INTL_SetCCCCvtflag_SendHankakuKana(a,b)
 #define INTL_GetCCCCvtfunc(a) NULL
 #define MSG_UnquotePhraseOrAddr_Intl(a,b,c) (*c = strdup(b))
-#define MIME_StripContinuations(a) (a)
 #define CS_UNKNOWN -1
 #define CS_JIS 0
 #define CS_UTF7 0
@@ -51,6 +53,7 @@
 #define LF '\012'
 #define MAX_CSNAME      64
 
+extern "C"  char * MIME_StripContinuations(char *original);
 /* RICHIE - These are needed by other libmime functions */
 extern "C" PRInt16 INTL_DefaultWinCharSetID(char a) { return a; }
 extern "C" char   *INTL_CsidToCharsetNamePt(PRInt16 id) { return "iso-8859-1"; }
@@ -61,32 +64,21 @@ typedef void* CCCDataObject;
 typedef unsigned char *(*CCCFunc)(CCCDataObject, const unsigned char
 *,PRInt32);
 
+
 /*	Very similar to strdup except it free's too
  */
-char * 
-NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    PR_Free(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
+inline char* StrAllocCopy(char** dest, const char* src) {
+  if (*dest) {
+    PR_Free(*dest);
+    *dest = NULL;
+  }
+  if (!src)
+    *dest = NULL;
+  else
+    *dest = PL_strdup(src);
 
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
+  return *dest;
 }
-
-#define StrAllocCopy(dest, src) NET_SACopy (&(dest), src)
 
 // END EXTERNAL DEPENDANCY
 
@@ -128,7 +120,7 @@ static char *   intlmime_encode_qp_buf(char *subject);
 static PRBool intlmime_is_hz(const char *header);
 static PRBool intlmime_is_mime_part2_header(const char *header);
 static PRBool intlmime_is_iso_2022_xxx(const char *, int16 );
-static  char *  intl_decode_mime_part2_str(const char *, int , PRBool );
+static  char *  intl_decode_mime_part2_str(const char *, int , PRBool, char* );
 static  char *  intl_DecodeMimePartIIStr(const char *, int16 , PRBool );
 static char *   intl_EncodeMimePartIIStr(char *subject, int16 wincsid,
 PRBool bUseMime, int maxLineLen);
@@ -254,7 +246,7 @@ static char *intlmime_decode_base64_buf(char *subject)
         char *pSrc, *pDest ;
         int i ;
 
-        StrAllocCopy(output, subject); /* Assume converted text are always
+        StrAllocCopy(&output, subject); /* Assume converted text are always
 less than source text */
 
         pSrc = subject;
@@ -857,7 +849,7 @@ the origional buffer */
                 {
                         char* newbuf = NULL;
                         /* Copy buf to newbuf */
-                        StrAllocCopy(newbuf, subject);
+                        StrAllocCopy(&newbuf, subject);
                         if(newbuf != NULL)
                         {
                                 buf = (unsigned char *)cvtfunc(obj,
@@ -1049,7 +1041,7 @@ mailcsid, int16 wincsid)
         /* Copy buf to tmpbuf, this guarantee the convresion won't
 overwrite the origional buffer and  */
         /* It will always return something it any conversion occcur */
-        StrAllocCopy(tmpbuf, header);
+        StrAllocCopy(&tmpbuf, header);
 
         if(tmpbuf == NULL)
                 return NULL;
@@ -1079,7 +1071,7 @@ overwrite the origional buffer and  */
 
 static
 char *intl_decode_mime_part2_str(const char *header, int wincsid, PRBool
-dontConvert)
+dontConvert, char* charset)
 {
         char *work_buf = NULL;
         char *output_p = NULL;
@@ -1090,9 +1082,12 @@ buffer */
         int16    csid = 0;
         int  ret = 0;
 
+        // initialize charset name to an empty string
+        if (charset)
+          charset[0] = '\0';
 
-        StrAllocCopy(work_buf, header);  /* temporary buffer */
-        StrAllocCopy(retbuff, header);
+        StrAllocCopy(&work_buf, header);  /* temporary buffer */
+        StrAllocCopy(&retbuff, header);
 
         if (work_buf == NULL || retbuff == NULL)
                 return NULL;
@@ -1123,6 +1118,9 @@ because the rest are not encoded */
 because there are no charset info */
                 *q++ = '\0';
                 csid = INTL_CharSetNameToID(p);
+                if (charset)
+                  PL_strcpy(charset, p);
+
                 if (csid == CS_UNKNOWN)
                 {
                         /*
@@ -1260,7 +1258,7 @@ wincsid));
         }
         /* Handle only Mime Part 2 after this point */
         return MIME_StripContinuations(intl_decode_mime_part2_str(header,
-wincsid, dontConvert));
+wincsid, dontConvert, NULL));
 }
 
 
@@ -1292,21 +1290,73 @@ PRBool bUseMime, int encodedWordSize)
 encodedWordSize);
 }
 
-PUBLIC char *IntlDecodeMimePartIIStr(const char *header, int wincsid,
-PRBool dontConvert)
+// Replacement for INTL_ConvertLineWithoutAutoDetect
+// Allocated buffer should be freed by PR_FREE.
+unsigned char *MIME_ConvertCharset(const char* from_charset, const char* to_charset,
+                                   const char *aBuffer, const PRInt32 aLength)
 {
-        /*      We change IntlDecodeMimePartIIStr to
-INTL_DecodeMimePartIIStr   */
-        return intl_DecodeMimePartIIStr(header, (int16)wincsid,
-dontConvert);
+  char *dstPtr = nsnull;
+  nsICharsetConverterManager * ccm = nsnull;
+  nsresult res;
+
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID, 
+                                     kICharsetConverterManagerIID, 
+                                     (nsISupports**)&ccm);
+
+  if(NS_SUCCEEDED(res) && (nsnull != ccm)) {
+    nsString aCharset(from_charset);
+    nsIUnicodeDecoder* decoder = nsnull;
+    PRUnichar *unichars;
+    PRInt32 unicharLength;
+
+    res = ccm->GetUnicodeDecoder(&aCharset, &decoder);
+    if(NS_SUCCEEDED(res) && (nsnull != decoder)) {
+      PRInt32 srcLen = aLength;
+      res = decoder->Length(aBuffer, 0, srcLen, &unicharLength);
+      unichars = new PRUnichar[unicharLength];
+      if (unichars != nsnull) {
+        res = decoder->Convert(unichars, 0, &unicharLength, aBuffer, 0, &srcLen);
+
+        nsIUnicodeEncoder* encoder = nsnull;
+        res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
+        if(NS_SUCCEEDED(res) && (nsnull != encoder)) {
+          PRInt32 dstLength;
+          res = encoder->Length(unichars, 0, unicharLength, &dstLength);
+          dstPtr = (char *) PR_Malloc(dstLength + 1);
+          if (dstPtr != nsnull) {
+           res = encoder->Convert(unichars, 0, &unicharLength, dstPtr, 0, &dstLength);
+           dstPtr[dstLength] = '\0';
+          }
+          NS_IF_RELEASE(encoder);
+        }
+        delete [] unichars;
+      }
+      NS_IF_RELEASE(decoder);
+    }
+    nsServiceManager::ReleaseService(kCharsetConverterManagerCID, ccm);
+  }
+
+  return (unsigned char *) dstPtr;
 }
-PUBLIC char *IntlEncodeMimePartIIStr(char *subject, int wincsid, PRBool
-bUseMime)
+
+// This is a replacement for INTL_DecodeMimePartIIStr
+// Unlike INTL_DecodeMimePartIIStr, this does not apply any charset conversion.
+// Use MIME_ConvertCharset if the decoded string needs a conversion.
+
+// If a header is MIME encoded then decode a header and sets a charset name.
+// Return NULL if the header is not MIME encoded.
+// Caller should allocate at least 65 bytes for a charset name.
+char *MIME_DecodeMimePartIIStr(const char *header, char *charset)
 {
-        /*      We change IntlEncodeMimePartIIStr to
-INTL_EncodeMimePartIIStr   */
-        return intl_EncodeMimePartIIStr(subject, (int16)wincsid, bUseMime,
-MAXLINELEN);
+  if (header == 0 || *header == '\0')
+    return NULL;
+
+  // MIME encoded
+  if (intlmime_is_mime_part2_header(header)) {
+    return MIME_StripContinuations(intl_decode_mime_part2_str(header, 0, PR_TRUE, charset));
+  }
+
+  return NULL;
 }
 
 } /* end of extern "C" */
