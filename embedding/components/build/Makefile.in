@@ -27,7 +27,7 @@ MODULE		= embedcomponents
 LIBRARY_NAME	= embedcomponents
 SHORT_LIBNAME	= embedcmp
 IS_COMPONENT	= 1
-REQUIRES	= js xpcom string windowwatcher embed_base
+REQUIRES	= js xpcom string windowwatcher appstartupnotifier embed_base
 
 CPPSRCS		= nsModule.cpp
 
@@ -42,6 +42,7 @@ else
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libwindowwatcher_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/libappstartupnotifier_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifdef MOZ_PERF_METRICS
@@ -52,6 +53,7 @@ endif
 
 LOCAL_INCLUDES	= \
 	-I$(srcdir)/../windowwatcher/src  \
+	-I$(srcdir)/../appstartup/src  \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS = \
