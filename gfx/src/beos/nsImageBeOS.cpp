@@ -379,7 +379,7 @@ NS_IMETHODIMP nsImageBeOS::DrawTile(nsIRenderingContext &aContext, nsIDrawingSur
 			{					
 				src = src0 + yy*mWidth;
 				dst = dst0 + y*dstRowLength;
-				// Avoid unneccessary job outside update rect
+				// Avoid unnecessary job outside update rect
 				if (yy >= validY && yy <= validMostY)
 				{
 					for (uint32 x = 0, xx = aSXOffset; x < dstRowLength; ++x) 
@@ -447,7 +447,7 @@ nsresult nsImageBeOS::Optimize(nsIDeviceContext *aContext)
 }
 
 // Not implemented at the moment. It's unclear whether this is necessary for
-// the BeOS port or not. BBitmap::Lock/UnlockBits()  may be used if neccessary
+// the BeOS port or not. BBitmap::Lock/UnlockBits()  may be used if necessary
 NS_IMETHODIMP nsImageBeOS::LockImagePixels(PRBool aMaskPixels) 
 {
 	return NS_OK;

@@ -1708,7 +1708,7 @@ nsTextControlFrame::InitEditor()
     if (NS_FAILED(rv))
       return rv;
 
-    // Now call SetValue() which will make the neccessary editor calls to set
+    // Now call SetValue() which will make the necessary editor calls to set
     // the default value.  Make sure to turn off undo before setting the default
     // value, and turn it back on afterwards. This will make sure we can't undo
     // past the default value.
@@ -1784,7 +1784,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
   // no matter what.
   divContent->SetNativeAnonymous(PR_TRUE);
 
-  // Set the neccessary style attributes on the text control.
+  // Set the necessary style attributes on the text control.
 
   rv = divContent->SetAttr(kNameSpaceID_None, nsHTMLAtoms::kClass,
                            NS_LITERAL_STRING("anonymous-div"), PR_FALSE);
@@ -1993,7 +1993,7 @@ nsTextControlFrame::CreateAnonymousContent(nsPresContext* aPresContext,
     if (NS_CONTENT_ATTR_NOT_THERE != rv) 
       editorFlags |= nsIPlaintextEditor::eEditorDisabledMask;
 
-    // Disable the caret and selection if neccessary.
+    // Disable the caret and selection if necessary.
 
     if (editorFlags & nsIPlaintextEditor::eEditorReadonlyMask ||
         editorFlags & nsIPlaintextEditor::eEditorDisabledMask)

@@ -116,7 +116,7 @@ interface nsITransactionManager : nsISupports
    * all references it has to the transaction without pushing it on the undo
    * stack. A value greater than zero indicates the max number of transactions
    * that can exist at any time on both the undo and redo stacks. This method
-   * will prune the neccessary number of transactions on the undo and redo
+   * will prune the necessary number of transactions on the undo and redo
    * stacks if the value specified is less than the number of items that exist
    * on both the undo and redo stacks.
    */

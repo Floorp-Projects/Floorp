@@ -44,7 +44,7 @@
 
 // here the plugin creates a plugin instance object which 
 // will be associated with this newly created NPP instance and 
-// will do all the neccessary job
+// will do all the necessary job
 NPError NPP_New(NPMIMEType pluginType, NPP instance, uint16 mode, int16 argc, char* argn[], char* argv[], NPSavedData* saved)
 {   
   if(instance == NULL)

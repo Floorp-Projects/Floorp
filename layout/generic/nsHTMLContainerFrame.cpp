@@ -156,7 +156,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsPresContext* aPresContext,
 {
   aDecorations = NS_STYLE_TEXT_DECORATION_NONE;
   if (!mStyleContext->HasTextDecorations()) {
-    // This is a neccessary, but not sufficient, condition for text
+    // This is a necessary, but not sufficient, condition for text
     // decorations.
     return; 
   }

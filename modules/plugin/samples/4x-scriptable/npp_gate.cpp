@@ -53,7 +53,7 @@ void NPP_Shutdown(void)
 
 // here the plugin creates an instance of our CPlugin object which 
 // will be associated with this newly created plugin instance and 
-// will do all the neccessary job
+// will do all the necessary job
 NPError NPP_New(NPMIMEType pluginType,
                 NPP instance,
                 uint16 mode,

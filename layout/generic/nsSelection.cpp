@@ -5294,7 +5294,7 @@ nsTypedSelection::ScrollPointIntoClipView(nsPresContext *aPresContext, nsIView *
     }
 
     //
-    // Now scroll the view if neccessary.
+    // Now scroll the view if necessary.
     //
 
     if (dx != 0 || dy != 0)
@@ -5485,7 +5485,7 @@ nsTypedSelection::DoAutoScrollView(nsPresContext *aPresContext, nsIView *aView, 
     return result;
 
   //
-  // Start the AutoScroll timer if neccessary.
+  // Start the AutoScroll timer if necessary.
   //
 
   if (didScroll && mAutoScrollTimer)
@@ -6903,7 +6903,7 @@ nsTypedSelection::GetSelectionRegionRectAndScrollableView(SelectionRegion aRegio
     aRect->x += pt.x;
 
     //
-    // Adjust the width of the rect to account for any neccessary
+    // Adjust the width of the rect to account for any necessary
     // padding!
     //
 

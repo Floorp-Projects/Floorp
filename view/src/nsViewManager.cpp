@@ -1961,7 +1961,7 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
           // synchronous paint to happen even if the view manager's
           // refresh is disabled. (Bug 97674)
           //
-          // Calling UpdateView() here, is neccessary to add
+          // Calling UpdateView() here, is necessary to add
           // the exposed region specified in the synchronous paint
           // event to  the view's damaged region so that it gets
           // painted properly when refresh is enabled.

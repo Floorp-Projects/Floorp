@@ -48,7 +48,7 @@
 //        Transaction system to work with the IPC daemon as its transport
 //        layer.
 //    tmTransactionManager (TM) - Manages the different queues. Maintains
-//        the queues neccessary for different clients. Receives messages
+//        the queues necessary for different clients. Receives messages
 //        from the tmIPCModule and passes message to the IPC daemon through
 //        the tmIPCModule.
 //    tmQueue - this class manages the transactions for the different areas
@@ -203,7 +203,7 @@ interface ipcITransactionService : nsISupports
     *   the message is sent to the Transaction Manager with the proper domain
     *   information. 
     *
-    *   XXXjg - this may not be neccessary with the synch attach call.
+    *   XXXjg - this may not be necessary with the synch attach call.
     *
     * Note: This call is an asynchronous call.
     *

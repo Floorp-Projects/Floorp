@@ -181,7 +181,7 @@ tmTransactionService::Attach(const nsACString & aDomainName,
   nsresult rv = NS_ERROR_FAILURE;
   tmTransaction trans;
 
-  // acquire a lock if neccessary
+  // acquire a lock if necessary
   if (aLockingCall)
     lockService->AcquireLock(joinedQueueName, PR_TRUE);
   // XXX need to handle lock failures
@@ -197,7 +197,7 @@ tmTransactionService::Attach(const nsACString & aDomainName,
     rv = NS_OK;
   }
 
-  // drop the lock if neccessary
+  // drop the lock if necessary
   if (aLockingCall)
     lockService->ReleaseLock(joinedQueueName);
 
@@ -216,14 +216,14 @@ tmTransactionService::Detach(const nsACString & aDomainName) {
 NS_IMETHODIMP
 tmTransactionService::Flush(const nsACString & aDomainName,
                             PRBool aLockingCall) {
-  // acquire a lock if neccessary
+  // acquire a lock if necessary
   if (aLockingCall)
     lockService->AcquireLock(GetJoinedQueueName(aDomainName), PR_TRUE);
 
   // synchronous flush
   nsresult rv = SendDetachOrFlush(GetQueueID(aDomainName), TM_FLUSH, PR_TRUE);
 
-  // drop the lock if neccessary
+  // drop the lock if necessary
   if (aLockingCall)
     lockService->ReleaseLock(GetJoinedQueueName(aDomainName));
 
@@ -292,7 +292,7 @@ tmTransactionService::OnMessageAvailable(const PRUint32 aSenderID,
         break;
       case TM_POST_REPLY:
         // OnPostReply() would be called here
-        //   isn't neccessary at the current time 2/19/03
+        //   isn't necessary at the current time 2/19/03
         break;
       case TM_DETACH_REPLY:
         OnDetachReply(trans);

@@ -397,7 +397,7 @@ public:
    */
   NS_IMETHOD SetDelayedCaretData(nsMouseEvent *aMouseEvent)=0;
 
-  /** Get the delayed MouseDown event data neccessary to place the
+  /** Get the delayed MouseDown event data necessary to place the
    *  caret during MouseUp processing.
    * @aMouseEvent will contain a pointer to the event received
    *  by the selection during MouseDown processing. It can be NULL
