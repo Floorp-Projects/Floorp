@@ -304,6 +304,7 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	                      nsNativeWidget aNativeParent)
 {
 	short	bottomPinDelta = 0;			// # of pixels to subtract to pin window bottom
+	nsIToolkit *theToolkit = aToolkit;
 	
 	// build the main native window
 	if (aNativeParent == nsnull)
@@ -311,21 +312,21 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		nsWindowType windowType;
 		if (aInitData)
 		{
-			windowType = aInitData->mWindowType;
+			mWindowType = aInitData->mWindowType;
 			// if a toplevel window was requested without a titlebar, use a dialog windowproc
 			if (aInitData->mWindowType == eWindowType_toplevel &&
 				(aInitData->mBorderStyle == eBorderStyle_none ||
 				 aInitData->mBorderStyle != eBorderStyle_all && !(aInitData->mBorderStyle & eBorderStyle_title)))
 				windowType = eWindowType_dialog;
 		} else
-			windowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
+			mWindowType = (mIsDialog ? eWindowType_dialog : eWindowType_toplevel);
 
 		short			wDefProcID;
-		Boolean			goAwayFlag;
+		Boolean		goAwayFlag;
 		short			hOffset;
 		short			vOffset;
 
-		switch (windowType)
+		switch (mWindowType)
 		{
 			case eWindowType_popup:
 			    // (pinkerton)
@@ -334,7 +335,9 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 			    // The main window must remain active.
 			    //
 			    // ...fall through...
-			    
+			    mOffsetParent = aParent;
+			    theToolkit =  (nsIToolkit*)(aParent->GetToolkit());
+
 			case eWindowType_child:
 				wDefProcID = plainDBox;
 				goAwayFlag = false;
@@ -403,7 +406,10 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 #if TARGET_CARBON
 		::OffsetRect(&wRect, hOffset, vOffset + ::GetMBarHeight());
 #else
-		::OffsetRect(&wRect, hOffset, vOffset + ::LMGetMBarHeight());
+		if (eWindowType_popup != mWindowType)
+			::OffsetRect(&wRect, hOffset, vOffset + ::LMGetMBarHeight());
+		else
+			::OffsetRect(&wRect, hOffset, vOffset);
 #endif	
 		
 		// HACK!!!!! This really should be part of the window manager
@@ -458,9 +464,8 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	nsRect bounds(0, 0, aRect.width, aRect.height - bottomPinDelta);
 
 	// init base class
-        // (note: aParent is ignored. Mac (real) windows don't want parents)
-	Inherited::StandardCreate(nsnull, bounds, aHandleEventFunction, 
-														aContext, aAppShell, aToolkit, aInitData);
+  // (note: aParent is ignored. Mac (real) windows don't want parents)
+	Inherited::StandardCreate(nil, bounds, aHandleEventFunction, aContext, aAppShell, theToolkit, aInitData);
 
 
 	// register tracking and receive handlers with the native Drag Manager
@@ -542,8 +547,24 @@ NS_METHOD nsWindow::Restore(void)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 {
-	if (mWindowMadeHere)
-	{
+
+	if (eWindowType_popup == mWindowType) {
+	PRInt32	xOffset=0,yOffset=0;
+	nsRect	localRect,globalRect;
+
+		// convert to screen coordinates
+		localRect.x = aX;
+		localRect.y = aY;
+		localRect.width = 100;
+		localRect.height = 100;	
+		
+		mOffsetParent->WidgetToScreen(localRect,globalRect);
+		
+		aX=globalRect.x;
+		aY=globalRect.y;
+		::MoveWindow(mWindowPtr, aX, aY, false);
+		return NS_OK;
+	} else if (mWindowMadeHere){
 		// make sure the window stays visible
 #if TARGET_CARBON
 		Rect screenRect;
@@ -654,8 +675,12 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 //-------------------------------------------------------------------------
 PRBool nsMacWindow::OnPaint(nsPaintEvent &event)
 {
-										// nothing to draw here
-  return PR_FALSE;	// don't dispatch the update event
+
+ 	//if (eWindowType_popup == mWindowType) {
+		//return PR_TRUE;
+	//}else {
+		return PR_FALSE;	// don't dispatch the update event
+	//}
 }
 
 //-------------------------------------------------------------------------
@@ -722,3 +747,5 @@ PRBool nsMacWindow::DragEvent ( unsigned int aMessage, Point aMouseGlobal, UInt1
 		retVal = PR_FALSE;
 	return retVal;
 }
+
+
