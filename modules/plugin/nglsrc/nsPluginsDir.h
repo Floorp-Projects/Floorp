@@ -54,6 +54,7 @@ struct nsPluginInfo {
 	PRUint32 fVariantCount;
 	char** fMimeTypeArray;
 	char** fMimeDescriptionArray;
+	char** fExtensionArray;
 };
 
 /**

@@ -47,10 +47,7 @@
 
 #include "nsSpecialSystemDirectory.h"
 #include "nsFileSpec.h"
-
-#ifdef XP_MAC
 #include "nsPluginsDir.h"
-#endif
 
 //uncomment this to use netlib to determine what the
 //user agent string is. we really *want* to do this,
@@ -1401,15 +1398,35 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
   return rv;
 }
 
-#ifdef XP_MAC
-
 NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
 													nsIURL *aURL,
 													nsIPluginInstanceOwner *aOwner)
 {
 	nsresult result = NS_ERROR_FAILURE;
 	nsIPlugin* plugin = NULL;
-	if (GetPluginFactory(aMimeType, &plugin) == NS_OK) {
+	const char* mimetype;
+
+	// if don't have a mimetype, check by file extension
+	if(!aMimeType)
+	{
+		const char* filename;
+		char* extension;
+
+		aURL->GetFile(&filename);
+		extension = PL_strrchr(filename, '.');
+		if(extension)
+			++extension;
+		else
+			return NS_ERROR_FAILURE;
+
+		if(IsPluginEnabledForExtension(extension, mimetype) != NS_OK)
+			return NS_ERROR_FAILURE;
+	}
+	else
+		mimetype = aMimeType;
+
+
+	if (GetPluginFactory(mimetype, &plugin) == NS_OK) {
 		// instantiate a plugin.
 		nsIPluginInstance* instance = NULL;
         if (plugin->CreateInstance(NULL, kIPluginInstanceIID, (void **)&instance) == NS_OK) {
@@ -1418,7 +1435,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 			nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
 
 			// set up the peer for the instance
-			peer->Initialize(aOwner, aMimeType);     // this will not add a ref to the instance (or owner). MMP
+			peer->Initialize(aOwner, mimetype);     // this will not add a ref to the instance (or owner). MMP
 
 			// tell the plugin instance to initialize itself and pass in the peer.
 			instance->Initialize(peer);
@@ -1430,203 +1447,8 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 	return result;
 }
 
-#else
-
-NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType, 
-													nsIURL *aURL,
-													nsIPluginInstanceOwner *aOwner)
-{
-  nsPluginTag *plugins = nsnull;
-  PRInt32     variants, cnt;
-
-  if (PR_FALSE == mPluginsLoaded)
-    LoadPlugins();
-
-  // if we have a mimetype passed in, search the mPlugins linked list for a match
-  if (nsnull != aMimeType)
-  {
-    plugins = mPlugins;
-
-    while (nsnull != plugins)
-    {
-      variants = plugins->mVariants;
-
-      for (cnt = 0; cnt < variants; cnt++)
-      {
-        if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
-          break;
-      }
-
-      if (cnt < variants)
-        break;
-
-      plugins = plugins->mNext;
-    }
-  }
-
-  // if plugins is nsnull, then we have not been passed a mimetype,
-  // so look based on file extension
-  if ((nsnull == plugins) && (nsnull != aURL))
-  {
-    const char  *name;
-    nsresult rv = aURL->GetSpec(&name);
-    if (rv != NS_OK) return rv;
-    PRInt32     len = PL_strlen(name);
-
-    //find the plugin by filename extension.
-
-    if ((nsnull != name) && (len > 1))
-    {
-      len--;
-
-      while ((name[len] != 0) && (name[len] != '.'))
-        len--;
-
-      if (name[len] == '.')
-      {
-        const char  *ext = name + len + 1;
-
-        len = PL_strlen(ext);
-
-        plugins = mPlugins;
-
-        while (nsnull != plugins)
-        {
-          variants = plugins->mVariants;
-
-          for (cnt = 0; cnt < variants; cnt++)
-          {
-            char    *extensions = plugins->mExtensionsArray[cnt];
-            char    *nextexten;
-            PRInt32 extlen;
-
-            while (nsnull != extensions)
-            {
-              nextexten = strchr(extensions, ',');
-
-              if (nsnull != nextexten)
-                extlen = nextexten - extensions;
-              else
-                extlen = PL_strlen(extensions);
-
-              if (extlen == len)
-              {
-                if (PL_strncasecmp(extensions, ext, extlen) == 0)
-                  break;
-              }
-
-              if (nsnull != nextexten)
-                extensions = nextexten + 1;
-              else
-                extensions = nsnull;
-            }
-
-            if (nsnull != extensions)
-              break;
-          }
-
-          if (cnt < variants)
-          {
-            aMimeType = plugins->mMimeTypeArray[cnt];
-#ifdef NS_DEBUG
-			printf("found plugin via extension %s\n", ext);
-#endif
-            break;
-          }
-
-          plugins = plugins->mNext;
-        }
-      }
-    }
-  }
-
-  // check to see if we've found a plugin that matches the mimetype
-  if (nsnull != plugins)
-  {
-	// check to see if the plugin has already been loaded (e.g. by a previous instance)
-    if (nsnull == plugins->mLibrary)
-    {
-      char        path[2000];
-
-      PL_strcpy(path, mPluginPath);
-      PL_strcat(path, plugins->mName);
-
-	  // load the plugin
-      plugins->mLibrary = LoadPluginLibrary(mPluginPath, path);
-    }
-
-    if (nsnull != plugins->mLibrary)
-    {
-      if (nsnull == plugins->mEntryPoint)
-      {
-        //create the plugin object
-
-        if (plugins->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)
-        {
-		  // we have to load an old 4x style plugin
-          nsresult rv = ns4xPlugin::CreatePlugin(plugins->mLibrary,
-												(nsIPlugin **)&plugins->mEntryPoint,
-												mServiceMgr);
-        }
-        else
-        {
-		  // we have to load a new 5x style plugin
-          nsFactoryProc  fact = (nsFactoryProc)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
-
-          if (nsnull != fact)
-			(fact)(mServiceMgr, kPluginCID, 0, 0, (nsIFactory**)&plugins->mEntryPoint);
-
-		  // we only need to call this for 5x style plugins - CreatePlugin() handles this for
-		  // 4x style plugins
-		  if (nsnull != plugins->mEntryPoint)
-			plugins->mEntryPoint->Initialize();
-        }
-      }
-
-      if (nsnull != plugins->mEntryPoint)
-      {
-        nsIPluginInstance *instance;
-
-        //create an instance
-
-        if (NS_OK == plugins->mEntryPoint->CreateInstance(nsnull, kIPluginInstanceIID, (void **)&instance))
-        {
-          aOwner->SetInstance(instance);
-
-          nsPluginInstancePeerImpl *peer = new nsPluginInstancePeerImpl();
-			
-		  // set up the peer for the instance
-          peer->Initialize(aOwner, aMimeType);     //this will not add a ref to the instance (or owner). MMP
-
-		  // tell the plugin instance to initialize itself and pass in the peer.
-
-          instance->Initialize(peer);
-          NS_RELEASE(instance);
-        }
-      }
-	  else
-		  return NS_ERROR_FAILURE;
-    }
-    else
-      return NS_ERROR_UNEXPECTED; // LoadPluginLibrary failure
-
-    return NS_OK;
-  }
-  else
-  {
-#ifdef NS_DEBUG
-	if ((nsnull != aURL) || (nsnull != aMimeType))
-		printf("unable to find plugin to handle %s\n", aMimeType ? aMimeType : "(mime type unspecified)");
-#endif
-
-    return NS_ERROR_FAILURE;
-  }
-}
-
-#endif /* !XP_MAC */
-
 NS_IMETHODIMP
-nsPluginHostImpl::IsPluginAvailableForType(const char* aMimeType)
+nsPluginHostImpl::IsPluginEnabledForType(const char* aMimeType)
 {
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
@@ -1660,7 +1482,7 @@ nsPluginHostImpl::IsPluginAvailableForType(const char* aMimeType)
 }
 
 NS_IMETHODIMP
-nsPluginHostImpl::IsPluginAvailableForExtension(const char* aExtension, const char* &aMimeType)
+nsPluginHostImpl::IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType)
 {
   nsPluginTag *plugins = nsnull;
   PRInt32     variants, cnt;
@@ -1696,49 +1518,94 @@ nsPluginHostImpl::IsPluginAvailableForExtension(const char* aExtension, const ch
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
+nsresult
+nsPluginHostImpl::FindPluginEnabledForType(const char* aMimeType, nsPluginTag* &aPlugin)
 {
-	nsresult res = NS_ERROR_FAILURE;
-	*aPlugin = NULL;
+  nsPluginTag *plugins = nsnull;
+  PRInt32     variants, cnt;
 
-	// If plugins haven't been scanned yet, do so now.
-	if (mPlugins == NULL)
-		LoadPlugins();
+  aPlugin = nsnull;
 
-	// search the plugin list for the specified MIME type.
-	// TODO:  should look at the MIME type array as well.
-	if (aMimeType != nsnull) {
-		nsPluginTag* pluginTag = mPlugins;
-		while (pluginTag != nsnull) {
-			if (::strcmp(aMimeType, pluginTag->mMimeType) == 0) {
-				nsIPlugin* plugin = pluginTag->mEntryPoint;
-				if (plugin == NULL) {
-					// need to get the plugin factory from this plugin.
-					nsFactoryProc nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
-					if (nsGetFactory != NULL) {
-                        res = nsGetFactory(mServiceMgr, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
-                                           (nsIFactory**)&pluginTag->mEntryPoint);
-						plugin = pluginTag->mEntryPoint;
-						if (plugin != NULL)
-							plugin->Initialize();
-					}
-				}
-				if (plugin != NULL) {
-					*aPlugin = plugin;
-					plugin->AddRef();
-					res = NS_OK;
-					break;
-				}
-			}
-			pluginTag = pluginTag->mNext;
+  if (PR_FALSE == mPluginsLoaded)
+    LoadPlugins();
+
+  // if we have a mimetype passed in, search the mPlugins linked list for a match
+  if (nsnull != aMimeType)
+  {
+    plugins = mPlugins;
+
+    while (nsnull != plugins)
+    {
+      variants = plugins->mVariants;
+
+      for (cnt = 0; cnt < variants; cnt++)
+      {
+        if (0 == strcmp(plugins->mMimeTypeArray[cnt], aMimeType))
+		{
+			aPlugin = plugins;
+			return NS_OK;
 		}
-	}
-	return res;
+	  }
+
+      if (cnt < variants)
+        break;
+
+      plugins = plugins->mNext;
+    }
+  }
+
+  return NS_ERROR_FAILURE;
 }
 
-#ifdef XP_MAC
+NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugin** aPlugin)
+{
+	nsresult rv = NS_ERROR_FAILURE;
+	*aPlugin = NULL;
 
-// excuse me while I try to rewrite this using XP code...
+	if(!aMimeType)
+		return NS_ERROR_ILLEGAL_VALUE;
+
+	// If plugins haven't been scanned yet, do so now
+	if (mPlugins == nsnull)
+		LoadPlugins();
+
+	nsPluginTag* pluginTag;
+	if((rv = FindPluginEnabledForType(aMimeType, pluginTag)) == NS_OK)
+	{
+		nsIPlugin* plugin = pluginTag->mEntryPoint;
+		if(plugin == NULL)
+		{
+			// need to get the plugin factory from this plugin.
+			nsFactoryProc nsGetFactory = nsnull;
+			nsGetFactory = (nsFactoryProc) PR_FindSymbol(pluginTag->mLibrary, "NSGetFactory");
+			if (nsGetFactory != nsnull)
+			{
+                rv = nsGetFactory(mServiceMgr, kPluginCID, nsnull, nsnull,    // XXX fix ClassName/ProgID
+                                   (nsIFactory**)&pluginTag->mEntryPoint);
+				plugin = pluginTag->mEntryPoint;
+				if (plugin != NULL)
+					plugin->Initialize();
+			}
+			else
+			{
+				rv = ns4xPlugin::CreatePlugin(pluginTag->mLibrary,
+											  (nsIPlugin **)&pluginTag->mEntryPoint,
+											  mServiceMgr);
+				plugin = pluginTag->mEntryPoint;
+				// no need to initialize, already done by CreatePlugin()
+			}
+		}
+
+		if(plugin != nsnull)
+		{
+			*aPlugin = plugin;
+			plugin->AddRef();
+			return NS_OK;
+		}
+	}
+
+	return rv;
+}
 
 NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 {
@@ -1770,6 +1637,7 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 						pluginTag->mVariants = info.fVariantCount;
 						pluginTag->mMimeTypeArray = info.fMimeTypeArray;
 						pluginTag->mMimeDescriptionArray = info.fMimeDescriptionArray;
+						pluginTag->mExtensionsArray = info.fExtensionArray;
 					}
 					
 					pluginTag->mLibrary = pluginLibrary;
@@ -1785,368 +1653,6 @@ NS_IMETHODIMP nsPluginHostImpl::LoadPlugins()
 	
 	return NS_ERROR_FAILURE;
 }
-
-#else
-
-NS_IMETHODIMP nsPluginHostImpl::LoadPlugins(void)
-{
-#ifdef XP_PC 
-  long result; 
-  HKEY keyloc; 
-  DWORD type, pathlen; 
-  char path[2000]; 
-  PRDir *dir = nsnull; 
-
-  if (::GetModuleFileName(NULL, path, sizeof(path)) > 0) 
-  { 
-    pathlen = PL_strlen(path) - 1; 
-
-    while (pathlen > 0) 
-    { 
-      if (path[pathlen] == '\\') 
-        break; 
-
-      pathlen--; 
-    } 
-
-    if (pathlen > 0) 
-    { 
-      PL_strcpy(&path[pathlen + 1], "plugins"); 
-      dir = PR_OpenDir(path); 
-    } 
-  } 
-
-  if (nsnull == dir) 
-  { 
-    path[0] = 0; 
-
-    result = ::RegOpenKeyEx(HKEY_CURRENT_USER, 
-                            "Software\\Netscape\\Netscape Navigator\\Main", 
-                            0, KEY_READ, &keyloc); 
-
-    if (result == ERROR_SUCCESS) 
-    { 
-      pathlen = sizeof(path); 
-
-      result = ::RegQueryValueEx(keyloc, "Install Directory", 
-                                 NULL, &type, (LPBYTE)&path, &pathlen); 
-
-      if (result == ERROR_SUCCESS) 
-      { 
-        PL_strcat(path, "\\Program\\Plugins"); 
-      } 
-
-      ::RegCloseKey(keyloc); 
-    } 
-
-    dir = PR_OpenDir(path); 
-  } 
-
-#ifdef NS_DEBUG 
-  if (path[0] != 0) 
-    printf("plugins at: %s\n", path); 
-#endif 
-
-  if (nsnull != dir)
-  {
-    PRDirEntry  *dent;
-    char        *verbuf = NULL;
-    DWORD       verbufsize = 0;
-
-    pathlen = PL_strlen(path);
-    mPluginPath = (char *)PR_Malloc(pathlen + 2);
-
-    if (nsnull != mPluginPath)
-    {
-      PL_strcpy(mPluginPath, path);
-
-      mPluginPath[pathlen] = '\\';
-      mPluginPath[pathlen + 1] = 0;
-    }
-
-    while (nsnull != mPlugins)
-    {
-      nsPluginTag *temp = mPlugins->mNext;
-      delete mPlugins;
-      mPlugins = temp;
-    }
-
-    while (dent = PR_ReadDir(dir, PR_SKIP_BOTH))
-    {
-      PRInt32 len = PL_strlen(dent->name);
-
-      if (len > 6)  //np*.dll
-      {
-        if ((0 == stricmp(&dent->name[len - 4], ".dll")) && //ends in '.dll'
-            (0 == PL_strncasecmp(dent->name, "np", 2)))           //starts with 'np'
-        {
-          PRLibrary *plugin;
-
-          PL_strcpy(path, mPluginPath);
-          PL_strcat(path, dent->name);
-
-          plugin = LoadPluginLibrary(mPluginPath, path);
-
-          if (NULL != plugin)
-          {
-            DWORD zerome, versionsize;
-
-            versionsize = ::GetFileVersionInfoSize(path, &zerome);
-
-            if (versionsize > 0)
-            {
-              if (versionsize > verbufsize)
-              {
-                if (nsnull != verbuf)
-                  PR_Free(verbuf);
-
-                verbuf = (char *)PR_Malloc(versionsize);
-                verbufsize = versionsize;
-              }
-
-              if ((nsnull != verbuf) && ::GetFileVersionInfo(path, NULL, verbufsize, verbuf))
-              {
-                char        *buf = NULL;
-                UINT        blen;
-                nsPluginTag *plugintag;
-                PRBool      completetag = PR_FALSE;
-                PRInt32     variants;
-
-                plugintag = new nsPluginTag();
-
-                while (nsnull != plugintag)
-                {
-                  plugintag->mName = (char *)PR_Malloc(PL_strlen(dent->name) + 1);
-
-                  if (nsnull == plugintag->mName)
-                    break;
-                  else
-                    PL_strcpy(plugintag->mName, dent->name);
-
-                  ::VerQueryValue(verbuf,
-                                  TEXT("\\StringFileInfo\\040904E4\\FileDescription"),
-                                  (void **)&buf, &blen);
-
-                  if (NULL == buf)
-                    break;
-                  else
-                  {
-                    plugintag->mDescription = (char *)PR_Malloc(blen + 1);
-
-                    if (nsnull == plugintag->mDescription)
-                      break;
-                    else
-                      PL_strcpy(plugintag->mDescription, buf);
-                  }
-
-                  ::VerQueryValue(verbuf,
-                                  TEXT("\\StringFileInfo\\040904E4\\MIMEType"),
-                                  (void **)&buf, &blen);
-
-                  if (NULL == buf)
-                    break;
-                  else
-                  {
-                    plugintag->mMimeType = (char *)PR_Malloc(blen + 1);
-
-                    if (nsnull == plugintag->mMimeType)
-                      break;
-                    else
-                      PL_strcpy(plugintag->mMimeType, buf);
-
-                    buf = plugintag->mMimeType;
-
-                    variants = 1;
-
-                    while (*buf)
-                    {
-                      if (*buf == '|')
-                        variants++;
-
-                      buf++;
-                    }
-
-                    plugintag->mVariants = variants;
-
-                    plugintag->mMimeTypeArray = (char **)PR_Malloc(variants * sizeof(char *));
-
-                    if (nsnull == plugintag->mMimeTypeArray)
-                      break;
-                    else
-                    {
-                      variants = 0;
-
-                      plugintag->mMimeTypeArray[variants++] = plugintag->mMimeType;
-
-                      buf = plugintag->mMimeType;
-
-                      while (*buf)
-                      {
-                        if (*buf == '|')
-                        {
-                          plugintag->mMimeTypeArray[variants++] = buf + 1;
-                          *buf = 0;
-                        }
-
-                        buf++;
-                      }
-                    }
-                  }
-
-                  ::VerQueryValue(verbuf,
-                                  TEXT("\\StringFileInfo\\040904E4\\FileOpenName"),
-                                  (void **)&buf, &blen);
-
-                  if (NULL == buf)
-                    break;
-                  else
-                  {
-                    plugintag->mMimeDescription = (char *)PR_Malloc(blen + 1);
-
-                    if (nsnull == plugintag->mMimeDescription)
-                      break;
-                    else
-                      PL_strcpy(plugintag->mMimeDescription, buf);
-
-                    buf = plugintag->mMimeDescription;
-
-                    variants = 1;
-
-                    while (*buf)
-                    {
-                      if (*buf == '|')
-                        variants++;
-
-                      buf++;
-                    }
-
-                    if (variants != plugintag->mVariants)
-                      break;
-
-                    plugintag->mMimeDescriptionArray = (char **)PR_Malloc(variants * sizeof(char *));
-
-                    if (nsnull == plugintag->mMimeDescriptionArray)
-                      break;
-                    else
-                    {
-                      variants = 0;
-
-                      plugintag->mMimeDescriptionArray[variants++] = plugintag->mMimeDescription;
-
-                      buf = plugintag->mMimeDescription;
-
-                      while (*buf)
-                      {
-                        if (*buf == '|')
-                        {
-                          plugintag->mMimeDescriptionArray[variants++] = buf + 1;
-                          *buf = 0;
-                        }
-
-                        buf++;
-                      }
-                    }
-                  }
-
-                  ::VerQueryValue(verbuf,
-                                  TEXT("\\StringFileInfo\\040904E4\\FileExtents"),
-                                  (void **)&buf, &blen);
-
-                  if (NULL == buf)
-                    break;
-                  else
-                  {
-                    plugintag->mExtensions = (char *)PR_Malloc(blen + 1);
-
-                    if (nsnull == plugintag->mExtensions)
-                      break;
-                    else
-                      PL_strcpy(plugintag->mExtensions, buf);
-
-                    buf = plugintag->mExtensions;
-
-                    variants = 1;
-
-                    while (*buf)
-                    {
-                      if (*buf == '|')
-                        variants++;
-
-                      buf++;
-                    }
-
-                    if (variants != plugintag->mVariants)
-                      break;
-
-                    plugintag->mExtensionsArray = (char **)PR_Malloc(variants * sizeof(char *));
-
-                    if (nsnull == plugintag->mExtensionsArray)
-                      break;
-                    else
-                    {
-                      variants = 0;
-
-                      plugintag->mExtensionsArray[variants++] = plugintag->mExtensions;
-
-                      buf = plugintag->mExtensions;
-
-                      while (*buf)
-                      {
-                        if (*buf == '|')
-                        {
-                          plugintag->mExtensionsArray[variants++] = buf + 1;
-                          *buf = 0;
-                        }
-
-                        buf++;
-                      }
-                    }
-                  }
-
-                  completetag = PR_TRUE;
-                  break;
-                }
-
-                if (PR_FALSE == completetag)
-                  delete plugintag;
-                else
-                {
-                  if (nsnull == PR_FindSymbol(plugin, "NSGetFactory"))
-                    plugintag->mFlags |= NS_PLUGIN_FLAG_OLDSCHOOL;
-
-#ifdef NS_DEBUG
-printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL) ? "(old school)" : "");
-#endif
-                  plugintag->mNext = mPlugins;
-                  mPlugins = plugintag;
-                }
-              }
-            }
-
-            PR_UnloadLibrary(plugin);
-          }
-        }
-      }
-    }
-
-    if (nsnull != verbuf)
-      PR_Free(verbuf);
-
-    PR_CloseDir(dir);
-  }
-
-#else
-#ifdef NS_DEBUG
-  printf("Don't know how to locate plugins directory on Unix yet...\n");
-#endif
-#endif
-
-  mPluginsLoaded = PR_TRUE;
-
-  return NS_OK;
-}
-
-#endif /* !XP_MAC */
 
 // private methods
 

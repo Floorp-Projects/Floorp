@@ -127,10 +127,10 @@ public:
   SetUpPluginInstance(const char *aMimeType, nsIURL *aURL, nsIPluginInstanceOwner *aOwner);
 
   NS_IMETHOD
-  IsPluginAvailableForType(const char* aMimeType);
+  IsPluginEnabledForType(const char* aMimeType);
 
   NS_IMETHOD
-  IsPluginAvailableForExtension(const char* aExtension, const char* &aMimeType);
+  IsPluginEnabledForExtension(const char* aExtension, const char* &aMimeType);
 
   //nsIPluginManager2 interface - secondary methods that nsIPlugin communicates to
 
@@ -220,6 +220,9 @@ private:
   PRLibrary* LoadPluginLibrary(const nsFileSpec &pluginSpec);
 
   PRLibrary* LoadPluginLibrary(const char* pluginPath, const char* path);
+
+  nsresult
+  FindPluginEnabledForType(const char* aMimeType, nsPluginTag* &aPlugin);
 
   char        *mPluginPath;
   nsPluginTag *mPlugins;

@@ -34,7 +34,7 @@
 #include "nsDOMCID.h"
 #include "nsIServiceManager.h"
 
-#if defined(OJI) && defined(XP_MAC)
+#if defined(OJI) && !defined(XP_UNIX)
 #include "nsIJVMManager.h"
 #include "nsILiveConnectManager.h"
 #endif
@@ -210,7 +210,7 @@ nsJSContext::InitializeLiveConnectClasses()
 {
 	nsresult result = NS_OK;
 
-#if defined(OJI) && defined(XP_MAC)
+#if defined(OJI) && !defined(XP_UNIX)
 	nsILiveConnectManager* manager = NULL;
 	result = nsServiceManager::GetService(nsIJVMManager::GetCID(),
 	                                  nsILiveConnectManager::GetIID(),
@@ -374,7 +374,7 @@ nsJSEnvironment::nsJSEnvironment()
 {
   mRuntime = JS_Init(gGCSize);
 
-#if defined(OJI) && defined(XP_MAC)
+#if defined(OJI) && !defined(XP_UNIX)
   // Initialize LiveConnect.
   nsILiveConnectManager* manager = NULL;
   nsresult result = nsServiceManager::GetService(nsIJVMManager::GetCID(),

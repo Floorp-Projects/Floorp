@@ -497,32 +497,28 @@ JVM_GetStartJSFrameFromParallelStack()
 PR_IMPLEMENT(nsISecurityContext*) 
 JVM_GetJSSecurityContext()
 {
-	 JVMContext* context = GetJVMContext();
-  JVMSecurityStack  *pSecurityStack    = context->securityStack; 
-  JVMSecurityStack  *pSecurityStackTop = NULL;
-  JSContext         *pJSCX             = context->js_context;
-  if (pJSCX == NULL)
-  {
+    JVMContext* context = GetJVMContext();
+    JVMSecurityStack  *securityStack = context->securityStack; 
+    JVMSecurityStack  *securityStackTop = NULL;
+    JSContext         *cx = context->js_context;
+
+    if (cx == NULL) {
      //TODO: Get to the new context from DOM.
      //pJSCX = LM_GetCrippledContext();
-  }
-  if(pSecurityStack != NULL)
-  {
-    pSecurityStackTop = pSecurityStack->prev; 
-    JSStackFrame *fp = NULL;
-    pSecurityStackTop->pJSToJavaFrame = JS_FrameIterator(pJSCX, &fp);
-  }
+    }
 
-	 nsCSecurityContext *pNSCSecurityContext = new nsCSecurityContext(pJSCX);
-	 nsISecurityContext *pNSISecurityContext = NULL;
-	 nsresult err = NS_OK;
-	 err = pNSCSecurityContext->QueryInterface(kISecurityContextIID,
-	                                          (void**)&pNSISecurityContext);
-	 if(err != NS_OK)
-	 {
-	  return NULL; 
-	 }
-	 return pNSISecurityContext;
+    if(securityStack != NULL) {
+	securityStackTop = securityStack->prev; 
+	JSStackFrame *fp = NULL;
+	securityStackTop->pJSToJavaFrame = JS_FrameIterator(cx, &fp);
+    }
+
+    if (cx != NULL) {
+	nsCSecurityContext *securityContext = new nsCSecurityContext(cx);
+	securityContext->AddRef();
+	return securityContext;
+    }
+    return NULL;
 }
 
 PR_END_EXTERN_C

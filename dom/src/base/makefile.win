@@ -63,7 +63,8 @@ CPP_OBJS= \
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
- -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
+ -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib -I$(PUBLIC)\plugin -I$(PUBLIC)\oji \
+ -I$(PUBLIC)\java
 
 LCFLAGS = \
         $(LCFLAGS) \
