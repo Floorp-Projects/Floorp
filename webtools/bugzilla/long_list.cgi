@@ -31,6 +31,9 @@ use vars %::FORM;
 print "Content-type: text/html\n\n";
 print "<TITLE>Full Text Bug Listing</TITLE>\n";
 
+ConnectToDatabase();
+quietly_check_login();
+
 my $generic_query  = "
 select
   bugs.bug_id,
@@ -52,9 +55,7 @@ select
   bugs.status_whiteboard
 from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
-";
-
-ConnectToDatabase();
+bugs.groupset & $::usergroupset = bugs.groupset and";
 
 foreach my $bug (split(/:/, $::FORM{'buglist'})) {
     SendSQL("$generic_query bugs.bug_id = $bug");

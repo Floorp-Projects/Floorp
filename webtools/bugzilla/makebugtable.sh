@@ -29,6 +29,7 @@ mysql << OK_ALL_DONE
 use bugs;
 create table bugs (
 bug_id mediumint not null auto_increment primary key,
+groupset bigint not null,
 assigned_to mediumint not null, # This is a comment.
 bug_file_loc text,
 bug_severity enum("critical", "major", "normal", "minor", "trivial", "enhancement") not null,

@@ -356,7 +356,19 @@ sub InsertNewUser {
     for (my $i=0 ; $i<8 ; $i++) {
         $password .= substr("abcdefghijklmnopqrstuvwxyz", int(rand(26)), 1);
     }
-    SendSQL("insert into profiles (login_name, password, cryptpassword) values (@{[SqlQuote($username)]}, '$password', encrypt('$password'))");
+    SendSQL("select bit, userregexp from groups where userregexp != ''");
+    my $groupset = "0";
+    while (MoreSQLData()) {
+        my @row = FetchSQLData();
+        if ($username =~ m/$row[1]/) {
+            $groupset .= "+ $row[0]"; # Silly hack to let MySQL do the math,
+                                      # not Perl, since we're dealing with 64
+                                      # bit ints here, and I don't *think* Perl
+                                      # does that.
+        }
+    }
+            
+    SendSQL("insert into profiles (login_name, password, cryptpassword, groupset) values (@{[SqlQuote($username)]}, '$password', encrypt('$password'), $groupset)");
     return $password;
 }
 
@@ -482,6 +494,21 @@ sub SqlQuote {
     return "'$str'";
 }
 
+
+
+sub UserInGroup {
+    my ($groupname) = (@_);
+    if ($::usergroupset eq "0") {
+        return 0;
+    }
+    ConnectToDatabase();
+    SendSQL("select (bit & $::usergroupset) != 0 from groups where name = " . SqlQuote($groupname));
+    my $bit = FetchOneColumn();
+    if ($bit) {
+        return 1;
+    }
+    return 0;
+}
 
 
 sub Param {

@@ -26,16 +26,13 @@ use strict;
 
 require "CGI.pl";
 
-# Shut up misguided -w warnings about "used only once":
-use vars %::COOKIE;
-
 confirm_login();
 
 print "Content-type: text/html\n\n";
 
-if (Param("maintainer") ne $::COOKIE{Bugzilla_login}) {
-    print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
-    print "And so, you aren't allowed to edit the parameters of it.\n";
+if (!UserInGroup("editcomponents")) {
+    print "<H1>Sorry, you aren't a member of the 'editcomponents' group.</H1>\n";
+    print "And so, you aren't allowed to edit the owners.\n";
     exit;
 }
 

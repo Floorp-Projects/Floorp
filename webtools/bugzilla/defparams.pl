@@ -90,17 +90,10 @@ sub check_numeric {
 #	     the database tables.  The name of the parameter is of the form
 #	     "tablename.columnname".
 
-# This very first one is silly.  At some point, "superuserness" should be an
-# attribute of the person's profile entry, and not a single name like this.
-#
-# When first installing bugzilla, you need to either change this line to be
-# you, or (better) edit the initial "params" file and change the entry for
-# param(maintainer).
-
 DefParam("maintainer",
 	 "The email address of the person who maintains this installation of Bugzilla.",
 	 "t",
-         'terry@mozilla.org');
+         'THE MAINTAINER HAS NOT YET BEEN SET');
 
 DefParam("urlbase",
 	 "The URL that is the common initial leading part of all Bugzilla URLs.",

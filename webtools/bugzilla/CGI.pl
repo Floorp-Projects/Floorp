@@ -231,6 +231,35 @@ sub PasswordForLogin {
     return $result;
 }
 
+
+sub quietly_check_login() {
+    $::usergroupset = '0';
+    my $loginok = 0;
+    if (defined $::COOKIE{"Bugzilla_login"} &&
+	defined $::COOKIE{"Bugzilla_logincookie"}) {
+        ConnectToDatabase();
+        SendSQL("select profiles.groupset, profiles.login_name = " .
+		SqlQuote($::COOKIE{"Bugzilla_login"}) .
+		" and profiles.cryptpassword = logincookies.cryptpassword " .
+		"and logincookies.hostname = " .
+		SqlQuote($ENV{"REMOTE_HOST"}) .
+		" from profiles,logincookies where logincookies.cookie = " .
+		$::COOKIE{"Bugzilla_logincookie"} .
+		" and profiles.userid = logincookies.userid");
+        my @row;
+        if (@row = FetchSQLData()) {
+            $loginok = $row[1];
+            if ($loginok) {
+                $::usergroupset = $row[0];
+            }
+        }
+    }
+    return $loginok;
+}
+
+
+
+
 sub confirm_login {
     my ($nexturl) = (@_);
 
@@ -324,25 +353,9 @@ To use the wonders of bugzilla, you can use the following:
     }
 
 
-    my $loginok = 0;
+    my $loginok = quietly_check_login();
 
-    if (defined $::COOKIE{"Bugzilla_login"} &&
-	defined $::COOKIE{"Bugzilla_logincookie"}) {
-        SendSQL("select profiles.login_name = " .
-		SqlQuote($::COOKIE{"Bugzilla_login"}) .
-		" and profiles.cryptpassword = logincookies.cryptpassword " .
-		"and logincookies.hostname = " .
-		SqlQuote($ENV{"REMOTE_HOST"}) .
-		" from profiles,logincookies where logincookies.cookie = " .
-		$::COOKIE{"Bugzilla_logincookie"} .
-		" and profiles.userid = logincookies.userid");
-        $loginok = FetchOneColumn();
-        if (!defined $loginok) {
-            $loginok = 0;
-        }
-    }
-
-    if ($loginok ne "1") {
+    if ($loginok != 1) {
         print "Content-type: text/html\n\n";
         print "<H1>Please log in.</H1>\n";
         print "I need a legitimate e-mail address and password to continue.\n";

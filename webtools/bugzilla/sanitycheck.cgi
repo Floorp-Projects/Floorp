@@ -53,6 +53,22 @@ print "OK, now running sanity checks.<P>\n";
 my @row;
 my @checklist;
 
+Status("Checking groups");
+SendSQL("select bit from groups where bit != pow(2, round(log(bit) / log(2)))");
+while (my $bit = FetchOneColumn()) {
+    Alert("Illegal bit number found in group table: $bit");
+}
+    
+SendSQL("select sum(bit) from groups where isbuggroup != 0");
+my $buggroupset = FetchOneColumn();
+SendSQL("select bug_id, groupset from bugs where groupset & $buggroupset != groupset");
+while (@row = FetchSQLData()) {
+    Alert("Bad groupset $row[1] found in bug " . BugLink($row[0]));
+}
+
+
+
+
 Status("Checking version/products");
 
 SendSQL("select distinct product, version from bugs");

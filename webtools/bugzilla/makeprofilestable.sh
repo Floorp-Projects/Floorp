@@ -33,6 +33,7 @@ login_name varchar(255) not null,
 password varchar(16),
 cryptpassword varchar(64),
 realname varchar(255),
+groupset bigint not null,
 index(login_name)
 );
 

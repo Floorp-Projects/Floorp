@@ -301,27 +301,23 @@ takes four parameters which are (with appropriate values):
 
 Just fill in those values and close up global.pl
 
-5. Setting the Maintainer Information
+5. Setting up yourself as Maintainer
 
-    Before the last file level configuration can be done you'll have to create
-a data/params file.  This file is created when the first bugzilla page is
-accessed that needs it.  The easiest way is to go visit the "query.cgi"
-bugzilla page.  After that, the data subdirectory should have been created, and
-the data/params file should have appeared.
-
-    Within that directory you'll find a file called 'params'.  params contains
-all sorts of juicy things that you'll be tempted to change, but don't bother --
-there's a nice web form to change all except the maintainer's email address.
-Find the line that begins with "$::param{'maintainer'}" and set the
-maintainer's email address to your own.
-
-    Now, you can create your own bugzilla account.  To do so, just try to "add
+    Start by creating your own bugzilla account.  To do so, just try to "add
 a bug" from the main bugzilla menu (now available from your system through your
 web browser!).  You'll be prompted for logon info, and you should enter your
 email address and then select 'mail me my password'.  When you get the password
-mail, log in with it.  Don't finish entering that new bug; instead, go to the
-query page (off of the bugzilla main menu) where you'll now find a 'edit
-parameters' option which is filled with editable treats.
+mail, log in with it.  Don't finish entering that new bug.
+
+    Now, bring up MySQL, and add yourself to every group.  This will
+effectively make you 'superuser'.  The SQL to type is:
+
+	update profiles set groupset=0x7fffffffffffffff where login_name = XXX;
+
+replacing XXX with your email address in quotes.
+
+Now, if you go to the query page (off of the bugzilla main menu) where you'll
+now find a 'edit parameters' option which is filled with editable treats.
 
 6. Setting Up the Whining Cron Job (Optional)
 

@@ -377,17 +377,17 @@ print "
 ";
 
 
+quietly_check_login();
+
+if (UserInGroup("tweakparams")) {
+    print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
+}
+if (UserInGroup("editcomponents")) {
+    print "<a href=editowners.cgi>Edit Bugzilla component owners</a><br>\n";
+}
 if (defined $::COOKIE{"Bugzilla_login"}) {
-    if ($::COOKIE{"Bugzilla_login"} eq Param("maintainer")) {
-        print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
-        print "<a href=editowners.cgi>Edit Bugzilla component owners</a><br>\n";
-    }
     print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
 print "<a href=changepassword.cgi>Change your password.</a><br>\n";
 print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
 print "<a href=\"reports.cgi\">Bug reports</a><br>\n";
-
-
-
-

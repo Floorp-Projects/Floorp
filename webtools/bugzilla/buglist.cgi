@@ -177,12 +177,14 @@ my $dotweak = defined $::FORM{'tweak'};
 
 if ($dotweak) {
     confirm_login();
+} else {
+    quietly_check_login();
 }
 
 
 print "Content-type: text/html\n\n";
 
-my $query = "select bugs.bug_id";
+my $query = "select bugs.bug_id, bugs.groupset";
 
 
 foreach my $c (@collist) {
@@ -210,6 +212,7 @@ where  bugs.assigned_to = assign.userid
 and    bugs.reporter = report.userid
 and    bugs.product = projector.program
 and    bugs.version = projector.value
+and    bugs.groupset & $::usergroupset = bugs.groupset
 ";
 
 if ((defined $::FORM{'emailcc1'} && $::FORM{'emailcc1'}) ||
@@ -439,9 +442,19 @@ my %seen;
 my @bugarray;
 my %prodhash;
 my %statushash;
+my $buggroupset = "";
 
 while (@row = FetchSQLData()) {
     my $bug_id = shift @row;
+    my $g = shift @row;         # Bug's group set.
+    if ($buggroupset eq "") {
+        $buggroupset = $g;
+    } elsif ($buggroupset ne $g) {
+        $buggroupset = "x";     # We only play games with tweaking the
+                                # buggroupset if all the bugs have exactly
+                                # the same group.  If they don't, we leave
+                                # it alone.
+    }
     if (!defined $seen{$bug_id}) {
         $seen{$bug_id} = 1;
         $count++;
@@ -626,6 +639,23 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 <B>Additional Comments:</B>
 <BR>
 <TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
+
+if ($::usergroupset ne '0' && $buggroupset =~ /^\d*$/) {
+    SendSQL("select bit, description, (bit & $buggroupset != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
+    while (MoreSQLData()) {
+        my ($bit, $description, $ison) = (FetchSQLData());
+        my $check0 = !$ison ? " SELECTED" : "";
+        my $check1 = $ison ? " SELECTED" : "";
+        print "<select name=bit-$bit><option value=0$check0>\n";
+        print "People not in the \"$description\" group can see these bugs\n";
+        print "<option value=1$check1>\n";
+        print "Only people in the \"$description\" group can see these bugs\n";
+        print "</select><br>\n";
+    }
+}
+
+
+
 
     # knum is which knob number we're generating, in javascript terms.
 

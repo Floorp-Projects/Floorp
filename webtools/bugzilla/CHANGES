@@ -10,6 +10,25 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+3/10/99 Added 'groups' stuff, where we have different group bits that we can
+put on a person or on a bug.  Some of the group bits control access to bugzilla
+features.  And a person can't access a bug unless he has every group bit set
+that is also set on the bug.  See the comments in makegroupstable.sh for a bit
+more info.
+
+The 'maintainer' param is now used only as an email address for people to send
+complaints to.  The groups table is what is now used to determine permissions.
+
+You will need to run the new script "makegroupstable.sh".  And then you need to
+feed the following lines to MySQL (replace XXX with the login name of the
+maintainer, the person you wish to be all-powerful).
+
+	alter table bugs add column groupset bigint not null;
+	alter table profiles add column groupset bigint not null;
+	update profiles set groupset=0x7fffffffffffffff where login_name = XXX;
+
+
+
 3/8/99 Added params to control how priorities are set in a new bug.  You can
 now choose whether to let submitters of new bugs choose a priority, or whether
 they should just accept the default priority (which is now no longer hardcoded

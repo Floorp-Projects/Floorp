@@ -120,6 +120,22 @@ sub ChangeResolution {
 }
 
 
+my $foundbit = 0;
+foreach my $b (grep(/^bit-\d*$/, keys %::FORM)) {
+    if (!$foundbit) {
+        $foundbit = 1;
+        DoComma();
+        $::query .= "groupset = 0";
+    }
+    if ($::FORM{$b}) {
+        my $v = substr($b, 4);
+        $::query .= "+ $v";     # Carefully written so that the math is
+                                # done by MySQL, which can handle 64-bit math,
+                                # and not by Perl, which I *think* can not.
+    }
+}
+
+
 foreach my $field ("rep_platform", "priority", "bug_severity", "url",
                    "summary", "component", "bug_file_loc", "short_desc",
                    "product", "version", "component", "op_sys",

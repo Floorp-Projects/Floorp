@@ -21,6 +21,8 @@
 use diagnostics;
 use strict;
 
+quietly_check_login();
+
 my $query = "
 select
         bug_id,
@@ -40,9 +42,11 @@ select
 	target_milestone,
 	qa_contact,
 	status_whiteboard,
-        date_format(creation_ts,'Y-m-d')
+        date_format(creation_ts,'Y-m-d'),
+        groupset
 from bugs
-where bug_id = $::FORM{'id'}";
+where bug_id = $::FORM{'id'}
+and bugs.groupset & $::usergroupset = bugs.groupset";
 
 SendSQL($query);
 my %bug;
@@ -53,7 +57,8 @@ if (@row = FetchSQLData()) {
 		       "op_sys", "bug_status", "resolution", "priority",
 		       "bug_severity", "component", "assigned_to", "reporter",
 		       "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "creation_ts") {
+                       "qa_contact", "status_whiteboard", "creation_ts",
+                       "groupset") {
 	$bug{$field} = shift @row;
 	if (!defined $bug{$field}) {
 	    $bug{$field} = "";
@@ -212,10 +217,27 @@ print "
 <br>
 <B>Additional Comments:</B>
 <BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>
-<br>
+<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
+
+
+if ($::usergroupset ne '0') {
+    SendSQL("select bit, description, (bit & $bug{'groupset'} != 0) from groups where bit & $::usergroupset != 0 and isbuggroup != 0 order by bit");
+    while (MoreSQLData()) {
+        my ($bit, $description, $ison) = (FetchSQLData());
+        my $check0 = !$ison ? " SELECTED" : "";
+        my $check1 = $ison ? " SELECTED" : "";
+        print "<select name=bit-$bit><option value=0$check0>\n";
+        print "People not in the \"$description\" group can see this bug\n";
+        print "<option value=1$check1>\n";
+        print "Only people in the \"$description\" group can see this bug\n";
+        print "</select><br>\n";
+    }
+}
+
+print "<br>
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
         Leave as <b>$bug{'bug_status'} $bug{'resolution'}</b><br>";
+
 
 # knum is which knob number we're generating, in javascript terms.
 
