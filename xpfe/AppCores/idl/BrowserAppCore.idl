@@ -8,6 +8,7 @@ interface BrowserAppCore : BaseAppCore
 	void back();
 	void forward();
 	void loadUrl(in wstring url);
+	void loadInitialPage();
 
 	void walletEditor();
 	void walletSafeFillin();
