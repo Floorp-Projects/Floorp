@@ -1472,14 +1472,29 @@ InternetSearchDataSource::GetCategoryDataSource(nsIRDFDataSource **ds)
 NS_IMETHODIMP
 InternetSearchDataSource::Stop()
 {
+	nsresult		rv;
+
 	// cancel any outstanding connections
 	if (mLoadGroup)
 	{
+		nsCOMPtr<nsISimpleEnumerator>	channels;
+		if (NS_SUCCEEDED(rv = mLoadGroup->GetChannels(getter_AddRefs(channels))))
+		{
+			PRBool			more;
+			while (NS_SUCCEEDED(rv = channels->HasMoreElements(&more)) && (more == PR_TRUE))
+			{
+				nsCOMPtr<nsISupports>	isupports;
+				if (NS_FAILED(rv = channels->GetNext(getter_AddRefs(isupports))))
+					break;
+				nsCOMPtr<nsIChannel>	channel = do_QueryInterface(isupports);
+				if (!channel)	continue;
+				channel->Cancel();
+			}
+		}
 		mLoadGroup->Cancel();
 	}
 
 	// remove any loading icons
-	nsresult		rv;
 	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
 	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(),
 		getter_AddRefs(trueLiteral))))
