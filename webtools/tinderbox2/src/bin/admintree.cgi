@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.20 $ 
-# $Date: 2002/04/27 04:55:37 $ 
+# $Revision: 1.21 $ 
+# $Date: 2002/05/01 01:52:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -210,7 +210,18 @@ sub get_current_ignore_builds  {
   # longer apply.
   
   my (@build_names) = get_build_names($tree);
-  my ($pat) = "\^".join("\$\|\^", @build_names)."\$";
+
+  my ($pat) = '';
+
+  foreach $build_name (@build_names) {
+      # careful some buildnames may have '()' or 
+      # other metacharacters in them.
+
+      $pat .= "\^". quotemeta($build_name)."\$".
+          "\|";
+  }
+  chop $pat;
+
   @ignore_builds = grep(/$pat/, @ignore_builds);
 
   
