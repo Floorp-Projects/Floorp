@@ -86,10 +86,6 @@ public:
   /** return the mapped cell's column index (starting at 0 for the first column) */
   virtual PRInt32 GetColIndex();
 
-  /** set the index of the column belonging to this cell */
-  // XXX should be removed, use cell map?
-  virtual void SetColIndex (int aColIndex);
-
   /** return the available width given to this frame during its last reflow */
   virtual nscoord GetPriorAvailWidth();
   
@@ -240,12 +236,6 @@ inline PRInt32 nsTableCellFrame::GetRowIndex()
 
 inline PRInt32 nsTableCellFrame::GetColIndex()
 {  return mColIndex;}
-
-inline void nsTableCellFrame::SetColIndex (int aColIndex)
-{
-  NS_ASSERTION(0<=aColIndex, "illegal negative column index.");
-  mColIndex = aColIndex;
-}
 
 inline nscoord nsTableCellFrame::GetPriorAvailWidth()
 { return mPriorAvailWidth;}
