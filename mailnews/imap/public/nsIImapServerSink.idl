@@ -23,6 +23,7 @@
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
 
+interface nsIMsgWindow;
 interface nsIMsgMailNewsUrl;
 
 [scriptable, uuid(8ec49a08-5cb0-11d3-a52c-0060b0fc04b7)]
@@ -44,7 +45,7 @@ interface nsIImapServerSink : nsISupports {
 	void FEAlert(in wstring aString);
 	void FEAlertFromServer(in string aString);
 	void CommitNamespaces();
-	void PromptForPassword(out string aString);
+	void PromptForPassword(out string aString, in nsIMsgWindow aMsgWindow);
 	void SetUserAuthenticated(in boolean authenticated);
 	void SetMailServerUrls(in string manageMailAccount, in string manageLists, in string manageFilters);
 	

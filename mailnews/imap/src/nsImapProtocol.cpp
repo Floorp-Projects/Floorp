@@ -50,6 +50,7 @@
 #include "nsIMsgFolder.h"
 #include "nsImapStringBundle.h"
 #include "nsICopyMsgStreamListener.h"
+#include "nsIWalletService.h"
 
 // for the memory cache...
 #include "nsINetDataCacheManager.h"
@@ -80,6 +81,7 @@ static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define OUTPUT_BUFFER_SIZE (4096*2) // mscott - i should be able to remove this if I can use nsMsgLineBuffer???
 
@@ -6124,6 +6126,16 @@ void nsImapProtocol::Check()
         ParseIMAPandCheckForNewMail();
 }
 
+nsresult nsImapProtocol::GetMsgWindow(nsIMsgWindow **aMsgWindow)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl =
+        do_QueryInterface(m_runningUrl, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = mailnewsUrl->GetMsgWindow(aMsgWindow);
+    return rv;
+}
+
 PRBool nsImapProtocol::TryToLogon()
 {
   PRInt32 logonTries = 0;
@@ -6140,16 +6152,28 @@ PRBool nsImapProtocol::TryToLogon()
     rv = m_server->GetUsername(&userName);
 
   }
+      
+  nsCOMPtr<nsIMsgWindow> aMsgWindow;
+  if (!password || !*password)
+  {
+      rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
+      if (NS_FAILED(rv)) return rv;
+  }
 
   if (userName && (!password || !*password) && m_imapServerSink)
   {
-        m_imapServerSink->PromptForPassword(&password);
+      m_imapServerSink->PromptForPassword(&password, aMsgWindow);
   }
   do
   {
     if (userName && (!password || !*password) && m_imapServerSink)
     {
-      m_imapServerSink->PromptForPassword(&password);
+      if (!aMsgWindow)
+      {
+          rv = GetMsgWindow(getter_AddRefs(aMsgWindow));
+          if (NS_FAILED(rv)) return rv;
+      }
+      m_imapServerSink->PromptForPassword(&password, aMsgWindow);
     }
       PRBool imapPasswordIsNew = PR_FALSE;
 
@@ -6189,6 +6213,10 @@ PRBool nsImapProtocol::TryToLogon()
       {
               // login failed!
               // if we failed because of an interrupt, then do not bother the user
+          NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+          if (NS_FAILED(rv)) return rv;
+          nsAutoString user(userName);
+          rv = walletservice->SI_RemoveUser(GetImapHostName(), (PRUnichar *)user.GetUnicode());
               if (!DeathSignalReceived())
               {
                 AlertUserEventUsingId(IMAP_LOGIN_FAILED);

@@ -25,6 +25,7 @@
 
 interface nsIFolder;
 interface nsIMsgFolderCache;
+interface nsIMsgWindow;
 /*
  * Interface for incoming mail/news host
  * this is the base interface for all mail server types (imap, pop, nntp, etc)
@@ -79,7 +80,7 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string password;
 
   /* prompt the user for a password */
-  string getPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle);
+  string getPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
 
   /* should we download whole messages when biff goes off? */
   /* in 4.x, this was "mail.pop3_gets_new_mail" for pop */

@@ -41,6 +41,10 @@
 #include "nsTextFormatter.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h" 
+#include "nsIWalletService.h"
+#include "nsIMsgWindow.h"
+
+static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 
 #define PREF_MAIL_ALLOW_AT_SIGN_IN_USER_NAME "mail.allow_at_sign_in_user_name"
 
@@ -534,8 +538,13 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         // if the last prompt got us a bad password then show a special dialog
         if (TestFlag(POP3_PASSWORD_FAILED))
         {
+            NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            nsAutoString user(userName);
+            rv = walletservice->SI_RemoveUser(hostName, (PRUnichar *)user.GetUnicode());
             PRUnichar *passwordTemplate = nsnull;
             mStringService->GetStringByID(POP3_PREVIOUSLY_ENTERED_PASSWORD_IS_INVALID_ETC, &passwordTemplate);
+
             if (m_commandResponse.Length())
                 passwordPromptString = nsTextFormatter::smprintf(passwordTemplate, m_commandResponse.GetBuffer(), (const char *) userName, (const char *) hostName);
             else
@@ -556,9 +565,16 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         }
 
         // now go get the password!!!!
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_url, &rv);
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIMsgWindow> aMsgWindow;
+        rv = mailnewsUrl->GetMsgWindow(getter_AddRefs(aMsgWindow));
+        if (NS_FAILED(rv)) return rv;
         PRUnichar * passwordTitle = nsnull;
         mStringService->GetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE, &passwordTitle);
-        rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle, aPassword);
+
+        rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle,
+                                        aMsgWindow, aPassword);
         nsCRT::free(passwordTitle);
         nsTextFormatter::smprintf_free(passwordPromptString);
 

@@ -33,15 +33,16 @@
 #include "nsIMsgFolder.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
-#include "nsINetSupportDialogService.h"
-#include "nsIPrompt.h"
+#include "nsIMsgWindow.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsINetPrompt.h"
 #include "nsXPIDLString.h"
 #include "nsIRDFService.h"
 #include "nsIMsgProtocolInfo.h"
 #include "nsRDFCID.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
@@ -536,14 +537,6 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 	// otherwise, just set the password so we remember it for the rest of the current
 	// session.
 
-	PRBool rememberPassword = PR_FALSE;
-	GetRememberPassword(&rememberPassword);
-	
-	if (rememberPassword)
-	{
-		SetPrefPassword((char *) aPassword);
-	}
-
 	m_password = aPassword;
 
 	return NS_OK;
@@ -552,46 +545,40 @@ NS_IMETHODIMP nsMsgIncomingServer::SetPassword(const char * aPassword)
 NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 {
 	nsresult rv = NS_OK;
-	PRBool rememberPassword = PR_FALSE;
-	// okay, here's the scoop for this messs...
-	// (1) if we have a password already, go ahead and use it!
-	// (2) if remember password is turned on, try reading in from the prefs and if we have one, go ahead
-	//	   and use it
-	// (3) otherwise prompt the user for a password and then remember that password in the server
-
-	if (m_password.IsEmpty())
-	{
-
-		// case (2)
-		GetRememberPassword(&rememberPassword);
-		if (rememberPassword)
-		{
-			nsXPIDLCString password;
-			GetPrefPassword(getter_Copies(password));
-			m_password = password;
-		}
-	}
-    
 	*aPassword = m_password.ToNewCString();
     return rv;
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const PRUnichar *aPromptTitle, char **aPassword) 
+nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
+                                       PRUnichar *aPromptTitle, 
+                                       nsIMsgWindow* aMsgWindow,
+                                       char **aPassword) 
 {
 
     nsXPIDLCString prefvalue;
     GetPassword(getter_Copies(prefvalue));
 
     nsresult rv = NS_OK;
+    if (!aMsgWindow) return NS_ERROR_NULL_POINTER;
     if (m_password.IsEmpty()) {
 		// prompt the user for the password
-		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
+        nsCOMPtr<nsIWebShell> webShell;
+        rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+        if (NS_FAILED(rv)) return rv;
+        // get top level window
+        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+        rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
 		if (NS_SUCCEEDED(rv))
 		{
 			PRUnichar * uniPassword;
 			PRBool okayValue = PR_TRUE;
-			dialog->PromptPassword(aPromptMessage, aPromptTitle, &uniPassword, &okayValue);
+			nsXPIDLCString serverUri;
+			rv = GetServerURI(getter_Copies(serverUri));
+			if (NS_FAILED(rv)) return rv;
+			dialog->PromptPassword(serverUri, aPromptTitle, aPromptMessage, &uniPassword, &okayValue);
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
 			{

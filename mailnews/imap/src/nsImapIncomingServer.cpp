@@ -42,6 +42,7 @@
 #include "plstr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgFolder.h"
+#include "nsIMsgWindow.h"
 #include "nsIMsgImapMailFolder.h"
 #include "nsImapUtils.h"
 #include "nsIRDFService.h"
@@ -1322,7 +1323,8 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 	return rv;
 }
 
-NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
+NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword,
+                                                      nsIMsgWindow * aMsgWindow)
 {
     PRUnichar *passwordTemplate = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT);
     PRUnichar *passwordTitle = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT_TITLE);
@@ -1334,7 +1336,7 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
     GetUsername(getter_Copies(userName));
 
     passwordText = nsTextFormatter::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
-    nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aPassword);
+    nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aMsgWindow, aPassword);
     nsTextFormatter::smprintf_free(passwordText);
     nsCRT::free(passwordTemplate);
     nsCRT::free(passwordTitle);

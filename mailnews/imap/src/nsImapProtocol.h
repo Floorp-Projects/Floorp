@@ -50,6 +50,7 @@
 #include "nsCOMPtr.h"
 #include "nsIImapIncomingServer.h"
 #include "nsXPIDLString.h"
+#include "nsIMsgWindow.h"
 
 class nsIMAPMessagePartIDArray;
 class nsIMsgIncomingServer;
@@ -486,7 +487,7 @@ private:
 	nsresult Configure(PRInt32 TooFastTime, PRInt32 IdealTime,
 									PRInt32 ChunkAddSize, PRInt32 ChunkSize, PRInt32 ChunkThreshold,
 									PRBool FetchByChunks, PRInt32 MaxChunkSize);
-
+    nsresult GetMsgWindow(nsIMsgWindow ** aMsgWindow);
 	// End Process AuthenticatedState Url helper methods
 
     PRBool		m_trackingTime;
