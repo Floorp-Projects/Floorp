@@ -2019,8 +2019,8 @@ else
 		bmks->mTimer->Cancel();
 		bmks->mTimer = nsnull;
 	}
-	mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-	if (NS_FAILED(rv) || (!mTimer)) return;
+	bmks->mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
+	if (NS_FAILED(rv) || (!bmks->mTimer)) return;
 	bmks->mTimer->Init(nsBookmarksService::FireTimer, bmks, BOOKMARK_TIMEOUT, NS_PRIORITY_LOWEST, NS_TYPE_REPEATING_SLACK);
 	// Note: don't addref "this" as we'll cancel the timer in the nsBookmarkService destructor
 #endif
