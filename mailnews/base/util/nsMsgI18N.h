@@ -44,5 +44,6 @@ NS_MSG_BASE const char *nsMsgI18NParseMetaCharset(nsFileSpec* fileSpec);
 
 NS_MSG_BASE nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString);
 
+NS_MSG_BASE nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char* charset, const PRUnichar* inString, char** outString);
 
 #endif /* _nsMsgI18N_H_ */

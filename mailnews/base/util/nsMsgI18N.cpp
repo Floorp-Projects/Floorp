@@ -30,12 +30,15 @@
 #include "nsFileSpec.h"
 #include "nsFileStream.h"
 #include "nsMsgMimeCID.h"
+#include "nsMimeTypes.h"
 #include "nsIEntityConverter.h"
+#include "nsISaveAsCharset.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
+static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 //
 // International functions necessary for composition
@@ -308,6 +311,45 @@ nsresult nsMsgI18NConvertToEntity(const nsString& inString, nsString* outString)
       nsAllocator::Free(entities);
      }
    }
+ 
+  return res;
+}
+
+nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset, const PRUnichar* inString, char** outString)
+{
+  NS_ASSERTION(contentType, "null ptr- contentType");
+  NS_ASSERTION(charset, "null ptr- charset");
+  NS_ASSERTION(outString, "null ptr- outString");
+  if(!contentType || !charset || !outString)
+    return NS_ERROR_NULL_POINTER;
+  *outString = NULL;
+
+  PRBool bTEXT_HTML = PR_FALSE;
+  nsresult res;
+
+  if (!nsCRT::strcasecmp(contentType, TEXT_HTML)) {
+    bTEXT_HTML = PR_TRUE;
+  }
+  else if (nsCRT::strcasecmp(contentType, TEXT_PLAIN)) {
+    return NS_ERROR_ILLEGAL_VALUE;  // not supported type
+  }
+
+  nsCOMPtr <nsISaveAsCharset> aConv;  // charset converter plus entity, NCR generation
+  res = nsComponentManager::CreateInstance(kSaveAsCharsetCID, NULL, 
+                                           nsISaveAsCharset::GetIID(), getter_AddRefs(aConv));
+  if(NS_SUCCEEDED(res)) {
+    // attribute: 
+    // html text - charset conv then fallback to entity or NCR
+    // plain text - charset conv then fallback to '?'
+    res = aConv->Init(charset, 
+                      bTEXT_HTML ? 
+                      nsISaveAsCharset::attr_EntityAfterCharsetConv + nsISaveAsCharset::attr_FallbackDecimalNCR : 
+                      nsISaveAsCharset::attr_plainTextDefault + nsISaveAsCharset::attr_FallbackQuestionMark, 
+                      nsIEntityConverter::html40);
+    if (NS_SUCCEEDED(res)) {
+      res = aConv->Convert(inString, outString);
+    }
+  }
  
   return res;
 }
