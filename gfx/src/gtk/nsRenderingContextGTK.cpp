@@ -574,6 +574,12 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawLine(nscoord aX0, nscoord aY0, nscoord 
   mTMatrix->TransformCoord(&aX0,&aY0);
   mTMatrix->TransformCoord(&aX1,&aY1);
 
+  if (aY0 != aY1) {
+    aY1--;
+  }
+  if (aX0 != aX1) {
+    aX1--;
+  }
   ::gdk_draw_line(mRenderingSurface->drawable,
                   mRenderingSurface->gc,
                   aX0, aY0, aX1, aY1);
@@ -633,7 +639,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DrawRect(nscoord aX, nscoord aY, nscoord aW
 
   ::gdk_draw_rectangle(mRenderingSurface->drawable, mRenderingSurface->gc,
                        FALSE,
-                       x, y, w, h);
+                       x, y, w - 1, h - 1);
 
   return NS_OK;
 }
