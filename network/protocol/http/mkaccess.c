@@ -55,6 +55,7 @@
 #endif
 
 #include "secnav.h"
+#include "sechash.h"
 #include "libevent.h"
 #include "pwcacapi.h"
 
@@ -3438,17 +3439,11 @@ net_parse_authenticate_line(char *auth, net_AuthStruct *ret)
 
 PRIVATE void do_md5(unsigned char *stuff, unsigned char digest[16])
 {
-	MD5Context *cx = MD5_NewContext();
-	unsigned int len;
+    SECStatus rv;
 
-	if (!cx)
-		return;
+    rv = HASH_HashBuf(HASH_AlgMD5, digest, stuff, strlen((char *)stuff));
 
-	MD5_Begin(cx);
-	MD5_Update(cx, stuff, strlen((char*)stuff));
-	MD5_End(cx, digest, &len, 16);	/* len had better be 16 when returned! */
-
-	MD5_DestroyContext(cx, (DSBool)TRUE);
+    return;
 }
 
 
