@@ -54,7 +54,8 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
 {
     IDL_tree iter = p;
     for (; iter; iter = IDL_LIST(iter).next)
-        if (!foreach(IDL_LIST(iter).data, user_data))
+        if (!foreach(IDL_LIST(iter).data,
+                     IDL_tree_get_scope(IDL_LIST(iter).data), user_data))
             return;
 }
 
@@ -155,6 +156,8 @@ fopen_from_includes(const char *filename, const char *mode,
         file = fopen(filebuf, mode);
         free(filebuf);
     }
+    if (!file)
+        fprintf(stderr, "can't open %s for reading\n", filename);
     return file;
 }
 
@@ -382,6 +385,14 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #endif
                     /* now continue getting data from new file */
                     goto fill_start;
+                } else {
+                    /*
+                     * if we started with a #include, but we've already
+                     * processed that file, we need to continue scanning
+                     * for special sequences.
+                     */
+                    data->f_include = INPUT_IN_NONE;
+                    goto scan_for_special;
                 }
             }
         } else {
@@ -426,7 +437,7 @@ int
 xpidl_process_idl(char *filename, IncludePathEntry *include_path,
                   char *basename)
 {
-    char *tmp, *outname;
+    char *tmp, *outname, *mode_outname;
     IDL_tree top;
     TreeState state;
     int rv;
@@ -453,37 +464,37 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
         return 0;
     }
 
-    if (!basename) {
-        basename = g_strdup(filename);
-        tmp = strrchr(basename, '.');
-        if (tmp)
-            *tmp = '\0';
-    } else {
-        basename = strdup(basename);
-    }
+    state.basename = strdup(filename);
+    tmp = strrchr(state.basename, '.');
+    if (tmp)
+        *tmp = '\0';
+    
+    if (!basename)
+        outname = strdup(state.basename);
+    else
+        outname = strdup(basename);
 
-    state.basename = basename;
     state.includes = stack.includes;
     state.include_path = include_path;
     nodeDispatch[TREESTATE_HEADER] = headerDispatch();
     nodeDispatch[TREESTATE_TYPELIB] = typelibDispatch();
     nodeDispatch[TREESTATE_DOC] = docDispatch();
     if (generate_headers) {
-        if (strcmp(basename, "-")) {
-            outname = g_strdup_printf("%s.h", basename);
-            state.file = fopen(outname, "w");
+        if (strcmp(outname, "-")) {
+            mode_outname = g_strdup_printf("%s.h", outname);
+            state.file = fopen(mode_outname, "w");
             if (!state.file) {
                 perror("error opening output file");
-                free(outname);
+                free(mode_outname);
                 return 0;
             }
+            free(mode_outname);
         } else {
             state.file = stdout;
         }
         state.mode = TREESTATE_HEADER;
         state.tree = top;
         ok = process_tree(&state);
-        free(outname);
         if (state.file != stdout)
             fclose(state.file);
         if (!ok)
@@ -517,6 +528,7 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path,
             return 0;
     }
     free(state.basename);
+    free(outname);
     /* g_hash_table_foreach(state.includes, free_name, NULL);
        g_hash_table_destroy(state.includes);
     */

@@ -33,6 +33,17 @@
 			    (IDL_NODE_TYPE(node) == IDLN_IDENT &&	      \
 			     UP_IS_AGGREGATE(node)) )
 
+static void
+dump_IDL(TreeState *state)
+{
+    fputs(" <IDL> ", state->file);
+}
+
+#define DUMP_IDL_COMMENT(state)                                               \
+  fputs("\n  /* ", state->file);                                              \
+  dump_IDL(state);                                                            \
+  fputs(" */\n", state->file);
+
 static gboolean
 ident(TreeState *state)
 {
@@ -55,14 +66,15 @@ pass_1(TreeState *state)
     if (state->tree) {
         fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
                 " %s.idl\n */\n", state->basename);
-        fprintf(state->file, "\n#ifndef __%s_h__\n#define __%s_h__\n\n",
+        fprintf(state->file, "\n#ifndef __gen_%s_h__\n"
+                "#define __gen_%s_h__\n\n",
                 state->basename, state->basename);
         if (g_hash_table_size(state->includes)) {
             g_hash_table_foreach(state->includes, write_header, state);
             fputc('\n', state->file);
         }
     } else {
-        fprintf(state->file, "\n#endif /* __%s_h__ */\n", state->basename);
+        fprintf(state->file, "\n#endif /* __gen_%s_h__ */\n", state->basename);
     }
     return TRUE;
 }
@@ -91,7 +103,7 @@ interface(TreeState *state)
     char *className = IDL_IDENT(IDL_INTERFACE(iface).ident).str;
     const char *iid;
 
-    fprintf(state->file, "/* starting interface %s */\n",
+    fprintf(state->file, "\n/* starting interface %s */\n",
             className);
     iid = IDL_tree_property_get(iface, "uuid");
     if (iid) {
@@ -117,10 +129,8 @@ interface(TreeState *state)
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
         for (; iter; iter = IDL_LIST(iter).next) {
-            state->tree = IDL_LIST(iter).data;
-            fputs("public ", state->file);
-            if (!ident(state))
-                return FALSE;
+            fprintf(state->file, "public %s",
+                    IDL_IDENT(IDL_LIST(iter).data).str);
             if (IDL_LIST(iter).next)
                 fputs(", ", state->file);
         }
@@ -138,7 +148,7 @@ interface(TreeState *state)
 
     state->tree = IDL_INTERFACE(iface).body;
 
-    if (!process_node(state))
+    if (state->tree && !process_node(state))
         return FALSE;
 
     fputs("};\n", state->file);
@@ -346,19 +356,7 @@ static gboolean
 attr_dcl(TreeState *state)
 {
     gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
-    IDL_tree orig = state->tree;
-    fprintf(state->file, "\n  /* %sattribute ",
-            ro ? "readonly " : "");
-    state->tree = IDL_ATTR_DCL(state->tree).param_type_spec;
-    if (state->tree && !type(state))
-        return FALSE;
-    fputs(" ", state->file);
-    state->tree = IDL_ATTR_DCL(orig).simple_declarations;
-    if (state->tree && !process_node(state))
-        return FALSE;
-    fputs("; */\n", state->file);
-
-    state->tree = orig;
+    DUMP_IDL_COMMENT(state);
     return attr_accessor(state, TRUE) && (ro || attr_accessor(state, FALSE));
 }
 
@@ -376,6 +374,34 @@ do_enum(TreeState *state)
                 IDL_LIST(iter).next ? ",": "");
 
     fputs("};\n\n", state->file);
+    return TRUE;
+}
+
+static gboolean
+do_typedef(TreeState *state)
+{
+    IDL_tree type = IDL_TYPE_DCL(state->tree).type_spec,
+        dcls = IDL_TYPE_DCL(state->tree).dcls,
+        complex;
+    fputs("typedef ", state->file);
+    fputs(" ", state->file);
+
+    if (IDL_NODE_TYPE(type) == IDLN_TYPE_SEQUENCE) {
+        fprintf(stderr, "SEQUENCE!\n");
+    } else {
+        state->tree = type;
+        if (!xpcom_type(state))
+            return FALSE;
+        if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
+            fprintf(state->file, "%s[%d]",
+                    IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).str,
+                    IDL_INTEGER(IDL_LIST(IDL_TYPE_ARRAY(complex).size_list).
+                                data).value);
+        } else {
+            fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
+        }
+    }
+    fputs(";\n", state->file);
     return TRUE;
 }
 
@@ -416,20 +442,8 @@ op_dcl(TreeState *state)
 {
     struct _IDL_OP_DCL op = IDL_OP_DCL(state->tree);
     IDL_tree iter;
-    state->tree = op.op_type_spec;
-    fputs("\n  /* ", state->file);
-    if (!type(state))
-        return FALSE;
-    fputs(" ", state->file);
-    state->tree = op.ident;
-    if (state->tree && !process_node(state))
-        return FALSE;
-    state->tree = op.parameter_dcls;
-    if (!param_dcls(state))
-        return FALSE;
-    if (op.f_varargs)
-        fputs(", ...", state->file);
-    fputs("); */\n", state->file);
+
+    DUMP_IDL_COMMENT(state);
 
     fprintf(state->file, "  NS_IMETHOD %s(", IDL_IDENT(op.ident).str);
     for (iter = op.parameter_dcls; iter; iter = IDL_LIST(iter).next) {
@@ -455,9 +469,8 @@ op_dcl(TreeState *state)
     }
 
     /* varargs go last */
-    /* XXX this should be ``nsIVarArgs *_varargs'', not ``...'', I guess */
     if (op.f_varargs) {
-        fputs("...", state->file);
+        fputs("nsVarArgs *_varargs", state->file);
     }
     fputs(") = 0;\n", state->file);
     return TRUE;
@@ -491,28 +504,13 @@ nodeHandler *headerDispatch()
     if (!initialized) {
         table[IDLN_NONE] = pass_1;
         table[IDLN_LIST] = list;
-        table[IDLN_IDENT] = ident;
         table[IDLN_ATTR_DCL] = attr_dcl;
         table[IDLN_OP_DCL] = op_dcl;
         table[IDLN_PARAM_DCL] = param_dcls;
-        table[IDLN_TYPE_INTEGER] = type_integer;
-        table[IDLN_TYPE_FLOAT] = type;
-        table[IDLN_TYPE_FIXED] = type;
-        table[IDLN_TYPE_CHAR] = type;
-        table[IDLN_TYPE_WIDE_CHAR] = type;
-        table[IDLN_TYPE_STRING] = type;
-        table[IDLN_TYPE_WIDE_STRING] = type;
-        table[IDLN_TYPE_BOOLEAN] = type;
-        table[IDLN_TYPE_OCTET] = type;
-        table[IDLN_TYPE_ANY] = type;
-        table[IDLN_TYPE_OBJECT] = type;
         table[IDLN_TYPE_ENUM] = do_enum;
-        table[IDLN_TYPE_SEQUENCE] = type;
-        table[IDLN_TYPE_ARRAY] = type;
-        table[IDLN_TYPE_STRUCT] = type;
-        table[IDLN_TYPE_UNION] = type;
         table[IDLN_INTERFACE] = interface;
         table[IDLN_CODEFRAG] = codefrag;
+        table[IDLN_TYPE_DCL] = do_typedef;
         initialized = TRUE;
     }
   
