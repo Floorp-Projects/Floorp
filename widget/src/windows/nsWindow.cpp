@@ -2525,6 +2525,27 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
   event.isAlt     = mIsAltDown;
   event.eventStructType = NS_KEY_EVENT;
 
+  nsPluginEvent pluginEvent;
+
+  switch (aEventType)
+  {
+    case NS_KEY_UP:
+      pluginEvent.event = WM_KEYUP;
+      break;
+    case NS_KEY_DOWN:
+      pluginEvent.event = WM_KEYDOWN;
+      break;
+    default:
+      break;
+  }
+
+  pluginEvent.wParam = 0;
+  pluginEvent.wParam |= (event.isShift) ? MK_SHIFT : 0;
+  pluginEvent.wParam |= (event.isControl) ? MK_CONTROL : 0;
+  pluginEvent.lParam = aVirtualCharCode;
+
+  event.nativeMsg = (void *)&pluginEvent;
+
   PRBool result = DispatchWindowEvent(&event);
   NS_RELEASE(event.widget);
 
