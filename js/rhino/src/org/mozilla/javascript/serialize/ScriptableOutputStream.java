@@ -17,6 +17,7 @@
  *
  * Contributor(s):
  * Norris Boyd
+ * Attila Szegedi
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -135,7 +136,7 @@ public class ScriptableOutputStream extends ObjectOutputStream {
         Object result = scope;
         while (st.hasMoreTokens()) {
             String s = st.nextToken();
-            result = ((Scriptable)result).get(s, (Scriptable)result);
+            result = ScriptableObject.getProperty((Scriptable)result, s);
             if (result == null || !(result instanceof Scriptable))
                 break;
         }
