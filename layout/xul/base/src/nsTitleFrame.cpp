@@ -50,7 +50,7 @@ NS_NewTitleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsTitleFrame* it = new (aPresShell) nsTitleFrame;
+  nsTitleFrame* it = new (aPresShell) nsTitleFrame(aPresShell);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -58,7 +58,7 @@ NS_NewTitleFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
-nsTitleFrame::nsTitleFrame()
+nsTitleFrame::nsTitleFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
 {
 }
 

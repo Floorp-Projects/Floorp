@@ -30,7 +30,10 @@ MODULE		= layout
 LIBRARY_NAME	= raptorxulbase_s
 
 CPPSRCS		= \
-                nsXULTextFrame.cpp \
+        nsStackFrame.cpp \
+        nsSpringFrame.cpp \
+        nsXULLeafFrame.cpp \
+        nsXULTextFrame.cpp \
 		nsTitledBoxFrame.cpp \
 		nsTitleFrame.cpp \
 		nsFrameNavigator.cpp \

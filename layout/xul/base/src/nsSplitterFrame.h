@@ -39,7 +39,7 @@ nsresult NS_NewSplitterFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 class nsSplitterFrame : public nsBoxFrame, public nsIAnonymousContentCreator
 {
 public:
-  nsSplitterFrame();
+  nsSplitterFrame(nsIPresShell* aPresShell);
   ~nsSplitterFrame();
 
 #ifdef DEBUG

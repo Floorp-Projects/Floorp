@@ -39,45 +39,6 @@
 #include "nsIContent.h"
 #include "nsINameSpaceManager.h"
 
-/*
-#include "nsButtonFrameRenderer.h"
-#include "nsHTMLAtoms.h"
-#include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsIPresContext.h"
-#include "nsButtonFrameRenderer.h"
-
-#include "nsHTMLParts.h"
-#include "nsString.h"
-#include "nsLeafFrame.h"
-#include "nsIPresShell.h"
-#include "nsHTMLIIDs.h"
-#include "nsIImage.h"
-#include "nsIWidget.h"
-#include "nsIHTMLAttributes.h"
-#include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
-#include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsImageMap.h"
-#include "nsILinkHandler.h"
-#include "nsIURL.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
-#include "nsHTMLContainerFrame.h"
-#include "prprf.h"
-#include "nsISizeOfHandler.h"
-#include "nsIFontMetrics.h"
-#include "nsCSSRendering.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDeviceContext.h"
-#include "nsTextFragment.h"
-#include "nsIDOMHTMLMapElement.h"
-#include "nsIStyleSet.h"
-
-#include "nsFormControlHelper.h"
-*/
-
 #define ELIPSIS "..."
 
 #define CROP_LEFT   "left"
@@ -165,7 +126,7 @@ nsXULTextFrame::Init(nsIPresContext*  aPresContext,
                           nsIStyleContext* aContext,
                           nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsXULLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
   
   PRBool a,b,c;
   UpdateAttributes(aPresContext, nsnull, a, b, c  /* all */);
@@ -271,7 +232,7 @@ nsXULTextFrame::Paint(nsIPresContext* aPresContext,
 	if (!disp->mVisible)
 		return NS_OK;
 
-    if (eFramePaintLayer_Content == aWhichLayer) {
+    if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
 
         // remove the border and padding
          const nsStyleSpacing* spacing = (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -603,75 +564,9 @@ nsXULTextFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-    
-    // See if it's targeted at us
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-    }
-  } else if (eReflowReason_Dirty == aReflowState.reason) {
-    Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-  }
-
-  
-
   mState |= NS_STATE_NEED_LAYOUT;
 
-  nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
-
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
-      NS_ASSERTION(aMetrics.width == aReflowState.mComputedWidth + aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right,
-                   "Text width is wrong!!!");
-
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
-      NS_ASSERTION(aMetrics.height == aReflowState.mComputedHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom,
-                   "Text height is wrong!!!");
-
-  return result;
-}
-
-void
-nsXULTextFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                    const nsHTMLReflowState& aReflowState,
-                                    nsHTMLReflowMetrics& aDesiredSize)
-{
-  // get our info object.
-  nsBoxInfo info;
-  info.Clear();
-
-  GetBoxInfo(aPresContext, aReflowState, info);
-
-  // size is our preferred unless calculated.
-  aDesiredSize.width = info.prefSize.width;
-  aDesiredSize.height = info.prefSize.height;
-
-  // if either the width or the height was not computed use our intrinsic size
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
-       aDesiredSize.width = aReflowState.mComputedWidth;
-
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
-       aDesiredSize.height = aReflowState.mComputedHeight;
-       nscoord descent = info.prefSize.height - info.ascent;
-       aDesiredSize.ascent = aDesiredSize.height - descent;
-       if (aDesiredSize.ascent < 0)
-           aDesiredSize.ascent = 0;
-  } else {
-       aDesiredSize.ascent = info.ascent;
-  }
-
-
-}
-
-
-
-NS_IMETHODIMP
-nsXULTextFrame::InvalidateCache(nsIFrame* aChild)
-{
-    // we don't cache any information
-    return NS_OK;
+  return nsXULLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
 }
 
 /**
@@ -696,43 +591,6 @@ nsXULTextFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState
    
    return NS_OK;
 }
-
-/**
- * We can be a nsIBox
- */
-NS_IMETHODIMP 
-nsXULTextFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
-    *aInstancePtr = (void*)(nsIBox*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-
-  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
-
-/*
- * We are a frame and we do not maintain a ref count
- */
-NS_IMETHODIMP_(nsrefcnt) 
-nsXULTextFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsXULTextFrame::Release(void)
-{
-    return NS_OK;
-}
-
 
 NS_IMETHODIMP
 nsXULTextFrame::GetFrameName(nsString& aResult) const

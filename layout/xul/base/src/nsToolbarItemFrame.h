@@ -35,7 +35,7 @@ class nsToolbarItemFrame : public nsBoxFrame
 {
 public:
 
-  nsToolbarItemFrame();
+  nsToolbarItemFrame(nsIPresShell* aShell);
   ~nsToolbarItemFrame();
 
   friend nsresult NS_NewToolbarItemFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);

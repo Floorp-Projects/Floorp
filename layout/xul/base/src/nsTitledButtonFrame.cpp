@@ -233,7 +233,7 @@ nsTitledButtonFrame::Destroy(nsIPresContext* aPresContext)
   // Release image loader first so that it's refcnt can go to zero
   mImageLoader.StopAllLoadImages(aPresContext);
 
-  return nsLeafFrame::Destroy(aPresContext);
+  return nsXULLeafFrame::Destroy(aPresContext);
 }
 
 
@@ -244,7 +244,7 @@ nsTitledButtonFrame::Init(nsIPresContext*  aPresContext,
                           nsIStyleContext* aContext,
                           nsIFrame*        aPrevInFlow)
 {
-  nsresult  rv = nsLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+  nsresult  rv = nsXULLeafFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
   mRenderer->SetNameSpace(kNameSpaceID_None);
   mRenderer->SetFrame(this,aPresContext);
@@ -822,7 +822,7 @@ nsTitledButtonFrame::PaintTitle(nsIPresContext* aPresContext,
                                 const nsRect& aDirtyRect,
                                 nsFramePaintLayer aWhichLayer)
 {
-   if (eFramePaintLayer_Content == aWhichLayer) {
+   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
  
      if (mTitle.Length() == 0)
          return NS_OK;
@@ -915,7 +915,7 @@ nsTitledButtonFrame::PaintImage(nsIPresContext* aPresContext,
   if (!mHasImage || !aDirtyRect.Intersects(mImageRect))
     return NS_OK;
 
-  if (eFramePaintLayer_Content != aWhichLayer)
+  if (NS_FRAME_PAINT_LAYER_FOREGROUND != aWhichLayer)
     return NS_OK;
 
   nsCOMPtr<nsIImage> image ( dont_AddRef(mImageLoader.GetImage()) );
@@ -945,67 +945,13 @@ nsTitledButtonFrame::Reflow(nsIPresContext*   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  // redraw us if we are flowed incremental and we are targeted or we are dirty.
-  mNeedsAccessUpdate = PR_TRUE;
-  if (eReflowReason_Incremental == aReflowState.reason) {
-    nsIFrame* targetFrame;
-    
-    // See if it's targeted at us
-    aReflowState.reflowCommand->GetTarget(targetFrame);
-    if (this == targetFrame) {
-      Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-    }
-  } else if (eReflowReason_Dirty == aReflowState.reason) {
-    Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
-  }
 
-  
 
   mNeedsLayout = PR_TRUE;
-  nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
-      NS_ASSERTION(aMetrics.width == aReflowState.mComputedWidth + aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right,
-                   "TitledButtons width is wrong!!!");
-
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE)
-      NS_ASSERTION(aMetrics.height == aReflowState.mComputedHeight + aReflowState.mComputedBorderPadding.top + aReflowState.mComputedBorderPadding.bottom,
-                   "TitledButtons height is wrong!!!");
+  nsresult result = nsXULLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
 
   return result;
 }
-
-void
-nsTitledButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
-                                    const nsHTMLReflowState& aReflowState,
-                                    nsHTMLReflowMetrics& aDesiredSize)
-{
-  // get our info object.
-  nsBoxInfo info;
-  info.Clear();
-
-  GetBoxInfo(aPresContext, aReflowState, info);
-
-  // size is our preferred unless calculated.
-  aDesiredSize.width = info.prefSize.width;
-  aDesiredSize.height = info.prefSize.height;
-
-  // if either the width or the height was not computed use our intrinsic size
-  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE)
-       aDesiredSize.width = aReflowState.mComputedWidth;
-
-  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) {
-       aDesiredSize.height = aReflowState.mComputedHeight;
-       nscoord descent = info.prefSize.height - info.ascent;
-       aDesiredSize.ascent = aDesiredSize.height - descent;
-       if (aDesiredSize.ascent < 0)
-           aDesiredSize.ascent = 0;
-  } else {
-       aDesiredSize.ascent = info.ascent;
-  }
-
-
-}
-
 
 struct nsTitleRecessedBorder : public nsStyleSpacing {
   nsTitleRecessedBorder(nscoord aBorderWidth)
@@ -1258,7 +1204,7 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext* aPresContext,
       break;
   }
 
-  return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
+  return nsXULLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
 
 //
@@ -1437,12 +1383,6 @@ nsTitledButtonFrame::GetImageSize(nsIPresContext* aPresContext)
 
 }
 
-NS_IMETHODIMP
-nsTitledButtonFrame::InvalidateCache(nsIFrame* aChild)
-{
-    // we don't cache any information
-    return NS_OK;
-}
 
 /**
  * Ok return our dimensions
@@ -1526,43 +1466,6 @@ nsTitledButtonFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflow
    return NS_OK;
 }
 
-/**
- * We can be a nsIBox
- */
-NS_IMETHODIMP 
-nsTitledButtonFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{           
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(NS_GET_IID(nsIBox))) {                                         
-    *aInstancePtr = (void*)(nsIBox*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }   
-
-  return nsLeafFrame::QueryInterface(aIID, aInstancePtr);                                     
-}
-
-/*
- * We are a frame and we do not maintain a ref count
- */
-NS_IMETHODIMP_(nsrefcnt) 
-nsTitledButtonFrame::AddRef(void)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP_(nsrefcnt) 
-nsTitledButtonFrame::Release(void)
-{
-    return NS_OK;
-}
-
-
 NS_IMETHODIMP
 nsTitledButtonFrame::GetFrameName(nsString& aResult) const
 {
@@ -1570,16 +1473,4 @@ nsTitledButtonFrame::GetFrameName(nsString& aResult) const
   aResult += mTitle;
   aResult += "]";
   return NS_OK;
-}
-
-NS_IMETHODIMP
-nsTitledButtonFrame::ContentChanged(nsIPresContext* aPresContext,
-                            nsIContent*     aChild,
-                            nsISupports*    aSubContent)
-{
-    nsCOMPtr<nsIPresShell> shell;
-    aPresContext->GetShell(getter_AddRefs(shell));
-    mState |= NS_FRAME_IS_DIRTY;
-    return mParent->ReflowDirtyChild(shell, this);
-
 }

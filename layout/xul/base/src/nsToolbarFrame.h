@@ -108,7 +108,7 @@ public:
 
 protected:
 
-  nsToolbarFrame();
+  nsToolbarFrame(nsIPresShell* aShell);
   virtual ~nsToolbarFrame();
 
     // pass-by-value not allowed for a coordinator because it corresponds 1-to-1

@@ -242,7 +242,7 @@ NS_NewScrollbarFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsScrollbarFrame* it = new (aPresShell) nsScrollbarFrame;
+  nsScrollbarFrame* it = new (aPresShell) nsScrollbarFrame (aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 

@@ -80,70 +80,66 @@
 
 //#define TEST_SANITY
 
-
-#define NS_STATE_IS_HORIZONTAL 0x00400000
-#define NS_STATE_AUTO_STRETCH  0x00800000
-#define NS_STATE_IS_ROOT       0x01000000
-
 /**
  * Only created when the box is in debug mode
  */
-class nsBoxDebugInner
+class nsBoxDebug
 {
 public:
 
-  nsBoxDebugInner(nsBoxFrame* aThis)
-  {
-    mOuter = aThis;
-  }
-  virtual ~nsBoxDebugInner() {}
+  nsBoxDebug(nsIPresContext* aPresContext, nsBoxFrame* aBoxFrame);
 
-public:
-    nsBoxFrame* mOuter;
+  static void AddRef(nsIPresContext* aPresContext, nsBoxFrame* aBox);
+  static void Release(nsIPresContext* aPresContext);
+  static void GetPref(nsIPresContext* aPresContext);
+    
+  void GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
+  void GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
+  void DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
+  void PaintSprings(nsIPresContext* aPresContext,  nsBoxFrame* aBoxFrame,  nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
+  void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
+  void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 
-    static nsIFrame* mDebugChild;
-    void GetValue(const nsSize& a, const nsSize& b, char* value);
-    void GetValue(PRInt32 a, PRInt32 b, char* value);
-    void DrawSpring( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
-    void PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect);
-    void DrawLine(nsIRenderingContext& aRenderingContext, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
-    void FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord width, nscoord height);
+  PRBool DisplayDebugInfoFor(nsIPresContext* aPresContext,
+                             nsBoxFrame* aBoxFrame,
+                                      nsPoint&        aPoint,
+                                      PRInt32&        aCursor);
 
-    PRBool DisplayDebugInfoFor(nsIPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor);
+  nsCOMPtr<nsIStyleContext> mHorizontalDebugStyle;
+  nsCOMPtr<nsIStyleContext> mVerticalDebugStyle;
+  PRInt32 mRefCount;
+  nsIFrame* mDebugChild;
 
-
-    static nsIStyleContext* mHorizontalDebugStyle;
-    static nsIStyleContext* mVerticalDebugStyle;
-    static PRInt32 gDebug;
-    static float mP2t;
+  static PRBool gDebug;
+  static nsBoxDebug* gInstance;
 };
 
-nsIStyleContext* nsBoxDebugInner::mHorizontalDebugStyle;
-nsIStyleContext* nsBoxDebugInner::mVerticalDebugStyle;
-
-PRInt32 nsBoxDebugInner::gDebug = 0;
-float nsBoxDebugInner::mP2t = 0;
+PRBool nsBoxDebug::gDebug = PR_FALSE;
+nsBoxDebug* nsBoxDebug::gInstance = nsnull;
 
 class nsInfoListImpl: public nsInfoList
 {
 public:
+    void* operator new(size_t sz, nsIPresShell* aPresShell);
+    void operator delete(void* aPtr, size_t sz);
+    void Recycle(nsIPresShell* aShell);
+
     nsInfoListImpl();
     virtual ~nsInfoListImpl();
     virtual nsCalculatedBoxInfo* GetFirst();
     virtual nsCalculatedBoxInfo* GetLast();
     virtual PRInt32 GetCount();
+    virtual nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
-    void Clear();
-    PRInt32 CreateInfosFor(nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last);
-    void RemoveAfter(nsCalculatedBoxInfo* aPrev);
-    void Remove(nsIFrame* aChild);
-    void Prepend(nsIFrame* aList);
-    void Append(nsIFrame* aList);
-    void Insert(nsIFrame* aPrevFrame, nsIFrame* aList);
-    void InsertAfter(nsCalculatedBoxInfo* aPrev, nsIFrame* aList);
-    void Init(nsIFrame* aList);
+    void Clear(nsIPresShell* aShell);
+    PRInt32 CreateInfosFor(nsIPresShell* aShell, nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last);
+    void RemoveAfter(nsIPresShell* aShell, nsCalculatedBoxInfo* aPrev);
+    void Remove(nsIPresShell* aShell, nsIFrame* aChild);
+    void Prepend(nsIPresShell* aShell, nsIFrame* aList);
+    void Append(nsIPresShell* aShell, nsIFrame* aList);
+    void Insert(nsIPresShell* aShell, nsIFrame* aPrevFrame, nsIFrame* aList);
+    void InsertAfter(nsIPresShell* aShell, nsCalculatedBoxInfo* aPrev, nsIFrame* aList);
+    void Init(nsIPresShell* aShell, nsIFrame* aList);
     nsCalculatedBoxInfo* GetPrevious(nsIFrame* aChild);
     nsCalculatedBoxInfo* GetInfo(nsIFrame* aChild);
     void SanityCheck(nsFrameList& aFrameList);
@@ -161,6 +157,9 @@ public:
     virtual ~nsCalculatedBoxInfoImpl();
     nsCalculatedBoxInfoImpl(const nsBoxInfo& aInfo);
     virtual void Clear();
+    void* operator new(size_t sz, nsIPresShell* aPresShell);
+    void operator delete(void* aPtr, size_t sz);
+    virtual void Recycle(nsIPresShell* aShell);
 };
 
 /**
@@ -169,19 +168,33 @@ public:
 class nsBoxFrameInner
 {
 public:
-  nsBoxFrameInner(nsBoxFrame* aThis)
+  nsBoxFrameInner(nsIPresShell* aPresShell, nsBoxFrame* aThis)
   {
     mOuter = aThis;
-    mDebugInner = nsnull;
-    mInfoList = new nsInfoListImpl();
+    mInfoList = new (aPresShell) nsInfoListImpl();
 
   }
 
   ~nsBoxFrameInner()
   {
-      delete mDebugInner;
-      delete mInfoList;
   }
+
+  void Recycle(nsIPresShell* aPresShell);
+
+  // Overloaded new operator. Initializes the memory to 0 and relies on an arena
+  // (which comes from the presShell) to perform the allocation.
+  void* operator new(size_t sz, nsIPresShell* aPresShell);
+
+  // Overridden to prevent the global delete from being called, since the memory
+  // came out of an nsIArena instead of the global delete operator's heap.  
+  // XXX Would like to make this private some day, but our UNIX compilers can't 
+  // deal with it.
+  void operator delete(void* aPtr, size_t sz);
+
+  // helper methods
+  static void* Allocate(size_t sz, nsIPresShell* aPresShell);
+  static void Free(void* aPtr, size_t sz);
+  static void RecycleFreedMemory(nsIPresShell* aPresShell, void* mem);
 
   void GetDebugInset(nsMargin& inset);
   void AdjustChildren(nsIPresContext* aPresContext, nsBoxFrame* aBox);
@@ -212,8 +225,6 @@ public:
 
    void PlaceChild(nsIPresContext* aPresContext, nsIFrame* aFrame, nscoord aX, nscoord aY);
 
-   void UpdatePseudoElements(nsIPresContext* aPresContext);
-
    void TranslateEventCoords(nsIPresContext* aPresContext,
                                     const nsPoint& aPoint,
                                     nsPoint& aResult);
@@ -221,6 +232,8 @@ public:
     static void InvalidateCachesTo(nsIFrame* aTargetFrame);
     static void InvalidateAllCachesBelow(nsIPresContext* aPresContext, nsIFrame* aTargetFrame);
     static PRBool AdjustTargetToScope(nsIFrame* aParent, nsIFrame*& aTargetFrame);
+
+    PRBool GetInitialDebug(PRBool& aDebug);
 
     nsBoxFrame::Halignment GetHAlign();
     nsBoxFrame::Valignment GetVAlign();
@@ -235,7 +248,6 @@ public:
 
     nsCOMPtr<nsISpaceManager> mSpaceManager; // We own this [OWNER].
     nsBoxFrame* mOuter;
-    nsBoxDebugInner* mDebugInner;
     nsInfoListImpl* mInfoList;
 
     // XXX make these flags!
@@ -250,22 +262,27 @@ public:
 
 };
 
+#ifdef DEBUG_REFLOW
+
+PRInt32 gIndent = 0;
+PRInt32 gReflows = 0;
+
+#endif
+
 #define GET_WIDTH(size) (IsHorizontal() ? size.width : size.height)
 #define GET_HEIGHT(size) (IsHorizontal() ? size.height : size.width)
 
 #define SET_WIDTH(size, coord)  if (IsHorizontal()) { (size).width  = (coord); } else { (size).height = (coord); }
 #define SET_HEIGHT(size, coord) if (IsHorizontal()) { (size).height = (coord); } else { (size).width  = (coord); }
 
-nsIFrame* nsBoxDebugInner::mDebugChild = nsnull;
-
 nsresult
-NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
+NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRBool aIsRoot)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsBoxFrame* it = new (aPresShell) nsBoxFrame();
+  nsBoxFrame* it = new (aPresShell) nsBoxFrame(aPresShell, aIsRoot);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -274,13 +291,16 @@ NS_NewBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   
 } // NS_NewBoxFrame
 
-nsBoxFrame::nsBoxFrame()
+nsBoxFrame::nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot)
 {
-  mInner = new nsBoxFrameInner(this);
+  mInner = new (aPresShell) nsBoxFrameInner(aPresShell, this);
 
   // if not otherwise specified boxes by default are horizontal.
   mState |= NS_STATE_IS_HORIZONTAL;
   mState |= NS_STATE_AUTO_STRETCH;
+
+  if (aIsRoot)
+     mState |= NS_STATE_IS_ROOT;
 
   mInner->mValign = nsBoxFrame::vAlign_Top;
   mInner->mHalign = nsBoxFrame::hAlign_Left;
@@ -291,9 +311,62 @@ nsBoxFrame::nsBoxFrame()
 #endif
 }
 
+void* 
+nsBoxFrameInner::operator new(size_t sz, nsIPresShell* aPresShell)
+{
+    return nsBoxFrameInner::Allocate(sz,aPresShell);
+}
+
+void 
+nsBoxFrameInner::Recycle(nsIPresShell* aPresShell)
+{
+  // recyle out info list.
+  mInfoList->Recycle(aPresShell);
+  delete this;
+  nsBoxFrameInner::RecycleFreedMemory(aPresShell, this);
+}
+
+// Overridden to prevent the global delete from being called, since the memory
+// came out of an nsIArena instead of the global delete operator's heap.
+void 
+nsBoxFrameInner::operator delete(void* aPtr, size_t sz)
+{
+    nsBoxFrameInner::Free(aPtr, sz);
+}
+
+void* 
+nsBoxFrameInner::Allocate(size_t sz, nsIPresShell* aPresShell)
+{
+  // Check the recycle list first.
+  void* result = nsnull;
+  aPresShell->AllocateFrame(sz, &result);
+  
+  if (result) {
+    nsCRT::zero(result, sz);
+  }
+
+  return result;
+}
+
+// Overridden to prevent the global delete from being called, since the memory
+// came out of an nsIArena instead of the global delete operator's heap.
+void 
+nsBoxFrameInner::Free(void* aPtr, size_t sz)
+{
+  // Don't let the memory be freed, since it will be recycled
+  // instead. Don't call the global operator delete.
+
+  // Stash the size of the object in the first four bytes of the
+  // freed up memory.  The Destroy method can then use this information
+  // to recycle the object.
+  size_t* szPtr = (size_t*)aPtr;
+  *szPtr = sz;
+}
+
+
 nsBoxFrame::~nsBoxFrame()
 {
-  delete mInner;
+  NS_ASSERTION(mInner == nsnull,"Error Destroy was never called on this Frame!!!");
 }
 
 
@@ -331,9 +404,12 @@ nsBoxFrame::SetInitialChildList(nsIPresContext* aPresContext,
   mInner->SanityCheck();
 
   nsresult r = nsHTMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  
+
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+
   // initialize our list of infos.
-  mInner->mInfoList->Init(aChildList);
+  mInner->mInfoList->Init(shell, aChildList);
 
   mInner->SanityCheck();
 
@@ -385,6 +461,22 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
         mState &= ~NS_STATE_AUTO_STRETCH;
 
 
+  PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
+  PRBool debugSet = mInner->GetInitialDebug(debug); 
+  if (debugSet) {
+        mState |= NS_STATE_DEBUG_WAS_SET;
+        if (debug)
+            mState |= NS_STATE_SET_TO_DEBUG;
+        else
+            mState &= ~NS_STATE_SET_TO_DEBUG;
+  } else {
+        mState &= ~NS_STATE_DEBUG_WAS_SET;
+  }
+
+    // if we are root and this
+  if (mState & NS_STATE_IS_ROOT) 
+      nsBoxDebug::GetPref(aPresContext);
+
   return rv;
 }
 
@@ -393,6 +485,27 @@ nsBoxFrame::GetDefaultFlex(PRInt32& aFlex)
 {
     aFlex = 0;
     return PR_TRUE;
+}
+
+PRBool
+nsBoxFrameInner::GetInitialDebug(PRBool& aDebug)
+{
+  nsString value;
+
+  nsCOMPtr<nsIContent> content;
+  GetContentOf(mOuter, getter_AddRefs(content));
+
+  if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::debug, value)) {
+      if (value.EqualsIgnoreCase("true")) {
+          aDebug = PR_TRUE;
+          return PR_TRUE;
+      } else if (value.EqualsIgnoreCase("false")) {
+          aDebug = PR_FALSE;
+          return PR_TRUE;
+      }
+  }
+
+  return PR_FALSE;
 }
 
 PRBool
@@ -707,6 +820,10 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIPresContext*  aPresContext, nsIFrame* aFra
 nsresult
 nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aReflowState, nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
 {
+#ifdef DEBUG_REFLOW
+    gIndent++;
+#endif
+
   nsIFrame* incrementalChild;
   if (aReflowState.reason == eReflowReason_Incremental) {
       // then get the child we need to flow incrementally
@@ -736,6 +853,10 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
      aSize.mFlags |= NS_FRAME_IS_BOX;
      // add in the border, padding, width, min, max
      GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
+
+#ifdef DEBUG_REFLOW
+     gIndent--;
+#endif
      return NS_OK;
   }   
 
@@ -805,12 +926,21 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowStat
         aSize.prefSize.height = desiredSize.height;
         aSize.ascent = desiredSize.ascent;
     
+#ifdef DEBUG_REFLOW
+           mInner->AddIndents();
+           printf("pref-size: (%d,%d)\n", aSize.prefSize.width, aSize.prefSize.height);
+#endif
+
     //    aSize.prefSize.width = 0;
       //  aSize.prefSize.height = 0;
       
     // redefine anything depending on css
     GetRedefinedMinPrefMax(aPresContext, aFrame, aSize);
   }
+
+#ifdef DEBUG_REFLOW
+    gIndent--;
+#endif
 
   return NS_OK;
 }
@@ -830,15 +960,8 @@ nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     return NS_OK;
 }
 
-#ifdef DEBUG_REFLOW
 
-PRInt32 gIndent = 0;
-PRInt32 gReflows = 0;
-
-#endif
-
-
-
+/*
 void
 nsIBox::HandleRootBoxReflow(nsIPresContext* aPresContext, 
                             nsIFrame* aBox, 
@@ -865,6 +988,7 @@ nsIBox::HandleRootBoxReflow(nsIPresContext* aPresContext,
      }
   } 
 }
+*/
 
 
 /**
@@ -918,41 +1042,18 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
   //---------------------------------------------------------
     nsIFrame* incrementalChild = nsnull;
 
-    if (mState & NS_FRAME_FIRST_REFLOW) {
-       // on the initial reflow see if we are the root box.
-       // the root box.
-       mState |= NS_STATE_IS_ROOT;
-
-       // see if we are the root box
-       nsIFrame* parent = mParent;
-       while (parent) {
-            nsIBox* ibox = nsnull;
-            if (NS_SUCCEEDED(parent->QueryInterface(nsIBox::GetIID(), (void**)&ibox)) && ibox) {
-               mState &= ~NS_STATE_IS_ROOT;
-               break;
-            }
-            parent->GetParent(&parent);
-       }
-
-       if (mState & NS_STATE_IS_ROOT) {
-
-           // see if someone turned on debugging
-            PRBool debug = PR_FALSE;
-            nsCOMPtr<nsIPref> pref;
-            aPresContext->GetPrefs(getter_AddRefs(pref));
-            if (pref) {
-	            pref->GetBoolPref("xul.debug.box", &debug);
-            }
-
-            if (debug)
-               nsBoxDebugInner::gDebug++;
-
-#ifdef DEBUG_REFLOW  
-           printf("-------- BOX IS ROOT --------\n");
-#endif
-       }
+    // update our debug state if it needs it.
+    // see if the debug was set. If it was then propagate it
+    // if it wasn't and we are root then get it from the global pref.
+    if (mState & NS_STATE_DEBUG_WAS_SET) {
+        if (mState & NS_STATE_SET_TO_DEBUG)
+            SetDebug(aPresContext, PR_TRUE);
+        else
+            SetDebug(aPresContext, PR_FALSE);
+    } else if (mState & NS_STATE_IS_ROOT) {
+        SetDebug(aPresContext, nsBoxDebug::gDebug);
     }
-    
+
     if ( aReflowState.reason == eReflowReason_Incremental ) {
         nsIReflowCommand::ReflowType  reflowType;
         aReflowState.reflowCommand->GetType(reflowType);
@@ -1010,25 +1111,7 @@ nsBoxFrame::Reflow(nsIPresContext*   aPresContext,
 
         // then get the child we need to flow incrementally
         //aReflowState.reflowCommand->GetNext(incrementalChild);
-    }
-
-           
-    if (aReflowState.reason == eReflowReason_Initial ) 
-    {
-        if (nsBoxDebugInner::gDebug > 0) {
-            if (!mInner->mDebugInner) {
-                    mInner->mDebugInner = new nsBoxDebugInner(this);
-                    mInner->UpdatePseudoElements(aPresContext);
-            }
-        } else {
-            if (mInner->mDebugInner) 
-            {
-                delete mInner->mDebugInner;
-                mInner->mDebugInner = nsnull;
-            }
-        }
-    }
-    
+    }   
 
 
 #ifdef DEBUG_REFLOW
@@ -1069,9 +1152,9 @@ printf("\n");
   nsMargin inset(0,0,0,0);
   GetInset(inset);
 
-  nsMargin debugInset(0,0,0,0);
-  mInner->GetDebugInset(debugInset);
-  inset += debugInset;
+  //nsMargin debugInset(0,0,0,0);
+  //mInner->GetDebugInset(debugInset);
+  //inset += debugInset;
 
   rect.Deflate(inset);
 
@@ -1345,7 +1428,7 @@ nsBoxFrameInner::FlowChildren(nsIPresContext* aPresContext,
 
        // make collapsed children not show up
         if (info->mFlags & NS_FRAME_BOX_IS_COLLAPSED) {
-
+          
           if (aReflowState.reason == eReflowReason_Initial)
 	      {
                 FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, *info, x, y, PR_TRUE, aIncrementalChild, redraw, reason);
@@ -1926,6 +2009,9 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
                              PRBool& aRedraw,
                              const nsString& aReason)
 {
+   //   if (mOuter->mState & NS_STATE_CURRENTLY_IN_DEBUG)
+    //      printf("in debug\n");
+
       aStatus = NS_FRAME_COMPLETE;
       PRBool needsReflow = PR_FALSE;
       nsReflowReason reason = aReflowState.reason;
@@ -1999,7 +2085,7 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
                      return FlowChildAt(childFrame, aPresContext, desiredSize, state, aStatus, aInfo, aX, aY, aMoveFrame, aIncrementalChild, aRedraw, aReason);
                 } 
               }
- 
+
               // get the frame state to see if it needs reflow
               needsReflow = (childState & NS_FRAME_IS_DIRTY) || (childState & NS_FRAME_HAS_DIRTY_CHILDREN);
 
@@ -2140,8 +2226,13 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
     char ch[100];
     aReason.ToCString(ch,100);
 
-    printf(" reason=%s %s\n",reflowReasonString,ch);
+    printf(" reason=%s %s",reflowReasonString,ch);
 #endif
+
+    // only frames that implement nsIBox seem to be able to handle a reason of Dirty. For everyone else
+    // send down a resize.
+    if (!(aInfo.mFlags & NS_FRAME_IS_BOX) && reason == eReflowReason_Dirty)
+        reason = eReflowReason_Resize;
 
         if (!(aInfo.mFlags & NS_FRAME_IS_BOX)) {
             nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(size.width, NS_INTRINSICSIZE));
@@ -2155,6 +2246,9 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
 
             reflowState.mComputedWidth = size.width;
             reflowState.mComputedHeight = size.height;
+#ifdef DEBUG_REFLOW
+    printf(" Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
+#endif
 
           // place the child and reflow
             childFrame->WillReflow(aPresContext);
@@ -2177,6 +2271,10 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
             reflowState.mComputedWidth = size.width;
             reflowState.mComputedHeight = size.height;
 
+#ifdef DEBUG_REFLOW
+    printf(" Size=(%d,%d)\n",reflowState.mComputedWidth, reflowState.mComputedHeight);
+#endif
+
           // place the child and reflow
             childFrame->WillReflow(aPresContext);
 
@@ -2194,12 +2292,13 @@ nsBoxFrameInner::FlowChildAt(nsIFrame* childFrame,
 
        // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
 
-        if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
-             desiredSize.width = desiredSize.mOverflowArea.width;
-             desiredSize.height = desiredSize.mOverflowArea.height;
-        }
-
-        
+        // XXX EDV hack to fix bug in block
+        if (reason != eReflowReason_Initial) {
+            if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
+                 desiredSize.width = desiredSize.mOverflowArea.width;
+                 desiredSize.height = desiredSize.mOverflowArea.height;
+            }
+        }        
 //        if (maxElementSize.width > desiredSize.width)
   //          desiredSize.width = maxElementSize.width;
 
@@ -2348,6 +2447,7 @@ nsBoxFrame::AddSize(const nsSize& a, nsSize& b, PRBool largest)
 void 
 nsBoxFrame::GetInset(nsMargin& margin)
 {
+    mInner->GetDebugInset(margin);
 }
 
 
@@ -2597,7 +2697,7 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
     mInner->SanityCheck();
 
     // remove child from our info list
-    mInner->mInfoList->Remove(aOldFrame);
+    mInner->mInfoList->Remove(&aPresShell, aOldFrame);
 
     // remove the child frame
     mFrames.DestroyFrame(aPresContext, aOldFrame);
@@ -2611,22 +2711,63 @@ nsBoxFrame::RemoveFrame(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsBoxFrame::Destroy(nsIPresContext* aPresContext)
 {
-
 // if we are root remove 1 from the debug count.
-  if (mState & NS_STATE_IS_ROOT &&  nsBoxDebugInner::gDebug > 0) 
-  {
-      nsBoxDebugInner::gDebug--;
-      if (nsBoxDebugInner::gDebug == 0)
-      {
-         NS_RELEASE(mInner->mDebugInner->mHorizontalDebugStyle);
-         NS_RELEASE(mInner->mDebugInner->mVerticalDebugStyle);
-         mInner->mDebugInner->mHorizontalDebugStyle = nsnull;
-         mInner->mDebugInner->mVerticalDebugStyle = nsnull;
-      }
-  }
+  if (mState & NS_STATE_IS_ROOT)
+      nsBoxDebug::GetPref(aPresContext);
+      
+  if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
+      nsBoxDebug::Release(aPresContext);
+
+  // recycle the Inner via the shell's arena.
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  mInner->Recycle(shell);
+  mInner = nsnull;
 
   return nsHTMLContainerFrame::Destroy(aPresContext);
 } 
+
+void
+nsBoxFrameInner::RecycleFreedMemory(nsIPresShell* aShell, void* aMem)
+{
+  size_t* sz = (size_t*)aMem;
+  aShell->FreeFrame(*sz, aMem);
+}
+
+NS_IMETHODIMP
+nsBoxFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+{
+  // see if our state matches the given debug state
+  PRBool debugSet = mState & NS_STATE_CURRENTLY_IN_DEBUG;
+  PRBool debugChanged = (!aDebug && debugSet) || (aDebug && !debugSet);
+
+  // if it doesn't then tell each child below us the new debug state
+  if (debugChanged)
+  {
+     if (aDebug) {
+         mState |= NS_STATE_CURRENTLY_IN_DEBUG;
+         nsBoxDebug::AddRef(aPresContext, this);
+     } else {
+         mState &= ~NS_STATE_CURRENTLY_IN_DEBUG;
+         nsBoxDebug::Release(aPresContext);
+     }
+
+     return mInner->mInfoList->SetDebug(aPresContext, aDebug);
+  }
+
+  return NS_OK;
+}
+
+void
+nsBoxDebug::GetPref(nsIPresContext* aPresContext)
+{
+    gDebug = PR_FALSE;
+    nsCOMPtr<nsIPref> pref;
+    aPresContext->GetPrefs(getter_AddRefs(pref));
+    if (pref) {
+	    pref->GetBoolPref("xul.debug.box", &gDebug);
+    }
+}
 
 NS_IMETHODIMP
 nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
@@ -2638,10 +2779,14 @@ nsBoxFrame::InsertFrames(nsIPresContext* aPresContext,
    mInner->SanityCheck();
 
    // insert the frames to our info list
-   mInner->mInfoList->Insert(aPrevFrame, aFrameList);
+   mInner->mInfoList->Insert(&aPresShell, aPrevFrame, aFrameList);
 
    // insert the frames in out regular frame list
    mFrames.InsertFrames(this, aPrevFrame, aFrameList);
+
+   // if we are in debug make sure our children are in debug as well.
+   if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
+       mInner->mInfoList->SetDebug(aPresContext, PR_TRUE);
 
    mInner->SanityCheck();
 
@@ -2660,11 +2805,15 @@ nsBoxFrame::AppendFrames(nsIPresContext* aPresContext,
    mInner->SanityCheck();
 
     // append them after
-   mInner->mInfoList->Append(aFrameList);
+   mInner->mInfoList->Append(&aPresShell,aFrameList);
 
    // append in regular frames
    mFrames.AppendFrames(this, aFrameList); 
    
+   // if we are in debug make sure our children are in debug as well.
+   if (mState & NS_STATE_CURRENTLY_IN_DEBUG)
+       mInner->mInfoList->SetDebug(aPresContext, PR_TRUE);
+
    mInner->SanityCheck();
 
    // mark us dirty and generate a reflow command
@@ -2691,7 +2840,7 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsXULAtoms::orient ||
         aAttribute == nsXULAtoms::autostretch) {
 
-        if (aAttribute == nsXULAtoms::orient || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
+        if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
           mInner->mValign = nsBoxFrame::vAlign_Top;
           mInner->mHalign = nsBoxFrame::hAlign_Left;
 
@@ -2704,6 +2853,18 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                 mState |= NS_STATE_IS_HORIZONTAL;
             else
                 mState &= ~NS_STATE_IS_HORIZONTAL;
+   
+          PRBool debug = mState & NS_STATE_SET_TO_DEBUG;
+          PRBool debugSet = mInner->GetInitialDebug(debug); 
+          if (debugSet) {
+                mState |= NS_STATE_DEBUG_WAS_SET;
+                if (debug)
+                    mState |= NS_STATE_SET_TO_DEBUG;
+                else
+                    mState &= ~NS_STATE_SET_TO_DEBUG;
+          } else {
+                mState &= ~NS_STATE_DEBUG_WAS_SET;
+          }
 
 
           PRBool autostretch = mState & NS_STATE_AUTO_STRETCH;
@@ -2736,8 +2897,8 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
       aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
    }
 
-   nsMargin debugInset(0,0,0,0);
-   mInner->GetDebugInset(debugInset);
+   //nsMargin debugInset(0,0,0,0);
+   //mInner->GetDebugInset(debugInset);
 
    nsresult rv;
 
@@ -2751,23 +2912,45 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
 
        while (info) 
        {  
-        // if a child needs recalculation then ask it for its size. Otherwise
-        // just use the size we already have.
-        if (info->mFlags & NS_FRAME_BOX_NEEDS_RECALC || info->frame == incrementalChild)
-        {
           // see if the child is collapsed
           const nsStyleDisplay* disp;
           info->frame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)disp));
 
-          // if collapsed then the child will have no size
+          PRBool collapsed = (info->mFlags & NS_FRAME_BOX_IS_COLLAPSED);
+          PRBool visibilityCollapsed = disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE;
+          PRBool collapsedChanged = (!collapsed && visibilityCollapsed) || (collapsed && !visibilityCollapsed);
+
+        // if a child needs recalculation then ask it for its size. Otherwise
+        // just use the size we already have.
+        if ((info->mFlags & NS_FRAME_BOX_NEEDS_RECALC) || info->frame == incrementalChild || collapsedChanged)
+        {
+            // if collapsed then the child will have no size
 	  // don't unset needsRecalc - therefore cause us
 	  // to be recalculated when we are uncollapsed
-          if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
-             info->mFlags |= NS_FRAME_BOX_IS_COLLAPSED;
-          else {
+          if (visibilityCollapsed) {
+              // eat up any incremental reflows targets at
+              // a collapsed child
+              if (incrementalChild == info->frame) {
+                 while(incrementalChild)
+                    aReflowState.reflowCommand->GetNext(incrementalChild);
+              }
+
+              if (collapsedChanged) {
+                 info->mFlags |= NS_FRAME_BOX_IS_COLLAPSED;
+              }
+
+              info->Clear();
+          } else {
+              if (collapsedChanged) {
+                nsFrameState childState;
+                info->frame->GetFrameState(&childState);
+                childState |= NS_FRAME_IS_DIRTY;
+                info->frame->SetFrameState(childState);
+              }
             // get the size of the child. This is the min, max, preferred, and spring constant
             // it does not include its border.
             rv = GetChildBoxInfo(aPresContext, aReflowState, info->frame, *info);
+
 
             /*
             // make sure we can see the debug info
@@ -2840,7 +3023,7 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
   nsMargin inset(0,0,0,0);
   GetInset(inset);
 
-  inset += debugInset;
+ // inset += debugInset;
 
   nsSize in(inset.left+inset.right,inset.top+inset.bottom);
   aSize.minSize += in;
@@ -2856,7 +3039,7 @@ nsBoxFrame::GetBoxInfo(nsIPresContext* aPresContext, const nsHTMLReflowState& aR
   */
 
   aSize.ascent += inset.top;
-  aSize.ascent += debugInset.top;
+  //aSize.ascent += debugInset.top;
 
   return rv;
 }
@@ -2903,8 +3086,8 @@ nsBoxFrame :: Paint ( nsIPresContext* aPresContext,
                        aWhichLayer);
 
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
-        if (mInner->mDebugInner) {
-            mInner->mDebugInner->PaintSprings(aPresContext, aRenderingContext, aDirtyRect);
+        if (mState & NS_STATE_CURRENTLY_IN_DEBUG) {
+            nsBoxDebug::gInstance->PaintSprings(aPresContext, this, aRenderingContext, aDirtyRect);
         }
   }
  
@@ -2961,8 +3144,8 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
   // If overflow is hidden then set the clip rect so that children
   // don't leak out of us
   if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
-    nsMargin dm(0,0,0,0);
-    mInner->GetDebugInset(dm);
+    //nsMargin dm(0,0,0,0);
+    //mInner->GetDebugInset(dm);
     nsMargin im(0,0,0,0);
     GetInset(im);
     nsMargin border(0,0,0,0);
@@ -2970,7 +3153,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
     spacing->GetBorderPadding(border);
     r.Deflate(im);
-    r.Deflate(dm);
+    //r.Deflate(dm);
     r.Deflate(border);    
   }
 
@@ -3002,12 +3185,15 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
 }
 
 void 
-nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect)
+nsBoxDebug::PaintSprings(nsIPresContext* aPresContext, nsBoxFrame* aBoxFrame,
+                         nsIRenderingContext& aRenderingContext, const nsRect& aDirtyRect)
 {
     
+        PRBool isHorizontal = aBoxFrame->mState & NS_STATE_IS_HORIZONTAL;
+
         // remove our border
         const nsStyleSpacing* spacing;
-        mOuter->GetStyleData(eStyleStruct_Spacing,
+        aBoxFrame->GetStyleData(eStyleStruct_Spacing,
                        (const nsStyleStruct*&) spacing);
 
         nsMargin border(0,0,0,0);
@@ -3018,7 +3204,7 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
         nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
         nsIStyleContext* debugStyle;
-        if (mOuter->mState & NS_STATE_IS_HORIZONTAL)
+        if (aBoxFrame->mState & NS_STATE_IS_HORIZONTAL)
             debugStyle = mHorizontalDebugStyle;
         else
             debugStyle = mVerticalDebugStyle;
@@ -3036,11 +3222,11 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
 
         border += margin;
 
-        nsRect inner(0,0,mOuter->mRect.width, mOuter->mRect.height);
+        nsRect inner(0,0,aBoxFrame->mRect.width, aBoxFrame->mRect.height);
         inner.Deflate(border);
 
         // paint our debug border
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, mOuter,
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, aBoxFrame,
                                     aDirtyRect, inner, *debugSpacing, debugStyle, 0);
 
         // get the debug border dimensions
@@ -3055,7 +3241,7 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
         aRenderingContext.SetColor(debugColor->mColor);
         
 
-        if (mOuter->mState & NS_STATE_IS_HORIZONTAL) 
+        if (isHorizontal) 
         {
             x = inner.x;
             y = inner.y + onePixel;
@@ -3068,11 +3254,11 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
             springSize = debugBorder.left - onePixel*4;
         }
 
-        nsCalculatedBoxInfo* info = mOuter->GetInfoList()->GetFirst();
+        nsCalculatedBoxInfo* info = aBoxFrame->GetInfoList()->GetFirst();
         while (info) {
             nsSize& size = info->calculatedSize;
             if (!(info->mFlags & NS_FRAME_BOX_IS_COLLAPSED)) {
-                if (mOuter->mState & NS_STATE_IS_HORIZONTAL) 
+                if (isHorizontal) 
                     borderSize = size.width;
                 else 
                     borderSize = size.height;
@@ -3089,7 +3275,7 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
                 }
                 */
 
-                DrawSpring(aPresContext, aRenderingContext, info->flex, x, y, borderSize, springSize);
+                DrawSpring(aPresContext, aRenderingContext, isHorizontal, info->flex, x, y, borderSize, springSize);
                 x += borderSize;
             }
             info = info->next;
@@ -3097,25 +3283,25 @@ nsBoxDebugInner::PaintSprings(nsIPresContext* aPresContext, nsIRenderingContext&
 }
 
 void
-nsBoxDebugInner::DrawLine(nsIRenderingContext& aRenderingContext, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
+nsBoxDebug::DrawLine(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2)
 {
-    if (mOuter->mState & NS_STATE_IS_HORIZONTAL)
+    if (aHorizontal)
        aRenderingContext.DrawLine(x1,y1,x2,y2);
     else
        aRenderingContext.DrawLine(y1,x1,y2,x2);
 }
 
 void
-nsBoxDebugInner::FillRect(nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord width, nscoord height)
+nsBoxDebug::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height)
 {
-    if (mOuter->mState & NS_STATE_IS_HORIZONTAL)
+    if (aHorizontal)
        aRenderingContext.FillRect(x,y,width,height);
     else
        aRenderingContext.FillRect(y,x,height,width);
 }
 
 void 
-nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
+nsBoxDebug::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
 {    
         float p2t;
         aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -3137,59 +3323,76 @@ nsBoxDebugInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& a
         int halfCoilSize = coilSize/2;
 
         if (flex == 0) {
-            DrawLine(aRenderingContext, x,y + springSize/2, x + size, y + springSize/2);
+            DrawLine(aRenderingContext, aHorizontal, x,y + springSize/2, x + size, y + springSize/2);
         } else {
             for (int i=0; i < coils; i++)
             {
-                   DrawLine(aRenderingContext, offset, center+halfSpring, offset+halfCoilSize, center-halfSpring);
-                   DrawLine(aRenderingContext, offset+halfCoilSize, center-halfSpring, offset+coilSize, center+halfSpring);
+                   DrawLine(aRenderingContext, aHorizontal, offset, center+halfSpring, offset+halfCoilSize, center-halfSpring);
+                   DrawLine(aRenderingContext, aHorizontal, offset+halfCoilSize, center-halfSpring, offset+coilSize, center+halfSpring);
 
                    offset += coilSize;
             }
         }
 
-        FillRect(aRenderingContext, x + size - springSize/2, y, springSize/2, springSize);
-        FillRect(aRenderingContext, x, y, springSize/2, springSize);
+        FillRect(aRenderingContext, aHorizontal, x + size - springSize/2, y, springSize/2, springSize);
+        FillRect(aRenderingContext, aHorizontal, x, y, springSize/2, springSize);
 
         //DrawKnob(aPresContext, aRenderingContext, x + size - springSize, y, springSize);
 }
 
 void
-nsBoxFrameInner::UpdatePseudoElements(nsIPresContext* aPresContext) 
+nsBoxDebug::AddRef(nsIPresContext* aPresContext, nsBoxFrame* aBoxFrame)
 {
-    if (mDebugInner->mHorizontalDebugStyle || mDebugInner->mVerticalDebugStyle)
-        return;
+    if (!gInstance) {
+        gInstance = new nsBoxDebug(aPresContext, aBoxFrame);
+    }
 
-    nsCOMPtr<nsIContent> content;
-    GetContentOf(mOuter, getter_AddRefs(content));
-
-	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-horizontal-box-debug")) );
-	aPresContext->ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
-										  PR_FALSE,
-										  &mDebugInner->mHorizontalDebugStyle);
-
-  	atom = getter_AddRefs(NS_NewAtom(":-moz-vertical-box-debug"));
-	aPresContext->ProbePseudoStyleContextFor(content, atom, mOuter->mStyleContext,
-										  PR_FALSE,
-										  &mDebugInner->mVerticalDebugStyle);
-
-    aPresContext->GetScaledPixelsToTwips(&mDebugInner->mP2t);
-
+    gInstance->mRefCount++;
 }
 
+void
+nsBoxDebug::Release(nsIPresContext* aPresContext)
+{
+   NS_ASSERTION(gInstance && gInstance->mRefCount > 0, "nsBoxDebug Realsed too may times!!");
+
+   gInstance->mRefCount--;
+   if (gInstance->mRefCount == 0) {
+       delete gInstance;
+       gInstance = nsnull;
+   } 
+}
+
+nsBoxDebug::nsBoxDebug(nsIPresContext* aPresContext, nsBoxFrame* aBoxFrame)
+{
+    nsCOMPtr<nsIContent> content;
+    aBoxFrame->mInner->GetContentOf(aBoxFrame, getter_AddRefs(content));
+
+	nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-horizontal-box-debug")) );
+	aPresContext->ProbePseudoStyleContextFor(content, atom, aBoxFrame->mStyleContext,
+										  PR_FALSE,
+										  getter_AddRefs(mHorizontalDebugStyle));
+
+  	atom = getter_AddRefs(NS_NewAtom(":-moz-vertical-box-debug"));
+	aPresContext->ProbePseudoStyleContextFor(content, atom, aBoxFrame->mStyleContext,
+										  PR_FALSE,
+										  getter_AddRefs(mVerticalDebugStyle));
+
+    mDebugChild = nsnull;
+    mRefCount = 0;
+}
 
 void
 nsBoxFrameInner::GetDebugInset(nsMargin& inset)
 {
     inset.SizeTo(0,0,0,0);
 
-    if (nsBoxDebugInner::gDebug > 0) 
+    if (mOuter->mState & NS_STATE_CURRENTLY_IN_DEBUG) 
     {
         nsIStyleContext* style;
         if (mOuter->mState & NS_STATE_IS_HORIZONTAL)
-            style = mDebugInner->mHorizontalDebugStyle;
+            style = nsBoxDebug::gInstance->mHorizontalDebugStyle;
         else
-            style = mDebugInner->mVerticalDebugStyle;
+            style = nsBoxDebug::gInstance->mVerticalDebugStyle;
 
         if (style == nsnull)
             return;
@@ -3241,6 +3444,32 @@ nsBoxFrame::GetFrameName(nsString& aResult) const
     return NS_OK;
 }
 
+void* 
+nsCalculatedBoxInfoImpl::operator new(size_t sz, nsIPresShell* aPresShell)
+{
+    return nsBoxFrameInner::Allocate(sz,aPresShell);
+}
+
+void 
+nsCalculatedBoxInfo::Recycle(nsIPresShell* aShell) 
+{
+}
+
+void 
+nsCalculatedBoxInfoImpl::Recycle(nsIPresShell* aShell) 
+{
+   delete this;
+   nsBoxFrameInner::RecycleFreedMemory(aShell, this);
+}
+
+// Overridden to prevent the global delete from being called, since the memory
+// came out of an nsIArena instead of the global delete operator's heap.
+void 
+nsCalculatedBoxInfoImpl::operator delete(void* aPtr, size_t sz)
+{
+    nsBoxFrameInner::Free(aPtr, sz);
+}
+
 //static PRInt32 gBoxInfoCount = 0;
 
 nsCalculatedBoxInfoImpl::nsCalculatedBoxInfoImpl(nsIFrame* aFrame)
@@ -3249,6 +3478,7 @@ nsCalculatedBoxInfoImpl::nsCalculatedBoxInfoImpl(nsIFrame* aFrame)
   // printf("created Info=%d\n",gBoxInfoCount);
 
     mFlags = NS_FRAME_BOX_NEEDS_RECALC;
+
     next = nsnull;
     calculatedSize.width = 0;
     calculatedSize.height = 0;
@@ -3289,25 +3519,89 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
                              const nsPoint& aPoint, 
                              nsIFrame**     aFrame)
 {   
-    nsresult rv = nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
-    return rv;
+    return nsHTMLContainerFrame::GetFrameForPoint(aPresContext, aPoint, aFrame);
+
+    /*
+  nsRect r(0,0,mRect.width, mRect.height);
+
+  // if it is not inside us fail
+  if (!r.Contains(aPoint)) {
+      return NS_ERROR_FAILURE;
+  }
+
+  // is it inside our border, padding, and debugborder or insets?
+  //nsMargin dm(0,0,0,0);
+  //mInner->GetDebugInset(dm);
+  nsMargin im(0,0,0,0);
+  GetInset(im);
+  nsMargin border(0,0,0,0);
+  const nsStyleSpacing* spacing = (const nsStyleSpacing*)
+  mStyleContext->GetStyleData(eStyleStruct_Spacing);
+  spacing->GetBorderPadding(border);
+  r.Deflate(im);
+  //r.Deflate(dm);
+  r.Deflate(border);    
+
+  // no? Then it must be in our border so return us.
+  if (!r.Contains(aPoint)) {
+      *aFrame = this;
+      return NS_OK;
+  }
+
+  // ok lets look throught the children
+  nsCalculatedBoxInfo* info = mInner->mInfoList->GetFirst();
+  nsRect kidRect;
+  while(info)
+  {
+    info->frame->GetRect(kidRect);
+
+    // Do a quick check and see if the child frame contains the point
+    if (kidRect.Contains(aPoint)) {
+        nsPoint tmp;
+        tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+        return info->frame->GetFrameForPoint(aPresContext, tmp, aFrame);
+    }
+
+    info = info->next;
+  }
+
+  const nsStyleColor* color =
+    (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
+
+  PRBool        transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
+                                (color->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+
+  PRBool backgroundImage = (color->mBackgroundImage.Length() > 0);
+
+  if (!transparentBG || backgroundImage)
+  {
+      *aFrame = this;
+      return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+  */
 }
 
+
 void
-nsBoxDebugInner::GetValue(const nsSize& a, const nsSize& b, char* ch) 
+nsBoxDebug::GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* ch) 
 {
+    float p2t;
+    aPresContext->GetScaledPixelsToTwips(&p2t);
+
     char width[100];
     char height[100];
     
     if (a.width == NS_INTRINSICSIZE)
         sprintf(width,"%s","INF");
     else 
-        sprintf(width,"%d", nscoord(a.width/mP2t));
+        sprintf(width,"%d", nscoord(a.width/*/p2t*/));
     
     if (a.height == NS_INTRINSICSIZE)
         sprintf(height,"%s","INF");
     else 
-        sprintf(height,"%d", nscoord(a.height/mP2t));
+        sprintf(height,"%d", nscoord(a.height/*/p2t*/));
     
 
     sprintf(ch, "(%s%s, %s%s)", width, (b.width != NS_INTRINSICSIZE ? "[CSS]" : ""),
@@ -3316,13 +3610,14 @@ nsBoxDebugInner::GetValue(const nsSize& a, const nsSize& b, char* ch)
 }
 
 void
-nsBoxDebugInner::GetValue(PRInt32 a, PRInt32 b, char* ch) 
+nsBoxDebug::GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* ch) 
 {
     sprintf(ch, "(%d)", a);             
 }
 
 PRBool
-nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
+nsBoxDebug::DisplayDebugInfoFor(nsIPresContext* aPresContext,
+                                nsBoxFrame* aBoxFrame,
                                      nsPoint&        aPoint,
                                      PRInt32&        aCursor)
 {
@@ -3330,10 +3625,10 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
     nscoord y = aPoint.y;
 
     // get the area inside our border.
-    nsRect insideBorder(0,0,mOuter->mRect.width, mOuter->mRect.height);
+    nsRect insideBorder(0,0,aBoxFrame->mRect.width, aBoxFrame->mRect.height);
 
     const nsStyleSpacing* spacing;
-    nsresult rv = mOuter->GetStyleData(eStyleStruct_Spacing,
+    nsresult rv = aBoxFrame->GetStyleData(eStyleStruct_Spacing,
                (const nsStyleStruct*&) spacing);
 
     NS_ASSERTION(rv == NS_OK,"failed to get spacing");
@@ -3345,7 +3640,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
 
     insideBorder.Deflate(border);
 
-    PRBool isHorizontal = mOuter->mState & NS_STATE_IS_HORIZONTAL;
+    PRBool isHorizontal = aBoxFrame->mState & NS_STATE_IS_HORIZONTAL;
 
     if (!insideBorder.Contains(nsPoint(x,y)))
         return NS_OK;
@@ -3353,10 +3648,10 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
         //printf("%%%%%% inside box %%%%%%%\n");
 
         int count = 0;
-        nsCalculatedBoxInfo* info = mOuter->GetInfoList()->GetFirst();
+        nsCalculatedBoxInfo* info = aBoxFrame->GetInfoList()->GetFirst();
 
         nsMargin m;
-        mOuter->mInner->GetDebugInset(m);
+        aBoxFrame->mInner->GetDebugInset(m);
 
         if ((isHorizontal && y < insideBorder.y + m.top) ||
             (!isHorizontal && x < insideBorder.x + m.left)) {
@@ -3377,7 +3672,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
 
 
                             nsCOMPtr<nsIContent> content;
-                            mOuter->mInner->GetContentOf(mOuter, getter_AddRefs(content));
+                            aBoxFrame->mInner->GetContentOf(aBoxFrame, getter_AddRefs(content));
 
                             nsString id;
                             content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
@@ -3399,7 +3694,7 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                             printf("----- ");
                
     #ifdef NS_DEBUG
-                            nsFrame::ListTag(stdout, mOuter);
+                            nsFrame::ListTag(stdout, aBoxFrame);
     #endif
 
                             printf(" Tag='%s', id='%s' class='%s'---------------\n", tagValue, idValue, kClassValue);
@@ -3535,11 +3830,11 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                  
                         */
 
-                        GetValue(info->minSize,  aSize.minSize, min);
-                        GetValue(info->prefSize, aSize.prefSize, pref);
-                        GetValue(info->maxSize, aSize.maxSize, max);
-                        GetValue(info->calculatedSize,  aSize.calculatedSize, calc);
-                        GetValue(info->flex,  aSize.flex, flex);
+                        GetValue(aPresContext, info->minSize,  aSize.minSize, min);
+                        GetValue(aPresContext, info->prefSize, aSize.prefSize, pref);
+                        GetValue(aPresContext, info->maxSize, aSize.maxSize, max);
+                        GetValue(aPresContext, info->calculatedSize,  aSize.calculatedSize, calc);
+                        GetValue(aPresContext, info->flex,  aSize.flex, flex);
 
 
                         printf("min%s, pref%s, max%s, actual%s, flex=%s\n\n", 
@@ -3590,9 +3885,9 @@ nsBoxFrame::GetCursor(nsIPresContext* aPresContext,
     
     // if we are in debug and we are in the debug area
     // return our own cursor and dump the debug information.
-    if (mInner->mDebugInner) 
+    if (mState & NS_STATE_CURRENTLY_IN_DEBUG) 
     {
-        if (mInner->mDebugInner->DisplayDebugInfoFor(aPresContext, newPoint, aCursor)) 
+        if (nsBoxDebug::gInstance->DisplayDebugInfoFor(aPresContext, this, newPoint, aCursor)) 
             return NS_OK;
     }
     
@@ -3671,6 +3966,30 @@ nsBoxFrameInner::SanityCheck()
 #endif
 }
 
+void* 
+nsInfoListImpl::operator new(size_t sz, nsIPresShell* aPresShell)
+{
+    return nsBoxFrameInner::Allocate(sz,aPresShell);
+}
+
+void 
+nsInfoListImpl::Recycle(nsIPresShell* aShell) 
+{
+   // recycle all out box infos
+   Clear(aShell);
+
+   delete this;
+   nsBoxFrameInner::RecycleFreedMemory(aShell, this);
+}
+
+// Overridden to prevent the global delete from being called, since the memory
+// came out of an nsIArena instead of the global delete operator's heap.
+void 
+nsInfoListImpl::operator delete(void* aPtr, size_t sz)
+{
+    nsBoxFrameInner::Free(aPtr, sz);
+}
+
 nsInfoListImpl::nsInfoListImpl():mFirst(nsnull),mLast(nsnull),mCount(0)
 {
 
@@ -3678,8 +3997,29 @@ nsInfoListImpl::nsInfoListImpl():mFirst(nsnull),mLast(nsnull),mCount(0)
 
 nsInfoListImpl::~nsInfoListImpl() 
 {
-  Clear();
 }
+
+nsresult
+nsInfoListImpl::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+{
+    nsCalculatedBoxInfo* info = GetFirst();
+    while (info)
+    {
+      nsIBox* ibox = nsnull;
+      if (NS_SUCCEEDED(info->frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
+          ibox->SetDebug(aPresContext, aDebug);
+      }
+
+      // make sure we recalculate our children's sizes
+      info->mFlags |= NS_FRAME_BOX_NEEDS_RECALC;
+
+      info = info->next;
+    }
+
+
+    return NS_OK;
+}
+
 
 nsCalculatedBoxInfo* 
 nsInfoListImpl::GetFirst()
@@ -3694,13 +4034,13 @@ nsInfoListImpl::GetLast()
 }
 
 void
-nsInfoListImpl::Clear()
+nsInfoListImpl::Clear(nsIPresShell* aShell)
 {
    nsCalculatedBoxInfo* info = mFirst;
    while(info) {
       nsCalculatedBoxInfo* it = info;
       info = info->next;
-      delete it;
+      it->Recycle(aShell);
    }
    mFirst = nsnull;
    mLast = nsnull;
@@ -3714,16 +4054,16 @@ nsInfoListImpl::GetCount()
 }
 
 PRInt32 
-nsInfoListImpl::CreateInfosFor(nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last)
+nsInfoListImpl::CreateInfosFor(nsIPresShell* aPresShell, nsIFrame* aList, nsCalculatedBoxInfo*& first, nsCalculatedBoxInfo*& last)
 {
     PRInt32 count = 0;
     if (aList) {
-       first = new nsCalculatedBoxInfoImpl(aList);
+       first = new (aPresShell) nsCalculatedBoxInfoImpl(aList);
        count++;
        last = first;
        aList->GetNextSibling(&aList);
        while(aList) {
-         last->next = new nsCalculatedBoxInfoImpl(aList);
+         last->next = new (aPresShell) nsCalculatedBoxInfoImpl(aList);
          count++;
          aList->GetNextSibling(&aList);       
          last = last->next;
@@ -3776,15 +4116,15 @@ nsInfoListImpl::GetInfo(nsIFrame* aFrame)
 }
 
 void
-nsInfoListImpl::Remove(nsIFrame* aFrame)
+nsInfoListImpl::Remove(nsIPresShell* aShell, nsIFrame* aFrame)
 {
     // get the info before the frame
     nsCalculatedBoxInfo* prevInfo = GetPrevious(aFrame);
-    RemoveAfter(prevInfo);        
+    RemoveAfter(aShell, prevInfo);        
 }
 
 void
-nsInfoListImpl::Insert(nsIFrame* aPrevFrame, nsIFrame* aFrameList)
+nsInfoListImpl::Insert(nsIPresShell* aShell, nsIFrame* aPrevFrame, nsIFrame* aFrameList)
 {
    nsCalculatedBoxInfo* prevInfo = GetInfo(aPrevFrame);
 
@@ -3792,15 +4132,15 @@ nsInfoListImpl::Insert(nsIFrame* aPrevFrame, nsIFrame* aFrameList)
    // if no previous frame then we are inserting in front
    if (prevInfo == nsnull) {
        // prepend them
-       Prepend(aFrameList);
+       Prepend(aShell, aFrameList);
    } else {
        // insert insert after previous info
-       InsertAfter(prevInfo, aFrameList);
+       InsertAfter(aShell, prevInfo, aFrameList);
    }
 }
 
 void
-nsInfoListImpl::RemoveAfter(nsCalculatedBoxInfo* aPrevious)
+nsInfoListImpl::RemoveAfter(nsIPresShell* aPresShell, nsCalculatedBoxInfo* aPrevious)
 {
     nsCalculatedBoxInfo* toDelete = nsnull;
 
@@ -3819,16 +4159,16 @@ nsInfoListImpl::RemoveAfter(nsCalculatedBoxInfo* aPrevious)
             mLast = aPrevious;
     }
 
-    delete toDelete;
+    toDelete->Recycle(aPresShell);
     mCount--;
 }
 
 void
-nsInfoListImpl::Prepend(nsIFrame* aList)
+nsInfoListImpl::Prepend(nsIPresShell* aPresShell, nsIFrame* aList)
 {
     nsCalculatedBoxInfo* first;
     nsCalculatedBoxInfo* last;
-    mCount += CreateInfosFor(aList, first, last);
+    mCount += CreateInfosFor(aPresShell, aList, first, last);
     if (!mFirst)
         mFirst = mLast = first;
     else {
@@ -3838,11 +4178,11 @@ nsInfoListImpl::Prepend(nsIFrame* aList)
 }
 
 void
-nsInfoListImpl::Append(nsIFrame* aList)
+nsInfoListImpl::Append(nsIPresShell* aPresShell, nsIFrame* aList)
 {
     nsCalculatedBoxInfo* first;
     nsCalculatedBoxInfo* last;
-    mCount += CreateInfosFor(aList, first, last);
+    mCount += CreateInfosFor(aPresShell, aList, first, last);
     if (!mFirst) 
         mFirst = first;
     else 
@@ -3852,11 +4192,11 @@ nsInfoListImpl::Append(nsIFrame* aList)
 }
 
 void 
-nsInfoListImpl::InsertAfter(nsCalculatedBoxInfo* aPrev, nsIFrame* aList)
+nsInfoListImpl::InsertAfter(nsIPresShell* aPresShell, nsCalculatedBoxInfo* aPrev, nsIFrame* aList)
 {
     nsCalculatedBoxInfo* first;
     nsCalculatedBoxInfo* last;
-    mCount += CreateInfosFor(aList, first, last);
+    mCount += CreateInfosFor(aPresShell, aList, first, last);
     last->next = aPrev->next;
     aPrev->next = first;
     if (aPrev == mLast)
@@ -3864,10 +4204,10 @@ nsInfoListImpl::InsertAfter(nsCalculatedBoxInfo* aPrev, nsIFrame* aList)
 }
 
 void 
-nsInfoListImpl::Init(nsIFrame* aList)
+nsInfoListImpl::Init(nsIPresShell* aPresShell, nsIFrame* aList)
 {
-    Clear();
-    mCount += CreateInfosFor(aList, mFirst, mLast);
+    Clear(aPresShell);
+    mCount += CreateInfosFor(aPresShell, aList, mFirst, mLast);
 }
 
 void
@@ -3919,6 +4259,8 @@ nsBoxInfo::Clear()
 nsBoxInfo::~nsBoxInfo()
 {
 }
+
+
 
 
 

@@ -76,6 +76,24 @@ NS_NewScrollPortFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsScrollPortFrame::SetDebug(nsIPresContext* aPresContext, PRBool aDebug)
+{
+  nsIFrame* kid = mFrames.FirstChild();
+  while (nsnull != kid) {
+    nsIBox* ibox = nsnull;
+    if (NS_SUCCEEDED(kid->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox)) && ibox) {
+      ibox->SetDebug(aPresContext, aDebug);
+    }
+
+    kid->GetNextSibling(&kid);
+  }
+
+  mNeedsRecalc = PR_TRUE;
+
+  return NS_OK;
+}
+
 nsScrollPortFrame::nsScrollPortFrame()
 {
     //mIncremental = PR_FALSE;
@@ -424,12 +442,18 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
 
   nscoord theHeight;
   nsIBox* box;
+  nsReflowReason reason = aReflowState.reason;
   nsresult result = kidFrame->QueryInterface(NS_GET_IID(nsIBox), (void**)&box);
-  if (NS_SUCCEEDED(result))
+  if (NS_SUCCEEDED(result)) 
      theHeight = aReflowState.mComputedHeight;
-  else 
+  else {
      theHeight = NS_INTRINSICSIZE;
-     
+     // html can't handle a reflow of dirty. Convert it to
+     // a resize reflow
+     if (reason == eReflowReason_Dirty)
+         reason = eReflowReason_Resize;
+  }
+
   nsSize              kidReflowSize(aReflowState.availableWidth, theHeight);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState,
                                      kidFrame, kidReflowSize);
@@ -437,6 +461,7 @@ nsScrollPortFrame::Reflow(nsIPresContext*          aPresContext,
 
   kidReflowState.mComputedWidth = aReflowState.mComputedWidth;
   kidReflowState.mComputedHeight = theHeight;
+  kidReflowState.reason = reason;
 
   nscoord pwidth = (kidReflowState.mComputedBorderPadding.left + kidReflowState.mComputedBorderPadding.right);
   nscoord pheight = (kidReflowState.mComputedBorderPadding.top + kidReflowState.mComputedBorderPadding.bottom);

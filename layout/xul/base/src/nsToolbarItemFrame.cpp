@@ -44,7 +44,7 @@ NS_NewToolbarItemFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if ( !aNewFrame )
     return NS_ERROR_NULL_POINTER;
 
-  nsToolbarItemFrame* it = new (aPresShell) nsToolbarItemFrame;
+  nsToolbarItemFrame* it = new (aPresShell) nsToolbarItemFrame(aPresShell);
   if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -57,7 +57,7 @@ NS_NewToolbarItemFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
 //
 // nsToolbarItemFrame ctor and dtor
 //
-nsToolbarItemFrame::nsToolbarItemFrame()
+nsToolbarItemFrame::nsToolbarItemFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
 {
 }
 

@@ -41,7 +41,7 @@ nsresult NS_NewPopupSetFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 class nsPopupSetFrame : public nsBoxFrame, public nsIPopupSetFrame
 {
 public:
-  nsPopupSetFrame();
+  nsPopupSetFrame(nsIPresShell* aShell);
 
   NS_DECL_ISUPPORTS
   
@@ -50,6 +50,8 @@ public:
                   nsIFrame*        aParent,
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
+
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
 
   // The following four methods are all overridden so that the menu children
   // can be stored in a separate list (so that they don't impact reflow of the
@@ -117,6 +119,8 @@ protected:
   void UpdateDismissalListener(nsIMenuParent* aMenuParent);
 
 protected:
+  nsresult SetDebug(nsIPresContext* aPresContext, nsIFrame* aList, PRBool aDebug);
+
   nsFrameList mPopupFrames;
   nsIPresContext* mPresContext; // Our pres context.
 

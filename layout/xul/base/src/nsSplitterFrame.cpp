@@ -213,7 +213,7 @@ NS_NewSplitterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsSplitterFrame* it = new (aPresShell) nsSplitterFrame;
+  nsSplitterFrame* it = new (aPresShell) nsSplitterFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -222,7 +222,7 @@ NS_NewSplitterFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewSplitterFrame
 
-nsSplitterFrame::nsSplitterFrame()
+nsSplitterFrame::nsSplitterFrame(nsIPresShell* aPresShell):nsBoxFrame(aPresShell)
 {
   mInner = new nsSplitterFrameInner(this);
   mInner->AddRef();

@@ -53,6 +53,8 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+
   virtual ~nsGfxScrollFrame();
 
 

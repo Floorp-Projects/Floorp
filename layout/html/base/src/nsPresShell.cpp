@@ -141,7 +141,7 @@ static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 static PRInt32 gMaxRCProcessingTime = -1;
 
 // Largest chunk size we recycle
-static const size_t gMaxRecycledSize = 200;
+static const size_t gMaxRecycledSize = 300;
 
 // Flag for enabling/disabling asynchronous reflow
 // Set via the "layout.reflow.async" pref

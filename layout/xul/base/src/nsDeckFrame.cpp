@@ -52,7 +52,7 @@ NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsDeckFrame* it = new (aPresShell) nsDeckFrame;
+  nsDeckFrame* it = new (aPresShell) nsDeckFrame(aPresShell);
   if (nsnull == it)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -61,19 +61,10 @@ NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame )
   
 } // NS_NewDeckFrame
 
-NS_IMETHODIMP
-nsDeckFrame::Init(nsIPresContext*  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIStyleContext* aContext,
-              nsIFrame*        aPrevInFlow)
-{
-   // Get the element's tag
-  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
-  //CreateViewForFrame(aPresContext,this,aContext,PR_TRUE);
-  return rv;
-}
 
+nsDeckFrame::nsDeckFrame(nsIPresShell* aPresShell):nsStackFrame(aPresShell)
+{
+}
 
 NS_IMETHODIMP
 nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
@@ -82,22 +73,12 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
                                nsIAtom* aAttribute,
                                PRInt32 aHint)
 {
-  nsresult rv = nsBoxFrame::AttributeChanged(aPresContext, aChild,
+  nsresult rv = nsStackFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aHint);
 
 
    // if the index changed hide the old element and make the now element visible
   if (aAttribute == nsHTMLAtoms::index) {
-      /*
-            nsCOMPtr<nsIPresShell> shell;
-            aPresContext->GetShell(getter_AddRefs(shell));
-
-            nsCOMPtr<nsIReflowCommand> reflowCmd;
-            rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
-                                         nsIReflowCommand::StyleChanged);
-            if (NS_SUCCEEDED(rv)) 
-              shell->AppendReflowCommand(reflowCmd);
-     */
 
     Invalidate(aPresContext, nsRect(0,0,mRect.width,mRect.height), PR_FALSE);
 
@@ -230,87 +211,6 @@ NS_IMETHODIMP  nsDeckFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsDeckFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                              nsIAtom*        aListName,
-                                              nsIFrame*       aChildList)
-{
-  nsresult r = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
-  return r;
-}
-
-
-
-void
-nsDeckFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
-{
-     // largest preferred size
-    if (aChildInfo.prefSize.width > aInfo.prefSize.width)
-      aInfo.prefSize.width = aChildInfo.prefSize.width;
-
-    if (aChildInfo.prefSize.height > aInfo.prefSize.height)
-      aInfo.prefSize.height = aChildInfo.prefSize.height;
-
-    // largest min size
-    if (aChildInfo.minSize.width > aInfo.minSize.width)
-      aInfo.minSize.width = aChildInfo.minSize.width;
-
-    if (aChildInfo.minSize.height > aInfo.minSize.height)
-      aInfo.minSize.height = aChildInfo.minSize.height;
-
-    // smallest max size
-    if (aChildInfo.maxSize.width < aInfo.maxSize.width)
-      aInfo.maxSize.width = aChildInfo.maxSize.width;
-
-    if (aChildInfo.maxSize.height < aInfo.maxSize.height)
-      aInfo.maxSize.height = aChildInfo.maxSize.height;
-}
-
-
-void
-nsDeckFrame::ComputeChildsNextPosition(nsCalculatedBoxInfo* aInfo, nscoord& aCurX, nscoord& aCurY, nscoord& aNextX, nscoord& aNextY, const nsSize& aCurrentChildSize, const nsRect& aBoxRect, nscoord aMaxAscent)
-{
-   // let everything layout on top of each other.
-    aCurX = aNextX = aBoxRect.x;
-    aCurY = aNextY = aBoxRect.y;
-}
-
-/*
-nsresult
-nsDeckFrame::PlaceChildren(nsIPresContext* aPresContext, nsRect& boxRect)
-{
-  // ------- set the childs positions ---------
-  nsIFrame* childFrame = mFrames.FirstChild(); 
-  nsInfoList* list = GetInfoList();
-  nsCalculatedBoxInfo* info = list->GetFirst();
-
-  nscoord count = 0;
-  while (nsnull != childFrame) 
-  {
-    nsresult rv;
-    // make collapsed children not show up
-    if (info->collapsed) {
-       //nsRect rect(0,0,0,0);
-       //childFrame->GetRect(rect);
-       //if (rect.width > 0 || rect.height > 0) {
-       //   childFrame->SizeTo(0,0);
-          CollapseChild(aPresContext, childFrame, PR_TRUE);
-       //}
-    } else {
-      childFrame->MoveTo(aPresContext, boxRect.x, boxRect.y);
-    }
-
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
-    info = info->next;
-    count++;
-  }
-
-  return NS_OK;
-}
-*/
-
 NS_IMETHODIMP
 nsDeckFrame::DidReflow(nsIPresContext* aPresContext,
                       nsDidReflowStatus aStatus)
@@ -346,42 +246,5 @@ nsDeckFrame::DidReflow(nsIPresContext* aPresContext,
   }
 
   return rv;
-}
-
-
-void
-nsDeckFrame::ChildResized(nsIFrame* aFrame, nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nscoord& aMaxAscent, nsCalculatedBoxInfo& aInfo, PRBool*& aResized, PRInt32 aInfoCount, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
-{
-  if (aDesiredSize.width > aRect.width) {
-    aRect.width = aDesiredSize.width;
-    InvalidateChildren();
-    LayoutChildrenInRect(aRect, aMaxAscent);
-    aReason = "child's width got bigger";
-    aChangedIndex = aIndex;
-    aFinished = PR_FALSE;
-  } else if (aDesiredSize.height > aRect.height) {
-    aRect.height = aDesiredSize.height;
-    InvalidateChildren();
-    LayoutChildrenInRect(aRect, aMaxAscent);
-    aReason = "child's height got bigger";
-    aChangedIndex = aIndex;
-    aFinished = PR_FALSE;    
-  }
-}
-
-void
-nsDeckFrame::LayoutChildrenInRect(nsRect& aGivenSize, nscoord& aMaxAscent)
-{
-  nsInfoList* list = GetInfoList();
-  nsCalculatedBoxInfo* info = list->GetFirst();
-
-  while(info) {
-      info->calculatedSize.width = aGivenSize.width;
-      info->calculatedSize.height = aGivenSize.height;
-      info->mFlags |= NS_FRAME_BOX_SIZE_VALID;
-      info = info->next;
-  }
-
-  aMaxAscent = 0;
 }
 

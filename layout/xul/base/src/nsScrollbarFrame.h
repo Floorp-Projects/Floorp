@@ -39,7 +39,7 @@ class nsScrollbarFrame : public nsBoxFrame,
                          public nsIAnonymousContentCreator
 {
 public:
-  nsScrollbarFrame() {}
+    nsScrollbarFrame(nsIPresShell* aShell):nsBoxFrame(aShell) {}
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const {
