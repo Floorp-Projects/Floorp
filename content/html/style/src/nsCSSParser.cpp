@@ -1591,7 +1591,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
           // ensure selector ends here, must be followed by EOF, space, '{' or ','
           if (GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
             if ((eCSSToken_WhiteSpace == mToken.mType) || 
-                (mToken.IsSymbol('\{') || mToken.IsSymbol(','))) {
+                (mToken.IsSymbol('{') || mToken.IsSymbol(','))) {
               UngetToken();
               return PR_TRUE;
             }
