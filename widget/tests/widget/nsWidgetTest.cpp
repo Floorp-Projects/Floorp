@@ -99,7 +99,7 @@ char * gFailedMsg = NULL;
 #define TEXT_HEIGHT 25
 #endif
 
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_BEOS)
 #define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #ifndef WIDGET_DLL
 #define WIDGET_DLL "libwidgetgtk"MOZ_DLL_SUFFIX
