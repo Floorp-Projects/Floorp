@@ -26,10 +26,12 @@
 # cd to /opt/webtools/tinderbox and run it without
 # any arguments:  
 #
-#   ./warnings.pl 
+#   ./warnings.pl [--debug]
 #
 
 use FileHandle;
+
+$debug = 1 if $ARGV[0] eq '--debug';
 
 $tree = 'SeaMonkey';
 # tinderbox/tbglobals.pl uses many shameful globals
@@ -49,7 +51,10 @@ $lxr_data_root = '/export2/lxr-data';
   'declaration of \`y1\' shadows global', # from mathcalls.h
   'by \`nsHTML(?:Anchor|[^:]*Element)::(?:Set|Get)Attribute', # kipp says this is bogus
 );
-$ignore_pat = "(?:".join('|',@ignore).")";
+@ignore_match = (
+  { warning=>'Statement with no effect', source=>'(?:JS_|PR_)?ASSERT'},
+);
+$ignore_pat       = "(?:".join('|',@ignore).")";
 
 print STDERR "Building hash of file names...";
 ($file_bases, $file_fullpaths) = build_file_hash($cvsroot, $tree);
@@ -96,6 +101,8 @@ for $br (last_successful_builds($tree)) {
 
   move($warn_summary, "$tree/warn.pl");
 
+  warn "$total_warnings warnings (updated $time_str)\n";
+
   last;
 }
 
@@ -119,6 +126,8 @@ sub build_file_hash {
 
   use File::Basename;
   
+  my $file_count = 0;
+
   while (<LXR_FILENAMES>) {
     my ($base, $dir, $ext) = fileparse($_,'\.[^/]*');
 
@@ -135,7 +144,10 @@ sub build_file_hash {
     } else {
       $bases{$base} = '[multiple]';
     }
+    $file_count++;
   }
+  warn "debug> $file_count files indexed\n" if $debug;
+
   return \%bases, \%fullpath;
 }
 
@@ -168,23 +180,15 @@ sub gcc_parser {
  PARSE_TOP: while (<$fh>) {
     # Directory
     #
-    if (/^gmake\[\d\]: Entering directory \`(.*)\'$/) {
-      ($build_dir = $1) =~ s|.*/mozilla/||;
-
-      # Skip the network directory until necko lands
-      if ($build_dir eq 'network') {
-        while (<$fh>) {
-          last if /^gmake\[\d\]: Leaving directory \`.*\/mozilla\/network\'$/;
-        }
-      }
-      next;
-    }
+    next if /^gmake\[\d\]: Entering directory \`(.*)\'$/;
     
     # Now only match lines with "warning:"
     next unless /warning:/;
     next if /$ignore_pat/o;
 
     chomp; # Yum, yum
+
+    warn "debug> $_\n" if $debug;
 
     my ($filename, $line, $warning_text);
     ($filename, $line, undef, $warning_text) = split /:\s*/, $_, 4;
@@ -193,6 +197,7 @@ sub gcc_parser {
     # Special case for Makefiles
     $filename =~ s/Makefile$/Makefile.in/;
 
+    # Look up the file name to determine the directory
     my $dir = '';
     if ($file_fullnames->{"$build_dir/$filename"}) {
       $dir = $build_dir;
@@ -207,12 +212,15 @@ sub gcc_parser {
     $warning_text = "...was hidden " . $warning_text 
       if $warning_text =~ /^by \`/;
 
+
+    # Remember line of first occurrence in the build log
     $warnings{$file}{$line}->{first_seen_line} = $.
       unless defined $warnings{$file}{$line};
 
     $warnings{$file}{$line}->{count}++;
     $total_warnings_count++;
 
+    # Do not re-add this warning if it has been seen before
     for my $rec (@{ $warnings{$file}{$line}->{list} }) {
       next PARSE_TOP if $rec->{warning_text} eq $warning_text;
     }
@@ -223,6 +231,7 @@ sub gcc_parser {
          warning_text    => $warning_text,
     };
   }
+  warn "debug> $. lines read\n" if $debug;
 }
 
 
@@ -235,9 +244,7 @@ sub dump_warning_data {
       $record->{count},
       $record->{warning_text};
       print "\n";
-    }
-  }
-}
+} } }
 
 sub build_blame {
   use lib '../bonsai';
@@ -256,7 +263,7 @@ sub build_blame {
 
     my $revision = &parse_cvs_file($rcs_filename);
     @text = &extract_revision($revision);
-    while (my ($line, $warn_rec) = each %{$lines_hash}) {
+    LINE: while (my ($line, $warn_rec) = each %{$lines_hash}) {
       my $line_rev = $revision_map[$line-1];
       my $who = $revision_author{$line_rev};
       my $source_text = join '', @text[$line-3..$line+1];
@@ -266,6 +273,11 @@ sub build_blame {
 
       $warn_rec->{line_rev} = $line_rev;
       $warn_rec->{source}   = $source_text;
+
+      for $ignore_rec (@ignore_match_pat) {
+        next LINE if $warn_rec->{warning_text} =~ /$ignore_rec->{warning}/
+          and $warn_rec->{source} =~ /$ignore_rec->{source}/;
+      }
 
       $warnings_by_who{$who}{$file}{$line} = $warn_rec;
 
