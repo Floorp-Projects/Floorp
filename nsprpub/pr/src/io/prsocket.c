@@ -355,13 +355,23 @@ static PRStatus PR_CALLBACK SocketConnectContinue(
 
 #elif defined(XP_BEOS)
 
+#ifdef BONE_VERSION  /* bug 122364 */
+    /* temporary workaround until getsockopt(SO_ERROR) works in BONE */
+    if (out_flags & PR_POLL_EXCEPT) {
+        PR_SetError(PR_CONNECT_REFUSED_ERROR, 0);
+        return PR_FAILURE;
+    }
+    PR_ASSERT(out_flags & PR_POLL_WRITE);
+    return PR_SUCCESS;
+#else
     err = _MD_beos_get_nonblocking_connect_error(fd);
     if( err != 0 ) {
-	_PR_MD_MAP_CONNECT_ERROR(err);
-	return PR_FAILURE;
+        _PR_MD_MAP_CONNECT_ERROR(err);
+        return PR_FAILURE;
     }
     else
-	return PR_SUCCESS;
+        return PR_SUCCESS;
+#endif /* BONE_VERSION */
 
 #else
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);

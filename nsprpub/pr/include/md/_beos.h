@@ -51,6 +51,10 @@
  * Internal configuration macros
  */
 
+#ifdef BONE_VERSION
+#define _PR_HAVE_SOCKADDR_LEN
+#endif
+
 #define PR_LINKER_ARCH	"beos"
 #define _PR_SI_SYSNAME  "BEOS"
 #ifdef __powerpc__
