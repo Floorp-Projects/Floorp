@@ -36,7 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIGenericFactory.h"
+#include "nsAppStartup.h"
+#include "nsUserInfo.h"
+#include "nsCommandLineService.h"
+#include "nsXPFEComponentsCID.h"
 
+#ifdef MOZ_PHOENIX
 #ifdef XP_WIN
 #include "nsAlertsService.h"
 #endif
@@ -51,9 +56,15 @@
 #include "nsGlobalHistory.h"
 #include "nsPasswordManager.h"
 #include "nsSingleSignonPrompt.h"
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAppStartup, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUserInfo)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCmdLineService)
+
+#ifdef MOZ_PHOENIX
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
@@ -66,20 +77,39 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsFormFillController)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsPasswordManager, nsPasswordManager::GetInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSingleSignonPrompt)
+#endif
 
 /////////////////////////////////////////////////////////////////////////////
 //// Module Destructor
 
 static void PR_CALLBACK nsToolkitCompModuleDtor(nsIModule* self)
 {
+#ifdef MOZ_PHOENIX
   nsFormHistory::ReleaseInstance();
   nsPasswordManager::Shutdown();
+#endif
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
 static const nsModuleComponentInfo components[] =
 {
+  { "App Startup Service",
+    NS_TOOLKIT_APPSTARTUP_CID,
+    NS_APPSTARTUP_CONTRACTID,
+    nsAppStartupConstructor },
+
+  { "User Info Service",
+    NS_USERINFO_CID,
+    NS_USERINFO_CONTRACTID,
+    nsUserInfoConstructor },
+
+  { "Command Line Service",
+    NS_COMMANDLINESERVICE_CID,
+    NS_COMMANDLINESERVICE_CONTRACTID,
+    nsCmdLineServiceConstructor },
+
+#ifdef MOZ_PHOENIX
 #ifdef XP_WIN
   { "Alerts Service",
     NS_ALERTSSERVICE_CID, 
@@ -147,6 +177,7 @@ static const nsModuleComponentInfo components[] =
     NS_SINGLE_SIGNON_PROMPT_CID,
     "@mozilla.org/wallet/single-sign-on-prompt;1",
     nsSingleSignonPromptConstructor },
+#endif
 };
 
 NS_IMPL_NSGETMODULE_WITH_DTOR(nsToolkitCompsModule, components, nsToolkitCompModuleDtor)
