@@ -51,7 +51,7 @@ public class NativeJavaObject implements Scriptable, Wrapper {
         Class dynamicType = javaObject != null ? javaObject.getClass()
             : staticType;
         members = JavaMembers.lookupClass(scope, dynamicType, staticType);
-        fieldAndMethods = members.getFieldAndMethodsObjects(javaObject, false);
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, false);
     }
     
     public boolean has(String name, Scriptable start) {
@@ -65,8 +65,11 @@ public class NativeJavaObject implements Scriptable, Wrapper {
     public Object get(String name, Scriptable start) {
         if (fieldAndMethods != null) {
             Object result = fieldAndMethods.get(name);
-            if (result != null)
+            if (result != null) {
+                if (result instanceof NativeJavaMethod) // must be a method invocation for property access...
+                    return ((NativeJavaMethod) result).getDefaultValue(null);
                 return result;
+            }
         }
         // TODO: passing 'this' as the scope is bogus since it has 
         //  no parent scope
@@ -157,6 +160,9 @@ public class NativeJavaObject implements Scriptable, Wrapper {
                     // Just abandon conversion from JSObject
                 }
             }
+        if (obj instanceof Class)
+            return new NativeJavaClass(scope, (Class)obj);
+            
         return new NativeJavaObject(scope, obj, staticType);
     }
 

@@ -41,7 +41,8 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
 
     public NativeJavaClass(Scriptable scope, Class cl) {
         super(scope, cl, JavaMembers.lookupClass(scope, cl, cl));
-        fieldAndMethods = members.getFieldAndMethodsObjects(javaObject, false);
+        fieldAndMethods = members.getFieldAndMethodsObjects(this, javaObject, 
+                                                            true);
     }
 
     public String getClassName() {
