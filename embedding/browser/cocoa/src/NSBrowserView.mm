@@ -52,7 +52,6 @@
 
 // XPCOM and String includes
 #include "nsCRT.h"
-#include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
