@@ -40,7 +40,7 @@ public:
 
 public:
   TimerImpl();
-  ~TimerImpl();
+  virtual ~TimerImpl();
 
   virtual nsresult Init(nsTimerCallbackFunc aFunc,
                 void *aClosure,
@@ -186,12 +186,17 @@ TimerImpl::ProcessTimeouts(DWORD aNow)
     while(p) {
         // send it
         if(p->mFireTime < aNow) {
+            //  Make sure that the timer cannot be deleted during the
+            //  Fire(...) call which may release *all* other references
+            //  to p...
+            NS_ADDREF(p);
             p->Fire(aNow);
 
             //  Clear the timer.
             //  Period synced.
             p->Cancel();
             bCalledSync = TRUE;
+            NS_RELEASE(p);
 
             //  Reset the loop (can't look at p->pNext now, and called
             //      code may have added/cleared timers).
@@ -221,10 +226,13 @@ TimerImpl::TimerImpl()
   mFunc = NULL;
   mCallback = NULL;
   mNext = NULL;
+  mClosure = nsnull;
 }
 
 TimerImpl::~TimerImpl()
 {
+    Cancel();
+    NS_IF_RELEASE(mCallback);
 }
 
 nsresult 
@@ -246,6 +254,7 @@ TimerImpl::Init(nsITimerCallback *aCallback,
                 PRUint32 aDelay)
 {
     mCallback = aCallback;
+    NS_ADDREF(mCallback);
     // mRepeat = aRepeat;
 
     return Init(aDelay);
