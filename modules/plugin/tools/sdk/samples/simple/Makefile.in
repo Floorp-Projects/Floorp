@@ -46,6 +46,8 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
+DEFINES += -DMOZILLA_STRICT_API
+
 ifeq ($(OS_ARCH),Linux)
 EXTRA_DSO_LDOPTS +=  -L/usr/lib -L/usr/X11R6/lib  -rdynamic  -lXi -lXext -lX11 -lm -lXt
 endif

@@ -38,12 +38,11 @@
 #include "plugin.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"
+#include "nsISupportsUtils.h" // this is where some useful macros defined
 
 // service manager which will give the access to all public browser services
 // we will use memory service as an illustration
 nsIServiceManager * gServiceManager = NULL;
-
-//static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 
 // Unix needs this
 #ifdef XP_UNIX
@@ -69,7 +68,7 @@ NPError NS_PluginInitialize()
   
   NPN_GetValue(NULL, NPNVserviceManager, &sm);
 
-  // Mozilla returns nsIServiceManager so we can use it directly, doing QI on
+  // Mozilla returns nsIServiceManager so we can use it directly; doing QI on
   // nsISupports here can still be more appropriate in case something is changed 
   // in the future so we don't need to do casting of any sort.
   if(sm) {
