@@ -82,12 +82,14 @@ static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
   gtk_main_quit();
 }
 
+#ifdef SET_FILTER_LIST_IS_WORKING
 static void filter_item_activated(GtkWidget *w, gpointer data)
 {
   //  nsFilePicker *f = (nsFilePicker*)data;
   gchar *foo = (gchar*)gtk_object_get_data(GTK_OBJECT(w), "filters");
   g_print("filter_item_activated(): %s\n", foo);
 }
+#endif /* SET_FILTER_LIST_IS_WORKING */
 
 //-------------------------------------------------------------------------
 //
@@ -150,7 +152,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
                                           const PRUnichar **aTitles,
                                           const PRUnichar **filters)
 {
-#if 0
+#ifdef SET_FILTER_LIST_IS_WORKING
   GtkWidget *menu_item;
 
   mNumberOfFilters  = aNumberOfFilters;
@@ -180,7 +182,7 @@ NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
 
     nsCRT::free(foo);
   }
-#endif
+#endif /* SET_FILTER_LIST_IS_WORKING */
   return NS_OK;
 }
 
