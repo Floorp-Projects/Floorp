@@ -898,7 +898,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 		res = mWindow->GetDocument(getter_AddRefs(domDoc));
 		if (NS_SUCCEEDED(res) && domDoc) 
 		{
-			res = domDoc->GetElementsByTagName("input", getter_AddRefs(nodeList));
+			res = domDoc->GetElementsByTagName("INPUT", getter_AddRefs(nodeList));
 			if ((NS_SUCCEEDED(res)) && nodeList)
 			{
 				PRUint32 count;
