@@ -3268,8 +3268,6 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
 
 PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 {
-	if (filePath && *filePath)
-	{
 #ifdef DEBUG_NEWS
         printf("post this file: %s\n",(const char *)nsFileSpec(filePath));
 #endif /* DEBUG_NEWS */
@@ -3362,7 +3360,6 @@ PRInt32 nsNNTPProtocol::PostMessageInFile(const nsFilePath &filePath)
 			if (mailnewsurl)
 				SendData(mailnewsurl, buffer); 
 		}
-	} // if filePath
 
     SetFlag(NNTP_PAUSE_FOR_READ);
     
