@@ -66,8 +66,9 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h" 
 
-////////////////////////////////////////////////////////////////////////
-// Common CIDs
+//----------------------------------------------------------------------
+//
+// CIDs
 
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
@@ -82,7 +83,7 @@ static NS_DEFINE_CID(kBrowsingProfileCID,   NS_BROWSINGPROFILE_CID);
 #endif
 
 
-nsresult
+static nsresult
 PRInt64ToChars(PRInt64 aValue, char* aBuf, PRInt32 aSize)
 {
   // Convert an unsigned 64-bit value to a string of up to aSize
@@ -117,6 +118,8 @@ PRInt64ToChars(PRInt64 aValue, char* aBuf, PRInt32 aSize)
   return NS_OK;
 }
 
+//----------------------------------------------------------------------
+
 nsresult
 CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
 {
@@ -134,7 +137,149 @@ CharsToPRInt64(const char* aBuf, PRUint32 aCount, PRInt64* aResult)
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
+//  nsMdbTableEnumerator
+//
+//    An nsISimpleEnumerator implementation that returns the value of
+//    a column as an nsISupports. Allows for some simple selection.
+//
+
+class nsMdbTableEnumerator : public nsISimpleEnumerator
+{
+protected:
+  nsIMdbEnv*   mEnv;
+  nsIMdbTable* mTable;
+
+  nsIMdbTableRowCursor* mCursor;
+  nsIMdbRow*            mCurrent;
+
+  nsMdbTableEnumerator();
+  virtual ~nsMdbTableEnumerator();
+
+public:
+  // nsISupports methods
+  NS_DECL_ISUPPORTS
+
+  // nsISimpleEnumeratorMethods
+  NS_IMETHOD HasMoreElements(PRBool* _result);
+  NS_IMETHOD GetNext(nsISupports** _result);
+
+  // Implementation methods
+  virtual nsresult Init(nsIMdbEnv* aEnv, nsIMdbTable* aTable);
+
+protected:
+  virtual PRBool   IsResult(nsIMdbRow* aRow) = 0;
+  virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult) = 0;
+};
+
+//----------------------------------------------------------------------
+
+nsMdbTableEnumerator::nsMdbTableEnumerator()
+  : mEnv(nsnull), mTable(nsnull), mCursor(nsnull), mCurrent(nsnull)
+{
+  NS_INIT_REFCNT();
+}
+
+
+nsresult
+nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
+                           nsIMdbTable* aTable)
+{
+  NS_PRECONDITION(aEnv != nsnull, "null ptr");
+  if (! aEnv)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aTable != nsnull, "null ptr");
+  if (! aTable)
+    return NS_ERROR_NULL_POINTER;
+
+  mEnv = aEnv;
+  mEnv->AddStrongRef(mEnv);
+
+  mTable = aTable;
+  mTable->AddStrongRef(mEnv);
+
+  mdb_err err;
+  err = mTable->GetTableRowCursor(mEnv, -1, &mCursor);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  return NS_OK;
+}
+
+
+nsMdbTableEnumerator::~nsMdbTableEnumerator()
+{
+  if (mCurrent)
+    mCurrent->CutStrongRef(mEnv);
+
+  if (mCursor)
+    mCursor->CutStrongRef(mEnv);
+
+  if (mTable)
+    mTable->CutStrongRef(mEnv);
+
+  if (mEnv)
+    mEnv->CutStrongRef(mEnv);
+}
+
+
+NS_IMPL_ISUPPORTS(nsMdbTableEnumerator, NS_GET_IID(nsISimpleEnumerator));
+
+NS_IMETHODIMP
+nsMdbTableEnumerator::HasMoreElements(PRBool* _result)
+{
+  if (! mCurrent) {
+    mdb_err err;
+
+    while (1) {
+      mdb_pos pos;
+      err = mCursor->NextRow(mEnv, &mCurrent, &pos);
+      if (err != 0) return NS_ERROR_FAILURE;
+
+      // If there are no more rows, then bail.
+      if (! mCurrent)
+        break;
+
+      // If this is a result, the stop.
+      if (IsResult(mCurrent))
+        break;
+
+      // Otherwise, drop the ref to the row we retrieved, and continue
+      // on to the next one.
+      mCurrent->CutStrongRef(mEnv);
+      mCurrent = nsnull;
+    }
+  }
+
+  *_result = (mCurrent != nsnull);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMdbTableEnumerator::GetNext(nsISupports** _result)
+{
+  nsresult rv;
+
+  PRBool hasMore;
+  rv = HasMoreElements(&hasMore);
+  if (NS_FAILED(rv)) return rv;
+
+  if (! hasMore)
+    return NS_ERROR_UNEXPECTED;
+
+  rv = ConvertToISupports(mCurrent, _result);
+
+  mCurrent->CutStrongRef(mEnv);
+  mCurrent = nsnull;
+
+  return rv;
+}
+
+
+//----------------------------------------------------------------------
+//
 // nsGlobalHistory
 //
 //   This class is the browser's implementation of the
@@ -226,7 +371,7 @@ public:
 
   NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult);
 
-private:
+protected:
   nsGlobalHistory(void);
   virtual ~nsGlobalHistory();
 
@@ -238,6 +383,8 @@ private:
   nsresult OpenDB();
   nsresult CreateTokens();
   nsresult CloseDB();
+
+  PRBool IsURLInHistory(nsIRDFResource* aResource);
 
   // N.B., these are MDB interfaces, _not_ XPCOM interfaces.
   nsIMdbEnv* mEnv;         // OWNER
@@ -271,6 +418,34 @@ private:
   static nsIRDFResource* kNC_HistoryRoot;
   static nsIRDFResource* kNC_HistoryBySite;
   static nsIRDFResource* kNC_HistoryByDate;
+
+  class URLEnumerator : public nsMdbTableEnumerator
+  {
+  protected:
+    mdb_column mURLColumn;
+    mdb_column mSelectColumn;
+    void*      mSelectValue;
+    PRInt32    mSelectValueLen;
+
+    virtual ~URLEnumerator();
+
+  public:
+    URLEnumerator(mdb_column aURLColumn,
+                  mdb_column aSelectColumn = mdb_column(-1),
+                  void* aSelectValue = nsnull,
+                  PRInt32 aSelectValueLen = 0) :
+      mURLColumn(aURLColumn),
+      mSelectColumn(aSelectColumn),
+      mSelectValue(aSelectValue),
+      mSelectValueLen(aSelectValueLen)
+    {}
+
+  protected:
+    virtual PRBool   IsResult(nsIMdbRow* aRow);
+    virtual nsresult ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult);
+  };
+
+  friend class URLEnumerator;
 };
 
 
@@ -288,193 +463,12 @@ nsIRDFResource* nsGlobalHistory::kNC_HistoryBySite;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 
 
-////////////////////////////////////////////////////////////////////////
-
-
-class nsMdbTableEnumerator : public nsISimpleEnumerator
-{
-protected:
-  nsIMdbEnv*   mEnv;
-  nsIMdbTable* mTable;
-  mdb_column   mColumn;
-
-  nsIMdbTableRowCursor* mCursor;
-  nsIMdbRow*            mCurrent;
-
-  static PRInt32        gRefCnt;
-  static nsIRDFService* gRDFService;
-
-  nsMdbTableEnumerator();
-  virtual ~nsMdbTableEnumerator();
-  nsresult Init(nsIMdbEnv* aEnv, nsIMdbTable* aTable, mdb_column aColumn);
-
-public:
-  static nsresult
-  CreateInstance(nsIMdbEnv* aEnv,
-                 nsIMdbTable* aTable,
-                 mdb_column aColumn,
-                 nsISimpleEnumerator** aResult);
-
-  // nsISupports methods
-  NS_DECL_ISUPPORTS
-
-  // nsISimpleEnumeratorMethods
-  NS_IMETHOD HasMoreElements(PRBool* _result);
-  NS_IMETHOD GetNext(nsISupports** _result);
-};
-
-PRInt32 nsMdbTableEnumerator::gRefCnt;
-nsIRDFService* nsMdbTableEnumerator::gRDFService;
-
-nsMdbTableEnumerator::nsMdbTableEnumerator()
-  : mEnv(nsnull), mTable(nsnull), mColumn(0), mCursor(nsnull), mCurrent(nsnull)
-{
-  NS_INIT_REFCNT();
-}
-
-
-nsresult
-nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
-                           nsIMdbTable* aTable,
-                           mdb_column aColumn)
-{
-  NS_PRECONDITION(aEnv != nsnull, "null ptr");
-  if (! aEnv)
-    return NS_ERROR_NULL_POINTER;
-
-  NS_PRECONDITION(aTable != nsnull, "null ptr");
-  if (! aTable)
-    return NS_ERROR_NULL_POINTER;
-
-  mEnv = aEnv;
-  mEnv->AddStrongRef(mEnv);
-
-  mTable = aTable;
-  mTable->AddStrongRef(mEnv);
-
-  mColumn = aColumn;
-
-  mdb_err err;
-  err = mTable->GetTableRowCursor(mEnv, -1, &mCursor);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  if (gRefCnt++ == 0) {
-    nsresult rv;
-    rv = nsServiceManager::GetService(kRDFServiceCID,
-                                      nsCOMTypeInfo<nsIRDFService>::GetIID(),
-                                      (nsISupports**) &gRDFService);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  return NS_OK;
-}
-
-
-nsMdbTableEnumerator::~nsMdbTableEnumerator()
-{
-  if (mCurrent)
-    mCurrent->CutStrongRef(mEnv);
-
-  if (mCursor)
-    mCursor->CutStrongRef(mEnv);
-
-  if (mTable)
-    mTable->CutStrongRef(mEnv);
-
-  if (mEnv)
-    mEnv->CutStrongRef(mEnv);
-
-  if (--gRefCnt == 0) {
-    nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-  }
-}
-
-
-nsresult
-nsMdbTableEnumerator::CreateInstance(nsIMdbEnv* aEnv,
-                                     nsIMdbTable* aTable,
-                                     mdb_column aColumn,
-                                     nsISimpleEnumerator** aResult)
-{
-  nsMdbTableEnumerator* result = new nsMdbTableEnumerator();
-  if (! result)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  NS_ADDREF(result);
-
-  nsresult rv;
-  rv = result->Init(aEnv, aTable, aColumn);
-  if (NS_FAILED(rv)) {
-    NS_RELEASE(result);
-    return rv;
-  }
-
-  *aResult = result;
-  return NS_OK;
-}
-
-
-NS_IMPL_ISUPPORTS(nsMdbTableEnumerator, nsCOMTypeInfo<nsISimpleEnumerator>::GetIID());
-
-NS_IMETHODIMP
-nsMdbTableEnumerator::HasMoreElements(PRBool* _result)
-{
-  if (! mCurrent) {
-    mdb_err err;
-
-    mdb_pos pos;
-    err = mCursor->NextRow(mEnv, &mCurrent, &pos);
-    if (err != 0) return NS_ERROR_FAILURE;
-  }
-
-  *_result = (mCurrent != nsnull);
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsMdbTableEnumerator::GetNext(nsISupports** _result)
-{
-  nsresult rv;
-
-  PRBool hasMore;
-  rv = HasMoreElements(&hasMore);
-  if (NS_FAILED(rv)) return rv;
-
-  if (! hasMore)
-    return NS_ERROR_UNEXPECTED;
-
-  mdb_err err;
-
-  nsIMdbCell* cell;
-  err = mCurrent->GetCell(mEnv, mColumn, &cell);
-  if (err != 0) return NS_ERROR_FAILURE;
-
-  rv = NS_ERROR_FAILURE;
-
-  // XXX cell might be null if no value set
-  mdbYarn yarn;
-  err = cell->AliasYarn(mEnv, &yarn);
-  if (err == 0) {
-    nsCAutoString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
-
-    nsCOMPtr<nsIRDFResource> resource;
-    rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
-    if (NS_SUCCEEDED(rv)) {
-      *_result = resource;
-      NS_ADDREF(*_result);
-    }
-  }
-  
-  if (cell)
-    cell->CutStrongRef(mEnv);
-
-  mCurrent->CutStrongRef(mEnv);
-  mCurrent = nsnull;
-  return rv;
-}
-
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory
+//
+//   ctor dtor etc.
+//
 
 
 nsGlobalHistory::nsGlobalHistory()
@@ -544,8 +538,11 @@ NS_NewGlobalHistory(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 }
 
 
-////////////////////////////////////////////////////////////////////////
-// nsISupports
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory
+//
+//   nsISupports methods
 
 NS_IMPL_ADDREF(nsGlobalHistory);
 NS_IMPL_RELEASE(nsGlobalHistory);
@@ -575,8 +572,13 @@ nsGlobalHistory::QueryInterface(REFNSIID aIID, void** aResult)
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsIGlobalHistory
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory
+//
+//   nsIGlobalHistory methods
+//
+
 
 NS_IMETHODIMP
 nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDate)
@@ -596,7 +598,13 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   nsresult rv;
   mdb_err err;
 
+  // Sanity check the URL
   PRInt32 len = PL_strlen(aURL);
+  NS_ASSERTION(len != 0, "no URL");
+  if (! len)
+    return NS_ERROR_INVALID_ARG;
+
+  // Okay, it's good. See if we've already got it in the database.
   mdbYarn yarn = { (void*) aURL, len, len, 0, 0, nsnull };
 
   mdbOid rowId;
@@ -817,7 +825,7 @@ nsGlobalHistory::GetLastVisitDate(const char *aURL, PRInt64 *_retval)
 
   if (err != 0) return NS_ERROR_FAILURE;
 
-  if ((err == 0) && (row)) {
+  if (row) {
     nsMdbPtr<nsIMdbCell> lastvisitdate(mEnv);
     err = row->GetCell(mEnv, kToken_LastVisitDateColumn, getter_Acquires(lastvisitdate));
     if (err != 0) return NS_ERROR_FAILURE;
@@ -849,8 +857,11 @@ nsGlobalHistory::GetLastPageVisted(char **_retval)
   return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////
-// nsIRDFDataSource
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory
+//
+//   nsIRDFDataSource methods
 
 NS_IMETHODIMP
 nsGlobalHistory::GetURI(char* *aURI)
@@ -873,8 +884,69 @@ nsGlobalHistory::GetSource(nsIRDFResource* aProperty,
                            PRBool aTruthValue,
                            nsIRDFResource** aSource)
 {
-  NS_NOTYETIMPLEMENTED("sorry");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_PRECONDITION(aProperty != nsnull, "null ptr");
+  if (! aProperty)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aTarget != nsnull, "null ptr");
+  if (! aTarget)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv;
+
+  *aSource = nsnull;
+
+  if (aProperty == kNC_URL) {
+    // See if we have the row...
+
+    // XXX We could be more forgiving here, and check for literal
+    // values as well.
+    nsCOMPtr<nsIRDFResource> target = do_QueryInterface(aTarget);
+    if (! target)
+      return NS_RDF_NO_VALUE;
+
+    mdb_err err;
+
+    nsXPIDLCString uri;
+    rv = target->GetValueConst(getter_Shares(uri));
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 len = PL_strlen(uri);
+    mdbYarn yarn = { (void*)NS_STATIC_CAST(const char*, uri), len, len, 0, 0, nsnull };
+
+    mdbOid rowId;
+    nsMdbPtr<nsIMdbRow> row(mEnv);
+    err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn, &rowId, getter_Acquires(row));
+    if (err != 0) return NS_ERROR_FAILURE;
+
+    if (row) {
+      // ...if so, return the URL. kNC_URL is just a self-referring arc.
+      return aTarget->QueryInterface(NS_GET_IID(nsIRDFResource), (void**) aSource);
+    }
+  }
+  else if ((aProperty == kNC_Date) ||
+           (aProperty == kNC_VisitCount) ||
+           (aProperty == kNC_Name) ||
+           (aProperty == kNC_Referrer)) {
+    // Call GetSources() and return the first one we find.
+    nsCOMPtr<nsISimpleEnumerator> sources;
+    rv = GetSources(aProperty, aTarget, aTruthValue, getter_AddRefs(sources));
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool hasMore;
+    rv = sources->HasMoreElements(&hasMore);
+    if (NS_FAILED(rv)) return rv;
+
+    if (hasMore) {
+      nsCOMPtr<nsISupports> isupports;
+      rv = sources->GetNext(getter_AddRefs(isupports));
+      if (NS_FAILED(rv)) return rv;
+
+      return CallQueryInterface(isupports, aSource);
+    }
+  }
+
+  return NS_RDF_NO_VALUE;  
 }
 
 NS_IMETHODIMP
@@ -883,8 +955,102 @@ nsGlobalHistory::GetSources(nsIRDFResource* aProperty,
                             PRBool aTruthValue,
                             nsISimpleEnumerator** aSources)
 {
-  NS_NOTYETIMPLEMENTED("sorry");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  // XXX TODO: make sure each URL in history is connected back to
+  // NC:HistoryRoot.
+  NS_PRECONDITION(aProperty != nsnull, "null ptr");
+  if (! aProperty)
+    return NS_ERROR_NULL_POINTER;
+
+  NS_PRECONDITION(aTarget != nsnull, "null ptr");
+  if (! aTarget)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv;
+
+  if (aProperty == kNC_URL) {
+    // Call GetSource() and return a singleton enumerator for the URL.
+    nsCOMPtr<nsIRDFResource> source;
+    rv = GetSource(aProperty, aTarget, aTruthValue, getter_AddRefs(source));
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_NewSingletonEnumerator(aSources, source);
+  }
+  else {
+    // See if aProperty is something we understand, and create an
+    // URLEnumerator to select URLs with the appropriate value.
+
+    mdb_column col = -1; // == "not a property that I grok"
+    void* value = nsnull;
+    PRInt32 len = 0;
+
+    if (aProperty == kNC_Date) {
+      nsCOMPtr<nsIRDFDate> date = do_QueryInterface(aTarget);
+      if (date) {
+        PRInt64 n;
+
+        rv = date->GetValue(&n);
+        if (NS_FAILED(rv)) return rv;
+
+        char buf[64];
+        rv = PRInt64ToChars(n, buf, sizeof(buf));
+        if (NS_FAILED(rv)) return rv;
+
+        len = PL_strlen(buf);
+        value = nsAllocator::Alloc(len + 1);
+        if (! value)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        PL_strcpy(buf, NS_STATIC_CAST(char*, value));
+        col = kToken_LastVisitDateColumn;
+      }
+    }
+    else if (aProperty == kNC_VisitCount) {
+      NS_NOTYETIMPLEMENTED("sorry");
+    }
+    else if (aProperty == kNC_Name) {
+      nsCOMPtr<nsIRDFLiteral> name = do_QueryInterface(aTarget);
+      if (name) {
+        PRUnichar* p;
+        rv = name->GetValue(&p);
+        if (NS_FAILED(rv)) return rv;
+
+        len = nsCRT::strlen(p) * sizeof(PRUnichar);
+        value = p;
+
+        col = kToken_NameColumn;
+      }
+    }
+    else if (aProperty == kNC_Referrer) {
+      col = kToken_ReferrerColumn;
+      nsCOMPtr<nsIRDFResource> referrer = do_QueryInterface(aTarget);
+      if (referrer) {
+        char* p;
+        rv = referrer->GetValue(&p);
+        if (NS_FAILED(rv)) return rv;
+
+        len = PL_strlen(p);
+        value = p;
+
+        col = kToken_ReferrerColumn;
+      }
+    }
+
+    if (col != -1) {
+      // The URLEnumerator takes ownership of the bytes allocated in |value|.
+      URLEnumerator* result = new URLEnumerator(kToken_URLColumn, col, value, len);
+      if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+      rv = result->Init(mEnv, mTable);
+      if (NS_FAILED(rv)) return rv;
+
+      *aSources = result;
+      NS_ADDREF(*aSources);
+      return NS_OK;
+    }
+  }
+
+  return NS_NewEmptyEnumerator(aSources);
 }
 
 NS_IMETHODIMP
@@ -905,6 +1071,8 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
   *aTarget = nsnull;
 
   if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child)) {
+    // If they're asking for all the children of the HistoryRoot, call
+    // through to GetTargets() and return the first one.
     nsCOMPtr<nsISimpleEnumerator> targets;
     rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
     if (NS_FAILED(rv)) return rv;
@@ -919,31 +1087,13 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     rv = targets->GetNext(getter_AddRefs(isupports));
     if (NS_FAILED(rv)) return rv;
 
-    return isupports->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
-  }
-  else if (aProperty == kNC_URL) {
-    rv = aSource->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
-    if (NS_SUCCEEDED(rv))
-    {
-    	// Yes, a nasty hack so that any URL starting with "NC:" isn't returned.
-    	// In truth, the history datasource should only answer on the URL property
-    	// if the source is actually in the history store.
-	const char	*url = nsnull;
-	if (NS_SUCCEEDED(rv = aSource->GetValueConst(&url)) && (url))
-	{
-		nsAutoString	urlStr = url;
-		if (urlStr.Find("NC:", PR_TRUE) == 0)
-		{
-			rv = NS_RDF_NO_VALUE;
-		}
-	}
-    }
-    return(rv);
+    return CallQueryInterface(isupports, aTarget);
   }
   else if ((aProperty == kNC_Date) ||
            (aProperty == kNC_VisitCount) ||
            (aProperty == kNC_Name) ||
-           (aProperty == kNC_Referrer)) {
+           (aProperty == kNC_Referrer) ||
+           (aProperty == kNC_URL)) {
     // It's a real property! Okay, first we'll get the row...
     mdb_err err;
 
@@ -981,7 +1131,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       rv = gRDFService->GetDateLiteral(i, getter_AddRefs(date));
       if (NS_FAILED(rv)) return rv;
 
-      return date->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
+      return date->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
     }
     else if (aProperty == kNC_VisitCount) {
       // Visit count
@@ -998,13 +1148,14 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
       cell->AliasYarn(mEnv, &yarn);
 
+      // XXX Could probably alias the buffer here to avoid copy
       nsAutoString str((const PRUnichar*) yarn.mYarn_Buf, PRInt32(yarn.mYarn_Fill / sizeof(PRUnichar)));
 
       nsCOMPtr<nsIRDFLiteral> name;
       rv = gRDFService->GetLiteral(str.GetUnicode(), getter_AddRefs(name));
       if (NS_FAILED(rv)) return rv;
 
-      return name->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
+      return name->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
     }
     else if (aProperty == kNC_Referrer) {
       // Referrer field
@@ -1016,17 +1167,24 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
 
       cell->AliasYarn(mEnv, &yarn);
 
+      // XXX Could probably alias the buffer here to avoid copy
       nsCAutoString str((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
 
       nsCOMPtr<nsIRDFResource> referrer;
       rv = gRDFService->GetResource((const char*) str, getter_AddRefs(referrer));
       if (NS_FAILED(rv)) return rv;
 
-      return referrer->QueryInterface(nsCOMTypeInfo<nsIRDFNode>::GetIID(), (void**) aTarget);
+      return referrer->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
+    }
+    else if (aProperty == kNC_URL) {
+      // URL. This is just a self-referring arc.
+      return aSource->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aTarget);
+    }
+    else {
+      NS_NOTREACHED("huh, how'd I get here?");
     }
   }
 
-  *aTarget = nsnull;
   return NS_RDF_NO_VALUE;
 }
 
@@ -1045,7 +1203,17 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
     return NS_ERROR_NULL_POINTER;
 
   if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child) && (aTruthValue)) {
-    return nsMdbTableEnumerator::CreateInstance(mEnv, mTable, kToken_URLColumn, aTargets);
+    URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
+    if (! result)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    nsresult rv;
+    rv = result->Init(mEnv, mTable);
+    if (NS_FAILED(rv)) return rv;
+
+    *aTargets = result;
+    NS_ADDREF(*aTargets);
+    return NS_OK;
   }
   else if ((aProperty == kNC_Date) ||
            (aProperty == kNC_VisitCount) ||
@@ -1172,8 +1340,19 @@ NS_IMETHODIMP
 nsGlobalHistory::ArcLabelsIn(nsIRDFNode* aNode,
                              nsISimpleEnumerator** aLabels)
 {
-  NS_NOTYETIMPLEMENTED("sorry");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_PRECONDITION(aNode != nsnull, "null ptr");
+  if (! aNode)
+    return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aNode);
+  if (resource && IsURLInHistory(resource)) {
+    // If it's a resource, be optimistic and assume that it's actually
+    // in the history.
+    return NS_NewSingletonEnumerator(aLabels, kNC_child);
+  }
+  else {
+    return NS_NewEmptyEnumerator(aLabels);
+  }
 }
 
 NS_IMETHODIMP
@@ -1187,15 +1366,12 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
       (aSource == kNC_HistoryByDate)) {
     return NS_NewSingletonEnumerator(aLabels, kNC_child);
   }
-  else {
-    // We'll be optimistic and _assume_ that this is in the history.
+  else if (IsURLInHistory(aSource)) {
+    // We'll be optimistic and _assume_ that this is in the history,
+    // in which case it'll have all the history attributes.
     nsCOMPtr<nsISupportsArray> array;
     rv = NS_NewISupportsArray(getter_AddRefs(array));
     if (NS_FAILED(rv)) return rv;
-
-//  XXX rjc: comment this out for the short term;
-//  Note: shouldn't return kNC_child unless its really a container
-//  array->AppendElement(kNC_child);
 
     array->AppendElement(kNC_Date);
     array->AppendElement(kNC_VisitCount);
@@ -1203,6 +1379,9 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
     array->AppendElement(kNC_Referrer);
 
     return NS_NewArrayEnumerator(aLabels, array);
+  }
+  else {
+    return NS_NewEmptyEnumerator(aLabels);
   }
 }
 
@@ -1243,12 +1422,26 @@ nsGlobalHistory::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 NS_IMETHODIMP
 nsGlobalHistory::GetAllResources(nsISimpleEnumerator** aResult)
 {
-  return nsMdbTableEnumerator::CreateInstance(mEnv, mTable, kToken_URLColumn, aResult);
+  URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
+  if (! result)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsresult rv;
+  rv = result->Init(mEnv, mTable);
+  if (NS_FAILED(rv)) return rv;
+
+  *aResult = result;
+  NS_ADDREF(*aResult);
+  return NS_OK;
 }
 
 
-////////////////////////////////////////////////////////////////////////
-// Implementation methods
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory
+//
+//   Miscellaneous implementation methods
+//
 
 nsresult
 nsGlobalHistory::Init()
@@ -1308,7 +1501,7 @@ nsGlobalHistory::OpenDB()
   nsCOMPtr<nsIMdbFactoryFactory> factoryfactory;
   rv = nsComponentManager::CreateInstance(kMorkCID,
                                           nsnull,
-                                          nsCOMTypeInfo<nsIMdbFactoryFactory>::GetIID(),
+                                          NS_GET_IID(nsIMdbFactoryFactory),
                                           getter_AddRefs(factoryfactory));
   if (NS_FAILED(rv)) return rv;
 
@@ -1481,6 +1674,29 @@ nsGlobalHistory::CloseDB()
 }
 
 
+PRBool
+nsGlobalHistory::IsURLInHistory(nsIRDFResource* aResource)
+{
+  nsresult rv;
+  mdb_err err;
+
+  const char* url;
+  rv = aResource->GetValueConst(&url);
+  if (NS_FAILED(rv)) return PR_FALSE;
+
+  PRInt32 len = PL_strlen(url);
+  mdbYarn yarn = { (void*) url, len, len, 0, 0, nsnull };
+
+  mdbOid rowId;
+  nsMdbPtr<nsIMdbRow> row(mEnv);
+  err = mStore->FindRow(mEnv, kToken_HistoryRowScope, kToken_URLColumn, &yarn,
+                        &rowId, getter_Acquires(row));
+
+  if (err != 0) return PR_FALSE;
+
+  return row ? PR_TRUE : PR_FALSE;
+}
+
 
 nsresult
 nsGlobalHistory::NotifyAssert(nsIRDFResource* aSource,
@@ -1539,10 +1755,94 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
 }
 
 
+//----------------------------------------------------------------------
+//
+// nsGlobalHistory::URLEnumerator
+//
+//   Implementation
+
+nsGlobalHistory::URLEnumerator::~URLEnumerator()
+{
+  nsAllocator::Free(mSelectValue);
+}
+
+PRBool
+nsGlobalHistory::URLEnumerator::IsResult(nsIMdbRow* aRow)
+{
+  if (mSelectColumn != -1) {
+    mdb_err err;
+
+    nsIMdbCell* cell;
+    err = mCurrent->GetCell(mEnv, mURLColumn, &cell);
+    if (err != 0) return PR_FALSE;
+
+    mdbYarn yarn;
+    err = cell->AliasYarn(mEnv, &yarn);
+    if (err != 0) return PR_FALSE;
+
+    // Do bitwise comparison
+    PRInt32 count = PRInt32(yarn.mYarn_Fill);
+    if (count != mSelectValueLen)
+      return PR_FALSE;
+
+    const char* p = (const char*) yarn.mYarn_Buf;
+    const char* q = (const char*) mSelectValue;
+
+    while (--count >= 0) {
+      if (*p++ != *q++)
+        return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
+nsresult
+nsGlobalHistory::URLEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
+{
+  mdb_err err;
+
+  nsIMdbCell* cell;
+  err = mCurrent->GetCell(mEnv, mURLColumn, &cell);
+  if (err != 0) return NS_ERROR_FAILURE;
+
+  nsresult rv = NS_ERROR_FAILURE;
+
+  // XXX cell might be null if no value set
+  mdbYarn yarn;
+  err = cell->AliasYarn(mEnv, &yarn);
+  if (err == 0) {
+    // Since the URLEnumerator always returns the value of the URL
+    // column, we create an RDF resource.
+    nsCAutoString uri((const char*) yarn.mYarn_Buf, yarn.mYarn_Fill);
+
+    nsCOMPtr<nsIRDFResource> resource;
+    rv = gRDFService->GetResource(uri, getter_AddRefs(resource));
+    if (NS_SUCCEEDED(rv)) {
+      *aResult = resource;
+      NS_ADDREF(*aResult);
+    }
+  }
+  
+  if (cell)
+    cell->CutStrongRef(mEnv);
+
+  return rv;
+}
 
 
-////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+//----------------------------------------------------------------------
+//
 // Component Exports
+//
+//   XXX aren't there macors or templates to do this now?
+//
 
 // Module implementation for the sample library
 class nsGlobalHistoryModule : public nsIModule
