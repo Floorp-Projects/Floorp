@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
  *      	Denis Issoupov <denis@macadamian.com> 
+ *      	Wes Morgan <wmorga13@calvin.edu> 
  *
  */
 
@@ -507,6 +508,17 @@ bool nsQBaseWidget::eventFilter(QObject *aObj,QEvent *aEvent)
         handled = true;
       break;
 
+    case QEvent::Wheel:
+      if (mEnabled) {
+#ifdef DBG_JCG_EVENT
+        printf("JCG: Mouse Wheel widget: %p\n",mWidget);
+#endif
+        handled = MouseWheelEvent((QWheelEvent*)aEvent);
+      }
+      else
+        handled = true;
+      break;
+
     case QEvent::KeyPress:
       if (mEnabled) {
 #ifdef DBG_JCG_EVENT
@@ -774,6 +786,30 @@ PRBool nsQBaseWidget::MouseExitEvent(QEvent *aEvent)
     nsEvent.time            = 0;
 
     mWidget->DispatchMouseEvent(nsEvent);
+  }
+  return PR_TRUE;
+}
+
+PRBool nsQBaseWidget::MouseWheelEvent(QWheelEvent *aEvent)
+{
+  if (aEvent && mWidget) {
+    nsMouseScrollEvent nsEvent;
+
+    nsEvent.scrollFlags     = nsMouseScrollEvent::kIsVertical;
+    nsEvent.delta           = (int)((aEvent->delta()/120) * -3);
+    nsEvent.message         = NS_MOUSE_SCROLL;
+    nsEvent.widget          = mWidget;
+    nsEvent.nativeMsg       = (void*)aEvent;
+    nsEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+    nsEvent.time            = 0;
+    nsEvent.point.x         = nscoord(aEvent->x());
+    nsEvent.point.y         = nscoord(aEvent->y());
+    nsEvent.isShift         = aEvent->state() & ShiftButton;
+    nsEvent.isControl       = aEvent->state() & ControlButton;
+    nsEvent.isAlt           = aEvent->state() & AltButton;
+    nsEvent.isMeta          = PR_FALSE;
+
+    mWidget->DispatchMouseScrollEvent(nsEvent);
   }
   return PR_TRUE;
 }
