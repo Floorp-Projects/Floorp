@@ -573,6 +573,14 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
       NS_WITH_SERVICE(nsIURILoader, pURILoader, kURILoaderCID, &rv);
       if (NS_SUCCEEDED(rv)) 
       {
+
+          /*
+           * Set the flag indicating that the document loader is in the process of
+           * loading a document.  This flag will remain set until the 
+           * OnConnectionsComplete(...) notification is fired for the loader...
+           */
+           mIsLoadingDocument = PR_TRUE;
+
         // temporary hack for post data...eventually this snippet of code
         // should be moved into the layout call when callers go through the
         // uri loader directly!
