@@ -96,9 +96,9 @@ final class NativeString extends IdScriptable {
                 case Id_valueOf:                   return 0;
                 case Id_charAt:                    return 1;
                 case Id_charCodeAt:                return 1;
-                case Id_indexOf:                   return 2;
-                case Id_lastIndexOf:               return 2;
-                case Id_split:                     return 1;
+                case Id_indexOf:                   return 1;
+                case Id_lastIndexOf:               return 1;
+                case Id_split:                     return 2;
                 case Id_substring:                 return 2;
                 case Id_toLowerCase:               return 0;
                 case Id_toUpperCase:               return 0;

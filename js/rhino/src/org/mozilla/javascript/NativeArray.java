@@ -551,7 +551,7 @@ public class NativeArray extends IdScriptable {
         double length = getLengthProperty(thisObj);
 
         // if no args, use "," as separator
-        if (args.length < 1) {
+        if ((args.length < 1) || (args[0] == Undefined.instance)) {
             separator = ",";
         } else {
             separator = ScriptRuntime.toString(args[0]);

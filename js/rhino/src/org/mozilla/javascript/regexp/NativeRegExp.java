@@ -1516,7 +1516,7 @@ System.out.println();
         int parenContent;
         RECapture s = x.parens[parenIndex];
         if (s.index == -1)
-            return null;
+            return x;
 
         len = s.length;
         if ((x.cp + len) > gData.cpend)
@@ -2700,12 +2700,13 @@ System.out.println("Testing at " + x.cp + ", op = " + op);
     protected int getIdDefaultAttributes(int id) {
         switch (id) {
             case Id_lastIndex:
-                return ScriptableObject.PERMANENT;
+                return ScriptableObject.PERMANENT | ScriptableObject.DONTENUM;
             case Id_source:
             case Id_global:
             case Id_ignoreCase:
             case Id_multiline:
-                return ScriptableObject.PERMANENT | ScriptableObject.READONLY;
+                return ScriptableObject.PERMANENT | ScriptableObject.READONLY
+                                                  | ScriptableObject.DONTENUM;
         }
         return super.getIdDefaultAttributes(id);
     }
