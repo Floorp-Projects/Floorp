@@ -470,4 +470,6 @@ extern int __syscall_poll(struct pollfd *ufds, unsigned long int nfds,
 /* For writev() */
 #include <sys/uio.h>
 
+extern void _MD_linux_map_sendfile_error(int err);
+
 #endif /* nspr_linux_defs_h___ */
