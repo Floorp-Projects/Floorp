@@ -175,7 +175,7 @@ nsAutoCompleteController::HandleText()
 
   PRBool disabled;
   mInput->GetDisableAutoComplete(&disabled);
-  NS_ENSURE_TRUE(!disabled, NS_OK;);
+  NS_ENSURE_TRUE(!disabled, NS_OK);
 
   nsAutoString newValue;
   mInput->GetTextValue(newValue);
@@ -269,6 +269,10 @@ nsAutoCompleteController::HandleKeyNavigation(PRUint16 aKey, PRBool *_retval)
   nsCOMPtr<nsIAutoCompletePopup> popup;
   mInput->GetPopup(getter_AddRefs(popup));
   NS_ENSURE_TRUE(popup != nsnull, NS_ERROR_FAILURE);
+
+  PRBool disabled;
+  mInput->GetDisableAutoComplete(&disabled);
+  NS_ENSURE_TRUE(!disabled, NS_OK);
 
   if (aKey == nsIAutoCompleteController::KEY_UP ||
       aKey == nsIAutoCompleteController::KEY_DOWN || 
