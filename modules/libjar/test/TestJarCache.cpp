@@ -53,18 +53,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-static char* filenames[] = {
-    "c:\\temp\\test1.zip",
-    "c:\\temp\\test2.zip",
-    "c:\\temp\\test3.zip",
-    "c:\\temp\\test4.zip",
-    "c:\\temp\\test5.zip",
-    "c:\\temp\\test6.zip",
-    "c:\\temp\\test7.zip",
-    "c:\\temp\\test8.zip",
-};
+static char** filenames; 
 
-#define ZIP_COUNT (sizeof(filenames)/sizeof(filenames[0]))
+#define ZIP_COUNT    8
 #define CACHE_SIZE   4
 #define THREAD_COUNT 6
 #define THREAD_LOOP_COUNT 1000
@@ -129,6 +120,7 @@ TestThread::Run()
     printf("thread %d started\n", mID);
     
     nsCOMPtr<nsIZipReader> reader;
+    int failure = 0;
     
     for(int i = 0; i < THREAD_LOOP_COUNT; i++)
     {
@@ -137,6 +129,7 @@ TestThread::Run()
         if(!reader)
         {
             printf("thread %d failed to get reader for %s\n", mID, filenames[k]);
+            failure = 1;
             break;         
         }
 
@@ -148,15 +141,27 @@ TestThread::Run()
     reader = nsnull;
 
     printf("thread %d finished\n", mID);
+
+    if ( failure ) return NS_ERROR_FAILURE;
     return NS_OK;
 }
 
 /***************************************************************************/
 
-int main()
+int main(int argc, char **argv)
 {
     nsresult rv;
     int i;
+
+    if (ZIP_COUNT != (argc - 1)) 
+    {
+        printf("usage: TestJarCache ");
+        for ( i = 0; i < ZIP_COUNT; i++)
+            printf("file%1d ",i + 1);
+        printf("\n");
+        return 1;
+    }
+    filenames = argv + 1;
 
     rv = NS_InitXPCOM(nsnull, nsnull);
     if(NS_FAILED(rv)) 
@@ -223,3 +228,5 @@ int main()
 
     return 0;
 }    
+
+
