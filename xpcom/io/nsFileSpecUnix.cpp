@@ -532,7 +532,7 @@ PRInt64 nsFileSpec::GetDiskSpaceAvailable() const
     PRInt64 bsize,bavail;
     LL_I2L( bsize,  fs_buf.f_bsize );
     LL_I2L( bavail, fs_buf.f_bavail - 1 );
-    LL_MUL( *aDiskSpaceAvailable, bsize, bavail );
+    LL_MUL( bytes, bsize, bavail );
     return bytes;
 
 #else 
