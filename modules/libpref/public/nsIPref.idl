@@ -117,6 +117,7 @@ interface nsIPref : nsISupports {
     
     // "localized" prefs - stored in the properties files
     wstring getLocalizedUnicharPref(in string pref);
+    wstring getDefaultLocalizedUnicharPref(in string pref);
   
   string CopyDefaultCharPref(in string pref);
   wstring CopyDefaultUnicharPref(in string pref);
