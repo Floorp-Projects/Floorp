@@ -64,18 +64,17 @@ if(!(-e "$inDistPath"))
 }
 
 # Make .js files
-MakeJsFile("install");
+MakeJsFile("xpcom");
 MakeJsFile("browser");
 MakeJsFile("mail");
 
 # Make all xpi files
-MakeXpiFile("install");
+MakeXpiFile("xpcom");
 MakeXpiFile("browser");
 MakeXpiFile("mail");
 
-# build the self-extracting .exe file.
-# printf "\nbuilding self-extracting .exe installer...";
-# PORT system("$inDistPath\\nszip.exe $inDistPath\\nsinstall.exe $inDistPath\\setup\\*.*");
+# Make the config.ini file
+MakeConfigFile();
 
 print " done!\n";
 
@@ -85,7 +84,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inStagePath $inDistPath $inURLPath") != 0)
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath $inURLPath") != 0)
   {
     exit(1);
   }

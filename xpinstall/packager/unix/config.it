@@ -1,0 +1,92 @@
+;-------------------------------------------------------------------------
+[Dialog Welcome]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=Mozilla Installer
+Readme File=README
+
+
+;-------------------------------------------------------------------------
+[Dialog License]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=Mozilla Installer
+License File=MPL-1.1.txt
+
+
+;-------------------------------------------------------------------------
+[Dialog Setup Type]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=Mozilla Installer
+Message0=Please select the setup type you wish to install.
+
+[Setup Type0]
+Description Short=Typical
+Description Long=Most common options, without Java
+C0=Component0
+C1=Component1
+C2=Component2
+
+[Setup Type1]
+Description Short=Complete
+Description Long=Most common options, with Java
+C0=Component0
+C1=Component1
+C2=Component2
+C3=Component3
+
+[Setup Type2]
+Description Short=Navigator
+Description Long=Navigator client only
+C0=Component0
+C1=Component1 
+
+[Setup Type3]
+Description Short=Custom
+Description Long=Choose components you wish to install
+C0=Component0
+C1=Component1
+C2=Component2
+C3=Component3
+
+
+;-------------------------------------------------------------------------
+[Dialog Select Components]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=Mozilla Installer
+Message0=Please select the components you wish to install.
+
+[Component0]
+Description Short=XPInstall Engine
+Description Long=Installer technology
+Archive=xpcom.xpi
+$InstallSize$:xpcom
+Attributes=SELECTED|INVISIBLE
+URL0=$URLPath$
+
+[Component1]
+Description Short=Navigator
+Description Long=Web browser software
+Archive=browser.xpi
+$InstallSize$:browser
+Attributes=SELECTED
+URL0=$URLPath$
+
+[Component2]
+Description Short=Mail & News
+Description Long=Email and Newsgroup software
+Archive=mail.xpi
+$InstallSize$:mail
+Attributes=SELECTED
+URL0=$URLPath$
+
+
+;-------------------------------------------------------------------------
+[Dialog Start Install]
+;-------------------------------------------------------------------------
+Show Dialog=TRUE
+Title=Mozilla Installer
+Message0=Click the Install button to proceed with this installation.
+XPInstall Engine=xpcom.xpi
