@@ -123,9 +123,15 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
         switch (pAtkStateChange->state) {
         case nsIAccessible::STATE_INVISIBLE:
             atkState = ATK_STATE_VISIBLE;
+            pAtkStateChange->enable = !pAtkStateChange->enable;
             break;
         case nsIAccessible::STATE_UNAVAILABLE:
             atkState = ATK_STATE_ENABLED;
+            pAtkStateChange->enable = !pAtkStateChange->enable;
+            break;
+        case nsIAccessible::STATE_READONLY:
+            atkState = ATK_STATE_EDITABLE;
+            pAtkStateChange->enable = !pAtkStateChange->enable;
             break;
         default:
             atkState = TranslateAState(pAtkStateChange->state);
@@ -451,12 +457,16 @@ TranslateAState(PRUint32 aState)
         return ATK_STATE_MULTISELECTABLE;
 
 #if 0
-        // The following two state need to deal specially
+        // The following states are opposite the MSAA states.
+        // We need to deal with them specially
     case nsIAccessible::STATE_INVISIBLE:
         return !ATK_STATE_VISIBLE;
 
     case nsIAccessible::STATE_UNAVAILABLE:
         return !ATK_STATE_ENABLED;
+
+    case nsIAccessible::STATE_READONLY:
+        return !ATK_STATE_EDITABLE;
 #endif
 
         // The following state is

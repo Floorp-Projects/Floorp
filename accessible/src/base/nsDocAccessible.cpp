@@ -169,16 +169,13 @@ NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
     *aState |= STATE_INVISIBLE;
   }
 
-#ifdef DEBUG
   PRBool isEditable;
   GetIsEditable(&isEditable);
 
-  if (isEditable) {
-    // Just for debugging, to show we're in editor on pane object
-    // We don't use STATE_MARQUEED for anything else
-    *aState |= STATE_MARQUEED; 
+  if (!isEditable) {
+    // Use STATE_READONLY when we're not in an editor pane
+    *aState |= STATE_READONLY; 
   }
-#endif
   return NS_OK;
 }
 
@@ -295,6 +292,9 @@ NS_IMETHODIMP nsDocAccessible::GetDocument(nsIDOMDocument **aDOMDoc)
 
 void nsDocAccessible::CheckForEditor()
 {
+  if (mEditor) {
+    return;  // Already have editor, don't need to check
+  }
   if (!mDocument) {
     return;  // No document -- we've been shut down
   }
@@ -308,6 +308,17 @@ void nsDocAccessible::CheckForEditor()
     return; // No editing session interface
 
   editingSession->GetEditorForWindow(domWindow, getter_AddRefs(mEditor));
+  if (mEditor) {
+    // State readonly is now clear
+#ifdef MOZ_ACCESSIBILITY_ATK
+    AtkStateChange stateData;
+    stateData.enable = PR_TRUE;
+    stateData.state = STATE_READONLY; // Will be translated to ATK_STATE_EDITABLE
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, &stateData);
+#else
+    FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, this, nsnull);
+#endif
+  }
 }
 
 NS_IMETHODIMP nsDocAccessible::GetIsEditable(PRBool *aIsEditable)
