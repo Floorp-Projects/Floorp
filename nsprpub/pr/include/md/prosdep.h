@@ -113,6 +113,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(QNX)
 #include "md/_qnx.h"
 
+#elif defined(VMS)
+#include "md/_openvms.h"
+
 #else
 #error unknown Unix flavor
 

@@ -70,6 +70,10 @@ OSF1_CSRCS = \
 	osf1.c \
 	$(NULL)
 
+OPENVMS_CSRCS = \
+	openvms.c \
+	$(NULL)
+
 LINUX_CSRCS = \
 	linux.c \
 	$(NULL)
@@ -151,6 +155,9 @@ CSRCS += $(HPUX_CSRCS)
 endif
 ifeq ($(OS_ARCH),OSF1)
 CSRCS += $(OSF1_CSRCS)
+endi:
+ifeq ($(OS_ARCH),OpenVMS)
+CSRCS += $(OPENVMS_CSRCS)
 endif
 ifeq ($(OS_ARCH),Linux)
 CSRCS += $(LINUX_CSRCS)

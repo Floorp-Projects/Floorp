@@ -123,7 +123,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
 #if defined(SOLARIS)
 #define _PRSockOptVal_t char *
 #elif defined(IRIX) || defined(OSF1) || defined(AIX) || defined(HPUX) \
-    || defined(LINUX) || defined(FREEBSD) || defined(BSDI)
+    || defined(LINUX) || defined(FREEBSD) || defined(BSDI) || defined(VMS)
 #define _PRSockOptVal_t void *
 #else
 #error "Cannot determine architecture"
@@ -137,7 +137,7 @@ static ssize_t (*pt_aix_sendfile_fptr)() = NULL;
     || defined(OSF1) || defined(SOLARIS) \
     || defined(HPUX10_30) || defined(HPUX11) || defined(LINUX) \
     || defined(FREEBSD) || defined(NETBSD) || defined(OPENBSD) \
-    || defined(BSDI)
+    || defined(BSDI) || defined(VMS)
 #define _PRSelectFdSetArg_t fd_set *
 #else
 #error "Cannot determine architecture"
@@ -201,7 +201,8 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
     && !defined(__alpha))
 typedef socklen_t pt_SockLen;
 #elif (defined(AIX) && !defined(AIX4_1)) \
-    || (defined(LINUX) && defined(__alpha))
+    || (defined(LINUX) && defined(__alpha)) \
+    || defined(VMS)
 typedef PRSize pt_SockLen;
 #else
 typedef PRIntn pt_SockLen;
@@ -2813,7 +2814,7 @@ static PRIOMethods _pr_socketpollfd_methods = {
 
 #if defined(HPUX) || defined(OSF1) || defined(SOLARIS) || defined (IRIX) \
     || defined(AIX) || defined(LINUX) || defined(FREEBSD) || defined(NETBSD) \
-    || defined(OPENBSD) || defined(BSDI)
+    || defined(OPENBSD) || defined(BSDI) || defined(VMS)
 #define _PR_FCNTL_FLAGS O_NONBLOCK
 #else
 #error "Can't determine architecture"
@@ -3707,21 +3708,21 @@ PR_IMPLEMENT(PRStatus) PR_UnlockFile(PRFileDesc *fd)
 
 PRInt32 PR_GetSysfdTableMax(void)
 {
-#if defined(XP_UNIX) && !defined(AIX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(VMS)
     struct rlimit rlim;
 
     if ( getrlimit(RLIMIT_NOFILE, &rlim) < 0) 
        return -1;
 
     return rlim.rlim_max;
-#elif defined(AIX)
+#elif defined(AIX) || defined(VMS)
     return sysconf(_SC_OPEN_MAX);
 #endif
 }
 
 PRInt32 PR_SetSysfdTableSize(PRIntn table_size)
 {
-#if defined(XP_UNIX) && !defined(AIX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(VMS)
     struct rlimit rlim;
     PRInt32 tableMax = PR_GetSysfdTableMax();
 
@@ -3738,7 +3739,7 @@ PRInt32 PR_SetSysfdTableSize(PRIntn table_size)
         return -1;
 
     return rlim.rlim_cur;
-#elif defined(AIX)
+#elif defined(AIX) || defined(VMS)
     return -1;
 #endif
 }

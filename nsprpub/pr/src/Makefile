@@ -91,6 +91,10 @@ endif
 endif
 endif
 
+ifeq ($(OS_ARCH),OpenVMS)
+OS_LIBS		= -lvms_jackets
+endif
+
 ifeq ($(OS_ARCH),OSF1)
 ifeq ($(USE_PTHREADS), 1)
 OS_LIBS 	= -lpthread -lrt

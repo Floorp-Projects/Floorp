@@ -39,7 +39,14 @@ typedef PRIntn intn;
 
 #include <support/SupportDefs.h>
 
-#else /* XP_BEOS */
+#elif VMS
+/*
+ * OpenVMS already defines the integer types below in its standard
+ * header files ints.h and types.h.
+ */
+#include <ints.h>
+#include <types.h>
+#else
 
 /* SVR4 typedef of uint is commonly found on UNIX machines. */
 #ifdef XP_UNIX
@@ -84,7 +91,7 @@ typedef PRInt8 int8;
 #endif /* HPUX */
 #endif /* AIX4_3 */
 
-#endif /* XP_BEOS */
+#endif /* XP_BEOS VMS */
 
 typedef PRFloat64 float64;
 typedef PRUptrdiff uptrdiff_t;

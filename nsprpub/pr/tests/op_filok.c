@@ -46,7 +46,9 @@
  * The name of a file that is guaranteed to exist
  * on every machine of a particular OS.
  */
-#ifdef XP_UNIX
+#ifdef VMS
+#define EXISTING_FILENAME "SYS$LOGIN:LOGIN.COM"
+#elif XP_UNIX
 #define EXISTING_FILENAME "/bin/sh"
 #elif defined(WIN32)
 #define EXISTING_FILENAME "c:/autoexec.bat"

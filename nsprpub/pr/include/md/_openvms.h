@@ -34,12 +34,28 @@
 #define _PR_SI_ARCHITECTURE "alpha"
 #else
 #define _PR_SI_ARCHITECTURE "vax"
-endif
-#define PR_DLL_SUFFIX		".so"
+#endif
+#define PR_DLL_SUFFIX		".exe"
 
 #define _PR_VMBASE		0x30000000
 #define _PR_STACK_VMBASE	0x50000000
 #define _MD_DEFAULT_STACK_SIZE	131072L
+
+/*
+** This is not defined on OpenVMS. I believe its only used in GC code, and
+** isn't that only used in Java? Anyway, for now, let's keep the compiler
+** happy.
+*/
+#define SA_RESTART 0
+
+/*
+** OpenVMS doesn't have these in socket.h.
+*/
+struct ip_mreq {
+    struct in_addr  imr_multiaddr;      /* IP multicast address of group */
+    struct in_addr  imr_interface;      /* local IP address of interface */
+};
+
 /*
  * OSF1 needs the MAP_FIXED flag to ensure that mmap returns a pointer
  * with the upper 32 bits zero.  This is because Java sticks a pointer
@@ -50,16 +66,17 @@ endif
 #undef  HAVE_STACK_GROWING_UP
 #undef 	HAVE_WEAK_IO_SYMBOLS
 #undef 	HAVE_WEAK_MALLOC_SYMBOLS
-#undef  HAVE_DLL
 #undef  HAVE_BSD_FLOCK
 
 #define NEED_TIME_R
+
+#undef  HAVE_DLL
 #undef  USE_DLFCN
 
 #define _PR_POLL_AVAILABLE
 #define _PR_USE_POLL
 #define _PR_STAT_HAS_ONLY_ST_ATIME
-#define _PR_HAVE_LARGE_OFF_T
+#define _PR_NO_LARGE_FILES
 
 #undef  USE_SETJMP
 
@@ -197,9 +214,7 @@ struct _MDCPU {
 #define _MD_INTERVAL_PER_SEC              _PR_UNIX_TicksPerSecond
 
 #define _MD_EARLY_INIT		_MD_EarlyInit
-#ifdef __VMS
 void _MD_EarlyInit(void);
-#endif
 #define _MD_FINAL_INIT		_PR_UnixInit
 #define _MD_INIT_RUNNING_CPU(cpu) _MD_unix_init_running_cpu(cpu)
 #define _MD_INIT_THREAD         _MD_InitializeThread
@@ -236,5 +251,8 @@ PR_EXTERN(void) _PR_MD_START_INTERRUPTS(void);
 #define _MD_ATOMIC_INCREMENT(val) (__ATOMIC_INCREMENT_LONG(val) + 1)
 #define _MD_ATOMIC_DECREMENT(val) (__ATOMIC_DECREMENT_LONG(val) - 1)
 #define _MD_ATOMIC_SET(val, newval) __ATOMIC_EXCH_LONG(val, newval)
+
+extern int thread_suspend(PRThread *thr_id);
+extern int thread_resume(PRThread *thr_id);
 
 #endif /* nspr_openvms_defs_h___ */
