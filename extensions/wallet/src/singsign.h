@@ -24,7 +24,7 @@
 
 
 #ifndef _SINGSIGN_H
-#define _SINGSIGNT_H
+#define _SINGSIGN_H
 
 #include "ntypes.h"
 
@@ -34,7 +34,7 @@ extern void
 SI_DisplaySignonInfoAsHTML();
 
 extern void
-SI_RememberSignonData(char* URLName, LO_FormSubmitData *submit);
+SI_RememberSignonData(char* URLName, char** name_array, char** value_array, char** type_array, PRInt32 value_cnt);
 
 extern void
 SI_RestoreSignonData(char* URLName, char* name, char** value);
