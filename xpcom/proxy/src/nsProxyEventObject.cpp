@@ -59,6 +59,13 @@ nsProxyEventObject::GetNewOrUsedProxy(PLEventQueue *destQueue,
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
 
+    if (realToProxyMap == nsnull)
+    {
+        if(clazz)
+        NS_RELEASE(clazz);
+        return nsnull;
+    }
+
     nsVoidKey key(rootObject);
     if(realToProxyMap->Exists(&key))
     {
@@ -163,7 +170,11 @@ nsProxyEventObject::~nsProxyEventObject()
 
         nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
         nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
-        realToProxyMap->Remove(&key);
+
+        if (realToProxyMap == nsnull)
+        {
+            realToProxyMap->Remove(&key);
+        }
     }
 
     if (mProxyObject != nsnull)

@@ -54,7 +54,11 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
     
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
-
+    
+    if (iidToClassMap == nsnull)
+    {
+        return nsnull;
+    }
 
     nsProxyEventClass* clazz = NULL;
     nsIDKey key(aIID);
@@ -73,7 +77,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
             if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
                 /* 
-                   Check to see if IsISupportsDescendent 
+                   Check to see if isISupportsDescendent 
                 */
                 nsIInterfaceInfo* oldest = info;
                 nsIInterfaceInfo* parent;
@@ -85,18 +89,18 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                     oldest = parent;
                 }
 
-                PRBool IsISupportsDescendent = PR_FALSE;
+                PRBool isISupportsDescendent = PR_FALSE;
                 nsID* iid;
                 if(NS_SUCCEEDED(oldest->GetIID(&iid))) 
                 {
-                    IsISupportsDescendent = iid->Equals(nsISupports::GetIID());
+                    isISupportsDescendent = iid->Equals(nsISupports::GetIID());
                     nsAllocator::Free(iid);
                 }
                 NS_RELEASE(oldest);
                
-                NS_ASSERTION(IsISupportsDescendent,"!IsISupportsDescendent");
+                NS_VERIFY(isISupportsDescendent,"!isISupportsDescendent");
 
-                if (IsISupportsDescendent)  
+                if (isISupportsDescendent)  
                 {
                     clazz = new nsProxyEventClass(aIID, info);
                     if(!clazz->mDescriptors)
@@ -126,8 +130,11 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
 
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
-
-    iidToClassMap->Put(&key, this);
+    
+    if (iidToClassMap == nsnull)
+    {
+        iidToClassMap->Put(&key, this);
+    }
 
     uint16 methodCount;
     if(NS_SUCCEEDED(mInfo->GetMethodCount(&methodCount)))
@@ -137,10 +144,7 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
             int wordCount = (methodCount/32)+1;
             if(NULL != (mDescriptors = new uint32[wordCount]))
             {
-                int i;
-                // init flags to 0;
-                for(i = wordCount-1; i >= 0; i--)
-                    mDescriptors[i] = 0;
+                memset(mDescriptors, 0, wordCount * sizeof(uint32));
             }
         }
         else
@@ -159,7 +163,11 @@ nsProxyEventClass::~nsProxyEventClass()
     
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
-    iidToClassMap->Remove(&key);
+    
+    if (iidToClassMap == nsnull)
+    {
+        iidToClassMap->Remove(&key);
+    }
     
     NS_RELEASE(mInfo);
 }
@@ -245,29 +253,27 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
         NS_ADDREF(root);
         return NS_OK;
     }
-    else if(aIID.Equals(self->GetIID()))
+    
+    if(aIID.Equals(self->GetIID()))
     {
         *aInstancePtr = (void*) self;
         NS_ADDREF(self);
         return NS_OK;
     }
-    else if(aIID.Equals(ProxyEventClassIdentity::GetIID()))
+    
+    if(aIID.Equals(ProxyEventClassIdentity::GetIID()))
     {
         *aInstancePtr = ProxyEventClassIdentity::GetSingleton();
         return NS_OK;
     }
-    else
-    {
-        *aInstancePtr = CallQueryInterfaceOnProxy(self, aIID);
-        if (*aInstancePtr == nsnull)
-            return NS_NOINTERFACE;
-        else
-            return NS_OK;
-        
-    }
+    
 
-    *aInstancePtr = NULL;
-    return NS_NOINTERFACE;
+    *aInstancePtr = CallQueryInterfaceOnProxy(self, aIID);
+    
+    if (*aInstancePtr == nsnull)
+        return NS_NOINTERFACE;
+
+    return NS_OK;
 }
 
 
