@@ -34,6 +34,7 @@
 #include "nsSSLSocketProvider.h"
 
 #include "nsSDR.h"
+#include "nsFSDR.h"
 #include "nsCrypto.h"
 
 //For the NS_CRYPTO_PROGID define
@@ -44,6 +45,7 @@
 // Define SDR object constructor
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsFSecretDecoderRing, init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCrypto, init)
 
 static nsModuleComponentInfo components[] =
@@ -118,6 +120,13 @@ static nsModuleComponentInfo components[] =
         NS_SDR_PROGID,
         nsSecretDecoderRingConstructor
     },
+
+    {
+        NS_FSDR_CLASSNAME,
+        NS_FSDR_CID,
+        NS_FSDR_PROGID,
+        nsFSecretDecoderRingConstructor
+    },
     
     {
         NS_CRYPTO_CLASSNAME,
@@ -125,6 +134,7 @@ static nsModuleComponentInfo components[] =
         NS_CRYPTO_PROGID,
         nsCryptoConstructor
     }
+
 };
 
 NS_IMPL_NSGETMODULE("PSMComponent", components);
