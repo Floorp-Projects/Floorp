@@ -365,6 +365,11 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
             result = PR_TRUE;
           }
           break;
+        case NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT:
+          if (NS_SUCCEEDED(aPresContext->GetDefaultActiveLinkColor(&aResult))) {
+            result = PR_TRUE;
+          }
+          break;
         default:
           NS_NOTREACHED("Should never have an unknown negative colorID.");
           break;

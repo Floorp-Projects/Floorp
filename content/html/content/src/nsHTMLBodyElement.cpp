@@ -411,7 +411,7 @@ nsHTMLBodyElement::Set##func_(const nsAString& aColor)              \
 }
 
 NS_IMPL_HTMLBODY_COLOR_ATTR(vlink, VLink, VisitedLinkColor)
-NS_IMPL_HTMLBODY_COLOR_ATTR(alink, ALink, LinkColor)
+NS_IMPL_HTMLBODY_COLOR_ATTR(alink, ALink, ActiveLinkColor)
 NS_IMPL_HTMLBODY_COLOR_ATTR(link, Link, LinkColor)
 // XXX Should text check the body frame's style struct for color,
 // like we do for bgColor?

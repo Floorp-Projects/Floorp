@@ -1537,7 +1537,7 @@ function EditorSelectColor(colorType, mouseEvent)
                 editor.setAttribute(bodyelement, "link", defColors.LinkColor);
 
               if (!bodyelement.getAttribute("alink"))
-                editor.setAttribute(bodyelement, "alink", defColors.LinkColor);
+                editor.setAttribute(bodyelement, "alink", defColors.ActiveLinkColor);
 
               if (!bodyelement.getAttribute("vlink"))
                 editor.setAttribute(bodyelement, "vlink", defColors.VisitedLinkColor);

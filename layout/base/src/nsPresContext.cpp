@@ -184,8 +184,9 @@ nsPresContext::nsPresContext()
   // the minimum font-size is unconstrained by default
   mMinimumFontSize = 0;
 
-  mLinkColor = NS_RGB(0x33, 0x33, 0xFF);
-  mVisitedLinkColor = NS_RGB(0x66, 0x00, 0xCC);
+  mLinkColor = NS_RGB(0x00, 0x00, 0xEE);
+  mActiveLinkColor = NS_RGB(0xEE, 0x00, 0x00);
+  mVisitedLinkColor = NS_RGB(0x55, 0x1A, 0x8B);
   mUnderlineLinks = PR_TRUE;
 
   mUseFocusColors = PR_FALSE;
@@ -222,6 +223,7 @@ nsPresContext::~nsPresContext()
     mPrefs->UnregisterCallback("browser.display.", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.underline_anchors", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.anchor_color", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.active_color", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
@@ -470,6 +472,9 @@ nsPresContext::GetUserPreferences()
   if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.anchor_color", getter_Copies(colorStr)))) {
     mLinkColor = MakeColorPref(colorStr);
   }
+  if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.active_color", getter_Copies(colorStr)))) {
+    mActiveLinkColor = MakeColorPref(colorStr);
+  }
   if (NS_SUCCEEDED(mPrefs->CopyCharPref("browser.visited_color", getter_Copies(colorStr)))) {
     mVisitedLinkColor = MakeColorPref(colorStr);
   }
@@ -637,6 +642,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
     mPrefs->RegisterCallback("browser.display.", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.underline_anchors", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.anchor_color", nsPresContext::PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.active_color", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("browser.visited_color", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("network.image.imageBehavior", nsPresContext::PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("image.animation_mode", nsPresContext::PrefChangedCallback, (void*)this);
@@ -1161,6 +1167,14 @@ nsPresContext::GetDefaultLinkColor(nscolor* aColor)
 }
 
 NS_IMETHODIMP 
+nsPresContext::GetDefaultActiveLinkColor(nscolor* aColor)
+{
+  NS_PRECONDITION(aColor, "null out param");
+  *aColor = mActiveLinkColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
 nsPresContext::GetDefaultVisitedLinkColor(nscolor* aColor)
 {
   NS_PRECONDITION(aColor, "null out param");
@@ -1229,6 +1243,13 @@ NS_IMETHODIMP
 nsPresContext::SetDefaultLinkColor(nscolor aColor)
 {
   mLinkColor = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsPresContext::SetDefaultActiveLinkColor(nscolor aColor)
+{
+  mActiveLinkColor = aColor;
   return NS_OK;
 }
 

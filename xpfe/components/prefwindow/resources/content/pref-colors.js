@@ -33,6 +33,7 @@ function setColorWell(aPicker)
     getColorFromWellAndSetValue("foregroundtextmenu");
     getColorFromWellAndSetValue("backgroundmenu");
     getColorFromWellAndSetValue("unvisitedlinkmenu");
+    getColorFromWellAndSetValue("activelinkmenu");
     getColorFromWellAndSetValue("visitedlinkmenu");
 
     return true;
