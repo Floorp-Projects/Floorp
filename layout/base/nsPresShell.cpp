@@ -2740,26 +2740,8 @@ PresShell::ScrollFrameIntoView(nsIFrame *aFrame,
 
   if (mViewManager) {
     // Get the viewport scroller
-    nsIScrollableView* rootscrollingView;
-    mViewManager->GetRootScrollableView(&rootscrollingView);
-
-    nsIFrame *viewParent;
-    nsIScrollableView* scrollingView = nsnull;
-    aFrame->GetParentWithView(mPresContext,&viewParent);
-    if (viewParent) {
-      nsIView *view;//XXX COM ptr?
-      viewParent->GetView(mPresContext,&view);
-      if (view) {
-        nsIViewManager *vm = nsnull;
-        view->GetViewManager(vm);
-        if (vm){
-          vm->GetRootScrollableView(&scrollingView);
-        }
-      }
-    }
-    if (!scrollingView) {
-      scrollingView = rootscrollingView;
-    }
+    nsIScrollableView* scrollingView;
+    mViewManager->GetRootScrollableView(&scrollingView);
 
     if (scrollingView) {
       nsIView*  scrolledView;
