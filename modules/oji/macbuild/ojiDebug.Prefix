@@ -4,5 +4,7 @@
 // Global prefix file for the ojiDebug.shlb target.
 //
 
-#include "MacPrefix_debug.h"
 #include "ojiConfig.h"
+
+#include "MacPrefix_debug.h"
+
