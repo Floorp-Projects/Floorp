@@ -245,7 +245,6 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
     return NS_OK;
   }
 
-  mSpec = PL_strdup(cSpec);
   const char* cp = PL_strchr(cSpec, ':');
   if (nsnull == cp) {
     // relative spec
@@ -271,8 +270,67 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
       PL_strncpy(mFile, uFile, dirlen);
       PL_strcpy(mFile + dirlen, cSpec);
     }
+
+    /* Stolen from netlib's mkparse.c.
+     *
+     * modifies a url of the form   /foo/../foo1  ->  /foo1
+     *                       and    /foo/./foo1   ->  /foo/foo1
+     */
+    char *fwdPtr = mFile;
+    char *urlPtr = mFile;
+    
+    for(; *fwdPtr != '\0'; fwdPtr++)
+    {
+    
+      if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '/')
+      {
+        /* remove ./ 
+         */	
+        fwdPtr += 1;
+      }
+      else if(*fwdPtr == '/' && *(fwdPtr+1) == '.' && *(fwdPtr+2) == '.' && 
+              (*(fwdPtr+3) == '/' || *(fwdPtr+3) == '\0'))
+      {
+        /* remove foo/.. 
+         */	
+        /* reverse the urlPtr to the previous slash
+         */
+        if(urlPtr != mFile) 
+          urlPtr--; /* we must be going back at least one */
+        for(;*urlPtr != '/' && urlPtr != mFile; urlPtr--)
+          ;  /* null body */
+        
+        /* forward the fwd_prt past the ../
+         */
+        fwdPtr += 2;
+      }
+      else
+      {
+        /* copy the url incrementaly 
+         */
+        *urlPtr++ = *fwdPtr;
+      }
+    }
+    
+    *urlPtr = '\0';  /* terminate the url */
+
+    // Now that we've resolved the relative URL, we need to reconstruct
+    // a URL spec from the components.
+    char portBuffer[10];
+    if (-1 != mPort) {
+      sprintf(portBuffer, ":%d", mPort);
+    }
+    else {
+      portBuffer[0] = '\0';
+    }
+
+    PRInt32 plen = PL_strlen(mProtocol) + PL_strlen(mHost) + PL_strlen(portBuffer) + PL_strlen(mFile) + 3;
+    mSpec = (char *) PR_Malloc(plen + 1);
+    sprintf(mSpec, "%s://%s%s%s", mProtocol, mHost, portBuffer, mFile);
+
   } else {
     // absolute spec
+    mSpec = PL_strdup(cSpec);
 
     // get protocol first
     PRInt32 plen = cp - cSpec;
