@@ -36,7 +36,7 @@ class nsString;
 #define TEXT_EDITOR_FLAG_SINGLELINE  0x02   // enter key and CR-LF handled specially
 #define TEXT_EDITOR_FLAG_PASSWORD    0x04   // text is not entered into content, only a representative character
 #define TEXT_EDITOR_FLAG_READONLY    0x08   // editing events are disabled.  Editor may still accept focus.
-#define TEXT_EDITOR_FLAG_DISALBED    0x10   // all events are disabled (like scrolling).  Editor will not accept focus.
+#define TEXT_EDITOR_FLAG_DISABLED    0x10   // all events are disabled (like scrolling).  Editor will not accept focus.
 /**
  * The general text editor interface. 
  * <P>

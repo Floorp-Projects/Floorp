@@ -65,8 +65,10 @@ NS_IMETHODIMP
 nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection, 
                               nsRulesInfo *aInfo, PRBool *aCancel)
 {
-  if (!aSelection || !aInfo) 
+  if (!aSelection || !aInfo || !aCancel) 
     return NS_ERROR_NULL_POINTER;
+
+  *aCancel = PR_FALSE;
     
   // my kingdom for dynamic cast
   nsTextRulesInfo *info = NS_STATIC_CAST(nsTextRulesInfo*, aInfo);
@@ -79,7 +81,8 @@ nsHTMLEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             info->placeTxn,
                             info->inString,
                             info->outString,
-                            info->typeInState);
+                            info->typeInState,
+                            info->maxLength);
     case kInsertBreak:
       return WillInsertBreak(aSelection, aCancel);
     case kDeleteSelection:
@@ -125,12 +128,13 @@ nsHTMLEditRules::DidDoAction(nsIDOMSelection *aSelection,
  ********************************************************/
  
 nsresult
-nsHTMLEditRules::WillInsertText(nsIDOMSelection  *aSelection, 
+nsHTMLEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
                                 PlaceholderTxn **aTxn,
                                 const nsString *inString,
                                 nsString       *outString,
-                                TypeInState    typeInState)
+                                TypeInState    typeInState,
+                                PRInt32         aMaxLength)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
@@ -152,7 +156,8 @@ nsHTMLEditRules::WillInsertText(nsIDOMSelection  *aSelection,
                                          aTxn,
                                          inString,
                                          outString,
-                                         typeInState);
+                                         typeInState,
+                                         aMaxLength);
 }
 
 nsresult

@@ -255,6 +255,16 @@ protected:
                                        nsIAtom     *aPropName, 
                                        const nsString *aAttribute,
                                        const nsString *aValue);
+
+  void GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection, 
+                                       nsIDOMNode **aParent,
+                                       PRInt32     &aStartOffset, 
+                                       PRInt32     &aEndOffset);
+
+  void ResetTextSelectionForRange(nsIDOMNode *aParent,
+                                  PRInt32     aStartOffset,
+                                  PRInt32     aEndOffset,
+                                  nsIDOMSelection *aSelection);
   
 
   TypeInState *GetTypeInState(); 

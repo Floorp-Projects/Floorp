@@ -496,12 +496,14 @@ nsEditor::EnableUndo(PRBool aEnable)
       }
 #endif
     }
+    mTxnMgr->SetMaxTransactionCount(-1);
   }
   else
   { // disable the transaction manager if it is enabled
     if (mTxnMgr)
     {
-      mTxnMgr = do_QueryInterface(nsnull);
+      mTxnMgr->Clear();
+      mTxnMgr->SetMaxTransactionCount(0);
     }
   }
 
@@ -2207,6 +2209,7 @@ nsEditor::IsNodeInline(nsIDOMNode *aNode, PRBool &aIsInline)
     result = element->GetTagName(tag);
     if (NS_SUCCEEDED(result))
     {
+      tag.ToLowerCase();
       nsIAtom *tagAtom = NS_NewAtom(tag);
       if (!tagAtom) { return NS_ERROR_NULL_POINTER; }
       if (tagAtom==nsIEditProperty::a      ||
@@ -2250,7 +2253,9 @@ nsEditor::GetBlockParent(nsIDOMNode *aNode, nsIDOMElement **aBlockParent)
     result = parent->GetParentNode(getter_AddRefs(temp));
     parent = do_QueryInterface(temp);
   }
-  if (gNoisy) { printf("GetBlockParent for %p returning parent %p\n", aNode, *aBlockParent); }
+  if (gNoisy) { 
+    printf("GetBlockParent for %p returning parent %p\n", aNode, *aBlockParent); 
+  }
   return result;
 }
 
@@ -2635,7 +2640,7 @@ nsEditor::NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
   {
     nsAutoString tag;
     element->GetTagName(tag);
-    if (tag.Equals(aTag->GetUnicode()))
+    if (tag.EqualsIgnoreCase(aTag->GetUnicode()))
     {
       return PR_TRUE;
     }
@@ -2916,7 +2921,7 @@ nsEditor::GetFirstNodeOfType(nsIDOMNode     *aStartNode,
     if (NS_SUCCEEDED(result) && (element))
     {    
       element->GetTagName(tag);
-      if (PR_TRUE==aTag.Equals(tag))
+      if (PR_TRUE==aTag.EqualsIgnoreCase(tag))
       {
         return (childNode->QueryInterface(nsIDOMNode::GetIID(),(void **) aResult)); // does the addref
       }
@@ -3556,7 +3561,7 @@ nsEditor::IsNextCharWhitespace(nsIDOMNode *aParentNode,
   if (textNode)
   {
     textNode->GetLength(&strLength);
-    if (aOffset < strLength)
+    if ((PRUint32)aOffset < strLength)
     {
       // easy case: next char is in same node
       textNode->SubstringData(aOffset,aOffset+1,tempString);
@@ -3742,4 +3747,35 @@ nsEditor::JoinNodeDeep(nsIDOMNode *aLeftNode,
   
   return res;
 }
+
+/******************************************************************************
+ * nsAutoSelectionReset
+ *****************************************************************************/
+
+nsAutoSelectionReset::nsAutoSelectionReset(nsIDOMSelection *aSel) 
+{ 
+  mInitialized = PR_FALSE;
+  mSel = do_QueryInterface(aSel);
+  if (mSel)
+  {
+    mSel->GetAnchorNode(getter_AddRefs(mStartNode));
+    mSel->GetAnchorOffset(&mStartOffset);
+    mSel->GetFocusNode(getter_AddRefs(mEndNode));
+    mSel->GetFocusOffset(&mEndOffset);
+    mInitialized = PR_TRUE;
+  }
+}
+
+nsAutoSelectionReset::~nsAutoSelectionReset()
+{
+  if (mSel && mInitialized)
+  {
+    // restore original selection
+    mSel->Collapse(mStartNode, mStartOffset);
+    mSel->Extend(mEndNode, mEndOffset);
+  }
+}
+
+
+
 
