@@ -506,7 +506,8 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
     }
 
     // copy attributes
-    for (PRUint32 i = 0; i < newcontent->GetAttrCount(); i++) {
+    PRUint32 i;
+    for (i = 0; i < newcontent->GetAttrCount(); i++) {
       PRInt32 nsID;
       nsCOMPtr<nsIAtom> name;
       nsCOMPtr<nsIAtom> prefix;
@@ -521,7 +522,7 @@ nsSVGUseElement::CreateAnonymousContent(nsPresContext*    aPresContext,
 
     // move the children over
     PRUint32 num = newcontent->GetChildCount();
-    for (PRUint32 i = 0; i < num; i++) {
+    for (i = 0; i < num; i++) {
       nsCOMPtr<nsIContent> child = newcontent->GetChildAt(0);
       newcontent->RemoveChildAt(0, PR_FALSE);
       svgNode->InsertChildAt(child, i, PR_TRUE, PR_TRUE);
