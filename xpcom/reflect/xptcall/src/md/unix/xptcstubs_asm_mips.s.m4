@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: asm; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * Version: MPL 1.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,7 +21,6 @@
  * Contributor(s):
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Chris Waterson   <waterson@netscape.com>
- *
  */
 
 /* This code is for MIPS using the O32 ABI. */
@@ -61,8 +60,8 @@ define(SENTINEL_ENTRY, `')
 
 include(xptcstubsdef.inc)
 
-	.globl sharedstub
-	.ent   sharedstub
+	.globl	sharedstub
+	.ent	sharedstub
 sharedstub:
 
 	REG_S	ra, 20(sp)

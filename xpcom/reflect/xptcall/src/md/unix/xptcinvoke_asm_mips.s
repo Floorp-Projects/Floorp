@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: asm; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * Version: MPL 1.1
  *
  * The contents of this file are subject to the Mozilla Public License Version
@@ -21,7 +21,6 @@
  * Contributor(s):
  *   Brendan Eich     <brendan@mozilla.org>
  *   Stuart Parmenter <pavlov@netscape.com>
- *
  */
 
 /* This code is for MIPS using the O32 ABI. */
@@ -75,11 +74,13 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 	#
 	# 10010000000000010000000011110000
 	.mask 0x900100F0, -((NARGSAVE+LOCALSZ)*SZREG)
-# thou shalt not use .cprestore if yer frame has variable size...
-#	.cprestore GPOFF
+
+	# thou shalt not use .cprestore if yer frame has variable size...
+	# .cprestore GPOFF
 
 	REG_S	ra, RAOFF(sp)
-# this happens automatically with .cprestore, but we cannot use that op...
+
+	# this happens automatically with .cprestore, but we cannot use that op...
 	REG_S	gp, GPOFF(sp)
 	REG_S	s0, S0OFF(sp)
 	REG_S	s1, S1OFF(sp)
@@ -90,10 +91,10 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 	REG_S	a3, A3OFF(sp)
 
 	# invoke_count_words(paramCount, params)
-        move    a0, a2
-	move    a1, a3
+	move	a0, a2
+	move	a1, a3
 
-        jal     invoke_count_words
+	jal	invoke_count_words
 	lw	gp, GPOFF(sp)
 
 	# save the old sp so we can pop the param area and any "low frame"
@@ -101,7 +102,7 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 	# we invoke.
 	move	s0, sp
 
-	REG_L   a1, A2OFF(sp)   # a1 = paramCount
+	REG_L	a1, A2OFF(sp)	# a1 = paramCount
 	REG_L	a2, A3OFF(sp)	# a2 = params
 
 	# we define a word as 4 bytes, period end of story!
@@ -110,7 +111,7 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 				# our stack frame -- SWEET!
 	subu	sp, sp, v0	# make room
 	move	a0, sp		# a0 = param stack address
-	move	s1, a0          # save it for later -- it should be safe here
+	move	s1, a0		# save it for later -- it should be safe here
 
 	# the old sp is still saved in s0, but we now need another argsave
 	# area ("low frame") for the invoke_copy_to_stack call.
@@ -119,15 +120,12 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 	# copy the param into the stack areas
 	# invoke_copy_to_stack(PRUint32* d, PRUint32 paramCount,
 	#                      nsXPTCVariant* s)
-	jal	invoke_copy_to_stack
-	lw	gp, GPOFF(s0)
+	jal     invoke_copy_to_stack
+	lw  	gp, GPOFF(s0)
 
 	move	sp, s0		# get orig sp back, popping params and argsave
 
 	REG_L	a0, A0OFF(sp)	# a0 = set "that" to be "this"
-
-# XXX why not directly load t1 with A1OFF(sp) and then just shift it?
-# ..   1 register access instead of 2!
 	REG_L	a1, A1OFF(sp)	# a1 = methodIndex
 
 	# t1 = methodIndex * 4
@@ -138,7 +136,7 @@ NESTED(_XPTC_InvokeByIndex, FRAMESZ, ra)
 	# which must then be saved in t9
 	lw	t9, 0(a0)
 	addu	t9, t9, t1
-	lw      t9, 8(t9)
+	lw	t9, 8(t9)
 
 	# a1..a3 and f13..f14 should now be set to what
 	# invoke_copy_to_stack told us. skip a0 and f12
