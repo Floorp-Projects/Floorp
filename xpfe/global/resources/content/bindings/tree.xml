@@ -19,12 +19,23 @@
       </xul:treerows>
     </content>
     
-    <implementation>
+    <implementation implements="nsIAccessibleProvider">
       <constructor>
         this.addEventListener("DOMMouseScroll", this._handleMouseScroll, true);
         if (navigator.platform.indexOf("Mac") != -1)
           this.pageUpOrDownMovesSelection = false;
       </constructor>
+
+      <!-- ///////////////// nsIAccessibleProvider ///////////////// -->
+
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTreeAccessible(this);
+          ]]>
+        </getter>
+      </property>
 
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
@@ -588,6 +599,16 @@
       <children includes="treecol|splitter"/>
       <xul:treecolpicker class="treecol-image" fixed="true" ordinal="2147483647"/>
     </content>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTreeColumnsAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
   </binding>
 
   <binding id="treerows" extends="chrome://global/content/bindings/tree.xml#tree-base">
@@ -914,6 +935,16 @@
       <xul:label class="treecol-text" xbl:inherits="crop,value=label" flex="1" crop="right"/>
       <xul:image class="treecol-sortdirection" xbl:inherits="sortDirection"/>
     </content>
+    <implementation implements="nsIAccessibleProvider">
+      <property name="accessible">
+        <getter>
+          <![CDATA[
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            return accService.createXULTreeColumnitemAccessible(this);
+          ]]>
+        </getter>
+      </property>
+    </implementation>
 
     <handlers>
       <handler event="click" button="0" action="if (event.originalTarget == this) { this.parentNode.parentNode.treeBoxObject.view.cycleHeader(this.id, this); }"/>

@@ -240,6 +240,7 @@ public:
 
 
 #define MAX_LIST_SIZE 100
+#define MAX_CHILD_ACCESSIBLES 1000000
 
 class RootAccessible: public DocAccessible, public nsIAccessibleEventListener
 {

@@ -994,6 +994,10 @@ void RootAccessible::GetNSAccessibleFor(VARIANT varChild, nsCOMPtr<nsIAccessible
       }
     }    
   }
+  else if (varChild.lVal >= MAX_CHILD_ACCESSIBLES && varChild.lVal < MAX_CHILD_ACCESSIBLES + mListCount){
+    aAcc = mList[varChild.lVal - MAX_CHILD_ACCESSIBLES].mAccessible;
+    return;
+  }
 
   Accessible::GetNSAccessibleFor(varChild, aAcc);
 }
@@ -1015,9 +1019,11 @@ PRInt32 RootAccessible::GetIdFor(nsIAccessible* aAccessible)
   // can call back and get the IAccessible the event occured on.
   // We use the unique ID exposed through nsIContent::GetContentID()
 
-  nsCOMPtr<nsIDOMNode> domNode;
-  aAccessible->AccGetDOMNode(getter_AddRefs(domNode));
-  PRInt32 uniqueID = - NS_REINTERPRET_CAST(PRInt32, (domNode.get()));
+  PRInt32 uniqueID;
+  aAccessible->GetAccId(&uniqueID);
+
+  if (uniqueID == 0)  // can't get an unique ID, use the mList's index + constant base number as the unique ID
+    uniqueID = mNextPos + MAX_CHILD_ACCESSIBLES;
 
   for (PRInt32 index = 0; index < mListCount; index++)
     if (uniqueID == mList[index].mId) {

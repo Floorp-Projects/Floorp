@@ -525,6 +525,12 @@ NS_IMETHODIMP nsAccessible::GetAccKeyboardShortcut(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsAccessible::GetAccId(PRInt32 *aAccId)
+{
+  *aAccId = - NS_REINTERPRET_CAST(PRInt32, (mDOMNode.get()));
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsAccessible::CacheOptimizations(nsIAccessible *aParent, PRInt32 aSiblingIndex, nsIDOMNodeList *aSiblingList)
 {
   if (aParent)

@@ -39,6 +39,7 @@ REQUIRES = \
   imglib2 \
   intl \
   layout \
+  layout_xul \
   locale \
   necko \
   plugin \
@@ -59,6 +60,7 @@ CPPSRCS = \
   nsXULSelectAccessible.cpp \
   nsXULTabAccessible.cpp \
   nsXULTextAccessible.cpp \
+  nsXULTreeAccessible.cpp \
   $(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

@@ -77,6 +77,7 @@ public:
   virtual ~nsAccessible();
 
   NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetAccId(PRInt32 *_retval);
   NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
   NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
   NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 

@@ -40,6 +40,7 @@ interface nsIAccessible : nsISupports
   readonly attribute long accChildCount;
   attribute DOMString accName;
   readonly attribute DOMString accValue;
+  readonly attribute long accId;
 
   readonly attribute DOMString accDescription;
   readonly attribute DOMString accKeyboardShortcut;
