@@ -110,6 +110,9 @@ enum {
   TABLESELECTION_ALLCELLS
 };
   
+class nsIScrollableView;
+
+
 class nsIFrameSelection : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IFRAMESELECTION_IID; return iid; }
@@ -119,7 +122,12 @@ public:
    *  @param aTracker is the parameter to be used for most of the other calls for callbacks ect
    *  @param aLimiter limits the selection to nodes with aLimiter parents
    */
-  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) = 0;
+  NS_IMETHOD Init(nsIFocusTracker *aTracker, nsIContent *aLimiter) = 0; //default since this isnt used for embedding
+
+  /* SetScrollView sets the scroll view
+   *  @param aScrollView is thr scroll view for this selection.
+   */
+  NS_IMETHOD SetScrollableView(nsIScrollableView *aScrollView) =0;
 
   /** ShutDown will be called when the owner of the frame selection is shutting down
    *  this should be the time to release all member variable interfaces. all methods
