@@ -177,11 +177,18 @@ BOOL CHistoryMenuBuilder::AddHistoryToMenu(HMENU hMenu, int nPosition, BOOL bCur
 	if (!pEntry->title)
 		 return FALSE;
 
+	char* titleInMenuCharset = (char*) INTL_ConvertLineWithoutAutoDetect(CS_UTF8, 
+				INTL_GetCharSetID(INTL_MenuCsidSel),
+				(unsigned char*)pEntry->title, 
+				strlen((char*)pEntry->title));
+
 	// Each of the menu items is numbered
 	if (nPosition < 10)
-		lpszText = PR_smprintf("&%d %s", nPosition, pEntry->title);
+		lpszText = PR_smprintf("&%d %s", nPosition, titleInMenuCharset);
 	else
-		lpszText = PR_smprintf("  %s", pEntry->title);
+		lpszText = PR_smprintf("  %s", titleInMenuCharset);
+
+	XP_FREEIF(titleInMenuCharset);
 
 	// We need to shorten the name to keep the menu width reasonable. TRUE for
 	// the third argument means to modify the passed in string and not make a copy

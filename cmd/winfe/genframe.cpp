@@ -1526,16 +1526,20 @@ void CGenericFrame::BuildViewMenu(CMenu *pMenu)
 	for (barCtr = 0; barCtr < barCount; barCtr++) {
 		HT_View view = HT_GetNthView(rootPane, barCtr);
 		CRDFToolbar *bar = (CRDFToolbar *) HT_GetViewFEData(view);
-		char *name = HT_GetViewName(view);
+		char *name = UTF8ToMenuText(HT_GetViewName(view));
+		char *menuName;
 		if (!name)
-			name = "";
+			menuName = "";
+		else
+			menuName = name;
 		CString menuText;
 		if (bars->IsWindowShowing(bar))
-			menuText.Format(IDS_HIDETOOLBARMENUITEM, name);
+			menuText.Format(IDS_HIDETOOLBARMENUITEM, menuName);
 		else
-			menuText.Format(IDS_SHOWTOOLBARMENUITEM, name);
+			menuText.Format(IDS_SHOWTOOLBARMENUITEM, menuName);
 		pMenu->InsertMenu(barCtr, MF_BYPOSITION | MF_STRING, ID_VIEW_FIRSTTOOLBAR+barCtr,
 			menuText);
+		XP_FREEIF(name);
 	}
 }
 
@@ -1688,7 +1692,42 @@ void CGenericFrame::OnConstructWindowMenu(CMenu * pPopup)
 		case MWContextMessageComposition:
 		case MWContextBrowser:
 			if(pXPContext->title) {
-				csContext += fe_MiddleCutString(pXPContext->title, 40);
+				int16 win_csid_in_context = INTL_GetCSIWinCSID(LO_GetDocumentCharacterSetInfo(pXPContext));
+				int16 menuCSID = INTL_GetCharSetID(INTL_MenuCsidSel);
+				if(win_csid_in_context == menuCSID)
+				{
+					csContext += fe_MiddleCutString(pXPContext->title, 40);
+				}
+				else
+				{
+					char* textInUTF8 = NULL;
+					char* textInMenuCsid = NULL;
+					if(CS_UTF8 == win_csid_in_context)
+					{
+						textInUTF8 = XP_STRDUP(pXPContext->title);
+					} else {
+						textInUTF8 = (char*) INTL_ConvertLineWithoutAutoDetect(
+							win_csid_in_context, 
+							CS_UTF8,
+							(unsigned char*)pXPContext->title, 
+							XP_STRLEN((char*)pXPContext->title));
+					}
+					if(textInUTF8)
+					{
+ 						textInMenuCsid = (char*) INTL_ConvertLineWithoutAutoDetect(
+							CS_UTF8, 
+							menuCSID,
+							(unsigned char*)textInUTF8, 
+							XP_STRLEN(textInUTF8));
+
+						XP_FREEIF(textInUTF8);
+					}
+					if(textInMenuCsid)
+					{
+						csContext += fe_MiddleCutString(textInMenuCsid, 40, TRUE);
+						XP_FREEIF(textInMenuCsid);
+					}
+				}
 			} else {
 				csContext += csTitle;
 			}
