@@ -57,10 +57,12 @@
 static NS_DEFINE_CID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 #define kIndentStr NS_LITERAL_STRING("  ")
-#define kMozStr "_moz"
 #define kLessThan NS_LITERAL_STRING("<")
 #define kGreaterThan NS_LITERAL_STRING(">")
 #define kEndTag NS_LITERAL_STRING("</")
+
+static const PRUnichar kMozStr[] = {'m', 'o', 'z', 0};
+static const PRInt32 kMozStrLength = 3;
 
 static const PRInt32 kLongLineLen = 128;
 
@@ -327,12 +329,11 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
                             *getter_AddRefs(attrName),
                             *getter_AddRefs(attrPrefix));
 
-    // Filter out any attribute starting with _moz
+    // Filter out any attribute starting with [-|_]moz
     const PRUnichar* sharedName;
     attrName->GetUnicode(&sharedName);
-    if (nsCRT::strncmp(sharedName, 
-                       NS_ConvertASCIItoUCS2(kMozStr).get(), 
-                       sizeof(kMozStr)-1) == 0) {
+    if ((('_' == *sharedName) || ('-' == *sharedName)) &&
+        !nsCRT::strncmp(sharedName+1, kMozStr, kMozStrLength)) {
       continue;
     }
 
@@ -344,7 +345,8 @@ nsHTMLContentSerializer::SerializeAttributes(nsIContent* aContent,
     //
     if ((aTagName == nsHTMLAtoms::br) &&
         (attrName.get() == nsHTMLAtoms::type) &&
-        (valueStr.EqualsWithConversion(kMozStr, PR_FALSE, sizeof(kMozStr)-1))) {
+        !valueStr.IsEmpty() && ('_' == valueStr[0]) &&
+        !nsCRT::strncmp(valueStr.get()+1, kMozStr, kMozStrLength)) {
       continue;
     }
     
