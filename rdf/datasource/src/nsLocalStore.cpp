@@ -44,7 +44,7 @@
 
 #include "nsNetUtil.h"
 #include "nsIURI.h"
-#include "nsIIoService.h"
+#include "nsIIOService.h"
 #include "nsIFileSpec.h"
 #include "nsFileStream.h"
 #include "nsIComponentManager.h"
