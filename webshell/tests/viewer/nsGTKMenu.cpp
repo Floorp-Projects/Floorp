@@ -58,6 +58,7 @@ GtkItemFactoryEntry menu_items[] =
   { "/File/_Test Sites",		nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_TOP100,		nsnull },
   { "/File/XPToolkit Tests",		nsnull,	nsnull,			0,			"<Branch>" },
   { "/File/Test Widgets/Toolbar Test 1",       nsnull, (GIFC)gtk_ifactory_cb,  VIEWER_XPTOOLKITTOOLBAR1,     nsnull },
+  { "/File/Test Widgets/Tree Test 1",       nsnull, (GIFC)gtk_ifactory_cb,  VIEWER_XPTOOLKITTREE1,     nsnull },
   { "/File/sep1",			nsnull,	nsnull,			0,			"<Separator>" },
   { "/File/Print Preview",	nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_ONE_COLUMN,	nsnull },
   { "/File/Print",			nsnull,	(GIFC)gtk_ifactory_cb,	VIEWER_PRINT,		nsnull },
