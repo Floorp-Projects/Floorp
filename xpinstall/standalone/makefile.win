@@ -21,7 +21,7 @@ PROGRAM = .\$(OBJDIR)\xpinstall.exe
 
 OBJS =  \
 	.\$(OBJDIR)\standalone.obj \
-    .\$(OBJDIR)\nsSimpleConsoleProgressNotifier.obj \
+    .\$(OBJDIR)\nsSimpleNotifier.obj \
 	$(NULL)
 
 LLIBS =                        \

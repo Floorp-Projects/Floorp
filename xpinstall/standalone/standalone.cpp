@@ -27,7 +27,7 @@
 #include "nscore.h"
 #include "nspr.h"
 
-#include "nsSimpleConsoleProgressNotifier.h"
+#include "nsSimpleNotifier.h"
 
 /*********************************************
  SoftwareUpdate
@@ -99,7 +99,7 @@ main(int argc, char **argv)
     if (NS_SUCCEEDED(rv))
     {
 
-        nsSimpleConsoleProgressNotifier *progress = new nsSimpleConsoleProgressNotifier();
+        nsSimpleNotifier *progress = new nsSimpleNotifier();
 
         softwareUpdate->RegisterNotifier(progress);
 

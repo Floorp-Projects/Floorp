@@ -22,52 +22,52 @@
  *     Douglas Turner <dougt@netscape.com>
  */
 
-#include "nsIXPInstallProgressNotifier.h"
-#include "nsSimpleConsoleProgressNotifier.h"
+#include "nsIXPINotifier.h"
+#include "nsSimpleNotifier.h"
 
 #include <stdlib.h>
 #include <stdio.h>
 
 
-nsSimpleConsoleProgressNotifier::nsSimpleConsoleProgressNotifier()
+nsSimpleNotifier::nsSimpleNotifier()
 {}
 
-nsSimpleConsoleProgressNotifier::~nsSimpleConsoleProgressNotifier()
+nsSimpleNotifier::~nsSimpleNotifier()
 {}
 
-void
-nsSimpleConsoleProgressNotifier::BeforeJavascriptEvaluation(void)
+NS_IMETHODIMP
+nsSimpleNotifier::BeforeJavascriptEvaluation(void)
 {
     printf("Prior to evaluation of Install Script\n");
 }
 
-void
-nsSimpleConsoleProgressNotifier::AfterJavascriptEvaluation(void)
+NS_IMETHODIMP
+nsSimpleNotifier::AfterJavascriptEvaluation(void)
 {
     printf("After evaluation of Install Script\n");
 }
 
-void
-nsSimpleConsoleProgressNotifier::InstallStarted(const char* UIPackageName)
+NS_IMETHODIMP
+nsSimpleNotifier::InstallStarted(const char* UIPackageName)
 {
     printf("Installing: %s\n", UIPackageName);
 }
 
-long
-nsSimpleConsoleProgressNotifier::ItemScheduled(const char* message )
+NS_IMETHODIMP
+nsSimpleNotifier::ItemScheduled(const char* message )
 {
     printf("Scheduled Item:\t%s\n", message);
     return 0;
 }
 
-void
-nsSimpleConsoleProgressNotifier::InstallFinalization(const char* message, long itemNum, long totNum )
+NS_IMETHODIMP
+nsSimpleNotifier::InstallFinalization(const char* message, long itemNum, long totNum )
 {
     printf("Item: %s\t(%ld of %ld) Installed.\n", message, itemNum, totNum );
 }
 
-void
-nsSimpleConsoleProgressNotifier::InstallAborted(void)
+NS_IMETHODIMP
+nsSimpleNotifier::InstallAborted(void)
 {
     printf("Installation aborted.\n");
 }
