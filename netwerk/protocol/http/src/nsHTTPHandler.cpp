@@ -1312,8 +1312,8 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     else
         mCapabilities = 0;
 
-    PRInt32 cVar = 0;
-    rv = mPrefs->GetIntPref("network.http.keep-alive", &cVar);
+    PRBool cVar = PR_FALSE;
+    rv = mPrefs->GetBoolPref("network.http.keep-alive", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1322,8 +1322,8 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_KEEPALIVE;
     }
 
-    cVar = 0;
-    rv = mPrefs->GetIntPref("network.http.proxy.keep-alive", &cVar);
+    cVar = PR_FALSE;
+    rv = mPrefs->GetBoolPref("network.http.proxy.keep-alive", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1332,8 +1332,8 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_PROXY_KEEPALIVE;
     }
 
-    cVar = 0;
-    rv = mPrefs->GetIntPref("network.http.pipelining", &cVar);
+    cVar = PR_FALSE;
+    rv = mPrefs->GetBoolPref("network.http.pipelining", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1342,8 +1342,8 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_PIPELINING;
     }
 
-    cVar = 0;
-    rv = mPrefs->GetIntPref("network.http.proxy.pipelining", &cVar);
+    cVar = PR_FALSE;
+    rv = mPrefs->GetBoolPref("network.http.proxy.pipelining", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
