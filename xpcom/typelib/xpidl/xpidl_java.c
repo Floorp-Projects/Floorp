@@ -562,7 +562,6 @@ constant_declaration(TreeState *state)
     struct _IDL_CONST_DCL *declaration = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(declaration->ident).str;
     IDL_tree real_type;
-    const char *const_format;
 
     if (!verify_const_declaration(state->tree))
         return FALSE;
