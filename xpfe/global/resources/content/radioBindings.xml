@@ -14,7 +14,6 @@
     </interface>
     <handlers>
       <handler type="command">
-        dump("*** this.checked = " + this.checked + "\n");
         if( !this.checked ) this.checked = true;
       </handler>
     </handlers>
