@@ -422,7 +422,7 @@ NS_IMETHODIMP nsFontMetricsPh::GetFontHandle(nsFontHandle &aHandle)
 	return NS_OK;
 }
 
-nsresult nsFontMetricsPh::GetSpaceWidth(nscoord &aSpaceWidth)
+NS_IMETHODIMP nsFontMetricsPh::GetSpaceWidth(nscoord &aSpaceWidth)
 {
 	aSpaceWidth = mSpaceWidth;
 	return NS_OK;

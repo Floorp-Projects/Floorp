@@ -201,7 +201,7 @@ public:
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetAveCharWidth(nscoord &aAveCharWidth);
-  virtual nsresult   GetSpaceWidth(nscoord &aSpaceWidth);
+  NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
 
   virtual nsresult
   ResolveForwards(HDC                  aDC,

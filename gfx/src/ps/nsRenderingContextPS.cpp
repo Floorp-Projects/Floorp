@@ -1086,33 +1086,12 @@ nsRenderingContextPS :: GetTextDimensions(const PRUnichar* aString, PRUint32 aLe
   }
 }
 
-NS_IMETHODIMP
-nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   const nscoord* aSpacing)
-{
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   PRInt32 aFontID,
-                                   const nscoord* aSpacing)
-{
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: DrawString2(const char *aString, PRUint32 aLength,
+nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
                         nscoord aX, nscoord aY,
                         const nscoord* aSpacing)
 {
@@ -1165,7 +1144,7 @@ PRInt32       y = aY;
  *	@update 12/21/98 dwc
  */
 NS_IMETHODIMP 
-nsRenderingContextPS :: DrawString2(const PRUnichar *aString, PRUint32 aLength,
+nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing)
 {

@@ -912,8 +912,7 @@ NS_IMETHODIMP nsRenderingContextPh :: GetWidth( char ch, nscoord& aWidth )
 	// Check for the very common case of trying to get the width of a single
 	// space.
 	if(ch == ' ' && nsnull != mFontMetrics ) {
-		nsFontMetricsPh* fontMetricsPh = (nsFontMetricsPh*)mFontMetrics;
-		return fontMetricsPh->GetSpaceWidth(aWidth);
+		return mFontMetrics->GetSpaceWidth(aWidth);
 	}
 	return GetWidth( &ch, 1, aWidth );
 }
@@ -1028,47 +1027,6 @@ NS_IMETHODIMP nsRenderingContextPh::GetTextDimensions(const PRUnichar* aString, 
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh :: DrawString( const char *aString, PRUint32 aLength, nscoord aX, nscoord aY, const nscoord* aSpacing )
-{
-	
-	if ( aLength == 0 )
-		return NS_OK;
-
-	UpdateGC();
-	
-	PgSetFont( mPhotonFontName );
-
-	if( !aSpacing ) {
-		mTranMatrix->TransformCoord( &aX, &aY );
-		PhPoint_t pos = { aX, aY };
-		PgDrawTextChars( aString, aLength, &pos, Pg_TEXT_LEFT | Pg_TEXT_TOP );
-//		PgDrawTextChars( aString, aLength, &pos, Pg_TEXT_LEFT );
-		}
-	else {
-		nscoord x = aX;
-		nscoord y = aY;
-		const char* end = aString + aLength;
-		while( aString < end ) {
-			char ch = *aString++;
-			nscoord xx = x;
-			nscoord yy = y;
-			mTranMatrix->TransformCoord(&xx, &yy);
-			PhPoint_t pos = { xx, yy };
-			PgDrawText( &ch, 1, &pos, Pg_TEXT_LEFT | Pg_TEXT_TOP);
-//			PgDrawText( &ch, 1, &pos, Pg_TEXT_LEFT);
-			x += *aSpacing++;
-		}
-	}
-	return NS_OK;
-}
-
-NS_IMETHODIMP nsRenderingContextPh :: DrawString( const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) 
-{
-	NS_ConvertUCS2toUTF8 theUnicodeString( aString, aLength );
-	const char *p = theUnicodeString.get( );
-	return DrawString( p, strlen( p ), aX, aY, aSpacing );
-}
-
 NS_IMETHODIMP nsRenderingContextPh :: DrawString( const nsString& aString, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing ) 
 {
 	NS_ConvertUCS2toUTF8 theUnicodeString( aString.get(), aString.Length() );
@@ -1076,7 +1034,7 @@ NS_IMETHODIMP nsRenderingContextPh :: DrawString( const nsString& aString, nscoo
 	return DrawString( p, strlen( p ), aX, aY, aSpacing );
 }
 
-NS_IMETHODIMP nsRenderingContextPh::DrawString2(const char *aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextPh::DrawString(const char *aString, PRUint32 aLength,
 												nscoord aX, nscoord aY,
 												const nscoord* aSpacing)
 {
@@ -1109,14 +1067,14 @@ NS_IMETHODIMP nsRenderingContextPh::DrawString2(const char *aString, PRUint32 aL
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextPh::DrawString2(const PRUnichar* aString, PRUint32 aLength,
+NS_IMETHODIMP nsRenderingContextPh::DrawString(const PRUnichar* aString, PRUint32 aLength,
 												 nscoord aX, nscoord aY,
 												 PRInt32 aFontID,
 												const nscoord* aSpacing)
 {
 	NS_ConvertUCS2toUTF8 theUnicodeString( aString, aLength );
 	const char *p = theUnicodeString.get( );
-	return DrawString2( p, strlen( p ), aX, aY, aSpacing );
+	return DrawString( p, strlen( p ), aX, aY, aSpacing );
 }
 
 NS_IMETHODIMP nsRenderingContextPh::DrawImage( nsIImage *aImage, nscoord aX, nscoord aY ) 

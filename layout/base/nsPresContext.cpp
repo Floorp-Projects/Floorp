@@ -523,7 +523,7 @@ nsPresContext::GetUserPreferences()
 }
 
 NS_IMETHODIMP
-nsPresContext::GetCachedBoolPref(const PRUint32 aPrefType, PRBool& aValue)
+nsPresContext::GetCachedBoolPref(PRUint32 aPrefType, PRBool& aValue)
 {
   nsresult rv = NS_OK;
 
@@ -545,7 +545,7 @@ nsPresContext::GetCachedBoolPref(const PRUint32 aPrefType, PRBool& aValue)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetCachedIntPref(const PRUint32 aPrefType, PRInt32& aValue) 
+nsPresContext::GetCachedIntPref(PRUint32 aPrefType, PRInt32& aValue) 
 {
   nsresult rv = NS_OK;
   switch (aPrefType) {
@@ -988,7 +988,7 @@ nsPresContext::GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::GetDefaultFont(const PRUint8 aFontID, nsFont& aResult)
+nsPresContext::GetDefaultFont(PRUint8 aFontID, nsFont& aResult)
 {
   nsresult rv = NS_OK;
   switch (aFontID) {
@@ -1024,7 +1024,7 @@ nsPresContext::GetDefaultFont(const PRUint8 aFontID, nsFont& aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::SetDefaultFont(const PRUint8 aFontID, const nsFont& aFont)
+nsPresContext::SetDefaultFont(PRUint8 aFontID, const nsFont& aFont)
 {
   nsresult rv = NS_OK;
   switch (aFontID) {

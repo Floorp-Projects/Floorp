@@ -112,6 +112,7 @@ protected:
                         const nsString&      sStr,
                         const nsRect&        aRect,
                         nscoord              aHeight,
+                        nscoord              aAscent,
                         nscoord              aWidth);
 
   void DrawHeaderFooter(nsIRenderingContext& aRenderingContext,
@@ -122,6 +123,7 @@ protected:
                         const nsString&      aStr2,
                         const nsString&      aStr3,
                         const nsRect&        aRect,
+                        nscoord              aAscent,
                         nscoord              aHeight);
 
   void ProcessSpecialCodes(const nsString& aStr, nsString& aNewStr);

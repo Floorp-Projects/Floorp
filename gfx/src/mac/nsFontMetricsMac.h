@@ -83,7 +83,7 @@ public:
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
-  virtual nsresult  GetSpaceWidth(nscoord &aSpaceWidth);
+  NS_IMETHOD  GetSpaceWidth(nscoord& aSpaceCharWidth);
 	// fill a native TextStyle record with the font, size and style (not color)
 	static void 	GetNativeTextStyle(nsIFontMetrics& inMetrics,
 																		const nsIDeviceContext& inDevContext, TextStyle &outStyle);

@@ -161,13 +161,6 @@ public:
                                  nsTextDimensions& aDimensions);
     NS_IMETHOD GetTextDimensions(const PRUnichar *aString, PRUint32 aLength,
                                  nsTextDimensions& aDimensions, PRInt32 *aFontID);
-    NS_IMETHOD DrawString2(const char *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          const nscoord* aSpacing);
-    NS_IMETHOD DrawString2(const PRUnichar *aString, PRUint32 aLength,
-                          nscoord aX, nscoord aY,
-                          PRInt32 aFontID,
-                          const nscoord* aSpacing);
 
 #ifdef MOZ_MATHML
   /* Returns metrics (in app units) of an 8-bit character string */

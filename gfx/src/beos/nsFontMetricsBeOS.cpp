@@ -316,6 +316,13 @@ NS_IMETHODIMP  nsFontMetricsBeOS::GetMaxAdvance(nscoord &aAdvance)
   return NS_OK;
 }
 
+ 
+NS_IMETHODIMP  nsFontMetricsBeOS::GetSpaceWidth(nscoord &aSpaceWidth) 
+{ 
+  aSpaceWidth = mSpaceWidth; 
+  return NS_OK; 
+} 
+
 NS_IMETHODIMP  nsFontMetricsBeOS::GetFont(const nsFont*& aFont)
 {
   aFont = mFont;
@@ -377,13 +384,6 @@ nsFontMetricsBeOS::FamilyExists(const nsString& aName)
     return NS_OK; 
   else 
     return NS_ERROR_FAILURE; 
-} 
- 
-nsresult 
-nsFontMetricsBeOS::GetSpaceWidth(nscoord &aSpaceWidth) 
-{ 
-  aSpaceWidth = mSpaceWidth; 
-  return NS_OK; 
 } 
  
 // The Font Enumerator 

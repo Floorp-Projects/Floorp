@@ -1125,7 +1125,7 @@ nsresult nsFontMetricsOS2::RealizeFont()
   return NS_OK;
 }
 
-nsresult nsFontMetricsOS2::GetSpaceWidth(nscoord &aSpaceWidth)
+NS_IMETHODIMP nsFontMetricsOS2::GetSpaceWidth(nscoord &aSpaceWidth)
 {
   aSpaceWidth = mSpaceWidth;
   return NS_OK;

@@ -153,7 +153,7 @@ public:
   NS_IMETHOD  GetLangGroup(nsIAtom** aLangGroup);
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   
-  virtual nsresult GetSpaceWidth(nscoord &aSpaceWidth);
+  NS_IMETHOD  GetSpaceWidth(nscoord &aSpaceWidth);
 
   nsFontGTK*  FindFont(PRUnichar aChar);
   nsFontGTK*  FindUserDefinedFont(PRUnichar aChar);

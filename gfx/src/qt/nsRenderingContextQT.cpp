@@ -1201,7 +1201,7 @@ FoundFont:
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextQT::DrawString2(const char *aString,
+NS_IMETHODIMP nsRenderingContextQT::DrawString(const char *aString,
                                                PRUint32 aLength,
                                                nscoord aX, nscoord aY,
                                                const nscoord *aSpacing)
@@ -1241,28 +1241,7 @@ NS_IMETHODIMP nsRenderingContextQT::DrawString2(const char *aString,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsRenderingContextQT::DrawString(const char *aString, PRUint32 aLength,
-                                 nscoord aX, nscoord aY,
-                                 const nscoord* aSpacing)
-{
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aSpacing);
-}
-
-NS_IMETHODIMP
-nsRenderingContextQT::DrawString(const PRUnichar *aString, PRUint32 aLength,
-                                   nscoord aX, nscoord aY,
-                                   PRInt32 aFontID,
-                                   const nscoord* aSpacing)
-{
-  nscoord y;
-  mFontMetrics->GetMaxAscent(y);
-  return DrawString2(aString, aLength, aX, aY + y, aFontID, aSpacing);
-}
-
-NS_IMETHODIMP nsRenderingContextQT::DrawString2(const PRUnichar *aString,
+NS_IMETHODIMP nsRenderingContextQT::DrawString(const PRUnichar *aString,
                                                PRUint32 aLength,
                                                nscoord aX,nscoord aY,
                                                PRInt32 aFontID,

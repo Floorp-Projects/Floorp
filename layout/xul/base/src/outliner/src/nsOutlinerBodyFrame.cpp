@@ -2090,8 +2090,9 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
 
     nsCOMPtr<nsIFontMetrics> fontMet;
     deviceContext->GetMetricsFor(fontStyle->mFont, *getter_AddRefs(fontMet));
-    nscoord height;
+    nscoord height, baseline;
     fontMet->GetHeight(height);
+    fontMet->GetMaxAscent(baseline);
 
     // Center the text. XXX Obey vertical-align style prop?
     if (height < textRect.height) {
@@ -2181,7 +2182,7 @@ NS_IMETHODIMP nsOutlinerBodyFrame::PaintText(int aRowIndex,
     const nsStyleColor* colorStyle = (const nsStyleColor*)textContext->GetStyleData(eStyleStruct_Color);
     aRenderingContext.SetColor(colorStyle->mColor);
 
-    aRenderingContext.DrawString(realText, textRect.x, textRect.y);
+    aRenderingContext.DrawString(realText, textRect.x, textRect.y + baseline);
   }
 
   return NS_OK;
