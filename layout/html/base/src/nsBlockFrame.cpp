@@ -2474,6 +2474,9 @@ nsBlockFrame::ResizeReflow(nsBlockReflowState& aState)
 nsresult
 nsBlockFrame::ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine)
 {
+  // Inform line layout of where the text runs are
+  aState.mLineLayout.SetReflowTextRuns(mTextRuns);
+
   // Reflow the lines that are already ours
   while (nsnull != aLine) {
     nsReflowStatus rs;
@@ -3452,7 +3455,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
          ("nsBlockFrame::PlaceLine: clearing floaters=%d",
           breakType));
       aState.ClearFloaters(breakType);
-ListTag(stdout); printf(": clearing %x\n", breakType);
       break;
     }
     // XXX page breaks, etc, need to be passed upwards too!
