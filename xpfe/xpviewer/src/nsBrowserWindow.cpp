@@ -1444,6 +1444,23 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 {
   nsresult rv;
 
+  nscoord txtHeight     = 24;
+  nscolor textBGColor   = NS_RGB(0, 0, 0);
+  nscolor textFGColor   = NS_RGB(255, 255, 255);
+  nscolor windowBGColor = NS_RGB(192, 192, 192);
+  nscolor widgetBGColor = NS_RGB(192, 192, 192);
+
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_TextBackground,    textBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  windowBGColor);
+    NS_RELEASE(lookAndFeel);
+  }
+
+
+
   PRInt32 imageWidth  = 23;
   PRInt32 imageHeight = 21;
 
@@ -1469,7 +1486,9 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     return rv;
   }
 	toolbarMgrWidget->Create(mWindow, rr, HandleToolbarMgrEvent, NULL);
+	toolbarMgrWidget->SetBackgroundColor(windowBGColor);
 	toolbarMgrWidget->Show(PR_TRUE);
+
   mToolbarMgr->AddToolbarListener(this);
   mToolbarMgr->SetCollapseTabURLs("resource:/res/toolbar/TB_Tab.gif", "resource:/res/toolbar/TB_Tab.gif", "resource:/res/toolbar/TB_Tab.gif", "resource:/res/toolbar/TB_Tab_mo.gif");
   mToolbarMgr->SetExpandTabURLs("resource:/res/toolbar/TB_HTab.gif", "resource:/res/toolbar/TB_HTab.gif", "resource:/res/toolbar/TB_HTab.gif", "resource:/res/toolbar/TB_HTab_mo.gif");
@@ -1492,6 +1511,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   mBtnToolbar->SetHGap(2);
 
 	toolbarWidget->Create(toolbarMgrWidget, rrr, HandleToolbarEvent, NULL);
+	toolbarWidget->SetBackgroundColor(windowBGColor);
 	toolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(mBtnToolbar);
 
@@ -1532,6 +1552,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     btn->SetCommand(gBtnToolbarInfo[i].mCommand);
     btn->SetRollOverDesc(gBtnToolbarInfo[i].mRollOverDesc);
     btn->AddListener(this);
+	  widget->SetBackgroundColor(widgetBGColor);
     widget->GetPreferredSize(width, height);
     widget->SetPreferredSize(54, height);
     widget->Resize(0,0, 54, height,PR_FALSE);
@@ -1586,6 +1607,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   mURLToolbar->SetHGap(2);
 
 	urlToolbarWidget->Create(toolbarMgrWidget, rr, HandleToolbarEvent, NULL);
+	urlToolbarWidget->SetBackgroundColor(windowBGColor);
 	urlToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(mURLToolbar);
 
@@ -1605,6 +1627,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
                       "TB_Bookmarks.gif", "TB_Bookmarks.gif", "TB_Bookmarks.gif", "TB_Bookmarks_mo.gif",
                       30, 18)) {
     AddToolbarItem(mURLToolbar, 10, PR_TRUE, mBookmarksWidget);
+	  mBookmarksWidget->SetBackgroundColor(widgetBGColor);
     mBookmarks->SetCommand(kBookmarksCmd);
     mBookmarks->SetRollOverDesc("Bookmarks functions");
     mBookmarks->AddListener(this);
@@ -1622,6 +1645,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
                       "TB_Location.gif", "TB_Location.gif", "TB_Location.gif", "TB_Location_mo.gif",
                       16, 16)) {
     AddToolbarItem(mURLToolbar, 10, PR_TRUE, mLocationIconWidget);
+	  mLocationIconWidget->SetBackgroundColor(widgetBGColor);
     mLocationIcon->SetRollOverDesc("Drag this location to Bookmarks");
     mLocationIcon->SetImageVerticalAlignment(eButtonVerticalAligment_Center);
     mLocationIcon->SetImageHorizontalAlignment(eButtonHorizontalAligment_Middle);
@@ -1634,6 +1658,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
                       r, nsnull, &font, "", "", "", "", "", 0, 0)) {
 
     AddToolbarItem(mURLToolbar, 1, PR_TRUE, widget);
+	  widget->SetBackgroundColor(widgetBGColor);
     locationLabel->SetShowImage(PR_FALSE);
     locationLabel->SetShowBorder(PR_FALSE);
     locationLabel->SetTextVerticalAlignment(eButtonVerticalAligment_Center);
@@ -1668,8 +1693,9 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
 
     AddToolbarItem(mURLToolbar, 2, PR_TRUE, mLocationWidget);
 
-    mLocationWidget->SetForegroundColor(NS_RGB(0, 0, 0));
-    mLocationWidget->SetBackgroundColor(NS_RGB(255, 255, 255));
+    mLocationWidget->SetPreferredSize(100, txtHeight);
+    mLocationWidget->SetForegroundColor(textFGColor);
+    mLocationWidget->SetBackgroundColor(textBGColor);
     mLocationWidget->Show(PR_TRUE);
     PRUint32 size;
     mLocation->SetText("",size);
@@ -1682,6 +1708,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
                       "TB_WhatsRelated.gif", "TB_WhatsRelated.gif", "TB_WhatsRelated.gif", "TB_WhatsRelated_mo.gif",
                       27, 16)) {
     AddToolbarItem(mURLToolbar, 2, PR_TRUE, mWhatsRelatedWidget);
+	  mWhatsRelatedWidget->SetBackgroundColor(widgetBGColor);
     mWhatsRelated->SetCommand(kWhatsRelatedCmd);
     mWhatsRelated->SetRollOverDesc("View the \"What's Related\" list");
     mWhatsRelated->AddListener(this);
@@ -1715,6 +1742,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   personalToolbar->SetWrapping(PR_TRUE);
 
 	personalToolbarWidget->Create(toolbarMgrWidget, rrr, HandleToolbarEvent, NULL);
+	personalToolbarWidget->SetBackgroundColor(windowBGColor);
 	personalToolbarWidget->Show(PR_TRUE);
   mToolbarMgr->AddToolbar(personalToolbar);
 
@@ -1751,6 +1779,7 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     btn->AddListener(this);
 
     PRInt32 width, height;
+	  widget->SetBackgroundColor(widgetBGColor);
     widget->GetPreferredSize(width, height);
     widget->SetPreferredSize(width, height);
     widget->Resize(0, 0, width, height, PR_FALSE);
@@ -1773,6 +1802,15 @@ nsresult
 nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
 {
   nsresult rv;
+  nscolor windowBGColor = NS_RGB(192, 192, 192);
+  nscolor widgetBGColor = NS_RGB(192, 192, 192);
+
+  nsILookAndFeel * lookAndFeel;
+  if (NS_OK == nsRepository::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  widgetBGColor);
+    lookAndFeel->GetColor(nsILookAndFeel::eColor_WindowBackground,  windowBGColor);
+    NS_RELEASE(lookAndFeel);
+  }
 
   nsIDeviceContext* dc = mWindow->GetDeviceContext();
   float t2d;
@@ -1800,7 +1838,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   mStatusBar->SetHGap(2);
 
 	statusWidget->Create(mWindow, rrr, HandleToolbarEvent, NULL);
-	statusWidget->Show(PR_TRUE);
+	statusWidget->SetBackgroundColor(windowBGColor);
 	statusWidget->Show(PR_TRUE);
 
   nsRect r(0, 0, 18, 16); 
@@ -1825,6 +1863,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
     mStatusSecurityLabel->SetBorderWidth(0);
     mStatusSecurityLabel->SetBorderOffset(0);
     mStatusSecurityLabel->SetImageVerticalAlignment(eButtonVerticalAligment_Center);
+	  widget->SetBackgroundColor(widgetBGColor);
     NS_RELEASE(widget);
   }
 
@@ -1841,6 +1880,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
     mStatusProcess->SetShowText(PR_TRUE);
     mStatusProcess->SetShowImage(PR_FALSE);
     mStatusProcess->SetBorderOffset(0);
+	  widget->SetBackgroundColor(widgetBGColor);
     widget->SetPreferredSize(96, 16); 
     NS_RELEASE(widget);
   }
@@ -1859,6 +1899,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
     mStatusText->SetShowText(PR_TRUE);
     mStatusText->SetShowImage(PR_FALSE);
     mStatusText->SetTextHorizontalAlignment(eButtonHorizontalAligment_Left);
+	  widget->SetBackgroundColor(widgetBGColor);
     NS_RELEASE(widget);
   }
 
@@ -1880,6 +1921,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   mStatusAppBar->SetDrawFullBorder(PR_TRUE);
 
 	mStatusAppBarWidget->Create(statusWidget, rrr, HandleToolbarEvent, NULL);
+	mStatusAppBarWidget->SetBackgroundColor(windowBGColor);
 	mStatusAppBarWidget->Show(PR_TRUE);
 
   mStatusAppBarWidget->SetClientData(this);
@@ -1927,6 +1969,7 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
     btn->SetCommand(gMiniAppsToolbarInfo[i].mCommand);
     btn->SetRollOverDesc(gMiniAppsToolbarInfo[i].mRollOverDesc);
     btn->AddListener(this);
+	  widget->SetBackgroundColor(widgetBGColor);
     if (i == 0) {
       btn->SetAlwaysShowBorder(PR_TRUE);
     }
@@ -2477,6 +2520,10 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
                                PRInt32 status,
                                const nsString& aMsg)
 {
+  if (mThrobber) {
+    mThrobber->Stop();
+  }
+
   mToolbarBtns[gStopBtnInx]->Enable(PR_FALSE);
   mToolbarBtns[gStopBtnInx]->Invalidate(PR_TRUE);
 
