@@ -1615,7 +1615,7 @@ SECOID_FindOID(SECItem *oid)
     if ( ret == NULL ) {
 	ret  = secoid_FindDynamic(oid);
 	if (ret == NULL) {
-	    PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+	    PORT_SetError(SEC_ERROR_UNRECOGNIZED_OID);
 	}
     }
 
