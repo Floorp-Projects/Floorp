@@ -989,6 +989,8 @@ option {
   display:block;
   padding-left:3px;
   padding-right:3px;
+  font-family: sans-serif;
+  font-size: small;
 }
 
 select[disabled] option {
