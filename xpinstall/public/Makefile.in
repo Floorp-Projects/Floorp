@@ -31,12 +31,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = xpinstall
 
+XPIDLSRCS = nsIXPInstallProgress.idl
+
 EXPORTS =		             \
         nsIDOMInstallTriggerGlobal.h \
         nsIDOMInstallVersion.h       \
         nsSoftwareUpdateIIDs.h       \
         nsISoftwareUpdate.h          \
-        nsIXPInstallProgressNotifier.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

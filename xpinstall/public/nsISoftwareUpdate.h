@@ -30,7 +30,7 @@
 #include "nsIFactory.h"
 #include "nsString.h"
 
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIXPInstallProgress.h"
 
 #define NS_IXPINSTALLCOMPONENT_PROGID NS_IAPPSHELLCOMPONENT_PROGID "/xpinstall"
 #define NS_IXPINSTALLCOMPONENT_CLASSNAME "Mozilla XPInstall Component"
@@ -53,13 +53,13 @@ class nsISoftwareUpdate : public nsISupports
                                   const nsString& localFile,
                                   long  flags) = 0; 
             
-            NS_IMETHOD RegisterNotifier(nsIXPInstallProgressNotifier *notifier) = 0;
+            NS_IMETHOD RegisterNotifier(nsIXPInstallProgress *notifier) = 0;
             
             NS_IMETHOD InstallPending(void) = 0;
 
             /* FIX: these should be in a private interface */
             NS_IMETHOD InstallJarCallBack()                   = 0; 
-            NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier) = 0;
+            NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgress **notifier) = 0;
 };
 
 

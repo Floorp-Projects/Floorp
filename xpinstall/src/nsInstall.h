@@ -44,7 +44,7 @@
 #include "nsInstallObject.h"
 #include "nsInstallVersion.h"
 
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIXPInstallProgress.h"
 
 
 class nsInstallInfo
@@ -235,7 +235,7 @@ class nsInstall
         nsVector*           mInstalledFiles;        
         nsHashtable*        mPatchList;
         
-        nsIXPInstallProgressNotifier *mNotifier;
+        nsIXPInstallProgress *mNotifier;
         
         PRInt32             mLastError;
 

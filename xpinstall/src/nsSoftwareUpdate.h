@@ -15,7 +15,7 @@ class nsInstallInfo;
 
 #include "nsIScriptExternalNameSet.h"
 #include "nsIAppShellComponent.h"
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIXPInstallProgress.h"
 #include "nsTopProgressNotifier.h"
 
 class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
@@ -34,12 +34,12 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
                               const nsString& localFile, 
                               long flags);  
 
-        NS_IMETHOD RegisterNotifier(nsIXPInstallProgressNotifier *notifier);
+        NS_IMETHOD RegisterNotifier(nsIXPInstallProgress *notifier);
         
         NS_IMETHOD InstallPending(void);
 
         NS_IMETHOD InstallJarCallBack();
-        NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgressNotifier **notifier);
+        NS_IMETHOD GetTopLevelNotifier(nsIXPInstallProgress **notifier);
 
 
     private:

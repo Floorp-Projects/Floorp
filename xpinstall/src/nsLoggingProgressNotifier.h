@@ -27,23 +27,25 @@
 #ifndef nsLoggingProgressNotifier_H__
 #define nsLoggingProgressNotifier_H__
 
-#include "nsIXPInstallProgressNotifier.h"
+#include "nsIXPInstallProgress.h"
 #include "nsFileStream.h"
 
 
-class nsLoggingProgressNotifier : public nsIXPInstallProgressNotifier
+class nsLoggingProgressNotifier : public nsIXPInstallProgress
 {
     public:
         
         nsLoggingProgressNotifier();
         virtual ~nsLoggingProgressNotifier();
-                
-        void BeforeJavascriptEvaluation(void);
-        void AfterJavascriptEvaluation(void);
-        void InstallStarted(const char* UIPackageName);
-        long ItemScheduled(const char* message );
-        void InstallFinalization(const char* message, long itemNum, long totNum );
-        void InstallAborted(void);
+        
+        NS_DECL_ISUPPORTS
+
+        NS_IMETHOD BeforeJavascriptEvaluation();
+        NS_IMETHOD AfterJavascriptEvaluation();
+        NS_IMETHOD InstallStarted(const char* UIPackageName);
+        NS_IMETHOD ItemScheduled(const char* message );
+        NS_IMETHOD InstallFinalization(const char* message, PRInt32 itemNum, PRInt32 totNum );
+        NS_IMETHOD InstallAborted();
    
      private:
         void GetTime(char** aString);

@@ -153,6 +153,8 @@ nsInstallTrigger::UpdateEnabled(PRBool* aReturn)
         *aReturn = PR_FALSE;  /* no prefs manager.  set to false */
     }
     
+    //FIX!!!!!!!!!!  
+    *aReturn = PR_TRUE; 
     return NS_OK;
 }
 
@@ -254,14 +256,14 @@ nsInstallTrigger::CreateTempFileFromURL(const nsString& aURL, nsString& tempFile
     {
         nsSpecialSystemDirectory tempFile(nsSpecialSystemDirectory::OS_TemporaryDirectory);
     
-        PRInt32 result = aURL.RFind('/');
+        PRInt32 result = aURL.RFind("/");
         if (result != -1)
         {    
             nsString jarName;
                        
             aURL.Right(jarName, (aURL.Length() - result) );
             
-            PRInt32 argOffset = jarName.RFind('?');
+            PRInt32 argOffset = jarName.RFind("?");
 
             if (argOffset != -1)
             {
