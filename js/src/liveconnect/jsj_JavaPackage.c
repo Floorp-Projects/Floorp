@@ -165,8 +165,10 @@ JavaPackage_resolve(JSContext *cx, JSObject *obj, jsval id)
     }
 
     jsj_env = jsj_EnterJava(cx, &jEnv);
-    if (!jEnv)
-        return JS_FALSE;
+    if (!jEnv) {
+        ok = JS_FALSE;
+        goto out;
+    }
 
     /*
         Unfortunately, Java provides no way to find out whether a particular
