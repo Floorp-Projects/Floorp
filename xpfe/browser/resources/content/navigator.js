@@ -317,9 +317,7 @@ function Startup()
                                            .createInstance(Components.interfaces.nsISHistory);
 
   // hook up UI through progress listener
-  var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-  var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-  webProgress.addProgressListener(window.XULBrowserWindow);
+  getBrowser().addProgressListener(window.XULBrowserWindow);
 
   // XXXjag see bug 68662 (needed to hook up web progress listener)
   getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", window.XULBrowserWindow);
@@ -740,6 +738,15 @@ function BrowserOpenWindow()
 {
   //opens a window where users can select a web location to open
   openDialog("chrome://communicator/content/openLocation.xul", "_blank", "chrome,modal,titlebar", window);
+}
+
+function BrowserOpenTab()
+{
+  var handler = Components.classes['@mozilla.org/commandlinehandler/general-startup;1?type=browser'];
+  handler = handler.getService();
+  handler = handler.QueryInterface(Components.interfaces.nsICmdLineHandler);
+  var startpage = handler.defaultArgs;
+  gBrowser.selectedTab = gBrowser.addTab(startpage);
 }
 
 /* Called from the openLocation dialog. This allows that dialog to instruct
