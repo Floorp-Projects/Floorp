@@ -109,6 +109,8 @@ localDefPref("browser.addressbook_location",    "");
 localDefPref("browser.socksfile_location",      "");
 localDefPref("browser.ldapfile_location",       "");
 
+pref("browser.history.last_page_visited", "");
+
 pref("browser.url_history.URL_1", "");
 pref("browser.url_history.URL_2", "");
 pref("browser.url_history.URL_3", "");
