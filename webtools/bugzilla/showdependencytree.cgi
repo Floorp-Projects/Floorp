@@ -283,24 +283,40 @@ sub drawDepForm {
     <td bgcolor="$bgcolor">
 
     <!-- depth section -->
-    Depth:
+    Max Depth:
     
+    </td>
+    <td bgcolor="$bgcolor">
+
     </td>
     <td bgcolor="$bgcolor">
     <form method="get" action="$scriptname" 
         style="display: inline; margin: 0px;">
     
-    <!-- Unlimited button -->
+    <!-- set to one form -->
+    <input type="submit" value="&nbsp;1&nbsp;" | 
+        . ( $realdepth < 2 || $maxdepth == 1 ? "disabled" : "" ) . qq|>
     <input name="id" type="hidden" value="$id">
+    <input name="maxdepth" type="hidden" value="1">
     <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    <input type="submit" value="&nbsp;Unlimited&nbsp;">
-
     </form>
     </td>
     <td bgcolor="$bgcolor">
+    <form method="get" action="$scriptname" 
+        style="display: inline; margin: 0px;">
 
-    Limit to:
-    
+    <!-- Minus one form  
+         Allow subtracting only when realdepth and maxdepth > 1 -->
+    <input name="id" type="hidden" value="$id">
+    <input name="maxdepth" type="hidden" value="| 
+        .  ( $maxdepth == 1 ? 1 : ( $maxdepth ? 
+            $maxdepth-1 : $realdepth-1 ) ) . qq|">
+    <input name="hide_resolved" type="hidden" value="$hide_resolved">
+    <input type="submit" value="&nbsp;&lt;&nbsp;" | 
+        . ( $realdepth < 2 || ( $maxdepth && $maxdepth < 2 ) ?
+            "disabled" : "" ) . qq|>
+
+    </form>
     </td>
     <td bgcolor="$bgcolor">
     <form method="get" action="$scriptname" 
@@ -313,25 +329,10 @@ sub drawDepForm {
     <input name="id" type="hidden" value="$id">
     <input name="hide_resolved" type="hidden"
         value="$hide_resolved">
+    <noscript>
     <input type="submit" value="Change" | 
         . ( $realdepth < 2 ? "disabled" : "" ) . qq|>
-
-    </form>
-    </td>
-    <td bgcolor="$bgcolor">
-    <form method="get" action="$scriptname" 
-        style="display: inline; margin: 0px;">
-
-    <!-- Minus one (-1) form  
-         Allow subtracting only when realdepth and maxdepth > 1 -->
-    <input name="id" type="hidden" value="$id">
-    <input name="maxdepth" type="hidden" value="| 
-        .  ( $maxdepth == 1 ? 1 : ( $maxdepth ? 
-            $maxdepth-1 : $realdepth-1 ) ) . qq|">
-    <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    <input type="submit" value="&nbsp;-1&nbsp;" | 
-        . ( $realdepth < 2 || ( $maxdepth && $maxdepth < 2 ) ?
-            "disabled" : "" ) . qq|>
+    </noscript>
 
     </form>
     </td>
@@ -339,14 +340,14 @@ sub drawDepForm {
     <form method="get" action="$scriptname" 
         style="display: inline; margin: 0px;">
     
-    <!-- plus one form +1 
+    <!-- plus one form 
         Disable button if total depth < 2, or if depth set to unlimited -->
     <input name="id" type="hidden" value="$id">
     | . ( $maxdepth ? qq|
     <input name="maxdepth" type="hidden" value="|.($maxdepth+1).qq|">| : "" ) 
     . qq| 
     <input name="hide_resolved" type="hidden" value="$hide_resolved">
-    <input type="submit" value="&nbsp;+1&nbsp;" | 
+    <input type="submit" value="&nbsp;&gt;&nbsp;" | 
         .  ( $realdepth < 2 || ! $maxdepth || $maxdepth >= $realdepth ?
             "disabled" : "" ) . qq|>
 
@@ -356,12 +357,11 @@ sub drawDepForm {
     <form method="get" action="$scriptname" 
         style="display: inline; margin: 0px;">
     
-    <!-- set to one form -->
-    <input type="submit" value="Set to 1" | 
-        . ( $realdepth < 2 || $maxdepth == 1 ? "disabled" : "" ) . qq|>
+    <!-- Unlimited button -->
     <input name="id" type="hidden" value="$id">
-    <input name="maxdepth" type="hidden" value="1">
     <input name="hide_resolved" type="hidden" value="$hide_resolved">
+    <input type="submit" value="&nbsp;Unlimited&nbsp;">
+
     </form>
     </td>
     </tr></table>
