@@ -1,3 +1,4 @@
 inspector.jar:
 +  content/inspector/contents.rdf                                      (content/contents.rdf)
 +  content/inspector/tasksOverlay.xul                                  (content/tasksOverlay.xul)
++  locale/en-US/inspector/tasksOverlay.dtd                             (locale/tasksOverlay.dtd)

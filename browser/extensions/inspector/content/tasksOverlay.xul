@@ -12,13 +12,13 @@
     <command id="Tasks:InspectPage" oncommand="inspectDOMDocument(_content.document);"/>
   </commandset>
 
-  <keyset id="tasksKeys">
-    <key id="key_inspectPage" key="i" modifiers="accel,shift" command="Tasks:InspectPage"/>
+  <keyset id="mainKeyset">
+    <key id="key_inspectPage" key="&inspectorTaskCmd.commandkey;" modifiers="accel,shift" command="Tasks:InspectPage"/>
   </keyset>
-  
+
   <menupopup id="menu_ToolsPopup">
-    <menuitem id="menu_inspector" label="&inspectorTaskCmd.label;"  
-              insertafter="javascriptConsole" 
+    <menuitem id="menu_inspector" label="&inspectorTaskCmd.label;"
+              insertafter="javascriptConsole"
               accesskey="&inspectorTaskCmd.accesskey;" command="Tasks:InspectPage"/>
   </menupopup>
 
