@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *     Jerry.Kirk@Nexwarecorp.com
+ *	   Dale.Stansberry@Nexwarecorop.com
  */
 
 #include "nsPhWidgetLog.h"
@@ -262,7 +264,8 @@ the PtRealizeWidget functions */
       err=PtRealizeWidget(mWidget);
       if (err == -1)
 	  {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p>\n", this));
+        PtWidget_t *parent = PtWidgetParent(mWidget);
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Show Failed to Realize this=<%p> mWidget=<%p> mWidget->Parent=<%p> parent->IsRealized=<%d> \n", this, mWidget,parent, PtWidgetIsRealized(parent)));
       }
 
       EnableDamage( mWidget, PR_TRUE );
@@ -1082,7 +1085,7 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsWidgetInitData *aInitData,
                                 nsNativeWidget aNativeParent)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d> aRect=<%d,%d,%d,%d>\n", this, mRefCnt, aRect.x, aRect.y, aRect.width, aRect.height));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d> aRect=<%d,%d,%d,%d> aContext=<%p>\n", this, mRefCnt, aRect.x, aRect.y, aRect.width, aRect.height, aContext));
 
   if (aParent)
   {
@@ -1111,8 +1114,8 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   NS_IF_ADDREF(mParent);
 
 
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after BaseCreate  mRefCnt=<%d> mBounds=<%d,%d,%d,%d>\n", 
-    mRefCnt, mBounds.x, mBounds.y, mBounds.width, mBounds.height));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget after BaseCreate  mRefCnt=<%d> mBounds=<%d,%d,%d,%d> mContext=<%p>\n", 
+    mRefCnt, mBounds.x, mBounds.y, mBounds.width, mBounds.height, mContext));
 
 
   if( aNativeParent )

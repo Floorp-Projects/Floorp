@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -18,6 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *     Jerry.Kirk@Nexwarecorp.com
+ *	   Dale.Stansberry@Nexwarecorop.com
  */
 
 #include "nsPhWidgetLog.h"
@@ -882,7 +884,7 @@ void nsWindow::RawDrawFunc( PtWidget_t * pWidget, PhTile_t * damage )
   nsWindow * pWin = (nsWindow*) GetInstance( pWidget );
   nsresult   result;
   
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for %p %p\n", pWidget,pWin ));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc for mWidget=<%p> this=<%p>\n", pWidget,pWin ));
   //printf("nsWindow::RawDrawFunc for %p mWidget=<%p>\n", pWidget,pWin);
   
   if ( !pWin )
@@ -970,18 +972,19 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc damage rect + offset <%d,
     if( rect.lr.x >= area.size.w ) rect.lr.x = area.size.w - 1;
     if( rect.lr.y >= area.size.h ) rect.lr.y = area.size.h - 1;
 
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc clipped damage <%d,%d,%d,%d>\n", rect.ul.x,rect.ul.y,rect.lr.x,rect.lr.y));
 
     nsDmg.x = rect.ul.x;
     nsDmg.y = rect.ul.y;
     nsDmg.width = rect.lr.x - rect.ul.x + 1;
     nsDmg.height = rect.lr.y - rect.ul.y + 1;
 
-PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
-//printf("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
+    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height));
 
-    if(( nsDmg.width <= 0 ) || ( nsDmg.height <= 0 ))
+    if ( (nsDmg.width <= 0 ) || (nsDmg.height <= 0 ) )
+    {
       return;
+    }
 
     nsPaintEvent pev;
     pWin->InitEvent(pev, NS_PAINT);
@@ -989,7 +992,6 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", n
     pev.rect = &nsDmg;
     pev.eventStructType = NS_PAINT_EVENT;
 
-#if 1
 	pev.point.x = nsDmg.x;
 	pev.point.y = nsDmg.y;
 
@@ -998,47 +1000,35 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc nsDmg <%d,%d,%d,%d>\n", n
 
     pev.rect = new nsRect(nsDmg.x, nsDmg.y, nsDmg.width, nsDmg.height);
 
-  // call the event callback
-  if (pWin->mEventCallback) 
-  {
-    pev.renderingContext = nsnull;
-    pev.renderingContext = pWin->GetRenderingContext();
-    if (pev.renderingContext)
+    // call the event callback
+    if (pWin->mEventCallback) 
     {
-      if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
+      pev.renderingContext = nsnull;
+      pev.renderingContext = pWin->GetRenderingContext();
+      if (pev.renderingContext)
       {
+#if 0
+        if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
+        {
+          PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
+          result = pWin->DispatchWindowEvent(&pev);
+        }
+ 	    else
+	    {
+           printf("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw\n");
+           PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw this=<%p>\n", pWin));
+	    }
+#else
+        PhRect_t r = {nsDmg.x, nsDmg.y, nsDmg.x+nsDmg.width-1, 
+		  nsDmg.y+nsDmg.height-1};
+		  
+        PgSetClipping( 1, &r );
         PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
-        //printf ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height );
         result = pWin->DispatchWindowEvent(&pev);
-        //printf ("kedl: dpe result: %d\n",result);
+#endif	  
+	    NS_RELEASE(pev.renderingContext);
       }
-	  else
-	  {
-         printf("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw\n");
-         PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWindow::RawDrawFunc SetWindowClipping resulted in nothing to draw this=<%p>\n", pWin));
-	  }
-	  
-	  NS_RELEASE(pev.renderingContext);
     }
-  }
-#endif
-
-#if 0	
-
-    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kRenderingContextIID, (void **)&pev.renderingContext))
-    {
-      pev.renderingContext->Init( pWin->mContext, pWin );
-
-      if( pWin->SetWindowClipping( damage, offset ) == NS_OK )
-      {
-        PR_LOG(PhWidLog, PR_LOG_DEBUG, ( "Dispatching paint event (area=%ld,%ld,%ld,%ld).\n",nsDmg.x,nsDmg.y,nsDmg.width,nsDmg.height ));
-        pWin->DispatchWindowEvent(&pev);
-      }
-
-      //Kirk took this out  look at OnDrawSignal in GTK
-      NS_RELEASE(pev.renderingContext);
-    }
-#endif
   }
   else
   {
@@ -1277,19 +1267,31 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
   if( dmg )
   {
     rects = PhTilesToRects( dmg, &rect_count );
+#if 1
     PgSetClipping( rect_count, rects );
+#else
+    //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  damage clipped to:\n"));
+    //printf("  damage clipped to:\n");
 
 
-//    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  damage clipped to:\n"));
-//    printf("  damage clipped to:\n");
+    int bX=0, bY=0;
+    int aX=32767, aY=32767;
 
-    int i;
-    for(i=0;i<rect_count;i++)
+    for(int i=0;i<rect_count;i++)
 	{
 	  //PR_LOG(PhWidLog, PR_LOG_DEBUG, ("    (%i,%i,%i,%i)\n", rects[i].ul.x, rects[i].ul.y, rects[i].lr.x, rects[i].lr.y));
       //printf("    (%i,%i,%i,%i)\n", rects[i].ul.x, rects[i].ul.y, rects[i].lr.x, rects[i].lr.y);
+
+      aX = min(aX, rects[i].ul.x);
+      aY = min(aY, rects[i].ul.y);
+      bX = max(bX, rects[i].lr.x);
+      bY = max(bY, rects[i].lr.y);	 
 	}
-	
+
+   PhRect_t r = {aX, aY, bX, bY}; 
+   PgSetClipping( 1, &r );
+
+#endif
     free( rects );
     PhFreeTiles( dmg );
     res = NS_OK;
