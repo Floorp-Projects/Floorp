@@ -2,11 +2,11 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="DOMDataSourceViewer.css" type="text/css"?>
 
+<!DOCTYPE window>
 <window
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns:html="http://www.w3.org/TR/REC-html40"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-  style="width: 100%; height: 100%">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:div flex="100%">
 <tree style="height:100%"
@@ -16,26 +16,31 @@
   <template>
     <rule>
       <treechildren>
-        <treeitem uri="...">
+        <treeitem uri="..."
+          Type="rdf:http://home.netscape.com/NC-rdf#Type">
           <treerow>
-            <treecell ident="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
             <treecell value="rdf:http://home.netscape.com/NC-rdf#Value"/>
             <treecell value="rdf:http://home.netscape.com/NC-rdf#Type"/>
           </treerow>
         </treeitem>
       </treechildren>
     </rule>
-    <treeitem uri="NC:DOMRoot"/>
+  <treechildren>
+    <treeitem   id="NC:DOMRoot"/>
+  </treechildren>
   </template>
 
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
-  <treecol id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
-  <treecol id="TypeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Type"/>
+  <treecol style="width: 40%" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecol style="width: 50%" id="ValueColumn" rdf:resource="http://home.netscape.com/NC-rdf#Value"/>
+  <treecol style="width: 10%" id="TypeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Type"/>
   <treehead>
-    <treecell value="Name"/>
-    <treecell value="Value"/>
-    <treecell value="Type"/>
+    <treerow>
+      <treecell value="Name"/>
+      <treecell value="Value"/>
+      <treecell value="Type"/>
+    </treerow>
   </treehead>
 </tree>
-
+</html:div>
 </window>
