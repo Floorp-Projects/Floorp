@@ -280,6 +280,9 @@ nsPropertiesDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
       }
     }
   }
+
+  // Trigger dialog startup code.
+  setAttribute( aWebShell, "dialog.start", "ready", "true" );
   
   return rv;
 }

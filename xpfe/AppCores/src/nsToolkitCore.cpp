@@ -268,6 +268,8 @@ NS_IMETHODIMP
 nsArgCallbacks::ConstructBeforeJavaScript( nsIWebShell *aWebShell ) {
     nsresult rv = NS_OK;
     setAttribute( aWebShell, "args", "value", mArgs );
+    // Trigger dialog arg handling.
+    setAttribute( aWebShell, "dialog.start", "ready", "true" );
     return rv;
 }
 

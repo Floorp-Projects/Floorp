@@ -728,10 +728,6 @@ static nsresult setAttribute( nsIWebShell *shell,
             if ( elem ) {
                 // Set the text attribute.
                 rv = elem->SetAttribute( name, value );
-                if ( APP_DEBUG ) {
-                    char *p = value.ToNewCString();
-                    delete [] p;
-                }
                 if ( rv != NS_OK ) {
                      if (APP_DEBUG) printf("SetAttribute failed, rv=0x%X\n",(int)rv);
                 }
@@ -927,7 +923,6 @@ nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader,
   const char *urlString = 0;
   aURL->GetSpec( &urlString );
   return rv;
-   return NS_OK;
 }
 
 
@@ -935,7 +930,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIURL* aURL, nsString& aMsg)
 {
-  nsresult rv = setAttribute( mWebShell, "Browser:Status", "text", aMsg );
+  nsresult rv = setAttribute( mWebShell, "Browser:Status", "value", aMsg );
    return rv;
 }
 

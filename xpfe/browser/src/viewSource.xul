@@ -105,7 +105,7 @@
 
 <window id="main-window" xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="StartupViewSource()" title="Mozilla"> 
+        title="Mozilla"> 
   
   <html:script src="navigator.js"></html:script>
   <html:script src="viewsource.js"></html:script>
@@ -119,6 +119,10 @@
   <broadcaster id="Browser:OnStopBinding"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
   
+  <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
+  <broadcaster id="dialog.start" ready="false"/>
+  <observes element="dialog.start" attribute="ready" onchange="StartupViewSource()"/>
+    
   <menubar>
       <menu name="&fileMenu.label;">
       <menuitem name="&browserCmd.label;" onclick="BrowserNewWindow();"/>

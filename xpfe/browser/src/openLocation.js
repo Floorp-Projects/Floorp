@@ -23,6 +23,9 @@ var browser;
 var dialog;
 
 function onLoad() {
+}
+
+function onLoadWithArgs() {
 	dialog = new Object;
 	dialog.input     = document.getElementById( "dialog.input" );
    dialog.ok        = document.getElementById( "dialog.ok" );

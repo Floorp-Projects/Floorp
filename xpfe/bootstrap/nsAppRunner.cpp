@@ -37,6 +37,11 @@
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
 
+// Temporary stuff.
+#include "nsIDOMToolkitCore.h"
+#include "nsAppCoresCIDs.h"
+static NS_DEFINE_CID( kToolkitCoreCID, NS_TOOLKITCORE_CID );
+
 #ifdef MOZ_FULLCIRCLE
 #include "fullsoft.h"
 #endif
@@ -181,6 +186,22 @@ int main(int argc, char* argv[])
 
   char* cmdResult = nsnull;
 
+  // These manage funky stuff with ensuring onload handler getting called at
+  // the correct time.  The problem is that upcoming (or recent)
+  // changes will result in the .xul window's onload handler getting called
+  // prior to execution of nsIXULWindowCallback's ContructBeforeJavaScript.
+  // This will break windows whose onload handler must execute subsequent to
+  // that callback mechanism (i.e., those that may need "args").  The short-term
+  // fix (ultimately, these windows will receive arguments via different means)
+  // is to trigger the pseudo-onload handler from the ConstructBeforeJavaScript
+  // code.  The problem is those windows that are not always constructed with an
+  // nsIXULWindowCallbacks, i.e., the editor.  The fix here is to ensure that
+  // the toolkit core's ShowWindowWithArgs function is used to open the editor.
+  // Whew.  For details, call me (law@netscape.com, x2296).  This code is only
+  // temporary!
+  nsString withArgs;
+  PRBool useArgs = PR_FALSE;
+
   /*
    * Initialize XPCOM.  Ultimately, this should be a function call such as
    * NS_XPCOM_Initialize(...).
@@ -243,6 +264,7 @@ int main(int argc, char* argv[])
     goto done;
   }
 #endif  /* 0 */
+
   // Default URL if one was not provided in the cmdline
   // Changed by kostello on 2/10/99 to look for -editor
   // or -mail command line and load the appropriate URL.
@@ -319,8 +341,11 @@ int main(int argc, char* argv[])
     rv = cmdLineArgs->GetCmdLineValue("-editor", &cmdResult);
     if (NS_SUCCEEDED(rv))
     {
-      if (cmdResult && (strcmp("1",cmdResult)==0))
+      if (cmdResult && (strcmp("1",cmdResult)==0)) {
         urlstr = "chrome://editor/content/";
+        useArgs = PR_TRUE;
+        withArgs = "chrome://editor/content/EditorInitPage.html";
+      }
     }
     if (nsnull == urlstr)
     {
@@ -499,8 +524,25 @@ int main(int argc, char* argv[])
 		}
   }
 
-  rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
-                   nsnull, nsnull, widthVal, heightVal);
+  if ( !useArgs ) {
+      rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, newWindow,
+                       nsnull, nsnull, widthVal, heightVal);
+  } else {
+      nsIDOMToolkitCore* toolkit = nsnull;
+      rv = nsServiceManager::GetService(kToolkitCoreCID,
+                                        nsIDOMToolkitCore::GetIID(),
+                                        (nsISupports**)&toolkit);
+      if (NS_SUCCEEDED(rv)) {
+          nsIWebShellWindow* newWindow = nsnull;
+          
+          toolkit->ShowWindowWithArgs( urlstr, nsnull, withArgs );
+          
+          /* Release the toolkit... */
+          if (nsnull != toolkit) {
+            nsServiceManager::ReleaseService(kToolkitCoreCID, toolkit);
+          }
+      }
+  }
 
   NS_RELEASE(url);
   if (NS_FAILED(rv)) {

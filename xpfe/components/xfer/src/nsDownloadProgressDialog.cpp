@@ -156,6 +156,9 @@ nsDownloadProgressDialog::ConstructBeforeJavaScript(nsIWebShell *aWebShell) {
                     rv = setAttribute( mDocument, "data.location", "value", loc );
                     if ( NS_SUCCEEDED( rv ) ) {
                         rv = setAttribute( mDocument, "data.fileName", "value", nsString((const char*)mFileName) );
+                        if ( NS_SUCCEEDED( rv ) ) {
+                            rv = setAttribute( mDocument, "dialog.start", "ready", "true" );
+                        }
                     }
                 } else {
                     DEBUG_PRINTF( PR_STDOUT, "%s %d: Upcast to nsIDOMXULDocument failed, rv=0x%X\n",

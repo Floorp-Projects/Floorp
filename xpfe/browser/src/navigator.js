@@ -15,6 +15,22 @@
     }
   }
 
+  function onLoadWithArgs() {
+    // See if Startup has been run.
+    if ( appCore ) {
+        // See if load in progress (loading default page).
+        if ( document.getElementById("Browser:Throbber").getAttribute("busy") == "true" ) {
+            dump( "Stopping load of default initial page\n" );
+            appCore.stop();
+        }
+        dump( "Loading page specified on ShowWindowWithArgs\n" );
+        appCore.loadInitialPage();
+    } else {
+        // onLoad handler timing is not correct yet.
+        dump( "onLoadWithArgs not needed yet\n" );
+    }
+  }
+
   function tryToSetContentWindow() {
     if ( window.frames[0].frames[1] ) {
         dump("Setting content window\n");
@@ -266,7 +282,7 @@
         }
     }
     if ( core ) {
-        core.ShowWindowWithArgs( "chrome://editor/content", window, "" );
+        core.ShowWindowWithArgs( "chrome://editor/content", window, "chrome://editor/content/EditorInitPage.html" );
     } else {
         dump("Error; can't create toolkitCore\n");
     }
@@ -675,7 +691,7 @@
       }
     }
     if (toolkitCore) {
-      toolkitCore.ShowWindow("chrome://editor/content/EditorAppShell.xul",window);
+      toolkitCore.ShowWindowWithArgs("chrome://editor/content/EditorAppShell.xul",window,"chrome://editor/content/EditorInitPage.html");
     }
   }
         var bindCount = 0;
