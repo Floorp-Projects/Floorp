@@ -255,6 +255,7 @@ bin\chrome\comm\*
 bin\chrome\toolkit\*
 bin\chrome\modern\*
 bin\chrome\classic\*
+bin\chrome\chromelist.txt
 ;-bin\chrome\comm\content\editor\EditorInitPage.html
 ;-bin\chrome\comm\editor\content\EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:

@@ -45,9 +45,13 @@
 
 use Fcntl qw(:DEFAULT :flock);
 use File::Basename;
-use File::Spec;
 use Cwd;
 use mozLock;
+
+# This is necessary because this module is not present in Perl versions less
+# than 5.004_05.
+eval q{use File::Spec};
+exit if $@;
 
 # This file takes two parameters - the jar file to process, and the chrome
 # directory we are compiling into.

@@ -242,6 +242,7 @@ bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/embed.jar
 bin/chrome/installed-chrome.txt
+bin/chrome/chromelist.txt
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
