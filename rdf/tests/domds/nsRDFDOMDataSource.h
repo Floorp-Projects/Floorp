@@ -152,6 +152,14 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
                        nsISupportsArray *aArguments);
 
   NS_IMETHOD SetWindow(nsIDOMWindow *window);
+
+  NS_IMETHOD Change(nsIRDFResource*, nsIRDFResource*,
+                    nsIRDFNode*, nsIRDFNode*)
+        {return NS_ERROR_NOT_IMPLEMENTED;}
+    
+  NS_IMETHOD Move(nsIRDFResource*, nsIRDFResource*,
+                  nsIRDFResource*, nsIRDFNode*)
+        {return NS_ERROR_NOT_IMPLEMENTED;}
     
  protected:
     char *mURI;
@@ -173,10 +181,10 @@ class nsRDFDOMDataSource : public nsIRDFDataSource,
 
     nsCOMPtr<nsIDOMDocument> mDocument;
 
-    nsCOMPtr<nsIRDFResource> kNC_Name;
-    nsCOMPtr<nsIRDFResource> kNC_Value;
-    nsCOMPtr<nsIRDFResource> kNC_Type;
-    nsCOMPtr<nsIRDFResource> kNC_Child;
+    nsIRDFResource* kNC_Name;
+    nsIRDFResource* kNC_Value;
+    nsIRDFResource* kNC_Type;
+    nsIRDFResource* kNC_Child;
 };
 
 nsresult
