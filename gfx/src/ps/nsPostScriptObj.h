@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Ken Herron <kherron@newsguy.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -67,46 +68,6 @@ class nsIImage;
 
 typedef int XP_Bool;
 
-typedef struct {
-  const char *name;
-  float       left,
-              top,
-              right,
-              bottom,
-              width,
-              height;
-} PSPaperSizeRec;
-
- 
-static const
-PSPaperSizeRec postscript_module_paper_sizes[] =
-{
-  { "A5",        0.25f, 0.25f, 0.25f, 0.25f,  5.33f,  7.77f }, /* 148mm X 210mm ( 5.83in X  8.27in) */
-  { "A4",        0.25f, 0.25f, 0.25f, 0.25f,  7.77f, 11.19f }, /* 210mm X 297mm ( 8.27in X 11.69in) */
-  { "A3",        0.25f, 0.25f, 0.25f, 0.25f, 11.19f, 16.03f }, /* 297mm X 420mm (11.69in X 16.53in) */
-  { "Letter",    0.25f, 0.25f, 0.25f, 0.25f,  8.00f, 10.50f }, /* 8.50in X 11.0in */
-  { "Legal",     0.25f, 0.25f, 0.25f, 0.25f,  8.00f, 13.50f }, /* 8.50in X 14.0in */
-  { "Executive", 0.25f, 0.25f, 0.25f, 0.25f,  7.00f,  9.50f }, /* 7.50in X 10.0in */
-  { 0,           0.25f, 0.25f, 0.25f, 0.25f,  0.00f,  0.0f  }
-};
-
-#define PSPaperSizeRec_FullPaperWidth(rec)  ((rec)->left + (rec)->right  + (rec)->width)
-#define PSPaperSizeRec_FullPaperHeight(rec) ((rec)->top  + (rec)->bottom + (rec)->height)
-
-/* This will be extended some day... */
-typedef struct {
-  const char *orientation;
-} PSOrientationRec;
-
-/* This will be extended some day... */
-static const
-PSOrientationRec postscript_module_orientations[] =
-{
-  { "portrait"  },
-  { "landscape" },
-  { NULL        }
-};
-
 typedef void (*XL_CompletionRoutine)(void*);
 
 typedef struct page_breaks {
@@ -127,21 +88,7 @@ typedef struct LineRecord_struct LineRecord;
 ** Used to store state needed while translation is in progress
 */
 struct PrintInfo_ {
-  /*	for table printing */
-  int32	page_height;	/* Size of printable area on page  */
-  int32	page_width;	  /* Size of printable area on page  */
-  int32	page_break;	  /* Current page bottom  */
-  int32 page_topy;	  /* Current page top  */
-  int phase;
-
-	PageBreaks *pages;	/* Contains extents of each page  */
-
-  int pt_size;		    /* Size of above table  */
-  int n_pages;		    /* # of valid entries in above table */
-
   const char *doc_title; /* best guess at title */
-  int32 doc_width;	 /* Total document width */
-  int32 doc_height;	 /* Total document height */
 
 #ifdef LATER
   THIS IS GOING TO BE DELETED XXXXX
@@ -168,16 +115,12 @@ typedef struct PrintInfo_ PrintInfo;
 ** Used to pass info into text and/or postscript translation
 */
 struct PrintSetup_ {
-  nscoord top;			/* Margins -- distance from the edge */
-  nscoord bottom;		/* of the printable region to the */
-  nscoord left;			/* edge of the paper. Measured in twips. */
-  nscoord right;
-
-  nscoord width;		/* Paper size, in twips. */
-  nscoord height;
+  nscoord width;                /* Page size, in twips, as oriented for */
+  nscoord height;               /* this print job. */
   
   const char* header;
   const char* footer;
+  const char* paper_name;
 
   int *sizes;
   XP_Bool reverse;              /* Output order */
@@ -187,11 +130,9 @@ struct PrintSetup_ {
   XP_Bool underline;            /* underline links */
   XP_Bool scale_images;         /* Scale unsized images which are too big */
   XP_Bool scale_pre;		        /* do the pre-scaling thing */
-  float dpi;                    /* dpi for externally sized items */
   float rules;			            /* Scale factor for rulers */
   int n_up;                     /* cool page combining */
   int bigger;                   /* Used to init sizes if sizesin NULL */
-  const PSPaperSizeRec *paper_size; /* Paper size record */
   const char* prefix;           /* For text xlate, prepended to each line */
   const char* eol;              /* For text translation, line terminator  */
   const char* bullet;           /* What char to use for bullets */
@@ -373,11 +314,6 @@ public:
    *	@update 2/1/99 dwc
    */
   void finalize_translation();
-  /** ---------------------------------------------------
-   *  ???
-   *	@update 2/1/99 dwc
-   */
-  void annotate_page( const char*, int, int, int);
   /** ---------------------------------------------------
    *  Output postscript to scale the current coordinate system
    *	@param aX   X scale factor

@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Ken Herron <kherron@newsguy.com>
  *
  * This Original Code has been modified by IBM Corporation. Modifications made by IBM 
  * described herein are Copyright (c) International Business Machines Corporation, 2000.
@@ -54,6 +55,7 @@
 #include "nsIPersistentProperties2.h"
 #include "nsCRT.h"
 #include "nsFontMetricsPS.h"
+#include "nsPaperPS.h"
 
 #ifndef NS_BUILD_ID
 #include "nsBuildID.h"
@@ -261,25 +263,9 @@ nsPostScriptObj::settitle(PRUnichar * aTitle)
   }
 }
 
-static
-const PSPaperSizeRec *paper_name_to_PSPaperSizeRec(const char *paper_name)
-{
-  int i;
-        
-  for( i = 0 ; postscript_module_paper_sizes[i].name != nsnull ; i++ )
-  {
-    const PSPaperSizeRec *curr = &postscript_module_paper_sizes[i];
-
-    if (!PL_strcasecmp(paper_name, curr->name))
-      return curr;
-  }
-
-  return nsnull;
-}
-
 /** ---------------------------------------------------
  *  See documentation in nsPostScriptObj.h
- *	@update 2/1/99 dwc
+ *	@update 2/20/2004 kherron
  */
 nsresult 
 nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
@@ -288,7 +274,6 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
               isAPrinter,
               isFirstPageFirst;
   int         landscape;
-  float       fwidth, fheight;
   const char *printername;
   nsresult    rv;
 
@@ -312,14 +297,6 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
-
-      /* Find PS paper size record by name */
-      const char *paper_name = nsnull;
-      aSpec->GetPaperName(&paper_name);    
-      mPrintSetup->paper_size = paper_name_to_PSPaperSizeRec(paper_name);
-
-      if (!mPrintSetup->paper_size)
-        return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
 
       // Clean up tempfile remnants of any previous print job
       if (mDocProlog)
@@ -425,34 +402,26 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     memset(mPrintContext, 0, sizeof(struct PSContext_));
     memset(pi, 0, sizeof(struct PrintInfo_));
 
-    mPrintSetup->dpi = 72.0f;   // dpi for externally sized items 
+    /* Find PS paper size record by name */
+    aSpec->GetPaperName(&(mPrintSetup->paper_name));
+    nsPaperSizePS paper;
+    if (!paper.Find(mPrintSetup->paper_name))
+      return NS_ERROR_GFX_PRINTER_PAPER_SIZE_NOT_SUPPORTED;
+
     aSpec->GetLandscape( landscape );
-    fwidth  = mPrintSetup->paper_size->width;
-    fheight = mPrintSetup->paper_size->height;
+    mPrintSetup->width = NS_MILLIMETERS_TO_TWIPS(paper.Width_mm());
+    mPrintSetup->height = NS_MILLIMETERS_TO_TWIPS(paper.Height_mm());
 
     if (landscape) {
-      float temp;
-      temp   = fwidth;
-      fwidth = fheight;
-      fheight = temp;
+      nscoord temp = mPrintSetup->width;
+      mPrintSetup->width = mPrintSetup->height;
+      mPrintSetup->height = temp;
     }
 
-    mPrintSetup->left   = NSToCoordRound(mPrintSetup->paper_size->left
-                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
-    mPrintSetup->top    = NSToCoordRound(mPrintSetup->paper_size->top
-                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
-    mPrintSetup->bottom = NSToCoordRound(mPrintSetup->paper_size->bottom
-                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
-    mPrintSetup->right  = NSToCoordRound(mPrintSetup->paper_size->right
-                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
-    
-    mPrintSetup->width  = NSToCoordRound(fwidth
-                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
-    mPrintSetup->height = NSToCoordRound(fheight
-                            * mPrintSetup->dpi * TWIPS_PER_POINT_FLOAT);
 #ifdef DEBUG
-    printf("\nPreWidth = %f PreHeight = %f\n",fwidth,fheight);
-    printf("\nWidth = %d Height = %d\n",mPrintSetup->width,mPrintSetup->height);
+    printf("\nPaper Width = %d twips (%gmm) Height = %d twips (%gmm)\n",
+        mPrintSetup->width, paper.Width_mm(),
+        mPrintSetup->height, paper.Height_mm());
 #endif
     mPrintSetup->header = "header";
     mPrintSetup->footer = "footer";
@@ -464,10 +433,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->underline = PR_TRUE;             // underline links 
     mPrintSetup->scale_images = PR_TRUE;          // Scale unsized images which are too big 
     mPrintSetup->scale_pre = PR_FALSE;		        // do the pre-scaling thing 
-    // scale margins (specified in inches) to dots.
 
-    PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("dpi %g top %d bottom %d left %d right %d\n", 
-           mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right));
 
     mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
     mPrintSetup->n_up = 0;                     // cool page combining 
@@ -487,23 +453,9 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->carg = nsnull;                // Data saved for completion routine 
     mPrintSetup->status = 0;                   // Status of URL on completion 
 
-    pi->page_height = mPrintSetup->height;	// Size of printable area on page 
-    pi->page_width = mPrintSetup->width;	// Size of printable area on page 
-    pi->page_break = 0;	              // Current page bottom 
-    pi->page_topy = 0;	              // Current page top 
-    pi->phase = 0;
-
- 
-    pi->pages = nsnull;		                // Contains extents of each page 
-
-    pi->pt_size = 0;		              // Size of above table 
-    pi->n_pages = 0;	        	      // # of valid entries in above table 
-
     mTitle = nsnull;
 
     pi->doc_title = mTitle;
-    pi->doc_width = 0;	              // Total document width 
-    pi->doc_height = 0;	              // Total document height 
 
     mPrintContext->prInfo = pi;
 
@@ -553,10 +505,8 @@ nsPostScriptObj::begin_document()
 int i;
 FILE *f;
 
-  nscoord paper_width = mPrintContext->prSetup->left
-    + mPrintContext->prSetup->width + mPrintContext->prSetup->right;
-  nscoord paper_height = mPrintContext->prSetup->bottom
-    + mPrintContext->prSetup->height + mPrintContext->prSetup->top;
+  nscoord paper_width = mPrintContext->prSetup->width;
+  nscoord paper_height = mPrintContext->prSetup->height;
   const char *orientation;
 
   if (paper_height < paper_width) {
@@ -573,16 +523,14 @@ FILE *f;
 
   f = mPrintContext->prSetup->out;
   fprintf(f, "%%!PS-Adobe-3.0\n");
-  fprintf(f, "%%%%BoundingBox: %s %s %s %s\n",
-    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->left)).get(),
-    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->bottom)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top)).get());
+  fprintf(f, "%%%%BoundingBox: 0 0 %s %s\n",
+    fpCString(NSTwipsToFloatPoints(paper_width)).get(),
+    fpCString(NSTwipsToFloatPoints(paper_height)).get());
 
   fprintf(f, "%%%%Creator: Mozilla PostScript module (%s/%lu)\n",
              "rv:" MOZILLA_VERSION, (unsigned long)NS_BUILD_ID);
   fprintf(f, "%%%%DocumentData: Clean8Bit\n");
-  fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_size->name);
+  fprintf(f, "%%%%DocumentPaperSizes: %s\n", mPrintSetup->paper_name);
   fprintf(f, "%%%%Orientation: %s\n", orientation);
 
   // hmm, n_pages is always zero so don't use it
@@ -621,17 +569,12 @@ FILE *f;
   // Tell the printer what size paper it should use
   fprintf(f,
     "/setpagedevice where\n"			// Test for the feature
-    "{ pop 2 dict\n"				// Set up a dictionary
+    "{ pop 1 dict\n"				// Set up a dictionary
     "  dup /PageSize [ %s %s ] put\n"		// Paper dimensions
-    "  dup /ImagingBBox [ %s %s %s %s ] put\n"	// Bounding box
     "  setpagedevice\n"				// Install settings
     "} if\n", 
     fpCString(NSTwipsToFloatPoints(paper_width)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_height)).get(),
-    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->left)).get(),
-    fpCString(NSTwipsToFloatPoints(mPrintContext->prSetup->bottom)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_width - mPrintContext->prSetup->right)).get(),
-    fpCString(NSTwipsToFloatPoints(paper_height - mPrintContext->prSetup->top)).get());
+    fpCString(NSTwipsToFloatPoints(paper_height)).get());
 
   fprintf(f, "[");
   for (i = 0; i < 256; i++){
@@ -2003,26 +1946,14 @@ FILE *f;
   fprintf(f,"/pagelevel save def\n");
   // Rescale the coordinate system from points to twips.
   scale(1.0 / TWIPS_PER_POINT_FLOAT, 1.0 / TWIPS_PER_POINT_FLOAT);
-  // Move the origin to the bottom left of the printable region.
+  // Rotate and shift the coordinate system for landscape
   if (mPrintContext->prSetup->landscape){
-    fprintf(f, "90 rotate %d -%d translate\n",
-      mPrintContext->prSetup->left,
-      mPrintContext->prSetup->height + mPrintContext->prSetup->top);
+    fprintf(f, "90 rotate 0 -%d translate\n", mPrintContext->prSetup->height);
   }
-  else {
-    fprintf(f, "%d %d translate\n",
-      mPrintContext->prSetup->left,
-      mPrintContext->prSetup->bottom);
-  }
+
   // Try to turn on automatic stroke adjust
   fputs("true Msetstrokeadjust\n", f);
   fprintf(f, "%%%%EndPageSetup\n");
-#if 0
-  annotate_page( mPrintContext->prSetup->header, 0, -1, pn);
-#endif
-  // Set up a clipping rectangle around the printable area.
-  fprintf(f, "0 0 %d %d Mrect closepath clip newpath\n",
-    mPrintContext->prInfo->page_width, mPrintContext->prInfo->page_height);
 
   // need to reset all U2Ntable
   gLangGroups->Enumerate(ResetU2Ntable, nsnull);
@@ -2035,18 +1966,7 @@ FILE *f;
 void 
 nsPostScriptObj::end_page()
 {
-#if 0
-  annotate_page( mPrintContext->prSetup->footer,
-		   mPrintContext->prSetup->height-mPrintContext->prSetup->bottom-mPrintContext->prSetup->top,
-		   1, pn);
-  fprintf(mPrintContext->prSetup->out, "pagelevel restore\nshowpage\n");
-#endif
-
   fprintf(mPrintContext->prSetup->tmpBody, "pagelevel restore\n");
-  annotate_page(mPrintContext->prSetup->header, mPrintContext->prSetup->top/2, -1, mPageNumber);
-  annotate_page( mPrintContext->prSetup->footer,
-				   mPrintContext->prSetup->height - mPrintContext->prSetup->bottom/2,
-				   1, mPageNumber);
   fprintf(mPrintContext->prSetup->tmpBody, "showpage\n");
   mPageNumber++;
 }
@@ -2161,17 +2081,6 @@ nsPostScriptObj::end_document()
   mDocProlog = nsnull;
   
   return rv;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsPostScriptObj.h
- *	@update 2/1/99 dwc
- */
-void
-nsPostScriptObj::annotate_page(const char *aTemplate,
-                               int y, int delta_dir, int pn)
-{
-
 }
 
 /** ---------------------------------------------------
