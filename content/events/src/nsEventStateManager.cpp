@@ -3576,9 +3576,11 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent,
                         }
                       }
                     }
-                    PRInt32 increment = forward ? 1 : - 1;
-                    PRInt32 start = index < count ? index + increment : (forward ? 0 : count - 1);
-                    for (index = start; index < count && index >= 0; index += increment) {
+                    PRInt32 increment = forward ? 1 : -1;
+                    // In the following two lines we might substract 1 from zero,
+                    // the |index < count| loop condition will be false in that case too.
+                    index = index < count ? index + increment : (forward ? 0 : count - 1);
+                    for (; index < count; index += increment) {
                       //Iterate over the children.
                       childArea = map->GetChildAt(index);
 
