@@ -171,9 +171,9 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnStateChange(nsIWebProgress *aWebP
         {
             nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
             NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
-            nsXPIDLCString contentType;
-            channel->GetContentType(getter_Copies(contentType));
-            if (strcmp(contentType.get(), "text/html"))
+            nsCAutoString contentType;
+            channel->GetContentType(contentType);
+            if (contentType.Equals(NS_LITERAL_CSTRING("text/html")))
                 mUseRealProgFlag = true;
         }
         
