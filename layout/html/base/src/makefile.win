@@ -99,7 +99,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsTextFrame.obj			\
 	.\$(OBJDIR)\nsTextTransformer.obj		\
 	.\$(OBJDIR)\nsViewportFrame.obj			\
-	.\$(OBJDIR)\nsWBRFrame.obj			\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
