@@ -187,40 +187,39 @@ sub initBug  {
     }
   }
 
-  &::SendSQL("select attach_id, creation_ts, description 
-           from attachments 
-           where bug_id = $bug_id");
-  my @attachments;
-  while (&::MoreSQLData()) {
-    my ($attachid, $date, $desc) = (&::FetchSQLData());
-    if ($date =~ /^(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/) {
-        $date = "$3/$4/$2 $5:$6";
-      my %attach;
-      $attach{'attachid'} = $attachid;
-      $attach{'date'} = $date;
-      $attach{'desc'} = $desc;
-      push @attachments, \%attach;
+    &::SendSQL("select attach_id, creation_ts, isprivate, description 
+             from attachments 
+             where bug_id = $bug_id");
+    my @attachments;
+    while (&::MoreSQLData()) {
+        my ($attachid, $date, $isprivate, $desc) = (&::FetchSQLData());
+        my %attach;
+        $attach{'attachid'} = $attachid;
+        $attach{'isprivate'} = $isprivate;
+        $attach{'date'} = $date;
+        $attach{'desc'} = $desc;
+        push @attachments, \%attach;
     }
-  }
-  if (@attachments) {
-    $self->{'attachments'} = \@attachments;
-  }
+    if (@attachments) {
+        $self->{'attachments'} = \@attachments;
+    }
 
-  &::SendSQL("select bug_id, who, bug_when, thetext 
+    &::SendSQL("select bug_id, who, bug_when, isprivate, thetext 
            from longdescs 
            where bug_id = $bug_id");
-  my @longdescs;
-  while (&::MoreSQLData()) {
-    my ($bug_id, $who, $bug_when, $thetext) = (&::FetchSQLData());
-    my %longdesc;
-    $longdesc{'who'} = $who;
-    $longdesc{'bug_when'} = $bug_when;
-    $longdesc{'thetext'} = $thetext;
-    push @longdescs, \%longdesc;
-  }
-  if (@longdescs) {
-    $self->{'longdescs'} = \@longdescs;
-  }
+    my @longdescs;
+    while (&::MoreSQLData()) {
+        my ($bug_id, $who, $bug_when, $isprivate, $thetext) = (&::FetchSQLData());
+        my %longdesc;
+        $longdesc{'who'} = $who;
+        $longdesc{'bug_when'} = $bug_when;
+        $longdesc{'isprivate'} = $isprivate;
+        $longdesc{'thetext'} = $thetext;
+        push @longdescs, \%longdesc;
+    }
+    if (@longdescs) {
+        $self->{'longdescs'} = \@longdescs;
+    }
   
   my @depends = EmitDependList("blocked", "dependson", $bug_id);
   if (@depends) {
@@ -271,34 +270,40 @@ sub emitXML {
     }
   }
 
-  if (defined $self->{'longdescs'}) {
-    for (my $i=0 ; $i < @{$self->{'longdescs'}} ; $i++) {
-      $xml .= "  <long_desc>\n"; 
-      $xml .= "   <who>" . &::DBID_to_name($self->{'longdescs'}[$i]->{'who'}) 
-                         . "</who>\n"; 
-      $xml .= "   <bug_when>" . $self->{'longdescs'}[$i]->{'bug_when'} 
-                              . "</bug_when>\n"; 
-      $xml .= "   <thetext>" . QuoteXMLChars($self->{'longdescs'}[$i]->{'thetext'})
-                             . "</thetext>\n"; 
-      $xml .= "  </long_desc>\n"; 
+    if (defined $self->{'longdescs'}) {
+        for (my $i=0 ; $i < @{$self->{'longdescs'}} ; $i++) {
+            next if ($self->{'longdescs'}[$i]->{'isprivate'} 
+                     && &::Param("insidergroup")
+                     && !&::UserInGroup(&::Param("insidergroup")));
+            $xml .= "  <long_desc>\n"; 
+            $xml .= "   <who>" . &::DBID_to_name($self->{'longdescs'}[$i]->{'who'}) 
+                               . "</who>\n"; 
+            $xml .= "   <bug_when>" . $self->{'longdescs'}[$i]->{'bug_when'} 
+                                    . "</bug_when>\n"; 
+            $xml .= "   <thetext>" . QuoteXMLChars($self->{'longdescs'}[$i]->{'thetext'})
+                                   . "</thetext>\n"; 
+            $xml .= "  </long_desc>\n"; 
+        }
     }
-  }
 
-  if (defined $self->{'attachments'}) {
-    for (my $i=0 ; $i < @{$self->{'attachments'}} ; $i++) {
-      $xml .= "  <attachment>\n"; 
-      $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
-                              . "</attachid>\n"; 
-      $xml .= "    <date>" . $self->{'attachments'}[$i]->{'date'} . "</date>\n"; 
-      $xml .= "    <desc>" . QuoteXMLChars($self->{'attachments'}[$i]->{'desc'}) . "</desc>\n"; 
-    # $xml .= "    <type>" . $self->{'attachments'}[$i]->{'type'} . "</type>\n"; 
-    # $xml .= "    <data>" . $self->{'attachments'}[$i]->{'data'} . "</data>\n"; 
-      $xml .= "  </attachment>\n"; 
+    if (defined $self->{'attachments'}) {
+        for (my $i=0 ; $i < @{$self->{'attachments'}} ; $i++) {
+            next if ($self->{'attachments'}[$i]->{'isprivate'} 
+                     && &::Param("insidergroup")
+                     && !&::UserInGroup(&::Param("insidergroup")));
+            $xml .= "  <attachment>\n"; 
+            $xml .= "    <attachid>" . $self->{'attachments'}[$i]->{'attachid'}
+                                    . "</attachid>\n"; 
+            $xml .= "    <date>" . $self->{'attachments'}[$i]->{'date'} . "</date>\n"; 
+            $xml .= "    <desc>" . QuoteXMLChars($self->{'attachments'}[$i]->{'desc'}) . "</desc>\n"; 
+          # $xml .= "    <type>" . $self->{'attachments'}[$i]->{'type'} . "</type>\n"; 
+          # $xml .= "    <data>" . $self->{'attachments'}[$i]->{'data'} . "</data>\n"; 
+            $xml .= "  </attachment>\n"; 
+        }
     }
-  }
 
-  $xml .= "</bug>\n";
-  return $xml;
+    $xml .= "</bug>\n";
+    return $xml;
 }
 
 sub EmitDependList {
