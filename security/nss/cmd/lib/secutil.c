@@ -258,6 +258,7 @@ SECU_FilePasswd(PK11SlotInfo *slot, PRBool retry, void *arg)
     /* handle the Windows EOL case */
     if ((nb > 2) && (phrase[nb-2] == '\r') ) nb--;
     if (phrase[nb-1] == '\n') {
+	if ( nb > 2 && phrase[nb-2] == '\r' ) nb--;
 	phrase[nb-1] = '\0';
 	if (nb == 0) {
 	    fprintf(stderr,"password file contains no data\n");
@@ -315,6 +316,7 @@ secu_InitSlotPassword(PK11SlotInfo *slot, PRBool retry, void *arg)
 	input = stdin;
 #else
 	input = fopen(consoleName, "r");
+#endif
 	if (input == NULL) {
 	    PR_fprintf(PR_STDERR, "Error opening input terminal for read\n");
 	    return NULL;
@@ -2029,6 +2031,23 @@ SECU_PrintCertNickname(CERTCertificate *cert, void *data)
 	printflags(trusts, trust->emailFlags);
 	PORT_Strcat(trusts, ",");
 	printflags(trusts, trust->objectSigningFlags);
+	fprintf(out, "%-60s %-5s\n", name, trusts);
+    } else {
+	name = cert->nickname;
+	if ( name == NULL ) {
+	    name = cert->emailAddr;
+	}
+	
+        trust = cert->trust;
+	if (trust) {
+	    printflags(trusts, trust->sslFlags);
+	    PORT_Strcat(trusts, ",");
+	    printflags(trusts, trust->emailFlags);
+	    PORT_Strcat(trusts, ",");
+	    printflags(trusts, trust->objectSigningFlags);
+	} else {
+	    PORT_Memcpy(trusts,",,",3);
+	}
 	fprintf(out, "%-60s %-5s\n", name, trusts);
     }
 
