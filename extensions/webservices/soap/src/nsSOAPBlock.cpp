@@ -87,6 +87,7 @@ NS_IMETHODIMP nsSOAPBlock::GetNamespaceURI(nsAString & aNamespaceURI)
 
 NS_IMETHODIMP nsSOAPBlock::SetNamespaceURI(const nsAString & aNamespaceURI)
 {
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc))
     return rc;
@@ -108,6 +109,7 @@ NS_IMETHODIMP nsSOAPBlock::GetName(nsAString & aName)
 
 NS_IMETHODIMP nsSOAPBlock::SetName(const nsAString & aName)
 {
+  NS_ENSURE_ARG_POINTER(&aName);
   nsresult rc = SetElement(nsnull);
   if (NS_FAILED(rc))
     return rc;

@@ -355,6 +355,7 @@ nsHTTPSOAPTransportCompletion::~nsHTTPSOAPTransportCompletion()
 /* readonly attribute nsISOAPCall call; */
 NS_IMETHODIMP nsHTTPSOAPTransportCompletion::GetCall(nsISOAPCall * *aCall)
 {
+  NS_ENSURE_ARG(aCall);
   *aCall = mCall;
   NS_IF_ADDREF(*aCall);
   return NS_OK;
@@ -365,6 +366,7 @@ NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::GetResponse(nsISOAPResponse *
                                                *aResponse)
 {
+  NS_ENSURE_ARG(aResponse);
   *aResponse =
       mRequest ? (nsCOMPtr < nsISOAPResponse >) nsnull : mResponse;
   NS_IF_ADDREF(*aResponse);
@@ -376,6 +378,7 @@ NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::GetListener(nsISOAPResponseListener *
                                                *aListener)
 {
+  NS_ENSURE_ARG(aListener);
   *aListener = mListener;
   NS_IF_ADDREF(*aListener);
   return NS_OK;
@@ -385,6 +388,7 @@ NS_IMETHODIMP
 NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::GetIsComplete(PRBool * aIsComplete)
 {
+  NS_ENSURE_ARG(aIsComplete);
   *aIsComplete = mRequest == nsnull;
   return NS_OK;
 }
@@ -392,6 +396,7 @@ NS_IMETHODIMP
 /* boolean abort (); */
 NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool * _retval)
 {
+  NS_ENSURE_ARG(_retval);
   if (mRequest) {
     if (NS_SUCCEEDED(mRequest->Abort())) {
       *_retval = PR_TRUE;
@@ -406,6 +411,7 @@ NS_IMETHODIMP nsHTTPSOAPTransportCompletion::Abort(PRBool * _retval)
 NS_IMETHODIMP
     nsHTTPSOAPTransportCompletion::HandleEvent(nsIDOMEvent * aEvent)
 {
+  NS_ENSURE_ARG(aEvent);
 //  PRUint32 status;
   nsresult rv = NS_OK;
   if (mRequest) {                //  Avoid if it has been aborted.
@@ -441,6 +447,7 @@ NS_IMETHODIMP
                                    nsISOAPCallCompletion ** aCompletion)
 {
   NS_ENSURE_ARG(aCall);
+  NS_ENSURE_ARG(aCompletion);
 
   nsresult rv;
   nsCOMPtr < nsIXMLHttpRequest > request;

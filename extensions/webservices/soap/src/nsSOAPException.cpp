@@ -168,6 +168,7 @@ static NS_NAMED_LITERAL_STRING(kErrorSeperator3, ", caused by ");
 NS_IMETHODIMP 
 nsSOAPException::ToString(char **_retval)
 {
+  NS_ENSURE_ARG_POINTER(_retval);
   nsAutoString s;
   s.Append(mName);
   s.Append(kErrorSeperator1);

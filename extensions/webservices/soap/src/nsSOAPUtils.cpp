@@ -356,7 +356,7 @@ nsresult
     nsCOMPtr < nsIDOMNamedNodeMap > attrs;
     nsCOMPtr < nsIDOMNode > temp;
     nsAutoString value;
-    while (current != nsnull) {
+    while (current) {
       rc = current->GetAttributes(getter_AddRefs(attrs));
       if (NS_FAILED(rc))
         return rc;
@@ -365,7 +365,7 @@ nsresult
                                    getter_AddRefs(temp));
         if (NS_FAILED(rc))
           return rc;
-        if (temp != nsnull) {
+        if (temp) {
           rc = temp->GetNodeValue(result);
           if (NS_FAILED(rc))
             return rc;
@@ -572,7 +572,8 @@ PRBool nsSOAPUtils::GetAttribute(nsISOAPEncoding *aEncoding,
   rc = attrs->GetLength(&count);
   if (NS_FAILED(rc))
     return PR_FALSE;
-  for (PRUint32 i = 0; i < count; i++) {
+  PRUint32 i;
+  for (i = 0; i < count; i++) {
     nsCOMPtr<nsIDOMNode> attrnode;
     rc = attrs->Item(i, getter_AddRefs(attrnode));
     if (NS_FAILED(rc))

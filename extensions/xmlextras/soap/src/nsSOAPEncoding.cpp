@@ -334,7 +334,7 @@ NS_IMETHODIMP
   NS_ENSURE_ARG_POINTER(_retval);
   nsStringKey nameKey(aKey);
   *_retval = (nsISOAPEncoder *) mEncoders->Get(&nameKey);
-  if (*_retval == nsnull && mDefaultEncoding != nsnull) {
+  if (*_retval == nsnull && mDefaultEncoding) {
     return mDefaultEncoding->GetEncoder(aKey, _retval);
   }
   return NS_OK;
@@ -365,7 +365,7 @@ NS_IMETHODIMP
   NS_ENSURE_ARG_POINTER(_retval);
   nsStringKey nameKey(aKey);
   *_retval = (nsISOAPDecoder *) mDecoders->Get(&nameKey);
-  if (*_retval == nsnull && mDefaultEncoding != nsnull) {
+  if (*_retval == nsnull && mDefaultEncoding) {
     return mDefaultEncoding->GetDecoder(aKey, _retval);
   }
   return NS_OK;
@@ -462,45 +462,49 @@ NS_IMETHODIMP
 /* boolean mapSchemaURI (in AString aExternalURI, in AString aInternalURI, in boolean aOutput); */
 NS_IMETHODIMP nsSOAPEncoding::MapSchemaURI(const nsAString & aExternalURI, const nsAString & aInternalURI, PRBool aOutput, PRBool *_retval)
 {
-    if (aExternalURI.IsEmpty() || aInternalURI.IsEmpty())  //  Permit no empty URIs.
-      return NS_ERROR_ILLEGAL_VALUE;
-    nsStringKey externalKey(aExternalURI);
-    if (mMappedExternal->Exists(&externalKey)) {
-      *_retval = PR_FALSE;  //  Do not permit duplicate external
+  NS_ENSURE_ARG_POINTER(&aExternalURI);
+  NS_ENSURE_ARG_POINTER(&aInternalURI);
+  if (aExternalURI.IsEmpty() || aInternalURI.IsEmpty())  //  Permit no empty URIs.
+    return NS_ERROR_ILLEGAL_VALUE;
+  nsStringKey externalKey(aExternalURI);
+  if (mMappedExternal->Exists(&externalKey)) {
+    *_retval = PR_FALSE;  //  Do not permit duplicate external
+    return NS_OK;
+  }
+  if (aOutput) {
+    nsStringKey internalKey(aInternalURI);
+    if (mMappedInternal->Exists(&internalKey)) {
+      *_retval = PR_FALSE;  //  Do not permit duplicate internal
       return NS_OK;
-    }
-    if (aOutput) {
-      nsStringKey internalKey(aInternalURI);
-      if (mMappedInternal->Exists(&internalKey)) {
-        *_retval = PR_FALSE;  //  Do not permit duplicate internal
-        return NS_OK;
-      }
-      nsresult rc;
-      nsCOMPtr < nsIWritableVariant > p =
-          do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
-      if (NS_FAILED(rc))
-        return rc;
-      p->SetAsAString(aExternalURI);
-      if (NS_FAILED(rc))
-        return rc;
-      mMappedInternal->Put(&internalKey, p);
     }
     nsresult rc;
     nsCOMPtr < nsIWritableVariant > p =
         do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
     if (NS_FAILED(rc))
       return rc;
-    p->SetAsAString(aInternalURI);
+    p->SetAsAString(aExternalURI);
     if (NS_FAILED(rc))
       return rc;
-    mMappedExternal->Put(&externalKey, p);
+    mMappedInternal->Put(&internalKey, p);
+  }
+  nsresult rc;
+  nsCOMPtr < nsIWritableVariant > p =
+      do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
+  if (NS_FAILED(rc))
+    return rc;
+  p->SetAsAString(aInternalURI);
+  if (NS_FAILED(rc))
+    return rc;
+  mMappedExternal->Put(&externalKey, p);
+  if (_retval)
     *_retval = PR_TRUE;
-    return NS_OK;
+  return NS_OK;
 }
 
 /* boolean unmapSchemaURI (in AString aExternalURI); */
 NS_IMETHODIMP nsSOAPEncoding::UnmapSchemaURI(const nsAString & aExternalURI, PRBool *_retval)
 {
+  NS_ENSURE_ARG_POINTER(&aExternalURI);
   nsStringKey externalKey(aExternalURI);
   nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal->Get(&externalKey)));
   if (internal) {
@@ -511,10 +515,12 @@ NS_IMETHODIMP nsSOAPEncoding::UnmapSchemaURI(const nsAString & aExternalURI, PRB
     nsStringKey internalKey(internalstr);
     mMappedExternal->Remove(&externalKey);
     mMappedInternal->Remove(&internalKey);
-    *_retval = PR_TRUE;
+    if (_retval)
+      *_retval = PR_TRUE;
   }
   else {
-    *_retval = PR_FALSE;
+    if (_retval)
+      *_retval = PR_FALSE;
   }
   return NS_OK;
 }
@@ -522,6 +528,8 @@ NS_IMETHODIMP nsSOAPEncoding::UnmapSchemaURI(const nsAString & aExternalURI, PRB
 /* AString getInternalSchemaURI (in AString aExternalURI); */
 NS_IMETHODIMP nsSOAPEncoding::GetInternalSchemaURI(const nsAString & aExternalURI, nsAString & _retval)
 {
+  NS_ENSURE_ARG_POINTER(&aExternalURI);
+  NS_ENSURE_ARG_POINTER(&_retval);
   if (mMappedExternal->Count()) {
     nsStringKey externalKey(aExternalURI);
     nsCOMPtr<nsIVariant> internal = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedExternal->Get(&externalKey)));
@@ -539,6 +547,8 @@ NS_IMETHODIMP nsSOAPEncoding::GetInternalSchemaURI(const nsAString & aExternalUR
 /* AString getExternalSchemaURI (in AString aInternalURI); */
 NS_IMETHODIMP nsSOAPEncoding::GetExternalSchemaURI(const nsAString & aInternalURI, nsAString & _retval)
 {
+  NS_ENSURE_ARG_POINTER(&aInternalURI);
+  NS_ENSURE_ARG_POINTER(&_retval);
   if (mMappedInternal->Count()) {
     nsStringKey internalKey(aInternalURI);
     nsCOMPtr<nsIVariant> external = dont_AddRef(NS_STATIC_CAST(nsIVariant*,mMappedInternal->Get(&internalKey)));

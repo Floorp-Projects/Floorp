@@ -177,7 +177,6 @@ NS_IMETHODIMP nsSOAPFault::GetDetail(nsIDOMElement * *aDetail)
   if (!mFaultElement)
     return NS_ERROR_ILLEGAL_VALUE;
 
-  nsCOMPtr < nsIDOMElement > element;
   nsSOAPUtils::GetSpecificChildElement(nsnull, mFaultElement,
                                        kEmpty,
                                        nsSOAPUtils::kFaultDetailTagName,

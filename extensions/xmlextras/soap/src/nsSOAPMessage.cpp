@@ -118,6 +118,7 @@ NS_IMETHODIMP nsSOAPMessage::GetEnvelope(nsIDOMElement * *aEnvelope)
 /* readonly attribute PRUint16 version; */
 NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 * aVersion)
 {
+  NS_ENSURE_ARG_POINTER(aVersion);
   if (mMessage) {
     nsCOMPtr < nsIDOMElement > root;
     mMessage->GetDocumentElement(getter_AddRefs(root));
@@ -152,6 +153,7 @@ NS_IMETHODIMP nsSOAPMessage::GetVersion(PRUint16 * aVersion)
 /* Internal method for getting  envelope and  version */
 PRUint16 nsSOAPMessage::GetEnvelopeWithVersion(nsIDOMElement * *aEnvelope)
 {
+  NS_ENSURE_ARG_POINTER(aEnvelope);
   if (mMessage) {
     nsCOMPtr < nsIDOMElement > root;
     mMessage->GetDocumentElement(getter_AddRefs(root));
@@ -226,6 +228,7 @@ NS_IMETHODIMP nsSOAPMessage::GetActionURI(nsAString & aActionURI)
 
 NS_IMETHODIMP nsSOAPMessage::SetActionURI(const nsAString & aActionURI)
 {
+  NS_ENSURE_ARG_POINTER(&aActionURI);
   mActionURI.Assign(aActionURI);
   return NS_OK;
 }
@@ -292,6 +295,8 @@ NS_IMETHODIMP
                           PRUint32 aParameterCount,
                           nsISOAPParameter ** aParameters)
 {
+  NS_ENSURE_ARG_POINTER(&aMethodName);
+  NS_ENSURE_ARG_POINTER(&aTargetObjectURI);
   if (aVersion != nsISOAPMessage::VERSION_1_1
       && aVersion != nsISOAPMessage::VERSION_1_2)
     return NS_ERROR_ILLEGAL_VALUE;
@@ -360,22 +365,19 @@ NS_IMETHODIMP
     rv = GetHeader(getter_AddRefs(parent));
     if (NS_FAILED(rv))
       return rv;
-    nsCOMPtr < nsISupports > next;
     nsCOMPtr < nsISOAPHeaderBlock > header;
     nsCOMPtr < nsIDOMElement > element;
-    nsCOMPtr < nsISchemaType > schemaType;
-    nsCOMPtr < nsIVariant > value;
     nsAutoString name;
     nsAutoString namespaceURI;
-    nsAutoString actorURI;
-    PRBool mustUnderstand;
-    for (PRUint32 i = 0; i < aHeaderBlockCount; i++) {
+    PRUint32 i;
+    for (i = 0; i < aHeaderBlockCount; i++) {
       header = aHeaderBlocks[i];
       if (!header)
         return NS_ERROR_FAILURE;
       rv = header->GetElement(getter_AddRefs(element));
       if (element) {
-        nsCOMPtr < nsIDOMNode > node1 = (nsIDOMElement *) element;
+        nsCOMPtr < nsIDOMNode > node1;
+        node1 = element;
         nsCOMPtr < nsIDOMNode > node2;
         rv = mMessage->ImportNode(node1, PR_TRUE, getter_AddRefs(node1));
         if (NS_FAILED(rv))
@@ -391,9 +393,11 @@ NS_IMETHODIMP
         rv = header->GetName(name);
         if (NS_FAILED(rv))
           return rv;
+        nsAutoString actorURI;
         rv = header->GetActorURI(actorURI);
         if (NS_FAILED(rv))
           return rv;
+        PRBool mustUnderstand;
         rv = header->GetMustUnderstand(&mustUnderstand);
         if (NS_FAILED(rv))
           return rv;
@@ -405,9 +409,11 @@ NS_IMETHODIMP
           if (NS_FAILED(rv))
             return rv;
         }
+        nsCOMPtr < nsISchemaType > schemaType;
         rv = header->GetSchemaType(getter_AddRefs(schemaType));
         if (NS_FAILED(rv))
           return rv;
+        nsCOMPtr < nsIVariant > value;
         rv = header->GetValue(getter_AddRefs(value));
         if (NS_FAILED(rv))
           return rv;
@@ -463,21 +469,20 @@ NS_IMETHODIMP
   }
 //  Encode and add all of the parameters into the body
 
-  nsCOMPtr < nsISupports > next;
   nsCOMPtr < nsISOAPParameter > param;
   nsCOMPtr < nsIDOMElement > element;
   nsCOMPtr < nsISOAPEncoding > newencoding;
-  nsCOMPtr < nsISchemaType > schemaType;
-  nsCOMPtr < nsIVariant > value;
   nsAutoString name;
   nsAutoString namespaceURI;
-  for (PRUint32 i = 0; i < aParameterCount; i++) {
+  PRUint32 i;
+  for (i = 0; i < aParameterCount; i++) {
     param = aParameters[i];
     if (!param)
       return NS_ERROR_FAILURE;
     rv = param->GetElement(getter_AddRefs(element));
     if (element) {
-      nsCOMPtr < nsIDOMNode > node1 = (nsIDOMElement *) element;
+      nsCOMPtr < nsIDOMNode > node1;
+      node1 = element;
       nsCOMPtr < nsIDOMNode > node2;
       rv = mMessage->ImportNode(node1, PR_TRUE, getter_AddRefs(node1));
       if (NS_FAILED(rv))
@@ -499,9 +504,11 @@ NS_IMETHODIMP
       if (!newencoding) {
         newencoding = encoding;
       }
+      nsCOMPtr < nsISchemaType > schemaType;
       rv = param->GetSchemaType(getter_AddRefs(schemaType));
       if (NS_FAILED(rv))
         return rv;
+      nsCOMPtr < nsIVariant > value;
       rv = param->GetValue(getter_AddRefs(value));
       if (NS_FAILED(rv))
         return rv;
@@ -587,7 +594,8 @@ NS_IMETHODIMP
     nsSOAPMessage::GetHeaderBlocks(PRUint32 * aCount,
                                    nsISOAPHeaderBlock *** aHeaderBlocks)
 {
-  nsCOMPtr < nsIMemory > memory = do_GetService(kMemoryCID);
+  NS_ENSURE_ARG_POINTER(aHeaderBlocks);
+  nsISOAPHeaderBlock** headerBlocks = nsnull;
   *aCount = 0;
   *aHeaderBlocks = nsnull;
   int count = 0;
@@ -609,36 +617,50 @@ NS_IMETHODIMP
   while (next) {
     if (length == count) {
       length = length ? 2 * length : 10;
-      *aHeaderBlocks =
-          (nsISOAPHeaderBlock * *)memory->Realloc(*aHeaderBlocks,
+      headerBlocks =
+          (nsISOAPHeaderBlock * *)nsMemory::Realloc(headerBlocks,
                                                   length *
-                                                  sizeof(**aHeaderBlocks));
+                                                  sizeof(*headerBlocks));
     }
     element = next;
     header = do_CreateInstance(NS_SOAPHEADERBLOCK_CONTRACTID);
-    if (!header)
-      return NS_ERROR_OUT_OF_MEMORY;
+    if (!header) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
     header->Init(nsnull, version);
 
-    (*aHeaderBlocks)[(*aCount)] = header;
-    NS_ADDREF((*aHeaderBlocks)[(*aCount)]);
-    (*aCount)++;
+    (headerBlocks)[(count)] = header;
+    NS_ADDREF((headerBlocks)[(count)]);
+    (count)++;
 
     rv = header->SetElement(element);
     if (NS_FAILED(rv))
-      return rv;
+      break;
     rv = header->SetEncoding(encoding);
     if (NS_FAILED(rv))
-      return rv;
+      break;
     nsSOAPUtils::GetNextSiblingElement(element, getter_AddRefs(next));
   }
-  if (*aCount) {
-    *aHeaderBlocks =
-        (nsISOAPHeaderBlock * *)memory->Realloc(*aHeaderBlocks,
-                                                (*aCount) *
-                                                sizeof(**aHeaderBlocks));
+  if (!NS_FAILED(rv)) {
+    if (count) {
+      headerBlocks =
+          (nsISOAPHeaderBlock * *)nsMemory::Realloc(headerBlocks,
+                                                    count *
+                                                    sizeof(*headerBlocks));
+    }
   }
-  return NS_OK;
+  else {
+    while (--count >= 0) {
+      NS_IF_RELEASE(headerBlocks[count]);
+    }
+    count = 0;
+    nsMemory::Free(headerBlocks);
+    headerBlocks = nsnull;
+  }
+  *aCount = count;
+  *aHeaderBlocks = headerBlocks;
+  return rv;
 }
 
 /* void getParameters (in boolean aDocumentStyle, out PRUint32 aCount, [array, size_is (aCount), retval] out nsISOAPParameter aParameters); */
@@ -646,7 +668,8 @@ NS_IMETHODIMP
     nsSOAPMessage::GetParameters(PRBool aDocumentStyle, PRUint32 * aCount,
                                  nsISOAPParameter *** aParameters)
 {
-  nsCOMPtr < nsIMemory > memory = do_GetService(kMemoryCID);
+  NS_ENSURE_ARG_POINTER(aParameters);
+  nsISOAPParameter** parameters = nsnull;
   *aCount = 0;
   *aParameters = nsnull;
   int count = 0;
@@ -672,35 +695,54 @@ NS_IMETHODIMP
   while (next) {
     if (length == count) {
       length = length ? 2 * length : 10;
-      *aParameters =
-          (nsISOAPParameter * *)memory->Realloc(*aParameters,
+      parameters =
+          (nsISOAPParameter * *)nsMemory::Realloc(parameters,
                                                 length *
-                                                sizeof(**aParameters));
+                                                sizeof(*parameters));
     }
     element = next;
     param = do_CreateInstance(NS_SOAPPARAMETER_CONTRACTID);
-    if (!param)
-      return NS_ERROR_OUT_OF_MEMORY;
-
-    (*aParameters)[(*aCount)] = param;
-    NS_ADDREF((*aParameters)[(*aCount)]);
-    (*aCount)++;
+    if (!param) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      break;
+    }
+    parameters[count] = param;
+    NS_ADDREF(parameters[count]);
+    count++;
 
     rv = param->SetElement(element);
     if (NS_FAILED(rv))
-      return rv;
+      break;
     rv = param->SetEncoding(encoding);
     if (NS_FAILED(rv))
-      return rv;
+      break;
     nsSOAPUtils::GetNextSiblingElement(element, getter_AddRefs(next));
   }
-  if (*aCount) {
-    *aParameters =
-        (nsISOAPParameter * *)memory->Realloc(*aParameters,
-                                              (*aCount) *
-                                              sizeof(**aParameters));
+  if (!NS_FAILED(rv)) {
+    if (count) {
+      parameters =
+          (nsISOAPParameter * *)nsMemory::Realloc(parameters,
+                                                    count *
+                                                    sizeof(*parameters));
+    }
   }
-  return NS_OK;
+  else {
+    while (--count >= 0) {
+      NS_IF_RELEASE(parameters[count]);
+    }
+    count = 0;
+    nsMemory::Free(parameters);
+    parameters = nsnull;
+  }
+  *aCount = count;
+  *aParameters = parameters;
+  if (count) {
+    parameters =
+        (nsISOAPParameter * *)nsMemory::Realloc(parameters,
+                                              count *
+                                              sizeof(*parameters));
+  }
+  return rv;
 }
 
 /* attribute nsISOAPEncoding encoding; */

@@ -167,6 +167,7 @@ NS_IMETHODIMP
     nsSOAPCall::AsyncInvoke(nsISOAPResponseListener * listener,
                             nsISOAPCallCompletion ** aCompletion)
 {
+  NS_ENSURE_ARG_POINTER(aCompletion);
   nsresult rv;
   nsCOMPtr < nsISOAPTransport > transport;
 

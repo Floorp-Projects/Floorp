@@ -70,8 +70,8 @@ protected:
    nsCOMPtr < nsIDOMElement > mElement;
    nsCOMPtr < nsIVariant > mValue;
   nsresult mStatus;
-  PRBool mComputeValue;
-  PRBool mVersion;
+  PRPackedBool mComputeValue;
+  PRPackedBool mVersion;
 };
 
 #endif

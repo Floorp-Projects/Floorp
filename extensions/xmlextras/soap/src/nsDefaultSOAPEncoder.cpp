@@ -246,11 +246,11 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
   if (NS_FAILED(rc))
     return rc;
   nsCOMPtr < nsIDOMElement > element;
-  rc = document->CreateElementNS(ns, aName, _retval);
+  rc = document->CreateElementNS(ns, aName, getter_AddRefs(element));
   if (NS_FAILED(rc))
     return rc;
   nsCOMPtr < nsIDOMNode > ignore;
-  rc = aDestination->AppendChild(*_retval, getter_AddRefs(ignore));
+  rc = aDestination->AppendChild(element, getter_AddRefs(ignore));
   if (NS_FAILED(rc))
     return rc;
   if (aSchemaType) {
@@ -262,7 +262,7 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
     if (NS_FAILED(rc))
       return rc;
     nsAutoString type;
-    rc = nsSOAPUtils::MakeNamespacePrefix(aEncoding, *_retval,
+    rc = nsSOAPUtils::MakeNamespacePrefix(aEncoding, element,
                                             ns, type);
     if (NS_FAILED(rc))
       return rc;
@@ -271,16 +271,22 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
     rc = aEncoding->GetExternalSchemaURI(nsSOAPUtils::kXSIURI, ns);
     if (NS_FAILED(rc))
       return rc;
-    rc = (*_retval)->
+    rc = (element)->
         SetAttributeNS(ns, nsSOAPUtils::kXSITypeAttribute, type);
+    if (NS_FAILED(rc))
+      return rc;
   }
   if (!aValue.IsEmpty()) {
     nsCOMPtr < nsIDOMText > text;
     rc = document->CreateTextNode(aValue, getter_AddRefs(text));
     if (NS_FAILED(rc))
       return rc;
-    return (*_retval)->AppendChild(text, getter_AddRefs(ignore));
+    rc = (element)->AppendChild(text, getter_AddRefs(ignore));
+    if (NS_FAILED(rc))
+      return rc;
   }
+  *_retval = element;
+  NS_IF_ADDREF(element);
   return rc;
 }
 
@@ -556,6 +562,12 @@ NS_IMETHODIMP
                              nsIDOMElement * aDestination,
                              nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   if (aSource == nsnull) {
     nsAutoString ns;
     nsCOMPtr<nsIDOMElement> cloneable;
@@ -692,6 +704,12 @@ NS_IMETHODIMP
                              nsIDOMElement * aDestination,
                              nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsAutoString nativeSchemaType;
   nsAutoString nativeSchemaURI;
   PRUint16 typevalue;
@@ -809,8 +827,7 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
               return rc;
           }
         }
-        if (minOccurs == 0
-          && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+        if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE) //  If we succeeded or failed recoverably, but we were permitted to, then return success
           rc = NS_OK;
         return rc;
       }
@@ -851,8 +868,7 @@ static nsresult EncodeStructParticle(nsISOAPEncoding* aEncoding, nsIPropertyBag*
         }
         if (compositor == nsISchemaModelGroup::COMPOSITOR_CHOICE)  //  If choice selected nothing, this is recoverable failure
           rc = NS_ERROR_NOT_AVAILABLE;
-        if (minOccurs == 0
-          && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+        if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE)  //  If we succeeded or failed recoverably, but we were permitted to, then return success
           rc = NS_OK;
         return rc;                    //  Return status
       }
@@ -903,6 +919,12 @@ NS_IMETHODIMP
                              nsIDOMElement * aDestination,
                              nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsIID* iid;
   nsCOMPtr<nsISupports> ptr;
   nsresult rc = aSource->GetAsInterface(&iid, getter_AddRefs(ptr));
@@ -949,6 +971,12 @@ NS_IMETHODIMP
                                    nsIDOMElement * aDestination,
                                    nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   nsAutoString value;
   rc = aSource->GetAsAString(value);
@@ -1021,7 +1049,7 @@ static nsresult GetArrayType(nsIVariant* aSource, PRUint32 aDimensionCount, PRUi
       {
         nsISupports** values = NS_STATIC_CAST(nsISupports**,array);
         for (i = 0; i < count; i++)
-          values[i]->Release();
+          NS_RELEASE(values[i]);
       }
       break;
     case nsIDataType::VTYPE_WCHAR_STR:
@@ -1105,6 +1133,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
         XPType* values = NS_STATIC_CAST(XPType*, array);\
         nsCOMPtr < nsIWritableVariant > p =\
            do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);\
+        if (NS_FAILED(rc)) break;\
         for (i = 0; i < count; i++) {\
           if (NS_FAILED(rc))\
             break;\
@@ -1140,7 +1169,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
             }
           }
           for (i = 0; i < count; i++)
-          values[i]->Release();
+            NS_RELEASE(values[i]);
           break;
         }
       case nsIDataType::VTYPE_WCHAR_STR:
@@ -1202,6 +1231,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
         else {
           nsCOMPtr < nsIWritableVariant > p =
             do_CreateInstance(NS_VARIANT_CONTRACTID, &rc);
+          if (NS_FAILED(rc)) break;
           for (i = 0; i < count; i++) {
             if (NS_FAILED(rc))
               break;
@@ -1219,7 +1249,7 @@ static nsresult EncodeArray(nsISOAPEncoding* aEncoding, nsIVariant* aSource, nsI
           }
         }
         for (i = 0; i < count; i++)
-          values[i]->Release();
+          NS_RELEASE(values[i]);
         break;
       }
   
@@ -1253,6 +1283,12 @@ NS_IMETHODIMP
                            nsIDOMElement * aDestination,
                            nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   PRUint16 arrayNativeType;
   PRUint32 dimensionSizes[MAX_ARRAY_DIMENSIONS];
   PRUint32 i;
@@ -1364,6 +1400,12 @@ NS_IMETHODIMP
                             nsIDOMElement * aDestination,
                             nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   nsAutoString value;
   rc = aSource->GetAsAString(value);
@@ -1392,6 +1434,12 @@ NS_IMETHODIMP
                              nsIDOMElement * aDestination,
                              nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRBool b;
   rc = aSource->GetAsBool(&b);
@@ -1421,6 +1469,12 @@ NS_IMETHODIMP
                             nsIDOMElement * aDestination,
                             nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   double f;
   rc = aSource->GetAsDouble(&f);        //  Check that double works.
@@ -1455,6 +1509,12 @@ NS_IMETHODIMP
                            nsIDOMElement * aDestination,
                            nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   float f;
   rc = aSource->GetAsFloat(&f);        //  Check that float works.
@@ -1488,6 +1548,12 @@ NS_IMETHODIMP
                           nsIDOMElement * aDestination,
                           nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRInt64 f;
   rc = aSource->GetAsInt64(&f);        //  Get as a long number.
@@ -1521,6 +1587,12 @@ NS_IMETHODIMP
                          nsIDOMElement * aDestination,
                          nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRInt32 f;
   rc = aSource->GetAsInt32(&f);        //  Get as a long number.
@@ -1554,6 +1626,12 @@ NS_IMETHODIMP
                            nsIDOMElement * aDestination,
                            nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRInt16 f;
   rc = aSource->GetAsInt16(&f);        //  Get as a long number.
@@ -1587,6 +1665,12 @@ NS_IMETHODIMP
                           nsIDOMElement * aDestination,
                           nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRUint8 f;
   rc = aSource->GetAsInt8(&f);        //  Get as a long number.
@@ -1620,6 +1704,12 @@ NS_IMETHODIMP
                                   nsIDOMElement * aDestination,
                                   nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRUint64 f;
   rc = aSource->GetAsUint64(&f);        //  Get as a long number.
@@ -1653,6 +1743,12 @@ NS_IMETHODIMP
                                  nsIDOMElement * aDestination,
                                  nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRUint32 f;
   rc = aSource->GetAsUint32(&f);        //  Get as a long number.
@@ -1686,6 +1782,12 @@ NS_IMETHODIMP
                                    nsIDOMElement * aDestination,
                                    nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRUint16 f;
   rc = aSource->GetAsUint16(&f);        //  Get as a long number.
@@ -1719,6 +1821,12 @@ NS_IMETHODIMP
                                   nsIDOMElement * aDestination,
                                   nsIDOMElement * *aReturnValue)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(&aNamespaceURI);
+  NS_ENSURE_ARG_POINTER(&aName);
+  NS_ENSURE_ARG_POINTER(aDestination);
+  NS_ENSURE_ARG_POINTER(aReturnValue);
+  *aReturnValue = nsnull;
   nsresult rc;
   PRUint8 f;
   rc = aSource->GetAsUint8(&f);        //  Get as a long number.
@@ -1747,6 +1855,10 @@ NS_IMETHODIMP
                              nsISOAPAttachments * aAttachments,
                              nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsCOMPtr < nsISOAPEncoding > encoding = aEncoding;        //  First, handle encoding redesignation, if any
 
   {
@@ -1895,7 +2007,7 @@ NS_IMETHODIMP
     }
   }
   if (!decoder) {
-    PRBool simple;
+    PRBool simple = PR_TRUE;
     if (type) {
       nsresult rc = HasSimpleValue(type, &simple);
       if (NS_FAILED(rc))
@@ -1904,7 +2016,7 @@ NS_IMETHODIMP
     if (simple) {
       nsCOMPtr<nsIDOMElement> child;
       nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
-      simple = child == nsnull;
+      simple = !child;
     }
     nsAutoString decodingKey;
     if (!simple) {
@@ -1933,7 +2045,11 @@ NS_IMETHODIMP
                              nsISOAPAttachments * aAttachments,
                              nsIVariant ** _retval)
 {
-  PRBool simple;
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
+  PRBool simple = PR_TRUE;
   if (aSchemaType) {
     nsresult rc = HasSimpleValue(aSchemaType, &simple);
     if (NS_FAILED(rc))
@@ -1942,7 +2058,7 @@ NS_IMETHODIMP
   if (simple) {
     nsCOMPtr<nsIDOMElement> child;
     nsSOAPUtils::GetFirstChildElement(aSource, getter_AddRefs(child));
-    simple = child == nsnull;
+    simple = !child;
   }
   nsAutoString decodingKey;
   if (!simple) {
@@ -2031,11 +2147,11 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
             return rc;
           nsSOAPUtils::GetNextSiblingElement(aElement, _retElement);
         }
-        if (minOccurs == 0
-          && rc == NS_ERROR_NOT_AVAILABLE)  //  If we failed recoverably, but we were permitted to, then return success
+        if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE) { //  If we failed recoverably, but we were permitted to, then return success
           *_retElement = aElement;
           NS_IF_ADDREF(*_retElement);
           rc = NS_OK;
+        }
         return rc;
       }
       case nsISchemaParticle::PARTICLE_TYPE_MODEL_GROUP: 
@@ -2096,8 +2212,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
             *_retElement = next;
             NS_IF_ADDREF(*_retElement);
           }
-          if (minOccurs == 0
-            && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+          if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
             *_retElement = aElement;
             NS_IF_ADDREF(*_retElement);
             rc = NS_OK;
@@ -2140,8 +2255,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
             *_retElement = next;
             NS_IF_ADDREF(*_retElement);
           }
-          if (minOccurs == 0
-            && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
+          if (minOccurs == 0 && rc == NS_ERROR_NOT_AVAILABLE) {  //  If we succeeded or failed recoverably, but we were permitted to, then return success
             *_retElement = aElement;
             NS_IF_ADDREF(*_retElement);
             rc = NS_OK;
@@ -2157,7 +2271,7 @@ static nsresult DecodeStructParticle(nsISOAPEncoding* aEncoding, nsIDOMElement* 
   }
 
   nsCOMPtr<nsIDOMElement> child = aElement;
-  while (child != nsnull) {
+  while (child) {
     nsAutoString name;
     nsAutoString namespaceURI;
     nsCOMPtr<nsIVariant>value;
@@ -2192,6 +2306,10 @@ NS_IMETHODIMP
                              nsISOAPAttachments * aAttachments,
                              nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsresult rc;
   nsCOMPtr<nsISOAPPropertyBagMutator> mutator = do_CreateInstance(NS_SOAPPROPERTYBAGMUTATOR_CONTRACTID, &rc);
   if (NS_FAILED(rc))
@@ -2237,6 +2355,10 @@ NS_IMETHODIMP
                                    nsISOAPAttachments * aAttachments,
                                    nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2278,7 +2400,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
   src.EndReading(i2);
   if (src.IsEmpty()) return 0;
   while (i1 != i2      //  Loop past white space
-    && *(--i2) <= ' ')
+    && *(--i2) <= ' ') //  In XML, all valid characters <= space are the only whitespace
     ;
   if (*i2 != ']') {                  //  In this case, not an array dimension
     int len = Distance(i1, i2) - 1;  //  This is the size to truncate to at the end.
@@ -2303,7 +2425,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
   {
     nsReadingIterator < PRUnichar > i3 = i2++;  //  Cover any extra white space
     while (i1 != i3) {      //  Loop past white space
-      if (*(--i3) > ' ') {
+      if (*(--i3) > ' ') { //  In XML, all valid characters <= space are the only whitespace
         i3++;
         break;
       }
@@ -2328,7 +2450,7 @@ static PRUint32 DecodeArrayDimensions(const nsAString& src, PRInt32* aDimensionS
     PRUnichar c = *(i1++);
     if (c < '0' || c > '9') {
 //  There may be slightly more to do here if alternative radixes are supported.
-      if (c <= ' ') {              //  Accept anything < space as whitespace
+      if (c <= ' ') {              //  In XML, all valid characters <= space are the only whitespace
         if (aDimensionSizes[dimensionCount] >= 0) {
           finished = PR_TRUE;
         }
@@ -2388,8 +2510,9 @@ static PRInt32 DecodeArrayPosition(const nsAString& src, PRUint32 aDimensionCoun
     if (++i < aDimensionCount)                 //  Multiply for next round.
       result = result * aDimensionSizes[i];
     else
-      return result;
+      break;
   }
+  return result;
 }
 
 /**
@@ -2411,6 +2534,8 @@ static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const n
     PRUint32 size = aSizeof / count;
     PRInt32 i;
     nsIVariant** a = new nsIVariant*[count];  //  Create variant array.
+    if (!a)
+      return NS_ERROR_OUT_OF_MEMORY;
 
     nsresult rc = NS_OK;
 
@@ -2432,7 +2557,7 @@ static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const n
     for (i = 0; i < count; i++) {            //  Release variants for array
       nsIVariant* v = a[i];
       if (v)
-        v->Release();
+        NS_RELEASE(v);
     }
     delete[] a;
     return rc;
@@ -2450,6 +2575,10 @@ NS_IMETHODIMP
                            nsISOAPAttachments * aAttachments,
                            nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString ns;
   nsAutoString name;
   nsCOMPtr < nsISchemaType > schemaArrayType;
@@ -2761,7 +2890,7 @@ NS_IMETHODIMP
   }
   if (unhandled) {  //  Handle all the other cases
     DECODE_ARRAY(nsIVariant*,INTERFACE,&NS_GET_IID(nsIVariant),a[p] = v;,
-                      for (si = 0; si < size; si++) a[si]->Release(););
+                      for (si = 0; si < size; si++) NS_RELEASE(a[si]););
   }
   if (NS_FAILED(rc))\
     return rc;
@@ -2777,6 +2906,10 @@ NS_IMETHODIMP
                             nsISOAPAttachments * aAttachments,
                             nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2800,6 +2933,10 @@ NS_IMETHODIMP
                              nsISOAPAttachments * aAttachments,
                              nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2815,7 +2952,9 @@ NS_IMETHODIMP
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BOOLEAN","Illegal value discovered for boolean");
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsBool(b);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2829,6 +2968,10 @@ NS_IMETHODIMP
                             nsISOAPAttachments * aAttachments,
                             nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2840,7 +2983,9 @@ NS_IMETHODIMP
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_DOUBLE","Illegal value discovered for double");
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsDouble(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2854,6 +2999,10 @@ NS_IMETHODIMP
                            nsISOAPAttachments * aAttachments,
                            nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2863,10 +3012,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %f %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_FLOAT","Illegal value discovered for float");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsFloat(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2880,6 +3030,10 @@ NS_IMETHODIMP
                           nsISOAPAttachments * aAttachments,
                           nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2889,10 +3043,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lld %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_LONG","Illegal value discovered for long");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsInt64(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2906,6 +3061,10 @@ NS_IMETHODIMP
                          nsISOAPAttachments * aAttachments,
                          nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2915,10 +3074,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %ld %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_INT","Illegal value discovered for int");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsInt32(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2932,6 +3092,10 @@ NS_IMETHODIMP
                            nsISOAPAttachments * aAttachments,
                            nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2941,10 +3105,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_SHORT","Illegal value discovered for short");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsInt16(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2958,6 +3123,10 @@ NS_IMETHODIMP
                           nsISOAPAttachments * aAttachments,
                           nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2967,10 +3136,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hd %n", &f, &n);
   if (r == 0 || n < value.Length() || f < -128 || f > 127)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_BYTE","Illegal value discovered for byte");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsInt8((PRUint8) f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -2984,6 +3154,10 @@ NS_IMETHODIMP
                                   nsISOAPAttachments * aAttachments,
                                   nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -2993,10 +3167,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %llu %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_ULONG","Illegal value discovered for unsigned long");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsUint64(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -3010,6 +3185,10 @@ NS_IMETHODIMP
                                  nsISOAPAttachments * aAttachments,
                                  nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -3019,10 +3198,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %lu %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UINT","Illegal value discovered for unsigned int");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsUint32(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -3036,6 +3216,10 @@ NS_IMETHODIMP
                                    nsISOAPAttachments * aAttachments,
                                    nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -3045,10 +3229,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length())
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_USHORT","Illegal value discovered for unsigned short");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsUint16(f);
   *_retval = p;
   NS_ADDREF(*_retval);
@@ -3062,6 +3247,10 @@ NS_IMETHODIMP
                                   nsISOAPAttachments * aAttachments,
                                   nsIVariant ** _retval)
 {
+  NS_ENSURE_ARG_POINTER(aEncoding);
+  NS_ENSURE_ARG_POINTER(aSource);
+  NS_ENSURE_ARG_POINTER(_retval);
+  *_retval = nsnull;
   nsAutoString value;
   nsresult rc = nsSOAPUtils::GetElementTextContent(aSource, value);
   if (NS_FAILED(rc))
@@ -3071,10 +3260,11 @@ NS_IMETHODIMP
   int r = PR_sscanf(NS_ConvertUCS2toUTF8(value).get(), " %hu %n", &f, &n);
   if (r == 0 || n < value.Length() || f > 255)
     return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_ILLEGAL_UBYTE","Illegal value discovered for unsigned byte");
-    return NS_ERROR_ILLEGAL_VALUE;
 
   nsCOMPtr < nsIWritableVariant > p =
-      do_CreateInstance(NS_VARIANT_CONTRACTID);
+      do_CreateInstance(NS_VARIANT_CONTRACTID,&rc);
+  if (NS_FAILED(rc))
+    return rc;
   p->SetAsUint8((PRUint8) f);
   *_retval = p;
   NS_ADDREF(*_retval);

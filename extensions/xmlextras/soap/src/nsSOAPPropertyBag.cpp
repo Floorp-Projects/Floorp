@@ -145,7 +145,7 @@ NS_IMETHODIMP
     nsCOMPtr < nsIVariant > value =
         dont_AddRef(NS_STATIC_CAST
                     (nsIVariant *, mProperties->Get(&nameKey)));
-    if (value == nsnull)
+    if (!value)
       return NS_OK;
     void *mark;
     jsval *argv = JS_PushArguments(cx, &mark, "%iv", value.get());
