@@ -53,6 +53,7 @@ void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
 {
   NS_PRECONDITION(0<=aColIndex, "bad col index arg");
   mColIndex = aColIndex;
+  mBorderEdges.mOutsideEdge=PR_FALSE;
   nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
@@ -98,11 +99,14 @@ void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide,
 }
 
 
+static int xxxpaintborders=1;
+
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
                                   nsFramePaintLayer aWhichLayer)
 {
+  printf("\npaint cell (%d,%d)\n", GetRowIndex(), GetColIndex());
   if (eFramePaintLayer_Underlay == aWhichLayer) {
     const nsStyleDisplay* disp =
       (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -145,6 +149,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
           }
           else
           {
+            if (xxxpaintborders)
             nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
                                              aDirtyRect, rect, &mBorderEdges, skipSides);
           }
@@ -155,7 +160,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
 
   // for debug...
   if ((eFramePaintLayer_Overlay == aWhichLayer) && GetShowFrameBorders()) {
-    aRenderingContext.SetColor(NS_RGB(0,128,128));
+    aRenderingContext.SetColor(NS_RGB(0, 0, 128));
     aRenderingContext.DrawRect(0, 0, mRect.width, mRect.height);
   }
 
@@ -237,8 +242,14 @@ void  nsTableCellFrame::VerticallyAlignChild()
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
   const nsStyleText* textStyle =
       (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
+  /* XXX: remove tableFrame when border-collapse inherits */
+  nsTableFrame* tableFrame=nsnull;
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   nsMargin borderPadding;
-  spacing->CalcBorderPaddingFor(this, borderPadding);
+  GetCellBorder (borderPadding, tableFrame);
+  nsMargin padding;
+  spacing->GetPadding(padding);
+  borderPadding += padding;
   
   nscoord topInset = borderPadding.top;
   nscoord bottomInset = borderPadding.bottom;
@@ -349,8 +360,14 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   const nsStyleSpacing* spacing =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
 
+  /* XXX: remove tableFrame when border-collapse inherits */
+  nsTableFrame* tableFrame=nsnull;
+  rv = nsTableFrame::GetTableFrame(this, tableFrame);
   nsMargin borderPadding;
-  spacing->CalcBorderPaddingFor(this, borderPadding);
+  GetCellBorder (borderPadding, tableFrame);
+  nsMargin padding;
+  spacing->GetPadding(padding);
+  borderPadding += padding;
 
   nscoord topInset = borderPadding.top;
   nscoord rightInset = borderPadding.right;
@@ -805,44 +822,6 @@ nscoord nsTableCellFrame::GetMargin(nsIFrame* aFrame, PRUint8 aEdge) const
 
 
 /**
-  * Given a style context and an edge, find the border width
-  *
-  **/
-nscoord nsTableCellFrame::GetBorderWidth(nsIFrame* aFrame, PRUint8 aEdge) const
-{
-  nscoord result = 0;
-
-  if (aFrame)
-  {
-    const nsStyleSpacing* spacing;
-    aFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
-    nsMargin  border;
-    spacing->CalcBorderFor(aFrame, border);
-    switch (aEdge)
-    {
-      case NS_SIDE_TOP:
-        result = border.top;
-      break;
-
-      case NS_SIDE_RIGHT:
-        result = border.right;
-      break;
-
-      case NS_SIDE_BOTTOM:
-        result = border.bottom;
-      break;
-
-      case NS_SIDE_LEFT:
-        result = border.left;
-      break;
-
-    }
-  }
-  return result;
-}
-
-
-/**
   * Given an Edge, find the opposing edge (top<-->bottom, left<-->right)
   *
   **/
@@ -908,7 +887,23 @@ nscoord nsTableCellFrame::FindLargestMargin(nsVoidArray* aList,PRUint8 aEdge)
 }
 
 
+void nsTableCellFrame::GetCellBorder(nsMargin &aBorder, nsTableFrame *aTableFrame)
+{
+  aBorder.left = aBorder.right = aBorder.top = aBorder.bottom = 0;
+  if (nsnull==aTableFrame)
+    return;
 
+  if (NS_STYLE_BORDER_COLLAPSE==aTableFrame->GetBorderCollapseStyle())
+  {
+    aBorder = mBorderEdges.mMaxBorderWidth;
+  }
+  else
+  {
+    const nsStyleSpacing* spacing;
+    aTableFrame->GetStyleData(eStyleStruct_Spacing, (const nsStyleStruct*&)spacing);
+    spacing->GetBorder(aBorder);
+  }
+}
 
 void nsTableCellFrame::CalculateMargins(nsTableFrame*     aTableFrame,
                                         nsVoidArray*      aBoundaryCells[4])
@@ -1040,20 +1035,6 @@ void nsTableCellFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) 
 
       nscoord top,left,bottom,right;
     
-      top = (mBorderFrame[NS_SIDE_TOP] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_TOP], NS_SIDE_TOP) : 0);
-      left = (mBorderFrame[NS_SIDE_LEFT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_LEFT], NS_SIDE_LEFT) : 0);
-      bottom = (mBorderFrame[NS_SIDE_BOTTOM] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_BOTTOM], NS_SIDE_BOTTOM) : 0);
-      right = (mBorderFrame[NS_SIDE_RIGHT] ? GetBorderWidth((nsIFrame*)mBorderFrame[NS_SIDE_RIGHT], NS_SIDE_RIGHT) : 0);
-
-
-      fprintf(out,"Border -- Top: %d Left: %d Bottom: %d Right: %d \n",  
-                  NSTwipsToIntPoints(top),
-                  NSTwipsToIntPoints(left),
-                  NSTwipsToIntPoints(bottom),
-                  NSTwipsToIntPoints(right));
-
-
-
       cell->List(out,aIndent);
       NS_RELEASE(cell);
     }

@@ -186,9 +186,18 @@ public:
     *
     */
   //virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
+
+
   NS_IMETHOD GetFrameName(nsString& aResult) const;
 
+  /** get the max border thickness for each edge */
   void GetTableBorder(nsMargin &aBorder);
+
+  /** get the border values for the row and column */
+  void GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt32 aColIndex);
+
+  /** get the max border thickness for each edge encompassed by the row group */
+  void GetTableBorderForRowGroup(nsTableRowGroupFrame * aRowGroupFrame, nsMargin &aBorder);
 
   /** return the width of the column at aColIndex    */
   virtual PRInt32 GetColumnWidth(PRInt32 aColIndex);
@@ -210,6 +219,11 @@ public:
           
   /** Calculate Layout Information */
   void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
+
+  /** notification that top and bottom borders have been computed */ 
+  void DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
+                                             PRInt32 aStartRowIndex,
+                                             PRInt32 aEndRowIndex);
 
   /** compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
   void    ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext,

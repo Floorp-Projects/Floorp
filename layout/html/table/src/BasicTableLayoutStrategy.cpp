@@ -146,7 +146,10 @@ void BasicTableLayoutStrategy::SetMaxElementSize(nsSize* aMaxElementSize)
     const nsStyleSpacing* tableSpacing;
     mTableFrame->GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)tablePosition));
     mTableFrame->GetStyleData(eStyleStruct_Spacing , ((const nsStyleStruct *&)tableSpacing));
-    tableSpacing->CalcBorderPaddingFor(mTableFrame, borderPadding);
+    mTableFrame->GetTableBorder(borderPadding);
+    nsMargin padding;
+    tableSpacing->GetPadding(padding);
+    borderPadding += padding;
     if (tablePosition->mWidth.GetUnit()==eStyleUnit_Coord)
     {
       aMaxElementSize->width = tablePosition->mWidth.GetCoordValue();
