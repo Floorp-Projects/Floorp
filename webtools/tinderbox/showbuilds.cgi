@@ -799,7 +799,7 @@ sub do_panel {
           LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
   );
   # Hack the panel link for now.
-  print "<a target='_content' href='http://tinderbox.mozilla.org/seamonkey/'>$::tree";
+  print "<a target='_content' href='http://tinderbox.mozilla.org/$::tree/'>$::tree";
   
   if (is_tree_state_available()) {
     print " is ", is_tree_open() ? 'open' : 'closed';
