@@ -144,18 +144,19 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 static JSFunctionSpec number_functions[] = {
-    {"isNaN",           num_isNaN,              1},
-    {"isFinite",        num_isFinite,           1},
-    {"parseFloat",      num_parseFloat,         1},
-    {"parseInt",        num_parseInt,           2},
-    {0}
+    {"isNaN",           num_isNaN,              1,0,0},
+    {"isFinite",        num_isFinite,           1,0,0},
+    {"parseFloat",      num_parseFloat,         1,0,0},
+    {"parseInt",        num_parseInt,           2,0,0},
+    {0,0,0,0,0}
 };
 
 static JSClass number_class = {
     "Number",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -333,16 +334,16 @@ num_toPrecision(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   num_toSource,      0},
+    {js_toSource_str,   num_toSource,      0,0,0},
 #endif
-    {js_toString_str,	num_toString,	   0},
-    {js_valueOf_str,	num_valueOf,	   0},
+    {js_toString_str,	num_toString,	   0,0,0},
+    {js_valueOf_str,	num_valueOf,	   0,0,0},
 #if JS_HAS_NUMBER_FORMATS
-    {"toFixed",         num_toFixed,       1},
-    {"toExponential",   num_toExponential, 1},
-    {"toPrecision",     num_toPrecision,   1},
+    {"toFixed",         num_toFixed,       1,0,0},
+    {"toExponential",   num_toExponential, 1,0,0},
+    {"toPrecision",     num_toPrecision,   1,0,0},
 #endif
-    {0}
+    {0,0,0,0,0}
 };
 
 /* NB: Keep this in synch with number_constants[]. */
@@ -361,12 +362,12 @@ enum nc_slot {
  * using union dpun.
  */
 static JSConstDoubleSpec number_constants[] = {
-    {0,                         js_NaN_str},
-    {0,                         "POSITIVE_INFINITY"},
-    {0,                         "NEGATIVE_INFINITY"},
-    {1.7976931348623157E+308,   "MAX_VALUE"},
-    {0,                         "MIN_VALUE"},
-    {0}
+    {0,                         js_NaN_str,          0,{0,0,0}},
+    {0,                         "POSITIVE_INFINITY", 0,{0,0,0}},
+    {0,                         "NEGATIVE_INFINITY", 0,{0,0,0}},
+    {1.7976931348623157E+308,   "MAX_VALUE",         0,{0,0,0}},
+    {0,                         "MIN_VALUE",         0,{0,0,0}},
+    {0,0,0,{0,0,0}}
 };
 
 static jsdouble NaN;

@@ -94,7 +94,7 @@ IdIsIndex(jsid id, jsuint *indexp)
     if (JS7_ISDEC(*cp) && str->length < sizeof(MAXSTR)) {
 	jsuint index = JS7_UNDEC(*cp++);
 	jsuint oldIndex = 0;
-	jsint c = 0;
+	jsuint c = 0;
 	if (index != 0) {
 	    while (JS7_ISDEC(*cp)) {
 		oldIndex = index;
@@ -305,7 +305,8 @@ JSClass js_ArrayClass = {
     "Array",
     0,
     array_addProperty, JS_PropertyStub,   JS_PropertyStub,   JS_PropertyStub,
-    JS_EnumerateStub,  JS_ResolveStub,    array_convert,     JS_FinalizeStub
+    JS_EnumerateStub,  JS_ResolveStub,    array_convert,     JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 static JSBool
@@ -1278,30 +1279,30 @@ array_slice(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec array_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   array_toSource,         0},
+    {js_toSource_str,   array_toSource,         0,0,0},
 #endif
-    {js_toString_str,   array_toString,         0},
+    {js_toString_str,   array_toString,         0,0,0},
 
     /* Perl-ish methods. */
-    {"join",            array_join,             1},
-    {"reverse",         array_reverse,          0},
-    {"sort",            array_sort,             1},
+    {"join",            array_join,             1,0,0},
+    {"reverse",         array_reverse,          0,0,0},
+    {"sort",            array_sort,             1,0,0},
 #ifdef NOTYET
-    {"pack",            array_pack,             1},
+    {"pack",            array_pack,             1,0,0},
 #endif
-    {"push",            array_push,             1},
-    {"pop",             array_pop,              0},
-    {"shift",           array_shift,            0},
-    {"unshift",         array_unshift,          1},
-    {"splice",          array_splice,           1},
+    {"push",            array_push,             1,0,0},
+    {"pop",             array_pop,              0,0,0},
+    {"shift",           array_shift,            0,0,0},
+    {"unshift",         array_unshift,          1,0,0},
+    {"splice",          array_splice,           1,0,0},
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",          array_concat,           0},
-    {"slice",           array_slice,            0},
+    {"concat",          array_concat,           0,0,0},
+    {"slice",           array_slice,            0,0,0},
 #endif
 
-    {0}
+    {0,0,0,0,0}
 };
 
 static JSBool

@@ -255,12 +255,12 @@ str_uneval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 #endif
 
 static JSFunctionSpec string_functions[] = {
-    {"escape",          str_escape,             1},
-    {"unescape",        str_unescape,           1},
+    {"escape",          str_escape,             1,0,0},
+    {"unescape",        str_unescape,           1,0,0},
 #if JS_HAS_UNEVAL
-    {"uneval",          str_uneval,             1},
+    {"uneval",          str_uneval,             1,0,0},
 #endif
-    {0}
+    {0,0,0,0,0}
 };
 
 jschar      js_empty_ucstr[]  = {0};
@@ -271,8 +271,8 @@ enum string_tinyid {
 };
 
 static JSPropertySpec string_props[] = {
-    {js_length_str,     STRING_LENGTH,  JSPROP_READONLY},
-    {0}
+    {js_length_str,     STRING_LENGTH,  JSPROP_READONLY,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -357,7 +357,8 @@ static JSClass string_class = {
     "String",
     JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  str_delProperty,  str_getProperty,  JS_PropertyStub,
-    str_enumerate,    str_resolve,      JS_ConvertStub,   JS_FinalizeStub
+    str_enumerate,    str_resolve,      JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #if JS_HAS_TOSOURCE
@@ -1935,52 +1936,52 @@ str_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec string_methods[] = {
 #if JS_HAS_TOSOURCE
-    {"quote",           str_quote,              0},
-    {js_toSource_str,   str_toSource,           0},
+    {"quote",           str_quote,              0,0,0},
+    {js_toSource_str,   str_toSource,           0,0,0},
 #endif
 
     /* Java-like methods. */
-    {js_toString_str,   str_toString,           0},
-    {js_valueOf_str,    str_valueOf,            0},
-    {"substring",       str_substring,          2},
-    {"toLowerCase",     str_toLowerCase,        0},
-    {"toUpperCase",     str_toUpperCase,        0},
-    {"charAt",          str_charAt,             1},
-    {"charCodeAt",      str_charCodeAt,         1},
-    {"indexOf",         str_indexOf,            2},
-    {"lastIndexOf",     str_lastIndexOf,        2},
+    {js_toString_str,   str_toString,           0,0,0},
+    {js_valueOf_str,    str_valueOf,            0,0,0},
+    {"substring",       str_substring,          2,0,0},
+    {"toLowerCase",     str_toLowerCase,        0,0,0},
+    {"toUpperCase",     str_toUpperCase,        0,0,0},
+    {"charAt",          str_charAt,             1,0,0},
+    {"charCodeAt",      str_charCodeAt,         1,0,0},
+    {"indexOf",         str_indexOf,            2,0,0},
+    {"lastIndexOf",     str_lastIndexOf,        2,0,0},
 
     /* Perl-ish methods (search is actually Python-esque). */
-    {"match",           str_match,              1},
-    {"search",          str_search,             1},
-    {"replace",         str_replace,            2},
-    {"split",           str_split,              1},
-    {"substr",          str_substr,             2},
+    {"match",           str_match,              1,0,0},
+    {"search",          str_search,             1,0,0},
+    {"replace",         str_replace,            2,0,0},
+    {"split",           str_split,              1,0,0},
+    {"substr",          str_substr,             2,0,0},
 #ifdef NOTYET
-    {"unpack",          str_unpack,             1},
+    {"unpack",          str_unpack,             1,0,0},
 #endif
 
     /* Python-esque sequence methods. */
 #if JS_HAS_SEQUENCE_OPS
-    {"concat",          str_concat,             0},
-    {"slice",           str_slice,              0},
+    {"concat",          str_concat,             0,0,0},
+    {"slice",           str_slice,              0,0,0},
 #endif
 
     /* HTML string methods. */
-    {"bold",            str_bold,               0},
-    {"italics",         str_italics,            0},
-    {"fixed",           str_fixed,              0},
-    {"fontsize",        str_fontsize,           1},
-    {"fontcolor",       str_fontcolor,          1},
-    {"link",            str_link,               1},
-    {"anchor",          str_anchor,             1},
-    {"strike",          str_strike,             0},
-    {"small",           str_small,              0},
-    {"big",             str_big,                0},
-    {"blink",           str_blink,              0},
-    {"sup",             str_sup,                0},
-    {"sub",             str_sub,                0},
-    {0}
+    {"bold",            str_bold,               0,0,0},
+    {"italics",         str_italics,            0,0,0},
+    {"fixed",           str_fixed,              0,0,0},
+    {"fontsize",        str_fontsize,           1,0,0},
+    {"fontcolor",       str_fontcolor,          1,0,0},
+    {"link",            str_link,               1,0,0},
+    {"anchor",          str_anchor,             1,0,0},
+    {"strike",          str_strike,             0,0,0},
+    {"small",           str_small,              0,0,0},
+    {"big",             str_big,                0,0,0},
+    {"blink",           str_blink,              0,0,0},
+    {"sup",             str_sup,                0,0,0},
+    {"sub",             str_sub,                0,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -2033,8 +2034,8 @@ str_fromCharCode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 }
 
 static JSFunctionSpec string_static_methods[] = {
-    {"fromCharCode",    str_fromCharCode,       1},
-    {0}
+    {"fromCharCode",    str_fromCharCode,       1,0,0},
+    {0,0,0,0,0}
 };
 
 static JSHashTable *deflated_string_cache;

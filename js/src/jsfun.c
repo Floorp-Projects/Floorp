@@ -148,9 +148,9 @@ Arguments(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSPropertySpec args_props[] = {
-    {js_length_str,     ARGS_LENGTH,    0},
-    {js_callee_str,     ARGS_CALLEE,    0},
-    {0}
+    {js_length_str,     ARGS_LENGTH,    0,0,0},
+    {js_callee_str,     ARGS_CALLEE,    0,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -249,7 +249,8 @@ JSClass js_ArgumentsClass = {
     JS_PropertyStub,  JS_PropertyStub,
     args_getProperty, args_setProperty,
     args_enumerate,   JS_ResolveStub,
-    JS_ConvertStub,   JS_FinalizeStub
+    JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #endif /* JS_HAS_ARGS_OBJECT */
@@ -349,10 +350,10 @@ Call(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 static JSPropertySpec call_props[] = {
-    {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT},
-    {"__callee__",      ARGS_CALLEE,    0},
-    {"__call__",        FUN_CALL,       0},
-    {0}
+    {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT,0,0},
+    {"__callee__",      ARGS_CALLEE,    0,0,0},
+    {"__call__",        FUN_CALL,       0,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -570,7 +571,8 @@ JSClass js_CallClass = {
     JS_PropertyStub,  JS_PropertyStub,
     call_getProperty, call_setProperty,
     call_enumerate,   (JSResolveOp)call_resolve,
-    call_convert,     JS_FinalizeStub
+    call_convert,     JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #endif /* JS_HAS_CALL_OBJECT */
@@ -664,7 +666,8 @@ JSClass js_ClosureClass = {
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   closure_convert,  JS_FinalizeStub,
-    NULL,             NULL,             closure_call,     closure_call
+    NULL,             NULL,             closure_call,     closure_call,
+    NULL,NULL,{0,0}
 };
 #endif /* JS_HAS_LEXICAL_CLOSURE */
 
@@ -674,12 +677,12 @@ static JSPropertySpec function_props[] = {
      * set by an unqualified assignment 'arguments = ...' within a call where
      * fun->object is proxying for a Call object.
      */
-    {js_arguments_str,  CALL_ARGUMENTS, JSPROP_PERMANENT},
-    {"__arity__",       FUN_ARITY,      JSPROP_READONLY | JSPROP_PERMANENT},
-    {"__length__",      ARGS_LENGTH,    JSPROP_READONLY | JSPROP_PERMANENT},
-    {"__name__",        FUN_NAME,       JSPROP_READONLY | JSPROP_PERMANENT},
-    {"__call__",        FUN_CALL,       JSPROP_READONLY | JSPROP_PERMANENT},
-    {0}
+    {js_arguments_str, CALL_ARGUMENTS, JSPROP_PERMANENT,0,0},
+    {"__arity__",      FUN_ARITY,      JSPROP_READONLY | JSPROP_PERMANENT,0,0},
+    {"__length__",     ARGS_LENGTH,    JSPROP_READONLY | JSPROP_PERMANENT,0,0},
+    {"__name__",       FUN_NAME,       JSPROP_READONLY | JSPROP_PERMANENT,0,0},
+    {"__call__",       FUN_CALL,       JSPROP_READONLY | JSPROP_PERMANENT,0,0},
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -1178,7 +1181,8 @@ JSClass js_FunctionClass = {
     fun_convert,      fun_finalize,
     NULL,             NULL,
     NULL,             NULL,
-    fun_xdrObject,    fun_hasInstance
+    fun_xdrObject,    fun_hasInstance,
+    {0,0}
 };
 
 static JSBool
@@ -1364,16 +1368,16 @@ out:
 
 static JSFunctionSpec function_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   fun_toSource,   0},
+    {js_toSource_str,   fun_toSource,   0,0,0},
 #endif
-    {js_toString_str,	fun_toString,	1},
+    {js_toString_str,	fun_toString,	1,0,0},
 #if JS_HAS_APPLY_FUNCTION
-    {"apply",		fun_apply,	1},
+    {"apply",		fun_apply,	1,0,0},
 #endif
 #if JS_HAS_CALL_FUNCTION
-    {"call",		fun_call,	1},
+    {"call",		fun_call,	1,0,0},
 #endif
-    {0}
+    {0,0,0,0,0}
 };
 
 JSBool

@@ -88,7 +88,8 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_Enumerate,       js_CheckAccess,
     NULL,               NATIVE_DROP_PROPERTY,
     js_Call,            js_Construct,
-    NULL,               js_HasInstance
+    NULL,               js_HasInstance,
+    {0,0}
 };
 
 #ifdef XP_MAC
@@ -99,7 +100,8 @@ JSClass js_ObjectClass = {
     js_Object_str,
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 #if JS_HAS_OBJ_PROTO_PROP
@@ -119,7 +121,7 @@ static JSPropertySpec object_props[] = {
     {js_parent_str,JSSLOT_PARENT, JSPROP_PERMANENT|JSPROP_READONLY,
                                                     obj_getSlot,  obj_setSlot},
     {js_count_str, 0,             JSPROP_PERMANENT, obj_getCount, obj_getCount},
-    {0}
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -912,18 +914,18 @@ static JSFunctionSpec object_methods[] = {
     {js_toSource_str,         js_obj_toSource,        0, 0, OBJ_TOSTRING_EXTRA},
 #endif
     {js_toString_str,         js_obj_toString,        0, 0, OBJ_TOSTRING_EXTRA},
-    {js_valueOf_str,          obj_valueOf,            0},
-    {js_eval_str,             obj_eval,               1},
+    {js_valueOf_str,          obj_valueOf,            0,0,0},
+    {js_eval_str,             obj_eval,               1,0,0},
 #if JS_HAS_OBJ_WATCHPOINT
-    {"watch",                 obj_watch,              2},
-    {"unwatch",               obj_unwatch,            1},
+    {"watch",                 obj_watch,              2,0,0},
+    {"unwatch",               obj_unwatch,            1,0,0},
 #endif
 #if JS_HAS_NEW_OBJ_METHODS
-    {"hasOwnProperty",        obj_hasOwnProperty,     1},
-    {"isPrototypeOf",         obj_isPrototypeOf,      1},
-    {"propertyIsEnumerable",  obj_propertyIsEnumerable, 1},
+    {"hasOwnProperty",        obj_hasOwnProperty,     1,0,0},
+    {"isPrototypeOf",         obj_isPrototypeOf,      1,0,0},
+    {"propertyIsEnumerable",  obj_propertyIsEnumerable, 1,0,0},
 #endif
-    {0}
+    {0,0,0,0,0}
 };
 
 static JSBool
@@ -1058,7 +1060,8 @@ JS_FRIEND_DATA(JSObjectOps) js_WithObjectOps = {
     with_GetAttributes,     with_SetAttributes,
     with_DeleteProperty,    with_DefaultValue,
     with_Enumerate,         with_CheckAccess,
-    with_ThisObject,        NATIVE_DROP_PROPERTY
+    with_ThisObject,        NATIVE_DROP_PROPERTY,
+    0,0,0,0,{0,0}
 };
 
 static JSObjectOps *
@@ -1072,7 +1075,8 @@ JSClass js_WithClass = {
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub,
-    with_getObjectOps
+    with_getObjectOps,
+    0,0,0,0,0,{0,0}
 };
 
 #if JS_HAS_OBJ_PROTO_PROP

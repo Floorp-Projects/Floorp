@@ -2322,7 +2322,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_LB:
       {
 	JSBool matched;
-	jsint atomIndex;
+	jsuint atomIndex;
 
 	pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
 	if (!pn)

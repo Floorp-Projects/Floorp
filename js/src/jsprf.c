@@ -337,8 +337,8 @@ static int cvt_f(SprintfState *ss, double d, const char *fmt0, const char *fmt1)
     char fout[300];
     int amount = fmt1 - fmt0;
 
-    JS_ASSERT((amount > 0) && (amount < sizeof(fin)));
-    if (amount >= sizeof(fin)) {
+    JS_ASSERT((amount > 0) && (amount < (int)sizeof(fin)));
+    if (amount >= (int)sizeof(fin)) {
 	/* Totally bogus % command to sprintf. Just ignore it */
 	return 0;
     }
@@ -920,7 +920,7 @@ static int dosprintf(SprintfState *ss, const char *fmt, va_list ap)
 	    u.d = va_arg(ap, double);
 	    if( nas != NULL ){
 		i = fmt - dolPt;
-		if( i < sizeof( pattern ) ){
+		if( i < (int)sizeof( pattern ) ){
 		    pattern[0] = '%';
 		    memcpy( &pattern[1], dolPt, (size_t)i );
 		    rv = cvt_f(ss, u.d, pattern, &pattern[i+1] );

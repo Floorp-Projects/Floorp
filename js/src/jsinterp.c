@@ -129,7 +129,8 @@ static JSClass prop_iterator_class = {
     "PropertyIterator",
     0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   prop_iterator_finalize
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   prop_iterator_finalize,
+    JSCLASS_NO_OPTIONAL_MEMBERS
 };
 
 /*
@@ -1387,7 +1388,9 @@ js_Interpret(JSContext *cx, jsval *result)
 		 * Stash private iteration state into property iterator object.
 		 * NB: This code knows that the first slots are pre-allocated.
 		 */
-		JS_ASSERT(JS_INITIAL_NSLOTS >= 5);
+#if JS_INITIAL_NSLOTS < 5
+#error JS_INITIAL_NSLOTS must be greater than or equal to 5.
+#endif
 		propobj->slots[JSSLOT_PARENT] = OBJECT_TO_JSVAL(obj);
 	    } else {
 		/* This is not the first iteration. Recover iterator state. */

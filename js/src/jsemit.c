@@ -94,7 +94,7 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
     ptrdiff_t offset, length;
     size_t cgsize;
 
-    JS_ASSERT(delta < CGINCR);
+    JS_ASSERT(delta < (ptrdiff_t)CGINCR);
     offset = CG_OFFSET(cg);
     if ((jsuword)cg->next + delta >= (jsuword)cg->limit) {
 	length = PTRDIFF(cg->limit, cg->base, jsbytecode);

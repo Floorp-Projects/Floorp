@@ -568,7 +568,9 @@ PushOff(SprintStack *ss, ptrdiff_t off, JSOp op)
 {
     uintN top;
 
-    JS_ASSERT(JSOP_LIMIT <= JSOP_GETPROP2);
+#if JSOP_LIMIT > JSOP_GETPROP2
+#error JSOP_LIMIT must be <= JSOP_GETPROP2
+#endif
     if (!SprintAlloc(&ss->sprinter, PAREN_SLOP))
 	return JS_FALSE;
 
