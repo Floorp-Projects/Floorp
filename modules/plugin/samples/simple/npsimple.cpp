@@ -941,10 +941,15 @@ SimplePluginInstance::PlatformSetWindow(nsPluginWindow* window)
 
     if (window == NULL || window->window == NULL)
         return NS_ERROR_NULL_POINTER;
-    if ( fPlatform.superwin == (GdkSuperWin *)window->window )
+
+    GdkWindow *win = gdk_window_lookup((XID)window->window);
+
+    if ( fPlatform.superwin && fPlatform.superwin->bin_window == win )
         return NS_OK;
     
-    fPlatform.superwin = (GdkSuperWin *)window->window;
+    // should we destroy fPlatform.superwin ??
+    
+    fPlatform.superwin = gdk_superwin_new(win, 0, 0, window->width, window->height);
 
     // a little cleanup
     if (fPlatform.label)

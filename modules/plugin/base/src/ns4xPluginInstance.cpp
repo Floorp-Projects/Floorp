@@ -29,9 +29,9 @@
 #include "nscore.h"
 
 #if defined(MOZ_WIDGET_GTK)
+#include <gdk/gdk.h>
+#include <gdk/gdkx.h>
 #include "gtkxtbin.h"
-#include "gdksuperwin.h"
-#include "gtkmozbox.h"
 #endif
 
 #include "nsPluginSafety.h"
@@ -517,7 +517,6 @@ NS_IMETHODIMP ns4xPluginInstance::Destroy(void)
 NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
 #ifdef MOZ_WIDGET_GTK
-  GdkSuperWin               *superwin;
   NPSetWindowCallbackStruct *ws;
 #endif
 
@@ -547,12 +546,12 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
     ws = (NPSetWindowCallbackStruct *)window->ws_info;
 
-    superwin = GDK_SUPERWIN(window->window);
-    if (superwin && superwin->bin_window)
+    GdkWindow *win = gdk_window_lookup((XID)window->window);
+    if (win)
     {
 #ifdef NS_DEBUG      
       printf("About to create new xtbin of %i X %i from %p...\n",
-             window->width, window->height, superwin->bin_window);
+             window->width, window->height, win);
 #endif
 
 #if 1
@@ -575,7 +574,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 
 
       if (!mXtBin) {
-        mXtBin = gtk_xtbin_new(superwin->bin_window, 0);
+        mXtBin = gtk_xtbin_new(win, 0);
       } 
 
       gtk_widget_set_usize(mXtBin, window->width, window->height);
@@ -594,7 +593,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
     ws->depth = gdk_rgb_get_visual()->depth;
     ws->display = GTK_XTBIN(mXtBin)->xtdisplay;
     ws->visual = GDK_VISUAL_XVISUAL(gdk_rgb_get_visual());
-    ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(superwin->bin_window));
+    ws->colormap = GDK_COLORMAP_XCOLORMAP(gdk_window_get_colormap(win));
 
     XFlush(ws->display);
   } // !window->ws_info
