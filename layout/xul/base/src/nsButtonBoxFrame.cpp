@@ -31,6 +31,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
+#include "nsGUIEvent.h"
 
 //
 // NS_NewXULButtonFrame
@@ -85,13 +86,13 @@ nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext,
       if (NS_KEY_EVENT == aEvent->eventStructType) {
         nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
         if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
-          MouseClicked(aPresContext);
+          MouseClicked(aPresContext, aEvent);
         }
       }
       break;
 
     case NS_MOUSE_LEFT_CLICK:
-      MouseClicked(aPresContext);
+      MouseClicked(aPresContext, aEvent);
       break;
   }
 
@@ -99,7 +100,7 @@ nsButtonBoxFrame::HandleEvent(nsIPresContext* aPresContext,
 }
 
 void 
-nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext) 
+nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent) 
 {
   // Don't execute if we're disabled.
   nsAutoString disabled;
@@ -114,10 +115,17 @@ nsButtonBoxFrame::MouseClicked (nsIPresContext* aPresContext)
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
   event.message = NS_MENU_ACTION;
-  event.isShift = PR_FALSE;
-  event.isControl = PR_FALSE;
-  event.isAlt = PR_FALSE;
-  event.isMeta = PR_FALSE;
+  if(aEvent) {
+    event.isShift = ((nsInputEvent*)(aEvent))->isShift;
+    event.isControl = ((nsInputEvent*)(aEvent))->isControl;
+    event.isAlt = ((nsInputEvent*)(aEvent))->isAlt;
+    event.isMeta = ((nsInputEvent*)(aEvent))->isMeta;
+  } else {
+    event.isShift = PR_FALSE;
+    event.isControl = PR_FALSE;
+    event.isAlt = PR_FALSE;
+    event.isMeta = PR_FALSE;
+  }
   event.clickCount = 0;
   event.widget = nsnull;
 

@@ -846,7 +846,7 @@ nsAutoRepeatBoxFrame::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP_(void) 
 nsAutoRepeatBoxFrame::Notify(nsITimer *timer)
 {
-  MouseClicked(mPresContext);
+  MouseClicked(mPresContext, nsnull);
 }
 
 NS_IMETHODIMP

@@ -44,7 +44,7 @@ public:
 
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
 
-  virtual void MouseClicked (nsIPresContext* aPresContext);
+  virtual void MouseClicked (nsIPresContext* aPresContext, nsGUIEvent* aEvent);
 
 
 }; // class nsButtonBoxFrame
