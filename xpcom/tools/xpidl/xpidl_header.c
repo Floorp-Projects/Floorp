@@ -84,7 +84,7 @@ find_interface_refs(IDL_tree p, gpointer user_data)
 static void
 write_header(gpointer key, gpointer value, gpointer user_data)
 {
-    char *ident = (char *)key;
+    char *ident = (char *)value;
     TreeState *state = (TreeState *)user_data;
     fprintf(state->file, "#include \"%s.h\" /* interface %s */\n",
             ident, ident);
@@ -93,16 +93,32 @@ write_header(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 pass_1(TreeState *state)
 {
-    GHashTable *hash = g_hash_table_new(g_str_hash, g_str_equal);
-    if (!hash)
-        return FALSE;
-    fputs("/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
-          " <filename goes here>\n */\n",
-          state->file);
-    fputs("#include \"nscore.h\"\n", state->file);
-    IDL_tree_walk_in_order(state->tree, find_interface_refs, hash);
-    g_hash_table_foreach(hash, write_header, state);
-    g_hash_table_destroy(hash);
+    if (state->tree) {
+        fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
+                " %s.idl\n */\n", state->basename);
+        fprintf(state->file, "\n#ifndef __%s_h__\n#define __%s_h__\n\n",
+                state->basename, state->basename);
+        g_hash_table_foreach(state->includes, write_header, state);
+    } else {
+        fprintf(state->file, "\n#endif /* __%s_h__ */\n", state->basename);
+    }
+    return TRUE;
+}
+
+static gboolean
+output_classname_iid_define(FILE *file, const char *className)
+{
+    const char *iidName;
+    if (className[0] == 'n' && className[1] == 's') {
+        /* backcompat naming styles */
+        fputs("NS_", file);
+        iidName = className + 2;
+    } else {
+        iidName = className;
+    }
+    while (*iidName)
+        fputc(toupper(*iidName++), file);
+    fputs("_IID", file);
     return TRUE;
 }
 
@@ -122,20 +138,14 @@ interface(TreeState *state)
         if (strlen(iid) != 36)
             /* XXX report error */
             return FALSE;
-        fprintf(state->file, "\n/* {%s} */\n#define ", iid);
-        if (className[0] == 'n' && className[1] == 's') {
-            /* backcompat naming styles */
-            fputs("NS_", state->file);
-            iidName = className + 2;
-        } else {
-            iidName = className;
-        }
-        while (*iidName)
-            fputc(toupper(*iidName++), state->file);
-        fputs("_IID \\\n", state->file);
-
+        fputs("#define ", state->file);
+        if (!output_classname_iid_define(state->file, className))
+            return FALSE;
+        fprintf(state->file, "_STR \"%s\"\n\n/* {%s} */\n#define ", iid, iid);
+        if (!output_classname_iid_define(state->file, className))
+            return FALSE;
         /* This is such a gross hack... */
-        fprintf(state->file, "  {0x%.8s, 0x%.4s, 0x%.4s, \\\n    "
+        fprintf(state->file, " \\\n  {0x%.8s, 0x%.4s, 0x%.4s, \\\n    "
                 "{ 0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s, "
                 "0x%.2s, 0x%.2s, 0x%.2s, 0x%.2s }}\n\n",
                 iid, iid + 9, iid + 14, iid + 19, iid + 21, iid + 24,
