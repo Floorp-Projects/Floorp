@@ -33,6 +33,7 @@ var folderDSProgID         = datasourceProgIDPrefix + "mailnewsfolders";
 var messageDSProgID        = datasourceProgIDPrefix + "mailnewsmessages";
 
 var gFolderTree;
+var gThreadTree;
 
 // get the messenger instance
 var messenger = Components.classes[messengerProgID].createInstance();
@@ -233,7 +234,7 @@ function OnLoadFolderPane(folderTree)
 
 function OnLoadThreadPane(threadTree)
 {
-
+    gThreadTree = threadTree;
 	// add folderSource to thread pane
 	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
 	threadTree.database.AddDataSource(folderDataSource);
@@ -250,7 +251,8 @@ function GetFolderTree()
 {
     if (gFolderTree) return gFolderTree;
     
-	var folderTree = FindInSidebar(frames[0], 'folderTree'); 
+	var folderTree = FindInSidebar(frames[0], 'folderTree');
+    gFolderTree = folderTree;
 	return folderTree;
 }
 
@@ -270,9 +272,11 @@ function FindInSidebar(currentWindow, id)
 
 function GetThreadTree()
 {
+    if (gThreadTree) return gThreadTree;
 	var threadTree = document.getElementById('threadTree');
 	if(!threadTree)
 		dump('thread tree is null\n');
+    gThreadTree = threadTree;
 	return threadTree;
 }
 

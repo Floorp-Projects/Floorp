@@ -465,14 +465,16 @@ function MsgToggleMessagePane()
     MsgToggleSplitter("messagePaneSplitter");
 }
 
+var gMessageSplitter;
 function MsgToggleSplitter(id)
 {
-    var splitter = document.getElementById("messagePaneSplitter");
-    var state = splitter.getAttribute("state");
+    if (!gMessageSplitter)
+        gMessageSplitter = document.getElementById("messagePaneSplitter");
+    var state = gMessageSplitter.getAttribute("state");
     if (state == "collapsed")
-        splitter.setAttribute("state", null);
+        gMessageSplitter.setAttribute("state", null);
     else
-        splitter.setAttribute("state", "collapsed")
+        gMessageSplitter.setAttribute("state", "collapsed")
 }
 
 function MsgShowFolders()
@@ -584,11 +586,13 @@ function MsgMarkAsFlagged(markFlagged)
 function MsgIgnoreThread() {}
 function MsgWatchThread() {}
 
+var gStatusObserver;
         var bindCount = 0;
         function onStatus() {
-            var status = document.getElementById("Messenger:Status");
-            if ( status ) {
-                var text = status.getAttribute("value");
+            if (!gStatusObserver)
+                gStatusObserver = document.getElementById("Messenger:Status");
+            if ( gStatusObserver ) {
+                var text = gStatusObserver.getAttribute("value");
                 if ( text == "" ) {
                     text = defaultStatus;
                 }
@@ -601,39 +605,44 @@ function MsgWatchThread() {}
             }
         }
 
+var gThrobberObserver;
+var gMeterObserver;
 		var startTime = 0;
         function onProgress() {
-            var throbber = document.getElementById("Messenger:Throbber");
-            var meter    = document.getElementById("Messenger:LoadingProgress");
-            if ( throbber && meter ) {
-                var busy = throbber.getAttribute("busy");
-                var wasBusy = meter.getAttribute("mode") == "undetermined" ? "true" : "false";
+            if (!gThrobberObserver)
+                gThrobberObserver = document.getElementById("Messenger:Throbber");
+            if (!gMeterObserver)
+                gMeterObserver = document.getElementById("Messenger:LoadingProgress");
+            if ( gThrobberObserver && gMeterObserver ) {
+                var busy = gThrobberObserver.getAttribute("busy");
+                var wasBusy = gMeterObserver.getAttribute("mode") == "undetermined" ? "true" : "false";
                 if ( busy == "true" ) {
                     if ( wasBusy == "false" ) {
                         // Remember when loading commenced.
     				    startTime = (new Date()).getTime();
                         // Turn progress meter on.
-                        meter.setAttribute("mode","undetermined");
+                        gMeterObserver.setAttribute("mode","undetermined");
                     }
                     // Update status bar.
                 } else if ( busy == "false" && wasBusy == "true" ) {
                     // Record page loading time.
-                    var status = document.getElementById("Messenger:Status");
-                    if ( status ) {
+                    if (!gStatusObserver)
+                        gStatusObserver = document.getElementById("Messenger:Status");
+                    if ( gStatusObserver ) {
 						var elapsed = ( (new Date()).getTime() - startTime ) / 1000;
 						var msg = "Document: Done (" + elapsed + " secs)";
 						dump( msg + "\n" );
-                        status.setAttribute("value",msg);
+                        gStatusObserver.setAttribute("value",msg);
                         defaultStatus = msg;
                     }
                     // Turn progress meter off.
-                    meter.setAttribute("mode","normal");
+                    gMeterObserver.setAttribute("mode","normal");
                 }
             }
         }
         function dumpProgress() {
             var broadcaster = document.getElementById("Messenger:LoadingProgress");
-            var meter       = document.getElementById("meter");
+
             dump( "bindCount=" + bindCount + "\n" );
             dump( "broadcaster mode=" + broadcaster.getAttribute("mode") + "\n" );
             dump( "broadcaster value=" + broadcaster.getAttribute("value") + "\n" );
