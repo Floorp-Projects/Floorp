@@ -7,17 +7,48 @@ shift
 if test -z "$prog"; then
     exit 0
 fi
-mountpoint=`mount -p | awk '{ if (/^\//) { print $1; exit } }'`
+
+mountpoint=$CYGDRIVE_MOUNT
 if test -z "$mountpoint"; then
-   print "Cannot determine cygwin mount points. Exiting"
-   exit 1
+    mountpoint=`mount -p`
+    if test -z "$mountpoint"; then
+       print "Cannot determine cygwin mount points. Exiting"
+       exit 1
+    fi
 fi
-mountpoint=`echo $mountpoint | sed 's|/$||'`
-if test "$prog" = "-up"; then
-   prog=$1
-   shift
-   args=`echo $* | sed -e "s|-I\([a-zA-Z]\):/|-I${mountpoint}/\1/|g;"`
-else
-   args=`echo $* | sed -e "s|${mountpoint}/\([a-zA-Z]\)/|\1:/|g;"`
+
+mountpoint=${mountpoint#*/}
+mountpoint=/${mountpoint%%[!A-Za-z0-9_]*}
+mountpoint=${mountpoint%/}
+
+args=""
+up=""
+if test "${prog}" = "-up"; then
+    up=1
+    prog=${1}
+    shift
 fi
+
+for i in "${@}"
+do
+    if test -n "${up}"; then
+        pathname=${i#-I[a-zA-Z]:/}
+        if ! test "${pathname}" = "${i}"; then
+            no_i=${i#-I}
+            driveletter=${no_i%%:*}
+            i=-I${mountpoint}/${driveletter}/${pathname}
+        fi
+    else
+        eval 'leader=${i%%'${mountpoint}'/[a-zA-Z]/*}'
+        if ! test "${leader}" = "${i}"; then
+            eval 'pathname=${i#'${leader}${mountpoint}'/[a-zA-Z]/}'
+            eval 'no_mountpoint=${i#'${leader}${mountpoint}'/}'
+            driveletter=${no_mountpoint%%/*}
+            i=${leader}${driveletter}:/${pathname}
+        fi
+    fi
+
+    args="${args} ${i}"
+done
+
 exec $prog $args
