@@ -1954,18 +1954,11 @@ nsHttpChannel::GetCredentials(const char *challenges,
     }
     */
 
-    // proxy auth's never in prehost.  only take user:pass from URL if this
-    // is the first 401 response (mIdent holds previously attempted identity).
-    PRBool identFromURI = PR_FALSE;
-    if (!proxyAuth && mIdent.IsEmpty()) {
-        GetIdentityFromURI(authFlags, mIdent);
-        identFromURI = !mIdent.IsEmpty(); 
-    }
-
     const char *host;
     PRInt32 port;
     nsHttpAuthIdentity *ident;
     nsCAutoString path;
+    PRBool identFromURI = PR_FALSE;
 
     if (proxyAuth) {
         host = mConnectionInfo->ProxyHost();
@@ -1979,6 +1972,13 @@ nsHttpChannel::GetCredentials(const char *challenges,
 
         rv = GetCurrentPath(path);
         if (NS_FAILED(rv)) return rv;
+
+        // if this is the first challenge, then try using the identity
+        // specified in the URL.
+        if (mIdent.IsEmpty()) {
+            GetIdentityFromURI(authFlags, mIdent);
+            identFromURI = !mIdent.IsEmpty();
+        }
     }
 
     //
@@ -2019,9 +2019,15 @@ nsHttpChannel::GetCredentials(const char *challenges,
                 entry = nsnull;
                 ident->Clear();
             }
-            else {
+            else if (!identFromURI || nsCRT::strcmp(ident->User(), entry->Identity().User()) == 0) {
                 LOG(("  taking identity from auth cache\n"));
+                // the password from the auth cache is more likely to be correct than
+                // the one in the URL.  at least, we know that it works with the given
+                // username.  it is possible for a server to distinguish logons based
+                // on the supplied password alone, but that would be quite unusual...
+                // and i don't think we need to worry about such unorthodox cases.
                 ident->Set(entry->Identity());
+                identFromURI = PR_FALSE;
                 if (entry->Creds()[0] != '\0') {
                     LOG(("    using cached credentials!\n"));
                     creds.Assign(entry->Creds());
@@ -2040,6 +2046,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
             // username and password for this domain.
             rv = PromptForIdentity(host, port, proxyAuth, realm.get(), scheme.get(), authFlags, *ident);
             if (NS_FAILED(rv)) return rv;
+            identFromURI = PR_FALSE;
         }
     }
 
@@ -2062,20 +2069,24 @@ nsHttpChannel::GetCredentials(const char *challenges,
     // let's try these credentials
     creds = result;
 
-    // find out if this authenticator allows reuse of credentials
-    PRBool saveCreds     = (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
-    PRBool saveChallenge = (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
+    // don't bother remember the identity if it came from the URI.
+    if (!identFromURI) {
+        // find out if this authenticator allows reuse of credentials
+        PRBool saveCreds     = (authFlags & nsIHttpAuthenticator::REUSABLE_CREDENTIALS);
+        PRBool saveChallenge = (authFlags & nsIHttpAuthenticator::REUSABLE_CHALLENGE);
 
-    // create a cache entry.  we do this even though we don't yet know that
-    // these credentials are valid b/c we need to avoid prompting the user more
-    // than once in case the credentials are valid.
-    //
-    // if the credentials are not reusable, then we don't bother sticking them
-    // in the auth cache.
-    return authCache->SetAuthEntry(host, port, path.get(), realm.get(),
-                                   saveCreds ? creds.get() : nsnull,
-                                   saveChallenge ? challenge.get() : nsnull,
-                                   *ident, sessionState);
+        // create a cache entry.  we do this even though we don't yet know that
+        // these credentials are valid b/c we need to avoid prompting the user more
+        // than once in case the credentials are valid.
+        //
+        // if the credentials are not reusable, then we don't bother sticking them
+        // in the auth cache.
+        rv = authCache->SetAuthEntry(host, port, path.get(), realm.get(),
+                                     saveCreds ? creds.get() : nsnull,
+                                     saveChallenge ? challenge.get() : nsnull,
+                                     *ident, sessionState);
+    }
+    return rv;
 }
 
 nsresult
@@ -2288,6 +2299,16 @@ nsHttpChannel::SetAuthorizationHeader(nsHttpAuthCache *authCache,
 
     rv = authCache->GetAuthEntryForPath(host, port, path, &entry);
     if (NS_SUCCEEDED(rv)) {
+        // if we are trying to add a header for origin server auth and if the
+        // URL contains an explicit username, then be sure to try the given
+        // username first.
+        if (header == nsHttp::Authorization) {
+            nsHttpAuthIdentity temp;
+            GetIdentityFromURI(0, temp);
+            if (nsCRT::strcmp(temp.User(), entry->Identity().User()) != 0)
+                return; // different username; let the server challenge us.
+        }
+
         nsXPIDLCString temp;
         const char *creds     = entry->Creds();
         const char *challenge = entry->Challenge();
