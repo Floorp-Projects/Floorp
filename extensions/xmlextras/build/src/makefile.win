@@ -37,7 +37,7 @@ MODULE_NAME=nsXMLExtrasModule
 ################################################################################
 ## library
 
-LINCS=-I..\..\base\src -I..\..\soap\src -I..\..\schema\src
+LINCS=-I..\..\base\src -I..\..\soap\src -I..\..\schema\src -I..\..\wsdl\src
 
 CPP_OBJS=					    \
 		.\$(OBJDIR)\nsXMLExtrasModule.obj   \
@@ -48,8 +48,9 @@ SUB_LIBRARIES=                                        \
 !if defined(MOZ_SOAP)
                 $(DIST)\lib\xmlextrassoap_s.lib       \
 !endif
-!if defined(MOZ_SCHEMA)
+!if defined(MOZ_WSDL)
 		$(DIST)\lib\xmlextrasschema_s.lib      \
+		$(DIST)\lib\xmlextraswsdl_s.lib        \
 !endif
                 $(NULL)
 
@@ -62,8 +63,8 @@ LLIBS=						      \
 !if defined(MOZ_SOAP)
 DEFINES = -DMOZ_SOAP
 !endif
-!if defined(MOZ_SCHEMA)
-DEFINES =$(DEFINES) -DMOZ_SCHEMA
+!if defined(MOZ_WSDL)
+DEFINES =$(DEFINES) -DMOZ_SCHEMA -DMOZ_WSDL
 !endif
 
 LCFLAGS = \

@@ -257,7 +257,8 @@ nsWSDLLoader::LoadAsync(const nsAReadableString& wsdlURI,
 /*  nsISupports createPortProxy(in nsIWSDLPort service, in AString nameSpace); */
 NS_IMETHODIMP 
 nsWSDLLoader::CreatePortProxy(nsIWSDLPort *port, 
-                              const nsAReadableString& nameSpace, 
+                              const nsAReadableString& nameSpace,
+                              PRBool sync,
                               nsISupports **_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;

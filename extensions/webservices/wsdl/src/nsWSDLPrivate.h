@@ -38,6 +38,14 @@
 #include "nsVoidArray.h"
 #include "nsSupportsArray.h"
 #include "nsString.h"
+#include "nsWeakReference.h"
+
+// Typelib includes
+#include "nsIInterfaceInfo.h"
+#include "nsIInterfaceInfoManager.h"
+#include "xpt_struct.h"
+#include "xptcall.h"
+
 
 #define NS_WSDL_SCHEMA_NAMESPACE "http://www.w3.org/2001/XMLSchema"
 #define NS_WSDL_NAMESPACE "http://schemas.xmlsoap.org/wsdl/"
@@ -184,6 +192,83 @@ protected:
   nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
+#define NS_WSDLINTERFACEINFOID_ISUPPORTS 0
+// The boundary number should be incremented as reserved
+// ids are added.
+#define NS_WSDLINTERFACEINFOID_RESERVED_BOUNDARY 1
+
+class nsWSDLInterfaceSet : public nsIInterfaceInfoManager,
+                           public nsSupportsWeakReference
+{
+public:
+  nsWSDLInterfaceSet();
+  virtual ~nsWSDLInterfaceSet();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEINFOMANAGER
+
+  nsresult AppendInterface(nsIInterfaceInfo* aInfo, PRUint16* aIndex);
+  nsresult GetInterfaceAt(PRUint16 aIndex, nsIInterfaceInfo** aInfo);
+  PRUint16 Count();
+  XPTArena* GetArena() { return mArena; }
+
+private:
+  nsSupportsArray mInterfaces;
+  XPTArena* mArena;
+};
+
+class nsWSDLInterfaceInfo : public nsIInterfaceInfo,
+                            public nsSupportsWeakReference
+{
+public:
+  nsWSDLInterfaceInfo(nsAReadableCString& aName, 
+                      const nsIID& aIID,
+                      nsWSDLInterfaceSet* aInterfaceSet);
+  virtual ~nsWSDLInterfaceInfo();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIINTERFACEINFO
+
+  void AddMethod(XPTMethodDescriptor* aMethod);
+  void AddAdditionalType(XPTTypeDescriptor* aType);
+
+private:
+  nsresult GetTypeInArray(const nsXPTParamInfo* param,
+                          uint16 dimension,
+                          const XPTTypeDescriptor** type);
+
+private:
+  nsCString mName;
+  nsIID mIID;
+  nsVoidArray mMethodDescriptors;
+  nsVoidArray mAdditionalTypes;
+  nsWSDLInterfaceSet* mInterfaceSet;
+};
+
+#if 0
+class nsWSDLServiceProxy : public nsXPTCStubBase,
+                           public nsIWSDLServiceProxy,
+                           public nsIClassInfo
+{
+public:
+  nsWSDLServiceProxy();
+  virtual ~nsWSDLServiceProxy();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWSDLSERVICEPROXY
+  NS_DECL_NSICLASSINFO
+
+  NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info); 
+  NS_IMETHOD CallMethod(PRUint16 methodIndex,
+                        const nsXPTMethodInfo* info,
+                        nsXPTCMiniVariant* params);
+
+private:
+  nsWSDLInterfaceSet* mInterfaceSet;
+  nsCOMPtr<nsIInterfaceInfo> mInterfaceInfo;
+  nsCOMPtr<nsIWSDLPort> mPort;
+};
+#endif
 
 #define NS_WSDLPORT_CID                           \
 { /* c1dfb250-0c19-4339-8211-24eabc0103e5 */      \

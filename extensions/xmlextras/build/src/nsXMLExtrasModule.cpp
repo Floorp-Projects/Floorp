@@ -57,9 +57,11 @@
 #include "nsHTTPSOAPTransport.h"
 #endif
 
-#ifdef MOZ_SCHEMA
+#ifdef MOZ_WSDL
 #include "nsSchemaLoader.h"
 #include "nsSchemaPrivate.h"
+#include "nsWSDLLoader.h"
+#include "nsWSDLPrivate.h"
 #endif
 
 #include "nsString.h"
@@ -82,7 +84,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsDefaultSOAPEncoder)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTTPSOAPTransport)
 #endif
 
-#ifdef MOZ_SCHEMA
+#ifdef MOZ_WSDL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchemaLoader)
 NS_DECL_CLASSINFO(nsSchema)
@@ -103,6 +105,16 @@ NS_DECL_CLASSINFO(nsSchemaAttributeGroup)
 NS_DECL_CLASSINFO(nsSchemaAttributeGroupRef)
 NS_DECL_CLASSINFO(nsSchemaAnyAttribute)
 NS_DECL_CLASSINFO(nsSchemaFacet)
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWSDLLoader)
+NS_DECL_CLASSINFO(nsWSDLLoader)
+NS_DECL_CLASSINFO(nsWSDLPort)
+NS_DECL_CLASSINFO(nsWSDLOperation)
+NS_DECL_CLASSINFO(nsWSDLMessage)
+NS_DECL_CLASSINFO(nsWSDLPart)
+NS_DECL_CLASSINFO(nsSOAPPortBinding)
+NS_DECL_CLASSINFO(nsSOAPOperationBinding)
+NS_DECL_CLASSINFO(nsSOAPPartBinding)
 #endif
 
 class nsXMLExtrasNameset : public nsISupports
@@ -216,10 +228,15 @@ RegisterXMLExtras(nsIComponentManager *aCompMgr,
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
 
-#ifdef MOZ_SCHEMA
+#ifdef MOZ_WSDL
   rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
                                 "SchemaLoader",
                                 NS_SCHEMALOADER_CONTRACTID,
+                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = catman->AddCategoryEntry(JAVASCRIPT_GLOBAL_CONSTRUCTOR_CATEGORY,
+                                "WSDLLoader",
+                                NS_WSDLLOADER_CONTRACTID,
                                 PR_TRUE, PR_TRUE, getter_Copies(previous));
   NS_ENSURE_SUCCESS(rv, rv);
 #endif
@@ -251,7 +268,7 @@ static nsModuleComponentInfo components[] = {
   { "HTTP SOAP Transport", NS_HTTPSOAPTRANSPORT_CID,
     NS_HTTPSOAPTRANSPORT_CONTRACTID, nsHTTPSOAPTransportConstructor },
 #endif
-#ifdef MOZ_SCHEMA
+#ifdef MOZ_WSDL
   { "SchemaLoader", NS_SCHEMALOADER_CID, NS_SCHEMALOADER_CONTRACTID,
     nsSchemaLoaderConstructor, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSchemaLoader), nsnull,
@@ -337,14 +354,47 @@ static nsModuleComponentInfo components[] = {
     nsnull, nsnull, nsnull, nsnull, 
     NS_CI_INTERFACE_GETTER_NAME(nsSchemaFacet), nsnull, 
     &NS_CLASSINFO_NAME(nsSchemaFacet), nsIClassInfo::DOM_OBJECT },
+  { "WSDLLoader", NS_WSDLLOADER_CID, NS_WSDLLOADER_CONTRACTID,
+    nsWSDLLoaderConstructor, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsWSDLLoader), nsnull,
+    &NS_CLASSINFO_NAME(nsWSDLLoader), nsIClassInfo::DOM_OBJECT },
+  { "WSDLPort", NS_WSDLPORT_CID, NS_WSDLPORT_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsWSDLPort), nsnull, 
+    &NS_CLASSINFO_NAME(nsWSDLPort), nsIClassInfo::DOM_OBJECT },
+  { "WSDLOperation", NS_WSDLOPERATION_CID, NS_WSDLOPERATION_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsWSDLOperation), nsnull, 
+    &NS_CLASSINFO_NAME(nsWSDLOperation), nsIClassInfo::DOM_OBJECT },
+  { "WSDLMessage", NS_WSDLMESSAGE_CID, NS_WSDLMESSAGE_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsWSDLMessage), nsnull, 
+    &NS_CLASSINFO_NAME(nsWSDLMessage), nsIClassInfo::DOM_OBJECT },
+  { "WSDLPart", NS_WSDLPART_CID, NS_WSDLPART_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsWSDLPart), nsnull, 
+    &NS_CLASSINFO_NAME(nsWSDLPart), nsIClassInfo::DOM_OBJECT },
+  { "SOAPPortBinding", NS_SOAPPORTBINDING_CID, NS_SOAPPORTBINDING_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPPortBinding), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPPortBinding), nsIClassInfo::DOM_OBJECT },
+  { "SOAPOperationBinding", NS_SOAPOPERATIONBINDING_CID, 
+    NS_SOAPOPERATIONBINDING_CONTRACTID, nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPOperationBinding), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPOperationBinding), nsIClassInfo::DOM_OBJECT },
+  { "SOAPPartBinding", NS_SOAPPARTBINDING_CID, NS_SOAPPARTBINDING_CONTRACTID, 
+    nsnull, nsnull, nsnull, nsnull, 
+    NS_CI_INTERFACE_GETTER_NAME(nsSOAPPartBinding), nsnull, 
+    &NS_CLASSINFO_NAME(nsSOAPPartBinding), nsIClassInfo::DOM_OBJECT },
 #endif
 };
 
 void PR_CALLBACK
 XMLExtrasModuleDestructor(nsIModule* self)
 {
-#ifdef MOZ_SCHEMA
+#ifdef MOZ_WSDL
   nsSchemaAtoms::DestroySchemaAtoms();
+  nsWSDLAtoms::DestroyWSDLAtoms();
 #endif    
 }
 

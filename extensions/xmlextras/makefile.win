@@ -26,8 +26,9 @@ DIRS= \
 !if defined(MOZ_SOAP)
 	soap \
 !endif
-!if defined(MOZ_SCHEMA)
+!if defined(MOZ_WSDL)
 	schema \
+	wsdl \
 !endif
 	build \
 !if !defined(DISABLE_TESTS)

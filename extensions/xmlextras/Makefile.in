@@ -32,8 +32,8 @@ ifdef MOZ_SOAP
 DIRS += soap
 endif
 
-ifdef MOZ_SCHEMA
-DIRS += schema
+ifdef MOZ_WSDL
+DIRS += schema wsdl
 endif
 
 DIRS += build

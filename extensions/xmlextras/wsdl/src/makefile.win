@@ -26,14 +26,28 @@ MODULE=xmlextras
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
+REQUIRES = xpcom \
+	   string \
+	   dom \
+	   xpconnect \
+	   caps \
+	   layout \
+	   widget \
+	   content \
+	   js \
+	   necko \
+	   $(NULL)
+
 CPPSRCS=					\
 	nsWSDLLoader.cpp			\
 	nsWSDLDefinitions.cpp			\
+	nsWSDLInterfaceInfo.cpp			\
 	$(NULL)
 
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsWSDLLoader.obj		\
 	.\$(OBJDIR)\nsWSDLDefinitions.obj	\
+	.\$(OBJDIR)\nsWSDLInterfaceInfo.obj	\
 	$(NULL)
 
 EXPORTS =					\

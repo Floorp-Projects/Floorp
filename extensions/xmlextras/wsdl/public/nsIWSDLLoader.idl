@@ -36,7 +36,8 @@ interface nsIWSDLLoader : nsISupports {
   void loadAsync(in AString wsdlURI, in AString portName, 
                  in nsIWSDLLoadListener listener);
   nsISupports createPortProxy(in nsIWSDLPort service, 
-                              in AString nameSpace);
+                              in AString nameSpace,
+                              in boolean sync);
 };
 
 [scriptable, function, uuid(0458dac6-65de-11d5-9b42-00104bdf5339)]
