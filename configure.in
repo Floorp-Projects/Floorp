@@ -3255,6 +3255,21 @@ then
     *-*-os2_vacpp)
         MOZ_DEBUG_FLAGS="/Ti+"
         ;;
+    *-irix*)
+        if test "$GNU_CC"; then
+            GCC_VERSION=`$CC -v 2>&1 | awk '/version/ { print $3 }'`
+            case "$GCC_VERSION" in
+            2.95.*)
+                MOZ_DEBUG_FLAGS=""
+                ;;
+            *)
+                MOZ_DEBUG_FLAGS="-g"
+                ;;
+            esac
+        else
+            MOZ_DEBUG_FLAGS="-g"
+        fi
+        ;;
     *)
     	MOZ_DEBUG_FLAGS="-g"
         ;;
