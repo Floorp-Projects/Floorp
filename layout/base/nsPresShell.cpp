@@ -4606,8 +4606,13 @@ PresShell::UnsuppressAndInvalidate()
     if (cvc) {
       nsCOMPtr<nsIContentViewer> cv;
       cvc->GetContentViewer(getter_AddRefs(cv));
-      if (cv)
+      if (cv) {
         cv->Show();
+        // Calling |Show| may destroy us.  Not sure why yet, but it's
+        // a smoketest blocker.
+        if (mIsDestroying)
+          return;
+      }
     }
   }
 
