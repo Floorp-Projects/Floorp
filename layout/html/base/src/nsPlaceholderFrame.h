@@ -44,7 +44,7 @@ public:
   NS_IMETHOD FindTextRuns(nsLineLayout&  aLineLayout,
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout&     aLineLayout,
-                          nsReflowMetrics&     aDesiredSize,
+                          nsHTMLReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,

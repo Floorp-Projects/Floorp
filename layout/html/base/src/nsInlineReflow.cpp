@@ -192,7 +192,7 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
 {
   nsReflowStatus result;
   nsSize innerMaxElementSize;
-  nsReflowMetrics metrics(mComputeMaxElementSize
+  nsHTMLReflowMetrics metrics(mComputeMaxElementSize
                           ? &innerMaxElementSize
                           : nsnull);
 
@@ -346,7 +346,7 @@ nsInlineReflow::ComputeAvailableSize()
  * Reflow the frame, choosing the appropriate reflow method.
  */
 PRBool
-nsInlineReflow::ReflowFrame(nsReflowMetrics& aMetrics,
+nsInlineReflow::ReflowFrame(nsHTMLReflowMetrics& aMetrics,
                             nsRect& aBounds,
                             nsInlineReflowStatus& aStatus)
 {
@@ -374,7 +374,10 @@ nsInlineReflow::ReflowFrame(nsReflowMetrics& aMetrics,
   // Let frame know that are reflowing it
   nscoord x = mFrameX;
   nscoord y = mFrameY;
-  mFrame->WillReflow(mPresContext);
+  nsIHTMLReflow* htmlReflow;
+
+  mFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
+  htmlReflow->WillReflow(mPresContext);
   mFrame->MoveTo(x, y);
 
   // There are 3 ways to reflow the child frame: using the
@@ -419,7 +422,7 @@ nsInlineReflow::ReflowFrame(nsReflowMetrics& aMetrics,
     aBounds.height = aMetrics.height;
   }
   else {
-    mFrame->Reflow(mPresContext, aMetrics, reflowState, aStatus);
+    htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
     aBounds.width = aMetrics.width;
     aBounds.height = aMetrics.height;
   }
@@ -469,7 +472,7 @@ nsInlineReflow::ReflowFrame(nsReflowMetrics& aMetrics,
  * assume that the caller will take care of that.
  */
 PRBool
-nsInlineReflow::CanPlaceFrame(nsReflowMetrics& aMetrics,
+nsInlineReflow::CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
                               nsRect& aBounds,
                               nsInlineReflowStatus& aStatus)
 {
@@ -523,7 +526,7 @@ nsInlineReflow::CanPlaceFrame(nsReflowMetrics& aMetrics,
  * Place the frame. Update running counters.
  */
 void
-nsInlineReflow::PlaceFrame(nsReflowMetrics& aMetrics, nsRect& aBounds)
+nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
 {
   // Remember this for later...
   if (mTreatFrameAsBlock) {
@@ -600,7 +603,7 @@ nsInlineReflow::PlaceFrame(nsReflowMetrics& aMetrics, nsRect& aBounds)
  * Store away the ascent value associated with the current frame
  */
 nsresult
-nsInlineReflow::SetFrameData(const nsReflowMetrics& aMetrics)
+nsInlineReflow::SetFrameData(const nsHTMLReflowMetrics& aMetrics)
 {
   PRInt32 frameNum = mFrameNum;
   if (frameNum == mNumFrameData) {

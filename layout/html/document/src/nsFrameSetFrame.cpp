@@ -74,7 +74,7 @@ public:
                    const nsRect& aDirtyRect);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -88,7 +88,7 @@ protected:
   virtual ~nsHTMLFramesetBorderFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
   PRInt32 mWidth;
   PRBool mVertical;
   PRBool mVisibility;
@@ -113,7 +113,7 @@ public:
                    const nsRect& aDirtyRect);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -122,7 +122,7 @@ protected:
   virtual ~nsHTMLFramesetBlankFrame();
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
   friend class nsHTMLFramesetFrame;
   friend class nsHTMLFrameset;
 };
@@ -362,7 +362,7 @@ nsHTMLFramesetFrame::GetSkipSides() const
 void 
 nsHTMLFramesetFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                     const nsReflowState& aReflowState,
-                                    nsReflowMetrics& aDesiredSize)
+                                    nsHTMLReflowMetrics& aDesiredSize)
 {
   nsHTMLFramesetFrame* framesetParent = GetFramesetParent(this);
   if (nsnull == framesetParent) {
@@ -670,31 +670,35 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*              aChild,
     }
   }
 
-  nsReflowState reflowState(aChild, aReflowState, aSize);
-  aChild->WillReflow(aPresContext);
+  nsReflowState  reflowState(aChild, aReflowState, aSize);
+  nsIHTMLReflow* htmlReflow;
+
+  if (NS_OK == aChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    htmlReflow->WillReflow(aPresContext);
                                           
-  nsReflowMetrics metrics(nsnull);
-  metrics.width = aSize.width;
-  metrics.height= aSize.height;
-  nsReflowStatus status;
+    nsHTMLReflowMetrics metrics(nsnull);
+    metrics.width = aSize.width;
+    metrics.height= aSize.height;
+    nsReflowStatus status;
 
-  if (needFramesetReflow) {
-    status = ((nsHTMLFramesetFrame*)aChild)->Reflow(aPresContext, childDrag, metrics, 
-                                                    reflowState, status);
-  } else {
-    status = ReflowChild(aChild, &aPresContext, metrics, reflowState);
-  }
-  NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+    if (needFramesetReflow) {
+      status = ((nsHTMLFramesetFrame*)aChild)->Reflow(aPresContext, childDrag, metrics, 
+                                                      reflowState, status);
+    } else {
+      status = ReflowChild(aChild, &aPresContext, metrics, reflowState);
+    }
+    NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
 
-  if (childDrag) {
-    delete childDrag;
-  }
+    if (childDrag) {
+      delete childDrag;
+    }
   
-  // Place and size the child
-  nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
-  aChild->SetFrameState(0);
-  aChild->SetRect(rect);
-  aChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // XXX do we need this
+    // Place and size the child
+    nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
+    aChild->SetFrameState(0);
+    aChild->SetRect(rect);
+    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // XXX do we need this
+  }
 
 }
 
@@ -817,7 +821,7 @@ nscolor nsHTMLFramesetFrame::GetBorderColor(nsIContent* aContent)
 
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
-                            nsReflowMetrics&     aDesiredSize,
+                            nsHTMLReflowMetrics& aDesiredSize,
                             const nsReflowState& aReflowState,
                             nsReflowStatus&      aStatus)
 {
@@ -832,7 +836,7 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 NS_IMETHODIMP
 nsHTMLFramesetFrame::Reflow(nsIPresContext&      aPresContext,
                             nsFramesetDrag*      aDrag,
-                            nsReflowMetrics&     aDesiredSize,
+                            nsHTMLReflowMetrics& aDesiredSize,
                             const nsReflowState& aReflowState,
                             nsReflowStatus&      aStatus)
 {
@@ -1389,7 +1393,7 @@ nsHTMLFramesetFrame::MouseDrag(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
   }
 
   if (change != 0) {
-    nsReflowMetrics metrics(nsnull);
+    nsHTMLReflowMetrics metrics(nsnull);
     nsSize size;
     GetSize(size);
     nsReflowState state(this, eReflowReason_Initial, size);
@@ -1454,7 +1458,7 @@ printf("nsHTMLFramesetBorderFrame destructor %X \n", this);
 
 void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                           const nsReflowState& aReflowState,
-                                          nsReflowMetrics& aDesiredSize)
+                                          nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width   = aReflowState.maxSize.width;
   aDesiredSize.height  = aReflowState.maxSize.height;
@@ -1475,7 +1479,7 @@ void nsHTMLFramesetBorderFrame::SetColor(nscolor aColor)
 
 NS_IMETHODIMP
 nsHTMLFramesetBorderFrame::Reflow(nsIPresContext&      aPresContext,
-                                  nsReflowMetrics&     aDesiredSize,
+                                  nsHTMLReflowMetrics& aDesiredSize,
                                   const nsReflowState& aReflowState,
                                   nsReflowStatus&      aStatus)
 {
@@ -1623,7 +1627,7 @@ nsHTMLFramesetBlankFrame::~nsHTMLFramesetBlankFrame()
 
 void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                               const nsReflowState& aReflowState,
-                                              nsReflowMetrics& aDesiredSize)
+                                              nsHTMLReflowMetrics& aDesiredSize)
 {
   aDesiredSize.width   = aReflowState.maxSize.width;
   aDesiredSize.height  = aReflowState.maxSize.height;
@@ -1633,7 +1637,7 @@ void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsHTMLFramesetBlankFrame::Reflow(nsIPresContext&      aPresContext,
-                                 nsReflowMetrics&     aDesiredSize,
+                                 nsHTMLReflowMetrics& aDesiredSize,
                                  const nsReflowState& aReflowState,
                                  nsReflowStatus&      aStatus)
 {

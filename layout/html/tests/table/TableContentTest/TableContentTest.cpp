@@ -559,7 +559,7 @@ void GeometryTest::CreateGeometry(BasicTest * aDoc, nsIPresContext *aPC)
   }
   NS_RELEASE(root);
 
-  nsReflowMetrics desiredSize;
+  nsHTMLReflowMetrics desiredSize;
   nsSize          maxSize(400, 600);
   nsSize          maxElementSize;
 

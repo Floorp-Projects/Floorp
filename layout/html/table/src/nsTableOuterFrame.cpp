@@ -30,6 +30,7 @@
 #include "nsIReflowCommand.h"
 #include "nsIPtr.h"
 #include "prinrval.h"
+#include "nsHTMLIIDs.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -205,7 +206,10 @@ nsresult nsTableOuterFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPr
       origin.y += aDeltaY;
   
       // XXX We need to send move notifications to the frame...
-      kidFrame->WillReflow(*aPresContext);
+      nsIHTMLReflow*  htmlReflow;
+      if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+        htmlReflow->WillReflow(*aPresContext);
+      }
       kidFrame->MoveTo(origin.x, origin.y);
 
       // Get the next frame
@@ -240,10 +244,12 @@ nsresult nsTableOuterFrame::AdjustSiblingsAfterReflow(nsIPresContext*        aPr
 
 nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
                                               OuterTableReflowState& aState,
-                                              nsReflowMetrics& aDesiredSize,
+                                              nsHTMLReflowMetrics& aDesiredSize,
                                               const nsReflowState& aReflowState,
                                               nsReflowStatus& aStatus)
 {
+  nsresult  rv = NS_OK;
+
   // Get the next frame in the reflow chain
   nsIFrame* kidFrame;
   aReflowState.reflowCommand->GetNext(kidFrame);
@@ -256,8 +262,8 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
   nsSize          kidMaxElementSize(0,0);
   nsSize*         pKidMaxElementSize = (nsnull != aDesiredSize.maxElementSize) ?
                                                   &kidMaxElementSize : nsnull;
-  nsReflowMetrics kidSize(pKidMaxElementSize);
-  nsRect          oldKidRect;
+  nsHTMLReflowMetrics kidSize(pKidMaxElementSize);
+  nsRect              oldKidRect;
 
   kidFrame->GetRect(oldKidRect);
 
@@ -281,35 +287,40 @@ nsresult nsTableOuterFrame::IncrementalReflow(nsIPresContext* aPresContext,
 
   // Now do the reflow
   aState.y += topMargin;
-  kidFrame->WillReflow(*aPresContext);
-  kidFrame->MoveTo(kidMargin.left, aState.y);
-  nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize);
-  if (kidFrame != mInnerTableFrame) {
-    // Reflow captions to the width of the inner table
-    kidReflowState.maxSize.width = aState.innerTableMaxSize.width;
-  }
-  kidFrame->Reflow(*aPresContext, kidSize, kidReflowState, aStatus);
+  nsIHTMLReflow* htmlReflow;
+  if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+    htmlReflow->WillReflow(*aPresContext);
+    kidFrame->MoveTo(kidMargin.left, aState.y);
+    nsReflowState kidReflowState(kidFrame, aState.reflowState, aState.availSize);
+    if (kidFrame != mInnerTableFrame) {
+      // Reflow captions to the width of the inner table
+      kidReflowState.maxSize.width = aState.innerTableMaxSize.width;
+    }
+    htmlReflow->Reflow(*aPresContext, kidSize, kidReflowState, aStatus);
 
-  // Place the child frame after taking into account its margin
-  nsRect kidRect (kidMargin.left, aState.y, kidSize.width, kidSize.height);
-  PlaceChild(aState, kidFrame, kidRect, aDesiredSize.maxElementSize, kidMaxElementSize);
-  if (bottomMargin < 0) {
-    aState.prevMaxNegBottomMargin = -bottomMargin;
-  } else {
-    aState.prevMaxPosBottomMargin = bottomMargin;
-  }
+    // Place the child frame after taking into account its margin
+    nsRect kidRect (kidMargin.left, aState.y, kidSize.width, kidSize.height);
+    PlaceChild(aState, kidFrame, kidRect, aDesiredSize.maxElementSize, kidMaxElementSize);
+    if (bottomMargin < 0) {
+      aState.prevMaxNegBottomMargin = -bottomMargin;
+    } else {
+      aState.prevMaxPosBottomMargin = bottomMargin;
+    }
 
-  // XXX We're not correctly dealing with maxElementSize...
-
-  // XXX The type of kidFrame matters
-  //      if it's this table's caption, we need to get a new maxElementSize and if the
-  //      maxElementSize > tableWidth, reflow the table
-  //      otherwise, it's destined for the inner table.  Do the inner table's
-  //      incremental reflow, and then reflow the caption if necessary.
-
-  // Adjust the frames that follow
-  return AdjustSiblingsAfterReflow(aPresContext, aState, kidFrame,
+    // XXX We're not correctly dealing with maxElementSize...
+  
+    // XXX The type of kidFrame matters
+    //      if it's this table's caption, we need to get a new maxElementSize and if the
+    //      maxElementSize > tableWidth, reflow the table
+    //      otherwise, it's destined for the inner table.  Do the inner table's
+    //      incremental reflow, and then reflow the caption if necessary.
+  
+    // Adjust the frames that follow
+    rv = AdjustSiblingsAfterReflow(aPresContext, aState, kidFrame,
                                    kidRect.YMost() - oldKidRect.YMost());
+  }
+
+  return rv;
 }
 
 /**
@@ -383,7 +394,7 @@ nscoord nsTableOuterFrame::GetTableWidth(const nsReflowState& aReflowState)
   * smaller available height
   */
 NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
-                                    nsReflowMetrics& aDesiredSize,
+                                    nsHTMLReflowMetrics& aDesiredSize,
                                     const nsReflowState& aReflowState,
                                     nsReflowStatus& aStatus)
 {
@@ -422,14 +433,18 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
 
       // Lay out the caption and get its maximum element size
       if (nsnull != mCaptionFrame) {
-        nsSize          maxElementSize;
-        nsReflowMetrics captionSize(&maxElementSize);
-        nsReflowState   captionReflowState(mCaptionFrame, aReflowState,
-                                           nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
-                                           eReflowReason_Initial);
-        mCaptionFrame->WillReflow(aPresContext);
-        mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
-        mMinCaptionWidth = maxElementSize.width;
+        nsSize              maxElementSize;
+        nsHTMLReflowMetrics captionSize(&maxElementSize);
+        nsReflowState       captionReflowState(mCaptionFrame, aReflowState,
+                                               nsSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE),
+                                               eReflowReason_Initial);
+        nsIHTMLReflow*      htmlReflow;
+
+        if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+          htmlReflow->WillReflow(aPresContext);
+          htmlReflow->Reflow(aPresContext, captionSize, captionReflowState, aStatus);
+          mMinCaptionWidth = maxElementSize.width;
+        }
       }
     }
 
@@ -449,16 +464,20 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
     // First reflow the inner table
     nsReflowState   innerReflowState(mInnerTableFrame, aReflowState,
                                      nsSize(tableWidth, aReflowState.maxSize.height));
-    nsReflowMetrics innerSize(aDesiredSize.maxElementSize); 
-    mInnerTableFrame->WillReflow(aPresContext);
-    aStatus = ReflowChild(mInnerTableFrame, &aPresContext, innerSize,
-                          innerReflowState);
+    nsHTMLReflowMetrics innerSize(aDesiredSize.maxElementSize); 
+    nsIHTMLReflow*      htmlReflow;
 
-    // Table's max element size is the MAX of the caption's max element size
-    // and the inner table's max element size...
-    if (nsnull != aDesiredSize.maxElementSize) {
-      if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
-        aDesiredSize.maxElementSize->width = mMinCaptionWidth;
+    if (NS_OK == mInnerTableFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->WillReflow(aPresContext);
+      aStatus = ReflowChild(mInnerTableFrame, &aPresContext, innerSize,
+                            innerReflowState);
+
+      // Table's max element size is the MAX of the caption's max element size
+      // and the inner table's max element size...
+      if (nsnull != aDesiredSize.maxElementSize) {
+        if (mMinCaptionWidth > aDesiredSize.maxElementSize->width) {
+          aDesiredSize.maxElementSize->width = mMinCaptionWidth;
+        }
       }
     }
     state.innerTableMaxSize.width = innerSize.width;
@@ -486,21 +505,25 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext& aPresContext,
       nsReflowState   captionReflowState(mCaptionFrame, state.reflowState,
                                          nsSize(innerSize.width, NS_UNCONSTRAINEDSIZE),
                                          eReflowReason_Resize);
-      nsReflowMetrics captionSize(nsnull);
+      nsHTMLReflowMetrics captionSize(nsnull);
+      nsIHTMLReflow*      htmlReflow;
+      nsRect captionRect(captionMargin.left, captionY, 0, 0);
 
-      nsReflowStatus  captionStatus;
-      mCaptionFrame->WillReflow(aPresContext);
-      mCaptionFrame->MoveTo(captionMargin.left, captionY);
-      mCaptionFrame->Reflow(aPresContext, captionSize, captionReflowState,
-                            captionStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(captionStatus), "unexpected reflow status");
+      if (NS_OK == mCaptionFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+        nsReflowStatus  captionStatus;
+        htmlReflow->WillReflow(aPresContext);
+        mCaptionFrame->MoveTo(captionMargin.left, captionY);
+        htmlReflow->Reflow(aPresContext, captionSize, captionReflowState,
+                           captionStatus);
+        NS_ASSERTION(NS_FRAME_IS_COMPLETE(captionStatus), "unexpected reflow status");
 
-      // XXX If the height is constrained then we need to check whether the inner
-      // table still fits...
+        // XXX If the height is constrained then we need to check whether the inner
+        // table still fits...
 
-      // Place the caption
-      nsRect captionRect(captionMargin.left, captionY, captionSize.width, captionSize.height);
-      mCaptionFrame->SetRect(captionRect);
+        // Place the caption
+        captionRect.SizeTo(captionSize.width, captionSize.height);
+        mCaptionFrame->SetRect(captionRect);
+      }
 
       // Place the inner table
       nscoord innerY;

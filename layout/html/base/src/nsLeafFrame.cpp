@@ -56,7 +56,7 @@ NS_METHOD nsLeafFrame::Paint(nsIPresContext& aPresContext,
 }
 
 NS_METHOD nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
+                              nsHTMLReflowMetrics& aDesiredSize,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
@@ -79,7 +79,7 @@ NS_METHOD nsLeafFrame::Reflow(nsIPresContext&      aPresContext,
 // XXX how should border&padding effect baseline alignment?
 // => descent = borderPadding.bottom for example
 void nsLeafFrame::AddBordersAndPadding(nsIPresContext* aPresContext,
-                                       nsReflowMetrics& aDesiredSize)
+                                       nsHTMLReflowMetrics& aDesiredSize)
 {
   const nsStyleSpacing* space =
     (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);

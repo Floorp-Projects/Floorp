@@ -115,7 +115,7 @@ protected:
    */
   nsReflowStatus ReflowChild(nsIFrame*            aKidFrame,
                              nsIPresContext*      aPresContext,
-                             nsReflowMetrics&     aDesiredSize,
+                             nsHTMLReflowMetrics& aDesiredSize,
                              const nsReflowState& aReflowState);
 
  /**

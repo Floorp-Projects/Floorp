@@ -126,7 +126,7 @@ class nsBlockFrame;
 struct nsBlockReflowState : public nsFrameReflowState {
   nsBlockReflowState(nsIPresContext& aPresContext,
                      const nsReflowState& aReflowState,
-                     const nsReflowMetrics& aMetrics,
+                     const nsHTMLReflowMetrics& aMetrics,
                      nsISpaceManager* aSpaceManager);
 
   ~nsBlockReflowState();
@@ -251,7 +251,7 @@ public:
   // nsIRunaround
   NS_IMETHOD ReflowAround(nsIPresContext&      aPresContext,
                           nsISpaceManager*     aSpaceManager,
-                          nsReflowMetrics&     aDesiredSize,
+                          nsHTMLReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState,
                           nsRect&              aDesiredRect,
                           nsReflowStatus&      aStatus);
@@ -312,9 +312,9 @@ public:
 
   nsresult ResizeReflow(nsBlockReflowState& aState);
 
-  void ComputeFinalSize(nsBlockReflowState& aState,
-                        nsReflowMetrics&       aMetrics,
-                        nsRect&                aDesiredRect);
+  void ComputeFinalSize(nsBlockReflowState&  aState,
+                        nsHTMLReflowMetrics& aMetrics,
+                        nsRect&              aDesiredRect);
 
   nsresult ReflowLinesAt(nsBlockReflowState& aState, LineData* aLine);
 
@@ -412,14 +412,14 @@ public:
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsReflowMetrics& aMetrics,
+                          nsHTMLReflowMetrics& aMetrics,
                           const nsReflowState& aReflowState);
 
   void SetListItemOrdinal(nsBlockReflowState& aBlockState);
 
   void GetDesiredSize(nsIPresContext* aPresContext,
                       const nsReflowState& aReflowState,
-                      nsReflowMetrics& aMetrics);
+                      nsHTMLReflowMetrics& aMetrics);
 
   void GetListItemText(nsIPresContext& aCX,
                        const nsStyleList& aMol,
@@ -749,7 +749,7 @@ UpdateBulletCB(nsIPresContext& aPresContext, nsIFrame* aFrame, PRIntn aStatus)
 void
 BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
                             const nsReflowState& aReflowState,
-                            nsReflowMetrics& aMetrics)
+                            nsHTMLReflowMetrics& aMetrics)
 {
   const nsStyleList* myList =
     (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
@@ -831,7 +831,7 @@ BulletFrame::GetDesiredSize(nsIPresContext*  aCX,
 
 NS_IMETHODIMP
 BulletFrame::InlineReflow(nsLineLayout& aLineLayout,
-                          nsReflowMetrics& aMetrics,
+                          nsHTMLReflowMetrics& aMetrics,
                           const nsReflowState& aReflowState)
 {
   // Get the base size
@@ -1295,7 +1295,7 @@ GetParentLeftPadding(const nsReflowState* aReflowState)
 
 nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
                                        const nsReflowState& aReflowState,
-                                       const nsReflowMetrics& aMetrics,
+                                       const nsHTMLReflowMetrics& aMetrics,
                                        nsISpaceManager* aSpaceManager)
   : nsFrameReflowState(aPresContext, aReflowState, aMetrics),
     mLineLayout(aPresContext, aSpaceManager)
@@ -1691,7 +1691,7 @@ nsBlockFrame::FirstChild(nsIFrame*& aFirstChild) const
 NS_IMETHODIMP
 nsBlockFrame::ReflowAround(nsIPresContext& aPresContext,
                            nsISpaceManager* aSpaceManager,
-                           nsReflowMetrics& aMetrics,
+                           nsHTMLReflowMetrics& aMetrics,
                            const nsReflowState& aReflowState,
                            nsRect& aDesiredRect,
                            nsReflowStatus& aStatus)
@@ -1851,9 +1851,9 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
 }
 
 void
-nsBlockFrame::ComputeFinalSize(nsBlockReflowState& aState,
-                                  nsReflowMetrics&  aMetrics,
-                                  nsRect&           aDesiredRect)
+nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
+                               nsHTMLReflowMetrics& aMetrics,
+                               nsRect&              aDesiredRect)
 {
   aDesiredRect.x = 0;
   aDesiredRect.y = 0;
@@ -3190,7 +3190,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       availSize.width = NS_UNCONSTRAINEDSIZE;
       availSize.height = NS_UNCONSTRAINEDSIZE;
       nsReflowState reflowState(mBullet, aState, availSize);
-      nsReflowMetrics metrics(nsnull);
+      nsHTMLReflowMetrics metrics(nsnull);
       nsIInlineReflow* iir;
       if (NS_OK == mBullet->QueryInterface(kIInlineReflowIID, (void**) &iir)) {
         mBullet->WillReflow(aState.mPresContext);
@@ -3724,11 +3724,14 @@ nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
 
   // Resize reflow the anchored item into the available space
   // XXX Check for complete?
-  nsReflowMetrics desiredSize(nsnull);
-  nsReflowStatus  status;
-  aFloaterFrame->WillReflow(aPresContext);
-  aFloaterFrame->Reflow(aPresContext, desiredSize, reflowState, status);
-  aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
+  nsIHTMLReflow*  floaterReflow;
+  if (NS_OK == aFloaterFrame->QueryInterface(kIHTMLReflowIID, (void**)&floaterReflow)) {
+    nsHTMLReflowMetrics desiredSize(nsnull);
+    nsReflowStatus  status;
+    floaterReflow->WillReflow(aPresContext);
+    floaterReflow->Reflow(aPresContext, desiredSize, reflowState, status);
+    aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
+  }
 }
 
 PRBool

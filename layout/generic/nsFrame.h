@@ -19,6 +19,7 @@
 #define nsFrame_h___
 
 #include "nsIFrame.h"
+#include "nsIHTMLReflow.h"
 #include "nsRect.h"
 #include "nsISelection.h"
 #include "nsSelectionRange.h"
@@ -87,7 +88,7 @@
 //----------------------------------------------------------------------
 
 // Implementation of a simple frame with no children and that isn't splittable
-class nsFrame : public nsIFrame
+class nsFrame : public nsIFrame, public nsIHTMLReflow
 {
 public:
   /**
@@ -140,13 +141,6 @@ public:
                           PRInt32&        aCursor);
   NS_IMETHOD  GetFrameState(nsFrameState& aResult);
   NS_IMETHOD  SetFrameState(nsFrameState aNewState);
-  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
-  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
-                        nsDidReflowStatus aStatus);
-  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
-                     nsReflowMetrics&     aDesiredSize,
-                     const nsReflowState& aReflowState,
-                     nsReflowStatus&      aStatus);
 
   NS_IMETHOD  ContentChanged(nsIPresContext* aPresContext,
                              nsIContent*     aChild,
@@ -155,8 +149,6 @@ public:
                                nsIContent*     aChild,
                                nsIAtom*        aAttribute,
                                PRInt32         aHint);
-  NS_IMETHOD  GetReflowMetrics(nsIPresContext&  aPresContext,
-                               nsReflowMetrics& aMetrics);
   NS_IMETHOD  IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD  CreateContinuingFrame(nsIPresContext&  aPresContext,
                                     nsIFrame*        aParent,
@@ -185,6 +177,17 @@ public:
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
   NS_IMETHOD  ListTag(FILE* out = stdout) const;
   NS_IMETHOD  VerifyTree() const;
+
+  // nsIHTMLReflow
+  NS_IMETHOD  WillReflow(nsIPresContext& aPresContext);
+  NS_IMETHOD  Reflow(nsIPresContext&      aPresContext,
+                     nsHTMLReflowMetrics& aDesiredSize,
+                     const nsReflowState& aReflowState,
+                     nsReflowStatus&      aStatus);
+  NS_IMETHOD  DidReflow(nsIPresContext& aPresContext,
+                        nsDidReflowStatus aStatus);
+  NS_IMETHOD  GetReflowMetrics(nsIPresContext&      aPresContext,
+                               nsHTMLReflowMetrics& aMetrics);
 
     // Selection Methods
   NS_IMETHOD HandlePress(nsIPresContext& aPresContext,

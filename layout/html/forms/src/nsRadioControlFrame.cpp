@@ -84,7 +84,7 @@ nsRadioControlFrame::GetCID()
 void 
 nsRadioControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                   const nsReflowState& aReflowState,
-                                  nsReflowMetrics& aDesiredLayoutSize,
+                                  nsHTMLReflowMetrics& aDesiredLayoutSize,
                                   nsSize& aDesiredWidgetSize)
 {
   float p2t = aPresContext->GetPixelsToTwips();

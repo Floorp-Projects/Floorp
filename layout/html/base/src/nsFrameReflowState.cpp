@@ -19,10 +19,12 @@
 #include "nsFrameReflowState.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
+#include "nsIFrame.h"
+#include "nsIHTMLReflow.h"
 
 nsFrameReflowState::nsFrameReflowState(nsIPresContext& aPresContext,
                                        const nsReflowState& aReflowState,
-                                       const nsReflowMetrics& aMetrics)
+                                       const nsHTMLReflowMetrics& aMetrics)
   : nsReflowState(aReflowState),
     mPresContext(aPresContext)
 {

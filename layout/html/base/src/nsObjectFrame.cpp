@@ -145,7 +145,7 @@ public:
 //  NS_IMETHOD Init(nsIPresContext& aPresContext, nsIFrame *aChildList);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
@@ -164,7 +164,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
 
 
   nsresult SetURL(const nsString& aURLSpec);
@@ -298,7 +298,7 @@ exit:
 void
 nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aMetrics)
+                              nsHTMLReflowMetrics& aMetrics)
 {
   // Determine our size stylistically
   nsSize styleSize;
@@ -339,7 +339,7 @@ nsObjectFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
-                      nsReflowMetrics&     aMetrics,
+                      nsHTMLReflowMetrics& aMetrics,
                       const nsReflowState& aReflowState,
                       nsReflowStatus&      aStatus)
 {

@@ -21,6 +21,7 @@
 #include "nsIFrame.h"
 class nsPlaceholderFrame;
 class nsIPresContext;
+struct nsReflowState;
 
 // 5a305ee0-cb55-11d1-8556-00a02468fab6
 #define NS_IFLOATER_CONTAINER_IID \

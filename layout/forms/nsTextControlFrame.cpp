@@ -170,7 +170,7 @@ nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
 void 
 nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsReflowState& aReflowState,
-                                   nsReflowMetrics& aDesiredLayoutSize,
+                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
                                    nsSize& aDesiredWidgetSize)
 {
   nsCompatibility mode;

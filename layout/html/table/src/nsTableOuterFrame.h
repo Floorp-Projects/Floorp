@@ -57,7 +57,7 @@ public:
                    const nsRect& aDirtyRect);
 
   NS_IMETHOD Reflow(nsIPresContext&      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus&      aStatus);
 
@@ -125,7 +125,7 @@ protected:
   nsresult RecoverState(OuterTableReflowState& aState, nsIFrame* aKidFrame);
   nsresult IncrementalReflow(nsIPresContext* aPresContext,
                              OuterTableReflowState& aState,
-                             nsReflowMetrics& aDesiredSize,
+                             nsHTMLReflowMetrics& aDesiredSize,
                              const nsReflowState& aReflowState,
                              nsReflowStatus& aStatus);
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*        aPresContext,
@@ -142,7 +142,7 @@ private:
   PRInt32 mMinCaptionWidth;
 
   /** used to cache reflow results so we can optimize out reflow in some circumstances */
-  nsReflowMetrics mDesiredSize;
+  nsHTMLReflowMetrics mDesiredSize;
   nsSize mMaxElementSize;
 
 };

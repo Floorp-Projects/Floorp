@@ -75,7 +75,7 @@ public:
     * @see nsIFrame::Reflow
     */
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
-                    nsReflowMetrics& aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus& aStatus);
 
@@ -122,7 +122,7 @@ protected:
                             nsSize&              aKidMaxElementSize);
 
   void ShrinkWrapChildren(nsIPresContext* aPresContext, 
-                          nsReflowMetrics& aDesiredSize);
+                          nsHTMLReflowMetrics& aDesiredSize);
 
   nsresult AdjustSiblingsAfterReflow(nsIPresContext*      aPresContext,
                                      RowGroupReflowState& aState,

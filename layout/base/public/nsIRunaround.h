@@ -19,6 +19,9 @@
 #define nsIRunaround_h___
 
 #include "nsIFrame.h"
+#include "nsIFrameReflow.h"
+
+struct nsHTMLReflowMetrics;
 
 // IID for the nsIRunaround interface {3C6ABCF0-C028-11d1-853F-00A02468FAB6}
 #define NS_IRUNAROUND_IID     \
@@ -66,7 +69,7 @@ public:
    */
   NS_IMETHOD  ReflowAround(nsIPresContext&      aPresContext,
                            nsISpaceManager*     aSpaceManager,
-                           nsReflowMetrics&     aDesiredSize,
+                           nsHTMLReflowMetrics& aDesiredSize,
                            const nsReflowState& aReflowState,
                            nsRect&              aDesiredRect,  // XXX FIX ME
                            nsReflowStatus&      aStatus) = 0;

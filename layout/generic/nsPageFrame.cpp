@@ -22,6 +22,7 @@
 #include "nsIReflowCommand.h"
 #include "nsIRenderingContext.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLIIDs.h"
 
 nsPageFrame::nsPageFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsContainerFrame(aContent, aParent)
@@ -64,7 +65,7 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
 }
 
 NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
+                              nsHTMLReflowMetrics& aDesiredSize,
                               const nsReflowState& aReflowState,
                               nsReflowStatus&      aStatus)
 {
@@ -125,28 +126,31 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
     // Resize our frame allowing it only to be as big as we are
     // XXX Pay attention to the page's border and padding...
     if (nsnull != mFirstChild) {
-      nsReflowState kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
+      nsReflowState  kidReflowState(mFirstChild, aReflowState, aReflowState.maxSize);
+      nsIHTMLReflow* htmlReflow;
 
-      // Get the child's desired size
-      mFirstChild->WillReflow(aPresContext);
-      aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
+      if (NS_OK == mFirstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+        // Get the child's desired size
+        htmlReflow->WillReflow(aPresContext);
+        aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
   
-      // Make sure the child is at least as tall as our max size (the containing window)
-      if (aDesiredSize.height < aReflowState.maxSize.height) {
-        aDesiredSize.height = aReflowState.maxSize.height;
-      }
+        // Make sure the child is at least as tall as our max size (the containing window)
+        if (aDesiredSize.height < aReflowState.maxSize.height) {
+          aDesiredSize.height = aReflowState.maxSize.height;
+        }
   
-      // Place and size the child
-      nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-      mFirstChild->SetRect(rect);
-      mFirstChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+        // Place and size the child
+        nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+        mFirstChild->SetRect(rect);
+        htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   
-      // Is the frame complete?
-      if (NS_FRAME_IS_COMPLETE(aStatus)) {
-        nsIFrame* childNextInFlow;
+        // Is the frame complete?
+        if (NS_FRAME_IS_COMPLETE(aStatus)) {
+          nsIFrame* childNextInFlow;
   
-        mFirstChild->GetNextInFlow(childNextInFlow);
-        NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
+          mFirstChild->GetNextInFlow(childNextInFlow);
+          NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
+        }
       }
     }
 

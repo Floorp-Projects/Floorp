@@ -17,6 +17,7 @@
  */
 #include "nsHTMLReflowCommand.h"
 #include "nsIFrame.h"
+#include "nsIHTMLReflow.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
@@ -133,9 +134,9 @@ void nsHTMLReflowCommand::BuildPath()
   }
 }
 
-NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&  aPresContext,
-                                            nsReflowMetrics& aDesiredSize,
-                                            const nsSize&    aMaxSize)
+NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&      aPresContext,
+                                            nsHTMLReflowMetrics& aDesiredSize,
+                                            const nsSize&        aMaxSize)
 {
   // Build the path from the target frame (index 0) to the root frame
   BuildPath();
@@ -155,8 +156,12 @@ NS_IMETHODIMP nsHTMLReflowCommand::Dispatch(nsIPresContext&  aPresContext,
     mPath.RemoveElementAt(mPath.Count() - 1);
 
     nsReflowState   reflowState(root, *this, aMaxSize);
+    nsIHTMLReflow*  htmlReflow;
     nsReflowStatus  status;
-    root->Reflow(aPresContext, aDesiredSize, reflowState, status);
+
+    if (NS_OK == root->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->Reflow(aPresContext, aDesiredSize, reflowState, status);
+    }
   }
 
   return NS_OK;

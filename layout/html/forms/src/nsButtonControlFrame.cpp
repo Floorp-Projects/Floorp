@@ -272,7 +272,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
 
 NS_METHOD
 nsButtonControlFrame::Reflow(nsIPresContext&      aPresContext,
-                             nsReflowMetrics&     aDesiredSize,
+                             nsHTMLReflowMetrics& aDesiredSize,
                              const nsReflowState& aReflowState,
                              nsReflowStatus&      aStatus)
 {
@@ -298,7 +298,7 @@ nsButtonControlFrame::Reflow(nsIPresContext&      aPresContext,
 void 
 nsButtonControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                    const nsReflowState& aReflowState,
-                                   nsReflowMetrics& aDesiredLayoutSize,
+                                   nsHTMLReflowMetrics& aDesiredLayoutSize,
                                    nsSize& aDesiredWidgetSize)
 {
   PRInt32 type;

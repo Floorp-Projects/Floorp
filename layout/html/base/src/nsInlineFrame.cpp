@@ -18,6 +18,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsFrameReflowState.h"
 #include "nsInlineReflow.h"
+#include "nsIHTMLReflow.h"
 #include "nsLineLayout.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
@@ -31,7 +32,7 @@
 struct nsInlineReflowState : nsFrameReflowState {
   nsInlineReflowState(nsIPresContext& aPresContext,
                       const nsReflowState& aReflowState,
-                      const nsReflowMetrics& aMetrics);
+                      const nsHTMLReflowMetrics& aMetrics);
   ~nsInlineReflowState();
 
   // Last child we have reflowed (so far)
@@ -40,7 +41,7 @@ struct nsInlineReflowState : nsFrameReflowState {
 
 nsInlineReflowState::nsInlineReflowState(nsIPresContext& aPresContext,
                                          const nsReflowState& aReflowState,
-                                         const nsReflowMetrics& aMetrics)
+                                         const nsHTMLReflowMetrics& aMetrics)
   : nsFrameReflowState(aPresContext, aReflowState, aMetrics)
 {
 
@@ -74,7 +75,7 @@ public:
   NS_IMETHOD FindTextRuns(nsLineLayout& aLineLayout,
                           nsIReflowCommand* aReflowCommand);
   NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsReflowMetrics& aDesiredSize,
+                          nsHTMLReflowMetrics& aDesiredSize,
                           const nsReflowState& aReflowState);
 
   virtual PRIntn GetSkipSides() const;
@@ -96,7 +97,7 @@ public:
 
   void ComputeFinalSize(nsInlineReflowState& aState,
                         nsInlineReflow& aInlineReflow,
-                        nsReflowMetrics& aMetrics);
+                        nsHTMLReflowMetrics& aMetrics);
 
   PRBool ReflowMapped(nsInlineReflowState& aState,
                       nsInlineReflow& aInlineReflow,
@@ -309,7 +310,7 @@ nsInlineFrame::InsertNewFrame(nsIPresContext& aPresContext,
 
 NS_IMETHODIMP
 nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
-                            nsReflowMetrics&     aMetrics,
+                            nsHTMLReflowMetrics& aMetrics,
                             const nsReflowState& aReflowState)
 {
 //XXX ListTag(stdout); printf(": enter (runningMargin=%d)\n", aMetrics.mCarriedInTopMargin);
@@ -430,7 +431,7 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
 void
 nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
                                 nsInlineReflow& aInlineReflow,
-                                nsReflowMetrics& aMetrics)
+                                nsHTMLReflowMetrics& aMetrics)
 {
   // Align our child frames. Note that inline frames "shrink wrap"
   // around their contents therefore we need to fixup the available

@@ -28,5 +28,6 @@ extern const nsIID kIFloaterContainerIID;
 extern const nsIID kIHTMLContentIID;
 extern const nsIID kIInlineReflowIID;
 extern const nsIID kIRunaroundIID;
+extern const nsIID kIHTMLReflowIID;
 
 #endif /* nsHTMLIIDs_h___ */

@@ -151,7 +151,7 @@ public:
                           nsIReflowCommand* aReflowCommand);
 
   NS_IMETHOD InlineReflow(nsLineLayout& aLineLayout,
-                          nsReflowMetrics& aMetrics,
+                          nsHTMLReflowMetrics& aMetrics,
                           const nsReflowState& aReflowState);
 
   // TextFrame methods
@@ -195,13 +195,13 @@ public:
                       nscoord dx, nscoord dy);
 
   nsInlineReflowStatus ReflowPre(nsLineLayout& aLineLayout,
-                                 nsReflowMetrics& aMetrics,
+                                 nsHTMLReflowMetrics& aMetrics,
                                  const nsReflowState& aReflowState,
                                  const nsStyleFont& aFont,
                                  PRInt32 aStartingOffset);
 
   nsInlineReflowStatus ReflowNormal(nsLineLayout& aLineLayout,
-                                    nsReflowMetrics& aMetrics,
+                                    nsHTMLReflowMetrics& aMetrics,
                                     const nsReflowState& aReflowState,
                                     const nsStyleFont& aFontStyle,
                                     const nsStyleText& aTextStyle,
@@ -1295,7 +1295,7 @@ TextFrame::GetPosition(nsIPresContext& aCX,
 
 NS_IMETHODIMP
 TextFrame::InlineReflow(nsLineLayout&     aLineLayout,
-                        nsReflowMetrics&     aMetrics,
+                        nsHTMLReflowMetrics& aMetrics,
                         const nsReflowState& aReflowState)
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
@@ -1348,7 +1348,7 @@ TextFrame::InlineReflow(nsLineLayout&     aLineLayout,
 // "whiteSpace" style property.
 nsInlineReflowStatus
 TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
-                        nsReflowMetrics& aMetrics,
+                        nsHTMLReflowMetrics& aMetrics,
                         const nsReflowState& aReflowState,
                         const nsStyleFont& aFont,
                         const nsStyleText& aTextStyle,
@@ -1522,7 +1522,7 @@ TextFrame::ReflowNormal(nsLineLayout& aLineLayout,
 
 nsInlineReflowStatus
 TextFrame::ReflowPre(nsLineLayout& aLineLayout,
-                     nsReflowMetrics& aMetrics,
+                     nsHTMLReflowMetrics& aMetrics,
                      const nsReflowState& aReflowState,
                      const nsStyleFont& aFont,
                      PRInt32 aStartingOffset)

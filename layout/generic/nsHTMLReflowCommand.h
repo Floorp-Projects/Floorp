@@ -50,9 +50,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIReflowCommand
-  NS_IMETHOD Dispatch(nsIPresContext&  aPresContext,
-                      nsReflowMetrics& aDesiredSize,
-                      const nsSize&    aMaxSize);
+  NS_IMETHOD Dispatch(nsIPresContext&      aPresContext,
+                      nsHTMLReflowMetrics& aDesiredSize,
+                      const nsSize&        aMaxSize);
   NS_IMETHOD GetNext(nsIFrame*& aNextFrame);
   NS_IMETHOD GetTarget(nsIFrame*& aTargetFrame) const;
   NS_IMETHOD SetTarget(nsIFrame* aTargetFrame);

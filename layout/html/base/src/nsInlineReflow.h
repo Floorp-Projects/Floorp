@@ -89,17 +89,17 @@ protected:
 
   PRBool ComputeAvailableSize();
 
-  PRBool ReflowFrame(nsReflowMetrics& aMetrics,
+  PRBool ReflowFrame(nsHTMLReflowMetrics& aMetrics,
                      nsRect& aBounds,
                      nsInlineReflowStatus& aStatus);
 
-  PRBool CanPlaceFrame(nsReflowMetrics& aMetrics,
+  PRBool CanPlaceFrame(nsHTMLReflowMetrics& aMetrics,
                        nsRect& aBounds,
                        nsInlineReflowStatus& aStatus);
 
-  void PlaceFrame(nsReflowMetrics& aMetrics, nsRect& aBounds);
+  void PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds);
 
-  nsresult SetFrameData(const nsReflowMetrics& aMetrics);
+  nsresult SetFrameData(const nsHTMLReflowMetrics& aMetrics);
 
   // The outer frame that contains the frames that we reflow.
   nsHTMLContainerFrame* mOuterFrame;

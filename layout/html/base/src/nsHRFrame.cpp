@@ -44,7 +44,7 @@ public:
              nsIFrame* aParentFrame);
 
   NS_IMETHOD Reflow(nsIPresContext& aPresContext,
-                    nsReflowMetrics& aDesiredSize,
+                    nsHTMLReflowMetrics& aDesiredSize,
                     const nsReflowState& aReflowState,
                     nsReflowStatus& aStatus);
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
@@ -56,7 +56,7 @@ protected:
 
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
-                              nsReflowMetrics& aDesiredSize);
+                              nsHTMLReflowMetrics& aDesiredSize);
 
   PRBool GetNoShade();
   PRInt32 GetThickness();
@@ -207,7 +207,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
 
 NS_IMETHODIMP
 HRuleFrame::Reflow(nsIPresContext&      aPresContext,
-                   nsReflowMetrics&     aDesiredSize,
+                   nsHTMLReflowMetrics& aDesiredSize,
                    const nsReflowState& aReflowState,
                    nsReflowStatus&      aStatus)
 {
@@ -243,7 +243,7 @@ HRuleFrame::Reflow(nsIPresContext&      aPresContext,
 void
 HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
-                           nsReflowMetrics& aDesiredSize)
+                           nsHTMLReflowMetrics& aDesiredSize)
 {
   nsSize size;
   PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);

@@ -27,6 +27,7 @@
 #include "nsHTMLParts.h"
 #include "nsIPtr.h"
 #include "nsHTMLAtoms.h"
+#include "nsHTMLIIDs.h"
 
 NS_DEF_PTR(nsIContent);
 NS_DEF_PTR(nsIStyleContext);
@@ -172,7 +173,7 @@ NS_METHOD nsTableColGroupFrame::Paint(nsIPresContext& aPresContext,
 // today, we just throw away the column frames and start over every time
 // this is dumb, we should be able to maintain column frames and adjust incrementally
 NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
-                                       nsReflowMetrics&     aDesiredSize,
+                                       nsHTMLReflowMetrics& aDesiredSize,
                                        const nsReflowState& aReflowState,
                                        nsReflowStatus&      aStatus)
 {
@@ -204,14 +205,18 @@ NS_METHOD nsTableColGroupFrame::Reflow(nsIPresContext&      aPresContext,
 
   for (kidFrame = mFirstChild; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
     // Give the child frame a chance to reflow, even though we know it'll have 0 size
-    nsReflowMetrics kidSize(nsnull);
+    nsHTMLReflowMetrics kidSize(nsnull);
     // XXX Use a valid reason...
     nsReflowState   kidReflowState(kidFrame, aReflowState, nsSize(0,0), eReflowReason_Initial);
-    kidFrame->WillReflow(aPresContext);
-    nsReflowStatus status = ReflowChild(kidFrame,&aPresContext, kidSize,
-                                        kidReflowState);
-    // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
-    kidFrame->SetRect(nsRect(0,0,0,0));
+    nsIHTMLReflow*  htmlReflow;
+
+    if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
+      htmlReflow->WillReflow(aPresContext);
+      nsReflowStatus status = ReflowChild(kidFrame,&aPresContext, kidSize,
+                                          kidReflowState);
+      // note that DidReflow is called as the result of some ancestor firing off a DidReflow above me
+      kidFrame->SetRect(nsRect(0,0,0,0));
+    }
   }
 
   aDesiredSize.width=0;
