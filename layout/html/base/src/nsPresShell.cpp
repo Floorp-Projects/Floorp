@@ -1584,7 +1584,7 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
       }
 
       if(clipboard) {
-        clipboard->SetTransferable(trans, nsnull);
+        clipboard->SetData(trans, nsnull);
         clipboard->SetClipboard();
       } else {
         printf("PresShell::DoCopy(), clipboard instance is null.\n");

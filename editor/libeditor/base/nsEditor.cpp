@@ -863,7 +863,7 @@ NS_IMETHODIMP nsEditor::Paste()
   }
 
   if(clipboard) {
-    clipboard->SetTransferable(trans, nsnull);
+    clipboard->SetData(trans, nsnull);
     clipboard->GetClipboard();
   } else {
     printf("nsEditor::Paste(), clipboard instance is null.\n");
