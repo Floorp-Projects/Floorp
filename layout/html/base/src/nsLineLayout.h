@@ -224,7 +224,7 @@ protected:
   const nsHTMLReflowState* mBlockReflowState;
   nsBlockReflowState* mBlockRS;/* XXX hack! */
   nscoord mMinLineHeight;
-  PRBool mComputeMaxElementSize;
+  PRPackedBool mComputeMaxElementSize;
   PRUint8 mTextAlign;
 
   // This state varies during the reflow of a line but is line
@@ -232,18 +232,18 @@ protected:
   nsIFrame* mFirstLetterFrame;
   PRInt32 mLineNumber;
   PRInt32 mColumn;
-  PRBool mEndsInWhiteSpace;
-  PRBool mUnderstandsWhiteSpace;
-  PRBool mTextStartsWithNBSP;
-  PRBool mFirstLetterStyleOK;
-  PRBool mIsTopOfPage;
-  PRBool mUpdatedBand;
-  PRBool mImpactedByFloaters;
-  PRBool mLastFloaterWasLetterFrame;
-  PRBool mCanPlaceFloater;
-  PRBool mKnowStrictMode;
-  PRBool mInStrictMode;
-  PRBool mLineEndsInBR;
+  PRPackedBool mEndsInWhiteSpace;
+  PRPackedBool mUnderstandsWhiteSpace;
+  PRPackedBool mTextStartsWithNBSP;
+  PRPackedBool mFirstLetterStyleOK;
+  PRPackedBool mIsTopOfPage;
+  PRPackedBool mUpdatedBand;
+  PRPackedBool mImpactedByFloaters;
+  PRPackedBool mLastFloaterWasLetterFrame;
+  PRPackedBool mCanPlaceFloater;
+  PRPackedBool mKnowStrictMode;
+  PRPackedBool mInStrictMode;
+  PRPackedBool mLineEndsInBR;
   PRUint8 mPlacedFloaters;
   PRInt32 mTotalPlacedFrames;
   nsVoidArray mWordFrames;
@@ -292,14 +292,14 @@ protected:
     nsMargin mMargin;
     nsMargin mBorderPadding;
     nsMargin mOffsets;
-    PRBool mRelativePos;
+    PRPackedBool mRelativePos;
 
     // Other state we use
     PRUint8 mVerticalAlign;
-    PRBool mIsTextFrame;
-    PRBool mIsNonEmptyTextFrame;
-    PRBool mIsLetterFrame;
-    PRBool mIsSticky;
+    PRPackedBool mIsTextFrame;
+    PRPackedBool mIsNonEmptyTextFrame;
+    PRPackedBool mIsLetterFrame;
+    PRPackedBool mIsSticky;
 
     PerFrameData* Last() {
       PerFrameData* pfd = this;
@@ -326,11 +326,11 @@ public:
     PerFrameData* mLastFrame;
 
     const nsHTMLReflowState* mReflowState;
-    PRBool mNoWrap;
+    PRPackedBool mNoWrap;
     PRUint8 mDirection;
-    PRBool mChangedFrameDirection;
-    PRBool mZeroEffectiveSpanBox;
-    PRBool mContainsFloater;
+    PRPackedBool mChangedFrameDirection;
+    PRPackedBool mZeroEffectiveSpanBox;
+    PRPackedBool mContainsFloater;
 
     nscoord mLeftEdge;
     nscoord mX;
