@@ -6,15 +6,55 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#">
 
+<html:script>
+
+function doSort(node)
+{
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+	if (!node)	return(false);
+        dump("Sort on '" + sortResource + "' column.\n");
+
+	// get RDF Core service
+	var rdfCore = XPAppCoresManager.Find("RDFCore");
+	if (!rdfCore)
+	{
+		dump("    *** error: RDFCore not found.\n");
+
+		rdfCore = new RDFCore();
+		if (!rdfCore)
+		{
+			dump("    *** error: Unable to create new RDFCore.\n");
+			return(false);
+		}
+                dump("RDFCore created\n");
+
+		rdfCore.Init("RDFCore");
+                dump("RDFCore inited\n");
+
+                XPAppCoresManager.Add(rdfCore);
+                dump("RDFCore added into XPAppCoresManager\n");
+	}
+
+	// sort!!!
+        dump("About to sort...\n");
+        rdfCore.doSort(node, sortResource, "ascending");
+        dump("Sort done.\n");
+
+        return(false);
+}
+
+</html:script>
+
 <xul:tree xul:datasources="rdf:files rdf:bookmarks rdf:mail">
   <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <xul:treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
   <xul:treehead>
     <xul:treeitem>
-      <xul:treecell>Name</xul:treecell>
-      <xul:treecell>URL</xul:treecell>
-      <xul:treecell>Last Modified</xul:treecell>
+      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#Name' html:onClick="return doSort(this);">Name</xul:treecell>
+      <xul:treecell xul:resource='http://home.netscape.com/NC-rdf#URL' html:onClick="return doSort(this);">URL</xul:treecell>
+      <xul:treecell xul:resource='http://home.netscape.com/WEB-rdf#LastModifiedDate' html:onClick="return doSort(this);">Last Modified</xul:treecell>
     </xul:treeitem>
   </xul:treehead>
 
