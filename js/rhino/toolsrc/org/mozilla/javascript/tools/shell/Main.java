@@ -21,6 +21,7 @@
  * Contributor(s):
  * Patrick Beard
  * Norris Boyd
+ * Igor Bukanov
  * Rob Ginda
  * Kurt Westerfeld
  *
@@ -69,13 +70,14 @@ public class Main {
             if (Boolean.getBoolean("rhino.use_java_policy_security")) {
                 initJavaPolicySecuritySupport();
             }
-        }catch (SecurityException ex) {
+        } catch (SecurityException ex) {
             ex.printStackTrace(System.err);
         }
 
         int result = exec(args);
-        if (result != 0)
+        if (result != 0) {
             System.exit(result);
+        }
     }
 
     /**
@@ -171,8 +173,7 @@ public class Main {
                 processStdin = false;
                 if (++i == args.length)
                     usage(arg);
-                Reader reader = new StringReader(args[i]);
-                evaluateReader(cx, global, reader, "<command>", 1, null);
+                evaluateScript(cx, global, null, args[i], "<command>", 1, null);
                 continue;
             }
             if (arg.equals("-w")) {
@@ -270,8 +271,7 @@ public class Main {
                     if (cx.stringIsCompilableUnit(source))
                         break;
                 }
-                Reader reader = new StringReader(source);
-                Object result = evaluateReader(cx, global, reader,
+                Object result = evaluateScript(cx, global, null, source,
                                                "<stdin>", startline, null);
                 if (result != cx.getUndefinedValue()) {
                     try {
@@ -365,23 +365,36 @@ public class Main {
         // Here we evalute the entire contents of the file as
         // a script. Text is printed only if the print() function
         // is called.
-        evaluateReader(cx, scope, in, filename, 1, securityDomain);
+        evaluateScript(cx, scope, in, null, filename, 1, securityDomain);
     }
 
-    public static Object evaluateReader(Context cx, Scriptable scope,
-                                        Reader in, String sourceName,
+    public static Object evaluateScript(Context cx, Scriptable scope,
+                                        Reader in, String script,
+                                        String sourceName,
                                         int lineno, Object securityDomain)
     {
         Object result = cx.getUndefinedValue();
         try {
-            result = cx.evaluateReader(scope, in, sourceName, lineno,
-                                       securityDomain);
-        }
-        catch (WrappedException we) {
+            if (in != null) {
+                try {
+                    try {
+                        result = cx.evaluateReader(scope, in,
+                                                   sourceName, lineno,
+                                                   securityDomain);
+                    } finally {
+                        in.close();
+                    }
+                } catch (IOException ioe) {
+                    global.getErr().println(ioe.toString());
+                }
+            } else {
+                result = cx.evaluateString(scope, script, sourceName, lineno,
+                                           securityDomain);
+            }
+        } catch (WrappedException we) {
             global.getErr().println(we.getWrappedException().toString());
             we.printStackTrace();
-        }
-        catch (EcmaError ee) {
+        } catch (EcmaError ee) {
             String msg = ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException", ee.toString());
             exitCode = EXITCODE_RUNTIME_ERROR;
@@ -393,31 +406,21 @@ public class Main {
             } else {
                 Context.reportError(msg);
             }
-        }
-        catch (EvaluatorException ee) {
+        } catch (VirtualMachineError ex) {
+            // Treat StackOverflow and OutOfMemory as runtime errors
+            ex.printStackTrace();
+            String msg = ToolErrorReporter.getMessage(
+                "msg.uncaughtJSException", ex.toString());
+            exitCode = EXITCODE_RUNTIME_ERROR;
+            Context.reportError(msg);
+        } catch (EvaluatorException ee) {
             // Already printed message.
             exitCode = EXITCODE_RUNTIME_ERROR;
-        }
-        catch (JavaScriptException jse) {
-            // Need to propagate ThreadDeath exceptions.
-            Object value = jse.getValue();
-            if (value instanceof ThreadDeath)
-                throw (ThreadDeath) value;
+        } catch (JavaScriptException jse) {
             exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException",
                 jse.getMessage()));
-        }
-        catch (IOException ioe) {
-            global.getErr().println(ioe.toString());
-        }
-        finally {
-            try {
-                in.close();
-            }
-            catch (IOException ioe) {
-                global.getErr().println(ioe.toString());
-            }
         }
         return result;
     }
