@@ -122,6 +122,7 @@ private:
 
 	NS_METHOD	GetFTPListing(nsIRDFResource *source, nsVoidArray **array);
 	NS_METHOD	GetURL(nsIRDFResource *source, nsVoidArray **array);
+	NS_METHOD	GetName(nsIRDFResource *source, nsVoidArray **array);
 
 protected:
 	nsIRDFDataSource	*mInner;
