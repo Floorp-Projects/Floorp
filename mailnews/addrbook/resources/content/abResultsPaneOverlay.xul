@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+
+Original Author:
+  Seth Spitzer <sspitzer@netscape.com>
+--> 
+
+<!--
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/abResultPane.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abResultsPaneOverlay.dtd">
+
+-->
+
+<overlay
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<script src="chrome://messenger/content/addressbook/abResultsPane.js"/>
+
+<outliner id="abResultsOutliner" flex="1" enableColumnDrag="true"
+    onkeypress="AbResultsPaneKeyPress(event);">
+
+  <outlinercol id="nameCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="nameXXX" primary="true"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="workPhoneCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width"  flex="1" label="emailXXX"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="emailCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width"  flex="1" label="workXXX"/>
+  <splitter class="tree-splitter"/>
+  <outlinercol id="organizationCol" class="outlinercol-header outlinercol-inset-header sortDirectionIndicator" persist="hidden ordinal width" flex="1" label="orgXXX"/>
+  <splitter class="tree-splitter"/>
+
+  <outlinerbody flex="1"
+    onselect="this.parentNode.outlinerBoxObject.view.selectionChanged();"
+    ondraggesture="return BeginDragAbResultsPane(event);"/>
+</outliner>
+
+</overlay>
