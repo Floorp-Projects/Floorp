@@ -206,11 +206,15 @@ nsButtonControlFrame::AttributeChanged(nsIPresContext* aPresContext,
   return result;
 }
                                      
+
 NS_METHOD 
 nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
                             nsIRenderingContext& aRenderingContext,
                             const nsRect& aDirtyRect)
 {
+#ifdef XP_PC
+  PaintButton(aPresContext, aRenderingContext, aDirtyRect);
+#else
   PRInt32 type;
   GetType(&type);
 
@@ -220,9 +224,11 @@ nsButtonControlFrame::Paint(nsIPresContext& aPresContext,
   if (disp->mVisible) {
     return nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
-
+#endif
+ 
   return NS_OK;
 }
+
 
 void
 nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext) 
@@ -381,3 +387,97 @@ nsButtonControlFrame::GetFrameName(nsString& aResult) const
 {
   return MakeFrameName("ButtonControl", aResult);
 }
+
+//
+// XXX: The following paint code is TEMPORARY. It is being used to get printing working
+// under windows. Later it may be used to GFX-render the controls to the display. 
+// Expect this code to repackaged and moved to a new location in the future.
+//
+
+void 
+nsButtonControlFrame::PaintButton(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect)
+{
+#ifdef XP_PC
+    aRenderingContext.PushState();
+    nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+    nsString label;
+    nsresult result = GetValue(&label);
+
+    const nsStyleSpacing* spacing =
+      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+    nsMargin border;
+    spacing->CalcBorderFor(this, border);
+
+    float p2t;
+    aPresContext.GetScaledPixelsToTwips(p2t);
+    nscoord onePixel = NSIntPixelsToTwips(1, p2t);
+
+    nsRect outside(0, 0, mRect.width, mRect.height);
+    outside.Deflate(border);
+    outside.Deflate(onePixel, onePixel);
+
+    nsRect inside(outside);
+    inside.Deflate(onePixel, onePixel);
+
+    //XXX: This will be used later, when rendering to the screen. For printing we don't bother
+    //printing the focus dashed line for now.
+#if 0
+  if (mGotFocus) { // draw dashed line to indicate selection, XXX don't calc rect every time
+    PRUint8 borderStyles[4];
+    nscolor borderColors[4];
+    nscolor black = NS_RGB(0,0,0);
+    for (PRInt32 i = 0; i < 4; i++) {
+      borderStyles[i] = NS_STYLE_BORDER_STYLE_DOTTED;
+      borderColors[i] = black;
+    }
+    nsCSSRendering::DrawDashedSides(0, aRenderingContext, borderStyles, borderColors, outside,
+                                    inside, PR_FALSE, nsnull);
+  }
+#endif
+
+  float appUnits;
+  float devUnits;
+  float scale;
+  nsIDeviceContext * context;
+  aRenderingContext.GetDeviceContext(context);
+
+  context->GetCanonicalPixelScale(scale);
+  context->GetAppUnitsToDevUnits(devUnits);
+  context->GetDevUnitsToAppUnits(appUnits);
+
+  //aRenderingContext.SetColor(NS_RGB(192,192,192));
+  //aRenderingContext.FillRect(inside);
+
+  aRenderingContext.SetColor(NS_RGB(0,0,0));
+ 
+  nsFont font(aPresContext.GetDefaultFixedFont()); 
+  GetFont(&aPresContext, font);
+
+  aRenderingContext.SetFont(font);
+
+  nscoord textWidth;
+  nscoord textHeight;
+  aRenderingContext.GetWidth(label, textWidth);
+
+  nsIFontMetrics* metrics;
+  context->GetMetricsFor(font, metrics);
+  metrics->GetMaxAscent(textHeight);
+
+  nscoord x = ((inside.width  - textWidth) / 2)  + inside.x;
+  nscoord y = ((inside.height - textHeight) / 2) + inside.y;
+  if (mLastMouseState == eMouseDown) {
+    x += onePixel;
+    y += onePixel;
+  }
+
+  aRenderingContext.DrawString(label, x, y, 0);
+  NS_RELEASE(context);
+  PRBool clipEmpty;
+  aRenderingContext.PopState(clipEmpty);
+
+}
+
+#endif
