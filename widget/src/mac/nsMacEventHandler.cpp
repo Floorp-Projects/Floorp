@@ -1799,7 +1799,9 @@ nsresult nsMacEventHandler::HandleStartComposition(void)
 
 	nsresult res = focusedWidget->DispatchWindowEvent(compositionEvent);
 	if(NS_SUCCEEDED(res)) {
-		mIMEPos = compositionEvent.theReply.mCursorPosition;
+		mIMEPos.x = compositionEvent.theReply.mCursorPosition.x;
+		mIMEPos.y = compositionEvent.theReply.mCursorPosition.y
+		          + compositionEvent.theReply.mCursorPosition.height;
 		focusedWidget->LocalToWindowCoordinate(mIMEPos);
 #ifdef DEBUG_TSM
 		printf("HandleStartComposition reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);
@@ -1921,7 +1923,9 @@ nsresult nsMacEventHandler::HandleTextEvent(PRUint32 textRangeCount, nsTextRange
 
 	nsresult res = NS_OK;
 	if (NS_SUCCEEDED(res = focusedWidget->DispatchWindowEvent(textEvent))) {
-		mIMEPos = textEvent.theReply.mCursorPosition;
+		mIMEPos.x = textEvent.theReply.mCursorPosition.x;
+		mIMEPos.y = textEvent.theReply.mCursorPosition.y +
+		            textEvent.theReply.mCursorPosition.height;
 		focusedWidget->LocalToWindowCoordinate(mIMEPos);
 #ifdef DEBUG_TSM
 		printf("HandleTextEvent reply (%d,%d)\n", mIMEPos.x , mIMEPos.y);

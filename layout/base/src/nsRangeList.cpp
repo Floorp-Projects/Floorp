@@ -715,7 +715,7 @@ nsRangeList::FetchDesiredX() //the x position requested by the Key Handling for 
   if (mDesiredXSet)
     return mDesiredX;
   else {
-    nsPoint coord;
+    nsRect coord;
     PRBool  collapsed;
     nsCOMPtr<nsICaret> caret;
     nsCOMPtr<nsIPresContext> context;

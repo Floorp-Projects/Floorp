@@ -160,7 +160,7 @@ typedef struct nsTextRange nsTextRange;
 typedef nsTextRange* nsTextRangeArray;
 
 struct nsTextEventReply {
-	nsPoint		mCursorPosition;
+	nsRect		mCursorPosition;
 	PRBool		mCursorIsCollapsed;
 };
 

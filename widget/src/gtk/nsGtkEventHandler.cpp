@@ -597,7 +597,12 @@ static gint composition_start(GdkEventKey *aEvent, nsWindow *aWin,
   aWin->DispatchEvent(&compEvent, *aStatus);
 
   // set SpotLocation
-  aWin->SetXICSpotLocation(compEvent.theReply.mCursorPosition);
+  nsPoint spot;
+  spot.x = compEvent.theReply.mCursorPosition.x;
+  spot.y = compEvent.theReply.mCursorPosition.y + 
+                compEvent.theReply.mCursorPosition.height;
+  aWin->SetXICBaseFontSize(compEvent.theReply.mCursorPosition.height-1);
+  aWin->SetXICSpotLocation(spot);
 
   return PR_TRUE;
 }
@@ -649,7 +654,12 @@ static gint composition_draw(GdkEventKey *aEvent, nsWindow *aWin,
   textEvent.eventStructType = NS_TEXT_EVENT;
   aWin->DispatchEvent(&textEvent, *aStatus);
 
-  aWin->SetXICSpotLocation(textEvent.theReply.mCursorPosition);
+  nsPoint spot;
+  spot.x = textEvent.theReply.mCursorPosition.x;
+  spot.y = textEvent.theReply.mCursorPosition.y + 
+                textEvent.theReply.mCursorPosition.height;
+  aWin->SetXICBaseFontSize(textEvent.theReply.mCursorPosition.height-1);
+  aWin->SetXICSpotLocation(spot);
   return True;
 }
 
