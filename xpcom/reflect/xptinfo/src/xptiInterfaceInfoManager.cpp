@@ -277,29 +277,18 @@ PRBool xptiInterfaceInfoManager::BuildFileSearchPath(nsISupportsArray** aPath)
 }
 
 PRBool 
-xptiInterfaceInfoManager::GetCloneOfManifestDir(nsILocalFile** aDir)
+xptiInterfaceInfoManager::GetCloneOfManifestLocation(nsILocalFile** aFile)
 {
-    // We cache the manifest directory to ensure that this call always returns 
-    // the same directory. Not doing so could be a problem if we try something 
-    // fancier in the future and that algorithm has different results when
-    // run at startup than when run later.
+    // We *trust* that this will not change!
+    nsCOMPtr<nsILocalFile> lf;
+    nsresult rv = GetDirectoryFromDirService(NS_XPCOM_XPTI_REGISTRY_FILE, 
+                                             getter_AddRefs(lf));
 
-    if(!mManifestDir)
-    {
-        // If we are going to do something fancy to get some other dir, then
-        // do it here...
+    if (NS_FAILED(rv)) return PR_FALSE;
 
-        if(!GetDirectoryFromDirService(NS_XPCOM_COMPONENT_DIR,
-                                       getter_AddRefs(mManifestDir)))
-            return PR_FALSE;
-    
-        // To be sure after the stuff above.
-        if(!mManifestDir)
-            return PR_FALSE;
-
-        mManifestDir->Create(nsIFile::DIRECTORY_TYPE, 0666);
-    }
-    return NS_SUCCEEDED(xptiCloneLocalFile(mManifestDir, aDir));
+    rv = xptiCloneLocalFile(lf, aFile);
+    if (NS_FAILED(rv)) return PR_FALSE;
+    return PR_TRUE;
 }
 
 PRBool 

@@ -123,9 +123,6 @@ const static char XPCOM_ABSCOMPONENT_PREFIX[] = "abs:";
 const static char XPCOM_RELCOMPONENT_PREFIX[] = "rel:";
 const static char XPCOM_GRECOMPONENT_PREFIX[] = "gre:";
 
-const static char persistentRegistryFilename[]     = "compreg.dat";
-const static char persistentRegistryTempFilename[] = "compreg.tmp";
-
 // Nonexistent factory entry
 // This is used to mark non-existent contractid mappings
 static nsFactoryEntry * kNonExistentContractID = (nsFactoryEntry*) 1;
@@ -825,6 +822,14 @@ nsresult nsComponentManagerImpl::Init(void)
         mGREComponentsOffset = componentDescriptor.Length();
     }
 
+    GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_REGISTRY_FILE, 
+                                    getter_AddRefs(mRegistryFile));
+
+    if(!mRegistryFile) {
+        NS_WARNING("No Component Registry file was found in the directory service");
+        return NS_ERROR_FAILURE;
+    }
+
     PR_LOG(nsComponentManagerLog, PR_LOG_ALWAYS,
            ("nsComponentManager: Initialized."));
 
@@ -1034,24 +1039,22 @@ nsComponentManagerImpl::ReadPersistentRegistry()
     nsManifestLineReader reader;
 
     if (!mComponentsDir)
-        return NS_ERROR_FAILURE;  // this should have been set by Init().
+        return NS_ERROR_NOT_INITIALIZED;  // this should have been set by Init().
 
     PRFileDesc* fd = nsnull;
 
-    nsCOMPtr<nsIFile> componentReg;
+    // Set From Init
+    if (!mRegistryFile) {
+        return NS_ERROR_FILE_NOT_FOUND;
+    }
 
-    rv = mComponentsDir->Clone(getter_AddRefs(componentReg));
-    if (NS_FAILED(rv))
-        return rv;
+    nsCOMPtr<nsIFile> file;
+    mRegistryFile->Clone(getter_AddRefs(file));
+    if (!file)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = componentReg->AppendNative(nsDependentCString(persistentRegistryFilename));
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(componentReg, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
+    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+    
     rv = localFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd);
     if (NS_FAILED(rv))
         return rv;
@@ -1407,26 +1410,26 @@ nsComponentManagerImpl::WriteCategoryManagerToRegistry(PRFileDesc* fd)
 nsresult
 nsComponentManagerImpl::WritePersistentRegistry()
 {
-    if (!mComponentsDir)
+    if (!mRegistryFile)
         return NS_ERROR_FAILURE;  // this should have been set by Init().
 
+    nsCOMPtr<nsIFile> file;
+    mRegistryFile->Clone(getter_AddRefs(file));
+    if (!file)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    nsCOMPtr<nsILocalFile> localFile(do_QueryInterface(file));
+
+    nsCAutoString originalLeafName;
+    localFile->GetNativeLeafName(originalLeafName);
+
+    nsCAutoString leafName;
+    leafName.Assign(originalLeafName + NS_LITERAL_CSTRING(".tmp"));
+ 
+    localFile->SetNativeLeafName(leafName);
+
     PRFileDesc* fd = nsnull;
-
-    nsCOMPtr<nsIFile> componentReg;
-
-    nsresult rv = mComponentsDir->Clone(getter_AddRefs(componentReg));       
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = componentReg->AppendNative(nsDependentCString(persistentRegistryTempFilename));     
-    if (NS_FAILED(rv))
-        return rv;
-
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(componentReg, &rv);
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666, &fd);
+    nsresult rv = localFile->OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 0666, &fd);
     if (NS_FAILED(rv))
         return rv;
 
@@ -1472,27 +1475,20 @@ out:
     if (NS_FAILED(rv))
         return rv;
 
-    nsCOMPtr<nsIFile> mainFile;
-    rv = mComponentsDir->Clone(getter_AddRefs(mainFile));       
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = mainFile->AppendNative(nsDependentCString(persistentRegistryFilename));     
-    if (NS_FAILED(rv))
-        return rv;
+    if (!mRegistryFile)
+        return NS_ERROR_NOT_INITIALIZED;
 
     PRBool exists;
-    rv = mainFile->Exists(&exists);
-    if (NS_FAILED(rv))
-        return rv;
+    if(NS_FAILED(mRegistryFile->Exists(&exists)))
+        return PR_FALSE;
+    
+    if(exists && NS_FAILED(mRegistryFile->Remove(PR_FALSE)))
+        return PR_FALSE;
+    
+    nsCOMPtr<nsIFile> parent;
+    mRegistryFile->GetParent(getter_AddRefs(parent));
 
-    if (exists) 
-    {
-        rv = mainFile->Remove(PR_FALSE);
-        if (NS_FAILED(rv))
-            return rv;
-    }
-    rv = componentReg->MoveToNative(nsnull, nsDependentCString(persistentRegistryFilename));
+    rv = localFile->MoveToNative(parent, originalLeafName);
     mRegistryDirty = PR_FALSE;
 
     return rv;
@@ -3062,9 +3058,9 @@ nsComponentManagerImpl::AutoRegisterImpl(PRInt32 when,
     } 
     else 
     {
-        GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(dir));
+        mComponentsDir->Clone(getter_AddRefs(dir));
         if (!dir)
-            return NS_ERROR_UNEXPECTED;
+            return NS_ERROR_NOT_INITIALIZED;
     }
 
     nsCOMPtr<nsIInterfaceInfoManager> iim = 
@@ -3140,9 +3136,9 @@ nsComponentManagerImpl::AutoRegisterNonNativeComponents(nsIFile* spec)
     nsCOMPtr<nsIFile> directory = spec;
 
     if (!directory) {
-        GetLocationFromDirectoryService(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(directory));
+        mComponentsDir->Clone(getter_AddRefs(directory));
         if (!directory)
-            return NS_ERROR_UNEXPECTED;
+            return NS_ERROR_NOT_INITIALIZED;
     }
 
     for (int i = 1; i < mNLoaderData; i++) {

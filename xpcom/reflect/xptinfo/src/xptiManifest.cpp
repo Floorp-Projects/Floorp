@@ -43,9 +43,6 @@
 #include "nsManifestLineReader.h"
 #include "nsString.h"
 
-#define g_MainManifestFilename NS_LITERAL_CSTRING("xpti.dat")
-#define g_TempManifestFilename NS_LITERAL_CSTRING("xptitemp.dat")
-
 static const char g_Disclaimer[] = "# Generated file. ** DO NOT EDIT! **";
 
 static const char g_TOKEN_Files[]          = "Files";
@@ -133,17 +130,21 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     nsCAutoString appDirString;
     
     nsCOMPtr<nsILocalFile> tempFile;
-    if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(tempFile)) || !tempFile)
+    if(!aMgr->GetCloneOfManifestLocation(getter_AddRefs(tempFile)) || !tempFile)
         return PR_FALSE;
 
-    if(NS_FAILED(tempFile->AppendNative(g_TempManifestFilename)))
-        return PR_FALSE;
+    nsCAutoString originalLeafName;
+    tempFile->GetNativeLeafName(originalLeafName);
+
+    nsCAutoString leafName;
+    leafName.Assign(originalLeafName + NS_LITERAL_CSTRING(".tmp"));
+
+    tempFile->SetNativeLeafName(leafName);
 
     // All exits via "goto out;" from here on...
-
     if(NS_FAILED(tempFile->
-                    OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
-                                     0666, &fd)) || !fd)
+                 OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+                                  0666, &fd)) || !fd)
     {
         goto out;
     }
@@ -259,10 +260,7 @@ out:
     {
         // delete the old file and rename this
         nsCOMPtr<nsILocalFile> mainFile;
-        if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(mainFile)) || !mainFile)
-            return PR_FALSE;
-    
-        if(NS_FAILED(mainFile->AppendNative(g_MainManifestFilename)))
+        if(!aMgr->GetCloneOfManifestLocation(getter_AddRefs(mainFile)) || !mainFile)
             return PR_FALSE;
     
         PRBool exists;
@@ -272,8 +270,11 @@ out:
         if(exists && NS_FAILED(mainFile->Remove(PR_FALSE)))
             return PR_FALSE;
     
+        nsCOMPtr<nsIFile> parent;
+        mainFile->GetParent(getter_AddRefs(parent));
+            
         // MoveTo means rename.
-        if(NS_FAILED(tempFile->MoveToNative(nsnull, g_MainManifestFilename)))
+        if(NS_FAILED(tempFile->MoveToNative(parent, originalLeafName)))
             return PR_FALSE;
     }
 
@@ -294,10 +295,7 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
     PRBool success = PR_FALSE;
 
     nsCOMPtr<nsILocalFile> aFile;
-    if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(aFile)) || !aFile)
-        return nsnull;
-    
-    if(NS_FAILED(aFile->AppendNative(g_MainManifestFilename)))
+    if(!aMgr->GetCloneOfManifestLocation(getter_AddRefs(aFile)) || !aFile)
         return nsnull;
 
 #ifdef DEBUG
@@ -697,10 +695,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
 PRBool xptiManifest::Delete(xptiInterfaceInfoManager* aMgr)
 {
     nsCOMPtr<nsILocalFile> aFile;
-    if(!aMgr->GetCloneOfManifestDir(getter_AddRefs(aFile)) || !aFile)
-        return PR_FALSE;
-    
-    if(NS_FAILED(aFile->AppendNative(g_MainManifestFilename)))
+    if(!aMgr->GetCloneOfManifestLocation(getter_AddRefs(aFile)) || !aFile)
         return PR_FALSE;
 
     PRBool exists;

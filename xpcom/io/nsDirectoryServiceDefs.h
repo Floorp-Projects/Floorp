@@ -60,6 +60,8 @@
 #define NS_GRE_DIR                              "GreD"
 #define NS_GRE_COMPONENT_DIR                    "GreComsD" 
 
+#define NS_XPCOM_XPTI_REGISTRY_FILE             "XptiRegF"
+
 #define NS_OS_HOME_DIR                          "Home"
 #define NS_OS_DRIVE_DIR                         "DrvD"
 #define NS_OS_TEMP_DIR                          "TmpD"
