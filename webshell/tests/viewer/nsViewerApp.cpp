@@ -354,7 +354,7 @@ nsViewerApp::GetAppCodeName(nsString& aAppCodeName)
 NS_IMETHODIMP
 nsViewerApp::GetAppVersion(nsString& aAppVersion)
 {
-  aAppVersion.SetString("5.0 [en] (Windows;I)");
+  aAppVersion.SetString("4.05 [en] (Windows;I)");
   return NS_OK;
 }
  
