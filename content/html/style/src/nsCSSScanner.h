@@ -130,9 +130,26 @@ class nsCSSScanner {
   static void ReleaseGlobals();
 
 #ifdef CSS_REPORT_PARSE_ERRORS
-  void AddToError(const nsSubstring& aErrorText);
-  void OutputError();
-  void ClearError();
+  NS_HIDDEN_(void) AddToError(const nsSubstring& aErrorText);
+  NS_HIDDEN_(void) OutputError();
+  NS_HIDDEN_(void) ClearError();
+
+  // aMessage must take no parameters
+  NS_HIDDEN_(void) ReportUnexpected(const char* aMessage);
+  NS_HIDDEN_(void) ReportUnexpectedParams(const char* aMessage,
+                                          const PRUnichar **aParams,
+                                          PRUint32 aParamsLength);
+  // aMessage must take no parameters
+  NS_HIDDEN_(void) ReportUnexpectedEOF(const char* aLookingFor);
+  // aMessage must take 1 parameter (for the string representation of the
+  // unexpected token)
+  NS_HIDDEN_(void) ReportUnexpectedToken(nsCSSToken& tok,
+                                         const char *aMessage);
+  // aParams's first entry must be null, and we'll fill in the token
+  NS_HIDDEN_(void) ReportUnexpectedTokenParams(nsCSSToken& tok,
+                                               const char* aMessage,
+                                               const PRUnichar **aParams,
+                                               PRUint32 aParamsLength);
 #endif
 
   PRUint32 GetLineNumber() { return mLineNumber; }

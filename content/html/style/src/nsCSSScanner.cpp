@@ -50,6 +50,7 @@
 #include "nsIURI.h"
 #include "nsIConsoleService.h"
 #include "nsIScriptError.h"
+#include "nsIStringBundle.h"
 
 // Don't bother collecting whitespace characters in token's mIdent buffer
 #undef COLLECT_WHITESPACE
@@ -70,6 +71,7 @@ PRUint8 nsCSSScanner::gLexTable[256];
 #ifdef CSS_REPORT_PARSE_ERRORS
 static nsIConsoleService *gConsoleService;
 static nsIFactory *gScriptErrorFactory;
+static nsIStringBundle *gStringBundle;
 #endif
 
 /* static */
@@ -225,6 +227,7 @@ nsCSSScanner::~nsCSSScanner()
 #ifdef CSS_REPORT_PARSE_ERRORS
   NS_IF_RELEASE(gConsoleService);
   NS_IF_RELEASE(gScriptErrorFactory);
+  NS_IF_RELEASE(gStringBundle);
 #endif
 }
 
@@ -250,8 +253,8 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI,
 #ifdef CSS_REPORT_PARSE_ERRORS
 
 // @see REPORT_UNEXPECTED_EOF in nsCSSParser.cpp
-#define REPORT_UNEXPECTED_EOF(err_) \
-  AddToError(NS_LITERAL_STRING("Unexpected end of file while searching for ") + err_ + NS_LITERAL_STRING("."))
+#define REPORT_UNEXPECTED_EOF(lf_) \
+  ReportUnexpectedEOF(#lf_)
 
 void nsCSSScanner::AddToError(const nsSubstring& aErrorText)
 {
@@ -299,8 +302,113 @@ void nsCSSScanner::OutputError()
   }
   ClearError();
 }
+
+static PRBool InitStringBundle()
+{
+  if (gStringBundle)
+    return PR_TRUE;
+
+  nsCOMPtr<nsIStringBundleService> sbs =
+    do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+  if (!sbs)
+    return PR_FALSE;
+
+  nsresult rv = 
+    sbs->CreateBundle("chrome://global/locale/css.properties", &gStringBundle);
+  if (NS_FAILED(rv)) {
+    gStringBundle = nsnull;
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
+}
+
+#define ENSURE_STRINGBUNDLE \
+  PR_BEGIN_MACRO if (!InitStringBundle()) return; PR_END_MACRO
+
+// aMessage must take no parameters
+void nsCSSScanner::ReportUnexpected(const char* aMessage)
+{
+  ENSURE_STRINGBUNDLE;
+
+  nsXPIDLString str;
+  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                   getter_Copies(str));
+  AddToError(str);
+}
+  
+void nsCSSScanner::ReportUnexpectedParams(const char* aMessage,
+                                          const PRUnichar **aParams,
+                                          PRUint32 aParamsLength)
+{
+  NS_PRECONDITION(aParamsLength > 0, "use the non-params version");
+  ENSURE_STRINGBUNDLE;
+
+  nsXPIDLString str;
+  gStringBundle->FormatStringFromName(NS_ConvertASCIItoUTF16(aMessage).get(),
+                                      aParams, aParamsLength,
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+// aMessage must take no parameters
+void nsCSSScanner::ReportUnexpectedEOF(const char* aLookingFor)
+{
+  ENSURE_STRINGBUNDLE;
+
+  nsXPIDLString innerStr;
+  gStringBundle->GetStringFromName(NS_ConvertASCIItoUTF16(aLookingFor).get(),
+                                   getter_Copies(innerStr));
+
+  const PRUnichar *params[] = {
+    innerStr.get()
+  };
+  nsXPIDLString str;
+  gStringBundle->FormatStringFromName(NS_LITERAL_STRING("PEUnexpEOF").get(),
+                                      params, NS_ARRAY_LENGTH(params),
+                                      getter_Copies(str));
+  AddToError(str);
+}
+
+// aMessage must take 1 parameter (for the string representation of the
+// unexpected token)
+void nsCSSScanner::ReportUnexpectedToken(nsCSSToken& tok,
+                                         const char *aMessage)
+{
+  ENSURE_STRINGBUNDLE;
+  
+  nsAutoString tokenString;
+  tok.AppendToString(tokenString);
+
+  const PRUnichar *params[] = {
+    tokenString.get()
+  };
+
+  ReportUnexpectedParams(aMessage, params, NS_ARRAY_LENGTH(params));
+}
+
+// aParams's first entry must be null, and we'll fill in the token
+void nsCSSScanner::ReportUnexpectedTokenParams(nsCSSToken& tok,
+                                               const char* aMessage,
+                                               const PRUnichar **aParams,
+                                               PRUint32 aParamsLength)
+{
+  NS_PRECONDITION(aParamsLength > 1, "use the non-params version");
+  NS_PRECONDITION(aParams[0] == nsnull, "first param should be empty");
+
+  ENSURE_STRINGBUNDLE;
+  
+  nsAutoString tokenString;
+  tok.AppendToString(tokenString);
+  aParams[0] = tokenString.get();
+
+  ReportUnexpectedParams(aMessage, aParams, aParamsLength);
+}
+
 #else
-#define REPORT_UNEXPECTED_EOF(err_)
+
+#define REPORT_UNEXPECTED_EOF(lf_)
+
 #endif // CSS_REPORT_PARSE_ERRORS
 
 void nsCSSScanner::Close()
@@ -897,7 +1005,7 @@ PRBool nsCSSScanner::SkipCComment(nsresult& aErrorCode)
     }
   }
 
-  REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of comment"));
+  REPORT_UNEXPECTED_EOF(PECommentEOF);
   return PR_FALSE;
 }
 
