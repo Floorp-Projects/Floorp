@@ -116,7 +116,7 @@ namespace Debugger {
     public:        
         Shell (World &aWorld, FILE *aIn, Formatter &aOut, Formatter &aErr) :
             mWorld(aWorld), mIn(aIn), mOut(aOut), mErr(aErr),
-            mStopMask(IS_ALL), mTraceFlag(true)
+            mStopMask(Context::EV_ALL), mTraceFlag(true)
         {
             mDebugger = new ICodeDebugger();
         }
@@ -126,7 +126,7 @@ namespace Debugger {
             delete mDebugger;
         }
         
-        void listen(Context *context, InterpretStage stage);
+        void listen(Context *context, Context::Event event);
         
         /**
          * install on a context

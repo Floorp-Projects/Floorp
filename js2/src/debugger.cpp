@@ -174,13 +174,13 @@ registers, or set the value of a single register."},
     }    
 
     void
-    Shell::listen(Context* cx, InterpretStage stage)
+    Shell::listen(Context* cx, Context::Event event)
     {
 
         if (mTraceFlag)
             showCurrentOp (cx, mOut);
             
-        if (!(mStopMask & stage))
+        if (!(mStopMask & event))
             return;
 
         static String lastLine(widenCString("help\n"));
@@ -240,11 +240,11 @@ registers, or set the value of a single register."},
 
                 case AMBIGUOUS:
                 case AMBIGUOUS2:
-                    mErr << "I pity the foo.\n";
+                    mErr << "I pity the foogoo.\n";
                     break;
 
                 case CONTINUE:
-                    mStopMask &= (IS_ALL ^ IS_STEP);
+                    mStopMask &= (Context::EV_ALL ^ Context::EV_STEP);
                     rv = false;
                     break;
 
@@ -261,7 +261,7 @@ registers, or set the value of a single register."},
                     break;
                     
                 case STEP:
-                    mStopMask |= IS_STEP;
+                    mStopMask |= Context::EV_STEP;
                     rv = false;
                     break;
                     
