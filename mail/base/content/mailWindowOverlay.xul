@@ -991,7 +991,7 @@
   <menuitem oncommand="CustomizeMailToolbar('mail-toolbox');" id="CustomizeMailToolbar" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
 </popup>
 
-<toolbox id="mail-toolbox" class="toolbox-top" mode="icons">  
+<toolbox id="mail-toolbox" class="toolbox-top" mode="full">  
   <!-- Menu -->
   <toolbar type="menubar" id="mail-toolbar-menubar" class="chromeclass-menubar" customizable="true"
            context="toolbar-context-menu" defaultset="menubar-items" mode="icons">

@@ -237,7 +237,7 @@
   <menuitem oncommand="CustomizeMailToolbar('compose-toolbox');" id="CustomizeMailToolbar" label="&customizeToolbar.label;" accesskey="&customizeToolbar.accesskey;"/>
 </popup>
 
-  <toolbox id="compose-toolbox" class="toolbox-top" mode="icons"> 
+  <toolbox id="compose-toolbox" class="toolbox-top" mode="full"> 
 
   <!-- Menu -->
   <!-- if you change the id of the menubar, be sure to update mailCore.js::CustomizeMailToolbar and MailToolboxCustomizeDone -->
