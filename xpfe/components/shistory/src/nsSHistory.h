@@ -60,8 +60,9 @@ protected:
    NS_IMETHOD PrintHistory();
    NS_IMETHOD GetEntryAtIndex(PRInt32 aIndex, PRBool aModifyIndex, nsISHEntry** aResult);
    NS_IMETHOD GetTransactionAtIndex(PRInt32 aIndex, nsISHTransaction ** aResult);
-   PRBool CompareSHEntry(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell,
-	                     nsIDocShell ** aResultDocShell, nsISHEntry ** aResultSHEntry);
+   nsresult CompareFrames(nsISHEntry * prevEntry, nsISHEntry * nextEntry, nsIDocShell * rootDocShell, long aLoadType, PRBool * aIsFrameFound);
+   nsresult InitiateLoad(nsISHEntry * aFrameEntry, nsIDocShell * aFrameDS, long aLoadType);
+
    NS_IMETHOD LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 histCmd);
 	
 protected:

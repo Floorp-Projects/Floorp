@@ -708,86 +708,67 @@ nsSHistory::LoadEntry(PRInt32 aIndex, long aLoadType, PRUint32 aHistCmd)
       /* THis is a subframe navigation. Go find 
        * the docshell in which load should happen
        */
-      PRBool result = CompareSHEntry(prevEntry, nextEntry, mRootDocShell, 
-                                      getter_AddRefs(docShell),
-                                      getter_AddRefs(shEntry)); 
-      if (!result || !shEntry) {
-        /* There was an error in finding the entry and docshell
-         * where the load should happen,return error.
-         */      
+      PRBool frameFound = PR_FALSE;
+      nsresult rv = CompareFrames(prevEntry, nextEntry, mRootDocShell, aLoadType, &frameFound);
+      if (!frameFound) {
+        // we did not successfully find the subframe in which
+        // the new url was to be loaded. return error.
         mRequestedIndex = -1;
-        return NS_ERROR_FAILURE;
+        return NS_ERROR_FAILURE; 
       }
-      else {                
-        nextEntry = shEntry;
-        // Set the Subframe flag of the entry to indicate that
-        // it is subframe navigation        
-        nextEntry->SetIsSubFrame(PR_TRUE);
-      }
+      return rv;
     }   // (pCount >0)
     else
       docShell = mRootDocShell;
     }
   
 
-  if (!docShell || !mRootDocShell) {
+  if (!docShell) {
      // we did not successfully go to the proper index.
      // return error.
       mRequestedIndex = -1;
       return NS_ERROR_FAILURE;
   }
 
-    /* Set the loadType in the SHEntry too to  what was passed on.
-     * This will be passed on to child subframes later in nsDocShell,
-     * so that proper loadType is maintained through out a frameset
-     */
-    nextEntry->SetLoadType(aLoadType);    
-    mRootDocShell->CreateLoadInfo (getter_AddRefs(loadInfo));
-
-    loadInfo->SetLoadType(aLoadType);
-    loadInfo->SetSHEntry(nextEntry);
-    // Time to initiate a document load
-    return docShell->LoadURI(nextURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+  // Start the load on the appropriate docshell
+  return InitiateLoad(nextEntry, docShell, aLoadType);
 }
 
 
 
-PRBool
-nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsIDocShell * aParent,
-					nsIDocShell ** aDSResult, nsISHEntry ** aSHEResult)
+nsresult
+nsSHistory::CompareFrames(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsIDocShell * aParent, long aLoadType, PRBool * aIsFrameFound)
 {
-	NS_ENSURE_ARG_POINTER(aDSResult);
-	NS_ENSURE_ARG_POINTER(aSHEResult);
+  if (!aPrevEntry || !aNextEntry || !aParent)
+    return PR_FALSE;
 
-	if (!aPrevEntry || !aNextEntry || !aParent)
-	   return PR_FALSE;
+  nsresult result = NS_OK;
+  PRUint32 prevID, nextID;
 
-	PRBool result = PR_FALSE;
-	PRUint32 prevID, nextID;
-
-	aPrevEntry->GetID(&prevID);
-	aNextEntry->GetID(&nextID);
+  aPrevEntry->GetID(&prevID);
+  aNextEntry->GetID(&nextID);
  
-	// Check the IDs to verify if the pages are different.
-    if (prevID != nextID) {
-       *aDSResult = aParent;
-	   *aSHEResult = aNextEntry;
-	   NS_IF_ADDREF(*aSHEResult);
-	   NS_IF_ADDREF(*aDSResult);
-	   return PR_TRUE;
-    }
-    result = PR_FALSE;
+  // Check the IDs to verify if the pages are different.
+  if (prevID != nextID) {
+    if (aIsFrameFound)
+      *aIsFrameFound = PR_TRUE;
+    // Set the Subframe flag of the entry to indicate that
+    // it is subframe navigation        
+    aNextEntry->SetIsSubFrame(PR_TRUE);
+    InitiateLoad(aNextEntry, aParent, aLoadType);
+    return NS_OK;
+  }
 
-    /* The root entries are the same, so compare any child frames */
-    PRInt32  cnt=0, pcnt=0, ncnt=0, dsCount=0;
-	nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(aPrevEntry));
-	nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(aNextEntry));
-	nsCOMPtr<nsIDocShellTreeNode> dsTreeNode(do_QueryInterface(aParent));
+  /* The root entries are the same, so compare any child frames */
+  PRInt32  cnt=0, pcnt=0, ncnt=0, dsCount=0;
+  nsCOMPtr<nsISHContainer>  prevContainer(do_QueryInterface(aPrevEntry));
+  nsCOMPtr<nsISHContainer>  nextContainer(do_QueryInterface(aNextEntry));
+  nsCOMPtr<nsIDocShellTreeNode> dsTreeNode(do_QueryInterface(aParent));
 
-	if (!dsTreeNode)
-		return PR_FALSE;
-	if (!prevContainer || !nextContainer)
-		return PR_FALSE;
+  if (!dsTreeNode)
+    return NS_ERROR_FAILURE;
+  if (!prevContainer || !nextContainer)
+    return NS_ERROR_FAILURE;
 
   prevContainer->GetChildCount(&pcnt);
   nextContainer->GetChildCount(&ncnt);
@@ -805,17 +786,38 @@ nsSHistory::CompareSHEntry(nsISHEntry * aPrevEntry, nsISHEntry * aNextEntry, nsI
 	    dsTreeNode->GetChildAt(i, getter_AddRefs(dsTreeItemChild));
 
 	  if (!dsTreeItemChild)
-		  return PR_FALSE;
+      return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIDocShell> dsChild(do_QueryInterface(dsTreeItemChild));
 
-	  result = CompareSHEntry(pChild, nChild, dsChild, aDSResult, aSHEResult);
-	  if (result)  // We have found the docshell in which loadUri is to be called.
-		  break;
+	  CompareFrames(pChild, nChild, dsChild, aLoadType, aIsFrameFound);
 	}     
-    return result;
+  return result;
 }
 
+
+nsresult 
+nsSHistory::InitiateLoad(nsISHEntry * aFrameEntry, nsIDocShell * aFrameDS, long aLoadType)
+{
+  nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+
+  /* Set the loadType in the SHEntry too to  what was passed on.
+   * This will be passed on to child subframes later in nsDocShell,
+   * so that proper loadType is maintained through out a frameset
+   */
+  aFrameEntry->SetLoadType(aLoadType);    
+  aFrameDS->CreateLoadInfo (getter_AddRefs(loadInfo));
+
+  loadInfo->SetLoadType(aLoadType);
+  loadInfo->SetSHEntry(aFrameEntry);
+
+  nsCOMPtr<nsIURI> nextURI;
+  nsCOMPtr<nsIHistoryEntry> hEntry(do_QueryInterface(aFrameEntry));
+  hEntry->GetURI(getter_AddRefs(nextURI));
+  // Time   to initiate a document load
+  return aFrameDS->LoadURI(nextURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+
+}
 
 
 
