@@ -305,7 +305,11 @@ NS_IMETHODIMP nsNNTPProtocol::OnStopBinding(nsIURL* aURL, nsresult aStatus, cons
 ////////////////////////////////////////////////////////////////////////////////////////////
 // TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
+#ifdef XP_WIN
 char *XP_AppCodeName = "Mozilla";
+#else
+const char *XP_AppCodeName = "Mozilla";
+#endif
 #define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 typedef PRUint32 MessageKey;
 const MessageKey MSG_MESSAGEKEYNONE = 0xffffffff;
@@ -2073,13 +2077,13 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
         
     if (NS_SUCCEEDED(rv))
     rv =
-      newsgroupList->GetRangeOfArtsToDownload(&status,
-                                                 m_firstPossibleArticle,
-                                                 m_lastPossibleArticle,
-                                                 m_numArticlesWanted -
-                                                 m_numArticlesLoaded,
-                                                 &(m_firstArticle),
-                                                 &(m_lastArticle));
+      newsgroupList->GetRangeOfArtsToDownload(m_firstPossibleArticle,
+                                              m_lastPossibleArticle,
+                                              m_numArticlesWanted -
+                                              m_numArticlesLoaded,
+                                              &(m_firstArticle),
+                                              &(m_lastArticle),
+                                              &status);
 	if (NS_FAILED(rv)) 
 	{
 	  PR_FREEIF (host_and_port);
