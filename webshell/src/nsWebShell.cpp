@@ -62,6 +62,7 @@
 #include "nsIWebShellServices.h"
 #include "nsIGlobalHistory.h"
 #include "prmem.h"
+#include "nsXPIDLString.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -1751,18 +1752,28 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 // the two nsIURI's match.
 static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
 {
-  const char *host1;
-  const char *host2;
-  const char *file1;
-  const char *file2;
+  nsXPIDLCString host1;
+  nsXPIDLCString host2;
+  nsXPIDLCString file1;
+  nsXPIDLCString file2;
   PRBool rv = PR_FALSE;
   
   // XXX We need to make these strcmps case insensitive.
-  url1->GetHost(&host1);
-  url2->GetHost(&host2);  
+#ifdef NECKO
+  url1->GetHost(getter_Copies(host1));
+  url2->GetHost(getter_Copies(host2));
+#else
+  url1->GetHost(getter_Shares(host1));
+  url2->GetHost(getter_Shares(host2));  
+#endif
   if (0 == PL_strcmp(host1, host2)) {
-    url1->GetFile(&file1);
-    url2->GetFile(&file2);
+#ifdef NECKO
+    url1->GetPath(getter_Copies(file1));
+    url2->GetPath(getter_Copies(file2));
+#else
+    url1->GetFile(getter_Shares(file1));
+    url2->GetFile(getter_Shares(file2));
+#endif
     if (0 == PL_strcmp(file1, file2)) {
       rv = PR_TRUE;
     }
