@@ -1556,19 +1556,30 @@ nsWebShellWindow::NewWebShell(PRUint32 aChromeMask, PRBool aVisible,
   return rv;
 }
 
-
+/**
+ * FindWebShellWithName - recursively search for any open window
+ * containing a webshell with the given name.
+ * @param aName - the name of the webshell to find. I believe this cannot
+ *                be null. Hard to tell. If zero-length, the find will
+ *                always fail (returning NS_OK).
+ * @param aResult - the webshell, returned, addrefed. null on failure to
+ *                  locate the desired webshell.
+ * @return an error indication. Can be NS_OK even if no match was found.
+ */
 NS_IMETHODIMP nsWebShellWindow::FindWebShellWithName(const PRUnichar* aName,
                                                      nsIWebShell*& aResult)
 {
   nsresult rv = NS_OK;
   nsString nameStr(aName);
 
-  // first, a special case
-  if (nameStr.EqualsIgnoreCase("_content"))
-    return GetContentWebShell(&aResult);
-
   // Zero result (in case we fail).
   aResult = nsnull;
+
+  // first, special cases
+  if (nameStr.Length() == 0)
+    return NS_OK;
+  if (nameStr.EqualsIgnoreCase("_content"))
+    return GetContentWebShell(&aResult);
 
   // look for open windows with the given name
   /*   Note: this function arguably works as expected, but the end effect
