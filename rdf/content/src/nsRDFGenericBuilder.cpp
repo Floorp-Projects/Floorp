@@ -63,7 +63,9 @@
 #include "nsXPIDLString.h"
 #include "rdf.h"
 #include "rdfutil.h"
-
+#include "nsITimer.h"
+#include "nsITimerCallback.h"
+#include "nsIDOMXULElement.h"
 #include "nsVoidArray.h"
 #include "nsIXULSortService.h"
 
@@ -121,13 +123,15 @@ nsIRDFResource* RDFGenericBuilderImpl::kNC_Column;
 nsIRDFResource* RDFGenericBuilderImpl::kNC_Folder;
 nsIRDFResource* RDFGenericBuilderImpl::kRDF_child;
 
+
 ////////////////////////////////////////////////////////////////////////
 
 
 RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
     : mDocument(nsnull),
       mDB(nsnull),
-      mRoot(nsnull)
+      mRoot(nsnull),
+      mTimer(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -192,6 +196,14 @@ static const char kRDFNameSpaceURI[]
 
         NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_child,  &kRDF_child)),
                   "couldn't get resource");
+
+    }
+
+    NS_VERIFY(NS_SUCCEEDED(NS_NewTimer(&mTimer)),
+	"couldn't get timer");
+    if (mTimer)
+    {
+        mTimer->Init(this, /* PR_TRUE, */ 1L);
     }
 
     ++gRefCnt;
@@ -224,6 +236,13 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
 
         nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
         NS_RELEASE(gNameSpaceManager);
+    }
+
+    if (mTimer)
+    {
+        mTimer->Cancel();
+        NS_RELEASE(mTimer);
+        mTimer = nsnull;
     }
 }
 

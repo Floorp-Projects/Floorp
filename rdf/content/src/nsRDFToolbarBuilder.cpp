@@ -133,6 +133,9 @@ public:
         return NS_OK;
     }
 
+    void
+    Notify(nsITimer *timer);
+
     // pseudo-constants
     static nsrefcnt gRefCnt;
  
@@ -186,6 +189,11 @@ RDFToolbarBuilderImpl::~RDFToolbarBuilderImpl(void)
         NS_RELEASE(kToolbarAtom);
         NS_RELEASE(kTitledButtonAtom);
     }
+}
+
+void
+RDFToolbarBuilderImpl::Notify(nsITimer *timer)
+{
 }
 
 ////////////////////////////////////////////////////////////////////////

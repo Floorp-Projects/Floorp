@@ -33,6 +33,7 @@
 #include "nsString.h"
 #include "nsXPIDLString.h"
 #include "prlog.h"
+#include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIContentIID,     NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
@@ -95,3 +96,35 @@ error:
 }
 
 
+nsresult
+nsRDFContentUtils::FindTreeBodyElement(nsIContent *tree, nsIContent **treeBody)
+{
+        nsCOMPtr<nsIContent>	child;
+	PRInt32			childIndex = 0, numChildren = 0, nameSpaceID;
+	nsresult		rv;
+
+        nsIAtom *treeBodyAtom = NS_NewAtom("treebody");
+
+	if (NS_FAILED(rv = tree->ChildCount(numChildren)))	return(rv);
+	for (childIndex=0; childIndex<numChildren; childIndex++)
+	{
+		if (NS_FAILED(rv = tree->ChildAt(childIndex, *getter_AddRefs(child))))	return(rv);
+		if (NS_FAILED(rv = child->GetNameSpaceID(nameSpaceID)))	return rv;
+//		if (nameSpaceID == kNameSpaceID_XUL)
+		if (1)
+		{
+			nsCOMPtr<nsIAtom> tag;
+			if (NS_FAILED(rv = child->GetTag(*getter_AddRefs(tag))))	return rv;
+			if (tag.get() == treeBodyAtom)
+			{
+				*treeBody = child;
+				NS_ADDREF(*treeBody);
+				return NS_OK;
+			}
+		}
+	}
+
+	NS_RELEASE(treeBodyAtom);
+
+	return(NS_ERROR_FAILURE);
+}
