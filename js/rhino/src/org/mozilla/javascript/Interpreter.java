@@ -279,7 +279,7 @@ public class Interpreter {
                     Node fn = (Node) node.getProp(Node.FUNCTION_PROP);
                     int index = fn.getExistingIntProp(Node.FUNCTION_PROP);
                     iCodeTop = addByte(TokenStream.CLOSURE, iCodeTop);
-                    iCodeTop = addShort(index, iCodeTop);
+                    iCodeTop = addIndex(index, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -411,15 +411,15 @@ public class Interpreter {
                     iCodeTop = addByte(SOURCEFILE_ICODE, iCodeTop);
 
                     int childCount = 0;
-                    int nameIndex = -1;
+                    String functionName = null;
                     while (child != null) {
                         iCodeTop = generateICode(child, iCodeTop);
-                        if (nameIndex == -1) {
+                        if (functionName == null) {
                             int childType = child.getType();
                             if (childType == TokenStream.NAME
                                 || childType == TokenStream.GETPROP)
                             {
-                                nameIndex = lastStringIndex;
+                                functionName = lastAddString;
                             }
                         }
                         child = child.getNextSibling();
@@ -432,7 +432,7 @@ public class Interpreter {
                         iCodeTop = addString(itsSourceFile, iCodeTop);
                     } else {
                         iCodeTop = addByte(type, iCodeTop);
-                        iCodeTop = addShort(nameIndex, iCodeTop);
+                        iCodeTop = addString(functionName, iCodeTop);
                     }
 
                     itsStackDepth -= (childCount - 1);  // always a result value
@@ -441,7 +441,7 @@ public class Interpreter {
                         childCount -= 1;
                     else
                         childCount -= 2;
-                    iCodeTop = addShort(childCount, iCodeTop);
+                    iCodeTop = addIndex(childCount, iCodeTop);
                     if (childCount > itsData.itsMaxCalleeArgs)
                         itsData.itsMaxCalleeArgs = childCount;
 
@@ -1010,7 +1010,7 @@ public class Interpreter {
                     Node regexp = (Node) node.getProp(Node.REGEXP_PROP);
                     int index = regexp.getExistingIntProp(Node.REGEXP_PROP);
                     iCodeTop = addByte(TokenStream.REGEXP, iCodeTop);
-                    iCodeTop = addShort(index, iCodeTop);
+                    iCodeTop = addIndex(index, iCodeTop);
                     itsStackDepth++;
                     if (itsStackDepth > itsData.itsMaxStack)
                         itsData.itsMaxStack = itsStackDepth;
@@ -1083,8 +1083,7 @@ public class Interpreter {
 
     private void recordJumpOffset(int pos, int offset) {
         if (offset != (short)offset) {
-            throw Context.reportRuntimeError
-                ("Program too complex: too big jump offset");
+            throw Context.reportRuntimeError0("msg.too.big.jump");
         }
         itsData.itsICode[pos] = (byte)(offset >> 8);
         itsData.itsICode[pos + 1] = (byte)offset;
@@ -1106,6 +1105,20 @@ public class Interpreter {
         }
         array[iCodeTop] = (byte)(s >>> 8);
         array[iCodeTop + 1] = (byte)s;
+        return iCodeTop + 2;
+    }
+
+    private int addIndex(int index, int iCodeTop) {
+        if (index < 0) Context.codeBug();
+        if (index > 0xFFFF) {
+            throw Context.reportRuntimeError0("msg.too.big.index");
+        }
+        byte[] array = itsData.itsICode;
+        if (iCodeTop + 2 > array.length) {
+            array = increaseICodeCapasity(iCodeTop, 2);
+        }
+        array[iCodeTop] = (byte)(index >>> 8);
+        array[iCodeTop + 1] = (byte)index;
         return iCodeTop + 2;
     }
 
@@ -1134,7 +1147,7 @@ public class Interpreter {
         itsData.itsDoubleTable[index] = num;
         itsDoubleTableTop = index + 1;
 
-        iCodeTop = addShort(index, iCodeTop);
+        iCodeTop = addIndex(index, iCodeTop);
         return iCodeTop;
     }
 
@@ -1144,8 +1157,8 @@ public class Interpreter {
             index = itsStrings.size();
             itsStrings.put(str, index);
         }
-        iCodeTop = addShort(index, iCodeTop);
-        lastStringIndex = index;
+        iCodeTop = addIndex(index, iCodeTop);
+        lastAddString = str;
         return iCodeTop;
     }
 
@@ -1164,6 +1177,10 @@ public class Interpreter {
 
     private static int getShort(byte[] iCode, int pc) {
         return (iCode[pc] << 8) | (iCode[pc + 1] & 0xFF);
+    }
+
+    private static int getIndex(byte[] iCode, int pc) {
+        return ((iCode[pc] & 0xFF) << 8) | (iCode[pc + 1] & 0xFF);
     }
 
     private static int getInt(byte[] iCode, int pc) {
@@ -1269,22 +1286,22 @@ public class Interpreter {
                             break;
                         case TokenStream.CALLSPECIAL : {
                                 int line = getShort(iCode, pc);
-                                String name = strings[getShort(iCode, pc + 2)];
-                                int count = getShort(iCode, pc + 4);
+                                String name = strings[getIndex(iCode, pc + 2)];
+                                int count = getIndex(iCode, pc + 4);
                                 out.println(tname + " " + count
                                             + " " + line + " " + name);
                                 pc += 6;
                             }
                             break;
                         case TokenStream.REGEXP : {
-                                int i = getShort(iCode, pc);
+                                int i = getIndex(iCode, pc);
                                 Object regexp = theData.itsRegExpLiterals[i];
                                 out.println(tname + " " + regexp);
                                 pc += 2;
                             }
                             break;
                         case TokenStream.CLOSURE : {
-                                int i = getShort(iCode, pc + 1);
+                                int i = getIndex(iCode, pc + 1);
                                 InterpretedFunction f = theData.itsNestedFunctions[i];
                                 out.println(tname + " " + f);
                                 pc += 2;
@@ -1292,8 +1309,8 @@ public class Interpreter {
                             break;
                         case TokenStream.NEW :
                         case TokenStream.CALL : {
-                                int count = getShort(iCode, pc + 2);
-                                String name = strings[getShort(iCode, pc)];
+                                int count = getIndex(iCode, pc + 2);
+                                String name = strings[getIndex(iCode, pc)];
                                 out.println(tname + " " + count + " \""
                                             + name + "\"");
                                 pc += 4;
@@ -1312,7 +1329,7 @@ public class Interpreter {
                             }
                             break;
                         case TokenStream.NUMBER : {
-                                int index = getShort(iCode, pc);
+                                int index = getIndex(iCode, pc);
                                 double value = theData.itsDoubleTable[index];
                                 out.println(tname + " " + value);
                                 pc += 2;
@@ -1327,7 +1344,7 @@ public class Interpreter {
                         case TokenStream.NAMEDEC :
                         case TokenStream.STRING :
                             out.println(tname + " \""
-                                        + strings[getShort(iCode, pc)] + "\"");
+                                        + strings[getIndex(iCode, pc)] + "\"");
                             pc += 2;
                             break;
                         case LINE_ICODE : {
@@ -1986,19 +2003,19 @@ public class Interpreter {
         break;
     }
     case TokenStream.BINDNAME : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.bind(scope, name);
         pc += 2;
         break;
     }
     case TokenStream.GETBASE : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.getBase(scope, name);
         pc += 2;
         break;
     }
     case TokenStream.SETNAME : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
@@ -2103,8 +2120,8 @@ public class Interpreter {
             instructionCount = -1;
         }
         int lineNum = getShort(iCode, pc + 1);
-        String name = strings[getShort(iCode, pc + 3)];
-        int count = getShort(iCode, pc + 5);
+        String name = strings[getIndex(iCode, pc + 3)];
+        int count = getIndex(iCode, pc + 5);
         stackTop -= count;
         Object[] outArgs = getArgsArray(stack, sDbl, stackTop + 1, count);
         Object rhs = stack[stackTop];
@@ -2126,7 +2143,7 @@ public class Interpreter {
             instructionCount = -1;
         }
         cx.instructionCount = instructionCount;
-        int count = getShort(iCode, pc + 3);
+        int count = getIndex(iCode, pc + 3);
         stackTop -= count;
         int calleeArgShft = stackTop + 1;
         Object rhs = stack[stackTop];
@@ -2162,8 +2179,8 @@ public class Interpreter {
             else if (lhs == undefined) {
                 // special code for better error message for call
                 // to undefined
-                int i = getShort(iCode, pc + 1);
-                if (i != -1) lhs = strings[i];
+                lhs = strings[getIndex(iCode, pc + 1)];
+                if (lhs == null) lhs = undefined;
             }
             throw NativeGlobal.typeError1
                 ("msg.isnt.function", ScriptRuntime.toString(lhs), calleeScope);
@@ -2179,7 +2196,7 @@ public class Interpreter {
             cx.instructionCount = instructionCount;
             instructionCount = -1;
         }
-        int count = getShort(iCode, pc + 3);
+        int count = getIndex(iCode, pc + 3);
         stackTop -= count;
         int calleeArgShft = stackTop + 1;
         Object lhs = stack[stackTop];
@@ -2206,8 +2223,8 @@ public class Interpreter {
             else if (lhs == undefined) {
                 // special code for better error message for call
                 // to undefined
-                int i = getShort(iCode, pc + 1);
-                if (i != -1) lhs = strings[i];
+                lhs = strings[getIndex(iCode, pc + 1)];
+                if (lhs == null) lhs = undefined;
             }
             throw NativeGlobal.typeError1
                 ("msg.isnt.function", ScriptRuntime.toString(lhs), scope);
@@ -2223,13 +2240,13 @@ public class Interpreter {
         break;
     }
     case TokenStream.TYPEOFNAME : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.typeofName(scope, name);
         pc += 2;
         break;
     }
     case TokenStream.STRING :
-        stack[++stackTop] = strings[getShort(iCode, pc + 1)];
+        stack[++stackTop] = strings[getIndex(iCode, pc + 1)];
         pc += 2;
         break;
     case SHORTNUMBER_ICODE :
@@ -2247,23 +2264,23 @@ public class Interpreter {
     case TokenStream.NUMBER :
         ++stackTop;
         stack[stackTop] = DBL_MRK;
-        sDbl[stackTop] = idata.itsDoubleTable[getShort(iCode, pc + 1)];
+        sDbl[stackTop] = idata.itsDoubleTable[getIndex(iCode, pc + 1)];
         pc += 2;
         break;
     case TokenStream.NAME : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.name(scope, name);
         pc += 2;
         break;
     }
     case TokenStream.NAMEINC : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.postIncrement(scope, name);
         pc += 2;
         break;
     }
     case TokenStream.NAMEDEC : {
-        String name = strings[getShort(iCode, pc + 1)];
+        String name = strings[getIndex(iCode, pc + 1)];
         stack[++stackTop] = ScriptRuntime.postDecrement(scope, name);
         pc += 2;
         break;
@@ -2434,7 +2451,7 @@ public class Interpreter {
         stack[++stackTop] = scope;
         break;
     case TokenStream.CLOSURE : {
-        int i = getShort(iCode, pc + 1);
+        int i = getIndex(iCode, pc + 1);
         InterpretedFunction f = idata.itsNestedFunctions[i];
         InterpretedFunction closure = new InterpretedFunction(f, scope, cx);
         createFunctionObject(closure, scope, idata.itsFromEvalCode);
@@ -2443,7 +2460,7 @@ public class Interpreter {
         break;
     }
     case TokenStream.REGEXP : {
-        int i = getShort(iCode, pc + 1);
+        int i = getIndex(iCode, pc + 1);
         stack[++stackTop] = idata.itsRegExpLiterals[i];
         pc += 2;
         break;
@@ -2899,7 +2916,7 @@ public class Interpreter {
     private LabelTable itsLabels = new LabelTable();
     private int itsDoubleTableTop;
     private ObjToIntMap itsStrings = new ObjToIntMap(20);
-    private int lastStringIndex = -1;
+    private String lastAddString;
 
 
     private int version;
