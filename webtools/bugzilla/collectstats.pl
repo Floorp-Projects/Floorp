@@ -25,7 +25,8 @@
 
 use diagnostics;
 use strict;
-use vars @::legal_product;
+use vars @::legal_product,
+       @::legal_bug_status;
 
 require "globals.pl";
 
@@ -64,7 +65,7 @@ sub collect_stats {
     if (open DATA, ">>$file") {
         push my @row, &today;
 
-        foreach my $status ('NEW', 'ASSIGNED', 'REOPENED') {
+        foreach my $status (@::legal_bug_status) {
 	    if( $product eq "-All-" ) {
                 SendSQL("select count(bug_status) from bugs where bug_status='$status'");
 	    } else {
@@ -80,10 +81,14 @@ sub collect_stats {
 #
 # do not edit me! this file is generated.
 # 
-# fields: date|new|assigned|reopened
 # product: $product
 # created: $when
 FIN
+          print DATA "# field: DATE";
+            foreach my $status (@::legal_bug_status) {
+              print DATA "|$status";
+          }
+          print DATA "\n";
 	}
 
         print DATA (join '|', @row) . "\n";

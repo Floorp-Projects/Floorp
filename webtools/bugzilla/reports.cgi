@@ -434,6 +434,7 @@ FIN
 	
 	my @dates;
 	my @open; my @assigned; my @reopened;
+        my @resolved; my @verified; my @closed;
 
         my $prodname = $::FORM{'product'};
 
@@ -457,13 +458,17 @@ FIN
 		{
 		chomp;
 		next if ($_ =~ /^#/ or ! $_);
-		my ($date, $open, $assigned, $reopened) = split /\|/, $_;
+               my ($date, $open, $assigned, $reopened,
+                       $resolved, $verified, $closed) = split /\|/, $_;
 		my ($yy, $mm, $dd) = $date =~ /^\d{2}(\d{2})(\d{2})(\d{2})$/;
 
 		push @dates, "$mm/$dd/$yy";
 		push @open, $open;
 		push @assigned, $assigned;
 		push @reopened, $reopened;
+                push @resolved, $resolved;
+                push @verified, $verified;
+                push @closed, $closed;
 		}
 	
 	close FILE;
@@ -474,7 +479,7 @@ FIN
 		}
 	
 	my $img = Chart::Lines->new (800, 600);
-	my @labels = qw (New Assigned Reopened);
+        my @labels = qw (New Assigned Reopened Resolved Verified Closed);
 	my @when;
 	my $i = 0;
 	my @data;
@@ -483,6 +488,9 @@ FIN
 	push @data, \@open;
 	push @data, \@assigned;
 	push @data, \@reopened;
+        push @data, \@resolved;
+        push @data, \@verified;
+        push @data, \@closed;
 
     my $MAXTICKS = 20;      # Try not to show any more x ticks than this.
     my $skip = 1;
@@ -492,11 +500,13 @@ FIN
 
 	my %settings =
 		(
-		"title" => "Bug Charts for $::FORM{'product'}",
+                 "title" => "Status Counts for $::FORM{'product'}",
 		"x_label" => "Dates",
-		"y_label" => "Bug Count",
+		"y_label" => "Bug Counts",
 		"legend_labels" => \@labels,
-        "skip_x_ticks" => $skip,
+                "skip_x_ticks" => $skip,
+                "y_grid_lines" => "true",
+                "grey_background" => "false"
 		);
 	
 	$img->set (%settings);
