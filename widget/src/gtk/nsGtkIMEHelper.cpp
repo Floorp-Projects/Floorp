@@ -82,6 +82,15 @@ nsGtkIMEHelper::ConvertToUnicode( const char* aSrc, PRInt32* aSrcLen,
   return mDecoder->Convert(aSrc, aSrcLen, aDest, aDestLen);
 }
 
+void
+nsGtkIMEHelper::ResetDecoder()
+{
+  NS_ASSERTION(mDecoder, "do not have mDecoder");
+  if(mDecoder) {
+    mDecoder->Reset();
+  }
+}
+
 //-----------------------------------------------------------------------
 void nsGtkIMEHelper::SetupUnicodeDecoder()
 {
@@ -142,9 +151,10 @@ nsGtkIMEHelper::MultiByteToUnicode(const char *aMbSrc,
       if (srcLeft == aMbSrcLen && uniCharSize < *aUniDesLen - 1) {
         break;
       }
+      nsGtkIMEHelper::GetSingleton()->ResetDecoder();
       *aUniDesLen += 32;
       if (aUniDes) {
-        delete[] aUniDes;
+        delete[] *aUniDes;
       }
       *aUniDes = new PRUnichar[*aUniDesLen];
     }
@@ -1063,7 +1073,7 @@ nsIMEGtkIC::~nsIMEGtkIC()
   }
 
   if (mStatusText) {
-    delete [] mStatusText;
+    nsCRT::free(mStatusText);
   }
 
   mIC = 0;
@@ -1283,9 +1293,6 @@ nsIMEGtkIC::ResetIC(PRUnichar **aUnichar, PRInt32 *aUnisize)
 				  uncommitted_text, uncommitted_len,
 				  aUnichar,
 				  aUnisize);
-    if (uniCharSize) {
-      aUnichar[uniCharSize] = 0;
-    }
   }
 #if XlibSpecificationRelease >= 6
   preedit_attr = XVaCreateNestedList(0,
@@ -1348,7 +1355,7 @@ nsIMEGtkIC::SetStatusText(char *aText) {
     if (!nsCRT::strcmp(aText, mStatusText)) {
       return;
     }
-    delete [] mStatusText;
+    nsCRT::free(mStatusText);
   }
   mStatusText = nsCRT::strdup(aText);
 }

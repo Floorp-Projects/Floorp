@@ -35,6 +35,7 @@ public:
   nsresult ConvertToUnicode(const char* aSrc, PRInt32* aSrcLen,
                             PRUnichar*  aDes, PRInt32* aDesLen);
   static nsGtkIMEHelper *GetSingleton();
+  void ResetDecoder();
   static void Shutdown();
   PRInt32 MultiByteToUnicode(const char*, const PRInt32,
                              PRUnichar**, PRInt32*);
