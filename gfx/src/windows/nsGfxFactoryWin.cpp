@@ -24,11 +24,13 @@
 #include "nsRenderingContextWin.h"
 #include "nsImageWin.h"
 #include "nsDeviceContextWin.h"
+#include "nsRegionWin.h"
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCRenderingContext, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_IID(kCImage, NS_IMAGE_CID);
 static NS_DEFINE_IID(kCDeviceContext, NS_DEVICE_CONTEXT_CID);
+static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -129,6 +131,9 @@ nsresult nsGfxFactoryWin::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCImage)) {
     inst = (nsISupports *)new nsImageWin();
+  }
+  else if (mClassID.Equals(kCRegion)) {
+    inst = (nsISupports *)new nsRegionWin();
   }
 
   if (inst == NULL) {  
