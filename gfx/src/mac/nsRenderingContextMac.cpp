@@ -270,7 +270,8 @@ NS_IMETHODIMP nsRenderingContextMac :: PushState(void)
   else
     mTMatrix = new nsTransform2D(mTMatrix);
 
-  GetClipRect(state->mLocalClip);
+  PRBool clipState;
+  GetClipRect(state->mLocalClip, clipState);
 
   state->mClipRegion = mClipRegion;
 
@@ -485,7 +486,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
   rect.width = mrect.right-mrect.left;
   rect.height = mrect.bottom-mrect.top;
 
-  SetClipRectInPixels(rect, aCombine);
+  SetClipRectInPixels(rect, aCombine, aClipEmpty);
 
   if (::EmptyRgn(mClipRegion) == PR_TRUE)
     aClipEmpty = PR_TRUE;
@@ -509,9 +510,10 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRegion(nsIRegion **aRegion)
   if (NS_OK == rv)
  	{
     nsRect rect;
+    PRBool clipState;
     pRegion = (nsIRegion *)&aRegion;
-    pRegion->Init();    
-    this->GetClipRect(rect);
+    pRegion->Init();
+    GetClipRect(rect, clipState);
     pRegion->Union(rect.x,rect.y,rect.width,rect.height);
  	}
 
@@ -964,8 +966,10 @@ NS_IMETHODIMP
 nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
 	// set native font and attributes
-	nsFont font = GetFont();
-	nsFontMetricsMac::SetFont(font, mContext);
+  
+	nsFont *font;
+  font = mFontMetrics->GetFont(font);
+	nsFontMetricsMac::SetFont(*font, mContext);
 
 	// measure text
 	short textWidth = ::TextWidth(aString, 0, aLength);
@@ -1013,7 +1017,9 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 	if (mFontMetrics)
 	{
 		// set native font and attributes
-		nsFontMetricsMac::SetFont(GetFont(), mContext);
+    nsFont *font;
+    mFontMetrics->GetFont(font);
+		nsFontMetricsMac::SetFont(*font, mContext);
 
 		// substract ascent since drawing specifies baseline
 		nscoord ascent = 0;
