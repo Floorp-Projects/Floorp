@@ -2829,6 +2829,8 @@ nsDOMSelection::DoAutoScroll(nsIPresContext *aPresContext, nsIFrame *aFrame, nsP
 
               if (dx != 0 || dy != 0)
               {
+// make sure latest bits are available before we scroll them.
+                viewManager->Composite();
                 result = scrollableView->ScrollTo(scrollX + dx, scrollY + dy, NS_VMREFRESH_NO_SYNC);
 
                 if (mAutoScrollTimer)
