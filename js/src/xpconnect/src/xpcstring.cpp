@@ -105,7 +105,8 @@ Deallocate(PRUnichar *) const
         // unroot
         JSRuntime *rt;
         nsCOMPtr<nsIJSRuntimeService> rtsvc =
-            nsJSRuntimeServiceImpl::GetSingleton();
+            dont_AddRef(NS_STATIC_CAST(nsIJSRuntimeService*,
+                                     nsJSRuntimeServiceImpl::GetSingleton()));
         if (rtsvc && NS_SUCCEEDED(rtsvc->GetRuntime(&rt)))
         {
             JS_RemoveRootRT(rt,
@@ -129,7 +130,8 @@ XPCReadableJSStringWrapper::WrapperBufferHandle::Allocator::RootString()
 {
     JSRuntime *rt;
     nsCOMPtr<nsIJSRuntimeService> rtsvc =
-        nsJSRuntimeServiceImpl::GetSingleton();
+        dont_AddRef(NS_STATIC_CAST(nsIJSRuntimeService*,
+                                   nsJSRuntimeServiceImpl::GetSingleton()));
     JSBool ok = rtsvc &&
         NS_SUCCEEDED(rtsvc->GetRuntime(&rt)) &&
         JS_AddNamedRootRT(rt,
