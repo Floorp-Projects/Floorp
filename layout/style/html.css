@@ -488,33 +488,32 @@ input[type=image][disabled] {
   cursor: default;
 }
 
-input[type=file] {
+/* file selector */
+input[type="file"] {
   box-sizing: border-box;
   white-space: nowrap;
   border:none;
   behavior: none;
 }
 
-/* browse button for file selector */
-input[type=file] input[type="button"] {
-  height:inherit;
+input[type="file"] > input {
+  /*border:inherit;*/
 }
 
-/* Show browse button inside the file selector disabled */
-input[type=file][disabled] input[type="button"] {
-  border: 1px solid;
-} 
-
-input[type=file] input[type="button"] {
+/* browse button for file selector */
+input[type="file"] > input[type="button"] {
+  height:inherit;
   font-family: sans-serif;
 }
 
-/* Show browse button disabled */
-input[type="file"][disabled] input[type="button"] {
+
+/* Show browse button inside the file selector disabled */
+input[type="file"][disabled] > input[type="button"] {
+  border: 1px solid;
   color: gray;
-}
+} 
 
-
+/* radio buttons */
 input[type=radio] {
   box-sizing: content-box;
   /* these margins are for NavQuirks, we need a Standard ua.css */  
@@ -1005,16 +1004,6 @@ select:focus, select[size="1"]:focus {
   background-color: #FEFEFE;
 }
 
-select[size][disabled] {
-  background-color:rgb(204, 204, 204);  
-  border: 2px inset rgb(153, 153, 153);
-}
-
-select[multiple][disabled] {
-  background-color:rgb(204, 204, 204);  
-  border: 2px inset rgb(153, 153, 153);
-}
-
 select[disabled] {
   background-color: rgb(204, 204, 204);
   border: 2px inset rgb(153, 153, 153);
@@ -1083,50 +1072,16 @@ select option, select[size="1"] option {
 }
 
 
-select[disabled] option {
-  color:rgb(153, 153, 153);
-  background-color:white; 
-}
-
 /* Combobox item style */
-select option[-moz-option-selected] {
- color:white;
- background-color:rgb(51,51,102); 
+option[-moz-option-selected] {
+ color:white !important;
+ background-color:rgb(51,51,102) !important; 
 }
 
 /* List box item selected style */
-select option[disabled][-moz-option-selected] {
-  color:rgb(153,153,153); 
-  background-color:rgb(204,204,204); 
-}
-
-select option[disabled] {
-  color:rgb(153,153,153); 
-  background-color:rgb(204,204,204); 
-}
-
-select[size] option[-moz-option-selected] {
-  color:white;
-  background-color:rgb(51,51,102); 
-}
-select[size] option[-moz-option-selected-focus] {
-  color:white;
-  background-color:rgb(51,51,102); 
-}
-
-select[size][disabled] option[-moz-option-selected] {
-  color:rgb(153,153,153); 
-  background-color:rgb(204,204,204); 
-}
-
-select[size="1"] option[-moz-option-selected] {
-  color:white;
-  background-color:rgb(51,51,102); 
-}
-
-select[size="1"] option[disabled][-moz-option-selected] {
-  color:rgb(153,153,153); 
-  background-color:rgb(204,204,204); 
+option[disabled] {
+  color:rgb(153,153,153) !important; 
+  background-color:rgb(204,204,204) !important; 
 }
 
 optgroup {
