@@ -1,0 +1,24 @@
+var err = initInstall("Mozilla Javaconnect", "Javaconnect", "0.1");
+logComment("initInstall: " + err);
+
+var fProgram = getFolder("Program");
+var srLibs = $SpaceRequired$:bin;
+
+if (verifyDiskSpace(fProgram, srLibs))
+{
+  err = addDirectory("", "0.1", "bin", fProgram, "", true);
+  logComment("addDirectory(): " + err);
+
+  if (err == SUCCESS)
+  {
+    err = performInstall();
+    logComment("performInstall() returned: " + err);
+  }
+  else
+  {
+    cancelInstall();
+    logComment("cancelInstall() due to error: "+err);
+  }
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
