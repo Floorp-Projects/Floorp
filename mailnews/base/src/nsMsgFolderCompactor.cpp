@@ -476,12 +476,9 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                                     nsresult status)
 {
   nsresult rv = status;
-  nsCOMPtr<nsIURI> uri;
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
 
-  if (NS_FAILED(rv)) goto done;
-  uri = do_QueryInterface(ctxt, &rv);
   if (NS_FAILED(rv)) goto done;
   EndCopy(nsnull, status);
   if (m_curIndex >= m_size)
@@ -707,6 +704,13 @@ nsFolderCompactState::EndCopy(nsISupports *url, nsresult aStatus)
   nsCOMPtr<nsIMsgDBHdr> msgHdr;
   nsCOMPtr<nsIMsgDBHdr> newMsgHdr;
   m_messageUri.SetLength(0); // clear the previous message uri
+
+  if (m_curIndex >= m_size)
+  {
+    NS_ASSERTION(PR_FALSE, "m_curIndex out of bounds");
+    return NS_OK;
+  }
+
   nsresult rv = BuildMessageURI(m_baseMessageUri, m_keyArray[m_curIndex],
                               m_messageUri);
 
