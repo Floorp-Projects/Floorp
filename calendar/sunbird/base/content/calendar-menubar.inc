@@ -275,7 +275,7 @@
 #                     label="&calendar.wizard.label;"
 #                     accesskey="&calendar.wizard.accesskey;"
 #                     observes="wizard_command"/>
-           <menuseparator/>
+#           <menuseparator/>
                <menuitem id="javascriptConsole"
                          label="&javaScriptConsoleCmd.label;"
                          accesskey="&javaScriptConsoleCmd.accesskey;"
