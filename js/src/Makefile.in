@@ -29,6 +29,8 @@ endif
 
 DIRS	+=	fdlibm
 
+DIRS 	+=	xpconnect
+
 LIBRARY_NAME	= $(MOZ_LIB_JS_PREFIX)js
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)

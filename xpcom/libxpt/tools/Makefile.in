@@ -27,7 +27,7 @@ SIMPLE_PROGRAMS	= xpt_dump xpt_link
 
 CSRCS		= xpt_dump.c xpt_link.c
 
-LDFLAGS		= 		\
+LIBS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpt 	\
 		  $(NSPR_LIBS) 	\

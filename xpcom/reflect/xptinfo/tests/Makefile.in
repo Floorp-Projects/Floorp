@@ -31,7 +31,7 @@ CPPSRCS		= \
 		  TestInterfaceInfo.cpp \
 		  $(NULL)
 
-LDFLAGS		= \
+LIBS		= \
 		  -L$(DIST)/bin \
 		  -lxptinfo 	\
 		  -lxpt 	\

@@ -24,15 +24,17 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = TestXPC
 
+SIMPLE_PROGRAMS = TestXPC
+
 CPPSRCS = \
 	TestXPC.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
-DEFINES	+= -DJS_THREADSAFE -DJSFILE
+DEFINES	+= -DJS_THREADSAFE
 
-LDFLAGS		= 		\
+LIBS		= 		\
 	-L$(DIST)/bin \
 	-l$(MOZ_LIB_JS_PREFIX)js \
 	-lxpcom       \
@@ -47,25 +49,28 @@ LDFLAGS		= 		\
 	$(NULL)
 
 
-PROGS = $(OBJDIR)/TestXPC
+# PROGS = $(OBJDIR)/TestXPC
 
 TEST_FILES = testxpc.js
 
-TARGETS= $(PROGS)
+# TARGETS= $(PROGS)
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xpconnect \
-               -I$(PUBLIC)/raptor
+# INCLUDES	+= -I$(PUBLIC)/xpcom -I$(PUBLIC)/js -I$(PUBLIC)/xpconnect \
+#                -I$(PUBLIC)/raptor
 
 #$(PROGS): $(OBJS)
 #	@$(MAKE_OBJDIR)
 #	$(CC) -o $@ $(OBJS) $(LD_FLAGS) -L$(DIST)/lib $(LIBS) $(OS_LIBS)
 
-export:: $(TARGETS)
-	$(INSTALL) $(PROGS) $(DIST)/bin
+export::
 	$(INSTALL) $(TEST_FILES) $(DIST)/bin
 
-clobber::
-	rm -f $(DIST)/bin/TestXPC
-	rm -f $(PROGS) $(OBJS)
+# export:: $(TARGETS)
+# 	$(INSTALL) $(PROGS) $(DIST)/bin
+# 	$(INSTALL) $(TEST_FILES) $(DIST)/bin
+
+# clobber::
+# 	rm -f $(DIST)/bin/TestXPC
+# 	rm -f $(PROGS) $(OBJS)
