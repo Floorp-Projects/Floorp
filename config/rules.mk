@@ -176,12 +176,14 @@ ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
 			  $(NOSUCHFILE) $(JDK_HEADER_CFILES) $(JDK_STUB_CFILES) \
 			  $(JRI_HEADER_CFILES) $(JRI_STUB_CFILES) $(JMC_STUBS) \
 			  $(JMC_HEADERS) $(JMC_EXPORT_FILES) so_locations \
-			  _gen _jmc _jri _stubs $(MDDEPDIR) $(wildcard gts_tmp_*) \
+			  _gen _jmc _jri _stubs $(MDDEPDIR) \
+                          $(wildcard gts_tmp_*) $(PROGOBJS)
 			  $(wildcard $(JAVA_DESTPATH)/$(PACKAGE)/*.class)
 else
 ALL_TRASH		= $(TARGETS) $(OBJS) LOGS TAGS $(GARBAGE) a.out \
 			  $(NOSUCHFILE) $(JMC_STUBS) so_locations \
-			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*)
+			  _gen _stubs $(MDDEPDIR) $(wildcard gts_tmp_*) \
+                          $(PROGOBJS)
 endif
 
 ifdef JAVA_OR_NSJVM
