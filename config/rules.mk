@@ -134,7 +134,7 @@ DEF_OBJS		= $(OBJS)
 ifneq ($(EXPORT_OBJS),1)
 DEF_OBJS		+= $(SHARED_LIBRARY_LIBS)
 endif
-SHARED_LIBRARY		:= $(LIBRARY_NAME).$(DLL_SUFFIX)
+SHARED_LIBRARY		:= $(LIBRARY_NAME)$(DLL_SUFFIX)
 DEF_FILE		:= $(SHARED_LIBRARY:.dll=.def)
 IMPORT_LIBRARY		:= $(SHARED_LIBRARY:.dll=.lib)
 else  # OS2
@@ -159,7 +159,7 @@ LIBRARY			= $(NULL)
 endif
 
 ifdef NO_SHARED_LIB
-DLL_SUFFIX		= $(LIB_SUFFIX)
+DLL_SUFFIX		= .$(LIB_SUFFIX)
 endif
 
 ifndef TARGETS
@@ -500,7 +500,7 @@ else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin/components
 endif # OS2
 ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin/components
 endif
 else # ! IS_COMPONENT
 ifeq ($(OS_ARCH),OS2)
@@ -511,7 +511,7 @@ else
 	$(INSTALL) -m 555 $(SHARED_LIBRARY) $(DIST)/bin
 endif # OS2
 ifeq ($(OS_ARCH),OpenVMS)
-	$(INSTALL) -m 555 $(SHARED_LIBRARY:.$(DLL_SUFFIX)=.vms) $(DIST)/bin
+	$(INSTALL) -m 555 $(SHARED_LIBRARY:$(DLL_SUFFIX)=.vms) $(DIST)/bin
 endif
 endif
 endif
@@ -738,7 +738,7 @@ ifndef IS_COMPONENT
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
 endif
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) VMSuni.opt;
-	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
+	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=.vms)
 endif
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
