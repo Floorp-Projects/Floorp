@@ -47,8 +47,7 @@ nsMsgDisplayMessageByID(PRInt32 msgID)
     rv = dialog->Alert(alertText);
 #else
     // will only work for single byte languages for now
-    nsString alertStr(msg, eOneByte);
-    printf("Alert: %s", alertStr.GetBuffer());
+    printf("Alert: %s", msg);
 #endif
   }
 
@@ -79,8 +78,7 @@ nsMsgDisplayMessageByString(char *msg)
     rv = dialog->Alert(alertText);
 #else
     // will only work for single byte languages for now
-    nsString alertStr(msg, eOneByte);
-    printf("Alert: %s", alertStr.GetBuffer());
+    printf("Alert: %s", msg);
 #endif    
   }
 
