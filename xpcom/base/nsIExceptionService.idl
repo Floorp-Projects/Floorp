@@ -46,7 +46,7 @@
 interface nsIExceptionProvider : nsISupports
 {
     /** Gets an nsIException or returns NULL if not possible. **/
-    nsIException getException(in nsresult result);
+    nsIException getException(in nsresult result, in nsIException defaultException);
 };
 
 // A ScriptErrorManager for a single thread.  These objects
@@ -63,7 +63,7 @@ interface nsIExceptionManager : nsISupports
 
     /** Gets an exception from a registered exception provider..
         This has no effect on the "current exception" */
-    nsIException getExceptionFromProvider( in nsresult rc );
+    nsIException getExceptionFromProvider( in nsresult rc, in nsIException defaultException);
 };
 
 

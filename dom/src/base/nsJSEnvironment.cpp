@@ -1611,8 +1611,6 @@ nsJSEnvironment::nsJSEnvironment()
 nsJSEnvironment::~nsJSEnvironment()
 {
   if (--globalCount == 0) {
-    nsJSUtils::ClearCachedSecurityManager();
-
     delete gNameSpaceManager;
     gNameSpaceManager = nsnull;
   }

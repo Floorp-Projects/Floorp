@@ -179,12 +179,35 @@ XPCThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
     /* no need to set an expection if the security manager already has */
     if(rv == NS_ERROR_XPC_SECURITY_MANAGER_VETO && JS_IsExceptionPending(cx))
         return;
-
-    nsCOMPtr<nsIException> e;
-    nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(e));
-
-    if(e)
-        success = ThrowExceptionObject(cx, e);
+    nsCOMPtr<nsIException> finalException;
+    nsCOMPtr<nsIException> defaultException;
+    nsXPCException::NewException(sz, rv, nsnull, nsnull, getter_AddRefs(defaultException));
+    XPCPerThreadData* tls = XPCPerThreadData::GetData();
+    if(tls)
+    {
+        nsIExceptionManager * exceptionManager = tls->GetExceptionManager();
+        if(exceptionManager)
+        {
+           // Ask the provider for the exception, if there is no provider
+           // we expect it to set e to null
+            exceptionManager->GetExceptionFromProvider(
+               rv,
+               defaultException,
+               getter_AddRefs(finalException));
+            // We should get at least the defaultException back, 
+            // but just in case
+            if(finalException == nsnull)
+            {
+                finalException = defaultException;
+            }
+        }
+    }
+    // XXX Should we put the following test and call to JS_ReportOutOfMemory
+    // inside this test?
+    if(finalException)
+        success = ThrowExceptionObject(cx, finalException);
+    // If we weren't able to build or throw an exception we're
+    // most likely out of memory 
     if(!success)
         JS_ReportOutOfMemory(cx);
 }

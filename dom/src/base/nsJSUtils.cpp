@@ -48,48 +48,13 @@
 #include "jsapi.h"
 #include "jsdbgapi.h"
 #include "prprf.h"
-#include "nscore.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsString.h"
-#include "nsIScriptNameSpaceManager.h"
-#include "nsIComponentManager.h"
-#include "nsIScriptEventListener.h"
 #include "nsIServiceManager.h"
 #include "nsIXPConnect.h"
-#include "nsIDOMDOMException.h"
-#include "nsDOMError.h"
 #include "nsCOMPtr.h"
-#include "nsIScriptSecurityManager.h"
-#include "nsIJSNativeInitializer.h"
 
-static NS_DEFINE_CID(kXPConnectCID, NS_XPCONNECT_CID);
-
-static struct ResultMap 
-{nsresult rv; const char* name; const char* format;} map[] = {
-#define DOM_MSG_DEF(val, format) \
-    {(val), #val, format},
-#include "domerr.msg"
-#undef DOM_MSG_DEF
-    {0,0,0}   // sentinel to mark end of array
-};
-
-PRBool
-nsJSUtils::NameAndFormatForNSResult(nsresult rv, const char** name,
-                                    const char** format)
-{
-  for (ResultMap* p = map; p->name; p++)
-  {
-    if (rv == p->rv)
-    {
-      if (name) *name = p->name;
-      if (format) *format = p->format;
-      return PR_TRUE;
-    }
-  }
-  return PR_FALSE;
-}
 
 JSBool
 nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
@@ -126,55 +91,6 @@ nsJSUtils::GetCallingLocation(JSContext* aContext, const char* *aFilename,
   return JS_FALSE;
 }
 
-JSBool
-nsJSUtils::ReportError(JSContext* aContext, JSObject* aObj, nsresult aResult,
-                       const char* aMessage)
-{
-  const char* name = nsnull;
-  const char* format = nsnull;
-
-  // Get the name and message
-  if (!aMessage)
-    NameAndFormatForNSResult(aResult, &name, &format);
-  else
-    format = aMessage;
-
-  const char* filename;
-  PRUint32 lineno;
-  char* location = nsnull;
-
-  if (nsJSUtils::GetCallingLocation(aContext, &filename, &lineno))
-    location = PR_smprintf("%s Line: %d", filename, lineno);
-  
-  nsCOMPtr<nsIDOMDOMException> exc;
-  nsresult rv = NS_NewDOMException(getter_AddRefs(exc), 
-                                   aResult,
-                                   name, 
-                                   format,
-                                   location);
-  
-  if (location) {
-    PR_smprintf_free(location);
-  }
-    
-  if (NS_SUCCEEDED(rv)) {
-    nsCOMPtr<nsIScriptObjectOwner> owner = do_QueryInterface(exc);
-    if (owner) {
-      nsCOMPtr<nsIScriptContext> scriptCX;
-      GetStaticScriptContext(aContext, aObj, getter_AddRefs(scriptCX));
-      if (scriptCX) {
-        JSObject* obj;
-        rv = owner->GetScriptObject(scriptCX, (void**)&obj);
-        if (NS_SUCCEEDED(rv)) {
-          ::JS_SetPendingException(aContext, OBJECT_TO_JSVAL(obj));
-        }
-      }
-    }
-  }
-
-  return JS_FALSE;
-}
-
 void 
 nsJSUtils::ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
                                 jsval* aReturn)
@@ -198,7 +114,7 @@ nsJSUtils::ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
   }
   else if (JSVAL_IS_OBJECT(aValue)) {
     nsresult rv;
-    nsCOMPtr<nsIXPConnect> xpc(do_GetService(kXPConnectCID, &rv));
+    nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
     if (NS_FAILED(rv))
       return JS_FALSE;
 
@@ -321,52 +237,4 @@ nsJSUtils::GetDynamicScriptContext(JSContext *aContext,
   return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
                                   (void**)aScriptContext);
 }
-
-JSBool PR_CALLBACK
-nsJSUtils::CheckAccess(JSContext *cx, JSObject *obj, jsid id,
-                       JSAccessMode mode, jsval *vp)
-{
-  if (mode == JSACC_WATCH) {
-    jsval value, dummy;
-    if (!::JS_IdToValue(cx, id, &value))
-      return JS_FALSE;
-    JSString *str = ::JS_ValueToString(cx, value);
-
-    if (!str)
-      return JS_FALSE;
-
-    return ::JS_GetUCProperty(cx, obj, ::JS_GetStringChars(str),
-                              ::JS_GetStringLength(str), &dummy);
-  }
-
-  return JS_TRUE;
-}
-
-nsIScriptSecurityManager * 
-nsJSUtils::GetSecurityManager(JSContext *cx, JSObject *obj)
-{
-  if (!mCachedSecurityManager) {
-    nsresult rv;
-    nsCOMPtr<nsIScriptSecurityManager> secMan = 
-             do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) {
-      nsJSUtils::ReportError(cx, obj, NS_ERROR_DOM_SECMAN_ERR);
-      return nsnull;
-    }
-    mCachedSecurityManager = secMan;
-    NS_ADDREF(mCachedSecurityManager);
-  }
-  return mCachedSecurityManager;
-}
-
-void
-nsJSUtils::ClearCachedSecurityManager()
-{
-  if (mCachedSecurityManager) {
-    NS_RELEASE(mCachedSecurityManager);
-    mCachedSecurityManager = nsnull;
-  }
-}
-
-nsIScriptSecurityManager *nsJSUtils::mCachedSecurityManager;
 

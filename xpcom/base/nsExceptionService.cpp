@@ -130,12 +130,12 @@ NS_IMETHODIMP nsExceptionManager::GetCurrentException(nsIException **_retval)
     return NS_OK;
 }
 
-/* nsIException GetExceptionFromProvider(in nsresult rc); */
-NS_IMETHODIMP nsExceptionManager::GetExceptionFromProvider(nsresult rc, nsIException **_retval)
+/* nsIException getExceptionFromProvider( in nsresult rc, in nsIException defaultException); */
+NS_IMETHODIMP nsExceptionManager::GetExceptionFromProvider(nsresult rc, nsIException * defaultException, nsIException **_retval)
 {
     CHECK_MANAGER_USE_OK();
     // Just delegate back to the service with the provider map.
-    return mService->GetExceptionFromProvider(rc, _retval);
+    return mService->GetExceptionFromProvider(rc, defaultException, _retval);
 }
 
 /* The Exception Service */
@@ -236,11 +236,12 @@ NS_IMETHODIMP nsExceptionService::GetCurrentException(nsIException **_retval)
     return sm->GetCurrentException(_retval);
 }
 
-/* nsIException GetExceptionFromProvider (in nsresult rc); */
-NS_IMETHODIMP nsExceptionService::GetExceptionFromProvider(nsresult rc, nsIException **_retval)
+/* nsIException getExceptionFromProvider( in nsresult rc, in nsIException defaultException); */
+NS_IMETHODIMP nsExceptionService::GetExceptionFromProvider(nsresult rc, 
+    nsIException * defaultException, nsIException **_retval)
 {
     CHECK_SERVICE_USE_OK();
-    return DoGetExceptionFromProvider(rc, _retval);
+    return DoGetExceptionFromProvider(rc, defaultException, _retval);
 }
 
 /* readonly attribute nsIExceptionManager currentExceptionManager; */
@@ -296,15 +297,23 @@ NS_IMETHODIMP nsExceptionService::Observe(nsISupports *aSubject, const char *aTo
      return NS_OK;
 }
 
-nsresult nsExceptionService::DoGetExceptionFromProvider( nsresult errCode, nsIException **_exc)
+nsresult
+nsExceptionService::DoGetExceptionFromProvider(nsresult errCode, 
+                                               nsIException * defaultException,
+                                               nsIException **_exc)
 {
     nsProviderKey key(NS_ERROR_GET_MODULE(errCode));
-    nsCOMPtr<nsIExceptionProvider> provider((nsIExceptionProvider *)mProviders.Get(&key));
+    nsCOMPtr<nsIExceptionProvider> provider =
+        (nsIExceptionProvider *)mProviders.Get(&key);
+
+    // No provider so we'll return the default exception
     if (!provider) {
-        *_exc = nsnull;
-        return NS_COMFALSE;
+        *_exc = defaultException;
+        NS_IF_ADDREF(*_exc);
+        return NS_OK;
     }
-    return provider->GetException(errCode, _exc);
+
+    return provider->GetException(errCode, defaultException, _exc);
 }
 
 // thread management

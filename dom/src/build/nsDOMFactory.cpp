@@ -46,6 +46,7 @@
 #include "nsGlobalWindow.h"
 #include "nsIObserverService.h"
 #include "nsIJSContextStack.h"
+#include "nsIExceptionService.h"
 
 
 extern nsresult NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
@@ -57,11 +58,16 @@ extern nsresult NS_NewJSEventListener(nsIDOMEventListener **aInstancePtrResult,
 
 extern nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
 
+extern nsresult NS_NewDOMException(nsresult aResult,
+                                   nsIException* aDefaultException,
+                                   nsIException** aException);
+
 
 //////////////////////////////////////////////////////////////////////
 
 class nsDOMSOFactory : public nsIDOMScriptObjectFactory,
-                       public nsIObserver
+                       public nsIObserver,
+                       public nsIExceptionProvider
 {
 public:
   nsDOMSOFactory();
@@ -71,6 +77,9 @@ public:
 
   // nsIObserver
   NS_DECL_NSIOBSERVER
+
+  // nsIExceptionProvider
+  NS_DECL_NSIEXCEPTIONPROVIDER
 
   NS_IMETHOD NewScriptContext(nsIScriptGlobalObject *aGlobal,
                               nsIScriptContext **aContext);
@@ -94,6 +103,13 @@ nsDOMSOFactory::nsDOMSOFactory()
   if (observerService) {
     observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, PR_FALSE);
   }
+
+  nsCOMPtr<nsIExceptionService> xs =
+    do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+
+  if (xs) {
+    xs->RegisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
+  }
 }
 
 nsDOMSOFactory::~nsDOMSOFactory()
@@ -104,6 +120,7 @@ nsDOMSOFactory::~nsDOMSOFactory()
 NS_INTERFACE_MAP_BEGIN(nsDOMSOFactory)
   NS_INTERFACE_MAP_ENTRY(nsIDOMScriptObjectFactory)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIExceptionProvider)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMScriptObjectFactory)
 NS_INTERFACE_MAP_END
 
@@ -162,10 +179,25 @@ nsDOMSOFactory::Observe(nsISupports *aSubject,
 
     GlobalWindowImpl::ShutDown();
     nsDOMClassInfo::ShutDown();
+
+    nsCOMPtr<nsIExceptionService> xs =
+      do_GetService(NS_EXCEPTIONSERVICE_CONTRACTID);
+
+    if (xs) {
+      xs->UnregisterExceptionProvider(this, NS_ERROR_MODULE_DOM);
+    }
   }
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDOMSOFactory::GetException(nsresult result, nsIException *aDefaultException,
+                             nsIException **_retval)
+{
+  return NS_NewDOMException(result, aDefaultException, _retval);
+}
+
 //////////////////////////////////////////////////////////////////////
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSOFactory);

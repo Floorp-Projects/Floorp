@@ -116,7 +116,6 @@ nsXPCException::GetNSResultCount()
 NS_INTERFACE_MAP_BEGIN(nsXPCException)
   NS_INTERFACE_MAP_ENTRY(nsIException)
   NS_INTERFACE_MAP_ENTRY(nsIXPCException)
-  NS_INTERFACE_MAP_ENTRY(nsIXPCDOMException)
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
   NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
 #endif
@@ -127,7 +126,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 NS_IMPL_THREADSAFE_ADDREF(nsXPCException)
 NS_IMPL_THREADSAFE_RELEASE(nsXPCException)
 
-NS_IMPL_CI_INTERFACE_GETTER2(nsXPCException, nsIXPCException, nsIXPCDOMException)
+NS_IMPL_CI_INTERFACE_GETTER1(nsXPCException, nsIXPCException)
 
 nsXPCException::nsXPCException()
     : mMessage(nsnull),
@@ -137,7 +136,6 @@ nsXPCException::nsXPCException()
       mData(nsnull),
       mFilename(nsnull),
       mLineNumber(0),
-      mColumnNumber(0),
       mInner(nsnull),
       mInitialized(PR_FALSE)
 {
@@ -169,7 +167,7 @@ nsXPCException::Reset()
         nsMemory::Free(mFilename);
         mFilename = nsnull;
     }
-    mLineNumber = mColumnNumber = (PRUint32)-1;
+    mLineNumber = (PRUint32)-1;
     NS_IF_RELEASE(mLocation);
     NS_IF_RELEASE(mData);
     NS_IF_RELEASE(mInner);
@@ -193,21 +191,6 @@ nsXPCException::GetResult(nsresult *aResult)
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
     *aResult = mResult;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXPCException::GetCode(PRUint32* aCode)
-{
-    if(!aCode)
-        return NS_ERROR_NULL_POINTER;
-    if(!mInitialized)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    if(NS_ERROR_GET_MODULE(mResult) == NS_ERROR_MODULE_DOM)
-        *aCode = NS_ERROR_GET_CODE(mResult);
-    else
-        *aCode = (PRUint32) mResult;
     return NS_OK;
 }
 
@@ -251,7 +234,7 @@ NS_IMETHODIMP nsXPCException::GetColumnNumber(PRUint32 *aColumnNumber)
         return NS_ERROR_NULL_POINTER;
     if(!mInitialized)
         return NS_ERROR_NOT_INITIALIZED;
-    *aColumnNumber = mColumnNumber;
+    *aColumnNumber = -1;
     return NS_OK;
 }
 
@@ -329,8 +312,6 @@ nsXPCException::Initialize(const char *aMessage, nsresult aResult, const char *a
         if(NS_FAILED(rc = aLocation->GetFilename(&mFilename)))
             return rc;
         if(NS_FAILED(rc = aLocation->GetLineNumber(&mLineNumber)))
-            return rc;
-        if(NS_FAILED(rc = aLocation->GetLineNumber(&mColumnNumber)))
             return rc;
     }
     else
@@ -520,8 +501,7 @@ nsXPCException::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, ch
 NS_IMETHODIMP
 nsXPCException::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const char* allowed[] = { "message", "result", "code", "name", 
-       nsnull};
+    static const char* allowed[] = { "message", "result", "name", nsnull};
 
     *_retval = xpc_CheckAccessList(propertyName, allowed);
     return NS_OK;

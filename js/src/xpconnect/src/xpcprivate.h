@@ -2429,7 +2429,7 @@ private:
 /***************************************************************************/
 
 class nsXPCException :
-            public nsIXPCDOMException
+            public nsIXPCException
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
           , public nsISecurityCheckedComponent
 #endif
@@ -2440,7 +2440,6 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIEXCEPTION
     NS_DECL_NSIXPCEXCEPTION
-    NS_DECL_NSIXPCDOMEXCEPTION
 #ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
     NS_DECL_NSISECURITYCHECKEDCOMPONENT
 #endif
@@ -2475,7 +2474,6 @@ private:
     nsISupports*    mData;
     char*           mFilename;
     int             mLineNumber;
-    int             mColumnNumber;
     nsIException*   mInner;
     PRBool          mInitialized;
 };
