@@ -310,10 +310,13 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 	}
 
 	// Dispatch xp menu items
-	if (xpID != 0)
-		return nsBrowserWindow::DispatchMenuItem(xpID);
-	else
-		return status;
+	if (xpID != 0) {
+		// beard: nsBrowserWindow::DispatchMenuItem almost always returns nsEventStatus_eIgnore.
+		// this causes double menu item dispatching for most items except for VIEWER_EXIT!
+		nsBrowserWindow::DispatchMenuItem(xpID);
+		status = nsEventStatus_eConsumeNoDefault;
+	}
+	return status;
 }
 
 #pragma mark -
