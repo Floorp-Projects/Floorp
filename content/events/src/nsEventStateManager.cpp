@@ -1606,8 +1606,8 @@ nsEventStateManager::DoScrollHistory(PRInt32 direction)
   if (pcContainer) {
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(pcContainer));
     if (webNav) {
-      // negative direction to go back one step, nonneg to go forward
-      if (direction < 0)
+      // positive direction to go back one step, nonpositive to go forward
+      if (direction > 0)
         webNav->GoBack();
       else
         webNav->GoForward();
@@ -2041,15 +2041,35 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
       }
       else
         {
+          // If the scroll event's delta isn't to our liking, we can
+          // override it with the "numlines" parameter.  There are two
+          // things we can do:
+          //
+          // (1) Pick a different number.  Instead of scrolling 3
+          //     lines ("delta" in Gtk2), we would scroll 1 line.
+          // (2) Swap directions.  Instead of scrolling down, scroll up.
+          //
+          // For the first item, the magnitude of the parameter is
+          // used instead of the magnitude of the delta.  For the
+          // second item, if the parameter is negative we swap
+          // directions.
+
           nsCAutoString numLinesKey(baseKey);
           numLinesKey.Append(numlinesslot);
 
           mPrefBranch->GetIntPref(numLinesKey.get(),
                                   &numLines);
-        }
 
-      if ((msEvent->delta < 0) && (numLines > 0))
-        numLines = -numLines;
+          bool swapDirs = (numLines < 0);
+          PRInt32 userSize = swapDirs ? -numLines : numLines;
+
+          PRInt32 deltaUp = (msEvent->delta < 0);
+          if (swapDirs) {
+            deltaUp = ! deltaUp;
+          }
+
+          numLines = deltaUp ? -userSize : userSize;
+        }
 
       switch (action) {
       case MOUSE_SCROLL_N_LINES:
