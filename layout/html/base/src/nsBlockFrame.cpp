@@ -153,6 +153,7 @@ InitDebugFlags()
 #undef REALLY_NOISY_FIRST_LINE
 #undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
+#undef NOISY_MAXIMUM_WIDTH
 #undef NOISY_FLOATER_CLEARING
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
@@ -390,6 +391,9 @@ public:
 
   void UpdateMaximumWidth(nscoord aMaximumWidth) {
     if (aMaximumWidth > mMaximumWidth) {
+#ifdef NOISY_MAXIMUM_WIDTH
+      printf("nsBlockReflowState::UpdateMaximumWidth block %p caching max width %d\n", mBlock, aMaximumWidth);
+#endif
       mMaximumWidth = aMaximumWidth;
     }
   }
@@ -697,6 +701,9 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   }
 
   SetFlag(BRS_COMPUTEMAXELEMENTSIZE, (nsnull != aMetrics.maxElementSize));
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  printf("BRS: setting compute-MES to %d\n", (nsnull != aMetrics.maxElementSize));
+#endif
   mMaxElementSize.SizeTo(0, 0);
   SetFlag(BRS_COMPUTEMAXWIDTH, 
           (NS_REFLOW_CALC_MAX_WIDTH == (aMetrics.mFlags & NS_REFLOW_CALC_MAX_WIDTH)));
@@ -975,15 +982,21 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       printf(": WARNING: xmost:%d\n", xmost);
     }
 #endif
-    /*sec*/ //printf("%p RecoverState aState.mKidXMost=%d\n", this, xmost); 
+    //printf("%p RecoverState block %p aState.mKidXMost=%d\n", this, mBlock, xmost); 
     mKidXMost = xmost;
   }
   if (GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
+#ifdef NOISY_MAX_ELEMENT_SIZE
+    printf("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaxElementWidth);
+#endif
     UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
   }
 
   // If computing the maximum width, then update mMaximumWidth
   if (GetFlag(BRS_COMPUTEMAXWIDTH)) {
+#ifdef NOISY_MAXIMUM_WIDTH
+    printf("nsBlockReflowState::RecoverStateFrom block %p caching max width %d\n", mBlock, aLine->mMaximumWidth);
+#endif
     UpdateMaximumWidth(aLine->mMaximumWidth);
   }
 
@@ -1944,13 +1957,14 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
     printf("%s\n", buf);
   }
 #endif
-  /*
+#ifdef NOISY_MAX_ELEMENT_SIZE
   if (aMetrics.maxElementSize) {
     printf("block %p returning with maxElementSize=%d,%d\n", this,
            aMetrics.maxElementSize->width,
            aMetrics.maxElementSize->height);
   }
-  */
+#endif
+
   return rv;
 }
 
@@ -2075,12 +2089,16 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     if (nsnull != aMetrics.maxElementSize) {
       aMetrics.maxElementSize->width = aState.mMaxElementSize.width;
       aMetrics.maxElementSize->height = aState.mMaxElementSize.height;
+#ifdef NOISY_MAX_ELEMENT_SIZE
+      printf ("nsBlockFrame::CFS: %p initially setting MES %d\n", 
+               this, aState.mMaxElementSize.width);
+#endif
     }
   }
   else {
     // Compute final width
     nscoord maxWidth = 0, maxHeight = 0;
-    /*SEC*///printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+    //printf("%p aState.mKidXMost=%d\n", this, aState.mKidXMost); 
     nscoord minWidth = aState.mKidXMost + borderPadding.right;
     if (!HaveAutoWidth(aReflowState)) {
       // Use style defined width
@@ -2134,7 +2152,9 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
           // When no-wrap is true the max-element-size.width is the
           // width of the widest line plus the right border. Note that
           // aState.mKidXMost already has the left border factored in
-          maxWidth = aState.mKidXMost + borderPadding.right;
+          //maxWidth = aState.mKidXMost + borderPadding.right;
+          maxWidth = aState.mMaxElementSize.width +
+            borderPadding.left + borderPadding.right;
         }
         else {
           // Add in border and padding dimensions to already computed
@@ -2266,6 +2286,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
       // Store away the final value
       aMetrics.maxElementSize->width = maxWidth;
       aMetrics.maxElementSize->height = maxHeight;
+#ifdef NOISY_MAX_ELEMENT_SIZE
+      printf ("nsBlockFrame::CFS: %p returning MES %d\n", 
+               this, aMetrics.maxElementSize->width);
+#endif
     }
 
     // Return bottom margin information
@@ -2304,11 +2328,10 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
   // If we're requested to update our maximum width, then compute it
   if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
     // We need to add in for the right border/padding
-    // The line below should be completely unnecessary if max element sizes are 
-    // computed correctly. But I found a case where this wasn't true.
-    // Still investigating, leaving the line in as a place holder
-    // XXX, should be unnecessary:  aMetrics.mMaximumWidth = PR_MAX(aMetrics.mMaximumWidth, aMetrics.width);
     aMetrics.mMaximumWidth = aState.mMaximumWidth + borderPadding.right;
+#ifdef NOISY_MAXIMUM_WIDTH
+    printf("nsBlockFrame::ComputeFinalSize block %p setting aMetrics.mMaximumWidth to %d\n", this, aMetrics.mMaximumWidth);
+#endif
   }
 
   // Compute the combined area of our children
@@ -3168,6 +3191,10 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
       // Update the line's maximum width
       aLine->mMaximumWidth = aLine->mBounds.XMost();
+#ifdef NOISY_MAXIMUM_WIDTH
+      printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
+             this, aLine, aLine->mMaximumWidth);
+#endif
       aState.UpdateMaximumWidth(aLine->mMaximumWidth);
 
       // Remove any floaters associated with the line from the space
@@ -3181,7 +3208,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
       // on this line the code to reflow the floater looks at both...
       nscoord oldComputeMaxElementSize = aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE);
       nscoord oldComputeMaximumWidth = aState.GetFlag(BRS_COMPUTEMAXWIDTH);
-        
+
       aState.SetFlag(BRS_COMPUTEMAXELEMENTSIZE, PR_FALSE);
       aState.SetFlag(BRS_COMPUTEMAXWIDTH, PR_FALSE);
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea);
@@ -3190,6 +3217,25 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
 
     } else {
       rv = ReflowInlineFrames(aState, aLine, aKeepReflowGoing, aDamageDirtyArea);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (aState.GetFlag(BRS_COMPUTEMAXWIDTH))
+        {
+#ifdef NOISY_MAXIMUM_WIDTH
+          printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaximumWidth to %d\n", 
+                 this, aLine, aLine->mMaximumWidth);
+#endif
+          aState.UpdateMaximumWidth(aLine->mMaximumWidth);
+        }
+        if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE))
+        {
+#ifdef NOISY_MAX_ELEMENT_SIZE
+          printf("nsBlockFrame::ReflowLine block %p line %p setting aLine.mMaxElementWidth to %d\n", 
+                 this, aLine, aLine->mMaxElementWidth);
+#endif
+          aState.UpdateMaxElementSize(nsSize(aLine->mMaxElementWidth, aLine->mBounds.height));
+        }
+      }
     }
 
     // We don't really know what changed in the line, so use the union
@@ -3936,6 +3982,10 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // updated value in the line, and update the current maximum width
       if (aState.GetFlag(BRS_COMPUTEMAXWIDTH)) {
         aLine->mMaximumWidth = brc.GetMaximumWidth();
+#ifdef NOISY_MAXIMUM_WIDTH
+        printf("nsBlockFrame::ReflowBlockFrame parent block %p line %p setting aLine.mMaximumWidth to %d\n", 
+             this, aLine, aLine->mMaximumWidth);
+#endif
         aState.UpdateMaximumWidth(aLine->mMaximumWidth);
 
       }
@@ -4695,6 +4745,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       // We also cache the max element width in the line. This is needed for
       // incremental reflow
       aLine->mMaxElementWidth = maxElementSize.width;
+#ifdef NOISY_MAX_ELEMENT_SIZE
+      printf ("nsBlockFrame::PlaceLine: %p setting MES for line %p to %d\n", 
+               this, aLine, maxElementSize.width);
+#endif
     }
 
   } else {
@@ -4823,6 +4877,10 @@ nsBlockFrame::ComputeLineMaxElementSize(nsBlockReflowState& aState,
       aMaxElementSize->height = maxHeight;
     }
   }
+#ifdef NOISY_MAX_ELEMENT_SIZE
+  printf ("nsBlockFrame::ComputeLineMaxElementSize: %p returning MES %d\n", 
+           this, aMaxElementSize->width);
+#endif
 }
 
 void
@@ -4846,12 +4904,20 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
     // We also cache the max element width in the line. This is needed for
     // incremental reflow
     aLine->mMaxElementWidth = aMaxElementSize.width;
+#ifdef NOISY_MAX_ELEMENT_SIZE
+    printf ("nsBlockFrame::PostPlaceLine: %p setting line %p MES %d\n", 
+               this, aLine, aMaxElementSize.width);
+#endif
   }
 
   // If this is an unconstrained reflow, then cache the line width in the
   // line. We'll need this during incremental reflow if we're asked to
   // calculate the maximum width
   if (aState.GetFlag(BRS_UNCONSTRAINEDWIDTH)) {
+#ifdef NOISY_MAXIMUM_WIDTH
+    printf("nsBlockFrame::PostPlaceLine block %p line %p caching max width %d\n", 
+           this, aLine, aLine->mBounds.XMost());
+#endif
     aLine->mMaximumWidth = aLine->mBounds.XMost();
   }
 
@@ -4867,11 +4933,11 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   // then make sure we take up all of the available width
   if (aState.GetFlag(BRS_SHRINKWRAPWIDTH) && aLine->IsLineWrapped()) {
     aState.mKidXMost = aState.BorderPadding().left + aState.mContentArea.width;
-    /*sec*/ //printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+    //printf("%p PostPlaceLine A aState.mKidXMost=%d\n", this, aState.mKidXMost); 
   }
   else if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
-    /*sec*/ //printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
+    //printf("%p PostPlaceLine B aState.mKidXMost=%d\n", this, aState.mKidXMost); 
   }
 }
 
@@ -6340,7 +6406,7 @@ nsBlockFrame::HandleEvent(nsIPresContext* aPresContext,
     nsCOMPtr<nsILineIterator> it; 
     nsIFrame *mainframe = this;
     nsCOMPtr<nsIFocusTracker> tracker;
-    aPresContext->GetShell(getter_AddRefs(shell));
+  	aPresContext->GetShell(getter_AddRefs(shell));
     if (!shell)
       return NS_OK;
     result = shell->QueryInterface(NS_GET_IID(nsIFocusTracker),getter_AddRefs(tracker));
