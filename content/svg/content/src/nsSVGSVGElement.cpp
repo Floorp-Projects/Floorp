@@ -64,6 +64,7 @@
 #include "nsSVGRect.h"
 #include "nsSVGPreserveAspectRatio.h"
 #include "nsISVGValueUtils.h"
+#include "nsDOMError.h"
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
 
@@ -431,21 +432,21 @@ nsSVGSVGElement::GetCurrentView(nsIDOMSVGViewSpec * *aCurrentView)
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentScale(float *aCurrentScale)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aCurrentScale = 1.0;
+  return NS_OK;
 }
+
 NS_IMETHODIMP
 nsSVGSVGElement::SetCurrentScale(float aCurrentScale)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 /* readonly attribute nsIDOMSVGPoint currentTranslate; */
 NS_IMETHODIMP
 nsSVGSVGElement::GetCurrentTranslate(nsIDOMSVGPoint * *aCurrentTranslate)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  return nsSVGPoint::Create(0.0f, 0.0f, aCurrentTranslate);
 }
 
 /* unsigned long suspendRedraw (in unsigned long max_wait_milliseconds); */
