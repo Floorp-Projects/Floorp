@@ -811,6 +811,7 @@ void nsHTMLContainer::MapAttributesInto(nsIStyleContext* aContext,
             styleSheet->SetVisitedLinkColor(value.GetColorValue());
           }
         }
+        NS_RELEASE(htmlDoc);
       }
 
       // set up the basefont (defaults to 3)
