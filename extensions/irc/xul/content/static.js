@@ -30,6 +30,8 @@ var client = new Object();
 
 client.defaultNick = "IRCMonkey";
 
+client.version = "0.8.2";
+
 client.TYPE = "IRCClient";
 client.COMMAND_CHAR = "/";
 client.STEP_TIMEOUT = 500;
@@ -120,6 +122,14 @@ function initStatic()
     client.sound =
         Components.classes["@mozilla.org/sound;1"].createInstance(nsISound);
     
+    var ary = navigator.userAgent.match (/;\s*([^;\s]+\s*)\).*\/(\d+)/);
+    if (ary)
+        client.userAgent = "ChatZilla " + client.version + " [Mozilla " + 
+            ary[1] + "/" + ary[2] + "]";
+    else
+        client.userAgent = "ChatZilla " + client.version + "[" + 
+            navigator.userAgent + "]";
+
     obj = document.getElementById("input");
     obj.addEventListener("keyup", onInputKeyUp, false);
     obj = document.getElementById("multiline-input");
@@ -1367,8 +1377,10 @@ function cli_say(msg)
             break;
 
         default:
-            client.display ("No default action for objects of type ``" +
-                            client.currentObject.TYPE + "''", "ERROR");
+            if (msg != "")
+                client.currentObject.display 
+                    ("No default action for objects of type ``" +
+                     client.currentObject.TYPE + "''", "ERROR");
             break;
     }
 
@@ -1579,6 +1591,18 @@ function display(message, msgtype, sourceObj, destObj)
     else
         notifyActivity (this);
 }
+
+client.getConnectionCount =
+function cli_gccount ()
+{
+    var count = 0;
+    
+    for (var n in client.networks)
+        if (client.networks[n].isConnected())
+            ++count;
+
+    return count;
+}   
 
 client.quit =
 function cli_quit (reason)
