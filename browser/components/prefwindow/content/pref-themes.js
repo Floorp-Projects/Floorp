@@ -61,10 +61,6 @@ function Startup()
   gData.loaded = true;
   parent.hPrefWindow.registerOKCallbackFunc(applyTheme);
 
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
-  const kPrefSvcIID = Components.interfaces.nsIPref;
-  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-
   var theme = null;
   try {
     theme = kPrefSvc.getComplexValue("general.skins.selectedSkin",
@@ -109,6 +105,10 @@ function applyTheme()
   var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://communicator/content/pref/pref-themes.xul"];
   if (data.name == null)
     return;
+
+  const kPrefSvcContractID = "@mozilla.org/preferences;1";
+  const kPrefSvcIID = Components.interfaces.nsIPref;
+  const kPrefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
 
   var theme = null;
   try {

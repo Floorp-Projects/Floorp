@@ -71,7 +71,6 @@
 <!ENTITY  units.inches                            "inches">
 <!ENTITY  units.centimetres                       "centimeters">
 
-<!ENTITY  lHeader                         "Colors">
 <!ENTITY  color                           "Text and Background">
 <!ENTITY  textColor.label                 "Text:">
 <!ENTITY  textColor.accesskey             "t">

@@ -2,22 +2,8 @@
 <!--LOCALIZATION NOTE : FILE 'Advanced' prefs settings -->
 <!ENTITY lHeader                      "Advanced">
 
-<!ENTITY advancedTitle.label          "Features that help interpret web pages">
-
-<!ENTITY autoLoadImgCheck.label       "Automatically load images"> 
-<!ENTITY autoLoadImgCheck.accesskey   "i">
-
 <!ENTITY enbJavaCheck.label           "Enable Java">
 <!ENTITY enbJavaCheck.accesskey       "j">
 
-<!ENTITY sendAddFtpCheck.label        "Send this email address as anonymous FTP password:">
-<!ENTITY sendAddFtpCheck.accesskey    "e">
-
-<!ENTITY imageBlocking.label          "Image Blocking...">
-<!ENTITY imageBlocking.accesskey      "b">
-
-<!ENTITY perfTitle.label              "Quick Launch">
-<!ENTITY enableTurbo.label            "Keep &brandShortName; in memory to improve startup performance">
-<!ENTITY enableTurboCheck.accesskey   "t">
-
-<!ENTITY perfdescription.label        "If you check this item, part of &brandShortName; will stay in memory when not in use, allowing it to start up faster.">
+<!ENTITY useProgressDialogs.label     "Display a progress window when starting a download">
+<!ENTITY useProgressDialogs.accesskey "D">
