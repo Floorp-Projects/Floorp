@@ -134,6 +134,9 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags = 0);
 
+  // the outer table does not paint its entire background if it has margins and/or captions
+  virtual PRBool CanPaintBackground() { return PR_FALSE; }
+
   NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
