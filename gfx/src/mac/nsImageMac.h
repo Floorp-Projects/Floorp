@@ -35,7 +35,7 @@ public:
   */
   virtual PRInt32     GetHeight()         { return mHeight;}
   virtual PRInt32     GetWidth()          { return mWidth; }
-  virtual PRUint8*    GetBits()           { return mImageBits; }
+  virtual PRUint8*    GetBits() ;          //{ return mImageBits; }
   virtual void*       GetBitInfo()        { return nsnull; }
   virtual PRInt32     GetLineStride()     {return mRowBytes; }
   virtual PRBool      Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -46,12 +46,12 @@ public:
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return false; }
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
-  virtual PRUint8*    GetAlphaBits()      { return nsnull; }
-  virtual PRInt32     GetAlphaWidth()   { return 0;}
-  virtual PRInt32     GetAlphaHeight()   {return 0;}
+  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
+  virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
+  virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
   virtual PRInt32     GetAlphaXLoc() {return 0;}
   virtual PRInt32     GetAlphaYLoc() {return 0;}
-  virtual PRInt32     GetAlphaLineStride(){ return 0; }
+  virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
   virtual void        CompositeImage(nsIImage *aTheImage,nsPoint *aULLocation,nsBlendQuality aQuality);
   virtual nsIImage*   DuplicateImage() {return(nsnull);}
 
@@ -61,7 +61,7 @@ public:
     * Return the image size of the Device Independent Bitmap(DIB).
     * @return size of image in bytes
     */
-  PRIntn      GetSizeImage(){ return 0; }
+  PRIntn      GetSizeImage(){ return mSizeImage; }
 
   /** 
    * Make a palette for the DIB.
@@ -93,6 +93,7 @@ private:
     
   // alpha layer members
   PRUint8             *mAlphaBits;         // alpha layer if we made one
+  PRInt32							mARowBytes;					// rowbytes for the alpha layer
   PRInt8              mAlphaDepth;         // alpha layer depth
   PRInt16             mAlphaWidth;        // alpha layer width
   PRInt16             mAlphaHeight;       // alpha layer height
