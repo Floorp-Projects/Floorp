@@ -915,7 +915,7 @@ MODULE_PRIVATE unsigned char* mz_AnyToAnyThroughUCS2(CCCDataObject obj, const un
 	free( fromBuf );
 	free( ucs2Buf );
 
-	INTL_SetCCCLen(obj, XP_STRLEN(toBuf));
+	INTL_SetCCCLen(obj, XP_STRLEN((char*)toBuf));
 
 	return toBuf;
 }
