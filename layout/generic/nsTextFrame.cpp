@@ -2652,46 +2652,39 @@ nsTextFrame::ComputeTotalWordWidth(nsIPresContext* aPresContext,
 {
   nscoord addedWidth = 0;
   while (nsnull != aNextFrame) {
-    nsIFrame* frame = aNextFrame;
-    while (nsnull != frame) {
-      nsIContent* content = nsnull;
-      if ((NS_OK == frame->GetContent(&content)) && (nsnull != content)) {
+    nsIContent* content = nsnull;
+    if ((NS_OK == aNextFrame->GetContent(&content)) && (nsnull != content)) {
 #ifdef DEBUG_WORD_WRAPPING
-        printf("  next textRun=");
-        nsAutoString tmp;
-        frame->GetFrameName(tmp);
-        fputs(tmp, stdout);
-        printf("\n");
+      printf("  next textRun=");
+      nsFrame::ListTag(stdout, aNextFrame);
+      printf("\n");
 #endif
-        nsITextContent* tc;
-        if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
-          PRBool stop;
-          nscoord moreWidth = ComputeWordFragmentWidth(aPresContext,
-                                                       aLineLayout,
-                                                       aReflowState,
-                                                       frame, tc,
-                                                       &stop);
-          NS_RELEASE(tc);
-          NS_RELEASE(content);
-          addedWidth += moreWidth;
+      nsITextContent* tc;
+      if (NS_OK == content->QueryInterface(kITextContentIID, (void**)&tc)) {
+        PRBool stop;
+        nscoord moreWidth = ComputeWordFragmentWidth(aPresContext,
+                                                     aLineLayout,
+                                                     aReflowState,
+                                                     aNextFrame, tc,
+                                                     &stop);
+        NS_RELEASE(tc);
+        NS_RELEASE(content);
+        addedWidth += moreWidth;
 #ifdef DEBUG_WORD_WRAPPING
-          printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreWidth,
-                 addedWidth, stop?'T':'F');
+        printf("  moreWidth=%d (addedWidth=%d) stop=%c\n", moreWidth,
+               addedWidth, stop?'T':'F');
 #endif
-          if (stop) {
-            goto done;
-          }
-        }
-        else {
-          // It claimed it was text but it doesn't implement the
-          // nsITextContent API. Therefore I don't know what to do with it
-          // and can't look inside it. Oh well.
-          NS_RELEASE(content);
+        if (stop) {
           goto done;
         }
       }
-      // Also look at the frame's next-in-flow, if it has one.
-      frame->GetNextInFlow(&frame);
+      else {
+        // It claimed it was text but it doesn't implement the
+        // nsITextContent API. Therefore I don't know what to do with it
+        // and can't look inside it. Oh well.
+        NS_RELEASE(content);
+        goto done;
+      }
     }
 
     // Move on to the next frame in the text-run
