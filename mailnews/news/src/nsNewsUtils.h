@@ -26,13 +26,10 @@ static const char kNewsRootURI[] = "news:/";
 static const char kNewsMessageRootURI[] = "news_message:/";
 
 extern nsresult
-nsGetNewsRoot(nsFileSpec &result);
+nsGetNewsRoot(const char* hostname, nsFileSpec &result);
 
 extern nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
-
-extern nsresult
-nsPath2NewsURI(const char* rootURI, const nsFileSpec& path, char* *uri);
 
 extern nsresult
 nsNewsURI2Name(const char* rootURI, char* uriStr, nsString& name);
@@ -41,7 +38,7 @@ extern nsresult
 nsParseNewsMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
 extern nsresult 
-nsBuildNewsMessageURI(const nsFileSpec& path, PRUint32 key, char **uri);
+nsBuildNewsMessageURI(const char *baseURI, PRUint32 key, char** uri);
 
 
 #endif //NS_NEWSUTILS_H

@@ -86,6 +86,11 @@ nsNntpUrl::~nsNntpUrl()
     PR_FREEIF(m_newsgroupPost);
 	PR_FREEIF(m_errorMessage);
 
+    if (m_filePath) {
+        delete m_filePath;
+        m_filePath = nsnull;
+    }
+
     PR_FREEIF(m_spec);
     PR_FREEIF(m_protocol);
     PR_FREEIF(m_host);
@@ -339,23 +344,42 @@ nsresult nsNntpUrl::GetErrorMessage (char ** errorMessage) const
     return NS_OK;
 }
 
+nsresult 
+nsNntpUrl::GetFilePath(const nsFileSpec ** aFilePath)
+{
+	if (aFilePath)
+		*aFilePath = m_filePath;
+	return NS_OK;
+}
+
+#if 0
+nsresult nsNntpUrl::SetFilePath(const nsFileSpec& aFilePath)
+{
+	NS_LOCK_INSTANCE();
+	if (m_filePath)
+		delete m_filePath;
+	m_filePath = new nsFileSpec(aFilePath);
+
+    NS_UNLOCK_INSTANCE();
+    return NS_OK;	
+}
+#endif
+
 // from nsIMsgUriUrl
 NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
-{
-#ifdef DEBUG_sspitzer
-    printf("nsNntpUrl::GetURI()\n");
-#endif
+{	
 	if (aURI)
 	{
 		const nsFileSpec * filePath = nsnull;
-#if 0
 		GetFilePath(&filePath);
-#endif
 		if (filePath)
 		{
 			char * uri = nsnull;
 			nsFileSpec folder = *filePath;
-			nsBuildNewsMessageURI(folder, nsnull, &uri);
+			nsBuildNewsMessageURI(m_spec, 0 /* don't have keys yet */, &uri);
+#ifdef DEBUG_alecf
+            fprintf(stderr, "nsBuildNewsMessageURI(%s, %d -> %s) in nsNntpUrl::GetURI", m_spec, m_messageKey, uri);
+#endif
 			*aURI = uri;
 		}
 		else
@@ -365,6 +389,7 @@ NS_IMETHODIMP nsNntpUrl::GetURI(char ** aURI)
 
 	return NS_OK;
 }
+
 ////////////////////////////////////////////////////////////////////////////////////
 // End nsINntpUrl specific support
 ////////////////////////////////////////////////////////////////////////////////////

@@ -85,8 +85,10 @@ nsMailboxUrl::~nsMailboxUrl()
     NS_IF_RELEASE(m_container);
 	PR_FREEIF(m_errorMessage);
 
-	if (m_filePath)
+	if (m_filePath) {
 		delete m_filePath;
+        m_filePath = nsnull;
+    }
 
 	PR_FREEIF(m_messageID);
     PR_FREEIF(m_spec);
@@ -643,16 +645,21 @@ nsresult nsMailboxUrl::GetFile(const char* *result) const
 
 nsresult nsMailboxUrl::SetFile(const char *aNewFile)
 {
+    nsresult rv = NS_OK;
     NS_ASSERTION(m_URL_s == nsnull, "URL has already been opened");
     NS_LOCK_INSTANCE();
     m_file = nsCRT::strdup(aNewFile);
     ReconstructSpec();
-	if (m_filePath)
+	if (m_filePath) {
 		delete m_filePath;
+        m_filePath = nsnull;
+    }
 	m_filePath = new nsFileSpec(m_file);
-
+    if (m_filePath == nsnull) {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+    }
     NS_UNLOCK_INSTANCE();
-    return NS_OK;
+    return rv;
 }
 
 nsresult nsMailboxUrl::GetSpec(const char* *result) const

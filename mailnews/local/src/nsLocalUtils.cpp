@@ -70,7 +70,7 @@ nsGetMailboxRoot(const char *hostname, nsFileSpec &result)
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(serverSupports);
 
   // this had better be a nsIMsgIncomingServer, otherwise
-  // FindServersByHostname is broken or we got some wierd object back
+  // FindServersByHostname is broken or we got some weird object back
   PR_ASSERT(server);
   
   // now ask the server what it's root is
@@ -89,8 +89,6 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 {
   nsresult rv;
 
-  nsCOMPtr<nsIMsgIncomingServer> server;
-  
   nsAutoString sep;
   sep += PR_GetDirectorySeparator();
 
@@ -103,8 +101,8 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
     return NS_ERROR_FAILURE;
 
   // verify that rootURI starts with "mailbox:/" or "mailbox_message:/"
-  if ((strcmp(rootURI, kMailboxRootURI) != 0) && 
-      (strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
+  if ((PL_strcmp(rootURI, kMailboxRootURI) != 0) && 
+      (PL_strcmp(rootURI, kMailboxMessageRootURI) != 0)) {
     pathResult = nsnull;
     return NS_ERROR_FAILURE;
   }
@@ -139,9 +137,11 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
   // at all?
   char *hostchar = hostname.ToNewCString();
   rv = nsGetMailboxRoot(hostchar, pathResult);
+#ifdef DEBUG_alecf
   printf("nsGetMailboxRoot(%s) = %s\n\tfolder = %s\n",
          hostchar, (const char*)pathResult,
          folder.ToNewCString());
+#endif
   delete[] hostchar;
 
   if (NS_FAILED(rv)) {
@@ -195,8 +195,9 @@ nsLocalURI2Path(const char* rootURI, const char* uriStr,
 	  pathResult +=path;
 #endif
 
-  if (folder != "")
-	pathResult += folder;
+  if (folder != "") {
+    pathResult += folder;
+  }
   return NS_OK;
 }
 

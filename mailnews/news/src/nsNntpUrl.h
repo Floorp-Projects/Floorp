@@ -79,6 +79,8 @@ public:
 
     NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
     NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
+    
+    NS_IMETHOD GetFilePath(const nsFileSpec ** aFilePath);
 
 	// from nsIMsgMailNewsUrl:
 	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
@@ -118,6 +120,8 @@ protected:
 	PRBool		m_runningUrl;
     
     nsINNTPNewsgroupPost *m_newsgroupPost;
+    
+    nsFileSpec	*m_filePath; 
 
 	// manager of all of current url listeners....
 	nsIUrlListenerManager * m_urlListeners;
