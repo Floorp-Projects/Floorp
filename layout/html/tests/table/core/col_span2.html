@@ -1,4 +1,4 @@
-this fixes a bug
+this fixes a bug - 5.0 allocates colspans from right to left - Nav4.6 goes left to right
 <table width=100 border>
  <tr>
   <td colspan=3>xxxxxxxxxxxx</td>
@@ -15,6 +15,23 @@ this fixes a bug
  </tr>
 </table>
 <BR>
+this is like the previous one except the relative sizes of the colspan content is reversed
+<table bgcolor=lime width=100 border>
+ <tr>
+  <td colspan=3>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</td>
+  <td>y</td></tr>
+ <tr>
+  <td>x</td>
+  <td>x</td>
+  <td>x</td>
+  <td>y</td>
+ </tr>
+ <tr>
+  <td>x</td>
+  <td colspan=3>yyyyyyyyyyyyy</td>
+ </tr>
+</table>
+<BR>
 <table width=10 border>
  <tr>
   <td colspan=2>xxxxxxxxxx</td></tr>
@@ -23,7 +40,7 @@ this fixes a bug
   <td>xx</td></tr>
 </table>
 <BR>
-<table widthx=100 border>
+<table bgcolor=red widthx=100 border>
  <tr>
   <td colspan=3>xxxxxx</td>
   <td>y</td></tr>
@@ -56,7 +73,7 @@ this fixes a bug
  </tr>
 </table>
 <BR>
-<table width=100 border>
+<table bgcolor=orange width=100 border>
  <tr>
   <td colspan=3>yyyyyyyyyyyyyyyyy</td>
   <td>y</td></tr>
@@ -72,7 +89,7 @@ this fixes a bug
  </tr>
 </table>
 <BR>
-<table border>
+<table bgcolor=yellow border>
  <tr>
   <td colspan=3>xxxxxxxxxxxxxxxxx</td></tr>
  <tr>
@@ -92,7 +109,7 @@ this fixes a bug
  </tr>
 </table>
 <BR>
-<table border>
+<table bgcolor=blue border>
  <tr>
   <td colspan=3>xxxxxxxxxxxxxxxxx</td></tr>
  <tr>
@@ -121,7 +138,7 @@ this fixes a bug
   <td colspan=2 width=200>200CS2</td></tr>
 </table>
 <BR>
-<table border>
+<table bgcolor=lime border>
  <tr>
   <td width=50>foo</td>
   <td width=50>foo</td></tr>
@@ -129,9 +146,9 @@ this fixes a bug
   <td colspan=2 width=200>foo</td></tr>
 </table>
 <BR>
-<table border>
+<table bgcolor=violet border>
  <tr>
-  <td colspan=3><img src=raptor.jpg width=600 height=100></td>
+  <td colspan=3><img src=../images/raptor.jpg width=600 height=100></td>
  <tr>
   <td width=100>100
   <td width=100>100
@@ -151,7 +168,7 @@ this fixes a bug
 fixed table - spanned cols based on fix widths
 <BR>
 <hr align=left style="width:400px;">
-<table border cellspacing=5>
+<table bgcolor=orange border cellspacing=5>
  <tr>
   <td colspan=2 width=400>400CS2</td>
   <td width=100>100</td></tr>
@@ -161,7 +178,7 @@ fixed table - spanned cols based on fix widths
   <td>auto</tr>
 </table>
 <BR>
-<table border cellspacing=5>
+<table bgcolor=gray border cellspacing=5>
  <tr>
   <td colspan=2>auto auto auto auto auto auto auto</td>
   <td width=100>100</td></tr>
@@ -171,7 +188,7 @@ fixed table - spanned cols based on fix widths
   <td>auto</tr>
 </table>
 <BR>
-<table border cellspacing=5>
+<table bgcolor=lime border cellspacing=5>
  <tr>
   <td colspan=2>auto auto auto auto auto auto auto</td>
   <td width=100>100</td></tr>
@@ -201,7 +218,7 @@ fixed table - spanned cols based on fix widths
   <td>auto</tr>
 </table>
 <BR>
-<table border cellspacing=5>
+<table bgoolor=orange border cellspacing=5>
  <tr>
   <td colspan=2>auto auto auto auto auto auto auto</td>
   <td width=100>100</td></tr>
@@ -221,7 +238,7 @@ fixed table - spanned cols based on fix widths
   <td>auto</tr>
 </table>
 <BR>
-<table width=500 border cellspacing=5>
+<table bgcolor=brown width=500 border cellspacing=5>
  <tr>
   <td colspan=2 width=80%>80% 80% 80% 80% 80% 80%</td>
   <td>auto</td></tr>
@@ -241,7 +258,7 @@ fixed table - spanned cols based on fix widths
   <td>auto</tr>
 </table>
 <BR>
-<table width=500 border cellspacing=5>
+<table bgcolor=gray width=500 border cellspacing=5>
  <tr>
   <td colspan=2 width=80%>80% 80% 80% 80% 80% 80%</td>
   <td>auto</td></tr>
@@ -250,7 +267,7 @@ fixed table - spanned cols based on fix widths
   <td width=66%>66%</td>
   <td>auto</tr>
 </table>
-<table width=500 border cellspacing=5>
+<table bgcolor=yellow width=500 border cellspacing=5>
  <tr>
   <td colspan=2 width=30%>30% 30% 30% 30% 30% 30%</td>
   <td>auto</td></tr>
@@ -436,7 +453,7 @@ PERCENT COLSPANS
 <hr align=left style="width:600px;">
 <table border cellspacing=5>
  <tr>
-  <td colspan=3><img src=raptor.jpg width=600 height=100></td>
+  <td colspan=3><img src=../images/raptor.jpg width=600 height=100></td>
   <td>foo</td></tr>
  <tr>
   <td width=100>foo
@@ -509,7 +526,7 @@ min colspan is based on min with no fix involved - IE uses max(min,des)
   <td>xxx</td></tr>
 </table>
 <BR>
-min colspan is based on max(min,des) but must exceed min with no fix involved
+adj min is based on min with no fix involved
 <table width=50 border>
  <tr>
   <td colspan=2>xxxxxxxxxxxxxxxxxxxyyyyyyy</td></tr>
@@ -518,12 +535,28 @@ min colspan is based on max(min,des) but must exceed min with no fix involved
   <td>xxxxxxxxxxxxxxxxxx</td></tr>
 </table>
 <BR>
-min colspan is based on max(min,des,fix) 
-<table width=50 border>
+adj min is based on max(min, fix) differs from Nav4.6 which differs from IE5
+<table bgcolor=lime width=50 border>
  <tr>
-  <td colspan=2>xxxxxxxxxxxxxxxxxxx</td></tr>
+  <td colspan=2>xxxxxxxcolspan2xxxxxxxxx</td></tr>
  <tr>
   <td>x x x</td>
+  <td width=100>100</td></tr>
+</table>
+<BR>
+<table bgcolor=lime width=50 border>
+ <tr>
+  <td colspan=2>xxxxxxxcolspan2xxxxxxxxx</td></tr>
+ <tr>
+  <td>x x x</td>
+  <td width=100>100 100 100</td></tr>
+</table>
+<BR>
+<table bgcolor=lime width=50 border>
+ <tr>
+  <td colspan=2>xxxxxxxcolspan2xxxxxxxxx</td></tr>
+ <tr>
+  <td>xxx xxx xxx</td>
   <td width=100>100</td></tr>
 </table>
 <BR>
