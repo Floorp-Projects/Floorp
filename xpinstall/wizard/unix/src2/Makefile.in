@@ -52,7 +52,7 @@ LIBS        = \
         -lpthread \
         $(NULL)
 
-LOCAL_INCLUDES += -I../../../stub
+LOCAL_INCLUDES += -I$(srcdir)/../../../stub
 
 include $(topsrcdir)/config/rules.mk
 
