@@ -307,7 +307,7 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAString& aPropertyName,
 
 #ifdef DEBUG_ComputedDOMStyle
   if (i == length) {
-    NS_WARNING(PromiseFlatCString(aPropertyName + 
+    NS_WARNING(PromiseFlatCString(NS_ConvertUCS2toUTF8(aPropertyName) + 
                                   NS_LITERAL_CSTRING(" is not queryable!")).get());
   }
 #endif
@@ -1564,12 +1564,7 @@ nsComputedDOMStyle::GetTextIndent(nsIFrame *aFrame,
   const nsStyleText *text = nsnull;
   GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)text, aFrame);
 
-  // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->FlushPendingNotifications();
-  }
+  FlushPendingReflows();
 
   if (text) {
     switch (text->mTextIndent.GetUnit()) {
@@ -2286,13 +2281,8 @@ nsComputedDOMStyle::GetHeight(nsIFrame *aFrame,
   
   if (aFrame) {
     calcHeight = PR_TRUE;
-    // Flush all pending notifications so that our frames are up to date
-    nsCOMPtr<nsIDocument> document;
-    mContent->GetDocument(*getter_AddRefs(document));
 
-    if (document) {
-      document->FlushPendingNotifications();
-    }
+    FlushPendingReflows();
   
     const nsStyleDisplay* displayData = nsnull;
     GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData,
@@ -2369,13 +2359,8 @@ nsComputedDOMStyle::GetWidth(nsIFrame *aFrame,
 
   if (aFrame) {
     calcWidth = PR_TRUE;
-    // Flush all pending notifications so that our frames are up to date
-    nsCOMPtr<nsIDocument> document;
-    mContent->GetDocument(*getter_AddRefs(document));
-  
-    if (document) {
-      document->FlushPendingNotifications();
-    }
+
+    FlushPendingReflows();
 
     const nsStyleDisplay *displayData = nsnull;
     GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)displayData,
@@ -2451,12 +2436,7 @@ nsComputedDOMStyle::GetMaxHeight(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData,
                aFrame);
 
-  // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->FlushPendingNotifications();
-  }
+  FlushPendingReflows();
 
   if (positionData) {
     nsIFrame *container = nsnull;
@@ -2522,12 +2502,7 @@ nsComputedDOMStyle::GetMaxWidth(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData,
                aFrame);
 
-  // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->FlushPendingNotifications();
-  }
+  FlushPendingReflows();
 
   if (positionData) {
     nsIFrame *container = nsnull;
@@ -2593,12 +2568,7 @@ nsComputedDOMStyle::GetMinHeight(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData,
                aFrame);
 
-  // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->FlushPendingNotifications();
-  }
+  FlushPendingReflows();
 
   if (positionData) {
     nsIFrame *container = nsnull;
@@ -2646,12 +2616,7 @@ nsComputedDOMStyle::GetMinWidth(nsIFrame *aFrame,
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)positionData,
                aFrame);
 
-  // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->FlushPendingNotifications();
-  }
+  FlushPendingReflows();
 
   if (positionData) {
     nsIFrame *container = nsnull;
@@ -2730,12 +2695,7 @@ nsComputedDOMStyle::GetOffsetWidthFor(PRUint8 aSide, nsIFrame* aFrame,
   const nsStyleDisplay* display = nsnull;
   GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display, aFrame);
 
-  // Flush all pending notifications so that our frames are up to date
-  nsCOMPtr<nsIDocument> document;
-  mContent->GetDocument(*getter_AddRefs(document));
-  if (document) {
-    document->FlushPendingNotifications();
-  }
+  FlushPendingReflows();
 
   nsresult rv = NS_OK;
   if (display) {
@@ -3003,6 +2963,16 @@ nsComputedDOMStyle::GetStaticOffset(PRUint8 aSide, nsIFrame* aFrame,
   return CallQueryInterface(val, aValue);
 }
 
+void
+nsComputedDOMStyle::FlushPendingReflows()
+{
+  // Flush all pending notifications so that our frames are up to date
+  nsCOMPtr<nsIDocument> document;
+  mContent->GetDocument(*getter_AddRefs(document));
+  if (document) {
+    document->FlushPendingNotifications();
+  }
+}
 
 nsIFrame*
 nsComputedDOMStyle::GetContainingBlock(nsIFrame *aFrame)
@@ -3070,6 +3040,8 @@ nsComputedDOMStyle::GetPaddingWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  FlushPendingReflows();
   
   nscoord width = GetPaddingWidthCoordFor(aSide, aFrame);
   val->SetTwips(width);
@@ -3405,6 +3377,8 @@ nsComputedDOMStyle::GetMarginWidthFor(PRUint8 aSide, nsIFrame *aFrame,
 {
   nsROCSSPrimitiveValue* val = GetROCSSPrimitiveValue();
   NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  FlushPendingReflows();
 
   nscoord width = GetMarginWidthCoordFor(aSide, aFrame);
   val->SetTwips(width);

@@ -71,6 +71,8 @@ public:
   static void Shutdown();
 
 private:
+  void FlushPendingReflows();
+  
   nsIFrame* GetContainingBlock(nsIFrame *aFrame);
 
   nsresult GetStyleData(nsStyleStructID aID,
