@@ -1583,16 +1583,16 @@ nsGenericHTMLElement::GetHrefURIForAnchors(nsIURI** aURI)
   // nsHTMLStyleElement.
 
   // Get href= attribute (relative URI).
-  nsAutoString relURISpec;
 
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, relURISpec)) {
+  // We use the nsAttrValue's copy of the URI string to avoid copying.
+  const nsAttrValue* attr = mAttrsAndChildren.GetAttr(nsHTMLAtoms::href);
+  if (attr) {
     // Get base URI.
     nsCOMPtr<nsIURI> baseURI = GetBaseURI();
 
     // Get absolute URI.
     nsresult rv = nsContentUtils::NewURIWithDocumentCharset(aURI,
-                                                            relURISpec,
+                                                            attr->GetStringValue(),
                                                             GetOwnerDoc(),
                                                             baseURI);
     if (NS_FAILED(rv)) {
