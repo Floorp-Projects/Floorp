@@ -166,6 +166,54 @@ function test2() {
 	}
 }
 
+function eudoraAddress() {
+	dump( "eudora addresses\n");
+
+	dump( "Loading outlook express component\n");
+	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded eudora import module\n");
+
+	dump( "Getting address book interface\n");
+
+	var addInterface = module.GetImportInterface( "addressbook");
+	addInterface = addInterface.QueryInterface( Components.interfaces.nsIImportGeneric);
+
+	dump( "Got the address book interface\n");
+	
+	var loc = addInterface.GetData( "addressLocation");
+
+	dump( "Address location: " + loc + "\n");
+
+	if (addInterface.WantsProgress()) {
+		dump( "Beginning address import with progress\n");
+		if (addInterface.BeginImport( null, null)) {
+			var count = 0;
+			dump( "Importing ");
+			while (addInterface.ContinueImport() && (addInterface.GetProgress() < 100)) {
+				count = count + 1;
+				if (count > 100) {
+					dump( ".");
+					count = 0;
+				}
+			}
+			dump( "\nImport address finished\n");
+		}
+		else {
+			dump( "BeginImport address returned failure\n");
+		}
+	}
+	else {
+		if (addInterface.BeginImport( null, null)) {
+			dump( "BeginImport address successful without progress\n");
+		}
+		else {
+			dump( "BeginImport address FAILED without progress\n");
+		}
+	}
+}
+
 function test3() {
 	dump( "test3\n");
 	dump( "Loading outlook express component\n");
@@ -190,6 +238,31 @@ function test3() {
 	}
 }
 
+function eudoraSettings() {
+	dump( "test3\n");
+	dump( "Loading eudora component\n");
+	var module = Components.classes["component://mozilla/import/import-eudora"].createInstance();
+	module = module.QueryInterface(Components.interfaces.nsIImportModule);
+	
+	dump( "Loaded eudora import module\n");
+	dump( "Getting the settings interface\n");
+
+	var setInterface = module.GetImportInterface( "settings");
+	setInterface = setInterface.QueryInterface( Components.interfaces.nsIImportSettings);
+
+	dump( "Got the settings interface\n");
+
+	var location = new Object();
+	if (setInterface.Import( location)) {
+		dump( "Settings import returned success\n");
+		dump( "Location: " + location + "\n");
+	}
+	else {
+		dump( "Settings import returned failure\n");
+	}
+}
+
+
 </script>
 
 <p>
@@ -197,7 +270,9 @@ function test3() {
 <input type="button" value="Import Outlook Express Mail" onclick="test1();"><br>
 <input type="button" value="Import Outlook Express Address Book" onclick="test2();"><br>
 <input type="button" value="Import Outlook Express Settings" onclick="test3();"><br>
-<input type="button" value="Import Eudora Mail" onclick="eudoraMail();">
+<input type="button" value="Import Eudora Mail" onclick="eudoraMail();"><br>
+<input type="button" value="Import Eudora Address" onclick="eudoraAddress();"><br>
+<input type="button" value="Import Eudora Settings" onclick="eudoraSettings();">
 <form> 
 
 </body>
