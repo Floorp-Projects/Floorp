@@ -1000,7 +1000,7 @@ PUBLIC void FE_EditFormattingUpdate( MWContext *pContext );
 /*
  * Dialog to confirm change of document encoding.
  */
-PUBLIC ED_CharsetEncode FE_EncodingDialog(MWContext* pContext); 
+PUBLIC ED_CharsetEncode FE_EncodingDialog(MWContext* pMWContext, char *pCharSet);
 
 /* 
  * Brings up a modal image load dialog and returns.  Calls

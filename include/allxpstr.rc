@@ -6527,7 +6527,7 @@ ResDef(XP_EDT_CHARSET_EDIT_SUGGESTED, (XP_MSG_BASE + 855),
 ResDef(XP_EDT_CHARSET_CONVERT_PAGE, (XP_MSG_BASE + 856),
 "This may alter some of the characters in your page.\nYou cannot undo this action.")
 ResDef(XP_EDT_CHARSET_SET_METATAG, (XP_MSG_BASE + 857),
-"This only changes the Content-Type tag saved with the page.\nIt will not convert any characters in your page.")
+"This only changes the Content-Type information saved with the page.\nIt will not convert any characters in your page.")
 
 
 ResDef(MK_ADDR_DELETE_ALL, XP_MSG_BASE+860, "Delete From All Lists")  /* new entry in address book context menus - delete all from list */
@@ -6910,11 +6910,6 @@ ResDef (MK_CACHE_USES_RELATIVE_PATH, XP_MSG_BASE + 1015,
     "Uses relative path:")
 ResDef (MK_CACHE_FROM_NETSITE_SERVER, XP_MSG_BASE + 1016,
     "From Netsite Server:")
-
-ResDef (XP_EDT_I18N_HAS_CHARSET, XP_MSG_BASE + 1017,
-  "Changing the character encoding may alter some\n\
-of the characters in your document.\n\
-This change cannot be undone.")
 
 ResDef (XP_EDT_BREAKING_LINKS, XP_MSG_BASE + 1018,
   "The following links could become invalid because\n\
