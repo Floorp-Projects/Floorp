@@ -29,6 +29,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
+ *  $Id: mpmontg.c,v 1.2 2000/07/30 06:37:14 nelsonb%netscape.com Exp $
  */
 
 /* This file implements moduluar exponentiation using Montgomery's
@@ -46,8 +47,12 @@
 #include "mpprime.h"
 
 #define MP_CHECKOK(x) if (MP_OKAY != (rv = (x))) goto loser
+#define MP_CHECKERR(x) if (0 > (rv = (x))) goto loser
 #define STATIC
 /* #define DEBUG 1  */
+
+#define WINDOW_BITS 5
+#define ODD_INTS    16   /* 2 ** (WINDOW_BITS - 1) */
 
 typedef struct {
   mp_int       N;	/* modulus N */
@@ -171,20 +176,100 @@ mp_err mp_exptmod(mp_int *inBase, mp_int *exponent, mp_int *modulus,
 
   MP_CHECKOK( mp_to_mont(base, &mmm, &square) );
 
-  if (mp_isodd(exponent)) {
-    mp_copy(&square, &accum);
-  } else {
+  bits_in_exponent = mpl_significant_bits(exponent);
+  i = bits_in_exponent % WINDOW_BITS;
+  if (i != 0) {
+    bits_in_exponent += WINDOW_BITS - i;
+  } 
+  {
+    /* oddPowers[i] = base ** (2*i + 1); */
+    /* power2 = base ** 2; */
+    int expOff;
+    mp_int power2, oddPowers[ODD_INTS];
+
+    mp_init(oddPowers);
+    MP_CHECKOK( mp_copy(&square, oddPowers));
+
+    mp_init(&power2);
+    MP_CHECKOK( mp_sqr(&square, &power2) );	/* square = square ** 2 */
+    MP_CHECKOK( s_mp_redc(&power2, &mmm) );
+
+    for (i = 1; i < ODD_INTS; ++i) {
+      mp_init(oddPowers + i);
+      MP_CHECKOK( mp_mul(oddPowers + (i - 1), &power2, oddPowers + i) );
+      MP_CHECKOK( s_mp_redc(oddPowers + i, &mmm) );
+    }
     mp_set(&accum, 1);
     MP_CHECKOK( mp_to_mont(&accum, &mmm, &accum) );
-  }
-  bits_in_exponent = mpl_significant_bits(exponent);
-  for (i = 1; i < bits_in_exponent; ++i) {
-    MP_CHECKOK( s_mp_sqr(&square));		/* square = square ** 2 */
-    MP_CHECKOK( s_mp_redc(&square, &mmm));
-    rv = mpl_get_bit(exponent, i);  if (rv < 0) goto loser;
-    if (rv) {
-      MP_CHECKOK( s_mp_mul(&accum, &square));	/* accum *= square */
-      MP_CHECKOK( s_mp_redc(&accum, &mmm));
+
+#define SQUARE \
+    MP_CHECKOK( s_mp_sqr(&accum) );\
+    MP_CHECKOK( s_mp_redc(&accum, &mmm) )
+#define MUL(x) \
+    MP_CHECKOK( s_mp_mul(&accum, oddPowers + (x)) ); \
+    MP_CHECKOK( s_mp_redc(&accum, &mmm))
+
+    for (expOff = bits_in_exponent - WINDOW_BITS; expOff >= 0; expOff -= WINDOW_BITS) {
+      mp_size smallExp;
+      MP_CHECKERR( mpl_get_bits(exponent, expOff, WINDOW_BITS) );
+      smallExp = (mp_size)rv;
+
+#if WINDOW_BITS == 4
+      if (!smallExp) {
+		SQUARE; SQUARE; SQUARE; SQUARE;
+      } else if (smallExp & 1) {
+		SQUARE; SQUARE; SQUARE; SQUARE; MUL(smallExp/2);
+      } else if (smallExp & 2) {
+		SQUARE; SQUARE; SQUARE; MUL(smallExp/4); SQUARE;
+      } else if (smallExp & 4) {
+		SQUARE; SQUARE; MUL(smallExp/8); SQUARE; SQUARE;
+      } else if (smallExp & 8) {
+		SQUARE; MUL(smallExp/16); SQUARE; SQUARE; SQUARE;
+      } else {
+		abort();
+      }
+#elif WINDOW_BITS == 5
+      if (!smallExp) {
+		SQUARE; SQUARE; SQUARE; SQUARE; SQUARE;
+      } else if (smallExp & 1) {
+		SQUARE; SQUARE; SQUARE; SQUARE; SQUARE; MUL(smallExp/2);
+      } else if (smallExp & 2) {
+		SQUARE; SQUARE; SQUARE; SQUARE; MUL(smallExp/4); SQUARE;
+      } else if (smallExp & 4) {
+		SQUARE; SQUARE; SQUARE; MUL(smallExp/8); SQUARE; SQUARE;
+      } else if (smallExp & 8) {
+		SQUARE; SQUARE; MUL(smallExp/16); SQUARE; SQUARE; SQUARE;
+      } else if (smallExp & 0x10) {
+		SQUARE; MUL(smallExp/32); SQUARE; SQUARE; SQUARE; SQUARE;
+      } else {
+		abort();
+      }
+#elif WINDOW_BITS == 6
+      if (!smallExp) {
+	      SQUARE; SQUARE; SQUARE; SQUARE; SQUARE; SQUARE;
+      } else if (smallExp & 1) {
+	      SQUARE; SQUARE; SQUARE; SQUARE; SQUARE; SQUARE; MUL(smallExp/2);
+      } else if (smallExp & 2) {
+	      SQUARE; SQUARE; SQUARE; SQUARE; SQUARE; MUL(smallExp/4); SQUARE;
+      } else if (smallExp & 4) {
+	      SQUARE; SQUARE; SQUARE; SQUARE; MUL(smallExp/8); SQUARE; SQUARE;
+      } else if (smallExp & 8) {
+	      SQUARE; SQUARE; SQUARE; MUL(smallExp/16); SQUARE; SQUARE; SQUARE;
+      } else if (smallExp & 0x10) {
+	      SQUARE; SQUARE; MUL(smallExp/32); SQUARE; SQUARE; SQUARE; SQUARE;
+      } else if (smallExp & 0x20) {
+	      SQUARE; MUL(smallExp/64); SQUARE; SQUARE; SQUARE; SQUARE; SQUARE;
+      } else {
+		abort();
+      }
+#else
+#error "Unknown value for WINDOW_BITS"
+#endif
+    }
+
+    mp_clear(&power2);
+    for (i = 0; i < ODD_INTS; ++i) {
+      mp_clear(oddPowers + i);
     }
   }
   rv = s_mp_redc(&accum, &mmm);
