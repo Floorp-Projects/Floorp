@@ -38,7 +38,30 @@ CPPSRCS = \
 	$(DEPTH)/webshell/tests/viewer/nsStubs.cpp \
 	$(NULL)
 
-LIBS := \
+ifndef NECKO
+LIBS := 	\
+	-lnetlib \
+	-lremoturl \
+	-lnetcnvts \
+	-lgophurl \
+	-labouturl \
+	-lsockstuburl \
+	-lhttpurl \
+	-lmimetype \
+	-lfileurl \
+	-lftpurl \
+	-lpwcac \
+	-lnetwork \
+	-lnetcache \
+	$(NULL)
+
+else
+LIBS := 	\
+	-lneckoutil_s \
+	$(NULL)
+endif
+
+LIBS += \
 	-lraptorgfx \
 	-lpref \
 	-lsecfree \
@@ -63,29 +86,6 @@ LIBS := \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \
 	$(NULL)
-
-ifndef NECKO
-LIBS += 	\
-	-lnetlib \
-	-lremoturl \
-	-lnetcnvts \
-	-lgophurl \
-	-labouturl \
-	-lsockstuburl \
-	-lhttpurl \
-	-lmimetype \
-	-lfileurl \
-	-lftpurl \
-	-lpwcac \
-	-lnetwork \
-	-lnetcache \
-	$(NULL)
-
-else
-LIBS += 	\
-	-lneckoutil_s \
-	$(NULL)
-endif
 
 CFLAGS += $(TOOLKIT_CFLAGS)
 CXXFLAGS += $(TOOLKIT_CXXFLAGS)
