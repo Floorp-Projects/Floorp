@@ -20,13 +20,19 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Mike Pinkerton (pinkerton@netscape.com)
  */
+
+#ifndef NSXULTREEGROUPFRAME
+#define NSXULTREEGROUPFRAME
+
 
 #include "nsBoxFrame.h"
 #include "nsIXULTreeSlice.h"
 
 class nsCSSFrameConstructor;
 class nsXULTreeOuterGroupFrame;
+class nsTreeItemDragCapturer;
 
 class nsXULTreeGroupFrame : public nsBoxFrame, public nsIXULTreeSlice
 {
@@ -52,6 +58,14 @@ public:
     mPresContext = aContext;
     mOuterFrame = aOuterFrame;
   }
+
+    // overridden for d&d setup and feedback
+  NS_IMETHOD Init ( nsIPresContext*  aPresContext, nsIContent* aContent,
+                      nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow) ;
+  NS_IMETHOD Paint(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+                    const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer);
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext, nsIContent* aChild,
+                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint) ;
 
   nsXULTreeOuterGroupFrame* GetOuterFrame() { return mOuterFrame; };
   nsIBox* GetFirstTreeBox();
@@ -90,7 +104,25 @@ public:
   void SetContentChain(nsISupportsArray* aContentChain);
   void InitSubContentChain(nsXULTreeGroupFrame* aRowGroupFrame);
 
-protected: // Data Members
+protected: 
+
+    // handle drawing the drop feedback
+  void PaintDropFeedback ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+                             PRBool aPaintSorted ) ;
+  void PaintSortedDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext, float & inP2T ) ;
+  void PaintOnContainerDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext, 
+                                        nsIPresContext* inPresContext, float & inP2T ) ;
+  void PaintInBetweenDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext, 
+                                        nsIPresContext* inPresContext, float & inP2T ) ;
+
+    // helpers for drop feedback
+  PRInt32 FindIndentation ( nsIPresContext* inPresContext, nsIFrame* inStartFrame ) const ;
+  void FindFirstChildTreeItemFrame ( nsIPresContext* inPresContext, nsIFrame** outChild ) const ;
+  PRBool IsOpenContainer ( ) const ;
+  nscolor GetColorFromStyleContext ( nsIPresContext* inPresContext, nsIAtom* inAtom, 
+                                       nscolor inDefaultColor ) ;
+  static void ForceDrawFrame ( nsIPresContext* aPresContext, nsIFrame * aFrame ) ;
+
   nsCSSFrameConstructor* mFrameConstructor; // We don't own this. (No addref/release allowed, punk.)
   nsIPresContext* mPresContext;
   nsXULTreeOuterGroupFrame* mOuterFrame;
@@ -99,4 +131,19 @@ protected: // Data Members
   nsIFrame* mBottomFrame;
   nsIFrame* mLinkupFrame;
   nsISupportsArray* mContentChain; // Our content chain
+  
+  // -- members for drag and drop --
+  
+    // our event capturer registered with the content model. See the discussion
+    // in Init() for why this is a weak ref.
+  nsTreeItemDragCapturer* mDragCapturer;
+
+    // only used during drag and drop for drop feedback. These are not
+    // guaranteed to be meaningful when no drop is underway.
+  PRInt32 mYDropLoc;
+  PRPackedBool mDropOnContainer;
+
 }; // class nsXULTreeGroupFrame
+
+
+#endif

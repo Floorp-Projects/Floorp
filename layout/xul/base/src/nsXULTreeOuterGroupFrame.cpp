@@ -33,6 +33,8 @@
 #include "nsISupportsArray.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsIDocument.h"
+#include "nsTreeItemDragCapturer.h"
+
 
 #define TICK_FACTOR 50
 
@@ -64,7 +66,8 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal),
- mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mTwipIndex(0)
+ mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mTwipIndex(0),
+ mTreeIsSorted(PR_FALSE)
 {}
 
 // Destructor
@@ -865,4 +868,53 @@ nsXULTreeOuterGroupFrame::IndexOfItem(nsIContent* aRoot, nsIContent* aContent,
   // not found
   return NS_ERROR_FAILURE;
 }
+
+
+//
+// Paint
+//
+// Overridden to handle the case where we should be drawing the tree as sorted.
+//
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+                                      const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer)
+{
+  nsresult res = NS_OK;
+  res = nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+  
+  if ( (aWhichLayer == eFramePaintLayer_Content) &&
+        (mYDropLoc != nsTreeItemDragCapturer::kNoDropLoc || mDropOnContainer || mTreeIsSorted) )
+    PaintDropFeedback ( aPresContext, aRenderingContext, PR_TRUE );
+
+  return res;
+
+} // Paint
+
+
+//
+// AttributeChanged
+//
+// Track several attributes set by the d&d drop feedback tracking mechanism, notably
+// telling us to paint as sorted
+//
+NS_IMETHODIMP
+nsXULTreeOuterGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
+                                                 PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+{
+  nsresult rv = NS_OK;
+   
+  if ( aAttribute == nsXULAtoms::ddTriggerRepaintSorted ) {
+    // Set a flag so that children won't draw the drop feedback but the parent
+    // will.
+    mTreeIsSorted = PR_TRUE;
+    ForceDrawFrame ( aPresContext, this );
+    mTreeIsSorted = PR_FALSE;
+  }
+  else
+    rv = nsXULTreeGroupFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
+
+  return rv;
+ 
+} // AttributeChanged
+
 

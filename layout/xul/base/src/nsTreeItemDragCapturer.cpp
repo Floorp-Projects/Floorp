@@ -49,8 +49,8 @@ NS_IMPL_QUERY_INTERFACE2(nsTreeItemDragCapturer, nsIDOMEventListener, nsIDOMDrag
 // Init member variables. We can't really do much of anything important here because
 // any subframes might not be totally intialized yet, or in the hash table
 //
-nsTreeItemDragCapturer :: nsTreeItemDragCapturer ( nsTreeRowGroupFrame* inGroup, nsIPresContext* inPresContext )
-  : mTreeItem(inGroup), mPresContext(inPresContext), mCurrentDropLoc(kNoDropLoc)
+nsTreeItemDragCapturer :: nsTreeItemDragCapturer ( nsIFrame* inTreeItem, nsIPresContext* inPresContext )
+  : mTreeItem(inTreeItem), mPresContext(inPresContext), mCurrentDropLoc(kNoDropLoc)
 {
   NS_INIT_REFCNT();
   

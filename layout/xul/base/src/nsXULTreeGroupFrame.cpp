@@ -20,6 +20,7 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Mike Pinkerton (pinkerton@netscape.com)
  */
 
 #include "nsCOMPtr.h"
@@ -27,6 +28,22 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsBoxLayoutState.h"
 #include "nsISupportsArray.h"
+#include "nsTreeItemDragCapturer.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMElement.h"
+#include "nsIRenderingContext.h"
+#include "nsIDeviceContext.h"
+#include "nsXULAtoms.h"
+#include "nsIViewManager.h"
+#include "nsINameSpaceManager.h"
+#include "nsXULTreeOuterGroupFrame.h"
+
+
+//
+// Prototypes
+//
+static void LocateIndentationFrame ( nsIPresContext* aPresContext, nsIFrame* aParentFrame,
+                                        nsIFrame** aResult ) ;
 
 //
 // NS_NewXULTreeGroupFrame
@@ -73,13 +90,57 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 nsXULTreeGroupFrame::nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager, PRBool aIsHorizontal)
 :nsBoxFrame(aPresShell, aIsRoot, aLayoutManager, aIsHorizontal), mFrameConstructor(nsnull), mPresContext(nsnull),
  mOuterFrame(nsnull), mAvailableHeight(10000), mTopFrame(nsnull), mBottomFrame(nsnull), mLinkupFrame(nsnull),
- mContentChain(nsnull)
+ mContentChain(nsnull), mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc), mDropOnContainer(PR_FALSE)
 {}
 
 // Destructor
 nsXULTreeGroupFrame::~nsXULTreeGroupFrame()
 {
+  nsCOMPtr<nsIContent> content;
+  GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
+
+  // NOTE: the last Remove will delete the drag capturer
+  if ( receiver ) {
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragCapturer, PR_TRUE);
+    receiver->RemoveEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragCapturer, PR_TRUE);
+  }
+  
 }
+
+
+//
+// Init
+//
+// Setup event capturers for drag and drop. Our frame's lifetime is bounded by the
+// lifetime of the content model, so we're guaranteed that the content node won't go away on us. As
+// a result, our drag capturer can't go away before the frame is deleted. Since the content
+// node holds owning references to our drag capturer, which we tear down in the dtor, there is no 
+// need to hold an owning ref to it ourselves.
+//
+NS_IMETHODIMP
+nsXULTreeGroupFrame::Init ( nsIPresContext* aPresContext, nsIContent* aContent,
+                             nsIFrame* aParent, nsIStyleContext* aContext, nsIFrame* aPrevInFlow )
+{
+  nsresult retVal = nsBoxFrame::Init ( aPresContext, aContent, aParent, aContext, aPrevInFlow );
+  
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(aContent));
+  if ( NS_SUCCEEDED(retVal) && receiver ) {
+    // register our drag over and exit capturers. These annotate the content object
+    // with enough info to determine where the drop would happen so that JS down the 
+    // line can do the right thing.
+    nsresult rv1, rv2;
+    mDragCapturer = new nsTreeItemDragCapturer(this, aPresContext);
+    rv1 = receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragover"), mDragCapturer, PR_TRUE);
+    rv2 = receiver->AddEventListener(NS_ConvertASCIItoUCS2("dragexit"), mDragCapturer, PR_TRUE);
+    NS_ASSERTION ( NS_SUCCEEDED(rv1) && NS_SUCCEEDED(rv2), "Couldn't hookup drag capturer on tree" );
+  }
+  
+  // it's ok to ignore the failure of the event listeners. Nothing bad will come of it.
+  return retVal;
+  
+} // Init
+
 
 void nsXULTreeGroupFrame::LocateFrame(nsIFrame* aStartFrame, nsIFrame** aResult)
 {
@@ -524,3 +585,403 @@ void nsXULTreeGroupFrame::InitSubContentChain(nsXULTreeGroupFrame* aRowGroupFram
     SetContentChain(nsnull);
   }
 }
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+
+//
+// [ Drag And Drop Methods ]
+//
+// These will hopefully all go away (and their 20K of extra code) when we convert over
+// to using the style system to do drop feedback.
+//
+
+
+//
+// ForceDrawFrame
+//
+// Force this frame to drop and give me twenty.
+// NOTE: try to consolodate with the version in the toolbar code.
+//
+void
+nsXULTreeGroupFrame :: ForceDrawFrame(nsIPresContext* aPresContext, nsIFrame * aFrame)
+{
+  if (aFrame == nsnull) {
+    return;
+  }
+  nsRect    rect;
+  nsIView * view;
+  nsPoint   pnt;
+  aFrame->GetOffsetFromView(aPresContext, pnt, &view);
+  aFrame->GetRect(rect);
+  rect.x = pnt.x;
+  rect.y = pnt.y;
+  if (view) {
+    nsCOMPtr<nsIViewManager> viewMgr;
+    view->GetViewManager(*getter_AddRefs(viewMgr));
+    if (viewMgr)
+      viewMgr->UpdateView(view, rect, NS_VMREFRESH_AUTO_DOUBLE_BUFFER | NS_VMREFRESH_IMMEDIATE);
+  }
+
+} // ForceDrawFrame
+
+
+//
+// AttributeChanged
+//
+// Track several attributes set by the d&d drop feedback tracking mechanism. The first
+// is the "dd-triggerrepaint" attribute so JS can trigger a repaint when it
+// needs up update the drop feedback. The second is the x (or y, if bar is vertical) 
+// coordinate of where the drop feedback bar should be drawn.
+//
+NS_IMETHODIMP
+nsXULTreeGroupFrame :: AttributeChanged ( nsIPresContext* aPresContext, nsIContent* aChild,
+                                           PRInt32 aNameSpaceID, nsIAtom* aAttribute, PRInt32 aHint)
+{
+  nsresult rv = NS_OK;
+  PRInt32 ignore;
+  
+  if ( aAttribute == nsXULAtoms::ddTriggerRepaint )
+    ForceDrawFrame ( aPresContext, this );
+  else if ( aAttribute == nsXULAtoms::ddTriggerRepaintRestore ) {
+    // Repaint the entire tree with no special attributes set.
+    ForceDrawFrame ( aPresContext, NS_REINTERPRET_CAST(nsIFrame*, mOuterFrame) );
+  }
+  else if ( aAttribute == nsXULAtoms::ddDropLocationCoord ) {
+    nsAutoString attribute;
+    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    mYDropLoc = attribute.ToInteger(&ignore);
+  }
+  else if ( aAttribute == nsXULAtoms::ddDropOn ) {
+    nsAutoString attribute;
+    aChild->GetAttribute ( kNameSpaceID_None, aAttribute, attribute );
+    attribute.ToLowerCase();
+    mDropOnContainer = attribute.EqualsWithConversion("true");
+  }
+  else
+    rv = nsBoxFrame::AttributeChanged ( aPresContext, aChild, aNameSpaceID, aAttribute, aHint );
+
+  return rv;
+  
+} // AttributeChanged
+
+
+//
+// Paint
+//
+// Used to draw the drop feedback based on attributes set by the drag event capturer
+//
+NS_IMETHODIMP
+nsXULTreeGroupFrame :: Paint ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+                                const nsRect& aDirtyRect, nsFramePaintLayer aWhichLayer)
+{
+  nsresult res = NS_OK;
+  res = nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+  
+  if ( (aWhichLayer == eFramePaintLayer_Content) &&
+        (mYDropLoc != nsTreeItemDragCapturer::kNoDropLoc || mDropOnContainer) )
+    PaintDropFeedback ( aPresContext, aRenderingContext, PR_FALSE );
+
+  return res;
+  
+} // Paint
+
+
+//
+// PaintDropFeedback
+//
+// Depending on the various flags, dispatch to the appropriate method for drawing
+// drop feedback.
+//
+void
+nsXULTreeGroupFrame :: PaintDropFeedback ( nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext,
+                                             PRBool aPaintSorted )
+{
+  // lookup the drop marker color. default to black if not found.
+  nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-marker")) );
+  nscolor color = GetColorFromStyleContext ( aPresContext, atom, NS_RGB(0,0,0) ) ;
+  
+  // find the twips-to-pixels conversion. We have decided not to cache this for
+  // space reasons.
+  float p2t = 20.0;
+  nsCOMPtr<nsIDeviceContext> dc;
+  aRenderingContext.GetDeviceContext ( *getter_AddRefs(dc) );
+  if ( dc )
+    dc->GetDevUnitsToTwips ( p2t );
+  
+  if ( aPaintSorted )
+    PaintSortedDropFeedback ( color, aRenderingContext, p2t );
+  else if ( !mOuterFrame->IsTreeSorted() ) {
+    // draw different drop feedback depending on if we are dropping on the 
+    // container or above/below it
+    if ( !mDropOnContainer )
+      PaintInBetweenDropFeedback ( color, aRenderingContext, aPresContext, p2t );
+    else
+      PaintOnContainerDropFeedback ( color, aRenderingContext, aPresContext, p2t );
+  } // else tree not sorted
+
+} // PaintDropFeedback
+
+
+//
+// PaintSortedDropFeedback
+//
+// Draws the drop feedback for when the tree is sorted, so line-item drop feedback is
+// not appliable.
+//
+void
+nsXULTreeGroupFrame :: PaintSortedDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext,
+                                                   float & inPixelsToTwips )
+{
+  // two pixels wide
+  const PRInt32 borderWidth = NSToIntRound(2 * inPixelsToTwips);
+  
+  nsRect top ( 0, 0, mRect.width, borderWidth );
+  nsRect left ( 0, 0, borderWidth, mRect.height );
+  nsRect right ( mRect.width - borderWidth, 0, borderWidth, mRect.height );
+  nsRect bottom ( 0, mRect.height - borderWidth, mRect.width, borderWidth );
+  
+  inRenderingContext.SetColor(inColor);
+  inRenderingContext.FillRect ( top );
+  inRenderingContext.FillRect ( left );
+  inRenderingContext.FillRect ( bottom );
+  inRenderingContext.FillRect ( right );
+ 
+} // PaintSortedDropFeedback
+
+
+//
+// PaintOnContainerDropFeedback
+//
+// Draws the drop feedback for when the tree is sorted, so line-item drop feedback is
+// not appliable.
+//
+void
+nsXULTreeGroupFrame :: PaintOnContainerDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext,
+                                                         nsIPresContext* inPresContext, float & inPixelsToTwips )
+{
+  // lookup the color for the bg of the selected cell. default to gray if not found.
+  nsCOMPtr<nsIAtom> atom ( getter_AddRefs(NS_NewAtom(":-moz-drop-container-bg")) );
+  nscolor bgColor = GetColorFromStyleContext ( inPresContext, atom, NS_RGB(0xDD, 0xDD, 0xDD) ) ;
+
+  // paint the cell's bg...we really want to muck with the titled buttons, but a) there
+  // isn't any support for that yet, and b) we don't really know what's going
+  // to be there in the cell as far as anonymous content goes...
+  nsRect cellBounds;
+  nsIFrame* treeRow;
+  FirstChild ( inPresContext, nsnull, &treeRow );
+  if ( !treeRow ) return;
+  nsIFrame* treeCell;
+  treeRow->FirstChild ( inPresContext, nsnull, &treeCell );
+  if ( !treeCell ) return;
+  treeCell->GetRect ( cellBounds );
+  inRenderingContext.SetColor ( bgColor );
+  inRenderingContext.FillRect ( cellBounds );
+
+  PRInt32 horizIndent = 0;
+  if ( IsOpenContainer() ) {
+    nsIFrame* firstChild = nsnull;
+    FindFirstChildTreeItemFrame ( inPresContext, &firstChild );
+    if ( firstChild )
+      horizIndent = FindIndentation(inPresContext, firstChild);
+  }
+  else {
+    // for the case where the container is closed (it doesn't have any children)
+    // all we can do is get our own indentation and add the hardcoded indent level
+    // since we don't really know...The indent level is currently hardcoded in
+    // the treeIndentation frame to 16..
+    horizIndent = FindIndentation(inPresContext, this) + NSToIntRound(16 * inPixelsToTwips);
+  }
+  
+  inRenderingContext.SetColor(inColor);
+  nsRect dividingLine ( horizIndent, mRect.height - NSToIntRound(2 * inPixelsToTwips), 
+                          NSToIntRound(50 * inPixelsToTwips), NSToIntRound(2 * inPixelsToTwips) );
+  inRenderingContext.DrawRect ( dividingLine );
+
+} // PaintOnContainerDropFeedback
+
+
+//
+// PaintInBetweenDropFeedback
+//
+// Draw the feedback for when the drop is to go in between two nodes
+//
+void
+nsXULTreeGroupFrame :: PaintInBetweenDropFeedback ( nscolor inColor, nsIRenderingContext& inRenderingContext,
+                                                      nsIPresContext* inPresContext, float & inPixelsToTwips )
+{
+  // the normal case is that we can just look at this frame to find the indentation we need. However,
+  // when we're an _open container_ and are being asked to draw the line _after_, we need to use the
+  // indentation of our first child instead. ick.
+  PRInt32 horizIndent = 0;
+  if ( IsOpenContainer() && mYDropLoc > 0 ) {
+    nsIFrame* firstChild = nsnull;
+    FindFirstChildTreeItemFrame ( inPresContext, &firstChild );
+    if ( firstChild )
+      horizIndent = FindIndentation(inPresContext, firstChild);
+  } // if open container and drop after
+  else
+    horizIndent = FindIndentation(inPresContext, this);
+  
+  inRenderingContext.SetColor(inColor);
+  nsRect dividingLine ( horizIndent, mYDropLoc, 
+                          NSToIntRound(50 * inPixelsToTwips), NSToIntRound(2 * inPixelsToTwips) );
+  inRenderingContext.FillRect(dividingLine);
+
+} // PaintInBetweenDropFeedback
+
+
+//
+// FindIndentation
+//
+// Compute horizontal offset for dividing line by finding a treeindentation tag
+// and using its right coordinate.
+//
+// NOTE: We assume this indentation tag is in the first column.
+// NOTE: We aren't caching this value because of space reasons....
+//  
+PRInt32
+nsXULTreeGroupFrame :: FindIndentation ( nsIPresContext* inPresContext, nsIFrame* inStartFrame ) const
+{
+  PRInt32 indentInTwips = 0;
+  
+  if ( !inStartFrame ) return 0;
+  nsIFrame* treeRowFrame;
+  inStartFrame->FirstChild ( inPresContext, nsnull, &treeRowFrame );
+  if ( !treeRowFrame ) return 0;
+  nsIFrame* treeCellFrame;
+  treeRowFrame->FirstChild ( inPresContext, nsnull, &treeCellFrame );
+  if ( !treeCellFrame ) return 0;
+
+  nsIFrame* treeIndentFrame = nsnull;
+  LocateIndentationFrame ( inPresContext, treeCellFrame, &treeIndentFrame );
+  if ( treeIndentFrame ) {
+    nsRect treeIndentBounds;
+    treeIndentFrame->GetRect ( treeIndentBounds );
+    indentInTwips = treeIndentBounds.x + treeIndentBounds.width;  
+  }
+  return indentInTwips;
+
+} // FindIndentation
+
+
+//
+// LocateIndentationFrame
+//
+// Recursively locate the <treeindentation> tag
+//
+void
+LocateIndentationFrame ( nsIPresContext* aPresContext, nsIFrame* aParentFrame,
+                            nsIFrame** aResult)
+{
+  // Check ourselves.
+  *aResult = nsnull;
+  nsCOMPtr<nsIContent> content;
+  aParentFrame->GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIAtom> tagName;
+  content->GetTag ( *getter_AddRefs(tagName) );
+  if ( tagName.get() == nsXULAtoms::treeindentation ) {
+    *aResult = aParentFrame;
+    return;
+  }
+
+  // Check our kids.
+  nsIFrame* currFrame;
+  aParentFrame->FirstChild(aPresContext, nsnull, &currFrame);
+  while (currFrame) {
+    LocateIndentationFrame(aPresContext, currFrame, aResult);
+    if (*aResult)
+      return;
+    currFrame->GetNextSibling(&currFrame);
+  }
+}
+
+
+//
+// FindFirstChildTreeItemFrame
+//
+// Locates the first <treeitem> in our child list. Assumes that we are a container and that 
+// the children are visible.
+//
+void
+nsXULTreeGroupFrame :: FindFirstChildTreeItemFrame ( nsIPresContext* inPresContext, 
+                                                      nsIFrame** outChild ) const
+{
+  *outChild = nsnull;
+  
+  // first find the <treechildren> tag in our child list.
+  nsIFrame* currChildFrame = nsnull;
+  FirstChild ( inPresContext, nsnull, &currChildFrame );
+  while ( currChildFrame ) {
+    nsCOMPtr<nsIContent> content;
+    currChildFrame->GetContent ( getter_AddRefs(content) );
+    nsCOMPtr<nsIAtom> tagName;
+    content->GetTag ( *getter_AddRefs(tagName) );
+    if ( tagName.get() == nsXULAtoms::treechildren )
+      break;
+    currChildFrame->GetNextSibling ( &currChildFrame );
+  } // foreach child of the treeItem
+  NS_ASSERTION ( currChildFrame, "Can't find <treechildren>" );
+  
+  // |currChildFrame| now holds the correct frame if we found it
+  if ( currChildFrame )
+    currChildFrame->FirstChild ( inPresContext, nsnull, outChild );
+
+} // FindFirstChildTreeItemFrame
+
+
+//
+// IsOpenContainer
+//
+// Determine if a node is both a container and open
+//
+PRBool
+nsXULTreeGroupFrame :: IsOpenContainer ( ) const
+{
+  PRBool isOpenContainer = PR_FALSE;
+  
+  nsCOMPtr<nsIDOMElement> me ( do_QueryInterface(mContent) );
+  if ( me ) {
+    nsAutoString isContainer, isOpen;
+    me->GetAttribute(NS_ConvertASCIItoUCS2("container"), isContainer);
+    me->GetAttribute(NS_ConvertASCIItoUCS2("open"), isOpen);
+    isOpenContainer = (isContainer.EqualsWithConversion("true") && isOpen.EqualsWithConversion("true"));
+  }
+
+  return isOpenContainer;
+  
+} // IsOpenContainer
+
+
+//
+// GetColorFromStyleContext
+//
+// A little helper to root out a color from the current style context. Returns
+// the given default color if we can't find it, for whatever reason.
+//
+nscolor
+nsXULTreeGroupFrame :: GetColorFromStyleContext ( nsIPresContext* inPresContext, nsIAtom* inAtom, 
+                                                    nscolor inDefaultColor )
+{
+  nscolor retColor = inDefaultColor;
+  
+  // go looking for the psuedo-style. We have decided not to cache this for space reasons.
+  nsCOMPtr<nsIStyleContext> markerStyle;
+  inPresContext->ProbePseudoStyleContextFor(mContent, inAtom, mStyleContext,
+                                              PR_FALSE, getter_AddRefs(markerStyle));
+
+  // dig out the color we want.
+  if ( markerStyle ) {
+    const nsStyleColor* styleColor = 
+               NS_STATIC_CAST(const nsStyleColor*, markerStyle->GetStyleData(eStyleStruct_Color));
+    retColor = styleColor->mColor;
+  }
+
+  return retColor;
+  
+} // GetColorFromStyleContext
+
+

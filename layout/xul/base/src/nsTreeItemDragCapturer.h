@@ -27,7 +27,6 @@
 #include "nsCoord.h"
 
 
-class nsTreeRowGroupFrame;
 class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
@@ -44,7 +43,7 @@ public:
   } ;
   
     // default ctor and dtor
-  nsTreeItemDragCapturer ( nsTreeRowGroupFrame* inToolbar, nsIPresContext* inPresContext );
+  nsTreeItemDragCapturer ( nsIFrame* inTreeItem, nsIPresContext* inPresContext );
   virtual ~nsTreeItemDragCapturer();
 
     // interfaces for addref and release and queryinterface
@@ -70,7 +69,7 @@ protected:
     // really for us.
   PRBool IsEventTargetMyTreeItem ( nsIDOMEvent* inEvent ) ;
   
-  nsTreeRowGroupFrame* mTreeItem;    // rowGroup owns me, don't be circular
+  nsIFrame* mTreeItem;    // rowGroup owns me, don't be circular
   nsIPresContext*  mPresContext;     // weak reference
   PRInt32          mCurrentDropLoc;
 
