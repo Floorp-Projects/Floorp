@@ -26,7 +26,7 @@ CPPSRCS		= nsplugin.cpp npglue.cpp
 
 EXPORTS		= nppg.h npglue.h nppriv.h
 
-REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl
+REQUIRES	= lay layer js style applet nspr dbm img util java pref xpcom raptor netcnvts plugin plugimpl oji ojiimpl caps
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2) 
 CPPSRCS		= npwplat.cpp
@@ -39,6 +39,7 @@ ifeq ($(subst /,_,$(shell uname -s)),OS2)
 INCLUDES	+= -I$(DEPTH)/cmd/os2fe/nfc/include -I$(DEPTH)/cmd/os2fe -I$(DEPTH)/cmd/winfe
 endif
 
-INCLUDES        += -I.
+INCLUDES        += -I. -I$(DIST)/include/private
+
 
 $(LIBRARY): $(OBJS)

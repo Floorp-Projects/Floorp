@@ -16,7 +16,9 @@
 
 DEPTH		= ../..
 
+ifdef MOZ_OJI
 DIRS = liveconnect
+endif
 
 LIBRARY_NAME	= js
 

@@ -43,6 +43,11 @@ typedef enum nsJVMStatus {
 class nsIPluginTagInfo2;
 class nsSymantecDebugManager;
 
+struct ThreadLocalStorageAtIndex0 {
+ PRUint32 refcount;
+};
+typedef struct ThreadLocalStorageAtIndex0 ThreadLocalStorageAtIndex0;
+
 /*******************************************************************************
  * JVMMgr is the interface to the JVM manager that the browser sees. All
  * files that want to include java services should include this header file.
@@ -211,6 +216,9 @@ JVM_GetJavaVM(void);
 
 PR_EXTERN(JNIEnv*)
 JVM_GetJNIEnv(void);
+
+PR_IMPLEMENT(void)
+JVM_ReleaseJNIEnv(JNIEnv *pJNIEnv);
 
 PR_EXTERN(PRBool)
 JVM_MaybeStartupLiveConnect(void);

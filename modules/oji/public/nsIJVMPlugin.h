@@ -30,6 +30,7 @@
 #define nsIJVMPlugin_h___
 
 #include "nsIPlugin.h"
+#include "nsIPrincipal.h"
 #include "jni.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,6 +50,7 @@ struct nsJVMInitArgs {
  * a supplied nsJVMInitArgs struct against this version.
  */
 #define nsJVMInitArgs_Version   0x00010000L
+
 
 class nsIJVMPlugin : public nsIPlugin {
 public:
@@ -81,12 +83,22 @@ public:
     // Returns the current classpath in use by the JVM.
     NS_IMETHOD
     GetClassPath(const char* *result) = 0;
-    
+#if 0    
     NS_IMETHOD
     GetPluginInstance(jobject javaObject, nsIPluginInstance* *result) = 0;
 
     NS_IMETHOD
     GetPluginInstance(JNIEnv* jenv, nsIPluginInstance* *result) = 0;
+#endif
+    NS_IMETHOD
+    GetJavaWrapper(JNIEnv* jenv, jint obj, jobject *jobj) = 0;
+
+    // nsIPrincipals is a array of pointers to principals associated with this
+    // java object trying to run a JS script.
+#if 0    
+    NS_IMETHOD
+    GetPrincipalArray(JNIEnv *pJNIEnv, PRInt32 frameIndex, nsIPrincipal ***principalArray, PRInt32 *length) = 0;
+#endif
 
     NS_IMETHOD
     GetJavaVM(JavaVM* *result) = 0;

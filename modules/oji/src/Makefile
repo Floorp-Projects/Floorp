@@ -16,7 +16,10 @@ LIBRARY_NAME	= oji
 CPPSRCS         = jvmmgr.cpp \
                   scd.cpp
 
-REQUIRES	= img java js lay layer plugin plugimpl pref style util xpcom raptor oji
+REQUIRES	= img java js lay layer plugin plugimpl pref style util xpcom raptor oji caps
+LCFLAGS += -DJSJDLL=\"$(JSJDLL)\" 
+INCLUDES += 		-I$(DIST)/include/private
+
 endif # MOZ_OJI
 
 EXPORTS         = jvmmgr.h

@@ -381,6 +381,10 @@ protected:
     virtual ~nsPluginManager(void);
 
     // aggregated interfaces:
+    nsIJVMManager* GetJVMMgr(const nsIID& aIID);
+    nsICapsManager* GetCapsManager(const nsIID& aIID);
+    nsILiveconnect* GetLiveconnect(const nsIID& aIID);
+
     nsISupports*        fJVMMgr;
     nsISupports*        fMalloc;
     nsISupports*        fFileUtils;
@@ -389,6 +393,8 @@ protected:
     void*               fOldCursor;
     
     nsHashtable*		fAllocatedMenuIDs;
+    nsISupports*        fCapsManager;
+    nsISupports*        fLiveconnect;
 };
 
 extern nsPluginManager* thePluginManager;

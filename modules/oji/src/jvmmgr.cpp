@@ -28,6 +28,8 @@
 #include "np.h"
 #include "prio.h"
 #include "prmem.h"
+#include "prthread.h"
+#include "pprthred.h"
 #include "plstr.h"
 #include "jni.h"
 #include "jsjava.h"
@@ -35,6 +37,9 @@
 #include "libmocha.h"
 #include "libevent.h"
 #endif
+#include "nsICapsManager.h"
+#include "nsCCapsManager.h"
+#include "nsILiveconnect.h"
 
 #include "xpgetstr.h"
 extern "C" int XP_PROGRESS_STARTING_JAVA;
@@ -52,6 +57,8 @@ void startAsyncCursors(void);
 void stopAsyncCursors(void);
 }
 #endif // XP_MAC
+
+static PRUintn tlsIndex_g = 0;
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
@@ -87,6 +94,7 @@ nsJVMMgr::nsJVMMgr(nsISupports* outer)
       fClassPathAdditions(new nsVector())
 {
     NS_INIT_AGGREGATED(outer);
+    PR_NewThreadPrivateIndex(&tlsIndex_g, NULL);
 }
 
 nsJVMMgr::~nsJVMMgr()
@@ -164,7 +172,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
     PRBool    jvmMochaPrefsEnabled = PR_FALSE;
 
     *errp = NULL;
-    
+#if 0    
     nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
     if (pJVMMgr != NULL) {
         nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
@@ -201,7 +209,7 @@ map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char 
         *errp = strdup("Java thread could not be associated with a JSContext");
         return NULL;
     }
-
+#endif
     return cx;
 }
 
@@ -259,25 +267,20 @@ map_js_context_to_jsj_thread_impl(JSContext *cx, char **errp)
 ** to get to the javascript JSObject.
 */
 static JSObject* PR_CALLBACK
-map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp)
+map_java_object_to_js_object_impl(JNIEnv *env, void *pNSIPluginInstanceIn, char **errp)
 {
     MWContext       *cx;
     JSObject        *window;
     MochaDecoder    *decoder; 
     PRBool           mayscript = PR_FALSE;
     PRBool           jvmMochaPrefsEnabled = PR_FALSE;
+    nsresult         err = NS_OK;
 
     *errp = NULL;
     /* XXX assert JS is locked */
 
-    if (!applet) {
+    if (!pNSIPluginInstanceIn) {
         env->ThrowNew(env->FindClass("java/lang/NullPointerException"),0);
-        return 0;
-    }
-    if (!env->IsInstanceOf(applet,
-                           env->FindClass("java/applet/Applet"))) {
-        env->ThrowNew(env->FindClass("java/lang/IllegalArgumentException"),
-                      "JSObject.getWindow() requires a java.applet.Applet argument");
         return 0;
     }
 
@@ -286,9 +289,10 @@ map_java_object_to_js_object_impl(JNIEnv *env, jobject applet, char **errp)
         nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
         jvmMochaPrefsEnabled = LM_GetMochaEnabled();
         if (pJVMPI != NULL) {
-            jobject javaObject = applet;
+            //jobject javaObject = applet;
             nsIPluginInstance* pPIT;
-            nsresult err = pJVMPI->GetPluginInstance(javaObject, &pPIT);
+            //nsresult err = pJVMPI->GetPluginInstance(javaObject, &pPIT);
+            pPIT = (nsIPluginInstance*)pNSIPluginInstanceIn;
             if ( (err == NS_OK) && (pPIT != NULL) ) {
                 nsIJVMPluginInstance* pJVMPIT;
                 if (pPIT->QueryInterface(kIJVMPluginInstanceIID,
@@ -367,19 +371,137 @@ get_java_vm_impl(char **errp)
     return pJavaVM;
 }
 
-#ifdef OJI
+static JSPrincipals* PR_CALLBACK
+get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext)
+{
+    nsIPrincipal  **ppNSIPrincipalArray = NULL;
+    PRInt32        length = 0;
+    nsresult       err    = NS_OK;
+    void          *pNSPrincipalArray = NULL;
+#if 0 // TODO: =-= sudu: fix it.
+    nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
+    if (pJVMMgr != NULL) {
+      nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
+      if (pJVMPI != NULL) {
+         err = pJVMPI->GetPrincipalArray(pJNIEnv, 0, &ppNSIPrincipalArray, &length);   
+         if ((err == NS_OK) && (ppNSIPrincipalArray != NULL)) {
+             nsIPluginManager *pNSIPluginManager = NULL;
+             NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
+             err = pJVMMgr->QueryInterface(kIPluginManagerIID,
+                                  (void**)&pNSIPluginManager);
+
+             if(   (err == NS_OK) 
+                && (pNSIPluginManager != NULL )
+               )
+             {
+               nsCCapsManager *pNSCCapsManager = NULL;
+               NS_DEFINE_IID(kICapsManagerIID, NS_ICAPSMANAGER_IID);
+               err = pNSIPluginManager->QueryInterface(kICapsManagerIID, (void**)&pNSCCapsManager);
+               if(   (err == NS_OK) 
+                  && (pNSCCapsManager != NULL)
+                 )
+               {
+                 PRInt32 i=0;
+                 nsPrincipal *pNSPrincipal = NULL;
+                 pNSPrincipalArray = nsCapsNewPrincipalArray(length);
+                 if (pNSPrincipalArray != NULL) 
+                 {
+                   while( i<length )
+                   {
+                      err = pNSCCapsManager->GetNSPrincipal(ppNSIPrincipalArray[i], &pNSPrincipal);
+                      nsCapsSetPrincipalArrayElement(pNSPrincipalArray, i, pNSPrincipal);
+                      i++;
+                   }
+                 }
+                 pNSCCapsManager->Release();
+               }
+               pNSIPluginManager->Release();
+             }
+         }
+         //pJVMPI->Release();
+      }
+      pJVMMgr->Release();
+    }
+#endif
+    if (  (pNSPrincipalArray != NULL)
+        &&(length != 0)
+       )
+    {
+        return LM_GetJSPrincipalsFromJavaCaller(pJSContext, pNSPrincipalArray);
+    }
+
+    return NULL;
+}
+PR_IMPLEMENT(jobject)
+get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
+{
+    nsresult       err    = NS_OK;
+    jobject  pJSObjectWrapper = NULL;
+    nsJVMMgr* pJVMMgr = JVM_GetJVMMgr();
+    if (pJVMMgr != NULL) {
+      nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
+      if (pJVMPI != NULL) {
+         err = pJVMPI->GetJavaWrapper(pJNIEnv, jsobject, &pJSObjectWrapper);
+         //pJVMPI->Release();
+      }
+      pJVMMgr->Release();
+    }
+    if ( err != NS_OK )
+    {
+       return NULL;
+    }
+    return pJSObjectWrapper;
+}
+
+
 static JSBool PR_CALLBACK
 enter_js_from_java_impl(JNIEnv *jEnv, char **errp)
 {
+#ifdef OJI
+    ThreadLocalStorageAtIndex0 *priv = NULL;
+	   if ( PR_GetCurrentThread() == NULL )
+	   {
+		    PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
+      priv = (ThreadLocalStorageAtIndex0 *)malloc(sizeof(ThreadLocalStorageAtIndex0));
+      priv->refcount=1;
+      PR_SetThreadPrivate(tlsIndex_g, (void *)priv);
+	   }
+    else
+    {
+      priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g);
+      if(priv != NULL)
+      {
+        priv->refcount++;
+      }
+    }
+
     return LM_LockJS(errp);
+#else
+	 return JS_TRUE;
+#endif
 }
 
 static void PR_CALLBACK
 exit_js_impl(JNIEnv *jEnv)
 {
-    LM_UnlockJS();
+   ThreadLocalStorageAtIndex0 *priv = NULL;
+
+   LM_UnlockJS();
+
+	  if (   (PR_GetCurrentThread() != NULL )
+       && ((priv = (ThreadLocalStorageAtIndex0 *)PR_GetThreadPrivate(tlsIndex_g)) != NULL)
+      )
+   {
+     priv->refcount--;
+     if(priv->refcount == 0)
+     {
+        PR_SetThreadPrivate(tlsIndex_g, NULL);
+        PR_DetachThread();
+        free(priv);
+     }
+   }
+   return;
 }
-#endif /* OJI */
 
 #endif /* MOCHA */
 
@@ -393,16 +515,17 @@ static JSJCallbacks jsj_callbacks = {
     map_jsj_thread_to_js_context_impl,
     map_js_context_to_jsj_thread_impl,
     map_java_object_to_js_object_impl,
-    NULL,
+    get_JSPrincipals_from_java_caller_impl,
 #ifdef OJI
     enter_js_from_java_impl,
     exit_js_impl,
 #else
-	NULL,
+   	NULL,
     NULL,
 #endif
     NULL,
-    get_java_vm_impl
+    get_java_vm_impl,
+    get_java_wrapper_impl
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -731,6 +854,9 @@ nsJVMMgr::MaybeStartupLiveConnect()
 
 	do {
 	    if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
+            NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
+            nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
+                                        PR_FALSE, PR_FALSE);
 	        JSJ_Init(&jsj_callbacks);
 	        nsIJVMPlugin* plugin = GetJVMPlugin();
 	        if (plugin) {
@@ -1190,22 +1316,26 @@ static void PR_CALLBACK detach_JNIEnv(void* env)
 PR_IMPLEMENT(JNIEnv*)
 JVM_GetJNIEnv(void)
 {
+    JNIEnv* env = NULL;
 	/* Use NSPR thread private data to manage the per-thread JNIEnv* association. */
+#ifdef NOT_YET /* Talked to patrick about it and he said it was ok to remove it
+                  for now. This code should be in the jvm plugin code which should also*/
 	static ThreadLocalStorage<JNIEnv*> localEnv(&detach_JNIEnv);
 
-    JNIEnv* env = localEnv.get();
+    env = localEnv.get();
 	if (env != NULL)
 		return env;
-
+#endif
     nsIJVMPlugin* jvm = GetRunningJVM();
     if (jvm) {
         (void)jvm->GetJNIEnv(&env);
         // jvm->Release(); // GetRunningJVM no longer calls AddRef
     }
 
+#ifdef NOT_YET
 	/* Associate the JNIEnv with the current thread. */
 	localEnv.set(env);
-	
+#endif
     return env;
 }
 
@@ -1220,6 +1350,7 @@ JVM_MaybeStartupLiveConnect()
     }
     return result;
 }
+
 
 PR_IMPLEMENT(PRBool)
 JVM_MaybeShutdownLiveConnect(void)
@@ -1255,6 +1386,22 @@ JVM_ShutdownJVM(void)
         mgr->Release();
     }
     return status;
+}
+
+
+PR_IMPLEMENT(void)
+JVM_ReleaseJNIEnv(JNIEnv *pJNIEnv)
+{
+   nsJVMMgr  *pNSJVMMgr = JVM_GetJVMMgr();
+   if (pNSJVMMgr != NULL)
+   {
+      nsIJVMPlugin *pNSIJVMPlugin =  pNSJVMMgr->GetJVMPlugin();
+      if (pNSIJVMPlugin != NULL)
+      {
+         pNSIJVMPlugin->ReleaseJNIEnv(pJNIEnv);
+      }
+   }
+   return;
 }
 
 PR_END_EXTERN_C

@@ -32,6 +32,7 @@
 #ifdef OJI
 #include "jni.h"
 #include "jvmmgr.h"
+#include "nsCaps.h"
 #endif
 
 #ifdef ANTHRAX
@@ -3996,6 +3997,12 @@ NPL_Init()
 	 * available.
 	 */
     NPL_RegisterDefaultConverters();
+    /*
+    ** Initialize caps manager so that factory for nsCCapsManager gets registered.
+    ** Since nsICapsManager is aggregated with nsIPluginManager, we need to initialize
+    ** caps well upfront. =-= sudu.
+    */
+    nsCapsInitialize();
 
     /* call the platform specific FE code to enumerate and register plugins */
     FE_RegisterPlugins();
