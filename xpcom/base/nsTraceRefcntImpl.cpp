@@ -69,7 +69,6 @@ static PRLock* gTraceLock;
 static PRLogModuleInfo* gTraceRefcntLog;
 
 static PLHashTable* gBloatView;
-
 static PLHashTable* gTypesToLog;
 
 static PRBool gLogging;
@@ -83,6 +82,8 @@ static PRBool gDumpLeaksOnly;
 
 static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
 static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
+
+static FILE *gLoggingStream = stderr;
 
 #define XPCOM_REFCNT_TRACK_BLOAT  0x1
 #define XPCOM_REFCNT_LOG_ALL      0x2
@@ -361,7 +362,7 @@ nsTraceRefcnt::DumpStatistics(StatisticsType type,
 
   LOCK_TRACELOG();
   if (gDumpLeaksOnly) {
-    fprintf(stderr, "Bloaty: Only dumping data about objects that leaked\n");
+    fprintf(gLoggingStream, "Bloaty: Only dumping data about objects that leaked\n");
   }
 
   PRBool wasLogging = gLogging;
@@ -450,6 +451,14 @@ static void InitTraceLog(void)
     if (getenv("MOZ_DUMP_LEAKS")) {
       gDumpLeaksOnly = PR_TRUE;
     }
+    
+    // See if user is redirecting the trace.
+	const char* traceLogName = getenv("MOZ_TRACE_LOG");
+	if (traceLogName) {
+	  FILE *stream = ::fopen(traceLogName, "w");
+	  if (stream != NULL)
+	    gLoggingStream = stream;
+	}
 
     // See if bloaty is enabled
     if (XPCOM_REFCNT_TRACK_BLOAT & gTraceRefcntLog->level) {
@@ -459,14 +468,14 @@ static void InitTraceLog(void)
         gTrackBloat = PR_FALSE;
       }
       else {
-        fprintf(stderr, "XPCOM: using turbo mega bloatvision\n");
+        fprintf(gLoggingStream, "XPCOM: using turbo mega bloatvision\n");
       }
     }
 
     // See if raw nspr logging is enabled
     if (XPCOM_REFCNT_LOG_ALL & gTraceRefcntLog->level) {
       gLogAllRefcnts = PR_TRUE;
-      fprintf(stderr, "XPCOM: logging all refcnt calls\n");
+      fprintf(gLoggingStream, "XPCOM: logging all refcnt calls\n");
     }
     else if (XPCOM_REFCNT_LOG_SOME & gTraceRefcntLog->level) {
       gLogSomeRefcnts = PR_TRUE;
@@ -479,26 +488,26 @@ static void InitTraceLog(void)
         gLogSomeRefcnts = PR_FALSE;
       }
       else {
-#if defined(XP_UNIX) || defined (_WIN32)
+#if defined(XP_UNIX) || defined (XP_PC) || defined(XP_MAC)
         char* types = getenv("MOZ_TRACE_REFCNT_TYPES");
         if (types) {
-          fprintf(stderr, "XPCOM: logging some refcnt calls: ");
+          fprintf(gLoggingStream, "XPCOM: logging some refcnt calls: ");
           char* cp = types;
           for (;;) {
             char* cm = strchr(cp, ',');
             if (cm) {
               *cm = '\0';
             }
-            PL_HashTableAdd(gTypesToLog, strdup(cp), (void*)1);
-            fprintf(stderr, "%s ", cp);
+            PL_HashTableAdd(gTypesToLog, nsCRT::strdup(cp), (void*)1);
+            fprintf(gLoggingStream, "%s ", cp);
             if (!cm) break;
             *cm = ',';
             cp = cm + 1;
           }
-          fprintf(stderr, "\n");
+          fprintf(gLoggingStream, "\n");
         }
         else {
-          fprintf(stderr, "XPCOM: MOZ_TRACE_REFCNTS_TYPE wasn't set; can't log some refcnts\n");
+          fprintf(gLoggingStream, "XPCOM: MOZ_TRACE_REFCNTS_TYPE wasn't set; can't log some refcnts\n");
           gLogSomeRefcnts = PR_FALSE;
         }
 #endif
@@ -521,7 +530,7 @@ static void InitTraceLog(void)
         p = dlsym(0, "__log_release");
         if (p) {
           leakyLogRelease = (void (*)(void*,int,int)) p;
-          fprintf(stderr, "XPCOM: logging addref/release calls to leaky\n");
+          fprintf(gLoggingStream, "XPCOM: logging addref/release calls to leaky\n");
         }
         else {
           gLogToLeaky = PR_FALSE;
@@ -545,30 +554,6 @@ static void InitTraceLog(void)
   }
 }
 #endif
-
-
-static int nsIToA16(PRUint32 aNumber, char* aBuffer)
-{
-  static char kHex[] = "0123456789abcdef";
-
-  if (aNumber == 0) {
-    *aBuffer = '0';
-    return 1;
-  }
-
-  char buf[8];
-  PRInt32 count = 0;
-  while (aNumber != 0) {
-    PRUint32 nibble = aNumber & 0xf;
-    buf[count++] = kHex[nibble];
-    aNumber >>= 4;
-  }
-
-  for (PRInt32 i = count - 1; i >= 0; --i)
-    *aBuffer++ = buf[i];
-
-  return count;
-}
 
 #if defined(_WIN32) && defined(_M_IX86) // WIN32 x86 stack walking code
 #include "imagehlp.h"
@@ -651,12 +636,10 @@ EnsureSymInitialized()
  * the rebasing and accordingly I've made a tool to use it to rebase the
  * DLL's in one fell swoop (see xpcom/tools/windows/rebasedlls.cpp).
  */
-void
-nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
-{
-  aBuffer[0] = '\0';
-  aBufLen--;                    // leave room for nul
 
+void
+nsTraceRefcnt::WalkTheStack(FILE* aStream)
+{
   HANDLE myProcess = ::GetCurrentProcess();
   HANDLE myThread = ::GetCurrentThread();
 
@@ -685,12 +668,9 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
   frame.AddrFrame.Offset = context.Ebp;
   frame.AddrFrame.Mode   = AddrModeFlat;
 
-  // Now walk the stack and map the pc's to symbol names that we stuff
-  // append to *cp.
-  char* cp = aBuffer;
-
+  // Now walk the stack and map the pc's to symbol names
   int skip = 2;
-  while (aBufLen > 0) {
+  while (1) {
     ok = _StackWalk(IMAGE_FILE_MACHINE_I386,
                    myProcess,
                    myThread,
@@ -719,52 +699,19 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
                             symbol);
 
     if (ok) {
-      int nameLen = strlen(symbol->Name);
-      if (nameLen + 12 > aBufLen) { // 12 == strlen("+0x12345678 ")
-        break;
-      }
-      char* cp2 = symbol->Name;
-      while (*cp2) {
-        if (*cp2 == ' ') *cp2 = '_'; // replace spaces with underscores
-        *cp++ = *cp2++;
-      }
-      aBufLen -= nameLen;
-      *cp++ = '+';
-      *cp++ = '0';
-      *cp++ = 'x';
-      PRInt32 len = nsIToA16(displacement, cp);
-      cp += len;
-      *cp++ = ' ';
-
-      aBufLen -= nameLen + len + 4;
+      fprintf(aStream, "%s+0x%08X\n", symbol->Name, displacement);
     }
     else {
-      if (11 > aBufLen) { // 11 == strlen("0x12345678 ")
-        break;
-      }
-      *cp++ = '0';
-      *cp++ = 'x';
-      PRInt32 len = nsIToA16(frame.AddrPC.Offset, cp);
-      cp += len;
-      *cp++ = ' ';
-      aBufLen -= len + 3;
+      fprintf(aStream, "0x%08X\n", frame.AddrPC.Offset);
     }
   }
-  *cp = 0;
 }
-/* _WIN32 */
-
 
 #elif defined(linux) && defined(__GLIBC__) && defined(__i386) // i386 Linux stackwalking code
 
 void
-nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
+nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
-  aBuffer[0] = '\0';
-  aBufLen--; // leave room for nul
-
-  char* cp = aBuffer;
-
   jmp_buf jb;
   setjmp(jb);
 
@@ -793,42 +740,108 @@ nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
 
       DemangleSymbol(symbol,demangled,sizeof(demangled));
 
-      if (demangled && strlen(demangled))
-      {
+      if (strlen(demangled)) {
         symbol = demangled;
         len = strlen(symbol);
       }
-        
-      if (len + 12 >= aBufLen) // 12 == strlen("+0x12345678 ")
-        break;
-
-      strcpy(cp, symbol);
-      cp += len;
-
-      *cp++ = '+';
-      *cp++ = '0';
-      *cp++ = 'x';
 
       PRUint32 off = (char*)pc - (char*)info.dli_saddr;
-      PRInt32 addrStrLen = nsIToA16(off, cp);
-      cp += addrStrLen;
-
-      *cp++ = '\t';
-
-      aBufLen -= addrStrLen + 4;
+      fprintf(aStream, "%s+0x%08X\n", symbol, off);
     }
     bp = nextbp;
   }
-  *cp = '\0';
+}
+
+#elif defined(XP_MAC)
+
+/**
+ * Stack walking code for the Mac OS.
+ */
+
+extern "C" {
+int GC_address_to_source(char* codeAddr, char fileName[256], UInt32* fileOffset);
+void MWUnmangle(const char *mangled_name, char *unmangled_name, size_t buffersize);
+}
+
+static asm void *GetSP() 
+{
+	mr		r3, sp
+	blr
+}
+
+struct traceback_table {
+	long zero;
+	long magic;
+	long reserved;
+	long codeSize;
+	short nameLength;
+	char name[2];
+};
+typedef struct traceback_table traceback_table;
+
+static char* pc2name(long* pc, char name[], long size)
+{
+	name[0] = '\0';
+	
+	// make sure pc is instruction aligned (at least).
+	if (UInt32(pc) == (UInt32(pc) & 0xFFFFFFFC)) {
+		long instructionsToLook = 4096;
+		long* instruction = (long*)pc;
+		
+		// look for the traceback table.
+		while (instructionsToLook--) {
+			if (instruction[0] == 0x4E800020 && instruction[1] == 0x00000000) {
+				traceback_table* tb = (traceback_table*)&instruction[1];
+				long nameLength = (tb->nameLength > --size ? size : tb->nameLength);
+				memcpy(name, tb->name + 1, --nameLength);
+				name[nameLength] = '\0';
+				break;
+			}
+			++instruction;
+		}
+	}
+	
+	return name;
+}
+
+NS_COM void
+nsTraceRefcnt::WalkTheStack(FILE* aStream)
+{
+	void* currentSP;
+	
+	currentSP = GetSP();				// WalkTheStack's frame.
+	currentSP = *((void **)currentSP);	// WalkTheStack's caller's frame.
+	currentSP = *((void **)currentSP);	// WalkTheStack's caller's caller's frame.
+	
+	while (true) {
+		long** linkageArea = (long**)currentSP;
+		// LR saved at 8(SP) in each frame. subtract 4 to get address of calling instruction.
+		long* pc = linkageArea[2] - 1;
+
+		// convert PC to name, unmangle it, and generate source location, if possible.
+		static char name[1024], unmangled_name[1024], file_name[256]; UInt32 file_offset;
+		pc2name(pc, name, sizeof(name));
+		MWUnmangle(name, unmangled_name, sizeof(unmangled_name));
+		
+     	if (GC_address_to_source((char*)pc, file_name, &file_offset))
+     		fprintf(aStream, "%s[%s,%ld]\n", unmangled_name, file_name, file_offset);
+     	else
+     		fprintf(aStream, "%s(0x%08X)\n", unmangled_name, pc);
+		
+		currentSP = *((void **)currentSP);
+		// the bottom-most frame is marked as pointing to NULL.
+		if (currentSP == NULL || UInt32(currentSP) & 0x1)
+			break;
+	}
 }
 
 #else // unsupported platform.
 
-NS_COM void
-nsTraceRefcnt::WalkTheStack(char* aBuffer, int aBufLen)
+void
+nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
-  // Write me!!!
-  *aBuffer = '\0';
+	WalkTheStack(gStackBuffer, sizeof(gStackBuffer));
+	fprintf(aStream, "%s\n", gStackBuffer);
 }
 
 #endif
@@ -907,7 +920,7 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
                              0);
 //  DWORD lastError = 0;
 //  if (!b) lastError = ::GetLastError();
-//  fprintf(stderr, "loading symbols for library %s => %s [%d]\n", aLibraryName,
+//  fprintf(gLoggingStream, "loading symbols for library %s => %s [%d]\n", aLibraryName,
 //         b ? "true" : "false", lastError);
   }
 #endif
@@ -916,6 +929,12 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
 
 //----------------------------------------------------------------------
 
+/*
+ For consistency, and ease of munging the output, the following record format will be used:
+ 
+ <TypeName> 0xADDRESS Verb [optional data]
+ */
+ 
 NS_COM void
 nsTraceRefcnt::LogAddRef(void* aPtr,
                          nsrefcnt aRefCnt,
@@ -940,24 +959,24 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
-    char sb[16384];
-    if (aRefCnt == 1 && (gLogNewAndDelete || (gTypesToLog && LogThisType(aClazz)))) {
-      WalkTheStack(sb, sizeof(sb));
-      PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-             ("Create: %p[%s]: [%s]",
-              aPtr, aClazz, sb));
+    PRBool loggingThisType = (gTypesToLog && LogThisType(aClazz));
+    if (aRefCnt == 1 && (gLogNewAndDelete || loggingThisType)) {
+      fprintf(gLoggingStream, "\n<%s> 0x%08X Create\n",
+              aClazz, PRInt32(aPtr));
+      WalkTheStack(gLoggingStream);
     }
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogAddRefCall instead to get file and line numbers.)
-    if (gLogAllRefcnts || (gTypesToLog && LogThisType(aClazz))) {
+    if (gLogAllRefcnts || loggingThisType) {
       if (gLogToLeaky) {
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
       }
       else {
-        WalkTheStack(sb, sizeof(sb));
         // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(stderr, "%s\t%p\tAddRef\t%d\t%s\n", aClazz, aPtr, aRefCnt, sb);
+        fprintf(gLoggingStream,
+                "\n<%s> 0x%08X AddRef %d\n", aClazz, PRInt32(aPtr), aRefCnt);
+        WalkTheStack(gLoggingStream);
       }
     }
 #endif
@@ -989,15 +1008,16 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogReleaseCall instead to get file and line numbers.)
-    char sb[16384];
-    if (gLogAllRefcnts || (gTypesToLog && LogThisType(aClazz))) {
+    PRBool loggingThisType = (gTypesToLog && LogThisType(aClazz));
+    if (gLogAllRefcnts || loggingThisType) {
       if (gLogToLeaky) {
         (*leakyLogRelease)(aPtr, aRefCnt + 1, aRefCnt);
       }
       else {
-        WalkTheStack(sb, sizeof(sb));
         // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(stderr, "%s\t%p\tRelease\t%d\t%s\n", aClazz, aPtr, aRefCnt, sb);
+        fprintf(gLoggingStream,
+                "\n<%s> 0x%08X Release %d\n", aClazz, PRInt32(aPtr), aRefCnt);
+        WalkTheStack(gLoggingStream);
       }
     }
 
@@ -1006,11 +1026,11 @@ nsTraceRefcnt::LogRelease(void* aPtr,
 
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (aRefCnt == 0 && (gLogNewAndDelete || (gTypesToLog && LogThisType(aClazz)))) {
-      WalkTheStack(sb, sizeof(sb));
-      PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-             ("Destroy: %p[%s]: [%s]",
-              aPtr, aClazz, sb));
+    if (aRefCnt == 0 && (gLogNewAndDelete || loggingThisType)) {
+      fprintf(gLoggingStream,
+              "\n<%s> 0x%08X Destroy\n",
+              aClazz, PRInt32(aPtr));
+      WalkTheStack(gLoggingStream);
     }
 #endif
 
@@ -1032,11 +1052,9 @@ nsTraceRefcnt::LogAddRefCall(void* aPtr,
   if (gLogCalls) {
     LOCK_TRACELOG();
 
-    char sb[1000];
-    WalkTheStack(sb, sizeof(sb));
-    PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-           ("AddRef: %p: %d=>%d [%s] in %s (line %d)",
-            aPtr, aNewRefcnt-1, aNewRefcnt, sb, aFile, aLine));
+    fprintf(gLoggingStream, "\n<Call> 0x%08X AddRef %d=>%d in %s (line %d)\n",
+            aPtr, aNewRefcnt-1, aNewRefcnt, aFile, aLine);
+    WalkTheStack(gLoggingStream);
 
     UNLOCK_TRACELOG();
   }
@@ -1059,11 +1077,9 @@ nsTraceRefcnt::LogReleaseCall(void* aPtr,
   if (gLogCalls) {
     LOCK_TRACELOG();
 
-    char sb[1000];
-    WalkTheStack(sb, sizeof(sb));
-    PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-           ("Release: %p: %d=>%d [%s] in %s (line %d)",
-            aPtr, aNewRefcnt+1, aNewRefcnt, sb, aFile, aLine));
+    fprintf(gLoggingStream, "\n<Call> 0x%08X Release %d=>%d in %s (line %d)\n",
+            aPtr, aNewRefcnt+1, aNewRefcnt, aFile, aLine);
+    WalkTheStack(gLoggingStream);
 
     UNLOCK_TRACELOG();
   }
@@ -1087,11 +1103,9 @@ nsTraceRefcnt::LogNewXPCOM(void* aPtr,
   if (gLogNewAndDelete) {
     LOCK_TRACELOG();
 
-    char sb[1000];
-    WalkTheStack(sb, sizeof(sb));
-    PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-           ("Create: %p[%s]: [%s] in %s (line %d)",
-            aPtr, aType, sb, aFile, aLine));
+    fprintf(gLoggingStream, "\n<%s> 0x%08X NewXPCOM in %s (line %d)\n",
+            aType, aPtr, aFile, aLine);
+    WalkTheStack(gLoggingStream);
 
     UNLOCK_TRACELOG();
   }
@@ -1112,11 +1126,9 @@ nsTraceRefcnt::LogDeleteXPCOM(void* aPtr,
   if (gLogNewAndDelete) {
     LOCK_TRACELOG();
 
-    char sb[1000];
-    WalkTheStack(sb, sizeof(sb));
-    PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-           ("Destroy: %p: [%s] in %s (line %d)",
-            aPtr, sb, aFile, aLine));
+    fprintf(gLoggingStream, "\n<%s> 0x%08X Destroy in %s (line %d)\n",
+            aType, aPtr, aFile, aLine);
+    WalkTheStack(gLoggingStream);
 
     UNLOCK_TRACELOG();
   }
@@ -1126,7 +1138,7 @@ nsTraceRefcnt::LogDeleteXPCOM(void* aPtr,
 
 NS_COM void
 nsTraceRefcnt::LogCtor(void* aPtr,
-                       const char* aTypeName,
+                       const char* aType,
                        PRUint32 aInstanceSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1137,7 +1149,7 @@ nsTraceRefcnt::LogCtor(void* aPtr,
     LOCK_TRACELOG();
 
     if (gTrackBloat) {
-      BloatEntry* entry = GetBloatEntry(aTypeName, aInstanceSize);
+      BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
       if (entry) {
         entry->Ctor();
       }
@@ -1146,12 +1158,10 @@ nsTraceRefcnt::LogCtor(void* aPtr,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogNewXPCOM instead to get file and line numbers.)
-    if (gLogNewAndDelete || (gTypesToLog && LogThisType(aTypeName))) {
-      char sb[1000];
-      WalkTheStack(sb, sizeof(sb));
-      PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-             ("Create: %p[%s]: [%s]",
-              aPtr, aTypeName, sb));
+    if (gLogNewAndDelete || (gTypesToLog && LogThisType(aType))) {
+      fprintf(gLoggingStream, "\n<%s> 0x%08X Ctor (%d)\n",
+             aType, PRInt32(aPtr), aInstanceSize);
+      WalkTheStack(gLoggingStream);
     }
 #endif
 
@@ -1161,7 +1171,7 @@ nsTraceRefcnt::LogCtor(void* aPtr,
 }
 
 NS_COM void
-nsTraceRefcnt::LogDtor(void* aPtr, const char* aTypeName,
+nsTraceRefcnt::LogDtor(void* aPtr, const char* aType,
                        PRUint32 aInstanceSize)
 {
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -1172,7 +1182,7 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aTypeName,
     LOCK_TRACELOG();
 
     if (gTrackBloat) {
-      BloatEntry* entry = GetBloatEntry(aTypeName, aInstanceSize);
+      BloatEntry* entry = GetBloatEntry(aType, aInstanceSize);
       if (entry) {
         entry->Dtor();
       }
@@ -1181,12 +1191,10 @@ nsTraceRefcnt::LogDtor(void* aPtr, const char* aTypeName,
 #ifndef NS_LOSING_ARCHITECTURE
     // (If we're on a losing architecture, don't do this because we'll be
     // using LogDeleteXPCOM instead to get file and line numbers.)
-    if (gLogNewAndDelete || (gTypesToLog && LogThisType(aTypeName))) {
-      char sb[1000];
-      WalkTheStack(sb, sizeof(sb));
-      PR_LOG(gTraceRefcntLog, PR_LOG_DEBUG,
-             ("Destroy: %p[%s]: [%s]",
-              aPtr, aTypeName, sb));
+    if (gLogNewAndDelete || (gTypesToLog && LogThisType(aType))) {
+      fprintf(gLoggingStream, "\n<%s> 0x%08X Dtor (%d)\n",
+             aType, PRInt32(aPtr), aInstanceSize);
+      WalkTheStack(gLoggingStream);
     }
 #endif
 

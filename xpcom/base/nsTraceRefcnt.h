@@ -21,6 +21,8 @@
 
 #include "nsCom.h"
 
+#include <stdio.h>
+
 // Normaly, the implementation of NS_LOG_ADDREF and NS_LOG_RELEASE
 // will use a stack crawl to determine who called Addref/Release on an
 // xpcom object.  If your platform can't implement a stack crawling
@@ -194,7 +196,8 @@ public:
                                     char * aBuffer,
                                     int aBufLen);
 
-  static NS_COM void WalkTheStack(char* aBuffer, int aBufLen);
+  // XXX change this to take an nsIOutputStream
+  static NS_COM void WalkTheStack(FILE* aStream);
 };
 
 #endif /* nsTraceRefcnt_h___ */
