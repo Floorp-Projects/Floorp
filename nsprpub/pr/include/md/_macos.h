@@ -39,7 +39,7 @@
 #include "prproces.h"
 
 #if !defined(MAC_NSPR_STANDALONE)
-#include "NSstring.h"
+#include "macstdlibextras.h"
 #endif
 
 #include <stddef.h>
