@@ -358,6 +358,7 @@ SheetLoadData::SheetLoadData(CSSLoaderImpl* aLoader, nsIURL* aURL,
     mURL(aURL),
     mTitle(),
     mMedia(),
+    mDefaultNameSpaceID(kNameSpaceID_Unknown),
     mSheetIndex(-1),
     mOwningElement(nsnull),
     mParserToUnblock(nsnull),
@@ -1245,6 +1246,9 @@ CSSLoaderImpl::LoadAgentSheet(nsIURL* aURL,
           mLoadingSheets.Put(&key, data);
           result = ParseSheet(uin, data, aCompleted, aSheet);
           NS_RELEASE(uin);
+        }
+        else {
+          fputs("CSSLoader::LoadAgentSheet - failed to get converter stream\n", stderr);
         }
         NS_RELEASE(in);
       }
