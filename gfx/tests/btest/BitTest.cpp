@@ -72,7 +72,7 @@ static PRBool           gCanBlend = PR_FALSE;
 static HBITMAP          gDobits,gSobits,gSrcbits,gDestbits;
 static HDC              gDestdc,gSrcdc,gScreendc;
 
-extern void     Compositetest(nsIBlender *aBlender,nsIImage *aImage,
+extern nsresult   Compositetest(nsIBlender *aBlender,nsIImage *aImage,
                               PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth,PRInt32 aHeight,
                               PRInt32 aDX,PRInt32 aDY,
                               float aBlendAmount,PRBool aBuff);
@@ -88,6 +88,9 @@ extern nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt
 extern PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
 
+#define RED16(x) ((x)&0x7C00)>>7
+#define GREEN16(x) ((x)&0x3E0)>>2
+#define BLUE16(x) ((x)&0x1F)<<3
 
 //------------------------------------------------------------
 
@@ -288,9 +291,7 @@ nsresult          rv;
 
     rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&gImageblender);
     gImageblender->Init(gSrcdc,gDestdc);
-
   }
-
 }
 
 //------------------------------------------------------------
@@ -315,6 +316,7 @@ void
 Restore(nsIBlender *aBlender,nsIImage *aImage)
 {
 PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
+PRUint16            *cur16;
 PRInt32             w,h,ls,x,y,numbytes,sls;
 HDC                 dstdc;
 HBITMAP             srcbits,tb1;
@@ -343,22 +345,45 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
   w = aImage->GetWidth();
   ls = aImage->GetLineStride();
   sls = CalcBytesSpan(srcinfo.bmWidth,srcinfo.bmBitsPixel);
-  for(y=0;y<h;y++)
+
+  if(srcinfo.bmBitsPixel==24)
     {
-    curbyte = thebytes + (y*ls);
-    cursourcebytes = srcbytes + (y*sls);
-    for(x=0;x<ls;x++)
+    for(y=0;y<h;y++)
       {
-      *curbyte = *cursourcebytes;
-      curbyte++;
-      cursourcebytes++;
+      curbyte = thebytes + (y*ls);
+      cursourcebytes = srcbytes + (y*sls);
+      for(x=0;x<ls;x++)
+        {
+        *curbyte = *cursourcebytes;
+        curbyte++;
+        cursourcebytes++;
+        }
       }
     }
+    else
+      if(srcinfo.bmBitsPixel==16)     // 16 bit going into a 24 bit
+        {
+        for(y=0;y<h;y++)
+          {
+          curbyte = thebytes + (y*ls);
+          cur16 = (PRUint16*)(srcbytes + (y*sls));
+          for(x=0;x<w;x++)
+            {
+            *curbyte = BLUE16(*cur16);
+            curbyte++;
+            *curbyte = GREEN16(*cur16);
+            curbyte++;
+            *curbyte = RED16(*cur16);
+            curbyte++;
+            cur16++;
+            }
+          }
+        }
 
   delete [] srcbytes;
   delete srcbinfo;
 
-  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+  //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 }
 
 //------------------------------------------------------------
@@ -366,6 +391,7 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
 void
 InterActiveBlend(nsIBlender *aBlender,nsIImage *aImage)
 {
+nsresult  result;
 float     blendamount;
 nsString  str;
 PRInt32   numerror,i,height,width;
@@ -392,27 +418,35 @@ MSG       msg;
 
       width = gBlendImage->GetWidth();
       height = gBlendImage->GetHeight();
-      Compositetest(aBlender,aImage,cpos.x,cpos.y,width,height,0,0,blendamount,PR_TRUE);
-      Restore(aBlender,aImage);
+      result = Compositetest(aBlender,aImage,cpos.x,cpos.y,width,height,0,0,blendamount,PR_TRUE);
 
-      if(GetMessage(&msg,NULL,0,0))
+      if(result == NS_OK)
         {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+        Restore(aBlender,aImage);
+
+        if(GetMessage(&msg,NULL,0,0))
+          {
+          TranslateMessage(&msg);
+          DispatchMessage(&msg);
+          }
         }
+      else
+        break;
       }
     }
 }
 
 //------------------------------------------------------------
 
-void
+nsresult
 Compositetest(nsIBlender *aBlender,nsIImage *aImage,
                   PRInt32 aSX, PRInt32 aSY, PRInt32 aWidth,PRInt32 aHeight,
                   PRInt32 aDX, PRInt32 aDY,
                   float aBlendAmount,PRBool aBuff)
 {
+nsresult            result = NS_ERROR_FAILURE;
 PRUint8             *thebytes,*curbyte,*srcbytes,*cursourcebytes;
+PRUint16            *cur16;
 PRInt32             w,h,ls,x,y,numbytes,sls;
 HDC                 srcdc,dstdc;
 HBITMAP             srcbits,tb1;
@@ -424,42 +458,71 @@ nsIRenderingContext *drawCtx = gWindow->GetRenderingContext();
   srcdc = aBlender->GetSrcDS();
   dstdc = aBlender->GetDstDS();
 
-  aBlender->Blend(srcdc,aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);
+  result = aBlender->Blend(aSX,aSY,aWidth,aHeight,dstdc,0, 0,aBlendAmount,aBuff);
 
-  // this takes the Destination DC and copies the information into aImage
-  tb1 = CreateCompatibleBitmap(dstdc,3,3);
-  srcbits = ::SelectObject(dstdc, tb1);
-  numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
-  // put into a DIB
-  BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
-  numbytes = ::GetDIBits(dstdc,srcbits,0,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
-
-  ::SelectObject(dstdc,srcbits);
-  DeleteObject(tb1);
-
-
-  // copy the information back into the source
-  thebytes = aImage->GetBits();
-  h = aImage->GetHeight();
-  w = aImage->GetWidth();
-  ls = aImage->GetLineStride();
-  sls = CalcBytesSpan(srcinfo.bmWidth,srcinfo.bmBitsPixel);
-  for(y=0;y<h;y++)
+  if(result == NS_OK)
     {
-    curbyte = thebytes + (y*ls);
-    cursourcebytes = srcbytes + (y*sls);
-    for(x=0;x<ls;x++)
+    // this takes the Destination DC and copies the information into aImage
+    tb1 = CreateCompatibleBitmap(dstdc,3,3);
+    srcbits = ::SelectObject(dstdc, tb1);
+    numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
+    // put into a DIB
+    BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
+    numbytes = ::GetDIBits(dstdc,srcbits,0,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+
+    ::SelectObject(dstdc,srcbits);
+    DeleteObject(tb1);
+
+
+    // copy the information back into the source
+    thebytes = aImage->GetBits();
+    h = aImage->GetHeight();
+    w = aImage->GetWidth();
+    ls = aImage->GetLineStride();
+    sls = CalcBytesSpan(srcinfo.bmWidth,srcinfo.bmBitsPixel);
+
+   
+    // put the bitmap back into the image
+    if(srcinfo.bmBitsPixel==24)
       {
-      *curbyte = *cursourcebytes;
-      curbyte++;
-      cursourcebytes++;
+      for(y=0;y<h;y++)
+        {
+        curbyte = thebytes + (y*ls);
+        cursourcebytes = srcbytes + (y*sls);
+        for(x=0;x<ls;x++)
+          {
+          *curbyte = *cursourcebytes;
+          curbyte++;
+          cursourcebytes++;
+          }
+        }
       }
-    }
+    else
+      if(srcinfo.bmBitsPixel==16)     // 16 bit going into a 24 bit
+        {
+        for(y=0;y<h;y++)
+          {
+          curbyte = thebytes + (y*ls);
+          cur16 = (PRUint16*)(srcbytes + (y*sls));
+          for(x=0;x<w;x++)
+            {
+            *curbyte = BLUE16(*cur16);
+            curbyte++;
+            *curbyte = GREEN16(*cur16);
+            curbyte++;
+            *curbyte = RED16(*cur16);
+            curbyte++;
+            cur16++;
+            }
+          }
+        }
 
-  delete [] srcbytes;
-  delete srcbinfo;
+    delete [] srcbytes;
+    delete srcbinfo;
 
-  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+    drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+  }
+  return(result);
 }
 
 //------------------------------------------------------------
@@ -1091,6 +1154,7 @@ PRUint8   *colortable;
 		case 8:
 			numpalletcolors = 256;
       break;
+    case 16:
 		case 24:
 			numpalletcolors = 0;
       break;
