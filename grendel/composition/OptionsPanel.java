@@ -98,7 +98,7 @@ public class OptionsPanel extends JPanel implements Serializable  {
         Preferences prefs = PreferencesFactory.Get();
         int numIdentities = prefs.getInt("mail.identities", 1);
         for (int i=0; i<numIdentities; i++) {
-            ident.addPossibleValue(prefs.getString("mail.identity.description."+ 1, "(no description available)"));
+            ident.addPossibleValue(prefs.getString("mail.identity.description."+ i, "(no description available)"));
         }
         // Select the default identity
         ident.setSelectedIndex(ActionFactory.getIdent());
