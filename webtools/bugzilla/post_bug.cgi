@@ -105,7 +105,8 @@ $::FORM{'reporter'} = DBNameToIdAndCheck($::FORM{'reporter'});
 
 my @bug_fields = ("reporter", "product", "version", "rep_platform",
                   "bug_severity", "priority", "op_sys", "assigned_to",
-                  "bug_status", "bug_file_loc", "short_desc", "component");
+                  "bug_status", "bug_file_loc", "short_desc", "component",
+                  "target_milestone");
 
 if (Param("useqacontact")) {
     SendSQL("select initialqacontact from components where program=" .
@@ -139,11 +140,19 @@ if (!exists $::FORM{'bug_status'}) {
     }
 }
 
+if (!exists $::FORM{'target_milestone'}) {
+    SendSQL("SELECT defaultmilestone FROM products " .
+            "WHERE product = " . SqlQuote($::FORM{'product'}));
+    $::FORM{'target_milestone'} = FetchOneColumn();
+}
+
 if ( Param("strictvaluechecks") ) {
     GetVersionTable();  
     CheckFormField(\%::FORM, 'reporter');
     CheckFormField(\%::FORM, 'product', \@::legal_product);
     CheckFormField(\%::FORM, 'version', \@{$::versions{$::FORM{'product'}}});
+    CheckFormField(\%::FORM, 'target_milestone',
+                   \@{$::target_milestone{$::FORM{'product'}}});
     CheckFormField(\%::FORM, 'rep_platform', \@::legal_platform);
     CheckFormField(\%::FORM, 'bug_severity', \@::legal_severity);
     CheckFormField(\%::FORM, 'priority', \@::legal_priority);

@@ -660,7 +660,8 @@ $table{products} =
     disallownew tinyint not null,
     votesperuser smallint not null,
     maxvotesperbug smallint not null default 10000,
-    votestoconfirm smallint not null
+    votestoconfirm smallint not null,
+    defaultmilestone varchar(20) not null default "---"
 ';
 
 
@@ -1073,8 +1074,15 @@ sub ChangeFieldType ($$$)
     my $ref = GetFieldDef($table, $field);
     #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
 
-    if ($$ref[1] ne $newtype) {
+    my $oldtype = $ref->[1];
+    if ($ref->[4]) {
+        $oldtype .= qq{ default "$ref->[4]"};
+    }
+
+    if ($oldtype ne $newtype) {
         print "Updating field type $field in table $table ...\n";
+        print "old: $oldtype\n";
+        print "new: $newtype\n";
         $newtype .= " NOT NULL" if $$ref[3];
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
@@ -1543,8 +1551,31 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 # the size of the target_milestone field in the bugs table.
 
 ChangeFieldType('bugs', 'target_milestone',
-                'varchar(20) not null default "---"');
-ChangeFieldType('milestones', 'value', 'varchar(20) not null');
+                'varchar(20) default "---"');
+ChangeFieldType('milestones', 'value', 'varchar(20)');
+
+
+# 2000-03-23 Added a defaultmilestone field to the products table, so that
+# we know which milestone to initially assign bugs to.
+
+if (!GetFieldDef('products', 'defaultmilestone')) {
+    AddField('products', 'defaultmilestone',
+             'varchar(20) not null default "---"');
+    $sth = $dbh->prepare("SELECT product, defaultmilestone FROM products");
+    $sth->execute();
+    while (my ($product, $defaultmilestone) = $sth->fetchrow_array()) {
+        $product = $dbh->quote($product);
+        $defaultmilestone = $dbh->quote($defaultmilestone);
+        my $s2 = $dbh->prepare("SELECT value FROM milestones " .
+                               "WHERE value = $defaultmilestone " .
+                               "AND product = $product");
+        $s2->execute();
+        if (!$s2->fetchrow_array()) {
+            $dbh->do("INSERT INTO milestones(value, product) " .
+                     "VALUES ($defaultmilestone, $product)");
+        }
+    }
+}
 
 
 #
@@ -1563,3 +1594,4 @@ if ($regenerateshadow) {
     print "Now regenerating the shadow database for all bugs.\n";
     system("./processmail regenerate");
 }
+unlink "data/versioncache";

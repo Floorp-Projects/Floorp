@@ -336,6 +336,10 @@ if ($action eq 'del') {
                 AND target_milestone=" . SqlQuote($milestone));
     my $bugs = FetchOneColumn();
 
+    SendSQL("SELECT defaultmilestone FROM products " .
+            "WHERE product=" . SqlQuote($product));
+    my $defaultmilestone = FetchOneColumn();
+
     print "<TABLE BORDER=1 CELLPADDING=4 CELLSPACING=0>\n";
     print "<TR BGCOLOR=\"#6666FF\">\n";
     print "  <TH VALIGN=\"top\" ALIGN=\"left\">Part</TH>\n";
@@ -367,6 +371,13 @@ one.";
               "milestone, <B><BLINK>all</BLINK></B> stored bugs will be deleted, too. ",
               "You could not even see the bug history for this milestone anymore!\n",
               "</TD></TR></TABLE>\n";
+    }
+
+    if ($defaultmilestone eq $milestone) {
+        print "Sorry; this is the default milestone for this product, and " .
+            "so it can not be deleted.";
+        PutTrailer($localtrailer);
+        exit;
     }
 
     print "<P>Do you really want to delete this milestone?<P>\n";
@@ -499,7 +510,8 @@ if ($action eq 'update') {
     CheckMilestone($product,$milestoneold);
 
     SendSQL("LOCK TABLES bugs WRITE,
-                         milestones WRITE");
+                         milestones WRITE,
+                         products WRITE");
 
     if ($milestone ne $milestoneold) {
         unless ($milestone) {
@@ -522,6 +534,10 @@ if ($action eq 'update') {
                  SET value=" . SqlQuote($milestone) . "
                  WHERE product=" . SqlQuote($product) . "
                    AND value=" . SqlQuote($milestoneold));
+        SendSQL("UPDATE products " .
+                "SET defaultmilestone = " . SqlQuote($milestone) .
+                "WHERE product = " . SqlQuote($product) .
+                "  AND defaultmilestone = " . SqlQuote($milestoneold));
         unlink "data/versioncache";
         print "Updated milestone.<BR>\n";
     }

@@ -79,10 +79,11 @@ sub CheckProduct ($)
 # Displays the form to edit a products parameters
 #
 
-sub EmitFormElements ($$$$$$$$)
+sub EmitFormElements ($$$$$$$$$)
 {
     my ($product, $description, $milestoneurl, $userregexp, $disallownew,
-        $votesperuser, $maxvotesperbug, $votestoconfirm) = @_;
+        $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone)
+        = @_;
 
     $product = value_quote($product);
     $description = value_quote($description);
@@ -94,11 +95,19 @@ sub EmitFormElements ($$$$$$$$)
     print "  <TH ALIGN=\"right\">Description:</TH>\n";
     print "  <TD><TEXTAREA ROWS=4 COLS=64 WRAP=VIRTUAL NAME=\"description\">$description</TEXTAREA></TD>\n";
 
+    $defaultmilestone = value_quote($defaultmilestone);
     if (Param('usetargetmilestone')) {
         $milestoneurl = value_quote($milestoneurl);
         print "</TR><TR>\n";
         print "  <TH ALIGN=\"right\">Milestone URL:</TH>\n";
         print "  <TD><INPUT TYPE=TEXT SIZE=64 MAXLENGTH=255 NAME=\"milestoneurl\" VALUE=\"$milestoneurl\"></TD>\n";
+
+        print "</TR><TR>\n";
+        print "  <TH ALIGN=\"right\">Default milestone:</TH>\n";
+        
+        print "  <TD><INPUT TYPE=TEXT SIZE=20 MAXLENGTH=20 NAME=\"defaultmilestone\" VALUE=\"$defaultmilestone\"></TD>\n";
+    } else {
+        print qq{<INPUT TYPE=HIDDEN NAME="defaultmilestone" VALUE="$defaultmilestone">\n};
     }
 
     # Added -JMR, 2/16/00
@@ -229,7 +238,7 @@ unless ($action) {
         print "</TR>";
     }
     print "<TR>\n";
-    print "  <TD VALIGN=\"top\" COLSPAN=5>Add a new product</TD>\n";
+    print "  <TD VALIGN=\"top\" COLSPAN=7>Add a new product</TD>\n";
     print "  <TD VALIGN=\"top\" ALIGN=\"middle\"><FONT SIZE =-1><A HREF=\"editproducts.cgi?action=add\">Add</A></FONT></TD>\n";
     print "</TR></TABLE>\n";
 
@@ -254,7 +263,7 @@ if ($action eq 'add') {
     print "<FORM METHOD=POST ACTION=editproducts.cgi>\n";
     print "<TABLE BORDER=0 CELLPADDING=4 CELLSPACING=0><TR>\n";
 
-    EmitFormElements('', '', '', '', 0, 0, 10000, 0);
+    EmitFormElements('', '', '', '', 0, 0, 10000, 0, "---");
 
     print "</TR><TR>\n";
     print "  <TH ALIGN=\"right\">Version:</TH>\n";
@@ -315,22 +324,27 @@ if ($action eq 'new') {
     $maxvotesperbug = 10000 if !defined $maxvotesperbug;
     my $votestoconfirm = $::FORM{votestoconfirm};
     $votestoconfirm ||= 0;
+    my $defaultmilestone = $::FORM{defaultmilestone} || "---";
 
     # Add the new product.
     SendSQL("INSERT INTO products ( " .
-          "product, description, milestoneurl, disallownew, votesperuser, " .
-          "maxvotesperbug, votestoconfirm" .
-          " ) VALUES ( " .
-          SqlQuote($product) . "," .
-          SqlQuote($description) . "," .
-          SqlQuote($milestoneurl) . "," .
-          $disallownew . "," .
-          "$votesperuser, $maxvotesperbug, $votestoconfirm)");
+            "product, description, milestoneurl, disallownew, votesperuser, " .
+            "maxvotesperbug, votestoconfirm, defaultmilestone" .
+            " ) VALUES ( " .
+            SqlQuote($product) . "," .
+            SqlQuote($description) . "," .
+            SqlQuote($milestoneurl) . "," .
+            $disallownew . "," .
+            "$votesperuser, $maxvotesperbug, $votestoconfirm, " .
+            SqlQuote($defaultmilestone) . ")");
     SendSQL("INSERT INTO versions ( " .
           "value, program" .
           " ) VALUES ( " .
           SqlQuote($version) . "," .
           SqlQuote($product) . ")" );
+
+    SendSQL("INSERT INTO milestones (product, value) VALUES (" .
+            SqlQuote($product) . ", " . SqlQuote($defaultmilestone) . ")");
 
     # If we're using bug groups, then we need to create a group for this
     # product as well.  -JMR, 2/16/00
@@ -668,11 +682,11 @@ if ($action eq 'edit') {
 
     # get data of product
     SendSQL("SELECT description,milestoneurl,disallownew,
-                    votesperuser,maxvotesperbug,votestoconfirm
+                    votesperuser,maxvotesperbug,votestoconfirm,defaultmilestone
              FROM products
              WHERE product=" . SqlQuote($product));
     my ($description, $milestoneurl, $disallownew,
-        $votesperuser, $maxvotesperbug, $votestoconfirm) =
+        $votesperuser, $maxvotesperbug, $votestoconfirm, $defaultmilestone) =
         FetchSQLData();
 
     my $userregexp = '';
@@ -688,7 +702,7 @@ if ($action eq 'edit') {
 
     EmitFormElements($product, $description, $milestoneurl, $userregexp,
                      $disallownew, $votesperuser, $maxvotesperbug,
-                     $votestoconfirm);
+                     $votestoconfirm, $defaultmilestone);
     
     print "</TR><TR VALIGN=top>\n";
     print "  <TH ALIGN=\"right\"><A HREF=\"editcomponents.cgi?product=", url_quote($product), "\">Edit components:</A></TH>\n";
@@ -780,6 +794,8 @@ if ($action eq 'edit') {
     print "<INPUT TYPE=HIDDEN NAME=\"votesperuserold\" VALUE=\"$votesperuser\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"maxvotesperbugold\" VALUE=\"$maxvotesperbug\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"votestoconfirmold\" VALUE=\"$votestoconfirm\">\n";
+    $defaultmilestone = value_quote($defaultmilestone);
+    print "<INPUT TYPE=HIDDEN NAME=\"defaultmilestoneold\" VALUE=\"$defaultmilestone\">\n";
     print "<INPUT TYPE=HIDDEN NAME=\"action\" VALUE=\"update\">\n";
     print "<INPUT TYPE=SUBMIT VALUE=\"Update\">\n";
 
@@ -800,21 +816,23 @@ if ($action eq 'edit') {
 if ($action eq 'update') {
     PutHeader("Update product");
 
-    my $productold        = trim($::FORM{productold}        || '');
-    my $description       = trim($::FORM{description}       || '');
-    my $descriptionold    = trim($::FORM{descriptionold}    || '');
-    my $disallownew       = trim($::FORM{disallownew}       || '');
-    my $disallownewold    = trim($::FORM{disallownewold}    || '');
-    my $milestoneurl      = trim($::FORM{milestoneurl}      || '');
-    my $milestoneurlold   = trim($::FORM{milestoneurlold}   || '');
-    my $votesperuser      = trim($::FORM{votesperuser}      || 0);
-    my $votesperuserold   = trim($::FORM{votesperuserold}   || '');
-    my $userregexp        = trim($::FORM{userregexp}        || '');
-    my $userregexpold     = trim($::FORM{userregexpold}     || '');
-    my $maxvotesperbug    = trim($::FORM{maxvotesperbug}    || 0);
-    my $maxvotesperbugold = trim($::FORM{maxvotesperbugold} || '');
-    my $votestoconfirm    = trim($::FORM{votestoconfirm}    || 0);
-    my $votestoconfirmold = trim($::FORM{votestoconfirmold} || '');
+    my $productold          = trim($::FORM{productold}          || '');
+    my $description         = trim($::FORM{description}         || '');
+    my $descriptionold      = trim($::FORM{descriptionold}      || '');
+    my $disallownew         = trim($::FORM{disallownew}         || '');
+    my $disallownewold      = trim($::FORM{disallownewold}      || '');
+    my $milestoneurl        = trim($::FORM{milestoneurl}        || '');
+    my $milestoneurlold     = trim($::FORM{milestoneurlold}     || '');
+    my $votesperuser        = trim($::FORM{votesperuser}        || 0);
+    my $votesperuserold     = trim($::FORM{votesperuserold}     || 0);
+    my $userregexp          = trim($::FORM{userregexp}          || '');
+    my $userregexpold       = trim($::FORM{userregexpold}       || '');
+    my $maxvotesperbug      = trim($::FORM{maxvotesperbug}      || 0);
+    my $maxvotesperbugold   = trim($::FORM{maxvotesperbugold}   || 0);
+    my $votestoconfirm      = trim($::FORM{votestoconfirm}      || 0);
+    my $votestoconfirmold   = trim($::FORM{votestoconfirmold}   || 0);
+    my $defaultmilestone    = trim($::FORM{defaultmilestone}    || '---');
+    my $defaultmilestoneold = trim($::FORM{defaultmilestoneold} || '---');
 
     my $checkvotes = 0;
 
@@ -954,6 +972,22 @@ if ($action eq 'update') {
         $checkvotes = 1;
     }
 
+
+    if ($defaultmilestone ne $defaultmilestoneold) {
+        SendSQL("SELECT value FROM milestones " .
+                "WHERE value = " . SqlQuote($defaultmilestone) .
+                "  AND product = " . SqlQuote($productold));
+        if (!FetchOneColumn()) {
+            print "Sorry, the milestone $defaultmilestone must be defined first.";
+            SendSQL("UNLOCK TABLES");
+            PutTrailer($localtrailer);
+            exit;
+        }
+        SendSQL("UPDATE products " .
+                "SET defaultmilestone = " . SqlQuote($defaultmilestone) .
+                "WHERE product=" . SqlQuote($productold));
+        print "Updated default milestone.<BR>\n";
+    }
 
     my $qp = SqlQuote($product);
     my $qpold = SqlQuote($productold);
