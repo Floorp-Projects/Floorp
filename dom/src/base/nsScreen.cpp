@@ -253,16 +253,15 @@ ScreenImpl::GetAvailRect(nsRect& aRect)
     return NS_ERROR_FAILURE;
   }
 
-  nsRect rect;
-  context->GetClientRect(rect);
+  context->GetClientRect(aRect);
 
   float devUnits;
   context->GetDevUnitsToAppUnits(devUnits);
 
-  aRect.x =      NSToIntRound(float(aRect.x)      / devUnits);
-  aRect.y =      NSToIntRound(float(aRect.y)      / devUnits);
+  aRect.x = NSToIntRound(float(aRect.x) / devUnits);
+  aRect.y = NSToIntRound(float(aRect.y) / devUnits);
   aRect.height = NSToIntRound(float(aRect.height) / devUnits);
-  aRect.width =  NSToIntRound(float(aRect.width)  / devUnits);
+  aRect.width = NSToIntRound(float(aRect.width) / devUnits);
 
   return NS_OK;
 }
