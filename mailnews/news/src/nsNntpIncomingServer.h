@@ -154,7 +154,8 @@ private:
     nsCOMPtr <nsISubscribableServer> mInner;
     nsresult EnsureInner();
     nsresult ClearInner();
-    
+    nsresult IsValidRow(PRInt32 row);
+
     nsIOFileStream *mHostInfoStream;
     nsCOMPtr<nsIFileSpec> mNewsrcFilePath;
 };

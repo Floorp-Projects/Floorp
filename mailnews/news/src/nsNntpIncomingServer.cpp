@@ -1775,6 +1775,9 @@ nsNntpIncomingServer::GetRowProperties(PRInt32 index, nsISupportsArray *properti
 NS_IMETHODIMP 
 nsNntpIncomingServer::GetCellProperties(PRInt32 row, const PRUnichar *colID, nsISupportsArray *properties)
 {
+    if (!IsValidRow(row))
+      return NS_ERROR_UNEXPECTED;
+
     if (colID[0] == 's') { 
         // if <name> is in our temporary list of subscribed groups
         // add the "subscribed" property so the check mark shows up
@@ -1868,9 +1871,18 @@ nsNntpIncomingServer::GetLevel(PRInt32 index, PRInt32 *_retval)
     return NS_OK;
 }
 
+nsresult 
+nsNntpIncomingServer::IsValidRow(PRInt32 row)
+{
+    return ((row >= 0) && (row < mSubscribeSearchResult.Count()));
+}
+
 NS_IMETHODIMP 
 nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString& _retval)
 {
+    if (!IsValidRow(row))
+      return NS_ERROR_UNEXPECTED;
+
     if (colID[0] == 'n') {
       nsCString str;
       mSubscribeSearchResult.CStringAt(row, str);
