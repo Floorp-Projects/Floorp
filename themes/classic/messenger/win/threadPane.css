@@ -136,12 +136,8 @@ treeitem[empty="true"] > treerow > .tree-cell-threadpane-icon > .tree-cell-twist
   {
     visibility            : hidden;
   }    
-  
+
 #threadTree  
   {
     border-top            : none;
-    border-bottom         : none;
-    border-left           : none;
   }
-  
-  

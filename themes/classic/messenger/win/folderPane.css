@@ -164,16 +164,11 @@ treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[NewMessages="true"]
 	  min-width             : 10px;
   }
 
-#folderTree, #folderTree > .tree-container-treerows
-  {
-    border                : none;
-  }
 
 #folderTree
   {
-    border-bottom         : 1px solid threedshadow;
-    border-right          : 1px solid threedshadow;
-  } 
+    border: none;
+  }
   
 /* using tree-cell-folderpane-icon to isolate this rule to the folderpane
    and prevent such crawls on the threadpane */   
@@ -182,4 +177,3 @@ treeitem[empty="true"] > treerow > .tree-cell-folderpane-icon > .tree-cell-twist
     visibility            : hidden;
   }      
 
-  

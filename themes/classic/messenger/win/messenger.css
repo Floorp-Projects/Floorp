@@ -384,52 +384,107 @@ searchterm
     border-left         : none;
   }
   
-#messagepane
-  {
-    border-left         : 1px solid threeddarkshadow;
-    border-top          : 1px solid threeddarkshadow;
-    border-right        : 1px solid threedface;
-    border-bottom       : 1px solid threedface;
-  }  
-  
 #threadpane-splitter
   {
-    border-left         : 1px solid threedhighlight;
+    border-left         : none;
+    border-top          : none;
   }
-    
+
 #messagepanebox
   {
-    border-right        : 1px solid threedhighlight;
+    border-top         : 1px solid threedshadow;
+    border-left         : 1px solid threedshadow;
+    border-right        : 1px solid threedface;
+    border-bottom       : 1px solid threedface;
   }
-        
-#sidebar-splitter
+
+#msgHeaderView 
   {
-    border-right        : 1px solid threedshadow;
+    border-top: none;
   }
-    
 
+#msgHeaderView > toolbar > toolbargrippy
+  {
+    border-left          : none;
+  }
 
+  
+#messagepane 
+  {
+    border-left          : 1px solid threeddarkshadow;
+    border-top           : 1px solid threeddarkshadow;
+  }
+
+#status-bar {
+  border-left            : 1px solid threedshadow;
+}
+  
+  
 /** 
  *Focus rings on 3 pane view
  */
 
-#folderTree{
-	border: 2px solid transparent !important;
-	
-} 
- 
-#folderTree:focus{
-	border: 2px solid black !important;
-} 
-  
-  
-.window-focusborder[focusring="true"]{
- border:2px solid black;
+#folderTree > treehead,
+#folderTree > treechildren,
+#threadTree[focusring="false"] > treehead,
+#threadTree[focusring="false"] > treechildren
+{
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
 }
 
-.window-focusborder[focusring="false"]{
- border:2px solid transparent;
-} 
- 
- 
+#folderTree > treehead,
+#threadTree[focusring="false"] > treehead
+{
+  border-top: 1px solid transparent;
+}
 
+#folderTree > treechildren,
+#threadTree[focusring="false"] > treechildren
+{
+  border-bottom: 1px solid transparent;
+}
+
+#folderTree:focus > treehead,
+#folderTree:focus > treechildren,
+#threadTree[focusring="true"] > treehead,
+#threadTree[focusring="true"] > treechildren
+{
+  border-left: 1px solid black;
+  border-right: 1px solid black;
+}
+
+#folderTree:focus > treehead,
+#threadTree[focusring="true"] > treehead
+{
+  border-top: 1px solid black;
+}
+
+#folderTree:focus > treechildren,
+#threadTree[focusring="true"] > treechildren
+{
+  border-bottom: 1px solid black;
+}
+
+#folderTree > treehead > treerow > .treecell-header:first-child,
+#threadTree > treehead > treerow > .treecell-header:first-child
+ {
+  border-left: none !important;
+}
+
+#folderTree > treehead > treerow > .treecell-header,
+#threadTree > treehead > treerow > .treecell-header
+ {
+  border-top: none !important;
+}
+
+#folderTree > treehead > treerow > .treecell-header > .treecell-header-box,
+#threadTree > treehead > treerow > .treecell-header > .treecell-header-box 
+{
+  border-top: none  !important;
+}
+
+#messagepanebox[focusring="true"] 
+{
+  border: 1px solid black;
+}
