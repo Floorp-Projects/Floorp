@@ -99,8 +99,8 @@ void parseFile (const char* aFilename,int size)
   strcat(filename,".tokens");
   {
     nsIParser* parser;
-    nsresult rv = NS_NewHTMLParser(&parser);
-    nsresult r=NS_NewHTMLParser(&parser);
+    nsresult rv = NS_NewParser(&parser);
+    nsresult r=NS_NewParser(&parser);
     CHTMLContentSink theSink;
     parser->setContentSink(&theSink);
     parser->parse(aFilename);

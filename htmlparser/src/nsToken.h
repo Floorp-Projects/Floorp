@@ -99,14 +99,14 @@ class CToken {
      * @update	gess5/11/98
      * @param   value is the new ord value for this token
      */
-    virtual void SetOrdinal(PRInt16 value);
-
+    virtual void SetTypeID(PRInt32 aValue);
+    
     /**
      * Getter which retrieves the current ordinal value for this token
      * @update	gess5/11/98
      * @return  current ordinal value 
      */
-    virtual PRInt16 GetOrdinal(void);
+    virtual PRInt32 GetTypeID(void);
 
     /**
      * Sets the # of attributes found for this token.
@@ -168,9 +168,10 @@ class CToken {
     virtual void SelfTest(void);
 
 protected:
-            PRInt16       mOrdinalValue;
-            PRInt16       mAttrCount;
-            nsString      mTextValue;
+            PRInt32   mTypeID;
+            PRInt16   mAttrCount;
+            PRInt16   mUnused;
+            nsString  mTextValue;
 };
 
 

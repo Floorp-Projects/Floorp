@@ -18,7 +18,6 @@
 
 
 #include "nsParserNode.h" 
-#include "nsHTMLParser.h"
 #include "string.h"
 
 
@@ -138,7 +137,7 @@ const nsString& nsCParserNode::GetSkippedContent() const {
  *  @return  int value that represents tag type
  */
 PRInt32 nsCParserNode::GetNodeType(void) const{
-  return mToken->GetHTMLTag(); 
+  return mToken->GetTypeID(); 
 }
 
 

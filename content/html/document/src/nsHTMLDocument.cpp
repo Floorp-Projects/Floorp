@@ -111,7 +111,7 @@ nsHTMLDocument::LoadURL(nsIURL* aURL, nsIStreamListener* aListener,
   }
 
   nsIParser* parser;
-  nsresult rv = NS_NewHTMLParser(&parser);
+  nsresult rv = NS_NewParser(&parser);
   if (NS_OK == rv) {
     nsIHTMLContentSink* sink;
     rv = NS_NewHTMLContentSink(&sink, this, aURL);

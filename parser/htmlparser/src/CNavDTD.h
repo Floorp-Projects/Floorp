@@ -40,7 +40,7 @@
   {0xaa, 0xda, 0x00,    0x80, 0x5f, 0x8a, 0x3e, 0x14}}
 
 
-class nsHTMLParser;
+class nsParser;
 class nsIHTMLContentSink;
 class nsIParserDebug;
 
@@ -681,7 +681,7 @@ protected:
 
     PRBool  CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const;
     
-    nsHTMLParser*       mParser;
+    nsParser*           mParser;
     nsIHTMLContentSink* mSink;
 
     CTokenHandler*      mTokenHandlers[eToken_last];

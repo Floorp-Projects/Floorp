@@ -18,7 +18,7 @@
   
 //#define __INCREMENTAL 1
 
-#include "nsHTMLParser.h"
+#include "nsParser.h"
 #include "nsIContentSink.h" 
 #include "nsString.h"
 #include "nsCRT.h"
@@ -40,7 +40,7 @@
 */
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-static NS_DEFINE_IID(kClassIID, NS_IHTML_PARSER_IID); 
+static NS_DEFINE_IID(kClassIID, NS_PARSER_IID); 
 static NS_DEFINE_IID(kIParserIID, NS_IPARSER_IID);
 
 static const char* kNullURL = "Error: Null URL given";
@@ -49,7 +49,7 @@ static const char* kNullTokenizer = "Error: Unable to construct tokenizer";
 
 static const int  gTransferBufferSize=4096;  //size of the buffer used in moving data from iistream
 
-//#define DEBUG_SAVE_SOURCE_DOC 1
+#define DEBUG_SAVE_SOURCE_DOC 1
 #ifdef DEBUG_SAVE_SOURCE_DOC
 fstream* gTempStream=0;
 #endif
@@ -57,15 +57,15 @@ fstream* gTempStream=0;
 
 /**
  *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsHTMLParser.
+ *  cause the COM-like construction of an nsParser.
  *  
  *  @update  gess 3/25/98
  *  @param   nsIParser** ptr to newly instantiated parser
  *  @return  NS_xxx error result
  */
-NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult)
+NS_HTMLPARS nsresult NS_NewParser(nsIParser** aInstancePtrResult)
 {
-  nsHTMLParser *it = new nsHTMLParser();
+  nsParser *it = new nsParser();
 
   if (it == 0) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -91,7 +91,7 @@ CTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-nsHTMLParser::nsHTMLParser() : mTokenDeque(gTokenKiller) {
+nsParser::nsParser() : mTokenDeque(gTokenKiller) {
   NS_INIT_REFCNT();
   mParserFilter = nsnull;
   mListener = nsnull;
@@ -111,7 +111,7 @@ nsHTMLParser::nsHTMLParser() : mTokenDeque(gTokenKiller) {
  *  @param   
  *  @return  
  */
-nsHTMLParser::~nsHTMLParser() {
+nsParser::~nsParser() {
   NS_IF_RELEASE(mListener);
   if(mTransferBuffer)
     delete [] mTransferBuffer;
@@ -121,7 +121,7 @@ nsHTMLParser::~nsHTMLParser() {
     delete mCurrentPos;
   mCurrentPos=0;
   if(mDTD)
-     NS_RELEASE(mDTD);
+     NS_RELEASE(mDTD);    
   mDTD=0;
   if(mScanner)
     delete mScanner;
@@ -129,9 +129,9 @@ nsHTMLParser::~nsHTMLParser() {
 }
 
 
-NS_IMPL_ADDREF(nsHTMLParser)
-NS_IMPL_RELEASE(nsHTMLParser)
-//NS_IMPL_ISUPPORTS(nsHTMLParser,NS_IHTML_PARSER_IID)
+NS_IMPL_ADDREF(nsParser)
+NS_IMPL_RELEASE(nsParser)
+//NS_IMPL_ISUPPORTS(nsParser,NS_IHTML_PARSER_IID)
 
 
 /**
@@ -144,7 +144,7 @@ NS_IMPL_RELEASE(nsHTMLParser)
  *  @param    aInstancePtr ptr to newly discovered interface
  *  @return   NS_xxx result code
  */
-nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
+nsresult nsParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
 {                                                                        
   if (NULL == aInstancePtr) {                                            
     return NS_ERROR_NULL_POINTER;                                        
@@ -157,7 +157,7 @@ nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     *aInstancePtr = (nsIParser*)(this);                                        
   }
   else if(aIID.Equals(kClassIID)) {  //do this class...
-    *aInstancePtr = (nsHTMLParser*)(this);                                        
+    *aInstancePtr = (nsParser*)(this);                                        
   }                 
   else {
     *aInstancePtr=0;
@@ -167,7 +167,14 @@ nsresult nsHTMLParser::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return NS_OK;                                                        
 }
 
-nsIParserFilter * nsHTMLParser::SetParserFilter(nsIParserFilter * aFilter)
+
+/**
+ * 
+ * @update	gess6/18/98
+ * @param 
+ * @return
+ */
+nsIParserFilter * nsParser::SetParserFilter(nsIParserFilter * aFilter)
 {
   nsIParserFilter* old=mParserFilter;
   if(old)
@@ -187,7 +194,7 @@ nsIParserFilter * nsHTMLParser::SetParserFilter(nsIParserFilter * aFilter)
  *  @param   nsIContentSink interface for node receiver
  *  @return  
  */
-nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
+nsIContentSink* nsParser::SetContentSink(nsIContentSink* aSink) {
   NS_PRECONDITION(0!=aSink,"sink cannot be null!");
   nsIContentSink* old=mSink;
   if(old)
@@ -207,11 +214,17 @@ nsIContentSink* nsHTMLParser::SetContentSink(nsIContentSink* aSink) {
  *  @param   
  *  @return  
  */
-void nsHTMLParser::SetDTD(nsIDTD* aDTD) {
+void nsParser::SetDTD(nsIDTD* aDTD) {
   mDTD=aDTD;
 }
 
-nsIDTD * nsHTMLParser::GetDTD(void) {
+/**
+ * Retrieve the DTD from the parser.
+ * @update	gess6/18/98
+ * @param 
+ * @return
+ */
+nsIDTD * nsParser::GetDTD(void) {
    return mDTD;
 }
 
@@ -222,7 +235,7 @@ nsIDTD * nsHTMLParser::GetDTD(void) {
  *  @param   
  *  @return  
  */
-CScanner* nsHTMLParser::GetScanner(void){
+CScanner* nsParser::GetScanner(void){
   return mScanner;
 }
 
@@ -234,15 +247,15 @@ CScanner* nsHTMLParser::GetScanner(void){
  *  @param   
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsHTMLParser::IterateTokens() {
+PRInt32 nsParser::IterateTokens() {
   nsDequeIterator e=mTokenDeque.End(); 
   nsDequeIterator theMarkPos(e);
+  mMajorIteration++;
 
   if(!mCurrentPos)
     mCurrentPos=new nsDequeIterator(mTokenDeque.Begin());
 
   PRInt32 result=kNoError;
-
   while((kNoError==result) && ((*mCurrentPos<e))){
     mMinorIteration++;
     CToken* theToken=(CToken*)mCurrentPos->GetCurrent();
@@ -285,7 +298,7 @@ eParseMode DetermineParseMode() {
  *  @param   
  *  @return  
  */
-nsIDTD* NewDTD(eParseMode aMode) {
+nsIDTD* CreateDTD(eParseMode aMode) {
   nsIDTD* aDTD=0;
   switch(aMode) {
     case eParseMode_navigator:
@@ -307,7 +320,7 @@ nsIDTD* NewDTD(eParseMode aMode) {
  * @param 
  * @return
  */
-PRInt32 nsHTMLParser::WillBuildModel(void) {
+PRInt32 nsParser::WillBuildModel(void) {
   mMajorIteration=-1;
   mMinorIteration=-1;
 
@@ -332,7 +345,7 @@ PRInt32 nsHTMLParser::WillBuildModel(void) {
  * @param 
  * @return
  */
-PRInt32 nsHTMLParser::DidBuildModel(PRInt32 anErrorCode) {
+PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
   //One last thing...close any open containers.
   PRInt32 result=anErrorCode;
   if(mDTD) {
@@ -358,7 +371,7 @@ PRInt32 nsHTMLParser::DidBuildModel(PRInt32 anErrorCode) {
  *  @param   aFilename is the name of the disk file to use for testing.
  *  @return  error code (kNoError means ok)
  */
-PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
+PRInt32 nsParser::ParseFileIncrementally(const char* aFilename){
   PRInt32   result=kBadFilename;
   fstream*  theFileStream;
   nsString  theBuffer;
@@ -412,7 +425,7 @@ PRInt32 nsHTMLParser::ParseFileIncrementally(const char* aFilename){
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug){
+PRBool nsParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug){
   NS_PRECONDITION(0!=aFilename,kNullFilename);
   PRInt32 status=kBadFilename;
   mIncremental=aIncremental;
@@ -420,7 +433,7 @@ PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserD
   if(aFilename) {
 
     mParseMode=DetermineParseMode();  
-    mDTD=(0==mDTD) ? NewDTD(mParseMode) : mDTD;
+    mDTD=(0==mDTD) ? CreateDTD(mParseMode) : mDTD;
     if(mDTD) {
       mDTD->SetParser(this);
       mDTD->SetContentSink(mSink);
@@ -457,7 +470,7 @@ PRBool nsHTMLParser::Parse(const char* aFilename,PRBool aIncremental, nsIParserD
  *  @param   aFilename -- const char* containing file to be parsed.
  *  @return  PR_TRUE if parse succeeded, PR_FALSE otherwise.
  */
-PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
+PRInt32 nsParser::Parse(nsIURL* aURL,
                             nsIStreamListener* aListener,
                             PRBool aIncremental,
                             nsIParserDebug * aDebug) {
@@ -480,7 +493,7 @@ PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
   if(aURL) {
 
     mParseMode=DetermineParseMode();  
-    mDTD=(0==mDTD) ? NewDTD(mParseMode) : mDTD;
+    mDTD=(0==mDTD) ? CreateDTD(mParseMode) : mDTD;
     if(mDTD) {
       mDTD->SetParser(this);
       mDTD->SetContentSink(mSink);
@@ -506,6 +519,7 @@ PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
   return status;
 }
 
+
 /**
  * Call this method if all you want to do is parse 1 string full of HTML text.
  *
@@ -514,7 +528,7 @@ PRInt32 nsHTMLParser::Parse(nsIURL* aURL,
  * @param   appendTokens tells us whether we should insert tokens inline, or append them.
  * @return  TRUE if all went well -- FALSE otherwise
  */
-PRInt32 nsHTMLParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
+PRInt32 nsParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
   PRInt32 result=kNoError;
   
   WillBuildModel();
@@ -535,7 +549,7 @@ PRInt32 nsHTMLParser::Parse(nsString& aSourceBuffer,PRBool appendTokens){
  *  @param   
  *  @return  PR_TRUE if parsing concluded successfully.
  */
-PRInt32 nsHTMLParser::ResumeParse() {
+PRInt32 nsParser::ResumeParse() {
   PRInt32 result=kNoError;
 
   mDTD->WillResumeParse();
@@ -558,7 +572,7 @@ PRInt32 nsHTMLParser::ResumeParse() {
  * @param   aCount is the # of attributes you're expecting
  * @return error code (should be 0)
  */
-PRInt32 nsHTMLParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
+PRInt32 nsParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
   nsDequeIterator end=mTokenDeque.End();
 
   int attr=0;
@@ -585,7 +599,7 @@ PRInt32 nsHTMLParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
  * @param 
  * @return
  */
-PRInt32 nsHTMLParser::CollectSkippedContent(nsCParserNode& aNode){
+PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode){
   eHTMLTokenTypes   subtype=eToken_attribute;
   nsDequeIterator   end=mTokenDeque.End();
   PRInt32           count=0;
@@ -609,7 +623,7 @@ PRInt32 nsHTMLParser::CollectSkippedContent(nsCParserNode& aNode){
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::GetBindInfo(void){
+nsresult nsParser::GetBindInfo(void){
   nsresult result=0;
   return result;
 }
@@ -622,7 +636,7 @@ nsresult nsHTMLParser::GetBindInfo(void){
  *  @return  
  */
 nsresult
-nsHTMLParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
+nsParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
                          const nsString& aMsg)
 {
   nsresult result=0;
@@ -639,7 +653,7 @@ nsHTMLParser::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::OnStartBinding(const char *aContentType){
+nsresult nsParser::OnStartBinding(const char *aContentType){
   if (nsnull != mListener) {
     mListener->OnStartBinding(aContentType);
   }
@@ -658,7 +672,7 @@ nsresult nsHTMLParser::OnStartBinding(const char *aContentType){
  *  @param   length is the number of bytes waiting input
  *  @return  error code (usually 0)
  */
-nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
+nsresult nsParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length){
   if (nsnull != mListener) {
     mListener->OnDataAvailable(pIStream, length);
   }
@@ -696,7 +710,7 @@ nsresult nsHTMLParser::OnDataAvailable(nsIInputStream *pIStream, PRInt32 length)
  *  @param   
  *  @return  
  */
-nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
+nsresult nsParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
   nsresult result=DidBuildModel(status);
   if (nsnull != mListener) {
     mListener->OnStopBinding(status, aMsg);
@@ -717,7 +731,7 @@ nsresult nsHTMLParser::OnStopBinding(PRInt32 status, const nsString& aMsg){
  *  @param   anError -- ref to error code
  *  @return  new token or null
  */
-PRInt32 nsHTMLParser::ConsumeToken(CToken*& aToken) {
+PRInt32 nsParser::ConsumeToken(CToken*& aToken) {
   PRInt32 result=mDTD->ConsumeToken(aToken);
   return result;
 }
@@ -732,7 +746,7 @@ PRInt32 nsHTMLParser::ConsumeToken(CToken*& aToken) {
  *  @param   
  *  @return  TRUE if it's ok to proceed
  */
-PRBool nsHTMLParser::WillTokenize(PRBool aIncremental){
+PRBool nsParser::WillTokenize(PRBool aIncremental){
   PRBool result=PR_TRUE;
   return result;
 }
@@ -742,13 +756,15 @@ PRBool nsHTMLParser::WillTokenize(PRBool aIncremental){
  *  @update  gess 3/25/98
  *  @return  TRUE if it's ok to proceed
  */
-PRInt32 nsHTMLParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
+PRInt32 nsParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
   CToken* theToken=0;
   PRInt32 result=kNoError;
+  PRInt32 debugCounter=0; //this can be removed. It's only for debugging...
   
   WillTokenize(PR_TRUE);
 
   while(kNoError==result) {
+    debugCounter++;
     result=ConsumeToken(theToken);
     if(theToken && (kNoError==result)) {
 
@@ -772,7 +788,7 @@ PRInt32 nsHTMLParser::Tokenize(nsString& aSourceBuffer,PRBool appendTokens){
  *  @update  gess 3/25/98
  *  @return  error code 
  */
-PRInt32 nsHTMLParser::Tokenize(void) {
+PRInt32 nsParser::Tokenize(void) {
   CToken* theToken=0;
   PRInt32 result=kNoError;
   PRBool  done=(0==mMajorIteration) ? (!WillTokenize(PR_TRUE)) : PR_FALSE;
@@ -811,7 +827,7 @@ PRInt32 nsHTMLParser::Tokenize(void) {
  *  @param   
  *  @return  TRUE if all went well
  */
-PRBool nsHTMLParser::DidTokenize(PRBool aIncremental) {
+PRBool nsParser::DidTokenize(PRBool aIncremental) {
   PRBool result=PR_TRUE;
 
 #ifdef VERBOSE_DEBUG
@@ -830,7 +846,7 @@ PRBool nsHTMLParser::DidTokenize(PRBool aIncremental) {
  *  @param   
  *  @return  
  */
-void nsHTMLParser::DebugDumpTokens(ostream& out) {
+void nsParser::DebugDumpTokens(ostream& out) {
   nsDequeIterator b=mTokenDeque.Begin();
   nsDequeIterator e=mTokenDeque.End();
 
@@ -851,7 +867,7 @@ void nsHTMLParser::DebugDumpTokens(ostream& out) {
  *  @param   
  *  @return  
  */
-void nsHTMLParser::DebugDumpSource(ostream& out) {
+void nsParser::DebugDumpSource(ostream& out) {
   nsDequeIterator b=mTokenDeque.Begin();
   nsDequeIterator e=mTokenDeque.End();
 

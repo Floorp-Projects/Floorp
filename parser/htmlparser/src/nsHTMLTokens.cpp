@@ -261,7 +261,7 @@ HTMLAttrEntry gHTMLAttributeTable[] =
  *  @return  
  */
 CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
-  mTagType=eHTMLTag_unknown;
+  mTypeID=eHTMLTag_unknown;
 }
 
 /*
@@ -272,31 +272,9 @@ CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
  *  @return  
  */
 CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(GetTagName(aTag)) {
-  mTagType=aTag; 
+  mTypeID=aTag; 
 }
 
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-eHTMLTags CHTMLToken::GetHTMLTag() {
-  return mTagType;
-}
-
-/*
- *  
- *  
- *  @update  gess 3/25/98
- *  @param   
- *  @return  
- */
-void CHTMLToken::SetHTMLTag(eHTMLTags aTagType) {
-  mTagType=aTagType; 
-  return;
-}
 
 /*
  *  default constructor
@@ -327,10 +305,10 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
  *  @param   
  *  @return  
  */
-eHTMLTags CStartToken::GetHTMLTag(){
-  if(eHTMLTag_unknown==mTagType)
-    mTagType=DetermineHTMLTagType(mTextValue);
-  return mTagType;
+PRInt32 CStartToken::GetTypeID(){
+  if(eHTMLTag_unknown==mTypeID)
+    mTypeID=DetermineHTMLTagType(mTextValue);
+  return mTypeID;
 }
 
 /*
@@ -439,7 +417,7 @@ void CStartToken::DebugDumpSource(ostream& out) {
  *  @return  
  */
 CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
-  mOrdinalValue=eToken_end;
+  mTypeID=eHTMLTag_unknown;
 }
 
 /*
@@ -475,10 +453,10 @@ PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @param   
  *  @return  eHTMLTag id of this endtag
  */
-eHTMLTags CEndToken::GetHTMLTag(){
-  if(eHTMLTag_unknown==mTagType)
-    mTagType=DetermineHTMLTagType(mTextValue);
-  return mTagType;
+PRInt32 CEndToken::GetTypeID(){
+  if(eHTMLTag_unknown==mTypeID)
+    mTypeID=DetermineHTMLTagType(mTextValue);
+  return mTypeID;
 }
 
 /*
@@ -525,8 +503,7 @@ void CEndToken::DebugDumpSource(ostream& out) {
  *  @return  
  */
 CTextToken::CTextToken(const nsString& aName) : CHTMLToken(aName) {
-  mOrdinalValue=eToken_text;
-  mTagType=eHTMLTag_text;
+  mTypeID=eHTMLTag_text;
 }
 
 /*
@@ -574,8 +551,7 @@ PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @return  
  */
 CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
-  mOrdinalValue=eToken_comment;
-  mTagType=eHTMLTag_comment;
+  mTypeID=eHTMLTag_comment;
 }
 
 /*
@@ -647,8 +623,7 @@ PRInt32 CCommentToken::GetTokenType(void) {
  *  @return  
  */
 CNewlineToken::CNewlineToken(const nsString& aName) : CHTMLToken(aName) {
-  mOrdinalValue=eToken_newline;
-  mTagType=eHTMLTag_newline;
+  mTypeID=eHTMLTag_newline;
 }
 
 /*
@@ -730,7 +705,6 @@ PRInt32 CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),  
   mTextKey() {
   mLastAttribute=PR_FALSE;
-  mOrdinalValue=eToken_attribute;
 }
 
 /*
@@ -767,7 +741,7 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
   out << "[" << GetClassName() << "] " << *cp << "=";
   delete cp;
   char* cp2=mTextValue.ToNewCString();
-  out << *cp2 << ": " << mOrdinalValue << endl;
+  out << *cp2 << ": " << mTypeID << endl;
 }
 
 
@@ -915,8 +889,7 @@ void CAttributeToken::DebugDumpSource(ostream& out) {
  *  @return  
  */
 CWhitespaceToken::CWhitespaceToken(const nsString& aName) : CHTMLToken(aName) {
-  mOrdinalValue=eToken_whitespace;
-  mTagType=eHTMLTag_whitespace;
+  mTypeID=eHTMLTag_whitespace;
 }
 
 /*
@@ -969,8 +942,7 @@ PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @return  
  */
 CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
-  mOrdinalValue=eToken_entity;
-  mTagType=eHTMLTag_entity;
+  mTypeID=eHTMLTag_entity;
 #ifdef VERBOSE_DEBUG
   if(!VerifyEntityTable())  {
     cout<<"Entity table is invalid!" << endl;
@@ -1255,7 +1227,6 @@ PRInt32 CStyleToken::GetTokenType(void) {
  */
 CSkippedContentToken::CSkippedContentToken(const nsString& aName) : CAttributeToken(aName) {
   mTextKey = "$skipped-content";/* XXX need a better answer! */
-  mOrdinalValue=eToken_skippedcontent;
 }
 
 /*
@@ -1333,16 +1304,6 @@ public:
   }
 };
 
-
-/*-------------------------------------------------------
- * 
- * @update  gess4/6/98
- * @param 
- * @return
- */
-eHTMLTokenTypes DetermineTokenType(const nsString& aString){
-  return eToken_unknown;
-}
 
 /*
  *  This method accepts a string (and optionally, its length)

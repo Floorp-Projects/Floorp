@@ -41,6 +41,7 @@ enum  eParseMode {
   eParseMode_autodetect
 };
 
+
 const PRInt32   kEOF          = 1000000L;
 const PRInt32   kUnknownError = -1000;
 const PRInt32   kCantPropagate = -6;

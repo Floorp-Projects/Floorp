@@ -26,7 +26,7 @@
  *  @param  nsString--name of token
  */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
-  mOrdinalValue=0;
+  mTypeID=0;
   mAttrCount=0;
 }
 
@@ -37,7 +37,7 @@ CToken::CToken(const nsString& aName) : mTextValue(aName) {
  *  @param  aName--char* containing name of token
  */
 CToken::CToken(const char* aName) : mTextValue(aName) {
-  mOrdinalValue=0;
+  mTypeID=0;
   mAttrCount=0;
 }
  
@@ -87,7 +87,7 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
   for(i=0;i<mTextValue.Length();i++){
     anOutputStream << char(mTextValue[i]);
   }
-  anOutputStream << ": " << mOrdinalValue << endl;
+  anOutputStream << ": " << mTypeID << endl;
 }
 
 /**
@@ -129,8 +129,8 @@ nsString& CToken::GetText(void) {
  *  @update gess 3/25/98
  *  @param  value -- new ordinal value for this token
  */
-void CToken::SetOrdinal(PRInt16 value) {
-  mOrdinalValue=value;
+void CToken::SetTypeID(PRInt32 aTypeID) {
+  mTypeID=aTypeID;
 }
 
 /**
@@ -140,8 +140,8 @@ void CToken::SetOrdinal(PRInt16 value) {
  *  @update gess 3/25/98
  *  @return int containing ordinal value
  */
-PRInt16 CToken::GetOrdinal(void) {
-  return mOrdinalValue;
+PRInt32 CToken::GetTypeID(void) {
+  return mTypeID;
 }
 
 /**

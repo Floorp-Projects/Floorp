@@ -48,6 +48,7 @@ class nsIParser : public nsISupports {
     virtual nsIContentSink* SetContentSink(nsIContentSink* aContentSink)=0;
 
     virtual void SetDTD(nsIDTD* aDTD)=0;
+    virtual nsIDTD* GetDTD(void)=0;
 
     /**
      *  Cause the tokenizer to consume the next token, and 
@@ -80,6 +81,6 @@ class nsIParser : public nsISupports {
 
 };
 
-extern NS_HTMLPARS nsresult NS_NewHTMLParser(nsIParser** aInstancePtrResult);
+extern NS_HTMLPARS nsresult NS_NewParser(nsIParser** aInstancePtrResult);
 
 #endif 

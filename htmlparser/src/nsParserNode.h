@@ -40,7 +40,7 @@
 #include "nsHTMLTokens.h"
 #include "nsString.h"
 
-class nsHTMLParser;
+//class nsParser;
 
 class nsCParserNode :  public nsIParserNode {
             

@@ -27,7 +27,7 @@
 
 #include "CNavDTD.h"
 #include "nsHTMLTokens.h"
-#include "nsHTMLParser.h"
+#include "nsParser.h"
 #include "nsIParserDebug.h"
 #include "nsCRT.h"
 #include "prenv.h"  //this is here for debug reasons...
@@ -66,7 +66,7 @@ public:
 
     void SetVerificationDirectory(char * verify_dir);
     void SetRecordStatistics(PRBool bval);
-    PRBool Verify(nsIDTD * aDTD,  nsHTMLParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], char * aURLRef);
+    PRBool Verify(nsIDTD * aDTD,  nsParser * aParser, int ContextStackPos, eHTMLTags aContextStack[], char * aURLRef);
     void DumpVectorRecord(void);
 
     // global table for storing vector statistics and the size
@@ -87,7 +87,7 @@ static NS_DEFINE_IID(kIDebugParserIID, NS_IPARSERDEBUG_IID);
 
 /**
  *  This method is defined in nsIParser. It is used to 
- *  cause the COM-like construction of an nsHTMLParser.
+ *  cause the COM-like construction of an nsParser.
  *  
  *  @update  jevering 3/25/98
  *  @param   nsIParser** ptr to newly instantiated parser
@@ -376,71 +376,72 @@ void CParserDebug::MakeVectorString(char * vector_string, VectorInfo * pInfo)
 void CParserDebug::DumpVectorRecord(void)
 {
     // do we have a table?
-	if (mVectorCount) {
+  if (mVectorCount) {
 
-        // hopefully, they wont exceed 1K.
-      char vector_string[1024];
-      char path[1024];
+      // hopefully, they wont exceed 1K.
+    char vector_string[1024];
+    char path[1024];
 
-      path[0] = '\0';
+    path[0] = '\0';
 
-      // put in the verification directory.. else the root
-      if (mVerificationDir)
-         strcpy(path,mVerificationDir);
+    // put in the verification directory.. else the root
+    if (mVerificationDir)
+       strcpy(path,mVerificationDir);
 
-      strcat(path,CONTEXT_VECTOR_STAT);
+    strcat(path,CONTEXT_VECTOR_STAT);
 
-      // open the stat file creaming any existing stat file
-      PRFileDesc * statisticFile = PR_Open(path,PR_CREATE_FILE|PR_RDWR,0);
+    // open the stat file creaming any existing stat file
+    PRFileDesc * statisticFile = PR_Open(path,PR_CREATE_FILE|PR_RDWR,0);
 		if (statisticFile) {
 
-            PRInt32 i;
-            PRofstream ps;
-            ps.attach(statisticFile);
-        
-            // oh what the heck, sort it again
-	          if (mVectorCount) {
-		          qsort((void*)mVectorInfoArray,(size_t)mVectorCount,sizeof(VectorInfo*),compare);
-	          }
+      PRInt32 i;
+      PRofstream ps;
+      ps.attach(statisticFile);
 
-            // cute little header
-            sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", mVectorCount);
-            ps << vector_string;
-
-            ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";
-            ps << VECTOR_TABLE_HEADER;
-
-            // dump out the bad vectors encountered
-            for (i = 0; i < mVectorCount; i++) {
-               if (!mVectorInfoArray[i]->good_vector) {
-                  MakeVectorString(vector_string, mVectorInfoArray[i]);
-                  ps << vector_string;
-               }
-            }
-
-            ps << "\r\n\r\nValid context vector summary\r\n";
-            ps << VECTOR_TABLE_HEADER;
-            
-            // take a big vector table dump (good vectors)
-            for (i = 0; i < mVectorCount; i++) {
-               if (mVectorInfoArray[i]->good_vector) {
-                  MakeVectorString(vector_string, mVectorInfoArray[i]);
-                  ps << vector_string;
-               }
-                // free em up.  they mean nothing to me now (I'm such a user)
-
-            if (mVectorInfoArray[i]->vector)
-               PR_Free(mVectorInfoArray[i]->vector);
-            PR_Free(mVectorInfoArray[i]);
-         }
+      // oh what the heck, sort it again
+      if (mVectorCount) {
+	      qsort((void*)mVectorInfoArray,(size_t)mVectorCount,sizeof(VectorInfo*),compare);
       }
 
-        // ok, we are done with the table, free it up as well
-      PR_Free(mVectorInfoArray);
-      mVectorInfoArray = 0;
-      mVectorCount = 0;
+      // cute little header
+      sprintf(vector_string,"Context vector occurance results. Processed %d unique vectors.\r\n\r\n", mVectorCount);
+      ps << vector_string;
+
+      ps << "Invalid context vector summary (see " CONTEXT_VECTOR_STAT ") for mapping.\r\n";
+      ps << VECTOR_TABLE_HEADER;
+
+      // dump out the bad vectors encountered
+      for (i = 0; i < mVectorCount; i++) {
+        if (!mVectorInfoArray[i]->good_vector) {
+          MakeVectorString(vector_string, mVectorInfoArray[i]);
+          ps << vector_string;
+        }
+      }
+
+      ps << "\r\n\r\nValid context vector summary\r\n";
+      ps << VECTOR_TABLE_HEADER;
+
+      // take a big vector table dump (good vectors)
+      for (i = 0; i < mVectorCount; i++) {
+        if (mVectorInfoArray[i]->good_vector) {
+          MakeVectorString(vector_string, mVectorInfoArray[i]);
+          ps << vector_string;
+        }
+          // free em up.  they mean nothing to me now (I'm such a user)
+
+        if (mVectorInfoArray[i]->vector)
+           PR_Free(mVectorInfoArray[i]->vector);
+        PR_Free(mVectorInfoArray[i]);
+      } //for
       PR_Close(statisticFile);
-   }
+    }//if
+
+      // ok, we are done with the table, free it up as well
+    PR_Free(mVectorInfoArray);
+    mVectorInfoArray = 0;
+    mVectorCount = 0;
+
+  } //if
 }
 
 
@@ -455,7 +456,7 @@ void CParserDebug::DumpVectorRecord(void)
  * @return  TRUE if we know how to handle it, else false
  */
 
-PRBool CParserDebug::Verify(nsIDTD * aDTD,  nsHTMLParser * aParser, int aContextStackPos, eHTMLTags aContextStack[], char * aURLRef) 
+PRBool CParserDebug::Verify(nsIDTD * aDTD,  nsParser * aParser, int aContextStackPos, eHTMLTags aContextStack[], char * aURLRef) 
 {
    PRBool  result=PR_TRUE;
 
