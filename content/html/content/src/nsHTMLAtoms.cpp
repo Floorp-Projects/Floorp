@@ -58,6 +58,8 @@ nsIAtom* nsHTMLAtoms::content;
 nsIAtom* nsHTMLAtoms::coords;
 nsIAtom* nsHTMLAtoms::data;
 nsIAtom* nsHTMLAtoms::defer;
+nsIAtom* nsHTMLAtoms::defaultchecked;
+nsIAtom* nsHTMLAtoms::defaultvalue;
 nsIAtom* nsHTMLAtoms::dir;
 nsIAtom* nsHTMLAtoms::disabled;
 nsIAtom* nsHTMLAtoms::div;
@@ -227,6 +229,8 @@ void nsHTMLAtoms::AddrefAtoms()
     compact = NS_NewAtom("COMPACT");
     content = NS_NewAtom("CONTENT");
     coords = NS_NewAtom("COORDS");
+    defaultchecked = NS_NewAtom("DEFAULTCHECKED");
+    defaultvalue = NS_NewAtom("DEFAULTVALUE");
     defer = NS_NewAtom("DEFER");
     dir = NS_NewAtom("DIR");
     div = NS_NewAtom("DIV");
@@ -394,6 +398,8 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(compact);
     NS_RELEASE(content);
     NS_RELEASE(coords);
+    NS_RELEASE(defaultchecked);
+    NS_RELEASE(defaultvalue);
     NS_RELEASE(defer);
     NS_RELEASE(dir);
     NS_RELEASE(disabled);
