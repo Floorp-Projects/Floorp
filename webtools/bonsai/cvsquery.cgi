@@ -200,7 +200,15 @@ my $result= &query_checkins( %mod_map );
 my %w;
 
 for my $i (@{$result}) {
-    $w{"$i->[$::CI_WHO]\@$userdomain"} = 1;
+	my $aname=$i->[$::CI_WHO];
+# the else is for compatibility w/ something that uses the other format
+# the regexp is probably not the best, but I think it might work
+	if ($aname =~ /%\w*.\w\w+/) {
+		my $tmp = join("@",split("%",$aname));
+		$w{"$tmp"} = 1;
+	}else{
+		$w{"$i->[$::CI_WHO]\@$userdomain"} = 1;
+	}
 }
 
 my @p = sort keys %w;
