@@ -3949,6 +3949,22 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
 
     nsresult rv = SetupNewViewer(aContentViewer);
 
+    // If we are loading a wyciwyg url from history, change the base URI for 
+    // the document to the original http url that created the document.write().
+    // This makes sure that all relative urls in a document.written page loaded
+    // via history work properly.
+    PRBool historyLoad = PR_FALSE, isWyciwyg = PR_FALSE;
+
+    if (mLoadType & LOAD_CMD_HISTORY ||
+        mLoadType == LOAD_RELOAD_NORMAL ||
+        mLoadType == LOAD_RELOAD_CHARSET_CHANGE)
+        historyLoad  = PR_TRUE;
+
+    rv = mCurrentURI->SchemeIs("wyciwyg", &isWyciwyg);
+      
+    if (historyLoad && NS_SUCCEEDED(rv) && isWyciwyg)
+        SetBaseUrlForWyciwyg(aContentViewer);
+    
     // XXX What if SetupNewViewer fails?
     if (mLSHE)
       mOSHE = mLSHE;
@@ -6752,4 +6768,33 @@ nsDocShell::InterfaceRequestorProxy::GetInterface(const nsIID & aIID, void **aSi
     }
     *aSink = nsnull;
     return NS_NOINTERFACE;
+}
+
+nsresult
+nsDocShell::SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer)
+{
+    nsCOMPtr<nsIURI> baseURI;
+    nsCOMPtr<nsIDocument> document;
+    nsresult rv = NS_OK;
+
+    if (!aContentViewer)
+        return NS_ERROR_FAILURE;
+
+    // Create the fixup object if necessary
+    if (!mURIFixup)
+        mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID, &rv);        
+
+    if (mURIFixup)
+        rv = mURIFixup->CreateExposableURI(mCurrentURI, getter_AddRefs(baseURI));
+
+    // Get the current document and set the base uri
+    if (baseURI) {
+        nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(aContentViewer));
+        if (docViewer) {
+            rv = docViewer->GetDocument(*getter_AddRefs(document));
+            if (document)
+                rv = document->SetBaseURL(baseURI);
+        }
+    }
+    return rv;
 }

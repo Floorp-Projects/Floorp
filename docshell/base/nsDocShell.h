@@ -251,6 +251,8 @@ protected:
     NS_IMETHOD DisplayLoadError(nsresult aError, nsIURI *aURI, const PRUnichar *aURL);
     NS_IMETHOD LoadErrorPage(nsIURI *aURI, const PRUnichar *aURL, const PRUnichar *aPage, const PRUnichar *aDescription);
 
+    nsresult SetBaseUrlForWyciwyg(nsIContentViewer * aContentViewer);
+
     static  inline  PRUint32
     PRTimeToSeconds(PRTime t_usec)
     {
