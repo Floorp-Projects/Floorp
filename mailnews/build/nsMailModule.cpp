@@ -829,11 +829,11 @@ static const nsModuleComponentInfo gComponents[] = {
        NS_MSGCONTENTPOLICY_CONTRACTID,
        nsMsgContentPolicyConstructor,
        RegisterContentPolicy, UnregisterContentPolicy },
-	  { "mail cookie policy enforcer",
-	    NS_MSGCOOKIEPOLICY_CID,
-	    NS_COOKIEPERMISSION_CONTRACTID,
-	    nsMsgCookiePolicyConstructor
-	  },
+    { "mail cookie policy enforcer",
+      NS_MSGCOOKIEPOLICY_CID,
+      NS_COOKIEPERMISSION_CONTRACTID,
+      nsMsgCookiePolicyConstructor
+    },
     
     ////////////////////////////////////////////////////////////////////////////////
     // addrbook components
