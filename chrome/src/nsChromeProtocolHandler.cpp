@@ -62,6 +62,7 @@ protected:
     nsCOMPtr<nsILoadGroup>      mLoadGroup;
     nsCOMPtr<nsIStreamListener> mListener;
     nsCOMPtr<nsISupports>       mContext;
+	nsLoadFlags					mLoadAttributes;
 
 public:
     static nsresult
@@ -104,7 +105,7 @@ nsCachedChromeChannel::Create(nsIURI* aURI, nsILoadGroup* aLoadGroup, nsIChannel
 
 
 nsCachedChromeChannel::nsCachedChromeChannel(nsIURI* aURI, nsILoadGroup* aLoadGroup)
-    : mURI(aURI), mLoadGroup(aLoadGroup)
+    : mURI(aURI), mLoadGroup(aLoadGroup), mLoadAttributes (nsIChannel::LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
 }
@@ -210,7 +211,7 @@ nsCachedChromeChannel::AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosi
 NS_IMETHODIMP
 nsCachedChromeChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 {
-    *aLoadAttributes = nsIChannel::LOAD_NORMAL;
+    *aLoadAttributes = mLoadAttributes; 
     return NS_OK;
 }
 
@@ -218,6 +219,7 @@ NS_IMETHODIMP
 nsCachedChromeChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
     // XXX: NS_NOTREACHED("don't do that");
+	mLoadAttributes = aLoadAttributes;
     return NS_OK;
 }
 
