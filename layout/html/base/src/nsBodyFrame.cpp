@@ -320,6 +320,14 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     // For append reflow commands that target the flowed frames just
     // repaint the newly added part of the frame.
     if (nsIReflowCommand::FrameAppended == reflowType) {
+      //this blows. we're repainting everything, but we have no choice
+      //since we don't know how we got here. see the XXX above for a
+      //real fix.
+#if 1
+      damageArea.y = 0;
+      damageArea.height = aDesiredSize.height;
+      damageArea.width = aDesiredSize.width;
+#else
       // It's an append reflow command
       damageArea.y = mRect.YMost();
       damageArea.width = aDesiredSize.width;
@@ -330,6 +338,7 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
         damageArea.y = 0;
         damageArea.height = aDesiredSize.height;
       }
+#endif
     } else {
       // Ideally the frame that is the target of the reflow command
       // (or its parent frame) would generate a damage rect, but
