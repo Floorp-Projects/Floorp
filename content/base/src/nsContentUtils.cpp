@@ -57,13 +57,18 @@
 #include "nsIJSContextStack.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
+#include "nsParserCIID.h"
+#include "nsIParserService.h"
+#include "nsIServiceManager.h"
 
 static const char *kJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
+static NS_DEFINE_IID(kParserServiceCID, NS_PARSERSERVICE_CID);
 
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;
 nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
 nsIScriptSecurityManager *nsContentUtils::sSecurityManager = nsnull;
 nsIThreadJSContextStack *nsContentUtils::sThreadJSContextStack = nsnull;
+nsIParserService *nsContentUtils::sParserService = nsnull;
 
 // static
 nsresult
@@ -86,6 +91,34 @@ nsContentUtils::Init()
   }
 
   return rv;
+}
+
+/**
+ * Access a cached parser service. Don't addref. We need only one
+ * reference to it and this class has that one.
+ */
+/* static */
+nsIParserService*
+nsContentUtils::GetParserServiceWeakRef()
+{
+  // XXX: This isn't accessed from several threads, is it?
+  if (sParserService == nsnull) {
+    // Lock, recheck sCachedParserService and aquire if this should be
+    // safe for multiple threads.
+    nsCOMPtr<nsIServiceManager> mgr;
+    nsresult rv = NS_GetServiceManager(getter_AddRefs(mgr));
+    
+    if (NS_FAILED(rv))
+      return nsnull;
+
+    // This addrefs the service for us and it will be released in
+    // |Shutdown|.
+    mgr->GetService(kParserServiceCID,
+                    NS_GET_IID(nsIParserService),
+                    NS_REINTERPRET_CAST(void**, &sParserService));
+  }
+
+  return sParserService;
 }
 
 // static
@@ -346,6 +379,7 @@ nsContentUtils::Shutdown()
   NS_IF_RELEASE(sXPConnect);
   NS_IF_RELEASE(sSecurityManager);
   NS_IF_RELEASE(sThreadJSContextStack);
+  NS_IF_RELEASE(sParserService);
 }
 
 // static
