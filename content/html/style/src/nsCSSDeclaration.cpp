@@ -378,7 +378,6 @@ nsCSSMargin::nsCSSMargin(const nsCSSMargin& aCopy)
   : mMargin(nsnull), mPadding(nsnull), 
     mBorderWidth(nsnull), mBorderColor(nsnull), mBorderStyle(nsnull),
     mBorderRadius(aCopy.mBorderRadius),
-    mCompatFloaterMargin(aCopy.mCompatFloaterMargin),
     mOutlineWidth(aCopy.mOutlineWidth),
     mOutlineColor(aCopy.mOutlineColor),
     mOutlineStyle(aCopy.mOutlineStyle),
@@ -445,7 +444,6 @@ void nsCSSMargin::List(FILE* out, PRInt32 aIndent) const
  
   nsAutoString  buffer;
   mBorderRadius.AppendToString(buffer, eCSSProperty__moz_border_radius);
-  mCompatFloaterMargin.AppendToString(buffer, eCSSProperty__moz_compat_floater_margin);
   mOutlineWidth.AppendToString(buffer, eCSSProperty_outline_width);
   mOutlineColor.AppendToString(buffer, eCSSProperty_outline_color);
   mOutlineStyle.AppendToString(buffer, eCSSProperty_outline_style);
@@ -1361,7 +1359,6 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
       break;
 
     case eCSSProperty__moz_border_radius:
-    case eCSSProperty__moz_compat_floater_margin:
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
@@ -1369,7 +1366,6 @@ CSSDeclarationImpl::AppendValue(nsCSSProperty aProperty, const nsCSSValue& aValu
       CSS_ENSURE(Margin) {
         switch (aProperty) {
           case eCSSProperty__moz_border_radius: mMargin->mBorderRadius = aValue;  break;
-          case eCSSProperty__moz_compat_floater_margin: mMargin->mCompatFloaterMargin = aValue;  break;
           case eCSSProperty_outline_width:      mMargin->mOutlineWidth = aValue;  break;
           case eCSSProperty_outline_color:      mMargin->mOutlineColor = aValue;  break;
           case eCSSProperty_outline_style:      mMargin->mOutlineStyle = aValue;  break;
@@ -2016,7 +2012,6 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
         break;
 
       case eCSSProperty__moz_border_radius:
-      case eCSSProperty__moz_compat_floater_margin:
       case eCSSProperty_outline_width:
       case eCSSProperty_outline_color:
       case eCSSProperty_outline_style:
@@ -2025,7 +2020,6 @@ CSSDeclarationImpl::SetValueImportant(nsCSSProperty aProperty)
           CSS_ENSURE_IMPORTANT(Margin) {
             switch (aProperty) {
               CSS_CASE_IMPORTANT(eCSSProperty__moz_border_radius, mMargin->mBorderRadius);
-              CSS_CASE_IMPORTANT(eCSSProperty__moz_compat_floater_margin, mMargin->mCompatFloaterMargin);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_width,      mMargin->mOutlineWidth);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_color,      mMargin->mOutlineColor);
               CSS_CASE_IMPORTANT(eCSSProperty_outline_style,      mMargin->mOutlineStyle);
@@ -2694,7 +2688,6 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       break;
 
     case eCSSProperty__moz_border_radius:
-    case eCSSProperty__moz_compat_floater_margin:
     case eCSSProperty_outline_width:
     case eCSSProperty_outline_color:
     case eCSSProperty_outline_style:
@@ -2702,7 +2695,6 @@ CSSDeclarationImpl::GetValue(nsCSSProperty aProperty, nsCSSValue& aValue)
       if (nsnull != mMargin) {
         switch (aProperty) {
           case eCSSProperty__moz_border_radius: aValue = mMargin->mBorderRadius; break;
-          case eCSSProperty__moz_compat_floater_margin: aValue = mMargin->mCompatFloaterMargin; break;
           case eCSSProperty_outline_width:      aValue = mMargin->mOutlineWidth; break;
           case eCSSProperty_outline_color:      aValue = mMargin->mOutlineColor; break;
           case eCSSProperty_outline_style:      aValue = mMargin->mOutlineStyle; break;
