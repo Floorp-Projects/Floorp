@@ -168,15 +168,18 @@ var BookmarksCommand = {
     var cmd = "cmd_" + aCommandName.substring(NC_NS_CMD.length);
     xulElement.setAttribute("command", cmd);
     
-    switch (aCommandName) {
-    case NC_NS_CMD + "bm_expandfolder":
+    if (aCommandName == NC_NS_CMD + "bm_expandfolder") {
       var shouldCollapse = true;
       for (var i=0; i<aSelection.length; ++i)
         if (!aSelection.isExpanded[i])
           shouldCollapse = false;
-      aDisplayName =  shouldCollapse? BookmarksUtils.getLocaleString("cmd_bm_collapsefolder") : aDisplayName;
-    break;
+
+      if (shouldCollapse) {
+        aDisplayName = BookmarksUtils.getLocaleString("cmd_bm_collapsefolder");
+        aAccessKey   = BookmarksUtils.getLocaleString("cmd_bm_collapsefolder_accesskey");
+      }
     }
+
     xulElement.setAttribute("label", aDisplayName);
     xulElement.setAttribute("accesskey", aAccessKey);
     return xulElement;
