@@ -8710,7 +8710,15 @@ ResDef(CAPS_TARGET_DESC_SOFTWAREINSTALL, (CAPS_MSG_BASE + 196), "\
 Installing and running software on your computer")
 
 ResDef(CAPS_TARGET_DETAIL_DESC_SOFTWAREINSTALL, (CAPS_MSG_BASE + 197), "\
-Installing software on your computer's main hard disk, potentially deleting other files on the hard disk. Each time a program that has this form of access attempts to install software, it must display a dialog box that lets you choose whether to go ahead with the installation. If you go ahead, the installation program can execute any software on your computer. This potentially dangerous form of access is typically requested by an installation program after you have downloaded new software or a new version of software that you have previously installed. You should not grant this form of access unless you are installing or updating software from a reliable source.")
+Installing software on your computer's main hard disk, potentially deleting \
+other files on the hard disk. Each time a program that has this form of access \
+attempts to install software, it must display a dialog box that lets you choose \
+whether to go ahead with the installation. If you go ahead, the installation \
+program can execute any software on your computer. This potentially dangerous \
+form of access is typically requested by an installation program after you have \
+downloaded new software or a new version of software that you have previously \
+installed. You should not grant this form of access unless you are installing or \
+updating software from a reliable source.")
 
 ResDef(CAPS_TARGET_URL_SOFTWAREINSTALL, (CAPS_MSG_BASE + 198), "\
 #SoftwareInstall")
@@ -8719,7 +8727,10 @@ ResDef(CAPS_TARGET_DESC_SILENTINSTALL, (CAPS_MSG_BASE + 199), "\
 Installing and running software without warning you")
 
 ResDef(CAPS_TARGET_DETAIL_DESC_SILENTINSTALL, (CAPS_MSG_BASE + 200), "\
-Installing software on your computer's main hard disk without giving you any warning, potentially deleting other files on the hard disk. Any software on the hard disk may be executed in the process. This is an extremely dangerous form of access. It should be granted by system administrators only.")
+Installing software on your computer's main hard disk without giving you any \
+warning, potentially deleting other files on the hard disk. Any software on the \
+hard disk may be executed in the process. This is an extremely dangerous form \
+of access. It should be granted by system administrators only.")
 
 ResDef(CAPS_TARGET_URL_SILENTINSTALL, (CAPS_MSG_BASE + 201), "\
 #SilentInstall")
