@@ -112,6 +112,9 @@ ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += comctl32.lib comdlg32.lib uuid.lib shell32.lib ole32.lib oleaut32.lib version.lib winspool.lib
 RCINCLUDE = splash.rc
 RCFLAGS += -DMOZ_PHOENIX -I$(srcdir)
+ifdef BUILD_STATIC_LIBS
+RCFLAGS += -DMOZ_STATIC_BUILD
+endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
