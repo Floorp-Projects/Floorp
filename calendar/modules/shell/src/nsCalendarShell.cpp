@@ -120,6 +120,10 @@ static NS_DEFINE_IID(kIUserIID,             NS_IUSER_IID);
 static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCUserCID,             NS_USER_CID);
 
+#include "nsXPFCMethodInvokerCommand.h"
+#include "nsIXPFCObserver.h"
+#define kNotFound -1
+
 // All Application Must implement this function
 nsresult NS_RegisterApplicationShellFactory()
 {
@@ -957,6 +961,8 @@ nsEventStatus nsCalendarShell::HandleEvent(nsGUIEvent *aEvent)
 
 nsresult nsCalendarShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
 {
+  SendCommand(aCommand,aReply);
+#if 0
   /*
    * Call SendCommand on the CommandCanvas!
    */
@@ -984,6 +990,7 @@ nsresult nsCalendarShell::ReceiveCommand(nsString& aCommand, nsString& aReply)
   }
 
   NS_RELEASE(root);
+#endif
   return NS_OK;
 }
 
@@ -1056,3 +1063,101 @@ extern "C" void XP_Trace( const char *, ... )
 } 
 
 
+// XXX: Move Me. This code was in the CommandCanvas, but is really
+//      independent of any UI
+
+nsresult nsCalendarShell :: SendCommand(nsString& aCommand, nsString& aReply)
+{
+
+  /*
+   * Extract the CanvasName, method and params out
+   */
+
+  nsString name, method, param;
+
+  aCommand.Trim(" \r\n\t");
+
+  PRInt32 offset = aCommand.Find(' ');
+
+  if (offset == kNotFound)
+    return NS_OK;
+    
+  aCommand.Left(name,offset);
+  aCommand.Cut(0,offset);
+  aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
+
+  offset = aCommand.Find(' ');
+
+  if (offset == kNotFound)
+  {
+    method = aCommand;
+    param = "";
+  } else
+  {
+    aCommand.Left(method,offset);
+    aCommand.Cut(0,offset);
+    aCommand.Trim(" \r\n\t",PR_TRUE,PR_FALSE);
+
+    param = aCommand;
+  }
+
+  /*
+   * Fint the canvas by this name
+   */
+
+  nsIXPFCCanvas * root = nsnull;
+  nsIXPFCCanvas * canvas = nsnull;
+  
+  gXPFCToolkit->GetRootCanvas(&root);
+  
+  canvas = root->CanvasFromName(name);
+
+  NS_RELEASE(root);
+
+  if (canvas == nsnull)
+    return NS_OK;
+
+  /*
+   * Send this command directly to the the canvas.
+   */
+
+  static NS_DEFINE_IID(kCXPFCMethodInvokerCommandCID, NS_XPFC_METHODINVOKER_COMMAND_CID);
+  static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+  static NS_DEFINE_IID(kCXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
+  static NS_DEFINE_IID(kCXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
+
+  nsXPFCMethodInvokerCommand * command;
+
+  nsresult res = nsRepository::CreateInstance(kCXPFCMethodInvokerCommandCID, 
+                                              nsnull, 
+                                              kXPFCCommandIID, 
+                                              (void **)&command);
+
+  if (NS_OK != res)
+    return res ;
+
+  command->Init();
+
+  command->mMethod = method;
+  command->mParams = param;
+
+  /*
+   * Pass this Command onto the Observer interface of the target canvas directly.
+   * There is no need to go through the ObserverManager since we have the
+   * necessary info
+   */
+
+  nsIXPFCObserver * observer = nsnull;
+  nsIXPFCSubject * subject = nsnull;
+
+  res = canvas->QueryInterface(kCXPFCObserverIID, (void **)&observer);
+  if (res == NS_OK)
+    observer->Update(subject,command);
+
+  aReply = command->mReply;
+
+  NS_IF_RELEASE(command);
+  NS_IF_RELEASE(observer);
+  
+  return NS_OK;  
+}

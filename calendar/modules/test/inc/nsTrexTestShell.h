@@ -68,11 +68,11 @@ public:
   NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent)  ;
   NS_IMETHOD GetWebViewerContainer(nsIWebViewerContainer ** aWebViewerContainer) ;
   NS_IMETHOD StartCommandServer();
-
+  NS_IMETHOD SendCommand(nsString& aCommand);
 
 private:
   NS_METHOD RegisterFactories();
-  NS_IMETHOD SendCommand(nsString& aCommand);
+  NS_IMETHOD SendJS(nsString& aCommand);
   NS_IMETHOD ReceiveCommand(nsString& aCommand, nsString& aReply);
 
 private:
