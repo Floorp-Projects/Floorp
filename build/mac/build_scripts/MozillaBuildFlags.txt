@@ -51,6 +51,7 @@ ldap            1      MOZ_LDAP_XPCOM
 ldap_experimental 0    MOZ_LDAP_XPCOM_EXPERIMENTAL
 xmlextras       1
 wsp             0      MOZ_WSP
+iiextras        0
 inspector       1
 mailextras      1
 xptlink         0
