@@ -39,7 +39,8 @@ OBJS =					\
 LINCS=  \
   -I$(PUBLIC)\xpcom	\
   -I$(PUBLIC)\raptor	\
-  -I$(PUBLIC)\intl	\
+  -I$(PUBLIC)\uconv	\
+  -I$(PUBLIC)\ucvja	\
   $(NULL)
 
 LLIBS=				\

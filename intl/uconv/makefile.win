@@ -17,6 +17,8 @@
 
 DEPTH=..\..
 
-DIRS=public src tests
+DIRS=public src  \
+     ucvja \
+     tests
 
 include <$(DEPTH)\layout\config\rules.mak>
