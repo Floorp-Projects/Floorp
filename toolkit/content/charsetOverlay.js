@@ -148,8 +148,6 @@ function UpdateCurrentCharset()
 function UpdateCurrentMailCharset()
 {
     var charset = msgWindow.mailCharacterSet;
-    dump("Update current mail charset: " + charset + " \n");
-
     var menuitem = document.getElementById('charset.' + charset);
 
     if (menuitem) {
@@ -253,7 +251,6 @@ function mailCharsetLoadListener (event)
         if (charset.length > 0 && (charset != gLastMailCharset)) {
             gCharsetMenu.SetCurrentMailCharset(charset);
             gLastMailCharset = charset;
-            dump("mailCharsetLoadListener: " + charset + " \n");
         }
     }
 }
