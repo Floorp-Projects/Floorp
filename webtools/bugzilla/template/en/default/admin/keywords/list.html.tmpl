@@ -52,8 +52,10 @@
   </table>
 [% END %]
 
+[% PROCESS table_header %]
+
 [% FOREACH keyword = keywords %]
-  [% IF loop.count() % max_table_size == 1 %]
+  [% IF !loop.first() && loop.count() % max_table_size == 1 %]
     [% PROCESS table_header %]
   [% END %]
 
