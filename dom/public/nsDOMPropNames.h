@@ -795,7 +795,6 @@
     "selection.startbatchchanges", \
     "selection.tostring", \
     "selectionlistener.notifyselectionchanged", \
-    "selectionlistener.tablecellnotification", \
     "stylesheet.disabled", \
     "stylesheet.readonly", \
     "stylesheet.type", \
