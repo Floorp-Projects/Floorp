@@ -1470,8 +1470,6 @@ nsBoxFrameInner::GetDebugPref(nsIPresContext* aPresContext)
     }
 }
 
-#include "nsIMonument.h"
-
 NS_IMETHODIMP
 nsBoxFrame::Paint(nsIPresContext*      aPresContext,
                   nsIRenderingContext& aRenderingContext,
