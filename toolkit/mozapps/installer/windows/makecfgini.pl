@@ -199,7 +199,6 @@ while($line = <fpInIt>)
 	    $cl =~ s/\s//g;
       close(fpFileCount);
 
-      print "*** component = $componentName, count = $cl, line = $line\n";
       $line =~ s/\$FileCount\$/$cl/i;
 
       print fpOutIni $line;

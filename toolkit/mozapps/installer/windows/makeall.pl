@@ -59,7 +59,7 @@ if ($inConfigFiles eq "")
 
 # Initialize state from environment (which is established in the calling script
 # after reading the installer.cfg file. 
-$versionLanguage          = $ENV{WIZ_versionLanugage};
+$versionLanguage          = $ENV{WIZ_versionLanguage};
 @gComponentList           = split(/,/, $ENV{WIZ_componentList});
 $seiFileNameGeneric       = "nsinstall.exe";
 $seiFileNameSpecific      = $ENV{WIZ_fileInstallerEXE};
@@ -77,7 +77,9 @@ if(defined($ENV{DEBUG_INSTALLER_BUILD}))
   print "   inDistPath : $inDistPath\n";
 }
 
-$gDefaultProductVersion   = StageUtils::GetProductY2KVersion($topobjdir, $topsrcdir, $topsrcdir);
+$gDefaultProductVersion = $ENV{WIZ_versionProduct};
+#$y2kDate = StageUtils::GetProductBuildId("$inDistPath/include/nsBuildID.h", "NS_BUILD_ID");
+#$gDefaultProductVersion = "$ENV{WIZ_versionProduct}.$y2kDate";
 
 print "\n";
 print " Building $ENV{WIZ_nameProduct} installer\n";
