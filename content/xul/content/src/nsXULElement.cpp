@@ -291,6 +291,7 @@ nsIAtom*             nsXULElement::kHeightAtom;
 nsIAtom*             nsXULElement::kHiddenAtom;
 nsIAtom*             nsXULElement::kIdAtom;
 nsIAtom*             nsXULElement::kObservesAtom;
+nsIAtom*             nsXULElement::kOpenAtom;
 nsIAtom*             nsXULElement::kPopupAtom;
 nsIAtom*             nsXULElement::kMenuPopupAtom;
 nsIAtom*             nsXULElement::kRefAtom;
@@ -364,6 +365,7 @@ nsXULElement::Init()
         kHiddenAtom         = NS_NewAtom("hidden");
         kIdAtom             = NS_NewAtom("id");
         kObservesAtom       = NS_NewAtom("observes");
+        kOpenAtom           = NS_NewAtom("open");
         kPopupAtom          = NS_NewAtom("popup");
         kMenuPopupAtom      = NS_NewAtom("menupopup");
         kRefAtom            = NS_NewAtom("ref");
@@ -447,6 +449,7 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kHiddenAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
+        NS_IF_RELEASE(kOpenAtom);
         NS_IF_RELEASE(kPopupAtom);
         NS_IF_RELEASE(kMenuPopupAtom);
         NS_IF_RELEASE(kRefAtom);
@@ -3919,7 +3922,14 @@ nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute,
 
     nsIAtom* tag = Tag();
 
-    if (kTreeColAtom == tag) {
+    if (kTreeItemAtom == tag) {
+#if 0
+        // Force a framechange if the 'open' atom changes on a <treeitem>
+        if (kOpenAtom == aAttribute)
+            aHint = NS_STYLE_HINT_FRAMECHANGE;
+#endif
+    }
+    else if (kTreeColAtom == tag) {
         // Ignore 'width' and 'hidden' on a <treecol>
         if (kWidthAtom == aAttribute || kHiddenAtom == aAttribute)
             aHint = NS_STYLE_HINT_REFLOW;

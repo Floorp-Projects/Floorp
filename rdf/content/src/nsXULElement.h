@@ -335,6 +335,7 @@ protected:
     static nsIAtom*             kHiddenAtom;
     static nsIAtom*             kIdAtom;
     static nsIAtom*             kObservesAtom;
+    static nsIAtom*             kOpenAtom;
     static nsIAtom*             kPopupAtom;
     static nsIAtom*             kMenuPopupAtom;
     static nsIAtom*             kRefAtom;
