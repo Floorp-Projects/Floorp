@@ -139,6 +139,7 @@ viewer:Components:view.shlb
 viewer:Components:Wallet.shlb 
 viewer:Components:wallet.xpt 
 viewer:Components:WalletViewers.shlb 
+viewer:Components:webshell.xpt
 viewer:Components:widget.xpt 
 viewer:Components:xfer.shlb 
 viewer:Components:xpcom.xpt 
