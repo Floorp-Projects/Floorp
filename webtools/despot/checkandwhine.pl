@@ -35,7 +35,7 @@ chdir $sourcedir || die "Couldn't chdir to $sourcedir";
 use Mysql;
 require 'utils.pl';
 
-$db = Mysql->Connect("localhost", "mozusers")
+$db = Mysql->Connect("localhost", "mozusers", "despot")
     || die "Can't connect to database server";
 
 $query = Query("select email,neednewpassword from users");

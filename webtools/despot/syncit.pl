@@ -58,7 +58,7 @@ chdir $srcdir || die "Couldn't chdir to $srcdir";
 use Mysql;
 require 'utils.pl';
 
-$db = Mysql->Connect("localhost", "mozusers", "root")
+$db = Mysql->Connect("localhost", "mozusers", "despot")
     || die "Can't connect to database server";
 
 $db = $db;                      # Make -w shut up.

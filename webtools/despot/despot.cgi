@@ -100,7 +100,7 @@ import_names("F");              # Makes all form values available as F::.
 
 use Mysql;
 
-$::db = Mysql->Connect(undef, "mozusers", "root", "")
+$::db = Mysql->Connect("localhost", "mozusers", "despot")
     || die "Can't connect to database server";
 
 
