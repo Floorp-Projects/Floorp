@@ -541,7 +541,7 @@ NSPR_API(void) _PR_PauseCPU(void);
 #define _PR_LOCK_UNLOCK(_lock) \
     _PR_MD_UNLOCK(&(_lock)->ilock);
     
-extern PRThread * _PR_AssignLock(PRLock *lock);
+extern PRThread * _PR_UnblockWaiters(PRLock *lock);
 
 #define _PR_LOCK_PTR(_qp) \
     ((PRLock*) ((char*) (_qp) - offsetof(PRLock,links)))
