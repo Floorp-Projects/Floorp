@@ -62,6 +62,7 @@ sub init {
     my @fields;
     my @supptables;
     my @wherepart;
+    my @having = ("(cntuseringroups = cntbugingroups OR canseeanyway)");
     @fields = @$fieldsref if $fieldsref;
     my %F;
     my %M;
@@ -265,8 +266,8 @@ sub init {
     }
 
     my $chartid;
-    # $statusid is used by the code that queries for attachment statuses.
-    my $statusid = 0;
+    # $type_id is used by the code that queries for attachment flags.
+    my $type_id = 0;
     my $f;
     my $ff;
     my $t;
@@ -358,69 +359,61 @@ sub init {
              }
              $f = "$table.$field";
          },
-         "^attachstatusdefs.name," => sub {
-             # The below has Fun with the names for attachment statuses. This
-             # isn't needed for changed* queries, so exclude those - the
-             # generic stuff will cope
+         "^flagtypes.name," => sub {
+             # Matches bugs by flag name/status.
+             # Note that--for the purposes of querying--a flag comprises
+             # its name plus its status (i.e. a flag named "review" 
+             # with a status of "+" can be found by searching for "review+").
+             
+             # Don't do anything if this condition is about changes to flags,
+             # as the generic change condition processors can handle those.
              return if ($t =~ m/^changed/);
-
-             # Searching for "status != 'bar'" wants us to look for an
-             # attachment without the 'bar' status, not for an attachment with
-             # a status not equal to 'bar' (Which would pick up an attachment
-             # with more than one status). We do this by LEFT JOINS, after
-             # grabbing the matching attachment status ids.
-             # Note that this still won't find bugs with no attachments, since
-             # that isn't really what people would expect.
-
-             # First, get the attachment status ids, using the other funcs
-             # to match the WHERE term.
-             # Note that we need to reverse the negated bits for this to work
-             # This somewhat abuses the definitions of the various terms -
-             # eg, does 'contains all' mean that the status has to contain all
-             # those words, or that all those words must be exact matches to
-             # statuses, which must all be on a single attachment, or should
-             # the match on the status descriptions be a contains match, too?
-
-             my $inverted = 0;
-             if ($t =~ m/not(.*)/) {
-                 $t = $1;
-                 $inverted = 1;
-             }
-
-             $ref = $funcsbykey{",$t"};
-             &$ref;
-             &::SendSQL("SELECT id FROM attachstatusdefs WHERE $term");
-
-             my @as_ids;
-             while (&::MoreSQLData()) {
-                 push @as_ids, &::FetchOneColumn();
-             }
-
-             # When searching for multiple statuses within a single boolean chart,
-             # we want to match each status record separately.  In other words,
-             # "status = 'foo' AND status = 'bar'" should match attachments with
-             # one status record equal to "foo" and another one equal to "bar",
-             # not attachments where the same status record equals both "foo" and
-             # "bar" (which is nonsensical).  In order to do this we must add an
-             # additional counter to the end of the "attachstatuses" table
-             # reference.
-             ++$statusid;
-
-             my $attachtable = "attachments_$chartid";
-             my $statustable = "attachstatuses_${chartid}_$statusid";
-
-             push(@supptables, "attachments $attachtable");
-             my $join = "LEFT JOIN attachstatuses $statustable ON ".
-               "($attachtable.attach_id = $statustable.attach_id AND " .
-                "$statustable.statusid IN (" . join(",", @as_ids) . "))";
-             push(@supptables, $join);
-             push(@wherepart, "bugs.bug_id = $attachtable.bug_id");
-             if ($inverted) {
-                 $term = "$statustable.statusid IS NULL";
-             } else {
-                 $term = "$statustable.statusid IS NOT NULL";
+             
+             # Add the flags and flagtypes tables to the query.  We do 
+             # a left join here so bugs without any flags still match 
+             # negative conditions (f.e. "flag isn't review+").
+             my $flags = "flags_$chartid";
+             push(@supptables, "LEFT JOIN flags $flags " . 
+                               "ON bugs.bug_id = $flags.bug_id");
+             my $flagtypes = "flagtypes_$chartid";
+             push(@supptables, "LEFT JOIN flagtypes $flagtypes " . 
+                               "ON $flags.type_id = $flagtypes.id");
+             
+             # Generate the condition by running the operator-specific function.
+             # Afterwards the condition resides in the global $term variable.
+             $ff = "CONCAT($flagtypes.name, $flags.status)";
+             &{$funcsbykey{",$t"}};
+             
+             # If this is a negative condition (f.e. flag isn't "review+"),
+             # we only want bugs where all flags match the condition, not 
+             # those where any flag matches, which needs special magic.
+             # Instead of adding the condition to the WHERE clause, we select
+             # the number of flags matching the condition and the total number
+             # of flags on each bug, then compare them in a HAVING clause.
+             # If the numbers are the same, all flags match the condition,
+             # so this bug should be included.
+             if ($t =~ m/not/) {
+                push(@fields, "SUM($ff IS NOT NULL) AS allflags_$chartid");
+                push(@fields, "SUM($term) AS matchingflags_$chartid");
+                push(@having, "allflags_$chartid = matchingflags_$chartid");
+                $term = "0=0";
              }
          },
+         "^requesters.login_name," => sub {
+             push(@supptables, "flags flags_$chartid");
+             push(@wherepart, "bugs.bug_id = flags_$chartid.bug_id");
+             push(@supptables, "profiles requesters_$chartid");
+             push(@wherepart, "flags_$chartid.requester_id = requesters_$chartid.userid");
+             $f = "requesters_$chartid.login_name";
+         },
+         "^setters.login_name," => sub {
+             push(@supptables, "flags flags_$chartid");
+             push(@wherepart, "bugs.bug_id = flags_$chartid.bug_id");
+             push(@supptables, "profiles setters_$chartid");
+             push(@wherepart, "flags_$chartid.setter_id = setters_$chartid.userid");
+             $f = "setters_$chartid.login_name";
+         },
+         
          "^changedin," => sub {
              $f = "(to_days(now()) - to_days(bugs.delta_ts))";
          },
@@ -817,8 +810,7 @@ sub init {
     # Make sure we create a legal SQL query.
     @andlist = ("1 = 1") if !@andlist;
     
-    my $query =  ("SELECT DISTINCT " . 
-                    join(', ', @fields) .
+    my $query =  ("SELECT " . join(', ', @fields) .
                   ", COUNT(DISTINCT ugmap.group_id) AS cntuseringroups, " .
                   " COUNT(DISTINCT bgmap.group_id) AS cntbugingroups, " .
                   " ((COUNT(DISTINCT ccmap.who) AND cclist_accessible) " .
@@ -834,11 +826,9 @@ sub init {
                   " LEFT JOIN cc AS ccmap " .
                   " ON ccmap.who = $::userid AND ccmap.bug_id = bugs.bug_id " .
                   " WHERE " . join(' AND ', (@wherepart, @andlist)) .
-                  " GROUP BY bugs.bug_id " .
-                  " HAVING cntuseringroups = cntbugingroups" .
-                  " OR canseeanyway" 
-              );
-
+                  " GROUP BY bugs.bug_id" . 
+                  " HAVING " . join(" AND ", @having));
+    
     if ($debug) {
         print "<p><code>" . value_quote($query) . "</code></p>\n";
         exit;

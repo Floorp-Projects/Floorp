@@ -1336,24 +1336,65 @@ $table{attachments} =
     index(bug_id),
     index(creation_ts)';
 
-# 2001-05-05 myk@mozilla.org: Tables to support attachment statuses.
-# "attachstatuses" stores one record for each status on each attachment.
-# "attachstatusdefs" defines the statuses that can be set on attachments.
+# September 2002 myk@mozilla.org: Tables to support status flags,
+# which replace attachment statuses and allow users to flag bugs
+# or attachments with statuses (review+, approval-, etc.).
+#
+# "flags" stores one record for each flag on each bug/attachment.
+# "flagtypes" defines the types of flags that can be set.
+# "flaginclusions" and "flagexclusions" specify the products/components
+#     a bug/attachment must belong to in order for flags of a given type
+#     to be set for them.
 
-$table{attachstatuses} =
-   '
-     attach_id    MEDIUMINT    NOT NULL , 
-     statusid     SMALLINT     NOT NULL , 
-     PRIMARY KEY(attach_id, statusid) 
+$table{flags} =
+    'id                 MEDIUMINT     NOT NULL  PRIMARY KEY , 
+     type_id            SMALLINT      NOT NULL , 
+     status             CHAR(1)       NOT NULL , 
+     
+     bug_id             MEDIUMINT     NOT NULL , 
+     attach_id          MEDIUMINT     NULL , 
+     
+     creation_date      DATETIME      NOT NULL , 
+     modification_date  DATETIME      NULL , 
+     
+     setter_id          MEDIUMINT     NULL , 
+     requestee_id       MEDIUMINT     NULL , 
+   
+     INDEX(bug_id, attach_id) , 
+     INDEX(setter_id) , 
+     INDEX(requestee_id)
    ';
 
-$table{attachstatusdefs} =
-   '
-     id           SMALLINT     NOT NULL  PRIMARY KEY , 
-     name         VARCHAR(50)  NOT NULL , 
-     description  MEDIUMTEXT   NULL , 
-     sortkey      SMALLINT     NOT NULL  DEFAULT 0 , 
-     product_id   SMALLINT    NOT NULL 
+$table{flagtypes} =
+   'id                  SMALLINT      NOT NULL  PRIMARY KEY , 
+    name                VARCHAR(50)   NOT NULL , 
+    description         TEXT          NULL , 
+    cc_list             VARCHAR(200)  NULL , 
+    
+    target_type         CHAR(1)       NOT NULL  DEFAULT \'b\' , 
+    
+    is_active           TINYINT       NOT NULL  DEFAULT 1 , 
+    is_requestable      TINYINT       NOT NULL  DEFAULT 0 , 
+    is_requesteeble     TINYINT       NOT NULL  DEFAULT 0 , 
+    is_multiplicable    TINYINT       NOT NULL  DEFAULT 0 , 
+    
+    sortkey             SMALLINT      NOT NULL  DEFAULT 0 
+   ';
+
+$table{flaginclusions} =
+   'type_id             SMALLINT      NOT NULL , 
+    product_id          SMALLINT      NULL ,
+    component_id        SMALLINT      NULL , 
+    
+    INDEX(type_id, product_id, component_id)
+   ';
+
+$table{flagexclusions} =
+   'type_id             SMALLINT      NOT NULL , 
+    product_id          SMALLINT      NULL ,
+    component_id        SMALLINT      NULL , 
+    
+    INDEX(type_id, product_id, component_id)
    ';
 
 #
@@ -1792,7 +1833,7 @@ AddFDef("attachments.mimetype", "Attachment mime type", 0);
 AddFDef("attachments.ispatch", "Attachment is patch", 0);
 AddFDef("attachments.isobsolete", "Attachment is obsolete", 0);
 AddFDef("attachments.isprivate", "Attachment is private", 0);
-AddFDef("attachstatusdefs.name", "Attachment Status", 0);
+
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
 AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
@@ -1806,6 +1847,10 @@ AddFDef("bug_group", "Group", 0);
 
 # Oops. Bug 163299
 $dbh->do("DELETE FROM fielddefs WHERE name='cc_accessible'");
+
+AddFDef("flagtypes.name", "Flag", 0);
+AddFDef("requesters.login_name", "Flag Requester", 0);
+AddFDef("setters.login_name", "Flag Setter", 0);
 
 ###########################################################################
 # Detect changed local settings
@@ -3244,6 +3289,133 @@ if (GetFieldDef("profiles", "groupset")) {
     DropField('bugs','groupset');
     DropField('groups','bit');
     $dbh->do("DELETE FROM fielddefs WHERE name = " . $dbh->quote('groupset'));
+}
+
+# September 2002 myk@mozilla.org bug 98801
+# Convert the attachment statuses tables into flags tables.
+if (TableExists("attachstatuses") && TableExists("attachstatusdefs")) {
+    print "Converting attachment statuses to flags...\n";
+    
+    # Get IDs for the old attachment status and new flag fields.
+    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " . 
+                         "WHERE name='attachstatusdefs.name'");
+    $sth->execute();
+    my $old_field_id = $sth->fetchrow_arrayref()->[0] || 0;
+    
+    $sth = $dbh->prepare("SELECT fieldid FROM fielddefs " . 
+                         "WHERE name='flagtypes.name'");
+    $sth->execute();
+    my $new_field_id = $sth->fetchrow_arrayref()->[0];
+
+    # Convert attachment status definitions to flag types.  If more than one
+    # status has the same name and description, it is merged into a single 
+    # status with multiple inclusion records.
+    $sth = $dbh->prepare("SELECT id, name, description, sortkey, product_id " . 
+                         "FROM attachstatusdefs");
+    
+    # status definition IDs indexed by name/description
+    my $def_ids = {};
+    
+    # merged IDs and the IDs they were merged into.  The key is the old ID,
+    # the value is the new one.  This allows us to give statuses the right
+    # ID when we convert them over to flags.  This map includes IDs that
+    # weren't merged (in this case the old and new IDs are the same), since 
+    # it makes the code simpler.
+    my $def_id_map = {};
+    
+    $sth->execute();
+    while (my ($id, $name, $desc, $sortkey, $prod_id) = $sth->fetchrow_array()) {
+        my $key = $name . $desc;
+        if (!$def_ids->{$key}) {
+            $def_ids->{$key} = $id;
+            my $quoted_name = $dbh->quote($name);
+            my $quoted_desc = $dbh->quote($desc);
+            $dbh->do("INSERT INTO flagtypes (id, name, description, sortkey, " .
+                     "target_type) VALUES ($id, $quoted_name, $quoted_desc, " .
+                     "$sortkey, 'a')");
+        }
+        $def_id_map->{$id} = $def_ids->{$key};
+        $dbh->do("INSERT INTO flaginclusions (type_id, product_id) " . 
+                "VALUES ($def_id_map->{$id}, $prod_id)");
+    }
+    
+    # Note: even though we've converted status definitions, we still can't drop
+    # the table because we need it to convert the statuses themselves.
+    
+    # Convert attachment statuses to flags.  To do this we select the statuses
+    # from the status table and then, for each one, figure out who set it
+    # and when they set it from the bugs activity table.
+    my $id = 0;
+    $sth = $dbh->prepare("SELECT attachstatuses.attach_id, attachstatusdefs.id, " . 
+                         "attachstatusdefs.name, attachments.bug_id " . 
+                         "FROM attachstatuses, attachstatusdefs, attachments " . 
+                         "WHERE attachstatuses.statusid = attachstatusdefs.id " .
+                         "AND attachstatuses.attach_id = attachments.attach_id");
+    
+    # a query to determine when the attachment status was set and who set it
+    my $sth2 = $dbh->prepare("SELECT added, who, bug_when " . 
+                             "FROM bugs_activity " . 
+                             "WHERE bug_id = ? AND attach_id = ? " . 
+                             "AND fieldid = $old_field_id " . 
+                             "ORDER BY bug_when DESC");
+    
+    $sth->execute();
+    while (my ($attach_id, $def_id, $status, $bug_id) = $sth->fetchrow_array()) {
+        ++$id;
+        
+        # Determine when the attachment status was set and who set it.
+        # We should always be able to find out this info from the bug activity,
+        # but we fall back to default values just in case.
+        $sth2->execute($bug_id, $attach_id);
+        my ($added, $who, $when);
+        while (($added, $who, $when) = $sth2->fetchrow_array()) {
+            last if $added =~ /(^|[, ]+)\Q$status\E([, ]+|$)/;
+        }
+        $who = $dbh->quote($who); # "NULL" by default if $who is undefined
+        $when = $when ? $dbh->quote($when) : "NOW()";
+            
+        
+        $dbh->do("INSERT INTO flags (id, type_id, status, bug_id, attach_id, " .
+                 "creation_date, modification_date, requestee_id, setter_id) " . 
+                 "VALUES ($id, $def_id_map->{$def_id}, '+', $bug_id, " . 
+                 "$attach_id, $when, $when, NULL, $who)");
+    }
+    
+    # Now that we've converted both tables we can drop them.
+    $dbh->do("DROP TABLE attachstatuses");
+    $dbh->do("DROP TABLE attachstatusdefs");
+    
+    # Convert activity records for attachment statuses into records for flags.
+    my $sth = $dbh->prepare("SELECT attach_id, who, bug_when, added, removed " .
+                            "FROM bugs_activity WHERE fieldid = $old_field_id");
+    $sth->execute();
+    while (my ($attach_id, $who, $when, $old_added, $old_removed) = 
+      $sth->fetchrow_array())
+    {
+        my @additions = split(/[, ]+/, $old_added);
+        @additions = map("$_+", @additions);
+        my $new_added = $dbh->quote(join(", ", @additions));
+        
+        my @removals = split(/[, ]+/, $old_removed);
+        @removals = map("$_+", @removals);
+        my $new_removed = $dbh->quote(join(", ", @removals));
+        
+        $old_added = $dbh->quote($old_added);
+        $old_removed = $dbh->quote($old_removed);
+        $who = $dbh->quote($who);
+        $when = $dbh->quote($when);
+        
+        $dbh->do("UPDATE bugs_activity SET fieldid = $new_field_id, " . 
+                 "added = $new_added, removed = $new_removed " . 
+                 "WHERE attach_id = $attach_id AND who = $who " . 
+                 "AND bug_when = $when AND fieldid = $old_field_id " . 
+                 "AND added = $old_added AND removed = $old_removed");
+    }
+    
+    # Remove the attachment status field from the field definitions.
+    $dbh->do("DELETE FROM fielddefs WHERE name='attachstatusdefs.name'");
+
+    print "done.\n";
 }
 
 # If you had to change the --TABLE-- definition in any way, then add your

@@ -539,7 +539,9 @@ if ($action eq 'delete') {
                          products WRITE,
                          groups WRITE,
                          profiles WRITE,
-                         milestones WRITE");
+                         milestones WRITE,
+                         flaginclusions WRITE,
+                         flagexclusions WRITE);
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -580,6 +582,12 @@ if ($action eq 'delete') {
     SendSQL("DELETE FROM milestones
              WHERE product_id=$product_id");
     print "Milestones deleted.<BR>\n";
+
+    SendSQL("DELETE FROM flaginclusions
+             WHERE product_id=$product_id");
+    SendSQL("DELETE FROM flagexclusions
+             WHERE product_id=$product_id");
+    print "Flag inclusions and exclusions deleted.<BR>\n";
 
     SendSQL("DELETE FROM products
              WHERE id=$product_id");

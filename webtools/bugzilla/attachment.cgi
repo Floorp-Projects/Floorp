@@ -46,6 +46,10 @@ if ($^O eq 'MSWin32') {
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
+# Use these modules to handle flags.
+use Bugzilla::Flag; 
+use Bugzilla::FlagType; 
+
 # Establish a connection to the database backend.
 ConnectToDatabase();
 
@@ -110,7 +114,8 @@ elsif ($action eq "update")
   validateContentType() unless $::FORM{'ispatch'};
   validateIsObsolete();
   validatePrivate();
-  validateStatuses();
+  Bugzilla::Flag::validate(\%::FORM);
+  Bugzilla::FlagType::validate(\%::FORM);
   update();
 }
 else 
@@ -240,29 +245,6 @@ sub validatePrivate
     $::FORM{'isprivate'} = $::FORM{'isprivate'} ? 1 : 0;
 }
 
-sub validateStatuses
-{
-  # Get a list of attachment statuses that are valid for this attachment.
-  PushGlobalSQLState();
-  SendSQL("SELECT  attachstatusdefs.id
-           FROM    attachments, bugs, attachstatusdefs
-           WHERE   attachments.attach_id = $::FORM{'id'}
-           AND     attachments.bug_id = bugs.bug_id
-           AND     attachstatusdefs.product_id = bugs.product_id");
-  my @statusdefs;
-  push(@statusdefs, FetchSQLData()) while MoreSQLData();
-  PopGlobalSQLState();
-  
-  foreach my $status (@{$::MFORM{'status'}})
-  {
-    grep($_ == $status, @statusdefs)
-      || ThrowUserError("invalid_attach_status");
-      
-    # We have tested that the status is valid, so it can be detainted
-    detaint_natural($status);
-  }
-}
-
 sub validateData
 {
   $::FORM{'data'}
@@ -380,18 +362,6 @@ sub viewall
     # !!! Yuck, what an ugly hack.  Fix it!
     $a{'isviewable'} = ( $a{'contenttype'} =~ /^(text|image|application\/vnd\.mozilla\.)/ );
 
-    # Retrieve a list of status flags that have been set on the attachment.
-    PushGlobalSQLState();
-    SendSQL("SELECT    name 
-             FROM      attachstatuses, attachstatusdefs 
-             WHERE     attach_id = $a{'attachid'} 
-             AND       attachstatuses.statusid = attachstatusdefs.id
-             ORDER BY  sortkey");
-    my @statuses;
-    push(@statuses, FetchSQLData()) while MoreSQLData();
-    $a{'statuses'} = \@statuses;
-    PopGlobalSQLState();
-
     # Add the hash representing the attachment to the array of attachments.
     push @attachments, \%a;
   }
@@ -491,10 +461,14 @@ sub insert
 
   # Make existing attachments obsolete.
   my $fieldid = GetFieldID('attachments.isobsolete');
-  foreach my $attachid (@{$::MFORM{'obsolete'}}) {
-      SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $attachid");
+  foreach my $obsolete_id (@{$::MFORM{'obsolete'}}) {
+      SendSQL("UPDATE attachments SET isobsolete = 1 WHERE attach_id = $obsolete_id");
       SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-               VALUES ($::FORM{'bugid'}, $attachid, $::userid, NOW(), $fieldid, '0', '1')");
+               VALUES ($::FORM{'bugid'}, $obsolete_id, $::userid, NOW(), $fieldid, '0', '1')");
+      # If the obsolete attachment has pending flags, migrate them to the new attachment.
+      if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id , 'status' => 'pending' })) {
+        Bugzilla::Flag::migrate($obsolete_id, $attachid);
+      }
   }
 
   # Send mail to let people know the attachment has been created.  Uses a 
@@ -544,32 +518,6 @@ sub edit
   # !!! Yuck, what an ugly hack.  Fix it!
   my $isviewable = ( $contenttype =~ /^(text|image|application\/vnd\.mozilla\.)/ );
 
-  # Retrieve a list of status flags that have been set on the attachment.
-  my %statuses;
-  SendSQL("SELECT  id, name 
-           FROM    attachstatuses JOIN attachstatusdefs 
-           WHERE   attachstatuses.statusid = attachstatusdefs.id 
-           AND     attach_id = $::FORM{'id'}");
-  while ( my ($id, $name) = FetchSQLData() )
-  {
-    $statuses{$id} = $name;
-  }
-
-  # Retrieve a list of statuses for this bug's product, and build an array 
-  # of hashes in which each hash is a status flag record.
-  # ???: Move this into versioncache or its own routine?
-  my @statusdefs;
-  SendSQL("SELECT   id, name 
-           FROM     attachstatusdefs, bugs 
-           WHERE    bug_id = $bugid 
-           AND      attachstatusdefs.product_id = bugs.product_id
-           ORDER BY sortkey");
-  while ( MoreSQLData() )
-  {
-    my ($id, $name) = FetchSQLData();
-    push @statusdefs, { 'id' => $id , 'name' => $name };
-  }
-
   # Retrieve a list of attachments for this bug as well as a summary of the bug
   # to use in a navigation bar across the top of the screen.
   SendSQL("SELECT attach_id FROM attachments WHERE bug_id = $bugid ORDER BY attach_id");
@@ -577,7 +525,20 @@ sub edit
   push(@bugattachments, FetchSQLData()) while (MoreSQLData());
   SendSQL("SELECT short_desc FROM bugs WHERE bug_id = $bugid");
   my ($bugsummary) = FetchSQLData();
-
+  
+  # Get a list of flag types that can be set for this attachment.
+  SendSQL("SELECT product_id, component_id FROM bugs WHERE bug_id = $bugid");
+  my ($product_id, $component_id) = FetchSQLData();
+  my $flag_types = Bugzilla::FlagType::match({ 'target_type'  => 'attachment' , 
+                                     'product_id'   => $product_id , 
+                                     'component_id' => $component_id , 
+                                     'is_active'    => 1});
+  foreach my $flag_type (@$flag_types) {
+    $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'}, 
+                                          'attach_id' => $::FORM{'id'} });
+  }
+  $vars->{'flag_types'} = $flag_types;
+  
   # Define the variables and functions that will be passed to the UI template.
   $vars->{'attachid'} = $::FORM{'id'}; 
   $vars->{'description'} = $description; 
@@ -589,8 +550,6 @@ sub edit
   $vars->{'isobsolete'} = $isobsolete; 
   $vars->{'isprivate'} = $isprivate; 
   $vars->{'isviewable'} = $isviewable; 
-  $vars->{'statuses'} = \%statuses; 
-  $vars->{'statusdefs'} = \@statusdefs; 
   $vars->{'attachments'} = \@bugattachments; 
 
   # Return the appropriate HTTP response headers.
@@ -604,7 +563,7 @@ sub edit
 
 sub update
 {
-  # Update an attachment record.
+  # Updates an attachment record.
 
   # Get the bug ID for the bug to which this attachment is attached.
   SendSQL("SELECT bug_id FROM attachments WHERE attach_id = $::FORM{'id'}");
@@ -616,49 +575,17 @@ sub update
   }
   
   # Lock database tables in preparation for updating the attachment.
-  SendSQL("LOCK TABLES attachments WRITE , attachstatuses WRITE , 
-           attachstatusdefs READ , fielddefs READ , bugs_activity WRITE");
+  SendSQL("LOCK TABLES attachments WRITE , flags WRITE , " . 
+          "flagtypes READ , fielddefs READ , bugs_activity WRITE, " . 
+          "flaginclusions AS i READ, flagexclusions AS e READ, " . 
+          "bugs READ, profiles READ");
+  
   # Get a copy of the attachment record before we make changes
   # so we can record those changes in the activity table.
   SendSQL("SELECT description, mimetype, filename, ispatch, isobsolete, isprivate
            FROM attachments WHERE attach_id = $::FORM{'id'}");
   my ($olddescription, $oldcontenttype, $oldfilename, $oldispatch,
       $oldisobsolete, $oldisprivate) = FetchSQLData();
-
-  # Get the list of old status flags.
-  SendSQL("SELECT    attachstatusdefs.name 
-           FROM      attachments, attachstatuses, attachstatusdefs
-           WHERE     attachments.attach_id = $::FORM{'id'}
-           AND       attachments.attach_id = attachstatuses.attach_id
-           AND       attachstatuses.statusid = attachstatusdefs.id
-           ORDER BY  attachstatusdefs.sortkey
-          ");
-  my @oldstatuses;
-  while (MoreSQLData()) {
-    push(@oldstatuses, FetchSQLData());
-  }
-  my $oldstatuslist = join(', ', @oldstatuses);
-
-  # Update the database with the new status flags.
-  SendSQL("DELETE FROM attachstatuses WHERE attach_id = $::FORM{'id'}");
-  foreach my $statusid (@{$::MFORM{'status'}}) 
-  {
-    SendSQL("INSERT INTO attachstatuses (attach_id, statusid) VALUES ($::FORM{'id'}, $statusid)");
-  }
-
-  # Get the list of new status flags.
-  SendSQL("SELECT    attachstatusdefs.name 
-           FROM      attachments, attachstatuses, attachstatusdefs
-           WHERE     attachments.attach_id = $::FORM{'id'}
-           AND       attachments.attach_id = attachstatuses.attach_id
-           AND       attachstatuses.statusid = attachstatusdefs.id
-           ORDER BY  attachstatusdefs.sortkey
-          ");
-  my @newstatuses;
-  while (MoreSQLData()) {
-    push(@newstatuses, FetchSQLData());
-  }
-  my $newstatuslist = join(', ', @newstatuses);
 
   # Quote the description and content type for use in the SQL UPDATE statement.
   my $quoteddescription = SqlQuote($::FORM{'description'});
@@ -677,18 +604,23 @@ sub update
            WHERE   attach_id = $::FORM{'id'}
          ");
 
+  # Figure out when the changes were made.
+  SendSQL("SELECT NOW()");
+  my $timestamp = FetchOneColumn();
+    
   # Record changes in the activity table.
+  my $sql_timestamp = SqlQuote($timestamp);
   if ($olddescription ne $::FORM{'description'}) {
     my $quotedolddescription = SqlQuote($olddescription);
     my $fieldid = GetFieldID('attachments.description');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedolddescription, $quoteddescription)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $quotedolddescription, $quoteddescription)");
   }
   if ($oldcontenttype ne $::FORM{'contenttype'}) {
     my $quotedoldcontenttype = SqlQuote($oldcontenttype);
     my $fieldid = GetFieldID('attachments.mimetype');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $quotedoldcontenttype, $quotedcontenttype)");
   }
   if ($oldfilename ne $::FORM{'filename'}) {
     my $quotedoldfilename = SqlQuote($oldfilename);
@@ -699,47 +631,25 @@ sub update
   if ($oldispatch ne $::FORM{'ispatch'}) {
     my $fieldid = GetFieldID('attachments.ispatch');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldispatch, $::FORM{'ispatch'})");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $oldispatch, $::FORM{'ispatch'})");
   }
   if ($oldisobsolete ne $::FORM{'isobsolete'}) {
     my $fieldid = GetFieldID('attachments.isobsolete');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
+             VALUES ($bugid, $::FORM{'id'}, $::userid, $sql_timestamp, $fieldid, $oldisobsolete, $::FORM{'isobsolete'})");
   }
   if ($oldisprivate ne $::FORM{'isprivate'}) {
     my $fieldid = GetFieldID('attachments.isprivate');
     SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
              VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $oldisprivate, $::FORM{'isprivate'})");
   }
-  if ($oldstatuslist ne $newstatuslist) {
-    my ($removed, $added) = DiffStrings($oldstatuslist, $newstatuslist);
-    my $quotedremoved = SqlQuote($removed);
-    my $quotedadded = SqlQuote($added);
-    my $fieldid = GetFieldID('attachstatusdefs.name');
-    SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
-             VALUES ($bugid, $::FORM{'id'}, $::userid, NOW(), $fieldid, $quotedremoved, $quotedadded)");
-  }
-
+  
+  # Update flags.
+  my $target = Bugzilla::Flag::GetTarget(undef, $::FORM{'id'});
+  Bugzilla::Flag::process($target, $timestamp, \%::FORM);
+  
   # Unlock all database tables now that we are finished updating the database.
   SendSQL("UNLOCK TABLES");
-
-  # If this installation has enabled the request manager, let the manager know
-  # an attachment was updated so it can check for requests on that attachment
-  # and fulfill them.  The request manager allows users to request database
-  # changes of other users and tracks the fulfillment of those requests.  When
-  # an attachment record is updated and the request manager is called, it will
-  # fulfill those requests that were requested of the user performing the update
-  # which are requests for the attachment being updated.
-  #my $requests;
-  #if (Param('userequestmanager'))
-  #{
-  #  use Request;
-  #  # Specify the fieldnames that have been updated.
-  #  my @fieldnames = ('description', 'mimetype', 'status', 'ispatch', 'isobsolete');
-  #  # Fulfill pending requests.
-  #  $requests = Request::fulfillRequest('attachment', $::FORM{'id'}, @fieldnames);
-  #  $vars->{'requests'} = $requests; 
-  #}
 
   # If the user submitted a comment while editing the attachment, 
   # add the comment to the bug.
@@ -772,10 +682,10 @@ sub update
     my $neverused = $::userid;
 
     # Append the comment to the list of comments in the database.
-    AppendComment($bugid, $who, $wrappedcomment, $::FORM{'isprivate'});
+    AppendComment($bugid, $who, $wrappedcomment, $::FORM{'isprivate'}, $timestamp);
 
   }
-
+  
   # Send mail to let people know the bug has changed.  Uses a special syntax
   # of the "open" and "exec" commands to capture the output of "processmail",
   # which "system" doesn't allow, without running the command through a shell,

@@ -194,7 +194,7 @@
       [% END %]
     </tr>
 
-[%# *** QAContact URL Summary Whiteboard Keywords *** %]
+[%# *** QAContact URL Requests Summary Whiteboard Keywords *** %]
 
    [% IF Param('useqacontact') %]
      <tr>
@@ -218,9 +218,15 @@
         [% END %]
       </b>
     </td>
-    <td colspan="7">
+    <td colspan="5">
       <input name="bug_file_loc" accesskey="u"
              value="[% bug.bug_file_loc FILTER html %]" size="60">
+    </td>
+    <td rowspan="4" colspan="2" valign="top"> 
+        [% IF flag_types.size > 0 %]
+          <b>Flags:</b><br>
+          [% PROCESS "flag/list.html.tmpl" %]
+        [% END %]
     </td>
   </tr>
   
@@ -228,7 +234,7 @@
     <td align="right">
       <b><u>S</u>ummary:</b>
     </td>
-    <td colspan="7">
+    <td colspan="5">
       <input name="short_desc" accesskey="s"
              value="[% bug.short_desc FILTER html %]" size="60">
     </td>
@@ -239,7 +245,7 @@
       <td align="right">
         <b>Status <u>W</u>hiteboard:</b>
       </td>
-      <td colspan="7">
+      <td colspan="5">
         <input name="status_whiteboard" accesskey="w"
                value="[% bug.status_whiteboard FILTER html %]" size="60">
       </td>
@@ -252,7 +258,7 @@
         <b>
           <a href="describekeywords.cgi"><u>K</u>eywords</a>:
         </b>
-      <td colspan="7">
+      <td colspan="5">
         <input name="keywords" accesskey="k"
                value="[% bug.keywords.join(', ') FILTER html %]" size="60">
       </td>
@@ -263,8 +269,8 @@
 [%# *** Attachments *** %]
 
   [% PROCESS attachment/list.html.tmpl 
-     attachments = bug.attachments 
-     bugid = bug.bug_id %]
+             attachments = bug.attachments 
+             bugid       = bug.bug_id  %]
 
 [%# *** Dependencies Votes *** %]
 

@@ -83,9 +83,27 @@
   <tr>
     <td width="150"></td>
     <td>
-      <label for="ExcludeSelf">Only email me reports of changes made by other people</label>
       <input type="checkbox" name="ExcludeSelf" id="ExcludeSelf" value="on"
         [% " checked" IF excludeself %]>
+      <label for="ExcludeSelf">Only email me reports of changes made by other people</label>
+      <br>
+    </td>
+  </tr>
+  <tr>
+    <td width="150"></td>
+    <td>
+      <input type="checkbox" name="FlagRequestee" id="FlagRequestee" value="on"
+        [% " checked" IF FlagRequestee %]>
+      <label for="FlagRequestee">Email me when someone asks me to set a flag</label>
+      <br>
+    </td>
+  </tr>
+  <tr>
+    <td width="150"></td>
+    <td>
+      <input type="checkbox" name="FlagRequester" id="FlagRequester" value="on"
+        [% " checked" IF FlagRequester %]>
+      <label for="FlagRequester">Email me when someone sets a flag I asked for</label>
       <br>
     </td>
   </tr>

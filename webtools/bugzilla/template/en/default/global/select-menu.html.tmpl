@@ -22,12 +22,18 @@
 [%# INTERFACE:
   # name: string; the name of the menu.
   #
+  # multiple: boolean; whether or not the menu is multi-select
+  #
+  # size: integer; if multi-select, the number of items to display at once
+  # 
   # options: array or hash; the items with which to populate the array.
   #   If a hash is passed, the hash keys become the names displayed
   #   to the user while the hash values become the value of the item.
   # 
   # default: string; the item selected in the menu by default.
   # 
+  # onchange: code; JavaScript to be run when the user changes the value
+  #   selected in the menu.
   #%]
  
 [%# Get the scalar representation of the options reference, 
@@ -37,7 +43,9 @@
   #%]
 [% options_type = BLOCK %][% options %][% END %]
 
-<select name="[% name FILTER html %]">
+<select name="[% name FILTER html %]" 
+        [% IF onchange %]onchange="[% onchange %]"[% END %]
+        [% IF multiple %] multiple [% IF size %] size="[% size %]" [% END %] [% END %]>
   [% IF options_type.search("ARRAY") %]
     [% FOREACH value = options %]
       <option value="[% value FILTER html %]"
@@ -45,7 +53,7 @@
         [% value FILTER html %]
       </option>
     [% END %]
-  [% ELSIF values_type.search("HASH") %]
+  [% ELSIF options_type.search("HASH") %]
     [% FOREACH option = options %]
       <option value="[% option.value FILTER html %]" 
               [% " selected" IF option.value == default %]>

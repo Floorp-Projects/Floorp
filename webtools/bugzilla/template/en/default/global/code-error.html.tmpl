@@ -40,6 +40,10 @@
     to any [% parameters %] which you may have set before calling
     ThrowCodeError.
 
+  [% ELSIF error == "action_unrecognized" %]
+    I don't recognize the value (<em>[% variables.action FILTER html %]</em>)
+    of the <em>action</em> variable.
+  
   [% ELSIF error == "attachment_already_obsolete" %]
     Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
@@ -78,10 +82,40 @@
   [% ELSIF error == "no_bug_data" %]
     No data when fetching bug [% bug_id %].
     
+  [% ELSIF error == "flag_nonexistent" %]
+    There is no flag with ID #[% variables.id %].
+  
+  [% ELSIF error == "flag_status_invalid" %]
+    The flag status <em>[% variables.status FILTER html %]</em> is invalid.
+  
+  [% ELSIF error == "flag_type_component_nonexistent" %]
+    The component <em>[% variables.component FILTER html %] does not exist
+    in the product <em>[% variables.product FILTER html %]</em>.
+  
+  [% ELSIF error == "flag_type_component_without_product" %]
+    A component was selected without a product being selected.
+  
+  [% ELSIF error == "flag_type_id_invalid" %]
+    The flag type ID <em>[% variables.id FILTER html %]</em> is not
+    a positive integer.
+
+  [% ELSIF error == "flag_type_nonexistent" %]
+    There is no flag type with the ID <em>[% variables.id %]</em>.
+  
+  [% ELSIF error == "flag_type_product_nonexistent" %]
+    The product <em>[% variables.product FILTER html %]</em> does not exist.
+  
+  [% ELSIF error == "flag_type_target_type_invalid" %]
+    The target type was neither <em>bug</em> nor <em>attachment</em>
+    but rather <em>[% variables.target_type FILTER html %]</em>.
+  
   [% ELSIF error == "no_y_axis_defined" %]
     No Y axis was defined when creating report. The X axis is optional,
     but the Y axis is compulsory.
     
+  [% ELSIF error == "request_queue_group_invalid" %]
+    The group field <em>[% group FILTER html %]</em> is invalid.
+
   [% ELSIF error == "template_error" %]
     [% template_error_msg %]
 
@@ -91,6 +125,14 @@
   [% ELSIF error == "unknown_action" %]
     Unknown action [% action FILTER html %]!
     
+  [% ELSIF error == "unknown_component" %]
+    [% title = "Unknown Component" %]
+    There is no component named <em>[% variables.component FILTER html %]</em>.
+
+  [% ELSIF error == "unknown_product" %]
+    [% title = "Unknown Product" %]
+    There is no product named <em>[% variables.product FILTER html %]</em>.
+
   [% ELSE %]
     [%# Give sensible error if error functions are used incorrectly.
       #%]        

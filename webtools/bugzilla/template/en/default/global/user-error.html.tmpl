@@ -30,7 +30,7 @@
   #%]  
   
 [% DEFAULT title = "Error" %]
-  
+
 [% error_message = BLOCK %]
   [% IF    error == "aaa_example_error_tag" %]
     [% title = "Example Error" %]    
@@ -74,6 +74,10 @@
     [% title = "Alias Too Long" %]
     Bug aliases cannot be longer than 20 characters.
     Please choose a shorter alias.
+
+  [% ELSIF error == "authorization_failure" %]
+    [% title = "Authorization Failed" %]
+    You are not allowed to [% action %].
 
   [% ELSIF error == "attachment_access_denied" %]
     [% title = "Access Denied" %]
@@ -129,6 +133,23 @@
     format like JPG or PNG, or put it elsewhere on the web and
     link to it from the bug's URL field or in a comment on the bug.
       
+  [% ELSIF error == "flag_type_cc_list_invalid" %]
+    [% title = "Flag Type CC List Invalid" %]
+    The CC list [% cc_list FILTER html %] must be less than 200 characters long.
+    
+  [% ELSIF error == "flag_type_description_invalid" %]
+    [% title = "Flag Type Description Invalid" %]
+    The description must be less than 32K.
+    
+  [% ELSIF error == "flag_type_name_invalid" %]
+    [% title = "Flag Type Name Invalid" %]
+    The name <em>[% name FILTER html %]</em> must be 1-50 characters long.
+    
+  [% ELSIF error == "flag_type_sortkey_invalid" %]
+    [% title = "Flag Type Sort Key Invalid" %]
+    The sort key must be an integer between 0 and 32767 inclusive.
+    It cannot be <em>[% variables.sortkey %]</em>.
+  
   [% ELSIF error == "illegal_at_least_x_votes" %]
     [% title = "Your Query Makes No Sense" %]
     The <em>At least ___ votes</em> field must be a simple number. 
@@ -176,10 +197,6 @@
     [% title = "Invalid Attachment ID" %]
     The attachment id [% attach_id FILTER html %] is invalid.
 
-  [% ELSIF error == "invalid_attach_status" %]
-    [% title = "Invalid Attachment Status" %]
-    One of the statuses you entered is not a valid status for this attachment.
-    
   [% ELSIF error == "invalid_content_type" %]
     [% title = "Invalid Content-Type" %]
     The content type <em>[% contenttype FILTER html %]</em> is invalid.
@@ -281,6 +298,18 @@
     intentionally cleared out the "Reassign bug to" 
     field, [% Param("browserbugmessage") %]
 
+  [% ELSIF error == "requestee_too_short" %]
+    [% title = "Requestee Name Too Short" %]
+    One or two characters match too many users, so please enter at least 
+    three characters of the name/email address of the user you want to set 
+    the flag.
+  
+  [% ELSIF error == "requestee_too_many_matches" %]
+    [% title = "Requestee String Matched Too Many Times" %]
+      The string <em>[% requestee FILTER html %]</em> matched more than 
+      100 users.  Enter more of the name to bring the number of matches 
+      down to a reasonable amount.
+  
   [% ELSIF error == "unknown_keyword" %]
     [% title = "Unknown Keyword" %]
     <code>[% keyword FILTER html %]</code> is not a known keyword. 

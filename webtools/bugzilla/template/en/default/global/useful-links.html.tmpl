@@ -50,6 +50,8 @@
         <input name="id" size="6"> | 
         
         <a href="reports.cgi">Reports</a> 
+        
+        | <a href="request.cgi">Requests</a>
        
         [% IF user.login && Param('usevotes') %]
           | <a href="votes.cgi?action=show_user">My Votes</a>
@@ -68,7 +70,7 @@
                                                   || user.canblessany %]
         [% ', <a href="editproducts.cgi">products</a>' 
                                                 IF user.groups.editcomponents %]
-        [% ', <a href="editattachstatuses.cgi"> attachment&nbsp;statuses</a>'
+        [% ', <a href="editflagtypes.cgi">flags</a>'
                                                 IF user.groups.editcomponents %]
         [% ', <a href="editgroups.cgi">groups</a>' 
                                                   IF user.groups.creategroups %]

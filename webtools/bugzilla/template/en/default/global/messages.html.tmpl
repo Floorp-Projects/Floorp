@@ -81,6 +81,34 @@
     [% title = "Password Changed" %]
     Your password has been changed.
 
+  [% ELSIF message_tag == "flag_type_created" %]
+    [% title = "Flag Type Created" %]
+      The flag type <em>[% name FILTER html %]</em> has been created.
+      <a href="editflagtypes.cgi">Back to flag types.</a>
+    
+  [% ELSIF message_tag == "flag_type_changes_saved" %]
+    [% title = "Flag Type Changes Saved" %]
+    <p>
+      Your changes to the flag type <em>[% name FILTER html %]</em> 
+      have been saved.
+      <a href="editflagtypes.cgi">Back to flag types.</a>
+    </p>
+    
+  [% ELSIF message_tag == "flag_type_deleted" %]
+    [% title = "Flag Type Deleted" %]
+    <p>
+      The flag type <em>[% name FILTER html %]</em> has been deleted.
+      <a href="editflagtypes.cgi">Back to flag types.</a>
+    </p>
+    
+  [% ELSIF message_tag == "flag_type_deactivated" %]
+    [% title = "Flag Type Deactivated" %]
+    <p>
+      The flag type <em>[% flag_type.name FILTER html %]</em> 
+      has been deactivated.
+      <a href="editflagtypes.cgi">Back to flag types.</a>
+    </p>
+    
   [% ELSIF message_tag == "shutdown" %]
     [% title = "Bugzilla is Down" %]
     [% Param("shutdownhtml") %]

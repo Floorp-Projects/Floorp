@@ -581,7 +581,9 @@ if ($action eq 'delete') {
                          bugs WRITE,
                          bugs_activity WRITE,
                          components WRITE,
-                         dependencies WRITE");
+                         dependencies WRITE,
+                         flaginclusions WRITE,
+                         flagexclusions WRITE");
 
     # According to MySQL doc I cannot do a DELETE x.* FROM x JOIN Y,
     # so I have to iterate over bugs and delete all the indivial entries
@@ -610,6 +612,12 @@ if ($action eq 'delete') {
         print "Bugs deleted.<BR>\n";
     }
 
+    SendSQL("DELETE FROM flaginclusions
+             WHERE component_id=$component_id");
+    SendSQL("DELETE FROM flagexclusions
+             WHERE component_id=$component_id");
+    print "Flag inclusions and exclusions deleted.<BR>\n";
+    
     SendSQL("DELETE FROM components
              WHERE id=$component_id");
     print "Components deleted.<P>\n";

@@ -1,0 +1,189 @@
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Myk Melez <myk@mozilla.org>
+  #%]
+
+[%# The javascript and header_html blocks get used in header.html.tmpl. %]
+[% javascript = BLOCK %]
+  var usetms = 0; // do we have target milestone?
+  var first_load = 1; // is this the first time we load the page?
+  var last_sel = []; // caches last selection
+  var cpts = new Array();
+  [% FOREACH p = products %]
+    cpts['[% p FILTER js %]'] = [ 
+      [%- FOREACH item = components_by_product.$p %]'[% item FILTER js %]'[% ", " UNLESS loop.last %] [%- END -%] ];
+  [% END %]
+[% END %]
+
+[% header_html = BLOCK %]
+  <script language="JavaScript" type="text/javascript" src="productmenu.js"></script>
+[% END %]
+
+[% IF type.target_type == "bug" %]
+  [% title = "Create Flag Type for Bugs" %]
+[% ELSE %]
+  [% title = "Create Flag Type for Attachments" %]
+[% END %]
+
+[% IF last_action == "copy" %]
+  [% title = "Create Flag Type Based on $type.name" %]
+[% ELSIF last_action == "edit" %]
+  [% title = "Edit Flag Type $type.name" %]
+[% END %]
+
+[% PROCESS global/header.html.tmpl 
+  title = title
+  style = "
+    table#form th { text-align: right; vertical-align: baseline; white-space: nowrap; }
+    table#form td { text-align: left; vertical-align: baseline; }
+  "
+  onload="selectProduct(forms[0], 'product', 'component', '__Any__');"
+%]
+
+<form method="post" action="editflagtypes.cgi">
+  <input type="hidden" name="action" value="[% action %]">
+  <input type="hidden" name="id" value="[% type.id %]">
+  <input type="hidden" name="target_type" value="[% type.target_type %]">
+  [% FOREACH category = type.inclusions %]
+    <input type="hidden" name="inclusions" value="[% category %]">
+  [% END %]
+  [% FOREACH category = type.exclusions %]
+    <input type="hidden" name="exclusions" value="[% category %]">
+  [% END %]
+  
+  <table id="form" cellspacing="0" cellpadding="4" border="0">
+    <tr>
+      <th>Name:</th>
+      <td>
+        a short name identifying this type<br>
+        <input type="text" name="name" value="[% type.name FILTER html %]" 
+               size="50" maxlength="50">
+      </td>
+    </tr>
+
+    <tr>
+      <th>Description:</th>
+      <td>
+        a comprehensive description of this type<br>
+        <textarea name="description" rows="4" cols="80">[% type.description FILTER html %]</textarea>
+      </td>
+    </tr>
+    
+    <tr>
+      <th>Category:</th>
+      <td>
+        the products/components to which [% type.target_type %]s must 
+        (inclusions) or must not (exclusions) belong in order for users 
+        to be able to set flags of this type for them
+        <table>
+          <tr>
+            <td style="vertical-align: top;">
+              <b>Product/Component:</b><br>
+              <select name="product" onChange="selectProduct(this.form, 'product', 'component', '__Any__');">
+                <option value="">__Any__</option>
+                [% FOREACH item = products %]
+                  <option value="[% item %]" [% "selected" IF type.product.name == item %]>[% item %]</option>
+                [% END %]
+              </select><br>
+              <select name="component">
+                <option value="">__Any__</option>
+                [% FOREACH item = components %]
+                  <option value="[% item %]" [% "selected" IF type.component.name == item %]>[% item %]</option>
+                [% END %]
+              </select><br>
+              <input type="submit" name="categoryAction" value="Include">
+              <input type="submit" name="categoryAction" value="Exclude">
+            </td>
+            <td style="vertical-align: top;">
+              <b>Inclusions:</b><br>
+              [% PROCESS "global/select-menu.html.tmpl" name="inclusion_to_remove" multiple=1 size=4 options=type.inclusions %]<br>
+              <input type="submit" name="categoryAction" value="Remove Inclusion">
+            </td>
+            <td style="vertical-align: top;">
+              <b>Exclusions:</b><br>
+              [% PROCESS "global/select-menu.html.tmpl" name="exclusion_to_remove" multiple=1 size=4 options=type.exclusions %]<br>
+              <input type="submit" name="categoryAction" value="Remove Exclusion">
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+    
+    <tr>
+      <th>Sort Key:</th>
+      <td>
+        a number between 1 and 32767 by which this type will be sorted 
+        when displayed to users in a list; ignore if you don't care
+        what order the types appear in or if you want them to appear
+        in alphabetical order<br>
+        <input type="text" name="sortkey" value="[% type.sortkey || 1 %]" size="5" maxlength="5">
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_active" [% "checked" IF type.is_active || !type.is_active.defined %]>
+        active (flags of this type appear in the UI and can be set)
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_requestable" [% "checked" IF type.is_requestable || !type.is_requestable.defined %]> 
+        requestable (users can ask for flags of this type to be set)
+      </td>
+    </tr>
+
+    <tr>
+      <th>CC List:</th>
+      <td>
+        if requestable, who should get carbon copied on email notification of requests<br>
+        <input type="text" name="cc_list" value="[% type.cc_list FILTER html %]" size="80" maxlength="200">
+      </td>
+    </tr>
+    
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_requesteeble" [% "checked" IF type.is_requesteeble || !type.is_requesteeble.defined %]> 
+        specifically requestable (users can ask specific other users to set flags of this type as opposed to just asking the wind)
+      </td>
+    </tr>
+
+    <tr>
+      <th>&nbsp;</th>
+      <td>
+        <input type="checkbox" name="is_multiplicable" [% "checked" IF type.is_multiplicable || !type.is_multiplicable.defined %]>
+        multiplicable (multiple flags of this type can be set on the same [% type.target_type %])
+      </td>
+    </tr>
+
+    <tr>
+      <th></th>
+      <td>
+        <input type="submit" value="[% (last_action == "enter" || last_action == "copy") ? "Create" : "Save Changes" %]">
+      </td>
+    </tr>
+
+  </table>
+
+</form>
+
+[% PROCESS global/footer.html.tmpl %]

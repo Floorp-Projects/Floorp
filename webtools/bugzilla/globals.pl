@@ -300,7 +300,12 @@ sub FetchOneColumn {
                           "status", "resolution", "summary");
 
 sub AppendComment {
-    my ($bugid,$who,$comment,$isprivate) = (@_);
+    my ($bugid, $who, $comment, $isprivate, $timestamp) = @_;
+    
+    # Use the date/time we were given if possible (allowing calling code
+    # to synchronize the comment's timestamp with those of other records).
+    $timestamp = ($timestamp ? SqlQuote($timestamp) : "NOW()");
+    
     $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
     $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
     if ($comment =~ /^\s*$/) {  # Nothin' but whitespace.
@@ -310,7 +315,7 @@ sub AppendComment {
     my $whoid = DBNameToIdAndCheck($who);
     my $privacyval = $isprivate ? 1 : 0 ;
     SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext, isprivate) " .
-        "VALUES($bugid, $whoid, now(), " . SqlQuote($comment) . ", " . 
+        "VALUES($bugid, $whoid, $timestamp, " . SqlQuote($comment) . ", " . 
         $privacyval . ")");
 
     SendSQL("UPDATE bugs SET delta_ts = now() WHERE bug_id = $bugid");
@@ -902,8 +907,7 @@ sub get_product_name {
 
 sub get_component_id {
     my ($prod_id, $comp) = @_;
-    die "non-numeric prod_id '$prod_id' passed to get_component_id"
-      unless ($prod_id =~ /^\d+$/);
+    return undef unless ($prod_id =~ /^\d+$/);
     PushGlobalSQLState();
     SendSQL("SELECT id FROM components " .
             "WHERE product_id = $prod_id AND name = " . SqlQuote($comp));

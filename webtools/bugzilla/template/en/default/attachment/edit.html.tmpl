@@ -32,6 +32,8 @@
     table.attachment_info th { text-align: right; vertical-align: top; }
     table.attachment_info td { text-align: left; vertical-align: top; }
     #noview { text-align: left; vertical-align: center; }
+    
+    table#flags th, table#flags td { font-size: small; vertical-align: baseline; }
   "
 %]
 
@@ -158,8 +160,7 @@
 
         <b>MIME Type:</b><br>
           <input type="text" size="20" name="contenttypeentry" value="[% contenttype FILTER html %]"><br>
-
-        <b>Flags:</b><br>
+          
           <input type="checkbox" id="ispatch" name="ispatch" value="1"
                  [% 'checked="checked"' IF ispatch %]>
           <label for="ispatch">patch</label>
@@ -168,20 +169,14 @@
           <label for="isobsolete">obsolete</label><br>
           [% IF (Param("insidergroup") && UserInGroup(Param("insidergroup"))) %]
             <input type="checkbox" name="isprivate" value="1"[% " checked" IF isprivate %]> private<br><br>
+          [% ELSE %]<br>
           [% END %]
 
-        [% IF statusdefs.size %]
-          <b>Status:</b><br>
-            [% FOREACH def = statusdefs %]
-                <input type="checkbox" id="status-[% def.id %]" name="status"
-                       value="[% def.id %]"
-                       [% 'checked="checked"' IF statuses.${def.id} %]>
-                <label for="status-[% def.id %]">
-                  [% def.name FILTER html %]
-                </label><br>
-            [% END %]
+        [% IF flag_types.size > 0 %]
+          <b>Flags:</b><br>
+          [% PROCESS "flag/list.html.tmpl" bug_id=bugid attach_id=attachid %]<br>
         [% END %]
-
+        
         <div id="smallCommentFrame">
           <b>Comment (on the bug):</b><br>
             <textarea name="comment" rows="5" cols="25" wrap="soft"></textarea><br>

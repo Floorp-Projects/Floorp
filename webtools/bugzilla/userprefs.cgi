@@ -207,6 +207,11 @@ sub DoEmail {
         $vars->{'excludeself'} = 0;
     }
     
+    foreach my $flag qw(FlagRequestee FlagRequester) {
+        $vars->{$flag} = 
+          !exists($emailflags{$flag}) || $emailflags{$flag} eq 'on';
+    }
+    
     # Parse the info into a hash of hashes; the first hash keyed by role,
     # the second by reason, and the value being 1 or 0 for (on or off).
     # Preferences not existing in the user's list are assumed to be on.
@@ -232,6 +237,10 @@ sub SaveEmail {
         $updateString .= 'ExcludeSelf~on';
     } else {
         $updateString .= 'ExcludeSelf~';
+    }
+    
+    foreach my $flag qw(FlagRequestee FlagRequester) {
+        $updateString .= "~$flag~" . (defined($::FORM{$flag}) ? "on" : "");
     }
     
     foreach my $role (@roles) {

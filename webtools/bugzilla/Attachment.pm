@@ -31,9 +31,31 @@ package Attachment;
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.
 
+# Use the Flag module to handle flags.
+use Bugzilla::Flag;
+
 ############################################################################
 # Functions
 ############################################################################
+
+sub new {
+    # Returns a hash of information about the attachment with the given ID.
+
+    my ($invocant, $id) = @_;
+    return undef if !$id;
+    my $self = { 'id' => $id };
+    my $class = ref($invocant) || $invocant;
+    bless($self, $class);
+    
+    &::PushGlobalSQLState();
+    &::SendSQL("SELECT 1, description, bug_id FROM attachments " . 
+               "WHERE attach_id = $id");
+    ($self->{'exists'}, $self->{'summary'}, $self->{'bug_id'}) = 
+      &::FetchSQLData();
+    &::PopGlobalSQLState();
+
+    return $self;
+}
 
 sub query
 {
@@ -65,23 +87,9 @@ sub query
         $a{'date'} = "$1-$2-$3 $4:$5";
     }
 
-    # Retrieve a list of status flags that have been set on the attachment.
-    &::PushGlobalSQLState();
-    &::SendSQL(" 
-                SELECT   name 
-                FROM     attachstatuses, attachstatusdefs 
-                WHERE    attach_id = $a{'attachid'} 
-                AND      attachstatuses.statusid = attachstatusdefs.id
-                ORDER BY sortkey
-              ");
-    my @statuses = ();
-    while (&::MoreSQLData()) { 
-      my ($status) = &::FetchSQLData(); 
-      push @statuses , $status;
-    }
-    $a{'statuses'} = \@statuses;
-    &::PopGlobalSQLState();
-
+    # Retrieve a list of flags for this attachment.
+    $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'} });
+    
     # We will display the edit link if the user can edit the attachment;
     # ie the are the submitter, or they have canedit.
     # Also show the link if the user is not logged in - in that cae,

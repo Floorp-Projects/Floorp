@@ -28,6 +28,10 @@ use RelationSet;
 # Use the Attachment module to display attachments for the bug.
 use Attachment;
 
+# Use the Flag modules to display flags on the bug.
+use Bugzilla::Flag;
+use Bugzilla::FlagType;
+
 sub show_bug {    
     # Shut up misguided -w warnings about "used only once".  For some reason,
     # "use vars" chokes on me when I try it here.
@@ -76,10 +80,10 @@ sub show_bug {
 
     # Populate the bug hash with the info we get directly from the DB.
     my $query = "
-    SELECT bugs.bug_id, alias, products.name, version, rep_platform, 
-        op_sys, bug_status, resolution, priority, 
-        bug_severity, components.name, assigned_to, reporter, 
-        bug_file_loc, short_desc, target_milestone, 
+    SELECT bugs.bug_id, alias, bugs.product_id, products.name, version, 
+        rep_platform, op_sys, bug_status, resolution, priority, 
+        bug_severity, bugs.component_id, components.name, assigned_to, 
+        reporter, bug_file_loc, short_desc, target_milestone, 
         qa_contact, status_whiteboard, 
         date_format(creation_ts,'%Y-%m-%d %H:%i'),
         delta_ts, sum(votes.count), delta_ts calc_disp_date
@@ -101,12 +105,12 @@ sub show_bug {
     my $value;
     my $disp_date;
     my @row = FetchSQLData();
-    foreach my $field ("bug_id", "alias", "product", "version", "rep_platform",
-                       "op_sys", "bug_status", "resolution", "priority",
-                       "bug_severity", "component", "assigned_to", "reporter",
-                       "bug_file_loc", "short_desc", "target_milestone",
-                       "qa_contact", "status_whiteboard", "creation_ts",
-                       "delta_ts", "votes", "calc_disp_date") 
+    foreach my $field ("bug_id", "alias", "product_id", "product", "version", 
+                       "rep_platform", "op_sys", "bug_status", "resolution", 
+                       "priority", "bug_severity", "component_id", "component", 
+                       "assigned_to", "reporter", "bug_file_loc", "short_desc", 
+                       "target_milestone", "qa_contact", "status_whiteboard", 
+                       "creation_ts", "delta_ts", "votes", "calc_disp_date") 
     {
         $value = shift(@row);
         if ($field eq "calc_disp_date") {
@@ -197,6 +201,28 @@ sub show_bug {
 
     # Attachments
     $bug{'attachments'} = Attachment::query($id);
+   
+    # The types of flags that can be set on this bug.
+    # If none, no UI for setting flags will be displayed.
+    my $flag_types = 
+      Bugzilla::FlagType::match({ 'target_type'  => 'bug', 
+                                  'product_id'   => $bug{'product_id'}, 
+                                  'component_id' => $bug{'component_id'}, 
+                                  'is_active'    => 1 });
+    foreach my $flag_type (@$flag_types) {
+        $flag_type->{'flags'} = 
+          Bugzilla::Flag::match({ 'bug_id'      => $id , 
+                                  'target_type' => 'bug' });
+    }
+    $vars->{'flag_types'} = $flag_types;
+
+    # The number of types of flags that can be set on attachments
+    # to this bug.  If none, flags won't be shown in the list of attachments.
+    $vars->{'num_attachment_flag_types'} = 
+      Bugzilla::FlagType::count({ 'target_type'  => 'a', 
+                        'product_id'   => $bug{'product_id'}, 
+                        'component_id' => $bug{'component_id'}, 
+                        'is_active'    => 1 });
 
     # Dependencies
     my @list;

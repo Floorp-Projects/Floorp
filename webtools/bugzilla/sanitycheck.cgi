@@ -232,11 +232,11 @@ CrossCheck("fielddefs", "fieldid",
            ["bugs_activity", "fieldid"]);
 
 CrossCheck("attachments", "attach_id",
-           ["attachstatuses", "attach_id"],
+           ["flags", "attach_id"],
            ["bugs_activity", "attach_id"]);
 
-CrossCheck("attachstatusdefs", "id",
-           ["attachstatuses", "statusid"]);
+CrossCheck("flagtypes", "id",
+           ["flags", "type_id"]);
 
 CrossCheck("bugs", "bug_id",
            ["bugs_activity", "bug_id"],
@@ -280,7 +280,7 @@ CrossCheck("products", "id",
            ["components", "product_id", "name"],
            ["milestones", "product_id", "value"],
            ["versions", "product_id", "value"],
-           ["attachstatusdefs", "product_id", "name"]);
+           ["flagtypes", "product_id", "name"]);
 
 DateCheck("groups", "last_changed");
 DateCheck("profiles", "refreshed_when");

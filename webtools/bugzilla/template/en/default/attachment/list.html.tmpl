@@ -19,13 +19,18 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   #%]
 
+[%# Whether or not to include flags. %]
+[% display_flags = num_attachment_flag_types > 0 %]
+
 <br>
 <table cellspacing="0" cellpadding="4" border="1">
   <tr>
     <th bgcolor="#cccccc" align="left">Attachment</th>
     <th bgcolor="#cccccc" align="left">Type</th>
     <th bgcolor="#cccccc" align="left">Created</th>
-    <th bgcolor="#cccccc" align="left">Status</th>
+    [% IF display_flags %]
+      <th bgcolor="#cccccc" align="left">Flags</th>
+    [% END %]
     <th bgcolor="#cccccc" align="left">Actions</th>
   </tr>
   [% canseeprivate = !Param("insidergroup") || UserInGroup(Param("insidergroup")) %]
@@ -50,16 +55,24 @@
 
       <td valign="top">[% attachment.date %]</td>
 
-      <td valign="top">
-        [% IF attachment.statuses.size == 0 %]
-          <i>none</i>
-        [% ELSE %]
-          [% FOREACH s = attachment.statuses %]
-            [% s FILTER html FILTER replace('\s', '&nbsp;') %]<br>
+      [% IF display_flags %]
+        <td valign="top">
+          [% IF attachment.flags.size == 0 %]
+            <i>none</i>
+          [% ELSE %]
+            [% FOR flag = attachment.flags %]
+                [% IF flag.setter %]
+                  [% flag.setter.nick FILTER html %]:
+                [% END %]
+                [%+ flag.type.name %][% flag.status %]
+                [%+ IF flag.status == "?" && flag.requestee %]
+                  ([% flag.requestee.nick %])
+                [% END %]<br>
+            [% END %]
           [% END %]
-        [% END %]
-      </td>
-
+        </td>
+      [% END %]
+      
       <td valign="top">
         [% IF attachment.canedit %]
           <a href="attachment.cgi?id=[% attachment.attachid %]&amp;action=edit">Edit</a>
@@ -72,7 +85,7 @@
   [% END %]
 
   <tr>
-    <td colspan="4">
+    <td colspan="[% display_flags ? 4 : 3 %]">
       <a href="attachment.cgi?bugid=[% bugid %]&amp;action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
     </td>
     <td colspan="1">

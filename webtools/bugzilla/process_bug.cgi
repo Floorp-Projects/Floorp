@@ -36,6 +36,9 @@ require "bug_form.pl";
 
 use RelationSet;
 
+# Use the Flag module to modify flag data if the user set flags.
+use Bugzilla::Flag;
+
 # Shut up misguided -w warnings about "used only once":
 
 use vars qw(%versions
@@ -1052,8 +1055,9 @@ foreach my $id (@idlist) {
             "profiles $write, dependencies $write, votes $write, " .
             "products READ, components READ, " .
             "keywords $write, longdescs $write, fielddefs $write, " .
-            "bug_group_map $write, " .
-            "user_group_map READ, " .
+            "bug_group_map $write, flags $write, " .
+            "user_group_map READ, flagtypes READ, " . 
+            "flaginclusions AS i READ, flagexclusions AS e READ, " .
             "keyworddefs READ, groups READ, attachments READ");
     my @oldvalues = SnapShotBug($id);
     my %oldhash;
@@ -1238,7 +1242,7 @@ foreach my $id (@idlist) {
     LogActivityEntry($id, "bug_group", $groupDelNames, $groupAddNames); 
     if (defined $::FORM{'comment'}) {
         AppendComment($id, $::COOKIE{'Bugzilla_login'}, $::FORM{'comment'},
-            $::FORM{'commentprivacy'});
+            $::FORM{'commentprivacy'}, $timestamp);
     }
     
     my $removedCcString = "";
@@ -1399,6 +1403,14 @@ foreach my $id (@idlist) {
     # what has changed since before we wrote out the new values.
     #
     my @newvalues = SnapShotBug($id);
+    my %newhash;
+    $i = 0;
+    foreach my $col (@::log_columns) {
+        # Consider NULL db entries to be equivalent to the empty string
+        $newvalues[$i] ||= '';
+        $newhash{$col} = $newvalues[$i];
+        $i++;
+    }
 
     # for passing to processmail to ensure that when someone is removed
     # from one of these fields, they get notified of that fact (if desired)
@@ -1411,12 +1423,6 @@ foreach my $id (@idlist) {
                                 # values in place.
         my $old = shift @oldvalues;
         my $new = shift @newvalues;
-        if (!defined $old) {
-            $old = "";
-        }
-        if (!defined $new) {
-            $new = "";
-        }
         if ($old ne $new) {
 
             # Products and components are now stored in the DB using ID's
@@ -1460,6 +1466,11 @@ foreach my $id (@idlist) {
             }
             LogActivityEntry($id,$col,$old,$new);
         }
+    }
+    # Set and update flags.
+    if ($UserInEditGroupSet) {
+        my $target = Bugzilla::Flag::GetTarget($id);
+        Bugzilla::Flag::process($target, $timestamp, \%::FORM);
     }
     if ($bug_changed) {
         SendSQL("UPDATE bugs SET delta_ts = " . SqlQuote($timestamp) . " WHERE bug_id = $id");
