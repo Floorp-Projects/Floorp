@@ -61,6 +61,8 @@
 #include "nsIViewManager.h"
 #include "nsGfxCIID.h"
 #include "nsIDeviceContext.h"
+#include "nsINetService.h"
+#include "nsINetContainerApplication.h"
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
@@ -705,6 +707,10 @@ void nsViewer::ProcessArguments(int argc, char **argv)
 // nsViewer Implementation
 //----------------------------------------------------------------------
 
+static NS_DEFINE_IID(kINetContainerApplicationIID, NS_INETCONTAINERAPPLICATION_IID);
+
+NS_IMPL_ISUPPORTS(nsViewer, kINetContainerApplicationIID);
+
 /*
  * Purify methods
  */
@@ -1147,6 +1153,8 @@ void nsViewer::CleanupViewer(nsDocLoader* aDl)
   if (aDl != nsnull)
     delete aDl;
   ReleaseMemory();
+  
+  NS_ShutdownINetService();
 }
 
 
@@ -1155,6 +1163,8 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
 #ifdef XP_PC
   PL_InitializeEventsLib("");
 #endif
+
+  NS_InitINetService(this);
 
   gWindows = new nsVoidArray();
 
@@ -1337,3 +1347,42 @@ void SetViewer(nsViewer* aViewer)
   gTheViewer = aViewer;
 }
 
+NS_IMETHODIMP    
+nsViewer::GetAppCodeName(nsString& aAppCodeName)
+{
+  aAppCodeName.SetString("Mozilla");
+  
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsViewer::GetAppVersion(nsString& aAppVersion)
+{
+  aAppVersion.SetString("5.0 [en] (Windows;I)");
+  
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsViewer::GetAppName(nsString& aAppName)
+{
+  aAppName.SetString("Netscape");
+  
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP
+nsViewer::GetLanguage(nsString& aLanguage)
+{
+  aLanguage.SetString("en");
+  
+  return NS_OK;
+}
+ 
+NS_IMETHODIMP    
+nsViewer::GetPlatform(nsString& aPlatform)
+{
+  aPlatform.SetString("Win32");
+  
+  return NS_OK;
+}
