@@ -9,6 +9,7 @@
       class="dialog"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       style="padding: 10px"
+      title="&imapAdvanced.label;"
       onload="onLoad();"
       align="vertical">
 
@@ -17,39 +18,60 @@
 <script src="am-imap-advanced.js"/>
 
 <box>
-  <text value="&serverDirectory.label;"/>
+  <text value="&serverDirectory.label;" class="label"/>
   <textfield imap_persist="true" id="serverDirectory"/>
 </box>
 
-  <checkbox imap_persist="true" id="usingSubscription" value="&usingSubscription.label;"/>
+<checkbox imap_persist="true" id="usingSubscription" value="&usingSubscription.label;"/>
 
-  <checkbox imap_persist="true" id="dualUseFolders" value="&dualUseFolders.label;"/>
+<checkbox imap_persist="true" id="dualUseFolders" value="&dualUseFolders.label;"/>
+
+<spring class="spacer"/>
+<separator class="groove"/>
+<spring class="spacer"/>
 
 <html>&namespaceDesc.label;</html>
-<grid style="padding-left: 10px">
+<grid>
+  <columns>
+    <column/>
+    <column/>
+    <column/>
+  </columns>
+  <rows>
+    <row>
+      <separator class="indent"/>
+      <text for="personalNamespace" class="label" value="&personalNamespace.label;"/>
+      <textfield imap_persist="true" id="personalNamespace" />
+    </row>
+    <row>
+      <separator class="indent"/>
+      <text for="publicNamespace" class="label" value="&publicNamespace.label;"/>
+      <textfield imap_persist="true" id="publicNamespace"/>
+    </row>
+    <row>
+      <separator class="indent"/>
+      <text for="otherUsersNamespace" class="label" value="&otherUsersNamespace.label;"/>
+      <textfield imap_persist="true" id="otherUsersNamespace"/>
+    </row>
+  </rows>
+</grid>
+<grid>
   <columns>
     <column/>
     <column/>
   </columns>
   <rows>
     <row>
-      <text for="personalNamespace" class="label" value="&personalNamespace.label;"/>
-      <textfield imap_persist="true" id="personalNamespace" />
-    </row>
-    <row>
-      <text for="publicNamespace" class="label" value="&publicNamespace.label;"/>
-      <textfield imap_persist="true" id="publicNamespace"/>
-    </row>
-    <row>
-      <text for="otherUsersNamespace" class="label" value="&otherUsersNamespace.label;"/>
-      <textfield imap_persist="true" id="otherUsersNamespace"/>
+      <separator class="indent"/>
+      <checkbox imap_persist="true" id="overrideNamespaces" value="&overrideNamespaces.label;"/>
     </row>
   </rows>
 </grid>
 
-<checkbox imap_persist="true" id="overrideNamespaces" value="&overrideNamespaces.label;"/>
-
+<spring class="spacer"/>
 <separator class="groove"/>
-<box id="okCancelButtons"/>
+<spring class="spacer"/>
+
+<box id="okCancelButtonsRight"/>
 
 </window>
