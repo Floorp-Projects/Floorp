@@ -25,9 +25,8 @@
 
 
 #include "nsMimeMapper.h"
-
+#include "nsITransferable.h"
 #include "nsString.h"
-#include "nsIDataFlavor.h"
 
 //
 // MapMimeTypeToMacOSType

@@ -28,7 +28,7 @@
 #include "nsDragService.h"
 
 #include "nsITransferable.h"
-#include "nsIDataFlavor.h"
+#include "nsString.h"
 #include "nsMimeMapper.h"
 #include "nsWidgetsCID.h"
 #include "nsClipboard.h"
@@ -148,14 +148,12 @@ nsDragService :: GetData (nsITransferable * aTransferable)
 // NS_OK for success and NS_ERROR_FAILURE if flavor is not present.
 //
 NS_IMETHODIMP
-nsDragService :: IsDataFlavorSupported(nsIDataFlavor * aDataFlavor)
+nsDragService :: IsDataFlavorSupported(nsString * aDataFlavor)
 {
   nsresult flavorSupported = NS_ERROR_FAILURE;
 
   // convert to 4 character MacOS type
-  nsAutoString mimeType;
-  aDataFlavor->GetMimeType(mimeType);
-  FlavorType macFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(mimeType);
+  FlavorType macFlavor = nsMimeMapperMac::MapMimeTypeToMacOSType(*aDataFlavor);
 
   // search through all drag items looking for something with this flavor
   unsigned short numDragItems = 0;
