@@ -23,6 +23,7 @@
 #include "nsMailHeaders.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
+#include "nsString.h"
 
 // For the new pref API's
 static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
@@ -188,42 +189,37 @@ nsMimeEmitter::WriteXMLHeader(const char *msgID)
   UtilityWrite("\">");
 
   mXMLHeaderStarted = PR_TRUE;
+  PR_FREEIF(newValue);
   return NS_OK;
 }
 
 nsresult
 nsMimeEmitter::WriteXMLTag(const char *tagName, const char *value)
 {
-  PRBool    xHeader = (tagName[0] == 'X');
-  
   if ( (!value) || (!*value) )
     return NS_OK;
 
+  char  *upCaseTag = NULL;
   char  *newValue = nsEscapeHTML(value);
   if (!newValue) 
     return NS_OK;
 
-  UtilityWrite("<");
-  if (!xHeader)
-  {
-    UtilityWrite(tagName);
-    UtilityWrite(">");  
-  }
-  else
-  {
-    UtilityWrite("misc field=\"");
-    UtilityWrite(tagName);
-    UtilityWrite("\">");
-  }
+  nsString  newTagName(tagName);
+  newTagName.CompressWhitespace(PR_TRUE, PR_TRUE);
+
+  newTagName.ToUpperCase();
+  upCaseTag = newTagName.ToNewCString();
+
+  UtilityWrite("<header field=\"");
+  UtilityWrite(upCaseTag);
+  UtilityWrite("\">");
 
   UtilityWrite(newValue);
 
-  UtilityWrite("</");
-  if (!xHeader)
-    UtilityWrite(tagName);
-  else
-    UtilityWrite("misc");
-  UtilityWrite(">");
+  UtilityWrite("</header>");
+
+  PR_FREEIF(upCaseTag);
+  PR_FREEIF(newValue);
 
   return NS_OK;
 }
