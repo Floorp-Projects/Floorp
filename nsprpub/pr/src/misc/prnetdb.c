@@ -1979,23 +1979,32 @@ _pr_find_getaddrinfo(void)
     PRLibrary *lib;
 #ifdef WIN32
     /*
-     * On windows, we need to search ws2_32.dll for getaddrinfo and
-     * freeaddrinfo.  This library might not be loaded yet.
+     * On windows, we need to search ws2_32.dll or wship6.dll
+     * (Microsoft IPv6 Technology Preview for Windows 2000) for
+     * getaddrinfo and freeaddrinfo.  These libraries might not
+     * be loaded yet.
      */
-    lib = PR_LoadLibrary("ws2_32.dll");
-    if (!lib) {
-        return PR_FAILURE;
+    const char *libname[] = { "ws2_32.dll", "wship6.dll" };
+    int i;
+
+    for (i = 0; i < sizeof(libname)/sizeof(libname[0]); i++) {
+        lib = PR_LoadLibrary(libname[i]);
+        if (!lib) {
+            continue;
+        }
+        _pr_getaddrinfo = (FN_GETADDRINFO)
+            PR_FindFunctionSymbol(lib, GETADDRINFO_SYMBOL);
+        if (!_pr_getaddrinfo) {
+            PR_UnloadLibrary(lib);
+            continue;
+        }
+        _pr_freeaddrinfo = (FN_FREEADDRINFO)
+            PR_FindFunctionSymbol(lib, FREEADDRINFO_SYMBOL);
+        PR_ASSERT(_pr_freeaddrinfo);
+        /* Keep the library loaded. */
+        return PR_SUCCESS;
     }
-    _pr_getaddrinfo = (FN_GETADDRINFO)
-        PR_FindFunctionSymbol(lib, GETADDRINFO_SYMBOL);
-    _pr_freeaddrinfo = (FN_FREEADDRINFO)
-        PR_FindFunctionSymbol(lib, FREEADDRINFO_SYMBOL);
-    if (!_pr_getaddrinfo || !_pr_freeaddrinfo) {
-        PR_UnloadLibrary(lib);
-        return PR_FAILURE;
-    }
-    /* Keep ws2_32.dll loaded. */
-    return PR_SUCCESS;
+    return PR_FAILURE;
 #else
     /*
      * Resolve getaddrinfo by searching all loaded libraries.  Then
