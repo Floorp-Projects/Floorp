@@ -105,6 +105,12 @@ namespace ICG {
     // function/script, adds statements and expressions to it and then
     // converts it into an ICodeModule, ready for execution.
     
+    struct Result {
+        Result(Register reg, JSTypes::JSType type) : reg(reg), type(type) {}
+        Register reg;
+        JSTypes::JSType type;
+    };
+
     class ICodeGenerator {
     private:
         InstructionStream *iCode;
@@ -187,7 +193,7 @@ namespace ICG {
                 
         ICodeModule *complete();
 
-        Register genExpr(ExprNode *p, 
+        Result genExpr(ExprNode *p, 
                     bool needBoolValueInBranch = false, 
                     Label *trueBranch = NULL, 
                     Label *falseBranch = NULL);
@@ -201,6 +207,9 @@ namespace ICG {
         { iCode->push_back(new Throw(r)); }
 
         Register allocateVariable(const StringAtom& name);
+        Register allocateVariable(const StringAtom& name, const StringAtom& /*type */)
+        { return allocateVariable(name); }
+
         Register findVariable(const StringAtom& name)
         { VariableList::iterator i = variableList->find(name);
         return (i == variableList->end()) ? NotARegister : (*i).second; }

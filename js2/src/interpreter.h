@@ -37,9 +37,10 @@ namespace Interpreter {
     struct Linkage;
     
     class Context : public gc_base {
+        void initContext();
     public:
         explicit Context(World& world, JSScope* aGlobal)
-            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0) {}
+            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0) { initContext(); }
 
         World& getWorld()           { return mWorld; }
         JSScope* getGlobalObject()  { return mGlobal; }

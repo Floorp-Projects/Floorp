@@ -77,7 +77,7 @@ namespace JSTypes {
             JSArray* array;
             JSFunction *function;
             JSString *string;
-            JSType *type;
+            const JSType *type;
             bool boolean;
         };
         
@@ -106,7 +106,7 @@ namespace JSTypes {
         explicit JSValue(JSFunction* function) : function(function), tag(function_tag) {}
         explicit JSValue(JSString* string) : string(string), tag(string_tag) {}
         explicit JSValue(bool boolean) : boolean(boolean), tag(boolean_tag) {}
-        explicit JSValue(JSType* type) : type(type), tag(type_tag) {}
+        explicit JSValue(const JSType* type) : type(type), tag(type_tag) {}
 
         int32& operator=(int32 i32)                     { return (tag = i32_tag, this->i32 = i32); }
         uint32& operator=(uint32 u32)                   { return (tag = u32_tag, this->u32 = u32); }
@@ -116,7 +116,7 @@ namespace JSTypes {
         JSFunction*& operator=(JSFunction* function)    { return (tag = function_tag, this->function = function); }
         JSString*& operator=(JSString* string)          { return (tag = string_tag, this->string = string); }
         bool& operator=(bool boolean)                   { return (tag = boolean_tag, this->boolean = boolean); }
-        JSType*& operator=(JSType* type)                { return (tag = type_tag, this->type = type); }
+        const JSType*& operator=(const JSType* type)    { return (tag = type_tag, this->type = type); }
         
         bool isFunction() const                         { return (tag == function_tag); }
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag)); }
@@ -129,6 +129,7 @@ namespace JSTypes {
         bool isUndefined() const                        { return (tag == undefined_tag); }
         bool isNull() const                             { return ((tag == object_tag) && (this->object == NULL)); }
         bool isNaN() const;
+        bool isType() const                             { return (tag == type_tag); }
 
         JSValue toString() const                        { return (isString() ? *this : valueToString(*this)); }
         JSValue toNumber() const                        { return (isNumber() ? *this : valueToNumber(*this)); }
@@ -146,7 +147,7 @@ namespace JSTypes {
         static JSValue valueToBoolean(const JSValue& value);
 
 
-        const JSType *getType() const;
+        const JSType *getType() const;                  // map from tag type to JS2 type
 
         int operator==(const JSValue& value) const;
     };
