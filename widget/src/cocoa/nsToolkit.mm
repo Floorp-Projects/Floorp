@@ -46,6 +46,8 @@
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 
+#include "nsRepeater.h"
+
 // for some reason, this must come last. otherwise the appshell 
 // component fails to instantiate correctly at runtime.
 #undef DARWIN
@@ -137,6 +139,10 @@ printf("shutting down event queue\n");
       NS_ASSERTION(NS_SUCCEEDED(rv), "Error processing PLEvents");
     }
   }
+  
+  EventRecord anEvent;
+	Repeater::DoIdlers(anEvent);
+  Repeater::DoRepeaters(anEvent);
 }
 
 
