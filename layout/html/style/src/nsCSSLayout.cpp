@@ -27,8 +27,8 @@
 #include "nsBlockFrame.h"
 #include "nsHTMLIIDs.h"
 
-static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
+static NS_DEFINE_IID(kStyleTextSID, NS_STYLETEXT_SID);
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -63,10 +63,8 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
   while (--kidCount >= 0) {
     nscoord kidAscent = *aAscents++;
     nsIStyleContextPtr kidSC;
-    nsIContentPtr kidContent;
 
     kid->GetStyleContext(aCX, kidSC.AssignRef());
-    kid->GetContent(kidContent.AssignRef());
     nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
     PRUint8 verticalAlignEnum = NS_STYLE_VERTICAL_ALIGN_BASELINE;
@@ -158,6 +156,7 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     kid->GetNextSibling(kid);
   }
 
+  // Now compute the final line-height
   nscoord lineHeight = maxY - minY;
 
   if (0 != pass2Kids) {
@@ -167,10 +166,8 @@ nsCSSLayout::VerticallyAlignChildren(nsIPresContext* aCX,
     while (--kidCount >= 0) {
       // Get kid's vertical align style data
       nsIStyleContextPtr kidSC;
-      nsIContentPtr kidContent;
 
       kid->GetStyleContext(aCX, kidSC.AssignRef());
-      kid->GetContent(kidContent.AssignRef());
       nsStyleText* textStyle = (nsStyleText*)kidSC->GetData(kStyleTextSID);
       nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
 
@@ -257,10 +254,8 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
   nsPoint origin;
   nsIFrame* kid = aFirstChild;
   while (--aChildCount >= 0) {
-    nsIContentPtr kidContent;
     nsIStyleContextPtr kidSC;
 
-    kid->GetContent(kidContent.AssignRef());
     kid->GetStyleContext(aCX, kidSC.AssignRef());
     nsStylePosition* kidPosition = (nsStylePosition*)
       kidSC->GetData(kStylePositionSID);
