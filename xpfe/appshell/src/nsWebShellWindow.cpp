@@ -1710,6 +1710,7 @@ nsWebShellWindow::NotifyObservers( const nsString &aTopic, const nsString &someD
 NS_IMETHODIMP nsWebShellWindow::Destroy()
 {
 #ifdef USE_NATIVE_MENUS
+  {
   // unregister as document listener
   // this is needed for menus
    nsCOMPtr<nsIContentViewer> cv;
@@ -1723,6 +1724,7 @@ NS_IMETHODIMP nsWebShellWindow::Destroy()
       if(doc)
          doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));
       }
+   }
 #endif
    
    return nsXULWindow::Destroy();

@@ -370,6 +370,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       return NS_OK;
 
 #ifdef XP_MAC // Anyone still using native menus should add themselves here.
+  {
   // unregister as document listener
   // this is needed for menus
    nsCOMPtr<nsIContentViewer> cv;
@@ -383,6 +384,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
 /*      if(doc)
          doc->RemoveObserver(NS_STATIC_CAST(nsIDocumentObserver*, this));  */
       }
+   }
 #endif
 
    nsCOMPtr<nsIAppShellService> appShell(do_GetService(kAppShellServiceCID));
