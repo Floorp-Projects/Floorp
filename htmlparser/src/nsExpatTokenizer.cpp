@@ -519,10 +519,11 @@ nsExpatTokenizer::OpenInputStream(const nsString& aURLStr,
 #else // NECKO
   nsIURI* uri;
 
+  // XXX We need to use the aBaseURL parameter here...
   rv = NS_NewURI(&uri, aURLStr);
   if (NS_FAILED(rv)) return rv;
 
-  ret = NS_OpenURI(in, uri);
+  rv = NS_OpenURI(in, uri);
 
   NS_RELEASE(uri);
 #endif // NECKO
