@@ -347,11 +347,25 @@ NS_IMETHODIMP nsWindow::Update(void)
     UnqueueDraw();
 
   if (!mUpdateArea->IsEmpty()) {
-    PRInt32 x, y, width, height;
     
-    mUpdateArea->GetBoundingBox (&x, &y, &width, &height);
-    DoPaint (x, y, width, height, mUpdateArea);
-    
+    nsRegionRectSet *regionRectSet = nsnull;
+
+    if (NS_FAILED(mUpdateArea->GetRects(&regionRectSet)))
+      return NS_ERROR_FAILURE;
+
+    PRUint32 len;
+    PRUint32 i;
+
+    len = regionRectSet->mRectsLen;
+
+    for (i=0;i<len;++i)
+    {
+      nsRegionRect *r = &(regionRectSet->mRects[i]);
+      DoPaint (r->x, r->y, r->width, r->height, mUpdateArea);
+    }
+
+    mUpdateArea->FreeRects(regionRectSet);
+
     mUpdateArea->SetTo(0, 0, 0, 0);
     return NS_OK;
   }
@@ -1025,7 +1039,9 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
   // set our background color to make people happy.
 
-  SetBackgroundColor(NS_RGB(192,192,192));
+  //  SetBackgroundColor(NS_RGB(192,192,192));
+  gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
+
 
   // track focus changes if we have a mozarea
   if (mMozArea) {
@@ -1788,7 +1804,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 
 
   // don't show if we are too small
-  if (mIsTooSmall && bState == PR_FALSE)
+  if (mIsTooSmall)
     return NS_OK;
 
   // show
@@ -1825,7 +1841,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
       gtk_widget_hide(mMozArea);
       //gtk_widget_unmap(mShell);
     } 
-   
+
     // For some strange reason, gtk_widget_hide() does not seem to
     // unmap the window.
     //    gtk_widget_unmap(mWidget);
@@ -1845,7 +1861,7 @@ NS_IMETHODIMP nsWindow::Show(PRBool bState)
 
 
   // don't show if we are too small
-  if (mIsTooSmall && bState == PR_FALSE)
+  if (mIsTooSmall)
     return NS_OK;
 
   // show
@@ -1987,6 +2003,7 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
       mIsTooSmall = PR_TRUE;
       if (GTK_WIDGET_VISIBLE(mShell))
       {
+        gtk_widget_hide(mMozArea);
         gtk_widget_hide(mShell);
         gtk_widget_unmap(mShell);
       }
@@ -2058,17 +2075,8 @@ NS_IMETHODIMP nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 #endif
 
   if (nNeedToShow)
-  {
-    if (mIsToplevel && mShell)
-    {
-      gtk_widget_show(mShell);
-    }
-    else
-    {
-      gdk_window_show(mSuperWin->bin_window);
-      gdk_window_show(mSuperWin->shell_window);
-    }
-  }
+    Show(PR_TRUE);
+
   return NS_OK;
 }
 
