@@ -28,7 +28,6 @@
 #include "nsListBox.h"
 #include "nsLookAndFeel.h"
 #include "nsRadioButton.h"
-#include "nsRadioGroup.h"
 #include "nsScrollbar.h"
 #include "nsTextAreaWidget.h"
 #include "nsTextHelper.h"
@@ -56,7 +55,6 @@ static NS_DEFINE_IID(kCCombobox,      NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kCFileOpen,      NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kCListbox,       NS_LISTBOX_CID);
 static NS_DEFINE_IID(kCRadioButton,   NS_RADIOBUTTON_CID);
-static NS_DEFINE_IID(kCRadioGroup,    NS_RADIOGROUP_CID);
 static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
 static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextArea,      NS_TEXTAREA_CID);
@@ -169,9 +167,6 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports* aOuter,
     else if (mClassID.Equals(kCRadioButton)) {
         inst = (nsISupports*)(nsWindow*)new nsRadioButton();
     }
-    //else if (mClassID.Equals(kCRadioGroup)) {
-    //    inst = (nsISupports*)(nsObject*)new nsRadioGroup();
-    //}
     else if (mClassID.Equals(kCFileOpen)) {
         inst = (nsISupports*)new nsFileWidget();
     }
