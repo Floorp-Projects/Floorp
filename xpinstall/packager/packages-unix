@@ -207,7 +207,6 @@ bin/defaults/pref/psm-glue.js
 bin/defaults/profile/*
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
-bin/searchplugins/*
 bin/res/entityTables/*
 bin/res/FieldSchema.tbl
 bin/res/SchemaConcat.tbl
