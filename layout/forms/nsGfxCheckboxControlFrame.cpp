@@ -31,6 +31,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIPresState.h"
+#include "nsCSSRendering.h"
 
 //------------------------------------------------------------
 nsresult
@@ -52,9 +53,16 @@ NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 //------------------------------------------------------------
 // Initialize GFX-rendered state
 nsGfxCheckboxControlFrame::nsGfxCheckboxControlFrame()
-  : mChecked(eOff)
+: mChecked(eOff),
+  mCheckButtonFaceStyle(nsnull)
 {
 }
+
+nsGfxCheckboxControlFrame::~nsGfxCheckboxControlFrame()
+{
+  NS_IF_RELEASE(mCheckButtonFaceStyle);
+}
+
 
 //----------------------------------------------------------------------
 // nsISupports
@@ -70,7 +78,20 @@ nsGfxCheckboxControlFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr
     *aInstancePtr = (void*)(nsIStatefulFrame*) this;
     return NS_OK;
   }
+  if (aIID.Equals(NS_GET_IID(nsICheckboxControlFrame))) {
+    *aInstancePtr = (void*) ((nsICheckboxControlFrame*) this);
+    return NS_OK;
+  }
   return nsFormControlFrame::QueryInterface(aIID, aInstancePtr);
+}
+
+//--------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::SetCheckboxFaceStyleContext(nsIStyleContext *aCheckboxFaceStyleContext)
+{
+  mCheckButtonFaceStyle = aCheckboxFaceStyleContext;
+  NS_ADDREF(mCheckButtonFaceStyle);
+  return NS_OK;
 }
 
 //------------------------------------------------------------
@@ -102,6 +123,48 @@ nsGfxCheckboxControlFrame::Init(nsIPresContext*  aPresContext,
   
   return NS_OK;
 }
+
+//--------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::GetAdditionalStyleContext(PRInt32 aIndex, 
+                                                     nsIStyleContext** aStyleContext) const
+{
+  NS_PRECONDITION(nsnull != aStyleContext, "null OUT parameter pointer");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aStyleContext = nsnull;
+  switch (aIndex) {
+  case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
+    *aStyleContext = mCheckButtonFaceStyle;
+    NS_IF_ADDREF(*aStyleContext);
+    break;
+  default:
+    return NS_ERROR_INVALID_ARG;
+  }
+  return NS_OK;
+}
+
+
+
+//--------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxCheckboxControlFrame::SetAdditionalStyleContext(PRInt32 aIndex, 
+                                                     nsIStyleContext* aStyleContext)
+{
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  switch (aIndex) {
+  case NS_GFX_CHECKBOX_CONTROL_FRAME_FACE_CONTEXT_INDEX:
+    NS_IF_RELEASE(mCheckButtonFaceStyle);
+    mCheckButtonFaceStyle = aStyleContext;
+    NS_IF_ADDREF(aStyleContext);
+    break;
+  }
+  return NS_OK;
+}
+
 
 //------------------------------------------------------------
 //
@@ -312,8 +375,36 @@ nsGfxCheckboxControlFrame::Paint(nsIPresContext* aPresContext,
   // Paint the background
   nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
   if (NS_FRAME_PAINT_LAYER_FOREGROUND == aWhichLayer) {
+    PRBool doDefaultPainting = PR_TRUE;
     // Paint the checkmark 
-    PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    if (nsnull != mCheckButtonFaceStyle  && GetCheckboxState() == eOn) {
+      const nsStyleColor* myColor = (const nsStyleColor*)
+          mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Color);
+
+      if (myColor->mBackgroundImage.Length() > 0) {
+        const nsStyleSpacing* mySpacing = (const nsStyleSpacing*)
+            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Spacing);
+        const nsStylePosition* myPosition = (const nsStylePosition*)
+            mCheckButtonFaceStyle->GetStyleData(eStyleStruct_Position);
+
+        nscoord width = myPosition->mWidth.GetCoordValue();
+        nscoord height = myPosition->mHeight.GetCoordValue();
+         // Position the button centered within the radio control's rectangle.
+        nscoord x = (mRect.width - width) / 2;
+        nscoord y = (mRect.height - height) / 2;
+        nsRect rect(x, y, width, height); 
+
+        nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
+                                          aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                    aDirtyRect, rect, *mySpacing, mCheckButtonFaceStyle, 0);
+        doDefaultPainting = PR_FALSE;
+      }
+    } 
+
+    if (doDefaultPainting) {
+      PaintCheckBox(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+    }
   }
   return NS_OK;
 }
