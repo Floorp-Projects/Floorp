@@ -160,6 +160,7 @@ nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
   mFrameTag = NS_NewAtom("FRAME");
   mIFrameTag = NS_NewAtom("IFRAME");
   mVisited = new AtomHashTable();
+  mVerbose = nsnull;
 }
 
 static void FreeStrings(nsVoidArray& aArray)
@@ -194,6 +195,13 @@ NS_IMPL_ISUPPORTS(nsWebCrawler, kISupportsIID)
 NS_IMETHODIMP
 nsWebCrawler::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
+  if (mVerbose) {
+    printf("Crawler: starting ");
+    nsAutoString tmp;
+    aURL->ToString(tmp);
+    fputs(tmp, stdout);
+    printf("\n");
+  }
   return NS_OK;
 }
 
@@ -212,8 +220,24 @@ nsWebCrawler::OnStatus(nsIURL* aURL, const nsString& aMsg)
 NS_IMETHODIMP
 nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
 {
-  if (nsnull!=mFilter)
-  {
+  if (mVerbose) {
+    printf("Crawler: stopping ");
+    nsAutoString tmp;
+    aURL->ToString(tmp);
+    fputs(tmp, stdout);
+    printf("\n");
+  }
+
+  if (nsnull == aURL) {
+    return NS_OK;
+  }
+
+  // Skip url post-processing for non-document urls
+  if (!mCurrentURL.Equals(aURL->GetSpec())) {
+    return NS_OK;
+  }
+
+  if ((nsnull != mFilter) || (nsnull != mOutputDir)) {
     nsIPresShell* shell = GetPresShell();
     if (nsnull != shell) {
       nsIFrame* root = shell->GetRootFrame();
@@ -224,14 +248,14 @@ nsWebCrawler::OnStopBinding(nsIURL* aURL, PRInt32 status, const nsString& aMsg)
           FILE *fp = GetOutputFile(aURL);
           if (nsnull!=fp)
           {
-            root->List(fp, 0, filter);
+            root->DumpRegressionData(fp, 0);
             fclose(fp);
           }
           else
             printf("could not open output file for %s\n", aURL->GetFile());
         }
         else
-          root->List(stdout, 0, filter);
+          root->DumpRegressionData(stdout, 0);
       }
       NS_RELEASE(shell);
     }
@@ -286,7 +310,7 @@ FILE * nsWebCrawler::GetOutputFile(nsIURL *aURL)
       char *c = inputFileName;
       for (PRInt32 i=fileNameOffset+1; i<fileNameOffset+len; i++)
       {
-        *c = inputFileFullPath[i]; 
+        *c = (char) inputFileFullPath[i];
         c++;
       }
       inputFileName[len-1]=nsnull;
@@ -613,6 +637,7 @@ nsWebCrawler::LoadNextURL()
           }
           nsIWebShell* webShell;
           mBrowser->GetWebShell(webShell);
+          mCurrentURL = *url;
           webShell->LoadURL(*url);
           NS_RELEASE(webShell);
 
