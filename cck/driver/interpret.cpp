@@ -31,7 +31,6 @@ extern BOOL inPrev;
 extern NODE* WizardTree;
 extern char currDirPath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
-extern BOOL IsSameCache;
 extern CString CacheFile;
 extern CString CachePath;
 extern char asePath[MAX_SIZE];
@@ -752,7 +751,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					interpret("Reload(%Root%)",curWidget);
 
 				}
-
+#if 0
 				else if (strcmp(pcmd, "NewNCIDialog") == 0)
 				{
 					CString entryName;
@@ -761,6 +760,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					entryName = newDlg.GetData();
 					SetGlobal(parms, entryName);
 				}
+#endif
 				else if (strcmp(pcmd, "inform") == 0)
 				{
 					char *p2 = strchr(parms, ',');
@@ -800,6 +800,17 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 						GenerateList(pcmd, w, p2path);
 					}
 				}
+				else if (strcmp(pcmd, "SelectItem") ==0)
+				{
+					WIDGET* tmpWidget = findWidget((char*) (LPCTSTR)curWidget->target);
+					if (!tmpWidget)
+						return FALSE;
+					CString comboValue = replaceVars(parms,NULL);				
+					if (!(comboValue.IsEmpty()))
+						((CComboBox*)tmpWidget->control)->SelectString(0, comboValue);
+
+				}
+
 				else if (strcmp(pcmd, "BrowseFile") == 0)
 				{
 					if (curWidget)
@@ -811,7 +822,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (curWidget)
 						BrowseDir(curWidget);
 				}
-			
+#if 0			
 				else if (strcmp(pcmd, "NewConfigDialog") == 0)
 				{
 					if (curWidget)
@@ -823,7 +834,7 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (curWidget)
 						NewConfig(curWidget, CString(parms),"Create Copy");
 				}
-
+#endif
 				else if (strcmp(pcmd, "CopyDir") == 0)
 				{
 					char *p2 = strchr(parms, ',');
