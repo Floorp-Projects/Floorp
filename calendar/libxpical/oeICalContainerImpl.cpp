@@ -42,7 +42,51 @@ commands to individual calendars and a collector of calculated data for global q
 #include "oeICalContainerImpl.h"
 #include "nsISupportsArray.h"
 #include "nsComponentManagerUtils.h"
-                             
+#include "nsCOMArray.h"
+#include "nsISimpleEnumerator.h"
+
+/**
+ * This enumerator collects items from an array of other enumerators, and
+ * returns it as a single one.
+ */
+class oeCollectedEventEnumerator : public nsISimpleEnumerator
+{
+  public:
+    NS_DECL_ISUPPORTS
+
+    oeCollectedEventEnumerator(nsCOMArray<nsISimpleEnumerator>& aListOfEnums)
+      : mListOfEnums(aListOfEnums),
+        mEnumIndex(0)
+    {
+    }
+    
+    NS_IMETHOD HasMoreElements(PRBool *aResult) 
+    {
+      *aResult = PR_FALSE;
+      mListOfEnums[mEnumIndex]->HasMoreElements(aResult);
+      while (!*aResult && (++mEnumIndex < mListOfEnums.Count())) {
+        mListOfEnums[mEnumIndex]->HasMoreElements(aResult);
+      }
+      return NS_OK;
+    }
+
+    NS_IMETHOD GetNext(nsISupports **aResult) 
+    {
+      return mListOfEnums[mEnumIndex]->GetNext(aResult);
+    }
+
+    virtual ~oeCollectedEventEnumerator() 
+    {
+    }
+
+  protected:
+    nsCOMArray<nsISimpleEnumerator> mListOfEnums;
+    PRInt32 mEnumIndex;
+};
+
+NS_IMPL_ISUPPORTS1(oeCollectedEventEnumerator, nsISimpleEnumerator)
+
+                         
 icaltimetype ConvertFromPrtime( PRTime indate );
 PRTime ConvertToPrtime ( icaltimetype indate );
 extern "C" {
@@ -530,29 +574,31 @@ oeICalContainerImpl::DeleteEvent( const char *id )
 }
 
 NS_IMETHODIMP
-oeICalContainerImpl::GetAllEvents(nsISimpleEnumerator **resultList )
+oeICalContainerImpl::GetAllEvents(nsISimpleEnumerator **eventlist )
 {
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetAllEvents()\n" );
 #endif
-    oeEventEnumerator* eventEnum = new oeEventEnumerator();
     
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
-        calendar->GetAllEvents( (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetAllEvents( getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
 
+    *eventlist = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*eventlist)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*eventlist);
     return NS_OK;
 }
 
@@ -561,24 +607,26 @@ oeICalContainerImpl::GetEventsForMonth( PRTime datems, nsISimpleEnumerator **eve
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetEventsForMonth()\n" );
 #endif
-    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
 
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
-        calendar->GetEventsForMonth( datems, (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetEventsForMonth( datems, getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
 
+    *eventlist = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*eventlist)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*eventlist);
     return NS_OK;
 }
 
@@ -587,23 +635,26 @@ oeICalContainerImpl::GetEventsForWeek( PRTime datems, nsISimpleEnumerator **even
 #ifdef ICAL_DEBUG
     printf( "oeICalContainerImpl::GetEventsForWeek()\n" );
 #endif
-    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
 
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
-        calendar->GetEventsForWeek( datems, (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetEventsForWeek( datems, getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
+
+    *eventlist = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*eventlist)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*eventlist);
     return NS_OK;
 }
 
@@ -613,23 +664,25 @@ oeICalContainerImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **event
     printf( "oeICalContainerImpl::GetEventsForDay()\n" );
 #endif
 
-    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
-        calendar->GetEventsForDay( datems, (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetEventsForDay( datems, getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
+
+    *eventlist = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*eventlist)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*eventlist);
     return NS_OK;
 }
 
@@ -639,24 +692,25 @@ oeICalContainerImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddat
     printf( "oeICalContainerImpl::GetEventsForRange()\n" );
 #endif
     
-    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
-        calendar->GetEventsForRange( checkdateinms, checkenddateinms, (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetEventsForRange( checkdateinms, checkenddateinms, getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
 
+    *eventlist = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*eventlist)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*eventlist);
     return NS_OK;
 }
 
@@ -666,24 +720,26 @@ oeICalContainerImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checke
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalContainerImpl::GetFirstEventsForRange()\n" );
 #endif
-    oeEventEnumerator* eventEnum = new oeEventEnumerator();
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
 
     PRUint32 num;
     unsigned int i;
+    nsCOMArray<nsISimpleEnumerator> listOfEnums;
 
     m_calendarArray->Count( &num );
     for( i=0; i<num; i++ ) 
     {
         nsCOMPtr<oeIICal> calendar;
         m_calendarArray->GetElementAt( i, getter_AddRefs(calendar) );
-        calendar->GetFirstEventsForRange( checkdateinms, checkenddateinms, (nsISimpleEnumerator **)&eventEnum );
+        nsCOMPtr<nsISimpleEnumerator> eventEnum;
+        calendar->GetFirstEventsForRange( checkdateinms, checkenddateinms, getter_AddRefs(eventEnum) );
+        listOfEnums.AppendObject(eventEnum);
     }
 
+    *eventlist = new oeCollectedEventEnumerator(listOfEnums);
+    if (!*eventlist)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(*eventlist);
     return NS_OK;
 }
 

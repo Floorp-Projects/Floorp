@@ -1282,14 +1282,9 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
     printf( "oeICalImpl::GetAllEvents()\n" );
 #endif
 
-    nsCOMPtr<oeEventEnumerator> eventEnum;
-    if( !*resultList ) {
-        eventEnum = new oeEventEnumerator();
-        if (!eventEnum)
-            return NS_ERROR_OUT_OF_MEMORY;
-        eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-    } else
-        eventEnum = (oeEventEnumerator *)*resultList;
+    oeEventEnumerator *eventEnum = new oeEventEnumerator();
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     nsCOMPtr<nsISupportsArray> eventArray;
     NS_NewISupportsArray(getter_AddRefs(eventArray));
@@ -1397,6 +1392,8 @@ oeICalImpl::GetAllEvents(nsISimpleEnumerator **resultList )
 
     // bump ref count
 //    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
+    *resultList = eventEnum;
+    NS_ADDREF(*resultList);
     return NS_OK;
 }
 
@@ -1483,14 +1480,11 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
     printf( "oeICalImpl::GetEventsForRange()\n" );
 #endif
     
-    nsCOMPtr<oeEventEnumerator> eventEnum;
-    if( !*eventlist ) {
-        eventEnum = new oeEventEnumerator();
-        if (!eventEnum)
-            return NS_ERROR_OUT_OF_MEMORY;
-        eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    } else
-        eventEnum = (oeEventEnumerator *)*eventlist;
+    oeEventEnumerator *eventEnum = new oeEventEnumerator();
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *eventlist = eventEnum;
+    NS_ADDREF(*eventlist);
 
     struct icaltimetype checkdate = ConvertFromPrtime( checkdateinms );
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
@@ -1529,14 +1523,11 @@ oeICalImpl::GetFirstEventsForRange( PRTime checkdateinms, PRTime checkenddateinm
 #ifdef ICAL_DEBUG
     printf( "oeICalImpl::GetFirstEventsForRange()\n" );
 #endif
-    nsCOMPtr<oeEventEnumerator> eventEnum;
-    if( !*eventlist ) {
-        eventEnum = new oeEventEnumerator();
-        if (!eventEnum)
-            return NS_ERROR_OUT_OF_MEMORY;
-        eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    } else
-        eventEnum = (oeEventEnumerator *)*eventlist;
+    oeEventEnumerator *eventEnum = new oeEventEnumerator();
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *eventlist = eventEnum;
+    NS_ADDREF(*eventlist);
 
     nsCOMPtr<nsISupportsArray> eventArray;
     NS_NewISupportsArray(getter_AddRefs(eventArray));
@@ -1629,14 +1620,11 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
     printf( "oeICalImpl::GetNextNEvents( %d )\n", maxcount );
 #endif
     
-    nsCOMPtr<oeEventEnumerator> eventEnum;
-    if( !*eventlist ) {
-        eventEnum = new oeEventEnumerator();
-        if (!eventEnum)
-            return NS_ERROR_OUT_OF_MEMORY;
-        eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)eventlist);
-    } else
-        eventEnum = (oeEventEnumerator *)*eventlist;
+    oeEventEnumerator *eventEnum = new oeEventEnumerator();
+    if (!eventEnum)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *eventlist = eventEnum;
+    NS_ADDREF(*eventlist);
 
     struct icaltimetype checkdate = ConvertFromPrtime( datems );
     icaltime_adjust( &checkdate, 0, 0, 0, -1 );
