@@ -33,6 +33,28 @@
         </getter>
       </property>
     </implementation>
+    <handlers>
+    <handler event="keypress" keycode="vk_tab" modifiers="control">
+      <![CDATA[
+       var tabbox = this.getElementsByTagNameNS(
+                                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                "tabbox");
+       tabbox = tabbox.length ? tabbox[0] : null;
+       if (tabbox)
+         tabbox.advanceSelectedTab(1);
+       ]]>
+    </handler>
+    <handler event="keypress" keycode="vk_tab" modifiers="control,shift">
+      <![CDATA[
+       var tabbox = this.getElementsByTagNameNS(
+                                                "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                                "tabbox");
+       tabbox = tabbox.length ? tabbox[0] : null;
+       if (tabbox)
+         tabbox.advanceSelectedTab(-1);
+       ]]>
+    </handler>
+    </handlers>
   </binding>
 
   <binding id="tabbox" extends="xul:box">

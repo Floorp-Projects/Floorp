@@ -2236,11 +2236,32 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
 
     const nsStyleUserInterface* ui;
     currentFrame->GetStyleData(eStyleStruct_UserInterface, ((const nsStyleStruct*&)ui));
-    
+
+    PRBool viewShown = PR_TRUE;
+
+    nsIView* frameView = nsnull;
+    currentFrame->GetView(mPresContext, &frameView);
+    if (!frameView) {
+      nsIFrame* parentWithView = nsnull;
+      currentFrame->GetParentWithView(mPresContext, &parentWithView);
+      if (parentWithView)
+        parentWithView->GetView(mPresContext, &frameView);
+    }
+    while (frameView) {
+      nsViewVisibility visib;
+      frameView->GetVisibility(visib);
+      if (visib == nsViewVisibility_kHide) {
+        viewShown = PR_FALSE;
+        break;
+      }
+      frameView->GetParent(frameView);
+    }
+
     nsCOMPtr<nsIDOMElement> element(do_QueryInterface(child));
 
     // if collapsed or hidden, we don't get tabbed into.
-    if ((disp->mVisible != NS_STYLE_VISIBILITY_COLLAPSE) &&
+    if (viewShown &&
+        (disp->mVisible != NS_STYLE_VISIBILITY_COLLAPSE) &&
         (disp->mVisible != NS_STYLE_VISIBILITY_HIDDEN) && 
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_IGNORE) &&
         (ui->mUserFocus != NS_STYLE_USER_FOCUS_NONE) && element) {
