@@ -222,7 +222,11 @@ NS_IMETHODIMP nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
   {
     if (mMozArea->window)
     {
-      gdk_window_get_origin(mMozArea->window, &x, &y);
+      if (!GTK_WIDGET_MAPPED(mMozArea) || !GTK_WIDGET_REALIZED(mMozArea)) {
+        // get_root_origin will do Bad Things
+        return NS_ERROR_FAILURE;
+      }
+      gdk_window_get_root_origin(mMozArea->window, &x, &y);
       aNewRect.x = x + aOldRect.x;
       aNewRect.y = y + aOldRect.y;
     }
@@ -1891,6 +1895,10 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     gtk_signal_connect_after(GTK_OBJECT(mShell),
                              "size_allocate",
                              GTK_SIGNAL_FUNC(handle_size_allocate),
+                             this);
+    gtk_signal_connect_after(GTK_OBJECT(mShell),
+                             "configure_event",
+                             GTK_SIGNAL_FUNC(handle_configure_event),
                              this);
     break;
 
