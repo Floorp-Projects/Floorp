@@ -62,7 +62,6 @@
 #include "nsContentUtils.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMutationEvent.h"
-#include "nsIFormControl.h"
 
 static const char* const mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
@@ -198,7 +197,6 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
   mTarget = nsnull;
   mCurrentTarget = nsnull;
   mOriginalTarget = nsnull;
-  mRealOriginalTarget = nsnull;
   mText = nsnull;
   mTextRange = nsnull;
   mButton = -1;
@@ -269,7 +267,6 @@ nsDOMEvent::~nsDOMEvent()
   NS_IF_RELEASE(mTarget);
   NS_IF_RELEASE(mCurrentTarget);
   NS_IF_RELEASE(mOriginalTarget);
-  NS_IF_RELEASE(mRealOriginalTarget);
   NS_IF_RELEASE(mTextRange);
 
   if (mEventIsInternal) {
@@ -375,23 +372,6 @@ nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 
   *aOriginalTarget = mOriginalTarget;
   NS_IF_ADDREF(*aOriginalTarget);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDOMEvent::GetOriginalTargetTrusted(nsIDOMEventTarget** aOriginalTarget)
-{
-  if (mRealOriginalTarget) {
-    *aOriginalTarget = mRealOriginalTarget;
-    NS_ADDREF(*aOriginalTarget);
-    return NS_OK;
-  }
-
-  if (!mOriginalTarget)
-    return GetTarget(aOriginalTarget);
-
-  *aOriginalTarget = mOriginalTarget;
-  NS_ADDREF(*aOriginalTarget);
   return NS_OK;
 }
 
@@ -1365,46 +1345,6 @@ NS_METHOD nsDOMEvent::SetCurrentTarget(nsIDOMEventTarget* aCurrentTarget)
 NS_METHOD nsDOMEvent::SetOriginalTarget(nsIDOMEventTarget* aOriginalTarget)
 {
   if (mOriginalTarget != aOriginalTarget) {
-    // Fix for bug 163598.  Do not expose anonymous content via originalTarget for
-    // file upload controls.  To accomplish this we look to see if the
-    // originalTarget is inside a file upload control.
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aOriginalTarget));
-    if (content) {
-      PRUint32 numParentsChecked = 0;
-      nsCOMPtr<nsIContent> parent;
-      content->GetParent(*getter_AddRefs(parent));
-      while (parent) {
-        numParentsChecked++;
-        // Only matters if we're an HTML form control.  |originalTarget| is
-        // defined all over the place for XUL, so this saves XUL (and non-form
-        // controls) from paying the cost of a failed QI.
-        if (parent->IsContentOfType(nsIContent::eHTML_FORM_CONTROL)) {
-          nsCOMPtr<nsIFormControl> inputControl(do_QueryInterface(parent));
-          if (inputControl) {
-            PRInt32 type;
-            inputControl->GetType(&type); 
-            if (type == NS_FORM_INPUT_FILE) {
-              NS_IF_RELEASE(mOriginalTarget);
-              mOriginalTarget = nsnull;
-              mRealOriginalTarget = aOriginalTarget;
-              NS_IF_ADDREF(mRealOriginalTarget);
-              return NS_OK;
-            }
-          }
-        }
-
-        // We're looking for input type=file, and anonymous content doesn't go any
-        // deeper than 3 deep under input type=file (input type=text, div,
-        // textnode)
-        if (numParentsChecked >= 3) {
-          break;
-        }
-
-        content = parent;
-        content->GetParent(*getter_AddRefs(parent));
-      }
-    }
-
     NS_IF_RELEASE(mOriginalTarget);
     NS_IF_ADDREF(aOriginalTarget);
     mOriginalTarget = aOriginalTarget;
