@@ -45,9 +45,9 @@ package org.mozilla.javascript;
  * instances or to notify about Context execution.
  * <p>
  * When Rhino runtime needs to create new {@link Context} instance during
- * execution of {@link Context.enter()} or {@link Context}, it will call
+ * execution of {@link Context#enter()} or {@link Context}, it will call
  * {@link #makeContext()} of the current global ContextFactory.
- * See {@lnk #getGlobal()} and {@link #initGlobal(ContextFactory)}.
+ * See {@link #getGlobal()} and {@link #initGlobal(ContextFactory)}.
  * <p>
  * It is also possible to use explicit ContextFactory instances for Context
  * creation. This is useful to have a set of independent Rhino runtime
@@ -83,7 +83,7 @@ package org.mozilla.javascript;
  * {
  *     private long creationTime = System.currentTimeMillis();
  *
- *     // Override {@Context#observeInstructionCount(int)}
+ *     // Override {@link Context#observeInstructionCount(int)}
  *     protected void observeInstructionCount(int instructionCount)
  *     {
  *         long currentTime = System.currentTimeMillis();
@@ -96,7 +96,7 @@ package org.mozilla.javascript;
  *         }
  *     }
  *
- *     // Override {@Context#hasFeature(int)}
+ *     // Override {@link Context#hasFeature(int)}
  *     public boolean hasFeature(int featureIndex)
  *     {
  *         // Turn on maximim compatibility with MSIE scripts
