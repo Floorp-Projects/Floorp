@@ -322,7 +322,6 @@ ul, menu, dir {
   list-style-type: disc;
   margin: 1em 0;
   -moz-padding-start: 40px;
-  -moz-counter-reset: -html-counter 0;
 }
 
 ol {
@@ -330,7 +329,6 @@ ol {
   list-style-type: decimal;
   margin: 1em 0;
   -moz-padding-start: 40px;
-  -moz-counter-reset: -html-counter 0;
 }
 
 li {

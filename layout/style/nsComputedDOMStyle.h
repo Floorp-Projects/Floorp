@@ -240,7 +240,9 @@ private:
   nsresult GetOutlineRadiusTopLeft(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetOutlineRadiusTopRight(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
-  /*Marker Properties */
+  /* Content Properties */
+  nsresult GetCounterIncrement(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
+  nsresult GetCounterReset(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
   nsresult GetMarkerOffset(nsIFrame *aFrame, nsIDOMCSSValue** aValue);
 
   /* z-index */

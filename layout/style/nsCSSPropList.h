@@ -323,10 +323,8 @@ CSS_PROP_COLUMN(-moz-column-count, _moz_column_count, MozColumnCount, Column, mC
 CSS_PROP_COLUMN(-moz-column-width, _moz_column_width, MozColumnWidth, Column, mColumnWidth, eCSSType_Value, nsnull)
 CSS_PROP_COLUMN(-moz-column-gap, _moz_column_gap, MozColumnGap, Column, mColumnGap, eCSSType_Value, nsnull)
 CSS_PROP_CONTENT(content, content, Content, Content, mContent, eCSSType_ValueList, kContentKTable)
-CSS_PROP_NOTIMPLEMENTED(counter-increment, counter_increment, CounterIncrement)
-CSS_PROP_NOTIMPLEMENTED(counter-reset, counter_reset, CounterReset)
-CSS_PROP_CONTENT(-moz-counter-increment, _moz_counter_increment, MozCounterIncrement, Content, mCounterIncrement, eCSSType_CounterData, nsnull) // XXX bug 137285
-CSS_PROP_CONTENT(-moz-counter-reset, _moz_counter_reset, MozCounterReset, Content, mCounterReset, eCSSType_CounterData, nsnull) // XXX bug 137285
+CSS_PROP_CONTENT(counter-increment, counter_increment, CounterIncrement, Content, mCounterIncrement, eCSSType_CounterData, nsnull) // XXX bug 137285
+CSS_PROP_CONTENT(counter-reset, counter_reset, CounterReset, Content, mCounterReset, eCSSType_CounterData, nsnull) // XXX bug 137285
 CSS_PROP_SHORTHAND(cue, cue, Cue)
 CSS_PROP_BACKENDONLY(cue-after, cue_after, CueAfter, Aural, mCueAfter, eCSSType_Value, nsnull)
 CSS_PROP_BACKENDONLY(cue-before, cue_before, CueBefore, Aural, mCueBefore, eCSSType_Value, nsnull)

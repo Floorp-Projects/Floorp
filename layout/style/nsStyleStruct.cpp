@@ -1399,6 +1399,9 @@ nsStyleContentData::~nsStyleContentData()
 {
   if (mType == eStyleContentType_Image) {
     NS_IF_RELEASE(mContent.mImage);
+  } else if (mType == eStyleContentType_Counter ||
+             mType == eStyleContentType_Counters) {
+    mContent.mCounters->Release();
   } else if (mContent.mString) {
     nsCRT::free(mContent.mString);
   }
@@ -1406,10 +1409,17 @@ nsStyleContentData::~nsStyleContentData()
 
 nsStyleContentData& nsStyleContentData::operator=(const nsStyleContentData& aOther)
 {
+  if (this == &aOther)
+    return *this;
+  this->~nsStyleContentData();
   mType = aOther.mType;
   if (mType == eStyleContentType_Image) {
     mContent.mImage = aOther.mContent.mImage;
     NS_IF_ADDREF(mContent.mImage);
+  } else if (mType == eStyleContentType_Counter ||
+             mType == eStyleContentType_Counters) {
+    mContent.mCounters = aOther.mContent.mCounters;
+    mContent.mCounters->AddRef();
   } else if (aOther.mContent.mString) {
     mContent.mString = nsCRT::strdup(aOther.mContent.mString);
   } else {
@@ -1432,6 +1442,9 @@ PRBool nsStyleContentData::operator==(const nsStyleContentData& aOther)
             NS_SUCCEEDED(thisURI->Equals(otherURI, &eq)) &&
             eq);
   }
+  if (mType == eStyleContentType_Counter ||
+      mType == eStyleContentType_Counters)
+    return *mContent.mCounters == *aOther.mContent.mCounters;
   return nsCRT::strcmp(mContent.mString, aOther.mContent.mString) == 0;
 }
 
@@ -1478,53 +1491,56 @@ nsStyleContent::nsStyleContent(const nsStyleContent& aSource)
 
   if (NS_SUCCEEDED(AllocateCounterIncrements(aSource.CounterIncrementCount()))) {
     for (index = 0; index < mIncrementCount; index++) {
-      aSource.GetCounterIncrementAt(index, mIncrements[index].mCounter,
-                                           mIncrements[index].mValue);
+      const nsStyleCounterData *data = aSource.GetCounterIncrementAt(index);
+      mIncrements[index].mCounter = data->mCounter;
+      mIncrements[index].mValue = data->mValue;
     }
   }
 
   if (NS_SUCCEEDED(AllocateCounterResets(aSource.CounterResetCount()))) {
     for (index = 0; index < mResetCount; index++) {
-      aSource.GetCounterResetAt(index, mResets[index].mCounter,
-                                       mResets[index].mValue);
+      const nsStyleCounterData *data = aSource.GetCounterResetAt(index);
+      mResets[index].mCounter = data->mCounter;
+      mResets[index].mValue = data->mValue;
     }
   }
 }
 
 nsChangeHint nsStyleContent::CalcDifference(const nsStyleContent& aOther) const
 {
-  if (mContentCount == aOther.mContentCount) {
-    if ((mMarkerOffset == aOther.mMarkerOffset) &&
-        (mIncrementCount == aOther.mIncrementCount) && 
-        (mResetCount == aOther.mResetCount)) {
-      PRUint32 ix = mContentCount;
-      while (0 < ix--) {
-        if (mContents[ix] != aOther.mContents[ix]) {
-          // Unfortunately we need to reframe here; a simple reflow
-          // will not pick up different text or different image URLs,
-          // since we set all that up in the CSSFrameConstructor
-          return NS_STYLE_HINT_FRAMECHANGE;
-        }
-      }
-      ix = mIncrementCount;
-      while (0 < ix--) {
-        if ((mIncrements[ix].mValue != aOther.mIncrements[ix].mValue) || 
-            (mIncrements[ix].mCounter != aOther.mIncrements[ix].mCounter)) {
-          return NS_STYLE_HINT_REFLOW;
-        }
-      }
-      ix = mResetCount;
-      while (0 < ix--) {
-        if ((mResets[ix].mValue != aOther.mResets[ix].mValue) || 
-            (mResets[ix].mCounter != aOther.mResets[ix].mCounter)) {
-          return NS_STYLE_HINT_REFLOW;
-        }
-      }
-      return NS_STYLE_HINT_NONE;
+  if (mContentCount != aOther.mContentCount ||
+      mIncrementCount != aOther.mIncrementCount || 
+      mResetCount != aOther.mResetCount) {
+    return NS_STYLE_HINT_FRAMECHANGE;
+  }
+
+  PRUint32 ix = mContentCount;
+  while (0 < ix--) {
+    if (mContents[ix] != aOther.mContents[ix]) {
+      // Unfortunately we need to reframe here; a simple reflow
+      // will not pick up different text or different image URLs,
+      // since we set all that up in the CSSFrameConstructor
+      return NS_STYLE_HINT_FRAMECHANGE;
     }
+  }
+  ix = mIncrementCount;
+  while (0 < ix--) {
+    if ((mIncrements[ix].mValue != aOther.mIncrements[ix].mValue) || 
+        (mIncrements[ix].mCounter != aOther.mIncrements[ix].mCounter)) {
+      return NS_STYLE_HINT_FRAMECHANGE;
+    }
+  }
+  ix = mResetCount;
+  while (0 < ix--) {
+    if ((mResets[ix].mValue != aOther.mResets[ix].mValue) || 
+        (mResets[ix].mCounter != aOther.mResets[ix].mCounter)) {
+      return NS_STYLE_HINT_FRAMECHANGE;
+    }
+  }
+  if (mMarkerOffset != aOther.mMarkerOffset) {
     return NS_STYLE_HINT_REFLOW;
   }
-  return NS_STYLE_HINT_FRAMECHANGE;
+  return NS_STYLE_HINT_NONE;
 }
 
 #ifdef DEBUG

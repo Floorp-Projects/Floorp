@@ -6605,7 +6605,7 @@ NS_IMETHODIMP nsBlockFrame::GetAccessible(nsIAccessible** aAccessible)
     bulletText.Assign(PRUnichar(0x2022));; // Unicode bullet character
   }
   else if (myList->mListStyleType != NS_STYLE_LIST_STYLE_NONE) {
-    mBullet->GetListItemText(aPresContext, *myList, bulletText);
+    mBullet->GetListItemText(*myList, bulletText);
   }
 
   return accService->CreateHTMLLIAccessible(NS_STATIC_CAST(nsIFrame*, this), 
@@ -7105,12 +7105,13 @@ nsBlockFrame::SetInitialChildList(nsPresContext* aPresContext,
 PRBool
 nsBlockFrame::FrameStartsCounterScope(nsIFrame* aFrame)
 {
-  const nsStyleContent* styleContent = aFrame->GetStyleContent();
-  if (0 != styleContent->CounterResetCount()) {
-    // Winner
-    return PR_TRUE;
-  }
-  return PR_FALSE;
+  if (!mContent->IsContentOfType(nsIContent::eHTML))
+    return PR_FALSE;
+  nsINodeInfo *ni = mContent->GetNodeInfo();
+  return ni->Equals(nsHTMLAtoms::ol) ||
+         ni->Equals(nsHTMLAtoms::ul) ||
+         ni->Equals(nsHTMLAtoms::dir) ||
+         ni->Equals(nsHTMLAtoms::menu);
 }
 
 void

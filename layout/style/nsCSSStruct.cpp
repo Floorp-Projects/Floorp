@@ -990,13 +990,13 @@ void nsCSSContent::List(FILE* out, PRInt32 aIndent) const
   }
   nsCSSCounterData* counter = mCounterIncrement;
   while (nsnull != counter) {
-    counter->mCounter.AppendToString(buffer, eCSSProperty__moz_counter_increment);
+    counter->mCounter.AppendToString(buffer, eCSSProperty_counter_increment);
     counter->mValue.AppendToString(buffer, eCSSProperty_UNKNOWN);
     counter = counter->mNext;
   }
   counter = mCounterReset;
   while (nsnull != counter) {
-    counter->mCounter.AppendToString(buffer, eCSSProperty__moz_counter_reset);
+    counter->mCounter.AppendToString(buffer, eCSSProperty_counter_reset);
     counter->mValue.AppendToString(buffer, eCSSProperty_UNKNOWN);
     counter = counter->mNext;
   }

@@ -59,10 +59,11 @@ enum nsCSSUnit {
   eCSSUnit_Normal       = 5,      // (n/a) value is normal (algorithmic, different than auto)
   eCSSUnit_String       = 10,     // (PRUnichar*) a string value
   eCSSUnit_Attr         = 11,     // (PRUnichar*) a attr(string) value
-  eCSSUnit_Counter      = 12,     // (PRUnichar*) a counter(string,[string]) value
-  eCSSUnit_Counters     = 13,     // (PRUnichar*) a counters(string,string[,string]) value
-  eCSSUnit_URL          = 14,     // (nsCSSValue::URL*) value
-  eCSSUnit_Image        = 15,     // (nsCSSValue::Image*) value
+  eCSSUnit_Array        = 20,     // (nsCSSValue::Array*) a list of values
+  eCSSUnit_Counter      = 21,     // (nsCSSValue::Array*) a counter(string,[string]) value
+  eCSSUnit_Counters     = 22,     // (nsCSSValue::Array*) a counters(string,string[,string]) value
+  eCSSUnit_URL          = 30,     // (nsCSSValue::URL*) value
+  eCSSUnit_Image        = 31,     // (nsCSSValue::Image*) value
   eCSSUnit_Integer      = 50,     // (int) simple value
   eCSSUnit_Enumerated   = 51,     // (int) value has enumerated meaning
   eCSSUnit_Color        = 80,     // (color) an RGBA value
@@ -71,7 +72,7 @@ enum nsCSSUnit {
 
   // Length units - fixed
   // US English
-  eCSSUnit_Inch         = 100,    // (float) Standard length
+  eCSSUnit_Inch         = 100,    // (float) 0.0254 meters
   eCSSUnit_Foot         = 101,    // (float) 12 inches
   eCSSUnit_Mile         = 102,    // (float) 5280 feet
 
@@ -98,7 +99,7 @@ enum nsCSSUnit {
   eCSSUnit_Char         = 804,    // (float) number of characters, used for width with monospace font
 
   // Screen relative measure
-  eCSSUnit_Pixel        = 900,    // (float)
+  eCSSUnit_Pixel        = 900,    // (float) CSS pixel unit
 
   // Proportional Unit (for columns in tables)
   eCSSUnit_Proportional = 950, 
@@ -106,19 +107,22 @@ enum nsCSSUnit {
   // Angular units
   eCSSUnit_Degree       = 1000,    // (float) 360 per circle
   eCSSUnit_Grad         = 1001,    // (float) 400 per circle
-  eCSSUnit_Radian       = 1002,    // (float) 2pi per circle
+  eCSSUnit_Radian       = 1002,    // (float) 2*pi per circle
 
   // Frequency units
-  eCSSUnit_Hertz        = 2000,    // (float)
-  eCSSUnit_Kilohertz    = 2001,    // (float)
+  eCSSUnit_Hertz        = 2000,    // (float) 1/seconds
+  eCSSUnit_Kilohertz    = 2001,    // (float) 1000 Hertz
 
   // Time units
-  eCSSUnit_Seconds      = 3000,    // (float)
-  eCSSUnit_Milliseconds = 3001     // (float)
+  eCSSUnit_Seconds      = 3000,    // (float) Standard time
+  eCSSUnit_Milliseconds = 3001     // (float) 1/1000 second
 };
 
 class nsCSSValue {
 public:
+  struct Array;
+  friend struct Array;
+
   struct URL;
   friend struct URL;
 
@@ -140,6 +144,7 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit) NS_HIDDEN;
   nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit) NS_HIDDEN;
   explicit nsCSSValue(nscolor aValue) NS_HIDDEN;
+  nsCSSValue(Array* aArray, nsCSSUnit aUnit) NS_HIDDEN;
   explicit nsCSSValue(URL* aValue) NS_HIDDEN;
   explicit nsCSSValue(Image* aValue) NS_HIDDEN;
   nsCSSValue(const nsCSSValue& aCopy) NS_HIDDEN;
@@ -188,7 +193,7 @@ public:
 
   nsAString& GetStringValue(nsAString& aBuffer) const
   {
-    NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Counters,
+    NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr,
                  "not a string value");
     aBuffer.Truncate();
     if (nsnull != mValue.mString) {
@@ -199,7 +204,7 @@ public:
 
   const PRUnichar* GetStringBufferValue() const
   {
-    NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Counters,
+    NS_ASSERTION(eCSSUnit_String <= mUnit && mUnit <= eCSSUnit_Attr,
                  "not a string value");
     return mValue.mString;
   }
@@ -208,6 +213,13 @@ public:
   {
     NS_ASSERTION((mUnit == eCSSUnit_Color), "not a color value");
     return mValue.mColor;
+  }
+
+  Array* GetArrayValue() const
+  {
+    NS_ASSERTION(eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters,
+                 "not an array value");
+    return mValue.mArray;
   }
 
   nsIURI* GetURLValue() const
@@ -230,14 +242,16 @@ public:
   // imgIRequest.h, which leads to REQUIRES hell, since this header is included
   // all over.
   NS_HIDDEN_(imgIRequest*) GetImageValue() const;
-  
+
   NS_HIDDEN_(nscoord)   GetLengthTwips() const;
 
   NS_HIDDEN_(void)  Reset()  // sets to null
   {
-    if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Counters) &&
+    if ((eCSSUnit_String <= mUnit) && (mUnit <= eCSSUnit_Attr) &&
         (nsnull != mValue.mString)) {
       nsCRT::free(mValue.mString);
+    } else if (eCSSUnit_Array <= mUnit && mUnit <= eCSSUnit_Counters) {
+      mValue.mArray->Release();
     } else if (eCSSUnit_URL == mUnit) {
       mValue.mURL->Release();
     } else if (eCSSUnit_Image == mUnit) {
@@ -252,6 +266,7 @@ public:
   NS_HIDDEN_(void)  SetFloatValue(float aValue, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetStringValue(const nsAString& aValue, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetColorValue(nscolor aValue);
+  NS_HIDDEN_(void)  SetArrayValue(nsCSSValue::Array* aArray, nsCSSUnit aUnit);
   NS_HIDDEN_(void)  SetURLValue(nsCSSValue::URL* aURI);
   NS_HIDDEN_(void)  SetImageValue(nsCSSValue::Image* aImage);
   NS_HIDDEN_(void)  SetAutoValue();
@@ -271,6 +286,98 @@ public:
     ToString(nsAString& aBuffer,
              nsCSSProperty aPropID = eCSSProperty_UNKNOWN) const;
 #endif
+
+  MOZ_DECL_CTOR_COUNTER(nsCSSValue::Array)
+
+  struct Array {
+
+    // return |Array| with reference count of zero
+    static Array* Create(PRUint16 aItemCount) {
+      return new (aItemCount) Array(aItemCount);
+    }
+
+    nsCSSValue& operator[](PRUint16 aIndex) {
+      NS_ASSERTION(aIndex < mCount, "out of range");
+      return *(First() + aIndex);
+    }
+
+    const nsCSSValue& operator[](PRUint16 aIndex) const {
+      NS_ASSERTION(aIndex < mCount, "out of range");
+      return *(First() + aIndex);
+    }
+
+    nsCSSValue& Item(PRUint16 aIndex) { return (*this)[aIndex]; }
+    const nsCSSValue& Item(PRUint16 aIndex) const { return (*this)[aIndex]; }
+
+    PRUint16 Count() { return mCount; }
+
+    PRBool operator==(const Array& aOther)
+    {
+      if (mCount != aOther.mCount)
+        return PR_FALSE;
+      for (PRUint16 i = 0; i < mCount; ++i)
+        if ((*this)[i] != aOther[i])
+          return PR_FALSE;
+      return PR_TRUE;
+    }
+
+    void AddRef() {
+      ++mRefCnt;
+      NS_LOG_ADDREF(this, mRefCnt, "nsCSSValue::Array", sizeof(*this));
+    }
+    void Release() {
+      --mRefCnt;
+      NS_LOG_RELEASE(this, mRefCnt, "nsCSSValue::Array");
+      if (mRefCnt == 0)
+        delete this;
+    }
+
+  private:
+
+    PRUint16 mRefCnt;
+    PRUint16 mCount;
+
+    void* operator new(size_t aSelfSize, PRUint16 aItemCount) CPP_THROW_NEW {
+      return ::operator new(aSelfSize + sizeof(nsCSSValue)*aItemCount);
+    }
+
+    void operator delete(void* aPtr) { ::operator delete(aPtr); }
+
+    nsCSSValue* First() {
+      return (nsCSSValue*) (((char*)this) + sizeof(*this));
+    }
+
+    const nsCSSValue* First() const {
+      return (const nsCSSValue*) (((const char*)this) + sizeof(*this));
+    }
+
+#define CSSVALUE_LIST_FOR_VALUES(var)                                         \
+  for (nsCSSValue *var = First(), *var##_end = var + mCount;                  \
+       var != var##_end; ++var)
+
+    Array(PRUint16 aItemCount)
+      : mRefCnt(0)
+      , mCount(aItemCount)
+    {
+      MOZ_COUNT_CTOR(nsCSSValue::Array);
+      CSSVALUE_LIST_FOR_VALUES(val) {
+        new (val) nsCSSValue();
+      }
+    }
+
+    ~Array()
+    {
+      MOZ_COUNT_DTOR(nsCSSValue::Array);
+      CSSVALUE_LIST_FOR_VALUES(val) {
+        val->~nsCSSValue();
+      }
+    }
+
+#undef CSSVALUE_LIST_FOR_VALUES
+
+  private:
+    Array(const Array& aOther); // not to be implemented
+  };
 
   MOZ_DECL_CTOR_COUNTER(nsCSSValue::URL)
 
@@ -341,6 +448,7 @@ protected:
     float      mFloat;
     PRUnichar* mString;
     nscolor    mColor;
+    Array*     mArray;
     URL*       mURL;
     Image*     mImage;
   }         mValue;

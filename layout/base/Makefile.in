@@ -118,10 +118,12 @@ CPPSRCS		= \
 		nsCSSRendering.cpp \
 		nsCaret.cpp \
 		nsChildIterator.cpp \
+		nsCounterManager.cpp \
 		nsDocumentViewer.cpp \
 		nsFrameContentIterator.cpp \
 		nsFrameManager.cpp \
 		nsFrameTraversal.cpp \
+		nsGenConList.cpp \
 		nsImageLoader.cpp \
 		nsLayoutAtoms.cpp \
 		nsLayoutDebugger.cpp \

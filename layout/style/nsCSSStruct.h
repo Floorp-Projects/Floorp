@@ -77,6 +77,7 @@ struct nsRuleDataFont : public nsCSSFont {
   PRBool mFamilyFromHTML; // Is the family from an HTML FONT element
 };
 
+// Prefer nsCSSValue::Array for lists of fixed size.
 struct nsCSSValueList {
   nsCSSValueList(void);
   nsCSSValueList(const nsCSSValueList& aCopy);
@@ -111,6 +112,7 @@ struct nsCSSColor : public nsCSSStruct  {
 struct nsRuleDataColor : public nsCSSColor {
 };
 
+// Should be replaced with nsCSSValue::List.
 struct nsCSSShadow {
   nsCSSShadow(void);
   nsCSSShadow(const nsCSSShadow& aCopy);
@@ -431,6 +433,7 @@ struct nsCSSPage : public nsCSSStruct  { // NEW
 struct nsRuleDataPage : public nsCSSPage {
 };
 
+// Should be replaced with nsCSSValue::List.
 struct nsCSSCounterData {
   nsCSSCounterData(void);
   nsCSSCounterData(const nsCSSCounterData& aCopy);
@@ -443,6 +446,7 @@ struct nsCSSCounterData {
   nsCSSCounterData* mNext;
 };
 
+// Should be replaced with nsCSSValue::List.
 struct nsCSSQuotes {
   nsCSSQuotes(void);
   nsCSSQuotes(const nsCSSQuotes& aCopy);

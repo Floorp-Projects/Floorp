@@ -87,10 +87,14 @@ public:
                           gfxIImageFrame *aNewframe,
                           nsRect *aDirtyRect);
 
-  PRBool GetListItemText(nsPresContext* aCX,
-                         const nsStyleList& aStyleList,
-                         nsString& aResult);
+  /* get list item text, without '.' */
+  static PRBool AppendCounterText(PRInt32 aListStyleType,
+                                  PRInt32 aOrdinal,
+                                  nsString& aResult);
 
+  /* get list item text, with '.' */
+  PRBool GetListItemText(const nsStyleList& aStyleList,
+                         nsString& aResult);
 
 protected:
   void GetDesiredSize(nsPresContext* aPresContext,

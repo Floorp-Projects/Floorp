@@ -37,54 +37,28 @@
 #ifndef nsQuoteList_h___
 #define nsQuoteList_h___
 
-#include "nsIFrame.h"
-#include "nsStyleStruct.h"
-#include "prclist.h"
-#include "nsIDOMCharacterData.h"
-#include "nsCSSPseudoElements.h"
+#include "nsGenConList.h"
 
-struct nsQuoteListNode : public PRCList {
+struct nsQuoteNode : public nsGenConNode {
   // open-quote, close-quote, no-open-quote, or no-close-quote
   const nsStyleContentType mType;
 
   // Quote depth before this quote, which is always non-negative.
   PRInt32 mDepthBefore;
 
-  // Index within the list of things specified by the 'content' property,
-  // which is needed to do 'content: open-quote open-quote' correctly.
-  const PRUint32 mContentIndex;
 
-  // null for 'content:no-open-quote', 'content:no-close-quote'
-  nsCOMPtr<nsIDOMCharacterData> mText;
-
-  // The wrapper frame for all of the pseudo-element's content.  This
-  // frame has useful style data and has the NS_FRAME_GENERATED_CONTENT
-  // bit set (so we use it to track removal).
-  nsIFrame* const mPseudoFrame;
-
-
-  nsQuoteListNode(nsStyleContentType& aType, nsIFrame* aPseudoFrame,
-                  PRUint32 aContentIndex)
-    : mType(aType)
+  nsQuoteNode(nsStyleContentType& aType, nsIFrame* aPseudoFrame,
+              PRUint32 aContentIndex)
+    : nsGenConNode(aPseudoFrame, aContentIndex)
+    , mType(aType)
     , mDepthBefore(0)
-    , mContentIndex(aContentIndex)
-    , mPseudoFrame(aPseudoFrame)
   {
     NS_ASSERTION(aType == eStyleContentType_OpenQuote ||
                  aType == eStyleContentType_CloseQuote ||
                  aType == eStyleContentType_NoOpenQuote ||
                  aType == eStyleContentType_NoCloseQuote,
                  "incorrect type");
-    NS_ASSERTION(aPseudoFrame->GetStateBits() & NS_FRAME_GENERATED_CONTENT,
-                 "not generated content");
-    NS_ASSERTION(aPseudoFrame->GetStyleContext()->GetPseudoType() ==
-                   nsCSSPseudoElements::before ||
-                 aPseudoFrame->GetStyleContext()->GetPseudoType() ==
-                   nsCSSPseudoElements::after,
-                 "not :before/:after generated content");
-    NS_ASSERTION(aContentIndex <
-                   aPseudoFrame->GetStyleContent()->ContentCount(),
-                 "index out of range");
+    NS_ASSERTION(aContentIndex >= 0, "out of range");
   }
 
   // is this 'open-quote' or 'no-open-quote'?
@@ -126,28 +100,22 @@ struct nsQuoteListNode : public PRCList {
   const nsString* Text();
 };
 
-class nsQuoteList {
+class nsQuoteList : public nsGenConList {
 private:
-  nsQuoteListNode* mFirstNode;
-  PRUint32 mSize;
-  // assign the correct |mDepthBefore| value to a node that has been inserted
-  void Calc(nsQuoteListNode* aNode);
+  nsQuoteNode* FirstNode() { return NS_STATIC_CAST(nsQuoteNode*, mFirstNode); }
 public:
-  nsQuoteList() : mFirstNode(nsnull), mSize(0) {}
-  ~nsQuoteList() { Clear(); }
-  void Clear();
-  nsQuoteListNode* Next(nsQuoteListNode* aNode) {
-    return NS_STATIC_CAST(nsQuoteListNode*, PR_NEXT_LINK(aNode));
+  // assign the correct |mDepthBefore| value to a node that has been inserted
+  // Should be called immediately after calling |Insert|.
+  void Calc(nsQuoteNode* aNode);
+
+  nsQuoteNode* Next(nsQuoteNode* aNode) {
+    return NS_STATIC_CAST(nsQuoteNode*, nsGenConList::Next(aNode));
   }
-  nsQuoteListNode* Prev(nsQuoteListNode* aNode) {
-    return NS_STATIC_CAST(nsQuoteListNode*, PR_PREV_LINK(aNode));
+  nsQuoteNode* Prev(nsQuoteNode* aNode) {
+    return NS_STATIC_CAST(nsQuoteNode*, nsGenConList::Prev(aNode));
   }
-  void Insert(nsQuoteListNode* aNode);
-  // returns whether any nodes have been destroyed
-  PRBool DestroyNodesFor(nsIFrame* aFrame); //destroy all nodes with aFrame as parent
-  void Remove(nsQuoteListNode* aNode) { PR_REMOVE_LINK(aNode); mSize--; }
+  
   void RecalcAll();
-  PRBool IsLast(nsQuoteListNode* aNode) { return (Next(aNode) == mFirstNode); }
 #ifdef DEBUG
   void PrintChain();
 #endif
