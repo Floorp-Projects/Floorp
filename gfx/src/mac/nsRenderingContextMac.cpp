@@ -80,6 +80,7 @@ nsRenderingContextMac::nsRenderingContextMac()
 	mSavePort					= nsnull;
 	mSaveDevice       = nsnull;
 	mFrontSurface				= new nsDrawingSurfaceMac();
+	NS_IF_ADDREF(mFrontSurface);
 
 	mCurrentSurface				= nsnull;
 	mPort						= nsnull;
@@ -106,13 +107,10 @@ nsRenderingContextMac::~nsRenderingContextMac()
 		::SetOrigin(mSavePortRect.left, mSavePortRect.top);
 	}
 
-	// delete surfaces
-	if (mFrontSurface) {
-		delete mFrontSurface;
-		mFrontSurface = nsnull;
-	}
+	// release surfaces
+	NS_IF_RELEASE(mFrontSurface);
+	NS_IF_RELEASE(mCurrentSurface);
 
-	mCurrentSurface = nsnull;
 	mPort = nsnull;
 	mGS = nsnull;
 
@@ -206,6 +204,7 @@ nsresult nsRenderingContextMac::Init(nsIDeviceContext* aContext, GrafPtr aPort)
 
 void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, PRUint32 aChanges)
 {
+  NS_PRECONDITION(aSurface != nsnull, "null surface");
 	if (! aSurface)
 		return;
 
@@ -216,10 +215,14 @@ void nsRenderingContextMac::SelectDrawingSurface(nsDrawingSurfaceMac* aSurface, 
 	}
 	
 	// if surface is changing, be extra conservative about graphic state changes.
-	if (mCurrentSurface != aSurface)
+	if (mCurrentSurface != aSurface) {
 		aChanges = kEverythingChanged;
+
+		NS_IF_RELEASE(mCurrentSurface);
+		mCurrentSurface = aSurface;
+		NS_IF_ADDREF(mCurrentSurface);
+	}
 	
-	mCurrentSurface = aSurface;
 	aSurface->GetGrafPtr(&mPort);
 	mGS = aSurface->GetGS();
 	mTranMatrix = &(mGS->mTMatrix);
@@ -523,12 +526,7 @@ NS_IMETHODIMP nsRenderingContextMac::CreateDrawingSurface(nsRect *aBounds, PRUin
 	nsDrawingSurfaceMac* surface = new nsDrawingSurfaceMac();
 	if (!surface)
 		return NS_ERROR_OUT_OF_MEMORY;
-
-	// Bug 93217. Needed for SVG, but possible side effects, so ifdef
-	// for now.
-#ifdef MOZ_SVG
-	NS_ADDREF(surface);
-#endif
+  NS_ADDREF(surface);
 
 	nsresult rv = surface->Init(depth, macRect.right, macRect.bottom, aSurfFlags);
 	if (NS_SUCCEEDED(rv))
@@ -547,29 +545,12 @@ NS_IMETHODIMP nsRenderingContextMac::DestroyDrawingSurface(nsDrawingSurface aSur
 		return NS_ERROR_FAILURE;
 
 	// if that surface is still the current one, select the front surface
-
 	if (aSurface == mCurrentSurface)
 		SelectDrawingSurface(mFrontSurface);
 
-	// delete the offscreen
+	// release the surface
 	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
-
-/* The dtor does this...
-	GWorldPtr offscreenGWorld;
-	surface->GetGrafPtr(reinterpret_cast<GrafPtr*>(&offscreenGWorld));
-	::UnlockPixels(::GetGWorldPixMap(offscreenGWorld));
-	::DisposeGWorld(offscreenGWorld);
-*/
-
-        // Bug 93217. Needed for SVG, but possible side effects, so ifdef
-        // for now.
-#ifdef MOZ_SVG
-	// release the surface (used to delete when CreateOffscreen didn't AddRef)
-  	NS_IF_RELEASE(surface);
-#else
-	// delete the surface
-	delete surface;
-#endif
+	NS_IF_RELEASE(surface);
 
 	return NS_OK;
 }
