@@ -394,10 +394,8 @@ NS_METHOD nsFrame::SetRect(const nsRect& aRect)
 
 NS_METHOD nsFrame::MoveTo(nscoord aX, nscoord aY)
 {
-  if ((aX != mRect.x) || (aY != mRect.y)) {
-    mRect.x = aX;
-    mRect.y = aY;
-  }
+  mRect.x = aX;
+  mRect.y = aY;
 
   // Let the view know
   if ((nsnull != mView) && (0 == (mState & NS_FRAME_IN_REFLOW))) {
@@ -1266,7 +1264,6 @@ NS_METHOD nsFrame::GetOffsetFromView(nsPoint& aOffset, nsIView*& aView) const
       frame->GetView(aView);
     }
   } while ((nsnull != frame) && (nsnull == aView));
-
   return NS_OK;
 }
 
