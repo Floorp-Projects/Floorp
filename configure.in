@@ -406,19 +406,6 @@ else
   AC_MSG_RESULT(no)
 fi  
 
-dnl Check for static_cast<>
-AC_CACHE_CHECK(for advanced C++ casting,
-               ac_cv_cpp_casts,
-               [AC_TRY_COMPILE(class A {};
-                               class B: public A {};,
-                               B* b = new B;
-                               A* a = static_cast<A*>(b);,
-                               ac_cv_cpp_casts=yes,
-                               ac_cv_cpp_casts=no)])
-if test $ac_cv_cpp_casts = yes ; then
-   AC_DEFINE(HAVE_CPP_CASTS)
-fi
-
 AC_CACHE_CHECK(for namespaces,
                ac_cv_cpp_namespaces,
                [AC_TRY_COMPILE(namespace X {},
@@ -429,6 +416,55 @@ if test $ac_cv_cpp_namespaces = yes ; then
    AC_DEFINE(HAVE_CPP_NAMESPACES)
 fi
 
+AC_CACHE_CHECK(for C++ \"explicit\" keyword,
+               ac_cv_cpp_explicit,
+               [AC_TRY_COMPILE(class X {
+                               public: explicit X(int i) : i_(i) {}
+                               private: int i_;
+                               };,
+                               X x(3);,
+                               ac_cv_cpp_explicit=yes,
+                               ac_cv_cpp_explicit=no)])
+if test $ac_cv_cpp_explicit = yes ; then
+   AC_DEFINE(HAVE_CPP_EXPLICIT)
+fi
+
+AC_CACHE_CHECK(for C++ \"using\" keyword,
+               ac_cv_cpp_using,
+               [AC_TRY_COMPILE(class X { public: int go() {return 3;} };
+                               class Y : public X {
+                                 private: using X::go;
+                               };,
+                               X x; Y y;,
+                               ac_cv_cpp_using=yes,
+                               ac_cv_cpp_using=no)])
+if test $ac_cv_cpp_using = yes ; then
+   AC_DEFINE(HAVE_CPP_USING)
+fi
+
+AC_CACHE_CHECK(for C++ reinterpret_cast,
+               ac_cv_cpp_reinterpret_cast,
+               [AC_TRY_COMPILE(struct X { int i; };
+                               struct Y { int i; };,
+                               X x; Y*y = reinterpret_cast<Y*>(&x);,
+                               ac_cv_cpp_reinterpret_cast=yes,
+                               ac_cv_cpp_reinterpret_cast=no)])
+if test $ac_cv_cpp_reinterpret_cast = yes ; then
+   AC_DEFINE(HAVE_CPP_NEW_CASTS)
+fi
+
+dnl note that this one is reversed - if the test fails, then
+dnl we require implementations of unused methods
+AC_CACHE_CHECK(if C++ requires implementation of unused methods,
+               ac_cv_cpp_unused_required,
+               [AC_TRY_COMPILE(class X {private: void never_called();};,
+                               X x;,
+                               ac_cv_cpp_unused_required=no,
+                               ac_cv_cpp_unused_requires=yes)])
+if test $ac_cv_cpp_unused_required = yes ; then
+   AC_DEFINE(NEED_CPP_UNUSED_IMPLEMENTATIONS)
+fi
+    
 CC=$_SAVE_CC
 
 dnl End of C++ language/feature checks
