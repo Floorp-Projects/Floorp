@@ -77,7 +77,10 @@ NS_METHOD nsSound::Play(nsIFileSpec *filespec)
 	filespec->GetNativePath(&filename);
 
 	delete mSound;
-	mSound = new BSimpleGameSound(filename);
+	entry_ref	ref;
+	BEntry e(filename);
+	e.GetRef(&ref);
+	mSound = new BSimpleGameSound(&ref);
 	if(mSound->InitCheck() == B_OK)
 		mSound->StartPlaying();
 
