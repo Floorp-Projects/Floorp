@@ -88,6 +88,9 @@ public:
   NS_IMETHOD    CreateProcessingInstruction(const nsString& aTarget, const nsString& aData, nsIDOMProcessingInstruction** aReturn);
   NS_IMETHOD    CreateElement(const nsString& aTagName, 
                               nsIDOMElement** aReturn);
+  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
+                                           const nsString& aNameSpace, 
+                                           nsIDOMElement** aReturn);
 
   // nsIXMLDocument interface
   NS_IMETHOD PrologElementAt(PRUint32 aOffset, nsIContent** aContent);

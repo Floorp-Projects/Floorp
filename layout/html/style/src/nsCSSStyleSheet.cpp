@@ -1962,9 +1962,9 @@ CSSStyleSheetImpl::InsertRule(const nsString& aRule,
   nsICSSParser* css;
   nsresult result = NS_NewCSSParser(&css);
   if (NS_OK == result) {
-    nsAutoString str(aRule);
+    nsString* str = new nsString(aRule); // will be deleted by the input stream
     nsIUnicharInputStream* input = nsnull;
-    result = NS_NewStringUnicharInputStream(&input, &str);
+    result = NS_NewStringUnicharInputStream(&input, str);
     if (NS_OK == result) {
       nsICSSStyleSheet* tmp;
       css->SetStyleSheet(this);
@@ -1975,6 +1975,13 @@ CSSStyleSheetImpl::InsertRule(const nsString& aRule,
       NS_RELEASE(tmp);
       NS_RELEASE(input);
       *aReturn = mOrderedRules->Count();
+      if (nsnull != mDocument) {
+        nsICSSStyleRule* rule;
+
+        rule = (nsICSSStyleRule*)mOrderedRules->ElementAt(aIndex);
+        mDocument->StyleRuleAdded(this, rule);
+        NS_IF_RELEASE(rule);
+      }
     }
 
     NS_RELEASE(css);

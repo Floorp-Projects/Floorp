@@ -66,6 +66,7 @@ public:
   {
     return nsGenericElement::SetAttribute(aName, aValue);
   }
+  nsresult GetTagName(nsString& aTagName);
 
   // Implementation for nsIDOMHTMLElement
   nsresult    GetId(nsString& aId);

@@ -26,7 +26,7 @@ function sort(collection, key)
 
 // Set user properties on the nodes in the collection
 // based on information found in its children. For example,
-// make a property "AUTHOR" based on the content of the
+// make a property "Author" based on the content of the
 // "Author" element found in the childNode list of the node.
 // This makes later sorting more efficient
 function collectInfo(nodes, propNames)

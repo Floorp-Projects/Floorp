@@ -285,6 +285,14 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
   return result;
 }
 
+nsresult
+nsGenericHTMLElement::GetTagName(nsString& aTagName)
+{
+  nsGenericElement::GetTagName(aTagName);
+  aTagName.ToUpperCase();
+  return NS_OK;
+}
+
 // Implementation for nsIDOMHTMLElement
 nsresult
 nsGenericHTMLElement::GetId(nsString& aId)

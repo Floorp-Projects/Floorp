@@ -416,7 +416,7 @@ NSHTMLFormElementNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 {
   nsIDOMHTMLFormElement *privateThis = (nsIDOMHTMLFormElement*)JS_GetPrivate(cx, obj);
   nsIDOMNSHTMLFormElement *nativeThis = nsnull;
-  if (NS_OK != privateThis->QueryInterface(kINSHTMLFormElementIID, (void **)nativeThis)) {
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLFormElementIID, (void **)&nativeThis)) {
     JS_ReportError(cx, "Object must be of type NSHTMLFormElement");
     return JS_FALSE;
   }

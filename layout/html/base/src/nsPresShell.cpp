@@ -1688,7 +1688,8 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->StyleRuleAdded(mPresContext, aStyleSheet, aStyleRule);
   ExitReflowLock();
-  return rv;
+  // XXX For now reconstruct everything
+  return ReconstructFrames();
 }
 
 NS_IMETHODIMP
@@ -1699,7 +1700,8 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->StyleRuleRemoved(mPresContext, aStyleSheet, aStyleRule);
   ExitReflowLock();
-  return rv;
+  // XXX For now reconstruct everything
+  return ReconstructFrames();
 }
 
 

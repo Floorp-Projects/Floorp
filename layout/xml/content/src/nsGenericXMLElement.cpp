@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsINameSpaceManager.h"
+#include "nsLayoutAtoms.h"
 #include "prprf.h"
 #include "prmem.h"
 
@@ -124,8 +125,13 @@ nsGenericXMLElement::ParseAttributeString(const nsString& aStr,
   nsIAtom* nameAtom = NS_NewAtom(attrName);
   aNameSpaceID = kNameSpaceID_None;
 
-  if ((nsnull != nameSpaceAtom) && (nsnull != mNameSpace)) {
-    mNameSpace->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
+  if (nsnull != nameSpaceAtom) {
+    if (nameSpaceAtom == nsLayoutAtoms::xmlNameSpace) {
+      aNameSpaceID = kNameSpaceID_XML;
+    }
+    else if (nsnull != mNameSpace) {
+      mNameSpace->FindNameSpaceID(nameSpaceAtom, aNameSpaceID);
+    }
   }
 
   aName = nameAtom;

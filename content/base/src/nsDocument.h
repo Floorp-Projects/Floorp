@@ -280,6 +280,9 @@ public:
   NS_IMETHOD    CreateEntityReference(const nsString& aName, nsIDOMEntityReference** aReturn);
   NS_IMETHOD    GetElementsByTagName(const nsString& aTagname, nsIDOMNodeList** aReturn);
   NS_IMETHOD    GetStyleSheets(nsIDOMStyleSheetCollection** aStyleSheets);
+  NS_IMETHOD    CreateElementWithNameSpace(const nsString& aTagName, 
+                                           const nsString& aNameSpace, 
+                                           nsIDOMElement** aReturn);
                      
   // nsIDOMNode interface
   NS_IMETHOD    GetNodeName(nsString& aNodeName);
