@@ -519,7 +519,8 @@ sub DoConfirm {
 
 sub ChangeStatus {
     my ($str) = (@_);
-    if ($str ne $::FORM{'dontchange'}) {
+    if (!$::FORM{'dontchange'} ||
+       ($str ne $::FORM{'dontchange'})) {
         DoComma();
         if ($::FORM{knob} eq 'reopen') {
             # When reopening, we need to check whether the bug was ever
@@ -571,7 +572,8 @@ sub ChangeStatus {
 
 sub ChangeResolution {
     my ($str) = (@_);
-    if ($str ne $::FORM{'dontchange'}) {
+    if (!$::FORM{'dontchange'} ||
+       ($str ne $::FORM{'dontchange'})) {
         DoComma();
         $::query .= "resolution = " . SqlQuote($str);
     }
