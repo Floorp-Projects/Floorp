@@ -67,6 +67,10 @@ fieldset {
   border: 2px groove ThreeDFace;
 }
 
+label {
+  cursor: default;
+}
+
 /* default inputs, text inputs, and selects */
 input {
   padding: 1px 0 1px 0;
