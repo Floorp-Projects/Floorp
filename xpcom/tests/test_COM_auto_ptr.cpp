@@ -24,8 +24,25 @@
 
 
 
-	// some classes I'll be defining
-class IFoo;
+class IFoo // : public ISupports
+	{
+		public:
+			IFoo();
+			virtual ~IFoo();
+
+			virtual unsigned long AddRef();
+			virtual unsigned long Release();
+			// virtual NS_RESULT QueryInterface
+
+			static void print_totals();
+
+		private:
+			unsigned int refcount_;
+
+			static unsigned int total_constructions_;
+			static unsigned int total_destructions_;
+	};
+
 class IBar;
 
 	// some types I'll need
@@ -41,25 +58,6 @@ COM_auto_ptr<IFoo>	return_a_IFoo();
 
 
 
-
-class IFoo // : public ISupports
-	{
-		public:
-			IFoo();
-			virtual ~IFoo();
-
-			virtual void AddRef();
-			virtual void Release();
-			// virtual NS_RESULT QueryInterface
-
-			static void print_totals();
-
-		private:
-			unsigned int refcount_;
-
-			static unsigned int total_constructions_;
-			static unsigned int total_destructions_;
-	};
 
 unsigned int IFoo::total_constructions_;
 unsigned int IFoo::total_destructions_;
@@ -105,14 +103,15 @@ IFoo::~IFoo()
 		cout << "IFoo@" << static_cast<void*>(this) << "::~IFoo()" << " [#" << total_destructions_ << "]" << endl;
 	}
 
-void
+unsigned long
 IFoo::AddRef()
 	{
 		++refcount_;
 		cout << "IFoo@" << static_cast<void*>(this) << "::AddRef(), refcount --> " << refcount_ << endl;
+		return refcount_;
 	}
 
-void
+unsigned long
 IFoo::Release()
 	{
 		int wrap_message = (refcount_ == 1);
@@ -130,6 +129,8 @@ IFoo::Release()
 
 		if ( wrap_message )
 			cout << "<<IFoo@" << static_cast<void*>(this) << "::Release()" << endl;
+
+		return refcount_;
 	}
 
 NS_RESULT
