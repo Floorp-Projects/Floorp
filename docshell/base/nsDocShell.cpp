@@ -3245,14 +3245,19 @@ nsDocShell::GetSessionHistory(nsISHistory ** aSessionHistory)
 NS_IMETHODIMP
 nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
 {
-    nsresult rv;
-    nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(aPageDescriptor));
+    nsCOMPtr<nsISHEntry> shEntryIn(do_QueryInterface(aPageDescriptor));
 
     // Currently, the opaque 'page descriptor' is an nsISHEntry...
-    if (!shEntry) {
+    if (!shEntryIn) {
         return NS_ERROR_INVALID_POINTER;
     }
 
+    // Now clone shEntryIn, since we might end up modifying it later on, and we
+    // want a page descriptor to be reusable.
+    nsCOMPtr<nsISHEntry> shEntry;
+    nsresult rv = shEntryIn->Clone(getter_AddRefs(shEntry));
+    NS_ENSURE_SUCCESS(rv, rv);
+    
     //
     // load the page as view-source
     //
@@ -3275,10 +3280,6 @@ nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
             return rv;
         }
         shEntry->SetURI(newUri);
-
-        // NULL out inappropriate cloned attributes...
-        shEntry->SetParent(nsnull);
-        shEntry->SetIsSubFrame(PR_FALSE);
     }
 
     rv = LoadHistoryEntry(shEntry, LOAD_HISTORY);
@@ -3288,31 +3289,27 @@ nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
 NS_IMETHODIMP
 nsDocShell::GetCurrentDescriptor(nsISupports **aPageDescriptor)
 {
-    nsresult rv;
-    nsCOMPtr<nsISHEntry> src;
+    NS_PRECONDITION(aPageDescriptor, "Null out param?");
 
-    if (!aPageDescriptor) {
-        return NS_ERROR_NULL_POINTER;
-    }
     *aPageDescriptor = nsnull;
 
-    src = mOSHE ? mOSHE : mLSHE;
+    nsISHEntry* src = mOSHE ? mOSHE : mLSHE;
     if (src) {
-        nsCOMPtr<nsISupports> sup;;
         nsCOMPtr<nsISHEntry> dest;
 
-        rv = src->Clone(getter_AddRefs(dest));
+        nsresult rv = src->Clone(getter_AddRefs(dest));
         if (NS_FAILED(rv)) {
             return rv;
         }
 
-        sup = do_QueryInterface(dest);
-        *aPageDescriptor = sup;
-
-        NS_ADDREF(*aPageDescriptor);
+        // null out inappropriate cloned attributes...
+        dest->SetParent(nsnull);
+        dest->SetIsSubFrame(PR_FALSE);
+        
+        return CallQueryInterface(dest, aPageDescriptor);
     }
 
-    return (*aPageDescriptor) ? NS_OK : NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 
