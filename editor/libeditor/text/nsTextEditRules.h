@@ -167,6 +167,8 @@ protected:
   
   PRBool DeleteEmptyTextNode(nsIDOMNode *aNode);
 
+  nsresult AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aDirection);
+  
   // data members
   nsHTMLEditor *mEditor;  // note that we do not refcount the editor
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors

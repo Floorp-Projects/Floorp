@@ -201,6 +201,10 @@ nsTextEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
   
     // detect empty doc
     res = CreateBogusNodeIfNeeded(selection);
+    if (NS_FAILED(res)) return res;
+    
+    // create moz-br and adjust selection if needed
+    res = AdjustSelection(selection, aDirection);
   }
   return res;
 }
@@ -1444,3 +1448,67 @@ nsTextEditRules::DeleteEmptyTextNode(nsIDOMNode *aNode)
   }
   return PR_FALSE;
 }
+
+
+nsresult 
+nsTextEditRules::AdjustSelection(nsIDOMSelection *aSelection, nsIEditor::EDirection aDirection)
+{
+  if (!aSelection) return NS_ERROR_NULL_POINTER;
+  
+  // if the selection isn't collapsed, do nothing.
+  PRBool bCollapsed;
+  nsresult res = aSelection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  if (!bCollapsed) return res;
+
+  // get the (collapsed) selection location
+  nsCOMPtr<nsIDOMNode> selNode, temp;
+  PRInt32 selOffset;
+  res = mEditor->GetStartNodeAndOffset(aSelection, &selNode, &selOffset);
+  if (NS_FAILED(res)) return res;
+  temp = selNode;
+  
+  // are we in an editable node?
+  while (!mEditor->IsEditable(selNode))
+  {
+    // scan up the tree until we find an editable place to be
+    res = nsEditor::GetNodeLocation(temp, &selNode, &selOffset);
+    if (NS_FAILED(res)) return res;
+    if (!selNode) return NS_ERROR_FAILURE;
+    temp = selNode;
+  }
+  
+  // are we in a text node? 
+  nsCOMPtr<nsIDOMCharacterData> textNode = do_QueryInterface(selNode);
+  if (textNode) 
+    return NS_OK; // we LIKE it when we are in a text node.  that RULZ
+  
+  // do we need to insert a special mozBR?  We do if we are:
+  // 1) after a block element AND
+  // 2) at the end of the body OR before another block
+
+  nsCOMPtr<nsIDOMNode> priorNode, nextNode;
+  res = mEditor->GetPriorHTMLSibling(selNode, selOffset, &priorNode);
+  if (NS_FAILED(res)) return res;
+  res = mEditor->GetNextHTMLSibling(selNode, selOffset, &nextNode);
+  if (NS_FAILED(res)) return res;
+  
+  // is priorNode a block?
+  if (priorNode && mEditor->IsBlockNode(priorNode)) 
+  {
+    if (!nextNode || mEditor->IsBlockNode(nextNode))
+    {
+      nsCOMPtr<nsIDOMNode> brNode;
+      res = CreateMozBR(selNode, selOffset, &brNode);
+      if (NS_FAILED(res)) return res;
+      res = nsEditor::GetNodeLocation(brNode, &selNode, &selOffset);
+      if (NS_FAILED(res)) return res;
+      // selection stays *before* moz-br, sticking to it
+      aSelection->SetHint(PR_TRUE);
+      res = aSelection->Collapse(selNode,selOffset);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  return res;
+}
+
