@@ -448,19 +448,21 @@ toolbar[iconsize="small"] #button-next[disabled] {
 /* ::::: remote content bar status rules ::::: */
 
 #remoteContentMessage {
+  font: icon;
   font-weight: bold;
+  padding: 0px 4px;
 }
 
 #remoteContentImage {
-  list-style-image: url("chrome://messenger/skin/icons/mail-toolbar-small.png"); /* temporary artwork!! */
-  -moz-image-region: rect(0px 168px 24px 144px);
-  padding-left: 3px;
+  list-style-image: url("chrome://global/skin/console/console-toolbar.png");
+  -moz-image-region: rect(0px, 32px, 32px, 0px);
 }
 
 #remoteContentBar {
-  border-bottom: 1px solid;
-  -moz-border-bottom-colors: #000000;
-  -moz-appearance: toolbox;
-  background-color: -moz-Dialog;
+  border: 1px solid #bfc790;
+  -moz-border-radius: 7px;
+  background-color: #EFF3D4;
+  padding: 3px 6px 4px 6px;
+  margin: 6px 6px 0px 6px;
   color: black;
 }

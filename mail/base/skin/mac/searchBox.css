@@ -71,8 +71,8 @@
 
 #searchInput {
   background: url("chrome://messenger/skin/icons/SearchBarLeft.png") left center no-repeat;
-  margin: 4px 0px 4px 0px !important;
-	-moz-appearance: none;
+  margin: 4px !important;
+  -moz-appearance: none;
   font: icon;
   height: 22px !important;
   width: 100px !important;
@@ -86,3 +86,8 @@
   height: 21px !important;
   margin: 0 !important;
 }
+
+#abContactsPanel #searchInput {
+  padding-left: 12px;
+}
+

@@ -1,4 +1,5 @@
 classic.jar:
   skin/classic/messenger-newsblog/subscriptions.css             (subscriptions.css)
   skin/classic/messenger-newsblog/newsBlogOverlay.css           (newsBlogOverlay.css)
+  skin/classic/messenger-newsblog/icons/folder-search-rss.png   (folder-search-rss.png)
   skin/classic/messenger-newsblog/contents.rdf                  
