@@ -61,6 +61,7 @@ static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
 static const char* kDocTypeDeclPrefix = "<!DOCTYPE";
 static const char* kChromeProtocol = "chrome";
 static const char* kDTDDirectory = "dtd/";
+static const char kHTMLNameSpaceURI[] = "http://www.w3.org/TR/REC-html40";
 
 const nsIID&
 nsExpatTokenizer::GetIID()
@@ -286,17 +287,112 @@ void nsExpatTokenizer::GetLine(const char* aSourceBuffer, PRUint32 aLength,
   }
 }
 
+
+static nsresult 
+CreateErrorText(const nsParserError* aError, nsString& aErrorString)
+{
+  aErrorString = "XML Parsing Error: ";
+
+  if (aError) {
+    aErrorString.Append(aError->description);
+    aErrorString.Append("\nLine Number ");
+    aErrorString.Append(aError->lineNumber, 10);
+    aErrorString.Append(", Column ");
+    aErrorString.Append(aError->colNumber, 10);
+    aErrorString.Append(":");
+  }
+
+  return NS_OK;
+}
+
+static nsresult 
+CreateSourceText(const nsParserError* aError, nsString& aSourceString)
+{  
+  PRInt32 errorPosition = aError->colNumber;
+
+  aSourceString.Append(aError->sourceLine);
+  aSourceString.Append("\n");
+  for (int i = 0; i < errorPosition; i++)
+    aSourceString.Append("-");
+  aSourceString.Append("^");  
+
+  return NS_OK;
+}
+
+/* Create and add the tokens in the following order to display the error:
+   ParserError start token
+     Text token containing error message
+     SourceText start token
+       Text token containing source text
+     SourceText end token
+   ParserError end token
+*/
+nsresult
+nsExpatTokenizer::AddErrorMessageTokens(nsParserError* aError)
+{   
+  nsresult rv = NS_OK;
+  CToken* newToken = mState->tokenRecycler->CreateTokenOfType(eToken_start, eHTMLTag_parsererror);
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+
+  CAttributeToken* attrToken = (CAttributeToken*) 
+      mState->tokenRecycler->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown);  
+  nsString& key = attrToken->GetKey();
+  key.Assign("xmlns");
+  attrToken->SetStringValue(kHTMLNameSpaceURI);
+  newToken->SetAttributeCount(1);
+  newToken = (CToken*) attrToken;
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+  
+  nsAutoString textStr;
+  CreateErrorText(aError, textStr);
+  newToken = mState->tokenRecycler->CreateTokenOfType(eToken_text, eHTMLTag_unknown);
+  newToken->SetStringValue(textStr);
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+
+  newToken = mState->tokenRecycler->CreateTokenOfType(eToken_start, eHTMLTag_sourcetext);
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);  
+  
+  textStr.Truncate();
+  CreateSourceText(aError, textStr);
+  newToken = mState->tokenRecycler->CreateTokenOfType(eToken_text, eHTMLTag_unknown);      
+  newToken->SetStringValue(textStr);
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);  
+
+  newToken = mState->tokenRecycler->CreateTokenOfType(eToken_end, eHTMLTag_sourcetext);  
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+
+  newToken = mState->tokenRecycler->CreateTokenOfType(eToken_end, eHTMLTag_parsererror);  
+  AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+  
+  return rv;
+}
+
 /* 
  * Called immediately after an error has occurred in expat.  Creates
- * an error token and pushes it onto the token queue.
+ * tokens to display the error and an error token to the token stream.
+ *
+ * The error tokens will end up creating the following content model
+ * in the content sink:
+ *
+ *    <ParserError>
+ *       XML Error: "contents of aError->description"
+ *       Line Number: "contents of aError->lineNumber"
+ *       <SourceText>
+ *          "Contents of aError->sourceLine"
+ *          "^ pointing at the error location"
+ *       </SourceText>
+ *    </ParserError>
  *
  */
-void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal)
+nsresult
+nsExpatTokenizer::PushXMLErrorTokens(const char *aBuffer, PRUint32 aLength, PRBool aIsFinal)
 {
-  CErrorToken* token= (CErrorToken *) mState->tokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
+  CErrorToken* errorToken= (CErrorToken *) mState->tokenRecycler->CreateTokenOfType(eToken_error, eHTMLTag_unknown);
   nsParserError *error = new nsParserError;
+  nsresult rv = NS_OK;
   
-  if(error){  
+  if (error && errorToken) {  
+    /* Fill in the values of the error token */
     error->code = XML_GetErrorCode(mExpatParser);
     error->lineNumber = XML_GetCurrentLineNumber(mExpatParser);
     error->colNumber = XML_GetCurrentColumnNumber(mExpatParser);  
@@ -310,11 +406,18 @@ void nsExpatTokenizer::PushXMLErrorToken(const char *aBuffer, PRUint32 aLength, 
       error->sourceLine.Append(mLastLine);
     }
 
-    token->SetError(error);
+    errorToken->SetError(error);
 
-    CToken* theToken = (CToken* )token;
-    AddToken(theToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+ 
+    /* Add the error token */
+    CToken* newToken = (CToken*) errorToken;
+    AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);
+
+    /* Add the error message tokens */
+    AddErrorMessageTokens(error);
   }
+
+  return rv;
 }
 
 nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength, PRBool aIsFinal)
@@ -326,7 +429,7 @@ nsresult nsExpatTokenizer::ParseXMLBuffer(const char* aBuffer, PRUint32 aLength,
     nsCOMPtr<nsExpatTokenizer> me=this;
 
     if (!XML_Parse(mExpatParser, aBuffer, aLength, aIsFinal)) {
-      PushXMLErrorToken(aBuffer, aLength, aIsFinal);
+      PushXMLErrorTokens(aBuffer, aLength, aIsFinal);
       result=NS_ERROR_HTMLPARSER_STOPPARSING;
     }
     else if (aBuffer && aLength) {

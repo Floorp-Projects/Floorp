@@ -127,6 +127,11 @@ class CToken {
     virtual void SetStringValue(const char* name);
 
     /**
+     * Setter method for the string value of this token
+     */    
+    virtual void SetStringValue(nsString& aStr);
+
+    /**
      * Retrieve string value of the token as a c-string
      * @update	gess5/11/98
      * @return  reference to string containing string value
