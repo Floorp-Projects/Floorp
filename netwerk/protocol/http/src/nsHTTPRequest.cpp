@@ -556,7 +556,9 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
 
     if (!mOnStopDone)
         return NS_OK;
-    mInputStream = iRequestStream;
+
+    if (!mInputStream)
+        mInputStream = iRequestStream;
 
 
     mRequests->Count(&count);
