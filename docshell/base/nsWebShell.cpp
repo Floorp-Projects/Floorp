@@ -29,6 +29,7 @@
 #else
 #include "nsINetSupport.h"
 #include "nsIRefreshUrl.h"
+#include "jsurl.h"
 #endif
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptContextOwner.h"
@@ -52,7 +53,6 @@
 #include "nsIPref.h"
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
-#include "jsurl.h"
 #include "nsIBrowserWindow.h"
 #include "nsIContent.h"
 #include "prlog.h"
