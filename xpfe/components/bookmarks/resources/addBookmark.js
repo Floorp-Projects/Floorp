@@ -234,7 +234,7 @@ function onOK()
     catch (e) {
     }
     
-    kBMS.createBookmarkEx(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
+    kBMS.createBookmarkWithDetails(gFld_Name.value, url, gBookmarkCharset, rFolder, -1);
   }
 }
 

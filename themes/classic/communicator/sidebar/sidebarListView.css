@@ -25,16 +25,3 @@ outlinerchildren {
   cursor: pointer;  
 }
 
-outlinerchildren:-moz-outliner-row(selected),
-outlinerchildren:-moz-outliner-row(selected, focus) {
-  background-color: -moz-Field !important;
-  border: 1px solid transparent !important;
-}
-
-outlinerchildren:-moz-outliner-cell-text,
-outlinerchildren:-moz-outliner-cell-text(selected),
-outlinerchildren:-moz-outliner-cell-text(selected, focus) {
-  color: blue !important;
-  text-decoration: underline;
-}
-
