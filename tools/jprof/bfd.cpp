@@ -48,7 +48,7 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   sp->Init(aFileName, aBaseAddress);
   NEXT_SYMBOL
 
-  static bfd_boolean kDynamic = (bfd_boolean) false;
+  bfd_boolean kDynamic = (bfd_boolean) false;
 
   static int firstTime = 1;
   if (firstTime) {
@@ -73,6 +73,11 @@ void leaky::ReadSymbols(const char *aFileName, u_long aBaseAddress)
   PTR minisyms;
   unsigned int size;
   long symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
+  if (symcount == 0) {
+    // symtab is empty; try dynamic symbols
+    kDynamic = (bfd_boolean) true;
+    symcount = bfd_read_minisymbols(lib, kDynamic, &minisyms, &size);
+  }
 
   // Scan symbols
   bfd_byte* from = (bfd_byte *) minisyms;
