@@ -114,12 +114,12 @@ static nsresult EscapeNonAsciiInURI(nsAReadableString& aHref, nsAWritableCString
   NS_ENSURE_SUCCESS(rv, rv);
 
   const nsAFlatString &tmp = PromiseFlatString(aHref);
-  PRInt32 len;
+  PRInt32 len = tmp.Length();
+  PRInt32 bufferLen;
 
-  rv = encoder->GetMaxLength(tmp.get(), tmp.Length(), &len);
+  rv = encoder->GetMaxLength(tmp.get(), len, &bufferLen);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  PRInt32 bufferLen = len;
   char* buffer = (char *) nsMemory::Alloc(bufferLen);
   NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
