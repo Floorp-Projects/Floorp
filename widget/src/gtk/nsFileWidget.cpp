@@ -193,6 +193,13 @@ nsFileDlgResults nsFileWidget::GetFile(nsIWidget *aParent,
                                        nsString &promptString,
                                        nsFileSpec &theFileSpec)
 {
+	Create(aParent, promptString, eMode_load, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		GetFile(theFileSpec);
+		return nsFileDlgResults_OK;
+	}
+
   return nsFileDlgResults_Cancel;
 }
 
@@ -200,6 +207,13 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget *aParent,
                                          nsString &promptString,
                                          nsFileSpec &theFileSpec)
 {
+	Create(aParent, promptString, eMode_getfolder, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		GetFile(theFileSpec);
+		return nsFileDlgResults_OK;
+	}
+
   return nsFileDlgResults_Cancel;
 }
 
@@ -207,5 +221,11 @@ nsFileDlgResults nsFileWidget::PutFile(nsIWidget *aParent,
                                        nsString &promptString,
                                        nsFileSpec &theFileSpec)
 { 
+	Create(aParent, promptString, eMode_save, nsnull, nsnull);
+	if (Show() == PR_TRUE)
+	{
+		GetFile(theFileSpec);
+		return nsFileDlgResults_OK;
+	}
   return nsFileDlgResults_Cancel; 
 }
