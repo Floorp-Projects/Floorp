@@ -317,7 +317,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
   // Attach a WebProgress listener.during initialization...
   nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(mDocShell, &rv));
   if (webProgress) {
-    webProgress->AddProgressListener(this);
+    webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_NETWORK);
   }
 
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1196,13 +1196,14 @@ nsWebShellWindow::OnProgressChange(nsIWebProgress *aProgress,
                                    PRInt32 aCurTotalProgress,
                                    PRInt32 aMaxTotalProgress)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShellWindow::OnStateChange(nsIWebProgress *aProgress,
                                 nsIRequest *aRequest,
-                                PRInt32 aStateFlags,
+                                PRUint32 aStateFlags,
                                 nsresult aStatus)
 {
   // If the notification is not about a document finishing, then just
@@ -1289,6 +1290,7 @@ nsWebShellWindow::OnLocationChange(nsIWebProgress *aProgress,
                                    nsIRequest *aRequest,
                                    nsIURI *aURI)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -1298,14 +1300,16 @@ nsWebShellWindow::OnStatusChange(nsIWebProgress* aWebProgress,
                                  nsresult aStatus,
                                  const PRUnichar* aMessage)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShellWindow::OnSecurityChange(nsIWebProgress *aWebProgress,
                                    nsIRequest *aRequest,
-                                   PRInt32 state)
+                                   PRUint32 state)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 

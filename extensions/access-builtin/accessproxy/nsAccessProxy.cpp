@@ -185,7 +185,8 @@ NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const char *aTopic, 
     nsCOMPtr<nsIWebProgress> progress(do_GetService(NS_DOCUMENTLOADER_SERVICE_CONTRACTID));
     rv = NS_ERROR_FAILURE;
     if (progress) {
-      rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
+      rv = progress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
+                                         nsIWebProgress::NOTIFY_STATE_DOCUMENT);
       if (NS_SUCCEEDED(rv))
         AddRef();
     }
@@ -201,9 +202,9 @@ NS_IMETHODIMP nsAccessProxy::Observe(nsISupports *aSubject, const char *aTopic, 
 
 
 NS_IMETHODIMP nsAccessProxy::OnStateChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+  nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
-/* PRInt32 aStateFlags ...
+/* PRUint32 aStateFlags ...
  *
  * ===== What has happened =====	
  * STATE_START, STATE_REDIRECTING, STATE_TRANSFERRING,
@@ -259,9 +260,7 @@ NS_IMETHODIMP nsAccessProxy::OnProgressChange(nsIWebProgress *aWebProgress,
   PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
   // We can use this to report the percentage done
-  #ifdef NS_DEBUG_ACCESS_BUILTIN
-  // printf ("** nsAccessProxy ** OnProgressChange ** \n");
-  #endif
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -270,9 +269,7 @@ NS_IMETHODIMP nsAccessProxy::OnLocationChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsIURI *location)
 {
   // Load has been verified, it will occur, about to commence
-  #ifdef NS_DEBUG_ACCESS_BUILTIN
-  // printf ("** nsAccessProxy ** OnLocationChange ** \n");
-  #endif
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -281,20 +278,16 @@ NS_IMETHODIMP nsAccessProxy::OnStatusChange(nsIWebProgress *aWebProgress,
   nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
   // Status bar has changed
-  #ifdef NS_DEBUG_ACCESS_BUILTIN
-  // printf ("** nsAccessProxy ** OnStatusChange ** \n");
-  #endif
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
 NS_IMETHODIMP nsAccessProxy::OnSecurityChange(nsIWebProgress *aWebProgress,
-  nsIRequest *aRequest, PRInt32 state)
+  nsIRequest *aRequest, PRUint32 state)
 {
   // Security setting has changed
-  #ifdef NS_DEBUG_ACCESS_BUILTIN
-  printf ("** nsAccessProxy ** OnSecurityChange ** \n");
-  #endif
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 

@@ -156,13 +156,17 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *window)
   if (!wp) return NS_ERROR_FAILURE;
   /* end GetWebProgress */
   
-  wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this));
+  wp->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*,this),
+                          nsIWebProgress::NOTIFY_STATE_ALL | 
+                          nsIWebProgress::NOTIFY_LOCATION  |
+                          nsIWebProgress::NOTIFY_SECURITY);
+
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::GetState(PRInt32* aState)
+nsSecureBrowserUIImpl::GetState(PRUint32* aState)
 {
   NS_ENSURE_ARG(aState);
   
@@ -237,10 +241,10 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child,
   return NS_OK;
 }
 
-static PRInt32 GetSecurityStateFromChannel(nsIChannel* aChannel)
+static PRUint32 GetSecurityStateFromChannel(nsIChannel* aChannel)
 {
   nsresult res;
-  PRInt32 securityState;
+  PRUint32 securityState;
 
   // qi for the psm information about this channel load.
   nsCOMPtr<nsISupports> info;
@@ -313,6 +317,7 @@ nsSecureBrowserUIImpl::OnProgressChange(nsIWebProgress* aWebProgress,
                                         PRInt32 aCurTotalProgress,
                                         PRInt32 aMaxTotalProgress)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -331,7 +336,7 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                                      nsIRequest* aRequest,
-                                     PRInt32 aProgressStateFlags,
+                                     PRUint32 aProgressStateFlags,
                                      nsresult aStatus)
 {
   /*
@@ -545,7 +550,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   const char *_status = NS_SUCCEEDED(aStatus) ? "1" : "0";
 
   nsCString info;
-  PRInt32 f = aProgressStateFlags;
+  PRUint32 f = aProgressStateFlags;
   if (f & nsIWebProgressListener::STATE_START)
   {
     f -= nsIWebProgressListener::STATE_START;
@@ -764,15 +769,15 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     
     // if we arrive here, LOAD_DOCUMENT_URI is not set
     
-    PRInt32 aState = nsIWebProgressListener::STATE_IS_INSECURE;
+    PRUint32 reqState = nsIWebProgressListener::STATE_IS_INSECURE;
     
     if (channel) {
-      aState = GetSecurityStateFromChannel(channel);
+      reqState = GetSecurityStateFromChannel(channel);
     }
     
-    if (aState & STATE_IS_SECURE)
+    if (reqState & STATE_IS_SECURE)
     {
-      if (aState & STATE_SECURE_LOW || aState & STATE_SECURE_MED)
+      if (reqState & STATE_SECURE_LOW || reqState & STATE_SECURE_MED)
       {
         PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
          ("SecureUI:%p: OnStateChange: subreq LOW\n", this));
@@ -785,7 +790,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         ++mSubRequestsHighSecurity;
       }
     }
-    else if (aState & STATE_IS_BROKEN)
+    else if (reqState & STATE_IS_BROKEN)
     {
       PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
        ("SecureUI:%p: OnStateChange: subreq BROKEN\n", this));
@@ -969,7 +974,7 @@ nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
 
   if (mToplevelEventSink)
   {
-    PRInt32 newState = STATE_IS_INSECURE;
+    PRUint32 newState = STATE_IS_INSECURE;
 
     switch (newSecurityState)
     {
@@ -1042,20 +1047,19 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress* aWebProgress,
                                       nsresult aStatus,
                                       const PRUnichar* aMessage)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 nsresult
 nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
                                         nsIRequest *aRequest,
-                                        PRInt32 state)
+                                        PRUint32 state)
 {
-  nsresult res = NS_OK;
-
 #if defined(DEBUG)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (!channel)
-    return NS_ERROR_FAILURE;
+    return NS_OK;
 
   nsCOMPtr<nsIURI> aURI;
   channel->GetURI(getter_AddRefs(aURI));
@@ -1067,7 +1071,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
           state, temp.get()));
 #endif
 
-  return res;
+  return NS_OK;
 }
 
 // nsISSLStatusProvider methods

@@ -257,7 +257,7 @@
         <parameter name="aListener"/>
         <body>
           <![CDATA[
-            this.webProgress.addProgressListener(aListener);
+            this.webProgress.addProgressListener(aListener, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
           ]]>
         </body>
       </method>

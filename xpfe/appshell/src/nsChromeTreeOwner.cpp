@@ -353,7 +353,7 @@ nsChromeTreeOwner::OnProgressChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsChromeTreeOwner::OnStateChange(nsIWebProgress* aWebProgress,
                                  nsIRequest* aRequest,
-                                 PRInt32 aProgressStateFlags,
+                                 PRUint32 aProgressStateFlags,
                                  nsresult aStatus)
 {
    return NS_OK;
@@ -397,9 +397,9 @@ nsChromeTreeOwner::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 nsChromeTreeOwner::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                     nsIRequest *aRequest, 
-                                    PRInt32 state)
+                                    PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 //*****************************************************************************

@@ -230,7 +230,7 @@ NS_IMETHODIMP CBrowserShellProgressListener::OnStatusChange(nsIWebProgress *aWeb
     return NS_OK;
 }
 
-NS_IMETHODIMP CBrowserShellProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+NS_IMETHODIMP CBrowserShellProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
     NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
 

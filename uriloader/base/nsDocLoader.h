@@ -59,6 +59,7 @@
 #include "nsCOMPtr.h"
 
 struct nsRequestInfo;
+struct nsListenerInfo;
 
 /****************************************************************************
  * nsDocLoaderImpl implementation...
@@ -137,13 +138,11 @@ protected:
     // class, please make the ownership explicit (pinkerton, scc).
   
     nsCOMPtr<nsIRequest>       mDocumentRequest;       // [OWNER] ???compare with document
-    nsCOMPtr<nsISupportsArray> mListenerList;
     nsISupports*               mContainer;             // [WEAK] it owns me!
 
     nsDocLoaderImpl*           mParent;                // [WEAK]
 
-    nsCString                  mCommand;
-
+    nsVoidArray                mListenerInfoList;
     /*
      * This flag indicates that the loader is loading a document.  It is set
      * from the call to LoadDocument(...) until the OnConnectionsComplete(...)
@@ -168,10 +167,8 @@ protected:
     nsAutoVoidArray mRequestInfoList;
 
 private:
-    nsresult GetProgressStatusFlags(PRInt32* aProgressStatusFlags);
-    nsresult GetCurSelfProgress(PRInt32* aCurSelfProgress);
-    nsresult GetMaxSelfProgress(PRInt32* aMaxSelfProgress);
-    nsresult GetCurTotalProgress(PRInt32* aCurTotalProgress);
+    nsListenerInfo *GetListenerInfo(nsIWeakReference* aListener);
+
     nsresult GetMaxTotalProgress(PRInt32* aMaxTotalProgress);
 
     nsresult AddRequestInfo(nsIRequest* aRequest);

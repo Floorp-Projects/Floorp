@@ -530,8 +530,8 @@ CProgressDlg::~CProgressDlg()
 }
 
 NS_IMETHODIMP CProgressDlg::OnStateChange(nsIWebProgress *aWebProgress, 
-                                          nsIRequest *aRequest, PRInt32 aStateFlags, 
-                                          PRUint32 aStatus)
+                                          nsIRequest *aRequest, PRUint32 aStateFlags, 
+                                          nsresult aStatus)
 {
     if((aStateFlags & STATE_STOP) && (aStateFlags & STATE_IS_DOCUMENT))
     {
@@ -565,20 +565,20 @@ NS_IMETHODIMP CProgressDlg::OnProgressChange(nsIWebProgress *aWebProgress,
 NS_IMETHODIMP CProgressDlg::OnLocationChange(nsIWebProgress *aWebProgress, 
                                              nsIRequest *aRequest, nsIURI *location)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP CProgressDlg::OnStatusChange(nsIWebProgress *aWebProgress, 
                                            nsIRequest *aRequest, nsresult aStatus, 
                                            const PRUnichar *aMessage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP CProgressDlg::OnSecurityChange(nsIWebProgress *aWebProgress, 
-                                             nsIRequest *aRequest, PRInt32 state)
+                                             nsIRequest *aRequest, PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 BOOL CProgressDlg::OnInitDialog() 

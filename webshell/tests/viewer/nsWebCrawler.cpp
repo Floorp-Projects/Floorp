@@ -361,7 +361,7 @@ nsWebCrawler::QueueExitCallback(nsITimer *aTimer, void *aClosure)
 NS_IMETHODIMP
 nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress, 
                             nsIRequest* aRequest, 
-                            PRInt32 progressStateFlags, 
+                            PRUint32 progressStateFlags, 
                             nsresult aStatus)
 {
   // Make sure that we're being notified for _our_ shell, and not some
@@ -479,8 +479,10 @@ nsWebCrawler::OnProgressChange(nsIWebProgress *aWebProgress,
                                PRInt32 aCurSelfProgress,
                                PRInt32 aMaxSelfProgress,
                                PRInt32 aCurTotalProgress,
-                               PRInt32 aMaxTotalProgress) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                               PRInt32 aMaxTotalProgress)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -488,7 +490,8 @@ nsWebCrawler::OnLocationChange(nsIWebProgress* aWebProgress,
                                nsIRequest* aRequest,
                                nsIURI *location)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
@@ -498,16 +501,18 @@ nsWebCrawler::OnStatusChange(nsIWebProgress* aWebProgress,
                              nsresult aStatus,
                              const PRUnichar* aMessage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsWebCrawler::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                nsIRequest *aRequest, 
-                               PRInt32 state)
+                               PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 FILE*
@@ -611,7 +616,8 @@ nsWebCrawler::Start()
   if (docShell) {
     nsCOMPtr<nsIWebProgress> progress(do_GetInterface(docShell));
     if (progress) {
-      progress->AddProgressListener(this);
+      progress->AddProgressListener(this,
+                                    nsIWebProgress::NOTIFY_STATE_DOCUMENT);
       LoadNextURL(PR_FALSE);
     }
   }

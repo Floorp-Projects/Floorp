@@ -134,8 +134,8 @@ NS_IMETHODIMP CWebBrowserContainer::OnProgressChange(nsIWebProgress *aProgress, 
 
 
 
-/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest request, in long progressStateFlags, in unsinged long aStatus); */
-NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRInt32 progressStateFlags, nsresult aStatus)
+/* void onStateChange (in nsIWebProgress aWebProgress, in nsIRequest request, in unsigned long progressStateFlags, in unsinged long aStatus); */
+NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRUint32 progressStateFlags, nsresult aStatus)
 {
     nsresult rv = NS_OK;
 
@@ -186,11 +186,11 @@ NS_IMETHODIMP CWebBrowserContainer::OnStateChange(nsIWebProgress* aWebProgress, 
             if (!aChannel) return NS_ERROR_NULL_POINTER;
 
             rv = aChannel->GetURI(getter_AddRefs(pURI));
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return NS_OK;
 
             nsCAutoString aURI;
             rv = pURI->GetAsciiSpec(aURI);
-            if (NS_FAILED(rv)) return rv;
+            if (NS_FAILED(rv)) return NS_OK;
 
             USES_CONVERSION;
             BSTR bstrURI = SysAllocString(A2OLE(aURI.get())); 
@@ -279,7 +279,7 @@ NS_IMETHODIMP CWebBrowserContainer::OnLocationChange(nsIWebProgress* aWebProgres
 {
 //    nsXPIDLCString aPath;
 //    location->GetPath(getter_Copies(aPath));
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -301,9 +301,9 @@ CWebBrowserContainer::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 CWebBrowserContainer::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                        nsIRequest *aRequest, 
-                                       PRInt32 state)
+                                       PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 

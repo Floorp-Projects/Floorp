@@ -165,8 +165,9 @@ public:
 NS_IMETHODIMP
 CStreamListener::OnStateChange(nsIWebProgress* aWebProgress, 
                    nsIRequest *aRequest, 
-                   PRInt32 progressStateFlags, 
-                   nsresult aStatus) {
+                   PRUint32 progressStateFlags, 
+                   nsresult aStatus)
+{
     if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
         if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
             fputs("done.\n",stdout);
@@ -181,15 +182,19 @@ CStreamListener::OnProgressChange(nsIWebProgress *aWebProgress,
                                      PRInt32 aCurSelfProgress,
                                      PRInt32 aMaxSelfProgress,
                                      PRInt32 aCurTotalProgress,
-                                     PRInt32 aMaxTotalProgress) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                                     PRInt32 aMaxTotalProgress)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 CStreamListener::OnLocationChange(nsIWebProgress* aWebProgress,
                       nsIRequest* aRequest,
-                      nsIURI *location) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                      nsIURI *location)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
@@ -197,16 +202,20 @@ NS_IMETHODIMP
 CStreamListener::OnStatusChange(nsIWebProgress* aWebProgress,
                     nsIRequest* aRequest,
                     nsresult aStatus,
-                    const PRUnichar* aMessage) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                    const PRUnichar* aMessage)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 CStreamListener::OnSecurityChange(nsIWebProgress *aWebProgress, 
                       nsIRequest *aRequest, 
-                      PRInt32 state) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                      PRUint32 state)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS2(CStreamListener,
@@ -329,7 +338,7 @@ extern "C" NS_EXPORT int DebugRobot(
       nsCOMPtr<nsIWebProgress> progress(do_GetInterface(docShell, &rv));
       if (NS_FAILED(rv)) return rv;
 
-      (void) progress->AddProgressListener(pl);
+      (void) progress->AddProgressListener(pl, nsIWebProgress::NOTIFY_STATE_DOCUMENT);
 
       nsCAutoString spec;
       (void)url->GetSpec(spec);

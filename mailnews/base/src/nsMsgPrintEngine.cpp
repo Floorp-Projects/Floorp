@@ -82,7 +82,7 @@ NS_IMPL_ISUPPORTS3(nsMsgPrintEngine,
 NS_IMETHODIMP
 nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress, 
                    nsIRequest *aRequest, 
-                   PRInt32 progressStateFlags, 
+                   PRUint32 progressStateFlags, 
                    nsresult aStatus)
 {
   nsresult rv = NS_OK;
@@ -200,15 +200,19 @@ nsMsgPrintEngine::OnProgressChange(nsIWebProgress *aWebProgress,
                                      PRInt32 aCurSelfProgress,
                                      PRInt32 aMaxSelfProgress,
                                      PRInt32 aCurTotalProgress,
-                                     PRInt32 aMaxTotalProgress) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                                     PRInt32 aMaxTotalProgress)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMsgPrintEngine::OnLocationChange(nsIWebProgress* aWebProgress,
                       nsIRequest* aRequest,
-                      nsIURI *location) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                      nsIURI *location)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
@@ -216,16 +220,20 @@ NS_IMETHODIMP
 nsMsgPrintEngine::OnStatusChange(nsIWebProgress* aWebProgress,
                     nsIRequest* aRequest,
                     nsresult aStatus,
-                    const PRUnichar* aMessage) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                    const PRUnichar* aMessage)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsMsgPrintEngine::OnSecurityChange(nsIWebProgress *aWebProgress, 
                       nsIRequest *aRequest, 
-                      PRInt32 state) {
-    return NS_ERROR_NOT_IMPLEMENTED;
+                      PRUint32 state)
+{
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -465,7 +473,8 @@ nsMsgPrintEngine::SetupObserver()
     nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell));
     NS_ASSERTION(progress, "we were expecting a nsIWebProgress");
     if (progress) {
-      (void) progress->AddProgressListener((nsIWebProgressListener *)this);
+      (void) progress->AddProgressListener((nsIWebProgressListener *)this,
+                                        nsIWebProgress::NOTIFY_STATE_DOCUMENT);
     }
   }
 }

@@ -318,7 +318,7 @@ function Startup()
   // hook up UI through progress listener
   var interfaceRequestor = getBrowser().docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-  webProgress.addProgressListener(window.XULBrowserWindow);
+  webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 
   // XXXjag see bug 68662 (needed to hook up web progress listener)
   getBrowser().boxObject.setPropertyAsSupports("listenerkungfu", window.XULBrowserWindow);

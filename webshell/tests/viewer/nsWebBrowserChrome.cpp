@@ -35,7 +35,6 @@
 // Interfaces needed to be included
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebProgress.h"
-#include "nsIChannel.h"
 #include "nsIURI.h"
 #include "nsIDOMWindow.h"
 
@@ -405,7 +404,7 @@ nsWebBrowserChrome::OnProgressChange(nsIWebProgress* aProgress,
 NS_IMETHODIMP
 nsWebBrowserChrome::OnStateChange(nsIWebProgress* aProgress,
                                   nsIRequest* aRequest,
-                                  PRInt32 aProgressStateFlags,
+                                  PRUint32 aProgressStateFlags,
                                   nsresult aStatus)
 {
   if (aProgressStateFlags & STATE_START) {
@@ -500,9 +499,9 @@ nsWebBrowserChrome::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 nsWebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                      nsIRequest *aRequest, 
-                                     PRInt32 state)
+                                     PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 //*****************************************************************************

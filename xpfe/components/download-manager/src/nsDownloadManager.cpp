@@ -1055,8 +1055,8 @@ nsDownload::OnStatusChange(nsIWebProgress *aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
-                          nsIRequest* aRequest, PRInt32 aStateFlags,
-                          PRUint32 aStatus)
+                          nsIRequest* aRequest, PRUint32 aStateFlags,
+                          nsresult aStatus)
 {
   if (aStateFlags & STATE_START)
     mStartTime = PR_Now();
@@ -1097,7 +1097,7 @@ nsDownload::OnStateChange(nsIWebProgress* aWebProgress,
 
 NS_IMETHODIMP
 nsDownload::OnSecurityChange(nsIWebProgress *aWebProgress,
-                             nsIRequest *aRequest, PRInt32 aState)
+                             nsIRequest *aRequest, PRUint32 aState)
 {
   if (mListener)
     mListener->OnSecurityChange(aWebProgress, aRequest, aState);

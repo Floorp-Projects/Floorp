@@ -307,7 +307,8 @@ NS_IMETHODIMP nsMsgMailNewsUrl::GetLoadGroup(nsILoadGroup **aLoadGroup)
               if (statusFeedback && docShell)
               {
                 webProgressListener = do_QueryInterface(statusFeedback);
-                webProgress->AddProgressListener(webProgressListener);
+                webProgress->AddProgressListener(webProgressListener,
+                                                 nsIWebProgress::NOTIFY_ALL);
               }
             }
 #endif

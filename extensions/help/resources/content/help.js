@@ -110,7 +110,7 @@ function init() {
   // hook up UI through progress listener
   var interfaceRequestor = helpBrowser.docShell.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
   var webProgress = interfaceRequestor.getInterface(Components.interfaces.nsIWebProgress);
-  webProgress.addProgressListener(window.XULBrowserWindow);
+  webProgress.addProgressListener(window.XULBrowserWindow, Components.interfaces.nsIWebProgress.NOTIFY_ALL);
 }
 
 function normalizeURI(uri) {

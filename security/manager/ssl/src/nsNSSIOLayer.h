@@ -53,7 +53,7 @@ public:
   NS_DECL_NSIINTERFACEREQUESTOR
   NS_DECL_NSISSLSTATUSPROVIDER
 
-  nsresult SetSecurityState(PRInt32 aState);
+  nsresult SetSecurityState(PRUint32 aState);
   nsresult SetShortSecurityDescription(const PRUnichar *aText);
 
   nsresult SetForTLSStepUp(PRBool useTLS);
@@ -82,7 +82,7 @@ public:
 protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   PRFileDesc* mFd;
-  PRInt32 mSecurityState;
+  PRUint32 mSecurityState;
   nsString mShortDesc;
   PRBool mForTLSStepUp;
   PRBool mFirstWrite;

@@ -213,7 +213,7 @@ nsURLFetcher::SetLoadCookie(nsISupports * aLoadCookie)
     nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
 
     if (webProgress) 
-      webProgress->AddProgressListener(this);
+      webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
   }
   return NS_OK;
 
@@ -408,7 +408,7 @@ nsURLFetcher::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsURLFetcher::OnStateChange(nsIWebProgress *aProgress, nsIRequest *aRequest,
-                          PRInt32 aStateFlags, nsresult aStatus)
+                          PRUint32 aStateFlags, nsresult aStatus)
 {
   // all we care about is the case where an error occurred (as in we were unable to locate the
   // the url....
@@ -424,6 +424,7 @@ nsURLFetcher::OnLocationChange(nsIWebProgress* aWebProgress,
                                nsIRequest* aRequest,
                                nsIURI *aURI)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
@@ -433,15 +434,17 @@ nsURLFetcher::OnStatusChange(nsIWebProgress* aWebProgress,
                              nsresult aStatus,
                              const PRUnichar* aMessage)
 {
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
   return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsURLFetcher::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                nsIRequest *aRequest, 
-                               PRInt32 state)
+                               PRUint32 state)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+  return NS_OK;
 }
 
 

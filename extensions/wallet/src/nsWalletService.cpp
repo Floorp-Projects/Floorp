@@ -389,7 +389,8 @@ nsresult nsWalletlibService::Init()
   if (NS_SUCCEEDED(rv) && docLoaderService) {
     nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService, &rv));
     if (NS_SUCCEEDED(rv))
-        (void) progress->AddProgressListener((nsIWebProgressListener*)this);
+        (void) progress->AddProgressListener((nsIWebProgressListener*)this,
+                                        nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   }
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
@@ -408,7 +409,7 @@ nsresult nsWalletlibService::Init()
 NS_IMETHODIMP
 nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress, 
                                   nsIRequest *aRequest, 
-                                  PRInt32 progressStateFlags, 
+                                  PRUint32 progressStateFlags,
                                   nsresult aStatus)
 {
     nsresult rv = NS_OK;
@@ -564,7 +565,8 @@ nsWalletlibService::OnProgressChange(nsIWebProgress *aWebProgress,
                                      PRInt32 aCurTotalProgress,
                                      PRInt32 aMaxTotalProgress)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -572,7 +574,8 @@ nsWalletlibService::OnLocationChange(nsIWebProgress* aWebProgress,
                                      nsIRequest* aRequest,
                                      nsIURI *location)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
@@ -582,16 +585,18 @@ nsWalletlibService::OnStatusChange(nsIWebProgress* aWebProgress,
                                    nsresult aStatus,
                                    const PRUnichar* aMessage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;    
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 
 NS_IMETHODIMP
 nsWalletlibService::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                      nsIRequest *aRequest, 
-                                     PRInt32 state)
+                                     PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 

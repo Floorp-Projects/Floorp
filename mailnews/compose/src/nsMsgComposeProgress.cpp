@@ -194,13 +194,11 @@ NS_IMETHODIMP nsMsgComposeProgress::OnStateChange(nsIWebProgress *aWebProgress, 
   
   if (m_listenerList)
   {
-    PRUint32 count;
+    PRUint32 count = 0;
     PRInt32 i;
 
     rv = m_listenerList->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_FAILED(rv))
-      return rv;
   
     nsCOMPtr<nsISupports> aSupports;
     nsCOMPtr<nsIWebProgressListener> aProgressListener;
@@ -213,7 +211,7 @@ NS_IMETHODIMP nsMsgComposeProgress::OnStateChange(nsIWebProgress *aWebProgress, 
     }
   }
   
-  return rv;
+  return NS_OK;
 }
 
 /* void onProgressChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long aCurSelfProgress, in long aMaxSelfProgress, in long aCurTotalProgress, in long aMaxTotalProgress); */
@@ -223,13 +221,11 @@ NS_IMETHODIMP nsMsgComposeProgress::OnProgressChange(nsIWebProgress *aWebProgres
 
   if (m_listenerList)
   {
-    PRUint32 count;
+    PRUint32 count = 0;
     PRInt32 i;
 
     rv = m_listenerList->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_FAILED(rv))
-      return rv;
   
     nsCOMPtr<nsISupports> aSupports;
     nsCOMPtr<nsIWebProgressListener> aProgressListener;
@@ -242,30 +238,28 @@ NS_IMETHODIMP nsMsgComposeProgress::OnProgressChange(nsIWebProgress *aWebProgres
     }
   }
   
-  return rv;
+  return NS_OK;
 }
 
 /* void onLocationChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsIURI location); */
 NS_IMETHODIMP nsMsgComposeProgress::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 /* void onStatusChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in nsresult aStatus, in wstring aMessage); */
 NS_IMETHODIMP nsMsgComposeProgress::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
-  nsresult rv = NS_OK;
+  nsresult rv;
 
   m_pendingStatus = aMessage;
   if (m_listenerList)
   {
-    PRUint32 count;
+    PRUint32 count = 0;
     PRInt32 i;
 
     rv = m_listenerList->Count(&count);
     NS_ASSERTION(NS_SUCCEEDED(rv), "m_listenerList->Count() failed");
-    if (NS_FAILED(rv))
-      return rv;
   
     nsCOMPtr<nsISupports> aSupports;
     nsCOMPtr<nsIWebProgressListener> aProgressListener;
@@ -278,13 +272,13 @@ NS_IMETHODIMP nsMsgComposeProgress::OnStatusChange(nsIWebProgress *aWebProgress,
     }
   }
   
-  return rv;
+  return NS_OK;
 }
 
-/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in long state); */
-NS_IMETHODIMP nsMsgComposeProgress::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+/* void onSecurityChange (in nsIWebProgress aWebProgress, in nsIRequest aRequest, in unsigned long state); */
+NS_IMETHODIMP nsMsgComposeProgress::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 nsresult nsMsgComposeProgress::ReleaseListeners()

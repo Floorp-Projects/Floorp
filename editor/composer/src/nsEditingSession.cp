@@ -297,7 +297,7 @@ nsEditingSession::GetEditorForWindow(nsIDOMWindow *aWindow, nsIEditor **outEdito
 
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 aStateFlags, nsresult aStatus)
 {
   //
   // A Request has started...
@@ -372,6 +372,7 @@ nsEditingSession::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aReque
 NS_IMETHODIMP
 nsEditingSession::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
 {
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 
@@ -383,6 +384,7 @@ nsEditingSession::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRe
 NS_IMETHODIMP
 nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
 {
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 
@@ -394,6 +396,7 @@ nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRe
 NS_IMETHODIMP
 nsEditingSession::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
 {
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 
@@ -403,8 +406,9 @@ nsEditingSession::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequ
 
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+nsEditingSession::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state)
 {
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
     return NS_OK;
 }
 
@@ -586,7 +590,9 @@ nsEditingSession::PrepareForEditing()
   nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
   if (!webProgress) return NS_ERROR_FAILURE;
 
-  nsresult rv = webProgress->AddProgressListener(this);
+  nsresult rv = webProgress->AddProgressListener(this,
+                                                 (nsIWebProgress::NOTIFY_STATE_NETWORK | 
+                                                  nsIWebProgress::NOTIFY_STATE_DOCUMENT));
   if (NS_FAILED(rv)) return rv;
 
   return NS_OK;

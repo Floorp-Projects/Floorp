@@ -99,7 +99,8 @@ nsresult nsCookieService::Init()
   if (NS_SUCCEEDED(rv) && docLoaderService) {
     nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService));
     if (progress)
-        (void) progress->AddProgressListener((nsIWebProgressListener*)this);
+        (void) progress->AddProgressListener((nsIWebProgressListener*)this,
+                                             nsIWebProgress::NOTIFY_STATE_DOCUMENT);
   } else {
     NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
   }
@@ -116,13 +117,14 @@ nsCookieService::OnProgressChange(nsIWebProgress *aProgress,
                                   PRInt32 curTotalProgress, 
                                   PRInt32 maxTotalProgress)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsCookieService::OnStateChange(nsIWebProgress* aWebProgress, 
                                nsIRequest *aRequest, 
-                               PRInt32 progressStateFlags, 
+                               PRUint32 progressStateFlags, 
                                nsresult aStatus)
 {
     if (progressStateFlags & STATE_IS_DOCUMENT)
@@ -137,7 +139,8 @@ NS_IMETHODIMP nsCookieService::OnLocationChange(nsIWebProgress* aWebProgress,
                                                      nsIRequest* aRequest,
                                                      nsIURI *location)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
@@ -146,15 +149,17 @@ nsCookieService::OnStatusChange(nsIWebProgress* aWebProgress,
                                      nsresult aStatus,
                                      const PRUnichar* aMessage)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 NS_IMETHODIMP 
 nsCookieService::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                        nsIRequest *aRequest, 
-                                       PRInt32 state)
+                                       PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    NS_NOTREACHED("notification excluded in AddProgressListener(...)");
+    return NS_OK;
 }
 
 

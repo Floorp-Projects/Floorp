@@ -209,7 +209,7 @@ NS_IMETHODIMP nsMsgWindow::SetStatusFeedback(nsIMsgStatusFeedback * aStatusFeedb
   if (webProgress && mStatusFeedback && messageWindowDocShell)
   {
     nsCOMPtr<nsIWebProgressListener> webProgressListener = do_QueryInterface(mStatusFeedback);
-    webProgress->AddProgressListener(webProgressListener);
+    webProgress->AddProgressListener(webProgressListener, nsIWebProgress::NOTIFY_ALL);
   }
 
 	return NS_OK;

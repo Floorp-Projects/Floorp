@@ -188,7 +188,7 @@ NS_IMETHODIMP nsWebProgressListener::OnLocationChange(nsIWebProgress* aWebProgre
 NS_IMETHODIMP nsWebProgressListener::OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsresult aStatus, const PRUnichar* aMessage) {
 	return NS_OK;
 	}
-NS_IMETHODIMP nsWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state) {
+NS_IMETHODIMP nsWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRUint32 state) {
 	return NS_OK;
 	}
 

@@ -114,7 +114,7 @@ nsMsgStatusFeedback::OnProgressChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP
 nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
                                    nsIRequest* aRequest,
-                                   PRInt32 aProgressStateFlags,
+                                   PRUint32 aProgressStateFlags,
                                    nsresult aStatus)
 {
   nsresult rv;
@@ -171,9 +171,9 @@ nsMsgStatusFeedback::OnStatusChange(nsIWebProgress* aWebProgress,
 NS_IMETHODIMP 
 nsMsgStatusFeedback::OnSecurityChange(nsIWebProgress *aWebProgress, 
                                     nsIRequest *aRequest, 
-                                    PRInt32 state)
+                                    PRUint32 state)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return NS_OK;
 }
 
 
