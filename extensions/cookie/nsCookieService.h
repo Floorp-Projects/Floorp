@@ -35,7 +35,7 @@ public:
 
   NS_IMETHOD GetCookieString(nsIURI *aURL, nsString& aCookie);
   NS_IMETHOD GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsString& aCookie);
-  NS_IMETHOD SetCookieString(nsIURI *aURL, const nsString& aCookie);
+  NS_IMETHOD SetCookieString(nsIURI *aURL, nsIDocument* aDoc, const nsString& aCookie);
   NS_IMETHOD SetCookieStringFromHttp(nsIURI *aURL, nsIURI *aFirstURL, nsIPrompt *aPrompter, const char *aCookie, const char *aExpires);
   NS_IMETHOD Cookie_RemoveAllCookies(void);
   NS_IMETHOD Cookie_CookieViewerReturn(nsAutoString results);

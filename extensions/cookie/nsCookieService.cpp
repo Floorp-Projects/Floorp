@@ -27,6 +27,9 @@
 #include "nsCookie.h"
 #include "nsIGenericFactory.h"
 #include "nsXPIDLString.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIPrompt.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -100,12 +103,19 @@ nsCookieService::GetCookieStringFromHTTP(nsIURI *aURL, nsIURI *aFirstURL, nsStri
 }
 
 NS_IMETHODIMP
-nsCookieService::SetCookieString(nsIURI *aURL, const nsString& aCookie) {
+nsCookieService::SetCookieString(nsIURI *aURL, nsIDocument* aDoc, const nsString& aCookie) {
   char *spec = NULL;
   nsresult result = aURL->GetSpec(&spec);
   NS_ASSERTION(result == NS_OK, "deal with this");
   char *cookie = aCookie.ToNewCString();
-  COOKIE_SetCookieString((char *)spec, cookie);
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObj;
+  aDoc->GetScriptGlobalObject(getter_AddRefs(globalObj));
+  nsCOMPtr<nsIDOMWindowInternal> window (do_QueryInterface(globalObj));
+  nsCOMPtr<nsIPrompt> prompt;
+  window->GetPrompter(getter_AddRefs(prompt));
+
+  COOKIE_SetCookieString((char *)spec, prompt, cookie);
   nsCRT::free(spec);
   nsCRT::free(cookie);
   return NS_OK;

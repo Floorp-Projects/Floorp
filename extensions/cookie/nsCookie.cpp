@@ -1735,8 +1735,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHead
 }
 
 PUBLIC void
-COOKIE_SetCookieString(char * curURL, char * setCookieHeader) {
-  cookie_SetCookieString(curURL, 0, setCookieHeader, 0);
+COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, char * setCookieHeader) {
+  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, 0);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 

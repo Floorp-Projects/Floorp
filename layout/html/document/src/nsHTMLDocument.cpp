@@ -1988,7 +1988,7 @@ nsHTMLDocument::SetCookie(const nsAReadableString& aCookie)
   nsresult result = NS_OK;
   NS_WITH_SERVICE(nsICookieService, service, kCookieServiceCID, &result);
   if ((NS_OK == result) && (nsnull != service) && (nsnull != mDocumentURL)) {
-    result = service->SetCookieString(mDocumentURL, nsAutoString(aCookie));
+    result = service->SetCookieString(mDocumentURL, this, nsAutoString(aCookie));
   }
   return result;
 }
