@@ -154,11 +154,7 @@ public:
  */
   virtual ~nsDeviceContextSpecOS2();
 
-  static nsStringArray *globalPrinterList;
-  static int globalNumPrinters;
   static PRINTDLG PrnDlg;
-  int InitializeGlobalPrinters();
-  void FreeGlobalPrinters();
 
 protected:
 
