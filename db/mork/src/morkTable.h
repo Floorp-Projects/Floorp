@@ -429,10 +429,10 @@ public: // state is public because the entire Mork system is private
     mdb_column inColumn); // the column to index if ever sorted
   // } ----- end index methods -----
 
-  morkStore*      mTable_Store;   // weak ref to port
+  morkStore*      mTable_Store;   // non-refcnted ptr to port
 
   // mTable_RowSpace->SpaceScope() is row scope 
-  morkRowSpace*   mTable_RowSpace; // weak ref to containing space
+  morkRowSpace*   mTable_RowSpace; // non-refcnted ptr to containing space
 
   morkRow*        mTable_MetaRow; // table's actual meta row
   mdbOid          mTable_MetaRowOid; // oid for meta row

@@ -108,7 +108,7 @@ morkRowObject::morkRowObject(morkEnv* ev,
     if ( ioRow && ioStore )
     {
       mRowObject_Row = ioRow;
-      morkStore::SlotWeakStore(ioStore, ev, &mRowObject_Store);
+      mRowObject_Store = ioStore; // morkRowObjects don't ref-cnt the owning store.
       
       if ( ev->Good() )
         mNode_Derived = morkDerived_kRowObject;
@@ -609,8 +609,7 @@ morkRowObject::CloseRowObject(morkEnv* ev) // called by CloseMorkNode();
         {
           row->mRow_Object = 0; // just nil this slot -- cut ref down below
           
-          morkStore::SlotWeakStore((morkStore*) 0, ev,
-            &mRowObject_Store);
+          mRowObject_Store = 0; // morkRowObjects don't ref-cnt the owning store.
             
           this->CutWeakRef(ev->AsMdbEnv()); // do last, because it might self destroy
         }
