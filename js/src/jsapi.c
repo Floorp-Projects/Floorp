@@ -631,7 +631,7 @@ JS_NewRuntime(uint32 maxbytes)
     rt->requestDone = JS_NEW_CONDVAR(rt->gcLock);
     if (!rt->requestDone)
 	goto bad;
-    js_SetupLocks(20,20);		/* this is asymmetric with JS_ShutDown. */
+    js_SetupLocks(20,20);       /* this is asymmetric with JS_ShutDown. */
     rt->rtLock = JS_NEW_LOCK();
     rt->stateChange = JS_NEW_CONDVAR(rt->rtLock);
 #endif
@@ -649,6 +649,11 @@ bad:
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime *rt)
 {
+    JSContext *cx, *iter;
+
+    iter = NULL;
+    while ((cx = js_ContextIterator(rt, &iter)) != NULL)
+        js_DestroyContext(cx, JS_NO_GC);
     js_FinishGC(rt);
 #ifdef JS_THREADSAFE
     if (rt->gcLock)
@@ -670,6 +675,18 @@ JS_ShutDown(void)
 #ifdef JS_THREADSAFE
     js_CleanupLocks();
 #endif
+}
+
+JS_PUBLIC_API(void *)
+JS_GetRuntimePrivate(JSRuntime *rt)
+{
+    return rt->data;
+}
+
+JS_PUBLIC_API(void)
+JS_SetRuntimePrivate(JSRuntime *rt, void *data)
+{
+    rt->data = data;
 }
 
 #ifdef JS_THREADSAFE

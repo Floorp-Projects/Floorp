@@ -334,6 +334,12 @@ JS_DestroyRuntime(JSRuntime *rt);
 extern JS_PUBLIC_API(void)
 JS_ShutDown(void);
 
+JS_PUBLIC_API(void *)
+JS_GetRuntimePrivate(JSRuntime *rt);
+
+JS_PUBLIC_API(void)
+JS_SetRuntimePrivate(JSRuntime *rt, void *data);
+
 #ifdef JS_THREADSAFE
 
 extern JS_PUBLIC_API(void)
