@@ -261,36 +261,36 @@ public:
 /**
  * An assignment of a value to a variable
  */
-class nsBinding {
+class nsAssignment {
 public:
     PRInt32 mVariable;
     Value   mValue;
 
-    nsBinding() : mVariable(-1), mValue()
-        { MOZ_COUNT_CTOR(nsBinding); }
+    nsAssignment() : mVariable(-1), mValue()
+        { MOZ_COUNT_CTOR(nsAssignment); }
 
-    nsBinding(PRInt32 aVariable, const Value& aValue)
+    nsAssignment(PRInt32 aVariable, const Value& aValue)
         : mVariable(aVariable),
           mValue(aValue)
-        { MOZ_COUNT_CTOR(nsBinding); }
+        { MOZ_COUNT_CTOR(nsAssignment); }
 
-    nsBinding(const nsBinding& aBinding)
-        : mVariable(aBinding.mVariable),
-          mValue(aBinding.mValue)
-        { MOZ_COUNT_CTOR(nsBinding); }
+    nsAssignment(const nsAssignment& aAssignment)
+        : mVariable(aAssignment.mVariable),
+          mValue(aAssignment.mValue)
+        { MOZ_COUNT_CTOR(nsAssignment); }
 
-    ~nsBinding() { MOZ_COUNT_DTOR(nsBinding); }
+    ~nsAssignment() { MOZ_COUNT_DTOR(nsAssignment); }
 
-    nsBinding& operator=(const nsBinding& aBinding) {
-        mVariable = aBinding.mVariable;
-        mValue    = aBinding.mValue;
+    nsAssignment& operator=(const nsAssignment& aAssignment) {
+        mVariable = aAssignment.mVariable;
+        mValue    = aAssignment.mValue;
         return *this; }
 
-    PRBool operator==(const nsBinding& aBinding) const {
-        return mVariable == aBinding.mVariable && mValue == aBinding.mValue; }
+    PRBool operator==(const nsAssignment& aAssignment) const {
+        return mVariable == aAssignment.mVariable && mValue == aAssignment.mValue; }
 
-    PRBool operator!=(const nsBinding& aBinding) const {
-        return mVariable != aBinding.mVariable || mValue != aBinding.mValue; }
+    PRBool operator!=(const nsAssignment& aAssignment) const {
+        return mVariable != aAssignment.mVariable || mValue != aAssignment.mValue; }
 
     PLHashNumber Hash() const {
         // XXX I have no idea if this hashing function is good or not
@@ -301,9 +301,10 @@ public:
 //----------------------------------------------------------------------
 
 /**
- * A collection of value-to-variable assignments
+ * A collection of value-to-variable assignments that minimizes
+ * copying by sharing subsets when possible.
  */
-class nsBindingSet {
+class nsAssignmentSet {
 public:
     class ConstIterator;
     friend class ConstIterator;
@@ -311,10 +312,10 @@ public:
 protected:
     class List {
     public:
-        List() { MOZ_COUNT_CTOR(nsBindingSet::List); }
+        List() { MOZ_COUNT_CTOR(nsAssignmentSet::List); }
 
         ~List() {
-            MOZ_COUNT_DTOR(nsBindingSet::List);
+            MOZ_COUNT_DTOR(nsAssignmentSet::List);
             NS_IF_RELEASE(mNext); }
 
         PRInt32 AddRef() { return ++mRefCnt; }
@@ -324,35 +325,35 @@ protected:
             if (refcnt == 0) delete this;
             return refcnt; }
 
-        nsBinding mBinding;
+        nsAssignment mAssignment;
         PRInt32 mRefCnt;
         List*   mNext;
     };
 
-    List* mBindings;
+    List* mAssignments;
 
 public:
-    nsBindingSet() : mBindings(nsnull) {
-        MOZ_COUNT_CTOR(nsBindingSet); }
+    nsAssignmentSet() : mAssignments(nsnull) {
+        MOZ_COUNT_CTOR(nsAssignmentSet); }
 
-    nsBindingSet(const nsBindingSet& aSet) : mBindings(aSet.mBindings) {
-        MOZ_COUNT_CTOR(nsBindingSet);
-        NS_IF_ADDREF(mBindings); }
+    nsAssignmentSet(const nsAssignmentSet& aSet) : mAssignments(aSet.mAssignments) {
+        MOZ_COUNT_CTOR(nsAssignmentSet);
+        NS_IF_ADDREF(mAssignments); }
 
-    nsBindingSet& operator=(const nsBindingSet& aSet) {
-        NS_IF_RELEASE(mBindings);
-        mBindings = aSet.mBindings;
-        NS_IF_ADDREF(mBindings);
+    nsAssignmentSet& operator=(const nsAssignmentSet& aSet) {
+        NS_IF_RELEASE(mAssignments);
+        mAssignments = aSet.mAssignments;
+        NS_IF_ADDREF(mAssignments);
         return *this; }
         
-    ~nsBindingSet() {
-        MOZ_COUNT_DTOR(nsBindingSet);
-        NS_IF_RELEASE(mBindings); }
+    ~nsAssignmentSet() {
+        MOZ_COUNT_DTOR(nsAssignmentSet);
+        NS_IF_RELEASE(mAssignments); }
 
 public:
     class ConstIterator {
     public:
-        ConstIterator(List* aBindingList) : mCurrent(aBindingList) {
+        ConstIterator(List* aAssignmentList) : mCurrent(aAssignmentList) {
             NS_IF_ADDREF(mCurrent); }
 
         ConstIterator(const ConstIterator& aConstIterator)
@@ -382,11 +383,11 @@ public:
             NS_IF_ADDREF(mCurrent);
             return result; }
 
-        const nsBinding& operator*() const {
-            return mCurrent->mBinding; }
+        const nsAssignment& operator*() const {
+            return mCurrent->mAssignment; }
 
-        const nsBinding* operator->() const {
-            return &mCurrent->mBinding; }
+        const nsAssignment* operator->() const {
+            return &mCurrent->mAssignment; }
 
         PRBool operator==(const ConstIterator& aConstIterator) const {
             return mCurrent == aConstIterator.mCurrent; }
@@ -398,21 +399,28 @@ public:
         List* mCurrent;
     };
 
-    ConstIterator First() const { return ConstIterator(mBindings); }
+    ConstIterator First() const { return ConstIterator(mAssignments); }
     ConstIterator Last() const { return ConstIterator(nsnull); }
 
 public:
-    nsresult Add(const nsBinding& aElement);
+    nsresult Add(const nsAssignment& aElement);
 
-    PRBool HasBinding(PRInt32 aVariable, const Value& aValue) const;
-    PRBool HasBindingFor(PRInt32 aVariable) const;
-    PRBool GetBindingFor(PRInt32 aVariable, Value* aValue) const;
+    PRBool HasAssignment(PRInt32 aVariable, const Value& aValue) const;
+
+    PRBool HasAssignment(const nsAssignment& aAssignment) const {
+        return HasAssignment(aAssignment.mVariable, aAssignment.mValue); }
+
+    PRBool HasAssignmentFor(PRInt32 aVariable) const;
+
+    PRBool GetAssignmentFor(PRInt32 aVariable, Value* aValue) const;
 
     PRInt32 Count() const;
 
-    PRBool Equals(const nsBindingSet& aSet) const;
-    PRBool operator==(const nsBindingSet& aSet) const { return Equals(aSet); }
-    PRBool operator!=(const nsBindingSet& aSet) const { return !Equals(aSet); }
+    PRBool IsEmpty() const { return mAssignments == nsnull; }
+
+    PRBool Equals(const nsAssignmentSet& aSet) const;
+    PRBool operator==(const nsAssignmentSet& aSet) const { return Equals(aSet); }
+    PRBool operator!=(const nsAssignmentSet& aSet) const { return !Equals(aSet); }
 };
 
 
@@ -424,25 +432,25 @@ public:
 class Instantiation
 {
 public:
-    nsBindingSet       mBindings;
+    nsAssignmentSet  mAssignments;
     MemoryElementSet mSupport;
 
     Instantiation() { MOZ_COUNT_CTOR(Instantiation); }
 
     Instantiation(const Instantiation& aInstantiation)
-        : mBindings(aInstantiation.mBindings),
+        : mAssignments(aInstantiation.mAssignments),
           mSupport(aInstantiation.mSupport) {
         MOZ_COUNT_CTOR(Instantiation); }
 
     Instantiation& operator=(const Instantiation& aInstantiation) {
-        mBindings = aInstantiation.mBindings;
+        mAssignments = aInstantiation.mAssignments;
         mSupport  = aInstantiation.mSupport;
         return *this; }
 
     ~Instantiation() { MOZ_COUNT_DTOR(Instantiation); }
 
-    nsresult AddBinding(PRInt32 aVariable, const Value& aValue) {
-        mBindings.Add(nsBinding(aVariable, aValue));
+    nsresult AddAssignment(PRInt32 aVariable, const Value& aValue) {
+        mAssignments.Add(nsAssignment(aVariable, aValue));
         return NS_OK; }
 
     nsresult AddSupportingElement(MemoryElement* aMemoryElement) {
@@ -450,7 +458,7 @@ public:
         return NS_OK; }
 
     PRBool Equals(const Instantiation& aInstantiation) const {
-        return mBindings == aInstantiation.mBindings; }
+        return mAssignments == aInstantiation.mAssignments; }
 
     PRBool operator==(const Instantiation& aInstantiation) const {
         return Equals(aInstantiation); }
@@ -599,7 +607,7 @@ public:
 
     void Clear();
 
-    PRBool HasBindingFor(PRInt32 aVariable) const;
+    PRBool HasAssignmentFor(PRInt32 aVariable) const;
 
 };
 

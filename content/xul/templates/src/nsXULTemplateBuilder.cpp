@@ -32,9 +32,11 @@
 
   TO DO
 
-  . fix ContentTagTest's location in the network construction
-  . use arenas
-  . refactor: stuff is starting to smell bad
+  . Fix ContentTagTest's location in the network construction
+
+  . Refactor: stuff is starting to smell bad
+
+  . Improve names of stuff
 
   To turn on logging for this module, set:
 
@@ -178,16 +180,20 @@ IsElementContainedBy(nsIContent* aElement, nsIContent* aContainer)
 
 //----------------------------------------------------------------------
 
-class PropertySet
+class ResourceSet
 {
 public:
-    PropertySet()
-        : mProperties(nsnull),
+    ResourceSet()
+        : mResources(nsnull),
           mCount(0),
           mCapacity(0) {
-        MOZ_COUNT_CTOR(PropertySet); }
+        MOZ_COUNT_CTOR(ResourceSet); }
+
+    ResourceSet(const ResourceSet& aResourceSet);
+
+    ResourceSet& operator=(const ResourceSet& aResourceSet);
     
-    ~PropertySet();
+    ~ResourceSet();
 
     nsresult Clear();
     nsresult Add(nsIRDFResource* aProperty);
@@ -195,7 +201,7 @@ public:
     PRBool Contains(nsIRDFResource* aProperty) const;
 
 protected:
-    nsIRDFResource** mProperties;
+    nsIRDFResource** mResources;
     PRInt32 mCount;
     PRInt32 mCapacity;
 
@@ -235,66 +241,87 @@ public:
 
     protected:
         ConstIterator(nsIRDFResource** aProperty) : mCurrent(aProperty) {}
-        friend class PropertySet;
+        friend class ResourceSet;
     };
 
-    ConstIterator First() const { return ConstIterator(mProperties); }
-    ConstIterator Last() const { return ConstIterator(mProperties + mCount); }
+    ConstIterator First() const { return ConstIterator(mResources); }
+    ConstIterator Last() const { return ConstIterator(mResources + mCount); }
 };
 
 
-PropertySet::~PropertySet()
+ResourceSet::ResourceSet(const ResourceSet& aResourceSet)
+    : mResources(nsnull),
+      mCount(0),
+      mCapacity(0)
 {
-    MOZ_COUNT_DTOR(PropertySet);
+    ConstIterator last = aResourceSet.Last();
+    for (ConstIterator resource = aResourceSet.First(); resource != last; ++resource)
+        Add(*resource);
+}
+
+
+ResourceSet&
+ResourceSet::operator=(const ResourceSet& aResourceSet)
+{
     Clear();
-    delete[] mProperties;
+    ConstIterator last = aResourceSet.Last();
+    for (ConstIterator resource = aResourceSet.First(); resource != last; ++resource)
+        Add(*resource);
+    return *this;
+}
+
+ResourceSet::~ResourceSet()
+{
+    MOZ_COUNT_DTOR(ResourceSet);
+    Clear();
+    delete[] mResources;
 }
 
 nsresult
-PropertySet::Clear()
+ResourceSet::Clear()
 {
     while (--mCount >= 0) {
-        NS_RELEASE(mProperties[mCount]);
+        NS_RELEASE(mResources[mCount]);
     }
     mCount = 0;
     return NS_OK;
 }
 
 nsresult
-PropertySet::Add(nsIRDFResource* aProperty)
+ResourceSet::Add(nsIRDFResource* aResource)
 {
-    NS_PRECONDITION(aProperty != nsnull, "null ptr");
-    if (! aProperty)
+    NS_PRECONDITION(aResource != nsnull, "null ptr");
+    if (! aResource)
         return NS_ERROR_NULL_POINTER;
 
-    if (Contains(aProperty))
+    if (Contains(aResource))
         return NS_OK;
 
     if (mCount >= mCapacity) {
         PRInt32 capacity = mCapacity + 4;
-        nsIRDFResource** properties = new nsIRDFResource*[capacity];
-        if (! properties)
+        nsIRDFResource** resources = new nsIRDFResource*[capacity];
+        if (! resources)
             return NS_ERROR_OUT_OF_MEMORY;
 
         for (PRInt32 i = mCount - 1; i >= 0; --i)
-            properties[i] = mProperties[i];
+            resources[i] = mResources[i];
 
-        delete[] mProperties;
+        delete[] mResources;
 
-        mProperties = properties;
+        mResources = resources;
         mCapacity = capacity;
     }
 
-    mProperties[mCount++] = aProperty;
-    NS_ADDREF(aProperty);
+    mResources[mCount++] = aResource;
+    NS_ADDREF(aResource);
     return NS_OK;
 }
 
 PRBool
-PropertySet::Contains(nsIRDFResource* aProperty) const
+ResourceSet::Contains(nsIRDFResource* aResource) const
 {
     for (PRInt32 i = mCount - 1; i >= 0; --i) {
-        if (mProperties[i] == aProperty)
+        if (mResources[i] == aResource)
             return PR_TRUE;
     }
 
@@ -302,9 +329,99 @@ PropertySet::Contains(nsIRDFResource* aProperty) const
 }
 
 //----------------------------------------------------------------------
+
+/**
+ * A "match" is a fully instantiated rule; that is, a complete and
+ * consistent set of variable-to-value assignments for all the rule's
+ * condition elements.
+ *
+ * Each match also contains information about the "optional"
+ * variable-to-value assignments that can be specified using the
+ * <bindings> element in a rule.
+ */
+
+class ConflictSet;
+class Rule;
+
+class Match {
+protected:
+    PRInt32 mRefCnt;
+
+public:
+    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
+        return aAllocator.Alloc(aSize); }
+
+    static void operator delete(void* aPtr, size_t aSize) {
+        nsFixedSizeAllocator::Free(aPtr, aSize); }
+
+    Match(const Rule* aRule,
+          const Instantiation& aInstantiation,
+          const nsAssignmentSet& aAssignments)
+        : mRefCnt(1),
+          mRule(aRule),
+          mInstantiation(aInstantiation),
+          mAssignments(aAssignments)
+        { MOZ_COUNT_CTOR(Match); }
+
+    PRBool operator==(const Match& aMatch) const {
+        return mRule == aMatch.mRule && mInstantiation == aMatch.mInstantiation; }
+
+    PRBool operator!=(const Match& aMatch) const {
+        return !(*this == aMatch); }
+
+    PRBool GetAssignmentFor(ConflictSet& aConflictSet, PRInt32 aVariable, Value* aValue);
+
+    const Rule*     mRule;
+    Instantiation   mInstantiation;
+    nsAssignmentSet mAssignments;
+    ResourceSet     mBindingDependencies;
+
+    PRInt32 AddRef() { return ++mRefCnt; }
+
+    PRInt32 Release() {
+        NS_PRECONDITION(mRefCnt > 0, "bad refcnt");
+        PRInt32 refcnt = --mRefCnt;
+        if (refcnt == 0) delete this;
+        return refcnt; }
+
+protected:
+    ~Match() { MOZ_COUNT_DTOR(Match); }
+
+private:
+    Match(const Match& aMatch); // not to be implemented
+    void operator=(const Match& aMatch); // not to be implemented
+};
+
+
+#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
+Match::Match(const Match& aMatch) {}
+void Match::operator=(const Match& aMatch) {}
+#endif
+
+//----------------------------------------------------------------------
 //
 // Rule
 //
+
+/**
+ * A rule consists of:
+ *
+ * - Conditions, a set of unbound variables with consistency
+ *   constraints that specify the values that each variable can
+ *   assume. The conditions must be completely and consistently
+ *   "bound" for the rule to be considered "matched".
+ *
+ * - Bindings, a set of unbound variables with consistency constraints
+ *   that specify the values that each variable can assume. Unlike the
+ *   conditions, the bindings need not be bound for the rule to be
+ *   considered matched.
+ *
+ * - Content that should be constructed when the rule is "activated".
+ *
+ * - Priority, which helps to determine which rule should be
+ *   considered "active" if several rules "match".
+ * 
+ */
 
 class Rule
 {
@@ -348,8 +465,23 @@ public:
     nsresult AddBinding(PRInt32 aSourceVariable,
                         nsIRDFResource* aProperty,
                         PRInt32 aTargetVariable);
-        
-    nsresult ComputeBindings(nsBindingSet& aBindings) const;
+
+    nsresult InitBindings(ConflictSet& aConflictSet, Match* aMatch) const;
+
+    nsresult RecomputeBindings(ConflictSet& aConflictSet,
+                               Match* aMatch,
+                               nsIRDFResource* aSource,
+                               nsIRDFResource* aProperty,
+                               nsIRDFNode* aOldTarget,
+                               nsIRDFNode* aNewTarget,
+                               nsAssignmentSet& aModifiedBindings) const;
+
+    PRBool ComputeAssignmentFor(ConflictSet& aConflictSet,
+                                Match* aMatch,
+                                PRInt32 aVariable,
+                                Value* aValue) const;
+
+    PRBool DependsOn(PRInt32 aChild, PRInt32 aParent) const;
 
 protected:
     nsCOMPtr<nsIRDFDataSource> mDataSource;
@@ -367,16 +499,17 @@ protected:
     PRInt32 mCount;
     PRInt32 mCapacity;
 
-
     struct Binding {
         PRInt32                  mSourceVariable;
         nsCOMPtr<nsIRDFResource> mProperty;
         PRInt32                  mTargetVariable;
-        Binding* mNext;
+        Binding*                 mNext;
+        Binding*                 mParent;
     };
 
     Binding* mBindings;
 };
+
 
 Rule::~Rule()
 {
@@ -461,6 +594,7 @@ Rule::AddBinding(PRInt32 aSourceVariable,
     newbinding->mSourceVariable = aSourceVariable;
     newbinding->mProperty       = aProperty;
     newbinding->mTargetVariable = aTargetVariable;
+    newbinding->mParent         = nsnull;
 
     Binding* binding = mBindings;
     Binding** link = &mBindings;
@@ -475,8 +609,13 @@ Rule::AddBinding(PRInt32 aSourceVariable,
     // person uses a natural ordering when writing the XUL, it'll all
     // work out ok.
     while (binding) {
-        if (binding->mSourceVariable == newbinding->mTargetVariable)
+        if (binding->mSourceVariable == newbinding->mTargetVariable) {
+            binding->mParent = newbinding;
             break;
+        }
+        else if (binding->mTargetVariable == newbinding->mSourceVariable) {
+            newbinding->mParent = binding;
+        }
 
         link = &binding->mNext;
         binding = binding->mNext;
@@ -488,123 +627,48 @@ Rule::AddBinding(PRInt32 aSourceVariable,
     return NS_OK;
 }
 
-
-nsresult
-Rule::ComputeBindings(nsBindingSet& aBindings) const
+PRBool
+Rule::DependsOn(PRInt32 aChildVariable, PRInt32 aParentVariable) const
 {
-    // The bindings are arranged such that any binding that is
-    // dependent on another variable's value will appear later
-    // in the list. That means we can iterate through the
-    // list, binding variables to values, and not worry about
-    // any dependencies.
-    //
-    // XXXwaterson of course, this isn't quite true: see
-    // InstantiationNode::AddBinding().
-    for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
-        Value sourceValue;
-        PRBool hasSourceBinding =
-            aBindings.GetBindingFor(binding->mSourceVariable, &sourceValue);
+    // Determine whether the value for aChildVariable will depend on
+    // the value for aParentVariable by examining the rule's bindings.
+    Binding* child = mBindings;
+    while ((child != nsnull) && (child->mSourceVariable != aChildVariable))
+        child = child->mNext;
 
-        Value targetValue;
-        PRBool hasTargetBinding =
-            aBindings.GetBindingFor(binding->mTargetVariable, &targetValue);
+    if (! child)
+        return PR_FALSE;
 
-        if (hasSourceBinding && hasTargetBinding) {
-            // This is a bit weird. Regardless, there's nothing for us
-            // to do. Both variables are bound, and we don't care if
-            // it's consistent or not.
-        }
-        else if (hasSourceBinding) {
-            nsCOMPtr<nsIRDFNode> target;
-            mDataSource->GetTarget(VALUE_TO_IRDFRESOURCE(sourceValue),
-                                   binding->mProperty,
-                                   PR_TRUE,
-                                   getter_AddRefs(target));
+    Binding* parent = child->mParent;
+    while (parent != nsnull) {
+        if (parent->mSourceVariable == aParentVariable)
+            return PR_TRUE;
 
-            // If we find a target, then we can extend the binding.
-            if (target) {
-                aBindings.Add(nsBinding(binding->mTargetVariable, Value(target.get())));
-            }
-        }
-        else if (hasTargetBinding) {
-            nsCOMPtr<nsIRDFResource> source;
-            mDataSource->GetSource(binding->mProperty,
-                                   VALUE_TO_IRDFNODE(targetValue),
-                                   PR_TRUE,
-                                   getter_AddRefs(source));
-
-            // If we find a source, then we can extend the binding.
-            if (source) {
-                aBindings.Add(nsBinding(binding->mSourceVariable, Value(source.get())));
-            }
-        }
-        else {
-            // oh well, no big deal
-        }
+        parent = parent->mParent;
     }
 
-    return NS_OK;
+    return PR_FALSE;
 }
 
+
 //----------------------------------------------------------------------
 
-/**
- * A single <rule, instantiation> tuple.
- */
-class Match {
-protected:
-    PRInt32 mRefCnt;
+PRBool
+Match::GetAssignmentFor(ConflictSet& aConflictSet, PRInt32 aVariable, Value* aValue)
+{
+    if (mAssignments.GetAssignmentFor(aVariable, aValue)) {
+        return PR_TRUE;
+    }
+    else {
+        return mRule->ComputeAssignmentFor(aConflictSet, this, aVariable, aValue);
+    }
+}
 
-public:
-    static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
-        return aAllocator.Alloc(aSize); }
-
-    static void operator delete(void* aPtr, size_t aSize) {
-        nsFixedSizeAllocator::Free(aPtr, aSize); }
-
-    Match(const Rule* aRule, const Instantiation& aInstantiation, nsBindingSet aBindings)
-        : mRefCnt(1),
-          mRule(aRule),
-          mInstantiation(aInstantiation),
-          mBindings(aBindings)
-        { MOZ_COUNT_CTOR(Match); }
-
-    PRBool operator==(const Match& aMatch) const {
-        return mRule == aMatch.mRule && mInstantiation == aMatch.mInstantiation; }
-
-    PRBool operator!=(const Match& aMatch) const {
-        return !(*this == aMatch); }
-
-    const Rule*   mRule;
-    Instantiation mInstantiation;
-    nsBindingSet  mBindings;
-
-    PRInt32 AddRef() { return ++mRefCnt; }
-
-    PRInt32 Release() {
-        NS_PRECONDITION(mRefCnt > 0, "bad refcnt");
-        PRInt32 refcnt = --mRefCnt;
-        if (refcnt == 0) delete this;
-        return refcnt; }
-
-protected:
-    ~Match() { MOZ_COUNT_DTOR(Match); }
-
-private:
-    Match(const Match& aMatch); // not to be implemented
-    void operator=(const Match& aMatch); // not to be implemented
-};
-
-
-#ifdef NEED_CPP_UNUSED_IMPLEMENTATIONS
-Match::Match(const Match& aMatch) {}
-void Match::operator=(const Match& aMatch) {}
-#endif
 
 //----------------------------------------------------------------------
 
 /**
- * A set of <rule, instantiation> tuples.
+ * A collection of unique Match objects.
  */
 class MatchSet
 {
@@ -623,7 +687,7 @@ private:
     void operator=(const MatchSet& aMatchSet); // XXX not to be implemented
 
 protected:
-    struct MatchList {
+    struct List {
         static void* operator new(size_t aSize, nsFixedSizeAllocator& aPool) {
             return aPool.Alloc(aSize); }
 
@@ -631,11 +695,11 @@ protected:
             nsFixedSizeAllocator::Free(aPtr, aSize); }
 
         Match* mMatch;
-        MatchList* mNext;
-        MatchList* mPrev;
+        List* mNext;
+        List* mPrev;
     };
 
-    MatchList mHead;
+    List mHead;
 
     // Lazily created when we pass a size threshold.
     PLHashTable* mMatches;
@@ -675,17 +739,17 @@ public:
     // Used to initialize the nsFixedSizeAllocator that's used to pool
     // entries.
     enum {
-        kEntrySize = sizeof(MatchList),
+        kEntrySize = sizeof(List),
         kIndexSize = sizeof(PLHashEntry)
     };
 
     class ConstIterator {
     protected:
         friend class Iterator; // XXXwaterson so broken.
-        MatchList* mCurrent;
+        List* mCurrent;
 
     public:
-        ConstIterator(MatchList* aCurrent) : mCurrent(aCurrent) {}
+        ConstIterator(List* aCurrent) : mCurrent(aCurrent) {}
 
         ConstIterator(const ConstIterator& aConstIterator)
             : mCurrent(aConstIterator.mCurrent) {}
@@ -726,11 +790,11 @@ public:
     };
 
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
-    ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(MatchList*, &mHead)); }
+    ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(List*, &mHead)); }
 
     class Iterator : public ConstIterator {
     public:
-        Iterator(MatchList* aCurrent) : ConstIterator(aCurrent) {}
+        Iterator(List* aCurrent) : ConstIterator(aCurrent) {}
 
         Iterator& operator++() {
             mCurrent = mCurrent->mNext;
@@ -770,7 +834,13 @@ public:
 
     PRBool Empty() const { return First() == Last(); }
 
-    PRBool Contains(const Match& aMatch) const;
+    PRInt32 Count() const { return mCount; }
+
+    ConstIterator Find(const Match& aMatch) const;
+    Iterator Find(const Match& aMatch);
+
+    PRBool Contains(const Match& aMatch) const {
+        return Find(aMatch) != Last(); }
 
     Match* FindMatchWithHighestPriority();
 
@@ -782,9 +852,13 @@ public:
     Iterator Add(nsFixedSizeAllocator& aPool, Match* aMatch) {
         return Insert(aPool, Last(), aMatch); }
 
+    nsresult CopyInto(MatchSet& aMatchSet, nsFixedSizeAllocator& aPool);
+
     void Clear();
 
     Iterator Erase(Iterator aIterator);
+
+    void Remove(Match* aMatch);
 };
 
 PLHashAllocOps MatchSet::gAllocOps = {
@@ -835,11 +909,11 @@ MatchSet::Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch)
             // storage, we can use a pointer to the Match object
             // (obtained from the iterator) as the key. We'll just
             // stuff something non-zero into the table as a value.
-            PL_HashTableAdd(mMatches, match.operator->(), NS_REINTERPRET_CAST(void*, 1));
+            PL_HashTableAdd(mMatches, match.operator->(), match.mCurrent);
         }
     }
 
-    MatchList* newelement = new (aPool) MatchList();
+    List* newelement = new (aPool) List();
     if (newelement) {
         newelement->mMatch = aMatch;
         aMatch->AddRef();
@@ -852,9 +926,20 @@ MatchSet::Insert(nsFixedSizeAllocator& aPool, Iterator aIterator, Match* aMatch)
         aIterator.mCurrent->mPrev = newelement;
 
         if (mMatches)
-            PL_HashTableAdd(mMatches, newelement->mMatch, NS_REINTERPRET_CAST(void*, 1));
+            PL_HashTableAdd(mMatches, newelement->mMatch, newelement);
     }
     return aIterator;
+}
+
+
+nsresult
+MatchSet::CopyInto(MatchSet& aMatchSet, nsFixedSizeAllocator& aPool)
+{
+    aMatchSet.Clear();
+    for (MatchSet::Iterator match = First(); match != Last(); ++match)
+        aMatchSet.Add(aPool, match.operator->());
+
+    return NS_OK;
 }
 
 void
@@ -865,22 +950,42 @@ MatchSet::Clear()
         Erase(match++);
 }
 
-
-PRBool
-MatchSet::Contains(const Match& aMatch) const
+MatchSet::ConstIterator
+MatchSet::Find(const Match& aMatch) const
 {
     if (mMatches) {
-        return PL_HashTableLookup(mMatches, &aMatch) != 0;
+        List* list = NS_STATIC_CAST(List*, PL_HashTableLookup(mMatches, &aMatch));
+        if (list)
+            return ConstIterator(list);
     }
     else {
         ConstIterator last = Last();
         for (ConstIterator i = First(); i != last; ++i) {
             if (*i == aMatch)
-                return PR_TRUE;
+                return i;
         }
     }
 
-    return PR_FALSE;
+    return Last();
+}
+
+MatchSet::Iterator
+MatchSet::Find(const Match& aMatch)
+{
+    if (mMatches) {
+        List* list = NS_STATIC_CAST(List*, PL_HashTableLookup(mMatches, &aMatch));
+        if (list)
+            return Iterator(list);
+    }
+    else {
+        Iterator last = Last();
+        for (Iterator i = First(); i != last; ++i) {
+            if (*i == aMatch)
+                return i;
+        }
+    }
+
+    return Last();
 }
 
 Match*
@@ -919,34 +1024,53 @@ MatchSet::Erase(Iterator aIterator)
     return result;
 }
 
+void
+MatchSet::Remove(Match* aMatch)
+{
+    Iterator doomed = Find(*aMatch);
+    if (doomed != Last())
+        Erase(doomed);
+}
+
 //----------------------------------------------------------------------
 
-class Key { // XXXwaterson this needs a better name
+/**
+ * A match "cluster" is a group of matches that all share the same
+ * values for their "container" (or parent) and "member" (or child)
+ * variables.
+ *
+ * Only one match in a cluster can be "active": the active match is
+ * the match that is used to generate content for the content model.
+ * The matches in a cluster "compete" amongst each other;
+ * specifically, the match that corresponds to the rule that is
+ * declared first wins, and becomes active.
+ */
+class ClusterKey {
 public:
-    Key() { MOZ_COUNT_CTOR(Key); }
+    ClusterKey() { MOZ_COUNT_CTOR(ClusterKey); }
 
-    Key(const Instantiation& aInstantiation, const Rule* aRule);
+    ClusterKey(const Instantiation& aInstantiation, const Rule* aRule);
 
-    Key(const Key& aKey)
+    ClusterKey(const ClusterKey& aKey)
         : mContainerVariable(aKey.mContainerVariable),
           mContainerValue(aKey.mContainerValue),
           mMemberVariable(aKey.mMemberVariable),
           mMemberValue(aKey.mMemberValue) {
-        MOZ_COUNT_CTOR(Key); }
+        MOZ_COUNT_CTOR(ClusterKey); }
 
-    ~Key() { MOZ_COUNT_DTOR(Key); }
+    ~ClusterKey() { MOZ_COUNT_DTOR(ClusterKey); }
 
-    Key& operator=(const Key& aKey) {
+    ClusterKey& operator=(const ClusterKey& aKey) {
         mContainerVariable = aKey.mContainerVariable;
         mContainerValue    = aKey.mContainerValue;
         mMemberVariable    = aKey.mMemberVariable;
         mMemberValue       = aKey.mMemberValue;
         return *this; }
 
-    PRBool operator==(const Key& aKey) const {
+    PRBool operator==(const ClusterKey& aKey) const {
         return Equals(aKey); }
 
-    PRBool operator!=(const Key& aKey) const {
+    PRBool operator!=(const ClusterKey& aKey) const {
         return !Equals(aKey); }
 
     PRInt32     mContainerVariable;
@@ -965,11 +1089,11 @@ public:
         temp2 |= PLHashNumber(mMemberVariable) << 16;
         return temp1 ^ temp2; }
 
-    static PLHashNumber HashKey(const void* aKey);
-    static PRIntn CompareKeys(const void* aLeft, const void* aRight);
+    static PLHashNumber HashClusterKey(const void* aKey);
+    static PRIntn CompareClusterKeys(const void* aLeft, const void* aRight);
 
 protected:
-    PRBool Equals(const Key& aKey) const {
+    PRBool Equals(const ClusterKey& aKey) const {
         return mContainerVariable == aKey.mContainerVariable &&
             mContainerValue == aKey.mContainerValue &&
             mMemberVariable == aKey.mMemberVariable &&
@@ -977,41 +1101,45 @@ protected:
 };
 
 
-Key::Key(const Instantiation& aInstantiation, const Rule* aRule)
+ClusterKey::ClusterKey(const Instantiation& aInstantiation, const Rule* aRule)
 {
-    PRBool hasbinding;
+    PRBool hasassignment;
 
     mContainerVariable = aRule->GetContainerVariable();
-    hasbinding = aInstantiation.mBindings.GetBindingFor(mContainerVariable, &mContainerValue);
-    NS_ASSERTION(hasbinding, "no binding for container variable");
+    hasassignment = aInstantiation.mAssignments.GetAssignmentFor(mContainerVariable, &mContainerValue);
+    NS_ASSERTION(hasassignment, "no assignment for container variable");
 
     mMemberVariable = aRule->GetMemberVariable();
-    hasbinding = aInstantiation.mBindings.GetBindingFor(mMemberVariable, &mMemberValue);
-    NS_ASSERTION(hasbinding, "no binding for member variable");
+    hasassignment = aInstantiation.mAssignments.GetAssignmentFor(mMemberVariable, &mMemberValue);
+    NS_ASSERTION(hasassignment, "no assignment for member variable");
 
-    MOZ_COUNT_CTOR(Key);
+    MOZ_COUNT_CTOR(ClusterKey);
 }
 
 
 PLHashNumber
-Key::HashKey(const void* aKey)
+ClusterKey::HashClusterKey(const void* aKey)
 {
-    const Key* key = NS_STATIC_CAST(const Key*, aKey);
+    const ClusterKey* key = NS_STATIC_CAST(const ClusterKey*, aKey);
     return key->Hash();
 }
 
 PRIntn
-Key::CompareKeys(const void* aLeft, const void* aRight)
+ClusterKey::CompareClusterKeys(const void* aLeft, const void* aRight)
 {
-    const Key* left  = NS_STATIC_CAST(const Key*, aLeft);
-    const Key* right = NS_STATIC_CAST(const Key*, aRight);
+    const ClusterKey* left  = NS_STATIC_CAST(const ClusterKey*, aLeft);
+    const ClusterKey* right = NS_STATIC_CAST(const ClusterKey*, aRight);
     return *left == *right;
 }
 
 
 //----------------------------------------------------------------------
 
-class KeySet {
+/**
+ * A collection of ClusterKey objects
+ */
+
+class ClusterKeySet {
 public:
     class ConstIterator;
     friend class ConstIterator;
@@ -1025,15 +1153,15 @@ protected:
         static void operator delete(void* aPtr, size_t aSize) {
             nsFixedSizeAllocator::Free(aPtr, aSize); }
 
-        Entry() { MOZ_COUNT_CTOR(KeySet::Entry); }
+        Entry() { MOZ_COUNT_CTOR(ClusterKeySet::Entry); }
 
-        Entry(const Key& aKey) : mKey(aKey) {
-            MOZ_COUNT_CTOR(KeySet::Entry); }
+        Entry(const ClusterKey& aKey) : mKey(aKey) {
+            MOZ_COUNT_CTOR(ClusterKeySet::Entry); }
 
-        ~Entry() { MOZ_COUNT_DTOR(KeySet::Entry); }
+        ~Entry() { MOZ_COUNT_DTOR(ClusterKeySet::Entry); }
 
         PLHashEntry mHashEntry;
-        Key         mKey;
+        ClusterKey  mKey;
         Entry*      mPrev;
         Entry*      mNext;
     };
@@ -1044,8 +1172,8 @@ protected:
     nsFixedSizeAllocator mPool;
 
 public:
-    KeySet();
-    ~KeySet();
+    ClusterKeySet();
+    ~ClusterKeySet();
 
     class ConstIterator {
     protected:
@@ -1070,10 +1198,10 @@ public:
             mCurrent = mCurrent->mNext;
             return result; }
 
-        const Key& operator*() const {
+        const ClusterKey& operator*() const {
             return mCurrent->mKey; }
 
-        const Key* operator->() const {
+        const ClusterKey* operator->() const {
             return &mCurrent->mKey; }
 
         PRBool operator==(const ConstIterator& aConstIterator) const {
@@ -1086,8 +1214,8 @@ public:
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(Entry*, &mHead)); }
 
-    PRBool Contains(const Key& aKey);
-    nsresult Add(const Key& aKey);
+    PRBool Contains(const ClusterKey& aKey);
+    nsresult Add(const ClusterKey& aKey);
 
 protected:
     static PLHashAllocOps gAllocOps;
@@ -1100,7 +1228,7 @@ protected:
 
     static PLHashEntry* PR_CALLBACK AllocEntry(void* aPool, const void* aKey) {
         nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-        const Key* key = NS_STATIC_CAST(const Key*, aKey);
+        const ClusterKey* key = NS_STATIC_CAST(const ClusterKey*, aKey);
         Entry* entry = new (*pool) Entry(*key);
         return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
 
@@ -1109,11 +1237,11 @@ protected:
             delete NS_REINTERPRET_CAST(Entry*, aEntry); }
 };
 
-PLHashAllocOps KeySet::gAllocOps = {
+PLHashAllocOps ClusterKeySet::gAllocOps = {
     AllocTable, FreeTable, AllocEntry, FreeEntry };
 
 
-KeySet::KeySet()
+ClusterKeySet::ClusterKeySet()
     : mTable(nsnull)
 {
     mHead.mPrev = mHead.mNext = &mHead;
@@ -1125,29 +1253,29 @@ KeySet::KeySet()
     static const PRInt32 kInitialPoolSize = 
         NS_SIZE_IN_HEAP(sizeof(Entry)) * kInitialEntries;
 
-    mPool.Init("KeySet", kBucketSizes, kNumBuckets, kInitialPoolSize);
+    mPool.Init("ClusterKeySet", kBucketSizes, kNumBuckets, kInitialPoolSize);
 
-    mTable = PL_NewHashTable(kInitialEntries, Key::HashKey, Key::CompareKeys,
+    mTable = PL_NewHashTable(kInitialEntries, ClusterKey::HashClusterKey, ClusterKey::CompareClusterKeys,
                              PL_CompareValues, &gAllocOps, &mPool);
 
-    MOZ_COUNT_CTOR(KeySet);
+    MOZ_COUNT_CTOR(ClusterKeySet);
 }
 
 
-KeySet::~KeySet()
+ClusterKeySet::~ClusterKeySet()
 {
     PL_HashTableDestroy(mTable);
-    MOZ_COUNT_DTOR(KeySet);
+    MOZ_COUNT_DTOR(ClusterKeySet);
 }
 
 PRBool
-KeySet::Contains(const Key& aKey)
+ClusterKeySet::Contains(const ClusterKey& aKey)
 {
     return nsnull != PL_HashTableLookup(mTable, &aKey);
 }
 
 nsresult
-KeySet::Add(const Key& aKey)
+ClusterKeySet::Add(const ClusterKey& aKey)
 {
     PLHashNumber hash = aKey.Hash();
     PLHashEntry** hep = PL_HashTableRawLookup(mTable, hash, &aKey);
@@ -1178,23 +1306,31 @@ KeySet::Add(const Key& aKey)
 //----------------------------------------------------------------------
 
 /**
- * Maintains the set of active instantiations.
+ * Maintains the set of active matches.
  */
 class ConflictSet
 {
 public:
-    ConflictSet();
-    ~ConflictSet();
+    ConflictSet()
+        : mClusters(nsnull),
+          mSupport(nsnull),
+          mBindingDependencies(nsnull) { Init(); }
+
+    ~ConflictSet() { Destroy(); }
 
     nsresult Add(Match* aMatch, PRBool* aDidAddKey);
 
-    void GetMatches(const Key& aKey, MatchSet** aMatchSet);
+    void GetMatchesForClusterKey(const ClusterKey& aKey, MatchSet** aMatchSet);
 
-    void GetMatches(nsIRDFResource* aResource, MatchSet** aMatchSet);
+    void GetMatchesWithBindingDependency(nsIRDFResource* aSource, MatchSet** aMatchSet);
 
     void Remove(const MemoryElement& aMemoryElement,
                 MatchSet& aNewMatches,
                 MatchSet& aRetractedMatches);
+
+    nsresult AddBindingDependency(Match* aMatch, nsIRDFResource* aResource);
+
+    nsresult RemoveBindingDependency(Match* aMatch, nsIRDFResource* aResource);
 
     void Clear();
 
@@ -1204,10 +1340,15 @@ protected:
     nsresult Init();
     nsresult Destroy();
 
-    // "Clusters" of matched rules for the same <content, member> pair
-    PLHashTable* mMatches;
+    nsresult ComputeNewMatches(MatchSet& aNewMatches, MatchSet& aRetractedMatches);
 
-    class MatchEntry {
+    // "Clusters" of matched rules for the same <content, member>
+    // pair. This table makes it O(1) to lookup all of the matches
+    // that are active for a cluster, so determining which is active
+    // is efficient.
+    PLHashTable* mClusters;
+
+    class ClusterEntry {
     public:
         static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
             return aAllocator.Alloc(aSize); }
@@ -1215,37 +1356,39 @@ protected:
         static void operator delete(void* aPtr, size_t aSize) {
             nsFixedSizeAllocator::Free(aPtr, aSize); }
 
-        MatchEntry() { MOZ_COUNT_CTOR(ConflictSet::MatchEntry); }
-        ~MatchEntry() { MOZ_COUNT_DTOR(ConflictSet::MatchEntry); }
+        ClusterEntry() { MOZ_COUNT_CTOR(ConflictSet::ClusterEntry); }
+        ~ClusterEntry() { MOZ_COUNT_DTOR(ConflictSet::ClusterEntry); }
 
-        struct PLHashEntry mHashEntry;
-        Key                mKey;
-        MatchSet           mMatchSet;
+        PLHashEntry mHashEntry;
+        ClusterKey  mKey;
+        MatchSet    mMatchSet;
     };
 
-    static PLHashAllocOps gMatchAllocOps;
+    static PLHashAllocOps gClusterAllocOps;
 
-    static void* PR_CALLBACK AllocMatchTable(void* aPool, PRSize aSize) {
+    static void* PR_CALLBACK AllocClusterTable(void* aPool, PRSize aSize) {
         return new char[aSize]; }
 
-    static void PR_CALLBACK FreeMatchTable(void* aPool, void* aItem) {
+    static void PR_CALLBACK FreeClusterTable(void* aPool, void* aItem) {
         delete[] NS_STATIC_CAST(char*, aItem); }
 
-    static PLHashEntry* PR_CALLBACK AllocMatchEntry(void* aPool, const void* aKey) {
+    static PLHashEntry* PR_CALLBACK AllocClusterEntry(void* aPool, const void* aKey) {
         nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
 
-        MatchEntry* entry = new (*pool) MatchEntry();
+        ClusterEntry* entry = new (*pool) ClusterEntry();
         if (! entry)
             return nsnull;
 
-        entry->mKey = *NS_STATIC_CAST(const Key*, aKey);
+        entry->mKey = *NS_STATIC_CAST(const ClusterKey*, aKey);
         return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
 
-    static void PR_CALLBACK FreeMatchEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag) {
+    static void PR_CALLBACK FreeClusterEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag) {
         if (aFlag == HT_FREE_ENTRY)
-            delete NS_REINTERPRET_CAST(MatchEntry*, aHashEntry); }
+            delete NS_REINTERPRET_CAST(ClusterEntry*, aHashEntry); }
 
-    // Maps a MemoryElement to the matches that it supports
+    // Maps a MemoryElement to the Match objects that it
+    // supports. This map allows us to efficiently remove rules from
+    // the conflict set when a MemoryElement is removed.
     PLHashTable* mSupport;
 
     class SupportEntry {
@@ -1263,9 +1406,9 @@ protected:
             delete mElement;
             MOZ_COUNT_DTOR(ConflictSet::SupportEntry); }
 
-        struct PLHashEntry mHashEntry;
-        MemoryElement*     mElement;
-        MatchSet           mMatchSet;
+        PLHashEntry    mHashEntry;
+        MemoryElement* mElement;
+        MatchSet       mMatchSet;
     };
 
     static PLHashAllocOps gSupportAllocOps;
@@ -1296,11 +1439,12 @@ protected:
     static PRIntn CompareMemoryElements(const void* aLeft, const void* aRight);
 
 
-    // Maps an RDF resource to a set of matches in which the resource
-    // participates
-    PLHashTable* mResources;
+    // Maps a MemoryElement to the Match objects whose bindings it
+    // participates in. This makes it possible to efficiently update a
+    // match when a binding changes.
+    PLHashTable* mBindingDependencies;
 
-    class ResourceEntry {
+    class BindingEntry {
     public:
         static void* operator new(size_t aSize, nsFixedSizeAllocator& aAllocator) {
             return aAllocator.Alloc(aSize); }
@@ -1308,65 +1452,73 @@ protected:
         static void operator delete(void* aPtr, size_t aSize) {
             nsFixedSizeAllocator::Free(aPtr, aSize); }
 
+        BindingEntry()
+            { MOZ_COUNT_CTOR(ConflictSet::BindingEntry); }
+
+        ~BindingEntry()
+            { MOZ_COUNT_DTOR(ConflictSet::BindingEntry); }
+
         PLHashEntry mHashEntry;
-        MatchSet    mMatches;
+        MatchSet mMatchSet;
     };
 
-    static PLHashAllocOps gResourceAllocOps;
+    static PLHashAllocOps gBindingAllocOps;
 
-    static void* PR_CALLBACK
-    AllocResourceTable(void* aPool, PRSize aSize) {
-        return new char[aSize]; };
+    static void* PR_CALLBACK AllocBindingTable(void* aPool, PRSize aSize) {
+        return new char[aSize]; }
 
-    static void PR_CALLBACK
-    FreeResourceTable(void* aPool, void* aItem) {
+    static void PR_CALLBACK FreeBindingTable(void* aPool, void* aItem) {
         delete[] NS_STATIC_CAST(char*, aItem); }
 
-    static PLHashEntry* PR_CALLBACK
-    AllocResourceEntry(void* aPool, const void* aKey) {
+    static PLHashEntry* PR_CALLBACK AllocBindingEntry(void* aPool, const void* aKey) {
         nsFixedSizeAllocator* pool = NS_STATIC_CAST(nsFixedSizeAllocator*, aPool);
-        ResourceEntry* entry = new (*pool) ResourceEntry;
+
+        BindingEntry* entry = new (*pool) BindingEntry();
+        if (! entry)
+            return nsnull;
+
+        nsIRDFResource* key = NS_STATIC_CAST(nsIRDFResource*, NS_CONST_CAST(void*, aKey));
+        NS_ADDREF(key);
+
         return NS_REINTERPRET_CAST(PLHashEntry*, entry); }
 
-    static void PR_CALLBACK
-    FreeResourceEntry(void* aPool, PLHashEntry* aEntry, PRUintn aFlag) {
-        if (aFlag == HT_FREE_ENTRY)
-            delete NS_REINTERPRET_CAST(ResourceEntry*, aEntry); }
+    static void PR_CALLBACK FreeBindingEntry(void* aPool, PLHashEntry* aHashEntry, PRUintn aFlag) {
+        if (aFlag == HT_FREE_ENTRY) {
+            nsIRDFResource* key = NS_STATIC_CAST(nsIRDFResource*, NS_CONST_CAST(void*, aHashEntry->key));
+            NS_RELEASE(key);
+            delete NS_REINTERPRET_CAST(BindingEntry*, aHashEntry);
+        } }
 
-    static PLHashNumber
-    HashPointer(const void* aKey) {
-        return PLHashNumber(aKey) >> 3; }
+    static PLHashNumber HashBindingElement(const void* aSupport) {
+        return PLHashNumber(aSupport) >> 3; }
+        
+    static PRIntn CompareBindingElements(const void* aLeft, const void* aRight) {
+        return aLeft == aRight; }
 
+    // The pool from whence all our slop will be allocated
     nsFixedSizeAllocator mPool;
 };
 
-// Allocation operations for the match table
-PLHashAllocOps ConflictSet::gMatchAllocOps = {
-    AllocMatchTable, FreeMatchTable, AllocMatchEntry, FreeMatchEntry };
+// Allocation operations for the cluster table
+PLHashAllocOps ConflictSet::gClusterAllocOps = {
+    AllocClusterTable, FreeClusterTable, AllocClusterEntry, FreeClusterEntry };
 
-// Allocation operations for the bindings table
+// Allocation operations for the support table
 PLHashAllocOps ConflictSet::gSupportAllocOps = {
     AllocSupportTable, FreeSupportTable, AllocSupportEntry, FreeSupportEntry };
 
-ConflictSet::ConflictSet()
-    : mMatches(nsnull), mSupport(nsnull)
-{
-    Init();
-}
-
-ConflictSet::~ConflictSet()
-{
-    Destroy();
-}
+// Allocation operations for the binding table
+PLHashAllocOps ConflictSet::gBindingAllocOps = {
+    AllocBindingTable, FreeBindingTable, AllocBindingEntry, FreeBindingEntry };
 
 
 nsresult
 ConflictSet::Init()
 {
     static const size_t kBucketSizes[] = {
-        sizeof(MatchEntry),
+        sizeof(ClusterEntry),
         sizeof(SupportEntry),
-        sizeof(ResourceEntry),
+        sizeof(BindingEntry),
         MatchSet::kEntrySize,
         MatchSet::kIndexSize
     };
@@ -1376,34 +1528,37 @@ ConflictSet::Init()
     static const PRInt32 kNumResourceElements = 64;
 
     static const PRInt32 kInitialSize =
-        (NS_SIZE_IN_HEAP(sizeof(MatchEntry)) +
+        (NS_SIZE_IN_HEAP(sizeof(ClusterEntry)) +
          NS_SIZE_IN_HEAP(sizeof(SupportEntry)) +
-         NS_SIZE_IN_HEAP(sizeof(ResourceEntry))) * kNumResourceElements +
+         NS_SIZE_IN_HEAP(sizeof(BindingEntry))) * kNumResourceElements +
         (NS_SIZE_IN_HEAP(MatchSet::kEntrySize) +
          NS_SIZE_IN_HEAP(MatchSet::kIndexSize)) * kNumResourceElements;
 
     mPool.Init("ConflictSet", kBucketSizes, kNumBuckets, kInitialSize);
 
-    mMatches = PL_NewHashTable(kNumResourceElements /* XXXwaterson we need a way to give a hint? */,
-                               Key::HashKey,
-                               Key::CompareKeys,
-                               PL_CompareValues,
-                               &gMatchAllocOps,
-                               &mPool);
+    mClusters =
+        PL_NewHashTable(kNumResourceElements /* XXXwaterson we need a way to give a hint? */,
+                        ClusterKey::HashClusterKey,
+                        ClusterKey::CompareClusterKeys,
+                        PL_CompareValues,
+                        &gClusterAllocOps,
+                        &mPool);
 
-    mSupport = PL_NewHashTable(kNumResourceElements, /* XXXwaterson need hint */
-                               HashMemoryElement,
-                               CompareMemoryElements,
-                               PL_CompareValues,
-                               &gSupportAllocOps,
-                               &mPool);
+    mSupport =
+        PL_NewHashTable(kNumResourceElements, /* XXXwaterson need hint */
+                        HashMemoryElement,
+                        CompareMemoryElements,
+                        PL_CompareValues,
+                        &gSupportAllocOps,
+                        &mPool);
 
-    mResources = PL_NewHashTable(kNumResourceElements /* XXX arbitrary */,
-                                 HashPointer,
-                                 PL_CompareValues,
-                                 PL_CompareValues,
-                                 &gResourceAllocOps,
-                                 &mPool);
+    mBindingDependencies =
+        PL_NewHashTable(kNumResourceElements /* XXX arbitrary */,
+                        HashBindingElement,
+                        CompareBindingElements,
+                        PL_CompareValues,
+                        &gBindingAllocOps,
+                        &mPool);
 
     return NS_OK;
 }
@@ -1413,22 +1568,25 @@ nsresult
 ConflictSet::Destroy()
 {
     PL_HashTableDestroy(mSupport);
-    PL_HashTableDestroy(mMatches);
-    PL_HashTableDestroy(mResources);
+    PL_HashTableDestroy(mClusters);
+    PL_HashTableDestroy(mBindingDependencies);
     return NS_OK;
 }
 
 nsresult
 ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
 {
+    // Add a match to the conflict set. This involves adding it to
+    // the cluster table, the support table, and the binding table.
+
     *aDidAddKey = PR_FALSE;
 
     // add the match to a table indexed by instantiation key
     {
-        Key key(aMatch->mInstantiation, aMatch->mRule);
+        ClusterKey key(aMatch->mInstantiation, aMatch->mRule);
 
         PLHashNumber hash = key.Hash();
-        PLHashEntry** hep = PL_HashTableRawLookup(mMatches, hash, &key);
+        PLHashEntry** hep = PL_HashTableRawLookup(mClusters, hash, &key);
 
         MatchSet* set;
 
@@ -1436,11 +1594,11 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
             set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
         }
         else {
-            PLHashEntry* he = PL_HashTableRawAdd(mMatches, hep, hash, &key, nsnull);
+            PLHashEntry* he = PL_HashTableRawAdd(mClusters, hep, hash, &key, nsnull);
             if (! he)
                 return NS_ERROR_OUT_OF_MEMORY;
 
-            MatchEntry* entry = NS_REINTERPRET_CAST(MatchEntry*, he);
+            ClusterEntry* entry = NS_REINTERPRET_CAST(ClusterEntry*, he);
 
             // Fixup the key in the hashentry to point to the value
             // that the specially-allocated entry contains (rather
@@ -1459,7 +1617,7 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
     }
 
 
-    // Add the match to a table indexed by memory element
+    // Add the match to a table indexed by supporting MemoryElement
     {
         MemoryElementSet::ConstIterator last = aMatch->mInstantiation.mSupport.Last();
         for (MemoryElementSet::ConstIterator element = aMatch->mInstantiation.mSupport.First(); element != last; ++element) {
@@ -1491,58 +1649,28 @@ ConflictSet::Add(Match* aMatch, PRBool* aDidAddKey)
         }
     }
 
-    {
-        nsBindingSet::ConstIterator last = aMatch->mBindings.Last();
-        for (nsBindingSet::ConstIterator binding = aMatch->mBindings.First(); binding != last; ++binding) {
-
-            if (binding->mValue.GetType() != Value::eISupports)
-                continue;
-
-            nsCOMPtr<nsIRDFResource> resource =
-                do_QueryInterface(NS_STATIC_CAST(nsISupports*, binding->mValue));
-
-            if (! resource)
-                continue;
-            
-            PLHashNumber hash = HashPointer(resource.get());
-            PLHashEntry** hep = PL_HashTableRawLookup(mResources, hash, resource.get());
-
-            MatchSet* set;
-            if (hep && *hep) {
-                set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
-            }
-            else {
-                PLHashEntry* he = PL_HashTableRawAdd(mResources, hep, hash, resource.get(), nsnull);
-                if (! he)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
-                // "Fix up" the entry's value to refer to the mMatch that's built
-                // in to the ResourceEntry object.
-                ResourceEntry* entry = NS_REINTERPRET_CAST(ResourceEntry*, he);
-                entry->mHashEntry.value = &entry->mMatches;
-
-                set = &entry->mMatches;
-            }
-
-            set->Add(mPool, aMatch);
-        }
-    }
+    // Add the match to a table indexed by bound MemoryElement
+    ResourceSet::ConstIterator last = aMatch->mBindingDependencies.Last();
+    for (ResourceSet::ConstIterator dep = aMatch->mBindingDependencies.First(); dep != last; ++dep)
+        AddBindingDependency(aMatch, *dep);
 
     return NS_OK;
 }
 
 
 void
-ConflictSet::GetMatches(const Key& aKey, MatchSet** aMatchSet)
+ConflictSet::GetMatchesForClusterKey(const ClusterKey& aKey, MatchSet** aMatchSet)
 {
-    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mMatches, &aKey));
+    // Retrieve all the matches in a cluster
+    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mClusters, &aKey));
 }
 
 
 void
-ConflictSet::GetMatches(nsIRDFResource* aResource, MatchSet** aMatchSet)
+ConflictSet::GetMatchesWithBindingDependency(nsIRDFResource* aResource, MatchSet** aMatchSet)
 {
-    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mResources, aResource));
+    // Retrieve all the matches whose bindings depend on the specified resource
+    *aMatchSet = NS_STATIC_CAST(MatchSet*, PL_HashTableLookup(mBindingDependencies, aResource));
 }
 
 
@@ -1551,39 +1679,103 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
                     MatchSet& aNewMatches,
                     MatchSet& aRetractedMatches)
 {
-    {
-        // First, use the memory-element-to-instantiations map to
-        // figure out what instantiations will be affected.
-        PLHashEntry** hep = PL_HashTableRawLookup(mSupport, aMemoryElement.Hash(), &aMemoryElement);
+    // Use the memory-element-to-match map to figure out what matches
+    // will be affected.
+    PLHashEntry** hep = PL_HashTableRawLookup(mSupport, aMemoryElement.Hash(), &aMemoryElement);
 
-        if (!hep || !*hep)
-            return;
+    if (!hep || !*hep)
+        return;
 
-        // 'set' gets the set of all instantiations containing the first binding.
-        MatchSet* set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+    // 'set' gets the set of all matches containing the first binding.
+    MatchSet* set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
 
-        // We'll iterate through these instantiations, only paying
-        // attention to instantiations that strictly contain the
-        // instantiation we're to remove.
-        for (MatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
-            // Note the retraction
-            aRetractedMatches.Add(mPool, match.operator->());
-        }
+    // We'll iterate through these matches, only paying attention to
+    // matches that strictly contain the MemoryElement we're about to
+    // remove.
+    for (MatchSet::Iterator match = set->First(); match != set->Last(); ++match) {
+        // Note the retraction, so we can compute new matches, later.
+        aRetractedMatches.Add(mPool, match.operator->());
 
-        // We'll eagerly remove it from the table.
-        PL_HashTableRawRemove(mSupport, hep, *hep);
+        // Keep the bindings table in sync, as well. Since this match
+        // is getting nuked, we need to nuke its bindings as well.
+        ResourceSet::ConstIterator last = match->mBindingDependencies.Last();
+        for (ResourceSet::ConstIterator dep = match->mBindingDependencies.First(); dep != last; ++dep)
+            RemoveBindingDependency(match.operator->(), *dep);
     }
 
-    // Now, update the key-to-instantiation map, and see if any new
-    // rules have been fired as a result of the retraction.
-    MatchSet::ConstIterator lastretraction = aRetractedMatches.Last();
-    for (MatchSet::ConstIterator retraction = aRetractedMatches.First(); retraction != lastretraction; ++retraction) {
-        Key key(retraction->mInstantiation, retraction->mRule);
-        PLHashEntry** hep = PL_HashTableRawLookup(mMatches, key.Hash(), &key);
+    // Unhash it
+    PL_HashTableRawRemove(mSupport, hep, *hep);
+
+    // Update the key-to-match map, and see if any new rules have been
+    // fired as a result of the retraction.
+    ComputeNewMatches(aNewMatches, aRetractedMatches);
+}
+
+nsresult
+ConflictSet::AddBindingDependency(Match* aMatch, nsIRDFResource* aResource)
+{
+    // Note a match's dependency on a source resource
+    PLHashNumber hash = HashBindingElement(aResource);
+    PLHashEntry** hep = PL_HashTableRawLookup(mBindingDependencies, hash, aResource);
+
+    MatchSet* set;
+
+    if (hep && *hep) {
+        set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+    }
+    else {
+        PLHashEntry* he = PL_HashTableRawAdd(mBindingDependencies, hep, hash, aResource, nsnull);
+
+        BindingEntry* entry = NS_REINTERPRET_CAST(BindingEntry*, he);
+        if (! entry)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        // Fixup the value.
+        entry->mHashEntry.value = set = &entry->mMatchSet;
+        
+    }
+
+    if (! set->Contains(*aMatch)) {
+        set->Add(mPool, aMatch);
+    }
+
+    return NS_OK;
+}
+
+nsresult
+ConflictSet::RemoveBindingDependency(Match* aMatch, nsIRDFResource* aResource)
+{
+    // Remove a match's dependency on a source resource
+    PLHashNumber hash = HashBindingElement(aResource);
+    PLHashEntry** hep = PL_HashTableRawLookup(mBindingDependencies, hash, aResource);
+
+    if (hep && *hep) {
+        MatchSet* set = NS_STATIC_CAST(MatchSet*, (*hep)->value);
+
+        set->Remove(aMatch);
+
+        if (set->Empty()) {
+            PL_HashTableRawRemove(mBindingDependencies, hep, *hep);
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+ConflictSet::ComputeNewMatches(MatchSet& aNewMatches, MatchSet& aRetractedMatches)
+{
+    // Given a set of just-retracted matches, compute the set of new
+    // matches that have been revealed, updating the key-to-match map
+    // as we go.
+    MatchSet::ConstIterator last = aRetractedMatches.Last();
+    for (MatchSet::ConstIterator retraction = aRetractedMatches.First(); retraction != last; ++retraction) {
+        ClusterKey key(retraction->mInstantiation, retraction->mRule);
+        PLHashEntry** hep = PL_HashTableRawLookup(mClusters, key.Hash(), &key);
 
         // XXXwaterson I'd managed to convince myself that this was really
         // okay, but now I can't remember why.
-        //NS_ASSERTION(hep && *hep, "mMatches corrupted");
+        //NS_ASSERTION(hep && *hep, "mClusters corrupted");
         if (!hep || !*hep)
             continue;
 
@@ -1605,9 +1797,11 @@ ConflictSet::Remove(const MemoryElement& aMemoryElement,
         }
 
         if (set->Empty()) {
-            PL_HashTableRawRemove(mMatches, hep, *hep);
+            PL_HashTableRawRemove(mClusters, hep, *hep);
         }
     }
+
+    return NS_OK;
 }
 
 
@@ -1639,9 +1833,238 @@ ConflictSet::CompareMemoryElements(const void* aLeft, const void* aRight)
     return *left == *right;
 }
 
-PLHashAllocOps ConflictSet::gResourceAllocOps = {
-    AllocResourceTable, FreeResourceTable, AllocResourceEntry, FreeResourceEntry };
 
+//----------------------------------------------------------------------
+
+nsresult
+Rule::InitBindings(ConflictSet& aConflictSet, Match* aMatch) const
+{
+    // Initialize a match's binding dependencies, so we can handle
+    // updates and queries later.
+
+    for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
+        // Add a dependency for bindings whose source variable comes
+        // from one of the <conditions>.
+        Value sourceValue;
+        PRBool hasBinding =
+            aMatch->mInstantiation.mAssignments.GetAssignmentFor(binding->mSourceVariable, &sourceValue);
+
+        if (hasBinding)
+            aConflictSet.AddBindingDependency(aMatch, VALUE_TO_IRDFRESOURCE(sourceValue));
+
+        // If this binding is dependant on another binding, then we
+        // need to eagerly compute its source variable's assignment.
+        if (binding->mParent) {
+            Value value;
+            ComputeAssignmentFor(aConflictSet, aMatch, binding->mSourceVariable, &value);
+        }
+    }
+
+    return NS_OK;
+}
+
+nsresult
+Rule::RecomputeBindings(ConflictSet& aConflictSet,
+                        Match* aMatch,
+                        nsIRDFResource* aSource,
+                        nsIRDFResource* aProperty,
+                        nsIRDFNode* aOldTarget,
+                        nsIRDFNode* aNewTarget,
+                        nsAssignmentSet& aModifiedBindings) const
+{
+    // Given a match with a source, property, old target, and new
+    // target, compute the minimal changes to the match's bindings.
+
+    // A temporary, mutable collection for holding all of the
+    // assignments that comprise the current match.
+    nsAutoVoidArray assignments;
+
+    {
+        // Collect -all- of the assignments in match into a temporary,
+        // mutable collection
+        nsAssignmentSet::ConstIterator last = aMatch->mAssignments.Last();
+        for (nsAssignmentSet::ConstIterator binding = aMatch->mAssignments.First(); binding != last; ++binding)
+            assignments.AppendElement(new nsAssignment(*binding));
+
+        // Truncate the match's assignments to only include
+        // assignments made via condition tests. We'll add back
+        // assignments as they are recomputed.
+        aMatch->mAssignments = aMatch->mInstantiation.mAssignments;
+    }
+
+    PRInt32 i;
+
+    // Iterate through each assignment, looking for the assignment
+    // whose value corresponds to the source of the assertion that's
+    // changing.
+    for (i = 0; i < assignments.Count(); ++i) {
+        nsAssignment* assignment = NS_STATIC_CAST(nsAssignment*, assignments[i]);
+        if ((assignment->mValue.GetType() == Value::eISupports) &&
+            (NS_STATIC_CAST(nsISupports*, assignment->mValue) == aSource)) {
+
+            // ...When we find it, look for binding's whose source
+            // variable depends on the assignment's variable
+            for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
+                if ((binding->mSourceVariable != assignment->mVariable) ||
+                    (binding->mProperty.get() != aProperty))
+                    continue;
+
+                // Found one. Now we iterate through the assignments,
+                // doing fixup.
+                for (PRInt32 j = 0; j < assignments.Count(); ++j) {
+                    nsAssignment* dependant = NS_STATIC_CAST(nsAssignment*, assignments[j]);
+                    if (dependant->mVariable == binding->mTargetVariable) {
+                        // The assignment's variable is the target
+                        // varible for the binding: we can update it
+                        // in-place.
+                        dependant->mValue = Value(aNewTarget);
+                        aModifiedBindings.Add(*dependant);
+                    }
+                    else if (DependsOn(dependant->mVariable, binding->mTargetVariable)) {
+                        // The assignment's variable depends on the
+                        // binding's target variable, which is
+                        // changing. Rip it out.
+                        aConflictSet.RemoveBindingDependency(aMatch, VALUE_TO_IRDFRESOURCE(dependant->mValue));
+
+                        delete dependant;
+                        assignments.RemoveElementAt(j--);
+                    }
+                }
+            }
+        }
+    }
+
+    // Now our set of assignments will contain the original
+    // assignments from the conditions, any unchanged assignments, and
+    // the single assignment that was updated by iterating through the
+    // bindings.
+    //
+    // Add these assignments *back* to the match (modulo the ones
+    // already in the conditions).
+    for (i = assignments.Count() - 1; i >= 0; --i) {
+        nsAssignment* assignment = NS_STATIC_CAST(nsAssignment*, assignments[i]);
+
+        // Only add it if it's not already in the match's conditions
+        if (! aMatch->mInstantiation.mAssignments.HasAssignment(*assignment)) {
+            aMatch->mAssignments.Add(*assignment);
+        }
+
+        delete assignment;
+    }
+
+    // Now we need to recompute values for any bindings that we've
+    // ripped out because of dependencies. This loop does this using a
+    // shotgun: it recomputes *all* the values that need to be
+    // recomputed.
+    //
+    // The bindings are arranged such that any binding that is
+    // dependent on another variable's value will appear later in the
+    // list. That means we can iterate through the list, binding
+    // variables to values, and not worry about any dependencies.
+    //
+    // XXXwaterson of course, this isn't quite true: see
+    // InstantiationNode::AddBinding().
+    for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
+        Value sourceValue;
+        PRBool hasSourceBinding =
+            aMatch->mAssignments.GetAssignmentFor(binding->mSourceVariable, &sourceValue);
+
+        Value targetValue;
+        PRBool hasTargetBinding =
+            aMatch->mAssignments.GetAssignmentFor(binding->mTargetVariable, &targetValue);
+
+        nsCOMPtr<nsIRDFResource> source;
+        nsCOMPtr<nsIRDFNode> target;
+
+        if (hasSourceBinding && hasTargetBinding) {
+            // This is a bit weird. Regardless, there's nothing for us
+            // to do. Both variables are bound, and we don't care if
+            // it's consistent or not.
+            continue;
+        }
+        else if (hasSourceBinding && (source = VALUE_TO_IRDFRESOURCE(sourceValue)) != nsnull) {
+            mDataSource->GetTarget(source,
+                                   binding->mProperty,
+                                   PR_TRUE,
+                                   getter_AddRefs(target));
+
+            nsAssignment assignment(binding->mTargetVariable, Value(target.get()));
+            aMatch->mAssignments.Add(assignment);
+            aModifiedBindings.Add(assignment);
+        }
+        else if (hasTargetBinding && (target = VALUE_TO_IRDFNODE(targetValue)) != nsnull) {
+            mDataSource->GetSource(binding->mProperty,
+                                   target,
+                                   PR_TRUE,
+                                   getter_AddRefs(source));
+
+            nsAssignment assignment(binding->mSourceVariable, Value(source.get()));
+            aMatch->mAssignments.Add(assignment);
+            aModifiedBindings.Add(assignment);
+        }
+        else {
+            // oh well, no big deal.
+            continue;
+        }
+
+        // If we get here, then we need to add a dependency on the
+        // `source' resource for this match.
+        aConflictSet.AddBindingDependency(aMatch, source);
+    }
+
+    return NS_OK;
+}
+
+PRBool
+Rule::ComputeAssignmentFor(ConflictSet& aConflictSet,
+                           Match* aMatch,
+                           PRInt32 aVariable,
+                           Value* aValue) const
+{
+    // Compute the value assignment for an arbitrary variable in a
+    // match. Potentially fill in dependencies if they haven't been
+    // resolved yet.
+    for (Binding* binding = mBindings; binding != nsnull; binding = binding->mNext) {
+        if (binding->mTargetVariable != aVariable)
+            continue;
+
+        // Potentially recur to find the value of the source.
+        //
+        // XXXwaterson this is sloppy, and could be dealt with more
+        // directly by following binding->mParent.
+        Value sourceValue;
+        PRBool hasSourceAssignment =
+            aMatch->GetAssignmentFor(aConflictSet, binding->mSourceVariable, &sourceValue);
+
+        if (! hasSourceAssignment)
+            return PR_FALSE;
+
+        nsCOMPtr<nsIRDFNode> target;
+
+        nsIRDFResource* source = VALUE_TO_IRDFRESOURCE(sourceValue);
+
+        if (source) {
+            mDataSource->GetTarget(source,
+                                   binding->mProperty,
+                                   PR_TRUE,
+                                   getter_AddRefs(target));
+
+            // Store the assignment in the match so we won't need to
+            // retrieve it again.
+            nsAssignment assignment(binding->mTargetVariable, Value(target.get()));
+            aMatch->mAssignments.Add(assignment);
+
+            // Add a dependency on the source, so we'll recompute the
+            // assignment if somebody tweaks it.
+            aConflictSet.AddBindingDependency(aMatch, source);
+        }
+
+        *aValue = target.get();
+        return PR_TRUE;
+    }
+
+    return PR_FALSE;
+}
 
 
 //----------------------------------------------------------------------
@@ -1682,25 +2105,27 @@ InstantiationNode::Propogate(const InstantiationSet& aInstantiations, void* aClo
     // node. Extend it with any <bindings> that we might have, add it
     // to the conflict set, and the set of new <content, member>
     // pairs.
-    KeySet* newkeys = NS_STATIC_CAST(KeySet*, aClosure);
+    ClusterKeySet* newkeys = NS_STATIC_CAST(ClusterKeySet*, aClosure);
 
     InstantiationSet::ConstIterator last = aInstantiations.Last();
     for (InstantiationSet::ConstIterator inst = aInstantiations.First(); inst != last; ++inst) {
-        nsBindingSet bindings = inst->mBindings;
+        nsAssignmentSet assignments = inst->mAssignments;
 
-        mRule->ComputeBindings(bindings);
-
-        Match* match = new (mConflictSet.GetPool()) Match(mRule, *inst, bindings);
+        Match* match = new (mConflictSet.GetPool()) Match(mRule, *inst, assignments);
         if (! match)
             return NS_ERROR_OUT_OF_MEMORY;
+
+        mRule->InitBindings(mConflictSet, match);
 
         PRBool didAddKey;
         mConflictSet.Add(match, &didAddKey);
 
+        // Give back our "local" reference. The conflict set will have
+        // taken what it needs.
         match->Release();
 
         if (didAddKey) {
-            newkeys->Add(Key(*inst, mRule));
+            newkeys->Add(ClusterKey(*inst, mRule));
         }
     }
     
@@ -1724,7 +2149,7 @@ public:
      * Determine wether the node can propogate an assertion
      * with the specified source, property, and target. If the
      * assertion can be propogated, aInitialBindings will be
-     * initialized with appropriate variable-to-value bindings
+     * initialized with appropriate variable-to-value assignments
      * to allow the rule network to start a constrain and propogate
      * search from this node in the network.
      *
@@ -1759,7 +2184,7 @@ public:
  * when building "resumes" on a partially-built content element, the builder
  * will walk upwards in the content tree to find the first element with an
  * 'id' attribute. This element is assumed to be the "resource element",
- * and allows the content builder to access the Match (variable bindings
+ * and allows the content builder to access the Match (variable assignments
  * and rule information).
  */
 class ContentSupportMap {
@@ -1961,7 +2386,10 @@ public:
     CompileRules();
 
     nsresult
-    CompileSimpleRule(nsIContent* aRule, PRInt32 aPriorty, InnerNode* aParentNode);
+    CompileSimpleRule(nsIContent* aRuleElement, PRInt32 aPriorty, InnerNode* naParentNode);
+
+    nsresult
+    AddSimpleRuleBindings(Rule* aRule, nsIContent* aElement);
 
     nsresult
     CompileExtendedRule(nsIContent* aRule, PRInt32 aPriorty, InnerNode* aParentNode);
@@ -1998,12 +2426,12 @@ public:
 
     nsresult
     SubstituteText(nsIRDFResource* aResource,
-                   const Match* aMatch,
+                   Match* aMatch,
                    nsString& aAttributeValue);
 
     nsresult
-    SubstituteTextForBinding(const Match* aMatch,
-                             nsString& aAttributeValue);
+    SubstituteTextForValue(const Value& aValue,
+                           nsString& aAttributeValue);
 
     nsresult
     BuildContentFromTemplate(nsIContent *aTemplateNode,
@@ -2019,30 +2447,26 @@ public:
     nsresult
     AddPersistentAttributes(nsIContent* aTemplateNode, nsIRDFResource* aResource, nsIContent* aRealNode);
 
-    enum UpdateAction { eSet, eClear };
-
     nsresult
     SynchronizeAll(nsIRDFResource* aSource,
                    nsIRDFResource* aProperty,
-                   nsIRDFNode* aTarget,
-                   UpdateAction aAction);
+                   nsIRDFNode* aOldTarget,
+                   nsIRDFNode* aNewTarget);
 
     nsresult
     SynchronizeUsingTemplate(nsIContent *aTemplateNode,
                              nsIContent* aRealNode,
-                             UpdateAction aAction,
-                             const Match* aMatch,
-                             nsIRDFResource* aProperty,
-                             nsIRDFNode* aValue);
+                             const Rule* aRule,
+                             const nsAssignmentSet& aModifiedBindings);
 
     nsresult
     Propogate(nsIRDFResource* aSource,
               nsIRDFResource* aProperty,
               nsIRDFNode* aTarget,
-              KeySet& aNewKeys);
+              ClusterKeySet& aNewKeys);
 
     nsresult
-    FireNewlyMatchedRules(const KeySet& aNewKeys);
+    FireNewlyMatchedRules(const ClusterKeySet& aNewKeys);
 
     nsresult
     Retract(nsIRDFResource* aSource,
@@ -2140,7 +2564,7 @@ protected:
 	nsRDFSortState			sortState;
 
     // For the rule network
-    PropertySet   mContainmentProperties;
+    ResourceSet   mContainmentProperties;
     PRBool        mRulesCompiled;
     nsRuleNetwork mRules;
     PRInt32       mContentVar;
@@ -2410,7 +2834,7 @@ RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, voi
             sourceValue = mSource;
         }
         else {
-            hasSourceBinding = inst->mBindings.GetBindingFor(mSourceVariable, &sourceValue);
+            hasSourceBinding = inst->mAssignments.GetAssignmentFor(mSourceVariable, &sourceValue);
         }
 
         PRBool hasTargetBinding;
@@ -2421,11 +2845,11 @@ RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, voi
             targetValue = mTarget;
         }
         else {
-            hasTargetBinding = inst->mBindings.GetBindingFor(mTargetVariable, &targetValue);
+            hasTargetBinding = inst->mAssignments.GetAssignmentFor(mTargetVariable, &targetValue);
         }
 
         if (hasSourceBinding && hasTargetBinding) {
-            // it's a consistency check. see if we have a binding that is consistent
+            // it's a consistency check. see if we have a assignment that is consistent
             PRBool hasAssertion;
             rv = mDataSource->HasAssertion(VALUE_TO_IRDFRESOURCE(sourceValue),
                                            mProperty,
@@ -2506,10 +2930,10 @@ RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, voi
                 }
 
                 // Copy the original instantiation, and add it to the
-                // instantiation set with the new binding that we've
+                // instantiation set with the new assignment that we've
                 // introduced. Ownership will be transferred to the
                 Instantiation newinst = *inst;
-                newinst.AddBinding(variable, value);
+                newinst.AddAssignment(variable, value);
 
                 Element* element = new (mConflictSet.GetPool())
                     Element(VALUE_TO_IRDFRESOURCE(sourceValue),
@@ -2528,7 +2952,7 @@ RDFPropertyTestNode::FilterInstantiations(InstantiationSet& aInstantiations, voi
             aInstantiations.Erase(inst--);
         }
         else {
-            // Neither source nor target binding!
+            // Neither source nor target assignment!
             NS_ERROR("can't do open ended queries like that!");
             return NS_ERROR_UNEXPECTED;
         }
@@ -2569,11 +2993,11 @@ RDFPropertyTestNode::CanPropogate(nsIRDFResource* aSource,
     }
 
     if (mSourceVariable) {
-        aInitialBindings.AddBinding(mSourceVariable, Value(aSource));
+        aInitialBindings.AddAssignment(mSourceVariable, Value(aSource));
     }
 
     if (mTargetVariable) {
-        aInitialBindings.AddBinding(mTargetVariable, Value(aTarget));
+        aInitialBindings.AddAssignment(mTargetVariable, Value(aTarget));
     }
 
     return PR_TRUE;
@@ -2600,7 +3024,7 @@ public:
     RDFContainerMemberTestNode(InnerNode* aParent,
                                ConflictSet& aConflictSet,
                                nsIRDFDataSource* aDataSource,
-                               const PropertySet& aMembershipProperties,
+                               const ResourceSet& aMembershipProperties,
                                PRInt32 aContainerVariable,
                                PRInt32 aMemberVariable)
         : RDFTestNode(aParent),
@@ -2669,7 +3093,7 @@ public:
 protected:
     ConflictSet& mConflictSet;
     nsCOMPtr<nsIRDFDataSource> mDataSource;
-    const PropertySet& mMembershipProperties;
+    const ResourceSet& mMembershipProperties;
     PRInt32 mContainerVariable;
     PRInt32 mMemberVariable;
 };
@@ -2684,12 +3108,12 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
         PRBool hasContainerBinding;
         Value containerValue;
-        hasContainerBinding = inst->mBindings.GetBindingFor(mContainerVariable, &containerValue);
+        hasContainerBinding = inst->mAssignments.GetAssignmentFor(mContainerVariable, &containerValue);
 
         nsCOMPtr<nsIRDFContainer> rdfcontainer;
 
         if (hasContainerBinding) {
-            // If we have a container binding, then see if the
+            // If we have a container assignment, then see if the
             // container is an RDF container (bag, seq, alt), and if
             // so, wrap it.
             PRBool isRDFContainer;
@@ -2709,10 +3133,10 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
 
         PRBool hasMemberBinding;
         Value memberValue;
-        hasMemberBinding = inst->mBindings.GetBindingFor(mMemberVariable, &memberValue);
+        hasMemberBinding = inst->mAssignments.GetAssignmentFor(mMemberVariable, &memberValue);
 
         if (hasContainerBinding && hasMemberBinding) {
-            // it's a consistency check. see if we have a binding that is consistent
+            // it's a consistency check. see if we have a assignment that is consistent
             PRBool isconsistent = PR_FALSE;
 
             if (rdfcontainer) {
@@ -2733,7 +3157,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
                 // Othewise, we'll need to grovel through the
                 // membership properties to see if we have an
                 // assertion that indicates membership.
-                for (PropertySet::ConstIterator property = mMembershipProperties.First();
+                for (ResourceSet::ConstIterator property = mMembershipProperties.First();
                      property != mMembershipProperties.Last();
                      ++property) {
                     PRBool hasAssertion;
@@ -2774,7 +3198,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
         }
 
         if (hasContainerBinding && rdfcontainer) {
-            // We've got a container binding, and the container is
+            // We've got a container assignment, and the container is
             // bound to an RDF container. Add each member as a new
             // instantiation.
             nsCOMPtr<nsISimpleEnumerator> elements;
@@ -2798,7 +3222,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
                     return NS_ERROR_UNEXPECTED;
 
                 Instantiation newinst = *inst;
-                newinst.AddBinding(mMemberVariable, Value(node.get()));
+                newinst.AddAssignment(mMemberVariable, Value(node.get()));
 
                 Element* element = new (mConflictSet.GetPool())
                     Element(VALUE_TO_IRDFRESOURCE(containerValue), node);
@@ -2813,7 +3237,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
         }
 
         if (hasMemberBinding) {
-            // Oh, this is so nasty. If we have a member binding, then
+            // Oh, this is so nasty. If we have a member assignment, then
             // grovel through each one of our inbound arcs to see if
             // any of them are ordinal properties (like an RDF
             // container might have). If so, walk it backwards to get
@@ -2879,7 +3303,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
 
                         // Add a new instantiation
                         Instantiation newinst = *inst;
-                        newinst.AddBinding(mContainerVariable, Value(source.get()));
+                        newinst.AddAssignment(mContainerVariable, Value(source.get()));
 
                         Element* element = new (mConflictSet.GetPool())
                             Element(source, VALUE_TO_IRDFNODE(memberValue));
@@ -2900,7 +3324,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
             // it's an open ended query on the container or member. go
             // through our containment properties to see if anything
             // applies.
-            for (PropertySet::ConstIterator property = mMembershipProperties.First();
+            for (ResourceSet::ConstIterator property = mMembershipProperties.First();
                  property != mMembershipProperties.Last();
                  ++property) {
                 nsCOMPtr<nsISimpleEnumerator> results;
@@ -2949,10 +3373,10 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
                     }
 
                     // Copy the original instantiation, and add it to the
-                    // instantiation set with the new binding that we've
+                    // instantiation set with the new assignment that we've
                     // introduced. Ownership will be transferred to the
                     Instantiation newinst = *inst;
-                    newinst.AddBinding(variable, value);
+                    newinst.AddAssignment(variable, value);
 
                     Element* element;
                     if (hasContainerBinding) {
@@ -2977,7 +3401,7 @@ RDFContainerMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiatio
         }
 
         if (! hasContainerBinding && ! hasMemberBinding) {
-            // Neither container nor member binding!
+            // Neither container nor member assignment!
             NS_ERROR("can't do open ended queries like that!");
             return NS_ERROR_UNEXPECTED;
         }
@@ -3023,8 +3447,8 @@ RDFContainerMemberTestNode::CanPropogate(nsIRDFResource* aSource,
     }
 
     if (canpropogate) {
-        aInitialBindings.AddBinding(mContainerVariable, Value(aSource));
-        aInitialBindings.AddBinding(mMemberVariable, Value(aTarget));
+        aInitialBindings.AddAssignment(mContainerVariable, Value(aSource));
+        aInitialBindings.AddAssignment(mMemberVariable, Value(aTarget));
         return PR_TRUE;
     }
 
@@ -3064,7 +3488,7 @@ public:
     RDFContainerInstanceTestNode(InnerNode* aParent,
                                  ConflictSet& aConflictSet,
                                  nsIRDFDataSource* aDataSource,
-                                 const PropertySet& aMembershipProperties,
+                                 const ResourceSet& aMembershipProperties,
                                  PRInt32 aContainerVariable,
                                  Test aContainer,
                                  Test aEmpty)
@@ -3142,7 +3566,7 @@ public:
 protected:
     ConflictSet& mConflictSet;
     nsCOMPtr<nsIRDFDataSource> mDataSource;
-    const PropertySet& mMembershipProperties;
+    const ResourceSet& mMembershipProperties;
     PRInt32 mContainerVariable;
     Test mContainer;
     Test mEmpty;
@@ -3156,7 +3580,7 @@ RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiat
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
         Value value;
-        if (! inst->mBindings.GetBindingFor(mContainerVariable, &value)) {
+        if (! inst->mAssignments.GetAssignmentFor(mContainerVariable, &value)) {
             NS_ERROR("can't do unbounded container testing");
             return NS_ERROR_UNEXPECTED;
         }
@@ -3190,7 +3614,7 @@ RDFContainerInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiat
             else {
                 empty = eTrue;
 
-                for (PropertySet::ConstIterator property = mMembershipProperties.First();
+                for (ResourceSet::ConstIterator property = mMembershipProperties.First();
                      property != mMembershipProperties.Last();
                      ++property) {
                     nsCOMPtr<nsIRDFNode> target;
@@ -3311,7 +3735,7 @@ RDFContainerInstanceTestNode::CanPropogate(nsIRDFResource* aSource,
     }
 
     if (canpropogate) {
-        aInitialBindings.AddBinding(mContainerVariable, Value(aSource));
+        aInitialBindings.AddAssignment(mContainerVariable, Value(aSource));
         return PR_TRUE;
     }
 
@@ -3367,7 +3791,7 @@ ContentTagTestNode::FilterInstantiations(InstantiationSet& aInstantiations, void
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
         Value value;
-        if (! inst->mBindings.GetBindingFor(mContentVariable, &value)) {
+        if (! inst->mAssignments.GetAssignmentFor(mContentVariable, &value)) {
             NS_ERROR("cannot handle open-ended tag name query");
             return NS_ERROR_UNEXPECTED;
         }
@@ -3856,7 +4280,7 @@ nsresult
 nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
                                 nsIRDFResource* aProperty,
                                 nsIRDFNode* aTarget,
-                                KeySet& aNewKeys)
+                                ClusterKeySet& aNewKeys)
 {
     // Find the "dominating" tests that could be used to propogate the
     // assertion we've just received. (Test A "dominates" test B if A
@@ -3924,7 +4348,7 @@ nsXULTemplateBuilder::Propogate(nsIRDFResource* aSource,
 
 
 nsresult
-nsXULTemplateBuilder::FireNewlyMatchedRules(const KeySet& aNewKeys)
+nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
 {
     // Iterate through newly added keys to determine which rules fired.
     //
@@ -3933,10 +4357,10 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const KeySet& aNewKeys)
     // to track those?
     nsresult rv;
 
-    KeySet::ConstIterator last = aNewKeys.Last();
-    for (KeySet::ConstIterator key = aNewKeys.First(); key != last; ++key) {
+    ClusterKeySet::ConstIterator last = aNewKeys.Last();
+    for (ClusterKeySet::ConstIterator key = aNewKeys.First(); key != last; ++key) {
         MatchSet* matches;
-        mConflictSet.GetMatches(*key, &matches);
+        mConflictSet.GetMatchesForClusterKey(*key, &matches);
 
         NS_ASSERTION(matches != nsnull, "no matched rules for new key");
         if (! matches)
@@ -3954,26 +4378,26 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const KeySet& aNewKeys)
         if (bestmatch != lastmatch) {
             Value value;
             nsIContent* content;
-            PRBool hasbinding;
+            PRBool hasassignment;
 
             if (lastmatch) {
                 // See if we need to yank anything out of the content
                 // model to handle the newly matched rule. If the
-                // instantiation has a binding for the content
+                // instantiation has a assignment for the content
                 // variable, there's content that's been built that we
                 // need to pull.
-                hasbinding = lastmatch->mBindings.GetBindingFor(mContentVar, &value);
-                NS_ASSERTION(hasbinding, "no content binding");
-                if (! hasbinding)
+                hasassignment = lastmatch->mAssignments.GetAssignmentFor(mContentVar, &value);
+                NS_ASSERTION(hasassignment, "no content assignment");
+                if (! hasassignment)
                     return NS_ERROR_UNEXPECTED;
 
                 nsIContent* parent = VALUE_TO_ICONTENT(value);
 
                 PRInt32 membervar = lastmatch->mRule->GetMemberVariable();
 
-                hasbinding = lastmatch->mBindings.GetBindingFor(membervar, &value);
-                NS_ASSERTION(hasbinding, "no member binding");
-                if (! hasbinding)
+                hasassignment = lastmatch->mAssignments.GetAssignmentFor(membervar, &value);
+                NS_ASSERTION(hasassignment, "no member assignment");
+                if (! hasassignment)
                     return NS_ERROR_UNEXPECTED;
 
                 nsIRDFResource* member = VALUE_TO_IRDFRESOURCE(value);
@@ -3982,10 +4406,10 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const KeySet& aNewKeys)
             }
 
             // Get the content node to which we were bound
-            hasbinding = bestmatch->mBindings.GetBindingFor(mContentVar, &value);
+            hasassignment = bestmatch->mAssignments.GetAssignmentFor(mContentVar, &value);
 
-            NS_ASSERTION(hasbinding, "no content binding");
-            if (! hasbinding)
+            NS_ASSERTION(hasassignment, "no content assignment");
+            if (! hasassignment)
                 continue;
 
             content = VALUE_TO_ICONTENT(value);
@@ -4027,14 +4451,14 @@ nsXULTemplateBuilder::OnAssert(nsIRDFResource* aSource,
 
     LOG("onassert", aSource, aProperty, aTarget);
 
-    KeySet newkeys;
+    ClusterKeySet newkeys;
     rv = Propogate(aSource, aProperty, aTarget, newkeys);
     if (NS_FAILED(rv)) return rv;
 
     rv = FireNewlyMatchedRules(newkeys);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SynchronizeAll(aSource, aProperty, aTarget, eSet);
+    rv = SynchronizeAll(aSource, aProperty, nsnull, aTarget);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -4060,10 +4484,10 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
             MatchSet::Iterator last = retractions.Last();
             for (MatchSet::Iterator match = retractions.First(); match != last; ++match) {
                 Value memberval;
-                match->mBindings.GetBindingFor(match->mRule->GetMemberVariable(), &memberval);
+                match->mAssignments.GetAssignmentFor(match->mRule->GetMemberVariable(), &memberval);
 
                 Value contentval;
-                match->mBindings.GetBindingFor(mContentVar, &contentval);
+                match->mAssignments.GetAssignmentFor(mContentVar, &contentval);
 
                 nsIContent* content = VALUE_TO_ICONTENT(contentval);
                 if (! content)
@@ -4110,7 +4534,7 @@ nsXULTemplateBuilder::OnUnassert(nsIRDFResource* aSource,
     rv = Retract(aSource, aProperty, aTarget);
     if (NS_FAILED(rv)) return rv;
 
-    rv = SynchronizeAll(aSource, aProperty, aTarget, eClear);
+    rv = SynchronizeAll(aSource, aProperty, aTarget, nsnull);
     if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
@@ -4145,7 +4569,7 @@ nsXULTemplateBuilder::OnChange(nsIRDFResource* aSource,
     nsresult rv;
 
 
-    rv = SynchronizeAll(aSource, aProperty, aNewTarget, eSet);
+    rv = SynchronizeAll(aSource, aProperty, aOldTarget, aNewTarget);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -4197,42 +4621,40 @@ nsXULTemplateBuilder::IsIgnoreableAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttr
 
 nsresult
 nsXULTemplateBuilder::SubstituteText(nsIRDFResource* aResource,
-                                     const Match* aMatch,
+                                     Match* aMatch,
                                      nsString& aAttributeValue)
 {
-    nsresult rv;
-
+    // See if it's the special value "..." or "rdf:*", in which case
+    // we need to substitute the URI of aResource.
     if (aAttributeValue.EqualsWithConversion("...") || aAttributeValue.EqualsWithConversion("rdf:*")) {
         const char *uri = nsnull;
         aResource->GetValueConst(&uri);
         aAttributeValue.AssignWithConversion(uri);
+        return NS_OK;
     }
-    else if (aMatch->mRule && aAttributeValue[0] == PRUnichar('?')) {
-        SubstituteTextForBinding(aMatch, aAttributeValue);
-    }
-    else if (aAttributeValue.Find("rdf:") == 0) {
-        // found an attribute which wants to bind its value to RDF so
-        // look it up in the graph
-        aAttributeValue.Cut(0,4);
 
-        nsCOMPtr<nsIRDFResource> property;
-        rv = gRDFService->GetUnicodeResource(aAttributeValue.GetUnicode(), getter_AddRefs(property));
-        if (NS_FAILED(rv)) return rv;
+    // See if it's a variable, in which case we'll use the match
+    // assignments to compute the value.
+    if (aAttributeValue[0] == PRUnichar('?') || aAttributeValue.Find("rdf:") == 0) {
+        // Grab the variable out of the attribute value
+        PRInt32 var = aMatch->mRule->LookupSymbol(aAttributeValue);
 
-        nsCOMPtr<nsIRDFNode> valueNode;
-        rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(valueNode));
-        if (NS_FAILED(rv)) return rv;
+        // ...then truncate the value, in case we need to leave the party early.
+        aAttributeValue.Truncate();
 
-        if ((rv != NS_RDF_NO_VALUE) && (valueNode)) {
-            rv = gXULUtils->GetTextForNode(valueNode, aAttributeValue);
-            if (NS_FAILED(rv)) return rv;
-        }
-        else {
-            aAttributeValue.Truncate();
-        }
-    }
-    else {
-        // Nothing to do!
+        // If there was no variable, bail.
+        if (! var)
+            return NS_OK;
+
+        Value value;
+        PRBool hasassignment =
+            aMatch->GetAssignmentFor(mConflictSet, var, &value);
+
+        // If there was no assignment for the variable, bail.
+        if (! hasassignment)
+            return NS_OK;
+
+        SubstituteTextForValue(value, aAttributeValue);
     }
 
     return NS_OK;
@@ -4240,41 +4662,25 @@ nsXULTemplateBuilder::SubstituteText(nsIRDFResource* aResource,
 
 
 nsresult
-nsXULTemplateBuilder::SubstituteTextForBinding(const Match* aMatch, nsString& aAttributeValue)
+nsXULTemplateBuilder::SubstituteTextForValue(const Value& aValue, nsString& aResult)
 {
-    // Grab the variable out of the attribute value
-    PRInt32 var = aMatch->mRule->LookupSymbol(aAttributeValue);
+    aResult.Truncate();
 
-    // ...then truncate the value, in case we need to leave the party early.
-    aAttributeValue.Truncate();
-
-    // If there was no variable, bail.
-    if (! var)
-        return NS_OK;
-
-    Value value;
-    PRBool hasbinding =
-        aMatch->mBindings.GetBindingFor(var, &value);
-
-    // If there was no binding for the variable, bail.
-    if (! hasbinding)
-        return NS_OK;
-
-    switch (value.GetType()) {
+    switch (aValue.GetType()) {
     case Value::eISupports:
         {
-            nsISupports* isupports = NS_STATIC_CAST(nsISupports*, value); // no addref
+            nsISupports* isupports = NS_STATIC_CAST(nsISupports*, aValue); // no addref
 
             nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
             if (node) {
-                gXULUtils->GetTextForNode(node, aAttributeValue);
+                gXULUtils->GetTextForNode(node, aResult);
             }
         }
-    return NS_OK;
+        break;
 
     case Value::eString:
-        aAttributeValue = NS_STATIC_CAST(const PRUnichar*, value);
-        return NS_OK;
+        aResult = NS_STATIC_CAST(const PRUnichar*, aValue);
+        break;
 
     default:
         break;
@@ -4437,7 +4843,7 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
                 // XXXwaterson hack! refactor me please
                 Value member;
-                aMatch->mBindings.GetBindingFor(aMatch->mRule->GetMemberVariable(), &member);
+                aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetMemberVariable(), &member);
                 aChild = VALUE_TO_IRDFRESOURCE(member);
             }
             else if (uri.EqualsWithConversion("...") || uri.EqualsWithConversion("rdf:*")) {
@@ -4810,33 +5216,51 @@ nsXULTemplateBuilder::AddPersistentAttributes(nsIContent* aTemplateNode,
 nsresult
 nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
                                      nsIRDFResource* aProperty,
-                                     nsIRDFNode* aTarget,
-                                     UpdateAction aAction)
+                                     nsIRDFNode* aOldTarget,
+                                     nsIRDFNode* aNewTarget)
 {
-    // Find all the elements in the content model that correspond to
-    // aSource: for each, we'll try to build XUL children if
-    // appropriate.
+    // Update each match that contains <aSource, aProperty, aOldTarget>.
     nsresult rv;
 
+    // Get all the matches whose assignments are currently supported
+    // by aSource and aProperty: we'll need to recompute them.
     MatchSet* matches;
-    mConflictSet.GetMatches(aSource, &matches);
-    if (! matches)
+    mConflictSet.GetMatchesWithBindingDependency(aSource, &matches);
+    if (! matches || matches->Empty())
         return NS_OK;
 
-    MatchSet::Iterator last = matches->Last();
-    for (MatchSet::Iterator match = matches->First(); match != last; ++match) {
+    // Since we'll actually be manipulating the match set as we
+    // iterate through it, we need to copy it into our own private
+    // area before performing the iteration.
+    static const size_t kBucketSizes[] = { MatchSet::kEntrySize, MatchSet::kIndexSize };
+    static const PRInt32 kNumBuckets = sizeof(kBucketSizes) / sizeof(size_t);
+
+    PRInt32 poolsize =
+        (NS_SIZE_IN_HEAP(MatchSet::kEntrySize)
+         + NS_SIZE_IN_HEAP(MatchSet::kIndexSize)) * matches->Count();
+
+    nsFixedSizeAllocator pool;
+    pool.Init("nsXULTemplateBuilder::SynchronizeAll", kBucketSizes, kNumBuckets, poolsize);
+
+    MatchSet copy;
+    matches->CopyInto(copy, pool);
+
+    for (MatchSet::Iterator match = copy.First(); match != copy.Last(); ++match) {
         const Rule* rule = match->mRule;
 
-        // Recompute the bindings.
-        //
-        // XXXwaterson ComputeBindings() should return the minimal set
-        // of bindings that actually need to be updated, so we can
-        // pass it down to SynchronizeUsingTemplate().
-        match->mBindings = match->mInstantiation.mBindings;
-        rule->ComputeBindings(match->mBindings);
+        // Recompute the assignments. This will replace aOldTarget with
+        // aNewTarget, which will disrupt the match set.
+        nsAssignmentSet modified;
+        rule->RecomputeBindings(mConflictSet, match.operator->(),
+                                aSource, aProperty, aOldTarget, aNewTarget,
+                                modified);
+
+        // If nothing changed, then continue on to the next match.
+        if (modified.IsEmpty())
+            continue;
 
         Value memberValue;
-        match->mBindings.GetBindingFor(rule->GetMemberVariable(), &memberValue);
+        match->mAssignments.GetAssignmentFor(rule->GetMemberVariable(), &memberValue);
 
         nsIRDFResource* resource = VALUE_TO_IRDFRESOURCE(memberValue);
         NS_ASSERTION(resource != nsnull, "no content");
@@ -4854,7 +5278,7 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 #endif
 
         Value parentValue;
-        match->mBindings.GetBindingFor(mContentVar, &parentValue);
+        match->mAssignments.GetAssignmentFor(mContentVar, &parentValue);
 
         nsIContent* parent = VALUE_TO_ICONTENT(parentValue);
 
@@ -4917,7 +5341,7 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
                 return NS_ERROR_UNEXPECTED;
 
             // this node was created by a XUL template, so update it accordingly
-            rv = SynchronizeUsingTemplate(templateNode, element, aAction, match.operator->(), aProperty, aTarget);
+            rv = SynchronizeUsingTemplate(templateNode, element, rule, modified);
             if (NS_FAILED(rv)) return rv;
         }
         
@@ -4938,10 +5362,8 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
 nsresult
 nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                                nsIContent* aRealElement,
-                                               UpdateAction aAction,
-                                               const Match* aMatch,
-                                               nsIRDFResource* aProperty,
-                                               nsIRDFNode* aValue)
+                                               const Rule* aRule,
+                                               const nsAssignmentSet& aModifiedBindings)
 {
     nsresult rv;
 
@@ -4972,41 +5394,24 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
                                              attribValue);
             if (NS_FAILED(rv)) return rv;
 
-            if (rv != NS_CONTENT_ATTR_HAS_VALUE)
+            // Make sure it's a variable
+            if (attribValue[0] != PRUnichar('?') && attribValue.Find("rdf:") != 0)
                 continue;
 
-            if (aMatch->mRule && attribValue[0] == PRUnichar('?')) {
-                // XXXwaterson this will update every single attribute
-                // on the template. Figure out how to communicate only
-                // the bindings that have changed.
-                SubstituteTextForBinding(aMatch, attribValue);
-            }
-            else if (attribValue.Find("rdf:") == 0) {
-                // found an attribute which wants to bind its value
-                // to RDF so look it up in the graph
-                attribValue.Cut(0,4);
+            // See if its value has changed.
+            PRInt32 var = aRule->LookupSymbol(attribValue);
 
-                nsCOMPtr<nsIRDFResource> property;
-                rv = gRDFService->GetUnicodeResource(attribValue.GetUnicode(),
-                                                     getter_AddRefs(property));
-                if (NS_FAILED(rv)) return rv;
+            Value value;
+            PRBool hasassignment = aModifiedBindings.GetAssignmentFor(var, &value);
 
-                // Check to see if it's the property that just
-                // changed. If not, continue on without touching the
-                // value.
-                if (property.get() != aProperty)
-                    continue;
-
-                rv = gXULUtils->GetTextForNode(aValue, attribValue);
-                if (NS_FAILED(rv)) return rv;
-            }
-            else {
-                // It's not a variable that we need to substitute any
-                // value for. Don't touch it.
+            // Nope, the value didn't change: it's not one of the "modified assignments"
+            if (! hasassignment)
                 continue;
-            }
 
-            if ((attribValue.Length() > 0) && (aAction == eSet)) {
+            // Get the new text
+            SubstituteTextForValue(value, attribValue);
+
+            if (attribValue.Length() > 0) {
                 aRealElement->SetAttribute(attribNameSpaceID,
                                            attribName,
                                            attribValue,
@@ -5053,7 +5458,7 @@ nsXULTemplateBuilder::SynchronizeUsingTemplate(nsIContent* aTemplateNode,
             if (! realKid)
                 break;
 
-            rv = SynchronizeUsingTemplate(tmplKid, realKid, aAction, aMatch, aProperty, aValue);
+            rv = SynchronizeUsingTemplate(tmplKid, realKid, aRule, aModifiedBindings);
             if (NS_FAILED(rv)) return rv;
         }
     }
@@ -5249,27 +5654,27 @@ nsXULTemplateBuilder::CreateContainerContents(nsIContent* aElement,
         // (/me crosses fingers...)
     }
 
-    // Seed the rule network with bindings for the content and
+    // Seed the rule network with assignments for the content and
     // container variables
     //
     // XXXwaterson could this code be shared with
     // nsXULTemplateBuilder::Propogate()?
     Instantiation seed;
-    seed.AddBinding(mContentVar, Value(aElement));
+    seed.AddAssignment(mContentVar, Value(aElement));
 
     InstantiationSet instantiations;
     instantiations.Append(seed);
 
-    // Propogate the bindings through the network
-    KeySet newkeys;
+    // Propogate the assignments through the network
+    ClusterKeySet newkeys;
     rv = mRules.GetRoot()->Propogate(instantiations, &newkeys);
     if (NS_FAILED(rv)) return rv;
 
     // Iterate through newly added keys to determine which rules fired
-    KeySet::ConstIterator last = newkeys.Last();
-    for (KeySet::ConstIterator key = newkeys.First(); key != last; ++key) {
+    ClusterKeySet::ConstIterator last = newkeys.Last();
+    for (ClusterKeySet::ConstIterator key = newkeys.First(); key != last; ++key) {
         MatchSet* matches;
-        mConflictSet.GetMatches(*key, &matches);
+        mConflictSet.GetMatchesForClusterKey(*key, &matches);
 
         if (! matches)
             continue;
@@ -5726,7 +6131,7 @@ nsXULTemplateBuilder::SetEmpty(nsIContent *aElement, const Match* aMatch)
         return NS_ERROR_NULL_POINTER;
 
     Value containerval;
-    aMatch->mBindings.GetBindingFor(aMatch->mRule->GetContainerVariable(), &containerval);
+    aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetContainerVariable(), &containerval);
 
     nsAutoString oldvalue;
     aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldvalue);
@@ -5814,10 +6219,10 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
     InstantiationSet::Iterator last = aInstantiations.Last();
     for (InstantiationSet::Iterator inst = aInstantiations.First(); inst != last; ++inst) {
         Value contentValue;
-        PRBool hasContentBinding = inst->mBindings.GetBindingFor(mContentVariable, &contentValue);
+        PRBool hasContentBinding = inst->mAssignments.GetAssignmentFor(mContentVariable, &contentValue);
 
         Value idValue;
-        PRBool hasIdBinding = inst->mBindings.GetBindingFor(mIdVariable, &idValue);
+        PRBool hasIdBinding = inst->mAssignments.GetAssignmentFor(mIdVariable, &idValue);
 
         if (hasContentBinding && hasIdBinding) {
             // both are bound, consistency check
@@ -5845,7 +6250,7 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
 
             if (resource) {
                 Instantiation newinst = *inst;
-                newinst.AddBinding(mIdVariable, Value(resource.get()));
+                newinst.AddAssignment(mIdVariable, Value(resource.get()));
 
                 Element* element = new (mConflictSet.GetPool())
                     Element(VALUE_TO_ICONTENT(contentValue));
@@ -5880,7 +6285,7 @@ nsXULTemplateBuilder::ContentIdTestNode::FilterInstantiations(InstantiationSet& 
 
                 if (IsElementContainedBy(content, mRoot)) {
                     Instantiation newinst = *inst;
-                    newinst.AddBinding(mContentVariable, Value(content.get()));
+                    newinst.AddAssignment(mContentVariable, Value(content.get()));
 
                     Element* element = new (mConflictSet.GetPool()) Element(content);
 
@@ -6173,7 +6578,7 @@ nsXULTemplateBuilder::CompileRules()
 
 
 nsresult
-nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
+nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRuleElement,
                                         PRInt32 aPriority,
                                         InnerNode* aParentNode)
 {
@@ -6183,13 +6588,13 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
     PRBool hasContainerTest = PR_FALSE;
 
     PRInt32 count;
-    aRule->GetAttributeCount(count);
+    aRuleElement->GetAttributeCount(count);
 
     // Add constraints for the LHS
     for (PRInt32 i = 0; i < count; ++i) {
         PRInt32 attrNameSpaceID;
         nsCOMPtr<nsIAtom> attr;
-        rv = aRule->GetAttributeNameAt(i, attrNameSpaceID, *getter_AddRefs(attr));
+        rv = aRuleElement->GetAttributeNameAt(i, attrNameSpaceID, *getter_AddRefs(attr));
         if (NS_FAILED(rv)) return rv;
 
         // Note: some attributes must be skipped on XUL template rule subtree
@@ -6208,7 +6613,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             continue;
 
         nsAutoString value;
-        rv = aRule->GetAttribute(attrNameSpaceID, attr, value);
+        rv = aRuleElement->GetAttribute(attrNameSpaceID, attr, value);
         if (NS_FAILED(rv)) return rv;
 
         TestNode* testnode = nsnull;
@@ -6237,7 +6642,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             RDFContainerInstanceTestNode::Test iscontainer =
                 RDFContainerInstanceTestNode::eDontCare;
 
-            rv = aRule->GetAttribute(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
+            rv = aRuleElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::iscontainer, value);
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -6252,7 +6657,7 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
             RDFContainerInstanceTestNode::Test isempty =
                 RDFContainerInstanceTestNode::eDontCare;
 
-            rv = aRule->GetAttribute(kNameSpaceID_None, nsXULAtoms::isempty, value);
+            rv = aRuleElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::isempty, value);
             if (NS_FAILED(rv)) return rv;
 
             if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
@@ -6313,12 +6718,14 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
     }
 
     // Create the rule.
-    Rule* rule = new Rule(mDB, aRule, aPriority);
+    Rule* rule = new Rule(mDB, aRuleElement, aPriority);
     if (! rule)
         return NS_ERROR_OUT_OF_MEMORY;
 
     rule->SetContainerVariable(mContainerVar);
     rule->SetMemberVariable(mMemberVar);
+
+    AddSimpleRuleBindings(rule, aRuleElement);
 
     // The InstantiationNode owns the rule now.
     InstantiationNode* instnode =
@@ -6335,7 +6742,78 @@ nsXULTemplateBuilder::CompileSimpleRule(nsIContent* aRule,
 
 
 nsresult
-nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
+nsXULTemplateBuilder::AddSimpleRuleBindings(Rule* aRule, nsIContent* aElement)
+{
+    // Crawl the content tree of a "simple" rule, adding a variable
+    // assignment for any attribute whose value is "rdf:".
+
+    nsAutoVoidArray elements;
+
+    elements.AppendElement(aElement);
+    while (elements.Count()) {
+        // Pop the next element off the stack
+        PRInt32 i = elements.Count() - 1;
+        nsIContent* element = NS_STATIC_CAST(nsIContent*, elements[i]);
+        elements.RemoveElementAt(i);
+
+        // Iterate through its attributes, looking for substitutions
+        // that we need to add as bindings.
+        PRInt32 count;
+        element->GetAttributeCount(count);
+
+        for (i = 0; i < count; ++i) {
+            PRInt32 nameSpaceID;
+            nsCOMPtr<nsIAtom> attr;
+
+            element->GetAttributeNameAt(i, nameSpaceID, *getter_AddRefs(attr));
+
+            nsAutoString value;
+            element->GetAttribute(nameSpaceID, attr, value);
+
+            // If it's not "rdf:something", or it's "rdf:*", then
+            // mosey along. We don't care.
+            if (value.Find("rdf:") != 0 || value[4] == PRUnichar('*'))
+                continue;
+
+            // Check to see if we've already seen this property. We'll
+            // know because we'll have already added a symbol for it.
+            PRInt32 var = aRule->LookupSymbol(value);
+            if (var != 0)
+                continue;
+
+            // Strip it down to the raw RDF property
+            nsAutoString propertyStr;
+            value.Right(propertyStr, value.Length() - 4);
+
+            nsCOMPtr<nsIRDFResource> property;
+            gRDFService->GetUnicodeResource(propertyStr.GetUnicode(), getter_AddRefs(property));
+
+            // Create a new variable that we'll binding to the
+            // property's value
+            mRules.CreateVariable(&var);
+            aRule->AddSymbol(value, var);
+
+            // In the simple syntax, the binding is always from the
+            // member variable, through the property, to the target.
+            aRule->AddBinding(mMemberVar, property, var);
+        }
+
+        // Push kids onto the stack, and search them next.
+        element->ChildCount(count);
+
+        while (--count >= 0) {
+            nsCOMPtr<nsIContent> child;
+            element->ChildAt(count, *getter_AddRefs(child));
+            elements.AppendElement(child);
+        }
+    }
+
+    return NS_OK;
+}
+
+
+nsresult
+nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRuleElement,
                                           PRInt32 aPriority,
                                           InnerNode* aParentNode)
 {
@@ -6345,7 +6823,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
     nsresult rv;
 
     nsCOMPtr<nsIContent> conditions;
-    gXULUtils->FindChildByTag(aRule, kNameSpaceID_XUL, nsXULAtoms::conditions,
+    gXULUtils->FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::conditions,
                               getter_AddRefs(conditions));
 
     if (! conditions) {
@@ -6356,7 +6834,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
     }
 
     nsCOMPtr<nsIContent> action;
-    gXULUtils->FindChildByTag(aRule, kNameSpaceID_XUL, nsXULAtoms::action,
+    gXULUtils->FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::action,
                               getter_AddRefs(action));
 
     if (! action) {
@@ -6387,7 +6865,7 @@ nsXULTemplateBuilder::CompileExtendedRule(nsIContent* aRule,
     
     // If we've got bindings, add 'em.
     nsCOMPtr<nsIContent> bindings;
-    gXULUtils->FindChildByTag(aRule, kNameSpaceID_XUL, nsXULAtoms::bindings,
+    gXULUtils->FindChildByTag(aRuleElement, kNameSpaceID_XUL, nsXULAtoms::bindings,
                               getter_AddRefs(bindings));
 
     if (bindings) {
@@ -6713,8 +7191,7 @@ nsXULTemplateBuilder::CompileContentCondition(Rule* aRule,
 
 
 nsresult
-nsXULTemplateBuilder::CompileBindings(Rule* aRule,
-                                      nsIContent* aBindings)
+nsXULTemplateBuilder::CompileBindings(Rule* aRule, nsIContent* aBindings)
 {
     // Add an extended rule's bindings.
     nsresult rv;
