@@ -143,9 +143,9 @@
             </action>
           </rule>
         </template>
-        <treecols>
+        <treecolgroup>
           <treecol flex="1"/>
-        </treecols>
+        </treecolgroup>
          <!-- We explicitly create a 'treechildren' so we can refer
               to it from the script -->
         <treechildren id="current-panels-root"/> 
