@@ -2088,7 +2088,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
             nsIView *listView; 
             listFrame->GetView(&listView);
             NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
-            listView->SetViewFlags(NS_VIEW_FLAG_DONT_CHECK_CHILDREN);
+            listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
               // Create a place holder frame for the dropdown list
             nsIFrame* placeholderFrame = nsnull;
@@ -2153,7 +2153,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*  aPresContext,
         nsIView *listView; 
         listFrame->GetView(&listView);
         NS_ASSERTION(nsnull != listView,"ListFrame's view is nsnull");
-        listView->SetViewFlags(NS_VIEW_FLAG_DONT_CHECK_CHILDREN);
+        listView->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
         aFrameHasBeenInitialized = PR_TRUE;
       }
       NS_RELEASE(select);

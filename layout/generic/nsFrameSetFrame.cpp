@@ -1411,7 +1411,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext&            aPresContext,
       mDragger = aBorder;
 
       //XXX This should go away!  Border should have own view instead
-      view->SetViewFlags(NS_VIEW_FLAG_DONT_CHECK_CHILDREN);
+      view->SetViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
 
       // can't set it to this event's point - it is not in framesetframe coords
       mLastDragPoint.MoveTo(NULL_POINT_X, NULL_POINT_Y);
@@ -1503,7 +1503,7 @@ nsHTMLFramesetFrame::EndMouseDrag()
       viewMan->GrabMouseEvents(nsnull, ignore);
       NS_RELEASE(viewMan);
       //XXX This should go away!  Border should have own view instead
-      view->ClearViewFlags(NS_VIEW_FLAG_DONT_CHECK_CHILDREN);
+      view->ClearViewFlags(NS_VIEW_PUBLIC_FLAG_DONT_CHECK_CHILDREN);
     }
   }
   gDragInProgress = PR_FALSE;
