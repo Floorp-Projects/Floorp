@@ -19,6 +19,7 @@
 #define IDD_TAB_TESTS                   136
 #define IDD_TAB_DOM                     137
 #define IDR_DHTMLEDIT                   138
+#define IDI_TESTPARTIAL                 140
 #define IDC_URL                         1000
 #define IDC_GO                          1001
 #define IDC_BROWSER_MARKER              1002
@@ -41,6 +42,7 @@
 #define IDC_CHECK1                      1021
 #define IDC_EDIT1                       1022
 #define IDC_EDITMODE                    1023
+#define IDC_BUTTON1                     1024
 #define IDB_BOLD                        32771
 #define IDB_ITALIC                      32772
 #define IDB_UNDERLINE                   32773
@@ -54,9 +56,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        140
+#define _APS_NEXT_RESOURCE_VALUE        141
 #define _APS_NEXT_COMMAND_VALUE         32779
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1025
 #define _APS_NEXT_SYMED_VALUE           107
 #endif
 #endif

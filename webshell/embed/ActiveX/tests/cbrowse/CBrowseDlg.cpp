@@ -6,6 +6,7 @@
 #include "cbrowse.h"
 #include "CBrowseDlg.h"
 #include "ControlEventSink.h"
+#include "..\..\DHTMLCmdIds.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -80,6 +81,9 @@ BEGIN_MESSAGE_MAP(CBrowseDlg, CDialog)
 	ON_WM_SIZE()
 	ON_BN_CLICKED(IDC_EDITMODE, OnEditMode)
 	//}}AFX_MSG_MAP
+	ON_COMMAND(IDB_BOLD, OnEditBold)
+	ON_COMMAND(IDB_ITALIC, OnEditItalic)
+	ON_COMMAND(IDB_UNDERLINE, OnEditUnderline)
 END_MESSAGE_MAP()
 
 #define IL_CLOSEDFOLDER	0
@@ -87,6 +91,7 @@ END_MESSAGE_MAP()
 #define IL_TEST			2
 #define IL_TESTFAILED	3
 #define IL_TESTPASSED	4
+#define IL_TESTPARTIAL  5
 #define IL_NODE			IL_TEST
 
 /////////////////////////////////////////////////////////////////////////////
@@ -132,7 +137,12 @@ BOOL CBrowseDlg::OnInitDialog()
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TEST));
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTFAILED));
 	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTPASSED));
-	
+	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_TESTPARTIAL));
+
+	// Set up the editor bar
+	m_EditBar.Create(this);
+	m_EditBar.LoadToolBar(IDR_DHTMLEDIT);
+	m_EditBar.SetWindowPos(&wndTop, 0, 0, 400, 40, SWP_SHOWWINDOW);
 
 	// Set up some URLs. The first couple are internal
 	m_cmbURLs.AddString(m_szTestURL);
@@ -689,7 +699,7 @@ void CBrowseDlg::OnDestroy()
 	delete this;	
 }
 
-void CBrowseDlg::OnEditMode() 
+void CBrowseDlg::ExecOleCommand(const GUID *pguidGroup, DWORD nCmdId)
 {
 	CComPtr<IUnknown> spUnkBrowser;
 	m_pControlSite->GetControlUnknown(&spUnkBrowser);
@@ -697,12 +707,39 @@ void CBrowseDlg::OnEditMode()
 	CIPtr(IOleCommandTarget) spCommandTarget = spUnkBrowser;
 	if (spCommandTarget)
 	{
-		DWORD nCmdID = (m_btnEditMode.GetCheck()) ? IDM_EDITMODE : IDM_BROWSEMODE;
-		spCommandTarget->Exec(&CGID_MSHTML, nCmdID, 0, NULL, NULL);
+		HRESULT hr = spCommandTarget->Exec(&CGID_MSHTML, nCmdId, 0, NULL, NULL);
+		OutputString(_T("Exec(%d), returned %08x"), (int) nCmdId, hr);
 	}
+	else
+	{
+		OutputString(_T("Error: Browser does not support IOleCommandTarget"));
+	}
+}
+
+
+void CBrowseDlg::OnEditMode() 
+{
+	DWORD nCmdID = (m_btnEditMode.GetCheck()) ? IDM_EDITMODE : IDM_BROWSEMODE;
+	ExecOleCommand(&CGID_MSHTML, nCmdID);
 
 //	if (m_pControlSite)
 //	{
 //		m_pControlSite->SetAmbientUserMode((m_btnEditMode.GetCheck() == 0) ? FALSE : TRUE);
 //	}
+}
+
+
+void CBrowseDlg::OnEditBold()
+{
+	ExecOleCommand(&CGID_MSHTML, IDM_BOLD);
+}
+
+void CBrowseDlg::OnEditItalic()
+{
+	ExecOleCommand(&CGID_MSHTML, IDM_ITALIC);
+}
+
+void CBrowseDlg::OnEditUnderline()
+{
+	ExecOleCommand(&CGID_MSHTML, IDM_UNDERLINE);
 }
