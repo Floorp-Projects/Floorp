@@ -78,8 +78,10 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
     if (NS_FAILED(rv)) 
         return rv;
      
-    if (topic)
+    if (topic) {
         nsAllocator::Free(topic);
+	topic=0;
+	}
     
     if (PL_strcmp(topic, mTopic)) 
         return NS_OK;
