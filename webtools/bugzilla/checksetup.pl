@@ -3878,16 +3878,18 @@ if ($sth->rows == 0) {
     system("stty","-echo");  # disable input echoing
 
     while( $pass1 ne $pass2 ) {
-      while( $pass1 eq "" || $pass1 !~ /^[a-zA-Z0-9-_]{3,16}$/ ) {
+      while( $pass1 eq "" || $pass1 !~ /^[[:print:]]{3,16}$/ ) {
         print "Enter a password for the administrator account: ";
         $pass1 = $answer{'ADMIN_PASSWORD'} 
             || ($silent && die("cant preload ADMIN_PASSWORD")) 
             || <STDIN>;
         chomp $pass1;
         if(! $pass1 ) {
-          print "\n\nIt's just plain stupid to not have a password.  Try again!\n";
+          print "\n\nAn empty password is a security risk. Try again!\n";
         } elsif ( $pass1 !~ /^.{3,16}$/ ) {
           print "\n\nThe password must be 3-16 characters in length.\n";
+        } elsif ( $pass1 !~ /^[[:print:]]{3,16}$/ ) {
+          print "\n\nThe password contains non-printable characters.\n";
         }
       }
       print "\nPlease retype the password to verify: ";
