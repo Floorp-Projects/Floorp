@@ -44,18 +44,6 @@
       element.setAttribute("style","display: none;" );
       element.setAttribute("disabled","true" );
     }
-    // Remove the popup entries from the task menu
-    function HidePopups(hide) {
-      var element;
-      element = document.getElementById("popup");
-      if (hide) {
-        element.setAttribute("hidden", "true");
-        element.setAttribute("disabled", "true");
-      } else {
-        element.removeAttribute("hidden");
-        element.removeAttribute("disabled");
-      }
-    }
 
     // for some unexplainable reason, CheckForImage() keeps getting called repeatedly
     // as we mouse over the task menu.  IMO, that shouldn't be happening.  To avoid
@@ -81,61 +69,24 @@
       }
 
       // determine current state (blocked or unblocked) and hide appropriate menu item
-      var blocked, enableElement, disableElement;
+      var blocked;
 
       blocked = 
         permissionmanager.testForBlocking(window._content.location, COOKIEPERMISSION);
-      if (blocked) {
-        disableElement = document.getElementById("BlockCookies");
-        enableElement = document.getElementById("AllowCookies");
-      } else {
-        disableElement = document.getElementById("AllowCookies");
-        enableElement = document.getElementById("BlockCookies");
-      }
-      disableElement.setAttribute("disabled","true");
-      enableElement.removeAttribute("disabled");
+      enableElement("AllowCookies", blocked);
+      enableElement("BlockCookies", !blocked);
 
       blocked =
         permissionmanager.testForBlocking(window._content.location, IMAGEPERMISSION);
-      if (blocked) {
-        disableElement = document.getElementById("BlockImages");
-        enableElement = document.getElementById("AllowImages");
-      } else {
-        disableElement = document.getElementById("AllowImages");
-        enableElement = document.getElementById("BlockImages");
-      }
-      disableElement.setAttribute("disabled","true");
-      enableElement.removeAttribute("disabled");
+      enableElement("AllowImages", blocked);
+      enableElement("BlockImages", !blocked);
 
-      if (popupmanager.testPermission(getBrowser().currentURI) == Components.interfaces.nsIPopupWindowManager.eDisallow) {
-        disableElement = document.getElementById("BlockPopups");
-        enableElement = document.getElementById("AllowPopups");
-      } else {
-        disableElement = document.getElementById("AllowPopups");
-        enableElement = document.getElementById("BlockPopups");
-      }
-      disableElement.setAttribute("disabled","true");
-      if (popupmanager.testSuitability(getBrowser().currentURI))
-        enableElement.removeAttribute("disabled");
-      else
-        enableElement.setAttribute("disabled","true");
+      SetPopupMenuEnabledState();
 
       var pref;
       pref = Components.classes['@mozilla.org/preferences-service;1'];
       pref = pref.getService();
       pref = pref.QueryInterface(Components.interfaces.nsIPrefBranch);
-
-      // hide the popup manager menus if the prefs aren't exactly right.
-      // it'd be nicer to leave it always visible and adjust prefs to match
-      // any user selections
-      try {
-        var hide = pref.getBoolPref("dom.disable_open_during_load");
-        if (!hide)
-          hide = pref.getIntPref("privacy.popups.policy") != Components.interfaces.nsIPopupWindowManager.eAllow || !pref.getBoolPref("privacy.popups.usecustom");
-        HidePopups(hide);
-      } catch(e) {
-        HidePopups(true);
-      }
 
       // determine if image manager should be in the UI
       if (alreadyCheckedForImage) {
@@ -150,6 +101,32 @@
       } catch(e) {
         HideImage();
       }
+    }
+
+    function SetPopupMenuEnabledState() {
+      // use care choosing which nsIPopupWindowManager constant to compare
+      // against. the allow/disallow/sometimes relationship can be subtle.
+      var useManager = !pref.getBoolPref("dom.disable_open_during_load") &&
+                       pref.getIntPref("privacy.popups.policy") == Components.interfaces.nsIPopupWindowManager.eAllow &&
+                       pref.getBoolPref("privacy.popups.usecustom");
+      var suitable = false;
+      var enableBlock = false;
+      if (useManager) {
+        suitable = popupmanager.testSuitability(getBrowser().currentURI);
+        if (suitable)
+          enableBlock = popupmanager.testPermission(getBrowser().currentURI) != Components.interfaces.nsIPopupWindowManager.eDisallow;
+      }
+      enableElement("BlockPopups", useManager && suitable && enableBlock);
+      enableElement("AllowPopups", useManager && suitable && !enableBlock);
+      enableElement("ManagePopups", useManager);
+    }
+
+    function enableElement(elementID, enable) {
+      var element = document.getElementById(elementID);
+      if (enable)
+        element.removeAttribute("disabled");
+      else
+        element.setAttribute("disabled", "true");
     }
 
     // perform a Cookie or Image action
@@ -251,7 +228,7 @@
                   msg="&cookieAllowPopupsMsg.label;"
                   oncommand="CookieImageAction('popupAllow');"/> 
         <menuseparator/>
-        <menuitem label="&cookieDisplayPopupsCmd.label;"
+        <menuitem id="ManagePopups" label="&cookieDisplayPopupsCmd.label;"
                   accesskey="&cookieDisplayPopupsCmd.accesskey;" 
                   oncommand="viewPopups();"/> 
       </menupopup>
