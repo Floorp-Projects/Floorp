@@ -1111,7 +1111,7 @@ nsFtpState::R_size() {
     }
 
     if (mResponseCode == 550) // File unavailable (e.g., file not found, no access).
-        return FTP_S_CWD;
+        return FTP_S_RETR;
 
     // if we tried downloading this, lets try restarting it...
     if (mDRequestForwarder && mDRequestForwarder->GetBytesTransfered() > 0)
