@@ -48,7 +48,7 @@
 
 <!-- comment template -->
 <xsl:template match="comment()">
-   <I>&lt;--<xsl:value-of select="."/>--&gt;</I>
+   <I>&lt;!--<xsl:value-of select="."/>--&gt;</I>
 </xsl:template>
 
 <!-- generic element template -->
