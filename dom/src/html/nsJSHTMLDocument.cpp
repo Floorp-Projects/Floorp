@@ -67,13 +67,15 @@ enum HTMLDocument_slots {
   HTMLDOCUMENT_FORMS = -9,
   HTMLDOCUMENT_ANCHORS = -10,
   HTMLDOCUMENT_COOKIE = -11,
-  NSHTMLDOCUMENT_ALINKCOLOR = -12,
-  NSHTMLDOCUMENT_LINKCOLOR = -13,
-  NSHTMLDOCUMENT_VLINKCOLOR = -14,
-  NSHTMLDOCUMENT_BGCOLOR = -15,
-  NSHTMLDOCUMENT_FGCOLOR = -16,
-  NSHTMLDOCUMENT_LASTMODIFIED = -17,
-  NSHTMLDOCUMENT_EMBEDS = -18
+  NSHTMLDOCUMENT_WIDTH = -12,
+  NSHTMLDOCUMENT_HEIGHT = -13,
+  NSHTMLDOCUMENT_ALINKCOLOR = -14,
+  NSHTMLDOCUMENT_LINKCOLOR = -15,
+  NSHTMLDOCUMENT_VLINKCOLOR = -16,
+  NSHTMLDOCUMENT_BGCOLOR = -17,
+  NSHTMLDOCUMENT_FGCOLOR = -18,
+  NSHTMLDOCUMENT_LASTMODIFIED = -19,
+  NSHTMLDOCUMENT_EMBEDS = -20
 };
 
 /***********************************************************************/
@@ -232,6 +234,44 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           rv = a->GetCookie(prop);
           if (NS_SUCCEEDED(rv)) {
             nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_WIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_WIDTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetWidth(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLDOCUMENT_HEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLDOCUMENT_HEIGHT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSHTMLDocument* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
+            rv = b->GetHeight(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
           }
         }
         break;
@@ -1120,6 +1160,8 @@ static JSPropertySpec HTMLDocumentProperties[] =
   {"forms",    HTMLDOCUMENT_FORMS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"anchors",    HTMLDOCUMENT_ANCHORS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"cookie",    HTMLDOCUMENT_COOKIE,    JSPROP_ENUMERATE},
+  {"width",    NSHTMLDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"height",    NSHTMLDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"alinkColor",    NSHTMLDOCUMENT_ALINKCOLOR,    JSPROP_ENUMERATE},
   {"linkColor",    NSHTMLDOCUMENT_LINKCOLOR,    JSPROP_ENUMERATE},
   {"vlinkColor",    NSHTMLDOCUMENT_VLINKCOLOR,    JSPROP_ENUMERATE},

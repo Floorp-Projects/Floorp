@@ -99,10 +99,8 @@ enum Document_slots {
   DOCUMENT_DOCUMENTELEMENT = -3,
   DOCUMENTSTYLE_STYLESHEETS = -4,
   DOCUMENTVIEW_DEFAULTVIEW = -5,
-  NSDOCUMENT_WIDTH = -6,
-  NSDOCUMENT_HEIGHT = -7,
-  NSDOCUMENT_CHARACTERSET = -8,
-  NSDOCUMENT_PLUGINS = -9
+  NSDOCUMENT_CHARACTERSET = -6,
+  NSDOCUMENT_PLUGINS = -7
 };
 
 /***********************************************************************/
@@ -195,44 +193,6 @@ GetDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case NSDOCUMENT_WIDTH:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_WIDTH, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          nsIDOMNSDocument* b;
-          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
-            rv = b->GetWidth(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case NSDOCUMENT_HEIGHT:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSDOCUMENT_HEIGHT, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          nsIDOMNSDocument* b;
-          if (NS_OK == a->QueryInterface(kINSDocumentIID, (void **)&b)) {
-            rv = b->GetHeight(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            *vp = INT_TO_JSVAL(prop);
             }
             NS_RELEASE(b);
           }
@@ -1388,8 +1348,6 @@ static JSPropertySpec DocumentProperties[] =
   {"documentElement",    DOCUMENT_DOCUMENTELEMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"styleSheets",    DOCUMENTSTYLE_STYLESHEETS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"defaultView",    DOCUMENTVIEW_DEFAULTVIEW,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"width",    NSDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"height",    NSDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"characterSet",    NSDOCUMENT_CHARACTERSET,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"plugins",    NSDOCUMENT_PLUGINS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}

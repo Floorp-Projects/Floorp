@@ -57,7 +57,9 @@ enum XULDocument_slots {
   XULDOCUMENT_POPUPNODE = -1,
   XULDOCUMENT_TOOLTIPNODE = -2,
   XULDOCUMENT_COMMANDDISPATCHER = -3,
-  XULDOCUMENT_CONTROLS = -4
+  XULDOCUMENT_WIDTH = -4,
+  XULDOCUMENT_HEIGHT = -5,
+  XULDOCUMENT_CONTROLS = -6
 };
 
 /***********************************************************************/
@@ -115,6 +117,30 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+        }
+        break;
+      }
+      case XULDOCUMENT_WIDTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULDOCUMENT_WIDTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetWidth(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+          }
+        }
+        break;
+      }
+      case XULDOCUMENT_HEIGHT:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULDOCUMENT_HEIGHT, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          rv = a->GetHeight(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
           }
         }
         break;
@@ -358,6 +384,8 @@ static JSPropertySpec XULDocumentProperties[] =
   {"popupNode",    XULDOCUMENT_POPUPNODE,    JSPROP_ENUMERATE},
   {"tooltipNode",    XULDOCUMENT_TOOLTIPNODE,    JSPROP_ENUMERATE},
   {"commandDispatcher",    XULDOCUMENT_COMMANDDISPATCHER,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"width",    XULDOCUMENT_WIDTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"height",    XULDOCUMENT_HEIGHT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"controls",    XULDOCUMENT_CONTROLS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };

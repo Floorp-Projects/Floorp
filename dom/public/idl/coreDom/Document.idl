@@ -85,8 +85,6 @@ interface NSDocument {
 /* IID: { 0xa6cf90cd, 0x15b3, 0x11d2, \
   { 0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32} } */
 
-     readonly attribute long width;
-     readonly attribute long height;
      readonly attribute DOMString characterSet;
      readonly attribute PluginArray plugins;
 // XXX This should be removed, the new createElementNS should be used in stead

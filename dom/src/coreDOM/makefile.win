@@ -35,7 +35,6 @@ CPPSRCS =				\
 	nsJSDocument.cpp		\
 	nsJSDocumentFragment.cpp	\
 	nsJSDocumentType.cpp		\
-	nsJSDocumentView.cpp		\
 	nsJSElement.cpp			\
 	nsJSEntity.cpp			\
 	nsJSEntityReference.cpp		\
@@ -59,7 +58,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsJSDocument.obj			\
 	.\$(OBJDIR)\nsJSDocumentFragment.obj		\
 	.\$(OBJDIR)\nsJSDocumentType.obj		\
-	.\$(OBJDIR)\nsJSDocumentView.obj		\
 	.\$(OBJDIR)\nsJSElement.obj			\
 	.\$(OBJDIR)\nsJSEntity.obj			\
 	.\$(OBJDIR)\nsJSEntityReference.obj		\

@@ -397,8 +397,6 @@ public:
                                            const nsString& aNameSpace, 
                                            nsIDOMElement** aReturn);
   NS_IMETHOD    CreateRange(nsIDOMRange** aReturn);
-  NS_IMETHOD    GetWidth(PRInt32* aWidth);
-  NS_IMETHOD    GetHeight(PRInt32* aHeight);
   NS_IMETHOD    Load (const nsString& aUrl);
   NS_IMETHOD    GetPlugins(nsIDOMPluginArray** aPlugins);
  
@@ -475,10 +473,6 @@ protected:
   nsIContent* FindContent(const nsIContent* aStartNode,
                           const nsIContent* aTest1, 
                           const nsIContent* aTest2) const;
-
-  nsresult GetPixelDimensions(nsIPresShell* aShell,
-                              PRInt32* aWidth,
-                              PRInt32* aHeight);
 
 protected:
 

@@ -147,6 +147,10 @@ public:
 
   virtual nsresult Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup);
 protected:
+  nsresult GetPixelDimensions(nsIPresShell* aShell,
+                              PRInt32* aWidth,
+                              PRInt32* aHeight);
+
   // Find/Search Method/Data member
   PRBool SearchBlock(BlockText    & aBlockText, 
                      nsString     & aStr,

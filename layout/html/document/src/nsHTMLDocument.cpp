@@ -2303,6 +2303,117 @@ nsHTMLDocument::GetElementsByName(const nsString& aElementName,
   return elements->QueryInterface(kIDOMNodeListIID, (void**)aReturn);
 }
 
+nsresult
+nsHTMLDocument::GetPixelDimensions(nsIPresShell* aShell,
+                                   PRInt32* aWidth,
+                                   PRInt32* aHeight)
+{
+  *aWidth = *aHeight = 0;
+
+  nsresult result;
+  result = FlushPendingNotifications();
+  if (NS_FAILED(result))
+    return NS_OK;
+
+  // Find the <body> element: this is what we'll want to use for the
+  // document's width and height values.
+  if (mBodyContent == nsnull && PR_FALSE == GetBodyContent()) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIContent> body = do_QueryInterface(mBodyContent);
+
+  // Now grab its frame
+  nsIFrame* frame;
+  result = aShell->GetPrimaryFrameFor(body, &frame);
+  if (NS_SUCCEEDED(result) && frame) {
+    nsSize                    size;
+    nsIView*                  view;
+    nsCOMPtr<nsIPresContext>  presContext;
+
+    aShell->GetPresContext(getter_AddRefs(presContext));
+    result = frame->GetView(presContext, &view);
+    if (NS_SUCCEEDED(result)) {
+      // If we have a view check if it's scrollable. If not,
+      // just use the view size itself
+      if (view) {
+        nsIScrollableView* scrollableView;
+        
+        if (NS_SUCCEEDED(view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView))) {
+          scrollableView->GetScrolledView(view);
+        }
+
+        result = view->GetDimensions(&size.width, &size.height);
+      }
+      // If we don't have a view, use the frame size
+      else {
+        result = frame->GetSize(size);
+      }
+    }
+
+    // Convert from twips to pixels
+    if (NS_SUCCEEDED(result)) {
+      nsCOMPtr<nsIPresContext> context;
+      
+      result = aShell->GetPresContext(getter_AddRefs(context));
+      
+      if (NS_SUCCEEDED(result)) {
+        float scale;
+        context->GetTwipsToPixels(&scale);
+        
+        *aWidth = NSTwipsToIntPixels(size.width, scale);
+        *aHeight = NSTwipsToIntPixels(size.height, scale);
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetWidth(PRInt32* aWidth)
+{
+  NS_ENSURE_ARG_POINTER(aWidth);
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult result = NS_OK;
+
+  // We make the assumption that the first presentation shell
+  // is the one for which we need information.
+  shell = getter_AddRefs(GetShellAt(0));
+  if (shell) {
+    PRInt32 width, height;
+
+    result = GetPixelDimensions(shell, &width, &height);
+    *aWidth = width;
+  } else
+    *aWidth = 0;
+
+  return result;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::GetHeight(PRInt32* aHeight)
+{
+  NS_ENSURE_ARG_POINTER(aHeight);
+
+  nsCOMPtr<nsIPresShell> shell;
+  nsresult result = NS_OK;
+
+  // We make the assumption that the first presentation shell
+  // is the one for which we need information.
+  shell = getter_AddRefs(GetShellAt(0));
+  if (shell) {
+    PRInt32 width, height;
+
+    result = GetPixelDimensions(shell, &width, &height);
+    *aHeight = height;
+  } else
+    *aHeight = 0;
+
+  return result;
+}
+
 NS_IMETHODIMP    
 nsHTMLDocument::GetAlinkColor(nsString& aAlinkColor)
 {
