@@ -2780,13 +2780,18 @@ nsBlockFrame::SlideLine(nsBlockReflowState& aState,
 {
   NS_PRECONDITION(aDY != 0, "why slide a line nowhere?");
 
-  PRBool doInvalidate = !aLine->mBounds.IsEmpty();
+  nsRect lineCombinedArea;
+  aLine->GetCombinedArea(&lineCombinedArea);
+
+  PRBool doInvalidate = !lineCombinedArea.IsEmpty();
   if (doInvalidate)
-    Invalidate(aState.mPresContext, aLine->mBounds);
+    Invalidate(aState.mPresContext, lineCombinedArea);
   // Adjust line state
   aLine->SlideBy(aDY);
-  if (doInvalidate)
-    Invalidate(aState.mPresContext, aLine->mBounds);
+  if (doInvalidate) {
+    aLine->GetCombinedArea(&lineCombinedArea);
+    Invalidate(aState.mPresContext, lineCombinedArea);
+  }
 
   // Adjust the frames in the line
   nsIFrame* kid = aLine->mFirstChild;
