@@ -2885,6 +2885,9 @@ net_ftp_read_dir(ActiveEntry * ce)
     if(ce->status == 0)
       {
 		cd->next_state = FTP_PRINT_DIR;
+#ifdef	XP_MAC
+                cd->pause_for_read = FALSE;		/* rjc: fix FTP for Mac */
+#endif
         return(ce->status);
       }
     else if(ce->status < 0)
@@ -4435,7 +4438,7 @@ net_ProcessFTP(ActiveEntry * ce)
             ce->status = net_ftp_read_dir(ce);
             break;
 
-		  case FTP_PRINT_DIR:
+	  case FTP_PRINT_DIR:
             ce->status = net_ftp_print_dir(ce);
             break;
 
