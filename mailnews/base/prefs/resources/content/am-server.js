@@ -178,6 +178,23 @@ function onAdvanced()
     var pop3Server = gServer.QueryInterface(Components.interfaces.nsIPop3IncomingServer);
     // we're explicitly setting this so we'll go through the SetDeferredToAccount method
     pop3Server.deferredToAccount = serverSettings.deferredToAccount;
+    // if we were using default special folders for this server, and we're deferring it,
+    // switch the special folders to the deferred to account.
+    if (serverSettings.deferredToAccount.length > 0)
+    {
+      var account = parent.getAccountFromServerId(gServer.serverURI);
+      var identity = account.defaultIdentity;
+      var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"].getService(Components.interfaces.nsIMsgAccountManager);
+      var account = accountManager.getAccount(serverSettings.deferredToAccount);
+      if (identity.fccFolder == (pop3Server.serverURI + "/Sent"))
+        identity.fccFolder = account.incomingServer.serverURI + "/Sent";
+
+      if (identity.draftFolder == (pop3Server.serverURI + "/Drafts"))
+        identity.draftFolder = account.incomingServer.serverURI + "/Drafts";
+
+      if (identity.stationeryFolder == (pop3Server.serverURI + "/Templates"))
+        identity.stationeryFolder = account.incomingServer.serverURI + "/Templates";
+    }
   }
 }
 
