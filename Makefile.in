@@ -89,7 +89,6 @@ DIRS		+= \
 		netwerk \
 		modules/appfilelocprovider \
 		modules/mpfilelocprovider \
-		security \
 		uriloader \
 		intl \
 		modules/libpref \
