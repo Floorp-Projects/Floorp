@@ -68,6 +68,7 @@
 
 #ifdef XP_MAC
 #include "Gestalt.h"
+#include "nsAppleSingleDecoder.h"
 #endif 
 
 #ifdef XP_PC
@@ -2035,9 +2036,41 @@ nsInstall::ExtractFileFromJar(const nsString& aJarfile, nsFileSpec* aSuggestedNa
             delete extractHereSpec;
         return EXTRACTION_FAILED;
     }
-    
+
     if (result == 0)
     {
+    
+#ifdef XP_MAC
+		FSSpec finalSpec, extractedSpec = extractHereSpec->GetFSSpec();
+		
+		if ( nsAppleSingleDecoder::IsAppleSingleFile(&extractedSpec) )
+		{
+			nsAppleSingleDecoder *asd = new nsAppleSingleDecoder(&extractedSpec, &finalSpec);
+		
+			OSErr decodeErr = asd->Decode();
+		
+			if (decodeErr != noErr)
+			{			
+				if (extractHereSpec)
+					delete extractHereSpec;
+				if (asd)
+					delete asd;
+				return EXTRACTION_FAILED;
+			}
+		
+			if ( !(extractedSpec.vRefNum == finalSpec.vRefNum) ||
+				 !(extractedSpec.parID   == finalSpec.parID)   ||
+				 !(nsAppleSingleDecoder::PLstrcmp(extractedSpec.name, finalSpec.name)) )
+			{
+				// delete the unique extracted file that got renamed in AS decoding
+				FSpDelete(&extractedSpec);
+				
+				// "real name" in AppleSingle entry may cause file rename
+				*extractHereSpec = finalSpec;
+			}
+		}		
+#endif
+
         *aRealName = extractHereSpec;
     }
     else
