@@ -427,9 +427,9 @@ nsresult CNavDTD::WillBuildModel(nsString& aFilename,PRInt32 aLevel){
   nsresult result=NS_OK;
 
   mFilename=aFilename;
-  mLineNumber=1;
 
   if((1==aLevel) && (mSink)) {
+    mLineNumber=1;
     result = mSink->WillBuildModel();
   }
 
