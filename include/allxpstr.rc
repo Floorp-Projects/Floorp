@@ -7502,16 +7502,14 @@ ResDef(MK_ACCESS_VALUE, XP_MSG_BASE + 1341,
 	   "Value:")
 ResDef(MK_ACCESS_HOST, XP_MSG_BASE + 1342,
 	   "Host:")
-ResDef(MK_ACCESS_SEND_TO_HOST, XP_MSG_BASE + 1343,
-	   "Send to host:")
-ResDef(MK_ACCESS_IS_DOMAIN, XP_MSG_BASE + 1344,
-	   "any host in the domain from the host above")
-ResDef(MK_ACCESS_IS_NOT_DOMAIN, XP_MSG_BASE + 1345,
-	   "the above fully qualified host only")
-ResDef(MK_ACCESS_SEND_TO_PATH, XP_MSG_BASE + 1346,
-	   "Send to path:")
-ResDef(MK_ACCESS_AND_BELOW, XP_MSG_BASE + 1347,
-	   " (and below)")
+ResDef(MK_ACCESS_DOMAIN, XP_MSG_BASE + 1343,
+           "Domain:")
+ResDef(MK_ACCESS_PATH, XP_MSG_BASE + 1344,
+           "Path:")
+ResDef(MK_ACCESS_YES, XP_MSG_BASE + 1345,
+           "Yes")
+ResDef(MK_ACCESS_NO, XP_MSG_BASE + 1346,
+           "No")
 ResDef(MK_ACCESS_SECURE, XP_MSG_BASE + 1348,
 	   "Secure:")
 ResDef(MK_ACCESS_EXPIRES, XP_MSG_BASE + 1349,
