@@ -31,12 +31,19 @@ CSRCS		=  \
 CPPSRCS		= \
                   nsISO88591ToUnicode.cpp \
                   nsISO88592ToUnicode.cpp \
+                  nsISO88593ToUnicode.cpp \
+                  nsISO88594ToUnicode.cpp \
+                  nsISO88595ToUnicode.cpp \
+                  nsISO88596ToUnicode.cpp \
                   nsISO88597ToUnicode.cpp \
+                  nsISO88598ToUnicode.cpp \
                   nsISO88599ToUnicode.cpp \
                   nsCP1250ToUnicode.cpp \
+                  nsCP1251ToUnicode.cpp \
                   nsCP1252ToUnicode.cpp \
                   nsCP1253ToUnicode.cpp \
                   nsCP1254ToUnicode.cpp \
+                  nsCP1257ToUnicode.cpp \
                   nsMacRomanToUnicode.cpp \
                   nsMacCEToUnicode.cpp \
                   nsMacGreekToUnicode.cpp \
@@ -44,12 +51,19 @@ CPPSRCS		= \
                   nsUTF8ToUnicode.cpp \
                   nsUnicodeToISO88591.cpp \
                   nsUnicodeToISO88592.cpp \
+                  nsUnicodeToISO88593.cpp \
+                  nsUnicodeToISO88594.cpp \
+                  nsUnicodeToISO88595.cpp \
+                  nsUnicodeToISO88596.cpp \
                   nsUnicodeToISO88597.cpp \
+                  nsUnicodeToISO88598.cpp \
                   nsUnicodeToISO88599.cpp \
                   nsUnicodeToCP1250.cpp \
+                  nsUnicodeToCP1251.cpp \
                   nsUnicodeToCP1252.cpp \
                   nsUnicodeToCP1253.cpp \
                   nsUnicodeToCP1254.cpp \
+                  nsUnicodeToCP1257.cpp \
                   nsUnicodeToMacRoman.cpp \
                   nsUnicodeToMacCE.cpp \
                   nsUnicodeToMacGreek.cpp \
