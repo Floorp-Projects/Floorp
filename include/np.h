@@ -43,7 +43,9 @@ typedef enum { NP_FullPage = 1, NP_Embedded } NPPageType;
 typedef void* NPReference;
 #define NPRefFromStart ((NPReference)NULL)
 
+#ifdef JAVA_OR_OJI
 #define ANTHRAX
+#endif
 
 /* it's lame that this is supposed to support more than plugins but
 it has plugin specific junk (wdata) in it -jg */
