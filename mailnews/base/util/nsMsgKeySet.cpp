@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "prlog.h"
 
 #include "MailNewsTypes.h"
 #include "nsMsgKeySet.h"
@@ -460,7 +461,7 @@ nsMsgKeySet::GetFirstMember()
    decreasing) but will optimize the compression, for example, merging
    consecutive literals or ranges into one range.
 
-   Returns TRUE if successful, FALSE if there wasn't enough memory to
+   Returns PR_TRUE if successful, PR_FALSE if there wasn't enough memory to
    allocate scratch space.
 
    #### This should be changed to modify the buffer in place.
@@ -488,7 +489,7 @@ nsMsgKeySet::Optimize()
 	input_end = input_tail + input_size;
 	output_end = output_data + output_size;
 
-	if (!output_data) return FALSE;
+	if (!output_data) return PR_FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
@@ -516,7 +517,7 @@ nsMsgKeySet::Optimize()
 		NS_ASSERTION(output_tail < output_end, "invalid end of output string");
 		if (output_tail >= output_end) {
 			PR_Free(output_data);
-			return FALSE;
+			return PR_FALSE;
 		}
 
 		/* As long as this chunk is followed by consecutive chunks,
@@ -532,7 +533,7 @@ nsMsgKeySet::Optimize()
 				output_tail++;
 				output_tail [-2] = 0;
 				output_tail [-1] = from;
-				range_p = TRUE;
+				range_p = PR_TRUE;
 			}
 
 			if (*input_tail > 0) { /* literal */
@@ -581,7 +582,7 @@ nsMsgKeySet::Optimize()
 PRBool
 nsMsgKeySet::IsMember(PRInt32 number)
 {
-	PRBool value = FALSE;
+	PRBool value = PR_FALSE;
 	PRInt32 size;
 	PRInt32 *head;
 	PRInt32 *tail;
@@ -606,7 +607,7 @@ nsMsgKeySet::IsMember(PRInt32 number)
 			PRInt32 to = from + (-(tail[0]));
 			if (from > number) {
 				/* This range begins after the number - we've passed it. */
-				value = FALSE;
+				value = PR_FALSE;
 				goto DONE;
 			} else if (to >= number) {
 				/* In range. */
@@ -624,7 +625,7 @@ nsMsgKeySet::IsMember(PRInt32 number)
 				goto DONE;
 			} else if (*tail > number) {
 				/* This literal is after the number - we've passed it. */
-				value = FALSE;
+				value = PR_FALSE;
 				goto DONE;
 			} else {
 				tail++;
@@ -914,7 +915,7 @@ nsMsgKeySet::AddRange(PRInt32 start, PRInt32 end)
 	PRInt32* tail;
 	PRInt32 a;
 	PRInt32 b;
-	PRBool didit = FALSE;
+	PRBool didit = PR_FALSE;
 
 	/* We're going to modify the set, so invalidate the cache. */
 	m_cached_value = -1;
@@ -1198,69 +1199,69 @@ nsMsgKeySet::test_adder (void)
 
   START("0-70,72-99,105,107,110-111,117-200");
 
-  FROB(205, TRUE);
-  FROB(206, TRUE);
-  FROB(207, TRUE);
-  FROB(208, TRUE);
-  FROB(208, TRUE);
-  FROB(109, TRUE);
-  FROB(72, TRUE);
+  FROB(205, PR_TRUE);
+  FROB(206, PR_TRUE);
+  FROB(207, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(109, PR_TRUE);
+  FROB(72, PR_TRUE);
 
-  FROB(205, FALSE);
-  FROB(206, FALSE);
-  FROB(207, FALSE);
-  FROB(208, FALSE);
-  FROB(208, FALSE);
-  FROB(109, FALSE);
-  FROB(72, FALSE);
+  FROB(205, PR_FALSE);
+  FROB(206, PR_FALSE);
+  FROB(207, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(109, PR_FALSE);
+  FROB(72, PR_FALSE);
 
-  FROB(72, TRUE);
-  FROB(109, TRUE);
-  FROB(208, TRUE);
-  FROB(208, TRUE);
-  FROB(207, TRUE);
-  FROB(206, TRUE);
-  FROB(205, TRUE);
+  FROB(72, PR_TRUE);
+  FROB(109, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(208, PR_TRUE);
+  FROB(207, PR_TRUE);
+  FROB(206, PR_TRUE);
+  FROB(205, PR_TRUE);
 
-  FROB(205, FALSE);
-  FROB(206, FALSE);
-  FROB(207, FALSE);
-  FROB(208, FALSE);
-  FROB(208, FALSE);
-  FROB(109, FALSE);
-  FROB(72, FALSE);
+  FROB(205, PR_FALSE);
+  FROB(206, PR_FALSE);
+  FROB(207, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(208, PR_FALSE);
+  FROB(109, PR_FALSE);
+  FROB(72, PR_FALSE);
 
-  FROB(100, TRUE);
-  FROB(101, TRUE);
-  FROB(102, TRUE);
-  FROB(103, TRUE);
-  FROB(106, TRUE);
-  FROB(104, TRUE);
-  FROB(109, TRUE);
-  FROB(108, TRUE);
+  FROB(100, PR_TRUE);
+  FROB(101, PR_TRUE);
+  FROB(102, PR_TRUE);
+  FROB(103, PR_TRUE);
+  FROB(106, PR_TRUE);
+  FROB(104, PR_TRUE);
+  FROB(109, PR_TRUE);
+  FROB(108, PR_TRUE);
   END();
 
-  START("1-6"); FROB(7, FALSE); END();
-  START("1-6"); FROB(6, FALSE); END();
-  START("1-6"); FROB(5, FALSE); END();
-  START("1-6"); FROB(4, FALSE); END();
-  START("1-6"); FROB(3, FALSE); END();
-  START("1-6"); FROB(2, FALSE); END();
-  START("1-6"); FROB(1, FALSE); END();
-  START("1-6"); FROB(0, FALSE); END();
+  START("1-6"); FROB(7, PR_FALSE); END();
+  START("1-6"); FROB(6, PR_FALSE); END();
+  START("1-6"); FROB(5, PR_FALSE); END();
+  START("1-6"); FROB(4, PR_FALSE); END();
+  START("1-6"); FROB(3, PR_FALSE); END();
+  START("1-6"); FROB(2, PR_FALSE); END();
+  START("1-6"); FROB(1, PR_FALSE); END();
+  START("1-6"); FROB(0, PR_FALSE); END();
 
-  START("1-3"); FROB(1, FALSE); END();
-  START("1-3"); FROB(2, FALSE); END();
-  START("1-3"); FROB(3, FALSE); END();
+  START("1-3"); FROB(1, PR_FALSE); END();
+  START("1-3"); FROB(2, PR_FALSE); END();
+  START("1-3"); FROB(3, PR_FALSE); END();
 
-  START("1,3,5-7,9,10"); FROB(5, FALSE); END();
-  START("1,3,5-7,9,10"); FROB(6, FALSE); END();
-  START("1,3,5-7,9,10"); FROB(7, FALSE); FROB(7, TRUE); FROB(8, TRUE);
-  FROB (4, TRUE); FROB (2, FALSE); FROB (2, TRUE);
+  START("1,3,5-7,9,10"); FROB(5, PR_FALSE); END();
+  START("1,3,5-7,9,10"); FROB(6, PR_FALSE); END();
+  START("1,3,5-7,9,10"); FROB(7, PR_FALSE); FROB(7, PR_TRUE); FROB(8, PR_TRUE);
+  FROB (4, PR_TRUE); FROB (2, PR_FALSE); FROB (2, PR_TRUE);
 
-  FROB (4, FALSE); FROB (5, FALSE); FROB (6, FALSE); FROB (7, FALSE);
-  FROB (8, FALSE); FROB (9, FALSE); FROB (10, FALSE); FROB (3, FALSE);
-  FROB (2, FALSE); FROB (1, FALSE); FROB (1, FALSE); FROB (0, FALSE);
+  FROB (4, PR_FALSE); FROB (5, PR_FALSE); FROB (6, PR_FALSE); FROB (7, PR_FALSE);
+  FROB (8, PR_FALSE); FROB (9, PR_FALSE); FROB (10, PR_FALSE); FROB (3, PR_FALSE);
+  FROB (2, PR_FALSE); FROB (1, PR_FALSE); FROB (1, PR_FALSE); FROB (0, PR_FALSE);
   END();
 }
 
@@ -1457,8 +1458,8 @@ nsMsgKeySet::RunTests ()
 
   test_ranges();
 
-  test_member (FALSE);
-  test_member (TRUE);
+  test_member (PR_FALSE);
+  test_member (PR_TRUE);
 
   // test_newsrc ("/u/montulli/.newsrc");
   /* test_newsrc ("/u/jwz/.newsrc");*/

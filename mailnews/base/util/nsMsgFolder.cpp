@@ -65,7 +65,7 @@ nsMsgFolder::nsMsgFolder(void)
 	mNumPendingTotalMessages  = 0;
 	NS_NewISupportsArray(getter_AddRefs(mSubFolders));
 
-	mIsCachable = TRUE;
+	mIsCachable = PR_TRUE;
 
 	mListeners = new nsVoidArray();
 
@@ -657,7 +657,7 @@ NS_IMETHODIMP nsMsgFolder::PropagateDelete(nsIMsgFolder *folder, PRBool deleteSt
 
 NS_IMETHODIMP nsMsgFolder::RecursiveDelete(PRBool deleteStorage)
 {
-	// If deleteStorage is TRUE, recursively deletes disk storage for this folder
+	// If deleteStorage is PR_TRUE, recursively deletes disk storage for this folder
 	// and all its subfolders.
 	// Regardless of deleteStorage, always unlinks them from the children lists and
 	// frees memory for the subfolders but NOT for _this_
@@ -909,8 +909,8 @@ NS_IMETHOD GetTotalMessagesInDB(PRUint32 *totalMessages) const;					// How many 
 // we don't want to do an expensive select until the user actually opens that folder
 // These functions are called when MSG_Master::GetFolderLineById is populating a MSG_FolderLine
 // struct used by the FE
-int32			GetNumPendingUnread(PRBool deep = FALSE) const;
-int32			GetNumPendingTotalMessages(PRBool deep = FALSE) const;
+int32			GetNumPendingUnread(PRBool deep = PR_FALSE) const;
+int32			GetNumPendingTotalMessages(PRBool deep = PR_FALSE) const;
 	
 void			ChangeNumPendingUnread(int32 delta);
 void			ChangeNumPendingTotalMessages(int32 delta);

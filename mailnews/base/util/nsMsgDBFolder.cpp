@@ -212,7 +212,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
         result = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
         if(NS_SUCCEEDED(result))
         {
-			mIsCachable = TRUE;
+			mIsCachable = PR_TRUE;
             if (folderInfo)
             {
 

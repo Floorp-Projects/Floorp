@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "prlog.h"
 #include "nsMsgLineBuffer.h"
 
 #include "nsIInputStream.h" // used by nsMsgLineStreamBuffer
@@ -189,7 +190,7 @@ PRInt32	nsMsgLineBuffer::BufferInput(const char *net_buffer, PRInt32 net_buffer_
 
 PRInt32 nsMsgLineBuffer::HandleLine(char *line, PRUint32 line_length)
 {
-	NS_ASSERTION(FALSE, "must override this method if you don't provide a handler");
+	NS_ASSERTION(PR_FALSE, "must override this method if you don't provide a handler");
 	return 0;
 }
 

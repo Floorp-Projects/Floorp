@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"    // precompiled header...
+#include "prlog.h"
 
 #include "MailNewsTypes.h"
 #include "nsUInt32Array.h"
