@@ -368,12 +368,14 @@ nsComposerCommandsUpdater::SelectionIsCollapsed()
   if (!mDOMWindow) return PR_TRUE;
 
   nsCOMPtr<nsISelection> domSelection;
-  if (NS_SUCCEEDED(mDOMWindow->GetSelection(getter_AddRefs(domSelection))))
-  {    
+  if (NS_SUCCEEDED(mDOMWindow->GetSelection(getter_AddRefs(domSelection))) && domSelection)
+  {
     PRBool selectionCollapsed = PR_FALSE;
     domSelection->GetIsCollapsed(&selectionCollapsed);
     return selectionCollapsed;
   }
+
+  NS_WARNING("nsComposerCommandsUpdater::SelectionIsCollapsed - no domSelection");
 
   return PR_FALSE;
 }
