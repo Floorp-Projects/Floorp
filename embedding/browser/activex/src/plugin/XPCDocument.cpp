@@ -130,6 +130,7 @@ public:
 #include "XPCBrowser.h"
 #include "LegacyPlugin.h"
 
+#include "IEHtmlElementCollection.h"
 #include "IHTMLLocationImpl.h"
 
 /*
@@ -1083,7 +1084,28 @@ END_COM_MAP()
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_all( 
         /* [out][retval] */ IHTMLElementCollection **p)
     {
-        return E_NOTIMPL;
+        // Validate parameters
+        if (p == NULL)
+        {
+            return E_INVALIDARG;
+        }
+
+        *p = NULL;
+
+        // Create a collection object
+        CIEHtmlElementCollectionInstance *pCollection = NULL;
+        CIEHtmlElementCollectionInstance::CreateInstance(&pCollection);
+        if (pCollection == NULL)
+        {
+            return E_OUTOFMEMORY;
+        }
+
+        // Initialise and populate the collection
+        nsCOMPtr<nsIDOMNode> docNode = do_QueryInterface(mDOMDocument);
+        pCollection->PopulateFromDOMNode(docNode, PR_TRUE);
+        pCollection->QueryInterface(IID_IHTMLElementCollection, (void **) p);
+
+        return *p ? S_OK : E_UNEXPECTED;
     }
     
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_body( 

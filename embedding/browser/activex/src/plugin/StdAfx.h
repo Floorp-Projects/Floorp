@@ -84,16 +84,12 @@ extern CComModule _Module;
 // New winsock2.h doesn't define this anymore
 typedef long int32;
 
-#include "ActiveXTypes.h"
-#include "BrowserDiagnostics.h"
-
 #include "PropertyList.h"
 #include "PropertyBag.h"
 #include "ItemContainer.h"
 #include "ControlSite.h"
 #include "ControlSiteIPFrame.h"
 #include "ControlEventSink.h"
-#include "ActiveScriptSite.h"
 
 #include "npapi.h"
 

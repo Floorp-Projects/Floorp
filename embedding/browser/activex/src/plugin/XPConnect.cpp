@@ -39,7 +39,10 @@
  * ***** END LICENSE BLOCK ***** */
 #include "stdafx.h"
 
+#ifdef XPCOM_GLUE
 #include "nsXPCOMGlue.h"
+#endif
+
 #include "nsCOMPtr.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIServiceManagerUtils.h"
@@ -71,7 +74,9 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIDOMLocation.h"
 #include "nsNetUtil.h"
+#ifdef XPCOM_GLUE
 #include "nsEmbedString.h"
+#endif
 #include "nsIURI.h"
 #endif
 
@@ -927,7 +932,9 @@ void MozAxPlugin::AddRef()
 {
     if (gInstances == 0)
     {
+#ifdef XPCOM_GLUE
         XPCOMGlueStartup(nsnull);
+#endif
         MozAxPlugin::PrefGetHostingFlags(); // Initial call to set it up
     }
     gInstances++;
@@ -940,7 +947,9 @@ void MozAxPlugin::Release()
 #ifdef XPC_IDISPATCH_SUPPORT
         MozAxPlugin::ReleasePrefObserver();
 #endif
+#ifdef XPCOM_GLUE
         XPCOMGlueShutdown();
+#endif
     }
 }
 
@@ -962,7 +971,11 @@ nsresult MozAxPlugin::GetCurrentLocation(NPP instance, nsIURI **aLocation)
     }
 
     nsCOMPtr<nsIDOMLocation> location;
+#ifdef XPCOM_GLUE
     nsEmbedString href;
+#else
+    nsAutoString href;
+#endif
     windowInternal->GetLocation(getter_AddRefs(location));
     if (!location ||
         NS_FAILED(location->GetHref(href)))
