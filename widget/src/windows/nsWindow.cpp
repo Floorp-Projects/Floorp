@@ -77,15 +77,31 @@ static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
 static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 
-BOOL nsWindow::sIsRegistered = FALSE;
-UINT nsWindow::uMSH_MOUSEWHEEL = 0;
+////////////////////////////////////////////////////
+// nsWindow Class static variable defintions
+////////////////////////////////////////////////////
+BOOL nsWindow::sIsRegistered       = FALSE;
+UINT nsWindow::uMSH_MOUSEWHEEL     = 0;
+nsWindow* nsWindow::gCurrentWindow = nsnull;
+////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////
+// Rollup Listener - static variable defintions
 ////////////////////////////////////////////////////
 static nsIRollupListener * gRollupListener           = nsnull;
 static nsIWidget         * gRollupWidget             = nsnull;
 static PRBool              gRollupConsumeRollupEvent = PR_FALSE;
+////////////////////////////////////////////////////
 
-nsWindow* nsWindow::gCurrentWindow = nsnull;
+
+////////////////////////////////////////////////////
+// Mouse Clicks - static variable defintions 
+// for figuring out 1 - 3 Clicks
+////////////////////////////////////////////////////
+static POINT gLastMousePoint;
+static LONG  gLastMsgTime    = 0;
+static LONG  gLastClickCount = 0;
+////////////////////////////////////////////////////
 
 #if 0
 // #ifdef KE_DEBUG
@@ -3205,8 +3221,6 @@ PRBool nsWindow::OnResize(nsRect &aWindowRect)
   return PR_FALSE;
 }
 
-
-
 //-------------------------------------------------------------------------
 //
 // Deal with all sort of mouse event
@@ -3230,6 +3244,7 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   event.eventStructType = NS_MOUSE_EVENT;
 
   //Dblclicks are used to set the click count, then changed to mousedowns
+#if 0 // old way for single and double clicks
   if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
       aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
     event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
@@ -3239,6 +3254,47 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
   else {
     event.clickCount = 1;
   }
+#else // new way for single and double clicks
+  LONG curMsgTime = ::GetMessageTime();
+
+  // we're going to time double-clicks from mouse *up* to next mouse *down*
+  if (aEventType == NS_MOUSE_LEFT_DOUBLECLICK ||
+      aEventType == NS_MOUSE_RIGHT_DOUBLECLICK) {
+    event.message = (aEventType == NS_MOUSE_LEFT_DOUBLECLICK) ? 
+                     NS_MOUSE_LEFT_BUTTON_DOWN : NS_MOUSE_RIGHT_BUTTON_DOWN;
+    gLastClickCount = 2;
+    event.clickCount = gLastClickCount;
+  } else if (aEventType == NS_MOUSE_LEFT_BUTTON_UP) {
+    // remember when this happened for the next mouse down
+    DWORD pos = ::GetMessagePos();
+    gLastMousePoint.x = LOWORD(pos);
+    gLastMousePoint.y = HIWORD(pos);
+
+  } else if (aEventType == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    // now look to see if we want to convert this to a double- or triple-click
+    const short kDoubleClickMoveThreshold  = 5;
+    POINT mp;
+    DWORD pos = ::GetMessagePos();
+    mp.x      = LOWORD(pos);
+    mp.y      = HIWORD(pos);
+    
+    //printf("Msg: %d Last: %d Dif: %d Max %d\n", curMsgTime, gLastMsgTime, curMsgTime-gLastMsgTime, ::GetDoubleClickTime());
+    //printf("Mouse %d %d\n", abs(gLastMousePoint.x - mp.x), abs(gLastMousePoint.y - mp.y));
+    if (((curMsgTime - gLastMsgTime) < (LONG)::GetDoubleClickTime()) &&
+        (((abs(gLastMousePoint.x - mp.x) < kDoubleClickMoveThreshold) &&
+           (abs(gLastMousePoint.y - mp.y) < kDoubleClickMoveThreshold)))) {    
+      gLastClickCount ++;
+    } else {
+      // reset the click count, to count *this* click
+      gLastClickCount = 1;
+    }
+    event.clickCount = gLastClickCount;
+  }
+
+  //printf("Msg Time: %d Click Count: %d\n", curMsgTime, event.clickCount);
+
+  gLastMsgTime = curMsgTime;
+#endif
 
   nsPluginEvent pluginEvent;
 
