@@ -314,7 +314,10 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEven
   nsCOMPtr<nsIScriptContext> boundContext;
   boundGlobal->GetContext(getter_AddRefs(boundContext));
 
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(winRoot ? boundGlobal : aReceiver));
+  nsCOMPtr<nsIScriptObjectOwner> owner;
+  if (winRoot)
+    owner = do_QueryInterface(boundGlobal);
+  else owner = do_QueryInterface(aReceiver);
   
   void* scriptObject;
   owner->GetScriptObject(boundContext, &scriptObject);

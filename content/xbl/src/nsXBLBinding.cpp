@@ -1451,6 +1451,15 @@ nsXBLBinding::MarkedForDeath(PRBool* aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsXBLBinding::ImplementsInterface(REFNSIID aIID, PRBool* aResult)
+{
+  mPrototypeBinding->ImplementsInterface(aIID, aResult);
+  if (!*aResult && mNextBinding)
+    return mNextBinding->ImplementsInterface(aIID, aResult);
+  return NS_OK;
+}
+
 // Creation Routine ///////////////////////////////////////////////////////////////////////
 
 nsresult
