@@ -235,10 +235,10 @@ if(verifyDiskSpace(fProgram, srDest))
     // register chrome
     var ctype = (CONTENT | DELAYED_CHROME);
     var cf = getFolder("Chrome");
-    registerChrome(ctype, getFolder(cf,"packages/core"));
-    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit"));
-    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/modern"));
-    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/classic"));
+    registerChrome(ctype, getFolder(cf,"packages/core.jar"));
+    registerChrome(ctype, getFolder(cf,"packages/widget-toolkit.jar"));
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/modern.jar"));
+    registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/classic.jar"));
 
     /* Log files that are created after the installer is done, so they can be uninstalled */
     logComment("Installing: "    + fProgram + "Xpcs Registry.dat");

@@ -6,13 +6,12 @@ addFile("Chatzilla service",
         getFolder("Components"),
         "");
 
-var fChat = getFolder("Chrome","packages/chatzilla");
-addDirectory("",
-             "bin/chrome/packages/chatzilla", // jar source folder 
-             fChat,                           // target folder
-             "");                             // target subdir 
+addFile("",
+        "bin/chrome/packages/chatzilla.jar", // jar source folder 
+        getFolder("Chrome","packages"),      // target folder
+        "");                                 // target subdir 
 
-registerChrome(PACKAGE | DELAYED_CHROME, fChat);
+registerChrome(PACKAGE | DELAYED_CHROME, getFolder("Chrome","packages/chatzilla.jar"));
 
 err = getLastError();
 if (err==SUCCESS)
