@@ -676,8 +676,107 @@ nsEditorShell::LoadUrl(const PRUnichar *url)
   return mContentAreaWebShell->LoadURL(url);
 }
 
+
 NS_IMETHODIMP    
-nsEditorShell::PrepareDocumentForEditing()
+nsEditorShell::RegisterDocumentStateListener(nsIDocumentStateListener *docListener)
+{
+  nsresult rv = NS_OK;
+  
+  if (!docListener)
+    return NS_ERROR_NULL_POINTER;
+  
+  // if we have an editor already, just pass this baby through.
+  if (mEditor)
+  {
+    nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+  
+    return editor->AddDocumentStateListener(docListener);
+  }
+  
+  // otherwise, keep it until we create an editor.
+  if (!mDocStateListeners)
+  {
+    rv = NS_NewISupportsArray(getter_AddRefs(mDocStateListeners));
+    if (NS_FAILED(rv)) return rv;
+  }
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(docListener, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // note that this return value is really a PRBool, so be sure to use
+  // NS_SUCCEEDED or NS_FAILED to check it.
+  return mDocStateListeners->AppendElement(iSupports);
+}
+
+NS_IMETHODIMP    
+nsEditorShell::UnregisterDocumentStateListener(nsIDocumentStateListener *docListener)
+{
+  if (!docListener)
+    return NS_ERROR_NULL_POINTER;
+
+  nsresult rv = NS_OK;
+  
+  // if we have an editor already, just pass this baby through.
+  if (mEditor)
+  {
+    nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor, &rv);
+    if (NS_FAILED(rv))
+      return rv;
+  
+    return editor->RemoveDocumentStateListener(docListener);
+  }
+
+  // otherwise, see if it exists in our list
+  if (!mDocStateListeners)
+    return (nsresult)PR_FALSE;      // yeah, this sucks, but I'm emulating the behaviour of
+                                    // nsISupportsArray::RemoveElement()
+
+  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(docListener, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  // note that this return value is really a PRBool, so be sure to use
+  // NS_SUCCEEDED or NS_FAILED to check it.
+  return mDocStateListeners->RemoveElement(iSupports);
+}
+
+// called after making an editor. Transfer the nsIDOcumentStateListeners
+// that we have been stashing in mDocStateListeners to the editor.
+NS_IMETHODIMP    
+nsEditorShell::TransferDocumentStateListeners()
+{
+  if (!mDocStateListeners)
+    return NS_OK;
+   
+  if (!mEditor)
+    return NS_ERROR_NOT_INITIALIZED;		// called too early.
+
+  nsresult  rv;
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
+  if (NS_FAILED(rv)) return rv;
+    
+  PRUint32 numListeners;  
+  while (NS_SUCCEEDED(mDocStateListeners->Count(&numListeners)) && numListeners > 0)
+  {
+    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(0));
+    nsCOMPtr<nsIDocumentStateListener> docStateListener = do_QueryInterface(iSupports);
+    if (docStateListener)
+    {
+      // this checks for duplicates
+      rv = editor->AddDocumentStateListener(docStateListener);
+    }
+    
+    mDocStateListeners->RemoveElementAt(0);
+  }
+  
+  // free the array
+  mDocStateListeners = 0;
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP    
+nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
 {
   if (!mContentAreaWebShell)
     return NS_ERROR_NOT_INITIALIZED;
@@ -692,11 +791,16 @@ nsEditorShell::PrepareDocumentForEditing()
     
     // and tell them that they are doing bad things
     NS_WARNING("Multiple loads of the editor's document detected.");
+    // Note that if you registered doc state listeners before the second
+    // URL load, they don't get transferred to the new editor.
   }
   
   nsresult rv = DoEditorMode(mContentAreaWebShell);
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
+  
+  // transfer the doc state listeners to the editor
+  rv = TransferDocumentStateListeners();
+  if (NS_FAILED(rv)) return rv;
   
   // make the UI state maintainer
   mStateMaintainer = new nsInterfaceState;
@@ -718,6 +822,29 @@ nsEditorShell::PrepareDocumentForEditing()
   if (NS_FAILED(rv)) return rv;
   rv = editor->AddDocumentStateListener(mStateMaintainer);
   if (NS_FAILED(rv)) return rv;
+  
+#if 0
+  // get the URL of the page we are editing
+  // does not work currently, because file URL has /usr/local/bin crap in it.
+  char* pageURLString = nsnull;
+  if (aUrl)
+  {
+    aUrl->GetSpec(&pageURLString);
+  
+    nsFileURL    pageURL(pageURLString);
+    nsFileSpec   pageSpec(pageURL);
+
+    nsCOMPtr<nsIDOMDocument>  domDoc;
+    editor->GetDocument(getter_AddRefs(domDoc));
+    
+    if (domDoc)
+    {
+      nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(domDoc);
+      if (diskDoc)
+        diskDoc->InitDiskDocument(&pageSpec);
+    }
+  }
+#endif
   
   // Force initial focus to the content window -- HOW?
 //  mWebShellWin->SetFocus();
@@ -2598,7 +2725,11 @@ nsEditorShell::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIChannel* channel,
 								 nsIDocumentLoaderObserver * aObserver)
 #endif // NECKO
 {
-   return PrepareDocumentForEditing();
+#ifdef NECKO
+  nsCOMPtr<nsIURI>  aUrl;
+  channel->GetURI(getter_AddRefs(aUrl));
+#endif
+   return PrepareDocumentForEditing(aUrl);
 }
 
 NS_IMETHODIMP

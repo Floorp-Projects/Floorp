@@ -99,6 +99,8 @@ class nsEditorShell :   public nsIEditorShell,
 	  NS_IMETHOD SetContentWindow(nsIDOMWindow *win);
 	  NS_IMETHOD SetWebShellWindow(nsIDOMWindow *win);
 	  NS_IMETHOD LoadUrl(const PRUnichar *url);
+    NS_IMETHOD RegisterDocumentStateListener(nsIDocumentStateListener *docListener);
+    NS_IMETHOD UnregisterDocumentStateListener(nsIDocumentStateListener *docListener);
 
 	  /* void NewWindow (); */
 	  NS_IMETHOD NewWindow();
@@ -284,10 +286,11 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD 			DoEditorMode(nsIWebShell *aWebShell);
     NS_IMETHOD	 		ExecuteScript(nsIScriptContext * aContext, const nsString& aScript);
     NS_IMETHOD			InstantiateEditor(nsIDOMDocument *aDoc, nsIPresShell *aPresShell);
+    NS_IMETHOD      TransferDocumentStateListeners();
     NS_IMETHOD			RemoveOneProperty(const nsString& aProp, const nsString& aAttr);
     void 						SetButtonImage(nsIDOMNode * aParentNode, PRInt32 aBtnNum, const nsString &aResName);
 		NS_IMETHOD			CreateWindowWithURL(const char* urlStr);
-		NS_IMETHOD  	  PrepareDocumentForEditing();
+		NS_IMETHOD  	  PrepareDocumentForEditing(nsIURI *aUrl);
 		NS_IMETHOD      DoFind(PRBool aFindNext);
 		
 		// this returns an AddReffed nsIScriptContext. You must relase it.
@@ -312,6 +315,10 @@ class nsEditorShell :   public nsIEditorShell,
     NS_IMETHOD      DeleteSuggestedWordList();
     nsStringArray   mDictionaryList;
     PRInt32         mDictionaryIndex;
+
+    // this is a holding pen for doc state listeners. They will be registered with
+    // the editor when that gets created.
+    nsCOMPtr<nsISupportsArray>    mDocStateListeners;		// contents are nsISupports
 };
 
 #endif // nsEditorAppCore_h___
