@@ -225,6 +225,7 @@ protected:
                              PRBool aKeepReflowGoing);
 
   nsresult PlaceLine(nsBlockReflowState& aState,
+                     nsLineLayout& aLineLayout,
                      nsLineBox* aLine,
                      PRBool* aKeepReflowGoing);
 
@@ -258,7 +259,24 @@ protected:
                               nsLineBox* aLine,
                               PRBool* aKeepLineGoing);
 
+  nsresult DoReflowInlineFrames(nsBlockReflowState& aState,
+                                nsLineLayout& aLineLayout,
+                                nsLineBox* aLine,
+                                PRBool* aKeepReflowGoing,
+                                PRUint8* aLineReflowStatus);
+
+  nsresult DoReflowInlineFramesAuto(nsBlockReflowState& aState,
+                                    nsLineBox* aLine,
+                                    PRBool* aKeepReflowGoing,
+                                    PRUint8* aLineReflowStatus);
+
+  nsresult DoReflowInlineFramesMalloc(nsBlockReflowState& aState,
+                                      nsLineBox* aLine,
+                                      PRBool* aKeepReflowGoing,
+                                      PRUint8* aLineReflowStatus);
+
   nsresult ReflowInlineFrame(nsBlockReflowState& aState,
+                             nsLineLayout& aLineLayout,
                              nsLineBox* aLine,
                              nsIFrame* aFrame,
                              PRUint8* aLineReflowStatus);
@@ -278,6 +296,7 @@ protected:
                                          PRBool& aMadeNewFrame);
 
   nsresult SplitLine(nsBlockReflowState& aState,
+                     nsLineLayout& aLineLayout,
                      nsLineBox* aLine,
                      nsIFrame* aFrame);
 
@@ -331,8 +350,6 @@ protected:
 
   void ReflowBullet(nsBlockReflowState& aState,
                     nsHTMLReflowMetrics& aMetrics);
-
-  void PlaceBullet(nsBlockReflowState& aState);
 
   //----------------------------------------
 
