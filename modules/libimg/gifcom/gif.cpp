@@ -508,6 +508,7 @@ il_gif_init(il_container *ic)
 		ic->ds = gs;
 		gs->state = gif_init;
 		gs->post_gather_state = gif_error;
+                gs->gathered = 0;
 		gs->ic = ic;
 	}
 
@@ -600,18 +601,18 @@ il_gif_compute_percentage_complete(int row, il_container *ic)
 
 #define MAX_READ_AHEAD  (60000L)
 
-unsigned int
+PRUint8
 il_gif_write_ready(il_container *ic)
 {
 	gif_struct *gs = (gif_struct *)ic->ds;
     int32 max;
     
     if (!gs)
-        return -1;               /* Let imglib generic code decide */
+        return 1;               /* Let imglib generic code decide */
 
     max = MAX(MAX_READ_AHEAD, gs->requested_buffer_fullness);
     if (gs->gathered < max)
-        return -1;               /* Let imglib generic code decide */
+        return 1;               /* Let imglib generic code decide */
     else
         return 0;               /* No more data until timeout expires */
 }
