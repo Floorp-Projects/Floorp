@@ -25,10 +25,12 @@ Rights Reserved.
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/FilterEditor.dtd" >
 <window class="dialog"
+  id="FilterEditor"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   title="&window.title;"
   orient="vertical"
+  persist="width heigh screenX screenY"
   onload="filterEditorOnLoad('msgFccFolderPicker');">
 
 <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
