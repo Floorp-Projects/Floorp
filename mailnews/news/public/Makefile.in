@@ -30,7 +30,7 @@ EXPORTS= \
 		nsIMsgOfflineNewsState.h \
 		nsINNTPArticleList.h \
 		nsINNTPCategoryContainer.h \
-		nsINntpURL.h \
+		nsINntpUrl.h \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk
