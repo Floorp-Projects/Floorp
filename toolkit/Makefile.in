@@ -51,19 +51,8 @@ DIRS	= \
 		xre \
 		components \
 		mozapps \
+		themes \
 		$(NULL)
-
-ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
-# Use Pinstripe on MacOS X
-DIRS	+= skin/mac
-else
-# Use Qute on Windows and Linux
-DIRS    += skin/win 
-endif
 
 include $(topsrcdir)/config/rules.mk
 
-# skin/gtk2 contains css rules that more closely match gtk widgets
-ifneq (,$(filter gtk2,$(MOZ_WIDGET_TOOLKIT)))
-DIRS	+= skin/gtk2
-endif
