@@ -41,7 +41,18 @@ public:
     
   void FireChangeHandler(nsIPresContext& aPresContext);
 
+  PRBool IsSlatedForReflow() { return mSlatedForReflow; };
+  void SlateForReflow() { mSlatedForReflow = PR_TRUE; };
+
+  // Overridden methods
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
+  PRBool RowGroupsShouldBeConstrained() { return PR_TRUE; }
+  
+  NS_IMETHODIMP Reflow(nsIPresContext&          aPresContext,
+							         nsHTMLReflowMetrics&     aMetrics,
+							         const nsHTMLReflowState& aReflowState,
+							         nsReflowStatus&          aStatus);
+
 
 protected:
   nsTreeFrame();
@@ -49,4 +60,7 @@ protected:
 
 protected: // Data Members
 	nsVoidArray mSelectedItems; // The selected cell frames. 
+  
+  PRBool mSlatedForReflow; // If set, don't waste time scheduling excess reflows.
+
 }; // class nsTreeFrame

@@ -43,6 +43,18 @@ function GetFolderTree()
 	return folderTree;
 }
 
+function GetThreadTree()
+{
+	var threadTree = frames[0].frames[1].document.getElementById('threadTree');
+	return threadTree;
+}
+
+function GetThreadTreeFolder()
+{
+  var tree = GetThreadTree();
+  return tree.childNodes[6];
+}
+
 function FindMessenger()
 {
   return messenger;
@@ -76,7 +88,7 @@ function ComposeMessage(type, format)
 		return;
 	}
 		
-	var tree = frames[0].frames[1].document.getElementById('threadTree');
+	var tree = GetThreadTree();
 	if (tree)
 	{
 		var nodeList = tree.getElementsByAttribute("selected", "true");
@@ -128,7 +140,7 @@ function NewMessage()
 
 function GetNewMessages()
 {
-	var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
+	var folderTree = GetFolderTree();; 
 	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
 	if(selectedFolderList.length > 0)
 	{
@@ -158,9 +170,9 @@ function ChangeFolderByDOMNode(folderNode)
 
 function ChangeFolderByURI(uri)
 {
-  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  var folder = GetThreadTreeFolder();
   var beforeTime = new Date();
-  tree.childNodes[5].setAttribute('id', uri);
+  folder.setAttribute('id', uri);
   var afterTime = new Date();
   var timeToLoad = (afterTime - beforeTime)/1000;
   if(showPerformance)
@@ -238,4 +250,11 @@ function SetFolderCharset(folderResource, aCharset)
 	var charsetProperty = RDF.GetResource("http://home.netscape.com/NC-rdf#Charset");
 
 	db2.Assert(folderResource, charsetProperty, charsetResource, true);
+}
+
+function RefreshThreadTreeView()
+{
+	var currentFolder = GetThreadTreeFolder();  
+	var currentFolderID = currentFolder.getAttribute('id');
+	currentFolder.setAttribute('id', currentFolderID);
 }

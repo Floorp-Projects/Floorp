@@ -1,126 +1,90 @@
-window { 
- display: block; 
- background-color: #FFFFFF; 
-} 
+/* -*- Mode: C; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
 
-menubar { 
- display: none; 
-} 
+/*
 
-tree { 
- display: table; 
- background-color: #FFFFFF; 
- border: none; 
- border-spacing: 0px; 
- width: 100%;
-}
+  Style rules specific to the bookmarks panel & pane.
 
-treecol {
- display: table-column;
- width: 200px;
-}
+*/
 
-treeitem { 
- display: table-row; 
-} 
-
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
-
-treecell { 
- display: table-cell; 
- font-family: Verdana, Sans-Serif;
- font-size: 8pt;
-} 
-
-treecell[selectedcell] {
- background-color: yellow;
- }
- 
-treecell[sortActive="true"][sortDirection="ascending"] {
- background-color: green;
- }
- 
-treecell[sortActive="true"][sortDirection="descending"] {
- background-color: red;
- }
- 
-treecol[sortActive="true"] {
-  background-color: lightgreen;
-}
-
-treehead treeitem treecell { 
- background-color: #c0c0c0; 
- border: outset 1px;
- border-color: white #707070 #707070 white;
- padding-left: 4px;
-}
-
-treecell[selectedcell] {
- background-color: yellow;
-}
-
-treeitem[container="true"][open="true"][loading="true"] > treecell > titledbutton {
+treeitem[container="true"][open="true"][loading="true"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/bookmark-folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][open="true"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/bookmark-folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/personal-folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFolder"][open="true"] > > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/personal-folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/bookmark-item.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/IEFavorite.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/samples/bookmark-item.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treerow > treecell > titledbutton
+{
  list-style-image: url("resource:/res/rdf/article.gif");
 }
 
-treeitem[container="true"][open="true"] > treecell > titledbutton {
+treeitem[container="true"][open="true"] > treerow > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/folder-open.gif");
 }
 
-treeitem[container="true"] > treecell > titledbutton {
+treeitem[container="true"] > treerow > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/folder-closed.gif");
 }
 
-treeitem > treecell > titledbutton {
- list-style-image: url("resource:/res/rdf/document.gif");
-}
-
 titledbutton#bookmarks {
-	list-style-image:url("resource:/res/samples/bookmark-item.gif");
+ list-style-image:url("resource:/res/samples/bookmark-item.gif");
 }

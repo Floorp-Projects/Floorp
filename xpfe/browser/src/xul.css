@@ -559,22 +559,26 @@ tree {
 }
 
 treeitem { 
- display: table-row; 
- color: black;
+ display: table-row-group; 
  font: inherit;
 } 
+
+treerow {
+ display: table-row;
+ font: inherit;
+}
 
 treehead { 
  display: table-header-group; 
  font: inherit;
 } 
 
-treebody { 
+treechildren { 
  display: table-row-group;
  font: inherit; 
 } 
 
-treeitem[selected="true"] { 
+treerow[selectedrow="true"] { 
  color: white;
  background-color: #666699;
  font: inherit; 
@@ -586,21 +590,24 @@ treecell {
  font: inherit;
 } 
 
-treehead treeitem treecell { 
+treehead treerow treecell { 
  font-size: 10pt;
  background-color: #a0a0a0; 
  border: 1px white transparent;
  color: black;
 } 
 
+treeitem > treechildren {
+  visibility: collapse;
+}
+
+treeitem[open="true"] > treechildren {
+  visibility: visible;
+}
 
 treecol {
  display: table-column;
 }
-
-
-
-
 
 /* tabs related stuff */
 

@@ -32,50 +32,62 @@
       <treecol id="activeColumn" style="width: 10%"/>
 
       <treehead>
-        <treeitem>
+        <treerow>
          <treecell>&numberColumn.label;</treecell>
          <treecell>&nameColumn.label;</treecell>
          <treecell>&activeColumn.label;</treecell>
-        </treeitem>
+        </treerow>
       </treehead>
-      <treebody>
+      <treechildren>
         <treeitem open="true">
-        <treecell/>
-        <treecell><treeindentation/>Sample Server 1</treecell>
-        <treecell/>
-        <treechildren>
-          <treeitem>
-            <treecell/>
-            <treecell><treeindentation/>People from work</treecell>
-            <treecell/>
-          </treeitem>
-          <treeitem>
-            <treecell/>
-            <treecell><treeindentation/>People from work</treecell>
-            <treecell/>
-          </treeitem>
-        </treechildren>
+		  <treerow>
+		    <treecell/>
+		    <treecell><treeindentation/>Sample Server 1</treecell>
+		    <treecell/>
+		  </treerow>
+          <treechildren>
+            <treeitem>
+			  <treerow>
+                <treecell/>
+                <treecell><treeindentation/>People from work</treecell>
+                <treecell/>
+			  </treerow>
+            </treeitem>
+            <treeitem>
+			  <treerow>
+                <treecell/>
+                <treecell><treeindentation/>People from work</treecell>
+                <treecell/>
+			  </treerow>
+            </treeitem>
+          </treechildren>
         </treeitem>
 
         <treeitem open="true">
-        <treecell/>
-        <treecell><treeindentation/>Sample Server 2</treecell>
-        <treecell/>
-        <treechildren>
-          <treeitem>
+		  <treerow>
             <treecell/>
-            <treecell><treeindentation/>People from college</treecell>
+            <treecell><treeindentation/>Sample Server 2</treecell>
             <treecell/>
-          </treeitem>
-          <treeitem>
-            <treecell/>
-            <treecell><treeindentation/>SPAM</treecell>
-            <treecell/>
-          </treeitem>
-        </treechildren>
+		  </treerow>
+          <treechildren>
+            <treeitem>
+			  <treerow>
+                <treecell/>
+                <treecell><treeindentation/>People from college</treecell>
+                <treecell/>
+			  </treerow>
+            </treeitem>
+            <treeitem>
+			  <treerow>
+                <treecell/>
+                <treecell><treeindentation/>SPAM</treecell>
+                <treecell/>
+			  </treerow>
+            </treeitem>
+          </treechildren>
         </treeitem>
 
-    </treebody>
+    </treechildren>
 
     </tree>
     </box>

@@ -44,6 +44,7 @@ CPPSRCS =				\
 	nsToolbarFrame.cpp			\
 	nsToolboxFrame.cpp			\
 	nsTreeFrame.cpp \
+	nsTreeRowGroupFrame.cpp \
 	nsTreeIndentationFrame.cpp \
 	nsTreeCellFrame.cpp \
 	nsTriStateCheckboxFrame.cpp \

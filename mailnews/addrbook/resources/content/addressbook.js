@@ -47,6 +47,7 @@ function OnLoadAddressBook()
 	
 function ChangeDirectoryByDOMNode(dirNode)
 {
+	dump("-----------------ChangeDirectoryByDOMNode----------------\n");
 	var uri = dirNode.getAttribute('id');
 	dump(uri + "\n");
 	ChangeDirectoryByURI(uri);
@@ -55,7 +56,15 @@ function ChangeDirectoryByDOMNode(dirNode)
 function ChangeDirectoryByURI(uri)
 {
 	var tree = frames[0].frames[1].document.getElementById('resultTree');
-	tree.childNodes[7].setAttribute('id', uri);
+	dump("tree = " + tree + "\n");
+
+	var treechildrenList = tree.getElementsByTagName('treechildren');
+	if ( treechildrenList.length == 1 )
+	{
+		var body = treechildrenList[0];
+		body.setAttribute('id', uri);// body no longer valid after setting id.
+	}
+	dump("------------end--ChangeDirectoryByDOMNode---end----------\n");
 }
 
 
@@ -70,9 +79,13 @@ function saChangeDirectoryByURI(uri)
 {
 	var tree = frames["browser.selAddrResultPane"].document.getElementById('resultTree');
 	dump("tree = " + tree + "\n");
-	dump("tree.childNodes[7].id = " + tree.childNodes[7].getAttribute('id') + "\n");
-	tree.childNodes[7].setAttribute('id', uri);
-	dump("tree.childNodes[7].id = " + tree.childNodes[7].getAttribute('id') + "\n");
+
+	var treechildrenList = tree.getElementsByTagName('treechildren');
+	if ( treechildrenList.length == 1 )
+	{
+		var body = treechildrenList[0];
+		body.setAttribute('id', uri);// body no longer valid after setting id.
+	}
 }
 
 
@@ -309,16 +322,18 @@ function AddAddressIntoBucket(doc, address)
 
 	var body = doc.getElementById("bucketBody");
 	
-	var newitem = doc.createElement('treeitem');
+	var item = doc.createElement('treeitem');
 	//newitem.setAttribute("rowID", num);
 	//newitem.setAttribute("rowName", name);
 
-	var elem = doc.createElement('treecell');
+	var cell = doc.createElement('treecell');
+	var row = doc.createElement('treerow');
 	var text = doc.createTextNode(address);
-	elem.appendChild(text);
-	newitem.appendChild(elem);
-
-	body.appendChild(newitem);
+	
+	cell.appendChild(text);
+	row.appendChild(cell);
+	item.appendChild(row);
+	body.appendChild(item);
 }
 
 function RemoveSelectedFromBucket()
@@ -335,4 +350,79 @@ function RemoveSelectedFromBucket()
 			body.removeChild(selArray[item]);
 		}
 	}	
+}
+
+// ----------------------
+// DumpDOM(node)
+// FIX ME!
+// This code should be removed when we land in the tip, it has been replaced by DumpDOM.js
+// ----------------------
+function DumpDOM(node)
+{
+	dump("--------------------- DumpDOM ---------------------\n");
+	
+	DumpNodeAndChildren(node, "");
+	
+	dump("------------------- End DumpDOM -------------------\n");
+}
+
+
+// This function does the work of DumpDOM by recursively calling itself to explore the tree
+function DumpNodeAndChildren(node, prefix)
+{
+	dump(prefix + "<" + node.nodeName);
+	if ( node.nodeType == 1 )
+	{
+		// id
+		var text = node.getAttribute('id');
+		if ( text && text[0] != '$' )
+			dump(" id=\"" + text + "\"");
+		
+		DumpAttribute(node, "name");
+		DumpAttribute(node, "class");
+		DumpAttribute(node, "style");
+		DumpAttribute(node, "flex");
+		DumpAttribute(node, "value");
+		DumpAttribute(node, "src");
+		DumpAttribute(node, "onclick");
+		DumpAttribute(node, "onchange");
+	}
+	
+	if ( node.nodeName == "#text" )
+		dump(" = \"" + node.data + "\"");
+	
+	dump(">\n");
+	
+	// dump IFRAME && FRAME DOM
+	if ( node.nodeName == "IFRAME" || node.nodeName == "FRAME" )
+	{
+		if ( node.name )
+		{
+			var wind = top.frames[node.name];
+			if ( wind && wind.document && wind.document.documentElement )
+			{
+				dump(prefix + "----------- " + node.nodeName + " -----------\n");
+				DumpNodeAndChildren(wind.document.documentElement, prefix + "  ");
+				dump(prefix + "--------- End " + node.nodeName + " ---------\n");
+			}
+		}
+	}
+	// children of nodes (other than frames)
+	else
+	{
+		var child = 0;
+		while ( node.childNodes && child < node.childNodes.length )
+		{
+			DumpNodeAndChildren(node.childNodes[child], prefix + "  ");
+			child++;
+		} 
+	} 
+}
+
+
+function DumpAttribute(node, attribute)
+{
+	var text = node.getAttribute(attribute);
+	if ( text )
+		dump(" " + attribute + "=\"" + text + "\"");
 }

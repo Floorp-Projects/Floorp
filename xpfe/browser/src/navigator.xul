@@ -239,7 +239,7 @@
 <!-- Statusbar -->
 <!ENTITY  notifCom.label "[Notification Component]">
 <!ENTITY  statusText.label "Document: Done">
-<!ENTITY  buildId.label "Build ID: 1999060717">
+<!ENTITY  buildId.label "Build ID: 1999062217">
 <!ENTITY  security-button.label "Secure Conn">
 
 <!-- taskbar -->

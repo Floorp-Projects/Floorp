@@ -108,7 +108,7 @@ treecol {
 
 /* Custom Trees */
 
-tree[class="abDirectory"] treeitem > treecell > titledbutton {
+tree[class="abDirectory"] treeitem > treerow > treecell > titledbutton {
  vertical-align: bottom;
  min-height: 1px;
  min-width: 1px;
@@ -116,10 +116,11 @@ tree[class="abDirectory"] treeitem > treecell > titledbutton {
  width: 1em;
  margin:0px;
  padding:0px;
+ border:none;
  list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
 
-tree[class="abResults"] treeitem > treecell > titledbutton {
+tree[class="abResults"] treeitem > treerow  > treecell > titledbutton {
  vertical-align: middle;
  min-height: 1px;
  min-width: 1px;
@@ -127,6 +128,7 @@ tree[class="abResults"] treeitem > treecell > titledbutton {
  width: 2em;
  margin:0px;
  padding:0px;
+ border:none;
  list-style-image: url("chrome://addressbook/skin/person.gif");
 }
 

@@ -112,6 +112,11 @@ public:
                                    nsIFrame*       aParentFrame,
                                    nsIFrame**      aContinuingFrame);
 
+  NS_IMETHODIMP CreateTreeWidgetContent(nsIPresContext* aPresContext,
+                                        nsIFrame*       aParentFrame,
+                                        nsIContent*     aChild,
+                                        nsIFrame**      aResult);
+
 protected:
 
   nsresult ResolveStyleContext(nsIPresContext*   aPresContext,
@@ -422,7 +427,7 @@ protected:
                            nsIAtom*                 aTag,
                            nsFrameConstructorState& aState,
                            nsIContent*              aContent,
-                           nsIFrame*                aNewFrame,
+                           nsIFrame*                aParentFrame,
                            nsFrameItems&            aChildItems);
 
 #endif

@@ -25,7 +25,6 @@ window {
 }
 
 tree {
- display: table;
  background-color: white;
  border: none;
  border-spacing: 0px;
@@ -34,54 +33,45 @@ tree {
  table-layout: fixed;
 }
 
-treeitem { 
- display: table-row; 
+treerow { 
  font-family: Verdana;
  font-size: 10pt;
  color: black;
 } 
 
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
-
 treecell { 
- display: table-cell; 
  white-space: nowrap;
 } 
 
-treeitem[selected="true"] { 
+treerow[selectedrow="true"] { 
  background-color: #666699; 
  color: white;
 } 
 
-treeitem[Status=""] {
+treeitem[Status=""] > treerow {
 	font-weight: bold;
 }
 
-treeitem[Status="new"] {
+treeitem[Status="new"] > treerow{
 	font-weight: bold;
 }
 
-treehead treeitem treecell { 
+treerow > treecell > titledbutton {
+ //list-style-image: url("chrome://messenger/skin/mailMessage.gif");
+ color: inherit;
+ border: none;
+ padding: 0px;
+ margin: 0px;
+ height: 16px;
+ width: 16px;
+}
+
+treehead treerow treecell { 
  font-size: 9pt;
  background-color: #666699; 
  border: thin darkgray solid; 
  color: white;
 } 
 
-icon {
- display: list-item;
- height: 16px;
- width: 16px;
-// list-style-image: url("chrome://messenger/skin/closedMailFolder.gif");
-}
 
-treecol {
- display: table-column;
- }
 

@@ -2006,54 +2006,15 @@ RDFGenericBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
         if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag, getter_AddRefs(element))))
             return rv;
 
-        if (NS_FAILED(rv = parent->AppendChildTo(element, PR_FALSE)))
+        if (NS_FAILED(rv = parent->AppendChildTo(element, PR_TRUE))) 
+          // XXX Note that the notification ensures we won't batch insertions! This could be bad! - Dave
+
             return rv;
 
         *result = element;
         NS_ADDREF(*result);
     }
     return NS_OK;
-}
-
-nsresult
-RDFGenericBuilderImpl::FindWidgetRootElement(nsIContent* aElement,
-                                             nsIContent** aWidgetElement)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIAtom>       rootAtom;
-    if (NS_FAILED(rv = GetRootWidgetAtom(getter_AddRefs(rootAtom)))) {
-        return rv;
-    }
-
-    // walk up the tree until you find rootAtom
-    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
-
-    while (element) {
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID == kNameSpaceID_XUL) {
-            nsCOMPtr<nsIAtom> tag;
-            if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(tag))))
-                return rv;
-
-            if (tag == rootAtom) {
-                *aWidgetElement = element;
-                NS_ADDREF(*aWidgetElement);
-                return NS_OK;
-            }
-        }
-
-        // up to the parent...
-        nsCOMPtr<nsIContent> parent;
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-
-    //NS_ERROR("must not've started from within the XUL widget");
-    return NS_ERROR_FAILURE;
 }
 
 
@@ -2322,9 +2283,17 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
         return rv;
     }
 
-    // The insertion root is _always_ open.
-    if (tag == insertionAtom)
-        return PR_TRUE;
+	if (tag == insertionAtom) {
+		// Hack for the tree widget
+		nsCOMPtr<nsIContent> parent;
+		aElement->GetParent(*getter_AddRefs(parent));
+		nsCOMPtr<nsIAtom> parentTag;
+		parent->GetTag(*getter_AddRefs(parentTag));
+		nsString tagName;
+		parentTag->ToString(tagName);
+		if (tagName == "tree")
+			return PR_TRUE;
+	}
 
     // If it's not a widget folder item, then it's not open.
     if (tag != folderAtom)
@@ -2341,6 +2310,7 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
             return PR_TRUE;
     }
 
+	
     return PR_FALSE;
 }
 

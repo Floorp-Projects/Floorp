@@ -25,7 +25,6 @@
 }
 
 tree { 
- display: table; 
  background-color:white;
  border: none; 
  border-spacing: 0px; 
@@ -33,20 +32,9 @@ tree {
  width: 100%
 } 
 
-treeitem { 
- display: table-row; 
-} 
 
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
 
 treecell { 
- display: table-cell; 
  color: black;
  font-family: Verdana;
  font-size: 10pt;
@@ -57,15 +45,21 @@ treecell[selectedcell] {
  color: white;
 }
 
-treeitem > treecell > titledbutton {
+treerow > treecell > titledbutton {
  list-style-image: url("chrome://messenger/skin/dot.gif");
+ color: inherit;
+ border: none;
+ padding: 0px;
+ margin: 0px;
+ height: 16px;
+ width: 16px;
 }
 
-treeitem[subscribed="true"] > treecell > titledbutton {
+treeitem[subscribed="true"] > treerow > treecell > titledbutton {
  list-style-image: url("chrome://messenger/skin/check.gif");
 }     
 
-treehead treeitem treecell { 
+treehead treerow treecell { 
  font-size: 9pt;
  background-color: #666699; 
  border: thin darkgray solid; 

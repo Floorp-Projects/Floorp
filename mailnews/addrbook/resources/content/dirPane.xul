@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://addressbook/skin/dirPane.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://addressbook/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
@@ -9,21 +10,41 @@
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+  style="background-color:white">
+
+<html:script language="javascript" src="chrome://addressbook/content/addressbook.js"/>
 
 
-<tree rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return parent.parent.ChangeDirectoryByDOMNode(event.target.parentNode)">
-  <treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
-  <treehead>
-    <treeitem>
-      <treecell>&directoryColumn.label;</treecell>
-    </treeitem>
-  </treehead>
+<tree class="abDirectory" rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return parent.parent.ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
+	<template>
+		<rule rootcontainment="treechildren" subcontainment="treechildren">
+			<treeitem uri="...">
+				<treerow >
+					<treecell>
+						<treeindentation />
+						<titledbutton value="rdf:http://home.netscape.com/NC-rdf#DirName" align="right" />
+					</treecell>
+				</treerow>
+			</treeitem>
+		</rule>
+	</template>
 
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
-    <treeitem id="abdirectory:/" open="true">
-      <treecell/>
-      </treeitem>
-  </treebody>
+	<treecol rdf:resource="http://home.netscape.com/NC-rdf#DirName"/>
+
+	<treehead>
+		<treerow>
+			<treecell>&directoryColumn.label;</treecell>
+		</treerow>
+	</treehead>
+
+	<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
+		<treeitem ref="abdirectory:/" open="true">
+			<treerow>
+				<treecell/>
+			</treerow>
+		</treeitem>
+	</treechildren>
 </tree>
+
 </window>

@@ -347,14 +347,14 @@ NS_IMETHODIMP nsABCardDataSource::Assert(nsIRDFResource* source,
                       nsIRDFNode* target,
                       PRBool tv)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_RDF_ASSERTION_REJECTED;//NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsABCardDataSource::Unassert(nsIRDFResource* source,
                         nsIRDFResource* property,
                         nsIRDFNode* target)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_RDF_ASSERTION_REJECTED;//NS_ERROR_NOT_IMPLEMENTED;
 }
 
 

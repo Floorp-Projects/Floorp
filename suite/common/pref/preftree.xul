@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="chrome://pref/skin/preftree.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 
 <!DOCTYPE window
 [
@@ -31,9 +31,10 @@
 <!ENTITY smart.label "Smart Update">
 ]>
 
-<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload = "ChangePanelURL(pref-appearance.xul);"> 
+        onload="ChangePanelURL(pref-appearance.xul);"
+        style="overflow: visible;"> 
 
 <html:script>
 	
@@ -70,125 +71,173 @@
 
 <tree onclick="return ClickChangePanel(event.target);"> 
   
-  <treebody>
-  
+  <treechildren>
     <treeitem>
-       
-      <treecell name="chrome://pref/content/pref-appearance.xul"><treeindentation/>&appear.label;</treecell>
-       
-	  <treechildren>
+      <treerow>   
+        <treecell name="chrome://pref/content/pref-appearance.xul"><treeindentation/>&appear.label;</treecell>
+      </treerow>
+      <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-fonts.xul"><treeindentation/>&fonts.label;</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell name="chrome://pref/content/pref-colors.xul"><treeindentation/>&colors.label;</treecell>
-	    </treeitem>
-      </treechildren>
-    
-    </treeitem>
- 
-    <treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-fonts.xul"><treeindentation/>&fonts.label;</treecell>
+          </treerow>
+        </treeitem>
 
-      <treecell name="chrome://pref/content/pref-navigator.xul"><treeindentation/>&navigator.label;</treecell>
-       
-	  <treechildren>
         <treeitem>
-          <treecell><treeindentation/>&languages.label;</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell name="chrome://pref/content/pref-applications.xul"><treeindentation/>&applications.label;</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell name="chrome://pref/content/pref-smart_browsing.xul"><treeindentation/>&smartBrowse.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-colors.xul"><treeindentation/>&colors.label;</treecell>
+          </treerow>
+        </treeitem>
       </treechildren>
-    
+    </treeitem>
+
+    <treeitem>
+      <treerow>
+        <treecell name="chrome://pref/content/pref-navigator.xul"><treeindentation/>&navigator.label;</treecell>
+      </treerow>
+      <treechildren>
+        <treeitem>
+          <treerow>
+            <treecell><treeindentation/>&languages.label;</treecell>
+          </treerow>
+        </treeitem>
+
+        <treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-applications.xul"><treeindentation/>&applications.label;</treecell>
+          </treerow>
+        </treeitem>
+
+        <treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-smart_browsing.xul"><treeindentation/>&smartBrowse.label;</treecell>
+          </treerow>
+        </treeitem>
+      </treechildren>
     </treeitem>
  
-     <treeitem>
-       
-      <treecell name="chrome://messenger/content/pref-mailnews.html"><treeindentation/>&mail.label;</treecell>
-       
-	  <treechildren>
+    <treeitem>
+      <treerow>       
+        <treecell name="chrome://messenger/content/pref-mailnews.html"><treeindentation/>&mail.label;</treecell>
+      </treerow>
+
+      <treechildren>
         <treeitem>
-          <treecell name="chrome://messenger/content/pref-identity.html"><treeindentation/>&identity.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messenger/content/pref-identity.html"><treeindentation/>&identity.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messenger/content/pref-mailservers.html"><treeindentation/>&mailServer.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messenger/content/pref-mailservers.html"><treeindentation/>&mailServer.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messenger/content/pref-newsservers.html"><treeindentation/>&newsServer.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messenger/content/pref-newsservers.html"><treeindentation/>&newsServer.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://addressbook/content/pref-addressing.html"><treeindentation/>&address.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://addressbook/content/pref-addressing.html"><treeindentation/>&address.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messengercompose/content/pref-messages.html"><treeindentation/>&mess.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messengercompose/content/pref-messages.html"><treeindentation/>&mess.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messenger/content/pref-winsetting.html"><treeindentation/>&windowSet.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messenger/content/pref-winsetting.html"><treeindentation/>&windowSet.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-        <treecell name="chrome://messengercompose/content/pref-copiesfolders.html"><treeindentation/>&copyFolder.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messengercompose/content/pref-copiesfolders.html"><treeindentation/>&copyFolder.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messengercompose/content/pref-formatting.html"><treeindentation/>&format.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messengercompose/content/pref-formatting.html"><treeindentation/>&format.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messenger/content/pref-receipts.html"><treeindentation/>&return.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messenger/content/pref-receipts.html"><treeindentation/>&return.label;</treecell>
+          </treerow>
+        </treeitem>
+
         <treeitem>
-          <treecell name="chrome://messenger/content/pref-diskspace.html"><treeindentation/>&disk.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://messenger/content/pref-diskspace.html"><treeindentation/>&disk.label;</treecell>
+          </treerow>
+        </treeitem>
       </treechildren>
-    
+    </treeitem>
+
+    <treeitem>
+      <treerow>       
+        <treecell name="chrome://pref/content/pref-composer.xul"><treeindentation/>&compose.label;</treecell>
+      </treerow>
+
+      <treechildren>
+        <treerow>
+          <treeitem>
+            <treecell name="chrome://pref/content/pref-publish.xul"><treeindentation/>&publish.label;</treecell>
+	  </treeitem>
+        </treerow>
+      </treechildren>
     </treeitem>
     
-     <treeitem>
-       
-      <treecell name="chrome://pref/content/pref-composer.xul"><treeindentation/>&compose.label;</treecell>
-       
-	  <treechildren>
+    <treeitem>
+      <treerow>       
+        <treecell name="chrome://pref/content/pref-offline.xul"><treeindentation/>&offline.label;</treecell>
+      </treerow>
+
+      <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-publish.xul"><treeindentation/>&publish.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-download.xul"><treeindentation/>&down.label;</treecell>
+          </treerow>
+        </treeitem>
       </treechildren>
-    
     </treeitem>
     
-    
-     <treeitem>
-       
-      <treecell name="chrome://pref/content/pref-offline.xul"><treeindentation/>&offline.label;</treecell>
-       
-	  <treechildren>
+    <treeitem>
+      <treerow>
+        <treecell name="chrome://pref/content/pref-advanced.xul"><treeindentation/>&advance.label;</treecell>
+      </treerow>
+
+      <treechildren>
         <treeitem>
-          <treecell name="chrome://pref/content/pref-download.xul"><treeindentation/>&down.label;</treecell>
-	    </treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-cache.xul"><treeindentation/>&cache.label;</treecell>
+          </treerow>
+        </treeitem>
+
+        <treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-proxies.xul"><treeindentation/>&proxies.label;</treecell>
+          </treerow>
+        </treeitem>
+
+        <treeitem>
+          <treerow>
+            <treecell name="chrome://pref/content/pref-smartupdate.html"><treeindentation/>&smart.label;</treecell>
+          </treerow>
+        </treeitem>
       </treechildren>
-    
-     </treeitem>
-    
-     <treeitem>
-       
-      <treecell name="chrome://pref/content/pref-advanced.xul"><treeindentation/>&advance.label;</treecell>
-       
-	  <treechildren>
-        <treeitem>
-          <treecell name="chrome://pref/content/pref-cache.xul"><treeindentation/>&cache.label;</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell name="chrome://pref/content/pref-proxies.xul"><treeindentation/>&proxies.label;</treecell>
-	    </treeitem>
-        <treeitem>
-          <treecell name="chrome://pref/content/pref-smartupdate.html"><treeindentation/>&smart.label;</treecell>
-	    </treeitem>
-      </treechildren>
-    
     </treeitem>
-    
-  </treebody>
-  
+  </treechildren>
 </tree>
 
-</xul:window>
+</window>

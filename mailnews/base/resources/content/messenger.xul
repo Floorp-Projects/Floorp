@@ -504,10 +504,10 @@ Rights Reserved.
       </menu>
       <menuitem name="&editMsgAsNewCmd.label;" onclick="MsgEditMessageAsNew();"/>
       <separator/>
-      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" open="true"
+      <menu name="&moveMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
 			onclick="MsgMoveMessage(event.target)">
       </menu>
-      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" open="true"
+      <menu name="&copyMsgMenu.label;" datasources="rdf:mailnewsfolders rdf:msgaccountmanager" ref="msgaccounts:/" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" 
 			onclick="MsgCopyMessage(event.target)">
       </menu>
       <separator/>

@@ -14,14 +14,29 @@
 <tree rdf:datasources="rdf:msgaccountmanager"
   onclick="showPage(event)"
   id="accounttree">
+
+  <template>
+  	<rule rootcontainment="treechildren" subcontainment="treechildren">
+		<treeitem uri="...">
+	  		<treerow >
+				<treecell>
+					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+				</treecell>
+	  		</treerow>
+		</treeitem>
+	</rule>
+  </template>
+
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treehead>
-    <treecell>Name</treecell>
+	<treerow>
+      <treecell>Name</treecell>
+	</treerow>
   </treehead>
 
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#Settings">
+  <treechildren rdf:containment="http://home.netscape.com/NC-rdf#Settings">
     <treeitem id="msgaccounts:/" open="true"/>
-  </treebody>
+  </treechildren>
   
 </tree>
 <box align="vertical">

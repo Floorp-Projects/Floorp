@@ -1,4 +1,5 @@
-<?xml version="1.0"?> <!-- -*- Mode: SGML -->
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/flash.css" type="text/css"?>
 
@@ -19,9 +20,30 @@
   <tree id="tree"
         flex="100%"
         datasources="rdf:bookmarks"
-        onclick="OpenURL(event.target.parentNode);">
+        onclick="OpenURL(event.target.parentNode.parentNode);">
 
-    <!-- XXX Write a template rule for this -->
+    <template>
+      <rule rootcontainment="treechildren" subcontainment="treechildren">
+        <treeitem uri="...">
+          <treerow>
+            <treecell>
+              <treeindentation />
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#source" align="right" />
+            </treecell>
+
+            <treecell>
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#description" align="right"
+                            style="list-style-image: none;" />
+            </treecell>
+
+            <treecell>
+              <titledbutton value="rdf:http://home.netscape.com/NC-rdf#timestamp" align="right"
+                            style="list-style-image: none;" />
+            </treecell>
+          </treerow>
+        </treeitem>
+      </rule>
+    </template>
 
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#source" />
     <treecol rdf:resource="http://home.netscape.com/NC-rdf#description" />
@@ -29,13 +51,13 @@
 
     <!-- XXX We probably won't have a treehead in the end, but we'll put it here for now... -->
     <treehead>
-      <treeitem>
+      <treerow>
         <treecell>&tree.header.source.label;</treecell>
         <treecell>&tree.header.description.label;</treecell>
         <treecell>&tree.header.time.label;</treecell>
-      </treeitem>
+      </treerow>
     </treehead>
 
-    <treebody id="NC:FlashRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" />
+    <treechildren id="NC:FlashRoot" rdf:containment="http://home.netscape.com/NC-rdf#child" />
   </tree>
 </window>

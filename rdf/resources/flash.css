@@ -4,10 +4,10 @@
 
  */
 
-treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treecell > titledbutton {
+treeitem[type="http://www.mozilla.org/RDF#TinderboxFlash"] > treerow > treecell > titledbutton {
   list-style-image: url("resource:/res/rdf/flames.gif");
 }
 
-treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treecell > titledbutton {
+treeitem[type="http://home.netscape.com/NC-rdf#MsgNewMessages"] > treerow > treecell > titledbutton {
   list-style-image: url("chrome://messenger/skin/folderHasMail.gif");
 }

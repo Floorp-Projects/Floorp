@@ -1,4 +1,24 @@
-<?xml version="1.0"?>
+<?xml version="1.0"?> <!-- -*- Mode: SGML -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.0 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+-->
+
+<?xml-stylesheet href="xul.css" type="text/css"?>
 <?xml-stylesheet href="history.css" type="text/css"?>
 
 <!DOCTYPE window
@@ -129,38 +149,51 @@ function doSort(sortColName)
     </menu>
   </menubar>
 
-<tree rdf:datasources="rdf:history" ondblclick="return OpenURL(event,event.target.parentNode);">
+<tree rdf:datasources="rdf:history"
+      ondblclick="return OpenURL(event,event.target.parentNode.parentNode);">
 
   <template>
-  	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
-  		<treeitem uri="...">
-  			<treecell>
-  				<html:hr width="75%" align="center" size="1" />
-  			</treecell>
-		</treeitem>  		
-  	</rule>
+    <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator"
+          rootcontainment="treechildren" subcontainment="treechildren">
+      <treeitem uri="...">
+        <treerow>
+          <treecell>
+            <html:hr width="75%" align="center" size="1" />
+          </treecell>
+          <treecell></treecell>
+          <treecell></treecell>
+        </treerow>
+      </treeitem>  		
+    </rule>
   	
-  	<rule rootcontainment="treebody" subcontainment="treechildren">
-	  	<treeitem uri="...">
-			<treecell>
-				<treeindentation />
-				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
-			</treecell>
-			<treecell>
-				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
-			</treecell>
-			<treecell>
-				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right" style="list-style-image: none;" />
-			</treecell>
-	  	</treeitem>
-	</rule>
+    <rule rootcontainment="treechildren" subcontainment="treechildren">
+      <treeitem uri="...">
+        <treerow>
+          <treecell>
+            <treeindentation />
+            <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+          </treecell>
+
+          <treecell>
+            <titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right"
+                          style="list-style-image: none;" />
+          </treecell>
+
+          <treecell>
+            <titledbutton value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" align="right"
+                          style="list-style-image: none;" />
+          </treecell>
+        </treerow>
+      </treeitem>
+    </rule>
   </template>
 
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <treecol id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
+
   <treehead>
-    <treeitem>
+    <treerow>
       <treecell onclick="return doSort('NameColumn');">
 	<xul:observes element="NameColumn" attribute="sortActive"/>
 	<xul:observes element="NameColumn" attribute="sortDirection"/>
@@ -173,26 +206,26 @@ function doSort(sortColName)
 	<xul:observes element="ShortcutURLColumn" attribute="sortActive"/>
 	<xul:observes element="ShortcutURLColumn" attribute="sortDirection"/>
       Shortcut URL</treecell>
-    </treeitem>
+    </treerow>
   </treehead>
 
- <treebody>
-    <treeitem id="NC:HistoryBySite" open="true">
-      <treecell>&historyBySite.label;</treecell>
-      <treecell></treecell>
-      <treecell></treecell>
-      <treecell></treecell>
+  <treechildren>
+    <treeitem ref="NC:HistoryBySite" open="true">
+      <treerow> 
+        <treecell>&historyBySite.label;</treecell>
+        <treecell></treecell>
+        <treecell></treecell>
+      </treerow>
     </treeitem>
 
-    <treeitem id="NC:HistoryByDate" open="true">
-      <treecell>&historyByDate.label;</treecell>
-      <treecell></treecell>
-      <treecell></treecell>
-      <treecell></treecell>
+    <treeitem ref="NC:HistoryByDate" open="true">
+      <treerow>
+        <treecell>&historyByDate.label;</treecell>
+        <treecell></treecell>
+        <treecell></treecell>
+      </treerow>
     </treeitem>
-
-  </treebody>
-
+  </treechildren>
 </tree>
 
 </window>

@@ -77,7 +77,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
   {
 	  nscoord level = 0;
 	  
-	  // First climb out to the tree row level.
+	  // First climb out to the tree item level.
 	  nsIFrame* aFrame = this;
 	  nsCOMPtr<nsIContent> pContent;
 	  aFrame->GetContent(getter_AddRefs(pContent));
@@ -96,7 +96,7 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 
 		  // We now have a tree row content node. Start counting our level of nesting.
 		  nsCOMPtr<nsIContent> pParentContent;
-		  while (pTag.get() != nsXULAtoms::treebody && pTag.get() != nsXULAtoms::treehead)
+		  while (pTag.get() != nsXULAtoms::tree && pTag.get() != nsXULAtoms::treehead)
 		  {
 			  pContent->GetParent(*getter_AddRefs(pParentContent));
 
@@ -106,7 +106,8 @@ nsTreeIndentationFrame::Reflow(nsIPresContext&          aPresContext,
 			  ++level;
 		  }
 
-		  level = (level-1)/2;
+		  level = (level/2) - 1;
+      if (level < 0) level = 0;
 
 		  width = level*16; // Hardcode an indentation of 16 pixels for now. TODO: Make this a parameter or something
 	  }

@@ -1,4 +1,5 @@
 <?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css" type="text/css"?>
 <!--
  The contents of this file are subject to the Netscape Public
@@ -34,28 +35,51 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 
-<tree rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode)">
+<tree style="height: 100%" rdf:datasources="rdf:mailnewsfolders rdf:msgaccountmanager" id="folderTree" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild" onclick="return parent.parent.ChangeFolderByDOMNode(event.target.parentNode.parentNode)">
+  <template>
+  	<rule rootcontainment="treechildren" subcontainment="treechildren">
+		<treeitem uri="...">
+	  		<treerow >
+				<treecell>
+					<treeindentation />
+					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+				</treecell>
+				<treecell>
+					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages" align="right" style="list-style-image: none;" />
+				</treecell>
+				<treecell>
+					<titledbutton value="rdf:http://home.netscape.com/NC-rdf#TotalMessages" align="right" style="list-style-image: none;" />
+				</treecell>
+	  		</treerow>
+		</treeitem>
+	</rule>
+  </template>
+
   <treecol style="width:70%" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
   <treecol style="width:15%" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
   <treehead>
-    <treeitem>
+    <treerow>
       <treecell>&nameColumn.label;</treecell>
       <treecell>&unreadColumn.label;</treecell>
       <treecell>&totalColumn.label;</treecell>
-    </treeitem>
+    </treerow>
   </treehead>
 
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
-    <treeitem id="msgaccounts:/" open="true">
-      <treecell>
-        <treeindentation/>
-        <html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;
-      </treecell>
-      <treecell/>
-      <treecell/>
-    </treeitem>
-  </treebody>
+  <treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" open="true">
+
+	<treeitem ref="msgaccounts:/" open="true">
+		<treerow>
+		  <treecell>
+			<treeindentation/>
+			<html:img hspace="2" style="vertical-align: bottom" src="&accounts.img;"/>&accounts.label;
+		  </treecell>
+		  <treecell/>
+		  <treecell/>
+		</treerow>
+	</treeitem>
+  </treechildren>
+
 
 </tree>
 </window>

@@ -17,11 +17,13 @@
 	<tree id="addressBucket" flex="100%">
 		<treecol style="width:100%"/>
 
-		<treebody id="bucketBody">
+		<treechildren id="bucketBody">
 			<treeitem>
-				<treecell/>
+				<treerow>
+					<treecell/>
+				</treerow>
 			</treeitem>
-		</treebody>
+		</treechildren>
 	</tree>
 
 </window>

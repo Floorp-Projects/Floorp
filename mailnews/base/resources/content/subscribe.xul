@@ -174,27 +174,33 @@ Rights Reserved.
 				<box align="vertical" class="cleanborder">
 <tree>
 	<treehead>
-		<treeitem>
+		<treerow>
 			<treecell>&nameColumn.label;</treecell>
 			<treecell><html:img src="chrome://messenger/skin/check.gif"/></treecell>
 			<treecell>&messagesColumn.label;</treecell>
-		</treeitem>
+		</treerow>
 	</treehead>
 	<treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">
 		<treeitem id="1">
-			<treecell><treeindentation/>1</treecell>
-			<treecell/>
-			<treecell/>
+			<treerow>
+				<treecell><treeindentation/>1</treecell>
+				<treecell/>
+				<treecell/>
+			</treerow>
 		</treeitem>
 		<treeitem id="2">
-			<treecell><treeindentation/>2</treecell>
-			<treecell/>
-			<treecell/>
+			<treerow>
+				<treecell><treeindentation/>2</treecell>
+				<treecell/>
+				<treecell/>
+			</treerow>
 		</treeitem>
 		<treeitem id="3">
-			<treecell><treeindentation/>3</treecell>
-			<treecell/>
-			<treecell/>
+			<treerow>
+				<treecell><treeindentation/>3</treecell>
+				<treecell/>
+				<treecell/>
+			</treerow>
 		</treeitem>
 	</treebody>
 </tree>

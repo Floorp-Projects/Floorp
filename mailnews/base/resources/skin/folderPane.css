@@ -24,7 +24,6 @@ window {
 } 
 
 tree { 
- display: table; 
  background-color:white;
  border: none; 
  border-spacing: 0px; 
@@ -33,76 +32,68 @@ tree {
 
 } 
 
-treeitem { 
- display: table-row; 
+treerow { 
  color: black;
  font-family: Verdana;
  font-size: 10pt;
 } 
 
-treehead { 
- display: table-header-group; 
-} 
-
-treebody { 
- display: table-row-group; 
-} 
-
 treecell { 
- display: table-cell; 
  white-space: nowrap;
 } 
 
-treecol {
- display: table-column;
-}
 
-treeitem[selected="true"] { 
+treerow[selectedrow="true"] { 
  background-color: #666699; 
  color: white;
 } 
 
-treehead treeitem treecell { 
+treehead treerow treecell { 
  font-size: 9pt;
  background-color: #666699; 
  border: thin darkgray solid; 
  color: white;
 } 
 
-treeitem > treecell > titledbutton {
+treerow > treecell > titledbutton {
  height: 16px;
  width: 16px;
  list-style-image: url("chrome://messenger/skin/closedMailFolder.gif");
+ color: inherit;
+ border: none;
+ padding: 0px;
+ margin: 0px;
+
 }
 
-treeitem[open="true"] > treecell > titledbutton {
+treeitem[open="true"] > treerow > treecell > titledbutton {
  height: 16px;
  width: 16px;
  list-style-image: url("chrome://messenger/skin/openMailFolder.gif");
 }
 
-treeitem[SpecialFolder="Inbox"] > treecell > titledbutton {
+treeitem[SpecialFolder="Inbox"] > treerow > treecell > titledbutton {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
  list-style-image: url("chrome:/messenger/skin/closedInbox.gif");
 }
 
-treeitem[SpecialFolder="Trash"] > treecell > titledbutton {
+treeitem[SpecialFolder="Trash"] > treerow > treecell > titledbutton {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
  list-style-image: url("chrome://messenger/skin/closedTrash.gif");
 }
 
-treeitem[SpecialFolder="Unsent Messages"] > treecell > titledbutton {
+treeitem[SpecialFolder="Unsent Messages"] > treerow > treecell > titledbutton {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
  list-style-image: url("chrome://messenger/skin/closedOutbox.gif");
 }
 
-treeitem[BiffState="NewMail"] > treecell > titledbutton {
+treeitem[BiffState="NewMail"] > treerow > treecell > titledbutton {
  vertical-align: bottom;
  height: 16px;
  width: 16px;

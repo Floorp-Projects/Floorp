@@ -1652,12 +1652,8 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
             PRUint32 cnt;
             nsresult rv = mChildren->Count(&cnt);
             if (NS_FAILED(rv)) return rv;
-#if 0
-            // XXX Can't do this because of the tree frame trickery, I think.
+            
             mDocument->ContentAppended(NS_STATIC_CAST(nsIStyledContent*, this), cnt - 1);
-#else
-            mDocument->ContentInserted(NS_STATIC_CAST(nsIStyledContent*, this), aKid, cnt - 1);
-#endif
         }
     }
     return NS_OK;

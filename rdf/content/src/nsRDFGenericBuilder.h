@@ -94,10 +94,6 @@ public:
                                  nsIAtom* aTag,
                                  nsIContent** aResult);
 
-    nsresult
-    FindWidgetRootElement(nsIContent* aElement,
-                          nsIContent** aRootElement);
-
     virtual nsresult
     AddWidgetItem(nsIContent* aWidgetElement,
                   nsIRDFResource* aProperty,

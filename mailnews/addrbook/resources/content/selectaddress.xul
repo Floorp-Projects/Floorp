@@ -55,7 +55,8 @@ Rights Reserved.
 		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&selectAddressWindow.title;"
-        style="width:100%; height:100%">
+        class="dialog"
+        style="width:100%; height:100%; padding:0px">
 
 <html:script language="JavaScript" src="chrome://addressbook/content/addressbook.js"/>
 
@@ -84,19 +85,21 @@ Rights Reserved.
 			<box align="vertical" style="width:190px; background-color:white">
 				<tree id="dirTree" class="abDirectory" flex="100%"
 						rdf:datasources="rdf:addressdirectory"
-						onclick="return saChangeDirectoryByDOMNode(event.target.parentNode)">
+						onclick="return saChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
 					<treecol style="width:100%" rdf:resource="http://home.netscape.com/NC-rdf#DirName" />
 					<treehead>
-						<treeitem>
+						<treerow>
 							<treecell>&directoryColumn.label;</treecell>
-						</treeitem>
+						</treerow>
 					</treehead>
 
-					<treebody rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
-						<treeitem id="abdirectory:/" open="true">
-							<treecell/>
+					<treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" rdf:ignore="http://home.netscape.com/NC-rdf#CardChild">
+						<treeitem ref="abdirectory:/" open="true">
+							<treerow>
+								<treecell/>
+							</treerow>
 						</treeitem>
-					</treebody>
+					</treechildren>
 				</tree>
 			</box>
 			

@@ -3249,8 +3249,9 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
     break;
   
   case nsIReflowCommand::FrameAppended :
-    NS_ASSERTION(nsnull!=objectFrame, "bad objectFrame");
-    NS_ASSERTION(nsnull!=childDisplay, "bad childDisplay");
+    if (!objectFrame)
+      break;
+    
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
       rv = IR_ColGroupAppended(aPresContext, aDesiredSize, aReflowState, aStatus, 
@@ -3794,6 +3795,18 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       nscoord x = borderPadding.left;
       nscoord y = borderPadding.top + aReflowState.y;
       if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 2 of frame %p with reason=%d\n", kidFrame, reason);
+      
+      if (RowGroupsShouldBeConstrained()) {
+        // Only applies to the tree widget.
+        nscoord tableSpecifiedHeight;
+        GetTableSpecifiedHeight(tableSpecifiedHeight, kidReflowState);
+        if (tableSpecifiedHeight != -1) {
+          kidReflowState.availableHeight = tableSpecifiedHeight - y;
+          if (kidReflowState.availableHeight < 0)
+            kidReflowState.availableHeight = 0;
+        }
+      }
+
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState, aStatus);
       // Did the child fit?
       if (desiredSize.height > kidAvailSize.height) {
@@ -4249,6 +4262,13 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
       y += excessForRow+rowRect.height;
       aExcessForRowGroup += excessForRow;
     }
+    else
+    {
+      nsRect rowRect;
+      rowFrame->GetRect(rowRect);
+      y += rowRect.height;
+    }
+
     rowFrame = iter.Next();
   }
   nsRect rowGroupRect;
@@ -4259,6 +4279,27 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext& aPresContext,
   aRowGroupYPos += aExcessForRowGroup + rowGroupRect.height;
 
   DistributeSpaceToCells(aPresContext, aReflowState, aRowGroupFrame);
+}
+
+NS_IMETHODIMP nsTableFrame::GetTableSpecifiedHeight(nscoord& aResult, const nsHTMLReflowState& aReflowState)
+{
+  const nsStylePosition* tablePosition;
+  GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
+  
+  const nsStyleTable* tableStyle;
+  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+  nscoord tableSpecifiedHeight=-1;
+  if (eStyleUnit_Coord == tablePosition->mHeight.GetUnit())
+    tableSpecifiedHeight = tablePosition->mHeight.GetCoordValue();
+  else if (eStyleUnit_Percent == tablePosition->mHeight.GetUnit())
+  {
+    float percent = tablePosition->mHeight.GetPercentValue();
+    nscoord parentHeight = GetEffectiveContainerHeight(aReflowState);
+    if (NS_UNCONSTRAINEDSIZE!=parentHeight && 0!=parentHeight)
+      tableSpecifiedHeight = NSToCoordRound((float)parentHeight * percent);
+  }
+  aResult = tableSpecifiedHeight;
+  return NS_OK;
 }
 
 nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
@@ -4297,7 +4338,8 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
       {
         const nsStyleDisplay *rowGroupDisplay;
         rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
-        if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
+        if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay) &&
+            ((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace())
         { 
           ((nsTableRowGroupFrame*)rowGroupFrame)->GetHeightOfRows(sumOfRowHeights);
         }
@@ -4310,11 +4352,19 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
       {
         const nsStyleDisplay *rowGroupDisplay;
         rowGroupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)rowGroupDisplay));
-        if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
-        { 
-          nscoord excessForGroup = 0;
-          DistributeSpaceToRows(aPresContext, aReflowState, rowGroupFrame, sumOfRowHeights, 
-                                excess, tableStyle, excessForGroup, rowGroupYPos);
+        if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay)) {
+          if (((nsTableRowGroupFrame*)rowGroupFrame)->RowGroupReceivesExcessSpace())
+          {
+            nscoord excessForGroup = 0;
+            DistributeSpaceToRows(aPresContext, aReflowState, rowGroupFrame, sumOfRowHeights, 
+                                  excess, tableStyle, excessForGroup, rowGroupYPos);
+          }
+          else
+          {
+            nsRect rowGroupRect;
+            rowGroupFrame->GetRect(rowGroupRect);
+            rowGroupYPos += rowGroupRect.height;
+          }
         }
         rowGroupFrame->GetNextSibling(&rowGroupFrame);
       }

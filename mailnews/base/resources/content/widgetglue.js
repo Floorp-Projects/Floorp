@@ -59,13 +59,13 @@ function MsgGetMessage()
 function MsgDeleteMessage()
 {
   dump("\nMsgDeleteMessage from XUL\n");
-  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  var tree = GetThreadTree();
   if(tree) {
     dump("tree is valid\n");
 	//get the selected elements
     var messageList = tree.getElementsByAttribute("selected", "true");
 	//get the current folder
-	var srcFolder = tree.childNodes[5];
+	var srcFolder = GetThreadTreeFolder();
     messenger.DeleteMessages(tree, srcFolder, messageList);
   }
 }
@@ -73,7 +73,7 @@ function MsgDeleteMessage()
 function MsgDeleteFolder()
 {
 	//get the selected elements
-	var tree = frames[0].frames[0].document.getElementById('folderTree');
+	var tree = GetFolderTree();
 	var folderList = tree.getElementsByAttribute("selected", "true");
 	var i;
 	var folder, parent;
@@ -132,13 +132,13 @@ function MsgCopyMessage(destFolder)
     destUri = destFolder.getAttribute('id');
 	dump(destUri);
 
-	var tree = frames[0].frames[1].document.getElementById('threadTree');
+	var tree = GetThreadTree();
 	if(tree)
 	{
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
 		//get the current folder
-		var srcFolder = tree.childNodes[5];
+		var srcFolder = GetThreadTreeFolder();
 		messenger.CopyMessages(srcFolder, destFolder, messageList, false);
 	}	
 }
@@ -149,13 +149,13 @@ function MsgMoveMessage(destFolder)
     destUri = destFolder.getAttribute('id');
 	dump(destUri);
 
-	var tree = frames[0].frames[1].document.getElementById('threadTree');
+	var tree = GetThreadTree();
 	if(tree)
 	{
 		//Get the selected messages to copy
 		var messageList = tree.getElementsByAttribute("selected", "true");
 		//get the current folder
-		var srcFolder = tree.childNodes[5];
+		var srcFolder = GetThreadTreeFolder();
 		messenger.CopyMessages(srcFolder, destFolder, messageList, true);
 	}	
 }
@@ -164,42 +164,32 @@ function MsgViewAllMsgs()
 {
 	dump("MsgViewAllMsgs");
 
-    var tree = frames[0].frames[1].document.getElementById('threadTree'); 
+    var tree = GetThreadTree(); 
 
 	messenger.ViewAllMessages(tree.database);
 
-	//hack to make it get new view.  
-	var currentFolder = tree.childNodes[5].getAttribute('id');
-	tree.childNodes[5].setAttribute('id', currentFolder);
-
+	RefreshThreadTreeView();
 }
 
 function MsgViewUnreadMsg()
 {
 	dump("MsgViewUnreadMsgs");
 
-    var tree = frames[0].frames[1].document.getElementById('threadTree'); 
+    var tree = GetThreadTree(); 
 
 	messenger.ViewUnreadMessages(tree.database);
 
-	//hack to make it get new view.  
-	var currentFolder = tree.childNodes[5].getAttribute('id');
-	tree.childNodes[5].setAttribute('id', currentFolder);
-
-
+	RefreshThreadTreeView();
 }
 
 function MsgViewAllThreadMsgs()
 {
 	dump("MsgViewAllMessagesThreaded");
 
-    var tree = frames[0].frames[1].document.getElementById('threadTree'); 
+    var tree = GetThreadTree(); 
 
 	messenger.ViewAllThreadMessages(tree.database);
-
-	//hack to make it get new view.  
-	var currentFolder = tree.childNodes[5].getAttribute('id');
-	tree.childNodes[5].setAttribute('id', currentFolder);
+	RefreshThreadTreeView();
 }
 
 function MsgSortByDate()
@@ -224,7 +214,7 @@ function MsgSortBySubject()
 
 function MsgNewFolder()
 {
-    var folderTree = frames[0].frames[0].document.getElementById('folderTree'); 
+    var folderTree = GetFolderTree(); 
 	var selectedFolderList = folderTree.getElementsByAttribute("selected", "true");
 	var selectedFolder = selectedFolderList[0];
 
@@ -341,7 +331,7 @@ function MsgAddAllToAddressBook() {}
 function MsgMarkMsgAsRead(markRead)
 {
   dump("\MsgMarkMsgAsRead from XUL\n");
-  var tree = frames[0].frames[1].document.getElementById('threadTree');
+  var tree = GetThreadTree();
   //get the selected elements
   var messageList = tree.getElementsByAttribute("selected", "true");
   messenger.MarkMessagesRead(tree.database, messageList, markRead);

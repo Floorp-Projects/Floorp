@@ -29,6 +29,7 @@ FILES=\
         bookmarks.js                    \
         bookmarks.xul                   \
         iefavorite.gif                  \
+        manage-bookmarks.css            \
         personal-folder-closed.gif      \
         personal-folder-open.gif        \
         $(NULL)
