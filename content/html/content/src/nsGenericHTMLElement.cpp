@@ -931,16 +931,26 @@ nsGenericHTMLElement::GetInlineStyleRule(nsIStyleRule*& aResult)
 nsresult
 nsGenericHTMLElement::GetBaseURL(nsIURL*& aBaseURL) const
 {
+  return GetBaseURL(mAttributes, mDocument, &aBaseURL);
+}
+
+nsresult
+nsGenericHTMLElement::GetBaseURL(nsIHTMLAttributes* aAttributes,
+                                 nsIDocument* aDocument,
+                                 nsIURL** aBaseURL)
+{
   nsresult result = NS_OK;
 
   nsIURL* docBaseURL = nsnull;
-  if (nsnull != mDocument) {
-    result = mDocument->GetBaseURL(docBaseURL);
+  if (nsnull != aDocument) {
+    result = aDocument->GetBaseURL(docBaseURL);
   }
-  aBaseURL = docBaseURL;
-  if (nsnull != mAttributes) {
+  *aBaseURL = docBaseURL;
+//  NS_IF_RELEASE(docBaseURL);
+
+  if (nsnull != aAttributes) {
     nsHTMLValue value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mAttributes->GetAttribute(nsHTMLAtoms::_baseHref, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == aAttributes->GetAttribute(nsHTMLAtoms::_baseHref, value)) {
       if (eHTMLUnit_String == value.GetUnit()) {
         nsAutoString baseHref;
         value.GetStringValue(baseHref);
@@ -955,7 +965,7 @@ nsGenericHTMLElement::GetBaseURL(nsIURL*& aBaseURL) const
         else {
           result = NS_NewURL(&url, baseHref, docBaseURL);
         }
-        aBaseURL = url;
+        *aBaseURL = url;
       }
     }
   }
@@ -1847,16 +1857,24 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(nsIHTMLAttributes* aAttributes
       value.GetStringValue(spec);
       if (spec.Length() > 0) {
         // Resolve url to an absolute url
-        nsCOMPtr<nsIURL> docURL;
-        aPresContext->GetBaseURL(getter_AddRefs(docURL));
-
-        nsresult rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
-        if (NS_SUCCEEDED(rv)) {
-          nsStyleColor* color = (nsStyleColor*)
-            aContext->GetMutableStyleData(eStyleStruct_Color);
-          color->mBackgroundImage = absURLSpec;
-          color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
-          color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+        nsCOMPtr<nsIPresShell> shell;
+        nsresult rv = aPresContext->GetShell(getter_AddRefs(shell));
+        if (NS_SUCCEEDED(rv) && shell) {
+          nsCOMPtr<nsIDocument> doc;
+          rv = shell->GetDocument(getter_AddRefs(doc));
+          if (NS_SUCCEEDED(rv) && doc) {
+            nsCOMPtr<nsIURL> docURL;
+            nsGenericHTMLElement::GetBaseURL(aAttributes, doc,
+                                             getter_AddRefs(docURL));
+            rv = NS_MakeAbsoluteURL(docURL, "", spec, absURLSpec);
+            if (NS_SUCCEEDED(rv)) {
+              nsStyleColor* color = (nsStyleColor*)
+                aContext->GetMutableStyleData(eStyleStruct_Color);
+              color->mBackgroundImage = absURLSpec;
+              color->mBackgroundFlags &= ~NS_STYLE_BG_IMAGE_NONE;
+              color->mBackgroundRepeat = NS_STYLE_BG_REPEAT_XY;
+            }
+          }
         }
       }
     }
