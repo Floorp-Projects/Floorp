@@ -32,7 +32,7 @@ REQUIRES	= xpcom uconv msgbase msgbaseutil msgcompose editor necko pref js mailn
 CPPSRCS		= test.cpp
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS	= msgbutil
+EXTRA_DSO_LIBS	= msgbsutl
 else
 EXTRA_DSO_LIBS	= msgbaseutil
 endif

@@ -28,12 +28,12 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mimeemitter
 LIBRARY_NAME	= mimeemitter
-SHORT_LIBNAME	= mimemitr
+SHORT_LIBNAME	= emitter
 IS_COMPONENT	= 1
 REQUIRES	= xpcom mime necko pref js intl locale msgbase msgbaseutil
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbutil
+EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
 endif

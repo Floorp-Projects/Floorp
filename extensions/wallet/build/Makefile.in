@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= walletviewers
 LIBRARY_NAME	= walletviewers
-SHORT_LIBNAME	= walletvw
+SHORT_LIBNAME	= wlltvwrs
 IS_COMPONENT	= 1
 REQUIRES	= xpcom wallet dom js layout widget
 

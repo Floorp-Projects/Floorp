@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= msgbaseutil
 LIBRARY_NAME	= msgbaseutil
-SHORT_LIBNAME	= msgbutil
+SHORT_LIBNAME	= msgbsutl
 REQUIRES	= xpcom msgbase rdf necko msgdb intl mork mailnews locale pref js rdfutil msgsearch rdfutil mime msgcompose docshell webshell wallet dom widget  htmlparser view layout uriloader appshell msgimap msglocal msgnews txmgr uconv unicharutil nkcache
 
 CPPSRCS		= \

@@ -35,7 +35,7 @@ CPPSRCS		= imapProtocolTest.cpp
 EXTRA_DSO_LIBS	= msgimap_s rdfutil_s
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS	+= msgbutil
+EXTRA_DSO_LIBS	+= msgbsutl
 else
 EXTRA_DSO_LIBS	+= msgbaseutil
 endif

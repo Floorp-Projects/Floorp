@@ -32,7 +32,7 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom mailnews addrbook uconv mork msgbase msgbaseutil profile intl locale necko rdf msgdb rdfutil
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbutil
+EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
 endif

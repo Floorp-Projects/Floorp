@@ -30,7 +30,7 @@ BUILD_DATE = gbdate.h
 
 MODULE		= layout
 LIBRARY_NAME	= gklayout
-SHORT_LIBNAME	= nglayout
+SHORT_LIBNAME	= gkhtml
 IS_COMPONENT	= 1
 EXTRA_DSO_LIBS	= jsdom gkgfx
 REQUIRES	= xpcom widget necko rdf docshell dom htmlparser uriloader webshell locale unicharutil lwbrk timer js

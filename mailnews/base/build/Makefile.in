@@ -32,7 +32,7 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom necko intl locale timer rdf dom js docshell widget layout webshell mime uriloader mailnews mork txmgr htmlparser pref msgcompose view msgbaseutil appcomps msgdb editor appshell rdfutil
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbutil
+EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
 endif

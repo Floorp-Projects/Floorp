@@ -32,7 +32,7 @@ REQUIRES	= xpcom mailnews pref js msgbase msgbaseutil msgcompose msglocal necko 
 CPPSRCS		= test.cpp
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS	= gkgfx msgbutil
+EXTRA_DSO_LIBS	= gkgfx msgbsutl
 else
 EXTRA_DSO_LIBS	= gkgfx msgbaseutil
 endif

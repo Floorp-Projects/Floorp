@@ -28,7 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE = vixen
 LIBRARY_NAME = vixen
-SHORT_LIBNAME = vixen
 IS_COMPONENT = 1
 
 CPPSRCS 	= \

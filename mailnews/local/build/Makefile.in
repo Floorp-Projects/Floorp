@@ -33,7 +33,7 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom mailnews msgbase msgbaseutil msgdb necko txmgr rdf rdfutil mime intl locale pref js nkcache
 
 ifeq ($(USE_SHORT_LIBNAME),1)
-EXTRA_DSO_LIBS = msgbutil
+EXTRA_DSO_LIBS = msgbsutl
 else
 EXTRA_DSO_LIBS = msgbaseutil
 endif
