@@ -1871,14 +1871,8 @@ public class Interpreter extends LabelTable {
                         int lineNum = getShort(iCode, pc + 1);   
                         name = strings[getShort(iCode, pc + 3)];
                         count = getShort(iCode, pc + 5);
-                        outArgs = new Object[count];
-                        for (i = count - 1; i >= 0; i--) {
-                            val = stack[stackTop];    
-                            if (val == DBL_MRK) 
-                                val = doubleWrap(sDbl[stackTop]);
-                            outArgs[i] = val;
-                            --stackTop;
-                        }
+                        outArgs = getArgsArray(stack, sDbl, stackTop, count);
+                        stackTop -= count;
                         rhs = stack[stackTop];    
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
@@ -1898,14 +1892,8 @@ public class Interpreter extends LabelTable {
                         }
                         cx.instructionCount = instructionCount;
                         count = getShort(iCode, pc + 3);
-                        outArgs = new Object[count];
-                        for (i = count - 1; i >= 0; i--) {
-                            val = stack[stackTop];    
-                            if (val == DBL_MRK) 
-                                val = doubleWrap(sDbl[stackTop]);
-                            outArgs[i] = val;
-                            --stackTop;
-                        }
+                        outArgs = getArgsArray(stack, sDbl, stackTop, count);
+                        stackTop -= count;
                         rhs = stack[stackTop];    
                         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
                         --stackTop;
@@ -1931,14 +1919,8 @@ public class Interpreter extends LabelTable {
                             instructionCount = -1;
                         }
                         count = getShort(iCode, pc + 3);
-                        outArgs = new Object[count];
-                        for (i = count - 1; i >= 0; i--) {
-                            val = stack[stackTop];    
-                            if (val == DBL_MRK) 
-                                val = doubleWrap(sDbl[stackTop]);
-                            outArgs[i] = val;
-                            --stackTop;
-                        }
+                        outArgs = getArgsArray(stack, sDbl, stackTop, count);
+                        stackTop -= count;
                         lhs = stack[stackTop];    
                         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
                         if (lhs == undefined && getShort(iCode, pc + 1) != -1) 
@@ -2434,6 +2416,23 @@ public class Interpreter extends LabelTable {
             result = ScriptRuntime.shallowEq(lhs, rhs);
         }
         return result;
+    }
+    
+    private static Object[] getArgsArray(Object[] stack, double[] sDbl,
+                                         int stackTop, int count)
+    {
+        if (count == 0) { 
+            return ScriptRuntime.emptyArgs; 
+        }
+        Object[] args = new Object[count];
+        do {
+            Object val = stack[stackTop];    
+            if (val == DBL_MRK) 
+                val = doubleWrap(sDbl[stackTop]);
+            args[--count] = val;
+            --stackTop;
+        } while (count != 0); 
+        return args;
     }
     
     private int version;
