@@ -514,10 +514,20 @@ nsMathMLmfracFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresConte
                                                       PRUint32        aFlagsValues,
                                                       PRUint32        aFlagsToUpdate)
 {
-  // The <mfrac> element sets displaystyle to "false" within numerator and
-  // denominator so we disable the displaystyle bit to retain what we set earlier
+  // The REC says "The <mfrac> element sets displaystyle to "false" within
+  // numerator and denominator"
+#if 0
+  // At one point I thought that it meant that the displaystyle state of
+  // the numerator and denominator cannot be modified by an ancestor, i.e.,
+  // to change the displaystlye, one has to use displaystyle="true" with mstyle: 
+  // <mfrac> <mstyle>numerator</mstyle> <mstyle>denominator</mstyle> </mfrac>
+
+  // Commenting out for now until it is clear what the intention really is.
+  // See also the variants for <mover>, <munder>, <munderover>
+
   aFlagsToUpdate &= ~NS_MATHML_DISPLAYSTYLE;
   aFlagsValues &= ~NS_MATHML_DISPLAYSTYLE;
+#endif
   return nsMathMLContainerFrame::
     UpdatePresentationDataFromChildAt(aPresContext, aFirstIndex, aLastIndex,
       aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);

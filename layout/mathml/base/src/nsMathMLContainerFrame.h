@@ -294,14 +294,6 @@ public:
 
     rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-    // notify our children that they are now in displaystyle=true
-    nsIFrame* childFrame = aChildList;
-    while (childFrame) {
-      nsMathMLContainerFrame::PropagatePresentationDataFor(aPresContext,
-        childFrame, 0, NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
-      childFrame->GetNextSibling(&childFrame);
-    }
-
     // re-resolve our subtree to set any mathml-expected scriptsizes
     nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
 
