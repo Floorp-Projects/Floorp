@@ -679,6 +679,11 @@ input[type=text] {
   background-color: white;
   color: black;
 }
+
+input[type=text][disabled] {
+  color: gray;
+}
+
 input[type=password] {
   border: 2px inset rgb(192, 192, 192);
   background-color: white;
