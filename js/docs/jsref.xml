@@ -2172,6 +2172,7 @@ void JS_Lock(JSRuntime *rt);
     </DESCRIPTION>
     <SEEALSO value='JS_Unlock'/>
     <SEEALSO value='JS_GetRuntime'/>
+    <DEPRECATED/>
   </ENTRY>
   <ENTRY id='JS_Unlock'>
     <TYPE value='Function'/>
@@ -2189,6 +2190,7 @@ void JS_Unlock(JSRuntime *rt);
     </DESCRIPTION>
     <SEEALSO value='JS_Lock'/>
     <SEEALSO value='JS_GetRuntime'/>
+    <DEPRECATED/>
   </ENTRY>
 <!-- XXXXXXXXXXXXXXXXXXX -->
   <ENTRY id='JS_SetContextThread'>
