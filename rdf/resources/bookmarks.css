@@ -39,12 +39,16 @@ treecell[selectedcell] {
  background-color: yellow;
  }
  
-treecell[sortActive="true"] {
- background-color: #404040;
+treecell[sortActive="true"][sortDirection="ascending"] {
+ background-color: green;
+ }
+ 
+treecell[sortActive="true"][sortDirection="descending"] {
+ background-color: red;
  }
  
 treecol[sortActive="true"] {
-  background-color: green;
+  background-color: lightgreen;
 }
 
 treehead treeitem treecell { 
@@ -77,4 +81,3 @@ treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFo
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-item.gif");
 }
-
