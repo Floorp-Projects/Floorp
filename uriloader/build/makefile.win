@@ -49,6 +49,7 @@ SUB_LIBRARIES=                          \
         $(NULL)
 
 LLIBS=				\
+        $(DIST)\lib\unicharutil_s.lib \
         $(DIST)\lib\xpcom.lib	\
         $(DIST)\lib\js3250.lib	\
         $(LIBNSPR)              \
