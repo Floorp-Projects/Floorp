@@ -471,7 +471,7 @@ public:
   PRUnichar* mText;
   PRInt32 mTextLength;
   PRInt32 mTextSize;
-
+  PRInt32 mIgnoredOpenCount;
 };
 
 //----------------------------------------------------------------------
@@ -1097,6 +1097,7 @@ SinkContext::SinkContext(HTMLContentSink* aSink)
   mTextSize = 0;
   mLastTextNode = nsnull;
   mLastTextNodeSize = 0;
+  mIgnoredOpenCount = 0;
 }
 
 SinkContext::~SinkContext()
@@ -1235,6 +1236,13 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   SINK_TRACE_NODE(SINK_TRACE_CALLS,
                   "SinkContext::OpenContainer", aNode, mStackPos, mSink);
 
+  // XXX - Hack to handle stack over flow ( Bug 18480 )
+  if (mStackPos > 1000) {
+    mIgnoredOpenCount++;
+    return AddLeaf(aNode);
+  }
+  // XXX - Hack Ends
+
   nsresult rv;
   if (mStackPos + 1 > mStackSize) {
     rv = GrowStack();
@@ -1336,6 +1344,13 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
 
+  // XXX - Hack to handle stack over flow ( Bug 18480 )
+  if (mIgnoredOpenCount) {
+    mIgnoredOpenCount--;
+    return NS_OK;
+  }
+  // XXX -Hack Ends.
+
   // Flush any collected text content. Release the last text
   // node to indicate that no more should be added to it.
   FlushTextAndRelease();
@@ -1408,9 +1423,12 @@ SinkContext::CloseContainer(const nsIParserNode& aNode)
 
     case eHTMLTag_noembed:
     case eHTMLTag_noframes:
-    case eHTMLTag_nolayer:
     case eHTMLTag_noscript:
-      mSink->mInsideNoXXXTag--;
+      // Fix bug 40216
+      NS_ASSERTION((mSink->mInsideNoXXXTag > 0), "mInsideNoXXXTag underflow");
+      if (mSink->mInsideNoXXXTag > 0) {
+        mSink->mInsideNoXXXTag--;
+      }
       break;
  
     case eHTMLTag_form:
