@@ -150,7 +150,10 @@ struct nsBlockReflowState : public nsFrameReflowState {
   PRBool mInlineReflowPrepared;
 
   PRUint8 mTextAlign;
-  PRUint8 mPrevMarginFlags;
+
+  PRUintn mPrevMarginFlags;
+// previous margin flag bits (above and beyond the carried-out-margin flags)
+#define HAVE_CARRIED_MARGIN 0x100
 
   nscoord mBottomEdge;          // maximum Y
 
@@ -1802,7 +1805,6 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our final size
   ComputeFinalSize(state, aMetrics);
-// ListTag(stdout); printf(": exit carriedMargins=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
@@ -2880,8 +2882,6 @@ nsBlockFrame::PrepareInlineReflow(nsBlockReflowState& aState,
   aState.mInlineReflowPrepared = PR_TRUE;
 }
 
-#define HAVE_CARRIED_MARGIN 0x100
-
 // XXX switch to two versions: inline vs. block?
 PRUintn
 nsBlockFrame::CalculateMargins(nsBlockReflowState& aState,
@@ -3534,7 +3534,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   nscoord lineBottomMargin = 0;
   if (0 == aLine->mBounds.height) {
     nsIFrame* brFrame = aState.mLineLayout.GetBRFrame();
-#if 0
     if (nsnull != brFrame) {
       // If a line ends in a BR, and the line is empty of height, then
       // we make sure that the line ends up with some height
@@ -3554,7 +3553,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         NS_RELEASE(brSC);
       }
     }
-#endif
   }
 
   // Calculate the lines top and bottom margin values. The margin will
@@ -3653,7 +3651,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
   }
 
   // Update max-element-size
-  // Update max-element-size
   if (aState.mComputeMaxElementSize) {
     const nsSize& kidMaxElementSize = ir.GetMaxElementSize();
     if (kidMaxElementSize.width > aState.mMaxElementSize.width) {
@@ -3699,7 +3696,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
         nscoord y0 = aState.mY;
         aState.ClearFloaters(breakType);
         nscoord dy = aState.mY - y0;
-//XXX        printf("PlaceLine:clear: y0=%g dy=%g\n", y0/20.0, dy/20.0);
         if (dy > aLine->mCarriedOutBottomMargin) {
           aLine->mCarriedOutBottomMargin = dy;
         }
