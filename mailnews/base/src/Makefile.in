@@ -104,6 +104,7 @@ CPPSRCS		= \
 		nsMsgOfflineManager.cpp \
 		nsMsgProgress.cpp \
 		nsSpamSettings.cpp \
+		nsCidProtocolHandler.cpp \
 		$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

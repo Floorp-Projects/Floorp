@@ -105,6 +105,7 @@
 
 #include "nsMsgProgress.h"
 #include "nsSpamSettings.h"
+#include "nsCidProtocolHandler.h"
 
 #ifdef XP_WIN
 #include "nsMessengerWinIntegration.h"
@@ -153,6 +154,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCidProtocolHandler);
 #ifdef XP_WIN
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsMessengerWinIntegration, Init);
 #endif
@@ -169,7 +171,7 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Netscape Messenger Window Service", NS_MESSENGERWINDOWSERVICE_CID,
       NS_MESSENGERWINDOWSERVICE_CONTRACTID,
       nsMessengerBootstrapConstructor,
-	},
+    },
     { "Mail Startup Handler", NS_MESSENGERBOOTSTRAP_CID,
       NS_MAILSTARTUPHANDLER_CONTRACTID,
       nsMessengerBootstrapConstructor,
@@ -296,8 +298,8 @@ static const nsModuleComponentInfo gComponents[] = {
       nsSubscribeDataSourceConstructor,
     },
     { "Mail/News Subscribable Server", NS_SUBSCRIBABLESERVER_CID,
-	  NS_SUBSCRIBABLESERVER_CONTRACTID,
-	  nsSubscribableServerConstructor,
+      NS_SUBSCRIBABLESERVER_CONTRACTID,
+      nsSubscribableServerConstructor,
     },
     { "Local folder compactor", NS_MSGLOCALFOLDERCOMPACTOR_CID,
       NS_MSGLOCALFOLDERCOMPACTOR_CONTRACTID,
@@ -338,6 +340,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "Spam Settings", NS_SPAMSETTINGS_CID,
       NS_SPAMSETTINGS_CONTRACTID,
       nsSpamSettingsConstructor,
+    },
+    { "cid protocol", NS_CIDPROTOCOL_CID,
+      NS_CIDPROTOCOLHANDLER_CONTRACTID,
+      nsCidProtocolHandlerConstructor,
     },
 #ifdef XP_WIN
     { "Windows OS Integration", NS_MESSENGERWININTEGRATION_CID,

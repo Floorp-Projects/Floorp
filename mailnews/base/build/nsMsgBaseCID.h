@@ -358,7 +358,6 @@
 #define NS_MSGFILTERDELEGATEFACTORY_IMAP_CONTRACTID \
   NS_MSGFILTERDELEGATEFACTORY_CONTRACTID_PREFIX "imap"
 
-
 //
 // nsMsgFilterDataSource
 //
@@ -472,5 +471,16 @@
 //
 #define NS_MESSENGEROSINTEGRATION_CONTRACTID \
   "@mozilla.org/messenger/osintegration;1"
- 
+
+//
+// cid protocol handler
+//
+#define NS_CIDPROTOCOLHANDLER_CONTRACTID \
+ NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "cid"
+
+#define NS_CIDPROTOCOL_CID \
+{ /* b3db9392-1b15-48ba-a136-0cc3db13d87b */ \
+ 0xb3db9392, 0x1b15, 0x48ba,      \
+ {0xa1, 0x36, 0x0c, 0xc3, 0xdb, 0x13, 0xd8, 0x7b }}
+
 #endif // nsMessageBaseCID_h__
