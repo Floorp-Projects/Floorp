@@ -22,6 +22,8 @@
 #include "nsISupports.h"
 
 class nsITransferable;
+class nsIClipboardOwner;
+class nsIDataFlavor;
 
 // {8B5314BA-DB01-11d2-96CE-0060B0FB9956}
 #define NS_ICLIPBOARD_IID      \
@@ -32,22 +34,41 @@ class nsIClipboard : public nsISupports {
   public:
 
    /**
-    * Gets the transferable object
+    * Set the transferable object onto the clipboard, 
+    * it is used to get and set the data from the native clipboard
     *
     * @param  aTransferable The transferable
+    * @param  anOwner The owner of the transferable
     * @result NS_Ok if no errors
     */
   
-    NS_IMETHOD GetTransferable(nsITransferable ** aTransferable) = 0;
+    NS_IMETHOD SetTransferable(nsITransferable * aTransferable, nsIClipboardOwner * anOwner) = 0;
 
    /**
-    * Sets the transferable object
+    * Gets the data from the clipboard and put it into the transferable object
     *
     * @param  aTransferable The transferable
     * @result NS_Ok if no errors
     */
   
-    NS_IMETHOD SetTransferable(nsITransferable * aTransferable) = 0;
+    NS_IMETHOD GetClipboard() = 0;
+
+   /**
+    * Sets the clipboard from the transferable object
+    *
+    * @param  aTransferable The transferable
+    * @result NS_Ok if no errors
+    */
+  
+    NS_IMETHOD SetClipboard() = 0;
+
+   /**
+    * Check to set if ant of the native data on the clipboard matches this data flavor
+    *
+    * @result NS_Ok if if the data flavor is supported and, NS_ERROR_FAILURE is it is not
+    */
+  
+    NS_IMETHOD IsDataFlavorSupported(nsIDataFlavor * aDataFlavor) = 0;
 
 };
 

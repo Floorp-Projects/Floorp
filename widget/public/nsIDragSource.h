@@ -43,6 +43,15 @@ class nsIDragSource : public nsISupports {
     NS_IMETHOD GetTransferable(nsITransferable ** aTransferable) = 0;
 
    /**
+    * Sets the transferable object
+    *
+    * @param  aTransferable The transferable
+    * @result NS_Ok if no errors
+    */
+  
+    NS_IMETHOD SetTransferable(nsITransferable * aTransferable) = 0;
+
+   /**
     * Called when a drag session has finished with the action that occured. 
     *
     * @param aDraggedObj the object being dragged

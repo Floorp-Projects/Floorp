@@ -27,8 +27,17 @@
 #define NS_IDATAFLAVOR_IID      \
 { 0x8b5314bd, 0xdb01, 0x11d2, { 0x96, 0xce, 0x0, 0x60, 0xb0, 0xfb, 0x99, 0x56 } }
 
-//     public static Flavor PLAIN_TEXT - A basic flavor representing plain text in UNICODE. 
-//     public static Flavor HTML - A flavor representing HTML source in UNICODE. 
+//const char * kTextMime    = "text/text";
+//const char * kUnicodeMime = "text/unicode";
+//const char * kHTMLMime    = "text/html";
+//const char * kAOLMailMime = "AOLMAIL";
+//const char * kImageMime   = "text/image";
+
+#define kTextMime    "text/text"
+#define kUnicodeMime "text/unicode"
+#define kHTMLMime    "text/html"
+#define kAOLMailMime "AOLMAIL"
+#define kImageMime   "text/image"
 
 class nsIDataFlavor : public nsISupports {
 
