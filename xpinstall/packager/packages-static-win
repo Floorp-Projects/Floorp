@@ -66,7 +66,6 @@ bin\components\autocomplete.xpt
 bin\components\bookmarks.xpt
 bin\components\crypto.dll
 bin\components\directory.xpt
-bin\components\downloadmanager.xpt
 bin\components\commandhandler.xpt
 bin\components\history.xpt
 bin\components\winhooks.xpt
@@ -179,7 +178,6 @@ bin\components\nsHelperAppDlg.js
 bin\components\helperAppDlg.xpt
 bin\components\nsProgressDialog.js
 bin\components\progressDlg.xpt
-bin\components\nsDownloadProgressListener.js
 bin\components\transformiix.xpt
 
 

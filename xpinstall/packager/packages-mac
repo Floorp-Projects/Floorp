@@ -92,7 +92,6 @@ viewer:Components:cookie.xpt
 viewer:Components:Cookie.shlb 
 viewer:Components:appcomps.shlb 
 viewer:Components:Directory.xpt 
-viewer:Components:downloadmanager.xpt
 viewer:Components:docshell.xpt
 viewer:Components:dom.shlb 
 viewer:Components:dom.xpt 
@@ -204,7 +203,6 @@ viewer:Components:xmlextras.shlb
 viewer:Components:xmlsoap.xpt
 viewer:Components:nsHelperAppDlg.js
 viewer:Components:nsProgressDialog.js
-viewer:Components:nsDownloadProgressListener.js
 viewer:Components:transformiix.xpt
 viewer:Components:transformiix.shlb
 viewer:Components:nsCloseAllWindows.js

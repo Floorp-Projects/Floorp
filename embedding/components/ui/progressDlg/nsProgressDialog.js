@@ -64,7 +64,6 @@ function nsProgressDialog() {
     this.mTarget      = null;
     this.mApp         = null;
     this.mDialog      = null;
-    this.mDisplayName = null;
     this.mPaused      = null;
     this.mRequest     = null;
     this.mCompleted   = false;
@@ -85,7 +84,7 @@ nsProgressDialog.prototype = {
     dialogFeatures: "chrome,titlebar,minimizable=yes",
 
     // getters/setters
-    get saving()            { return this.openingWith == null || this.openingWith == ""; },
+    get saving()            { return this.openingWith == null; },
     get parent()            { return this.mParent; },
     set parent(newval)      { return this.mParent = newval; },
     get operation()         { return this.mOperation; },
@@ -110,8 +109,6 @@ nsProgressDialog.prototype = {
     set openingWith(newval) { return this.mApp = newval; },
     get dialog()            { return this.mDialog; },
     set dialog(newval)      { return this.mDialog = newval; },
-    get displayName()       { return this.mDisplayName; },
-    set displayName(newval) { return this.mDisplayName = newval; },
     get paused()            { return this.mPaused; },
     get request()           { return this.mRequest; },
     get completed()         { return this.mCompleted; },
@@ -131,9 +128,10 @@ nsProgressDialog.prototype = {
     // ---------- nsIProgressDialog methods ----------
 
     // open: Store aParentWindow and open the dialog.
-    open: function( aParentWindow ) {
+    open: function( aParentWindow, aPersist ) {
         // Save parent and "persist" operation.
         this.parent    = aParentWindow;
+        this.operation = aPersist;
 
         // Open dialog using the WindowWatcher service.
         var ww = Components.classes["@mozilla.org/embedcomp/window-watcher;1"]
@@ -143,17 +141,6 @@ nsProgressDialog.prototype = {
                                      null,
                                      this.dialogFeatures,
                                      this );
-    },
-    
-    init: function( aSource, aTarget, aDisplayName, aOpeningWith, aStartTime, aOperation ) {
-      this.source = aSource;
-      this.target = aTarget;
-      this.displayName = aDisplayName;
-      this.openingWith = aOpeningWith;
-      if ( aStartTime ) {
-          this.startTime = aStartTime;
-      }
-      this.operation = aOperation;
     },
 
     // ---------- nsIWebProgressListener methods ----------
@@ -320,7 +307,6 @@ nsProgressDialog.prototype = {
     // of interface inheritance), nsIObserver, and nsISupports.
     QueryInterface: function (iid) {
         if (!iid.equals(Components.interfaces.nsIProgressDialog) &&
-            !iid.equals(Components.interfaces.nsIDownload) && 
             !iid.equals(Components.interfaces.nsIWebProgressListener) &&
             !iid.equals(Components.interfaces.nsIObserver) &&
             !iid.equals(Components.interfaces.nsISupports)) {
