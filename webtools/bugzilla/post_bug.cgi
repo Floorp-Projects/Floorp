@@ -138,7 +138,10 @@ foreach my $person (keys %ccids) {
 
 print "<H2>Changes Submitted</H2>\n";
 print "<A HREF=\"show_bug.cgi?id=$id\">Show BUG# $id</A>\n";
+print "<BR><A HREF=\"createattachment.cgi?id=$id\">Attach a file to this bug</a>\n";
 print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
 
+
 system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
+
 exit;
