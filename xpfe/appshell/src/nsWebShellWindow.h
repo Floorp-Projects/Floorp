@@ -22,6 +22,7 @@
 
 #include "nsISupports.h"
 #include "nsIWebShellWindow.h"
+#include "nsIBrowserWindow.h"
 #include "nsGUIEvent.h"
 #include "nsIWebShell.h"  
 #include "nsIDocumentLoaderObserver.h"
@@ -53,6 +54,7 @@ class nsIXULWindowCallbacks;
 
 class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
+												 public nsIBrowserWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver
 {
@@ -169,6 +171,26 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule);
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
+
+	// nsIBrowserWindow methods not already covered elsewhere
+  NS_IMETHOD Init(nsIAppShell* aAppShell,
+                  nsIPref* aPrefs,
+                  const nsRect& aBounds,
+                  PRUint32 aChromeMask,
+                  PRBool aAllowPlugins = PR_TRUE);
+  NS_IMETHOD MoveTo(PRInt32 aX, PRInt32 aY);
+  NS_IMETHOD SizeTo(PRInt32 aWidth, PRInt32 aHeight);
+  NS_IMETHOD GetBounds(nsRect& aResult);
+  NS_IMETHOD GetWindowBounds(nsRect& aResult);
+  NS_IMETHOD Show() { Show(PR_TRUE); return NS_OK; }
+  NS_IMETHOD Hide() { Show(PR_FALSE); return NS_OK; }
+  NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
+  NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
+  NS_IMETHOD SetTitle(const PRUnichar* aTitle);
+  NS_IMETHOD GetTitle(const PRUnichar** aResult);
+  NS_IMETHOD SetStatus(const PRUnichar* aStatus);
+  NS_IMETHOD GetStatus(const PRUnichar** aResult);
+  NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
 
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
