@@ -258,18 +258,18 @@ endif
 	cp ./C/protocol/SMTP/test/smtptest.c $(NS_RELEASE)/examples/SMTP/
 	cp ./C/protocol/SMTP/test/testsink.c $(NS_RELEASE)/examples/SMTP/
 	cp ./C/protocol/SMTP/test/testsink.h $(NS_RELEASE)/examples/SMTP/
-	cp ./C/advancedExamples/SMTPAdvanced1/include/testsink.h $(NS_RELEASE)/examples/SMTP/advanced
-	cp ./C/advancedExamples/SMTPAdvanced1/src/testsink.c $(NS_RELEASE)/examples/SMTP/advanced
-	cp ./C/advancedExamples/SMTPAdvanced1/src/smtptest.c $(NS_RELEASE)/examples/SMTP/advanced
+	cp ./C/advancedExamples/SMTPAdvanced_1/include/testsink.h $(NS_RELEASE)/examples/SMTP/advanced
+	cp ./C/advancedExamples/SMTPAdvanced_1/src/testsink.c $(NS_RELEASE)/examples/SMTP/advanced
+	cp ./C/advancedExamples/SMTPAdvanced_1/src/smtptest.c $(NS_RELEASE)/examples/SMTP/advanced
 	cp ./C/protocol/POP3/test/pop3test.c $(NS_RELEASE)/examples/POP3/
 	cp ./C/protocol/POP3/test/testsink.c $(NS_RELEASE)/examples/POP3/
 	cp ./C/protocol/POP3/test/testsink.h $(NS_RELEASE)/examples/POP3/
 	cp ./C/protocol/IMAP4/test/*.c       $(NS_RELEASE)/examples/IMAP4/
 	cp ./C/protocol/IMAP4/test/*.h       $(NS_RELEASE)/examples/IMAP4/
 	cp ./C/protocol/IMAP4/test/*.out     $(NS_RELEASE)/examples/IMAP4/
-	cp ./C/advancedExamples/IMAP4Advanced1/include/testsink.h $(NS_RELEASE)/examples/IMAP4/advanced
-	cp ./C/advancedExamples/IMAP4Advanced1/src/testsink.c $(NS_RELEASE)/examples/IMAP4/advanced
-	cp ./C/advancedExamples/IMAP4Advanced1/src/imaptest.c $(NS_RELEASE)/examples/IMAP4/advanced
+	cp ./C/advancedExamples/IMAP4Advanced_1/include/testsink.h $(NS_RELEASE)/examples/IMAP4/advanced
+	cp ./C/advancedExamples/IMAP4Advanced_1/src/testsink.c $(NS_RELEASE)/examples/IMAP4/advanced
+	cp ./C/advancedExamples/IMAP4Advanced_1/src/imaptest.c $(NS_RELEASE)/examples/IMAP4/advanced
 
 JAVA_EXAMPLES: 
 	cp java/protocol/examples/example1/*.java $(JAVABUILDDIR)/examples/example1
