@@ -41,6 +41,7 @@ function initPrefs()
 
     console.addPref ("input.commandchar", "/");    
     console.addPref ("input.history.max", 20);
+    console.addPref ("input.dtab.time", 500);
     console.addPref ("output.wordbreak.length", 40);
 
 }
