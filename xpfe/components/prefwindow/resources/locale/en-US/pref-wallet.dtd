@@ -1,5 +1,5 @@
 <!ENTITY window.title "Wallet">
-<!ENTITY lHeader "Wallet">
+<!ENTITY lHeader "Autofill">
 <!ENTITY remSignCheck.label "Automatically prefill usernames and passwords">
 <!ENTITY capFormsCheck.label "Enable prefilling of forms">
 <!ENTITY rHeader "Manage stored data about yourself">
