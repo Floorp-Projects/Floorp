@@ -26,6 +26,7 @@
 
 <page id="history-panel" orient="vertical"
       xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
       onload="HistoryCommonInit();"
       elementtofocus="historyTree">
 
