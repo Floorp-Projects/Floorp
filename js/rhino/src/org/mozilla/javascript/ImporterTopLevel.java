@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  * Norris Boyd
+ * Matthias Radestock
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -88,57 +89,79 @@ public class ImporterTopLevel extends ScriptableObject {
     
     public Object get(String name, Scriptable start) {
         Object result = super.get(name, start);
-        if (result == NOT_FOUND && importedPackages != null) {
-            for (int i=0; i < importedPackages.size(); i++) {
-                Object o = importedPackages.elementAt(i);
-                NativeJavaPackage p = (NativeJavaPackage) o;
-                Object v = p.getPkgProperty(name, start, false);
-                if (v != null && !(v instanceof NativeJavaPackage)) {
-                    if (result == NOT_FOUND) {
-                        result = v;
-                    } else {
-                        String[] args = { result.toString(), v.toString() };
-                        throw Context.reportRuntimeError(
-                            Context.getMessage("msg.ambig.import", 
-                                               args));
-                    }
+        if (result != NOT_FOUND) 
+            return result;
+        if (name.equals("_packages_")) 
+            return result;
+        Object plist = ScriptableObject.getProperty(start,"_packages_");
+        if (plist == NOT_FOUND) 
+            return result;
+        Context cx = Context.enter();
+        Object[] elements = cx.getElements((Scriptable)plist);
+        Context.exit();
+        for (int i=0; i < elements.length; i++) {
+            NativeJavaPackage p = (NativeJavaPackage) elements[i];
+            Object v = p.getPkgProperty(name, start, false);
+            if (v != null && !(v instanceof NativeJavaPackage)) {
+                if (result == NOT_FOUND) {
+                    result = v;
+                } else {
+                    String[] args = { result.toString(), v.toString() };
+                    throw Context.reportRuntimeError(
+                        Context.getMessage("msg.ambig.import", 
+                        args));
                 }
             }
         }
-        return result;          
+        return result;
     }
     
-    public void importClass(Object cl) {
-        if (!(cl instanceof NativeJavaClass)) {
-            String[] args = { Context.toString(cl) };
-            throw Context.reportRuntimeError(
-                Context.getMessage("msg.not.class", args));
+    public static void importClass(Context cx, Scriptable thisObj,
+                                   Object[] args, Function funObj) {
+        for (int i=0; i<args.length; i++) {
+            Object cl = args[i];
+            if (!(cl instanceof NativeJavaClass)) {
+                String[] eargs = { Context.toString(cl) };
+                throw Context.reportRuntimeError(Context.getMessage("msg.not.class", eargs));
+            }
+            String s = ((NativeJavaClass) cl).getClassObject().getName();
+            String n = s.substring(s.lastIndexOf('.')+1);
+            Object val = thisObj.get(n, thisObj);
+            if (val != NOT_FOUND && val != cl) {
+                String[] eargs = { n };
+                throw Context.reportRuntimeError(Context.getMessage("msg.prop.defined", eargs));
+            }
+            //thisObj.defineProperty(n, cl, DONTENUM);
+            thisObj.put(n,thisObj,cl);
         }
-        String s = ((NativeJavaClass) cl).getClassObject().getName();
-        String n = s.substring(s.lastIndexOf('.')+1);
-        Object val = this.get(n, this);
-        if (val != NOT_FOUND && val != cl) {
-            String[] args = { n };
-            throw Context.reportRuntimeError(
-                Context.getMessage("msg.prop.defined", args));
-        }
-        this.defineProperty(n, cl, DONTENUM);
     }
     
-    public void importPackage(Object pkg) {
-        if (importedPackages == null)
-            importedPackages = new Vector();
-        if (!(pkg instanceof NativeJavaPackage)) {
-            String[] args = { Context.toString(pkg) };
-            throw Context.reportRuntimeError(
-                Context.getMessage("msg.not.pkg", args));
+    public static void importPackage(Context cx, Scriptable thisObj,
+                                   Object[] args, Function funObj) {
+        Scriptable importedPackages;
+        Object plist = thisObj.get("_packages_", thisObj);
+        if (plist == NOT_FOUND) {
+            importedPackages = cx.newArray(thisObj,0);
+            thisObj.put("_packages_", thisObj, importedPackages);
         }
-        for (int i=0; i < importedPackages.size(); i++) {
-            if (pkg == importedPackages.elementAt(i))
-                return;     // allready in list
+        else {
+            importedPackages = (Scriptable)plist;
         }
-        importedPackages.addElement(pkg);
+        for (int i=0; i<args.length; i++) {
+            Object pkg = args[i];
+            if (!(pkg instanceof NativeJavaPackage)) {
+                String[] eargs = { Context.toString(pkg) };
+                throw Context.reportRuntimeError(Context.getMessage("msg.not.pkg", eargs));
+            }
+            Object[] elements = cx.getElements(importedPackages);
+            for (int j=0; j < elements.length; j++) {
+                if (pkg == elements[j]) {
+                    pkg = null;
+                    break;
+                }
+            }
+            if (pkg != null)
+                importedPackages.put(elements.length,importedPackages,pkg);
+        }
     }
-    
-    private Vector importedPackages;
 }

@@ -110,7 +110,7 @@ public class Main {
             processSource(cx, args.length == 0 ? null : args[0]);
 
         cx.exit();
-        return global.exitCode;
+        return exitCode;
     }
 
     /**
@@ -201,7 +201,7 @@ public class Main {
                 (new InputStreamReader(Main.getIn()));
             int lineno = 1;
             boolean hitEOF = false;
-            while (!hitEOF && !global.quitting) {
+            while (!hitEOF) {
                 int startline = lineno;
                 if (filename == null)
                     getErr().print("js> ");
@@ -244,13 +244,15 @@ public class Main {
                 }
                 NativeArray h = global.history;
                 h.put((int)h.jsGet_length(), h, source);
-                if (global.quitting) {
-                    // The user executed the quit() function.
-                    break;
-                }
             }
             getErr().println();
-        } else {
+        } else processFile(cx, global, filename);
+        System.gc();
+    }
+    
+    public static void processFile(Context cx, Scriptable scope,
+                                   String filename)
+    {
             Reader in = null;
             try {
                 in = new PushbackReader(new FileReader(filename));
@@ -278,7 +280,7 @@ public class Main {
                 Context.reportError(ToolErrorReporter.getMessage(
                     "msg.couldnt.open",
                     filename));
-                global.exitCode = EXITCODE_FILE_NOT_FOUND;
+                exitCode = EXITCODE_FILE_NOT_FOUND;
                 return;
             } catch (IOException ioe) {
                 getErr().println(ioe.toString());
@@ -287,11 +289,9 @@ public class Main {
             // Here we evalute the entire contents of the file as
             // a script. Text is printed only if the print() function
             // is called.
-            evaluateReader(cx, global, in, filename, 1);
-        }
-        System.gc();
+            evaluateReader(cx, scope, in, filename, 1);
     }
-    
+
     public static Object evaluateReader(Context cx, Scriptable scope, 
                                         Reader in, String sourceName, 
                                         int lineno)
@@ -307,7 +307,7 @@ public class Main {
         catch (EcmaError ee) {
             String msg = ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException", ee.toString());
-            global.exitCode = EXITCODE_RUNTIME_ERROR;
+            exitCode = EXITCODE_RUNTIME_ERROR;
             if (ee.getSourceName() != null) {
                 Context.reportError(msg, ee.getSourceName(), 
                                     ee.getLineNumber(), 
@@ -319,14 +319,14 @@ public class Main {
         }
         catch (EvaluatorException ee) {
             // Already printed message.
-            global.exitCode = EXITCODE_RUNTIME_ERROR;
+            exitCode = EXITCODE_RUNTIME_ERROR;
         }
         catch (JavaScriptException jse) {
 	    	// Need to propagate ThreadDeath exceptions.
 	    	Object value = jse.getValue();
 	    	if (value instanceof ThreadDeath)
 	    		throw (ThreadDeath) value;
-            global.exitCode = EXITCODE_RUNTIME_ERROR;
+            exitCode = EXITCODE_RUNTIME_ERROR;
             Context.reportError(ToolErrorReporter.getMessage(
                 "msg.uncaughtJSException",
                 jse.getMessage()));
@@ -381,6 +381,7 @@ public class Main {
     
     static protected ToolErrorReporter errorReporter;
     static protected Global global;
+    static protected int exitCode = 0;
     static public InputStream inStream;
     static public PrintStream outStream;
     static public PrintStream errStream;

@@ -23,6 +23,7 @@
  * Norris Boyd
  * Rob Ginda
  * Kurt Westerfeld
+ * Matthias Radestock
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -132,12 +133,8 @@ public class Global extends ImporterTopLevel {
                             Object[] args, Function funObj)
     {
 
-        Main.global.exitCode = 0;
-        
-        if (args.length > 0)
-            Main.global.exitCode = (int) Context.toNumber(args[0]);
-
-        Main.global.quitting = true;
+        System.exit((args.length > 0) ?
+                    ((int) Context.toNumber(args[0])) : 0);
     }
 
     /**
@@ -166,7 +163,7 @@ public class Global extends ImporterTopLevel {
                             Object[] args, Function funObj)
     {
         for (int i=0; i < args.length; i++) {
-            Main.processSource(cx, cx.toString(args[i]));
+            Main.processFile(cx, thisObj, cx.toString(args[i]));
         }
     }
 
@@ -194,7 +191,7 @@ public class Global extends ImporterTopLevel {
                PropertyException
     {
         Class clazz = getClass(args);
-        ScriptableObject.defineClass(Main.global, clazz);
+        ScriptableObject.defineClass(thisObj, clazz);
     }
 
     /**
@@ -227,7 +224,7 @@ public class Global extends ImporterTopLevel {
                 "msg.must.implement.Script"));
         }
         Script script = (Script) clazz.newInstance();
-        script.exec(cx, Main.global);
+        script.exec(cx, thisObj);
     }
 
     private static Class getClass(Object[] args)
@@ -284,8 +281,6 @@ public class Global extends ImporterTopLevel {
     }
     
     boolean processStdin = true;    
-    boolean quitting;
-    int exitCode = 0;
     NativeArray history;
 }
 
