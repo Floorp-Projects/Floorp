@@ -24,6 +24,7 @@
 
 
 class nsIWebShell;
+class nsIPref;
 
 class GtkMozillaContainer : public nsIWebShellContainer
 {
@@ -64,7 +65,7 @@ public:
 
 
 // Construction
-  GtkMozillaContainer(GtkMozilla *moz);        // standard constructor
+  GtkMozillaContainer(GtkMozilla *moz, nsIPref * aPrefs);        // standard constructor
   virtual ~GtkMozillaContainer();
 
   void Show();
@@ -103,6 +104,8 @@ protected:
                                nsIContentViewer** aDocViewerResult);
 
   nsIWebShell *mWebShell;
+  nsIPref *mPrefs;
+
   GtkMozilla *mozilla;
   int width, height;
 

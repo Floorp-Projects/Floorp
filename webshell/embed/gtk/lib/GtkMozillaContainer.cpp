@@ -27,15 +27,25 @@
 #include "nsIContentViewer.h"
 #include "prprf.h"
 
+#include "nsIPref.h"
+
+
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
 
-GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz)
+// static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+// static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
+
+GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz, nsIPref * aPrefs)
 {
   mWebShell = nsnull;
+
+
   width = height = 0;
   mStream = nsnull;
 
@@ -45,12 +55,23 @@ GtkMozillaContainer::GtkMozillaContainer(GtkMozilla *moz)
   mozilla = moz;
 
   gtk_widget_set_app_paintable(GTK_WIDGET(moz), PR_TRUE);
+
+  mPrefs = aPrefs;
+  NS_IF_ADDREF(mPrefs);
 }
 
 
 GtkMozillaContainer::~GtkMozillaContainer(void)
 {
   NS_IF_RELEASE(mWebShell);
+  NS_IF_RELEASE(mPrefs);
+
+//   if (nsnull != mPrefs) 
+//   {
+//     mPrefs->ShutDown();
+
+//     NS_RELEASE(mPrefs);
+//   }
 }
 
 void
@@ -58,27 +79,55 @@ GtkMozillaContainer::Show()
 {
   GtkAllocation *alloc = &GTK_WIDGET(mozilla)->allocation;
     
-  nsresult rv = nsRepository::CreateInstance(kWebShellCID, nsnull,
-					     kIWebShellIID,
-					     (void**)&mWebShell);
-
-  if (NS_FAILED(rv) || !mWebShell) {
-    printf("Cannot create WebShell!");
+  nsresult rv = nsRepository::CreateInstance(kWebShellCID, 
+                                             nsnull,
+                                             kIWebShellIID,
+                                             (void**) &mWebShell);
+  
+  if (NS_FAILED(rv) || !mWebShell) 
+  {
+    printf("Cannot create WebShell!\n");
     return;
   }
+
+//   rv = nsComponentManager::CreateInstance(kPrefCID, 
+//                                           nsnull, 
+//                                           kIPrefIID,
+//                                           (void **) &mPrefs);
   
-  if (mozilla) {
+//   if (NS_OK != rv) 
+//   {
+//     printf("Cannot create Prefs!\n");
+//     return rv;
+//   }
+
+  
+//   mPrefs->StartUp();
+//   mPrefs->ReadUserPrefs();
+
+ 
+  if (mozilla) 
+  {
     width = alloc->width;
     height = alloc->height;
-
+    
     //printf("Init, size: %d, %d\n", width, height);
     mWebShell->Init((nsNativeWidget *)mozilla,
-		    0, 0,
-		    width, height);
+                    0,
+                    0,
+                    width,
+                    height);
     
     mWebShell->SetContainer(this);
+
+    if(mPrefs)
+    {
+      mWebShell->SetPrefs(mPrefs);
+    }
   }
-  if (mWebShell) {
+
+  if (mWebShell) 
+  {
     mWebShell->Show();
   }
 }
