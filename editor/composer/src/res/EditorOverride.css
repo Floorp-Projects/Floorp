@@ -43,7 +43,7 @@ img, img[usemap], area,
 object, object[usemap], 
 applet, hr, button, input, select,
 a:link img, a:visited img, a:active img,
-a[name] {
+a[name]:empty {
   cursor: default;
 }
 
@@ -53,7 +53,7 @@ a:visited, a:active {
 }
 
 /* Prevent clicking on links from going to link */
-a[name], a:link img, a:visited img {
+a:link img, a:visited img {
   -moz-user-input: none;
 }
 
