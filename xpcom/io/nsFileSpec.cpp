@@ -679,7 +679,9 @@ nsFilePath::nsFilePath(const char* inString, PRBool inCreateDirs)
     // Make canonical and absolute.
     nsFileSpecHelpers::Canonify(mPath, inCreateDirs);
 #ifdef XP_PC
-    NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
+    if (!mPath.IsEmpty()) {
+        NS_ASSERTION( mPath[1] == ':', "unexpected canonical path" );
+    }
     nsFileSpecHelpers::NativeToUnix(mPath);
 #endif
 }

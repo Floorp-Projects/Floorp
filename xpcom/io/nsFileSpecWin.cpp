@@ -94,17 +94,22 @@ void nsFileSpecHelpers::UnixToNative(nsSimpleCharString& ioPath)
 	if (ioPath.IsEmpty())
 		return;
 		
-    // Strip initial slash for an absolute path
+  // Strip initial slash for an absolute path
 	char* src = (char*)ioPath;
-	if (*src == '/')
-	{
-		// Since it was an absolute path, check for the drive letter
+  if (*src == '/') {
+    if (PL_strlen(src+1)==0) {
+      // allocate new string by copying from ioPath[1]
+      nsSimpleCharString temp = src + 1;
+      ioPath = temp;
+      return;
+    }
+	  // Since it was an absolute path, check for the drive letter
 		char* colonPointer = src + 2;
 		if (strstr(src, "|/") == colonPointer)
-	        *colonPointer = ':';
-	    // allocate new string by copying from ioPath[1]
-	    nsSimpleCharString temp = src + 1;
-	    ioPath = temp;
+	    *colonPointer = ':';
+	  // allocate new string by copying from ioPath[1]
+	  nsSimpleCharString temp = src + 1;
+	  ioPath = temp;
 	}
 
 	src = (char*)ioPath;
