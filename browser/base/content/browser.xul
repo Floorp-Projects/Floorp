@@ -400,16 +400,16 @@
   <statusbar class="chromeclass-status" id="status-bar"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
     <statusbarpanel id="security-button" class="statusbarpanel-iconic"
-                  onclick="displayPageInfo()"/>
+                    ondblclick="displaySecurityInfo()"/>
     <statusbarpanel id="page-report-button" class="statusbarpanel-iconic" tooltiptext="&pageReportIcon.tooltip;"
-                  onclick="displayPageReport();"/>
+                    ondblclick="displayPageReport();"/>
     <statusbarpanel id="page-theme-button" type="menu" class="statusbarpanel-menu-iconic" tooltiptext="&pageThemeIcon.tooltip;">
-          <menupopup onpopupshowing="stylesheetFillPopup(this);"
-                     oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
-            <menuitem label="&pageThemeNoTheme.label;" accesskey="&pageThemeNoTheme.accesskey;" type="radio" data="_nostyle"/>
-            <menuitem label="&pageThemePersistentOnly.label;" accesskey="&pageThemePersistentOnly.accesskey;" type="radio" checked="true"/>
-            <menuseparator/>
-          </menupopup>
+      <menupopup onpopupshowing="stylesheetFillPopup(this);"
+                  oncommand="stylesheetSwitchAll(window._content, event.target.getAttribute('data'));">
+        <menuitem label="&pageThemeNoTheme.label;" accesskey="&pageThemeNoTheme.accesskey;" type="radio" data="_nostyle"/>
+        <menuitem label="&pageThemePersistentOnly.label;" accesskey="&pageThemePersistentOnly.accesskey;" type="radio" checked="true"/>
+        <menuseparator/>
+      </menupopup>
     </statusbarpanel>
 
     <statusbarpanel id="statusbar-display" flex="1"/>

@@ -2555,7 +2555,7 @@ function onViewToolbarCommand(aEvent)
   document.persist(toolbar.id, "collapsed");
 }
 
-function displayPageInfo()
+function displaySecurityInfo()
 {
     window.openDialog("chrome://browser/content/pageInfo.xul", "_blank",
                       "dialog=no", null, "securityTab");
