@@ -142,6 +142,7 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
     case kInsertBreak:
       return WillInsertBreak(aSelection, aCancel, aHandled);
     case kInsertText:
+    case kInsertTextIME:
       return WillInsertText(aSelection, 
                             aCancel,
                             aHandled, 
@@ -149,8 +150,6 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
                             info->outString,
                             info->typeInState,
                             info->maxLength);
-    case kInsertTextIME:
-      return WillInsert(aSelection, aCancel);
     case kDeleteSelection:
       return WillDeleteSelection(aSelection, info->collapsedAction, aCancel, aHandled);
     case kUndo:
@@ -186,6 +185,7 @@ nsTextEditRules::DidDoAction(nsIDOMSelection *aSelection,
    case kInsertBreak:
      return DidInsertBreak(aSelection, aResult);
     case kInsertText:
+    case kInsertTextIME:
       return DidInsertText(aSelection, aResult);
     case kDeleteSelection:
       return DidDeleteSelection(aSelection, info->collapsedAction, aResult);
