@@ -845,10 +845,8 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
 		n_str = m_value.string;
 		if (charset != nsnull)
 		{
-			nsAutoString  srcCharset;
-			srcCharset.AssignWithConversion(charset);
 			nsString out;
-			ConvertToUnicode(srcCharset, stringToMatch ? stringToMatch : "", out);
+			ConvertToUnicode(charset, stringToMatch ? stringToMatch : "", out);
 			utf8 = ToNewUTF8String(out);
 		}
 	}

@@ -615,7 +615,7 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
   // resort we'll use the mail defaul charset.
   if (! headerVal.Length())
   {
-    headerVal = nsMsgI18NFileSystemCharset();
+    headerVal.AssignWithConversion(nsMsgI18NFileSystemCharset());
     if (! headerVal.Length())
     { // last resort
       if (!m_defCharset.Length())

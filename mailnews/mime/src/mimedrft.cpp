@@ -226,7 +226,7 @@ mime_dump_attachments ( attachmentList );
         if (NS_SUCCEEDED(rv) && attachment)
         {
           nsAutoString nameStr;
-          rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), curAttachment->real_name, nameStr);
+          rv = ConvertToUnicode(msgCompHeaderInternalCharset(), curAttachment->real_name, nameStr);
           if (NS_FAILED(rv))
             nameStr.AssignWithConversion(curAttachment->real_name);
           attachment->SetName(nameStr.get());
@@ -1756,7 +1756,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     //Need some convertion to native file system character set
     nsAutoString outStr;
     char * fileName = nsnull;
-    nsresult rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), newAttachment->real_name, outStr);
+    nsresult rv = ConvertToUnicode(msgCompHeaderInternalCharset(), newAttachment->real_name, outStr);
     if (NS_SUCCEEDED(rv))
     {
       rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), outStr, &fileName);

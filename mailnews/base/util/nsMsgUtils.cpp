@@ -287,7 +287,7 @@ nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, nsCString& p
 {
 	// A file name has to be in native charset, convert from UTF-8.
 	nsCAutoString oldPath;
-	const nsString fileCharset(nsMsgI18NFileSystemCharset());
+	const char *fileCharset = nsMsgI18NFileSystemCharset();
 	char *nativeString = nsnull;
 	nsresult rv = ConvertFromUnicode(fileCharset, nsAutoString(NS_ConvertUTF8toUCS2(folderURI)), &nativeString);
 	if (NS_SUCCEEDED(rv) && nativeString && nativeString[0])

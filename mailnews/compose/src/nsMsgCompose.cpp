@@ -2815,15 +2815,15 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   }
   tempFile.close();
 
-  nsAutoString sigEncoding;
-  sigEncoding.AssignWithConversion(nsMsgI18NParseMetaCharset(&fSpec));
+  nsCAutoString sigEncoding;
+  sigEncoding.Assign(nsMsgI18NParseMetaCharset(&fSpec));
   PRBool removeSigCharset = !sigEncoding.IsEmpty() && m_composeHTML;
 
   //default to platform encoding for signature files w/o meta charset
   if (sigEncoding.IsEmpty())
     sigEncoding.Assign(nsMsgI18NFileSystemCharset());
 
-  if (NS_FAILED(ConvertToUnicode(sigEncoding, readBuf, sigData)))
+  if (NS_FAILED(ConvertToUnicode(sigEncoding.get(), readBuf, sigData)))
     sigData.AssignWithConversion(readBuf);
 
   //remove sig meta charset to allow user charset override during composition
@@ -2831,7 +2831,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   {
     nsAutoString metaCharset;
     metaCharset.Assign(NS_LITERAL_STRING("charset="));
-    metaCharset.Append(sigEncoding);
+    metaCharset.AppendWithConversion(sigEncoding.get());
     PRInt32 metaCharsetOffset = sigData.Find(metaCharset,PR_TRUE,0,-1);
 
     if (metaCharsetOffset != kNotFound)
@@ -3520,7 +3520,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                       if (!fullAddress.IsEmpty())
                       {
                         /* We need to convert back the result from UTF-8 to Unicode */
-                        (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress.get(), fullNameStr);
+                        (void)ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress.get(), fullNameStr);
                       }
                     }
                     if (fullNameStr.IsEmpty())
@@ -4242,7 +4242,7 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
     if (!fullAddress.IsEmpty())
     {
       /* We need to convert back the result from UTF-8 to Unicode */
-      (void)ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, mFullName);
+      (void)ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress, mFullName);
     }
   }
 

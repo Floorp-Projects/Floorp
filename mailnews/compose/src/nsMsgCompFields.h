@@ -179,7 +179,7 @@ protected:
   PRBool      m_uuEncodeAttachments;
   PRBool      m_returnReceipt;
   PRInt32     m_receiptType;        /* 0:None 1:DSN 2:MDN 3:BOTH */
-  nsString    m_internalCharSet;
+  nsCString   m_internalCharSet;
 
   nsCOMPtr<nsISupports> mSecureCompFields;
 };

@@ -819,7 +819,7 @@ mime_generate_attachment_headers (const char *type, const char *encoding,
   if (real_name)
   {
     encodedRealName = nsMsgI18NEncodeMimePartIIStr(real_name,
-      NS_ConvertUCS2toUTF8(nsMsgI18NFileSystemCharset()).get(), nsMsgMIMEGetConformToStandard());
+      nsMsgI18NFileSystemCharset(), nsMsgMIMEGetConformToStandard());
     if (!encodedRealName || !*encodedRealName)
     {
       /* Let's try one more time using UTF8 */

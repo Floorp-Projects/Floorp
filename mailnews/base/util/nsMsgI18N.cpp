@@ -217,7 +217,7 @@ nsresult nsMsgI18NConvertToUnicode(const nsCString& aCharset,
 }
 
 // Convert an unicode string to a C string with a given charset.
-nsresult ConvertFromUnicode(const nsAString& aCharset, 
+nsresult ConvertFromUnicode(const char* aCharset,
                             const nsString& inString,
                             char** outCString)
 {
@@ -237,21 +237,15 @@ nsresult ConvertFromUnicode(const nsAString& aCharset,
   }
   // Note: this will hide a possible error when the unicode text may contain more than one charset.
   // (e.g. Latin1 + Japanese). Use nsMsgI18NSaveAsCharset instead to avoid that problem.
-  else if (aCharset.IsEmpty() ||
-           Compare(aCharset,
-                   NS_LITERAL_STRING("us-ascii"),
-                   nsCaseInsensitiveStringComparator()) == 0 ||
-           Compare(aCharset,
-                   NS_LITERAL_STRING("ISO-8859-1"),
-                   nsCaseInsensitiveStringComparator()) == 0) {
+  else if (!*aCharset ||
+           !nsCRT::strcasecmp("us-ascii", aCharset) ||
+           !nsCRT::strcasecmp("ISO-8859-1", aCharset)) {
     *outCString = ToNewCString(inString);
-    return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    return *outCString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
-  else if (Compare(aCharset,
-                   NS_LITERAL_STRING("UTF-8"),
-                   nsCaseInsensitiveStringComparator()) == 0) {
+  else if (!nsCRT::strcasecmp("UTF-8", aCharset)) {
     *outCString = ToNewUTF8String(inString);
-    return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+    return *outCString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
 
   nsresult res;
@@ -260,8 +254,7 @@ nsresult ConvertFromUnicode(const nsAString& aCharset,
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(PromiseFlatString(aCharset).get(),
-                             getter_AddRefs(charsetAtom));
+  res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aCharset).get(), getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(res, res);
 
   // get an unicode converter
@@ -300,7 +293,7 @@ nsresult ConvertFromUnicode(const nsAString& aCharset,
 }
 
 // Convert a C string to an unicode string.
-nsresult ConvertToUnicode(const nsAString& aCharset, 
+nsresult ConvertToUnicode(const char* aCharset, 
                           const char* inCString, 
                           nsString& outString)
 {
@@ -317,13 +310,9 @@ nsresult ConvertToUnicode(const nsAString& aCharset,
     outString.Truncate();
     return NS_OK;
   }
-  else if (aCharset.IsEmpty() ||
-           Compare(aCharset,
-                   NS_LITERAL_STRING("us-ascii"),
-                   nsCaseInsensitiveStringComparator()) == 0 ||
-           Compare(aCharset,
-                   NS_LITERAL_STRING("ISO-8859-1"),
-                   nsCaseInsensitiveStringComparator()) == 0) {
+  else if (!*aCharset ||
+           !nsCRT::strcasecmp("us-ascii", aCharset) ||
+           !nsCRT::strcasecmp("ISO-8859-1", aCharset)) {
     outString.AssignWithConversion(inCString);
     return NS_OK;
   }
@@ -334,8 +323,7 @@ nsresult ConvertToUnicode(const nsAString& aCharset,
   NS_ENSURE_SUCCESS(res, res);
 
   nsCOMPtr <nsIAtom> charsetAtom;
-  res = ccm2->GetCharsetAtom(PromiseFlatString(aCharset).get(),
-                             getter_AddRefs(charsetAtom));
+  res = ccm2->GetCharsetAtom(NS_ConvertASCIItoUCS2(aCharset).get(), getter_AddRefs(charsetAtom));
   NS_ENSURE_SUCCESS(res, res);
 
   // get an unicode converter
@@ -385,22 +373,25 @@ const char *msgCompHeaderInternalCharset()
 }
 
 // Charset used by the file system.
-const nsString& nsMsgI18NFileSystemCharset()
+const char * nsMsgI18NFileSystemCharset()
 {
 	/* Get a charset used for the file. */
-	static nsString aPlatformCharset;
+	static nsCAutoString fileSystemCharset;
 
-	if (aPlatformCharset.Length() < 1) 
+	if (fileSystemCharset.Length() < 1) 
 	{
 		nsresult rv;
 		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_CONTRACTID, &rv);
-		if (NS_SUCCEEDED(rv)) 
-			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
+    if (NS_SUCCEEDED(rv)) {
+      nsAutoString charset;
+      rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, charset);
+      fileSystemCharset.AssignWithConversion(charset);
+    }
 
 		if (NS_FAILED(rv)) 
-			aPlatformCharset.AssignWithConversion("ISO-8859-1");
+			fileSystemCharset.Assign("ISO-8859-1");
 	}
-	return aPlatformCharset;
+	return fileSystemCharset.get();
 }
 
 // MIME encoder, output string should be freed by PR_FREE
@@ -409,7 +400,7 @@ char * nsMsgI18NEncodeMimePartIIStr(const char *header, const char *charset, PRB
   // No MIME, convert to the outgoing mail charset.
   if (PR_FALSE == bUseMime) {
     char *convertedStr;
-    if (NS_SUCCEEDED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(charset), NS_ConvertUTF8toUCS2(header), &convertedStr)))
+    if (NS_SUCCEEDED(ConvertFromUnicode(charset, NS_ConvertUTF8toUCS2(header), &convertedStr)))
       return (convertedStr);
     else
       return PL_strdup(header);

@@ -660,7 +660,6 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
   nsCOMPtr<nsIFilePicker> filePicker =
       do_CreateInstance("@mozilla.org/filepicker;1", &rv);
   char * unescapedDisplayName = nsnull;
-  nsAutoString tempStr;
   PRInt16 dialogResult;
   nsCOMPtr<nsILocalFile> localFile;
   nsCOMPtr<nsIFileSpec> fileSpec;
@@ -685,17 +684,13 @@ nsMessenger::SaveAttachment(const char * contentType, const char * url,
      The display name is in UTF-8 because it has been escaped from JS
   */ 
   
-  rv = ConvertToUnicode(NS_LITERAL_STRING("UTF-8"), unescapedDisplayName, tempStr);
-  if (NS_SUCCEEDED(rv))
-  {
-      filePicker->Init(
-          nsnull, 
-          GetString(NS_LITERAL_STRING("Save Attachment").get()),
-          nsIFilePicker::modeSave
-          );
-      filePicker->SetDefaultString(tempStr.get());
-      filePicker->AppendFilters(nsIFilePicker::filterAll);
-  }      
+  filePicker->Init(
+      nsnull, 
+      GetString(NS_LITERAL_STRING("Save Attachment").get()),
+      nsIFilePicker::modeSave
+      );
+  filePicker->SetDefaultString(NS_ConvertUTF8toUCS2(unescapedDisplayName).get());
+  filePicker->AppendFilters(nsIFilePicker::filterAll);
   nsCRT::free(unescapedDisplayName);
   
   filePicker->Show(&dialogResult);
@@ -731,7 +726,6 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
     nsCOMPtr<nsIFileSpec> fileSpec;
     nsXPIDLCString dirName;
     char *unescapedUrl = nsnull, *unescapedName = nsnull, *tempCStr = nsnull;
-    nsAutoString tempStr;
     nsSaveAllAttachmentsState *saveState = nsnull;
     PRInt16 dialogResult;
 
@@ -763,9 +757,7 @@ nsMessenger::SaveAllAttachments(PRUint32 count,
         nsUnescape(unescapedUrl);
         unescapedName = PL_strdup(displayNameArray[0]);
         nsUnescape(unescapedName);
-        rv = ConvertToUnicode(NS_LITERAL_STRING("UTF-8"), unescapedName, tempStr);
-        if (NS_FAILED(rv)) goto done;
-        rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
+        rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), NS_ConvertUTF8toUCS2(unescapedName),
                                 &tempCStr);
         if (NS_FAILED(rv)) goto done;
         PR_FREEIF(unescapedName);
@@ -1644,7 +1636,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
     if (m_outputFormat.EqualsWithConversion(TEXT_PLAIN))
     {
       ConvertBufToPlainText(m_msgBuffer);
-      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, NS_LossyConvertUCS2toASCII(nsMsgI18NFileSystemCharset()).get(), 
+      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, nsMsgI18NFileSystemCharset(), 
                                   m_msgBuffer.get(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
         conLength = nsCRT::strlen(conBuf);
@@ -1677,7 +1669,6 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
       {
           char * unescapedUrl = nsnull, * unescapedName = nsnull, 
                * tempCStr = nsnull;
-          nsAutoString tempStr;
           nsSaveAllAttachmentsState *state = m_saveAllAttachmentsState;
           PRUint32 i = state->m_curIndex;
           nsCOMPtr<nsIFileSpec> fileSpec;
@@ -1689,9 +1680,7 @@ nsSaveMsgListener::OnStopRequest(nsIRequest* request, nsISupports* aSupport,
           nsUnescape(unescapedUrl);
           unescapedName = PL_strdup(state->m_displayNameArray[i]);
           nsUnescape(unescapedName);
-          rv = ConvertToUnicode(NS_LITERAL_STRING("UTF-8"), unescapedName, tempStr);
-          if (NS_FAILED(rv)) goto done;
-          rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr,
+          rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), NS_ConvertUTF8toUCS2(unescapedName),
                                   &tempCStr);
           if (NS_FAILED(rv)) goto done;
           PR_FREEIF(unescapedName);

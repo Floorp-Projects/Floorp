@@ -221,24 +221,21 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
 
 
   nsAutoString outString;
-  nsAutoString aCharset; aCharset.AssignWithConversion(from_charset);
   
-  res = ConvertToUnicode(aCharset, inBuffer, outString);
+  res = ConvertToUnicode(from_charset, inBuffer, outString);
 
   // known bug in 4.x, it mixes Shift_JIS (or EUC-JP) and ISO-2022-JP in vCard fields
   if (NS_ERROR_MODULE_UCONV == NS_ERROR_GET_MODULE(res)) {
-    if (aCharset.EqualsIgnoreCase("ISO-2022-JP")) {
-      aCharset.AssignWithConversion("Shift_JIS");
-      res = ConvertToUnicode(aCharset, inBuffer, outString);
+    if (!nsCRT::strcasecmp("ISO-2022-JP", from_charset)) {
+      res = ConvertToUnicode("Shift_JIS", inBuffer, outString);
       if (NS_ERROR_MODULE_UCONV == NS_ERROR_GET_MODULE(res)) {
-        aCharset.AssignWithConversion("EUC-JP");
-        res = ConvertToUnicode(aCharset, inBuffer, outString);
+        res = ConvertToUnicode("EUC-JP", inBuffer, outString);
       }
     }
   }
 
   if (NS_SUCCEEDED(res)) {
-    res = ConvertFromUnicode(NS_ConvertASCIItoUCS2(to_charset), outString, outBuffer);
+    res = ConvertFromUnicode(to_charset, outString, outBuffer);
     if (NS_SUCCEEDED(res)) {
       *outLength = nsCRT::strlen(*outBuffer);
     }

@@ -907,8 +907,7 @@ nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, P
 
   if (charsetConversion)
   {
-    nsAutoString charset; charset.AssignWithConversion(m_charset);
-    if (NS_FAILED(ConvertToUnicode(charset, readBuf, sigData)))
+    if (NS_FAILED(ConvertToUnicode(m_charset, readBuf, sigData)))
       sigData.AssignWithConversion(readBuf);
   }
   else
@@ -1076,8 +1075,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
           if (tempfile.is_open()) 
           {
             char    *tData = nsnull;
-            nsAutoString charset; charset.AssignWithConversion(m_charset);
-            if (NS_FAILED(ConvertFromUnicode(charset, conData, &tData)))
+            if (NS_FAILED(ConvertFromUnicode(m_charset, conData, &tData)))
               tData = ToNewCString(conData);
             if (tData)
             {

@@ -1231,9 +1231,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
 	// convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
 	// function in nsIFileSpec
 
-	const nsString fileCharset(nsMsgI18NFileSystemCharset());
 	nsXPIDLCString convertedNewName;
-	if (NS_FAILED(ConvertFromUnicode(fileCharset, nsAutoString(aNewName), getter_Copies(convertedNewName))))
+	if (NS_FAILED(ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(aNewName), getter_Copies(convertedNewName))))
 		return NS_ERROR_FAILURE;
 	nsCAutoString newNameStr(convertedNewName.get());
 

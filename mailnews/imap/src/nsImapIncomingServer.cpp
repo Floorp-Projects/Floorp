@@ -2011,20 +2011,14 @@ NS_IMETHODIMP  nsImapIncomingServer::FEAlertFromServer(const char *aString, nsIM
         	     whereRealMessage[len] = '.';
 		}
     
-    // the alert string from the server IS UTF-8!!! We must convert it to unicode
-    // correctly before appending it to our error message string...
-
-    nsAutoString unicodeAlertString;
-    nsAutoString charset;
-    charset.AppendWithConversion("UTF-8");
-    ConvertToUnicode(charset, whereRealMessage ? whereRealMessage : aString, unicodeAlertString);
-    
 		PRUnichar *serverSaidPrefix = nsnull;
 		GetImapStringByID(IMAP_SERVER_SAID, &serverSaidPrefix);
 		if (serverSaidPrefix)
 		{
 			nsAutoString message(serverSaidPrefix);
-			message.Append(unicodeAlertString);
+      // the alert string from the server IS UTF-8!!! We must convert it to unicode
+      // correctly before appending it to our error message string...
+			message.Append(NS_ConvertUTF8toUCS2(whereRealMessage ? whereRealMessage : aString));
 			rv = dialog->Alert(nsnull, message.get());
 
 			PR_Free(serverSaidPrefix);

@@ -602,7 +602,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 			useQuotes = !reallyDredd ||
                 (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
 			// now convert to char* and escape quoted_specials
-			nsresult rv = ConvertFromUnicode(nsAutoString(destCharset), nsAutoString(convertedValue), &value);
+			nsresult rv = ConvertFromUnicode(NS_ConvertUCS2toUTF8(destCharset).get(), nsAutoString(convertedValue), &value);
 			if (NS_SUCCEEDED(rv) && value)
 			{
 				char *oldValue = value;

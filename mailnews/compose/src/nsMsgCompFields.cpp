@@ -76,7 +76,7 @@ nsMsgCompFields::nsMsgCompFields()
     prefs->GetBoolPref("mail.request.return_receipt_on", &m_returnReceipt);
     prefs->GetIntPref("mail.request.return_receipt", &m_receiptType);
   }
-  m_internalCharSet.AssignWithConversion(msgCompHeaderInternalCharset());
+  m_internalCharSet.Assign(msgCompHeaderInternalCharset());
 
   // Get the default charset from pref, use this as a mail charset.
   char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
@@ -134,7 +134,7 @@ const char* nsMsgCompFields::GetAsciiHeader(MsgHeaderID header)
 nsresult nsMsgCompFields::SetUnicodeHeader(MsgHeaderID header, const PRUnichar *value)
 {
   char* cString;
-  ConvertFromUnicode(m_internalCharSet, nsAutoString(value), &cString);
+  ConvertFromUnicode(m_internalCharSet.get(), nsAutoString(value), &cString);
   nsresult rv = SetAsciiHeader(header, cString);
   PR_Free(cString);
   
@@ -144,7 +144,7 @@ nsresult nsMsgCompFields::SetUnicodeHeader(MsgHeaderID header, const PRUnichar *
 nsresult nsMsgCompFields::GetUnicodeHeader(MsgHeaderID header, PRUnichar **_retval)
 {
   nsString unicodeStr;
-  ConvertToUnicode(m_internalCharSet, GetAsciiHeader(header), unicodeStr);
+  ConvertToUnicode(m_internalCharSet.get(), GetAsciiHeader(header), unicodeStr);
   *_retval = ToNewUnicode(unicodeStr);
   return NS_OK;
 }
@@ -450,7 +450,7 @@ NS_IMETHODIMP nsMsgCompFields::SetBody(const PRUnichar *value)
   if (value)
   {
     char* cString;
-    ConvertFromUnicode(m_internalCharSet, nsAutoString(value), &cString);
+    ConvertFromUnicode(m_internalCharSet.get(), nsAutoString(value), &cString);
     m_body = cString;
     if (!m_body)
       return NS_ERROR_OUT_OF_MEMORY;
@@ -462,7 +462,7 @@ NS_IMETHODIMP nsMsgCompFields::GetBody(PRUnichar **_retval)
 {
   nsString unicodeStr;
   const char* cString = GetBody();
-  ConvertToUnicode(m_internalCharSet, cString, unicodeStr);
+  ConvertToUnicode(m_internalCharSet.get(), cString, unicodeStr);
   *_retval = ToNewUnicode(unicodeStr);
 
   return NS_OK;
@@ -584,7 +584,7 @@ NS_IMETHODIMP nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBo
 			char * addresses;
 			PRUint32 numAddresses;
 
-			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), nsAutoString(recipients), &recipientsStr)))
+			if (NS_FAILED(ConvertFromUnicode(msgCompHeaderInternalCharset(), nsAutoString(recipients), &recipientsStr)))
 			  {
 				  recipientsStr = ToNewCString(nsDependentString(recipients));
 				}
@@ -608,11 +608,11 @@ NS_IMETHODIMP nsMsgCompFields::SplitRecipients(const PRUnichar *recipients, PRBo
 					    rv = parser->MakeFullAddress(msgCompHeaderInternalCharset(), pNames, pAddresses, &fullAddress);
 					if (NS_SUCCEEDED(rv) && !emailAddressOnly)
 					{
-						rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, aRecipient);
+						rv = ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress, aRecipient);
 						PR_FREEIF(fullAddress);
 					}
 					else
-						rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), pAddresses, aRecipient);
+						rv = ConvertToUnicode(msgCompHeaderInternalCharset(), pAddresses, aRecipient);
 					if (NS_FAILED(rv))
 						break;
 
@@ -679,7 +679,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
 			char * addresses;
 			PRUint32 numAddresses;
 
-			if (NS_FAILED(ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), nsAutoString(recipients), &recipientsStr)))
+			if (NS_FAILED(ConvertFromUnicode(msgCompHeaderInternalCharset(), nsAutoString(recipients), &recipientsStr)))
 			{
 				recipientsStr = ToNewCString(nsDependentString(recipients));
 			}
@@ -704,11 +704,11 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
             rv = parser->MakeFullAddress(msgCompHeaderInternalCharset(), pNames, pAddresses, &fullAddress);
             if (NS_SUCCEEDED(rv))
             {
-              rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), fullAddress, aRecipient);
+              rv = ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress, aRecipient);
               PR_FREEIF(fullAddress);
             }
             else
-              rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), pAddresses, aRecipient);
+              rv = ConvertToUnicode(msgCompHeaderInternalCharset(), pAddresses, aRecipient);
             if (NS_FAILED(rv))
               return rv;
               
@@ -719,7 +719,7 @@ nsresult nsMsgCompFields::SplitRecipientsEx(const PRUnichar *recipients, nsIMsgR
 
           if (pEmailsArray)
           {
-            rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), pAddresses, aRecipient);
+            rv = ConvertToUnicode(msgCompHeaderInternalCharset(), pAddresses, aRecipient);
             if (NS_FAILED(rv))
               return rv;
             rv = pEmailsArray->AppendString(aRecipient.get(), &aBool);
