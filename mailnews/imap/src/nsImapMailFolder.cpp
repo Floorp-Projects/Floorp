@@ -3223,7 +3223,7 @@ NS_IMETHODIMP nsImapMailFolder::DownloadMessagesForOffline(nsISupportsArray *mes
 //  return DownloadAllForOffline(nsnull, window);
 #endif
   nsresult rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv) || messageIds.Length() == 0) return rv;
   NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
   if (NS_FAILED(rv)) return rv;
 
