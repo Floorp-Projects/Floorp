@@ -71,6 +71,8 @@ nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
 	if (mPath)
 		delete mPath;
+	if (mDatabase)
+		mDatabase->RemoveListener(this);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
