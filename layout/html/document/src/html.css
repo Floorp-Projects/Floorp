@@ -472,6 +472,7 @@ input[type=image] {
   box-sizing: border-box;
   border: 2px solid blue;
   vertical-align:baseline;
+  background-color: inherit;
 }
 
 input[type=image]:focus {
