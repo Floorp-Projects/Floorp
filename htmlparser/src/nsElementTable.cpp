@@ -499,7 +499,7 @@ void InitializeElementTable(void) {
       /*tag*/                             eHTMLTag_dl,
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gDLRootTags,&gRootTags,	//fix bug 57634
-      /*autoclose starttags and endtags*/ 0,0,0,&gDLKids,           // DT/DD should not contain DL - bug 100466
+      /*autoclose starttags and endtags*/ 0,0,0,&gDTKids,           // DT should not contain DL - bug 100466
       /*parent,incl,exclgroups*/          kBlock, kSelf|kFlowEntity, kNone,	
       /*special props, prop-range*/       kOmitWS, kNoPropRange,
       /*special parents,kids,skip*/       0,&gDLKids,eHTMLTag_unknown);
