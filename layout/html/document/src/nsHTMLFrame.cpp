@@ -41,8 +41,8 @@
 #include "nsIPref.h"
 //#include "nsIDocumentWidget.h"
 #include "nsHTMLFrameset.h"
-#include "nsIDOMHTMLFRAMEElement.h"
-#include "nsIDOMHTMLIFRAMEElement.h"
+#include "nsIDOMHTMLFrameElement.h"
+#include "nsIDOMHTMLIFrameElement.h"
 #include "nsGenericHTMLElement.h"
 class nsHTMLFrame;
 
