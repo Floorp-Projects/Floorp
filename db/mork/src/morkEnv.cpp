@@ -56,10 +56,6 @@
 #include "morkEnv.h"
 #endif
 
-#ifndef _ORKINENV_
-#include "orkinEnv.h"
-#endif
-
 #ifndef _MORKFACTORY_
 #include "morkFactory.h"
 #endif

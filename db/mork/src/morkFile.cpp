@@ -56,7 +56,7 @@
 #include "morkFile.h"
 #endif
 
-#define MORK_CONFIG_USE_ORKINFILE 1
+// #define MORK_CONFIG_USE_ORKINFILE 1
  
 #ifdef MORK_CONFIG_USE_ORKINFILE
 #ifndef _ORKINFILE_

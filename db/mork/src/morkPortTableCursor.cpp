@@ -60,10 +60,6 @@
 #include "morkPortTableCursor.h"
 #endif
 
-#ifndef _ORKINPORTTABLECURSOR_
-#include "orkinPortTableCursor.h"
-#endif
-
 #ifndef _MORKSTORE_
 #include "morkStore.h"
 #endif

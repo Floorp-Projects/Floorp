@@ -64,14 +64,6 @@
 #include "morkStore.h"
 #endif
 
-#ifndef _ORKINSTORE_
-#include "orkinStore.h"
-#endif
-
-#ifndef _ORKINTHUMB_
-#include "orkinThumb.h"
-#endif
-
 #ifndef _MORKFACTORY_
 #include "morkFactory.h"
 #endif
@@ -215,9 +207,9 @@ morkStore::morkStore(morkEnv* ev, const morkUsage& inUsage,
 
 , mStore_FirstCommitGroupPos( 0 )
 , mStore_SecondCommitGroupPos( 0 )
-, mPort_Heap( 0 )
 , mPort_Env( ev )
 , mPort_Factory( 0 )
+, mPort_Heap( 0 )
 
 // disable auto-assignment of atom IDs until someone knows it is okay:
 , mStore_CanAutoAssignAtomIdentity( morkBool_kFalse )
@@ -255,7 +247,7 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
     {
 
       nsIMdbFile* file = mStore_File;
-      nsrefcnt refCnt = file->AddRef();
+      file->AddRef();
 
       morkFactory::SlotWeakFactory((morkFactory*) 0, ev, &mPort_Factory);
       nsIMdbHeap_SlotStrongHeap((nsIMdbHeap*) 0, ev, &mPort_Heap);

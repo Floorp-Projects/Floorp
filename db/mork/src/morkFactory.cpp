@@ -60,10 +60,6 @@
 #include "morkFactory.h"
 #endif
 
-#ifndef _ORKINFACTORY_
-#include "orkinFactory.h"
-#endif
-
 #ifndef _ORKINHEAP_
 #include "orkinHeap.h"
 #endif
@@ -217,7 +213,6 @@ morkFactory::OpenOldFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
   // other portions or Mork source code don't want to know how it's done.
 {
   mdb_err outErr = 0;
-  nsIMdbFile* outFile = 0;
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   morkFile* file = nsnull;
   if ( ev )
@@ -247,7 +242,6 @@ morkFactory::CreateNewFile(nsIMdbEnv* mev, nsIMdbHeap* ioHeap,
   // other portions or Mork source code don't want to know how it's done.
 {
   mdb_err outErr = 0;
-  nsIMdbFile* outFile = 0;
   morkEnv* ev = morkEnv::FromMdbEnv(mev);
   morkFile* file = nsnull;
   if ( ev )

@@ -72,10 +72,6 @@
 #include "morkCell.h"
 #endif
 
-#ifndef _ORKINCELL_
-#include "orkinCell.h"
-#endif
-
 #ifndef _MORKSTORE_
 #include "morkStore.h"
 #endif
