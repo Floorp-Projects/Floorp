@@ -48,7 +48,7 @@ nsUint8Array::nsUint8Array()
 
 nsUint8Array::~nsUint8Array()
 {
-	delete[] (PRUint8*)m_pData;
+	PR_Free(m_pData);
 }
 
 void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
@@ -62,14 +62,14 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
 	if (nNewSize == 0)
 	{
 		// shrink to nothing
-		delete[] (PRUint8*)m_pData;
+		PR_Free(m_pData);
 		m_pData = nsnull;
 		m_nSize = m_nMaxSize = 0;
 	}
 	else if (m_pData == nsnull)
 	{
 		// create one with exact size
-		m_pData = (PRUint8*) new PRUint8[nNewSize * sizeof(PRUint8)];
+		m_pData = (PRUint8*)PR_Malloc(nNewSize * sizeof(PRUint8));
 
 		memset(m_pData, 0, nNewSize * sizeof(PRUint8));  // zero fill
 
@@ -103,7 +103,7 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
 			nNewMax = nNewSize;  // no slush
 
 		NS_ASSERTION(nNewMax >= m_nMaxSize, "no wraparound");  // no wrap around
-		PRUint8* pNewData = (PRUint8*) new PRUint8[nNewMax * sizeof(PRUint8)];
+		PRUint8* pNewData = (PRUint8*)PR_Malloc(nNewMax * sizeof(PRUint8));
 
 		// copy new data from old
         memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint8));
@@ -112,7 +112,7 @@ void nsUint8Array::SetSize(PRInt32 nNewSize, PRInt32 nGrowBy)
 
 		memset(&pNewData[m_nSize], 0, (nNewSize-m_nSize) * sizeof(PRUint8));
 
-		delete[] (PRUint8*)m_pData;
+		PR_Free(m_pData);
 		m_pData = pNewData;
 		m_nSize = nNewSize;
 		m_nMaxSize = nNewMax;
@@ -128,13 +128,13 @@ void nsUint8Array::FreeExtra()
 		PRUint8* pNewData = nsnull;
 		if (m_nSize != 0)
 		{
-			pNewData = (PRUint8*) new PRUint8[m_nSize * sizeof(PRUint8)];
+			pNewData = (PRUint8*)PR_Malloc(m_nSize * sizeof(PRUint8));
 			// copy new data from old
 			memcpy(pNewData, m_pData, m_nSize * sizeof(PRUint8));
 		}
 
 		// get rid of old stuff (note: no destructors called)
-		delete[] (PRUint8*)m_pData;
+		PR_Free(m_pData);
 		m_pData = pNewData;
 		m_nMaxSize = m_nSize;
 	}
