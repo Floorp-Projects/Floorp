@@ -60,28 +60,10 @@ public:
   NS_IMETHOD GetToolbarAt(nsIToolbar*& aToolbar, PRInt32 anIndex) = 0;
 
  /**
-  * Get a toolbar to the toolbar manager
-  *
-  */
-  NS_IMETHOD GetTabIndex(nsIImageButton * aTab, PRInt32 &anIndex) = 0;
-
- /**
   * Forces the toolbar manager to layout
   *
   */
   NS_IMETHOD DoLayout() = 0;
-
- /**
-  * Tells the Toolbar manager to Collapse the toolbar
-  *
-  */
-  NS_IMETHOD CollapseToolbar(nsIToolbar * aToolbar) = 0;
-
- /**
-  * Tells the Toolbar manager to Expand the toolbar
-  *
-  */
-  NS_IMETHOD ExpandToolbar(nsIToolbar * aToolbar) = 0;
 
  /**
   * Adds a Listener to the toolbar manager
