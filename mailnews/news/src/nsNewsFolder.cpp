@@ -67,9 +67,7 @@
 #include "nsINntpUrl.h"
 #include "nsNewsSummarySpec.h"
 
-#include "nsIAppShellService.h"
-#include "nsIXULWindow.h"
-#include "nsAppShellCIDs.h"
+#include "nsINetSupportDialogService.h"
 #include "nsIInterfaceRequestor.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
@@ -83,7 +81,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 #define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
 
@@ -1379,8 +1377,9 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
     // prompt the user for the password
         
 		nsCOMPtr<nsIPrompt> dialog;
-
-    NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
+#ifdef DEBUG_seth
+    NS_ASSERTION(aMsgWindow,"no msg window");
+#endif
 		if (aMsgWindow) {
       nsCOMPtr<nsIDocShell> docShell;
 
@@ -1394,16 +1393,7 @@ nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
     }
 		else {
-			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
-			if (NS_FAILED(rv)) return rv;
-			if (!appshellservice) return NS_ERROR_FAILURE;
-
-			nsCOMPtr<nsIXULWindow> xulWindow;
-			rv = appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
-			if (NS_FAILED(rv)) return rv;
-			if (!xulWindow) return NS_ERROR_FAILURE;
-
-			dialog = do_GetInterface(xulWindow, &rv);
+			dialog = do_GetService(kNetSupportDialogCID, &rv);
 			if (NS_FAILED(rv)) return rv;
 		}
  
@@ -1454,8 +1444,9 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
         // prompt the user for the username
         
 		nsCOMPtr<nsIPrompt> dialog;
-
-		NS_ASSERTION(aMsgWindow,"no msg window, fix this, for now, use the hidden window");
+#ifdef DEBUG_seth
+		NS_ASSERTION(aMsgWindow,"no msg window");
+#endif
 		if (aMsgWindow) {
       // prompt the user for the password
       nsCOMPtr<nsIDocShell> docShell;
@@ -1467,16 +1458,7 @@ nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
 			if (NS_FAILED(rv)) return rv;
     }
 		else {
-			nsCOMPtr <nsIAppShellService> appshellservice = do_GetService(kAppShellServiceCID, &rv);
-			if (NS_FAILED(rv)) return rv;
-			if (!appshellservice) return NS_ERROR_FAILURE;
-
-			nsCOMPtr<nsIXULWindow> xulWindow;
-			rv = appshellservice->GetHiddenWindow(getter_AddRefs(xulWindow));
-			if (NS_FAILED(rv)) return rv;
-			if (!xulWindow) return NS_ERROR_FAILURE;
-
-			dialog = do_GetInterface(xulWindow, &rv);
+			dialog = do_GetService(kNetSupportDialogCID, &rv);
 			if (NS_FAILED(rv)) return rv;
 		}
  

@@ -46,11 +46,9 @@
 #include "nsIWebShellWindow.h"
 #include "nsIPrompt.h"
 #include "nsIWalletService.h"
+#include "nsINetSupportDialogService.h"
 
 #include "nsIRDFService.h"
-#include "nsIAppShellService.h"
-#include "nsAppShellCIDs.h"
-#include "nsIXULWindow.h"
 #include "nsRDFCID.h"
 #include "nsIInterfaceRequestor.h"
 
@@ -61,7 +59,7 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
-static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer);
@@ -622,18 +620,12 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
             nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell, &rv));
             if (NS_FAILED(rv)) return rv;
             dialog = do_GetInterface(webShell, &rv);
+			if (NS_FAILED(rv)) return rv;
         }
         else
         {
-            NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID,
-                            &rv);
-            if (NS_SUCCEEDED(rv))
-            {
-                nsCOMPtr<nsIXULWindow> hiddenWindow;
-                rv = appShell->GetHiddenWindow(getter_AddRefs(hiddenWindow));
-                if (NS_SUCCEEDED(rv))
-                    dialog = do_QueryInterface(hiddenWindow, &rv);
-            }
+			dialog = do_GetService(kNetSupportDialogCID, &rv);
+			if (NS_FAILED(rv)) return rv;
         }
 		if (NS_SUCCEEDED(rv) && dialog)
 		{
