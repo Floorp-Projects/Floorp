@@ -158,7 +158,7 @@ interface nsIMsgCompose : nsISupports {
     charset. In case of URL, |charset| parameter will be used in the conversion.
     This UI utility function should probably go into it's own class
   */
-  AString AttachmentPrettyName(in string url, in string charset);
+  AUTF8String AttachmentPrettyName(in string url, in string charset);
     
 	/*
 		CheckAndPopulateRecipients will perform several task:
