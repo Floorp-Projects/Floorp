@@ -88,6 +88,26 @@ nsString::nsString(const PRUnichar* aUnicodeStr){
 }
 
 /*-------------------------------------------------------
+ * special subclas constructor
+ * this will optionally not allocate a buffer
+ * but the subclass must
+ * @update	psl 4/16/98
+ * @param 
+ * @return
+ *------------------------------------------------------*/
+nsString::nsString(PRBool aSubclassBuffer)
+{
+  mLength=mCapacity=0;
+  mStr=0;
+  if (PR_FALSE == aSubclassBuffer) {
+    EnsureCapacityFor(1);
+    this->SetString("");
+  }
+  if(++mInstanceCount==1)
+    SelfTest();
+}
+
+/*-------------------------------------------------------
  * standard destructor 
  * @update	gess 3/27/98
  * @param 
@@ -1829,7 +1849,9 @@ void nsString::SelfTest(void) {
  * @param 
  * @return
  *------------------------------------------------------*/
-nsAutoString::nsAutoString() : nsString() {
+nsAutoString::nsAutoString() 
+  : nsString(PR_TRUE) 
+{
   mStr = mBuf;
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
@@ -1841,7 +1863,8 @@ nsAutoString::nsAutoString() : nsString() {
  * @param 
  * @return
  *------------------------------------------------------*/
-nsAutoString::nsAutoString(const char* isolatin1) : nsString()
+nsAutoString::nsAutoString(const char* isolatin1) 
+  : nsString(PR_TRUE)
 {
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
@@ -1855,7 +1878,9 @@ nsAutoString::nsAutoString(const char* isolatin1) : nsString()
  * @param 
  * @return
  *------------------------------------------------------*/
-nsAutoString::nsAutoString(const nsString& other) {
+nsAutoString::nsAutoString(const nsString& other)
+  : nsString(PR_TRUE)
+{
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
   mStr=mBuf;
@@ -1868,7 +1893,9 @@ nsAutoString::nsAutoString(const nsString& other) {
  * @param 
  * @return
  *------------------------------------------------------*/
-nsAutoString::nsAutoString(PRUnichar aChar) {
+nsAutoString::nsAutoString(PRUnichar aChar) 
+  : nsString(PR_TRUE)
+{
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
   mStr=mBuf;
@@ -1881,7 +1908,9 @@ nsAutoString::nsAutoString(PRUnichar aChar) {
  * @param 
  * @return
  *------------------------------------------------------*/
-nsAutoString::nsAutoString(const nsAutoString& other) {
+nsAutoString::nsAutoString(const nsAutoString& other) 
+  : nsString(PR_TRUE)
+{
   mLength=0;
   mCapacity = (sizeof(mBuf) / sizeof(chartype))-sizeof(chartype);
   mStr=mBuf;
@@ -1906,6 +1935,9 @@ void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
     if (mLength > 0) {
       nsCRT::memcpy(temp, mStr, mLength * sizeof(chartype));
     }
+    if ((mStr != mBuf) && (0 != mStr)) {
+      delete [] mStr;
+    }
     mStr = temp;
   }
 }
@@ -1916,7 +1948,9 @@ void nsAutoString::EnsureCapacityFor(PRInt32 aNewLength) {
  * @param 
  * @return
  *------------------------------------------------------*/
-nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) {
+nsAutoString::nsAutoString(const PRUnichar* unicode, PRInt32 uslen) 
+  : nsString(PR_TRUE)
+{
   mStr = mBuf;
   mCapacity = sizeof(mBuf) / sizeof(chartype);
   if (0 == uslen) {
