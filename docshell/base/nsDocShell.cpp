@@ -1633,6 +1633,17 @@ NS_IMETHODIMP nsDocShell::SetTitle(const PRUnichar* aTitle)
       mGlobalHistory->SetPageTitle(url, aTitle);
       }
 
+   // Update SessionHistory too with Title. Otherwise entry for current page
+   // has previous page's title.
+   if (mSessionHistory) {
+     PRInt32 index = 0;
+     mSessionHistory->GetIndex(&index);
+     nsCOMPtr<nsISHEntry>   shEntry;
+     mSessionHistory->GetEntryAtIndex(index, PR_FALSE, getter_AddRefs(shEntry));
+     NS_ENSURE_TRUE(shEntry, NS_ERROR_FAILURE);
+     shEntry->SetTitle(mTitle.GetUnicode());      
+   }
+   
 
    return NS_OK;
 }
@@ -2700,7 +2711,8 @@ NS_IMETHODIMP nsDocShell::AddToSessionHistory(nsIURI* aURI)
    nsCOMPtr<nsIInputStream> inputStream;  // XXX Need to get this from somewhere
    nsCOMPtr<nsILayoutHistoryState> layoutState; // XXX Need to get this from somewhere
 
-   NS_ENSURE_SUCCESS(entry->Create(aURI, mTitle.GetUnicode(), nsnull, 
+   //Title is set in nsDocShell::SetTitle()
+   NS_ENSURE_SUCCESS(entry->Create(aURI, nsnull, nsnull, 
       inputStream, layoutState), NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(mSessionHistory->AddEntry(entry, shouldPersist),
