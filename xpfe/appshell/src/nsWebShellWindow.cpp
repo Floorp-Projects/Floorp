@@ -34,15 +34,19 @@
 #include "nsAppShellCIDs.h"
 
 #include "nsXULCommand.h"
+#include "nsIXULCommand.h"
 #include "nsIDOMCharacterData.h"
 
 #include "nsIMenuBar.h"
 #include "nsIMenu.h"
 #include "nsIMenuItem.h"
+#include "nsIMenuListener.h"
 
 // XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsIDocumentLoader.h"
 #include "nsIDOMHTMLInputElement.h"
@@ -541,12 +545,13 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
     if (NS_OK != rv) {
       // Error
     }
-    
-    //pnsMenuBar = new nsMenuBar();
     if (nsnull != pnsMenuBar) {
-      // TODO: set pnsMenuBar as a nsMenuListener on aParentWindow
-      //GetWidget()->AddMenuListener((nsIMenuListener*)pnsMenuBar);
-      mWindow->AddMenuListener((nsIMenuListener*)pnsMenuBar);
+      pnsMenuBar->Create(aParentWindow);
+      
+      // set pnsMenuBar as a nsMenuListener on aParentWindow
+      nsCOMPtr<nsIMenuListener> menuListener;
+      pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+      mWindow->AddMenuListener(menuListener);
 
       nsCOMPtr<nsIDOMNode> menuNode;
       menubarNode->GetFirstChild(getter_AddRefs(menuNode));
@@ -567,9 +572,12 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
             if (NS_OK != rv) {
               // Error
             }
-            // TODO: Set nsMenu Name
+            // Call Create
+            pnsMenu->Create(pnsMenuBar, menuName);
+            
+            // Set nsMenu Name
             pnsMenu->SetLabel(menuName);
-            // TODO: Make nsMenu a child of nsMenuBar
+            // Make nsMenu a child of nsMenuBar
             pnsMenuBar->AddMenu(pnsMenu);
 
             // Begin menuitem inner loop
@@ -580,9 +588,11 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
               if (menuitemElement) {
                 nsString menuitemNodeType;
                 nsString menuitemName;
+                nsString menuitemCmd;
                 menuitemElement->GetNodeName(menuitemNodeType);
                 if (menuitemNodeType.Equals("menuitem")) {
                   menuitemElement->GetAttribute(nsAutoString("name"), menuitemName);
+                  menuitemElement->GetAttribute(nsAutoString("cmd"), menuitemCmd);
                   //printf("MenuItem [%s]\n", nsAutoCString(menuitemName) );
                   // Create nsMenuItem
                   nsIMenuItem * pnsMenuItem = nsnull;
@@ -591,11 +601,18 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                   if (NS_OK != rv) {
                     // Error
                   }
-                  // TODO: Set nsMenuItem Name
+                  pnsMenuItem->Create(pnsMenu, menuitemName, 0);
+                  
+                  // Set nsMenuItem Name
                   pnsMenuItem->SetLabel(menuitemName);
-                  // TODO: Make nsMenuItem a child of nsMenu
+                  // Make nsMenuItem a child of nsMenu
                   pnsMenu->AddMenuItem(pnsMenuItem);
                   ConnectCommandToOneGUINode(menuitemNode, menuitemElement, "menuitem");
+    
+                  //nsCOMPtr<nsIXULCommand> cmd(FindCommandByName(menuitemCmd));
+                  //if (nsnull != cmd) {
+                  //  pnsMenuItem->SetXULCommand(cmd);  
+                  //}
                 }
               }
               nsCOMPtr<nsIDOMNode> oldmenuitemNode(menuitemNode);
@@ -607,7 +624,10 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
         oldmenuNode->GetNextSibling(getter_AddRefs(menuNode));
       } // end while (nsnull != menuNode)
           
-      // TODO: Give the aParentWindow this nsMenuBar to hold onto.
+      // Give the aParentWindow this nsMenuBar to hold onto.
+      //mWindow->SetMenuBar(pnsMenuBar);
+      
+      // HACK: force a paint for now
       pnsMenuBar->Paint();
     } // end if ( nsnull != pnsMenuBar )
   } // end if (nsnull != node)
