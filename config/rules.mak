@@ -591,7 +591,7 @@ chrome::
 
 install:: chrome
 
-!ifndef MOZ_DISABLE_JAR_PACKAGING
+!ifndef MOZ_OLD_JAR_PACKAGING
 
 !if exist($(JAR_MANIFEST))
 chrome:: 
@@ -600,12 +600,12 @@ chrome::
 
 !if "$(CHROME_TYPE)" != "$(NULL)"
 chrome::
-    -for %t in ($(CHROME_TYPE)) do @perl $(DEPTH)\config\add-chrome.pl $(CHROME_DIR:\=/).jar packageName %t $(DIST)\bin\chrome\installed-chrome.txt
+    -for %t in ($(CHROME_TYPE)) do @perl $(DEPTH)\config\add-chrome.pl $(DIST)\bin\chrome\installed-chrome.txt %t packageName $(CHROME_DIR:\=/) $(MOZ_DISABLE_JAR_PACKAGING)
 !endif
 
 regchrome:
 
-!else # !MOZ_DISABLE_JAR_PACKAGING
+!else # !MOZ_OLD_JAR_PACKAGING
 
 ################################################################################
 # Generate chrome building rules.
@@ -764,7 +764,7 @@ regchrome:
 #    $(PERL) $(DEPTH)\config\installchrome.pl win32 resource $(DIST)\bin\chrome
 !endif
 
-!endif # !MOZ_DISABLE_JAR_PACKAGING
+!endif # !MOZ_OLD_JAR_PACKAGING
 
 ################################################################################
 

@@ -54,18 +54,3 @@ install:: $(LIBRARY)
 clobber::
         rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
 
-!ifdef MOZ_DISABLE_JAR_PACKAGING
-
-clobber::
-        rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\SignonViewer.xul
-        rm -f $(DIST)\bin\chrome\packages\core\communicator\content\wallet\SignonViewer.js
-        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\SignonViewer.properties
-        rm -f $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet\SignonViewer.dtd
-
-install:: $(DLL)
-        $(MAKE_INSTALL) SignonViewer.xul $(DIST)\bin\chrome\packages\core\communicator\content\wallet
-        $(MAKE_INSTALL) SignonViewer.js $(DIST)\bin\chrome\packages\core\communicator\content\wallet
-        $(MAKE_INSTALL) SignonViewer.properties $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
-        $(MAKE_INSTALL) SignonViewer.dtd $(DIST)\bin\chrome\locales\en-US\communicator\locale\wallet
-
-!endif
