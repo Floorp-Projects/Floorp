@@ -250,7 +250,8 @@ function PageDataToAccountData(pageData, accountData)
         dump("not setting username/password/rememberpassword/etc\n");
     } else {
         if (pageData.login) {
-            server.username = pageData.login.username.value;
+            if (pageData.login.username)
+                server.username = pageData.login.username.value;
             if (pageData.login.password)
                 server.password = pageData.login.password.value;
             if (pageData.login.rememberPassword)
