@@ -275,8 +275,6 @@ DeleteModule(char *moduleName)
 	return SUCCESS;
 }
 
-SECMODModule *SECMOD_GetDefaultDBModule();
-char ** pk11_getModuleSpecList(SECMODModule *module);
 /************************************************************************
  *
  * R a w L i s t M o d u l e s
@@ -290,19 +288,19 @@ RawListModule(char *modulespec)
 	char **moduleSpecList;
 	SECStatus rv;
 
-	rv = PK11_LoadPKCS11Module(modulespec,NULL,PR_FALSE);
-	if (rv != SECSuccess) {
-		/* handle error */
+	module = SECMOD_LoadModule(modulespec,NULL,PR_FALSE);
+	if (module == NULL) {
+	    /* handle error */
+	    return NO_SUCH_MODULE_ERR;
 	}
 
-	module = SECMOD_GetDefaultDBModule();
-	moduleSpecList = pk11_getModuleSpecList(module);
+	moduleSpecList = SECMOD_GetModuleSpecList(module);
 
 	for ( ;*moduleSpecList; moduleSpecList++) {
 		printf("%s\n",*moduleSpecList);
 	}
 
-	return SECSuccess;
+	return SUCCESS;
 }
 
 /************************************************************************
@@ -693,12 +691,7 @@ EnableModule(char *moduleName, char *slotName, PRBool enable)
 	}
 
 	/* Delete and re-add module to save changes */
-	if( pk11_DeletePermDB(module) != SECSuccess ) {
-		PR_fprintf(PR_STDERR, errStrings[UPDATE_MOD_FAILED_ERR], moduleName);
-		return UPDATE_MOD_FAILED_ERR;
-	}
-	if( pk11_AddPermDB(module) != SECSuccess ) {
-		/* We're in big trouble here */
+	if( SECMOD_UpdateModule(module) != SECSuccess ) {
 		PR_fprintf(PR_STDERR, errStrings[UPDATE_MOD_FAILED_ERR], moduleName);
 		return UPDATE_MOD_FAILED_ERR;
 	}
@@ -760,14 +753,7 @@ SetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 	}
 
 	/* Delete and re-add module to save changes */
-	if( pk11_DeletePermDB(module) != SECSuccess ) {
-		PR_fprintf(PR_STDERR, errStrings[DEFAULT_FAILED_ERR],
-		  moduleName);
-		errcode = DEFAULT_FAILED_ERR;
-		goto loser;
-	}
-	if( pk11_AddPermDB(module) != SECSuccess ) {
-		/* We're in big trouble here */
+	if( SECMOD_UpdateModule(module) != SECSuccess ) {
 		PR_fprintf(PR_STDERR, errStrings[DEFAULT_FAILED_ERR],
 		  moduleName);
 		errcode = DEFAULT_FAILED_ERR;
@@ -824,13 +810,7 @@ UnsetDefaultModule(char *moduleName, char *slotName, char *mechanisms)
 	}
 
 	/* Delete and re-add module to save changes */
-	if( pk11_DeletePermDB(module) != SECSuccess ) {
-		PR_fprintf(PR_STDERR, errStrings[UNDEFAULT_FAILED_ERR],
-		  moduleName);
-		return UNDEFAULT_FAILED_ERR;
-	}
-	if( pk11_AddPermDB(module) != SECSuccess ) {
-		/* We're in big trouble here */
+	if( SECMOD_UpdateModule(module) != SECSuccess ) {
 		PR_fprintf(PR_STDERR, errStrings[UNDEFAULT_FAILED_ERR],
 		  moduleName);
 		return UNDEFAULT_FAILED_ERR;
