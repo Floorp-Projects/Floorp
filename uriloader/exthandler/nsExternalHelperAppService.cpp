@@ -1001,11 +1001,11 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
                                   nsnull, dispToken);
     // RFC 2183, section 2.8 says that an unknown disposition
     // value should be treated as "attachment"
-    if (NS_FAILED(rv) || !dispToken.EqualsIgnoreCase("inline", 6) &&
+    if (NS_FAILED(rv) || !dispToken.EqualsIgnoreCase("inline") &&
         // Broken sites just send
         // Content-Disposition: filename="file"
         // without a disposition token... screen those out.
-        !dispToken.EqualsIgnoreCase("filename", 8)) 
+        !dispToken.EqualsIgnoreCase("filename")) 
     {
       // We have a content-disposition of "attachment" or unknown
       mHandlingAttachment = PR_TRUE;
