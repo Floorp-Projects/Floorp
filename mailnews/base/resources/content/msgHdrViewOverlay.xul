@@ -134,6 +134,16 @@ Rights Reserved.
       <html id="expandedccValueLong" class="headerValue" collapsed="true" flex="1"/>
 	  </hbox>
 
+     <hbox id="expandedbccBox" class="headerBox" collapsed="true">
+      <hbox class="headerValueBox" autostretch="never">
+         <image class="showMoreAddressesButton" id="expandedbccToggleIcon"
+             onclick="ToggleLongShortAddresses('expandedbccToggleIcon', 'expandedbccValue', 'expandedbccValueLong');"/>
+         <text class="headerdisplayname" value="&bccField.label;"/>
+      </hbox>
+      <html id="expandedbccValue" class="headerValue" flex="1"/>
+      <html id="expandedbccValueLong" class="headerValue" collapsed="true" flex="1"/>
+	  </hbox>
+
      <hbox id="expandednewsgroupsBox" class="headerBox" collapsed="true">
         <hbox class="headerValueBox">
           <text class="headerdisplayname" value="&newsgroupsField.label;"/>

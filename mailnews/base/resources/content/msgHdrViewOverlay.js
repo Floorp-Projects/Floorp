@@ -93,6 +93,7 @@ var gExpandedHeaderList = [ {name:"subject"},
                             {name:"date"},
                             {name:"to", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"cc", useToggle:true, outputFunction:OutputEmailAddresses},
+                            {name:"bcc", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"newsgroups", outputFunction:OutputNewsgroups},
                             {name:"followup-to", outputFunction:OutputNewsgroups} ];
 
