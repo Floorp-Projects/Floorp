@@ -46,7 +46,6 @@
 #include "nsIStreamListener.h"
 
 #include "nsIDOMAppCoresManager.h"
-#include "nsIDOMMailCore.h"
 
 /* For Javascript Namespace Access */
 #include "nsDOMCID.h"
@@ -80,12 +79,9 @@ static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 
-static NS_DEFINE_IID(kIMailCoreIID,           NS_IDOMMAILCORE_IID);
 static NS_DEFINE_IID(kIAppCoresManagerIID,    NS_IDOMAPPCORESMANAGER_IID); 
 static NS_DEFINE_IID(kAppCoresManagerCID,     NS_APPCORESMANAGER_CID);
-static NS_DEFINE_IID(kMailCoreCID,            NS_MAILCORE_CID);
 static NS_DEFINE_IID(kAppCoresFactoryCID,     NS_APPCORESFACTORY_CID);
-static NS_DEFINE_IID(kMailCoreFactoryCID,     NS_MAILCOREFACTORY_CID);
 
 
 /////////////////////////////////////////////////////////////////////////
