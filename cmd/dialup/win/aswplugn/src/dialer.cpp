@@ -170,6 +170,7 @@ statusDlgcallback(HWND hWnd,
                   LPARAM lParam)
 {
 	BOOL bRetval = FALSE;
+	DWORD dwRet;
 
 	if (!setStatusHwnd) {
 		hwndStatus = hWnd;
@@ -200,8 +201,18 @@ statusDlgcallback(HWND hWnd,
 
 					getMsgString(strText, IDS_CANCELDIAL);
 		            SafeSetWindowText(IDC_DIAL_STATUS, strText);		
+	
+					dwRet = RasHangUp(hRasConn);
 
-					RasHangUp(hRasConn);
+					if (dwRet == ERROR_INVALID_HANDLE) {
+						trace("dialer.cpp : statusDlgcallback - Can't hangup. Invalid Connection Handle. (r)");
+						return FALSE;
+					}
+					else if (dwRet && dwRet != ERROR_INVALID_HANDLE) {
+						trace("dialer.cpp : statusDlgcallback - Can't hangup. Error %d. (r)", dwRet);
+						return FALSE;
+					}
+
 					Sleep(3000);
 #else
 					assert(g_lpfnRasHangUp);
@@ -243,11 +254,12 @@ void SetCallState(CallState newState)
 
 void DisplayDialErrorMsg(DWORD dwError)
 {
-    char    szErr[255];
-	char    szErrStr[255];
+    char    szErr[256];
+    char    szErrStr[256];
 
 #ifdef WIN32
     RasGetErrorString((UINT)dwError, szErr, sizeof(szErr));
+    trace("dialer.cpp : DisplayDialErrorMsg - The error is %s",szErr);
 #else
 	(*g_lpfnRasGetErrorString)((UINT)dwError, szErr, sizeof(szErr));
 #endif
@@ -303,6 +315,7 @@ void ConnectErr(DWORD dwError)
 void ProcessRasDialEvent(RASCONNSTATE rasconnstate, DWORD dwError)
 {
 	char strText[255];
+	DWORD dwRet;
 
     switch (rasconnstate) {
         case RASCS_OpenPort:
@@ -385,7 +398,15 @@ void ProcessRasDialEvent(RASCONNSTATE rasconnstate, DWORD dwError)
 			// down the status dialog box
             if (m_callState == StateConnected) {
 #ifdef WIN32
-				::RasHangUp(hRasConn);
+				dwRet = (::RasHangUp(hRasConn));
+
+				if (dwRet == ERROR_INVALID_HANDLE) {
+					trace("dialer.cpp : ProcessRasDialEvent (stateConnected) - Can't hangup. Invalid Connection Handle.");
+				}
+				else if (dwRet && dwRet != ERROR_INVALID_HANDLE) {
+					trace("dialer.cpp : ProcessRasDialEvent (stateConnected) - Can't hangup. Error %d", dwRet);
+				}
+				
 				Sleep(3000);
 #else
 				assert(g_lpfnRasHangUp);
@@ -397,7 +418,17 @@ void ProcessRasDialEvent(RASCONNSTATE rasconnstate, DWORD dwError)
 
             } else if (m_callState == StateConnecting) {
 #ifdef WIN32
-				::RasHangUp(hRasConn);
+				dwRet = (::RasHangUp(hRasConn));
+
+				if (dwRet == ERROR_INVALID_HANDLE)
+				{
+					trace("dialer.cpp : ProcessRasDialEvent (stateConnecting) - Can't hangup. Invalid Connection Handle.");
+				}
+				else if (dwRet && dwRet != ERROR_INVALID_HANDLE)
+				{
+					trace("dialer.cpp : ProcessRasDialEvent (stateConnecting) - Can't hangup. Error %d", dwRet);
+				}
+
 			   	Sleep(3000);
 #else
 				assert(g_lpfnRasHangUp);
@@ -422,7 +453,10 @@ void ProcessRasDialEvent(RASCONNSTATE rasconnstate, DWORD dwError)
             getMsgString(strText, IDS_DISCONNECTING);
             SafeSetWindowText(IDC_DIAL_STATUS, strText);
 			if (dwError)
+			{
+				trace("dialer.cpp : ProcessRasDialEvent (WaitForModemReset) - Connection Error %d", dwError);
 				ConnectErr(dwError);
+			}
 			else
 				Sleep(1000);
 
@@ -430,7 +464,10 @@ void ProcessRasDialEvent(RASCONNSTATE rasconnstate, DWORD dwError)
 
 		default:
 			if (dwError)
+			{
+				trace("dialer.cpp : ProcessRasDialEvent (default case) - Connection Error %d", dwError);
 				ConnectErr(dwError);
+			}
 			break;
 
     }
@@ -552,6 +589,13 @@ static BOOL IsDialerConnected()
 		getMsgString((char *)regiRAS, IDS_REGGIE_PROGITEM_NAME);
 		DWORD ret = (*m_lpfnRasDeleteEntry) (NULL, (LPSTR) (const char *) regiRAS);
 
+		if (ret == ERROR_INVALID_NAME) {
+			trace("dialer.cpp : isDialerConnected - Can't delete regi phonebook entry. Invalid phonebook entry name");
+		}
+		else if (ret && ret != ERROR_INVALID_NAME) {
+			trace("dialer.cpp : isDialerConnected - Can't delete regi phone book entry. Error = %d", ret);
+		}
+
 		// delete NT4.0 RasMon process
 		if ((platformOS == VER_PLATFORM_WIN32_NT) && (hRasMon)) {
 			CloseHandle(hRasMon);
@@ -588,6 +632,7 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fDialerConnect(JRIEnv* env,
 #endif
  
 	DWORD dwError;
+	DWORD dwRet;
 	BOOL connectSucceed=TRUE;
 	hwndNavigator = GetActiveWindow();
 
@@ -601,6 +646,13 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fDialerConnect(JRIEnv* env,
 	if (platformOS == VER_PLATFORM_WIN32_WINDOWS) {
 		// do the dialing here
 		dwError = RasDial(NULL, NULL, &dialParams, 1, RasDialFunc /*NULL*/, &hRasConn);
+
+		if (dwError == ERROR_NOT_ENOUGH_MEMORY){
+			trace("dialer.cpp : [native] DialerConnect - Not enough memory for dialing activity. Dialing failed.");
+		}
+		else if (dwError && dwError != ERROR_NOT_ENOUGH_MEMORY){
+			trace("dialer.cpp : [native] DialerConnect - Dialing failed. Error code = %d",dwError);
+		}
     } 
     // WinNT40 find system phone book first then start RASDIAL
     else if (platformOS == VER_PLATFORM_WIN32_NT) {
@@ -708,7 +760,15 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fDialerConnect(JRIEnv* env,
 		// hangup connection
 		if (hRasConn) {
 #ifdef WIN32 // ***************************** WIN32 ***********************************
-			RasHangUp(hRasConn);
+			dwRet = RasHangUp(hRasConn);
+
+			if (dwRet == ERROR_INVALID_HANDLE) {
+				trace("dialer.cpp : [native] DialerConnect - Can't hangup. Invalid Connection Handle.");
+			}
+			else if (dwRet && dwRet != ERROR_INVALID_HANDLE) {
+				trace("dialer.cpp : [native] DialerConnect - Can't hangup. Error %d", dwRet);
+			}
+
 			SafeEndDialog();
 
 			// give RasHangUp some time till complete hangup
@@ -726,6 +786,13 @@ native_netscape_npasw_SetupPlugin_SECURE_0005fDialerConnect(JRIEnv* env,
 		char regiRAS[50];
 		getMsgString((char *)regiRAS, IDS_REGGIE_PROGITEM_NAME);
 		DWORD ret = (*m_lpfnRasDeleteEntry) (NULL, (LPSTR) (const char *) regiRAS);
+
+		if (ret == ERROR_INVALID_NAME) {
+			trace("dialer.cpp : [native] DialerConnect - Can't delete regi phonebook entry. Invalid phonebook entry name");
+		}
+		else if (ret && ret != ERROR_INVALID_NAME) {
+			trace("dialer.cpp : [native] DialerConnect - Can't delete regi phone book entry. Error  %d", ret);
+		}
 #else
 		DWORD ret = (*m_lpfnRasDeleteEntry) (NULL, REGGI_SERVER_NAME);
 #endif        
@@ -751,6 +818,7 @@ void DialerHangup()
 	DWORD code, count = 0;
 	char szMessage[256] = { '\0' };
 	DWORD dSize = stRASCONN;
+	DWORD dwRet;
     
 #ifdef WIN32
 	HLOCAL hBuffer = NULL;
@@ -834,7 +902,15 @@ void DialerHangup()
 	// just hang up everything
 	for (int i = 0; i < (int) count; i++) {
 #ifdef WIN32
-		RasHangUp(Info[i].hrasconn);
+		dwRet = RasHangUp(Info[i].hrasconn);
+
+		if (dwRet == ERROR_INVALID_HANDLE) {
+			trace("dialer.cpp : DialerHangup - Can't hangup. Invalid Connection Handle.");
+		}
+		else if (dwRet && dwRet != ERROR_INVALID_HANDLE) {
+			trace("dialer.cpp : DialerHangup - Can't hangup. Error %d.", dwRet);
+		}
+
 		Sleep(3000);
 #else
 		assert(g_lpfnRasHangUp);
@@ -855,6 +931,13 @@ void DialerHangup()
 		char regiRAS[50];
 		getMsgString((char *)regiRAS, IDS_REGGIE_PROGITEM_NAME);
 		DWORD ret = (*m_lpfnRasDeleteEntry) (NULL, (LPSTR) (const char *) regiRAS);
+
+		if (ret == ERROR_INVALID_NAME) {
+			trace("dialer.cpp : DialerHangup - Can't delete regi phonebook entry. Invalid phonebook entry name");
+		}
+		else if (ret && ret != ERROR_INVALID_NAME) {
+			trace("dialer.cpp : DialerHangup - Can't delete regi phone book entry. Error code %d", ret);
+		}
 
 		// delete NT4.0 RasMon process
 		if ((platformOS == VER_PLATFORM_WIN32_NT) && (hRasMon)) {
@@ -1334,7 +1417,10 @@ GetCountryID(DWORD dwCountryCode, DWORD &dwCountryID)
 {
 	assert(m_lpfnRasGetCountryInfo);
 	if (NULL == m_lpfnRasGetCountryInfo)
+	{
+		trace("dialer.cpp : GetCountryID - RasGetCountryinfo func not availble. (r)");
 		return FALSE;
+	}
 		
 	RASCTRYINFO *pCI = NULL;
 	BOOL bRetval = FALSE;
@@ -1604,10 +1690,42 @@ void EnableDialOnDemandNT(LPSTR lpProfileName)
 	// set auto dial params
 	int     val = 1;
 	rtn = (*m_lpfnRasSetAutodialParam)(RASADP_DisableConnectionQuery, &val, sizeof(int));
-	 
+
+	if (rtn == ERROR_INVALID_PARAMETER) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Invalid Parameter. Can't set Autodial Parameters. (r)");
+		return;
+	}	 
+	else if (rtn == ERROR_INVALID_SIZE) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Invalid size. Can't set Autodial Parameters. (r)");
+		return;
+	}	 
+	else if (rtn) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Can't set Autodial Parameters. Error %d. (r)", rtn);
+		return;
+	}	 
+
 	rtn = (*m_lpfnRasSetAutodialAddress)("www.netscape.com", 0, &rasAutodialEntry, 
 	          sizeof(RASAUTODIALENTRY), 1);                          
+
+	if (rtn == ERROR_INVALID_PARAMETER) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Invalid Parameter. Can't set Autodial Address. (r)");
+		return;
+	}	 
+	else if (rtn == ERROR_INVALID_SIZE) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Invalid size. Can't set Autodial Address. (r)");
+		return;
+	}	 
+	else if (rtn) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Can't set Autodial Address. Error %d. (r)", rtn);
+		return;
+	}	 
+
 	rtn = (*m_lpfnRasSetAutodialEnable)(rasAutodialEntry.dwDialingLocation, TRUE);
+
+	if (rtn) {
+		trace("dialer.cpp : EnableDialOnDemandNT - Can't set Autodial Enable. Error %d. (r)", rtn);
+		return;
+	}	 
 }
 
 #else  // ************************************* WIN16 *************************************
@@ -1883,6 +2001,8 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 		// Let Win95 decide to dial the area code or not
 		rasEntry.dwfOptions |= RASEO_UseCountryAndAreaCodes;
 
+		trace("dialer.cpp : Use country and area codes = %d", rasEntry.dwfOptions);
+
 		// Configure the phone number
 		ParseNumber( account.ISPPhoneNum, &rasEntry.dwCountryCode, 
 						rasEntry.szAreaCode, rasEntry.szLocalPhoneNumber );
@@ -1908,9 +2028,11 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 		}
 	}
 
+
 	// Now that we have the country code, we need to find the associated
 	// country ID
 	GetCountryID( rasEntry.dwCountryCode, rasEntry.dwCountryID );
+
 
 	// Configure the IP data
 	rasEntry.dwfOptions |= RASEO_SpecificNameServers;
@@ -1974,13 +2096,42 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
     if ( ( account.DialOnDemand ) && ( platformOS == VER_PLATFORM_WIN32_WINDOWS ) && ( !RegiMode ) )
 		EnableDialOnDemand( (LPSTR)(LPCSTR)account.ISPName );
 #endif //WIN32
+	
+	dwRet = (*m_lpfnRasValidateEntryName)( NULL, (LPSTR)(LPCSTR)account.ISPName );	
+
+	assert( dwRet == 0 );
+	if (dwRet == ERROR_INVALID_NAME) {
+		trace ("dialer.cpp : CreateRNAEntry (RasValidateEntryName) - Invalid Name. Can't set RasEntry properties. (r)");
+		return FALSE;
+	}
+	else if (dwRet == ERROR_ALREADY_EXISTS) {
+		trace ("dialer.cpp : CreateRNAEntry (RasValidateEntryName) - This name already exists. (r)");
+		return FALSE;
+	}
+	else if (dwRet) {
+		trace ("dialer.cpp : CreateRNAEntry (RasValidateEntryName) - Can't Validate account name. Error %d. (r)", dwRet);
+		return FALSE;
+	}
+
 
 	dwRet = (*m_lpfnRasSetEntryProperties)( NULL, (LPSTR)(LPCSTR)account.ISPName,
 										  (LPBYTE)&rasEntry, stRASENTRY, NULL, 0 );
 	assert( dwRet == 0 );
-	if ( dwRet )
-		return -1;		// ??? this is going to return TRUE
-	
+	//if ( dwRet )
+		//return -1;		// ??? this is going to return TRUE
+	if (dwRet == ERROR_BUFFER_INVALID) {
+		trace ("dialer.cpp : CreateRNAEntry (RasSetEntryProperties) - Invalid Buffer. Can't set RasEntry properties. (r)");
+		return FALSE;
+	}
+	else if (dwRet == ERROR_CANNOT_OPEN_PHONEBOOK) {
+		trace ("dialer.cpp : CreateRNAEntry (RasSetEntryProperties) - Can't open phonebook. Corrupted phonebook or missing components. Can't set RasEntry properties. (r)");
+		return FALSE;
+	}
+	else if (dwRet) {
+		trace ("dialer.cpp : CreateRNAEntry (RasSetEntryProperties) - Can't set RasEntry properties. Error %d. (r)", dwRet);
+		return FALSE;
+	}
+
 	// We need to set the login name and password with a separate call
 	// why doesn't this work for winNT40??
 	memset( &dialParams, 0, sizeof( dialParams ) );
@@ -1997,6 +2148,24 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 	if ( platformOS == VER_PLATFORM_WIN32_WINDOWS )
 	{
 		dwRet = RasSetEntryDialParams( (LPSTR)(LPCSTR)account.ISPName, &dialParams, FALSE); //Returns 0 for okay
+		
+		if (dwRet == ERROR_BUFFER_INVALID) {
+			trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Invalid Buffer. Can't set RasEntry Dial properties. (r)");
+			return FALSE;
+		}
+		else if (dwRet == ERROR_CANNOT_OPEN_PHONEBOOK) {
+			trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Can't open phonebook. Corrupted phonebook or missing components. Can't set RasEntry Dial properties. (r)");
+			return FALSE;
+		}
+		else if (dwRet == ERROR_CANNOT_FIND_PHONEBOOK_ENTRY) {
+			trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Phonebook entry does not exist. Can't set RasEntry Dial properties. (r)");
+			return FALSE;
+		}
+		else if (dwRet) {
+			trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Can't set RasEntry Dial properties. Error %d. (r)", dwRet);
+			return FALSE;
+		}
+
 		ret = ( dwRet == 0 );
 	}
 	else if ( platformOS == VER_PLATFORM_WIN32_NT )
@@ -2023,6 +2192,23 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 				
 				ret = ( RasSetEntryDialParams( pbPath, &dialParams, FALSE ) == 0 );
 				
+				if (dwRet == ERROR_BUFFER_INVALID) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Invalid Buffer. Can't set RasEntry Dial properties. (r)");
+					return FALSE;
+				}
+				else if (dwRet == ERROR_CANNOT_OPEN_PHONEBOOK) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Can't open phonebook. Corrupted phonebook or missing components. Can't set RasEntry Dial properties. (r)");
+					return FALSE;
+				}
+				else if (dwRet == ERROR_CANNOT_FIND_PHONEBOOK_ENTRY) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Phonebook entry does not exist. Can't set RasEntry Dial properties. (r)");
+					return FALSE;
+				}
+				else if (dwRet) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetEntryDialParams) - Can't set RasEntry Dial properties. Error %d. (r)", dwRet);
+					return FALSE;
+				}
+
 				// sets up user login info for new phonebook entry
 				memset( &credentials, 0, sizeof( RASCREDENTIALS ) );
 				credentials.dwSize = sizeof( RASCREDENTIALS );
@@ -2032,6 +2218,28 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 				strcpy( credentials.szDomain, account.DomainName );
 
 				dwRet = m_lpfnRasSetCredentials( pbPath, (LPSTR)(LPCSTR)account.ISPName, &credentials, FALSE );
+
+				if (dwRet == ERROR_INVALID_PARAMETER) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetCredentials) - Invalid Parameter. Can't set user credentials. (r)");
+					return FALSE;
+				}
+				else if (dwRet == ERROR_CANNOT_OPEN_PHONEBOOK) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetCredentials) - Can't open phonebook. Corrupted phonebook or missing components. Can't set user credentials. (r)");
+					return FALSE;
+				}
+				else if (dwRet == ERROR_CANNOT_FIND_PHONEBOOK_ENTRY) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetCredentials) - Phonebook entry does not exist. Can't set user credentials. (r)");
+					return FALSE;
+				}
+				else if (dwRet == ERROR_INVALID_SIZE) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetCredentials) - Invalid size value. Can't set user credentials. (r)");
+					return FALSE;
+				}
+				else if (dwRet) {
+					trace ("dialer.cpp : CreateRNAEntry (RasSetCredentials) - Can't set user credentials. Error %d. (r)", dwRet);
+					return FALSE;
+				}
+
 				ret = ( dwRet == 0 );
 				
 				free( sysDir );
@@ -2045,13 +2253,15 @@ static BOOL CreateRNAEntry( ACCOUNTPARAMS account, const LOCATIONPARAMS& locatio
 			{
 				free( sysDir );
 				// Err: not enough memory for pbPath!
-				return -2;	// ??? 
+				//return -2;	// ??? 
+				return FALSE;
 			}
 		}
 		else
 		{
 			// Err: not enough memory for sysDir;
-			return -3;	// ???
+			//return -3;	// ???
+			return FALSE;
  		} // if (sysDir)
 	} // else if (platformOS == VER_PLATFORM_WIN32_NT
 
