@@ -28,7 +28,10 @@
 interface nsIConsoleService : nsISupports
 {
     void logMessage(in nsIConsoleMessage message);
-    // Needed for folks who need to avoid nsIConsoleMessage hassle
+
+    /**
+     * Convenience method for logging simple messages.
+     */
     void logStringMessage(in wstring message);
 
     /**
@@ -40,8 +43,17 @@ interface nsIConsoleService : nsISupports
     void getMessageArray([array, size_is(count)] out nsIConsoleMessage messages,
                          out PRUint32 count);
 
+    /**
+     * To guard against stack overflows from listeners that could log
+     * messages (it's easy to do this inadvertently from listeners
+     * implemented in JavaScript), we don't call any listeners when
+     * another error is already being logged.
+     */
     void registerListener(in nsIConsoleListener listener);
 
+    /**
+     * Each registered listener should also be unregistered.
+     */
     void unregisterListener(in nsIConsoleListener listener);
    
 };

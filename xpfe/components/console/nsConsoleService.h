@@ -21,15 +21,15 @@
  */
 
 /*
- * 'lil description of this file.
+ * nsConsoleService class declaration.
  */
 
 #ifndef __nsconsoleservice_h__
 #define __nsconsoleservice_h__
 
-
 #include "nsSupportsArray.h"
 #include "nsCOMPtr.h"
+#include "nsAutoLock.h"
 
 #include "nsIConsoleService.h"
 
@@ -57,6 +57,13 @@ private:
 
     // Listeners to notify whenever a new message is logged.
     nsCOMPtr<nsSupportsArray> mListeners;
+
+    // Current listener being notified of a logged error - to prevent
+    // stack overflows.
+    PRBool mListening;
+
+    // To serialize interesting methods.
+    PRLock *mLock;
 };
 
 #endif /* __nsconsoleservice_h__ */

@@ -40,3 +40,10 @@ nsConsoleMessage::GetMessage(PRUnichar **result) {
     return NS_OK;
 }
 
+//  NS_IMETHODIMP
+//  nsConsoleMessage::Init(const PRUnichar *message) {
+//      nsAutoString newMessage(message);
+//      mMessage = newMessage.ToNewUnicode();
+//      return NS_OK;
+//  }
+
