@@ -1117,11 +1117,17 @@ MapAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
           aContext->GetMutableStyleData(eStyleStruct_Position);
         switch (value.GetUnit()) {
         case eHTMLUnit_Percent:
-          position->mWidth.SetPercentValue(value.GetPercentValue());
+          // 0 width remains default auto
+          //if (value.GetPercentValue() > 0.0f) {
+            position->mWidth.SetPercentValue(value.GetPercentValue());
+          //}
           break;
 
         case eHTMLUnit_Pixel:
-          position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
+          // 0 width remains default auto
+          //if (value.GetPixelValue() > 0) {
+            position->mWidth.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), sp2t));
+          //}
           break;
         default:
           break;

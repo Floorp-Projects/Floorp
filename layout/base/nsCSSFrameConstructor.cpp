@@ -518,6 +518,19 @@ nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 
 // -----------------------------------------------------------
 
+// return the child list that aFrame belongs on. does not ADDREF
+nsIAtom* GetChildListFor(const nsIFrame* aFrame)
+{
+  nsIAtom* childList = nsnull;
+  nsIAtom* frameType;
+  aFrame->GetFrameType(&frameType);
+  if (nsLayoutAtoms::tableCaptionFrame == frameType) { 
+    childList = nsLayoutAtoms::captionList;
+  }
+  NS_IF_RELEASE(frameType);
+  return childList;
+}
+
 nsCSSFrameConstructor::nsCSSFrameConstructor(void)
   : nsIStyleFrameConstruction(),
     mDocument(nsnull),
@@ -1067,15 +1080,6 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
 #endif
   // Create the inner table frame
   aTableCreator.CreateTableFrame(&innerFrame);
-  
-  // This gets reset later, since there may also be a caption. 
-  // It allows descendants to get at the inner frame before that
-  // XXX This is very wrong. You cannot call SetInitialChildList() more
-  // than once (see the nsIFrame header file). Either call it once only,
-  // _or_ move the caption out into a separate named child list...
-  // XXX The other things that's wrong here is that the calls to
-  // SetInitialChildList() are bottom-up, and the order is wrong...
-  aNewFrame->SetInitialChildList(aPresContext, nsnull, innerFrame); 
   childList = innerFrame;
 
   InitAndRestoreFrame(aPresContext, aState, aContent, 
@@ -1164,11 +1168,14 @@ nsCSSFrameConstructor::ConstructTableFrame(nsIPresShell*            aPresShell,
     }
   }
 
-  // Set the inner table frame's list of initial child frames
+  // Set the inner table frame's initial primary list 
   innerFrame->SetInitialChildList(aPresContext, nsnull, innerChildList);
 
-  // Set the anonymous table outer frame's initial child list
+  // Set the outer table frame's primary and option lists
   aNewFrame->SetInitialChildList(aPresContext, nsnull, childList);
+  if (captionFrame) {
+    aNewFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::captionList, captionFrame);
+  }
   return rv;
 }
 
@@ -1287,7 +1294,7 @@ nsCSSFrameConstructor::ConstructAnonymousTableFrame(nsIPresShell*        aPresSh
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         aOuterFrame, innerStyleContext, nsnull, aInnerFrame);
 
-    //XXX duplicated call here
+    //XXX when bug 2479 is fixed this may be a duplicate call
     aOuterFrame->SetInitialChildList(aPresContext, nsnull, aInnerFrame);
 
     if (cellIsParent) {
@@ -1315,28 +1322,17 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
   if (NS_FAILED(rv)) return rv;
 
   const nsStyleDisplay* parentDisplay = GetDisplay(aParentFrame);
-  nsIFrame* innerFrame;
 
+  nsIFrame* outerFrame = aParentFrame;
   if (NS_STYLE_DISPLAY_TABLE == parentDisplay->mDisplay) { // parent is an outer table
-    // determine the inner table frame, it is either aParentFrame or its first child
-    nsIFrame* parFrame = aParentFrame;
-    aParentFrame->FirstChild(aPresContext, nsnull, &innerFrame);
-    const nsStyleDisplay* innerDisplay;
-    innerFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)innerDisplay);
-    if (NS_STYLE_DISPLAY_TABLE != innerDisplay->mDisplay) {
-      innerFrame = aParentFrame; 
-      innerFrame->GetParent(&parFrame);
-    }
-
     InitAndRestoreFrame(aPresContext, aState, aContent, 
-                        parFrame, aStyleContext, nsnull, aNewCaptionFrame);
+                        aParentFrame, aStyleContext, nsnull, aNewCaptionFrame);
 
-    innerFrame->SetNextSibling(aNewCaptionFrame);
-    // the caller is responsible for calling SetInitialChildList on the outer, inner frames
+    // the caller is responsible for calling SetInitialChildList 
     aNewTopFrame = aNewCaptionFrame;
   } else { // parent is not a table, need to create a new table
     //NS_WARNING("a non table contains a table caption child. \n");
-    nsIFrame* outerFrame;
+    nsIFrame* innerFrame;
     ConstructAnonymousTableFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
                                  aNewTopFrame, outerFrame, innerFrame, aTableCreator);
     nsCOMPtr<nsIStyleContext> outerStyleContext;
@@ -1346,9 +1342,6 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
                                          PR_FALSE, getter_AddRefs(adjStyleContext));
     InitAndRestoreFrame(aPresContext, aState, aContent, 
                         outerFrame, adjStyleContext, nsnull, aNewCaptionFrame);
-    innerFrame->SetNextSibling(aNewCaptionFrame);
-    //XXX duplicated call here
-    outerFrame->SetInitialChildList(aPresContext, nsnull, innerFrame);
   }
 
   // The caption frame is a floater container
@@ -1370,6 +1363,11 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresShell*            aPres
     aNewCaptionFrame->SetInitialChildList(aPresContext,
                                           nsLayoutAtoms::floaterList,
                                           aState.mFloatedItems.childList);
+  }
+
+  if (outerFrame) {
+    outerFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::captionList,
+                                    aNewCaptionFrame);
   }
 
   return rv;
@@ -1601,13 +1599,13 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresShell*        aPresShell,
                                     contentDisplayIsRow, aNewRowFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
 
+    //XXX when bug 2479 is fixed this may be a duplicate call
     groupFrame->SetInitialChildList(aPresContext, nsnull, aNewRowFrame);
     if (contentDisplayIsRow) { // called from above
       // set the primary frame to avoid getting the anonymous row group frame 
       aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewRowFrame);
     }
 
-    groupFrame->SetInitialChildList(aPresContext, nsnull, aNewRowFrame);
     if (contentDisplayIsRow) { // called from above
       TableProcessTableList(aPresContext, *toDo);
     }
@@ -1680,6 +1678,7 @@ nsCSSFrameConstructor::ConstructTableColFrame(nsIPresShell*            aPresShel
                                     styleContext, aNewColFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
     aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewColFrame);
+    //XXX when bug 2479 is fixed this may be a duplicate call
     groupFrame->SetInitialChildList(aPresContext, nsnull, aNewColFrame);
 
     // if an anoymous table got created, then set its initial child list
@@ -1776,6 +1775,7 @@ nsCSSFrameConstructor::ConstructTableCellFrame(nsIPresShell*        aPresShell,
                                      styleContext, aNewCellFrame, aNewCellBodyFrame,
                                      aTableCreator, aProcessChildren);
     if (NS_FAILED(rv)) return rv;
+    //XXX when bug 2479 is fixed this may be a duplicate call
     rowFrame->SetInitialChildList(aPresContext, nsnull, aNewCellFrame);
     TableProcessTableList(aPresContext, toDo);
   }
@@ -5755,6 +5755,8 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
                                        aFrameList);
   }
 
+  nsresult rv = NS_OK;
+
   // a col group or col appended to a table may result in an insert rather than an append
   nsIAtom* parentType;
   aParentFrame->GetFrameType(&parentType);
@@ -5763,30 +5765,45 @@ nsCSSFrameConstructor::AppendFrames(nsIPresContext*  aPresContext,
     nsIAtom* childType;
     aFrameList->GetFrameType(&childType);
     if (nsLayoutAtoms::tableColFrame == childType) {
+      // table column
       nsIFrame* parentFrame = aParentFrame;
       aFrameList->GetParent(&parentFrame);
-      return aFrameManager->AppendFrames(aPresContext, *aPresShell, parentFrame,
-                                         nsLayoutAtoms::colGroupList, aFrameList);
+      NS_RELEASE(childType);
+      rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, parentFrame,
+                                       nsLayoutAtoms::colGroupList, aFrameList);
     }
     else if (nsLayoutAtoms::tableColGroupFrame == childType) {
+      // table col group
       nsIFrame* prevSibling;
       PRBool doAppend = nsTableColGroupFrame::GetLastRealColGroup(tableFrame, &prevSibling);
       if (doAppend) {
-        return aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
-                                           nsLayoutAtoms::colGroupList, aFrameList);
+        rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
+                                         nsLayoutAtoms::colGroupList, aFrameList);
       }
       else {
-        return aFrameManager->InsertFrames(aPresContext, *aPresShell, aParentFrame, 
-                                           nsLayoutAtoms::colGroupList, prevSibling, aFrameList);
+        rv = aFrameManager->InsertFrames(aPresContext, *aPresShell, aParentFrame, 
+                                         nsLayoutAtoms::colGroupList, prevSibling, aFrameList);
       }
+    }
+    else if (nsLayoutAtoms::tableCaptionFrame == childType) {
+      // table caption
+      rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
+                                       nsLayoutAtoms::captionList, aFrameList);
+    }
+    else {
+      rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
+                                       nsnull, aFrameList);
     }
     NS_IF_RELEASE(childType);
   }
+  else {
+    // Append the frames to the end of the parent's child list
+    rv = aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
+                                       nsnull, aFrameList);
+  }
   NS_IF_RELEASE(parentType);
 
-  // Append the frames to the end of the parent's child list
-  return aFrameManager->AppendFrames(aPresContext, *aPresShell, aParentFrame,
-                                     nsnull, aFrameList);
+  return rv;
 }
 
 static nsIFrame*
@@ -6529,10 +6546,11 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
               prevSibling = firstChild;
             }
           }
-
+          // check for a table caption which goes on an additional child list
+          nsIAtom* childList = GetChildListFor(newFrame);
           rv = state.mFrameManager->InsertFrames(aPresContext, *shell,
                                                  parentFrame,
-                                                 nsnull, prevSibling,
+                                                 childList, prevSibling,
                                                  newFrame);
         }
         
@@ -7021,8 +7039,9 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
 
       } else {
         // Notify the parent frame that it should delete the frame
+        nsIAtom* childList = GetChildListFor(childFrame);
         rv = frameManager->RemoveFrame(aPresContext, *shell, parentFrame,
-                                       nsnull, childFrame);
+                                       childList, childFrame);
       }
     }
 

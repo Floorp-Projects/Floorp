@@ -36,6 +36,42 @@
 #include "nsHTMLParts.h"
 #include "nsIPresShell.h"
 
+#define NS_TABLE_FRAME_CAPTION_LIST_INDEX 0
+
+// caption frame
+nsTableCaptionFrame::nsTableCaptionFrame()
+{
+  // shrink wrap 
+  SetFlags(NS_BLOCK_SPACE_MGR|NS_BLOCK_WRAP_SIZE);
+}
+
+NS_IMETHODIMP
+nsTableCaptionFrame::GetFrameType(nsIAtom** aType) const
+{
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsLayoutAtoms::tableCaptionFrame; 
+  NS_ADDREF(*aType);
+  return NS_OK;
+}
+
+nsresult 
+NS_NewTableCaptionFrame(nsIPresShell* aPresShell, 
+                        nsIFrame**    aNewFrame)
+{
+  NS_PRECONDITION(aNewFrame, "null OUT ptr");
+  if (nsnull == aNewFrame) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  nsTableCaptionFrame* it = new (aPresShell) nsTableCaptionFrame;
+  if (nsnull == it) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  *aNewFrame = it;
+  return NS_OK;
+}
+
+// OuterTableReflowState
+
 struct OuterTableReflowState {
 
   // The presentation context
@@ -101,27 +137,80 @@ nsresult nsTableOuterFrame::QueryInterface(const nsIID& aIID, void** aInstancePt
   }
 }
 
-NS_IMETHODIMP nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
-                                                     nsIAtom*        aListName,
-                                                     nsIFrame*       aChildList)
+NS_IMETHODIMP
+nsTableOuterFrame::Init(nsIPresContext*  aPresContext,
+                   nsIContent*           aContent,
+                   nsIFrame*             aParent,
+                   nsIStyleContext*      aContext,
+                   nsIFrame*             aPrevInFlow)
 {
-  mFrames.SetFrames(aChildList);
+  nsresult rv = nsHTMLContainerFrame::Init(aPresContext, aContent, aParent, 
+                                           aContext, aPrevInFlow);
+  if (NS_FAILED(rv) || !mStyleContext) return rv;
 
-  // Set our internal member data
-  mInnerTableFrame = aChildList;
-  //XXX this should go through the child list looking for a displaytype==caption
-  if (1 < mFrames.GetLength()) {
-    nsIFrame *child;
-    nsresult result = aChildList->GetNextSibling(&child);
-    while ((NS_SUCCEEDED(result)) && (nsnull!=child)) {
-      const nsStyleDisplay* childDisplay;
-      child->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)childDisplay);
-      if (NS_STYLE_DISPLAY_TABLE_CAPTION==childDisplay->mDisplay) {
-        mCaptionFrame = child;
-        break;
-      }
-      result = child->GetNextSibling(&child);
+#if 0
+  // a 0 width table becomes auto
+  PRBool makeAuto = PR_FALSE;
+  nsStylePosition* position = (nsStylePosition*)mStyleContext->GetMutableStyleData(eStyleStruct_Position);
+  if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
+    if (0 >= position->mWidth.GetCoordValue()) {
+      makeAuto= PR_TRUE;
     }
+  }
+  else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
+    if (0.0f >= position->mWidth.GetPercentValue()) {
+      makeAuto= PR_TRUE;
+    }
+  }
+
+  if (makeAuto) {
+    position->mWidth = nsStyleCoord(eStyleUnit_Auto);
+  }
+#endif
+  return rv;
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::FirstChild(nsIPresContext* aPresContext,
+                              nsIAtom*        aListName,
+                              nsIFrame**      aFirstChild) const
+{
+  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
+  *aFirstChild = (nsLayoutAtoms::captionList == aListName)
+                 ? mCaptionFrame : mFrames.FirstChild(); 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTableOuterFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                              nsIAtom** aListName) const
+{
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+  if (aIndex < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  *aListName = nsnull;
+  switch (aIndex) {
+  case NS_TABLE_FRAME_CAPTION_LIST_INDEX:
+    *aListName = nsLayoutAtoms::captionList;
+    NS_ADDREF(*aListName);
+    break;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsTableOuterFrame::SetInitialChildList(nsIPresContext* aPresContext,
+                                       nsIAtom*        aListName,
+                                       nsIFrame*       aChildList)
+{
+  if (nsLayoutAtoms::captionList == aListName) {
+    // the frame constructor already checked for table-caption display type
+    mCaptionFrame = aChildList;
+  }
+  else {
+    mFrames.SetFrames(aChildList);
+    mInnerTableFrame = aChildList;
   }
 
   return NS_OK;
@@ -133,22 +222,18 @@ nsTableOuterFrame::AppendFrames(nsIPresContext* aPresContext,
                                 nsIAtom*        aListName,
                                 nsIFrame*       aFrameList)
 {
-  const nsStyleDisplay* display;
-  nsresult              rv;
+  nsresult rv;
 
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
-  aFrameList->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  if (NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay) {
+  if (nsLayoutAtoms::captionList == aListName) {
     NS_PRECONDITION(!mCaptionFrame, "already have a caption frame");
     // We only support having a single caption frame
     if (mCaptionFrame || (LengthOf(aFrameList) > 1)) {
       rv = NS_ERROR_UNEXPECTED;
-
     } else {
       // Insert the caption frame into the child list
       mCaptionFrame = aFrameList;
-      mInnerTableFrame->SetNextSibling(aFrameList);
 
       // Reflow the new caption frame. It's already marked dirty, so generate a reflow
       // command that tells us to reflow our dirty child frames
@@ -186,14 +271,12 @@ nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
                                nsIAtom*        aListName,
                                nsIFrame*       aOldFrame)
 {
-  const nsStyleDisplay* display;
-  nsresult              rv;
+  nsresult rv;
 
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame can't be removed so this should be the caption
-  aOldFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
-  NS_PRECONDITION(NS_STYLE_DISPLAY_TABLE_CAPTION == display->mDisplay,
-                  "can't remove inner frame");
+  NS_PRECONDITION(nsLayoutAtoms::captionList == aListName, "can't remove inner frame");
+  NS_PRECONDITION(aOldFrame == mCaptionFrame, "invalid caption frame");
 
   // See if the caption's minimum width impacted the inner table
   if (mMinCaptionWidth > mRect.width) {
@@ -205,10 +288,12 @@ nsTableOuterFrame::RemoveFrame(nsIPresContext* aPresContext,
     mInnerTableFrame->SetFrameState(frameState);
   }
 
-  // Remove the caption frame from the child list and destroy it
-  mFrames.DestroyFrame(aPresContext, aOldFrame);
-  mCaptionFrame = nsnull;
-  mMinCaptionWidth = 0;
+  // Remove the caption frame and destroy it
+  if (mCaptionFrame && (mCaptionFrame == aOldFrame)) {
+    mCaptionFrame->Destroy(aPresContext);
+    mCaptionFrame = nsnull;
+    mMinCaptionWidth = 0;
+  }
 
   // Generate a reflow command so we get reflowed
   nsIReflowCommand* reflowCmd;
@@ -235,7 +320,37 @@ NS_METHOD nsTableOuterFrame::Paint(nsIPresContext*      aPresContext,
   }
 #endif
 
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  // the remaining code was copied from nsContainerFrame::PaintChildren since
+  // it only paints the primary child list
+
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+    mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  // Child elements have the opportunity to override the visibility property
+  // of their parent and display even if the parent is hidden
+  PRBool clipState;
+
+  // If overflow is hidden then set the clip rect so that children
+  // don't leak out of us
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PushState();
+    aRenderingContext.SetClipRect(nsRect(0, 0, mRect.width, mRect.height),
+                                  nsClipCombine_kIntersect, clipState);
+  }
+
+  if (mCaptionFrame) {
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, mCaptionFrame, aWhichLayer);
+  }
+  nsIFrame* kid = mFrames.FirstChild();
+  while (nsnull != kid) {
+    PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, aWhichLayer);
+    kid->GetNextSibling(&kid);
+  }
+
+  if (NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow) {
+    aRenderingContext.PopState(clipState);
+  }
+  
   return NS_OK;
 }
 
@@ -344,8 +459,11 @@ nsresult nsTableOuterFrame::IR_TargetIsChild(nsIPresContext*        aPresContext
                                              nsIFrame*              aNextFrame)
 {
   nsresult rv;
-  if (!aNextFrame)
+  if (!aNextFrame) {
+    // this will force Reflow to return the height of the last reflow rather than 0
+    aReflowState.y = mRect.height; 
     return NS_OK;
+  }
 
   if (aNextFrame == mInnerTableFrame) {
     rv = IR_TargetIsInnerTableFrame(aPresContext, aDesiredSize, aReflowState, aStatus);
@@ -825,7 +943,6 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
 {
   if (nsDebugTable::gRflTableOuter) nsTableFrame::DebugReflow("TO::Rfl en", this, &aReflowState, nsnull);
   nsresult rv = NS_OK;
-
   // Initialize out parameters
   aDesiredSize.width  = 0;
   aDesiredSize.height = 0;
