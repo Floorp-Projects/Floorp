@@ -306,6 +306,19 @@ EXTRA_DSO_LDOPTS	+= -L$(DIST)/bin $(BEOS_LINK_LIBS) $(NSPR_LIBS)
 endif
 endif
 
+#
+# HP-UXBeOS specific section: for COMPONENTS only, add -Bsymbolic flag
+# which uses internal symbols first
+#
+ifeq ($(OS_ARCH),HP-UX)
+ifdef IS_COMPONENT
+ifeq ($(GNU_CC)$(GNU_CXX),)
+EXTRA_DSO_LDOPTS += -Wl,-Bsymbolic
+endif # non-gnu compilers
+endif # IS_COMPONENT
+endif # HP-UX
+
+
 ################################################################################
 
 all:: export libs install
