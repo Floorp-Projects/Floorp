@@ -45,14 +45,15 @@ local $opt_output_file = "";
 local $opt_test_list_file = "";
 local $opt_suite_path = "./";
 local $opt_shell_path = "";
-local $opt_trace = 1;
+local $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
+local $opt_trace = 0;
 local $opt_verbose = 0;
 local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 
 # command line option definition
-local $options = "c=s classpath>c d smdebug>d f=s file>f h help>h l=s list>l " .
-  "o smopt>o p=s testpath>p r rhino>r s=s shellpath>s t trace>t v verbose>v " .
-  "x=s lxrurl>x";
+local $options = "b=s bugurl>b c=s classpath>c d smdebug>d f=s file>f " .
+  "h help>h l=s list>l o smopt>o p=s testpath>p r rhino>r s=s shellpath>s " .
+  "t trace>t v verbose>v x=s lxrurl>x";
 
 &parse_args;
 
@@ -81,8 +82,10 @@ sub execute_tests {
 
     foreach $test (@test_list) {
         local ($suite, $test_dir, $test_file) = split("/", $test);
-        local $expected_exit = 0;
+        # *-n.js is a negative test, expect exit code 3 (runtime error)
+        local $expected_exit = ($test =~ /\-n\.js$/) ? 3 : 0;
         local $got_exit, $exit_signal;
+        local $bug_line;
 
         if ($user_exit) {
             return;
@@ -115,6 +118,7 @@ sub execute_tests {
         $got_exit = ($? >> 8);
         $exit_signal = ($? & 255);
         $failure_lines = "";
+        $bug_line = "";
 
         foreach $line (@output) {
 
@@ -127,21 +131,27 @@ sub execute_tests {
                 $failure_lines .= $line;
             }
 
+            if ($line =~ /bugnumber\s*\:?\s*(.*)/i) {
+                $1 =~ /(\n+)/;
+                $bug_line = "<a href='$opt_bug_url$1'>Bug Number $1</a>";
+            }
+
         }
         
         if (!@output) {
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
-                             "Test case produced no output!");
+                             "Test case produced no output!", $bug_line);
         } elsif ($got_exit != $expected_exit) {
             &report_failure ($test, "Expected exit code " .
                              "$expected_exit, got $got_exit\n" .
                              "Testcase terminated with signal $exit_signal\n" .
                              "Complete testcase output was:\n" .
-                             join ("\n",reverse(@output)));
+                             join ("\n",@output), $bug_line);
         } elsif ($failure_lines) {
-            &report_failure ($test, "Failure messages were:\n" . $failure_lines);
+            &report_failure ($test, "Failure messages were:\n" . $failure_lines,
+                            $bug_line);
         }        
         
         &dd ("exit code $got_exit, exit signal $exit_signal.");
@@ -160,7 +170,6 @@ sub write_results {
 
     open (OUTPUT, "> $opt_output_file") ||
       die ("Could not create output file $opt_output_file");
-
     print OUTPUT 
     ("<html><head>\n" .
      "<title>Test results, $opt_engine_type, $list_name</title>\n" .
@@ -169,7 +178,7 @@ sub write_results {
      "<a name='tippy_top'></a>\n" .
      "<h2>Test results, $opt_engine_type, $list_name</h2><br>\n" .
      "<p class='results_summary'>\n" .
-     ($#test_list + 1) . "test(s) selected, $tests_completed test(s) " .
+     ($#test_list + 1) . " test(s) selected, $tests_completed test(s) " .
      "completed, $failures_reported failures reported " .
      "(" . (($failures_reported / $tests_completed) * 100) . "% failed)<br>\n" .
      "[ <a href='#fail_detail'>Failure Details</a> | " .
@@ -187,7 +196,7 @@ sub write_results {
      "# Retest List, $opt_engine_type, " .
      "generated $year $mon $mday $hour:$min.\n" .
      "# Original test base was: $list_name.\n" .
-     "# $tests_completed of $#test_list test(s) were completed, " .
+     "# $tests_completed of " . ($#test_list + 1) . " test(s) were completed, " .
      "$failures_reported failures reported.\n" .
      join ("\n", @failed_tests) .
      "</pre>\n" .
@@ -207,12 +216,15 @@ sub parse_args {
     Getopt::Mixed::init ($options);
     
     while (($option, $value) = nextOption()) {
-        if ($option eq "c") {
+        if ($option eq "b") {
+            &dd ("opt: setting bugurl to '$value'.");
+            $opt_bug_url = $value;
+            
+        } elsif ($option eq "c") {
             &dd ("opt: setting classpath to '$value'.");
             $opt_classpath = $value;
             
         } elsif ($option eq "d") {
-            
             &dd ("opt: using smdebug engine");
             $opt_engine_type = "smdebug";
             
@@ -284,6 +296,8 @@ sub parse_args {
 sub usage {
     print STDERR 
       ("\nusage: $0 [<options>] \n" .
+       "(-b|--bugurl)           Bugzilla URL\n" .
+       "                        (default is $opt_bug_url)\n" .
        "(-c|--classpath)        Classpath (Rhino only)\n" .
        "(-d|--smdebug)          Test SpiderMonkey Debug engine\n" .
        "(-f|--file) <file>      Redirect output to file named <file>\n" .
@@ -298,9 +312,7 @@ sub usage {
        "(-t|--trace)            Trace execution (for debugging)\n" .
        # "(-v|--verbose)          Show all test cases (not recommended)\n" .
        "(-x|--lxrurl) <url>     Complete url to tests subdirectory on lxr\n" .
-       "                        (default is\n" .
-       "                         http://lxr.mozilla.org/mozilla/source/js/" .
-       "tests/)\n\n");
+       "                        (default is\n$opt_lxr_url)\n\n");
     
     exit (1);
     
@@ -591,7 +603,7 @@ sub get_js_files {
 }
 
 sub report_failure {
-    local ($test, $message) = @_;
+    local ($test, $message, $bug_line) = @_;
 
     $failures_reported++;
 
@@ -604,10 +616,10 @@ sub report_failure {
         $test = $1;
         $html .= "<dd><b>".
           "Testcase <a target='other_window' href='$opt_lxr_url$test'>$1</a> " .
-            "failed</b><br>\n";
+            "failed</b> $bug_line<br>\n";
     } else {
         $html .= "<dd><b>".
-          "Testcase $test failed</b><br>\n";
+          "Testcase $test failed</b> $bug_line<br>\n";
     }
     
     $html .= " [ ";
