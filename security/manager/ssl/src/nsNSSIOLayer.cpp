@@ -935,6 +935,9 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
       peerCert->timeOK = PR_TRUE;
     }
     break;
+  case SEC_ERROR_CRL_EXPIRED:
+    rv = badCertHandler->CrlExpired(csi, callBackCert, &retVal);
+    break;
   default:
     rv = NS_ERROR_FAILURE;
     break;
