@@ -34,11 +34,13 @@
  * GPL.
  */
 
+#include "nsNSSComponent.h"
 #include "nsNSSIOLayer.h"
 #include "nsNSSCallbacks.h"
 
 #include "prlog.h"
 #include "prnetdb.h"
+#include "nsIPrompt.h"
 #include "nsIPref.h"
 #include "nsISecurityManagerComponent.h"
 #include "nsIServiceManager.h"
@@ -47,11 +49,10 @@
 #include "nsIBadCertListener.h"
 #include "nsNSSCertificate.h"
 #include "nsINSSDialogs.h"
+#include "nsIProxyObjectManager.h"
 
 #include "nsXPIDLString.h"
 #include "nsVoidArray.h"
-
-#include "nsNSSHelper.h"
 
 #include "ssl.h"
 #include "secerr.h"
@@ -61,6 +62,7 @@
 #include "genname.h"
 #include "certdb.h"
 #include "cert.h"
+
 
 //#define DEBUG_SSL_VERBOSE //Enable this define to get minimal 
                             //reports when doing SSL read/write
@@ -369,6 +371,100 @@ nsresult nsNSSSocketInfo::SetSSLStatus(nsISSLStatus *aSSLStatus)
   return NS_OK;
 }
 
+static nsresult
+nsHandleSSLError(nsNSSSocketInfo *socketInfo, PRInt32 err)
+{
+  nsresult rv;
+  NS_DEFINE_CID(nssComponentCID, NS_NSSCOMPONENT_CID);
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(nssComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString hostName;
+  socketInfo->GetHostName(getter_Copies(hostName));
+  NS_ConvertASCIItoUCS2 hostNameU(hostName);
+  const PRUnichar *params[2];
+  nsXPIDLString formattedString;
+
+  switch (err) {
+  case SSL_ERROR_SSL_DISABLED:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLDisabled").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+  case SSL_ERROR_SSL2_DISABLED:
+    params[0] = hostNameU.get();
+    nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSL2Disabled").get(),
+                                                params, 1,
+                                                getter_Copies(formattedString));
+    break;
+  case SSL_ERROR_EXPORT_ONLY_SERVER:
+  case SSL_ERROR_US_ONLY_SERVER:
+  case SSL_ERROR_NO_CYPHER_OVERLAP:
+    {
+      NS_DEFINE_CID(StringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
+      nsCOMPtr<nsIStringBundleService> service = 
+                                  do_GetService(StringBundleServiceCID, &rv);
+      nsCOMPtr<nsIStringBundle> brandBundle;
+      service->CreateBundle("chrome://global/locale/brand.properties",
+                            getter_AddRefs(brandBundle));
+      nsXPIDLString brandShortName;
+      brandBundle->GetStringFromName(NS_LITERAL_STRING("brandShortName").get(),
+                                     getter_Copies(brandShortName));
+      params[0] = brandShortName.get();
+      params[1] = hostNameU.get();
+      nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLNoMatchingCiphers").get(),
+                                                  params, 2,
+                                                  getter_Copies(formattedString));
+                                                  
+    }
+    break;
+  default:
+    {
+      char buf[80];
+      PR_snprintf(buf, 80, "%ld", err);
+      NS_ConvertASCIItoUCS2 errorCode(buf);
+      params[0] = hostNameU.get();
+      params[1] = errorCode.get(); 
+      nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("SSLGenericError").get(),
+                                                  params, 2, 
+                                                  getter_Copies(formattedString));
+      
+    }                                           
+    break;
+  }
+
+  // The interface requestor object may not be safe, so
+  // proxy the call to get the nsIPrompt.
+
+  nsCOMPtr<nsIProxyObjectManager> proxyman(do_GetService(NS_XPCOMPROXY_CONTRACTID));
+  if (!proxyman) 
+    return NS_ERROR_FAILURE;
+ 
+  nsCOMPtr<nsIInterfaceRequestor> proxiedCallbacks;
+  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              NS_GET_IID(nsIInterfaceRequestor),
+                              NS_STATIC_CAST(nsIInterfaceRequestor*,socketInfo),
+                              PROXY_SYNC,
+                              getter_AddRefs(proxiedCallbacks));
+
+  nsCOMPtr<nsIPrompt> prompt (do_GetInterface(proxiedCallbacks));
+  
+  if (!prompt)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsCOMPtr<nsIPrompt> proxyPrompt;
+  // Finally, get a proxy for the nsIPrompt
+  proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
+                              NS_GET_IID(nsIPrompt),
+                              prompt,
+                              PROXY_SYNC,
+                              getter_AddRefs(proxyPrompt));
+  proxyPrompt->Alert(nsnull, formattedString.get());
+  return NS_OK;
+}
+
 static PRStatus PR_CALLBACK
 nsSSLIOLayerConnect(PRFileDesc* fd, const PRNetAddr* addr,
                     PRIntervalTime timeout)
@@ -580,6 +676,9 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
   // is necessary.  :(
   
   if (bytesWritten == -1) {
+    // Let's see if there was an error set by the SSL libraries that we
+    // should tell the user about.
+    PRInt32 err = PR_GetError();
     if (firstWrite) {
       PRBool tlsOn;
       SSL_OptionGet(fd->lower, SSL_ENABLE_TLS, &tlsOn);
@@ -626,17 +725,38 @@ nsSSLIOLayerWrite(PRFileDesc* fd, const void* buf, PRInt32 amount)
           // This connect must be blocking.
           socketInfo->GetNetAddr(&addr);
           PRStatus prv = PR_Connect(fd, &addr, PR_INTERVAL_NO_TIMEOUT);
-          // We no longer need this socket to block, so make it non-blocking.
-          sockopt.option = PR_SockOpt_Nonblocking;
-          sockopt.value.non_blocking = oldBlockVal;
-          PR_SetSocketOption(fd, &sockopt);
-          oldBlockReset = PR_TRUE;
-          if (prv == PR_SUCCESS)
+          if (prv == PR_SUCCESS) {
             bytesWritten = fd->lower->methods->write(fd->lower, buf, amount);
+             // We no longer need this socket to block, so make it non-blocking.
+             PRSocketOptionData sockopt;
+             sockopt.option = PR_SockOpt_Nonblocking;
+             sockopt.value.non_blocking = oldBlockVal;
+             PR_SetSocketOption(fd, &sockopt);
+             oldBlockReset = PR_TRUE;
+             // It's possible that this write failed as well, so if the 
+             // error set by this write is an SSL error, let's tell the
+             // user about it.
+             if (bytesWritten == -1) {
+               err = PR_GetError();
+               if (IS_SSL_ERROR(err)) {
+                 nsHandleSSLError(socketInfo,err);
+               }
+             }
+           }
+
         } else {
           PR_Close(newSocket);
         }
-      } 
+      } else if (IS_SSL_ERROR(err)) {
+         // This is the case where  the first write failed with 
+         // TLS turned off.
+         nsHandleSSLError(socketInfo, err);
+       }
+     } else if (IS_SSL_ERROR(err)) {
+       // This is the case where a subseuent write has failed, 
+       // ie not the first write.
+       nsHandleSSLError(socketInfo, err);
+
     }
   }
   // TLS intolerant servers only cause the first write to fail, so let's 
