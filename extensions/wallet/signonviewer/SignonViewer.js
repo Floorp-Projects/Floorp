@@ -26,6 +26,7 @@
 
 // globals 
 var signonviewer        = null;
+var passwordmanager     = null;
 var signons             = [];
 var rejects             = [];
 var nopreviewList       = [];
@@ -116,17 +117,18 @@ function Startup()
 
 // function : <SignonViewer.js>::AddSignonToList();
 // purpose  : creates an array of signon objects
-function AddSignonToList(count, host, user) {
-  signons[count] = new Signon(count, host, user);
+function AddSignonToList(count, host, user, rawuser) {
+  signons[count] = new Signon(count, host, user, rawuser);
 }
 
 // function : <SignonViewer.js>::Signon();
 // purpose  : an home-brewed object that represents a individual signon
-function Signon(number, host, user)
+function Signon(number, host, user, rawuser)
 {
   this.number = number;
   this.host = host;
   this.user = user;
+  this.rawuser = rawuser;
 }
 
 // function : <SignonViewer.js>::LoadSignons();
@@ -147,6 +149,7 @@ function LoadSignons()
 
     var host = nextPassword.host;
     var user = nextPassword.user;
+    var rawuser = user;
 
     if (user == "") {
       /* no username passed in, parse it out of url */
@@ -161,7 +164,7 @@ function LoadSignons()
       }
     }
 
-    AddSignonToList(count, host, user);
+    AddSignonToList(count, host, user, rawuser);
     AddItem("savesignonlist", [host,user], "signon_", count++);
   }
   if (count == 0) {
@@ -380,7 +383,7 @@ function onOK()
   var signonCount;
   for (signonCount=0; signonCount<deletedSignons.length-1; signonCount++) {
     passwordmanager.removeUser(signons[deletedSignons[signonCount]].host,
-                             signons[deletedSignons[signonCount]].user);
+                               signons[deletedSignons[signonCount]].rawuser);
   }
 
   var deletedRejects = [];
@@ -446,7 +449,7 @@ function DeleteItemSelected(tree, prefix, kids) {
   var rv = "";
   var cookietree = document.getElementById(tree);
   var i;
-  selitems = cookietree.selectedItems;
+  var selitems = cookietree.selectedItems;
   for(i = 0; i < selitems.length; i++) 
   { 
     delnarray[i] = document.getElementById(selitems[i].getAttribute("id"));
