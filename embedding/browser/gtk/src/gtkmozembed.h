@@ -235,6 +235,12 @@ typedef enum
 /* this is a singleton object that you can hook up to to get signals
    that are not handed out on a per widget basis. */
 
+#define GTK_TYPE_MOZ_EMBED_SINGLE            (gtk_moz_embed_single_get_type())
+#define GTK_MOZ_EMBED_SINGLE(obj)            GTK_CHECK_CAST((obj), GTK_TYPE_MOZ_EMBED_SINGLE, GtkMozEmbedSingle)
+#define GTK_MOZ_EMBED_SINGLE_CLASS(klass)    GTK_CHEK_CLASS_CAST((klass), GTK_TYPE_MOZ_EMBED_SINGLE, GtkMozEmbedSingleClass)
+#define GTK_IS_MOZ_EMBED_SINGLE(obj)         GTK_CHECK_TYPE((obj), GTK_TYPE_MOZ_EMBED_SINGLE)
+#define GTK_IS_MOZ_EMBED_SINGLE_CLASS(klass) GTK_CHECK_CLASS_TYPE((klass), GTK_TYPE_MOZ_EMBED)
+
 typedef struct _GtkMozEmbedSingle      GtkMozEmbedSingle;
 typedef struct _GtkMozEmbedSingleClass GtkMozEmbedSingleClass;
 
@@ -253,8 +259,8 @@ struct _GtkMozEmbedSingleClass
 				guint chromemask);
 };
 
-GTKMOZEMBED_API(GtkMozEmbedSingle *)
-gtk_moz_embed_single_get(void);
+GTKMOZEMBED_API(GtkType)             gtk_moz_embed_single_get_type  (void);
+GTKMOZEMBED_API(GtkMozEmbedSingle *) gtk_moz_embed_single_get       (void);
 
 #ifdef __cplusplus
 }
