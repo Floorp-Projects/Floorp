@@ -736,14 +736,22 @@ il_size(il_container *ic)
             }
 
             mask_header = &ic->mask->header;
+			if(img_header->alpha_bits)
+                mask_header->color_space = IL_CreateGreyScaleColorSpace(1, img_header->alpha_bits);
+			else
                 mask_header->color_space = IL_CreateGreyScaleColorSpace(1, 1);
 
             if (!mask_header->color_space)
                 return MK_OUT_OF_MEMORY;
 			
+			mask_header->alpha_bits = img_header->alpha_bits;
+
             mask_header->width = img_header->width;
             mask_header->height = img_header->height;
-            mask_header->widthBytes = (mask_header->width + 7) / 8;
+			if(img_header->alpha_bits == 1)
+                mask_header->widthBytes = (mask_header->width + 7) / 8;
+			if(img_header->alpha_bits == 8)
+				mask_header->widthBytes = mask_header->width;
 
             /* Mask data must be quadlet aligned for optimizations */
             mask_header->widthBytes = ROUNDUP(mask_header->widthBytes, 4);
@@ -2375,7 +2383,8 @@ IL_GetIconDimensions(IL_GroupContext *img_cx, int icon_number, int *width,
 IL_IMPLEMENT(IL_Pixmap *)
 IL_GetImagePixmap(IL_ImageReq *image_req)
 {
-    if (image_req && image_req->ic)
+    if ((image_req && image_req->ic)&&
+		(image_req->ic->state == IC_COMPLETE)||(image_req->ic->state == IC_SIZED))
         return image_req->ic->image;
     else
         return NULL;
