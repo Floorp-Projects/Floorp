@@ -244,11 +244,11 @@ NS_NewBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
 
 extern nsresult
 NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                nsIFrame*& aNewFrame);
+                nsIFrame*& aNewFrame, PRBool aIsTopLevel);
 
 extern nsresult
 NS_NewBlockFrame(nsIContent* aContent, nsIFrame* aParentFrame,
-                 nsIFrame*& aNewFrame);
+                 nsIFrame*& aNewFrame, PRBool aShrinkWrap);
 
 extern nsresult
 NS_NewCommentFrame(nsIContent* aContent, nsIFrame* aParentFrame,

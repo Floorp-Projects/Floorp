@@ -74,7 +74,7 @@ NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create body pseudo frame
-  NS_NewBodyFrame(mContent, this, mFirstChild);
+  NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
 
   // Resolve style and set the style context
   nsIStyleContext* styleContext =
@@ -190,7 +190,7 @@ void nsTableCellFrame::CreatePsuedoFrame(nsIPresContext* aPresContext)
   // Do we have a prev-in-flow?
   if (nsnull == mPrevInFlow) {
     // No, create a body pseudo frame
-    NS_NewBodyFrame(mContent, this, mFirstChild);
+    NS_NewBodyFrame(mContent, this, mFirstChild, PR_FALSE);
 
     // Resolve style and set the style context
     nsIStyleContext* styleContext =

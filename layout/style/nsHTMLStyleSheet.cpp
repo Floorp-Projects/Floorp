@@ -1047,7 +1047,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_CAPTION:
         // Have we already created a caption? If so, ignore this caption
         if (nsnull == captionFrame) {
-          NS_NewBodyFrame(childContent, aNewFrame, captionFrame);
+          NS_NewBodyFrame(childContent, aNewFrame, captionFrame, PR_FALSE);
           captionFrame->SetStyleContext(aPresContext, childStyleContext);
           // Process the caption's child content and initialize it
           nsIFrame* captionChildList;
@@ -1206,7 +1206,7 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 //    processChildren = PR_TRUE;
   }
   else if (nsHTMLAtoms::body == aTag) {
-    rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame);
+    rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame, PR_TRUE);
     processChildren = PR_TRUE;
   }
   else if (nsHTMLAtoms::form == aTag) {
@@ -1260,7 +1260,7 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
   switch (styleDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
-    rv = NS_NewBlockFrame(aContent, aParentFrame, aNewFrame);
+    rv = NS_NewBlockFrame(aContent, aParentFrame, aNewFrame, PR_FALSE);
     processChildren = PR_TRUE;
     break;
 

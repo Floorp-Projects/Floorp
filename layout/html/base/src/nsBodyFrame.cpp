@@ -41,39 +41,21 @@
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 
 nsresult
-NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult)
+NS_NewBodyFrame(nsIContent* aContent, nsIFrame* aParent, nsIFrame*& aResult,
+                PRBool aIsTopLevel)
 {
-  nsIFrame* it = new nsBodyFrame(aContent, aParent);
+  nsBodyFrame* it = new nsBodyFrame(aContent, aParent);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  it->SetIsTopLevel(aIsTopLevel);
   aResult = it;
   return NS_OK;
-}
-
-// XXX FIX ME...
-// Returns true if this frame is being used a pseudo frame
-PRBool nsBodyFrame::IsPseudoFrame() const
-{
-  PRBool  result = PR_FALSE;
-
-  if (nsnull != mGeometricParent) {
-    nsIContent* parentContent;
-     
-    mGeometricParent->GetContent(parentContent);
-    if (parentContent == mContent) {
-      result = PR_TRUE;
-    }
-    NS_RELEASE(parentContent);
-  }
-
-  return result;
 }
 
 nsBodyFrame::nsBodyFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsHTMLContainerFrame(aContent, aParentFrame)
 {
-  mIsPseudoFrame = IsPseudoFrame();
   mSpaceManager = new nsSpaceManager(this);
   NS_ADDREF(mSpaceManager);
 }
@@ -111,7 +93,7 @@ NS_IMETHODIMP
 nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 {
   // Create a block frame and set its style context
-  nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild);
+  nsresult rv = NS_NewBlockFrame(mContent, this, mFirstChild, !mIsTopLevel);
   if (NS_OK != rv) {
     return rv;
   }
@@ -250,7 +232,7 @@ nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
     mySpacing->CalcBorderPaddingFor(this, borderPadding);
   
     // Compute the child frame's max size
-    nsSize  kidMaxSize = GetColumnAvailSpace(&aPresContext, borderPadding,
+    nsSize  kidMaxSize = GetColumnAvailSpace(aPresContext, borderPadding,
                                              rsp->maxSize);
     mSpaceManager->Translate(borderPadding.left, borderPadding.top);
   
@@ -350,7 +332,7 @@ nsBodyFrame::Reflow(nsIPresContext&      aPresContext,
   }
 
   // Now force a repaint of the damage area
-  if (!mIsPseudoFrame && !damageArea.IsEmpty()) {
+  if (mIsTopLevel && !damageArea.IsEmpty()) {
     Invalidate(damageArea);
   }
   
@@ -403,7 +385,7 @@ AddToPadding(nsIPresContext* aPresContext,
 NS_METHOD 
 nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 {
-  if (mIsPseudoFrame) {
+  if (!mIsTopLevel) {
     return NS_OK;
   }
 
@@ -486,15 +468,16 @@ nsBodyFrame::DidSetStyleContext(nsIPresContext* aPresContext)
 /////////////////////////////////////////////////////////////////////////////
 // Helper functions
 
-nsSize nsBodyFrame::GetColumnAvailSpace(nsIPresContext*  aPresContext,
-                                        const nsMargin&  aBorderPadding,
-                                        const nsSize&    aMaxSize)
+nsSize
+nsBodyFrame::GetColumnAvailSpace(nsIPresContext& aPresContext,
+                                 const nsMargin& aBorderPadding,
+                                 const nsSize&   aMaxSize)
 {
   nsSize  result(aMaxSize);
 
-  // If we're not being used as a pseudo frame then make adjustments
+  // If we are being used as a top-level frame then make adjustments
   // for border/padding and a vertical scrollbar
-  if (!mIsPseudoFrame) {
+  if (mIsTopLevel) {
     // If our width is constrained then subtract for the border/padding
     if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
       result.width -= aBorderPadding.left +
@@ -549,7 +532,7 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
     width = styleSize.width + aBorderPadding.left + aBorderPadding.right;
   }
   else {
-    if (!mIsPseudoFrame) {
+    if (mIsTopLevel) {
       // Make sure we're at least as wide as our available width
       width = PR_MAX(aMetrics.width, aMaxSize.width);
     }
@@ -559,12 +542,12 @@ nsBodyFrame::ComputeDesiredSize(nsIPresContext& aPresContext,
     height = styleSize.width + aBorderPadding.top + aBorderPadding.bottom;
   }
   else {
-    if (!mIsPseudoFrame) {
+    if (mIsTopLevel) {
       height += aBorderPadding.top + aBorderPadding.bottom;
     }
   }
 
-  if (!mIsPseudoFrame) {
+  if (mIsTopLevel) {
     // Make sure we're at least as wide as our available width
     width = PR_MAX(aMetrics.width, aMaxSize.width);
     height += aBorderPadding.top + aBorderPadding.bottom;
