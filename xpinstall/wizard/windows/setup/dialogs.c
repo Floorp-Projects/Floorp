@@ -2529,9 +2529,7 @@ void DlgSequenceNext()
         hrErr = SmartUpdateJars();
         if((hrErr == WIZ_OK) || (hrErr == 999))
         {
-#ifdef XXX_DISABLED_BUG_39015
           UpdateJSProxyInfo();
-#endif
 
           /* POST_SMARTUPDATE process file manipulation functions */
           ProcessFileOps(T_POST_SMARTUPDATE);

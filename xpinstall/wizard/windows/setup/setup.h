@@ -65,7 +65,7 @@ typedef int PRInt32;
 #define FILE_INI_REDIRECT               "redirect.ini"
 #define WIZ_TEMP_DIR                    "ns_temp"
 #define FILE_INSTALL_LOG                "install_wizard.log"
-#define FILE_ALL_JS                     "all.js"
+#define FILE_ALL_JS                     "all-proxy.js"
 
 /* UG: Upgrade */
 #define UG_NONE                         0

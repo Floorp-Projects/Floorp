@@ -734,6 +734,7 @@ void UpdateJSProxyInfo()
         lstrcat(szBuf, diAdvancedSettings.szProxyPort);
         lstrcat(szBuf, ");\n");
       }
+      lstrcat(szBuf, "user_pref(\"network.proxy.type\", 1);\n");
 
       fwrite(szBuf, sizeof(char), lstrlen(szBuf), fJSFile);
       fclose(fJSFile);
