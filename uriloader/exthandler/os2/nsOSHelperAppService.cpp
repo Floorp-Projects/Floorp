@@ -99,8 +99,8 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
   if (aMIMEInfo)
   {
     nsCOMPtr<nsIFile> application;
-    nsXPIDLCString path;
-    aTempFile->GetPath(getter_Copies(path));
+    nsCAutoString path;
+    aTempFile->GetNativePath(path);
 
     nsMIMEInfoHandleAction action = nsIMIMEInfo::useSystemDefault;
     aMIMEInfo->GetPreferredAction(&action);
@@ -110,7 +110,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     {
       // if we were given an application to use then use it....otherwise
       // make the registry call to launch the app
-      const char * strPath = (const char *) path;
+      const char * strPath = path.get();
       nsCOMPtr<nsIProcess> process = do_CreateInstance(NS_PROCESS_CONTRACTID);
       nsresult rv;
       if (NS_FAILED(rv = process->Init(application)))
@@ -121,7 +121,7 @@ NS_IMETHODIMP nsOSHelperAppService::LaunchAppWithTempFile(nsIMIMEInfo * aMIMEInf
     }    
     else // use the system default
     {
-      HOBJECT hobject = WinQueryObject( path );
+      HOBJECT hobject = WinQueryObject( path.get() );
       if (WinSetObjectData( hobject, "OPEN=DEFAULT" ))
         rv = NS_OK;
       else
@@ -227,7 +227,7 @@ nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformApp
   if (localFile)
   {
     if (localFile)
-      localFile->InitWithUnicodePath(platformAppPath);
+      localFile->InitWithPath(NS_ConvertUCS2toUTF8(platformAppPath));
     *aFile = localFile;
     NS_IF_ADDREF(*aFile);
   }
