@@ -1051,7 +1051,11 @@ nsPluginStreamListenerPeer::OnStartRequest(nsIChannel* channel, nsISupports* aCo
         {
           mInstance->Start();
           mOwner->CreateWidget();
-          mInstance->SetWindow(window);
+
+          // If we've got a native window, the let the plugin know
+          // about it.
+          if (window->window)
+            mInstance->SetWindow(window);
         }
       }
     }
@@ -1810,7 +1814,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateEmbededPlugin(const char *aMimeType,
     {
       instance->Start();
       aOwner->CreateWidget();
-      instance->SetWindow(window);
+
+      // If we've got a native window, the let the plugin know about it.
+      if (window->window)
+        instance->SetWindow(window);
 
       // don't make an initial steam if it's a java applet
       if(!aMimeType || 
@@ -1891,7 +1898,10 @@ NS_IMETHODIMP nsPluginHostImpl::InstantiateFullPagePlugin(const char *aMimeType,
     {
       instance->Start();
       aOwner->CreateWidget();
-      instance->SetWindow(window);
+
+      // If we've got a native window, the let the plugin know about it.
+      if (window->window)
+        instance->SetWindow(window);
 
       rv = NewFullPagePluginStream(aStreamListener, instance);
 
@@ -1934,7 +1944,10 @@ nsresult nsPluginHostImpl::FindStoppedPluginForURL(nsIURI* aURL,
 
     instance->Start();
     aOwner->CreateWidget();
-    instance->SetWindow(window);
+
+    // If we've got a native window, the let the plugin know about it.
+    if (window->window)
+      instance->SetWindow(window);
 
     plugin->setStopped(PR_FALSE);
     nsCRT::free(url);
