@@ -83,6 +83,10 @@ bindings:
 	aximp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll 
 	tlbimp $(MOZ_SRC)\mozilla\dist\$(SUBDIR)\bin\mozctl.dll
 
+control:
+	aximp c:\WINNT\system32\comct332.ocx
+	tlbimp c:\WINNT\system32\comct332.ocx
+
 # XXX fix me
 clean:
 	for %i in ( $(CLEANUP) ) do del %i
