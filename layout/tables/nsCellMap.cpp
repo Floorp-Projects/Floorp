@@ -19,6 +19,7 @@
 #include "nsVoidArray.h"
 #include "nsCellMap.h"
 #include "nsTableFrame.h"
+#include "nsTableCellFrame.h"
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
@@ -225,5 +226,188 @@ PRInt32 nsCellMap::GetNextAvailColIndex(PRInt32 aRowIndex, PRInt32 aColIndex) co
   }
   return result;
 }
+
+/** returns PR_TRUE if the row at aRowIndex has any cells that are the result
+  * of a row-spanning cell above it.  So, given this table:<BR>
+  * <PRE>
+  * TABLE
+  *   TR
+  *    TD ROWSPAN=2
+  *    TD
+  *   TR
+  *    TD
+  * </PRE>
+  * RowIsSpannedInto(0) returns PR_FALSE, and RowIsSpannedInto(1) returns PR_TRUE.
+  * @see RowHasSpanningCells
+  */
+// if computing this and related info gets expensive, we can easily 
+// cache it.  The only thing to remember is to rebuild the cache 
+// whenever a row|col|cell is added/deleted, or a span attribute is changed.
+PRBool nsCellMap::RowIsSpannedInto(PRInt32 aRowIndex)
+{
+  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
+  PRBool result = PR_FALSE;
+	PRInt32 colCount = GetColCount();
+	for (PRInt32 colIndex=0; colIndex<colCount; colIndex++)
+	{
+		CellData *cd = GetCellAt(aRowIndex, colIndex);
+		if (cd != nsnull)
+		{ // there's really a cell at (aRowIndex, colIndex)
+			if (nsnull==cd->mCell)
+			{ // the cell at (aRowIndex, colIndex) is the result of a span
+				nsTableCellFrame *cell = cd->mRealCell->mCell;
+				NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
+				const PRInt32 realRowIndex = cell->GetRowIndex ();
+				if (realRowIndex!=aRowIndex)
+				{ // the span is caused by a rowspan
+					result = PR_TRUE;
+					break;
+				}
+			}
+		}
+  }
+  return result;
+}
+
+/** returns PR_TRUE if the row at aRowIndex has any cells that have a rowspan>1
+  * So, given this table:<BR>
+  * <PRE>
+  * TABLE
+  *   TR
+  *    TD ROWSPAN=2
+  *    TD
+  *   TR
+  *    TD
+  * </PRE>
+  * RowHasSpanningCells(0) returns PR_TRUE, and RowHasSpanningCells(1) returns PR_FALSE.
+  * @see RowIsSpannedInto
+  */
+PRBool nsCellMap::RowHasSpanningCells(PRInt32 aRowIndex)
+{
+  NS_PRECONDITION (0<=aRowIndex && aRowIndex<GetRowCount(), "bad row index arg");
+  PRBool result = PR_FALSE;
+  const PRInt32 rowCount = GetRowCount();
+  if (aRowIndex!=rowCount-1)
+  { // aRowIndex is not the last row, so we check the next row after aRowIndex for spanners
+    const PRInt32 colCount = GetColCount();
+    for (PRInt32 colIndex=0; colIndex<colCount; colIndex++)
+    {
+      PRInt32 nextRowIndex = aRowIndex+1;
+      CellData *cd =GetCellAt(nextRowIndex, colIndex);
+      if (cd != nsnull)
+      { // there's really a cell at (nextRowIndex, colIndex)
+        if (nsnull==cd->mCell)
+        { // the cell at (nextRowIndex, colIndex) is the result of a span
+          nsTableCellFrame *cell = cd->mRealCell->mCell;
+          NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
+          const PRInt32 realRowIndex = cell->GetRowIndex ();
+          if (realRowIndex!=nextRowIndex)
+          { // the span is caused by a rowspan
+            CellData *spanningCell = GetCellAt(aRowIndex, colIndex);
+            if (nsnull!=spanningCell)
+            { // there's really a cell at (aRowIndex, colIndex)
+              if (nsnull!=spanningCell->mCell)
+              { // aRowIndex is where the rowspan originated
+                result = PR_TRUE;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
+
+/** returns PR_TRUE if the col at aColIndex has any cells that are the result
+  * of a col-spanning cell.  So, given this table:<BR>
+  * <PRE>
+  * TABLE
+  *   TR
+  *    TD COLSPAN=2
+  *    TD
+  *    TD
+  * </PRE>
+  * ColIsSpannedInto(0) returns PR_FALSE, ColIsSpannedInto(1) returns PR_TRUE,
+  * and ColIsSpannedInto(2) returns PR_FALSE.
+  * @see ColHasSpanningCells
+  */
+PRBool nsCellMap::ColIsSpannedInto(PRInt32 aColIndex)
+{
+  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRBool result = PR_FALSE;
+  PRInt32 rowCount = GetRowCount();
+  for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
+  {
+    CellData *cd =GetCellAt(rowIndex, aColIndex);
+    if (cd != nsnull)
+    { // there's really a cell at (aRowIndex, aColIndex)
+      if (nsnull==cd->mCell)
+      { // the cell at (rowIndex, aColIndex) is the result of a span
+        nsTableCellFrame *cell = cd->mRealCell->mCell;
+        NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
+        const PRInt32 realColIndex = cell->GetColIndex ();
+        if (realColIndex!=aColIndex)
+        { // the span is caused by a colspan
+          result = PR_TRUE;
+          break;
+        }
+      }
+    }
+  }
+  return result;
+}
+
+/** returns PR_TRUE if the row at aColIndex has any cells that have a colspan>1
+  * So, given this table:<BR>
+  * <PRE>
+  * TABLE
+  *   TR
+  *    TD COLSPAN=2
+  *    TD
+  * </PRE>
+  * ColHasSpanningCells(0) returns PR_TRUE, and ColHasSpanningCells(1) returns PR_FALSE.
+  * @see ColIsSpannedInto
+  */
+PRBool nsCellMap::ColHasSpanningCells(PRInt32 aColIndex)
+{
+  NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
+  PRBool result = PR_FALSE;
+  const PRInt32 colCount = GetColCount();
+  if (aColIndex!=colCount-1)
+  { // aColIndex is not the last col, so we check the next col after aColIndex for spanners
+    const PRInt32 rowCount = GetRowCount();
+    for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
+    {
+      PRInt32 nextColIndex = aColIndex+1;
+      CellData *cd =GetCellAt(rowIndex, nextColIndex);
+      if (cd != nsnull)
+      { // there's really a cell at (rowIndex, nextColIndex)
+        if (nsnull==cd->mCell)
+        { // the cell at (rowIndex, nextColIndex) is the result of a span
+          nsTableCellFrame *cell = cd->mRealCell->mCell;
+          NS_ASSERTION(nsnull!=cell, "bad cell map state, missing real cell");
+          const PRInt32 realColIndex = cell->GetColIndex ();
+          if (realColIndex!=nextColIndex)
+          { // the span is caused by a colspan
+            CellData *spanningCell =GetCellAt(rowIndex, aColIndex);
+            if (nsnull!=spanningCell)
+            { // there's really a cell at (rowIndex, aColIndex)
+              if (nsnull!=spanningCell->mCell)
+              { // aCowIndex is where the cowspan originated
+                result = PR_TRUE;
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 
 
