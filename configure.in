@@ -3198,8 +3198,18 @@ else
   dnl If it fails, nothing is set and config.status will run as usual.
   dnl
   dnl This does not change the $MAKEFILES variable.
-  eval `echo $MAKEFILES | \
-         $PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
+  dnl
+  dnl OpenVMS gets a line overflow on the long eval command
+  dnl
+  if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
+	echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl \
+		>configsh.tmp 2>/dev/null
+	eval `cat configsh.tmp`
+	rm configsh.tmp
+  else
+	eval `echo $MAKEFILES | \
+		$PERL $srcdir/build/autoconf/acoutput-fast.pl` 2>/dev/null
+  fi
 fi
 
 AC_OUTPUT($MAKEFILES)
