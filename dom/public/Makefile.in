@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = base coreDom coreEvents events html css
+DIRS = base coreDom coreEvents range events html css
 
 DEFINES += -D_IMPL_NS_DOM
  
