@@ -308,7 +308,8 @@ TypedRegister ICodeGenerator::propertyDec(TypedRegister base, const StringAtom &
 TypedRegister ICodeGenerator::getStatic(JSClass *base, const StringAtom &name)
 {
     TypedRegister dest(getRegister(), &Any_Type);
-    GetStatic *instr = new GetStatic(dest, base, &name);
+    const JSSlot& slot = base->getStatic(name);
+    GetStatic *instr = new GetStatic(dest, base, slot.mIndex);
     iCode->push_back(instr);
     return dest;
 }
@@ -316,14 +317,16 @@ TypedRegister ICodeGenerator::getStatic(JSClass *base, const StringAtom &name)
 void ICodeGenerator::setStatic(JSClass *base, const StringAtom &name,
                                  TypedRegister value)
 {
-    SetStatic *instr = new SetStatic(base, &name, value);
+    const JSSlot& slot = base->getStatic(name);
+    SetStatic *instr = new SetStatic(base, slot.mIndex, value);
     iCode->push_back(instr);
 }
 
 TypedRegister ICodeGenerator::staticInc(JSClass *base, const StringAtom &name)
 {
     TypedRegister dest(getRegister(), &Any_Type);
-    StaticXcr *instr = new StaticXcr(dest, base, &name, 1.0);
+    const JSSlot& slot = base->getStatic(name);
+    StaticXcr *instr = new StaticXcr(dest, base, slot.mIndex, 1.0);
     iCode->push_back(instr);
     return dest;
 }
@@ -331,7 +334,8 @@ TypedRegister ICodeGenerator::staticInc(JSClass *base, const StringAtom &name)
 TypedRegister ICodeGenerator::staticDec(JSClass *base, const StringAtom &name)
 {
     TypedRegister dest(getRegister(), &Any_Type);
-    StaticXcr *instr = new StaticXcr(dest, base, &name, -1.0);
+    const JSSlot& slot = base->getStatic(name);
+    StaticXcr *instr = new StaticXcr(dest, base, slot.mIndex, -1.0);
     iCode->push_back(instr);
     return dest;
 }
@@ -629,7 +633,7 @@ static bool isSlotName(JSType *t, const StringAtom &name, uint32 &slotIndex)
     if (c) {
         do {
             if (c->hasSlot(name)) {
-                JSSlot &s = c->getSlot(name);
+                const JSSlot &s = c->getSlot(name);
                 slotIndex = s.mIndex;
                 return true;
             }
@@ -741,7 +745,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                 ret = getSlot(base, slotIndex);
             else {
                 JSClass* c = dynamic_cast<JSClass*>(base.second);
-                if (c && c->getScope()->hasProperty(name))
+                if (c && c->hasStatic(name))
                     ret = getStatic(c, name);
                 else
                     ret = getProperty(base, name);
@@ -1003,7 +1007,7 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         setSlot(base, slotIndex, ret);
                     else {
                         JSClass* c = dynamic_cast<JSClass*>(base.second);
-                        if (c && c->getScope()->hasProperty(name))
+                        if (c && c->hasStatic(name))
                             setStatic(c, name, ret);
                         else
                             setProperty(base, name, ret);
@@ -1456,7 +1460,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                                             scg.resetStatement();
                                         }
                                      } else {
-                                        JSSlot& slot = thisClass->defineSlot(idExpr->name, type);
+                                        const JSSlot& slot = thisClass->defineSlot(idExpr->name, type);
                                         if (v->initializer) {
                                             // generate code for the default constructor, which initializes the slots.
                                             ccg.setSlot(thisRegister, slot.mIndex, ccg.genExpr(v->initializer));
@@ -1480,6 +1484,8 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                     }
                     s = s->next;
                 }
+                // freeze the class.
+                thisClass->complete();
                 if (ccg.getICode()->size())
                     thisClass->setConstructor(ccg.complete());
                 // REVISIT:  using the scope of the class to store both methods and statics.
