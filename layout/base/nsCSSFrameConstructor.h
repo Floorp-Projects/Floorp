@@ -241,6 +241,11 @@ protected:
                                      nsIFrame*        aParentFrame,
                                      nsIFrame*&       aPlaceholderFrame);
 
+  nsresult ConstructAlternateImageFrame(nsIPresContext* aPresContext,
+                                        nsIContent*     aContent,
+                                        nsIFrame*       aParentFrame,
+                                        nsIFrame*&      aFrame);
+
   nsresult ConstructSelectFrame(nsIPresContext*  aPresContext,
                                 nsIContent*      aContent,
                                 nsIFrame*        aParentFrame,

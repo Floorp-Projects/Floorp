@@ -1480,6 +1480,8 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
       // Create a frame based on the tag
       if (nsHTMLAtoms::img == aTag) {
+        // XXX If image display is turned off, then use ConstructAlternateImageFrame()
+        // instead...
         rv = NS_NewImageFrame(newFrame);
       }
       else if (nsHTMLAtoms::hr == aTag) {
@@ -3356,6 +3358,109 @@ nsCSSFrameConstructor::StyleRuleRemoved(nsIPresContext* aPresContext,
   return NS_OK;
 }
 
+// Construct an alternate frame to use when the image can't be rendered
+nsresult
+nsCSSFrameConstructor::ConstructAlternateImageFrame(nsIPresContext* aPresContext,
+                                                    nsIContent*     aContent,
+                                                    nsIFrame*       aParentFrame,
+                                                    nsIFrame*&      aFrame)
+{
+  nsIDOMHTMLImageElement*  imageElement;
+  nsresult                 rv;
+
+  // Initialize OUT parameter
+  aFrame = nsnull;
+
+  rv = aContent->QueryInterface(kIDOMHTMLImageElementIID, (void**)&imageElement);
+  if (NS_SUCCEEDED(rv)) {
+    nsAutoString  altText;
+  
+    // The "alt" attribute specifies alternate text that is rendered
+    // when the image can not be displayed
+    imageElement->GetAlt(altText);
+    if (0 == altText.Length()) {
+      // If there's no "alt" attribute, then use the value of the "title"
+      // attribute
+      imageElement->GetTitle(altText);
+    }
+    if (0 == altText.Length()) {
+      // If there's no "title" attribute, then use the filename minus the
+      // extension
+      nsAutoString  srcURI;
+
+      imageElement->GetSrc(srcURI);
+      if (srcURI.Length() > 0) {
+        nsIURL* url;
+        if (NS_SUCCEEDED(NS_NewURL(&url, srcURI))) {
+          const char* file;
+          url->GetFile(&file);
+          altText = file;
+          NS_RELEASE(url);
+
+          // Trim off the path part of the filename
+          PRInt32 offset = altText.RFind('/');
+          if (offset >= 0) {
+            altText.Cut(0, offset + 1);
+          }
+
+          // Trim off the extension
+          offset = altText.RFind('.');
+          if (offset >= 0) {
+            altText.Truncate(offset);
+          }
+        }
+      }
+    }
+    NS_RELEASE(imageElement);
+  
+    if (altText.Length() > 0) {
+      // Create a text content element for the alternate text
+      nsIContent*          altTextContent;
+      nsIDOMCharacterData* domData;
+  
+      NS_NewTextNode(&altTextContent);
+      altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+      domData->SetData(altText);
+      NS_RELEASE(domData);
+  
+      // Create an inline frame and a text frame to display the alt-text.
+      // XXX The only reason for the inline frame is so there's a frame that
+      // points to the IMG content element. Some day when we have a hash table
+      // for GetPrimaryFrameFor() we don't need the inline frame...
+      nsIFrame* inlineFrame;
+      nsIFrame* textFrame;
+      
+      NS_NewInlineFrame(inlineFrame);
+      NS_NewTextFrame(textFrame);
+  
+      // Use a special text pseudo element style context
+      nsIStyleContext*  textStyleContext;
+      nsIStyleContext*  parentStyleContext;
+      nsIContent*       parentContent;
+  
+      aParentFrame->GetContent(parentContent);
+      aParentFrame->GetStyleContext(parentStyleContext);
+      textStyleContext = aPresContext->ResolvePseudoStyleContextFor
+                           (parentContent, nsHTMLAtoms::textPseudo, parentStyleContext);
+      NS_RELEASE(parentStyleContext);
+      NS_RELEASE(parentContent);
+  
+      // Initialize the frames
+      inlineFrame->Init(*aPresContext, aContent, aParentFrame, textStyleContext);
+      textFrame->Init(*aPresContext, altTextContent, inlineFrame, textStyleContext);
+      inlineFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
+      NS_RELEASE(textStyleContext);
+      NS_RELEASE(altTextContent);
+
+      // Return the inline frame
+      aFrame = inlineFrame;
+    }
+  }
+
+  return rv;
+}
+
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                                  nsIFrame*       aFrame)
@@ -3363,6 +3468,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
   nsIContent* content;
   nsIAtom*    tag;
   nsIFrame*   parentFrame;
+  nsresult    rv = NS_OK;
 
   aFrame->GetParent(parentFrame);
 
@@ -3373,74 +3479,23 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
 
   // See whether it's an IMG or an OBJECT element
   if (nsHTMLAtoms::img == tag) {
-    // It's an IMG element
-    nsIDOMHTMLImageElement*  imageElement;
-    if (NS_SUCCEEDED(content->QueryInterface(kIDOMHTMLImageElementIID, (void**)&imageElement))) {
-      nsAutoString  altText;
+    // It's an IMG element. Try and construct an alternate frame to use when the
+    // image can't be rendered
+    nsIFrame* newFrame;
+    rv = ConstructAlternateImageFrame(aPresContext, content, parentFrame, newFrame);
 
-      // The "alt" attribute specifies alternate text that is rendered
-      // when the image can not be displayed
-      imageElement->GetAlt(altText);
-      if (0 == altText.Length()) {
-        // If there's no "alt" attribute, then use the value of the "title"
-        // attribute
-        imageElement->GetTitle(altText);
-      }
-      NS_RELEASE(imageElement);
+    if (NS_SUCCEEDED(rv)) {
+      // Get the previous sibling frame
+      nsIFrame*     firstChild;
+      parentFrame->FirstChild(nsnull, firstChild);
+      nsFrameList   frameList(firstChild);
+      nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
 
-      // XXX As a last resort we should use the filename minus the extension as
-      // the alternate text...
-      if (altText.Length() > 0) {
-        // Create a text content element for the alt-text
-        nsIContent*          altTextContent;
-        nsIDOMCharacterData* domData;
-
-        NS_NewTextNode(&altTextContent);
-        altTextContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-        domData->SetData(altText);
-        NS_RELEASE(domData);
-
-        // Create an inline frame and a text frame to display the alt-text.
-        // XXX The only reason for the inline frame is so there's a frame that
-        // points to the IMG content element. Some day when we have a hash table
-        // for GetPrimaryFrameFor() we don't need the inline frame...
-        nsIFrame* inlineFrame;
-        nsIFrame* textFrame;
-        
-        NS_NewInlineFrame(inlineFrame);
-        NS_NewTextFrame(textFrame);
-
-        // Use a special text pseudo element style context
-        nsIStyleContext*  textStyleContext;
-        nsIStyleContext*  parentStyleContext;
-        nsIContent*       parentContent;
-
-        parentFrame->GetContent(parentContent);
-        parentFrame->GetStyleContext(parentStyleContext);
-        textStyleContext = aPresContext->ResolvePseudoStyleContextFor
-                             (parentContent, nsHTMLAtoms::textPseudo, parentStyleContext);
-        NS_RELEASE(parentStyleContext);
-        NS_RELEASE(parentContent);
-
-        // Initialize the frames
-        inlineFrame->Init(*aPresContext, content, parentFrame, textStyleContext);
-        textFrame->Init(*aPresContext, altTextContent, inlineFrame, textStyleContext);
-        inlineFrame->SetInitialChildList(*aPresContext, nsnull, textFrame);
-        NS_RELEASE(textStyleContext);
-        NS_RELEASE(altTextContent);
-
-        // Get the previous sibling frame
-        nsIFrame*     firstChild;
-        parentFrame->FirstChild(nsnull, firstChild);
-        nsFrameList   frameList(firstChild);
-        nsIFrame*     prevSibling = frameList.GetPrevSiblingFor(aFrame);
-
-        // Delete the current frame and insert the new frame
-        nsIPresShell* presShell = aPresContext->GetShell();
-        parentFrame->RemoveFrame(*aPresContext, *presShell, nsnull, aFrame);
-        parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, inlineFrame);
-        NS_RELEASE(presShell);
-      }
+      // Delete the current frame and insert the new frame
+      nsIPresShell* presShell = aPresContext->GetShell();
+      parentFrame->RemoveFrame(*aPresContext, *presShell, nsnull, aFrame);
+      parentFrame->InsertFrames(*aPresContext, *presShell, nsnull, prevSibling, newFrame);
+      NS_RELEASE(presShell);
     }
 
   } else if (nsHTMLAtoms::object == tag) {
@@ -3451,7 +3506,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
 
   NS_IF_RELEASE(tag);
   NS_IF_RELEASE(content);
-  return NS_OK;
+  return rv;
 }
 
 nsresult
