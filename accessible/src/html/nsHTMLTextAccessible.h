@@ -81,7 +81,7 @@ public:
   nsHTMLListAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell):
     nsAccessibleWrap(aDOMNode, aShell) { }
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_LIST; return NS_OK; }
-  NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~(STATE_FOCUSABLE | STATE_READONLY); return NS_OK; }
+  NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
 };
 
 class nsHTMLLIAccessible : public nsAccessibleWrap
@@ -90,7 +90,7 @@ public:
   nsHTMLLIAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell, 
                      nsIFrame *aBulletFrame, const nsAString& aBulletText);
   NS_IMETHOD GetRole(PRUint32 *aRole) {* aRole = ROLE_LISTITEM; return NS_OK; }
-  NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~(STATE_FOCUSABLE | STATE_READONLY); return NS_OK; }
+  NS_IMETHOD GetState(PRUint32 *aState) { nsAccessibleWrap::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
   NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
   void CacheChildren(PRBool aWalkAnonContent);  // Include bullet accessible
 protected:
@@ -104,7 +104,7 @@ public:
                              nsIFrame *aFrame, const nsAString& aBulletText);
   NS_IMETHOD GetName(nsAString& aName);
   NS_IMETHOD GetRole(PRUint32 *aRole) { *aRole = ROLE_STATICTEXT; return NS_OK; }
-  NS_IMETHOD GetState(PRUint32 *aState) { nsHTMLTextAccessible::GetState(aState); *aState &= ~(STATE_FOCUSABLE | STATE_READONLY); return NS_OK; }
+  NS_IMETHOD GetState(PRUint32 *aState) { nsHTMLTextAccessible::GetState(aState); *aState &= ~STATE_FOCUSABLE; *aState |= STATE_READONLY; return NS_OK; }
   // Don't cache via unique ID -- bullet accessible shares the same dom node as this LI accessible.
   // Also, don't cache via mParent/SetParent(), prevent circular reference since li holds onto us.
   NS_IMETHOD SetParent(nsIAccessible *aParentAccessible) { mParent = nsnull; return NS_OK; }

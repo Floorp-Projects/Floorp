@@ -358,7 +358,7 @@ NS_IMETHODIMP nsXULListboxAccessible::GetState(PRUint32 *_retval)
   // Get focus status from base class
   nsAccessible::GetState(_retval);
 
-  *_retval |= STATE_READONLY | STATE_FOCUSABLE;
+  *_retval |= STATE_FOCUSABLE;
 
 // see if we are multiple select if so set ourselves as such
   nsCOMPtr<nsIDOMElement> element (do_QueryInterface(mDOMNode));
