@@ -27,19 +27,7 @@ include <$(DEPTH)\config\config.mak>
 ################################################################################
 ## exports
 
-EXPORTS=	nsImapUrl.h									\
-			nsImapProtocol.h							\
-			nsImapCore.h								\
-			nsImapFlagAndUidState.h						\
-			nsImapProxyEvent.h							\
-			nsImapHostSessionList.h						\
-			nsImapService.h								\
-			nsImapServerResponseParser.h				\
-			nsIMAPGenericParser.h						\
-			nsImapSearchResults.h						\
-			nsImapIncomingServer.h						\
-			nsIMAPNamespace.h							\
-			nsImapMailFolder.h							\
+EXPORTS=	nsImapCore.h								\
             $(NULL)
 
 ################################################################################
@@ -64,6 +52,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsImapUrl.obj					\
 			.\$(OBJDIR)\nsImapUtils.obj					\
 			.\$(OBJDIR)\nsImapUndoTxn.obj					\
 			.\$(OBJDIR)\nsImapStringBundle.obj			\
+			.\$(OBJDIR)\nsImapOfflineSync.obj					\
 			$(NULL)
 
 
