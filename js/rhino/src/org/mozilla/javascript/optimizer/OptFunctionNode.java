@@ -50,16 +50,20 @@ public class OptFunctionNode extends FunctionNode {
     }
 
     public String getDirectCallParameterSignature() {
-        StringBuffer parameterSig = new StringBuffer(
-                "(Lorg/mozilla/javascript/Context;"
-                + "Lorg/mozilla/javascript/Scriptable;"
-                + "Lorg/mozilla/javascript/Scriptable;");
         int pCount = itsVariableTable.getParameterCount();
-        for (int i = 0; i < pCount; i++) {
-            parameterSig.append("Ljava/lang/Object;D");
+        switch (pCount) {
+            case 0: return ZERO_PARAM_SIG;
+            case 1: return ONE_PARAM_SIG;
+            case 2: return TWO_PARAM_SIG;
         }
-        parameterSig.append("[Ljava/lang/Object;)");
-        return parameterSig.toString();
+        StringBuffer sb = new StringBuffer(ZERO_PARAM_SIG.length()
+                                           + pCount * DIRECT_ARG_SIG.length());
+        sb.append(BEFORE_DIRECT_SIG);
+        for (int i = 0; i != pCount; i++) {
+            sb.append(DIRECT_ARG_SIG);
+        }
+        sb.append(AFTER_DIRECT_SIG);
+        return sb.toString();
     }
 
     public String getClassName() {
@@ -112,6 +116,19 @@ public class OptFunctionNode extends FunctionNode {
         int localCount = getIntProp(Node.LOCALCOUNT_PROP, 0);
         putIntProp(Node.LOCALCOUNT_PROP, localCount + 1);
     }
+
+    private static final String
+        BEFORE_DIRECT_SIG = "(Lorg/mozilla/javascript/Context;"
+                            +"Lorg/mozilla/javascript/Scriptable;"
+                            +"Lorg/mozilla/javascript/Scriptable;",
+        DIRECT_ARG_SIG    = "Ljava/lang/Object;D",
+        AFTER_DIRECT_SIG  = "[Ljava/lang/Object;)";
+
+    private static final String
+        ZERO_PARAM_SIG = BEFORE_DIRECT_SIG+AFTER_DIRECT_SIG,
+        ONE_PARAM_SIG  = BEFORE_DIRECT_SIG+DIRECT_ARG_SIG+AFTER_DIRECT_SIG,
+        TWO_PARAM_SIG  = BEFORE_DIRECT_SIG+DIRECT_ARG_SIG+DIRECT_ARG_SIG
+                         +AFTER_DIRECT_SIG;
 
     private String itsClassName;
     private boolean itsIsTargetOfDirectCall;
