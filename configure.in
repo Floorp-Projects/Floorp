@@ -33,6 +33,93 @@ AC_INIT(config/config.mk)
 AC_CONFIG_AUX_DIR(${srcdir}/build/autoconf)
 AC_CANONICAL_SYSTEM
 
+dnl ========================================================
+dnl Pick an option...any option.
+dnl Caveat: random options will override cmdline options.
+dnl ========================================================
+AC_ARG_ENABLE(random-options,
+[  --enable-random-options          Randomly add options to configure],
+    [if test "$enableval" = "yes"; then
+	if test -z $BASH_VERSION; then
+	    AC_MSG_WARN("Options randomizer requires GNU bash.");
+	else
+	    AC_MSG_CHECKING([for random options]);
+	    changequote(, )dnl
+	    _nargs=$[RANDOM % 5 + 1] ;
+	    _new_args=
+	    while test 1; do 
+		_choice=$[RANDOM % 28 + 1];
+		case "$_choice" in	
+		1) _new_args="$_new_args --with-gtk" ;;
+		2) _new_args="$_new_args --with-gtk --with-static-gtk" ;;
+		3) _new_args="$_new_args --disable-gtk-mozilla" ;;
+		4) _new_args="$_new_args --with-motif" ;;
+		5) _new_args="$_new_args --with-motif --with-static-motif" ;;
+		6) _new_args="$_new_args --with-xlib" ;;
+		7) _new_args="$_new_args --with-qt" ;;
+		8) _new_args="$_new_args --with-qt --with-static-qt" ;;
+		9) _new_args="$_new_args --without-pthreads" ;;
+		10) _new_args="$_new_args --disable-async-dns" ;;
+		11) _new_args="$_new_args --enable-oji" ;;
+		12) _new_args="$_new_args --enable-pics" ;;
+		13) _new_args="$_new_args --enable-brprof" ;;
+		14) _new_args="$_new_args --enable-x11-shm" ;;
+		15) _new_args="$_new_args --enable-monolithic-toolkit" ;;
+		16) _new_args="$_new_args --disable-pic-dso-cflags" ;;
+		17) _new_args="$_new_args --disable-client-wallet" ;;
+		18) _new_args="$_new_args --disable-cookie-management" ;;
+		19) _new_args="$_new_args --disable-single-signon" ;;
+		20) _new_args="$_new_args --enable-strip-libs" ;;
+		21) _new_args="$_new_args --enable-strip-not-exported" ;;
+		22) _new_args="$_new_args --enable-cpp-rtti" ;;
+		23) _new_args="$_new_args --enable-cpp-excecpions" ;;
+		24) _new_args="$_new_args --disable-double-buffer" ;;
+		25) _new_args="$_new_args --enable-wrap-malloc" ;;
+		26) _new_args="$_new_args --enable-idlc" ;;
+		27) _new_args="$_new_args --disable-dtd-debug" ;;
+		28) _new_args="$_new_args --enable-static" ;;
+		esac
+
+		_nargs=$[_nargs - 1];
+		if test $_nargs -lt 0; then
+		    break;
+		fi
+	    done 
+	    changequote([, ])dnl
+
+	    for _ac_option in $_new_args; do
+		case "$_ac_option" in
+		-disable-* | --disable-*)
+		    _ac_feature=`echo $_ac_option|sed -e 's/-*disable-//'`
+		    _ac_feature=`echo $_ac_feature| sed 's/-/_/g'`
+		    eval "enable_${_ac_feature}=no"
+		    ;;
+		-enable-* | --enable-*)
+		    _ac_feature=`echo $_ac_option|sed -e 's/-*enable-//' -e 's/=.*//'`
+		    _ac_feature=`echo $_ac_feature| sed 's/-/_/g'`
+		    eval "enable_${_ac_feature}=yes"
+		    ;;
+		-with-* | --with-*)
+		    _ac_package=`echo $_ac_option|sed -e 's/-*with-//' -e 's/=.*//'`
+		    _ac_package=`echo $_ac_package| sed 's/-/_/g'`
+		    eval "with_${_ac_package}=yes" 
+		    ;;
+		-without-* | --without-*)
+		    _ac_package=`echo $_ac_option|sed -e 's/-*without-//'`
+		    _ac_package=`echo $_ac_package| sed 's/-/_/g'`
+	    	    eval "with_${_ac_package}=no"
+		    ;;
+		esac
+	    done
+
+	    AC_MSG_RESULT([$_new_args]);
+		
+            ac_configure_args=`echo $ac_configure_args | sed 's|--enable-random-options||'`
+	    ac_configure_args="$ac_configure_args $_new_args";
+
+	fi
+     fi])
+
 dnl Set this define to make fixes w/o breaking anything else.
 AC_DEFINE(USE_AUTOCONF)
 
@@ -1943,7 +2030,7 @@ esac
 
 MOZ_ARG_ENABLE_BOOL(monolithic-toolkit,
 [  --enable-monolithic-toolkit        Link the toolkit into the app],
-  MOZ_MONOLITHIC-TOOLKIT=1)
+  MOZ_MONOLITHIC_TOOLKIT=1)
 
 
 if test "$MOZ_MONOLITHIC_TOOLKIT"
