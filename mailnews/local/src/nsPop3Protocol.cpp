@@ -26,6 +26,10 @@
 #include "plstr.h"
 #include "MailNewsTypes.h"
 
+#include "nsINetService.h"
+
+static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
+
 #if 1
 // This is a temporary thing.
 
@@ -408,50 +412,79 @@ NS_IMETHODIMP nsPop3Protocol::OnStopBinding(nsIURL* aURL, nsresult aStatus,
     return NS_OK; // for now
 }
 
-nsPop3Protocol::nsPop3Protocol(nsIURL* aURL, nsITransport* aTransport) : nsMsgLineBuffer(NULL, FALSE)
+nsPop3Protocol::nsPop3Protocol(nsIURL* aURL) : nsMsgLineBuffer(NULL, FALSE)
 {
     nsresult rv = 0;
 
-		NS_INIT_REFCNT();
-    m_username = 0;
-    m_password = 0;
-    m_pop3ConData = 0;
-    m_nsIPop3URL = 0;
-    m_transport = 0;
-    m_outputStream = 0;
-    m_outputConsumer = 0;
-    m_nsIPop3Sink = 0;
+	NS_INIT_REFCNT();
+	Initialize(aURL);
+}
+
+void nsPop3Protocol::Initialize(nsIURL * aURL)
+{
+	m_username = nsnull;
+    m_password = nsnull;
+    m_pop3ConData = nsnull;
+    m_nsIPop3URL = nsnull;
+    m_transport = nsnull;
+    m_outputStream = nsnull;
+    m_outputConsumer = nsnull;
+    m_nsIPop3Sink = nsnull;
     m_isRunning = PR_FALSE;
 
-		m_pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED |
-				                    POP3_XSENDER_UNDEFINED |
-				                    POP3_GURL_UNDEFINED |
+	m_pop3CapabilityFlags = POP3_AUTH_LOGIN_UNDEFINED |
+				            POP3_XSENDER_UNDEFINED |
+				            POP3_GURL_UNDEFINED |
                             POP3_UIDL_UNDEFINED |
                             POP3_TOP_UNDEFINED |
-				                    POP3_XTND_XLST_UNDEFINED;
+				            POP3_XTND_XLST_UNDEFINED;
 
-		m_pop3ConData = (Pop3ConData *)PR_NEWZAP(Pop3ConData);
+	m_pop3ConData = (Pop3ConData *)PR_NEWZAP(Pop3ConData);
 
     PR_ASSERT(m_pop3ConData);
+	m_pop3ConData->output_buffer = (char *) PR_MALLOC(OUTPUT_BUFFER_SIZE);
+	PR_ASSERT(m_pop3ConData->output_buffer);
 		
-    m_transport = aTransport;
-    m_outputStream = NULL;
-    m_outputConsumer = NULL;
+    m_transport = nsnull;
+    m_outputStream = nsnull;
+    m_outputConsumer = nsnull;
     m_isRunning = PR_FALSE;
-    
-    rv = m_transport->GetOutputStream(&m_outputStream);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
+	if (aURL)
+	{
+		nsresult rv = aURL->QueryInterface(nsIPop3URL::GetIID(), (void **)&m_nsIPop3URL);
+		if (NS_SUCCEEDED(rv) && m_nsIPop3URL)
+		{
+			// extract the file name and create a file transport...
+			const char * fileName = nsnull;
+            nsINetService* pNetService;
+            rv = nsServiceManager::GetService(kNetServiceCID,
+                                              nsINetService::GetIID(),
+                                              (nsISupports**)&pNetService);
+			if (NS_SUCCEEDED(rv) && pNetService)
+			{
+				const char * hostName = nsnull;
+				PRUint32 port = POP3_PORT;
 
-    rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output consumer");
+				m_nsIPop3URL->GetHost(&hostName);
+				m_nsIPop3URL->GetHostPort(&port);
+				rv = pNetService->CreateSocketTransport(&m_transport, port, hostName);
+				if (NS_SUCCEEDED(rv) && m_transport)
+				{
+					rv = m_transport->GetOutputStream(&m_outputStream);
+					NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output stream");
 
-    // register self as the consumer for the socket...
-    rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
-    NS_ASSERTION(NS_SUCCEEDED(rv), 
-                 "unable to register NNTP instance as a consumer on the socket");
+					rv = m_transport->GetOutputStreamConsumer(&m_outputConsumer);
+					NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create an output consumer");
 
-		m_pop3ConData->output_buffer = (char *) PR_MALLOC(OUTPUT_BUFFER_SIZE);
-		PR_ASSERT(m_pop3ConData->output_buffer);
+					// register self as the consumer for the socket...
+					rv = m_transport->SetInputStreamConsumer((nsIStreamListener *) this);
+					NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register NNTP instance as a consumer on the socket");
+				}
+                
+				(void)nsServiceManager::ReleaseService(kNetServiceCID, pNetService);
+			} // if we got a netlib service
+		} // if we have a runningUrl
+	} // if we got a url...
 }
 
 nsPop3Protocol::~nsPop3Protocol()
@@ -500,11 +533,11 @@ nsPop3Protocol::SetPassword(const char* passwd)
 
 
 PRInt32 
-nsPop3Protocol::Load(nsIURL* aURL)
+nsPop3Protocol::Load(nsIURL* aURL, nsISupports * aConsumer)
 {
-		const char* urlSpec = NULL;
-		const char* host = NULL;
-		nsresult rv = 0;
+	const char* urlSpec = NULL;
+	const char* host = NULL;
+	nsresult rv = 0;
     nsIPop3URL *pop3URL = NULL;
 
     if (aURL)
@@ -522,7 +555,7 @@ nsPop3Protocol::Load(nsIURL* aURL)
             // it returns the interface to us...we'll release when we are done
         }
         else
-            NS_ASSERTION(0, "Invalid url type passed into NNTP Protocol Handler");
+            NS_ASSERTION(0, "Invalid url type passed into Pop3 Protocol Handler");
     }
     else
         rv = NS_ERROR_FAILURE;
@@ -569,27 +602,27 @@ nsPop3Protocol::Load(nsIURL* aURL)
     NS_IF_RELEASE(m_nsIPop3Sink);
     m_nsIPop3URL->GetPop3Sink(&m_nsIPop3Sink);
 
-
     const char* mailDirectory = 0;
 
     m_nsIPop3Sink->GetMailDirectory(&mailDirectory);
 
-		m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), 
+	m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), 
                                                   mailDirectory); 
     PR_ASSERT(m_pop3ConData->uidlinfo);
 
-		m_pop3ConData->biffstate = MSG_BIFF_NOMAIL;
+	m_pop3ConData->biffstate = MSG_BIFF_NOMAIL;
 
-		const char* uidl = PL_strcasestr(urlSpec, "?uidl=");
+	const char* uidl = PL_strcasestr(urlSpec, "?uidl=");
     PR_FREEIF(m_pop3ConData->only_uidl);
 		
     if (uidl)
-		{
-				uidl += 6;
-				m_pop3ConData->only_uidl = PL_strdup(uidl);
-				PR_ASSERT(m_pop3ConData->only_uidl);
-		}
-		m_pop3ConData->next_state = POP3_READ_PASSWORD;
+	{
+		uidl += 6;
+		m_pop3ConData->only_uidl = PL_strdup(uidl);
+		PR_ASSERT(m_pop3ConData->only_uidl);
+	}
+	
+	m_pop3ConData->next_state = POP3_READ_PASSWORD;
     m_isRunning = PR_TRUE;
 
     m_transport->Open(aURL);

@@ -295,11 +295,11 @@ typedef struct _Pop3ConData {
 class nsPop3Protocol : public nsIStreamListener, public nsMsgLineBuffer
 {
 public:
-    nsPop3Protocol(nsIURL* aURL, nsITransport* aTransport);
+    nsPop3Protocol(nsIURL* aURL);
     
     virtual ~nsPop3Protocol();
     
-    PRInt32 Load(nsIURL *aURL);
+    PRInt32 Load(nsIURL *aURL, nsISupports * aConsumer /* consumer of the url */ = nsnull);
     PRBool IsRunning() { return m_isRunning; };
     
     NS_DECL_ISUPPORTS
@@ -409,6 +409,8 @@ private:
     PRInt32 CommitState(PRBool remove_last_entry);
     PRInt32 ProcessPop3State(nsIURL* aURL, nsIInputStream* aInputStream,
                              PRUint32 aLength); 
+
+	void Initialize(nsIURL * aURL);
 };
 
 #endif /* nsPop3Protocol_h__ */
