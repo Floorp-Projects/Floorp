@@ -4305,7 +4305,9 @@ nsEventStateManager::ForceViewUpdate(nsIView* aView)
 }
 
 NS_IMETHODIMP
-nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent, PRBool *aPreventDefault)
+nsEventStateManager::DispatchNewEvent(nsISupports* aTarget,
+                                      nsIDOMEvent* aEvent,
+                                      PRBool *aPreventDefault)
 {
   nsresult ret = NS_OK;
 
@@ -4314,14 +4316,22 @@ nsEventStateManager::DispatchNewEvent(nsISupports* aTarget, nsIDOMEvent* aEvent,
     nsCOMPtr<nsIDOMEventTarget> eventTarget(do_QueryInterface(aTarget));
     privEvt->SetTarget(eventTarget);
 
-      //Check security state to determine if dispatcher is trusted
-      nsIScriptSecurityManager *securityManager =
-        nsContentUtils::GetSecurityManager();
+    //Check security state to determine if dispatcher is trusted
+    nsIScriptSecurityManager *securityManager =
+      nsContentUtils::GetSecurityManager();
 
-    PRBool enabled;
-    nsresult res =
-      securityManager->IsCapabilityEnabled("UniversalBrowserWrite", &enabled);
-    privEvt->SetTrusted(NS_SUCCEEDED(res) && enabled);
+    PRBool trusted;
+    nsCOMPtr<nsIDOMNSEvent> nsevent(do_QueryInterface(privEvt));
+
+    nsevent->GetIsTrusted(&trusted);
+
+    if (!trusted) {
+      PRBool enabled;
+      nsresult res =
+        securityManager->IsCapabilityEnabled("UniversalBrowserWrite",
+                                             &enabled);
+      privEvt->SetTrusted(NS_SUCCEEDED(res) && enabled);
+    }
 
     nsEvent * innerEvent;
     privEvt->GetInternalNSEvent(&innerEvent);
