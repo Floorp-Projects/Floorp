@@ -19,10 +19,25 @@
 #include "if.h"
 #include "il.h"
 
-#include "jinclude.h"
 #include "jpeglib.h"
-#include "jerror.h"
-#include "jpegint.h"
+
+ /* cope with brain-damaged compilers that don't make sizeof return a size_t */
+ #ifdef SIZEOF
+ #undef SIZEOF
+ #endif
+ #define SIZEOF(object)        ((size_t) sizeof(object))
+
+ /* just in case someone needs it */
+ #ifdef RIGHT_SHIFT_IS_UNSIGNED
+ #define SHIFT_TEMPS   INT32 shift_temp;
+ #define RIGHT_SHIFT(x,shft)  \
+       ((shift_temp = (x)) < 0 ? \
+        (shift_temp >> (shft)) | ((~((INT32) 0)) << (32-(shft))) : \
+        (shift_temp >> (shft)))
+ #else
+ #define SHIFT_TEMPS
+ #define RIGHT_SHIFT(x,shft)   ((x) >> (shft))
+ #endif
 
 
 /* BEGIN code adapted from jpeg library */
