@@ -48,7 +48,7 @@ DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, locale);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, base);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, main);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, archive);
-DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, displayname);
+DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, theme);
 DEFINE_RDF_VOCAB(CHROME_NAMESPACE_URI, CHROME, name);
 
 // This nasty function should disappear when we land Necko completely and 
@@ -154,18 +154,25 @@ public:
     static nsIRDFResource* kCHROME_main;
     static nsIRDFResource* kCHROME_archive;
     static nsIRDFResource* kCHROME_name;
-    static nsIRDFResource* kCHROME_displayname;
+    static nsIRDFResource* kCHROME_theme;
     static nsSupportsHashtable *mDataSourceTable;
 
 protected:
+    NS_IMETHOD GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult);
     NS_IMETHOD InitializeDataSource(nsString &aPackage,
                                     nsString &aProvider,
                                     nsIRDFDataSource **aResult);
     nsresult GetPackageTypeResource(const nsString& aChromeType, nsIRDFResource** aResult);
     nsresult GetChromeResource(nsIRDFDataSource *aDataSource,
                                nsString& aResult, nsIRDFResource* aChromeResource,
-                               nsIRDFResource* aProperty);    
+                               nsIRDFResource* aProperty);
+    NS_IMETHOD RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource);
+    NS_IMETHOD RemoveOverlays(nsAutoString aPackage,
+                              nsAutoString aProvider,
+                              nsIRDFContainer *aContainer,
+                              nsIRDFDataSource *aDataSource);
 private:
+    NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
     NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult);
 
 };
@@ -182,7 +189,7 @@ nsIRDFResource* nsChromeRegistry::kCHROME_base = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_main = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_archive = nsnull;
 nsIRDFResource* nsChromeRegistry::kCHROME_name = nsnull;
-nsIRDFResource* nsChromeRegistry::kCHROME_displayname = nsnull;
+nsIRDFResource* nsChromeRegistry::kCHROME_theme = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -224,7 +231,7 @@ nsChromeRegistry::nsChromeRegistry()
       rv = gRDFService->GetResource(kURICHROME_name, &kCHROME_name);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
 
-      rv = gRDFService->GetResource(kURICHROME_displayname, &kCHROME_displayname);
+      rv = gRDFService->GetResource(kURICHROME_theme, &kCHROME_theme);
       NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
   }
 }
@@ -242,7 +249,7 @@ nsChromeRegistry::~nsChromeRegistry()
         NS_IF_RELEASE(kCHROME_base);
         NS_IF_RELEASE(kCHROME_main);
         NS_IF_RELEASE(kCHROME_archive);
-        NS_IF_RELEASE(kCHROME_displayname);
+        NS_IF_RELEASE(kCHROME_theme);
         NS_IF_RELEASE(kCHROME_name);
         delete mDataSourceTable;
        
@@ -423,7 +430,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     return NS_OK;
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumerator **aResult)
+NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFDataSource **aResult)
 {
   *aResult = nsnull;
 
@@ -457,21 +464,6 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
 
 #endif
 
-  // Construct the lookup string-
-  // which is basically chrome:// + package + provider
-  
-  char *lookup;
-  aChromeURL->GetSpec(&lookup);
-
-  // Get the chromeResource from this lookup string
-  nsCOMPtr<nsIRDFResource> chromeResource;
-  if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
-      NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
-      return rv;
-  }
-  // XXX free this?
-  //  nsAllocator::Free(lookup);
-
   nsCAutoString overlayFile;
 
   // Retrieve the mInner data source.
@@ -486,34 +478,61 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumera
   {
     nsCOMPtr<nsIRDFDataSource> dataSource;
     nsISupports *supports = NS_STATIC_CAST(nsISupports*, data);
-    
-    dataSource = do_QueryInterface(supports);
-    if (dataSource)
+    dataSource = do_QueryInterface(supports, &rv);
+    if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIRDFContainer> container;
-      nsresult rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
-                                                       nsnull,
-                                                       NS_GET_IID(nsIRDFContainer),
-                                                       getter_AddRefs(container));
-      if (NS_FAILED(rv))
-        return NS_OK;
-      
-      if (NS_FAILED(container->Init(dataSource, chromeResource)))
-        return NS_OK;
-
-
-      nsCOMPtr<nsISimpleEnumerator> arcs;
-      if (NS_FAILED(container->GetElements(getter_AddRefs(arcs))))
-        return NS_OK;
-
-      *aResult = new nsOverlayEnumerator(arcs);
-
+      *aResult = dataSource;
       NS_ADDREF(*aResult);
     }
-
   }
+  return NS_OK;
+}
 
-  nsAllocator::Free(lookup);
+
+NS_IMETHODIMP nsChromeRegistry::GetOverlays(nsIURI *aChromeURL, nsISimpleEnumerator **aResult)
+{
+  *aResult = nsnull;
+
+  nsresult rv;
+
+  if (!mDataSourceTable)
+    return NS_OK;
+
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  GetOverlayDataSource(aChromeURL, getter_AddRefs(dataSource));
+
+  if (dataSource)
+  {
+    nsCOMPtr<nsIRDFContainer> container;
+    rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                            nsnull,
+                                            NS_GET_IID(nsIRDFContainer),
+                                            getter_AddRefs(container));
+    if (NS_FAILED(rv))
+      return NS_OK;
+ 
+    char *lookup;
+    aChromeURL->GetSpec(&lookup);
+
+    // Get the chromeResource from this lookup string
+    nsCOMPtr<nsIRDFResource> chromeResource;
+    if (NS_FAILED(rv = GetPackageTypeResource(lookup, getter_AddRefs(chromeResource)))) {
+        NS_ERROR("Unable to retrieve the resource corresponding to the chrome skin or content.");
+        return rv;
+    }
+    nsAllocator::Free(lookup);
+
+    if (NS_FAILED(container->Init(dataSource, chromeResource)))
+      return NS_OK;
+
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    if (NS_FAILED(container->GetElements(getter_AddRefs(arcs))))
+      return NS_OK;
+
+    *aResult = new nsOverlayEnumerator(arcs);
+
+    NS_ADDREF(*aResult);
+  }
 
   return NS_OK;
 }
@@ -562,7 +581,7 @@ nsChromeRegistry::InitializeDataSource(nsString &aPackage,
     chromeFile += aProvider; // provider already has a / in the front of it
     chromeFile += "/";
     overlayFile = chromeFile;
-    chromeFile += "current.rdf";
+    chromeFile += "chrome.rdf";
     overlayFile += "overlays.rdf";
 
     if (mDataSourceTable)
@@ -696,4 +715,194 @@ void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, ch
     }
     else // everything is just the provider
         *o_provider = PL_strndup(i_path, len);
+}
+
+
+
+
+// theme stuff
+
+NS_IMETHODIMP nsChromeRegistry::RefreshChrome()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::ApplyTheme(const PRUnichar *themeFileName)
+{
+  nsCAutoString chromeFile = "resource:/chrome/themes.rdf";
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  LoadDataSource(chromeFile, getter_AddRefs(dataSource));
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI,
+                                                                  char *aOverlayURI)
+{
+  nsresult rv;
+  nsCOMPtr<nsIURL> url;
+  
+  rv = nsComponentManager::CreateInstance("component://netscape/network/standard-url",
+                                          nsnull,
+                                          NS_GET_IID(nsIURL),
+                                          getter_AddRefs(url));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsCAutoString str(aDocURI);
+  url->SetSpec(str);
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  GetOverlayDataSource(url, getter_AddRefs(dataSource));
+
+  if (!dataSource)
+    return NS_OK;
+
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetPackageTypeResource(aDocURI,
+                              getter_AddRefs(resource));
+
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  nsCOMPtr<nsIRDFContainer> container;
+
+  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  
+  if (NS_FAILED(container->Init(dataSource, resource)))
+    return NS_ERROR_FAILURE;
+
+  nsAutoString unistr(aOverlayURI);
+  nsCOMPtr<nsIRDFLiteral> literal;
+  gRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
+
+  container->RemoveElement(literal, PR_TRUE);
+
+  nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(dataSource, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+  
+  remote->Flush();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::RemoveOverlay(nsIRDFDataSource *aDataSource, nsIRDFResource *aResource)
+{
+  nsCOMPtr<nsIRDFContainer> container;
+  nsresult rv;
+
+  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  
+  if (NS_FAILED(container->Init(aDataSource, aResource)))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  if (NS_FAILED(container->GetElements(getter_AddRefs(arcs))))
+    return NS_ERROR_FAILURE;
+
+  PRBool moreElements;
+  arcs->HasMoreElements(&moreElements);
+  
+  char *value;
+  aResource->GetValue(&value);
+
+  while (moreElements)
+  {
+    nsCOMPtr<nsISupports> supports;
+    arcs->GetNext(getter_AddRefs(supports));
+
+    nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(supports, &rv);
+
+    if (NS_SUCCEEDED(rv))
+    {
+      const PRUnichar* valueStr;
+      rv = literal->GetValueConst(&valueStr);
+      if (NS_FAILED(rv))
+        return rv;
+
+      ReallyRemoveOverlayFromDataSource(valueStr, value);
+    }
+    arcs->HasMoreElements(&moreElements);
+  }
+  nsAllocator::Free(value);
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsChromeRegistry::RemoveOverlays(nsAutoString aPackage,
+                                               nsAutoString aProvider,
+                                               nsIRDFContainer *aContainer,
+                                               nsIRDFDataSource *aDataSource)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsISimpleEnumerator> arcs;
+  if (NS_FAILED(aContainer->GetElements(getter_AddRefs(arcs))))
+    return NS_OK;
+
+  PRBool moreElements;
+  arcs->HasMoreElements(&moreElements);
+  
+  while (moreElements)
+  {
+    nsCOMPtr<nsISupports> supports;
+    arcs->GetNext(getter_AddRefs(supports));
+
+    nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(supports, &rv);
+
+    if (NS_SUCCEEDED(rv))
+    {
+      RemoveOverlay(aDataSource, resource);
+    }
+
+    arcs->HasMoreElements(&moreElements);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsChromeRegistry::ApplyThemeToPackage(const PRUnichar *aThemeFileName,
+                                                    const PRUnichar *aPackageName,
+                                                    const PRUnichar *aProviderName)
+{
+  nsresult rv;
+  nsCOMPtr<nsIRDFDataSource> dataSource;
+  nsAutoString package(aPackageName), provider("/");
+  provider += aProviderName;
+
+  if (NS_FAILED(InitializeDataSource(package, provider, getter_AddRefs(dataSource))))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = GetPackageTypeResource("chrome:overlays",
+                              getter_AddRefs(resource));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIRDFContainer> container;
+  rv = nsComponentManager::CreateInstance("component://netscape/rdf/container",
+                                          nsnull,
+                                          NS_GET_IID(nsIRDFContainer),
+                                          getter_AddRefs(container));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+  
+  if (NS_SUCCEEDED(container->Init(dataSource, resource)))
+  {
+    RemoveOverlays(package, provider, container, dataSource);
+  }
+
+  return NS_OK;
 }

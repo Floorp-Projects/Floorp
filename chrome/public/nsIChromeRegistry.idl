@@ -29,6 +29,10 @@ interface nsIChromeRegistry : nsISupports
 {
 	void convertChromeURL(in nsIURI aChromeURL);
 	nsISimpleEnumerator getOverlays(in nsIURI aChromeURL);
+	void refreshChrome();
+	void applyTheme(in wstring themeFileName);
+	void applyThemeToPackage(in wstring themeFileName, in wstring packageName, in wstring providerName);
+
 };
 
 
