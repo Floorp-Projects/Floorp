@@ -54,7 +54,7 @@ sub getDefaultString {
     # XXX THIS IS PLATFORM SPECIFIC CODE XXX
     if ($^O eq 'linux') {
         foreach my $piece ($protocol, $string) {
-            $piece =~ s/[^a-z\/0-9.]/_/gos;
+            $piece =~ s/[^a-zA-Z\/0-9.]/_/gos;
         }
         $filename = "output/$protocol/$string";
     } else {
@@ -75,6 +75,7 @@ sub getDefaultString {
         return ($type, $data);
     } else {
         # file does not exist
+        $self->dump(9, "No file for string '$string' in protocol '$protocol' (looking for '$filename')4");
         return; # no can do, sir
     }
 }
