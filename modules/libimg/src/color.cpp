@@ -21,12 +21,12 @@
                Includes dithering for B&W displays, but not dithering
                for PseudoColor displays which can be found in dither.c.
                
-   $Id: color.cpp,v 3.4 1999/02/09 12:23:00 mcafee%netscape.com Exp $
+   $Id: color.cpp,v 3.5 1999/02/10 04:29:17 mcafee%netscape.com Exp $
 */
 
 
 #include "if.h"
-#ifdef STANDALONE_IMAGE_LIB
+#ifdef XP_MAC
 #include "xpcompat.h"
 #else
 #include "xp_qsort.h"
