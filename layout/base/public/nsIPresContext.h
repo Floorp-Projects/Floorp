@@ -20,6 +20,7 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
+#include "nsIImageObserver.h"
 #include "nsRect.h"
 
 class nsIImage;
@@ -82,15 +83,24 @@ public:
    * otherwise it will return nsnull and guarantee that the frame
    * is repained when the image is ready.
    *
-   * XXX this api needs work; the frame can't find out the size when
-   * it arrives nor can it find out any error information, etc.
+   * If the image dimensions are known then they are returned
+   * immediately.
+   *
+   * This call can be safely made as many times as wanted with
+   * aImageStatus updated each time indicating what is known about the
+   * image.
    */
-  virtual nsIImage* LoadImage(const nsString& aURL, nsIFrame* aForFrame) = 0;
+  NS_IMETHOD LoadImage(const nsString& aURL,
+                       nsIFrame* aForFrame,
+                       PRInt32& aLoadImageStatus,
+                       nsImageError& aError,
+                       nsSize& aImageSize,
+                       nsIImage*& aImage) = 0;
 
   /**
    * Stop any image loading being done on behalf of the argument frame.
    */
-  virtual void StopLoadImage(nsIFrame* aForFrame) = 0;
+  NS_IMETHOD StopLoadImage(nsIFrame* aForFrame) = 0;
 
   NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 
@@ -136,6 +146,11 @@ public:
   //be sure to Relase() after you are done with the Get()
   virtual nsIDeviceContext * GetDeviceContext() const = 0;
 };
+
+// Bit values for LoadImage's aImageStatus
+#define NS_LOAD_IMAGE_STATUS_ERROR      0x1
+#define NS_LOAD_IMAGE_STATUS_SIZE       0x2
+#define NS_LOAD_IMAGE_STATUS_BITS       0x4
 
 // Factory method to create a "galley" presentation context (galley is
 // a kind of view that has no limit to the size of a page)
