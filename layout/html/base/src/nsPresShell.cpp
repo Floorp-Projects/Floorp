@@ -3499,8 +3499,16 @@ PresShell::HandleEvent(nsIView         *aView,
               rv = frame->GetFrameForPoint(mPresContext, eventPoint, NS_FRAME_PAINT_LAYER_BACKGROUND, &mCurrentEventFrame);
               if (rv != NS_OK) {
                 // XXX Is this the right thing to do?
+#ifdef XP_MAC
+                // On the Mac it is possible to be running with no windows open, only the native menu bar.
+                // In this situation, we need to handle key board events but there are no frames, so
+                // we set mCurrentEventContent and that works itself out in HandleEventInternal.
+                mCurrentEventContent = mDocument->GetRootContent();
+                mCurrentEventFrame = nsnull;
+#else
                 mCurrentEventFrame = frame;
                 aHandled = PR_FALSE;
+#endif
                 rv = NS_OK;
               }
             }
@@ -3564,8 +3572,8 @@ PresShell::HandleEvent(nsIView         *aView,
     PopCurrentEventInfo();
   }
   else {
-    rv = NS_OK;
     aHandled = PR_FALSE;
+    rv = NS_OK;
   }
 
   return rv;
