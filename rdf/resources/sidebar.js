@@ -36,9 +36,12 @@ function Init(sidebardb, sidebar_resource)
 
   sb_datasource.Init(registry, RDF.GetResource(sidebar_resource));
   
+  //var sidebar_container = document.documentElement;
+  var sidebox = document.getElementById('sidebox');
+
   var sidebar_title = createSidebarTitle('Sidebar');
   if (sidebar_title) {
-      document.documentElement.appendChild(sidebar_title);
+      sidebox.appendChild(sidebar_title);
   }
 
   // Now enumerate all of the flash datasources.
@@ -50,64 +53,73 @@ function Init(sidebardb, sidebar_resource)
 
     var new_panel = createPanel(registry, service);
     if (new_panel) {
-      document.documentElement.appendChild(new_panel);
+      sidebox.appendChild(new_panel);
     }
   }
 }
 
 function createSidebarTitle(title) {
-  var div = document.createElement('html:div');
-  var titleB = document.createElement('titledbutton');
-  var reloadB = document.createElement('titledbutton');
+  var box        = document.createElement('box');
+  var titleB     = document.createElement('titledbutton');
+  var reloadB    = document.createElement('titledbutton');
   var customizeB = document.createElement('titledbutton');
-  var spring = document.createElement('spring');
-  var toolbar = document.createElement('box');
-  toolbar.setAttribute('class', 'maintitle');
-  titleB.setAttribute('value', title);
-  reloadB.setAttribute('value', 'Reload');
-  reloadB.setAttribute('onclick', 'window.location.reload()');
-  customizeB.setAttribute('value', 'Customize');
-  //customizeB.setAttribute('onclick', '');
-  spring.setAttribute('flex', '100%');
+  var spring     = document.createElement('spring');
+  box.setAttribute    ('class', 'sidebartitle');
+  titleB.setAttribute     ('value', title);
+  reloadB.setAttribute    ('value', 'Reload');
+  reloadB.setAttribute    ('onclick', 'window.location.reload()');
+  customizeB.setAttribute ('value', 'Customize');
+  titleB.setAttribute     ('class', 'sidebartitle');
+  spring.setAttribute     ('flex', '100%');
 
-  toolbar.appendChild(titleB);
-  toolbar.appendChild(spring);
-  toolbar.appendChild(reloadB);
-  toolbar.appendChild(customizeB);
-  div.appendChild(toolbar);
-  return div;
+  box.appendChild(titleB);
+  box.appendChild(spring);
+  box.appendChild(reloadB);
+  box.appendChild(customizeB);
+
+  return box;
 }
 
 function createPanel(registry, service) {
-  var panel_title = getAttr(registry, service, 'title');
-  var panel_content = getAttr(registry, service, 'content');
+  var panel_title     = getAttr(registry, service, 'title');
   var panel_customize = getAttr(registry, service, 'customize');
+  var panel_content   = getAttr(registry, service, 'content');
 
   dump('Adding...' + panel_title + '\n');
-  var div = document.createElement('box');
-  var title = document.createElement('titledbutton');
-  var customize = document.createElement('titledbutton');
-  var spring = document.createElement('spring');
-  var toolbar = document.createElement('box');
-  var iframe = document.createElement('html:iframe');
-  var newline = document.createElement('html:br');
+  var box      = document.createElement('box');
+  var panelbar = createPanelTitle(panel_title, panel_customize);
+  var iframe   = document.createElement('html:iframe');
 
-  div.setAttribute('align', 'vertical');
-
-  //title.setAttribute('style', 'width=100%; color=red');
-  title.setAttribute('value', panel_title);
-  customize.setAttribute('value', 'Customize');
-  //customize.setAttribute('onclick', '');
-  spring.setAttribute('flex', '100%');
+  box.setAttribute('align', 'vertical');
   iframe.setAttribute('src', panel_content);
 
-  toolbar.appendChild(title);
-  toolbar.appendChild(spring);
-  toolbar.appendChild(customize);
-  div.appendChild(toolbar);
-  div.appendChild(iframe);
-  div.appendChild(newline);
-  return div;
+  box.appendChild(panelbar);
+  box.appendChild(iframe);
+
+  return box;
+}
+
+function createPanelTitle(titletext,customize)
+{
+  var panelbar  = document.createElement('box');
+  //var titletext = document.createTextNode(titletext);
+  var title     = document.createElement('titledbutton');
+  var customize = document.createElement('titledbutton');
+  var spring     = document.createElement('spring');
+
+  title.setAttribute('value', titletext);
+  title.setAttribute('class', 'paneltitle');
+  spring.setAttribute('flex', '100%');
+  customize.setAttribute('value', 'Customize');
+  customize.setAttribute('onclick', 'window.open("http://");');
+  panelbar.setAttribute('class', 'panelbar');
+
+
+  panelbar.appendChild(title);
+  panelbar.appendChild(spring);
+  panelbar.appendChild(customize);
+
+  return panelbar;
 }
 
 function getAttr(registry,service,attr_name) {

@@ -9,4 +9,7 @@
 
 <html:script src="sidebar.js" />
 
+<box id="sidebox" align="vertical">
+</box>
+
 </window>
