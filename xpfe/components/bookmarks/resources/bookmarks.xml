@@ -1494,8 +1494,6 @@
                     ++index;
                   relativeIndex = index - 1;
               }
-              else if (this.outlinerBoxObject.view.isContainer(currentIndex))
-                isParent = true;
               if (isParent) {
                 parentRes = this.outlinerBuilder.getResourceAtIndex(this.outlinerBoxObject.view.getParentIndex(relativeIndex));
               } else {
