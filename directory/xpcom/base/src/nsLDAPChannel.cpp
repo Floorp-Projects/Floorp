@@ -647,18 +647,11 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 	// get a new pipe, propagating any error upwards
 	//
 	rv = NS_NewPipe(getter_AddRefs(mReadPipeIn), 
-			getter_AddRefs(mReadPipeOut));
+			getter_AddRefs(mReadPipeOut), 
+			NS_PIPE_DEFAULT_SEGMENT_SIZE, 
+			NS_PIPE_DEFAULT_BUFFER_SIZE,
+			PR_TRUE, PR_FALSE, nsnull);
 	NS_ENSURE_SUCCESS(rv, rv);
-
-	// the side of the pipe used on the main UI thread cannot block
-	//
-	NS_ENSURE_SUCCESS(mReadPipeIn->SetNonBlocking(PR_TRUE), 
-			  NS_ERROR_UNEXPECTED);
-
-	// but the side of the pipe used by the worker thread can block
-	//
-	NS_ENSURE_SUCCESS(mReadPipeOut->SetNonBlocking(PR_FALSE),
-			  NS_ERROR_UNEXPECTED);
     } 
 
     // get an AsyncStreamListener to proxy for mListener, if we're
