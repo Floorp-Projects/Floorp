@@ -7,10 +7,10 @@ require 5.000;
 require "build-seamonkey-util.pl";
 
 use Sys::Hostname;
-use POSIX "sys_wait_h";
+use POSIX qw(sys_wait_h strftime);
 use Cwd;
 
-$Version = '$Revision: 1.50 $ ';
+$Version = '$Revision: 1.51 $ ';
 
 
 sub PrintUsage {
