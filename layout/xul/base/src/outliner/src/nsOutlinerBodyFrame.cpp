@@ -385,15 +385,10 @@ nsOutlinerBodyFrame::Destroy(nsIPresContext* aPresContext)
   return nsLeafBoxFrame::Destroy(aPresContext);
 }
 
-NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
-                                          nsHTMLReflowMetrics& aReflowMetrics,
-                                          const nsHTMLReflowState& aReflowState,
-                                          nsReflowStatus& aStatus)
+void
+nsOutlinerBodyFrame::EnsureBoxObject()
 {
-  if (aReflowState.reason == eReflowReason_Initial) {
-    // We might have a box object with some properties already cached.  If so,
-    // pull them out of the box object and restore them here.
-    mRowHeight = GetRowHeight();
+  if (!mOutlinerBoxObject) {
     nsCOMPtr<nsIContent> parent;
     mContent->GetParent(*getter_AddRefs(parent));
     nsCOMPtr<nsIDOMXULElement> parentXUL(do_QueryInterface(parent));
@@ -403,32 +398,47 @@ NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
       if (box) {
         nsCOMPtr<nsIOutlinerBoxObject> outlinerBox(do_QueryInterface(box));
         SetBoxObject(outlinerBox);
+      }
+    }
+  }
+}
 
-        nsAutoString view(NS_LITERAL_STRING("view"));
-        nsCOMPtr<nsISupports> suppView;
-        box->GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
-        nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
-
-        if (outlinerView) {
-          nsAutoString topRow(NS_LITERAL_STRING("topRow"));
-          nsXPIDLString rowStr;
-          box->GetProperty(topRow.get(), getter_Copies(rowStr));
-          nsAutoString rowStr2(rowStr);
-          PRInt32 error;
-          PRInt32 rowIndex = rowStr2.ToInteger(&error);
+NS_IMETHODIMP nsOutlinerBodyFrame::Reflow(nsIPresContext* aPresContext,
+                                          nsHTMLReflowMetrics& aReflowMetrics,
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsReflowStatus& aStatus)
+{
+  if (aReflowState.reason == eReflowReason_Initial) {
+    // We might have a box object with some properties already cached.  If so,
+    // pull them out of the box object and restore them here.
+    mRowHeight = GetRowHeight();
+    EnsureBoxObject();
+    nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mOutlinerBoxObject);
+    if (box) {
+      nsAutoString view(NS_LITERAL_STRING("view"));
+      nsCOMPtr<nsISupports> suppView;
+      box->GetPropertyAsSupports(view.get(), getter_AddRefs(suppView));
+      nsCOMPtr<nsIOutlinerView> outlinerView(do_QueryInterface(suppView));
       
-          // Set our view.
-          SetView(outlinerView);
-
-          // Scroll to the given row.
-          ScrollToRow(rowIndex);
-
-          // Clear out the property info for the top row, but we always keep the
-          // view current.
-          box->RemoveProperty(topRow.get());
-
-          return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
-        }
+      if (outlinerView) {
+        nsAutoString topRow(NS_LITERAL_STRING("topRow"));
+        nsXPIDLString rowStr;
+        box->GetProperty(topRow.get(), getter_Copies(rowStr));
+        nsAutoString rowStr2(rowStr);
+        PRInt32 error;
+        PRInt32 rowIndex = rowStr2.ToInteger(&error);
+        
+        // Set our view.
+        SetView(outlinerView);
+        
+        // Scroll to the given row.
+        ScrollToRow(rowIndex);
+        
+        // Clear out the property info for the top row, but we always keep the
+        // view current.
+        box->RemoveProperty(topRow.get());
+        
+        return nsLeafBoxFrame::Reflow(aPresContext, aReflowMetrics, aReflowState, aStatus);
       }
     }
 
@@ -501,10 +511,8 @@ NS_IMETHODIMP nsOutlinerBodyFrame::GetView(nsIOutlinerView * *aView)
 NS_IMETHODIMP nsOutlinerBodyFrame::SetView(nsIOutlinerView * aView)
 {
   // First clear out the old view.
-  nsCOMPtr<nsIBoxObject> box(do_QueryInterface(mOutlinerBoxObject));
-  if (!box)
-    return NS_OK; // Just ignore the call.  An initial reflow when it comes in
-                  // will retrieve the view from the box object.
+  EnsureBoxObject();
+  nsCOMPtr<nsIBoxObject> box = do_QueryInterface(mOutlinerBoxObject);
   
   nsAutoString view(NS_LITERAL_STRING("view"));
   
