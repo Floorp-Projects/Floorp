@@ -443,9 +443,10 @@ public:
   nsString& operator+=(const nsString& aString){return Append(aString,aString.mLength);}
   nsString& operator+=(const char* aCString) {return Append(aCString);}
   nsString& operator+=(const char aChar) {
-    unsigned char theChar=(unsigned char)aChar;
-    return Append(PRUnichar(theChar));
+    //unsigned theChar=(unsigned)aChar;
+    return Append(PRUnichar(aChar));
   }
+
   nsString& operator+=(const PRUnichar* aUCString) {return Append(aUCString);}
   nsString& operator+=(const PRUnichar aChar){return Append(aChar);}
   nsString& operator+=(const int anInt){return Append(anInt,10);}
