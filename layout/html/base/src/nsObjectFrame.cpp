@@ -2267,7 +2267,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::GetDocumentBase(const char* *result)
     nsCOMPtr<nsIDocument> doc;
     shell->GetDocument(getter_AddRefs(doc));
 
-    nsCOMPtr<nsIURI> docURL( dont_AddRef(doc->GetDocumentURL()) );
+    nsCOMPtr<nsIURI> docURL;
+    doc->GetBaseURL(*getter_AddRefs(docURL));  // should return base + doc url
 
     rv = docURL->GetSpec(&mDocumentBase);
   }
