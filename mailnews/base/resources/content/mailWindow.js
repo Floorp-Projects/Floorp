@@ -215,6 +215,7 @@ nsMsgStatusFeedback.prototype =
 		if(iid.equals(Components.interfaces.nsIMsgStatusFeedback))
 			return this;
 		throw Components.results.NS_NOINTERFACE;
+        return null;
 		},
 	ShowStatusString : function(statusText)
 		{
@@ -298,6 +299,7 @@ nsMsgWindowCommands.prototype =
 		if(iid.equals(Components.interfaces.nsIMsgWindowCommands))
 			return this;
 		throw Components.results.NS_NOINTERFACE;
+        return null;
 	},
 	SelectFolder: function(folderUri)
 	{

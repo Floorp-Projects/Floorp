@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -17,6 +17,7 @@
  * Copyright (C) 1998-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  */
+
 // Controller object for folder pane
 var FolderPaneController =
 {
@@ -26,8 +27,6 @@ var FolderPaneController =
 		{
 			case "cmd_delete":
 			case "button_delete":
-				return true;
-			
 			case "cmd_selectAll":
 			case "cmd_cut":
 			case "cmd_copy":
@@ -112,8 +111,6 @@ var ThreadPaneController =
 		switch ( command )
 		{
 			case "cmd_selectAll":
-				return true;
-
 			case "cmd_cut":
 			case "cmd_copy":
 			case "cmd_paste":
@@ -156,27 +153,12 @@ var ThreadPaneController =
 					if ( threadTree.selectedItems && threadTree.selectedItems.length != 1 )
 						ClearMessagePane();
 				}
-					//setting threadTree on
-        			//document.getElementById("threadTree").setAttribute("focusring","true");
 				break;
 		}
 	},
 	
 	onEvent: function(event)
 	{
-		// on blur events set the menu item texts back to the normal values
-		if ( event == 'blur' )
-        {
-              //document.getElementById("threadTree").setAttribute("focusring","false");
-
-		}
-		
-		if ( event == 'focus' )
-        {
-        	//alert("focus")
-              //document.getElementById("threadTree").setAttribute("focusring","true");
-
-		}		
 	}
 };
 
@@ -331,8 +313,7 @@ var DefaultController =
 	doCommand: function(command)
 	{
    		//dump("ThreadPaneController.doCommand(" + command + ")\n");
-   		
-        document.getElementById("messagepane").setAttribute("focusring","true");
+
 		switch ( command )
 		{
 			case "cmd_getNewMessages":
@@ -502,7 +483,6 @@ function GetNumSelectedMessages()
 
 function CommandUpdate_Mail()
 {
-
 	goUpdateCommand('button_delete');
 	goUpdateCommand('cmd_delete');
 	goUpdateCommand('cmd_nextMsg');
@@ -531,46 +511,33 @@ function CommandUpdate_Mail()
 var lastFocusedElement=null;
 
 function FocusRingUpdate_Mail(){
-	var currentFocusedElement = null;
-	
-	if(MessagePaneHasFocus()){
-		currentFocusedElement="messagepanebox"
-	}
-	else{
-		currentFocusedElement= WhichPaneHasFocus()	
-	}
-	
-	if(currentFocusedElement != lastFocusedElement){
-			if( currentFocusedElement == "threadTree"){
-				document.getElementById("threadTree").setAttribute("focusring","true")
-				//document.getElementById("folderTree").setAttribute("focusring","false")
-				document.getElementById("messagepanebox").setAttribute("focusring","false")
 
-			}
+    var currentFocusedElement = WhichPaneHasFocus();
+    if (!currentFocusedElement)
+        currentFocusedElement = GetMessagePane();
+    
+	if(currentFocusedElement != lastFocusedElement) {
+        if( currentFocusedElement == GetThreadTree()) {
+            GetThreadTree().setAttribute("focusring","true");
+            GetMessagePane().setAttribute("focusring","false");
+        }
 
-			else{
-				if(currentFocusedElement=="folderTree"){
-						document.getElementById("threadTree").setAttribute("focusring","false")
-						//document.getElementById("folderTree").setAttribute("focusring","true")
-						document.getElementById("messagepanebox").setAttribute("focusring","false")
-				}
-				else{
-					if(currentFocusedElement=="messagepanebox"){
-						document.getElementById("threadTree").setAttribute("focusring","false")
-						//document.getElementById("folderTree").setAttribute("focusring","false")
-						document.getElementById("messagepanebox").setAttribute("focusring","true")
-					}
-					else{
-						document.getElementById("threadTree").setAttribute("focusring","false")
-						//document.getElementById("folderTree").setAttribute("focusring","false")
-						document.getElementById("messagepanebox").setAttribute("focusring","false")
-						}
-
-					}
-			}	
-		lastFocusedElement=currentFocusedElement;
-		}
-	}
+        else if(currentFocusedElement==GetFolderTree()) {
+            GetThreadTree().setAttribute("focusring","false");
+            GetMessagePane().setAttribute("focusring","false");
+        }
+        else if(currentFocusedElement==GetMessagePane()){
+            GetThreadTree().setAttribute("focusring","false");
+            GetMessagePane().setAttribute("focusring","true");
+        }
+        else {
+            GetThreadTree().setAttribute("focusring","false");
+            GetMessagePane().setAttribute("focusring","false");
+        }
+        
+        lastFocusedElement=currentFocusedElement;
+    }
+}
 	
 
 function ThreadTreeUpdate_Mail(command)
@@ -660,7 +627,8 @@ function MessagePaneHasFocus()
 	
 	if ( focusedWindow && messagePaneWindow && (focusedWindow != top) )
 	{
-		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow, false);
+        
+		var hasFocus = IsSubWindowOf(focusedWindow, messagePaneWindow);
 
 		return hasFocus;
 	}
@@ -668,15 +636,15 @@ function MessagePaneHasFocus()
 	return false;
 }
 
-function IsSubWindowOf(search, wind, found)
+function IsSubWindowOf(search, wind)
 {
 	//dump("IsSubWindowOf(" + search + ", " + wind + ", " + found + ")\n");
-	if ( found || (search == wind) )
+	if (search == wind)
 		return true;
 	
 	for ( index = 0; index < wind.frames.length; index++ )
 	{
-		if ( IsSubWindowOf(search, wind.frames[index], false) )
+		if ( IsSubWindowOf(search, wind.frames[index]) )
 			return true;
 	}
 	return false;
@@ -684,27 +652,23 @@ function IsSubWindowOf(search, wind, found)
 
 
 function WhichPaneHasFocus(){
-	var whichPane= "none";
-	currentNode = top.document.commandDispatcher.focusedElement;	
+	var whichPane= null;
+	var currentNode = top.document.commandDispatcher.focusedElement;	
 
-	
-	if(currentNode){
-		while(currentNode.parentNode!=null){
-			if(currentNode.getAttribute("id") == "threadTree" ){ whichPane="threadTree" }
-			
-			if(currentNode.getAttribute("id") == "folderTree"){  whichPane="folderTree" } 
-	
-			if(currentNode.getAttribute("id") == "messagepanebox"){  whichPane="messagepanebox" }
+    var threadTree = GetThreadTree();
+    var folderTree = GetFolderTree();
+    var messagePane = GetMessagePane();
+    
+	while (currentNode) {
+        if (currentNode === threadTree ||
+            currentNode === folderTree ||
+            currentNode === messagePane)
+            return currentNode;
 					
 			currentNode = currentNode.parentNode;
-		}
+    }
 	
-	}
-	
-	
-	
-	return whichPane
-
+	return null;
 }
 
 

@@ -26,6 +26,7 @@ var msgNavigationService;
 
 var gFolderTree;
 var gThreadTree;
+var gMessagePane;
 var gThreadAndMessagePaneSplitter = null;
 var gUnreadCount = null;
 var gTotalCount = null;
@@ -485,6 +486,13 @@ function GetFolderTree()
 	var folderTree = document.getElementById('folderTree');
     gFolderTree = folderTree;
 	return folderTree;
+}
+
+function GetMessagePane()
+{
+    if (gMessagePane) return gMessagePane;
+    gMessagePane = document.getElementById("messagepanebox");
+    return gMessagePane;
 }
 
 function FindInSidebar(currentWindow, id)
