@@ -48,6 +48,7 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIDocument.h"
 #include "nsIURL.h"
+#include "nsIPref.h"
 #include "nsCRT.h"
 #include "nsRect.h"
 #include "nsINetSupport.h"
@@ -86,6 +87,9 @@ static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
+
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -829,9 +833,25 @@ GlobalWindowImpl::Back()
 NS_IMETHODIMP
 GlobalWindowImpl::Home()
 {
-  // XXX: This should look in the preferences to find the home URL. 
-  // Temporary hardcoded to www.netscape.com
-  nsString homeURL("http://www.netscape.com");
+  char *url = nsnull;
+  nsresult rv = NS_OK;
+  nsString homeURL;
+
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv) || (prefs == nsnull)) {
+      return rv;
+  }
+
+  // if we get here, we know prefs is not null
+  rv = prefs->CopyCharPref(PREF_BROWSER_STARTUP_HOMEPAGE, &url);
+  if (NS_FAILED(rv) || url == nsnull) {
+    // if all else fails, use this
+    homeURL = DEFAULT_HOME_PAGE;
+  }
+  else {
+    homeURL = url;
+  }
+  PR_FREEIF(url);
   PRUnichar* urlToLoad = homeURL.ToNewUnicode();
   mWebShell->LoadURL(urlToLoad);
   delete[] urlToLoad;
