@@ -34,32 +34,6 @@
 #pragma once
 #endif // _MSC_VER >= 1000
 
-#define STRICT
-
-#define _WIN32_WINNT 0x0400
-#define _ATL_APARTMENT_THREADED
-#define _ATL_STATIC_REGISTRY
-
-// ATL headers
-#include <atlbase.h>
-//You may derive a class from CComModule and use it if you want to override
-//something, but do not change the name of _Module
-extern CComModule _Module;
-#include <atlcom.h>
-#include <atlctl.h>
-#include <mshtml.h>
-#include <mshtmhst.h>
-#include <docobj.h>
-#include <winsock2.h>
-
-// STL headers
-#include <vector>
-#include <list>
-#include <string>
-
-// New winsock2.h doesn't define this anymore
-typedef long int32;
-
 #include "jstypes.h"
 #include "prtypes.h"
 
@@ -123,6 +97,35 @@ typedef long int32;
 #include "nsIDOMDocument.h"
 #include "nsIDOMDocumentType.h"
 #include "nsIDOMElement.h"
+#include "nsIDOMEvent.h"
+#include "nsIDOMEventReceiver.h"
+
+#define _WIN32_WINNT 0x0400
+#define _ATL_APARTMENT_THREADED
+#define _ATL_STATIC_REGISTRY
+
+// ATL headers
+#include <atlbase.h>
+//You may derive a class from CComModule and use it if you want to override
+//something, but do not change the name of _Module
+extern CComModule _Module;
+#include <atlcom.h>
+#include <atlctl.h>
+#include <mshtml.h>
+#include <mshtmhst.h>
+#include <docobj.h>
+#include <winsock2.h>
+
+// STL headers
+#include <vector>
+#include <list>
+#include <string>
+
+// New winsock2.h doesn't define this anymore
+typedef long int32;
+
+// Turn off warnings about debug symbols for templates being too long
+#pragma warning(disable : 4786)
 
 // Mozilla control headers
 #include "resource.h"
