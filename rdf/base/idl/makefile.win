@@ -30,6 +30,8 @@ XPIDLSRCS=      .\nsIRDFNode.idl                  \
                 .\nsIRDFPurgeableDataSource.idl   \
                 .\nsIRDFXMLDataSource.idl         \
                 .\nsIRDFXMLSource.idl             \
+				.\nsIController.idl				  \
+				.\nsIGenericCommandSet.idl		  \
 		.\xulstubs.idl			\
                 $(NULL)
 
