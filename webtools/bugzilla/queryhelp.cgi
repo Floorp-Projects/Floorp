@@ -56,8 +56,6 @@ print qq{
 
 <br><center><img width="329" height="220" src="ant.jpg" border="2" alt="Da Ant"></center>
 
-<p><b>Notice:</b> This was written for the new query page that will probably be added in a version later than Bugzilla 2.12 in order to fix some regressions. Therefore, the layout of the forms shown in captions might not be exactly as they appear on the query page. The number of fields, though, is the same and you should be able to locate the fields on the current query.cgi without much problem.
-
 <p><br><center><h3>The Sections</h3></center>
 
 <p>The query page is broken down into the following sections:
@@ -1385,7 +1383,6 @@ You can talk to me on irc.mozilla.org - #mozilla, #mozwebtools, #mozillazine, I 
 How To Find Previously Reported Bugs</a><br>
 <a href="http://www.mozilla.org/bugs/">Bugzilla General Information</a><br>
 <a href="http://www.mozilla.org/quality/help/bugzilla-helper.html">Mozilla Bug Report Form</a><br>
-<a href="http://www.objective2k.co.uk/goodmozillauser.htm">Sliver's How To Be a Good Mozilla User</a><br>
 <a href="http://www.mozilla.org/bugs/text-searching.html">Bugzilla Text Searching</a><br>
 <a href="http://www.mozilla.org/quality/bug-writing-guidelines.html">The Bug Reporting Guidelines</a><br>
 <p>My main motive for writing this was to help the engineers by giving new Bugzilla users a way to learn how to use the Bugzilla Query form. I 
