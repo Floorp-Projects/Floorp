@@ -218,7 +218,7 @@ nsFontMetricsWin::RealizeFont()
   else
   {
     // Find font metrics and character widths
-    win = mDeviceContext->mWidget;
+    win = (HWND)mDeviceContext->mWidget;
     dc = ::GetDC(win);
   }
 
