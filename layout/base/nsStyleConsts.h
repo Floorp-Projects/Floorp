@@ -42,16 +42,6 @@
 #define NS_SIDE_LEFT    3
 
 
-// auto-select
-#define NS_STYLE_AUTO_SELECT_NONE     0
-#define NS_STYLE_AUTO_SELECT_SELECT   1
-
-// auto-tab
-#define NS_STYLE_AUTO_TAB_NONE            0
-#define NS_STYLE_AUTO_TAB_ACTIVATE_NEXT   1
-#define NS_STYLE_AUTO_TAB_SELECT_NEXT     2
-#define NS_STYLE_AUTO_TAB_AUTO            3
-
 // box-sizing
 #define NS_STYLE_BOX_SIZING_CONTENT       0
 #define NS_STYLE_BOX_SIZING_PADDING       1
@@ -66,12 +56,6 @@
 // key-equivalent
 #define NS_STYLE_KEY_EQUIVALENT_NONE      0
 
-// modify-content
-#define NS_STYLE_MODIFY_CONTENT_READ_ONLY   0
-#define NS_STYLE_MODIFY_CONTENT_READ_WRITE  1
-#define NS_STYLE_MODIFY_CONTENT_WRITE_ONLY  2
-#define NS_STYLE_MODIFY_CONTENT_TOGGLE      3
-
 // resizer
 #define NS_STYLE_RESIZER_NONE         0x00
 #define NS_STYLE_RESIZER_HORIZONTAL   0x01  // bits
@@ -79,17 +63,35 @@
 #define NS_STYLE_RESIZER_BOTH         0x03  // bits
 #define NS_STYLE_RESIZER_AUTO         0x04  // bits
 
-// selection-style
-#define NS_STYLE_SELECTION_STYLE_NONE   0
-#define NS_STYLE_SELECTION_STYLE_ANY    1
-#define NS_STYLE_SELECTION_STYLE_LINE   2
-#define NS_STYLE_SELECTION_STYLE_ALL    3
+// user-focus
+#define NS_STYLE_USER_FOCUS_NONE            0
+#define NS_STYLE_USER_FOCUS_NORMAL          1
+#define NS_STYLE_USER_FOCUS_SELECT_ALL      2
+#define NS_STYLE_USER_FOCUS_SELECT_BEFORE   3
+#define NS_STYLE_USER_FOCUS_SELECT_AFTER    4
+#define NS_STYLE_USER_FOCUS_SELECT_SAME     5
+#define NS_STYLE_USER_FOCUS_SELECT_MENU     6
+
+// user-select
+#define NS_STYLE_USER_SELECT_NONE       0
+#define NS_STYLE_USER_SELECT_TEXT       1
+#define NS_STYLE_USER_SELECT_ELEMENT    2
+#define NS_STYLE_USER_SELECT_ELEMENTS   3
+#define NS_STYLE_USER_SELECT_ALL        4
 
 // user-input
 #define NS_STYLE_USER_INPUT_NONE      0
 #define NS_STYLE_USER_INPUT_ENABLED   1
 #define NS_STYLE_USER_INPUT_DISABLED  2
 #define NS_STYLE_USER_INPUT_AUTO      3
+
+// user-modify
+#define NS_STYLE_USER_MODIFY_READ_ONLY   0
+#define NS_STYLE_USER_MODIFY_READ_WRITE  1
+#define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
+#define NS_STYLE_USER_MODIFY_TOGGLE      3
+#define NS_STYLE_USER_MODIFY_TRI_STATE   4
+
 
 
 // Azimuth - See nsStyleAural

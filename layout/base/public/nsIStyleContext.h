@@ -285,11 +285,10 @@ protected:
 
 struct nsStyleUserInterface: public nsStyleStruct {
   PRUint8   mUserInput;       // [inherited]
-  PRUint8   mModifyContent;   // [inherited]
-  PRUint8   mSelectionStyle;  // [reset]
-  PRUint8   mAutoSelect;      // [inherited]
+  PRUint8   mUserModify;      // [inherited] (modify-content)
+  PRUint8   mUserSelect;      // [reset] (selection-style)
+  PRUint8   mUserFocus;       // [inherited] (auto-select)
   PRUnichar mKeyEquivalent;   // [reset] XXX what type should this be?
-  PRUint8   mAutoTab;         // [inherited]
   PRUint8   mResizer;         // [reset]
 protected:
   nsStyleUserInterface(void);
