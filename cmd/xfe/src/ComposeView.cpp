@@ -2011,7 +2011,7 @@ XFE_ComposeView::updateCompToolbar()
 		address = "about:editfilenew";
 		n_url = NET_CreateURLStruct(address, NET_DONT_RELOAD);
 
-		((XFE_EditorView*)m_htmlViewAlias)->getURL(n_url, (n_url == NULL));
+		((XFE_EditorView*)m_htmlViewAlias)->getURL(n_url);
 	}
 }
 
@@ -2041,8 +2041,7 @@ XFE_ComposeView::initEditor()
 			address = "about:editfilenew";
 			n_url = NET_CreateURLStruct(address, NET_DONT_RELOAD);
 
-			rtn = ((XFE_EditorView*)m_htmlViewAlias)->getURL(n_url, 
-															 (n_url == NULL));
+			rtn = ((XFE_EditorView*)m_htmlViewAlias)->getURL(n_url);
 		}
 	}
 

@@ -43,7 +43,7 @@ public:
 
   virtual ~XFE_HTMLView();
 
-  virtual int getURL(URL_Struct *url, Boolean skip_get_url);
+  virtual int getURL(URL_Struct *url);
 
   // this gets called by our toplevel to let us do some things
   // after it's been realized, but before we're on the screen.

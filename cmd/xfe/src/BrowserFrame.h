@@ -50,7 +50,7 @@ public:
   virtual char *commandToString(CommandType cmd, void *calldata = NULL,
 						 XFE_CommandInfo* = NULL);
 
-  virtual int getURL(URL_Struct *url, Boolean skip_get_url);
+  virtual int getURL(URL_Struct *url);
 
   virtual void queryChrome(Chrome * chrome);
   virtual void respectChrome(Chrome * chrome);

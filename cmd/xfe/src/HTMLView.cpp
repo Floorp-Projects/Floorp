@@ -409,12 +409,12 @@ XFE_CALLBACK_DEFN(XFE_HTMLView, beforeToplevelShow)(XFE_NotificationCenter *,
 }
 
 int
-XFE_HTMLView::getURL(URL_Struct *url, Boolean skip_get_url)
+XFE_HTMLView::getURL(URL_Struct *url)
 {
   if (url)
     {
       XP_MEMSET (&url->savedData, 0, sizeof (SHIST_SavedData));
-      return fe_GetURL (m_contextData, url, skip_get_url);
+      return fe_GetURL (m_contextData, url, /*skip_get_url*/FALSE);
     }
 
   return 0; // ###ct ???  Is this what we want?
@@ -481,7 +481,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
     {
       URL_Struct *url = (URL_Struct*)callData;
 
-      getURL(url, False);
+      getURL(url);
       
       getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
       return;
@@ -873,7 +873,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
           ! XP_STRNCMP ("tn3270:", m_urlUnderMouse->address, 7) ||
           ! XP_STRNCMP ("rlogin:", m_urlUnderMouse->address, 7)
          )
-	getURL (m_urlUnderMouse, FALSE);
+	getURL (m_urlUnderMouse);
       else
 	fe_MakeWindow (XtParent (CONTEXT_WIDGET (m_contextData)),
 		       m_contextData, m_urlUnderMouse, NULL, 
@@ -941,7 +941,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
 	}
 #ifdef MOZ_MAIL_NEWS
       if (MSG_RequiresComposeWindow(m_urlUnderMouse->address))
-	getURL (m_urlUnderMouse, FALSE);
+	getURL (m_urlUnderMouse);
       else
 #endif
         fe_EditorNew(m_contextData, (XFE_Frame *)m_toplevel,
@@ -1023,7 +1023,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
       if (!m_imageUnderMouse)
         FE_Alert (m_contextData, fe_globalData.not_over_image_message);
       else
-        getURL(m_imageUnderMouse, False);
+        getURL(m_imageUnderMouse);
 
       m_imageUnderMouse = NULL; /* it will be freed in the exit routine. */
     }
@@ -1069,7 +1069,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
           if (url)
             {
               URL_Struct *url_s = NET_CreateURLStruct (url, NET_DONT_RELOAD);
-              getURL(url_s, False);
+              getURL(url_s);
             }
         }
       return;

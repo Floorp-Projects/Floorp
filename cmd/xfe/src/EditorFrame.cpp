@@ -759,11 +759,11 @@ XFE_EditorFrame::XFE_EditorFrame(Widget toplevel,
 }
 
 int
-XFE_EditorFrame::getURL(URL_Struct *url, Boolean skip_get_url)
+XFE_EditorFrame::getURL(URL_Struct *url)
 {
   XFE_EditorView *eview = (XFE_EditorView*)m_view;
 
-  return eview->getURL(url, skip_get_url);
+  return eview->getURL(url);
 }
 
 XFE_CALLBACK_DEFN(XFE_EditorFrame, navigateToURL)(XFE_NotificationCenter*, void*, void* /*callData*/)
@@ -771,7 +771,7 @@ XFE_CALLBACK_DEFN(XFE_EditorFrame, navigateToURL)(XFE_NotificationCenter*, void*
   // int status;
   // URL_Struct *url_struct = (URL_Struct*)callData;
   //
-  // status = getURL(url_struct, FALSE);
+  // status = getURL(url_struct);
   //
   // if (status >= 0)
   //  {
@@ -1038,7 +1038,7 @@ fe_editor_pre_open_cb(XP_Bool cancelled, char* address, void* closure)
 		}
 
 		URL_Struct* url = NET_CreateURLStruct(address, NET_NORMAL_RELOAD);
-		theFrame->getURL(url, FALSE);
+		theFrame->getURL(url);
 	}
 
 	if (info->address)

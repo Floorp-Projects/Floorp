@@ -37,7 +37,7 @@ class XFE_EditorFrame : public XFE_Frame
 public:
   XFE_EditorFrame(Widget toplevel, XFE_Frame *parent_frame, Chrome *);
 
-  virtual int getURL(URL_Struct *url, Boolean skip_get_url);
+  virtual int getURL(URL_Struct *url);
   virtual MWContext* getContext();
 
   virtual XP_Bool isCommandEnabled(CommandType cmd, void *calldata = NULL,

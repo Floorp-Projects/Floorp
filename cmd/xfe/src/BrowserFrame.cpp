@@ -453,7 +453,7 @@ XFE_BrowserFrame::commandToString(CommandType cmd,
 }
 
 int
-XFE_BrowserFrame::getURL(URL_Struct *url, Boolean skip_get_url)
+XFE_BrowserFrame::getURL(URL_Struct *url)
 {
 /*    XFE_HTMLView *hview = (XFE_HTMLView*)m_view;  */
 
@@ -477,7 +477,7 @@ XFE_BrowserFrame::getURL(URL_Struct *url, Boolean skip_get_url)
   m_urlBar->setURLString(url);
 
 /*      return hview->getURL(url, skip_get_url);  */
-     return (browserview->getHTMLView())->getURL(url, skip_get_url);  
+     return (browserview->getHTMLView())->getURL(url);  
 }
 
 void
@@ -526,7 +526,7 @@ XFE_CALLBACK_DEFN(XFE_BrowserFrame, navigateToURL)(XFE_NotificationCenter*, void
 	  storeProperty (m_context, "_MOZILLA_URL", 
 		       (const unsigned char *) url_struct->address);
 	}
-	status = getURL(url_struct, FALSE);
+	status = getURL(url_struct);
 	
 	if (status >= 0)
     {
@@ -697,14 +697,14 @@ fe_showBrowser(Widget toplevel, XFE_Frame *parent_frame, Chrome *chromespec, URL
 
         if (url == NULL) {
 		    if (!plonk_cancelled())
-				theFrame->getURL(url, (url == NULL));
+				theFrame->getURL(url);
 			//fe_home_cb(toplevel, theFrame->getContext(), NULL);
             //else
 			// do nothing - assume the plonk canceller is loading a page.
 			// (i.e. XFE_BrowserDrop after a desktop file was dropped.)
         }
         else {
-            theFrame->getURL(url, (url == NULL));
+            theFrame->getURL(url);
         }
         
 	// hang properties for the browser window

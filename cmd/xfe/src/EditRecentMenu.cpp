@@ -274,7 +274,7 @@ XFE_EditRecentMenu::itemActivate(char * pUrl)
 				URL_Struct* url = NET_CreateURLStruct(pUrl, NET_NORMAL_RELOAD);
 				XFE_EditorFrame *theFrame = (XFE_EditorFrame*) _frame;
 				
-				theFrame->getURL(url, FALSE);
+				theFrame->getURL(url);
 			}
 			else {
 				fe_EditorEdit(context, _frame, /*chromespec=*/NULL, pUrl);
