@@ -52,6 +52,7 @@ CPPSRCS		= \
 		nsLDAPOperation.cpp \
 		nsLDAPURL.cpp \
 		nsLDAPServer.cpp \
+		nsLDAPService.cpp \
 		$(NULL)
 
 ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
@@ -60,7 +61,6 @@ DEFINES		+= -DMOZ_LDAP_XPCOM_EXPERIMENTAL
 CPPSRCS		+= \
 		nsLDAPProtocolHandler.cpp \
 		nsLDAPChannel.cpp \
-		nsLDAPService.cpp \
 		$(NULL)
 
 REQUIRES	+= mimetype
@@ -74,4 +74,3 @@ CSRCS		= \
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) -lldap40 -llber40
 
 include $(topsrcdir)/config/rules.mk
-

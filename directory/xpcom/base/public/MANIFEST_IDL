@@ -5,3 +5,4 @@ nsILDAPURL.idl
 nsILDAPMessageListener.idl
 nsILDAPErrors.idl
 nsILDAPServer.idl
+nsILDAPService.idl

@@ -77,6 +77,13 @@ interface nsILDAPMessage : nsISupports
                    [retval, array, size_is(count)] out string values);
 
     /**
+     * The operation this message originated from
+     * 
+     * @exception NS_ERROR_NULL_POINTER         NULL pointer to getter
+     */
+    readonly attribute nsILDAPOperation operation;
+
+    /**
      * The result code (aka lderrno) for this message.  
      *
      * IDL definitions for these constants live in nsILDAPErrors.idl.

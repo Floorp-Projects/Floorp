@@ -49,6 +49,8 @@ extern "C" int nsLDAPThreadFuncsInit(LDAP *aLDAP);
 // constructor
 //
 nsLDAPConnection::nsLDAPConnection()
+    : mConnectionHandle(0),
+      mPendingOperations(0)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -77,7 +79,6 @@ nsLDAPConnection::~nsLDAPConnection()
   if (mPendingOperations) {
       delete mPendingOperations;
   }
-
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsLDAPConnection, nsILDAPConnection, 
@@ -572,6 +573,11 @@ nsLDAPConnection::InvokeMessageCallback(LDAPMessage *aMsgHandle,
     }
 
     operation = getter_AddRefs(NS_STATIC_CAST(nsILDAPOperation *, data));
+
+    // Make sure the mOperation member is set to this operation before
+    // we call the callback.
+    //
+    NS_STATIC_CAST(nsLDAPMessage *, aMsg)->mOperation = operation;
 
     // get the message listener object (this may be a proxy for a
     // callback which should happen on another thread)

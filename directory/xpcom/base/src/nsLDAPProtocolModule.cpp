@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ *                 Leif Hedstrom <leif@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -38,11 +39,11 @@
 #include "nsLDAPOperation.h"
 #include "nsLDAPMessage.h"
 #include "nsLDAPServer.h"
+#include "nsLDAPService.h"
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 #include "nsLDAPProtocolHandler.h"
 #include "nsLDAPChannel.h"
-#include "nsLDAPService.h"
 #endif
 
 // use the default constructor
@@ -52,10 +53,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPOperation);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPMessage);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPURL);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPServer);
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init);
 
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPProtocolHandler);
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsLDAPService, Init);
 #endif
 
 
@@ -73,12 +74,12 @@ static nsModuleComponentInfo components[] =
           "@mozilla.org/network/ldap-message;1", nsLDAPMessageConstructor },
     { "LDAP Server", NS_LDAPSERVER_CID,
           "@mozilla.org/network/ldap-server;1", nsLDAPServerConstructor },
+    { "LDAP Service", NS_LDAPSERVICE_CID,
+          "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
 #ifdef MOZ_LDAP_XPCOM_EXPERIMENTAL    
     { "LDAP Protocol Handler", NS_LDAPPROTOCOLHANDLER_CID, 
           NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "ldap", 
           nsLDAPProtocolHandlerConstructor },   
-    { "LDAP Service", NS_LDAPSERVICE_CID, 
-          "@mozilla.org/network/ldap-service;1", nsLDAPServiceConstructor },
 #endif
     { "LDAP URL", NS_LDAPURL_CID,
           "@mozilla.org/network/ldap-url;1", nsLDAPURLConstructor }

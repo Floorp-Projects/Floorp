@@ -34,10 +34,10 @@ CPP_OBJS = .\$(OBJDIR)\nsLDAPURL.obj             \
            .\$(OBJDIR)\nsLDAPConnection.obj      \
            .\$(OBJDIR)\nsLDAPOperation.obj       \
            .\$(OBJDIR)\nsLDAPServer.obj          \
+           .\$(OBJDIR)\nsLDAPService.obj         \
 !if defined(ENABLE_LDAP_EXPERIMENTAL)
            .\$(OBJDIR)\nsLDAPProtocolHandler.obj \
            .\$(OBJDIR)\nsLDAPChannel.obj         \
-           .\$(OBJDIR)\nsLDAPService.obj         \
 !endif
            $(NULL)
 

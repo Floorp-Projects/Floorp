@@ -57,7 +57,6 @@ nsLDAPMessage::nsLDAPMessage()
 //
 nsLDAPMessage::~nsLDAPMessage(void)
 {
-
     if (mMsgHandle) {
         int rc = ldap_msgfree(mMsgHandle);
 
@@ -524,6 +523,18 @@ nsLDAPMessage::GetValues(const char *aAttr, PRUint32 *aCount,
     }
 
     *aCount = numVals;
+    return NS_OK;
+}
+
+// readonly attribute nsILDAPOperation operation;
+NS_IMETHODIMP nsLDAPMessage::GetOperation(nsILDAPOperation **_retval)
+{
+    if (!_retval) {
+        NS_ERROR("nsLDAPMessage::GetOperation: null pointer ");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    NS_IF_ADDREF(*_retval = mOperation);
     return NS_OK;
 }
 

@@ -17,7 +17,7 @@
  * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s): Dan Mosedale <dmose@mozilla.org>
+ * Contributor(s): Leif Hedstrom <leif@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,12 +32,19 @@
  * GPL.
  */
 
-#ifndef nsLDAPService_h___
-#define nsLDAPService_h___
-
-#include "nsIRunnable.h"
+#include "nsLDAP.h"
+#include "ldap.h"
+#include "nsString.h"
+#include "nsSupportsArray.h"
+#include "nsHashtable.h"
+#include "nsILDAPService.h"
+#include "nsILDAPMessage.h"
+#include "nsILDAPMessageListener.h"
 #include "nsCOMPtr.h"
-#include "nsIThread.h"
+#include "nsILDAPServer.h"
+#include "nsILDAPConnection.h"
+#include "nsILDAPMessage.h"
+
 
 // 6a89ae33-7a90-430d-888c-0dede53a951a 
 //
@@ -47,28 +54,78 @@
   {0x88, 0x8c, 0x0d, 0xed, 0xe5, 0x3a, 0x95, 0x1a} \
 }
 
-class nsLDAPService : public nsIRunnable
+// This is a little "helper" class, we use to store information
+// related to one Service entry (one LDAP server).
+//
+class nsLDAPServiceEntry
+{
+  public:
+    nsLDAPServiceEntry();
+    virtual ~nsLDAPServiceEntry();
+    PRBool Init();
+
+    inline PRUint32 GetLeases();
+    inline void IncrementLeases();
+    inline PRBool DecrementLeases();
+
+    inline PRTime GetTimestamp();
+    inline void SetTimestamp();
+
+    inline nsILDAPServer *GetServer();
+    inline PRBool SetServer(nsILDAPServer *aServer);
+
+    inline nsILDAPConnection *GetConnection();
+    inline void SetConnection(nsILDAPConnection *aConnection);
+
+    inline nsILDAPMessage *GetMessage();
+    inline void SetMessage(nsILDAPMessage *aMessage);
+
+    inline nsILDAPMessageListener *PopListener();
+    inline PRBool PushListener(nsILDAPMessageListener *);
+
+    inline PRBool IsRebinding();
+    inline void SetRebinding(PRBool);
+
+    inline PRBool DeleteEntry();
+
+  protected:
+    PRUint32 mLeases;		  // The number of leases currently granted
+    PRTime mTimestamp;        // Last time this server was "used"
+    PRBool mDelete;           // This entry is due for deletion
+    PRBool mRebinding;        // Keep state if we are rebinding or not
+
+    nsCOMPtr<nsILDAPServer> mServer;
+    nsCOMPtr<nsILDAPConnection> mConnection;
+    nsCOMPtr<nsILDAPMessage> mMessage;
+
+    // Array holding all the pending callbacks (listeners) for this entry
+    nsCOMPtr<nsISupportsArray> mListeners;  
+};
+
+// This is the interface we're implementing.
+//
+class nsLDAPService : public nsILDAPService, public nsILDAPMessageListener
 {
   public: 
     // interface decls
     //
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIRUNNABLE
+    NS_DECL_NSILDAPSERVICE
+    NS_DECL_NSILDAPMESSAGELISTENER
 
     // constructor and destructor
     //
     nsLDAPService();
     virtual ~nsLDAPService();
-
-    // initialize; should only be called by the generic 
-    // constructor after creation
-    //
-    NS_METHOD Init(void);
+    
+    nsresult Init();
 
   protected:
-    nsCOMPtr<nsIThread> mThread;
-    PRBool mThreadRunning;
+    nsresult EstablishConnection(nsLDAPServiceEntry *,
+                                 nsILDAPMessageListener *);
 
+    PRLock *mLock;              // Lock mechanism
+    nsHashtable *mServers;      // Hash table holding server entries
+    nsHashtable *mConnections;  // Hash table holding "reverse"
+                                // lookups from connection to server
 };
-
-#endif // nsLDAPService_h___
