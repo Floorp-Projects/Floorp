@@ -384,15 +384,8 @@ nsHelperAppDialog.prototype = {
     
     // Set "default" application description field.
     initDefaultApp: function() {
-        // Use description, if provided.
+        // Use description, if we can get one.
         var desc = this.mLauncher.MIMEInfo.defaultDescription;
-        if ( !desc ) {
-            // Otherwise, use helper application file name
-            var app = this.mLauncher.MIMEInfo.defaultApplicationHandler;
-            if ( app ) {
-                desc = app.leafName;
-            }
-        }
         if ( desc ) {
             this.dialogElement( "useSystemDefault" ).label = this.replaceInsert( this.getString( "defaultApp" ), 1, desc );
         }
@@ -538,7 +531,7 @@ nsHelperAppDialog.prototype = {
                 // App may have changed - Update application and description
                 var app = this.helperAppChoice();
                 this.mLauncher.MIMEInfo.preferredApplicationHandler = app;
-                this.mLauncher.MIMEInfo.applicationDescription = app.leafName;
+                this.mLauncher.MIMEInfo.applicationDescription = "";
             }
         }
         // We will also need to update if the "always ask" flag has changed.

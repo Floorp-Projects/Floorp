@@ -273,8 +273,17 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetFileExtensions( const char* aExtensions )
 
 NS_IMETHODIMP nsMIMEInfoImpl::GetApplicationDescription(PRUnichar ** aApplicationDescription)
 {
-  *aApplicationDescription = ToNewUnicode(mPreferredAppDescription);
-  return NS_OK;
+  if (mPreferredAppDescription.IsEmpty() && mPreferredApplication) {
+    // Don't want to cache this, just in case someone resets the app
+    // without changing the description....
+    nsAutoString leafName;
+    mPreferredApplication->GetLeafName(leafName);
+    *aApplicationDescription = ToNewUnicode(leafName);
+  } else {
+    *aApplicationDescription = ToNewUnicode(mPreferredAppDescription);
+  }
+  
+  return *aApplicationDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
  
 NS_IMETHODIMP nsMIMEInfoImpl::SetApplicationDescription(const PRUnichar * aApplicationDescription)
@@ -285,8 +294,17 @@ NS_IMETHODIMP nsMIMEInfoImpl::SetApplicationDescription(const PRUnichar * aAppli
 
 NS_IMETHODIMP nsMIMEInfoImpl::GetDefaultDescription(PRUnichar ** aDefaultDescription)
 {
-  *aDefaultDescription = ToNewUnicode(mDefaultAppDescription);
-  return NS_OK;
+  if (mDefaultAppDescription.IsEmpty() && mDefaultApplication) {
+    // Don't want to cache this, just in case someone resets the app
+    // without changing the description....
+    nsAutoString leafName;
+    mDefaultApplication->GetLeafName(leafName);
+    *aDefaultDescription = ToNewUnicode(leafName);
+  } else {
+    *aDefaultDescription = ToNewUnicode(mDefaultAppDescription);
+  }
+  
+  return *aDefaultDescription ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP nsMIMEInfoImpl::SetDefaultDescription(const PRUnichar * aDefaultDescription)
