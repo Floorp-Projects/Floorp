@@ -1,4 +1,20 @@
-// -*- Mode: Java -*-
+/* -*- Mode: Java; tab-width: 4; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
 
 // the rdf service
 var RDF = Components.classes['component://netscape/rdf/rdf-service'].getService();
@@ -22,7 +38,23 @@ function Init()
     // the tree control. Datasources are listed as members of the
     // NC:FlashDataSources sequence, and are loaded in the order that
     // they appear in that sequence.
-    var registry = RDF.GetDataSource(flashdb);
+    var registry;
+    try {
+        // First try to construct a new one and load it
+        // synchronously. nsIRDFService::GetDataSource() loads RDF/XML
+        // asynchronously by default.
+        registry = Components.classes['component://netscape/rdf/datasource?name=xml-datasource'].createInstance();
+        registry = registry.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
+        registry.Init(flashdb); // this will throw if it's already been opened and registered.
+
+        // read it in synchronously.
+        registry.Open(true);
+    }
+    catch (ex) {
+        // if we get here, then the RDF/XML has been opened and read
+        // once. We just need to grab the datasource.
+        registry = RDF.GetDataSource(flashdb);
+    }
 
     // Create a 'container' wrapper around the NC:FlashDataSources
     // resource so we can use some utility routines that make access a
