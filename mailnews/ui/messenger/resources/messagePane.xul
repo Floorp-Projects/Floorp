@@ -15,7 +15,7 @@ window {
 
 </html:style>
 
-<html:iframe src="message.html" name="browser.webwindow" width="100%" height="325px" > </html:iframe>
+<html:iframe src="http://messenger.netscape.com/bookmark/4_5/messengerstart.html" name="browser.webwindow" width="100%" height="325px" > </html:iframe>
 
 
 </window>
