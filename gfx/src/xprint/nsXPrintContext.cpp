@@ -33,7 +33,7 @@
 #include "prenv.h" /* for PR_GetEnv */
 
 /* misc defines */
-// #define HACK_PRINTONSCREEN 1
+//#define HACK_PRINTONSCREEN 1
 #define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
 
 #ifdef XPRINT_NOT_YET /* ToDo: make this dynamically */
@@ -74,7 +74,6 @@ nsXPrintContext::nsXPrintContext()
   mPContext    = (XPContext)None;
   mScreen      = (Screen *)nsnull;
   mVisual      = (Visual *)nsnull;
-  mGC          = (GC)None;
   mDrawable    = (Drawable)None;
   mDepth       = 0;
   mIsGrayscale = PR_FALSE; /* default is color output */
@@ -90,7 +89,17 @@ nsXPrintContext::~nsXPrintContext()
 
   // end the document
   if( mPDisplay != nsnull )
-    EndDocument();
+  {
+    XpDestroyContext(mPDisplay, mPContext);
+
+    // Cleanup things allocated along the way
+    xlib_rgb_detach();
+    
+    XCloseDisplay(mPDisplay);
+    
+    mPContext = nsnull;
+    mPDisplay = nsnull;
+  }
 }
 
 NS_IMETHODIMP 
@@ -172,8 +181,6 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
 
   Window                 parent_win;
   XVisualInfo           *visual_info;
-  unsigned long          gcmask;
-  XGCValues              gcvalues;
   XSetWindowAttributes   xattributes;
   long                   xattributes_mask;
   unsigned long          background,
@@ -201,17 +208,11 @@ nsXPrintContext::SetupWindow(int x, int y, int width, int height)
                                       width, height, 0,
                                       mDepth, InputOutput, mVisual, xattributes_mask,
                                       &xattributes);
-  
-  gcmask = GCBackground | GCForeground | GCFunction;
-  gcvalues.background = background;
-  gcvalues.foreground = foreground;
-  gcvalues.function = GXcopy;
-  mGC     = XCreateGC(mPDisplay, mDrawable, gcmask, &gcvalues); /* ToDo: Check for error */
 
   /* %p would be better instead of %lx for pointers - but does PR_LOG() support that ? */
   PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG,
-         ("nsXPrintContext::SetupWindow: mDepth=%d, mScreenNumber=%d, colormap=%lx, mDrawable=%lx, mGC=%lx\n",
-         (int)mDepth, (int)mScreenNumber, (long)xattributes.colormap, (long)mDrawable, (long)mGC));
+         ("nsXPrintContext::SetupWindow: mDepth=%d, mScreenNumber=%d, colormap=%lx, mDrawable=%lx\n",
+         (int)mDepth, (int)mScreenNumber, (long)xattributes.colormap, (long)mDrawable));
          
   return NS_OK;
 }
@@ -419,15 +420,6 @@ nsXPrintContext::EndDocument()
     sleep(15);
   }
 #endif /* HACK_PRINTONSCREEN */
-
-  // Cleanup things allocated along the way
-  xlib_rgb_detach();
-
-  XpDestroyContext(mPDisplay, mPContext);
-  XCloseDisplay(mPDisplay);
-
-  mPContext = nsnull;
-  mPDisplay = nsnull;
     
   return NS_OK;
 }
@@ -480,7 +472,16 @@ GetScaledXImage(XImage *img,
     for(dy = 0 ; dy < newHeight ; dy++) 
     {
       sy = dy * factorY;
+#ifdef XPRINT_USE_SLOW_BUT_EASY_CODE      
       XPutPixel(newImg, dx, dy, XGetPixel(img, sx, sy));
+#else
+      /* quick&dirty - but this is still legal because XInitImage() has 
+       * initalized the function pointers
+       * This shortcut avoids tons of test in XGetPixel()/XPutPixel() 
+       * which are not neccesary here...
+       */
+      (*newImg->f.put_pixel)(newImg, dx, dy, (*img->f.get_pixel)(img, sx, sy));  
+#endif /* XPRINT_USE_SLOW_BUT_EASY_CODE */
     }
   }
   
@@ -489,7 +490,7 @@ GetScaledXImage(XImage *img,
 
 
 NS_IMETHODIMP
-nsXPrintContext::DrawImage(nsIImage *aImage,
+nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -537,12 +538,12 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     if( (aSX != 0) || (aSY != 0) || (aSWidth != aDWidth_scaled) || (aSHeight != aDHeight_scaled) )
     {
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using DrawImageBitsScaled()\n"));
-      rv = DrawImageBitsScaled(aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
+      rv = DrawImageBitsScaled(xgc, aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
     }
     else
     {
       PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("using DrawImage() [shortcut]\n"));
-      rv = DrawImage(aImage, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
+      rv = DrawImage(xgc, aImage, aDX, aDY, aDWidth_scaled, aDHeight_scaled);
     }
     
     /* reset image resolution to previous resolution */
@@ -555,7 +556,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     (void)XpSetImageResolution(mPDisplay, mPContext, prev_res, &dummy);
     
     /* scale image on our side (bad) */
-    rv = DrawImageBitsScaled(aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
+    rv = DrawImageBitsScaled(xgc, aImage, aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight);
   }
   
   return rv;
@@ -564,7 +565,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
 // use DeviceContextImpl :: GetCanonicalPixelScale(float &aScale) 
 // to get the pixel scale of the device context
 nsresult
-nsXPrintContext::DrawImageBitsScaled(nsIImage *aImage,
+nsXPrintContext::DrawImageBitsScaled(xGC *xgc, nsIImage *aImage,
                  PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
@@ -679,7 +680,8 @@ nsXPrintContext::DrawImageBitsScaled(nsIImage *aImage,
                                   aDWidth, aDHeight);
 
     PR_LOG(nsXPrintContextLM, PR_LOG_DEBUG, ("rendering ALPHA image !!\n"));
-    rv = DrawImageBits((PRUint8 *)dstAlphaImg->data, dstAlphaImg->bytes_per_line, 
+    rv = DrawImageBits(xgc,
+                       (PRUint8 *)dstAlphaImg->data, dstAlphaImg->bytes_per_line, 
                        (PRUint8 *)dstImg->data,      dstImg->bytes_per_line, 
                        aDX, aDY, aDWidth, aDHeight);
 
@@ -689,7 +691,7 @@ nsXPrintContext::DrawImageBitsScaled(nsIImage *aImage,
   {
     /* shortcut */
     xlib_draw_rgb_image(mDrawable,
-                        mGC,
+                        *xgc,
                         aDX, aDY, aDWidth, aDHeight,
                         NS_XPRINT_RGB_DITHER,
                         (unsigned char *)dstImg->data, dstImg->bytes_per_line);
@@ -730,7 +732,7 @@ nsXPrintContext::DrawImageBitsScaled(nsIImage *aImage,
 
 
 NS_IMETHODIMP
-nsXPrintContext::DrawImage(nsIImage *aImage,
+nsXPrintContext::DrawImage(xGC *xgc, nsIImage *aImage,
                            PRInt32 aX, PRInt32 aY,
                            PRInt32 aWidth, PRInt32 aHeight)
 {
@@ -759,7 +761,7 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
     return NS_OK;
   }
       
-  return DrawImageBits(alphaBits, alphaRowBytes, 
+  return DrawImageBits(xgc, alphaBits, alphaRowBytes, 
                        image_bits, row_bytes, 
                        aX, aY, aWidth, aHeight);
 }
@@ -767,7 +769,8 @@ nsXPrintContext::DrawImage(nsIImage *aImage,
                            
 // Draw the bitmap, this draw just has destination coordinates
 nsresult
-nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
+nsXPrintContext::DrawImageBits(xGC *xgc,
+                               PRUint8 *alphaBits, PRInt32  alphaRowBytes,
                                PRUint8 *image_bits, PRInt32  row_bytes,
                                PRInt32 aX, PRInt32 aY,
                                PRInt32 aWidth, PRInt32 aHeight)
@@ -814,8 +817,9 @@ nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
     // Write into the pixemap that is underneath gdk's alpha_pixmap
     // the image we just created.
     memset(&gcv, 0, sizeof(XGCValues)); /* this may be unneccesary */
+    XGetGCValues(mPDisplay, *xgc, GCForeground|GCBackground, &gcv);
     gcv.function = GXcopy;
-    gc = XCreateGC(mPDisplay, alpha_pixmap, GCFunction, &gcv);
+    gc = XCreateGC(mPDisplay, alpha_pixmap, GCForeground|GCBackground|GCFunction, &gcv);
 
     XPutImage(mPDisplay, alpha_pixmap, gc, x_image, 0, 0, 0, 0,
               aWidth, aHeight);
@@ -831,18 +835,22 @@ nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
     /* create copy of GC before start to playing with it... */
     XGCValues gcv;  
     memset(&gcv, 0, sizeof(XGCValues)); /* this may be unneccesary */
-    gcv.function = GXcopy;
-    image_gc = XCreateGC(mPDisplay, mDrawable, GCFunction, &gcv);
-    
-    // set up the gc to use the alpha pixmap for clipping
-    XSetClipOrigin(mPDisplay, image_gc, aX, aY);
-    XSetClipMask(mPDisplay, image_gc, alpha_pixmap);
+    XGetGCValues(mPDisplay, *xgc, GCForeground|GCBackground, &gcv);
+    gcv.function      = GXcopy;
+    gcv.clip_mask     = alpha_pixmap;
+    gcv.clip_x_origin = aX;
+    gcv.clip_y_origin = aY;
+
+    image_gc = XCreateGC(mPDisplay, mDrawable, 
+                         (GCForeground|GCBackground|GCFunction|
+                          GCClipXOrigin|GCClipYOrigin|GCClipMask),
+                         &gcv);
   }
   else
   {
     /* this assumes that xlib_draw_rgb_image()/xlib_draw_gray_image()
      * does not change the GC... */
-    image_gc = mGC;
+    image_gc = *xgc;
   }
 
   if( mIsGrayscale )
@@ -863,10 +871,7 @@ nsXPrintContext::DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
   }
   
   if( alpha_pixmap != None ) 
-  {
-    XSetClipOrigin(mPDisplay, image_gc, 0, 0);
-    XSetClipMask(mPDisplay, image_gc, None);
-    
+  {   
     XFreeGC(mPDisplay, image_gc);
     XFreePixmap(mPDisplay, alpha_pixmap);
   }
@@ -880,13 +885,6 @@ NS_IMETHODIMP nsXPrintContext::GetPrintResolution(int &aPrintResolution) const
          (int)mPrintResolution));
   
   aPrintResolution = mPrintResolution;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsXPrintContext::SetForegroundColor(nscolor aColor)
-{
-  xlib_rgb_gc_set_foreground(mGC,
-                             NS_RGB(NS_GET_B(aColor), NS_GET_G(aColor), NS_GET_R(aColor)));
   return NS_OK;
 }
 

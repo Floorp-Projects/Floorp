@@ -35,6 +35,9 @@
 #include "nsString.h"
 #include "nsIImage.h"
 
+#include "nsImageXlib.h" // nsGCCache.h wants this
+#include "nsGCCache.h"
+
 #include "nsIDeviceContextSpecXPrint.h"
 
 class nsDeviceContextXp;
@@ -51,8 +54,7 @@ public:
   NS_IMETHOD BeginDocument(PRUnichar *aTitle);
   NS_IMETHOD EndDocument();
  
-  GC         GetGC(void) { return mGC; }
-  Drawable   GetDrawable(void) { return (mDrawable); }
+  Drawable   GetDrawable() { return (mDrawable); }
   Screen *   GetScreen() { return mScreen; }
   Visual *   GetVisual() { return mVisual; }
   int        GetDepth() { return mDepth; }
@@ -63,23 +65,20 @@ public:
   Display *  GetDisplay() { return mPDisplay; }
   NS_IMETHOD GetPrintResolution(int &aPrintResolution) const;
 
-  NS_IMETHOD DrawImage(nsIImage *aImage,
+  NS_IMETHOD DrawImage(xGC *gc, nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
 
-  NS_IMETHOD DrawImage(nsIImage *aImage,
+  NS_IMETHOD DrawImage(xGC *gc, nsIImage *aImage,
                  PRInt32 aX, PRInt32 aY,
                  PRInt32 aWidth, PRInt32 aHeight);
 
-  
-  NS_IMETHOD SetForegroundColor(nscolor aColor); 
-
 private:
-  nsresult DrawImageBitsScaled(nsIImage *aImage,
+  nsresult DrawImageBitsScaled(xGC *gc, nsIImage *aImage,
                 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
                 
-  nsresult DrawImageBits(PRUint8 *alphaBits, PRInt32  alphaRowBytes,
+  nsresult DrawImageBits(xGC *gc, PRUint8 *alphaBits, PRInt32  alphaRowBytes,
                          PRUint8 *image_bits, PRInt32  row_bytes,
                          PRInt32 aX, PRInt32 aY,
                          PRInt32 aWidth, PRInt32 aHeight); 

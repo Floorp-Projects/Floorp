@@ -43,11 +43,12 @@ CSRCS		= \
 
 CPPSRCS		= \
 		nsDeviceContextXP.cpp \
-		nsFontMetricsXP.cpp \
+		nsFontMetricsXlib.cpp \
 		nsRenderingContextXP.cpp \
 		nsGfxFactoryXP.cpp \
 		nsXPrintContext.cpp \
 		nsRegionXlib.cpp \
+                nsGCCache.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -64,7 +65,7 @@ EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES         += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES
+DEFINES         += -D_IMPL_NS_GFXONXP -DUSE_MOZILLA_TYPES -DUSE_XPRINT
 ifeq ($(OS_ARCH), Linux)
 DEFINES         += -D_BSD_SOURCE
 endif
@@ -83,4 +84,5 @@ INCLUDES	+= \
 		-I$(srcdir)/../gtk \
 		-I$(srcdir)/../xlib \
 		-I$(srcdir)/../xlibrgb \
+		-I$(srcdir)/../xprint \
 		$(NULL)
