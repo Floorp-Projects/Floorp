@@ -288,16 +288,19 @@ calendarManager.prototype.removeCalendar = function calMan_removeCalendar( ThisC
 /*
 ** Delete the calendar. Remove the file, it won't be used any longer.
 */
-calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisCalendarObject )
+calendarManager.prototype.deleteCalendar = function calMan_deleteCalendar( ThisCalendarObject, deleteFile )
 {
    if( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#serverNumber" ) == 0 )
       return;
 
    this.CalendarWindow.eventSource.gICalLib.removeCalendar( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
 
-   var FileToRemove = new File( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
-   FileToRemove.remove();
-
+   if( deleteFile === true )
+   {
+      var FileToRemove = new File( ThisCalendarObject.getAttribute( "http://home.netscape.com/NC-rdf#path" ) );
+      FileToRemove.remove();
+   }
+   
    ThisCalendarObject.remove();
 
    this.rdf.flush();
@@ -697,12 +700,38 @@ function switchCalendar( event )
 
 function deleteCalendar( )
 {
+   // Show a dialog with option to import events with or without dialogs
+   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(); 
+   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService); 
+   var result = {value:0}; 
+
+   var calendarStringBundle = srGetStrBundle("chrome://calendar/locale/calendar.properties");
+   
+   var buttonPressed =      
+      promptService.confirmEx(window, 
+                            calendarStringBundle.GetStringFromName( "deleteCalendarTitle" ), calendarStringBundle.GetStringFromName( "deleteCalendarMessage" ), 
+                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) + 
+                            (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) + 
+                            (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2), 
+                            calendarStringBundle.GetStringFromName( "deleteCalendarOnly" ),null,calendarStringBundle.GetStringFromName( "deleteCalendarAndFile" ),null, result); 
+   
    var IdToDelete = gCalendarWindow.calendarManager.getSelectedCalendarId()
    
    var calendarObjectToDelete = gCalendarWindow.calendarManager.rdf.getNode( IdToDelete );
 
-   gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete );
-
+   if(buttonPressed == 0) // Delete calendar
+   { 
+      gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete, false );
+   }
+   else if(buttonPressed == 2) //delete calendar and file
+   { 
+      gCalendarWindow.calendarManager.deleteCalendar( calendarObjectToDelete, true );
+   } 
+   else if(buttonPressed == 1) // CANCEL
+   { 
+      return false; 
+   } 
+   
    refreshEventTree( getAndSetEventTable() );
 
    refreshToDoTree( false );

@@ -193,7 +193,7 @@ function loadEventsFromFile()
         { 
             return false; 
         } 
-   }
+      }
 
 
       // Depending on how the user chose to deal with duplicates,
