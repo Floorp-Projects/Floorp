@@ -485,14 +485,8 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_PurgeAtomTable();
 
-#ifdef NS_BUILD_REFCNT_LOGGING
-#if defined(_WIN32) || defined(XP_UNIX)
-    if (getenv("MOZ_DUMP_LEAKS")) {
-        nsTraceRefcnt::DumpStatistics();
-    }
-#endif
+    nsTraceRefcnt::DumpStatistics();
     nsTraceRefcnt::ResetStatistics();
-#endif
 
 #ifdef GC_LEAK_DETECTOR
 	// Shutdown the GC.
