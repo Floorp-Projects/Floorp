@@ -794,7 +794,7 @@ NS_IMETHODIMP nsTreeBodyFrame::GetSelection(nsITreeSelection** aSelection)
 NS_IMETHODIMP nsTreeBodyFrame::GetRowHeight(PRInt32* _retval)
 {
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   *_retval = NSToCoordRound((float) mRowHeight * t2p);
 
   return NS_OK;
@@ -1028,7 +1028,7 @@ nsTreeBodyFrame::UpdateScrollbar()
   if (!EnsureScrollbar())
     return;
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
   nsAutoString curPos;
@@ -1071,7 +1071,7 @@ void nsTreeBodyFrame::InvalidateScrollbar()
   nsAutoString maxposStr;
 
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
   PRInt32 size = rowHeightAsPixels*(mRowCount-mPageCount);
@@ -1093,7 +1093,7 @@ nsTreeBodyFrame::AdjustEventCoordsToBoxCoordSpace (PRInt32 aX, PRInt32 aY, PRInt
 {
   // Convert our x and y coords to twips.
   float pixelsToTwips = 0.0;
-  mPresContext->GetPixelsToTwips(&pixelsToTwips);
+  pixelsToTwips = mPresContext->PixelsToTwips();
   aX = NSToIntRound(aX * pixelsToTwips);
   aY = NSToIntRound(aY * pixelsToTwips);
   
@@ -1412,7 +1412,7 @@ nsTreeBodyFrame::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID, con
   }
   
   float t2p = 0.0;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   
   *aX = NSToIntRound(theRect.x * t2p);
   *aY = NSToIntRound(theRect.y * t2p);
@@ -2019,7 +2019,7 @@ nsRect nsTreeBodyFrame::GetImageSize(PRInt32 aRowIndex, const PRUnichar* aColID,
     if (needWidth || needHeight) {
       // Get the natural image size.
       float p2t;
-      mPresContext->GetPixelsToTwips(&p2t);
+      p2t = mPresContext->PixelsToTwips();
 
       if (needWidth) {
         // Get the size from the image.
@@ -2061,11 +2061,11 @@ PRInt32 nsTreeBodyFrame::GetRowHeight()
 
     if (height > 0) {
       float t2p;
-      mPresContext->GetTwipsToPixels(&t2p);
+      t2p = mPresContext->TwipsToPixels();
       height = NSTwipsToIntPixels(height, t2p);
       height += height % 2;
       float p2t;
-      mPresContext->GetPixelsToTwips(&p2t);
+      p2t = mPresContext->PixelsToTwips();
       height = NSIntPixelsToTwips(height, p2t);
 
       // XXX Check box-sizing to determine if border/padding should augment the height
@@ -2080,7 +2080,7 @@ PRInt32 nsTreeBodyFrame::GetRowHeight()
   }
 
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   return NSIntPixelsToTwips(18, p2t); // As good a default as any.
 }
 
@@ -2097,7 +2097,7 @@ PRInt32 nsTreeBodyFrame::GetIndentation()
     }
   }
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   return NSIntPixelsToTwips(16, p2t); // As good a default as any.
 }
 
@@ -2774,8 +2774,8 @@ nsTreeBodyFrame::PaintImage(PRInt32              aRowIndex,
     // Center the image. XXX Obey vertical-align style prop?
 
     float t2p, p2t;
-    mPresContext->GetTwipsToPixels(&t2p);
-    mPresContext->GetPixelsToTwips(&p2t);
+    t2p = mPresContext->TwipsToPixels();
+    p2t = mPresContext->PixelsToTwips();
 
     if (imageSize.height < imageRect.height) {
       p.y += (imageRect.height - imageSize.height)/2;
@@ -3154,7 +3154,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
     else {
       // Use default width 50px.
       float p2t;
-      mPresContext->GetPixelsToTwips(&p2t);
+      p2t = mPresContext->PixelsToTwips();
       width = NSIntPixelsToTwips(50, p2t);
     }
 
@@ -3165,7 +3165,7 @@ nsTreeBodyFrame::PaintDropFeedback(const nsRect&        aDropFeedbackRect,
     else {
       // Use default height 2px.
       float p2t;
-      mPresContext->GetPixelsToTwips(&p2t);
+      p2t = mPresContext->PixelsToTwips();
       height = NSIntPixelsToTwips(2, p2t);
     }
 
@@ -3305,7 +3305,7 @@ nsTreeBodyFrame::ScrollInternal(PRInt32 aRow)
   mTopRowIndex += delta;
 
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   nscoord rowHeightAsPixels = NSToCoordRound((float)mRowHeight*t2p);
 
   // See if we have a background image.  If we do, then we cannot blit.
@@ -3337,7 +3337,7 @@ nsTreeBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
     return NS_ERROR_UNEXPECTED;
 
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   nscoord rh = NSToCoordRound((float)mRowHeight*t2p);
 
   nscoord oldrow = aOldIndex/rh;

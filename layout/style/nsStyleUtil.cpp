@@ -226,7 +226,7 @@ nsStyleUtil::CalcFontPointSize(PRInt32 aHTMLSize, PRInt32 aBasePointSize,
   if ((fontSize >= sFontSizeTableMin) && (fontSize <= sFontSizeTableMax))
   {
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
 
     PRInt32 row = fontSize - sFontSizeTableMin;
 
@@ -272,7 +272,7 @@ nscoord nsStyleUtil::FindNextSmallerFontSize(nscoord aFontSize, PRInt32 aBasePoi
   float p2t;
   nscoord onePx;
   
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   onePx = NSToCoordRound(p2t);
     
 	if (aFontSizeType == eFontSize_HTML) {
@@ -340,7 +340,7 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
   float p2t;
   nscoord onePx;
   
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   onePx = NSToCoordRound(p2t);
     
 	if (aFontSizeType == eFontSize_HTML) {
@@ -383,7 +383,7 @@ nscoord nsStyleUtil::FindNextLargerFontSize(nscoord aFontSize, PRInt32 aBasePoin
   }
   else { // smaller than HTML table, increase by 1px
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
     largerSize = aFontSize + NSToCoordRound(p2t); 
   }
   return largerSize;

@@ -757,7 +757,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect, nsIContent** aOffsetParent)
   
   // Get the scale from that Presentation Context
   float scale;
-  context->GetTwipsToPixels(&scale);
+  scale = context->TwipsToPixels();
 
   // Convert to pixels using that scale
   aRect.x = NSTwipsToIntPixels(origin.x, scale);
@@ -965,8 +965,8 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     *aFrame = frame;
   }
 
-  presContext->GetPixelsToTwips(aP2T);
-  presContext->GetTwipsToPixels(aT2P);
+  *aP2T = presContext->PixelsToTwips();
+  *aT2P = presContext->TwipsToPixels();
 
   // Get the scrollable frame
   nsIScrollableFrame *scrollFrame = nsnull;

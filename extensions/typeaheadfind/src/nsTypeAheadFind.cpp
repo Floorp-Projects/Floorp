@@ -2626,7 +2626,7 @@ nsTypeAheadFind::IsRangeVisible(nsIPresShell *aPresShell,
   nsIView *containingView = nsnull;
   nsPoint frameOffset;
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   nsRectVisibility rectVisibility = nsRectVisibility_kAboveViewport;
 
   if (!aGetTopVisibleLeaf) {

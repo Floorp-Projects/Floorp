@@ -174,7 +174,7 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
     return NS_OK;
 
   float t2p;
-  presContext->GetTwipsToPixels(&t2p);
+  t2p = presContext->TwipsToPixels();
     // Convert to pixels using that scale
   caretRect.x      = NSTwipsToIntPixels(caretRect.x, t2p);
   caretRect.y      = NSTwipsToIntPixels(caretRect.y, t2p);

@@ -96,8 +96,6 @@ public:
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult) = 0;
   virtual void GetPageDim(nsRect* aActualRect, nsRect* aAdjRect) = 0;
   virtual void SetPageDim(nsRect* aRect) = 0;
-  NS_IMETHOD GetPixelsToTwips(float* aResult) const;
-  NS_IMETHOD GetTwipsToPixels(float* aResult) const;
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const;
   NS_IMETHOD GetScaledPixelsToTwips(float* aScale) const;
   NS_IMETHOD GetEventStateManager(nsIEventStateManager** aManager);

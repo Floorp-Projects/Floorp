@@ -721,7 +721,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
   if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
      // Get the height of the dropdown list in pixels.
      float t2p;
-     aPresContext->GetTwipsToPixels(&t2p);
+     t2p = aPresContext->TwipsToPixels();
      nscoord absoluteDropDownHeight = NSTwipsToIntPixels(dropdownRect.height, t2p);
     
       // Check to see if the drop-down list will go offscreen
@@ -2394,7 +2394,7 @@ nsComboboxControlFrame::Paint(nsIPresContext*     aPresContext,
           }
           //aRenderingContext.DrawRect(clipRect);
           float p2t;
-          aPresContext->GetPixelsToTwips(&p2t);
+          p2t = aPresContext->PixelsToTwips();
           nscoord onePixel = NSIntPixelsToTwips(1, p2t);
           clipRect.width -= onePixel;
           clipRect.height -= onePixel;

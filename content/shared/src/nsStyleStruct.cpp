@@ -411,7 +411,7 @@ nsStyleBorder::nsStyleBorder(nsIPresContext* aPresContext)
   // XXX support mBorderWidths until deprecated methods are removed
   float pixelsToTwips = 20.0f;
   if (aPresContext) {
-    aPresContext->GetPixelsToTwips(&pixelsToTwips);
+    pixelsToTwips = aPresContext->PixelsToTwips();
   }
   mBorderWidths[NS_STYLE_BORDER_WIDTH_THIN] = NSIntPixelsToTwips(1, pixelsToTwips);
   mBorderWidths[NS_STYLE_BORDER_WIDTH_MEDIUM] = NSIntPixelsToTwips(3, pixelsToTwips);
@@ -617,7 +617,7 @@ nsStyleOutline::nsStyleOutline(nsIPresContext* aPresContext)
   // XXX support mBorderWidths until deprecated methods are removed
   float pixelsToTwips = 20.0f;
   if (aPresContext)
-    aPresContext->GetPixelsToTwips(&pixelsToTwips);
+    pixelsToTwips = aPresContext->PixelsToTwips();
   mBorderWidths[NS_STYLE_BORDER_WIDTH_THIN] = NSIntPixelsToTwips(1, pixelsToTwips);
   mBorderWidths[NS_STYLE_BORDER_WIDTH_MEDIUM] = NSIntPixelsToTwips(3, pixelsToTwips);
   mBorderWidths[NS_STYLE_BORDER_WIDTH_THICK] = NSIntPixelsToTwips(5, pixelsToTwips);

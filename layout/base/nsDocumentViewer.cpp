@@ -672,7 +672,7 @@ DocumentViewerImpl::InitPresentationStuff(PRBool aDoInitialReflow)
 
   float p2t;
 
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
 
   nscoord width = NSIntPixelsToTwips(bounds.width, p2t);
   nscoord height = NSIntPixelsToTwips(bounds.height, p2t);
@@ -1701,7 +1701,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
 
   nsRect tbounds = aBounds;
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   tbounds *= p2t;
 
    // Initialize the view manager with an offset. This allows the viewmanager
@@ -2601,7 +2601,7 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 
    // so how big is it?
    nsRect shellArea = presContext->GetVisibleArea();
-   presContext->GetTwipsToPixels(&pixelScale);
+   pixelScale = presContext->TwipsToPixels();
    width = PRInt32((float)shellArea.width*pixelScale);
    height = PRInt32((float)shellArea.height*pixelScale);
 
@@ -3677,7 +3677,7 @@ DocumentViewerImpl::InstallNewPresentation()
   nscoord width  = bounds.width;
   nscoord height = bounds.height;
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   width = NSIntPixelsToTwips(width, p2t);
   height = NSIntPixelsToTwips(height, p2t);
   mViewManager->DisableRefresh();

@@ -465,7 +465,7 @@ nsDocShellTreeOwner::SizeShellTo(nsIDocShellTreeItem* aShellItem,
    nsRect shellArea = presContext->GetVisibleArea();
 
    float pixelScale;
-   presContext->GetTwipsToPixels(&pixelScale);
+   pixelScale = presContext->TwipsToPixels();
    PRInt32 browserCX = PRInt32((float)shellArea.width*pixelScale);
    PRInt32 browserCY = PRInt32((float)shellArea.height*pixelScale);
 

@@ -295,7 +295,7 @@ nsListBoxBodyFrame::AttributeChanged(nsIPresContext* aPresContext,
       PRInt32 dummy;
       PRInt32 count = rows.ToInteger(&dummy);
       float t2p;
-      aPresContext->GetTwipsToPixels(&t2p);
+      t2p = aPresContext->TwipsToPixels();
       PRInt32 rowHeight = GetRowHeightTwips();
       rowHeight = NSTwipsToIntPixels(rowHeight, t2p);
       nsAutoString value;
@@ -661,7 +661,7 @@ nsListBoxBodyFrame::SetRowHeight(nscoord aRowHeight)
       PRInt32 dummy;
       PRInt32 count = rows.ToInteger(&dummy);
       float t2p;
-      mPresContext->GetTwipsToPixels(&t2p);
+      t2p = mPresContext->TwipsToPixels();
       PRInt32 rowHeight = NSTwipsToIntPixels(aRowHeight, t2p);
       nsAutoString value;
       value.AppendInt(rowHeight*count);

@@ -422,7 +422,7 @@ nsSubDocumentFrame::Reflow(nsIPresContext*          aPresContext,
     // resize the sub document
     if (baseWindow) {
       float t2p;
-      aPresContext->GetTwipsToPixels(&t2p);
+      t2p = aPresContext->TwipsToPixels();
       PRInt32 x = 0;
       PRInt32 y = 0;
       

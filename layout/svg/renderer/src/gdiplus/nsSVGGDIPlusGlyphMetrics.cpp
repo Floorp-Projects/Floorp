@@ -531,7 +531,7 @@ nsSVGGDIPlusGlyphMetrics::InitializeFontInfo()
   }
 
   float pxPerTwips;
-  presContext->GetTwipsToPixels(&pxPerTwips);
+  pxPerTwips = presContext->TwipsToPixels();
   pxPerTwips/=GetPixelScale();
   
   nsFont font;

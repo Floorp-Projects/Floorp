@@ -117,7 +117,7 @@ nsSVGLibartBitmapMac::Init(nsIRenderingContext* ctx,
   mRenderingContext = ctx;
 
   float twipsPerPx;
-  presContext->GetPixelsToTwips(&twipsPerPx);
+  twipxPerPx = presContext->PixelsToTwips();
   mRectTwips.x = (nscoord)(rect.x*twipsPerPx);
   mRectTwips.y = (nscoord)(rect.y*twipsPerPx);
   mRectTwips.width = (nscoord)(rect.width*twipsPerPx);

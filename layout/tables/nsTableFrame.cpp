@@ -3495,7 +3495,7 @@ nsTableFrame::DistributeHeightToRows(const nsHTMLReflowState& aReflowState,
 { 
   nsIPresContext *presContext = GetPresContext();
   float p2t;
-  presContext->GetPixelsToTwips(&p2t);
+  p2t = presContext->PixelsToTwips();
 
   nscoord cellSpacingY = GetCellSpacingY();
 
@@ -4114,7 +4114,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
 
   if (NS_UNCONSTRAINEDSIZE != width) {
     float p2t;
-    GetPresContext()->GetPixelsToTwips(&p2t);
+    p2t = GetPresContext()->PixelsToTwips();
     width = RoundToPixel(width, p2t);
   }
 

@@ -346,7 +346,7 @@ nsHTMLImageElement::GetXY()
 
   // Get the scale from that Presentation Context
   float scale;
-  context->GetTwipsToPixels(&scale);
+  scale = context->TwipsToPixels();
 
   // Convert to pixels using that scale
   point.x = NSTwipsToIntPixels(origin.x, scale);
@@ -409,7 +409,7 @@ nsHTMLImageElement::GetWidthHeight()
 
     if (context) {
       float t2p;
-      context->GetTwipsToPixels(&t2p);
+      t2p = context->TwipsToPixels();
 
       size.width = NSTwipsToIntPixels(size.width, t2p);
       size.height = NSTwipsToIntPixels(size.height, t2p);

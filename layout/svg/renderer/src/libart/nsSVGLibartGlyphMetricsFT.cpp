@@ -311,7 +311,7 @@ nsSVGLibartGlyphMetricsFT::GetTwipsToPixels()
     return 1.0f;
   }
   float twipstopixel;
-  presContext->GetTwipsToPixels(&twipstopixel);
+  twipstopixel = presContext->TwipsToPixels();
   return twipstopixel;
 }  
 

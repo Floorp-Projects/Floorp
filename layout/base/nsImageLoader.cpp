@@ -207,7 +207,7 @@ NS_IMETHODIMP nsImageLoader::FrameChanged(imgIContainer *aContainer,
   nsRect r(*dirtyRect);
 
   float p2t;
-  mPresContext->GetPixelsToTwips(&p2t);
+  p2t = mPresContext->PixelsToTwips();
   r.x = NSIntPixelsToTwips(r.x, p2t);
   r.y = NSIntPixelsToTwips(r.y, p2t);
   r.width = NSIntPixelsToTwips(r.width, p2t);

@@ -932,26 +932,6 @@ nsPresContext::GetUseFocusColors(PRBool& aUseFocusColors)
 
 
 NS_IMETHODIMP
-nsPresContext::GetPixelsToTwips(float* aResult) const
-{
-  NS_PRECONDITION(aResult, "null out param");
-
-  float p2t;
-  p2t = mDeviceContext->DevUnitsToAppUnits();
-  *aResult = p2t;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsPresContext::GetTwipsToPixels(float* aResult) const
-{
-  NS_PRECONDITION(aResult, "null out param");
-
-  *aResult = mDeviceContext->AppUnitsToDevUnits();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsPresContext::GetTwipsToPixelsForFonts(float* aResult) const
 {
   NS_PRECONDITION(nsnull != aResult, "null ptr");

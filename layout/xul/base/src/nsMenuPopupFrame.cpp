@@ -2263,7 +2263,7 @@ nsMenuPopupFrame::GetScreenPosition(nsIView* aView, nsPoint& aScreenPosition)
   rootWidget->WidgetToScreen(bounds, screenBounds);
 
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
 
   aScreenPosition.x = NSTwipsToIntPixels(screenPos.x, t2p) + screenBounds.x;
   aScreenPosition.y = NSTwipsToIntPixels(screenPos.y, t2p) + screenBounds.y;

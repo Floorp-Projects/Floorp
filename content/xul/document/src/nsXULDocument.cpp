@@ -1616,7 +1616,7 @@ nsXULDocument::GetPixelDimensions(nsIPresShell* aShell, PRInt32* aWidth,
 
         if (NS_SUCCEEDED(result)) {
             float scale;
-            context->GetTwipsToPixels(&scale);
+            scale = context->TwipsToPixels();
 
             *aWidth = NSTwipsToIntPixels(size.width, scale);
             *aHeight = NSTwipsToIntPixels(size.height, scale);

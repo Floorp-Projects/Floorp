@@ -377,7 +377,7 @@ NS_IMETHODIMP mozXMLTermStream::SizeToContentHeight(PRInt32 maxHeight)
 
   // Determine twips to pixels conversion factor
   float pixelScale;
-  presContext->GetTwipsToPixels(&pixelScale);
+  pixelScale = presContext->TwipsToPixels();
 
   // Get scrollbar dimensions in pixels
   float sbWidth, sbHeight;

@@ -131,7 +131,7 @@ GetScreenOrigin(nsIDOMElement* aElement)
       if (presContext) {
         // Get the scale from that Presentation Context
         float scale;
-        presContext->GetTwipsToPixels(&scale);
+        scale = presContext->TwipsToPixels();
 
         nsIFrame* frame;
         nsresult rv = presShell->GetPrimaryFrameFor(content, &frame);

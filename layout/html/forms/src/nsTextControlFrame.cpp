@@ -1407,7 +1407,7 @@ nsTextControlFrame::ReflowStandard(nsIPresContext*          aPresContext,
   // Add in the size of the scrollbars for textarea
   if (IsTextArea()) {
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
 
     nsIDeviceContext *dx = aPresContext->DeviceContext();
 
@@ -1468,7 +1468,7 @@ nsTextControlFrame::CalculateSizeStandard(nsIPresContext*       aPresContext,
   // certainly a fixed-width font.
   if (charWidth != charMaxAdvance) {
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
     nscoord internalPadding = PR_MAX(charMaxAdvance - NSToCoordRound(4 * p2t), 0);
     // round to a multiple of p2t
     nscoord t = NSToCoordRound(p2t); 

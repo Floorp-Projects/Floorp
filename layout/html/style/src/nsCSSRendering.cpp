@@ -2189,7 +2189,7 @@ nscoord width;
   /* XXX something is misnamed here!!!! */
   nscoord twipsPerPixel;/* XXX */
   float p2t;/* XXX */
-  aPresContext->GetPixelsToTwips(&p2t);/* XXX */
+  p2t = aPresContext->PixelsToTwips();/* XXX */
   twipsPerPixel = (nscoord) p2t;/* XXX */
 
   nscolor outlineColor(NS_RGB(0,0,0)); // default to black in case it is invert color and the platform does not support that
@@ -2281,7 +2281,7 @@ void nsCSSRendering::PaintBorderEdges(nsIPresContext* aPresContext,
   // Draw all the other sides
   nscoord twipsPerPixel;
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   twipsPerPixel = (nscoord) p2t;/* XXX huh!*/
 
   if (0 == (aSkipSides & (1<<NS_SIDE_TOP))) {
@@ -2937,7 +2937,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   image->GetHeight(&imageSize.height);
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   imageSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
   imageSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
 
@@ -3417,7 +3417,7 @@ nsCSSRendering::PaintRoundedBackground(nsIPresContext* aPresContext,
   float         p2t;
 
   // needed for our border thickness
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   twipsPerPixel = NSToCoordRound(p2t);
 
   nscolor color = aColor.mBackgroundColor;
@@ -3550,7 +3550,7 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
   }
 
   // needed for our border thickness
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   twipsPerPixel = NSToCoordRound(p2t);
 
   // Base our thickness check on the segment being less than a pixel and 1/2

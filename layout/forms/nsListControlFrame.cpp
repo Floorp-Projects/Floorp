@@ -1228,7 +1228,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         nscoord screenHeightInPixels = 0;
         if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
           float   p2t;
-          aPresContext->GetPixelsToTwips(&p2t);
+          p2t = aPresContext->PixelsToTwips();
           nscoord screenHeight = NSIntPixelsToTwips(screenHeightInPixels, p2t);
 
           nscoord availDropHgt = (screenHeight / 2) - (heightOfARow*2); // approx half screen minus combo size

@@ -5575,8 +5575,8 @@ GlobalWindowImpl::GetScrollInfo(nsIScrollableView **aScrollableView,
   nsCOMPtr<nsIPresContext> presContext;
   mDocShell->GetPresContext(getter_AddRefs(presContext));
   if (presContext) {
-    presContext->GetPixelsToTwips(aP2T);
-    presContext->GetTwipsToPixels(aT2P);
+    *aP2T = presContext->PixelsToTwips();
+    *aT2P = presContext->TwipsToPixels();
 
     nsIViewManager* vm = presContext->GetViewManager();
     if (vm)

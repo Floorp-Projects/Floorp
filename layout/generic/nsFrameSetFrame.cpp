@@ -615,7 +615,7 @@ void nsHTMLFramesetFrame::GenerateRowCol(nsIPresContext*       aPresContext,
                                          nsString&             aNewAttr)
 {
   float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
   PRInt32 i;
  
   for (i = 0; i < aNumSpecs; i++) {
@@ -1422,7 +1422,7 @@ nsHTMLFramesetFrame::StartMouseDrag(nsIPresContext*            aPresContext,
 {
   if (mMinDrag == 0) {
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
     mMinDrag = NSIntPixelsToTwips(2, p2t);  // set min drag and min frame size to 2 pixels
   }
 
@@ -1645,10 +1645,10 @@ nsHTMLFramesetBorderFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
   nscoord widthInPixels = NSTwipsToIntPixels(mWidth, t2p);
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   nscoord pixelWidth    = NSIntPixelsToTwips(1, p2t);
 
   if (widthInPixels <= 0) {
@@ -1820,7 +1820,7 @@ nsHTMLFramesetBlankFrame::Paint(nsIPresContext*      aPresContext,
   //aRenderingContext.FillRect (mRect);
 
   float p2t;
-  aPresContext->GetPixelsToTwips(&p2t);
+  p2t = aPresContext->PixelsToTwips();
   nscoord x0 = 0;
   nscoord y0 = 0;
   nscoord x1 = x0;

@@ -331,7 +331,7 @@ nsImageFrame::RecalculateTransform(imgIContainer* aImage)
   
   if (aImage) {
     float p2t;
-    GetPresContext()->GetPixelsToTwips(&p2t);
+    p2t = GetPresContext()->PixelsToTwips();
 
     nsSize imageSizeInPx;
     aImage->GetWidth(&imageSizeInPx.width);
@@ -415,7 +415,7 @@ nsRect
 nsImageFrame::ConvertPxRectToTwips(const nsRect& aRect) const
 {
   float p2t;
-  GetPresContext()->GetPixelsToTwips(&p2t);
+  p2t = GetPresContext()->PixelsToTwips();
   return nsRect(NSIntPixelsToTwips(aRect.x, p2t), // x
                 NSIntPixelsToTwips(aRect.y, p2t), // y
                 NSIntPixelsToTwips(aRect.width, p2t), // width
@@ -717,7 +717,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
       
     float p2t;
-    aPresContext->GetPixelsToTwips(&p2t);
+    p2t = aPresContext->PixelsToTwips();
 
     if (currentContainer) {
       RecalculateTransform(currentContainer);
@@ -737,7 +737,7 @@ nsImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
   }
 
   float t2p, sp2t;
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
   aPresContext->GetScaledPixelsToTwips(&sp2t);
 
   // convert from normal twips to scaled twips (printing...)
@@ -1536,7 +1536,7 @@ nsImageFrame::TranslateEventCoords(nsIPresContext* aPresContext,
 
   // Translate the coordinates from twips to pixels
   float t2p;
-  aPresContext->GetTwipsToPixels(&t2p);
+  t2p = aPresContext->TwipsToPixels();
   aResult.x = NSTwipsToIntPixels(x, t2p);
   aResult.y = NSTwipsToIntPixels(y, t2p);
 }

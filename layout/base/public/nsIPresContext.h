@@ -46,6 +46,7 @@
 #include "nsCOMPtr.h"
 #include "nsIPresShell.h"
 #include "nsRect.h"
+#include "nsIDeviceContext.h"
 #ifdef IBMBIDI
 class nsBidiPresUtils;
 #endif // IBMBIDI
@@ -312,9 +313,9 @@ public:
    */
   virtual void SetPageDim(nsRect* aRect) = 0;
 
-  NS_IMETHOD GetPixelsToTwips(float* aResult) const = 0;
+  float PixelsToTwips() const { return mDeviceContext->DevUnitsToAppUnits(); }
 
-  NS_IMETHOD GetTwipsToPixels(float* aResult) const = 0;
+  float TwipsToPixels() const { return mDeviceContext->AppUnitsToDevUnits(); }
 
   NS_IMETHOD GetTwipsToPixelsForFonts(float* aResult) const = 0;
 

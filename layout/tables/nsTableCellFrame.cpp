@@ -348,26 +348,22 @@ nsTableCellFrame::DecorateForSelection(nsIPresContext* aPresContext,
               GetColor(nsILookAndFeel::eColor_TextSelectBackground,
                        bordercolor);
           }
-          float t2pfloat;
-          if (NS_SUCCEEDED(aPresContext->GetPixelsToTwips(&t2pfloat)))
+          PRInt16 t2p = (PRInt16) aPresContext->PixelsToTwips();
+          if ((mRect.width >(3*t2p)) && (mRect.height > (3*t2p)))
           {
-            PRInt16 t2p = (PRInt16)t2pfloat;
-            if ((mRect.width >(3*t2p)) && (mRect.height > (3*t2p)))
-            {
-              //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
-              bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
-              //outerrounded
-              aRenderingContext.SetColor(bordercolor);
-              aRenderingContext.DrawLine(t2p, 0, mRect.width, 0);
-              aRenderingContext.DrawLine(0, t2p, 0, mRect.height);
-              aRenderingContext.DrawLine(t2p, mRect.height, mRect.width, mRect.height);
-              aRenderingContext.DrawLine(mRect.width, t2p, mRect.width, mRect.height);
-              //middle
-              aRenderingContext.DrawRect(t2p, t2p, mRect.width-t2p, mRect.height-t2p);
-              //shading
-              aRenderingContext.DrawLine(2*t2p, mRect.height-2*t2p, mRect.width-t2p, mRect.height- (2*t2p));
-              aRenderingContext.DrawLine(mRect.width - (2*t2p), 2*t2p, mRect.width - (2*t2p), mRect.height-t2p);
-            }
+            //compare bordercolor to ((nsStyleColor *)myColor)->mBackgroundColor)
+            bordercolor = EnsureDifferentColors(bordercolor, aStyleColor->mBackgroundColor);
+            //outerrounded
+            aRenderingContext.SetColor(bordercolor);
+            aRenderingContext.DrawLine(t2p, 0, mRect.width, 0);
+            aRenderingContext.DrawLine(0, t2p, 0, mRect.height);
+            aRenderingContext.DrawLine(t2p, mRect.height, mRect.width, mRect.height);
+            aRenderingContext.DrawLine(mRect.width, t2p, mRect.width, mRect.height);
+            //middle
+            aRenderingContext.DrawRect(t2p, t2p, mRect.width-t2p, mRect.height-t2p);
+            //shading
+            aRenderingContext.DrawLine(2*t2p, mRect.height-2*t2p, mRect.width-t2p, mRect.height- (2*t2p));
+            aRenderingContext.DrawLine(mRect.width - (2*t2p), 2*t2p, mRect.width - (2*t2p), mRect.height-t2p);
           }
         }
       }

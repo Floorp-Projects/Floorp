@@ -932,7 +932,7 @@ NS_METHOD nsDOMEvent::GetLayerX(PRInt32* aLayerX)
   }
 
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   *aLayerX = NSTwipsToIntPixels(mEvent->point.x, t2p);
   return NS_OK;
 }
@@ -947,7 +947,7 @@ NS_METHOD nsDOMEvent::GetLayerY(PRInt32* aLayerY)
   }
 
   float t2p;
-  mPresContext->GetTwipsToPixels(&t2p);
+  t2p = mPresContext->TwipsToPixels();
   *aLayerY = NSTwipsToIntPixels(mEvent->point.y, t2p);
   return NS_OK;
 }
@@ -963,8 +963,8 @@ nsresult nsDOMEvent::GetScrollInfo(nsIScrollableView** aScrollableView,
     return NS_ERROR_FAILURE;
   }
 
-  mPresContext->GetPixelsToTwips(aP2T);
-  mPresContext->GetTwipsToPixels(aT2P);
+  *aP2T = mPresContext->PixelsToTwips();
+  *aT2P = mPresContext->TwipsToPixels();
 
   nsIPresShell *presShell = mPresContext->GetPresShell();
   if (presShell) {

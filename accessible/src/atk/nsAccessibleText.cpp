@@ -684,10 +684,7 @@ NS_IMETHODIMP nsAccessibleText::GetCharacterExtents(PRInt32 aOffset,
     return NS_ERROR_FAILURE;
   }
 
-  float t2p;
-  if (NS_FAILED(context->GetTwipsToPixels(&t2p))) {
-    return NS_ERROR_FAILURE;
-  }
+  float t2p = context->TwipsToPixels();
 
   //Getting width
   nscoord tmpWidth;
