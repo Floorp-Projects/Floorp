@@ -28,14 +28,14 @@ LIBRARY_NAME = raptorhtmlpars
 
 DEFINES += -D_IMPL_NS_HTMLPARS
 
-CPPSRCS=					\
-	nsDTDUtils.cpp				\
-	nsHTMLTokenizer.cpp \
-	nsXMLTokenizer.cpp \
-  nsElementTable.cpp \
-	CNavDTD.cpp				\
-	COtherDTD.cpp				\
-	CRtfDTD.cpp				\
+CPPSRCS= \
+	nsDTDUtils.cpp 				\
+	nsHTMLTokenizer.cpp 		\
+	nsXMLTokenizer.cpp 			\
+	nsElementTable.cpp 			\
+	CNavDTD.cpp					\
+	COtherDTD.cpp 				\
+	CRtfDTD.cpp 				\
 	nsDTDDebug.cpp				\
 	nsHTMLEntities.cpp			\
 	nsHTMLNullSink.cpp			\
@@ -47,38 +47,38 @@ CPPSRCS=					\
 	nsParserFactory.cpp			\
 	nsParserNode.cpp			\
 	nsScanner.cpp				\
-	nsToken.cpp				\
+	nsToken.cpp					\
 	nsTokenHandler.cpp			\
-	nsHTMLContentSinkStream.cpp		\
+	nsHTMLContentSinkStream.cpp	\
 	nsValidDTD.cpp				\
 	nsWellFormedDTD.cpp			\
-	nsViewSourceHTML.cpp \
-  nsXIFDTD.cpp				\
-	prstrm.cpp				\
+	nsViewSourceHTML.cpp 		\
+	nsXIFDTD.cpp				\
+	prstrm.cpp					\
 	$(NULL)
 
 EXPORTS =     \
-  nshtmlpars.h    \
-  nsIContentSink.h  \
+	nshtmlpars.h    \
+	nsIContentSink.h  \
 	nsITokenizer.h \
-  nsIHTMLContentSink.h  \
-  nsHTMLContentSinkStream.h \
-  nsHTMLEntities.h    \
-  nsHTMLTokens.h    \
-  nsILoggingSink.h   \
-  nsIParserNode.h   \
-  nsIParser.h   \
-  nsParser.h   \
-  nsIDTD.h \
-  nsIParserFilter.h \
-  nsToken.h   \
-  CNavDTD.h \
-  COtherDTD.h \
-  nsWellFormedDTD.h \
-  nsValidDTD.h \
-  CRtfDTD.h \
-  nsXIFDTD.h \
-  nsParserCIID.h \
+	nsIHTMLContentSink.h  \
+	nsHTMLContentSinkStream.h \
+	nsHTMLEntities.h \
+	nsHTMLTokens.h \
+	nsILoggingSink.h \
+	nsIParserNode.h \
+	nsIParser.h \
+	nsParser.h \
+	nsIDTD.h \
+	nsIParserFilter.h \
+	nsToken.h \
+	CNavDTD.h \
+	COtherDTD.h \
+	nsWellFormedDTD.h \
+	nsValidDTD.h \
+	CRtfDTD.h \
+	nsXIFDTD.h \
+	nsParserCIID.h \
   $(NULL)
 
 EXTRA_EXPORTS = \
