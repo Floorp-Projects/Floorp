@@ -27,6 +27,7 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCRT.h"
+class nsUnicodeFontMappingMac;
 
 class nsFontMetricsMac : public nsIFontMetrics
 {
@@ -54,17 +55,19 @@ public:
   NS_IMETHOD  GetWidths(const nscoord *&aWidths);
   NS_IMETHOD  GetFont(const nsFont *&aFont);
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
-
   virtual nsresult  GetSpaceWidth(nscoord &aSpaceWidth);
-
 	// fill a native TextStyle record with the font, size and style (not color)
 	static void 	GetNativeTextStyle(nsIFontMetrics& inMetrics,
 																		const nsIDeviceContext& inDevContext, TextStyle &outStyle);
+
+
+  nsUnicodeFontMappingMac* GetUnicodeFontMapping();
 	
 protected:
 	void				RealizeFont();
 
 	short							mFontNum;
+  nsUnicodeFontMappingMac *mFontMapping;
   nscoord           mHeight;
   nscoord           mAscent;
   nscoord           mDescent;

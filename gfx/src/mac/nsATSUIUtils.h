@@ -23,21 +23,18 @@
 #include "nsCRT.h"
 #include "nsError.h"
 #include "nsCoord.h"
+#include "nsColor.h"
 #include <ATSUnicode.h>
-
 
 class ATSUILayoutCache;
 class nsDrawingSurfaceMac;
 class nsIDeviceContext;
-class nsGraphicState;
-
 
 class nsATSUIUtils
 {
 public:
 	static void		Initialize();
 	static PRBool	IsAvailable();
-	static PRBool	ConvertToMacRoman(const PRUnichar *aString, PRUint32 aLength, char* macroman, PRBool onlyAllowASCII);
 
 	static ATSUILayoutCache*	gTxLayoutCache;
 
@@ -54,19 +51,22 @@ public:
 	nsATSUIToolkit();
 	~nsATSUIToolkit() {};
 
-	void				PrepareToDraw(PRBool aFontOrColorChanged, nsGraphicState* aGS, GrafPtr aPort, nsIDeviceContext* aContext);
-
-	NS_IMETHOD			GetWidth(const PRUnichar *aString, PRUint32 aLength, nscoord &aWidth, PRInt32 *aFontID);
-	NS_IMETHOD			DrawString(const PRUnichar *aString, PRUint32 aLength, nscoord aX, nscoord aY, PRInt32 aFontID, const nscoord* aSpacing);
+	void        		PrepareToDraw(GrafPtr aPort, nsIDeviceContext* aContext);
+ 
+    NS_IMETHOD			GetWidth(const PRUnichar *aCharPt, short &oWidth, 
+    						short aSize, short fontNum, PRBool aBold, PRBool aItalic, nscolor aColor);
+    NS_IMETHOD			DrawString(const PRUnichar *aCharPt, PRInt32 x, PRInt32 y, short &oWidth, 
+    						short aSize, short fontNum, PRBool aBold, PRBool aItalic, nscolor aColor);
 
 private:
-	ATSUTextLayout		GetTextLayout();
+	void        		StartDraw(const PRUnichar *aCharPt, short aSize, short fontNum, PRBool aBold, PRBool aItalic, nscolor aColor, 
+									GrafPtr& oSavePort, ATSUTextLayout& oLayout);
+	void        		EndDraw(GrafPtr aSavePort);
+	ATSUTextLayout		GetTextLayout(short aFontNum, short aSize, PRBool aBold, PRBool aItalic, nscolor aColor);
 	
 private:
-	ATSUTextLayout  	mLastTextLayout;
-	PRBool						mFontOrColorChanged;
-	nsGraphicState*		mGS;
-	GrafPtr						mPort;
+	GrafPtr				mPort;
+
 	nsIDeviceContext*	mContext;
 };
 

@@ -21,8 +21,9 @@
 
 #include "nsIRenderingContext.h"
 #include "nsDrawingSurfaceMac.h"
-#include "nsATSUIUtils.h"
+#include "nsUnicodeRenderingToolkit.h"
 #include <QDOffscreen.h>
+#include <UnicodeConverter.h>
 
 class nsIFontMetrics;
 class nsIDeviceContext;
@@ -33,9 +34,10 @@ class nsVoidArray;
 
 class nsGraphicState;
 class DrawingSurface;		// a surface is a combination of a port and a graphic state
-
+class nsUnicodeFallbackCache;
 
 //------------------------------------------------------------------------
+
 
 class nsRenderingContextMac : public nsIRenderingContext
 {
@@ -137,12 +139,11 @@ protected:
   				{
 					::SetPort(mOldPort);
   				}
+  	typedef enum {
+		kFontChanged	= (1 << 0),
+		kColorChanged	= (1 << 1)
+	} styleChanges;
 
-
-typedef enum {
-  kFontChanged	= (1 << 0),
-  kColorChanged	= (1 << 1)
-} styleChanges;
 
 
 protected:
@@ -157,10 +158,9 @@ protected:
 
 	GrafPtr						mPort;			// current grafPort - shortcut for mCurrentSurface->GetPort()
 	nsGraphicState *	mGS;				// current graphic state - shortcut for mCurrentSurface->GetGS()
-
+	nsUnicodeRenderingToolkit mUnicodeRenderingToolkit;
 	nsVoidArray *			mGSStack;		// GraphicStates stack, used for PushState/PopState
 	PRInt8						mChanges;
-	nsATSUIToolkit		mATSUIToolkit;
 };
 
 
