@@ -43,6 +43,7 @@
 #include "nsIContent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIPresShell.h"
+#include "nsIFrame.h"
 
 nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsIDOMNode* aNode, PRBool aWalkAnonContent): 
   mWeakShell(aPresShell), 
@@ -52,6 +53,8 @@ nsAccessibleTreeWalker::nsAccessibleTreeWalker(nsIWeakReference* aPresShell, nsI
   mState.prevState = nsnull;
   mState.siblingIndex = eSiblingsUninitialized;
   mState.siblingList = nsnull;
+  mState.isHidden = false;
+  mState.frameHint = nsnull;
 
   if (aWalkAnonContent) {
     nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
@@ -83,7 +86,7 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFullTreeParentNode(nsIDOMNode *aChildNo
   nsCOMPtr<nsIContent> bindingParentContent;
   nsCOMPtr<nsIDOMNode> parentNode;
 
-  if (mState.prevState) 
+  if (mState.prevState)
     parentNode = mState.prevState->domNode;
   else {
     if (mBindingManager) {
@@ -142,7 +145,6 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetParent()
 
   while (NS_SUCCEEDED(GetFullTreeParentNode(mState.domNode, getter_AddRefs(parent)))) {
     if (NS_FAILED(PopState())) {
-      ClearState();
       mState.domNode = parent;
       GetAccessible();
     }
@@ -155,12 +157,20 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetParent()
 
 NS_IMETHODIMP nsAccessibleTreeWalker::PopState()
 {
+  nsIFrame *frameHintParent = mState.frameHint? mState.frameHint->GetParent(): nsnull;
   if (mState.prevState) {
     WalkState *toBeDeleted = mState.prevState;
     mState = *mState.prevState; // deep copy
+    mState.isHidden = PR_FALSE; // If we were in a child, the parent wasn't hidden
+    if (!mState.frameHint) {
+      mState.frameHint = frameHintParent;
+    }
     delete toBeDeleted;
     return NS_OK;
   }
+  ClearState();
+  mState.frameHint = frameHintParent;
+  mState.isHidden = PR_FALSE;
   return NS_ERROR_FAILURE;
 }
 
@@ -208,7 +218,6 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
         break; // Failed - can't get parent node, we're at the top 
 
       if (NS_FAILED(PopState())) {   // Use parent - go up in stack
-        ClearState();
         mState.domNode = parent;
       }
       if (mState.siblingIndex == eSiblingsUninitialized) 
@@ -220,11 +229,9 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
       }
     }
     else {
+      UpdateFrameHint(next, false);
       // if next is accessible, use it 
       mState.domNode = next;
-      if (IsHidden())
-        continue;
-
       if (GetAccessible())
         return NS_OK;
 
@@ -240,21 +247,11 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetNextSibling()
   return NS_ERROR_FAILURE;
 }
 
-PRBool nsAccessibleTreeWalker::IsHidden()
-{
-  PRBool isHidden = PR_FALSE;
-
-  nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(mState.domNode));
-  if (xulElt) {
-    xulElt->GetHidden(&isHidden);
-    if (!isHidden)
-      xulElt->GetCollapsed(&isHidden);
-  }
-  return isHidden;
-}
-
 NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
 {
+  if (mState.isHidden) {
+    return NS_ERROR_FAILURE;
+  }
   mState.accessible = nsnull;
 
   if (!mState.domNode)
@@ -270,16 +267,18 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetFirstChild()
     parent->GetFirstChild(getter_AddRefs(next));
   else  // Use the sibling list - there are anonymous content nodes in here
     mState.siblingList->Item(0, getter_AddRefs(next));
+  UpdateFrameHint(next, true);
 
   // Recursive loop: depth first search for first accessible child
   while (next) {
     mState.domNode = next;
-    if (!IsHidden() && (GetAccessible() || NS_SUCCEEDED(GetFirstChild())))
+    if (GetAccessible() || NS_SUCCEEDED(GetFirstChild()))
       return NS_OK;
     if (mState.siblingIndex == eSiblingsWalkNormalDOM)  // Indicates we must use normal DOM calls to traverse here
       mState.domNode->GetNextSibling(getter_AddRefs(next));
     else 
       mState.siblingList->Item(++mState.siblingIndex, getter_AddRefs(next));
+    UpdateFrameHint(next, false);
   }
 
   PopState();  // Return to previous state
@@ -322,18 +321,36 @@ NS_IMETHODIMP nsAccessibleTreeWalker::GetLastChild()
   return GetChildBefore(mState.domNode, nsnull);
 }
 
+void nsAccessibleTreeWalker::UpdateFrameHint(nsIDOMNode *aStartNode, PRBool aTryFirstChild)
+{
+  if (mState.frameHint) {
+    nsIFrame *testFrame = aTryFirstChild? mState.frameHint->GetFirstChild(nsnull) :
+                                          mState.frameHint->GetNextSibling();
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aStartNode));
+    if (testFrame && content && content == testFrame->GetContent()) {
+      mState.frameHint = testFrame;
+    }
+  }
+}
+
 /**
  * If the DOM node's frame has an accessible or the DOMNode
  * itself implements nsIAccessible return it.
  */
-
 PRBool nsAccessibleTreeWalker::GetAccessible()
 {
+  if (!mAccService) {
+    return false;
+  }
   mState.accessible = nsnull;
+  nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
 
-  return (mAccService &&
-    NS_SUCCEEDED(mAccService->GetAccessibleInWeakShell(mState.domNode, mWeakShell,
-                                                       getter_AddRefs(mState.accessible))) &&
-    mState.accessible);
+  if (NS_SUCCEEDED(mAccService->GetAccessible(mState.domNode, presShell, mWeakShell, 
+                                              &mState.frameHint, &mState.isHidden,
+                                              getter_AddRefs(mState.accessible)))) {
+    NS_ASSERTION(mState.accessible, "No accessible but no failure return code");
+    return true;
+  }
+  return false;
 }
 

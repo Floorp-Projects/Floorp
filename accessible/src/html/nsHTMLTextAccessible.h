@@ -48,9 +48,12 @@ class nsHTMLTextAccessible : public nsTextAccessibleWrap
 {
 
 public:
-  nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
+  nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame);
+  nsIFrame* GetFrame();
   NS_IMETHOD GetName(nsAString& _retval);
   NS_IMETHOD GetState(PRUint32 *aState);
+private:
+  nsIFrame *mFrame; // Only valid if node is not shut down (mWeakShell != null)
 };
 
 class nsHTMLHRAccessible : public nsLeafAccessible

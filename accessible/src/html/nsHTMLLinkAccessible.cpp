@@ -40,8 +40,8 @@
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLLinkAccessible, nsLinkableAccessible)
 
-nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsLinkableAccessible(aDomNode, aShell)
+nsHTMLLinkAccessible::nsHTMLLinkAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):
+nsLinkableAccessible(aDomNode, aShell), mFrame(aFrame)
 { 
 }
 
@@ -68,5 +68,16 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *_retval)
   *_retval &= ~(STATE_READONLY|STATE_SELECTABLE);
 
   return NS_OK;
+}
+
+nsIFrame* nsHTMLLinkAccessible::GetFrame()
+{
+  if (mWeakShell) {
+    if (!mFrame) {
+      mFrame = nsLinkableAccessible::GetFrame();
+    }
+    return mFrame;
+  }
+  return nsnull;
 }
 

@@ -48,15 +48,15 @@ nsHTMLTextFieldAccessible(aNode, aShell), nsAccessibleEditableText(aNode)
 { 
   nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (shell) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-    nsIFrame *frame = nsnull;
-    shell->GetPrimaryFrameFor(content, &frame);
-    nsITextControlFrame *textFrame;
-    frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
-    if (textFrame) {
-      nsCOMPtr<nsIEditor> editor;
-      textFrame->GetEditor(getter_AddRefs(editor));
-      SetEditor(editor);
+    nsIFrame *frame = GetFrame();
+    if (frame) {
+      nsITextControlFrame *textFrame;
+      frame->QueryInterface(NS_GET_IID(nsITextControlFrame), (void**)&textFrame);
+      if (textFrame) {
+        nsCOMPtr<nsIEditor> editor;
+        textFrame->GetEditor(getter_AddRefs(editor));
+        SetEditor(editor);
+      }
     }
   }
 }

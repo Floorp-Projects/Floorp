@@ -74,9 +74,8 @@ private:
   nsresult GetInfo(nsISupports* aFrame, nsIFrame** aRealFrame, nsIWeakReference** aShell, nsIDOMNode** aContent);
   void GetOwnerFor(nsIPresShell *aPresShell, nsIPresShell **aOwnerShell, nsIContent **aOwnerContent);
   nsIContent* FindContentForDocShell(nsIPresShell* aPresShell, nsIContent* aContent, nsIDocShell*  aDocShell);
-  nsresult GetAccessible(nsIDOMNode *aNode, nsIPresShell *aPresShell,
-                         nsIWeakReference *aWeakShell, nsIAccessible **aAccessible);
   static nsAccessibilityService *gAccessibilityService;
+  nsresult InitAccessible(nsIAccessible *aAccessibleIn, nsIAccessible **aAccessibleOut);
 };
 
 #endif /* __nsIAccessibilityService_h__ */

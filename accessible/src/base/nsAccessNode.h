@@ -123,7 +123,7 @@ class nsAccessNode: public nsIAccessNode, public nsPIAccessNode
     already_AddRefed<nsIPresShell> GetPresShell();
     already_AddRefed<nsIPresContext> GetPresContext();
     already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
-    nsIFrame* GetFrame();
+    virtual nsIFrame* GetFrame();
 
     nsCOMPtr<nsIDOMNode> mDOMNode;
     nsCOMPtr<nsIWeakReference> mWeakShell;

@@ -45,8 +45,8 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 
-nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell):
-nsTextAccessibleWrap(aDomNode, aShell)
+nsHTMLTextAccessible::nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell, nsIFrame *aFrame):
+nsTextAccessibleWrap(aDomNode, aShell), mFrame(aFrame)
 { 
 }
 
@@ -58,6 +58,14 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
   accName.CompressWhitespace();
   aName = accName;
   return NS_OK;
+}
+
+nsIFrame* nsHTMLTextAccessible::GetFrame()
+{
+  if (mWeakShell) {
+    return mFrame? mFrame : nsTextAccessible::GetFrame();
+  }
+  return nsnull;
 }
 
 NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
@@ -73,7 +81,10 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
   shell->GetPresContext(getter_AddRefs(context));
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   nsIFrame *frame = nsnull;
-  if (content && NS_SUCCEEDED(shell->GetPrimaryFrameFor(content, &frame)) && frame) {
+  // The root frame and all text frames in the document share the same
+  // selection controller.
+  shell->GetRootFrame(&frame);
+  if (frame) {
     nsCOMPtr<nsISelectionController> selCon;
     frame->GetSelectionController(context, getter_AddRefs(selCon));
     if (selCon) {
