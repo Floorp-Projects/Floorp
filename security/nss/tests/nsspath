@@ -3,12 +3,10 @@
 set PWD=`pwd`
 source /u/sonmi/bin/nssdir $*
 set OBJDIR=`(cd mozilla/security/nss/tests/common; gmake objdir_name)`
-#set path = ( "$path $UXDIST/$OBJDIR/bin" )
 setenv PATH `perl /u/sonmi/bin/path_uniq -s "${PATH}:${UXDIST}/${OBJDIR}/bin"`
-#echo "PATH $PATH"
-setenv LD_LIBRARY_PATH "${UXDIST}/${OBJDIR}/lib"
-#echo "LD_LIBRARY_PATH $LD_LIBRARY_PATH"
-#echo "${UXDIST}/${OBJDIR}/bin"
-#ls ${UXDIST}/${OBJDIR}/bin/modutil
-#which modutil
+if ( `uname -n` == "iws-perf" ) then
+    setenv LD_LIBRARY_PATH "${UXDIST}/${OBJDIR}/lib:/opt/nfast/toolkits/pkcs11"
+else
+    setenv LD_LIBRARY_PATH "${UXDIST}/${OBJDIR}/lib"
+endif
 cd $PWD
