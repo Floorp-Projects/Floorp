@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Mike Shaver <shaver@off.net>
+ *   Michiel van Leeuwen <mvl@exedo.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -162,7 +163,8 @@ public:
     NS_DECL_CALIICALCOMPONENT
 protected:
 
-    nsresult SetProperty(icalproperty_kind kind, icalvalue *val);
+    nsresult SetPropertyValue(icalproperty_kind kind, icalvalue *val);
+    nsresult SetProperty(icalproperty_kind kind, icalproperty *prop);
 
     nsresult GetStringProperty(icalproperty_kind kind, nsACString &str)
     {
@@ -180,7 +182,7 @@ protected:
         icalvalue *val = icalvalue_new_string(PromiseFlatCString(str).get());
         if (!val)
             return NS_ERROR_OUT_OF_MEMORY;
-        return SetProperty(kind, val);
+        return SetPropertyValue(kind, val);
     }
 
     nsresult GetIntProperty(icalproperty_kind kind, PRUint32 *valp)
@@ -199,7 +201,7 @@ protected:
         icalvalue *val = icalvalue_new_integer(i);
         if (!val)
             return NS_ERROR_OUT_OF_MEMORY;
-        return SetProperty(kind, val);
+        return SetPropertyValue(kind, val);
     }
 
     void ClearAllProperties(icalproperty_kind kind);
@@ -209,7 +211,7 @@ protected:
 };
 
 nsresult
-calIcalComponent::SetProperty(icalproperty_kind kind, icalvalue *val)
+calIcalComponent::SetPropertyValue(icalproperty_kind kind, icalvalue *val)
 {
     ClearAllProperties(kind);
     icalproperty *prop = icalproperty_new(kind);
@@ -222,7 +224,19 @@ calIcalComponent::SetProperty(icalproperty_kind kind, icalvalue *val)
     return NS_OK;
 }
 
-#define COMP_STRING_ATTRIBUTE(Attrname, ICALNAME)               \
+nsresult
+calIcalComponent::SetProperty(icalproperty_kind kind, icalproperty *prop)
+{
+    ClearAllProperties(kind);
+    if (!prop) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    icalcomponent_add_property(mComponent, prop);
+    return NS_OK;
+}
+
+
+#define COMP_GENERAL_STRING_ATTRIBUTE(Attrname, ICALNAME)       \
 NS_IMETHODIMP                                                   \
 calIcalComponent::Get##Attrname(nsACString &str)                \
 {                                                               \
@@ -235,7 +249,22 @@ calIcalComponent::Set##Attrname(const nsACString &str)          \
     return SetStringProperty(ICAL_##ICALNAME##_PROPERTY, str);  \
 }
 
-#define COMP_INT_ATTRIBUTE(Attrname, ICALNAME)                  \
+#define COMP_STRING_ATTRIBUTE(Attrname, ICALNAME, lcname)       \
+NS_IMETHODIMP                                                   \
+calIcalComponent::Get##Attrname(nsACString &str)                \
+{                                                               \
+    return GetStringProperty(ICAL_##ICALNAME##_PROPERTY, str);  \
+}                                                               \
+                                                                \
+NS_IMETHODIMP                                                   \
+calIcalComponent::Set##Attrname(const nsACString &str)          \
+{                                                               \
+    icalproperty *prop =                                        \
+        icalproperty_new_##lcname(PromiseFlatCString(str).get()); \
+    return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);       \
+}
+
+#define COMP_GENERAL_INT_ATTRIBUTE(Attrname, ICALNAME)          \
 NS_IMETHODIMP                                                   \
 calIcalComponent::Get##Attrname(PRUint32 *valp)                 \
 {                                                               \
@@ -247,6 +276,36 @@ calIcalComponent::Set##Attrname(PRUint32 val)                   \
 {                                                               \
     return SetIntProperty(ICAL_##ICALNAME##_PROPERTY, val);     \
 }                                                               \
+
+#define COMP_ENUM_ATTRIBUTE(Attrname, ICALNAME, lcname)         \
+NS_IMETHODIMP                                                   \
+calIcalComponent::Get##Attrname(PRUint32 *valp)                 \
+{                                                               \
+    return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
+}                                                               \
+                                                                \
+NS_IMETHODIMP                                                   \
+calIcalComponent::Set##Attrname(PRUint32 val)                   \
+{                                                               \
+    icalproperty *prop =                                        \
+      icalproperty_new_##lcname((icalproperty_##lcname)val);    \
+    return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);       \
+}                                                               \
+
+#define COMP_INT_ATTRIBUTE(Attrname, ICALNAME, lcname)          \
+NS_IMETHODIMP                                                   \
+calIcalComponent::Get##Attrname(PRUint32 *valp)                 \
+{                                                               \
+    return GetIntProperty(ICAL_##ICALNAME##_PROPERTY, valp);    \
+}                                                               \
+                                                                \
+NS_IMETHODIMP                                                   \
+calIcalComponent::Set##Attrname(PRUint32 val)                   \
+{                                                               \
+    icalproperty *prop = icalproperty_new_##lcname(val);        \
+    return SetProperty(ICAL_##ICALNAME##_PROPERTY, prop);       \
+}                                                               \
+
 
 #define RO_COMP_DATE_ATTRIBUTE(Attrname, ICALNAME)                      \
 NS_IMETHODIMP                                                           \
@@ -330,19 +389,20 @@ calIcalComponent::GetIsA(PRUint32 *isa)
     return NS_OK;
 }
 
-COMP_STRING_ATTRIBUTE(Uid, UID)
-COMP_STRING_ATTRIBUTE(Prodid, PRODID)
-COMP_STRING_ATTRIBUTE(Version, VERSION)
-COMP_INT_ATTRIBUTE(Method, METHOD)
-COMP_INT_ATTRIBUTE(Status, STATUS)
-COMP_INT_ATTRIBUTE(Transp, TRANSP)
-COMP_STRING_ATTRIBUTE(Summary, SUMMARY)
-COMP_STRING_ATTRIBUTE(Description, DESCRIPTION)
-COMP_STRING_ATTRIBUTE(Location, LOCATION)
-COMP_STRING_ATTRIBUTE(Categories, CATEGORIES)
-COMP_STRING_ATTRIBUTE(URL, URL)
-COMP_INT_ATTRIBUTE(Priority, PRIORITY)
-COMP_INT_ATTRIBUTE(IcalClass, CLASS)
+
+COMP_STRING_ATTRIBUTE(Uid, UID, uid)
+COMP_STRING_ATTRIBUTE(Prodid, PRODID, prodid)
+COMP_STRING_ATTRIBUTE(Version, VERSION, version)
+COMP_ENUM_ATTRIBUTE(Method, METHOD, method)
+COMP_ENUM_ATTRIBUTE(Status, STATUS, status)
+COMP_GENERAL_INT_ATTRIBUTE(Transp, TRANSP)
+COMP_STRING_ATTRIBUTE(Summary, SUMMARY, summary)
+COMP_STRING_ATTRIBUTE(Description, DESCRIPTION, description)
+COMP_STRING_ATTRIBUTE(Location, LOCATION, location)
+COMP_STRING_ATTRIBUTE(Categories, CATEGORIES, categories)
+COMP_STRING_ATTRIBUTE(URL, URL, url)
+COMP_INT_ATTRIBUTE(Priority, PRIORITY, priority)
+COMP_ENUM_ATTRIBUTE(IcalClass, CLASS, class)
 COMP_DATE_ATTRIBUTE(StartTime, DTSTART)
 COMP_DATE_ATTRIBUTE(EndTime, DTEND)
 COMP_DATE_ATTRIBUTE(DueTime, DUE)
