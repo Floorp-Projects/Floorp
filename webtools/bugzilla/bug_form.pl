@@ -71,7 +71,7 @@ sub quoteUrls {
 
     my @things;
     while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@[\w\-]+(?:\.[\w\-]+)+)\b|
-                       (\b((?:$protocol):\S+[\w/])))%"##$count##"%exo) {
+                    (\b((?:$protocol):[^ \t\n<>"]+[\w/])))%"##$count##"%exo) {
         my $item = $&;
 
         $item = value_quote($item);
