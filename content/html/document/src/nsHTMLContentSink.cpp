@@ -739,7 +739,8 @@ MakeContentObject(nsHTMLTag aNodeType,
                   nsIDOMHTMLFormElement* aForm,
                   nsIWebShell* aWebShell,
                   nsIHTMLContent** aResult,
-                  const nsString* aContent = nsnull)
+                  const nsString* aContent = nsnull,
+                  PRBool aInsideNoXXXTag = PR_FALSE)
 {
   nsresult rv = NS_OK;
   switch (aNodeType) {
@@ -773,7 +774,10 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_button:
     rv = NS_NewHTMLButtonElement(aResult, aNodeInfo);
-    SetForm(*aResult, aForm);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_caption:
     rv = NS_NewHTMLTableCaptionElement(aResult, aNodeInfo);
@@ -803,7 +807,10 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_fieldset:
     rv = NS_NewHTMLFieldSetElement(aResult, aNodeInfo);
-    SetForm(*aResult, aForm);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_font:
     rv = NS_NewHTMLFontElement(aResult, aNodeInfo);
@@ -848,18 +855,27 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_input:
     rv = NS_NewHTMLInputElement(aResult, aNodeInfo);
-    SetForm(*aResult, aForm);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_isindex:
     rv = NS_NewHTMLIsIndexElement(aResult, aNodeInfo);
     break;
   case eHTMLTag_label:
     rv = NS_NewHTMLLabelElement(aResult, aNodeInfo);
-    SetForm(*aResult, aForm);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_legend:
     rv = NS_NewHTMLLegendElement(aResult, aNodeInfo);
-    SetForm(*aResult, aForm);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_li:
     rv = NS_NewHTMLLIElement(aResult, aNodeInfo);
@@ -905,7 +921,10 @@ MakeContentObject(nsHTMLTag aNodeType,
     break;
   case eHTMLTag_select:
     rv = NS_NewHTMLSelectElement(aResult, aNodeInfo);
-    SetForm(*aResult, aForm);
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_spacer:
     rv = NS_NewHTMLSpacerElement(aResult, aNodeInfo);
@@ -937,7 +956,11 @@ MakeContentObject(nsHTMLTag aNodeType,
         NS_RELEASE(taElem);
       }
     }
-    SetForm(*aResult, aForm);
+
+    if (!aInsideNoXXXTag) {
+      SetForm(*aResult, aForm);
+    }
+
     break;
   case eHTMLTag_title:
     rv = NS_NewHTMLTitleElement(aResult, aNodeInfo);
@@ -1038,7 +1061,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
       content.Assign(aNode.GetSkippedContent());
     }
     rv = MakeContentObject(aNodeType, nodeInfo, aForm, aWebShell,
-                           aResult, &content);
+                           aResult, &content, !!mInsideNoXXXTag);
 
     PRInt32 id;
     mDocument->GetAndIncrementContentID(&id);
