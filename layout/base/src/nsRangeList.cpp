@@ -79,7 +79,7 @@ static void printRange(nsIDOMRange *aDomRange);
 #endif //MOZ_DEBUG
 
 
-#define OLD_SELECTION PRFALSE
+#define OLD_SELECTION 0
 
 //#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
@@ -1040,7 +1040,7 @@ void printRange(nsIDOMRange *aDomRange)
 }
 #endif /* PRINT_RANGE */
 
-#ifdef OLD_SELECTION
+#if OLD_SELECTION
 nsCOMPtr<nsIAtom> GetTag(nsIDOMNode *aNode)
 {
   nsCOMPtr<nsIAtom> atom;
