@@ -40,6 +40,8 @@ function onLoad()
     editButton = document.getElementById("editButton");
     deleteButton = document.getElementById("deleteButton");
 
+    doSetOKCancel(onOk, null);
+    
     updateButtons();
     
     var firstitem;
@@ -54,6 +56,14 @@ function onLoad()
     }
     
     selectServer(firstItem);
+}
+
+function onOk()
+{
+    // make sure to save the filter to disk
+    filterList =  currentFilterList();
+    if (filterList) filterList.saveToDefaultFile();
+    window.close();
 }
 
 function onServerClick(event)

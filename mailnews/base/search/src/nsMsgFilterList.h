@@ -84,6 +84,8 @@ protected:
 	const char		*m_filterFileName;
 	nsIOFileStream	*m_fileStream;
 	nsCOMPtr<nsISupportsArray> m_filters;
+  
+  nsCOMPtr<nsIFileSpec> m_defaultFile;
 
 };
 

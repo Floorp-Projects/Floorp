@@ -34,6 +34,11 @@
 #include "nsMsgSearchTerm.h"
 #include "nsXPIDLString.h"
 
+#include "nsMsgBaseCID.h"
+#include "nsIMsgFilterService.h"
+
+static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
+
 // unicode "%s" format string
 static const PRUnichar unicodeFormatter[] = {
     (PRUnichar)'%',
@@ -157,6 +162,50 @@ nsMsgFilterList::ApplyFiltersToHdr(nsMsgFilterTypeType filterType,
 		}
 	}
 	return ret;
+}
+
+NS_IMETHODIMP
+nsMsgFilterList::SetDefaultFile(nsIFileSpec *aFileSpec)
+{
+    nsresult rv;
+    m_defaultFile = 
+        do_CreateInstance(NS_FILESPEC_PROGID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = m_defaultFile->FromFileSpec(aFileSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilterList::GetDefaultFile(nsIFileSpec **aResult)
+{
+    NS_ENSURE_ARG_POINTER(aResult);
+
+    nsresult rv;
+    nsCOMPtr<nsIFileSpec> fileSpec =
+        do_CreateInstance(NS_FILESPEC_PROGID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = fileSpec->FromFileSpec(m_defaultFile);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    *aResult = fileSpec;
+    NS_ADDREF(*aResult);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgFilterList::SaveToDefaultFile()
+{
+    nsresult rv;
+    nsCOMPtr<nsIMsgFilterService> filterService =
+        do_GetService(kMsgFilterServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return filterService->SaveFilterList(this, m_defaultFile);
 }
 
 #if 0
@@ -852,6 +901,7 @@ nsMsgFilterList::GetVersion(PRInt16 *aResult)
     *aResult = m_fileVersion;
     return NS_OK;
 }
+
 
 
 #ifdef DEBUG

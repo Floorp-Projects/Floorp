@@ -41,11 +41,13 @@ nsMsgFilterService::~nsMsgFilterService()
 {
 }
 
-NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgFolder *rootFolder, nsIMsgFilterList **resultFilterList)
+NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsIFileSpec *filterFile, nsIMsgFolder *rootFolder, nsIMsgFilterList **resultFilterList)
 {
 	nsresult ret = NS_OK;
 
-	nsIOFileStream *fileStream = new nsIOFileStream(*filterFile);
+    nsFileSpec filterSpec;
+    filterFile->GetFileSpec(&filterSpec);
+	nsIOFileStream *fileStream = new nsIOFileStream(filterSpec);
 	if (!fileStream)
 		return NS_ERROR_OUT_OF_MEMORY;
 
@@ -53,8 +55,14 @@ NS_IMETHODIMP nsMsgFilterService::OpenFilterList(nsFileSpec *filterFile, nsIMsgF
 	if (!filterList)
 		return NS_ERROR_OUT_OF_MEMORY;
 	NS_ADDREF(filterList);
-  filterList->SetFolder(rootFolder);
-	if (filterFile->GetFileSize() > 0)
+    filterList->SetFolder(rootFolder);
+    
+    // temporarily tell the filter where it's file path is
+    filterList->SetDefaultFile(filterFile);
+    
+    PRUint32 size;
+    ret = filterFile->GetFileSize(&size);
+	if (NS_SUCCEEDED(ret) && size > 0)
 		ret = filterList->LoadTextFilters();
   fileStream->close();
 	if (NS_SUCCEEDED(ret))
@@ -80,7 +88,7 @@ NS_IMETHODIMP nsMsgFilterService::CloseFilterList(nsIMsgFilterList *filterList)
 }
 
 /* save without deleting */
-NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, nsFileSpec *filterFile)
+NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, nsIFileSpec *filterFile)
 {
 	nsresult ret = NS_OK;
   nsCOMPtr <nsIFileSpec> tmpFiltersFile;
@@ -95,13 +103,11 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
   NS_ASSERTION(NS_SUCCEEDED(ret),"writing filters file: failed to append filename");
   if (NS_FAILED(ret)) 
     return ret;
-  if (NS_SUCCEEDED(ret))
-    ret = NS_NewFileSpecWithSpec(*filterFile, getter_AddRefs(realFiltersFile));
 
 	nsIOFileStream *tmpFileStream = nsnull;
   
   if (NS_SUCCEEDED(ret))
-    ret = realFiltersFile->GetParent(getter_AddRefs(parentDir));
+    ret = filterFile->GetParent(getter_AddRefs(parentDir));
 
   if (NS_SUCCEEDED(ret))
     tmpFileStream = new nsIOFileStream(tmpFile);
@@ -121,6 +127,7 @@ NS_IMETHODIMP	nsMsgFilterService::SaveFilterList(nsIMsgFilterList *filterList, n
       parentDir->Rename("rules.dat");
       tmpFiltersFile->Delete(PR_FALSE);
     }
+
   }
   NS_ASSERTION(NS_SUCCEEDED(ret), "error opening/saving filter list");
 	return ret;

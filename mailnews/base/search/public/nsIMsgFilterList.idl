@@ -75,6 +75,13 @@ interface nsIMsgFilterList : nsISupports {
 
     void saveToFile(in nsIOFileStream stream);
 
+    // this is temporary so that we can save the filterlist to disk
+    // without knowing where the filters were read from intially
+    // (such as the filter list dialog)
+    attribute nsIFileSpec defaultFile;
+    void saveToDefaultFile();
+    
+
     // marking noscript because headers is a null-seperated list
     // of strings, which is not scriptable
     [noscript]
