@@ -129,7 +129,7 @@ function con_ondt ()
 console.onDebugContinue =
 function con_ondc ()
 {
-    /* XXX */
+    console.sourceView.outliner.invalidate();
 }
 
 console.onLoad =
@@ -644,7 +644,7 @@ function con_projsel (e)
         var sourceView = console.sourceView;
         sourceView.displaySource (scriptRec);
         sourceView.scrollTo (row.line - 3, -1);
-        if (sourceView.childData && sourceView.childData.isLoaded)
+        if ("childData" in sourceView && sourceView.childData.isLoaded)
         {
             sourceView.outliner.selection.timedSelect (row.line - 1, 500);
         }
