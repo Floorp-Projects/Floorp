@@ -3,17 +3,22 @@
 
 <!DOCTYPE window SYSTEM "chrome://global-platform/locale/platformGlobalOverlay.dtd">
 
-
 <overlay id="platformGlobalOverlay"
      xmlns:html="http://www.w3.org/1999/xhtml"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-<!-- close -->
+  <!-- close -->
   <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" command="cmd_close"/>
   <key id="key_close"  key="&closeCmd.key;" command="cmd_close" modifiers="accel"/>
-  
-  <!-- quit -->
+
   <menupopup id="menu_FilePopup">
+    <!-- Page setup -->
+    <menuitem id="printSetupMenuItem"
+         insertbefore="printMenuItem"
+         label="&printSetupCmd.label;"
+         accesskey="&printSetupCmd.accesskey;"
+         command="cmd_printSetup"/>
+    <!-- quit -->
     <menuitem label="&quitApplicationCmd.label;" key="key_quit" command="cmd_quit"/>
   </menupopup>
   <key id="key_quit"  key="&quitApplicationCmd.key;" command="cmd_quit" modifiers="accel"/>

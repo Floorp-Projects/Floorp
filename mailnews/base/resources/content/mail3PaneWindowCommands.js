@@ -228,6 +228,7 @@ var DefaultController =
 			case "cmd_openMessage":
       case "button_print":
 			case "cmd_print":
+			case "cmd_printSetup":
 			case "cmd_saveAsFile":
 			case "cmd_saveAsTemplate":
             case "cmd_properties":
@@ -345,6 +346,8 @@ var DefaultController =
           }
         }
         return false;
+      case "cmd_printSetup":
+        return true;
       case "cmd_markThreadAsRead":
       case "cmd_markAsFlagged":
       case "button_file":
@@ -547,6 +550,9 @@ var DefaultController =
 			case "cmd_openMessage":
                 MsgOpenSelectedMessages();
 				return;
+			case "cmd_printSetup":
+			  goPageSetup();
+			  return;
 			case "cmd_print":
 				PrintEnginePrint();
 				return;

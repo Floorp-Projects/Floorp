@@ -75,6 +75,7 @@ Rights Reserved.
   <commandset id="globalEditMenuItems"/>
     <command id="cmd_newNavigator"/>
     <command id="cmd_newEditor"/>
+    <command id="cmd_printSetup" oncommand="goPageSetup()"/>
     <command id="cmd_PrintCard" oncommand="AbPrintCard()"/>
     <command id="cmd_quit"/>
     <command id="cmd_close" oncommand="AbClose()"/>
@@ -132,6 +133,7 @@ Rights Reserved.
 				<menuseparator/>
         <menuitem label="&importCmd.label;" accesskey="&importCmd.accesskey;" oncommand="toImport()"/>
 				<menuseparator/>
+        <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
         <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_PrintCard" command="cmd_PrintCard"/>
 				<menuseparator/>
 			</menupopup>

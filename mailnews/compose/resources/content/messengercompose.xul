@@ -109,7 +109,7 @@
   <command id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
   <command id="cmd_sendWithCheck" oncommand="goDoCommand('cmd_sendWithCheck')"/>
   <command id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
-<!--NYI <command id="cmd_printSetup" oncommand="dump('PRINT SETUP\n');"/>  -->
+  <command id="cmd_printSetup" oncommand="goDoCommand('cmd_printSetup')"/>
   <command id="cmd_print" oncommand="goDoCommand('cmd_print')"/>
 
   <!-- Edit Menu -->
@@ -206,7 +206,7 @@
           <menuitem label="&sendNowCmd.label;" accesskey="&sendNowCmd.accesskey;" key="key_send" command="cmd_sendNow" id="menu-item-send-now"/>
           <menuitem label="&sendLaterCmd.label;" accesskey="&sendLaterCmd.accesskey;" key="key_sendLater" command="cmd_sendLater"/>
           <menuseparator/>
-<!--NYI          <menuitem label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>   -->
+          <!--Page setup gets overlaid here from platformGlobalOverlay.xul / -->
           <menuitem id="printMenuItem" label="&printCmd.label;" accesskey="&printCmd.accesskey;" key="key_print" command="cmd_print"/>
           <menuseparator/>
         </menupopup>

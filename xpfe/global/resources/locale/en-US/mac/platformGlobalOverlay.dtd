@@ -3,6 +3,10 @@
 
 <!ENTITY closeCmd.label						"Close">  
 <!ENTITY closeCmd.key						"W">  
+
+<!ENTITY printSetupCmd.label				"Page Setup...">
+<!ENTITY printSetupCmd.accesskey			"u">
+
 <!ENTITY quitApplicationCmd.label			"Quit"> 
 <!ENTITY quitApplicationCmd.key				"Q"> 
 

@@ -228,7 +228,7 @@ var defaultController =
       case "cmd_sendNow":
       case "cmd_sendWithCheck":
       case "cmd_sendLater":
-//      case "cmd_printSetup":
+      case "cmd_printSetup":
       case "cmd_print":
       case "cmd_quit":
 
@@ -336,7 +336,7 @@ var defaultController =
       case "cmd_saveAsTemplate":
       case "cmd_sendButton":
       case "cmd_sendLater":
-//      case "cmd_printSetup":
+      case "cmd_printSetup":
       case "cmd_print":
       case "cmd_sendWithCheck":
         return !gWindowLocked;
@@ -467,7 +467,7 @@ var defaultController =
       case "cmd_sendNow"            : if (defaultController.isCommandEnabled(command)) SendMessage();          break;
       case "cmd_sendWithCheck"   : if (defaultController.isCommandEnabled(command)) SendMessageWithCheck();          break;
       case "cmd_sendLater"          : if (defaultController.isCommandEnabled(command)) SendMessageLater();     break;
-//      case "cmd_printSetup"         : dump("PRINT SETUP\n");                                                   break;
+      case "cmd_printSetup"         : goPageSetup();                                                           break;
       case "cmd_print"              : DoCommandPrint();                                                        break;
 
       //Edit Menu
