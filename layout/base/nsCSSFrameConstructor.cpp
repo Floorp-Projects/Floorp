@@ -248,6 +248,239 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
   return NS_OK;
 }
 
+class nsAttrValueContent : public nsIContent, public nsITextContent
+{
+public:
+  NS_IMETHOD GetTag(nsIAtom *&aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD GetDocument(nsIDocument *&aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD SetDocument(nsIDocument *aDocument, PRBool aDeep) {
+    return NS_OK;
+  }
+  NS_IMETHOD CanContainChildren(PRBool &aResult) const {
+    aResult = PR_FALSE;
+    return NS_OK;
+  }
+  NS_IMETHOD GetParent(nsIContent *&aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD SetParent(nsIContent *aParent) {
+    return NS_OK;
+  }
+  NS_IMETHOD GetNameSpaceID(PRInt32 &aResult) const {
+    aResult = kNameSpaceID_None;
+    return NS_OK;
+  }
+  NS_IMETHOD IndexOf(nsIContent *aPossibleChild, PRInt32 &aIndex) const {
+    aIndex = -1;
+    return NS_OK;
+  }
+  NS_IMETHOD InsertChildAt(nsIContent *aKid, PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD ChildCount(PRInt32 &aResult) const {
+    aResult = 0;
+    return NS_OK;
+  }
+  NS_IMETHOD ChildAt(PRInt32 aIndex, nsIContent *&aResult) const {
+    aResult = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD RemoveChildAt(PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD IsSynthetic(PRBool &aResult) {
+    aResult = PR_TRUE;
+    return NS_OK;
+  }
+  NS_IMETHOD ReplaceChildAt(nsIContent *aKid, PRInt32 aIndex, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD AppendChildTo(nsIContent *aKid, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD SetAttribute(PRInt32 aNameSpaceID, nsIAtom *aName, const nsString &aValue, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aName, nsString &aResult) const {
+    return NS_CONTENT_ATTR_NOT_THERE;
+  }
+  NS_IMETHOD ParseAttributeString(const nsString &aStr, nsIAtom *&aName, PRInt32 &aNameSpaceID) {
+    aName = nsnull;
+    aNameSpaceID = kNameSpaceID_None;
+    return NS_OK; 
+  }
+  NS_IMETHOD GetNameSpacePrefixFromId(PRInt32 aNameSpaceID, nsIAtom *&aPrefix) {
+    aPrefix = nsnull;
+    return NS_OK;
+  }
+  NS_IMETHOD GetAttributeCount(PRInt32 &aCountResult) const {
+    aCountResult = 0;
+    return NS_OK;
+  }
+  NS_IMETHOD List(FILE *out=stdout, PRInt32 aIndent=0) const {
+    return NS_OK;
+  }
+  NS_IMETHOD UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute, PRBool aNotify) {
+    return NS_OK;
+  }
+  NS_IMETHOD GetAttributeNameAt(PRInt32 aIndex, PRInt32 &aNameSpaceID, nsIAtom *&aName) const {
+    aName = nsnull;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+  NS_IMETHOD RangeAdd(nsIDOMRange &aRange) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD RangeRemove(nsIDOMRange &aRange) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD GetRangeList(nsVoidArray *&aResult) const {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD BeginConvertToXIF(nsXIFConverter &aConverter) const {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD ConvertContentToXIF(nsXIFConverter &aConverter) const {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD FinishConvertToXIF(nsXIFConverter &aConverter) const {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD HandleDOMEvent(nsIPresContext &aPresContext, nsEvent *aEvent, nsIDOMEvent **aDOMEvent, PRUint32 aFlags, nsEventStatus &aEventStatus) {
+    return NS_OK;
+  }
+  NS_IMETHOD GetText(const nsTextFragment *&aFragmentsResult, PRInt32 &aNumFragmentsResult) {
+    // XXX ???;
+    aNumFragmentsResult = 1;
+    return NS_OK;
+  }
+  NS_IMETHOD SetText(const PRUnichar *aBuffer, PRInt32 aLength, PRBool aNotify) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD SetText(const char *aBuffer, PRInt32 aLength, PRBool aNotify) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+  NS_IMETHOD IsOnlyWhitespace(PRBool *aResult) {
+    *aResult = PR_FALSE;
+    return NS_OK;
+  }
+
+protected:
+  nsIContent* mContent;
+  const char* mAttr;
+};
+
+nsresult
+nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
+                                               nsIFrame*             aParentFrame,
+                                               nsIContent*           aContent,
+                                               nsIStyleContext*      aStyleContext,
+                                               const nsStyleContent* aStyleContent,
+                                               PRUint32              aContentIndex,
+                                               nsIFrame**            aFrame)
+{
+  *aFrame = nsnull;  // initialize OUT parameter
+
+  // Get the content value
+  nsStyleContentType  type;
+  nsAutoString        contentString;
+  aStyleContent->GetContentAt(aContentIndex, type, contentString);
+
+  if (eStyleContentType_URL == type) {
+    nsIHTMLContent* imageContent;
+    
+    // Create an HTML image content object, and set the SRC.
+    // XXX Check if it's an image type we can handle...
+    NS_NewHTMLImageElement(&imageContent, nsHTMLAtoms::img);
+    imageContent->SetHTMLAttribute(nsHTMLAtoms::src, contentString, PR_FALSE);
+  
+    // Create an image frame and initialize it
+    nsIFrame* imageFrame;
+    NS_NewImageFrame(imageFrame);
+    imageFrame->Init(*aPresContext, imageContent, aParentFrame, aStyleContext, nsnull);
+    NS_RELEASE(imageContent);
+  
+    // Return the image frame
+    *aFrame = imageFrame;
+
+  } else {
+    switch (type) {
+    case eStyleContentType_String:
+      break;
+  
+    case eStyleContentType_Attr:
+      {  // XXX for now, prefetch the attr value, this needs to be a special content node
+        nsIAtom* attrName = NS_NewAtom(contentString);
+        aContent->GetAttribute(kNameSpaceID_None, attrName, contentString);  // XXX need attr namespace from style
+        NS_RELEASE(attrName);
+      }
+      break;
+  
+    case eStyleContentType_Counter:
+    case eStyleContentType_Counters:
+      return NS_ERROR_NOT_IMPLEMENTED;  // XXX not supported yet...
+  
+    case eStyleContentType_OpenQuote:
+    case eStyleContentType_CloseQuote:
+      {
+        PRUint32  quotesCount = aStyleContent->QuotesCount();
+        if (quotesCount > 0) {
+          nsAutoString  openQuote, closeQuote;
+  
+          // If the depth is greater than the number of pairs, the last pair
+          // is repeated
+          PRUint32  quoteDepth = 0;  // XXX really track the nested quotes...
+          if (quoteDepth > quotesCount) {
+            quoteDepth = quotesCount - 1;
+          }
+          aStyleContent->GetQuotesAt(quoteDepth, openQuote, closeQuote);
+          if (eStyleContentType_OpenQuote == type) {
+            contentString = openQuote;
+          } else {
+            contentString = closeQuote;
+          }
+  
+        } else {
+          contentString = '"';
+        }
+      }
+      break;
+  
+    case eStyleContentType_NoOpenQuote:
+    case eStyleContentType_NoCloseQuote:
+      // XXX Adjust quote depth...
+      return NS_OK;
+    }
+  
+    // Create a text content node
+    nsIContent*           textContent;
+    nsIDOMCharacterData*  domData;
+    
+    NS_NewTextNode(&textContent);
+    textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
+    domData->SetData(contentString);
+    NS_RELEASE(domData);
+  
+    // Create a text frame and initialize it
+    nsIFrame* textFrame;
+    NS_NewTextFrame(textFrame);
+    textFrame->Init(*aPresContext, textContent, aParentFrame, aStyleContext, nsnull);
+  
+    NS_RELEASE(textContent);
+  
+    // Return the text frame
+    *aFrame = textFrame;
+  }
+
+  return NS_OK;
+}
+
 PRBool
 nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext,
                                                    nsIFrame*        aFrame,
@@ -264,93 +497,89 @@ nsCSSFrameConstructor::CreateGeneratedContentFrame(nsIPresContext*  aPresContext
                                            PR_FALSE, &pseudoStyleContext);
 
   if (pseudoStyleContext) {
-    nsIContent*           textContent;
-    nsIDOMCharacterData*  domData;
     const nsStyleDisplay* display;
 
     // See whether the generated content should be displayed.
     display = (const nsStyleDisplay*)pseudoStyleContext->GetStyleData(eStyleStruct_Display);
 
     if (NS_STYLE_DISPLAY_NONE != display->mDisplay) {
-      PRUint8 displayValue = display->mDisplay;
-
-      // Make sure the 'display' property value is allowable
-      const nsStyleDisplay* subjectDisplay = (const nsStyleDisplay*)
-        aStyleContext->GetStyleData(eStyleStruct_Display);
-
-      if (subjectDisplay->IsBlockLevel()) {
-        // For block-level elements the only allowed 'display' values are:
-        // 'none', 'inline', 'block', and 'marker'
-        if ((NS_STYLE_DISPLAY_INLINE != displayValue) &&
-            (NS_STYLE_DISPLAY_BLOCK != displayValue) &&
-            (NS_STYLE_DISPLAY_MARKER != displayValue)) {
-          // Pseudo-element behaves as if the value were 'block'
-          displayValue = NS_STYLE_DISPLAY_BLOCK;
-        }
-
-      } else {
-        // For inline-level elements the only allowed 'display' values are
-        // 'none' and 'inline'
-        displayValue = NS_STYLE_DISPLAY_INLINE;
-      }
-
-      if (display->mDisplay != displayValue) {
-        // Reset the value
-        nsStyleDisplay* mutableDisplay = (nsStyleDisplay*)
-          pseudoStyleContext->GetMutableStyleData(eStyleStruct_Display);
-
-        mutableDisplay->mDisplay = displayValue;
-      }
-
-      // Now create the content object and frame based on the 'content' property
-      // XXX For the time being just pretend it's text
-
-      // XXX this needs to create a wrapper frame, then a collection of text frames to contain the
-      // generated content nodes.
-      // for now, create a single text frame
+      // See if there was any content specified
       const nsStyleContent* styleContent;
       styleContent = (const nsStyleContent*)pseudoStyleContext->GetStyleData(eStyleStruct_Content);
       PRUint32  contentCount = styleContent->ContentCount();
 
-      if (contentCount) {
-        nsStyleContentType  type;
-        nsAutoString  contentString;
-        styleContent->GetContentAt(0, type, contentString);
-
-        switch (type) {
-          case eStyleContentType_String:
-            break;
-          case eStyleContentType_Attr:
-            {  // XXX for now, prefetch the attr value, this needs to be a special content node
-              nsIAtom* attrName = NS_NewAtom(contentString);
-              aContent->GetAttribute(kNameSpaceID_None, attrName, contentString);  // XXX need attr namespace from style
-              NS_RELEASE(attrName);
-            }
-            break;
-
-          case eStyleContentType_URL:   // XXX need to handle these differently than simple text
-          case eStyleContentType_Counter:
-          case eStyleContentType_Counters:
-          case eStyleContentType_OpenQuote:
-          case eStyleContentType_CloseQuote:
-          case eStyleContentType_NoOpenQuote:
-          case eStyleContentType_NoCloseQuote:
-            contentString.Append("GENERATED");
-            break;
+      if (contentCount > 0) {
+        PRUint8 displayValue = display->mDisplay;
+  
+        // Make sure the 'display' property value is allowable
+        const nsStyleDisplay* subjectDisplay = (const nsStyleDisplay*)
+          aStyleContext->GetStyleData(eStyleStruct_Display);
+  
+        if (subjectDisplay->IsBlockLevel()) {
+          // For block-level elements the only allowed 'display' values are:
+          // 'none', 'inline', 'block', and 'marker'
+          if ((NS_STYLE_DISPLAY_INLINE != displayValue) &&
+              (NS_STYLE_DISPLAY_BLOCK != displayValue) &&
+              (NS_STYLE_DISPLAY_MARKER != displayValue)) {
+            // Pseudo-element behaves as if the value were 'block'
+            displayValue = NS_STYLE_DISPLAY_BLOCK;
+          }
+  
+        } else {
+          // For inline-level elements the only allowed 'display' values are
+          // 'none' and 'inline'
+          displayValue = NS_STYLE_DISPLAY_INLINE;
         }
-        NS_NewTextNode(&textContent);
-        textContent->QueryInterface(kIDOMCharacterDataIID, (void**)&domData);
-        domData->SetData(contentString);
-        NS_RELEASE(domData);
   
-        // Create a text frame and initialize it
-        nsIFrame* textFrame;
-        NS_NewTextFrame(textFrame);
-        textFrame->Init(*aPresContext, textContent, aFrame, pseudoStyleContext, nsnull);
+        if (display->mDisplay != displayValue) {
+          // Reset the value
+          nsStyleDisplay* mutableDisplay = (nsStyleDisplay*)
+            pseudoStyleContext->GetMutableStyleData(eStyleStruct_Display);
   
+          mutableDisplay->mDisplay = displayValue;
+        }
+
+        // Create a block box or an inline box depending on the value of
+        // the 'display' property
+        nsIFrame*     containerFrame;
+        nsFrameItems  childFrames;
+  
+        if (NS_STYLE_DISPLAY_BLOCK == displayValue) {
+          NS_NewBlockFrame(containerFrame, 0);
+        } else {
+          NS_NewInlineFrame(containerFrame);
+        }
+        containerFrame->Init(*aPresContext, aContent, aFrame, pseudoStyleContext, nsnull);
+
+        // Create another pseudo style context to use for all the generated child
+        // frames
+        nsIStyleContext*  textStyleContext;
+        aPresContext->ResolvePseudoStyleContextFor(aContent, nsHTMLAtoms::textPseudo,
+                                                   pseudoStyleContext, PR_FALSE,
+                                                   &textStyleContext);
+
+        // Now create content objects (and child frames) for each value of the
+        // 'content' property
+        for (PRUint32 contentIndex = 0; contentIndex < contentCount; contentIndex++) {
+          nsIFrame* frame;
+          nsresult  result;
+
+          // Create a frame
+          result = CreateGeneratedFrameFor(aPresContext, containerFrame, aContent,
+                                           textStyleContext, styleContent,
+                                           contentIndex, &frame);
+          if (NS_SUCCEEDED(result) && frame) {
+            // Add it to the list of child frames
+            childFrames.AddChild(frame);
+          }
+        }
+  
+        NS_RELEASE(textStyleContext);
         NS_RELEASE(pseudoStyleContext);
-        NS_RELEASE(textContent);
-        *aResult = textFrame;
+        if (childFrames.childList) {
+          containerFrame->SetInitialChildList(*aPresContext, nsnull, childFrames.childList);
+        }
+        *aResult = containerFrame;
         return PR_TRUE;
       }
     }
@@ -374,14 +603,12 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
                                        nsAbsoluteItems& aAbsoluteItems,
                                        nsFrameItems&    aFrameItems,
                                        nsAbsoluteItems& aFixedItems,
-                                       nsAbsoluteItems& aFloatingItems)
+                                       nsAbsoluteItems& aFloatingItems,
+                                       PRBool           aCanHaveGeneratedContent)
 {
-  // If the content can contain children, then check for generated content
   nsIStyleContext*  styleContext = nsnull;
-  PRBool            canContainChildren;
-  aContent->CanContainChildren(canContainChildren);
 
-  if (canContainChildren) {
+  if (aCanHaveGeneratedContent) {
     nsIFrame* generatedFrame;
 
     // Probe for generated content before
@@ -406,7 +633,7 @@ nsCSSFrameConstructor::ProcessChildren(nsIPresContext*  aPresContext,
     }
   }
 
-  if (canContainChildren) {
+  if (aCanHaveGeneratedContent) {
     nsIFrame* generatedFrame;
 
     // Probe for generated content after
@@ -810,7 +1037,7 @@ nsCSSFrameConstructor::ConstructTableCaptionFrame(nsIPresContext*  aPresContext,
   nsFrameItems childItems;
   nsAbsoluteItems floatingKids(aNewCaptionFrame);
   ProcessChildren(aPresContext, aContent, aNewCaptionFrame, aAbsoluteItems, 
-                  childItems, aFixedItems, floatingKids);
+                  childItems, aFixedItems, floatingKids, PR_TRUE);
   aNewCaptionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
   if (floatingKids.childList) {
     aNewCaptionFrame->SetInitialChildList(*aPresContext,
@@ -1248,7 +1475,7 @@ nsCSSFrameConstructor::ConstructTableCellFrameOnly(nsIPresContext*  aPresContext
     nsFrameItems childItems;
     nsAbsoluteItems floaterList(aNewCellBodyFrame);
     rv = ProcessChildren(aPresContext, aContent, aNewCellBodyFrame, aAbsoluteItems,
-                         childItems, aFixedItems, floaterList);
+                         childItems, aFixedItems, floaterList, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
     aNewCellBodyFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     if (floaterList.childList) {
@@ -1535,7 +1762,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     nsFrameItems     childItems;
 
     ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList);
+                    childItems, aFixedItems, floaterList, PR_TRUE);
     
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -1598,7 +1825,7 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     nsFrameItems     childItems;
 
     ProcessChildren(aPresContext, aDocElement, areaFrame, absoluteItems,
-                    childItems, aFixedItems, floatingItems);
+                    childItems, aFixedItems, floatingItems, PR_TRUE);
     
     // Set the initial child lists
     areaFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -2004,6 +2231,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
   nsIFrame* newFrame = nsnull;  // the frame we construct
   PRBool    newFrameIsFloaterContainer = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
+  PRBool    canHaveGeneratedContent = PR_FALSE;  // ignore things like text
   nsIFrame* beforeGenerated = nsnull;
   nsIFrame* afterGenerated = nsnull;
   nsresult  rv = NS_OK;
@@ -2033,6 +2261,9 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (NS_STYLE_FLOAT_NONE != display->mFloats) {
         isFloating = PR_TRUE;
       }
+
+      // Most things in here can have generated content
+      canHaveGeneratedContent = PR_TRUE;
 
       // Create a frame based on the tag
       if (nsHTMLAtoms::img == aTag) {
@@ -2083,10 +2314,16 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         rv = NS_NewLegendFrame(newFrame);
         processChildren = PR_TRUE;
         canBePositioned = PR_FALSE;
+        canHaveGeneratedContent = PR_FALSE;
       }
       else if (nsHTMLAtoms::object == aTag) {
         isReplaced = PR_TRUE;
         rv = NS_NewObjectFrame(newFrame);
+        // Note: if we can render the OBJECT element, then the generated content
+        // goes before and after the replaced element (as sibling frames) because
+        // we're ignoring the OBJECT element's content.
+        // If we can't render the OBJECT element, then the generated content goes
+        // before and after the OBJECT element's content
       }
       else if (nsHTMLAtoms::form == aTag) {
         rv = NS_NewFormFrame(newFrame);
@@ -2094,6 +2331,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       else if (nsHTMLAtoms::frameset == aTag) {
         rv = NS_NewHTMLFramesetFrame(newFrame);
         canBePositioned = PR_FALSE;
+        canHaveGeneratedContent = PR_FALSE;
       }
       else if (nsHTMLAtoms::iframe == aTag) {
         isReplaced = PR_TRUE;
@@ -2148,6 +2386,15 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
                                                aStyleContext, PR_FALSE);
 
+      // If it's allowed to have generated content, then check for :before
+      // and :after pseudo-elements
+      if (canHaveGeneratedContent) {
+        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
+                                    nsCSSAtoms::beforePseudo, &beforeGenerated);
+        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
+                                    nsCSSAtoms::afterPseudo, &afterGenerated);
+      }
+
       // Process the child content if requested
       nsFrameItems childItems;
       nsAbsoluteItems floaterList(newFrame);
@@ -2155,22 +2402,13 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
         if (newFrameIsFloaterContainer) {
           rv = ProcessChildren(aPresContext, aContent, newFrame,
                                aAbsoluteItems, childItems, aFixedItems,
-                               floaterList);
+                               floaterList, PR_TRUE);
         }
         else {
           rv = ProcessChildren(aPresContext, aContent, newFrame,
                                aAbsoluteItems, childItems, aFixedItems,
-                               aFloatingItems);
+                               aFloatingItems, PR_TRUE);
         }
-      } else {
-        // Check for generated content before and after.
-        // Note: we don't need to do this in the case where we're processing
-        // children, because ProcessChildren() takes care of this...
-        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
-                                    nsCSSAtoms::beforePseudo, &beforeGenerated);
-        CreateGeneratedContentFrame(aPresContext, newFrame, aContent, aStyleContext,
-                                    nsCSSAtoms::afterPseudo, &afterGenerated);
-
       }
 
       // Set the frame's initial child list
@@ -2663,7 +2901,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     nsAbsoluteItems  floaterList(newFrame);
 
     ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList);
+                    childItems, aFixedItems, floaterList, PR_TRUE);
 
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2696,7 +2934,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     nsFrameItems childItems;
     nsAbsoluteItems  floaterList(newFrame);
     ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
-                    childItems, aFixedItems, floaterList);
+                    childItems, aFixedItems, floaterList, PR_TRUE);
 
     // Set the frame's initial child list(s)
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2724,7 +2962,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
     nsAbsoluteItems  floaterList(newFrame);
     nsFrameItems     childItems;
     ProcessChildren(aPresContext, aContent, newFrame, absoluteItems,
-                    childItems, aFixedItems, floaterList);
+                    childItems, aFixedItems, floaterList, PR_TRUE);
 
     // Set the frame's initial child list
     newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
@@ -2843,7 +3081,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
           nsAbsoluteItems floaterList(newFrame);
           rv = ProcessChildren(aPresContext, aContent, newFrame,
                                aAbsoluteItems, childItems, aFixedItems,
-                               aFloatingItems);
+                               aFloatingItems, PR_TRUE);
 
           // Set the frame's initial child list
           newFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -2857,7 +3095,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresContext*       aPresCo
         else {
           rv = ProcessChildren(aPresContext, aContent, newFrame,
                                aAbsoluteItems, childItems, aFixedItems,
-                               aFloatingItems);
+                               aFloatingItems, PR_TRUE);
 
           // Set the frame's initial child list
           newFrame->SetInitialChildList(*aPresContext, nsnull,
@@ -4523,7 +4761,7 @@ nsCSSFrameConstructor::CreateContinuingOuterTableFrame(nsIPresContext*  aPresCon
         NS_NewAreaFrame(captionFrame, 0);
         captionFrame->Init(*aPresContext, caption, newFrame, captionStyle, nsnull);
         ProcessChildren(aPresContext, caption, captionFrame, absoluteItems, 
-                        childItems, fixedItems, floaterList);
+                        childItems, fixedItems, floaterList, PR_TRUE);
         captionFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
         // XXX Deal with absolute and fixed frames...
         if (floaterList.childList) {
