@@ -785,6 +785,18 @@ ImageFrame::HandleEvent(nsIPresContext& aPresContext,
         // the image's borders.
         nsRect inner;
         GetInnerArea(&aPresContext, inner);
+
+        // XXX Event isn't in our local coordinate space like it should be...
+        nsIView*  view;
+        GetView(view);
+        if (nsnull == view) {
+          nsPoint offset;
+          GetOffsetFromView(offset, view);
+          if (nsnull != view) {
+            aEvent->point -= offset;
+          }
+        }
+
         PRInt32 x = NSTwipsToIntPixels((aEvent->point.x - inner.x), t2p);
         PRInt32 y = NSTwipsToIntPixels((aEvent->point.y - inner.y), t2p);
         nsresult r = map->IsInside(x, y, docURL, absURL, target, altText,
@@ -846,8 +858,21 @@ ImageFrame::GetCursor(nsIPresContext& aPresContext,
     GetInnerArea(&aPresContext, inner);
     aCursor = NS_STYLE_CURSOR_DEFAULT;
     float t2p = aPresContext.GetTwipsToPixels();
-    PRInt32 x = NSTwipsToIntPixels((aPoint.x - inner.x), t2p);
-    PRInt32 y = NSTwipsToIntPixels((aPoint.y - inner.y), t2p);
+
+    // XXX Event isn't in our local coordinate space like it should be...
+    nsPoint   pt = aPoint;
+    nsIView*  view;
+    GetView(view);
+    if (nsnull == view) {
+      nsPoint offset;
+      GetOffsetFromView(offset, view);
+      if (nsnull != view) {
+        pt -= offset;
+      }
+    }
+
+    PRInt32 x = NSTwipsToIntPixels((pt.x - inner.x), t2p);
+    PRInt32 y = NSTwipsToIntPixels((pt.y - inner.y), t2p);
     if (NS_OK == map->IsInside(x, y)) {
       aCursor = NS_STYLE_CURSOR_POINTER;
     }

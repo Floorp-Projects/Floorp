@@ -1049,6 +1049,8 @@ NS_IMETHODIMP PresShell :: HandleEvent(nsIView         *aView,
           NS_RELEASE(targetContent);
         }
         //3. Give event to the Frames for browser default processing.
+        // XXX The event isn't translated into the local coordinate space
+        // of the frame...
         if (NS_OK == rv) {
           rv = targetFrame->HandleEvent(*mPresContext, aEvent, aEventStatus);
         }
