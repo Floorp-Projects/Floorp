@@ -58,6 +58,6 @@ interface nsISOAPResponseListener:nsISupports {
    *   indicating that the last response was already sent.
    */
   boolean handleResponse(in nsISOAPResponse aResponse,
-			 in nsISOAPCall aCall, in nsresult status,
+			 in nsISOAPCall aCall, in unsigned long status,
 			 in boolean aLast);
 };

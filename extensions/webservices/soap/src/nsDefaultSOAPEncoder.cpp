@@ -2166,6 +2166,9 @@ static PRInt32 DecodeArrayPosition(const nsAString& src, PRUint32 aDimensionCoun
 static nsresult CreateArray(nsIWritableVariant* aResult, PRUint16 aType, const nsIID* aIID, 
   PRUint32 aDimensionCount, PRInt32* aDimensionSizes, PRUint32 aSizeof, PRUint8* aArray)
 {
+  if (aSizeof == 0) {  //  Variants do not support construction of null-sized arrays
+    return aResult->SetAsEmpty();
+  }
   if (aDimensionCount > 1) {                  //  We cannot reuse variants because they are kept by resulting array
     PRInt32 count = aDimensionSizes[0];
     PRUint32 size = aSizeof / count;

@@ -158,10 +158,10 @@ interface nsISOAPMessage:nsISupports {
    */
   void encode(in unsigned short aVersion,
 	      in AString aMethodName, in AString aTargetObjectURI,
-	      in PRUint32 aHeaderBlockCount,
+	      in unsigned long aHeaderBlockCount,
 	      [array,
 	       size_is(aHeaderBlockCount)] in nsISOAPHeaderBlock
-	      aHeaderBlocks, in PRUint32 aParameterCount,[array,
+	      aHeaderBlocks, in unsigned long aParameterCount,[array,
 							  size_is
 							  (aParameterCount)]
 	      in nsISOAPParameter aParameters);
@@ -175,7 +175,7 @@ interface nsISOAPMessage:nsISupports {
    *
    * @return Array of header blocks found in the message.
    */
-  void getHeaderBlocks(out PRUint32 aCount,
+  void getHeaderBlocks(out unsigned long aCount,
 		       [array, size_is(aCount),
 			retval] out nsISOAPHeaderBlock aHeaderBlocks);
 
@@ -194,7 +194,7 @@ interface nsISOAPMessage:nsISupports {
    * @return Array of parameters found in the message.
    */
   void getParameters(in boolean aDocumentStyle,
-		     out PRUint32 aCount,
+		     out unsigned long aCount,
 		     [array, size_is(aCount),
 		      retval] out nsISOAPParameter aParameters);
 
