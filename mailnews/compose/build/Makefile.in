@@ -41,7 +41,6 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/lib \
 		-lxpcom \
 		-lmsgbaseutil \
-		-lraptorhtmlpars \
 		$(NSPR_LIBS) \
 		$(NULL)
 
