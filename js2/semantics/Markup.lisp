@@ -706,6 +706,13 @@
           (depict markup-stream :left-angle-quote name :right-angle-quote))))))
 
 
+; Emit markup for the given supplementary code point, which must be between #x10000 and #x10FFFF.
+(defun depict-supplementary-character (markup-stream code-point)
+  (assert (and (integerp code-point) (<= #x10000 code-point #x10FFFF)))
+  (depict-char-style (markup-stream :character-literal-control)
+    (depict markup-stream :left-angle-quote (format nil "U~8,'0X" code-point) :right-angle-quote)))
+
+
 ; Emit markup for the given string, enclosing it in curly double quotes.
 ; The markup-stream should be set to normal formatting.
 (defun depict-string (markup-stream string)
