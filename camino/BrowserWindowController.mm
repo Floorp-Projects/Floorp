@@ -370,7 +370,9 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
                                         StopToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
+#if CORPORATE_BRANDING
                                         ThrobberToolbarItemIdentifier,
+#endif
                                         nil];
 }
 
@@ -422,8 +424,8 @@ static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
         [toolbarItem setTarget:self];
         [toolbarItem setAction:@selector(toggleSidebar:)];
     } else if ( [itemIdent isEqual:ThrobberToolbarItemIdentifier] ) {
-        [toolbarItem setLabel:@"Throbber"];
-        [toolbarItem setPaletteLabel:@"Throbber"];
+        [toolbarItem setLabel:@""];
+        [toolbarItem setPaletteLabel:@"Progress"];
         [toolbarItem setToolTip:@"http://www.netscape.com"];
         [toolbarItem setImage:[NSImage imageNamed:@"throbber-01"]];
         [toolbarItem setTarget:self];

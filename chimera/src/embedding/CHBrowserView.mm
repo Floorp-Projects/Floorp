@@ -1377,7 +1377,7 @@ nsHeaderSniffer::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aReq
     clipboard->Paste();
 }
 
--(IBAction)clear:(id)aSender
+-(IBAction)delete:(id)aSender
 {
     nsCOMPtr<nsIClipboardCommands> clipboard(do_GetInterface(_webBrowser));
     clipboard->SelectNone();
