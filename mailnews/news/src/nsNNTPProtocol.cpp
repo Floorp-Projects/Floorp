@@ -536,7 +536,7 @@ PRInt32 nsNNTPProtocol::SendModeReaderResponse()
 	/* ignore the response code and continue
 	 */
     PRBool pushAuth;
-    nsresult rv = m_newsHost->IsPushAuth(&pushAuth);
+    nsresult rv = m_newsHost->GetPushAuth(&pushAuth);
     if (NS_SUCCEEDED(rv) && pushAuth)
 		/* if the news host is set up to require volunteered (pushed) authentication,
 		 * do that before we do anything else
@@ -1495,7 +1495,7 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
 		 */
-        rv = m_newsHost->IsPushAuth(&pushAuth);
+        rv = m_newsHost->GetPushAuth(&pushAuth);
         
         if (!TestFlag(NNTP_READER_PERFORMED))
 			m_nextState = NNTP_SEND_MODE_READER;
@@ -1655,7 +1655,7 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 		/* If we're here because the host demanded authentication before we
 		 * even sent a single command, then jump back to the beginning of everything
 		 */
-        rv = m_newsHost->IsPushAuth(&pushAuth);
+        rv = m_newsHost->GetPushAuth(&pushAuth);
         
 		if (!TestFlag(NNTP_READER_PERFORMED))
 			m_nextState = NNTP_SEND_MODE_READER;

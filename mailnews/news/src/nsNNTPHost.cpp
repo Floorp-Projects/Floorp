@@ -72,15 +72,15 @@ public:
     NS_DECL_ISUPPORTS
     // nsINNTPHost
     
-    NS_IMPL_CLASS_GETSET_BOOL(SupportsExtensions, PRBool,
-                              m_supportsExtensions);
+    NS_IMPL_CLASS_GETSET(SupportsExtensions, PRBool,
+                         m_supportsExtensions);
     
 	NS_IMETHOD AddExtension (const char *ext);
 	NS_IMETHOD QueryExtension (const char *ext, PRBool *_retval);
     
-    NS_IMPL_CLASS_GETSET_BOOL(PostingAllowed, PRBool, m_postingAllowed);
+    NS_IMPL_CLASS_GETSET(PostingAllowed, PRBool, m_postingAllowed);
     
-    NS_IMPL_CLASS_GETTER(IsPushAuth, PRBool, m_pushAuth);
+    NS_IMPL_CLASS_GETTER(GetPushAuth, PRBool, m_pushAuth);
     NS_IMETHOD SetPushAuth(PRBool value);
     
     NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRInt64, m_lastGroupUpdate);
@@ -943,7 +943,7 @@ nsNNTPHost::WriteNewsrc()
         rv = newsgroup->GetName(&newsgroupName);
         
         PRBool isSubscribed=PR_FALSE;
-        rv = newsgroup->IsSubscribed(&isSubscribed);
+        rv = newsgroup->GetSubscribed(&isSubscribed);
         line = PR_smprintf("%s%s %s" LINEBREAK,
                                  newsgroupName, 
 								 isSubscribed ? ":" : "!", str);
@@ -1638,7 +1638,7 @@ nsNNTPHost::AddGroup(const char *groupName,
             
             // if we're not subscribed to container, do that instead.
             if (NS_SUCCEEDED(rv))
-                rv = newsInfo->IsSubscribed(&isSubscribed);
+                rv = newsInfo->GetSubscribed(&isSubscribed);
             
             if (NS_FAILED(rv) || !isSubscribed)
                 {
@@ -1658,7 +1658,7 @@ nsNNTPHost::AddGroup(const char *groupName,
     rv = FindGroup(groupName, &newsInfo);
 	if (NS_SUCCEEDED(rv)) {	// seems to be already added
         PRBool subscribed;
-        rv = newsInfo->IsSubscribed(&subscribed);
+        rv = newsInfo->GetSubscribed(&subscribed);
 		if (NS_SUCCEEDED(rv) && !subscribed) {
 			newsInfo->SetSubscribed(PR_TRUE);
             nsIMsgFolder *newsFolder = getFolderFor(newsInfo);
@@ -1716,7 +1716,7 @@ nsNNTPHost::AddGroup(const char *groupName,
             rv = FindGroup(fullname, &info);
 			if (NS_SUCCEEDED(rv)) {
                 PRBool subscribed;
-                rv = info->IsSubscribed(&subscribed);
+                rv = info->GetSubscribed(&subscribed);
 				if (NS_SUCCEEDED(rv) && !subscribed) {
 					info->SetSubscribed(PR_TRUE);
 				}
@@ -1862,7 +1862,7 @@ nsNNTPHost::RemoveGroup (const nsINNTPNewsgroup *newsInfo)
 {
     PRBool subscribed;
     if (!newsInfo) return NS_ERROR_NULL_POINTER;
-    nsresult rv = newsInfo->IsSubscribed(&subscribed);
+    nsresult rv = newsInfo->GetSubscribed(&subscribed);
 	if (NS_SUCCEEDED(rv) && subscribed) 
 	{
 		newsInfo->SetSubscribed(PR_FALSE);
@@ -1954,9 +1954,9 @@ nsNNTPHost::GetNumGroupsNeedingCounts(PRInt32 *value)
 		nsINNTPNewsgroup* info = (nsINNTPNewsgroup*) ((*m_groups)[i]);
         PRBool wantNewTotals, subscribed;
         nsresult rv;
-        rv = info->IsWantNewTotals(&wantNewTotals);
+        rv = info->GetWantNewTotals(&wantNewTotals);
         if (NS_SUCCEEDED(rv))
-            rv = info->IsSubscribed(&subscribed);
+            rv = info->GetSubscribed(&subscribed);
 		if (NS_SUCCEEDED(rv) &&
             wantNewTotals &&
             subscribed) {
@@ -1977,9 +1977,9 @@ nsNNTPHost::GetFirstGroupNeedingCounts(char **result)
         
         PRBool wantNewTotals, subscribed;
         nsresult rv;
-        rv = info->IsWantNewTotals(&wantNewTotals);
+        rv = info->GetWantNewTotals(&wantNewTotals);
         if (NS_SUCCEEDED(rv))
-            rv = info->IsSubscribed(&subscribed);
+            rv = info->GetSubscribed(&subscribed);
         
 		if (NS_SUCCEEDED(rv) &&
             wantNewTotals &&
@@ -3082,7 +3082,7 @@ nsNNTPHost::AddNewNewsgroup(const char *groupName,
             
             if (NS_SUCCEEDED(rv)) {
                 PRBool isSubscribed;
-                categoryInfo->IsSubscribed(&isSubscribed);
+                categoryInfo->GetSubscribed(&isSubscribed);
                 if (isSubscribed) {
                     // this autosubscribes categories of subscribed newsgroups.
                     nsINNTPNewsgroup *newsgroup;
@@ -3124,7 +3124,7 @@ nsNNTPHost::DisplaySubscribedGroup(const char *group,
         return NS_OK;
     else {
         PRBool subscribed;
-        newsgroup->IsSubscribed(&subscribed);
+        newsgroup->GetSubscribed(&subscribed);
         if (!subscribed)
             newsgroup->SetSubscribed(TRUE);
     }

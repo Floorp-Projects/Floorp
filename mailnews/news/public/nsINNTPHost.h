@@ -29,7 +29,7 @@ class nsINNTPHost : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD IsSupportsExtensions(PRBool *aIsSupportsExtensions) = 0;
+  NS_IMETHOD GetSupportsExtensions(PRBool *aSupportsExtensions) = 0;
   NS_IMETHOD SetSupportsExtensions(PRBool aSupportsExtensions) = 0;
 
   /*  <IDL>  */
@@ -39,11 +39,11 @@ class nsINNTPHost : public nsISupports {
   NS_IMETHOD QueryExtension(const char *extension, PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD IsPostingAllowed(PRBool *aIsPostingAllowed) = 0;
+  NS_IMETHOD GetPostingAllowed(PRBool *aPostingAllowed) = 0;
   NS_IMETHOD SetPostingAllowed(PRBool aPostingAllowed) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD IsPushAuth(PRBool *aIsPushAuth) = 0;
+  NS_IMETHOD GetPushAuth(PRBool *aPushAuth) = 0;
   NS_IMETHOD SetPushAuth(PRBool aPushAuth) = 0;
 
   /*  <IDL>  */

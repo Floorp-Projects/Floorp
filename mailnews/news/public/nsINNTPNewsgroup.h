@@ -43,22 +43,22 @@ class nsINNTPNewsgroup : public nsISupports {
   NS_IMETHOD SetUsername(char * aUsername) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD IsNeedsExtraInfo(PRBool *aIsNeedsExtraInfo) = 0;
+  NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) = 0;
   NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD IsCategory(PRBool *aIsCategory) = 0;
+  NS_IMETHOD GetCategory(PRBool *aCategory) = 0;
   NS_IMETHOD SetCategory(PRBool aCategory) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD IsSubscribed(PRBool *aIsSubscribed) = 0;
+  NS_IMETHOD GetSubscribed(PRBool *aSubscribed) = 0;
   NS_IMETHOD SetSubscribed(PRBool aSubscribed) = 0;
 
   /*  <IDL>  */
-  NS_IMETHOD IsWantNewTotals(PRBool *aIsWantNewTotals) = 0;
+  NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals) = 0;
   NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals) = 0;
 
   /*  <IDL>  */
