@@ -1233,30 +1233,40 @@ js_FreeSlot(JSContext *cx, JSObject *obj, uint32 slot)
 #define CHECK_FOR_EMPTY_INDEX(id) /* nothing */
 #endif
 
+/* JSVAL_INT_MAX as a string */
+#define JSVAL_INT_MAX_STRING "1073741823"
+
 #define CHECK_FOR_FUNNY_INDEX(id)                                             \
     PR_BEGIN_MACRO                                                            \
-	if (!JSVAL_IS_INT(id)) {                                              \
+    	if (!JSVAL_IS_INT(id)) {                                              \
 	    JSAtom *_atom = (JSAtom *)id;                                     \
 	    JSString *_str = ATOM_TO_STRING(_atom);                           \
 	    const jschar *_cp = _str->chars;                                  \
-	    if (JS7_ISDEC(*_cp)) {                                            \
-		jsint _index = JS7_UNDEC(*_cp);                               \
-		_cp++;                                                        \
-		if (_index != 0) {                                            \
-		    while (JS7_ISDEC(*_cp)) {                                 \
-			_index = 10 * _index + JS7_UNDEC(*_cp);               \
-			if (_index < 0)                                       \
-			    break;                                            \
-			_cp++;                                                \
-		    }                                                         \
-		}                                                             \
-		if (*_cp == 0 && INT_FITS_IN_JSVAL(_index))                   \
+	    if (JS7_ISDEC(*_cp) &&                                            \
+                _str->length <= sizeof(JSVAL_INT_MAX_STRING)-1)               \
+            {                                                                 \
+		jsuint _index = JS7_UNDEC(*_cp++);                            \
+                jsuint _oldIndex = 0;                                         \
+                jsuint _c;                                                    \
+                if (_index != 0) {                                            \
+                    while (JS7_ISDEC(*_cp)) {                                 \
+                        _oldIndex = _index;                                   \
+                        _c = JS7_UNDEC(*_cp);                                 \
+                        _index = 10*_index + _c;                              \
+		        _cp++;                                                \
+                    }                                                         \
+                }                                                             \
+                if (*_cp == 0 &&                                              \
+                     (_oldIndex < (JSVAL_INT_MAX / 10) ||                     \
+                      (_oldIndex == (JSVAL_INT_MAX / 10) &&                   \
+                       _c < (JSVAL_INT_MAX % 10))))                           \
 		    id = INT_TO_JSVAL(_index);                                \
 	    } else {                                                          \
 		CHECK_FOR_EMPTY_INDEX(id);                                    \
 	    }                                                                 \
 	}                                                                     \
     PR_END_MACRO
+
 
 JSBool
 js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
@@ -1267,7 +1277,8 @@ js_DefineProperty(JSContext *cx, JSObject *obj, jsid id, jsval value,
     JSScope *scope;
     JSScopeProperty *sprop;
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index. 
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     /* Lock if object locking is required by this implementation. */
@@ -1337,7 +1348,8 @@ js_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
     JSObject *obj2, *proto;
     JSScopeProperty *sprop;
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index. 
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     /* Search scopes starting with obj and following the prototype link. */
@@ -1538,7 +1550,8 @@ js_GetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
     if (!js_LookupProperty(cx, obj, id, &obj2, (JSProperty **)&sprop))
 	return JS_FALSE;
     if (!sprop) {
-	/* Handle old bug that treated empty string as zero index. */
+        /* Handle old bug that treated empty string as zero index. 
+         * Also convert string indices to numbers if applicable. */
 	CHECK_FOR_FUNNY_INDEX(id);
 
 #if JS_BUG_NULL_INDEX_PROPS
@@ -1603,7 +1616,8 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 	return JS_FALSE;
     }
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index. 
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     hash = js_HashValue(id);
@@ -1875,7 +1889,8 @@ js_DeleteProperty(JSContext *cx, JSObject *obj, jsid id, jsval *rval)
 
     *rval = JSVERSION_IS_ECMA(cx->version) ? JSVAL_TRUE : JSVAL_VOID;
 
-    /* Handle old bug that treated empty string as zero index. */
+    /* Handle old bug that treated empty string as zero index. 
+     * Also convert string indices to numbers if applicable. */
     CHECK_FOR_FUNNY_INDEX(id);
 
     if (!js_LookupProperty(cx, obj, id, &proto, &prop))
@@ -2435,3 +2450,28 @@ out:
 }
 
 #endif /* JS_HAS_XDR */
+
+#ifdef DEBUG
+
+void printId(jsid id) {
+    jsuint i;
+    JSAtom *atom;
+    JSString *str;
+
+    fprintf(stderr, "id %d (0x%x) = ", id, id);
+    if (JSVAL_IS_INT(id)) {
+        fprintf(stderr, "%d\n", JSVAL_TO_INT(id));
+    } else {
+        atom = (JSAtom *)id;
+        str = ATOM_TO_STRING(atom);
+        fputc('"', stderr);
+        for (i=0; i < str->length; i++)
+            fputc(str->chars[i], stderr);
+        fputc('"', stderr);
+        fputc('\n', stderr);
+    }
+    fflush(stderr);
+}
+
+#endif
+

@@ -38,6 +38,9 @@
 #include "jsobj.h"
 #include "jsstr.h"
 
+/* 2^32 - 1 as a number and a string */
+#define MAXINDEX 4294967295u
+#define MAXSTR   "4294967295"
 
 /* Determine if the id represents an array index.
  * 
@@ -59,7 +62,7 @@ IdIsIndex(jsid id, jsuint *indexp)
 {
     jsuint i;
     JSString *str;
-    jschar *ep;
+    jschar *cp;
 
     if (JSVAL_IS_INT(id)) {
         i = JSVAL_TO_INT(id);
@@ -71,21 +74,31 @@ IdIsIndex(jsid id, jsuint *indexp)
 
     /* It must be a string. */
     str = JSVAL_TO_STRING(id);
-    ep = str->chars;
-    if (str->length == 0 || *ep < '1' || *ep > '9')
-        return JS_FALSE;
-    i = 0;
-    while (*ep != 0 && JS7_ISDEC(*ep)) {
-        jsuint i2 = i*10 + (*ep - '0');
-        if (i2 < i)
-            return JS_FALSE;    /* overflow */
-        i = i2;
-        ep++;
+    cp = str->chars;
+    if (JS7_ISDEC(*cp) && str->length < sizeof(MAXSTR)) {
+	jsuint index = JS7_UNDEC(*cp++);
+        jsuint oldIndex = 0;
+        jsint c;
+        if (index != 0) {
+            while (JS7_ISDEC(*cp)) {
+                oldIndex = index;
+                c = JS7_UNDEC(*cp);
+                index = 10*index + c;
+	        cp++;
+	    }
+        }
+        /* Make sure all characters were consumed and that it couldn't
+         * have overflowed.
+         */
+        if (*cp == 0 &&
+             (oldIndex < (MAXINDEX / 10) ||
+              (oldIndex == (MAXINDEX / 10) && c < (MAXINDEX % 10))))
+        {
+            *indexp = index;
+            return JS_TRUE;
+        }
     }
-    if (*ep != 0 || i == 4294967295)    /* 4294967295 == 2^32-1 */
-        return JS_FALSE;
-    *indexp = i;
-    return JS_TRUE;
+    return JS_FALSE;
 }
 
 
