@@ -67,13 +67,11 @@ sub CheckProduct ($)
     # do we have a product?
     unless ($prod) {
         ThrowUserError('product_not_specified');
-        exit;
     }
 
     unless (TestProduct $prod) {
         ThrowUserError('product_doesnt_exist',
                        {'product' => $prod});
-        exit;
     }
 }
 
@@ -97,7 +95,6 @@ sub CheckComponent ($$)
     # do we have the component?
     unless ($comp) {
         ThrowUserError('component_not_specified');
-        exit;
     }
 
     CheckProduct($prod);
@@ -106,7 +103,6 @@ sub CheckComponent ($$)
         ThrowUserError('component_not_valid',
                        {'product' => $prod,
                         'name' => $comp});
-        exit;
     }
 }
 
@@ -267,18 +263,15 @@ if ($action eq 'new') {
     unless ($component) {
         ThrowUserError('component_blank_name',
                        {'name' => $component});
-        exit;
     }
     if (TestComponent($product, $component)) {
         ThrowUserError('component_already_exists',
                        {'name' => $component});
-        exit;
     }
 
     if (length($component) > 64) {
         ThrowUserError('component_name_too_long',
                        {'name' => $component});
-        exit;
     }
 
     my $description = trim($cgi->param('description') || '');
@@ -286,7 +279,6 @@ if ($action eq 'new') {
     if ($description eq '') {
         ThrowUserError('component_blank_description',
                        {'name' => $component});
-        exit;
     }
 
     my $initialowner = trim($cgi->param('initialowner') || '');
@@ -294,14 +286,12 @@ if ($action eq 'new') {
     if ($initialowner eq '') {
         ThrowUserError('component_need_initialowner',
                        {'name' => $component});
-        exit;
     }
 
     my $initialownerid = login_to_id ($initialowner);
     if (!$initialownerid) {
         ThrowUserError('component_need_valid_initialowner',
                        {'name' => $component});
-        exit;
     }
 
     my $initialqacontact = trim($cgi->param('initialqacontact') || '');
@@ -310,7 +300,6 @@ if ($action eq 'new') {
         if (!$initialqacontactid && $initialqacontact ne '') {
             ThrowUserError('component_need_valid_initialqacontact',
                            {'name' => $component});
-            exit;
         }
     }
 
@@ -571,7 +560,6 @@ if ($action eq 'update') {
     if (length($component) > 64) {
         ThrowUserError('component_name_too_long',
                        {'name' => $component});
-        exit;
     }
 
     # Note that the order of this tests is important. If you change
@@ -587,7 +575,6 @@ if ($action eq 'update') {
         unless ($description) {
             ThrowUserError('component_blank_description',
                            {'name' => $componentold});
-            exit;
         }
         SendSQL("UPDATE components
                  SET description=" . SqlQuote($description) . "
@@ -604,7 +591,6 @@ if ($action eq 'update') {
         unless ($initialownerid) {
             ThrowUserError('component_need_valid_initialowner',
                            {'name' => $componentold});
-            exit;
         }
 
         SendSQL("UPDATE components
@@ -621,7 +607,6 @@ if ($action eq 'update') {
         if (!$initialqacontactid && $initialqacontact ne '') {
             ThrowUserError('component_need_valid_initialqacontact',
                            {'name' => $componentold});
-            exit;
         }
 
         SendSQL("UPDATE components
@@ -637,12 +622,10 @@ if ($action eq 'update') {
         unless ($component) {
             ThrowUserError('component_must_have_a_name',
                            {'name' => $componentold});
-            exit;
         }
         if (TestComponent($product, $component)) {
             ThrowUserError('component_already_exists',
                            {'name' => $component});
-            exit;
         }
 
         SendSQL("UPDATE components SET name=" . SqlQuote($component) . 

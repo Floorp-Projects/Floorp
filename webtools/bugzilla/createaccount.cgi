@@ -72,7 +72,6 @@ if (defined($login)) {
     if (!($createexp)
         || ($login !~ /$createexp/)) {
         ThrowUserError("account_creation_disabled");
-        exit;
     }
     
     # Create account

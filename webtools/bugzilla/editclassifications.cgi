@@ -300,7 +300,7 @@ if ($action eq 'update') {
 
     if ($classification ne $classificationold) {
         unless ($classification) {
-            ThrowUserError("classification_not_specified")
+            ThrowUserError("classification_not_specified");
         }
         
         if (TestClassification($classification)) {

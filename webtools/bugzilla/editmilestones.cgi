@@ -60,14 +60,12 @@ sub CheckProduct ($)
     # do we have a product?
     unless ($product) {
         ThrowUserError('product_not_specified');    
-        exit;
     }
 
     # Does it exist in the DB?
     unless (TestProduct $product) {
         ThrowUserError('product_doesnt_exist',
                        {'product' => $product});
-        exit;
     }
 }
 
@@ -104,7 +102,6 @@ sub CheckMilestone ($$)
     # do we have the milestone and product combination?
     unless ($milestone) {
         ThrowUserError('milestone_not_specified');
-        exit;
     }
 
     CheckProduct($product);
@@ -113,7 +110,6 @@ sub CheckMilestone ($$)
         ThrowUserError('milestone_not_valid',
                        {'product' => $product,
                         'milestone' => $milestone});
-        exit;
     }
 }
 
@@ -254,13 +250,11 @@ if ($action eq 'new') {
     unless ($milestone) {
         ThrowUserError('milestone_blank_name',
                        {'name' => $milestone});
-        exit;
     }
 
     if (length($milestone) > 20) {
         ThrowUserError('milestone_name_too_long',
                        {'name' => $milestone});
-        exit;
     }
 
     # Need to store in case detaint_natural() clears the sortkey
@@ -269,13 +263,11 @@ if ($action eq 'new') {
         ThrowUserError('milestone_sortkey_invalid',
                        {'name' => $milestone,
                         'sortkey' => $stored_sortkey});
-        exit;
     }
     if (TestMilestone($product, $milestone)) {
         ThrowUserError('milestone_already_exists',
                        {'name' => $milestone,
                         'product' => $product});
-        exit;
     }
 
     # Add the new milestone
@@ -492,7 +484,6 @@ if ($action eq 'update') {
     if (length($milestone) > 20) {
         ThrowUserError('milestone_name_too_long',
                        {'name' => $milestone});
-        exit;
     }
 
     my $dbh = Bugzilla->dbh;
@@ -509,7 +500,6 @@ if ($action eq 'update') {
             ThrowUserError('milestone_sortkey_invalid',
                            {'name' => $milestone,
                             'sortkey' => $stored_sortkey});
-            exit;
         }
 
         trick_taint($milestoneold);
@@ -530,13 +520,11 @@ if ($action eq 'update') {
     if ($milestone ne $milestoneold) {
         unless ($milestone) {
             ThrowUserError('milestone_blank_name');
-            exit;
         }
         if (TestMilestone($product, $milestone)) {
             ThrowUserError('milestone_already_exists',
                            {'name' => $milestone,
                             'product' => $product});
-            exit;
         }
 
         trick_taint($milestone);

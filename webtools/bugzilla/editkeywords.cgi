@@ -37,15 +37,12 @@ sub Validate ($$) {
     my ($name, $description) = @_;
     if ($name eq "") {
         ThrowUserError("keyword_blank_name");
-        exit;
     }
     if ($name =~ /[\s,]/) {
         ThrowUserError("keyword_invalid_name");
-        exit;
     }    
     if ($description eq "") {
         ThrowUserError("keyword_blank_description");
-        exit;
     }
 }
 
@@ -124,7 +121,6 @@ if ($action eq 'new') {
     if (FetchOneColumn()) {
         $vars->{'name'} = $name;
         ThrowUserError("keyword_already_exists");
-        exit;
     }
 
 
@@ -183,7 +179,6 @@ if ($action eq 'edit') {
     if (!$name) {
         $vars->{'id'} = $id;
         ThrowCodeError("invalid_keyword_id", $vars);
-        exit;
     }
 
     SendSQL("SELECT count(*)
@@ -227,7 +222,6 @@ if ($action eq 'update') {
     if ($tmp && $tmp != $id) {
         $vars->{'name'} = $name;
         ThrowUserError("keyword_already_exists", $vars);
-        exit;
     }
 
     SendSQL("UPDATE keyworddefs SET name = " . SqlQuote($name) .

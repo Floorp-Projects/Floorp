@@ -64,13 +64,11 @@ sub CheckProduct ($)
     # do we have a product?
     unless ($prod) {
         ThrowUserError('product_not_specified');    
-        exit;
     }
 
     unless (TestProduct $prod) {
         ThrowUserError('product_doesnt_exist',
                        {'product' => $prod});
-        exit;
     }
 }
 
@@ -94,7 +92,6 @@ sub CheckVersion ($$)
     # do we have the version?
     unless ($ver) {
         ThrowUserError('version_not_specified');
-        exit;
     }
 
     CheckProduct($prod);
@@ -103,7 +100,6 @@ sub CheckVersion ($$)
         ThrowUserError('version_not_valid',
                        {'product' => $prod,
                         'version' => $ver});
-        exit;
     }
 }
 
@@ -233,14 +229,12 @@ if ($action eq 'new') {
     unless ($version) {
         ThrowUserError('version_blank_name',
                        {'name' => $version});
-        exit;
     }
 
     if (TestVersion($product,$version)) {
         ThrowUserError('version_already_exists',
                        {'name' => $version,
                         'product' => $product});
-        exit;
     }
 
     # Add the new version
@@ -407,13 +401,11 @@ if ($action eq 'update') {
     if ($version ne $versionold) {
         unless ($version) {
             ThrowUserError('version_blank_name');
-            exit;
         }
         if (TestVersion($product,$version)) {
             ThrowUserError('version_already_exists',
                            {'name' => $version,
                             'product' => $product});
-            exit;
         }
         SendSQL("UPDATE bugs
                  SET version=" . SqlQuote($version) . "

@@ -129,13 +129,11 @@ sub CheckClassificationNew ($)
     # do we have a classification?
     unless ($cl) {
         ThrowUserError('classification_not_specified');    
-        exit;
     }
 
     unless (TestClassification $cl) {
         ThrowUserError('classification_doesnt_exist',
                        {'name' => $cl});
-        exit;
     }
 }
 
