@@ -174,6 +174,12 @@ nsHTMLTableRowElement::GetTable(nsIDOMHTMLTableElement** aTable)
     return rv;
   }
 
+  // We may not be in a section
+  rv = CallQueryInterface(sectionNode, aTable);
+  if (NS_SUCCEEDED(rv)) {
+    return rv;
+  }
+
   nsCOMPtr<nsIDOMNode> tableNode;
   rv = sectionNode->GetParentNode(getter_AddRefs(tableNode));
   if (!tableNode) {
