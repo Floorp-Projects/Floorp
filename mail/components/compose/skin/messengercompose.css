@@ -145,7 +145,7 @@ toolbar[iconsize="small"] #button-send {
   -moz-image-region: rect(0px 20px 20px 0px);
 }
 
-toolbar[iconsize="small"] #button-send[buttonover] {
+toolbar[iconsize="small"] #button-send:hover {
   -moz-image-region: rect(20px 20px 40px 0px);
 } 
 
