@@ -677,6 +677,8 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 
 	if (mInner)
 	{	
+		rv = mInner->GetTargets(source, property, tv, targets);
+
 		// defer search engine discovery until needed; small startup time improvement
 		if (((source == kNC_SearchEngineRoot) || isSearchURI(source)) && (property == kNC_Child)
 			&& (mEngineListBuilt == PR_FALSE))
@@ -700,8 +702,6 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 #endif
 			}
 		}
-
-		rv = mInner->GetTargets(source, property, tv, targets);
 	}
 	if (isSearchURI(source))
 	{
@@ -1475,11 +1475,8 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		return(rv);
 	if (!context)	return(NS_ERROR_UNEXPECTED);
 
-	char	*actionStr = action.ToNewCString();
-	if (!actionStr)	return(NS_ERROR_UNEXPECTED);
-
 	nsCOMPtr<nsIURI>	url;
-	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), actionStr)))
+	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), action)))
 	{
 		nsCOMPtr<nsIChannel>	channel;
 		// XXX: Null LoadGroup ?
@@ -1516,9 +1513,6 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			}
 		}
 	}
-
-	nsCRT::free(actionStr);
-	actionStr = nsnull;
 
 	// dispose of any last HTML results page
 	if (mInner)
