@@ -32,6 +32,7 @@ LLIBS = \
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 	$(GLOWDIR)\glowcode.lib		\
 !endif
+	imagehlp.lib			\
 	$(NULL)
 
 LIBNAME = .\$(OBJDIR)\xpcom$(MOZ_BITS)
@@ -39,23 +40,27 @@ DLL = $(LIBNAME).dll
 
 LCFLAGS = -D_IMPL_NS_COM -DUSE_NSREG -DWIN32_LEAN_AND_MEAN
 
-CPPSRCS = \
+CPPSRCS =			\
 	nsDebug.cpp		\
 	nsHashtable.cpp		\
 	nsID.cpp		\
+	nsMalloc.cpp    	\
 	nsRepository.cpp	\
 	nsServiceManager.cpp	\
 	nsSupportsArray.cpp	\
-	nsMalloc.cpp    	\
+	nsTraceRefcnt.cpp	\
+	$(NULL)
 
 CPP_OBJS = \
-	.\$(OBJDIR)\nsDebug.obj		\
-	.\$(OBJDIR)\nsHashtable.obj	\
-	.\$(OBJDIR)\nsID.obj		\
-	.\$(OBJDIR)\nsServiceManager.obj\
-	.\$(OBJDIR)\nsSupportsArray.obj	\
-	.\$(OBJDIR)\nsRepository.obj	\
-	.\$(OBJDIR)\nsMalloc.obj	\
+	.\$(OBJDIR)\nsDebug.obj			\
+	.\$(OBJDIR)\nsHashtable.obj		\
+	.\$(OBJDIR)\nsID.obj			\
+	.\$(OBJDIR)\nsMalloc.obj		\
+	.\$(OBJDIR)\nsRepository.obj		\
+	.\$(OBJDIR)\nsServiceManager.obj	\
+	.\$(OBJDIR)\nsSupportsArray.obj		\
+	.\$(OBJDIR)\nsTraceRefcnt.obj		\
+	$(NULL)
 
 EXPORTS = \
 	nsAgg.h			\
@@ -73,6 +78,7 @@ EXPORTS = \
 	nsIEnumerator.h		\
 	nsIMalloc.h		\
 	nsMalloc.h		\
+	nsTraceRefcnt.h		\
 	nsVector.h		\
 	$(NULL)			
 
