@@ -503,7 +503,7 @@ protected:
   virtual nsIStyleSheet* InternalGetStyleSheetAt(PRInt32 aIndex) const;
   virtual PRInt32 InternalGetNumberOfStyleSheets() const;
 
-  virtual void RetrieveRelevantHeaders(nsIChannel *aChannel);
+  void RetrieveRelevantHeaders(nsIChannel *aChannel);
 
   nsresult doCreateShell(nsIPresContext* aContext,
                          nsIViewManager* aViewManager, nsStyleSet* aStyleSet,
