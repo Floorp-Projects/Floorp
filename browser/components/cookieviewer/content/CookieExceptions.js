@@ -30,7 +30,7 @@ function onOK() {
 
 function manageSite(perm)
 {
-  var url = document.getElementById("url").value;
+  var url = document.getElementById("url").value.replace(/ /g, "");
   var uri = Components.classes["@mozilla.org/network/standard-url;1"]
                       .createInstance(Components.interfaces.nsIURI);
   uri.spec = url;
@@ -52,6 +52,14 @@ function manageSite(perm)
     permissionsTree.treeBoxObject.ensureRowIsVisible(permissions.length-1)
 
   }
+}
+
+function buttonEnabling(textfield)
+{
+  var block = document.getElementById("btnBlock");
+  var allow = document.getElementById("btnAllow");
+  block.disabled = !textfield.value;
+  allow.disabled = !textfield.value;
 }
 
 function Startup()

@@ -43,10 +43,13 @@
  <separator class="thin"/>
  <label value="&address.label;"/>
  <hbox align="start">
-   <textbox id="url" flex="1" oninput="if (event.keyCode == 13) manageSite(permissionmanager.DENY_ACTION);"/>
+   <textbox id="url" flex="1"
+            oninput="buttonEnabling(this);"/>
    <vbox>
-     <button label="&block.label;" oncommand="manageSite(permissionmanager.DENY_ACTION);"/>
-     <button label="&allow.label;" oncommand="manageSite(permissionmanager.ALLOW_ACTION);"/>
+     <button id="btnBlock" disabled="true"
+             label="&block.label;" oncommand="manageSite(permissionmanager.DENY_ACTION);"/>
+     <button id="btnAllow" disabled="true"
+             label="&allow.label;" oncommand="manageSite(permissionmanager.ALLOW_ACTION);"/>
    </vbox>
  </hbox>
  <separator class="thin"/>
