@@ -22,6 +22,7 @@
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
  *   Roy Yokoyama <yokoyama@netscape.com>
+ *   Jungshik Shin <jshin@mailaps.org>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -84,6 +85,9 @@ PRUint16 g_AsciiMapping[] = {
 };
 PRUint16 g_HangulNullMapping[] ={
   0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0xAC00, 0xD7A3, 0xAC00
+};
+PRUint16 g_ufJohabJamoMapping[] ={   
+#include "johabjamo.uf"
 };
 
 NS_CONVERTER_REGISTRY_START
