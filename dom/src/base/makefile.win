@@ -41,6 +41,8 @@ CPPSRCS =			 \
 	nsJSPluginArray.cpp  \
 	nsJSMimeTypeArray.cpp \
 	nsJSMimeType.cpp \
+	nsMimeTypeArray.cpp \
+	nsPluginArray.cpp \
 	$(NULL)
 
 EXPORTS=nsJSUtils.h
@@ -68,6 +70,8 @@ CPP_OBJS= \
 	.\$(OBJDIR)\nsJSPluginArray.obj  \
 	.\$(OBJDIR)\nsJSMimeTypeArray.obj \
 	.\$(OBJDIR)\nsJSMimeType.obj \
+	.\$(OBJDIR)\nsMimeTypeArray.obj \
+	.\$(OBJDIR)\nsPluginArray.obj \
 	$(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \
