@@ -35,7 +35,10 @@ CHROME_CONTENT	= \
 		unknownContent.js \
 		$(NULL)
 
-CHROME_L10N	= ./locale/en-US/unknownContent.dtd
+CHROME_L10N	= \
+		./locale/en-US/unknownContent.dtd	\
+		./locale/en-US/unknownContent.properties	\
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
