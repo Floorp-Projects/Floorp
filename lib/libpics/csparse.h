@@ -227,7 +227,7 @@ typedef enum {Command_NONE = 0, Command_OPEN = 1, Command_CLOSE = 2,
               Command_MATCHANY = 0x10,
               Command_MATCHANY_OPEN_CHAIN = (Command_MATCHANY|Command_OPEN|Command_CHAIN),
               Command_MATCHANY_CLOSE = (Command_MATCHANY|Command_CLOSE),
-              Command_MATCHANY_CLOSE_CHAIN = (Command_MATCHANY|Command_CLOSE|Command_CHAIN),
+              Command_MATCHANY_CLOSE_CHAIN = (Command_MATCHANY|Command_CLOSE|Command_CHAIN)
               } Command_t;
 /*
 

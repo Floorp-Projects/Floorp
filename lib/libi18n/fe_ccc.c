@@ -678,8 +678,7 @@ typedef enum {
 	kHZDouble,
 	kHZDoubleGet1,
 	kHZDoubleTild,
-	kGBDoubleGet1, 	 /* hacky state which allow GB pass through */
-
+	kGBDoubleGet1 	 /* hacky state which allow GB pass through */
 } HZ_STATE;
 
 PRIVATE unsigned char *
