@@ -443,24 +443,38 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode)
     result=aScanner.ReadUntil(mTextValue,theTerminals,PR_TRUE,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
+
       if(((kCR==aChar) || (kNewLine==aChar)) && (NS_OK==result)) {
-        result=aScanner.GetChar(aChar); //strip off the \r
-        result=aScanner.Peek(aChar);    //then see what's next.
-        if(NS_OK==result) {
-          switch(aChar) {
-            case kCR:
-              result=aScanner.GetChar(aChar); //strip off the \r
-              mTextValue.Append("\n\n");
-              break;
-            case kNewLine:
-               //which means we saw \r\n, which becomes \n
-              result=aScanner.GetChar(aChar); //strip off the \n
-                  //now fall through on purpose...
-            default:
+        result=aScanner.GetChar(aChar); //strip off the char
+        PRUnichar theNextChar;
+        result=aScanner.Peek(theNextChar);    //then see what's next.
+        switch(aChar) {
+          case kCR:
+            // result=aScanner.GetChar(aChar);       
+            if(kLF==theNextChar) {
+              result=aScanner.GetChar(theNextChar);
+            }
+            else if(kCR==theNextChar) {
+              result=aScanner.GetChar(theNextChar);
+              result=aScanner.Peek(theNextChar);    //then see what's next.
+              if(kLF==theNextChar) {
+                result=aScanner.GetChar(theNextChar);
+              }
               mTextValue.Append("\n");
-              break;
-          }//switch
-        }//if
+            }
+            mTextValue.Append("\n");
+            break;
+          case kLF:
+            if((kLF==theNextChar) || (kCR==theNextChar)) {
+              result=aScanner.GetChar(theNextChar);
+              mTextValue.Append("\n");
+            }
+            mTextValue.Append("\n");
+            break;
+          default:
+            mTextValue.Append("\n");
+            break;
+        } //switch
       }
       else done=PR_TRUE;
     }
