@@ -375,7 +375,7 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURI *aUrl, 
                         if (valueString) {
                           nsAutoString value(valueString);                                    
                           rv = inputElement->SetValue(value);
-                          delete[] valueString;
+                          // warning! don't delete valueString
                         }
                         delete[] nameString;
                       }
