@@ -436,7 +436,7 @@ NS_IMETHODIMP
 calDateTime::GetClassName(char * *aClassName)
 {
     NS_ENSURE_ARG_POINTER(aClassName);
-    *aClassName = (char *) nsMemory::Clone("mozStorageStatementRow", 23);
+    *aClassName = (char *) nsMemory::Clone("calDateTime", 12);
     if (!*aClassName)
         return NS_ERROR_OUT_OF_MEMORY;
     return NS_OK;
