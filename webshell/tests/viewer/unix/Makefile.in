@@ -34,9 +34,6 @@ endif
 ifdef MOZ_ENABLE_GTK2
 DIRS		+= gtk2
 endif
-ifdef MOZ_ENABLE_QT
-DIRS		+= qt
-endif
 ifdef MOZ_ENABLE_XLIB
 DIRS		+= xlib
 endif
