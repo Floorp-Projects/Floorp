@@ -22,20 +22,16 @@ LIBRARY_NAME = raptorlayout_s
 DEFINES = -D_IMPL_NS_LAYOUT
 
 CPPSRCS =				\
-	nsContainerFrame.cpp		\
 	nsContentList.cpp		\
 	nsDocument.cpp			\
-	nsFrame.cpp			\
 	nsFrameImageLoader.cpp		\
 	nsGalleyContext.cpp		\
 	nsPresContext.cpp		\
-	nsPresShell.cpp			\
 	nsPrintPreviewContext.cpp	\
 	nsSelection.cpp			\
 	nsSelectionPoint.cpp		\
 	nsSelectionRange.cpp		\
 	nsSpaceManager.cpp		\
-	nsSplittableFrame.cpp		\
 	nsStyleCoord.cpp		\
 	nsStyleContext.cpp		\
 	nsStyleSet.cpp			\
