@@ -299,6 +299,7 @@ content/xbl/Makefile
 content/xbl/public/Makefile
 content/xbl/src/Makefile
 content/xbl/builtin/Makefile
+content/xbl/builtin/gtk2/Makefile
 content/xbl/builtin/unix/Makefile
 content/xbl/builtin/win/Makefile
 content/xsl/Makefile

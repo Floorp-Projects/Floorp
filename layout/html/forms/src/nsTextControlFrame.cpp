@@ -120,6 +120,10 @@
 #include "nsIDOMText.h" //for multiline getselection
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
+#include "nsIDOMKeyListener.h"
+#include "nsIDOMEventGroup.h"
+#include "nsIDOM3EventTarget.h"
+#include "nsINativeKeyBindings.h"
 
 #ifdef IBMBIDI
 #include "nsIBidiKeyboard.h"
@@ -138,8 +142,12 @@ static const PRInt32 DEFAULT_COLS = 20;
 static const PRInt32 DEFAULT_ROWS = 1;
 static const PRInt32 DEFAULT_ROWS_TEXTAREA = 2;
 
+static nsINativeKeyBindings *sNativeInputBindings = nsnull;
+static nsINativeKeyBindings *sNativeTextAreaBindings = nsnull;
+
 class nsTextInputListener : public nsISelectionListener,
                             public nsIDOMFocusListener,
+                            public nsIDOMKeyListener,
                             public nsIEditorObserver,
                             public nsSupportsWeakReference
 {
@@ -169,11 +177,18 @@ public:
   NS_IMETHOD Blur (nsIDOMEvent* aEvent);
   /* END interfaces from nsIDOMFocusListener*/
 
+  // nsIDOMKeyListener
+  NS_IMETHOD KeyDown(nsIDOMEvent *aKeyEvent);
+  NS_IMETHOD KeyPress(nsIDOMEvent *aKeyEvent);
+  NS_IMETHOD KeyUp(nsIDOMEvent *aKeyEvent);
+
   NS_DECL_NSIEDITOROBSERVER
 
 protected:
 
   nsresult  UpdateTextInputCommands(const nsAString& commandsToUpdate);
+
+  NS_HIDDEN_(nsINativeKeyBindings*) GetKeyBindings();
 
 protected:
 
@@ -211,9 +226,18 @@ nsTextInputListener::~nsTextInputListener()
 {
 }
 
-NS_IMPL_ISUPPORTS5(nsTextInputListener, nsISelectionListener,
-                   nsIDOMEventListener, nsIDOMFocusListener,
-                   nsIEditorObserver, nsISupportsWeakReference)
+NS_IMPL_ADDREF(nsTextInputListener)
+NS_IMPL_RELEASE(nsTextInputListener)
+
+NS_INTERFACE_MAP_BEGIN(nsTextInputListener)
+  NS_INTERFACE_MAP_ENTRY(nsISelectionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIEditorObserver)
+  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMKeyListener)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFocusListener)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMFocusListener)
+NS_INTERFACE_MAP_END
 
 // BEGIN nsIDOMSelectionListener
 
@@ -313,6 +337,103 @@ nsTextInputListener::Blur(nsIDOMEvent* aEvent)
 
 // END nsIFocusListener
 
+// BEGIN nsIDOMKeyListener
+
+static void
+DoCommandCallback(const char *aCommand, void *aData)
+{
+  nsTextControlFrame *frame = NS_STATIC_CAST(nsTextControlFrame*, aData);
+  nsIContent *content = frame->GetContent();
+
+  nsCOMPtr<nsIControllers> controllers;
+  nsCOMPtr<nsIDOMNSHTMLInputElement> input = do_QueryInterface(content);
+  if (input) {
+    input->GetControllers(getter_AddRefs(controllers));
+  } else {
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textArea =
+      do_QueryInterface(content);
+
+    if (textArea) {
+      textArea->GetControllers(getter_AddRefs(controllers));
+    }
+  }
+
+  if (!controllers) {
+    NS_WARNING("Could not get controllers");
+    return;
+  }
+
+  nsCOMPtr<nsIController> controller;
+  controllers->GetControllerForCommand(aCommand, getter_AddRefs(controller));
+  if (controller) {
+    controller->DoCommand(aCommand);
+  }
+}
+
+static PRBool
+DOMEventToNativeKeyEvent(nsIDOMEvent      *aDOMEvent,
+                         nsNativeKeyEvent *aNativeEvent)
+{
+  nsCOMPtr<nsIDOMNSUIEvent> nsevent = do_QueryInterface(aDOMEvent);
+  PRBool defaultPrevented;
+  nsevent->GetPreventDefault(&defaultPrevented);
+  if (defaultPrevented)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
+
+  keyEvent->GetCharCode(&aNativeEvent->charCode);
+  keyEvent->GetKeyCode(&aNativeEvent->keyCode);
+  keyEvent->GetAltKey(&aNativeEvent->altKey);
+  keyEvent->GetCtrlKey(&aNativeEvent->ctrlKey);
+  keyEvent->GetShiftKey(&aNativeEvent->shiftKey);
+  keyEvent->GetMetaKey(&aNativeEvent->metaKey);
+
+  return PR_TRUE;
+}
+
+NS_IMETHODIMP
+nsTextInputListener::KeyDown(nsIDOMEvent *aKeyEvent)
+{
+  nsNativeKeyEvent nativeEvent;
+  nsINativeKeyBindings *bindings = GetKeyBindings();
+  if (bindings && DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent)) {
+    if (bindings->KeyDown(nativeEvent, DoCommandCallback, mFrame)) {
+      aKeyEvent->PreventDefault();
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextInputListener::KeyPress(nsIDOMEvent *aKeyEvent)
+{
+  nsNativeKeyEvent nativeEvent;
+  nsINativeKeyBindings *bindings = GetKeyBindings();
+  if (bindings && DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent)) {
+    if (bindings->KeyPress(nativeEvent, DoCommandCallback, mFrame)) {
+      aKeyEvent->PreventDefault();
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTextInputListener::KeyUp(nsIDOMEvent *aKeyEvent)
+{
+  nsNativeKeyEvent nativeEvent;
+  nsINativeKeyBindings *bindings = GetKeyBindings();
+  if (bindings && DOMEventToNativeKeyEvent(aKeyEvent, &nativeEvent)) {
+    if (bindings->KeyUp(nativeEvent, DoCommandCallback, mFrame)) {
+      aKeyEvent->PreventDefault();
+    }
+  }
+
+  return NS_OK;
+}
+// END nsIDOMKeyListener
 
 // BEGIN nsIEditorObserver
 
@@ -371,6 +492,36 @@ nsTextInputListener::UpdateTextInputCommands(const nsAString& commandsToUpdate)
   return domWindow->UpdateCommands(commandsToUpdate);
 }
 
+nsINativeKeyBindings*
+nsTextInputListener::GetKeyBindings()
+{
+  if (mFrame->IsTextArea()) {
+    static PRBool sNoTextAreaBindings = PR_FALSE;
+
+    if (!sNativeTextAreaBindings && !sNoTextAreaBindings) {
+      CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "textarea",
+                     &sNativeTextAreaBindings);
+
+      if (!sNativeTextAreaBindings) {
+        sNoTextAreaBindings = PR_TRUE;
+      }
+    }
+
+    return sNativeTextAreaBindings;
+  }
+
+  static PRBool sNoInputBindings = PR_FALSE;
+  if (!sNativeInputBindings && !sNoInputBindings) {
+    CallGetService(NS_NATIVEKEYBINDINGS_CONTRACTID_PREFIX "input",
+                   &sNativeInputBindings);
+
+    if (!sNativeInputBindings) {
+      sNoInputBindings = PR_TRUE;
+    }
+  }
+
+  return sNativeInputBindings;
+}
 
 // END nsTextInputListener
 
@@ -1254,6 +1405,22 @@ nsTextControlFrame::PreDestroy(nsPresContext* aPresContext)
     if (erP)
     {
       erP->RemoveEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener  *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
+    }
+
+    nsCOMPtr<nsIDOMEventGroup> systemGroup;
+    erP->GetSystemEventGroup(getter_AddRefs(systemGroup));
+    nsCOMPtr<nsIDOM3EventTarget> dom3Targ = do_QueryInterface(mContent);
+    if (dom3Targ) {
+      // cast because of ambiguous base
+      nsIDOMEventListener *listener = NS_STATIC_CAST(nsIDOMKeyListener*,
+                                                     mTextListener);
+
+      dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keydown"),
+                                           listener, PR_FALSE, systemGroup);
+      dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keypress"),
+                                           listener, PR_FALSE, systemGroup);
+      dom3Targ->RemoveGroupedEventListener(NS_LITERAL_STRING("keyup"),
+                                           listener, PR_FALSE, systemGroup);
     }
   }
 
@@ -3005,16 +3172,31 @@ nsTextControlFrame::SetInitialChildList(nsPresContext* aPresContext,
       scrollableFrame->SetScrollbarVisibility(PR_FALSE, PR_FALSE);
   }
 
-  //register keylistener
-  nsCOMPtr<nsIDOMEventReceiver> erP;
-  if (NS_SUCCEEDED(mContent->QueryInterface(NS_GET_IID(nsIDOMEventReceiver), getter_AddRefs(erP))) && erP)
-  {
-    // register the event listeners with the DOM event reveiver
+  //register focus and key listeners
+  nsCOMPtr<nsIDOMEventReceiver> erP = do_QueryInterface(mContent);
+  if (erP) {
+    // register the event listeners with the DOM event receiver
     rv = erP->AddEventListenerByIID(NS_STATIC_CAST(nsIDOMFocusListener *,mTextListener), NS_GET_IID(nsIDOMFocusListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register focus listener");
     // XXXbryner do we need to check for a null presshell here?
     if (!aPresContext->GetPresShell())
       return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIDOMEventGroup> systemGroup;
+  erP->GetSystemEventGroup(getter_AddRefs(systemGroup));
+  nsCOMPtr<nsIDOM3EventTarget> dom3Targ = do_QueryInterface(mContent);
+  if (dom3Targ) {
+    // cast because of ambiguous base
+    nsIDOMEventListener *listener = NS_STATIC_CAST(nsIDOMKeyListener*,
+                                                   mTextListener);
+
+    dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keydown"),
+                                      listener, PR_FALSE, systemGroup);
+    dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keypress"),
+                                      listener, PR_FALSE, systemGroup);
+    dom3Targ->AddGroupedEventListener(NS_LITERAL_STRING("keyup"),
+                                      listener, PR_FALSE, systemGroup);
   }
 
   while(first)
@@ -3104,4 +3286,11 @@ nsTextControlFrame::HandleEvent(nsPresContext* aPresContext,
 
   return nsStackFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     
+}
+
+/* static */ void
+nsTextControlFrame::ShutDown()
+{
+  NS_IF_RELEASE(sNativeTextAreaBindings);
+  NS_IF_RELEASE(sNativeInputBindings);
 }

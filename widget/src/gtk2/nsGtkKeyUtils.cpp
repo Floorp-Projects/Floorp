@@ -215,6 +215,53 @@ GdkKeyCodeToDOMKeyCode(int aKeysym)
     return((int)0);
 }
 
+int
+DOMKeyCodeToGdkKeyCode(PRUint32 aKeysym)
+{
+    int i, length = 0;
+
+    // First, try to handle alphanumeric input, not listed in nsKeycodes:
+    // most likely, more letters will be getting typed in than things in
+    // the key list, so we will look through these first.
+
+    if (aKeysym >= NS_VK_A && aKeysym <= NS_VK_Z)
+      // gdk and DOM both use the ASCII codes for these keys.
+      return aKeysym;
+
+    // numbers
+    if (aKeysym >= NS_VK_0 && aKeysym <= NS_VK_9)
+      // gdk and DOM both use the ASCII codes for these keys.
+      return aKeysym - GDK_0 + NS_VK_0;
+
+    // keypad numbers
+    if (aKeysym >= NS_VK_NUMPAD0 && aKeysym <= NS_VK_NUMPAD9)
+      return aKeysym - NS_VK_NUMPAD0 + GDK_KP_0;
+
+    // map Sun Keyboard special keysyms
+    if (IS_XSUN_XSERVER(GDK_DISPLAY())) {
+      length = NS_ARRAY_LENGTH(nsSunKeycodes);
+      for (i = 0; i < length; ++i) {
+        if (nsSunKeycodes[i].vkCode == aKeysym) {
+          return nsSunKeycodes[i].keysym;
+        }
+      }
+    }
+
+    // misc other things
+    length = NS_ARRAY_LENGTH(nsKeycodes);
+    for (i = 0; i < length; ++i) {
+      if (nsKeycodes[i].vkCode == aKeysym) {
+        return nsKeycodes[i].keysym;
+      }
+    }
+
+    // function keys
+    if (aKeysym >= NS_VK_F1 && aKeysym <= NS_VK_F9)
+      return aKeysym - NS_VK_F1 + GDK_F1;
+
+    return 0;
+}
+
 // Convert gdk key event keyvals to char codes if printable, 0 otherwise
 PRUint32 nsConvertCharCodeToUnicode(GdkEventKey* aEvent)
 {
