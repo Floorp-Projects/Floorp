@@ -217,7 +217,7 @@ nsPersistentProperties::~nsPersistentProperties()
 
 NS_DEFINE_IID(kIPropertiesIID, NS_IPROPERTIES_IID);
 
-NS_IMPL_ISUPPORTS(nsPersistentProperties, kIPropertiesIID)
+NS_IMPL_ISUPPORTS(nsPersistentProperties, nsIPersistentProperties::GetIID())
 
 NS_IMETHODIMP
 nsPersistentProperties::Load(nsIInputStream *aIn)
