@@ -289,6 +289,7 @@ static void Usage(char *progName)
     fprintf(stderr, "%-20s \t 1 - SEC_CRL_TYPE\n", " ");        
     fprintf(stderr, "\n%-20s Bypass CA certificate checks.\n", "-B");
     fprintf(stderr, "\n%-20s Partial decode for faster operation.\n", "-p");
+    fprintf(stderr, "%-20s Repeat the operation.\n", "-r <iterations>");
 
     exit(-1);
 }
@@ -315,6 +316,8 @@ int main(int argc, char **argv)
     PRInt32 importOptions = CRL_IMPORT_DEFAULT_OPTIONS;
     PRBool test = PR_FALSE;
     PRBool erase = PR_FALSE;
+    PRInt32 i = 0;
+    PRInt32 iterations = 1;
 
     progName = strrchr(argv[0], '/');
     progName = progName ? progName+1 : argv[0];
@@ -330,7 +333,7 @@ int main(int argc, char **argv)
     /*
      * Parse command line arguments
      */
-    optstate = PL_CreateOptState(argc, argv, "BCDILP:d:i:n:pt:u:TE");
+    optstate = PL_CreateOptState(argc, argv, "BCDILP:d:i:n:pt:u:TEr:");
     while ((status = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
 	switch (optstate->option) {
 	  case '?':
@@ -390,6 +393,13 @@ int main(int argc, char **argv)
 	  case 'p':
 	    decodeOptions |= CRL_DECODE_SKIP_ENTRIES;
 	    break;
+
+	  case 'r': {
+	      const char* str = optstate->value;
+	      if (str && atoi(str)>0)
+		iterations = atoi(str);
+	    }
+	    break;
 	    
 	  case 't': {
 	    char *type;
@@ -429,34 +439,34 @@ int main(int argc, char **argv)
 	return (-1);
     }
 
-    /* Read in the private key info */
-    if (deleteCRL) 
-	DeleteCRL (certHandle, nickName, crlType);
-    else if (listCRL) {
-	int i = 0;
-	for (i=0; i<10; i++)
+    for (i=0; i<iterations; i++) {
+	/* Read in the private key info */
+	if (deleteCRL) 
+	    DeleteCRL (certHandle, nickName, crlType);
+	else if (listCRL) {
 	    ListCRL (certHandle, nickName, crlType);
-    }
-    else if (importCRL) {
-	rv = ImportCRL (certHandle, url, crlType, inFile, importOptions,
-                        decodeOptions);
-    }
-    else if (erase) {
-        /* list and delete all CRLs */
-        ListCRLNames (certHandle, crlType, PR_TRUE);
-    }
+	}
+	else if (importCRL) {
+	    rv = ImportCRL (certHandle, url, crlType, inFile, importOptions,
+			    decodeOptions);
+	}
+	else if (erase) {
+	    /* list and delete all CRLs */
+	    ListCRLNames (certHandle, crlType, PR_TRUE);
+	}
 #ifdef DEBUG
-    else if (test) {
-        /* list and delete all CRLs */
-        ListCRLNames (certHandle, crlType, PR_TRUE);
-        /* list CRLs */
-        ListCRLNames (certHandle, crlType, PR_FALSE);
-        /* import CRL as a blob */
-	rv = ImportCRL (certHandle, url, crlType, inFile, importOptions,
-                        decodeOptions);
-        /* list CRLs */
-        ListCRLNames (certHandle, crlType, PR_FALSE);
-    }
+	else if (test) {
+	    /* list and delete all CRLs */
+	    ListCRLNames (certHandle, crlType, PR_TRUE);
+	    /* list CRLs */
+	    ListCRLNames (certHandle, crlType, PR_FALSE);
+	    /* import CRL as a blob */
+	    rv = ImportCRL (certHandle, url, crlType, inFile, importOptions,
+			    decodeOptions);
+	    /* list CRLs */
+	    ListCRLNames (certHandle, crlType, PR_FALSE);
+	}
 #endif    
+    }
     return (rv);
 }
