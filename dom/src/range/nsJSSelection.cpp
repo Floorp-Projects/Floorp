@@ -483,6 +483,92 @@ SelectionExtend(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 
 
 //
+// Native method CollapseToStart
+//
+PR_STATIC_CALLBACK(JSBool)
+SelectionCollapseToStart(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSelection *nativeThis = (nsIDOMSelection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapsetostart",PR_FALSE , &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    result = nativeThis->CollapseToStart();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CollapseToEnd
+//
+PR_STATIC_CALLBACK(JSBool)
+SelectionCollapseToEnd(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMSelection *nativeThis = (nsIDOMSelection*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+
+  *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsCOMPtr<nsIScriptSecurityManager> secMan;
+  if (NS_OK != scriptCX->GetSecurityManager(getter_AddRefs(secMan))) {
+    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECMAN_ERR);
+  }
+  {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "selection.collapsetoend",PR_FALSE , &ok);
+    if (!ok) {
+      return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
+    }
+  }
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+
+    result = nativeThis->CollapseToEnd();
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ContainsNode
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -922,6 +1008,8 @@ static JSFunctionSpec SelectionMethods[] =
   {"clearSelection",          SelectionClearSelection,     0},
   {"collapse",          SelectionCollapse,     2},
   {"extend",          SelectionExtend,     2},
+  {"collapseToStart",          SelectionCollapseToStart,     0},
+  {"collapseToEnd",          SelectionCollapseToEnd,     0},
   {"containsNode",          SelectionContainsNode,     2},
   {"deleteFromDocument",          SelectionDeleteFromDocument,     0},
   {"addRange",          SelectionAddRange,     1},
