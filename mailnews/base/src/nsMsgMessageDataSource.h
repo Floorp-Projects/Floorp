@@ -178,6 +178,8 @@ protected:
 	nsresult DoMarkMessagesRead(nsISupportsArray *messages, PRBool markRead);
 	nsresult DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool markFlagged);
 
+  nsresult DoMarkThreadRead(nsISupportsArray *folders, nsISupportsArray *arguments);
+
 	nsresult DoMessageHasAssertion(nsIMessage *message, nsIRDFResource *property, nsIRDFNode *target,
 													 PRBool tv, PRBool *hasAssertion);
 
@@ -246,6 +248,7 @@ protected:
 	static nsIRDFResource* kNC_ToggleRead;
 	static nsIRDFResource* kNC_MarkFlagged;
 	static nsIRDFResource* kNC_MarkUnflagged;
+  static nsIRDFResource* kNC_MarkThreadRead;
 
 	//Cached literals
 	nsCOMPtr<nsIRDFNode> kEmptyStringLiteral;

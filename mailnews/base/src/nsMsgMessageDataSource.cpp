@@ -81,6 +81,7 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnread= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_ToggleRead= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkFlagged= nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MarkUnflagged= nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_MarkThreadRead= nsnull;
 
 nsrefcnt nsMsgMessageDataSource::gMessageResourceRefCnt = 0;
 
@@ -142,6 +143,7 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_ToggleRead, refcnt);
 		NS_RELEASE2(kNC_MarkFlagged, refcnt);
 		NS_RELEASE2(kNC_MarkUnflagged, refcnt);
+		NS_RELEASE2(kNC_MarkThreadRead, refcnt);
 
     NS_RELEASE(kStatusAtom);
     NS_RELEASE(kFlaggedAtom);
@@ -205,6 +207,7 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_TOGGLEREAD, &kNC_ToggleRead);
 		rdf->GetResource(NC_RDF_MARKFLAGGED, &kNC_MarkFlagged);
 		rdf->GetResource(NC_RDF_MARKUNFLAGGED, &kNC_MarkUnflagged);
+    rdf->GetResource(NC_RDF_MARKTHREADREAD, &kNC_MarkThreadRead);
 
     kStatusAtom = NS_NewAtom("Status");
     kFlaggedAtom = NS_NewAtom("Flagged");
@@ -770,6 +773,8 @@ nsMsgMessageDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/ * aSource
 		rv = DoMarkMessagesFlagged(aSources, PR_TRUE);
 	else if((aCommand == kNC_MarkUnflagged))
 		rv = DoMarkMessagesFlagged(aSources, PR_FALSE);
+  else if((aCommand == kNC_MarkThreadRead))
+    rv = DoMarkThreadRead(aSources, aArguments);
 
   //for the moment return NS_OK, because failure stops entire DoCommand process.
   return NS_OK;
@@ -784,7 +789,6 @@ NS_IMETHODIMP nsMsgMessageDataSource::OnItemRemoved(nsISupports *parentItem, nsI
 {
 	return OnItemAddedOrRemoved(parentItem, item, viewString, PR_FALSE);
 }
-
 
 nsresult nsMsgMessageDataSource::OnItemAddedOrRemoved(nsISupports *parentItem, nsISupports *item, const char *viewString, PRBool added)
 {
@@ -1843,6 +1847,23 @@ nsMsgMessageDataSource::DoMarkMessagesFlagged(nsISupportsArray *messages, PRBool
 		rv = messages->Count(&count);
 		if(NS_FAILED(rv))
 			return rv;
+	}
+	return rv;
+}
+
+nsresult nsMsgMessageDataSource::DoMarkThreadRead(nsISupportsArray *folders, nsISupportsArray *arguments)
+{
+	nsresult rv = NS_OK;
+
+  nsCOMPtr<nsISupports> supports;
+  supports  = getter_AddRefs(folders->ElementAt(0));
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
+
+	nsCOMPtr<nsISupports> elem = getter_AddRefs(arguments->ElementAt(0));
+	nsCOMPtr<nsIMsgThread> thread = do_QueryInterface(elem);
+	if(folder && thread)
+	{
+		rv = folder->MarkThreadRead(thread);
 	}
 	return rv;
 }
