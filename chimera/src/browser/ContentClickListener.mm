@@ -283,19 +283,6 @@ ContentClickListener::MouseClick(nsIDOMEvent* aEvent)
 
   NSString* hrefStr = [NSString stringWith_nsAString: href];
   
-  // Hack to determine specific protocols handled by Chimera in the frontend
-  // until I can determine why the general unknown protocol handler handoff
-  // between Necko and uriloader isn't happening.
-  // NS_NewURI returns nil for the uri if we don't have a handler for the protocol
-  nsCOMPtr<nsIURI> uri;
-  NS_NewURI(getter_AddRefs(uri), href);
-  if (uri) {
-    // Fall through and do whatever we'd normally do with this kind of URL
-  } else {
-    NSString* escapedString = (NSString*) CFURLCreateStringByAddingPercentEscapes(NULL, (CFStringRef) hrefStr, NULL, NULL, kCFStringEncodingUTF8);
-    [[NSWorkspace sharedWorkspace] openURL:[NSURL URLWithString: escapedString]];
-  }
-
   if ((metaKey && button == 0) || button == 1) {
     // The command key is down or we got a middle click.  Open the link in a new window or tab.
     PRBool useTab;
