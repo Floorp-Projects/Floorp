@@ -41,6 +41,7 @@
 // this service away =).
 ////////////////////////////////////////////////////////////////////////////////////////
 class nsIURL;
+class nsIUrlListener;
 
 class nsISmtpService : public nsISupports
 {
@@ -56,9 +57,11 @@ public:
 	//
 	// mscott - until we have a mail session, we need to pass in the host name to use....this will go away when we can
 	// read it directly from prefs...
+	// If you don't care about listening to the url, feel free to pass in nsnull for that argument. 
 	/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& hostName, const nsString& aSender, const nsString& aRecipients, nsIURL ** aURL) = 0; 
+	NS_IMETHOD SendMailMessage(const nsFilePath& aFilePath, const nsString& hostName, const nsString& aSender, const nsString& aRecipients, 
+								nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0; 
 };
 
 #endif /* nsISmtpService_h___ */
