@@ -30,14 +30,15 @@ EXPORTS =				\
 	nsIDOMXULTreeElement.h		\
 	nsIRDFContentModelBuilder.h	\
 	nsIRDFDocument.h		\
-	nsIXULParentDocument.h	\
-	nsIXULChildDocument.h	\
-	nsIXULDocumentInfo.h	\
-	nsIXULPopupListener.h \
-	nsIDOMXULCommandDispatcher.h \
-	nsIXULCommandDispatcher.h \
+	nsIXULParentDocument.h		\
+	nsIXULChildDocument.h		\
+	nsIXULDocumentInfo.h		\
+	nsIXULPopupListener.h		\
+	nsIDOMXULCommandDispatcher.h	\
+	nsIXULContentUtils.h		\
+	nsIXULCommandDispatcher.h	\
 	nsIStreamLoadableDocument.h	\
-	nsIXULKeyListener.h	\
+	nsIXULKeyListener.h		\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -6,6 +6,7 @@ nsIRDFContentModelBuilder.h
 nsIRDFDocument.h
 nsIXULParentDocument.h
 nsIXULChildDocument.h
+nsIXULContentUtils.h
 nsIXULDocumentInfo.h
 nsIXULPopupListener.h
 nsIXULCommandDispatcher.h
