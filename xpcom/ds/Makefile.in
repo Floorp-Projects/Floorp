@@ -101,7 +101,6 @@ EXPORTS		= \
 		nsXPIDLString.h \
 		plvector.h \
 		nsTextFormatter.h \
-		nsIPersistentProperties.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
