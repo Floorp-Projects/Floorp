@@ -62,7 +62,7 @@ enum ePathTypes{
   eCalcRev
 };
 
-static void GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
+static void GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
 static void TileImage(nsIRenderingContext& aRC,nsDrawingSurface  aDS,nsRect &aSrcRect,PRInt16 aWidth,PRInt16 aHeight);
 static PRBool GetBGColorForHTMLElement(nsIPresContext *aPresContext,const nsStyleColor *&aBGColor);
 static nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
@@ -2558,7 +2558,7 @@ RoundedRect   outerPath;
 QBCurve       cr1,cr2,cr3,cr4;
 QBCurve       UL,UR,LL,LR;
 PRInt32       curIndex,c1Index;
-nsPoint       thePath[MAXPATHSIZE];
+nsFloatPoint  thePath[MAXPATHSIZE];
 nsPoint       polyPath[MAXPOLYPATHSIZE];
 PRInt16       np;
 nscoord       twipsPerPixel;
@@ -2586,8 +2586,8 @@ float         p2t;
   thePath[np++].MoveTo(cr3.mCon.x, cr3.mCon.y);
   thePath[np++].MoveTo(cr3.mAnc2.x, cr3.mAnc2.y);
 
-  polyPath[0].x = thePath[0].x;
-  polyPath[0].y = thePath[0].y;
+  polyPath[0].x = NSToCoordRound(thePath[0].x);
+  polyPath[0].y = NSToCoordRound(thePath[0].y);
   curIndex = 1;
   GetPath(thePath,polyPath,&curIndex,eOutside,c1Index);
 
@@ -2650,7 +2650,7 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
   QBCurve       IUL,ILL,IUR,ILR;
   QBCurve       cr1,cr2,cr3,cr4;
   QBCurve       Icr1,Icr2,Icr3,Icr4;
-  nsPoint       thePath[MAXPATHSIZE];
+  nsFloatPoint  thePath[MAXPATHSIZE];
   PRInt16       np;
   nsMargin      border;
   nscoord       twipsPerPixel,qtwips;
@@ -2679,7 +2679,8 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
   twipsPerPixel = NSToCoordRound(p2t);
 
   // Base our thickness check on the segment being less than a pixel and 1/2
-  qtwips = twipsPerPixel >> 2;
+  //qtwips = twipsPerPixel >> 2;
+  qtwips = twipsPerPixel;
 
   outerPath.Set(aBorderArea.x,aBorderArea.y,aBorderArea.width,aBorderArea.height,aBorderRadius,twipsPerPixel);
   outerPath.GetRoundedBorders(UL,UR,LL,LR);
@@ -2776,7 +2777,7 @@ nsCSSRendering::PaintRoundedBorder(nsIPresContext* aPresContext,
  *	@update 3/26/99 dwc
  */
 void 
-nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingContext,
+nsCSSRendering::RenderSide(nsFloatPoint aPoints[],nsIRenderingContext& aRenderingContext,
                         const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel,
                         PRBool aIsOutline)
@@ -2813,11 +2814,11 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
   }
 
   // if the border is thin, just draw it 
-  if (thickness<aTwipsPerPixel) {
+  if (thickness<=aTwipsPerPixel) {
     // NOTHING FANCY JUST DRAW OUR OUTSIDE BORDER
     thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
     thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
-    aRenderingContext.DrawLine(aPoints[2].x,aPoints[2].y,aPoints[3].x,aPoints[3].y);
+    aRenderingContext.DrawLine((nscoord)aPoints[2].x,(nscoord)aPoints[2].y,(nscoord)aPoints[3].x,(nscoord)aPoints[3].y);
     thecurve.SetPoints(aPoints[3].x,aPoints[3].y,aPoints[4].x,aPoints[4].y,aPoints[5].x,aPoints[5].y);
     thecurve.SubDivide((nsIRenderingContext*)&aRenderingContext,0,0);
   } else {
@@ -2842,29 +2843,29 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
         // be moved when it is supported so that the above outset and inset will fall into the 
         // solid code below....
       case NS_STYLE_BORDER_STYLE_SOLID:
-        polypath[0].x = aPoints[0].x;
-        polypath[0].y = aPoints[0].y;
+        polypath[0].x = NSToCoordRound(aPoints[0].x);
+        polypath[0].y = NSToCoordRound(aPoints[0].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
         c2Index = curIndex;
-        polypath[curIndex].x = aPoints[6].x;
-        polypath[curIndex].y = aPoints[6].y;
+        polypath[curIndex].x = NSToCoordRound(aPoints[6].x);
+        polypath[curIndex].y = NSToCoordRound(aPoints[6].y);
         curIndex++;
         GetPath(aPoints,polypath,&curIndex,eInside,junk);
-        polypath[curIndex].x = aPoints[0].x;
-        polypath[curIndex].y = aPoints[0].y;
+        polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
+        polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
         curIndex++;
         aRenderingContext.FillPolygon(polypath,curIndex);
 
        break;
       case NS_STYLE_BORDER_STYLE_DOUBLE:
-        polypath[0].x = aPoints[0].x;
-        polypath[0].y = aPoints[0].y;
+        polypath[0].x = NSToCoordRound(aPoints[0].x);
+        polypath[0].y = NSToCoordRound(aPoints[0].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
         aRenderingContext.DrawPolyline(polypath,curIndex);
-        polypath[0].x = aPoints[6].x;
-        polypath[0].y = aPoints[6].y;
+        polypath[0].x = NSToCoordRound(aPoints[6].x);
+        polypath[0].y = NSToCoordRound(aPoints[6].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
         aRenderingContext.DrawPolyline(polypath,curIndex);
@@ -2880,16 +2881,16 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
         aBorderStyle.GetBorderColor(aSide,sideColor);
         aRenderingContext.SetColor ( MakeBevelColor (aSide, border_Style, bgColor->mBackgroundColor,sideColor, PR_TRUE));
 
-        polypath[0].x = aPoints[0].x;
-        polypath[0].y = aPoints[0].y;
+        polypath[0].x = NSToCoordRound(aPoints[0].x);
+        polypath[0].y = NSToCoordRound(aPoints[0].y);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eOutside,c1Index);
-        polypath[curIndex].x = (aPoints[5].x + aPoints[6].x)>>1;
-        polypath[curIndex].y = (aPoints[5].y + aPoints[6].y)>>1;
+        polypath[curIndex].x = NSToCoordRound((aPoints[5].x + aPoints[6].x)/2.0f);
+        polypath[curIndex].y = NSToCoordRound((aPoints[5].y + aPoints[6].y)/2.0f);
         curIndex++;
         GetPath(aPoints,polypath,&curIndex,eCalcRev,c1Index,.5);
-        polypath[curIndex].x = aPoints[0].x;
-        polypath[curIndex].y = aPoints[0].y;
+        polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
+        polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
         curIndex++;
         aRenderingContext.FillPolygon(polypath,curIndex);
 
@@ -2899,16 +2900,16 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
                                                 NS_STYLE_BORDER_STYLE_RIDGE), 
                                                 bgColor->mBackgroundColor,sideColor, PR_TRUE));
        
-        polypath[0].x = (aPoints[0].x + aPoints[11].x)>>1;
-        polypath[0].y = (aPoints[0].y + aPoints[11].y)>>1;
+        polypath[0].x = NSToCoordRound((aPoints[0].x + aPoints[11].x)/2.0f);
+        polypath[0].y = NSToCoordRound((aPoints[0].y + aPoints[11].y)/2.0f);
         curIndex = 1;
         GetPath(aPoints,polypath,&curIndex,eCalc,c1Index,.5);
-        polypath[curIndex].x = aPoints[6].x ;
-        polypath[curIndex].y = aPoints[6].y;
+        polypath[curIndex].x = NSToCoordRound(aPoints[6].x) ;
+        polypath[curIndex].y = NSToCoordRound(aPoints[6].y);
         curIndex++;
         GetPath(aPoints,polypath,&curIndex,eInside,c1Index);
-        polypath[curIndex].x = aPoints[0].x;
-        polypath[curIndex].y = aPoints[0].y;
+        polypath[curIndex].x = NSToCoordRound(aPoints[0].x);
+        polypath[curIndex].y = NSToCoordRound(aPoints[0].y);
         curIndex++;
         aRenderingContext.FillPolygon(polypath,curIndex);
         }
@@ -2926,9 +2927,9 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
 void 
 RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder)
 {
-  PRInt32   nLeft,nTop,nRight,nBottom;
-  PRInt32   tLeft,bLeft,tRight,bRight,lTop,rTop,lBottom,rBottom;
-  PRInt16   adjust=0;
+PRInt32   nLeft,nTop,nRight,nBottom;
+PRInt32   tLeft,bLeft,tRight,bRight,lTop,rTop,lBottom,rBottom;
+PRInt16   adjust=0;
 
   if(mDoRound)
     adjust = mRoundness[0]>>3;
@@ -2983,18 +2984,18 @@ RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCur
 
 
   // set the passed in curves to the rounded borders of the rectangle
-  aULCurve.SetPoints( nLeft,lTop,
-                      nLeft+adjust,nTop+adjust,
-                      tLeft,nTop);
-  aURCurve.SetPoints( tRight,nTop,
-                      nRight-adjust,nTop+adjust,
-                      nRight,rTop);
-  aLRCurve.SetPoints( nRight,rBottom,
-                      nRight-adjust,nBottom-adjust,
-                      bRight,nBottom);
-  aLLCurve.SetPoints( bLeft,nBottom,
-                      nLeft+adjust,nBottom-adjust,
-                      nLeft,lBottom);
+  aULCurve.SetPoints( (float)nLeft,(float)lTop,
+                      (float)nLeft+adjust,(float)nTop+adjust,
+                      (float)tLeft,(float)nTop);
+  aURCurve.SetPoints( (float)tRight,(float)nTop,
+                      (float)nRight-adjust,(float)nTop+adjust,
+                      (float)nRight,(float)rTop);
+  aLRCurve.SetPoints( (float)nRight,(float)rBottom,
+                      (float)nRight-adjust,(float)nBottom-adjust,
+                      (float)bRight,(float)nBottom);
+  aLLCurve.SetPoints( (float)bLeft,(float)nBottom,
+                      (float)nLeft+adjust,(float)nBottom-adjust,
+                      (float)nLeft,(float)lBottom);
 
 }
 
@@ -3070,18 +3071,18 @@ RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLC
     adjust = mRoundness[0]>>3;
 
   // set the passed in curves to the rounded borders of the rectangle
-  aULCurve.SetPoints( mLeft,mTop + mRoundness[0],
-                      mLeft+adjust,mTop+adjust,
-                      mLeft+mRoundness[0],mTop);
-  aURCurve.SetPoints( mRight - mRoundness[1],mTop,
-                      mRight-adjust,mTop+adjust,
-                      mRight,mTop + mRoundness[1]);
-  aLRCurve.SetPoints( mRight,mBottom - mRoundness[2],
-                      mRight-adjust,mBottom-adjust,
-                      mRight - mRoundness[2],mBottom);
-  aLLCurve.SetPoints( mLeft + mRoundness[3],mBottom,
-                      mLeft+adjust,mBottom-adjust,
-                      mLeft,mBottom - mRoundness[3]);
+  aULCurve.SetPoints( (float)mLeft,(float)mTop + mRoundness[0],
+                      (float)mLeft+adjust,(float)mTop+adjust,
+                      (float)mLeft+mRoundness[0],(float)mTop);
+  aURCurve.SetPoints( (float)mRight - mRoundness[1],(float)mTop,
+                      (float)mRight-adjust,(float)mTop+adjust,
+                      (float)mRight,(float)mTop + mRoundness[1]);
+  aLRCurve.SetPoints( (float)mRight,(float)mBottom - mRoundness[2],
+                      (float)mRight-adjust,(float)mBottom-adjust,
+                      (float)mRight - mRoundness[2],(float)mBottom);
+  aLLCurve.SetPoints( (float)mLeft + mRoundness[3],(float)mBottom,
+                      (float)mLeft+adjust,(float)mBottom-adjust,
+                      (float)mLeft,(float)mBottom - mRoundness[3]);
 }
 
 /** ---------------------------------------------------
@@ -3094,7 +3095,7 @@ RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLC
  *  @param aFrac -- the inset amount for a eCalc type path
  */
 static void 
-GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac)
+GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac)
 {
   QBCurve thecurve;
 
@@ -3103,8 +3104,8 @@ GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPa
       thecurve.SetPoints(aPoints[0].x,aPoints[0].y,aPoints[1].x,aPoints[1].y,aPoints[2].x,aPoints[2].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
       aC1Index = *aCurIndex;
-      aPolyPath[*aCurIndex].x = aPoints[3].x;
-      aPolyPath[*aCurIndex].y = aPoints[3].y;
+      aPolyPath[*aCurIndex].x = (nscoord)aPoints[3].x;
+      aPolyPath[*aCurIndex].y = (nscoord)aPoints[3].y;
       (*aCurIndex)++;
       thecurve.SetPoints(aPoints[3].x,aPoints[3].y,aPoints[4].x,aPoints[4].y,aPoints[5].x,aPoints[5].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
@@ -3112,36 +3113,36 @@ GetPath(nsPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPa
     case eInside:
       thecurve.SetPoints(aPoints[6].x,aPoints[6].y,aPoints[7].x,aPoints[7].y,aPoints[8].x,aPoints[8].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
-      aPolyPath[*aCurIndex].x = aPoints[9].x;
-      aPolyPath[*aCurIndex].y = aPoints[9].y;
+      aPolyPath[*aCurIndex].x = (nscoord)aPoints[9].x;
+      aPolyPath[*aCurIndex].y = (nscoord)aPoints[9].y;
       (*aCurIndex)++;
       thecurve.SetPoints(aPoints[9].x,aPoints[9].y,aPoints[10].x,aPoints[10].y,aPoints[11].x,aPoints[11].y);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
      break;
     case eCalc:
-      thecurve.SetPoints( (aPoints[0].x+aPoints[11].x)>>1,(aPoints[0].y+aPoints[11].y)>>1,
-                          (aPoints[1].x+aPoints[10].x)>>1,(aPoints[1].y+aPoints[10].y)>>1,
-                          (aPoints[2].x+aPoints[9].x)>>1,(aPoints[2].y+aPoints[9].y)>>1);
+      thecurve.SetPoints( (aPoints[0].x+aPoints[11].x)/2.0f,(aPoints[0].y+aPoints[11].y)/2.0f,
+                          (aPoints[1].x+aPoints[10].x)/2.0f,(aPoints[1].y+aPoints[10].y)/2.0f,
+                          (aPoints[2].x+aPoints[9].x)/2.0f,(aPoints[2].y+aPoints[9].y)/2.0f);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
-      aPolyPath[*aCurIndex].x = (aPoints[3].x+aPoints[8].x)>>1;
-      aPolyPath[*aCurIndex].y = (aPoints[3].y+aPoints[8].y)>>1;
+      aPolyPath[*aCurIndex].x = (nscoord)((aPoints[3].x+aPoints[8].x)/2.0f);
+      aPolyPath[*aCurIndex].y = (nscoord)((aPoints[3].y+aPoints[8].y)/2.0f);
       (*aCurIndex)++;
-      thecurve.SetPoints( (aPoints[3].x+aPoints[8].x)>>1,(aPoints[3].y+aPoints[8].y)>>1,
-                          (aPoints[4].x+aPoints[7].x)>>1,(aPoints[4].y+aPoints[7].y)>>1,
-                          (aPoints[5].x+aPoints[6].x)>>1,(aPoints[5].y+aPoints[6].y)>>1);
+      thecurve.SetPoints( (aPoints[3].x+aPoints[8].x)/2.0f,(aPoints[3].y+aPoints[8].y)/2.0f,
+                          (aPoints[4].x+aPoints[7].x)/2.0f,(aPoints[4].y+aPoints[7].y)/2.0f,
+                          (aPoints[5].x+aPoints[6].x)/2.0f,(aPoints[5].y+aPoints[6].y)/2.0f);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
       break;
     case eCalcRev:
-      thecurve.SetPoints( (aPoints[5].x+aPoints[6].x)>>1,(aPoints[5].y+aPoints[6].y)>>1,
-                          (aPoints[4].x+aPoints[7].x)>>1,(aPoints[4].y+aPoints[7].y)>>1,
-                          (aPoints[3].x+aPoints[8].x)>>1,(aPoints[3].y+aPoints[8].y)>>1);
+      thecurve.SetPoints( (aPoints[5].x+aPoints[6].x)/2.0f,(aPoints[5].y+aPoints[6].y)/2.0f,
+                          (aPoints[4].x+aPoints[7].x)/2.0f,(aPoints[4].y+aPoints[7].y)/2.0f,
+                          (aPoints[3].x+aPoints[8].x)/2.0f,(aPoints[3].y+aPoints[8].y)/2.0f);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
-      aPolyPath[*aCurIndex].x = (aPoints[2].x+aPoints[9].x)>>1;
-      aPolyPath[*aCurIndex].y = (aPoints[2].y+aPoints[9].y)>>1;
+      aPolyPath[*aCurIndex].x = (nscoord)((aPoints[2].x+aPoints[9].x)/2.0f);
+      aPolyPath[*aCurIndex].y = (nscoord)((aPoints[2].y+aPoints[9].y)/2.0f);
       (*aCurIndex)++;
-      thecurve.SetPoints( (aPoints[2].x+aPoints[9].x)>>1,(aPoints[2].y+aPoints[9].y)>>1,
-                          (aPoints[1].x+aPoints[10].x)>>1,(aPoints[1].y+aPoints[10].y)>>1,
-                          (aPoints[0].x+aPoints[11].x)>>1,(aPoints[0].y+aPoints[11].y)>>1);
+      thecurve.SetPoints( (aPoints[2].x+aPoints[9].x)/2.0f,(aPoints[2].y+aPoints[9].y)/2.0f,
+                          (aPoints[1].x+aPoints[10].x)/2.0f,(aPoints[1].y+aPoints[10].y)/2.0f,
+                          (aPoints[0].x+aPoints[11].x)/2.0f,(aPoints[0].y+aPoints[11].y)/2.0f);
       thecurve.SubDivide(nsnull,aPolyPath,aCurIndex);
       break;
   } 
@@ -3155,16 +3156,16 @@ void
 QBCurve::SubDivide(nsIRenderingContext *aRenderingContext,nsPoint aPointArray[],PRInt32 *aCurIndex)
 {
 QBCurve   curve1,curve2;
-PRInt16   fx,fy,smag;
+float     fx,fy,smag;
 
   // divide the curve into 2 pieces
 	MidPointDivide(&curve1,&curve2);
 	
-	fx = (PRInt16)abs(curve1.mAnc2.x - this->mCon.x);
-	fy = (PRInt16)abs(curve1.mAnc2.y - this->mCon.y);
+	fx = (float)fabs(curve1.mAnc2.x - this->mCon.x);
+	fy = (float)fabs(curve1.mAnc2.y - this->mCon.y);
 
-	smag = fx+fy-(PR_MIN(fx,fy)>>1);
-  //smag = fx*fx + fy*fy;
+	//smag = fx+fy-(PR_MIN(fx,fy)>>1);
+  smag = fx*fx + fy*fy;
  
 	if (smag>1){
 		// split the curve again
@@ -3173,11 +3174,11 @@ PRInt16   fx,fy,smag;
 	}else{
     if(aPointArray ) {
       // save the points for further processing
-      aPointArray[*aCurIndex].x = curve1.mAnc2.x;
-      aPointArray[*aCurIndex].y = curve1.mAnc2.y;
+      aPointArray[*aCurIndex].x = (nscoord)curve1.mAnc2.x;
+      aPointArray[*aCurIndex].y = (nscoord)curve1.mAnc2.y;
       (*aCurIndex)++;
-      aPointArray[*aCurIndex].x = curve2.mAnc2.x;
-      aPointArray[*aCurIndex].y = curve2.mAnc2.y;
+      aPointArray[*aCurIndex].x = (nscoord)curve2.mAnc2.x;
+      aPointArray[*aCurIndex].y = (nscoord)curve2.mAnc2.y;
       (*aCurIndex)++;
     }else{
 		  // draw the curve 
@@ -3185,8 +3186,8 @@ PRInt16   fx,fy,smag;
       aRenderingContext->GetCurrentTransform(aTransform);
 
       
-      aRenderingContext->DrawLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
-      aRenderingContext->DrawLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
+      aRenderingContext->DrawLine((nscoord)curve1.mAnc1.x,(nscoord)curve1.mAnc1.y,(nscoord)curve1.mAnc2.x,(nscoord)curve1.mAnc2.y);
+      aRenderingContext->DrawLine((nscoord)curve1.mAnc2.x,(nscoord)curve1.mAnc2.y,(nscoord)curve2.mAnc2.x,(nscoord)curve2.mAnc2.y);
     }
 	}
 }
@@ -3198,24 +3199,24 @@ PRInt16   fx,fy,smag;
 void 
 QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
 {
-double  c1x,c1y,c2x,c2y;
-nsPoint	a1;
+float         c1x,c1y,c2x,c2y;
+nsFloatPoint	a1;
 
-  c1x = (mAnc1.x+mCon.x)/2.0;
-  c1y = (mAnc1.y+mCon.y)/2.0;
-  c2x = (mAnc2.x+mCon.x)/2.0;
-  c2y = (mAnc2.y+mCon.y)/2.0;
+  c1x = (mAnc1.x+mCon.x)/2.0f;
+  c1y = (mAnc1.y+mCon.y)/2.0f;
+  c2x = (mAnc2.x+mCon.x)/2.0f;
+  c2y = (mAnc2.y+mCon.y)/2.0f;
 
-  a1.x = (PRInt32)((c1x + c2x)/2.0);
-	a1.y = (PRInt32)((c1y + c2y)/2.0);
+  a1.x = (c1x + c2x)/2.0f;
+	a1.y = (c1y + c2y)/2.0f;
 
   // put the math into our 2 new curves
   A->mAnc1 = this->mAnc1;
-  A->mCon.x = (PRInt16)c1x;
-  A->mCon.y = (PRInt16)c1y;
+  A->mCon.x = c1x;
+  A->mCon.y = c1y;
   A->mAnc2 = a1;
   B->mAnc1 = a1;
-  B->mCon.x = (PRInt16)c2x;
-  B->mCon.y = (PRInt16)c2y;
+  B->mCon.x = c2x;
+  B->mCon.y = c2y;
   B->mAnc2 = this->mAnc2;
 }
