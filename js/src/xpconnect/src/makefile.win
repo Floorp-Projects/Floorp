@@ -79,6 +79,9 @@ LINCS=-I$(PUBLIC)\xpconnect -I$(PUBLIC)\xpcom -I$(PUBLIC)\js \
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
+!ifdef XPC_TOOLS_SUPPORT
+        -DXPC_TOOLS_SUPPORT \
+!endif
         $(NULL)
 
 LLIBS=	$(LIBNSPR)	\
