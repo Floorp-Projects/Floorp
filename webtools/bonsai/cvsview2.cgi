@@ -177,6 +177,7 @@ $rcsdiff .= ' -w' if ($opt_whitespace_mode eq 'ignore');
 my $root = $opt_root;
 if (defined $root && $root ne '') {
     $root =~ s|/$||;
+    &validateRepository($root);
     if (-d $root) {
         unshift(@SRCROOTS, $root);
     } else {

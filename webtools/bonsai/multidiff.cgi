@@ -60,6 +60,7 @@ if( $form{"cvsroot"} ){
 else {
     $cvsroot = pickDefaultRepository();
 }
+&validateRespository($cvsroot);
 
 if( $form{"allchanges"} ){
     @revs = split(/,/, $form{"allchanges"} );

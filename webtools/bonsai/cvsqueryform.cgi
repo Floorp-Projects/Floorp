@@ -34,6 +34,8 @@ print "Content-type: text/html\n\n";
 LoadTreeConfig();
 $::CVS_ROOT = $::FORM{'cvsroot'};
 $::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
+&validateRepository($::CVS_ROOT);
+
 if (exists $::FORM{'module'}) {
     if (exists($::TreeInfo{$::FORM{'module'}}{'repository'})) {
         $::TreeID = $::FORM{'module'} 

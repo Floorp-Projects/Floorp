@@ -43,6 +43,7 @@ print "Content-type: text/html\n\n";
 
 my $CVS_ROOT = $::FORM{'cvsroot'};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+&validateRepository($CVS_ROOT);
 
 PutsHeader("CVS Module Analyzer", $CVS_ROOT);
 

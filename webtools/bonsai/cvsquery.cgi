@@ -48,6 +48,8 @@ require 'CGI.pl';
 
 $::CVS_ROOT = $::FORM{'cvsroot'};
 $::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
+&validateRepository($::CVS_ROOT);
+
 $::TreeID = $::FORM{'module'} 
      if (!exists($::FORM{'treeid'}) && 
          exists($::FORM{'module'}) &&
