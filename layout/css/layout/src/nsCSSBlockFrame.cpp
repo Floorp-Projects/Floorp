@@ -1256,7 +1256,11 @@ nsCSSBlockFrame::Reflow(nsIPresContext&      aPresContext,
     mState &= ~NS_FRAME_FIRST_REFLOW;
   }
   else if (eReflowReason_Incremental == state.reason) {
-    NS_ASSERTION(nsnull == mOverflowLines, "bad overflow list");
+#if XXX
+    // We can have an overflow here if our parent doesn't bother to
+    // continue us
+    DrainOverflowLines();
+#endif
     nsIFrame* target;
     state.reflowCommand->GetTarget(target);
     if (this == target) {
@@ -1433,7 +1437,7 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
     aDesiredRect.width = aState.mKidXMost + aState.mBorderPadding.right;
     if (!aState.mUnconstrainedWidth) {
       // Make sure we're at least as wide as the max size we were given
-      nscoord mw = aState.maxSize.width + aState.mBulletPadding;
+      nscoord mw = aState.maxSize.width/* + aState.mBulletPaddingXXX*/;
       if (aDesiredRect.width < mw) {
         aDesiredRect.width = mw;
       }
@@ -1581,6 +1585,7 @@ NS_ASSERTION(xmost < 1000000, "bad line width");
 nsresult
 nsCSSBlockFrame::CreateNewFrames(nsIPresContext* aPresContext)
 {
+  // If we need to be continued but aren't, we will have an overflow list
   NS_ASSERTION((nsnull == mOverflowLines) && (nsnull == mNextInFlow),
                "bad call to CreateNewFrames");
 
@@ -2065,6 +2070,12 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
      ("nsCSSBlockFrame::ReflowBlockFrame: line=%p frame=%p y=%d",
       aLine, aFrame, aState.mY));
 
+  NS_ASSERTION(nsnull != aState.mSpaceManager, "null ptr");
+
+  // Get run-around interface if frame supports it
+  nsIRunaround* runAround = nsnull;
+  aFrame->QueryInterface(kIRunaroundIID, (void**)&runAround);
+
   // Get the child margins
   nsMargin childMargin;
   const nsStyleSpacing* childSpacing;
@@ -2135,61 +2146,28 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     if (childBottomMargin < 0) childBottomMargin = 0;
   }
 
-  nscoord x = aState.mX + childMargin.left + aState.mBulletPadding;
-  if (NS_STYLE_DISPLAY_LIST_ITEM == childDisplay->mDisplay) {
-    const nsStyleList* sl;
-    aFrame->GetStyleData(eStyleStruct_List,
-                         (const nsStyleStruct*&) sl);
-    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == sl->mListStylePosition) {
-      // Slide child list item so that it's just past our border; it
-      // will use our padding area to place it's bullet.
-      x -= aState.mLeftPadding;
-    }
-  }
-  nscoord y = aState.mY + topMargin;
-  aFrame->WillReflow(*aState.mPresContext);
-  aFrame->MoveTo(x, y);
-
   // Compute the available space that the child block can reflow into
+  // and the starting x,y coordinate.
+  nscoord x;
+  if (nsnull == runAround) {
+    // When there is no run-around API the coordinates must include
+    // any impact by floaters.
+    x = aState.mCurrentBand.availSpace.x;
+  }
+  else {
+    // When the child does implement the run-around API it will deal
+    // with any floater impact itself.
+    x = aState.mX;
+  }
+  x += childMargin.left + aState.mBulletPadding;
+  nscoord y = aState.mY + topMargin;
   nsSize availSize;
   if (aState.mUnconstrainedWidth) {
-#if 1
     availSize.width = NS_UNCONSTRAINEDSIZE;
-#else
-    // Never give a block an unconstrained width
-#if 1
-    nsRect r;
-    aState.mPresContext->GetVisibleArea(r);
-    float p2t = aState.mPresContext->GetPixelsToTwips();
-    availSize.width = nscoord(p2t * r.width);
-#else
-    if (!aState.mHaveBlockMaxWidth) {
-      const nsReflowState* rsp = aState.parentReflowState;
-      aState.mBlockMaxWidth = 0;
-      while (nsnull != rsp) {
-        if (NS_UNCONSTRAINEDSIZE != rsp->maxSize.width) {
-          aState.mBlockMaxWidth = rsp->maxSize.width;
-          const nsStyleSpacing* spacing = nsnull;
-          rsp->frame->GetStyleData(eStyleStruct_Spacing,
-                                   (const nsStyleStruct *&)spacing);
-          if (nsnull!=spacing) {
-            nsMargin borderPadding;
-            spacing->CalcBorderPaddingFor(rsp->frame, borderPadding);
-            aState.mBlockMaxWidth -= borderPadding.right + borderPadding.left;
-          }
-          break;
-        }
-        rsp = rsp->parentReflowState;
-      }
-      aState.mHaveBlockMaxWidth = PR_TRUE;
-    }
-    availSize.width = aState.mBlockMaxWidth;
-#endif
-#endif
   }
   else {
     availSize.width = aState.mInnerSize.width -
-      (childMargin.left + childMargin.right);
+      (childMargin.left + childMargin.right + aState.mBulletPadding);
   }
   if (aState.mUnconstrainedHeight) {
     availSize.height = NS_UNCONSTRAINEDSIZE;
@@ -2197,9 +2175,25 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   else {
     availSize.height = aState.mBottomEdge - (y + childBottomMargin);
   }
+  if (NS_STYLE_DISPLAY_LIST_ITEM == childDisplay->mDisplay) {
+    // Special handling for list-item children that have outside
+    // bullets.
+    const nsStyleList* sl;
+    aFrame->GetStyleData(eStyleStruct_List,
+                         (const nsStyleStruct*&) sl);
+    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == sl->mListStylePosition) {
+      // Slide child list item so that it's just past our border; it
+      // will use our padding area to place its bullet.
+      x -= aState.mLeftPadding;
+      availSize.width += aState.mLeftPadding;
+    }
+  }
+  aFrame->WillReflow(*aState.mPresContext);
+  aFrame->MoveTo(x, y);
+
   NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
-     ("nsCSSBlockFrame::ReflowBlockFrame: availSize={%d,%d}",
-      availSize.width, availSize.height));
+     ("nsCSSBlockFrame::ReflowBlockFrame: xy={%d,%d} availSize={%d,%d}",
+      x, y, availSize.width, availSize.height));
 
   // Determine the reason for the reflow
   nsReflowReason reason = eReflowReason_Resize;
@@ -2223,10 +2217,8 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
                           : nsnull);
   metrics.posTopMargin = totalTopMargin;
   nsReflowStatus reflowStatus;
-  nsIRunaround* runAround;
-  if ((nsnull != aState.mSpaceManager) &&
-      (NS_OK == aFrame->QueryInterface(kIRunaroundIID, (void**)&runAround))) {
 
+  if (nsnull != runAround) {
     // Reflow the block
     nsReflowState reflowState(aFrame, aState, availSize);
     reflowState.reason = reason;
@@ -2243,8 +2235,10 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   else {
     nsReflowState reflowState(aFrame, aState, availSize);
     reflowState.reason = reason;
+    aState.mSpaceManager->Translate(x, y);
     rv = aFrame->Reflow(*aState.mPresContext, metrics, reflowState,
                         reflowStatus);
+    aState.mSpaceManager->Translate(-x, -y);
   }
   if (NS_IS_REFLOW_ERROR(rv)) {
     aReflowResult = nsInlineReflowStatus(rv);
@@ -2397,13 +2391,20 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
                                    nsInlineReflowStatus&  aReflowResult)
 {
   if (!aState.mInlineLayoutPrepared) {
-    aState.mLineLayout.Prepare(aState.mX + aState.mBulletPadding);
+    nscoord x = aState.mCurrentBand.availSpace.x;
+    nscoord width = aState.mCurrentBand.availSpace.width;
+    if (0 != aState.mBulletPadding) {
+      if (x == aState.mX) {
+        x += aState.mBulletPadding;
+        width -= aState.mBulletPadding;
+      }
+    }
+
+    aState.mLineLayout.Prepare(x);
     aState.mInlineLayout.Prepare(aState.mUnconstrainedWidth, aState.mNoWrap,
                                  aState.mComputeMaxElementSize);
-    aState.mInlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x +
-                                        aState.mBulletPadding,
-                                        aState.mY,
-                                        aState.mCurrentBand.availSpace.width,
+    aState.mInlineLayout.SetReflowSpace(x, aState.mY,
+                                        width,
                                         aState.mCurrentBand.availSpace.height);
     // If we we are a list-item container and we are positioning the
     // first child on the line (which is true when !mInlineLayoutPrepared)
@@ -2734,14 +2735,16 @@ FindFloatersIn(nsIFrame* aFrame, nsVoidArray*& aArray)
     aArray->AppendElement(aFrame);
   }
 
-  nsIFrame* kid;
-  aFrame->FirstChild(kid);
-  while (nsnull != kid) {
-    nsresult rv = FindFloatersIn(kid, aArray);
-    if (NS_OK != rv) {
-      return rv;
+  if (NS_STYLE_DISPLAY_INLINE == display->mDisplay) {
+    nsIFrame* kid;
+    aFrame->FirstChild(kid);
+    while (nsnull != kid) {
+      nsresult rv = FindFloatersIn(kid, aArray);
+      if (NS_OK != rv) {
+        return rv;
+      }
+      kid->GetNextSibling(kid);
     }
-    kid->GetNextSibling(kid);
   }
   return NS_OK;
 }
@@ -3619,6 +3622,8 @@ nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
   // band of available space.
   nsRect region;
   aFloater->GetRect(region);
+  nsMargin floaterMargin;
+  floaterSpacing->CalcMarginFor(aFloater, floaterMargin);
   region.y = mY;
   switch (floaterDisplay->mFloats) {
   default:
@@ -3626,19 +3631,19 @@ nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
     // FALL THROUGH
 
   case NS_STYLE_FLOAT_LEFT:
-    region.x = mX;
+    region.x = mCurrentBand.availSpace.x;
+    region.width += mBulletPadding;
     break;
 
   case NS_STYLE_FLOAT_RIGHT:
     region.x = mCurrentBand.availSpace.XMost() - region.width;
+    region.x -= floaterMargin.right;
     if (region.x < 0) {
       region.x = 0;
     }
   }
 
   // Factor in the floaters margins
-  nsMargin floaterMargin;
-  floaterSpacing->CalcMarginFor(aFloater, floaterMargin);
   region.width += floaterMargin.left + floaterMargin.right;
   region.height += floaterMargin.top + floaterMargin.bottom;
   sm->AddRectRegion(aFloater, region);
@@ -3647,8 +3652,14 @@ nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
   nscoord worldX, worldY;
   sm->GetTranslation(worldX, worldY);
   aFloater->WillReflow(*mPresContext);
-  aFloater->MoveTo(region.x + worldX + floaterMargin.left,
-                   region.y + worldY + floaterMargin.top);
+  if (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats) {
+    aFloater->MoveTo(region.x + worldX + floaterMargin.left,
+                     region.y + worldY + floaterMargin.top);
+  }
+  else {
+    aFloater->MoveTo(region.x + worldX + floaterMargin.left + mBulletPadding,
+                     region.y + worldY + floaterMargin.top);
+  }
   aFloater->DidReflow(*mPresContext, NS_FRAME_REFLOW_FINISHED);
 
   // Update the band of available space to reflect space taken up by
@@ -3657,8 +3668,7 @@ nsCSSBlockReflowState::PlaceCurrentLineFloater(nsIFrame* aFloater)
 
   // XXX if the floater is a child of an inline frame then this won't
   // work because we won't update the correct nsCSSInlineLayout.
-  mInlineLayout.SetReflowSpace(mCurrentBand.availSpace.x,
-                               mY,
+  mInlineLayout.SetReflowSpace(mCurrentBand.availSpace.x, mY,
                                mCurrentBand.availSpace.width,
                                mCurrentBand.availSpace.height);
 }
@@ -3701,7 +3711,12 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
     floater->GetStyleData(eStyleStruct_Spacing,
                           (const nsStyleStruct*&)floaterSpacing);
 
+    // Get the floaters bounding box and margin information
     floater->GetRect(region);
+    nsMargin floaterMargin;
+    floaterSpacing->CalcMarginFor(floater, floaterMargin);
+
+    // Compute the size of the region that will impact the space manager
     region.y = mCurrentBand.availSpace.y;
     switch (floaterDisplay->mFloats) {
     default:
@@ -3710,21 +3725,18 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
 
     case NS_STYLE_FLOAT_LEFT:
       region.x = mCurrentBand.availSpace.x;
+      region.width += mBulletPadding;
       break;
 
     case NS_STYLE_FLOAT_RIGHT:
       region.x = mCurrentBand.availSpace.XMost() - region.width;
+      region.x -= floaterMargin.right;
       if (region.x < 0) {
         region.x = 0;
       }
     }
 
-    // XXX Temporary incremental hack (kipp asks: why is this
-    // temporary or an incremental hack?)
-
     // Factor in the floaters margins
-    nsMargin floaterMargin;
-    floaterSpacing->CalcMarginFor(floater, floaterMargin);
     region.width += floaterMargin.left + floaterMargin.right;
     region.height += floaterMargin.top + floaterMargin.bottom;
     sm->AddRectRegion(floater, region);
@@ -3732,8 +3744,14 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
     // Set the origin of the floater in world coordinates
     nscoord worldX, worldY;
     sm->GetTranslation(worldX, worldY);
-    floater->MoveTo(region.x + worldX + floaterMargin.left,
-                    region.y + worldY + floaterMargin.top);
+    if (NS_STYLE_FLOAT_RIGHT == floaterDisplay->mFloats) {
+      floater->MoveTo(region.x + worldX + floaterMargin.left,
+                      region.y + worldY + floaterMargin.top);
+    }
+    else {
+      floater->MoveTo(region.x + worldX + floaterMargin.left + mBulletPadding,
+                      region.y + worldY + floaterMargin.top);
+    }
   }
 
   // Pass on updated available space to the current line
