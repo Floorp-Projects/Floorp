@@ -627,12 +627,12 @@ nsImageGTK::DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
   }
 
   // now composite
-  for (int y=0; y<mHeight; y++) {
-    unsigned char *targetRow = readData+3*y*mWidth;
+  for (int y=0; y<height; y++) {
+    unsigned char *targetRow = readData+3*y*width;
     unsigned char *imageRow  = mImageBits   +(y+offsetY)*mRowBytes+3*offsetX;
     unsigned char *alphaRow  = mAlphaBits   +(y+offsetY)*mAlphaRowBytes+offsetX;
     
-    for (int i=0; i<mWidth; i++) {
+    for (int i=0; i<width; i++) {
       targetRow[3*i] =   (unsigned(targetRow[3*i])*(255-alphaRow[i]) +
                            unsigned(imageRow[3*i])*alphaRow[i])>>8;
       targetRow[3*i+1] = (unsigned(targetRow[3*i+1])*(255-alphaRow[i]) +
@@ -669,6 +669,11 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
 
   readX = aX; readY = aY;
   destX = 0;  destY = 0;
+  if ((readY>=surfaceHeight) || (readX>=surfaceWidth)) {
+    // This should never happen if the layout engine is sane,
+    // but pavlov says he saw it.  Bulletproof gfx for now...
+    return;
+  }
   if (readY<0) {
     destY = -readY;
     readY = 0;
