@@ -38,6 +38,10 @@ require "CGI.pl";
 ConnectToDatabase();
 confirm_login();
 
+if (Param('enablequips') eq "off") {
+    ThrowUserError("quips_disabled");
+}
+    
 my $action = $::FORM{'action'} || "";
 
 if ($action eq "show") {

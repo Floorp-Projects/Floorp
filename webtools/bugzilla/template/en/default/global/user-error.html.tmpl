@@ -466,6 +466,10 @@
     [% title = "No Query Name Specified" %]
     You must enter a name for your query.
 
+  [% ELSIF error == "quips_disabled" %]
+    [% title = "Quips Disabled" %]
+    Quips are disabled.
+
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]
     You cannot reassign to a bug to nobody. Unless you
