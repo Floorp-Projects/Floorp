@@ -2786,7 +2786,7 @@ nsHTMLEditor::GetCellFromRange(nsIDOMRange *aRange, nsIDOMElement **aCell)
   //   so tell caller the cell wasn't found
   if (startParent == endParent && 
       endOffset == startOffset+1 &&
-      IsTableCell(childNode))
+      nsHTMLEditUtils::IsTableCell(childNode))
   {
     // Should we also test if frame is selected? (Use GetCellDataAt())
     // (Let's not for now -- more efficient)

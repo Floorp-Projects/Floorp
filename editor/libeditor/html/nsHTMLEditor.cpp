@@ -730,7 +730,7 @@ NS_IMETHODIMP nsHTMLEditor::EditorKeyPress(nsIDOMKeyEvent* aKeyEvent)
       {
         PRBool bHandled = PR_FALSE;
         
-        if (IsTableElement(blockParent))
+        if (nsHTMLEditUtils::IsTableElement(blockParent))
           res = TabInTable(isShift, &bHandled);
         else if (nsHTMLEditUtils::IsListItem(blockParent))
         {
@@ -845,7 +845,7 @@ NS_IMETHODIMP nsHTMLEditor::TabInTable(PRBool inIsShift, PRBool *outHandled)
     res = iter->CurrentNode(getter_AddRefs(cNode));
     if (NS_FAILED(res)) break;
     node = do_QueryInterface(cNode);
-    if (IsTableCell(node) && (GetEnclosingTable(node) == tbl))
+    if (nsHTMLEditUtils::IsTableCell(node) && (GetEnclosingTable(node) == tbl))
     {
       res = CollapseSelectionToDeepestNonTableFirstChild(nsnull, node);
       if (NS_FAILED(res)) return res;
@@ -2262,7 +2262,7 @@ nsHTMLEditor::CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSel
     {
       // Stop if we find a table
       // don't want to go into nested tables
-      if (IsTable(child)) break;
+      if (nsHTMLEditUtils::IsTable(child)) break;
       // hey, it'g gotta be a container too!
       if (!IsContainer(child)) break;
       node = child;
@@ -6237,58 +6237,6 @@ nsHTMLEditor::IsSubordinateBlock(nsString &aTag, PRBool &aIsTag)
   return NS_OK;
 }
 
-///////////////////////////////////////////////////////////////////////////
-// IsTable: true if node an html table
-//                  
-PRBool 
-nsHTMLEditor::IsTable(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTable");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  if (tag.EqualsWithConversion("table"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsTableCell: true if node an html td
-//                  
-PRBool 
-nsHTMLEditor::IsTableCell(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableCell");
-  nsAutoString tag;
-  nsEditor::GetTagString(node,tag);
-  if (tag.EqualsWithConversion("td") || tag.EqualsWithConversion("th"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-
-///////////////////////////////////////////////////////////////////////////
-// IsTableElement: true if node an html table, td, tr, ...
-//                  
-PRBool 
-nsHTMLEditor::IsTableElement(nsIDOMNode *node)
-{
-  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableElement");
-  nsAutoString tagName;
-  nsEditor::GetTagString(node,tagName);
-  if (tagName.EqualsWithConversion("table") || tagName.EqualsWithConversion("tr") || 
-      tagName.EqualsWithConversion("td")    || tagName.EqualsWithConversion("th") ||
-      tagName.EqualsWithConversion("thead") || tagName.EqualsWithConversion("tfoot") ||
-      tagName.EqualsWithConversion("tbody") || tagName.EqualsWithConversion("caption"))
-  {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -6304,7 +6252,7 @@ nsHTMLEditor::GetEnclosingTable(nsIDOMNode *aNode)
   {
     tmp = GetBlockNodeParent(node);
     if (!tmp) break;
-    if (IsTable(tmp)) tbl = tmp;
+    if (nsHTMLEditUtils::IsTable(tmp)) tbl = tmp;
     node = tmp;
   }
   return tbl;
@@ -7249,7 +7197,7 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   // cells empty if caller desires.
   if (!IsContainer(aNode) || nsHTMLEditUtils::IsAnchor(aNode) || 
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsListItem(aNode)) ||
-       (aListOrCellNotEmpty && nsHTMLEditUtils::IsTableCell(aNode)) ) 
+       (aListOrCellNotEmpty && nsHTMLEditUtils::nsHTMLEditUtils::IsTableCell(aNode)) ) 
   {
     *outIsEmptyNode = PR_FALSE;
     return NS_OK;
