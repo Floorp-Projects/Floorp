@@ -32,12 +32,6 @@
 #include "RDFTreeView.h"
 #include "HTMLView.h"
 
-typedef enum _EHtmlPaneSizing 
-{
-	XFE_HTML_PANE_FIXED,
-	XFE_HTML_PANE_PERCENT
-} EHtmlPaneSizing;
-
 class XFE_RDFChromeTreeView : public XFE_RDFTreeView
 {
 public:
@@ -71,9 +65,6 @@ public:
 	// Set the HTML pane height (as a fixed pixel height)
 	void setHtmlPaneHeightFixed(PRUint32 heightPercent);
 	
-	// Set the HTML pane sizing policy
-	void setHtmlPaneSizing(EHtmlPaneSizing sizing);
-
 protected:
 
     // Override RDFBase methods
@@ -101,27 +92,18 @@ private:
 	// The HTML pane form
 	Widget				_htmlPaneForm;
 
-	// The tree/html division form
-	Widget				_divisionForm;
+	// The tree/html divider
+	Widget				_divider;
 
 	// The HTML pane
 	XFE_HTMLView *		_htmlPane;
-
-	// The height of the HTML pane as a percentage of the view
-	PRUint32			_htmlPaneHeightPercent;
-
-	// The height of the HTML pane as a fixed pixel height
-	PRUint32			_htmlPaneHeightFixed;
-
-	// Type of html pain sizing
-	EHtmlPaneSizing		_htmlPaneSizing;
 
 	static void closeRdfView_cb(Widget, XtPointer, XtPointer);
 
     // Create widgets
     void createControlToolbar();
     void createViewLabel();
-    void createDivisionForm();
+    void createDivider();
     void createHtmlPane();
 };
 
