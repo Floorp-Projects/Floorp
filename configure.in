@@ -631,7 +631,7 @@ case "$target" in
        MKSHLIB_FORCE_ALL='-all'
        MKSHLIB_UNFORCE_ALL='-none'
        CFLAGS="$CFLAGS -woff 3262"
-       CXXFLAGS="$CXXFLAGS -woff 3262"
+       CXXFLAGS="$CXXFLAGS -woff 3262 -LANG:exceptions=OFF"
        if test -n "$USE_N32"; then
 	   CFLAGS="$CFLAGS -n32"
 	   CXXFLAGS="$CXXFLAGS -n32"
