@@ -27,7 +27,7 @@ include $(topsrcdir)/config/config.mk
 ifeq ($(USE_NGLAYOUT_GTK),1)
 LIBRARY_NAME = widgetgtk
 else
-LIBRARY_NAME = widgetunix
+LIBRARY_NAME = widgetmotif
 endif
 
 MODULE=raptor 
@@ -48,13 +48,13 @@ LD_NONE = -none
 endif
 
 ifeq ($(USE_NGLAYOUT_GTK),1)
-EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetgtk_s.a
+TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetgtk_s.a
 else
-EXTRA_DSO_LDOPTS+=$(DIST)/lib/libraptorwidgetunix_s.a
+TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetmotif_s.a
 endif
 
 EXTRA_DSO_LDOPTS+=\
-	$(DIST)/lib/libraptorwidgetunix_s.a \
+	$(TOOLKIT_DSO_LDOPTS) \
 	$(DIST)/lib/libraptorbasewidget_s.a \
 	-L$(DIST)/bin \
 	-lxpcom \

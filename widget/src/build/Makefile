@@ -19,7 +19,11 @@ DEPTH = ../../..
 
 include $(DEPTH)/config/config.mk
 
-LIBRARY_NAME = widgetunix
+ifeq ($(USE_NGLAYOUT_GTK),1)
+LIBRARY_NAME = widgetgtk
+else
+LIBRARY_NAME = widgetmotif
+endif
 
 MODULE=raptor 
 
@@ -29,8 +33,14 @@ INCLUDES+= -I../xpwidgets -I../motif -I.
 
 CPPSRCS=dlldeps.cpp nsWidgetSupport.cpp nsMotifWidgetFactory.cpp
 
+ifeq ($(USE_NGLAYOUT_GTK),1)
+TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetgtk_s.a
+else
+TOOLKIT_DSO_LDOPTS = $(DIST)/lib/libraptorwidgetmotif_s.a
+endif
+
 EXTRA_DSO_LDOPTS+=\
-	$(DIST)/lib/libraptorwidgetunix_s.a \
+	$(TOOLKIT_DSO_LDOPTS) \
 	$(DIST)/lib/libraptorbasewidget_s.a \
 	-L$(DIST)/bin \
 	-lxpcom \
