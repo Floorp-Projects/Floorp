@@ -297,7 +297,11 @@ sub connect {
            )) {
         &debug("Could not connect. Are you sure '$server:$port' is a valid host?");
         if (defined($localAddr)) {
-            &debug("Is '$localAddr' the correct address of the interface to use?");
+            if ($Net::IRC::VERSION < 0.73) {
+                &debug("To use 'localAddr' you need Net::IRC version 0.73 or higher (you have $Net::IRC::VERSION)");
+            } else {
+                &debug("Is '$localAddr' the correct address of the interface to use?");
+            }
         } else {
             &debug("Try editing '$cfgfile' to set 'localAddr' to the address of the interface to use.");
         }
