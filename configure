@@ -7401,6 +7401,15 @@ intl/uconv/src/Makefile
 intl/uconv/tests/Makefile
 intl/uconv/ucvja/Makefile
 intl/uconv/ucvlatin/Makefile
+intl/locale/Makefile
+intl/locale/public/Makefile
+intl/locale/src/Makefile
+intl/locale/tests/Makefile
+intl/unicharutil/Makefile
+intl/unicharutil/src/Makefile
+intl/unicharutil/public/Makefile
+intl/unicharutil/tests/Makefile
+intl/unicharutil/tools/Makefile
 jpeg/Makefile
 js/Makefile
 js/jsd/Makefile
