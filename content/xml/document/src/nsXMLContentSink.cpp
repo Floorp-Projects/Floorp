@@ -1152,13 +1152,13 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
   nsAutoString text, target, data;
-  nsIContent* node;
+  nsCOMPtr<nsIContent> node;
 
   FlushText();
 
   text.Assign(aNode.GetText());
   ParseProcessingInstruction(text, target, data);
-  result = NS_NewXMLProcessingInstruction(&node, target, data);
+  result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
   if (NS_OK == result) {
     node->SetDocument(mDocument, PR_FALSE, PR_TRUE);
     result = AddContentAsLeaf(node);
