@@ -332,14 +332,14 @@ nsAttrAndChildArray::RemoveAttrAt(PRUint32 aPos)
   if (aPos < mapped) {
     if (mapped == 1) {
       // We're removing the last mapped attribute.
-      mImpl->mMappedAttrs->ReleaseUse();
       NS_RELEASE(mImpl->mMappedAttrs);
 
       return NS_OK;
     }
 
     nsRefPtr<nsMappedAttributes> mapped;
-    nsresult rv = GetModifiableMapped(nsnull, nsnull, getter_AddRefs(mapped));
+    nsresult rv = GetModifiableMapped(nsnull, nsnull, PR_FALSE,
+                                      getter_AddRefs(mapped));
     NS_ENSURE_SUCCESS(rv, rv);
 
     mapped->RemoveAttrAt(aPos);
@@ -436,7 +436,8 @@ nsAttrAndChildArray::SetAndTakeMappedAttr(nsIAtom* aLocalName,
                                           nsIHTMLStyleSheet* aSheet)
 {
   nsRefPtr<nsMappedAttributes> mapped;
-  nsresult rv = GetModifiableMapped(aContent, aSheet, getter_AddRefs(mapped));
+  nsresult rv = GetModifiableMapped(aContent, aSheet, PR_TRUE,
+                                    getter_AddRefs(mapped));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mapped->SetAndTakeAttr(aLocalName, aValue);
@@ -454,7 +455,8 @@ nsAttrAndChildArray::SetMappedAttrStyleSheet(nsIHTMLStyleSheet* aSheet)
   }
 
   nsRefPtr<nsMappedAttributes> mapped;
-  nsresult rv = GetModifiableMapped(nsnull, nsnull, getter_AddRefs(mapped));
+  nsresult rv = GetModifiableMapped(nsnull, nsnull, PR_FALSE, 
+                                    getter_AddRefs(mapped));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mapped->SetStyleSheet(aSheet);
@@ -511,7 +513,6 @@ nsAttrAndChildArray::Clear()
   }
 
   if (mImpl->mMappedAttrs) {
-    mImpl->mMappedAttrs->ReleaseUse();
     NS_RELEASE(mImpl->mMappedAttrs);
   }
 
@@ -554,12 +555,13 @@ nsAttrAndChildArray::MappedAttrCount() const
 nsresult
 nsAttrAndChildArray::GetModifiableMapped(nsIHTMLContent* aContent,
                                          nsIHTMLStyleSheet* aSheet,
+                                         PRBool aWillAddAttr,
                                          nsMappedAttributes** aModifiable)
 {
   *aModifiable = nsnull;
 
   if (mImpl && mImpl->mMappedAttrs) {
-    *aModifiable = new nsMappedAttributes(*mImpl->mMappedAttrs);
+    *aModifiable = mImpl->mMappedAttrs->Clone(aWillAddAttr);
     NS_ENSURE_TRUE(*aModifiable, NS_ERROR_OUT_OF_MEMORY);
 
     NS_ADDREF(*aModifiable);
@@ -592,11 +594,7 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
     // This doesn't currently happen, but it could if we do loading right
 
     nsRefPtr<nsMappedAttributes> mapped(aAttributes);
-    if (mImpl->mMappedAttrs) {
-      mImpl->mMappedAttrs->ReleaseUse();
-    }
     mapped.swap(mImpl->mMappedAttrs);
-    mImpl->mMappedAttrs->AddUse();
 
     return NS_OK;
   }
@@ -606,11 +604,15 @@ nsAttrAndChildArray::MakeMappedUnique(nsMappedAttributes* aAttributes)
     UniqueMappedAttributes(aAttributes, *getter_AddRefs(mapped));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (mImpl->mMappedAttrs) {
-    mImpl->mMappedAttrs->ReleaseUse();
+  if (mapped != aAttributes) {
+    // Reset the stylesheet of aAttributes so that it doesn't spend time
+    // trying to remove itself from the hash. There is no risk that aAttributes
+    // is in the hash since it will always have come from GetModifiableMapped,
+    // which never returns maps that are in the hash (such hashes are by
+    // nature not modifiable).
+    aAttributes->DropStyleSheetReference();
   }
   mapped.swap(mImpl->mMappedAttrs);
-  mImpl->mMappedAttrs->AddUse();
 
   return NS_OK;
 }
