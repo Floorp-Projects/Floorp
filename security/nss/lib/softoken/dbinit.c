@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: dbinit.c,v 1.2 2001/08/25 21:01:38 mcgreer%netscape.com Exp $
+ # $Id: dbinit.c,v 1.3 2001/08/25 21:28:16 mcgreer%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -187,6 +187,9 @@ pk11_OpenVolatileCertDB() {
       CERT_SetDefaultCertDB(&certhandle);
       return CKR_OK;
 }
+
+/* forward declare so that a failure in the init case can shutdown */
+void pk11_Shutdown(void);
 
 /*
  * OK there are now lots of options here, lets go through them all:
