@@ -183,6 +183,7 @@
 <!ENTITY releaseCmd.accesskey "R"> 
 <!ENTITY hintsAndTips.label "&brandShortName; Help">
 <!ENTITY hintsAndTips.accesskey "h"> 
+<!ENTITY hintsAndTipsMac.commandkey "?">
 <!ENTITY aboutCmd.label "About &brandShortName;">
 <!ENTITY aboutCmd.accesskey "A">
 
