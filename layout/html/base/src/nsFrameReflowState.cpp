@@ -48,6 +48,8 @@ nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
   while (nsnull != aParentRS) {
     if (nsnull != aParentRS->frame) {
       PRBool isContainingBlock;
+      // XXX This needs to go and we need to start using the info in the
+      // reflow state...
       nsresult rv = aParentRS->frame->IsPercentageBase(isContainingBlock);
       if (NS_SUCCEEDED(rv) && isContainingBlock) {
         return (const nsHTMLReflowState*) aParentRS;
@@ -127,8 +129,6 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
     case NS_STYLE_DISPLAY_BLOCK:
     case NS_STYLE_DISPLAY_LIST_ITEM:
     case NS_STYLE_DISPLAY_TABLE:
-    case NS_STYLE_DISPLAY_TABLE_CELL:
-    case NS_STYLE_DISPLAY_TABLE_CAPTION:
       frameType = eCSSFrameType_Block;
       break;
 
@@ -149,14 +149,15 @@ nsHTMLReflowState::DetermineFrameType(nsIPresContext& aPresContext)
       frameType = eCSSFrameType_Block;
       break;
 
+    case NS_STYLE_DISPLAY_TABLE_CELL:
+    case NS_STYLE_DISPLAY_TABLE_CAPTION:
     case NS_STYLE_DISPLAY_TABLE_ROW_GROUP:
     case NS_STYLE_DISPLAY_TABLE_COLUMN:
     case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
     case NS_STYLE_DISPLAY_TABLE_HEADER_GROUP:
     case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
     case NS_STYLE_DISPLAY_TABLE_ROW:
-      // XXX I don't know what to do about these yet...later
-      frameType = eCSSFrameType_Inline;
+      frameType = eCSSFrameType_InternalTable;
       break;
 
     case NS_STYLE_DISPLAY_NONE:
@@ -270,6 +271,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
     // by the content edge
     nscoord containingBlockWidth = cbrs->computedWidth;
     nscoord containingBlockHeight = cbrs->computedHeight;
+    NS_ASSERTION(0 != containingBlockWidth, "containing block width of 0");
     nsStyleUnit widthUnit = pos->mWidth.GetUnit();
     nsStyleUnit heightUnit = pos->mHeight.GetUnit();
 
@@ -321,6 +323,37 @@ nsHTMLReflowState::InitConstraints(nsIPresContext& aPresContext)
       }
       if (eStyleUnit_Auto == heightUnit) {
         computedHeight = NS_AUTOHEIGHT;  // let it choose its height
+      } else {
+        ComputeVerticalValue(containingBlockHeight, heightUnit, pos->mHeight,
+                             computedHeight);
+      }
+
+    } else if (eCSSFrameType_InternalTable == frameType) {
+      // Internal table elements. The rules vary depending on the type
+      const nsStyleDisplay* display;
+      frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+
+      // Calculate the computed width
+      if ((NS_STYLE_DISPLAY_TABLE_ROW == display->mDisplay) ||
+          (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay)) {
+        // 'width' property doesn't apply to table rows and row groups
+        widthUnit = eStyleUnit_Auto;
+      }
+      if (eStyleUnit_Auto == widthUnit) {
+        computedWidth = maxSize.width;
+      } else {
+        ComputeHorizontalValue(containingBlockWidth, widthUnit, pos->mWidth,
+                               computedWidth);
+      }
+
+      // Calculate the computed height
+      if ((NS_STYLE_DISPLAY_TABLE_COLUMN == display->mDisplay) ||
+          (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == display->mDisplay)) {
+        // 'width' property doesn't apply to table columns and column groups
+        heightUnit = eStyleUnit_Auto;
+      }
+      if (eStyleUnit_Auto == heightUnit) {
+        computedHeight = NS_AUTOHEIGHT;
       } else {
         ComputeVerticalValue(containingBlockHeight, heightUnit, pos->mHeight,
                              computedHeight);
