@@ -259,6 +259,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 		if (!ParseLocaleString(locale_string,language_code,country_code,region_code)) {
 			*winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
 				SORT_DEFAULT);
+			delete [] locale_string;
 			return NS_OK;
 		}
 		// we have a LL-CC-RR style string
@@ -270,6 +271,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 			//
 			*winLCID = MAKELCID(MAKELANGID(USER_DEFINED_PRIMARYLANG,USER_DEFINED_SUBLANGUAGE),
 								SORT_DEFAULT);
+			delete [] locale_string;
 			return NS_OK;
 		}
 		
@@ -279,6 +281,7 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 			//
 			*winLCID = MAKELCID(MAKELANGID(winLangCode,SUBLANG_DEFAULT),
 								SORT_DEFAULT);
+			delete [] locale_string;
 			return NS_OK;
 		}
 
@@ -289,10 +292,12 @@ nsIWin32LocaleImpl::GetPlatformLocale(const nsString* locale,LCID* winLCID)
 			//
 			*winLCID = MAKELCID(MAKELANGID(winLangCode,USER_DEFINED_SUBLANGUAGE),
 								SORT_DEFAULT);
+			delete [] locale_string;
 			return NS_OK;
 		}
 
 		*winLCID = winLangCode | winSublangCode;
+		delete [] locale_string;
 		return NS_OK;
 	}
 

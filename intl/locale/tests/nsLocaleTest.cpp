@@ -167,7 +167,7 @@ factory_new_locale(void)
 		delete catagory;
 		delete value;
 	}
-
+	delete localeName;
 	locale->Release();
 
 	catagoryList = new nsString*[6];
