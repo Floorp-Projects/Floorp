@@ -39,7 +39,7 @@
 var returnmycall=false;
 var accountManagerContractID   = "@mozilla.org/messenger/account-manager;1";
 var messengerMigratorContractID   = "@mozilla.org/messenger/migrator;1";
-var zeroIdCount = false; //If there is only one account and has no IDs
+var gAnyValidIdentity = false; //If there are no valid identities for any account
 // returns the first account with an invalid server or identity
 
 function getInvalidAccounts(accounts)
@@ -65,14 +65,14 @@ function getInvalidAccounts(accounts)
 
         for (var j=0; j<numIdentities; j++) {
             var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
-            if (!identity.valid) {
-                invalidAccounts[invalidAccounts.length] = account;
-                continue;
+            if (identity.valid) {
+              gAnyValidIdentity = true;
+            }
+            else {
+              invalidAccounts[invalidAccounts.length] = account;
             }
         }
     }
-    if ((numAccounts == 1) && (numIdentities <= 0))
-      zeroIdCount = true;
     return invalidAccounts;
 }
 
@@ -168,13 +168,14 @@ function verifyAccounts(wizardcallback) {
         //We are doing openWizard if  MessengerMigration returns some kind of error
         //(including those cases where there is nothing to migrate).
         //prefillAccount is valid, if there is an invalid account already 
-        //zeroIdCount is true when there is only one account and it has no identities
-        //usually that happens only when it is a local folder account
+        //gAnyValidIdentity is true when you've got at least one *valid* identity,
+        //Since local folders is an identity-less account, if you only have
+        //local folders, it will be false.
         //wizardcallback is true only when verifyaccounts is called from compose window.
         //the last condition in the if is so that we call account wizard only when the user
         //has only a local folder and tries to compose mail.
 
-        if (openWizard || prefillAccount || (zeroIdCount && wizardcallback)) {
+        if (openWizard || prefillAccount || ((!gAnyValidIdentity) && wizardcallback)) {
             MsgAccountWizard(prefillAccount);
 		        ret = false;
         }
