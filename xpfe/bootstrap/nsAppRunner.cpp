@@ -108,6 +108,10 @@
 #include <malloc.h>
 #endif
 
+#if defined (XP_MACOSX)
+#include <Processes.h>
+#endif
+
 #include "nsITimelineService.h"
 
 #if defined(DEBUG_pra)
@@ -1463,12 +1467,27 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // if we had no command line arguments, argc == 1.
 
   PRBool windowOpened = PR_FALSE;
-#ifdef XP_MAC
+  PRBool defaultStartup;
+#if defined(XP_MAC)
   // if we do no command line args on the mac, it says argc is 0, and not 1
-  rv = DoCommandLines(cmdLineArgs, ((argc == 1) || (argc == 0)), &windowOpened);
+  defaultStartup = ((argc == 1) || (argc == 0));
+#elif defined(XP_MACOSX)
+  defaultStartup = (argc == 1);
+  // On OSX, we get passed two args if double-clicked from the Finder.
+  // The second is our PSN. Check for this and consider it to be default.
+  if (argc == 2) {
+    ProcessSerialNumber ourPSN;
+    if (::MacGetCurrentProcess(&ourPSN) == noErr) {
+      char argBuf[64];
+      sprintf(argBuf, "-psn_%ld_%ld", ourPSN.highLongOfPSN, ourPSN.lowLongOfPSN);
+      if (!strcmp(argBuf, argv[1]))
+        defaultStartup = PR_TRUE;
+    }
+  }
 #else
-  rv = DoCommandLines(cmdLineArgs, (argc == 1), &windowOpened);
-#endif /* XP_MAC */
+  defaultStartup = (argc == 1);
+#endif
+  rv = DoCommandLines(cmdLineArgs, defaultStartup, &windowOpened);
   if (NS_FAILED(rv))
   {
     NS_WARNING("failed to process command line");
