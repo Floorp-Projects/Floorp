@@ -388,20 +388,20 @@ SimplePlugin::SimplePlugin()
 {
     NS_INIT_REFCNT();
 
-	if(nsComponentManager::CreateInstance(kCPluginManagerCID, 
+    if(nsComponentManager::CreateInstance(kCPluginManagerCID, 
                                           NULL, kIPluginManagerIID, (void**)&mPluginManager) != NS_OK)
-		return;
+        return;
 
-	gPluginObjectCount++;
+    gPluginObjectCount++;
 }
 
 SimplePlugin::~SimplePlugin(void)
 {
-	if(mPluginManager)
-		mPluginManager->Release();
+    if(mPluginManager)
+        mPluginManager->Release();
 
-	if(mServiceManager)
-		mServiceManager->Release();
+    if(mServiceManager)
+        mServiceManager->Release();
 
     gPluginObjectCount--;
 }
@@ -412,23 +412,23 @@ SimplePlugin::~SimplePlugin(void)
 NS_METHOD
 SimplePlugin::QueryInterface(const nsIID& aIID, void** aInstancePtr) 
 {
-	if (!aInstancePtr)
-		return NS_ERROR_NULL_POINTER;
+    if (!aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
 
-	if (aIID.Equals(kISupportsIID)) {
-		*aInstancePtr = NS_STATIC_CAST(nsISupports*,this);
-	} else if (aIID.Equals(kIFactoryIID)) {
-		*aInstancePtr = NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(nsIFactory*,this));
-	} else if (aIID.Equals(kIPluginIID)) {
-		*aInstancePtr = NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(nsIPlugin*,this));
-	} else {
-		*aInstancePtr = nsnull;
-		return NS_ERROR_NO_INTERFACE;
-	}
+    if (aIID.Equals(kISupportsIID)) {
+        *aInstancePtr = NS_STATIC_CAST(nsISupports*,this);
+    } else if (aIID.Equals(kIFactoryIID)) {
+        *aInstancePtr = NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(nsIFactory*,this));
+    } else if (aIID.Equals(kIPluginIID)) {
+        *aInstancePtr = NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(nsIPlugin*,this));
+    } else {
+        *aInstancePtr = nsnull;
+        return NS_ERROR_NO_INTERFACE;
+    }
 
-	NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*,*aInstancePtr));
+    NS_ADDREF(NS_REINTERPRET_CAST(nsISupports*,*aInstancePtr));
 
-	return NS_OK;
+    return NS_OK;
 }
  
 NS_IMPL_ADDREF(SimplePlugin);
@@ -596,12 +596,20 @@ SimplePlugin::LockFactory(PRBool aLock)
 NS_METHOD
 SimplePlugin::Initialize()
 {
+#ifdef NS_DEBUG
+    printf("SimplePlugin::Initialize\n");
+#endif
+
     return NS_OK;
 }
 
 NS_METHOD
 SimplePlugin::Shutdown(void)
 {
+#ifdef NS_DEBUG
+    printf("SimplePlugin::Shutdown\n");
+#endif
+
     return NS_OK;
 }
 
@@ -612,6 +620,10 @@ SimplePlugin::Shutdown(void)
 NS_METHOD
 SimplePlugin::GetMIMEDescription(const char* *result)
 {
+#ifdef NS_DEBUG
+    printf("SimplePlugin::GetMIMEDescription\n");
+#endif
+
     *result = PLUGIN_MIME_DESCRIPTION;
     return NS_OK;
 }
@@ -623,6 +635,10 @@ SimplePlugin::GetMIMEDescription(const char* *result)
 NS_METHOD
 SimplePlugin::GetValue(nsPluginVariable variable, void *value)
 {
+#ifdef NS_DEBUG
+    printf("SimplePlugin::GetValue\n");
+#endif
+
     nsresult err = NS_OK;
     if (variable == nsPluginVariable_NameString)
         *((char **)value) = PLUGIN_NAME;
@@ -639,7 +655,11 @@ SimplePlugin::CreatePluginInstance(nsISupports *aOuter, REFNSIID aIID,
                                       const char* aPluginMIMEType,
                                       void **aResult)
 {
-  return NS_OK;
+#ifdef NS_DEBUG
+    printf("SimplePlugin::CreatePluginInstance\n");
+#endif
+
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -680,10 +700,40 @@ NS_IMPL_RELEASE(SimplePluginInstance);
 NS_METHOD
 SimplePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::Initialize\n");
+#endif
+    
+    NS_ASSERTION(peer != NULL, "null peer");
+
     fPeer = peer;
+    nsIPluginTagInfo* taginfo;
+    const char* const* names = nsnull;
+    const char* const* values = nsnull;
+    PRUint16 count = 0;
+    nsresult result;
+
     peer->AddRef();
-    nsresult err = peer->GetMode(&fMode);
-    if (err) return err;
+    result = peer->GetMode(&fMode);
+    if (NS_FAILED(result)) return result;
+
+   result = peer->QueryInterface(nsIPluginTagInfo::GetIID(), (void **)&taginfo);
+
+    if (!NS_FAILED(result))
+    {
+        taginfo->GetAttributes(count, names, values);
+        NS_IF_RELEASE(taginfo);
+    }
+
+#ifdef NS_DEBUG
+    printf("Attribute count = %d\n", count);
+
+    for (int i = 0; i < count; i++)
+    {
+        printf("plugin param=%s, value=%s\n", names[i], values[i]);
+    }
+#endif
+
     PlatformNew(); 	/* Call Platform-specific initializations */
     return NS_OK;
 }
@@ -691,6 +741,10 @@ SimplePluginInstance::Initialize(nsIPluginInstancePeer* peer)
 NS_METHOD
 SimplePluginInstance::GetPeer(nsIPluginInstancePeer* *result)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::GetPeer\n");
+#endif
+
     fPeer->AddRef();
     *result = fPeer;
     return NS_OK;
@@ -699,7 +753,9 @@ SimplePluginInstance::GetPeer(nsIPluginInstancePeer* *result)
 NS_METHOD
 SimplePluginInstance::Start(void)
 {
-    printf("***SimplePluginInstance::Start***\n");
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::Start\n");
+#endif
 
     return NS_OK;
 }
@@ -707,12 +763,20 @@ SimplePluginInstance::Start(void)
 NS_METHOD
 SimplePluginInstance::Stop(void)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::Stop\n");
+#endif
+
     return NS_OK;
 }
 
 NS_METHOD
 SimplePluginInstance::Destroy(void)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::Destroy\n");
+#endif
+
     return NS_OK;
 }
 
@@ -733,6 +797,10 @@ SimplePluginInstance::Destroy(void)
 NS_METHOD
 SimplePluginInstance::SetWindow(nsPluginWindow* window)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::SetWindow\n");
+#endif
+
     nsresult result;
 
     /*
@@ -750,10 +818,14 @@ SimplePluginInstance::SetWindow(nsPluginWindow* window)
 NS_METHOD
 SimplePluginInstance::NewStream(nsIPluginStreamListener** listener)
 {
-	if(listener != NULL)
-		*listener = new SimplePluginStreamListener(this, "http://warp");
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::NewStream\n");
+#endif
 
-	return NS_OK;
+    if(listener != NULL)
+        *listener = new SimplePluginStreamListener(this, "http://warp");
+    
+    return NS_OK;
 }
 
 /*+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -763,6 +835,9 @@ SimplePluginInstance::NewStream(nsIPluginStreamListener** listener)
 NS_METHOD
 SimplePluginInstance::Print(nsPluginPrint* printInfo)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::Print\n");
+#endif
 
     if (printInfo == NULL)
         return NS_ERROR_FAILURE;
@@ -817,6 +892,10 @@ SimplePluginInstance::Print(nsPluginPrint* printInfo)
 NS_METHOD
 SimplePluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::HandleEvent\n");
+#endif
+
     *handled = (PRBool)PlatformHandleEvent(event);
     return NS_OK;
 }
@@ -824,6 +903,10 @@ SimplePluginInstance::HandleEvent(nsPluginEvent* event, PRBool* handled)
 NS_METHOD
 SimplePluginInstance::GetValue(nsPluginInstanceVariable variable, void *value)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginInstance::GetValue\n");
+#endif
+
     return NS_ERROR_FAILURE;
 }
 
@@ -856,6 +939,10 @@ NS_IMPL_ISUPPORTS(SimplePluginStreamListener, kIPluginStreamListenerIID);
 NS_METHOD
 SimplePluginStreamListener::OnStartBinding(nsIPluginStreamInfo* pluginInfo)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginStreamListener::OnStartBinding\n");
+#endif
+
     char msg[256];
     sprintf(msg, "### Opening plugin stream for %s\n", fMessageName);
     return NS_OK;
@@ -866,6 +953,10 @@ SimplePluginStreamListener::OnDataAvailable(nsIPluginStreamInfo* pluginInfo,
                                             nsIInputStream* input, 
                                             PRUint32 length)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginStreamListener::OnDataAvailable\n");
+#endif
+
     char* buffer = new char[length];
     if (buffer) {
         PRUint32 amountRead = 0;
@@ -883,6 +974,10 @@ NS_METHOD
 SimplePluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo, 
                                             const char* fileName)
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginStreamListener::OnFileAvailable\n");
+#endif
+
     char msg[256];
     sprintf(msg, "### File available for %s: %s\n", fMessageName, fileName);
     return NS_OK;
@@ -891,6 +986,10 @@ SimplePluginStreamListener::OnFileAvailable(nsIPluginStreamInfo* pluginInfo,
 NS_METHOD
 SimplePluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status )
 {
+#ifdef NS_DEBUG
+    printf("SimplePluginStreamListener::OnStopBinding\n");
+#endif
+
     char msg[256];
     sprintf(msg, "### Closing plugin stream for %s\n", fMessageName);
     return NS_OK;
@@ -899,14 +998,22 @@ SimplePluginStreamListener::OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsres
 NS_METHOD
 SimplePluginStreamListener::OnNotify(const char* url, nsresult status)
 {
-	return NS_OK;
+#ifdef NS_DEBUG
+    printf("SimplePluginStreamListener::OnNotify\n");
+#endif
+
+    return NS_OK;
 }
 
 NS_METHOD
 SimplePluginStreamListener::GetStreamType(nsPluginStreamType *result)
 {
-	*result = nsPluginStreamType_Normal;
-	return NS_OK;
+#ifdef NS_DEBUG
+    printf("SimplePluginStreamListener::GetStreamType\n");
+#endif
+
+    *result = nsPluginStreamType_Normal;
+    return NS_OK;
 }
 
 /*******************************************************************************
