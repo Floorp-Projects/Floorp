@@ -16,9 +16,49 @@
  * Reserved.
  */
 
-#include "nsInstallPath.h"
+#ifndef nsUninstallObject_h__
+#define nsUninstallObject_h__
+
+#include "prtypes.h"
+#include "nsSoftwareUpdate.h"
+
 
 PR_BEGIN_EXTERN_C
 
+struct nsUninstallObject : public nsInstallObject {
+
+public:
+
+  /* Public Fields */
+
+  /* Public Methods */
+
+  nsUninstallObject(nsSoftwareUpdate* inSoftUpdate, char* inRegName, char* *errorMsg);
+
+  virtual ~nsUninstallObject();
+  
+  /* Complete
+   * Uninstalls the package
+   */
+  char* Complete();
+  
+  char* Prepare();
+  
+  void Abort();
+  
+  char* toString();
+  
+private:
+  
+  /* Private Fields */
+  char* regName;     // Registry name of package
+  char* userName;    // User name of package
+  
+  /* Private Methods */
+  char* NativeComplete(char* regname);
+  
+};
 
 PR_END_EXTERN_C
+
+#endif /* nsUninstallObject_h__ */

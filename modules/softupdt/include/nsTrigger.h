@@ -53,7 +53,7 @@ public:
   /**
    * @return true if SmartUpdate is enabled
    */
-  static  PRBool UpdateEnabled();
+  static  PRBool UpdateEnabled(void);
   
   /**
    * @param componentName     version registry name of the component
@@ -100,6 +100,10 @@ public:
                              nsVersionInfo* version,
                              PRInt32 flags);
   
+
+  static PRBool ConditionalSoftwareUpdate(char* url,
+                                          char* componentName,
+                                          char* version);
   
   /**
    * Validates existence and compares versions

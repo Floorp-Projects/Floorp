@@ -16,8 +16,8 @@
  * Reserved.
  */
 
-#ifndef nsInstallPath_h__
-#define nsInstallPath_h__
+#ifndef nsInstallPatch_h__
+#define nsInstallPatch_h__
 
 #include "prtypes.h"
 #include "nsSoftwareUpdate.h"
@@ -27,7 +27,7 @@
 
 PR_BEGIN_EXTERN_C
 
-struct nsInstallPath {
+struct nsInstallPatch : public nsInstallObject {
 
 public:
 
@@ -46,48 +46,51 @@ public:
   nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
                  char* inVRName,
                  nsVersionInfo* inVInfo,
-                 char* inJarLocation);
-  
+                 char* inJarLocation,
+                 char* *errorMsg);
+
   nsInstallPatch(nsSoftwareUpdate* inSoftUpdate,
                  char* inVRName,
                  nsVersionInfo* inVInfo,
                  char* inJarLocation,
                  nsFolderSpec* folderSpec,
-                 char* inPartialPath);
+                 char* inPartialPath, 
+                 char* *errorMsg);
+
   
-  ~nsInstallPath();
+  virtual ~nsInstallPatch();
   
-  void Prepare();
+  char* Prepare(void);
   
   /* Complete
    * Completes the install:
    * - move the patched file to the final location
    * - updates the registry
    */
-  void Complete();
+  char* Complete(void);
   
-  void Abort();
+  void Abort(void);
   
-  char* toString();
+  char* toString(void);
   
 private:
   
   /* Private Fields */
-  char* vrName;              // Registry name of the component
-  nsVersionInfo* versionInfo;    // Version
-  char* jarLocation;         // Location in the JAR
-  char* patchURL;            // extracted location of diff (xpURL)
-  char* targetfile;          // source and final file (native)
-  char* patchedfile;         // temp name of patched file
+  char* vrName;                // Registry name of the component
+  nsVersionInfo* versionInfo;  // Version
+  char* jarLocation;           // Location in the JAR
+  char* patchURL;              // extracted location of diff (xpURL)
+  char* targetfile;            // source and final file (native)
+  char* patchedfile;           // temp name of patched file
   
   /* Private Methods */
-  void checkPrivileges();
-  char* NativePatch( char* srcfile, char* diffURL );
-  PRInt32 NativeReplace( char* target, char* tmpfile );
-  void   NativeDeleteFile( char* file );
+  char* checkPrivileges(void);
+  char* NativePatch( char* srcfile, char* diffURL, char* *errorMsg );
+  int   NativeReplace( char* target, char* tmpfile );
+  void  NativeDeleteFile( char* filename );
   
 };
 
 PR_END_EXTERN_C
 
-#endif /* nsInstallPath_h__ */
+#endif /* nsInstallPatch_h__ */

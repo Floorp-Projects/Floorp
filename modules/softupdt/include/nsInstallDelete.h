@@ -21,6 +21,7 @@
 
 #include "prtypes.h"
 #include "nsSoftwareUpdate.h"
+#include "nsFolderSpec.h"
 
 PR_BEGIN_EXTERN_C
 
@@ -62,7 +63,7 @@ private:
   char* registryName;		// final file to be deleted
 
   /* Private Methods */
-  void processInstallDelete();
+  void processInstallDelete(char* *errorMsg);
   int NativeComplete();
   int NativeCheckFileStatus();
 

@@ -58,10 +58,14 @@ typedef enum nsInstallType {
 } nsInstallType;
 
 typedef enum nsVersionEnum {
-  nsVersionEnum_MAJOR_DIFF =  4,
-  nsVersionEnum_MINOR_DIFF =  3,
-  nsVersionEnum_REL_DIFF   =  2,
-  nsVersionEnum_BLD_DIFF   =  1,
+  nsVersionEnum_MAJOR_DIFF       =  4,
+  nsVersionEnum_MAJOR_DIFF_MINUS = -4,
+  nsVersionEnum_MINOR_DIFF       =  3,
+  nsVersionEnum_MINOR_DIFF_MINUS = -3,
+  nsVersionEnum_REL_DIFF         =  2,
+  nsVersionEnum_REL_DIFF_MINUS   = -2,
+  nsVersionEnum_BLD_DIFF         =  1,
+  nsVersionEnum_BLD_DIFF_MINUS   = -1,
   nsVersionEnum_EQUAL      =  0
 } nsVersionEnum;
 
@@ -112,25 +116,6 @@ typedef enum nsWinRegValueEnum {
 } nsWinRegValueEnum;
 
 typedef enum nsRegistryErrorsEnum {
-  REGERR_OK            = 0,
-  REGERR_FAIL          = 1,
-  REGERR_NOMORE        = 2,
-  REGERR_NOFIND        = 3,
-  REGERR_BADREAD       = 4,
-  REGERR_BADLOCN       = 5,
-  REGERR_PARAM         = 6,
-  REGERR_BADMAGIC      = 7,
-  REGERR_BADCHECK      = 8,
-  REGERR_NOFILE        = 9,
-  REGERR_MEMORY        = 10,
-  REGERR_BUFTOOSMALL   = 11,
-  REGERR_NAMETOOLONG   = 12,
-  REGERR_REGVERSION    = 13,
-  REGERR_DELETED       = 14,
-  REGERR_BADTYPE       = 15,
-  REGERR_NOPATH        = 16,
-  REGERR_BADNAME       = 17,
-  REGERR_READONLY      = 18,
   REGERR_BADUTF8       = 19,
 
   REGERR_SECURITY      = 99,

@@ -19,15 +19,17 @@
 #include "prmem.h"
 #include "prmon.h"
 #include "prlog.h"
+#include "prthread.h"
 #include "fe_proto.h"
+#include "xp.h"
 #include "xp_str.h"
+#include "xpgetstr.h"
 #include "prefapi.h"
 #include "proto.h"
 #include "prprf.h"
 #include "prthread.h"
 #include "nsFolderSpec.h"
 #include "nsSUError.h"
-#include "xp.h"
 #include "su_folderspec.h"
 
 #ifndef MAX_PATH
@@ -69,21 +71,21 @@ PR_BEGIN_EXTERN_C
 nsFolderSpec::nsFolderSpec(char* inFolderID , char* inVRPath, char* inPackageName)
 {
   urlPath = folderID = versionRegistryPath = userPackageName = NULL;
-  folderID = PR_sprintf_append(folderID, "%s", inFolderID);
-  versionRegistryPath = PR_sprintf_append(versionRegistryPath, "%s", inVRPath);
-  userPackageName = PR_sprintf_append(userPackageName, "%s", inPackageName);
+  folderID = XP_STRDUP(inFolderID);
+  versionRegistryPath = XP_STRDUP(inVRPath);
+  userPackageName = XP_STRDUP(inPackageName);
 }
 
 nsFolderSpec::~nsFolderSpec(void)
 {
   if (folderID) 
-    PR_Free(folderID);
+    XP_FREE(folderID);
   if (versionRegistryPath) 
-    PR_Free(versionRegistryPath);
+    XP_FREE(versionRegistryPath);
   if (userPackageName) 
-    PR_Free(userPackageName);
+    XP_FREE(userPackageName);
   if (urlPath) 
-    PR_Free(urlPath);
+    XP_FREE(urlPath);
 }
 
 /*
@@ -103,9 +105,10 @@ char* nsFolderSpec::GetDirectoryPath(char* *errorMsg)
 
     } else if (XP_STRCMP(folderID, "Installed") == 0)  {
       // Then use the Version Registry path
-      urlPath = PR_sprintf_append(urlPath, "%s", versionRegistryPath);
+      urlPath = XP_STRDUP(versionRegistryPath);
     } else {
       // Built-in folder
+      /* NativeGetDirectoryPath updates urlPath */
       int err = NativeGetDirectoryPath();
       if (err != 0)
         *errorMsg = SU_GetErrorMsg3(folderID, err);
@@ -116,7 +119,10 @@ char* nsFolderSpec::GetDirectoryPath(char* *errorMsg)
 
 /**
  * Returns full path to a file. Makes sure that the full path is bellow
- * this directory (security measure
+ * this directory (security measure)
+ *
+ * Caller should free the returned string
+ *
  * @param relativePath      relative path
  * @return                  full path to a file
  */
@@ -133,10 +139,13 @@ char* nsFolderSpec::MakeFullPath(char* relativePath, char* *errorMsg)
   if (errorMsg != NULL) {
     return NULL;
   }
-  fullPath = PR_sprintf_append(fullPath, "%s%s", dir_path, GetNativePath(relativePath));
+  fullPath = XP_Cat(dir_path, GetNativePath(relativePath));
   return fullPath;
 }
 
+/* The caller is not supposed to free the memory. 
+ * XXX: Should we give a copy of the string??
+ */
 char* nsFolderSpec::toString()
 {
   char *errorMsg = NULL;
@@ -155,7 +164,7 @@ char* nsFolderSpec::toString()
  */
 char* nsFolderSpec::PickDefaultDirectory(char* *errorMsg)
 {
-  urlPath = NativePickDefaultDirectory(errorMsg);
+  urlPath = NativePickDefaultDirectory();
 
   if (urlPath == NULL)
     *errorMsg = SU_GetErrorMsg3(folderID, nsSoftUpdateError_INVALID_PATH_ERR);
@@ -207,7 +216,7 @@ int nsFolderSpec::NativeGetDirectoryPath()
   /* Store it in the object */
   if (folderPath != NULL) {
     urlPath = NULL;
-    urlPath = PR_sprintf_append(urlPath, "%s", folderPath);
+    urlPath = XP_STRDUP(folderPath);
     XP_FREE(folderPath);
     return 0;
   }
@@ -260,7 +269,7 @@ char* nsFolderSpec::GetNativePath(char* path)
  * NativePickDefaultDirectory
  * Platform-specific implementation of GetDirectoryPath
  */
-char* nsFolderSpec::NativePickDefaultDirectory(char* *errorMsg)
+char* nsFolderSpec::NativePickDefaultDirectory(void)
 {
   su_PickDirTimer callback;
   char * packageName;
@@ -283,7 +292,7 @@ char* nsFolderSpec::NativePickDefaultDirectory(char* *errorMsg)
       callback.prompt = prompt;
       FE_SetTimeout( pickDirectoryCallback, &callback, 1 );
       while (!callback.done)  /* Busy loop for now */
-        PR_Yield(); /* java_lang_Thread_yield(WHAT?); */
+        PR_Sleep(PR_INTERVAL_NO_WAIT); /* java_lang_Thread_yield(WHAT?); */
     }
 
   return callback.fileName;
@@ -291,7 +300,6 @@ char* nsFolderSpec::NativePickDefaultDirectory(char* *errorMsg)
 
 PRBool nsFolderSpec::NativeIsJavaDir()
 {
-  int i;
   char* folderName;
 
   /* Get the name of the package to prompt for */
@@ -300,6 +308,7 @@ PRBool nsFolderSpec::NativeIsJavaDir()
 #ifdef XXX
   PR_ASSERT( folderName );
   if ( folderName != NULL) {
+    int i;
     for (i=0; DirectoryTable[i].directoryName[0] != 0; i++ ) {
       if ( strcmp(folderName, DirectoryTable[i].directoryName) == 0 )
         return DirectoryTable[i].bJavaDir;

@@ -43,15 +43,15 @@ public:
   /* Prepare
    * Extracts	file out of	the	JAR	archive	into the temp directory
    */
-  char* Prepare();
+  char* Prepare(void);
   
   /* Complete
    * Completes the install by executing the file
    * Security hazard: make sure we request the right permissions
    */
-  char* Complete();
+  char* Complete(void);
   
-  void Abort();
+  void Abort(void);
   
   char* toString();
   
@@ -64,8 +64,8 @@ private:
   char* cmdline;     // constructed command-line
   
   /* Private Methods */
-  void NativeComplete();
-  void NativeAbort();
+  char* NativeComplete(void);
+  void NativeAbort(void);
   
 };
 

@@ -93,7 +93,7 @@ private:
    * NativePickDefaultDirectory
    * Platform-specific implementation of GetDirectoryPath
    */
-  char* NativePickDefaultDirectory(char* *errorMsg);
+  char* NativePickDefaultDirectory(void);
 
   PRBool NativeIsJavaDir();
 

@@ -117,22 +117,22 @@ nsVersionEnum nsVersionInfo::compareTo(nsVersionInfo* vi)
         else if ( build > vi->build )
           diff = nsVersionEnum_BLD_DIFF;
         else
-          diff = -nsVersionEnum_BLD_DIFF;
+          diff = nsVersionEnum_BLD_DIFF_MINUS;
       }
       else if ( release > vi->release )
         diff = nsVersionEnum_REL_DIFF;
       else
-        diff = -nsVersionEnum_REL_DIFF;
+        diff = nsVersionEnum_REL_DIFF_MINUS;
     }
     else if (  minor > vi->minor )
       diff = nsVersionEnum_MINOR_DIFF;
     else
-      diff = -nsVersionEnum_MINOR_DIFF;
+      diff = nsVersionEnum_MINOR_DIFF_MINUS;
   }
   else if ( major > vi->major )
     diff = nsVersionEnum_MAJOR_DIFF;
   else
-    diff = -nsVersionEnum_MAJOR_DIFF;
+    diff = nsVersionEnum_MAJOR_DIFF_MINUS;
   
   return diff;
 }

@@ -291,11 +291,12 @@ public:
                        char* jarSource,   
                        nsFolderSpec* folderSpec, 
                        char* subdir, 
-                       PRBool forceInstall);
+                       PRBool forceInstall,
+                       char* *errorMsg);
     
 
   /* Uninstall */
-  PRInt32 Uninstall(char* packageName);
+  PRInt32 Uninstall(char* packageName, char* *errorMsg);
 
 
   /*******************************
@@ -308,9 +309,9 @@ public:
    * altogether this makes more sense for now. Creating a new object
    * would only lead to more JRI hell, especially on the Mac
    *******************************/
-  void OpenProgressDialog();
+  void OpenProgressDialog(void);
     
-  void CloseProgressDialog();
+  void CloseProgressDialog(void);
 
   void SetProgressDialogItem(char* message);
 
@@ -327,13 +328,14 @@ private:
   nsProgressDetails* confdlg;      /* Detail confirmation dialog */
 
   PRInt32 userChoice;              /* User feedback: -1 unknown, 0 is cancel, 1 is OK */
-  PRInt32 progwin;                 /* pointer to native progress window */
+  void* progwin;                   /* pointer to native progress window */
   PRBool silent;                   /* Silent upgrade? */
   PRBool force;                    /* Force install? */
   PRInt32 lastError;               /* the most recent non-zero error */
   char* filesep;                   /* the platform-specific file separator */
 
   char* installerJarName;          /* Name of the installer file */
+  unsigned long installerJarNameLength;    /* Length of Name of the installer file */
   char* jarName;                   /* Name of the JAR file */
   char* jarCharset;                /* Charset for filenames in JAR */
   void* zigPtr;                    /* Stores the pointer to ZIG * */
@@ -347,7 +349,7 @@ private:
   /*
    * Reads in the installer certificate, and creates its principal
    */
-  char* InitializeInstallerCertificate();
+  PRInt32 InitializeInstallerCertificate(char* *errorMsg);
 
   /*
    * checks if our principal has privileges for silent install
@@ -358,7 +360,7 @@ private:
   /* Request the security privileges, so that the security dialogs
    * pop up
    */
-  void RequestSecurityPrivileges();
+  PRInt32 RequestSecurityPrivileges(char* *errorMsg);
 
 
   /**
@@ -393,11 +395,11 @@ private:
    * Since SoftUpdate JSObject can only be created by C code
    * we cannot be spoofed
    */
-  void VerifyJSObject(void* jsObj);
+  char* VerifyJSObject(void* jsObj);
 
   /* Open/close the jar file
    */
-  char* OpenJARFile();
+  PRInt32 OpenJARFile(char* *errorMsg);
   void CloseJARFile();
 
   /* getCertificates
@@ -407,6 +409,8 @@ private:
    */
   void* getCertificates(void* zigPtr, char* inJarLocation);
 
+  void freeCertificates(void* prins);
+
   char* NativeExtractJARFile(char* inJarLocation, char* finalFile, char* *errorMsg);
 
   PRInt32 NativeMakeDirectory(char* path);;
@@ -415,13 +419,13 @@ private:
 
   char* NativeFileURLToNative(char* Dir, char* path);
 
-  char** ExtractDirEntries(char* Dir);
+  char** ExtractDirEntries(char* Dir, int *length);
 
-  PRInt32  NativeOpenProgDlg(char* packageName);
-  void     NativeCloseProgDlg(PRInt32 progptr);
-  void     NativeSetProgDlgItem(PRInt32 progptr, char* message);
-  void     NativeSetProgDlgRange(PRInt32 progptr, PRInt32 max);
-  void     NativeSetProgDlgThermo(PRInt32 progptr, PRInt32 value);
+  void*    NativeOpenProgDlg(char* packageName);
+  void     NativeCloseProgDlg(void* progptr);
+  void     NativeSetProgDlgItem(void* progptr, char* message);
+  void     NativeSetProgDlgRange(void* progptr, PRInt32 max);
+  void     NativeSetProgDlgThermo(void* progptr, PRInt32 value);
   PRBool   UserWantsConfirm();
 
 };

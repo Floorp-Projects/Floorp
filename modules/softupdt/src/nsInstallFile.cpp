@@ -18,10 +18,15 @@
 
 #include "nsCRT.h"
 #include "xp.h"
+#include "su_folderspec.h"
+#include "su_instl.h"
+
+#include "nsSoftUpdateEnums.h"
+#include "NSReg.h"
 #include "nsInstallFile.h"
 #include "nsVersionRegistry.h"
 #include "nsSUError.h"
-#include "nsSoftUpdateEnums.h"
+
 #include "nsPrivilegeManager.h"
 #include "nsTarget.h"
 
@@ -78,15 +83,19 @@ nsInstallFile::nsInstallFile(nsSoftwareUpdate* inSoftUpdate,
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
 
-  /* XXX: We are using security to display the dialog. Thus depth may not matter */
   if ((privMgr != NULL) && (impersonation != NULL)) {
+    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
+     * Or may be we should get rid of impersonation
+     */
     privMgr->enablePrivilege(impersonation, 1);
 
     /* check the security permissions */
     target = nsTarget::findTarget(INSTALL_PRIV);
     if (target != NULL) {
-      /* XXX: we need a way to indicate that a dialog box should appear. */
-      privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1);
+      if (!privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1)) {
+        *errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+        return;
+      }
     }
   }
         
@@ -143,8 +152,10 @@ char* nsInstallFile::Prepare()
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
 
-  /* XXX: We are using security to display the dialog. Thus depth may not matter */
   if ((privMgr != NULL) && (impersonation != NULL)) {
+    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
+     * Or may be we should get rid of impersonation
+     */
     PRBool allowed = privMgr->enablePrivilege(impersonation, 1);
     if (allowed == PR_FALSE) {
       errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
@@ -153,7 +164,6 @@ char* nsInstallFile::Prepare()
 
     /* check the security permissions */
     if (target != NULL) {
-      /* XXX: we need a way to indicate that a dialog box should appear. */
       PRBool allowed = privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1);
       if (allowed == PR_FALSE) {
         errorMsg = SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
@@ -195,14 +205,17 @@ char* nsInstallFile::Complete()
   nsTarget* impersonation = nsTarget::findTarget(IMPERSONATOR);
   nsPrivilegeManager* privMgr = nsPrivilegeManager::getPrivilegeManager();
 
-  /* XXX: We are using security to display the dialog. Thus depth may not matter */
   if ((privMgr != NULL) && (impersonation != NULL)) {
+    /* XXX: We should get the SystemPrincipal and enablePrivilege on that. 
+     * Or may be we should get rid of impersonation
+     */
     privMgr->enablePrivilege(impersonation, 1);
     
     /* check the security permissions */
     if (target != NULL) {
-      /* XXX: we need a way to indicate that a dialog box should appear. */
-      privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1);
+      if (!privMgr->enablePrivilege(target, softUpdate->GetPrincipal(), 1)) {
+        return SU_GetErrorMsg3("Permssion was denied", nsSoftUpdateError_ACCESS_DENIED);
+      }
     }
   }
   
