@@ -2421,8 +2421,8 @@ MOZ_ARG_DISABLE_BOOL(pedantic,
 [  --disable-pedantic      Issue all warnings demanded by strict ANSI C ],
   _PEDANTIC= )
 if test "$_PEDANTIC"; then
-  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} -pedantic"
-  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} -pedantic"
+  _WARNINGS_CFLAGS="${_WARNINGS_CFLAGS} ${_COMPILER_PREFIX}-pedantic"
+  _WARNINGS_CXXFLAGS="${_WARNINGS_CXXFLAGS} ${_COMPILER_PREFIX}-pedantic"
 fi
 
 dnl pass -Wno-long-long to the compiler
