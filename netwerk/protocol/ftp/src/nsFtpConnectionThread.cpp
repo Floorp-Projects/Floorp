@@ -1641,7 +1641,7 @@ nsFtpState::S_pasv() {
         
         if (sTrans) {
             PRNetAddr addr;
-            rv = sTrans->GetAddress(&addr);
+            rv = sTrans->GetPeerAddr(&addr);
             if (NS_SUCCEEDED(rv)) {
                 if (addr.raw.family == PR_AF_INET6 && !PR_IsNetAddrType(&addr, PR_IpAddrV4Mapped)) {
                     mIPv6ServerAddress = (char *) nsMemory::Alloc(100);

@@ -251,8 +251,7 @@ private:
 
     PRInt32 SendMessageInFile();
 
-    // extract domain name from userName field in the url...
-    const char * GetUserDomainName();
+    void GetUserDomainName(nsACString& domainName);
     nsresult GetPassword(char **aPassword);
     nsresult GetUsernamePassword(char **aUsername, char **aPassword);
     nsresult PromptForPassword(nsISmtpServer *aSmtpServer, nsISmtpUrl *aSmtpUrl, const PRUnichar **formatStrings, char **aPassword);
