@@ -112,7 +112,7 @@ nsMessengerBootstrap::Handle(nsICommandLine* aCmdLine)
     }
 
     wwatch->OpenWindow(nsnull, "chrome://messenger/content/", "_blank",
-                       "chrome,dialog=no,all", argsArray, getter_AddRefs(opened));
+                       "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar,dialog=no", argsArray, getter_AddRefs(opened));
     aCmdLine->SetPreventDefault(PR_TRUE);
   } 
 
