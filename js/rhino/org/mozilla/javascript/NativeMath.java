@@ -48,8 +48,8 @@ public class NativeMath extends ScriptableObject {
         m.setPrototype(getObjectPrototype(scope));
         m.setParentScope(scope);
 
-        String[] names = { "acos", "asin", "atan", "atan2", "ceil",
-                           "cos", "floor", "log", "random",
+        String[] names = { "atan", "atan2", "ceil",
+                           "cos", "floor", "random",
                            "sin", "sqrt", "tan" };
 
         m.defineFunctionProperties(names, java.lang.Math.class,
@@ -57,10 +57,18 @@ public class NativeMath extends ScriptableObject {
 
         // These functions exist in java.lang.Math, but
         // are overloaded. Define our own wrappers.
-        String[] localNames = { "abs", "exp", "max", "min", "round", "pow" };
+        String[] localNames = { "acos", "asin", "abs", "exp", "max", "min",
+                                            "round", "pow", "log" };
 
         m.defineFunctionProperties(localNames, NativeMath.class,
                                    ScriptableObject.DONTENUM);
+
+        /*
+            have to fix up the length property for max & min
+            which are varargs form, but need to have a length of 2
+        */
+        ((FunctionObject)m.get("max", scope)).setLength((short)2);
+        ((FunctionObject)m.get("min", scope)).setLength((short)2);
 
         final int attr = ScriptableObject.DONTENUM  |
                          ScriptableObject.PERMANENT |
@@ -82,7 +90,7 @@ public class NativeMath extends ScriptableObject {
 
         return m;
     }
-
+    
     public NativeMath() {
     }
 
@@ -99,16 +107,48 @@ public class NativeMath extends ScriptableObject {
             return d;
     }
 
-    public double max(double x, double y) {
-        if ((x != x) || (y != y))
-            return Double.NEGATIVE_INFINITY;
-        return Math.max(x, y);
+    public double acos(double d) {
+        if ((d != d) 
+                || (d > 1.0)
+                || (d < -1.0))
+            return Double.NaN;
+        return Math.acos(d);
     }
 
-    public double min(double x, double y) {
-        if ((x != x) || (y != y))
-            return Double.POSITIVE_INFINITY;
-        return Math.min(x, y);
+    public double asin(double d) {
+        if ((d != d) 
+                || (d > 1.0)
+                || (d < -1.0))
+            return Double.NaN;
+        return Math.asin(d);
+    }
+
+    static public double max(Context cx, Scriptable thisObj, 
+                                    Object[] args, Function funObj) 
+    {        
+        double result = Double.NEGATIVE_INFINITY;
+        if (args.length == 0)
+            return result;
+        for (int i = 0; i < args.length; i++) {
+            double d = ScriptRuntime.toNumber(args[i]);
+            if (d != d) return d;
+            result = Math.max(result, d);
+        }
+        return result;
+    }
+
+    static public double min(Context cx, Scriptable thisObj, 
+                                    Object[] args, Function funObj)
+    {
+        double result = Double.POSITIVE_INFINITY;
+        if (args.length == 0)
+            return result;
+        for (int i = 0; i < args.length; i++) {
+            double d = ScriptRuntime.toNumber(args[i]);
+            if (d != d) return d;
+            result = Math.min(result, d);
+        }
+        return result;
     }
 
     public double round(double d) {
@@ -129,6 +169,15 @@ public class NativeMath extends ScriptableObject {
     public double pow(double x, double y) {
         if (y == 0)
             return 1.0;   // Java's pow(NaN, 0) = NaN; we need 1
+        if ((x == 0) && (y < 0)) {
+            Double d = new Double(x);
+            if (d.equals(new Double(0)))            // x is +0
+                return Double.POSITIVE_INFINITY;    // Java is -Infinity
+            /* if x is -0 and y is an odd integer, -Infinity */
+            if (((int)y == y) && (((int)y & 0x1) == 1))
+                return Double.NEGATIVE_INFINITY;
+            return Double.POSITIVE_INFINITY;
+        }
         return Math.pow(x, y);
     }
     
@@ -139,4 +188,11 @@ public class NativeMath extends ScriptableObject {
             return 0.0;
         return Math.exp(d);
     }
+
+    public double log(double x) {
+        if (x < 0)
+            return Double.NaN;   // Java's log(<0) = -Infinity; we need NaN
+        return Math.log(x);
+    }
+    
 }
