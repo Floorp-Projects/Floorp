@@ -481,7 +481,7 @@ function getAccountFromServerId(serverId) {
 // get the array of form elements for the given page
 //
 function getPageFormElements(pageId) {
-  try {
+ try {
 	var pageFrame = top.frames[pageId];
 	var pageDoc = top.frames[pageId].document;
 	var pageElements = pageDoc.getElementsByTagName("FORM")[0].elements;
