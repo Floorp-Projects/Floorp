@@ -116,6 +116,7 @@ pull_seamonkey:
 clobber_all:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	rd /s /q dist
+	set CLOBBER_ALL=1
 	nmake -f makefile.win clobber_all 
 
 depend:
