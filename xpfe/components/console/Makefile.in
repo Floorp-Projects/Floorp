@@ -27,34 +27,6 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-IS_COMPONENT    = 1
-
 DIRS		= resources
 
-MODULE		= consoleservice
-LIBRARY_NAME	= consoleservice
-IS_COMPONENT	= 1
-
-CPPSRCS		=				\
-		nsConsoleMessage.cpp		\
-		nsConsoleService.cpp		\
-		nsConsoleServiceModule.cpp	\
-		nsScriptError.cpp		\
-		$(NULL)
-
-XPIDLSRCS	=				\
-		nsIConsoleService.idl		\
-		nsIConsoleMessage.idl		\
-		nsIConsoleListener.idl		\
-		nsIScriptError.idl		\
-		$(NULL)
-
-EXTRA_DSO_LDOPTS = \
-		$(MOZ_COMPONENT_LIBS) \
-		$(NULL)
-
 include $(topsrcdir)/config/rules.mk
-
-# install::
-# 	$(INSTALL) $(srcdir)/nsConsoleService.js $(DIST)/bin/components
-

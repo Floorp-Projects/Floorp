@@ -22,47 +22,9 @@
 # copied in part from ../timebomb/makefile.win
 
 DEPTH         = ..\..\..
-MODULE        = consoleservice
-DLL           = .\$(OBJDIR)\$(MODULE).dll
-MAKE_OBJ_TYPE = DLL
 
 include <$(DEPTH)/config/config.mak>
 
 DIRS          = resources
 
-EXPORTS = \
-             $(NULL)
-
-XPIDLSRCS =					\
-	.\nsIConsoleService.idl			\
-	.\nsIConsoleMessage.idl			\
-	.\nsIConsoleListener.idl		\
-	.\nsIScriptError.idl			\
-	$(NULL)
-
-LINCS = \
-	$(NULL)
-
-LLIBS = \
-	$(LIBNSPR) \
-	$(DIST)\lib\xpcom.lib \
-	$(NULL)
-
-OBJS = \
-	.\$(OBJDIR)\nsConsoleMessage.obj	\
-	.\$(OBJDIR)\nsConsoleService.obj	\
-	.\$(OBJDIR)\nsConsoleServiceModule.obj	\
-	.\$(OBJDIR)\nsScriptError.obj		\
-	$(NULL)
-
 include <$(DEPTH)\config\rules.mak>
-
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).dll $(DIST)\bin\components
-
-clobber::
-    rm -f $(DIST)\bin\components\$(MODULE).dll
-
-
-
-
