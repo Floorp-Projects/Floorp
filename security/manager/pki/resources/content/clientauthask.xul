@@ -12,8 +12,7 @@
    -
    -
    - Contributor(s):
-   -  Javier Delgadillo <javi@netscape.com>
-   -  Bob Lord <lord@netscape.com>
+   - David Drinan (ddrinan@netscape.com)
   -->
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
@@ -56,8 +55,6 @@
      style="width: 10ex" onclick="doOK();" disabled="false"/> 
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
-  <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
   </box>
 </box>
 </window>
