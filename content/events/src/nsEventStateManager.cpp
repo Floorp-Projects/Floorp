@@ -230,7 +230,7 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
                       if (mDocument) {
                         mCurrentTarget = nsnull;
                         
-                        nsCOMPtr<nsIScriptContextOwner> contextOwner = dont_QueryInterface(mDocument->GetScriptContextOwner());
+                        nsCOMPtr<nsIScriptContextOwner> contextOwner = getter_AddRefs(mDocument->GetScriptContextOwner());
                         if(!contextOwner) break;
 
                         nsCOMPtr<nsIScriptGlobalObject> globalObject;
