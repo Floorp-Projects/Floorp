@@ -53,8 +53,8 @@ toolbarbutton.bookmark-item {
   color: black !important;
 }
 
-toolbarbutton.bookmark-item:hover,
-toolbarbutton.bookmark-item:hover:active {
+.bookmark-item:hover,
+.bookmark-item:hover:active {
   text-decoration: underline;
   color: black !important;
 }
@@ -128,37 +128,31 @@ treechildren:-moz-tree-image(Name) {
 .bookmark-item,
 treechildren:-moz-tree-image(Name) {
   margin: 0px 2px;
-  list-style-image: url("chrome://browser/skin/bookmark-icon-n.png");
+  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  -moz-image-region: rect(0px 16px 16px 0px);
 }
-
 .bookmark-item:hover,
 treechildren:-moz-tree-image(Name) {
-  list-style-image: url("chrome://browser/skin/bookmark-icon-h.png");
+  -moz-image-region: rect(0px 32px 16px 16px);
 }
-
 .bookmark-item:active,
 treechildren:-moz-tree-image(Name) {
-  list-style-image: url("chrome://browser/skin/bookmark-icon-a.png");
+  -moz-image-region: rect(0px 48px 16px 32px);
 }
 
 .bookmark-item[container="true"],
 treechildren:-moz-tree-image(Name, container) {
-  list-style-image: url("chrome://browser/skin/bookmark-folder-n.png");
+  list-style-image: url("chrome://browser/skin/bookmarks.png") !important;
+  -moz-image-region: rect(16px 16px 32px 0px);
 }
-
 .bookmark-item[container="true"]:hover,
 treechildren:-moz-tree-image(Name, container) {
-  list-style-image: url("chrome://browser/skin/bookmark-folder-h.png");
+  -moz-image-region: rect(16px 32px 32px 16px);
 }
-
 .bookmark-item[open="true"],
-treechildren:-moz-tree-image(Name, open) {
-  list-style-image: url("chrome://browser/skin/bookmark-folder-a.png");
-}
-
 .bookmark-item[container="true"][open="true"],
 treechildren:-moz-tree-image(Name, open) {
-  list-style-image: url("chrome://browser/skin/bookmark-folder-a.png");
+  -moz-image-region: rect(16px 48px 32px 32px);
 }
 
 
@@ -273,7 +267,6 @@ toolbar[mode="text"] .toolbarbutton-text {
   padding: 4px 4px 5px 4px !important;
   margin: 5px !important;
 }
-
 
 #back-button {
   -moz-binding: url('chrome://browser/skin/browser.xml#toolbar-menu-button');
