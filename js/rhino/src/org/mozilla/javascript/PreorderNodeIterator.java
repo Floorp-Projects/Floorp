@@ -21,6 +21,7 @@
  * Contributor(s): 
  * Norris Boyd
  * Roger Lawrence
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -36,8 +37,6 @@
 
 package org.mozilla.javascript;
 
-import java.util.Stack;
-
 /**
  * This class implements a preorder tree iterator for the Node class.
  *
@@ -46,8 +45,7 @@ import java.util.Stack;
  */
 public class PreorderNodeIterator {
     public PreorderNodeIterator(Node n) {
-    	start = n;
-    	stack = new Stack();
+        start = n;
     }
 
     public Node currentNode() {
@@ -55,38 +53,69 @@ public class PreorderNodeIterator {
     }
 
     public Node getCurrentParent() {
-    	return currentParent;
+        return currentParent;
     }
 
     public Node nextNode() {
-        if (current == null)
-            return current = start;
-    	if (current.first != null) {
-    	    stack.push(current);
-    	    currentParent = current;
-    	    current = current.first;
-    	} else {
-    	    current = current.next;
-    	    boolean isEmpty;
-            for (;;) {
-                isEmpty = stack.isEmpty();
-                if (isEmpty || current != null)
-    		        break;
-                current = (Node) stack.pop();
+        if (current == null) {
+            current = start;
+        }
+        else if (current.first != null) {
+            stackPush(current);
+            currentParent = current;
+            cachedPrev = null;
+            current = current.first;
+        }
+        else {
+            cachedPrev = current;
+            current = current.next;
+            while (current == null && stackTop != 0) {
+                --stackTop;
+                current = stack[stackTop];
+                stack[stackTop] = null;
+
+                cachedPrev = current;
                 current = current.next;
-    	    }
-    	    currentParent = isEmpty ? null : (Node) stack.peek();
-    	}
-    	return current;
+            }
+            currentParent = (current == null) ? null : stack[stackTop - 1];
+        }
+        return current;
     }
 
     public void replaceCurrent(Node newNode) {
-        currentParent.replaceChild(current, newNode);
+        if (cachedPrev != null && cachedPrev.next == current) {
+            // Check cachedPrev.next == current is necessary due to possible
+            // tree mutations
+            currentParent.replaceChildAfter(cachedPrev, newNode);
+        }
+        else {
+            currentParent.replaceChild(current, newNode);
+        }
         current = newNode;
+    }
+    
+    private void stackPush(Node n) {
+        int N = stackTop;
+        if (N == 0) {
+            stack = new Node[16];
+        }
+        else if (N == stack.length) {
+            Node[] tmp = new Node[N * 2];
+            System.arraycopy(stack, 0, tmp, 0, N);
+            stack = tmp;
+        }
+        stack[N] = n;
+        stackTop = N + 1;
     }
 
     private Node start;
+    private Node[] stack;
+    private int stackTop;
+
     private Node current;
     private Node currentParent;
-    private Stack stack;
+
+//cache previous sibling of current not to search for it when
+//replacing current
+    private Node cachedPrev; 
 }

@@ -254,6 +254,15 @@ public class Node implements Cloneable {
         child.next = null;
     }
 
+    public void replaceChildAfter(Node prevChild, Node newChild) {
+        Node child = prevChild.next;
+        newChild.next = child.next;
+        prevChild.next = newChild;
+        if (child == last)
+            last = newChild;
+        child.next = null;
+    }
+
     public static final int
         TARGET_PROP       =  1,
         BREAK_PROP        =  2,
