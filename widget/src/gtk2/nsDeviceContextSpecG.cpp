@@ -16,11 +16,13 @@
  * Reserved.
  */
 
+#include <glib.h>
 #include "nsDeviceContextSpecG.h"
 //#include "prmem.h"
 //#include "plstr.h"
 
-#include "stdlib.h"  // getenv() on Solaris/CC
+// this isn't needed since we arn't useing getenv() anymore in here (pav)
+//#include "stdlib.h"  // getenv() on Solaris/CC
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecGTK
@@ -55,7 +57,7 @@ NS_IMPL_RELEASE(nsDeviceContextSpecGTK)
  */
 NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 {
-  char *path;
+  gchar *path;
 
   // XXX for now, neutering this per rickg until dcone can play with it
   
@@ -72,13 +74,9 @@ NS_IMETHODIMP nsDeviceContextSpecGTK :: Init(PRBool	aQuiet)
 
   // PWD, HOME, or fail 
 
-  if ( ( path = getenv( "PWD" ) ) == (char *) NULL ) 
-	if ( ( path = getenv( "HOME" ) ) == (char *) NULL )
-  		strcpy( mPrData.path, "netscape.ps" );
-  if ( path != (char *) NULL )
-	sprintf( mPrData.path, "%s/netscape.ps", path );
-  else
-	return NS_ERROR_FAILURE;
+  path = g_get_home_dir();
+  sprintf(mPrData.path, "%s/netscape.ps", path);
+  g_free(path);
 
   ::UnixPrDialog( &mPrData );
   if ( mPrData.cancel == PR_TRUE ) 

@@ -25,8 +25,10 @@
 
 #include <X11/Xatom.h>
 
-#undef NOISY_FONTS
-#undef REALLY_NOISY_FONTS
+//#undef NOISY_FONTS
+//#undef REALLY_NOISY_FONTS
+#define NOISY_FONTS
+#define REALLY_NOISY_FONTS
 
 static NS_DEFINE_IID(kIFontMetricsIID, NS_IFONT_METRICS_IID);
 
@@ -116,8 +118,11 @@ NS_IMETHODIMP nsFontMetricsGTK::Init(const nsFont& aFont, nsIDeviceContext* aCon
 #ifdef DEBUG
   static PRBool firstTime = 1;
   if (firstTime) {
-    if (getenv("GECKO_SCALE_FONTS")) {
+    gchar *gsf = g_getenv("GECKO_SCALE_FONTS");
+    if (gsf)
+    {
       allowFontScaling = PR_TRUE;
+      g_free(gsf);
     }
   }
 #endif

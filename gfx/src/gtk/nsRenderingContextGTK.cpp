@@ -570,6 +570,7 @@ NS_IMETHODIMP nsRenderingContextGTK::DestroyDrawingSurface(nsDrawingSurface aDS)
 
   g_return_val_if_fail ((surface != NULL), NS_ERROR_FAILURE);
   g_return_val_if_fail ((surface->drawable != NULL), NS_ERROR_FAILURE);
+  ::gdk_gc_unref (surface->gc);
   ::gdk_pixmap_unref (surface->drawable);
 
   delete surface;
