@@ -80,6 +80,8 @@ function createShortcuts()
   filePalmSyncInstallExe    = getFolder("Program", "PalmSyncInstall.exe");
   scDescPalmSyncInstall     = "Address Book Palm Sync Install";
   scDescPalmSyncUninstall   = "Address Book Palm Sync Uninstall";
+  filePalmSyncReadme        = getFolder("Program", "palm.html");
+  scDescPalmSyncReadme      = "Palm Sync User Guide";
   scExeDesc                 = "Mail";
   scParam                   = "-mail";
   scFolderName              = "$ProductName$";
@@ -204,6 +206,13 @@ function createShortcuts()
       /* create the shortcuts in the new sub folder */
       File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncInstall, fProgram, "", filePalmSyncInstallExe, 0);
       File.windowsShortcut(filePalmSyncInstallExe, fStartMenuPalmSync, scDescPalmSyncUninstall, fProgram, "/u", filePalmSyncInstallExe, 0);
+
+      // only create the palm sync readme shortcut if the file exist
+      if(File.exists(filePalmSyncReadme))
+      {
+        /* create the shortcuts in the new sub folder */
+        File.windowsShortcut(filePalmSyncReadme, fStartMenuPalmSync, scDescPalmSyncReadme, fProgram, "", filePalmSyncReadme, 0);
+      }
     }
 
     //
