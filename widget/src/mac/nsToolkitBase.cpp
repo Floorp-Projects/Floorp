@@ -202,16 +202,14 @@ void nsToolkitBase::SetupQuartzRendering()
 
 
 // see
-// http://developer.apple.com/techpubs/macosx/Darwin/General/IOKitFundamentals/PowerMgmt/chapter_10_section_8.html
+// http://developer.apple.com/documentation/DeviceDrivers/Conceptual/IOKitFundamentals/PowerMgmt/chapter_10_section_3.html
 
 static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural_t messageType, void * messageArgument)
 {
   switch (messageType)
   {
     case kIOMessageSystemWillSleep:
-      // Handle demand sleep (such as sleep caused by running out of
-      // batteries, closing the lid of a laptop, or selecting
-      // sleep from the Apple menu.
+      // System is going to sleep now.
       nsToolkitBase::PostSleepWakeNotification("sleep_notification");
       ::IOAllowPowerChange(gRootPort, (long)messageArgument);
       break;
@@ -221,7 +219,7 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       // and will sleep soon so you must either allow or cancel
       // this notification. Important: if you don’t respond, there will
       // be a 30-second timeout before the computer sleeps.
-      nsToolkitBase::PostSleepWakeNotification("sleep_notification");
+      // In Mozilla's case, we always allow sleep.
       ::IOAllowPowerChange(gRootPort,(long)messageArgument);
       break;
 
@@ -230,7 +228,6 @@ static void ToolkitSleepWakeCallback(void *refCon, io_service_t service, natural
       nsToolkitBase::PostSleepWakeNotification("wake_notification");
       break;
   }
-  
 }
 
 void
@@ -271,7 +268,7 @@ nsToolkitBase::RemoveSleepWakeNotifcations()
 {
   if (mSleepWakeNotificationRLS)
   {
-    IODeregisterForSystemPower(&mPowerNotifier);
+    ::IODeregisterForSystemPower(&mPowerNotifier);
     ::CFRunLoopRemoveSource(::CFRunLoopGetCurrent(),
                           mSleepWakeNotificationRLS,
                           kCFRunLoopDefaultMode);
