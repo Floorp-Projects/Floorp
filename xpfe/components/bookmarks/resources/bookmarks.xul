@@ -102,7 +102,7 @@
 >
        <treeitem uri="..." persist="open" web:status="rdf:http://home.netscape.com/WEB-rdf#status" rdf:type="rdf:http://www.w3.org/1999/02/22-rdf-syntax-ns#type" loading="rdf:http://home.netscape.com/NC-rdf#loading">
          <treerow>
-           <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+           <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name" src="rdf:http://home.netscape.com/NC-rdf#Icon" />
            <treecell value="rdf:http://home.netscape.com/NC-rdf#URL"/>
            <treecell value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
            <treecell value="rdf:http://home.netscape.com/NC-rdf#Description"/>
