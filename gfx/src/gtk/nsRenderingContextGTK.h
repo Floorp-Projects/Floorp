@@ -220,20 +220,7 @@ public:
   //locals
   NS_IMETHOD CommonInit();
 
-  void CreateClipRegion() {
-    static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-    if (mClipRegion)
-      return;
-
-    PRUint32 w, h;
-    mSurface->GetSize(&w, &h);
-    
-    mClipRegion = do_CreateInstance(kRegionCID);
-    if (mClipRegion) {
-      mClipRegion->Init();
-      mClipRegion->SetTo(0,0,w,h);
-    }
-  }
+  void CreateClipRegion();
 
   GdkGC *GetGC() {
     if (!mGC)
