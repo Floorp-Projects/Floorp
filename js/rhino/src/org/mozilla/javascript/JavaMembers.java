@@ -515,18 +515,20 @@ class JavaMembers
     private static MemberBox extractGetMethod(MemberBox[] methods,
                                               boolean isStatic)
     {
-         // Grab and inspect the getter method; does it have an empty parameter
-         // list with a return value (eg. a getSomething() or isSomething())?
-        if (methods.length == 1) {
-            MemberBox method = methods[0];
-            // Make sure the method static-ness is preserved for this property.
-            if (!isStatic || method.isStatic()) {
-                if (method.argTypes.length == 0) {
-                    Class type = method.method().getReturnType();
-                    if (type != Void.TYPE) {
-                        return method;
-                    }
+        // Inspect the list of all MemberBox for the only one having no
+        // parameters
+        for (int methodIdx = 0; methodIdx < methods.length; methodIdx++) {
+            MemberBox method = methods[methodIdx];
+            // Does getter method have an empty parameter list with a return
+            // value (eg. a getSomething() or isSomething())?
+            if (method.argTypes.length == 0
+                && (!isStatic || method.isStatic()))
+            {
+                Class type = method.method().getReturnType();
+                if (type != Void.TYPE) {
+                    return method;
                 }
+                break;
             }
         }
         return null;
