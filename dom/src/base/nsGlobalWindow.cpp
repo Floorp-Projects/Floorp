@@ -1205,23 +1205,21 @@ NS_IMETHODIMP GlobalWindowImpl::Confirm(JSContext* cx, jsval* argv,
 }
 
 NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv, 
-   PRUint32 argc, nsString& aReturn)
+   PRUint32 argc, jsval* aReturn)
 {
    NS_ENSURE_STATE(mDocShell);
 
    nsresult ret = NS_OK;
-   nsAutoString str, initial;
+   nsAutoString message, initial;
 
-   aReturn.Truncate();
-   if(argc > 0)
-      {
-      nsJSUtils::nsConvertJSValToString(str, cx, argv[0]);
+   if(argc > 0) {
+      nsJSUtils::nsConvertJSValToString(message, cx, argv[0]);
    
       if(argc > 1)
          nsJSUtils::nsConvertJSValToString(initial, cx, argv[1]);
       else 
          initial.AssignWithConversion("undefined");
-      }
+   }
 
    nsCOMPtr<nsIPrompt> prompter(do_GetInterface(mDocShell));
 
@@ -1229,18 +1227,18 @@ NS_IMETHODIMP GlobalWindowImpl::Prompt(JSContext* cx, jsval* argv,
 
    PRBool b;
    PRUnichar* uniResult = nsnull;
-   ret = prompter->Prompt(nsnull, str.GetUnicode(), nsnull,
+   ret = prompter->Prompt(nsnull, message.GetUnicode(), nsnull,
                           initial.GetUnicode(), &uniResult, &b);
-   aReturn = uniResult;
-   if(uniResult)
+
+   if (NS_SUCCEEDED(ret) && uniResult && b) {
+      JSString *jsret = JS_NewUCStringCopyZ(cx, uniResult);
+      *aReturn = STRING_TO_JSVAL(jsret);
+   }
+   else
+      *aReturn = JSVAL_NULL;
+
+   if (uniResult)
       nsMemory::Free(uniResult);
-   if(NS_FAILED(ret) || !b)
-      {
-      // XXX Need to check return value and return null if the
-      // user hits cancel. Currently, we can only return a 
-      // string reference.
-      aReturn.SetLength(0);
-      }
 
   return ret;
 }

@@ -1163,7 +1163,7 @@ WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
-  nsAutoString nativeRet;
+  jsval nativeRet;
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -1179,12 +1179,12 @@ WindowPrompt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    result = nativeThis->Prompt(cx, argv+0, argc-0, nativeRet);
+    result = nativeThis->Prompt(cx, argv+0, argc-0, &nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
 
-    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+    *rval = nativeRet;
   }
 
   return JS_TRUE;

@@ -42,7 +42,10 @@ interface Window {
         void  dump(in wstring str);
         void  alert(/* ... */);
 	      boolean  confirm(/* ... */);
-        DOMString  prompt(/* ... */);
+        // XXX prompt() should be changed back to return a string once
+        // the DOM APIs allow us to return null js values for a string.
+        // in the meantime, this is the only way to do that:
+        jsval  prompt(/* ... */);
         void  focus();
         void  blur();
         void  back();
