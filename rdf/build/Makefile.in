@@ -30,7 +30,7 @@ REQUIRES	= dom js netlib rdf raptor xpcom
 
 CPPSRCS		= \
 		dlldeps.cpp \
-		nsRDFFactory.cpp \
+		nsRDFModule.cpp \
 		$(NULL)
 
 EXPORTS		= nsRDFCID.h
