@@ -106,6 +106,7 @@ BEGIN_MESSAGE_MAP(CTests, CWnd)
 	ON_COMMAND(ID_TOOLS_REMOVEGHPAGE, OnToolsRemoveGHPage)
 	ON_COMMAND(ID_TOOLS_REMOVEALLGH, OnToolsRemoveAllGH)
 	ON_COMMAND(ID_TOOLS_VIEWLOGFILE, OnToolsViewLogfile)
+	ON_COMMAND(ID_TOOLS_DELETELOGFILE, OnToolsDeleteLogfile)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD, OnToolsTestYourMethod)
 	ON_COMMAND(ID_TOOLS_TESTYOURMETHOD2, OnToolsTestYourMethod2)
 	ON_COMMAND(ID_VERIFYBUGS_70228, OnVerifybugs70228)
@@ -783,9 +784,32 @@ void CTests::OnToolsViewLogfile()
 {
 	char theUri[1024];
 
+	CStdioFile myFile; 
+    CFileException e; 
+    CString strFileName = "c:\\temp\\TestOutput.txt"; 
+	myFile.Open( strFileName, CStdioFile::modeCreate | CStdioFile::modeWrite
+			   | CStdioFile::modeNoTruncate, &e );               
+	myFile.Close();
+
 	strcpy(theUri, "file://C|/temp/TestOutput.txt");
 	rv = qaWebNav->LoadURI(NS_ConvertASCIItoUCS2(theUri).get(),
 		 nsIWebNavigation::LOAD_FLAGS_NONE, nsnull,nsnull, nsnull);
+}
+
+void CTests::OnToolsDeleteLogfile()
+{
+	CStdioFile myFile; 
+    CFileException e; 
+    CString strFileName = "c:\\temp\\TestOutput.txt"; 
+	myFile.Open( strFileName, CStdioFile::modeCreate | CStdioFile::modeWrite
+			   | CStdioFile::modeNoTruncate, &e );       
+	myFile.Close();
+
+	nsCOMPtr<nsILocalFile> theOriginalFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID));
+
+	rv = theOriginalFile->InitWithNativePath(NS_LITERAL_CSTRING("c:\\temp\\TestOutput.txt"));
+    nsCOMPtr<nsIFile> theTestFile = do_QueryInterface(theOriginalFile);
+	rv = theTestFile->Remove(PR_FALSE);
 }
 
 // ***********************************************************************
