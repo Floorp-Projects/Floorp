@@ -732,6 +732,14 @@ nsTextEditorDragListener::DragEnter(nsIDOMEvent* aDragEvent)
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
+      PRUint32 flags;
+      if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
+        if ((flags & nsIHTMLEditor::eEditorDisabledMask) || 
+            (flags & nsIHTMLEditor::eEditorReadonlyMask)) {
+          dragSession->SetCanDrop(PR_FALSE);
+          return NS_OK;
+        }
+      }
       PRBool flavorSupported = PR_FALSE;
       dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
       if ( !flavorSupported ) 
@@ -757,6 +765,14 @@ nsTextEditorDragListener::DragOver(nsIDOMEvent* aDragEvent)
   if ( NS_SUCCEEDED(rv) ) {
     nsCOMPtr<nsIDragSession> dragSession(do_QueryInterface(dragService));
     if ( dragSession ) {
+      PRUint32 flags;
+      if (NS_SUCCEEDED(mEditor->GetFlags(&flags))) {
+        if ((flags & nsIHTMLEditor::eEditorDisabledMask) || 
+            (flags & nsIHTMLEditor::eEditorReadonlyMask)) {
+          dragSession->SetCanDrop(PR_FALSE);
+          return NS_OK;
+        }
+      }
       PRBool flavorSupported = PR_FALSE;
       dragSession->IsDataFlavorSupported(kUnicodeMime, &flavorSupported);
       if ( !flavorSupported ) 
