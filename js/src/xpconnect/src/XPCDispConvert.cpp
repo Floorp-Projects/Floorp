@@ -278,7 +278,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
             if(!chars)
             {
                 err = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-                // Avoid cleaning up garabage
+                // Avoid cleaning up garbage
                 varDest->vt = VT_EMPTY;
                 return JS_FALSE;
             }
@@ -320,7 +320,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
                 nsnull, 
                 &err))
             {
-                // Avoid cleaning up garabage
+                // Avoid cleaning up garbage
                 varDest->vt = VT_EMPTY;
                 return JS_FALSE;
             }
@@ -340,7 +340,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
         {
             NS_ERROR("This is out of synce with XPCDispConvert::JSTypeToCOMType");
             err = NS_ERROR_XPC_BAD_CONVERT_NATIVE;
-            // Avoid cleaning up garabage
+            // Avoid cleaning up garbage
             varDest->vt = VT_EMPTY;
             return JS_FALSE;
         }
@@ -350,7 +350,7 @@ JSBool XPCDispConvert::JSToCOM(XPCCallContext& ccx,
     {
         if(!xpc_CopyVariantByRef(byRefVariant, dest))
         {
-            // Avoid cleaning up garabage
+            // Avoid cleaning up garbage
             dest.vt = VT_EMPTY;
         }
     }
