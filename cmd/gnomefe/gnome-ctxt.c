@@ -917,8 +917,7 @@ FE_GetURL (MWContext *context,
 
 void
 FE_SetRefreshURLTimer(MWContext *context, 
-		      uint32     seconds, 
-		      char      *refresh_url)
+		      URL_Struct *URL_s)
 {
   printf ("FE_SetRefreshURLTimer\n");
   XP_ASSERT(0);
