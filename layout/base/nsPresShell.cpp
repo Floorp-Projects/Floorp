@@ -1842,9 +1842,12 @@ PresShell::HandleEvent(nsIView         *aView,
     if (NS_OK == mPresContext->GetEventStateManager(&manager)) {
       if (NS_IS_KEY_EVENT(aEvent)) {
         //Key events go to the focused frame, not point based.
-        manager->GetFocusedContent(&focusContent);  
+        manager->GetFocusedContent(&focusContent);
+        if (focusContent)
+          GetPrimaryFrameFor(focusContent, &mCurrentEventFrame);
+        else mCurrentEventFrame = nsnull;
       }
-      frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
+      else frame->GetFrameForPoint(aEvent->point, &mCurrentEventFrame);
       NS_IF_RELEASE(mCurrentEventContent);
       if (GetCurrentEventFrame() || focusContent) {
       //Once we have the targetFrame, handle the event in this order
