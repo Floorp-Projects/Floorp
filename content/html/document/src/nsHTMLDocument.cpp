@@ -603,7 +603,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                          webShell->QueryInterface(
                             nsIWebShellServices::GetIID(),(void**) &wss)))
                    {
-                     rv_detect = adp->Init(wss, cdet);
+                     rv_detect = adp->Init(wss, cdet, aCommand);
                    }
                  }
               }
