@@ -265,11 +265,7 @@ pref("wallet.enabled",                      true);
 pref("imageblocker.enabled",                true);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
-pref("intl.mailcharset.cyrillic",           "koi8-r");
 pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.auto_detect_encoding",           true);
-pref("intl.character_set",                  2);     // CS_LATIN1
-pref("intl.font_encoding",                  6);     // CS_MAC_ROMAN
 
 pref("intl.charset_menu.static",           "iso-8859-1");
 pref("intl.charset_menu.cache",            "");
