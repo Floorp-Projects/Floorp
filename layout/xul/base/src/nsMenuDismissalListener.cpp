@@ -77,7 +77,7 @@ nsMenuDismissalListener::SetCurrentMenuParent(nsIMenuParent* aMenuParent)
   widget->CaptureRollupEvents(this, PR_TRUE, PR_TRUE);
   mWidget = widget;
 
-  NS_ADDREF(nsMenuFrame::mDismissalListener = this);
+  NS_ADDREF(nsMenuFrame::sDismissalListener = this);
 }
 
 NS_IMETHODIMP
@@ -172,7 +172,7 @@ nsMenuDismissalListener::Unregister()
     mWidget = nsnull;
   }
   
-  NS_RELEASE(nsMenuFrame::mDismissalListener);
+  NS_RELEASE(nsMenuFrame::sDismissalListener);
   return NS_OK;
 }
 
