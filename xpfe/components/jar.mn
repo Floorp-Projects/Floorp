@@ -167,6 +167,7 @@ en-US.jar:
     locale/en-US/global/console.properties                      (console/resources/locale/en-US/console.properties)
     locale/en-US/global/finddialog.dtd                          (find/resources/locale/en-US/finddialog.dtd)
     locale/en-US/global/finddialog.properties                          (find/resources/locale/en-US/finddialog.properties)
+    locale/en-US/global/replacedialog.dtd                          (find/resources/locale/en-US/replacedialog.dtd)
 
 toolkit.jar:
     content/global/console.js                                   (console/resources/content/console.js)
@@ -175,6 +176,8 @@ toolkit.jar:
     content/global/consoleBindings.xml                          (console/resources/content/consoleBindings.xml)
     content/global/finddialog.js                                (find/resources/finddialog.js)
     content/global/finddialog.xul                               (find/resources/finddialog.xul)
+    content/global/replacedialog.js                                (find/resources/replacedialog.js)
+    content/global/replacedialog.xul                               (find/resources/replacedialog.xul)
     content/global/unknownContent.xul                           (ucth/resources/unknownContent.xul)
     content/global/unknownContent.js                            (ucth/resources/unknownContent.js)
     content/global/helperAppLauncher.xul                        (ucth/resources/helperAppLauncher.xul)

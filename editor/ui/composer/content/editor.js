@@ -1225,6 +1225,7 @@ function DisableMenusForHTMLSource(disable)
   // Edit menu items
   DisableItem("menu_find", disable);
   DisableItem("menu_findnext", disable);
+  DisableItem("menu_replace", disable);
   DisableItem("menu_checkspelling", disable);
 
   // Disable all items in the view menu except mode switch items
@@ -1982,6 +1983,10 @@ function RemoveInapplicableUIElements()
     findMenuItem = document.getElementById("menu_findnext");
     if (findMenuItem)
       findMenuItem.setAttribute("hidden", "true");
+    
+    var replaceMenuItem = document.getElementById("menu_replace");
+    if (replaceMenuItem)
+      replaceMenuItem.setAttribute("hidden", "true");
     
     var findSepItem  = document.getElementById("sep_find");
     if (findSepItem)

@@ -283,6 +283,7 @@
           <menuseparator/>
           <menuitem value="&findCmd.label;"      key="key_find"      accesskey="&findCmd.accesskey;"      observes="cmd_find"/>
           <menuitem value="&findAgainCmd.label;" key="key_findNext" accesskey="&findAgainCmd.accesskey;" observes="cmd_findNext"/>
+          <menuitem value="&replaceCmd.label;" observes="cmd_replace"/>
           <menuseparator/>
           <menuitem value="&accountManagerCmd.label;" accesskey="&accountManagerCmd.accesskey;" observes="cmd_account"/>
           <menuitem id="menu_preferences" observes="cmd_preferences"/>

@@ -168,6 +168,7 @@
 
     <command id="cmd_find"          oncommand="goDoCommand('cmd_find')"/>
     <command id="cmd_findNext"      oncommand="goDoCommand('cmd_findNext')"   value="&findAgainCmd.label;"/>
+    <command id="cmd_replace"       oncommand="goDoCommand('cmd_replace')" />
     <command id="cmd_spelling"      oncommand="goDoCommand('cmd_spelling')"/>
     <command id="cmd_pasteQuote"    oncommand="goDoCommand('cmd_pasteQuote')" value="&pasteAsQuotationCmd.label;"/>
 
@@ -325,6 +326,7 @@
       <menuseparator id="sep_find" class="hide-in-IM"/>
       <menuitem id="menu_find"       accesskey="&editfind.accesskey;"            key="findkb"         observes="cmd_find" value="&findCmd.label;"/>
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
+      <menuitem id="menu_replace"   observes="cmd_replace" value="&replaceCmd.label;"/>
       <menuseparator id="sep_checkspelling" class="hide-in-IM" />
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" value="&checkSpellingCmd.label;"/>
       <menuseparator/>

@@ -117,6 +117,7 @@ var defaultController =
       case "cmd_pasteQuote":
       case "cmd_find":
       case "cmd_findNext":
+      case "cmd_replace":
       case "cmd_account":
       case "cmd_preferences":
       
@@ -230,6 +231,7 @@ var defaultController =
       case "cmd_pasteQuote":
       case "cmd_find":
       case "cmd_findNext":
+      case "cmd_replace":
         //Disable the editor specific edit commands if the focus is not into the body
         return /*!focusedElement*/false;
       case "cmd_account":
@@ -405,6 +407,7 @@ function CommandUpdate_MsgCompose()
   goUpdateCommand("cmd_pasteQuote");
   goUpdateCommand("cmd_find");
   goUpdateCommand("cmd_findNext");
+  goUpdateCommand("cmd_replace");
   goUpdateCommand("cmd_account");
   goUpdateCommand("cmd_preferences");
 

@@ -44,4 +44,5 @@ interface nsISearchContext : nsISupports {
     attribute boolean wrapSearch;
     readonly attribute nsIDOMWindowInternal targetWindow;
     attribute nsIDOMWindowInternal findDialog;
+    attribute nsIDOMWindowInternal replaceDialog;
 };
