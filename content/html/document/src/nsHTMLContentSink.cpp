@@ -33,6 +33,7 @@
 #include "nsTablePart.h"
 #include "nsTableRow.h"
 #include "nsTableCell.h"
+#include "nsIDOMText.h"
 
 #include "nsHTMLForms.h"
 #include "nsIFormManager.h"
@@ -183,6 +184,10 @@ protected:
                             const nsIParserNode& aNode);
   //----------------------------------------------------------------------
 
+  void FlushText();
+
+  nsresult AddText(const nsString& aText, nsIHTMLContent** aContent);
+
   void GetAttributeValueAt(const nsIParserNode& aNode,
                            PRInt32 aIndex,
                            nsString& aResult);
@@ -211,6 +216,7 @@ protected:
   nsIImageMap* mCurrentMap;
   nsIHTMLContent* mCurrentSelect;
   nsIHTMLContent* mCurrentOption;
+  nsIDOMText* mCurrentText;
 
   nsIHTMLContent* mRoot;
   nsIHTMLContent* mBody;
@@ -280,7 +286,11 @@ nsresult HTMLContentSink::Init(nsIDocument* aDoc, nsIURL* aDocURL, nsIWebWidget*
 
 NS_IMPL_ISUPPORTS(HTMLContentSink,kIHTMLContentSinkIID)
 
-PRInt32 HTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
+PRInt32
+HTMLContentSink::OpenHTML(const nsIParserNode& aNode)
+{
+  FlushText();
+
   NOISY_SINK_TRACE("OpenHTML", aNode)
   NS_PRECONDITION(0 == mStackPos, "bad stack pos");
 
@@ -291,8 +301,11 @@ PRInt32 HTMLContentSink::OpenHTML(const nsIParserNode& aNode) {
   return 0;
 }
 
-PRInt32 HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("CloseHTML", aNode)
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
@@ -303,8 +316,11 @@ PRInt32 HTMLContentSink::CloseHTML(const nsIParserNode& aNode)
   return 0; 
 }
 
-PRInt32 HTMLContentSink::OpenHead(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::OpenHead(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("OpenHead", aNode)
 
   if (nsnull == mHead) {
@@ -322,8 +338,11 @@ PRInt32 HTMLContentSink::OpenHead(const nsIParserNode& aNode)
   return 0;
 }
 
-PRInt32 HTMLContentSink::CloseHead(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::CloseHead(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("CloseHead", aNode)
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
@@ -331,8 +350,11 @@ PRInt32 HTMLContentSink::CloseHead(const nsIParserNode& aNode)
   return 0;
 }
 
-PRInt32 HTMLContentSink::SetTitle(const nsString& aValue)
+PRInt32
+HTMLContentSink::SetTitle(const nsString& aValue)
 {
+  FlushText();
+
   if (nsnull == mTitle) {
     mTitle = new nsString(aValue);
   }
@@ -361,8 +383,11 @@ PRInt32 HTMLContentSink::SetTitle(const nsString& aValue)
   return 0;
 }
 
-PRInt32 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("OpenBody", aNode)
 
   PRBool startLayout = PR_FALSE;
@@ -398,8 +423,11 @@ PRInt32 HTMLContentSink::OpenBody(const nsIParserNode& aNode)
   return 0;
 }
 
-PRInt32 HTMLContentSink::CloseBody(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("CloseBody", aNode)
 
   NS_ASSERTION(mStackPos > 0, "bad bad");
@@ -412,8 +440,11 @@ PRInt32 HTMLContentSink::CloseBody(const nsIParserNode& aNode)
 
 static NS_DEFINE_IID(kIFormManagerIID, NS_IFORMMANAGER_IID);
 
-PRInt32 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::OpenForm(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("OpenForm", aNode)
 
   // Close out previous form if it's there
@@ -485,8 +516,11 @@ PRInt32 HTMLContentSink::OpenForm(const nsIParserNode& aNode)
   return 0;
 }
 
-PRInt32 HTMLContentSink::CloseForm(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::CloseForm(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("CloseForm", aNode)
 
   if (nsnull != mCurrentForm) {
@@ -496,24 +530,33 @@ PRInt32 HTMLContentSink::CloseForm(const nsIParserNode& aNode)
   return 0;
 }
 
-PRInt32 HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::OpenFrameset(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("OpenFrameset", aNode)
 
   mNodeStack[mStackPos++] = (eHTMLTags)aNode.GetNodeType();
   return 0;
 }
 
-PRInt32 HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::CloseFrameset(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("CloseFrameset", aNode)
 
   mNodeStack[--mStackPos] = eHTMLTag_unknown;
   return 0;
 }
 
-PRInt32 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("OpenContainer", aNode)
 
   nsAutoString tmp(aNode.GetText());
@@ -612,8 +655,11 @@ PRInt32 HTMLContentSink::OpenContainer(const nsIParserNode& aNode)
   return 0;
 }
 
-PRInt32 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
+PRInt32
+HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
 {
+  FlushText();
+
   NOISY_SINK_TRACE("CloseContainer", aNode)
 
   switch (aNode.GetNodeType()) {
@@ -679,6 +725,90 @@ PRInt32 HTMLContentSink::CloseContainer(const nsIParserNode& aNode)
   return 0;
 }
 
+PRBool HTMLContentSink::CloseTopmostContainer()
+{
+  return PR_TRUE;
+}
+
+/**
+ * This method gets called when the parser begins the process
+ * of building the content model via the content sink.
+ *
+ * @update 5/7/98 gess
+ */     
+void
+HTMLContentSink::WillBuildModel(void)
+{
+  PR_LogPrint("WillBuildModel");
+  mDocument->BeginLoad();
+
+  // XXX temporary
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell* shell = mDocument->GetShellAt(i);
+    if (nsnull != shell) {
+      shell->BeginObservingDocument();
+      NS_RELEASE(shell);
+    }
+  }
+
+  StartLayout();
+}
+
+
+/**
+ * This method gets called when the parser concludes the process
+ * of building the content model via the content sink.
+ *
+ * @param  aQualityLevel describes how well formed the doc was.
+ *         0=GOOD; 1=FAIR; 2=POOR;
+ * @update 6/21/98 gess
+ */     
+void HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel) {
+  PR_LogPrint("DidBuildModel");
+
+  PRInt32 i, ns = mDocument->GetNumberOfShells();
+  for (i = 0; i < ns; i++) {
+    nsIPresShell* shell = mDocument->GetShellAt(i);
+    if (nsnull != shell) {
+      nsIViewManager* vm = shell->GetViewManager();
+      if(vm) {
+        vm->SetQuality(nsContentQuality(aQualityLevel));
+      }
+      NS_RELEASE(vm);
+      NS_RELEASE(shell);
+    }
+  }
+
+  ReflowNewContent();
+  mDocument->EndLoad();
+}
+
+/**
+ * This method gets called when the parser gets i/o blocked,
+ * and wants to notify the sink that it may be a while before
+ * more data is available.
+ *
+ * @update 5/7/98 gess
+ */     
+void
+HTMLContentSink::WillInterrupt(void)
+{
+}
+
+/**
+ * This method gets called when the parser i/o gets unblocked,
+ * and we're about to start dumping content again to the sink.
+ *
+ * @update 5/7/98 gess
+ */     
+void
+HTMLContentSink::WillResume(void)
+{
+}
+
+//----------------------------------------------------------------------
+
 void HTMLContentSink::StartLayout()
 {
   if (!mLayoutStarted) {
@@ -727,11 +857,6 @@ void HTMLContentSink::ReflowNewContent()
 #endif
 }
 
-PRBool HTMLContentSink::CloseTopmostContainer()
-{
-  return PR_TRUE;
-}
-
 nsIHTMLContent* HTMLContentSink::GetCurrentContainer(eHTMLTags* aType)
 {
   nsIHTMLContent* parent;
@@ -756,23 +881,27 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   // Check for nodes that require special handling
   switch (aNode.GetNodeType()) {
   case eHTMLTag_style:
+    FlushText();
     ProcessSTYLETag(aNode);
     return 0;
 
   case eHTMLTag_script:
     // XXX SCRIPT tag evaluation is currently turned off till we
     // get more scripts working.
+    FlushText();
 #if 0
     ProcessSCRIPTTag(aNode);
 #endif
     return 0;
 
   case eHTMLTag_area:
+    FlushText();
     ProcessAREATag(aNode);
     return 0;
 
   case eHTMLTag_meta:
     // Add meta objects to the head object
+    FlushText();
     ProcessMETATag(aNode);
     return 0;
   }
@@ -791,6 +920,7 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
     return PR_TRUE;
   */
   case eHTMLTag_option:
+    FlushText();
     ProcessOPTIONTagContent(aNode);
     return 0;
 
@@ -808,21 +938,27 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eToken_start:
     switch (aNode.GetNodeType()) {
     case eHTMLTag_br:
+      FlushText();
       rv = ProcessBRTag(&leaf, aNode);
       break;
     case eHTMLTag_hr:
+      FlushText();
       rv = ProcessHRTag(&leaf, aNode);
       break;
     case eHTMLTag_input:
+      FlushText();
       rv = ProcessINPUTTag(&leaf, aNode);
       break;
     case eHTMLTag_img:
+      FlushText();
       rv = ProcessIMGTag(&leaf, aNode);
       break;
     case eHTMLTag_spacer:
+      FlushText();
       rv = ProcessSPACERTag(&leaf, aNode);
       break;
     case eHTMLTag_textarea:
+      FlushText();
       ProcessTEXTAREATag(&leaf, aNode);
       break;
     }
@@ -830,33 +966,20 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
 
   case eToken_text:
   case eToken_whitespace:
-    {
-      nsAutoString tmp;
-      tmp.Append(aNode.GetText());
-      rv = NS_NewHTMLText(&leaf, tmp.GetUnicode(), tmp.Length());
-    }
-    break;
-
-    // XXX ick
   case eToken_newline:
-    {
-      nsAutoString tmp;
-      tmp.Append('\n');
-      rv = NS_NewHTMLText(&leaf, tmp.GetUnicode(), tmp.Length());
-    }
+    rv = AddText(aNode.GetText(), &leaf);
     break;
 
   case eToken_entity:
     {
       nsAutoString tmp;
-      nsAutoString tmp2("");
-      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp2);
+      PRInt32 unicode = aNode.TranslateToUnicodeStr(tmp);
       if (unicode < 0) {
-        tmp.Append(aNode.GetText());
-      } else {
-        tmp+=tmp2;
+        rv = AddText(aNode.GetText(), &leaf);
       }
-      rv = NS_NewHTMLText(&leaf, tmp.GetUnicode(), tmp.Length());
+      else {
+        rv = AddText(tmp, &leaf);
+      }
     }
     break;
 
@@ -877,6 +1000,33 @@ PRInt32 HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   NS_IF_RELEASE(leaf);
 
   return 0;
+}
+
+nsresult
+HTMLContentSink::AddText(const nsString& aText, nsIHTMLContent** aContent)
+{
+  nsresult rv;
+  if (nsnull != mCurrentText) {
+    mCurrentText->Append((nsString&)aText);/* XXX fix dom text api!!! */
+    *aContent = nsnull;
+    rv = NS_OK;
+  }
+  else {
+    static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+    rv = NS_NewHTMLText(aContent, aText.GetUnicode(), aText.Length());
+    if (NS_OK == rv) {
+      (*aContent)->QueryInterface(kIDOMTextIID, (void**) &mCurrentText);
+    }
+  }
+  return rv;
+}
+
+void
+HTMLContentSink::FlushText()
+{
+  if (nsnull != mCurrentText) {
+    NS_RELEASE(mCurrentText);
+  }
 }
 
 void HTMLContentSink::GetAttributeValueAt(const nsIParserNode& aNode,
@@ -1494,83 +1644,6 @@ nsresult HTMLContentSink::ProcessWBRTag(nsIHTMLContent** aInstancePtrResult,
   }
   NS_RELEASE(atom);
   return rv;
-}
-
-/**
- * This method gets called when the parser begins the process
- * of building the content model via the content sink.
- *
- * @update 5/7/98 gess
- */     
-void
-HTMLContentSink::WillBuildModel(void)
-{
-  PR_LogPrint("WillBuildModel");
-  mDocument->BeginLoad();
-
-  // XXX temporary
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (nsnull != shell) {
-      shell->BeginObservingDocument();
-      NS_RELEASE(shell);
-    }
-  }
-
-  StartLayout();
-}
-
-
-/**
- * This method gets called when the parser concludes the process
- * of building the content model via the content sink.
- *
- * @param  aQualityLevel describes how well formed the doc was.
- *         0=GOOD; 1=FAIR; 2=POOR;
- * @update 6/21/98 gess
- */     
-void HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel) {
-  PR_LogPrint("DidBuildModel");
-
-  PRInt32 i, ns = mDocument->GetNumberOfShells();
-  for (i = 0; i < ns; i++) {
-    nsIPresShell* shell = mDocument->GetShellAt(i);
-    if (nsnull != shell) {
-      nsIViewManager* vm = shell->GetViewManager();
-      if(vm) {
-        vm->SetQuality(nsContentQuality(aQualityLevel));
-      }
-      NS_RELEASE(vm);
-      NS_RELEASE(shell);
-    }
-  }
-
-  ReflowNewContent();
-  mDocument->EndLoad();
-}
-
-/**
- * This method gets called when the parser gets i/o blocked,
- * and wants to notify the sink that it may be a while before
- * more data is available.
- *
- * @update 5/7/98 gess
- */     
-void
-HTMLContentSink::WillInterrupt(void)
-{
-}
-
-/**
- * This method gets called when the parser i/o gets unblocked,
- * and we're about to start dumping content again to the sink.
- *
- * @update 5/7/98 gess
- */     
-void
-HTMLContentSink::WillResume(void)
-{
 }
 
 
