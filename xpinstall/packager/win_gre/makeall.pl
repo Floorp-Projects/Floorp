@@ -125,6 +125,10 @@ $ENV{WIZ_userAgentShort}       = "$versionMain";
 $ENV{WIZ_xpinstallVersion}     = "$inDefaultProductVersion";
 $ENV{WIZ_distInstallPath}      = "$gDirDistInstall";
 
+# GetProductBuildID() will return the build id for GRE located here:
+#      NS_BUILD_ID in nsBuildID.h: 2003030610
+$ENV{WIZ_greBuildID}       = StageUtils::GetProductBuildID("$topsrcdir/config/nsBuildID.h", "NS_BUILD_ID");
+
 # GetGreFileVersion() will return the actual version of xpcom.dll used by GRE.
 #  ie:
 #      given milestone.txt : 1.4a
@@ -141,6 +145,7 @@ $ENV{WIZ_greFileVersion}       = StageUtils::GetGreFileVersion($topsrcdir);
 $ENV{WIZ_greUniqueID}          = StageUtils::GetGreSpecialID($topsrcdir);
 
 print "\n";
+print " GRE build id       : $ENV{WIZ_greBuildID}\n";
 print " GRE file version   : $ENV{WIZ_greFileVersion}\n";
 print " GRE special version: $ENV{WIZ_greUniqueID}\n";
 print "\n";
