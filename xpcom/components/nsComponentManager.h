@@ -205,7 +205,6 @@ protected:
     nsNativeComponentLoader *mNativeComponentLoader;
     nsIComponentLoader  *mStaticComponentLoader;
     nsCOMPtr<nsIFile>   mComponentsDir;
-    PRInt32             mComponentsOffset;
 
     // Shutdown
     #define NS_SHUTDOWN_NEVERHAPPENED 0
