@@ -30,10 +30,13 @@
   xmlns:html="http://www.w3.org/1999/xhtml"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="setWindowName();"
-  persist="height width screenX screenY">
+  persist="height width screenX screenY"
+  style="width:8ex">
 
   <script type="application/x-javascript" src="chrome://pippki/content/deletecert.js"/>
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js" />
+  <script type="application/x-javascript" src="pippki.js" />
 
   <keyset id="keys">
     <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK();"/>
@@ -42,10 +45,12 @@
   </keyset>
 
   <vbox flex="1">
-    <html>&certmgr.deletecert.beforename;</html>
-    <text id="certname"/>
-    <html>&certmgr.deletecert.aftername;</html>
-    <separator/>
+     <html id="confirm"/>
+     <separator />
+     <vbox id="certlist" flex="100%"/>
+     <html id="impact"/>
+     <separator />
+
     <hbox align="center">
       <button id="ok-button" class="dialog" label="&certmgr.ok.label;"
               oncommand="doOK();"/> 
