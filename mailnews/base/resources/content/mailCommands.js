@@ -277,7 +277,8 @@ function GetNextNMessages(folder)
 		dump("### nodeList is invalid\n");
 }
 
-function CreateNewSubfolder(chromeWindowURL,windowTitle, preselectedMsgFolder)
+function CreateNewSubfolder(chromeWindowURL,windowTitle, preselectedMsgFolder,
+                            dualUseFolders)
 {
 	var preselectedURI;
 
@@ -294,6 +295,7 @@ function CreateNewSubfolder(chromeWindowURL,windowTitle, preselectedMsgFolder)
 				"",
 				"chrome,titlebar,modal",
 				{preselectedURI:preselectedURI, title:windowTitle,
+                                   dualUseFolders:dualUseFolders,
 				okCallback:NewFolder});
 }
 

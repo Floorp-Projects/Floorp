@@ -22,3 +22,7 @@ Rights Reserved.
 <!ENTITY name.label			"Name:">
 <!ENTITY rename.label		"Enter the new name for your folder:">
 <!ENTITY newDialogDescription.label		"Create as a subfolder of:">
+<!ENTITY folderRestriction1.label  "This server restricts folders to two special kinds.">
+<!ENTITY folderRestriction2.label  "Allow your new folder to contain:">
+<!ENTITY foldersOnly.label  "Folders Only">
+<!ENTITY messagesOnly.label "Messages Only">

@@ -698,8 +698,6 @@ nsresult nsPop3Protocol::LoadUrl(nsIURI* aURL, nsISupports * /* aConsumer */)
 	}
 
     m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
-
-    m_pop3ConData->uidlinfo = net_pop3_load_state(host, GetUsername(), mailDirectory);
 	m_pop3ConData->biffstate = nsIMsgFolder::nsMsgBiffState_NoMail;
 
 	const char* uidl = PL_strcasestr(queryPart, "uidl=");

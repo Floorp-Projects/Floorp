@@ -384,8 +384,24 @@ function MsgNewFolder()
 {
 	var windowTitle = Bundle.GetStringFromName("newFolderDialogTitle");
 	var preselectedFolder = GetFirstSelectedMsgFolder();
-
-	CreateNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle, preselectedFolder);
+    var dualUseFolders = true;
+    var server = null;
+    if (preselectedFolder)
+    {
+        try {
+            server = preselectedFolder.server;
+            if (server)
+            {
+                var imapServer =
+                    server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
+                if (imapServer)
+                    dualUseFolders = imapServer.dualUseFolders;
+            }
+        } catch (e) {
+            dump ("Exception: dualUseFolders = true\n");
+        }
+    }
+	CreateNewSubfolder("chrome://messenger/content/newFolderNameDialog.xul",windowTitle, preselectedFolder, dualUseFolders);
 }
 
 

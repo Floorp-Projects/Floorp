@@ -1,6 +1,8 @@
 var okCallback = 0;
 var pickerID = null;
 var preselectedFolderURI = null;
+var dualUseFolders = true;
+var foldersOnly = 0;
 
 function newFolderNameOnLoad(pickerDOMID)
 {
@@ -14,6 +16,8 @@ function newFolderNameOnLoad(pickerDOMID)
 			// dump("title = " + window.arguments[0].title + "\n");
 			top.window.title = window.arguments[0].title;
 		}
+
+		dualUseFolders = window.arguments[0].dualUseFolders;
 		
 		if ( window.arguments[0].okCallback ) {
 			top.okCallback = window.arguments[0].okCallback;
@@ -35,6 +39,15 @@ function newFolderNameOnLoad(pickerDOMID)
 	var picker = document.getElementById(pickerID);
 	if(picker)
 		MsgFolderPickerOnLoad(pickerID);
+	if (!dualUseFolders)
+	{
+		var newFolderTypeBox = document.getElementById("newFolderTypeBox");
+		if (newFolderTypeBox)
+		{
+			newFolderTypeBox.setAttribute("hidden", "false");
+			window.sizeToContent();
+		}
+	}
 	moveToAlertPosition();
 }
 
@@ -44,11 +57,22 @@ function newFolderNameOKButtonCallback()
 	{
 		var name = document.getElementById("name").value;
 		var picker = document.getElementById(pickerID);
-
 		var	uri = picker.getAttribute("uri");
 
-		dump("uri,name in callback = " + uri + "," + name + "\n");
-		top.okCallback(name, uri);
+		// make sure we have a valid name and parent uri	
+		if (name.length <= 0 || uri.length <=0)
+			return false;
+
+		//dump("uri,name in callback = " + uri + "," + name + "\n");
+
+		if (!dualUseFolders && foldersOnly && name.charAt(name.length-1) != "/")
+		{
+			top.okCallback(name + "/", uri);
+		}
+		else
+		{
+			top.okCallback(name, uri);
+		}
 	}
 	
 	return true;
@@ -123,4 +147,14 @@ function renameFolderNameCancelButtonCallback()
 	// close the window
 	dump("in renameFolderNameCancelButtonCallback\n");
 	return true;
+}
+
+function onFoldersOnly()
+{
+	foldersOnly = 1;
+}
+
+function onMessagesOnly()
+{
+	foldersOnly = 0;
 }

@@ -48,8 +48,19 @@ Rights Reserved.
 		<text value="&newDialogDescription.label;"/>
 		<box align="horizontal">
 			<menu id="msgNewFolderPicker"/>
-        		<spring flex="100%"/>
-        	</box>
+        	<spring flex="100%"/>
+        </box>
+		<box align="vertical" orient="vertical" hidden="true" id="newFolderTypeBox">
+			<separator class="thin"/>
+			<text value="&folderRestriction1.label;"/>
+			<text value="&folderRestriction2.label;"/>
+			<separator class="thin"/>
+			<radiogroup id="folderGroup">
+				<radio group="folderGroup" oncommand="onFoldersOnly();" value="&foldersOnly.label;"/>
+				<radio group="folderGroup" oncommand="onMessagesOnly();" value="&messagesOnly.label;" checked="true"/>
+				<spring flex="100%"/>
+			</radiogroup>
+		</box>
 		<spring flex="100%"/>
 		<separator/>
 		<box id="okCancelButtons"/>

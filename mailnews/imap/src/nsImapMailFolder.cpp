@@ -1133,6 +1133,20 @@ nsImapMailFolder::GetCanCreateSubfolders(PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
   *aResult = !(mFlags & MSG_FOLDER_FLAG_IMAP_NOINFERIORS);
+
+  PRBool isServer = PR_FALSE;
+  GetIsServer(&isServer);
+  if (!isServer)
+  {
+      nsCOMPtr<nsIImapIncomingServer> imapServer;
+      nsresult rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+      PRBool dualUseFolders = PR_TRUE;
+      if (NS_SUCCEEDED(rv) && imapServer)
+          imapServer->GetDualUseFolders(&dualUseFolders);
+      if (!dualUseFolders && *aResult)
+          *aResult = (mFlags & MSG_FOLDER_FLAG_IMAP_NOSELECT);
+  }
+  
   return NS_OK;
 }
 
