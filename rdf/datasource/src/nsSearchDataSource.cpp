@@ -1754,10 +1754,12 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		}
 	}
 
+	PRBool	trimItemEnd = PR_TRUE;
 	// if resultItemEndStr is not specified, try making it the same as resultItemStartStr
 	if (resultItemEndStr.Length() < 1)
 	{
 		resultItemEndStr = resultItemStartStr;
+		trimItemEnd = PR_FALSE;
 	}
 
 	while(PR_TRUE)
@@ -1778,7 +1780,14 @@ SearchDataSourceCallback::OnStopRequest(nsIURI* aURL, nsresult aStatus, const PR
 		htmlResults.Left(resultItem, resultItemEnd);
 
 		if (resultItem.Length() < 1)	break;
-		htmlResults.Cut(0, resultItemEnd + resultItemEndStr.Length());
+		if (trimItemEnd == PR_TRUE)
+		{
+			htmlResults.Cut(0, resultItemEnd + resultItemEndStr.Length());
+		}
+		else
+		{
+			htmlResults.Cut(0, resultItemEnd);
+		}
 
 #if DEBUG
 		char	*results = resultItem.ToNewCString();
@@ -2136,12 +2145,16 @@ SearchDataSourceCallback::OnDataAvailable(nsIURI* aURL, nsIInputStream *aIStream
 			PRUint32	count=0, numBytes = (aLength > sizeof(buffer)-1 ? sizeof(buffer)-1 : aLength);
 			if (NS_FAILED(rv = aIStream->Read(buffer, numBytes, &count)))
 			{
+#ifdef	DEBUG			
 				printf("Search datasource read failure.\n");
+#endif
 				break;
 			}
 			if (numBytes != count)
 			{
+#ifdef	DEBUG
 				printf("Search datasource read # of bytes failure.\n");
+#endif
 				break;
 			}
 			buffer[count] = '\0';
