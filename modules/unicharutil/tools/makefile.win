@@ -54,8 +54,7 @@ clobber::
 
 $(PROG1): $(OBJDIR) ucgendat.c
 
-$(CTYPE_DATA): $(PROG1) $(TABLESRC)
-  $(PROG1) $(UCGENFLAGS) $(TABLESRC)
-
-$(CASE_DATA): $(PROG1) $(TABLESRC)
-  $(PROG1) $(UCGENFLAGS) $(TABLESRC)
+table:: $(TABLESRC)
+  type $(TABLESRC) > mergedtable.txt
+  $(PROG1) $(UCGENFLAGS) mergedtable.txt
+  
