@@ -12383,6 +12383,9 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
     nsCOMPtr<nsIAtom>  tag;
     aChild->GetTag(*getter_AddRefs(tag));
 
+    PRInt32 namespaceID;
+    aChild->GetNameSpaceID(namespaceID);
+
     nsCOMPtr<nsIStyleContext> styleContext;
     rv = ResolveStyleContext(aPresContext, aParentFrame, aChild, tag, getter_AddRefs(styleContext));
 
@@ -12398,7 +12401,8 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
       }
     }
 
-    rv = ConstructFrame(shell, aPresContext, state, aChild, aParentFrame, frameItems);
+    rv = ConstructFrameInternal(shell, aPresContext, state, aChild, aParentFrame, tag, namespaceID, 
+                                styleContext, frameItems, PR_FALSE);
     
     nsIFrame* newFrame = frameItems.childList;
     *aNewFrame = newFrame;
