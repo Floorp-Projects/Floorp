@@ -31,13 +31,15 @@
 #include "nsIDocShellTreeOwner.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 
 class nsXULWindow;
 
 class nsChromeTreeOwner : public nsIDocShellTreeOwner,
                           public nsIBaseWindow, 
                           public nsIInterfaceRequestor,
-                          public nsIWebProgressListener
+                          public nsIWebProgressListener,
+                          public nsSupportsWeakReference
 {
 friend class nsXULWindow;
 
