@@ -77,7 +77,7 @@ endif
 
 # Make sure the build_number is 00000000000 unless MOZILLA_OFFICIAL is set 
 build_number: FORCE
-ifdef MOZILLA_OFFICIAL
+ifeq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 	$(PERL) $(srcdir)/bdate.pl > $@
 else
 	@if [ ! -f build_number ]; then \
