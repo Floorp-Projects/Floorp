@@ -755,6 +755,31 @@ param {
   display: none;
 }
 
+parsererror {
+  display: block;
+  font-family: sans-serif;
+  font-weight: bold;
+  white-space: pre;
+  margin: 1em;
+  padding: 1em;
+  border-width: thin;
+  border-style: inset;
+  border-color: red;
+  font-size: 14pt;
+  background-color: lightyellow;
+}
+
+sourcetext {
+  display: block;
+  white-space: pre;
+  font-family: Courier;
+  margin-top: 2em;
+  margin-bottom: 1em;
+  color: red;
+  font-weight: bold;
+  font-size: 12pt;
+}
+
 /* pseudo-element style */
 
 :scrollbar-look {
