@@ -140,6 +140,7 @@ public:
   static nsIAtom* size;
   static nsIAtom* src;
   static nsIAtom* start;
+  static nsIAtom* style;
   static nsIAtom* suppress;
 
   static nsIAtom* table;
