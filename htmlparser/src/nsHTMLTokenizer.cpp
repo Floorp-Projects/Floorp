@@ -241,7 +241,7 @@ CToken* nsHTMLTokenizer::PopToken() {
  */
 CToken* nsHTMLTokenizer::PushTokenFront(CToken* theToken) {
   mTokenDeque.PushFront(theToken);
-	return theToken;
+  return theToken;
 }
 
 /**
@@ -252,7 +252,7 @@ CToken* nsHTMLTokenizer::PushTokenFront(CToken* theToken) {
  */
 CToken* nsHTMLTokenizer::PushToken(CToken* theToken) {
   mTokenDeque.Push(theToken);
-	return theToken;
+  return theToken;
 }
 
 /**
@@ -285,7 +285,7 @@ nsresult nsHTMLTokenizer::WillTokenize(PRBool aIsFinalChunk,nsTokenAllocator* aT
 {
   mTokenAllocator=aTokenAllocator;
   mIsFinalChunk=aIsFinalChunk;
-  mTokenScanPos=mTokenDeque.GetSize()+1; //cause scanDocStructure to search from here for new tokens...
+  mTokenScanPos=mTokenDeque.GetSize(); //cause scanDocStructure to search from here for new tokens...
   return NS_OK;
 }
 
@@ -345,7 +345,8 @@ static PRInt32 FindLastIndexOfTag(eHTMLTags aTag,nsDeque &aTagStack) {
  */
 nsresult nsHTMLTokenizer::ScanDocStructure(PRBool aFinalChunk) {
   nsresult result=NS_OK;
-
+  if (!mTokenDeque.GetSize())
+    return result;
 
   CHTMLToken  *theRootToken=0;
 

@@ -183,28 +183,33 @@ nsParserService::GetTopicObservers(const nsAString& aTopic,
   return result;
 }
 
+class nsMatchesTopic : public nsDequeFunctor{
+  const nsAString& mString;
+public:
+  PRBool matched;
+  nsObserverEntry* entry;
+  nsMatchesTopic(const nsAString& aString):mString(aString),matched(PR_FALSE){};
+  virtual void* operator()(void* anObject){
+    entry=NS_STATIC_CAST(nsObserverEntry*, anObject);
+    matched=mString.Equals(entry->mTopic);
+    return matched ? nsnull : anObject;
+  };
+};
+
 // XXX This may be more efficient as a HashTable instead of linear search
 nsObserverEntry*
 nsParserService::GetEntry(const nsAString& aTopic)
 {
-  if(!mHaveNotifiedCategoryObservers) {
+  if (!mHaveNotifiedCategoryObservers) {
     mHaveNotifiedCategoryObservers = PR_TRUE;
     NS_CreateServicesFromCategory("parser-service-category",
                                   NS_STATIC_CAST(nsISupports*,NS_STATIC_CAST(void*,this)),
                                   "parser-service-start"); 
   }
 
-
-  PRInt32 index = 0;
-  nsObserverEntry* entry = nsnull;
-
-  while (entry = NS_STATIC_CAST(nsObserverEntry*,mEntries.ObjectAt(index++))) {
-    if (entry->Matches(aTopic)) {
-      break;
-    }
-  }
-
-  return entry;
+  nsMatchesTopic matchesTopic(aTopic);
+  mEntries.FirstThat(*&matchesTopic);
+  return matchesTopic.matched?matchesTopic.entry:nsnull;
 }
 
 nsresult
