@@ -1,304 +1,366 @@
 <!-- <!DOCTYPE glossary PUBLIC "-//OASIS//DTD DocBook V4.1//EN" > -->
+<glossary id="glossary">
+  <glossdiv>
+    <title>0-9, high ascii</title>
 
-  <glossary id="glossary">
-    <glossdiv>
-      <title>0-9, high ascii</title>
-      <glossentry>
-	<glossterm>.htaccess</glossterm>
-	<glossdef>
-	  <para>
-	    Apache web server, and other NCSA-compliant web servers,
-	    observe the convention of using files in directories
-	    called <filename>.htaccess</filename> files.  These
-	    restrict parameters of the web server.  In Bugzilla, they
-	    are used to restrict access to certain files which would
-	    otherwise compromise your installation.  For instance, the
-	    <filename>localconfig</filename> file contains the
-	    password to your database.  If this information were
-	    generally available, and remote access to your database
-	    turned on, you risk corruption of your database by
-	    computer criminals or the curious.
-	  </para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-    <glossdiv id="gloss-a">
-      <title>A</title>
-      <glossentry>
-	<glossterm>Apache</glossterm>
-	<glossdef>
-	  <para>In this context, Apache is the web server most
-	    commonly used for serving up
-	    <glossterm>Bugzilla</glossterm> pages.  Contrary to
-	    popular belief, the apache web server has nothing to do
-	    with the ancient and noble Native American tribe, but
-	    instead derived its name from the fact that it was
-	    <quote>a patchy</quote> version of the original
-	    <acronym>NCSA</acronym> world-wide-web server.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-    <glossdiv id="gloss-b">
-      <title>B</title>
-      <glossentry>
-	<glossterm>Bug</glossterm>
-	<glossdef>
-	<para>
-	    A <quote>Bug</quote> in Bugzilla refers to an issue
-	    entered into the database which has an associated number,
-	    assignments, comments, etc. Some also refer to a
-	    <quote>tickets</quote> or <quote>issues</quote>; in the
-	    context of Bugzilla, they are synonymous.
-	  </para>
-	</glossdef>
-      </glossentry>
-      
-      <glossentry>
-	<glossterm>Bug Number</glossterm>
-	<glossdef>
-	  <para>
-	    Each Bugzilla Bug is assigned a number that uniquely
-	    identifies that Bug.  The Bug associated with a Bug Number
-	    can be pulled up via a query, or easily from the very
-	    front page by typing the number in the "Find" box.
-	  </para>
-	</glossdef>
-      </glossentry>
-      
-      <glossentry>
-	<glossterm>Bug Life Cycle</glossterm>
-	<glossdef>
-	  <para>A Bug has stages through which it must pass before
-	    becoming a <quote>closed bug</quote>, including
-	    acceptance, resolution, and verification.  The <quote>Bug
-	      Life Cycle</quote> is moderately flexible according to
-	    the needs of the organization using it, though.</para>
-	</glossdef>
-      </glossentry>
+    <glossentry>
+      <glossterm>.htaccess</glossterm>
 
-      <glossentry>
-	<glossterm>Bugzilla</glossterm>
-	<glossdef>
-	  <para>
-	    Bugzilla is the industry-standard bug tracking system.  It
-	    is quite popular among Open Source enthusiasts.
-	  </para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+      <glossdef>
+        <para>Apache web server, and other NCSA-compliant web servers,
+        observe the convention of using files in directories called 
+        <filename>.htaccess</filename>
 
-    <glossdiv id="gloss-c">
-      <title></title>
-      <glossentry id="gloss-component">
-	<glossterm>Component</glossterm>
-	<glossdef>
-	  <para>
-	    A Component is a subsection of a Product.  It should be a
-	    narrow category, tailored to your organization.  All
-	    Products must contain at least one Component (and, as a
-	    matter of fact, creating a Product with no Components will
-	    create an error in Bugzilla).
-	  </para>
-	</glossdef>
-      </glossentry>
-      <glossentry id="gloss-cpan">
-	<glossterm><acronym>CPAN</acronym></glossterm>
-	<glossdef>
-	  <para><acronym>CPAN</acronym> stands for the
-	    <quote>Comprehensive Perl Archive Network</quote>.  CPAN
-	    maintains a large number of extremely useful
-	    <glossterm>Perl</glossterm> modules.  By themselves, Perl
-	    modules generally do nothing, but when used as part of a
-	    larger program, they provide much-needed algorithms and
-	    functionality.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-    <glossdiv id="gloss-d">
-      <title>D</title>
-      <glossentry>
-	<glossterm>daemon</glossterm>
-	<glossdef>
-	  <para>A daemon is a computer program which runs in the
-	    background.  In general, most daemons are started at boot
-	    time via System V init scripts, or through RC scripts on
-	    BSD-based systems.  <glossterm>mysqld</glossterm>, the
-	    MySQL server, and <glossterm>apache</glossterm>, a web
-	    server, are generally run as daemons.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+        to restrict access to certain files. In Bugzilla, they are used
+        to keep secret files which would otherwise
+        compromise your installation - e.g. the 
+        <filename>localconfig</filename>
 
-    <glossdiv id="gloss-g">
-      <title></title>
-      <glossentry>
-	<glossterm>Groups</glossterm>
-	<glossdef>
-	  <para>The word <quote>Groups</quote> has a very special
-	    meaning to Bugzilla.  Bugzilla's main security mechanism
-	    comes by lumping users into groups, and assigning those
-	    groups certain privileges to
-	    <glossterm>Products</glossterm> and
-	    <glossterm>Components</glossterm> in the
-	    <glossterm>Bugzilla</glossterm> database.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+        file contains the password to your database. If this information were
+        generally available, and remote access to your database turned on,
+        you risk corruption of your database by computer criminals or the
+        curious.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
 
-    <glossdiv id="gloss-i">
-      <title>I</title>
-      <glossentry id="gloss-infiniteloop">
-	<glossterm>Infinite Loop</glossterm>
-	<glossdef>
-	  <para>A loop of information that never ends; see recursion.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+  <glossdiv id="gloss-a">
+    <title>A</title>
 
-    <glossdiv id="gloss-m">
-      <title>M</title>
-      <glossentry>
-	<glossterm>mysqld</glossterm>
-	<glossdef>
-	  <para>mysqld is the name of the
-	    <glossterm>daemon</glossterm> for the MySQL database.  In
-	    general, it is invoked automatically through the use of
-	    the System V init scripts on GNU/Linux and AT&amp;T System
-	    V-based systems, such as Solaris and HP/UX, or through the
-	    RC scripts on BSD-based systems.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+    <glossentry>
+      <glossterm>Apache</glossterm>
 
-    <glossdiv id="gloss-p">
-      <title>P</title>
-      <glossentry>
-	<glossterm id="gloss-product">Product</glossterm>
-	<glossdef>
-	  <para>A Product is a broad category of types of bugs.  In
-	    general, there are several Components to a Product.  A
-	    Product also defines a default Group (used for Bug
-	    Security) for all bugs entered into components beneath
-	    it.</para>
-	  <example>
-	    <title>A Sample Product</title>
-	    <para>A company sells a software product called
-	      <quote>X</quote>.  They also maintain some older
-	      software called <quote>Y</quote>, and have a secret
-	      project <quote>Z</quote>.  An effective use of Products
-	      might be to create Products <quote>X</quote>,
-	      <quote>Y</quote>, <quote>Z</quote>, each with Components
-	      of User Interface, Database, and Business Logic.  They
-	      might also change group permissions so that only those
-	      people who are members of Group <quote>Z</quote> can see
-	      components and bugs under Product
-	      <quote>Z</quote>.</para>
-	  </example>
-	</glossdef>
-      </glossentry>
-      <glossentry>
-	<glossterm>Perl</glossterm>
-	<glossdef>
-	  <para>First written by Larry Wall, Perl is a remarkable
-	    program language.  It has the benefits of the flexibility
-	    of an interpreted scripting language (such as shell
-	    script), combined with the speed and power of a compiled
-	    language, such as C.  <glossterm>Bugzilla</glossterm> is
-	    maintained in Perl.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-    <glossdiv id="gloss-q">
-      <title>Q</title>
-      <glossentry>
-	<glossterm>QA</glossterm>
-	<glossdef>
-	  <para><quote>QA</quote>, <quote>Q/A</quote>, and
-	    <quote>Q.A.</quote> are short for <quote>Quality
-	      Assurance</quote>.  In most large software development
-	    organizations, there is a team devoted to ensuring the
-	    product meets minimum standards before shipping.  This
-	    team will also generally want to track the progress of
-	    bugs over their life cycle, thus the need for the
-	    <quote>QA Contact</quote> field in a Bug.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-    <glossdiv id="gloss-r">
-      <title>R</title>
-      <glossentry id="gloss-recursion" xreflabel="Recursion">
-	<glossterm>Recursion</glossterm>
-	<glossdef>
-	  <para>The property of a function looking back at itself for
-	    something.  <quote>GNU</quote>, for instance, stands for
-	    <quote>GNU's Not UNIX</quote>, thus recursing upon itself
-	    for definition.  For further clarity, see Infinite
-	    Loop.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+      <glossdef>
+        <para>In this context, Apache is the web server most commonly used
+        for serving up 
+        <glossterm>Bugzilla</glossterm>
 
-    <glossdiv id="gloss-s">
-      <title>S</title>
-      <glossentry>
-	<glossterm><acronym>SGML</acronym></glossterm>
-	<glossdef>
-	  <para><acronym>SGML</acronym> stands for <quote>Standard
-	      Generalized Markup Language</quote>.  Created in the
-	    1980's to provide an extensible means to maintain
-	    documentation based upon content instead of presentation,
-	    <acronym>SGML</acronym> has withstood the test of time as
-	    a robust, powerful language.
-	    <glossterm><acronym>XML</acronym></glossterm> is the
-	    <quote>baby brother</quote> of SGML; any valid
-	    <acronym>XML</acronym> document it, by definition, a valid
-	    <acronym>SGML</acronym> document.  The document you are
-	    reading is written and maintained in
-	    <acronym>SGML</acronym>, and is also valid
-	    <acronym>XML</acronym> if you modify the Document Type
-	    Definition.</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
+        pages. Contrary to popular belief, the apache web server has nothing
+        to do with the ancient and noble Native American tribe, but instead
+        derived its name from the fact that it was 
+        <quote>a patchy</quote>
 
-    <glossdiv id="gloss-t">
-      <title>T</title>
-      <glossentry id="gloss-target-milestone" xreflabel="Target Milestone">
-	<glossterm>Target Milestone</glossterm>
-	<glossdef>
-	  <para>
-	    Target Milestones are Product goals.  They are
-	    configurable on a per-Product basis.  Most software
-	    development houses have a concept of
-	    <quote>milestones</quote> where the people funding a
-	    project expect certain functionality on certain dates.
-	    Bugzilla facilitates meeting these milestones by giving
-	    you the ability to declare by which milestone a bug will be
-	    fixed, or an enhancement will be implemented.
-	  </para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-    <glossdiv id="gloss-z">
-      <title>Z</title>
-      <glossentry id="zarro-boogs-found" xreflabel="Zarro Boogs Found">
-	<glossterm>Zarro Boogs Found</glossterm>
-	<glossdef>
-	  <para>This is the cryptic response sent by Bugzilla when a
-	    query returned no results.  It is just a goofy way of
-	    saying "Zero Bugs Found".</para>
-	</glossdef>
-      </glossentry>
-    </glossdiv>
-    
-  </glossary>
-  
+        version of the original 
+        <acronym>NCSA</acronym>
+
+        world-wide-web server.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-b">
+    <title>B</title>
+
+    <glossentry>
+      <glossterm>Bug</glossterm>
+
+      <glossdef>
+        <para>A 
+        <quote>Bug</quote>
+
+        in Bugzilla refers to an issue entered into the database which has an
+        associated number, assignments, comments, etc. Some also refer to a 
+        <quote>tickets</quote>
+        or 
+        <quote>issues</quote>; 
+        in the context of Bugzilla, they are synonymous.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm>Bug Number</glossterm>
+
+      <glossdef>
+        <para>Each Bugzilla Bug is assigned a number that uniquely identifies
+        that Bug. The Bug associated with a Bug Number can be pulled up via a
+        query, or easily from the very front page by typing the number in the
+        "Find" box.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm>Bug Life Cycle</glossterm>
+
+      <glossdef>
+        <para>A Bug has stages through which it must pass before becoming a 
+        <quote>closed bug</quote>, 
+        including acceptance, resolution, and verification. The 
+        <quote>Bug Life Cycle</quote>
+
+        is moderately flexible according to the needs of the organization
+        using it, though.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm>Bugzilla</glossterm>
+
+      <glossdef>
+        <para>Bugzilla is the industry-standard bug tracking system. It is
+        quite popular among Open Source enthusiasts.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-c">
+    <title>
+    </title>
+
+    <glossentry id="gloss-component">
+      <glossterm>Component</glossterm>
+
+      <glossdef>
+        <para>A Component is a subsection of a Product. It should be a narrow
+        category, tailored to your organization. All Products must contain at
+        least one Component (and, as a matter of fact, creating a Product
+        with no Components will create an error in Bugzilla).</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry id="gloss-cpan">
+      <glossterm>
+        <acronym>CPAN</acronym>
+      </glossterm>
+
+      <glossdef>
+        <para>
+        <acronym>CPAN</acronym>
+
+        stands for the 
+        <quote>Comprehensive Perl Archive Network</quote>
+
+        . CPAN maintains a large number of extremely useful 
+        <glossterm>Perl</glossterm>
+
+        modules. By themselves, Perl modules generally do nothing, but when
+        used as part of a larger program, they provide much-needed algorithms
+        and functionality.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-d">
+    <title>D</title>
+
+    <glossentry>
+      <glossterm>daemon</glossterm>
+
+      <glossdef>
+        <para>A daemon is a computer program which runs in the background. In
+        general, most daemons are started at boot time via System V init
+        scripts, or through RC scripts on BSD-based systems. 
+        <glossterm>mysqld</glossterm>, 
+        the MySQL server, and 
+        <glossterm>apache</glossterm>, 
+        a web server, are generally run as daemons.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-g">
+    <title>
+    </title>
+
+    <glossentry>
+      <glossterm>Groups</glossterm>
+
+      <glossdef>
+        <para>The word 
+        <quote>Groups</quote>
+
+        has a very special meaning to Bugzilla. Bugzilla's main security
+        mechanism comes by lumping users into groups, and assigning those
+        groups certain privileges to 
+        <glossterm>Products</glossterm>
+
+        and 
+        <glossterm>Components</glossterm>
+
+        in the 
+        <glossterm>Bugzilla</glossterm>
+
+        database.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-i">
+    <title>I</title>
+
+    <glossentry id="gloss-infiniteloop">
+      <glossterm>Infinite Loop</glossterm>
+
+      <glossdef>
+        <para>A loop of information that never ends; see recursion.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-m">
+    <title>M</title>
+
+    <glossentry>
+      <glossterm>mysqld</glossterm>
+
+      <glossdef>
+        <para>mysqld is the name of the 
+        <glossterm>daemon</glossterm>
+
+        for the MySQL database. In general, it is invoked automatically
+        through the use of the System V init scripts on GNU/Linux and
+        AT&amp;T System V-based systems, such as Solaris and HP/UX, or
+        through the RC scripts on BSD-based systems.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-p">
+    <title>P</title>
+
+    <glossentry>
+      <glossterm id="gloss-product">Product</glossterm>
+
+      <glossdef>
+        <para>A Product is a broad category of types of bugs. In general,
+        there are several Components to a Product. A Product may also define a
+        group (used for security) for all bugs entered into
+        components beneath it.</para>
+      </glossdef>
+    </glossentry>
+
+    <glossentry>
+      <glossterm>Perl</glossterm>
+
+      <glossdef>
+        <para>First written by Larry Wall, Perl is a remarkable program
+        language. It has the benefits of the flexibility of an interpreted
+        scripting language (such as shell script), combined with the speed
+        and power of a compiled language, such as C. 
+        <glossterm>Bugzilla</glossterm>
+
+        is maintained in Perl.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-q">
+    <title>Q</title>
+
+    <glossentry>
+      <glossterm>QA</glossterm>
+
+      <glossdef>
+        <para>
+        <quote>QA</quote>, 
+        <quote>Q/A</quote>, and 
+        <quote>Q.A.</quote>
+        are short for 
+        <quote>Quality Assurance</quote>. 
+        In most large software development organizations, there is a team
+        devoted to ensuring the product meets minimum standards before
+        shipping. This team will also generally want to track the progress of
+        bugs over their life cycle, thus the need for the 
+        <quote>QA Contact</quote>
+
+        field in a Bug.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-r">
+    <title>R</title>
+
+    <glossentry id="gloss-recursion" xreflabel="Recursion">
+      <glossterm>Recursion</glossterm>
+
+      <glossdef>
+        <para>The property of a function looking back at itself for
+        something. 
+        <quote>GNU</quote>, for instance, stands for 
+        <quote>GNU's Not UNIX</quote>, 
+        thus recursing upon itself for definition. For further clarity, see
+        Infinite Loop.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-s">
+    <title>S</title>
+
+    <glossentry>
+      <glossterm>
+        <acronym>SGML</acronym>
+      </glossterm>
+
+      <glossdef>
+        <para>
+        <acronym>SGML</acronym>
+
+        stands for 
+        <quote>Standard Generalized Markup Language</quote>. 
+        Created in the 1980's to provide an extensible means to maintain
+        documentation based upon content instead of presentation, 
+        <acronym>SGML</acronym>
+
+        has withstood the test of time as a robust, powerful language. 
+        <glossterm>
+          <acronym>XML</acronym>
+        </glossterm>
+
+        is the 
+        <quote>baby brother</quote>
+
+        of SGML; any valid 
+        <acronym>XML</acronym>
+
+        document it, by definition, a valid 
+        <acronym>SGML</acronym>
+
+        document. The document you are reading is written and maintained in 
+        <acronym>SGML</acronym>, 
+        and is also valid 
+        <acronym>XML</acronym>
+
+        if you modify the Document Type Definition.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-t">
+    <title>T</title>
+
+    <glossentry id="gloss-target-milestone" xreflabel="Target Milestone">
+      <glossterm>Target Milestone</glossterm>
+
+      <glossdef>
+        <para>Target Milestones are Product goals. They are configurable on a
+        per-Product basis. Most software development houses have a concept of
+        
+        <quote>milestones</quote>
+
+        where the people funding a project expect certain functionality on
+        certain dates. Bugzilla facilitates meeting these milestones by
+        giving you the ability to declare by which milestone a bug will be
+        fixed, or an enhancement will be implemented.</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+
+  <glossdiv id="gloss-z">
+    <title>Z</title>
+
+    <glossentry id="zarro-boogs-found" xreflabel="Zarro Boogs Found">
+      <glossterm>Zarro Boogs Found</glossterm>
+
+      <glossdef>
+        <para>This is the cryptic response sent by Bugzilla when a query
+        returned no results. It is just a goofy way of saying "Zero Bugs
+        Found".</para>
+      </glossdef>
+    </glossentry>
+  </glossdiv>
+</glossary>
+
 <!-- Keep this comment at the end of the file
 Local variables:
 mode: sgml
@@ -319,3 +381,4 @@ sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:
 -->
+

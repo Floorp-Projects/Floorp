@@ -1,77 +1,102 @@
 <!-- <!DOCTYPE chapter PUBLIC "-//OASIS//DTD DocBook V4.1//EN">-->
-
 <chapter id="variants" xreflabel="Bugzilla Variants and Competitors">
   <title>Bugzilla Variants and Competitors</title>
-  <para>I created this section to answer questions about Bugzilla
-    competitors and variants, then found a wonderful site which covers
-    an awful lot of what I wanted to discuss.  Rather than quote it in
-    its entirety, I'll simply refer you here: <ulink
-						     url="http://linas.org/linux/pm.html">http://linas.org/linux/pm.html</ulink></para>
+
+  <para>I created this section to answer questions about Bugzilla competitors
+  and variants, then found a wonderful site which covers an awful lot of what
+  I wanted to discuss. Rather than quote it in its entirety, I'll simply
+  refer you here: 
+  <ulink url="http://linas.org/linux/pm.html">
+  http://linas.org/linux/pm.html</ulink>
+  </para>
 
   <section id="rhbugzilla" xreflabel="Red Hat Bugzilla">
     <title>Red Hat Bugzilla</title>
-    <para>
-      Red Hat Bugzilla is probably the most popular Bugzilla variant
-      on the planet. One of the major benefits of Red Hat Bugzilla is
-      the ability to work with Oracle, MySQL, and PostGreSQL databases
-      serving as the back-end, instead of just MySQL.  Dave Lawrence
-      has worked very hard to keep Red Hat Bugzilla up-to-date, and
-      many people prefer the snappier-looking page layout of Red Hat
-      Bugzilla to the default Mozilla-standard formatting.
+
+    <para>Red Hat Bugzilla is probably the most popular Bugzilla variant on
+    the planet. One of the major benefits of Red Hat Bugzilla is the ability
+    to work with Oracle, MySQL, and PostGreSQL databases serving as the
+    back-end, instead of just MySQL. Dave Lawrence has worked very hard to
+    keep Red Hat Bugzilla up-to-date, and many people prefer the
+    snappier-looking page layout of Red Hat Bugzilla to the default
+    Mozilla-standard formatting.</para>
+
+    <para>URL: 
+    <ulink url="http://bugzilla.redhat.com/bugzilla/">
+    http://bugzilla.redhat.com/bugzilla/</ulink>
     </para>
-    <para>URL: <ulink
-		      url="http://bugzilla.redhat.com/bugzilla/">http://bugzilla.redhat.com/bugzilla/</ulink></para>
   </section>
 
   <section id="variant-fenris" xreflabel="Loki Bugzilla, a.k.a. Fenris">
     <title>Loki Bugzilla (Fenris)</title>
-    <para>Fenris can be found at <ulink
-					url="http://fenris.lokigames.com/">http://fenris.lokigames.com</ulink>.  It is a fork from Bugzilla.</para>
+
+    <para>Fenris can be found at 
+    <ulink url="http://fenris.lokigames.com/">
+    http://fenris.lokigames.com</ulink>
+
+    . It is a fork from Bugzilla.</para>
   </section>
 
   <section id="variant-issuezilla" xreflabel="Issuezilla">
     <title>Issuezilla</title>
-    <para>Issuezilla is another fork from Bugzilla, and seems nearly
-      as popular as the Red Hat Bugzilla fork.  Some Issuezilla team
-      members are regular contributors to the Bugzilla mailing
-      list/newsgroup.  Issuezilla is not the primary focus of
-      bug-tracking at tigris.org, however.  Their Java-based
-      bug-tracker, <xref linkend="variant-scarab" />, is under heavy development
-      and looks promising!</para>
-    <para>URL:  <ulink url="http://issuezilla.tigris.org/servlets/ProjectHome">http://issuezilla.tigris.org/servlets/ProjectHome</ulink></para>
+
+    <para>Issuezilla is another fork from Bugzilla, and seems nearly as
+    popular as the Red Hat Bugzilla fork. Some Issuezilla team members are
+    regular contributors to the Bugzilla mailing list/newsgroup. Issuezilla
+    is not the primary focus of bug-tracking at tigris.org, however. Their
+    Java-based bug-tracker, 
+    <xref linkend="variant-scarab" />
+
+    , is under heavy development and looks promising!</para>
+
+    <para>URL: 
+    <ulink url="http://issuezilla.tigris.org/servlets/ProjectHome">
+    http://issuezilla.tigris.org/servlets/ProjectHome</ulink>
+    </para>
   </section>
 
-  <section id="variant-scarab" xreflabel="Scarab, a newfangled Java-based issue tracker">
+  <section id="variant-scarab"
+  xreflabel="Scarab, a newfangled Java-based issue tracker">
     <title>Scarab</title>
-    <para>Scarab is a promising new bug-tracking system built using
-      Java Serlet technology.  As of this writing, no source code has
-      been released as a package, but you can obtain the code from
-      CVS.
+
+    <para>Scarab is a promising new bug-tracking system built using Java
+    Serlet technology. As of this writing, no source code has been released
+    as a package, but you can obtain the code from CVS.</para>
+
+    <para>URL: 
+    <ulink url="http://scarab.tigris.org/">http://scarab.tigris.org</ulink>
     </para>
-    <para>URL: <ulink url="http://scarab.tigris.org/">http://scarab.tigris.org</ulink></para>
   </section>
 
   <section id="variant-perforce" xreflabel="Using Perforce to track bugs">
     <title>Perforce SCM</title>
-    <para>Although Perforce isn't really a bug tracker, it can be used
-      as such through the <quote>jobs</quote> functionality.</para>
-    <para><ulink
-		 url="http://www.perforce.com/perforce/technotes/note052.html"></ulink>http://www.perforce.com/perforce/technotes/note052.html</para>
+
+    <para>Although Perforce isn't really a bug tracker, it can be used as
+    such through the 
+    <quote>jobs</quote>
+
+    functionality.</para>
+
+    <para>
+    <ulink url="http://www.perforce.com/perforce/technotes/note052.html">
+    </ulink>
+
+    http://www.perforce.com/perforce/technotes/note052.html</para>
   </section>
 
   <section id="variant-sourceforge" xreflabel="SourceForge">
     <title>SourceForge</title>
+
     <para>SourceForge is more of a way of coordinating geographically
-      distributed free software and open source projects over the
-      Internet than strictly a bug tracker, but if you're hunting for
-      bug-tracking for your open project, it may be just what the
-      software engineer ordered!</para>
-    <para>URL: <ulink
-		      url="http://www.sourceforge.net">http://www.sourceforge.net</ulink></para>
+    distributed free software and open source projects over the Internet than
+    strictly a bug tracker, but if you're hunting for bug-tracking for your
+    open project, it may be just what the software engineer ordered!</para>
+
+    <para>URL: 
+    <ulink url="http://www.sourceforge.net">
+    http://www.sourceforge.net</ulink>
+    </para>
   </section>
-
-
-
 </chapter>
 
 <!-- Keep this comment at the end of the file
@@ -94,3 +119,4 @@ sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:
 -->
+

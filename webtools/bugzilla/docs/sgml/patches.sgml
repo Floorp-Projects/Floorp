@@ -1,480 +1,287 @@
 <!DOCTYPE appendix PUBLIC "-//OASIS//DTD DocBook V4.1//EN">
-
 <appendix id="patches" xreflabel="Useful Patches and Utilities for Bugzilla">
-  <title>Useful Patches and Utilities for Bugzilla</title>		
+  <title>Useful Patches and Utilities for Bugzilla</title>
 
-  <para>Are you looking for a way to put your Bugzilla into overdrive?  Catch some of the niftiest tricks here in this section.</para>
+  <para>Are you looking for a way to put your Bugzilla into overdrive? Catch
+  some of the niftiest tricks here in this section.</para>
 
   <section id="rewrite" xreflabel="Apache mod_rewrite magic">
-    <title>Apache <filename>mod_rewrite</filename> magic</title>
-    <para>Apache's <filename>mod_rewrite</filename> module lets you do some truly amazing things with URL rewriting.  Here are a couple of examples of what you can do.</para>
+    <title>Apache 
+    <filename>mod_rewrite</filename>
+
+    magic</title>
+
+    <para>Apache's 
+    <filename>mod_rewrite</filename>
+
+    module lets you do some truly amazing things with URL rewriting. Here are
+    a couple of examples of what you can do.</para>
+
     <orderedlist>
       <listitem>
-	<para>
-	  Make it so if someone types
-	  <computeroutput>http://www.foo.com/12345</computeroutput>,
-	  Bugzilla spits back
-	  http://www.foo.com/show_bug.cgi?id=12345. Try setting up
-	  your VirtualHost section for Bugzilla with a rule like
-	  this:</para>
-	<programlisting>
+        <para>Make it so if someone types 
+        <computeroutput>http://www.foo.com/12345</computeroutput>
+
+        , Bugzilla spits back http://www.foo.com/show_bug.cgi?id=12345. Try
+        setting up your VirtualHost section for Bugzilla with a rule like
+        this:</para>
+
+        <programlisting>
 <![CDATA[
 <VirtualHost 12.34.56.78>
 RewriteEngine On
 RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
 </VirtualHost>
 ]]>
-	</programlisting>
-
+        </programlisting>
       </listitem>
+
       <listitem>
-	<para>There are many, many more things you can do with
-	  mod_rewrite.  As time goes on, I will include many more in
-	  the Guide.  For now, though, please refer to the mod_rewrite
-	  documentation at <ulink
-				  url="http://www.apache.org">http://www.apache.org</ulink></para>
+        <para>There are many, many more things you can do with mod_rewrite.
+        As time goes on, I will include many more in the Guide. For now,
+        though, please refer to the mod_rewrite documentation at 
+        <ulink url="http://www.apache.org">http://www.apache.org</ulink>
+        </para>
       </listitem>
     </orderedlist>
   </section>
 
-<section id="setperl" xreflabel="The setperl.csh Utility">
+  <section id="setperl" xreflabel="The setperl.csh Utility">
     <title>The setperl.csh Utility</title>
-    <para>	 You can use the "setperl.csh" utility to quickly and
-      easily change the path to perl on all your Bugzilla files. This
-      is a C-shell script; if you do not have "csh" or "tcsh" in the
-      search path on your system, it will not work!
-    </para>	
+
+    <para>You can use the "setperl.csh" utility to quickly and easily change
+    the path to perl on all your Bugzilla files. This is a C-shell script; if
+    you do not have "csh" or "tcsh" in the search path on your system, it
+    will not work!</para>
+
     <procedure>
       <step>
-	<para>
-	  Download the "setperl.csh" utility to your Bugzilla
-	  directory and make it executable.
-	</para>
-	<substeps>
-	  <step>
-	    <para>
-	      <computeroutput>
-		<prompt>bash#</prompt>
-		<command>cd /your/path/to/bugzilla</command>
-	      </computeroutput>
-	    </para>
-	  </step>
-	  <step>
-	  <para>
-	      <computeroutput> <prompt>bash#</prompt> <command>wget -O
-		  setperl.csh
-		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</command> </computeroutput>
-	    </para>
-	  </step>
-	<step>
-	    <para>
-	      <computeroutput> <prompt>bash#</prompt> <command>chmod
-		  u+x setperl.csh</command> </computeroutput>
-	    </para>
-	  </step>
-      </substeps>
-      </step>
-      <step>
-	<para>
-	  Prepare (and fix) Bugzilla file permissions.
-	</para>
-	<substeps>
-	  <step>
-	    <para>
-	      <computeroutput>
-		<prompt>bash#</prompt>
-		<command>chmod u+w *</command>
-	      </computeroutput>
-	    </para>
-	  </step>
-	  <step>
-	  <para>
-	      <computeroutput> <prompt>bash#</prompt> <command>chmod
-		  u+x duplicates.cgi</command> </computeroutput>
-	    </para>
-	  </step>
-	  <step>
-	    <para>
-	      <computeroutput>
-		<prompt>bash#</prompt>
-		<command>chmod a-x bug_status.html</command>
-	      </computeroutput>
-	    </para>
-	  </step>
-	</substeps>
-      </step>
-      <step>
-	<para>
-	  Run the script:
-	</para>
-	<para>
-	  <computeroutput> <prompt>bash#</prompt>
-	    <command>./setperl.csh /your/path/to/perl</command>
-	  </computeroutput>
-<example>
-	    <title>Using Setperl to set your perl path</title>
-	    <para>
-	      <computeroutput> <prompt>bash#</prompt>
-		<command>./setperl.csh /usr/bin/perl</command>
-	      </computeroutput>
+        <para>Download the "setperl.csh" utility to your Bugzilla directory
+        and make it executable.</para>
+
+        <substeps>
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>cd /your/path/to/bugzilla</command>
+              </computeroutput>
             </para>
-	  </example>
-	</para>
+          </step>
+
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>wget -O setperl.csh
+                'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</command>
+              </computeroutput>
+            </para>
+          </step>
+
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>chmod u+x setperl.csh</command>
+              </computeroutput>
+            </para>
+          </step>
+        </substeps>
+      </step>
+
+      <step>
+        <para>Prepare (and fix) Bugzilla file permissions.</para>
+
+        <substeps>
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>chmod u+w *</command>
+              </computeroutput>
+            </para>
+          </step>
+
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>chmod u+x duplicates.cgi</command>
+              </computeroutput>
+            </para>
+          </step>
+
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>chmod a-x bug_status.html</command>
+              </computeroutput>
+            </para>
+          </step>
+        </substeps>
+      </step>
+
+      <step>
+        <para>Run the script:</para>
+
+        <para>
+          <computeroutput>
+            <prompt>bash#</prompt>
+
+            <command>./setperl.csh /your/path/to/perl</command>
+          </computeroutput>
+
+          <example>
+            <title>Using Setperl to set your perl path</title>
+
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>./setperl.csh /usr/bin/perl</command>
+              </computeroutput>
+            </para>
+          </example>
+        </para>
       </step>
     </procedure>
   </section>
 
   <section id="cmdline">
     <title>Command-line Bugzilla Queries</title>
-    <para>
-      Users can query Bugzilla from the command line using this suite
-      of utilities.
+
+    <para>Users can query Bugzilla from the command line using this suite of
+    utilities.</para>
+
+    <para>The query.conf file contains the mapping from options to field
+    names and comparison types. Quoted option names are "grepped" for, so it
+    should be easy to edit this file. Comments (#) have no effect; you must
+    make sure these lines do not contain any quoted "option"</para>
+
+    <para>buglist is a shell script which submits a Bugzilla query and writes
+    the resulting HTML page to stdout. It supports both short options, (such
+    as "-Afoo" or "-Rbar") and long options (such as "--assignedto=foo" or
+    "--reporter=bar"). If the first character of an option is not "-", it is
+    treated as if it were prefixed with "--default=".</para>
+
+    <para>The columlist is taken from the COLUMNLIST environment variable.
+    This is equivalent to the "Change Columns" option when you list bugs in
+    buglist.cgi. If you have already used Bugzilla, use 
+    <command>grep COLUMLIST ~/.netscape/cookies</command>
+
+    to see your current COLUMNLIST setting.</para>
+
+    <para>bugs is a simple shell script which calls buglist and extracts the
+    bug numbers from the output. Adding the prefix
+    "http://bugzilla.mozilla.org/buglist.cgi?bug_id=" turns the bug list into
+    a working link if any bugs are found. Counting bugs is easy. Pipe the
+    results through 
+    <command>sed -e 's/,/ /g' | wc | awk '{printf $2 "\n"}'</command>
     </para>
-    <para>
-      The query.conf file contains the mapping from options to field
-      names and comparison types.  Quoted option names are "grepped"
-      for, so it should be easy to edit this file.  Comments (#) have
-      no effect; you must make sure these lines do not contain any
-      quoted "option"
+
+    <para>Akkana says she has good results piping buglist output through 
+    <command>w3m -T text/html -dump</command>
     </para>
-    <para>
-      buglist is a shell script which submits a Bugzilla query and
-      writes the resulting HTML page to stdout.  It supports both
-      short options, (such as "-Afoo" or "-Rbar") and long options
-      (such as "--assignedto=foo" or "--reporter=bar").  If the first
-      character of an option is not "-", it is treated as if it were
-      prefixed with "--default=".
-    </para>
-    <para>
-      The columlist is taken from the COLUMNLIST environment variable.
-      This is equivalent to the "Change Columns" option when you list
-      bugs in buglist.cgi.  If you have already used Bugzilla, use
-      <command>grep COLUMLIST ~/.netscape/cookies</command> to see
-      your current COLUMNLIST setting.
-    </para>
-    <para>
-      bugs is a simple shell script which calls buglist and extracts
-      the bug numbers from the output.  Adding the prefix
-      "http://bugzilla.mozilla.org/buglist.cgi?bug_id=" turns the bug
-      list into a working link if any bugs are found. Counting bugs is
-      easy.  Pipe the results through <command>sed -e 's/,/ /g' | wc |
-	awk '{printf $2 "\n"}'</command>
-    </para>
-    <para>
-      Akkana says she has good results piping buglist output through
-      <command>w3m -T text/html -dump</command>
-    </para>
+
     <procedure>
       <step>
-	<para>
-	  Download three files:
-	</para>
-	<substeps>
-	  <step>
-	    <para>
-	      <computeroutput> <prompt>bash$</prompt> <command>wget -O
-		  query.conf
-		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26157'</command> </computeroutput>
-	    </para>
-	  </step>
-	  <step>
-	    <para>
-	      <computeroutput> <prompt>bash$</prompt> <command>wget -O
-		  buglist
-		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26944'</command> </computeroutput>
-	    </para>
-	  </step>
-	  <step>
-	    <para>
-	      <computeroutput> <prompt>bash#</prompt> <command>wget -O
-		  bugs
-		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26215'</command> </computeroutput>
-	    </para>
-	  </step>
-	</substeps>
+        <para>Download three files:</para>
+
+        <substeps>
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash$</prompt>
+
+                <command>wget -O query.conf
+                'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26157'</command>
+              </computeroutput>
+            </para>
+          </step>
+
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash$</prompt>
+
+                <command>wget -O buglist
+                'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26944'</command>
+              </computeroutput>
+            </para>
+          </step>
+
+          <step>
+            <para>
+              <computeroutput>
+                <prompt>bash#</prompt>
+
+                <command>wget -O bugs
+                'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26215'</command>
+              </computeroutput>
+            </para>
+          </step>
+        </substeps>
       </step>
+
       <step>
-	<para>
-	  Make your utilities executable:
-	  <computeroutput>
-	    <prompt>bash$</prompt>
-	    <command>chmod u+x buglist bugs</command>
-	  </computeroutput>
-	</para>
+        <para>Make your utilities executable: 
+        <computeroutput>
+          <prompt>bash$</prompt>
+
+          <command>chmod u+x buglist bugs</command>
+        </computeroutput>
+        </para>
       </step>
     </procedure>
   </section>
 
   <section id="quicksearch">
     <title>The Quicksearch Utility</title>
-    <para>
-      Quicksearch is a new, experimental feature of the 2.12 release.
-      It consist of two Javascript files, "quicksearch.js" and
-      "localconfig.js", and two documentation files,
-      "quicksearch.html" and "quicksearchhack.html"
+
+    <para>Quicksearch is a new, experimental feature of the 2.12 release. It
+    consist of two Javascript files, "quicksearch.js" and "localconfig.js",
+    and two documentation files, "quicksearch.html" and
+    "quicksearchhack.html"</para>
+
+    <para>The index.html page has been updated to include the QuickSearch
+    text box.</para>
+
+    <para>To take full advantage of the query power, the Bugzilla maintainer
+    must edit "localconfig.js" according to the value sets used in the local
+    installation.</para>
+
+    <para>Currently, keywords must be hard-coded in localconfig.js. If they
+    are not, keywords are not automatically recognized. This means, if
+    localconfig.js is left unconfigured, that searching for a bug with the
+    "foo" keyword will only find bugs with "foo" in the summary, status
+    whiteboard, product or component name, but not those with the keyword
+    "foo".</para>
+
+    <para>Workarounds for Bugzilla users: 
+    <simplelist>
+      <member>search for '!foo' (this will find only bugs with the keyword
+      "foo"</member>
+
+      <member>search 'foo,!foo' (equivalent to 'foo OR keyword:foo')</member>
+    </simplelist>
     </para>
-    <para>
-      The index.html page has been updated to include the QuickSearch
-      text box.
-    </para>
-    <para>
-      To take full advantage of the query power, the Bugzilla
-      maintainer must edit "localconfig.js" according to the value
-      sets used in the local installation.
-    </para>
-    <para>
-      Currently, keywords must be hard-coded in localconfig.js.  If
-      they are not, keywords are not automatically recognized.  This
-      means, if localconfig.js is left unconfigured, that searching
-      for a bug with the "foo" keyword will only find bugs with "foo"
-      in the summary, status whiteboard, product or component name,
-      but not those with the keyword "foo".
-    </para>
-    <para>
-      Workarounds for Bugzilla users:
-      <simplelist>
-	<member>search for '!foo' (this will find only bugs with the
-	  keyword "foo"</member>
-	<member>search 'foo,!foo' (equivalent to 'foo OR
-	  keyword:foo')</member>
-      </simplelist>
-    </para>
-    <para>
-      When this tool is ported from client-side JavaScript to
-      server-side Perl, the requirement for hard-coding keywords can
-      be fixed. <ulink
-		       url="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">This bug</ulink> has details.
-    </para>
+
+    <para>When this tool is ported from client-side JavaScript to server-side
+    Perl, the requirement for hard-coding keywords can be fixed. 
+    <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">This
+    bug</ulink>
+
+    has details.</para>
   </section>
-
-  <section id="bzhacking">
-    <title>Hacking Bugzilla</title>
-    <para>
-      The following is a guide for reviewers when checking code into Bugzilla's
-      CVS repostory at mozilla.org.  If you wish to submit patches to Bugzilla,
-      you should follow the rules and style conventions below.  Any code that
-      does not adhere to these basic rules will not be added to Bugzilla's
-      codebase.
-    </para>
-    <section>
-      <title>Things that have caused problems and should be avoided</title>
-      <orderedlist>
-        <listitem>
-          <para>
-            Usage of variables in Regular Expressions
-          </para>
-          <para>
-            It is very important that you don't use a variable in a regular
-            expression unless that variable is supposed to contain an expression.
-            This especially applies when using grep.  You should use:
-          </para>
-          <para>
-            <programlisting>
-grep ($_ eq $value, @array);
-            </programlisting>
-          </para>
-          <para>
-            -- NOT THIS --
-          </para>
-          <para>
-            <programlisting>
-grep (/$value/, @array);
-            </programlisting>
-          </para>
-          <note>
-            <para>
-              If you need to use a non-expression variable inside of an expression, be
-              sure to quote it properly (using <function>\Q..\E</function>).
-            </para>
-          </note>
-        </listitem>
-      </orderedlist>
-    </section>
-    <section>
-      <title>Coding Style for Bugzilla</title>
-      <para>
-        While it's true that not all of the code currently in Bugzilla adheres to
-        this (or any) styleguide, it is something that is being worked toward.  Therefore,
-        we ask that all new code (submitted patches and new files) follow this guide
-        as closely as possible (if you're only changing 1 or 2 lines, you don't have
-        to reformat the entire file :).
-      </para>
-      <para>
-        The Bugzilla development team has decided to adopt the perl style guide as
-        published by Larry Wall.  This giude can be found in <quote>Programming
-        Perl</quote> (the camel book) or by typing <command>man perlstyle</command> at
-        your favorite shell prompt.
-      </para>
-      <para>
-        What appears below if a brief summary, please refer to the perl style
-        guide if you don't see your question covered here.  It is much better to submit
-	a patch which fails these criteria than no patch at all, but please try to meet
-	these minimum standards when submitting code to Bugzilla.
-      </para>
-      <itemizedlist>
-        <listitem>
-          <para>
-            Whitespace
-          </para>
-          <para>
-            Bugzilla's preferred indentation is 4 spaces (no tabs, please).
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-            Curly braces.
-          </para>
-          <para>
-            The opening brace of a block should be on the same line as the statement
-            that is causing the block and the closing brace should be at the same
-            indentation level as that statement, for example:
-          </para>
-          <para>
-            <programlisting>
-if ($var) {
-    print "The variable is true";
-}
-else {
-    print "Try again";
-}
-            </programlisting>
-          </para>
-          <para>
-            -- NOT THIS --
-          </para>
-          <para>
-            <programlisting>
-if ($var)
-{
-    print "The variable is true";
-}
-else
-{
-    print "Try again";
-}
-            </programlisting>
-          </para>
-        </listitem>
-
-	<listitem>
-	  <para>
-	    Cookies
-	  </para>
-	  <para>
-	    Bugzilla uses cookies to ease the user experience, but no new patches
-	    should <emphasis>require</emphasis> user-side cookies.
-	  </para>
-	</listitem>
-
-        <listitem>
-          <para>
-            File Names
-          </para>
-          <para>
-            File names for bugzilla code and support documention should be legal across
-            multiple platforms. <computeroutput>\ / : * ? &quot; &lt; &gt;</computeroutput>
-            and <computeroutput>|</computeroutput> are all illegal characters for filenames
-            on various platforms.  Also, file names should not have spaces in them as they
-            can cause confusion in CVS and other mozilla.org utilities.
-          </para>
-        </listitem>
-
-	<listitem>
-	  <para>
-	    Javascript dependencies
-	  </para>
-	  <para>
-	    While Bugzilla uses Javascript to make the user experience easier, no patch
-	    to Bugzilla should <emphasis>require</emphasis> Javascript.
-	  </para>
-	</listitem>
-
-	<listitem>
-	  <para>
-	    Patch Format
-	  </para>
-	  <para>
-	    All patches submitted for inclusion into Bugzilla should be in the form of a
-	    <quote>unified diff</quote>.  This comes from using <quote>diff -u</quote>
-	    instead of simply <quote>diff</quote> when creating your patch.  This will
-	    result in quicker acceptance of the patch.
-	  </para>
-	</listitem>
-
-	<listitem>
-	  <para>
-	    Schema Changes
-	  </para>
-	  <para>
-	    If you make schema changes, you should modify <filename>sanitycheck.cgi</filename>
-	    to support the new schema.  All referential columns should be checked.
-	  </para>
-	</listitem>
-
-	<listitem>
-	  <para>
-	    Taint Mode
-	  </para>
-	  <para>
-	    All new cgis must run in Taint mode (Perl taint and DBI taint), and existing cgi's
-	    which run in taint mode must not have taint mode turned off.
-	  </para>
-	</listitem>
-
-	<listitem>
-	  <para>
-	    Templatization
-	  </para>
-	  <para>
-	    Patches to Bugzilla need to support templates so they do not force user interface choices
-	    on Bugzilla administrators.
-	  </para>
-	</listitem>
-
-        <listitem>
-          <para>
-            Variable Names
-          </para>
-          <para>
-            If a variable is scoped globally (<computeroutput>$::variable</computeroutput>)
-            its name should be descriptive of what it contains.  Local variables can be named
-            a bit looser, provided the context makes their content obvious.  For example,
-            <computeroutput>$ret</computeroutput> could be used as a staging variable for a
-             routine's return value as the line <computeroutput>return $ret;</computeroutput>
-             will make it blatantly obvious what the variable holds and most likely be shown
-             on the same screen as <computeroutput>my $ret = "";</computeroutput>.
-          </para>
-        </listitem>
-
-        <listitem>
-          <para>
-            Cross Database Compatability
-          </para>
-          <para>
-            Bugzilla was originally written to work with MySQL and therefore took advantage
-            of some of its features that aren't contained in other RDBMS software.  These
-            should be avoided in all new code.  Examples of these features are enums and
-            <function>encrypt()</function>.
-          </para>
-        </listitem>
-        <listitem>
-          <para>
-            Cross Platform Compatability
-          </para>
-          <para>
-            While Bugzilla was written to be used on Unix based systems (and Unix/Linux is
-            still the only officially supported platform) there are many who desire/need to
-            run Bugzilla on Microsoft Windows boxes.  Whenever possible, we should strive
-            not to make the lives of these people any more complicated and avoid doing things
-            that break Bugzilla's ability to run on multiple operating systems.
-          </para>
-        </listitem>
-      </itemizedlist>
-    </section>
-  </section>
-
 </appendix>
-
 
 <!-- Keep this comment at the end of the file
 Local variables:
@@ -496,3 +303,4 @@ sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:
 -->
+

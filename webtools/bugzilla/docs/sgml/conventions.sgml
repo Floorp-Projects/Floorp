@@ -1,98 +1,155 @@
 <!-- <!DOCTYPE section PUBLIC "-//OASIS//DTD DocBook V4.1//EN"> -->
-
 <section id="conventions">
   <title>Document Conventions</title>
-  
+
   <indexterm zone="conventions">
     <primary>conventions</primary>
   </indexterm>
-  
-  <para>
-    This document uses the following conventions
-  </para>
-  
+
+  <para>This document uses the following conventions</para>
+
   <informaltable frame="none">
     <tgroup cols="2">
       <thead>
         <row>
           <entry>Descriptions</entry>
+
           <entry>Appearance</entry>
         </row>
       </thead>
+
       <tbody>
         <row>
           <entry>Warnings</entry>
-          <entry><caution>
+
+          <entry>
+            <caution>
               <para>Don't run with scissors!</para>
-            </caution></entry>
+            </caution>
+          </entry>
         </row>
+
         <row>
           <entry>Hint</entry>
-          <entry><tip>
+
+          <entry>
+            <tip>
               <para>Warm jar lids under the hot tap to loosen them.</para>
-            </tip></entry>
+            </tip>
+          </entry>
         </row>
+
         <row>
           <entry>Notes</entry>
-          <entry><note>
+
+          <entry>
+            <note>
               <para>Dear John...</para>
-            </note></entry>
+            </note>
+          </entry>
         </row>
+
         <row>
           <entry>Information requiring special attention</entry>
-          <entry><warning>
+
+          <entry>
+            <warning>
               <para>Read this or the cat gets it.</para>
-            </warning></entry>
+            </warning>
+          </entry>
         </row>
+
         <row>
           <entry>File Names</entry>
-          <entry><filename>file.extension</filename></entry>
+
+          <entry>
+            <filename>file.extension</filename>
+          </entry>
         </row>
+
         <row>
           <entry>Directory Names</entry>
-          <entry><filename class="directory">directory</filename></entry>
+
+          <entry>
+            <filename class="directory">directory</filename>
+          </entry>
         </row>
+
         <row>
           <entry>Commands to be typed</entry>
-          <entry><command>command</command></entry>
+
+          <entry>
+            <command>command</command>
+          </entry>
         </row>
+
         <row>
           <entry>Applications Names</entry>
-          <entry><application>application</application></entry>
+
+          <entry>
+            <application>application</application>
+          </entry>
         </row>
+
         <row>
-          <entry><foreignphrase>Prompt</foreignphrase> of users command under bash shell</entry>
+          <entry>
+          <foreignphrase>Prompt</foreignphrase>
+
+          of users command under bash shell</entry>
+
           <entry>bash$</entry>
         </row>
+
         <row>
-          <entry><foreignphrase>Prompt</foreignphrase> of root users command under bash shell</entry>
+          <entry>
+          <foreignphrase>Prompt</foreignphrase>
+
+          of root users command under bash shell</entry>
+
           <entry>bash#</entry>
         </row>
-	<row>
-	  <entry><foreignphrase>Prompt</foreignphrase> of user command under tcsh shell</entry>
-	  <entry>tcsh$</entry>
-	</row>
+
+        <row>
+          <entry>
+          <foreignphrase>Prompt</foreignphrase>
+
+          of user command under tcsh shell</entry>
+
+          <entry>tcsh$</entry>
+        </row>
+
         <row>
           <entry>Environment Variables</entry>
-          <entry><envar>VARIABLE</envar></entry>
+
+          <entry>
+            <envar>VARIABLE</envar>
+          </entry>
         </row>
+
         <row>
           <entry>Emphasized word</entry>
-          <entry><emphasis>word</emphasis></entry>
+
+          <entry>
+            <emphasis>word</emphasis>
+          </entry>
         </row>
+
         <row>
           <entry>Code Example</entry>
-          <entry><programlisting><sgmltag class="starttag">para</sgmltag>Beginning and end of paragraph<sgmltag class="endtag">para</sgmltag></programlisting></entry> 
+
+          <entry>
+            <programlisting>
+            <sgmltag class="starttag">para</sgmltag>
+
+            Beginning and end of paragraph
+            <sgmltag class="endtag">para</sgmltag>
+            </programlisting>
+          </entry>
         </row>
       </tbody>
     </tgroup>
   </informaltable>
-  
 </section>
-
-
-
-
 
 <!-- Keep this comment at the end of the file
 Local variables:
@@ -114,3 +171,4 @@ sgml-shorttag:t
 sgml-tag-region-if-active:t
 End:
 -->
+
