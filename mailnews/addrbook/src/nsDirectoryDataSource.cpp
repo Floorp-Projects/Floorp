@@ -546,7 +546,7 @@ nsresult nsAbDirectoryDataSource::createDirectoryUriNode(nsIAbDirectory *directo
   if (NS_FAILED(rv)) return rv;
   nsString nameString(uri);
   createNode(nameString, target);
-  delete[] uri;
+  nsAllocator::Free(uri);
   return NS_OK;
 }
 
@@ -568,7 +568,7 @@ nsAbDirectoryDataSource::createCardChildNode(nsIAbDirectory *directory,
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
   createNode(nameString, target);
-  delete[] name;
+  nsAllocator::Free(name);
   return NS_OK;
 }
 
