@@ -37,7 +37,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsISimpleEnumerator.idl"
+
+class nsISimpleEnumerator;
 
 /**
  * nsIArray
