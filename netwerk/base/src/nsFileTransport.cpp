@@ -50,7 +50,6 @@
 #include "nsIProxyObjectManager.h"
 #include "nsNetUtil.h"
 
-static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 
 #define NS_OUTPUT_STREAM_BUFFER_SIZE    (64 * 1024)
