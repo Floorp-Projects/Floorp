@@ -684,7 +684,7 @@ sub getEmailAttributes ($@) {
     if ( $commentField =~ /Created an attachment \(/ ) {
         push (@flags, 'Attachments');
     }
-    elsif ( ($commentField ne '') && (scalar(@flags) == 1) && ($flags[0] eq 'Resolved')) {
+    elsif ( ($commentField ne '') && !(scalar(@flags) == 1 && $flags[0] eq 'Resolved')) {
         push (@flags, 'Comments');
     }
     
