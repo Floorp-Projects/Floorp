@@ -3623,7 +3623,7 @@ then
 fi
 rm -f dummy.mk
 echo 'all: ; @echo $(MAKE_VERSION)' > dummy.mk
-_make_vers=`$MAKE -f dummy.mk all 2>/dev/null`
+_make_vers=`$MAKE --no-print-directory -f dummy.mk all 2>/dev/null`
 rm -f dummy.mk
 _MAKE_MAJOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $1 }'`
 _MAKE_MINOR_VERSION=`echo $_make_vers | $AWK -F\. '{ print $2 }'`
