@@ -107,8 +107,8 @@ nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
     *aInstancePtr = NS_STATIC_CAST(nsIXULWindowCallbacks*,this);
   else if (aIID.Equals(nsIProgressEventSink::GetIID()))
     *aInstancePtr = NS_STATIC_CAST(nsIProgressEventSink*,this);
-  else if (aIID.Equals(nsIEventSinkGetter::GetIID()))
-    *aInstancePtr = NS_STATIC_CAST(nsIEventSinkGetter*,this);
+  else if (aIID.Equals(nsICapabilities::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsICapabilities*,this);
   else if (aIID.Equals(kISupportsIID))
     *aInstancePtr = NS_STATIC_CAST( nsISupports*, NS_STATIC_CAST(nsIXPINotifier*,this));
   else
@@ -474,14 +474,11 @@ nsXPInstallManager::OnStatus(nsIChannel *channel, nsISupports *ctxt, const PRUni
     return mProxy->SetActionText(aMsg);
 }
 
-// nsIEventSinkGetter method
+// nsICapabilities method
 NS_IMETHODIMP 
-nsXPInstallManager::GetEventSink(const char *command, const nsIID & eventSinkIID, nsISupports **_retval)
+nsXPInstallManager::QueryCapability(const nsIID & eventSinkIID, void* *_retval)
 {
-    if (nsCRT::strcmp(command, "load") == 0)  // what is the correct verb?
-        return QueryInterface(eventSinkIID, (void**)_retval);
-
-    return NS_ERROR_FAILURE;
+    return QueryInterface(eventSinkIID, (void**)_retval);
 }
 
 // IXPINotifier methods

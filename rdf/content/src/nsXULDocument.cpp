@@ -4600,7 +4600,7 @@ nsXULDocument::LoadScript(nsIURI* aURI, const char* aVersion, PRBool* aBlock)
 
         // N.B., the loader will be released in DoneLoadingScript()
         nsIUnicharStreamLoader* loader;
-        rv = NS_NewUnicharStreamLoader(&loader, aURI, group, this);
+        rv = NS_NewUnicharStreamLoader(&loader, aURI, this, group);
         if (NS_FAILED(rv)) return rv;
 
         *aBlock = PR_TRUE;

@@ -29,7 +29,7 @@
 #include "nsIURI.h"
 #include "nsHTTPHandler.h"
 #include "nsIEventQueue.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIHttpEventSink.h"
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
@@ -55,7 +55,6 @@ public:
     // Constructors and Destructor
     nsHTTPChannel(nsIURI* i_URL, 
                   const char* verb,
-                  nsIEventSinkGetter* i_EventSinkGetter,
                   nsIURI* originalURI,
                   nsHTTPHandler* i_Handler);
 
@@ -91,12 +90,12 @@ protected:
     nsCOMPtr<nsIURI>            mOriginalURI;
     nsCOMPtr<nsIURI>            mURI;
     PRBool                      mConnected; 
-    nsCOMPtr<nsHTTPHandler>     mHandler;
+    nsHTTPHandler*              mHandler;
     HTTPState                   mState;
 
-    nsCString                    mVerb;
+    nsCString                   mVerb;
     nsCOMPtr<nsIHTTPEventSink>  mEventSink;
-    nsCOMPtr<nsIEventSinkGetter> mEventSinkGetter;
+    nsCOMPtr<nsICapabilities>   mCallbacks;
 
     nsHTTPRequest*              mRequest;
     nsHTTPResponse*             mResponse;

@@ -58,7 +58,6 @@ public:
 	virtual nsresult LoadUrl(nsIURI * aURL, nsISupports * aConsumer = nsnull);
 
 	virtual nsresult SetUrl(nsIURI * aURL); // sometimes we want to set the url before we load it
-	virtual nsresult SetLoadGroup(nsILoadGroup * aLoadGroup);
 
 	// Flag manipulators
 	PRBool TestFlag  (PRUint32 flag) {return flag & m_flags;}

@@ -3771,7 +3771,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       nsIUnicharStreamLoader* loader;
 
       mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
-      rv = NS_NewUnicharStreamLoader(&loader, url, loadGroup, this);
+      rv = NS_NewUnicharStreamLoader(&loader, url, this, loadGroup);
       NS_RELEASE(url);
       if (NS_OK == rv) {
         rv = NS_ERROR_HTMLPARSER_BLOCK;

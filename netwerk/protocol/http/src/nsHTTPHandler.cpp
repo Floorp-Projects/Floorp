@@ -31,7 +31,7 @@
 #include "nsIChannel.h"
 #include "nsISocketTransportService.h"
 #include "nsIServiceManager.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIHttpEventSink.h"
 #include "nsIFileStream.h" 
 #include "nsIStringStream.h" 
@@ -185,12 +185,11 @@ nsHTTPHandler::~nsHTTPHandler()
 
 }
 
-NS_IMPL_ADDREF(nsHTTPHandler);
-
 NS_METHOD
 nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
-                          nsILoadGroup *aGroup,
-                          nsIEventSinkGetter *eventSinkGetter,
+                          nsILoadGroup* aLoadGroup,
+                          nsICapabilities* notificationCallbacks,
+                          nsLoadFlags loadAttributes,
                           nsIURI* originalURI,
                           nsIChannel **o_Instance)
 {
@@ -235,16 +234,21 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
         // Create one
         pChannel = new nsHTTPChannel(i_URL, 
                                      verb,
-                                     eventSinkGetter,
                                      originalURI,
                                      this);
         if (pChannel) {
             NS_ADDREF(pChannel);
-            pChannel->Init(aGroup);
+            rv = pChannel->SetLoadAttributes(loadAttributes);
+            if (NS_FAILED(rv)) goto done;
+            rv = pChannel->SetLoadGroup(aLoadGroup);
+            if (NS_FAILED(rv)) goto done;
+            rv = pChannel->SetNotificationCallbacks(notificationCallbacks);
+            if (NS_FAILED(rv)) goto done;
             rv = pChannel->QueryInterface(NS_GET_IID(nsIChannel), 
-                    (void**)o_Instance);
+                                          (void**)o_Instance);
             // add this instance to the active list of connections
             // TODO!
+          done:
             NS_RELEASE(pChannel);
         } else {
             rv = NS_ERROR_OUT_OF_MEMORY;
@@ -257,38 +261,10 @@ nsHTTPHandler::NewChannel(const char* verb, nsIURI* i_URL,
     return NS_ERROR_FAILURE;
 }
 
-nsresult
-nsHTTPHandler::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-    if (NULL == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
-
-    *aInstancePtr = NULL;
-    
-    if (aIID.Equals(NS_GET_IID(nsIProtocolHandler))) {
-        *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIHTTPProtocolHandler))) {
-        *aInstancePtr = (void*) ((nsIHTTPProtocolHandler*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIProxy))) {
-        *aInstancePtr = (void*) ((nsIProxy*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsISupports))) {
-        *aInstancePtr = (void*) ((nsISupports*)(nsIProtocolHandler*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE;
-}
- 
-NS_IMPL_RELEASE(nsHTTPHandler);
+NS_IMPL_ISUPPORTS3(nsHTTPHandler,
+                   nsIHTTPProtocolHandler,
+                   nsIProtocolHandler,
+                   nsIProxy)
 
 NS_METHOD
 nsHTTPHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
@@ -379,7 +355,6 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
 
 nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri, 
                                      nsHTTPChannel* i_Channel,
-                                     nsIEventSinkGetter* i_ESG,
                                      nsIChannel** o_pTrans)
 {
     nsresult rv;
@@ -473,11 +448,11 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
         // Create a new one...
         if (!mProxy || !mUseProxy)
         {
-            rv = CreateTransport(host, port, i_ESG, host, &trans);
+            rv = CreateTransport(host, port, host, &trans);
         }
         else
         {
-            rv = CreateTransport(mProxy, mProxyPort, i_ESG, host, &trans);
+            rv = CreateTransport(mProxy, mProxyPort, host, &trans);
         }
         if (NS_FAILED(rv)) return rv;
     }
@@ -500,7 +475,6 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
 
 nsresult nsHTTPHandler::CreateTransport(const char* host, 
                             PRInt32 port, 
-                            nsIEventSinkGetter* i_ESG, 
                             const char* aPrintHost,
                             nsIChannel** o_pTrans)
 {
@@ -510,13 +484,13 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
             kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    return sts->CreateTransport(host, port, i_ESG, aPrintHost, o_pTrans);  
+    return sts->CreateTransport(host, port, aPrintHost, o_pTrans);  
 }
 
 nsHTTPHandler * nsHTTPHandler::GetInstance(void)
 {
     static nsHTTPHandler* pHandler = new nsHTTPHandler();
-    NS_ADDREF(pHandler);
+    NS_IF_ADDREF(pHandler);
     return pHandler;
 };
 

@@ -26,7 +26,7 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIProgressEventSink.h"
 #include "nsIThreadPool.h"
 #include "nsISupportsArray.h"
@@ -84,7 +84,6 @@ nsFileTransportService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 NS_IMETHODIMP
 nsFileTransportService::CreateTransport(nsFileSpec& spec,
                                         const char* command,
-                                        nsIEventSinkGetter* getter,
                                         nsIChannel** result)
 {
     nsresult rv;
@@ -92,7 +91,7 @@ nsFileTransportService::CreateTransport(nsFileSpec& spec,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(spec, command, getter);
+    rv = trans->Init(spec, command);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -106,7 +105,6 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
                                                   const char* contentType,
                                                   PRInt32 contentLength,
                                                   const char *command,
-                                                  nsIEventSinkGetter *getter,
                                                   nsIChannel** result)
 {
     nsresult rv;
@@ -114,7 +112,7 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fromStream, contentType, contentLength, command, getter);
+    rv = trans->Init(fromStream, contentType, contentLength, command);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;
@@ -126,7 +124,6 @@ nsFileTransportService::CreateTransportFromStream(nsIInputStream *fromStream,
 NS_IMETHODIMP
 nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
                                                       const char *command,
-                                                      nsIEventSinkGetter *getter,
                                                       nsIChannel **result)
 {
     nsresult rv;
@@ -134,7 +131,7 @@ nsFileTransportService::CreateTransportFromFileSystem(nsIFileSystem *fsObj,
     if (trans == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(trans);
-    rv = trans->Init(fsObj, command, getter);
+    rv = trans->Init(fsObj, command);
     if (NS_FAILED(rv)) {
         NS_RELEASE(trans);
         return rv;

@@ -4,3 +4,4 @@ nsIEnumerator.idl
 nsIObserver.idl
 nsIObserverService.idl
 nsISupportsArray.idl
+nsICapabilities.idl

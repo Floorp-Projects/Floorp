@@ -153,10 +153,12 @@ nsKeywordProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                   nsILoadGroup *aGroup,
-                                   nsIEventSinkGetter* eventSinkGetter,
-                                   nsIURI* aOriginalURI,
-                                   nsIChannel* *result) {
+                                     nsILoadGroup* aLoadGroup,
+                                     nsICapabilities* notificationCallbacks,
+                                     nsLoadFlags loadAttributes,
+                                     nsIURI* aOriginalURI,
+                                     nsIChannel* *result)
+{
     nsresult rv;
 
     NS_ASSERTION(mEnabled && (mKeywordURL.Length() > 0), "someone's trying to use the keyword handler even though it hasn't been init'd");
@@ -172,7 +174,8 @@ nsKeywordProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     if (NS_FAILED(rv)) return rv;
 
     // now we have an HTTP url, give the user an HTTP channel
-    rv = serv->NewChannel(verb, httpSpec, nsnull, aGroup, eventSinkGetter, aOriginalURI, result);
+    rv = serv->NewChannel(verb, httpSpec, nsnull, aLoadGroup, notificationCallbacks,
+                          loadAttributes, aOriginalURI, result);
     nsAllocator::Free(httpSpec);
     return rv;
 

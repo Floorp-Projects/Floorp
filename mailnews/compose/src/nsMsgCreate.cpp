@@ -52,12 +52,12 @@
 #include "nsRDFCID.h"
 #include "nsIIOService.h"
 #include "nsMsgMimeCID.h"
+#include "nsNeckoUtil.h"
 
 // CID's needed
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID); 
 static NS_DEFINE_CID(kPrefCID,            NS_PREF_CID);
 static NS_DEFINE_CID(kRDFServiceCID,      NS_RDFSERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 //
 // Implementation...
@@ -190,19 +190,19 @@ nsresult  rv;
     return NS_ERROR_UNEXPECTED;
   }  
 
-  nsCOMPtr<nsIChannel> dummyChannel;
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-
   nsCOMPtr<nsIURI> aURL;
   rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
 
-  rv = netService->NewInputStreamChannel(aURL, 
-                                         nsnull,      // contentType
-                                         -1,          // contentLength
-                                         nsnull,      // inputStream
-                                         nsnull,      // loadGroup
-                                         nsnull,      // originalURI
-                                         getter_AddRefs(dummyChannel));
+  nsCOMPtr<nsIChannel> dummyChannel;
+  rv = NS_NewInputStreamChannel(aURL, 
+                                nsnull, // contentType
+                                -1,     // contentLength
+                                nsnull, // inputStream
+                                nsnull, // loadGroup
+                                nsnull, // notificationCallbacks
+                                nsIChannel::LOAD_NORMAL,
+                                nsnull, // originalURI
+                                getter_AddRefs(dummyChannel));
   if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
   {
     Release();

@@ -67,7 +67,7 @@ nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL) // open a connection on
 		aURL->GetPort(&port);
 		aURL->GetHost(getter_Copies(hostName));
 
-		rv = socketService->CreateTransport(hostName, port, nsnull, nsnull, getter_AddRefs(m_channel));
+		rv = socketService->CreateTransport(hostName, port, nsnull, getter_AddRefs(m_channel));
 		if (NS_SUCCEEDED(rv) && m_channel)
 		{
 			m_socketIsOpen = PR_FALSE;
@@ -97,8 +97,9 @@ nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSp
 
 		rv = netService->NewChannel("Load", urlSpec, 
                                     nsnull,     // null base URI
-                                    nsnull,     // null load group
-                                    nsnull,     // null eventsink getter
+                                    nsnull,     // loadGroup
+                                    nsnull,     // notificationCallbacks
+                                    nsIChannel::LOAD_NORMAL, 
                                     nsnull,     // originalURI
                                     getter_AddRefs(m_channel));
 		PR_FREEIF(urlSpec);
@@ -245,7 +246,7 @@ nsresult nsMsgProtocol::SetUrl(nsIURI * aURL)
 	return NS_OK;
 }
 
-nsresult nsMsgProtocol::SetLoadGroup(nsILoadGroup * aLoadGroup)
+NS_IMETHODIMP nsMsgProtocol::SetLoadGroup(nsILoadGroup * aLoadGroup)
 {
 	m_loadGroup = dont_QueryInterface(aLoadGroup);
 	return NS_OK;
@@ -319,7 +320,7 @@ NS_IMETHODIMP nsMsgProtocol::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
 
 NS_IMETHODIMP nsMsgProtocol::SetLoadAttributes(nsLoadFlags aLoadAttributes)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+	return NS_OK;       // don't fail when trying to set this
 }
 
 NS_IMETHODIMP nsMsgProtocol::GetContentType(char * *aContentType)
@@ -351,7 +352,21 @@ NS_IMETHODIMP nsMsgProtocol::SetOwner(nsISupports * aPrincipal)
 
 NS_IMETHODIMP nsMsgProtocol::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
+    *aLoadGroup = m_loadGroup;
+    NS_IF_ADDREF(*aLoadGroup);
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsMsgProtocol::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
 	return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsMsgProtocol::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+	return NS_OK;       // don't fail when trying to set this
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -21,11 +21,13 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIChannel.idl"
 
 interface nsIURI;
 interface nsILoadGroup;
 interface nsIStreamObserver;
 interface nsIUnicharStreamLoader;
+interface nsICapabilities;
 
 [scriptable, uuid(c75e57d0-8e5a-11d3-93ad-00104ba0fd40)]
 interface nsIUnicharStreamLoaderObserver : nsISupports
@@ -39,8 +41,10 @@ interface nsIUnicharStreamLoaderObserver : nsISupports
 interface nsIUnicharStreamLoader : nsISupports
 {
     void init(in nsIURI uri,
+              in nsIUnicharStreamLoaderObserver completionObserver,
               in nsILoadGroup loadGroup,
-              in nsIUnicharStreamLoaderObserver completionObserver);
+              in nsICapabilities notificationCallbacks,
+              in nsLoadFlags loadAttributes);
 
     /**
      * Gets the number of bytes read so far.
@@ -63,8 +67,10 @@ interface nsIUnicharStreamLoader : nsISupports
 inline nsresult
 NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
                           nsIURI* uri,
-                          nsILoadGroup* loadGroup,
-                          nsIUnicharStreamLoaderObserver* observer)
+                          nsIUnicharStreamLoaderObserver* observer,
+                          nsILoadGroup* loadGroup = nsnull,
+                          nsICapabilities* notificationCallbacks = nsnull,
+                          nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL)
 {
     nsresult rv;
     nsCOMPtr<nsIUnicharStreamLoader> loader;
@@ -74,7 +80,7 @@ NS_NewUnicharStreamLoader(nsIUnicharStreamLoader* *result,
                                             NS_GET_IID(nsIUnicharStreamLoader),
                                             getter_AddRefs(loader));
     if (NS_FAILED(rv)) return rv;
-    rv = loader->Init(uri, loadGroup, observer);
+    rv = loader->Init(uri, observer, loadGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
     *result = loader;
     NS_ADDREF(*result);

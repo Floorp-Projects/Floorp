@@ -125,8 +125,9 @@ nsChromeProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                    nsILoadGroup *aGroup,
-                                    nsIEventSinkGetter* eventSinkGetter,
+                                    nsILoadGroup* aLoadGroup,
+                                    nsICapabilities* notificationCallbacks,
+                                    nsLoadFlags loadAttributes,
                                     nsIURI* originalURI,
                                     nsIChannel* *result)
 {
@@ -151,7 +152,10 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
         return rv;
     }
 
-    rv = serv->NewChannelFromURI(verb, chromeURI, aGroup, eventSinkGetter, 
+    rv = serv->NewChannelFromURI(verb, chromeURI,
+                                 aLoadGroup,
+                                 notificationCallbacks,
+                                 loadAttributes,
                                  originalURI ? originalURI : uri, result);
 
     // Get a system principal for chrome and set the owner property

@@ -36,8 +36,9 @@
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
 #include "nsIFileSystem.h"
+#include "nsICapabilities.h"
 
-class nsIEventSinkGetter;
+class nsICapabilities;
 
 class nsFileTransport : public nsIChannel, 
                         public nsIRunnable,
@@ -59,16 +60,13 @@ public:
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
     nsresult Init(nsFileSpec& spec, 
-                  const char* command,
-                  nsIEventSinkGetter* getter);
+                  const char* command);
     nsresult Init(nsIInputStream* fromStream, 
                   const char* contentType,
                   PRInt32 contentLength,
-                  const char* command,
-                  nsIEventSinkGetter* getter);
+                  const char* command);
     nsresult Init(nsIFileSystem* fsObj,
-                  const char* command,
-                  nsIEventSinkGetter* getter);
+                  const char* command);
 
     void Process(void);
 
@@ -92,6 +90,7 @@ public:
     };
 
 protected:
+    nsCOMPtr<nsICapabilities>           mCallbacks;
     nsCOMPtr<nsIProgressEventSink>      mProgress;
     nsFileSpec                          mSpec;      // eliminate?
     nsCOMPtr<nsIFileSystem>             mFileObject;

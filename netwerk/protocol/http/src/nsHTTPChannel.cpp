@@ -27,7 +27,7 @@
 #include "nsIHTTPProtocolHandler.h"
 #include "nsHTTPRequest.h"
 #include "nsHTTPResponse.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIChannel.h"
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
@@ -55,6 +55,11 @@ static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 #include "nsINetPrompt.h"
 #include "nsProxiedService.h"
 
+static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
+static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
 #endif /* PR_LOGGING */
@@ -64,7 +69,6 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, 
                              const char *i_Verb,
-                             nsIEventSinkGetter* i_EventSinkGetter,
                              nsIURI* originalURI,
                              nsHTTPHandler* i_Handler): 
     mOriginalURI(dont_QueryInterface(originalURI ? originalURI : i_URL)),
@@ -72,7 +76,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mConnected(PR_FALSE),
     mHandler(dont_QueryInterface(i_Handler)),
     mState(HS_IDLE),
-    mEventSinkGetter(dont_QueryInterface(i_EventSinkGetter)),
     mResponse(nsnull),
     mResponseDataListener(nsnull),
     mLoadAttributes(LOAD_NORMAL),
@@ -90,17 +93,6 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mContentLength = -1;
 
     mVerb = i_Verb;
-
-    // Verify that the event sink is http
-    if (i_EventSinkGetter) {
-        nsIHTTPEventSink *sink = nsnull;
-
-        (void) i_EventSinkGetter->GetEventSink(i_Verb, NS_GET_IID(nsIHTTPEventSink),
-                                               (nsISupports**)&sink);
-        mEventSink = sink;
-        NS_IF_RELEASE(sink);
-    }
-
 }
 
 nsHTTPChannel::~nsHTTPChannel()
@@ -347,6 +339,43 @@ nsHTTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
+nsHTTPChannel::SetLoadGroup(nsILoadGroup *aGroup)
+{
+    //TODO think if we need to make a copy of the URL and keep it here
+    //since it might get deleted off the creators thread. And the
+    //stream listener could be elsewhere...
+
+    /* 
+        Set up a request object - later set to a clone of a default 
+        request from the handler. TODO
+    */
+    nsresult rv;
+
+    //
+    // Initialize the load group and copy any default load attributes...
+    //
+    mLoadGroup = aGroup;
+    if (mLoadGroup) {
+        mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
+    }
+
+    mRequest = new nsHTTPRequest(mURI);
+    if (mRequest == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mRequest);
+    mRequest->SetConnection(this);
+    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    PRUnichar * ua = nsnull;
+    rv = service->GetUserAgent(&ua);
+    if (NS_FAILED(rv)) return rv;
+    nsCString uaString(ua);
+    nsCRT::free(ua);
+    mRequest->SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsHTTPChannel::GetOwner(nsISupports * *aOwner)
 {
     *aOwner = mOwner.get();
@@ -359,6 +388,30 @@ nsHTTPChannel::SetOwner(nsISupports * aOwner)
 {
     mOwner = aOwner;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+    *aNotificationCallbacks = mCallbacks.get();
+    NS_IF_ADDREF(*aNotificationCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+    nsresult rv = NS_OK;
+    mCallbacks = aNotificationCallbacks;
+
+    // Verify that the event sink is http
+    if (mCallbacks) {
+        // we don't care if this fails -- we don't need an nsIHTTPEventSink
+        // to proceed
+        (void)mCallbacks->QueryCapability(NS_GET_IID(nsIHTTPEventSink),
+                                          getter_AddRefs(mEventSink));
+    }
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -537,51 +590,8 @@ nsHTTPChannel::GetAuthTriedWithPrehost(PRBool* oTried)
 }
 
 
-static NS_DEFINE_IID(kProxyObjectManagerIID, NS_IPROXYEVENT_MANAGER_IID);
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-
-
 ////////////////////////////////////////////////////////////////////////////////
 // nsHTTPChannel methods:
-
-nsresult
-nsHTTPChannel::Init(nsILoadGroup *aGroup)
-{
-    //TODO think if we need to make a copy of the URL and keep it here
-    //since it might get deleted off the creators thread. And the
-    //stream listener could be elsewhere...
-
-    /* 
-        Set up a request object - later set to a clone of a default 
-        request from the handler. TODO
-    */
-    nsresult rv;
-
-    //
-    // Initialize the load group and copy any default load attributes...
-    //
-    mLoadGroup = aGroup;
-    if (mLoadGroup) {
-        mLoadGroup->GetDefaultLoadAttributes(&mLoadAttributes);
-    }
-
-    mRequest = new nsHTTPRequest(mURI);
-    if (mRequest == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    NS_ADDREF(mRequest);
-    mRequest->SetConnection(this);
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    PRUnichar * ua = nsnull;
-    rv = service->GetUserAgent(&ua);
-    if (NS_FAILED(rv)) return rv;
-    nsCString uaString(ua);
-    nsCRT::free(ua);
-    mRequest->SetHeader(nsHTTPAtoms::User_Agent, uaString.GetBuffer());
-    return NS_OK;
-}
 
 nsresult
 nsHTTPChannel::Open(void)
@@ -617,9 +627,8 @@ nsHTTPChannel::Open(void)
     }
      
     rv = mHandler->RequestTransport(mURI, 
-                        this, 
-                        mEventSinkGetter, 
-                        getter_AddRefs(transport));
+                                    this, 
+                                    getter_AddRefs(transport));
 
     if (NS_ERROR_BUSY == rv) {
         mState = HS_WAITING_FOR_OPEN;
@@ -630,6 +639,14 @@ nsHTTPChannel::Open(void)
       (void) ResponseCompleted(nsnull, rv, nsnull);
       return rv;
     }
+
+    rv = transport->SetNotificationCallbacks(mCallbacks);
+    if (NS_FAILED(rv)) {
+      // Unable to create a transport...  End the request...
+      (void) ResponseCompleted(nsnull, rv, nsnull);
+      return rv;
+    }
+
     // Check for any modules that want to set headers before we
     // send out a request.
     NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv);
@@ -733,12 +750,9 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
           this, newURLSpec));
 #endif /* PR_LOGGING */
 
-  rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mEventSinkGetter, 
-                               mOriginalURI, getter_AddRefs(channel));
+  rv = serv->NewChannelFromURI(mVerb.GetBuffer(), newURI, mLoadGroup, mCallbacks,
+                               mLoadAttributes, mOriginalURI, getter_AddRefs(channel));
   if (NS_FAILED(rv)) return rv;
-
-  // Copy the load attributes into the new channel...
-  channel->SetLoadAttributes(mLoadAttributes);
 
   // Start the redirect...
   rv = channel->AsyncRead(0, -1, mResponseContext, mResponseDataListener);
@@ -986,15 +1000,11 @@ nsHTTPChannel::Authenticate(const char *iChallenge, nsIChannel **oChannel)
     if (NS_FAILED(rv)) return rv;
 
     // This smells like a clone function... maybe there is a benefit in doing that, think. TODO.
-    rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, 
-                                mLoadGroup, mEventSinkGetter, mOriginalURI,
-                                getter_AddRefs(channel));
+    rv = serv->NewChannelFromURI(mVerb.GetBuffer(), mURI, mLoadGroup, mCallbacks, 
+                                 mLoadAttributes, mOriginalURI, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv; 
 
-    // Copy the load attributes into the new channel...
-    channel->SetLoadAttributes(mLoadAttributes);
-
-    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
+    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
     NS_ASSERTION(httpChannel, "Something terrible happened..!");
     if (!httpChannel)
         return rv;
@@ -1018,3 +1028,4 @@ nsHTTPChannel::SetUsingProxy(PRBool i_UsingProxy)
     mUsingProxy = i_UsingProxy;
     return NS_OK;
 }
+

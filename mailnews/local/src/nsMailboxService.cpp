@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -296,15 +296,24 @@ NS_IMETHODIMP nsMailboxService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIU
 	return rv;
 }
 
-NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup,
-                                           nsIEventSinkGetter *eventSinkGetter, nsIURI* originalURI,
+NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, 
+                                           nsIURI *aURI, 
+                                           nsILoadGroup* aLoadGroup,
+                                           nsICapabilities* notificationCallbacks,
+                                           nsLoadFlags loadAttributes,
+                                           nsIURI* originalURI,
                                            nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
 	nsMailboxProtocol * protocol = new nsMailboxProtocol(aURI, originalURI);
-	protocol->SetLoadGroup(aGroup);
 	if (protocol)
 	{
+        rv = protocol->SetLoadAttributes(loadAttributes);
+        if (NS_FAILED(rv)) return rv;
+        rv = protocol->SetLoadGroup(aLoadGroup);
+        if (NS_FAILED(rv)) return rv;
+        rv = protocol->SetNotificationCallbacks(notificationCallbacks);
+        if (NS_FAILED(rv)) return rv;
 		rv = protocol->QueryInterface(NS_GET_IID(nsIChannel), (void **) _retval);
 	}
 	else

@@ -118,10 +118,11 @@ nsJARProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
 
 NS_IMETHODIMP
 nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
-                                   nsILoadGroup* loadGroup,
-                                   nsIEventSinkGetter* eventSinkGetter,
-								   nsIURI* originalURI,
-                                   nsIChannel* *result)
+                                 nsILoadGroup* aLoadGroup,
+                                 nsICapabilities* notificationCallbacks,
+                                 nsLoadFlags loadAttributes,
+                                 nsIURI* originalURI,
+                                 nsIChannel* *result)
 {
     nsresult rv;
     
@@ -129,7 +130,8 @@ nsJARProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     rv = nsJARChannel::Create(nsnull, NS_GET_IID(nsIJARChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-	rv = channel->Init(this, verb, uri, loadGroup, eventSinkGetter, originalURI);
+	rv = channel->Init(this, verb, uri, aLoadGroup, notificationCallbacks,
+                       loadAttributes, originalURI);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         return rv;

@@ -128,7 +128,12 @@ nsFTPDirListingConv::AsyncConvertData(const PRUnichar *aFromType, const PRUnicha
     if (NS_FAILED(rv)) return rv;
 
     rv = serv->NewInputStreamChannel(uri, "application/http-index-format", -1,  // XXX fix contentLength
-                                     nsnull, nsnull, nsnull, &mPartChannel);
+                                     nsnull,    // inStr
+                                     nsnull,    // loadGroup
+                                     nsnull,    // notificationCallbacks
+                                     nsIChannel::LOAD_NORMAL,
+                                     nsnull,    // originalURI
+                                     &mPartChannel);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
 

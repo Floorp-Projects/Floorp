@@ -38,12 +38,10 @@ interface nsISocketTransportService : nsISupports
      */
     nsIChannel createTransport(in string host,
                                in long port,
-                               in nsIEventSinkGetter eventSinkGetter,
                                in string printHost);
     nsIChannel createTransportOfType(in string socketType,
                                in string host, 
                                in long port,
-                               in nsIEventSinkGetter eventSinkGetter,
                                in string printHost);
 
     /**

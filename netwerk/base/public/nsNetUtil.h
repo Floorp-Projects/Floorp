@@ -28,7 +28,7 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsString.h"
 
 #include "nsIIOService.h"
@@ -67,7 +67,7 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull)
 
 inline nsresult
 NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
-           nsIEventSinkGetter *eventSinkGetter = nsnull)
+           nsICapabilities *capabilities = nsnull)
 {
     nsresult rv;
     static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
@@ -75,7 +75,7 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = serv->NewChannelFromURI("load", uri, aGroup, eventSinkGetter, 
+    rv = serv->NewChannelFromURI("load", uri, aGroup, capabilities, 
                                  nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
 

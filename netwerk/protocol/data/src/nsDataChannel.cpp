@@ -28,7 +28,7 @@
 #include "nsIIOService.h"
 #include "nsILoadGroup.h"
 #include "plbase64.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIPipe.h"
 #include "nsIBufferInputStream.h"
 #include "nsIBufferOutputStream.h"
@@ -45,46 +45,39 @@ nsDataChannel::nsDataChannel() {
 }
 
 nsDataChannel::~nsDataChannel() {
-    NS_IF_RELEASE(mDataStream);
-    NS_RELEASE(mUrl);
-    NS_IF_RELEASE(mLoadGroup);
 }
 
-NS_IMPL_ADDREF(nsDataChannel);
-NS_IMPL_RELEASE(nsDataChannel);
-
-NS_IMETHODIMP
-nsDataChannel::QueryInterface(const nsIID& aIID, void** aInstancePtr) {
-    NS_ASSERTION(aInstancePtr, "no instance pointer");
-    if (aIID.Equals(NS_GET_IID(nsIDataChannel)) ||
-        aIID.Equals(NS_GET_IID(nsIChannel)) ||
-        aIID.Equals(NS_GET_IID(nsISupports)) ) {
-        *aInstancePtr = NS_STATIC_CAST(nsIDataChannel*, this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    return NS_NOINTERFACE; 
-}
+NS_IMPL_ISUPPORTS3(nsDataChannel,
+                   nsIDataChannel,
+                   nsIChannel,
+                   nsIRequest)
 
 nsresult
-nsDataChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                   nsIEventSinkGetter* getter, nsIURI* originalURI)
+nsDataChannel::Init(const char* verb, 
+                    nsIURI* uri, 
+                    nsILoadGroup* aLoadGroup,
+                    nsICapabilities* notificationCallbacks, 
+                    nsLoadFlags loadAttributes,
+                    nsIURI* originalURI)
 {
     // we don't care about event sinks in data
     nsresult rv;
 
-    mDataStream = nsnull;
+    rv = SetLoadAttributes(loadAttributes);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetLoadGroup(aLoadGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetNotificationCallbacks(notificationCallbacks);
+    if (NS_FAILED(rv)) return rv;
 
     // Data urls contain all the data within the url string itself.
     mOriginalURI = originalURI ? originalURI : uri;
     mUrl = uri;
-    NS_ADDREF(mUrl);
 
     rv = ParseData();
     if (NS_FAILED(rv)) return rv;
-
-    mLoadGroup = aGroup;
-    NS_IF_ADDREF(mLoadGroup);
 
     return NS_OK;
 }
@@ -200,7 +193,7 @@ nsDataChannel::ParseData() {
     // Initialize the content length of the data...
     mContentLength = dataToWrite->dataLen;
 
-    rv = bufInStream->QueryInterface(NS_GET_IID(nsIInputStream), (void**)&mDataStream);
+    rv = bufInStream->QueryInterface(NS_GET_IID(nsIInputStream), getter_AddRefs(mDataStream));
     NS_RELEASE(bufInStream);
     NS_RELEASE(bufOutStream);
     if (NS_FAILED(rv)) return rv;
@@ -266,8 +259,8 @@ nsDataChannel::GetOriginalURI(nsIURI * *aURI)
 NS_IMETHODIMP
 nsDataChannel::GetURI(nsIURI * *aURI)
 {
-    NS_ADDREF(mUrl);
     *aURI = mUrl;
+    NS_IF_ADDREF(*aURI);
     return NS_OK;
 }
 
@@ -381,7 +374,7 @@ nsDataChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+nsDataChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
     NS_IF_ADDREF(*aLoadGroup);
@@ -389,7 +382,14 @@ nsDataChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsDataChannel::GetOwner(nsISupports * *aOwner)
+nsDataChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetOwner(nsISupports* *aOwner)
 {
     *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
@@ -397,9 +397,24 @@ nsDataChannel::GetOwner(nsISupports * *aOwner)
 }
 
 NS_IMETHODIMP
-nsDataChannel::SetOwner(nsISupports * aOwner)
+nsDataChannel::SetOwner(nsISupports* aOwner)
 {
     mOwner = aOwner;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+    *aNotificationCallbacks = mCallbacks.get();
+    NS_IF_ADDREF(*aNotificationCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDataChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+    mCallbacks = aNotificationCallbacks;
     return NS_OK;
 }
 

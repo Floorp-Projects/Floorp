@@ -355,7 +355,8 @@ int nsAccount::GetNCIValues(nsString MiddleValue)
 
   nsIChannel *channel = nsnull;
   // XXX NECKO verb? loadgroup? getter?
-  ret = service->NewChannel("load", Trial.ToNewCString(), nsnull, nsnull, nsnull, nsnull, &channel);
+  ret = service->NewChannel("load", Trial.ToNewCString(), nsnull, nsnull, nsnull,
+                            nsIChannel::LOAD_NORMAL, nsnull, &channel);
   if (NS_FAILED(ret)) return ret;
 
 
@@ -444,7 +445,8 @@ int nsAccount::GetConfigValues(nsString fileName)
 
   nsIChannel *channel = nsnull;
   // XXX NECKO verb? loadgroup? getter?
-  ret = service->NewChannel("load", Trial.ToNewCString(), nsnull, nsnull, nsnull, nsnull, &channel);
+  ret = service->NewChannel("load", Trial.ToNewCString(), nsnull, nsnull, nsnull,
+                            nsIChannel::LOAD_NORMAL, nsnull, &channel);
   if (NS_FAILED(ret)) return ret;
 
 

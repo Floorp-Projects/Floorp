@@ -30,7 +30,7 @@
 #include "nsFtpConnectionThread.h"
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIMIMEService.h"
 #include "nsProxyObjectManager.h"
 
@@ -88,9 +88,14 @@ NS_IMPL_QUERY_INTERFACE4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListe
 //NS_IMPL_ISUPPORTS4(nsFTPChannel, nsIChannel, nsIFTPChannel, nsIStreamListener, nsIStreamObserver);
 
 nsresult
-nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                   nsIEventSinkGetter* getter, nsIURI* originalURI,
-                   nsIProtocolHandler* aHandler, nsIThreadPool* aPool)
+nsFTPChannel::Init(const char* verb, 
+                   nsIURI* uri, 
+                   nsILoadGroup* aLoadGroup,
+                   nsICapabilities* notificationCallbacks, 
+                   nsLoadFlags loadAttributes, 
+                   nsIURI* originalURI,
+                   nsIProtocolHandler* aHandler, 
+                   nsIThreadPool* aPool)
 {
     nsresult rv;
 
@@ -99,28 +104,21 @@ nsFTPChannel::Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
 
     mHandler = aHandler;
 
+    rv = SetLoadAttributes(loadAttributes);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetLoadGroup(aLoadGroup);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = SetNotificationCallbacks(notificationCallbacks);
+    if (NS_FAILED(rv)) return rv;
+
     NS_ASSERTION(aPool, "FTP channel needs a thread pool to play in");
     if (!aPool) return NS_ERROR_NULL_POINTER;
     mPool = aPool;
 
     mOriginalURI = originalURI ? originalURI : uri;
     mURL = uri;
-
-    if (aGroup) {
-        mLoadGroup = aGroup;
-        rv = mLoadGroup->AddChannel(this, nsnull);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    mEventSinkGetter = getter;
-
-    if (mEventSinkGetter) {
-        rv = mEventSinkGetter->GetEventSink(verb, NS_GET_IID(nsIProgressEventSink), 
-                                  getter_AddRefs(mEventSink));
-        if (NS_FAILED(rv)) {
-            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
-        }
-    }
 
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueService, &rv);
     if (NS_FAILED(rv)) return rv;
@@ -270,7 +268,7 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
     rv = protocolInterpreter->Init(mURL,                    /* url to load */
                                    mEventQueue,             /* event queue for this thread */
                                    mHandler,
-                                   this, ctxt, mEventSinkGetter);
+                                   this, ctxt, mCallbacks);
     mHandler = 0;
     if (NS_FAILED(rv)) {
         NS_RELEASE(protocolInterpreter);
@@ -367,7 +365,7 @@ nsFTPChannel::GetContentLength(PRInt32 *aContentLength)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
+nsFTPChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
     *aLoadGroup = mLoadGroup;
     NS_IF_ADDREF(*aLoadGroup);
@@ -375,7 +373,18 @@ nsFTPChannel::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::GetOwner(nsISupports * *aOwner)
+nsFTPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    mLoadGroup = aLoadGroup;
+    if (mLoadGroup) {
+        nsresult rv = mLoadGroup->AddChannel(this, nsnull);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetOwner(nsISupports* *aOwner)
 {
     *aOwner = mOwner.get();
     NS_IF_ADDREF(*aOwner);
@@ -383,9 +392,32 @@ nsFTPChannel::GetOwner(nsISupports * *aOwner)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::SetOwner(nsISupports * aOwner)
+nsFTPChannel::SetOwner(nsISupports* aOwner)
 {
     mOwner = aOwner;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+    *aNotificationCallbacks = mCallbacks.get();
+    NS_IF_ADDREF(*aNotificationCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+    mCallbacks = aNotificationCallbacks;
+
+    if (mCallbacks) {
+        nsresult rv = mCallbacks->QueryCapability(NS_GET_IID(nsIProgressEventSink), 
+                                                  getter_AddRefs(mEventSink));
+        if (NS_FAILED(rv)) {
+            PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::Init() (couldn't find event sink)\n"));
+        }
+    }
     return NS_OK;
 }
 

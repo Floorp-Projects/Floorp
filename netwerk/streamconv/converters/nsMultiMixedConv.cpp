@@ -259,7 +259,12 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     if (mContentType.Length() < 1)
                         mContentType = "text/html"; // default to text/html, that's all we'll ever see anyway
                     rv = serv->NewInputStreamChannel(partURI, mContentType.GetBuffer(), mContentLength,
-                                                     nsnull, nsnull, nsnull, getter_AddRefs(mPartChannel));
+                                                     nsnull,    // inStr
+                                                     nsnull,    // loadGroup
+                                                     nsnull,    // notificationCallbacks
+                                                     nsIChannel::LOAD_NORMAL,
+                                                     nsnull,    // originalURI
+                                                     getter_AddRefs(mPartChannel));
                     if (NS_FAILED(rv)) {
                         nsAllocator::Free(buffer);
                         return rv;

@@ -102,6 +102,7 @@ XPIDLSRCS	= \
 		nsIObserverService.idl \
 		nsISupportsArray.idl \
 		nsISupportsPrimitives.idl \
+		nsICapabilities.idl \
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

@@ -187,11 +187,13 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   mQuoteChannel = null_nsCOMPtr();
   NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
   rv = netService->NewInputStreamChannel(aURL, 
-                                         nsnull,      // contentType
-                                         -1,          // contentLength
-                                         nsnull,      // inputStream
-                                         nsnull,      // loadGroup
-                                         nsnull,      // originalURI
+                                         nsnull, // contentType
+                                         -1,     // contentLength
+                                         nsnull, // inputStream
+                                         nsnull, // loadGroup
+                                         nsnull, // notificationCallbacks
+                                         nsIChannel::LOAD_NORMAL,
+                                         nsnull, // originalURI
                                          getter_AddRefs(mQuoteChannel));
 
   NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
@@ -208,7 +210,12 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
 
   // now we want to create a necko channel for this url and we want to open it
   nsCOMPtr<nsIChannel> aChannel;
-  rv = netService->NewChannelFromURI(nsnull, aURL, nsnull, nsnull, nsnull, getter_AddRefs(aChannel));
+  rv = netService->NewChannelFromURI(nsnull, aURL, 
+                                     nsnull, // loadGroup
+                                     nsnull, // notificationCallbacks
+                                     nsIChannel::LOAD_NORMAL,
+                                     nsnull, // originalURI
+                                     getter_AddRefs(aChannel));
   if (NS_FAILED(rv)) return rv;
   nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(aURL);
   //  now try to open the channel passing in our display consumer as the listener 

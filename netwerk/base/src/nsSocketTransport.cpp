@@ -34,7 +34,7 @@
 #include "nsISocketProvider.h"
 #include "nsISocketProviderService.h"
 #include "nsStdURL.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsProxyObjectManager.h"
 #include "nsXPIDLString.h"
 
@@ -228,7 +228,6 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
                                  const char* aHost, 
                                  PRInt32 aPort,
                                  const char* aSocketType,
-                                 nsIEventSinkGetter* eventSinkGetter,
                                  const char* aPrintHost)
 {
   nsresult rv = NS_OK;
@@ -261,31 +260,6 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
   } 
-
-  // Get a nsIProgressEventSink so that we can fire status/progress on it-
-  if (NS_SUCCEEDED(rv) && eventSinkGetter) 
-  {
-        nsIProgressEventSink* sink = nsnull;
-        (void) eventSinkGetter->GetEventSink("load", // Hmmm...
-                                nsIProgressEventSink::GetIID(),
-                                (nsISupports**)&sink);
-        if (sink)
-        {
-            // Now generate a proxied event sink-
-            NS_WITH_SERVICE(nsIProxyObjectManager, 
-                    proxyMgr, kProxyObjectManagerCID, &rv);
-            if (NS_SUCCEEDED(rv))
-            {
-                rv = proxyMgr->GetProxyObject(
-                                nsnull, // primordial thread - should change?
-                                NS_GET_IID(nsIProgressEventSink),
-                                sink,
-                                PROXY_ASYNC | PROXY_ALWAYS,
-                                getter_AddRefs(mEventSink));
-            }
-            NS_RELEASE(sink);
-        }
-  }
 
   //
   // Create the lock used for synchronizing access to the transport instance.
@@ -1823,45 +1797,86 @@ nsSocketTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 }
 
 NS_IMETHODIMP
+nsSocketTransport::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsSocketTransport::GetOwner(nsISupports * *aOwner)
 {
-    *aOwner = mOwner.get();
-    NS_IF_ADDREF(*aOwner);
-    return NS_OK;
+  *aOwner = mOwner.get();
+  NS_IF_ADDREF(*aOwner);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSocketTransport::SetOwner(nsISupports * aOwner)
 {
-    mOwner = aOwner;
-    return NS_OK;
+  mOwner = aOwner;
+  return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSocketTransport::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+  *aNotificationCallbacks = mCallbacks.get();
+  NS_IF_ADDREF(*aNotificationCallbacks);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketTransport::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+  mCallbacks = aNotificationCallbacks;
+
+  // Get a nsIProgressEventSink so that we can fire status/progress on it-
+  if (mCallbacks) {
+    nsCOMPtr<nsIProgressEventSink> sink;
+    nsresult rv = mCallbacks->QueryCapability(NS_GET_IID(nsIProgressEventSink),
+                                              getter_AddRefs(sink));
+    if (NS_SUCCEEDED(rv)) {
+      // Now generate a proxied event sink-
+      NS_WITH_SERVICE(nsIProxyObjectManager, 
+                      proxyMgr, kProxyObjectManagerCID, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        rv = proxyMgr->GetProxyObject(nsnull, // primordial thread - should change?
+                                      NS_GET_IID(nsIProgressEventSink),
+                                      sink,
+                                      PROXY_ASYNC | PROXY_ALWAYS,
+                                      getter_AddRefs(mEventSink));
+      }
+    }
+  }
+
+  return NS_OK;
+}
 
 nsresult
 nsSocketTransport::fireStatus(PRUint32 aCode)
 {
-    // need to optimize this - TODO
-    nsXPIDLString tempmesg;
-    nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
+  // need to optimize this - TODO
+  nsXPIDLString tempmesg;
+  nsresult rv = GetSocketErrorString(aCode, getter_Copies(tempmesg));
 
-    nsAutoString mesg(tempmesg);
-    if (mPrintHost)
-        mesg.Append(mPrintHost);
-    else
-        mesg.Append(mHostName);
+  nsAutoString mesg(tempmesg);
+  if (mPrintHost)
+    mesg.Append(mPrintHost);
+  else
+    mesg.Append(mHostName);
 
-    if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) return rv;
 #ifndef BUG_16273_FIXED //TODO
-    return mEventSink ? mEventSink->OnStatus(this,
-                            mReadContext, 
-                            mesg.ToNewUnicode()) // this gets freed elsewhere.
-                        : NS_ERROR_FAILURE;
+  return mEventSink ? mEventSink->OnStatus(this,
+                                           mReadContext, 
+                                           mesg.ToNewUnicode()) // this gets freed elsewhere.
+                    : NS_ERROR_FAILURE;
 #else
-    return mEventSink ? mEventSink->OnStatus(this,
-                            mReadContext, 
-                            mesg.mUStr) // this gets freed elsewhere.
-                        : NS_ERROR_FAILURE;
+  return mEventSink ? mEventSink->OnStatus(this,
+                                           mReadContext, 
+                                           mesg.mUStr) // this gets freed elsewhere.
+                    : NS_ERROR_FAILURE;
 #endif
 
 }

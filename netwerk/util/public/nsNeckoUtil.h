@@ -28,8 +28,11 @@
 #include "nsIInputStream.h"
 #include "nsIStreamListener.h"
 #include "nsILoadGroup.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
+#include "nsIChannel.h"
 #include "nsString.h"
+#include "nsIServiceManager.h"
+#include "nsIIOService.h"
 
 #ifdef XP_MAC
 	#define NECKO_EXPORT(returnType)	PR_PUBLIC_API(returnType)
@@ -48,15 +51,22 @@ extern nsresult
 NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI = nsnull);
 
 extern nsresult
-NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
-           nsIEventSinkGetter *eventSinkGetter = nsnull);
+NS_OpenURI(nsIChannel* *result, nsIURI* uri, 
+           nsILoadGroup *aGroup = nsnull,
+           nsICapabilities *notificationCallbacks = nsnull,
+           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL);
 
 extern nsresult
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri);
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri,
+           nsILoadGroup *aGroup = nsnull,
+           nsICapabilities *notificationCallbacks = nsnull, 
+           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL);
 
 extern nsresult
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri, 
-           nsILoadGroup *aGroup);
+           nsILoadGroup *aGroup = nsnull,
+           nsICapabilities *notificationCallbacks = nsnull, 
+           nsLoadFlags loadAttributes = nsIChannel::LOAD_NORMAL);
 
 extern nsresult
 NS_MakeAbsoluteURI(const char* spec, nsIURI* baseURI, char* *result);
@@ -71,5 +81,31 @@ NS_NewLoadGroup(nsISupports* outer, nsIStreamObserver* observer,
 extern nsresult
 NS_NewPostDataStream(PRBool isFile, const char *data, PRUint32 encodeFlags,
                      nsIInputStream **result);
+
+inline nsresult
+NS_NewInputStreamChannel(nsIURI* uri, 
+                         const char *contentType, 
+                         PRInt32 contentLength,
+                         nsIInputStream *inStr, 
+                         nsILoadGroup *aGroup,
+                         nsICapabilities* notificationCallbacks,
+                         nsLoadFlags loadAttributes,
+                         nsIURI* originalURI,
+                         nsIChannel **result)
+{
+    nsresult rv;
+    static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    return serv->NewInputStreamChannel(uri, 
+                                       contentType, 
+                                       contentLength,
+                                       inStr, 
+                                       aGroup,
+                                       notificationCallbacks,
+                                       loadAttributes,
+                                       originalURI,
+                                       result);
+}
 
 #endif // nsNeckoUtil_h__

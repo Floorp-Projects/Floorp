@@ -57,16 +57,18 @@ NS_NewURI(nsIURI* *result, const nsString& spec, nsIURI* baseURI)
 }
 
 NECKO_EXPORT(nsresult)
-NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
-           nsIEventSinkGetter *eventSinkGetter)
+NS_OpenURI(nsIChannel* *result, nsIURI* uri,
+           nsILoadGroup *aGroup,
+           nsICapabilities *notificationCallbacks, 
+           nsLoadFlags loadAttributes)
 {
     nsresult rv;
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     nsIChannel* channel;
-    rv = serv->NewChannelFromURI("load", uri, aGroup, eventSinkGetter, 
-                                 nsnull, &channel);
+    rv = serv->NewChannelFromURI("load", uri, aGroup, notificationCallbacks,
+                                 loadAttributes, nsnull, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
@@ -74,12 +76,15 @@ NS_OpenURI(nsIChannel* *result, nsIURI* uri, nsILoadGroup *aGroup,
 }
 
 NECKO_EXPORT(nsresult)
-NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
+NS_OpenURI(nsIInputStream* *result, nsIURI* uri, 
+           nsILoadGroup *aGroup,
+           nsICapabilities *notificationCallbacks, 
+           nsLoadFlags loadAttributes)
 {
     nsresult rv;
     nsIChannel* channel;
 
-    rv = NS_OpenURI(&channel, uri, nsnull);
+    rv = NS_OpenURI(&channel, uri, aGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     nsIInputStream* inStr;
@@ -93,12 +98,14 @@ NS_OpenURI(nsIInputStream* *result, nsIURI* uri)
 
 NECKO_EXPORT(nsresult)
 NS_OpenURI(nsIStreamListener* aConsumer, nsISupports* context, nsIURI* uri, 
-           nsILoadGroup *aGroup)
+           nsILoadGroup *aGroup,
+           nsICapabilities *notificationCallbacks, 
+           nsLoadFlags loadAttributes)
 {
     nsresult rv;
     nsIChannel* channel;
 
-    rv = NS_OpenURI(&channel, uri, aGroup);
+    rv = NS_OpenURI(&channel, uri, aGroup, notificationCallbacks, loadAttributes);
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->AsyncRead(0, -1, context, aConsumer);

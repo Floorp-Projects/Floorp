@@ -525,19 +525,16 @@ nsSocketTransportService::Run(void)
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransport(const char* aHost, 
                                           PRInt32 aPort,
-                                          nsIEventSinkGetter* eventSinkGetter, 
                                           const char* aPrintHost, 
                                           nsIChannel** aResult)
 {
-  return CreateTransportOfType(nsnull, aHost, aPort, 
-          eventSinkGetter, aPrintHost, aResult);
+  return CreateTransportOfType(nsnull, aHost, aPort, aPrintHost, aResult);
 }
 
 NS_IMETHODIMP
 nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
                                         const char* aHost, 
                                         PRInt32 aPort,
-                                        nsIEventSinkGetter* eventSinkGetter,
                                         const char* aPrintHost,
                                         nsIChannel** aResult)
 {
@@ -553,8 +550,7 @@ nsSocketTransportService::CreateTransportOfType(const char* aSocketType,
   // Create and initialize a new connection object...
   NS_NEWXPCOM(transport, nsSocketTransport);
   if (transport) {
-    rv = transport->Init(this, aHost, aPort, 
-            aSocketType, eventSinkGetter, aPrintHost);
+    rv = transport->Init(this, aHost, aPort, aSocketType, aPrintHost);
     if (NS_FAILED(rv)) {
       delete transport;
       transport = nsnull;

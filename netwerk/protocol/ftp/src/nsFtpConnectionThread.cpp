@@ -1481,10 +1481,7 @@ nsFtpConnectionThread::R_pasv() {
     nsAllocator::Free(response);
 
     // now we know where to connect our data channel
-    rv = mSTS->CreateTransport(host.GetBuffer(), port,
-                               nsnull, /* don't push the event sink getter through for the data channel */
-                               nsnull,
-                               getter_AddRefs(mDPipe)); // the data channel
+    rv = mSTS->CreateTransport(host.GetBuffer(), port, nsnull, getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     if (mAction == GET) {
@@ -1671,7 +1668,10 @@ nsFtpConnectionThread::Run() {
             port = FTP_DEFAULT_PORT;
 
         // build our own
-        rv = mSTS->CreateTransport(host, port, mEventSinkGetter, host, getter_AddRefs(mCPipe)); // the command channel
+        rv = mSTS->CreateTransport(host, port, host, getter_AddRefs(mCPipe)); // the command channel
+        if (NS_FAILED(rv)) return rv;
+
+        rv = mCPipe->SetNotificationCallbacks(mCallbacks);
         if (NS_FAILED(rv)) return rv;
 
         // get the output stream so we can write to the server
@@ -1835,13 +1835,13 @@ nsFtpConnectionThread::Init(nsIURI* aUrl,
                             nsIProtocolHandler* aHandler,
                             nsIChannel* aChannel,
                             nsISupports* aContext,
-                            nsIEventSinkGetter* aEventSinkGetter) {
+                            nsICapabilities* notificationCallbacks) {
     nsresult rv;
 
     NS_ASSERTION(aChannel, "FTP: thread needs a channel");
 
     mOutsideEventQueue = aEventQ;
-    mEventSinkGetter   = aEventSinkGetter;
+    mCallbacks = notificationCallbacks;
 
     NS_WITH_SERVICE(nsIProxyObjectManager, pIProxyObjectManager, kProxyObjectManagerCID, &rv);
     if(NS_FAILED(rv)) return rv;

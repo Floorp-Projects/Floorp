@@ -28,6 +28,7 @@ interface nsIOutputStream;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsILoadGroup;
+interface nsICapabilities;
 
 typedef unsigned long nsLoadFlags;
 
@@ -149,9 +150,16 @@ interface nsIChannel : nsIRequest
     attribute nsISupports owner;
 
     /**
-     * Returns the load group in which the channel is a currently a member.
+     * Accesses the load group in which the channel is a currently a member.
      */
-    readonly attribute nsILoadGroup loadGroup;
+    attribute nsILoadGroup loadGroup;
+
+    /**
+     * Accesses the capabilities callbacks of the channel. This is set by clients
+     * who wish to provide a means to receive progress, status and protocol-specific 
+     * notifications.
+     */
+    attribute nsICapabilities notificationCallbacks;
 
 };
 
@@ -169,7 +177,9 @@ interface nsIInputStreamChannel : nsIChannel
               in string contentType, 
               in long contentLength,
               in nsIInputStream inStr,
-              in nsILoadGroup group,
+              in nsILoadGroup aLoadGroup,
+              in nsICapabilities notificationCallbacks,
+              in nsLoadFlags loadAttributes,
               in nsIURI originalURI);
 };
 

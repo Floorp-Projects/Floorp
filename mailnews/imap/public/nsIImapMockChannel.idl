@@ -56,7 +56,6 @@ interface nsIImapMockChannel : nsIChannel
 {
     void GetChannelListener(out nsIStreamListener aChannelListener);
     void GetChannelContext(out nsISupports aChannelContext);
-    void SetLoadGroup(in nsILoadGroup aLoadGroup);
     void SetURI(in nsIURI aUrl);
     void Close();
 	attribute boolean cancelled;

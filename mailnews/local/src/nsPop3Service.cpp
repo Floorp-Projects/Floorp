@@ -259,8 +259,12 @@ NS_IMETHODIMP nsPop3Service::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup,
-                                        nsIEventSinkGetter *eventSinkGetter, nsIURI* originalURI,
+NS_IMETHODIMP nsPop3Service::NewChannel(const char *verb, 
+                                        nsIURI *aURI, 
+                                        nsILoadGroup* aLoadGroup,
+                                        nsICapabilities* notificationCallbacks,
+                                        nsLoadFlags loadAttributes,
+                                        nsIURI* originalURI,
                                         nsIChannel **_retval)
 {
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us

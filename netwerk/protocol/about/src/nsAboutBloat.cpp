@@ -44,8 +44,9 @@ NS_IMPL_ISUPPORTS(nsAboutBloat, NS_GET_IID(nsIAboutModule));
 NS_IMETHODIMP
 nsAboutBloat::NewChannel(const char *verb,
                          nsIURI *aURI,
-                         nsILoadGroup *aGroup,
-                         nsIEventSinkGetter *eventSinkGetter,
+                         nsILoadGroup* aLoadGroup,
+                         nsICapabilities* notificationCallbacks,
+                         nsLoadFlags loadAttributes,
                          nsIURI* originalURI,
                          nsIChannel **result)
 {
@@ -141,7 +142,8 @@ nsAboutBloat::NewChannel(const char *verb,
 
     nsIChannel* channel;
     rv = serv->NewInputStreamChannel(aURI, "text/plain", 
-                                     size, inStr, aGroup, originalURI, &channel);
+                                     size, inStr, aLoadGroup, notificationCallbacks,
+                                     loadAttributes, originalURI, &channel);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;

@@ -65,8 +65,13 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, REFNSIID aIID, void **aResult);
 
-    nsresult Init(nsIJARProtocolHandler* aHandler, const char* verb, nsIURI* uri,
-                  nsILoadGroup* aGroup, nsIEventSinkGetter* getter, nsIURI* originalURI);
+    nsresult Init(nsIJARProtocolHandler* aHandler, 
+                  const char* command, 
+                  nsIURI* uri,
+                  nsILoadGroup* aLoadGroup, 
+                  nsICapabilities* notificationCallbacks,
+                  nsLoadFlags loadAttributes,
+                  nsIURI* originalURI);
 
     nsresult ExtractJARElement(nsIFileChannel* jarFileChannel);
     nsresult GetCacheFile(nsFileSpec& cacheFile);
@@ -75,7 +80,7 @@ protected:
 	char*                               mCommand;
 	nsCOMPtr<nsIJARURI>                 mURI;
 	nsCOMPtr<nsILoadGroup>              mLoadGroup;
-	nsCOMPtr<nsIEventSinkGetter>        mEventSinkGetter;
+	nsCOMPtr<nsICapabilities>           mCallbacks;
 	nsCOMPtr<nsIURI>                    mOriginalURI;
     nsLoadFlags                         mLoadAttributes;
     nsCOMPtr<nsISupports>               mOwner;

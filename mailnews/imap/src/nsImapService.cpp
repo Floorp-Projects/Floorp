@@ -458,7 +458,8 @@ nsImapService::FetchMessage(nsIImapUrl * aImapUrl,
 		  if (NS_SUCCEEDED(rv) && mailnewsUrl)
 			mailnewsUrl->GetLoadGroup(getter_AddRefs(aLoadGroup));
 
-          rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsnull, getter_AddRefs(aChannel));
+          rv = NewChannel(nsnull, url, aLoadGroup, nsnull, nsIChannel::LOAD_NORMAL,
+                          nsnull, getter_AddRefs(aChannel));
           if (NS_FAILED(rv)) return rv;
 
           nsCOMPtr<nsISupports> aCtxt = do_QueryInterface(url);
@@ -2195,8 +2196,12 @@ NS_IMETHODIMP nsImapService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI 
     return rv;
 }
 
-NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadGroup *aGroup,
-                                        nsIEventSinkGetter *eventSinkGetter, nsIURI* originalURI,
+NS_IMETHODIMP nsImapService::NewChannel(const char *verb, 
+                                        nsIURI *aURI, 
+                                        nsILoadGroup* aLoadGroup,
+                                        nsICapabilities* notificationCallbacks,
+                                        nsLoadFlags loadAttributes,
+                                        nsIURI* originalURI,
                                         nsIChannel **_retval)
 {
     // imap can't open and return a channel right away...the url needs to go in the imap url queue 
@@ -2206,7 +2211,6 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
     nsresult rv = NS_OK;
     nsCOMPtr<nsIImapMockChannel> mockChannel;
     nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aURI, &rv);
-
     if (NS_FAILED(rv)) return rv;
 
     // XXX this mock channel stuff is wrong -- the channel really should be owning the URL
@@ -2214,7 +2218,15 @@ NS_IMETHODIMP nsImapService::NewChannel(const char *verb, nsIURI *aURI, nsILoadG
     rv = imapUrl->GetMockChannel(getter_AddRefs(mockChannel));
     if (NS_FAILED(rv) || !mockChannel) return rv;
 
-    mockChannel->SetLoadGroup(aGroup);
+    // XXX this seems wrong to do to this shared mock channel too, 
+    // but oh well...
+    rv = mockChannel->SetLoadAttributes(loadAttributes);
+	if (NS_FAILED(rv)) return rv;
+    rv = mockChannel->SetLoadGroup(aLoadGroup);
+	if (NS_FAILED(rv)) return rv;
+    rv = mockChannel->SetNotificationCallbacks(notificationCallbacks);
+	if (NS_FAILED(rv)) return rv;
+
     *_retval = mockChannel;
     NS_IF_ADDREF(*_retval);
 

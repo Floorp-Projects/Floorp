@@ -23,7 +23,7 @@
 #include "nsFileTransport.h"
 #include "nsFileTransportService.h"
 #include "nscore.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsIURI.h"
 #include "nsIEventQueue.h"
 #include "nsIIOService.h"
@@ -286,32 +286,31 @@ nsFileTransport::nsFileTransport()
 }
 
 nsresult
-nsFileTransport::Init(nsFileSpec& spec, const char* command, nsIEventSinkGetter* getter)
+nsFileTransport::Init(nsFileSpec& spec, const char* command)
 {
     nsresult rv;
     mSpec = spec;
     nsCOMPtr<nsIFileSystem> fsObj;
     rv = nsLocalFileSystem::Create(spec, getter_AddRefs(fsObj));
     if (NS_FAILED(rv)) return rv;
-    return Init(fsObj, command, getter);
+    return Init(fsObj, command);
 }
 
 nsresult
 nsFileTransport::Init(nsIInputStream* fromStream, const char* contentType,
-                      PRInt32 contentLength, const char* command, nsIEventSinkGetter* getter)
+                      PRInt32 contentLength, const char* command)
 {
     nsresult rv;
     nsCOMPtr<nsIFileSystem> fsObj;
     rv = nsInputStreamFileSystem::Create(fromStream, contentType, contentLength,
                                          getter_AddRefs(fsObj));
     if (NS_FAILED(rv)) return rv;
-    return Init(fsObj, command, getter);
+    return Init(fsObj, command);
 }
 
 nsresult
 nsFileTransport::Init(nsIFileSystem* fsObj,
-                      const char* command,
-                      nsIEventSinkGetter* getter)
+                      const char* command)
 {
     nsresult rv = NS_OK;
     if (mMonitor == nsnull) {
@@ -320,23 +319,6 @@ nsFileTransport::Init(nsIFileSystem* fsObj,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     mFileObject = fsObj;
-    if (getter) {
-        nsCOMPtr<nsISupports> sink;
-        rv = getter->GetEventSink(command, 
-                                  nsIProgressEventSink::GetIID(), getter_AddRefs(sink));
-        if (NS_FAILED(rv)) return NS_OK;        // don't need a progress event sink
-
-        // Now generate a proxied event sink
-        NS_WITH_SERVICE(nsIProxyObjectManager, 
-                        proxyMgr, kProxyObjectManagerCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = proxyMgr->GetProxyObject(nsnull, // primordial thread - should change?
-                                      NS_GET_IID(nsIProgressEventSink),
-                                      sink,
-                                      PROXY_ASYNC | PROXY_ALWAYS,
-                                      getter_AddRefs(mProgress));
-    }
     return rv;
 }
 
@@ -1108,6 +1090,46 @@ NS_IMETHODIMP
 nsFileTransport::GetLoadGroup(nsILoadGroup * *aLoadGroup)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetLoadGroup(nsILoadGroup* aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFileTransport::GetNotificationCallbacks(nsICapabilities* *aNotificationCallbacks)
+{
+    *aNotificationCallbacks = mCallbacks.get();
+    NS_IF_ADDREF(*aNotificationCallbacks);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFileTransport::SetNotificationCallbacks(nsICapabilities* aNotificationCallbacks)
+{
+    mCallbacks = aNotificationCallbacks;
+
+    // Get a nsIProgressEventSink so that we can fire status/progress on it-
+    if (mCallbacks) {
+        nsCOMPtr<nsISupports> sink;
+        nsresult rv = mCallbacks->QueryCapability(NS_GET_IID(nsIProgressEventSink),
+                                                  getter_AddRefs(sink));
+        if (NS_FAILED(rv)) return NS_OK;        // don't need a progress event sink
+
+        // Now generate a proxied event sink
+        NS_WITH_SERVICE(nsIProxyObjectManager, 
+                        proxyMgr, kProxyObjectManagerCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+        
+        rv = proxyMgr->GetProxyObject(nsnull, // primordial thread - should change?
+                                      NS_GET_IID(nsIProgressEventSink),
+                                      sink,
+                                      PROXY_ASYNC | PROXY_ALWAYS,
+                                      getter_AddRefs(mProgress));
+    }
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -21,11 +21,11 @@
  */
 
 #include "nsISupports.idl"
+#include "nsIChannel.idl"
 
 interface nsIProtocolHandler;
 interface nsIURI;
-interface nsIEventSinkGetter;
-interface nsIChannel;
+interface nsICapabilities;
 interface nsIStreamObserver;
 interface nsIStreamListener;
 interface nsIEventQueue;
@@ -53,8 +53,8 @@ interface nsIIOService : nsISupports
     nsIURI newURI(in string aSpec, in nsIURI aBaseURI);
 
     /**
-     * Creates a channel for a given URI. The eventSinkGetter is used to
-     * obtain the appropriate callbacks for the URI's protocol from the
+     * Creates a channel for a given URI. The notificationCallbacks argument
+     * is used to obtain the appropriate callbacks for the URI's protocol from the
      * application.
      *
      * @param originalURI - Specifies the original URI which caused the creation
@@ -67,7 +67,8 @@ interface nsIIOService : nsISupports
     nsIChannel newChannelFromURI(in string verb,
                                  in nsIURI aURI,
                                  in nsILoadGroup aLoadGroup,
-                                 in nsIEventSinkGetter eventSinkGetter,
+                                 in nsICapabilities notificationCallbacks,
+                                 in nsLoadFlags loadAttributes,
                                  in nsIURI originalURI);
 
     /**
@@ -78,7 +79,8 @@ interface nsIIOService : nsISupports
                           in string aSpec,
                           in nsIURI aBaseURI,
                           in nsILoadGroup aLoadGroup,
-                          in nsIEventSinkGetter eventSinkGetter,
+                          in nsICapabilities notificationCallbacks,
+                          in nsLoadFlags loadAttributes,
                           in nsIURI originalURI);
 
     /**
@@ -155,7 +157,9 @@ interface nsIIOService : nsISupports
                                      in string contentType, 
                                      in long contentLength,
                                      in nsIInputStream inStr,
-                                     in nsILoadGroup group,
+                                     in nsILoadGroup aLoadGroup,
+                                     in nsICapabilities notificationCallbacks,
+                                     in nsLoadFlags loadAttributes,
                                      in nsIURI originalURI);
 
     /**

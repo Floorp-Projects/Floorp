@@ -25,7 +25,7 @@
 
 #include "nsIFileChannel.h"
 #include "nsIFileProtocolHandler.h"
-#include "nsIEventSinkGetter.h"
+#include "nsICapabilities.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIChannel.h"
@@ -63,8 +63,13 @@ public:
     static NS_METHOD
     Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult);
     
-    nsresult Init(nsIFileProtocolHandler* handler, const char* verb, nsIURI* uri,
-                  nsILoadGroup *aGroup, nsIEventSinkGetter* getter, nsIURI* originalURI);
+    nsresult Init(nsIFileProtocolHandler* handler, 
+                  const char* command, 
+                  nsIURI* uri,
+                  nsILoadGroup* aLoadGroup, 
+                  nsICapabilities* notificationCallbacks, 
+                  nsLoadFlags loadAttributes,
+                  nsIURI* originalURI);
 
 protected:
     nsresult CreateFileChannelFromFileSpec(nsFileSpec& spec, nsIFileChannel** result);
@@ -73,7 +78,7 @@ protected:
     nsCOMPtr<nsIURI>                    mOriginalURI;
     nsCOMPtr<nsIURI>                    mURI;
     nsCOMPtr<nsIFileProtocolHandler>    mHandler;
-    nsCOMPtr<nsIEventSinkGetter>        mGetter;        // XXX it seems wrong keeping this -- used by GetParent
+    nsCOMPtr<nsICapabilities>           mCallbacks;
     char*                               mCommand;
     nsFileSpec                          mSpec;
     nsCOMPtr<nsIChannel>                mFileTransport;

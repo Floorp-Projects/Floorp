@@ -24,7 +24,7 @@
 
 #include "nsweb.h"
 #include "prtypes.h"
-#include "nsISupports.h"
+#include "nsICapabilities.h"
 
 class nsIContentViewer;
 class nsIURI;
@@ -38,7 +38,7 @@ class nsIChannel;
  * The primary container interface for objects that can contain
  * implementations of nsIContentViewer.
  */
-class nsIContentViewerContainer : public nsISupports
+class nsIContentViewerContainer : public nsICapabilities
 {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_ICONTENT_VIEWER_CONTAINER_IID; return iid; }
