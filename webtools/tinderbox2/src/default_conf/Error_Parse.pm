@@ -5,8 +5,8 @@
 # errors and creating links into the source code where the errors
 # occurred.
 
-# $Revision: 1.13 $ 
-# $Date: 2002/05/07 04:05:17 $ 
+# $Revision: 1.14 $ 
+# $Date: 2002/05/07 20:01:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/Error_Parse.pm,v $ 
 # $Name:  $ 
@@ -177,7 +177,9 @@ sub line_type {
 
                      ($line =~ m/Status token, FAILED, not found/) ||
 
-                     ($line =~ m!WARNING: NS_ENSURE_TRUE\(presShell\) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/content/html/content/src/nsGenericHTMLElement.cpp!) ||
+                     ($line =~ m!WARNING: NS_ENSURE_TRUE\(presShell\) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/content/html/content/src!) ||
+
+                     ($line =~ m!WARNING: NS_ENSURE_TRUE\(NS_SUCCEEDED\(result\)\) failed, file /builds/tinderbox/SeaMonkey/Linux_2.2.5-22smp_Clobber/mozilla/htmlparser/src!) ||
 
                      # note that the word widget was followed by a
                      # quote mark which emacs thought was a bit funny
@@ -188,7 +190,7 @@ sub line_type {
 
  		     # these are files which look like error messages
 
-                     ($line =~ m/-error-/) ||
+                     ($line =~ m![\/\-\.]error[\/\-\.]!) ||
                      ($line =~ m/-failed\.gif/) ||
                      ($line =~ m/-deprecated\.h/) ||
 
@@ -261,6 +263,22 @@ sub line_type {
             ($line =~ /jmake.MakerFailedException:/) ||         # Java error
 
     0);
+
+  if ($error) {
+      my  $ignore = (
+
+ 		     # these are files which look like error messages
+
+                     ($line =~ m![\/\-\.]error[\/\-\.]!) ||
+                     ($line =~ m/-failed\.gif/) ||
+                     ($line =~ m/-deprecated\.h/) ||
+
+                     0);
+      
+      if ($ignore) {
+          undef $error;
+      }
+  }
 
   if ($error) {
     return('error');
