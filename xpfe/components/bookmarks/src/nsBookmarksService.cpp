@@ -139,10 +139,10 @@ static const char kBookmarkCommand[]              = "http://home.netscape.com/NC
 
 ////////////////////////////////////////////////////////////////////////
 
-PRInt32 gRefCnt;
+PRInt32			gRefCnt=0;
 nsIRDFService		*gRDF;
 nsIRDFContainerUtils	*gRDFC;
-nsICharsetAlias* gCharsetAlias;
+nsICharsetAlias		*gCharsetAlias;
 
 nsIRDFResource		*kNC_Bookmark;
 nsIRDFResource		*kNC_BookmarkSeparator;
