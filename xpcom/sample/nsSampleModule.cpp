@@ -18,8 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	Suresh Duddu <dp@netscape.com>
  */
-#include "nsIModule.h"
 #include "nsIGenericFactory.h"
 
 #include "nsSample.h"
