@@ -255,11 +255,11 @@ public class LDAPConnection
     /**
      * Properties
      */
-    private final static Float SdkVersion = new Float(4.17f);
+    private final static Float SdkVersion = new Float(4.18f);
     private final static Float ProtocolVersion = new Float(3.0f);
     private final static String SecurityVersion = new String("none,simple,sasl");
     private final static Float MajorVersion = new Float(4.0f);
-    private final static Float MinorVersion = new Float(0.17f);
+    private final static Float MinorVersion = new Float(0.18f);
     private final static String DELIM = "#";
     private final static String PersistSearchPackageName =
       "netscape.ldap.controls.LDAPPersistSearchControl";
