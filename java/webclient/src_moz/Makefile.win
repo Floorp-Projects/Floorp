@@ -81,9 +81,8 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 LLIBS = \
 	$(DIST)\lib\baseembed_s.lib \
 	$(DIST)\lib\raptorbasewidget_s.lib \
-	$(DIST)\lib\gkwidget.lib \
 	$(DIST)\lib\xpcom.lib \
-	$(DIST)\lib\gkgfxwin.lib \
+	$(DIST)\lib\gkgfx.lib \
 	$(DIST)\lib\nsreg.lib \
 	$(DIST)\lib\nspr4.lib \
 	$(DIST)\lib\plc4.lib \
