@@ -436,6 +436,39 @@ all_ok = echo.SharedString() == "a static string";
 print("[shared] test - "+(all_ok ? "passed" : "failed"));
 
 /***************************************************************************/
+
+var e1 = new Object();
+var e2 = new Object();
+
+var v1 = new Object();
+var v2 = new Object();
+var v3 = new Object();
+var v4 = new Object();
+
+echo.SetReceiver(null);
+all_ok = true;
+
+v1.value = e1;
+echo.SetReceiverReturnOldReceiver(v1);
+all_ok = all_ok && v1.value == null;
+
+v2.value = e2;
+echo.SetReceiverReturnOldReceiver(v2);
+all_ok = all_ok && v2.value == e1;
+
+v3.value = null;
+echo.SetReceiverReturnOldReceiver(v3);
+all_ok = all_ok && v3.value == e2;
+
+v4.value = e1;
+echo.SetReceiverReturnOldReceiver(v4);
+all_ok = all_ok && v4.value == null;
+
+print("inout of interface tests - "+
+        (all_ok ? "passed" : "failed"));
+echo.SetReceiver(null);
+
+/***************************************************************************/
 // Components object test...
 // print(".......................................");
 

@@ -271,6 +271,9 @@ public:
     /* nsIJSStackFrameLocation GetStack (); */
     NS_IMETHOD GetStack(nsIJSStackFrameLocation **_retval);
 
+    /* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
+    NS_IMETHOD SetReceiverReturnOldReceiver(nsIEcho **aReceiver);
+
     MyEcho();
 private:
     nsIEcho* mReceiver;
@@ -476,7 +479,7 @@ MyEcho::GetStack(nsIJSStackFrameLocation **_retval)
         {
             xpc->CreateStackFrameLocation(JS_FALSE,
                                           __FILE__,
-                                          "MyEcho::GetStack",                          
+                                          "MyEcho::GetStack",
                                           __LINE__,
                                           jsstack,
                                           &stack);
@@ -490,7 +493,24 @@ MyEcho::GetStack(nsIJSStackFrameLocation **_retval)
         return NS_OK;
     }
     return NS_ERROR_FAILURE;
-}        
+}
+
+/* void SetReceiverReturnOldReceiver (inout nsIEcho aReceiver); */
+NS_IMETHODIMP
+MyEcho::SetReceiverReturnOldReceiver(nsIEcho **aReceiver)
+{
+    if(!aReceiver)
+        return NS_ERROR_NULL_POINTER;
+
+    nsIEcho* oldReceiver = mReceiver;
+    mReceiver = *aReceiver;
+    if(mReceiver)
+        NS_ADDREF(mReceiver);
+
+    /* don't release the reference, that is the caller's problem */
+    *aReceiver = oldReceiver;
+    return NS_OK;
+}
 
 /***************************************************************************/
 // security manager test class

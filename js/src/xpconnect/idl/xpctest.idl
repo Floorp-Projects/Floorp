@@ -79,6 +79,7 @@ interface nsIEcho : nsISupports {
     nsISupports ReturnInterface(in nsISupports obj);
 
     nsIJSStackFrameLocation GetStack();
+    void SetReceiverReturnOldReceiver(inout nsIEcho aReceiver);
 };
 
 /***************************************************************************/
