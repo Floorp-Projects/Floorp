@@ -64,6 +64,8 @@ public:
 protected:
   virtual 	~nsDeviceContextMac();
   
+	virtual nsresult CreateFontAliasTable();
+
   nsDrawingSurface 			mSurface;
   PRUint32 							mDepth;
   Rect									mPageRect;
