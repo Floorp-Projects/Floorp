@@ -657,6 +657,10 @@ nsresult nsDeviceContextPh :: GetDisplayInfo(PRInt32 &aWidth, PRInt32 &aHeight, 
        }
      }	
   }
+  else
+  {
+    printf("The PHIG environment variable must be set, try setting it to 1\n");  
+  }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsDeviceContextPh::GetDisplayInfo aWidth=<%d> aHeight=<%d> aDepth=<%d>\n", aWidth, aHeight, aDepth));
   

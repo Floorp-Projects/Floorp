@@ -74,13 +74,10 @@ nsDrawingSurfacePh :: ~nsDrawingSurfacePh()
   {
     /* This will be defined if the surface is still locked... */
 	/* maybe I should unlock it? */
-    if (mImage)
-    {
-	  PR_Free(mImage->image);
-      mImage->image = nsnull;
-	  PR_Free(mImage);
-	  mImage = nsnull;
-    }
+    PR_Free(mImage->image);
+    mImage->image = nsnull;
+	PR_Free(mImage);
+	mImage = nsnull;
   }
 
     Stop();
@@ -204,7 +201,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Unlock(void)
       bpl = (bpl + 3) & ~0x3;
       err=PgDrawTImage( mImage->image, mImage->type, &pos, &mImage->size, mImage->bpl, 0 ,Mask,bpl);
       if (err == -1)
-	  {
+      {
 	    NS_ASSERTION(0, "nsDrawingSurfacePh::Unlock PgDrawTImage failed");
 		return NS_ERROR_FAILURE;
 	  }
@@ -266,6 +263,25 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC )
   mPixmap      = NULL;
   mDrawContext = PhDCGetCurrent();
 
+/* Code to clear the clipping from the GC */
+  /* Activate this GC */
+  Select();
+  
+  /* Clear out the Multi-clip, it will be reset later if needed */
+  /* This fixed the toolbar drawing */
+  PgSetMultiClip(0,NULL);
+
+  /* Clear out the Image if its still set */
+  if (mImage)
+  {
+    /* This will be defined if the surface is still locked... */
+	/* maybe I should unlock it? */
+    PR_Free(mImage->image);
+    mImage->image = nsnull;
+	PR_Free(mImage);
+	mImage = nsnull;
+  }
+  
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init with PhGC_t=<%p> for onscreen drawing this=<%p> mDrawContext=<%p>\n",aGC, this, mDrawContext));
   return NS_OK;
 }
@@ -353,11 +369,30 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Init( PhGC_t * &aGC, PRUint32 aWidth,
 	return NS_ERROR_FAILURE;
   }
 
-  /* Hack to see if this helps! */
+  /* There are two types of MemoryContexts and I have no idea which is "better"  */
   //PmMemSetType(mMC, Pm_IMAGE_CONTEXT);
 
   /* Save away the new DrawContext */
   mDrawContext = PhDCGetCurrent();
+
+  /* Code to clear the clipping from the GC */
+  /* Activate this GC */
+  Select();
+  
+  /* Clear out the Multi-clip, it will be reset later if needed */
+  /* This fixed the toolbar drawing */
+  PgSetMultiClip(0,NULL);
+
+  /* Clear out the Image if its still set */
+  if (mImage)
+  {
+    /* This will be defined if the surface is still locked... */
+	/* maybe I should unlock it? */
+    PR_Free(mImage->image);
+    mImage->image = nsnull;
+	PR_Free(mImage);
+	mImage = nsnull;
+  }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsDrawingSurfacePh::Init  Finished calling PmMemStart oldDC=<%p> new mc=<%p> CurrentDC=<%p>\n", oldDC, mMC, PhDCGetCurrent()));
 	    
@@ -404,7 +439,7 @@ NS_IMETHODIMP nsDrawingSurfacePh :: Select( void )
 
   /* Clear out the Multi-clip, it will be reset if needed */
   /* This fixed the toolbar drawing */
-  PgSetMultiClip(0,NULL);
+  //  PgSetMultiClip(0,NULL);		/* Moved this to the Init section  */
 
 
 #ifdef DEBUG
@@ -519,5 +554,3 @@ PRBool nsDrawingSurfacePh::IsActive(void)
     return PR_FALSE;
   }
 }
-
-

@@ -159,6 +159,8 @@ public:
   // nsIRenderingContextPh
   // NS_IMETHOD CreateDrawingSurface(PhGC_t *aGC, nsDrawingSurface &aSurface);
 
+  NS_IMETHOD SetClipRegion(PhTile_t *aTileList, nsClipCombine aCombine, PRBool &aClipState);
+
 private:
   void PushClipState(void);
   void holdSetGC();
