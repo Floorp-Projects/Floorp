@@ -2117,6 +2117,15 @@ nsXULDocument::ContentReplaced(nsIContent* aContainer,
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->ContentReplaced(this, aContainer, aOldChild, aNewChild,
                                   aIndexInContainer);
+
+        // XXXdwh hack to avoid crash, since an observer removes itself
+        // during ContentReplaced.
+        PRInt32 newCount = mObservers.Count();
+        if (newCount < count) {
+          PRInt32 diff = (count - newCount);
+          count -= diff;
+          i -= diff;
+        }
     }
     return NS_OK;
 }
