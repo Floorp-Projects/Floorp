@@ -36,6 +36,7 @@ XPIDLSRCS =               \
   .\nsITransferable.idl          \
   .\nsIDragSession.idl          \
   .\nsIDragService.idl          \
+  .\nsIDragTracker.idl \
   .\nsIFormatConverter.idl          \
   .\nsIClipboard.idl            \
   .\nsIClipboardOwner.idl       \
