@@ -703,38 +703,26 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
             fastLoadServ->GetOutputStream(getter_AddRefs(objectOutput));
             if (objectOutput) {
                 nsCOMPtr<nsIFile> file;
-                nsCOMPtr<nsIChannel> chan = result;
-                while (!fileChan) {
-                    nsCOMPtr<nsIURI> uri;
-                    chan->GetURI(getter_AddRefs(uri));
 
-                    // Loop, jar: URIs can nest (e.g. jar:jar:A.jar!B.jar!C.xml).
+                if (fileChan) {
+                    fileChan->GetFile(getter_AddRefs(file));
+                } else {
+                    nsCOMPtr<nsIURI> uri;
+                    result->GetURI(getter_AddRefs(uri));
+
+                    // Loop, jar URIs can nest (e.g. jar:jar:A.jar!B.jar!C.xml).
                     // Often, however, we have jar:resource:/chrome/A.jar!C.xml.
                     nsCOMPtr<nsIJARURI> jarURI;
                     while ((jarURI = do_QueryInterface(uri)) != nsnull)
                         jarURI->GetJARFile(getter_AddRefs(uri));
 
-                    // Here we must have a URL of the form resource:/chrome/A.jar
-                    // or file:/some/path/to/A.jar.  Let's hope for the latter.
+                    // Here we have a URL of the form resource:/chrome/A.jar
+                    // or file:/some/path/to/A.jar.
                     nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
-                    if (fileURL) {
+                    if (fileURL)
                         fileURL->GetFile(getter_AddRefs(file));
-                        if (file)
-                            break;
-                    }
-
-                    // Thanks to the way that the resource: URL implementation
-                    // hides its substitution code from itself and the rest of
-                    // the world, we must make a new channel simply to get the
-                    // substituted URI.
-                    ioServ->NewChannelFromURI(uri, getter_AddRefs(chan));
-                    if (!chan)
-                        break;
-                    fileChan = do_QueryInterface(chan);
                 }
 
-                if (!file && fileChan)
-                    fileChan->GetFile(getter_AddRefs(file));
                 if (file) {
                     rv = fastLoadServ->AddDependency(file);
                     if (NS_FAILED(rv))
