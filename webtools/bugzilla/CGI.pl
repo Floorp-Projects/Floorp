@@ -1056,8 +1056,15 @@ sub DumpBugActivity {
 
 sub GetCommandMenu {
     my $loggedin = quietly_check_login();
-    my $html = qq{<FORM METHOD=GET ACTION="show_bug.cgi">};
-    $html .= "<a href='enter_bug.cgi'>New</a> | <a href='query.cgi'>Query</a>";
+    my $html = "";
+    $html .= <<"--endquote--";
+<TABLE><TR><TD width=5%>
+<FORM METHOD=GET ACTION="show_bug.cgi">
+Actions:
+</TD><TD width=35%>
+<a href='enter_bug.cgi'>New</a> | <a href='query.cgi'>Query</a>
+--endquote--
+
     if (-e "query2.cgi") {
         $html .= "[<a href='query2.cgi'>beta</a>]";
     }
@@ -1065,32 +1072,15 @@ sub GetCommandMenu {
     $html .=
         qq{ | <INPUT TYPE=SUBMIT VALUE="Find"> bug \# <INPUT NAME=id SIZE=6>};
 
-    $html .= " | <a href='reports.cgi'>Reports</a>";
+    $html .= " | <a href='reports.cgi'>Reports</a></TD>\n";
     if ($loggedin) {
-        my $mybugstemplate = Param("mybugstemplate");
-        my %substs;
-        $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
-        if (!defined $::anyvotesallowed) {
-            GetVersionTable();
-        }
-        if ($::anyvotesallowed) {
-            $html .= qq{ | <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
-        }
+    	#a little mandatory SQL, used later on
         SendSQL("SELECT mybugslink, userid, blessgroupset FROM profiles " .
                 "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
         my ($mybugslink, $userid, $blessgroupset) = (FetchSQLData());
-        if ($mybugslink) {
-            my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
-            $html = $html . " | <A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
-        }
-        SendSQL("SELECT name FROM namedqueries " .
-                "WHERE userid = $userid AND linkinfooter");
-        while (MoreSQLData()) {
-            my ($name) = (FetchSQLData());
-            $html .= " | <A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
-                     url_quote($name) . "\"><NOBR>$name</NOBR></A>";
-        }
-        $html .= " | <NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
+        
+        #Begin settings
+        $html .= "<TD width=65%><NOBR>Edit <a href='userprefs.cgi'>prefs</a></NOBR>";
         if (UserInGroup("tweakparams")) {
             $html .= ", <a href=editparams.cgi>parameters</a>";
             $html .= ", <a href=sanitycheck.cgi><NOBR>sanity check</NOBR></a>";
@@ -1108,13 +1098,42 @@ sub GetCommandMenu {
             $html .= ", <a href=editkeywords.cgi>keywords</a>";
         }
         $html .= " | <NOBR><a href=relogin.cgi>Log out</a> $::COOKIE{'Bugzilla_login'}</NOBR>";
+        $html .= "</TD></TR>";
+        
+		#begin preset queries
+        my $mybugstemplate = Param("mybugstemplate");
+        my %substs;
+        $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
+        if (!defined $::anyvotesallowed) {
+            GetVersionTable();
+        }
+        if ($::anyvotesallowed) {
+            $html .= qq{ | <A HREF="showvotes.cgi"><NOBR>My votes</NOBR></A>};
+        }
+        $html .= "</TR><TR>";
+        $html .= "<TD>Preset Queries: </TD>";
+        $html .= "<TD colspan=2>\n";
+        if ($mybugslink) {
+            my $mybugsurl = PerformSubsts($mybugstemplate, \%substs);
+            $html = $html . "<A HREF='$mybugsurl'><NOBR>My bugs</NOBR></A>";
+        }
+        SendSQL("SELECT name FROM namedqueries " .
+                "WHERE userid = $userid AND linkinfooter");
+        while (MoreSQLData()) {
+            my ($name) = (FetchSQLData());
+            $html .= " | <A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
+                     url_quote($name) . "\"><NOBR>$name</NOBR></A>";
+        }
+        $html .= "</TR>\n<TR>";
     } else {
         $html .=
             " | <a href=\"createaccount.cgi\"><NOBR>New account</NOBR></a>\n";
         $html .=
             " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
+        $html .= "</TD></TR>";
     }
-    $html .= "</FORM>";                
+    $html .= "</FORM>\n";
+    $html .= "</TABLE>";                
     return $html;
 }
 
