@@ -2206,10 +2206,10 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 #endif
     
 
-    // maybe using XTextStyle would work as we want... i doubt it though.
-    status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XCompoundTextStyle,
+    // Use XStdICCTextStyle for 41786(a.k.a TWM sucks) and 43108(JA text title)
+    prop.value = 0;
+    status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1, XStdICCTextStyle,
                                        &prop);
-
     if (status == Success) {
 #ifdef DEBUG_TITLE
       g_print("\nXmbTextListToTextProperty succeeded\n  text is %s\n  length is %d\n", prop.value,
@@ -2217,38 +2217,17 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
 #endif
       XSetWMProperties(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
                        &prop, &prop, NULL, 0, NULL, NULL, NULL);
-
-      // TWM sucks and doesn't support compound text.. argh
-      XTextProperty tmpProp;
-      // XGetWMName is weird - returns nonzero for success
-      if (!XGetWMName(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
-                      &tmpProp)) {
-        // !! XGetWMName is returning failure!!
-        // We should try XStringStyle to prevent having a blank window title.
-
-        if (prop.value) // free from the previous attempt
-          XFree(prop.value);
-
-        status = XmbTextListToTextProperty(GDK_DISPLAY(), &platformText, 1,
-                                           XStringStyle,
-                                           &prop);
-        if (status == Success) {
-          XSetWMProperties(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
-                           &prop, &prop, NULL, 0, NULL, NULL, NULL);
-        } else {
-          // we're fucked, set it however we can.
-          gtk_window_set_title(GTK_WINDOW(mShell), nsAutoCString(aTitle));
-        }
-        if (tmpProp.value)
-          XFree(tmpProp.value);
-      }
-
       if (prop.value)
         XFree(prop.value);
 
       nsMemory::Free(platformText);
       // free properties list?
       return NS_OK;
+    } else {                    // status != Success
+      if (prop.value)
+        XFree(prop.value);
+      nsMemory::Free(platformText);
+      // free properties list?
     }
   }
 
