@@ -1640,7 +1640,7 @@ PRIVATE void net_CacheAbort (NET_StreamClass *stream, int status)
 
 
 #ifdef XP_UNIX
-char **fe_encoding_extensions; /* gag! */
+extern char **fe_encoding_extensions; /* gag! */
 #endif
 
 /* setup the stream
