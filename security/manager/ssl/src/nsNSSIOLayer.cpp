@@ -628,6 +628,14 @@ nsSSLIOLayerRead(PRFileDesc* fd, void* buf, PRInt32 amount)
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("[%p] read %d bytes\n", (void*)fd, bytesRead));
   DEBUG_DUMP_BUFFER((unsigned char*)buf, bytesRead);
 #endif
+
+  if (bytesRead == -1) {
+    PRInt32 err = PR_GetError();
+    if (IS_SSL_ERROR(err)) {
+      nsHandleSSLError(socketInfo, err);
+    }
+  }
+
   return bytesRead;
 }
 
