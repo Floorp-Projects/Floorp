@@ -704,7 +704,7 @@ extern void x86Sar64Bit();
 extern void x86ThreeWayCMP_L();
 extern void x86ThreeWayCMPC_L();
 extern void x86Extract64Bit();
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(FREEBSD)
 extern "C" {
 extern void x86Mul64Bit(void);
 extern void x86Div64Bit(void);
@@ -718,7 +718,7 @@ extern void x86Extract64Bit(void);
 };
 #endif
 
-#if !defined(WIN32) && !defined(LINUX)
+#if !defined(WIN32) && !defined(LINUX) && !defined(FREEBSD)
 static void x86Mul64Bit() {trespass("Not implemented");}
 static void x86Div64Bit() {trespass("Not implemented");}
 static void x86Mod64Bit() {trespass("Not implemented");}
