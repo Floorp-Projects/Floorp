@@ -143,13 +143,14 @@ nsUnknownContentTypeDialog.prototype = {
           {
 #ifdef XP_WIN
             return aFolderType == "Desktop" ? "DeskV" : "Pers";
-#else
+#endif
 #ifdef XP_MACOSX
             return aFolderType == "Desktop" ? "UsrDsk" : "UsrDocs";
-#else
+#endif
+#ifdef XP_OS2
+            return aFolderType == "Desktop" ? "Desk" : "Home";
+#endif
             return "Home";
-#endif
-#endif
           }
           
           function getDownloadsFolder(aFolder)
