@@ -28,4 +28,8 @@
 #define IDC_ARROWNORTHPLUS              4106
 #define IDC_ARROWEASTPLUS               4107
 #define IDC_ARROWWESTPLUS               4108
-
+#define IDC_GRAB                        4109
+#define IDC_GRABBING                    4110
+#define IDC_CELL                        4111
+#define IDC_COPY                        4112
+#define IDC_ALIAS                       4113
