@@ -147,7 +147,7 @@ TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLT
 TagList  gTableCloseTags={6,{eHTMLTag_td,eHTMLTag_tr,eHTMLTag_th,eHTMLTag_tbody,eHTMLTag_thead,eHTMLTag_tfoot}};
 TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
 TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
-TagList  gDTCloseTags={1,{eHTMLTag_p}};
+TagList  gDTCloseTags={3,{eHTMLTag_p,eHTMLTag_dd,eHTMLTag_dt}};
 TagList  gULCloseTags={1,{eHTMLTag_li}};
 TagList  gULAutoClose={2,{eHTMLTag_p,eHTMLTag_ul}}; //fix bug 50261..
 
@@ -454,7 +454,7 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kDLChild|kInlineEntity, kFlowEntity|kDLChild, kNone,	// added kDLChild to the inclusion bit - Refer bug 102370
+      /*parent,incl,exclgroups*/          kInlineEntity, kFlowEntity, kNone,
       /*special props, prop-range*/       kNoPropagate|kMustCloseSelf|kVerifyHierarchy,kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
@@ -508,8 +508,8 @@ void InitializeElementTable(void) {
       /*req-parent excl-parent*/          eHTMLTag_unknown,eHTMLTag_unknown,
 	    /*rootnodes,endrootnodes*/          &gRootTags,	&gRootTags,	
       /*autoclose starttags and endtags*/ &gDTCloseTags,0,0,0,
-      /*parent,incl,exclgroups*/          kDLChild|kInlineEntity, (kFlowEntity-kHeading)|kDLChild, kNone,	// dt's parent group is inline - bug 65467
-      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,                // // added kDLChild to the inclusion bit - Refer bug 102370
+      /*parent,incl,exclgroups*/          kInlineEntity, (kFlowEntity-kHeading), kNone,	// dt's parent group is inline - bug 65467
+      /*special props, prop-range*/       (kNoPropagate|kMustCloseSelf),kDefaultPropRange,
       /*special parents,kids,skip*/       &gInDL,0,eHTMLTag_unknown);
 
     Initialize( 

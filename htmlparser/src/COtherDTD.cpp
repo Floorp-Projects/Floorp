@@ -165,7 +165,7 @@ COtherDTD::COtherDTD() : nsIDTD() {
   mNodeAllocator=new nsNodeAllocator();
   mBodyContext=new nsDTDContext();
 
-#if 1 //set this to 1 if you want strictDTD to be based on the environment setting.
+#if 0 //set this to 1 if you want strictDTD to be based on the environment setting.
   char* theEnvString = PR_GetEnv("MOZ_DISABLE_STRICT"); 
   mEnableStrict=PRBool(0==theEnvString);
 #else
