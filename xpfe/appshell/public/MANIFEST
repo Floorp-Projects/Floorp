@@ -10,3 +10,4 @@ nsFileLocations.h
 nsIXULWindowCallbacks.h
 nsIDOMXPConnectFactory.h
 nsINetSupportDialogService.h
+nsISplashScreen.h
