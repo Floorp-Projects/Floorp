@@ -459,7 +459,6 @@ js_AtomizeHashedKey(JSContext *cx, jsval key, JSHashNumber keyHash, uintN flags)
 
     atom = (JSAtom *)he;
     atom->flags |= flags;
-    cx->lastAtom = atom;
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
@@ -550,7 +549,6 @@ js_AtomizeDouble(JSContext *cx, jsdouble d, uintN flags)
 
     atom = (JSAtom *)he;
     atom->flags |= flags;
-    cx->lastAtom = atom;
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
@@ -613,7 +611,6 @@ js_AtomizeString(JSContext *cx, JSString *str, uintN flags)
 
     atom = (JSAtom *)he;
     atom->flags |= flags & (ATOM_PINNED | ATOM_INTERNED);
-    cx->lastAtom = atom;
 out:
     JS_UNLOCK(&state->lock,cx);
     return atom;
