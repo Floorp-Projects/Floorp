@@ -91,12 +91,11 @@ public:
   // Flags:
   // NS_FRAME_NO_MOVE_VIEW - don't position the frame's view. Set this if you
   //    don't want to automatically sync the frame and view
-  // NS_FRAME_NO_MOVE_VIEW - don't move the frame. aX and aY are ignored in this
-  //   case. Also implies NS_FRAME_NO_MOVE_VIEW
+  // NS_FRAME_NO_SIZE_VIEW - don't size the view
   static void SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame,
                                        nsIView*        aView,
-                                       nsRect*         aCombinedArea,
+                                       const nsRect*   aCombinedArea,
                                        PRUint32        aFlags = 0);
   
   /**
