@@ -870,11 +870,11 @@ permission_Check(
   if (rememberChecked) {
     char * hostname2 = NULL;
     /* ignore leading periods in host name */
-    while (hostname && (*hostname == '.')) {
-      hostname++;
+    char * hostnameAfterDot = hostname;
+    while (hostnameAfterDot && (*hostnameAfterDot == '.')) {
+      hostnameAfterDot++;
     }
-    StrAllocCopy(hostname2, hostname);
-    Recycle(hostname);
+    StrAllocCopy(hostname2, hostnameAfterDot);
     permission_Add(hostname2, permission, type, PR_TRUE);
   }
   if (rememberChecked != permission_GetRememberChecked(type)) {
