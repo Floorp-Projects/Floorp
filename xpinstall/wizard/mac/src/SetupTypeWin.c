@@ -198,7 +198,7 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 	NavDialogOptions	dlgOpts;
 	NavEventUPP			eventProc;
 	AEDesc				resultDesc, initDesc;
-	FSSpec				folderSpec, tmp;
+	FSSpec				folderSpec, tmp, fsDest;
 	OSErr				err;
 	long				realDirID;
 
@@ -327,12 +327,18 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 		{
 			/* check if folder location contains legacy apps */
 			if (gControls->cfg->numLegacyChecks > 0)
-				if (LegacyFileCheck(gControls->opt->vRefNum, gControls->opt->dirID))
+				if (!LegacyFileCheck(gControls->opt->vRefNum, gControls->opt->dirID))
 				{
-					/* user indicated reselection desired so don't do anything */
+					/* user cancelled so don't do anything */
 					return;
 				}
-				/* else move on to next screen */
+				/* else delete and move on to next screen */
+				else
+				{
+					err = FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &fsDest);
+					if (err == noErr) /* don't care if this fails */
+						DeleteDirectoryContents(fsDest.vRefNum, fsDest.parID, fsDest.name);
+				}
 			
 			ClearDiskSpaceMsgs();
 			KillControls(gWPtr);
@@ -842,8 +848,8 @@ LegacyFileCheck(short vRefNum, long dirID)
 				ParamText(pMessage, "\p", "\p", "\p");
 				
 				/* set bRetry to retval of show message dlg */
-				dlgRV = CautionAlert(rAlrtSelectCont, nil);
-				if (dlgRV == 1) /* default button id  ("Select Again") */
+				dlgRV = CautionAlert(rAlrtDelOldInst, nil);
+				if (dlgRV == 1) /* default button id  ("Delete") */
 					bRetry = true;
 
 				if (pMessage)
