@@ -2204,14 +2204,25 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     convertFileToURL(urlStr, urlSpec);
     rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
     if (NS_FAILED(rv)) {
+      // KEYWORDS
       // keyword failover
       // we kick the following cases to the keyword server:
       //   * starts with a '?'
       //   * contains a space
-      if ( (urlStr.First() == '?') || (urlStr.FindChar(' ') > -1) ) {
+      //   * (windows only) is a single word (contains no dots or scheme) XXX: this breaks
+      //     intranet host lookups. This latter case needs to be handled by
+      //     dns notifications rather than string interrogation.
+      if (
+#ifdef XP_PC
+          // This is windows only because windows is the only platform that utilizes
+          // WINS resolution (a DNS fallback) which can take several minutes to
+          // fail a resolve call if the host does not exist. Thus, this forces us
+          // to bypass DNS/WINS altogether on windows.
+          (urlStr.FindChar('.') == -1) || 
+#endif // XP_PC
+          (urlStr.First() == '?') || (urlStr.FindChar(' ') > -1) ) {
           nsAutoString keywordSpec("keyword:");
           keywordSpec.Append(aURLSpec);
-
           rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
       }
 
@@ -3398,54 +3409,59 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        dlObserver->OnEndDocumentLoad(mDocLoader, channel, aStatus, aWebShell);
     }
 
-   if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
-         // We need to check for a dns failure in aStatus, but dns failure codes 
-         // aren't proliferated yet. This checks for failure for a host lacking
-         // "www." and/or ".com" and munges the url acordingly, then fires off
-         // a new request.
-         //
-         // XXX This code may or may not have mem leaks depending on the version 
-         // XXX stdurl that is in the tree at a given point in time. This needs t
-         // XXX be fixed once we have a solid version of std url in.
-         char *host = nsnull;
-         nsString2 hostStr;
-         rv = aURL->GetHost(&host);
-         if (NS_FAILED(rv)) return rv;
+    if ( (mDocLoader == loader) && (aStatus == NS_ERROR_UNKNOWN_HOST) ) {
+        // KEYWORDS
+        // if a lookup failed, check to see if it was non-qualified.
+        // if it was, kick it to the keyword server. the keyword server
+        // now handles the www.*.com trick.
+        char *host = nsnull;
+        rv = aURL->GetHost(&host);
+        if (NS_FAILED(rv)) return rv;
 
-         hostStr.SetString(host);
-         nsAllocator::Free(host);
-         PRInt32 dotLoc = -1;
-         dotLoc = hostStr.FindChar('.');
-         PRBool retry = PR_FALSE;
-         if (-1 == dotLoc) {
-             hostStr.Insert("www.", 0, 4);
-             hostStr.Append(".com");
-             retry = PR_TRUE;
-         } else if ( (hostStr.Length() - dotLoc) == 3) {
-             hostStr.Insert("www.", 0, 4);
-             retry = PR_TRUE;
-         }
-
-         if (retry) {
-             char *modHost = hostStr.ToNewCString();
-             if (!modHost)
-                 return NS_ERROR_OUT_OF_MEMORY;
-             rv = aURL->SetHost(modHost);
-             nsAllocator::Free(modHost);
-             modHost = nsnull;
-             if (NS_FAILED(rv)) return rv;
-             char *aSpec = nsnull;
-             rv = aURL->GetSpec(&aSpec);
-             if (NS_FAILED(rv)) return rv;
-             nsString2 newURL(aSpec);
-             // reload the url
-             const PRUnichar *spec = newURL.GetUnicode();
-             if (spec) {
-                 rv = LoadURL(spec, "view");
-             }
-         } // retry            
-     } // unknown host
-
+        if(!host) return NS_ERROR_OUT_OF_MEMORY;
+        
+        char *tmp = host;
+        while (*tmp && (*tmp != '.')) tmp++;
+        if (!*tmp) {
+            nsAutoString keywordSpec("keyword:");
+            keywordSpec.Append(host);
+            rv = LoadURL(keywordSpec.GetUnicode(), "view");
+            if (NS_FAILED(rv)) {
+                // if we couldn't load the keyword munged URL do
+                // our own www.*.com trick.
+                nsAllocator::Free(host);
+                nsCAutoString hostStr;
+                rv = aURL->GetHost(&host);
+                if (NS_FAILED(rv)) return rv;
+     
+                hostStr.SetString(host);
+                PRInt32 dotLoc = -1;
+                dotLoc = hostStr.FindChar('.');
+                PRBool retry = PR_FALSE;
+                if (-1 == dotLoc) {
+                    hostStr.Insert("www.", 0, 4);
+                    hostStr.Append(".com");
+                    retry = PR_TRUE;
+                } else if ( (hostStr.Length() - dotLoc) == 3) {
+                    hostStr.Insert("www.", 0, 4);
+                    retry = PR_TRUE;
+                }
+    
+                if (retry) {
+                    rv = aURL->SetHost(hostStr.GetBuffer());
+                    if (NS_FAILED(rv)) return rv;
+                    char *aSpec = nsnull;
+                    rv = aURL->GetSpec(&aSpec);
+                    if (NS_FAILED(rv)) return rv;
+                    nsAutoString newURL(aSpec);
+                    nsAllocator::Free(aSpec);
+                    // reload the url
+                    rv = LoadURL(newURL.GetUnicode(), "view");
+                } // retry
+            } // end keyword load failure
+        } // end !*tmp
+        nsAllocator::Free(host);
+    } // unknown host
   } //!mProcessedEndDocumentLoad
   else {
     rv = NS_OK;
