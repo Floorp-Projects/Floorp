@@ -99,6 +99,7 @@ EXPORTS		= \
 		nsQuickSort.h \
 		nsRecyclingAllocator.h \
 		nsStaticNameTable.h \
+		nsStaticAtom.h \
 		nsSupportsArray.h \
 		nsSupportsPrimitives.h \
 		nsTime.h \
