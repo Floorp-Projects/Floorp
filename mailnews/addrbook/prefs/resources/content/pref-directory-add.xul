@@ -43,7 +43,6 @@
     <tabbox orient="vertical" style="margin:5px">
       <tabs id="directoryTabBox">
         <tab label="&General.tab;"/>
-        <tab label="&Offline.tab;"/>
         <tab label="&Advanced.tab;"/>
       </tabs>
 	   
@@ -76,8 +75,6 @@
                </row>
              </rows>
            </grid>
-         </box>
-         <box index="offline" align="vertical" flex="1" style="width:100%">
          </box>
          <box index="advanced" align="vertical" flex="1" style="width:100%">
            <grid flex="1">
