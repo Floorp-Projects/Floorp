@@ -586,7 +586,7 @@ public:
       if (donePrinting) {
         // now clean up print or print the next webshell
         if (mDocViewer->DonePrintingPages(mPrintObj)) {
-          initNewTimer = FALSE;
+          initNewTimer = PR_FALSE;
         }
       } 
 
