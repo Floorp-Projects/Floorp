@@ -44,7 +44,9 @@ class nsCacheEntry
 {
 public:
 
-    nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy);
+    nsCacheEntry(nsCString *          key,
+                 PRBool               streamBased,
+                 nsCacheStoragePolicy storagePolicy);
     ~nsCacheEntry();
 
     nsCString *  Key(void)  { return mKey; }
@@ -96,9 +98,11 @@ public:
         
     };
 
+    void MarkDoomed()          { mFlags |= eDoomedMask; }
     void MarkEntryDirty()      { mFlags |= eEntryDirtyMask; }
     void MarkDataDirty()       { mFlags |= eDataDirtyMask; }
     void MarkMetaDataDirty()   { mFlags |= eMetaDataDirtyMask; }
+    void MarkStreamData()      { mFlags |= eStreamDataMask; }
     void MarkActive()          { mFlags |= eActiveMask; }
     void MarkInactive()        { mFlags &= ~eActiveMask; }
     void MarkValid();

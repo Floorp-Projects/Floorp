@@ -31,7 +31,9 @@
 #include "nsICacheService.h"
 
 #define ONE_YEAR (PR_USEC_PER_SEC * 60 * 60 * 24 * 365)
-nsCacheEntry::nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy)
+nsCacheEntry::nsCacheEntry(nsCString *          key,
+                           PRBool               streamBased,
+                           nsCacheStoragePolicy storagePolicy)
     : mKey(key),
       mFetchCount(0),
       mLastValidated(LL_ZERO),
@@ -48,6 +50,8 @@ nsCacheEntry::nsCacheEntry(nsCString * key, nsCacheStoragePolicy storagePolicy)
     PR_INIT_CLIST(&mDescriptorQ);
 
     mLastFetched = PR_Now();
+    
+    if (streamBased) MarkStreamBased();
 
     if ((storagePolicy == nsICache::STORE_IN_MEMORY) ||
         (storagePolicy == nsICache::STORE_ANYWHERE)) {
@@ -112,6 +116,7 @@ nsCacheEntry::SetMetaDataElement( const nsAReadableCString& key,
 void
 nsCacheEntry::MarkValid()
 {
+    //** bind if not bound
     //** convert pending requests to descriptors, etc.
     mFlags |= eValidMask;
 }
