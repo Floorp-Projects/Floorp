@@ -27,7 +27,9 @@ EXPORTS	= \
         nsIDOMXULElement.h              \
         nsIRDFContentModelBuilder.h     \
         nsIRDFDocument.h                \
-	nsIXULSortService.h		\
+	    nsIXULSortService.h				\
+		nsIXULParentDocument.h			\
+		nsIXULChildDocument.h			\
 	$(NULL)
 
 include <$(DEPTH)/config/rules.mak>

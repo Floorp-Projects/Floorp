@@ -32,6 +32,8 @@ EXPORTS =				\
 	nsIRDFContentModelBuilder.h	\
 	nsIRDFDocument.h		\
 	nsIXULSortService.h		\
+	nsIXULParentDocument.h	\
+	nsIXULChildDocument.h	\
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

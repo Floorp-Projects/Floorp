@@ -71,6 +71,8 @@
 #include "nsIWebShell.h"
 #include "nsIXULContentSink.h"
 #include "nsIDOMXULElement.h"
+#include "nsIXULParentDocument.h"
+#include "nsIXULChildDocument.h"
 #include "nsIXMLContent.h"
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
@@ -306,7 +308,9 @@ class XULDocumentImpl : public nsIDocument,
                         public nsIScriptObjectOwner,
                         public nsIHTMLContentContainer,
                         public nsIDOMNodeObserver,
-                        public nsIDOMElementObserver
+                        public nsIDOMElementObserver,
+                        public nsIXULParentDocument,
+                        public nsIXULChildDocument
 {
 public:
     XULDocumentImpl();
@@ -479,6 +483,7 @@ public:
     NS_IMETHOD GetElementsForResource(nsIRDFResource* aResource, nsISupportsArray* aElements);
     NS_IMETHOD CreateContents(nsIContent* aElement);
     NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
+    NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource);
 
     // nsIDOMDocument interface
     NS_IMETHOD    GetDoctype(nsIDOMDocumentType** aDoctype);
@@ -498,7 +503,15 @@ public:
 
     // nsIDOMXULDocument interface
     NS_DECL_IDOMXULDOCUMENT
-                     
+                   
+    // nsIXULParentDocument interface
+    NS_IMETHOD    GetContentViewerContainer(nsIContentViewerContainer** aContainer);
+    NS_IMETHOD    GetCommand(nsString& aCommand);
+
+    // nsIXULChildDocument Interface
+    NS_IMETHOD    SetFragmentRoot(nsIContent* aFragmentRoot);
+    NS_IMETHOD    GetFragmentRoot(nsIContent** aFragmentRoot);
+
     // nsIDOMNode interface
     NS_IMETHOD    GetNodeName(nsString& aNodeName);
     NS_IMETHOD    GetNodeValue(nsString& aNodeValue);
@@ -603,6 +616,9 @@ protected:
     nsIRDFDataSource*          mDocumentDataSource;
     nsIParser*                 mParser;
     nsILineBreaker*            mLineBreaker;
+    nsIContentViewerContainer* mContentViewerContainer;
+    nsString                   mCommand;
+    nsIContent*                mFragmentRoot;          
 };
 
 PRInt32 XULDocumentImpl::gRefCnt;
@@ -630,7 +646,10 @@ XULDocumentImpl::XULDocumentImpl(void)
       mLocalDataSource(nsnull),
       mDocumentDataSource(nsnull),
       mLineBreaker(nsnull),
-      mParser(nsnull)
+      mParser(nsnull),
+      mContentViewerContainer(nsnull),
+      mCommand(""),
+      mFragmentRoot(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -673,6 +692,8 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mNameSpaceManager);
     NS_IF_RELEASE(mParser);
     NS_IF_RELEASE(mLineBreaker);
+    NS_IF_RELEASE(mContentViewerContainer);
+    NS_IF_RELEASE(mFragmentRoot);
 
     if (--gRefCnt == 0) {
         NS_IF_RELEASE(kIdAtom);
@@ -718,6 +739,12 @@ XULDocumentImpl::QueryInterface(REFNSIID iid, void** result)
     if (iid.Equals(kIDocumentIID) ||
         iid.Equals(kISupportsIID)) {
         *result = NS_STATIC_CAST(nsIDocument*, this);
+    }
+    else if (iid.Equals(nsIXULParentDocument::GetIID())) {
+        *result = NS_STATIC_CAST(nsIXULParentDocument*, this);
+    }
+    else if (iid.Equals(nsIXULChildDocument::GetIID())) {
+        *result = NS_STATIC_CAST(nsIXULChildDocument*, this);
     }
     else if (iid.Equals(kIRDFDocumentIID) ||
              iid.Equals(kIXMLDocumentIID)) {
@@ -773,6 +800,13 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
     NS_ASSERTION(aURL != nsnull, "null ptr");
     if (! aURL)
         return NS_ERROR_NULL_POINTER;
+
+    if (aContainer && aContainer != mContentViewerContainer)
+    {
+      // AddRef and hold the container
+      NS_ADDREF(aContainer);
+      mContentViewerContainer = aContainer;
+    }
 
     nsresult rv;
 
@@ -835,89 +869,92 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         return rv;
     }
       
-    // Create a composite data source that'll tie together local and
-    // remote stores.
-    nsIRDFCompositeDataSource* db;
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFCompositeDataSourceIID,
-                                                    (void**) &db))) {
-        NS_ERROR("couldn't create composite datasource");
-        return rv;
-    }
+    // Create various data sources and builders, but only do this if we're
+    // not a XUL fragment.
+    if (mFragmentRoot == nsnull) {
 
-    // Create a XUL content model builder
-    NS_IF_RELEASE(mXULBuilder);
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
-                                                    nsnull,                     
-                                                    kIRDFContentModelBuilderIID,
-                                                    (void**) &mXULBuilder))) {
-        NS_ERROR("couldn't create XUL builder");
-        return rv;
-    }
+        nsIRDFCompositeDataSource* db;
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFCompositeDataSourceCID,
+                                                        nsnull,
+                                                        kIRDFCompositeDataSourceIID,
+                                                        (void**) &db))) {
+            NS_ERROR("couldn't create composite datasource");
+            return rv;
+        }
 
-    if (NS_FAILED(rv = mXULBuilder->SetDataBase(db))) {
-        NS_ERROR("couldn't set builder's db");
-        return rv;
-    }
+        // Create a XUL content model builder
+        NS_IF_RELEASE(mXULBuilder);
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFXULBuilderCID,
+                                                        nsnull,                     
+                                                        kIRDFContentModelBuilderIID,
+                                                        (void**) &mXULBuilder))) {
+            NS_ERROR("couldn't create XUL builder");
+            return rv;
+        }
 
-    NS_IF_RELEASE(mBuilders);
-    if (NS_FAILED(rv = AddContentModelBuilder(mXULBuilder))) {
-        NS_ERROR("could't add XUL builder");
-        return rv;
-    }
+        if (NS_FAILED(rv = mXULBuilder->SetDataBase(db))) {
+            NS_ERROR("couldn't set builder's db");
+            return rv;
+        }
 
-    // Create a "scratch" in-memory data store to associate with the
-    // document to be a catch-all for any doc-specific info that we
-    // need to store (e.g., current sort order, etc.)
-    //
-    // XXX This needs to be cloned across windows, and the final
-    // instance needs to be flushed to disk. It may be that this is
-    // really an RDFXML data source...
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFDataSourceIID,
-                                                    (void**) &mLocalDataSource))) {
-        NS_ERROR("couldn't create local data source");
-        return rv;
-    }
+        NS_IF_RELEASE(mBuilders);
+        if (NS_FAILED(rv = AddContentModelBuilder(mXULBuilder))) {
+            NS_ERROR("could't add XUL builder");
+            return rv;
+        }
 
-    if (NS_FAILED(rv = db->AddDataSource(mLocalDataSource))) {
-        NS_ERROR("couldn't add local data source to db");
-        return rv;
-    }
+        // Create a "scratch" in-memory data store to associate with the
+        // document to be a catch-all for any doc-specific info that we
+        // need to store (e.g., current sort order, etc.)
+        //
+        // XXX This needs to be cloned across windows, and the final
+        // instance needs to be flushed to disk. It may be that this is
+        // really an RDFXML data source...
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+                                                        nsnull,
+                                                        kIRDFDataSourceIID,
+                                                        (void**) &mLocalDataSource))) {
+            NS_ERROR("couldn't create local data source");
+            return rv;
+        }
 
-    // Now load the actual RDF/XML document data source. First, we'll
-    // see if the data source has been loaded and is registered with
-    // the RDF service. If so, do some monkey business to "pretend" to
-    // load it: really, we'll just walk its graph to generate the
-    // content model.
-    const char* uri;
-    if (NS_FAILED(rv = aURL->GetSpec(&uri)))
-        return rv;
+        if (NS_FAILED(rv = db->AddDataSource(mLocalDataSource))) {
+            NS_ERROR("couldn't add local data source to db");
+            return rv;
+        }
 
-    // We need to construct a new stream and load it. The stream will
-    // automagically register itself as a named data source, so if
-    // subsequent docs ask for it, they'll get the real deal. In the
-    // meantime, add us as an nsIRDFXMLDataSourceObserver so that
-    // we'll be notified when we need to load style sheets, etc.
-    NS_IF_RELEASE(mDocumentDataSource);
-    if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-                                                    nsnull,
-                                                    kIRDFDataSourceIID,
-                                                    (void**) &mDocumentDataSource))) {
-        NS_ERROR("unable to create XUL datasource");
-        return rv;
-    }
+        // Now load the actual RDF/XML document data source. First, we'll
+        // see if the data source has been loaded and is registered with
+        // the RDF service. If so, do some monkey business to "pretend" to
+        // load it: really, we'll just walk its graph to generate the
+        // content model.
+        const char* uri;
+        if (NS_FAILED(rv = aURL->GetSpec(&uri)))
+            return rv;
 
-    if (NS_FAILED(rv = db->AddDataSource(mDocumentDataSource))) {
-        NS_ERROR("unable to add XUL datasource to db");
-        return rv;
-    }
+        // We need to construct a new stream and load it. The stream will
+        // automagically register itself as a named data source, so if
+        // subsequent docs ask for it, they'll get the real deal. In the
+        // meantime, add us as an nsIRDFXMLDataSourceObserver so that
+        // we'll be notified when we need to load style sheets, etc.
+        NS_IF_RELEASE(mDocumentDataSource);
+        if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+                                                        nsnull,
+                                                        kIRDFDataSourceIID,
+                                                        (void**) &mDocumentDataSource))) {
+            NS_ERROR("unable to create XUL datasource");
+            return rv;
+        }
 
-    if (NS_FAILED(rv = mDocumentDataSource->Init(uri))) {
-        NS_ERROR("unable to initialize XUL data source");
-        return rv;
+        if (NS_FAILED(rv = db->AddDataSource(mDocumentDataSource))) {
+            NS_ERROR("unable to add XUL datasource to db");
+            return rv;
+        }
+
+        if (NS_FAILED(rv = mDocumentDataSource->Init(uri))) {
+            NS_ERROR("unable to initialize XUL data source");
+            return rv;
+        }
     }
 
     nsCOMPtr<nsIXULContentSink> sink;
@@ -960,6 +997,8 @@ XULDocumentImpl::StartDocumentLoad(nsIURL *aURL,
         NS_ERROR("unable to construct DTD");
         return rv;
     }
+
+    mCommand = aCommand;
 
     mParser->RegisterDTD(dtd);
     mParser->SetCommand(aCommand);
@@ -2031,7 +2070,14 @@ XULDocumentImpl::AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder)
     return mBuilders->AppendElement(aBuilder) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-
+NS_IMETHODIMP
+XULDocumentImpl::GetDocumentDataSource(nsIRDFDataSource** aDataSource) {
+    if (mDocumentDataSource) {
+        NS_ADDREF(mDocumentDataSource);
+        *aDataSource = mDocumentDataSource;
+    }
+    return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMDocument interface
@@ -2282,6 +2328,52 @@ XULDocumentImpl::SearchForNodeByID(const nsString& anID,
             NS_RELEASE(pContent);
         }
     }
+}
+
+////////////////////////////////////////////////////////////////////////
+// nsIXULParentDocument interface
+NS_IMETHODIMP 
+XULDocumentImpl::GetContentViewerContainer(nsIContentViewerContainer** aContainer)
+{
+    if (mContentViewerContainer != nsnull)
+    {
+        NS_ADDREF(mContentViewerContainer);
+        *aContainer = mContentViewerContainer;
+    }
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+XULDocumentImpl::GetCommand(nsString& aCommand)
+{
+    aCommand = mCommand;
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+// nsIXULChildDocument interface
+NS_IMETHODIMP 
+XULDocumentImpl::SetFragmentRoot(nsIContent* aFragmentRoot)
+{
+    if (aFragmentRoot != mFragmentRoot)
+    {
+        NS_IF_RELEASE(mFragmentRoot);
+        NS_IF_ADDREF(aFragmentRoot);
+        mFragmentRoot = aFragmentRoot;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+XULDocumentImpl::GetFragmentRoot(nsIContent** aFragmentRoot)
+{
+    if (mFragmentRoot) {
+        NS_ADDREF(mFragmentRoot);
+        *aFragmentRoot = mFragmentRoot;
+    }
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////
