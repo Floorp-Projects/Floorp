@@ -1160,7 +1160,7 @@ sub update
     $Text::Wrap::columns = 80;
     $Text::Wrap::huge = 'wrap';
 
-    # Append a string to the comment to let users know that the comment came from
+    # Prepend a string to the comment to let users know that the comment came from
     # the "edit attachment" screen.
     my $comment = qq|(From update of attachment $::FORM{'id'})\n| . $::FORM{'comment'};
 
