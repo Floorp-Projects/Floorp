@@ -7337,6 +7337,7 @@ CHTMLView :: DisplayBuiltin ( int /*inLocation*/, LO_BuiltinStruct* inBuiltinStr
 		
 		tree->Refresh();
 		inBuiltinStruct->FE_Data = tree;
+		inBuiltinStruct->htPane = tree->HTPane();
 	}
 	else {
 		LView* tree = static_cast<LView*>(inBuiltinStruct->FE_Data);
