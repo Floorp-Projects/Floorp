@@ -78,7 +78,7 @@ static NS_DEFINE_CID(kXULTemplateBuilderCID,              NS_XULTEMPLATEBUILDER_
 // generic factory.
 
 #define MAKE_CTOR(_func,_new,_ifname)                                \
-static nsresult                                                      \
+static NS_IMETHODIMP                                                 \
 CreateNew##_func(nsISupports* aOuter, REFNSIID aIID, void **aResult) \
 {                                                                    \
     if (!aResult) {                                                  \
@@ -271,59 +271,59 @@ nsRDFModule::GetClassObject(nsIComponentManager *aCompMgr,
 
 struct Components {
     const char* mDescription;
-    nsID mCID;
+    const nsID* mCID;
     const char* mProgID;
 };
 
 // The list of components we register
 static Components gComponents[] = {
     // register our build-in datasources:
-    { "RDF Composite Data Source", kRDFCompositeDataSourceCID,
+    { "RDF Composite Data Source", &kRDFCompositeDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "composite-datasource", },
-    { "RDF File System Data Source", kRDFFileSystemDataSourceCID,
+    { "RDF File System Data Source", &kRDFFileSystemDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "files", },
-    { "RDF FTP Data Source", kRDFFTPDataSourceCID,
+    { "RDF FTP Data Source", &kRDFFTPDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "ftp", },
-    { "RDF In-Memory Data Source", kRDFInMemoryDataSourceCID,
+    { "RDF In-Memory Data Source", &kRDFInMemoryDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "in-memory-datasource", },
-    { "Local Store", kLocalStoreCID,
+    { "Local Store", &kLocalStoreCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "local-store", },
-    { "RDF XML Data Source", kRDFXMLDataSourceCID,
+    { "RDF XML Data Source", &kRDFXMLDataSourceCID,
       NS_RDF_DATASOURCE_PROGID_PREFIX "xml-datasource", },
 
     // register our built-in resource factories:
-    { "RDF Default Resource Factory", kRDFDefaultResourceCID,
+    { "RDF Default Resource Factory", &kRDFDefaultResourceCID,
       // Note: default resource factory has no name= part
       NS_RDF_RESOURCE_FACTORY_PROGID, },
 
     // register all the other rdf components:
-    { "RDF Content Sink", kRDFContentSinkCID,
+    { "RDF Content Sink", &kRDFContentSinkCID,
       NS_RDF_PROGID "/content-sink", },
-    { "RDF Container", kRDFContainerCID,
+    { "RDF Container", &kRDFContainerCID,
       NS_RDF_PROGID "/container", },
-    { "RDF Container Utilities", kRDFContainerUtilsCID,
+    { "RDF Container Utilities", &kRDFContainerUtilsCID,
       NS_RDF_PROGID "/container-utils", },
-    { "RDF Service", kRDFServiceCID,
+    { "RDF Service", &kRDFServiceCID,
       NS_RDF_PROGID "/rdf-service", },
-    { "XUL Sort Service", kXULSortServiceCID,
+    { "XUL Sort Service", &kXULSortServiceCID,
       NS_RDF_PROGID "/xul-sort-service", },
-    { "XUL Template Builder", kXULTemplateBuilderCID,
+    { "XUL Template Builder", &kXULTemplateBuilderCID,
       NS_RDF_PROGID "/xul-template-builder", },
-    { "RDF XUL Builder", kRDFXULBuilderCID,
+    { "RDF XUL Builder", &kRDFXULBuilderCID,
       NS_RDF_PROGID "/xul-builder", },
-    { "XUL Content Sink", kXULContentSinkCID,
+    { "XUL Content Sink", &kXULContentSinkCID,
       NS_RDF_PROGID "/xul-content-sink", },
-    { "XUL Document", kXULDocumentCID,
+    { "XUL Document", &kXULDocumentCID,
       NS_RDF_PROGID "/xul-document", },
-    { "XUL Document Info", kXULDocumentInfoCID,
+    { "XUL Document Info", &kXULDocumentInfoCID,
       NS_RDF_PROGID "/xul-document-info", },
-    { "XUL PopupListener", kXULPopupListenerCID,
+    { "XUL PopupListener", &kXULPopupListenerCID,
       NS_RDF_PROGID "/xul-popup-listener", },
-    { "XUL KeyListener", kXULKeyListenerCID,
+    { "XUL KeyListener", &kXULKeyListenerCID,
       NS_RDF_PROGID "/xul-key-listener", },
-    { "XUL CommandDispatcher", kXULCommandDispatcherCID,
+    { "XUL CommandDispatcher", &kXULCommandDispatcherCID,
       NS_RDF_PROGID "/xul-command-dispatcher", },
-    { "XUL Content Utilities", kXULContentUtilsCID,
+    { "XUL Content Utilities", &kXULContentUtilsCID,
       NS_RDF_PROGID "/xul-content-utils", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
@@ -343,7 +343,7 @@ nsRDFModule::RegisterSelf(nsIComponentManager *aCompMgr,
     Components* cp = gComponents;
     Components* end = cp + NUM_COMPONENTS;
     while (cp < end) {
-        rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
+        rv = aCompMgr->RegisterComponentSpec(*cp->mCID, cp->mDescription,
                                              cp->mProgID, aPath, PR_TRUE,
                                              PR_TRUE);
         if (NS_FAILED(rv)) {
@@ -370,7 +370,7 @@ nsRDFModule::UnregisterSelf(nsIComponentManager* aCompMgr,
     Components* cp = gComponents;
     Components* end = cp + NUM_COMPONENTS;
     while (cp < end) {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
+        nsresult rv = aCompMgr->UnregisterComponentSpec(*cp->mCID, aPath);
         if (NS_FAILED(rv)) {
 #ifdef DEBUG
             printf("nsRDFModule: unable to unregister %s component => %x\n",
