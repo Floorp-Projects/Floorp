@@ -22,7 +22,6 @@ var msgComposeService = Components.classes["component://netscape/messengercompos
 msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
 var msgCompose = null;
 var MAX_RECIPIENTS = 0;
-var numAttachments = 0;
 var currentAttachment = null;
 var tabIntoBodyPhase = 0;
 
@@ -555,14 +554,19 @@ function AttachFile()
 
 function AddAttachment(attachment)
 {
-	if (attachment && (attachment != "")) {
-		/* dump("attachment = " + attachment + "\n"); */
-		selectNode = document.getElementById('attachments');
-		numAttachments = numAttachments + 1;
-		key = "attachment" + numAttachments;
-                var opt = new Option(attachment, key);
-		selectNode.add(opt, null);
-        }    
+	if (attachment && (attachment != ""))
+	{
+		var bucketBody = document.getElementById("bucketBody");
+		var item = document.createElement("treeitem");
+		var row = document.createElement("treerow");
+		var cell = document.createElement("treecell");
+		var text = document.createTextNode(attachment);
+		
+		cell.appendChild(text);
+		row.appendChild(cell);
+		item.appendChild(row);
+		bucketBody.appendChild(item);
+	}    
 }
 
 function AttachPage()
@@ -572,32 +576,51 @@ function AttachPage()
 
 function GenerateAttachmentsString()
 {
-	dump("GenerateAttachmentsString()\n");
-	attachments = "";
+	var attachments = "";
+	var body = document.getElementById('bucketBody');
+	var item, row, cell, text, colon;
 
-	selectNode = document.getElementById('attachments');
-	if (selectNode == null) return attachments;
-	options = selectNode.options;
-	if (options == null) return attachments;
-	if (options.length == 0) return attachments;
-
-	attachments = options[0].text;
-
-	for (i=1;i<options.length;i++) {
-		attachments = attachments + "," + options[i].text;
+	for (var index = 0; index < body.childNodes.length; index++)
+	{
+		item = body.childNodes[index];
+		if (item.childNodes && item.childNodes.length)
+		{
+			row = item.childNodes[0];
+			if (row.childNodes &&  row.childNodes.length)
+			{
+				cell = row.childNodes[0];
+				if (cell.childNodes &&  cell.childNodes.length)
+				{
+					text = cell.childNodes[0];
+					if (text && text.data && text.data.length)
+					{
+						if (attachments == "")
+							attachments = text.data;
+						else
+							attachments = attachments + "," + text.data;
+					}
+				}
+			}
+		}
 	}
 
 	return attachments;
 }
 
-function RemoveLastAttachment()
+function RemoveSelectedAtachment()
 {
-	// dump("RemoveLastAttachment()\n");
-	selectNode = document.getElementById('attachments');
-	i = selectNode.options.length;
-	if (i > 0) {
-		selectNode.remove(i - 1);
-	}
+	var bucketTree = document.getElementById("attachmentBucket");
+	if ( bucketTree )
+	{
+		var body = document.getElementById("bucketBody");
+		
+		if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
+		{
+			for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
+				body.removeChild(bucketTree.selectedItems[item]);
+		}	
+	}	
+	
 }
 
 function AttachVCard()

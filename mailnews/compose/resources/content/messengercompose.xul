@@ -114,7 +114,6 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menupopup>
 			<menuitem value="&attachFileCmd.label;" oncommand="AttachFile()"/>
 			<menuitem value="&attachPageCmd.label;" oncommand="AttachPage()"/>
-			<menuitem value="&removeLastAttachmentCmd.label;" oncommand="RemoveLastAttachment()"/>
 			<menuseparator/>
 			<menuitem value="&attachVCardCmd.label;" oncommand="AttachVCard()"/>
 			</menupopup>
@@ -281,8 +280,10 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 
 	<toolbar>
 		<box align="horizontal" flex="100%">
+			<spring style="width:0.5em"/>
 			<box align="vertical" flex="60%">
-				<box align="horizontal" flex="100%">
+				<spring style="height:0.5em"/>
+				<box align="horizontal">
 					<html:div flex="20%">&fromAddr.label;</html:div>
 					<html:select id="msgIdentity" flex="80%"
 						onkeyup="if (event.which == 9) ShouldITabIntoBody(2);"
@@ -292,24 +293,39 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 					</html:select>
 				</box>
 				<spring style="height:0.5em"/>
-				<box align="horizontal" flex="100%">
-					<html:div flex="20%">&attachments.label;</html:div>
-					<html:select id="attachments" flex="80%">
-                                        </html:select> 
-				</box>
-				<spring style="height:0.5em"/>
 
 				<!-- addressing widget -->
 				<box id="addressingWidget"/>
+				<spring style="height:0.5em"/>
 				
-				<box align="horizontal" flex="100%">
+				<box align="horizontal">
 					<html:div flex="20%">&subject.label;</html:div>
 				    <html:input id="msgSubject" type="text" flex="80%"
 						onkeyup="SetComposeWindowTitle(event.which);"
 						onblur="ShouldITabIntoBody(0);"
 						/>
 				</box>
+				<spring style="height:0.5em"/>
 			</box>
+			
+			<spring style="width:0.5em"/>
+			<box align="vertical" flex="40%">
+				<spring style="height:0.5em"/>
+				<box align="vertical" style="height:1em">
+					<html:div flex="100%">&attachments.label;</html:div>
+				</box>
+				<spring style="height:0.5em"/>
+				<box align="vertical" style="height:8.5em; background-color:white; border-top:solid black 1px">
+					<tree id="attachmentBucket" flex="100%" onkeypress="RemoveSelectedAtachment();">
+						<treecol style="width:100%"/>
+
+						<treechildren id="bucketBody">
+						</treechildren>
+					</tree>
+				</box>
+				<spring style="height:0.5em"/>
+			</box>
+			<spring style="width:0.5em"/>
 		</box>
 	</toolbar>
 

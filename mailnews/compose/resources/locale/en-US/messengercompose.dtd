@@ -15,7 +15,6 @@
 <!ENTITY attachMenu.label "Attach...">
 <!ENTITY attachFileCmd.label "File...">
 <!ENTITY attachPageCmd.label "Web Page...">
-<!ENTITY removeLastAttachmentCmd.label "Remove Last Attachment">
 <!--LOCALIZATION NOTE attachVCardCmd.label Don't translate the term 'vCard' -->
 <!ENTITY attachVCardCmd.label ".Personal Card (vCard)">
 <!ENTITY sendNowCmd.label "Send Now">

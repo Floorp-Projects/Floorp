@@ -92,7 +92,6 @@
 <!ENTITY quoteButton.img "chrome://messengercompose/skin/quote.gif">
 <!ENTITY quoteButton.label "Citer">
 <!ENTITY quoteOrigCmd.label ".Citer oprindelig besked">
-<!ENTITY removeLastAttachmentCmd.label "Fjern sidste vedhæng">
 <!ENTITY returnReceiptCmd.label "Kvitering">
 <!ENTITY runLogCmd.label "Run Log">
 <!ENTITY runUnitTestsCmd.label "Run Unit Tests">
