@@ -197,7 +197,7 @@ sub Checkout()
 	# activate MacCVS
 	ActivateApplication('Mcvs');
 
-	my($nsprpub_tag) = "NSPRPUB_RELEASE_4_0_20000218";
+	my($nsprpub_tag) = "NSPRPUB_RELEASE_4_0_20000223";
 	
 	#//
 	#// Checkout commands
