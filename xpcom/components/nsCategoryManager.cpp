@@ -310,27 +310,42 @@ nsCategoryManager::AddCategoryEntry( const char *aCategoryName,
     NS_ASSERTION(aValue,        "aValue is NULL!");
 
 
-			/*
-				Note: if |_retval| is |NULL|, I won't bother returning a copy
-				of the replaced value.
-			*/
+      /*
+        Note: if |_retval| is |NULL|, I won't bother returning a copy
+        of the replaced value.
+      */
 
-		if ( _retval )
-			*_retval = 0;
+    if ( _retval )
+      *_retval = 0;
 
 
 
-    nsresult status;
+    nsresult status = NS_OK;
 
     CategoryNode* category;
     if ( !(category = find_category(aCategoryName)) )
       {
-        // Create and add a category
+        category = new CategoryNode;
+        nsStringKey categoryNameKey(aCategoryName);
+        Put(&categoryNameKey, category);
       }
 
     LeafNode* entry = category->find_leaf(aEntryName);
 
-    // BULLSHIT ALERT: more stuff here
+    if ( entry )
+      {
+        if ( aReplace )
+          {
+            if ( _retval )
+              *_retval = nsXPIDLCString::Copy(*entry);
+          }
+        else
+          status = NS_ERROR_INVALID_ARG;
+      }
+
+    entry = new LeafNode(aValue);
+    nsStringKey entryNameKey(aEntryName);
+    category->Put(&entryNameKey, entry);
 
     if ( aPersist )
       persist(aCategoryName, aEntryName, aValue);
