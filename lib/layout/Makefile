@@ -84,6 +84,7 @@ CPPSRCS		= streams.cpp \
 		  edtcmd.cpp \
 		  edtele.cpp \
 		  edtjava.cpp \
+		  edtlist.cpp \
 		  edtsave.cpp \
 		  edtutil.cpp \
 		  $(NULL)

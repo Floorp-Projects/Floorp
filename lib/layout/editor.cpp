@@ -40,6 +40,12 @@ extern "C" {
 #include "msgcom.h"
 #include "intl_csi.h"
 
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+extern "C" {
+#include "edtlist.h"
+}
+#endif /* ENDER && MOZ_ENDER_MIME */
+
 //extern "C" int XP_EDT_HEAD_FAILED;
 
 CBitArray *edt_setNoEndTag = 0;
@@ -1924,6 +1930,16 @@ EDT_ClipboardResult EDT_SetDefaultHTML(  MWContext *pContext, char *pHTML ) {
 	}
 	return EDT_COP_DOCUMENT_BUSY;
 }
+
+void EDT_SetEmbeddedEditorData(  MWContext *pContext, void *pData ) {
+	CEditBuffer* pEditBuffer = LO_GetEDBuffer( pContext );
+	if (pEditBuffer)
+	{
+		pEditBuffer->m_bEmbedded     = TRUE;
+		pEditBuffer->m_pEmbeddedData = pData;
+	}
+}
+
 #endif //ENDER
 
 EDT_ClipboardResult EDT_PasteQuoteBegin( MWContext *pContext, XP_Bool bHTML ) {
@@ -1995,6 +2011,12 @@ void EDT_ConvertTableToText(MWContext *pMWContext)
 {
     GET_WRITABLE_EDIT_BUF_OR_RETURN(pMWContext, pEditBuffer);
     pEditBuffer->ConvertTableToText();
+}
+
+/* Save the character and paragraph style of selection or at caret */
+/* TODO: REMOVE AFTER CONFIRMING ITS NOT BEING USED ON ALL PLATFORMS */
+void EDT_CopyStyle(MWContext * /* pMWContext */)
+{
 }
 
 /* TRUE if there is global style data available */
@@ -2329,6 +2351,10 @@ void EDT_InsertImage( MWContext *pContext, EDT_ImageData *pData, XP_Bool bKeepIm
     pEditBuffer->BeginBatchChanges(kInsertImageCommandID);
     pEditBuffer->LoadImage( pData, bKeepImagesWithDoc, FALSE );
     pEditBuffer->EndBatchChanges();
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+    if (bKeepImagesWithDoc && pEditBuffer->m_bEmbedded)
+      EDT_AddURLToSafeList(pEditBuffer->m_pEmbeddedData, pData->pSrc);
+#endif /* ENDER && MOZ_ENDER_MIME */
 }
 
 void EDT_ImageLoadCancel( MWContext *pContext ){

@@ -58,6 +58,10 @@
 #include "lm_dom.h"
 #endif
 
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+#include "edtlist.h"
+#endif /* ENDER && MOZ_ENDER_MIME */
+
 #ifndef XP_TRACE
 # define XP_TRACE(X) fprintf X
 #endif
@@ -3604,6 +3608,10 @@ form_reset_closure(MWContext * context, LO_Element * ele, int32 event,
 		    (form_ele->element_data->type != FORM_TYPE_READONLY)&&
 		    (form_ele->element_data->type != FORM_TYPE_BUTTON))
 		{
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+			if (form_ele->element_data->type == FORM_TYPE_HTMLAREA)
+				EDT_RemoveIDFromSafeList((void *)form_ele->element_data);
+#endif /* ENDER && MOZ_ENDER_MIME */
 			FE_ResetFormElement(context, form_ele);
 		}
 	}

@@ -3075,6 +3075,8 @@ public:
     char *m_pBaseTarget;
     char *m_pBodyExtra;
 #ifdef ENDER
+	XP_Bool m_bEmbedded;
+	void *m_pEmbeddedData;
 	char *m_pImportedStream; //dont forget to XP_FREE this memory //ENDER
 	char *m_pImportedHTMLStream; //dont forget to XP_FREE this memory //ENDER
 #endif //ENDER
@@ -3216,6 +3218,10 @@ public:
     void ConvertCurrentDocToNewDoc();
 
     XP_Bool IsComposeWindow(){ return m_pContext->bIsComposeWindow; }
+
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+    void AddImagesToSafeList( CEditElement* pElement );
+#endif /* ENDER && MOZ_ENDER_MIME */
 
     void PrintTree( CEditElement* m_pRoot );
     void DebugPrintTree( CEditElement* m_pRoot );

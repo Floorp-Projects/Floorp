@@ -30,6 +30,10 @@
 #define IL_CLIENT               /* XXXM12N Defined by Image Library clients */
 #include "libimg.h"             /* Image Library public API. */
 
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+#include "edtlist.h"
+#endif /* ENDER && MOZ_ENDER_MIME */
+
 extern void NPL_DeleteSessionData(MWContext*, void*);
 
 #ifdef PROFILE
@@ -142,10 +146,16 @@ lo_FreeFormElementData(LO_FormElementData *element_data)
 				}
 			}
 			break;
-		case FORM_TYPE_TEXTAREA:
 #ifdef ENDER
-           case FORM_TYPE_HTMLAREA :
+		case FORM_TYPE_HTMLAREA :
+#if defined(MOZ_ENDER_MIME)
+			{
+				EDT_RemoveIDFromSafeList((void *)element_data);
+			}
+#endif /* MOZ_ENDER_MIME */
+			/* no break */
 #endif /*ENDER*/
+		case FORM_TYPE_TEXTAREA:
 			{
 				lo_FormElementTextareaData *form_data;
 

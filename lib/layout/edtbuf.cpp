@@ -42,6 +42,12 @@ const int32 MAX_POSITIONAL_TEXT =0x7FFFFFF0;
 
 #include "prefapi.h"
 
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+extern "C" {
+#include "edtlist.h"
+}
+#endif /* ENDER && MOZ_ENDER_MIME */
+
 #define GET_COL TRUE
 #define GET_ROW FALSE
 
@@ -1531,7 +1537,9 @@ CEditBuffer::CEditBuffer(MWContext *pContext, XP_Bool bImportText):
         m_bBackgroundNoSave(FALSE),
         m_pBodyExtra(0),
 #ifdef ENDER
-		m_pImportedStream(0), //ENDER
+		m_bEmbedded(FALSE),       //ENDER
+		m_pEmbeddedData(0),       //ENDER
+		m_pImportedStream(0),     //ENDER
 		m_pImportedHTMLStream(0), //ENDER
 #endif //ENDER
         m_pLoadingImage(0),
@@ -10124,6 +10132,11 @@ void CEditBuffer::ReadFromBuffer(XP_HUGE_CHAR_PTR pBuffer){
     NET_StreamClass *stream =
         NET_StreamBuilder(FO_PRESENT, url_s, m_pContext);
     if(stream) {
+#ifdef ENDER
+        XP_Bool bEmbedded   = m_bEmbedded;
+        void *pEmbeddedData = m_pEmbeddedData;
+        MWContext *pContext = m_pContext;
+#endif /* ENDER */
         delete m_pRoot;
         m_pRoot = 0;
         m_pCurrent = 0;
@@ -10163,6 +10176,11 @@ void CEditBuffer::ReadFromBuffer(XP_HUGE_CHAR_PTR pBuffer){
         (*stream->complete)(stream);
         XP_FREE(stream);
         XP_FREEIF(pChunk);
+
+#ifdef ENDER
+        if (bEmbedded)
+            EDT_SetEmbeddedEditorData(pContext, pEmbeddedData);
+#endif /* ENDER */
     }
     NET_FreeURLStruct(url_s);
 }
@@ -13820,6 +13838,13 @@ NORMAL_PASTE:
             {
                 bAtStartOfParagraph = TRUE;
             }
+
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+
+            if( m_bEmbedded )
+                AddImagesToSafeList(pElement);
+
+#endif /* ENDER && MOZ_ENDER_MIME */
 
 #ifdef DEBUG
             m_pRoot->ValidateTree();
@@ -18076,6 +18101,38 @@ void CEditBuffer::SelectNextNonTextObject()
     }
     
 }
+
+#if defined(ENDER) && defined(MOZ_ENDER_MIME)
+
+void CEditBuffer::AddImagesToSafeList(CEditElement *pElement)
+{
+    CEditElement* pChild;
+
+    if ( !m_bEmbedded )
+        return;
+
+    while ( pElement )
+    {
+        if (pElement->IsImage())
+        {
+            CEditImageElement *pImageElement = (CEditImageElement *)pElement;
+            EDT_ImageData *pData = pImageElement->GetImageData();
+            if (pData)
+            {
+                if (pData->pSrc)
+                    EDT_AddURLToSafeList(m_pEmbeddedData, pData->pSrc);
+                edt_FreeImageData(pData);
+            }
+        }
+
+        if ( (pChild = pElement->GetChild()) )
+            this->AddImagesToSafeList(pChild);
+
+        pElement = pElement->GetNextSibling();
+    }
+}
+
+#endif /* ENDER && MOZ_ENDER_MIME */
 
 XP_Bool EDT_ScrollToTarget(MWContext *pMWContext, char *pTargetURL)
 {

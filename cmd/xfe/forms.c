@@ -2466,6 +2466,8 @@ htmlarea_create_widget(FEFormData *fed, LO_FormElementStruct *form)
 				XFE_GetEmbeddedEditorContext(ha_fed->form_data.widget,
 												context);
 
+  EDT_SetEmbeddedEditorData(ha_fed->editor_context, (void *)form_data);
+
   /* Can't register a XmNfocusCallback or XmNlosingFocusCallback on
    * a DrawingArea so we register an event handler.
    */
