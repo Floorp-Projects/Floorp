@@ -1107,7 +1107,7 @@ function addException( dateToAdd )
    if( isAlreadyException( dateToAdd ) )
       return;
 
-   var DateLabel = getDayOfWeek( dateToAdd ) + " " + formatDate( dateToAdd );
+   var DateLabel = formatDate( dateToAdd );
 
    //add a row to the listbox
    document.getElementById( "exception-dates-listbox" ).appendItem( DateLabel, dateToAdd.getTime() );
