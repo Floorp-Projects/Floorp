@@ -252,7 +252,7 @@ public:
 
 class NamedParameter {
 public:
-    StringAtom &name;      // This parameter's name
+    const String *name;      // This parameter's name
     JS2Class *type;        // This parameter's type
 };
 
@@ -320,6 +320,7 @@ public:
     js2val value;                   // This variable's current value
     bool hasFunctionInitializer;    // true if this variable was created by a function statement
 
+    virtual StaticMember *clone()       { return new HoistedVar(); }
     virtual void mark()                 { GCMARKVALUE(value); }
 };
 
@@ -408,7 +409,7 @@ public:
 #define POTENTIAL_CONFLICT ((InstanceMember *)(-1))
 class OverrideStatus {
 public:
-    OverrideStatus(InstanceMember *overriddenMember, const StringAtom *name)
+    OverrideStatus(InstanceMember *overriddenMember, const String *name)
         : overriddenMember(overriddenMember), multiname(name) { }
     
     InstanceMember *overriddenMember;   // NULL for none
@@ -726,8 +727,9 @@ class LexicalReference : public Reference {
 // of a given set of qualified names. LEXICALREFERENCE tuples arise from evaluating identifiers a and qualified identifiers
 // q::a.
 public:
-    LexicalReference(const StringAtom *name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
-    LexicalReference(const StringAtom *name, Namespace *nameSpace, bool strict) : variableMultiname(new Multiname(name, nameSpace)), env(NULL), strict(strict) { }
+    LexicalReference(Multiname *mname, bool strict) : variableMultiname(mname), env(NULL), strict(strict) { }
+    LexicalReference(const String *name, bool strict) : variableMultiname(new Multiname(name)), env(NULL), strict(strict) { }
+    LexicalReference(const String *name, Namespace *nameSpace, bool strict) : variableMultiname(new Multiname(name, nameSpace)), env(NULL), strict(strict) { }
 
     
     Multiname *variableMultiname;   // A nonempty set of qualified names to which this reference can refer
@@ -754,7 +756,7 @@ class DotReference : public Reference {
 // object with one of a given set of qualified names. DOTREFERENCE tuples arise from evaluating subexpressions such as a.b or
 // a.q::b.
 public:
-    DotReference(const StringAtom *name) : propertyMultiname(new Multiname(name)) { }
+    DotReference(const String *name) : propertyMultiname(new Multiname(name)) { }
     DotReference(Multiname *mn) : propertyMultiname(mn) { }
 
     // In this implementation, the base is established by the execution of the preceding expression and
@@ -804,7 +806,7 @@ public:
 
 class NamedArgument {
 public:
-    StringAtom &name;               // This argument's name
+    const String *name;               // This argument's name
     js2val value;                   // This argument's value
 };
 
@@ -1034,11 +1036,11 @@ public:
     StaticMember *findFlatMember(Frame *container, Multiname *multiname, Access access, Phase phase);
     InstanceBinding *resolveInstanceMemberName(JS2Class *js2class, Multiname *multiname, Access access, Phase phase);
 
-    HoistedVar *defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p);
+    HoistedVar *defineHoistedVar(Environment *env, const String *id, StmtNode *p);
     Multiname *defineStaticMember(Environment *env, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, StaticMember *m, size_t pos);
-    OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
-    OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
-    OverrideStatus *searchForOverrides(JS2Class *c, const StringAtom *id, NamespaceList *namespaces, Access access, size_t pos);
+    OverrideStatusPair *defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos);
+    OverrideStatus *resolveOverrides(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos);
+    OverrideStatus *searchForOverrides(JS2Class *c, const String *id, NamespaceList *namespaces, Access access, size_t pos);
     InstanceMember *findInstanceMember(JS2Class *c, QualifiedName *qname, Access access);
     Slot *findSlot(js2val thisObjVal, InstanceVariable *id);
     bool findStaticMember(JS2Class *c, Multiname *multiname, Access access, Phase phase, MemberDescriptor *result);

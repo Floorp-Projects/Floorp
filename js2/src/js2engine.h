@@ -131,6 +131,7 @@ enum JS2Op {
     ePopv,
     ePop,
     eDup,
+    eVoid,
 
     eLexicalPostInc,    // <multiname index:u16>
     eLexicalPostDec,    // <multiname index:u16>
@@ -260,7 +261,7 @@ public:
     
     // The execution stack for expression evaluation, should be empty
     // between statements.
-#define INITIAL_EXEC_STACK (20)
+#define INITIAL_EXEC_STACK (40)
 
     js2val *execStackLimit;
     js2val *execStack;

@@ -510,7 +510,7 @@ namespace MetaData {
                                 }
                                 else {
                                     Variable *v = new Variable(functionClass, OBJECT_TO_JS2VAL(fInst), true);
-                                    defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                    vb->mn = defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
                                 }
                             }
                         }
@@ -530,7 +530,7 @@ namespace MetaData {
                     // XXX Here the spec. has ???, so the following is tentative
                             CallableInstance *fInst = validateStaticFunction(f, compileThis, prototype, unchecked, cxt, env);
                             ConstructorMethod *cm = new ConstructorMethod(OBJECT_TO_JS2VAL(fInst));
-                            defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
+                            vb->mn = defineStaticMember(env, f->function.name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, cm, p->pos);
                         }
                         break;
                     }
@@ -557,7 +557,7 @@ namespace MetaData {
                             ValidateTypeExpression(cxt, env, vb->type);
                         vb->member = NULL;
 
-                        if (cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
+                        if (!cxt->strict && ((regionalFrame->kind == GlobalObjectKind)
                                             || (regionalFrame->kind == ParameterKind))
                                         && !immutable
                                         && (vs->attributes == NULL)
@@ -583,6 +583,7 @@ namespace MetaData {
                                     vb->member = v;
                                     v->vb = vb;
                                     vb->mn = defineStaticMember(env, name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
+                                    bCon->saveMultiname(vb->mn);
                                 }
                                 break;
                             case Attribute::Virtual:
@@ -682,7 +683,7 @@ namespace MetaData {
                         reportError(Exception::definitionError, "Illegal modifier for class definition", p->pos);
                         break;
                     }
-                    JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), true, final, &classStmt->name);
+                    JS2Class *c = new JS2Class(superClass, proto, new Namespace(engine->private_StringAtom), (a->dynamic || superClass->dynamic), true, final, engine->allocStringPtr(&classStmt->name));
                     classStmt->c = c;
                     Variable *v = new Variable(classClass, OBJECT_TO_JS2VAL(c), true);
                     defineStaticMember(env, &classStmt->name, a->namespaces, a->overrideMod, a->xplicit, ReadWriteAccess, v, p->pos);
@@ -1211,8 +1212,7 @@ namespace MetaData {
                                             throw x;
                                         Reference *r = SetupExprNode(env, phase, vb->initializer, &exprType);
                                         if (r) r->emitReadBytecode(bCon, p->pos);
-                                        LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
-                                        lVal->variableMultiname->addNamespace(publicNamespace);
+                                        LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
                                         lVal->emitWriteBytecode(bCon, p->pos);      
                                         bCon->emitOp(ePop, p->pos);
                                     }
@@ -1230,15 +1230,13 @@ namespace MetaData {
                                     if (r) r->emitReadBytecode(bCon, p->pos);
                                     bCon->emitOp(eCoerce, p->pos);
                                     bCon->addType(v->type);
-                                    LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
-                                    lVal->variableMultiname->addNamespace(publicNamespace);
+                                    LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
                                     lVal->emitWriteBytecode(bCon, p->pos);      
                                     bCon->emitOp(ePop, p->pos);
                                 }
                                 else {
                                     v->type->emitDefaultValue(bCon, p->pos);
-                                    LexicalReference *lVal = new LexicalReference(vb->name, cxt.strict);
-                                    lVal->variableMultiname->addNamespace(publicNamespace);
+                                    LexicalReference *lVal = new LexicalReference(vb->mn, cxt.strict);
                                     lVal->emitWriteBytecode(bCon, p->pos);      
                                     bCon->emitOp(ePop, p->pos);
                                 }
@@ -1697,6 +1695,7 @@ namespace MetaData {
         case ExprNode::parentheses:
         case ExprNode::Typeof:
         case ExprNode::logicalNot:
+        case ExprNode::Void: 
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
                 ValidateExpression(cxt, env, u->op);
@@ -1929,6 +1928,14 @@ doBinary:
                 bCon->emitOp(op, p->pos);
             }
             break;
+        case ExprNode::Void: 
+            {
+                UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
+                Reference *rVal = SetupExprNode(env, phase, u->op, exprType);
+                bCon->emitOp(eVoid, p->pos);
+            }
+            break;
+
         case ExprNode::logicalNot:
             op = eLogicalNot;
             goto doUnary;
@@ -2491,6 +2498,10 @@ doUnary:
     void Environment::instantiateFrame(Frame *pluralFrame, Frame *singularFrame)
     {
         StaticBindingIterator sbi, sbend;
+        
+        singularFrame->staticReadBindings.clear();
+        singularFrame->staticWriteBindings.clear();
+
         for (sbi = pluralFrame->staticReadBindings.begin(), sbend = pluralFrame->staticReadBindings.end(); (sbi != sbend); sbi++) {
             sbi->second->content->cloneContent = NULL;
         }
@@ -2735,7 +2746,7 @@ doUnary:
 
     // Examine class 'c' and find all instance members that would be overridden
     // by 'id' in any of the given namespaces.
-    OverrideStatus *JS2Metadata::searchForOverrides(JS2Class *c, const StringAtom *id, NamespaceList *namespaces, Access access, size_t pos)
+    OverrideStatus *JS2Metadata::searchForOverrides(JS2Class *c, const String *id, NamespaceList *namespaces, Access access, size_t pos)
     {
         OverrideStatus *os = new OverrideStatus(NULL, id);
         for (NamespaceListIterator ns = namespaces->begin(), end = namespaces->end(); (ns != end); ns++) {
@@ -2755,7 +2766,7 @@ doUnary:
 
     // Find the possible override conflicts that arise from the given id and namespaces
     // Fall back on the currently open namespace list if no others are specified.
-    OverrideStatus *JS2Metadata::resolveOverrides(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos)
+    OverrideStatus *JS2Metadata::resolveOverrides(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Access access, bool expectMethod, size_t pos)
     {
         OverrideStatus *os = NULL;
         if ((namespaces == NULL) || namespaces->empty()) {
@@ -2820,7 +2831,7 @@ doUnary:
 
     // Define an instance member in the class. Verify that, if any overriding is happening, it's legal. The result pair indicates
     // the members being overridden.
-    OverrideStatusPair *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const StringAtom *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
+    OverrideStatusPair *JS2Metadata::defineInstanceMember(JS2Class *c, Context *cxt, const String *id, NamespaceList *namespaces, Attribute::OverrideModifier overrideMod, bool xplicit, Access access, InstanceMember *m, size_t pos)
     {
         OverrideStatus *readStatus;
         OverrideStatus *writeStatus;
@@ -2877,7 +2888,7 @@ doUnary:
     // instance or open instance. According to rules inherited from ECMAScript Edition 3, if there are multiple 
     // definitions of a hoisted variable, then the initial value of that variable is undefined if none of the definitions
     // is a function definition; otherwise, the initial value is the last function definition.
-    HoistedVar *JS2Metadata::defineHoistedVar(Environment *env, const StringAtom *id, StmtNode *p)
+    HoistedVar *JS2Metadata::defineHoistedVar(Environment *env, const String *id, StmtNode *p)
     {
         HoistedVar *result = NULL;
         QualifiedName qName(publicNamespace, id);
@@ -3016,17 +3027,17 @@ doUnary:
         MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->object_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom, JS2VAL_NULL);
-        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, &world.identifiers["Boolean"], JS2VAL_FALSE);
-        MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, &world.identifiers["general number"], engine->nanValue);
-        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, &world.identifiers["Number"], engine->nanValue);
-        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, &world.identifiers["Character"], JS2VAL_ZERO);
-        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, &world.identifiers["String"], JS2VAL_NULL);
-        MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, &world.identifiers["namespace"], JS2VAL_NULL);
-        MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, &world.identifiers["attribute"], JS2VAL_NULL);
-        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, &world.identifiers["Class"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, engine->allocStringPtr(&world.identifiers["Boolean"]), JS2VAL_FALSE);
+        MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, engine->allocStringPtr(&world.identifiers["general number"]), engine->nanValue);
+        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, engine->allocStringPtr(&world.identifiers["Number"]), engine->nanValue);
+        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, engine->allocStringPtr(&world.identifiers["Character"]), JS2VAL_ZERO);
+        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, engine->allocStringPtr(&world.identifiers["String"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["namespace"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["attribute"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, engine->allocStringPtr(&world.identifiers["Class"]), JS2VAL_NULL);
         MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->Function_StringAtom, JS2VAL_NULL);
-        MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, &world.identifiers["prototype"], JS2VAL_NULL);
-        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, &world.identifiers["Package"], JS2VAL_NULL);
+        MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["prototype"]), JS2VAL_NULL);
+        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, engine->allocStringPtr(&world.identifiers["Package"]), JS2VAL_NULL);
 
         
 
@@ -3056,14 +3067,24 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         writeDynamicProperty(glob, new Multiname(engine->undefined_StringAtom, publicNamespace), true, JS2VAL_UNDEFINED, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["NaN"], publicNamespace), true, engine->nanValue, RunPhase);
         writeDynamicProperty(glob, new Multiname(&world.identifiers["Infinity"], publicNamespace), true, engine->posInfValue, RunPhase);
+        // XXX add 'version' 
+        writeDynamicProperty(glob, new Multiname(&world.identifiers["version"], publicNamespace), true, INT_TO_JS2VAL(0), RunPhase);
         // Function properties of the global object 
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN);
         addGlobalObjectFunction("eval", GlobalObject_eval);
 
 
 /*** ECMA 3  Object Class ***/
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(objectClass), true);
+        defineStaticMember(env, &world.identifiers["Object"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         // Function properties of the Object prototype object
         objectClass->prototype = new PrototypeInstance(NULL, objectClass);
+        // Adding "prototype" as a static member of the class - not a dynamic property
+        env->addFrame(objectClass);
+            v = new Variable(objectClass, OBJECT_TO_JS2VAL(objectClass->prototype), true);
+            defineStaticMember(env, engine->prototype_StringAtom, &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        env->removeTopFrame();
+
 // XXX Or make this a static class member?
         CallableInstance *fInst = new CallableInstance(functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_VOID, true), Object_toString);
@@ -3845,6 +3866,7 @@ deleteClassProperty:
                     access = WriteAccess;
                     b = container->staticWriteBindings.lower_bound(*multiname->name);
                     end = container->staticWriteBindings.upper_bound(*multiname->name);
+                    found = NULL;
                     continue;
                 }
                 else
@@ -4326,6 +4348,8 @@ deleteClassProperty:
         GCMARKOBJECT(super)
         GCMARKOBJECT(prototype)
         GCMARKOBJECT(privateNamespace)
+        JS2Object::mark(name);
+//        GCMARKVALUE(defaultValue);
         InstanceBindingIterator ib, iend;
         for (ib = instanceReadBindings.begin(), iend = instanceReadBindings.end(); (ib != iend); ib++) {
             ib->second->content->mark();

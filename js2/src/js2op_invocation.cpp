@@ -76,7 +76,7 @@
                         PrototypeInstance *pInst = new PrototypeInstance(protoObj, meta->objectClass);
                         baseVal = OBJECT_TO_JS2VAL(pInst);
                         runtimeFrame->thisObject = baseVal;
-    //                      assignArguments(runtimeFrame, fWrap->compileFrame->signature);
+                        runtimeFrame->assignArguments(base(argCount), argCount);
                         if (!fWrap->code)
                             jsr(phase, fWrap->bCon, base(argCount + 1), baseVal);   // seems out of order, but we need to catch the current top frame 
                         meta->env->addFrame(runtimeFrame);
@@ -165,7 +165,7 @@
                     a = c->call(meta, JS2VAL_NULL, base(argCount), argCount);
                 else
                     a = JS2VAL_UNDEFINED;
-                pop(argCount + 1);
+                pop(argCount + 2);
                 push(a);
             }
             else
@@ -176,6 +176,13 @@
     case ePopv:
         {
             retval = pop();
+        }
+        break;
+
+    case eVoid:
+        {
+            pop();
+            push(JS2VAL_VOID);
         }
         break;
 

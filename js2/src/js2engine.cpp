@@ -106,7 +106,7 @@ namespace MetaData {
                 default:
                     NOT_REACHED("Bad opcode, no biscuit");
                 }
-//                JS2Object::gc(meta);        // XXX temporarily, for testing
+                JS2Object::gc(meta);        // XXX temporarily, for testing
             }
             catch (Exception &jsx) {
                 if (mTryStack.size() > 0) {
@@ -488,6 +488,7 @@ namespace MetaData {
         { ePopv,  "Popv", 0 },
         { ePop,  "Pop", 0 },
         { eDup,  "Dup", 0 },
+        { eVoid,  "Void", 0 },
 
         { eLexicalPostInc,  "LexicalPostInc", NAME_INDEX },    // <multiname index:u16>
         { eLexicalPostDec,  "LexicalPostDec", NAME_INDEX },    // <multiname index:u16>
@@ -689,6 +690,9 @@ namespace MetaData {
         case eReturnVoid:
         case eBranch:
             return 0;
+
+        case eVoid:         // remove top item, push undefined
+            return 1;      
 
         case eDup:          // duplicate top item
             return 1;      

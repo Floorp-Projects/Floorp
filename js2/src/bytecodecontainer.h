@@ -136,6 +136,7 @@ public:
 
     // Maintain list of associated pointers, so as to keep the objects safe across gc's
     void addMultiname(Multiname *mn)        { mMultinameList.push_back(mn); addShort((uint16)(mMultinameList.size() - 1)); }
+    void saveMultiname(Multiname *mn)       { mMultinameList.push_back(mn); }
     void addFrame(Frame *f)                 { mFrameList.push_back(f); addShort((uint16)(mFrameList.size() - 1)); }
     void saveFrame(Frame *f)                { mFrameList.push_back(f); }
     void addRegExp(RegExpInstance *x, size_t pos)   { emitOp(eRegExp, pos); mRegExpList.push_back(x); addShort((uint16)(mRegExpList.size() - 1)); }
