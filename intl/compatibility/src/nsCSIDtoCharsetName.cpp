@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * IBM Corporation
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 1999
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 12/09/1999   IBM Corp.       Support for IBM codepages - 850,852,855,857,862,864
+ *
  */
 
 #include "nsI18nCompatibility.h"
@@ -230,6 +243,30 @@ static csname2id_t csname2id_tbl[] = {
 
 	/* Baltic support for ibm */
 			{"windows-1257", "Cp1257", CS_CP_1257},  /* greek */
+
+	/* cP850 support for ibm */
+			{"ibm850", "Cp850", CS_CP_850},         /* PC Latin-1 */
+			{"cp850", "Cp850", CS_CP_850},          /* PC Latin-1 */
+
+	/* cP852 support for ibm */
+			{"ibm852", "Cp852", CS_CP_852},         /* PC Latin-2 */
+			{"cp852", "Cp852", CS_CP_852},          /* PC Latin-2 */
+
+	/* cP855 support for ibm */
+			{"ibm855", "Cp855", CS_CP_855},         /* PC Cyrillic */
+			{"cp855", "Cp855", CS_CP_855},          /* PC Cyrillic */
+
+	/* cP857 support for ibm */
+			{"ibm857", "Cp857", CS_CP_857},         /* PC Turkish */
+			{"cp857", "Cp857", CS_CP_857},          /* PC Turkish */
+
+	/* cP862 support for ibm */
+			{"ibm862", "Cp862", CS_CP_862},         /* PC Hebrew */
+			{"cp862", "Cp862", CS_CP_862},          /* PC Hebrew */
+
+	/* cP864 support for ibm */
+			{"ibm864", "Cp864", CS_CP_864},         /* PC Arabic */
+			{"cp864", "Cp864", CS_CP_864},          /* PC Arabic */
 
 	/* aliases for us-ascii: */
 			{"ansi_x3.4-1968", "", CS_ASCII},
