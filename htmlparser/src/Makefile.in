@@ -84,6 +84,7 @@ EXPORTS =     \
 	nsXIFDTD.h \
 	nsParserCIID.h \
 	nsExpatDTD.h \
+	nsParserError.h \
   $(NULL)
 
 EXTRA_EXPORTS = \
