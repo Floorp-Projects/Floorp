@@ -73,6 +73,7 @@ CMDLINEHANDLER3_IMPL(nsMessengerBootstrap,"-mail","general.startup.mail","Start 
 
 NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask) 
 { 
+#ifndef MOZ_THUNDERBIRD
   if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
   nsresult rv;
   nsCOMPtr<nsIPref> prefService(do_GetService(kPrefServiceCID, &rv));
@@ -92,6 +93,11 @@ NS_IMETHODIMP nsMessengerBootstrap::GetChromeUrlForTask(char **aChromeUrlForTask
     }	
   }
   *aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
+#else
+  NS_ENSURE_ARG_POINTER(aChromeUrlForTask);
+  *aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
+#endif
+
   return NS_OK; 
 }
 

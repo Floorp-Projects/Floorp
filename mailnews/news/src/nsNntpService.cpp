@@ -1721,6 +1721,7 @@ CMDLINEHANDLER3_IMPL(nsNntpService,"-news","general.startup.news","Start with ne
 
 NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask) 
 { 
+#ifndef MOZ_THUNDERBIRD
     if (!aChromeUrlForTask) return NS_ERROR_FAILURE; 
 	nsresult rv;
 	nsCOMPtr<nsIPrefBranch> prefBranch(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
@@ -1741,6 +1742,10 @@ NS_IMETHODIMP nsNntpService::GetChromeUrlForTask(char **aChromeUrlForTask)
 	}
 	*aChromeUrlForTask = PL_strdup("chrome://messenger/content/messenger.xul"); 
     return NS_OK; 
+#else
+  NS_ENSURE_ARG_POINTER(aChromeUrlForTask);
+  *aChromeUrlForTask = PL_strdup("chrome://messenger/content/"); 
+#endif
 }
 
 
