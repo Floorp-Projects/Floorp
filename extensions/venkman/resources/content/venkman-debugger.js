@@ -40,60 +40,109 @@ const jsdIValue = Components.interfaces.jsdIValue;
 const jsdIProperty = Components.interfaces.jsdIProperty;
 
 var $ = new Array(); /* array to store results from evals in debug frames */
+console._scripts = new Object();
 
-console.breakpointHooker = new Object();
-console.breakpointHooker.onExecute =
-function dh_bphook (cx, state, type, rv)
+console._scriptHook = {
+    onScriptCreated: function scripthook (script) {       
+        addScript (script);
+    },
+
+    onScriptDestroyed: function scripthook (script) {
+        removeScript (script);
+    }
+};
+
+console._executionHook = {
+    onExecute: function exehook (frame, type, rv) {
+        return debugTrap(frame, type, rv);
+    }
+};
+
+function insertScriptEntry (script, scriptList)
 {
-    dd ("onBreakpointHook (" + cx + ", " + state + ", " + type + ")");
-
-    return debugTrap(cx, state, type);
-}
-
-console.scriptHooker = new Object();
-console.scriptHooker.onScriptLoaded =
-function sh_scripthook (cx, script, creating)
-{
-    dd ("script created (" + creating + "): " + script.fileName + " (" +
-        script.functionName + ") " + script.baseLineNumber + "..." + 
-        script.lineExtent);
-}
-
-console.interruptHooker = new Object();
-console.interruptHooker.onExecute =
-function ih_exehook (cx, state, type, rv)
-{
-    dd ("onInterruptHook (" + cx + ", " + state + ", " + type + ")");
-    return jsdIExecutionHook.RETURN_CONTINUE;
-}
-
-console.debuggerHooker = new Object();
-console.debuggerHooker.onExecute =
-function dh_exehook (cx, state, type, rv)
-{
-    dd ("onDebuggerHook (" + cx + ", " + state + ", " + type + ")");
-
-    return debugTrap(cx, state, type);
-}
-
-function debugTrap (cx, state, type)
-{
-    ++console.stopLevel;
-
-    /* set our default return value */
-    console.continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
-
-    $ = new Array();
-    console.currentContext = cx;
-    console.currentThreadState = state;
-    console.currentFrameIndex = 0;
-    var frame = state.topFrame;
+    var newBLine = script.baseLineNumber;
+    var newLineE = script.lineExtent;
+    var newELine = newBLine + newLineE;
     
-    /* build an array of frames */
-    console.frames = new Array(frame);
-    while ((frame = frame.callingFrame))
-        console.frames.push(frame);
+    for (i = scriptList.length - 1; i >= 0 ; --i)
+    {
+        /* scripts for this filename are stored in the scriptList array
+         * in lowest-to-highest line number order.  We search backwards to
+         * find the correct place to insert the new script, because that's
+         * the most likely where it belongs.
+         */
+        var thisBLine = scriptList[i].baseLineNumber;
+        var thisLineE = scriptList[i].lineExtent;
+        var thisELine = thisBLine + thisLineE;
+        
+        if (script == scriptList[i])
+        {
+            dd ("ignoring duplicate script '" + formatScript(script) + "'.");
+            return;
+        }
+        else if (newBLine >= thisBLine)
+        {   /* new script starts after this starts. */
+            /*
+            if (newBLine == thisBLine && newELine == thisELine)
+                dd ("script '" + formatScript(script) + "' loaded again.");
+            else if (newBLine <= thisELine && newBLine >= thisBLine)
+                dd ("script '" + formatScript(script) + "' is a subScript.");
+            */
 
+            arrayInsertAt(scriptList, i + 1, script);
+            ++console._scriptCount;
+            return;
+        }
+    }
+    
+    /* new script is the earliest one yet, insert it at the top of the array */
+    arrayInsertAt(scriptList, 0, script);
+}
+
+function removeScriptEntry (script, scriptList)
+{
+    for (var i = 0; i < scriptList.length; ++i)
+    {
+        if (scriptList[i] == script)
+        {
+            arrayRemoveAt(scriptList, i);
+            --console._scriptCount;
+            return true;
+        }
+    }
+
+    return false;
+}
+    
+function removeScript (script)
+{
+    /* man this sucks, we can't ask the script any questions that would help us
+     * find it (fileName, lineNumber), because the underlying JSDScript has
+     * already been destroyed.  Instead, we have to walk all active scripts to
+     * find it.
+     */
+
+    for (var s in console._scripts)
+        if (removeScriptEntry(script, console._scripts[s]))
+            return true;
+    
+    return false;    
+}
+
+function addScript(script)
+{
+    var scriptList = console._scripts[script.fileName];
+    if (!scriptList)
+    {
+        /* no scripts under this filename yet, create a new record for it */
+        console._scripts[script.fileName] = [script];
+    }
+    else
+        insertScriptEntry (script, scriptList);
+}
+
+function debugTrap (frame, type, rv)
+{
     var tn = "";
     switch (type)
     {
@@ -109,12 +158,31 @@ function debugTrap (cx, state, type)
         case jsdIExecutionHook.TYPE_THROW:
             tn = MSG_WORD_THROW;
             break;
+        case jsdIExecutionHook.TYPE_INTERRUPTED:
+            if (console._stepPast == frame.script.fileName + frame.line)
+                return jsdIExecutionHook.RETURN_CONTINUE;
+            delete console._stepPast;
+            console.jsds.interruptHook = null;
+            break;
         default:
             /* don't print stop/cont messages for other types */
     }
 
     if (tn)
         display (getMsg(MSN_STOP, tn), MT_STOP);
+
+    ++console._stopLevel;
+
+    /* set our default return value */
+    console._continueCodeStack.push (jsdIExecutionHook.RETURN_CONTINUE);
+
+    $ = new Array();
+    console.currentFrameIndex = 0;
+    
+    /* build an array of frames */
+    console.frames = new Array(frame);
+    while ((frame = frame.callingFrame))
+        console.frames.push(frame);
 
     display (formatStackFrame(console.frames[console.currentFrameIndex]));
     
@@ -128,28 +196,27 @@ function debugTrap (cx, state, type)
         display (getMsg(MSN_CONT, tn), MT_CONT);
 
     $ = new Array();
-    delete console.currentContext;
-    delete console.currentThreadState;
     delete console.currentFrameIndex;
     delete console.frames;
     
-    return console.continueCodeStack.pop();
+    return console._continueCodeStack.pop();
 }
 
 function detachDebugger()
 {
-    var count = console.stopLevel;
+    var count = console._stopLevel;
     var i;
 
     for (i = 0; i < count; ++i)
         console.jsds.exitNestedEventLoop();
 
-    ASSERT (console.stopLevel == 0,
+    ASSERT (console._stopLevel == 0,
             "console.stopLevel != 0 after detachDebugger");
 
-    console.jsds.off();
+    console.jsds.clearAllBreakpoints();
     console.jsds.scriptHook = null;
     console.jsds.debuggerHook = null;
+    console.jsds.off();
 }
 
 function formatProperty (p)
@@ -208,6 +275,10 @@ function formatValue (v)
     
     switch (v.jsType)
     {
+        case jsdIValue.TYPE_BOOLEAN:
+            s += MSG_TYPE_BOOLEAN;
+            value = String(v.booleanValue);
+            break;
         case jsdIValue.TYPE_DOUBLE:
             s += MSG_TYPE_DOUBLE;
             value = v.doubleValue;
@@ -258,7 +329,10 @@ function formatValue (v)
 
 function initDebugger()
 {   
-    console.continueCodeStack = new Array();
+    console._continueCodeStack = new Array();
+    console._breakpoints = new Array();
+    console._stopLevel = 0;
+    console._scriptCount = 0;
     
     /* create the debugger instance */
     if (!Components.classes[JSD_CTRID])
@@ -266,9 +340,9 @@ function initDebugger()
     
     console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
     console.jsds.on();
-    console.jsds.breakpointHook = console.breakpointHooker;
-    //console.jsds.scriptHook = console.scriptHooker;
-    console.jsds.debuggerHook = console.debuggerHooker;
+    console.jsds.breakpointHook = console._executionHook;
+    console.jsds.debuggerHook = console._executionHook;
+    console.jsds.scriptHook = console._scriptHook;
     //dbg.interruptHook = interruptHooker;
 }
 
@@ -311,3 +385,36 @@ function displayFrame (f, idx)
     
     display(idx + ": " + formatStackFrame (f));
 }
+
+function setBreakpoint (fileName, line)
+{
+    var ary = console._scripts[fileName];
+    
+    if (!ary)
+    {
+        display (getMsg(MSN_ERR_NOTLOADED, fileName), MT_ERROR);
+        return false;
+    }
+    
+    var bpList = new Array();
+    
+    for (var i = 0; i < ary.length; ++i)
+    {
+        if (ary[i].baseLineNumber <= line && 
+            ary[i].baseLineNumber + ary[i].lineExtent >= line)
+        {
+            var pc = ary[i].lineToPc(line);
+            ary[i].setBreakpoint(pc);
+            bpList.push ({fileName: fileName, script: ary[i], line: line,
+                          pc: pc});
+        }
+    }
+
+    if (bpList.length > 0)
+        console._breakpoints.push (bpList);
+    
+    return bpList;
+}
+
+    
+            
