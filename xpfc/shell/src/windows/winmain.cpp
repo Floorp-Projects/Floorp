@@ -65,7 +65,7 @@ static NS_DEFINE_IID(kCstackCID, NS_STACK_CID);
 static NS_DEFINE_IID(kCBoxLayoutCID,    NS_BOXLAYOUT_CID);
 static NS_DEFINE_IID(kCListLayoutCID,   NS_LISTLAYOUT_CID);
 
-int PASCAL WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
+int CALLBACK WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
 	nsresult result = NS_OK ;
 
