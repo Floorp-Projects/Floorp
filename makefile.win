@@ -71,7 +71,7 @@ DIRS = \
   silentdl                      \
   webshell			\
   editor 			\
-!if defined(BUILD_CLIENT)
+!if defined(BUILD_CLIENT) || defined(CLOBBER_ALL)
 # the following are associated with the browser
   xpfe				\
   extensions			\
