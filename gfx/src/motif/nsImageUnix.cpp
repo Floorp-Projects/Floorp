@@ -32,6 +32,9 @@ nsImageUnix :: nsImageUnix()
   NS_INIT_REFCNT();
   
   mImage = nsnull ;
+  mWidth = 0;
+  mHeight = 0;
+  mDepth = 0;
 }
 
 //------------------------------------------------------------
@@ -92,9 +95,6 @@ PRInt32 spanbytes;
 // set up the pallete to the passed in color array, RGB only in this array
 void nsImageUnix :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
-  if (nsnull == mImage) {
-    CreateImage(aContext);
-  }
 
   if (nsnull == mImage)
     return;
@@ -150,27 +150,24 @@ PRBool nsImageUnix::SetAlphaMask(nsIImage *aTheMask)
 
 nsresult nsImageUnix::Optimize(nsDrawingSurface aDrawingSurface)
 {
-  return(NS_OK);
+  if (nsnull == mImage) {
+    CreateImage(aDrawingSurface);
+  }
 }
 
 //------------------------------------------------------------
 
-void nsImageUnix::CreateImage(nsIDeviceContext * aDeviceContext)
+void nsImageUnix::CreateImage(nsDrawingSurface aSurface)
 {
-
-  /* The XImage must be compatible with the Pixmap we draw into */
-  nsDrawingSurfaceUnix * surface = (nsDrawingSurfaceUnix *) 
-    ((nsDeviceContextUnix *)aDeviceContext)->GetDrawingSurface();
-
   XWindowAttributes wa;
   PRUint32 wdepth;
   Visual * visual ;
   PRUint32 format ;
-
+ nsDrawingSurfaceUnix	*unixdrawing =(nsDrawingSurfaceUnix*) aSurface;
   char * data = (char *) PR_Malloc(sizeof(char) * mWidth * mHeight * mDepth);
 
-  ::XGetWindowAttributes(surface->display,
-			 surface->drawable,
+  ::XGetWindowAttributes(unixdrawing->display,
+			 unixdrawing->drawable,
 			 &wa);
   
   /* XXX What if mDepth != wDepth */
@@ -183,7 +180,7 @@ void nsImageUnix::CreateImage(nsIDeviceContext * aDeviceContext)
   else
     format = XYPixmap;
 
-  mImage = ::XCreateImage(surface->display,
+  mImage = ::XCreateImage(unixdrawing->display,
 			  visual,
 			  wdepth,
 			  format,
