@@ -18,6 +18,7 @@
 
 import java.io.*;
 import java.util.Date;
+import java.util.StringTokenizer;
 /*
 	ScriptFile class reads off the script file and sets up the list
 	of delimiters.
@@ -69,11 +70,19 @@ class ScriptFile {
 
 	public void Parse () throws IOException {
 
-	    if ((request == null) || (request.length() == 0) || request.startsWith("GET / "))
+	    if ((request == null) ||
+			(request.length() == 0) ||
+			request.startsWith("GET / "))
 	    {
 	        WriteDefaultResponse();
             return;
 	    }
+
+		if (request.startsWith("GET /?"))
+		{
+			WriteSpecialResponse(request.substring(request.indexOf('?')+1));
+			return;
+		}
 
         boolean outDirty = false;
 	    if (file != null)
@@ -163,24 +172,52 @@ class ScriptFile {
     }
 
     protected void WriteDefaultResponse() throws IOException {
-	        WriteOutFile("docs/generic.res");
-            out.println("Date: " + (new Date()).toString());
-            if (file != null)
-            {
-                File f = new File(file);
-                out.println("Last-modified: " + (new Date(f.lastModified())).toString());
-            }
-            out.println("\n"); // prints 2
-            if (con != null)
-            {
-                out.println("<H3>Rec'd. the following request-</H3>");
-                out.println("<PRE>");
-                out.println(con.request);
-                out.println("</PRE>");
-                out.println("From- " + con.client);
-            }
+		WriteOutFile("docs/generic.res");
+        out.println("Date: " + (new Date()).toString());
+        if (file != null)
+        {
+            File f = new File(file);
+            out.println("Last-modified: " + (new Date(f.lastModified())).toString());
+        }
+        out.println("\n"); // prints 2
+        if (con != null)
+        {
+			out.println("<HTML><BODY>");
+            out.println("<H3>Rec'd. the following request-</H3>");
+            out.println("<PRE>");
+            out.println(con.request);
+            out.println("</PRE>");
+            out.println("From- " + con.client);
+			out.println("</BODY></HTML>");
+         }
     }
 
+	protected void WriteSpecialResponse(String specialcase) throws IOException {
+		WriteOutFile("docs/generic.res");
+		StringTokenizer st = new StringTokenizer(specialcase, " &");
+		while (st.hasMoreTokens()) {
+		    String pair = st.nextToken();
+    		if (pair.startsWith("Length="))
+    		{
+
+                int len = Integer.valueOf(pair.substring(pair.indexOf('=')+1), 10).intValue();
+
+    			out.println("Date: " + (new Date()).toString());
+    			out.println("Content-Length: " + len);
+    			out.println("\n");
+    			for (int i = 0; i<len ; i++)
+    			{
+    			    if ((i % 80) == 0)
+    			        out.print('\n');
+    			    else
+    			        out.print('#');
+    			    out.flush();
+    			}
+    			return;
+    		}
+    	}
+
+	}
     String file = null;
     // The string associated with this script occurence
 
