@@ -1126,7 +1126,9 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
   const PRUnichar* str = aAltText.get();
   PRInt32          strLen = aAltText.Length();
   nscoord          y = aRect.y;
-  while ((strLen > 0) && ((y + maxDescent) < aRect.YMost())) {
+  // Always show the first line, even if we have to clip it below
+  PRBool firstLine = PR_TRUE;
+  while ((strLen > 0) && (firstLine || (y + maxDescent) < aRect.YMost())) {
     // Determine how much of the text to display on this line
     PRUint32  maxFit;  // number of characters that fit
     MeasureString(str, strLen, aRect.width, maxFit, aRenderingContext);
@@ -1138,6 +1140,7 @@ nsImageFrame::DisplayAltText(nsPresContext*      aPresContext,
     str += maxFit;
     strLen -= maxFit;
     y += height;
+    firstLine = PR_FALSE;
   }
 
   NS_RELEASE(fm);
@@ -1204,17 +1207,6 @@ nsImageFrame::DisplayAltFeedback(nsPresContext*      aPresContext,
   inner.Deflate(NSIntPixelsToTwips(ICON_PADDING+ALT_BORDER_WIDTH, p2t), 
                 NSIntPixelsToTwips(ICON_PADDING+ALT_BORDER_WIDTH, p2t));
   if (inner.IsEmpty()) {
-    return;
-  }
-
-  // check if the size of the (deflated) rect is big enough to show the icon
-  // - if not, then just bail, leaving the border rect by itself
-  // NOTE: setting the clip (below) should be enough, but there is a bug in the Linux
-  //       rendering context that images are not clipped when a clip rect is set (bugzilla bug 78497)
-  //       and also this will be slightly more efficient since we will not try to render any icons
-  //       or ALT text into the rect.
-  if (inner.width < NSIntPixelsToTwips(ICON_SIZE, p2t) || 
-      inner.height < NSIntPixelsToTwips(ICON_SIZE, p2t)) {
     return;
   }
 
