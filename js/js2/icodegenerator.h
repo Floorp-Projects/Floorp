@@ -260,6 +260,7 @@ namespace ICG {
         void saveName(const StringAtom &name, TypedRegister value);
         TypedRegister nameXcr(const StringAtom &name, ICodeOp op);
        
+        TypedRegister deleteProperty(TypedRegister base, const StringAtom &name);
         TypedRegister getProperty(TypedRegister base, const StringAtom &name);
         void setProperty(TypedRegister base, const StringAtom &name, TypedRegister value);
         TypedRegister propertyXcr(TypedRegister base, const StringAtom &name, ICodeOp op);

@@ -259,6 +259,14 @@ TypedRegister ICodeGenerator::varXcr(TypedRegister var, ICodeOp op)
 
 
 
+TypedRegister ICodeGenerator::deleteProperty(TypedRegister base, const StringAtom &name)
+{
+    TypedRegister dest(getRegister(), &Any_Type);
+    DeleteProp *instr = new DeleteProp(dest, base, &name);
+    iCode->push_back(instr);
+    return dest;
+}
+
 TypedRegister ICodeGenerator::getProperty(TypedRegister base, const StringAtom &name)
 {
     TypedRegister dest(getRegister(), &Any_Type);
@@ -744,6 +752,11 @@ TypedRegister ICodeGenerator::handleDot(BinaryExprNode *b, ExprNode::Kind use, I
                 break;
             }
             break;
+        case ExprNode::Delete:
+            if (lValueKind == Property) {
+                ret = deleteProperty(base, name);
+            }
+            break;
         }
         ret.second = fieldType;
     }
@@ -799,6 +812,14 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             }                
             else
                 ret = newObject();  // XXX more
+        }
+        break;
+    case ExprNode::Delete:
+        {
+            UnaryExprNode *d = static_cast<UnaryExprNode *>(p);
+            ASSERT(d->op->getKind() == ExprNode::dot);
+            ret = handleDot(static_cast<BinaryExprNode *>(d->op), p->getKind(), xcrementOp, ret);
+            // rather than getProperty(), need to do a deleteProperty().
         }
         break;
     case ExprNode::call : 
