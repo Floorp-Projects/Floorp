@@ -180,10 +180,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
   // Reflow our child frame
   if (nsnull != mFirstChild) {
     // Compute how much space to reserve for our border and padding
-    const nsStyleSpacing* spacing =
-      (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
     nsMargin borderPadding;
-    spacing->CalcBorderPaddingFor(this, borderPadding);
+    nsHTMLReflowState::ComputeBorderPaddingFor(this, nsnull,
+                                               borderPadding);
 
     nsSize  kidMaxSize(reflowState.maxSize);
     kidMaxSize.width -= borderPadding.left + borderPadding.right;
