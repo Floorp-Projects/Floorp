@@ -1406,7 +1406,6 @@ NS_IMETHODIMP
 PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                      nsIFrame*       aFrame)
 {
-#ifdef _WIN32
   nsIEventQueueService* eventService;
   nsresult              rv;
    
@@ -1421,7 +1420,7 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                            &eventQueue);
     nsServiceManager::ReleaseService(kEventQueueServiceCID, eventService);
 
-    if (nsnull != eventQueue) {
+    if (NS_SUCCEEDED(rv) && (nsnull != eventQueue)) {
       CantRenderReplacedElementEvent* ev;
 
       ev = new CantRenderReplacedElementEvent(this, aFrame);
@@ -1429,9 +1428,6 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
     }
   }
   return rv;
-#else
-  return NS_OK;
-#endif
 }
 
 NS_IMETHODIMP
@@ -1439,7 +1435,7 @@ PresShell::GoToAnchor(const nsString& aAnchorName) const
 {
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc;
   nsCOMPtr<nsIXMLDocument> xmlDoc;
-  nsresult                     rv;
+  nsresult                     rv = NS_OK;
   nsCOMPtr<nsIContent>  content;
 
   if (NS_SUCCEEDED(mDocument->QueryInterface(kIDOMHTMLDocumentIID,
