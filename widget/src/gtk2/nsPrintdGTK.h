@@ -18,6 +18,9 @@
 
 /* Original Code: Syd Logan (syd@netscape.com) 3/12/99 */
 
+#ifndef nsPrintdGTK_h___
+#define nsPrintdGTK_h___
+
 #include <limits.h>
 
 enum { SizeLetter, SizeLegal, SizeExecutive, SizeA4 };
@@ -33,3 +36,6 @@ typedef struct unixprdata {
 	FILE *stream;		    /* File or Printer */
 } UnixPrData;
 
+void UnixPrDialog(UnixPrData *prData);
+
+#endif /* nsPrintdGTK_h___ */
