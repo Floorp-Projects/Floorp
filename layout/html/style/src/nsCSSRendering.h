@@ -332,10 +332,10 @@ public:
 
   PRBool  mDoRound;
 
-  PRInt16 mLeft;
-  PRInt16 mRight;
-  PRInt16 mTop;
-  PRInt16 mBottom;
+  PRInt32 mLeft;
+  PRInt32 mRight;
+  PRInt32 mTop;
+  PRInt32 mBottom;
 
   /** 
    *  Construct a rounded rectangle object
