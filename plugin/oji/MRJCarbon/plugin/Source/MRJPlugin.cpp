@@ -50,7 +50,9 @@
 #include "EmbeddedFramePluginInstance.h"
 
 #include "nsIServiceManager.h"
-#include "nsMemory.h"
+#include "nsIServiceManagerObsolete.h"
+
+#include "nsIMemory.h"
 #include "nsIJVMManager.h"
 #include "nsIJVMPluginTagInfo.h"
 #include "nsIPluginManager2.h"
@@ -62,20 +64,15 @@
 
 #include <Resources.h>
 
-extern nsIServiceManager* theServiceManager;
-extern nsIPluginManager* thePluginManager;
 extern nsIPlugin* thePlugin;
 
-nsIServiceManager* theServiceManager = NULL;
 nsIPluginManager2* thePluginManager2 = NULL;
 nsIMemory* theMemoryAllocator = NULL;
 
-#if TARGET_CARBON
 #pragma export on
 nsIPluginManager* thePluginManager = NULL;
 nsIPlugin* thePlugin = NULL;
 #pragma export off
-#endif
 
 FSSpec thePluginSpec;
 short thePluginRefnum = -1;
@@ -84,10 +81,34 @@ short thePluginRefnum = -1;
 
 static NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
-static NS_DEFINE_IID(kMemoryCID, NS_MEMORY_CID);
 static NS_DEFINE_IID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININSTANCEPEER_IID);
+
+/**
+ * Bottleneck all uses of the service manager, and use the obsolete service manager
+ * if the modern one is unavailable.
+ */
+static nsIServiceManager* theServiceManager = NULL;
+static nsIServiceManagerObsolete* theServiceManagerObsolete = NULL;
+
+nsresult MRJPlugin::GetService(const nsCID& aCID, const nsIID& aIID, void* *aService)
+{
+    if (theServiceManager)
+        return theServiceManager->GetService(aCID, aIID, aService);
+    if (theServiceManagerObsolete)
+        return theServiceManagerObsolete->GetService(aCID, aIID, (nsISupports **)aService);
+    return NS_ERROR_FAILURE;
+}
+
+nsresult MRJPlugin::GetService(const char* aContractID, const nsIID& aIID, void* *aService)
+{
+    if (theServiceManager)
+        return theServiceManager->GetServiceByContractID(aContractID, aIID, aService);
+    if (theServiceManagerObsolete)
+        return theServiceManagerObsolete->GetService(aContractID, aIID, (nsISupports **)aService);
+    return NS_ERROR_FAILURE;
+}
 
 #pragma export on
 
@@ -95,13 +116,14 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 {
 	nsresult result = NS_OK;
 
-	if (theServiceManager == NULL) {
-		if (serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&theServiceManager) != NS_OK)
-			return NS_ERROR_FAILURE;
+	if (theServiceManager == NULL && theServiceManagerObsolete == NULL) {
+		if (NS_FAILED(serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&theServiceManager)))
+		    if (NS_FAILED(serviceManager->QueryInterface(NS_GET_IID(nsIServiceManagerObsolete), (void**)&theServiceManagerObsolete)))
+			    return NS_ERROR_FAILURE;
 
 		// Our global operator new wants to use nsIMalloc to do all of its allocation.
 		// This should be available from the Service Manager.
-		if (theServiceManager->GetService(kMemoryCID, NS_GET_IID(nsIMemory), (nsISupports**)&theMemoryAllocator) != NS_OK)
+		if (MRJPlugin::GetService(NS_MEMORY_CONTRACTID, NS_GET_IID(nsIMemory), (void **)&theMemoryAllocator) != NS_OK)
 			return NS_ERROR_FAILURE;
 	}
 
@@ -273,7 +295,7 @@ NS_METHOD MRJPlugin::Initialize()
 
 	// try to get a plugin manager.
 	if (thePluginManager == NULL) {
-		result = theServiceManager->GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (nsISupports**)&thePluginManager);
+		result = MRJPlugin::GetService(kPluginManagerCID, NS_GET_IID(nsIPluginManager), (void**)&thePluginManager);
 		if (result != NS_OK || thePluginManager == NULL)
 			return NS_ERROR_FAILURE;
 	}
@@ -285,7 +307,7 @@ NS_METHOD MRJPlugin::Initialize()
 	}
 
 	// try to get a JVM manager. we have to be able to run without one.
-	if (theServiceManager->GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (nsISupports**)&mManager) != NS_OK)
+	if (MRJPlugin::GetService(kJVMManagerCID, NS_GET_IID(nsIJVMManager), (void**)&mManager) != NS_OK)
 		mManager = NULL;
 	
 	// try to get a Thread manager.
@@ -315,8 +337,9 @@ NS_METHOD MRJPlugin::Shutdown()
     NS_IF_RELEASE(thePluginManager2);
     NS_IF_RELEASE(thePluginManager);
 
-    // release our reference to the service manager.
+    // release our reference(s) to the service manager.
     NS_IF_RELEASE(theServiceManager);
+    NS_IF_RELEASE(theServiceManagerObsolete);
     
     return NS_OK;
 }
