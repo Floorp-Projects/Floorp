@@ -302,11 +302,11 @@ protected:
   void LanguageSpecificTransform(PRUnichar* aText, PRInt32 aLen,
                                  PRBool* aWasTransformed);
 
-#ifdef IBMBIDI
   void DoArabicShaping(PRUnichar* aText, PRInt32& aTextLength, PRBool* aWasTransformed);
 
   void DoNumericShaping(PRUnichar* aText, PRInt32& aTextLength, PRBool* aWasTransformed);
-#endif
+
+  void StripZeroWidthJoinControls(PRUnichar* aSource, PRUnichar* aTarget, PRInt32& aTextLength, PRBool* aWasTransformed);
 
   // The text fragment that we are looking at
   const nsTextFragment* mFrag;
