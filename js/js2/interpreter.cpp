@@ -115,16 +115,32 @@ struct Activation : public gc_base {
 
 };
 
+/**
+ * exception-safe class to save off values.
+ */
+template <typename T>
+class autosaver {
+    T& mRef;
+    T mOld;
+public:
+    autosaver(T& ref, T val = T()) : mRef(ref), mOld(ref) { ref = val; }
+    ~autosaver() { mRef = mOld; }
+};
 
 JSValue Context::readEvalFile(FILE* in, const String& fileName)
 {
-    Context cx(mWorld, mGlobal);
     String buffer;
     string line;
     LineReader inReader(in);
     JSValues emptyArgs;
     JSValue result;
         
+    // save off important member variables, to enable recursive call to interpret.
+    // this is a little stinky, but should be exception-safe.
+    autosaver<Activation*> activation(mActivation, 0);
+    autosaver<Linkage*> linkage(mLinkage, 0);
+    autosaver<InstructionIterator> pc(mPC);
+
     while (inReader.readLine(line) != 0) {
         appendChars(buffer, line.data(), line.size());
         try {
@@ -148,7 +164,7 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
             // list of zero or more statements
             ICodeModule* icm = genCode(parsedStatements, fileName);
             if (icm) {
-                result = cx.interpret(icm, emptyArgs);
+                result = interpret(icm, emptyArgs);
                 delete icm;
             }
 
@@ -368,11 +384,11 @@ static JSValue identical_Default(const JSValue& r1, const JSValue& r2)
     }
     else {
         if (r1.isString())
-            return kFalseValue;     // XXX implement me!! w_strcmp??
+            return JSValue(bool(r1.string->compare(*r2.string) == 0));
         if (r1.isBoolean())
-            return JSValue(r1.boolean == r2.boolean);
+            return JSValue(bool(r1.boolean == r2.boolean));
         if (r1.isObject())
-            return JSValue(r1.object == r2.object);
+            return JSValue(bool(r1.object == r2.object));
         return kFalseValue;
     }
 }
