@@ -32,13 +32,12 @@
 <!ENTITY edit.sslciphers "Edit Ciphers...">
 
 <!ENTITY warn.description "&brandShortName; can alert you to the security status of the web page you are viewing. Set &brandShortName; to show a warning and ask permission before:">
-<!ENTITY warn.enteringsecure "Entering a site that supports encryption">
-<!ENTITY warn.enteringweak "Entering a site that uses low-grade encryption">
-<!ENTITY warn.insecurepost
- "Sending form data from an insecure page to an insecure page">
-<!ENTITY warn.secureredirect "Redirection from one secure site to another">
-<!ENTITY warn.secureredirecttoinsecure
- "Redirection from a secure site to an insecure site">
+<!ENTITY warn.enteringsecure "Loading a page that supports encryption">
+<!ENTITY warn.enteringweak "Loading a page that uses low-grade encryption">
+<!ENTITY warn.insecurepost "Sending form data from an unencrypted page to an unencrypted page">
+<!ENTITY warn.leavingsecure "Leaving a page that supports encryption">
+<!ENTITY warn.secureredirect "Redirecting from one encrypted page to another">
+<!ENTITY warn.secureredirecttoinsecure "Redirecting from an encrypted page to an unencrypted page">
 <!ENTITY warn.viewmixed "Viewing a page with an encrypted/unencrypted mix">
 
 <!ENTITY certselect.description "Decide how &brandShortName; selects a security certificate to present to web sites that require one:">
