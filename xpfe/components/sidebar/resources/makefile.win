@@ -54,7 +54,7 @@ CHROME_SKIN = \
 CHROME_L10N = \
         .\locale\en-US\customize.dtd \
 	.\locale\en-US\preview.dtd \
-        .\locale\en-US\locale-panels.dtd \
+        .\locale\en-US\local-panels.dtd \
         .\locale\en-US\sidebarOverlay.dtd \
         $(NULL)
 
