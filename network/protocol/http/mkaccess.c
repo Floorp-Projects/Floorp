@@ -520,7 +520,8 @@ NET_AskForAuthString(MWContext *context,
 					 URL_Struct * URL_s, 
 					 char * authenticate, 
 					 char * prot_template,
-					 Bool   already_sent_auth)
+					 Bool   already_sent_auth,
+                     void *closure)
 {
 	static PRBool first_time=TRUE;
 	net_AuthStruct *prev_auth;
@@ -796,6 +797,10 @@ NET_AskForAuthString(MWContext *context,
 	/* if the password is filled in then the username must
 	 * be filled in already.  
 	 */
+    /* 4/6/99 -- with the new async dialogs, we will only enter this
+       statement the first time through; afterward, we will have the
+       user and pass via NET_ResumeWithAuth()
+    */
 	if(!password || re_authorize)
 	  {
 		XP_Bool remember_password = FALSE;
@@ -811,6 +816,7 @@ NET_AskForAuthString(MWContext *context,
 
 
 			NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_HOST) );
+#if 0
 #if defined(SingleSignon)
 			/* prefill prompt with previous username/passwords if any 
              * this returns 1 if user pressed OK, or 0 if they Canceled
@@ -827,6 +833,16 @@ NET_AskForAuthString(MWContext *context,
 			    (context, buf, &username, &password,
 			    &remember_password, NET_IsURLSecure(URL_s->address));
 #endif
+#else
+            {
+              NET_AuthClosure * authclosure = (NET_AuthClosure *) closure;
+
+              /* the new multi-threaded case -- we return asynchronously */
+              authclosure->msg = PL_strdup (buf);
+              status = stub_PromptUsernameAndPassword
+			    (context, buf, &username, &password, closure);
+            }
+#endif
 	
 			PR_Free(buf);
         } else {
@@ -836,6 +852,10 @@ NET_AskForAuthString(MWContext *context,
 		PR_Free(host);
 
 		if(!status) {
+            /* XXX now we have FALSE == WAIT_FOR_AUTH */
+            return(NET_WAIT_FOR_AUTH);
+
+#ifdef notused /* with async dialogs, we never have a user/pass here */a
 			TRACEMSG(("User canceled login!!!"));
 
 			/* if the paths are exact and the user cancels
@@ -847,6 +867,7 @@ NET_AskForAuthString(MWContext *context,
 			PR_FREEIF(password);
 			PR_FREEIF(new_address);
 			return(NET_AUTH_FAILED_DISPLAY_DOCUMENT);
+#endif /* notused */
 		  }
 		else if(!username || !password)
 		  {
@@ -3663,7 +3684,8 @@ PUBLIC PRBool
 NET_AskForProxyAuth(MWContext * context,
 					char *   proxy_addr,
 					char *   pauth_params,
-					PRBool  already_sent_auth)
+					PRBool  already_sent_auth,
+                    void * closure)
 {
 	net_AuthStruct * prev;
 	PRBool new_entry = FALSE;
@@ -3758,6 +3780,7 @@ NET_AskForProxyAuth(MWContext * context,
 		PR_snprintf(buf, len*sizeof(char), XP_GetString( XP_PROXY_AUTH_REQUIRED_FOR ), prev->realm, proxy_addr);
 
 		NET_Progress(context, XP_GetString( XP_CONNECT_PLEASE_ENTER_PASSWORD_FOR_PROXY ) );
+#if 0
 #if defined(SingleSignon)
 		/* prefill prompt with previous username/passwords if any */
 		len = SI_PromptUsernameAndPassword
@@ -3765,6 +3788,11 @@ NET_AskForProxyAuth(MWContext * context,
 #else
 		len = FE_PromptUsernameAndPassword
 		    (context, buf, &username, &password);
+#endif
+#else
+        /* the new multi-thread case -- we return with out user/pass */
+		len = stub_PromptUsernameAndPassword
+		    (context, buf, &username, &password, closure);
 #endif
 		PR_Free(buf);
 	  }
@@ -3775,8 +3803,12 @@ NET_AskForProxyAuth(MWContext * context,
 
 	if (!len)
 	  {
+          TRACEMSG(("Waiting for user auth"));
+          return FALSE;
+#if notused
 		  TRACEMSG(("User canceled login!!!"));
 		  return FALSE;
+#endif /* notused */
 	  }
 	else if (!username || !password)
 	  {
@@ -5618,6 +5650,7 @@ NET_DisplayCookieInfoAsHTML(MWContext * context)
     net_DisplayCookieInfoAsHTML(context, NULL);
 }
 
+#if 0
 #ifdef XP_MAC
 /* pinkerton - reset optimization state (see above) */
 #pragma global_optimizer reset
@@ -5625,7 +5658,8 @@ NET_DisplayCookieInfoAsHTML(MWContext * context)
 
 #else
 PUBLIC void
-NET_DisplayCookieInfoAsHTML(MWContext * context)
+NET_DisplayCookieInfoAsHTML(ActiveEntry *cur_entry)
 {
 }
 #endif
+#endif /* 0 */

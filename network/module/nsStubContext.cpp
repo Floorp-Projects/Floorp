@@ -202,15 +202,150 @@ char *stub_Prompt(MWContext *context,
   return result;
 }
 
-PRIVATE XP_Bool
-stub_PromptUsernameAndPassword(MWContext *context,
+#include "nsIComponentManager.h" 
+#include "nsIBlockingNotification.h" 
+#include "nsAppShellCIDs.h" 
+#include "plevent.h" 
+#include "nsXPComFactory.h"
+
+static NS_DEFINE_IID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
+// static NS_DEFINE_IID(kDefaultNotificationCID,  NS_DEFAULT_NOTIFICATION_CID);
+
+static NS_DEFINE_IID(kIBlockingNotificationObserverIID, 
+                                             NS_IBLOCKINGNOTIFICATION_OBSERVER_IID);
+static NS_DEFINE_IID(kIBlockingNotificationIID, NS_IBLOCKINGNOTIFICATION_IID);
+
+/*-------------------- nsDefaultNotification ----------------------------*/
+
+// our notification object
+class nsDefaultNotification : public nsIBlockingNotification
+{
+public:
+  nsDefaultNotification();
+
+  /* nsISupports interface... */
+  NS_DECL_ISUPPORTS
+
+  /* nsIBlockingNotification interface... */
+  NS_IMETHOD IsBlocked(nsIURL *aURL, PRBool *aResult);
+  NS_IMETHOD Resume(nsIURL *aUrl, void *aExtraInfo);
+};
+
+nsDefaultNotification::nsDefaultNotification()
+{
+  NS_INIT_REFCNT();
+}
+
+/* 
+ * Implementations of nsISupports interface methods...
+ */
+NS_IMPL_ADDREF(nsDefaultNotification);
+NS_IMPL_RELEASE(nsDefaultNotification);
+NS_IMPL_QUERY_INTERFACE(nsDefaultNotification, kIBlockingNotificationIID);
+
+NS_IMETHODIMP
+nsDefaultNotification::IsBlocked(nsIURL *aURL, PRBool *aResult)
+{
+  nsresult rv = NS_NOTIFY_BLOCKED;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsDefaultNotification::Resume(nsIURL *aURL, void *aExtraInfo)
+{
+  nsresult rv = NS_NOTIFY_SUCCEEDED;
+  NET_ResumeWithAuth((void *) aExtraInfo);
+  return rv;
+}
+
+/*--------------------------------------------------------------*/
+
+/* forward declaration */
+class nsDefaultNotification;
+
+NS_DEF_FACTORY(DefaultNotification,nsDefaultNotification)
+
+nsresult NS_NewDefaultNotificationFactory(nsIFactory** aResult)
+{
+  nsresult rv = NS_OK;
+  nsIFactory* inst;
+  
+  inst = new nsDefaultNotificationFactory;
+  if (nsnull == inst) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    NS_ADDREF(inst);
+  }
+  *aResult = inst;
+  return rv;
+}
+
+/*--------------------------------------------------------------*/
+
+
+#if 0
+PRIVATE XP_Bool 
+stub_PromptUsernameAndPassword(MWContext *context, 
+                               const char *msg, 
+                               char **username, 
+                               char **password,
+                               void *closure) 
+{ 
+  nsIBlockingNotificationObserver *helper; 
+  nsIBlockingNotification *caller;
+  nsConnectionInfo *pConn = nsnull; 
+  URL_Struct *URL_s = context->modular_data; 
+  nsIURL *base = nsnull;
+  nsresult rv; 
+  
+  printf ("stub_PromptUsernameAndPassword()\n");
+
+  /* Access the nsConnectionInfo object off of the URL Struct fe_data */ 
+  if ((nsnull != URL_s) && (nsnull != URL_s->fe_data)) { 
+    pConn = (nsConnectionInfo *)URL_s->fe_data; 
+  } 
+
+  // create an object that calls Resume() XXX
+  rv = nsComponentManager::CreateInstance(kProtocolHelperCID, nsnull, kIBlockingNotificationIID, (void**)&caller); 
+  if (NS_FAILED(rv)) {
+    return FALSE;
+  }
+  // build an nsIURL
+  rv = NS_NewURL(&base, URL_s->address);
+  if (NS_FAILED(rv)) {
+    return FALSE;
+  }
+
+  rv = nsComponentManager::CreateInstance(kProtocolHelperCID, nsnull, kIBlockingNotificationObserverIID, (void**)&helper); 
+  if (NS_SUCCEEDED(rv)) { 
+    rv = helper->Notify(caller, base, pConn->mRequestingThread, 0, closure); 
+    NS_RELEASE(helper); 
+  } else {
+    return FALSE;
+  }
+  *username = nsnull; 
+  *password = nsnull; 
+
+  // XXX we can't return TRUE anymore, since the ProtocolHelper is
+  // is still waiting for the user ...
+  // return TRUE; 
+
+  return FALSE;
+}
+#endif /* 0 */
+
+
+PRIVATE XP_Bool _stub_PromptUsernameAndPassword(MWContext *context,
                                const char *msg,
                                char **username,
-                               char **password)
+                               char **password,
+                               void *closure)
 {
   nsINetSupport *ins;
   XP_Bool bResult = FALSE;
     
+#if 0
   if (nsnull != (ins = getNetSupport(context->modular_data))) {
     nsAutoString str(msg);
     nsAutoString userStr(*username);
@@ -225,27 +360,37 @@ stub_PromptUsernameAndPassword(MWContext *context,
 
   } 
   /* No nsINetSupport interface... */
-  else {
+  else
+#endif /* 0 */
+ {
+    NET_AuthClosure *auth_closure = (NET_AuthClosure *) closure;
     char buf[256];
+    char *tmp_user = *username;
+    char *tmp_pass = *password;
 
     printf("%s\n", msg);
-    printf("%cUser (default=%s): ", '\007', *username);
+    printf("%cUser (default=%s): ", '\007', tmp_user);
     fgets(buf, sizeof buf, stdin);
     if (strlen(buf)) {
-      *username = PL_strdup(buf);
+      tmp_user = PL_strdup(buf);
+      tmp_user[strlen(tmp_user)-1] = '\0';
     }
 
-    printf("%cPassword (default=%s): ", '\007', *password);
+    printf("%cPassword (default=%s): ", '\007', tmp_pass);
     fgets(buf, sizeof buf, stdin);
     if (strlen(buf)) {
-      *password = PL_strdup(buf);
+      tmp_pass = PL_strdup(buf);
+      tmp_pass[strlen(tmp_pass)-1] = '\0';
     }
 
-    if (**username) {
-       bResult = TRUE;
+    if (tmp_user) {
+        bResult = FALSE; /* XXX false because the callback will finalize */
+       auth_closure->user = tmp_user;
+       auth_closure->pass = tmp_pass;
+       NET_ResumeWithAuth (closure);
     } else {
-      PR_FREEIF(*username);
-      PR_FREEIF(*password);
+      PR_FREEIF(tmp_user);
+      PR_FREEIF(tmp_pass);
     }
   }
 
@@ -282,6 +427,18 @@ char *stub_PromptPassword(MWContext *context,
   }
 
   return result;
+}
+
+extern "C" XP_Bool
+stub_PromptUsernameAndPassword(MWContext *context, 
+                               const char *msg, 
+                               char **username, 
+                               char **password,
+                               void *closure)
+{
+  return _stub_PromptUsernameAndPassword(context, msg,
+                                        username, password,
+                                        closure);
 }
 
 PRIVATE void stub_GraphProgressInit(MWContext  *context, 
@@ -660,7 +817,7 @@ unsigned int stub_is_write_ready(NET_StreamClass *stream)
 {
     nsresult errorCode;
     PRUint32 free_space = 0;
-    URL_Struct *URL_s = (URL_Struct *)stream->data_object;
+    /* URL_Struct *URL_s = (URL_Struct *)stream->data_object; */
     nsConnectionInfo *pConn = GetConnectionInfoFromStream(stream);
 
     errorCode = pConn->pNetStream->GetAvailableSpace(&free_space);
@@ -696,7 +853,6 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
                       MWContext   *context)
 {
     NET_StreamClass *stream = NULL;
-    PRBool bSuccess = PR_TRUE;
 
     /* 
      * Only create a stream if an nsConnectionInfo object is 

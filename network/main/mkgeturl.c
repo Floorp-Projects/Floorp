@@ -3143,6 +3143,53 @@ redo_load_switch:   /* come here on file/ftp retry */
 #endif
 }
 
+/* forward declaration */
+PUBLIC void NET_ResumeHTTP (ActiveEntry *, PRBool);
+
+
+/* this thing is a hack that will allow http streams
+   waiting on passwd auth to resume XXX */
+PUBLIC void NET_ResumeWithAuth (void *closure)
+{
+    XP_List * iter = NULL;
+    ActiveEntry * tmpEntry = NULL;
+    NET_AuthClosure *auth_closure = (char *) closure;
+
+    /* check to see if our entry is in the list */
+    if (XP_ListIsEmpty(net_EntryList)) {
+      TRACEMSG (("NET_ResumeWithAuth: no list! we're busted ..."));
+      return;
+    }
+    iter = net_EntryList;
+
+    while (tmpEntry = (ActiveEntry *) XP_ListNextObject(iter)) {
+      if (tmpEntry == (ActiveEntry *) auth_closure->_private) {
+        break;
+      } else {
+        return;
+      }
+    }
+
+    if (auth_closure && auth_closure->pass && *auth_closure->pass) {
+
+      TRACEMSG (("NET_ResumeWithAuth: auth succeeded: %s", tmpEntry->URL_s->address));
+      /* now update the user/pass */
+      tmpEntry->URL_s->username = PL_strdup (auth_closure->user);
+      tmpEntry->URL_s->password = PL_strdup (auth_closure->pass);
+
+      /* now try it again */
+      NET_ResumeHTTP(tmpEntry, PR_TRUE);
+
+    } else {
+      TRACEMSG (("NET_ResumeWithAuth(): auth failed: %s", tmpEntry->URL_s->address));
+      NET_ResumeHTTP(tmpEntry, PR_FALSE);
+    }
+
+    /* now free the closure struct */
+    PR_Free(auth_closure);
+    return;
+}
+
 /* process_net is called from the client's main event loop and
  * causes connections to be read and processed.  Multiple
  * connections can be processed simultaneously.
@@ -3461,7 +3508,7 @@ PUBLIC int NET_ProcessNet (PRFileDesc *ready_fd,  int fd_type) {
                 PR_Free(tmpEntry);  /* free the now non active entry */
 
             } /* end if  rv < 0 */
-
+            
             TRACEMSG(("Leaving process net with %d items in list",
                         XP_ListCount(net_EntryList)));
 
