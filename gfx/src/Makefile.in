@@ -41,7 +41,7 @@ DIRS		+= xprint
 endif
 
 # Build xlibrgb only for X toolkits
-ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter motif xlib,$(MOZ_WIDGET_TOOLKIT))$(MOZ_ENABLE_XLIB))
 DIRS		+= xlibrgb
 endif
 
@@ -59,7 +59,7 @@ ifdef MOZ_ENABLE_QT
 DIRS		+= qt
 endif
 ifdef MOZ_ENABLE_XLIB
-DIRS		+= xlibrgb xlib
+DIRS		+= xlib
 endif
 
 ifdef MOZ_ENABLE_PHOTON
