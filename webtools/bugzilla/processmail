@@ -327,7 +327,7 @@ sub ProcessOneBug {
 
         push(@reasons, 'AssignedTo') if lsearch(\@assigned_toList, $person) != -1;
         push(@reasons, 'Reporter') if lsearch(\@reporterList, $person) != -1;
-        push(@reasons, 'QAContact') if lsearch(\@qa_contactList, $person) != -1;
+        push(@reasons, 'QAcontact') if lsearch(\@qa_contactList, $person) != -1;
         push(@reasons, 'CC') if lsearch(\@ccList, $person) != -1;
         push(@reasons, 'Voter') if lsearch(\@voterList, $person) != -1;
 
@@ -478,10 +478,10 @@ sub getEmailAttributes (\%\@$) {
         # to the Owner, QA, CC, etc. fields.  It does not effect
         # the @flags array at all, but is run here because it does
         # effect filtering later and we're already in the loop.
-        if ($fieldName eq 'Owner') {
+        if ($fieldName eq 'AssignedTo') {
             push (@{$force{'Owner'}}, $new);
         } elsif ($fieldName eq 'QAContact') {
-           push (@{$force{'QAContact'}}, $new);
+           push (@{$force{'QAcontact'}}, $new);
         } elsif ($fieldName eq 'CC') {
             my @added = split (/[ ,]/, $new);
             push (@{$force{'CClist'}}, @added);
@@ -766,7 +766,7 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
                 $reasonsbody .= "You are the assignee for the bug, or are watching the assignee.\n";
             } elsif ($reason eq 'Reporter') {
                 $reasonsbody .= "You reported the bug, or are watching the reporter.\n";
-            } elsif ($reason eq 'QAContact') {
+            } elsif ($reason eq 'QAcontact') {
                 $reasonsbody .= "You are the QA contact for the bug, or are watching the QA contact.\n";
             } elsif ($reason eq 'CC') {
                 $reasonsbody .= "You are on the CC list for the bug, or are watching someone who is.\n";
