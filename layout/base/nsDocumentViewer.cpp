@@ -219,7 +219,7 @@ static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
 #ifdef NS_DEBUG
 // PR_LOGGING is force to always be on (even in release builds)
 // but we only want some of it on,
-//#define EXTENDED_DEBUG_PRINTING 
+#define EXTENDED_DEBUG_PRINTING 
 #endif
 
 #define DUMP_LAYOUT_LEVEL 9 // this turns on the dumping of each doucment's layout info
@@ -443,7 +443,7 @@ protected:
 
 #ifdef NS_PRINTING
   nsPrintEngine*        mPrintEngine;
-
+  PRBool                mClosingWhilePrinting;
 #if NS_PRINT_PREVIEW
   // These data member support delayed printing when the document is loading
   nsCOMPtr<nsIPrintSettings>       mCachedPrintSettings;
@@ -512,6 +512,7 @@ void DocumentViewerImpl::PrepareToStartLoad()
 #ifdef NS_PRINTING
   mPrintIsPending        = PR_FALSE;
   mPrintDocIsFullyLoaded = PR_FALSE;
+  mClosingWhilePrinting  = PR_FALSE;
 
   // Make sure we have destroyed it and cleared the data member
   if (mPrintEngine) {
@@ -1059,8 +1060,21 @@ DocumentViewerImpl::Close()
       globalObject->SetNewDocument(nsnull, PR_TRUE, PR_TRUE);
     }
 
-    // out of band cleanup of webshell
+#ifdef NS_PRINTING
+    // A Close was called while we were printing
+    // so don't clear the ScriptGlobalObject
+    // or clear the mDocument below
+    // Also, do an extra addref to keep the viewer from going away.
+    if (mPrintEngine && !mClosingWhilePrinting) {
+      mClosingWhilePrinting = PR_TRUE;
+      NS_ADDREF_THIS();
+    } else {
+      // out of band cleanup of webshell
+      mDocument->SetScriptGlobalObject(nsnull);
+    }
+#else
     mDocument->SetScriptGlobalObject(nsnull);
+#endif
 
     if (mFocusListener) {
       // get the DOM event receiver
@@ -1074,7 +1088,14 @@ DocumentViewerImpl::Close()
     }
   }
 
-  mDocument = nsnull;
+#ifdef NS_PRINTING
+  // Don't clear the document if we are printing.
+  if (!mClosingWhilePrinting) {
+    mDocument = nsnull;
+  }
+#else
+    mDocument = nsnull;
+#endif
 
   return NS_OK;
 }
@@ -3791,6 +3812,16 @@ DocumentViewerImpl::OnDonePrinting()
     } else {
       mPrintEngine->Destroy();
       NS_RELEASE(mPrintEngine);
+    }
+
+    // We are done printing, now cleanup 
+    if (mClosingWhilePrinting) {
+      if (mDocument) {
+        mDocument->SetScriptGlobalObject(nsnull);
+        mDocument = nsnull;
+      }
+      mClosingWhilePrinting = PR_FALSE;
+      NS_RELEASE_THIS();
     }
   }
 #endif // NS_PRINTING && NS_PRINT_PREVIEW
