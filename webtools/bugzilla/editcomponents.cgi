@@ -397,14 +397,8 @@ if ($action eq 'new') {
         PutTrailer($localtrailer);
         exit;
     }
-    #+++
 
     my $initialqacontact = trim($::FORM{initialqacontact} || '');
-	#
-	# Now validating to make sure it's too an existing account
-	#
-	DBNameToIdAndCheck($initialqacontact);
-
     if (Param('useqacontact')) {
         if ($initialqacontact eq '') {
             print "You must enter an initial QA contact for the component '$component'. Please press\n";
@@ -412,8 +406,10 @@ if ($action eq 'new') {
             PutTrailer($localtrailer);
             exit;
         }
-        #+++
-        #DBNameToIdAndCheck($initialqacontact, 0);
+	#
+	# Now validating to make sure it's too an existing account
+	#
+	DBNameToIdAndCheck($initialqacontact);
     }
 
     # Add the new component
