@@ -1,0 +1,73 @@
+
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML 2.0//EN">
+<HTML>
+<HEAD>
+
+<TITLE>MRJ In A Box</TITLE>
+
+
+</HEAD>
+<BODY>
+<H2>What is MRJ In A Box?</H2>
+
+Makes a Java applet run with an embed tag.<P>
+
+<HR>
+
+<SCRIPT LANGUAGE="JavaScript">
+function emit(text)
+{
+	document.write(text, "<P>");
+}
+
+function embed(props)
+{
+	document.write("<EMBED ");
+	document.write(props);
+	document.write(">");
+}
+
+function prop(name, value)
+{
+	return (' ' + name + '=' + '"' + value + '"');
+}
+
+var url = window.location;
+var path = url.pathname;
+var href = url.href;
+var codebase = href.substring(0, href.lastIndexOf("/") + 1);
+
+emit("My URL is: " + url);
+emit("My path is: " + path);
+emit("My codebase is: " + codebase);
+
+embed(	prop("TYPE", "application/x-java-vm") +
+		prop("NAME", "TrivialApplet") +
+		prop("BORDER", "5") +
+		prop("WIDTH", "200") +
+		prop("HEIGHT", "200") +
+		prop("CODEBASE", codebase) +
+		prop("ARCHIVE", "AppletClasses.jar") +
+		prop("CODE", "TrivialApplet.class") +
+		prop("URL", "http://home.netscape.com")
+	 );
+</SCRIPT>
+
+<BR>
+
+<!--
+You can use these buttons to communicate with the LivePict plugin, to change the picture.<P>
+<CENTER>
+<form>
+<input	type=button
+		onclick="document.javaPlug.SetLocation('light.pict');"
+		value="Light Bulb">
+<input	type=button
+		onclick="document.javaPlug.SetLocation('moon.pict');"
+		value="Moon">
+</form>
+</CENTER>
+-->
+
+</BODY>
+</HTML>
