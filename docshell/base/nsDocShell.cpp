@@ -125,6 +125,8 @@
 // for embedding
 #include "nsIWebBrowserChromeFocus.h"
 
+#include "nsPluginError.h"
+
 static NS_DEFINE_IID(kDeviceContextCID, NS_DEVICE_CONTEXT_CID);
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kDocumentCharsetInfoCID, NS_DOCUMENTCHARSETINFO_CID);
@@ -4183,14 +4185,15 @@ nsDocShell::NewContentViewerObj(const char *aContentType,
         docLoaderFactory(do_CreateInstance(contractId.get()));
     if (!docLoaderFactory) {
         // try again after loading plugins
-        nsresult err;
-        nsCOMPtr<nsIPluginHost> pluginHost = 
-                 do_GetService(kPluginManagerCID, &err);
-
-        if (NS_FAILED(err))
+        nsCOMPtr<nsIPluginManager> pluginManager = do_GetService(kPluginManagerCID);
+        if (!pluginManager)
             return NS_ERROR_FAILURE;
 
-        pluginHost->LoadPlugins();
+        // no need to do anything if plugins have not been changed
+        // PR_FALSE will ensure that currently running plugins will not be shut down
+        // but the plugin list will still be updated with newly installed plugins
+        if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == pluginManager->ReloadPlugins(PR_FALSE))
+            return NS_ERROR_FAILURE;
 
         docLoaderFactory = do_CreateInstance(contractId.get());
 
