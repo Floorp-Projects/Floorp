@@ -235,7 +235,7 @@ private:
   void GetContentOf(nsIBox* aBox, nsIContent** aContent);
 
   void PageUpDown(nsIFrame* aThumbFrame, nscoord change);
-  void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos);
+  void SetCurrentPosition(nsIContent* scrollbar, nsIFrame* aThumbFrame, nscoord pos, PRBool aIsSmooth);
   NS_IMETHOD DragThumb(nsIPresContext* aPresContext, PRBool aGrabMouseEvents);
   void AddListener();
   void RemoveListener();
