@@ -7,21 +7,32 @@ viewer=$MOZILLA_FIVE_HOME/viewer
 echo viewer: $viewer
 testsfile=/tmp/$$-tests.txt
 
-sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list.txt > $testsfile
-sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list2.txt >> $testsfile
-sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list3.txt >> $testsfile
-sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list4.txt >> $testsfile
-sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list5.txt >> $testsfile
-sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list6.txt >> $testsfile
-
 if test "$1"x = "baselinex"; then
   rm -r -f baseline
   mkdir baseline
-  $viewer -d 1 -o baseline/ -f $testsfile
+  for i in 1 2 3 4 5 6; do
+    if test -f file_list"$i".txt; then 
+      sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list"$i".txt > $testsfile
+      $viewer -d 1 -o baseline/ -f $testsfile
+    fi
+  done
+  if test -f file_list_printing.txt; then 
+    sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list_printing.txt > $testsfile
+    $viewer -Prt 1 -d 5 -o baseline/ -f $testsfile
+  fi
 elif test "$1"x = "verifyx"; then
   rm -r -f verify
   mkdir verify
-  $viewer -d 1 -o verify/ -rd baseline/ -f $testsfile
+  for i in 1 2 3 4 5 6; do
+    if test -f file_list"$i".txt; then 
+      sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list"$i".txt > $testsfile
+      $viewer -d 1 -o verify/ -rd baseline/ -f $testsfile
+    fi
+  done
+  if test -f file_list_printing.txt; then 
+    sed -e "s@file:///s|@file:$MOZ_SRC@" < file_list"$i".txt > $testsfile
+    $viewer -Prt 1 -d 5 -o verify/ -rd baseline/ -f $testsfile
+  fi
 elif test "$1"x = "cleanx"; then
   rm -r -f verify baseline  
 else
