@@ -1370,6 +1370,7 @@ backtrace(int skip)
 typedef struct allocation {
     PLHashEntry entry;
     size_t      size;
+    FILE        *trackfp;       /* for allocation tracking */
 } allocation;
 
 #define ALLOC_HEAP_SIZE 150000
@@ -1409,7 +1410,7 @@ static void alloc_freeentry(void *pool, PLHashEntry *he, PRUintn flag)
     if (flag != HT_FREE_ENTRY)
         return;
     alloc = (allocation*) he;
-    if (&alloc_heap[0] <= alloc && alloc < &alloc_heap[ALLOC_HEAP_SIZE]) {
+    if ((PRUptrdiff)(alloc - alloc_heap) < (PRUptrdiff)ALLOC_HEAP_SIZE) {
         alloc->entry.next = &alloc_freelist->entry;
         alloc_freelist = alloc;
     } else {
@@ -1469,6 +1470,7 @@ __ptr_t malloc(size_t size)
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
+                alloc->trackfp = NULL;
             }
         }
     }
@@ -1494,10 +1496,11 @@ __ptr_t calloc(size_t count, size_t size)
     } else if (suppress_tracing == 0) {
         site = backtrace(1);
         size *= count;
-        if (site)
+        if (site) {
             log_event5(logfp, TM_EVENT_CALLOC,
                        site->serial, start, end - start,
                        (uint32)NS_PTR_TO_INT32(ptr), size);
+        }
         if (get_allocations()) {
             suppress_tracing++;
             he = PL_HashTableAdd(allocations, ptr, site);
@@ -1505,6 +1508,7 @@ __ptr_t calloc(size_t count, size_t size)
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
+                alloc->trackfp = NULL;
             }
         }
     }
@@ -1521,6 +1525,7 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
     PLHashNumber hash;
     PLHashEntry **hep, *he;
     allocation *alloc;
+    FILE *trackfp = NULL;
 
     TM_ENTER_MONITOR();
     tmstats.realloc_calls++;
@@ -1537,6 +1542,13 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
                 oldsite = (callsite*) he->value;
                 alloc = (allocation*) he;
                 oldsize = alloc->size;
+                trackfp = alloc->trackfp;
+                if (trackfp) {
+                    fprintf(alloc->trackfp,
+                            "\nrealloc(%p, %u), oldsize %u, alloc site %p\n",
+                            (void*) ptr, size, oldsize, (void*) oldsite);
+                    NS_TraceStack(1, trackfp);
+                }
             }
         }
     }
@@ -1587,6 +1599,7 @@ __ptr_t realloc(__ptr_t ptr, size_t size)
             if (he) {
                 alloc = (allocation*) he;
                 alloc->size = size;
+                alloc->trackfp = trackfp;
             }
         }
     }
@@ -1616,6 +1629,11 @@ void free(__ptr_t ptr)
                     alloc = (allocation*) he;
                     serial = site->serial;
                     size = alloc->size;
+                    if (alloc->trackfp) {
+                        fprintf(alloc->trackfp, "\nfree(%p), alloc site %p\n",
+                                (void*) ptr, (void*) site);
+                        NS_TraceStack(1, alloc->trackfp);
+                    }
                 }
                 PL_HashTableRawRemove(allocations, hep, he);
             }
@@ -2057,6 +2075,29 @@ NS_TraceMallocFlushLogfiles()
     for (fp = logfile_list; fp; fp = fp->next)
         flush_logfile(fp);
 
+    TM_EXIT_MONITOR();
+}
+
+PR_IMPLEMENT(void)
+NS_TrackAllocation(__ptr_t ptr, FILE *ofp)
+{
+    PLHashEntry **hep;
+    allocation *alloc;
+
+    fprintf(ofp, "Trying to track %p\n", (void*) ptr);
+    setlinebuf(ofp);
+
+    TM_ENTER_MONITOR();
+    if (get_allocations()) {
+        hep = PL_HashTableRawLookup(allocations, hash_pointer(ptr), ptr);
+        alloc = (allocation*) *hep;
+        if (alloc) {
+            fprintf(ofp, "Tracking %p\n", (void*) ptr);
+            alloc->trackfp = ofp;
+        } else {
+            fprintf(ofp, "Not tracking %p\n", (void*) ptr);
+        }
+    }
     TM_EXIT_MONITOR();
 }
 
