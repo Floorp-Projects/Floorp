@@ -37,6 +37,7 @@
 #define POP3_PORT 110 // The IANA port for Pop3
 
 #define PREF_MAIL_ROOT_POP3 "mail.root.pop3"
+#define PREF_MAIL_ROOT_NONE "mail.root.none"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
@@ -279,7 +280,16 @@ nsPop3Service::SetDefaultLocalPath(nsIFileSpec *aPath)
     NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
+    // there is no nsNoService, so in the MsgLocalFactory, we 
+    // registered the nsPop3Service with both 
+    // "component://netscape/messenger/protocol/info;type=none"
+    // "component://netscape/messenger/protocol/info;type=pop3"
+    // on disk, both roots should bpoint to <profile>/Mail
+    // so we set both here to the save place
     rv = prefs->SetFilePref(PREF_MAIL_ROOT_POP3, aPath, PR_FALSE /* set default */);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = prefs->SetFilePref(PREF_MAIL_ROOT_NONE, aPath, PR_FALSE /* set default */);
     return rv;
 }     
 
