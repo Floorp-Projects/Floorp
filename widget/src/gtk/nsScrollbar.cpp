@@ -42,6 +42,7 @@ nsScrollbar::nsScrollbar (PRBool aIsVertical):nsWidget (), nsIScrollbar ()
 
   mOrientation = (aIsVertical) ?
     GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
+  mAdjustment = nsnull;
 }
 
 //-------------------------------------------------------------------------
