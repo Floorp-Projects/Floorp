@@ -63,6 +63,12 @@ pref("browser.anchor_color",                "#0000EE");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
 
+pref("browser.display.use_focus_colors",    false);
+pref("browser.display.focus_background_color", "#117722");
+pref("browser.display.focus_text_color",     "#ffffff");
+pref("browser.display.focus_ring_width",     1);
+pref("browser.display.focus_ring_on_anything", false);
+
 pref("browser.chrome.toolbar_tips",         true);
 pref("browser.chrome.toolbar_style",        2);
 

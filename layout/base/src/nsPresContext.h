@@ -119,6 +119,11 @@ public:
   NS_IMETHOD GetDefaultLinkColor(nscolor* aColor);
   NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor);
 
+  NS_IMETHOD GetFocusBackgroundColor(nscolor* aColor);
+  NS_IMETHOD GetFocusTextColor(nscolor* aColor);
+  NS_IMETHOD GetUseFocusColors(PRBool& useFocusColors);
+  NS_IMETHOD GetFocusRingWidth(PRUint8 *focusRingWidth);
+  NS_IMETHOD GetFocusRingOnAnything(PRBool& focusRingOnAnything);
   NS_IMETHOD SetDefaultColor(nscolor aColor);
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor);
   NS_IMETHOD SetDefaultBackgroundImage(const nsString& aImage);
@@ -221,6 +226,11 @@ protected:
   nscolor               mLinkColor;               // set in GetUserPrefs
   nscolor               mVisitedLinkColor;        // set in GetUserPrefs
   PRPackedBool          mUnderlineLinks;          // set in GetUserPrefs
+  PRPackedBool          mUseFocusColors;          // set in GetUserPrefs
+  nscolor               mFocusTextColor;          // set in GetUserPrefs
+  nscolor               mFocusBackgroundColor;    // set in GetUserPrefs
+  PRUint8               mFocusRingWidth;          // set in GetUserPrefs
+  PRPackedBool          mFocusRingOnAnything;     // set in GetUserPrefs
   nsString              mDefaultBackgroundImage;
   PRUint8               mDefaultBackgroundImageRepeat;
   nscoord               mDefaultBackgroundImageOffsetX;
