@@ -76,6 +76,7 @@ extern "C" int statfs(char *, struct statfs *);
 #define STATFS statfs
 #elif defined(BSDI)
 #include <sys/mount.h>    /* for statfs() */
+#define STATFS statfs
 #elif defined(NETBSD)
 #include <sys/mount.h>    /* for statfs() */
 #define STATFS statfs
