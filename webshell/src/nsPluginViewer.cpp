@@ -69,10 +69,10 @@ public:
   nsIStreamListener* mNextStream;
 };
 
-class nsPluginInstanceOwner : public nsIPluginInstanceOwner {
+class pluginInstanceOwner : public nsIPluginInstanceOwner {
 public:
-  nsPluginInstanceOwner();
-  ~nsPluginInstanceOwner();
+  pluginInstanceOwner();
+  ~pluginInstanceOwner();
 
   NS_DECL_ISUPPORTS
 
@@ -154,7 +154,7 @@ public:
   nsIContentViewerContainer* mContainer;
   nsIURL* mURL;
   nsString mContentType;
-  nsPluginInstanceOwner *mOwner;
+  pluginInstanceOwner *mOwner;
 };
 
 //----------------------------------------------------------------------
@@ -258,7 +258,7 @@ PluginViewerImpl::Init(nsNativeWidget aNativeParent,
 {
   nsresult rv = MakeWindow(aNativeParent, aDeviceContext, aBounds);
   if (NS_OK == rv) {
-    mOwner = new nsPluginInstanceOwner();
+    mOwner = new pluginInstanceOwner();
     if (nsnull != mOwner) {
       NS_ADDREF(mOwner);
       rv = mOwner->Init(this, mWindow);
@@ -519,7 +519,7 @@ PluginListener::OnDataAvailable(nsIURL* aURL, nsIInputStream* aStream,
 
 //----------------------------------------------------------------------
 
-nsPluginInstanceOwner :: nsPluginInstanceOwner()
+pluginInstanceOwner :: pluginInstanceOwner()
 {
   memset(&mPluginWindow, 0, sizeof(mPluginWindow));
   mInstance = nsnull;
@@ -527,7 +527,7 @@ nsPluginInstanceOwner :: nsPluginInstanceOwner()
   mViewer = nsnull;
 }
 
-nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
+pluginInstanceOwner :: ~pluginInstanceOwner()
 {
   if (nsnull != mInstance)
   {
@@ -540,9 +540,9 @@ nsPluginInstanceOwner :: ~nsPluginInstanceOwner()
   mViewer = nsnull;
 }
 
-NS_IMPL_ISUPPORTS(nsPluginInstanceOwner, kIPluginInstanceOwnerIID)
+NS_IMPL_ISUPPORTS(pluginInstanceOwner, kIPluginInstanceOwnerIID)
 
-NS_IMETHODIMP nsPluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
+NS_IMETHODIMP pluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
 {
   NS_IF_RELEASE(mInstance);
   mInstance = aInstance;
@@ -551,7 +551,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: SetInstance(nsIPluginInstance *aInstance)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
+NS_IMETHODIMP pluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance)
 {
   NS_IF_ADDREF(mInstance);
   aInstance = mInstance;
@@ -559,19 +559,19 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetInstance(nsIPluginInstance *&aInstance
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetWindow(nsPluginWindow *&aWindow)
+NS_IMETHODIMP pluginInstanceOwner :: GetWindow(nsPluginWindow *&aWindow)
 {
   aWindow = &mPluginWindow;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetMode(nsPluginMode *aMode)
+NS_IMETHODIMP pluginInstanceOwner :: GetMode(nsPluginMode *aMode)
 {
   *aMode = nsPluginMode_Full;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
+NS_IMETHODIMP pluginInstanceOwner :: CreateWidget(void)
 {
   PRBool    windowless;
 
@@ -598,7 +598,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: CreateWidget(void)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData)
+NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarget, void *aPostData)
 {
   nsresult  rv;
 
@@ -648,7 +648,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: GetURL(const char *aURL, const char *aTar
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
+NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
 {
   nsresult  rv = NS_ERROR_FAILURE;
 
@@ -704,7 +704,7 @@ NS_IMETHODIMP nsPluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
   return rv;
 }
 
-NS_IMETHODIMP nsPluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *aWindow)
+NS_IMETHODIMP pluginInstanceOwner :: Init(PluginViewerImpl *aViewer, nsIWidget *aWindow)
 {
   //do not addref
   mWindow = aWindow;

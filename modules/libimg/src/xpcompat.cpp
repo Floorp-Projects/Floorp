@@ -41,6 +41,7 @@ extern ilISystemServices *il_ss;
 #include <limits.h>
 #endif /* XP_PC */
 
+#ifndef XP_MAC
 PR_BEGIN_EXTERN_C
 int MK_UNABLE_TO_LOCATE_FILE = -1;
 int MK_OUT_OF_MEMORY = -2;
@@ -67,6 +68,7 @@ int XP_MSG_COMMENT = -25;
 int XP_MSG_UNKNOWN = -26;	
 int XP_MSG_COMPRESS_REMOVE = -27;	
 PR_END_EXTERN_C
+#endif /* XP_MAC */
 
 char *XP_GetString(int i)
 {
@@ -370,6 +372,7 @@ static void  swap (
 
 /*	Allocate a new copy of a block of binary data, and returns it
  */
+#ifndef XP_MAC
 char * 
 NET_BACopy (char **destination, const char *source, size_t length)
 {
@@ -392,6 +395,7 @@ NET_BACopy (char **destination, const char *source, size_t length)
       }
     return *destination;
 }
+#endif /* XP_MAC */ 
 
 /*	binary block Allocate and Concatenate
  *
@@ -399,6 +403,7 @@ NET_BACopy (char **destination, const char *source, size_t length)
  *   source_length   is the length of the block being added to the 
  *   destination block
  */
+#ifndef XP_MAC
 char * 
 NET_BACat (char **destination, 
 		   size_t destination_length, 
@@ -428,9 +433,11 @@ NET_BACat (char **destination,
 
   return *destination;
 }
+#endif /* XP_MAC */ 
 
 /*	Very similar to strdup except it free's too
  */
+#ifndef XP_MAC
 char * 
 NET_SACopy (char **destination, const char *source)
 {
@@ -453,9 +460,11 @@ NET_SACopy (char **destination, const char *source)
       }
     return *destination;
 }
+#endif /* XP_MAC */ 
 
 /*  Again like strdup but it concatinates and free's and uses Realloc
 */
+#ifndef XP_MAC
 char *
 NET_SACat (char **destination, const char *source)
 {
@@ -481,6 +490,7 @@ NET_SACat (char **destination, const char *source)
       }
     return *destination;
 }
+#endif /* XP_MAC */ 
 
 #if 0
 #include <windows.h>
