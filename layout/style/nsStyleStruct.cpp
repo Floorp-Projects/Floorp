@@ -1242,6 +1242,8 @@ nsStyleQuotes::~nsStyleQuotes(void)
 }
 
 nsStyleQuotes::nsStyleQuotes(const nsStyleQuotes& aSource)
+  : mQuotesCount(0),
+    mQuotes(nsnull)
 {
   if (NS_SUCCEEDED(AllocateQuotes(aSource.QuotesCount()))) {
     PRUint32 count = (mQuotesCount * 2);
