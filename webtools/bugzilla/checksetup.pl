@@ -1753,14 +1753,9 @@ if ( CountIndexes('keywords') != 3 ) {
 # initially. It's executed if the table is empty; if it's empty because there
 # are no dupes (as opposed to having just created the table) it won't have
 # any effect anyway, so it doesn't matter.
-
-# This should give us the number of populated rows but seems to return "5"
-# all the time <shrug>
-$dbh->prepare("SELECT * FROM duplicates");
+$sth = $dbh->prepare("SELECT count(*) from duplicates");
 $sth->execute();
-
-if ($sth->fetchrow_array() == 5)
-{
+if (!($sth->fetchrow_arrayref()->[0])) {
 	# populate table
 	print("Populating duplicates table...\n");
 	
@@ -1787,6 +1782,18 @@ if ($sth->fetchrow_array() == 5)
 	
 	$::regenerateshadow = 1;
 }
+
+# 2000-12-14 New graphing system requires a directory to put the graphs in
+# How do we make the new directory owned by the webserver's group? Until 
+# we find out, make it 0777.
+unless (-d 'graphs') {
+    print "Creating graphs directory ...\n";
+    mkdir 'graphs', 0777;   # was 0770 in the code (above) I pinched this from
+    if ($::webservergroup eq "") {
+        chmod 0777, 'graphs';
+    }
+}
+
 
 #
 # If you had to change the --TABLE-- definition in any way, then add your
