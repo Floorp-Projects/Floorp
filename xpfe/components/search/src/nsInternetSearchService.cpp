@@ -1916,6 +1916,18 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		// XXX: Null LoadGroup ?
 		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull)))
 		{
+
+			// send a "MultiSearch" header
+			nsCOMPtr<nsIHTTPChannel>	httpMultiChannel = do_QueryInterface(channel);
+			if (httpMultiChannel)
+			{
+				nsCOMPtr<nsIAtom>	multiSearchAtom = getter_AddRefs(NS_NewAtom("MultiSearch"));
+				if (multiSearchAtom)
+				{
+					httpMultiChannel->SetRequestHeader(multiSearchAtom, "true");
+				}
+			}
+
 			if (method.EqualsIgnoreCase("post"))
 			{
 				nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
