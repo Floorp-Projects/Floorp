@@ -78,7 +78,7 @@ nsBaseWidget::nsBaseWidget() :
     mAppShell      = nsnull;
     mMouseListener = nsnull;
     mEventListener = nsnull;
-    /*mMenuListener  = nsnull;*/
+    mMenuListener  = nsnull;
     mClientData    = nsnull;
     mContext       = nsnull;
     mCursor        = eCursor_standard;
@@ -601,14 +601,14 @@ NS_METHOD nsBaseWidget::AddEventListener(nsIEventListener * aListener)
 * Processes a menu event
 *
 **/
-/*
+
 NS_METHOD nsBaseWidget::AddMenuListener(nsIMenuListener * aListener)
 {
   NS_PRECONDITION(mMenuListener == nsnull, "Null menu listener");
   mMenuListener = aListener;
   return NS_OK;
 }
-*/
+
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
