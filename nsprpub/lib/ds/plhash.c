@@ -250,10 +250,6 @@ PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
     /* Grow the table if it is overloaded */
     n = NBUCKETS(ht);
     if (ht->nentries >= OVERLOADED(n)) {
-#ifdef HASHMETER
-        ht->ngrows++;
-#endif
-        ht->shift--;
         oldbuckets = ht->buckets;
 #if defined(WIN16)
         if (2 * n > 16000)
@@ -267,6 +263,10 @@ PL_HashTableRawAdd(PLHashTable *ht, PLHashEntry **hep,
             return 0;
         }
         memset(ht->buckets, 0, nb);
+#ifdef HASHMETER
+        ht->ngrows++;
+#endif
+        ht->shift--;
 
         for (i = 0; i < n; i++) {
             for (he = oldbuckets[i]; he; he = next) {
@@ -332,10 +332,6 @@ PL_HashTableRawRemove(PLHashTable *ht, PLHashEntry **hep, PLHashEntry *he)
     /* Shrink table if it's underloaded */
     n = NBUCKETS(ht);
     if (--ht->nentries < UNDERLOADED(n)) {
-#ifdef HASHMETER
-        ht->nshrinks++;
-#endif
-        ht->shift++;
         oldbuckets = ht->buckets;
         nb = n * sizeof(PLHashEntry*) / 2;
         ht->buckets = (PLHashEntry**)(
@@ -345,6 +341,10 @@ PL_HashTableRawRemove(PLHashTable *ht, PLHashEntry **hep, PLHashEntry *he)
             return;
         }
         memset(ht->buckets, 0, nb);
+#ifdef HASHMETER
+        ht->nshrinks++;
+#endif
+        ht->shift++;
 
         for (i = 0; i < n; i++) {
             for (he = oldbuckets[i]; he; he = next) {
