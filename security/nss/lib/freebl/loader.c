@@ -32,11 +32,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.c,v 1.3 2001/01/06 17:07:07 mcgreer%netscape.com Exp $
+ * $Id: loader.c,v 1.4 2001/01/24 05:26:16 wtc%netscape.com Exp $
  */
 
 #include "loader.h"
-#include "prlink.h"
+#include "prmem.h"
+#include "prerror.h"
 #include "prinit.h"
 
 #if defined(SOLARIS)
@@ -91,6 +92,152 @@ isHybrid(void)
 #error "code for this platform is missing."
 #endif
 
+/*
+ * On Solaris, if an application using libnss3.so is linked
+ * with the -R linker option, the -R search patch is only used
+ * to search for the direct dependencies of the application
+ * (such as libnss3.so) and is not used to search for the
+ * dependencies of libnss3.so.  So we build libnss3.so with
+ * the -R '$ORIGIN' linker option to instruct it to search for
+ * its dependencies (libfreebl_*.so) in the same directory
+ * where it resides.  This requires that libnss3.so, not
+ * libnspr4.so, be the shared library that calls dlopen().
+ * Therefore we have to duplicate the relevant code in the PR
+ * load library functions here.
+ */
+
+#if defined(SOLARIS)
+
+#include <dlfcn.h>
+
+typedef struct {
+    void *dlh;
+} BLLibrary;
+
+static BLLibrary *
+bl_LoadLibrary(const char *name)
+{
+    BLLibrary *lib;
+    const char *error;
+
+    lib = PR_NEWZAP(BLLibrary);
+    if (NULL == lib) {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+    lib->dlh = dlopen(name, RTLD_NOW | RTLD_LOCAL);
+    if (NULL == lib->dlh) {
+        PR_SetError(PR_LOAD_LIBRARY_ERROR, 0);
+        error = dlerror();
+        if (NULL != error)
+            PR_SetErrorText(strlen(error), error);
+        PR_Free(lib);
+        return NULL;
+    }
+    return lib;
+}
+
+static void *
+bl_FindSymbol(BLLibrary *lib, const char *name)
+{
+    void *f;
+    const char *error;
+
+    f = dlsym(lib->dlh, name);
+    if (NULL == f) {
+        PR_SetError(PR_FIND_SYMBOL_ERROR, 0);
+        error = dlerror();
+        if (NULL != error)
+            PR_SetErrorText(strlen(error), error);
+    }
+    return f;
+}
+
+static PRStatus
+bl_UnloadLibrary(BLLibrary *lib)
+{
+    const char *error;
+
+    if (dlclose(lib->dlh) == -1) {
+        PR_SetError(PR_UNLOAD_LIBRARY_ERROR, 0);
+        error = dlerror();
+        if (NULL != error)
+            PR_SetErrorText(strlen(error), error);
+        return PR_FAILURE;
+    }
+    PR_Free(lib);
+    return PR_SUCCESS;
+}
+
+#elif defined(HPUX)
+
+#include <dl.h>
+#include <string.h>
+#include <errno.h>
+
+typedef struct {
+    shl_t dlh;
+} BLLibrary;
+
+static BLLibrary *
+bl_LoadLibrary(const char *name)
+{
+    BLLibrary *lib;
+    const char *error;
+
+    lib = PR_NEWZAP(BLLibrary);
+    if (NULL == lib) {
+        PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+        return NULL;
+    }
+    lib->dlh = shl_load(name, DYNAMIC_PATH | BIND_IMMEDIATE, 0L);
+    if (NULL == lib->dlh) {
+        PR_SetError(PR_LOAD_LIBRARY_ERROR, errno);
+        error = strerror(errno);
+        if (NULL != error)
+            PR_SetErrorText(strlen(error), error);
+        PR_Free(lib);
+        return NULL;
+    }
+    return lib;
+}
+
+static void *
+bl_FindSymbol(BLLibrary *lib, const char *name)
+{
+    void *f;
+    const char *error;
+
+    if (shl_findsym(&lib->dlh, name, TYPE_PROCEDURE, &f) == -1) {
+        f = NULL;
+        PR_SetError(PR_FIND_SYMBOL_ERROR, errno);
+        error = strerror(errno);
+        if (NULL != error)
+            PR_SetErrorText(strlen(error), error);
+    }
+    return f;
+}
+
+static PRStatus
+bl_UnloadLibrary(BLLibrary *lib)
+{
+    const char *error;
+
+    if (shl_unload(lib->dlh) == -1) {
+        PR_SetError(PR_UNLOAD_LIBRARY_ERROR, errno);
+        error = strerror(errno);
+        if (NULL != error)
+            PR_SetErrorText(strlen(error), error);
+        return PR_FAILURE;
+    }
+    PR_Free(lib);
+    return PR_SUCCESS;
+}
+
+#else
+#error "code for this platform is missing."
+#endif
+
 #define LSB(x) ((x)&0xff)
 #define MSB(x) ((x)>>8)
 
@@ -102,11 +249,10 @@ static PRStatus
 freebl_LoadDSO( void ) 
 {
   int          hybrid   = isHybrid();
-  PRLibrary *  handle;
-  PRLibSpec    libSpec;
+  BLLibrary *  handle;
+  const char * name;
 
-  libSpec.type = PR_LibSpec_Pathname;
-  libSpec.value.pathname = hybrid ?
+  name = hybrid ?
 #if defined( AIX )
 	       "libfreebl_hybrid_3_shr.a" : "libfreebl_pure32_3_shr.a";
 #elif defined( HPUX )
@@ -115,9 +261,9 @@ freebl_LoadDSO( void )
                "libfreebl_hybrid_3.so"    : "libfreebl_pure32_3.so";
 #endif
 
-  handle = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW | PR_LD_LOCAL );
+  handle = bl_LoadLibrary(name);
   if (handle) {
-    void * address = PR_FindSymbol(handle, "FREEBL_GetVector");
+    void * address = bl_FindSymbol(handle, "FREEBL_GetVector");
     if (address) {
       FREEBLGetVectorFn  * getVector = (FREEBLGetVectorFn *)address;
       const FREEBLVector * dsoVector = getVector();
@@ -132,7 +278,7 @@ freebl_LoadDSO( void )
 	}
       }
     }
-    PR_UnloadLibrary(handle);
+    bl_UnloadLibrary(handle);
   }
   return PR_FAILURE;
 }
