@@ -25,6 +25,7 @@
 #include "nsIImgDCallbk.h"
 #include "nsMemory.h"
 #include "libmng.h"
+#include "prinrval.h"
 
 // Define this if you just want an RGB (no alpha) target
 //#define NO_ALPHA
