@@ -356,8 +356,8 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 	PRExplodedTime now;
-    PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
-	int gmtoffset = now.tm_params.tp_gmt_offset / 60; /*We need the offset in minute and not in second! */
+  PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &now);
+  int gmtoffset = (now.tm_params.tp_gmt_offset + now.tm_params.tp_dst_offset) / 60;
 
 	/* Use PR_FormatTimeUSEnglish() to format the date in US English format,
 	   then figure out what our local GMT offset is, and append it (since
