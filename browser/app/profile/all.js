@@ -278,8 +278,6 @@ pref("capability.policy.default.Window.window", "allAccess");
 
 // Scripts & Windows prefs
 pref("browser.block.target_new_window",     false);
-pref("dom.disable_cookie_get",              false);
-pref("dom.disable_cookie_set",              false);
 pref("dom.disable_image_src_set",           false);
 pref("dom.disable_open_during_load",        true);
 pref("dom.disable_window_flip",             false);
