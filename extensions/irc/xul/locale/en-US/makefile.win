@@ -25,6 +25,7 @@ CHROME_DIR=packages\chatzilla
 CHROME_L10N_DIR=chatzilla\locale
 
 CHROME_L10N = \
+        .\chatzilla.dtd \
 	.\chatzillaOverlay.dtd \
 	$(NULL)
 

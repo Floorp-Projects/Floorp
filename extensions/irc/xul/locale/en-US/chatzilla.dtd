@@ -1,0 +1,28 @@
+<!ENTITY op.value		"Op">
+<!ENTITY op.accesskey		"o">
+<!ENTITY deop.value		"Deop">
+<!ENTITY deop.accesskey		"d">
+<!ENTITY voice.value		"Voice">
+<!ENTITY voice.accesskey	"v">
+<!ENTITY devoice.value		"Devoice">
+<!ENTITY devoice.accesskey	"e">
+<!ENTITY kick.value		"Kick">
+<!ENTITY kick.accesskey		"k">
+<!ENTITY kick2.value		"Kick With Reason">
+<!ENTITY kick2.accesskey	"r">
+<!ENTITY whois.value		"Whois">
+<!ENTITY whois.accesskey	"w">
+
+<!ENTITY network.label		"Network">
+<!ENTITY channel.label		"Channel">
+<!ENTITY topicBy.label		"Topic By">
+<!ENTITY server.label		"Server">
+<!ENTITY mode.label		"Mode">
+<!ENTITY nickname.label		"Nickname">
+<!ENTITY topic.label		"Topic">
+<!ENTITY users.label		"Users">
+<!ENTITY lag.label		"Lag">
+<!ENTITY limit.label		"Limit">
+<!ENTITY lastPing.label		"Last Ping">
+<!ENTITY key.label		"Key">
+<!ENTITY network.label		"Network">

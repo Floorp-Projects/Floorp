@@ -23,9 +23,10 @@
  
   Contributor(s):
    Robert Ginda, rginda@ndcico.com, original author
+   Josh Soref, timeless@mac.com, international support
 -->
 
-<!DOCTYPE window>
+<!DOCTYPE window SYSTEM "chrome://chatzilla/locale/chatzilla.dtd">
 
 <?xml-stylesheet href="chrome://chatzilla/skin" type="text/css"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
@@ -39,29 +40,31 @@
         align="vertical" onload="onLoad();" onunload="onUnload();"
         persist="width height" windowtype="irc:chatzilla">
 
-<html:script src="chrome://chatzilla/content/lib/js/utils.js"/>
-<html:script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
-<html:script src="chrome://chatzilla/content/lib/js/events.js"/>
-<html:script src="chrome://chatzilla/content/lib/js/command-manager.js"/>
-<html:script src="chrome://chatzilla/content/lib/js/irc.js"/>
-<html:script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
-<html:script src="chrome://chatzilla/content/lib/xul/munger.js"/>
+<script src="chrome://chatzilla/content/lib/js/utils.js"/>
+<script src="chrome://chatzilla/content/lib/js/connection-xpcom.js"/>
+<script src="chrome://chatzilla/content/lib/js/events.js"/>
+<script src="chrome://chatzilla/content/lib/js/command-manager.js"/>
+<script src="chrome://chatzilla/content/lib/js/irc.js"/>
+<script src="chrome://chatzilla/content/lib/js/irc-debug.js"/>
+<script src="chrome://chatzilla/content/lib/xul/munger.js"/>
 
-<html:script src="chrome://chatzilla/content/commands.js"/>
-<html:script src="chrome://chatzilla/content/readprefs.js"/>
-<html:script src="chrome://chatzilla/content/static.js"/>
-<html:script src="chrome://chatzilla/content/handlers.js"/>
-<html:script src="chrome://chatzilla/content/rdf.js"/>
+<script src="chrome://chatzilla/content/commands.js"/>
+<script src="chrome://chatzilla/content/readprefs.js"/>
+<script src="chrome://chatzilla/content/static.js"/>
+<script src="chrome://chatzilla/content/handlers.js"/>
+<script src="chrome://chatzilla/content/rdf.js"/>
+
+<broadcasterset id="broadcasterset"/>
 
 <popupset>
 	<popup id="userlistPopup" onclick="onUserListPopupClick(event)">
-		<menuitem value="Op" code="/op" />
-		<menuitem value="Deop" code="/deop" />
-		<menuitem value="Voice" code="/voice" />
-		<menuitem value="Devoice" code="/devoice" />	
-		<menuitem value="Kick" code="/kick" />
-<!--		<menuitem value="Kick With Reason" code="/kick" /> -->	
-		<menuitem value="Whois" code="/whois" />
+		<menuitem value="&op.value;" accesskey="&op.accesskey;" code="/op" />
+		<menuitem value="&deop.value;" accesskey="&deop.accesskey;" code="/deop" />
+		<menuitem value="&voice.value;" accesskey="&voice.accesskey;" code="/voice" />
+		<menuitem value="&devoice.value;" accesskey="&devoice.accesskey;" code="/devoice" />	
+		<menuitem value="&kick.value;" accesskey="&kick.accesskey;" code="/kick" />
+<!--		<menuitem value="&kick2.value;" accesskey="&kick2.accesskey;" code="/kick" /> -->	
+		<menuitem value="&whois.value;" accesskey="&whois.accesskey;" code="/whois" />
 	</popup>
 </popupset>
 
@@ -180,26 +183,23 @@
           <treecell id="usercol-op"
             resource="http://home.netscape.com/NC-irc#op"
             class="treecell-header sortDirectionIndicator" value="O"
-            onclick="return onSortCol('usercol-op');"/>
+            oncommand="return onSortCol('usercol-op');"/>
           <treecell id="usercol-voice"
             resource="http://home.netscape.com/NC-irc#voice"
             class="treecell-header sortDirectionIndicator" value="V"
-            onclick="return onSortCol('usercol-voice');"/>
+            oncommand="return onSortCol('usercol-voice');"/>
           <treecell id="usercol-nick"
             resource="http://home.netscape.com/NC-irc#nick"
             class="treecell-header sortDirectionIndicator" value="Nick"
-            onclick="return onSortCol('usercol-nick');"/>
+            oncommand="return onSortCol('usercol-nick');"/>
         </treerow>
       </treehead>
     </tree>      
     </box>
     <splitter id="main-splitter" align="vertical" collapse="before"/>
     <box align="vertical" flex="60%">
-      <html:iframe id="it-doesnt-matter-anyway" class="output-container"
+      <iframe id="it-doesnt-matter-anyway" class="output-container"
        type="content" src="about:blank" flex="1"/>
-    <!--
-      <html:textarea id="input" class="input-window"/>
-    -->
       <textfield id="input" class="input-window"/>
     </box>
   </box>
@@ -209,9 +209,9 @@
   <toolbar id="status-bar" class="chromeclass-status">
     <box class="status-box" align="horizontal" flex="20%">
       <box class="status-label" align="vertical">
-        <label>Network</label>
-        <label>Channel</label>
-        <label>Topic By</label>
+        <label>&network.label;</label>
+        <label>&channel.label;</label>
+        <label>&topicBy.label;</label>
       </box>
       <box class="status-data" align="vertical">
          <label id="net-name">(none)</label> 
@@ -220,9 +220,9 @@
       </box>
       <spring flex="20%"/>
       <box class="status-label" align="vertical">
-         <label>Server</label>
-         <label>Mode</label>
-         <label>Topic</label>
+         <label>&server.label;</label>
+         <label>&mode.label;</label>
+         <label>&topic.label;</label>
       </box>
       <box align="vertical" flex="80%">
         <box align="horizontal" flex="1">
@@ -232,8 +232,8 @@
           </box>
           <spring flex="100%"/>
           <box class="status-label" align="vertical">
-            <label>Nickname</label>
-            <label>Users</label>
+            <label>&nickname.label;</label>
+            <label>&users.label;</label>
           </box>
           <box class="status-data" align="vertical">
             <label id="server-nick">(unknown)</label>
@@ -241,8 +241,8 @@
           </box>
           <spring flex="100%"/>
           <box class="status-label" align="vertical">
-            <label>Lag</label>
-            <label>Limit</label>
+            <label>&lag.label;</label>
+            <label>&limit.label;</label>
           </box>
           <box class="status-data" align="vertical">
             <label id="server-lag">-1</label>
@@ -250,8 +250,8 @@
           </box>
           <spring flex="100%"/>
           <box class="status-label" align="vertical">
-            <label>Last Ping</label>
-            <label>Key</label>
+            <label>&lastPing.label;</label>
+            <label>&key.label;</label>
           </box>
           <box class="status-data" align="vertical">
             <label id="last-ping">(never)</label>

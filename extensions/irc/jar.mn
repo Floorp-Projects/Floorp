@@ -42,6 +42,7 @@ chatzilla.jar:
 	skin/modern/chatzilla/images/view-current.gif       (xul/skin/images/view-current.gif) 
 	skin/modern/chatzilla/images/view-normal.gif        (xul/skin/images/view-normal.gif)
 	locale/en-US/chatzilla/chatzillaOverlay.dtd        (xul/locale/en-US/chatzillaOverlay.dtd) 
+        locale/en-US/chatzilla/chatzilla.dtd               (xul/locale/en-US/chatzilla.dtd) 
 	locale/en-US/chatzilla/pref-irc.dtd                (xul/locale/en-US/pref-irc.dtd) 
 
 # XXX fix me...
