@@ -25,8 +25,7 @@
 // cache these services
 var RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService().QueryInterface(Components.interfaces.nsIRDFService);
 var dragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService().QueryInterface(Components.interfaces.nsIDragService);
-
-var ctrlKeydown = false;
+var nsIDragService = Components.interfaces.nsIDragService;
 var gSrcCanRename;
 
 function debugDump(msg)
@@ -49,7 +48,7 @@ function DragOverTree(event)
 
     dragSession = dragService.getCurrentSession();
     if ( !dragSession )	return(false);
-
+    
     if ( dragSession.isDataFlavorSupported("text/nsmessageOrfolder") ) flavor = true;
 
     var treeItem = event.target.parentNode.parentNode;
@@ -151,7 +150,7 @@ function DragOverTree(event)
     {
        debugDump("***isFolderFlavor == true \n");  //first check these conditions then proceed further
         
-       if (event.ctrlKey)   //ctrlkey does not apply to folder drag
+       if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_COPY)   //no copy for folder drag
           return(false);
 
        var canCreateSubfolders = treeItem.getAttribute('CanCreateSubfolders');
@@ -238,7 +237,6 @@ function BeginDragTree(event, tree, flavor)
         transArray.AppendElement(genTrans);
     }
 
-    var nsIDragService = Components.interfaces.nsIDragService;
     dragService.invokeDragSession ( event.target, transArray, null, nsIDragService.DRAGDROP_ACTION_COPY + 
     nsIDragService.DRAGDROP_ACTION_MOVE );
     
@@ -287,10 +285,6 @@ function DropOnFolderTree(event)
     var treeItem = event.target.parentNode.parentNode;
     if (!treeItem)	return(false);
 
-    if (event.ctrlKey)
-        ctrlKeydown = true;
-	else
-        ctrlKeydown = false;
 	// drop action is always "on" not "before" or "after"
 	// get drop hint attributes
     var dropBefore = treeItem.getAttribute("dd-droplocation");
@@ -399,10 +393,14 @@ function DropOnFolderTree(event)
           }
           else {
             // fix this, will not work for multiple 3 panes
-            if (!ctrlKeydown) {
+            if (dragSession.dragAction == nsIDragService.DRAGDROP_ACTION_MOVE) {
               SetNextMessageAfterDelete();
             }
-            messenger.CopyMessages(sourceFolder, targetFolder, list, !ctrlKeydown);
+            var dragAction = dragSession.dragAction;
+            if (dragAction == nsIDragService.DRAGDROP_ACTION_COPY)
+               messenger.CopyMessages(sourceFolder, targetFolder, list, false);
+            else if (dragAction == nsIDragService.DRAGDROP_ACTION_MOVE)
+               messenger.CopyMessages(sourceFolder, targetFolder, list, true);
           }
         }
         catch (ex) {
@@ -489,7 +487,7 @@ function BeginDragOutliner(event, outliner, flavor)
     var selArray = GetSelectedMessages();
     var count = selArray.length;
     debugDump("selArray.length = " + count + "\n");
-    for ( var i = 0; i < count; ++i ) {
+    for (i = 0; i < count; ++i ) {
         var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
         if (!trans) return(false);
 
@@ -510,7 +508,6 @@ function BeginDragOutliner(event, outliner, flavor)
         transArray.AppendElement(genTrans);
     }
 
-    var nsIDragService = Components.interfaces.nsIDragService;
     dragService.invokeDragSession ( event.target, transArray, region, nsIDragService.DRAGDROP_ACTION_COPY +
     nsIDragService.DRAGDROP_ACTION_MOVE );
 
