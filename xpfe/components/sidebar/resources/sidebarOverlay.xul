@@ -29,13 +29,13 @@
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical"
     persist="hidden width collapsed">
-    <sidebarheader id="title-box" class="sidebar-main-header" 
-      value="&sidebar.panels.label;"
-      collapse="after" persist="state" onmouseup="PersistHeight();">
-      <menu id="panel-picker" class="standard" 
-        oncreate="SidebarBuildPickerPopup();" 
+    <sidebarheader id="sidebar-title-box" class="sidebar-main-header"
+      value="&sidebar.panels.label;" persist="hidden state"
+      collapse="after" onmouseup="PersistHeight();">
+      <menu id="sidebar-panel-picker" class="standard" crop="right"
+        oncreate="SidebarBuildPickerPopup();"
         value="&sidebar.picker.label;" >
-        <menupopup id="panel-picker-popup" popupanchor="topright"
+        <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
           datasources="rdf:null"
           ref="urn:sidebar:current-panel-list">
           <template>
@@ -56,18 +56,24 @@
     <box id="sidebar-panels" align="vertical"
       datasources="rdf:null"
       ref="urn:sidebar:current-panel-list" 
-      persist='last-selected-panel height collapsed' flex="1*">
-      <template>
+      persist='last-selected-panel height collapsed hidden' flex="1*">
+      <template id="sidebar-template">
         <rule>
-          <box uri="rdf:*" class="texttab" align="left" 
+          <box uri="rdf:*" class="texttab sidebar-tab" align="left" 
             value="rdf:http://home.netscape.com/NC-rdf#title"
             onclick="SidebarSelectPanel(this)"
             exclude="rdf:http://home.netscape.com/NC-rdf#exclude"
             hidden="true"/>
-          <box uri="rdf:*" flex='1*' hidden="true">
-            <iframe class="panel-frame" flex='1*' hidden="true"
+          <box uri="rdf:*" flex='1*' hidden="true" orient="vertical">
+            <box flex='1'>
+              <image class="loading-image"/>
+              <text class="loading-image" value="&sidebar.loading.label;"/>
+            </box>
+            <iframe class="panel-frame" flex='1*'
+              hidden="true" collapsed="true"
               src="rdf:http://home.netscape.com/NC-rdf#content" />
-            <iframe class="panel-frame" flex='1*' hidden="true"
+            <iframe class="panel-frame" flex='1*'
+              hidden="true" collapsed="true"
               src="rdf:http://home.netscape.com/NC-rdf#content"
               type="content" />
           </box>
@@ -77,29 +83,35 @@
   </box>
 
   <!-- Splitter on the right of sidebar -->
-  <splitter id="sidebar-splitter" collapse="before" persist="state hidden" 
-    class="chromeclass-extrachrome"
+  <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
+    class="chromeclass-extrachrome sidebar-splitter">
     onmouseup="SidebarFinishDrag();">
-    <box id="topright-cap" align="vertical">
+    <box id="sidebar-topright-cap" align="vertical">
       <spring flex="100%"/>
     </box>
     <spring flex="100%"/>
     <grippy onclick="SidebarExpandCollapse();"/>
     <spring flex="100%"/>
-    <box id="bottomright-cap" align="vertical">
+    <box id="sidebar-bottomright-cap" align="vertical">
     <spring flex="100%"/>
     </box>
   </splitter>
 
   <!-- View->Sidebar toggle -->
   <menupopup id="menu_View_Popup">
-      <menuitem id="menu_sidebar" type="checkbox" value="&sidebarCmd.label;"
-                oncommand="SidebarShowHide();" position="2"/>
+    <menuitem id="sidebar-menu" type="checkbox" value="&sidebarCmd.label;"
+      oncommand="SidebarShowHide();" position="2"/>
   </menupopup>
+
+  <!-- open/close grippy for status (not yet)
+  <box id="status-bar">
+    <image id="sidebar-status-grippy" position="1"/>
+  </box>  
+  -->
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
   <html:script language="JavaScript"
-               src="chrome://communicator/content/sidebar/sidebarOverlay.js"/>
+    src="chrome://communicator/content/sidebar/sidebarOverlay.js"/>
 
 </overlay>
 
