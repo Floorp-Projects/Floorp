@@ -493,7 +493,7 @@ sub EmitDependList {
 sub ValidateTime{
   my ($time, $field) = @_;
     if ($time > 99999.99 || $time < 0 || !($time =~ /^(?:\d+(?:\.\d*)?|\.\d+)$/)){
-      ThrowUserError("need_positive_number", {field => "$field"}, 1);
+      ThrowUserError("need_positive_number", {field => "$field"}, "abort");
     }
  }
 
