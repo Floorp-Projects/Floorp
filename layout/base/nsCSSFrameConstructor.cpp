@@ -11154,6 +11154,29 @@ keepLooking:
           // Ignore the placeholder and return the out-of-flow frame instead
           return ((nsPlaceholderFrame*)kidFrame)->GetOutOfFlowFrame();
         } else {
+          // Check if kidframe is the :before pseudo frame for aContent. If it
+          // is, and aContent is an element, then aContent might be a
+          // non-splittable-element, so the real primary frame could be the
+          // next sibling.
+
+          if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
+              IsGeneratedContentFor(aContent, kidFrame, nsCSSAtoms::beforePseudo)) {
+            nsIFrame *nextSibling = nsnull;
+
+            kidFrame->GetNextSibling(&nextSibling);
+            if (nextSibling) {
+              nsCOMPtr<nsIContent> nextSiblingContent;
+              nextSibling->GetContent(getter_AddRefs(nextSiblingContent));
+
+              // Make sure the content matches, and because I'm paranoid,
+              // make sure it's not the :after pseudo frame.
+
+              if (nextSiblingContent.get() == aContent &&
+                 !IsGeneratedContentFor(aContent, nextSibling, nsCSSAtoms::afterPseudo))
+                kidFrame = nextSibling;
+            }
+          }
+
           // Return the matching child frame
           return kidFrame;
         }
