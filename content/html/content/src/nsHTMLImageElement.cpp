@@ -231,9 +231,7 @@ nsHTMLImageElement::StringToAttribute(nsIAtom* aAttribute,
   if ((aAttribute == nsHTMLAtoms::usemap) ||
       (aAttribute == nsHTMLAtoms::src) ||
       (aAttribute == nsHTMLAtoms::lowsrc)) {
-    nsAutoString tmp(aValue);
-    tmp.StripWhitespace();
-    aResult.SetStringValue(tmp);
+    aResult.SetStringValue(aValue);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if (nsGenericHTMLElement::ParseImageAttribute(aAttribute,

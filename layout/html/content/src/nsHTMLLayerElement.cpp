@@ -186,9 +186,7 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
 {
   // XXX CLIP
   if (aAttribute == nsHTMLAtoms::src) {
-    nsAutoString src(aValue);
-    src.StripWhitespace();
-    aResult.SetStringValue(src);
+    aResult.SetStringValue(aValue);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   else if ((aAttribute == nsHTMLAtoms::top)   ||
@@ -216,9 +214,7 @@ nsHTMLLayerElement::StringToAttribute(nsIAtom*        aAttribute,
     }
   }
   else if (aAttribute == nsHTMLAtoms::background) {
-    nsAutoString url(aValue);
-    url.StripWhitespace();
-    aResult.SetStringValue(url);
+    aResult.SetStringValue(aValue);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
 

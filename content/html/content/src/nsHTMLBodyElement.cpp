@@ -592,9 +592,7 @@ nsHTMLBodyElement::StringToAttribute(nsIAtom* aAttribute,
                                      nsHTMLValue& aResult)
 {
   if (aAttribute == nsHTMLAtoms::background) {
-    nsAutoString href(aValue);
-    href.StripWhitespace();
-    aResult.SetStringValue(href);
+    aResult.SetStringValue(aValue);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
   if ((aAttribute == nsHTMLAtoms::bgcolor) ||
