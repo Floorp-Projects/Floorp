@@ -96,6 +96,7 @@ public:
   NS_IMETHOD EventStatusOK(nsGUIEvent* aEvent, PRBool *aOK) = 0;
 
   // This is called when browse with caret changes on the fly
+  NS_IMETHOD GetBrowseWithCaret(PRBool *aBrowseWithCaret) = 0;
   NS_IMETHOD ResetBrowseWithCaret(PRBool *aBrowseWithCaret) = 0;
 
   // This is called after find text or when a cursor movement key is pressed
