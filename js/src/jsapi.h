@@ -233,11 +233,11 @@ JS_PopArguments(JSContext *cx, void *mark);
  * is typically a string constant.  If format is in dynamic storage, it is up
  * to the caller to keep the string alive until Remove is called.
  */
-JS_PUBLIC_API(JSBool)
+extern JS_PUBLIC_API(JSBool)
 JS_AddArgumentFormatter(JSContext *cx, const char *format,
 			JSArgumentFormatter formatter);
 
-JS_PUBLIC_API(void)
+extern JS_PUBLIC_API(void)
 JS_RemoveArgumentFormatter(JSContext *cx, const char *format);
 
 #endif /* JS_ARGUMENT_FORMATTER_DEFINED */
