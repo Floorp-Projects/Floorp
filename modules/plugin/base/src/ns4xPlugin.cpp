@@ -106,18 +106,20 @@ static NS_DEFINE_IID(kIPluginStreamListenerIID, NS_IPLUGINSTREAMLISTENER_IID);
 
 ns4xPlugin::ns4xPlugin(NPPluginFuncs* callbacks, PRLibrary* aLibrary, NP_PLUGINSHUTDOWN aShutdown, nsIServiceManager* serviceMgr)
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 
-	memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
-	fShutdownEntry = aShutdown;
+  memcpy((void*) &fCallbacks, (void*) callbacks, sizeof(fCallbacks));
+  fShutdownEntry = aShutdown;
 
-    fLibrary = aLibrary;
-	gServiceMgr = serviceMgr;
+  fLibrary = aLibrary;
+  gServiceMgr = serviceMgr;
 }
 
 
 ns4xPlugin::~ns4xPlugin(void)
 {
+  //reset the callbacks list
+	memset((void*) &fCallbacks, 0, sizeof(fCallbacks));
 }
 
 /* static */
