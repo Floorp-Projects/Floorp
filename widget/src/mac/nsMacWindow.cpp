@@ -32,6 +32,14 @@
 #endif
 
 
+// These magic adjustments are so that the contained webshells hangs one pixel
+// off the right and bottom sides of the window. This aligns the scroll bar
+// correctly, and compensates for different window frame dimentions on
+// Windows and Mac.
+#define WINDOW_SIZE_TWEAKING
+
+// these should come from the system, not be hard-coded. What if I'm running
+// an elaborate theme with wide window borders?
 const short kWindowTitleBarHeight = 22;
 const short kWindowMarginWidth = 6;
 const short kDialogTitleBarHeight = 26;
@@ -121,20 +129,26 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 		nsRectToMacRect(aRect, wRect);
 
+#ifdef WINDOW_SIZE_TWEAKING
+		// see also the Resize method
+		wRect.right --;
+		wRect.bottom --;
+#endif
+		
 		if (mIsDialog)
 		{
-			wDefProcID = movableDBoxProc;
+			wDefProcID = kWindowMovableModalDialogProc;
 			goAwayFlag = false;
 			::OffsetRect(&wRect, kDialogMarginWidth, kDialogTitleBarHeight + ::LMGetMBarHeight());
 		}
 		else
 		{
-			wDefProcID = 0;
+			wDefProcID = kWindowFullZoomGrowDocumentProc;
 			goAwayFlag = true;
 			::OffsetRect(&wRect, kWindowMarginWidth, kWindowTitleBarHeight + ::LMGetMBarHeight());
 		}
 
-		mWindowPtr = ::NewCWindow(nil, &wRect, "\p-", false, wDefProcID, (GrafPort*)-1, goAwayFlag, (long)nsnull);
+		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (GrafPort*)-1, goAwayFlag, (long)nsnull);
 		mWindowMadeHere = PR_TRUE;
 	}
 	else
@@ -143,6 +157,17 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		mWindowMadeHere = PR_FALSE;
 	}
 
+	if (mWindowPtr == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+	
+	// create the root control
+	ControlHandle		rootControl = nil;
+	if (GetRootControl(mWindowPtr, &rootControl) != noErr)
+	{
+		OSErr	err = CreateRootControl(mWindowPtr, &rootControl);
+		NS_ASSERTION(err == noErr, "Error creating window root control");
+	}
+	
 	// set the refData
 	nsRefData* theRefData = new nsRefData();	
 	if (theRefData == nsnull)
@@ -253,9 +278,18 @@ NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRep
 	// move the window if it has not been moved yet
 	// (ie. if this function isn't called in response to a GrowWindow event)
 	Rect macRect = mWindowPtr->portRect;
+#ifdef WINDOW_SIZE_TWEAKING
+	macRect.right ++;
+	macRect.bottom ++;
+#endif
 	if (((macRect.right - macRect.left) != aWidth)
-		|| ((macRect.bottom - macRect.top) != aHeight)) {
+		|| ((macRect.bottom - macRect.top) != aHeight))
+	{
+#ifdef WINDOW_SIZE_TWEAKING
+		::SizeWindow(mWindowPtr, aWidth - 1, aHeight - 1, aRepaint);
+#else
 		::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+#endif
 	}
 	nsWindow::Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
