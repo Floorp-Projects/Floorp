@@ -77,29 +77,18 @@ nsNetModRegEntry::Equals(nsINetModRegEntry* aEntry, PRBool *_retVal)
     rv = aEntry->GetTopic(&topic);
     if (NS_FAILED(rv)) 
         return rv;
-     
-    if (topic) {
-        nsAllocator::Free(topic);
-    topic=0;
-    }
     
     if (topic && PL_strcmp(topic, mTopic)) 
-        return NS_OK;
-
-    nsCOMPtr<nsIEventQueue> entryEventQ;
-    NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
-    
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    rv = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(entryEventQ)); 
-     
-    if (NS_FAILED(rv) || mEventQ != entryEventQ)
     {
-        return rv;
+        nsCOMPtr<nsINetNotify> aSyncProxy;
+        rv = aEntry->GetSyncProxy(getter_AddRefs(aSyncProxy));
+        
+        if(aSyncProxy == mSyncProxy)
+        {
+            *_retVal = PR_TRUE;
+        }
+        nsAllocator::Free(topic);
     }
-
-    *_retVal = PR_TRUE;
     return rv;
 }
 
