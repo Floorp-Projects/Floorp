@@ -27,6 +27,7 @@ en-US.jar:
         locale/en-US/navigator/navigator.properties         (resources/locale/en-US/navigator.properties)
         locale/en-US/navigator/metadata.dtd                 (resources/locale/en-US/metadata.dtd)
         locale/en-US/navigator/metadata.properties          (resources/locale/en-US/metadata.properties)
+        locale/en-US/navigator/pageInfo.properties          (resources/locale/en-US/pageInfo.properties)
 
 US.jar:
         locale/US/navigator-region/contents.rdf             (resources/locale/en-US/contents-region.rdf)
