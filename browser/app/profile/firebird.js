@@ -517,10 +517,10 @@ pref("mousewheel.withnokey.sysnumlines",true);
 pref("mousewheel.withcontrolkey.action",3);
 pref("mousewheel.withcontrolkey.numlines",1);
 pref("mousewheel.withcontrolkey.sysnumlines",true);
-pref("mousewheel.withshiftkey.action",0);
+pref("mousewheel.withshiftkey.action",2);
 pref("mousewheel.withshiftkey.numlines",1);
 pref("mousewheel.withshiftkey.sysnumlines",false);
-pref("mousewheel.withaltkey.action",2);
+pref("mousewheel.withaltkey.action",0);
 pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
 
