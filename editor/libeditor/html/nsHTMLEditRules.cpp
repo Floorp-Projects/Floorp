@@ -566,7 +566,7 @@ nsHTMLEditRules::WillMakeList(nsIDOMSelection *aSelection, PRBool aOrdered, PRBo
     while (IsDiv(curNode) || IsOrderedList(curNode) || IsUnorderedList(curNode) || IsBlockquote(curNode))
     {
       // dive as long as there is only one child, and it is a list, div, or blockquote
-      PRInt32 numChildren;
+      PRUint32 numChildren;
       res = nsEditor::CountEditableChildren(curNode, numChildren);
       if (NS_FAILED(res)) return res;
       

@@ -3058,7 +3058,7 @@ nsEditor::IsEditable(nsIDOMNode *aNode)
   return PR_TRUE;
 }
 
-PRUint32
+nsresult
 nsEditor::CountEditableChildren(nsIDOMNode *aNode, PRUint32 &outCount) 
 {
   outCount = 0;
