@@ -168,3 +168,4 @@ file:///s:/mozilla/layout/html/tests/block/bugs/67690.html
 file:///s:/mozilla/layout/html/tests/block/bugs/69960.html
 file:///s:/mozilla/layout/html/tests/block/bugs/71594.html
 file:///s:/mozilla/layout/html/tests/block/bugs/81118.html
+file:///s:/mozilla/layout/html/tests/block/bugs/82221.html
