@@ -22,6 +22,7 @@
 #include "nsWindow.h"
 #include <Controls.h>
 
+#define APPEARANCE1_1 1
 
 class nsMacControl : public nsWindow
 {
@@ -52,16 +53,22 @@ public:
 	NS_IMETHODIMP		SetFont(const nsFont &aFont);
 
 protected:
+	
+	NS_METHOD				CreateOrReplaceMacControl(short inControlType);
+	virtual void		GetRectForMacControl(nsRect &outRect);
+	void						SetupMacControlFont();
+	
 	nsString				mLabel;
 	PRBool					mWidgetArmed;
 	PRBool					mMouseInButton;
-	PRInt16					mValue;
+
+	PRInt32					mValue;
 	ControlHandle		mControl;
 	short						mControlType;
 
 	nsString				mLastLabel;
 	nsRect					mLastBounds;
-	PRInt16					mLastValue;
+	PRInt32					mLastValue;
 	PRInt16					mLastHilite;
 };
 

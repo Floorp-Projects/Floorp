@@ -57,20 +57,13 @@ NS_IMETHODIMP nsMacControl::Create(nsIWidget *aParent,
 {
 	Inherited::Create(aParent, aRect, aHandleEventFunction,
 						aContext, aAppShell, aToolkit, aInitData);
-
   
-	// create native control
-	nsRect ctlRect = aRect;
-	ctlRect.x = ctlRect.y = 0;
-	Rect macRect;
-	nsRectToMacRect(ctlRect, macRect);
-	if(nsnull != mWindowPtr){
-		mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, mControlType, nil);
-	}
-	
-	mLastBounds = ctlRect;
+	// create native control. mBounds has been set up at this point
+	nsresult		theResult = CreateOrReplaceMacControl(mControlType);
 
-	return NS_OK;
+	mLastBounds = mBounds;
+
+	return theResult;
 }
 
 //-------------------------------------------------------------------------
@@ -95,17 +88,9 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 {
 	if (mControl && mVisible)
 	{
-#if 0
-		// set the control text attributes
-		// (the rendering context has already set these attributes for
-		// the window: we just have to transfer them over to the control)
-		ControlFontStyleRec fontStyleRec;
-		fontStyleRec.flags = (kControlUseFontMask | kControlUseFaceMask | kControlUseSizeMask);
-		fontStyleRec.font = mWindowPtr->txFont;
-		fontStyleRec.size = mWindowPtr->txSize;
-		fontStyleRec.style = mWindowPtr->txFace;
-		::SetControlFontStyle(mControl, &fontStyleRec);
-#endif
+		// turn off drawing for setup to avoid ugliness
+		Boolean		isVisible = IsControlVisible(mControl);
+		::SetControlVisibility(mControl, false, false);
 
 		// draw the control
 		if (mLabel != mLastLabel)
@@ -119,8 +104,8 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		if (mBounds != mLastBounds)
 		{
 			mLastBounds = mBounds;
-			nsRect ctlRect = mBounds;
-			ctlRect.x = ctlRect.y = 0;
+			nsRect ctlRect;
+			GetRectForMacControl(ctlRect);
 			Rect macRect;
 			nsRectToMacRect(ctlRect, macRect);
 			::MoveControl(mControl, macRect.left, macRect.top);
@@ -130,7 +115,11 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 		if (mValue != mLastValue)
 		{
 			mLastValue = mValue;
+#if APPEARANCE1_1
+			::SetControl32BitValue(mControl, mValue);
+#else
 			::SetControlValue(mControl, mValue);
+#endif
 		}
 
 		PRInt16 hilite;
@@ -144,7 +133,8 @@ PRBool nsMacControl::OnPaint(nsPaintEvent &aEvent)
 			::HiliteControl(mControl, hilite);
 		}
 
-		::Draw1Control(mControl);
+		::SetControlVisibility(mControl, isVisible, false);
+		::DrawOneControl(mControl);
 		::ValidRect(&(*mControl)->contrlRect);
 	}
 	return PR_FALSE;
@@ -208,10 +198,7 @@ NS_IMETHODIMP nsMacControl::Show(PRBool bState)
   Inherited::Show(bState);
   if (mControl)
   {
-  	if (bState)
-  		::ShowControl(mControl);
-  	else
-  		::HideControl(mControl);
+  	::SetControlVisibility(mControl, bState, false);		// don't redraw
   }
   return NS_OK;
 }
@@ -225,6 +212,73 @@ NS_IMETHODIMP nsMacControl::SetFont(const nsFont &aFont)
 {
 	Inherited::SetFont(aFont);	
 
+	SetupMacControlFont();
+	
+ 	return NS_OK;
+}
+
+#pragma mark -
+
+//-------------------------------------------------------------------------
+//
+// Get the rect which the Mac control uses. This may be different for
+// different controls, so this method allows overriding
+//
+//-------------------------------------------------------------------------
+void nsMacControl::GetRectForMacControl(nsRect &outRect)
+{
+		outRect = mBounds;
+		outRect.x = outRect.y = 0;
+}
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+
+NS_METHOD nsMacControl::CreateOrReplaceMacControl(short inControlType)
+{
+	nsRect		controlRect;
+	GetRectForMacControl(controlRect);
+	Rect macRect;
+	nsRectToMacRect(controlRect, macRect);
+
+	if(nsnull != mWindowPtr)
+	{
+		if (mControl)
+			::DisposeControl(mControl);
+
+#ifdef DEBUG
+		// we should have a root control at this point. If not, something's wrong.
+		// it's made in nsMacWindow
+		ControlHandle		rootControl = nil;
+		OSErr		err = ::GetRootControl(mWindowPtr, &rootControl);
+		NS_ASSERTION((err == noErr && rootControl != nil), "No root control exists for the window");
+#endif
+			
+		mControl = ::NewControl(mWindowPtr, &macRect, "\p", true, 0, 0, 1, inControlType, nil);
+		
+		// need to reset the font now
+		// XXX to do: transfer the text in the old control over too
+		if (mControl && mFontMetrics)
+		{
+			SetupMacControlFont();
+		}
+	}
+
+	return (mControl) ? NS_OK : NS_ERROR_NULL_POINTER;
+}
+
+
+//-------------------------------------------------------------------------
+//
+//
+//-------------------------------------------------------------------------
+void nsMacControl::SetupMacControlFont()
+{
+	NS_PRECONDITION(mFontMetrics != nsnull, "No font metrics in SetupMacControlFont");
+	NS_PRECONDITION(mContext != nsnull, "No context metrics in SetupMacControlFont");
+	
 	TextStyle		theStyle;
 	nsFontMetricsMac::GetNativeTextStyle(*mFontMetrics, *mContext, theStyle);
 	
@@ -234,6 +288,7 @@ NS_IMETHODIMP nsMacControl::SetFont(const nsFont &aFont)
 	fontStyleRec.size = theStyle.tsSize;
 	fontStyleRec.style = theStyle.tsFace;
 	::SetControlFontStyle(mControl, &fontStyleRec);
-
- 	return NS_OK;
 }
+	
+	
+
