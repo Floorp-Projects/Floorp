@@ -152,30 +152,56 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
                                       nsISupports *aObj,
                                       REFNSIID aIID)
 {
+    if (!aObj)
+        return nsnull;
+
+    nsISupports* rawObject = aObj;
+
+    // make sure that the object pass in is not a proxy.
+    nsCOMPtr<nsProxyEventObject> aIdentificationObject;
+    nsresult rv = rawObject->QueryInterface(kProxyObject_Identity_Class_IID, getter_AddRefs(aIdentificationObject));
+
+    if (NS_SUCCEEDED(rv))
+    {
+        // ATTENTION!!!!
+        //
+        // If you are hitting any of the assertions in this block of code, 
+        // please contact dougt@netscape.com.
+        //
+
+        // if you hit this assertion, you might want to check out how 
+        // you are using proxies.  You shouldn't need to be creating
+        // a proxy from a proxy.  -- dougt@netscape.com
+        NS_ASSERTION(0, "Someone is building a proxy from a proxy");
+        
+        NS_ASSERTION(aIdentificationObject, "where did my identification object go!");
+        
+        if (!aIdentificationObject)
+            return nsnull;
+
+        // someone is asking us to create a proxy for a proxy.  Lets get
+        // the real object and build aproxy for that!
+        rawObject = aIdentificationObject->GetRealObject();
+        
+        NS_ASSERTION(rawObject, "where did my real object go!");
+
+        if (!rawObject) 
+            return nsnull;
+    }
+
+    // Get a class for this IID.
+    nsCOMPtr<nsProxyEventClass> clazz = getter_AddRefs( nsProxyEventClass::GetNewOrUsedClass(aIID) );
+    if(!clazz) 
+        return nsnull;
     
     nsCOMPtr<nsProxyEventObject> proxy;
     nsCOMPtr<nsProxyEventObject> root;
     nsProxyEventObject* peo;
 
-    // Get a class for this IID.
-    nsCOMPtr<nsProxyEventClass> clazz = getter_AddRefs( nsProxyEventClass::GetNewOrUsedClass(aIID) );
-    if(!clazz) return nsnull;
-    
-    // make sure that the object pass in is not a proxy.
-    nsCOMPtr<nsProxyEventObject> aIdentificationObject;
-    if (NS_SUCCEEDED(aObj->QueryInterface(kProxyObject_Identity_Class_IID, getter_AddRefs(aIdentificationObject))))
-    {
-        // someone is asking us to create a proxy for a proxy.  Lets get
-        // the real object and build aproxy for that!
-        aObj = aIdentificationObject->GetRealObject();
-        aIdentificationObject = 0;
-        if (aObj == nsnull) return nsnull;
-    }
-
     // always find the native root if the |real| object.
 	// this must not be a nsCOMPtr since we need to make sure that we do a QI.
     nsCOMPtr<nsISupports> rootObject;
-	if(NS_FAILED(aObj->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(rootObject))))
+	if(NS_FAILED(rawObject->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(rootObject))))
     return nsnull;
 
     /* get our hash table */    
@@ -189,14 +215,13 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
 	// this must not be a nsCOMPtr since we need to make sure that we do a QI.
 
     nsCOMPtr<nsISupports> requestedInterface;
-	if(NS_FAILED(aObj->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
+	if(NS_FAILED(rawObject->QueryInterface(aIID, getter_AddRefs(requestedInterface))))
     return nsnull;
     
 
     // this will be our key in the hash table.  
     // this must not be a nsCOMPtr since we need to make sure that we do a QI.
     nsCOMPtr<nsISupports> destQRoot;
-    nsresult rv;
     destQRoot = do_QueryInterface(destQueue, &rv);
     if (NS_FAILED(rv))
         return nsnull;
@@ -219,7 +244,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     else
     {
         // build the root proxy
-        if (aObj == rootObject.get())
+        if (rawObject == rootObject.get())
         {
             // the root will do double duty as the interface wrapper
             peo = new nsProxyEventObject(destQueue, 
