@@ -855,7 +855,7 @@ nsProtocolProxyService::NewProxyInfo(const nsACString &aType,
     // proxy info instance.  we just reference the string literals directly :)
     const char *type = nsnull;
     for (PRUint32 i=0; i<NS_ARRAY_LENGTH(types); ++i) {
-        if (aType.LowerCaseEqualsASCII(types[i]) == 0) {
+        if (aType.LowerCaseEqualsASCII(types[i])) {
             type = types[i];
             break;
         }
