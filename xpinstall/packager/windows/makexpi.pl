@@ -60,6 +60,21 @@ if(!(-e "$inStagePath\\$inComponentName"))
   die "invalid path: $inStagePath\\$inComponentName\n";
 }
 
+if($inComponentName =~ /xpcom/i)
+{
+  # copy msvcrt.dll to xpcom dir
+  if(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll")
+  {
+    system("copy $ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcrt.dll  $inStagePath\\$inComponentName");
+  }
+
+  # copy msvcirt.dll to xpcom dir
+  if(-e "$ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcirt.dll")
+  {
+    system("copy $ENV{MOZ_SRC}\\redist\\microsoft\\system\\msvcirt.dll $inStagePath\\$inComponentName");
+  }
+}
+
 # check for existance of .js script
 if(!(-e "$inComponentName.js"))
 {
