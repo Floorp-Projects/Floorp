@@ -60,6 +60,7 @@ void mork_assertion_signal(const char* inMessage)
 
 #if defined(MORK_OS2)
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <share.h>
 #include <io.h>
 
