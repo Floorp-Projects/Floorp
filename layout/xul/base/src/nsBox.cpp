@@ -1319,6 +1319,16 @@ nsIBox::AddCSSFlex(nsBoxLayoutState& aState, nsIBox* aBox, nscoord& aFlex)
             aFlex = value.ToInteger(&error);
             flexSet = PR_TRUE;
         }
+        else {
+          // No attribute value.  Check CSS.
+          const nsStyleXUL* boxInfo;
+          frame->GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+          if (boxInfo->mBoxFlex > 0.0f) {
+            // The flex was defined in CSS.
+            aFlex = (nscoord)boxInfo->mBoxFlex;
+            flexSet = PR_TRUE;
+          }
+        }
     }
 
     return flexSet;

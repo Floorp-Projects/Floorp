@@ -625,7 +625,11 @@ PRInt32 nsStyleList::CalcDifference(const nsStyleList& aOther) const
 //
 nsStyleXUL::nsStyleXUL() 
 { 
+  mBoxAlign  = NS_STYLE_BOX_ALIGN_STRETCH;
+  mBoxDirection = NS_STYLE_BOX_DIRECTION_NORMAL;
+  mBoxFlex = 0.0f;
   mBoxOrient = NS_STYLE_BOX_ORIENT_HORIZONTAL;
+  mBoxPack   = NS_STYLE_BOX_PACK_START;
 }
 
 nsStyleXUL::~nsStyleXUL() 
@@ -640,7 +644,11 @@ nsStyleXUL::nsStyleXUL(const nsStyleXUL& aSource)
 PRInt32 
 nsStyleXUL::CalcDifference(const nsStyleXUL& aOther) const
 {
-  if (mBoxOrient == aOther.mBoxOrient)
+  if (mBoxAlign == aOther.mBoxAlign &&
+      mBoxDirection == aOther.mBoxDirection &&
+      mBoxFlex == aOther.mBoxFlex &&
+      mBoxOrient == aOther.mBoxOrient &&
+      mBoxPack == aOther.mBoxPack)
     return NS_STYLE_HINT_NONE;
   return NS_STYLE_HINT_REFLOW;
 }

@@ -24,12 +24,12 @@
 
 multipanelset {
   -moz-binding: url("chrome://inspector/content/extensions/multipanel.xml#multipanelset");
-  display: -moz-xul-box;
-  -moz-xul-box-orient: vertical;
+  display: -moz-box;
+  -moz-box-orient: vertical;
 }
 
 multipanel {
   -moz-binding: url("chrome://inspector/content/extensions/multipanel.xml#multipanel");
-  display: -moz-xul-box;
-  -moz-xul-box-orient: vertical;
+  display: -moz-box;
+  -moz-box-orient: vertical;
 }

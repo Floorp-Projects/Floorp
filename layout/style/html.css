@@ -433,7 +433,7 @@ noembed, noscript, param, *|*:-moz-comment, *|*:-moz-pi {
   background: inherit;
   padding: inherit;
   display: inherit;
-  -moz-xul-box-orient: inherit;
+  -moz-box-orient: inherit;
 }
 
 *|*:wrapped-frame {

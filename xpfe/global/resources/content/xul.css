@@ -12,7 +12,7 @@
 
 * {
   -moz-user-focus: ignore;
-  display: -moz-xul-box;
+  display: -moz-box;
 }
 
 /* hide the content and destroy the frame */
@@ -72,39 +72,14 @@ window {
 
 /******** box *******/
 
-hbox[autostretch="never"],
-box[autostretch="never"] {
-  vertical-align: middle;
-}
-
-hbox[autostretch="never"][valign="top"],
-box[autostretch="never"][valign="top"] {
-  vertical-align: top;
-}
-
-hbox[autostretch="never"][valign="bottom"],
-box[autostretch="never"][valign="bottom"] {
-  vertical-align: bottom;
-}
-
-hbox[autostretch="never"][halign="center"],
-box[autostretch="never"][halign="center"] {
-  text-align: center;
-}
-
-hbox[autostretch="never"][halign="right"],
-box[autostretch="never"][halign="right"] {
-  text-align: right;
-}
-
 vbox {
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
 }
 
 /******** bulletinboard *******/
 
 bulletinboard {
-  display: -moz-xul-bulletinboard;
+  display: -moz-bulletinboard;
 }
 
 /********** button **********/
@@ -167,7 +142,7 @@ radio {
 titledbox,
 groupbox {
   -moz-binding: url("chrome://global/content/bindings/titledbox.xml#groupbox");
-  display: -moz-xul-groupbox;
+  display: -moz-groupbox;
 }
 
 label {
@@ -175,8 +150,8 @@ label {
 }
 
 .groupbox-body {
-  text-align: inherit;
-  vertical-align: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
 }
   
 /******* toolbar *******/
@@ -255,14 +230,14 @@ menuseparator {
 popup,
 menupopup {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#popup");
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
   display: none;
   z-index: 2147483647; 
 }
 
 menupopup[menugenerated="true"],
 popup[menugenerated="true"] {
-  display: -moz-xul-popup;
+  display: -moz-popup;
 }
 
 popup.tooltip,
@@ -303,29 +278,25 @@ button.popupClose {
 /******** grid **********/
 
 grid {
-  display: -moz-xul-grid;
+  display: -moz-grid;
 }
 
 rows, 
 columns {
-  display: -moz-xul-grid-group;
+  display: -moz-grid-group;
 }
 
 row,
 column {
-  display: -moz-xul-grid-line;
+  display: -moz-grid-line;
 }
 
 rows {
-  -moz-xul-box-orient: vertical;
-}
-
-row {
-  vertical-align: middle;
+  -moz-box-orient: vertical;
 }
 
 column {
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
 }
 
 /******** tree **********/
@@ -429,20 +400,20 @@ outlinercol.outliner-columnpicker {
 
 outlinercol[hidden="true"] {
   visibility: collapse;
-  display: -moz-xul-box;
+  display: -moz-box;
 }
 
 /********** deck & stack *********/
 
 deck {
-  display: -moz-xul-deck;
+  display: -moz-deck;
 }
 
 stack {
-  display: -moz-xul-stack;
+  display: -moz-stack;
 }
 
-:-moz-xul-deck-hidden {
+:-moz-deck-hidden {
    visibility: hidden;
 }
 
@@ -462,7 +433,7 @@ tab {
 
 tabpanels {
   -moz-binding: url("chrome://global/content/bindings/tabbox.xml#tabpanels");
-  display: -moz-xul-deck;
+  display: -moz-deck;
 }
 
 /********** progressmeter **********/
@@ -639,7 +610,7 @@ scrollbox {
 
 arrowscrollbox {
   -moz-binding: url("chrome://global/content/bindings/scrollbox.xml#arrowscrollbox");
-  display: -moz-xul-stack;
+  display: -moz-stack;
 }
 
 autorepeatbutton.up {
@@ -651,8 +622,8 @@ autorepeatbutton.down {
 }
 
 .scrollbox-innerbox {
-  text-align: inherit;
-  vertical-align: inherit;
+  -moz-box-pack: inherit;
+  -moz-box-align: inherit;
 }
 
 /********** statusbar **********/
@@ -688,12 +659,12 @@ resourcebundle {
 
 wizard {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizard");
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
 }
 
 wizardpage {
   -moz-binding: url("chrome://global/content/bindings/wizard.xml#wizardpage");
-  -moz-xul-box-orient: vertical;
+  -moz-box-orient: vertical;
   overflow: auto;
 }
 

@@ -100,6 +100,23 @@
 #define NS_STYLE_USER_MODIFY_READ_WRITE  1
 #define NS_STYLE_USER_MODIFY_WRITE_ONLY  2
 
+// box-align
+#define NS_STYLE_BOX_ALIGN_STRETCH     0
+#define NS_STYLE_BOX_ALIGN_START       1
+#define NS_STYLE_BOX_ALIGN_CENTER      2
+#define NS_STYLE_BOX_ALIGN_BASELINE    3
+#define NS_STYLE_BOX_ALIGN_END         4
+
+// box-pack
+#define NS_STYLE_BOX_PACK_START        0
+#define NS_STYLE_BOX_PACK_CENTER       1
+#define NS_STYLE_BOX_PACK_END          2
+#define NS_STYLE_BOX_PACK_JUSTIFY      3
+
+// box-direction
+#define NS_STYLE_BOX_DIRECTION_NORMAL    0
+#define NS_STYLE_BOX_DIRECTION_REVERSE   1
+
 // box-orient
 #define NS_STYLE_BOX_ORIENT_HORIZONTAL 0
 #define NS_STYLE_BOX_ORIENT_VERTICAL   1

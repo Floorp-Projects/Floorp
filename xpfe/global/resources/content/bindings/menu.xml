@@ -11,10 +11,10 @@
   </binding>
 
   <binding id="menu" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-    <content autostretch="never">
+    <content>
       <xul:text class="menu-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="value=acceltext"/>
-      <xul:box autostretch="never" class="menu-right" inherits="menuactive,disabled">
+      <xul:box align="center" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
       <children includes="menupopup"/>
@@ -27,7 +27,7 @@
   </binding>
 
   <binding id="menuitem" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-    <content autostretch="never">
+    <content>
       <xul:text class="menu-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-accel" inherits="value=acceltext"/>
     </content>
@@ -55,7 +55,7 @@
 
   <binding id="menuitem-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
-      <xul:box class="menu-iconic-left" orient="vertical" autostretch="never"
+      <xul:box class="menu-iconic-left" orient="vertical" align="center"
                inherits="selected,menuactive,disabled,checked">
         <xul:image inherits="src"/>
       </xul:box>
@@ -70,13 +70,13 @@
   </binding>
 
   <binding id="menu-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-    <content autostretch="never">
-      <xul:box class="menu-iconic-left" orient="vertical" autostretch="never">
+    <content>
+      <xul:box class="menu-iconic-left" orient="vertical" align="center">
         <xul:image inherits="src"/>
       </xul:box>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
-      <xul:box orient="vertical" autostretch="never" class="menu-right" inherits="menuactive,disabled">
+      <xul:box orient="vertical" align="center" class="menu-right" inherits="menuactive,disabled">
         <xul:image/>
       </xul:box>
       <children includes="menupopup|template"/>
@@ -89,7 +89,7 @@
   </binding>
   
   <binding id="menubutton-item" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
-    <content autostretch="never">
+    <content>
       <xul:text class="menubutton-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <children includes="menupopup"/>
     </content>

@@ -129,6 +129,7 @@ XUL_ATOM(crop, "crop")
 
 XUL_ATOM(mode, "mode")
 XUL_ATOM(equalsize, "equalsize")
+XUL_ATOM(pack, "pack")
 XUL_ATOM(box, "box")
 XUL_ATOM(hbox, "hbox")
 XUL_ATOM(vbox, "vbox")

@@ -360,20 +360,19 @@ nsBoxFrameInner::CacheAttributes()
   printf("\n");
    */
 
-  mValign = nsBoxFrame::vAlign_Top;
+  mValign = nsBoxFrame::vAlign_Middle;
   mHalign = nsBoxFrame::hAlign_Left;
 
+  PRBool orient = PR_FALSE;
+  mOuter->GetInitialOrientation(orient); 
+  if (orient)
+    mOuter->mState |= NS_STATE_IS_HORIZONTAL;
+  else
+    mOuter->mState &= ~NS_STATE_IS_HORIZONTAL;
 
   mOuter->GetInitialVAlignment(mValign);
   mOuter->GetInitialHAlignment(mHalign);
   
-  PRBool orient = PR_FALSE;
-  mOuter->GetInitialOrientation(orient); 
-  if (orient)
-        mOuter->mState |= NS_STATE_IS_HORIZONTAL;
-    else
-        mOuter->mState &= ~NS_STATE_IS_HORIZONTAL;
-
   PRBool equalSize = PR_FALSE;
   mOuter->GetInitialEqualSize(equalSize); 
   if (equalSize)
@@ -438,40 +437,76 @@ nsBoxFrame::GetInitialHAlignment(nsBoxFrame::Halignment& aHalign)
     return PR_FALSE;
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
-      if (value.EqualsIgnoreCase("left")) {
-          aHalign = nsBoxFrame::hAlign_Left;
-          return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("center")) {
-          aHalign = nsBoxFrame::hAlign_Center;
-          return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("right")) {
-          aHalign = nsBoxFrame::hAlign_Right;
-          return PR_TRUE;
-      }
+    // XXXdwh Everything inside this if statement is deprecated code.
+    if (value.EqualsIgnoreCase("left")) {
+        aHalign = nsBoxFrame::hAlign_Left;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("center")) {
+        aHalign = nsBoxFrame::hAlign_Center;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("right")) {
+        aHalign = nsBoxFrame::hAlign_Right;
+        return PR_TRUE;
+    }
+  }
+      
+  // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
+  // attribute.  For horizontal boxes, we are checking the PACK attribute.  For vertical boxes
+  // we are checking the ALIGN attribute.
+  nsresult res;
+  if (IsHorizontal())
+    res = content->GetAttribute(kNameSpaceID_None, nsXULAtoms::pack, value);
+  else res = content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  if (res == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (value.EqualsIgnoreCase("start")) {
+        aHalign = nsBoxFrame::hAlign_Left;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("center")) {
+        aHalign = nsBoxFrame::hAlign_Center;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("end")) {
+        aHalign = nsBoxFrame::hAlign_Right;
+        return PR_TRUE;
+    }
+
+    // The attr was present but had a nonsensical value. Revert to the default.
+    return PR_FALSE;
   }
 
-            // look at vertical alignment
-      const nsStyleText* textStyle =
-        (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
-
-        switch (textStyle->mTextAlign) 
-         {
-
-                case NS_STYLE_TEXT_ALIGN_RIGHT:
-                    aHalign = nsBoxFrame::hAlign_Right;
-                    return PR_TRUE;
-                break;
-
-                case NS_STYLE_TEXT_ALIGN_CENTER:
-                    aHalign = nsBoxFrame::hAlign_Center;
-                    return PR_TRUE;
-                break;
-
-                default:
-                    aHalign = nsBoxFrame::hAlign_Left;
-                    return PR_TRUE;
-                break;
-         }
+  // Now that we've checked for the attribute it's time to check CSS.  For 
+  // horizontal boxes we're checking PACK.  For vertical boxes we are checking
+  // ALIGN.
+  const nsStyleXUL* boxInfo = (const nsStyleXUL*)mStyleContext->GetStyleData(eStyleStruct_XUL);
+  if (IsHorizontal()) {
+    switch (boxInfo->mBoxPack) {
+      case NS_STYLE_BOX_PACK_START:
+        aHalign = nsBoxFrame::hAlign_Left;
+        return PR_TRUE;
+      case NS_STYLE_BOX_PACK_CENTER:
+        aHalign = nsBoxFrame::hAlign_Center;
+        return PR_TRUE;
+      case NS_STYLE_BOX_PACK_END:
+        aHalign = nsBoxFrame::hAlign_Right;
+        return PR_TRUE;
+      default: // Nonsensical value. Just bail.
+        return PR_FALSE;
+    }
+  }
+  else {
+    switch (boxInfo->mBoxAlign) {
+      case NS_STYLE_BOX_ALIGN_START:
+        aHalign = nsBoxFrame::hAlign_Left;
+        return PR_TRUE;
+      case NS_STYLE_BOX_ALIGN_CENTER:
+        aHalign = nsBoxFrame::hAlign_Center;
+        return PR_TRUE;
+      case NS_STYLE_BOX_ALIGN_END:
+        aHalign = nsBoxFrame::hAlign_Right;
+        return PR_TRUE;
+      default: // Nonsensical value. Just bail.
+        return PR_FALSE;
+    }
+  }
 
   return PR_FALSE;
 }
@@ -488,54 +523,83 @@ nsBoxFrame::GetInitialVAlignment(nsBoxFrame::Valignment& aValign)
     return PR_FALSE;
 
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::valign, value)) {
-      if (value.EqualsIgnoreCase("top")) {
-          aValign = nsBoxFrame::vAlign_Top;
-          return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("baseline")) {
-          aValign = nsBoxFrame::vAlign_BaseLine;
-          return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("middle")) {
-          aValign = nsBoxFrame::vAlign_Middle;
-          return PR_TRUE;
-      } else if (value.EqualsIgnoreCase("bottom")) {
-          aValign = nsBoxFrame::vAlign_Bottom;
-          return PR_TRUE;
-      }
+    if (value.EqualsIgnoreCase("top")) {
+        aValign = nsBoxFrame::vAlign_Top;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("baseline")) {
+        aValign = nsBoxFrame::vAlign_BaseLine;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("middle")) {
+        aValign = nsBoxFrame::vAlign_Middle;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("bottom")) {
+        aValign = nsBoxFrame::vAlign_Bottom;
+        return PR_TRUE;
+    }
   }
 
-  
-             // look at vertical alignment
-      const nsStyleTextReset* textStyle =
-        (const nsStyleTextReset*)mStyleContext->GetStyleData(eStyleStruct_TextReset);
+  // Now that the deprecated stuff is out of the way, we move on to check the appropriate 
+  // attribute.  For horizontal boxes, we are checking the ALIGN attribute.  For vertical boxes
+  // we are checking the PACK attribute.
+  nsresult res;
+  if (IsHorizontal())
+    res = content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value);
+  else res = content->GetAttribute(kNameSpaceID_None, nsXULAtoms::pack, value);
+  if (res == NS_CONTENT_ATTR_HAS_VALUE) {
+    if (value.EqualsIgnoreCase("start")) {
+        aValign = nsBoxFrame::vAlign_Top;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("center")) {
+        aValign = nsBoxFrame::vAlign_Middle;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("baseline")) {
+        aValign = nsBoxFrame::vAlign_BaseLine;
+        return PR_TRUE;
+    } else if (value.EqualsIgnoreCase("end")) {
+        aValign = nsBoxFrame::vAlign_Bottom;
+        return PR_TRUE;
+    }
+    // The attr was present but had a nonsensical value. Revert to the default.
+    return PR_FALSE;
+  }
 
-      if (textStyle->mVerticalAlign.GetUnit() == eStyleUnit_Enumerated) {
-
-         PRInt32 type = textStyle->mVerticalAlign.GetIntValue();
-
-         switch (type) 
-         {
-                case NS_STYLE_VERTICAL_ALIGN_BASELINE:
-                    aValign = nsBoxFrame::vAlign_BaseLine;
-                    return PR_TRUE;
-                break;
-
-                case NS_STYLE_VERTICAL_ALIGN_TOP:
-                    aValign = nsBoxFrame::vAlign_Top;
-                    return PR_TRUE;
-                break;
-
-                case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-                    aValign = nsBoxFrame::vAlign_Bottom;
-                    return PR_TRUE;
-                break;
-
-                case NS_STYLE_VERTICAL_ALIGN_MIDDLE:
-                    aValign = nsBoxFrame::vAlign_Middle;
-                    return PR_TRUE;
-                break;
-         }
-      }
-  
+  // Now that we've checked for the attribute it's time to check CSS.  For 
+  // horizontal boxes we're checking ALIGN.  For vertical boxes we are checking
+  // PACK.
+  const nsStyleXUL* boxInfo = (const nsStyleXUL*)mStyleContext->GetStyleData(eStyleStruct_XUL);
+  if (IsHorizontal()) {
+    switch (boxInfo->mBoxAlign) {
+      case NS_STYLE_BOX_ALIGN_START:
+        aValign = nsBoxFrame::vAlign_Top;
+        return PR_TRUE;
+      case NS_STYLE_BOX_ALIGN_CENTER:
+        aValign = nsBoxFrame::vAlign_Middle;
+        return PR_TRUE;
+      case NS_STYLE_BOX_ALIGN_BASELINE:
+        aValign = nsBoxFrame::vAlign_BaseLine;
+        return PR_TRUE;
+      case NS_STYLE_BOX_ALIGN_END:
+        aValign = nsBoxFrame::vAlign_Bottom;
+        return PR_TRUE;
+      default: // Nonsensical value. Just bail.
+        return PR_FALSE;
+    }
+  }
+  else {
+    switch (boxInfo->mBoxPack) {
+      case NS_STYLE_BOX_PACK_START:
+        aValign = nsBoxFrame::vAlign_Top;
+        return PR_TRUE;
+      case NS_STYLE_BOX_PACK_CENTER:
+        aValign = nsBoxFrame::vAlign_Middle;
+        return PR_TRUE;
+      case NS_STYLE_BOX_PACK_END:
+        aValign = nsBoxFrame::vAlign_Bottom;
+        return PR_TRUE;
+      default: // Nonsensical value. Just bail.
+        return PR_FALSE;
+    }
+  }
 
   return PR_FALSE;
 }
@@ -619,18 +683,34 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
   if (!content)
      return PR_FALSE;
 
+  PRBool autostretchSet = PR_FALSE;
   if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsXULAtoms::autostretch, value))
   {
       if (value.EqualsIgnoreCase("never")) {
          aStretch = PR_FALSE;
+         autostretchSet = PR_TRUE;
          return PR_TRUE;
       } else if (value.EqualsIgnoreCase("always")) {
          aStretch = PR_TRUE;
+         autostretchSet = PR_TRUE;
          return PR_TRUE;
       }
-  } 
+  }
 
-  return PR_FALSE;
+  if (!autostretchSet) {
+    // Check the align attribute.
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::align, value)) {
+      aStretch = value.EqualsIgnoreCase("stretch");
+      return PR_TRUE;
+    }
+
+    // Check the CSS box-align property.
+    const nsStyleXUL* boxInfo;
+    GetStyleData(eStyleStruct_XUL, (const nsStyleStruct*&)boxInfo);
+    aStretch = (boxInfo->mBoxAlign == NS_STYLE_BOX_ALIGN_STRETCH);
+  }
+
+  return PR_TRUE;
 }
 
 
@@ -1154,19 +1234,19 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
         aAttribute == nsXULAtoms::autostretch) {
 
         if (aAttribute == nsXULAtoms::orient || aAttribute == nsXULAtoms::debug || aAttribute == nsHTMLAtoms::align || aAttribute == nsHTMLAtoms::valign) {
-          mInner->mValign = nsBoxFrame::vAlign_Top;
+          mInner->mValign = nsBoxFrame::vAlign_Middle;
           mInner->mHalign = nsBoxFrame::hAlign_Left;
 
-          GetInitialVAlignment(mInner->mValign);
-          GetInitialHAlignment(mInner->mHalign);
-  
           PRBool orient = PR_TRUE;
           GetInitialOrientation(orient); 
           if (orient)
             mState |= NS_STATE_IS_HORIZONTAL;
           else
             mState &= ~NS_STATE_IS_HORIZONTAL;
- 
+
+          GetInitialVAlignment(mInner->mValign);
+          GetInitialHAlignment(mInner->mHalign);
+  
           PRBool equalSize = PR_FALSE;
           GetInitialEqualSize(equalSize); 
           if (equalSize)

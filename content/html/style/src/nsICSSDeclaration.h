@@ -404,7 +404,11 @@ struct nsCSSXUL : public nsCSSStruct  {
   const nsID& GetID(void);
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  nsCSSValue  mBoxAlign;
+  nsCSSValue  mBoxDirection;
+  nsCSSValue  mBoxFlex;
   nsCSSValue  mBoxOrient;
+  nsCSSValue  mBoxPack;
 };
 #endif
 

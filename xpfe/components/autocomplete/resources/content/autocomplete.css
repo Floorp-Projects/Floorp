@@ -8,5 +8,5 @@
 }
 
 .autocomplete-result-popup {
-  display: -moz-xul-popup !important;
+  display: -moz-popup !important;
 }

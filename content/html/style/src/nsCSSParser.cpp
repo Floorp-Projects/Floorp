@@ -3458,9 +3458,20 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_right:
 	  return ParseVariant(aErrorCode, aValue, VARIANT_AHLP, nsnull);
 #ifdef INCLUDE_XUL
+  case eCSSProperty_box_align:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBoxAlignKTable);
+  case eCSSProperty_box_direction:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBoxDirectionKTable);
+  case eCSSProperty_box_flex:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HN, nsnull);
   case eCSSProperty_box_orient:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
                         nsCSSProps::kBoxOrientKTable);
+  case eCSSProperty_box_pack:
+    return ParseVariant(aErrorCode, aValue, VARIANT_HK,
+                        nsCSSProps::kBoxPackKTable);
 #endif
   case eCSSProperty_box_sizing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HK,
