@@ -347,17 +347,18 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCString &aString) {
         aString.Append("201: ");
         // FILENAME
 
-        aString.Append(nsDependentCString(result.fe_fname, result.fe_fnlen));
 
-        /* Bug 143770
-          if (type == 'd')
-            aString.Append('/');
-        */
-        aString.Append(' ');
+        const char* offset = strstr(result.fe_fname, " -> ");
+        if (offset) {
+            result.fe_fnlen = offset - result.fe_fname;
+        }
+        aString.Append(NS_LITERAL_CSTRING("\"") +
+                       Substring(result.fe_fname, result.fe_fname+result.fe_fnlen) +
+                       NS_LITERAL_CSTRING("\" "));
 
         // CONTENT LENGTH
         
-        if (type == 'f') 
+        if (type != 'd') 
         {
             for (int i = 0; i < sizeof(result.fe_size); i++)
             {
