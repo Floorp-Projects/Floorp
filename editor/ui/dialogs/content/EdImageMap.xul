@@ -59,7 +59,7 @@
 
   <broadcaster id="args" value=""/>
 
-  <keyset id="defaultKeySet">
+  <keyset id="keyset">
 
     <key id="deletespot"   keycode="VK_DELETE"   oncommand="deleteElement(currentElement)" />
     <key id="nudgeup"      keycode="VK_UP"       oncommand="nudge(event, 'up')" />

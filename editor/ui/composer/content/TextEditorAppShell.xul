@@ -74,7 +74,7 @@
   </broadcasterset>
 
 	<!-- keys are appended from the overlay -->
-  <keyset id="defaultKeySet"/>
+  <keyset id="keyset"/>
 
   <menubar id="main-menubar" class="chromeclass-menubar">
     <menu id="fileMenu"/>

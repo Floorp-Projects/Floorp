@@ -9,44 +9,39 @@
   <![CDATA[
     function goNewCardDialog(selectedAB)
       {
-      	window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
-      					  "",
-    	  				  "chrome,resizeable=no,titlebar,modal",
-    		  			  {selectedAB:selectedAB});
+        window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+                          "",
+                          "chrome,resizeable=no,titlebar,modal",
+                          {selectedAB:selectedAB});
       }
 
     function goOpenNewMessage()
       {
-	try {
-		MsgNewMessage();
-		return;
-	}
-	catch(ex) {
-	;
-	}
-      	var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService(); 
-      	msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService); 
+        try {
+          MsgNewMessage();
+          return;
+        }
+        catch(ex) {
+          ;
+        }
+        var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
+        msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
         msgComposeService.OpenComposeWindow(null, null,
-										                        Components.interfaces.nsIMsgCompType.New,
-                        										Components.interfaces.nsIMsgCompFormat.Default,
-                        										null); 
-      }  
+                                            Components.interfaces.nsIMsgCompType.New,
+                                            Components.interfaces.nsIMsgCompFormat.Default,
+                                            null);
+      }
 
   ]]>
   </script>
          
   <!-- generic commands -->  
   <broadcasterset id="broadcasterset">
-  	<broadcaster id="cmd_newMessage" value="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" oncommand="goOpenNewMessage();"/>
-	  <broadcaster id="cmd_newCard" value="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" oncommand="goNewCardDialog(0)"/>
-  </broadcasterset>    
+    <broadcaster id="cmd_newMessage" value="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" oncommand="goOpenNewMessage();"/>
+    <broadcaster id="cmd_newCard" value="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" oncommand="goNewCardDialog(0)"/>
+  </broadcasterset>
 
   <keyset id="keyset">
-  	<key id="key_newMessage"   key="&newMessageCmd.key;" observes="cmd_newMessage" modifiers="accel"/>
+    <key id="key_newMessage"   key="&newMessageCmd.key;" observes="cmd_newMessage" modifiers="accel"/>
   </keyset>
-   
-  <keyset id="defaultKeySet">
-  	<key id="key_newMessage"   key="&newMessageCmd.key;" observes="cmd_newMessage" modifiers="accel"/>
-  </keyset>
-        
 </overlay>
