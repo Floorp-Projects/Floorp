@@ -16,15 +16,6 @@
  * Reserved.
  */
 
-//
-// a public service announcement from pinkerton:
-// 
-// Right now this class is in a state of flux because it is drawing partially with
-// appearance, but can still draw the old way when appearance is not present. I want
-// to rip out all the non-appearance stuff at some point, but we need a way to go back
-// to the old way if appearance doesn't work out for us.
-//
-
 #ifdef PowerPlant_PCH
 #include PowerPlant_PCH
 #endif
@@ -32,87 +23,71 @@
 #include <Appearance.h>
 
 #include "CAMSavvyBevelView.h"
-#include "UGraphicGizmos.h"
-#include "CSharedPatternWorld.h"
 
+//
+// Constructor and Destructor
+//
+// Since there is no stream data, or any local data at all for that matter, the
+// constructor/destructor don't need to do anything
+//
 
-
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 CAMSavvyBevelView::CAMSavvyBevelView(LStream *inStream)
 	:	CBevelView(inStream)
 {
-	ResIDT theBevelTraitsID;
-	*inStream >> theBevelTraitsID;
-	
-	ResIDT thePatternResID;
-	*inStream >> thePatternResID;
-	
-	*inStream >> mPatternOrientation;
-	
-	if ( ! UEnvironment::HasFeature(env_HasAppearance) ) {
-		UGraphicGizmos::LoadBevelTraits(theBevelTraitsID, mArithBevelColors);
-
-		mPatternWorld = CSharedPatternWorld::CreateSharedPatternWorld(thePatternResID);
-		ThrowIfNULL_(mPatternWorld);
-		mPatternWorld->AddUser(this);
-	}
-	
+	// nothing	
 }
 
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 CAMSavvyBevelView::~CAMSavvyBevelView()
 {
-	if ( !UEnvironment::HasFeature(env_HasAppearance) )
-		mPatternWorld->RemoveUser(this);
+	// nothing
 }
 
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CAMSavvyBevelView::DrawBeveledFill(void)
+//
+// DrawBevelFill
+//
+// Use Appearance Manager to draw the entire area, both bevel and interior. We use
+// the Window List View Header rather than the Window Header because the list view
+// header doesn't draw the dark bevel at the bottom and it looks nicer when you put
+// multiple bevel rects next to each other.
+//
+void 
+CAMSavvyBevelView :: DrawBeveledFill ( )
 {
 	Rect theFrame;
 	CalcLocalFrameRect(theFrame);
 	
 	StClipRgnState theClipSaver(mBevelRegion);
-	if ( UEnvironment::HasFeature(env_HasAppearance) ) {
-		--theFrame.top;
-		--theFrame.left;
-		::DrawThemeWindowListViewHeader ( &theFrame, kThemeStateActive );
-	}
-	else {
-		Point theAlignment;
-		CSharedPatternWorld::CalcRelativePoint(this, CSharedPatternWorld::eOrientation_Port, theAlignment);
-		
-		CGrafPtr thePort = (CGrafPtr)GetMacPort();
-		mPatternWorld->Fill(thePort, theFrame, theAlignment);
-	}
-}
+	--theFrame.top;			// get rid of thick top/left bevels
+	--theFrame.left;
+	::DrawThemeWindowListViewHeader ( &theFrame, kThemeStateActive );
 
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+} // DrawBeveledFill
 
-void CAMSavvyBevelView::DrawBeveledFrame(void)
+
+
+//
+// DrawBeveledFrame
+//
+// Since the Appearance Manager draws both the bevel and the interior, we
+// don't need to do anything separately like we would have if we were drawing
+// by hand (the old way).
+//
+void 
+CAMSavvyBevelView :: DrawBeveledFrame ( )
 {
-	if ( ! UEnvironment::HasFeature(env_HasAppearance) ) {
-		Rect theFrame;
-		CalcLocalFrameRect(theFrame);
-		UGraphicGizmos::BevelTintRect(theFrame, mMainBevel, 0x4000, 0x4000);
-	}
+	// do nothing
 }
 
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
-void CAMSavvyBevelView::DrawBeveledSub(const SSubBevel&	inDesc)
+//
+// DrawBeveledSub
+//
+// Draw sub-bevels using appearance manager.
+//
+void 
+CAMSavvyBevelView :: DrawBeveledSub( const SSubBevel& inDesc )
 {
 	Rect subFrame = inDesc.cachedLocalFrame;
 	Int16 theInsetLevel = inDesc.bevelLevel;
@@ -126,12 +101,8 @@ void CAMSavvyBevelView::DrawBeveledSub(const SSubBevel&	inDesc)
 			theInsetLevel = -theInsetLevel;
 					
 		::InsetRect(&subFrame, -(theInsetLevel), -(theInsetLevel));
-		if ( UEnvironment::HasFeature(env_HasAppearance) ) {
-			--subFrame.top;
-			::DrawThemeWindowListViewHeader ( &subFrame, kThemeStateActive );
-		}
-		else
-			UGraphicGizmos::BevelTintRect(subFrame, inDesc.bevelLevel, 0x4000, 0x4000);
+		--subFrame.top;
+		::DrawThemeWindowListViewHeader ( &subFrame, kThemeStateActive );
 	}
 }
 

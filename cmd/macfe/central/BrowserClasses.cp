@@ -45,6 +45,18 @@
 	#include <LTextColumn.h>
 	#include <LSubOverlapView.h>
 	
+// еее AM wrappers classes and their AM implementations
+	#include <LStaticText.h>
+	#include <LAMStaticTextImp.h>
+	#include <LIconControl.h>
+	#include <LProgressBar.h>
+	#include <LPushButton.h>
+	#include <LAMPushButtonImp.h>
+
+// еее Things that will go away after appearance conversion complete
+	#include "CProgressBar.h"
+	#include "CPatternBevelView.h"
+	
 // еее PowerPlant Grayscale Classes
 	#include <UGALibRegistry.h>
 
@@ -66,8 +78,6 @@
 	#include "CClusterView.h"
 	#include "CTabSwitcher.h"
 	#include "CPatternTabControl.h"	
-	#include "CProgressBar.h"
-//	#include "CProgressCaption.h"
 	#include "CTaskBarView.h"
 	#include "LTableHeader.h"
 	#include "LTableViewHeader.h"
@@ -192,7 +202,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(LTabGroup);
 	RegisterClass_(LActiveScroller);
 
-	//LRegistrar::RegisterClass('prto', (ClassCreatorFunc);LPrintout::CreateOldPrintoutStream);
 
 #ifdef PP_NewClasses
 	#include <LCicnButton.h>
@@ -213,6 +222,22 @@ void RegisterAllBrowserClasses(void)
 	// еее PowerPlant Grayscale Classes
 	RegisterGALibraryClasses();
 
+	// еее PowerPlant appearance manager classes and their implementations
+	RegisterClass_(LStaticText);
+	RegisterClassID_(LAMStaticTextImp, LStaticText::imp_class_ID);
+	RegisterClass_(LIconControl);
+	RegisterClassID_(LAMControlImp, LIconControl::imp_class_ID);
+	RegisterClass_(LProgressBar);
+	RegisterClassID_(LAMControlImp, LProgressBar::imp_class_ID);
+	RegisterClass_(LPushButton);
+	RegisterClassID_(LAMPushButtonImp, LPushButton::imp_class_ID);
+//	RegisterClass_(LBevelButton);
+//	RegisterClassID_(LAMControlImp, LBevelButton::imp_class_ID);
+
+	// еее Things that will go away after appearance port complete
+	RegisterClass_(CProgressBar);
+	RegisterClass_(CPatternBevelView);
+
 	// еее General Purpose UI Classes
 	RegisterClass_(CBevelButton);
 	RegisterClass_(CDeluxeBevelButton);
@@ -227,7 +252,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CClusterView);
 	RegisterClass_(CPatternTabControl);
 	RegisterClass_(CTabSwitcher);
-	RegisterClass_(CProgressBar);
 	RegisterClass_(CKeyScrollAttachment);
 	RegisterClass_(CToolTipAttachment);
 	RegisterClass_(CDynamicTooltipPane);
@@ -236,7 +260,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CPaneEnabler);
 	RegisterClass_(CSlaveEnabler);
 	RegisterClass_(CScrollerWithArrows);
-	RegisterClass_(CScrollArrowControl);
 	
 #ifdef MOZ_MAIL_NEWS
 	RegisterClass_(CSingleLineEditField);

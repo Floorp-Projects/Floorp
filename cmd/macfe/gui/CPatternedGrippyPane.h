@@ -22,8 +22,8 @@
 // Interface for class that draws a "grippy" pattern in the pane rectangle so users know
 // they can drag/click in this area. Also hilights when mouse enters (roll-over feedback).
 //
-// I didn't actually write this class, just moved it out of DragBar.h.
-// 
+// It is fully Apperance Manager savvy.
+//
 
 #pragma once 
 
@@ -50,11 +50,10 @@ class CPatternedGrippyPane : public LPane
 		virtual	void			DrawSelf(void);
 
 		CIconHandle				mTriangle;
-		CSharedPatternWorld*	mBackPattern;			// back pattern when mouse outside
-		CSharedPatternWorld*	mBackPatternHilite;	// back pattern when mouse inside
+		CSharedPatternWorld*	mBackPatternHilite;		// back pattern when mouse inside
 		Boolean					mMouseInside;
 		
 		CSharedPatternWorld*	mGrippy;				// grippy pattern (gray bg)
-		CSharedPatternWorld*	mGrippyHilite;			// grippy pattern hilite (purple bg)
+		CSharedPatternWorld*	mGrippyHilite;			// grippy pattern hilite (blue bg)
 		
 }; // CPatternedGrippyPane

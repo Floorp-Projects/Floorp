@@ -27,7 +27,7 @@
 #include "CNavCenterTitle.h"
 #include "CNavCenterSelectorPane.h"		// for message id's
 
-#include <Appearance.h>
+#include <LCaption.h>
 
 
 CNavCenterTitle :: CNavCenterTitle ( LStream *inStream )

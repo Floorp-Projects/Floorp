@@ -27,7 +27,6 @@ Boolean GetCaretPosition(MWContext *context, LO_Element * element, int32 caretPo
 									int32* caretX, int32* caretYLow, int32* caretYHigh );
 
 
-class LGAPopup;
 class CPatternButtonPopup;
 class CColorPopup;
 class CComposeSession;
@@ -179,8 +178,8 @@ public:
 			CEditView &view;	
 	};
 
-	LGAPopup		* mParagraphToolbarPopup;
-	LGAPopup		* mSizeToolbarPopup;
+	LControl		* mParagraphToolbarPopup;
+	LControl		* mSizeToolbarPopup;
 	CFontMenuPopup	* mFontToolbarPopup;
 	CPatternButtonPopup	* mAlignToolbarPopup;
 	CColorPopup		* mColorPopup;

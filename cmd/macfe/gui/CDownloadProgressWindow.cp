@@ -22,7 +22,6 @@
 
 #include "CDownloadProgressWindow.h"
 #include "CNSContext.h"
-#include "CProgressBar.h"
 #include "COffscreenCaption.h"
 #include "Netscape_Constants.h"
 #include "PascalString.h"
@@ -31,6 +30,7 @@
 #include "resgui.h"
 
 #include <PP_Messages.h>
+#include <LProgressBar.h>
 
 #define MIN_TICKS	(60/4)	// Don't refresh the progress bar more than 4x /sec.
 
@@ -99,7 +99,7 @@ void CDownloadProgressWindow::FinishCreateSelf(void)
 {
 	CMediatedWindow::FinishCreateSelf();
 	
-	mBar = dynamic_cast<CProgressBar*>(FindPaneByID(PaneID_ProgressBar));
+	mBar = dynamic_cast<LProgressBar*>(FindPaneByID(PaneID_ProgressBar));
 	Assert_(mBar != NULL);
 	
 	mMessage = dynamic_cast<COffscreenCaption*>(FindPaneByID(PaneID_ProgressMessage));

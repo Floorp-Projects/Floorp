@@ -27,7 +27,7 @@
 // PowerPlant
 #include <LTableArrayStorage.h>
 #include <LDropFlag.h>
-#include <UGAColorRamp.h>
+#include <Appearance.h>
 
 #include "CHyperTreeHeader.h"
 #include "URDFUtilities.h"
@@ -319,17 +319,20 @@ void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect
 		Rect backRect = inLocalRect;
 		backRect.bottom--;				// leave a one pixel line on the bottom as separator
 		backRect.right++;				// cover up vertical dividing line on right side
-		Uint8 backColor = inCell.col == header->GetSortedColumn(columnPane) ? colorRamp_Gray3 : colorRamp_Gray1;
-		::RGBBackColor(&UGAColorRamp::GetColor(backColor));
+		ThemeBrush backColor = inCell.col == header->GetSortedColumn(columnPane) ? 
+							kThemeListViewSortColumnBackgroundBrush : kThemeListViewBackgroundBrush;
+		::SetThemeBackground( backColor, 8, false );
 		::EraseRect(&backRect);
 	}
 		
+	::SetThemeTextColor ( kThemeListViewTextColor, 8, false );
+	
 	// Get cell data
 	HT_Resource node = HT_GetNthItem(GetHTView(), URDFUtilities::PPRowToHTRow(inCell.row) );
 	if (node)
 	{
 		if ( HT_IsSeparator(node) ) {
-			const static RGBColor black = { 0, 0, 0 };
+			
 			Uint16 left = inLocalRect.left;
 			
 			if ( inCell.col == FindTitleColumnID() ) {
@@ -337,7 +340,9 @@ void CHyperTreeFlexTable::DrawCellContents( const STableCell& inCell, const Rect
 				left += CStandardFlexTable::kDistanceFromIconToText;
 			}
 			
-			::RGBForeColor ( &black );
+			StColorPenState saved;
+			::SetThemePen( kThemeListViewTextColor, 8, false );
+			
 			::MoveTo ( left,
 						inLocalRect.top + ((inLocalRect.bottom - inLocalRect.top) / 2) );
 			::PenSize ( 2, 2 );

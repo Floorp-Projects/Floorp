@@ -25,7 +25,8 @@
 #include "CContextMenuAttachment.h"
 #include "Netscape_constants.h"
 
-#include "UGAColorRamp.h"
+//#include "UGAColorRamp.h"
+#include <Appearance.h>
 
 
 #pragma mark -- CNavCenterSelectorPane methods --
@@ -79,9 +80,12 @@ CNavCenterSelectorPane::DrawSelf()
 	CalcLocalFrameRect(cellBounds);
 	
 	// erase the background
-	StColorState saved;
-	::RGBBackColor(&UGAColorRamp::GetColor(colorRamp_Gray2));
-	::EraseRect(&cellBounds);
+	StColorPenState saved;
+//	::SetThemeBackground( kThemeActiveWindowHeaderTextColor, 8, false );
+	Rect bevelRect = cellBounds;
+	InsetRect ( &bevelRect, -3, -3 );
+	::DrawThemeWindowListViewHeader ( &bevelRect, kThemeStateActive );
+//	::EraseRect(&cellBounds);
 	
 	// find the bounds of the first cell
 	cellBounds.top = 0;
@@ -766,10 +770,7 @@ TitleImage :: TitleImage ( const LStr255 & inTitle, ResIDT inIconID )
 void
 TitleImage :: DrawInCurrentView( const Rect& inBounds, unsigned long inMode ) const
 {
-	StColorState saved;
-	
-	::RGBBackColor(&UGAColorRamp::GetColor(colorRamp_Gray2));
-	::EraseRect(&inBounds);
+	StColorPenState saved;
 	
 	Rect iconRect = inBounds;
 	Rect textbg = { 0, 0, 0, 0 };

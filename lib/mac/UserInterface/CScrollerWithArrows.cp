@@ -23,7 +23,8 @@
 // See header file for class descriptions.
 //
 // NOTES:
-// - does not yet autoscroll when doing drag and drop
+// - does not yet autoscroll when doing drag and drop. Autoscroll seems to be broken with
+//		new AM implementation for arrows.
 // - icons for horizontal orientation are incorrect, but we don't have any better ones
 //		in the app so I just put the vertical ones in as place holders.
 // - has only been tested in vertical orientation
@@ -34,7 +35,7 @@
 
 #include <LStdControl.h>
 #include <PP_Types.h>
-#include <UGAColorRamp.h>
+#include <Appearance.h>
 
 #pragma mark -- class CScrollArrowControl
 
@@ -186,22 +187,18 @@ CScrollerWithArrows :: MakeOneScrollArrow ( const SPaneInfo &inPaneInfo,
 												ScrollDir inScrollWhichWay )
 {
 	ResIDT iconID = 0;
-	SControlInfo controlInfo;
-	controlInfo.value = 0;
-	controlInfo.minValue = 0;
-	controlInfo.maxValue = 0;
+	MessageT value = 0;
 	
 	if ( inScrollWhichWay == kUpLeft ) {
-		controlInfo.valueMessage = kControlUpButtonPart;
-		iconID = IsVertical() ? CScrollArrowControl::kIconUp : CScrollArrowControl::kIconLeft;
-		
+		value = kControlUpButtonPart;
+		iconID = IsVertical() ? CScrollArrowControl::kIconUp : CScrollArrowControl::kIconLeft;	
 	}
 	else {
-		controlInfo.valueMessage = kControlDownButtonPart;
+		value = kControlDownButtonPart;
 		iconID = IsVertical() ? CScrollArrowControl::kIconDown : CScrollArrowControl::kIconRight;
 	}
 	
-	return new CScrollArrowControl ( inPaneInfo, controlInfo, iconID );
+	return new CScrollArrowControl ( inPaneInfo, value, iconID );
 	
 } // MakeOneScrollArrow
 
@@ -466,20 +463,14 @@ CScrollerWithArrows::ListenToMessage( MessageT inMessage, void *ioParam)
 
 #pragma mark -- class CScrollArrowControl
 
-CScrollArrowControl :: CScrollArrowControl (  const SPaneInfo &inPaneInfo,
-												const SControlInfo	&inControlInfo,
-												ResIDT inIconResID )
-	: LGAIconButton ( inPaneInfo, inControlInfo, controlMode_Button, inIconResID,
-						 sizeSelector_SmallIconSize, iconPosition_Center )
-{
-	// nothing else needed
-}
 
-
-CScrollArrowControl :: CScrollArrowControl ( LStream* inStream ) 
-	:LGAIconButton(inStream)
+CScrollArrowControl :: CScrollArrowControl (
+		const SPaneInfo	&inPaneInfo,
+		MessageT		inValueMessage,
+		Int16			inContentResID )
+	: LIconControl ( inPaneInfo, inValueMessage, kControlIconSuiteNoTrackProc, inContentResID )
 {
-	// nothing else needed	
+	SetIconAlignment( kAlignAbsoluteCenter );
 }
 
 
@@ -492,31 +483,8 @@ CScrollArrowControl :: CScrollArrowControl ( LStream* inStream )
 void
 CScrollArrowControl :: HotSpotAction ( Int16 inHotSpot, Boolean inCurrInside, Boolean inPrevInside )
 {
-	LGAIconButton::HotSpotAction ( inHotSpot, inCurrInside, inPrevInside );
+	LIconControl::HotSpotAction ( inHotSpot, inCurrInside, inPrevInside );
 	if ( inCurrInside )
 		BroadcastValueMessage();
 
 } // HotSpotAction
-
-
-//
-// DrawSelf
-//
-// While the cursor tracking, etc of LGAIconButton is great, we don't want a border around
-// the scroll triangle (it just looks bad). Only paint the background and draw the icon
-//
-void
-CScrollArrowControl :: DrawSelf ( )
-{
-	StColorPenState::Normalize ();
-
-	// Get the frame for the control and paint it
-	Rect localFrame;
-	CalcLocalFrameRect ( localFrame );
-	localFrame.right--;
-	::RGBForeColor ( &UGAColorRamp::GetColor(2));
-	::PaintRect ( &localFrame );
-
-	DrawIcon();
-
-} // DrawSelf

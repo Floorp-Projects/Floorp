@@ -185,9 +185,8 @@ void * StructCopy(const void * struc, UInt32 size);
 // ¥ return the free space available on the volume referenced by vRefNum in bytes
 unsigned long GetFreeSpaceInBytes( short vRefNum );
 
-// ¥Êsets the std poup to the named item
-Boolean SetPopupToNamedItem( LStdPopupMenu* whichMenu, const CStr255& itemText );
-Boolean SetLGAPopupToNamedItem( LGAPopup* whichMenu, const CStr255& itemText );
+// ¥Êsets the std popup to the named item
+Boolean SetMenuToNamedItem( LControl* inControl, MenuHandle inMenu, const CStr255& itemText ) ;
 
 // ¥
 void TurnOn( LControl* control );

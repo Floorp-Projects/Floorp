@@ -23,6 +23,8 @@
 #include <vector.h>
 #include <algorithm>
 
+#include <Appearance.h>
+
 #include "CPersonalToolbarTable.h"
 #include "uapp.h"
 #include "LTableMultiGeometry.h"
@@ -642,14 +644,20 @@ CPersonalToolbarTable :: DrawCell ( const STableCell &inCell, const Rect &inLoca
 	
 	if ( mDropOn ) {									// handle drop on folder
 		mTextHiliteRect = ComputeTextRect ( iconAndName, inLocalRect );
-		StColorState savedColorForTextDrawing;
-		::RGBBackColor(&black);
+		StColorPenState savedColorForTextDrawing;
+
+		::SetThemeBackground ( kThemeDragHiliteBrush, 8, false );
 		::EraseRect(&mTextHiliteRect);
 		::TextMode(srcXor);
 	}
 	else if ( mHiliteCol == inCell.col ) {
 		TextFace(underline);
 		RGBForeColor( &blue );
+	}
+	else {
+		// it should be the window header text color, but that's not right for some reason
+//		::SetThemePen ( kThemeActiveWindowHeaderTextColor, 8, false );
+		::SetThemePen ( kThemeListViewTextColor, 8, false );
 	}
 	::MoveTo(inLocalRect.left + 22, inLocalRect.bottom - 4);
 	::DrawString(iconAndName.name);

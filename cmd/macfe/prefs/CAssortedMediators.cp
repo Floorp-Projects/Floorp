@@ -1559,10 +1559,10 @@ CAppearanceFontsMediator::UpdateMenus()
 	Str255	fontName;
 	LGAPopup *propFontMenu = (LGAPopup *)FindPaneByID(ePropFontMenu);
 	XP_ASSERT(propFontMenu);
-	if (!SetLGAPopupToNamedItem(propFontMenu, mEncodings[selectedEncMenuItem - 1].mPropFont))
+	if (!SetMenuToNamedItem(propFontMenu, propFontMenu->GetMacMenuH(), mEncodings[selectedEncMenuItem - 1].mPropFont))
 	{
 		GetFontName(applFont, fontName);
-		if (!SetLGAPopupToNamedItem(propFontMenu, fontName))
+		if (!SetMenuToNamedItem(propFontMenu, propFontMenu->GetMacMenuH(), fontName))
 		{
 			propFontMenu->SetValue(1);
 		}
@@ -1579,10 +1579,10 @@ CAppearanceFontsMediator::UpdateMenus()
 
 	LGAPopup *fixedFontMenu = (LGAPopup *)FindPaneByID(eFixedFontMenu);
 	XP_ASSERT(fixedFontMenu);
-	if (!SetLGAPopupToNamedItem(fixedFontMenu, mEncodings[selectedEncMenuItem - 1].mFixedFont))
+	if (!SetMenuToNamedItem(fixedFontMenu, fixedFontMenu->GetMacMenuH(), mEncodings[selectedEncMenuItem - 1].mFixedFont))
 	{
 		GetFontName(applFont, fontName);
-		if (!SetLGAPopupToNamedItem(fixedFontMenu, fontName))
+		if (!SetMenuToNamedItem(fixedFontMenu, fixedFontMenu->GetMacMenuH(), fontName))
 		{
 			fixedFontMenu->SetValue(1);
 		}

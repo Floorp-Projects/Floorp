@@ -21,12 +21,17 @@
 #include "CBevelView.h"
 #include "UStdBevels.h"
 
-class CSharedPatternWorld;
-
+//
+// CAMSavvyBevelView
+//
+// A view that bevels itself and its sub views by using appearanace manager
+// routines to draw as a window header. This is a concrete implementation
+// of the abstract CBevelView class.
+//
 class CAMSavvyBevelView : public CBevelView
 {
 	public:
-		enum { class_ID = 'BvPv' };
+		enum { class_ID = 'BvAM' };
 		
 							CAMSavvyBevelView(LStream *inStream);
 		virtual				~CAMSavvyBevelView();
@@ -37,7 +42,4 @@ class CAMSavvyBevelView : public CBevelView
 		virtual	void		DrawBeveledFrame(void);
 		virtual	void		DrawBeveledSub(const SSubBevel&	inDesc);
 
-		SBevelColorDesc		mArithBevelColors;
-		CSharedPatternWorld* mPatternWorld;
-		Int16				mPatternOrientation;
-};
+}; // class CAMSavvyBevelView
