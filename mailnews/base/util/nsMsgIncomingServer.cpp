@@ -557,7 +557,7 @@ NS_IMETHODIMP nsMsgIncomingServer::GetPassword(char ** aPassword)
 }
 
 NS_IMETHODIMP
-nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, char **aPassword) 
+nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const PRUnichar *aPromptTitle, char **aPassword) 
 {
 
     nsXPIDLCString prefvalue;
@@ -571,7 +571,7 @@ nsMsgIncomingServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, char **
 		{
 			PRUnichar * uniPassword;
 			PRBool okayValue = PR_TRUE;
-			dialog->PromptPassword(aPromptMessage, &uniPassword, &okayValue);
+			dialog->PromptPassword(aPromptMessage, aPromptTitle, &uniPassword, &okayValue);
 				
 			if (!okayValue) // if the user pressed cancel, just return NULL;
 			{

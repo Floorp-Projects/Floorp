@@ -261,7 +261,6 @@ public:
 private:
 
     nsCString m_username;
-    Pop3ConData* m_pop3ConData;
 	nsCString m_senderInfo;
 	nsCString m_commandResponse;
 	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
@@ -288,6 +287,7 @@ private:
     nsCOMPtr<nsIPop3IncomingServer> m_pop3Server;
 	
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
+    Pop3ConData* m_pop3ConData;
     void FreeMsgInfo();
 
 	//////////////////////////////////////////////////////////////////////////////////////////

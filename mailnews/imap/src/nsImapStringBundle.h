@@ -82,4 +82,5 @@ NS_END_EXTERN_C
 #define IMAP_SERVER_NOT_IMAP4									5048
 #define IMAP_SERVER_SAID										5049
 #define IMAP_DONE												5050
+#define IMAP_ENTER_PASSWORD_PROMPT_TITLE			5051
 #endif /* _nsImapStringBundle_H__ */

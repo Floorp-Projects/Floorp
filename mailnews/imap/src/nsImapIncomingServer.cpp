@@ -1282,6 +1282,7 @@ nsresult nsImapIncomingServer::GetUnverifiedSubFolders(nsIFolder *parentFolder, 
 NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
 {
     PRUnichar *passwordTemplate = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT);
+    PRUnichar *passwordTitle = IMAPGetStringByID(IMAP_ENTER_PASSWORD_PROMPT_TITLE);
     PRUnichar *passwordText = nsnull;
     nsXPIDLCString hostName;
     nsXPIDLCString userName;
@@ -1290,9 +1291,10 @@ NS_IMETHODIMP nsImapIncomingServer::PromptForPassword(char ** aPassword)
     GetUsername(getter_Copies(userName));
 
     passwordText = nsTextFormater::smprintf(passwordTemplate, (const char *) userName, (const char *) hostName);
-    nsresult rv =  GetPasswordWithUI(passwordText, aPassword);
+    nsresult rv =  GetPasswordWithUI(passwordText, passwordTitle, aPassword);
     nsTextFormater::smprintf_free(passwordText);
     nsCRT::free(passwordTemplate);
+    nsCRT::free(passwordTitle);
     return rv;
 }
 

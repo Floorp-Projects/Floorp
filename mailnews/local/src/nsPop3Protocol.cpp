@@ -372,10 +372,10 @@ net_pop3_free_state(Pop3UidlHost* host)
 nsPop3Protocol::nsPop3Protocol(nsIURI* aURL)
     : nsMsgProtocol(aURL, aURL),
 	nsMsgLineBuffer(NULL, PR_FALSE),
-	m_totalBytesReceived(0),
 	m_bytesInMsgReceived(0), 
 	m_totalFolderSize(0),    
 	m_totalDownloadSize(0),
+	m_totalBytesReceived(0),
 	m_lineStreamBuffer(nsnull),
 	m_pop3ConData(nsnull)
 {
@@ -516,7 +516,9 @@ nsresult nsPop3Protocol::GetPassword(char ** aPassword)
         }
 
         // now go get the password!!!!
-        rv =  server->GetPasswordWithUI(passwordPromptString, aPassword);
+        PRUnichar * passwordTitle = LocalGetStringByID(POP3_ENTER_PASSWORD_PROMPT_TITLE);
+        rv =  server->GetPasswordWithUI(passwordPromptString, passwordTitle, aPassword);
+        nsCRT::free(passwordTitle);
         nsTextFormater::smprintf_free(passwordPromptString);
 
         ClearFlag(POP3_PASSWORD_FAILED);

@@ -2273,6 +2273,7 @@ nsBrowserWindow::PromptUsernameAndPassword(const PRUnichar *text,
 
 NS_IMETHODIMP
 nsBrowserWindow::PromptPassword(const PRUnichar *text,
+				const PRUnichar *title,
                                 PRUnichar **pwd,
                                 PRBool *_retval)
 {

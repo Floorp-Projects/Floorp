@@ -79,7 +79,7 @@ interface nsIMsgIncomingServer : nsISupports {
   attribute string password;
 
   /* prompt the user for a password */
-  string getPasswordWithUI(in wstring aPromptString);
+  string getPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle);
 
   /* should we download whole messages when biff goes off? */
   attribute boolean downloadOnBiff;

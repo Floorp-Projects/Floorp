@@ -518,7 +518,8 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUsernameAndPassword(const PRUnichar *tex
 #endif	
 }
 
-NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text, 
+NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text,
+						 const PRUnichar *windowTitle,
                                                  PRUnichar **pwd, 
                                                  PRBool *returnValue)
 {
@@ -532,7 +533,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword(const PRUnichar *text,
 	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
                                                       (void**)&dialogService );
         if( NS_SUCCEEDED ( rv ) )
-        	rv = dialogService->PromptPassword( window, NULL,text, pwd, returnValue );
+        	rv = dialogService->PromptPassword( window, windowTitle,text, pwd, returnValue );
 	 
 	 }
 	 return rv;

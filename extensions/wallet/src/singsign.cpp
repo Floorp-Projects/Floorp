@@ -2282,7 +2282,7 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    return dialog->PromptPassword(text, pwd, returnValue);
+    return dialog->PromptPassword(text, nsnull /* window title */, pwd, returnValue);
   }
 
   /* convert to a uri so we can parse out the username and hostname */
@@ -2327,7 +2327,7 @@ SINGSIGN_PromptPassword
   }
 
   /* if no password found, get new password from user */
-  res = dialog->PromptPassword(text, pwd, returnValue);
+  res = dialog->PromptPassword(text, nsnull /* window title */, pwd, returnValue);
   if (NS_FAILED(res) || !(*returnValue)) {
     /* user pressed Cancel */
     if (colon) {

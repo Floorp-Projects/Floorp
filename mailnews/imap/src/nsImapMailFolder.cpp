@@ -337,7 +337,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
 		{
 			nsCAutoString leafName (currentFolderNameStr);
 			nsCOMPtr <nsIFileSpec> msfFileSpec;
-			nsresult rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
+			rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
 			if (NS_SUCCEEDED(rv) && msfFileSpec)
 			{
 				// leaf name is the db name w/o .msf (nsShouldIgnoreFile strips it off)

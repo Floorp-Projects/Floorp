@@ -832,7 +832,7 @@ char * wallet_GetString(PRUnichar * szMessage)
   const nsString message = szMessage;
   PRUnichar* pwd;
   retval = PR_FALSE; /* in case user exits dialog by clicking X */
-  res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
+  res = dialog->PromptPassword(message.GetUnicode(), nsnull /* window title */, &pwd, &retval);
   if (NS_FAILED(res)) {
     return NULL;
   }
@@ -867,7 +867,7 @@ char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage2, PRB
   res = dialog->PromptDoublePassword
     (message.GetUnicode(), message2.GetUnicode(), &pwd, &pwd2, &retval);
 #else
-  res = dialog->PromptPassword(message.GetUnicode(), &pwd, &retval);
+  res = dialog->PromptPassword(message.GetUnicode(), nsnull /* window title */, &pwd, &retval);
   if (NS_FAILED(res)) {
     return NULL;
   }
@@ -875,7 +875,7 @@ char * wallet_GetDoubleString(PRUnichar * szMessage, PRUnichar * szMessage2, PRB
     delete[] pwd;
     return NULL; /* user pressed cancel */
   }
-  res = dialog->PromptPassword(message2.GetUnicode(), &pwd2, &retval);
+  res = dialog->PromptPassword(message2.GetUnicode(), nsnull /* window title */, &pwd2, &retval);
 #endif
   if (NS_FAILED(res)) {
     return NULL;
