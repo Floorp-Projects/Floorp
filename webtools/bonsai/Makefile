@@ -22,7 +22,7 @@
 # to where you will install the running Bonsai.  Then "make install" should
 # copy things for you.
 
-
+CC = cc
 CFLAGS = -g
 #LDFLAGS = -lcrypt
 #PERL = /usr/bin/perl
@@ -97,7 +97,7 @@ FILES = CGI.tcl			\
 	viewold.cgi		
 
 trapdoor: trapdoor.o
-	cc -o trapdoor trapdoor.o $(LDFLAGS)
+	$(CC) -o trapdoor trapdoor.o $(LDFLAGS)
 
 install: trapdoor
 	mkdir -p $(PREFIX) && \
@@ -106,7 +106,7 @@ install: trapdoor
           sed -e s#/usr/bonsaitools/bin/perl#$(PERL)#g \
               -e s#/usr/bonsaitools/bin/mysqltcl#$(MYSQLTCL)#g \
               $$I > $(PREFIX)/$$I && \
-	chmod 755 $(PREFIX)$(I); done && \
+	chmod 755 $(PREFIX)$$(I); done && \
 	mkdir -p $(PREFIX)/data && \
 	cp -f trapdoor $(PREFIX)/data && \
 	chmod 755 $(PREFIX)/data && \
