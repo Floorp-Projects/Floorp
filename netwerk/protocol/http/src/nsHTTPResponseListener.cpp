@@ -157,15 +157,15 @@ nsHTTPResponseListener::OnDataAvailable(nsISupports* context,
 
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
+nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
 {
     nsresult rv;
 
     //TODO globally replace printf with trace calls. 
-    //printf("nsHTTPResponseListener::OnStartBinding...\n");
+    //printf("nsHTTPResponseListener::OnStartRequest...\n");
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-           ("nsHTTPResponseListener::OnStartBinding [this=%x].\n", this));
+           ("nsHTTPResponseListener::OnStartRequest [this=%x].\n", this));
 
     // Initialize header varaibles...  
     m_bHeadersDone     = PR_FALSE;
@@ -191,7 +191,7 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
     if (NS_SUCCEEDED(rv)) {
         // Pass the notification out to the consumer...
         if (m_pConsumer) {
-            rv = m_pConsumer->OnStartBinding(m_ResponseContext);
+            rv = m_pConsumer->OnStartRequest(m_ResponseContext);
         } else {
             NS_ERROR("No Stream Listener...");
             rv = NS_ERROR_NULL_POINTER;
@@ -202,18 +202,18 @@ nsHTTPResponseListener::OnStartBinding(nsISupports* i_pContext)
 }
 
 NS_IMETHODIMP
-nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
+nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
                                  nsresult i_Status,
                                  const PRUnichar* i_pMsg)
 {
     nsresult rv;
 
     PR_LOG(gHTTPLog, PR_LOG_DEBUG, 
-           ("nsHTTPResponseListener::OnStopBinding [this=%x].\n", this));
+           ("nsHTTPResponseListener::OnStopRequest [this=%x].\n", this));
 
     // Pass the notification out to the consumer...
     if (m_pConsumer) {
-        rv = m_pConsumer->OnStopBinding(m_ResponseContext, i_Status, i_pMsg);
+        rv = m_pConsumer->OnStopRequest(m_ResponseContext, i_Status, i_pMsg);
     } else {
         NS_ERROR("No Stream Listener...");
         rv = NS_ERROR_NULL_POINTER;
@@ -230,21 +230,6 @@ nsHTTPResponseListener::OnStopBinding(nsISupports* i_pContext,
 
     return rv;
 }
-
-NS_IMETHODIMP
-nsHTTPResponseListener::OnStartRequest(nsISupports* i_pContext)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsHTTPResponseListener::OnStopRequest(nsISupports* i_pContext,
-                                      nsresult iStatus,
-                                      const PRUnichar* i_pMsg)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 nsresult nsHTTPResponseListener::FireOnHeadersAvailable()
 {
