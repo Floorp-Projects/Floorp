@@ -1720,7 +1720,7 @@ nsBrowserAppCore::Reload(nsIWebShell * aPrev, nsLoadFlags aType)
 NS_IMETHODIMP
 nsBrowserAppCore::Add(nsIWebShell * aWebShell)
 {
-   nsresult rv;
+   nsresult rv=NS_OK;
    if (mSHistory)  {
 	   //mSHistory checks for null pointers
      rv = mSHistory->Add(aWebShell);
@@ -1731,7 +1731,7 @@ nsBrowserAppCore::Add(nsIWebShell * aWebShell)
 NS_IMETHODIMP
 nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev, PRBool aIsReloading)
 {
-   nsresult rv;
+   nsresult rv=NS_OK;
    if (mSHistory) {
 	   //mSHistory checks for null pointers
      rv = mSHistory->Goto(aGotoIndex, aPrev, PR_FALSE);
@@ -2185,184 +2185,20 @@ nsBrowserInstance::SetIsViewSource(PRBool aBool) {
 
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
 
-/* Factory class */
-struct nsBrowserInstanceFactory : public nsIFactory {
-    /* ctor/dtor */
-    nsBrowserInstanceFactory() {
-        NS_INIT_REFCNT();
-    }
-    virtual ~nsBrowserInstanceFactory() {
-    }
-    /* This class implements the nsISupports interface functions. */
-	NS_DECL_ISUPPORTS
-    /* nsIFactory methods */
-    NS_IMETHOD CreateInstance( nsISupports *aOuter,
-                               const nsIID &aIID,
-                               void **aResult );
-    NS_IMETHOD LockFactory( PRBool aLock );
-private:
-    nsInstanceCounter instanceCounter;
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
+
+struct components_t {
+  nsCID cid;
+  nsIGenericFactory::ConstructorProcPtr constructor;
+  const char *progid;
+  const char *description;
 };
 
-/* nsISupports interface implementation for the factory. */
-NS_IMPL_ADDREF( nsBrowserInstanceFactory )
-NS_IMPL_RELEASE( nsBrowserInstanceFactory )
+components_t components[] = {
+  { NS_BROWSERINSTANCE_CID, &nsBrowserInstanceConstructor, NS_IBROWSERINSTANCE_PROGID, "nsBrowserInstance", },
+};
 
-NS_IMETHODIMP
-nsBrowserInstanceFactory::QueryInterface( const nsIID &anIID, void **aResult ) {
-    nsresult rv = NS_OK;
-    if ( aResult ) {
-        *aResult = 0;
-        if ( 0 ) {
-        } else if ( anIID.Equals( nsIFactory::GetIID() ) ) {
-            nsIFactory *self = (nsIFactory*)this;
-            *aResult = self;
-            self->AddRef();
-        } else if ( anIID.Equals( nsCOMTypeInfo<nsISupports>::GetIID() ) ) {
-            nsISupports *self = (nsISupports*)this;
-            *aResult = self;
-            self->AddRef();
-        } else {
-            rv = NS_ERROR_NO_INTERFACE;
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
-}
+NS_IMPL_MODULE(components)
+NS_IMPL_NSGETMODULE(nsModule)
 
-/* Factory's CreateInstance implementation */
-NS_IMETHODIMP
-nsBrowserInstanceFactory::CreateInstance( nsISupports *anOuter,
-                                    const nsIID &anIID,
-                                    void*       *aResult ) {
-    nsresult rv = NS_OK;
-    if ( aResult ) {
-        /* Allocate new find component object. */
-        nsBrowserInstance *instance = new nsBrowserInstance();
-        if ( instance ) {
-            /* Allocated OK, do query interface to get proper */
-            /* pointer and increment refcount.                */
-            rv = instance->QueryInterface( anIID, aResult );
-            if ( NS_FAILED( rv ) ) {
-                /* refcount still at zero, delete it here. */
-                delete instance;
-            } else {
-                /* Initialize the new instance. */
-                rv = instance->Init();
-                if ( NS_FAILED( rv ) ) {
-                    /* Clean up. */
-                    ((nsISupports*)*aResult)->Release();
-                    *aResult = 0;
-                }
-            }
-        } else {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-    } else {
-        rv = NS_ERROR_NULL_POINTER;
-    }
-    return rv;
-}
 
-/* Factory's LockFactory implementation */
-NS_IMETHODIMP
-nsBrowserInstanceFactory::LockFactory(PRBool aLock) {
-      return nsInstanceCounter::LockFactory( aLock );
-}
-
-/* NSRegisterSelf implementation */
-extern "C" NS_EXPORT nsresult
-NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIServiceManager> srvMgr( do_QueryInterface( aServiceMgr, &rv ) );
-    if ( NS_SUCCEEDED( rv ) ) {
-        /* Get the component manager service. */
-        nsCID cid = NS_COMPONENTMANAGER_CID;
-        nsIComponentManager *componentMgr = 0;
-        rv = srvMgr->GetService( cid,
-                                 nsIComponentManager::GetIID(),
-                                 (nsISupports**)&componentMgr );
-        if ( NS_SUCCEEDED( rv ) ) {
-            /* Register our component. */
-            rv = componentMgr->RegisterComponent( nsBrowserInstance::GetCID(),
-                                                  "nsBrowserInstance",
-                                                  NS_IBROWSERINSTANCE_PROGID,
-                                                  path,
-                                                  PR_TRUE,
-                                                  PR_TRUE );
-            if ( NS_SUCCEEDED( rv ) ) {
-                DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance registration successful\n" );
-            } else {
-                DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance registration failed, RegisterComponent rv=0x%X\n", (int)rv );
-            }
-            /* Release the component manager service. */
-            srvMgr->ReleaseService( cid, componentMgr );
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance registration failed, GetService rv=0x%X\n", (int)rv );
-        }
-    } else {
-        DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance registration failed, bad service mgr, rv=0x%X\n", (int)rv );
-    }
-    return rv;
-}
-
-/* NSUnregisterSelf implementation */
-extern "C" NS_EXPORT nsresult
-NSUnregisterSelf( nsISupports* aServiceMgr, const char* path ) {
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIServiceManager> srvMgr( do_QueryInterface( aServiceMgr, &rv ) );
-    if ( NS_SUCCEEDED( rv ) ) {
-        /* Get the component manager service. */
-        nsCID cid = NS_COMPONENTMANAGER_CID;
-        nsIComponentManager *componentMgr = 0;
-        rv = srvMgr->GetService( cid,
-                                 nsIComponentManager::GetIID(),
-                                 (nsISupports**)&componentMgr );
-        if ( NS_SUCCEEDED( rv ) ) {
-            /* Unregister our component. */
-            rv = componentMgr->UnregisterComponent( nsBrowserInstance::GetCID(), path );
-            if ( NS_SUCCEEDED( rv ) ) {
-                DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance unregistration successful\n" );
-            } else {
-                DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance unregistration failed, UnregisterComponent rv=0x%X\n", (int)rv );
-            }
-            /* Release the component manager service. */
-            srvMgr->ReleaseService( cid, componentMgr );
-        } else {
-            DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance unregistration failed, GetService rv=0x%X\n", (int)rv );
-        }
-    } else {
-        DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance unregistration failed, bad service mgr, rv=0x%X\n", (int)rv );
-    }
-    return rv;
-}
-
-/* NSGetFactory implementation */
-extern "C" NS_EXPORT nsresult
-NSGetFactory( nsISupports *aServiceMgr,
-              const nsCID &aClass,
-              const char  *aClassName,
-              const char  *aProgID,
-              nsIFactory* *aFactory ) {
-    nsresult rv = NS_OK;
-    if ( NS_SUCCEEDED( rv ) ) {
-        if ( aFactory ) {
-            nsBrowserInstanceFactory *factory = new nsBrowserInstanceFactory();
-            if ( factory ) {
-                rv = factory->QueryInterface( nsIFactory::GetIID(), (void**)aFactory );
-                if ( NS_FAILED( rv ) ) {
-                    DEBUG_PRINTF( PR_STDOUT, "nsBrowserInstance NSGetFactory failed, QueryInterface rv=0x%X\n", (int)rv );
-                    /* Delete this bogus factory. */
-                    delete factory;
-                }
-            } else {
-                rv = NS_ERROR_OUT_OF_MEMORY;
-            }
-        } else {
-            rv = NS_ERROR_NULL_POINTER;
-        }
-    }
-
-    return rv;
-}
