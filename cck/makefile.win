@@ -76,7 +76,6 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Sidebar
 
-	-mkdir $(CCKDIST)\CCKTool\CCKDocs
 	-mkdir $(CCKDIST)\CCKTool\CCKHelp
 
 	-mkdir $(CCKDIST)\CCKTool\Version
