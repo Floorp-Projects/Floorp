@@ -904,25 +904,27 @@ ParseAtom(CompilerState *state)
       case '[':
         ++cp;
         ren = NewRENode(state, REOP_CCLASS, (void *)cp);
-	if (!ren)
-	    return NULL;
+        if (!ren)
+            return NULL;
 
-        while ((c = *++cp) != ']') {
-	    if (cp == state->cpend) {
+        do {
+            if (cp == state->cpend) {
                 js_ReportCompileErrorNumber(state->context, state->tokenStream,
                                             NULL,
                                             JSREPORT_ERROR,
                                             JSMSG_UNTERM_CLASS, ocp);
-		return NULL;
-	    }
-	    if (c == '\\' && (cp+1 != state->cpend))
-		cp++;
-	}
-	ren->u.kid2 = (void *)cp++;
-
+                return NULL;
+            }
+            if ((c = *++cp) == ']')
+                break;
+            if (c == '\\' && (cp+1 != state->cpend))
+                cp++;
+        } while (JS_TRUE);
+        ren->u.kid2 = (void *)cp++;
+        
         ren->u.ucclass.bitmap = NULL;
 
-	/* Since we rule out [] and [^], we can set the non-empty flag. */
+        /* Since we rule out [] and [^], we can set the non-empty flag. */
 	ren->flags = RENODE_SINGLE | RENODE_NONEMPTY;
 	break;
 
