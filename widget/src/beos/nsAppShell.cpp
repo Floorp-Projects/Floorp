@@ -57,8 +57,8 @@ static int gBAppCount = 0;
 
 struct ThreadInterfaceData
 {
-  void  *data;
-  int32  sync;
+  void	*data;
+  thread_id waitingThread;
 };
 
 struct EventItem
@@ -123,7 +123,10 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
               (long unsigned) PR_GetCurrentThread());
   PR_snprintf(semname, sizeof(semname), "sync%lx", 
               (long unsigned) PR_GetCurrentThread());
-
+              
+#ifdef DEBUG              
+  printf("nsAppShell::Create portname: %s, semname: %s\n", portname, semname);
+#endif
   /* 
    * Set up the port for communicating. As restarts thru execv may occur
    * and ports survive those (with faulty events as result). Combined with the fact
@@ -133,6 +136,8 @@ NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
    *
    * We do this by checking if the sem has been created. If it is we can reuse the port (if it exists).
    * Otherwise we need to create the sem and the port, deleting any open ports before.
+   * TODO: The semaphore is no longer needed for syncing, so it's only use is for detecting if the
+   * port needs to be reopened. This should be replaced, but I'm not sure how -tqh
    */
   syncsem = my_find_sem(semname);
   eventport = find_port(portname);
@@ -191,10 +196,11 @@ NS_IMETHODIMP nsAppShell::Run()
         {
           MethodInfo *mInfo = (MethodInfo *)id.data;
           mInfo->Invoke();
-          if(! id.sync)
+          if(id.waitingThread != 0)
           {
-            delete mInfo;
+            resume_thread(id.waitingThread);
           }
+          delete mInfo;
         }
         break;
 
@@ -209,9 +215,6 @@ NS_IMETHODIMP nsAppShell::Run()
 #endif
         break;
       }
-
-      if(id.sync)
-        release_sem(syncsem);
 
       delete newitem;
       newitem = nsnull;
@@ -354,7 +357,7 @@ NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
   int32 code;
   ThreadInterfaceData id;
   id.data = 0;
-  id.sync = 0;
+  id.waitingThread = 0;
   bool gotMessage = false;
 
   do 
@@ -374,10 +377,11 @@ NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
           {
             MethodInfo *mInfo = (MethodInfo *)id.data;
             mInfo->Invoke();
-            if(! id.sync)
+            if(id.waitingThread != 0)
             {
-              delete mInfo;
+              resume_thread(id.waitingThread);
             }
+            delete mInfo;
             gotMessage = PR_TRUE;
           }
           break;
@@ -397,10 +401,6 @@ NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
           break;
       }
 
-      if(id.sync)
-      {
-        release_sem(syncsem);
-      }
       delete newitem;
       newitem = nsnull;
 
@@ -452,7 +452,7 @@ void nsAppShell::RetrieveAllEvents(bool blockable)
 
     newitem->code = 0;
     newitem->ifdata.data = nsnull;
-    newitem->ifdata.sync = 0;
+    newitem->ifdata.waitingThread = 0;
 
     // only block on read_port when 
     //   blockable == true
@@ -470,10 +470,9 @@ void nsAppShell::RetrieveAllEvents(bool blockable)
       return;
     }
     // synchronous events should be processed quickly (?)
-	if (newitem->ifdata.sync) {
+    if (newitem->ifdata.waitingThread != 0) {
       events[PRIORITY_TOP].AddItem(newitem);
-	}
-	else {
+    } else {
       switch(newitem->code)
       {
       case WM_CALLMETHOD :
@@ -532,6 +531,9 @@ void nsAppShell::ConsumeRedundantMouseMoveEvent(MethodInfo *pNewEventMInfo)
       // sequential mouse move found!
       events[PRIORITY_THIRD].RemoveItem(previtem);
       delete mInfoPrev;
+      //if it's a synchronized call also wake up thread.
+      if(previtem->ifdata.waitingThread != 0)
+        resume_thread(previtem->ifdata.waitingThread);
       delete previtem;
       break;
     }

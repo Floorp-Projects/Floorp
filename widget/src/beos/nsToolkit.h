@@ -64,7 +64,6 @@ public:
             PRBool          IsGuiThread(void)      { return (PRBool)(mGuiThread == PR_GetCurrentThread());}
             PRThread*       GetGuiThread(void)       { return mGuiThread;   }
 			void			Kill();
-
 private:
             virtual         ~nsToolkit();
             void            CreateUIThread(void);
@@ -77,7 +76,6 @@ protected:
 	bool		cached;
 	bool		localthread;
 	port_id		eventport;
-	sem_id		syncsem;
 };
 
 #define WM_CALLMETHOD   'CAme'
