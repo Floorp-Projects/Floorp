@@ -7788,7 +7788,10 @@ FindPreviousSibling(nsIPresShell* aPresShell,
       const nsStyleDisplay* display;
       prevSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
-      if (display->IsFloating()) {
+      const nsStylePosition* position;
+      prevSibling->GetStyleData(eStyleStruct_Position,
+                                (const nsStyleStruct*&)position);
+      if (display->IsFloating() || position->IsPositioned()) {
         // Nope. Get the place-holder instead
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(prevSibling, &placeholderFrame);
@@ -7834,7 +7837,10 @@ FindNextSibling(nsIPresShell* aPresShell,
       const nsStyleDisplay* display;
       nextSibling->GetStyleData(eStyleStruct_Display,
                                 (const nsStyleStruct*&)display);
-      if (display->IsFloating()) {
+      const nsStylePosition* position;
+      nextSibling->GetStyleData(eStyleStruct_Position,
+                                (const nsStyleStruct*&)position);
+      if (display->IsFloating() || position->IsPositioned()) {
         // Nope. Get the place-holder instead
         nsIFrame* placeholderFrame;
         aPresShell->GetPlaceholderFrameFor(nextSibling, &placeholderFrame);
@@ -8976,11 +8982,14 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // remove the mapping from content objects to frames
     DeletingFrameSubtree(aPresContext, shell, frameManager, childFrame);
 
-    // See if the child frame is a floating frame
+    // See if the child frame is a floating or positioned frame
     const nsStyleDisplay* display;
     childFrame->GetStyleData(eStyleStruct_Display,
                              (const nsStyleStruct*&)display);
-    if (display->IsFloating()) {
+    const nsStylePosition* position;
+    childFrame->GetStyleData(eStyleStruct_Position,
+                              (const nsStyleStruct*&)position);
+    if (display->IsFloating() || position->IsPositioned()) {
 #ifdef NOISY_FIRST_LETTER
       printf("  ==> child display is still floating!\n");
 #endif
