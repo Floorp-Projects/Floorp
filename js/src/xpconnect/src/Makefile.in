@@ -131,8 +131,10 @@ endif
 endif
 
 ifeq ($(OS_ARCH),WINNT)
+ifndef GNU_CXX
 # use pre-compiled headers
 CXXFLAGS	+= -YX -Fp$(LIBRARY_NAME).pch
 # precompiled headers require write access to .pch which breaks -j builds
 .NOTPARALLEL::
+endif
 endif

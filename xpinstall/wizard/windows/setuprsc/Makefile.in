@@ -43,6 +43,8 @@ GARBAGE_DIRS	+= $(DIST)/include/$(MODULE)
 
 FORCE_SHARED_LIB=1
 
+LOCAL_INCLUDES	= -I$(srcdir)
+
 include $(topsrcdir)/config/rules.mk
 
 # Hack to get around the default rules insisting that .lib should exist

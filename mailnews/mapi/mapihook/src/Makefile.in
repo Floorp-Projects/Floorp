@@ -86,8 +86,8 @@ endif
 
 EXTRA_DSO_LDOPTS= \
 		$(EXTRA_DSO_LIBS) \
-		$(XPCOM_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
+		$(XPCOM_LIBS) \
 		$(NSPR_LIBS) \
 		$(NULL)
 

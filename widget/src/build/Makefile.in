@@ -60,14 +60,14 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
 		$(EXTRA_DSO_LIBS) \
-		$(XPCOM_LIBS) \
-		$(NSPR_LIBS) \
+		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE 
+DEFINES		+= -D_IMPL_NS_WIDGET -DMOZ_UNICODE -DMOZ_AIMM
 
 
 

@@ -55,5 +55,5 @@ include $(topsrcdir)/config/rules.mk
 # For nsManifestLineReader class.
 LOCAL_INCLUDES	= -I$(srcdir)/../../../ds
 
-DEFINES += -DEXPORT_XPTI_API -DEXPORT_XPT_API
+DEFINES += -DEXPORT_XPTI_API -DEXPORT_XPT_API -D_IMPL_NS_COM -D_IMPL_NS_BASE
 
