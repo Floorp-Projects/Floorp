@@ -36,6 +36,16 @@ XPT_SizeOfHeader(XPTHeader *header)
     return size;
 }
 
+uint32
+XPT_SizeOfHeaderBlock(XPTHeader *header)
+{
+    uint32 size = XPT_SizeOfHeader(header);
+
+    size += header->num_interfaces * sizeof (XPTInterfaceDirectoryEntry);
+
+    return size;
+}
+
 XPTHeader *
 XPT_NewHeader(uint32 num_interfaces)
 {
@@ -109,11 +119,6 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     /* shouldn't be necessary now, but maybe later */
     XPT_SeekTo(cursor, ide_offset); 
 
-    for (i = 0; i < header->num_interfaces; i++) {
-        XPT_DoInterfaceDirectoryEntry(cursor,
-                                      &header->interface_directory[i]);
-    }
-    
     for (i = 0; i < header->num_interfaces; i++) {
         if (!XPT_DoInterfaceDirectoryEntry(&cursor, 
                                            &header->interface_directory[i]))
@@ -591,7 +596,8 @@ XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **ap)
 }
 
 PRBool 
-XPT_DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap) {
+XPT_DoAnnotations(XPTCursor *cursor, XPTAnnotation **ap)
+{
     return PR_FALSE;
 }
 
@@ -601,8 +607,9 @@ XPT_SizeOfInterfaceDescriptor(XPTInterfaceDescriptor *idp)
     return 0;
 }
 
-XPTInterfaceDescriptor
+XPTInterfaceDescriptor *
 XPT_GetDescriptorByOffset(XPTState *state, XPTHeader *header, uint32
-                          descriptor_num) {
+                          descriptor_num)
+{
 }
 

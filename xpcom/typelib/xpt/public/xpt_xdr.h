@@ -72,6 +72,9 @@ XPT_DoBits(XPTCursor *cursor, uint8 *u8p, int nbits);
 int
 XPT_FlushBits(XPTCursor *cursor);
 
+PRBool
+XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp);
+
 typedef enum {
     XPT_ENCODE,
     XPT_DECODE
@@ -114,6 +117,10 @@ XPT_SeekTo(XPTCursor *cursor, uint32 offset);
 
 void
 XPT_DestroyXDRState(XPTState *state);
+
+/* Set file_length based on the data used in the state.  (Only ENCODE.) */
+PRBool
+XPT_UpdateFileLength(XPTState *state);
 
 void
 XPT_GetXDRData(XPTState *state, XPTPool pool, char **data, uint32 *len);
