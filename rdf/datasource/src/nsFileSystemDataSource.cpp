@@ -359,7 +359,7 @@ FileSystemDataSource::GetSources(nsIRDFResource *property,
                                  PRBool tv,
                                  nsISimpleEnumerator **sources /* out */)
 {
-	NS_NOTYETIMPLEMENTED("write me");
+//	NS_NOTYETIMPLEMENTED("write me");
 	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
