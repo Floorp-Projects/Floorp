@@ -192,7 +192,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
         hasVoidReturn = method != null && method.getReturnType() == Void.TYPE;
         this.argCount = (short) length;
 
-        ScriptRuntime.initFunction(scope, this);
+        ScriptRuntime.setFunctionProtoAndParent(scope, this);
         Context cx = Context.getCurrentContext();
         useDynamicScope = cx != null &&
                           cx.hasCompileFunctionsWithDynamicScope();
@@ -334,7 +334,7 @@ public class FunctionObject extends NativeFunction implements Serializable {
      * @see org.mozilla.javascript.Scriptable#getClassName
      */
     public void addAsConstructor(Scriptable scope, Scriptable prototype) {
-        ScriptRuntime.initFunction(scope, this);
+        ScriptRuntime.setFunctionProtoAndParent(scope, this);
         setImmunePrototypeProperty(prototype);
 
         prototype.setParentScope(this);

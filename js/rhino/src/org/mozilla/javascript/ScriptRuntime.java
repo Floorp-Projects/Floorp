@@ -1855,19 +1855,6 @@ public class ScriptRuntime {
     {
         String[] argNames = funObj.argNames;
         if (argNames != null) {
-            ScriptableObject so;
-            try {
-                /* Global var definitions are supposed to be DONTDELETE
-                 * so we try to create them that way by hoping that the
-                 * scope is a ScriptableObject which provides access to
-                 * setting the attributes.
-                 */
-                so = (ScriptableObject) scope;
-            } catch (ClassCastException x) {
-                // oh well, we tried.
-                so = null;
-            }
-
             Scriptable varScope = scope;
             if (fromEvalCode) {
                 // When executing an eval() inside a with statement,
@@ -1882,11 +1869,14 @@ public class ScriptRuntime {
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!hasProp(scope, name)) {
-                    if (so != null && !fromEvalCode)
-                        so.defineProperty(name, Undefined.instance,
-                                          ScriptableObject.PERMANENT);
-                    else
+                    if (!fromEvalCode) {
+                        // Global var definitions are supposed to be DONTDELETE
+                        ScriptableObject.defineProperty
+                            (scope, name, Undefined.instance,
+                             ScriptableObject.PERMANENT);
+                    } else {
                         varScope.put(name, varScope, Undefined.instance);
+                    }
                 }
             }
         }
@@ -1934,20 +1924,22 @@ public class ScriptRuntime {
         return scope.getParentScope();
     }
 
-    public static void initFunction(Scriptable scope, Function fn) {
+    public static void setFunctionProtoAndParent(Scriptable scope,
+                                                 Function fn)
+    {
         fn.setPrototype(ScriptableObject.getFunctionPrototype(scope));
         fn.setParentScope(scope);
     }
 
-    public static void putFunction(Scriptable scope, String name,
-                                   Function function, int type,
-                                   boolean fromEvalCode)
+    public static void initFunction(Context cx, Scriptable scope,
+                                    NativeFunction function, int type,
+                                    boolean fromEvalCode)
     {
-        if (type == FunctionNode.FUNCTION_STATEMENT
-            || type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT)
-        {
+        setFunctionProtoAndParent(scope, function);
+        if (type == FunctionNode.FUNCTION_STATEMENT) {
+            String name = function.functionName;
             if (name != null && name.length() != 0) {
-                if (type == FunctionNode.FUNCTION_STATEMENT && !fromEvalCode) {
+                if (!fromEvalCode) {
                     // ECMA specifies that functions defined in global and
                     // function scope outside eval should have DONTDELETE set.
                     ScriptableObject.defineProperty
@@ -1956,9 +1948,13 @@ public class ScriptRuntime {
                     scope.put(name, scope, function);
                 }
             }
+        } else if (type == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
+            String name = function.functionName;
+            if (name != null && name.length() != 0) {
+                scope.put(name, scope, function);
+            }
         }
     }
-
 
     static void checkDeprecated(Context cx, String name) {
         int version = cx.getLanguageVersion();

@@ -304,12 +304,9 @@ public final class OptRuntime extends ScriptRuntime {
         return result;
     }
 
-    public static void setupFunction(NativeFunction fn,
-                                     Scriptable scope,
-                                     int functionType)
+    public static void initFunction(NativeFunction fn, int functionType,
+                                    Scriptable scope, Context cx)
     {
-        ScriptRuntime.initFunction(scope, fn);
-        ScriptRuntime.putFunction(scope, fn.getFunctionName(), fn,
-                                  functionType, false);
+        ScriptRuntime.initFunction(cx, scope, fn, functionType, false);
     }
 }

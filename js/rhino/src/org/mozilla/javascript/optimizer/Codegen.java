@@ -176,7 +176,7 @@ public class Codegen extends Interpreter {
                     ("Unable to instantiate compiled class:"+ex.toString());
             }
             OptFunctionNode fnNode = (OptFunctionNode)tree;
-            OptRuntime.setupFunction(f, scope, fnNode.getFunctionType());
+            OptRuntime.initFunction(f, fnNode.getFunctionType(), scope, cx);
             return f;
         } else {
             NativeScript script;
@@ -1554,16 +1554,18 @@ public class Codegen extends Interpreter {
         aload(variableObjectLocal);
         aload(contextLocal);           // load 'cx'
         addSpecialInvoke(fnClassName, "<init>",
-                         "(Lorg/mozilla/javascript/Scriptable;" +
-                          "Lorg/mozilla/javascript/Context;)",
+                         "(Lorg/mozilla/javascript/Scriptable;"
+                         +"Lorg/mozilla/javascript/Context;)",
                          "V");
         addByteCode(ByteCode.DUP); // copy of function
-        aload(variableObjectLocal);
         push(functionType);
-        addOptRuntimeInvoke("setupFunction",
+        aload(variableObjectLocal);
+        aload(contextLocal);           // load 'cx'
+        addOptRuntimeInvoke("initFunction",
                             "(Lorg/mozilla/javascript/NativeFunction;"
+                            +"I"
                             +"Lorg/mozilla/javascript/Scriptable;"
-                            +"I)",
+                            +"Lorg/mozilla/javascript/Context;)",
                             "V");
         // leave on stack new function instance
     }

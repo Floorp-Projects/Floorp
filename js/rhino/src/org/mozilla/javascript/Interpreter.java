@@ -1541,9 +1541,8 @@ public class Interpreter {
                  fn.itsUseDynamicScope = true;
              }
         }
-        ScriptRuntime.initFunction(scope, fn);
-        ScriptRuntime.putFunction(scope, idata.itsName, fn,
-                                  idata.itsFunctionType, fromEvalCode);
+        ScriptRuntime.initFunction(cx, scope, fn, idata.itsFunctionType,
+                                   fromEvalCode);
         return fn;
     }
 

@@ -365,7 +365,7 @@ public class BaseFunction extends IdScriptable implements Function {
         finally { cx.setOptimizationLevel(oldOptLevel); }
 
         fn.fromFunctionConstructor = true;
-        ScriptRuntime.initFunction(global, fn);
+        ScriptRuntime.setFunctionProtoAndParent(global, fn);
 
         return fn;
     }
