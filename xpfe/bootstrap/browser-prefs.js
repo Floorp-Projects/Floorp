@@ -111,8 +111,8 @@ pref("browser.history.grouping", "day");
 pref("browser.sessionhistory.max_entries", 50);
 
 // Translation service
-pref("browser.translation.service", "http://translate.google.com/translate?pev=/language_tools&u=");
-pref("browser.translation.serviceDomain", "translate.google.com");
+pref("browser.translation.service", "chrome://navigator-region/locale/region.properties");
+pref("browser.translation.serviceDomain", "chrome://navigator-region/locale/region.properties");
   
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
