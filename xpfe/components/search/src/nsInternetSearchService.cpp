@@ -2021,25 +2021,31 @@ InternetSearchDataSource::GetSearchEngineList(nsFileSpec nativeDir, PRBool check
 
 
 nsresult
-InternetSearchDataSource::ReadFileContents(nsFileSpec baseFilename, nsString& sourceContents)
+InternetSearchDataSource::ReadFileContents(nsFileSpec fileSpec, nsString& sourceContents)
 {
-	nsresult			rv = NS_OK;
-	nsInputFileStream		searchFile(baseFilename);
+	nsresult			rv = NS_ERROR_FAILURE;
+	PRUint32			contentsLen;
+	char				*contents;
 
-	if (searchFile.is_open())
+	sourceContents.Truncate();
+
+	contentsLen = fileSpec.GetFileSize();
+	if (contentsLen > 0)
 	{
-		nsRandomAccessInputStream	stream(searchFile);
-		char				buffer[1024];
-		while (!stream.eof())
+		contents = new char [contentsLen + 1];
+		if (contents)
 		{
-			stream.readline(buffer, sizeof(buffer)-1 );
-			sourceContents += buffer;
-			sourceContents += "\n";
+			nsInputFileStream inputStream(fileSpec);	// defaults to read only
+		       	PRInt32 howMany = inputStream.read(contents, contentsLen);
+		        if (PRUint32(howMany) == contentsLen)
+		        {
+				contents[contentsLen] = '\0';
+				sourceContents = contents;
+				rv = NS_OK;
+		        }
+	        	delete [] contents;
+	        	contents = nsnull;
 		}
-	}
-	else
-	{
-		rv = NS_ERROR_FAILURE;
 	}
 	return(rv);
 }
