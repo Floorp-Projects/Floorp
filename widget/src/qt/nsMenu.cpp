@@ -422,9 +422,31 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
     return NS_OK;
 }
 
+//-------------------------------------------------------------------------
+// Set enabled state
+//-------------------------------------------------------------------------
 NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
 {
-  return NS_OK;
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenu::SetEnabled()\n"));
+    return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// Get enabled state
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::GetEnabled(PRBool* aIsEnabled)
+{
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenu::GetEnabled()\n"));
+    return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+// Query if this is the help menu
+//-------------------------------------------------------------------------
+NS_METHOD nsMenu::IsHelpMenu(PRBool* aIsHelpMenu)
+{
+    PR_LOG(QtWidgetsLM, PR_LOG_DEBUG, ("nsMenu::IsHelpMenu()\n"));
+    return NS_OK;
 }
 
 //-------------------------------------------------------------------------
