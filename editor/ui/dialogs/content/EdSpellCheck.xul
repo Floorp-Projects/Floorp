@@ -1,33 +1,7 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window
-[
-
-<!-- These entity declarations will go into a separate, locale file at some point -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Check Spelling">
-
-<!ENTITY wordEditField.label "Word">
-<!ENTITY checkwordButton.label "Check Word">
-<!ENTITY suggestions.label "Suggestions:">
-
-<!ENTITY ignoreButton.label "Ignore">
-<!ENTITY ignoreallButton.label "Ignore All">
-<!ENTITY changeButton.label "Change">
-<!ENTITY changeallButton.label "Change All">
-
-<!ENTITY userDictionary.label "User Dictionary:">
-<!ENTITY addtouserdictionaryButton.label "Add">
-<!ENTITY edituserdictionaryButton.label "Edit">
-<!ENTITY closeButton.label "Close">
-
-<!ENTITY languagePopup.label "Language:">
-<!ENTITY englishLanguagePopup.value "English">
-<!ENTITY spanishLanguagePopup.value "Spanish">
-<!ENTITY frenchLanguagePopup.value "French">
-
-]>
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
 <xul:window class="dialog" title="&windowTitle.label;"
