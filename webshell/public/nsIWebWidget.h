@@ -19,13 +19,10 @@
 #define nsIWebWidget_h___
 
 #include "nsweb.h"
-#include "nsIWidget.h"
-#include "nsRect.h"
-class nsIDocument;
+#include "nsIDocumentWidget.h"
 class nsILinkHandler;
 class nsIPresContext;
 class nsIStyleSet;
-class nsString;
 class nsIScriptContext;
 
 // IID for the nsWebWidget interface
@@ -35,8 +32,9 @@ class nsIScriptContext;
 
 // Interface to the web widget. The web widget is a container for web
 // content.
-class nsIWebWidget : public nsISupports {
+class nsIWebWidget : public nsIDocumentWidget {
 public:
+
   // Create a native window for this web widget; may be called once
   virtual nsresult Init(nsNativeWindow aNativeParent,
                         const nsRect& aBounds) = 0;
@@ -50,14 +48,6 @@ public:
                         nsIDocument* aDocument,
                         nsIPresContext* aPresContext) = 0;
 
-  virtual nsRect GetBounds() = 0;
-
-  virtual void SetBounds(const nsRect& aBounds) = 0;
-
-  virtual void Show() = 0;
-
-  virtual void Hide() = 0;
-
   NS_IMETHOD SetContainer(nsISupports* aContainer) = 0;
 
   NS_IMETHOD GetContainer(nsISupports** aResult) = 0;
@@ -65,8 +55,6 @@ public:
   NS_IMETHOD SetLinkHandler(nsILinkHandler* aHandler) = 0;
 
   NS_IMETHOD GetLinkHandler(nsILinkHandler** aResult) = 0;
-
-  NS_IMETHOD LoadURL(const nsString& aURLSpec) = 0;
 
   virtual nsIDocument* GetDocument() = 0;
 
@@ -82,15 +70,13 @@ public:
 
   virtual PRBool GetShowFrameBorders() = 0;
 
-  virtual nsIWidget* GetWWWindow() = 0;
-
   virtual nsresult GetScriptContext(nsIScriptContext **aContext) = 0;
   virtual nsresult ReleaseScriptContext() = 0;
+
 };
 
 // Create a new web widget that uses the default (galley) presentation
 // context.
-extern NS_WEB nsresult
-NS_NewWebWidget(nsIWebWidget** aInstancePtrResult);
+extern NS_WEB nsresult NS_NewWebWidget(nsIWebWidget** aInstancePtrResult);
 
 #endif /* nsWebWidget_h___ */

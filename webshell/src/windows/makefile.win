@@ -15,38 +15,26 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..\..
+DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DIRS = windows
-
 DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
+
 MODULE=raptor 
 
-EXPORTS =			\
-	nsShellInstance.h		\
-	nsApplicationManager.h		\
-	$(NULL)
-
 CPPSRCS=				\
- nsLinkHandler.cpp			\
- nsShellInstance.cpp			\
- nsApplicationManager.cpp			\
- nsWebWidget.cpp			\
+ winmain.cpp			\
  $(NULL)
 
 CPP_OBJS=				\
- .\$(OBJDIR)\nsLinkHandler.obj		\
- .\$(OBJDIR)\nsShellInstance.obj		\
- .\$(OBJDIR)\nsApplicationManager.obj		\
- .\$(OBJDIR)\nsWebWidget.obj		\
+ .\$(OBJDIR)\winmain.obj		\
  $(NULL)
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
 
-MAKE_OBJ_TYPE = DLL
-DLLNAME = raptorweb
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
+MAKE_OBJ_TYPE = LIB
+
+LIBRARY_NAME=raptorwebwin_s
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -59,6 +47,7 @@ LLIBS=				\
  $(DIST)\lib\raptorbase.lib	\
  $(DIST)\lib\raptorgfx.lib	\
  $(DIST)\lib\raptorhtml.lib	\
+ $(DIST)\lib\raptorweb.lib	\
  $(DIST)\lib\img3240.lib     \
  $(DIST)\lib\util.lib        \
  $(DIST)\lib\libplc21.lib    \
@@ -67,10 +56,8 @@ LLIBS=				\
 
 include <$(DEPTH)\config\rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\bin\$(DLLNAME).dll
-	rm -f $(DIST)\lib\$(DLLNAME).lib
+	rm -f $(DIST)\lib\$(LIBNAME).lib
