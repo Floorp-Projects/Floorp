@@ -243,15 +243,17 @@ sub DoFactoidCheck {
                                  'is', # am => is
                      $event->{'from'}, # subject
                           $direct || $self->{'ridiculouslyEagerToHelp'});
-    } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.*?[^?\s]) \s* $/six) {
+    } elsif ($shortMessage =~ /^(no\s*, (\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? (.+?) \s+ (is|are) \s+ (also\s+)? (.*?[^?\s]) \s* $/six) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
-                          defined($1), # replace existing answer?
-                                   $2, # subject
-                               lc($3), # is/are
-                          defined($4), # add to existing answer?
-                                   $5, # object
-            $direct || $self->{'ridiculouslyEagerToHelp'} || defined($1));
+                          defined($1) &&
+                          ($direct || $self->{'ridiculouslyEagerToHelp'} || defined($2)),
+                                       # replace existing answer?
+                                   $3, # subject
+                               lc($4), # is/are
+                          defined($5), # add to existing answer?
+                                   $6, # object
+            $direct || $self->{'ridiculouslyEagerToHelp'} || defined($2));
     } elsif ($shortMessage =~ /^(no\s*, (?:\s*\Q$event->{'nick'}\E\s*,)? \s+)? (?:remember\s*:\s+)? I \s+ am \s+ (also\s+)? (.+?) $/osix) {
         # the "remember:" prefix can be used to delimit the start of the actual content, if necessary.
         $self->SetFactoid($event,
