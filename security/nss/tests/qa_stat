@@ -34,6 +34,8 @@ fi
 TBX_EXIT=48
 EARLY_EXIT=TRUE
 
+URL="cindercone.red.iplanet.com"
+
 DOCDIR=/u/sonmi/doc
 
 HTML_ERRORCOLOR=\"#FF0000\"
@@ -175,8 +177,8 @@ qa_stat_init()
     TMPFILE=${RFILE}.T
 
     TMPFILES="$TMPFILES $TMPFILE"
-    #TMPFILES="$TMPFILES $ERRORLIST $PLATFORMLIST $PERFLIST $WARNINGLIST \
-       #$BCMISSINGLIST $BCERRORLIST" #FIXME uncomment
+    TMPFILES="$TMPFILES $ERRORLIST $PLATFORMLIST $PERFLIST $WARNINGLIST \
+       $BCMISSINGLIST $BCERRORLIST" #FIXME uncomment
 
     FILENAME=$RFILE        #we might want to mail it...later switch to html file
     O_FILE="ON"
@@ -187,9 +189,9 @@ qa_stat_init()
        $BCMISSINGLIST $BCERRORLIST $TMP_HTML_FILE  2>/dev/null
 
     if [  $O_WIN = "ON" -a "$O_TBX" = "ON" ] ; then
-        HTML_PATH="http://cindercone${UX_D0}/nss${NSSVER}/tinderbox/tests_results/security/`basename $RESULTDIR`"
+        HTML_PATH="http://${URL}${UX_D0}/nss${NSSVER}/tinderbox/tests_results/security/`basename $RESULTDIR`"
     else
-        HTML_PATH="http://cindercone${RESULTDIR}"
+        HTML_PATH="http://${URL}${RESULTDIR}"
     fi
     HREF_TMP_HTML_FILE="${HTML_PATH}/`basename $HTML_FILE`"
 
@@ -225,19 +227,12 @@ etscape]">
 <table BORDER WIDTH="100%" NOSAVE >
 <tr>
 <td>&nbsp;<b><font size=+1>Build-OS and version</font></b></td>
-
 <td><b><font size=+1>QA-OS</font></b></td>
-
 <td><b><font size=+1>Systemname</font></b></td>
-
 <td><b><font size=+1>P/F</font></b></td>
-
 <td><b><font size=+1>result</font></b></td>
-
 <td><b><font size=+1>output</font></b></td>
-
 <td><b><font size=+1>errors</font></b></td>
-
 <td><b><font size=+1>QA time / #</font></b></td>
 </tr>
 '
@@ -283,13 +278,8 @@ setQAsysvars()
     else
         RESULT="0"
     fi
-    if [ -f "${RESULTDIR}/bc_libs/${MACHINE}/results.html" ] ; then
-        BCL_RESULT="${HTML_PATH}/bc_libs/${MACHINE}/results.html"
-    else
-        BCL_RESULT="0"
-    fi
-    if [ -f "${RESULTDIR}/bc_bins/${MACHINE}/results.html" ] ; then
-        BCB_RESULT="${HTML_PATH}/bc_bins/${MACHINE}/results.html"
+    if [ -f "${RESULTDIR}/bct/${MACHINE}/results.html" ] ; then
+        BCB_RESULT="${HTML_PATH}/bct/${MACHINE}/results.html"
     else
       BCB_RESULT="0"
     fi
@@ -299,13 +289,8 @@ setQAsysvars()
     else
         LOG="0"
     fi
-    if [ -f "${RESULTDIR}/bc_libs/${MACHINE}/output.log" ] ; then
-        BCL_LOG="${HTML_PATH}/bc_libs/${MACHINE}/output.log"
-    else
-        BCL_LOG="0"
-    fi
-    if [ -f "${RESULTDIR}/bc_bins/${MACHINE}/output.log" ] ; then
-        BCB_LOG="${HTML_PATH}/bc_bins/${MACHINE}/output.log"
+    if [ -f "${RESULTDIR}/bct/${MACHINE}/output.log" ] ; then
+        BCB_LOG="${HTML_PATH}/bct/${MACHINE}/output.log"
     else
         BCB_LOG="0"
     fi
@@ -370,39 +355,44 @@ html_line()
       else
           echo '<td></td>'
       fi
-      echo '<td>'$TESTDATE $TESTNUMBER'</td>'
   else
+     #<td><b><font size=+1>errors</font></b></td>
+     #<td><b><font size=+1>P/F</font></b></td>
+     #<td><b><font size=+1>P/F</font></b></td>
+
      #echo '<td><b><font size=+1>All Current</font></b></td>'
      #echo '<td><b><font size=+1>old dlls</font></b></td>'
      #echo '<td><b><font size=+1>old executables</font></b></td>'
-      if [ "$RESULT" != "0" -a "$LOG" != "0" ] ; then
-          echo '<td><a href="'$RESULT'">result</a>, <a href="'$LOG'">log</td>'
-      elif [ "$RESULT" = "0" -a "$LOG" != "0" ] ; then
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$LOG'">log</a></td>'
-      elif [ "$RESULT" != "0" -a "$LOG" = "0" ] ; then
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$RESULT'">result</a></td>'
-      else
+      #if [ "$RESULT" != "0" -a "$LOG" != "0" ] ; then
+          #echo '<td><a href="'$RESULT'">result</a>, <a href="'$LOG'">log</td>'
+      #elif [ "$RESULT" = "0" -a "$LOG" != "0" ] ; then
+          #echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$LOG'">log</a></td>'
+      #elif [ "$RESULT" != "0" -a "$LOG" = "0" ] ; then
+          #echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$RESULT'">result</a></td>'
+      #else
+          #echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      #fi
+      #if [ "$BCB_RESULT" != "0" -a "$BCB_LOG" != "0" ] ; then
+          #echo '<td><a href="'$BCB_RESULT'">result</a>, <a href="'$BCB_LOG'"> log</td>'
+      #elif [ "$BCB_RESULT" = "0" -a "$BCB_LOG" != "0" ] ; then
+          #echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_LOG'">log</a></td>'
+      #elif [ "$BCB_RESULT" != "0" -a "$BCB_LOG" = "0" ] ; then
+          #echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_RESULT'">result</a></td>'
+      #else
+          #echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      #fi
+      if [ "$BCB_RESULT" = "0" ] ; then
           echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+      else
+          echo '<td>&nbsp;<a href="'$BCB_RESULT'">result</a>&nbsp;</td>'
       fi
-      if [ "$BCL_RESULT" != "0" -a "$BCL_LOG" != "0" ] ; then
-          echo '<td><a href="'$BCL_RESULT'">result</a>, <a href="'$BCL_LOG'"> log</td>'
-      elif [ "$BCL_RESULT" = "0" -a "$BCL_LOG" != "0" ] ; then
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCL_LOG'">log</a></td>'
-      elif [ "$BCL_RESULT" != "0" -a "$BCL_LOG" = "0" ] ; then
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCL_RESULT'">result</a></td>'
-      else
+      if [ "$BCB_LOG" = "0" ] ; then
           echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
-      fi
-      if [ "$BCB_RESULT" != "0" -a "$BCB_LOG" != "0" ] ; then
-          echo '<td><a href="'$BCB_RESULT'">result</a>, <a href="'$BCB_LOG'"> log</td>'
-      elif [ "$BCB_RESULT" = "0" -a "$BCB_LOG" != "0" ] ; then
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_LOG'">log</a></td>'
-      elif [ "$BCB_RESULT" != "0" -a "$BCB_LOG" = "0" ] ; then
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE><a href="'$BCB_RESULT'">result</a></td>'
       else
-          echo '<td BGCOLOR='$HTML_MISSINGCOLOR' NOSAVE>'$HTML_MISSINGMSG'</td>'
+          echo '<td>&nbsp;<a href="'$BCB_LOG'">log</a>&nbsp;</td>'
       fi
   fi
+  echo '<td>'$TESTDATE $TESTNUMBER'</td>'
   echo '</tr>'
 }
 
@@ -426,6 +416,8 @@ qa_errorlist()
         grep -vi "no error" |
         grep -vi "12285" |
         grep -i  $BEFORE_CONTEXT_GREP $AFTER_CONTEXT_GREP error 
+        #grep -vi "5938" |  needed for -v option
+        #grep -vi "HDX PR_Read hit EOF" | 
     grep  -vi "write to SSL socket" ${MACHINES_TO_CHECK}*/output.log |
         grep -vi "peer cannot verify" |
         grep -vi "error" |
@@ -439,10 +431,10 @@ qa_errorlist()
 
     if [ -n "${MACHINES_TO_CHECK}" ] ; then
         find ${MACHINES_TO_CHECK}* -name core -print 2>/dev/null |
-            grep -v bc_bins | grep -v bc_libs
+            grep -v bct 
     else
         find . -name core -print 2>/dev/null |
-            grep -v bc_bins | grep -v bc_libs
+            grep -v bct 
     fi
 }
 
@@ -561,15 +553,10 @@ rsaperf()
     qa_stat_table "Performance list"
 
     echo '<td NOSAVE><b><font size=+1>Build-OS and version</font></b></td>'
-    echo ''
     echo '<td><b><font size=+1>Systemname</font></b></td>'
-    echo ''
     echo '<td><b><font size=+1># of iterations</font></b></td>'
-    echo ''
     echo '<td><b><font size=+1>average for one op</font></b></td>'
-    echo ''
     echo '<td><b><font size=+1>Total</font></b></td>'
-    echo ''
     echo '<td><b><font size=+1>QA time / #</font></b></td>'
     echo '</tr>'
     cat $PERFLIST | 
@@ -632,30 +619,36 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   echo '<td><b><font size=+1>QA-OS</font></b></td>'
   echo '<td><b><font size=+1>Systemname</font></b></td>'
   echo '<td><b><font size=+1>P/F</font></b></td>'
-  echo '<td><b><font size=+1>All Current</font></b></td>'
-  echo '<td><b><font size=+1>old dlls</font></b></td>'
-  echo '<td><b><font size=+1>old executables</font></b></td>'
+  #echo '<td><b><font size=+1>All Current</font></b></td>'
+  #echo '<td><b><font size=+1>backward comp. test</font></b></td>'
+  echo '<td><b><font size=+1>result</font></b></td>'
+  echo '<td><b><font size=+1>output</font></b></td>'
+  echo '<td><b><font size=+1>QA time / #</font></b></td>'
   echo '</tr>'
 
   for w in `ls */results.html`
   do
-      for b in bc_libs bc_bins
-      do
-          diff -b $w $b/$w  2>>$BCMISSINGLIST | 
-               grep -v "backward compatibility" |
-               grep -v "Can.t run pk12util tests for NSS 3.2" |
-               grep -v "porting Alice.s email cert " |
-               grep -v "^---$" | grep -v "^[<> ] $" | 
-               grep -v "^---.$" | grep -v "^[<> ] .$" | 
-               grep -v "^[0-9,ca]*$" 2>>$BCMISSINGLIST >/dev/null &&  (
-                    echo "$w differs" >> $BCMISSINGLIST
-                    echo "diff $w $b/$w"
-                    diff -b $w $b/$w 2>&1 | 
-                         grep -v "backward compatibility" |
-                         grep -v "Can.t run pk12util tests for NSS 3.2" |
-                         grep -v "porting Alice.s email cert "
-               )  2>&1 >>$BCERRORLIST
-      done
+      diff -b $w bct/$w  2>>$BCMISSINGLIST | 
+           grep -v "backward compatibility" |
+           grep -v "Can.t run pk12util tests for NSS 3.2" |
+           grep -v "porting Alice.s email cert " |
+           grep -v "^---$" | grep -v "^[<> ] $" | 
+           grep -v "^---.$" | grep -v "^[<> ] .$" | 
+           grep -v '< </BODY></HTML>' |
+           grep -v "^[0-9,cad]*$" 2>>$BCMISSINGLIST >/dev/null &&  (
+                echo "$w differs" >> $BCMISSINGLIST
+                echo "========================================="
+                echo "diff $w bct/$w"
+                echo "========================================="
+                diff -b $w bct/$w 2>&1 | 
+                     grep -v "backward compatibility" |
+                     grep -v "Can.t run pk12util tests for NSS 3.2" |
+                     grep -v "porting Alice.s email cert " |
+                     grep -v "^---$" | grep -v "^[<> ] $" | 
+                     grep -v "^---.$" | grep -v "^[<> ] .$" | 
+                     grep -v '< </BODY></HTML>' |
+                     grep -v "^[0-9,cad]*$" \
+           )  2>&1 >>$BCERRORLIST
   done
   rm $ERRORLIST
   cat $BCMISSINGLIST | sed -e "s/^diff: bc_...s.//" \
@@ -665,7 +658,7 @@ CURRENT_TABLE="BC"   #so html_line can determine which fields to write
   platformlist  
   echo '</table>' >>$TMP_HTML_FILE
 
-  #cat $BCERRORLIST | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
+  head -200 $BCERRORLIST | sed -e 's/<[^>]*>//g' -e "s/^/<br>/" 
 
 }
 
