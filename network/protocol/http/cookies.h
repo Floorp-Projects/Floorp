@@ -21,7 +21,7 @@
 
 /* removes all cookies structs from the cookie list */
 extern void
-NET_RemoveAllCookies();
+NET_RemoveAllCookies(void);
 
 extern char *
 NET_GetCookie(MWContext * context, char * address);
