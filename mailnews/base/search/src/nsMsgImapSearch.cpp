@@ -45,7 +45,7 @@ MSG_SearchError msg_SearchOnlineMail::ValidateTerms ()
     {
         // ### mwelch Figure out the charsets to use 
         //            for the search terms and targets.
-        int16 src_csid, dst_csid;
+        PRInt16 src_csid, dst_csid;
         GetSearchCSIDs(src_csid, dst_csid);
 
         // do IMAP specific validation
@@ -54,18 +54,18 @@ MSG_SearchError msg_SearchOnlineMail::ValidateTerms ()
         if (SearchError_Success == err)
         {
             // we are searching an online folder, right?
-            XP_ASSERT(m_scope->m_folder->GetType() == FOLDER_IMAPMAIL);
+            PR_ASSERT(m_scope->m_folder->GetType() == FOLDER_IMAPMAIL);
             MSG_IMAPFolderInfoMail *imapFolder = (MSG_IMAPFolderInfoMail *) m_scope->m_folder;
             m_encoding = CreateImapSearchUrl(imapFolder->GetHostName(),
                                                       imapFolder->GetOnlineName(),
                                                       imapFolder->GetOnlineHierarchySeparator(),
                                                       tmpEncoding,
-                                                      TRUE);    // return UIDs
+                                                      PR_TRUE);    // return UIDs
             delete [] tmpEncoding;
         }
         else 
             if (err == SearchError_ScopeAgreement)
-                XP_ASSERT(FALSE);
+                PR_ASSERT(PR_FALSE);
     }
     
     return err;
@@ -106,7 +106,7 @@ MSG_SearchError msg_SearchOnlineMail::AddResultElement (NeoMessageHdr *pHeaders)
 
     if (newResult)
     {
-        XP_ASSERT (newResult);
+        PR_ASSERT (newResult);
 
         // This isn't very general. Just add the headers we think we'll be interested in
         // to the list of attributes per result element.
@@ -124,7 +124,7 @@ MSG_SearchError msg_SearchOnlineMail::AddResultElement (NeoMessageHdr *pHeaders)
         if (pValue)
         {
             pValue->attribute = attribSender;
-            pValue->u.string = (char*) XP_ALLOC(64);
+            pValue->u.string = (char*) PR_Malloc(64);
             if (pValue->u.string)
             {
                 pHeaders->GetAuthor(pValue->u.string, 64);
@@ -158,7 +158,7 @@ MSG_SearchError msg_SearchOnlineMail::AddResultElement (NeoMessageHdr *pHeaders)
         if (pValue)
         {
             pValue->attribute = attribLocation;
-            pValue->u.string = XP_STRDUP(m_scope->m_folder->GetName());
+            pValue->u.string = nsCRT::strdup(m_scope->m_folder->GetName());
             newResult->AddValue (pValue);
         }
         pValue = new MSG_SearchValue;
@@ -195,9 +195,9 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
         {
             // open the relevant IMAP db
             MailDB *imapDB = NULL;
-            XP_Bool wasCreated = FALSE;
+            PRBool wasCreated = PR_FALSE;
             ImapMailDB::Open(adapter->m_scope->m_folder->GetMailFolderInfo()->GetPathname(),
-                             FALSE,     // do not create if not found
+                             PR_FALSE,     // do not create if not found
                              &imapDB,
                              adapter->m_scope->m_folder->GetMaster(),
                              &wasCreated);
@@ -205,15 +205,15 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
             if (imapDB)
             {
                 // expect search results in the form of "* SEARCH <hit> <hit> ..."
-                char *tokenString = XP_STRDUP(resultLine);
+                char *tokenString = nsCRT::strdup(resultLine);
                 if (tokenString)
                 {
                     char *currentPosition = strcasestr(tokenString, "SEARCH");
                     if (currentPosition)
                     {
-                        currentPosition += XP_STRLEN("SEARCH");
+                        currentPosition += nsCRT::strlen("SEARCH");
                         
-                        XP_Bool shownUpdateAlert = FALSE;
+                        PRBool shownUpdateAlert = PR_FALSE;
                         char *hitUidToken = XP_STRTOK(currentPosition, WHITESPACE);
                         while (hitUidToken)
                         {
@@ -227,7 +227,7 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
                             else if (!shownUpdateAlert)
                             {
                                 FE_Alert(context, XP_GetString(MK_MSG_SEARCH_HITS_NOT_IN_DB));
-                                shownUpdateAlert = TRUE;
+                                shownUpdateAlert = PR_TRUE;
                             }
                             
                             hitUidToken = XP_STRTOK(NULL, WHITESPACE);
@@ -243,7 +243,7 @@ SEARCH_API void MSG_AddImapSearchHit (MWContext *context, const char *resultLine
     }
     else
     {
-        XP_ASSERT(FALSE); // apparently, this was left over from trying to do filtering on the server
+        PR_ASSERT(PR_FALSE); // apparently, this was left over from trying to do filtering on the server
     }
 }
 
@@ -257,13 +257,13 @@ MSG_SearchError msg_SearchOnlineMail::Search ()
 }
 
 
-MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermArray &searchTerms, int16 src_csid, int16 dest_csid)
+MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermArray &searchTerms, PRInt16 src_csid, PRInt16 dest_csid)
 {
     *ppEncoding = NULL;
     char *imapTerms = NULL;
 
 	//check if searchTerms are ascii only
-	XP_Bool asciiOnly = TRUE;
+	PRBool asciiOnly = PR_TRUE;
 	if ( !(src_csid & CODESET_MASK == STATEFUL || src_csid & CODESET_MASK == WIDECHAR) )   //assume all single/multiple bytes charset has ascii as subset
 	{
 		int termCount = searchTerms.GetSize();
@@ -279,7 +279,7 @@ MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermA
 				{
 					if (*pchar & 0x80)
 					{
-						asciiOnly = FALSE;
+						asciiOnly = PR_FALSE;
 						break;
 					}
 				}
@@ -287,16 +287,16 @@ MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermA
 		}
 	}
 	else
-		asciiOnly = FALSE;
+		asciiOnly = PR_FALSE;
 
 	// Get the optional CHARSET parameter, in case we need it.
     char *csname = GetImapCharsetParam(asciiOnly ? CS_ASCII : dest_csid);
 
 
-    MSG_SearchError err = msg_SearchAdapter::EncodeImap (&imapTerms,searchTerms, src_csid, asciiOnly ? CS_ASCII : dest_csid, FALSE);
+    MSG_SearchError err = msg_SearchAdapter::EncodeImap (&imapTerms,searchTerms, src_csid, asciiOnly ? CS_ASCII : dest_csid, PR_FALSE);
     if (SearchError_Success == err)
     {
-        int len = XP_STRLEN(m_kSearchTemplate) + XP_STRLEN(imapTerms) + (csname ? XP_STRLEN(csname) : 0) + 1;
+        int len = nsCRT::strlen(m_kSearchTemplate) + nsCRT::strlen(imapTerms) + (csname ? nsCRT::strlen(csname) : 0) + 1;
         *ppEncoding = new char [len];
         if (*ppEncoding)
         {
@@ -313,7 +313,7 @@ MSG_SearchError msg_SearchOnlineMail::Encode (char **ppEncoding, MSG_SearchTermA
 
 MSG_SearchError msg_SearchValidityManager::InitOfflineMailTable ()
 {
-    XP_ASSERT (NULL == m_offlineMailTable);
+    PR_ASSERT (NULL == m_offlineMailTable);
     MSG_SearchError err = NewTable (&m_offlineMailTable);
 
     if (SearchError_Success == err)
@@ -435,7 +435,7 @@ MSG_SearchError msg_SearchValidityManager::InitOfflineMailTable ()
 
 MSG_SearchError msg_SearchValidityManager::InitOnlineMailTable ()
 {
-    XP_ASSERT (NULL == m_onlineMailTable);
+    PR_ASSERT (NULL == m_onlineMailTable);
     MSG_SearchError err = NewTable (&m_onlineMailTable);
 
     if (SearchError_Success == err)
@@ -512,7 +512,7 @@ MSG_SearchError msg_SearchValidityManager::InitOnlineMailFilterTable ()
     // is supposed to be the same as offline mail, except that the body 
     // attribute is omitted
 
-    XP_ASSERT (NULL == m_onlineMailFilterTable);
+    PR_ASSERT (NULL == m_onlineMailFilterTable);
     MSG_SearchError err = NewTable (&m_onlineMailFilterTable);
 
     if (SearchError_Success == err)

@@ -108,7 +108,7 @@ NS_IMETHODIMP nsMsgFilter::AddTerm(
 	nsMsgSearchAttribute attrib,    /* attribute for this term                */
 	nsMsgSearchOperator op,         /* operator e.g. opContains               */
 	nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
-	PRBool BooleanAND, 	       /* TRUE if AND is the boolean operator. FALSE if OR is the boolean operators */
+	PRBool BooleanAND, 	       /* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operators */
 	const char * arbitraryHeader)       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
 {
 	return NS_OK;
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsMsgFilter::GetTerm(PRInt32 termIndex,
 	nsMsgSearchAttribute *attrib,    /* attribute for this term                */
 	nsMsgSearchOperator *op,         /* operator e.g. opContains               */
 	nsMsgSearchValue *value,         /* value e.g. "Dogbert"                   */
-	PRBool *booleanAnd,				/* TRUE if AND is the boolean operator. FALSE if OR is the boolean operator */
+	PRBool *booleanAnd,				/* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operator */
 	char ** arbitraryHeader)        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
 {
 	if (!attrib || !op || !value || !booleanAnd || !arbitraryHeader)
@@ -329,14 +329,14 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsCString &relativePath)
 
 //		MSG_IMAPFolderInfoMail *imapFolder = NULL;
 //		if (imapContainer)
-//			imapFolder = GetFilter()->GetMaster()->FindImapMailFolder(imapContainer->GetHostName(), relativePath + XP_STRLEN(MSG_Rule::kImapPrefix), NULL, FALSE);
+//			imapFolder = GetFilter()->GetMaster()->FindImapMailFolder(imapContainer->GetHostName(), relativePath + nsCRT::strlen(MSG_Rule::kImapPrefix), NULL, PR_FALSE);
 //		if (imapFolder)
-//			m_action.m_value.m_folderName = XP_STRDUP(imapFolder->GetPathname());
+//			m_action.m_value.m_folderName = nsCRT::strdup(imapFolder->GetPathname());
 //		else
 //		{
 			// did the user switch servers??
 			// we'll still save this filter, the filter code in the mail parser will handle this case
-//			m_action.m_value.m_folderName = XP_STRDUP("");
+//			m_action.m_value.m_folderName = nsCRT::strdup("");
 //		}
 	}
 	else

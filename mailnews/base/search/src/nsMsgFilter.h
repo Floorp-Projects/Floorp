@@ -58,7 +58,7 @@ public:
 		nsMsgSearchAttribute attrib,    /* attribute for this term                */
 		nsMsgSearchOperator op,         /* operator e.g. opContains               */
 		nsMsgSearchValue *value,        /* value e.g. "Dogbert"                   */
-		PRBool BooleanAND, 	       /* TRUE if AND is the boolean operator. FALSE if OR is the boolean operators */
+		PRBool BooleanAND, 	       /* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operators */
 		const char * arbitraryHeader);       /* arbitrary header specified by user. ignored unless attrib = attribOtherHeader */
 
 	NS_IMETHOD GetNumTerms(PRInt32 *numTerms);
@@ -67,7 +67,7 @@ public:
 		nsMsgSearchAttribute *attrib,    /* attribute for this term                */
 		nsMsgSearchOperator *op,         /* operator e.g. opContains               */
 		nsMsgSearchValue *value,         /* value e.g. "Dogbert"                   */
-		PRBool *BooleanAnd,				/* TRUE if AND is the boolean operator. FALSE if OR is the boolean operator */
+		PRBool *BooleanAnd,				/* PR_TRUE if AND is the boolean operator. PR_FALSE if OR is the boolean operator */
 		char ** arbitraryHeader);        /* arbitrary header specified by user. ignore unless attrib = attribOtherHeader */
 
 	NS_IMETHOD SetScope(nsMsgSearchScopeTerm *scope);

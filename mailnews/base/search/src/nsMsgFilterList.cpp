@@ -26,8 +26,8 @@
 #include "nsMsgUtils.h"
 #include "nsMsgSearchTerm.h"
 
-const int16 kFileVersion = 7;
-const int16 k45Version = 6;
+const PRInt16 kFileVersion = 7;
+const PRInt16 k45Version = 6;
 
 
 nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
@@ -654,7 +654,7 @@ nsresult nsMsgFilterList::Close()
 		if (err == NS_OK)
 		{
 			int status = XP_FileRename(tmpName, xpTemporary, finalName, m_fileType);
-			XP_ASSERT(status >= 0);
+			PR_ASSERT(status >= 0);
 		}
 	}
 

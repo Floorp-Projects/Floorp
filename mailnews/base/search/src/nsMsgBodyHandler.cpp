@@ -33,12 +33,12 @@ nsMsgBodyHandler::nsMsgBodyHandler (nsMsgSearchScopeTerm * scope, PRUint32 offse
 	// case so we set them to NULL.
 	m_headers = NULL;
 	m_headersSize = 0;
-	m_Filtering = FALSE; // make sure we set this before we call initialize...
+	m_Filtering = PR_FALSE; // make sure we set this before we call initialize...
 
 #ifdef DO_BODY
 	Initialize();  // common initialization stuff
 	if (m_scope->IsOfflineIMAPMail() || m_scope->m_folder->GetType() == FOLDER_IMAPMAIL) // if we are here with an IMAP folder, assume offline! 
-		m_OfflineIMAP = TRUE;
+		m_OfflineIMAP = PR_TRUE;
 	else
    	   OpenLocalFolder();	    // POP so open the mail folder file
 #endif
@@ -65,7 +65,7 @@ nsMsgBodyHandler::nsMsgBodyHandler(nsMsgSearchScopeTerm * scope,
 		m_headers = headers;
 	else
 		if (m_scope->IsOfflineIMAPMail() || m_scope->m_folder->GetType() == FOLDER_IMAPMAIL)
-			m_OfflineIMAP = TRUE;
+			m_OfflineIMAP = PR_TRUE;
 		else
 			OpenLocalFolder();  // if nothing else applies, then we must be a POP folder file
 #endif
@@ -75,17 +75,17 @@ void nsMsgBodyHandler::Initialize()
 // common initialization code regardless of what body type we are handling...
 {
 	// Default transformations for local message search and MAPI access
-	m_stripHeaders = TRUE;
-	m_stripHtml = TRUE;
-	m_messageIsHtml = FALSE;
-	m_passedHeaders = FALSE;
+	m_stripHeaders = PR_TRUE;
+	m_stripHtml = PR_TRUE;
+	m_messageIsHtml = PR_FALSE;
+	m_passedHeaders = PR_FALSE;
 
 	// set our offsets to 0 since we haven't handled any bytes yet...
 	m_IMAPMessageOffset = 0;
 	m_NewsArticleOffset = 0;
 	m_headerBytesRead = 0;
 
-	m_OfflineIMAP = FALSE;
+	m_OfflineIMAP = PR_FALSE;
 }
 
 nsMsgBodyHandler::~nsMsgBodyHandler()
@@ -105,7 +105,7 @@ PRInt32 nsMsgBodyHandler::GetNextLine (char * buf, int bufSize)
 {
 	PRInt32 length = 0;
 #ifdef DO_BODY
-	PRBool eatThisLine = FALSE;
+	PRBool eatThisLine = PR_FALSE;
 
 	do {
 		// first, handle the filtering case...this is easy....
@@ -170,7 +170,7 @@ PRInt32 nsMsgBodyHandler::GetNextFilterLine(char * buf, int bufSize)
 
 		if (m_headersSize > 0)
 		{
-			numBytesCopied = XP_STRLEN(m_headers)+1 /* + 1 to include NULL */ < bufSize ? XP_STRLEN(m_headers)+1 : bufSize;
+			numBytesCopied = nsCRT::strlen(m_headers)+1 /* + 1 to include NULL */ < bufSize ? nsCRT::strlen(m_headers)+1 : bufSize;
 			XP_MEMCPY(buf, m_headers, numBytesCopied);
 			m_headers += numBytesCopied;  
 			// be careful...m_headersSize is unsigned. Don't let it go negative or we overflow to 2^32....*yikes*	
@@ -214,8 +214,8 @@ PRInt32 nsMsgBodyHandler::GetNextNewsLine (NewsGroupDB * /* newsDB */, char * bu
 		}
 		else
 		    buf[bytesCopied] = '\0';
-		m_NewsArticleOffset += XP_STRLEN (buf);
-		return XP_STRLEN (buf);      // return num bytes stored in the buf
+		m_NewsArticleOffset += nsCRT::strlen (buf);
+		return nsCRT::strlen (buf);      // return num bytes stored in the buf
 	}
 	return 0;
 }
@@ -231,7 +231,7 @@ PRInt32 nsMsgBodyHandler::GetNextLocalLine(char * buf, int bufSize)
 			m_numLocalLines--; // the line count is only for body lines
 		line = XP_FileReadLine (buf, bufSize, m_scope->m_file);
 		if (line)
-			return XP_STRLEN(line);
+			return nsCRT::strlen(line);
 	}
 
 	return 0;
@@ -267,8 +267,8 @@ PRInt32 nsMsgBodyHandler::GetNextIMAPLine(char * buf, int bufSize)
 		}
 		else
 		    buf[bytesCopied] = '\0';
-		m_IMAPMessageOffset += XP_STRLEN (buf);
-		return XP_STRLEN (buf);      // return num bytes stored in the buf
+		m_IMAPMessageOffset += nsCRT::strlen (buf);
+		return nsCRT::strlen (buf);      // return num bytes stored in the buf
 	}
 	return 0;
 }
@@ -277,15 +277,15 @@ PRInt32 nsMsgBodyHandler::GetNextIMAPLine(char * buf, int bufSize)
 PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBool &eatThisLine)
 {
 	PRInt32 newLength = length;
-	eatThisLine = FALSE;
+	eatThisLine = PR_FALSE;
 
 	if (!m_passedHeaders)	// buf is a line from the message headers
 	{
 		if (m_stripHeaders)
-			eatThisLine = TRUE;
+			eatThisLine = PR_TRUE;
 
 		if (!XP_STRNCASECMP(buf, "Content-Type:", 13) && strcasestr (buf, "text/html"))
-			m_messageIsHtml = TRUE;
+			m_messageIsHtml = PR_TRUE;
 
 		m_passedHeaders = EMPTY_MESSAGE_LINE(buf);
 	}
@@ -294,7 +294,7 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBoo
 		if (m_stripHtml && m_messageIsHtml)
 		{
 			StripHtml (buf);
-			newLength = XP_STRLEN (buf);
+			newLength = nsCRT::strlen (buf);
 		}
 	}
 
@@ -304,22 +304,22 @@ PRInt32 nsMsgBodyHandler::ApplyTransformations (char *buf, PRInt32 length, PRBoo
 
 void nsMsgBodyHandler::StripHtml (char *pBufInOut)
 {
-	char *pBuf = (char*) XP_ALLOC (XP_STRLEN(pBufInOut) + 1);
+	char *pBuf = (char*) PR_Malloc (nsCRT::strlen(pBufInOut) + 1);
 	if (pBuf)
 	{
 		char *pWalk = pBuf;
 		char *pWalkInOut = pBufInOut;
-		PRBool inTag = FALSE;
+		PRBool inTag = PR_FALSE;
 		while (*pWalkInOut) // throw away everything inside < >
 		{
 			if (!inTag)
 				if (*pWalkInOut == '<')
-					inTag = TRUE;
+					inTag = PR_TRUE;
 				else
 					*pWalk++ = *pWalkInOut;
 			else
 				if (*pWalkInOut == '>')
-					inTag = FALSE;
+					inTag = PR_FALSE;
 			pWalkInOut++;
 		}
 		*pWalk = 0; // null terminator

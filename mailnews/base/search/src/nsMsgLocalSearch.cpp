@@ -43,7 +43,7 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression()
 {
     m_term = nsnull;
     m_boolOp = nsMsgSearchBooleanOp::BooleanAND;
-    m_evalValue = FALSE;
+    m_evalValue = PR_FALSE;
     m_leftChild = nsnull;
     m_rightChild = nsnull;
 }
@@ -72,7 +72,7 @@ nsMsgSearchBoolExpression::nsMsgSearchBoolExpression (nsMsgSearchBoolExpression 
     m_boolOp = boolOp;
 
     m_term = nsnull;
-    m_evalValue = FALSE;
+    m_evalValue = PR_FALSE;
 }
 
 nsMsgSearchBoolExpression::~nsMsgSearchBoolExpression()
@@ -88,7 +88,7 @@ nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTerm(nsMsgSearch
 // appropriately add the search term to the current expression and return a pointer to the
 // new expression. The encodingStr is the IMAP/NNTP encoding string for newTerm.
 {
-    return leftToRightAddTerm(newTerm,FALSE,encodingStr);
+    return leftToRightAddTerm(newTerm,PR_FALSE,encodingStr);
 }
 
 nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::AddSearchTerm(nsMsgSearchTerm * newTerm, PRBool evalValue)
@@ -124,16 +124,16 @@ nsMsgSearchBoolExpression * nsMsgSearchBoolExpression::leftToRightAddTerm(nsMsgS
 
 
 PRBool nsMsgSearchBoolExpression::OfflineEvaluate()
-// returns TRUE or FALSE depending on what the current expression evaluates to. Since this is
+// returns PR_TRUE or PR_FALSE depending on what the current expression evaluates to. Since this is
 // offline, when we created the expression we stored an evaluation value for each search term in 
-// the expression. These are the values we use to determine if the expression is TRUE or FALSE.
+// the expression. These are the values we use to determine if the expression is PR_TRUE or PR_FALSE.
 {
     if (m_term) // do we contain just a search term?
         return m_evalValue;
     
     // otherwise we must recursively determine the value of our sub expressions
-    PRBool result1 = TRUE;    // always default to false positives
-    PRBool result2 = TRUE;
+    PRBool result1 = PR_TRUE;    // always default to false positives
+    PRBool result2 = PR_TRUE;
     
     if (m_leftChild)
         result1 = m_leftChild->OfflineEvaluate();
@@ -143,16 +143,16 @@ PRBool nsMsgSearchBoolExpression::OfflineEvaluate()
     if (m_boolOp == nsMsgSearchBooleanOp::BooleanOR)
     {
         if (result1 || result2)
-            return TRUE;
+            return PR_TRUE;
     }
     
     if (m_boolOp == nsMsgSearchBooleanOp::BooleanAND)
     {
         if (result1 && result2)
-            return TRUE;
+            return PR_TRUE;
     }
 
-    return FALSE;
+    return PR_FALSE;
 }
 
 // ### Maybe we can get rid of these because of our use of nsString???
@@ -323,13 +323,13 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
     nsresult err = NS_OK;
 #ifdef HAVE_SEARCH_PORT
     // do password protection of local cache thing.
-    if (m_scope->m_folder && m_scope->m_folder->UserNeedsToAuthenticateForFolder(FALSE) && m_scope->m_folder->GetMaster()->PromptForHostPassword(m_scope->m_frame->GetContext(), m_scope->m_folder) != 0)
+    if (m_scope->m_folder && m_scope->m_folder->UserNeedsToAuthenticateForFolder(PR_FALSE) && m_scope->m_folder->GetMaster()->PromptForHostPassword(m_scope->m_frame->GetContext(), m_scope->m_folder) != 0)
     {
         m_scope->m_frame->StopRunning();
         return SearchError_ScopeDone;
     }
 
-    nsresult dbErr = MailDB::Open (m_scope->GetMailPath(), FALSE /*create?*/, &mailDb);
+    nsresult dbErr = MailDB::Open (m_scope->GetMailPath(), PR_FALSE /*create?*/, &mailDb);
     switch (dbErr)
     {
         case NS_OK:
@@ -343,7 +343,7 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
             {
                 // Remove the old summary file so maildb::open can create a new one
                 XP_FileRemove (m_scope->GetMailPath(), xpMailFolderSummary);
-                dbErr = MailDB::Open (m_scope->GetMailPath(), TRUE /*create?*/, &mailDb, TRUE /*upgrading?*/);
+                dbErr = MailDB::Open (m_scope->GetMailPath(), PR_TRUE /*create?*/, &mailDb, PR_TRUE /*upgrading?*/);
                 NS_ASSERTION(mailDb, "couldn't opn DB");
 
                 // Initialize the async parser to rebuild the summary file
@@ -351,7 +351,7 @@ nsresult nsMsgSearchOfflineMail::OpenSummaryFile ()
                 m_mailboxParser->SetContext (m_scope->m_frame->GetContext());
                 m_mailboxParser->SetDB (mailDb);
                 m_mailboxParser->SetFolder(m_scope->m_folder);
-                m_mailboxParser->SetIgnoreNonMailFolder(TRUE);
+                m_mailboxParser->SetIgnoreNonMailFolder(PR_TRUE);
                 err = NS_OK;
             }
             break;
@@ -455,7 +455,7 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForFilter(nsIMsgDBHdr *msgToMatch,
                                                            PRUint32 headerSize,
 														   PRBool *pResult)
 {
-    return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, TRUE, pResult);
+    return MatchTerms(msgToMatch, termList, scope, db, headers, headerSize, PR_TRUE, pResult);
 }
 
 // static method which matches a header against a list of search terms.
@@ -465,7 +465,7 @@ nsresult nsMsgSearchOfflineMail::MatchTermsForSearch(nsIMsgDBHdr *msgToMatch,
                                                 nsIMsgDatabase *db,
 												PRBool *pResult)
 {
-    return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, FALSE, pResult);
+    return MatchTerms(msgToMatch, termList, scope, db, nsnull, 0, PR_FALSE, pResult);
 }
 
 nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
@@ -516,7 +516,7 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
             break;
         case nsMsgSearchAttrib::Subject:
 			{
-            msgToMatch->GetSubject(&matchString /* , TRUE */);
+            msgToMatch->GetSubject(&matchString /* , PR_TRUE */);
 			nsCAutoString singleByteString(matchString); 
             err = pTerm->MatchString (&singleByteString, charset, PR_FALSE, &result);
 			}

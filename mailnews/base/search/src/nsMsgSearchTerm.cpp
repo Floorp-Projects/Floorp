@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "xp_core.h"
 #include "nsMsgSearchCore.h"
 #include "nsMsgUtils.h"
 #include "nsIMsgDatabase.h"
@@ -55,11 +56,11 @@ nsMsgSearchAttribEntry SearchAttribEntryTable[] =
 
 // Take a string which starts off with an attribute
 // return the matching attribute. If the string is not in the table, then we can conclude that it is an arbitrary header
-nsresult NS_MsgGetAttributeFromString(const char *string, int16 *attrib)
+nsresult NS_MsgGetAttributeFromString(const char *string, PRInt16 *attrib)
 {
 	if (NULL == string || NULL == attrib)
 		return NS_ERROR_NULL_POINTER;
-	PRBool found = FALSE;
+	PRBool found = PR_FALSE;
 	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
 	{
 		if (!PL_strcasecmp(string, SearchAttribEntryTable[idxAttrib].attribName))
@@ -74,11 +75,11 @@ nsresult NS_MsgGetAttributeFromString(const char *string, int16 *attrib)
 	return NS_OK;      // we always succeed now
 }
 
-nsresult NS_MsgGetStringForAttribute(int16 attrib, const char **string)
+nsresult NS_MsgGetStringForAttribute(PRInt16 attrib, const char **string)
 {
 	if (NULL == string)
 		return NS_ERROR_NULL_POINTER;
-	PRBool found = FALSE;
+	PRBool found = PR_FALSE;
 	for (int idxAttrib = 0; idxAttrib < (int)(sizeof(SearchAttribEntryTable) / sizeof(nsMsgSearchAttribEntry)); idxAttrib++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
@@ -118,12 +119,12 @@ nsMsgSearchOperatorEntry SearchOperatorEntryTable[] =
 	{nsMsgSearchOp::EndsWith,	"ends with"}
 };
 
-nsresult NS_MsgGetOperatorFromString(const char *string, int16 *op)
+nsresult NS_MsgGetOperatorFromString(const char *string, PRInt16 *op)
 {
 	if (NULL == string || NULL == op)
 		return NS_ERROR_NULL_POINTER;
 	
-	XP_Bool found = FALSE;
+	PRBool found = PR_FALSE;
 	for (unsigned int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
@@ -139,11 +140,11 @@ nsresult NS_MsgGetOperatorFromString(const char *string, int16 *op)
 	return (found) ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
-nsresult NS_MsgGetStringForOperator(int16 op, const char **string)
+nsresult NS_MsgGetStringForOperator(PRInt16 op, const char **string)
 {
 	if (NULL == string)
 		return NS_ERROR_NULL_POINTER;
-	PRBool found = FALSE;
+	PRBool found = PR_FALSE;
 	for (unsigned int idxOp = 0; idxOp < sizeof(SearchOperatorEntryTable) / sizeof(nsMsgSearchOperatorEntry); idxOp++)
 	{
 		// I'm using the idx's as aliases into MSG_SearchAttribute and 
@@ -441,7 +442,7 @@ nsresult nsMsgSearchTerm::ParseValue(char *inStream)
 // find the operator code for this operator string.
 nsMsgSearchOperator nsMsgSearchTerm::ParseOperator(char *inStream)
 {
-	int16				operatorVal;
+	PRInt16				operatorVal;
 	nsresult		err;
 
 	while (IS_SPACE(*inStream))
@@ -460,7 +461,7 @@ nsMsgSearchOperator nsMsgSearchTerm::ParseOperator(char *inStream)
 nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 {
 	nsCAutoString			attributeStr;
-	int16				attributeVal;
+	PRInt16				attributeVal;
 	nsresult		err;
 
 	while (IS_SPACE(*inStream))
@@ -498,7 +499,7 @@ nsMsgSearchAttribute nsMsgSearchTerm::ParseAttribute(char *inStream)
 // with "to or CC, contains, r-thompson", the second time with
 // "body, doesn't contain, fred"
 
-nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, int16 /*length*/)
+nsresult nsMsgSearchTerm::DeStreamNew (char *inStream, PRInt16 /*length*/)
 {
 	char *commaSep = PL_strchr(inStream, ',');
 	m_attribute = ParseAttribute(inStream);  // will allocate space for arbitrary header if necessary
@@ -678,8 +679,8 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 
 		CCCDataObject conv = INTL_CreateCharCodeConverter();
 		PRBool getConverter = PR_FALSE;
-		int16 win_csid = INTL_DocToWinCharSetID(foldcsid);
-		int16 mail_csid = INTL_DefaultMailCharSetID(win_csid);    // to default mail_csid (e.g. JIS for Japanese)
+		PRInt16 win_csid = INTL_DocToWinCharSetID(foldcsid);
+		PRInt16 mail_csid = INTL_DefaultMailCharSetID(win_csid);    // to default mail_csid (e.g. JIS for Japanese)
 		if ((nsnull != conv) && INTL_GetCharCodeConverter(mail_csid, win_csid, conv)) 
 			getConverter = PR_TRUE;
 
@@ -1077,7 +1078,7 @@ nsresult nsMsgSearchTerm::MatchPriority (nsMsgPriority priorityToMatch, PRBool *
 		return NS_ERROR_NULL_POINTER;
 
 	nsresult err = NS_OK;
-	PRBool result;
+	PRBool result=NS_OK;
 
 	// Use this ugly little hack to get around the fact that enums don't have
 	// integer compare operators
@@ -1380,7 +1381,7 @@ nsresult nsMsgResultElement::GetPrettyName (nsMsgSearchValue **value)
 				folder = host->FindGroup ((*value)->u.string);
 				if (folder)
 				{
-					char *tmp = XP_STRDUP (folder->GetPrettiestName());
+					char *tmp = nsCRT::strdup (folder->GetPrettiestName());
 					if (tmp)
 					{
 						XP_FREE ((*value)->u.string);
@@ -1545,13 +1546,13 @@ nsresult nsMsgResultElement::Open (void *window)
 		if (m_adapter->m_scope->m_attribute != nsMsgSearchScopeLdapDirectory)
 		{
 			msgPane = (MSG_MessagePane *) window; 
-			XP_ASSERT (MSG_MESSAGEPANE == msgPane->GetPaneType());
+			PR_ASSERT (MSG_MESSAGEPANE == msgPane->GetPaneType());
 			return m_adapter->OpenResultElement (msgPane, this);
 		}
 		else
 		{
 			context = (MWContext*) window;
-			XP_ASSERT (MWContextBrowser == context->type);
+			PR_ASSERT (MWContextBrowser == context->type);
 			msg_SearchLdap *thisAdapter = (msg_SearchLdap*) m_adapter;
 			return thisAdapter->OpenResultElement (context, this);
 		}
