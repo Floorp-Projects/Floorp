@@ -501,8 +501,8 @@ NS_IMETHODIMP GtkMozEmbedChrome::FindNamedBrowserItem(const PRUnichar *aName,
     NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
     docShellAsItem->FindItemWithName(aName, NS_STATIC_CAST(nsIWebBrowserChrome *, this), _retval);
-    if (!*_retval)
-      return NS_OK;
+    if (*_retval)
+      break;
   }
 
   return NS_OK;
