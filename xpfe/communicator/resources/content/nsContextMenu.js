@@ -615,7 +615,7 @@ nsContextMenu.prototype = {
                  // Add this text to our collection.
                  text += " " + node.data;
              } else if ( node.nodeType == Node.ELEMENT_NODE 
-                         && node.localName.ToUpperCase() == "IMG" ) {
+                         && node.localName.toUpperCase() == "IMG" ) {
                  // If it has an alt= attribute, use that.
                  altText = node.getAttribute( "alt" );
                  if ( altText && altText != "" ) {
