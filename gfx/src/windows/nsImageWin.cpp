@@ -55,8 +55,18 @@ static PRInt32 GetPlatform()
   return versionInfo.dwPlatformId;
 }
 
+static PRInt32 GetOsMajorVersion()
+{
+  OSVERSIONINFO versionInfo;
+
+  versionInfo.dwOSVersionInfoSize = sizeof(versionInfo);
+  ::GetVersionEx(&versionInfo);
+  return versionInfo.dwMajorVersion;
+}
+
 
 PRInt32 nsImageWin::gPlatform = GetPlatform();
+PRInt32 nsImageWin::gOsMajorVersion = GetOsMajorVersion();
 
 
 /** ----------------------------------------------------------------
@@ -1440,7 +1450,9 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
   // We also can not optimize empty images, or 8-bit alpha depth images on
   // Win98 due to a Windows API bug.
   //
-  // Create DDBs only for large (> 128k) images to minimize GDI handle usage.
+  // On Windows 95/98/Me, GDI resources are very limited.  Windows NT has more,
+  // but is still rather limited. Create DDBs on these platforms only for
+  // large (> 128k) images to minimize GDI handle usage.
   // See bug 205893, bug 204374, and bug 216430 for more info on the situation.
   // Bottom-line: we need a better accounting mechanism to avoid exceeding the
   // system's GDI object limit.  The rather arbitrary size limitation imposed
@@ -1448,9 +1460,9 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
   // most certainly the wrong place to impose this policy, but we do it for
   // now as a stop-gap measure.
   //
-  if ((gPlatform == VER_PLATFORM_WIN32_WINDOWS && mSizeImage >= 0xFF0000) ||
-      (mAlphaDepth == 8 && !CanAlphaBlend()) ||
-      (mSizeImage < 0x20000)) {
+  if ((gOsMajorVersion <= VER_OSMAJOR_WIN9598MENT &&
+       (mSizeImage >= 0xFF0000 || mSizeImage < 0x20000)) ||
+      (mAlphaDepth == 8 && !CanAlphaBlend())) {
     return NS_OK;
   }
 
@@ -1476,16 +1488,29 @@ nsImageWin :: Optimize(nsIDeviceContext* aContext)
     if (mAlphaDepth == 8) {
       CreateImageWithAlphaBits(TheHDC);
     } else {
-      LPVOID bits;
-      mHBitmap = ::CreateDIBSection(TheHDC, (LPBITMAPINFO)mBHead,
-        256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
-        &bits, NULL, 0);
+      // Apparently, DIBs use less resources than DDBs.
+      // On Windows 95/98/Me/NT, use DIBs to save resources.  On remaining
+      // platforms, use DDBs.  DDBs draw at the same speed or faster when
+      // drawn to a DDB surface.  This is another temporary solution until
+      // we manage our resources better.
+      if (gOsMajorVersion <= VER_OSMAJOR_WIN9598MENT) {
+        LPVOID bits;
+        mHBitmap = ::CreateDIBSection(TheHDC, (LPBITMAPINFO)mBHead,
+          256 == mNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS,
+          &bits, NULL, 0);
 
-      if (mHBitmap) {
-        memcpy(bits, mImageBits, mSizeImage);
-        mIsOptimized = PR_TRUE;
+        if (mHBitmap) {
+          memcpy(bits, mImageBits, mSizeImage);
+          mIsOptimized = PR_TRUE;
+        } else {
+          mIsOptimized = PR_FALSE;
+        }
       } else {
-        mIsOptimized = PR_FALSE;
+        mHBitmap = ::CreateDIBitmap(TheHDC, mBHead, CBM_INIT, mImageBits,
+                                    (LPBITMAPINFO)mBHead,
+                                    256 == mNumPaletteColors ? DIB_PAL_COLORS
+                                                             : DIB_RGB_COLORS);
+        mIsOptimized = (mHBitmap != 0);
       }
     }
     if (mIsOptimized)
