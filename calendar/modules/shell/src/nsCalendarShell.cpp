@@ -226,7 +226,7 @@ nsresult nsCalendarShell::Init()
   /*
    * Register class factrories needed for application
    */
-
+  NLS_Initialize(nsnull,nsnull);
   RegisterFactories() ;
   InitFactoryObjs();
 

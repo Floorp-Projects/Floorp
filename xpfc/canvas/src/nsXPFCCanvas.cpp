@@ -759,16 +759,18 @@ nsresult nsXPFCCanvas :: Init()
   nsRepository::RegisterFactory(kCVectorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCVectorIteratorCID, XPFC_DLL, PR_FALSE, PR_FALSE);
 
+  if (nsnull == mChildWidgets)
+  {
+    res = nsRepository::CreateInstance(kCVectorCID, 
+                                       nsnull, 
+                                       kCVectorCID, 
+                                       (void **)&mChildWidgets);
 
-  res = nsRepository::CreateInstance(kCVectorCID, 
-                                     nsnull, 
-                                     kCVectorCID, 
-                                     (void **)&mChildWidgets);
+    if (NS_OK != res)
+      return res ;
 
-  if (NS_OK != res)
-    return res ;
-
-  mChildWidgets->Init();
+    mChildWidgets->Init();
+  }
 
   CreateDefaultLayout();
 
@@ -778,17 +780,19 @@ nsresult nsXPFCCanvas :: Init()
 nsresult nsXPFCCanvas :: CreateDefaultLayout()
 {
   nsresult res = NS_OK;
-  
-  res = nsRepository::CreateInstance(kCBoxLayoutCID, 
-                                     nsnull, 
-                                     kCBoxLayoutCID, 
-                                     (void **)&mLayout);
+ 
+  if (mLayout == nsnull)
+  { 
+    res = nsRepository::CreateInstance(kCBoxLayoutCID, 
+                                       nsnull, 
+                                       kCBoxLayoutCID, 
+                                       (void **)&mLayout);
 
-  if (NS_OK != res)
-    return res ;
+    if (NS_OK != res)
+      return res ;
 
-  ((nsBoxLayout *)mLayout)->Init(this);
-
+    ((nsBoxLayout *)mLayout)->Init(this);
+  }
   return res;
 }
 
