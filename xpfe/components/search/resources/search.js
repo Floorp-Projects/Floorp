@@ -4,16 +4,19 @@ var	gSearchStr = "";
 function loadPage(thePage, searchStr)
 {
 	var	content="", results="";
+	var	tabName="";
 
 	gSearchStr = "";
 
 	if (thePage == "find")
 	{
+		tabName="findTab";
 		content="chrome://search/content/find.xul";
 		results="chrome://search/content/findresults.xul";
 	}
 	else if (thePage == "internet")
 	{
+		tabName="internetTab";
 		content="chrome://search/content/internet.xul";
 		results="chrome://search/content/internetresults.xul";
 
@@ -24,11 +27,13 @@ function loadPage(thePage, searchStr)
 	}
 	else if (thePage == "mail")
 	{
+		tabName="mailnewsTab";
 		content="about:blank";
 		results="about:blank";
 	}
 	else if (thePage == "addressbook")
 	{
+		tabName="addressbookTab";
 		content="about:blank";
 		results="about:blank";
 	}
@@ -44,6 +49,11 @@ function loadPage(thePage, searchStr)
 		if (resultsFrame)
 		{
 			resultsFrame.setAttribute("src", results);
+		}
+		var	theTab = document.getElementById(tabName);
+		if (theTab)
+		{
+			theTab.setAttribute("selected", "true");
 		}
 	}
 	return(true);

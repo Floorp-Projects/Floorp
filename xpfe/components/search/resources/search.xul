@@ -31,10 +31,10 @@
 
 	<tabcontrol align="vertical"> 
 		<tabbox align="horizontal"> 
-			<tab selected="true" onclick="loadPage('find', null);">&find.title.label;</tab> 
-			<tab onclick="loadPage('internet', null);">&internet.title.label;</tab> 
-			<tab onclick="loadPage('mail', null);">&mailnews.title.label;</tab> 
-			<tab onclick="loadPage('addressbook', null);">&addressbook.title.label;</tab> 
+			<tab id="findTab" onclick="loadPage('find', null);">&find.title.label;</tab> 
+			<tab id="internetTab" onclick="loadPage('internet', null);">&internet.title.label;</tab> 
+			<tab id="mailnewsTab" onclick="loadPage('mail', null);">&mailnews.title.label;</tab> 
+			<tab id="addressbookTab" onclick="loadPage('addressbook', null);">&addressbook.title.label;</tab> 
 			<spring flex="1"/>
 		</tabbox> 
                     
