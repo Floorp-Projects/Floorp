@@ -97,6 +97,11 @@ and see why the wouldn't work for you right now.
 you've installed your binaries in all executable scripts in Bugzilla
 directories.
 
+   Make sure the directory containing the binaries is writable by the 
+web server.  Bugzilla keeps some temporary files here.
+
+  Create an empty file in that directory named "comments"; make sure
+it is writable by the web server.
 
 3. Setting up database
 
