@@ -828,9 +828,6 @@ NS_METHOD nsDocumentBindInfo::OnStopBinding(nsIURL* aURL, PRInt32 aStatus,
 
     /*
      * The stream is complete...  Tell the DocumentLoader to release us...
-     *
-     * This should cause the nsDocumentBindInfo instance to be deleted, so
-     * DO NOT assume this is valid after the call!!
      */
     m_DocLoader->LoadURLComplete((nsIStreamListener *)this);
 
