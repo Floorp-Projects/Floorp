@@ -76,20 +76,27 @@ NS_IMETHODIMP nsWebBrowserChrome::GetInterface(const nsIID &aIID, void** aInstan
 
 NS_IMETHODIMP nsWebBrowserChrome::SetJSStatus(const PRUnichar* aStatus)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mBrowserWindow->mStatus);
+
+   PRUint32 size;
+   mBrowserWindow->mStatus->SetText(aStatus, size);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetJSDefaultStatus(const PRUnichar* aStatus)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetOverLink(const PRUnichar* aLink)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   NS_ENSURE_STATE(mBrowserWindow->mStatus);
+
+   PRUint32 size;
+   mBrowserWindow->mStatus->SetText(aLink, size);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetWebBrowser(nsIWebBrowser* aWebBrowser)

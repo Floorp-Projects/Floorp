@@ -43,10 +43,10 @@
 #include "nsTableInspectorDialog.h"
 #include "nsImageInspectorDialog.h"
 #include "nsIPrompt.h"
+#include "nsITextWidget.h"
 
 class nsILabel;
 class nsICheckButton;
-class nsITextWidget;
 class nsIButton;
 class nsThrobber;
 class nsViewerApp;
