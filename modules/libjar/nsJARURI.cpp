@@ -39,13 +39,12 @@
 #include "nsJARURI.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
+#include "nsIStandardURL.h"
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIZipReader.h"
 #include "nsReadableUtils.h"
-#include "nsURLHelper.h"
-#include "nsStandardURL.h"
 #include "nsAutoPtr.h"
 
 static NS_DEFINE_CID(kThisImplCID, NS_THIS_JARURI_IMPL_CID);
@@ -115,8 +114,8 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
                          nsIURL** url)
 {
     *url = nsnull;
-    
-    nsStandardURL* stdURL = new nsStandardURL();
+
+    nsCOMPtr<nsIStandardURL> stdURL(do_CreateInstance(NS_STANDARDURL_CONTRACTID));
     if (!stdURL) {
         return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -126,12 +125,10 @@ nsJARURI::CreateEntryURL(const nsACString& entryFilename,
     nsresult rv = stdURL->Init(nsIStandardURL::URLTYPE_NO_AUTHORITY, -1,
                                spec, charset, nsnull);
     if (NS_FAILED(rv)) {
-        delete stdURL;
         return rv;
     }
 
-    NS_ADDREF(*url = stdURL);
-    return NS_OK;
+    return CallQueryInterface(stdURL, url);
 }
     
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +167,7 @@ nsJARURI::SetSpec(const nsACString &aSpec)
     if (NS_FAILED(rv)) return rv;
 
     nsCAutoString scheme;
-    rv = net_ExtractURLScheme(aSpec, nsnull, nsnull, &scheme);
+    rv = ioServ->ExtractScheme(aSpec, scheme);
     if (NS_FAILED(rv)) return rv;
 
     if (strcmp("jar", scheme.get()) != 0)
@@ -402,7 +399,12 @@ nsJARURI::Resolve(const nsACString &relativePath, nsACString &result)
 {
     nsresult rv;
 
-    rv = net_ExtractURLScheme(relativePath, nsnull, nsnull, nsnull);
+    nsCOMPtr<nsIIOService> ioServ(do_GetIOService(&rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    nsCAutoString scheme;
+    rv = ioServ->ExtractScheme(relativePath, scheme);
     if (NS_SUCCEEDED(rv)) {
         // then aSpec is absolute
         result = relativePath;
