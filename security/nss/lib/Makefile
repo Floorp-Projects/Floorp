@@ -72,17 +72,16 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
+FILES=$(shell ls $(CORE_DEPTH)/../../ns/security/lib/crypto/*)
 
 export::
 ifdef MOZILLA_SECURITY_BUILD
-	rm -f crypto
-	ln -s $(CORE_DEPTH)/../../ns/security/lib/crypto
-	(cd crypto && gmake export)
-#
-# cmd expects to live in $(COREDEP)/security/cmd, and now it lives in 
-# $(CORE_DEPTH)/nss/cmd. put the link in so it builds until we can fix the makefiles
-# over move to mozilla
-#
-	rm -f $(CORE_DEPTH)/security
-	(cd $(CORE_DEPTH) ; ln -s nss security)
+	if test -d $(CORE_DEPTH)/../../ns/security/lib/crypto; then \
+	   $(NSINSTALL) -D crypto; \
+	   for file in $(FILES) ; do \
+		if test -f $$file; then \
+   		    $(NSINSTALL) -m 444 $$file crypto; \
+		fi; \
+	   done;  \
+	fi
 endif
