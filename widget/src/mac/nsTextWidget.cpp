@@ -59,6 +59,8 @@ nsTextWidget::nsTextWidget() : nsMacControl(), nsITextWidget(), Repeater()
   SetControlType(kControlEditTextProc);
 	mIsPassword = PR_FALSE;
 	mIsReadOnly = PR_FALSE;
+
+	AcceptFocusOnClick(PR_TRUE);
 }
 
 //-------------------------------------------------------------------------
