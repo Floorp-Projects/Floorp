@@ -38,7 +38,6 @@
 
 #include "nsIFileSpec.h"
 
-#include "nsIProfile.h"
 #include "nsIAddrDatabase.h"
 #include "nsIAddrBookSession.h"
 #include "nsIRDFService.h"
@@ -54,7 +53,6 @@
 
 static NS_DEFINE_CID(kImportServiceCID, NS_IMPORTSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kAbDirectoryCID, NS_ABDIRECTORY_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kAddrBookSessionCID, NS_ADDRBOOKSESSION_CID);

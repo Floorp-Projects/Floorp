@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = import
 LIBRARY_NAME = import
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string mailnews addrbook uconv mork msgbase msgbaseutil profile intl locale necko rdf msgdb rdfutil
+REQUIRES	= xpcom string mailnews addrbook uconv mork msgbase msgbaseutil intl locale necko rdf msgdb rdfutil
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 EXTRA_DSO_LIBS = msgbsutl

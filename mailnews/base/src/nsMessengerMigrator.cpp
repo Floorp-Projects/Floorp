@@ -42,7 +42,6 @@
 #include "nsIURL.h"
 #include "nsIStringBundle.h"
 
-#include "nsIProfile.h"
 #include "nsINetSupportDialogService.h"
 
 #include "nsMessengerMigrator.h"
@@ -81,7 +80,6 @@
 #endif
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static NS_DEFINE_CID(kProfileCID, NS_PROFILE_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);   
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);   
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
