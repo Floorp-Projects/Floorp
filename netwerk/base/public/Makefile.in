@@ -66,6 +66,7 @@ XPIDLSRCS	= \
 		nsISecretDecoderRing.idl \
 		nsISecureBrowserUI.idl \
 		nsISecurityManagerComponent.idl \
+		nsICachingChannel.idl \
 		$(NULL)
 
 EXPORTS		= \

@@ -23,6 +23,8 @@
 
 #include "nsISupports.idl"
 
+interface nsIFile;
+
 /**
  * A channel may optionally implement this interface to allow clients
  * to effect its behavior with respect to how it uses the cache service.
