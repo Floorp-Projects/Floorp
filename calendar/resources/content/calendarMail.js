@@ -302,43 +302,11 @@ function getCalendarDataFilePath()
 
 function saveCalendarObject(FilePath, CalendarStream)
 {
-	var LocalFileComponent;
-	var LocalFileInstance;
-	var FileChannelComponent;
-	var FileChannelInstance;
-	var FileTransportComponent;
-	var FileTransportService;
-	var FileTransport;
-	var FileOutput;
-	
-	// need LocalFile, otherwise what are we going to write to?
-	LocalFileComponent = Components.classes["@mozilla.org/file/local;1"];
-	LocalFileInstance = LocalFileComponent.createInstance(Components.interfaces.nsILocalFile);
-	LocalFileInstance.initWithPath(FilePath);
-	if (!LocalFileInstance.exists())
-	{
-		try
-		{
-			LocalFileInstance.create(LocalFileInstance.NORMAL_FILE_TYPE, 0644);
-		}
-		catch(ex)
-		{
-			mdebug("Unable to create temporary iCal file");
-		}
-	}
-	// need nsIFileChannel for ioflags
-	FileChannelComponent = Components.classes["@mozilla.org/network/local-file-channel;1"];
-	FileChannelInstance = FileChannelComponent.createInstance(Components.interfaces.nsIFileChannel);
-	// need nsIFileTransport to create a transport
-	FileTransportComponent = Components.classes["@mozilla.org/network/file-transport-service;1"];
-	FileTransportService = FileTransportComponent.getService(Components.interfaces.nsIFileTransportService);
-	// need nsITransport to open an output stream
-	FileTransport = FileTransportService.createTransport(LocalFileInstance, FileChannelInstance.NS_RDWR, 0644, true);
-	// need nsIOutputStream to write out the actual file
-	FileOutput = FileTransport.openOutputStream(0, -1, null);
-	// now lets actually write the output to the file
-	FileOutput.write(CalendarStream, CalendarStream.length);
-	FileOutput.close();
+   var TempFile = new File( FilePath );
+   TempFile.open( "w", 0644 );
+   TempFile.write( CalendarStream );
+   TempFile.close();
+   return;
 }
 
 /***************************************************************
