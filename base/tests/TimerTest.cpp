@@ -24,6 +24,8 @@
 #include <stdlib.h>
 #include "resources.h"
 
+#include <windows.h>
+
 static char* class1Name = "TimerTest";
 
 static HANDLE gInstance, gPrevInstance;
