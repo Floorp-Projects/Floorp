@@ -26,8 +26,6 @@
 
 #include "nsISecretDecoderRing.h"
 
-class nsINSSDialogs;
-
 /**
  * NS_SDR_CONTRACTID - contract id for SDR services.
  *   Implements nsISecretDecoderRing.

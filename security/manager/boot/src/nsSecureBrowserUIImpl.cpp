@@ -66,7 +66,6 @@
 #include "nsIFormSubmitObserver.h"
 #include "nsISecurityWarningDialogs.h"
 #include "nsIProxyObjectManager.h"
-#include "nsINSSDialogs.h"
 #include "nsCRT.h"
 
 #define SECURITY_STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
@@ -1287,7 +1286,7 @@ nsresult nsSecureBrowserUIImpl::
 GetNSSDialogs(nsISecurityWarningDialogs **result)
 {
   nsresult rv;
-  nsCOMPtr<nsISecurityWarningDialogs> my_result(do_GetService(NS_NSSDIALOGS_CONTRACTID, &rv));
+  nsCOMPtr<nsISecurityWarningDialogs> my_result(do_GetService(NS_SECURITYWARNINGDIALOGS_CONTRACTID, &rv));
 
   if (NS_FAILED(rv)) 
     return rv;
@@ -1319,7 +1318,8 @@ AlertEnteringSecure()
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  dialogs->AlertEnteringSecure(ctx);
+  PRBool canceled;
+  dialogs->AlertEnteringSecure(ctx, &canceled);
 
   return;
 }
@@ -1334,7 +1334,8 @@ AlertEnteringWeak()
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  dialogs->AlertEnteringWeak(ctx);
+  PRBool canceled;
+  dialogs->AlertEnteringWeak(ctx, &canceled);
 
   return;
 }
@@ -1349,7 +1350,8 @@ AlertLeavingSecure()
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  dialogs->AlertLeavingSecure(ctx);
+  PRBool canceled;
+  dialogs->AlertLeavingSecure(ctx, &canceled);
 
   return;
 }
@@ -1364,7 +1366,8 @@ AlertMixedMode()
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsUIContext(mWindow);
 
-  dialogs->AlertMixedMode(ctx);
+  PRBool canceled;
+  dialogs->AlertMixedMode(ctx, &canceled);
 
   return;
 }

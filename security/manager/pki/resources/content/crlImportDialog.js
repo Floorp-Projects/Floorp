@@ -23,7 +23,7 @@
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsIX509Cert         = Components.interfaces.nsIX509Cert;
-const nsICrlEntry         = Components.interfaces.nsICrlEntry;
+const nsICRLInfo          = Components.interfaces.nsICRLInfo;
 const nsIPref             = Components.interfaces.nsIPref;
 
 var pkiParams;
@@ -36,7 +36,7 @@ function onLoad()
   pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
   isupport = pkiParams.getISupportAtIndex(1);
   if (isupport) {
-    crl = isupport.QueryInterface(nsICrlEntry);
+    crl = isupport.QueryInterface(nsICRLInfo);
   }
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var yesButton = bundle.GetStringFromName("yesButton");

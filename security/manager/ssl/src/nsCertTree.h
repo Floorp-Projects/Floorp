@@ -44,6 +44,7 @@
 #include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
 #include "pldhash.h"
+#include "nsIX509CertDB.h"
 
 typedef struct treeArrayElStr treeArrayEl;
 
@@ -75,6 +76,8 @@ protected:
   void ClearCompareHash();
   void RemoveCacheEntry(void *key);
 
+  typedef int (*nsCertCompareFunc)(void *, nsIX509Cert *a, nsIX509Cert *b);
+
   static CompareCacheHashEntry *getCacheEntry(void *cache, void *aCert);
   static void CmpInitCriterion(nsIX509Cert *cert, CompareCacheHashEntry *entry,
                                sortCriterion crit, PRInt32 level);
@@ -90,6 +93,12 @@ protected:
   nsCertCompareFunc GetCompareFuncFromCertType(PRUint32 aType);
   PRInt32 CountOrganizations();
 
+  PRBool GetCertsByType(PRUint32 aType, nsCertCompareFunc aCertCmpFn,
+                        void *aCertCmpFnArg, nsISupportsArray **_certs);
+
+  PRBool GetCertsByTypeFromCache(nsINSSCertCache *aCache, PRUint32 aType,
+                                 nsCertCompareFunc aCertCmpFn, void *aCertCmpFnArg,
+                                 nsISupportsArray **_certs);
 private:
   nsCOMPtr<nsISupportsArray>      mCertArray;
   nsCOMPtr<nsITreeBoxObject>  mTree;
@@ -105,6 +114,12 @@ private:
 
   void FreeCertArray();
   nsresult UpdateUIContents();
+
+  PRBool GetCertsByTypeFromCertList(CERTCertList *aCertList,
+                                    PRUint32 aType,
+                                    nsCertCompareFunc  aCertCmpFn,
+                                    void              *aCertCmpFnArg,
+                                    nsISupportsArray **_certs);
 
 #ifdef DEBUG_CERT_TREE
   /* for debugging purposes */

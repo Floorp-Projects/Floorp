@@ -409,7 +409,7 @@ function viewCerts()
     return;
 
   for (var t=0; t<numcerts; t++) {
-    selected_certs[t].view();
+    viewCertHelper(window, selected_certs[t]);
   }
 }
 

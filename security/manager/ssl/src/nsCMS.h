@@ -41,7 +41,10 @@
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
 #include "nsIInterfaceRequestor.h"
-#include "nsICMS.h"
+#include "nsIHash.h"
+#include "nsICMSMessage.h"
+#include "nsICMSEncoder.h"
+#include "nsICMSDecoder.h"
 #include "sechash.h"
 #include "cms.h"
 

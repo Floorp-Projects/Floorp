@@ -63,11 +63,20 @@ CPPSRCS = 				\
 	nsCertTree.cpp              \
 	nsKeygenHandler.cpp		\
 	nsCrypto.cpp			\
-        nsPKCS11Slot.cpp                \
-        nsKeygenThread.cpp              \
-        nsCMSSecureMessage.cpp          \
-        nsCMS.cpp 	                \
-        nsCertPicker.cpp                \
+  nsPKCS11Slot.cpp                \
+  nsKeygenThread.cpp              \
+  nsCMSSecureMessage.cpp          \
+  nsCMS.cpp 	                \
+  nsCertPicker.cpp                \
+  nsCRLInfo.cpp \
+  nsNSSCertCache.cpp \
+  nsNSSCertHelper.cpp \
+  nsNSSCertificateDB.cpp \
+  nsNSSCertTrust.cpp \
+  nsNSSCertValidity.cpp \
+  nsOCSPResponder.cpp \
+  nsUsageArrayHelper.cpp \
+  nsCRLManager.cpp \
 	$(NULL)
 
 REQUIRES	= nspr \

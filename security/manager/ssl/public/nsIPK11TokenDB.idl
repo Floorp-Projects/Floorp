@@ -22,7 +22,9 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIEnumerator.idl"
+
+interface nsIPK11Token;
+interface nsIEnumerator;
 
 /**
  * The PK11 Token Database provides access to the PK11 modules
@@ -33,56 +35,6 @@
 %{C++
 #define NS_PK11TOKENDB_CONTRACTID "@mozilla.org/security/pk11tokendb;1"
 %}
-
-[scriptable, uuid(51191434-1dd2-11b2-a17c-e49c4e99a4e3)]
-interface nsIPK11Token : nsISupports
-{
-  const long ASK_EVERY_TIME  = -1;
-  const long ASK_FIRST_TIME  =  0;
-  const long ASK_EXPIRE_TIME =  1;
-
-  /*
-   * The name of the token
-   */
-  readonly attribute wstring tokenName;
-
-  readonly attribute wstring tokenLabel;
-  readonly attribute wstring tokenManID;
-  readonly attribute wstring tokenHWVersion;
-  readonly attribute wstring tokenFWVersion;
-  readonly attribute wstring tokenSerialNumber;
-
-  /*
-   * Login information
-   */
-  boolean isLoggedIn();
-  void login(in boolean force);
-  void logout();
-
-  /*
-   * Reset password
-   */
-  void reset();
-
-  /*
-   * Password information
-   */
-  readonly attribute long minimumPasswordLength;
-  readonly attribute boolean needsUserInit;
-  boolean checkPassword(in wstring password);  /* Logs out if check fails */
-  void initPassword(in wstring initialPassword);
-  void changePassword(in wstring oldPassword, in wstring newPassword);
-  long getAskPasswordTimes();
-  long getAskPasswordTimeout();
-  void setAskPasswordDefaults([const] in long askTimes, [const] in long timeout);
-
-  /*
-   * Other attributes
-   */
-  boolean isHardwareToken();
-  boolean needsLogin();
-  boolean isFriendly();
-};
 
 /**
  * nsIPK11TokenDB - Manages PK11 Tokens

@@ -53,7 +53,7 @@ function onLoad()
 
 function viewCert()
 {
-  cert.view();
+  viewCertHelper(window, cert);
 }
 
 function doOK()

@@ -48,11 +48,11 @@
 #include "nsIChannel.h"
 #include "nsIBadCertListener.h"
 #include "nsNSSCertificate.h"
-#include "nsINSSDialogs.h"
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsIClientAuthDialogs.h"
 
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
@@ -1228,10 +1228,11 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
   if (!nssCert)
     return PR_FALSE;
   rv = getNSSDialogs((void**)&badCertHandler, 
-                     NS_GET_IID(nsIBadCertListener));
+                     NS_GET_IID(nsIBadCertListener),
+                     NS_BADCERTLISTENER_CONTRACTID);
   if (NS_FAILED(rv)) 
     return PR_FALSE;
-  nsITransportSecurityInfo *csi = NS_STATIC_CAST(nsITransportSecurityInfo*,
+  nsIInterfaceRequestor *csi = NS_STATIC_CAST(nsIInterfaceRequestor*,
                                                  infoObject);
   nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
   CERTCertificate *peerCert = nssCert->GetCert();
@@ -2018,7 +2019,9 @@ SECStatus nsNSS_SSLGetClientAuthData(void* arg, PRFileDesc* socket,
     }
 
     /* Throw up the client auth dialog and get back the index of the selected cert */
-    rv = getNSSDialogs((void**)&dialogs, NS_GET_IID(nsIClientAuthDialogs));
+    rv = getNSSDialogs((void**)&dialogs, 
+                       NS_GET_IID(nsIClientAuthDialogs),
+                       NS_CLIENTAUTHDIALOGS_CONTRACTID);
 
     if (NS_FAILED(rv)) goto loser;
 

@@ -26,6 +26,8 @@
 
 #include "nsISupports.h"
 #include "nsIPKCS11Slot.h"
+#include "nsIPKCS11Module.h"
+#include "nsIPKCS11ModuleDB.h"
 #include "nsString.h"
 #include "pk11func.h"
 

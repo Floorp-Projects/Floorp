@@ -1,0 +1,71 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Javier Delgadillo <javi@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the
+ * terms of the GNU General Public License Version 2 or later (the
+ * "GPL"), in which case the provisions of the GPL are applicable
+ * instead of those above.  If you wish to allow use of your
+ * version of this file only under the terms of the GPL and not to
+ * allow others to use your version of this file under the MPL,
+ * indicate your decision by deleting the provisions above and
+ * replace them with the notice and other provisions required by
+ * the GPL.  If you do not delete the provisions above, a recipient
+ * may use your version of this file under either the MPL or the
+ * GPL.
+ */
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(ba8bf582-1dd1-11b2-898c-f40246bc9a63)]
+interface nsIASN1Object : nsISupports {
+  const unsigned long ASN1_END_CONTENTS     = 0;
+  const unsigned long ASN1_BOOLEAN          = 1;
+  const unsigned long ASN1_INTEGER          = 2;
+  const unsigned long ASN1_BIT_STRING       = 3;
+  const unsigned long ASN1_OCTET_STRING     = 4;
+  const unsigned long ASN1_NULL             = 5; 
+  const unsigned long ASN1_OBJECT_ID        = 6;
+  const unsigned long ASN1_ENUMERATED       = 10;
+  const unsigned long ASN1_UTF8_STRING      = 12;
+  const unsigned long ASN1_SEQUENCE         = 16;
+  const unsigned long ASN1_SET              = 17;
+  const unsigned long ASN1_PRINTABLE_STRING = 19;
+  const unsigned long ASN1_T61_STRING       = 20;
+  const unsigned long ASN1_IA5_STRING       = 22;
+  const unsigned long ASN1_UTC_TIME         = 23;
+  const unsigned long ASN1_GEN_TIME         = 24;
+  const unsigned long ASN1_VISIBLE_STRING   = 26;
+  const unsigned long ASN1_UNIVERSAL_STRING = 28; 
+  const unsigned long ASN1_BMP_STRING       = 30;
+  const unsigned long ASN1_HIGH_TAG_NUMBER  = 31;
+  const unsigned long ASN1_CONTEXT_SPECIFIC = 32;
+  const unsigned long ASN1_APPLICATION      = 33;
+  const unsigned long ASN1_PRIVATE          = 34;
+
+  // This will be either one of the const
+  // values above.
+  attribute unsigned long type;
+  attribute unsigned long tag;
+  attribute wstring displayName;
+  attribute wstring displayValue;
+};
+

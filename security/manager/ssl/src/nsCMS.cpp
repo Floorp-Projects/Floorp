@@ -41,6 +41,7 @@
 #include "nsNSSCertificate.h"
 #include "smime.h"
 #include "cms.h"
+#include "nsICMSMessageErrors.h"
 
 #include "prlog.h"
 #ifdef PR_LOGGING
@@ -361,7 +362,15 @@ NS_IMETHODIMP nsCMSMessage::CreateEncrypted(nsISupportsArray * aRecipientCerts)
   }
 
   for (i=0; i<recipientCertCount; i++) {
-    nssRecipientCert = NS_STATIC_CAST(nsNSSCertificate*, aRecipientCerts->ElementAt(i));
+    nsCOMPtr<nsIX509Cert> x509cert = do_QueryElementAt(aRecipientCerts, i);
+
+    nssRecipientCert = 
+      NS_STATIC_CAST(nsNSSCertificate*, 
+                     NS_STATIC_CAST(nsIX509Cert*, x509cert));
+
+    if (!nssRecipientCert)
+      return NS_ERROR_FAILURE;
+
     recipientCerts[i] = nssRecipientCert->GetCert();
   }
   recipientCerts[i] = nsnull;

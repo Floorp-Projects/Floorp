@@ -89,5 +89,5 @@ function doCancel()
 
 function viewCert()
 {
-  cert.view();
+  viewCertHelper(window, cert);
 }

@@ -38,7 +38,6 @@
 #include "nsCURILoader.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIProxyObjectManager.h"
-#include "nsINSSDialogs.h"
 #include "nsIX509Cert.h"
 #include "nsIX509CertDB.h"
 #include "nsIProfileChangeStatus.h"
@@ -54,6 +53,7 @@
 #include "nsIRunnable.h"
 #include "plevent.h"
 #include "nsCRT.h"
+#include "nsCRLInfo.h"
 
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -68,6 +68,8 @@
 #include "nsIBufEntropyCollector.h"
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
+#include "nsITokenPasswordDialogs.h"
+#include "nsICRLManager.h"
 
 #include "nss.h"
 #include "pk11func.h"
@@ -1544,17 +1546,15 @@ NS_IMETHODIMP PipUIContext::GetInterface(const nsIID & uuid, void * *result)
   return rv;
 }
 
-static const char *kNSSDialogsContractId = NS_NSSDIALOGS_CONTRACTID;
-
 nsresult 
-getNSSDialogs(void **_result, REFNSIID aIID)
+getNSSDialogs(void **_result, REFNSIID aIID, const char *contract)
 {
   nsresult rv;
   nsCOMPtr<nsISupports> result;
   nsCOMPtr<nsISupports> proxiedResult;
 
-  rv = nsServiceManager::GetService(kNSSDialogsContractId, 
-                                    NS_GET_IID(nsINSSDialogs),
+  rv = nsServiceManager::GetService(contract, 
+                                    aIID,
                                     getter_AddRefs(result));
   if (NS_FAILED(rv)) 
     return rv;
@@ -1587,7 +1587,8 @@ setPassword(PK11SlotInfo *slot, nsIInterfaceRequestor *ctx)
     NS_ConvertUTF8toUCS2 tokenName(PK11_GetTokenName(slot));
 
     rv = getNSSDialogs((void**)&dialogs,
-                       NS_GET_IID(nsITokenPasswordDialogs));
+                       NS_GET_IID(nsITokenPasswordDialogs),
+                       NS_TOKENPASSWORDSDIALOG_CONTRACTID);
 
     if (NS_FAILED(rv)) goto loser;
 
@@ -1702,21 +1703,36 @@ PSMContentDownloader::OnStopRequest(nsIRequest* request,
   }
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("CertDownloader::OnStopRequest\n"));
-  /* this will init NSS if it hasn't happened already */
-  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+
+  nsCOMPtr<nsIX509CertDB> certdb;
+  nsCOMPtr<nsICRLManager> crlManager;
 
   nsresult rv;
   nsCOMPtr<nsIInterfaceRequestor> ctx = new PipUIContext();
 
   switch (mType) {
   case PSMContentDownloader::X509_CA_CERT:
-    return certdb->ImportCertificates(mByteData, mBufferOffset, mType, ctx); 
   case PSMContentDownloader::X509_USER_CERT:
-    return certdb->ImportUserCertificate(mByteData, mBufferOffset, ctx);
   case PSMContentDownloader::X509_EMAIL_CERT:
-    return certdb->ImportEmailCertificate(mByteData, mBufferOffset, ctx); 
+    certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+    break;
+
   case PSMContentDownloader::PKCS7_CRL:
-    return certdb->ImportCrl(mByteData, mBufferOffset, mURI, SEC_CRL_TYPE, mDoSilentDownload, mCrlAutoDownloadKey.get());
+    crlManager = do_GetService(NS_CRLMANAGER_CONTRACTID);
+
+  default:
+    break;
+  }
+
+  switch (mType) {
+  case PSMContentDownloader::X509_CA_CERT:
+    return certdb->ImportCertificates((PRUint8*)mByteData, mBufferOffset, mType, ctx); 
+  case PSMContentDownloader::X509_USER_CERT:
+    return certdb->ImportUserCertificate((PRUint8*)mByteData, mBufferOffset, ctx);
+  case PSMContentDownloader::X509_EMAIL_CERT:
+    return certdb->ImportEmailCertificate((PRUint8*)mByteData, mBufferOffset, ctx); 
+  case PSMContentDownloader::PKCS7_CRL:
+    return crlManager->ImportCrl((PRUint8*)mByteData, mBufferOffset, mURI, SEC_CRL_TYPE, mDoSilentDownload, mCrlAutoDownloadKey.get());
   default:
     rv = NS_ERROR_FAILURE;
     break;

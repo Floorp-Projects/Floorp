@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsPKCS12Blob.cpp,v 1.29 2002/08/26 20:31:02 kaie%netscape.com Exp $
+ * $Id: nsPKCS12Blob.cpp,v 1.30 2002/09/17 18:51:14 kaie%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -40,7 +40,6 @@
 #include "nsISupportsArray.h"
 #include "nsIFileSpec.h"
 #include "nsILocalFile.h"
-#include "nsINSSDialogs.h"
 #include "nsIDirectoryService.h"
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
@@ -58,6 +57,7 @@
 #include "nsNSSCertificate.h"
 #include "nsKeygenHandler.h" //For GetSlotWithMechanism
 #include "nsPK11TokenDB.h"
+#include "nsICertificateDialogs.h"
 
 #include "pk11func.h"
 #include "secerr.h"
@@ -453,7 +453,8 @@ nsPKCS12Blob::newPKCS12FilePassword(SECItem *unicodePw)
   PRBool canceled;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
-                       NS_GET_IID(nsICertificateDialogs));
+                       NS_GET_IID(nsICertificateDialogs),
+                       NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
   rv = certDialogs->SetPKCS12FilePassword(mUIContext, &password, &canceled);
   if (NS_FAILED(rv) || canceled) return rv;
@@ -473,7 +474,8 @@ nsPKCS12Blob::getPKCS12FilePassword(SECItem *unicodePw)
   PRBool canceled;
   nsCOMPtr<nsICertificateDialogs> certDialogs;
   rv = ::getNSSDialogs(getter_AddRefs(certDialogs), 
-                       NS_GET_IID(nsICertificateDialogs));
+                       NS_GET_IID(nsICertificateDialogs),
+                       NS_CERTIFICATEDIALOGS_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
   rv = certDialogs->GetPKCS12FilePassword(mUIContext, &password, &canceled);
   if (NS_FAILED(rv) || canceled) return rv;

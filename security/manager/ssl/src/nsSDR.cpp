@@ -36,7 +36,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
-#include "nsINSSDialogs.h"
+#include "nsITokenPasswordDialogs.h"
 
 #include "nsISecretDecoderRing.h"
 #include "nsSDR.h"
@@ -282,7 +282,8 @@ ChangePassword()
   nsCOMPtr<nsITokenPasswordDialogs> dialogs;
 
   rv = getNSSDialogs(getter_AddRefs(dialogs),
-           NS_GET_IID(nsITokenPasswordDialogs));
+           NS_GET_IID(nsITokenPasswordDialogs),
+           NS_TOKENPASSWORDSDIALOG_CONTRACTID);
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIInterfaceRequestor> ctx = new nsSDRContext();

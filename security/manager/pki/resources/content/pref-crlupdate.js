@@ -20,11 +20,10 @@
  *  Rangan Sen <rangansen@netscape.com>
  */
 
-const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
-const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
+const nsICRLManager = Components.interfaces.nsICRLManager;
+const nsCRLManager  = "@mozilla.org/security/crlmanager;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
-const nsIX509Cert         = Components.interfaces.nsIX509Cert;
-const nsICrlEntry         = Components.interfaces.nsICrlEntry;
+const nsICRLInfo          = Components.interfaces.nsICRLInfo;
 const nsIPref             = Components.interfaces.nsIPref;
  
 var crl;
@@ -34,7 +33,7 @@ var updateTypeRadio;
 var enabledCheckBox;
 var timeBasedRadio;
 var freqBasedRadio;
-var certdb;
+var crlManager;
 
 var autoupdateEnabledString   = "security.crl.autoupdate.enable.";
 var autoupdateTimeTypeString  = "security.crl.autoupdate.timingType.";
@@ -47,10 +46,10 @@ var autoupdateFreqCntString   = "security.crl.autoupdate.freqCnt.";
 
 function onLoad()
 {
-  certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  crlManager = Components.classes[nsCRLManager].getService(nsICRLManager);
   var pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);  
   var isupport = pkiParams.getISupportAtIndex(1);
-  crl = isupport.QueryInterface(nsICrlEntry);
+  crl = isupport.QueryInterface(nsICRLInfo);
 
   autoupdateEnabledString    = autoupdateEnabledString + crl.nameInDb;
   autoupdateTimeTypeString  = autoupdateTimeTypeString + crl.nameInDb;
@@ -217,13 +216,13 @@ function onAccept()
    var updateTime;
    var dayCnt = (document.getElementById("nextUpdateDay")).value;
    var freqCnt = (document.getElementById("nextUpdateFreq")).value;
-   
+
    if(timingTypeId == "timeBasedRadio"){
      prefs.SetIntPref(autoupdateTimeTypeString,crl.TYPE_AUTOUPDATE_TIME_BASED);
-     updateTime = crl.ComputeNextAutoUpdateTime(crl.TYPE_AUTOUPDATE_TIME_BASED, dayCnt);
+     updateTime = crlManager.computeNextAutoUpdateTime(crl, crl.TYPE_AUTOUPDATE_TIME_BASED, dayCnt);
    } else {
      prefs.SetIntPref(autoupdateTimeTypeString,crl.TYPE_AUTOUPDATE_FREQ_BASED);
-     updateTime = crl.ComputeNextAutoUpdateTime(crl.TYPE_AUTOUPDATE_FREQ_BASED, freqCnt);
+     updateTime = crlManager.computeNextAutoUpdateTime(crl, crl.TYPE_AUTOUPDATE_FREQ_BASED, freqCnt);
    }
 
    //alert(updateTime);
@@ -234,7 +233,7 @@ function onAccept()
    //Save Now
    prefs.savePrefFile(null);
    
-   certdb.rescheduleCRLAutoUpdate();
+   crlManager.rescheduleCRLAutoUpdate();
    //Close dialog by returning true
    return true;
 }

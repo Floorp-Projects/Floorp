@@ -20,7 +20,8 @@
 // make sure to include all the required file headers
 
 #include "nsISupports.idl"
-#include "nsIDOMWindowInternal.idl"
+
+interface nsIDOMWindowInternal;
 
 /**
  * nsIKeygenThread

@@ -35,7 +35,7 @@
       // Display the server certificate (static)
       viewCert : function () {
         var cert = security._cert;
-        if (cert) cert.view();
+        viewCertHelper(window, cert);
       },
 
       _getSecurityInfo : function() {
