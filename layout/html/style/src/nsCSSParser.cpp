@@ -319,6 +319,8 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      nsIURL*                aInputURL,
                      nsICSSStyleSheet*&     aResult)
 {
+  NS_ASSERTION(nsnull != aInputURL, "need base URL");
+
   if (nsnull == mSheet) {
     NS_NewCSSStyleSheet(&mSheet, aInputURL);
   }
@@ -364,6 +366,8 @@ CSSParserImpl::ParseDeclarations(const nsString& aDeclaration,
                                  nsIURL*         aBaseURL,
                                  nsIStyleRule*&  aResult)
 {
+  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
+
   nsString* str = new nsString(aDeclaration);
   if (nsnull == str) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -410,6 +414,8 @@ CSSParserImpl::ParseAndAppendDeclaration(const nsString&    aBuffer,
                                          nsICSSDeclaration* aDeclaration,
                                          PRInt32*           aHint)
 {
+  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
+
   nsString* str = new nsString(aBuffer);
   if (nsnull == str) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -564,7 +570,7 @@ PRBool CSSParserImpl::ParseAtRule(PRInt32& aErrorCode)
 }
 
 PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
-{
+{ // media is acse sensative
   PRBool first = PR_TRUE;
   for (;;) {
     if (!GetToken(aErrorCode, PR_TRUE)) {
@@ -574,7 +580,6 @@ PRBool CSSParserImpl::GatherMedia(PRInt32& aErrorCode, nsString& aMedia)
       PRUnichar symbol = mToken.mSymbol;
       if (';' == symbol) {
         UngetToken();
-        aMedia.ToUpperCase();
         return PR_TRUE;
       } else if (',' != symbol) {
         UngetToken();
@@ -649,6 +654,7 @@ const PRUnichar kNullCh       = PRUnichar('\0');
 const PRUnichar kSingleQuote  = PRUnichar('\'');
 const PRUnichar kDoubleQuote  = PRUnichar('\"');
 const PRUnichar kComma        = PRUnichar(',');
+const PRUnichar kHyphenCh     = PRUnichar('-');
 
 static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFunc, void* aData)
 {
@@ -693,6 +699,16 @@ static PRBool EnumerateString(const nsString& aStringList, nsStringEnumFunc aFun
       *end = kNullCh; // end string here
     }
 
+    // truncate at first non letter, digit or hyphen
+    PRUnichar* test = start;
+    while (test <= end) {
+      if ((PR_FALSE == nsString::IsAlpha(*test)) && 
+          (PR_FALSE == nsString::IsDigit(*test)) && (kHyphenCh != *test)) {
+        *test = kNullCh;
+        break;
+      }
+      test++;
+    }
     subStr = start;
 
     if (PR_FALSE == quoted) {
@@ -1137,6 +1153,18 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
         if (0 == (dataMask & SEL_MASK_PELEM)) {
           dataMask |= SEL_MASK_PELEM;
           aSelector.AddPseudoClass(pseudo); // store it here, it gets pulled later
+
+          // ensure selector ends here, must be followed by EOF, space, '{' or ','
+          if (GetToken(aErrorCode, PR_FALSE)) { // premature eof is ok (here!)
+            if ((eCSSToken_WhiteSpace == mToken.mType) || 
+                ((eCSSToken_Symbol == mToken.mType) &&
+                 (('{' == mToken.mSymbol) || (',' == mToken.mSymbol)))) {
+              UngetToken();
+              return PR_TRUE;
+            }
+            UngetToken();
+            return PR_FALSE;
+          }
         }
         else {  // multiple pseudo elements, not legal
           UngetToken();
@@ -1933,9 +1961,14 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
       // the style sheet.
       // XXX editors won't like this - too bad for now
       nsAutoString absURL;
-      nsString baseURL;
-      nsresult rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
-      if (NS_OK != rv) {
+      if (nsnull != mURL) {
+        nsString baseURL;
+        nsresult rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
+        if (NS_FAILED(rv)) {
+          absURL = tk->mIdent;
+        }
+      }
+      else {
         absURL = tk->mIdent;
       }
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
