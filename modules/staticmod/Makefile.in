@@ -81,6 +81,9 @@ endif
 #EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
 ifdef MOZ_META_COMPONENTS
+# Force XPCOM_TRANSLATE_NSGM_ENTRY_POINT to be defined so the macros
+# in nsIGenericFactory.h will come out in the wash.
+DEFINES += -DMETA_MODULE=\"$(LIBRARY_NAME)\" -DXPCOM_TRANSLATE_NSGM_ENTRY_POINT
 ifeq ($(LIBRARY_NAME),meta_crypto)
 EXTRA_LIBS += $(NSS_LIBS)
 endif
@@ -96,7 +99,7 @@ nsStaticModule.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(DEPTH)/config/aut
 	rm -f $@
 	cat $< | \
 	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
-	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), \\& NSMODULEINFO($(m)),)|" | \
+	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), \\& NSMODULEINFO($(m)),)|" \
 	> $@
 endif
 
@@ -104,5 +107,5 @@ nsMetaModule_%.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(topsrcdir)/config
 	rm -f $@
 	cat $< | \
 	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
-	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), \\& NSMODULEINFO($(m)),)|" | \
+	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), \\& NSMODULEINFO($(m)),)|" \
 	> $@
