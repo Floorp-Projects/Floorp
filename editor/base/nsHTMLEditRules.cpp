@@ -4629,28 +4629,6 @@ nsHTMLEditRules::UpdateDocChangeRange(nsIDOMRange *aRange)
   return res;
 }
 
-
-
-PRBool 
-nsHTMLEditRules::IsDescendantOfBody(nsIDOMNode *inNode) 
-{
-  if (!inNode) return PR_FALSE;
-  if (inNode == mBody.get()) return PR_TRUE;
-  
-  nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(inNode);
-  nsresult res;
-  
-  do
-  {
-    res = node->GetParentNode(getter_AddRefs(parent));
-    if (NS_FAILED(res)) return PR_FALSE;
-    if (parent == mBody) return PR_TRUE;
-    node = parent;
-  } while (parent);
-  
-  return PR_FALSE;
-}
-
 nsresult 
 nsHTMLEditRules::InsertMozBRIfNeeded(nsIDOMNode *aNode)
 {

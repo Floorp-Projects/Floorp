@@ -178,7 +178,6 @@ protected:
   nsresult ConvertWhitespace(const nsString & inString, nsString & outString);
   nsresult ConfirmSelectionInBody();
 
-  PRBool   IsDescendantOfBody(nsIDOMNode *inNode);
   nsresult InsertMozBRIfNeeded(nsIDOMNode *aNode);
 
 // data members
