@@ -135,6 +135,7 @@ function loadCalendarEventDialog()
    var startDate = new Date( gEvent.start.getTime() );
    var endDate = new Date( gEvent.end.getTime() );
    setDateFieldValue( "start-date-text", startDate );
+   setDateFieldValue( "end-date-text", endDate );
    setTimeFieldValue( "start-time-text", startDate );
    setTimeFieldValue( "end-time-text", endDate );
    gTimeDifference = gEvent.end.getTime() - gEvent.start.getTime(); //the time difference in ms
@@ -241,10 +242,11 @@ function onOKCommand()
    gEvent.start.hour = startTime.getHours();
    gEvent.start.minute = startTime.getMinutes();
    
+   var endDate = getDateTimeFieldValue( "end-date-text" );
    //do this because the end date is always the same as the start date.
-   gEvent.end.year = gEvent.start.year;
-   gEvent.end.month = gEvent.start.month;
-   gEvent.end.day = gEvent.start.day;
+   gEvent.end.year = endDate.getYear()+1900;
+   gEvent.end.month = endDate.getMonth();
+   gEvent.end.day = endDate.getDate();
 
    var endTime = getDateTimeFieldValue( "end-time-text" );
    gEvent.end.hour = endTime.getHours();
@@ -1222,9 +1224,7 @@ function setTimeFieldValue( elementId, newDate  )
 
 function formatDate( date )
 {
-   var monthDayString = gDateFormatter.getFormatedDate( date );
-   
-   return  monthDayString + ", " + date.getFullYear();
+   return( gDateFormatter.getFormatedDate( date ) );
 }
 
 
