@@ -134,7 +134,6 @@ function calendarManager( CalendarWindow )
             function autoreloadCmd(){
                if( ThisCalendar.getAttribute( "http://home.netscape.com/NC-rdf#active" ) == "true" )
                   ThisObject.reloadCalendar( ThisCalendar ); 
-               }
             }
             return autoreloadCmd;
          }
