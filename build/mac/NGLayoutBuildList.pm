@@ -808,7 +808,7 @@ sub BuildEditorProjects()
 
 	BuildOneProject(":mozilla:editor:txmgr:macbuild:txmgr.mcp",					"EditorTxmgr$D.shlb", "txmgr.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
-	#BuildOneProject(":mozilla:editor:guimgr:macbuild:EditorGuiManager.mcp",		"EditorGuiManager$D.shlb", "EditorGuiManager.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:editor:txtsvc:macbuild:txtsvc.mcp",				"TextServices$D.shlb", "txtsvc.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
 	BuildOneProject(":mozilla:editor:macbuild:editor.mcp",						"EditorCore$D.shlb", "EditorCore.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
