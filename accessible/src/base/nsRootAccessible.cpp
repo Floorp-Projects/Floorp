@@ -610,6 +610,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       stateData.enable = (stateData.state & STATE_CHECKED) != 0;
       stateData.state = STATE_CHECKED;
       HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, &stateData);
+      if (eventType.EqualsIgnoreCase("RadioStateChange")) {
+        FireAccessibleFocusEvent(accessible, targetNode);
+      }
     }
     else if (eventType.EqualsIgnoreCase("popupshowing")) 
       FireAccessibleFocusEvent(accessible, targetNode);
