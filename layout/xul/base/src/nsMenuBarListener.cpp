@@ -221,10 +221,14 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
     nsUIEvent->GetPreventDefault(&preventDefault);
     if (!preventDefault) {
       nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
-      PRUint32 theChar;
-      keyEvent->GetKeyCode(&theChar);
+      PRUint32 keyCode, charCode;
+      keyEvent->GetKeyCode(&keyCode);
+      keyEvent->GetCharCode(&charCode);
 
-      if (IsAccessKeyPressed(keyEvent) && (theChar != (PRUint32)mAccessKey))
+      // If charCode == 0, then it is not a printable character.
+      // Don't attempt to handle accesskey for non-printable characters
+      if (IsAccessKeyPressed(keyEvent) && charCode &&
+        (keyCode != (PRUint32)mAccessKey))
       {
         mAccessKeyDown = PR_FALSE;
 
@@ -247,7 +251,7 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
       }    
 #if !defined(XP_MAC) && !defined(XP_MACOSX)
       // Also need to handle F10 specially on Non-Mac platform.
-      else if (theChar == NS_VK_F10) {
+      else if (keyCode == NS_VK_F10) {
         PRBool alt,ctrl,shift,meta;
         keyEvent->GetAltKey(&alt);
         keyEvent->GetCtrlKey(&ctrl);
