@@ -554,7 +554,7 @@ function findParentNode(node, parentNode)
 
 function onselect_loadURI(tree, columnName) {
     try {
-        var row = tree.currentIndex;
+        var row = tree.treeBoxObject.view.selection.currentIndex;
         var properties = Components.classes["@mozilla.org/supports-array;1"]
             .createInstance(Components.interfaces.nsISupportsArray);
         tree.treeBoxObject.view.getCellProperties(row, columnName, properties);
