@@ -241,14 +241,14 @@ function viewCertHelper(parent, cert) {
 function viewSignatureCert()
 {
   if (gSignerCert) {
-    viewCertHelper(gSignerCert);
+    viewCertHelper(window, gSignerCert);
   }
 }
 
 function viewEncryptionCert()
 {
   if (gEncryptionCert) {
-    viewCertHelper(gEncryptionCert);
+    viewCertHelper(window, gEncryptionCert);
   }
 }
 

@@ -272,7 +272,7 @@ function viewSelectedCert()
     var cert = gCerts.value[selected];
     if (cert)
     {
-      viewCertHelper(cert);
+      viewCertHelper(window, cert);
     }
   }
 }
