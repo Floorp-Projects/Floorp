@@ -116,29 +116,29 @@ inLayoutUtils::GetRenderingContextFor(nsIPresShell* aShell)
 nsIEventStateManager*
 inLayoutUtils::GetEventStateManagerFor(nsIDOMElement *aElement)
 {
-  if (aElement) {
-    // get the document
-    nsCOMPtr<nsIDOMDocument> doc1;
-    aElement->GetOwnerDocument(getter_AddRefs(doc1));
-    nsCOMPtr<nsIDocument> doc;
-    doc = do_QueryInterface(doc1);
-  
-    // use the first PresShell
-    PRInt32 num = doc->GetNumberOfShells();
-    if (num > 0) {
-      nsCOMPtr<nsIPresShell> shell;
-      doc->GetShellAt(0, getter_AddRefs(shell));
-      nsCOMPtr<nsIPresContext> presContext;
-      shell->GetPresContext(getter_AddRefs(presContext));
-      
-      nsCOMPtr<nsIEventStateManager> esm;
-      presContext->GetEventStateManager(getter_AddRefs(esm));
-      
-      return esm;
-    }
-  }  
-  
-  return nsnull;
+  NS_PRECONDITION(aElement, "Passing in a null element is bad");
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  aElement->GetOwnerDocument(getter_AddRefs(domDoc));
+  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+
+  if (!doc) {
+    NS_WARNING("Could not get an nsIDocument!");
+    return nsnull;
+  }
+
+  nsCOMPtr<nsIPresShell> shell;
+  doc->GetShellAt(0, getter_AddRefs(shell));
+  NS_ASSERTION(shell, "No pres shell");
+
+  nsCOMPtr<nsIPresContext> presContext;
+  shell->GetPresContext(getter_AddRefs(presContext));
+  NS_ASSERTION(presContext, "No pres context");
+
+  nsCOMPtr<nsIEventStateManager> esm;
+  presContext->GetEventStateManager(getter_AddRefs(esm));
+
+  return esm;
 }
 
 nsPoint
