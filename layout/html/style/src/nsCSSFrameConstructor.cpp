@@ -4035,37 +4035,8 @@ nsCSSFrameConstructor::ConstructPageFrame(nsIPresShell*   aPresShell,
 
   aPageFrame->SetInitialChildList(aPresContext, nsnull, aPageContentFrame);
 
-  if (aPrevPageFrame) {
-    // Get aPrevPageFrame's page content frame
-    nsIFrame* prevPCFrame;
-    aPrevPageFrame->FirstChild(aPresContext, nsnull, &prevPCFrame);
-
-    nsFrameItems fixedPlaceholders;
-    nsIFrame* firstFixed;
-    prevPCFrame->FirstChild(aPresContext, nsLayoutAtoms::fixedList, &firstFixed);
-
-    nsFrameConstructorState state(aPresContext, aPageContentFrame,
-                                  mInitialContainingBlock, mInitialContainingBlock);
-    // Iterate the fixed frames and replicate each
-    for (nsIFrame* fixed = firstFixed; fixed; fixed->GetNextSibling(&fixed)) {
-      nsIContent* content;
-      fixed->GetContent(&content);
-      rv = ConstructFrame(aPresShell, aPresContext, state, content, 
-                          aPageContentFrame, fixedPlaceholders);
-      if (NS_FAILED(rv))
-        return NS_ERROR_NULL_POINTER;
-    }
-    // Add the fixed frames and their placeholders to aPageContentFrame
-    if (firstFixed) {
-      // Add the placeholders to the primary child list. They will not be reflowed 
-      // (only the area frame child is reflowed) but must not be destroyed until the 
-      // page content frame is destroyed.
-      aPageContentFrame->SetInitialChildList(aPresContext, nsnull, fixedPlaceholders.childList);
-      // Add the fixed frames to the fixed child list.
-      aPageContentFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::fixedList, 
-                                             state.mFixedItems.childList);
-    }
-  }
+  // Fixed pos kids are taken care of directly in CreateContinuingFrame()
+  
   return rv;
 }
 
@@ -11588,9 +11559,81 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresShell*   aPresShell,
     rv = NS_ERROR_UNEXPECTED;
   }
 
-  *aContinuingFrame = newFrame; 
+  *aContinuingFrame = newFrame;
 
-  return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  // Now deal with fixed-pos things....  They should appear on all pages, and
+  // the placeholders must be kids of a block, so we want to move over the
+  // placeholders when processing the child of the pageContentFrame.
+  if (!aParentFrame) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsIAtom> parentType;
+  aParentFrame->GetFrameType(getter_AddRefs(parentType));
+  if (parentType != nsLayoutAtoms::pageContentFrame) {
+    return NS_OK;
+  }
+
+  // Our parent is a page content frame.  Look up its page frame and
+  // see whether it has a prev-in-flow.
+  nsIFrame* pageFrame;
+  aParentFrame->GetParent(&pageFrame);
+  if (!pageFrame) {
+    NS_ERROR("pageContentFrame does not have parent!");
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsIFrame* prevPage;
+  pageFrame->GetPrevInFlow(&prevPage);
+  if (!prevPage) {
+    return NS_OK;
+  }
+
+  // OK.  now we need to do this fixed-pos game.
+  // Get prevPage's page content frame
+  nsIFrame* prevPageContentFrame;
+  prevPage->FirstChild(aPresContext, nsnull, &prevPageContentFrame);
+
+  if (!prevPageContentFrame) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  
+  nsFrameItems fixedPlaceholders;
+  nsIFrame* firstFixed;
+  prevPageContentFrame->FirstChild(aPresContext, nsLayoutAtoms::fixedList,
+                                   &firstFixed);
+
+  if (!firstFixed) {
+    return NS_OK;
+  }
+
+  nsFrameConstructorState state(aPresContext, aParentFrame,
+                                mInitialContainingBlock,
+                                mInitialContainingBlock);
+  
+  // Iterate the fixed frames and replicate each
+  for (nsIFrame* fixed = firstFixed; fixed; fixed->GetNextSibling(&fixed)) {
+    nsIContent* content;
+    fixed->GetContent(&content);
+    rv = ConstructFrame(aPresShell, aPresContext, state, content, 
+                        newFrame, fixedPlaceholders);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+
+  // Add the placeholders to our primary child list.
+  // XXXbz this is a little screwed up, since the fixed frames will have the
+  // wrong parent block and hence auto-positioning will be broken.  Oh, well.
+  newFrame->SetInitialChildList(aPresContext, nsnull, fixedPlaceholders.childList);
+  // Add the fixed frames to the fixed child list of the page content frame
+  aParentFrame->SetInitialChildList(aPresContext,
+                                    nsLayoutAtoms::fixedList, 
+                                    state.mFixedItems.childList);
+  return NS_OK;
 }
 
 // Helper function that searches the immediate child frames 
