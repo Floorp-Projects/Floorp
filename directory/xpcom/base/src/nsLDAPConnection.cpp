@@ -336,7 +336,9 @@ nsLDAPConnection::Run(void)
     PRInt32 returnCode;
     LDAPMessage *msgHandle;
     nsCOMPtr<nsILDAPMessage> msg;
+#ifdef DEBUG
     char *errString;
+#endif
 
     // initialize the thread-specific data for the child thread (as necessary)
     //

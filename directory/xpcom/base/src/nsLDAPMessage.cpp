@@ -32,10 +32,7 @@
  */
 
 #include "nsLDAPMessage.h"
-
-#ifdef DEBUG
 #include "nspr.h"
-#endif
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsLDAPMessage, nsILDAPMessage);
 
@@ -76,14 +73,18 @@ nsLDAPMessage::~nsLDAPMessage(void)
 	    break;
 	case LDAP_SUCCESS:
 	    // timed out (dunno why LDAP_SUCCESS is used to indicate this) 
+#ifdef DEBUG
 	    PR_fprintf(PR_STDERR,
 		"nsLDAPMessage::~nsLDAPMessage: ldap_msgfree() timed out.\n");
+#endif
 	    break;
 	default:
 	    // other failure
 	    // XXX - might errno conceivably be useful here?
+#ifdef DEBUG
 	    PR_fprintf(PR_STDERR,"nsLDAPMessage::~nsLDAPMessage: "
 		       "ldap_msgfree: %s\n", ldap_err2string(rc));
+#endif
 	    break;
 	}
     }
