@@ -861,12 +861,40 @@ atomToName(nsIAtom* aAtom)
 //
 // smart quotes (and other special chars) in Asian (double byte)
 // fonts are too large to use is western fonts.
-// To update the list, see one of files included below. (bug 180266)
+// Here we define those characters.
 //
-static const PRUint16 gDoubleByteSpecialCharsCCMap[] = {
-#include "dbyte_special_chars.ccmap"
+static const PRUnichar gDoubleByteSpecialChars[] = {
+  0x0152, /* LATIN CAPITAL LIGATURE OE */
+  0x0153, /* LATIN SMALL LIGATURE OE */
+  0x0160, /* LATIN CAPITAL LETTER S WITH CARON */
+  0x0161, /* LATIN SMALL LETTER S WITH CARON */
+  0x0178, /* LATIN CAPITAL LETTER Y WITH DIAERESIS */
+  0x017D, /* LATIN CAPITAL LETTER Z WITH CARON */
+  0x017E, /* LATIN SMALL LETTER Z WITH CARON */
+  0x0192, /* LATIN SMALL LETTER F WITH HOOK */
+  0x02C6, /* MODIFIER LETTER CIRCUMFLEX ACCENT */
+  0x02DC, /* SMALL TILDE */
+  0x2013, /* EN DASH */
+  0x2014, /* EM DASH */
+  0x2018, /* LEFT SINGLE QUOTATION MARK */
+  0x2019, /* RIGHT SINGLE QUOTATION MARK */
+  0x201A, /* SINGLE LOW-9 QUOTATION MARK */
+  0x201C, /* LEFT DOUBLE QUOTATION MARK */
+  0x201D, /* RIGHT DOUBLE QUOTATION MARK */
+  0x201E, /* DOUBLE LOW-9 QUOTATION MARK */
+  0x2020, /* DAGGER */
+  0x2021, /* DOUBLE DAGGER */
+  0x2022, /* BULLET */
+  0x2026, /* HORIZONTAL ELLIPSIS */
+  0x2030, /* PER MILLE SIGN */
+  0x2039, /* SINGLE LEFT-POINTING ANGLE QUOTATION MARK */
+  0x203A, /* SINGLE RIGHT-POINTING ANGLE QUOTATION MARK */
+  0x20AC, /* EURO SIGN */
+  0x2122, /* TRADE MARK SIGN */
+  0
 };
-	  
+
+
 static PRBool
 FreeCharSetMap(nsHashKey* aKey, void* aData, void* aClosure)
 {
@@ -1006,7 +1034,7 @@ nsFontMetricsXlibContext::~nsFontMetricsXlibContext()
   }
   FreeCCMap(mUserDefinedCCMap);
   FreeCCMap(mEmptyCCMap);
-  PR_Free(mDoubleByteSpecialCharsCCMap);
+  FreeCCMap(mDoubleByteSpecialCharsCCMap);
   
   /* Free memory allocated by |CopyFontCharSetMapXlib()| */
   if (mCharSetMap) {
@@ -1159,11 +1187,14 @@ nsFontMetricsXlibContext::Init(nsIDeviceContext *aDevice, PRBool aPrintermode)
   if (NS_SUCCEEDED(rv))
     mAllowDoubleByteSpecialChars = val;
 
-  PRUint32 dbmapSize = sizeof(gDoubleByteSpecialCharsCCMap);
-  mDoubleByteSpecialCharsCCMap = (PRUint16*)PR_Malloc(dbmapSize);
+  // setup the double byte font special chars glyph map
+  nsCompressedCharMap specialchars_ccmapObj;
+  for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+    specialchars_ccmapObj.SetChar(gDoubleByteSpecialChars[i]);
+  }
+  mDoubleByteSpecialCharsCCMap = specialchars_ccmapObj.NewCCMap();
   if (!mDoubleByteSpecialCharsCCMap)
     return NS_ERROR_OUT_OF_MEMORY;
-  memcpy(mDoubleByteSpecialCharsCCMap, gDoubleByteSpecialCharsCCMap, dbmapSize);
 
   PRInt32 scale_minimum = 0;
   rv = mPref->GetIntPref("font.scale.outline.min", &scale_minimum);
@@ -2571,15 +2602,8 @@ SetUpFontCharSetInfo(nsFontMetricsXlibContext *aFmctx, nsFontCharSetInfoXlib* aS
           if ((aSelf->Convert == DoubleByteConvert) 
               && (!aFmctx->mAllowDoubleByteSpecialChars)) {
             PRUint16* ccmap = aSelf->mCCMap;
-            PRUint32 page = CCMAP_BEGIN_AT_START_OF_MAP;
-            const PRUint16* specialmap = aFmctx->mDoubleByteSpecialCharsCCMap;
-            while (NextNonEmptyCCMapPage(specialmap, &page)) {
-              PRUint32 pagechar = page;
-              for (int i=0; i < CCMAP_BITS_PER_PAGE; i++) {
-                if (CCMAP_HAS_CHAR(specialmap, pagechar)) 
-                    CCMAP_UNSET_CHAR(ccmap, pagechar);
-                pagechar++;
-              }
+            for (int i=0; gDoubleByteSpecialChars[i]; i++) {
+              CCMAP_UNSET_CHAR(ccmap, gDoubleByteSpecialChars[i]);
             }
           }
           return PR_TRUE;
