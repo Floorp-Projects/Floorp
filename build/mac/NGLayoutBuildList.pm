@@ -701,6 +701,9 @@ sub MakeResourceAliases()
 	my($rdf_dir) = "$resource_dir" . "rdf:";
 	BuildFolderResourceAliases(":mozilla:rdf:resources:",								"$rdf_dir");
 	
+	my($profile_dir) = "$resource_dir" . "profile:";
+	BuildFolderResourceAliases(":mozilla:profile:resources:",							"$profile_dir");
+	
 	# NOTE: this will change as we move the toolbar/appshell chrome files to a real place
 	InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
 
