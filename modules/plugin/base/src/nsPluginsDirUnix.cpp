@@ -140,7 +140,7 @@ static PRBool LoadExtraSharedLib(const char *name, char **soname, PRBool tryToGe
 
 #define PLUGIN_MAX_NUMBER_OF_EXTRA_LIBS 32
 #define PREF_PLUGINS_SONAME "plugin.soname.list"
-#ifdef SOLARIS
+#if defined(SOLARIS) || defined(HPUX)
 #define DEFAULT_EXTRA_LIBS_LIST "libXt" LOCAL_PLUGIN_DLL_SUFFIX ":libXext" LOCAL_PLUGIN_DLL_SUFFIX ":libXm" LOCAL_PLUGIN_DLL_SUFFIX
 #else
 #define DEFAULT_EXTRA_LIBS_LIST "libXt" LOCAL_PLUGIN_DLL_SUFFIX ":libXext" LOCAL_PLUGIN_DLL_SUFFIX
@@ -303,13 +303,6 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         return rv;
 
     libSpec.value.pathname = path.get();
- 
-#ifdef SOLARIS
-    // Acrobat plugin might need this for libXm (bug 211587)
-    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
-#else
-    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
-#endif
 
 #if defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_GTK2)
 
@@ -324,6 +317,9 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
     // at runtime.  Explicitly opening Xt/Xext into the global
     // namespace before attempting to load the plug-in seems to
     // work fine.
+
+    // Lazy resolving might cause crash later (bug 211587)
+    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, PR_LD_NOW);
     if (!pLibrary) {
         LoadExtraSharedLibs();
         // try reload plugin once more
@@ -331,6 +327,8 @@ nsresult nsPluginFile::LoadPlugin(PRLibrary* &outLibrary)
         if (!pLibrary)
             DisplayPR_LoadLibraryErrorMessage(libSpec.value.pathname);
     }
+#else
+    pLibrary = outLibrary = PR_LoadLibraryWithFlags(libSpec, 0);
 #endif
 
 #ifdef NS_DEBUG
