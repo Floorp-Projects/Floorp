@@ -64,6 +64,24 @@ inline PRBool FindTagInSet(PRInt32 aTag,const eHTMLTags aTagSet[],PRInt32 aCount
 }
 
 
+/**
+ * Called from various DTD's to determine the type of data in the buffer...
+ * @update	gess11/20/98
+ * @param 
+ * @return
+ */
+inline PRBool BufferContainsHTML(nsString& aBuffer){
+  PRBool result=PR_FALSE;
+  nsString temp;
+  aBuffer.Left(temp,200);
+  temp.ToLowerCase();
+  if((-1<temp.Find("<html") || (-1<temp.Find("!doctype html public \"-//w3c//dtd html")))) {
+    result=PR_TRUE;
+  }
+  return result;
+}
+
+
 //#define _dynstack 1
 class nsTagStack {
   enum {eStackSize=200};
