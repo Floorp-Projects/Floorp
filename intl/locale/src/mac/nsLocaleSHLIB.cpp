@@ -220,7 +220,8 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   //
   // register the language atom service
   //
-  rv = compMgr->RegisterComponent(kLanguageAtomServiceCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
+  rv = compMgr->RegisterComponent(kLanguageAtomServiceCID, "Language Atom Service", 
+  NS_LANGUAGEATOMSERVICE_PROGID, path, PR_TRUE, PR_TRUE);
   NS_ASSERTION(NS_SUCCEEDED(rv),"nsLocaleTest: Register LanguageAtomService failed.");
   if (NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
 
