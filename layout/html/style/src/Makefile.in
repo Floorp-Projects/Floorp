@@ -37,7 +37,6 @@ CPPSRCS =				\
 	nsCSSLoader.cpp		\
 	nsCSSParser.cpp			\
 	nsCSSProps.cpp			\
-	nsCSSProps2.cpp			\
 	nsCSSRendering.cpp		\
 	nsCSSScanner.cpp		\
 	nsCSSRule.cpp		\
@@ -55,8 +54,10 @@ CPPSRCS =				\
 
 EXPORTS =				\
   nsDOMCSSDeclaration.h \
+  nsCSSKeywords.h  \
+  nsCSSKeywordList.h  \
   nsCSSProps.h  \
-  nsCSSPropIDs.h \
+  nsCSSPropList.h \
   nsCSSValue.h \
   nsICSSRule.h \
   nsICSSGroupRule.h \

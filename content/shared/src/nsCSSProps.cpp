@@ -1,680 +1,989 @@
-
-/*
-** This is a generated file, do not edit it. This file is created by
-** genhash.pl
-*/
-
-#include "plstr.h"
-#include "nsCSSProps.h"
-#define TOTAL_KEYWORDS 143
-#define MIN_WORD_LENGTH 3
-#define MAX_WORD_LENGTH 21
-#define MIN_HASH_VALUE 260
-#define MAX_HASH_VALUE 1186
-/* maximum key range = 927, duplicates = 0 */
-
-
-struct StaticNameTable {
-  char* tag;
-  PRInt32 id;
-};
-
-static const unsigned char kLowerLookup[256] = {
-  0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
-  16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,
-  32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,
-  48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,
-  64,
-    97,98,99,100,101,102,103,104,105,106,107,108,109,
-    110,111,112,113,114,115,116,117,118,119,120,121,122,
-
-   91, 92, 93, 94, 95, 96, 97, 98, 99,100,101,102,103,104,105,106,107,108,109,110,111,
-  112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,
-
-  128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,
-  144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,
-  160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,
-  176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,
-  192,193,194,195,196,197,198,199,200,201,202,203,204,205,206,207,
-  208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,
-  224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,
-  240,241,242,243,244,245,246,247,248,249,250,251,252,253,254,255
-};
-
-#define MYLOWER(x) kLowerLookup[((x) & 0x7f)]
-
-/**
- * Map a name to an ID or -1
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
  */
-PRInt32 nsCSSProps::LookupName(const char* str)
+
+#include "nsCSSProps.h"
+#include "nsCSSKeywords.h"
+#include "nsStyleConsts.h"
+
+#include "nsString.h"
+#include "nsAVLTree.h"
+
+
+// define an array of all CSS properties
+#define CSS_PROP(_prop, _hint) #_prop,
+const char* kCSSRawProperties[] = {
+#include "nsCSSPropList.h"
+};
+#undef CSS_PROP
+
+struct PropertyNode {
+  PropertyNode(void)
+    : mStr(),
+      mEnum(eCSSProperty_UNKNOWN)
+  {}
+
+  PropertyNode(const nsStr& aStringValue, nsCSSProperty aEnumValue)
+    : mStr(),
+      mEnum(aEnumValue)
+  { // point to the incomming buffer
+    // note that the incomming buffer may really be 2 byte
+    nsStr::Initialize(mStr, aStringValue.mStr, aStringValue.mCapacity, 
+                      aStringValue.mLength, aStringValue.mCharSize, PR_FALSE);
+  }
+
+  nsCAutoString mStr;
+  nsCSSProperty mEnum;
+};
+
+class PropertyComparitor: public nsAVLNodeComparitor {
+public:
+  virtual ~PropertyComparitor(void) {}
+  virtual PRInt32 operator()(void* anItem1,void* anItem2) {
+    PropertyNode* one = (PropertyNode*)anItem1;
+    PropertyNode* two = (PropertyNode*)anItem2;
+    return one->mStr.Compare(two->mStr, PR_TRUE);
+  }
+}; 
+
+
+static PRInt32        gTableRefCount;
+static PropertyNode*  gPropertyArray;
+static nsAVLTree*     gPropertyTree;
+static PropertyComparitor*  gComparitor;
+
+void
+nsCSSProps::AddRefTable(void) 
 {
-  static unsigned short asso_values[] =
-    {
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187,  115, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187, 1187,
-     1187, 1187, 1187, 1187, 1187, 1187, 1187,   84,  184,   76,
-      120,  248,    1,  192,   45,  108, 1187,   52,   98,   78,
-       46,  127,  221,   59,   85,  219,  204,  211,   54,  111,
-      216,  201,  122, 1187, 1187, 1187, 1187, 1187,
-    };
-  static unsigned char lengthtable[] =
-    {
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  6,  0,  0,  0,  5,  0,
-      0,  0,  0,  5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  6,  0,  0,  0,  0,  0,  0,  0,  5,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      5,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      4,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  5,  0,  0,  0,  0,  0,  0,  5,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  4,  0,  0,  5,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 11,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  7,  0,
-      7,  6,  0,  0,  0,  0,  0,  0,  0,  0,  0,  6,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  7,  0,  9,  6,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  5,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  8,  0,  0,  0,  0,  0,  0,  0, 11,
-      0,  0,  7, 11,  0,  0,  0,  0,  0,  0,  9,  0,  0,  0,
-      0,  0, 12,  0,  0,  0,  3,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  7,  0,  9,  0,  4,  3,  8,  4,  5,  0,
-      0,  0, 11,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-     11,  0,  0,  0,  0,  4,  0,  0,  0,  0,  0,  0,  0,  0,
-      0, 10,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0, 12, 13,  0,  0, 10,  9,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      9,  0,  0,  0,  0,  0,  0,  0,  0,  7,  0,  0,  0, 10,
-     14,  0,  0,  0,  0,  0,  0, 11,  0,  0, 12,  0,  0,  0,
-      0,  0,  0,  0,  0,  6,  0, 10,  0, 17,  0,  0,  0, 17,
-      0, 11,  0,  0,  0,  0,  0,  0,  0,  0,  0,  6,  0,  0,
-      0, 12,  0,  0,  0,  0,  0,  0, 10, 11,  0,  0, 11,  0,
-     10,  0,  0,  0,  0,  0,  0,  6,  7, 11,  0, 17,  0, 12,
-      6,  0,  0,  0,  0,  0, 12,  0,  0,  0, 13,  0,  9, 11,
-     13,  0,  0,  0,  9,  0,  0,  0,  0,  0,  0,  0,  0, 16,
-      0,  0,  0,  0,  0,  0, 18,  0,  0, 11,  0,  0,  0,  0,
-      0,  0,  0,  0,  7, 13, 14,  0,  0,  0,  0,  0,  0,  0,
-      0, 19, 16,  0,  0,  0,  0, 16,  0,  0,  0,  0,  0,  0,
-      0,  0,  0, 11, 18,  0,  0,  0,  0,  0, 12,  0,  0,  0,
-     13,  0,  0,  0,  0,  0,  0,  0, 10,  0,  0, 16,  0, 19,
-      0,  0, 18,  0, 10,  0,  0, 15,  0,  0,  0,  0,  0,  0,
-      0,  0,  8, 11,  0, 10, 21,  0,  0,  0,  0,  0,  0, 13,
-     10,  0,  0,  0,  0,  0,  0, 21,  0,  0, 19,  0,  0,  0,
-      0,  0,  0,  0, 13,  0,  0,  0,  0,  0,  0,  0,  0,  6,
-      0,  0, 17,  0, 17, 21, 17, 17,  0, 11,  0,  0,  0,  0,
-      0,  0, 10,  0, 12,  8,  0, 16,  0,  0,  0,  0,  0, 11,
-      0,  0,  0,  0,  0, 12,  0,  0, 16,  0,  0, 12,  0,  0,
-     12,  0, 19, 15,  0,  0,  0,  0,  0, 11, 10,  0, 16,  0,
-      0,  0,  0,  0,  0, 14,  0,  0,  0,  0,  0,  0, 16, 12,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0, 18,
-      0,  0,  0,  0,  0,  0,  0, 14,  0, 13,  0,  0, 14,  0,
-      0,  0,  0,  0,  0,  0, 17,  0, 19,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0, 12,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0, 16,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0, 13,  0,  0,  0,  0,
-      0,  0,  0,  0, 17,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0, 12,  0,  0,  0,  0,
-      0,  0,  0,  0,  0, 16, 13,  0,  0,  0,  0,  0,  0,  0,
-      0, 15,  0,  0,  0,  0,  0, 13,  0,  0,  0,  0,  0,  0,
-      0, 18,  0,  0, 17,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0, 12,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-      0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-     12,  0,  0,  0,  0,  0,  0,  0,  0,  0, 17,
-    };
-  static struct StaticNameTable wordlist[] =
-    {
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"margin",  73},
-      {"",}, {"",}, {"",}, 
-      {"clear",  37},
-      {"",}, {"",}, {"",}, {"",}, 
-      {"width",  140},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"filter",  55},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"color",  43},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"float",  56},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      
-      {"font",  57},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"pitch",  103},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"marks",  79},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, 
-      {"clip",  38},
-      {"",}, {"",}, 
-      {"right",  112},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"font-family",  58},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, 
-      {"content",  44},
-      {"",}, 
-      {"azimuth",  1},
-      {"cursor",  50},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"bottom",  35},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, 
-      {"orphans",  85},
-      {"",}, 
-      {"clip-left",  40},
-      {"border",  11},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"speak",  116},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, 
-      {"overflow",  90},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"pause-after",  101},
-      {"",}, {"",}, 
-      {"display",  52},
-      {"margin-left",  75},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"max-width",  81},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"font-stretch",  61},
-      {"",}, {"",}, {"",}, 
-      {"cue",  47},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, 
-      {"padding",  91},
-      {"",}, 
-      {"min-width",  83},
-      {"",}, 
-      {"left",  66},
-      {"top",  132},
-      {"position",  107},
-      {"page",  96},
-      {"pause",  100},
-      {"",}, {"",}, {"",}, 
-      {"font-weight",  64},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, 
-      {"line-height",  68},
-      {"",}, {"",}, {"",}, {"",}, 
-      {"size",  113},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"visibility",  135},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"border-width",  32},
-      {"margin-bottom",  74},
-      {"",}, {"",}, 
-      {"size-width",  115},
-      {"direction",  51},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"cue-after",  48},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"outline",  86},
-      {"",}, {"",}, {"",}, 
-      {"margin-top",  77},
-      {"vertical-align",  134},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"clip-bottom",  39},
-      {"",}, {"",}, 
-      {"border-color",  17},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"widows",  139},
-      {"",}, 
-      {"clip-right",  41},
-      {"",}, 
-      {"background-filter",  5},
-      {"",}, {"",}, {"",}, 
-      {"border-left-width",  21},
-      {"",}, 
-      {"quotes-open",  110},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"volume",  137},
-      {"",}, {"",}, {"",}, 
-      {"font-variant",  63},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"background",  2},
-      {"size-height",  114},
-      {"",}, {"",}, 
-      {"padding-top",  95},
-      {"",}, 
-      {"text-align",  123},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"height",  65},
-      {"z-index",  142},
-      {"border-left",  18},
-      {"",}, 
-      {"border-left-color",  19},
-      {"",}, 
-      {"margin-right",  76},
-      {"quotes",  108},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"unicode-bidi",  133},
-      {"",}, {"",}, {"",}, 
-      {"outline-color",  87},
-      {"",}, 
-      {"font-size",  59},
-      {"play-during",  105},
-      {"padding-right",  94},
-      {"",}, {"",}, {"",}, 
-      {"elevation",  53},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"background-color",  4},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"border-right-width",  25},
-      {"",}, {"",}, 
-      {"white-space",  138},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"opacity",  84},
-      {"outline-width",  89},
-      {"padding-bottom",  92},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"border-bottom-width",  15},
-      {"border-top-width",  31},
-      {"",}, {"",}, {"",}, {"",}, 
-      {"border-top-color",  29},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"pitch-range",  104},
-      {"border-right-color",  23},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"voice-family",  136},
-      {"",}, {"",}, {"",}, 
-      {"border-bottom",  12},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"font-style",  62},
-      {"",}, {"",}, 
-      {"font-size-adjust",  60},
-      {"",}, 
-      {"border-bottom-color",  13},
-      {"",}, {"",}, 
-      {"-moz-border-radius",  0},
-      {"",}, 
-      {"max-height",  80},
-      {"",}, {"",}, 
-      {"border-collapse",  16},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"clip-top",  42},
-      {"speech-rate",  120},
-      {"",}, 
-      {"border-top",  28},
-      {"background-y-position",  10},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"marker-offset",  78},
-      {"min-height",  82},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"background-x-position",  9},
-      {"",}, {"",}, 
-      {"background-position",  7},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"outline-style",  88},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"stress",  121},
-      {"",}, {"",}, 
-      {"background-repeat",  8},
-      {"",}, 
-      {"counter-increment",  45},
-      {"background-attachment",  3},
-      {"border-left-style",  20},
-      {"play-during-flags",  106},
-      {"",}, 
-      {"text-shadow",  126},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"list-style",  69},
-      {"",}, 
-      {"padding-left",  93},
-      {"richness",  111},
-      {"",}, 
-      {"border-y-spacing",  34},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"text-indent",  125},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"border-right",  22},
-      {"",}, {"",}, 
-      {"border-x-spacing",  33},
-      {"",}, {"",}, 
-      {"table-layout",  122},
-      {"",}, {"",}, 
-      {"caption-side",  36},
-      {"",}, 
-      {"list-style-position",  71},
-      {"text-decoration",  124},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"empty-cells",  54},
-      {"cue-before",  49},
-      {"",}, 
-      {"page-break-after",  97},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"border-spacing",  26},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"background-image",  6},
-      {"word-spacing",  141},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, 
-      {"border-right-style",  24},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"text-transform",  131},
-      {"",}, 
-      {"speak-numeral",  118},
-      {"",}, {"",}, 
-      {"letter-spacing",  67},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"text-shadow-color",  127},
-      {"",}, 
-      {"border-bottom-style",  14},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, 
-      {"speak-header",  117},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, 
-      {"list-style-image",  70},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"counter-reset",  46},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"speak-punctuation",  119},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"quotes-close",  109},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"border-top-style",  30},
-      {"text-shadow-y",  130},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"list-style-type",  72},
-      {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"text-shadow-x",  129},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"text-shadow-radius",  128},
-      {"",}, {"",}, 
-      {"page-break-inside",  99},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, 
-      {"border-style",  27},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"pause-before",  102},
-      {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, {"",}, 
-      {"page-break-before",  98},
-    };
-
-  if (str != NULL) {
-    int len = PL_strlen(str);
-    if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH) {
-  register int hval = len;
-
-  switch (hval)
-    {
-      default:
-      case 12:
-        hval += asso_values[MYLOWER(str[11])];
-      case 11:
-      case 10:
-      case 9:
-      case 8:
-        hval += asso_values[MYLOWER(str[7])];
-      case 7:
-      case 6:
-        hval += asso_values[MYLOWER(str[5])];
-      case 5:
-      case 4:
-      case 3:
-      case 2:
-        hval += asso_values[MYLOWER(str[1])];
-      case 1:
-        hval += asso_values[MYLOWER(str[0])];
-        break;
-    }
-  hval += asso_values[MYLOWER(str[len - 1])];
-      if (hval <= MAX_HASH_VALUE && hval >= MIN_HASH_VALUE) {
-        if (len == lengthtable[hval]) {
-          register const char *tag = wordlist[hval].tag;
-
-          /*
-          ** While not at the end of the string, if they ever differ
-          ** they are not equal.  We know "tag" is already lower case.
-          */
-          while ((*tag != '\0')&&(*str != '\0')) {
-            if (*tag != (char) MYLOWER(*str)) {
-              return -1;
-            }
-            tag++;
-            str++;
-          }
-
-          /*
-          ** One of the strings has ended, if they are both ended, then they
-          ** are equal, otherwise not.
-          */
-          if ((*tag == '\0')&&(*str == '\0')) {
-            return wordlist[hval].id;
-          }
+  if (0 == gTableRefCount++) {
+    if (! gPropertyArray) {
+      gPropertyArray= new PropertyNode[eCSSProperty_COUNT];
+      gComparitor = new PropertyComparitor();
+      if (gComparitor) {
+        gPropertyTree = new nsAVLTree(*gComparitor, nsnull);
+      }
+      if (gPropertyArray && gPropertyTree) {
+        PRInt32 index = -1;
+        while (++index < PRInt32(eCSSProperty_COUNT)) {
+          gPropertyArray[index].mStr = kCSSRawProperties[index];
+          gPropertyArray[index].mStr.ReplaceChar('_', '-');
+          gPropertyArray[index].mEnum = nsCSSProperty(index);
+          gPropertyTree->AddItem(&(gPropertyArray[index]));
         }
       }
     }
   }
-  return -1;
 }
 
-const nsCSSProps::NameTableEntry nsCSSProps::kNameTable[] = {
-  { "-moz-border-radius", 0 }, 
-  { "azimuth", 1 }, 
-  { "background", 2 }, 
-  { "background-attachment", 3 }, 
-  { "background-color", 4 }, 
-  { "background-filter", 5 }, 
-  { "background-image", 6 }, 
-  { "background-position", 7 }, 
-  { "background-repeat", 8 }, 
-  { "background-x-position", 9 }, 
-  { "background-y-position", 10 }, 
-  { "border", 11 }, 
-  { "border-bottom", 12 }, 
-  { "border-bottom-color", 13 }, 
-  { "border-bottom-style", 14 }, 
-  { "border-bottom-width", 15 }, 
-  { "border-collapse", 16 }, 
-  { "border-color", 17 }, 
-  { "border-left", 18 }, 
-  { "border-left-color", 19 }, 
-  { "border-left-style", 20 }, 
-  { "border-left-width", 21 }, 
-  { "border-right", 22 }, 
-  { "border-right-color", 23 }, 
-  { "border-right-style", 24 }, 
-  { "border-right-width", 25 }, 
-  { "border-spacing", 26 }, 
-  { "border-style", 27 }, 
-  { "border-top", 28 }, 
-  { "border-top-color", 29 }, 
-  { "border-top-style", 30 }, 
-  { "border-top-width", 31 }, 
-  { "border-width", 32 }, 
-  { "border-x-spacing", 33 }, 
-  { "border-y-spacing", 34 }, 
-  { "bottom", 35 }, 
-  { "caption-side", 36 }, 
-  { "clear", 37 }, 
-  { "clip", 38 }, 
-  { "clip-bottom", 39 }, 
-  { "clip-left", 40 }, 
-  { "clip-right", 41 }, 
-  { "clip-top", 42 }, 
-  { "color", 43 }, 
-  { "content", 44 }, 
-  { "counter-increment", 45 }, 
-  { "counter-reset", 46 }, 
-  { "cue", 47 }, 
-  { "cue-after", 48 }, 
-  { "cue-before", 49 }, 
-  { "cursor", 50 }, 
-  { "direction", 51 }, 
-  { "display", 52 }, 
-  { "elevation", 53 }, 
-  { "empty-cells", 54 }, 
-  { "filter", 55 }, 
-  { "float", 56 }, 
-  { "font", 57 }, 
-  { "font-family", 58 }, 
-  { "font-size", 59 }, 
-  { "font-size-adjust", 60 }, 
-  { "font-stretch", 61 }, 
-  { "font-style", 62 }, 
-  { "font-variant", 63 }, 
-  { "font-weight", 64 }, 
-  { "height", 65 }, 
-  { "left", 66 }, 
-  { "letter-spacing", 67 }, 
-  { "line-height", 68 }, 
-  { "list-style", 69 }, 
-  { "list-style-image", 70 }, 
-  { "list-style-position", 71 }, 
-  { "list-style-type", 72 }, 
-  { "margin", 73 }, 
-  { "margin-bottom", 74 }, 
-  { "margin-left", 75 }, 
-  { "margin-right", 76 }, 
-  { "margin-top", 77 }, 
-  { "marker-offset", 78 }, 
-  { "marks", 79 }, 
-  { "max-height", 80 }, 
-  { "max-width", 81 }, 
-  { "min-height", 82 }, 
-  { "min-width", 83 }, 
-  { "opacity", 84 }, 
-  { "orphans", 85 }, 
-  { "outline", 86 }, 
-  { "outline-color", 87 }, 
-  { "outline-style", 88 }, 
-  { "outline-width", 89 }, 
-  { "overflow", 90 }, 
-  { "padding", 91 }, 
-  { "padding-bottom", 92 }, 
-  { "padding-left", 93 }, 
-  { "padding-right", 94 }, 
-  { "padding-top", 95 }, 
-  { "page", 96 }, 
-  { "page-break-after", 97 }, 
-  { "page-break-before", 98 }, 
-  { "page-break-inside", 99 }, 
-  { "pause", 100 }, 
-  { "pause-after", 101 }, 
-  { "pause-before", 102 }, 
-  { "pitch", 103 }, 
-  { "pitch-range", 104 }, 
-  { "play-during", 105 }, 
-  { "play-during-flags", 106 }, 
-  { "position", 107 }, 
-  { "quotes", 108 }, 
-  { "quotes-close", 109 }, 
-  { "quotes-open", 110 }, 
-  { "richness", 111 }, 
-  { "right", 112 }, 
-  { "size", 113 }, 
-  { "size-height", 114 }, 
-  { "size-width", 115 }, 
-  { "speak", 116 }, 
-  { "speak-header", 117 }, 
-  { "speak-numeral", 118 }, 
-  { "speak-punctuation", 119 }, 
-  { "speech-rate", 120 }, 
-  { "stress", 121 }, 
-  { "table-layout", 122 }, 
-  { "text-align", 123 }, 
-  { "text-decoration", 124 }, 
-  { "text-indent", 125 }, 
-  { "text-shadow", 126 }, 
-  { "text-shadow-color", 127 }, 
-  { "text-shadow-radius", 128 }, 
-  { "text-shadow-x", 129 }, 
-  { "text-shadow-y", 130 }, 
-  { "text-transform", 131 }, 
-  { "top", 132 }, 
-  { "unicode-bidi", 133 }, 
-  { "vertical-align", 134 }, 
-  { "visibility", 135 }, 
-  { "voice-family", 136 }, 
-  { "volume", 137 }, 
-  { "white-space", 138 }, 
-  { "widows", 139 }, 
-  { "width", 140 }, 
-  { "word-spacing", 141 }, 
-  { "z-index", 142 }, 
+void
+nsCSSProps::ReleaseTable(void) 
+{
+  if (0 == --gTableRefCount) {
+    if (gPropertyArray) {
+      delete [] gPropertyArray;
+      gPropertyArray = nsnull;
+    }
+    if (gPropertyTree) {
+      delete gPropertyTree;
+      gPropertyTree = nsnull;
+    }
+    if (gComparitor) {
+      delete gComparitor;
+      gComparitor = nsnull;
+    }
+  }
+}
+
+
+nsCSSProperty 
+nsCSSProps::LookupProperty(const nsStr& aProperty)
+{
+  NS_ASSERTION(gPropertyTree, "no lookup table, needs addref");
+  if (gPropertyTree) {
+    PropertyNode node(aProperty, eCSSProperty_UNKNOWN);
+    PropertyNode*  found = (PropertyNode*)gPropertyTree->FindItem(&node);
+    if (found) {
+      NS_ASSERTION(found->mStr.EqualsIgnoreCase(aProperty), "bad tree");
+      return found->mEnum;
+    }
+  }
+  return eCSSProperty_UNKNOWN;
+}
+
+
+const nsCString& 
+nsCSSProps::GetStringValue(nsCSSProperty aProperty)
+{
+  NS_ASSERTION(gPropertyArray, "no lookup table, needs addref");
+  if ((eCSSProperty_UNKNOWN < aProperty) && 
+      (aProperty < eCSSProperty_COUNT) && gPropertyArray) {
+    return gPropertyArray[aProperty].mStr;
+  }
+  else {
+    static const nsCString kNullStr;
+    return kNullStr;
+  }
+}
+
+
+
+// Keyword id tables for variant/enum parsing
+const PRInt32 nsCSSProps::kAutoSelectKTable[] = {
+  eCSSKeyword_select, NS_STYLE_AUTO_SELECT_SELECT,
+  -1,-1
 };
+
+const PRInt32 nsCSSProps::kAutoTabKTable[] = {
+  eCSSKeyword_activate_next,  NS_STYLE_AUTO_TAB_ACTIVATE_NEXT,
+  eCSSKeyword_select_next,    NS_STYLE_AUTO_TAB_SELECT_NEXT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kAzimuthKTable[] = {
+  eCSSKeyword_left_side,    NS_STYLE_AZIMUTH_LEFT_SIDE,
+  eCSSKeyword_far_left,     NS_STYLE_AZIMUTH_FAR_LEFT,
+  eCSSKeyword_left,         NS_STYLE_AZIMUTH_LEFT,
+  eCSSKeyword_center_left,  NS_STYLE_AZIMUTH_CENTER_LEFT,
+  eCSSKeyword_center,       NS_STYLE_AZIMUTH_CENTER,
+  eCSSKeyword_center_right, NS_STYLE_AZIMUTH_CENTER_RIGHT,
+  eCSSKeyword_right,        NS_STYLE_AZIMUTH_RIGHT,
+  eCSSKeyword_far_right,    NS_STYLE_AZIMUTH_FAR_RIGHT,
+  eCSSKeyword_right_side,   NS_STYLE_AZIMUTH_RIGHT_SIDE,
+  eCSSKeyword_behind,       NS_STYLE_AZIMUTH_BEHIND,
+  eCSSKeyword_leftwards,    NS_STYLE_AZIMUTH_LEFTWARDS,
+  eCSSKeyword_rightwards,   NS_STYLE_AZIMUTH_RIGHTWARDS,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBackgroundAttachmentKTable[] = {
+  eCSSKeyword_fixed, NS_STYLE_BG_ATTACHMENT_FIXED,
+  eCSSKeyword_scroll, NS_STYLE_BG_ATTACHMENT_SCROLL,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBackgroundColorKTable[] = {
+  eCSSKeyword_transparent, NS_STYLE_BG_COLOR_TRANSPARENT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBackgroundRepeatKTable[] = {
+  eCSSKeyword_no_repeat,  NS_STYLE_BG_REPEAT_OFF,
+  eCSSKeyword_repeat,     NS_STYLE_BG_REPEAT_XY,
+  eCSSKeyword_repeat_x,   NS_STYLE_BG_REPEAT_X,
+  eCSSKeyword_repeat_y,   NS_STYLE_BG_REPEAT_Y,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBorderCollapseKTable[] = {
+  eCSSKeyword_collapse,  NS_STYLE_BORDER_COLLAPSE,
+  eCSSKeyword_separate,  NS_STYLE_BORDER_SEPARATE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBorderColorKTable[] = {
+  eCSSKeyword_transparent, NS_STYLE_COLOR_TRANSPARENT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBorderStyleKTable[] = {
+  eCSSKeyword_hidden, NS_STYLE_BORDER_STYLE_HIDDEN,
+  eCSSKeyword_dotted, NS_STYLE_BORDER_STYLE_DOTTED,
+  eCSSKeyword_dashed, NS_STYLE_BORDER_STYLE_DASHED,
+  eCSSKeyword_solid,  NS_STYLE_BORDER_STYLE_SOLID,
+  eCSSKeyword_double, NS_STYLE_BORDER_STYLE_DOUBLE,
+  eCSSKeyword_groove, NS_STYLE_BORDER_STYLE_GROOVE,
+  eCSSKeyword_ridge,  NS_STYLE_BORDER_STYLE_RIDGE,
+  eCSSKeyword_inset,  NS_STYLE_BORDER_STYLE_INSET,
+  eCSSKeyword_outset, NS_STYLE_BORDER_STYLE_OUTSET,
+  eCSSKeyword__moz_bg_inset,  NS_STYLE_BORDER_STYLE_BG_INSET,
+  eCSSKeyword__moz_bg_outset, NS_STYLE_BORDER_STYLE_BG_OUTSET,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBorderWidthKTable[] = {
+  eCSSKeyword_thin, NS_STYLE_BORDER_WIDTH_THIN,
+  eCSSKeyword_medium, NS_STYLE_BORDER_WIDTH_MEDIUM,
+  eCSSKeyword_thick, NS_STYLE_BORDER_WIDTH_THICK,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kBoxSizingKTable[] = {
+  eCSSKeyword_content_box,  NS_STYLE_BOX_SIZING_CONTENT,
+  eCSSKeyword_border_box,   NS_STYLE_BOX_SIZING_BORDER,
+  eCSSKeyword_padding_box,  NS_STYLE_BOX_SIZING_PADDING,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kCaptionSideKTable[] = {
+  eCSSKeyword_top,    NS_SIDE_TOP,
+  eCSSKeyword_right,  NS_SIDE_RIGHT,
+  eCSSKeyword_bottom, NS_SIDE_BOTTOM,
+  eCSSKeyword_left,   NS_SIDE_LEFT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kClearKTable[] = {
+  eCSSKeyword_left, NS_STYLE_CLEAR_LEFT,
+  eCSSKeyword_right, NS_STYLE_CLEAR_RIGHT,
+  eCSSKeyword_both, NS_STYLE_CLEAR_LEFT_AND_RIGHT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kContentKTable[] = {
+  eCSSKeyword_open_quote, NS_STYLE_CONTENT_OPEN_QUOTE,
+  eCSSKeyword_close_quote, NS_STYLE_CONTENT_CLOSE_QUOTE,
+  eCSSKeyword_no_open_quote, NS_STYLE_CONTENT_NO_OPEN_QUOTE,
+  eCSSKeyword_no_close_quote, NS_STYLE_CONTENT_NO_CLOSE_QUOTE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kCursorKTable[] = {
+  eCSSKeyword_crosshair, NS_STYLE_CURSOR_CROSSHAIR,
+  eCSSKeyword_default, NS_STYLE_CURSOR_DEFAULT,
+  eCSSKeyword_pointer, NS_STYLE_CURSOR_POINTER,
+  eCSSKeyword_move, NS_STYLE_CURSOR_MOVE,
+  eCSSKeyword_e_resize, NS_STYLE_CURSOR_E_RESIZE,
+  eCSSKeyword_ne_resize, NS_STYLE_CURSOR_NE_RESIZE,
+  eCSSKeyword_nw_resize, NS_STYLE_CURSOR_NW_RESIZE,
+  eCSSKeyword_n_resize, NS_STYLE_CURSOR_N_RESIZE,
+  eCSSKeyword_se_resize, NS_STYLE_CURSOR_SE_RESIZE,
+  eCSSKeyword_sw_resize, NS_STYLE_CURSOR_SW_RESIZE,
+  eCSSKeyword_s_resize, NS_STYLE_CURSOR_S_RESIZE,
+  eCSSKeyword_w_resize, NS_STYLE_CURSOR_W_RESIZE,
+  eCSSKeyword_text, NS_STYLE_CURSOR_TEXT,
+  eCSSKeyword_wait, NS_STYLE_CURSOR_WAIT,
+  eCSSKeyword_help, NS_STYLE_CURSOR_HELP,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kDirectionKTable[] = {
+  eCSSKeyword_ltr,      NS_STYLE_DIRECTION_LTR,
+  eCSSKeyword_rtl,      NS_STYLE_DIRECTION_RTL,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kDisplayKTable[] = {
+  eCSSKeyword_inline,             NS_STYLE_DISPLAY_INLINE,
+  eCSSKeyword_block,              NS_STYLE_DISPLAY_BLOCK,
+  eCSSKeyword_inline_block,       NS_STYLE_DISPLAY_INLINE_BLOCK,
+  eCSSKeyword_list_item,          NS_STYLE_DISPLAY_LIST_ITEM,
+  eCSSKeyword_run_in,             NS_STYLE_DISPLAY_RUN_IN,
+  eCSSKeyword_compact,            NS_STYLE_DISPLAY_COMPACT,
+  eCSSKeyword_marker,             NS_STYLE_DISPLAY_MARKER,
+  eCSSKeyword_table,              NS_STYLE_DISPLAY_TABLE,
+  eCSSKeyword_inline_table,       NS_STYLE_DISPLAY_INLINE_TABLE,
+  eCSSKeyword_table_row_group,    NS_STYLE_DISPLAY_TABLE_ROW_GROUP,
+  eCSSKeyword_table_header_group, NS_STYLE_DISPLAY_TABLE_HEADER_GROUP,
+  eCSSKeyword_table_footer_group, NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP,
+  eCSSKeyword_table_row,          NS_STYLE_DISPLAY_TABLE_ROW,
+  eCSSKeyword_table_column_group, NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP,
+  eCSSKeyword_table_column,       NS_STYLE_DISPLAY_TABLE_COLUMN,
+  eCSSKeyword_table_cell,         NS_STYLE_DISPLAY_TABLE_CELL,
+  eCSSKeyword_table_caption,      NS_STYLE_DISPLAY_TABLE_CAPTION,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kElevationKTable[] = {
+  eCSSKeyword_below,  NS_STYLE_ELEVATION_BELOW,
+  eCSSKeyword_level,  NS_STYLE_ELEVATION_LEVEL,
+  eCSSKeyword_above,  NS_STYLE_ELEVATION_ABOVE,
+  eCSSKeyword_higher, NS_STYLE_ELEVATION_HIGHER,
+  eCSSKeyword_lower,  NS_STYLE_ELEVATION_LOWER,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kEmptyCellsKTable[] = {
+  eCSSKeyword_show,  NS_STYLE_TABLE_EMPTY_CELLS_SHOW,
+  eCSSKeyword_hide,  NS_STYLE_TABLE_EMPTY_CELLS_HIDE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFloatKTable[] = {
+  eCSSKeyword_left,  NS_STYLE_FLOAT_LEFT,
+  eCSSKeyword_right, NS_STYLE_FLOAT_RIGHT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFloatEdgeKTable[] = {
+  eCSSKeyword_content_box,  NS_STYLE_FLOAT_EDGE_CONTENT,
+  eCSSKeyword_border_box,  NS_STYLE_FLOAT_EDGE_BORDER,
+  eCSSKeyword_padding_box,  NS_STYLE_FLOAT_EDGE_PADDING,
+  eCSSKeyword_margin_box,  NS_STYLE_FLOAT_EDGE_MARGIN,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFontKTable[] = {
+  eCSSKeyword_caption, NS_STYLE_FONT_CAPTION,
+  eCSSKeyword_icon, NS_STYLE_FONT_ICON,
+  eCSSKeyword_menu, NS_STYLE_FONT_MENU,
+  eCSSKeyword_message_box, NS_STYLE_FONT_MESSAGE_BOX,
+  eCSSKeyword_small_caption, NS_STYLE_FONT_SMALL_CAPTION,
+  eCSSKeyword_status_bar, NS_STYLE_FONT_STATUS_BAR,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFontSizeKTable[] = {
+  eCSSKeyword_xx_small, NS_STYLE_FONT_SIZE_XXSMALL,
+  eCSSKeyword_x_small, NS_STYLE_FONT_SIZE_XSMALL,
+  eCSSKeyword_small, NS_STYLE_FONT_SIZE_SMALL,
+  eCSSKeyword_medium, NS_STYLE_FONT_SIZE_MEDIUM,
+  eCSSKeyword_large, NS_STYLE_FONT_SIZE_LARGE,
+  eCSSKeyword_x_large, NS_STYLE_FONT_SIZE_XLARGE,
+  eCSSKeyword_xx_large, NS_STYLE_FONT_SIZE_XXLARGE,
+  eCSSKeyword_larger, NS_STYLE_FONT_SIZE_LARGER,
+  eCSSKeyword_smaller, NS_STYLE_FONT_SIZE_SMALLER,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFontStretchKTable[] = {
+  eCSSKeyword_wider, NS_STYLE_FONT_STRETCH_WIDER,
+  eCSSKeyword_narrower, NS_STYLE_FONT_STRETCH_NARROWER,
+  eCSSKeyword_ultra_condensed, NS_STYLE_FONT_STRETCH_ULTRA_CONDENSED,
+  eCSSKeyword_extra_condensed, NS_STYLE_FONT_STRETCH_EXTRA_CONDENSED,
+  eCSSKeyword_condensed, NS_STYLE_FONT_STRETCH_CONDENSED,
+  eCSSKeyword_semi_condensed, NS_STYLE_FONT_STRETCH_SEMI_CONDENSED,
+  eCSSKeyword_semi_expanded, NS_STYLE_FONT_STRETCH_SEMI_EXPANDED,
+  eCSSKeyword_expanded, NS_STYLE_FONT_STRETCH_EXPANDED,
+  eCSSKeyword_extra_expanded, NS_STYLE_FONT_STRETCH_EXTRA_EXPANDED,
+  eCSSKeyword_ultra_expanded, NS_STYLE_FONT_STRETCH_ULTRA_EXPANDED,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFontStyleKTable[] = {
+  eCSSKeyword_italic, NS_STYLE_FONT_STYLE_ITALIC,
+  eCSSKeyword_oblique, NS_STYLE_FONT_STYLE_OBLIQUE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFontVariantKTable[] = {
+  eCSSKeyword_small_caps, NS_STYLE_FONT_VARIANT_SMALL_CAPS,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kFontWeightKTable[] = {
+    eCSSKeyword_bold, NS_STYLE_FONT_WEIGHT_BOLD,
+    eCSSKeyword_bolder, NS_STYLE_FONT_WEIGHT_BOLDER,
+    eCSSKeyword_lighter, NS_STYLE_FONT_WEIGHT_LIGHTER,
+    -1,-1
+};
+
+const PRInt32 nsCSSProps::kKeyEquivalentKTable[] = {
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kListStylePositionKTable[] = {
+  eCSSKeyword_inside, NS_STYLE_LIST_STYLE_POSITION_INSIDE,
+  eCSSKeyword_outside, NS_STYLE_LIST_STYLE_POSITION_OUTSIDE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kListStyleKTable[] = {
+  eCSSKeyword_disc, NS_STYLE_LIST_STYLE_DISC,
+  eCSSKeyword_circle, NS_STYLE_LIST_STYLE_CIRCLE,
+  eCSSKeyword_square, NS_STYLE_LIST_STYLE_SQUARE,
+  eCSSKeyword_decimal, NS_STYLE_LIST_STYLE_DECIMAL,
+  eCSSKeyword_decimal_leading_zero, NS_STYLE_LIST_STYLE_DECIMAL_LEADING_ZERO,
+  eCSSKeyword_lower_roman, NS_STYLE_LIST_STYLE_LOWER_ROMAN,
+  eCSSKeyword_upper_roman, NS_STYLE_LIST_STYLE_UPPER_ROMAN,
+  eCSSKeyword_lower_greek, NS_STYLE_LIST_STYLE_LOWER_GREEK,
+  eCSSKeyword_lower_alpha, NS_STYLE_LIST_STYLE_LOWER_ALPHA,
+  eCSSKeyword_lower_latin, NS_STYLE_LIST_STYLE_LOWER_LATIN,
+  eCSSKeyword_upper_alpha, NS_STYLE_LIST_STYLE_UPPER_ALPHA,
+  eCSSKeyword_upper_latin, NS_STYLE_LIST_STYLE_UPPER_LATIN,
+  eCSSKeyword_hebrew, NS_STYLE_LIST_STYLE_HEBREW,
+  eCSSKeyword_armenian, NS_STYLE_LIST_STYLE_ARMENIAN,
+  eCSSKeyword_georgian, NS_STYLE_LIST_STYLE_GEORGIAN,
+  eCSSKeyword_cjk_ideographic, NS_STYLE_LIST_STYLE_CJK_IDEOGRAPHIC,
+  eCSSKeyword_hiragana, NS_STYLE_LIST_STYLE_HIRAGANA,
+  eCSSKeyword_katakana, NS_STYLE_LIST_STYLE_KATAKANA,
+  eCSSKeyword_hiragana_iroha, NS_STYLE_LIST_STYLE_HIRAGANA_IROHA,
+  eCSSKeyword_katakana_iroha, NS_STYLE_LIST_STYLE_KATAKANA_IROHA,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kModifyContentKTable[] = {
+  eCSSKeyword_read_only,  NS_STYLE_MODIFY_CONTENT_READ_ONLY,
+  eCSSKeyword_read_write, NS_STYLE_MODIFY_CONTENT_READ_WRITE,
+  eCSSKeyword_write_only, NS_STYLE_MODIFY_CONTENT_WRITE_ONLY,
+  eCSSKeyword_toggle,     NS_STYLE_MODIFY_CONTENT_TOGGLE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kOutlineColorKTable[] = {
+  eCSSKeyword_invert, NS_STYLE_COLOR_INVERT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kOverflowKTable[] = {
+  eCSSKeyword_visible, NS_STYLE_OVERFLOW_VISIBLE,
+  eCSSKeyword_hidden, NS_STYLE_OVERFLOW_HIDDEN,
+  eCSSKeyword_scroll, NS_STYLE_OVERFLOW_SCROLL,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPageBreakKTable[] = {
+  eCSSKeyword_always, NS_STYLE_PAGE_BREAK_ALWAYS,
+  eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
+  eCSSKeyword_left, NS_STYLE_PAGE_BREAK_LEFT,
+  eCSSKeyword_right, NS_STYLE_PAGE_BREAK_RIGHT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPageBreakInsideKTable[] = {
+  eCSSKeyword_avoid, NS_STYLE_PAGE_BREAK_AVOID,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPageMarksKTable[] = {
+  eCSSKeyword_crop, NS_STYLE_PAGE_MARKS_CROP,
+  eCSSKeyword_cross, NS_STYLE_PAGE_MARKS_REGISTER,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPageSizeKTable[] = {
+  eCSSKeyword_landscape, NS_STYLE_PAGE_SIZE_LANDSCAPE,
+  eCSSKeyword_portrait, NS_STYLE_PAGE_SIZE_PORTRAIT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPitchKTable[] = {
+  eCSSKeyword_x_low, NS_STYLE_PITCH_X_LOW,
+  eCSSKeyword_low, NS_STYLE_PITCH_LOW,
+  eCSSKeyword_medium, NS_STYLE_PITCH_MEDIUM,
+  eCSSKeyword_high, NS_STYLE_PITCH_HIGH,
+  eCSSKeyword_x_high, NS_STYLE_PITCH_X_HIGH,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPlayDuringKTable[] = {
+  eCSSKeyword_mix, NS_STYLE_PLAY_DURING_MIX,
+  eCSSKeyword_repeat, NS_STYLE_PLAY_DURING_REPEAT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kPositionKTable[] = {
+  eCSSKeyword_static, NS_STYLE_POSITION_NORMAL,
+  eCSSKeyword_relative, NS_STYLE_POSITION_RELATIVE,
+  eCSSKeyword_absolute, NS_STYLE_POSITION_ABSOLUTE,
+  eCSSKeyword_fixed, NS_STYLE_POSITION_FIXED,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kResizerKTable[] = {
+  eCSSKeyword_both,       NS_STYLE_RESIZER_BOTH,
+  eCSSKeyword_horizontal, NS_STYLE_RESIZER_HORIZONTAL,
+  eCSSKeyword_vertical,   NS_STYLE_RESIZER_VERTICAL,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kSelectionStyleKTable[] = {
+  eCSSKeyword_any,  NS_STYLE_SELECTION_STYLE_ANY,
+  eCSSKeyword_line, NS_STYLE_SELECTION_STYLE_LINE,
+  eCSSKeyword_all,  NS_STYLE_SELECTION_STYLE_ALL,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kSpeakKTable[] = {
+  eCSSKeyword_spell_out, NS_STYLE_SPEAK_SPELL_OUT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kSpeakHeaderKTable[] = {
+  eCSSKeyword_once, NS_STYLE_SPEAK_HEADER_ONCE,
+  eCSSKeyword_always, NS_STYLE_SPEAK_HEADER_ALWAYS,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kSpeakNumeralKTable[] = {
+  eCSSKeyword_digits, NS_STYLE_SPEAK_NUMERAL_DIGITS,
+  eCSSKeyword_continuous, NS_STYLE_SPEAK_NUMERAL_CONTINUOUS,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kSpeakPunctuationKTable[] = {
+  eCSSKeyword_code, NS_STYLE_SPEAK_PUNCTUATION_CODE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kSpeechRateKTable[] = {
+  eCSSKeyword_x_slow, NS_STYLE_SPEECH_RATE_X_SLOW,
+  eCSSKeyword_slow, NS_STYLE_SPEECH_RATE_SLOW,
+  eCSSKeyword_medium, NS_STYLE_SPEECH_RATE_MEDIUM,
+  eCSSKeyword_fast, NS_STYLE_SPEECH_RATE_FAST,
+  eCSSKeyword_x_fast, NS_STYLE_SPEECH_RATE_X_FAST,
+  eCSSKeyword_faster, NS_STYLE_SPEECH_RATE_FASTER,
+  eCSSKeyword_slower, NS_STYLE_SPEECH_RATE_SLOWER,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kTableLayoutKTable[] = {
+  eCSSKeyword_fixed, NS_STYLE_TABLE_LAYOUT_FIXED,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kTextAlignKTable[] = {
+  eCSSKeyword_left, NS_STYLE_TEXT_ALIGN_LEFT,
+  eCSSKeyword_right, NS_STYLE_TEXT_ALIGN_RIGHT,
+  eCSSKeyword_center, NS_STYLE_TEXT_ALIGN_CENTER,
+  eCSSKeyword_justify, NS_STYLE_TEXT_ALIGN_JUSTIFY,
+  eCSSKeyword__moz_center, NS_STYLE_TEXT_ALIGN_MOZ_CENTER,
+  eCSSKeyword__moz_right, NS_STYLE_TEXT_ALIGN_MOZ_RIGHT,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kTextDecorationKTable[] = {
+  eCSSKeyword_underline, NS_STYLE_TEXT_DECORATION_UNDERLINE,
+  eCSSKeyword_overline, NS_STYLE_TEXT_DECORATION_OVERLINE,
+  eCSSKeyword_line_through, NS_STYLE_TEXT_DECORATION_LINE_THROUGH,
+  eCSSKeyword_blink, NS_STYLE_TEXT_DECORATION_BLINK,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kTextTransformKTable[] = {
+  eCSSKeyword_capitalize, NS_STYLE_TEXT_TRANSFORM_CAPITALIZE,
+  eCSSKeyword_lowercase, NS_STYLE_TEXT_TRANSFORM_LOWERCASE,
+  eCSSKeyword_uppercase, NS_STYLE_TEXT_TRANSFORM_UPPERCASE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kUnicodeBidiKTable[] = {
+  eCSSKeyword_embed, NS_STYLE_UNICODE_BIDI_EMBED,
+  eCSSKeyword_bidi_override, NS_STYLE_UNICODE_BIDI_OVERRIDE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kUserInputKTable[] = {
+  eCSSKeyword_enabled,  NS_STYLE_USER_INPUT_ENABLED,
+  eCSSKeyword_disabled, NS_STYLE_USER_INPUT_DISABLED,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kVerticalAlignKTable[] = {
+  eCSSKeyword_baseline, NS_STYLE_VERTICAL_ALIGN_BASELINE,
+  eCSSKeyword_sub, NS_STYLE_VERTICAL_ALIGN_SUB,
+  eCSSKeyword_super, NS_STYLE_VERTICAL_ALIGN_SUPER,
+  eCSSKeyword_top, NS_STYLE_VERTICAL_ALIGN_TOP,
+  eCSSKeyword_text_top, NS_STYLE_VERTICAL_ALIGN_TEXT_TOP,
+  eCSSKeyword_middle, NS_STYLE_VERTICAL_ALIGN_MIDDLE,
+  eCSSKeyword_bottom, NS_STYLE_VERTICAL_ALIGN_BOTTOM,
+  eCSSKeyword_text_bottom, NS_STYLE_VERTICAL_ALIGN_TEXT_BOTTOM,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kVisibilityKTable[] = {
+  eCSSKeyword_visible, NS_STYLE_VISIBILITY_VISIBLE,
+  eCSSKeyword_hidden, NS_STYLE_VISIBILITY_HIDDEN,
+  eCSSKeyword_collapse, NS_STYLE_VISIBILITY_COLLAPSE,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kVolumeKTable[] = {
+  eCSSKeyword_silent, NS_STYLE_VOLUME_SILENT,
+  eCSSKeyword_x_soft, NS_STYLE_VOLUME_X_SOFT,
+  eCSSKeyword_soft, NS_STYLE_VOLUME_SOFT,
+  eCSSKeyword_medium, NS_STYLE_VOLUME_MEDIUM,
+  eCSSKeyword_loud, NS_STYLE_VOLUME_LOUD,
+  eCSSKeyword_x_loud, NS_STYLE_VOLUME_X_LOUD,
+  -1,-1
+};
+
+const PRInt32 nsCSSProps::kWhitespaceKTable[] = {
+  eCSSKeyword_pre, NS_STYLE_WHITESPACE_PRE,
+  eCSSKeyword_nowrap, NS_STYLE_WHITESPACE_NOWRAP,
+  eCSSKeyword__moz_pre_wrap, NS_STYLE_WHITESPACE_MOZ_PRE_WRAP,
+  -1,-1
+};
+
+static const nsCString&
+SearchKeywordTable(PRInt32 aValue, const PRInt32 aTable[])
+{
+  PRInt32 i = 1;
+  for (;;) {
+    if (aTable[i] < 0) {
+      break;
+    }
+    if (aValue == aTable[i]) {
+      return nsCSSKeywords::GetStringValue(nsCSSKeyword(aTable[i-1]));
+    }
+    i += 2;
+  }
+  static const nsCString kNullStr;
+  return kNullStr;
+}
+
+
+
+const nsCString& 
+nsCSSProps::LookupPropertyValue(nsCSSProperty aProp, PRInt32 aValue)
+{
+static const PRInt32 kBackgroundXPositionKTable[] = {
+  eCSSKeyword_left,   0,
+  eCSSKeyword_center, 50,
+  eCSSKeyword_right,  100,
+  -1,-1
+};
+
+static const PRInt32 kBackgroundYPositionKTable[] = {
+  eCSSKeyword_top,    0,
+  eCSSKeyword_center, 50,
+  eCSSKeyword_bottom, 100,
+  -1,-1
+};
+
+  switch (aProp)  {
+  
+  case eCSSProperty_auto_select:
+    return SearchKeywordTable(aValue, kAutoSelectKTable);
+
+  case eCSSProperty_auto_tab:
+    return SearchKeywordTable(aValue, kAutoTabKTable);
+
+  case eCSSProperty_azimuth:
+    return SearchKeywordTable(aValue, kAzimuthKTable);
+
+  case eCSSProperty_background:
+    break;
+  
+  case eCSSProperty_background_attachment:
+    return SearchKeywordTable(aValue, kBackgroundAttachmentKTable);
+
+  case eCSSProperty_background_color:
+    return SearchKeywordTable(aValue, kBackgroundColorKTable);
+  
+  case eCSSProperty_background_image:
+    break;
+
+  case eCSSProperty_background_position:
+    break;
+
+  case eCSSProperty_background_repeat:
+    return SearchKeywordTable(aValue, kBackgroundRepeatKTable);
+
+  case eCSSProperty_background_x_position:
+    return SearchKeywordTable(aValue, kBackgroundXPositionKTable);
+
+  case eCSSProperty_background_y_position:
+    return SearchKeywordTable(aValue, kBackgroundYPositionKTable);
+
+  case eCSSProperty_border:
+    break;
+
+  case eCSSProperty_border_collapse:
+    return SearchKeywordTable(aValue, kBorderCollapseKTable);
+
+  case eCSSProperty_box_sizing:
+    return SearchKeywordTable(aValue, kBoxSizingKTable);
+
+  case eCSSProperty_border_color:
+  case eCSSProperty_border_spacing:
+  case eCSSProperty_border_style:
+  case eCSSProperty_border_bottom:
+  case eCSSProperty_border_left:
+  case eCSSProperty_border_right:
+  case eCSSProperty_border_top:
+    break;
+
+  case eCSSProperty_border_bottom_color:
+  case eCSSProperty_border_left_color:
+  case eCSSProperty_border_right_color:
+  case eCSSProperty_border_top_color:
+    return SearchKeywordTable(aValue, kBorderColorKTable);
+
+  case eCSSProperty_border_bottom_style:
+  case eCSSProperty_border_left_style:
+  case eCSSProperty_border_right_style:
+  case eCSSProperty_border_top_style:
+    return SearchKeywordTable(aValue, kBorderStyleKTable);
+
+  case eCSSProperty_border_bottom_width:
+  case eCSSProperty_border_left_width:
+  case eCSSProperty_border_right_width:
+  case eCSSProperty_border_top_width:
+    return SearchKeywordTable(aValue, kBorderWidthKTable);
+  
+  case eCSSProperty_border_width:
+  case eCSSProperty_border_x_spacing:
+  case eCSSProperty_border_y_spacing:
+  case eCSSProperty_bottom:
+    break;
+
+  case eCSSProperty_caption_side:
+    return SearchKeywordTable(aValue, kCaptionSideKTable);  
+
+  case eCSSProperty_clear:
+    return SearchKeywordTable(aValue, kClearKTable);  
+    
+  case eCSSProperty_clip:
+  case eCSSProperty_clip_bottom:
+  case eCSSProperty_clip_left:
+  case eCSSProperty_clip_right:
+  case eCSSProperty_clip_top:
+  case eCSSProperty_color:
+    break;
+
+  case eCSSProperty_content:
+    return SearchKeywordTable(aValue, kContentKTable);  
+
+  case eCSSProperty_counter_increment:
+  case eCSSProperty_counter_reset:
+  case eCSSProperty_cue:
+  case eCSSProperty_cue_after:
+  case eCSSProperty_cue_before:
+    break;
+
+  case eCSSProperty_cursor:
+    return SearchKeywordTable(aValue, kCursorKTable);  
+
+  case eCSSProperty_direction:
+    return SearchKeywordTable(aValue, kDirectionKTable);  
+  
+  case eCSSProperty_display:
+    return SearchKeywordTable(aValue, kDisplayKTable);  
+
+  case eCSSProperty_elevation:
+    return SearchKeywordTable(aValue, kElevationKTable);  
+
+  case eCSSProperty_empty_cells:
+    return SearchKeywordTable(aValue, kEmptyCellsKTable);  
+
+  case eCSSProperty_float:
+    return SearchKeywordTable(aValue, kFloatKTable);  
+
+  case eCSSProperty_float_edge:
+    return SearchKeywordTable(aValue, kFloatEdgeKTable);  
+
+  case eCSSProperty_font:
+    break;
+
+  case eCSSProperty_font_family:
+    return SearchKeywordTable(aValue, kFontKTable);  
+    
+  case eCSSProperty_font_size:
+    return SearchKeywordTable(aValue, kFontSizeKTable);  
+
+  case eCSSProperty_font_size_adjust:
+    break;
+
+  case eCSSProperty_font_stretch:
+    return SearchKeywordTable(aValue, kFontStretchKTable);  
+
+  case eCSSProperty_font_style:
+    return SearchKeywordTable(aValue, kFontStyleKTable);  
+
+  case eCSSProperty_font_variant:
+    return SearchKeywordTable(aValue, kFontVariantKTable);  
+  
+  case eCSSProperty_font_weight:
+    return SearchKeywordTable(aValue, kFontWeightKTable);  
+
+  case eCSSProperty_height:
+    break;
+
+  case eCSSProperty_key_equivalent:
+    return SearchKeywordTable(aValue, kKeyEquivalentKTable);
+
+  case eCSSProperty_left:
+  case eCSSProperty_letter_spacing:
+  case eCSSProperty_line_height:
+  case eCSSProperty_list_style:
+  case eCSSProperty_list_style_image:
+    break;
+
+  case eCSSProperty_list_style_position:
+    return SearchKeywordTable(aValue, kListStylePositionKTable);  
+  
+  case eCSSProperty_list_style_type:
+    return SearchKeywordTable(aValue, kListStyleKTable);
+
+  case eCSSProperty_margin:
+  case eCSSProperty_margin_bottom:
+  case eCSSProperty_margin_left:
+  case eCSSProperty_margin_right:
+  case eCSSProperty_margin_top:
+  case eCSSProperty_marker_offset:
+    break;
+
+  case eCSSProperty_marks:
+    return SearchKeywordTable(aValue, kPageMarksKTable);
+
+  case eCSSProperty_max_height:
+  case eCSSProperty_max_width:
+  case eCSSProperty_min_height:
+  case eCSSProperty_min_width:
+    break;
+
+  case eCSSProperty_modify_content:
+    return SearchKeywordTable(aValue, kModifyContentKTable);
+
+  case eCSSProperty_opacity:
+  case eCSSProperty_orphans:
+  case eCSSProperty_outline:
+    break;
+
+  case eCSSProperty_outline_color:
+    return SearchKeywordTable(aValue, kOutlineColorKTable);
+
+  case eCSSProperty_outline_style:
+    return SearchKeywordTable(aValue, kBorderStyleKTable);
+
+  case eCSSProperty_outline_width:
+    return SearchKeywordTable(aValue, kBorderWidthKTable);
+
+  case eCSSProperty_overflow:
+    return SearchKeywordTable(aValue, kOverflowKTable);
+  
+  case eCSSProperty_padding:
+  case eCSSProperty_padding_bottom:
+  case eCSSProperty_padding_left:
+  case eCSSProperty_padding_right:
+  case eCSSProperty_padding_top:
+  case eCSSProperty_page:
+    break;
+
+  case eCSSProperty_page_break_before:
+  case eCSSProperty_page_break_after:
+    return SearchKeywordTable(aValue, kPageBreakKTable);
+
+  case eCSSProperty_page_break_inside:
+    return SearchKeywordTable(aValue, kPageBreakInsideKTable);
+  
+  case eCSSProperty_pause:
+  case eCSSProperty_pause_after:
+  case eCSSProperty_pause_before:
+    break;
+
+  case eCSSProperty_pitch:
+    return SearchKeywordTable(aValue, kPitchKTable);
+
+  case eCSSProperty_pitch_range:
+  case eCSSProperty_play_during:
+    break;
+
+  case eCSSProperty_play_during_flags:
+    return SearchKeywordTable(aValue, kPlayDuringKTable);
+
+  case eCSSProperty_position:
+    return SearchKeywordTable(aValue, kPositionKTable);
+  
+  case eCSSProperty_quotes:
+  case eCSSProperty_quotes_close:
+  case eCSSProperty_quotes_open:
+    break;
+
+  case eCSSProperty_resizer:
+    return SearchKeywordTable(aValue, kResizerKTable);
+
+  case eCSSProperty_richness:
+  case eCSSProperty_right:
+    break;
+
+  case eCSSProperty_selection_style:
+    return SearchKeywordTable(aValue, kSelectionStyleKTable);
+
+  case eCSSProperty_size:
+    break;
+
+  case eCSSProperty_size_height:
+  case eCSSProperty_size_width:
+    return SearchKeywordTable(aValue, kPageSizeKTable);
+
+  case eCSSProperty_speak:
+    return SearchKeywordTable(aValue, kSpeakKTable);
+
+  case eCSSProperty_speak_header:
+    return SearchKeywordTable(aValue, kSpeakHeaderKTable);
+
+  case eCSSProperty_speak_numeral:
+    return SearchKeywordTable(aValue, kSpeakNumeralKTable);
+
+  case eCSSProperty_speak_punctuation:
+    return SearchKeywordTable(aValue, kSpeakPunctuationKTable);
+
+  case eCSSProperty_speech_rate:
+    return SearchKeywordTable(aValue, kSpeechRateKTable);
+
+  case eCSSProperty_stress:
+    break;
+
+  case eCSSProperty_table_layout:
+    return SearchKeywordTable(aValue, kTableLayoutKTable);
+
+  case eCSSProperty_text_align:
+    return SearchKeywordTable(aValue, kTextAlignKTable);
+  
+  case eCSSProperty_text_decoration:
+    return SearchKeywordTable(aValue, kTextDecorationKTable);
+
+  case eCSSProperty_text_indent:
+  case eCSSProperty_text_shadow:
+  case eCSSProperty_text_shadow_color:
+  case eCSSProperty_text_shadow_radius:
+  case eCSSProperty_text_shadow_x:
+  case eCSSProperty_text_shadow_y:
+    break;
+  
+  case eCSSProperty_text_transform:
+    return SearchKeywordTable(aValue, kTextTransformKTable);
+  
+  case eCSSProperty_top:
+    break;
+
+  case eCSSProperty_unicode_bidi:
+    return SearchKeywordTable(aValue, kUnicodeBidiKTable);
+
+  case eCSSProperty_user_input:
+    return SearchKeywordTable(aValue, kUserInputKTable);
+
+  case eCSSProperty_vertical_align:
+    return SearchKeywordTable(aValue, kVerticalAlignKTable);
+  
+  case eCSSProperty_visibility:
+    return SearchKeywordTable(aValue, kVisibilityKTable);
+
+  case eCSSProperty_voice_family:
+    break;
+
+  case eCSSProperty_volume:
+    return SearchKeywordTable(aValue, kVolumeKTable);
+    
+  case eCSSProperty_white_space:
+    return SearchKeywordTable(aValue, kWhitespaceKTable);
+
+  case eCSSProperty_widows:
+  case eCSSProperty_width:
+  case eCSSProperty_word_spacing:
+  case eCSSProperty_z_index:
+    break;
+
+// no default case, let the compiler help find missing values
+  case eCSSProperty_UNKNOWN:
+  case eCSSProperty_COUNT:
+    NS_ERROR("invalid property");
+    break;
+  }
+  static const nsCString kNullStr;
+  return kNullStr;
+}
+
+
+// define array of all CSS property hints
+#define CSS_PROP(_prop, _hint) NS_STYLE_HINT_##_hint,
+const PRInt32 nsCSSProps::kHintTable[eCSSProperty_COUNT] = {
+#include "nsCSSPropList.h"
+};
+#undef CSS_PROP
+
