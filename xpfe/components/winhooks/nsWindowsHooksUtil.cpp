@@ -42,6 +42,9 @@
 #include "nsINativeAppSupportWin.h"
 #include "nsIStringBundle.h"
 
+#define MOZ_HWND_BROADCAST_MSG_TIMEOUT 5000
+#define MOZ_CLIENT_BROWSER_KEY "Software\\Clients\\StartMenuInternet"
+
 // Where Mozilla stores its own registry values.
 const char * const mozillaKeyName = "Software\\Mozilla\\Desktop";
 
@@ -420,7 +423,13 @@ static void setWindowsXP() {
                 SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", shortAppName().get() );
             }
             // Notify the system of the changes.
-            ::SendMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet" );
+            ::SendMessageTimeout( HWND_BROADCAST,
+                                  WM_SETTINGCHANGE,
+                                  0,
+                                  (LPARAM)MOZ_CLIENT_BROWSER_KEY,
+                                  SMTO_NORMAL|SMTO_ABORTIFHUNG,
+                                  MOZ_HWND_BROADCAST_MSG_TIMEOUT,
+                                  NULL);
         }
     }
 }
@@ -517,7 +526,13 @@ static void resetWindowsXP() {
     SavedRegistryEntry( HKEY_CURRENT_USER, baseKey.get(), "", 0 ).reset();
 
     // Notify the system of the changes.
-    ::SendMessage( HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)"Software\\Clients\\StartMenuInternet" );
+    ::SendMessageTimeout( HWND_BROADCAST,
+                          WM_SETTINGCHANGE,
+                          0,
+                          (LPARAM)MOZ_CLIENT_BROWSER_KEY,
+                          SMTO_NORMAL|SMTO_ABORTIFHUNG,
+                          MOZ_HWND_BROADCAST_MSG_TIMEOUT,
+                          NULL);
 }
 
 // Restore this entry and corresponding DDE entry.
