@@ -284,6 +284,7 @@ get_best_temp_or_perm(NSSCertificate *ct, NSSCertificate *cp)
     if (cp) {
 	nssBestCertificate_Callback(cp, (void *)&best);
     }
+    nss_ZFreeIf(best.time);
     return best.cert;
 }
 
