@@ -1130,7 +1130,7 @@ nsMsgSearchTerm::MatchPriority (nsMsgPriorityValue priorityToMatch,
 
 	// Use this ugly little hack to get around the fact that enums don't have
 	// integer compare operators
-	int p1 = (int) priorityToMatch;
+	int p1 = (priorityToMatch == nsMsgPriority::none) ? (int) nsMsgPriority::normal : (int) priorityToMatch;
 	int p2 = (int) m_value.u.priority;
 
 	switch (m_operator)
