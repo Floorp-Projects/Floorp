@@ -110,12 +110,12 @@ public:
   PRBool IsValidItem(nsIContent* aContent);
   PRBool IsDisabled(nsIContent* aContent);
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult.AssignWithConversion("MenuBar");
-      return NS_OK;
+      return MakeFrameName("MenuBar", aResult);
   }
-
+#endif
 
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.

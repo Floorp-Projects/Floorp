@@ -238,9 +238,10 @@ nsGrippyFrame::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt3
   return nsnull;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsGrippyFrame::GetFrameName(nsString& aResult) const
 {
-  aResult.AssignWithConversion("Grippy");
-  return NS_OK;
+  return MakeFrameName("Grippy", aResult);
 }
+#endif

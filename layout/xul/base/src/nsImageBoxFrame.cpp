@@ -496,13 +496,13 @@ nsImageBoxFrame::CacheImageSize(nsBoxLayoutState& aState)
   GetImageSize(presContext);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsImageBoxFrame::GetFrameName(nsString& aResult) const
 {
-  aResult.AssignWithConversion("ImageBox");
-  return NS_OK;
+  return MakeFrameName("ImageBox", aResult);
 }
-
+#endif
 
 
 void

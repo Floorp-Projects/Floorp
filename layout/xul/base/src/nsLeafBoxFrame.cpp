@@ -75,7 +75,9 @@ nsLeafBoxFrame::nsLeafBoxFrame(nsIPresShell* aShell):nsBox(aShell)
 void
 nsLeafBoxFrame::GetBoxName(nsAutoString& aName)
 {
+#ifdef DEBUG
    GetFrameName(aName);
+#endif
 }
 
 
@@ -241,12 +243,13 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsLeafBoxFrame::GetFrameName(nsString& aResult) const
 {
-  aResult.AssignWithConversion("LeafBox");
-  return NS_OK;
+  return MakeFrameName("LeafBox", aResult);
 }
+#endif
 
 NS_IMETHODIMP_(nsrefcnt) 
 nsLeafBoxFrame::AddRef(void)

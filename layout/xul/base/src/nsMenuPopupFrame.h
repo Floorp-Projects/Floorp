@@ -141,11 +141,12 @@ public:
 
   NS_IMETHOD KillCloseTimer();
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult.AssignWithConversion("MenuPopup");
-      return NS_OK;
+      return MakeFrameName("MenuPopup", aResult);
   }
+#endif
 
   void EnsureMenuItemIsVisible(nsIMenuFrame* aMenuFrame);
 

@@ -162,11 +162,12 @@ public:
 
   void SetIsMenu(PRBool aIsMenu) { mIsMenu = aIsMenu; };
 
+#ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const
   {
-      aResult.AssignWithConversion("Menu");
-      return NS_OK;
+      return MakeFrameName("Menu", aResult);
   }
+#endif
 
   void SetFrameConstructor(nsCSSFrameConstructor* aFC) {
     mFrameConstructor = aFC;

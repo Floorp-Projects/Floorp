@@ -1772,15 +1772,18 @@ nsBoxFrame::GetFrame(nsIFrame** aFrame)
 void
 nsBoxFrame::GetBoxName(nsAutoString& aName)
 {
+#ifdef DEBUG
    GetFrameName(aName);
+#endif
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsBoxFrame::GetFrameName(nsString& aResult) const
 {
-    aResult.AssignWithConversion("Box");
-    return NS_OK;
+  return MakeFrameName("Box", aResult);
 }
+#endif
 
 NS_IMETHODIMP
 nsBoxFrame::GetDebug(PRBool& aDebug)
