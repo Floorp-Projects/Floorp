@@ -213,18 +213,6 @@ SetChromeAttribute(nsIDocShell *aShell, const char *aID,
   return rv;
 }
 
-static nsresult 
-RemoveChromeAttribute(nsIDocShell *aShell, const char *aID, const char *aName)
-{
-  nsCOMPtr<nsIDOMElement> elem;
-  nsresult rv = GetChromeElement(aShell, aID, getter_AddRefs(elem));
-  if (NS_SUCCEEDED(rv) && elem)
-    // Set the text attribute.
-    rv = elem->RemoveAttribute(NS_ConvertASCIItoUCS2(aName));
-
-  return rv;
-}
-
 // Utility to get the treeOwner for a docShell
 static nsresult
 GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
