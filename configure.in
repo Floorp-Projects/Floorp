@@ -3078,6 +3078,16 @@ if test "$MOZ_MAIL_NEWS"; then
 fi
 AC_SUBST(MOZ_MAIL_NEWS)
 
+dnl Turn on editor logging by default
+MOZ_EDITOR_API_LOG=1
+MOZ_ARG_DISABLE_BOOL(editor-api-log,
+[  --disable-editor-api-log      Disable editor logging],
+  MOZ_EDITOR_API_LOG= )
+if test "$MOZ_EDITOR_API_LOG"; then
+  AC_DEFINE(MOZ_EDITOR_API_LOG)
+fi
+AC_SUBST(MOZ_EDITOR_API_LOG)
+
 dnl Turn on the new lightweight gfx text control frames
 MOZ_ENDER_LITE=1
 MOZ_ARG_DISABLE_BOOL(ender-lite,
