@@ -36,7 +36,7 @@
 # ***** END LICENSE BLOCK *****
 CORE_DEPTH = ../../..
 
-# DEFINES = -DTRACE -DNISCC_TEST 
+# DEFINES = -DTRACE
 
 PRIVATE_EXPORTS = \
 	ssl3prot.h \

@@ -35,6 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+ifdef NISCC_TEST
+DEFINES += -DNISCC_TEST
+endif
+
 ifeq (,$(filter-out WIN%,$(OS_TARGET)))
 
 # don't want the 32 in the shared library name

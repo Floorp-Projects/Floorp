@@ -37,7 +37,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.49 2004/04/25 15:02:55 gerv%gerv.net Exp $
+ * $Id: cmsutil.c,v 1.50 2004/05/13 01:29:15 wchang0222%aol.com Exp $
  */
 
 #include "nspr.h"
@@ -1088,7 +1088,7 @@ main(int argc, char **argv)
     PRFileDesc *contentFile = NULL;
     PRBool      batch = PR_FALSE;
 
-#ifdef NISCC_TESTING
+#ifdef NISCC_TEST
     const char *ev = PR_GetEnv("NSS_DISABLE_ARENA_FREE_LIST");
     PORT_Assert(ev); 
     ev = PR_GetEnv("NSS_STRICT_SHUTDOWN");
