@@ -162,7 +162,6 @@ public:
   // nsIHTMLContentSink
   NS_IMETHOD BeginContext(PRInt32 aID);
   NS_IMETHOD EndContext(PRInt32 aID);
-  NS_IMETHOD SetContext(PRInt32 aID);
   NS_IMETHOD SetTitle(const nsString& aValue);
   NS_IMETHOD OpenHTML(const nsIParserNode& aNode);
   NS_IMETHOD CloseHTML(const nsIParserNode& aNode);
@@ -1596,69 +1595,59 @@ HTMLContentSink::SetParser(nsIParser* aParser)
 }
 
 NS_IMETHODIMP
-HTMLContentSink::BeginContext(PRInt32 aID)
+HTMLContentSink::BeginContext(PRInt32 aPosition)
 {
-  NS_PRECONDITION(aID >= 0, "bad context ID");
+  NS_PRECONDITION(aPosition > -1, "out of bounds");
 
   // Create new context
   SinkContext* sc = new SinkContext(this);
   if (nsnull == sc) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+   
+  NS_ASSERTION(mCurrentContext != nsnull," Non-existing context");
+  
+  nsHTMLTag nodeType      = mCurrentContext->mStack[aPosition].mType;
+  nsIHTMLContent* content = mCurrentContext->mStack[aPosition].mContent;
+  sc->Begin(nodeType,content);
+  NS_ADDREF(sc->mSink);
 
-  // Put it into our context array. Grow the array if necessary.
-  if (aID >= mNumContexts) {
-    PRInt32 newSize = aID + 10;
-    SinkContext** contexts = new SinkContext*[newSize];
-    if (nsnull == contexts) {
-      delete sc;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    memset(contexts, 0, sizeof(SinkContext*) * newSize);
-    if (0 != mNumContexts) {
-      memcpy(contexts, mContexts, sizeof(SinkContext*) * mNumContexts);
-      delete [] mContexts;
-    }
-    mNumContexts = newSize;
-    mContexts = contexts;
-  }
-  mContexts[aID] = sc;
-
-  // Push the old current context and make the new context the current one
   mContextStack.AppendElement(mCurrentContext);
   mCurrentContext = sc;
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLContentSink::EndContext(PRInt32 aID)
+HTMLContentSink::EndContext(PRInt32 aPosition)
 {
-  NS_PRECONDITION((aID >= 0) && (aID < mNumContexts) &&
-                  (mCurrentContext == mContexts[aID]), "bad context ID");
+  NS_PRECONDITION(mCurrentContext != nsnull && aPosition > -1, "non-existing context");
 
-  // Destroy the context
-  SinkContext* sc = mCurrentContext;
-  sc->End();
-  delete sc;
-  mContexts[aID] = nsnull;
-
-  // Pop off the previous context and make it our current context
   PRInt32 n = mContextStack.Count() - 1;
-  mCurrentContext = (SinkContext*) mContextStack.ElementAt(n);
+  SinkContext* sc = (SinkContext*) mContextStack.ElementAt(n);
+
+  NS_ASSERTION(sc->mStack[aPosition].mType == mCurrentContext->mStack[0].mType,"ending a wrong context");
+  
+  mCurrentContext->FlushText();
+  for(PRInt32 i=0; i<mCurrentContext->mStackPos; i++)
+    NS_IF_RELEASE(mCurrentContext->mStack[i].mContent);
+  delete [] mCurrentContext->mStack;
+  mCurrentContext->mStack      = nsnull;
+  mCurrentContext->mStackPos   = 0;
+  mCurrentContext->mStackSize  = 0;
+  if(mCurrentContext->mText != nsnull)
+    delete [] mCurrentContext->mText;
+   mCurrentContext->mText      = nsnull;
+  mCurrentContext->mTextLength = 0;
+  mCurrentContext->mTextSize   = 0;
+  NS_IF_RELEASE(mCurrentContext->mSink);
+  delete mCurrentContext;
+
+  mCurrentContext = sc;
   mContextStack.RemoveElementAt(n);
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-HTMLContentSink::SetContext(PRInt32 aID)
-{
-  NS_PRECONDITION((aID >= 0) && (aID < mNumContexts), "bad context ID");
-  SinkContext* sc = mContexts[aID];
-  mCurrentContext = sc;
-  return NS_OK;
-}
 
 NS_IMETHODIMP
 HTMLContentSink::SetTitle(const nsString& aValue)
