@@ -279,6 +279,15 @@ nsOnStopRequestEvent::HandleEvent()
          ("netlibEvent: Handle Stop [event=%x]", this));
 #endif
   nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
+  nsresult rv = mListener->GetStatus();
+
+  //
+  // If the consumer returned a failure code, then pass it out in the
+  // OnStopRequest(...) notification...
+  //
+  if (NS_FAILED(rv)) {
+    mStatus = rv;
+  }
   return receiver->OnStopRequest(mChannel, mContext, mStatus, mMessage);
 }
 
@@ -369,8 +378,27 @@ nsOnDataAvailableEvent::HandleEvent()
          ("netlibEvent: Handle Data [event=%x]", this));
 #endif
   nsIStreamListener* receiver = (nsIStreamListener*)mListener->GetReceiver();
-  return receiver->OnDataAvailable(mChannel, mContext,
+  nsresult rv = mListener->GetStatus();
+  //
+  // Only send OnDataAvailable(... ) notifications if all previous calls
+  // have succeeded...
+  //
+  if (NS_SUCCEEDED(rv)) {
+    rv = receiver->OnDataAvailable(mChannel, mContext,
                                    mIStream, mSourceOffset, mLength);
+    //
+    // If the consumer fails, then cancel the transport.  This is necessary
+    // in case where the socket transport is blocked waiting for room in the
+    // pipe, but the consumer fails without consuming all the data.
+    //
+    // Unless the transport is cancelled, it will block forever, waiting for
+    // the pipe to empty...
+    //
+    if (NS_FAILED(rv)) {
+      mChannel->Cancel();
+    }
+  }
+  return rv;
 }
 
 NS_IMETHODIMP 
