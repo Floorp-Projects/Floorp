@@ -24,7 +24,6 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
-#include "nsIUnicharInputStream.h"
 #include "nsGUIEvent.h"
 #include "nsAWritableString.h"
 

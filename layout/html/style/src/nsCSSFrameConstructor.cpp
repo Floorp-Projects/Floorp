@@ -46,6 +46,7 @@
 #include "nsIPresShell.h"
 #include "nsIStyleSet.h"
 #include "nsIViewManager.h"
+#include "nsIScrollableView.h"
 #include "nsStyleConsts.h"
 #include "nsTableOuterFrame.h"
 #include "nsIXMLDocument.h"

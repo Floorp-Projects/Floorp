@@ -22,6 +22,8 @@
  
 #include "nsDynamicMDEF.h"
 
+#include "prinrval.h"
+
 #include "nsCOMPtr.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNode.h"

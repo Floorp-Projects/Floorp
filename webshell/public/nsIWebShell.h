@@ -22,26 +22,10 @@
 #ifndef nsIWebShell_h___
 #define nsIWebShell_h___
 
-#include "nsIWidget.h"
-#include "nsIParser.h"
-#include "nsIScrollableView.h"
 #include "nsIContentViewerContainer.h"
-#include "nsIChannel.h"
-#include "nsIScrollableView.h"
 
-class nsIDOMElement;
-class nsIDOMWindowInternal;
-class nsIFactory;
-//class nsIPostData;
-class nsIStreamObserver;
 class nsIDocumentLoader;
-class nsIDocumentLoaderObserver;
-class nsIWebShell;
-class nsIWebShellContainer;
-class nsIContent;
-class nsIURIContentListener;
-class nsIDOMDocument;
-class nsIChromeEventHandler;
+class nsIURI;
 
 // Interface ID for nsIWebShell
 #define NS_IWEB_SHELL_IID \

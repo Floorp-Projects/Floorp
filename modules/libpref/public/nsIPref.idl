@@ -25,7 +25,6 @@
 #include "nsIObserver.idl"
 
 %{C++
-#include "jsapi.h"
 
 
 typedef int (*PR_CALLBACK PrefChangedFunc)(const char *, void *);
@@ -46,8 +45,6 @@ typedef void (*PrefEnumerationFunc)(const char *, void *);
  
 #define NS_PREF_VALUE_CHANGED 1 
 %}
-[ptr] native JSContext(JSContext);
-[ptr] native JSObject(JSObject);
 native PrefChangedFunc(PrefChangedFunc);
 native PrefEnumerationFunc(PrefEnumerationFunc);
 

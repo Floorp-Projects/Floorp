@@ -34,6 +34,8 @@
 // Interfaces needed to be included
 #include "nsIDocShellTreeItem.h"
 #include "nsIWebProgress.h"
+#include "nsIChannel.h"
+#include "nsIURI.h"
 
 // CIDs
 
