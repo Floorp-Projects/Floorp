@@ -167,11 +167,6 @@ function view_init()
           message_menuitem.setAttribute('checked',!IsThreadAndMessagePaneSplitterCollapsed());
       }
   }
-  var threadColumn = document.getElementById('ThreadColumnHeader');
-  var thread_menuitem=document.getElementById('menu_showThreads');
-  if (threadColumn && thread_menuitem){
-      thread_menuitem.setAttribute('checked',threadColumn.getAttribute('currentView')=='threaded');
-  }
 
   // Initialize the View Attachment Inline menu
   var viewAttachmentInline = pref.getBoolPref("mail.inline_attachments");
@@ -229,21 +224,16 @@ function InitViewSortByMenu()
 
 function InitViewMessagesMenu()
 {
-  var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
   var viewFlags = gDBView.viewFlags;
   var viewType = gDBView.viewType;
 
+  var allMenuItem = document.getElementById("viewAllMessagesMenuItem");
   if(allMenuItem)
       allMenuItem.setAttribute("checked",  (viewFlags & nsMsgViewFlagsType.kUnreadOnly) == 0 && (viewType == nsMsgViewType.eShowAllThreads));
 
   var unreadMenuItem = document.getElementById("viewUnreadMessagesMenuItem");
   if(unreadMenuItem)
       unreadMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kUnreadOnly) != 0);
-
-  var theadedMenuItem = document.getElementById("menu_showThreads");
-  if (theadedMenuItem)
-    theadedMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kThreadedDisplay) != 0);
-  document.commandDispatcher.updateCommands('create-menu-view');
 
   var theadsWithUnreadMenuItem = document.getElementById("viewThreadsWithUnreadMenuItem");
   if(theadsWithUnreadMenuItem)
@@ -252,9 +242,79 @@ function InitViewMessagesMenu()
   var watchedTheadsWithUnreadMenuItem = document.getElementById("viewWatchedThreadsWithUnreadMenuItem");
   if(watchedTheadsWithUnreadMenuItem)
       watchedTheadsWithUnreadMenuItem.setAttribute("checked", viewType == nsMsgViewType.eShowWatchedThreadsWithUnread);
+  
   var ignoredTheadsMenuItem = document.getElementById("viewIgnoredThreadsMenuItem");
   if(ignoredTheadsMenuItem)
       ignoredTheadsMenuItem.setAttribute("checked", (viewFlags & nsMsgViewFlagsType.kShowIgnored) != 0);
+}
+
+function InitViewMessageViewMenu()
+{
+  var currentViewValue = document.getElementById("viewPicker").value;
+
+  var allMenuItem = document.getElementById("viewAll");
+  if(allMenuItem)
+    allMenuItem.setAttribute("checked",  currentViewValue == 0);  // from msgViewPickerOveraly.xul <menuitem value="0" id="viewPickerAll" label="&viewPickerAll.label;"/>
+    
+  var unreadMenuItem = document.getElementById("viewUnread");
+  if(unreadMenuItem)
+    unreadMenuItem.setAttribute("checked", currentViewValue == 1); // from msgViewPickerOveraly.xul, <menuitem value="1" id="viewPickerUnread" label="&viewPickerUnread.label;"/>
+  
+  for (var i = 1; i <= 5; i++) {
+    var prefString = gPrefs.getComplexValue("mailnews.labels.description." + i, Components.interfaces.nsIPrefLocalizedString).data;
+    var viewLabelMenuItem = document.getElementById("viewLabelMenuItem" + i);
+    viewLabelMenuItem.setAttribute("label", prefString);
+    viewLabelMenuItem.setAttribute("checked", (i == (currentViewValue - 1)));  // 1=2-1, from msgViewPickerOveraly.xul, <menuitem value="2" id="labelMenuItem1"/>
+  }
+
+  viewRefreshCustomMailViews(currentViewValue);
+}
+
+function viewRefreshCustomMailViews(aCurrentViewValue)
+{
+  // for each mail view in the msg view list, add a menu item
+  var mailViewList = Components.classes["@mozilla.org/messenger/mailviewlist;1"].getService(Components.interfaces.nsIMsgMailViewList);
+
+  // XXX TODO, fix code in msgViewPickerOverlay.js, to be like this.
+  // remove any existing entries...
+  var menupopupNode = document.getElementById('viewMessageViewPopup');
+  var userDefinedItems = menupopupNode.getElementsByAttribute("userdefined","true");
+  for (var i=0; i<userDefinedItems.length; i++)
+  {
+    menupopupNode.removeChild(userDefinedItems[i]);
+  }
+  
+  // now rebuild the list
+  var numItems = mailViewList.mailViewCount; 
+  var viewCreateCustomViewSeparator = document.getElementById('viewCreateCustomViewSeparator');
+  
+  for (i = 0; i < numItems; i++)
+  {
+    var newMenuItem = document.createElement("menuitem");
+    newMenuItem.setAttribute("label", mailViewList.getMailViewAt(i).mailViewName);
+    newMenuItem.setAttribute("userdefined", "true");
+    var oncommandStr = "ViewMessagesBy('userdefinedview" + (kLastDefaultViewIndex + i) + "');";  
+    newMenuItem.setAttribute("oncommand", oncommandStr);
+    var item = menupopupNode.insertBefore(newMenuItem, viewCreateCustomViewSeparator);
+    item.setAttribute("value",  kLastDefaultViewIndex + i); 
+    item.setAttribute("type",  "radio"); // for checked
+    item.setAttribute("name", "viewmessages");  // for checked
+    item.setAttribute("checked", (kLastDefaultViewIndex + i == aCurrentViewValue)); 
+  }
+
+  if (!numItems)
+    viewCreateCustomViewSeparator.setAttribute('collapsed', true);
+  else
+    viewCreateCustomViewSeparator.removeAttribute('collapsed');
+}
+
+// called by the View | Messages | Views ... menu items
+// see mailWindowOverlay.xul
+function ViewMessagesBy(id)
+{
+  var viewPicker = document.getElementById('viewPicker');
+  viewPicker.selectedItem = document.getElementById(id);
+  viewChange(viewPicker);
 }
 
 function InitMessageMenu()
@@ -1211,18 +1271,26 @@ function MsgViewPageSource()
     ViewPageSource(messages);
 }
 
+var gFindInstData;
+function getFindInstData()
+{
+  if (!gFindInstData) {
+    gFindInstData = new nsFindInstData();
+    gFindInstData.browser = getMessageBrowser();
+    gFindInstData.__proto__.rootSearchWindow = window.top.content;
+    gFindInstData.__proto__.currentSearchWindow = window.top.content;
+  }
+  return gFindInstData;
+}
+
 function MsgFind()
 {
-  var contentWindow = window.top._content;
-
-  // from utilityOverlay.js
-  findInPage(getMessageBrowser(), contentWindow, contentWindow)
+  findInPage(getFindInstData());
 }
 
 function MsgFindAgain(reverse)
 {
-  var contentWindow = window.top._content;
-  findAgainInPage(getMessageBrowser(), contentWindow, contentWindow, reverse)
+  findAgainInPage(getFindInstData(), reverse);
 }
 
 function MsgCanFindAgain()
@@ -1477,9 +1545,7 @@ function IsEmptyTrashEnabled()
 {
   var folderURI = GetSelectedFolderURI();
   var server = GetServer(folderURI);
-  if (!server)
-    return false;
-  return (server.canEmptyTrashOnExit?IsMailFolderSelected():false);
+  return (server && server.canEmptyTrashOnExit?IsMailFolderSelected():false);
 }
 
 function IsCompactFolderEnabled()

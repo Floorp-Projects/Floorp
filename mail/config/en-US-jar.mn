@@ -92,4 +92,8 @@ locale/en-US/editor/EdDialogOverlay.dtd,                  en-US/locale/en-US/edi
 locale/US/messenger-region,                               US/locale/US/messenger-region
 locale/US/global-region,                                  US/locale/US/global-region
 
-
+#################################################################################################
+# crypto
+#################################################################################################
+locale/en-US/pippki,                                     en-US/locale/en-US/pippki
+locale/en-US/pipnss,                                     en-US/locale/en-US/pipnss
