@@ -53,19 +53,7 @@ public class Interpreter extends LabelTable {
         }
         return generateScriptICode(cx, scope, tree, securityDomain);
     }
-    
-    public void defineJavaAdapter(Scriptable scope) {
-        // do nothing; only the code generator can define the JavaAdapter
-        try {
-        	String adapterName = System.getProperty("org.mozilla.javascript.JavaAdapter");
-        	if (adapterName != null) {
-        		Class adapterClass = Class.forName(adapterName);
-				ScriptableObject.defineClass(scope, adapterClass);
-			}
-        } catch (Exception e) {
-        }
-    }
-    
+       
     private void generateICodeFromTree(Node tree, 
                                        VariableTable varTable, 
                                        boolean needsActivation,

@@ -112,7 +112,7 @@ public class VariableTable {
         itsVariables.addElement(lVar);
         itsVariableNames.put(vName, new Integer(index));
     }
-
+    
     // a list of the formal parameters and local variables
     protected Vector itsVariables = new Vector();    
 

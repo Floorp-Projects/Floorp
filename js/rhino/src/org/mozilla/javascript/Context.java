@@ -474,7 +474,8 @@ public final class Context {
                                  "NativeNumber",        "NativeDate", 
                                  "NativeMath",          "NativeCall", 
                                  "NativeClosure",       "NativeWith", 
-                                 "regexp.NativeRegExp", "NativeScript"
+                                 "regexp.NativeRegExp", "NativeScript",
+                                 "JavaAdapter"
                                };
             for (int i=0; i < classes.length; i++) {
                 try {
@@ -488,9 +489,6 @@ public final class Context {
             
             // This creates the Packages and java package roots.
             NativeJavaPackage.init(scope);
-            
-            // Define JavaAdapter class if possible.
-            getCompiler().defineJavaAdapter(scope);
         }
         // All of these exceptions should not occur since we are initializing
         // from known classes

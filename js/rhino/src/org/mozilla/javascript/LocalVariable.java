@@ -33,6 +33,28 @@ public class LocalVariable {
             
     public String getName()        { return itsName; }
         
+    /**
+     * Return the starting PC where this variable is live, or -1
+     * if it is not a Java register.
+     */
+    public int getStartPC() {
+        return -1;
+    }
+
+    /**
+     * Return the Java register number or -1 if it is not a Java register.
+     */
+    public short getJRegister() {
+        return -1;
+    }
+
+    /**
+     * Return true if the local variable is a Java register with double type.
+     */
+    public boolean isNumber() {
+        return false;
+    }
+
     private String itsName;
     private int itsIndex = -1;
     
