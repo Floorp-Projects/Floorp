@@ -72,7 +72,7 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     this.bind = bind;
     this.tcp_flag = tcp_flag;
 
-    this._channel = this._sockService.createTransport (host, port, null, 0, 0, 0);
+    this._channel = this._sockService.createTransport (host, port, null, -1, 0, 0);
     if (!this._channel)
         throw ("Error opening channel.");
 

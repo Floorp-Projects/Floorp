@@ -157,7 +157,7 @@ nsDateTimeChannel::OpenInputStream(nsIInputStream **_retval)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIChannel> channel;
-    rv = socketService->CreateTransport(mHost, mPort, nsnull, 0, 32, 32, getter_AddRefs(channel));
+    rv = socketService->CreateTransport(mHost, mPort, nsnull, -1, 32, 32, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
 
     rv = channel->SetNotificationCallbacks(mCallbacks);
