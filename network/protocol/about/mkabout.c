@@ -356,6 +356,14 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		NET_DisplayCookieInfoAsHTML(cur_entry);
 		return(-1);
 	}
+#if defined(SingleSignon)
+        else if(!PL_strcasecmp(which, "signons"))
+	{
+		extern void SI_DisplaySignonInfoAsHTML(ActiveEntry * cur_entry);
+		SI_DisplaySignonInfoAsHTML(cur_entry);
+		return(-1);
+	}
+#endif
 	else if(!PL_strncasecmp(which, "cache", 5))
 	  {
 		NET_DisplayCacheInfoAsHTML(cur_entry);
