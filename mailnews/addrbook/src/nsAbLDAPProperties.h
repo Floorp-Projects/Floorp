@@ -71,6 +71,12 @@ public:
     static nsHashtable mMozillaToLdap ;
     static PRBool IsInitialized;
 
+    static const char ** changeLogRootDSEAttribs; 
+    static const char ** changeLogEntryAttribs;
+    
+    static const int rootDSEAttribCount;
+    static const int changeLogEntryAttribCount;
+    
 public:
     static const MozillaLdapPropertyRelation* findMozillaPropertyFromLdap (const char* ldapProperty);
     static const MozillaLdapPropertyRelation* findLdapPropertyFromMozilla (const char* mozillaProperty);

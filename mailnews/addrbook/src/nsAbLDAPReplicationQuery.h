@@ -58,7 +58,6 @@ public:
   virtual ~nsAbLDAPReplicationQuery();
 
   nsresult InitLDAPData();
-  nsresult ConnectToLDAPServer(nsILDAPURL * aURL);
 
 protected :
   // pointer to interfaces used by this object

@@ -44,6 +44,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 
+
 /*
     Table defining the relationship between
     mozilla card properties and corresponding
@@ -180,6 +181,24 @@ static MozillaLdapPropertyRelation mozillaLdapPropertyTable[] =
 const MozillaLdapPropertyRelation* MozillaLdapPropertyRelator::table = mozillaLdapPropertyTable;
 const int MozillaLdapPropertyRelator::tableSize = sizeof (mozillaLdapPropertyTable) / sizeof (MozillaLdapPropertyRelation);
 
+static const char * sLDAPChangeLogRootDSEAttribs[] =
+{ 
+    "changelog", 
+    "firstChangeNumber", 
+    "lastChangeNumber", 
+    "dataVersion"
+};
+static const char * sLDAPChangeLogEntryAttribs[] =
+{ 
+	"targetdn", 
+	"changetype"
+};
+
+const char ** MozillaLdapPropertyRelator::changeLogRootDSEAttribs = sLDAPChangeLogRootDSEAttribs;
+const int MozillaLdapPropertyRelator::rootDSEAttribCount = sizeof(sLDAPChangeLogRootDSEAttribs)/sizeof(char**);
+const char ** MozillaLdapPropertyRelator::changeLogEntryAttribs = sLDAPChangeLogEntryAttribs;
+const int MozillaLdapPropertyRelator::changeLogEntryAttribCount = sizeof(sLDAPChangeLogEntryAttribs)/sizeof(char**);
+
 PRBool MozillaLdapPropertyRelator::IsInitialized = PR_FALSE ;
 nsHashtable MozillaLdapPropertyRelator::mMozillaToLdap;
 nsHashtable MozillaLdapPropertyRelator::mLdapToMozilla;
@@ -197,6 +216,7 @@ void MozillaLdapPropertyRelator::Initialize(void)
     }
     IsInitialized = PR_TRUE;
 }
+
 
 nsresult MozillaLdapPropertyRelator::GetAllSupportedLDAPAttributes(nsCString &aResult)
 {
@@ -268,4 +288,3 @@ nsresult MozillaLdapPropertyRelator::createCardPropertyFromLDAPMessage (nsILDAPM
 
     return rv;
 }
-

@@ -135,6 +135,7 @@ endif
 ifdef MOZ_LDAP_XPCOM
 REQUIRES    += mozldap \
                uriloader \
+               windowwatcher \
                $(NULL)
 
 EXPORTS		+= nsAbLDAPDirectoryQuery.h \
@@ -145,6 +146,8 @@ EXPORTS		+= nsAbLDAPDirectoryQuery.h \
                 nsAbLDAPReplicationService.h \
                 nsAbLDAPReplicationQuery.h \
                 nsAbLDAPReplicationData.h \
+                nsAbLDAPChangeLogQuery.h \
+                nsAbLDAPChangeLogData.h \
 		$(NULL)
 
 CPPSRCS		+= nsAbLDAPDirectory.cpp \
@@ -157,6 +160,8 @@ CPPSRCS		+= nsAbLDAPDirectory.cpp \
                 nsAbLDAPReplicationService.cpp \
                 nsAbLDAPReplicationQuery.cpp \
                 nsAbLDAPReplicationData.cpp \
+                nsAbLDAPChangeLogQuery.cpp \
+                nsAbLDAPChangeLogData.cpp \
 		$(NULL)
 endif
 

@@ -48,6 +48,7 @@ REQUIRES	= xpcom \
 		  intl \
 		  layout_xul \
 		  import \
+                  windowwatcher \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
@@ -91,6 +92,8 @@ EXPORTS=								\
                         nsAbLDAPReplicationService.h \
                         nsAbLDAPReplicationQuery.h \
                         nsAbLDAPReplicationData.h \
+                        nsAbLDAPChangeLogQuery.h \
+                        nsAbLDAPChangeLogData.h \
 !endif
 			nsAbDirectoryRDFResource.h \
 			nsAbBooleanExpression.h \
@@ -141,6 +144,8 @@ CPP_OBJS=										\
     .\$(OBJDIR)\nsAbLDAPReplicationService.obj \
     .\$(OBJDIR)\nsAbLDAPReplicationQuery.obj \
     .\$(OBJDIR)\nsAbLDAPReplicationData.obj \
+    .\$(OBJDIR)\nsAbLDAPChangeLogQuery.obj \
+    .\$(OBJDIR)\nsAbLDAPChangeLogData.obj \
 !endif
     .\$(OBJDIR)\nsAbBooleanExpression.obj \
     .\$(OBJDIR)\nsAbDirectoryRDFResource.obj \

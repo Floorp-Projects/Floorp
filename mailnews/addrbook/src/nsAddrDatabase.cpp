@@ -2936,11 +2936,8 @@ nsresult nsAddrDatabase::CreateCard(nsIMdbRow* cardRow, mdb_id listRowID, nsIAbC
     if(NS_SUCCEEDED(rv))
     {
         nsCOMPtr<nsIAbCard> personCard;
-        nsCOMPtr<nsIAbMDBDirectory> dbm_dbDirectory(do_QueryInterface(m_dbDirectory,&rv));
-    if (NS_SUCCEEDED(rv) && dbm_dbDirectory) {
       personCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
       NS_ENSURE_SUCCESS(rv,rv);
-    }
 
         nsCOMPtr<nsIAbMDBCard> dbpersonCard (do_QueryInterface(personCard, &rv));
 

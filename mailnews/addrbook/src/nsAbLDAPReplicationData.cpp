@@ -48,19 +48,24 @@
 #include "nsAbLDAPProperties.h"
 #include "nsAbLDAPReplicationQuery.h"
 #include "nsProxiedService.h"
+#include "nsCPasswordManager.h"
+#include "nsIRDFService.h"
+#include "nsIRDFResource.h"
 
+// once bug # 101252 gets fixed, this should be reverted back to be non threadsafe
+// implementation is not really thread safe since each object should exist 
+// independently along with its related independent nsAbLDAPReplicationQuery object.
 NS_IMPL_THREADSAFE_ISUPPORTS2(nsAbLDAPProcessReplicationData, nsIAbLDAPProcessReplicationData, nsILDAPMessageListener)
 
 nsAbLDAPProcessReplicationData::nsAbLDAPProcessReplicationData()
- : mState(kQueryNotStarted),
+ : mState(kIdle),
    mProtocol(-1),
    mCount(0),
-   mReplInfo(nsnull),
+   mDirServerInfo(nsnull),
    mInitialized(PR_FALSE),
    mDBOpen(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
-  /* member initializers and constructor code */
 }
 
 nsAbLDAPProcessReplicationData::~nsAbLDAPProcessReplicationData()
@@ -74,16 +79,14 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Init(nsIAbLDAPReplicationQuery *qu
 {
    NS_ENSURE_ARG_POINTER(query);
 
-   nsresult rv = NS_OK;
-
    mQuery = query;
 
-   rv = mQuery->GetReplicationInfo(&mReplInfo);
+   nsresult rv = mQuery->GetReplicationServerInfo(&mDirServerInfo);
    if(NS_FAILED(rv)) {
        mQuery = nsnull;
        return rv;   
    }
-   if(!mReplInfo) {
+   if(!mDirServerInfo) {
        mQuery = nsnull;
        return NS_ERROR_FAILURE;   
    }
@@ -106,7 +109,6 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::GetReplicationState(PRInt32 *aRepl
 NS_IMETHODIMP nsAbLDAPProcessReplicationData::GetProtocolUsed(PRInt32 *aProtocolUsed) 
 {
     NS_ENSURE_ARG_POINTER(aProtocolUsed);
-
     *aProtocolUsed = mProtocol; 
     return NS_OK; 
 }
@@ -116,16 +118,14 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsresult aStatus)
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK;
-
     // Make sure that the Init() worked properly
     if(NS_FAILED(aStatus)) {
         Done(PR_FALSE);
-        return rv;
+        return NS_ERROR_FAILURE;
     }
 
     nsCOMPtr<nsILDAPMessageListener> listener;
-    rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
+    nsresult rv = NS_GetProxyForObject(NS_CURRENT_EVENTQ,
                   NS_GET_IID(nsILDAPMessageListener), 
                   NS_STATIC_CAST(nsILDAPMessageListener*, this),
                   PROXY_SYNC | PROXY_ALWAYS, 
@@ -156,10 +156,17 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPInit(nsresult aStatus)
     }
 
     // Bind
+    if(mAuthPswd.IsEmpty()) {
     rv = operation->SimpleBind(nsnull);
+        mState = kAnonymousBinding;
+    }
+    else {
+        rv = operation->SimpleBind(mAuthPswd.get());
+        mState = kAuthenticatedBinding;
+    }
+
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
-        return rv;
     }
 
     return rv;
@@ -171,10 +178,8 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::OnLDAPMessage(nsILDAPMessage *aMes
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK;
-
     PRInt32 messageType;
-    rv = aMessage->GetType(&messageType);
+    nsresult rv = aMessage->GetType(&messageType);
     if(NS_FAILED(rv)) {
 #ifdef DEBUG_rdayal
         printf("LDAP Replication : OnLDAPMessage : couldnot GetType \n");
@@ -208,15 +213,17 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK;
+#ifdef DEBUG_rdayal
+    printf ("ChangeLog Replication : ABORT called !!! \n");
+#endif
 
     nsCOMPtr<nsILDAPOperation> operation;
-    rv = mQuery->GetOperation(getter_AddRefs(operation));
-    if(operation && mState != kQueryNotStarted)
+    nsresult rv = mQuery->GetOperation(getter_AddRefs(operation));
+    if(operation && mState != kIdle)
     {
         rv = operation->Abandon();
         if(NS_SUCCEEDED(rv))
-            mState = kQueryNotStarted;
+            mState = kIdle;
     }
 
     if(mReplicationDB && mDBOpen) {
@@ -228,14 +235,49 @@ NS_IMETHODIMP nsAbLDAPProcessReplicationData::Abort()
             rv = mReplicationFile->Remove(PR_FALSE);
             if(NS_SUCCEEDED(rv)) {
                 // now put back the backed up replicated file if aborted
-                if(mBackupReplicationFile) 
-                    rv = mBackupReplicationFile->MoveTo(nsnull, mReplInfo->fileName);
+                if(mBackupReplicationFile && mDirServerInfo->replInfo) 
+                    rv = mBackupReplicationFile->MoveTo(nsnull, mDirServerInfo->replInfo->fileName);
             }
         }
     }
 
 
     Done(PR_FALSE);
+
+    return rv;
+}
+
+// this should get the authDN from prefs and password from PswdMgr
+NS_IMETHODIMP nsAbLDAPProcessReplicationData::PopulateAuthData()
+{
+    mAuthDN.AssignWithConversion(mDirServerInfo->authDn);
+
+    nsresult rv = NS_OK;
+    nsCOMPtr <nsIPasswordManagerInternal> passwordMgrInt = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv) && passwordMgrInt) {
+        // Get the current server URI
+        nsCOMPtr<nsILDAPURL> url;
+        rv = mQuery->GetReplicationURL(getter_AddRefs(url));
+        if (NS_FAILED(rv))
+            return rv;
+        nsCAutoString serverUri;
+        rv = url->GetSpec(serverUri);
+        if (NS_FAILED(rv)) 
+            return rv;
+
+        nsCAutoString hostFound;
+        nsAutoString userNameFound;
+        nsAutoString passwordFound;
+
+        // Get password entry corresponding to the server URI we are passing in.
+        rv = passwordMgrInt->FindPasswordEntry(serverUri, NS_LITERAL_STRING(""), NS_LITERAL_STRING(""),
+                                               hostFound, userNameFound, passwordFound);
+        if (NS_FAILED(rv))
+            return rv;
+
+        if (!passwordFound.IsEmpty())
+            mAuthPswd = passwordFound;
+    }
 
     return rv;
 }
@@ -259,9 +301,9 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPBind(nsILDAPMessage *aMessage)
         return NS_ERROR_FAILURE;
     }
 
-    rv = CreateABForReplicatedDir();
+    rv = OpenABForReplicatedDir(PR_TRUE);
     if(NS_FAILED(rv)) {
-        // do not call Done here since CreateABForReplicationDir calls it.
+        // do not call done here since it is called by OpenABForReplicationDir
         return rv;
     }
 
@@ -289,14 +331,10 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
     if(!mReplicationDB || !mDBOpen) 
         return NS_ERROR_FAILURE;
 
-    nsresult rv;       
-
-
     nsAbLDAPCard card;
-
-
     PRBool hasSetCardProperty = PR_FALSE;
-    rv = MozillaLdapPropertyRelator::createCardPropertyFromLDAPMessage(aMessage,
+
+    nsresult rv = MozillaLdapPropertyRelator::createCardPropertyFromLDAPMessage(aMessage,
                                                                      &card, &hasSetCardProperty);
     if(NS_FAILED(rv)) {
         Abort();
@@ -305,10 +343,11 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
 
     if(hasSetCardProperty == PR_FALSE)
     {
-        Abort();
-        return NS_ERROR_FAILURE;
+        NS_WARNING("nsAbLDAPProcessReplicationData::OnLDAPSearchEntry"
+           "No card Properties found and set");
+        // if some entries are bogus for us, continue with next one
+        return NS_OK;
     }
-
 
 #ifdef DEBUG_rdayal
         nsXPIDLString firstName;
@@ -323,7 +362,6 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
         name.AppendWithConversion(lastName);
         printf("\n LDAPReplication :: got card #: %d, name: %s \n", mCount, name.get());
 #endif
-
 
     nsCOMPtr<nsIAbMDBCard> dbCard;
     dbCard = do_CreateInstance(NS_ABMDBCARD_CONTRACTID, &rv);
@@ -351,6 +389,28 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchEntry(nsILDAPMessage *aMess
         return rv;
     }
 
+    // now set the attribute for the DN of the entry in the card in the DB
+    nsXPIDLString authDN;
+    rv = aMessage->GetDn(getter_Copies(authDN));
+    if(NS_SUCCEEDED(rv) && !authDN.IsEmpty())
+    {
+        dbCard->SetAbDatabase(mReplicationDB);
+        dbCard->SetStringAttribute("_DN", authDN.get());
+    }
+
+    newCard = do_QueryInterface(dbCard, &rv);
+    if(NS_FAILED(rv)) {
+        Abort();
+        return rv;
+    }
+
+    rv = mReplicationDB->EditCard(newCard, PR_FALSE);
+    if(NS_FAILED(rv)) {
+        Abort();
+        return rv;
+    }
+    
+
     mCount ++;
 
     if(!(mCount % 10))  // inform the listener every 10 entries
@@ -375,9 +435,8 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsresult rv = NS_OK;
     PRInt32 errorCode;
-    rv = aMessage->GetErrorCode(&errorCode);
+    nsresult rv = aMessage->GetErrorCode(&errorCode);
 
     if(NS_SUCCEEDED(rv)) {
         // We are done with the LDAP search for all entries.
@@ -411,9 +470,9 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
             NS_ASSERTION(NS_SUCCEEDED(rv), "Replication File Remove on Failure failed");
             if(NS_SUCCEEDED(rv)) {
                 // now put back the backed up replicated file
-                if(mBackupReplicationFile) 
+                if(mBackupReplicationFile && mDirServerInfo->replInfo) 
                 {
-                    rv = mBackupReplicationFile->MoveTo(nsnull, mReplInfo->fileName);
+                    rv = mBackupReplicationFile->MoveTo(nsnull, mDirServerInfo->replInfo->fileName);
                     NS_ASSERTION(NS_SUCCEEDED(rv), "Replication Backup File Move back on Failure failed");
                 }
             }
@@ -424,7 +483,7 @@ nsresult nsAbLDAPProcessReplicationData::OnLDAPSearchResult(nsILDAPMessage *aMes
     return NS_OK;
 }
 
-nsresult nsAbLDAPProcessReplicationData::CreateABForReplicatedDir()
+nsresult nsAbLDAPProcessReplicationData::OpenABForReplicatedDir(PRBool aCreate)
 {
     if(!mInitialized) 
         return NS_ERROR_NOT_INITIALIZED;
@@ -437,7 +496,7 @@ nsresult nsAbLDAPProcessReplicationData::CreateABForReplicatedDir()
         return rv;
     }
 
-    if(!mReplInfo->fileName) {
+    if(!mDirServerInfo->replInfo->fileName) {
         Done(PR_FALSE);
         return NS_ERROR_FAILURE;
     }
@@ -449,7 +508,7 @@ nsresult nsAbLDAPProcessReplicationData::CreateABForReplicatedDir()
         return rv;
     }
 
-    (*dbPath) += mReplInfo->fileName;
+    (*dbPath) += mDirServerInfo->replInfo->fileName;
 
     // if the AB DB already exists backup existing one, 
     // in case if the user cancels or Abort put back the backed up file
@@ -461,10 +520,12 @@ nsresult nsAbLDAPProcessReplicationData::CreateABForReplicatedDir()
             Done(PR_FALSE);
             return rv;
         }
-        // create the backup file object same as replication file object
+        // create the backup file object same as the Replication file object.
         // we create a backup file here since we need to cleanup the existing file
-        // and then commit so instead of deleting existing cards we just clone the
-        // existing one for a much better performance.
+        // for create and then commit so instead of deleting existing cards we just
+        // clone the existing one for a much better performance - for Download All.
+        // And also important in case if replication fails we donot lose user's existing 
+        // replicated data for both Download all and Changelog.
         rv = mReplicationFile->Clone(getter_AddRefs(mBackupReplicationFile));
         if(NS_FAILED(rv))  {
             delete dbPath;
@@ -477,16 +538,43 @@ nsresult nsAbLDAPProcessReplicationData::CreateABForReplicatedDir()
             Done(PR_FALSE);
             return rv;
         }
-        nsXPIDLCString backupFilePath;
-        rv = mBackupReplicationFile->GetLeafName(getter_Copies(backupFilePath));
+        nsXPIDLCString backupFileLeafName;
+        rv = mBackupReplicationFile->GetLeafName(getter_Copies(backupFileLeafName));
+        if(NS_FAILED(rv))  {
+            delete dbPath;
+            Done(PR_FALSE);
+            return rv;
+        }
+        // remove the newly created unique backup file so that move and copy succeeds.
+        rv = mBackupReplicationFile->Remove(PR_FALSE);
         if(NS_FAILED(rv))  {
             delete dbPath;
             Done(PR_FALSE);
             return rv;
         }
 
-        rv = mBackupReplicationFile->MoveTo(nsnull, backupFilePath.get());
-        // this will take care of all failed cases for moving to backup file above
+        if(aCreate) {
+            // set backup file to existing replication file for move
+            mBackupReplicationFile->SetLeafName(mDirServerInfo->replInfo->fileName);
+            rv = mBackupReplicationFile->MoveTo(nsnull, backupFileLeafName.get());
+            // set the backup file leaf name now
+            if (NS_SUCCEEDED(rv))
+                mBackupReplicationFile->SetLeafName(backupFileLeafName.get());
+        }
+        else {
+            // set backup file to existing replication file for copy
+            mBackupReplicationFile->SetLeafName(mDirServerInfo->replInfo->fileName);
+            // specify the parent here specifically, 
+            // passing nsnull to copy to the same dir actually renames existing file
+            // instead of making another copy of the existing file.
+            nsCOMPtr<nsIFile> parent;
+            rv = mBackupReplicationFile->GetParent(getter_AddRefs(parent));
+            if (NS_SUCCEEDED(rv))
+                rv = mBackupReplicationFile->CopyTo(parent, backupFileLeafName.get());
+            // set the backup file leaf name now
+            if (NS_SUCCEEDED(rv))
+                mBackupReplicationFile->SetLeafName(backupFileLeafName.get());
+        }
         if(NS_FAILED(rv))  {
             delete dbPath;
             Done(PR_FALSE);
@@ -498,14 +586,18 @@ nsresult nsAbLDAPProcessReplicationData::CreateABForReplicatedDir()
              do_GetService(NS_ADDRDATABASE_CONTRACTID, &rv);
     if(NS_FAILED(rv)) {
         delete dbPath;
+        if (mBackupReplicationFile)
+            mBackupReplicationFile->Remove(PR_FALSE);
         Done(PR_FALSE);
         return rv;
     }
     
-    rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mReplicationDB), PR_TRUE);
+    rv = addrDBFactory->Open(dbPath, aCreate, getter_AddRefs(mReplicationDB), PR_TRUE);
     delete dbPath;
     if(NS_FAILED(rv)) {
         Done(PR_FALSE);
+        if (mBackupReplicationFile)
+            mBackupReplicationFile->Remove(PR_FALSE);
         return rv;
     }
 
@@ -518,6 +610,8 @@ void nsAbLDAPProcessReplicationData::Done(PRBool aSuccess)
    if(!mInitialized) 
        return;
 
+   mState = kReplicationDone;
+
    mQuery->Done(aSuccess);
 
    if(mListener)
@@ -526,4 +620,12 @@ void nsAbLDAPProcessReplicationData::Done(PRBool aSuccess)
    // since this is called when all is done here, either on success, failure or abort
    // releas the query now.
    mQuery = nsnull;
+}
+
+nsresult nsAbLDAPProcessReplicationData::DeleteCard(nsString & aDn)
+{
+    nsCOMPtr<nsIAbCard> cardToDelete;
+    mReplicationDB->GetCardFromAttribute(nsnull, "_DN", NS_ConvertUCS2toUTF8(aDn).get(),
+                                         PR_FALSE, getter_AddRefs(cardToDelete));
+    return mReplicationDB->DeleteCard(cardToDelete, PR_FALSE);
 }

@@ -72,13 +72,16 @@ protected :
   PRBool          mDBOpen;
   PRBool          mInitialized;
   
-  DIR_ReplicationInfo * mReplInfo;
+  DIR_Server *    mDirServerInfo;
+  nsString        mAuthDN;      // authDN of the user
+  nsString        mAuthPswd;    // pswd of the authDN user
   
   virtual nsresult OnLDAPBind(nsILDAPMessage *aMessage);
   virtual nsresult OnLDAPSearchEntry(nsILDAPMessage *aMessage);
   virtual nsresult OnLDAPSearchResult(nsILDAPMessage *aMessage);
   
-  nsresult CreateABForReplicatedDir();
+  nsresult OpenABForReplicatedDir(PRBool bCreate);
+  nsresult DeleteCard(nsString & aDn);
   void Done(PRBool aSuccess);
 };
 

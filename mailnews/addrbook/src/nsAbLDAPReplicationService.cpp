@@ -42,9 +42,12 @@
 #include "nsAbBaseCID.h"
 #include "nsIWebProgressListener.h"
 
+#include "nsAbLDAPChangeLogQuery.h"
+#include "nsIAbLDAPReplicationData.h"
+
 /*** implementation of the service ******/
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsAbLDAPReplicationService, nsIAbLDAPReplicationService)
+NS_IMPL_ISUPPORTS1(nsAbLDAPReplicationService, nsIAbLDAPReplicationService)
 
 nsAbLDAPReplicationService::nsAbLDAPReplicationService() 
     : mReplicating(PR_FALSE)
@@ -78,6 +81,14 @@ NS_IMETHODIMP nsAbLDAPReplicationService::StartReplication(const nsACString & aP
     {
         case nsIAbLDAPProcessReplicationData::kDefaultDownloadAll :
             mQuery = do_CreateInstance(NS_ABLDAP_REPLICATIONQUERY_CONTRACTID, &rv);
+            break ;
+        case nsIAbLDAPProcessReplicationData::kChangeLogProtocol :
+            mQuery = do_CreateInstance (NS_ABLDAP_CHANGELOGQUERY_CONTRACTID, &rv);
+            break ;
+        default :
+            break;
+    }
+
             if(NS_SUCCEEDED(rv) && mQuery)
             {
                rv = mQuery->Init(aPrefName, progressListener);
@@ -91,13 +102,7 @@ NS_IMETHODIMP nsAbLDAPReplicationService::StartReplication(const nsACString & aP
                    }
                }
             }
-            break;
-        default :
-            break;
-    }
 
-    // this should come here only in case of an error, either when DoReplicationQuery errors out
-    // of if DecideProtocol returns an error.
     if(progressListener && NS_FAILED(rv))
         progressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, PR_FALSE);
        
@@ -139,8 +144,9 @@ NS_IMETHODIMP nsAbLDAPReplicationService::Done(PRBool aSuccess)
 // if it exists ChangeLog protocol is supported.
 PRInt32 nsAbLDAPReplicationService::DecideProtocol()
 {
-    // currently only Replicate All is implemented
-    return nsIAbLDAPProcessReplicationData::kDefaultDownloadAll;
+    // do the changeLog, it will decide if there is a need to replicate all
+    // entries or only update existing DB and will do the approprite thing.
+    return nsIAbLDAPProcessReplicationData::kChangeLogProtocol;
 }
 
 
