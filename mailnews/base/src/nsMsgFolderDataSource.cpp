@@ -768,8 +768,8 @@ nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
                                                      nsIRDFNode **target, PRBool sort)
 {
 
-  PRUnichar *name;
-  nsresult rv = folder->GetName(&name);
+  nsXPIDLString name;
+  nsresult rv = folder->GetName(getter_Copies(name));
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);
 	if(!sort)
@@ -790,7 +790,6 @@ nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
 		PR_smprintf_free(orderString);
 	}
 	createNode(nameString, target);
-  delete[] name;
   return NS_OK;
 }
 
