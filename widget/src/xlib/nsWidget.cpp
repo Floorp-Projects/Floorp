@@ -17,6 +17,35 @@
  */
 
 #include "nsWidget.h"
+#include "nsGfxCIID.h"
+// set up our static members here.
+nsHashtable *nsWidget::window_list = nsnull;
+
+// this is a class for generating keys for
+// the list of windows managed by mozilla.
+
+class nsWindowKey : public nsHashKey {
+protected:
+  Window mKey;
+
+public:
+  nsWindowKey(Window key) {
+    mKey = key;
+  }
+  ~nsWindowKey(void) {
+  }
+  PRUint32 HashValue(void) const {
+    return (PRUint32)mKey;
+  }
+
+  PRBool Equals(const nsHashKey *aKey) const {
+    return (mKey == ((nsWindowKey *)aKey)->mKey);
+  }
+
+  nsHashKey *Clone(void) const {
+    return new nsWindowKey(mKey);
+  }
+};
 
 nsWidget::nsWidget() : nsBaseWidget()
 {
@@ -32,10 +61,18 @@ nsWidget::nsWidget() : nsBaseWidget()
 
 nsWidget::~nsWidget()
 {
+  DestroyNative();
+}
+
+void
+nsWidget::DestroyNative(void)
+{
   if (mGC)
     XFreeGC(gDisplay, mGC);
-  if (mBaseWindow)
+  if (mBaseWindow) {
     XDestroyWindow(gDisplay, mBaseWindow);
+    DeleteWindowCallback(mBaseWindow);
+  }
 }
 
 NS_IMETHODIMP nsWidget::Create(nsIWidget *aParent,
@@ -247,12 +284,6 @@ NS_IMETHODIMP nsWidget::Update()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent* event,
-                                      nsEventStatus & aStatus)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP nsWidget::SetBackgroundColor(const nscolor &aColor)
 {
   printf("nsWidget::SetBackgroundColor()\n");
@@ -310,8 +341,13 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
   attr.event_mask = SubstructureNotifyMask | StructureNotifyMask | ExposureMask;
   // set the default background color to that awful gray
   attr.background_pixel = bg_pixel;
+  // set the colormap
+  attr.colormap = xlib_rgb_get_cmap();
   // here's what's in the struct
   attr_mask = CWBitGravity | CWEventMask | CWBackPixel;
+  // check to see if there was actually a colormap.
+  if (attr.colormap)
+    attr_mask |= CWColormap;
   
   printf("Creating XWindow: x %d y %d w %d h %d\n",
          aRect.x, aRect.y, aRect.width, aRect.height);
@@ -337,12 +373,120 @@ void nsWidget::CreateNative(Window aParent, nsRect aRect)
                               0, // border width
                               gDepth,
                               InputOutput,    // class
-                              CopyFromParent, // visual
+                              gVisual, // visual
                               attr_mask,
                               &attr);
+  // add the callback for this
+  AddWindowCallback(mBaseWindow, this);
   // map this window and flush the connection.  we want to see this
   // thing now.
   XMapWindow(gDisplay,
              mBaseWindow);
   XSync(gDisplay, False);
+}
+
+nsWidget *
+nsWidget::getWidgetForWindow(Window aWindow)
+{
+  if (window_list == nsnull) {
+    return nsnull;
+  }
+  nsWindowKey *window_key = new nsWindowKey(aWindow);
+  nsWidget *retval = (nsWidget *)window_list->Get(window_key);
+  return retval;
+}
+
+void
+nsWidget::AddWindowCallback(Window aWindow, nsWidget *aWidget)
+{
+  // make sure that the list has been initialized
+  if (window_list == nsnull) {
+    window_list = new nsHashtable();
+  }
+  nsWindowKey *window_key = new nsWindowKey(aWindow);
+  window_list->Put(window_key, aWidget);
+  // add a new ref to this widget
+  NS_ADDREF(aWidget);
+  delete window_key;
+}
+
+void
+nsWidget::DeleteWindowCallback(Window aWindow)
+{
+  nsWindowKey *window_key = new nsWindowKey(aWindow);
+  nsWidget *widget = (nsWidget *)window_list->Get(window_key);
+  NS_RELEASE(widget);
+  window_list->Remove(window_key);
+  delete window_key;
+}
+
+PRBool
+nsWidget::OnPaint(nsPaintEvent &event)
+{
+  nsresult result = PR_FALSE;
+  if (mEventCallback) {
+    event.renderingContext = nsnull;
+    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
+    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+    if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
+                                                    nsnull,
+                                                    kRenderingContextIID,
+                                                    (void **)&event.renderingContext)) {
+      event.renderingContext->Init(mContext, this);
+      result = DispatchWindowEvent(&event);
+      NS_RELEASE(event.renderingContext);
+    }
+    else {
+      result = PR_FALSE;
+    }
+  }
+  return result;
+}
+
+PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
+{
+  nsEventStatus status;
+  DispatchEvent(event, status);
+  return ConvertStatus(status);
+}
+
+
+NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
+                                      nsEventStatus &aStatus)
+{
+  NS_ADDREF(event->widget);
+
+  if (nsnull != mMenuListener) {
+    if (NS_MENU_EVENT == event->eventStructType)
+      aStatus = mMenuListener->MenuSelected(NS_STATIC_CAST(nsMenuEvent&, *event));
+  }
+
+  aStatus = nsEventStatus_eIgnore;
+  if (nsnull != mEventCallback) {
+    aStatus = (*mEventCallback)(event);
+  }
+
+  // Dispatch to event listener if event was not consumed
+  if ((aStatus != nsEventStatus_eIgnore) && (nsnull != mEventListener)) {
+    aStatus = mEventListener->ProcessEvent(*event);
+  }
+  NS_RELEASE(event->widget);
+
+  return NS_OK;
+}
+
+PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
+{
+  switch(aStatus) {
+    case nsEventStatus_eIgnore:
+      return(PR_FALSE);
+    case nsEventStatus_eConsumeNoDefault:
+      return(PR_TRUE);
+    case nsEventStatus_eConsumeDoDefault:
+      return(PR_FALSE);
+    default:
+      NS_ASSERTION(0, "Illegal nsEventStatus enumeration value");
+      break;
+  }
+  return(PR_FALSE);
 }

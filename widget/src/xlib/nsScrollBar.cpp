@@ -90,18 +90,6 @@ NS_METHOD nsScrollbar::SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
   return NS_OK;
 }
 
-PRBool nsScrollbar::OnPaint()
-{
-    return PR_FALSE;
-}
-
-
-PRBool nsScrollbar::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
-
 PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
 {
   return PR_FALSE;

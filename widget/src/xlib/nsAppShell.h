@@ -30,8 +30,6 @@ class nsAppShell : public nsIAppShell
 
   NS_DECL_ISUPPORTS
 
-  PRBool                  OnPaint();
-
   // nsIAppShellInterface
   
   NS_IMETHOD            Create(int* argc, char ** argv);
@@ -50,6 +48,7 @@ class nsAppShell : public nsIAppShell
  private:
   nsDispatchListener*     mDispatchListener;
   void DispatchEvent(XEvent *event);
+  static void HandleExposeEvent(XEvent *event, nsWidget *aWidget);
 
 protected:
   nsIEventQueueService * mEventQueueService;

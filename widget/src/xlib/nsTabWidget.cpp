@@ -54,15 +54,6 @@ PRUint32 nsTabWidget::GetSelectedTab(PRUint32& aTabNumber)
   return 0;
 }
 
-PRBool nsTabWidget::OnPaint()
-{
-  return PR_FALSE;
-}
-
-PRBool nsTabWidget::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
 
 
 

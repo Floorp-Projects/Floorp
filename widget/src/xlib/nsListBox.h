@@ -40,10 +40,6 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
   NS_IMETHOD_(nsrefcnt) Release(void);          
 
-  virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool    OnPaint();
-  virtual PRBool    OnResize(nsRect &aWindowRect);
-
 
   // nsIListBox interface
   NS_IMETHOD SetMultipleSelection(PRBool aMultipleSelections);

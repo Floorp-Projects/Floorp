@@ -50,11 +50,6 @@ PRBool nsTooltipWidget::OnPaint()
   return PR_FALSE;
 }
 
-PRBool nsTooltipWidget::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 PRBool nsTooltipWidget::AutoErase()
 {
   return(PR_TRUE);

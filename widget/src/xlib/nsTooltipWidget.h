@@ -40,7 +40,6 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);          
 
   virtual PRBool OnPaint();
-  virtual PRBool OnResize(nsRect &aWindowRect);
   virtual PRBool AutoErase();
 
 

@@ -94,21 +94,6 @@ nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return nsWidget::QueryInterface(aIID,aInstancePtr);
 }
 
-PRBool nsComboBox::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsComboBox::OnPaint()
-{
-    return PR_FALSE;
-}
-
-PRBool nsComboBox::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsComboBox::PreCreateWidget(nsWidgetInitData *aInitData)
 {
   return NS_OK;

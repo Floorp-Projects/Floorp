@@ -299,8 +299,36 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 void
 nsAppShell::DispatchEvent(XEvent *event)
 {
-  printf("Window %ld Got a %s event\n",
-         event->xany.window, event_names[event->type]);
+  nsWidget *widget;
+  widget = nsWidget::getWidgetForWindow(event->xany.window);
+  // switch on the type of event
+  switch (event->type) {
+  case Expose:
+    printf("Handling expose event for window %ld\n", event->xany.window);
+    HandleExposeEvent(event, widget);
+    break;
+  default:
+    printf("Unhandled window event: Window %ld Got a %s event\n",
+           event->xany.window, event_names[event->type]);
+    break;
+  }
+}
+
+void
+nsAppShell::HandleExposeEvent(XEvent *event, nsWidget *aWidget)
+{
+  nsPaintEvent pevent;
+  pevent.message = NS_PAINT;
+  pevent.widget = aWidget;
+  pevent.eventStructType = NS_PAINT_EVENT;
+  pevent.rect = new nsRect (event->xexpose.x, event->xexpose.y,
+                            event->xexpose.width, event->xexpose.height);
+  // XXX fix this
+  pevent.time = 0;
+  NS_ADDREF(aWidget);
+  aWidget->OnPaint(pevent);
+  NS_RELEASE(aWidget);
+  delete pevent.rect;
 }
 
 static PRUint8 convertMaskToCount(unsigned long val)

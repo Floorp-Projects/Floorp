@@ -28,6 +28,7 @@ class nsWindow : public nsWidget
   ~nsWindow();
 protected:
   void CreateNative(Window aParent, nsRect aRect);
+  void DestroyNative(void);
 };
 
 class ChildWindow : public nsWindow

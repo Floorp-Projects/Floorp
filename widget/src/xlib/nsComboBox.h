@@ -36,11 +36,6 @@ public:
     NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
     NS_IMETHOD_(nsrefcnt) Release(void);          
 
-    // nsIWidget overrides
-    virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-    virtual PRBool OnPaint();
-    virtual PRBool OnResize(nsRect &aWindowRect);
-
     // nsIComboBox interface
     NS_IMETHOD      AddItemAt(nsString &aItem, PRInt32 aPosition);
     virtual PRInt32 FindItem(nsString &aItem, PRInt32 aStartPos);

@@ -41,9 +41,6 @@ public:
   NS_IMETHOD_(nsrefcnt) Release(void);          
   
   // nsIWidget Overrides
-  virtual PRBool          OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool          OnPaint();
-  virtual PRBool          OnResize(nsRect &aWindowRect);
   NS_IMETHOD              Paint(nsIRenderingContext& aRenderingContext,
 				const nsRect& aDirtyRect);
   
