@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -157,8 +157,30 @@ function onFinish() {
 // use: to prepopulate the wizard with account information
 function AccountDataToPageData(accountData, pageData)
 {
-    if (accountData.incomingServer) {
-        var server = accountData.incomingServer;
+    if (!accountData) {
+        dump("null account data! clearing..\n");
+        // handle null accountData as if it were an empty object
+        // so that we clear-out any old pagedata from a
+        // previous accountdata. The trick is that
+        // with an empty object, accountData.identity.slot is undefined,
+        // so this will clear out the prefill data in setPageData
+        
+        accountData = new Object;
+        accountData.incomingServer = new Object;
+        accountData.identity = new Object;
+        accountData.smtp = new Object;
+    }
+    
+    var server = accountData.incomingServer;
+
+    if (server.type == undefined) {
+        // clear out the old server data
+        setPageData(pageData, "accounttype", "mailaccount", undefined);
+        setPageData(pageData, "accounttype", "newsaccount", undefined);
+        setPageData(pageData, "server", "servertype", undefined);
+        setPageData(pageData, "server", "hostname", undefined);
+        
+    } else {
         
         if (server.type == "nntp") {
             setPageData(pageData, "accounttype", "newsaccount", true);
@@ -170,13 +192,13 @@ function AccountDataToPageData(accountData, pageData)
             setPageData(pageData, "server", "servertype", server.type);
             setPageData(pageData, "server", "hostname", server.hostName);
         }
-        
-        setPageData(pageData, "login", "username", server.username);
-        setPageData(pageData, "login", "password", server.password);
-        setPageData(pageData, "login", "rememberPassword", server.rememberPassword);
-        setPageData(pageData, "accname", "prettyName", server.prettyName);
     }
-
+    
+    setPageData(pageData, "login", "username", server.username);
+    setPageData(pageData, "login", "password", server.password);
+    setPageData(pageData, "login", "rememberPassword", server.rememberPassword);
+    setPageData(pageData, "accname", "prettyName", server.prettyName);
+    
     var identity;
     
     if (accountData.identity) {
@@ -186,17 +208,18 @@ function AccountDataToPageData(accountData, pageData)
     else if (accountData.identities) {
         identity = accountData.identities.QueryElementAt(0, Components.interfaces.nsIMsgIdentity);
         dump("this is an account, id= " + identity + "\n");
-    }
-    if (identity) {
-        setPageData(pageData, "identity", "email", identity.email);
-        setPageData(pageData, "identity", "fullName", identity.fullName);
-    }
+    } 
 
-    if (accountData.smtp) {
-        setPageData(pageData, "server", "smtphostname",
-                    accountData.smtp.hostname);
-    }
+    setPageData(pageData, "identity", "email", identity.email);
+    setPageData(pageData, "identity", "fullName", identity.fullName);
+
+    var smtp;
     
+    if (accountData.smtp) {
+        smtp = accountData.smtp;
+        setPageData(pageData, "server", "smtphostname",
+                    smtp.hostname);
+    }
 }
 
 
@@ -469,13 +492,16 @@ function AccountToAccountData(account)
 
 // sets the page data, automatically creating the arrays as necessary
 function setPageData(pageData, tag, slot, value) {
-    if (!value) return;
-    if (value == "") return;
-    
     if (!pageData[tag]) pageData[tag] = [];
-    if (!pageData[tag][slot]) pageData[tag][slot] = [];
-    
-    pageData[tag][slot].value = value;
+
+    if (value == undefined) {
+        // clear out this slot
+        if (pageData[tag][slot]) delete pageData[tag][slot];
+    } else {
+        // pre-fill this slot
+        if (!pageData[tag][slot]) pageData[tag][slot] = [];
+        pageData[tag][slot].value = value;
+    }
 }
 
 // value of checkbox on the first page
@@ -511,6 +537,11 @@ function UpdateWizardMap() {
 function updateMap(pageData, wizardMap) {
     dump("Updating wizard map..\n");
     if (pageData.accounttype) {
+        dump("Accounttype is mail: " + pageData.accounttype.mailaccount + "\n");
+        // set up default account stuff
+        wizardMap.identity.next = "server";
+        wizardMap.done.previous = "accname";
+        
         if (pageData.accounttype.mailaccount &&
             pageData.accounttype.mailaccount.value) {
 
@@ -519,9 +550,6 @@ function updateMap(pageData, wizardMap) {
             if (currentAccountData && currentAccountData.wizardSkipPanels) {
                 wizardMap.identity.next = "done";
                 wizardMap.done.previous = "identity";
-            } else {
-                wizardMap.identity.next = "server";
-                wizardMap.done.previous = "accname";
             }
         }
 
@@ -531,7 +559,7 @@ function updateMap(pageData, wizardMap) {
             wizardMap.accname.previous = "newsserver";
         }
         else {
-            dump("Handle other types here?");
+            dump("Handle other types (" + pageData.accounttype + ") here?\n");
         }
     }
 
@@ -548,17 +576,12 @@ function PrefillAccountForIsp(ispName)
     dump("AccountWizard.prefillAccountForIsp(" + ispName + ")\n");
 
     var ispData = getIspDefaultsForUri(ispName);
-
-    // no data for this isp, just return
-    if (!ispData) return;
     
     var pageData = GetPageData();
 
-    dump("incoming server: \n");
-    for (var i in ispData.incomingServer)
-        dump("ispData.incomingserver." + i + " = " + ispData.incomingServer[i] + "\n");
 
     // prefill the rest of the wizard
+    dump("PrefillAccountForISP: filling with " + ispData + "\n");
     currentAccountData = ispData;
     AccountDataToPageData(ispData, pageData);
 }

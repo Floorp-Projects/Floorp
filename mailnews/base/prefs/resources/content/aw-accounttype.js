@@ -32,21 +32,24 @@ function onInit() {
 // basically: templates can't set the "id" attribute on a node, so we
 // have to set "fakeid" and then transfer it manually
 function fixLabels(box) {
+    dump("Fixing labels on " + box + "\n");
     if (!box) return;
     var child = box.firstChild;
 
     var haveDynamicInputs = false;
     while (child) {
-        if (child.tagName.toLowerCase() == "html") {
+        dump("Checking <" + child.localName + ">\n");
+        if (child.localName.toLowerCase() == "box") {
             var input = child.childNodes[0];
             var label = child.childNodes[1];
 
-            if (input.tagName.toLowerCase() == "input" &&
-                label.tagName.toLowerCase() == "label") {
+            if (input.localName.toLowerCase() == "input" &&
+                label.localName.toLowerCase() == "label") {
                 
                 var fakeid = input.getAttribute("fakeid");
                 if (fakeid && fakeid != "") {
                     input.setAttribute("id", fakeid);
+                    dump("Found dynamic inputs!\n");
                     haveDynamicInputs = true;
                 }
             }
@@ -57,6 +60,7 @@ function fixLabels(box) {
 
     if (haveDynamicInputs) {
         var subButtons = document.getElementById("mailSubButtons");
+        dump("hiding " + subButtons + "\n");
         subButtons.removeAttribute("hidden");
     }
 }
@@ -68,8 +72,8 @@ function onMailChanged(event) {
 
 function enableControls(node, enabled)
 {
-    var tagName = node.tagName.toLowerCase();
-    if (tagName == "input" || tagName == "label") {
+    var localName = node.localName.toLowerCase();
+    if (localName == "input" || localName == "label") {
         if (enabled)
             node.setAttribute("disabled", "true");
         else
@@ -120,3 +124,4 @@ function initializeIspData()
     parent.PrefillAccountForIsp(ispName);
     parent.UpdateWizardMap();
 }
+

@@ -42,7 +42,7 @@ Rights Reserved.
     <html:input type="radio" name="acctyperadio" id="mailaccount" onclick="onMailChanged(event);" value="mail" checked="1"/>
     <html:label for="mailaccount">&accountTypeMail.label;</html:label>
   </box>
-  <box orient="vertical" style="margin-left: 10px" id="mailSubButtons" >
+  <box orient="vertical" style="margin-left: 10px" id="mailSubButtons" hidden="true">
   <box orient="vertical" 
             datasources="rdf:ispdefaults" 
             containment="http://home.netscape.com/NC-rdf#providers"
@@ -51,7 +51,7 @@ Rights Reserved.
   <template>
     <rule>
       <box uri="...">
-        <html:input type="radio" name="ispchoice" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" id="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
+        <html:input type="radio" name="ispchoice" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
         <html:label for="rdf:http://home.netscape.com/NC-rdf#wizardShortName">
           <text value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
         </html:label>

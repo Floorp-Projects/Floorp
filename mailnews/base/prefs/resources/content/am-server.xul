@@ -64,9 +64,7 @@
 
   <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer"
             value="&deleteOnServer.label;"/>
-  <checkbox wsm_persist="true" id="pop3.emptyTrashOnExit"
-            value="&emptyTrashOnExit.label;"/>
-  <box>
+  <box iscontrolcontainer="true">
     <checkbox wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
     <textfield wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
     <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
@@ -85,8 +83,8 @@
 
   <checkbox wsm_persist="true" id="imap.cleanupInboxOnExit"
             value="&expungeOnExit.label;"/>
-  <checkbox wsm_persist="true" id="imap.emptyTrashOnExit" iscontrolcontainer="true"
-            value="&emptyTrashOnExit.label;"/>
+  <checkbox wsm_persist="true" id="server.emptyTrashOnExit" iscontrolcontainer="true"
+            value="&emptyTrashOnExit.label;" hidefor="nntp"/>
 
   <box iscontrolcontainer="true">
     <box orient="horizontal">
