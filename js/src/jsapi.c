@@ -2034,7 +2034,6 @@ JS_CompileUCScriptForPrincipals(JSContext *cx, JSObject *obj,
     return CompileTokenStream(cx, obj, ts, mark);
 }
 
-#ifdef JSFILE
 JS_PUBLIC_API(JSScript *)
 JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 {
@@ -2048,7 +2047,6 @@ JS_CompileFile(JSContext *cx, JSObject *obj, const char *filename)
 	return NULL;
     return CompileTokenStream(cx, obj, ts, mark);
 }
-#endif
 
 JS_PUBLIC_API(JSObject *)
 JS_NewScriptObject(JSContext *cx, JSScript *script)
