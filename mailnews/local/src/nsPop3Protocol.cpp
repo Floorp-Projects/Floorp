@@ -1402,7 +1402,7 @@ PRInt32 nsPop3Protocol::ProcessAuth()
         if (m_socketType == nsIMsgIncomingServer::tryTLS ||
             m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
         {
-            nsCAutoString command("CAPA" CRLF);
+            nsCAutoString command("STLS" CRLF);
 
             m_pop3ConData->next_state_after_response = POP3_TLS_RESPONSE;
             return SendData(m_url, command.get());
