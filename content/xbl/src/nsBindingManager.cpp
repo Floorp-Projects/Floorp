@@ -1060,9 +1060,10 @@ nsBindingManager::GetXBLDocumentInfo(const nsCString& aURL, nsIXBLDocumentInfo**
     return NS_OK;
 
   StringToObjectEntry *entry = mDocumentTable.GetEntry(aURL);
-  *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, entry->GetValue());
-  NS_IF_ADDREF(*aResult);
-
+  if (entry) {
+    *aResult = NS_STATIC_CAST(nsIXBLDocumentInfo*, entry->GetValue());
+    NS_IF_ADDREF(*aResult);
+  }
   return NS_OK;
 }
 
