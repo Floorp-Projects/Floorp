@@ -29,7 +29,7 @@
 
 /* Primary cursor is text I-beam */
 
-:canvas, a:link {
+::-moz-canvas, a:link {
   cursor: text;
 }
 
