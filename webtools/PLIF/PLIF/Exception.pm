@@ -29,10 +29,10 @@
 package PLIF::Exception;
 use strict;
 use vars qw(@ISA @EXPORT);
-use overload '""' => 'stringify';
+use overload '""' => 'stringify', 'cmp' => 'comparison';
 require Exporter;
 @ISA = qw(Exporter);
-@EXPORT = qw(try raise handle with unhandled except finally);
+@EXPORT = qw(try raise handle with unhandled except otherwise finally);
 
 # To use this package, you first have to define your own exceptions:
 #
@@ -48,7 +48,7 @@ require Exporter;
 #         # ... more code ...
 #     } handle MemoryException with {
 #         my($exception) = @_;
-#         raise $exception; # reraise 
+#         raise $exception; # reraise
 #     } handle IOException with {
 #         my($exception) = @_;
 #         unhandled; # fall through to the following handlers
@@ -133,7 +133,7 @@ sub try(&;$) {
 sub handle($$) {
     my($class, $continuation, @more) = @_;
     syntax "Syntax error in \"handle ... with\" clause: \"$class\" is not a PLIF::Exception class", caller unless $class->isa('PLIF::Exception');
-    if (not defined($continuation) or 
+    if (not defined($continuation) or
         not ref($continuation) or
         not $continuation->isa('PLIF::Exception::Internal::With')) {
         syntax 'Syntax error: missing "with" operator in "handle" clause', caller;
@@ -151,7 +151,7 @@ sub handle($$) {
 
 sub with(&;$) {
     my($handler, $continuation) = @_;
-    if (not defined($continuation) or 
+    if (not defined($continuation) or
         not ref($continuation) or
         not $continuation->isa('PLIF::Exception::Internal::Continuation')) {
         syntax 'Syntax error after "handle ... with" clause', caller;
@@ -206,11 +206,20 @@ sub unhandled() {
 
 sub stringify {
     my $self = shift;
-    if (defined($self->{'message'}) {
+    if (defined($self->{'message'})) {
         return "$self->{'message'} at $self->{'filename'} line $self->{'line'}";
     } else {
         return ref($self) . " exception at $self->{'filename'} line $self->{'line'}";
     }
+}
+
+sub comparison {
+    my($a, $b, $reverse) = @_;
+    my $result = ((defined($a) and defined($b)) ? ("$a" cmp "$b") :
+                  defined($a) ? 1 :
+                  defined($b) ? -1 :
+                  0);
+    return $reverse ? !$result : $result;
 }
 
 
@@ -342,3 +351,6 @@ sub DESTROY {
     return $self->SUPER::DESTROY(@_) if $self->{'resolved'};
     warn "Incorrectly used \"unhandled\" function at $self->{'filename'} line $self->{'line'}\n"; # XXX can't raise an exception in a destructor
 }
+
+
+package PLIF::Exception::Alarm; use vars qw(@ISA); @ISA = qw(PLIF::Exception);
