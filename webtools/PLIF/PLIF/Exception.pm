@@ -29,6 +29,7 @@
 package PLIF::Exception;
 use strict;
 use vars qw(@ISA @EXPORT);
+use overload '""' => 'stringify';
 require Exporter;
 @ISA = qw(Exporter);
 @EXPORT = qw(try raise handle with unhandled except finally);
@@ -73,6 +74,7 @@ sub create {
 
 sub raise {
     my($exception, @data) = @_;
+    my($package, $filename, $line) = caller;
     if (ref($exception) and $exception->isa('PLIF::Exception')) {
         # if the exception is an object, raise it
         # this is for people doing things like:
@@ -81,6 +83,8 @@ sub raise {
         #   my $memoryException = MemoryException->create();
         #   # ...
         #   $memoryException->raise();
+        $exception->{'filename'} = $filename;
+        $exception->{'line'} = $line;
         die $exception;
     } else {
         # otherwise, assume we were called as a constructor
@@ -91,7 +95,11 @@ sub raise {
         # or:
         #   IOException->raise('message' => $!);
         syntax "Syntax error in \"raise\": \"$exception\" is not a PLIF::Exception class", caller unless $exception->isa('PLIF::Exception');
-        die $exception->create(@data);
+        die $exception->create(
+            'filename' => $filename,
+            'line' => $line,
+            @data
+        );
     }
 }
 
@@ -172,6 +180,15 @@ sub finally(&;@) {
 
 sub unhandled() {
     return PLIF::Exception::Internal::Unhandled->create(caller);
+}
+
+sub stringify {
+    my $self = shift;
+    if (defined($self->{'message'}) {
+        return "$self->{'message'} at $self->{'filename'} line $self->{'line'}";
+    } else {
+        return ref($self) . " exception at $self->{'filename'} line $self->{'line'}";
+    }
 }
 
 
