@@ -44,6 +44,7 @@ static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
 static NS_DEFINE_CID(kDNSService, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+
 //
 // This is the State table which maps current state to next state
 // for each socket operation...
@@ -306,7 +307,7 @@ nsresult nsSocketTransport::Init(nsSocketTransportService* aService,
     PR_LOG(gSocketLog, PR_LOG_DEBUG, 
         ("Initializing nsSocketTransport [%s:%d %x].  rv = %x",
         mHostName, mPort, this, rv));
-    
+
     return rv;
 }
 
@@ -2398,9 +2399,8 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
         case eSocketState_Created: 
         case eSocketState_WaitDNS:
             {
-                  // STRING USE WARNING: this needs to be looked at -- scc
-                static nsAutoString mesg; mesg.AssignWithConversion("Resolving host ");
-                *oString = mesg.ToNewUnicode();
+                // STRING USE WARNING: this needs to be looked at -- scc
+                mService -> GetNeckoStringByName ("ResolvingHost", oString);
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
             }
@@ -2408,8 +2408,7 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
         case eSocketState_Connected:
             {
                   // STRING USE WARNING: this needs to be looked at -- scc
-                static nsAutoString mesg; mesg.AssignWithConversion("Connected to ");
-                *oString = mesg.ToNewUnicode();
+                mService -> GetNeckoStringByName ("ConnectedTo", oString);
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
             }
@@ -2419,8 +2418,11 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
                   // STRING USE WARNING: this needs to be looked at -- scc
                 static nsAutoString frommesg; frommesg.AssignWithConversion("Transferring data from ");
                 static nsAutoString tomesg; tomesg.AssignWithConversion("Sending request to ");
-                *oString = (mWriteContext == nsnull) ? 
-                    frommesg.ToNewUnicode() : tomesg.ToNewUnicode();
+                if (mWriteContext == nsnull)
+                    mService -> GetNeckoStringByName ("SendingRequestTo", oString);
+                else
+                    mService -> GetNeckoStringByName ("TransferringDataFrom", oString);
+
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
             }
@@ -2428,8 +2430,7 @@ nsSocketTransport::GetSocketErrorString(PRUint32 iCode,
         case eSocketState_WaitConnect:
             {
                   // STRING USE WARNING: this needs to be looked at -- scc
-                static nsAutoString mesg; mesg.AssignWithConversion("Connecting to ");
-                *oString = mesg.ToNewUnicode();
+                mService -> GetNeckoStringByName ("ConnectingTo", oString);
                 if (!*oString) return NS_ERROR_OUT_OF_MEMORY;
                 rv = NS_OK;
             }

@@ -28,8 +28,10 @@
 #include "nsAutoLock.h"
 #include "nsIIOService.h"
 #include "nsIServiceManager.h"
+#include "nsString.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
 nsSocketTransportService::nsSocketTransportService ()   :
     mConnectedTransports (0),
@@ -649,4 +651,50 @@ nsSocketTransportService::GetInUseTransportCount     (PRUint32 * o_TransCount)
 
     *o_TransCount = (PRUint32) mSelectFDSetCount;
     return NS_OK;
+}
+
+nsresult
+nsSocketTransportService::GetNeckoStringByName (const char *aName, PRUnichar **aString)
+{
+	nsresult res;
+	nsAutoString	resultString; resultString.AssignWithConversion(aName);
+
+    if (!m_stringBundle)
+    {
+	    char*  propertyURL = NECKO_MSGS_URL;
+
+        NS_WITH_SERVICE(nsIStringBundleService, sBundleService, kStringBundleServiceCID, &res);
+	    if (NS_SUCCEEDED (res) && (nsnull != sBundleService)) 
+	    {
+		    nsILocale   *locale = nsnull;
+		    res = sBundleService->CreateBundle(propertyURL, locale, getter_AddRefs(m_stringBundle));
+	    }
+    }
+
+    if (m_stringBundle)
+	{
+		nsAutoString unicodeName; unicodeName.AssignWithConversion(aName);
+
+		PRUnichar *ptrv = nsnull;
+		res = m_stringBundle->GetStringFromName(unicodeName.GetUnicode(), &ptrv);
+
+		if (NS_FAILED(res)) 
+		{
+			resultString.AssignWithConversion("[StringName");
+			resultString.AppendWithConversion(aName);
+			resultString.AppendWithConversion("?]");
+			*aString = resultString.ToNewUnicode();
+		}
+		else
+		{
+			*aString = ptrv;
+		}
+	}
+	else
+	{
+		res = NS_OK;
+		*aString = resultString.ToNewUnicode();
+	}
+
+	return res;
 }
