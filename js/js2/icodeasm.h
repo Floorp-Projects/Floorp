@@ -118,7 +118,6 @@ namespace ICodeASM {
     };
     
     struct StatementNode {
-        iter begin;
         uint icodeID;
         AnyOperand operand[4];
     };
@@ -127,10 +126,11 @@ namespace ICodeASM {
     {
     private:
         ICodeParser(const ICodeParser&); /* No copy constructor */
-
+        
         Interpreter::Context *mCx;
-        uint mMaxRegister;
-        std::vector<StatementNode *> mStatementNodes;
+        uint32 mInstructionCount;
+        uint32 mMaxRegister;
+        VM::InstructionStream mInstructions;
         VM::LabelList mUnnamedLabels;
         typedef std::map<const char *, VM::Label*> LabelMap;
         LabelMap mNamedLabels;
@@ -160,7 +160,7 @@ namespace ICodeASM {
          * the start of the token with |SeekTokenStart|, and checking the
          * "estimation" (explicit checking takes care of |begin| == |end|,
          * aka EOF, because EOF is a token estimate.)  Once the start of the
-         * token is found, and it is the expected type, the actual parsing is
+         * token is found, and it is of the expected type, the actual parsing is
          * carried out by one of the general purpose parse functions.
          */
         iter ParseArgumentListOperand (iter begin, iter end,

@@ -191,7 +191,14 @@
         CompareEQ (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_EQ, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_EQ] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class CompareGE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -200,7 +207,14 @@
         CompareGE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_GE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_GE] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class CompareGT : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -209,7 +223,14 @@
         CompareGT (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_GT, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_GT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class CompareIN : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -218,7 +239,14 @@
         CompareIN (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_IN, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_IN] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class CompareLE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -227,7 +255,14 @@
         CompareLE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_LE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_LE] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class CompareLT : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -236,7 +271,14 @@
         CompareLT (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_LT, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_LT] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class CompareNE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -245,7 +287,14 @@
         CompareNE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_NE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[COMPARE_NE] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class Debugger : public Instruction {
@@ -279,11 +328,11 @@
         }
     };
 
-    class DirectCall : public Instruction_3<TypedRegister, JSFunction *, ArgumentList> {
+    class DirectCall : public Instruction_3<TypedRegister, JSFunction*, ArgumentList> {
     public:
         /* result, target, args */
-        DirectCall (TypedRegister aOp1, JSFunction * aOp2, ArgumentList aOp3) :
-            Instruction_3<TypedRegister, JSFunction *, ArgumentList>
+        DirectCall (TypedRegister aOp1, JSFunction* aOp2, ArgumentList aOp3) :
+            Instruction_3<TypedRegister, JSFunction*, ArgumentList>
             (DIRECT_CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
             f << opcodeNames[DIRECT_CALL] << "\t" << mOp1 << ", " << "JSFunction" << ", " << mOp3;
@@ -422,7 +471,14 @@
         Instanceof (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (INSTANCEOF, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[INSTANCEOF] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class Jsr : public GenericBranch {
@@ -888,7 +944,14 @@
         StrictEQ (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (STRICT_EQ, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[STRICT_EQ] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class StrictNE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
@@ -897,7 +960,14 @@
         StrictNE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (STRICT_NE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[STRICT_NE] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
     };
 
     class Subtract : public Arithmetic {
