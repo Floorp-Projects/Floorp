@@ -24,16 +24,14 @@
 [scriptable, uuid(77947960-b4af-11d2-bd93-00805f8ae3f4)]
 interface nsIDOMScreen : nsISupports
 {
-
-		readonly attribute long top;
-		readonly attribute long left;
-        readonly attribute long width;
-        readonly attribute long height;
-        readonly attribute long pixelDepth;
-        readonly attribute long colorDepth;
-        readonly attribute long availWidth;
-        readonly attribute long availHeight;
-        readonly attribute long availLeft;
-        readonly attribute long availTop;
+  readonly attribute long             top;
+  readonly attribute long             left;
+  readonly attribute long             width;
+  readonly attribute long             height;
+  readonly attribute long             pixelDepth;
+  readonly attribute long             colorDepth;
+  readonly attribute long             availWidth;
+  readonly attribute long             availHeight;
+  readonly attribute long             availLeft;
+  readonly attribute long             availTop;
 };
-

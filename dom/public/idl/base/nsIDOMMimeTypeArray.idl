@@ -24,8 +24,9 @@
 [scriptable, uuid(f6134683-f28b-11d2-8360-c90899049c3c)]
 interface nsIDOMMimeTypeArray : nsISupports
 {
-   readonly attribute  unsigned long	length;
-   nsIDOMMimeType			                    item(in unsigned long index);
-   nsIDOMMimeType								namedItem(in DOMString name);
+  readonly attribute unsigned long    length;
+
+  nsIDOMMimeType            item(in unsigned long index);
+  nsIDOMMimeType            namedItem(in DOMString name);
 };
 

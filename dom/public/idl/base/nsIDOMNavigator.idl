@@ -24,25 +24,27 @@
 [scriptable, uuid(a6cf906e-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNavigator : nsISupports
 {
+  readonly attribute DOMString           appCodeName;
+  readonly attribute DOMString           appName;
+  readonly attribute DOMString           appVersion;
+  readonly attribute DOMString           language;
+  readonly attribute nsIDOMMimeTypeArray mimeTypes;
+  readonly attribute DOMString           platform;
+  readonly attribute DOMString           oscpu;
+  readonly attribute DOMString           vendor;
+  readonly attribute DOMString           vendorSub;
+  readonly attribute DOMString           product;
+  readonly attribute DOMString           productSub;
+  readonly attribute nsIDOMPluginArray   plugins;
+  readonly attribute DOMString           securityPolicy;
+  readonly attribute DOMString           userAgent;
+  readonly attribute boolean             cookieEnabled;
 
-	readonly attribute DOMString		appCodeName;
-	readonly attribute DOMString		appName;
-	readonly attribute DOMString		appVersion;
-	readonly attribute DOMString		language;
-	readonly attribute nsIDOMMimeTypeArray	mimeTypes;
-	readonly attribute DOMString		platform;
-    readonly attribute DOMString        oscpu;
-    readonly attribute DOMString        vendor;
-    readonly attribute DOMString        vendorSub;
-    readonly attribute DOMString        product;
-    readonly attribute DOMString        productSub;
-	readonly attribute nsIDOMPluginArray		plugins;
-	readonly attribute DOMString		securityPolicy;
-	readonly attribute DOMString		userAgent;
-	readonly attribute boolean              cookieEnabled;
+  boolean                   javaEnabled();
+  boolean                   taintEnabled();
 
-	boolean    javaEnabled();
-	boolean    taintEnabled();
-	jsval      preference(/* ... */);
+  // XXX This one's tough, would nsISupports preference(in DOMString
+  // pref /*, ... */); work?
+
+  // jsval      preference(/* ... */);
 };
-

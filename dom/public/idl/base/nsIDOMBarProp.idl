@@ -24,7 +24,5 @@
 [scriptable, uuid(9eb2c150-1d56-11d3-8221-0060083a0bcf)]
 interface nsIDOMBarProp : nsISupports
 {
-
-        attribute boolean visible;
+           attribute boolean          visible;
 };
-

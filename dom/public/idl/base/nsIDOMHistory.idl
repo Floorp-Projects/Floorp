@@ -24,15 +24,13 @@
 [scriptable, uuid(896d1d20-b4c4-11d2-bd93-00805f8ae3f4)]
 interface nsIDOMHistory : nsISupports
 {
+  readonly attribute long             length;
+  readonly attribute DOMString        current;
+  readonly attribute DOMString        previous;
+  readonly attribute DOMString        next;
 
-        readonly attribute long length;
-        readonly attribute DOMString current;
-        readonly attribute DOMString previous;
-        readonly attribute DOMString next;
-
-		void back();
-		void forward();
-		void go(/* ... */);
-		DOMString item(in unsigned long index);
+  void                       back();
+  void                       forward();
+  void                       go(/* ... */);
+  DOMString                  item(in unsigned long index);
 };
-

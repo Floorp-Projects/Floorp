@@ -24,7 +24,5 @@
 [scriptable, uuid(16da46c0-208d-11d4-8a7c-006008c844c3)]
 interface nsIDOMCRMFObject : nsISupports
 {
-
-	readonly attribute DOMString request;
+  readonly attribute DOMString        request;
 };
-

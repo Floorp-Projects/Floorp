@@ -24,13 +24,11 @@
 [scriptable, uuid(f6134681-f28b-11d2-8360-c90899049c3c)]
 interface nsIDOMPlugin : nsISupports
 {
-	readonly attribute DOMString			description;
-	readonly attribute DOMString			filename;
-	readonly attribute DOMString			name;
+  readonly attribute DOMString        description;
+  readonly attribute DOMString        filename;
+  readonly attribute DOMString        name;
 
-
-	readonly attribute  unsigned long		length;
-	nsIDOMMimeType			                    item(in unsigned long index);
-	nsIDOMMimeType								namedItem(in DOMString name);
+  readonly attribute unsigned long    length;
+  nsIDOMMimeType            item(in unsigned long index);
+  nsIDOMMimeType            namedItem(in DOMString name);
 };
-

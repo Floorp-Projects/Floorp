@@ -24,9 +24,10 @@
 [scriptable, uuid(f6134680-f28b-11d2-8360-c90899049c3c)]
 interface nsIDOMPluginArray : nsISupports
 {
-   readonly attribute  unsigned long	length;
-   nsIDOMPlugin			                    item(in unsigned long index);
-   nsIDOMPlugin								namedItem(in DOMString name);
-   void									refresh(in boolean reloadDocuments);
-};
+  readonly attribute unsigned long    length;
 
+  nsIDOMPlugin              item(in unsigned long index);
+  nsIDOMPlugin              namedItem(in DOMString name);
+
+  void                      refresh(in boolean reloadDocuments);
+};

@@ -24,20 +24,18 @@
 [scriptable, uuid(a6cf906d-15b3-11d2-932e-00805f8add32)]
 interface Location : nsISupports
 {
+           attribute DOMString        hash;
+           attribute DOMString        host;
+           attribute DOMString        hostname;
+           attribute DOMString        href;
+           attribute DOMString        pathname;
+           attribute DOMString        port;
+           attribute DOMString        protocol;
+           attribute DOMString        search;
 
-        attribute DOMString hash;
-        attribute DOMString host;
-        attribute DOMString hostname;
-        [noscript] attribute DOMString href;
-        attribute DOMString pathname;
-        attribute DOMString port;
-        attribute DOMString protocol;
-        attribute DOMString search;
+  [noscript] void           reload(in boolean forceget);
+  [noscript] void           replace(in DOMString url);
+  void                      assign(in DOMString url);
 
-        [noscript] void reload(in boolean forceget);
-        [noscript] void replace(in DOMString url);
-        void assign(in DOMString url);
-
-        DOMString toString();
+  DOMString                 toString();
 };
-
