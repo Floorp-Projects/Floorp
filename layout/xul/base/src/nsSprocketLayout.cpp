@@ -582,6 +582,19 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
             originalClientRect.height = clientRect.height;
         }
 
+        if (!(frameState & NS_STATE_IS_DIRECTION_NORMAL)) {
+          // Our childRect had its XMost() or YMost() (depending on our layout
+          // direction), positioned at a certain point.  Ensure that the
+          // newChildRect satisfies the same constraint.  Note that this is
+          // just equivalent to adjusting the x/y by the difference in
+          // width/height between childRect and newChildRect.  So we don't need
+          // to reaccount for the left and right of the box layout state again.
+          if (frameState & NS_STATE_IS_HORIZONTAL)
+            newChildRect.x = childRect.XMost() - newChildRect.width;
+          else
+            newChildRect.y = childRect.YMost() - newChildRect.height;
+        }
+
         // If the child resized then recompute its position.
         ComputeChildsNextPosition(aBox, child, 
                                   x, 
