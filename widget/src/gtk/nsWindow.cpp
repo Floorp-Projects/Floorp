@@ -305,8 +305,8 @@ nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
   if (mEventCallback) 
   {
     nsPaintEvent event;
-    nsRect rect (aX, aY, aWidth, aHeight);
- 
+    nsRect rect(aX, aY, aWidth, aHeight);
+
     event.message = NS_PAINT;
     event.widget = (nsWidget *)this;
     event.eventStructType = NS_PAINT_EVENT;
@@ -1283,6 +1283,9 @@ struct GtkLayoutChild {
 
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
+  UnqueueDraw();
+  mUpdateArea->SetTo(0,0,0,0);
+
   if (mSuperWin) {
     gdk_superwin_scroll(mSuperWin, aDx, aDy);
   }
@@ -1575,7 +1578,7 @@ nsresult nsWindow::SetIcon(GdkPixmap *pixmap,
  **/
 PRBool nsWindow::OnExpose(nsPaintEvent &event)
 {
-  nsresult result ;
+  nsresult result;
 
   // call the event callback
   if (mEventCallback) 
@@ -1590,10 +1593,12 @@ PRBool nsWindow::OnExpose(nsPaintEvent &event)
     //    event.region = mUpdateArea;
 
 
+    mUpdateArea->Intersect(0, 0, mBounds.width, mBounds.height);
+
     //    printf("\n\n");
     PRInt32 x, y, w, h;
     mUpdateArea->GetBoundingBox(&x,&y,&w,&h);
-    //    printf("should be painting x = %i , y = %i , w = %i , h = %i\n", x, y, w, h);
+
     //    printf("\n\n");
     event.rect->x = x;
     event.rect->y = y;
