@@ -144,7 +144,8 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
           deletedFrame->GetNextSibling(mFirstChild);
         } else {
           nsIFrame* prevSibling = nsnull;
-          for (nsIFrame* f = mFirstChild; nsnull != f; f->GetNextSibling(f)) {
+          nsIFrame* f;
+          for (f = mFirstChild; nsnull != f; f->GetNextSibling(f)) {
             if (f == deletedFrame) {
               break;
             }
