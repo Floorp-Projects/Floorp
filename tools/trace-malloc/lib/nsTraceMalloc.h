@@ -211,6 +211,11 @@ NS_TraceMallocDumpAllocations(const char *pathname);
 PR_EXTERN(void)
 NS_TraceMallocFlushLogfiles(void);
 
+/**
+ * Track all realloc and free calls operating on a given allocation.
+ */
+PR_EXTERN(void)
+NS_TrackAllocation(__ptr_t ptr, FILE *ofp);
 
 PR_END_EXTERN_C
 
