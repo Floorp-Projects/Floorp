@@ -17,7 +17,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Alan Raetz <al_raetz@yahoo.com>
 #                 David Miller <justdave@syndicomm.com>
-#
+#                 Christopher Aillon <christopher@aillon.com>
 
 use diagnostics;
 use strict;
@@ -171,7 +171,7 @@ sub SaveAccount {
                  WHERE   userid = $userid");
     }
     SendSQL("UPDATE profiles SET " .
-            "realname = " . SqlQuote($::FORM{'realname'}) .
+            "realname = " . SqlQuote(trim($::FORM{'realname'})) .
             " WHERE userid = $userid");
 }
 

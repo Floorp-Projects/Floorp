@@ -21,6 +21,7 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 David Gardiner <david.gardiner@unisa.edu.au>
 #                 Joe Robins <jmrobins@tgix.com>
+#                 Christopher Aillon <christopher@aillon.com>
 
 use diagnostics;
 use strict;
@@ -53,7 +54,7 @@ if(Param('useLDAP')) {
 }
 
 my $login = $::FORM{'login'};
-my $realname = $::FORM{'realname'};
+my $realname = trim($::FORM{'realname'});
 if (defined $login) {
     CheckEmailSyntax($login);
     if (DBname_to_id($login) != 0) {
