@@ -257,12 +257,12 @@ real_checkout:
 	@: Start the checkout. Split the output to the tty and a log file. \
 	 : If it fails, touch an error file because "tee" hides the error.
 	@failed=.cvs-failed.tmp; rm -f $$failed*; \
-	cvs_co='echo $$cmd ; \
-	  (eval "$$cmd" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
-	  if test -f $$failed; then false; else true; fi;'; \
-	cmd='$(CVSCO_NSPR)'      && eval $$cvs_co && \
-	cmd='$(CVSCO_PSM)'       && eval $$cvs_co && \
-	cmd='$(CVSCO_SEAMONKEY)' && eval $$cvs_co
+	cvs_co() { echo "$$@" ; \
+	  ("$$@" || touch $$failed) 2>&1 | tee -a $(CVSCO_LOGFILE) && \
+	  if test -f $$failed; then false; else true; fi; }; \
+	cvs_co $(CVSCO_NSPR) && \
+	cvs_co $(CVSCO_PSM) && \
+	cvs_co $(CVSCO_SEAMONKEY) && \
 	@echo "checkout finish: "`date` | tee -a $(CVSCO_LOGFILE)
 	@: Check the log for conflicts. ;\
 	conflicts=`egrep "^C " $(CVSCO_LOGFILE)` ;\
