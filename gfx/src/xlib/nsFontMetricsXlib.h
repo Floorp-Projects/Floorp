@@ -82,10 +82,12 @@ public:
     
 
   virtual int GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
+#ifndef _IMPL_NS_XPRINT
   virtual int DrawString(nsRenderingContextXlib* aContext,
                          nsDrawingSurfaceXlib* aSurface,
                          nscoord aX, nscoord aY,
                          const PRUnichar* aString, PRUint32 aLength) = 0;
+#endif
 #ifdef USE_XPRINT
    virtual int DrawString(nsRenderingContextXp* aContext,
                           nsXPrintContext* aSurface,
