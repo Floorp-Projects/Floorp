@@ -959,8 +959,8 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
           this, rv, totalBytesWritten));
   if (mEventSink)
       // we don't have content length info at the socket level
-      // just pass -1 through.
-      rv = mEventSink->OnProgress(this, mReadContext, mReadOffset, -1);
+      // just pass 0 through.
+      rv = mEventSink->OnProgress(this, mReadContext, mReadOffset, 0);
 
   return rv;
 }
@@ -1048,8 +1048,8 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 
   if (mEventSink)
       // we don't have content length info at the socket level
-      // just pass -1 through.
-      rv = mEventSink->OnProgress(this, mWriteContext, mWriteOffset, -1);
+      // just pass 0 through.
+      rv = mEventSink->OnProgress(this, mWriteContext, mWriteOffset, 0);
 
   return rv;
 }
