@@ -227,7 +227,7 @@ BOOL CWizardMachineApp::InitInstance()
 	}
 
 	strcpy(customizationPath, currDirPath);
-	strcat(customizationPath, "customizations\\");
+	strcat(customizationPath, "Configs\\");
 
 	CString cacheExt = ".che";
 	CacheFile = CString(iniFile); 
