@@ -20,11 +20,23 @@
 
 #include "nsLWIMP.h"
 
+#include "pratom.h"
+#include "nsLWBRKDll.h"
+nsLWBreakerFImp::nsLWBreakerFImp()
+{
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+}
+nsLWBreakerFImp::~nsLWBreakerFImp()
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
 
 NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
 NS_DEFINE_IID(kILineBreakerIID, NS_ILINEBREAKER_IID);
 NS_DEFINE_IID(kIWordBreakerIID, NS_ILINEBREAKER_IID);
+NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 
 NS_IMPL_ADDREF  (  nsLWBreakerFImp );
@@ -48,7 +60,6 @@ nsresult nsLWBreakerFImp::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   if( aIID.Equals ( kISupportsIID )) {
     *aInstancePtr = (void*) (this);

@@ -25,9 +25,8 @@ class nsSampleWordBreaker : public nsIWordBreaker
 {
   NS_DECL_ISUPPORTS
 
-  nsSampleWordBreaker() {
-    NS_INIT_REFCNT();
-  }
+  nsSampleWordBreaker() ;
+  ~nsSampleWordBreaker() ;
 
   NS_IMETHOD BreakInBetween(PRUnichar* aText1 , PRUint32 aTextLen1,
                             PRUnichar* aText2 , PRUint32 aTextLen2,
