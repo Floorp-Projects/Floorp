@@ -29,8 +29,8 @@
 # issue to work out.
 
 
-# $Revision: 1.13 $ 
-# $Date: 2002/04/30 18:01:02 $ 
+# $Revision: 1.14 $ 
+# $Date: 2002/05/03 03:27:30 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TreeData.pm,v $ 
 # $Name:  $ 
@@ -241,18 +241,28 @@ foreach $tree (keys %VC_TREE) {
                          "html_color" => "white",
                          "hdml_char" => "O",
                          "order" => 1,
+                         "description" => "All Checkins allowed",
+                     },
+
+		     'Metered' => {
+                         "html_color" => '#eeff00', # a yellow
+                         "hdml_char" => "R",
+                         "order" => 2,
+                         "description" => "Checkins only by approval of Current Sherriff",
                      },
 
 		     'Restricted' => {
                          "html_color" => "#e7e7e7", # a light grey
                          "hdml_char" => "R",
                          "order" => 2,
+                         "description" => "Checkins only by approval of Drivers",
                      },
 
 		     'Closed' => {
                          "html_color" => "silver",
                          "hdml_char" => "C",
                          "order" => 3,
+                         "description" => "Checkins only by approval of QA",
                      },
 
 		    );
@@ -290,6 +300,20 @@ sub TreeState2char {
   return $char;
 }
 
+# convert a list of status strings into a list of hdml_chars
+
+sub TreeStates2descriptions {
+  my (@states) = @_;
+  my (@out);
+
+  for ($i=0; $i <= $#states; $i++) {
+    my ($state) = $states[$i];
+    my ($out) = $TREE_STATES{$state}{'description'};
+    push @out, $out;
+  }
+
+  return @out;
+}
 
 sub get_all_sorted_tree_states {
   my @tree_states;
