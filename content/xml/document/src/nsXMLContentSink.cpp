@@ -1156,18 +1156,6 @@ nsXMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
     nsIUnicharInputStream* uin = nsnull;
 
-    // Create a text node holding the content
-    nsCOMPtr<nsIContent> text;
-    rv = NS_NewTextNode(getter_AddRefs(text));
-    if (text) {
-      nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text));
-      if (tc) {
-        tc->SetData(mStyleText);
-      }
-      mStyleElement->AppendChildTo(text, PR_FALSE, PR_FALSE);
-      text->SetDocument(mDocument, PR_FALSE, PR_TRUE);
-    }
-
     // Create a string to hold the data and wrap it up in a unicode
     // input stream.
     rv = NS_NewStringUnicharInputStream(&uin, new nsString(mStyleText));
