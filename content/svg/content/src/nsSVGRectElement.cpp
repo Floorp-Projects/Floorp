@@ -136,30 +136,6 @@ nsSVGRectElement::nsSVGRectElement()
 
 nsSVGRectElement::~nsSVGRectElement()
 {
-  if (mX) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mX);
-    value->RemoveObserver(this);
-  }
-  if (mY) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mY);
-    value->RemoveObserver(this);
-  }
-  if (mWidth) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mWidth);
-    value->RemoveObserver(this);
-  }
-  if (mHeight) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mHeight);
-    value->RemoveObserver(this);
-  }
-  if (mRx) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRx);
-    value->RemoveObserver(this);
-  }
-  if (mRy) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mRy);
-    value->RemoveObserver(this);
-  }
 }
 
 
@@ -180,7 +156,7 @@ nsSVGRectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mX), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::x, mX);
+    rv = AddMappedSVGValue(nsSVGAtoms::x, mX);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -192,7 +168,7 @@ nsSVGRectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mY), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::y, mY);
+    rv = AddMappedSVGValue(nsSVGAtoms::y, mY);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -205,7 +181,7 @@ nsSVGRectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mWidth), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::width, mWidth);
+    rv = AddMappedSVGValue(nsSVGAtoms::width, mWidth);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -218,7 +194,7 @@ nsSVGRectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mHeight), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::height, mHeight);
+    rv = AddMappedSVGValue(nsSVGAtoms::height, mHeight);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   // DOM property: rx ,  #IMPLIED  attrib: rx
@@ -230,7 +206,7 @@ nsSVGRectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mRx), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::rx, mRx);
+    rv = AddMappedSVGValue(nsSVGAtoms::rx, mRx);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -243,7 +219,7 @@ nsSVGRectElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mRy), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::ry, mRy);
+    rv = AddMappedSVGValue(nsSVGAtoms::ry, mRy);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 

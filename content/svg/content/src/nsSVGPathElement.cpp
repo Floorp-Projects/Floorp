@@ -127,10 +127,6 @@ nsSVGPathElement::nsSVGPathElement()
 
 nsSVGPathElement::~nsSVGPathElement()
 {
-  if (mSegments) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mSegments);
-    value->RemoveObserver(this);
-  }
 }
 
   
@@ -146,7 +142,7 @@ nsSVGPathElement::Init()
   // d #REQUIRED
   rv = NS_NewSVGPathSegList(getter_AddRefs(mSegments));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::d, mSegments);
+  rv = AddMappedSVGValue(nsSVGAtoms::d, mSegments);
   NS_ENSURE_SUCCESS(rv,rv);
   
     

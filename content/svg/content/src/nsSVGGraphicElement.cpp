@@ -80,7 +80,7 @@ nsSVGGraphicElement::Init()
     rv = NS_NewSVGAnimatedTransformList(getter_AddRefs(mTransforms),
                                         transformList);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::transform, mTransforms);
+    rv = AddMappedSVGValue(nsSVGAtoms::transform, mTransforms);
     NS_ENSURE_SUCCESS(rv,rv);
   }
   

@@ -125,10 +125,6 @@ nsSVGPolylineElement::nsSVGPolylineElement()
 
 nsSVGPolylineElement::~nsSVGPolylineElement()
 {
-  if (mPoints) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mPoints);
-    value->RemoveObserver(this);
-  }
 }
 
   
@@ -144,7 +140,7 @@ nsSVGPolylineElement::Init()
   // points #IMPLIED
   rv = nsSVGPointList::Create(getter_AddRefs(mPoints));
   NS_ENSURE_SUCCESS(rv,rv);
-  rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::points, mPoints);
+  rv = AddMappedSVGValue(nsSVGAtoms::points, mPoints);
   NS_ENSURE_SUCCESS(rv,rv);
   
     

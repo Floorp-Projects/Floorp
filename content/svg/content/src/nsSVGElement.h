@@ -48,7 +48,6 @@
 #include "nsCOMPtr.h"
 #include "nsIDOMSVGElement.h"
 #include "nsGenericElement.h"
-#include "nsSVGAttributes.h"
 #include "nsISVGValue.h"
 #include "nsISVGValueObserver.h"
 #include "nsWeakReference.h"
@@ -82,21 +81,6 @@ public:
   virtual nsresult SetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
                            nsIAtom* aPrefix, const nsAString& aValue,
                            PRBool aNotify);
-  virtual nsresult GetAttr(PRInt32 aNameSpaceID, nsIAtom* aName,
-                           nsAString& aResult) const;
-  virtual PRBool HasAttr(PRInt32 aNameSpaceID, nsIAtom* aName) const;
-  virtual nsresult UnsetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
-                             PRBool aNotify);
-  virtual nsresult GetAttrNameAt(PRUint32 aIndex, PRInt32* aNameSpaceID,
-                                 nsIAtom** aName, nsIAtom** aPrefix) const;
-  virtual PRUint32 GetAttrCount() const;
-
-#ifdef DEBUG
-  virtual void List(FILE* out, PRInt32 aIndent) const;
-  virtual void DumpContent(FILE* out, PRInt32 aIndent,PRBool aDumpAll) const;
-#endif // DEBUG
-  
-  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const;
 
   virtual nsresult SetBindingParent(nsIContent* aParent);
 
@@ -114,7 +98,6 @@ public:
   static const MappedAttributeEntry sFontSpecificationMap[];
   
   // nsIDOMNode
-  NS_IMETHOD GetAttributes(nsIDOMNamedNodeMap** aAttributes);
   NS_IMETHOD IsSupported(const nsAString& aFeature, const nsAString& aVersion, PRBool* aReturn);
   
   // nsIDOMSVGElement
@@ -134,11 +117,39 @@ public:
   virtual void ParentChainChanged(); 
   
 protected:
+  /**
+   * Set attribute and (if needed) notify documentobservers and fire off
+   * mutation events.
+   *
+   * @param aNamespaceID  namespace of attribute
+   * @param aAttribute    local-name of attribute
+   * @param aPrefix       aPrefix of attribute
+   * @param aOldValue     previous value of attribute. Only needed if
+   *                      aFireMutation is true.
+   * @param aParsedValue  parsed new value of attribute
+   * @param aModification is this a attribute-modification or addition. Only
+   *                      needed if aFireMutation or aNotify is true.
+   * @param aFireMutation should mutation-events be fired?
+   * @param aNotify       should we notify document-observers?
+   */
+  nsresult SetAttrAndNotify(PRInt32 aNamespaceID,
+                            nsIAtom* aAttribute,
+                            nsIAtom* aPrefix,
+                            const nsAString& aOldValue,
+                            nsAttrValue& aParsedValue,
+                            PRBool aModification,
+                            PRBool aFireMutation,
+                            PRBool aNotify);
 
   nsresult CopyNode(nsSVGElement* dest, PRBool deep);
+  void UpdateContentStyleRule();
+  nsISVGValue* GetMappedAttribute(PRInt32 aNamespaceID, nsIAtom* aName);
+  nsresult AddMappedSVGValue(nsIAtom* aName, nsISupports* aValue,
+                             PRInt32 aNamespaceID = kNameSpaceID_None);
   
-  nsSVGAttributes*             mAttributes;
-  nsCOMPtr<nsISVGStyleValue>   mStyle;
+  nsCOMPtr<nsICSSStyleRule> mContentStyleRule;
+  nsAttrAndChildArray mMappedAttributes;
+  nsCOMPtr<nsISVGStyleValue> mStyle;
 };
 
 #endif // __NS_SVGELEMENT_H__

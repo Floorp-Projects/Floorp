@@ -131,18 +131,6 @@ nsSVGCircleElement::nsSVGCircleElement()
 
 nsSVGCircleElement::~nsSVGCircleElement()
 {
-  if (mCx) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCx);
-    value->RemoveObserver(this);
-  }
-  if (mCy) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mCy);
-    value->RemoveObserver(this);
-  }
-  if (mR) {
-    nsCOMPtr<nsISVGValue> value = do_QueryInterface(mR);
-    value->RemoveObserver(this);
-  }
 }
 
   
@@ -162,7 +150,7 @@ nsSVGCircleElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCx), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::cx, mCx);
+    rv = AddMappedSVGValue(nsSVGAtoms::cx, mCx);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -173,7 +161,7 @@ nsSVGCircleElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mCy), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::cy, mCy);
+    rv = AddMappedSVGValue(nsSVGAtoms::cy, mCy);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
@@ -185,7 +173,7 @@ nsSVGCircleElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = NS_NewSVGAnimatedLength(getter_AddRefs(mR), length);
     NS_ENSURE_SUCCESS(rv,rv);
-    rv = mAttributes->AddMappedSVGValue(nsSVGAtoms::r, mR);
+    rv = AddMappedSVGValue(nsSVGAtoms::r, mR);
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
