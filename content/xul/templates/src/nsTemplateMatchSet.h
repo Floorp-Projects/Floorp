@@ -169,12 +169,12 @@ protected:
     /**
      * Hashtable entry; holds weak reference to a match object.
      */
-    struct Entry {
+    typedef struct _Entry {
         friend class ConstIterator;
 
         PLDHashEntryHdr  mHdr;
         nsTemplateMatch* mMatch;
-    };
+    } Entry;
 
     enum { kMaxInlineMatches = (sizeof(PLDHashTable) / sizeof(void*)) - 1 };
 
@@ -184,10 +184,10 @@ protected:
     /**
      * If the set is currently
      */
-    struct InlineMatches {
+    typedef struct _InlineMatches {
         PRUint32         mCount;
         nsTemplateMatch* mEntries[kMaxInlineMatches];
-    };
+    }  InlineMatches;
 
     /**
      * The set is implemented as a dual datastructure. It is initially
