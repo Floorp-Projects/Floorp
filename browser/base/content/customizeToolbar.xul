@@ -59,7 +59,9 @@
 &instructions.description;
 </description>
 
-<vbox flex="1" id="palette-box"/>
+<vbox flex="1" id="palette-box"
+      ondragover="nsDragAndDrop.dragOver(event, paletteDropObserver);"
+      ondragdrop="nsDragAndDrop.drop(event, paletteDropObserver);"/>
 
 <separator class="groove"/>
 
