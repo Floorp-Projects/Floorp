@@ -714,7 +714,11 @@ endif
 GARBAGE		+= $(DEPENDENCIES) $(MKDEPENDENCIES) $(MKDEPENDENCIES).bak core $(wildcard core.[0-9]*) $(wildcard *.err) $(wildcard *.pure) $(wildcard *_pure_*.o) Templates.DB
 
 ifeq (,$(filter-out WINNT, $(OS_ARCH)))
+ifeq ($(OS_ARCH),WINNT)
+NSINSTALL	= $(MOZ_TOOLS_DIR)/bin/nsinstall
+else
 NSINSTALL	= nsinstall
+endif
 INSTALL		= $(NSINSTALL)
 else
 NSINSTALL	= $(CONFIG_TOOLS)/nsinstall
