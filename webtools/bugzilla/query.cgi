@@ -468,7 +468,7 @@ function selectProduct(f) {
         }
     }
 
-    if ("target_milestone" in f) {
+    if (f.target_milestone) {
         var tmsel = new Array();
         for (i=0 ; i<f.target_milestone.length ; i++) {
             if (f.target_milestone[i].selected) {
