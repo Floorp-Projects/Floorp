@@ -42,11 +42,6 @@ class nsUnicodeToGBKNoAscii: public nsUnicodeToGBK
 
   NS_IMETHOD FillInfo(PRUint32 *aInfo);
 
- protected:
-
-
- private:
-
 };
 
 #endif /* nsUnicodeToGBKNoAscii_h___ */

@@ -24,6 +24,7 @@
 #define nsHZToUnicode_h___
 
 #include "nsUCvCnSupport.h"
+#include "gbku.h"
 
 //----------------------------------------------------------------------
 // Class nsHZToUnicode [declaration]
@@ -57,13 +58,6 @@ protected:
       PRInt32 * aDestLength);
 
 private:
-
-typedef struct
-{
-  PRUint8 leftbyte;
-  PRUint8 rightbyte;
-
-} DByte;
   void HZToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
   void GBToUnicode(DByte *pGBCode, PRUnichar * pUnicode);
 
