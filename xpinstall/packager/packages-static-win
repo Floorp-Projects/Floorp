@@ -124,6 +124,7 @@ bin\components\necko_res.xpt
 bin\components\nsSidebar.js
 bin\components\oji.xpt
 bin\components\pref.xpt
+bin\components\autoconfig.xpt
 bin\components\prefmigr.xpt
 bin\components\profile.xpt
 bin\components\proxyObject.xpt
@@ -195,6 +196,7 @@ bin\chrome\classic\*
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin\defaults\pref\*
+bin\defaults\autoconfig\prefcalls.js
 bin\res\html.css
 bin\res\ua.css
 bin\res\forms.css

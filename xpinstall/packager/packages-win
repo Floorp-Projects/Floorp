@@ -234,6 +234,8 @@ bin\components\xpcom_xpti.xpt
 bin\components\xpconnect.xpt
 bin\components\xpinstall.xpt
 bin\components\xppref32.dll
+bin\components\autoconfig.dll
+bin\components\autoconfig.xpt
 bin\components\xml-rpc.xpt
 bin\components\nsDictionary.js
 bin\components\nsProxyAutoConfig.js
@@ -277,6 +279,7 @@ bin\chrome\chromelist.txt
 ; all the pref files must be part of base
 ; to prevent migration bugs
 bin\defaults\pref\*
+bin\defaults\autoconfig\prefcalls.js
 bin\res\html.css
 bin\res\ua.css
 bin\res\forms.css

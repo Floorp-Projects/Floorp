@@ -124,6 +124,8 @@ viewer:Components:universalchardet.xpt
 viewer:Components:libjar.xpt 
 viewer:Components:libpref.shlb 
 viewer:Components:libpref.xpt 
+viewer:Components:prefextras.shlb 
+viewer:Components:prefextras.xpt 
 viewer:Components:libutil.xpt
 viewer:Components:lwbrk.shlb 
 viewer:Components:Mork.shlb 
@@ -227,6 +229,7 @@ viewer:chrome:pipnss.jar
 ; all the pref files must be part of base
 ; to prevent migration bugs
 viewer:defaults:pref:*
+viewer:defaults:autoconfig:prefcalls.js
 viewer:res:arrow.gif
 viewer:res:loading-image.gif
 viewer:res:broken-image.gif
