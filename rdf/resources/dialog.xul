@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar.css" type="text/css"?>
+
+<window
+
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns:NC="http://home.netscape.com/NC-rdf#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <html:script src="dialog.js" />
+  <tree id="tree"
+        datasources="resource:/res/rdf/sidebar-registry.rdf"
+		onclick="selected(event,event.target.parentNode)" >
+
+    <!-- The template we'll use to build rows in the content model. -->
+    <template containment="treeitem" rootcontainment="treebody" subcontainment="treechildren">
+      <treeitem uri="...">
+        <treecell>
+          <treeindentation />
+          <titledbutton />
+          <text rdf:resource="http://home.netscape.com/NC-rdf#title" />
+        </treecell>
+      </treeitem>
+    </template>
+
+    <!-- The tree header: display some column info. -->
+    <treehead>
+      <treeitem>
+        <treecell>Title</treecell>
+      </treeitem>
+    </treehead>
+
+    <!-- The tree body: it's rooted at sitemap1.rdf's root -->
+    <treebody ref="NC:BrowserSidebarRoot" />
+  </tree>
+
+</window>

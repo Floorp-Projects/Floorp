@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/rdf/sidebar-browser.css" type="text/css"?>
+
+<!DOCTYPE window> 
+
+<window
+  xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script src="dialogSidebar.js" />  
+
+Current My Sidebar
+<html:div>
+<box align="horizontal">
+
+
+<html:form name="one">
+   <html:select name="two" id="selectList" size="10" multiple="true">
+   </html:select>
+
+
+</html:form>
+
+
+	<box align="vertical">
+	
+			      <spring flex="100%"/>
+			      <html:button  style="width:144px; height:15px;" onclick="moveUp()">
+		   			<html:div>Move Up</html:div>
+		   		</html:button>
+		   		<spring style="width:15px"/>
+			      <html:button  style="width:108px; height:15px;" onclick="moveDown()">
+		   				<html:div>Move Down</html:div>
+		   		</html:button>
+				<html:button  style="width:108px; height:15px;"  onclick="dump('here');deleteOption()">
+		   				<html:div>Remove</html:div>
+		   		</html:button>
+				<spring style="width:15px"/>
+				<html:button  style="width:108px; height:15px;" onclick="parent.frames[1].location.href = 'about:blank'">
+		   				<html:div>Customize</html:div>
+		   		</html:button>
+		<!--		<html:button  style="width:108px; height:15px;" onclick="writeRDF('New Panel','http://foo.com/content.html','http://foo.com/customize.html',0)">
+		   				<html:div>Add</html:div>
+		   		</html:button>
+					<html:button  style="width:108px; height:15px;" onclick="writeRDF('New Panel','http://foo.com/content.html','http://foo.com/customize.html',1)">
+		   				<html:div>Remove</html:div>
+		   		</html:button>
+			
+				
+					<html:button  style="width:108px; height:15px;" onclick="DumpIt()">
+		   				<html:div>RemoveIt</html:div>
+		   		</html:button>  -->
+
+				
+	</box>
+</box>
+
+</html:div>
+
+</window>
