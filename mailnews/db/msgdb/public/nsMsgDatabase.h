@@ -171,8 +171,7 @@ public:
   NS_IMETHOD MarkOffline(nsMsgKey key, PRBool offline,
                          nsIDBChangeListener *instigator);
 
-  // returns NS_OK on success, NS_COMFALSE on failure
-  NS_IMETHOD  AllMsgKeysImapDeleted(nsMsgKeyArray *keys);
+  NS_IMETHOD  AllMsgKeysImapDeleted(nsMsgKeyArray *keys, PRBool *allKeysDeleted);
 
   NS_IMETHOD MarkImapDeleted(nsMsgKey key, PRBool deleted,
                              nsIDBChangeListener *instigator);

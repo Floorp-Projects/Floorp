@@ -127,7 +127,7 @@ NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsg
   nsMsgImapDeleteModel deleteModel;
   GetDeleteModel(&deleteModel);
   hostSession->SetDeleteIsMoveToTrashForHost(aKey, deleteModel == nsMsgImapDeleteModels::MoveToTrash); 
-  hostSession->SetShowDeletedMessagesForHost(aKey, deleteModel != nsMsgImapDeleteModels::IMAPDelete);
+  hostSession->SetShowDeletedMessagesForHost(aKey, deleteModel == nsMsgImapDeleteModels::IMAPDelete);
 
 	char *personalNamespace = nsnull;
 	char *publicNamespace = nsnull;

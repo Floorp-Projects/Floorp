@@ -54,7 +54,9 @@ Rights Reserved.
 			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
   			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
   		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
-			 IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread">
+			 IsUnread="rdf:http://home.netscape.com/NC-rdf#IsUnread"
+			 IsImapDeleted="rdf:http://home.netscape.com/NC-rdf#IsImapDeleted">
+
 	  		<treerow>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
 				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"/>

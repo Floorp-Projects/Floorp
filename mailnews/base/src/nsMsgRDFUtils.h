@@ -46,6 +46,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_PRIORITY				NC_NAMESPACE_URI "Priority"
 #define NC_RDF_SIZE					NC_NAMESPACE_URI "Size"
 #define NC_RDF_ISUNREAD				NC_NAMESPACE_URI "IsUnread"
+#define NC_RDF_ISIMAPDELETED				NC_NAMESPACE_URI "IsImapDeleted"
 #define NC_RDF_ORDERRECEIVED		NC_NAMESPACE_URI "OrderReceived"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"

@@ -142,6 +142,7 @@ protected:
 								   nsIRDFNode **target);
 
 	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageIsImapDeletedNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageOrderReceivedNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageOrderReceivedSortNode(nsIMessage *message, nsIRDFNode **target);
 
@@ -174,6 +175,7 @@ protected:
 	nsresult OnChangeStatus(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
 	nsresult OnChangeStatusString(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
 	nsresult OnChangeIsUnread(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
+	nsresult OnChangeIsImapDeleted(nsIRDFResource *resource, PRUint32 oldFlag, PRUint32 newFlag);
 	nsresult OnChangeUnreadMessageCount(nsIMessage *message);
 	nsresult OnChangeTotalMessageCount(nsIMessage *message);
 
@@ -193,6 +195,7 @@ protected:
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
 	static nsIRDFResource* kNC_IsUnread;
+	static nsIRDFResource* kNC_IsImapDeleted;
 	static nsIRDFResource* kNC_OrderReceived;
 	static nsIRDFResource* kNC_OrderReceivedSort;
 

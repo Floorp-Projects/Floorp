@@ -1462,9 +1462,41 @@ NS_IMETHODIMP nsMsgDatabase::MarkOffline(nsMsgKey key, PRBool offline,
 }
 
 NS_IMETHODIMP
-nsMsgDatabase::AllMsgKeysImapDeleted(nsMsgKeyArray *keys)
+nsMsgDatabase::AllMsgKeysImapDeleted(nsMsgKeyArray *keys, PRBool *allKeysDeleted)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (!keys || ! allKeysDeleted)
+    return NS_ERROR_NULL_POINTER;
+
+	for (PRUint32 kindex = 0; kindex < keys->GetSize(); kindex++)
+	{
+		nsMsgKey key = keys->ElementAt(kindex);
+		nsIMsgDBHdr *msgHdr = NULL;
+		
+		PRBool hasKey;
+
+		if (NS_SUCCEEDED(ContainsKey(key, &hasKey)) && hasKey)
+		{
+			nsresult err = GetMsgHdrForKey(key, &msgHdr);
+			if (NS_FAILED(err)) 
+			{
+        // ### we drop this error -probably OK.
+				err = NS_MSG_MESSAGE_NOT_FOUND;
+				break;
+			}
+			if (msgHdr)
+      {
+        PRUint32 flags;
+        (void)msgHdr->GetFlags(&flags);
+        if (! (flags & MSG_FLAG_IMAP_DELETED))
+        {
+          *allKeysDeleted = PR_FALSE;
+          return NS_OK;
+        }
+      }
+    }
+  }
+  *allKeysDeleted = PR_TRUE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgDatabase::MarkImapDeleted(nsMsgKey key, PRBool deleted,

@@ -22,6 +22,11 @@ treeitem[IsUnread="true"] > treerow {
 	font-weight: bold;
 }
 
+treeitem[IsImapDeleted="true"] > treerow {
+	font-weight: lighter;
+   font-style: italic;
+}
+
 treeitem[Priority="Highest"] > treerow > treecell.prioritycol > .tree-button
 {
 	color:red;

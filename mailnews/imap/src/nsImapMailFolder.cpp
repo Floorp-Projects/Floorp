@@ -1396,12 +1396,12 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
       deleteImmediatelyNoTrash = PR_TRUE;
   }
 
-    rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
-    if (NS_FAILED(rv)) return rv;
+  rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
+  if (NS_FAILED(rv)) return rv;
 
 
-    nsCOMPtr<nsIMsgFolder> rootFolder;
-    nsCOMPtr<nsIMsgFolder> trashFolder;
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  nsCOMPtr<nsIMsgFolder> trashFolder;
 
 	if (!deleteImmediatelyNoTrash)
 	{
@@ -1417,47 +1417,56 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
 				deleteImmediatelyNoTrash = PR_TRUE;
 		}
 	}
-    if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
-    {
-        rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
+  if ((NS_SUCCEEDED(rv) && deleteImmediatelyNoTrash) || deleteModel == nsMsgImapDeleteModels::IMAPDelete )
+  {
+    rv = StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, srcKeyArray);
     if (NS_SUCCEEDED(rv))
     {
-            if (mDatabase && deleteModel != nsMsgImapDeleteModels::IMAPDelete) 
+      if (mDatabase)
       {
-                mDatabase->DeleteMessages(&srcKeyArray,NULL);
-//        if(!isMove)
+        if (deleteModel == nsMsgImapDeleteModels::IMAPDelete) 
         {
+          PRBool allKeysImapDeleted;
+          mDatabase->AllMsgKeysImapDeleted(&srcKeyArray, &allKeysImapDeleted);
+	        for (PRUint32 kindex = 0; kindex < srcKeyArray.GetSize(); kindex++)
+	        {
+		        nsMsgKey key = srcKeyArray.ElementAt(kindex);
+            mDatabase->MarkImapDeleted(key, !allKeysImapDeleted, nsnull);
+          }
+        }
+        else
+        {
+          mDatabase->DeleteMessages(&srcKeyArray,NULL);
           NotifyDeleteOrMoveMessagesCompleted(this);
         }
       }
-
-      return rv;
-    }
-    }
-    else
-    {
+     }
+     return rv;
+  }
+  else
+  {
     if (msgWindow)
     {
       nsCOMPtr <nsITransactionManager> txnMgr;
 
       msgWindow->GetTransactionManager(getter_AddRefs(txnMgr));
 
-    if (txnMgr) SetTransactionManager(txnMgr);
+      if (txnMgr) SetTransactionManager(txnMgr);
     }
-        
-      if(trashFolder)
+      
+    if(trashFolder)
 	  {
-        nsCOMPtr<nsIMsgFolder> srcFolder;
-        nsCOMPtr<nsISupports>srcSupport;
-        PRUint32 count = 0;
-        rv = messages->Count(&count);
+      nsCOMPtr<nsIMsgFolder> srcFolder;
+      nsCOMPtr<nsISupports>srcSupport;
+      PRUint32 count = 0;
+      rv = messages->Count(&count);
 
-        rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
-						getter_AddRefs(srcFolder));
-        rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull);
+      rv = QueryInterface(NS_GET_IID(nsIMsgFolder),
+					  getter_AddRefs(srcFolder));
+      rv = trashFolder->CopyMessages(srcFolder, messages, PR_TRUE, msgWindow, nsnull);
 	  }
-    }
-    return rv;
+  }
+  return rv;
 }
 
 PRBool
@@ -1910,7 +1919,7 @@ NS_IMETHODIMP nsImapMailFolder::NormalEndHeaderParseStream(nsIImapProtocol*
       }
     }
     // here we need to tweak flags from uid state..
-    if (!m_msgMovedByFilter)
+    if (!m_msgMovedByFilter || !DeleteIsMoveToTrash())
       mDatabase->AddNewHdrToDB(newMsgHdr, PR_TRUE);
     // I don't think we want to do this - it does bad things like set the size incorrectly.
 //    m_msgParser->FinishHeader();
@@ -2845,6 +2854,7 @@ nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 	    mDatabase->MarkHdrRead(dbHdr, (flags & kImapMsgSeenFlag) != 0, nsnull);
 		  mDatabase->MarkHdrReplied(dbHdr, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
 			mDatabase->MarkHdrMarked(dbHdr, (flags & kImapMsgFlaggedFlag) != 0, nsnull);
+			mDatabase->MarkImapDeleted(msgKey, (flags & kImapMsgDeletedFlag) != 0, nsnull);
 		}
   }
   
