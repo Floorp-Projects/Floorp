@@ -43,40 +43,13 @@ import java.lang.reflect.InvocationTargetException;
 import org.mozilla.javascript.GeneratedClassLoader;
 
 /**
- * Load generated classes.
+ * @deprecated The class is moved to <tt>org.mozilla.javascript</tt>
+ * package.
  *
- * @author Norris Boyd
+ * @see org.mozilla.javascript.DefiningClassLoader
  */
-public class DefiningClassLoader extends ClassLoader
-    implements GeneratedClassLoader
+public class DefiningClassLoader
+    extends org.mozilla.javascript.DefiningClassLoader
 {
-    public DefiningClassLoader() {
-        this.parentLoader = getClass().getClassLoader();
-    }
-
-    public Class defineClass(String name, byte[] data) {
-        return super.defineClass(name, data, 0, data.length);
-    }
-
-    public void linkClass(Class cl) {
-        resolveClass(cl);
-    }
-
-    public Class loadClass(String name, boolean resolve)
-        throws ClassNotFoundException
-    {
-        Class clazz = findLoadedClass(name);
-        if (clazz == null) {
-            if (parentLoader != null) {
-                clazz = parentLoader.loadClass(name);
-            } else {
-                clazz = findSystemClass(name);
-            }
-        }
-        if (resolve)
-            resolveClass(clazz);
-        return clazz;
-    }
-
-    private ClassLoader parentLoader;
+    public DefiningClassLoader() { }
 }

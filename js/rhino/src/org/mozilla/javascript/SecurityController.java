@@ -67,11 +67,13 @@ public abstract class SecurityController {
     /**
      * Get class loader-like object that can be used
      * to define classes with the given security context.
+     * @param parentLoader parent class loader to delegate search for classes
+     *        not defined by the class loader itself
      * @param securityDomain some object specifying the security
      *        context of the code that is defined by the returned class loader.
      */
     public abstract GeneratedClassLoader
-    createClassLoader(Object securityDomain);
+    createClassLoader(ClassLoader parentLoader, Object securityDomain);
 
     /**
      * Get dynamic security domain that allows an action only if it is allowed

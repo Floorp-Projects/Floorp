@@ -411,7 +411,7 @@ public class FunctionObject extends BaseFunction {
         }
         try {
             Object result = method == null ? ctor.newInstance(invokeArgs)
-                                           : doInvoke(thisObj, invokeArgs);
+                                           : doInvoke(cx, thisObj, invokeArgs);
             return hasVoidReturn ? Undefined.instance : result;
         }
         catch (InvocationTargetException e) {
@@ -486,13 +486,13 @@ public class FunctionObject extends BaseFunction {
         return super.construct(cx, scope, args);
     }
 
-    private final Object doInvoke(Object thisObj, Object[] args)
+    private final Object doInvoke(Context cx, Object thisObj, Object[] args)
         throws IllegalAccessException, InvocationTargetException
     {
         Invoker master = invokerMaster;
         if (master != null) {
             if (invoker == null) {
-                invoker = master.createInvoker(method, types);
+                invoker = master.createInvoker(cx, method, types);
             }
             try {
                 return invoker.invoke(thisObj, args);
@@ -510,14 +510,14 @@ public class FunctionObject extends BaseFunction {
         try {
             if (parmsLength == VARARGS_METHOD) {
                 Object[] invokeArgs = { cx, thisObj, args, this };
-                Object result = doInvoke(null, invokeArgs);
+                Object result = doInvoke(cx, null, invokeArgs);
                 return hasVoidReturn ? Undefined.instance : result;
             } else {
                 Boolean b = inNewExpr ? Boolean.TRUE : Boolean.FALSE;
                 Object[] invokeArgs = { cx, args, this, b };
                 return (method == null)
                        ? ctor.newInstance(invokeArgs)
-                       : doInvoke(null, invokeArgs);
+                       : doInvoke(cx, null, invokeArgs);
             }
         }
         catch (InvocationTargetException e) {

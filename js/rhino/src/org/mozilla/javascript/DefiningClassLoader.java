@@ -1,5 +1,4 @@
-/* -*- Mode: java; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -15,12 +14,14 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1997-2000 Netscape Communications Corporation. All
+ * Copyright (C) 1997-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s):
  * Norris Boyd
- * David C. Navas
+ * Roger Lawrence
+ * Patrick Beard
+ * Igor Bukanov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -37,18 +38,47 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.InvocationTargetException;
 
 /**
- * Avoid cost of java.lang.reflect.Method.invoke() by compiling a class to
- * perform the method call directly.
+ * Load generated classes.
+ *
+ * @author Norris Boyd
  */
-public abstract class Invoker {
-
-    public abstract Object invoke(Object that, Object [] args);
-
-    /** Factory method to get invoker for given method */
-    public Invoker createInvoker(Context cx, Method method, Class[] types) {
-        return null;
+public class DefiningClassLoader extends ClassLoader
+    implements GeneratedClassLoader
+{
+    public DefiningClassLoader() {
+        this.parentLoader = getClass().getClassLoader();
     }
 
+    public DefiningClassLoader(ClassLoader parentLoader) {
+        this.parentLoader = parentLoader;
+    }
+
+    public Class defineClass(String name, byte[] data) {
+        return super.defineClass(name, data, 0, data.length);
+    }
+
+    public void linkClass(Class cl) {
+        resolveClass(cl);
+    }
+
+    public Class loadClass(String name, boolean resolve)
+        throws ClassNotFoundException
+    {
+        Class clazz = findLoadedClass(name);
+        if (clazz == null) {
+            if (parentLoader != null) {
+                clazz = parentLoader.loadClass(name);
+            } else {
+                clazz = findSystemClass(name);
+            }
+        }
+        if (resolve)
+            resolveClass(clazz);
+        return clazz;
+    }
+
+    private ClassLoader parentLoader;
 }

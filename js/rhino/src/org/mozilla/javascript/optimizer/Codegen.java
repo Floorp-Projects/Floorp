@@ -80,11 +80,13 @@ public class Codegen extends Interpreter {
 
         Exception e = null;
         Class result = null;
+        ClassLoader parentLoader = cx.getClass().getClassLoader();
         GeneratedClassLoader loader;
         if (securityController == null) {
-            loader = new DefiningClassLoader();
+            loader = cx.createClassLoader(parentLoader);
         } else {
-            loader = securityController.createClassLoader(securityDomain);
+            loader = securityController.createClassLoader(parentLoader,
+                                                          securityDomain);
         }
         nameHelper.reset();
 

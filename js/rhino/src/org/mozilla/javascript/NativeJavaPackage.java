@@ -38,7 +38,6 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
-import org.mozilla.classfile.DefiningClassLoader;
 
 /**
  * This class reflects Java packages into the JavaScript environment.  We

@@ -172,9 +172,10 @@ public class JavaPolicySecurity extends SecurityProxy
         return new ProtectionDomain(cs, pc);
     }
 
-    public GeneratedClassLoader createClassLoader(Object securityDomain) {
+    public GeneratedClassLoader
+    createClassLoader(ClassLoader parentLoader, Object securityDomain) {
         ProtectionDomain domain = (ProtectionDomain)securityDomain;
-        return new Loader(getClass().getClassLoader(), domain);
+        return new Loader(parentLoader, domain);
     }
 
     public Object getDynamicSecurityDomain(Object securityDomain)

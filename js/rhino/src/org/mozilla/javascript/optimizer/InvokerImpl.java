@@ -40,9 +40,10 @@ import java.util.Hashtable;
 import java.lang.reflect.Method;
 
 import org.mozilla.javascript.Invoker;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.GeneratedClassLoader;
 import org.mozilla.classfile.ByteCode;
 import org.mozilla.classfile.ClassFileWriter;
-import org.mozilla.classfile.DefiningClassLoader;
 
 /**
  * Avoid cost of java.lang.reflect.Method.invoke() by compiling a class to
@@ -50,13 +51,19 @@ import org.mozilla.classfile.DefiningClassLoader;
  */
 public class InvokerImpl extends Invoker {
 
-    public Invoker createInvoker(Method method, Class[] types) {
+    public Invoker createInvoker(Context cx, Method method, Class[] types) {
 
-        Invoker result = (Invoker)invokersCache.get(method);
-        if (result != null) { return result; }
-
-        int classNum = 0;
+        Invoker result;
+        int classNum;
         synchronized (this) {
+            if (invokersCache == null) {
+                invokersCache = new Hashtable();
+                ClassLoader parentLoader = cx.getClass().getClassLoader();
+                classLoader = cx.createClassLoader(parentLoader);
+            } else {
+                result = (Invoker)invokersCache.get(method);
+                if (result != null) { return result; }
+            }
             classNum = ++classNumber;
         }
 
@@ -291,6 +298,6 @@ public class InvokerImpl extends Invoker {
     }
 
     int classNumber;
-    Hashtable invokersCache = new Hashtable();
-    DefiningClassLoader classLoader = new DefiningClassLoader();
+    Hashtable invokersCache;
+    GeneratedClassLoader classLoader;
 }

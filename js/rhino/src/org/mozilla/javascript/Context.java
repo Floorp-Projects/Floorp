@@ -1865,6 +1865,11 @@ public class Context {
      */
     protected void observeInstructionCount(int instructionCount) {}
 
+    public GeneratedClassLoader createClassLoader(ClassLoader parent) {
+        return new DefiningClassLoader(parent);
+
+    }
+
     /********** end of API **********/
 
     static String getMessage0(String messageId) {

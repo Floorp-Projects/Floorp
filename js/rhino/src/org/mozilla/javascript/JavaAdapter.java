@@ -331,13 +331,14 @@ public class JavaAdapter extends ScriptableObject {
             }
         }
 
+        ClassLoader parentLoader = cx.getClass().getClassLoader();
         GeneratedClassLoader loader;
         SecurityController sc = cx.getSecurityController();
         if (sc == null) {
-            loader = new DefiningClassLoader();
+            loader = cx.createClassLoader(parentLoader);
         } else {
             Object securityDomain = sc.getDynamicSecurityDomain(null);
-            loader = sc.createClassLoader(securityDomain);
+            loader = sc.createClassLoader(parentLoader, securityDomain);
         }
         Class result = loader.defineClass(adapterName, bytes);
         loader.linkClass(result);
