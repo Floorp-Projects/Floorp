@@ -23,23 +23,30 @@
 #define NS_EDITORCONTROLLER_CID \
 { 0x26fb965c, 0x9de6, 0x11d3, { 0xbc, 0xcc, 0x0, 0x60, 0xb0, 0xfc, 0x76, 0xbd } }
 
+#define NS_COMPOSERCONTROLLER_CID \
+{ 0x50e95301, 0x17a8, 0x11d4, { 0x9f, 0x7e, 0xdd, 0x53, 0x0d, 0x5f, 0x05, 0x7c } }
+
+
 #include "nsIController.h"
 #include "nsIEditorController.h"
 #include "nsIControllerCommand.h"
+#include "nsIInterfaceRequestor.h"
 
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsWeakPtr.h"
 
-class nsIHTMLContent;
-class nsIGfxTextControlFrame;
 class nsIEditor;
-class nsISelectionController;
+class nsIEditorShell;
 class nsBaseCommand;
 
 
+// the editor controller is used for both text widgets, and basic text editing
+// commands in composer. The refCon that gets passed to its commands is an nsIEditor.
+
 class nsEditorController :  public nsIController,
-                            public nsIEditorController
+                            public nsIEditorController,
+                            public nsIInterfaceRequestor
 {
 public:
 
@@ -53,48 +60,68 @@ public:
   NS_DECL_NSICONTROLLER
 
   /** init the controller */
-  NS_IMETHOD Init();
+  NS_IMETHOD Init(nsISupports *aCommandRefCon);
 
-  /** set the content for this controller instance */
-  NS_IMETHOD SetContent(nsIHTMLContent *aContent);
+  /** Set the cookie that is passed to commands
+   */
+  NS_IMETHOD SetCommandRefCon(nsISupports *aCommandRefCon);
 
-  /** set the editor for this controller. Mutually exclusive with setContent*/
-  NS_IMETHOD SetEditor(nsIEditor *aEditor);
-
-
+  // nsIInterfaceRequestor
+  NS_DECL_NSIINTERFACEREQUESTOR
+  
 protected:
 
-  /** fetch the primary frame associated with mContent */
-  NS_IMETHOD GetFrame(nsIGfxTextControlFrame **aFrame);
-
-  /** fetch the editor associated with mContent */
-  NS_IMETHOD GetEditor(nsIEditor ** aEditor);
-
-  NS_IMETHOD GetSelectionController(nsISelectionController ** aSelCon);
   /** return PR_TRUE if the editor associated with mContent is enabled */
-  PRBool IsEnabled();
+  PRBool   IsEnabled();
 
   /* register a command */
   nsresult RegisterEditorCommand(nsBaseCommand* aCommand);
   
 protected:
 
-   nsIHTMLContent* mContent;    // weak reference, the content object owns this object
-
    //if editor is null then look to mContent. this is for dual use of window and content
    //attached controller.
-   nsIEditor *mEditor;
+   nsISupports *mCommandRefCon;
    
    nsCOMPtr<nsIControllerCommandManager> mCommandManager;     // our reference to the command manager
    
 
+protected:
+
+  static nsresult RegisterOneCommand(const PRUnichar* aCommandName, nsIControllerCommandManager *inCommandManager, nsBaseCommand* aCommand);
+
 private:
 
-  static nsresult GetCommandManager(nsIControllerCommandManager* *outCommandManager);
+  static nsresult GetEditorCommandManager(nsIControllerCommandManager* *outCommandManager);
   static nsresult RegisterEditorCommands(nsIControllerCommandManager* inCommandManager);
-  static nsresult RegisterOneCommand(const PRUnichar* aCommandName, nsIControllerCommandManager *inCommandManager, nsBaseCommand* aCommand);
   
   // the singleton command manager
-  static nsWeakPtr sCommandManager;
+  static nsWeakPtr sEditorCommandManager;       // common editor (i.e. text widget) commands
    
+};
+
+
+
+// the editor controller is used for composer only (and other HTML compose
+// areas). The refCon that gets passed to its commands is an nsIEditorShell.
+
+class nsComposerController : public nsEditorController
+{
+public:
+
+          nsComposerController();
+  virtual ~nsComposerController();
+
+  /** init the controller */
+  NS_IMETHOD Init(nsISupports *aCommandRefCon);
+
+protected:
+
+private:
+
+  static nsresult GetComposerCommandManager(nsIControllerCommandManager* *outCommandManager);
+  static nsresult RegisterComposerCommands(nsIControllerCommandManager* inCommandManager);
+
+  // the singleton command manager
+  static nsWeakPtr sComposerCommandManager;     // composer-specific commands (lots of them)
 };

@@ -215,10 +215,11 @@ GetTreeOwner(nsIDocShell* aDocShell, nsIBaseWindow** aBaseWindow)
 /////////////////////////////////////////////////////////////////////////
 
 nsEditorShell::nsEditorShell()
-:  mToolbarWindow(nsnull)
-,  mContentWindow(nsnull)
-,  mParserObserver(nsnull)
+:  mParserObserver(nsnull)
 ,  mStateMaintainer(nsnull)
+,  mWebShellWindow(nsnull)
+,  mContentWindow(nsnull)
+,  mEditorController(nsnull)
 ,  mDocShell(nsnull)
 ,  mContentAreaDocShell(nsnull)
 ,  mCloseWindowWhenLoaded(PR_FALSE)
@@ -295,13 +296,14 @@ nsEditorShell::Init()
 
   // XXX: why are we returning NS_OK here rather than res?
   // is it ok to fail to get a string bundle?  if so, it should be documented.
+
   return NS_OK;
 }
 
 nsresult    
 nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUrl)
 {
-  if (!mContentAreaDocShell)
+  if (!mContentAreaDocShell || !mContentWindow)
     return NS_ERROR_NOT_INITIALIZED;
 
   if (mEditor)
@@ -322,6 +324,13 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
         NS_IF_RELEASE(mStateMaintainer);
       }
     }
+    
+    // clear this editor out of the controller
+    if (mEditorController)
+    {
+      mEditorController->SetCommandRefCon(nsnull);
+    }
+    
     mEditorType = eUninitializedEditorType;
     mEditor = 0;  // clear out the nsCOMPtr
 
@@ -394,29 +403,12 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
   {
     txnMgr->AddListener(NS_STATIC_CAST(nsITransactionListener*, mStateMaintainer));
   }
-
-  if (NS_SUCCEEDED(rv) && mContentWindow)
+  
+  // set the editor in the editor controller  
+  if (mEditorController)
   {
-    nsCOMPtr<nsIController> controller;
-    nsCOMPtr<nsIControllers> controllers;
-    rv = nsComponentManager::CreateInstance("component://netscape/editor/editorcontroller",
-                                       nsnull,
-                                       NS_GET_IID(nsIController),
-                                       getter_AddRefs(controller));
-    if (NS_SUCCEEDED(rv) && controller)
-    {
-      rv = mContentWindow->GetControllers(getter_AddRefs(controllers));
-      if (NS_SUCCEEDED(rv) && controllers)
-      {
-        nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
-        rv = editorController->Init();
-        if (NS_FAILED(rv)) return rv;
-        
-        editorController->SetEditor(editor);//weak link
-
-        rv = controllers->InsertControllerAt(0, controller);
-      }
-    }
+    nsCOMPtr<nsISupports> editorAsISupports = do_QueryInterface(editor);
+    mEditorController->SetCommandRefCon(editorAsISupports);
   }
 
   // now all the listeners are set up, we can call PostCreate
@@ -489,18 +481,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIDocumentLoader* aLoader, nsIURI *aUr
 }
 
 NS_IMETHODIMP    
-nsEditorShell::SetToolbarWindow(nsIDOMWindow* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (!aWin)
-      return NS_ERROR_NULL_POINTER;
-
-  mToolbarWindow = aWin;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
 nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
 {
   NS_PRECONDITION(aWin != nsnull, "null ptr");
@@ -520,7 +500,52 @@ nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
     return NS_ERROR_FAILURE;
     
   mContentAreaDocShell = docShell;      // dont AddRef
-  return docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+  rv = docShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+  if (NS_FAILED(rv)) return rv;
+    
+  // we make two controllers
+  nsCOMPtr<nsIControllers> controllers;      
+  rv = mContentWindow->GetControllers(getter_AddRefs(controllers));      
+  if (NS_FAILED(rv)) return rv;
+  
+  {
+    // the first is an editor controller, and takes an nsIEditor as the refCon
+    nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/editorcontroller", &rv);
+    if (NS_FAILED(rv)) return rv;  
+    nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
+    rv = editorController->Init(nsnull);    // we set the editor later when we have one
+    if (NS_FAILED(rv)) return rv;
+    
+    mEditorController = editorController;   // temp weak link, so we can get it and set the editor later
+    
+    rv = controllers->InsertControllerAt(0, controller);
+    if (NS_FAILED(rv)) return rv;  
+  }
+  
+  {
+    // the first is a composer controller, and takes an nsIEditorShell as the refCon
+    nsCOMPtr<nsIController> controller = do_CreateInstance("component://netscape/editor/composercontroller", &rv);
+    if (NS_FAILED(rv)) return rv;  
+    nsCOMPtr<nsIEditorController> editorController = do_QueryInterface(controller);
+    
+    nsCOMPtr<nsISupports> shellAsISupports = do_QueryInterface((nsIEditorShell*)this);
+    rv = editorController->Init(shellAsISupports);
+    if (NS_FAILED(rv)) return rv;
+    
+    rv = controllers->InsertControllerAt(1, controller);
+    if (NS_FAILED(rv)) return rv;  
+  }
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP    
+nsEditorShell::GetContentWindow(nsIDOMWindow * *aContentWindow)
+{
+  NS_ENSURE_ARG_POINTER(aContentWindow);
+  NS_IF_ADDREF(*aContentWindow = mContentWindow);
+  return NS_OK;
 }
 
 
@@ -531,6 +556,8 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
   if (!aWin)
       return NS_ERROR_NULL_POINTER;
 
+  mWebShellWindow = aWin;   // no addref
+  
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
     return NS_ERROR_FAILURE;
@@ -544,7 +571,6 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
     return NS_ERROR_NOT_INITIALIZED;
 
   mDocShell = docShell;
-  //NS_ADDREF(mWebShell);
 
 /*
 #ifdef APP_DEBUG
@@ -560,6 +586,14 @@ nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
 */
     
   return rv;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::GetWebShellWindow(nsIDOMWindow * *aWebShellWindow)
+{
+  NS_ENSURE_ARG_POINTER(aWebShellWindow);
+  NS_IF_ADDREF(*aWebShellWindow = mWebShellWindow);
+  return NS_OK;
 }
 
 // tell the appcore what type of editor to instantiate
@@ -672,13 +706,33 @@ nsEditorShell::DoEditorMode(nsIDocShell *aDocShell)
 
 
 NS_IMETHODIMP
-nsEditorShell::UpdateInterfaceState(void)
+nsEditorShell::UpdateInterfaceState(const PRUnichar *tagToUpdate)
 {
   if (!mStateMaintainer)
     return NS_ERROR_NOT_INITIALIZED;
 
-  return mStateMaintainer->ForceUpdate();
+  return mStateMaintainer->ForceUpdate(tagToUpdate);
 }  
+
+NS_IMETHODIMP
+nsEditorShell::SetCommandStateData(const PRUnichar *commandName, void * stateData)
+{
+  if (!mStateMaintainer)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsSubsumeStr commandStr((PRUnichar *)commandName, PR_FALSE);
+  return mStateMaintainer->SetCommandStateData(commandStr, stateData);
+}
+
+NS_IMETHODIMP
+nsEditorShell::GetCommandStateData(const PRUnichar *commandName, void * *outStateData)
+{
+  if (!mStateMaintainer)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsSubsumeStr commandStr((PRUnichar *)commandName, PR_FALSE);
+  return mStateMaintainer->GetCommandStateData(commandStr, outStateData);
+}
 
 // Deletion routines
 nsresult
@@ -768,7 +822,7 @@ nsEditorShell::SetAttribute(nsIDOMElement *element, const PRUnichar *attr, const
     nsAutoString valueStr(value);
     result = editor->SetAttribute(element, attributeStr, valueStr); 
   }
-  UpdateInterfaceState();
+  UpdateInterfaceState(nsnull);
   return result;
 }
 
@@ -784,7 +838,7 @@ nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
     nsAutoString attributeStr(attr);
     result = editor->RemoveAttribute(element, attributeStr);
   }
-  UpdateInterfaceState();
+  UpdateInterfaceState(nsnull);
   return result;
 }
 
@@ -793,16 +847,10 @@ nsEditorShell::RemoveAttribute(nsIDOMElement *element, const PRUnichar *attr)
 NS_IMETHODIMP    
 nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, const PRUnichar *value)
 {
-  nsIAtom    *styleAtom = nsnull;
   nsresult  err = NS_NOINTERFACE;
 
-  styleAtom = NS_NewAtom(prop);      /// XXX Hack alert! Look in nsIEditProperty.h for this
-
-  if (! styleAtom)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // addref it while we're using it
-  NS_ADDREF(styleAtom);
+  nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(prop));      /// XXX Hack alert! Look in nsIEditProperty.h for this
+  if (! styleAtom) return NS_ERROR_OUT_OF_MEMORY;
 
   nsAutoString    attributeStr(attr);
   nsAutoString    valueStr(value);
@@ -817,8 +865,8 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
     default:
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
-  UpdateInterfaceState();
-  NS_RELEASE(styleAtom);
+
+  UpdateInterfaceState(prop);
   return err;
 }
 
@@ -827,16 +875,10 @@ nsEditorShell::SetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
 nsresult
 nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
 {
-  nsIAtom    *styleAtom = nsnull;
   nsresult  err = NS_NOINTERFACE;
 
-  styleAtom = NS_NewAtom(aProp);      /// XXX Hack alert! Look in nsIEditProperty.h for this
-
-  if (! styleAtom)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  // addref it while we're using it
-  NS_ADDREF(styleAtom);
+  nsCOMPtr<nsIAtom> styleAtom = getter_AddRefs(NS_NewAtom(aProp));      /// XXX Hack alert! Look in nsIEditProperty.h for this
+  if (! styleAtom) return NS_ERROR_OUT_OF_MEMORY;
 
   switch (mEditorType)
   {
@@ -849,8 +891,7 @@ nsEditorShell::RemoveOneProperty(const nsString& aProp, const nsString &aAttr)
       err = NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  UpdateInterfaceState();
-  NS_RELEASE(styleAtom);
+  UpdateInterfaceState(aProp.GetUnicode());
   return err;
 }
 
@@ -1520,7 +1561,7 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
         } else {
           // File was saved successfully
           *_retval = PR_TRUE;
- 
+
           // Update window title to show possibly different filename
           if (mustShowFileDialog)
             UpdateWindowTitle();
@@ -1545,12 +1586,12 @@ nsEditorShell::CloseWindow( PRBool *_retval )
   // Don't close the window if there was an error saving file or 
   //   user canceled an action along the way
   if (NS_SUCCEEDED(rv) && *_retval)
-    {
+  {
     nsCOMPtr<nsIBaseWindow> baseWindow;
     GetTreeOwner(mDocShell, getter_AddRefs(baseWindow));
     NS_ENSURE_TRUE(baseWindow, NS_ERROR_FAILURE);
     baseWindow->Destroy();
-    }
+  }
 
   return rv;
 }
@@ -2910,6 +2951,29 @@ nsEditorShell::GetDocumentIsEmpty(PRBool *aDocumentIsEmpty)
 
   return NS_NOINTERFACE;
 }
+
+
+NS_IMETHODIMP
+nsEditorShell::GetDocumentEditable(PRBool *aDocumentEditable)
+{
+  *aDocumentEditable = PR_FALSE;  // default return value
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor) return NS_OK;
+  
+  PRUint32  editorFlags;
+  editor->GetFlags(&editorFlags);
+  
+  if (editorFlags & nsIHTMLEditor::eEditorReadonlyMask)
+    return NS_OK;
+  
+  nsCOMPtr<nsIDOMDocument> doc;
+  editor->GetDocument(getter_AddRefs(doc));
+  if (!doc) return NS_OK;
+
+  *aDocumentEditable = PR_TRUE;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)

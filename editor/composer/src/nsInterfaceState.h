@@ -32,6 +32,8 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
+#include "nsHashTable.h"
+
 class nsIHTMLEditor;
 class nsIDOMXULDocument;
 
@@ -54,10 +56,13 @@ public:
 
   // force an update of the UI. At some point, we could pass flags
   // here to target certain things for updating.
-  NS_IMETHOD    ForceUpdate();
+  NS_IMETHOD    ForceUpdate(const PRUnichar *tagToUpdate);
   
   // nsIDOMSelectionListener interface
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsIDOMSelection *aSel, short aReason);
+
+  NS_IMETHOD    SetCommandStateData(const nsString& commandName, void* stateData);
+  NS_IMETHOD    GetCommandStateData(const nsString& commandName, void* *outStateData);
 
   NS_DECL_NSIDOCUMENTSTATELISTENER
   
@@ -127,6 +132,8 @@ protected:
   PRPackedBool  mUpdateBold;
   PRPackedBool  mUpdateItalics;
   PRPackedBool  mUpdateUnderline;
+  
+  nsHashtable   mCommandStateTable;
   
   // current state
   PRInt8        mBoldState;

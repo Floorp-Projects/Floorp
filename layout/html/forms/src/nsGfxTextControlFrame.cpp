@@ -348,7 +348,7 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
           nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
           if (editController)
           {
-            editController->SetEditor(nsnull);
+            editController->SetCommandRefCon(nsnull);
             found = PR_TRUE;
           }
         }
@@ -1287,6 +1287,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
         inputElement->GetControllers(getter_AddRefs(controllers));
       else
         return rv = NS_ERROR_FAILURE;
+      
       if (NS_SUCCEEDED(rv))
       {
         PRUint32 count;
@@ -1301,7 +1302,7 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
             nsCOMPtr<nsIEditorController> editController = do_QueryInterface(controller);
             if (editController)
             {
-              editController->SetEditor(mEditor);
+              editController->SetCommandRefCon(mEditor);
               found = PR_TRUE;
             }
           }
@@ -3029,24 +3030,22 @@ nsGfxTextControlFrame::InstallEditor()
 		if (NS_FAILED(result)) { return result; }
 
     // check to see if mContent has focus, and if so tell the docshell.
-    nsIEventStateManager *manager;
-    result = mFramePresContext->GetEventStateManager(&manager);
+    nsCOMPtr<nsIEventStateManager> manager;
+    result = mFramePresContext->GetEventStateManager(getter_AddRefs(manager));
     if (NS_FAILED(result)) { return result; }
     if (!manager) { return NS_ERROR_NULL_POINTER; }
 
-    nsIContent *focusContent=nsnull;
-    result = manager->GetFocusedContent(&focusContent);
+    nsCOMPtr<nsIContent> focusContent;
+    result = manager->GetFocusedContent(getter_AddRefs(focusContent));
     if (NS_FAILED(result)) { return result; }
     if (focusContent)
     {
-      if (mContent==focusContent)
+      if (mContent == focusContent.get())
       {
         // XXX DocShell redesign work
         SetFocus();
       }
-      NS_RELEASE(focusContent);
     }
-    NS_RELEASE(manager);
   }
   mCreatingViewer = PR_FALSE;
   return result;

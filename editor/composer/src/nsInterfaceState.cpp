@@ -35,7 +35,6 @@
 #include "nsIDOMElement.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMAttr.h"
-#include "nsIDOMXULCommandDispatcher.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMWindow.h"
 #include "nsITimer.h"
@@ -45,6 +44,33 @@
 #include "nsITransactionManager.h"
 
 #include "nsInterfaceState.h"
+
+
+/*
+static PRBool StringHashDestroyFunc(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsString* stringData = NS_REINTERPRET_CAST(nsString*, aData);
+  delete stringData;
+  return PR_FALSE;
+}
+
+static void* StringHashCloneElementFunc(nsHashKey *aKey, void *aData, void* closure)
+{
+  nsString* stringData = NS_REINTERPRET_CAST(nsString*, aData);
+  if (stringData)
+  {
+    nsString* newString = new nsString(*stringData);
+    return newString;
+  }
+  
+  return nsnull;
+}
+
+*/
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 nsInterfaceState::nsInterfaceState()
 :  mEditor(nsnull)
@@ -261,7 +287,8 @@ void nsInterfaceState::TimerCallback()
     mSelectionCollapsed = isCollapsed;
   }
   
-  (void)ForceUpdate();
+  // (void)ForceUpdate();
+  CallUpdateCommands(NS_ConvertASCIItoUCS2("style"));
 }
 
 
@@ -291,42 +318,44 @@ nsresult nsInterfaceState::CallUpdateCommands(const nsString& aCommand)
 }
 
 NS_IMETHODIMP
-nsInterfaceState::ForceUpdate()
+nsInterfaceState::ForceUpdate(const PRUnichar *tagToUpdate)
 {
+  PRBool updateEverything = !tagToUpdate || !*tagToUpdate;
+
+#if 0
+  // This code is obsolete now that commanders are doing the work
   nsresult  rv;
-  
-  // we don't really care if any of these fail.
-  
+    
   // update bold
-  if (mUpdateBold)
+  if (mUpdateBold && (updateEverything || nsAutoString("b").Equals(tagToUpdate)))
   {
-    rv = UpdateTextState("b", "Editor:Bold", "bold", mBoldState);
+    rv = UpdateTextState("b", "cmd_bold", "bold", mBoldState);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
   
   // update italic
-  if (mUpdateItalics)
+  if (mUpdateItalics && (updateEverything || nsAutoString("i").Equals(tagToUpdate)))
   {
-    rv = UpdateTextState("i", "Editor:Italic", "italic", mItalicState);
+    rv = UpdateTextState("i", "cmd_italic", "italic", mItalicState);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
 
   // update underline
-  if (mUpdateUnderline)
+  if (mUpdateUnderline && (updateEverything || nsAutoString("u").Equals(tagToUpdate)))
   {
-    rv = UpdateTextState("u", "Editor:Underline", "underline", mUnderlineState);
+    rv = UpdateTextState("u", "cmd_underline", "underline", mUnderlineState);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
   
   // update the paragraph format popup
-  if (mUpdateParagraph)
+  if (mUpdateParagraph && (updateEverything || nsAutoString("format").Equals(tagToUpdate)))
   {
     rv = UpdateParagraphState("Editor:Paragraph:Format", "format");
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
 
   // udpate the font face
-  if (mUpdateFont)
+  if (mUpdateFont && (updateEverything || nsAutoString("font").Equals(tagToUpdate)))
   {
     rv = UpdateFontFace("Editor:Font:Face", "font");
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
@@ -335,14 +364,41 @@ nsInterfaceState::ForceUpdate()
   // TODO: FINISH FONT FACE AND ADD FONT SIZE ("Editor:Font:Size", "fontsize", mFontSize)
 
   // update the list buttons
-  if (mUpdateList)
+  if (mUpdateList && (updateEverything ||
+        nsAutoString("ol").Equals(tagToUpdate) ||
+        nsAutoString("ul").Equals(tagToUpdate)))
   {
     rv = UpdateListState("Editor:Paragraph:ListType");
     NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to update state");
   }
+#endif
 
   return NS_OK;
 }
+
+
+NS_IMETHODIMP
+nsInterfaceState::SetCommandStateData(const nsString& commandName, void* stateData)
+{
+  nsStringKey commandKey(commandName);
+  mCommandStateTable.Put(&commandKey, stateData);
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsInterfaceState::GetCommandStateData(const nsString& commandName, void* *outStateData)
+{
+  nsStringKey commandKey(commandName);
+  
+  // sucks that we have to do two hash lookups
+  if (!mCommandStateTable.Exists(&commandKey))
+    return NS_ERROR_UNEXPECTED;
+    
+  *outStateData = mCommandStateTable.Get(&commandKey);
+  return NS_OK;
+}
+
 
 PRBool
 nsInterfaceState::SelectionIsCollapsed()
@@ -573,10 +629,7 @@ nsInterfaceState::UpdateDirtyState(PRBool aNowDirty)
 {
   if (mDirtyState != aNowDirty)
   {
-    nsresult rv;	// = SetNodeAttribute("Editor:Save", "disabled", aNowDirty ? "true" : "false");
-
-    rv = SetNodeAttribute("Editor:Save", "disabled", NS_ConvertASCIItoUCS2(aNowDirty ? "false" : "true"));
-	  if (NS_FAILED(rv)) return rv;
+    CallUpdateCommands(NS_ConvertASCIItoUCS2("save"));
 
     mDirtyState = aNowDirty;
   }

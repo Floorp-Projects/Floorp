@@ -34,7 +34,7 @@ class nsBaseCommand : public nsIControllerCommand
 public:
 
               nsBaseCommand();
-  virtual     ~nsBaseCommand();
+  virtual     ~nsBaseCommand() {}
     
   NS_DECL_ISUPPORTS
     
@@ -44,13 +44,16 @@ public:
 };
 
 
-#define NS_DECL_EDITOR_COMMAND(_cmd)          \
-class _cmd : public nsBaseCommand             \
-{                                             \
-public:                                       \
-  NS_DECL_NSICONTROLLERCOMMAND                \
+#define NS_DECL_EDITOR_COMMAND(_cmd)                    \
+class _cmd : public nsBaseCommand                       \
+{                                                       \
+public:                                                 \
+  NS_DECL_NSICONTROLLERCOMMAND                          \
 };
 
+
+
+// basic editor commands
 NS_DECL_EDITOR_COMMAND(nsUndoCommand)
 NS_DECL_EDITOR_COMMAND(nsRedoCommand)
 
@@ -62,5 +65,24 @@ NS_DECL_EDITOR_COMMAND(nsSelectAllCommand)
 
 NS_DECL_EDITOR_COMMAND(nsSelectionMoveCommands)
 
+
+
+#if 0
+// template for new command
+NS_IMETHODIMP
+nsFooCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsFooCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+#endif
 
 #endif // nsIEditorCommand_h_

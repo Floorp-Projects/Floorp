@@ -38,12 +38,11 @@ nsBaseCommand::nsBaseCommand()
   NS_INIT_REFCNT();
 }
 
-
-nsBaseCommand::~nsBaseCommand()
-{
-}
-
 NS_IMPL_ISUPPORTS(nsBaseCommand, NS_GET_IID(nsIControllerCommand));
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 
 NS_IMETHODIMP

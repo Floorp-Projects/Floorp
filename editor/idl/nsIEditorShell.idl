@@ -47,6 +47,9 @@ interface nsIEditorShell : nsISupports
   readonly attribute nsIDOMSelection   editorSelection;
   readonly attribute nsISelectionController   selectionController;
   
+           attribute nsIDOMWindow      webShellWindow;
+           attribute nsIDOMWindow      contentWindow;
+           
   [noscript] readonly attribute nsIEditor         editor;
   
 %{C++
@@ -64,15 +67,13 @@ interface nsIEditorShell : nsISupports
 %}
   readonly attribute boolean              documentModified;
   readonly attribute boolean              documentIsEmpty;
+  readonly attribute boolean              documentEditable;   // do we have a doc and editor yet?
   readonly attribute long                 documentLength;
   attribute long                          wrapColumn;
    
   /* Setup */
   void SetEditorType(in wstring editorType);
 
-  void SetToolbarWindow(in nsIDOMWindow win);
-  void SetContentWindow(in nsIDOMWindow win);
-  void SetWebShellWindow(in nsIDOMWindow win);
   void LoadUrl(in wstring url);
 
   /* Set the value of the <title> tag in the <head> of a document
@@ -158,9 +159,15 @@ interface nsIEditorShell : nsISupports
 
   /* General Utilities */
 
-  /* UI updating */
-  void UpdateInterfaceState();
+  /* UI updating
+   * tagToUpdate can be null or "" to update everything  
+  */
+  void UpdateInterfaceState(in wstring tagToUpdate);
 
+  /* Used to associate state with a command */
+  [noscript] void SetCommandStateData(in wstring commandName, in voidStar stateData);
+  [noscript] voidStar GetCommandStateData(in wstring commandName);
+    
   /* Get string from the Editor's localized string bundle */
   wstring GetString(in wstring name);
 
