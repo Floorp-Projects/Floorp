@@ -1,5 +1,5 @@
 /******************************************************************************
- * $Id: API.xs,v 1.9 1998/08/03 02:35:23 clayton Exp $
+ * $Id: API.xs,v 1.10 1998/08/03 06:53:23 leif Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -805,29 +805,30 @@ ldap_get_lang_values_len(ld,entry,target,type)
 int
 ldap_get_lderrno(ld,m,s)
 	LDAP *		ld
-	SV *		m = NO_INIT
-	SV *		s = NO_INIT
+	SV *		m
+	SV *		s
 	CODE:
 	{
-	   char *mm,*ss;
-	   RETVAL = ldap_get_lderrno(ld,&mm,&ss);
-	   if (mm == NULL)
+	   char *match = (char *)NULL, *msg = (char *)NULL;
+           SV *tmp;
+
+	   RETVAL = ldap_get_lderrno(ld, SvROK(m) ? &match : (char **)NULL,
+	                                 SvROK(s) ? &msg : (char **)NULL);
+
+	   if (match)
 	   {
-	      m = &sv_undef;
-	   } else {
-	      m = sv_2mortal(newSVpv(mm,strlen(mm)));
+	      tmp = SvRV(m);
+	      sv_setpv(tmp, match);
 	   }
-	   if (ss == NULL)
+	   if (msg)
 	   {
-	      s = &sv_undef;
-	   } else {
-	      s = sv_2mortal(newSVpv(ss,strlen(ss)));
+	      tmp = SvRV(s);
+	      sv_setpv(tmp, msg);
 	   }
+
 	}
 	OUTPUT:
 	RETVAL
-	m
-	s
 
 LDAPFiltInfo *
 ldap_getnextfilter(lfdp)
