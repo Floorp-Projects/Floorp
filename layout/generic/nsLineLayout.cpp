@@ -111,10 +111,8 @@ nsLineData::Verify(PRBool aFinalCheck) const
   if (1 == mChildCount) {
     if (mIsBlock) {
       nsIFrame* child = mFirstChild;
-      nsIStyleContext* sc;
-      child->GetStyleContext(nsnull, sc);
-      const nsStyleDisplay* display = (const nsStyleDisplay*)
-        sc->GetStyleData(eStyleStruct_Display);
+      const nsStyleDisplay* display;
+      child->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
       NS_ASSERTION((NS_STYLE_DISPLAY_BLOCK == display->mDisplay) ||
                    (NS_STYLE_DISPLAY_LIST_ITEM == display->mDisplay),
                    "bad mIsBlock state");
@@ -248,10 +246,8 @@ nsLineLayout::Initialize(nsBlockReflowState& aState, nsLineData* aLine)
   mLineHeight = 0;
 
   mNoWrap = PR_FALSE;
-  nsIStyleContext* sc;
-  mBlock->GetStyleContext(mPresContext, sc);
-  const nsStyleText* styleText = (const nsStyleText*)
-    sc->GetStyleData(eStyleStruct_Text);
+  const nsStyleText* styleText;
+  mBlock->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)styleText);
   switch (styleText->mWhiteSpace) {
   case NS_STYLE_WHITESPACE_PRE:
   case NS_STYLE_WHITESPACE_NOWRAP:
@@ -758,16 +754,13 @@ nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
       // ebina's engine.
       if ((nsnull != mLine->mPrevLine) && !mLine->mPrevLine->mIsBlock) {
         // Supply a default top margin
-        nsIStyleContext* blockSC;
-        mBlock->GetStyleContext(mPresContext, blockSC);
-        const nsStyleFont* styleFont = (const nsStyleFont*)
-          blockSC->GetStyleData(eStyleStruct_Font);
+        const nsStyleFont* styleFont;
+        mBlock->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)styleFont);
         nsIFontMetrics* fm = mPresContext->GetMetricsFor(styleFont->mFont);
         mBlockReflowState.mPrevNegBottomMargin = 0;
         mBlockReflowState.mPrevPosBottomMargin = fm->GetHeight();
         mBlockReflowState.mPrevMarginSynthetic = PR_TRUE;
         NS_RELEASE(fm);
-        NS_RELEASE(blockSC);
       }
     }
 
@@ -806,15 +799,13 @@ nsLineLayout::ReflowChild(nsIReflowCommand* aReflowCommand,
       if (eStyleUnit_Null == kidSpacing->mMargin.GetBottomUnit()) {
         // ebina's engine uses the height of the font for the bottom margin.
         nsIStyleContext* blockSC;
-        mBlock->GetStyleContext(mPresContext, blockSC);
-        const nsStyleFont* styleFont = (const nsStyleFont*)
-          blockSC->GetStyleData(eStyleStruct_Font);
+        const nsStyleFont* styleFont;
+        mBlock->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)styleFont);
         nsIFontMetrics* fm = mPresContext->GetMetricsFor(styleFont->mFont);
         mBlockReflowState.mPrevNegBottomMargin = 0;
         mBlockReflowState.mPrevPosBottomMargin = fm->GetHeight();
         mBlockReflowState.mPrevMarginSynthetic = PR_TRUE;
         NS_RELEASE(fm);
-        NS_RELEASE(blockSC);
       }
       else {
         // Save away bottom margin information for later
@@ -942,11 +933,8 @@ nsLineLayout::PlaceChild(nsRect& kidRect,
         // alignment will take care of that).
 
         // Compute gap between bullet and inner rect left edge
-        nsIStyleContext* blockCX;
-        mBlock->GetStyleContext(mPresContext, blockCX);
-        const nsStyleFont* font =
-          (const nsStyleFont*)blockCX->GetStyleData(eStyleStruct_Font);
-        NS_RELEASE(blockCX);
+        const nsStyleFont* font;
+        mBlock->GetStyleData(eStyleStruct_Font, (const nsStyleStruct*&)font);
         nsIFontMetrics* fm = mPresContext->GetMetricsFor(font->mFont);
         nscoord kidAscent = fm->GetMaxAscent();
         nscoord dx = fm->GetHeight() / 2;  // from old layout engine
@@ -1316,13 +1304,11 @@ nsLineLayout::PullUpChildren()
       // line in the block or if it's the first line and it's not the
       // first child in the line then we cannot pull-up the child.
       nsresult rv;
-      nsIStyleContextPtr kidSC;
-      rv = mState.mKidFrame->GetStyleContext(mPresContext, kidSC.AssignRef());
+      const nsStyleDisplay* kidDisplay;
+      rv = mState.mKidFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)kidDisplay);
       if (NS_OK != rv) {
         return rv;
       }
-      const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
-        kidSC->GetStyleData(eStyleStruct_Display);
       if (IsBlock(kidDisplay)) {
         if ((nsnull != mLine->mPrevLine) || (0 != mLine->mChildCount)) {
           goto done;
