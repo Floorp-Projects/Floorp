@@ -1646,8 +1646,6 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  if (!aPresContext || !aContent || !aResults) return matchCount;
-
   nsIAtom* presMedium = nsnull;
 
   aPresContext->GetMedium(&presMedium);
