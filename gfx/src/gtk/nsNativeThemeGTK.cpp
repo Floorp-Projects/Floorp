@@ -87,6 +87,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
   memset(mDisabledWidgetTypes, 0, sizeof(mDisabledWidgetTypes));
   memset(mSafeWidgetStates, 0, sizeof(mSafeWidgetStates));
 
+#ifdef MOZ_WIDGET_GTK
   // Look up the symbol for gtk_style_get_prop_experimental
   PRLibrary* gtkLibrary;
   PRFuncPtr stylePropFunc = PR_FindFunctionSymbolAndLibrary("gtk_style_get_prop_experimental", &gtkLibrary);
@@ -94,6 +95,7 @@ nsNativeThemeGTK::nsNativeThemeGTK()
     moz_gtk_enable_style_props((style_prop_t) stylePropFunc);
     PR_UnloadLibrary(gtkLibrary);
   }
+#endif
 }
 
 nsNativeThemeGTK::~nsNativeThemeGTK() {
