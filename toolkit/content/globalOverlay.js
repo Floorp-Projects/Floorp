@@ -61,7 +61,7 @@ function goQuitApplication()
   {
      var domWindow = enumerator.getNext();
      if (("tryToClose" in domWindow) && !domWindow.tryToClose())
-       return false;          
+       return false;
      domWindow.close();
   };
   appShell.quit(Components.interfaces.nsIAppShellService.eAttemptQuit);
@@ -96,8 +96,7 @@ function goDoCommand(command)
       controller.doCommand(command);
   }
   catch (e) {
-    dump("An error occurred executing the "+command+" command\n");
-    dump(e+"\n")
+    dump("An error occurred executing the " + command + " command\n" + e + "\n");
   }
 }
 

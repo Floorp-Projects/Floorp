@@ -472,20 +472,6 @@
         ]]></body>
       </method>
       
-      <method name="getElementByanonid">
-        <parameter name="aValue"/>
-        <body><![CDATA[
-          var nodes = document.getAnonymousNodes(this);
-          var results;
-          for (var i = 0; i < nodes.length; i++) {
-            results = nodes[i].getElementsByAttribute("anonid", aValue);
-            if (results.item(0))
-              return results[0];
-          }
-          return null;
-        ]]></body>
-      </method>
-      
       <method name="showPopup">
         <body><![CDATA[
           this.mPicker.parentNode.showPopup(this, -1, -1, "popup", "bottomleft", "topleft");
