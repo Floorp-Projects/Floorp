@@ -241,7 +241,7 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPTSTR aPrinterName, PRBool& aIsFo
 
 
   for (DWORD i = 0; i < dwNumItems; i++ ) {
-    if (_tcscmp(lpInfo[i].pPrinterName, aPrinterName)) {
+    if (_tcscmp(lpInfo[i].pPrinterName, aPrinterName) == 0) {
       aIsFound = PR_TRUE;
       aIsFile  = _tcscmp(lpInfo[i].pPortName, _T("FILE:")) == 0;
       break;
@@ -253,31 +253,30 @@ EnumerateNativePrinters(DWORD aWhichPrinters, LPTSTR aPrinterName, PRBool& aIsFo
 }
 
 //----------------------------------------------------------------
-static nsresult 
-CheckForPrintToFile(LPTSTR aPrinterName, PRBool& aIsFile)
+static void 
+CheckForPrintToFileWithName(LPTSTR aPrinterName, PRBool& aIsFile)
 {
   PRBool isFound = PR_FALSE;
   aIsFile = PR_FALSE;
   nsresult rv = EnumerateNativePrinters(PRINTER_ENUM_LOCAL, aPrinterName, isFound, aIsFile);
-  if (isFound || NS_FAILED(rv)) return rv;
+  if (isFound) return;
 
   rv = EnumerateNativePrinters(PRINTER_ENUM_NETWORK, aPrinterName, isFound, aIsFile);
-  if (isFound || NS_FAILED(rv)) return rv;
+  if (isFound) return;
 
   rv = EnumerateNativePrinters(PRINTER_ENUM_SHARED, aPrinterName, isFound, aIsFile);
-  if (isFound || NS_FAILED(rv)) return rv;
+  if (isFound) return;
 
   rv = EnumerateNativePrinters(PRINTER_ENUM_REMOTE, aPrinterName, isFound, aIsFile);
-  if (isFound || NS_FAILED(rv)) return rv;
+  if (isFound) return;
 
-  return NS_OK;
 }
 
 static nsresult 
 GetFileNameForPrintSettings(nsIPrintSettings* aPS)
 {
   // for testing
-#ifdef DEBUG_rods
+#ifdef DEBUG_rodsX
   return NS_OK;
 #endif
 
@@ -368,12 +367,12 @@ CheckForPrintToFile(nsIPrintSettings* aPS, LPTSTR aPrinterName, PRUnichar* aUPri
 
   PRBool toFile;
 #ifdef UNICODE
-  CheckForPrintToFile(aPrinterName?aPrinterName:aUPrinterName, toFile);
+  CheckForPrintToFileWithName(aPrinterName?aPrinterName:aUPrinterName, toFile);
 #else
   if (aPrinterName) {
-    CheckForPrintToFile(aPrinterName, toFile);
+    CheckForPrintToFileWithName(aPrinterName, toFile);
   } else {
-    CheckForPrintToFile((char*)NS_ConvertUCS2toUTF8(aUPrinterName).get(), toFile);
+    CheckForPrintToFileWithName((char*)NS_ConvertUCS2toUTF8(aUPrinterName).get(), toFile);
   }
 #endif
   aPS->SetPrintToFile(toFile);
@@ -430,12 +429,19 @@ NS_IMETHODIMP nsDeviceContextSpecWin::Init(nsIWidget* aWidget,
 
         return NS_OK;
       } else {
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+        printf("***** nsDeviceContextSpecWin::Init - deviceName/driverName/devMode was NULL!\n");
+#endif
         if (deviceName) nsCRT::free(deviceName);
         if (driverName) nsCRT::free(driverName);
         if (devMode) free(devMode);
       }
     }
-  } 
+  } else {
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+    printf("***** nsDeviceContextSpecWin::Init - aPrintSettingswas NULL!\n");
+#endif
+  }
 
   LPDEVMODE pDevMode  = NULL;
   HGLOBAL   hDevNames = NULL;
@@ -617,6 +623,30 @@ SetupDevModeFromSettings(LPDEVMODE aDevMode, nsIPrintSettings* aPrintSettings)
 
 }
 
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+static void DisplayLastError()
+{
+  LPVOID lpMsgBuf;
+  DWORD errCode = GetLastError();
+
+  FormatMessage( 
+      FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
+      NULL,
+      GetLastError(),
+      MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+      (LPTSTR) &lpMsgBuf,
+      0,
+      NULL 
+  );
+
+  // Display the string.
+  MessageBox( NULL, (const char *)lpMsgBuf, "GetLastError", MB_OK|MB_ICONINFORMATION );
+}
+#define DISPLAY_LAST_ERROR DisplayLastError();
+#else
+#define DISPLAY_LAST_ERROR 
+#endif
+
 //----------------------------------------------------------------------------------
 // Setup the object's data member with the selected printer's data
 nsresult
@@ -626,6 +656,12 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
 
   if (!GlobalPrinters::GetInstance()->PrintersAreAllocated()) {
     rv = GlobalPrinters::GetInstance()->EnumeratePrinterList();
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+    if (NS_FAILED(rv)) {
+      printf("***** nsDeviceContextSpecWin::GetDataFromPrinter - Couldn't enumerate printers!\n");
+      DISPLAY_LAST_ERROR
+    }
+#endif
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -649,6 +685,10 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     if (dwRet != IDOK) {
        free(pDevMode);
        ::ClosePrinter(hPrinter);
+#if defined(DEBUG_rods) || defined(DEBUG_dcone)
+       printf("***** nsDeviceContextSpecWin::GetDataFromPrinter - DocumentProperties call failed code: %d/0x%x\n", dwRet, dwRet);
+       DISPLAY_LAST_ERROR
+#endif
        return rv;
     }
 
@@ -673,6 +713,7 @@ nsDeviceContextSpecWin::GetDataFromPrinter(const PRUnichar * aName, nsIPrintSett
     rv = NS_OK;
   } else {
     rv = NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+    DISPLAY_LAST_ERROR
   }
   return rv;
 }
