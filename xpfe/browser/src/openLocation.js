@@ -23,16 +23,12 @@ var browser;
 var dialog;
 
 function onLoad() {
-}
-
-function onLoadWithArgs() {
 	dialog = new Object;
 	dialog.input     = document.getElementById( "dialog.input" );
-   dialog.ok        = document.getElementById( "dialog.ok" );
-   dialog.cancel    = document.getElementById( "dialog.cancel" );
-   dialog.help      = document.getElementById( "dialog.help" );
+    dialog.ok        = document.getElementById( "dialog.ok" );
+    dialog.cancel    = document.getElementById( "dialog.cancel" );
+    dialog.help      = document.getElementById( "dialog.help" );
 	dialog.newWindow = document.getElementById( "dialog.newWindow" );
-	dialog.args      = document.getElementById( "args" );
 
 	toolkit = XPAppCoresManager.Find( "toolkitCore" );
 	if ( !toolkit ) {
@@ -40,10 +36,10 @@ function onLoadWithArgs() {
 		toolkit.Init( "toolkitCore" );
 	}
 
-	browser = XPAppCoresManager.Find( dialog.args.getAttribute( "value" ) );
+	browser = XPAppCoresManager.Find( window.arguments[0] );
 	if ( !browser ) {
 		dump( "unable to get browser app core\n" );
-		//toolkit.CloseWindow( window );
+		toolkit.CloseWindow( window );
 	}
 
 	/* Give input field the focus. */
@@ -89,25 +85,22 @@ function open() {
 	}
 
 	/* Close dialog. */
-	//toolkit.CloseWindow( window );
+	toolkit.CloseWindow( window );
 }
 
 function choose() {
 	/* Use existing browser "open" logic. */
 	browser.openWindow();
-	//toolkit.CloseWindow( window );
+	toolkit.CloseWindow( window );
 }
 
 function cancel() {
-   if ( dialog.cancel.disabled ) {
-      return;
-   }
-	//toolkit.CloseWindow( window );
+    toolkit.CloseWindow( window );
 }
 
 function help() {
-   if ( dialog.help.disabled ) {
-      return;
-   }
-	dump( "openLocation::help() not implemented\n" );
+    if ( dialog.help.disabled ) {
+        return;
+    }
+    dump( "openLocation::help() not implemented\n" );
 }
