@@ -33,6 +33,7 @@ CPPSRCS=                                \
  nsWindowCreator.cpp                    \
  nsNativeAppSupportBase.cpp             \
  nsNativeAppSupportWin.cpp              \
+ showOSAlert.cpp                        \
  $(NULL)
 
 CPP_OBJS=                               \
@@ -41,6 +42,7 @@ CPP_OBJS=                               \
  .\$(OBJDIR)\nsWindowCreator.obj        \
  .\$(OBJDIR)\nsNativeAppSupportBase.obj \
  .\$(OBJDIR)\nsNativeAppSupportWin.obj  \
+ .\$(OBJDIR)\showOSAlert.obj            \
  $(NULL)
 
 LINCS=-I$(PUBLIC)\raptor                \

@@ -47,8 +47,6 @@
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIClipboard.h"
-#include "nsISoftwareUpdate.h"
-#include "nsSoftwareUpdateIIDs.h"
 #include "nsISupportsPrimitives.h"
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
@@ -64,6 +62,9 @@
 #include "nsBuildID.h"
 #include "nsWindowCreator.h"
 #include "nsIWindowWatcher.h"
+#include "nsProcess.h"
+
+#include "InstallCleanupDefines.h"
 
 // Interfaces Needed
 #include "nsIXULWindow.h"
@@ -88,6 +89,9 @@
 #define STANDALONE_APP_DIR_PREF    "profile.standalone_app.directory"
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
+static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID); 
+
+extern "C" void ShowOSAlert(char* aMessage);
 
 #define HELP_SPACER_1   "\t"
 #define HELP_SPACER_2   "\t\t"
@@ -136,6 +140,10 @@ public:
 	}
 };
 #endif // XP_MAC
+
+#ifdef MOZ_WIDGET_GTK
+#include <gtk/gtk.h>
+#endif //MOZ_WIDGET_GTK
 
 /* Define Class IDs */
 static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
@@ -813,6 +821,84 @@ static nsresult InitializeWindowCreator()
   return NS_ERROR_FAILURE;
 }
 
+static nsresult VerifyInstallation(int argc, char **argv)
+{
+  nsresult rv;
+  nsCOMPtr<nsILocalFile> registryFile;
+
+  NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return NS_OK;
+  rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, 
+                             NS_GET_IID(nsIFile), 
+                             getter_AddRefs(registryFile));
+  if (NS_FAILED(rv) || !registryFile)
+    return NS_OK;
+
+#ifdef XP_MAC
+  registryFile->Append(ESSENTIAL_FILES);
+#endif
+  registryFile->Append(CLEANUP_REGISTRY);
+
+  PRBool exists;
+  registryFile->Exists(&exists);
+  if (exists)
+  {
+    nsCOMPtr<nsIFile> binPath;
+    char cleanupMessage[256];
+    char* lastResortMessage = "A previous install did not complete correctly.  Finishing install.";
+    PRInt32 numRead;
+
+    registryFile->Clone(getter_AddRefs(binPath));
+    nsCOMPtr<nsILocalFile>cleanupMessageFile = do_QueryInterface(binPath, &rv);
+#ifdef XP_MAC
+    nsCOMPtr<nsIFile> messageFileParent;
+    cleanupMessageFile->GetParent(getter_AddRefs(messageFileParent));
+    cleanupMessageFile = do_QueryInterface(messageFileParent, &rv);
+#endif
+    cleanupMessageFile->SetLeafName("res");
+    cleanupMessageFile->Append(CLEANUP_MESSAGE_FILENAME);
+  
+    PRFileDesc* fd;
+    cleanupMessageFile->OpenNSPRFileDesc(PR_RDONLY, 0664, &fd);
+    if (fd)
+    {
+      numRead = PR_Read(fd, cleanupMessage, sizeof(cleanupMessage));
+      if (numRead > 0)
+        cleanupMessage[numRead] = 0;
+      else
+      {
+        //Something was wrong with the translated message file. empty? 
+        strcpy(cleanupMessage, lastResortMessage);
+      }
+    }
+    else
+    {
+      //Couldn't open the translated message file
+      strcpy(cleanupMessage, lastResortMessage);
+    }
+    //The cleanup registry file exists so we have cleanup work to do
+#ifdef MOZ_WIDGET_GTK
+    gtk_init(&argc, &argv);
+#endif
+    ShowOSAlert(cleanupMessage);
+
+    nsCOMPtr<nsIFile> cleanupUtility;
+    registryFile->Clone(getter_AddRefs(cleanupUtility));
+    cleanupUtility->SetLeafName(CLEANUP_UTIL);
+
+    //Create the process framework to run the cleanup utility
+    nsCOMPtr<nsIProcess> cleanupProcess = do_CreateInstance(kIProcessCID);
+    rv = cleanupProcess->Init(cleanupUtility);
+    if (NS_SUCCEEDED(rv))
+      rv = cleanupProcess->Run(PR_FALSE,nsnull, 0, nsnull);
+    
+    //We must exit because all open files must be released by the system
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
 #ifdef DEBUG_warren
 #ifdef XP_PC
 #define _CRTDBG_MAP_ALLOC
@@ -831,6 +917,21 @@ static nsresult InitializeWindowCreator()
 static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 {
   nsresult rv;
+
+  //----------------------------------------------------------------
+  // First we need to check if a previous installation occured and
+  // if so, make sure it finished and cleaned up correctly.
+  //
+  // If there is an xpicleanup.dat file left around, that means the
+  // previous installation did not finish correctly. We must cleanup
+  // before a valid mozilla can run.
+  //
+  // Show the user a platform-specific Alert message, then spawn the
+  // xpicleanup utility, then exit.
+  //----------------------------------------------------------------
+  rv = VerifyInstallation(argc, argv);
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
 
 #ifdef DEBUG_warren
 //  _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_CHECK_ALWAYS_DF);
@@ -868,24 +969,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
     }
   }
 
-  //----------------------------------------------------------------
-  // XPInstall needs to clean up after any updates that couldn't
-  // be completed because components were in use. This must be done
-  // **BEFORE** any other libraries are loaded!
-  //
-  // Will also check to see if AutoReg is required due to version
-  // change or installation of new components. If for some reason
-  // XPInstall can't be loaded we assume Autoreg is required.
-  //
-  // (scoped in a block to force release of COMPtr)
-  //----------------------------------------------------------------
-  PRBool needAutoreg = PR_TRUE;
-  {
-    nsCOMPtr<nsISoftwareUpdate> su(do_GetService(NS_IXPINSTALLCOMPONENT_CONTRACTID, &rv));
-    if (NS_SUCCEEDED(rv))
-      su->StartupTasks(&needAutoreg);
-  }
-
 #if XP_MAC
   stTSMCloser  tsmCloser;
 
@@ -894,7 +977,7 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
 #endif
 
   // XXX: This call will be replaced by a registry initialization...
-  NS_SetupRegistry_1( needAutoreg );
+  NS_SetupRegistry_1( PR_FALSE );
 
   // remove the nativeApp as an XPCOM autoreg observer
   if (obsService)
