@@ -74,6 +74,7 @@
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIPresShell.h"
+#include "nsIPresContext.h"
 #include "nsIImage.h"
 #include "nsAOLCiter.h"
 #include "nsInternetCiter.h"
@@ -397,6 +398,13 @@ NS_IMETHODIMP nsHTMLEditor::Init(nsIDOMDocument *aDoc,
   // Init the base editor
   result = nsEditor::Init(aDoc, aPresShell, aRoot, aSelCon, aFlags);
   if (NS_FAILED(result)) { return result; }
+
+  // disable links
+  nsCOMPtr<nsIPresContext> context;
+  aPresShell->GetPresContext(getter_AddRefs(context));
+  if (!context) return NS_ERROR_NULL_POINTER;
+  if (!(mFlags & eEditorPlaintextMask))
+    context->SetLinkHandler(0);  
 
   nsCOMPtr<nsIDOMElement> bodyElement;
   result = nsEditor::GetRootElement(getter_AddRefs(bodyElement));
