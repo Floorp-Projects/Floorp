@@ -419,11 +419,9 @@ nsBlockFrame::~nsBlockFrame()
 NS_IMETHODIMP
 nsBlockFrame::DeleteFrame(nsIPresContext& aPresContext)
 {
-  // When we have a bullet frame and it's not in our child list then
-  // we need to delete it ourselves (this is the common case for
-  // list-item's that have outside bullets).
-  if ((nsnull != mBullet) &&
-      ((nsnull == mLines) || (mBullet != mLines->mFirstChild))) {
+  // Outside bullets are not in our child-list so check for them here
+  // and delete them when present.
+  if (HaveOutsideBullet()) {
     mBullet->DeleteFrame(aPresContext);
     mBullet = nsnull;
   }
@@ -2356,10 +2354,50 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       // Post-process the "line"
       PostPlaceLine(aState, aLine, brc.GetMaxElementSize());
 
-      // Notify anyone who cares that the line has been placed
-      DidPlaceLine(aState, aLine,
-                   applyTopMargin ? brc.GetCollapsedTopMargin() : 0,
-                   brc.GetCollapsedBottomMargin(), *aKeepReflowGoing);
+      // Place the "marker" (bullet) frame.
+      //
+      // According to the CSS2 spec, section 12.6.1, the "marker" box
+      // participates in the height calculation of the list-item box's
+      // first line box.
+      //
+      // There are exactly two places a bullet can be placed: near the
+      // first or second line. Its only placed on the second line in a
+      // rare case: an empty first line followed by a second line that
+      // contains a block (example: <LI>\n<P>... ). This is where
+      // the second case can happen.
+      if (HaveOutsideBullet() &&
+          ((aLine == mLines) ||
+           ((0 == mLines->mBounds.height) && (aLine == mLines->mNext)))) {
+        // Reflow the bullet
+        nsHTMLReflowMetrics metrics(nsnull);
+        ReflowBullet(aState, metrics);
+
+        // For bullets that are placed next to a child block, there will
+        // be no correct ascent value. Therefore, make one up...
+        nscoord ascent = 0;
+        const nsStyleFont* font;
+        nsresult rv;
+        rv = frame->GetStyleData(eStyleStruct_Font,
+                                 (const nsStyleStruct*&) font);
+        if (NS_SUCCEEDED(rv) && (nsnull != font)) {
+          nsIRenderingContext& rc = *aState.rendContext;
+          rc.SetFont(font->mFont);
+          nsIFontMetrics* fm;
+          rv = rc.GetFontMetrics(fm);
+          if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
+            fm->GetMaxAscent(ascent);
+            NS_RELEASE(fm);
+          }
+        }
+
+        // Tall bullets won't look particularly nice here...
+        nsRect bbox;
+        mBullet->GetRect(bbox);
+        nscoord topMargin = applyTopMargin ? brc.GetCollapsedTopMargin() : 0;
+        bbox.y = aState.mBorderPadding.top + ascent - metrics.ascent +
+          topMargin;
+        mBullet->SetRect(bbox);
+      }
     }
     else {
       // None of the block fits. Determine the correct reflow status.
@@ -2657,10 +2695,33 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 {
   nsresult rv = NS_OK;
 
-  // Align the children. This also determines the actual height and
-  // width of the line.
+  // Vertically align the frames on this line.
+  //
+  // According to the CSS2 spec, section 12.6.1, the "marker" box
+  // participates in the height calculation of the list-item box's
+  // first line box.
+  //
+  // There are exactly two places a bullet can be placed: near the
+  // first or second line. Its only placed on the second line in a
+  // rare case: an empty first line followed by a second line that
+  // contains a block (example: <LI>\n<P>... ).
+  //
+  // For this code, only the first case is possible because this
+  // method is used for placing a line of inline frames. If the rare
+  // case is happening then the worst that will happen is that the
+  // bullet frame will be reflowed twice.
   nsInlineReflow& ir = *aState.mInlineReflow;
+  PRBool addedBullet = PR_FALSE;
+  if (HaveOutsideBullet() && (aLine == mLines) && !ir.IsZeroHeight()) {
+    nsHTMLReflowMetrics metrics(nsnull);
+    ReflowBullet(aState, metrics);
+    ir.AddFrame(mBullet, metrics);
+    addedBullet = PR_TRUE;
+  }
   ir.VerticalAlignFrames(aLine->mBounds, aState.mAscent, aState.mDescent);
+  if (addedBullet) {
+    ir.RemoveFrame(mBullet);
+  }
 
   // Only block frames horizontally align their children because
   // inline frames "shrink-wrap" around their children (therefore
@@ -2780,9 +2841,6 @@ printf(" mY=%d carried=%d,%d top=%d bottom=%d prev=%d shouldApply=%s\n",
     break;
   }
 
-  // Notify anyone who cares that the line has been placed
-  DidPlaceLine(aState, aLine, topMargin, bottomMargin, *aKeepReflowGoing);
-
   return rv;
 }
 
@@ -2847,40 +2905,6 @@ nsBlockFrame::PostPlaceLine(nsBlockReflowState& aState,
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
-  }
-}
-
-void
-nsBlockFrame::DidPlaceLine(nsBlockReflowState& aState,
-                           nsLineBox* aLine,
-                           nscoord aTopMargin, nscoord aBottomMargin,
-                           PRBool aLineReflowStatus)
-{
-  // Place the outside list bullet, if we have one
-  if ((nsnull == mPrevInFlow) && (nsnull != mBullet) &&
-      ShouldPlaceBullet(aLine)) {
-    nscoord ascent = aState.mAscent;
-    if (aLine->IsBlock()) {
-      ascent = 0;
-
-      // For bullets that are placed next to a child block, there will
-      // be no correct ascent value. Therefore, make one up...
-      const nsStyleFont* font;
-      nsresult rv;
-      rv = aLine->mFirstChild->GetStyleData(eStyleStruct_Font,
-                                            (const nsStyleStruct*&) font);
-      if (NS_SUCCEEDED(rv) && (nsnull != font)) {
-        nsIRenderingContext& rc = *aState.rendContext;
-        rc.SetFont(font->mFont);
-        nsIFontMetrics* fm;
-        rv = rc.GetFontMetrics(fm);
-        if (NS_SUCCEEDED(rv) && (nsnull != fm)) {
-          fm->GetMaxAscent(ascent);
-          NS_RELEASE(fm);
-        }
-      }
-    }
-    PlaceBullet(aState, ascent, aTopMargin);
   }
 }
 
@@ -4254,14 +4278,10 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
   }
 
   if (eFramePaintLayer_Content == aWhichLayer) {
-    if (nsnull != mBullet) {
+    if ((nsnull != mBullet) && HaveOutsideBullet()) {
       // Paint outside bullets manually
-      const nsStyleList* list = (const nsStyleList*)
-        mStyleContext->GetStyleData(eStyleStruct_List);
-      if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == list->mListStylePosition) {
-        PaintChild(aPresContext, aRenderingContext, aDirtyRect, mBullet,
-                   aWhichLayer);
-      }
+      PaintChild(aPresContext, aRenderingContext, aDirtyRect, mBullet,
+                 aWhichLayer);
     }
   }
 }
@@ -4374,7 +4394,8 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     // Resolve style for the bullet frame
     nsIStyleContext* kidSC;
     aPresContext.ResolvePseudoStyleContextFor(mContent, 
-                nsHTMLAtoms::bulletPseudo, mStyleContext, PR_FALSE, &kidSC);
+                                              nsHTMLAtoms::mozListBulletPseudo,
+                                              mStyleContext, PR_FALSE, &kidSC);
 
     // Create bullet frame
     mBullet = new nsBulletFrame;
@@ -4391,6 +4412,10 @@ nsBlockFrame::SetInitialChildList(nsIPresContext& aPresContext,
     GetStyleData(eStyleStruct_List, (const nsStyleStruct*&) styleList);
     if (NS_STYLE_LIST_STYLE_POSITION_INSIDE == styleList->mListStylePosition) {
       InsertNewFrames(aPresContext, mBullet, nsnull);
+      mState &= ~NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
+    }
+    else {
+      mState |= NS_BLOCK_FRAME_HAS_OUTSIDE_BULLET;
     }
   }
 
@@ -4489,34 +4514,9 @@ nsBlockFrame::RenumberLists(nsBlockReflowState& aState)
   }
 }
 
-PRBool
-nsBlockFrame::ShouldPlaceBullet(nsLineBox* aLine)
-{
-  PRBool ok = PR_FALSE;
-  const nsStyleList* list;
-  GetStyleData(eStyleStruct_List, (const nsStyleStruct*&)list);
-  if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == list->mListStylePosition) {
-    nsLineBox* line = mLines;
-    while (nsnull != line) {
-      if (line->mBounds.height > 0) {
-        if (aLine == line) {
-          ok = PR_TRUE;
-          break;
-        }
-      }
-      if (aLine == line) {
-        break;
-      }
-      line = line->mNext;
-    }
-  }
-  return ok;
-}
-
 void
-nsBlockFrame::PlaceBullet(nsBlockReflowState& aState,
-                          nscoord aMaxAscent,
-                          nscoord aTopMargin)
+nsBlockFrame::ReflowBullet(nsBlockReflowState& aState,
+                           nsHTMLReflowMetrics& aMetrics)
 {
   // Reflow the bullet now
   nsSize availSize;
@@ -4524,13 +4524,12 @@ nsBlockFrame::PlaceBullet(nsBlockReflowState& aState,
   availSize.height = NS_UNCONSTRAINEDSIZE;
   nsHTMLReflowState reflowState(aState.mPresContext, mBullet, aState,
                                 availSize, aState.mLineLayout);
-  nsHTMLReflowMetrics metrics(nsnull);
   nsIHTMLReflow* htmlReflow;
   nsresult rv = mBullet->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
   if (NS_SUCCEEDED(rv)) {
     nsReflowStatus  status;
     htmlReflow->WillReflow(aState.mPresContext);
-    htmlReflow->Reflow(aState.mPresContext, metrics, reflowState, status);
+    htmlReflow->Reflow(aState.mPresContext, aMetrics, reflowState, status);
     htmlReflow->DidReflow(aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
@@ -4538,12 +4537,12 @@ nsBlockFrame::PlaceBullet(nsBlockReflowState& aState,
   // from the rest of the frames in the line
   nsMargin margin;
   nsHTMLReflowState::ComputeMarginFor(mBullet, &aState, margin);
-  nscoord x = aState.mBorderPadding.left - margin.right - metrics.width;
-  // XXX This calculation may be wrong, especially if
-  // vertical-alignment occurs on the line!
-  nscoord y = aState.mBorderPadding.top + aMaxAscent -
-    metrics.ascent + aTopMargin;
-  mBullet->SetRect(nsRect(x, y, metrics.width, metrics.height));
+  nscoord x = aState.mBorderPadding.left - margin.right - aMetrics.width;
+
+  // Approximate the bullets position; vertical alignment will provide
+  // the final vertical location.
+  nscoord y = aState.mBorderPadding.top;
+  mBullet->SetRect(nsRect(x, y, aMetrics.width, aMetrics.height));
 }
 
 void
