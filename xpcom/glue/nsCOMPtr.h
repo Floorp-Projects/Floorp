@@ -236,10 +236,10 @@
     Update: ramiro is working on getting these into the configuration system.
   */
 
-#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90) && !defined(SOLARIS)
+#if defined(__GNUG__) && (__GNUC_MINOR__ <= 90)
   #define NSCAP_NO_MEMBER_USING_DECLARATIONS
 
-  #if defined(LINUX) && (__GNUC_MINOR__ <= 7)
+  #if (defined(LINUX) || defined(__bsdi__)) && (__GNUC_MINOR__ <= 7)
     #define NSCAP_NEED_UNUSED_VIRTUAL_IMPLEMENTATIONS
   #endif
 #endif
