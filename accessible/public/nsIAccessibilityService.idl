@@ -62,6 +62,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createHTMLTableHeadAccessible(in nsIDOMNode aDOMNode);
   nsIAccessible createHTMLTextAccessible(in nsISupports aFrame);
   nsIAccessible createHTMLTextFieldAccessible(in nsISupports aFrame);
+  nsIAccessible createHTMLHRAccessible(in nsISupports aFrame);
 
   nsIAccessible createXULButtonAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULCheckboxAccessible(in nsIDOMNode aNode);
@@ -91,6 +92,9 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULTreeAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTreeColumnsAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTreeColumnitemAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULToolbarAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULToolbarSeparatorAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTooltipAccessible(in nsIDOMNode aNode);
 
   nsIAccessible getAccessibleFor(in nsIDOMNode aNode);
 };

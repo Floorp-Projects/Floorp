@@ -22,10 +22,11 @@
       <property name="accessible">
         <getter>
           <![CDATA[
-            if (this.localName == "popup" || this.localName == "menupopup") {
-              var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            var accService = Components.classes["@mozilla.org/accessibilityService;1"].getService(Components.interfaces.nsIAccessibilityService);
+            if (this.localName == "popup" || this.localName == "menupopup")
               return (this.parentNode.localName == "menulist")? accService.createXULSelectListAccessible(this): accService.createXULMenupopupAccessible(this);
-            }
+            else if (this.localName == "tooltip")
+              return accService.createXULTooltipAccessible(this);
             return null;
           ]]>
         </getter>

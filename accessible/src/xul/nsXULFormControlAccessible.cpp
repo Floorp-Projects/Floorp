@@ -19,9 +19,10 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
+ * Original Author: John Gaunt (jgaunt@netscape.com)
  * Contributor(s):
- * Author: John Gaunt (jgaunt@netscape.com)
- *
+ *   Aaron Leventhal (aaronl@netscape.com)
+ *   Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -636,5 +637,48 @@ NS_IMETHODIMP nsXULStatusBarAccessible::GetAccRole(PRUint32 *_retval)
 NS_IMETHODIMP nsXULStatusBarAccessible::GetAccState(PRUint32 *_retval)
 {
   *_retval = 0;  // no special state flags for status bar
+  return NS_OK;
+}
+
+/**
+  * XUL ToolBar
+  */
+
+nsXULToolbarAccessible::nsXULToolbarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsAccessible(aNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsXULToolbarAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_TOOLBAR;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULToolbarAccessible::GetAccState(PRUint32 *_retval)
+{
+  nsAccessible::GetAccState(_retval);
+  *_retval &= ~STATE_FOCUSABLE;  // toolbar is not focusable
+  return NS_OK;
+}
+
+/**
+  * XUL Toolbar Separator
+  */
+
+nsXULToolbarSeparatorAccessible::nsXULToolbarSeparatorAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
+nsLeafAccessible(aNode, aShell)
+{ 
+}
+
+NS_IMETHODIMP nsXULToolbarSeparatorAccessible::GetAccRole(PRUint32 *_retval)
+{
+  *_retval = ROLE_SEPARATOR;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsXULToolbarSeparatorAccessible::GetAccState(PRUint32 *_retval)
+{
+  *_retval = 0;  // no special state flags for toolbar separator
   return NS_OK;
 }
