@@ -1366,6 +1366,29 @@ NS_METHOD nsWindow::SetWindowClipping( PhTile_t *damage, PhPoint_t &offset )
     }
   }
 
+  if( mClipSiblings )
+  {
+    for( w=PtWidgetBrotherInFront( mWidget ); w; w=PtWidgetBrotherInFront( w ))
+    {
+      PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
+      PtGetResources( w, 1, &arg );
+      tile = PhGetTile();
+      if( tile )
+      {
+        tile->rect.ul.x = area->pos.x;
+        tile->rect.ul.y = area->pos.y;
+        tile->rect.lr.x = area->pos.x + area->size.w - 1;
+        tile->rect.lr.y = area->pos.y + area->size.h - 1;
+        tile->next = NULL;
+        if( !clip_tiles )
+          clip_tiles = tile;
+        if( last )
+          last->next = tile;
+        last = tile;
+      }
+    }
+  }
+
   int rect_count;
   PhRect_t *rects;
   PhTile_t *dmg;
