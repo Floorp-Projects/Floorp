@@ -118,6 +118,7 @@ protected:
   PRBool      mVisible;
   PRBool      mDisplayed;
   PRBool      mIsDestroyingWindow;
+  PRBool      mIsTooSmall;
 
   // XXX Temporary, should not be caching the font
   nsFont *    mFont;
