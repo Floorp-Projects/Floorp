@@ -389,13 +389,13 @@ function formatDateOffset (offset, format)
     {
         var ary = new Array();
         if (days > 0)
-            ary.push (days + " days");
+            ary.push (getMsg("days", days));
         if (hours > 0)
-            ary.push (hours + " hours");
+            ary.push (getMsg("hours", hours));
         if (minutes > 0)
-            ary.push (minutes + " minutes");
+            ary.push (getMsg("minutes", minutes));
         if (seconds > 0 || offset == 0)
-            ary.push (seconds + " seconds");
+            ary.push (getMsg("seconds", seconds));
 
         format = ary.join(", ");
     }
