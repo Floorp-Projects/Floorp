@@ -1,7 +1,7 @@
 <!-- extracted from content/pref-fonts.xul -->
 
 <!-- LOCALIZATION NOTE : FILE 'Fonts' prefs dialog -->
-<!ENTITY  lHeader                                 "Fonts">
+<!ENTITY  lHeader                                 "Fonts &amp; Languages">
 
 <!ENTITY  language.label                          "Fonts for:">
 <!ENTITY  language.accesskey                      "t">
@@ -18,11 +18,6 @@
 <!ENTITY  sans-serif.accesskey                    "n">
 <!ENTITY  monospace.label                         "Monospace:">
 <!ENTITY  monospace.accesskey                     "m">
-<!-- LOCALIZATION NOTE (fantasy.label): 'Fantasy' means 'Ornate' -->
-<!ENTITY  fantasy.label                           "Fantasy:">
-<!ENTITY  fantasy.accesskey                       "f">
-<!ENTITY  cursive.label                           "Cursive:">
-<!ENTITY  cursive.accesskey                       "c">
 
 <!ENTITY  fontsize.units                          "pixels">
 
@@ -85,3 +80,15 @@
 <!ENTITY  calibrate.instructions                  "The length of the line above is:">
 <!ENTITY  units.inches                            "inches">
 <!ENTITY  units.centimetres                       "centimeters">
+
+<!-- Language settings -->
+
+<!ENTITY sendDefaultCharset.label             "Outgoing Mail:">
+<!ENTITY sendDefaultCharset.accesskey         "u">
+<!ENTITY languagesTitle.label				  "Languages">
+<!ENTITY composingDescription.label           "Set the default character encodings for sending and receiving mail">
+
+<!ENTITY viewDefaultCharsetList.label         "Incoming Mail:">
+<!ENTITY viewDefaultCharsetList.accesskey	  "I">
+<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header)">
+<!ENTITY forceCharsetOverride.accesskey   "d">

@@ -43,36 +43,8 @@ var outsideDomainLabel;
 var otherCasesPref;
 var otherCasesLabel;
 
-function setColorWell(aPicker)
-{
-  var colorRef;
-
-  colorRef = aPicker.nextSibling; // colour value is held here
-  colorRef.setAttribute( "value", aPicker.color );
-}
-
-function getColorFromWellAndSetValue(aPickerId)
-{
-  var picker;
-  var colorRef;
-  var color;
-
-  picker       = document.getElementById(aPickerId);
-  colorRef     = picker.nextSibling;
-  color        = colorRef.getAttribute("value");
-  picker.color = color;
-
-  return color;
-}     
-
 function Startup()
 {
-  getColorFromWellAndSetValue("labelColorPicker1");
-  getColorFromWellAndSetValue("labelColorPicker2");
-  getColorFromWellAndSetValue("labelColorPicker3");
-  getColorFromWellAndSetValue("labelColorPicker4");
-  getColorFromWellAndSetValue("labelColorPicker5");
-
   // return receipt startup
   receiptSend = document.getElementById("receiptSend");
   notInToCcPref = document.getElementById("notInToCcPref");
@@ -86,44 +58,9 @@ function Startup()
 
   // proxy connection
   DoEnabling();
-
-  // autocomplete
-  enableAutocomplete();
         
   return true;
 }                   
-
-/* Function to restore pref values to application defaults */
-function restoreColorAndDescriptionToDefaults()
-{
-  var prefColor;
-  var description;
-  var pickerColor;
-  var dataColor;
-  var labelDescription;
-  var prefService = Components.classes["@mozilla.org/preferences-service;1"]
-                              .getService(Components.interfaces.nsIPrefService);
-  var prefs = prefService.getDefaultBranch(null);
-
-  /* there are only 5 labels */
-	for(var i = 1; i <= 5; i++)
-  {
-    /* set the default description from prefs */
-    description = prefs.getComplexValue("mailnews.labels.description." + i,
-                                         Components.interfaces.nsIPrefLocalizedString).data;
-    labelDescription = document.getElementById("label" + i + "TextBox");
-    labelDescription.value = description;
-
-    /* set the default color from prefs */
-    prefColor = prefs.getCharPref("mailnews.labels.color." + i);
-    pickerColor = document.getElementById("labelColorPicker" + i);
-    pickerColor.color = prefColor;
-
-    // need to call setColorWell() so that the default pref value will be updated
-    // in the preferences file.
-    setColorWell(pickerColor);
-  }
-}
 
 // return receipts....
 function EnableDisableAllowedReceipts() {

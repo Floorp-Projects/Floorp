@@ -1,7 +1,7 @@
 messenger.jar:
 +   content/messenger/messengercompose/pref-formatting.xul             (content/pref-formatting.xul)
 +   content/messenger/messengercompose/pref-composing_messages.xul     (content/pref-composing_messages.xul)
-+   content/messenger/messengercompose/pref-viewing_messages.xul       (content/pref-viewing_messages.xul)
++   content/messenger/pref-viewing_messages.xul                        (content/pref-viewing_messages.xul)
 *+  content/messenger/pref-mailnews.xul                                (content/pref-mailnews.xul)
 +   content/messenger/pref-mailnews.js                                 (content/pref-mailnews.js)
 *+  content/messenger/pref-advanced.xul                                (content/pref-advanced.xul)
@@ -16,6 +16,8 @@ comm.jar:
 +   content/communicator/pref/pref-themes.js                           (content/pref-themes.js)
 *   content/communicator/pref/pref-extensions.xul                      (content/pref-extensions.xul)
 *   content/communicator/pref/pref-extensions.js                       (content/pref-extensions.js)
+*+  content/communicator/pref/pref-fonts.xul                           (content/pref-fonts.xul)
+*+  content/communicator/pref/pref-fonts.js                            (content/pref-fonts.js)
 
 en-US.jar:
 +   locale/en-US/communicator/pref/pref-fonts.dtd                      (locale/pref-fonts.dtd)

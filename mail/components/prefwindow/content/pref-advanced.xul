@@ -46,41 +46,28 @@
 <!DOCTYPE overlay [
   <!ENTITY % dtd1 SYSTEM "chrome://messenger/locale/pref-advanced.dtd" > %dtd1;
   <!ENTITY % dtd2 SYSTEM "chrome://messenger/locale/pref-receipts.dtd" > %dtd2;
-  <!ENTITY % dtd3 SYSTEM "chrome://messenger/locale/addressbook/pref-addressing.dtd" > %dtd3;
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       xmlns:nc="http://home.netscape.com/NC-rdf#"
       xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-      onload="onLoad();"
+      onload="parent.initPanel('chrome://messenger/content/pref-advanced.xul');  "
       headertitle="&pane.title;">
   
   <script type="application/x-javascript" src="chrome://messenger/content/pref-advanced.js"/>
-  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
 
   <script type="application/x-javascript">
   <![CDATA[
 
-    function onLoad()
-    {
-      createDirectoriesList(true);
-      parent.initPanel('chrome://messenger/content/pref-advanced.xul');   
-    }
-
-    var _elementIDs = [ // labels
-                       "label1TextBox", "label1Color", "label2TextBox", "label2Color", "label3TextBox", 
-                       "label3Color", "label4TextBox", "label4Color", "label5TextBox", "label5Color",
-
-                       // privacy settings
+    var _elementIDs = [ // privacy settings
                        "javascriptAllowMailNews", "networkImageDisableImagesInMailNews", "networkDisableCookieForMailNews",
                        
                        // return receipts
                        "alwaysRequest", "receiptFolder", "receiptSend", "notInToCcPref", "outsideDomainPref", "otherCasesPref",
                        
                        // addressing prefs
-                       "emailCollectionOutgoing", "addressingAutocomplete", "autocompleteLDAP",
-                       "localDirectoriesList", "directoriesList",
-                       
+                       "emailCollectionOutgoing", 
+                                              
                        // connection
                        "networkProxyType",
                        "networkProxyHTTP", "networkProxyHTTP_Port", 
@@ -93,65 +80,6 @@
 
   <vbox id="expanderCategories" class="listBox" flex="1" style="overflow: auto;">
     
-    <!-- Labels -->
-    <expander class="prefExpander" id="labels" label="&labelsSettings.label;" persist="open"> 
-      <label class="expanderDescription" value="&displayText.label;" flex="1"/>
-      <hbox align="top">
-        <vbox>
-          <!-- label color: 1 (default red) -->
-          <hbox class="indent" align="center">
-            <textbox id="label1TextBox" pref="true" preftype="localizedstring" 
-                     prefstring="mailnews.labels.description.1" prefattribute="value"/>
-            <colorpicker class="small-margin" type="button" id="labelColorPicker1"
-                         palettename="standard" onchange="setColorWell(this);"/>
-            <data id="label1Color" pref="true" preftype="color" prefstring="mailnews.labels.color.1"
-                  prefattribute="value" wsm_attributes="value"/>
-          </hbox>    
-
-          <!-- label color: 2 (default orange) -->
-          <hbox class="indent" align="center">
-            <textbox id="label2TextBox" pref="true" preftype="localizedstring"
-                     prefstring="mailnews.labels.description.2" prefattribute="value"/>
-            <colorpicker class="small-margin" type="button" id="labelColorPicker2"
-                         palettename="standard" onchange="setColorWell(this);"/>
-            <data id="label2Color" pref="true" preftype="color" prefstring="mailnews.labels.color.2"
-                  prefattribute="value" wsm_attributes="value"/>
-          </hbox>    
-
-          <!-- label color: 3 (default green) -->
-          <hbox class="indent" align="center">
-            <textbox id="label3TextBox" pref="true" preftype="localizedstring" 
-                     prefstring="mailnews.labels.description.3" prefattribute="value"/>
-            <colorpicker class="small-margin" type="button" id="labelColorPicker3"
-                         palettename="standard" onchange="setColorWell(this);"/>
-            <data id="label3Color" pref="true" preftype="color" prefstring="mailnews.labels.color.3"
-                  prefattribute="value" wsm_attributes="value"/>
-          </hbox>    
-        </vbox>
-
-        <vbox>
-          <!-- label color: 4 (default blue) -->
-          <hbox class="indent" align="center">
-            <textbox id="label4TextBox" pref="true" preftype="localizedstring" prefstring="mailnews.labels.description.4" prefattribute="value"/>
-            <colorpicker class="small-margin" type="button" id="labelColorPicker4" palettename="standard" onchange="setColorWell(this);"/>
-            <data id="label4Color" pref="true" preftype="color" prefstring="mailnews.labels.color.4" prefattribute="value" wsm_attributes="value"/>
-          </hbox>    
-
-          <!-- label color: 5 (default purple) -->
-          <hbox class="indent" align="center">
-            <textbox id="label5TextBox" pref="true" preftype="localizedstring" prefstring="mailnews.labels.description.5" prefattribute="value"/>
-            <colorpicker class="small-margin" type="button" id="labelColorPicker5" palettename="standard" onchange="setColorWell(this);"/>
-            <data id="label5Color" pref="true" preftype="color" prefstring="mailnews.labels.color.5" prefattribute="value" wsm_attributes="value"/>
-          </hbox>    
-
-          <hbox pack="end">
-            <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" oncommand="restoreColorAndDescriptionToDefaults();">
-            </button>
-          </hbox>  
-        </vbox>
-      </hbox>
-    </expander>
-
     <!-- Privacy Settings -->
 
     <expander id="privacySettings" class="prefExpander" label="&privacyTitle.label;" persist="open">
@@ -202,33 +130,6 @@
     </expander>
 
      -->
-
-    <!-- Address Autocomplete -->
-    <expander id="addressAutocompletion" class="prefExpander" label="&addressingTitle.label;" persist="open">
-      <label class="expanderDescription" value="&autocompleteText.label;" flex="1"/>
-      <hbox align="center">
-        <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
-                  prefstring="mail.enable_autocomplete"
-                  accesskey="&addressingEnable.accesskey;"/>
-      </hbox>
-      <hbox align="center">
-        <checkbox id="autocompleteLDAP" label="&directories.label;" 
-                  prefstring="ldap_2.autoComplete.useDirectory" 
-                  oncommand="enableAutocomplete();"
-                  accesskey="&directories.accesskey;"/>
-       <menulist id="directoriesList" flex="1"
-                  preftype="string" 
-                  prefstring="ldap_2.autoComplete.directoryServer">
-          <menupopup id="directoriesListPopup" 
-            onpopupshowing="createDirectoriesList(true);">
-          </menupopup>
-       </menulist>
-       <button id="editButton" label="&editDirectories.label;" 
-               prefstring="pref.ldap.disable_button.edit_directories" 
-               oncommand="onEditDirectories();"
-               accesskey="&editDirectories.accesskey;"/>
-      </hbox>
-    </expander>
 
     <!-- Return Receipts -->
     <expander id="returnReceipts" class="prefExpander" label="&receiptSettings.label;" persist="open"> 

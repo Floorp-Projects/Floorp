@@ -11,13 +11,22 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "foregroundText", "background"];
+    var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", 
+                       "mailCitationColor", "foregroundText", "background",
+                       // labels
+                       "label1TextBox", "label1Color", "label2TextBox", "label2Color", "label3TextBox", 
+                       "label3Color", "label4TextBox", "label4Color", "label5TextBox", "label5Color" ];
 
     function Startup()
     {
       getColorFromPickerAndSetWell('citationmenu', 'mailCitationColor');
       getColorFromWellAndSetValue('foregroundtextmenu');
       getColorFromWellAndSetValue('backgroundmenu');
+      getColorFromWellAndSetValue("labelColorPicker1");
+      getColorFromWellAndSetValue("labelColorPicker2");
+      getColorFromWellAndSetValue("labelColorPicker3");
+      getColorFromWellAndSetValue("labelColorPicker4");
+      getColorFromWellAndSetValue("labelColorPicker5");
     }
 
     function getColorFromPickerAndSetWell(menuID, colorfield)
@@ -43,6 +52,38 @@
       picker.color = color;
       return color;
     }     
+
+    /* Function to restore pref values to application defaults */
+    function restoreColorAndDescriptionToDefaults()
+    {
+      var prefColor;
+      var description;
+      var pickerColor;
+      var dataColor;
+      var labelDescription;
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"]
+                                  .getService(Components.interfaces.nsIPrefService);
+      var prefs = prefService.getDefaultBranch(null);
+
+      /* there are only 5 labels */
+	    for(var i = 1; i <= 5; i++)
+      {
+        /* set the default description from prefs */
+        description = prefs.getComplexValue("mailnews.labels.description." + i,
+                                             Components.interfaces.nsIPrefLocalizedString).data;
+        labelDescription = document.getElementById("label" + i + "TextBox");
+        labelDescription.value = description;
+
+        /* set the default color from prefs */
+        prefColor = prefs.getCharPref("mailnews.labels.color." + i);
+        pickerColor = document.getElementById("labelColorPicker" + i);
+        pickerColor.color = prefColor;
+
+        // need to call setColorWell() so that the default pref value will be updated
+        // in the preferences file.
+        setColorWell(pickerColor);
+      }
+    }
     ]]>
   </script>
 
@@ -50,20 +91,27 @@
     <caption label="&displayWidth.label;"/>
 
   <description>&viewingPlainText.label;</description>
-    <vbox align="start">
+    <hbox class="indent" align="start">
       <checkbox id="wrapLongLines" label="&wrapInMsg.label;"
                 prefstring="mail.wrap_long_lines" accesskey="&wrapInMsg.accesskey;"/>
+    </hbox>
+
+    <hbox class="indent" align="start">
       <checkbox class="iconic" id="displayGlyph" label="&convertEmoticons.label;"
                 prefstring="mail.display_glyph" accesskey="&convertEmoticons.accesskey;"/>
-    </vbox>
-     
-    <description>&plainText.label;</description>
+    </hbox>
     
-    <radiogroup id="mailFixedWidthMessages" 
+    <separator class="thin"/>
+    
+    <hbox align="center"> 
+      <description>&plainText.label;</description>
+    
+      <radiogroup id="mailFixedWidthMessages" orient="horizontal" class="indent"
                   preftype="bool" prefstring="mail.fixed_width_messages">
-      <radio value="true" label="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
-      <radio value="false" label="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
-    </radiogroup>
+        <radio value="true" label="&fixedWidth.label;" accesskey="&fixedWidth.accesskey;"/>
+        <radio value="false" label="&variableWidth.label;" accesskey="&variableWidth.accesskey;"/>                
+      </radiogroup>
+    </hbox>
 
     <separator class="thin"/>
 
@@ -97,15 +145,79 @@
   <groupbox>
     <caption label="&htmlColors.label;"/>
     <description>&overrideSender.label;</description>
-    <hbox align="center">
+    <hbox align="center" class="indent">
       <label value="&textColor.label;" accesskey="&textColor.accesskey;" control="foregroundtextmenu"/>
 
       <colorpicker type="button" id="foregroundtextmenu" palettename="standard" onchange="setColorWell(this)"/> 
       <data id="foregroundText" preftype="color" prefstring="browser.display.foreground_color" prefattribute="value" wsm_attributes="value"/>
+
+      <spacer style="width: 25px"/>
 
       <label value="&backgroundColor.label;" accesskey="&backgroundColor.accesskey;" control="backgroundmenu"/>
       <colorpicker type="button" id="backgroundmenu" palettename="standard" onchange="setColorWell(this)"/> 
       <data id="background" preftype="color" prefstring="browser.display.background_color" prefattribute="value" wsm_attributes="value"/>
     </hbox>
   </groupbox>
+
+  <!-- Labels -->
+  <groupbox>
+    <caption label="&labelsSettings.label;"/> 
+    <description>&displayText.label;</description>
+
+    <hbox align="top">
+      <vbox>
+        <!-- label color: 1 (default red) -->
+        <hbox class="indent" align="center">
+          <textbox id="label1TextBox" pref="true" preftype="localizedstring" 
+                   prefstring="mailnews.labels.description.1" prefattribute="value"/>
+          <colorpicker class="small-margin" type="button" id="labelColorPicker1"
+                       palettename="standard" onchange="setColorWell(this);"/>
+          <data id="label1Color" pref="true" preftype="color" prefstring="mailnews.labels.color.1"
+                prefattribute="value" wsm_attributes="value"/>
+        </hbox>    
+
+        <!-- label color: 2 (default orange) -->
+        <hbox class="indent" align="center">
+          <textbox id="label2TextBox" pref="true" preftype="localizedstring"
+                   prefstring="mailnews.labels.description.2" prefattribute="value"/>
+          <colorpicker class="small-margin" type="button" id="labelColorPicker2"
+                       palettename="standard" onchange="setColorWell(this);"/>
+          <data id="label2Color" pref="true" preftype="color" prefstring="mailnews.labels.color.2"
+                prefattribute="value" wsm_attributes="value"/>
+        </hbox>    
+
+        <!-- label color: 3 (default green) -->
+        <hbox class="indent" align="center">
+          <textbox id="label3TextBox" pref="true" preftype="localizedstring" 
+                   prefstring="mailnews.labels.description.3" prefattribute="value"/>
+          <colorpicker class="small-margin" type="button" id="labelColorPicker3"
+                       palettename="standard" onchange="setColorWell(this);"/>
+          <data id="label3Color" pref="true" preftype="color" prefstring="mailnews.labels.color.3"
+                prefattribute="value" wsm_attributes="value"/>
+        </hbox>    
+      </vbox>
+
+      <vbox>
+        <!-- label color: 4 (default blue) -->
+        <hbox class="indent" align="center">
+          <textbox id="label4TextBox" pref="true" preftype="localizedstring" prefstring="mailnews.labels.description.4" prefattribute="value"/>
+          <colorpicker class="small-margin" type="button" id="labelColorPicker4" palettename="standard" onchange="setColorWell(this);"/>
+          <data id="label4Color" pref="true" preftype="color" prefstring="mailnews.labels.color.4" prefattribute="value" wsm_attributes="value"/>
+        </hbox>    
+
+        <!-- label color: 5 (default purple) -->
+        <hbox class="indent" align="center">
+          <textbox id="label5TextBox" pref="true" preftype="localizedstring" prefstring="mailnews.labels.description.5" prefattribute="value"/>
+          <colorpicker class="small-margin" type="button" id="labelColorPicker5" palettename="standard" onchange="setColorWell(this);"/>
+          <data id="label5Color" pref="true" preftype="color" prefstring="mailnews.labels.color.5" prefattribute="value" wsm_attributes="value"/>
+        </hbox>    
+
+        <hbox pack="end">
+          <button label="&restoreDefaults.label;" accesskey="&restoreDefaults.accesskey;" oncommand="restoreColorAndDescriptionToDefaults();">
+          </button>
+        </hbox>  
+      </vbox>
+    </hbox>
+  </groupbox>
+
 </page>

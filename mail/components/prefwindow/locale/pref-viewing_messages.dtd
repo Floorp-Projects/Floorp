@@ -17,12 +17,6 @@
 <!ENTITY plainText.label				  "Use the following font:">
 <!ENTITY displayText.label				  "When displaying quoted plain text messages:">
 <!ENTITY viewingPlainText.label			  "When displaying plain text messages:">
-<!ENTITY languagesTitle.label			  "Languages">
-<!ENTITY coding.label					  "Use the following character coding as the default for viewing messages:">
-<!ENTITY sendDefaultCharset.label         "Character Coding:">
-<!ENTITY sendDefaultCharset.accesskey	  "r">
-<!ENTITY forceCharsetOverride.label       "Apply default to all messages (ignore character coding specified by MIME header)">
-<!ENTITY forceCharsetOverride.accesskey   "A">
 <!ENTITY fixedWidth.label                 "Fixed width font">
 <!ENTITY fixedWidth.accesskey             "f">
 <!ENTITY variableWidth.label              "Variable width font">
@@ -41,3 +35,9 @@
 <!ENTITY  textColor.accesskey             "T">
 <!ENTITY  backgroundColor.label           "Background Color:">
 <!ENTITY  backgroundColor.accesskey       "b">
+
+<!-- labels -->
+<!ENTITY labelsSettings.label       "Labels">
+<!ENTITY displayText.label          "Labels can be used to categorize and prioritize your messages.">
+<!ENTITY restoreDefaults.label      "Restore Defaults">
+<!ENTITY restoreDefaults.accesskey  "R">

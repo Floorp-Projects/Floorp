@@ -1,9 +1,5 @@
 <!ENTITY pane.title                 "Advanced">
-<!ENTITY labelsSettings.label       "Labels">
 <!ENTITY receiptSettings.label      "Return Receipts">
-<!ENTITY displayText.label          "Labels can be used to categorize and prioritize your messages.">
-<!ENTITY restoreDefaults.label      "Restore Defaults">
-<!ENTITY restoreDefaults.accesskey  "R">
 
 <!-- Privacy Settings -->
 <!ENTITY privacyTitle.label "Privacy">

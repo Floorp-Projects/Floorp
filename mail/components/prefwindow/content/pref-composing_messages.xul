@@ -5,20 +5,31 @@
 <!DOCTYPE page SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_messages.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');"
+      onload="onLoad();"
       headertitle="&pane.title;">
+
+  <script type="application/x-javascript" src="chrome://messenger/content/addressbook/pref-directory.js"/>
     
   <script type="application/x-javascript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", 
-                       "wrapLength", "mailWarnOnSendAccelKey", "sendDefaultCharsetList"];
-    var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
-    observerService.notifyObservers(null, "charsetmenu-selected", "mailedit");
+                       "wrapLength", "mailWarnOnSendAccelKey", 
+                       // auto complete prefs 
+                       "addressingAutocomplete", "autocompleteLDAP",
+                       "localDirectoriesList", "directoriesList",];
+    function onLoad()
+    {
+      createDirectoriesList(true);
+      parent.initPanel('chrome://messenger/content/messengercompose/pref-composing_messages.xul');  
+    }
 
     function Startup()
     {
       document.getElementById("spellCheckBeforeSend").hidden =
         !("@mozilla.org/spellchecker;1" in Components.classes);
+
+      // autocomplete
+      enableAutocomplete();
 
       doEnabling();
     }
@@ -94,29 +105,36 @@
                prefstring="mailnews.wraplength" prefattribute="value"/>
     <label value="&char.label;"/>
   </hbox>
-  </groupbox>  
+  </groupbox>
 
-  <!-- Default language for compose -->
-  <groupbox align="start">
-    <caption label="&languagesTitle.label;"/>
+  <!-- Address Autocomplete -->
+  <groupbox>
+    <caption label="&addressingTitle.label;"/>
+
+    <description>&autocompleteText.label;</description>
 
     <hbox align="center">
-      <label value="&composingDescription.label;"/>
+      <checkbox id="addressingAutocomplete" label="&addressingEnable.label;"
+                prefstring="mail.enable_autocomplete"
+                accesskey="&addressingEnable.accesskey;"/>
     </hbox>
-
-    <separator class="thin"/>
-
+    
     <hbox align="center">
-      <label control="sendDefaultCharsetList"
-             value="&sendDefaultCharset.label;" accesskey="&sendDefaultCharset.accesskey;" page="sendDefaultCharsetList"/>
-      <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
-                preftype="localizedstring" prefstring="mailnews.send_default_charset">
-        <template>
-          <menupopup>
-            <menuitem label="rdf:http://home.netscape.com/NC-rdf#Name" value="..." uri="..."/>
-          </menupopup>
-        </template>
-      </menulist>       
-    </hbox> 
-  </groupbox>   
+      <checkbox id="autocompleteLDAP" label="&directories.label;" 
+                prefstring="ldap_2.autoComplete.useDirectory" 
+                oncommand="enableAutocomplete();"
+                accesskey="&directories.accesskey;"/>
+      <menulist id="directoriesList" flex="1"
+                preftype="string" 
+                prefstring="ldap_2.autoComplete.directoryServer">
+        <menupopup id="directoriesListPopup" onpopupshowing="createDirectoriesList(true);">
+        </menupopup>
+      </menulist>
+      <button id="editButton" label="&editDirectories.label;" 
+              prefstring="pref.ldap.disable_button.edit_directories" 
+              oncommand="onEditDirectories();"
+              accesskey="&editDirectories.accesskey;"/>
+    </hbox>
+  </groupbox>
+
 </page>
