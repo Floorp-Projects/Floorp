@@ -70,6 +70,8 @@ install:: $(TARGETS)
 	$(INSTALL) $(srcdir)/../resources/Mail/joe@meer.net/inbox $(DIST)/bin/res/rdf/Mail/joe@meer.net
 	$(INSTALL) $(srcdir)/../resources/sidebar.xul $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/sidebar.css $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmarks.xul $(DIST)/bin/res/rdf
+	$(INSTALL) $(srcdir)/../resources/bookmarks.css $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/bookmarks.html $(DIST)/bin/res/rdf
 	$(INSTALL) $(srcdir)/../resources/Mail/joe@meer.net/work $(DIST)/bin/res/rdf/Mail/joe@meer.net
 	$(INSTALL) $(srcdir)/../resources/Mail/joe@meer.net/other $(DIST)/bin/res/rdf/Mail/joe@meer.net
