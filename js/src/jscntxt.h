@@ -235,7 +235,16 @@ struct JSContext {
     jsrefcount          requestDepth;
 #endif
 
-    /* Exception state. */
+    /*
+     * Secondary return value from native method called on the left-hand side
+     * of an assignment operator.  The native should store the object in which
+     * to set a property in *rval, and return the property's id expressed as a
+     * jsval by calling JS_SetCallReturnValue2(cx, idval).
+     */
+    jsval               rval2;
+    JSPackedBool        rval2set;
+
+    /* Exception state (NB: throwing packs with rval2set, above). */
     JSPackedBool        throwing;           /* is there a pending exception? */
     jsval               exception;          /* most-recently-thrown exceptin */
 

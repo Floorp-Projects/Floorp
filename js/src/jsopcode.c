@@ -1437,6 +1437,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		rval = POP_STR();
 		if (op == JSOP_SETNAME)
 		    (void) PopOff(ss, op);
+              do_setlval:
 		if ((sn = js_GetSrcNote(jp->script, pc - 1)) != NULL &&
 		    SN_TYPE(sn) == SRC_ASSIGNOP) {
 		    todo = Sprint(&ss->sprinter, "%s %s= %s",
@@ -1451,6 +1452,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 	      case JSOP_NEW:
 	      case JSOP_CALL:
 	      case JSOP_EVAL:
+	      case JSOP_SETCALL:
 		saveop = op;
 		op = JSOP_NOP;           /* turn off parens */
 		argc = GET_ARGC(pc);
@@ -1507,6 +1509,11 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		if (!ok)
 		    return JS_FALSE;
 		op = saveop;
+                if (op == JSOP_SETCALL) {
+                    if (!PushOff(ss, todo, op))
+                        return JS_FALSE;
+                    todo = Sprint(&ss->sprinter, "");
+                }
 		break;
 
 	      case JSOP_DELNAME:
@@ -1682,7 +1689,10 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		xval = POP_STR();
 		op = JSOP_GETELEM;
 		lval = POP_STR();
-		todo = Sprint(&ss->sprinter, "%s[%s]", lval, xval);
+                if (*xval == '\0')
+                    todo = Sprint(&ss->sprinter, "%s", lval);
+                else
+                    todo = Sprint(&ss->sprinter, "%s[%s]", lval, xval);
 		break;
 
 	      case JSOP_SETELEM:
@@ -1691,15 +1701,17 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		xval = POP_STR();
 		op = JSOP_SETELEM;
 		lval = POP_STR();
-		if ((sn = js_GetSrcNote(jp->script, pc - 1)) != NULL &&
-		    SN_TYPE(sn) == SRC_ASSIGNOP) {
-		    todo = Sprint(&ss->sprinter, "%s[%s] %s= %s",
-				  lval, xval,
-				  js_CodeSpec[lastop].token, rval);
-		} else {
-		    todo = Sprint(&ss->sprinter, "%s[%s] = %s",
-				  lval, xval, rval);
-		}
+                if (*xval == '\0')
+                    goto do_setlval;
+                if ((sn = js_GetSrcNote(jp->script, pc - 1)) != NULL &&
+                    SN_TYPE(sn) == SRC_ASSIGNOP) {
+                    todo = Sprint(&ss->sprinter, "%s[%s] %s= %s",
+                                  lval, xval,
+                                  js_CodeSpec[lastop].token, rval);
+                } else {
+                    todo = Sprint(&ss->sprinter, "%s[%s] = %s",
+                                  lval, xval, rval);
+                }
 		break;
 
 	      case JSOP_GETARG:
@@ -2427,10 +2439,12 @@ js_DecompileValueGenerator(JSContext *cx, JSBool checkStack, jsval v,
 	    JS_ASSERT(off == (uintN) PTRDIFF(pc, begin, jsbytecode));
 	    if (mode == JOF_PROP) {
 		tmp[off] = (format & JOF_SET) ? JSOP_GETPROP2 : JSOP_GETPROP;
-	    } else {
-		JS_ASSERT(mode == JOF_ELEM);
+	    } else if (mode == JOF_ELEM) {
 		tmp[off] = (format & JOF_SET) ? JSOP_GETELEM2 : JSOP_GETELEM;
-	    }
+	    } else {
+                JS_ASSERT(op == JSOP_SETCALL);
+                tmp[off] = JSOP_CALL;
+            }
 	}
 	begin = tmp;
     } else {

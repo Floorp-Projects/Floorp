@@ -1880,6 +1880,9 @@ AssignExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       case TOK_LB:
         pn2->pn_op = JSOP_SETELEM;
         break;
+      case TOK_LP:
+        pn2->pn_op = JSOP_SETCALL;
+        break;
       default:
         js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
                                     JSMSG_BAD_LEFTSIDE_OF_ASS);

@@ -3177,6 +3177,26 @@ JS_IsConstructing(JSContext *cx)
     return cx->fp && cx->fp->constructing;
 }
 
+JS_FRIEND_API(JSBool)
+JS_IsAssigning(JSContext *cx)
+{
+    JSStackFrame *fp;
+    jsbytecode *pc;
+
+    for (fp = cx->fp; fp && !fp->script; fp = fp->down)
+        ;
+    if (!fp || !(pc = fp->pc))
+	return JS_FALSE;
+    return (js_CodeSpec[*pc].format & JOF_SET) != 0;
+}
+
+JS_PUBLIC_API(void)
+JS_SetCallReturnValue2(JSContext *cx, jsval v)
+{
+    cx->rval2 = v;
+    cx->rval2set = JS_TRUE;
+}
+
 /************************************************************************/
 
 JS_PUBLIC_API(JSString *)
@@ -3645,19 +3665,6 @@ JS_ClearContextThread(JSContext *cx)
     return old;
 }
 #endif
-
-/************************************************************************/
-
-JS_FRIEND_API(JSBool)
-JS_IsAssigning(JSContext *cx)
-{
-    JSStackFrame *fp;
-    jsbytecode *pc;
-
-    if (!(fp = cx->fp) || !(pc = fp->pc))
-	return JS_FALSE;
-    return (js_CodeSpec[*pc].format & JOF_SET) != 0;
-}
 
 /************************************************************************/
 

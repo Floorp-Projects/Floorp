@@ -710,6 +710,9 @@ have_fun:
 
     /* Call the function, either a native method or an interpreted script. */
     if (native) {
+        /* Set by JS_SetCallReturnValue2, used to return reference types. */
+        cx->rval2set = JS_FALSE;
+
         /* If native, use caller varobj and scopeChain for eval. */
         frame.varobj = fp->varobj;
         frame.scopeChain = fp->scopeChain;
@@ -2518,6 +2521,44 @@ js_Interpret(JSContext *cx, jsval *result)
             RESTORE_SP(fp);
             if (!ok)
                 goto out;
+            if (cx->rval2set) {
+                /*
+                 * Sneaky: use the stack depth we didn't claim in our budget,
+                 * but that we know is there on account of [fun, this] already
+                 * having been pushed, at a minimum (if no args).  Those two
+                 * slots have been popped and [rval] has been pushed, which
+                 * leaves one more slot for rval2 before we might overflow.
+                 *
+                 * NB: rval2 must be the property identifier, and rval the
+                 * object from which to get the property.  The pair form an
+                 * ECMA "reference type", which can be used on the right- or
+                 * left-hand side of assignment op.  Only native methods can
+                 * return reference types.  See JSOP_SETCALL just below for
+                 * the left-hand-side case.
+                 */
+                PUSH_OPND(cx->rval2);
+                cx->rval2set = JS_FALSE;
+                ELEMENT_OP(CACHED_GET(OBJ_GET_PROPERTY(cx, obj, id, &rval)));
+                PUSH_OPND(rval);
+            }
+            obj = NULL;
+            break;
+
+          case JSOP_SETCALL:
+            argc = GET_ARGC(pc);
+            SAVE_SP(fp);
+            ok = js_Invoke(cx, argc, 0);
+            RESTORE_SP(fp);
+            if (!ok)
+                goto out;
+            if (!cx->rval2set) {
+                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_LEFTSIDE_OF_ASS);
+                ok = JS_FALSE;
+                goto out;
+            }
+            PUSH_OPND(cx->rval2);
+            cx->rval2set = JS_FALSE;
             obj = NULL;
             break;
 
