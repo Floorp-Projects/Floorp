@@ -237,6 +237,7 @@ public:
   nsSubsumeCStr operator+(char aChar);
 #endif
 
+
   /**********************************************************************
     Lexomorphic transforms...
    *********************************************************************/
@@ -432,8 +433,8 @@ public:
 
     // Yes, I know this makes assignment from a |nsSubsumeString| not do the special thing
     //  |nsSubsumeString| needs to go away
-  #ifdef AIX
-  nsCString& operator=(const nsSubsumeCStr& aSubsumeString);  // AIX requires a const here
+  #if defined(AIX) || defined(XP_OS2_VACPP)
+  nsCString& operator=(const nsSubsumeCStr& aSubsumeString);  // AIX and VAC++ requires a const here
   #else
   nsCString& operator=(nsSubsumeCStr& aSubsumeString);
   #endif
@@ -813,11 +814,11 @@ public:
 //  nsCAutoString(PRUnichar aChar);
 #endif
 
-#ifdef AIX
-    nsCAutoString(const nsSubsumeCStr& aSubsumeStr);  // AIX requires a const
+#if defined(AIX) || defined(XP_OS2_VACPP)
+    nsCAutoString(const nsSubsumeCStr& aSubsumeStr);  // AIX and VAC++ require a const
 #else
     nsCAutoString(nsSubsumeCStr& aSubsumeStr);
-#endif // AIX
+#endif // AIX || XP_OS2_VACPP
 
 
 #ifndef NEW_STRING_APIS

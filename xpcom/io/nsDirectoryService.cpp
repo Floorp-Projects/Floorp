@@ -31,6 +31,8 @@
 #include <Files.h>
 #include <Memory.h>
 #include <Processes.h>
+#elif defined(XP_OS2)
+#define MAX_PATH _MAX_PATH
 #elif defined(XP_PC)
 #include <windows.h>
 #include <shlobj.h>
@@ -99,6 +101,17 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 
 
 #ifdef XP_PC
+#ifdef XP_OS2
+    PPIB ppib;
+    PTIB ptib;
+    char buffer[CCHMAXPATH];
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+    *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
+    localFile->InitWithPath(buffer);
+    *aFile = localFile;
+    return NS_OK;
+#else
     char buf[MAX_PATH];
     if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
         // chop of the executable name by finding the rightmost backslash
@@ -110,6 +123,7 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
         *aFile = localFile;
         return NS_OK;
     }
+#endif
 
 #elif defined(XP_MAC)
     // get info for the the current process to determine the directory

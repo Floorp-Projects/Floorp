@@ -124,8 +124,8 @@ public:
    * This constructor takes a subsumestr
    * @param   reference to subsumestr
    */
-#ifdef AIX
-  nsString(const nsSubsumeStr& aSubsumeStr);   // AIX requires a const here
+#if defined(AIX) || defined(XP_OS2_VACPP)
+  nsString(const nsSubsumeStr& aSubsumeStr);   // AIX and VAC++ require a const here
 #else
   nsString(nsSubsumeStr& aSubsumeStr);   
 #endif
@@ -468,8 +468,8 @@ public:
 
     // Yes, I know this makes assignment from a |nsSubsumeString| not do the special thing
     //  |nsSubsumeString| needs to go away
-  #ifdef AIX
-  nsString& operator=(const nsSubsumeStr& aSubsumeString);  // AIX requires a const here
+  #if defined(AIX) || defined(XP_OS2_VACPP)
+  nsString& operator=(const nsSubsumeStr& aSubsumeString);  // AIX and VAC++ requires a const here
   #else
   nsString& operator=(nsSubsumeStr& aSubsumeString);
   #endif
@@ -904,11 +904,11 @@ public:
 //  nsAutoString(const nsStr& aString);
 #endif
 
-#ifdef AIX
-    nsAutoString(const nsSubsumeStr& aSubsumeStr);  // AIX requires a const
+#if defined(AIX) || defined(XP_OS2_VACPP)
+    nsAutoString(const nsSubsumeStr& aSubsumeStr);  // AIX and VAC++ requires a const
 #else
     nsAutoString(nsSubsumeStr& aSubsumeStr);
-#endif // AIX
+#endif // AIX || XP_OS2_VACPP
 
 
 #ifndef NEW_STRING_APIS
