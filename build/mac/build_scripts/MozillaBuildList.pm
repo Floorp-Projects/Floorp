@@ -1759,13 +1759,6 @@ sub BuildImglibProjects()
     BuildProject(":mozilla:modules:libimg:macbuild:png.xml",                 "png$D.o");
     MakeAlias(":mozilla:modules:libimg:macbuild:png$D.o",                    ":mozilla:dist:libimg:");
 
-    # MNG
-    if ($main::options{mng})
-    {
-        BuildProject(":mozilla:modules:libimg:macbuild:mng.xml",             "mng$D.o");
-        MakeAlias(":mozilla:modules:libimg:macbuild:mng$D.o",                ":mozilla:dist:libimg:");
-    }
-
     EndBuildModule("imglib");
 } # imglib
 
@@ -1786,12 +1779,6 @@ sub BuildImglib2Projects()
     
     BuildOneProject(":mozilla:modules:libpr0n:macbuild:libimg2.xml",            "libimg2$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     BuildOneProject(":mozilla:modules:libpr0n:macbuild:icondecoder.xml",        "icondecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    
-    # MNG
-    if ($main::options{mng})
-    {
-        BuildOneProject(":mozilla:modules:libpr0n:macbuild:mngdecoder.xml",     "mngdecoder$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
-    }
     
     EndBuildModule("libimg2");
 } # imglib2
