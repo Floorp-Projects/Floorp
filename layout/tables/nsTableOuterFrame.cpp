@@ -1406,6 +1406,13 @@ nsTableOuterFrame::IncrementalReflow(nsIPresContext*          aPresContext,
                                      const nsHTMLReflowState& aReflowState,
                                      nsReflowStatus&          aStatus)
 {
+  // At this point, we need an inner table frame, and we might have a caption.  
+  // Due to the logic in nsCSSFrameConstructor::ConstructTableFrame, we can 
+  // end here without an inner table frame.
+  if (mFrames.IsEmpty() || !mInnerTableFrame) {
+    NS_ASSERTION(PR_FALSE, "incomplete children");
+    return NS_ERROR_FAILURE;
+  }
   // the outer table is a target if its path has a reflow command
   nsHTMLReflowCommand* command = aReflowState.path->mReflowCommand;
   if (command)
@@ -1968,8 +1975,14 @@ NS_METHOD nsTableOuterFrame::Reflow(nsIPresContext*          aPresContext,
         mMinCaptionWidth = captionMet.mMaxElementWidth;
       }
     }
-    // At this point, we must have an inner table frame, and we might have a caption
-    NS_ASSERTION(mFrames.NotEmpty() && mInnerTableFrame, "incomplete children");
+    // At this point, we need an inner table frame, and we might have a 
+    // caption. Due to the logic in 
+    // nsCSSFrameConstructor::ConstructTableFrame, we can end here 
+    // without an inner table frame.
+    if (mFrames.IsEmpty() || !mInnerTableFrame) {
+      NS_ASSERTION(PR_FALSE, "incomplete children");
+      return NS_ERROR_FAILURE;
+    }
     nsSize   innerSize;
     nsMargin innerMargin, innerMarginNoAuto, innerPadding;
 
