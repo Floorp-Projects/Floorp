@@ -50,42 +50,45 @@ const DEFAULT_RECURINTERVAL = 7;
 const DEFAULT_RECURUNITS = "days";
 const DEFAULT_RECURFOREVER = true;
 
+var iCalLib = null;
+
 function Test()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+   if( iCalLib == null ) {
+      netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+      var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+      iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
+   }
     
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
-    this.iCalLib.SetServer( "/tmp/.oecalendar" );
-    
-    this.iCalLib.Test();
+   iCalLib.setServer( "/tmp/.oecalendar" );
+   iCalLib.Test();
+   alert( "Test Successfull" );
 }
 
 function TestAll()
 {
-    var id = TestAddEvent();
-    var iCalEvent = TestFetchEvent( id );
-    id = TestUpdateEvent( iCalEvent );
+   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
+   if( iCalLib == null ) {
+      var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
+      iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
+   }
+   iCalLib.setServer( "/tmp/.oecalendar" );
+   var id = TestAddEvent();
+   var iCalEvent = TestFetchEvent( id );
+   id = TestUpdateEvent( iCalEvent );
 //    TestSearchEvent();
-    TestDeleteEvent( id );
-    TestRecurring();
-    alert( "Test Successfull" );
+   TestDeleteEvent( id );
+   TestRecurring();
+   alert( "Test Successfull" );
 }
 
 function TestAddEvent()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-    
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
     var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
     
-    this.iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+    var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
 
-    this.iCalLib.SetServer( "/tmp/.oecalendar" );
-    
+    iCalEvent.id = 999999999;
     iCalEvent.title = DEFAULT_TITLE;
     iCalEvent.description = DEFAULT_DESCRIPTION;
     iCalEvent.location = DEFAULT_LOCATION;
@@ -115,7 +118,10 @@ function TestAddEvent()
     iCalEvent.end.hour = 13;
     iCalEvent.end.minute = 24;
 
-    var id = this.iCalLib.addEvent( iCalEvent );
+    var snoozetime = new Date();
+    iCalEvent.setSnoozeTime( snoozetime );
+
+    var id = iCalLib.addEvent( iCalEvent );
     
     if( id == null )
        alert( "Invalid Id" );
@@ -157,13 +163,6 @@ function TestAddEvent()
 
 function TestFetchEvent( id )
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-    
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
-    this.iCalLib.SetServer( "/tmp/.oecalendar" );
-
     var iCalEvent = iCalLib.fetchEvent( id );
     if( id == null )
        alert( "Invalid Id" );
@@ -205,13 +204,6 @@ function TestFetchEvent( id )
 
 function TestUpdateEvent( iCalEvent )
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-    
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
-    this.iCalLib.SetServer( "/tmp/.oecalendar" );
-    
     iCalEvent.title = DEFAULT_TITLE+"*NEW*";
     iCalEvent.description = DEFAULT_DESCRIPTION+"*NEW*";
     iCalEvent.location = DEFAULT_LOCATION+"*NEW*";
@@ -234,7 +226,7 @@ function TestUpdateEvent( iCalEvent )
     iCalEvent.end.hour = 14;
     iCalEvent.end.minute = 25;
 
-    var id = this.iCalLib.modifyEvent( iCalEvent );
+    var id = iCalLib.modifyEvent( iCalEvent );
     
     if( id == null )
        alert( "Invalid Id" );
@@ -259,31 +251,15 @@ function TestUpdateEvent( iCalEvent )
 
     return id;
 }
-
+/*
 function TestSearchEvent()
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-    
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
-    this.iCalLib.SetServer( "/tmp/.oecalendar" );
-    
-    var result = this.iCalLib.SearchByDate( 2000,01,01,00,00,2002,01,01,00,00 );
-    result = this.iCalLib.SearchBySQL( "SELECT * FROM VEVENT WHERE CATEGORIES = 'Personal'" );
-    result = this.iCalLib.SearchAlarm( 2001,9,22,11,30 );
-//    alert( "Result : " + result );
-}
+    result = iCalLib.SearchBySQL( "SELECT * FROM VEVENT WHERE CATEGORIES = 'Personal'" );
+    alert( "Result : " + result );
+}*/
 
 function TestDeleteEvent( id )
 {
-    netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-    var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-    
-    this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-    
-    this.iCalLib.SetServer( "/tmp/.oecalendar" );
-    
     iCalLib.deleteEvent( id );
 
     var iCalEvent = iCalLib.fetchEvent( id );
@@ -293,16 +269,8 @@ function TestDeleteEvent( id )
 }
 
 function TestRecurring() {
-   netscape.security.PrivilegeManager.enablePrivilege("UniversalXPConnect");
-   var iCalLibComponent = Components.classes["@mozilla.org/ical;1"].createInstance();
-
-   this.iCalLib = iCalLibComponent.QueryInterface(Components.interfaces.oeIICal);
-
    var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-
    this.iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
-
-   this.iCalLib.SetServer( "/tmp/.oecalendar" );
 
    iCalEvent.allDay = true;
    iCalEvent.recur = true;
@@ -322,14 +290,15 @@ function TestRecurring() {
    iCalEvent.end.hour = 23;
    iCalEvent.end.minute = 59;
 
-   this.iCalLib.addEvent( iCalEvent );
+   var id = iCalLib.addEvent( iCalEvent );
 
    var displayDates =  new Object();
    var checkdate = new Date( 2002, 0, 1, 0, 0, 0 );
-   var eventList = gICalLib.GetEventsForDay( checkdate, displayDates );
+   var eventList = iCalLib.getEventsForDay( checkdate, displayDates );
 
    if( !eventList.hasMoreElements() )
       alert( "Yearly Recur Test Failed" );
    
    var displayDate = new Date( displayDates.value.getNext().QueryInterface(Components.interfaces.nsISupportsPRTime).data );
+   iCalLib.deleteEvent( id );
 }
