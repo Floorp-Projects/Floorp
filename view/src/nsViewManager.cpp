@@ -25,17 +25,11 @@
 #include "nsView.h"
 #include "nsIScrollbar.h"
 #include "nsIClipView.h"
+#include "nsCOMPtr.h"
 
-static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
-static NS_DEFINE_IID(kIScrollbarIID, NS_ISCROLLBAR_IID);
 static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
-static NS_DEFINE_IID(kIBlenderIID, NS_IBLENDER_IID);
 static NS_DEFINE_IID(kRegionCID, NS_REGION_CID);
-static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
 static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-static NS_DEFINE_IID(kIClipViewIID, NS_ICLIPVIEW_IID);
-static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 
 static const PRBool gsDebug = PR_FALSE;
 
@@ -89,6 +83,13 @@ static void vm_timer_callback(nsITimer *aTimer, void *aClosure)
 #endif
 }
 
+static void blinkRect(nsIRenderingContext* context, const nsRect& r)
+{
+	context->InvertRect(r);
+	::PR_Sleep(::PR_MillisecondsToInterval(100));
+	context->InvertRect(r);
+}
+
 PRUint32 nsViewManager::mVMCount = 0;
 nsDrawingSurface nsViewManager::mDrawingSurface = nsnull;
 nsRect nsViewManager::mDSBounds = nsRect(0, 0, 0, 0);
@@ -131,7 +132,7 @@ nsViewManager :: ~nsViewManager()
 
     nsresult rv = nsComponentManager::CreateInstance(kRenderingContextCID, 
                                        nsnull, 
-                                       kIRenderingContextIID, 
+                                       NS_GET_IID(nsIRenderingContext), 
                                        (void **)&rc);
 
     if (NS_OK == rv)
@@ -217,56 +218,60 @@ nsrefcnt nsViewManager::Release(void)
   return mRefCnt;
 }
 
+static nsresult CreateRegion(nsIComponentManager* componentManager, nsIRegion* *result)
+{
+	*result = nsnull;
+	nsIRegion* region = nsnull;
+	nsresult rv = componentManager->CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**)&region);
+	if (NS_SUCCEEDED(rv)) {
+		rv = region->Init();
+		*result = region;
+	}
+	return rv;
+}
+
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
 NS_IMETHODIMP nsViewManager :: Init(nsIDeviceContext* aContext)
 {
-  nsresult rv;
+	nsresult rv;
 
-  NS_PRECONDITION(nsnull != aContext, "null ptr");
+	NS_PRECONDITION(nsnull != aContext, "null ptr");
 
-  if (nsnull == aContext) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (nsnull != mContext) {
-    return NS_ERROR_ALREADY_INITIALIZED;
-  }
-  mContext = aContext;
+	if (nsnull == aContext) {
+		return NS_ERROR_NULL_POINTER;
+	}
+	if (nsnull != mContext) {
+		return NS_ERROR_ALREADY_INITIALIZED;
+	}
+	mContext = aContext;
 
-  mDSBounds.Empty();
-  mTimer = nsnull;
-  mFrameRate = 0;
-  mTrueFrameRate = 0;
-  mTransCnt = 0;
+	mDSBounds.Empty();
+	mTimer = nsnull;
+	mFrameRate = 0;
+	mTrueFrameRate = 0;
+	mTransCnt = 0;
 
-  rv = SetFrameRate(UPDATE_QUANTUM);
+	rv = SetFrameRate(UPDATE_QUANTUM);
 
-  mLastRefresh = PR_IntervalNow();
+	mLastRefresh = PR_IntervalNow();
 
-  mRefreshEnabled = PR_TRUE;
+	mRefreshEnabled = PR_TRUE;
 
-  mMouseGrabber = nsnull;
-  mKeyGrabber = nsnull;
+	mMouseGrabber = nsnull;
+	mKeyGrabber = nsnull;
 
-  //create regions
-  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTransRgn);
-  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mOpaqueRgn);
-  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mTRgn);
-  nsComponentManager::CreateInstance(kRegionCID, nsnull, kIRegionIID, (void **)&mRCRgn);
-
-  if (nsnull != mTransRgn)
-    mTransRgn->Init();
-
-  if (nsnull != mOpaqueRgn)
-    mOpaqueRgn->Init();
-
-  if (nsnull != mTRgn)
-    mTRgn->Init();
-
-  if (nsnull != mRCRgn)
-    mRCRgn->Init();
-
-  return rv;
+	// create regions
+	nsIComponentManager* componentManager = nsnull;
+	rv = NS_GetGlobalComponentManager(&componentManager);
+	if (NS_SUCCEEDED(rv)) {
+		rv = CreateRegion(componentManager, &mTransRgn);
+		rv = CreateRegion(componentManager, &mOpaqueRgn);
+		rv = CreateRegion(componentManager, &mTRgn);
+		rv = CreateRegion(componentManager, &mRCRgn);
+	}
+  
+	return rv;
 }
 
 NS_IMETHODIMP nsViewManager :: GetRootView(nsIView *&aView)
@@ -513,6 +518,8 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
 #ifdef NEW_COMPOSITOR
   {
 #ifdef XP_MAC
+    // localcx->SelectOffScreenDrawingSurface(nsnull);
+    // blinkRect(localcx, trect);
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
 #else
 #ifdef XP_UNIX
@@ -588,13 +595,17 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
   PRInt32           accumstart;
   float             t2p, p2t;
   PRInt32           rgnrect;
-  nsRect            localrect;
+  nsRect            localrect, trect;
   PRBool            useopaque = PR_FALSE;
   nsRegionRectSet   onerect, *rectset;
+  
+  nsCOMPtr<nsIRegion> paintedRgn;
+  if (NS_FAILED(nsComponentManager::CreateInstance(kRegionCID, nsnull, NS_GET_IID(nsIRegion), (void**) getter_AddRefs(paintedRgn))))
+    return;
+  paintedRgn->Init();
 
   //printf("-------------begin paint------------\n");
-  if (aRootView && mRootView)
-  {
+  if (aRootView && mRootView) {
     nscoord ox = 0, oy = 0;
 
     ComputeViewOffset(aRootView, &ox, &oy, 1);
@@ -617,6 +628,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
     PRUint32  curflags;
     PRBool    pushing;
     PRUint32  pushcnt = 0;
+    PRBool    clipstate;
 
     for (cnt = loopstart; (increment > 0) ? (cnt < loopend) : (cnt > loopend); cnt += increment)
     {
@@ -634,13 +646,16 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
         if (curflags & PUSH_CLIP)
         {
-          PRBool  clipstate;
-
           if (state == BACK_TO_FRONT_OPACITY)
           {
             mOffScreenCX->PopState(clipstate);
             mRedCX->PopState(clipstate);
             mBlueCX->PopState(clipstate);
+
+            // permanently remove any painted opaque views.
+            mOffScreenCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+            mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+            mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
 
             pushcnt--;
             NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
@@ -650,6 +665,9 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             aRC.PopState(clipstate);
             pushcnt--;
             NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+
+            // permanently remove any painted opaque views.
+            aRC.SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
           }
           else
           {
@@ -663,8 +681,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
         }
         else if (curflags & POP_CLIP)
         {
-          PRBool  clipstate;
-
           if (state == BACK_TO_FRONT_OPACITY)
           {
             pushing = BACK_TO_FRONT_OPACITY;
@@ -693,6 +709,9 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             aRC.PopState(clipstate);
             pushcnt--;
             NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
+
+            // permanently remove any painted opaque views.
+            aRC.SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
           }
 
           if (state == FRONT_TO_BACK_POP_SEARCH)
@@ -751,11 +770,13 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                 else
                 {
                   RenderView(curview, aRC, aRect, *currect, aResult);
+                  
+                  // accumulate region of all rendered opaque views.
+                  trect.IntersectRect(*currect, aRect), trect *= t2p;
+                  paintedRgn->Union(trect.x, trect.y, trect.width, trect.height);
 
                   if (aResult == PR_FALSE)
                   {
-                    PRBool clipstate;
-
                     aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
 
                     if (clipstate)
@@ -772,8 +793,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
               case FRONT_TO_BACK_ACCUMULATE:
               {
-                nsRect  trect;
-
                 trect.IntersectRect(*currect, aRect);
                 trect *= t2p;
 
@@ -797,10 +816,12 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
                 {
                   RenderView(curview, aRC, aRect, *currect, aResult);
 
+                  // accumulate region of all rendered opaque views.
+                  trect.IntersectRect(*currect, aRect), trect *= t2p;
+                  paintedRgn->Union(trect.x, trect.y, trect.width, trect.height);
+
                   if (aResult == PR_FALSE)
                   {
-                    PRBool clipstate;
-
                     aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
 
                     if (clipstate)
@@ -822,8 +843,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
               case BACK_TO_FRONT_TRANS:
                 if ((curflags & VIEW_INCLUDED) && localrect.Intersects(*currect))
                 {
-                  PRBool clipstate;
-
                   RenderView(curview, aRC, localrect, *currect, clipstate);
                 }
 
@@ -837,8 +856,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
                   if (aResult == PR_FALSE)
                   {
-                    PRBool clipstate;
-
                     aRC.SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
 
                     if (clipstate)
@@ -860,8 +877,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
                   if (blendrect.IntersectRect(*currect, localrect))
                   {
-                    PRBool clipstate;
-
                     pixrect = blendrect;
 
                     pixrect.x -= localrect.x;
@@ -904,7 +919,7 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
                       if (nsnull == mBlender)
                       {
-                        if (NS_OK == nsComponentManager::CreateInstance(kBlenderCID, nsnull, kIBlenderIID, (void **)&mBlender))
+                        if (NS_OK == nsComponentManager::CreateInstance(kBlenderCID, nsnull, NS_GET_IID(nsIBlender), (void **)&mBlender))
                           mBlender->Init(mContext);
                       }
 
@@ -929,8 +944,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
           {
             if (state == BACK_TO_FRONT_OPACITY)
             {
-              PRBool clipstate;
-
               mOffScreenCX->SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
               mRedCX->SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
               mBlueCX->SetClipRect(*currect, nsClipCombine_kSubtract, clipstate);
@@ -949,8 +962,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
     while (pushcnt--)
     {
-      PRBool  clipstate;
-
       NS_ASSERTION(!((PRInt32)pushcnt < 0), "underflow");
 
       if (pushing == BACK_TO_FRONT_OPACITY)
@@ -958,9 +969,17 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
         mOffScreenCX->PopState(clipstate);
         mRedCX->PopState(clipstate);
         mBlueCX->PopState(clipstate);
-      }
-      else
+
+        // permanently remove any painted opaque views.
+        mOffScreenCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+        mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+        mRedCX->SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+      } else {
         aRC.PopState(clipstate);
+        
+        // permanently remove any painted opaque views.
+        aRC.SetClipRegion(*paintedRgn, nsClipCombine_kSubtract, clipstate);
+      }
     }
 
     switch (state)
@@ -996,6 +1015,9 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
           mTransRgn->Subtract(*mTRgn);
           mTransRgn->GetBoundingBox(&x, &y, &w, &h);
+
+          // permanently remove any opaque painted views.
+          mTransRgn->Subtract(*paintedRgn);
 
           aRC.SetClipRegion(*mTransRgn, nsClipCombine_kReplace, aResult);
 
@@ -1121,15 +1143,15 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
             // bug 5062:  recreate the local blending contexts if necessary, since global drawing surfaces may have
             // been created while viewing another page, have to make sure local contexts exist.
             if (mOffScreenCX == NULL) {
-              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mOffScreenCX))
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mOffScreenCX))
                 mOffScreenCX->Init(mContext, gOffScreen);
             }
             if (mRedCX == NULL) {
-              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mRedCX))
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mRedCX))
                 mRedCX->Init(mContext, gRed);
             }
             if (mBlueCX == NULL) {
-              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, kIRenderingContextIID, (void **)&mBlueCX))
+              if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID, nsnull, NS_GET_IID(nsIRenderingContext), (void **)&mBlueCX))
                 mBlueCX->Init(mContext, gBlue);
             }
 
@@ -1143,8 +1165,6 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
 
           if (state == BACK_TO_FRONT_OPACITY)
           {
-            PRBool  clipstate;
-
             mOffScreenCX->Translate(-localrect.x, -localrect.y);
             mRedCX->Translate(-localrect.x, -localrect.y);
             mBlueCX->Translate(-localrect.x, -localrect.y);
@@ -1171,6 +1191,9 @@ void nsViewManager :: RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, 
               mOpaqueRgn->GetBoundingBox(&localrect.x, &localrect.y, &localrect.width, &localrect.height);
 
               localrect *= p2t;
+
+              // permanently remove any opaque painted views.
+              mOpaqueRgn->Subtract(*paintedRgn);
 
               aRC.SetClipRegion(*mOpaqueRgn, nsClipCombine_kReplace, aResult);
 
@@ -1355,6 +1378,12 @@ NS_IMETHODIMP nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, P
   // Ignore any silly requests...
   if ((aRect.width == 0) || (aRect.height == 0))
     return NS_OK;
+    
+  // is this view even visible?
+  nsViewVisibility  visibility;
+  aView->GetVisibility(visibility);
+  if (visibility == nsViewVisibility_kHide)
+  	return NS_OK; 
 
   if (gsDebug)
   {
@@ -1551,7 +1580,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
       else if (nsnull != mKeyGrabber && NS_IS_KEY_EVENT(aEvent)) {
         view = mKeyGrabber;
       }
-      else if (NS_OK == aEvent->widget->QueryInterface(kIScrollbarIID, (void**)&sb)) {
+      else if (NS_OK == aEvent->widget->QueryInterface(NS_GET_IID(nsIScrollbar), (void**)&sb)) {
         view = baseView;
         NS_RELEASE(sb);
       }
@@ -2183,7 +2212,7 @@ void nsViewManager::AddRectToDirtyRegion(nsIView* aView, const nsRect &aRect) co
 		// The view doesn't have a dirty region so create one
 		nsresult rv = nsComponentManager::CreateInstance(kRegionCID, 
 		                               nsnull, 
-		                               kIRegionIID, 
+		                               NS_GET_IID(nsIRegion), 
 		                               (void **)&dirtyRegion);
 
 		if (NS_FAILED(rv)) return;
@@ -2396,7 +2425,7 @@ PRBool nsViewManager :: CreateDisplayList(nsIView *aView, PRInt32 *aIndex,
   lrect.x += aX;
   lrect.y += aY;
 
-  aView->QueryInterface(kIClipViewIID, (void **)&clipper);
+  aView->QueryInterface(NS_GET_IID(nsIClipView), (void **)&clipper);
   aView->GetChildCount(numkids);
   aView->GetScratchPoint(&point);
 
