@@ -469,6 +469,14 @@ menu {
   background-position: top left;
 }
 
+nobr {
+  min-height: 35px; margin-left: 2px; margin-top: 2px;
+  padding-left: 39px; 
+  background-image: url(chrome://editor/content/images/tag-nbr.gif);
+  background-repeat: no-repeat; 
+  background-position: top left;
+}
+
 noframes {
   min-height: 44px; margin-left: 2px; margin-top: 2px;
   padding-left: 17px; 
