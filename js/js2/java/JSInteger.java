@@ -35,6 +35,10 @@ class JSInteger extends JSNumber {
         return new JSString(Integer.toString(i));
     }
     
+    void twiddle(Environment theEnv) {
+        theEnv.theStack.push(new JSInteger(~i));
+    }
+
     void and(Environment theEnv) {
         JSValue vR = theEnv.theStack.pop();
         theEnv.theStack.push(new JSInteger(i & vR.toJSInteger().i));

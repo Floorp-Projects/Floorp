@@ -20,25 +20,176 @@ class JSValue extends ExpressionNode {
         throw new RuntimeException("unimplemented " + op + " called");
     }
     
-    void add(Environment theEnv)                        { unimplemented("add"); }
-    void subtract(Environment theEnv)                   { unimplemented("subtract"); }
-    void multiply(Environment theEnv)                   { unimplemented("multiply"); }
-    void divide(Environment theEnv)                     { unimplemented("divide"); }
-    void remainder(Environment theEnv)                  { unimplemented("remainder"); }
+    void gt(Environment theEnv) {
+        JSValue lV = toPrimitive("Number");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
+        if ((lV instanceof JSString) && (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.gt(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().gt(theEnv);
+        }
+    }
 
-    void and(Environment theEnv)                        { unimplemented("and"); }
-    void or(Environment theEnv)                         { unimplemented("or"); }
-    void xor(Environment theEnv)                        { unimplemented("xor"); }
-    void shl(Environment theEnv)                        { unimplemented("shl"); }
-    void shr(Environment theEnv)                        { unimplemented("shr"); }
-    void ushl(Environment theEnv)                       { unimplemented("ushl"); }
+    void ge(Environment theEnv) {
+        JSValue lV = toPrimitive("Number");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
+        if ((lV instanceof JSString) && (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.ge(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().ge(theEnv);
+        }
+    }
 
-    void gt(Environment theEnv)                         { unimplemented("gt"); }
-    void ge(Environment theEnv)                         { unimplemented("ge"); }
-    void lt(Environment theEnv)                         { unimplemented("lt"); }
-    void le(Environment theEnv)                         { unimplemented("le"); }
-    void eq(Environment theEnv)                         { unimplemented("eq"); }
-    void ne(Environment theEnv)                         { unimplemented("ne"); }
+    void lt(Environment theEnv) {
+        JSValue lV = toPrimitive("Number");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
+        if ((lV instanceof JSString) && (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.lt(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().lt(theEnv);
+        }
+    }
+
+    void le(Environment theEnv) {
+        JSValue lV = toPrimitive("Number");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
+        if ((lV instanceof JSString) && (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.le(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().le(theEnv);
+        }
+    }
+
+    void eq(Environment theEnv) {
+        JSValue lV = toPrimitive("Number");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
+        if ((lV instanceof JSString) && (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.eq(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().eq(theEnv);
+        }
+    }
+
+    void ne(Environment theEnv) {
+        JSValue lV = toPrimitive("Number");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("Number");
+        if ((lV instanceof JSString) && (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.ne(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().ne(theEnv);
+        }
+    }
+    
+    void plus(Environment theEnv) {
+        toJSDouble().plus(theEnv);
+    }
+
+    void minus(Environment theEnv) {
+        toJSDouble().minus(theEnv);
+    }
+
+    void twiddle(Environment theEnv) {
+        toJSInteger().twiddle(theEnv);
+    }
+
+    void bang(Environment theEnv) {
+        toJSBoolean().bang(theEnv);
+    }
+
+    void typeof(Environment theEnv) {
+        unimplemented("typeof");
+    }
+
+    void add(Environment theEnv) {
+        JSValue lV = toPrimitive("");
+        JSValue rV = theEnv.theStack.pop().toPrimitive("");
+        if ((lV instanceof JSString) || (rV instanceof JSString)) {
+            theEnv.theStack.push(rV);
+            lV.ne(theEnv);
+        }
+        else {
+            theEnv.theStack.push(rV.toJSDouble());
+            lV.toJSDouble().add(theEnv);
+        }
+    }
+    
+    void subtract(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSDouble());
+        toJSDouble().subtract(theEnv);
+    }
+    
+    void multiply(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSDouble());
+        toJSDouble().multiply(theEnv);
+    }
+    
+    void divide(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSDouble());
+        toJSDouble().divide(theEnv);
+    }
+    
+    void remainder(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSDouble());
+        toJSDouble().remainder(theEnv);
+    }
+    
+    void and(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSInteger());
+        toJSInteger().and(theEnv);
+    }
+    
+    void or(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSInteger());
+        toJSInteger().or(theEnv);
+    }
+    
+    void xor(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSInteger());
+        toJSInteger().xor(theEnv);
+    }
+    
+    void shl(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSInteger());
+        toJSInteger().shl(theEnv);
+    }
+    
+    void shr(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSInteger());
+        toJSInteger().shr(theEnv);
+    }
+    
+    void ushl(Environment theEnv) {
+        theEnv.theStack.push(theEnv.theStack.pop().toJSInteger());
+        toJSInteger().ushl(theEnv);
+    }     
+    
+    void getProp(Environment theEnv) {
+        unimplemented("getProp"); 
+    }
+    
+    void putProp(Environment theEnv) {
+        unimplemented("putProp"); 
+    }
+    
+    
     
     JSDouble toJSDouble()                               { unimplemented("toJSDouble"); return null; }
     JSInteger toJSInteger()                             { unimplemented("toJSInteger"); return null; }

@@ -20,6 +20,13 @@ class JSDouble extends JSNumber {
         theEnv.theStack.push(this);
     }
 
+    void plus(Environment theEnv) {
+        theEnv.theStack.push(this);
+    }
+    
+    void minus(Environment theEnv) {
+        theEnv.theStack.push(new JSDouble(-d));
+    }
     
     void add(Environment theEnv) {
         JSValue vR = theEnv.theStack.peek();

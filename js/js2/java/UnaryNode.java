@@ -22,6 +22,29 @@ class UnaryNode extends ExpressionNode {
         return result.toString();
     }
     
+    void eval(Environment theEnv)
+    {
+        child.eval(theEnv);
+        JSValue cV = theEnv.theStack.pop();
+
+        if (op == "+")
+            cV.plus(theEnv);
+        else
+        if (op == "-")
+            cV.minus(theEnv);
+        else
+        if (op == "~")
+            cV.twiddle(theEnv);
+        else
+        if (op == "!")
+            cV.bang(theEnv);
+        else
+        if (op == "typeof")
+            cV.typeof(theEnv);
+        else
+            System.out.println("missing unary op " + op);
+    }
+
     String getOperator()
     {
         return op;

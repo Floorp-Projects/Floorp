@@ -10,6 +10,10 @@ class JSString extends JSValue {
         theEnv.theStack.push(this);
     }
     
+    void typeof(Environment theEnv) {
+        theEnv.theStack.push(new JSString("string"));
+    }
+
     void add(Environment theEnv)
     {
         JSString vR = theEnv.theStack.pop().toJSString();
@@ -88,6 +92,6 @@ class JSString extends JSValue {
         return this;
     }
     
-    String s;
+    protected String s;
     
 }
