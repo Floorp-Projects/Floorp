@@ -16,13 +16,19 @@
  * Copyright (C) 1998,1999,2000 Erik van der Poel.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s): Bruce Robson
  */
 
+#include "plat.h"
+
+#ifdef PLAT_UNIX
 #include <thread.h>
 #include <synch.h>
+#endif
 
 #include "main.h"
+
+#ifdef PLAT_UNIX
 
 #define MUTEX_INIT() \
 	if (mutex_init(&mainMutex, USYNC_THREAD, NULL)) \
@@ -43,3 +49,37 @@
 	{ \
 		mutex_unlock(&mainMutex); \
 	} while (0);
+
+#define DECLARE_MUTEX mutex_t mainMutex
+
+#else /* Windows */
+
+#define MUTEX_INIT() \
+        if ((mainMutex = CreateMutex (NULL, FALSE, NULL)) == NULL) \
+        { \
+                fprintf(stderr, "CreateMutex failed\n"); \
+                exit(0); \
+                return 1; \
+        }
+
+#define MUTEX_LOCK() \
+        do \
+        { \
+                if (WaitForSingleObject(mainMutex, INFINITE) == WAIT_FAILED) \
+                { \
+                        fprintf(stderr, "WaitForSingleObject(mainMutex) failed\n"); \
+                } \
+        } while (0);
+
+#define MUTEX_UNLOCK() \
+        do \
+        { \
+                if (ReleaseMutex(mainMutex) == 0) \
+                { \
+                        fprintf(stderr, "ReleaseMutex failed\n"); \
+                } \
+        } while (0);
+
+#define DECLARE_MUTEX HANDLE mainMutex = NULL
+
+#endif

@@ -16,8 +16,10 @@
  * Copyright (C) 1998,1999,2000 Erik van der Poel.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s): Bruce Robson
  */
+
+#include "plat.h"
 
 #include <errno.h>
 #include <memory.h>
@@ -25,11 +27,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <thread.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <sys/types.h>
+#ifdef PLAT_UNIX
+#include <thread.h>
 #include <sys/systeminfo.h>
+#endif
 #include <signal.h>
 #include <sys/socket.h>
 #include <sys/wait.h>
@@ -47,7 +51,9 @@ getHostName(void)
 {
 	size_t	alloc;
 	char	*hostName;
+#ifdef PLAT_UNIX
 	long	size;
+#endif
 
 	alloc = 512;
 	hostName = calloc(alloc, 1);
@@ -56,6 +62,7 @@ getHostName(void)
 		return NULL;
 	}
 
+#ifdef PLAT_UNIX
 	while (1)
 	{
 		size = sysinfo(SI_HOSTNAME, hostName, alloc);
@@ -78,6 +85,14 @@ getHostName(void)
 			break;
 		}
 	}
+#else /* Windows */
+        if (gethostname(hostName, alloc) != 0)
+        {
+                fprintf(stderr, "gethostname failed\n");
+                free(hostName);
+                return NULL;
+        }
+#endif
 
 	return hostName;
 }
@@ -86,8 +101,10 @@ static int
 getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 	struct sockaddr_in *addr)
 {
+#ifdef PLAT_UNIX
 	char			buf[512];
 	int			err;
+#endif
 	struct hostent		host;
 	struct hostent		*ret;
 	unsigned short		shortPort;
@@ -110,9 +127,17 @@ getSocketAndIPAddress(void *a, unsigned char *hostName, int port,
 
 	/* XXX implement my own DNS lookup to do timeouts? */
 	/* XXX implement my own DNS lookup to try again? */
+#ifdef PLAT_UNIX
 	ret = gethostbyname_r((char *) hostName, &host, buf, sizeof(buf), &err);
-
 	if (!ret)
+#else /* Windows */
+        ret = gethostbyname((char *) hostName);
+        if (ret != NULL)
+        {
+                host = *ret;
+        }
+        else
+#endif
 	{
 		reportTime(REPORT_TIME_GETHOSTBYNAME_FAILURE, &theTime);
 		reportStatus(a, "gethostbyname_r failed", __FILE__, __LINE__);

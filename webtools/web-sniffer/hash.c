@@ -16,12 +16,13 @@
  * Copyright (C) 1998,1999,2000 Erik van der Poel.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s): Bruce Robson
  */
 
 #include <malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/time.h>
 
 #include "hash.h"
 #include "mutex.h"

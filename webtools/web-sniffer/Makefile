@@ -16,8 +16,14 @@
 # Copyright (C) 1998,1999,2000 Erik van der Poel.
 # All Rights Reserved.
 # 
-# Contributor(s): 
+# Contributor(s): Bruce Robson
 # 
+
+# Solaris
+LIBS = -lsocket -lnsl
+
+# Windows NT
+#LIBS =
 
 CC = gcc
 
@@ -65,31 +71,31 @@ all: view.cgi
 #all: $(EXES)
 
 dnstest: dns.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) dns.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) dns.c $(OBJS) $(LIBS) -o $@
 
 ftp: ftp.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) ftp.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) ftp.c $(OBJS) $(LIBS) -o $@
 
 grab: grab.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) grab.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) grab.c $(OBJS) $(LIBS) -o $@
 
 link: link.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) link.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) link.c $(OBJS) $(LIBS) -o $@
 
 pop: pop.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) pop.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) pop.c $(OBJS) $(LIBS) -o $@
 
 proxy: proxy.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) proxy.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) proxy.c $(OBJS) $(LIBS) -o $@
 
 robot: robot.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) robot.c $(OBJS) -lthread -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) robot.c $(OBJS) -lthread $(LIBS) -o $@
 
 urltest: url.c utils.c
 	$(PURIFY) $(CC) $(CFLAGS) -DURL_TEST url.c utils.c -o $@
 
 view.cgi: cgiview.c $(OBJS)
-	$(PURIFY) $(CC) $(CFLAGS) cgiview.c $(OBJS) -lsocket -lnsl -o $@
+	$(PURIFY) $(CC) $(CFLAGS) cgiview.c $(OBJS) $(LIBS) -o $@
 
 clean:
 	rm -f *.o $(EXES)

@@ -16,8 +16,10 @@
  * Copyright (C) 1998,1999,2000 Erik van der Poel.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s): Bruce Robson
  */
+
+#include "plat.h"
 
 #include <errno.h>
 #include <malloc.h>
@@ -26,7 +28,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifdef PLAT_UNIX
 #include <sys/stropts.h>
+#else
+#include <sys/socket.h>
+#endif
 
 #include "io.h"
 #include "utils.h"
@@ -113,7 +119,11 @@ readStream(int fd, unsigned char *url)
 			streamSize = 0;
 			break;
 		}
+#ifdef PLAT_UNIX
 		if (ioctl(fd, I_NREAD, &bytesAvailable) == -1)
+#else
+		if (ioctl(fd, FIONREAD, &bytesAvailable) == -1)
+#endif
 		{
 			/* if fd is file, we get this error */
 			if (errno == ENOTTY)

@@ -16,18 +16,28 @@
  * Copyright (C) 1998,1999,2000 Erik van der Poel.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s): Bruce Robson
  */
 
 #ifndef _MAIN_H_
 #define _MAIN_H_
 
+#include "plat.h"
+
+#ifdef PLAT_UNIX
 #include <synch.h>
+#else
+#include <windows.h>
+#endif
 
 #include "html.h"
 #include "io.h"
 
+#ifdef PLAT_UNIX
 extern mutex_t mainMutex;
+#else
+extern HANDLE mainMutex;
+#endif
 
 #define REPORT_TIME_CONNECT_SUCCESS		0
 #define REPORT_TIME_CONNECT_FAILURE		1

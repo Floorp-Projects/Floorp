@@ -16,8 +16,18 @@
  * Copyright (C) 1998,1999,2000 Erik van der Poel.
  * All Rights Reserved.
  * 
- * Contributor(s): 
+ * Contributor(s): Bruce Robson
  */
+
+/* host and port of proxy that this proxy connects to */
+#define PROXY_HOST "w3proxy.netscape.com"
+#define PROXY_PORT 8080
+/*
+#define PROXY_HOST "127.0.0.1"
+#define PROXY_PORT 4444
+*/
+
+#include "plat.h"
 
 #include <errno.h>
 #include <netdb.h>
@@ -29,6 +39,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <unistd.h>
+
+#ifdef PLAT_WINDOWS
+#include <windows.h>
+#endif
 
 #include "html.h"
 #include "http.h"
@@ -54,7 +68,7 @@ typedef struct Arg
 	View	*view;
 } Arg;
 
-mutex_t mainMutex;
+DECLARE_MUTEX;
 
 static fd_set fdSet;
 static int id = 0;
@@ -311,10 +325,11 @@ acceptNewClient(int fd)
 		return 0;
 	}
 
-	proxyFD = netConnect(NULL, "w3proxy.netscape.com", 8080);
+	proxyFD = netConnect(NULL, PROXY_HOST, PROXY_PORT);
 	if (proxyFD < 0)
 	{
-		fprintf(stderr, "netConnect failed\n");
+		fprintf(stderr, "netConnect to proxy %s:%d failed\n",
+			PROXY_HOST, PROXY_PORT);
 		return 0;
 	}
 
@@ -605,7 +620,7 @@ reportHTTPHeaderName(void *a, Input *input)
 }
 
 void
-reportHTTPHeaderValue(void *a, Input *input)
+reportHTTPHeaderValue(void *a, Input *input, unsigned char *url)
 {
 	Arg	*arg;
 
@@ -630,6 +645,8 @@ main(int argc, char *argv[])
 	int	fd;
 	fd_set	localFDSet;
 	int	ret;
+
+	MUTEX_INIT();
 
 	fd = netListen(NULL, NULL, &mainPort);
 	if (fd < 0)
