@@ -117,6 +117,8 @@ protected:
 
     static const PRInt32 kInitialTableSize;
 
+    static PRIntn DeleteForwardArcsEntry(PLHashEntry* he, PRIntn index, void* arg);
+
     friend class InMemoryResourceCursor; // b/c it needs to enumerate mForwardArcs
 
 public:
@@ -810,12 +812,18 @@ InMemoryDataSource::InMemoryDataSource(void)
                             PL_CompareValues,
                             nsnull,
                             nsnull);
-     NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 InMemoryDataSource::~InMemoryDataSource(void)
 {
     if (mForwardArcs) {
+        // This'll release all of the Assertion objects that are
+        // associated with this data source. We only need to do this
+        // for the forward arcs, because the reverse arcs table
+        // indexes the exact same set of resources.
+        PL_HashTableEnumerateEntries(mForwardArcs, DeleteForwardArcsEntry, nsnull);
+
         PL_HashTableDestroy(mForwardArcs);
         mForwardArcs = nsnull;
     }
@@ -831,6 +839,23 @@ InMemoryDataSource::~InMemoryDataSource(void)
         delete mObservers;
     }
 }
+
+PRIntn
+InMemoryDataSource::DeleteForwardArcsEntry(PLHashEntry* he, PRIntn index, void* arg)
+{
+    Assertion* as = (Assertion*) he->value;
+    while (as) {
+        Assertion* doomed = as;
+        as = as->mNext;
+
+        NS_RELEASE(doomed->mSource);
+        NS_RELEASE(doomed->mProperty);
+        NS_RELEASE(doomed->mTarget);
+        delete doomed;
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
 
 Assertion*
 InMemoryDataSource::GetForwardArcs(nsIRDFResource* u)
@@ -880,9 +905,9 @@ InMemoryDataSource::GetURI(const char* *uri) const
 
 NS_IMETHODIMP
 InMemoryDataSource::GetSource(nsIRDFResource* property,
-                                nsIRDFNode* target,
-                                PRBool tv,
-                                nsIRDFResource** source)
+                              nsIRDFNode* target,
+                              PRBool tv,
+                              nsIRDFResource** source)
 {
     nsresult rv;
     for (Assertion* as = GetReverseArcs(target); as != nsnull; as = as->mNext) {
@@ -906,9 +931,9 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
 
 NS_IMETHODIMP
 InMemoryDataSource::GetTarget(nsIRDFResource* source,
-                                nsIRDFResource* property,
-                                PRBool tv,
-                                nsIRDFNode** target)
+                              nsIRDFResource* property,
+                              PRBool tv,
+                              nsIRDFNode** target)
 {
     nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
@@ -935,10 +960,10 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
 
 NS_IMETHODIMP
 InMemoryDataSource::HasAssertion(nsIRDFResource* source,
-                                   nsIRDFResource* property,
-                                   nsIRDFNode* target,
-                                   PRBool tv,
-                                   PRBool* hasAssertion)
+                                 nsIRDFResource* property,
+                                 nsIRDFNode* target,
+                                 PRBool tv,
+                                 PRBool* hasAssertion)
 {
     nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
@@ -970,9 +995,9 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
 
 NS_IMETHODIMP
 InMemoryDataSource::GetSources(nsIRDFResource* property,
-                                 nsIRDFNode* target,
-                                 PRBool tv,
-                                 nsIRDFAssertionCursor** sources)
+                               nsIRDFNode* target,
+                               PRBool tv,
+                               nsIRDFAssertionCursor** sources)
 {
     NS_PRECONDITION(sources != nsnull, "null ptr");
     if (! sources)
@@ -991,9 +1016,9 @@ InMemoryDataSource::GetSources(nsIRDFResource* property,
 
 NS_IMETHODIMP
 InMemoryDataSource::GetTargets(nsIRDFResource* source,
-                                 nsIRDFResource* property,
-                                 PRBool tv,
-                                 nsIRDFAssertionCursor** targets)
+                               nsIRDFResource* property,
+                               PRBool tv,
+                               nsIRDFAssertionCursor** targets)
 {
     NS_PRECONDITION(targets != nsnull, "null ptr");
     if (! targets)
@@ -1012,9 +1037,9 @@ InMemoryDataSource::GetTargets(nsIRDFResource* source,
 
 NS_IMETHODIMP
 InMemoryDataSource::Assert(nsIRDFResource* source,
-                             nsIRDFResource* property, 
-                             nsIRDFNode* target,
-                             PRBool tv) 
+                           nsIRDFResource* property, 
+                           nsIRDFNode* target,
+                           PRBool tv) 
 {
     nsresult rv;
 
