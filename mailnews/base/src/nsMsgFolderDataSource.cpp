@@ -227,7 +227,7 @@ nsresult nsMsgFolderDataSource::CreateLiterals(nsIRDFService *rdf)
 
 	nsAutoString str; str.AssignWithConversion("true");
 	createNode(str, getter_AddRefs(kTrueLiteral), rdf);
-	str; str.AssignWithConversion("false");
+	str.AssignWithConversion("false");
 	createNode(str, getter_AddRefs(kFalseLiteral), rdf);
 	return NS_OK;
 
