@@ -147,7 +147,7 @@ nsresult NS_MsgBuildMailtoUrl(const nsFilePath& aFilePath, const nsString& aHost
 			nsCOMPtr<nsIMsgMailNewsUrl> url = do_QueryInterface(smtpUrl);
 			url->SetSpec(urlSpec);
 			smtpUrl->SetPostMessageFile(aFilePath);
-			smtpUrl->SetUserEmailAddress(aSender);
+			smtpUrl->SetUserEmailAddress(nsCAutoString(aSender));
 			url->RegisterListener(aUrlListener);
 			PR_Free(urlSpec);
 		}
