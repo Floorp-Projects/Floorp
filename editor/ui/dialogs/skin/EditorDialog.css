@@ -148,6 +148,9 @@ titledbutton.PixelOrPercent {
   min-width: 7em;
 }
 
+titledbutton.SizeToCell {
+  width: 90%;
+}
 
 hr {
   height: 2px;

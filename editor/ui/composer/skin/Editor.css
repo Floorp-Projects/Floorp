@@ -1,6 +1,7 @@
 iframe#content-frame { 
   min-width: 100px; 
-  min-height: 400px; 
+  min-height: 20px;
+  height: 400px;
 } 
 
 toolbox#EditorToolbars {

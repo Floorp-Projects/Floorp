@@ -7,7 +7,7 @@
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical" flex="100%">
+    align="vertical">
 
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
   </script>
@@ -15,6 +15,7 @@
   </script>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <xul:broadcaster id="args" value=""/>
+
   <table>
     <tr>
       <td colspan="3">
@@ -26,7 +27,7 @@
         <input type="text" class="SpellCheckWord" id="Word" size="10"/>
       </td>
       <td>
-        <button width="30" id="CheckWord" onclick="CheckWord()">Check word</button>
+        <xul:titledbutton class="SizeToCell"  id="CheckWord" onclick="CheckWord()" value="Check word"/>
       </td>
       <td>
       </td>
@@ -50,18 +51,18 @@
     </tr>
     <tr>
       <td>
-        <button width="30" id="Ignore" onclick="Ignore()">Ignore</button>
+        <xul:titledbutton class="SizeToCell"  id="Ignore" onclick="Ignore()" value="Ignore"/>
       </td>
       <td>
-        <button width="30"  id="IgnoreAll" onclick="IgnoreAll()">Ignore All</button>
+        <xul:titledbutton class="SizeToCell"  id="IgnoreAll" onclick="IgnoreAll()" value="Ignore All"/>
       </td>
     </tr>
     <tr>
       <td>
-        <button width="30"  id="Replace" onclick="Replace()">Change</button>
+        <xul:titledbutton class="SizeToCell"  id="Replace" onclick="Replace()" value="Change"/>
       </td>
       <td>
-        <button width="30"  id="ReplaceAll" onclick="ReplaceAll()">Change All</button>
+        <xul:titledbutton class="SizeToCell"  id="ReplaceAll" onclick="ReplaceAll()" value="Change All"/>
       </td>
     </tr>
     <tr>
@@ -71,10 +72,10 @@
     </tr>
     <tr>
       <td>
-        <button width="30" id="AddToDictionary" onclick="AddToDictionary()">Add</button>
+        <xul:titledbutton class="SizeToCell"  id="AddToDictionary" onclick="AddToDictionary()" value="Add"/>
       </td>
       <td>
-        <button width="30" id="EditDictionary" onclick="EditDictionary()">Edit</button>
+        <xul:titledbutton class="SizeToCell"  id="EditDictionary" onclick="EditDictionary()" value="Edit"/>
       </td>
     </tr>
     <tr>
@@ -90,7 +91,7 @@
         </select>
       </td>
       <td>
-        <button id="Close" onclick="Close()">Close</button>
+        <xul:titledbutton class="SizeToCell"  id="Close" onclick="Close()" value="Close"/>
       </td>
     </tr>
   </table>

@@ -8,7 +8,7 @@
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical" flex="100%">
+    align="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editordlgs/content/EdDialogCommon.js">
@@ -17,6 +17,7 @@
   </script>
 
   <xul:broadcaster id="args" value=""/>
+
   <table>
     <tr>
       <td colspan="2">
