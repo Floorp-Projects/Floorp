@@ -61,9 +61,6 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-distclean::
-	$(RM) -f content/buildconfig.html
-
 # skin/unix contains css rules that more closely match gtk widgets
 ### killing this for now until we know how qute looks on linux
 # ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
