@@ -118,6 +118,21 @@
     }
   }
 
+  function BrowserEditBookmarks()
+  {
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("resource:/res/rdf/bookmarks.xul",
+                             window);
+    }
+  }
+
   function BrowserPrintPreview()
   {
     // Borrowing this method to show how to 
@@ -176,6 +191,9 @@
       <menuitem name="Back" onClick="BrowserBack();"/>
       <menuitem name="Forward" onClick="BrowserForward();" />
       <menuitem name="Home" onClick="BrowserHome();"/>
+    </menu>
+    <menu name="Window">
+      <menuitem name="Edit Bookmarks..." onClick="BrowserEditBookmarks();"/>
     </menu>
 
   </menubar>
