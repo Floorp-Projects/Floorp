@@ -352,6 +352,9 @@ CreateContentObject(const nsIParserNode& aNode,
   // Create content object for the given tag
   nsresult rv = NS_OK;
   switch (aNodeType) {
+  case eHTMLTag_a:
+    rv = NS_NewHTMLAnchor(aResult, atom);
+    break;
   case eHTMLTag_applet:
     rv = NS_NewHTMLApplet(aResult, atom);
     break;
@@ -760,7 +763,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
       NS_ASSERTION(mStackPos > 0, "leaf w/o container");
       nsIHTMLContent* parent = mStack[mStackPos-1].mContent;
       parent->AppendChildTo(content, PR_FALSE);
-      NS_IF_RELEASE(content);
+      NS_RELEASE(content);
 
       // Mark sink dirty if it can safely reflow something
       MaybeMarkSinkDirty();
