@@ -51,7 +51,7 @@ endif
 
 CSRCS = mygetval.c mysetval.c
 
-INCLUDES = -I$(includedir)
+INCLUDES = -I$(dist_includedir)
 
 OBJS = $(OBJDIR)/mygetval.$(OBJ_SUFFIX) \
 	$(OBJDIR)/mysetval.$(OBJ_SUFFIX)

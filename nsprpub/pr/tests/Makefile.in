@@ -43,16 +43,7 @@ include $(MOD_DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-ifeq ($(OS_TARGET), WIN16)
-OS_CFLAGS = $(OS_EXE_CFLAGS)
-W16STDIO = $(MOD_DEPTH)/pr/src/md/windows/$(OBJDIR)/w16stdio.$(OBJ_SUFFIX)
-endif
-
-ifeq ($(OS_TARGET),WIN16)
-DIRS = dll w16gui
-else
 DIRS = dll
-endif
 
 ifeq ($(OS_TARGET),OS2)
 OS_CFLAGS = $(OS_EXE_CFLAGS)
@@ -222,40 +213,18 @@ PROGS = $(addprefix $(OBJDIR)/, $(CSRCS:.c=$(PROG_SUFFIX)))
 
 TARGETS = $(PROGS)
 
-INCLUDES = -I$(includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
-
-# Setting the variables LDOPTS and LIBPR.  We first initialize
-# them to the default values, then adjust them for some platforms.
-LDOPTS = -L$(libdir)
-LIBPR = -lnspr$(MOD_VERSION)
-LIBPLC = -lplc$(MOD_VERSION)
-
-ifndef USE_AUTOCONF
+INCLUDES = -I$(dist_includedir) -I$(topsrcdir)/pr/include -I$(topsrcdir)/pr/include/private
 
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET), WIN16)
-  LIBPR = $(libdir)/nspr$(MOD_VERSION).lib
-  LIBPLC= $(libdir)/plc$(MOD_VERSION).lib
-else
   LDOPTS = -NOLOGO -DEBUG -DEBUGTYPE:CV -INCREMENTAL:NO
-  ifeq ($(OS_TARGET), WIN95)
-    LIBPR = $(libdir)/nspr$(MOD_VERSION).$(LIB_SUFFIX)
-    LIBPLC= $(libdir)/plc$(MOD_VERSION).$(LIB_SUFFIX)
-  else
-    LIBPR = $(libdir)/libnspr$(MOD_VERSION).$(LIB_SUFFIX)
-    LIBPLC= $(libdir)/libplc$(MOD_VERSION).$(LIB_SUFFIX)
-  endif
   ifdef PROFILE                                                                              
     LDOPTS += -PROFILE -MAP                                                                  
   endif # profile
-endif
 endif
 
 ifeq ($(OS_ARCH),OS2)
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
   LDOPTS = -NOE -DEBUG -nologo -PMTYPE:VIO
-  LIBPR  = $(libdir)/nspr$(MOD_VERSION).lib
-  LIBPLC = $(libdir)/plc$(MOD_VERSION).lib
 else
 ifeq ($(MOZ_OS2_EMX_OBJECTFORMAT),OMF)
   LDOPTS = -Zlinker /PM:VIO
@@ -268,11 +237,11 @@ ifneq ($(OS_ARCH), WINNT)
 # or -rpath linker option or the LD_RUN_PATH environment variable).
 ifeq (,$(patsubst /%,,$(DIST)))
 # $(DIST) is already an absolute pathname.
-ABSOLUTE_LIB_DIR = $(libdir)
+ABSOLUTE_LIB_DIR = $(dist_libdir)
 else
 # $(DIST) is a relative pathname: prepend the current directory.
 PWD = $(shell pwd)
-ABSOLUTE_LIB_DIR = $(PWD)/$(libdir)
+ABSOLUTE_LIB_DIR = $(PWD)/$(dist_libdir)
 endif
 endif
 
@@ -304,8 +273,8 @@ ifeq ($(OS_ARCH), OSF1)
 # I haven't figured out how to pass -rpath to cc on OSF1 V3.2, so
 # we do static linking.
     ifeq (,$(filter-out V2.0 V3.2,$(OS_RELEASE)))
-        LIBPR = $(libdir)/libnspr$(MOD_VERSION).a
-        LIBPLC = $(libdir)/libplc$(MOD_VERSION).a
+        LIBNSPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
+        LIBPLC = $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).a
         EXTRA_LIBS = -lc_r
     else
         LDOPTS += -rpath $(ABSOLUTE_LIB_DIR)
@@ -324,8 +293,8 @@ endif
 ifeq ($(OS_ARCH),AIX)
     LDOPTS += -blibpath:$(ABSOLUTE_LIB_DIR):/usr/lib:/lib
     ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
-        LIBPR = -lnspr$(MOD_VERSION)_shr
-        LIBPLC = -lplc$(MOD_VERSION)_shr
+        LIBNSPR = -lnspr$(MOD_MAJOR_VERSION)_shr
+        LIBPLC = -lplc$(MOD_MAJOR_VERSION)_shr
     else
         LDOPTS += -brtl
         EXTRA_LIBS = -ldl
@@ -393,8 +362,8 @@ ifeq ($(OS_ARCH), NEWS-OS)
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 
 # option for ld on other platforms.
 #export LD_RUN_PATH = $(ABSOLUTE_LIB_DIR)
-    LIBPR = $(libdir)/libnspr$(MOD_VERSION).a
-    LIBPLC = $(libdir)/libplc$(MOD_VERSION).a
+    LIBNSPR = $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
+    LIBPLC = $(dist_libdir)/libplc$(MOD_MAJOR_VERSION).a
     EXTRA_LIBS = -lsocket -lnsl -lgen -lresolv
 endif
 
@@ -476,7 +445,6 @@ LIBPTHREAD = -ldce
 endif
 endif
 
-endif # !USE_AUTOCONF
 
 #####################################################
 #
@@ -486,11 +454,6 @@ endif # !USE_AUTOCONF
 
 include $(topsrcdir)/config/rules.mk
 
-ifdef USE_AUTOCONF
-$(OBJDIR)/%$(PROG_SUFFIX): %.c
-	$(CC) $< -o $@ $(CFLAGS) $(LDOPTS) $(LIBPLC) $(LIBPR) $(OS_LIBS)
-
-else
 AIX_PRE_4_2 = 0
 ifeq ($(OS_ARCH),AIX)
 ifeq ($(OS_RELEASE),4.1)
@@ -513,7 +476,7 @@ ifeq ($(AIX_PRE_4_2),1)
 $(OBJDIR)/%: $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 	rm -f $@ $(AIX_TMP)
-	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(libdir)/libnspr$(MOD_VERSION).a
+	$(CC) $(AIX_LINK_OPTS) -o $(AIX_TMP) $< $(dist_libdir)/libnspr$(MOD_MAJOR_VERSION).a
 	$(CC) -o $@ $(AIX_TMP) $(AIX_WRAP)
 	rm -f $(AIX_TMP)
 
@@ -524,67 +487,45 @@ else
 $(OBJDIR)/%$(PROG_SUFFIX): $(OBJDIR)/%.$(OBJ_SUFFIX)
 	@$(MAKE_OBJDIR)
 ifeq ($(OS_ARCH), WINNT)
-ifeq ($(OS_TARGET),WIN16)
-	echo system windows >w16link
-	echo name $@  >>w16link
-	echo option map >>w16link
-#	echo option CASEEXACT >>w16link
-	echo option stack=16K >>w16link
-	echo debug $(DEBUGTYPE) all >>w16link
-	echo file >>w16link
-	echo $< , >>w16link
-	echo $(W16STDIO) >>w16link
-	echo library  >>w16link
-	echo $(LIBPR),	     >>w16link
-	echo $(LIBPLC),		 >>w16link
-	echo winsock.lib     >>w16link
-	wlink @w16link.
-else
-	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) wsock32.lib -out:$@
-endif
+	link $(LDOPTS) $(EXTRA_LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) wsock32.lib -out:$@
 else
 ifeq ($(OS_ARCH),OS2)
-	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBPR) $(OS_LIBS) $(EXTRA_LIBS)
+	$(LINK) $(EXEFLAGS) $(LDOPTS) $< $(LIBPLC) $(LIBNSPR) $(OS_LIBS) $(EXTRA_LIBS)
 else
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(EXTRA_LIBS) -o $@
-endif
-endif
-endif
-
-endif # !USE_AUTOCONF
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(EXTRA_LIBS) -o $@
+endif # OS/2
+endif # WINNT
+endif # AIX_PRE_4_2
 
 export:: $(TARGETS)
 clean::
 	rm -f $(TARGETS)
 
-ifndef USE_AUTOCONF
 # The following tests call BSD socket functions, so they need to link
 # with -lsocket on some platforms.
 ifeq ($(OS_ARCH),SunOS)
 ifneq ($(OS_RELEASE),4.1.3_U1)
 ifeq ($(USE_IPV6),1)
 $(OBJDIR)/gethost: $(OBJDIR)/gethost.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) -lsocket $(EXTRA_LIBS) -o $@
 endif
 $(OBJDIR)/prpoll: $(OBJDIR)/prpoll.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) -lsocket $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) -lsocket $(EXTRA_LIBS) -o $@
 endif
 endif
 
 ifeq ($(USE_PTHREADS), 1)
 $(OBJDIR)/attach: $(OBJDIR)/attach.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/foreign: $(OBJDIR)/foreign.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/provider: $(OBJDIR)/provider.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/socket: $(OBJDIR)/socket.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 $(OBJDIR)/testfile: $(OBJDIR)/testfile.o
-	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
+	$(PURE) $(CC) $(XCFLAGS) $< $(LDOPTS) $(LIBPLC) $(LIBNSPR) $(LIBPTHREAD) $(EXTRA_LIBS) -o $@
 endif
-
-endif # !USE_AUTOCONF
 
 #
 # Run the test programs with no arguments
