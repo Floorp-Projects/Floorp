@@ -135,9 +135,15 @@ nsScreenGtk :: Init ()
   int format_returned;
   int length_returned;
 
+#if GTK_CHECK_VERSION(2,0,0)
+  GdkAtom cardinal_atom = gdk_x11_xatom_to_atom(XA_CARDINAL);
+#else
+  GdkAtom cardinal_atom = (GdkAtom) XA_CARDINAL;
+#endif
+
   if (!gdk_property_get(root_window,
                         gdk_atom_intern ("_NET_WORKAREA", FALSE),
-                        gdk_x11_xatom_to_atom (XA_CARDINAL),
+                        cardinal_atom,
                         0, G_MAXLONG, FALSE,
                         &type_returned,
                         &format_returned,
