@@ -36,6 +36,7 @@
 #include "nsIFrame.h"
 #include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
+#include "nsCOMPtr.h"
 
 // XXX align=left, hspace, vspace, border? other nav4 attrs
 
@@ -507,37 +508,28 @@ nsHTMLInputElement::Select()
 NS_IMETHODIMP
 nsHTMLInputElement::Click()
 {
-  PRInt32 type;
-  GetType(&type);
-  switch(type) {
-  case NS_FORM_INPUT_CHECKBOX:
-    {
-      PRBool checked;
-      GetChecked(&checked);
-      SetChecked(!checked);
-    }
-    break;
-
-  case NS_FORM_INPUT_RADIO:
-    SetChecked(PR_TRUE);
-    break;
-
-#if 0
-  case NS_FORM_INPUT_BUTTON:
-  case NS_FORM_INPUT_RESET:
-  case NS_FORM_INPUT_SUBMIT:
-    {
-      nsIFormControlFrame* formControlFrame = nsnull;
-      if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-        if (formControlFrame) {
-          formControlFrame->MouseClicked(XXXpresContextXXX);
+  nsIDocument* doc; // Strong
+  nsresult rv = GetDocument(doc);
+  if (NS_SUCCEEDED(rv) && doc) {
+    PRInt32 numShells = doc->GetNumberOfShells();
+    nsIPresShell* shell = nsnull; // Strong
+    nsCOMPtr<nsIPresContext> context;
+    for (PRInt32 i=0; i<numShells; i++) {
+      shell = doc->GetShellAt(i);
+      if (shell) {
+        rv = shell->GetPresContext(getter_AddRefs(context));
+        if (NS_SUCCEEDED(rv) && context) {
+	  nsEventStatus status = nsEventStatus_eIgnore;
+	  nsGUIEvent event;
+	  event.eventStructType = NS_GUI_EVENT;
+	  event.message = NS_MOUSE_LEFT_CLICK;
+          rv = HandleDOMEvent(*context, &event, nsnull, NS_EVENT_FLAG_INIT, status);
         }
+	NS_RELEASE(shell);
       }
     }
-    break;
-#endif
+    NS_RELEASE(doc);
   }
-  
   return NS_OK;
 }
 
@@ -562,15 +554,21 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext& aPresContext,
           GetType(&type);
           switch(type) {
           case NS_FORM_INPUT_CHECKBOX:
+	    {
+              PRBool checked;
+              GetChecked(&checked);
+              SetChecked(!checked);
+	    }
+            break;
           case NS_FORM_INPUT_RADIO:
-            ret = Click();
+            SetChecked(PR_TRUE);
             break;
           case NS_FORM_INPUT_BUTTON:
           case NS_FORM_INPUT_RESET:
           case NS_FORM_INPUT_SUBMIT:
             {
               //Checkboxes and radio trigger off return or space but buttons
-              //just trigger of of space, go figure.
+              //just trigger off space, go figure.
               if (keyEvent->charCode == 0x20) {
                 //XXX We should just be able to call Click() here but then
                 //Click wouldn't have a PresContext.
