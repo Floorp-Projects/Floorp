@@ -36,15 +36,16 @@ LOCAL_INCLUDES = \
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
-    nsSplitterFrame.cpp \
-    nsGrippyFrame.cpp \
-    nsTabFrame.cpp \
-    nsDeckFrame.cpp \
-    nsBoxFrame.cpp \
-    nsProgressMeterFrame.cpp \
-	nsTitledButtonFrame.cpp \
-	nsToolbarFrame.cpp			\
-	nsToolboxFrame.cpp			\
+	nsSplitterFrame.cpp \
+	nsGrippyFrame.cpp \
+	nsTabFrame.cpp \
+	nsDeckFrame.cpp \
+	nsBoxFrame.cpp \
+	nsProgressMeterFrame.cpp      \
+	nsTitledButtonFrame.cpp   \
+	nsToolbarFrame.cpp        \
+	nsToolbarDragListener.cpp \
+	nsToolboxFrame.cpp        \
 	nsTreeFrame.cpp \
 	nsTreeRowGroupFrame.cpp \
 	nsTreeIndentationFrame.cpp \
