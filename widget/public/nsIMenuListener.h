@@ -40,7 +40,7 @@ static NS_DEFINE_IID(kIMenuListenerIID, NS_IMENULISTENER_IID);
 class nsIMenuListener : public nsISupports {
 
   public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IMENULISTENER_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENULISTENER_IID)
 
 	 /**
      * Processes a menu item selected event

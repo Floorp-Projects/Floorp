@@ -35,7 +35,7 @@ class nsIDragService : public nsISupports {
 
   public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IDRAGSERVICE_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSERVICE_IID)
 
     enum {
       DRAGDROP_ACTION_NONE = 0x0000,

@@ -34,7 +34,7 @@ class nsIFileListTransferable : public nsISupports {
 
   public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_IFILELISTTRANSFERABLE_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILELISTTRANSFERABLE_IID)
 
   /**
     * Copies the list of nsFileSpecs items from aFileList to the internal data member

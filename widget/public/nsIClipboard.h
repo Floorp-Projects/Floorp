@@ -33,7 +33,7 @@ class nsIClipboard : public nsISupports {
 
   public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_ICLIPBOARD_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICLIPBOARD_IID)
 
    /**
     * Given a transferable, set the data on the native clipboard

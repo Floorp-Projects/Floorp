@@ -45,7 +45,7 @@ class nsITransferable : public nsISupports {
 
   public:
 
-    static const nsIID& GetIID() { static nsIID iid = NS_ITRANSFERABLE_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITRANSFERABLE_IID)
 
   /**
     * Computes a list of flavors that the transferable can export, either through

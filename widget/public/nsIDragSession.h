@@ -33,7 +33,7 @@ struct nsSize;
 class nsIDragSession : public nsISupports {
 
   public:
-    static const nsIID& GetIID() { static nsIID iid = NS_IDRAGSESSION_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDRAGSESSION_IID)
 
   /**
     * Set the current state of the drag whether it can be dropped or not.

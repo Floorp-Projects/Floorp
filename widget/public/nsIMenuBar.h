@@ -37,7 +37,7 @@ class nsIWidget;
 class nsIMenuBar : public nsISupports {
 
   public:
-     static const nsIID& GetIID() { static nsIID iid = NS_IMENUBAR_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMENUBAR_IID)
 
    /**
     * Creates the MenuBar

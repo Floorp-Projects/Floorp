@@ -48,8 +48,7 @@ enum nsFileDlgResults {
 class nsIFileDialogsMgr : public nsISupports
 {
 public:
-  static const nsIID& GetIID()
-    { static nsIID iid = NS_IFILEDIALOGSMGR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFILEDIALOGSMGR_IID)
     
   NS_IMETHOD GetFile(
     nsFileSpec       & theFileSpec,     // Populate with initial path for file dialog

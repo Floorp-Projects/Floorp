@@ -30,7 +30,7 @@
 
 class nsILookAndFeel: public nsISupports {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ILOOKANDFEEL_IID; return iid; }
+    NS_DEFINE_STATIC_IID_ACCESSOR(NS_ILOOKANDFEEL_IID)
 
   typedef enum {
     eColor_WindowBackground,

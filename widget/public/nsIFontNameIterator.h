@@ -31,7 +31,7 @@ class nsIFontNameIterator : public nsISupports
 		//	with C++ objects as standard iterators.
 	{
 		public:
-      static const nsIID& GetIID() { static nsIID iid = NS_IFONTNAMEITERATOR_IID; return iid; }
+      NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFONTNAMEITERATOR_IID)
 
 			NS_IMETHOD Reset() = 0;
 				// does not need to be called initially, returns iterator to initial state

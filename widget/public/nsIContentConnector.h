@@ -30,7 +30,7 @@ class nsIContent;
 class nsIContentConnector : public nsISupports
 {
 public:
-  static const nsIID& GetIID() { static nsIID iid = NS_ICONTENTCONNECTOR_IID; return iid; }
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTCONNECTOR_IID)
 
   NS_IMETHOD SetContentRoot(nsIContent* pContent) = 0;
 
