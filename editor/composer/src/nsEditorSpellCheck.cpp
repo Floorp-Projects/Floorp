@@ -53,6 +53,7 @@
 #include "nsIChromeRegistry.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsComposeTxtSrvFilter.h"
 
 static NS_DEFINE_CID(kCTextServicesDocumentCID, NS_TEXTSERVICESDOCUMENT_CID);
 
@@ -87,6 +88,8 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* editor)
 
   if (!tsDoc)
     return NS_ERROR_NULL_POINTER;
+
+  tsDoc->SetFilter(mTxtSrvFilter);
 
   // Pass the editor to the text services document
   rv = tsDoc->InitWithEditor(editor);
@@ -401,6 +404,14 @@ nsEditorSpellCheck::UninitSpellChecker()
   return NS_OK;
 }
 
+/* void setFilter (in nsITextServicesFilter filter); */
+NS_IMETHODIMP 
+nsEditorSpellCheck::SetFilter(nsITextServicesFilter *filter)
+{
+  mTxtSrvFilter = filter;
+  return NS_OK;
+}
+
 nsresult    
 nsEditorSpellCheck::DeleteSuggestedWordList()
 {
@@ -408,7 +419,3 @@ nsEditorSpellCheck::DeleteSuggestedWordList()
   mSuggestedWordIndex = 0;
   return NS_OK;
 }
-
-
-  
-

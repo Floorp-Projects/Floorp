@@ -45,6 +45,7 @@ class nsIDOMDocument;
 class nsIPresShell;
 class nsIEditor;
 class nsString;
+class nsITextServicesFilter;
 
 /*
 TextServicesDocument interface to outside world
@@ -93,6 +94,12 @@ public:
    * by this method.
    */
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor) = 0;
+
+  /**
+   * Sets the filter to be used while iterating over content.
+   * @param aFilter filter to be used while iterating over content.
+   */
+  NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter) = 0;
 
   /**
    * Returns true if the document can be modified with calls

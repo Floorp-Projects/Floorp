@@ -51,6 +51,7 @@
 #include "nsVoidArray.h"
 #include "nsTSDNotifier.h"
 #include "nsISelectionController.h"
+#include "nsITextServicesFilter.h"
 
 /** implementation of a text services object.
  *
@@ -109,6 +110,8 @@ private:
   PRInt32                         mSelEndIndex;
   PRInt32                         mSelEndOffset;
 
+  nsCOMPtr<nsITextServicesFilter>   mTxtSvcFilter;
+
 public:
 
   /** The default constructor.
@@ -125,6 +128,7 @@ public:
   /* nsITextServicesDocument method implementations. */
   NS_IMETHOD InitWithDocument(nsIDOMDocument *aDOMDocument, nsIPresShell *aPresShell);
   NS_IMETHOD InitWithEditor(nsIEditor *aEditor);
+  NS_IMETHOD SetFilter(nsITextServicesFilter *aFilter);
   NS_IMETHOD CanEdit(PRBool *aCanEdit);
   NS_IMETHOD GetCurrentTextBlock(nsString *aStr);
   NS_IMETHOD FirstBlock();
@@ -152,6 +156,11 @@ public:
                      nsIDOMNode  *aRightNode,
                      nsIDOMNode  *aParent);
 
+  /* Helper functions */
+  static nsresult ComparePoints(nsIDOMNode *aParent1, PRInt32 aOffset1, nsIDOMNode *aParent2, PRInt32 aOffset2, PRInt32 *aResult);
+  static nsresult GetRangeEndPoints(nsIDOMRange *aRange, nsIDOMNode **aParent1, PRInt32 *aOffset1, nsIDOMNode **aParent2, PRInt32 *aOffset2);
+  static nsresult CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset, nsIDOMNode *aEndParent, PRInt32 aEndOffset, nsIDOMRange **aRange);
+
 private:
 
   /* nsTextServicesDocument private methods. */
@@ -174,6 +183,8 @@ private:
   PRBool IsBlockNode(nsIContent *aContent);
   PRBool IsTextNode(nsIContent *aContent);
   PRBool IsTextNode(nsIDOMNode *aNode);
+  PRBool DidSkip(nsIContentIterator* aFilteredIter);
+  void   ClearDidSkip(nsIContentIterator* aFilteredIter);
 
   PRBool HasSameBlockNodeParent(nsIContent *aContent1, nsIContent *aContent2);
 
@@ -184,10 +195,6 @@ private:
 
   PRBool SelectionIsCollapsed();
   PRBool SelectionIsValid();
-
-  nsresult ComparePoints(nsIDOMNode *aParent1, PRInt32 aOffset1, nsIDOMNode *aParent2, PRInt32 aOffset2, PRInt32 *aResult);
-  nsresult GetRangeEndPoints(nsIDOMRange *aRange, nsIDOMNode **aParent1, PRInt32 *aOffset1, nsIDOMNode **aParent2, PRInt32 *aOffset2);
-  nsresult CreateRange(nsIDOMNode *aStartParent, PRInt32 aStartOffset, nsIDOMNode *aEndParent, PRInt32 aEndOffset, nsIDOMRange **aRange);
 
   nsresult RemoveInvalidOffsetEntries();
   nsresult CreateOffsetTable(nsString *aStr=0);

@@ -46,6 +46,8 @@
 #include "nsVoidArray.h"
 #include "nsCOMPtr.h"
 
+#include "nsComposeTxtSrvFilter.h"
+
 #define NS_EDITORSPELLCHECK_CID                     \
 { /* {75656ad9-bd13-4c5d-939a-ec6351eea0cc} */        \
     0x75656ad9, 0xbd13, 0x4c5d,                       \
@@ -73,6 +75,8 @@ protected:
   PRInt32        mDictionaryIndex;
 
   nsresult       DeleteSuggestedWordList();
+
+  nsCOMPtr<nsITextServicesFilter> mTxtSrvFilter;
 };
 
 #endif // nsEditorSpellCheck_h___
