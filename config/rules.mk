@@ -282,6 +282,12 @@ ifdef CPPSRCS
 CPP_PROG_LINK		= 1
 endif
 
+ifdef IS_COMPONENT
+ifdef MOZ_LOW_FAT
+EXTRA_DSO_LDOPTS += $(MOZ_COMPONENTS_LOW_FAT_LDFLAGS)
+endif # MOZ_LOW_FAT
+endif # IS_COMPONENT
+
 #
 # BeOS specific section: link against dependent shared libs
 #
