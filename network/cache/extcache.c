@@ -318,7 +318,7 @@ total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
 
 	STUFF_BOOL(is_relative_path);
 
-	HG98379
+	STUFF_NUMBER(security_on);
 
 #ifndef EXT_DB_ROUTINES
     HG42539
@@ -338,7 +338,7 @@ total_size += old_obj->string ? PL_strlen(old_obj->string)+1 : 0
 		cur_ptr = cur_ptr + sizeof(int32);
 	}
 
-	STUFF_NUMBER(method);
+    STUFF_NUMBER(method);
 
 #ifdef STORE_ADDRESS_AND_POST_DATA
 
@@ -502,7 +502,7 @@ net_DBDataToCacheStruct(DBT * db_obj)
 
 	RETRIEVE_BOOL(is_relative_path);
 
-	HG72761
+	HG72761 
 
 	RETRIEVE_NUMBER(method);
 
