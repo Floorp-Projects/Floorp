@@ -26,8 +26,6 @@
 #include "jni.h"
 #include "jsjava.h"
 #include "jsdbgapi.h"
-#include "libmocha.h"
-#include "libevent.h"
 #include "nsJVMManager.h"
 #include "nsIPluginInstancePeer2.h"
 //#include "npglue.h"

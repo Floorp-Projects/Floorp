@@ -38,8 +38,6 @@
 #include "jni.h"
 #include "jsjava.h"
 #include "jsdbgapi.h"
-#include "libmocha.h"
-#include "libevent.h"
 #include "prinrval.h"
 #include "ProxyJNI.h"
 #include "prcmon.h"

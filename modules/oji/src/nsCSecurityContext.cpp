@@ -32,7 +32,6 @@
 #include "prtypes.h"
 #include "jscntxt.h"
 #include "jsdbgapi.h"
-#include "libmocha.h"
 #include "nsCSecurityContext.h"
 #include "jvmmgr.h"
 
