@@ -128,6 +128,7 @@ nsDocShell::nsDocShell() :
   mInitialPageLoad(PR_TRUE),
   mAllowPlugins(PR_TRUE),
   mAllowJavascript(PR_TRUE),
+  mAllowMetaRedirects(PR_TRUE),
   mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
   mViewMode(viewNormal),
   mLastViewMode(viewNormal),
@@ -713,6 +714,23 @@ NS_IMETHODIMP nsDocShell::SetAllowJavascript(PRBool aAllowJavascript)
    mAllowJavascript = aAllowJavascript;
    return NS_OK;
 }
+
+NS_IMETHODIMP 
+nsDocShell::GetAllowMetaRedirects(PRBool * aReturn) 
+{
+  NS_ENSURE_ARG_POINTER(aReturn);
+
+  *aReturn = mAllowMetaRedirects;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetAllowMetaRedirects(PRBool aValue)
+{
+  mAllowMetaRedirects = aValue;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsDocShell::GetAppType(PRUint32* aAppType)
 {
@@ -4478,23 +4496,36 @@ NS_IMETHODIMP_(void) nsRefreshTimer::Notify(nsITimer *aTimer)
       }
       nsCOMPtr<nsIDocShellLoadInfo> loadInfo;        
       mDocShell->CreateLoadInfo (getter_AddRefs (loadInfo));
-      /* Check if this refresh causes a redirection
-       * to another site within the threshold time we 
-       * have in mind(15000 ms as defined by REFRESH_REDIRECT_TIMER).
-       * If so, pass a REPLACE flag to LoadURI().
+      /* Check if this META refresh causes a redirection
+       * to another site. If so, check if this is permitted. Some
+       * embedded applications may not want to do this.
        */
       PRBool equalUri = PR_FALSE;
-      if (NS_SUCCEEDED(mURI->Equals(currURI, &equalUri)) && (delay <= REFRESH_REDIRECT_TIMER) && (!equalUri) && mMetaRefresh) {
-        loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+      nsresult rv = mURI->Equals(currURI, &equalUri);
+      if (NS_SUCCEEDED(rv) && (!equalUri) && mMetaRefresh) {
+        PRBool allowRedirects=PR_TRUE;
+        mDocShell->GetAllowMetaRedirects(&allowRedirects);
+        if (!allowRedirects)
+          return;
+        /* It is a META refresh based redirection. Now check if it happened within 
+         * the threshold time we have in mind(15000 ms as defined by REFRESH_REDIRECT_TIMER).
+         * If so, pass a REPLACE flag to LoadURI().
+         */      
+        if (delay <= REFRESH_REDIRECT_TIMER) {
+          loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
+        }
+        else
+          loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
+        /*
+         * LoadURL(...) will cancel all refresh timers... This causes the Timer and
+         * its refreshData instance to be released...
+         */
+        mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
+
       }
       else
         loadInfo->SetLoadType(nsIDocShellLoadInfo::loadRefresh);
       mDocShell->LoadURI(mURI, loadInfo, nsIWebNavigation::LOAD_FLAGS_NONE);
     }
-
-   /*
-    * LoadURL(...) will cancel all refresh timers... This causes the Timer and
-    * its refreshData instance to be released...
-    */
 }
 

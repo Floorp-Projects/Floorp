@@ -604,7 +604,13 @@ NS_IMETHODIMP nsWebBrowser::SetProperty(PRUint32 aId, PRUint32 aValue)
            mDocShell->SetAllowJavascript(aValue);
         }
         break;
-
+    case nsIWebBrowserSetup::SETUP_ALLOW_META_REDIRECTS:
+        {
+           NS_ENSURE_STATE(mDocShell);
+           NS_ENSURE_TRUE((aValue == PR_TRUE || aValue == PR_FALSE), NS_ERROR_INVALID_ARG);
+           mDocShell->SetAllowMetaRedirects(aValue);
+        }
+        break;
     default:
         return NS_ERROR_INVALID_ARG;
   
