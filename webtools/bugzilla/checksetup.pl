@@ -684,13 +684,18 @@ END
     print "Creating data/webdot/.htaccess...\n";
     open HTACCESS, ">data/webdot/.htaccess";
     print HTACCESS <<'END';
-# Allow access to nothing in this directory except for .dot files
-# and don't allow access to those to anyone except research.att.com
+# Restrict access to .dot files to the public webdot server at research.att.com 
 # if research.att.com ever changed their IP, or if you use a different
 # webdot server, you'll need to edit this
 <FilesMatch ^[0-9]+\.dot$>
   Allow from 192.20.225.10
   Deny from all
+</FilesMatch>
+
+# Allow access by a local copy of 'dot' to .png, .gif, .jpg, and
+# .map files
+<FilesMatch ^[0-9]+\.(png|gif|jpg|map)$>
+  Allow from all
 </FilesMatch>
 
 # And no directory listings, either.
@@ -922,7 +927,7 @@ if ($my_db_check) {
     # Check what version of MySQL is installed and let the user know
     # if the version is too old to be used with Bugzilla.
     if ( vers_cmp($sql_vers,$sql_want) > -1 ) {
-        print "ok: found v$sql_vers\n\n";
+        print "ok: found v$sql_vers\n";
     } else {
         die "Your MySQL server v$sql_vers is too old./n" . 
             "   Bugzilla requires version $sql_want or later of MySQL.\n" . 
@@ -958,7 +963,36 @@ my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
 END { $dbh->disconnect if $dbh }
 
 
+###########################################################################
+# Check GraphViz setup
+###########################################################################
 
+#
+# If we are using a local 'dot' binary, verify the specified binary exists
+# and that the generated images are accessible.
+#
+
+if(-e "data/params") {
+  require "data/params";
+  if( $::param{'webdotbase'} && $::param{'webdotbase'} !~ /^https?:/ ) {
+    printf("Checking for %15s %-9s ", "GraphViz", "(any)");
+    if(-x $::param{'webdotbase'}) {
+      print "ok: found\n";
+    } else {
+      print "not a valid executable: $::param{'webdotbase'}\n";
+    }
+
+    # Check .htaccess allows access to generated images
+    open HTACCESS, "data/webdot/.htaccess";
+    if(! grep(/png/,<HTACCESS>)) {
+      print "Dependency graph images are not accessible.\n";
+      print "Delete data/webdot/.htaccess and re-run checksetup.pl to rectify.\n";
+    }
+    close HTACCESS;
+  }
+}
+
+print "\n";
 
 
 ###########################################################################

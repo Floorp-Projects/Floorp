@@ -163,13 +163,21 @@ node [URL="${urlbase}show_bug.cgi?id=\\N", style=filled, color=lightgrey]
     close DOT;
     chmod 0777, $filename;
     
-    my $url = PerformSubsts(Param("webdotbase")) . $filename;
-
-    print qq{<a href="$url.map"> <img src="$url.gif" ismap> </a><hr>\n};
-
+    my $webdotbase = Param('webdotbase');
+    if($webdotbase =~ /^https?:/) {
+        my $url = PerformSubsts(Param("webdotbase")) . $filename;
+        print qq{<a href="$url.map"> <img src="$url.gif" ismap> </a><hr>\n};
+    } else {
+        my $pngfilename = "data/webdot/$$.png";
+        my $mapfilename = "data/webdot/$$.map";
+        system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
+        system("$webdotbase","-Timap","-o","$mapfilename","$filename");
+        print qq{<a href="$mapfilename"> <img src="$pngfilename" ismap> </a><hr>\n};
+    }
+  
     # Cleanup any old .dot files created from previous runs.
     my $since = time() - 24 * 60 * 60;
-    foreach my $f (glob("data/webdot/*.dot")) {
+    foreach my $f (glob("data/webdot/*.dot data/webdot/*.png data/webdot/*.map")) {
         # Here we are deleting all old files. All entries are from the
         # data/webdot/ directory. Since we're deleting the file (not following
         # symlinks), this can't escape to delete anything it shouldn't
