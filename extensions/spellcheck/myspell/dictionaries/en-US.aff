@@ -1,5 +1,5 @@
-SET ISO-8859-1
-TRY esianrtolcdugmphbyfvkw
+SET ISO8859-1
+TRY esianrtolcdugmphbyfvkwzESIANRTOLCDUGMPHBYFVKWZ
 
 PFX A Y 1
 PFX A   0     re         .
@@ -96,3 +96,93 @@ SFX B   e     able       [^aeiou]e
 
 SFX L Y 1
 SFX L   0     ment       .
+
+REP 88
+REP a ei
+REP ei a
+REP a ey
+REP ey a
+REP ai ie
+REP ie ai
+REP are air
+REP are ear
+REP are eir
+REP air are
+REP air ere
+REP ere air
+REP ere ear
+REP ere eir
+REP ear are
+REP ear air
+REP ear ere
+REP eir are
+REP eir ere
+REP ch te
+REP te ch
+REP ch ti
+REP ti ch
+REP ch tu
+REP tu ch
+REP ch s
+REP s ch
+REP ch k
+REP k ch
+REP f ph
+REP ph f
+REP gh f
+REP f gh
+REP i igh
+REP igh i
+REP i uy
+REP uy i
+REP i ee
+REP ee i
+REP j di
+REP di j
+REP j gg
+REP gg j
+REP j ge
+REP ge j
+REP s ti
+REP ti s
+REP s ci
+REP ci s
+REP k cc
+REP cc k
+REP k qu
+REP qu k
+REP kw qu
+REP o eau
+REP eau o
+REP o ew
+REP ew o
+REP oo ew
+REP ew oo
+REP ew ui
+REP ui ew
+REP oo ui
+REP ui oo
+REP ew u
+REP u ew
+REP oo u
+REP u oo
+REP u oe
+REP oe u
+REP u ieu
+REP ieu u
+REP ue ew
+REP ew ue
+REP uff ough
+REP oo ieu
+REP ieu oo
+REP ier ear
+REP ear ier
+REP ear air
+REP air ear
+REP w qu
+REP qu w
+REP z ss
+REP ss z
+REP shun tion
+REP shun sion
+REP shun cion
