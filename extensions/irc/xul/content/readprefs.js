@@ -162,12 +162,16 @@ function pref_observe (prefService, topic, prefName)
 {
     if (!("prefLock" in client))
         readPref(prefName);
+
+    if (prefName == "stalkWholeWords" || prefName == "stalkWords")
+        updateAllStalkExpressions();
+
+    if (prefName == "style.default")
+        onSimulateCommand("/css " + client.DEFAULT_STYLE);
 }
 
 function readPref(prefName)
 {
-    //if (prefName.indexOf("extensions.irc." == 0))
-    //    prefName = prefName.substr(15);
     var ary;
     
     if (prefName in client.prefSpecs)

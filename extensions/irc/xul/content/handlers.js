@@ -2564,12 +2564,8 @@ function cli_istalk (e)
     }
 
     client.stalkingVictims[client.stalkingVictims.length] = e.inputData;
-    for (var name in client.networks)
-    {
-        if ("stalkExpression" in client.networks[name])
-            updateStalkExpression(client.networks[name]);
-    }
-            
+
+    updateAllStalkExpressions();
     client.currentObject.display(getMsg("cli_istalkMsg3",e.inputData), "STALK");
     return true;
 }
@@ -2591,12 +2587,7 @@ function cli_iunstalk ( e )
         }
     }
 
-    for (var name in client.networks)
-    {
-        if ("stalkExpression" in client.networks[name])
-            updateStalkExpression(client.networks[name]);
-    }
-
+    updateAllStalkExpressions();
     client.currentObject.display(getMsg("cli_iunstalkMsg2", e.inputData),
                                  "UNSTALK");
     return true;

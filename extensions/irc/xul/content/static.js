@@ -821,6 +821,15 @@ function insertHyphenatedWord (longWord, containerTag)
     }
 }
 
+function updateAllStalkExpressions()
+{
+    for (var name in client.networks)
+    {
+        if ("stalkExpression" in client.networks[name])
+            updateStalkExpression(client.networks[name]);
+    }
+}
+
 function updateStalkExpression(network)
 {
     function escapeChar(ch)
