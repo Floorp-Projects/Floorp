@@ -267,7 +267,8 @@ content/xbl/Makefile
 content/xbl/public/Makefile
 content/xbl/src/Makefile
 content/xbl/builtin/Makefile
-content/xbl/builtin/os2/Makefile
+content/xbl/builtin/unix/Makefile
+content/xbl/builtin/win/Makefile
 content/xsl/Makefile
 content/xsl/document/Makefile
 content/xsl/document/src/Makefile
@@ -690,7 +691,7 @@ xpfe/browser/src/Makefile
 xpfe/browser/resources/Makefile
 xpfe/browser/resources/content/Makefile
 xpfe/browser/resources/content/unix/Makefile
-xpfe/browser/resources/content/os2/Makefile
+xpfe/browser/resources/content/win/Makefile
 xpfe/browser/resources/locale/Makefile
 xpfe/browser/resources/locale/en-US/Makefile
 xpfe/browser/resources/locale/en-US/unix/Makefile
@@ -710,7 +711,8 @@ xpfe/communicator/resources/Makefile
 xpfe/communicator/resources/locale/Makefile
 xpfe/communicator/resources/locale/en-US/Makefile
 xpfe/communicator/resources/content/Makefile
-xpfe/communicator/resources/content/os2/Makefile
+xpfe/communicator/resources/content/unix/Makefile
+xpfe/communicator/resources/content/win/Makefile
 "
 
 MAKEFILES_embedding="
