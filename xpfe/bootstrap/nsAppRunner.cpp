@@ -53,6 +53,7 @@
 #include "nsIClipboard.h"
 #include "nsISoftwareUpdate.h"
 #include "nsSoftwareUpdateIIDs.h"
+#include "nsISupportsPrimitives.h"
 
 #include "nsICmdLineHandler.h"
 #include "nsICategoryManager.h"
@@ -272,20 +273,6 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
 	if (tempString)
 		PR_sscanf(tempString, "%d", &height);
 	  
-	
-
-  if (heedGeneralStartupPrefs) {
-                prefs->GetBoolPref(PREF_GENERAL_STARTUP_MAIL,&forceLaunchMail);
-  }    
-  rv = cmdLineArgs->GetCmdLineValue("-mail", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {
-    if (forceLaunchMail || (cmdResult && (PL_strcmp("1",cmdResult)==0)))
-    {
-      OpenChromURL("chrome://messenger/content/", height, width);
-          
-    }
-  }
 
   rv = cmdLineArgs->GetCmdLineValue("-compose", &cmdResult);
   if (NS_SUCCEEDED(rv))
@@ -298,15 +285,7 @@ static nsresult HandleMailStartup( nsICmdLineService* cmdLineArgs, nsIPref *pref
       OpenWindow( urlstr, withArgs.GetUnicode() );
     }
   }
-	
-  rv = cmdLineArgs->GetCmdLineValue("-addressbook", &cmdResult);
-  if (NS_SUCCEEDED(rv))
-  {
-    if (cmdResult && (PL_strcmp("1",cmdResult)==0))
-      OpenChromURL("chrome://addressbook/content/",height, width);
-  }
-	
-	return NS_OK;    
+
 }
 
 static nsresult HandleBrowserStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
@@ -447,11 +426,16 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 #ifdef DEBUG_sspitzer
       printf("got the enumerator for all %s\n",COMMAND_LINE_ARGUMENT_HANDLERS);
 #endif /* DEBUG_sspitzer */
-      nsCOMPtr<nsISupports> el;
-      rv = e->GetNext(getter_AddRefs(el));
-      while (NS_SUCCEEDED(rv) && el) {
-        nsCOMPtr <nsICmdLineHandler> handler = do_QueryInterface(el);
-        
+      nsCOMPtr<nsISupportsString> progid;
+      rv = e->GetNext(getter_AddRefs(progid));
+      while (NS_SUCCEEDED(rv) && progid) {
+       	nsXPIDLCString progidString;
+		progid->ToString (getter_Copies(progidString));
+		
+		// should this be a NS_WITH_SERVICE?
+		nsCOMPtr <nsICmdLineHandler> handler = do_CreateInstance((const char *)progidString, &rv);
+		if (NS_FAILED(rv)) continue;
+
         if (handler) {
 #ifdef DEBUG_sspitzer
           printf("got a nsICmdLineHandler\n");
@@ -469,7 +453,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
           if (NS_FAILED(rv)) continue;
           
 #ifdef DEBUG_sspitzer
-          printf("got this one:  %s,%s,%s\n",(const char *)commandLineArg,(const char *)chromeUrlForTask,(const char *)prefNameForStartup);
+          printf("got this one:  %s\t%s\t%s\n",(const char *)commandLineArg,(const char *)chromeUrlForTask,(const char *)prefNameForStartup);
 #endif /* DEBUG_sspitzer */
 
           if (heedGeneralStartupPrefs) {
@@ -491,7 +475,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 #endif
         }
         
-        rv = e->GetNext(getter_AddRefs(el));
+        rv = e->GetNext(getter_AddRefs(progid));
       }
     }
   }
