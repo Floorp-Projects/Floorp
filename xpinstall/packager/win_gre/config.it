@@ -95,6 +95,9 @@ Default Setup Type=Setup Type 0
 ;   TRUE
 Refresh Icons=FALSE
 
+;*** LOCALIZE ME BABY ***
+GRE Cleanup Orphans Message=Cleaning up orphaned GREs (Gecko Runtime Environments), please wait...
+
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
 ; By default, this feature is enabled, unless disabled.
