@@ -178,13 +178,29 @@ $::bug{'long_desc'}
 }
 
 
-
+my $didexclude = 0;
 sub fixaddresses {
-    my ($list) = (@_);
+    my ($field, $list) = (@_);
     my @result;
     my %seen;
     foreach my $i (@$list) {
-        if ($i ne $nametoexclude && $i ne "" && !defined $::nomail{$i} && !defined $seen{$i}) {
+        if ($i eq "") {
+            next;
+        }
+        SendSQL("select emailnotification from profiles where login_name = " .
+                SqlQuote($i));
+        my $emailnotification = FetchOneColumn();
+        if ($emailnotification eq "CConly") {
+            if ($field ne "cc") {
+                next;
+            }
+        }
+        if ($emailnotification eq "ExcludeSelfChanges" && $i eq $nametoexclude) {
+            $didexclude = 1;
+            next;
+        }
+        
+        if (!defined $::nomail{$i} && !defined $seen{$i}) {
             push @result, $i;
             $seen{$i} = 1;
         }
@@ -224,9 +240,10 @@ sub ProcessOneBug {
     close FID;
     if (Different($old, $new)) {
         system("diff -c -b $old $new > $diffs");
-        my $tolist = fixaddresses([$::bug{'assigned_to'}, $::bug{'reporter'},
+        my $tolist = fixaddresses("to",
+                                  [$::bug{'assigned_to'}, $::bug{'reporter'},
                                    $::bug{'qa_contact'}]);
-        my $cclist = fixaddresses($::bug{'cclist'});
+        my $cclist = fixaddresses("cc", $::bug{'cclist'});
         my $logstr = "Bug $i $verb";
         if ($tolist ne "" || $cclist ne "") {
             my %substs;
@@ -251,7 +268,10 @@ sub ProcessOneBug {
                 print SENDMAIL $msg;
                 close SENDMAIL;
                 $logstr = "$logstr; mail sent to $tolist, $cclist";
-		print "<B>Email sent to:</B> $tolist $cclist <B>Excluding:</B> $nametoexclude\n";
+		print "<B>Email sent to:</B> $tolist $cclist\n";
+                if ($didexclude) {
+                    print "<B>Excluding:</B> $nametoexclude (<a href=changepassword.cgi>change your preferences</a> if you wish not to be excluded)\n";
+                }
             }
         }
         unlink($diffs);

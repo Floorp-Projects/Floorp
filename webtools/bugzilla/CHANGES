@@ -10,6 +10,11 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+5/12/99 Added a pref to control how much email you get.  This needs a new
+column in the profiles table, so feed the following to mysql:
+
+	alter table profiles add column emailnotification enum("ExcludeSelfChanges", "CConly", "All") not null default "ExcludeSelfChanges";
+
 5/5/99 Added the ability to search by creation date.  To make this perform
 well, you ought to do the following:
 

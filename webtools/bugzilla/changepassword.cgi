@@ -23,28 +23,65 @@ require "CGI.pl";
 
 confirm_login();
 
-if (! defined $::FORM{'pwd1'}) {
-    print "Content-type: text/html
+print "Content-type: text/html\n\n";
 
-<H1>Change your password</H1>
+if (! defined $::FORM{'pwd1'}) {
+    PutHeader("Preferences", "Change your password and other preferences",
+              $::COOKIE{'Bugzilla_login'});
+
+    my $qacontactpart = "";
+    if (Param('useqacontact')) {
+        $qacontactpart = ", the current QA Contact";
+    }
+    SendSQL("select emailnotification from profiles where login_name = " .
+            SqlQuote($::COOKIE{'Bugzilla_login'}));
+    my ($emailnotification) = (FetchSQLData());
+    print qq{
 <form method=post>
+<hr>
 <table>
 <tr>
 <td align=right>Please enter the new password for <b>$::COOKIE{'Bugzilla_login'}</b>:</td>
-<td><input type=password name=pwd1></td>
+<td><input type=password name="pwd1"></td>
 </tr>
 <tr>
 <td align=right>Re-enter your new password:</td>
-<td><input type=password name=pwd2></td>
+<td><input type=password name="pwd2"></td>
 </table>
-<input type=submit value=Submit>\n";
+<hr>
+<table>
+<tr>
+<td align=right>Bugzilla will send out email notification of changed bugs to 
+the current owner, the submitter of the bug$qacontactpart, and anyone on the
+CC list.  However, you can suppress some of those email notifications.
+On which of these bugs would you like email notification of changes?</td>
+<td><SELECT NAME="emailnotification">
+};
+    foreach my $i (["ExcludeSelfChanges", "All qualifying bugs except those which I change"],
+                   ["CConly", "Only those bugs which I am listed on the CC line"],
+                   ["All", "All qualifying bugs"]) {
+        my ($tag, $desc) = (@$i);
+        my $selectpart = "";
+        if ($tag eq $emailnotification) {
+            $selectpart = " SELECTED";
+        }
+        print qq{<OPTION$selectpart VALUE="$tag">$desc\n};
+    }
+    print "
+</SELECT>
+</td>
+</tr>
+</table>
+<hr>
+<input type=submit value=Submit>
+<hr>
+";
+    navigation_header();
     exit;
 }
 
 if ($::FORM{'pwd1'} ne $::FORM{'pwd2'}) {
-    print "Content-type: text/html
-
-<H1>Try again.</H1>
+    print "<H1>Try again.</H1>
 The two passwords you entered did not match.  Please click <b>Back</b> and try again.\n";
     exit;
 }
@@ -53,36 +90,43 @@ The two passwords you entered did not match.  Please click <b>Back</b> and try a
 my $pwd = $::FORM{'pwd1'};
 
 
-if ($pwd !~ /^[a-zA-Z0-9-_]*$/ || length($pwd) < 3 || length($pwd) > 15) {
-    print "Content-type: text/html
-
-<H1>Sorry; we're picky.</H1>
-Please choose a password that is between 3 and 15 characters long, and that
-contains only numbers, letters, hyphens, or underlines.
-<p>
-Please click <b>Back</b> and try again.\n";
-    exit;
-}
-
-
-print "Content-type: text/html\n\n";
-
-# Generate a random salt.
-
 sub x {
     my $sc="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./";
     return substr($sc, int (rand () * 100000) % (length ($sc) + 1), 1);
 }
-my $salt  = x() . x();
 
-my $encrypted = crypt($pwd, $salt);
+if ($pwd ne "") {
+    if ($pwd !~ /^[a-zA-Z0-9-_]*$/ || length($pwd) < 3 || length($pwd) > 15) {
+        print "<H1>Sorry; we're picky.</H1>
+Please choose a password that is between 3 and 15 characters long, and that
+contains only numbers, letters, hyphens, or underlines.
+<p>
+Please click <b>Back</b> and try again.\n";
+        exit;
+    }
+    
+    
+# Generate a random salt.
+    
+    my $salt  = x() . x();
+    
+    my $encrypted = crypt($pwd, $salt);
+    
+    SendSQL("update profiles set password='$pwd',cryptpassword='$encrypted' where login_name=" .
+            SqlQuote($::COOKIE{'Bugzilla_login'}));
+    
+    SendSQL("update logincookies set cryptpassword = '$encrypted' where cookie = $::COOKIE{'Bugzilla_logincookie'}");
+}
 
-SendSQL("update profiles set password='$pwd',cryptpassword='$encrypted' where login_name=" .
+
+SendSQL("update profiles set emailnotification='$::FORM{'emailnotification'}' where login_name = " .
         SqlQuote($::COOKIE{'Bugzilla_login'}));
 
-SendSQL("update logincookies set cryptpassword = '$encrypted' where cookie = $::COOKIE{'Bugzilla_logincookie'}");
 
-print "<H1>OK, done.</H1>
-Your new password has been set.
+PutHeader("Preferences updated.");
+
+
+print "
+Your preferences have been updated.
 <p>
 <a href=query.cgi>Back to query page.</a>\n";
