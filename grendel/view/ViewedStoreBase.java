@@ -112,7 +112,7 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   public ViewedFolder getDefaultFolder() throws MessagingException {
     if (fDefaultFolder == null) {
       checkConnected();
-      if (true) {
+      if (isConnected()) {
         fDefaultFolder = new ViewedFolderBase(this, null,
                                               fStore.getDefaultFolder());
 
@@ -182,25 +182,9 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
   void checkConnected() throws MessagingException {
     if (!isConnected()) {
       boolean success = false;
-
-      try {
-        if (fStore != null) {
-          fStore.connect(getHost(), getUsername(), null);
-        }
-        success = true;
-      } catch (AuthenticationFailedException e) {
-        JOptionPane.showMessageDialog(null,
-                                      // labels.getString("loginFailedLabel"),
-                                      // labels.getString("errorDialogLabel"),
-                                      "Login failed",
-                                      "Grendel Error",
-                                      JOptionPane.ERROR_MESSAGE);
-
-      } catch (MessagingException e) {
-        System.out.println("Got exception " + e +
-                           " while connecting to " + this);
-        e.printStackTrace();
-      }
+      Thread connect = new Thread(new ConnectThread());
+      connect.start();
+      success = true;
     }
   }
 
@@ -325,6 +309,28 @@ public class ViewedStoreBase extends ViewedFolderBase implements ViewedStore {
 
     public void folderRenamed(FolderEvent e) {
       // We'll let ViewedFolderBase handle this
+    }
+  }
+
+  class ConnectThread implements Runnable {
+    public void run() {
+      try {
+        if (fStore != null) {
+          fStore.connect(getHost(), getUsername(), null);
+        }
+      } catch (AuthenticationFailedException e) {
+        JOptionPane.showMessageDialog(null,
+                                      // labels.getString("loginFailedLabel"),
+                                      // labels.getString("errorDialogLabel"),
+                                      "Login failed",
+                                      "Grendel Error",
+                                      JOptionPane.ERROR_MESSAGE);
+        
+      } catch (MessagingException e) {
+        System.out.println("Got exception " + e +
+                           " while connecting to " + this);
+        e.printStackTrace();
+      }
     }
   }
 
