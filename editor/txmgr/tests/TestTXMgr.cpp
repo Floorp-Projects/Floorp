@@ -550,7 +550,7 @@ public:
     mVal = -1;
   }
 
-  virtual nsresult Do()
+  NS_IMETHOD Do()
   {
     //
     // Make sure Do() is called in the order we expect!
@@ -573,7 +573,7 @@ public:
     return (mFlags & THROWS_DO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  virtual nsresult Undo()
+  NS_IMETHOD Undo()
   {
     //
     // Make sure Undo() is called in the order we expect!
@@ -596,7 +596,7 @@ public:
     return (mFlags & THROWS_UNDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  virtual nsresult Redo()
+  NS_IMETHOD Redo()
   {
     //
     // Make sure Redo() is called in the order we expect!
@@ -619,7 +619,7 @@ public:
     return (mFlags & THROWS_REDO_ERROR_FLAG) ? NS_ERROR_FAILURE : NS_OK;
   }
 
-  virtual nsresult GetIsTransient(PRBool *aIsTransient)
+  NS_IMETHOD GetIsTransient(PRBool *aIsTransient)
   {
     if (aIsTransient)
       *aIsTransient = (mFlags & TRANSIENT_FLAG) ? PR_TRUE : PR_FALSE;
@@ -627,7 +627,7 @@ public:
     return NS_OK;
   }
 
-  virtual nsresult Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
+  NS_IMETHOD Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   {
     if (aDidMerge)
       *aDidMerge = (mFlags & MERGE_FLAG) ? PR_TRUE : PR_FALSE;
@@ -635,7 +635,7 @@ public:
     return NS_OK;
   }
 
-  virtual nsresult Write(nsIOutputStream *aOutputStream)
+  NS_IMETHOD Write(nsIOutputStream *aOutputStream)
   {
     char buf[256];
     PRUint32 amt;
@@ -644,13 +644,13 @@ public:
     return aOutputStream->Write(buf, 0, strlen(buf), &amt);
   }
 
-  virtual nsresult GetUndoString(nsString **aString)
+  NS_IMETHOD GetUndoString(nsString **aString)
   {
     *aString = 0;
     return NS_OK;
   }
 
-  virtual nsresult GetRedoString(nsString **aString)
+  NS_IMETHOD GetRedoString(nsString **aString)
   {
     *aString = 0;
     return NS_OK;
@@ -706,7 +706,7 @@ public:
     // printf("~AggregateTransaction(0x%.8x) - %3d (%3d)\n", this, mLevel, mVal);
   }
 
-  virtual nsresult Do()
+  NS_IMETHOD Do()
   {
     if (mLevel >= mMaxLevel) {
       // Only leaf nodes can throw errors!
