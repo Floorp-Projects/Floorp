@@ -313,8 +313,11 @@ void handle_size_allocate(GtkWidget *w, GtkAllocation *alloc, gpointer p)
   
   nsSizeEvent sevent;
   InitAllocationEvent(alloc, p, sevent, NS_SIZE);
-  sevent.mWinWidth = gtk_widget_get_toplevel(w)->allocation.width;
-  sevent.mWinHeight = gtk_widget_get_toplevel(w)->allocation.height;
+  sevent.mWinWidth = alloc->width;
+  sevent.mWinHeight = alloc->height;
+/*  sevent.mWinWidth = gtk_widget_get_toplevel(w)->allocation.width;
+    sevent.mWinHeight = gtk_widget_get_toplevel(w)->allocation.height;
+*/
 
   nsWindow *win = (nsWindow *)p;
 

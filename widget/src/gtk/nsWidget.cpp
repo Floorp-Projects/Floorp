@@ -507,19 +507,20 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
 
   CreateNative (parentWidget);
 
-  if (parentWidget)
-  {
-    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
-  }
   Resize(mBounds.width, mBounds.height, PR_FALSE);
 
-  InitCallbacks();
+  /* place the widget in its parent */
+  if (parentWidget)
+    gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, mBounds.x, mBounds.y);
+
   CreateGC();
 
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
   DispatchStandardEvent(NS_CREATE);
+  InitCallbacks();
+
   return NS_OK;
 }
 
@@ -596,26 +597,18 @@ nsIRenderingContext* nsWidget::GetRenderingContext()
 
 void nsWidget::CreateGC()
 {
-  if (nsnull == mGC) {
-    if (!mWidget) {
-      mWidget = ::gtk_window_new(GTK_WINDOW_POPUP);
-      gtk_widget_realize(mWidget);
-      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
-    }
-    else if (GTK_IS_LAYOUT(mWidget)) {
-      if (!GTK_LAYOUT(mWidget)->bin_window) {
+  if (mWidget && !mGC)
+  {
+    if (GTK_IS_LAYOUT(mWidget))
+    {
+      if (!GTK_LAYOUT(mWidget)->bin_window)
+      {
         gtk_widget_realize(mWidget);
         mGC = ::gdk_gc_new(GTK_LAYOUT(mWidget)->bin_window);
       }
       else
         mGC = ::gdk_gc_new(GTK_LAYOUT(mWidget)->bin_window);
     }
-    else if (!GTK_WIDGET(mWidget)->window) {
-      gtk_widget_realize(mWidget);
-      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
-    }
-    else
-      mGC = ::gdk_gc_new(GTK_WIDGET(mWidget)->window);
   }
 }
 

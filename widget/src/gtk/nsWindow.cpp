@@ -36,16 +36,9 @@
 
 #include "stdio.h"
 
-#include "mozicon.xpm"
-
 //#define DBG 0
 
 static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-extern GtkWidget *gAppContext;
-
-static gint window_realize_callback(GtkWidget *window, gpointer data);
-static void set_icon (GdkWindow * w);
 
 //-------------------------------------------------------------------------
 //
@@ -122,73 +115,6 @@ NS_METHOD nsWindow::RemoveTooltips()
   return NS_OK;
 }
 
-static gint window_realize_callback(GtkWidget *window, gpointer data)
-{
-  if (window->window)
-    set_icon(window->window);
-
-  return PR_FALSE;
-}
-
-static void set_icon (GdkWindow * w)
-{
-  GdkWindow *ic_win;
-  GdkWindowAttr att;
-  XIconSize *is;
-  gint i, count, j;
-  GdkPixmap *pmap, *mask;
-
-
-  if ((XGetIconSizes (GDK_DISPLAY (), GDK_ROOT_WINDOW (), &is, &count)) &&
-      (count > 0))
-    {
-      i = 0;			/* use first icon size - not much point using the others */
-      att.width = is[i].max_width;
-      att.height = is[i].max_height;
-      /*
-       * raster had:
-       * att.height = 3 * att.width / 4;
-       * but this didn't work  (it scaled the icons incorrectly
-       */
-
-      /* make sure the icon is inside the min and max sizes */
-      if (att.height < is[i].min_height)
-	att.height = is[i].min_height;
-      if (att.height > is[i].max_height)
-	att.height = is[i].max_height;
-      if (is[i].width_inc > 0)
-	{
-	  j = ((att.width - is[i].min_width) / is[i].width_inc);
-	  att.width = is[i].min_width + (j * is[i].width_inc);
-	}
-      if (is[i].height_inc > 0)
-	{
-	  j = ((att.height - is[i].min_height) / is[i].height_inc);
-	  att.height = is[i].min_height + (j * is[i].height_inc);
-	}
-      XFree (is);
-    }
-  else
-    /* no icon size hints at all? ok - invent our own size */
-    {
-      att.width = 32;
-      att.height = 24;
-    }
-  att.wclass = GDK_INPUT_OUTPUT;
-  att.window_type = GDK_WINDOW_TOPLEVEL;
-  att.x = 0;
-  att.y = 0;
-  att.visual = gdk_rgb_get_visual ();
-  att.colormap = gdk_rgb_get_cmap ();
-  ic_win = gdk_window_new (nsnull, &att, GDK_WA_VISUAL | GDK_WA_COLORMAP);
-  gdk_window_set_icon (w, ic_win, nsnull, nsnull);
-  pmap = gdk_pixmap_create_from_xpm_d(w, &mask, 0, mozilla_icon_xpm);
-  gdk_window_set_back_pixmap (ic_win, pmap, PR_FALSE);
-  gdk_window_clear (ic_win);
-  gdk_window_shape_combine_mask (ic_win, mask, 0, 0);
-  gdk_pixmap_unref(pmap);
-}
-
 //-------------------------------------------------------------------------
 //
 // Create the native widget
@@ -214,10 +140,6 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
     gtk_widget_show (mainWindow);
-    gtk_signal_connect(GTK_OBJECT(mainWindow),
-                       "realize",
-                       GTK_SIGNAL_FUNC(window_realize_callback),
-                       NULL);
 
 // VBox for the menu, etc.
     mVBox = gtk_vbox_new(PR_FALSE, 0);
@@ -225,6 +147,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
     gtk_container_add(GTK_CONTAINER(mainWindow), mVBox);
     gtk_box_pack_start(GTK_BOX(mVBox), mWidget, PR_TRUE, PR_TRUE, 0);
   }
+
   // Force cursor to default setting
   gtk_widget_set_name(mWidget, "nsWindow");
   mCursor = eCursor_select;
@@ -240,12 +163,10 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
 //-------------------------------------------------------------------------
 void nsWindow::InitCallbacks(char * aName)
 {
-
   gtk_signal_connect_after(GTK_OBJECT(mWidget),
                      "size_allocate",
                      GTK_SIGNAL_FUNC(handle_size_allocate),
                      this);
-
   gtk_signal_connect(GTK_OBJECT(mWidget),
                      "button_press_event",
 		     GTK_SIGNAL_FUNC(handle_button_press_event),
@@ -410,17 +331,7 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
       case NS_NATIVE_WIDGET:
 	return (void *)mWidget;
       case NS_NATIVE_GRAPHIC:
-        {
-	      void *res;
-	      if (mGC) {
-		      res = mGC;
-	      } else {
-          NS_ASSERTION(mToolkit, "unable to return NS_NATIVE_GRAPHIC");
-          res = (void *)((nsToolkit *)mToolkit)->GetSharedGC();
-	      }
-	      NS_ASSERTION(res, "unable to return NS_NATIVE_GRAPHIC");
-	      return res;
-	  }
+	if (mGC) return (void *)mGC;
       default:
 	break;
     }
