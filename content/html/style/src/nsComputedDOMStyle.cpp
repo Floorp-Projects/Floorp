@@ -2661,9 +2661,7 @@ nsComputedDOMStyle::GetClip(nsIFrame *aFrame,
                                 NS_STYLE_CLIP_LEFT_AUTO)) {
       val->SetIdent(NS_LITERAL_STRING("auto"));
     }
-    else if (display->mClipFlags == NS_STYLE_CLIP_INHERIT) {
-      val->SetIdent(NS_LITERAL_STRING("inherit"));
-    } else {
+    else {
       // create the cssvalues for the sides, stick them in the rect object
       topVal = GetROCSSPrimitiveValue();
       rightVal = GetROCSSPrimitiveValue();
