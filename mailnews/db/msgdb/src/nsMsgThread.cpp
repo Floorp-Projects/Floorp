@@ -694,7 +694,8 @@ NS_IMETHODIMP nsMsgThread::GetRootHdr(PRInt32 *resultIndex, nsIMsgDBHdr **result
 {
 	if (m_threadRootKey == nsMsgKey_None)
 	{
-		*resultIndex = 0;
+		if (resultIndex)
+			*resultIndex = 0;
 		return GetChildHdrAt(0, result);
 	}
 	else
