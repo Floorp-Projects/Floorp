@@ -44,6 +44,9 @@ import java.security.spec.*;
 import org.mozilla.jss.crypto.*;
 import org.mozilla.jss.CryptoManager;
 import org.mozilla.jss.util.Assert;
+import org.mozilla.jss.util.Password;
+import org.mozilla.jss.crypto.PBEKeyGenParams;
+import java.lang.reflect.*;
 
 class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
 
@@ -75,20 +78,77 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
       }
     }
 
+    private static PBEKeyGenParams
+    makePBEKeyGenParams(PBEKeySpec spec)
+        throws InvalidKeySpecException
+    {
+        // The PBEKeySpec in JCE 1.2.1 does not contain salt or iteration.
+        // The PBEKeySpec in JDK 1.4 does contain salt and iteration.
+        // If this is a JCE 1.2.1 PBEKeySpec, we don't have enough
+        // information and we have to throw an exception. If it's a JDK 1.4
+        // PBEKeySpec, we can get the information. The only way I know of
+        // to find this out at runtime and be compatible with both
+        // versions is to use the reflection API.
+        Class specClass = spec.getClass();
+        try {
+            Method getSaltMethod = specClass.getMethod("getSalt", null);
+            Method getIterationMethod =
+                specClass.getMethod("getIterationCount", null);
+
+            byte[] salt = (byte[]) getSaltMethod.invoke(spec, null);
+            
+            Integer itCountObj =
+                (Integer) getIterationMethod.invoke(spec,null);
+            int iterationCount = itCountObj.intValue();
+
+            Password pass = new Password(spec.getPassword());
+            
+            PBEKeyGenParams params =
+                new PBEKeyGenParams(pass, salt, iterationCount);
+            pass.clear();
+            return params;
+        } catch(NoSuchMethodException nsme) {
+            // fall through
+        } catch(SecurityException se) {
+            throw new InvalidKeySpecException(
+                "SecurityException calling getMethod() on the key " +
+                "spec's class: " + se.getMessage());
+        } catch(IllegalAccessException iae) {
+            throw new InvalidKeySpecException(
+                "IllegalAccessException invoking method on PBEKeySpec: " +
+                iae.getMessage());
+        } catch(InvocationTargetException ite) {
+            String message="";
+            Throwable t = ite.getTargetException();
+            if( t != null ) {
+                message = t.getMessage();
+            }
+            throw new InvalidKeySpecException(
+                "InvocationTargetException invoking method on PBEKeySpec: "+
+                message);
+        }
+
+        throw new InvalidKeySpecException(
+            "This version of PBEKeySpec is unsupported. It must " +
+            "implement getSalt() and getIterationCount(). The PBEKeySpec in " +
+            "JDK 1.4 works, as does org.mozilla.jss.crypto.PBEKeyGenParams. " +
+            "The PBEKeySpec in JCE 1.2.1 and earlier does NOT work.");
+    }
+
     public SecretKey
     engineGenerateSecret(KeySpec spec) throws InvalidKeySpecException
     {
       try {
-        if( spec instanceof javax.crypto.spec.PBEKeySpec ) {
-            if( ! (spec instanceof org.mozilla.jss.crypto.PBEKeySpec) ) {
-                throw new InvalidKeySpecException(
-                    "javax.crypto.spec.PBEKeySpec not supported. Use " +
-                    "org.mozilla.jss.crypto.PBEKeySpec instead.");
+        if( spec instanceof PBEKeySpec ||
+            spec instanceof PBEKeyGenParams) {
+            
+            PBEKeyGenParams params;
+            if( spec instanceof PBEKeySpec ) {
+                params = makePBEKeyGenParams((PBEKeySpec)spec);
+            } else {
+                params = (org.mozilla.jss.crypto.PBEKeyGenParams) spec;
             }
-            org.mozilla.jss.crypto.PBEKeySpec kspec =
-                (org.mozilla.jss.crypto.PBEKeySpec) spec;
             org.mozilla.jss.crypto.KeyGenerator gen =token.getKeyGenerator(alg);
-            PBEKeyGenParams params = kspec.getKeyGenParams();
             gen.initialize(params);
             SymmetricKey symk = gen.generate();
             params.clear();
@@ -251,8 +311,8 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
         org.mozilla.jss.crypto.Cipher cipher =
             tok.getCipherContext(EncryptionAlgorithm.DES3_ECB);
         cipher.initEncrypt(origKey.key);
-        byte[] cipherText = cipher.doFinal(
-            "Hello, World!!!!".getBytes("UTF-8") );
+        String original = "Hello, World!!!!";
+        byte[] cipherText = cipher.doFinal( original.getBytes("UTF-8") );
         System.out.println("ciphertext is " + cipherText.length + " bytes");
 
         cipher.initDecrypt(newKey.key);
@@ -262,9 +322,43 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
 
         String recovered = new String(plainText, "UTF-8");
         System.out.println("Recovered '" + recovered + "'");
+        if( ! recovered.equals(original) ) {
+            throw new Exception("recovered string is different from original");
+        }
+
+        char[] pw = "foobarpw".toCharArray();
+        byte[] salt = new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 };
+        int iterationCount = 2;
+
+        // generate a PBE key the old-fashioned way
+        keygen = tok.getKeyGenerator(PBEAlgorithm.PBE_SHA1_DES3_CBC);
+        PBEKeyGenParams jssKeySpec = 
+            new PBEKeyGenParams(pw, salt, iterationCount);
+        keygen.initialize(jssKeySpec);
+        symk = keygen.generate();
+        byte[] keydata = symk.getKeyData();
+
+        // generate a PBE key with the JCE
+        SecretKeyFactory keyFact = SecretKeyFactory.getInstance("PBEWithSHA1AndDESede", "Mozilla-JSS");
+        newKey = (SecretKeyFacade) keyFact.generateSecret(jssKeySpec);
+        byte[] newkeydata = newKey.key.getKeyData();
+        if( ! java.util.Arrays.equals(keydata, newkeydata) ) {
+            throw new Exception("generated PBE keys are different");
+        }
+        System.out.println("generated PBE keys are the same");
+
+        // now try with a JDK 1.4 PBEKeySpec
+        PBEKeySpec keySpec = new PBEKeySpec(pw, salt, iterationCount);
+        newKey = (SecretKeyFacade) keyFact.generateSecret(keySpec);
+        if( ! java.util.Arrays.equals(keydata, newKey.key.getKeyData()) ) {
+            throw new Exception("generated PBE keys are different");
+        }
+        System.out.println("generated PBE keys are the same");
         
+        System.exit(0);
       } catch(Throwable t) {
             t.printStackTrace();
+            System.exit(-1);
       }
     }
 
@@ -288,9 +382,31 @@ class JSSSecretKeyFactorySpi extends SecretKeyFactorySpi {
             super(KeyGenAlgorithm.RC4);
         }
     }
+    public static class PBE_MD5_DES_CBC extends JSSSecretKeyFactorySpi {
+        public PBE_MD5_DES_CBC() {
+            super(PBEAlgorithm.PBE_MD5_DES_CBC);
+        }
+    }
+    public static class PBE_SHA1_DES_CBC extends JSSSecretKeyFactorySpi {
+        public PBE_SHA1_DES_CBC() {
+            super(PBEAlgorithm.PBE_SHA1_DES_CBC);
+        }
+    }
+    public static class PBE_SHA1_DES3_CBC extends JSSSecretKeyFactorySpi {
+        public PBE_SHA1_DES3_CBC() {
+            super(PBEAlgorithm.PBE_SHA1_DES3_CBC);
+        }
+    }
+    public static class PBE_SHA1_RC4_128 extends JSSSecretKeyFactorySpi {
+        public PBE_SHA1_RC4_128() {
+            super(PBEAlgorithm.PBE_SHA1_RC4_128);
+        }
+    }
+
     public static class HmacSHA1 extends JSSSecretKeyFactorySpi {
         public HmacSHA1() {
             super(KeyGenAlgorithm.PBA_SHA1_HMAC);
         }
     }
+
 }
