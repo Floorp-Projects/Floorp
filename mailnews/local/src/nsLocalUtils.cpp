@@ -20,6 +20,7 @@
 #include "nsLocalUtils.h"
 #include "nsIServiceManager.h"
 #include "prsystem.h"
+#include "nsCOMPtr.h"
 
 // stuff for temporary root folder hack
 #include "nsIMsgMailSession.h"
@@ -39,29 +40,14 @@ nsGetMailboxRoot(nsFileSpec &result)
 
   // temporary stuff. for now get everything from the mail session
   if (gMailboxRoot == nsnull) {
-    nsIMsgMailSession *session;
-    rv = nsServiceManager::GetService(kMsgMailSessionCID,
-                                      nsIMsgMailSession::GetIID(),
-                                      (nsISupports **)&session);
+    NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv);
     
     if (NS_SUCCEEDED(rv)) {
-      nsIMsgIncomingServer *server;
-      rv = session->GetCurrentServer(&server);
-      if (NS_FAILED(rv)) printf("nsGetMailboxRoot: Couldn't get current server\n");
-      if (NS_SUCCEEDED(rv)) {
-        nsIPop3IncomingServer *popServer;
-        rv = server->QueryInterface(nsIPop3IncomingServer::GetIID(),
-                                    (void **)&popServer);
-        if (NS_FAILED(rv)) printf("nsGetMailboxRoot: Couldn't get pop3 server\n");
-        if (NS_SUCCEEDED(rv)) {
-          rv = popServer->GetRootFolderPath(&gMailboxRoot);
-          if (NS_FAILED(rv)) printf("nsGetMailboxRoot: Couldn't get root\n");
-          NS_RELEASE(popServer);
-        }
-        NS_RELEASE(server);
-        
-      }
-      nsServiceManager::ReleaseService(kMsgMailSessionCID, session);
+      nsCOMPtr<nsIMsgIncomingServer> server;
+      rv = session->GetCurrentServer(getter_AddRefs(server));
+      
+      if (NS_SUCCEEDED(rv))
+          rv = server->GetLocalPath(&gMailboxRoot);
     }
   } /* if (gMailboxRoot == nsnull) .. */
   result = gMailboxRoot;
