@@ -19,7 +19,7 @@
  * Created: Lester Schueler <lesters@netscape.com>, 14 Nov 1997.
  */
 
-package grendel.addressbook.AddressCard;
+package grendel.addressbook.addresscard;
 
 import netscape.ldap.*;
 import java.util.Enumeration;

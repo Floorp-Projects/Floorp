@@ -19,7 +19,7 @@
  * Created: Lester Schueler <lesters@netscape.com>, 14 Nov 1997.
  */
 
-package grendel.addressbook.AddressCard;
+package grendel.addressbook.addresscard;
 
 public interface IQueryString  {
     public String opAnd         (ITerm aLeftTerm, ITerm aRightTerm);
