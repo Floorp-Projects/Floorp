@@ -1,6 +1,0 @@
-# target: libpref.shlb
-mozilla/modules/libpref/src/mac/macpref.cp
-mozilla/modules/libpref/src/mac/MacPrefUtils.cpp
-mozilla/modules/libpref/src/nsPref.cpp
-mozilla/modules/libpref/src/prefapi.c
-mozilla/modules/security/freenav/navstubs.c

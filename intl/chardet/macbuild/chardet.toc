@@ -1,2 +1,0 @@
-mozilla/intl/chardet/src/nsMetaCharsetObserver.cpp
-mozilla/intl/chardet/src/nsCharDetDll.cpp

@@ -1,5 +1,0 @@
-# target: viewDebug.shlb
-mozilla/view/src/nsScrollingView.cpp
-mozilla/view/src/nsView.cpp
-mozilla/view/src/nsViewFactory.cpp
-mozilla/view/src/nsViewManager.cpp

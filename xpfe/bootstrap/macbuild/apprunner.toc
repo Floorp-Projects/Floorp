@@ -1,3 +1,0 @@
-# target: apprunnerDebug
-mozilla/xpfe/bootstrap/nsAppRunner.cpp
-mozilla/xpfe/bootstrap/nsSetupRegistry.cpp

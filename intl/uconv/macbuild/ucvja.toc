@@ -1,2 +1,0 @@
-mozilla/intl/uconv/ucvja/nsSJIS2Unicode.cpp
-mozilla/intl/uconv/ucvja/nsUCVJADll.cpp

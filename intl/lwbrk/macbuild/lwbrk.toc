@@ -1,4 +1,0 @@
-mozilla/intl/lwbrk/src/nsJISx4501LineBreaker.cpp
-mozilla/intl/lwbrk/src/nsLWBreakerFImp.cpp
-mozilla/intl/lwbrk/src/nsLWBrk.cpp
-mozilla/intl/lwbrk/src/nsSampleWordBreaker.cpp
