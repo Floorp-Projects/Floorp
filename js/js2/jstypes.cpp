@@ -267,7 +267,7 @@ static JSValue array_constructor(Context *, const JSValues& argv)
             return JSValue(result);
         }
         else
-            return JSValue(new JSArray(JSValue::valueToInteger(argv[1]).i32));
+            return JSValue(new JSArray(JSValue::valueToInt32(argv[1]).i32));
     else
         return JSValue(new JSArray());
 }
@@ -358,15 +358,6 @@ JSType Date_Type = JSType(widenCString("Date"), NULL, new JSNativeFunction(date_
 
 
 // the canonical undefined value, etc.
-const JSValue kUndefinedValue;
-const JSValue kNaNValue = JSValue(nan);
-const JSValue kTrueValue = JSValue(true);
-const JSValue kFalseValue = JSValue(false);
-const JSValue kNullValue = JSValue((JSObject*)NULL);
-const JSValue kNegativeZero = JSValue(-0.0);
-const JSValue kPositiveZero = JSValue(0.0);
-const JSValue kNegativeInfinity = JSValue(negativeInfinity);
-const JSValue kPositiveInfinity = JSValue(positiveInfinity);
 
 
 const JSType *JSValue::getType() const
@@ -712,10 +703,10 @@ JSValue JSValue::valueToInteger(const JSValue& value)
 {
     JSValue result = valueToNumber(value);
     ASSERT(result.tag == f64_tag);
-    result.tag = i32_tag;
+    result.tag = integer_tag;
     bool neg = (result.f64 < 0);
-    result.i32 = (int32)floor((neg) ? -result.f64 : result.f64);
-    result.i32 = (neg) ? -result.i32 : result.i32;
+    result.f64 = floor((neg) ? -result.f64 : result.f64);
+    result.f64 = (neg) ? -result.f64 : result.f64;
     return result;
 }
 

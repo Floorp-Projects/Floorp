@@ -22,9 +22,11 @@
 #include <cstring>
 #include <cfloat>
 #include "numerics.h"
+#include "jstypes.h"
 
 namespace JS = JavaScript;
 using namespace JavaScript;
+using namespace JSTypes;
 
 
 //
@@ -225,6 +227,15 @@ InitNumerics::InitNumerics()
 	word1(nan) = 0xFFFFFFFF;
 }
 
+const JSValue JSTypes::kUndefinedValue;
+const JSValue JSTypes::kNaNValue = JSValue(nan);
+const JSValue JSTypes::kTrueValue = JSValue(true);
+const JSValue JSTypes::kFalseValue = JSValue(false);
+const JSValue JSTypes::kNullValue = JSValue(JSValue::Tag::null_tag);
+const JSValue JSTypes::kNegativeZero = JSValue(-0.0);
+const JSValue JSTypes::kPositiveZero = JSValue(0.0);
+const JSValue JSTypes::kNegativeInfinity = JSValue(negativeInfinity);
+const JSValue JSTypes::kPositiveInfinity = JSValue(positiveInfinity);
 
 //
 // Portable double-precision floating point to string and back conversions

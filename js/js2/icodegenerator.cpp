@@ -1442,12 +1442,12 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister r1 = genExpr(b->op1);
             TypedRegister r2 = genExpr(b->op2);
-            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r2, r1);
+            ret = binaryOp(mapExprNodeToICodeOp(p->getKind()), r1, r2);     // will generate equal/identical code
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
-                    branchFalse(falseBranch, ret);
+                    branchTrue(falseBranch, ret);
                 else {
-                    branchTrue(trueBranch, ret);
+                    branchFalse(trueBranch, ret);
                     if (falseBranch)
                         branch(falseBranch);
                 }
@@ -2104,11 +2104,13 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     case StmtNode::IfElse:
         {
             Label *falseLabel = getLabel();
+            Label *trueLabel = getLabel();
             Label *beyondLabel = getLabel();
             BinaryStmtNode *i = static_cast<BinaryStmtNode *>(p);
-            TypedRegister c = genExpr(i->expr, false, NULL, falseLabel);
+            TypedRegister c = genExpr(i->expr, false, trueLabel, falseLabel);
             if (!generatedBoolean(i->expr))
                 branchFalse(falseLabel, test(c));
+            setLabel(trueLabel);
             genStmt(i->stmt);
             branch(beyondLabel);
             setLabel(falseLabel);
