@@ -622,9 +622,9 @@ sub BuildClientDist()
     }
     
     #PLUGIN
-    InstallFromManifest(":mozilla:modules:plugin:nglsrc:MANIFEST",                 "$distdirectory:plugin:");
-    InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",                 "$distdirectory:plugin:");
-    InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST_IDL",             "$distdirectory:idl:");
+    InstallFromManifest(":mozilla:modules:plugin:base:src:MANIFEST",               "$distdirectory:plugin:");
+    InstallFromManifest(":mozilla:modules:plugin:base:public:MANIFEST",            "$distdirectory:plugin:");
+    InstallFromManifest(":mozilla:modules:plugin:base:public:MANIFEST_IDL",        "$distdirectory:idl:");
     InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",                       "$distdirectory:oji:");
     InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",                    "$distdirectory:oji:");
     InstallFromManifest(":mozilla:modules:oji:public:MANIFEST_IDL",                "$distdirectory:idl:");
@@ -1067,7 +1067,7 @@ sub BuildIDLProjects()
 	    BuildIDLProject(":mozilla:modules:libpr0n:macbuild:icondecoderIDL.mcp",         "icondecoder");
     }
     
-    BuildIDLProject(":mozilla:modules:plugin:macbuild:pluginIDL.mcp",               "plugin");
+    BuildIDLProject(":mozilla:modules:plugin:base:macbuild:pluginIDL.mcp",          "plugin");
     BuildIDLProject(":mozilla:modules:oji:macbuild:ojiIDL.mcp",                     "oji");
     BuildIDLProject(":mozilla:js:macbuild:XPConnectIDL.mcp",                        "xpconnect");
     BuildIDLProject(":mozilla:dom:macbuild:domIDL.mcp",                             "dom");
@@ -1575,7 +1575,7 @@ sub BuildLayoutProjects()
 #    BuildOneProject(":mozilla:gfx:macbuild:gfx.mcp",                            "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProjectWithOutput(":mozilla:gfx:macbuild:gfx.mcp",            "gfx$C$D.shlb", "gfx$D.shlb", 1, $main::ALIAS_SYM_FILES, 0);
     BuildOneProject(":mozilla:dom:macbuild:dom.mcp",                            "dom$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
-    BuildOneProject(":mozilla:modules:plugin:macbuild:plugin.mcp",              "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
+    BuildOneProject(":mozilla:modules:plugin:base:macbuild:plugin.mcp",          "plugin$D.shlb", 1, $main::ALIAS_SYM_FILES, 1);
 
     # Static library shared between different content- and layout-related libraries
     BuildOneProject(":mozilla:content:macbuild:contentshared.mcp",              "contentshared$D.o", 0, 0, 0);
@@ -1895,7 +1895,7 @@ sub BuildPluginsProjects()
 	}
 
     # Build the Default Plug-in and place an alias in the appropriate plugins folder.
-    my($plugin_path) = ":mozilla:modules:plugin:default:mac:";
+    my($plugin_path) = ":mozilla:modules:plugin:samples:default:mac:";
     my($plugin_dist) = GetBinDirectory() . "Plug-ins:";
 
     BuildProject($plugin_path . "NullPlugin.mcp", "NullPluginPPC");
