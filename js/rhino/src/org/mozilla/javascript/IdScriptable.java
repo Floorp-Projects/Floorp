@@ -271,7 +271,10 @@ public abstract class IdScriptable extends ScriptableObject
 
     /** Map id back to property name it defines.
      */
-    protected abstract String getIdName(int id);
+    protected String getIdName(int id)
+    {
+        throw new IllegalArgumentException(String.valueOf(id));
+    }
 
     /** Get attributes for id.
      ** Default implementation return DONTENUM that is the standard attribute
@@ -422,24 +425,27 @@ public abstract class IdScriptable extends ScriptableObject
             throw new RuntimeException("No id for constructor property");
         }
 
-        IdFunction ctor = newIdFunction(getClassName(), constructorId);
-        // order is important: setParentScope should be called before
-        // ctor.initAsConstructor
-        setParentScope(ctor); // XXX: why it is not scope ???
+        // Set scope and prototype unless IdScriptable is top level scope itself
+        if (scope != this && scope != null) {
+            setParentScope(scope);
+            setPrototype(getObjectPrototype(scope));
+        }
+
+        String name = getClassName();
+        IdFunction ctor = newIdFunction(name, constructorId);
         ctor.initAsConstructor(scope, this);
         fillConstructorProperties(cx, ctor, sealed);
         if (sealed) {
             ctor.sealObject();
         }
 
-        setPrototype(getObjectPrototype(scope));
         cacheIdValue(constructorId, ctor);
 
         if (sealed) {
             sealObject();
         }
 
-        defineProperty(scope, getClassName(), ctor, ScriptableObject.DONTENUM);
+        defineProperty(scope, name, ctor, ScriptableObject.DONTENUM);
     }
 
     protected void fillConstructorProperties
