@@ -291,7 +291,6 @@ bin\res\wincharset.properties
 bin\res\charsetalias.properties
 bin\res\charsetData.properties
 bin\res\langGroups.properties
-bin\res\acceptlanguage.properties
 bin\res\language.properties
 bin\res\entityTables\*
 bin\res\rdf\article.gif
