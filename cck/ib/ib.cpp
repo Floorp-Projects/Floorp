@@ -44,7 +44,6 @@ CString outputPath;
 CString xpiDstPath;
 
 // variables for CCK Linux build
-CString linuxOption;
 CString templinuxPath;
 CString nsinstPath;
 CString nsinstallerDir;
@@ -1899,13 +1898,12 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	xpiDstPath    = cdPath;
 
 	// initializing variables for CCK linux build
-	linuxOption = GetGlobal("lPlatform");
-	templinuxPath = tempPath + "\\templinux\\netscape-installer";
-	nsinstPath = "\\netscape-installer\\xpi";
+	templinuxPath  = tempPath + "\\templinux\\netscape-installer";
+	nsinstPath     = "\\netscape-installer\\xpi";
 	nsinstallerDir = "netscape-installer";
-	xpiDir = "\\xpi";
-	templinuxDir = "tempLinux";
-	tarfile = GetGlobal("InstallerFilename");
+	xpiDir         = "\\xpi";
+	templinuxDir   = "tempLinux";
+	tarfile        = GetGlobal("InstallerFilename");
 
 //  AfxMessageBox("set breakpoint",MB_OK);
 
@@ -1914,7 +1912,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	else
 		nscpxpiPath = localePath + "\\Nscpxpi";
 
-	if (linuxOption == "Linux")
+	if (curPlatform == "Linux")
 	{
 		_mkdir(tempPath);
 		_chdir(tempPath);
@@ -1942,7 +1940,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 	ULARGE_INTEGER nTotalBytes, nTotalFreeBytes, nTotalAvailable;
 	GetDiskFreeSpaceEx(NULL,&nTotalAvailable, &nTotalBytes, &nTotalFreeBytes);
 	// Checking for 26.3MB disk space
-	if (linuxOption != "Linux")
+	if (curPlatform != "Linux")
 	{
 		if ((nTotalAvailable.QuadPart) < WDISK_SPACE)
 		{
@@ -2130,27 +2128,24 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 					 xpiDstPath + "\\" + Components[i].archive, TRUE);
 	}
 
-	if (linuxOption != "Linux")
+	if (curPlatform != "Linux")
 	{
-	if (cdDir.Compare("1") ==0)
-	{
-		
-		CString shellPath = workspacePath + "\\Autorun\\";
-		CopyDir(shellPath, outputPath, NULL, TRUE);
-		CreateRshell ();
-		WritePrivateProfileString("Message Stream", "Status", "Disabled", iniDstPath);
-
-	}
-	else
-	{
-		FILE *infout;
-		CString infFile = outputPath + "\\autorun.inf";
-		infout = fopen(infFile, "w");
-		if (!infout)
-			exit( 3 );
-
-		fprintf(infout,"[autorun]\nopen = setup.exe");
-	}
+		if (cdDir.Compare("1") ==0)
+		{
+			CString shellPath = workspacePath + "\\Autorun\\";
+			CopyDir(shellPath, outputPath, NULL, TRUE);
+			CreateRshell ();
+			WritePrivateProfileString("Message Stream", "Status", "Disabled", iniDstPath);
+		}
+		else
+		{
+			FILE *infout;
+			CString infFile = outputPath + "\\autorun.inf";
+			infout = fopen(infFile, "w");
+			if (!infout)
+				exit( 3 );
+			fprintf(infout,"[autorun]\nopen = setup.exe");
+		}
 	}
 	CString component;
 	CString configiniPath = xpiDstPath +"\\config.ini";
@@ -2184,7 +2179,7 @@ int StartIB(/*CString parms, WIDGET *curWidget*/)
 
 	// Didn't work...
 
-	if (linuxOption == "Linux")
+	if (curPlatform == "Linux")
 	{
 		LinuxInvisible();
 		AddThirdParty();
