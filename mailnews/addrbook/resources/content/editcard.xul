@@ -4,7 +4,11 @@
 
 <!DOCTYPE window
 [
-<!ENTITY addressbookWindow.title "New Card">
+<!-- Title -->
+	<!ENTITY addressbookWindow.title "New Card">
+
+<!-- Labels -->
+	<!ENTITY firstName.label		"First:"> 
 ]> 
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -12,10 +16,8 @@
 	title="&addressbookWindow.title;"
 	width="370" height="500">
 
-<html:script src="chrome://messenger/content/widgetglue.js"/>
-<html:script src="chrome://messenger/content/commandglue.js"/>
-<html:script src="chrome://messenger/content/shareglue.js"/>
-<html:script src="chrome://addressbook/content/addressbook.js"/>
+<html:script language="JavaScript" src="chrome://addressbook/content/editcard.js"/>
+<html:script language="JavaScript" src="resource://res/samples/DumpDOM.js"/>
 
 <box align="vertical" style="width: 100%; height: 100%">
 	<tabcontrol align="vertical" style="margin: 5px; border: 2px groove white">
@@ -28,12 +30,24 @@
 	   <tabpanel include="chrome://addressbook/content/nsFrag2.xul" align="vertical" flex="100%">
 			<box index="name" align="vertical">
 				<box align="vertical" value="Name" class="CardEdit">
+		
+		
+					<html:div style="vertical-align: middle;">
+						<html:label for="firstname">&firstName.label;</html:label>
+						<html:input type="text" id="firstname" class="CardEdit"/>
+					</html:div>
+
+
+					<!--
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>First: </html:div> 
 						<spring class="PromptEditSpacing"/>
 						<html:input id="firstname" type="text" class="CardEdit"/>
 					</box>
+					-->
+					
+					
 					<box align="horizontal">
 						<spring flex="100%"/>
 						<html:div>Last: </html:div> 

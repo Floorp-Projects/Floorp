@@ -19,9 +19,14 @@
 addressbook.xul
 addressbook.js
 dirPane.xul
+dirPane.js
 resultPane.xul
+resultPane.js
 cardviewPane.xul
+cardviewPane.js
 addresspanes.html
 editcard.xul
+editcard.js
 selectaddress.xul
+selectaddress.js
 addressbucket.xul

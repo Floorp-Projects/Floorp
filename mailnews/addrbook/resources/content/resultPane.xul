@@ -17,12 +17,10 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		style="width:100%; height:100%; background-color:white">
 
-<html:script language="javascript" src="chrome://addressbook/content/addressbook.js"/>
-
 
 	<tree class="abResults" flex="100%" id="resultTree"
 			rdf:datasources="rdf:addressdirectory rdf:addresscard"
-			onchange="ResultsPaneSelectionChange()" rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
+			onchange="top.ResultsPaneSelectionChange()" rdf:containment="http://home.netscape.com/NC-rdf#CardChild">
 
 		<template>
 			<rule rootcontainment="treechildren" subcontainment="treechildren">

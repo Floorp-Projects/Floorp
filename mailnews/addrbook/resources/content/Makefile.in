@@ -30,13 +30,18 @@ SAMPLES_DIR = $(DIST)/bin/chrome/addressbook/content/default
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/addressbook.xul \
+	$(srcdir)/addressbook.js \
 	$(srcdir)/dirPane.xul \
+	$(srcdir)/dirPane.js \
 	$(srcdir)/resultPane.xul \
+	$(srcdir)/resultPane.js \
 	$(srcdir)/cardviewPane.xul \
+	$(srcdir)/cardviewPane.js \
 	$(srcdir)/addresspanes.html \
 	$(srcdir)/editcard.xul \
-	$(srcdir)/addressbook.js \
+	$(srcdir)/editcard.js \
 	$(srcdir)/selectaddress.xul \
+	$(srcdir)/selectaddress.js \
 	$(srcdir)/addressbucket.xul \
 	$(NULL)
 

@@ -13,10 +13,10 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   style="background-color:white">
 
-<html:script language="javascript" src="chrome://addressbook/content/addressbook.js"/>
+<html:script language="javascript" src="chrome://addressbook/content/dirPane.js"/>
 
 
-<tree class="abDirectory" rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return parent.parent.ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
+<tree class="abDirectory" rdf:datasources="rdf:addressdirectory" id="dirTree" onclick="return ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
 	<template>
 		<rule rootcontainment="treechildren" subcontainment="treechildren">
 			<treeitem uri="...">
