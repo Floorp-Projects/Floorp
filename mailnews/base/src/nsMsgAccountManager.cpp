@@ -84,7 +84,9 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
 
 #define POP_4X_MAIL_TYPE 0
 #define IMAP_4X_MAIL_TYPE 1
+#ifdef HAVE_MOVEMAIL
 #define MOVEMAIL_4X_MAIL_TYPE 2
+#endif /* HAVE_MOVEMAIL */
 
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 /* TODO:  do we want to clear these after migration? */
@@ -100,6 +102,9 @@ static NS_DEFINE_CID(kMsgFolderCacheCID, NS_MSGFOLDERCACHE_CID);
  */
 #define LOCAL_MAIL_FAKE_HOST_NAME "Local Mail"
 #define LOCAL_MAIL_FAKE_USER_NAME "nobody"
+#ifdef HAVE_MOVEMAIL
+#define MOVEMAIL_FAKE_HOST_NAME "movemail"
+#endif /* HAVE_MOVEMAIL */
 #define NEW_MAIL_DIR_NAME	"Mail"
 #define NEW_NEWS_DIR_NAME	"News"
 #define NEW_IMAPMAIL_DIR_NAME	"ImapMail"
@@ -1173,8 +1178,12 @@ nsMsgAccountManager::ProceedWithMigration(PRInt32 oldMailType)
   char *prefvalue = nsnull;
   nsresult rv = NS_OK;
   
-  if (oldMailType == POP_4X_MAIL_TYPE) {
-    // if they were using pop, "mail.pop_name" must have been set
+  if ((oldMailType == POP_4X_MAIL_TYPE) 
+#ifdef HAVE_MOVEMAIL
+	|| (oldMailType == MOVEMAIL_4X_MAIL_TYPE) 
+#endif /* HAVE_MOVEMAIL */
+	) {
+    // if they were using pop or movemail, "mail.pop_name" must have been set
     // otherwise, they don't really have anything to migrate
     rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &prefvalue);
     if (NS_SUCCEEDED(rv)) {
@@ -1192,11 +1201,6 @@ nsMsgAccountManager::ProceedWithMigration(PRInt32 oldMailType)
 	      rv = NS_ERROR_FAILURE;
 	    }
     }
-  }
-  else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
-    printf("sorry, migration of movemail not supported yet.\n");
-    NS_ASSERTION(0, "movemail migration not supported yet.");
-    rv = NS_ERROR_UNEXPECTED;
   }
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
@@ -1277,11 +1281,13 @@ nsMsgAccountManager::UpgradePrefs()
       rv = MigrateLocalMailAccount(identity);
       if (NS_FAILED(rv)) return rv;
 	}
+#ifdef HAVE_MOVEMAIL
     else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
-      printf("sorry, migration of movemail not supported yet.\n");
-      NS_ASSERTION(0, "movemail migration not supported yet.");
-      return NS_ERROR_UNEXPECTED;
+	// if 4.x, you could only have one movemail account
+	rv = MigrateMovemailAccount(identity);
+	if (NS_FAILED(rv)) return rv;
     }
+#endif /* HAVE_MOVEMAIL */
     else {
 #ifdef DEBUG_ACCOUNTMANAGER
       printf("Unrecognized server type %d\n", oldMailType);
@@ -1549,11 +1555,18 @@ nsMsgAccountManager::Convert4XUri(const char *old_uri, const char *default_folde
   else if (oldMailType == IMAP_4X_MAIL_TYPE) {
     usernameAtHostname = PR_smprintf("%s@%s",LOCAL_MAIL_FAKE_USER_NAME,LOCAL_MAIL_FAKE_HOST_NAME);
   }
+#ifdef HAVE_MOVEMAIL
   else if (oldMailType == MOVEMAIL_4X_MAIL_TYPE) {
-    printf("sorry, movemail migration not supported yet.\n");
-    NS_ASSERTION(0, "movemail migration not supported yet.");
-    return NS_ERROR_FAILURE;
+	char *movemail_username = nsnull; 
+
+	rv = m_prefs->CopyCharPref(PREF_4X_MAIL_POP_NAME, &movemail_username);
+	if (NS_FAILED(rv)) return rv; 
+	
+	usernameAtHostname = PR_smprintf("%s@%s",movemail_username,MOVEMAIL_FAKE_HOST_NAME);
+
+	PR_FREEIF(movemail_username);
   }
+#endif /* HAVE_MOVEMAIL */
   else {
 #ifdef DEBUG_ACCOUNTMANAGER
     printf("Unrecognized server type %d\n", oldMailType);
@@ -1826,6 +1839,98 @@ nsMsgAccountManager::MigrateLocalMailAccount(nsIMsgIdentity *identity)
   return rv;
 }
 
+#ifdef HAVE_MOVEMAIL
+nsresult
+nsMsgAccountManager::MigrateMovemailAccount(nsIMsgIdentity *identity)
+{
+  nsresult rv;
+  
+  nsCOMPtr<nsIMsgAccount> account;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+
+  rv = CreateAccount(getter_AddRefs(account));
+  if (NS_FAILED(rv)) return rv;
+
+  // for right now, none.  eventually, we'll have "movemail"
+  rv = CreateIncomingServer("none", getter_AddRefs(server));
+  if (NS_FAILED(rv)) return rv;
+
+  // "none" is the type we use for migrate Local Mail
+  server->SetType("none");
+  server->SetHostName(MOVEMAIL_FAKE_HOST_NAME);  
+
+  // create the identity
+  nsCOMPtr<nsIMsgIdentity> copied_identity;
+  rv = CreateIdentity(getter_AddRefs(copied_identity));
+  if (NS_FAILED(rv)) return rv;
+
+  // make this new identity to copy of the identity
+  // that we created out of the 4.x prefs
+  rv = CopyIdentity(identity,copied_identity);
+  if (NS_FAILED(rv)) return rv;
+
+  // XXX: this probably won't work yet...
+  // the cc and fcc values
+  rv = SetMailCcAndFccValues(copied_identity);
+  if (NS_FAILED(rv)) return rv;
+
+  // hook them together
+  account->SetIncomingServer(server);
+  account->AddIdentity(copied_identity);
+  
+  // now upgrade all the prefs
+  nsCOMPtr <nsIFileSpec> mailDir;
+  nsFileSpec dir;
+  PRBool dirExists;
+
+  rv = MigrateOldMailPrefs(server);
+  if (NS_FAILED(rv)) return rv;
+
+  // if they used -installer, this pref will point to where their files got copied
+  rv = m_prefs->GetFilePref(PREF_MAIL_DIRECTORY, getter_AddRefs(mailDir));
+  // create the directory structure for old 4.x pop mail
+  // under <profile dir>/Mail/movemail or
+  // <"mail.directory" pref>/movemail
+  //
+  // if the "mail.directory" pref is set, use that.
+  if (NS_FAILED(rv)) {
+    // we wan't <profile>/Mail
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_MailDirectory50, getter_AddRefs(mailDir));
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  // set the default local path for "none" (eventually, "movemail")
+  rv = server->SetDefaultLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = mailDir->Exists(&dirExists);
+  if (!dirExists) {
+    mailDir->CreateDir();
+  }
+
+  // we want .../Mail/movemail, not .../Mail
+  rv = mailDir->AppendRelativeUnixPath(MOVEMAIL_FAKE_HOST_NAME);
+  if (NS_FAILED(rv)) return rv;
+  
+  // set the local path for this "none" (eventually, "movemail" server)
+  rv = server->SetLocalPath(mailDir);
+  if (NS_FAILED(rv)) return rv;
+    
+  rv = mailDir->Exists(&dirExists);
+  if (!dirExists) {
+    mailDir->CreateDir();
+  }
+    
+  // pass the server so the send later uri pref 
+  // will be something like "mailbox://sspitzer@movemail/Unsent Messages"
+  rv = SetSendLaterUriPref(server);
+  return rv;
+}
+#endif /* HAVE_MOVEMAIL */
+
 nsresult
 nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
 {
@@ -1887,7 +1992,7 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
 #endif /* DEBUG_ACCOUNTMANAGER */
   server->SetHostName((const char *)hostname);
 
-  rv = MigrateOldPopPrefs(server, hostAndPort);
+  rv = MigrateOldMailPrefs(server);
   if (NS_FAILED(rv)) return rv;
 
   // if they used -installer, this pref will point to where their files got copied
@@ -1934,7 +2039,6 @@ nsMsgAccountManager::MigratePopAccount(nsIMsgIdentity *identity)
   rv = SetSendLaterUriPref(server);
   return rv;
 }
-
 nsresult 
 nsMsgAccountManager::SetSendLaterUriPref(nsIMsgIncomingServer *server)
 {
@@ -1964,14 +2068,10 @@ nsMsgAccountManager::SetSendLaterUriPref(nsIMsgIncomingServer *server)
 }
 
 nsresult
-nsMsgAccountManager::MigrateOldPopPrefs(nsIMsgIncomingServer * server, const char *hostname)
+nsMsgAccountManager::MigrateOldMailPrefs(nsIMsgIncomingServer * server)
 {
   nsresult rv;
     
-  nsCOMPtr<nsIPop3IncomingServer> popServer;
-  popServer = do_QueryInterface(server, &rv);
-  if (NS_FAILED(rv)) return rv;
- 
   MIGRATE_SIMPLE_STR_PREF(PREF_4X_MAIL_POP_NAME,server,SetUsername)
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_REMEMBER_PASSWORD,server,SetRememberPassword)
 #ifdef CAN_UPGRADE_4x_PASSWORDS
@@ -1982,9 +2082,17 @@ nsMsgAccountManager::MigrateOldPopPrefs(nsIMsgIncomingServer * server, const cha
 #endif /* CAN_UPGRADE_4x_PASSWORDS */
   MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_CHECK_NEW_MAIL,server,SetDoBiff)
   MIGRATE_SIMPLE_INT_PREF(PREF_4X_MAIL_CHECK_TIME,server,SetBiffMinutes)
-  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_LEAVE_ON_SERVER,popServer,SetLeaveMessagesOnServer)
-  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER,popServer,SetDeleteMailLeftOnServer) 
-  
+
+  nsCOMPtr<nsIPop3IncomingServer> popServer;
+  popServer = do_QueryInterface(server, &rv);
+  if (NS_SUCCEEDED(rv) && popServer) {
+	  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_LEAVE_ON_SERVER,popServer,SetLeaveMessagesOnServer)
+	  MIGRATE_SIMPLE_BOOL_PREF(PREF_4X_MAIL_DELETE_MAIL_LEFT_ON_SERVER,popServer,SetDeleteMailLeftOnServer) 
+  }
+  else {
+	// could be a movemail server, in that case do nothing.
+  }
+
   return NS_OK;
 }
 

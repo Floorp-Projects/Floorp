@@ -57,6 +57,10 @@
 
 #endif /* XP_UNIX || XP_BEOS */
 
+#ifdef XP_UNIX
+#define HAVE_MOVEMAIL 1
+#endif /* HAVE_MOVEMAIL */
+
 class nsMsgAccountManager : public nsIMsgAccountManager, public nsIObserver
 {
 public:
@@ -171,9 +175,14 @@ private:
   nsresult MigrateOldImapPrefs(nsIMsgIncomingServer *server, const char *hostAndPort);
   
   nsresult MigratePopAccount(nsIMsgIdentity *identity);
+
+#ifdef HAVE_MOVEMAIL
+  nsresult MigrateMovemailAccount(nsIMsgIdentity *identity);
+#endif /* HAVE_MOVEMAIL */
   
   nsresult MigrateLocalMailAccount(nsIMsgIdentity *identity);
-  nsresult MigrateOldPopPrefs(nsIMsgIncomingServer *server, const char *hostname);
+
+  nsresult MigrateOldMailPrefs(nsIMsgIncomingServer *server);
   
   nsresult MigrateNewsAccounts(nsIMsgIdentity *identity);
   nsresult MigrateNewsAccount(nsIMsgIdentity *identity, const char *hostAndPort, nsFileSpec &newsrcfile, nsFileSpec &newsHostsDir);
