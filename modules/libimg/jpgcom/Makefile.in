@@ -34,7 +34,6 @@ CPPSRCS		= \
 		jpeg.cpp \
 		nsJPGDecoder.cpp \
 		nsJPGModule.cpp \
-		dllcompat.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)

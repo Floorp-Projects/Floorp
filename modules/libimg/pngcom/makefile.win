@@ -90,11 +90,10 @@ DEPTH=..\..\..
 LINCS=-I$(DEPTH)/dist/public/xpcom -I. -I$(DEPTH)/dist/public/raptor \
       -I$(DEPTH)/dist/public/png -I$(DEPTH)/dist/public/zlib -I$(DEPTH)/dist/public/img
 
-CPPSRCS= dllcompat.cpp nsPNGDecoder.cpp nsPNGCallback.cpp ipng.cpp
+CPPSRCS= nsPNGDecoder.cpp nsPNGCallback.cpp ipng.cpp
 CPP_OBJS= \
 	.\$(OBJDIR)\nsPNGDecoder.obj \
 	.\$(OBJDIR)\nsPNGModule.obj \
-	.\$(OBJDIR)\dllcompat.obj \
         .\$(OBJDIR)\ipng.obj
 
 

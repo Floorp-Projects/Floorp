@@ -31,7 +31,6 @@ MODULE		= img
 # XXX nsImgDCallbk.h should go into libimg/src instead of being here
 EXPORTS		= \
 		il.h \
-		dllcompat.h \
 		if_struct.h \
 		il_utilp.h \
 		nsIImgDecoder.h \

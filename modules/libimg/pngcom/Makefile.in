@@ -34,7 +34,6 @@ CPPSRCS		= \
 		ipng.cpp \
 		nsPNGDecoder.cpp \
 		nsPNGModule.cpp \
-		dllcompat.cpp \
 		$(NULL)
 
 LOCAL_INCLUDES	= -I$(srcdir)

@@ -73,6 +73,31 @@ NS_EXPORT void* IL_SetTimeout(TimeoutCallbackFunction func, void * closure, PRUi
 
 NS_EXPORT void IL_ClearTimeout(void *timer_id);
 
+#define MK_UNABLE_TO_LOCATE_FILE  -1
+#define MK_OUT_OF_MEMORY          -2
+
+#define XP_MSG_IMAGE_PIXELS       -7
+#define XP_MSG_IMAGE_NOT_FOUND    -8
+#define XP_MSG_XBIT_COLOR         -9	
+#define XP_MSG_1BIT_MONO         -10
+#define XP_MSG_XBIT_GREYSCALE    -11
+#define XP_MSG_XBIT_RGB          -12
+#define XP_MSG_DECODED_SIZE      -13	
+#define XP_MSG_WIDTH_HEIGHT      -14	
+#define XP_MSG_SCALED_FROM       -15	
+#define XP_MSG_IMAGE_DIM         -16	
+#define XP_MSG_COLOR             -17	
+#define XP_MSG_NB_COLORS         -18	
+#define XP_MSG_NONE              -19	
+#define XP_MSG_COLORMAP          -20	
+#define XP_MSG_BCKDRP_VISIBLE    -21	
+#define XP_MSG_SOLID_BKGND       -22	
+#define XP_MSG_JUST_NO           -23	
+#define XP_MSG_TRANSPARENCY      -24	
+#define XP_MSG_COMMENT           -25	
+#define XP_MSG_UNKNOWN           -26	
+#define XP_MSG_COMPRESS_REMOVE   -27	
+
 PR_END_EXTERN_C
 
 #endif

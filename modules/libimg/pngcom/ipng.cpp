@@ -37,7 +37,6 @@
 #include "nsIImgDecoder.h" // include if_struct.h Needs to be first
 
 #include "ipng.h"
-#include "dllcompat.h"
 #include "pngdec.h"
 
 #include "nsPNGDecoder.h"
