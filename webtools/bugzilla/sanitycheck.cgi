@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Matthew Tuck <matty@chariot.net.au>
 
 use diagnostics;
 use strict;
@@ -109,6 +110,7 @@ sub CrossCheck {
 }
 
     
+my @badbugs;
 
 
 my @row;
@@ -355,24 +357,25 @@ while (1) {
     push(@list, $k);
 }
 
-my @fixlist;
+@badbugs = ();
+
 foreach my $b (keys(%keyword)) {
     if (!exists $realk{$b} || $realk{$b} ne $keyword{$b}) {
-        push(@fixlist, $b);
+        push(@badbugs, $b);
     }
 }
 foreach my $b (keys(%realk)) {
     if (!exists $keyword{$b}) {
-        push(@fixlist, $b);
+        push(@badbugs, $b);
     }
 }
-if (@fixlist) {
-    @fixlist = sort {$a <=> $b} @fixlist;
+if (@badbugs) {
+    @badbugs = sort {$a <=> $b} @badbugs;
     Alert("Bug(s) found with incorrect keyword cache: " .
-          join(', ', @fixlist));
+          join(', ', @badbugs));
     if (exists $::FORM{'rebuildkeywordcache'}) {
         Status("OK, now fixing keyword cache.");
-        foreach my $b (@fixlist) {
+        foreach my $b (@badbugs) {
             my $k = '';
             if (exists($realk{$b})) {
                 $k = $realk{$b};
@@ -386,6 +389,47 @@ if (@fixlist) {
     } else {
         print qq{<a href="sanitycheck.cgi?rebuildkeywordcache=1">Click here to rebuild the keyword cache</a><p>\n};
     }
+}
+
+
+###########################################################################
+# Perform duplicates table checks
+###########################################################################
+
+Status("Checking duplicates table");
+
+SendSQL("SELECT bugs.bug_id " .
+        "FROM bugs INNER JOIN duplicates ON bugs.bug_id = duplicates.dupe " .
+        "WHERE bugs.resolution != 'DUPLICATE' " .
+        "ORDER BY bugs.bug_id");
+
+@badbugs = ();
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push (@badbugs, $id);
+}
+
+if (@badbugs) {
+    Alert("Bug(s) found on duplicates table that are not marked duplicate: " .
+          join(', ', @badbugs));
+}
+
+SendSQL("SELECT bugs.bug_id " .
+        "FROM bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe " .
+        "WHERE bugs.resolution = 'DUPLICATE' AND duplicates.dupe IS NULL " .
+        "ORDER BY bugs.bug_id");
+
+@badbugs = ();
+
+while (@row = FetchSQLData()) {
+    my ($id) = (@row);
+    push (@badbugs, $id);
+}
+
+if (@badbugs) {
+    Alert("Bug(s) found marked resolved duplicate and not on duplicates " .
+          "table: " . join(', ', @badbugs));
 }
 
 
