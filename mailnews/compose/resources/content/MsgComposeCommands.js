@@ -827,9 +827,19 @@ function setupLdapAutocompleteSession()
                 // if we make it here, we know that session initialization has
                 // succeeded; add the session for all recipients, and 
                 // remember that we've done so
+                var autoCompleteWidget;
                 for (var i=1; i <= MAX_RECIPIENTS; i++)
-                    document.getElementById("msgRecipient#" + i).
-                        addSession(LDAPSession);
+                {
+                    autoCompleteWidget = document.getElementById("msgRecipient#" + i);
+                    if (autoCompleteWidget)
+                    {
+                      autoCompleteWidget.addSession(LDAPSession);
+                      // ldap searches don't insert a default entry with the default domain appended to it
+                      // so reduce the minimum results for a popup to 2 in this case. 
+                      autoCompleteWidget.minResultsForPopup = 2;
+
+                    }
+                 }
                 sessionAdded = true;
             }
         }
