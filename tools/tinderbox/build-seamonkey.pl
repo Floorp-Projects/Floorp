@@ -6,18 +6,18 @@ use Sys::Hostname;
 use POSIX "sys_wait_h";
 use Cwd;
 
-$Version = '$Revision: 1.2 $';
+$Version = '$Revision: 1.3 $ ';
 
 sub InitVars {
     # PLEASE FILL THIS IN WITH YOUR PROPER EMAIL ADDRESS
-    $BuildAdministrator = "$ENV{'USER'}\@$ENV{'HOST'}";
+    $BuildAdministrator = "$ENV{USER}\@$ENV{HOST}";
 
     # Default values of cmdline opts
     $BuildDepend = 1;	# Depend or Clobber
     $ReportStatus = 1;	# Send results to server, or not
     $BuildOnce = 0;	# Build once, don't send results to server
     $RunTest = 1;	# Run the smoke test on successful build, or not
-    $UseTimeStamp = 0;	# Use the CVS 'pull-by-timestamp' option, or not
+    $UseTimeStamp = 1;	# Use the CVS 'pull-by-timestamp' option, or not
 
     # Relative path to binary
     $BinaryName{'apprunner'} = '/dist/bin/apprunner';
