@@ -581,8 +581,11 @@ void CBrowserWindow::FindCommandStatus(
 			break;
 		
 		case cmd_NCToggle:
-			outEnabled = (mContext) ? !(mIsRootDocInfo || mIsViewSource || mIsHTMLHelp || PREF_PrefIsLocked(CRDFCoordinator::Pref_ShowNavCenterSelector)) : true;
-			::GetIndString(outName, BROWSER_MENU_TOGGLE_STRINGS_ID, (mNavCenterParent->NavCenterSelector().IsShelfOpen() ? HIDE_NAVCENTER_STRING : SHOW_NAVCENTER_STRING));
+			outEnabled = (mContext && mNavCenterParent) ? !(mIsRootDocInfo || mIsViewSource || mIsHTMLHelp || PREF_PrefIsLocked(CRDFCoordinator::Pref_ShowNavCenterSelector)) : true;
+			Uint32 strID = SHOW_NAVCENTER_STRING;
+			if ( mNavCenterParent && mNavCenterParent->NavCenterSelector().IsShelfOpen() )
+				strID = HIDE_NAVCENTER_STRING;
+			::GetIndString(outName, BROWSER_MENU_TOGGLE_STRINGS_ID, strID);
 			break;
 			
 		case cmd_NetSearch:
@@ -758,7 +761,8 @@ Boolean	CBrowserWindow::ObeyCommand(
 				// still open. This isn't the end of the world, at least, because the closebox
 				// is there so the user can still figure out how to get rid of it and
 				// close it if they want.
-				mNavCenterParent->NavCenterSelector().ToggleShelf();
+				if ( mNavCenterParent )
+					mNavCenterParent->NavCenterSelector().ToggleShelf();
 				cmdHandled = true;
 				break;
 								
