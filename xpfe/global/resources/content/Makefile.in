@@ -32,6 +32,8 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/tasksOverlay.js \
 	$(srcdir)/dialogOverlay.xul \
 	$(srcdir)/dialogOverlay.js \
+	$(srcdir)/commonDialog.xul \
+	$(srcdir)/commonDialog.js \
 	$(NULL)
 
 install:: 
