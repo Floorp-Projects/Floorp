@@ -2,10 +2,23 @@
 # This is a list of local files which get copied to the mozilla:dist:idl directory
 #
 
-nsIUrlListener.idl
-nsIMsgGroupRecord.idl
 nsIMessenger.idl
-nsIMsgIdentity.idl
-nsIMsgSignature.idl
-nsIMsgVCard.idl
+nsICopyMessageListener.idl
+nsIFolder.idl
+nsIFolderListener.idl
+nsIMessage.idl
+nsIMessageView.idl
+nsIMsgAccount.idl
+nsIMsgAccountManager.idl
 nsIMsgFolder.idl
+nsIMsgGroupRecord.idl
+nsIMsgHost.idl
+nsIMsgIdentity.idl
+nsIMsgIncomingServer.idl
+nsIMsgMailSession.idl
+nsIMsgMessageService.idl
+nsIMsgSignature.idl
+nsIMsgThread.idl
+nsIMsgVCard.idl
+nsIUrlListener.idl
+nsIMsgBiffManager.idl
