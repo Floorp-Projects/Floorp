@@ -17,6 +17,8 @@ mailnews/addrbook/resources/locale/en-US/Makefile
 mailnews/addrbook/prefs/Makefile
 mailnews/addrbook/prefs/resources/Makefile
 mailnews/addrbook/prefs/resources/content/Makefile
+mailnews/addrbook/prefs/resources/locale/Makefile
+mailnews/addrbook/prefs/resources/locale/en-US/Makefile
 mailnews/base/Makefile
 mailnews/base/public/Makefile
 mailnews/base/src/Makefile
@@ -37,6 +39,8 @@ mailnews/base/prefs/Makefile
 mailnews/base/prefs/resources/Makefile
 mailnews/base/prefs/resources/content/Makefile
 mailnews/base/prefs/resources/skin/Makefile
+mailnews/base/prefs/resources/locale/Makefile
+mailnews/base/prefs/resources/locale/en-US/Makefile
 mailnews/db/Makefile
 mailnews/db/mdb/Makefile
 mailnews/db/mdb/public/Makefile
@@ -101,6 +105,8 @@ mailnews/compose/resources/locale/en-US/Makefile
 mailnews/compose/prefs/Makefile
 mailnews/compose/prefs/resources/Makefile
 mailnews/compose/prefs/resources/content/Makefile
+mailnews/compose/prefs/resources/locale/Makefile
+mailnews/compose/prefs/resources/locale/en-US/Makefile
 mailnews/compose/tests/Makefile
 mailnews/compose/tests/compose/Makefile
 mailnews/compose/tests/compose2/Makefile
