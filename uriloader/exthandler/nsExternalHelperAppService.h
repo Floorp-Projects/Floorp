@@ -185,7 +185,7 @@ protected:
   // if the user tells us how they want to dispose of the content and we still haven't finished downloading while
   // they were deciding, then throw a progress dialog so they know what's going on...
   nsresult ShowProgressDialog();
-  nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile);
+  nsresult PromptForSaveToFile(nsILocalFile ** aNewFile, const PRUnichar * aDefaultFile, const PRUnichar * aDefaultFileExt);
   // if the passed in channel is an nsIHTTPChannel, we'll attempt to extract a suggested file name
   // from the content disposition header...
   void ExtractSuggestedFileNameFromChannel(nsIChannel * aChannel);
