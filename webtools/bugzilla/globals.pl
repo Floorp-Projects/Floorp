@@ -706,7 +706,7 @@ sub ValidatePassword {
         ThrowUserError("password_too_short");
     } elsif (length($password) > 16) {
         ThrowUserError("password_too_long");
-    } elsif ($matchpassword && $password ne $matchpassword) { 
+    } elsif ((defined $matchpassword) && ($password ne $matchpassword)) {
         ThrowUserError("passwords_dont_match");
     }
 }

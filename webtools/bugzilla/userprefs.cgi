@@ -97,9 +97,8 @@ sub SaveAccount {
 
         if ($pwd1 ne "" || $pwd2 ne "")
         {
-            ($pwd1 eq $pwd2) || ThrowUserError("passwords_dont_match");
             $::FORM{'new_password1'} || ThrowUserError("new_password_missing");
-            ValidatePassword($pwd1);
+            ValidatePassword($pwd1, $pwd2);
         
             my $cryptedpassword = SqlQuote(Crypt($pwd1));
             SendSQL("UPDATE profiles 
