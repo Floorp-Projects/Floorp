@@ -1526,20 +1526,13 @@ nsContentSubtreeIterator::Next()
   {
     // as long as we are finding ancestors of the endpoint of the range,
     // dive down into their children
-    nsIContent *cChild = nextNode->GetChildAt(0);
-    if (!cChild) {
-      // XXX: Is this check necessary?
+    nextNode = nextNode->GetChildAt(0);
+    NS_ASSERTION(nextNode, "Iterator error, expected a child node!");
 
-      NS_ERROR("Iterator error, expected a child node!");
-
-      return;
-    }
-
-    // should be impossible to get a null pointer.  If we went all the 
+    // should be impossible to get a null pointer.  If we went all the way
     // down the child chain to the bottom without finding an interior node, 
     // then the previous node should have been the last, which was
     // was tested at top of routine.
-    nextNode = cChild;
     i = mEndNodes.IndexOf(nextNode);
   }
 
