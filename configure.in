@@ -2130,7 +2130,7 @@ os2*)
     ;;
 esac
 AC_CHECK_HEADERS(sys/byteorder.h compat.h getopt.h)
-AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
+AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h)
 AC_CHECK_HEADERS(gnu/libc-version.h nl_types.h)
 AC_CHECK_HEADERS(X11/XKBlib.h)
 
@@ -2376,7 +2376,7 @@ dnl Checks for library functions.
 dnl ========================================================
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
-AC_CHECK_FUNCS(random qsort strerror lchown fchmod snprintf localtime_r statvfs memmove usleep rint)
+AC_CHECK_FUNCS(random strerror lchown fchmod snprintf localtime_r statvfs memmove rint)
 AC_CHECK_FUNCS(nl_langinfo)
 
 AC_LANG_CPLUSPLUS
@@ -2398,62 +2398,6 @@ if test "$ac_cv_func_gnu_get_libc_version" = "yes"; then
     AC_DEFINE(HAVE_GNU_GET_LIBC_VERSION)
 fi
 AC_LANG_C
-
-AC_MSG_CHECKING(how to call gettimeofday)
-AC_CACHE_VAL(ac_cv_gettimeofday_args,
- [AC_TRY_COMPILE([#include <stdlib.h>
-                  #include <sys/time.h>],
-                 [struct timeval tv; struct timezone tzp;
-                  gettimeofday(&tv, &tzp);],
-                 [ac_cv_gettimeofday_args=2],
-                 [AC_TRY_COMPILE([#include <stdlib.h>
-                                  #include <sys/time.h>],
-                                 [struct timeval tv; gettimeofday(&tv);],
-                                 [ac_cv_gettimeofday_args=1],
-                                 [ac_cv_gettimeofday_args=0])])])
-if test "$ac_cv_gettimeofday_args" = 1 ; then
-  AC_DEFINE(HAVE_GETTIMEOFDAY)
-  AC_MSG_RESULT(one argument)
-elif test "$ac_cv_gettimeofday_args" = 2 ; then
-  AC_DEFINE(HAVE_GETTIMEOFDAY)
-  AC_DEFINE(GETTIMEOFDAY_TWO_ARGS)
-  AC_MSG_RESULT(two arguments)
-else
-  AC_MSG_RESULT(unknown)
-fi
-
-dnl Figure out how to 'allocate' paged memory areas (see xpcom/ds/nsPageMgr.cpp)
-dnl First see if /dev/zero is supported so that we
-dnl can mmap against it.  If not (hpux) then see if
-dnl if valloc is supported (which is hpux's malloc
-dnl on paged memory boundary
-dnl ========================================================
-
-AC_MSG_CHECKING(for /dev/zero)
-if test "$HAVE_DEV_ZERO"; then
-  AC_DEFINE(HAVE_DEV_ZERO)
-  AC_MSG_RESULT(yes)
-else
-if test -r /dev/zero && test -z "$CROSS_COMPILE"; then
-  AC_DEFINE(HAVE_DEV_ZERO)
-  AC_MSG_RESULT(yes)
-else
-        AC_MSG_RESULT(no)
-        AC_MSG_CHECKING(for valloc)
-        AC_CACHE_VAL(ac_cv_valloc,
-                     [AC_TRY_COMPILE([#include <stdlib.h>],
-                                     [void *ptr = valloc(1);],
-                                     [ac_cv_valloc=true],
-                                     [ac_cv_valloc=false])])
-
-	if test "$ac_cv_valloc" = true ; then
-	  AC_DEFINE(HAVE_VALLOC)
-	  AC_MSG_RESULT(yes)
-	else
-	  AC_MSG_RESULT(no)
-	fi
-fi
-fi
 
 dnl Does this platform require array notation to assign to a va_list?
 dnl If cross-compiling, we assume va_list is "normal".  If this breaks
@@ -2536,21 +2480,6 @@ EOF
 	    ;;
 esac
 
-dnl Checks for specific (libc) global variables
-AC_MSG_CHECKING(for sys_errlist/sys_nerr)
-AC_CACHE_VAL(ac_cv_syserrlist,
- [AC_TRY_COMPILE([#include <stdio.h>
-                  #include <errno.h>],
-                 [char *foo = sys_errlist[sys_nerr-1];],
-                 [ac_cv_syserrlist=true],
-                 [ac_cv_syserrlist=false])])
-if test "$ac_cv_syserrlist" = true ; then
-  AC_DEFINE(HAVE_SYSERRLIST)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-fi  
-
 dnl By default, turn rtti and exceptions off on g++/egcs
 dnl ========================================================
 if test "$GNU_CXX"; then
@@ -2613,48 +2542,6 @@ if test "$ac_cv_ios_bin" = true ; then
 else
   AC_MSG_RESULT(no)
 fi  
-
-AC_MSG_CHECKING(for ostreams)
-AC_CACHE_VAL(ac_cv_ostream,
-  [AC_TRY_LINK([#include <iostream.h>],
-               [streambuf *xxx; ostream *foo=new ostream(xxx);],
-               [ac_cv_ostream=true],
-               [ac_cv_ostream=false])])
-if test "$ac_cv_ostream" = true ; then
-  AC_DEFINE(HAVE_OSTREAM)
-  AC_MSG_RESULT(yes)
-else
-  AC_MSG_RESULT(no)
-  _SAVE_LIBS=$LIBS
-  LIBS="$LIBS -lstdc++"
-  if test "$target_os" = "os2_emx"; then
-    LIBS='-lemxio -lsocket -lstdcpp'
-  fi
-  AC_MSG_CHECKING(for ostreams in -lstdc++)
-  AC_CACHE_VAL(ac_cv_lib_stdcpp_ostream,
-    [AC_TRY_LINK([#include <iostream.h>],
-                [ostream *foo=new ostream();],
-                [ac_cv_lib_stdcpp_ostream=true],
-                [ac_cv_lib_stdcpp_ostream=false])])
-  if test "$ac_cv_lib_stdcpp_ostream" = true ; then
-    AC_DEFINE(HAVE_OSTREAM)
-    AC_MSG_RESULT(yes)
-  else
-    AC_MSG_RESULT(no)
-    LIBS=$_SAVE_LIBS
-  fi
-fi
-
-AC_CACHE_CHECK(for C++ \"bool\" keyword,
-               ac_cv_cpp_bool,
-               [AC_TRY_COMPILE(bool b;,
-                               b = true;,
-                               ac_cv_cpp_bool=yes,
-                               ac_cv_cpp_bool=no)])
-if test "$ac_cv_cpp_bool" = no ; then
-   AC_DEFINE(NEEDS_bool)
-fi
-
 
 AC_CACHE_CHECK(for C++ \"explicit\" keyword,
                ac_cv_cpp_explicit,
