@@ -65,6 +65,7 @@ DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, FindObject);
+DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, pulse);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
 DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
@@ -79,6 +80,7 @@ nsIRDFResource		*FindDataSource::kNC_Child;
 nsIRDFResource		*FindDataSource::kNC_Name;
 nsIRDFResource		*FindDataSource::kNC_URL;
 nsIRDFResource		*FindDataSource::kNC_FindObject;
+nsIRDFResource		*FindDataSource::kNC_pulse;
 nsIRDFResource		*FindDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FindDataSource::kRDF_type;
 
@@ -133,6 +135,7 @@ FindDataSource::FindDataSource(void)
 	gRDFService->GetResource(kURINC_Name, &kNC_Name);
 	gRDFService->GetResource(kURINC_URL, &kNC_URL);
 	gRDFService->GetResource(kURINC_FindObject, &kNC_FindObject);
+	gRDFService->GetResource(kURINC_FindObject, &kNC_pulse);
 	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
 	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
 
@@ -164,6 +167,7 @@ FindDataSource::~FindDataSource (void)
 		NS_RELEASE(kNC_Name);
 		NS_RELEASE(kNC_URL);
 		NS_RELEASE(kNC_FindObject);
+		NS_RELEASE(kNC_pulse);
 		NS_RELEASE(kRDF_InstanceOf);
 		NS_RELEASE(kRDF_type);
 
@@ -273,6 +277,18 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 				rv = NS_OK;
 			}
 			return(rv);
+		}
+		else if (peq(property, kNC_pulse))
+		{
+			nsAutoString	pulse("15");
+			nsIRDFLiteral	*pulseLiteral;
+			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			array = new nsVoidArray();
+			if (array)
+			{
+				array->AppendElement(pulseLiteral);
+				rv = NS_OK;
+			}
 		}
 		if (array != nsnull)
 		{
@@ -427,13 +443,16 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 							if (PL_strncmp(uri, "find:", PL_strlen("find:")))	// never match against a "find:" URI
 							{
 								nsIRDFResource	*property = nsnull;
-								if (NS_SUCCEEDED(rv = gRDFService->GetResource(tokens[1].value, &property)))
+								if (NS_SUCCEEDED(rv = gRDFService->GetResource(tokens[1].value, &property)) &&
+									(rv != NS_RDF_NO_VALUE) && (nsnull != property))
 								{
 									nsIRDFNode	*value = nsnull;
-									if (NS_SUCCEEDED(rv = datasource->GetTarget(source, property, PR_TRUE, &value)))
+									if (NS_SUCCEEDED(rv = datasource->GetTarget(source, property, PR_TRUE, &value)) &&
+										(rv != NS_RDF_NO_VALUE) && (nsnull != value))
 									{
 										nsIRDFLiteral	*literal = nsnull;
-										if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void **)&literal)))
+										if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void **)&literal)) &&
+											(rv != NS_RDF_NO_VALUE) && (nsnull != literal))
 										{
 											if (PR_TRUE == doMatch(literal, tokens[2].value, tokens[3].value))
 											{
@@ -524,7 +543,7 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (peq(property, kRDF_type))
 		{
-                    nsXPIDLCString uri;
+			nsXPIDLCString uri;
 			kNC_FindObject->GetValue( getter_Copies(uri) );
 			if (uri)
 			{
@@ -537,6 +556,18 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 					array->AppendElement(literal);
 					rv = NS_OK;
 				}
+			}
+		}
+		else if (peq(property, kNC_pulse))
+		{
+			nsAutoString	pulse("15");
+			nsIRDFLiteral	*pulseLiteral;
+			gRDFService->GetLiteral(pulse, &pulseLiteral);
+			array = new nsVoidArray();
+			if (array)
+			{
+				array->AppendElement(pulseLiteral);
+				rv = NS_OK;
 			}
 		}
 	}
@@ -628,6 +659,7 @@ FindDataSource::ArcLabelsOut(nsIRDFResource *source,
 		if (nsnull == temp)
 			return NS_ERROR_OUT_OF_MEMORY;
 		temp->AppendElement(kNC_Child);
+		temp->AppendElement(kNC_pulse);
 		*labels = new FindCursor(source, kNC_Child, PR_TRUE, temp);
 		if (nsnull != *labels)
 		{
