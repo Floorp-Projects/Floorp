@@ -28,6 +28,7 @@
 
 #include "nsString.h"
 #include "nsInstall.h"
+#include "nsInstallFile.h"
 
 #include "nsIDOMInstallVersion.h"
 
@@ -389,7 +390,7 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   nsAutoString b4;
   JSObject *jsObj;
   nsInstallFolder *folder;
-  PRBool b5;
+  PRInt32 b5;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -512,11 +513,21 @@ InstallAddDirectory(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
       return JS_TRUE; 
     }
 
-    if(!ConvertJSValToBool(&b5, cx, argv[5]))
+    if(JSVAL_IS_BOOLEAN(argv[5])) //Old form of the AddDirectory took a boolean
     {
-      return JS_FALSE;
+      b5 = JSVAL_TO_BOOLEAN(argv[5]);
+      if( b5 == PR_TRUE )
+        b5 = INSTALL_NO_COMPARE;  //convert to values that mean something in the bit field
+      else
+        b5 = INSTALL_IF_NEWER;
     }
-
+    else
+    {
+      if(!(b5 = JSVAL_TO_INT(argv[5])))  //File handling bit field
+      {
+        return JS_FALSE;
+      }
+    }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 
@@ -552,7 +563,7 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
   nsAutoString b4;
   JSObject* jsObj;
   nsInstallFolder* folder;
-  PRBool b5;
+  PRInt32 b5;
 
   *rval = INT_TO_JSVAL(nsInstall::UNEXPECTED_ERROR);
 
@@ -590,11 +601,21 @@ InstallAddSubcomponent(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
       return JS_TRUE; 
     }
 
-    if(!ConvertJSValToBool(&b5, cx, argv[5]))
+    if(JSVAL_IS_BOOLEAN(argv[5])) //Old form of the AddSubComponent took a boolean
     {
-      return JS_FALSE;
+      b5 = JSVAL_TO_BOOLEAN(argv[5]);
+      if( b5 == PR_TRUE )
+        b5 = INSTALL_NO_COMPARE;  //convert to values that mean something in the bit field
+      else
+        b5 = INSTALL_IF_NEWER;
     }
-
+    else
+    {
+      if(!(b5 = JSVAL_TO_INT(argv[5])))  //File handling bit field
+      {
+        return JS_FALSE;
+      }
+    }
 
     folder = (nsInstallFolder*)JS_GetPrivate(cx, jsObj);
 

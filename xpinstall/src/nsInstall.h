@@ -57,7 +57,6 @@
 #include "nsIEnumerator.h"
 #include "nsIZipReader.h"
 
-
 class nsInstallInfo
 {
   public:
@@ -185,12 +184,12 @@ class nsInstall
 
         PRInt32    AbortInstall(PRInt32 aErrorNumber);
         
-        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRInt32 aMode, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder* aFolder, const nsString& aSubdir, PRInt32* aReturn);
         PRInt32    AddDirectory(const nsString& aJarSource, PRInt32* aReturn);
         
-        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRBool aForceMode, PRInt32* aReturn);
+        PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRInt32 aMode, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aVersion, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aRegName, const nsString& aJarSource, nsInstallFolder *aFolder, const nsString& aTargetName, PRInt32* aReturn);
         PRInt32    AddSubcomponent(const nsString& aJarSource, PRInt32* aReturn);
@@ -267,7 +266,6 @@ class nsInstall
 
         PRInt32    SaveError(PRInt32 errcode);
 
-
     private:
         JSObject*           mScriptObject;
         
@@ -301,7 +299,7 @@ class nsInstall
         nsCOMPtr<nsIStringBundle>   mStringBundle;
 
         PRInt32             mLastError;
-
+        
         void        ParseFlags(int flags);
         PRInt32     SanityCheck(void);
         void        GetTime(nsString &aString);

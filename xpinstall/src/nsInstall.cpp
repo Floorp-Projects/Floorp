@@ -285,7 +285,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                         const nsString& aJarSource, 
                         nsInstallFolder *aFolder,
                         const nsString& aSubdir, 
-                        PRBool aForceMode, 
+                        PRInt32 aMode, 
                         PRInt32* aReturn)
 {
     nsInstallFile* ie = nsnull;
@@ -394,7 +394,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                                 newJarSource,
                                 aFolder,
                                 newSubDir,
-                                aForceMode,
+                                aMode,
                                 &result);
         
         if (ie == nsnull)
@@ -433,7 +433,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                         aJarSource, 
                         aFolder, 
                         aSubdir, 
-                        PR_FALSE,
+                        INSTALL_NO_COMPARE,
                         aReturn);
 }
 
@@ -449,7 +449,7 @@ nsInstall::AddDirectory(const nsString& aRegName,
                         aJarSource, 
                         aFolder, 
                         aSubdir, 
-                        PR_FALSE,
+                        INSTALL_NO_COMPARE,
                         aReturn);
 }
 
@@ -468,7 +468,7 @@ nsInstall::AddDirectory(const nsString& aJarSource,
                         aJarSource, 
                         mPackageFolder, 
                         "", 
-                        PR_FALSE,
+                        INSTALL_NO_COMPARE,
                         aReturn);
 }
 
@@ -478,7 +478,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                            const nsString& aJarSource, 
                            nsInstallFolder *aFolder, 
                            const nsString& aTargetName, 
-                           PRBool aForceMode, 
+                           PRInt32 aMode, 
                            PRInt32* aReturn)
 {
     nsInstallFile*  ie;
@@ -538,7 +538,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                             aJarSource,
                             aFolder,
                             tempTargetName, 
-                            aForceMode, 
+                            aMode, 
                             &errcode );
     
     if (ie == nsnull)
@@ -573,7 +573,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                            aJarSource, 
                            aFolder, 
                            aTargetName, 
-                           PR_FALSE, 
+                           INSTALL_NO_COMPARE, 
                            aReturn);
 }
 
@@ -606,7 +606,7 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                            aJarSource, 
                            aFolder, 
                            aTargetName, 
-                           PR_FALSE, 
+                           INSTALL_NO_COMPARE, 
                            aReturn);
 }
 
@@ -641,7 +641,7 @@ nsInstall::AddSubcomponent(const nsString& aJarSource,
                            aJarSource, 
                            mPackageFolder, 
                            "",
-                           PR_FALSE, 
+                           INSTALL_NO_COMPARE, 
                            aReturn);
 }
 
