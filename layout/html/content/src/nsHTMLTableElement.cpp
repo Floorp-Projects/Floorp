@@ -842,7 +842,7 @@ nsHTMLTableElement::StringToAttribute(nsIAtom* aAttribute,
   /* attributes that resolve to pixels, with min=0 */
   if ((aAttribute == nsHTMLAtoms::cellspacing) ||
       (aAttribute == nsHTMLAtoms::cellpadding)) {
-    if (nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Pixel)) {
+    if (nsGenericHTMLElement::ParseValueOrPercent(aValue, aResult, eHTMLUnit_Pixel)) {
       return NS_CONTENT_ATTR_HAS_VALUE;
     }
   }
