@@ -1101,12 +1101,10 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 
 	NNTP_LOG_READ(line);
 
-    if(status == 0)
+    if(pauseForMoreData)
 	{
-        m_nextState = NNTP_ERROR;
-        ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-        return(MK_NNTP_SERVER_ERROR);
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 
     /* if TCP error of if there is not a full line yet return */
@@ -1280,12 +1278,10 @@ PRInt32 nsNNTPProtocol::SendListExtensionsResponse(nsIInputStream * inputStream,
 		PRBool pauseForMoreData = PR_FALSE;
 		line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-		if(status == 0)
+		if(pauseForMoreData)
 		{
-			m_nextState = NNTP_ERROR;
-			ClearFlag(NNTP_PAUSE_FOR_READ);
-			m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-			return MK_NNTP_SERVER_ERROR;
+			SetFlag(NNTP_PAUSE_FOR_READ);
+			return 0;
 		}
 		if (!line)
 			return status;  /* no line yet */
@@ -1358,12 +1354,10 @@ PRInt32 nsNNTPProtocol::SendListSearchesResponse(nsIInputStream * inputStream, P
 
 	NNTP_LOG_READ(line);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return MK_NNTP_SERVER_ERROR;
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 	if (!line)
 		return status;  /* no line yet */
@@ -1410,12 +1404,10 @@ PRInt32 nsNNTPProtocol::SendListSearchHeadersResponse(nsIInputStream * inputStre
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return MK_NNTP_SERVER_ERROR;
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 	if (!line)
 		return status;  /* no line yet */
@@ -1470,13 +1462,10 @@ PRInt32 nsNNTPProtocol::GetPropertiesResponse(nsIInputStream * inputStream, PRUi
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		PR_FREEIF(line);
-		return MK_NNTP_SERVER_ERROR;
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 	if (!line)
 		return status;  /* no line yet */
@@ -1549,13 +1538,10 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		PR_FREEIF(line);
-		return MK_NNTP_SERVER_ERROR;
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 	if (!line)
 		return status;  /* no line yet */
@@ -1705,8 +1691,6 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 	  		  }
 #endif /* BUG_21013 */
 #endif
-
-			nsresult rv;
 			PRBool xactive=PR_FALSE;
 			rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
 			if (NS_SUCCEEDED(rv) && xactive)
@@ -1777,7 +1761,6 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURL * url)
 		}
 		else
 		{
-            nsresult rv;
             char *group_name;
             
 			/* for XPAT, we have to GROUP into the group before searching */
@@ -2503,17 +2486,16 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 	char *line, *s, *s1=NULL, *s2=NULL, *flag=NULL;
 	PRInt32 oldest, youngest;
 	PRUint32 status = 0;
-
+    nsresult rv = NS_OK;
+    
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-    if(status == 0)
-    {
-        m_nextState = NNTP_ERROR;
-        ClearFlag(NNTP_PAUSE_FOR_READ);
-        m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-        return(MK_NNTP_SERVER_ERROR);
-    }
+	if(pauseForMoreData)
+	{
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
+	}
 
     if(!line)
         return(status);  /* no line yet */
@@ -2532,13 +2514,11 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
     if (line[0]=='.' && line[1]=='\0')
 	{
 		ClearFlag(NNTP_PAUSE_FOR_READ);
-	    nsresult rv;
 		PRBool xactive=PR_FALSE;
 		rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
 		if (NS_SUCCEEDED(rv) && xactive)
 		{
           char *groupName;
-          nsresult rv;
           rv = m_newsHost->GetFirstGroupNeedingExtraInfo(&groupName);
 		  if (NS_SUCCEEDED(rv) && m_newsgroup)
 		  {
@@ -2609,7 +2589,6 @@ PRInt32 nsNNTPProtocol::ProcessNewsgroups(nsIInputStream * inputStream, PRUint32
 #endif
 	m_newsHost->AddNewNewsgroup(line, oldest, youngest, flag, PR_FALSE);
 
-    nsresult rv;
     PRBool xactive=PR_FALSE;
     rv = m_newsHost->QueryExtension("XACTIVE",&xactive);
     if (NS_SUCCEEDED(rv) && xactive)
@@ -2651,16 +2630,11 @@ PRInt32 nsNNTPProtocol::ReadNewsList(nsIInputStream * inputStream, PRUint32 leng
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-    if(status == 0)
-    {
+	if(pauseForMoreData)
+	{
 		SetFlag(NNTP_PAUSE_FOR_READ);
-#if 0 
-        m_nextState = NNTP_ERROR;
-        ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-#endif
-        return status;
-    }
+		return 0;
+	}
 
     if(!line)
         return(status);  /* no line yet */
@@ -2736,7 +2710,7 @@ PRInt32 nsNNTPProtocol::BeginReadXover()
 	   Now parse that response to help decide which articles to request
 	   xover data for.
 	 */
-    sscanf(m_responseText,
+    PR_sscanf(m_responseText,
 		   "%d %d %d", 
 		   &count, 
 		   &m_firstPossibleArticle, 
@@ -2765,7 +2739,7 @@ PRInt32 nsNNTPProtocol::BeginReadXover()
 
 PRInt32 nsNNTPProtocol::FigureNextChunk()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 	PRInt32 status = 0;
 
 	const char * host_and_port = NULL;
@@ -2775,7 +2749,6 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 
 	if (m_firstArticle > 0) 
 	{
-      nsresult rv = NS_OK;
       char *groupName;
       
 	  rv = m_newsgroup->GetName(&groupName);
@@ -2838,8 +2811,10 @@ PRInt32 nsNNTPProtocol::FigureNextChunk()
 	  return 0;
 	}
 
-    NNTP_LOG_NOTE(("    Chunk will be (%ld-%ld)", m_firstArticle, m_lastArticle));
-
+#ifdef DEBUG_sspitzer
+    printf("Chunk will be (%ld-%ld)\n", m_firstArticle, m_lastArticle);
+#endif
+    
 	m_articleNumber = m_firstArticle;
 
     /* was MSG_InitXOVER() */
@@ -2938,14 +2913,11 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
     PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-    if(status == 0)
-    {
-		NNTP_LOG_NOTE(("received unexpected TCP EOF!!!!  aborting!"));
-        m_nextState = NNTP_ERROR;
-        ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-        return(MK_NNTP_SERVER_ERROR);
-    }
+	if(pauseForMoreData)
+	{
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
+	}
 
     if(!line)
 		return(status);  /* no line yet or TCP error */
@@ -3076,13 +3048,11 @@ PRInt32 nsNNTPProtocol::ReadNewsgroupBody(nsIInputStream * inputStream, PRUint32
   PRBool pauseForMoreData = PR_FALSE;
   line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-  if(status == 0)
-  {
-	  m_nextState = NNTP_ERROR;
-	  ClearFlag(NNTP_PAUSE_FOR_READ);
-	  m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-	  return(MK_NNTP_SERVER_ERROR);
-  }
+	if(pauseForMoreData)
+	{
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
+	}
 
   /* if TCP error of if there is not a full line yet return
    */
@@ -3495,13 +3465,12 @@ PRInt32 nsNNTPProtocol::Cancel()
 	 which to cancel postings (like telnet.)
 	 Don't do this if server tells us it will validate user. DMB 3/19/97
    */
-  nsresult rv;
+  nsresult rv = NS_OK;
   PRBool cancelchk=PR_FALSE;
   rv = m_newsHost->QueryExtension("CANCELCHK",&cancelchk);
   if (NS_SUCCEEDED(rv) && cancelchk)
   {
     nsIMsgHeaderParser *parser;
-    nsresult rv;
     PRBool ok = PR_FALSE;
     NS_DEFINE_CID(kCHeaderParser, NS_MSGHEADERPARSER_CID);
                   
@@ -3693,12 +3662,10 @@ PRInt32 nsNNTPProtocol::XPATResponse(nsIInputStream * inputStream, PRUint32 leng
 
 	NNTP_LOG_READ(line);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return(MK_NNTP_SERVER_ERROR);
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 
 	if (line)
@@ -3775,12 +3742,10 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 
 	NNTP_LOG_READ(line);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return(MK_NNTP_SERVER_ERROR);
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 
 	if (line)
@@ -3857,12 +3822,10 @@ PRInt32 nsNNTPProtocol::ListXActiveResponse(nsIInputStream * inputStream, PRUint
 
 	NNTP_LOG_READ(line);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return(MK_NNTP_SERVER_ERROR);
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 
 	 /* almost correct
@@ -4000,12 +3963,10 @@ PRInt32 nsNNTPProtocol::ListGroupResponse(nsIInputStream * inputStream, PRUint32
 
 	NNTP_LOG_READ(line);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ);
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return(MK_NNTP_SERVER_ERROR);
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 
 	if (line)
@@ -4055,12 +4016,10 @@ PRInt32 nsNNTPProtocol::SearchResults(nsIInputStream *inputStream, PRUint32 leng
 	PRBool pauseForMoreData = PR_FALSE;
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 
-	if(status == 0)
+	if(pauseForMoreData)
 	{
-		m_nextState = NNTP_ERROR;
-		ClearFlag(NNTP_PAUSE_FOR_READ); 
-		m_runningURL->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_SERVER_ERROR));
-		return MK_NNTP_SERVER_ERROR;
+		SetFlag(NNTP_PAUSE_FOR_READ);
+		return 0;
 	}
 	if (!line)
 		return status;  /* no line yet */
