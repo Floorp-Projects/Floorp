@@ -20,9 +20,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.32 $
+ *  Version: $Revision: 1.33 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.32 2003/03/09 01:59:33 samuel%sieb.net Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.33 2003/03/26 01:37:02 suresh%netscape.com Exp $
  */
 
 /*
@@ -407,7 +407,8 @@ nsXmlRpcClient.prototype = {
         if (iid.equals(Components.interfaces.nsIAuthPrompt)){
             return this;
         }
-        return Components.results.NS_ERROR_NO_INTERFACE;
+        Components.returnCode = Components.results.NS_ERROR_NO_INTERFACE;
+        return null;
     },
 
     // nsIAuthPrompt interface
