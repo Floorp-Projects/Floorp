@@ -99,6 +99,7 @@
 #include "nsPlainTextSerializer.h"
 #include "nsRange.h"
 #include "nsXMLContentSerializer.h"
+#include "nsRuleNode.h"
 
 class nsIDocumentLoaderFactory;
 
@@ -226,10 +227,9 @@ Shutdown(nsIModule* aSelf)
 #endif
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
-
+  NS_IF_RELEASE(nsRuleNode::gLangService);
   nsContentUtils::Shutdown();
   nsGenericHTMLElement::Shutdown();
-
   NS_NameSpaceManagerShutdown();
 }
 

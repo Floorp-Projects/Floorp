@@ -207,10 +207,6 @@ static void ReleaseAttributes(nsIHTMLAttributes*& aAttributes)
   NS_RELEASE(aAttributes);
 }
 
-static int gGenericHTMLElementCount = 0;
-static nsILanguageAtomService* gLangService = nsnull;
-
-
 class nsGenericHTMLElementTearoff : public nsIDOMNSHTMLElement,
                                     public nsIDOMElementCSSInlineStyle
 {
@@ -267,16 +263,12 @@ static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 nsGenericHTMLElement::nsGenericHTMLElement()
 {
   mAttributes = nsnull;
-  gGenericHTMLElementCount++;
 }
 
 nsGenericHTMLElement::~nsGenericHTMLElement()
 {
   if (nsnull != mAttributes) {
     ReleaseAttributes(mAttributes);
-  }
-  if (!--gGenericHTMLElementCount) {
-    NS_IF_RELEASE(gLangService);
   }
 }
 
@@ -3229,30 +3221,6 @@ nsGenericHTMLElement::ParseStyleAttribute(const nsAReadableString& aValue, nsHTM
   return result;
 }
 
-static void PostResolveCallback(nsStyleStruct* aStyleStruct, nsRuleData* aRuleData)
-{
-  if (!aRuleData->mAttributes)
-    return;
-
-  nsHTMLValue value;
-  aRuleData->mAttributes->GetAttribute(nsHTMLAtoms::lang, value);
-  if (value.GetUnit() == eHTMLUnit_String) {
-    if (!gLangService) {
-      nsServiceManager::GetService(NS_LANGUAGEATOMSERVICE_CONTRACTID,
-        NS_GET_IID(nsILanguageAtomService), (nsISupports**) &gLangService);
-      if (!gLangService) {
-        return;
-      }
-    }
-    nsStyleVisibility* vis = (nsStyleVisibility*)aStyleStruct;
-    
-    nsAutoString lang;
-    value.GetStringValue(lang);
-    gLangService->LookupLanguage(lang.get(),
-      getter_AddRefs(vis->mLanguage));
-  }
-}
-  
 /**
  * Handle attributes common to all html elements
  */
@@ -3279,10 +3247,10 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
     nsHTMLValue value;
     aAttributes->GetAttribute(nsHTMLAtoms::lang, value);
     if (value.GetUnit() == eHTMLUnit_String) {
-      // Register a post-resolve callback for filling in the language atom
-      // over in the computed style data.
-      aData->mAttributes = (nsIHTMLMappedAttributes*)aAttributes;
-      aData->mPostResolveCallback = &PostResolveCallback;
+      nsAutoString lang;
+      value.GetStringValue(lang);
+      aData->mDisplayData->mLang.SetStringValue(lang,
+                                                eCSSUnit_String);
     }
   }
 }

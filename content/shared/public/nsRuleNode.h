@@ -47,8 +47,8 @@
 #include "nsFixedSizeAllocator.h"
 #include "nsIPresContext.h"
 #include "nsICSSDeclaration.h"
+#include "nsILanguageAtomService.h"
 
-class nsIHTMLMappedAttributes;
 class nsIStyleContext;
 struct nsRuleList;
 
@@ -269,9 +269,6 @@ struct nsRuleData
   nsIStyleContext* mStyleContext;
   nsPostResolveFunc mPostResolveCallback;
   PRBool mCanStoreInRuleTree;
-
-  nsIHTMLMappedAttributes* mAttributes; // Can be cached in the rule data by a content node for a post-resolve callback.
-
   nsCSSFont* mFontData; // Should always be stack-allocated! We don't own these structures!
   nsCSSDisplay* mDisplayData;
   nsCSSMargin* mMarginData;
@@ -289,7 +286,7 @@ struct nsRuleData
 
   nsRuleData(const nsStyleStructID& aSID, nsIPresContext* aContext, nsIStyleContext* aStyleContext) 
     :mSID(aSID), mPresContext(aContext), mStyleContext(aStyleContext), mPostResolveCallback(nsnull),
-     mAttributes(nsnull), mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
+     mFontData(nsnull), mDisplayData(nsnull), mMarginData(nsnull), mListData(nsnull), 
      mPositionData(nsnull), mTableData(nsnull), mColorData(nsnull), mContentData(nsnull), mTextData(nsnull),
      mUIData(nsnull)
   {
@@ -361,19 +358,18 @@ private:
                                   // rule node on that branch, so that you can break out of the rule tree
                                   // early.
 
-  static PRUint32 gRefCnt;
- 
 friend struct nsRuleList;
 
 protected:
   // The callback function for deleting rule nodes from our rule tree.
   static PRBool PR_CALLBACK DeleteChildren(nsHashKey *aKey, void *aData, void *closure);
-  
+
 public:
   // Overloaded new operator. Initializes the memory to 0 and relies on an arena
   // (which comes from the presShell) to perform the allocation.
   void* operator new(size_t sz, nsIPresContext* aContext);
   void Destroy();
+  static nsILanguageAtomService *gLangService;
 
 protected:
   void PropagateInheritBit(PRUint32 aBit, nsRuleNode* aHighestNode);

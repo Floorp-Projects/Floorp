@@ -395,6 +395,8 @@ void nsRuleNode::CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResu
   *aResult = new (aPresContext) nsRuleNode(aPresContext);
 }
 
+nsILanguageAtomService* nsRuleNode::gLangService = nsnull;
+
 nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode* aParent)
     :mPresContext(aContext), mParent(aParent), mInheritBits(0), mNoneBits(0)
 {
@@ -784,6 +786,7 @@ static const PropertyCheckData DisplayCheckProperties[] = {
 static const PropertyCheckData VisibilityCheckProperties[] = {
   CHECKDATA_PROP(nsCSSDisplay, mVisibility, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mDirection, CHECKDATA_VALUE, PR_FALSE),
+  CHECKDATA_PROP(nsCSSDisplay, mLang, CHECKDATA_VALUE, PR_FALSE),
   CHECKDATA_PROP(nsCSSDisplay, mOpacity, CHECKDATA_VALUE, PR_FALSE)
 };
 
@@ -2909,6 +2912,21 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
     inherited = PR_TRUE;
     visibility->mVisible = parentVisibility->mVisible;
   }
+
+  // lang: string, inherit
+  // this is not a real CSS property, it is a html attribute mapped to CSS struture
+  if (eCSSUnit_String == displayData.mLang.GetUnit()) {
+    if (!gLangService) {
+      CallGetService(NS_LANGUAGEATOMSERVICE_CONTRACTID, &gLangService);
+    }
+
+    if (gLangService) {
+      nsAutoString lang;
+      displayData.mLang.GetStringValue(lang);
+      gLangService->LookupLanguage(lang.get(),
+                        getter_AddRefs(visibility->mLanguage));
+    }
+  } 
 
   if (inherited)
     // We inherited, and therefore can't be cached in the rule node.  We have to be put right on the
