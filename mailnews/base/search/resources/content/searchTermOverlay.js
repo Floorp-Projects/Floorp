@@ -33,6 +33,8 @@ var gSearchBooleanRadiogroup;
 function searchTermContainer() {}
 
 searchTermContainer.prototype = {
+    internalSearchTerm : '',
+    internalBooleanAnd : '',
 
     // this.searchTerm: the actual nsIMsgSearchTerm object 
     get searchTerm() { return this.internalSearchTerm; },

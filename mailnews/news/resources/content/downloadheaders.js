@@ -34,8 +34,7 @@ var numberElement = null;
 
 var server = null;
 var nntpServer = null;
-var param = null;
-
+var args = null;
 
 function OnLoad()
 {
