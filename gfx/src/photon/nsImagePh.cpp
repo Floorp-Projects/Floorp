@@ -20,7 +20,6 @@
  * Contributor(s): 
  */
 
-
 #include "nsImagePh.h"
 #include "nsRenderingContextPh.h"
 #include "nsPhGfxLog.h"
@@ -29,12 +28,15 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 
-//#define NO_MASK
+//#define PgFLUSH() PgFlush()
+#define PgFLUSH()
 
 // ----------------------------------------------------------------
 nsImagePh :: nsImagePh()
 {
   NS_INIT_REFCNT();
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::nsImagePh Constructor called this=<%p>\n", this));
 
   mWidth = 0;
   mHeight = 0;
@@ -60,7 +62,7 @@ nsImagePh :: nsImagePh()
 // ----------------------------------------------------------------
 nsImagePh :: ~nsImagePh()
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::~nsImagePh Destructor called\n"));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::~nsImagePh Destructor called this=<%p>\n", this));
 
   /* from windows */
   CleanUp(PR_TRUE);
@@ -76,7 +78,7 @@ nsImagePh :: ~nsImagePh()
  */
 nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init (%p) - aWidth=%d aHeight=%d aDepth=%d aMaskRequirements=%d\n", this, aWidth, aHeight, aDepth, aMaskRequirements));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init this=<%p> - aWidth=%d aHeight=%d aDepth=%d aMaskRequirements=%d\n", this, aWidth, aHeight, aDepth, aMaskRequirements));
 
   CleanUp(PR_TRUE);
 
@@ -166,13 +168,8 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   mImage.ghost_bpl     = 0;
   mImage.spare1        = 0;
   mImage.ghost_bitmap  = nsnull;
-#ifdef NO_MASK
-  mImage.mask_bpl      = 0;
-  mImage.mask_bm       = nsnull;
-#else
   mImage.mask_bpl      = mARowBytes;
   mImage.mask_bm       = (char *)mAlphaBits;
-#endif
   if( mColorMap )
     mImage.palette     = (PgColor_t *) mColorMap->Index;
   else
@@ -287,6 +284,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgSetPalette");
+      abort();
 	  return NS_ERROR_FAILURE;
     }
   }
@@ -300,6 +298,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
+	  abort();
 	  return NS_ERROR_FAILURE;
     }
   }
@@ -309,11 +308,12 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawImage");
+      abort();
 	  return NS_ERROR_FAILURE;
     }
   }
 
-  PgFlush();	// kedl
+  PgFLUSH();	// kedl
   return NS_OK;
 }
 
@@ -333,6 +333,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p>\n", this, aX, aY, aWidth, aHeight, aSurface ));
+  //printf("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p>\n", this, aX, aY, aWidth, aHeight, aSurface);
 
   if( !mImage.image )
   {
@@ -353,20 +354,74 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   if ((aWidth != mWidth) || (aHeight != mHeight))
   {
 	NS_ASSERTION(0, "nsImagePh::Draw2 - Width or Height don't match!");
+	printf("nsImagePh::Draw2 - Width or Height don't match!\n");
 
     aWidth = mWidth;
     aHeight = mHeight;
   }
   
+  /* Create a new GC just for this image */
+  PhGC_t *newGC = PgCreateGC(0);
+  PgDefaultGC(newGC);
+  PhGC_t *previousGC = PgSetGC(newGC);
+  nsRect aRect;
+  PRBool isValid;
+  
+  aContext.GetClipRect(aRect, isValid); 
+  if (isValid)
+  {
+    PhRect_t rect = { {aRect.x,aRect.y}, {aRect.x+aRect.width-1,aRect.y+aRect.height-1}};
+    PgSetMultiClip(1,&rect);  
+  }
+  
+#if 1
+  /* Print out all the clipping that applies */
+  PhRect_t  *rect;
+  int       rect_count;
+  PhGC_t    *gc;
+
+  gc = PgGetGC();
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsImagePh::Draw2   GC Information: rid=<%d> target_rid=<%d>\n", gc->rid, gc->target_rid));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n_clip_rects=<%d> max_clip_rects=<%d>\n", gc->n_clip_rects,gc->max_clip_rects));
+  rect_count=gc->n_clip_rects;
+  rect = gc->clip_rects;
+  while(rect_count--)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
+    rect++;
+  }
+  
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t n__user_clip_rects=<%d> max_user_clip_rects=<%d>\n", gc->n_user_clip_rects,gc->max_user_clip_rects));
+  rect_count=gc->n_user_clip_rects;
+  rect = gc->user_clip_rects;
+  while(rect_count--)
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t\t %d (%d,%d) to (%d,%d)\n", rect_count, rect->ul.x, rect->ul.y, rect->lr.x, rect->lr.y));
+    rect++;
+  }
+
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("\t aux_clip_valid=<%d>\n", gc->aux_clip_valid));
+#endif
+
+
   PhPoint_t pos = { aX, aY };
   int       err;
   
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
+  //printf("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl);
 
-#ifndef NO_MASK
+#if 0
+if ( (mImage.size.w==100) && (mImage.size.h==38))
+{
+  /* this causes trouble if logging is OFF */
+  printf("skipping image\n");
+  return NS_OK;
+}
+#endif
+
   if( mAlphaBits )
   {
-#if 1
+#if 0
 	int x,y;
 	for(x=0; x < mHeight; x++)
 	{
@@ -412,23 +467,29 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawTImage");
+	  abort();
       return NS_ERROR_FAILURE;
     }
   }
   else
-#endif
   {
     err=PgDrawImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0 );
     if (err == -1)
     {
       NS_ASSERTION(0,"nsImagePh::Draw Error calling PgDrawImage");
+      abort();
 	  return NS_ERROR_FAILURE;
     }
   }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
+  //printf("nsImagePh::Draw2 this=<%p> finished \n", this);
 
-  PgFlush();	//kedl
+  /* Restore the old GC */
+  PgSetGC(previousGC);
+  PgDestroyGC(newGC);
+
+  PgFLUSH();	//kedl
   return NS_OK;
 }
 
@@ -615,6 +676,8 @@ void* nsImagePh::GetBitInfo()
 NS_IMETHODIMP
 nsImagePh::LockImagePixels(PRBool aMaskPixels)
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::LockImagePixels aMaskPixels=<%d>\n", aMaskPixels));
+
   return NS_OK;
 }
 
@@ -623,6 +686,8 @@ nsImagePh::LockImagePixels(PRBool aMaskPixels)
 NS_IMETHODIMP
 nsImagePh::UnlockImagePixels(PRBool aMaskPixels)
 {
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::UnlockImagePixels aMaskPixels=<%d>\n", aMaskPixels));
+
   return NS_OK;
 }
 

@@ -118,8 +118,6 @@ nsresult nsGfxFactoryPh::CreateInstance(nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsGfxFactoryPh::CreateInstance\n"));
-
   if (aResult == NULL) {  
     return NS_ERROR_NULL_POINTER;  
   }  
