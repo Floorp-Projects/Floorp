@@ -2854,8 +2854,15 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
       if (binding)
         binding->AttributeChanged(aName, aNameSpaceID, PR_FALSE);
       
-      if (aNotify)
+      if (aNotify) {
+        nsCOMPtr<nsIAtom> tagName;
+        NodeInfo()->GetNameAtom(*getter_AddRefs(tagName));
+        if ((tagName.get() == nsXULAtoms::broadcaster) ||
+            (tagName.get() == nsXULAtoms::command) ||
+            (tagName.get() == nsXULAtoms::key))
+            return rv;
         mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this), aNameSpaceID, aName, NS_STYLE_HINT_UNKNOWN);
+      }
     }
 
     return rv;
@@ -3078,10 +3085,17 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
           if (binding)
             binding->AttributeChanged(aName, aNameSpaceID, PR_TRUE);
 
-          if (aNotify)
+          if (aNotify) {
+            nsCOMPtr<nsIAtom> tagName;
+            NodeInfo()->GetNameAtom(*getter_AddRefs(tagName));
+            if ((tagName.get() == nsXULAtoms::broadcaster) ||
+                (tagName.get() == nsXULAtoms::command) ||
+                (tagName.get() == nsXULAtoms::key))
+                return rv;
             mDocument->AttributeChanged(NS_STATIC_CAST(nsIStyledContent*, this),
                                         aNameSpaceID, aName,
                                         NS_STYLE_HINT_UNKNOWN);
+          }
         }
     }
 
