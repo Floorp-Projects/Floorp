@@ -147,7 +147,7 @@ nsDataChannel::ParseData() {
     char *dataBuffer = nsnull;
     PRBool cleanup = PR_FALSE;
     mContentType.StripWhitespace();
-    if (!mContentType.Find("text")) {
+    if (!mContentType.Find("text") && !lBase64) {
         // it's text, don't compress spaces
         dataBuffer = comma+1;
     } else {
