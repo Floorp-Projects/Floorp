@@ -146,7 +146,7 @@ nsDOMEvent::operator delete(void* aPtr)
 
 
 nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
-                       const nsAReadableString& aEventType) 
+                       const nsAString& aEventType) 
 {
   NS_INIT_REFCNT();
 
@@ -294,7 +294,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMEvent)
 NS_INTERFACE_MAP_END
 
 // nsIDOMEventInterface
-NS_METHOD nsDOMEvent::GetType(nsAWritableString& aType)
+NS_METHOD nsDOMEvent::GetType(nsAString& aType)
 {
   const char* mName = GetEventName(mEvent->message);
 
@@ -1129,7 +1129,7 @@ NS_METHOD nsDOMEvent::GetPreventDefault(PRBool* aReturn)
 }
 
 nsresult
-nsDOMEvent::SetEventType(const nsAReadableString& aEventTypeArg)
+nsDOMEvent::SetEventType(const nsAString& aEventTypeArg)
 {
   nsCOMPtr<nsIAtom> atom(dont_AddRef(NS_NewAtom(NS_LITERAL_STRING("on") + aEventTypeArg)));
 
@@ -1222,7 +1222,7 @@ nsDOMEvent::SetEventType(const nsAReadableString& aEventTypeArg)
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)
+nsDOMEvent::InitEvent(const nsAString& aEventTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg)
 {
   NS_ENSURE_SUCCESS(SetEventType(aEventTypeArg), NS_ERROR_FAILURE);
   mEvent->flags |= aCanBubbleArg ? NS_EVENT_FLAG_NONE : NS_EVENT_FLAG_CANT_BUBBLE;
@@ -1232,14 +1232,14 @@ nsDOMEvent::InitEvent(const nsAReadableString& aEventTypeArg, PRBool aCanBubbleA
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitUIEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
+nsDOMEvent::InitUIEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
                         nsIDOMAbstractView* aViewArg, PRInt32 aDetailArg)
 {
   return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitMouseEvent(const nsAReadableString & aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
+nsDOMEvent::InitMouseEvent(const nsAString & aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
                            nsIDOMAbstractView *aViewArg, PRInt32 aDetailArg, PRInt32 aScreenXArg, 
                            PRInt32 aScreenYArg, PRInt32 aClientXArg, PRInt32 aClientYArg, 
                            PRBool aCtrlKeyArg, PRBool aAltKeyArg, PRBool aShiftKeyArg, 
@@ -1278,7 +1278,7 @@ nsDOMEvent::InitMouseEvent(const nsAReadableString & aTypeArg, PRBool aCanBubble
 }
 
 NS_IMETHODIMP
-nsDOMEvent::InitKeyEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
+nsDOMEvent::InitKeyEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, PRBool aCancelableArg, 
                          nsIDOMAbstractView* aViewArg, PRBool aCtrlKeyArg, PRBool aAltKeyArg, 
                          PRBool aShiftKeyArg, PRBool aMetaKeyArg, 
                          PRUint32 aKeyCodeArg, PRUint32 aCharCodeArg)
@@ -1501,7 +1501,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 
 nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                           nsIPresContext* aPresContext,
-                          const nsAReadableString& aEventType,
+                          const nsAString& aEventType,
                           nsEvent *aEvent) 
 {
   nsDOMEvent* it = new nsDOMEvent(aPresContext, aEvent, aEventType);

@@ -80,7 +80,7 @@ public:
   * @param an event listener
   */
   NS_IMETHOD AddEventListenerByType(nsIDOMEventListener *aListener,
-                                    const nsAReadableString& type,
+                                    const nsAString& type,
                                     PRInt32 flags) = 0;
 
   /**
@@ -88,7 +88,7 @@ public:
   * @param an event listener
   */
   NS_IMETHOD RemoveEventListenerByType(nsIDOMEventListener *aListener,
-                                       const nsAReadableString& type,
+                                       const nsAString& type,
                                        PRInt32 flags) = 0;
 
   /**
@@ -99,7 +99,7 @@ public:
   NS_IMETHOD AddScriptEventListener(nsIScriptContext*aContext,
                                     nsISupports *aObject,
                                     nsIAtom *aName,
-                                    const nsAReadableString& aFunc,
+                                    const nsAString& aFunc,
                                     PRBool aDeferCompilation) = 0;
 
 
@@ -142,7 +142,7 @@ public:
   */
   NS_IMETHOD CreateEvent(nsIPresContext* aPresContext,
                          nsEvent* aEvent,
-                         const nsAReadableString& aEventType,
+                         const nsAString& aEventType,
                          nsIDOMEvent** aDOMEvent) = 0;
 
   /**

@@ -74,7 +74,7 @@ public:
 extern nsresult NS_NewDOMEvent(nsIDOMEvent** aInstancePtrResult, nsIPresContext* aPresContext, nsEvent *aEvent);
 extern nsresult NS_NewDOMUIEvent(nsIDOMEvent** aInstancePtrResult,
                                  nsIPresContext* aPresContext,
-                                 const nsAReadableString& aEventType,
+                                 const nsAString& aEventType,
                                  nsEvent *aEvent);
 extern nsresult NS_NewDOMMutationEvent(nsIDOMEvent** aResult, nsIPresContext* aPresContext, 
                                        nsEvent* aEvent);

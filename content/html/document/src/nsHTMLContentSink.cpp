@@ -234,7 +234,7 @@ public:
   NS_IMETHOD WillResume(void);
   NS_IMETHOD SetParser(nsIParser* aParser);
   NS_IMETHOD FlushPendingNotifications();
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset);
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset);
 
 
 
@@ -440,14 +440,14 @@ public:
 
   void AddBaseTagInfo(nsIHTMLContent* aContent);
 
-  nsresult ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& aLinkData);
+  nsresult ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkData);
   nsresult ProcessStyleLink(nsIHTMLContent* aElement,
                             const nsString& aHref, const nsString& aRel,
                             const nsString& aTitle, const nsString& aType,
                             const nsString& aMedia);
 
-  void ProcessBaseHref(const nsAReadableString& aBaseHref);
-  void ProcessBaseTarget(const nsAReadableString& aBaseTarget);
+  void ProcessBaseHref(const nsAString& aBaseHref);
+  void ProcessBaseTarget(const nsAString& aBaseTarget);
 
   nsresult RefreshIfEnabled(nsIViewManager* vm);
 
@@ -461,7 +461,7 @@ public:
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
 
-  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent=nsnull);
+  nsresult ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIHTMLContent* aContent=nsnull);
   nsresult ProcessHTTPHeaders(nsIChannel* aChannel);
 
   // Script processing related routines
@@ -630,7 +630,7 @@ public:
   nsresult End();
 
   nsresult GrowStack();
-  nsresult AddText(const nsAReadableString& aText);
+  nsresult AddText(const nsAString& aText);
   nsresult FlushText(PRBool* aDidFlush = nsnull, PRBool aReleaseLast = PR_FALSE);  
   nsresult FlushTextAndRelease(PRBool* aDidFlush = nsnull)
   {
@@ -766,7 +766,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
-    const nsAReadableString& key = aNode.GetKeyAt(i);
+    const nsAString& key = aNode.GetKeyAt(i);
     k.Assign(key);
     ToLowerCase(k);
 
@@ -2035,7 +2035,7 @@ SinkContext::GrowStack()
  */
 // XXX If we get a giant string grow the buffer instead of chopping it up???
 nsresult
-SinkContext::AddText(const nsAReadableString& aText)
+SinkContext::AddText(const nsAString& aText)
 {
   PRInt32 addLen = aText.Length();
   if (0 == addLen) {
@@ -4146,7 +4146,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 }
 
 void 
-HTMLContentSink::ProcessBaseHref(const nsAReadableString& aBaseHref)
+HTMLContentSink::ProcessBaseHref(const nsAString& aBaseHref)
 {
   //-- Make sure this page is allowed to load this URL
   nsresult rv;
@@ -4199,7 +4199,7 @@ HTMLContentSink::RefreshIfEnabled(nsIViewManager* vm)
 }
 
 void 
-HTMLContentSink::ProcessBaseTarget(const nsAReadableString& aBaseTarget)
+HTMLContentSink::ProcessBaseTarget(const nsAString& aBaseTarget)
 {
   if (nsnull == mBody) { // still in real HEAD
     mDocument->SetBaseTarget(aBaseTarget);
@@ -4263,7 +4263,7 @@ const PRUnichar kLessThanCh = PRUnichar('<');
 const PRUnichar kGreaterThanCh = PRUnichar('>');
 
 nsresult 
-HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAReadableString& aLinkData)
+HTMLContentSink::ProcessLink(nsIHTMLContent* aElement, const nsAString& aLinkData)
 {
   nsresult result = NS_OK;
   
@@ -4679,7 +4679,7 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
 }
 
 nsresult
-HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAReadableString& aValue,nsIHTMLContent* aContent)
+HTMLContentSink::ProcessHeaderData(nsIAtom* aHeader,const nsAString& aValue,nsIHTMLContent* aContent)
 {
   nsresult rv=NS_OK;
   // XXX necko isn't going to process headers coming in from the parser          
@@ -5290,7 +5290,7 @@ HTMLContentSink::FlushPendingNotifications()
 }
 
 NS_IMETHODIMP 
-HTMLContentSink::SetDocumentCharset(nsAWritableString& aCharset)
+HTMLContentSink::SetDocumentCharset(nsAString& aCharset)
 {
   if (mDocument) {
     return mDocument->SetDocumentCharacterSet(aCharset);

@@ -759,7 +759,7 @@ nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, EventArra
 
 NS_IMETHODIMP
 nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener, 
-                                               const nsAReadableString& aType,
+                                               const nsAString& aType,
                                                PRInt32 aFlags)
 {
   PRInt32 subType;
@@ -780,7 +780,7 @@ nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aListener,
 
 NS_IMETHODIMP
 nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *aListener, 
-                                                  const nsAReadableString& aType,
+                                                  const nsAString& aType,
                                                   PRInt32 aFlags)
 {
   PRInt32 subType;
@@ -871,7 +871,7 @@ NS_IMETHODIMP
 nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
                                                nsISupports *aObject,
                                                nsIAtom *aName,
-                                               const nsAReadableString& aBody,
+                                               const nsAString& aBody,
                                                PRBool aDeferCompilation)
 {
   nsresult rv;
@@ -2338,7 +2338,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 NS_IMETHODIMP
 nsEventListenerManager::CreateEvent(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
-                                    const nsAReadableString& aEventType,
+                                    const nsAString& aEventType,
                                     nsIDOMEvent** aDOMEvent)
 {
   *aDOMEvent = nsnull;
@@ -2612,7 +2612,7 @@ nsEventListenerManager::SetListenerTarget(nsISupports* aTarget)
 
 // nsIDOMEventTarget interface
 NS_IMETHODIMP 
-nsEventListenerManager::AddEventListener(const nsAReadableString& aType, 
+nsEventListenerManager::AddEventListener(const nsAString& aType, 
                                          nsIDOMEventListener* aListener, 
                                          PRBool aUseCapture)
 {
@@ -2622,7 +2622,7 @@ nsEventListenerManager::AddEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP 
-nsEventListenerManager::RemoveEventListener(const nsAReadableString& aType, 
+nsEventListenerManager::RemoveEventListener(const nsAString& aType, 
                                             nsIDOMEventListener* aListener, 
                                             PRBool aUseCapture)
 {

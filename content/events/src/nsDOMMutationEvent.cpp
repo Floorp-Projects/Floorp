@@ -98,7 +98,7 @@ nsDOMMutationEvent::GetRelatedNode(nsIDOMNode** aRelatedNode)
 }
 
 NS_IMETHODIMP
-nsDOMMutationEvent::GetPrevValue(nsAWritableString& aPrevValue)
+nsDOMMutationEvent::GetPrevValue(nsAString& aPrevValue)
 {
   if (mEvent) {
     nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
@@ -109,7 +109,7 @@ nsDOMMutationEvent::GetPrevValue(nsAWritableString& aPrevValue)
 }
 
 NS_IMETHODIMP
-nsDOMMutationEvent::GetNewValue(nsAWritableString& aNewValue)
+nsDOMMutationEvent::GetNewValue(nsAString& aNewValue)
 {
   if (mEvent) {
     nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
@@ -120,7 +120,7 @@ nsDOMMutationEvent::GetNewValue(nsAWritableString& aNewValue)
 }
 
 NS_IMETHODIMP
-nsDOMMutationEvent::GetAttrName(nsAWritableString& aAttrName)
+nsDOMMutationEvent::GetAttrName(nsAString& aAttrName)
 {
   if (mEvent) {
     nsMutationEvent* mutation = NS_STATIC_CAST(nsMutationEvent*, mEvent);
@@ -143,11 +143,11 @@ nsDOMMutationEvent::GetAttrChange(PRUint16* aAttrChange)
 }
 
 NS_IMETHODIMP
-nsDOMMutationEvent::InitMutationEvent(const nsAReadableString& aTypeArg, PRBool aCanBubbleArg, 
+nsDOMMutationEvent::InitMutationEvent(const nsAString& aTypeArg, PRBool aCanBubbleArg, 
                                       PRBool aCancelableArg, nsIDOMNode* aRelatedNodeArg, 
-                                      const nsAReadableString& aPrevValueArg, 
-                                      const nsAReadableString& aNewValueArg, 
-                                      const nsAReadableString& aAttrNameArg,
+                                      const nsAString& aPrevValueArg, 
+                                      const nsAString& aNewValueArg, 
+                                      const nsAString& aAttrNameArg,
                                       PRUint16 aAttrChangeArg)
 {
   NS_ENSURE_SUCCESS(SetEventType(aTypeArg), NS_ERROR_FAILURE);

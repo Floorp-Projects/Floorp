@@ -72,8 +72,8 @@ public:
 
   NS_IMETHOD RemoveImageMap(nsIDOMHTMLMapElement* aMap) = 0;
 
-  NS_IMETHOD SetLastModified(const nsAReadableString& aLastModified) = 0;
-  NS_IMETHOD SetReferrer(const nsAReadableString& aReferrer) = 0;
+  NS_IMETHOD SetLastModified(const nsAString& aLastModified) = 0;
+  NS_IMETHOD SetReferrer(const nsAString& aReferrer) = 0;
 
   /**
    * Access DTD compatibility mode for this document
@@ -86,7 +86,7 @@ public:
    */
   NS_IMETHOD WasDomainSet(PRBool* aDomainWasSet) = 0;
 
-  NS_IMETHOD ResolveName(const nsAReadableString& aName,
+  NS_IMETHOD ResolveName(const nsAString& aName,
                          nsIDOMHTMLFormElement *aForm,
                          nsISupports **aResult) = 0;
 

@@ -128,7 +128,7 @@ GenericElementCollection::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 }
 
 NS_IMETHODIMP 
-GenericElementCollection::NamedItem(const nsAReadableString& aName, nsIDOMNode** aReturn)
+GenericElementCollection::NamedItem(const nsAString& aName, nsIDOMNode** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
   *aReturn = nsnull;
