@@ -41,6 +41,7 @@
 #include "nsIDocument.h"
 #include "nsIDeviceContext.h"
 #include "nsIFocusTracker.h"
+#include "nsICaret.h"
 #include "nsXIFConverter.h"
 #include "nsHTMLAtoms.h"
 #include "nsILineBreaker.h"
@@ -2268,8 +2269,8 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
   nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
   if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
-    nsICaret *caret;
-    rv = shell->GetCaret(&caret);
+    nsCOMPtr<nsICaret> caret;
+    rv = shell->GetCaret(getter_AddRefs(caret));
     if (NS_FAILED(rv))
       return rv;
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
