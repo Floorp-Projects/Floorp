@@ -180,7 +180,7 @@ static PRBool PR_CALLBACK DeleteClasses(nsHashKey* aKey, void* aValue, void* clo
   JSClass* c = (JSClass*)aValue;
   nsMemory::Free(c->name);
   delete c;
-  return HT_ENUMERATE_NEXT;
+  return PR_TRUE; // return PR_TRUE to continue for nsHashtable enumerator
 }
 
 nsXBLService::~nsXBLService(void)
