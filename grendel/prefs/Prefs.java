@@ -41,15 +41,14 @@ import java.util.Vector;
 public class Prefs {
   static Preferences   fPrefs = PreferencesFactory.Get();
 
-  static final String kUserNamePre = "mail.identity.username.";
-  static final String kOrganization = "mail.identity.organization.";
-  static final String kEmailAddress = "mail.identity.email.";
-  static final String kSignatureFile = "mail.identity.signature.";
+  static final String kOrganization     = "mail.identity.organization.";
+  static final String kEmailAddress     = "mail.identity.email.";
+  static final String kSignatureFile    = "mail.identity.signature.";
+  static final String kUserName         = "mail.identity.username.";
   static final String kPopLeaveOnServer = "pop.leaveMailOnServer";
-  static final String kMailDirectory = "mail.directory";
-  static final String kSMTPHost = "mail.identity-0.smtphost";
-  static final String kStoreList = "mail.storelist";
-  static final String kUserName = "mail.identity.username.";
+  static final String kMailDirectory    = "mail.directory";
+  static final String kSMTPHost         = "mail.identity-0.smtphost";
+  static final String kStoreList        = "mail.storelist";
 
   static final String kLocalProtocol = "berkeley";
   static final String kUserPrefsCount = "mail.identities";
@@ -57,7 +56,7 @@ public class Prefs {
   Vector ids = new Vector();
 
   public Prefs() {
-    int total = getUserPrefsCount();
+    int total = 1; //getUserPrefsCount();
     System.out.println("Total is " + total);
     for (int i = 0; i < total; i++) {
       addUserPrefs(readUserPrefs(i));
@@ -103,8 +102,9 @@ public class Prefs {
     if (ids.contains(aPrefs)) {
       location = ids.indexOf(aPrefs);
     } else {
-      location = ids.size();
+      location = 0;
     }
+    
     
     fPrefs.putString(kUserName + location,
                      aPrefs.getUserName());
