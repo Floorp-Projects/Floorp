@@ -246,7 +246,7 @@ nsresult URLImpl::ParseURL(const nsIURL* aURL, const nsString& aSpec)
   }
 
   const char* cp = PL_strchr(cSpec, ':');
-  if (nsnull == cp) {
+  if ((nsnull == cp) || ('/' == cSpec[0])) {
     // relative spec
     if (nsnull == aURL) {
       delete cSpec;
