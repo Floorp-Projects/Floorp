@@ -72,6 +72,7 @@ const long kMinSearchPaneHeight = 80;
 @interface BookmarkViewController (Private) <BookmarksClient, NetworkServicesClient>
 -(void) setSearchResultArray:(NSArray *)anArray;
 -(void) displayBookmarkInOutlineView:(BookmarkItem *)aBookmarkItem;
+-(BOOL) doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index;
 @end
 
 @implementation BookmarkViewController
@@ -121,6 +122,7 @@ const long kMinSearchPaneHeight = 80;
     for ( int i = 0; i < numColumns; ++i )
       [[[columns objectAtIndex:i] dataCell] setFont:smallerFont];
   }
+
   // Generic notifications for Bookmark Client
   NSNotificationCenter *nc = [NSNotificationCenter defaultCenter];
   [nc addObserver:self selector:@selector(bookmarkAdded:) name:BookmarkFolderAdditionNotification object:nil];
@@ -128,11 +130,13 @@ const long kMinSearchPaneHeight = 80;
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkItemChangedNotification object:nil];
   [nc addObserver:self selector:@selector(bookmarkChanged:) name:BookmarkIconChangedNotification object:nil];
   [nc addObserver:self selector:@selector(serviceResolved:) name:NetworkServicesResolutionSuccess object:nil];
+
   // register for dragged types
-  [mContainerPane registerForDraggedTypes:[NSArray arrayWithObject:@"MozBookmarkType"]];
+  [mContainerPane registerForDraggedTypes:[NSArray arrayWithObjects:@"MozBookmarkType",@"MozURLType", NSURLPboardType, NSStringPboardType, nil]];
+
   [mSearchButton setEnabled:NO];
   [self ensureBookmarks];
-  //
+
   // these should be settable in the nib.  however, whenever
   // I try, they disappear as soon as I've saved.  Very annoying.
   [mItemPane setAutosaveName:@"BMOutlineView"];
@@ -652,6 +656,55 @@ const long kMinSearchPaneHeight = 80;
   return mExpandedStatus;
 }
 
+//
+// -doDrop:intoFolder:index:
+//
+// called when a drop occurs on a table or outline to do the actual work based on the
+// data types present in the drag info.
+//
+-(BOOL) doDrop:(id <NSDraggingInfo>)info intoFolder:(BookmarkFolder *)dropFolder index:(int)index
+{
+  NSArray* types  = [[info draggingPasteboard] types];
+  BOOL isCopy = ([info draggingSourceOperationMask] == NSDragOperationCopy);
+
+  if ([types containsObject: @"MozBookmarkType"])
+  {
+    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+    // added sequentially, so use reverse object enumerator to preserve order.
+    NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
+    id aKid;
+    while ((aKid = [enumerator nextObject])) {
+      if (isCopy)
+        [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+      else
+        [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:index];
+    }
+    return YES;
+  }
+  else if ([types containsObject: @"MozURLType"])
+  {
+    NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];
+    [dropFolder addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
+    return YES;
+  }
+  else if ([types containsObject: NSURLPboardType])
+  {
+    NSURL*	urlData = [NSURL URLFromPasteboard:[info draggingPasteboard]];
+    [dropFolder addBookmark:[urlData absoluteString] url:[urlData absoluteString] inPosition:index isSeparator:NO];
+    return YES;
+  }
+  else if ([types containsObject: NSStringPboardType])
+  {
+    NSString* draggedText = [[info draggingPasteboard] stringForType:NSStringPboardType];
+    NSURL *testURL = [NSURL URLWithString:draggedText];
+    if (testURL) {
+      [dropFolder addBookmark:draggedText url:draggedText inPosition:index isSeparator:NO];
+      return YES;
+    }
+  }
+  return NO;  
+}
+
 
 #pragma mark -
 //
@@ -778,10 +831,17 @@ const long kMinSearchPaneHeight = 80;
   return YES;
 }
 
+//
+// -tableView:validateDrop:proposedRow:proposedDropOperation:
+//
+// validate if the drop is allowed and what type it is (move, copy, etc). 
+//
 - (NSDragOperation)tableView:(NSTableView*)tv validateDrop:(id <NSDraggingInfo>)info proposedRow:(int)row proposedDropOperation:(NSTableViewDropOperation)op
 {
-  NSArray* types = [[info draggingPasteboard] types];
-  if ([types containsObject:@"MozBookmarkType"] && tv == mContainerPane) {
+  if (tv == mContainerPane) {
+    NSArray* types = [[info draggingPasteboard] types];
+    // figure out where we want to drop. |dropFolder| will either be a container or
+    // the top-level bookmarks root if we're to create a new container.
     BookmarkManager *manager = [BookmarkManager sharedBookmarkManager];
     BookmarkFolder *dropFolder = nil;
     if ((row < 2) && (op == NSTableViewDropOn))
@@ -793,37 +853,43 @@ const long kMinSearchPaneHeight = 80;
         dropFolder = [mRootBookmarks objectAtIndex:row];
     }
     if (dropFolder) {
-      NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-      BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
-      return (isOK) ? NSDragOperationGeneric: NSDragOperationNone;
+      // special check if we're moving pointers around
+      if ([types containsObject:@"MozBookmarkType"])
+      {
+        NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
+        BOOL isOK = [manager isDropValid:draggedItems toFolder:dropFolder];
+        return (isOK) ? NSDragOperationGeneric: NSDragOperationNone;
+      }
+      else if ([types containsObject:@"MozURLType"] || [types containsObject:NSURLPboardType])
+      {
+        return (dropFolder == mRootBookmarks) ? NSDragOperationNone: NSDragOperationGeneric;
+      }
+      else if ([types containsObject:NSStringPboardType])
+      {
+        NSURL* testURL = [NSURL URLWithString:[[info draggingPasteboard] stringForType:NSStringPboardType]];
+        if (testURL)
+          return (dropFolder == mRootBookmarks) ? NSDragOperationNone: NSDragOperationGeneric;        
+      }
     }
   }
+  // nope
   return NSDragOperationNone;
 }
 
 - (BOOL)tableView:(NSTableView*)tv acceptDrop:(id <NSDraggingInfo>)info row:(int)row dropOperation:(NSTableViewDropOperation)op
 {
-  NSArray *types = [[info draggingPasteboard] types];
-  if ([types containsObject:@"MozBookmarkType"] && (tv == mContainerPane)) {
-    BookmarkFolder *dropFolder;
-    if (op == NSTableViewDropAbove)
-      dropFolder = mRootBookmarks;
-    else
-      dropFolder = [mRootBookmarks objectAtIndex:row];
-    BOOL isCopy = ([info draggingSourceOperationMask] == NSDragOperationCopy);
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    NSEnumerator *enumerator = [draggedItems objectEnumerator];
-    id aKid;
-    while ((aKid = [enumerator nextObject])) {
-      if (isCopy) {
-        [[aKid parent] copyChild:aKid toBookmarkFolder:dropFolder atIndex:row];
-      } else {
-        [[aKid parent] moveChild:aKid toBookmarkFolder:dropFolder atIndex:row];
-      }
-    }
-    return YES;
+  if (tv != mContainerPane)
+    return NO;
+  // get info
+  BookmarkFolder *dropFolder;
+  int dropLocation = row;
+  if (op == NSTableViewDropAbove)
+    dropFolder = mRootBookmarks;
+  else {
+    dropFolder = [mRootBookmarks objectAtIndex:row];
+    dropLocation = [dropFolder count];
   }
-  return NO;
+  return [self doDrop:info intoFolder:dropFolder index:dropLocation];
 }
 
 - (BOOL)tableView:(NSTableView *)aTableView shouldSelectRow:(int)rowIndex
@@ -960,7 +1026,6 @@ const long kMinSearchPaneHeight = 80;
   return YES;
 }
 
-
 - (NSDragOperation)outlineView:(NSOutlineView*)ov validateDrop:(id <NSDraggingInfo>)info proposedItem:(id)item proposedChildIndex:(int)index
 {
   NSArray* types = [[info draggingPasteboard] types];
@@ -969,66 +1034,31 @@ const long kMinSearchPaneHeight = 80;
   if (index == NSOutlineViewDropOnItemIndex)
     return NSDragOperationNone;
 
-  if ([types containsObject: @"MozBookmarkType"])
-  {
+  if ([types containsObject: @"MozBookmarkType"]) {
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     BookmarkFolder* parent = (item) ? item : [self activeCollection];
     BOOL isOK = [[BookmarkManager sharedBookmarkManager] isDropValid:draggedItems toFolder:parent];
     return (isOK) ? NSDragOperationGeneric : NSDragOperationNone;
   }
 
-  if ([types containsObject: NSStringPboardType] ||
-      [types containsObject: NSURLPboardType]    ||
-      [types containsObject: @"MozURLType"]      )
+  if ([types containsObject: NSURLPboardType] || [types containsObject: @"MozURLType"] )
     return NSDragOperationGeneric;
 
+  // see if we can turn a string into a URL.  If so, accept it. If not, punt.
+  if ([types containsObject: NSStringPboardType]) {
+    NSURL* testURL = [NSURL URLWithString:[[info draggingPasteboard] stringForType:NSStringPboardType]];
+    if (testURL)
+      return NSDragOperationGeneric;
+  }
   return NSDragOperationNone;
 }
 
-
 - (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index
 {
-  NSArray*      types  = [[info draggingPasteboard] types];
-  BOOL          isCopy = ([info draggingSourceOperationMask] == NSDragOperationCopy);
-  if (!item)
-    item = [self activeCollection];
-
-  if ([types containsObject: @"MozBookmarkType"])
-  {
-    NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[info draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
-    // added sequentially, so use reverse object enumerator to preserve order.
-    NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
-    id aKid;
-    while ((aKid = [enumerator nextObject])) {
-      if (isCopy) {
-        [[aKid parent] copyChild:aKid toBookmarkFolder:item atIndex:index];
-      } else {
-        [[aKid parent] moveChild:aKid toBookmarkFolder:item atIndex:index];
-      }
-    }
-    // clear selections
-    [ov deselectAll:self];
-    return YES;
-  }
-  else if ([types containsObject: @"MozURLType"])
-  {
-    NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];
-    [item addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
-    return YES;
-  }
-  else if ([types containsObject: NSStringPboardType])
-  {
-    NSString* draggedText = [[info draggingPasteboard] stringForType:NSStringPboardType];
-    [item addBookmark:draggedText url:draggedText inPosition:index isSeparator:NO];
-    return YES;
-  }
-  else if ([types containsObject: NSURLPboardType])
-  {
-    NSURL*	urlData = [NSURL URLFromPasteboard:[info draggingPasteboard]];
-    [item addBookmark:[urlData absoluteString] url:[urlData absoluteString] inPosition:index isSeparator:NO];
-    return YES;
-  }
-  return NO;
+  BookmarkFolder *parent = (item) ? item : [self activeCollection];
+  BOOL retVal = [self doDrop:info intoFolder:parent index:index];
+  [ov deselectAll:self];
+  return retVal;
 }
 
 - (NSString *)outlineView:(NSOutlineView *)outlineView tooltipStringForItem:(id)item
@@ -1048,7 +1078,6 @@ const long kMinSearchPaneHeight = 80;
   else
     return nil;
 }
-
 
  - (NSMenu *)outlineView:(NSOutlineView *)outlineView contextMenuForItem:(id)item
 {

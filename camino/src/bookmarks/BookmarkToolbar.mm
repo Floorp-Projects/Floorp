@@ -437,6 +437,13 @@
     if (![bmManager isDropValid:draggedItems toFolder:destItem])
       return NO;
   }
+  else if ([types containsObject:NSStringPboardType])
+  {
+    // validate the string is a real url before allowing
+    NSURL* testURL = [NSURL URLWithString:[draggingPasteboard stringForType:NSStringPboardType]];
+    return (testURL != nil);
+  }
+
   return YES;
 }
 
