@@ -601,12 +601,12 @@ Message=
 
 
 ;Copy FileX sections
-[Copy File0]
-Timing=post smartupdate
-Source=[XPI PATH]\$MainIcoFile$
-Destination=[SETUP PATH]
-Fail If Exists=FALSE
-Do Not Uninstall=FALSE
+;[Copy File0]
+;Timing=post smartupdate
+;Source=[XPI PATH]\$MainIcoFile$
+;Destination=[SETUP PATH]
+;Fail If Exists=FALSE
+;Do Not Uninstall=FALSE
 
 
 ;Copy File SequentialX sections
