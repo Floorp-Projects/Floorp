@@ -96,10 +96,10 @@ function onLoad() {
     // load up the SMTP service for later
     if (!smtpService) {
         smtpService =
-            Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);;
+            Components.classes["component://netscape/messengercompose/smtp"].getService(Components.interfaces.nsISmtpService);
     }
 
-    // skp
+    // skip the first page if we have an account
     if (currentAccount) {
         // skip past first pane
         wizardMap.identity.previous = null;
@@ -180,6 +180,11 @@ function AccountDataToPageData(accountData, pageData)
         setPageData(pageData, "identity", "email", identity.email);
         setPageData(pageData, "identity", "fullName", identity.fullName);
     }
+
+    if (accountData.smtp) {
+        setPageData(pageData, "server", "smtphostname", smtp.hostname);
+    }
+    
 }
 
 
@@ -191,9 +196,12 @@ function PageDataToAccountData(pageData, accountData)
         accountData.identity = new Object;
     if (!accountData.incomingServer)
         accountData.incomingServer = new Object;
-
+    if (!accountData.smtp)
+        accountData.smtp = new Object;
+    
     var identity = accountData.identity;
     var server = accountData.incomingServer;
+    var smtp = accountData.smtp;
 
     dump("Setting identity for " + pageData.identity.email.value + "\n");
     identity.email = pageData.identity.email.value;
@@ -209,9 +217,11 @@ function PageDataToAccountData(pageData, accountData)
         server.username = pageData.login.username.value;
         server.password = pageData.login.password.value;
         server.rememberPassword = pageData.login.rememberPassword.value;
+        smtp.hostname = pageData.server.smtphostname.value;
     }
     
     server.prettyName = pageData.accname.prettyName.value;
+
 }
 
 // given an accountData structure, create an account
@@ -259,6 +269,10 @@ function finishAccount(account, accountData) {
         copyObjectToInterface(destIdentity,
                               accountData.identity);
         destIdentity.valid=true;
+    }
+
+    if (accountData.smtp) {
+        smtpService.defaultServer.hostname = accountData.smtp.hostname;
     }
 }
 
@@ -383,40 +397,28 @@ function checkForInvalidAccounts()
 {
     am = Components.classes["component://netscape/messenger/account-manager"].getService(Components.interfaces.nsIMsgAccountManager);
 
-    var account = getFirstInvalidAccount();
+    var account = getFirstInvalidAccount(am.accounts);
 
     if (account) {
         var pageData = parent.wizardManager.WSM.PageData;
         dump("We have an invalid account, " + account + ", let's use that!\n");
         currentAccount = account;
-        AccountDataToPageData(account, pageData);
+
+        var accountData = AccountToAccountData(account);
+        
+        AccountDataToPageData(accountData, pageData);
         dump(parent.wizardManager.WSM);
     }
 }
 
-// returns the first account with an invalid server or identity
-function getFirstInvalidAccount()
+function AccountToAccountData(account)
 {
-    var accounts = am.accounts;
+    var accountData = new Object;
+    accountData.incomingServer = account.incomingServer;
+    accountData.identity = account.identities.QueryElementAt(0, nsIMsgIdentity);
+    accountData.smtp = smtpService.defaultServer;
 
-    var numAccounts = accounts.Count();
-    for (var i=0; i<numAccounts; i++) {
-        var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
-        if (!account.incomingServer.valid)
-            return account;
-
-        var identities = account.identities;
-        var numIdentities = identities.Count();
-
-        for (var j=0; j<numIdentities; j++) {
-            var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
-            if (!identity.valid)
-                return account
-        }
-    }
-
-    // none found
-    return null;
+    return accountData;
 }
 
 
