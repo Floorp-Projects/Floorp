@@ -65,6 +65,7 @@
 #include "nsIDOMHTMLMapElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsINameSpaceManager.h"
+#include "nsGenericHTMLElement.h"
 #include "nsGenericDOMNodeList.h"
 #include "nsICSSLoader.h"
 
@@ -89,10 +90,7 @@ const PRInt32 kBackward = 1;
 
 static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
@@ -106,9 +104,7 @@ static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 
-static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIHTMLContentContainerIID, NS_IHTMLCONTENTCONTAINER_IID);
-static NS_DEFINE_IID(kIDOMHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 
 // ==================================================================
@@ -1621,13 +1617,22 @@ nsHTMLDocument::GetAlinkColor(nsString& aAlinkColor)
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
+  aAlinkColor.Truncate();
   result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetALink(aAlinkColor);
     NS_RELEASE(body);
   }
+  else if (nsnull != mAttrStyleSheet) {
+    nscolor color;
+    result = mAttrStyleSheet->GetActiveLinkColor(color);
+    if (NS_OK == result) {
+      nsHTMLValue value(color);
+      nsGenericHTMLElement::ColorToString(value, aAlinkColor);
+    }
+  }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1641,8 +1646,15 @@ nsHTMLDocument::SetAlinkColor(const nsString& aAlinkColor)
     result = body->SetALink(aAlinkColor);
     NS_RELEASE(body);
   }
-
-  return result;
+  else if (nsnull != mAttrStyleSheet) {
+    nsHTMLValue value;
+  
+    if (nsGenericHTMLElement::ParseColor(aAlinkColor, value)) {
+      mAttrStyleSheet->SetActiveLinkColor(value.GetColorValue());
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1651,13 +1663,22 @@ nsHTMLDocument::GetLinkColor(nsString& aLinkColor)
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
+  aLinkColor.Truncate();
   result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetLink(aLinkColor);
     NS_RELEASE(body);
   }
+  else if (nsnull != mAttrStyleSheet) {
+    nscolor color;
+    result = mAttrStyleSheet->GetLinkColor(color);
+    if (NS_OK == result) {
+      nsHTMLValue value(color);
+      nsGenericHTMLElement::ColorToString(value, aLinkColor);
+    }
+  }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1671,8 +1692,14 @@ nsHTMLDocument::SetLinkColor(const nsString& aLinkColor)
     result = body->SetLink(aLinkColor);
     NS_RELEASE(body);
   }
-
-  return result;
+  else if (nsnull != mAttrStyleSheet) {
+    nsHTMLValue value;
+    if (nsGenericHTMLElement::ParseColor(aLinkColor, value)) {
+      mAttrStyleSheet->SetLinkColor(value.GetColorValue());
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1681,13 +1708,22 @@ nsHTMLDocument::GetVlinkColor(nsString& aVlinkColor)
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
+  aVlinkColor.Truncate();
   result = GetBodyElement(&body);
   if (NS_OK == result) {
-    result = body->GetVLink(aVlinkColor);
+    result = body->GetLink(aVlinkColor);
     NS_RELEASE(body);
   }
+  else if (nsnull != mAttrStyleSheet) {
+    nscolor color;
+    result = mAttrStyleSheet->GetVisitedLinkColor(color);
+    if (NS_OK == result) {
+      nsHTMLValue value(color);
+      nsGenericHTMLElement::ColorToString(value, aVlinkColor);
+    }
+  }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1701,8 +1737,14 @@ nsHTMLDocument::SetVlinkColor(const nsString& aVlinkColor)
     result = body->SetVLink(aVlinkColor);
     NS_RELEASE(body);
   }
-
-  return result;
+  else if (nsnull != mAttrStyleSheet) {
+    nsHTMLValue value;
+    if (nsGenericHTMLElement::ParseColor(aVlinkColor, value)) {
+      mAttrStyleSheet->SetVisitedLinkColor(value.GetColorValue());
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1711,13 +1753,22 @@ nsHTMLDocument::GetBgColor(nsString& aBgColor)
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
+  aBgColor.Truncate();
   result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetBgColor(aBgColor);
     NS_RELEASE(body);
   }
+  else if (nsnull != mAttrStyleSheet) {
+    nscolor color;
+    result = mAttrStyleSheet->GetDocumentBackgroundColor(color);
+    if (NS_OK == result) {
+      nsHTMLValue value(color);
+      nsGenericHTMLElement::ColorToString(value, aBgColor);
+    }
+  }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1731,8 +1782,14 @@ nsHTMLDocument::SetBgColor(const nsString& aBgColor)
     result = body->SetBgColor(aBgColor);
     NS_RELEASE(body);
   }
-
-  return result;
+  else if (nsnull != mAttrStyleSheet) {
+    nsHTMLValue value;
+    if (nsGenericHTMLElement::ParseColor(aBgColor, value)) {
+      mAttrStyleSheet->SetDocumentBackgroundColor(value.GetColorValue());
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1741,13 +1798,22 @@ nsHTMLDocument::GetFgColor(nsString& aFgColor)
   nsresult result = NS_OK;
   nsIDOMHTMLBodyElement* body;
 
+  aFgColor.Truncate();
   result = GetBodyElement(&body);
   if (NS_OK == result) {
     result = body->GetText(aFgColor);
     NS_RELEASE(body);
   }
+  else if (nsnull != mAttrStyleSheet) {
+    nscolor color;
+    result = mAttrStyleSheet->GetDocumentForegroundColor(color);
+    if (NS_OK == result) {
+      nsHTMLValue value(color);
+      nsGenericHTMLElement::ColorToString(value, aFgColor);
+    }
+  }
 
-  return result;
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1761,8 +1827,15 @@ nsHTMLDocument::SetFgColor(const nsString& aFgColor)
     result = body->SetText(aFgColor);
     NS_RELEASE(body);
   }
-
-  return result;
+  else if (nsnull != mAttrStyleSheet) {
+    nsHTMLValue value;
+  
+    if (nsGenericHTMLElement::ParseColor(aFgColor, value)) {
+      mAttrStyleSheet->SetDocumentForegroundColor(value.GetColorValue());
+    }
+  }
+  
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
