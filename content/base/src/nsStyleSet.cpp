@@ -25,6 +25,7 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsIStyleFrameConstruction.h"
 #include "nsLayoutAtoms.h"
 
@@ -53,11 +54,7 @@ public:
   virtual PRInt32 GetNumberOfOverrideStyleSheets();
   virtual nsIStyleSheet* GetOverrideStyleSheetAt(PRInt32 aIndex);
 
-  virtual void AppendDocStyleSheet(nsIStyleSheet* aSheet);
-  virtual void InsertDocStyleSheetAfter(nsIStyleSheet* aSheet,
-                                        nsIStyleSheet* aAfterSheet);
-  virtual void InsertDocStyleSheetBefore(nsIStyleSheet* aSheet,
-                                         nsIStyleSheet* aBeforeSheet);
+  virtual void AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument);
   virtual void RemoveDocStyleSheet(nsIStyleSheet* aSheet);
   virtual PRInt32 GetNumberOfDocStyleSheets();
   virtual nsIStyleSheet* GetDocStyleSheetAt(PRInt32 aIndex);
@@ -209,6 +206,7 @@ void StyleSetImpl::AppendOverrideStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mOverrideSheets)) {
+    mOverrideSheets->RemoveElement(aSheet);
     mOverrideSheets->AppendElement(aSheet);
   }
 }
@@ -218,6 +216,7 @@ void StyleSetImpl::InsertOverrideStyleSheetAfter(nsIStyleSheet* aSheet,
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mOverrideSheets)) {
+    mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aAfterSheet);
     mOverrideSheets->InsertElementAt(aSheet, ++index);
   }
@@ -228,6 +227,7 @@ void StyleSetImpl::InsertOverrideStyleSheetBefore(nsIStyleSheet* aSheet,
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mOverrideSheets)) {
+    mOverrideSheets->RemoveElement(aSheet);
     PRInt32 index = mOverrideSheets->IndexOf(aBeforeSheet);
     mOverrideSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
   }
@@ -261,37 +261,28 @@ nsIStyleSheet* StyleSetImpl::GetOverrideStyleSheetAt(PRInt32 aIndex)
 
 // -------- Doc Sheets
 
-void StyleSetImpl::AppendDocStyleSheet(nsIStyleSheet* aSheet)
+void StyleSetImpl::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
 {
-  NS_PRECONDITION(nsnull != aSheet, "null arg");
+  NS_PRECONDITION((nsnull != aSheet) && (nsnull != aDocument), "null arg");
   if (EnsureArray(&mDocSheets)) {
-    mDocSheets->AppendElement(aSheet);
-    if (nsnull == mFrameConstructor) {
-      aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
+    mDocSheets->RemoveElement(aSheet);
+    // lowest index last
+    PRInt32 newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
+    PRInt32 count = mDocSheets->Count();
+    PRInt32 index;
+    for (index = 0; index < count; index++) {
+      nsIStyleSheet* sheet = (nsIStyleSheet*)mDocSheets->ElementAt(index);
+      PRInt32 sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);
+      if (sheetDocIndex < newDocIndex) {
+        mDocSheets->InsertElementAt(aSheet, index);
+        index = count; // break loop
+      }
+      NS_RELEASE(sheet);
     }
-  }
-}
-
-void StyleSetImpl::InsertDocStyleSheetAfter(nsIStyleSheet* aSheet,
-                                         nsIStyleSheet* aAfterSheet)
-{
-  NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mDocSheets)) {
-    PRInt32 index = mDocSheets->IndexOf(aAfterSheet);
-    mDocSheets->InsertElementAt(aSheet, ++index);
-    if (nsnull == mFrameConstructor) {
-      aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
+    if (mDocSheets->Count() == count) {  // didn't insert it
+      mDocSheets->AppendElement(aSheet);
     }
-  }
-}
 
-void StyleSetImpl::InsertDocStyleSheetBefore(nsIStyleSheet* aSheet,
-                                          nsIStyleSheet* aBeforeSheet)
-{
-  NS_PRECONDITION(nsnull != aSheet, "null arg");
-  if (EnsureArray(&mDocSheets)) {
-    PRInt32 index = mDocSheets->IndexOf(aBeforeSheet);
-    mDocSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
     if (nsnull == mFrameConstructor) {
       aSheet->QueryInterface(kIStyleFrameConstructionIID, (void **)&mFrameConstructor);
     }
@@ -318,7 +309,7 @@ PRInt32 StyleSetImpl::GetNumberOfDocStyleSheets()
 nsIStyleSheet* StyleSetImpl::GetDocStyleSheetAt(PRInt32 aIndex)
 {
   nsIStyleSheet* sheet = nsnull;
-  if (nsnull == mDocSheets) {
+  if (nsnull != mDocSheets) {
     sheet = (nsIStyleSheet*)mDocSheets->ElementAt(aIndex);
   }
   return sheet;
@@ -330,6 +321,7 @@ void StyleSetImpl::AppendBackstopStyleSheet(nsIStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mBackstopSheets)) {
+    mBackstopSheets->RemoveElement(aSheet);
     mBackstopSheets->AppendElement(aSheet);
   }
 }
@@ -339,6 +331,7 @@ void StyleSetImpl::InsertBackstopStyleSheetAfter(nsIStyleSheet* aSheet,
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mBackstopSheets)) {
+    mBackstopSheets->RemoveElement(aSheet);
     PRInt32 index = mBackstopSheets->IndexOf(aAfterSheet);
     mBackstopSheets->InsertElementAt(aSheet, ++index);
   }
@@ -349,6 +342,7 @@ void StyleSetImpl::InsertBackstopStyleSheetBefore(nsIStyleSheet* aSheet,
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
   if (EnsureArray(&mBackstopSheets)) {
+    mBackstopSheets->RemoveElement(aSheet);
     PRInt32 index = mBackstopSheets->IndexOf(aBeforeSheet);
     mBackstopSheets->InsertElementAt(aSheet, ((-1 < index) ? index : 0));
   }
