@@ -29,7 +29,6 @@
 #include "nsAbRDFResource.h"
 #include "nsIAddrDatabase.h"
 
-#include "xp_core.h"
 #include "plstr.h"
 #include "prmem.h"
 #include "prprf.h"	 
@@ -685,7 +684,7 @@ void AddressBookParser::AddTabRowToDatabase()
 #define RIGHT4			0x0f
 #define CONTINUED_LINE_MARKER	'\001'
 #define IS_SPACE(VAL)                \
-    (((((intn)(VAL)) & 0x7f) == ((intn)(VAL))) && isspace((intn)(VAL)) )
+    (((((intn)(VAL)) & 0x7f) == ((intn)(VAL))) && nsString::IsSpace((intn)(VAL)) )
 
 static unsigned char b642nib[0x80] = {
 	0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
@@ -737,7 +736,7 @@ nsresult AddressBookParser::str_parse_line(
 	}
 
 	/* trim any space between type and : */
-	for ( p = s - 1; p > line && isspace( *p ); p-- ) {
+	for ( p = s - 1; p > line && nsString::IsSpace( *p ); p-- ) {
 		*p = '\0';
 	}
 	*s++ = '\0';
