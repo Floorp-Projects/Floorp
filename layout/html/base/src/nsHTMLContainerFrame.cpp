@@ -387,7 +387,7 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
         view->Init(viewManager, bounds, parentView);
 
         // If the frame has a fixed background attachment, then indicate that the
-        // view's contents should repainted and not bitblt'd
+        // view's contents should be repainted and not bitblt'd
         if (fixedBackgroundAttachment) {
           PRUint32  viewFlags;
           view->GetViewFlags(&viewFlags);
@@ -403,13 +403,45 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIPresContext& aPresContext,
           viewManager->InsertChild(parentView, view, zIndex);
         }
 
-        // If the background color is transparent or the visibility is hidden,
-        // then mark the view as having transparent content. The reason we
-        // need to do it for hidden visibility is that child elements can
-        // override their parent's visibility and be visible.
-        if ((NS_STYLE_BG_COLOR_TRANSPARENT & color->mBackgroundFlags) ||
-            (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible)) {
-          viewManager->SetViewContentTransparency(view, PR_TRUE);
+        // See if the view should be hidden
+        PRBool  viewIsVisible = PR_TRUE;
+        PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+                  NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+
+        if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+          // If it's a container element, then leave the view visible, but
+          // mark it as having transparent content. The reason we need to
+          // do this is that child elements can override their parent's
+          // hidden visibility and be visible anyway
+          nsIContent* content;
+
+          // Because this function is called before processing the content
+          // object's child elements, we can't tell if it's a leaf by looking
+          // at whether the frame has any child frames
+          aFrame->GetContent(&content);
+          if (content) {
+            PRBool  isContainer;
+
+            content->CanContainChildren(isContainer);
+            if (isContainer) {
+              // The view needs to be visible, but marked as having transparent
+              // content
+              viewHasTransparentContent = PR_TRUE;
+            } else {
+              // Go ahead and hide the view
+              viewIsVisible = PR_FALSE;
+            }
+            NS_RELEASE(content);
+          }
+        }
+
+        if (viewIsVisible) {
+          if (viewHasTransparentContent) {
+            viewManager->SetViewContentTransparency(view, PR_TRUE);
+          }
+
+        } else {
+          view->SetVisibility(nsViewVisibility_kHide);
         }
 
         // XXX If it's fixed positioned, then create a widget so it floats

@@ -1093,22 +1093,77 @@ nsFrame::DidReflow(nsIPresContext& aPresContext,
   if (NS_FRAME_REFLOW_FINISHED == aStatus) {
     mState &= ~(NS_FRAME_IN_REFLOW | NS_FRAME_FIRST_REFLOW | NS_FRAME_IS_DIRTY);
 
-    // Size and position the view if requested
-    if ((nsnull != mView) && (NS_FRAME_SYNC_FRAME_AND_VIEW & mState)) {
-      // Position and size view relative to its parent, not relative to our
-      // parent frame (our parent frame may not have a view).
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, &parentWithView);
+    // Make sure the view is sized and positioned correctly and it's
+    // visibility, opacity, content transparency, and clip are correct
+    if (mView) {
       nsIViewManager  *vm;
       mView->GetViewManager(vm);
-      vm->ResizeView(mView, mRect.width, mRect.height);
-      vm->MoveViewTo(mView, origin.x, origin.y);
+      
+      if (NS_FRAME_SYNC_FRAME_AND_VIEW & mState) {
+        // Position and size view relative to its parent, not relative to our
+        // parent frame (our parent frame may not have a view).
+        nsIView* parentWithView;
+        nsPoint origin;
+        GetOffsetFromView(origin, &parentWithView);
+        vm->ResizeView(mView, mRect.width, mRect.height);
+        vm->MoveViewTo(mView, origin.x, origin.y);
+      }
 
-      // Clip applies to block-level and replaced elements with overflow
-      // set to other than 'visible'
+      const nsStyleColor* color =
+        (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
       const nsStyleDisplay* display =
         (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Set the view's opacity
+      vm->SetViewOpacity(mView, color->mOpacity);
+      
+      // See if the view should be hidden or visible
+      PRBool  viewIsVisible = PR_TRUE;
+      PRBool  viewHasTransparentContent = (color->mBackgroundFlags &
+                NS_STYLE_BG_COLOR_TRANSPARENT) == NS_STYLE_BG_COLOR_TRANSPARENT;
+
+      if (NS_STYLE_VISIBILITY_HIDDEN == display->mVisible) {
+        // If it's a scroll frame, then hide the view. This means that
+        // child elements can't override their parent's visibility, but
+        // it's not practical to leave it visible in all cases because
+        // the scrollbars will be showing
+        nsIAtom*  frameType;
+        GetFrameType(&frameType);
+
+        if (frameType == nsLayoutAtoms::scrollFrame) {
+          viewIsVisible = PR_FALSE;
+
+        } else {
+          // If we're a container element, then leave the view visible, but
+          // mark it as having transparent content. The reason we need to
+          // do this is that child elements can override their parent's
+          // hidden visibility and be visible anyway
+          nsIFrame* firstChild;
+  
+          FirstChild(nsnull, &firstChild);
+          if (firstChild) {
+            // Not a left frame, so the view needs to be visible, but marked
+            // as having transparent content
+            viewHasTransparentContent = PR_TRUE;
+          } else {
+            // Leaf frame so go ahead and hide the view
+            viewIsVisible = PR_FALSE;
+          }
+        }
+        NS_IF_RELEASE(frameType);
+      }
+
+      // Make sure visibility is correct
+      vm->SetViewVisibility(mView, viewIsVisible ? nsViewVisibility_kShow :
+                            nsViewVisibility_kHide);
+      
+      // Make sure content transparency is correct
+      if (viewIsVisible) {
+        vm->SetViewContentTransparency(mView, viewHasTransparentContent);
+      }
+      
+      // Clip applies to block-level and replaced elements with overflow
+      // set to other than 'visible'
       if (display->IsBlockLevel()) {
         if (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN) {
           nscoord left, top, right, bottom;
