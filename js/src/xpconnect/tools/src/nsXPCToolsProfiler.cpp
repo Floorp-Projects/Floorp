@@ -111,7 +111,11 @@ ProfilerFunction::ProfilerFunction(const char* name,
         mLineExtent(extent),
         mFile(file),
         mCallCount(0),
-        mCompileCount(0)
+        mCompileCount(0),
+        mQuickTime((PRUint32) -1),
+        mLongTime(0),
+        mStartTime(0),
+        mSum(0)
 {
     // empty        
 }
@@ -241,7 +245,6 @@ xpctools_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
                          JSBool *ok, void *closure)
 {
     // ignore returns
-    NS_ASSERTION(before, "engine should not do this cuz we return nsnull!");
     NS_ASSERTION(fp, "bad frame pointer!");
 
     JSScript* script = fp->script;
@@ -255,10 +258,20 @@ xpctools_InterpreterHook(JSContext *cx, JSStackFrame *fp, JSBool before,
             ProfilerFunction* fun = 
                 (ProfilerFunction*) self->mScriptTable->Get(&scriptkey);
             if(fun)
-                fun->IncrementCallCount();
+            {
+                if(before == PR_TRUE)
+                {
+                    fun->IncrementCallCount();
+                    fun->SetStartTime();
+                }
+                else
+                {
+                    fun->SetEndTime();
+                }
+            }
         }
     }   
-    return nsnull;
+    return closure;
 }
 
 /***************************************************************************/
@@ -308,15 +321,29 @@ xpctools_FuncionNamePrinter(nsHashKey *aKey, void *aData, void* closure)
     ProfilerFunction* fun = (ProfilerFunction*) aData;
     FILE* out = (FILE*) closure;
     const char* name = fun->GetName();
+    PRUint32 average;
+    PRUint32 count;
+
+    count = fun->GetCallCount();
+    if (count != 0)
+        average = fun->GetSum() / count;
     if(!name)
         name = "<top level>"; 
     fprintf(out,
-            "    [%lu,%lu] %s() {%d-%d}\n", 
-            (unsigned long) fun->GetCompileCount(),
-            (unsigned long) fun->GetCallCount(),
-            name,
-            (int) fun->GetBaseLineNumber(),
-            (int)(fun->GetBaseLineNumber()+fun->GetLineExtent()-1));
+        "    [%lu,%lu] %s() {%d-%d} ",
+        (unsigned long) fun->GetCompileCount(),
+        (unsigned long) fun->GetCallCount(),
+        name,
+        (int) fun->GetBaseLineNumber(),
+        (int)(fun->GetBaseLineNumber()+fun->GetLineExtent()-1));
+    if(count != 0)
+        fprintf(out,
+            "{min %lu, max %lu avg %lu}\n",
+            (unsigned long) fun->GetQuickTime(),
+            (unsigned long) fun->GetLongTime(),
+            (unsigned long) average);
+    else
+        fprintf(out, "\n" );
     return PR_TRUE;        
 }        
 
