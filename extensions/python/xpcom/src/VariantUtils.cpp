@@ -1720,8 +1720,8 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		if (!Py_nsIID::IIDFromPyObject(val, &iid))
 			BREAK_FALSE;
 		nsIID **pp = (nsIID **)ns_v.val.p;
-		// If there is an existing IID, free it.
-		if (*pp)
+		// If there is an existing [in] IID, free it.
+		if (*pp && pi->IsIn())
 			nsAllocator::Free(*pp);
 		*pp = (nsIID *)nsAllocator::Alloc(sizeof(nsIID));
 		if (*pp==NULL) {
@@ -1753,7 +1753,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 	  case nsXPTType::T_CHAR_STR: {
 		// If it is an existing string, free it.
 		char **pp = (char **)ns_v.val.p;
-		if (*pp)
+		if (*pp && pi->IsIn())
 			nsAllocator::Free(*pp);
 		*pp = nsnull;
 
@@ -1782,7 +1782,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 	  case nsXPTType::T_WCHAR_STR: {
 		// If it is an existing string, free it.
 		PRUnichar **pp = (PRUnichar **)ns_v.val.p;
-		if (*pp)
+		if (*pp && pi->IsIn())
 			nsAllocator::Free(*pp);
 		*pp = nsnull;
 		if (val == Py_None)
@@ -1812,7 +1812,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		if (!Py_nsISupports::InterfaceFromPyObject(val, NS_GET_IID(nsISupports), &pnew, PR_TRUE))
 			BREAK_FALSE;
 		nsISupports **pp = (nsISupports **)ns_v.val.p;
-		if (*pp) {
+		if (*pp && pi->IsIn()) {
 			Py_BEGIN_ALLOW_THREADS; // MUST release thread-lock, incase a Python COM object that re-acquires.
 			(*pp)->Release();
 			Py_END_ALLOW_THREADS;
@@ -1835,7 +1835,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		if (!Py_nsISupports::InterfaceFromPyObject(val, *piid, &pnew, PR_TRUE))
 			BREAK_FALSE;
 		nsISupports **pp = (nsISupports **)ns_v.val.p;
-		if (*pp) {
+		if (*pp && pi->IsIn()) {
 			Py_BEGIN_ALLOW_THREADS; // MUST release thread-lock, incase a Python COM object that re-acquires.
 			(*pp)->Release();
 			Py_END_ALLOW_THREADS;
@@ -1880,7 +1880,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		} else {
 			// If we have an existing string, free it!
 			char **pp = (char **)ns_v.val.p;
-			if (*pp)
+			if (*pp && pi->IsIn())
 				nsAllocator::Free(*pp);
 			*pp = nsnull;
 			if (sz==nsnull) // None specified.
@@ -1936,7 +1936,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		} else {
 			// If it is an existing string, free it.
 			PRUnichar **pp = (PRUnichar **)ns_v.val.p;
-			if (*pp)
+			if (*pp && pi->IsIn())
 				nsAllocator::Free(*pp);
 			*pp = nsnull;
 
@@ -1991,7 +1991,7 @@ nsresult PyXPCOM_GatewayVariantHelper::BackFillVariant( PyObject *val, int index
 		else {
 			// If it is an existing array, free it.
 			void **pp = (void **)ns_v.val.p;
-			if (*pp) {
+			if (*pp && pi->IsIn()) {
 				FreeSingleArray(*pp, existing_size, array_type);
 				nsAllocator::Free(*pp);
 			}
