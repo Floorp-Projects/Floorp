@@ -1159,7 +1159,10 @@ __free_ovflpage(HTAB *hashp, BUFHEAD *obufp)
 static int
 open_temp(HTAB *hashp)
 {
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
+#ifdef XP_OS2
+ 	hashp->fp = mkstemp(NULL);
+#else
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 	sigset_t set, oset;
 #endif
 	char * tmpdir;
@@ -1168,7 +1171,7 @@ open_temp(HTAB *hashp)
 	char filename[1024];
 	char last;
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 	/* Block signals; make sure file goes away at process exit. */
 	(void)sigfillset(&set);
 	(void)sigprocmask(SIG_BLOCK, &set, &oset);
@@ -1205,15 +1208,16 @@ open_temp(HTAB *hashp)
 #else
 	if ((hashp->fp = mkstemp(filename)) != -1) {
 		(void)unlink(filename);
-#if !defined(macintosh) && !defined(XP_OS2)
+#if !defined(macintosh)
 		(void)fcntl(hashp->fp, F_SETFD, 1);
 #endif									  
 	}
 #endif
 
-#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
+#if !defined(_WIN32) && !defined(_WINDOWS) && !defined(macintosh)
 	(void)sigprocmask(SIG_SETMASK, &oset, (sigset_t *)NULL);
 #endif
+#endif  /* !OS2 */
 	return (hashp->fp != -1 ? 0 : -1);
 }
 
