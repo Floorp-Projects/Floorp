@@ -1011,7 +1011,7 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
 		return NS_ERROR_FAILURE;
 	PRBool enabled;
     if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkdomprops", &enabled)) &&
-        enabled) 
+        !enabled) 
     {
         *aResult = PR_TRUE;
         return NS_OK;
