@@ -408,7 +408,7 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06(const nsString aSrc, nsString & aDst)
   // Start Unreview Code
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRUint32 i, size = aSrc.Length();
-  aDst = NS_ConvertToString("");
+  aDst = NS_ConvertASCIItoUCS2("");
   for (i=0;i<size;i++) { // i : Source
     aSrcUnichars[i];
     if (aSrcUnichars[i] == 0x0000) 
@@ -444,7 +444,7 @@ NS_IMETHODIMP nsBidiUtilsImp::Conv_FE_06_WithReverse(const nsString aSrc, nsStri
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRBool foundArabic = PR_FALSE;
   PRUint32 i,endArabic, beginArabic, size = aSrc.Length();
-  aDst = NS_ConvertToString("");
+  aDst = NS_ConvertASCIItoUCS2("");
   for (endArabic=0;endArabic<size;endArabic++) {
     if (aSrcUnichars[endArabic] == 0x0000) 
       break; // no need to convert char after the NULL
@@ -501,7 +501,7 @@ nsString & aDst,PRUint32 aDir)
   // Start Unreview Code
   PRUnichar *aSrcUnichars = (PRUnichar *)aSrc.get();
   PRUint32 i,beginArabic, endArabic, size = aSrc.Length();
-  aDst = NS_ConvertToString("");
+  aDst = NS_ConvertASCIItoUCS2("");
   PRBool foundArabic = PR_FALSE;
   for (endArabic=0;endArabic<size;endArabic++) {
     if (aSrcUnichars[endArabic] == 0x0000) 
