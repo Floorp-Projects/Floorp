@@ -35,7 +35,7 @@
 #define NSSCKG_H
 
 #ifdef DEBUG
-static const char NSSCKG_CVS_ID[] = "@(#) $RCSfile: nssckg.h,v $ $Revision: 1.1 $ $Date: 2000/09/22 22:52:20 $ $Name:  $ ; @(#) $RCSfile: nssckg.h,v $ $Revision: 1.1 $ $Date: 2000/09/22 22:52:20 $ $Name:  $";
+static const char NSSCKG_CVS_ID[] = "@(#) $RCSfile: nssckg.h,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:12 $ $Name:  $ ; @(#) $RCSfile: nssckg.h,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:12 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
