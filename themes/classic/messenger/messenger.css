@@ -255,39 +255,39 @@ iframe {
 #button-print[disabled="true"][buttonover="true"],
 #button-print[disabled="true"][buttondown="true"]
   {
-    list-style-image      : url("chrome://global/skin/print-disabled.gif");
+    list-style-image      : url("chrome://global/skin/print.gif");
   }
 
 #button-print[buttonover="true"]
   {
-    list-style-image      : url("chrome://global/skin/print-hover.gif");
+    list-style-image      : url("chrome://global/skin/print.gif");
   }
 
 #button-print[buttondown="true"]
   {
-    list-style-image      : url("chrome://global/skin/print-hover-active.gif");
+    list-style-image      : url("chrome://global/skin/print.gif");
   }
 
 #button-stop 
   {
-	  list-style-image      : url("chrome://messenger/skin/stop.gif");
+	  list-style-image      : url("chrome://global/skin/stop.gif");
   } 
 
 #button-stop[disabled="true"],
 #button-stop[disabled="true"]:hover,
 #button-stop[disabled="true"]:hover:active
   {
-    list-style-image      : url("chrome://messenger/skin/stop-disabled.gif");
+    list-style-image      : url("chrome://global/skin/stop-disabled.gif");
   } 
 
 #button-stop:hover
   {
-    list-style-image      : url("chrome://messenger/skin/stop-hover.gif");
+    list-style-image      : url("chrome://global/skin/stop-hover.gif");
   } 
 
 #button-stop:hover:active
   {
-    list-style-image      : url("chrome://messenger/skin/stop-hover-active.gif");
+    list-style-image      : url("chrome://global/skin/stop-hover-active.gif");
   } 
 
 

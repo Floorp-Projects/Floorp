@@ -125,7 +125,8 @@ install::
 	$(MAKE_INSTALL) reply.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) replyall-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) replyall-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
-	$(MAKE_INSTALL) replyall-hover.gif$(MAKE_INSTALL) replyall.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) replyall-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
+	$(MAKE_INSTALL) replyall.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) server-local-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) server-local.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
 	$(MAKE_INSTALL) server-mail-new.gif $(DIST)\bin\chrome\skins\$(THEME)\messenger\skin
