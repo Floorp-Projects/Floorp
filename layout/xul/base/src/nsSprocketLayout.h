@@ -107,6 +107,8 @@ public:
 
   nsSprocketLayout();
 
+  static PRInt32 Round(PRInt32 aCoord, PRInt32 aOnePixel);
+
 protected:
 
   virtual PRBool IsHorizontal(nsIBox* aBox) const;
@@ -155,6 +157,9 @@ protected:
 
   virtual void GetFrameState(nsIBox* aBox, nsFrameState& aState);
   virtual void SetFrameState(nsIBox* aBox, nsFrameState aState);
+
+private:
+
 
   // because the sprocket layout manager has no instance variables. We 
   // can make a static on and reuse it everywhere.

@@ -58,6 +58,7 @@
 #include "nsIScrollableView.h"
 #include "nsRepeatService.h"
 #include "nsBoxLayoutState.h"
+#include "nsSprocketLayout.h"
 
 #define DEBUG_SLIDER PR_FALSE
 
@@ -293,25 +294,6 @@ nsSliderFrame::Layout(nsBoxLayoutState& aState)
   aState.GetPresContext()->GetScaledPixelsToTwips(&p2t);
   nscoord onePixel = NSIntPixelsToTwips(1, p2t);
 
-  /*
-  if (aReflowState.mComputedHeight == NS_INTRINSICSIZE) 
-    aDesiredSize.height = isHorizontal ? thumbSize.height : 200*onePixel;
-  else {
-    aDesiredSize.height = aReflowState.mComputedHeight;
-   // if (aDesiredSize.height < thumbSize.height)
-   //   aDesiredSize.height = thumbSize.height;
-  }
-
-  // set the width to the computed or if intrinsic then the width of the thumb.
-  if (aReflowState.mComputedWidth == NS_INTRINSICSIZE) 
-    aDesiredSize.width = isHorizontal ? 200*onePixel : thumbSize.width;
-  else {
-    aDesiredSize.width = aReflowState.mComputedWidth;
-   // if (aDesiredSize.width < thumbSize.width)
-   //   aDesiredSize.width = thumbSize.width;
-  }
-  */
-
   // get max pos in twips
   nscoord maxpos = maxpospx*onePixel;
 
@@ -327,7 +309,7 @@ nsSliderFrame::Layout(nsBoxLayoutState& aState)
   // if there is more room than the thumb need stretch the
   // thumb
 
-  nscoord thumbsize = nscoord(ourmaxpos * mRatio);
+  nscoord thumbsize = nsSprocketLayout::Round(nscoord(ourmaxpos * mRatio), onePixel);
 
   if (thumbsize > thumbcoord) {
     nscoord flex = 0;
@@ -336,9 +318,9 @@ nsSliderFrame::Layout(nsBoxLayoutState& aState)
     // if the thumb is flexible make the thumb bigger.
     if (flex > 0) {
        if (isHorizontal)
-          thumbSize.width = nscoord(ourmaxpos * mRatio);
+         thumbSize.width = thumbsize;
        else
-          thumbSize.height = nscoord(ourmaxpos * mRatio);
+          thumbSize.height = thumbsize;
     }    
   } else {
     ourmaxpos -= thumbcoord;
