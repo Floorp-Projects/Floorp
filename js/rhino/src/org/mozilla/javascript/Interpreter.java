@@ -303,7 +303,6 @@ public class Interpreter {
                 break;
 
             case TokenStream.LABEL :
-            case TokenStream.WITH :
             case TokenStream.LOOP :
             case TokenStream.DEFAULT :
             case TokenStream.BLOCK :
@@ -314,6 +313,16 @@ public class Interpreter {
                     iCodeTop = generateICode(child, iCodeTop);
                     child = child.getNext();
                 }
+                break;
+
+            case TokenStream.WITH :
+                ++itsWithDepth;
+                iCodeTop = updateLineNumber(node, iCodeTop);
+                while (child != null) {
+                    iCodeTop = generateICode(child, iCodeTop);
+                    child = child.getNext();
+                }
+                --itsWithDepth;
                 break;
 
             case TokenStream.COMMA :
@@ -830,6 +839,7 @@ public class Interpreter {
                 iCodeTop = addByte(TokenStream.TRY, iCodeTop);
                 iCodeTop = addShort(0, iCodeTop); // placeholder for catch pc
                 iCodeTop = addShort(0, iCodeTop); // placeholder for finally pc
+                iCodeTop = addIndex(itsWithDepth, iCodeTop);
 
                 boolean insertedEndTry = false;
                 while (child != null) {
@@ -1239,13 +1249,15 @@ public class Interpreter {
                         case TokenStream.TRY : {
                             int catch_offset = getShort(iCode, pc);
                             int finally_offset = getShort(iCode, pc + 2);
+                            int with_depth = getIndex(iCode, pc + 4);
+
                             int catch_pc = (catch_offset == 0)
                                            ? -1 : pc - 1 + catch_offset;
                             int finally_pc = (finally_offset == 0)
                                            ? -1 : pc - 1 + finally_offset;
                             out.println(tname + " " + catch_pc
-                                        + " " + finally_pc);
-                            pc += 4;
+                                        + " " + finally_pc + " " +with_depth);
+                            pc += 6;
                             break;
                         }
                         case RETSUB :
@@ -1420,7 +1432,8 @@ public class Interpreter {
             case TokenStream.TRY :
                 // catch pc offset or 0
                 // finally pc offset or 0
-                return 1 + 2 + 2;
+                // with depth
+                return 1 + 2 + 2 + 2;
 
             case RETSUB :
             case TokenStream.ENUMINIT :
@@ -1586,6 +1599,8 @@ public class Interpreter {
         int stackTop = STACK_SHFT - 1;
         int tryStackTop = 0; // add TRY_STACK_SHFT to get real index
 
+        int withDepth = 0;
+
         int definedArgs = fnOrScript.argCount;
         if (definedArgs > argCount) { definedArgs = argCount; }
         for (int i = 0; i != definedArgs; ++i) {
@@ -1680,14 +1695,12 @@ public class Interpreter {
 
     case ENDTRY :
         tryStackTop--;
-        stack[TRY_STACK_SHFT + tryStackTop] = null;
         break;
     case TokenStream.TRY :
-        stack[TRY_STACK_SHFT + tryStackTop] = scope;
         sDbl[TRY_STACK_SHFT + tryStackTop] = (double)pc;
         ++tryStackTop;
-        // Skip starting pc of catch/finally blocks
-        pc += 4;
+        // Skip starting pc of catch/finally blocks and with depth
+        pc += 6;
         break;
     case TokenStream.CATCH: {
         // See comments in generateICodeFromTree: the following code should
@@ -1695,6 +1708,7 @@ public class Interpreter {
         // block itself
         if (javaException == null) Context.codeBug();
 
+        int pcTry = -1;
         int pcNew = -1;
         boolean doCatch = false;
         if (tryStackTop > 0) {
@@ -1723,7 +1737,7 @@ public class Interpreter {
                 // Do not allow for JS to interfere with Error instances
                 // (exType == OTHER), as they can be used to terminate
                 // long running script
-                int pcTry = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
+                pcTry = (int)sDbl[TRY_STACK_SHFT + tryStackTop];
                 if (exType == SCRIPT_CAN_CATCH) {
                     // Allow JS to catch only JavaScriptException and
                     // EcmaError
@@ -1752,11 +1766,15 @@ public class Interpreter {
             break Loop;
         }
 
-        // We caught an exception,
+        // We caught an exception
 
         // restore scope at try point
-        scope = (Scriptable)stack[TRY_STACK_SHFT + tryStackTop];
-        stack[TRY_STACK_SHFT + tryStackTop] = null;
+        int tryWithDepth = getIndex(iCode, pcTry + 5);
+        while (tryWithDepth != withDepth) {
+            if (scope == null) Context.codeBug();
+            scope = ScriptRuntime.leaveWith(scope);
+            --withDepth;
+        }
 
         // make stack to contain single exception object
         stackTop = STACK_SHFT;
@@ -2506,10 +2524,12 @@ public class Interpreter {
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         scope = ScriptRuntime.enterWith(lhs, scope);
+        ++withDepth;
         break;
     }
     case TokenStream.LEAVEWITH :
         scope = ScriptRuntime.leaveWith(scope);
+        --withDepth;
         break;
     case TokenStream.NEWSCOPE :
         stack[++stackTop] = ScriptRuntime.newScope();
@@ -2955,6 +2975,7 @@ public class Interpreter {
     private ScriptOrFnNode scriptOrFn;
     private int itsTryDepth = 0;
     private int itsStackDepth = 0;
+    private int itsWithDepth = 0;
     private String itsSourceFile;
     private int itsLineNumber = 0;
     private LabelTable itsLabels = new LabelTable();
