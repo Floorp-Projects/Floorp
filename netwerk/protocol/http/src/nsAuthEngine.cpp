@@ -233,7 +233,7 @@ nsAuthEngine::SetProxyAuthString(const char* host,
 
     spec.Append(host);
     spec.Append(':');
-    spec.Append(port);
+    spec.AppendInt(port);
 
     NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;

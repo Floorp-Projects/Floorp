@@ -161,12 +161,12 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
         // we can't use the standard comma because there
         // set-cookie headers that include commas in the cookie value
         // contrary to the specs not allowing it.
-        entry->mValue.AppendWithConversion(LF);
-        entry->mValue.AppendWithConversion(aValue);
+        entry->mValue.Append(LF);
+        entry->mValue.Append(aValue);
     } else {
         // delimit each value from the others using a comma(HTTP spec delimiter)
-        entry->mValue.AppendWithConversion(", ");
-        entry->mValue.AppendWithConversion(aValue);
+        entry->mValue.Append(", ");
+        entry->mValue.Append(aValue);
     }
   }
   //
