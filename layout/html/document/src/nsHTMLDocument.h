@@ -30,7 +30,7 @@ public:
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
-  virtual void LoadURL(nsIURL* aURL);
+  virtual void LoadURL(nsIURL* aURL, nsIPostData* aPostData = 0);
 
   NS_IMETHOD SetTitle(const nsString& aTitle);
 

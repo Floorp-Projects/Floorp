@@ -47,6 +47,8 @@ protected:
 class nsInputFile : public nsInput {
 public:
   typedef nsInput nsInputFileSuper;
+  static nsString* gFILE_TYPE;
+
   nsInputFile (nsIAtom* aTag, nsIFormManager* aManager);
 
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
@@ -55,6 +57,9 @@ public:
                                nsIFrame*&       aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+  virtual PRInt32 GetMaxNumValues();
+  virtual PRBool GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                                nsString* aValues, nsString* aNames);
 
 protected:
   virtual ~nsInputFile();

@@ -167,7 +167,7 @@ void testStrings(nsIDocument* aDoc) {
 class MyDocument : public nsDocument {
 public:
   MyDocument();
-  void LoadURL(nsIURL* aURL);
+  void LoadURL(nsIURL* aURL, nsIPostData* aPostData);
 
 protected:
   virtual ~MyDocument();
@@ -181,7 +181,7 @@ MyDocument::~MyDocument()
 {
 }
 
-void MyDocument::LoadURL(nsIURL* aURL)
+void MyDocument::LoadURL(nsIURL* aURL, nsIPostData* aPostData)
 {
 }
 

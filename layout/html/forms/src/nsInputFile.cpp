@@ -37,6 +37,7 @@
 #include "nsIView.h"
 
 PRInt32 nsInputFileFrame::gSpacing = 40;
+nsString* nsInputFile::gFILE_TYPE = new nsString("file");
 
 nsInputFileFrame::nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame)
   : nsInlineFrame(aContent, aParentFrame)
@@ -108,7 +109,8 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
 NS_IMETHODIMP
 nsInputFileFrame::MoveTo(nscoord aX, nscoord aY)
 {
-  if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
+  //if ( ((aX == 0) && (aY == 0)) || (aX != mRect.x) || (aY != mRect.y)) {
+  if ((aX != mRect.x) || (aY != mRect.y)) {
     nsIFrame* childFrame = mFirstChild;
     nscoord x = aX;
     nscoord y = aY;
@@ -237,6 +239,31 @@ void nsInputFile::GetType(nsString& aResult) const
   aResult = "file";
 }
 
+
+PRInt32 
+nsInputFile::GetMaxNumValues()
+{
+  return 1;
+}
+  
+PRBool
+nsInputFile::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
+                            nsString* aValues, nsString* aNames)
+{
+  if ((aMaxNumValues <= 0) || (nsnull == mName)) {
+    return PR_FALSE;
+  }
+  nsInput* text = (nsInput *)ChildAt(0);
+  // use our name and the text widgets value 
+  aNames[0] = *mName;
+  nsITextWidget* textWidget = (nsITextWidget *)text->GetWidget();
+  textWidget->GetText(aValues[0], 0);  // the last parm is not used
+
+  NS_IF_RELEASE(text);
+  aNumValues = 1;
+
+  return PR_TRUE;
+}
 
 void nsInputFile::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {

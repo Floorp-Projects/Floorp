@@ -23,6 +23,7 @@
 class nsIDocument;
 class nsString;
 class nsIScriptContext;
+class nsIPostData;
 
 // Interface to the web widget. The web widget is a container for web
 // content.
@@ -40,7 +41,7 @@ public:
 
   virtual void Hide() = 0;
 
-  NS_IMETHOD LoadURL(const nsString& aURLSpec) = 0;
+  NS_IMETHOD LoadURL(const nsString& aURLSpec, nsIPostData* aPostData = 0) = 0;
 
   virtual nsIWidget* GetWWWindow() = 0;
 
