@@ -368,8 +368,7 @@ Feed.prototype.parseAsRSS1 = function() {
     this.itemsToStore[index++] = item;
   }
 
-  if (index) // at least one item to store?
-    this.storeNextItem();
+  this.storeNextItem();
 }
 
 Feed.prototype.parseAsAtom = function() {
