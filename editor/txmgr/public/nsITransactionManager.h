@@ -43,7 +43,7 @@ class nsITransactionManager  : public nsISupports{
 public:
 
   /**
-   * Places a transaction on the do stack and calls it's Do() method.
+   * Calls a transaction's Do() method, then pushes it on the undo stack.
    * <P>
    * This method calls the transaction's AddRef() method.
    * The transaction's Release() method will be called when the undo or redo
@@ -53,14 +53,14 @@ public:
   virtual nsresult Do(nsITransaction *aTransaction) = 0;
 
   /**
-   * Pops the topmost transaction on the do stack, pushes it on the undo
-   * stack, then calls it's Undo() method.
+   * Pops the topmost transaction on the undo stack, calls it's Undo() method,
+   * then pushes it on the redo stack.
    */
   virtual nsresult Undo(void) = 0;
 
   /**
-   * Pops the topmost transaction on the undo stack, pushes it on the redo
-   * stack, then calls it's Redo() method.
+   * Pops the topmost transaction on the redo stack, calls it's Redo() method,
+   * then pushes it on the undo stack.
    */
   virtual nsresult Redo(void) = 0;
 
