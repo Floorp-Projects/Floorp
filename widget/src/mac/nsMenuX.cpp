@@ -348,7 +348,7 @@ NS_METHOD nsMenuX::AddMenu(nsIMenu * aMenu)
     ::DisableMenuItem(mMacMenuHandle, currItemIndex);	    
 
   MenuHandle childMenu;
-  if (aMenu->GetNativeData(&(void*)childMenu) == NS_OK)
+  if (aMenu->GetNativeData((void**)&childMenu) == NS_OK)
     ::SetMenuItemHierarchicalMenu((MenuHandle) mMacMenuHandle, currItemIndex, childMenu);
   
   return NS_OK;
