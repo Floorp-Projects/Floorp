@@ -1850,7 +1850,7 @@ ClearBroadcasterMapEntry(PLDHashTable* aTable, PLDHashEntryHdr* aEntry)
 {
     BroadcasterMapEntry* entry =
         NS_STATIC_CAST(BroadcasterMapEntry*, aEntry);
-    for (PRInt32 i = entry->mListeners.Count(); i>= 0; --i) {
+    for (PRInt32 i = entry->mListeners.Count()-1; i>= 0; --i) {
         delete (BroadcastListener*)entry->mListeners[i];
     }
 
