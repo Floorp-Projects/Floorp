@@ -17,7 +17,7 @@
 
 DEPTH=../..
 
-#DIRS = windows
+#DIRS = motif
 
 include $(DEPTH)/config/config.mk
 
