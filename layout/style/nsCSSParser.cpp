@@ -545,7 +545,8 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
                      PRUint32               aLineNumber,
                      nsICSSStyleSheet*&     aResult)
 {
-  NS_ASSERTION(nsnull != aBaseURL, "need base URL");
+  NS_ASSERTION(nsnull != aBaseURI, "need base URL");
+  NS_ASSERTION(nsnull != aSheetURI, "need sheet URL");
 
   if (! mSheet) {
     NS_NewCSSStyleSheet(getter_AddRefs(mSheet));
@@ -554,9 +555,9 @@ CSSParserImpl::Parse(nsIUnicharInputStream* aInput,
 #ifdef DEBUG
   else {
     nsCOMPtr<nsIURI> uri;
-    mSheet->GetURL(*getter_AddRefs(uri));
+    mSheet->GetSheetURI(getter_AddRefs(uri));
     PRBool equal;
-    aBaseURI->Equals(uri, &equal);
+    aSheetURI->Equals(uri, &equal);
     NS_ASSERTION(equal, "Sheet URI does not match passed URI");
   }
 #endif
