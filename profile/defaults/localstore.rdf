@@ -22,8 +22,16 @@
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul">
     <NC:persist resource="chrome://messenger/content/addressbook/addressbook.xul#abResultsOutliner"/>
+    <NC:persist resource="chrome://messenger/content/addressbook/addressbook.xul#sidebar-panels-splitter-box"/>
+    <NC:persist resource="chrome://messenger/content/addressbook/addressbook.xul#sidebar-title-box"/>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul#abResultsOutliner" height="94" />
+  <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul#sidebar-panels-splitter-box">
+    <collapsed>true</collapsed>
+  </RDF:Description>
+  <RDF:Description about="chrome://messenger/content/addressbook/addressbook.xul#sidebar-title-box">
+    <hidden>true</hidden>
+  </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul">
     <NC:persist resource="chrome://messenger/content/messenger.xul#statusCol"/>
     <NC:persist resource="chrome://messenger/content/messenger.xul#sizeCol"/>
