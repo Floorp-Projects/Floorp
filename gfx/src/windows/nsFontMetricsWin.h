@@ -88,6 +88,7 @@ typedef struct nsGlobalFont
   PRUint32*     map;
   PRUint8       skip;
   FONTSIGNATURE signature;
+  int           fonttype;
 } nsGlobalFont;
 
 class nsFontMetricsWin : public nsIFontMetrics
@@ -136,6 +137,8 @@ public:
 
   virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
+
+  virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
 
   int SameAsPreviousMap(int aIndex);
 
@@ -300,6 +303,8 @@ public:
 
   virtual nsFontWin* LoadSubstituteFont(HDC aDC, nsString* aName);
   virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
+
+  virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
 };
 
 #endif /* nsFontMetricsWin_h__ */
