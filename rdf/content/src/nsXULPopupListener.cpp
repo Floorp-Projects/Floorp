@@ -262,6 +262,16 @@ XULPopupListenerImpl::LaunchPopup(nsIDOMEvent* anEvent)
     		uiEvent->GetScreenX(&xPos); 
         uiEvent->GetScreenY(&yPos); 
               
+        // If we're anchored, we pass in client/screen offsets so that
+        // we can translate the frames corners to screen coords.
+        if (anchorAlignment != "none") {
+          PRInt32 offsetX, offsetY;
+          uiEvent->GetClientX(&offsetX);
+          uiEvent->GetClientY(&offsetY);
+          offsetX = xPos-offsetX;
+          offsetY = yPos-offsetY;
+        }
+
         domWindow->CreatePopup(element, popupContent, 
                              xPos, yPos, 
                              type, anchorAlignment, popupAlignment);
