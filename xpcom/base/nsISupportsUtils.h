@@ -45,8 +45,8 @@ struct JSContext;
  * IID for the nsISupports interface
  * {00000000-0000-0000-c000-000000000046}
  *
- * NOTE: NEVER EVER EVER EVER EVER change this IID. Never. Not once.
- * No. Don't do it. Stop!
+ * To maintain binary compatibility with COM's nsIUnknown, we define the IID
+ * of nsISupports to be the same as that of COM's nsIUnknown.
  */
 #define NS_ISUPPORTS_IID      \
 { 0x00000000, 0x0000, 0x0000, \
@@ -54,8 +54,17 @@ struct JSContext;
 
 /**
  * Reference count values
+ *
+ * This is type of return value from Addref() and Release() in nsISupports.
+ * nsIUnknown of COM returns a unsigned long from equivalent functions.
+ * To maintain binary compatibility of nsISupports with nsIUnknown, we are
+ * doing this ifdeffing.
  */
+#if defined(XP_PC) && PR_BYTES_PER_LONG == 4
+typedef unsigned long nsrefcnt;
+#else
 typedef PRUint32 nsrefcnt;
+#endif
 
 /**
  * Base class for all XPCOM objects to use. This macro forces the C++
