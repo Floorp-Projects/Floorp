@@ -54,6 +54,7 @@ static NS_DEFINE_IID(kISupportsIID,                            NS_ISUPPORTS_IID)
 
 static const char kURINC_RelatedLinksRoot[] = "NC:RelatedLinks";
 
+
 class RelatedLinksDataSourceCallback : public nsIStreamListener
 {
 private:
@@ -67,6 +68,8 @@ private:
 	static nsIRDFResource	*kNC_Name;
 	static nsIRDFResource	*kNC_loading;
 	static nsIRDFResource	*kNC_RelatedLinksRoot;
+	static nsIRDFResource	*kNC_BookmarkSeparator;
+	static nsIRDFResource	*kRDF_type;
 
 	char			*mLine;
 
@@ -197,6 +200,8 @@ nsIRDFResource		*RelatedLinksDataSourceCallback::kNC_Child;
 nsIRDFResource		*RelatedLinksDataSourceCallback::kNC_Name;
 nsIRDFResource		*RelatedLinksDataSourceCallback::kNC_loading;
 nsIRDFResource		*RelatedLinksDataSourceCallback::kNC_RelatedLinksRoot;
+nsIRDFResource		*RelatedLinksDataSourceCallback::kNC_BookmarkSeparator;
+nsIRDFResource		*RelatedLinksDataSourceCallback::kRDF_type;
 
 
 
@@ -488,8 +493,10 @@ RelatedLinksDataSourceCallback::RelatedLinksDataSourceCallback(nsIRDFDataSource 
 		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
 		gRDFService->GetResource(NC_NAMESPACE_URI "Name",  &kNC_Name);
 		gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
+		gRDFService->GetResource(NC_NAMESPACE_URI "BookmarkSeparator", &kNC_BookmarkSeparator);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type", &kRDF_type);
 		gRDFService->GetResource(kURINC_RelatedLinksRoot, &kNC_RelatedLinksRoot);
-		
+
 		if (nsnull != (mParentArray = new nsVoidArray()))
 		{
 			mParentArray->AppendElement(parent);
@@ -521,6 +528,8 @@ RelatedLinksDataSourceCallback::~RelatedLinksDataSourceCallback()
 		NS_RELEASE(kNC_Child);
 		NS_RELEASE(kNC_Name);
 		NS_RELEASE(kNC_loading);
+		NS_RELEASE(kNC_BookmarkSeparator);
+		NS_RELEASE(kRDF_type);
 		NS_RELEASE(kNC_RelatedLinksRoot);
 	}
 }
@@ -665,6 +674,31 @@ RelatedLinksDataSourceCallback::OnDataAvailable(nsIURL* aURL, nsIInputStream *aI
 					if (theEnd > 0)
 					{
 						oneLiner.Mid(title, 0, theEnd);
+					}
+				}
+			}
+			// check for separator
+			else if ((theStart = oneLiner.Find("<child instanceOf=\"Separator1\"/>")) == 0)
+			{
+				nsCOMPtr<nsIRDFResource>	newSeparator;
+				nsAutoString			rlRoot(kURINC_RelatedLinksRoot);
+				if (NS_SUCCEEDED(rv = rdf_CreateAnonymousResource(rlRoot, getter_AddRefs(newSeparator))))
+				{
+					nsAutoString		defaultSeparatorName("-----");
+					nsCOMPtr<nsIRDFLiteral> nameLiteral;
+					if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(defaultSeparatorName.GetUnicode(), getter_AddRefs(nameLiteral))))
+					{
+						if (NS_SUCCEEDED(rv = mDataSource->Assert(newSeparator, kNC_Name, nameLiteral, PR_TRUE)))
+						{
+						}
+					}
+					mDataSource->Assert(newSeparator, kRDF_type, kNC_BookmarkSeparator, PR_TRUE);
+
+					PRInt32		numParents = mParentArray->Count();
+					if (numParents > 0)
+					{
+						nsIRDFResource	*parent = (nsIRDFResource *)(mParentArray->ElementAt(numParents - 1));
+						mDataSource->Assert(parent, kNC_Child, newSeparator, PR_TRUE);
 					}
 				}
 			}
