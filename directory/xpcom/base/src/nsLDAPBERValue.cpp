@@ -55,14 +55,13 @@ nsLDAPBERValue::~nsLDAPBERValue()
 NS_IMETHODIMP 
 nsLDAPBERValue::Get(PRUint32 *aCount, PRUint8 **aRetVal)
 {
-    PRUint8 *array;
-
     // if mSize = 0, return a count of a 0 and a null pointer
 
     if (mSize) {
         // get a buffer to hold a copy of the data
         //
-        array = NS_STATIC_CAST(PRUint8 *, nsMemory::Alloc(mSize));
+        PRUint8 *array = NS_STATIC_CAST(PRUint8 *, nsMemory::Alloc(mSize));
+
         if (!array) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
@@ -70,10 +69,12 @@ nsLDAPBERValue::Get(PRUint32 *aCount, PRUint8 **aRetVal)
         // copy and return
         //
         memcpy(array, mValue, mSize);
+        *aRetVal = array;
+    } else {
+        *aRetVal = 0;
     }
 
     *aCount = mSize;
-    *aRetVal = mSize ? array : 0;
     return NS_OK;
 }
 
