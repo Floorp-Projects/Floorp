@@ -58,6 +58,12 @@
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
 
+#ifdef DEBUG
+#undef NOISY_LINKS
+#else
+#undef NOISY_LINKS
+#endif
+
 #ifdef NS_DEBUG
 /**
  * Note: the log module is created during initialization which
@@ -1235,6 +1241,10 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
 NS_IMETHODIMP nsWebShell::Stop(void)
 {
+  if (nsnull != mContentViewer) {
+    mContentViewer->Stop();
+  }
+
   // Cancel any timers that were set for this loader.
   CancelRefreshURLTimers();
 
@@ -1676,7 +1686,7 @@ nsWebShell::OnOverLink(nsIContent* aContent,
                        const PRUnichar* aTargetSpec)
 {
   if (!mOverURL.Equals(aURLSpec) || !mOverTarget.Equals(aTargetSpec)) {
-#ifdef NS_DEBUG
+#ifdef NOISY_LINKS
     fputs("Was '", stdout); 
     fputs(mOverURL, stdout); 
     fputs("' '", stdout); 
