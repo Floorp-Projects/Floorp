@@ -1350,77 +1350,42 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const char * aWindowTarget)
 {
    nsresult rv = NS_OK;
-   PRBool keywordsEnabled = PR_FALSE;
-
-   /* 
-     TODO This doesnt belong here... The app should be doing all this
-     URL play. The webshell should not have a clue about whats "mailto" 
-     If you insist that this should be here, then put in URL parsing 
-     optimizations here. -Gagan
-   */
 
    nsAutoString urlStr(aURLSpec);
-   // first things first. try to create a uri out of the string.
-   nsCOMPtr<nsIURI> uri;
    nsXPIDLCString  spec;
-   if(0==urlStr.Find("file:",0))
+
+   // no dice.
+   urlStr.Trim(" ");
+
+   nsCOMPtr<nsIURI> uri;
+   rv = CreateFixupURI(urlStr.GetUnicode(), getter_AddRefs(uri));
+
+   if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
       {
-      // if this is file url, we need to  convert the URI
-      // from Unicode to the FS charset
-      nsCAutoString inFSCharset;
-      rv = ConvertStringURIToFileCharset(urlStr, inFSCharset);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
-      if(NS_SUCCEEDED(rv)) 
-         rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
-      } 
-   else 
-      rv = NS_NewURI(getter_AddRefs(uri), urlStr, nsnull);
-   if(NS_FAILED(rv))
-      {
-      // no dice.
-      nsAutoString urlSpec;
-      urlStr.Trim(" ");
+      PRInt32 colon=urlStr.FindChar(':');
+      // we weren't able to find a protocol handler
+      rv = InitDialogVars();
+      if (NS_FAILED(rv)) 
+         return rv;
 
-      // see if we've got a file url.
-      ConvertFileToStringURI(urlStr, urlSpec);
-      nsCAutoString inFSCharset;
-      rv = ConvertStringURIToFileCharset(urlSpec, inFSCharset);
-      NS_ASSERTION(NS_SUCCEEDED(rv), "convertURLToFielCharset failed");
-      if(NS_SUCCEEDED(rv)) 
-         rv = NS_NewURI(getter_AddRefs(uri), inFSCharset.GetBuffer(), nsnull);
+      nsXPIDLString messageStr;
+      nsAutoString name("protocolNotFound");
+      rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
+      if (NS_FAILED(rv)) 
+         return rv;
 
-      if(NS_FAILED(rv))
-         {
-         rv = CreateFixupURI(urlStr.GetUnicode(), getter_AddRefs(uri));
+      NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
 
-         if(NS_ERROR_UNKNOWN_PROTOCOL == rv)
-            {
-            PRInt32 colon=urlStr.FindChar(':');
-            // we weren't able to find a protocol handler
-            rv = InitDialogVars();
-            if (NS_FAILED(rv)) 
-               return rv;
+      // extract the scheme
+      nsAutoString scheme;
+      urlStr.Left(scheme, colon);
 
-            nsXPIDLString messageStr;
-            nsAutoString name("protocolNotFound");
-            rv = mStringBundle->GetStringFromName(name.GetUnicode(), getter_Copies(messageStr));
-            if (NS_FAILED(rv)) 
-               return rv;
+      nsAutoString dnsMsg(scheme);
+      dnsMsg.Append(' ');
+      dnsMsg.Append(messageStr);
 
-            NS_ASSERTION(colon != -1, "we shouldn't have gotten this far if we didn't have a colon");
-
-            // extract the scheme
-            nsAutoString scheme;
-            urlSpec.Left(scheme, colon);
-
-            nsAutoString dnsMsg(scheme);
-            dnsMsg.Append(' ');
-            dnsMsg.Append(messageStr);
-
-            (void)mPrompter->Alert(dnsMsg.GetUnicode());
-            } // end unknown protocol
-         }
-      }
+      (void)mPrompter->Alert(dnsMsg.GetUnicode());
+      } // end unknown protocol
 
    if(!uri)
       return rv;
