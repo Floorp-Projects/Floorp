@@ -317,17 +317,30 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
         ++start;
       }
       nsCAutoString::const_iterator iter = start;
-      // walk forward till we hit the next whitespace or semicolon
-      while (iter != end && *iter != ';' && !nsCRT::IsAsciiSpace(*iter))
+      // walk forward till we hit the next whitespace, semicolon, or
+      // equals sign
+      while (iter != end && *iter != ';' && *iter != '=' &&
+             !nsCRT::IsAsciiSpace(*iter))
       {
         ++iter;
       }
-      if (start != iter &&
-          Substring(start, iter).Equals(NS_LITERAL_CSTRING("attachment"),
-                                        nsCaseInsensitiveCStringComparator()))
+      
+      if (start != iter)
       {
-        // We have a content-disposition of "attachment"
-        forceExternalHandling = PR_TRUE;
+        const nsACString & dispToken = Substring(start, iter);
+        // RFC 2183, section 2.8 says that an unknown disposition
+        // value should be treated as "attachment"
+        if (!dispToken.Equals(NS_LITERAL_CSTRING("inline"),
+                              nsCaseInsensitiveCStringComparator()) &&
+            // Broken sites just send
+            // Content-Disposition: filename="file"
+            // without a disposition token... screen those out.
+            !dispToken.Equals(NS_LITERAL_CSTRING("filename"),
+                              nsCaseInsensitiveCStringComparator()))
+        {
+          // We have a content-disposition of "attachment" or unknown
+          forceExternalHandling = PR_TRUE;
+        }
       }
     }
     
