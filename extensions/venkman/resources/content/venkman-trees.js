@@ -86,6 +86,7 @@ function initOutliners()
     outliner.outlinerBoxObject.view = console.sourceView;
 
     console.scriptsView.childData.setSortColumn("baseLineNumber");
+    console.scriptsView.groupFiles  = true;
     console.scriptsView.atomUnknown = atomsvc.getAtom("ft-unk");
     console.scriptsView.atomHTML    = atomsvc.getAtom("ft-html");
     console.scriptsView.atomJS      = atomsvc.getAtom("ft-js");
@@ -354,11 +355,14 @@ SourceRecord.prototype.isLoaded = false;
 SourceRecord.prototype.sortCompare =
 function sr_compare (a, b)
 {
-    if (a.group < b.group)
-        return -1;
+    if (console.scriptsView.groupFiles)
+    {
+        if (a.group < b.group)
+            return -1;
     
-    if (a.group > b.group)
-        return 1;
+        if (a.group > b.group)
+            return 1;
+    }
     
     if (a.displayName < b.displayName)
         return -1;
