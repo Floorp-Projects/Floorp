@@ -27,6 +27,7 @@ MODULE=raptor
 XPIDL_MODULE=gfx
 
 XPIDLSRCS =               \
+  .\nsIFontEnumerator.idl          \
   .\nsIScriptableRegion.idl          \
   $(NULL)
 
