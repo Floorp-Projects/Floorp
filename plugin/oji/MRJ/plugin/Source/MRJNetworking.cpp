@@ -333,13 +333,16 @@ static OSStatus openInputStream(
 {
     MRJURLConnection* connection = reinterpret_cast<MRJURLConnection*>(urlConnectionRef);
     MRJInputStream* inputStream = new MRJInputStream(connection->getInstance()->getSession());
+    if (!inputStream)
+        return memFullErr;
+
     inputStream->AddRef();
     *urlInputStreamRef = inputStream;
 
-	nsIPluginInstance* pluginInstance = connection->getInstance();
-	nsIPluginStreamListener* listener = inputStream;
-	nsresult rv = thePluginManager->GetURL(pluginInstance, connection->getURL(), NULL, listener);
-    
+    nsIPluginInstance* pluginInstance = connection->getInstance();
+    nsIPluginStreamListener* listener = inputStream;
+    nsresult rv = thePluginManager->GetURL(pluginInstance, connection->getURL(), NULL, listener);
+
     return noErr;
 }
 

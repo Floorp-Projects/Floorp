@@ -898,7 +898,7 @@ public:
 	nsIPluginStreamInfo* CreatePluginStreamInfo(const char* url, nsMIMEType type, PRBool seekable) {
 		if (mStreamInfo == NULL) {
 			mStreamInfo = new CPluginStreamInfo(url, this, type, seekable);
-			mStreamInfo->AddRef();
+			NS_IF_ADDREF(mStreamInfo);
 		}
 		return mStreamInfo;
 	}
@@ -1954,18 +1954,20 @@ CPluginManager::AllocateMenuID(nsIEventHandler* handler, PRBool isSubmenu, PRInt
 NS_METHOD
 CPluginManager::GetService(const nsCID& aClass, const nsIID& aIID, void* *result)
 {
-	// the only service we support currently is nsIMemory.
-	if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kMemoryCID)) {
-		return QueryInterface(aIID, (void**) result);
-	}
-	if (aClass.Equals(nsILiveconnect::GetCID())) {
-		if (mLiveconnect == NULL) {
-			mLiveconnect = new nsLiveconnect;
-			NS_IF_ADDREF(mLiveconnect);
-		}
-		return mLiveconnect->QueryInterface(aIID, (void**)result);
-	}
-	return NS_ERROR_SERVICE_NOT_FOUND;
+    // the only service we support currently is nsIMemory.
+    if (aClass.Equals(kPluginManagerCID) || aClass.Equals(kMemoryCID)) {
+        return QueryInterface(aIID, result);
+    }
+    if (!aClass.Equals(nsILiveconnect::GetCID())) {
+        return NS_ERROR_SERVICE_NOT_FOUND;
+    }
+    if (mLiveconnect == NULL) {
+        mLiveconnect = new nsLiveconnect;
+        if (!mLiveconnect)
+            return NS_ERROR_OUT_OF_MEMORY;
+        NS_ADDREF(mLiveconnect);
+    }
+    return mLiveconnect->QueryInterface(aIID, result);
 }
 
 //////////////////////////////

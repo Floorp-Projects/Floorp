@@ -388,6 +388,8 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
         static CSecureEnv* mainEnv = NULL;
         if (mainEnv == NULL) {
             mainEnv = new CSecureEnv(theJVMPlugin, NULL, env);
+            if (!mainEnv)
+                return;
             mainEnv->AddRef();
         }
         mainEnv->setJavaEnv(env);
@@ -410,22 +412,26 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
             static CSecureEnv* sharedEnv = NULL;
             if (sharedEnv == NULL) {
                 sharedEnv = new CSecureEnv(theJVMPlugin, NULL, env);
-                sharedEnv->AddRef();
+                NS_IF_ADDREF(sharedEnv);
             }
-            sharedEnv->setJavaEnv(env);
+            if (sharedEnv) {
+                sharedEnv->setJavaEnv(env);
 
-            // In the current Seamonkey architecture, there's really only one thread that JavaScript
-            // can execute in. We take advantage of that fact here. When we have a more multithreaded
-            // system, this will have to be revisited.
-            static PRUint32 theJavaScriptThread = getJavaScriptThread(env);
-            
-            // if the JavaScript thread is known, wrap the message in a MessageRunnable to handle
-            // the message in the JavaScript thread.
-            if (theJavaScriptThread != 0) {
-                MessageRunnable* runnableMsg = new MessageRunnable(theJavaScriptThread, msg);
-                NS_ADDREF(runnableMsg);
-                sharedEnv->sendMessageFromJava(env, runnableMsg);
-                NS_IF_RELEASE(runnableMsg);
+                // In the current Seamonkey architecture, there's really only one thread that JavaScript
+                // can execute in. We take advantage of that fact here. When we have a more multithreaded
+                // system, this will have to be revisited.
+                static PRUint32 theJavaScriptThread = getJavaScriptThread(env);
+
+                // if the JavaScript thread is known, wrap the message in a MessageRunnable to handle
+                // the message in the JavaScript thread.
+                if (theJavaScriptThread != 0) {
+                    MessageRunnable* runnableMsg = new MessageRunnable(theJavaScriptThread, msg);
+                    if (runnableMsg) {
+                        NS_ADDREF(runnableMsg);
+                        sharedEnv->sendMessageFromJava(env, runnableMsg);
+                        NS_RELEASE(runnableMsg);
+                    }
+                }
             }
         }
         sharedMonitor.exit();
