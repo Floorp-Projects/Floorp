@@ -152,7 +152,7 @@ nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector,
 NS_IMETHODIMP
 nsPlatformCharset::GetDefaultCharsetForLocale(const nsAString& localeName, nsACString &oResult)
 {
-  oResult.Truncate();
+  oResult.AssignLiteral("ISO-8859-1");
   return NS_OK;
 }
 
