@@ -34,6 +34,7 @@
 function nsContextMenu( xulMenu ) {
     this.target     = null;
     this.menu       = null;
+    this.onTextInput = false;
     this.onImage    = false;
     this.onLink     = false;
     this.onSaveableLink = false;
@@ -140,6 +141,10 @@ nsContextMenu.prototype = {
         // command updating system
         // this.setItemAttr( "context-copy", "disabled", this.isNoTextSelected() );
     
+        // Items for text areas
+        this.showItem( "context-cut", this.onTextInput );
+        this.showItem( "context-paste", this.onTextInput );
+        
         // Copy link location depends on whether we're on a link.
         this.showItem( "context-copylink", this.onLink );
     
@@ -150,6 +155,7 @@ nsContextMenu.prototype = {
     setTarget : function ( node ) {
         // Initialize contextual info.
         this.onImage    = false;
+        this.onTextInput = false;
         this.imageURL   = "";
         this.onLink     = false;
         this.inFrame    = false;
@@ -207,6 +213,8 @@ nsContextMenu.prototype = {
                if(this.target.getAttribute( "type" ).toUpperCase() == "IMAGE") {
                  this.onImage = true;
                  this.imageURL = this.target.src;
+               } else if (this.target.getAttribute( "type" ).toUpperCase() == "TEXT") {
+                 this.onTextInput = true;
                }
              } else if (this.target.getAttribute( "background" )) {
                this.onImage = true;
