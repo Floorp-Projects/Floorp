@@ -56,6 +56,8 @@ private:
     friend nsresult
     NS_NewLocalStore(nsILocalStore** aResult);
 
+    nsCOMPtr<nsISupportsArray> mObservers;
+
 public:
     // nsISupports interface
     NS_DECL_ISUPPORTS
@@ -130,11 +132,23 @@ public:
     }
 
     NS_IMETHOD AddObserver(nsIRDFObserver* aObserver) {
-        return mInner->AddObserver(aObserver);
+        // Observers are _never_ notified, but we still have to play
+        // nice.
+        if (! mObservers) {
+            nsresult rv;
+            rv = NS_NewISupportsArray(getter_AddRefs(mObservers));
+            if (NS_FAILED(rv)) return rv;
+        }
+
+        mObservers->AppendElement(aObserver);
+        return NS_OK;
     }
 
     NS_IMETHOD RemoveObserver(nsIRDFObserver* aObserver) {
-        return mInner->RemoveObserver(aObserver);
+        if (mObservers) {
+            mObservers->RemoveElement(aObserver);
+        }
+        return NS_OK;
     }
 
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* aNode,
