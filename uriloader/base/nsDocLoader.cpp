@@ -740,6 +740,12 @@ nsDocLoaderImpl::Stop(void)
   mForegroundURLs = 0;
   mTotalURLs      = 0;
 
+  /* 
+   * Release the Stream Observer...  
+   * It will be set on the next LoadDocument(...) 
+   */
+  NS_IF_RELEASE(mStreamObserver);
+
   return NS_OK;
 }       
 
