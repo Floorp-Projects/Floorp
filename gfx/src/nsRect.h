@@ -32,7 +32,7 @@ struct NS_GFX nsRect {
   nscoord width, height;
 
   // Constructors
-  nsRect() {}
+  nsRect() : x(0), y(0), width(0), height(0) {}
   nsRect(const nsRect& aRect) {*this = aRect;}
   nsRect(const nsPoint& aOrigin, const nsSize &aSize) {x = aOrigin.x; y = aOrigin.y;
                                                        width = aSize.width; height = aSize.height;}
