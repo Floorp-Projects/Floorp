@@ -150,9 +150,9 @@ function Startup()
   if (insertLinkAtCaret)
   {
     // Groupbox caption:
-    dialog.linkTextCaption.setAttribute("label",GetString("LinkText"));
+    dialog.linkTextCaption.setAttribute("value",GetString("LinkText"));
     // Message above input field:
-    dialog.linkTextMessage.setAttribute("label", GetString("EnterLinkText"));
+    dialog.linkTextMessage.setAttribute("value", GetString("EnterLinkText"));
   }
   else
   {
