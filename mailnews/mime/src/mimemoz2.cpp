@@ -217,7 +217,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach)
   if (aAttach->real_type && !nsCRT::strcasecmp(aAttach->real_type, MESSAGE_RFC822) && 
      (!aAttach->real_name || *aAttach->real_name == 0))
   {
-    mime_SACopy(&(aAttach->real_name), "forward.eml");
+    mime_SACopy(&(aAttach->real_name), "ForwardedMessage.eml");
     return;
   }
 
