@@ -590,11 +590,8 @@ public abstract class ScriptableObject implements Scriptable {
         catch (JavaScriptException jse) {
             // fall through to error 
         }
-        Object arg = typeHint == null ? "undefined" : typeHint.toString();
-        throw NativeGlobal.constructError(
-                    Context.getContext(), "TypeError",
-                    ScriptRuntime.getMessage1("msg.default.value", arg),
-                    this);
+        Object arg = (typeHint == null) ? "undefined" : typeHint.toString();
+        throw NativeGlobal.typeError1("msg.default.value", arg, this);
     }
 
     /**

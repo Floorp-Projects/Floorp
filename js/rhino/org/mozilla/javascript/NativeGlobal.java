@@ -467,6 +467,16 @@ public class NativeGlobal {
                               filename, linep[0], 0, null);
     }
     
+    static EcmaError typeError0(String messageId, Object scope) {
+        return constructError(Context.getContext(), "TypeError",
+            ScriptRuntime.getMessage0(messageId), scope);
+    }
+
+    static EcmaError typeError1(String messageId, Object arg1, Object scope) {
+        return constructError(Context.getContext(), "TypeError",
+            ScriptRuntime.getMessage1(messageId, arg1), scope);
+    }
+
     /**
      * The NativeError functions
      *

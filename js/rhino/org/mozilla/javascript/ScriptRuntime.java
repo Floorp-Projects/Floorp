@@ -459,17 +459,11 @@ public class ScriptRuntime {
                                       Class staticClass)
     {
         if (val == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         if (val instanceof Scriptable) {
             if (val == Undefined.instance) {
-                throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.undef.to.object"),
-                        scope);
+                throw NativeGlobal.typeError0("msg.undef.to.object", scope);
             }
             return (Scriptable) val;
         }
@@ -719,10 +713,7 @@ public class ScriptRuntime {
             s = toObject(scope, obj);
         }
         if (s == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         return s.getPrototype();
     }
@@ -749,10 +740,7 @@ public class ScriptRuntime {
             s = toObject(scope, obj);
         }
         if (s == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         return s.getParentScope();
     }
@@ -774,10 +762,7 @@ public class ScriptRuntime {
             s = s.getPrototype();
         }
         if (start == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         start.setPrototype(result);
         return result;
@@ -800,10 +785,7 @@ public class ScriptRuntime {
             s = s.getParentScope();
         }
         if (start == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         start.setParentScope(result);
         return result;
@@ -819,10 +801,7 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         Scriptable m = start;
         do {
@@ -1207,10 +1186,8 @@ public class ScriptRuntime {
             function = (Function) fun;
         }
         catch (ClassCastException e) {
-            throw NativeGlobal.constructError
-                (Context.getContext(), "TypeError",
-                 ScriptRuntime.getMessage1("msg.isnt.function", toString(fun)),
-                        scope);
+            throw NativeGlobal.typeError1
+                ("msg.isnt.function", toString(fun), scope);
         }
 
         Scriptable thisObj;
@@ -1285,10 +1262,8 @@ public class ScriptRuntime {
         } catch (ClassCastException e) {
             // fall through to error
         }
-        throw NativeGlobal.constructError
-            (Context.getContext(), "TypeError",
-             ScriptRuntime.getMessage1("msg.isnt.function", toString(fun)),
-                    scope);
+        throw NativeGlobal.typeError1
+            ("msg.isnt.function", toString(fun), scope);
     }
 
     public static Scriptable newObjectSpecial(Context cx, Object fun,
@@ -1401,10 +1376,7 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         Scriptable m = start;
         do {
@@ -1497,10 +1469,7 @@ public class ScriptRuntime {
             start = toObject(scope, obj);
         }
         if (start == null) {
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.null.to.object"),
-                        scope);
+            throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
         Scriptable m = start;
         do {
@@ -1530,10 +1499,7 @@ public class ScriptRuntime {
         }
         Object result = ((Scriptable) val).getDefaultValue(null);
         if (result != null && result instanceof Scriptable)
-            throw NativeGlobal.constructError(
-                        Context.getContext(), "TypeError",
-                        ScriptRuntime.getMessage0("msg.bad.default.value"),
-                        val);
+            throw NativeGlobal.typeError0("msg.bad.default.value", val);
         return result;
     }
 
@@ -1683,10 +1649,7 @@ public class ScriptRuntime {
     public static boolean instanceOf(Scriptable scope, Object a, Object b) {
         // Check RHS is an object
         if (! (b instanceof Scriptable)) {
-            throw NativeGlobal.constructError(
-                Context.getContext(), "TypeError",
-                ScriptRuntime.getMessage0("msg.instanceof.not.object"),
-                scope);
+            throw NativeGlobal.typeError0("msg.instanceof.not.object", scope);
         }
 
         // for primitive values on LHS, return false
@@ -1730,11 +1693,7 @@ public class ScriptRuntime {
      */
     public static boolean in(Object a, Object b, Scriptable scope) {
         if (!(b instanceof Scriptable)) {
-            throw NativeGlobal.constructError(
-                Context.getContext(), 
-                "TypeError",
-                ScriptRuntime.getMessage0("msg.instanceof.not.object"), 
-                scope);
+            throw NativeGlobal.typeError0("msg.instanceof.not.object", scope);
         }
         String s = getStringId(a);
         return s != null

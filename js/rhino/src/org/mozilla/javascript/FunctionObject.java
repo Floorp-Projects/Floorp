@@ -457,9 +457,8 @@ public class FunctionObject extends NativeFunction {
                 thisObj = thisObj.getPrototype();
                 if (thisObj == null || !useDynamicScope) {
                     // Couldn't find an object to call this on.
-                    String msg = Context.getMessage1
-                        ("msg.incompat.call", names[0]);
-                    throw NativeGlobal.constructError(cx, "TypeError", msg, scope);
+                    throw NativeGlobal.typeError1
+                        ("msg.incompat.call", names[0], scope);
                 }
             }
         }
