@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.30 2001/11/29 19:34:03 ian.mcgreer%sun.com Exp $
+ # $Id: nssinit.c,v 1.31 2001/11/30 23:32:30 relyea%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -105,9 +105,9 @@ static PRBool pk11_password_required = PR_FALSE;
  * the PKCS #11 internal token.
  */
 void
-PK11_ConfigurePKCS11(char *man, char *libdes, char *tokdes, char *ptokdes,
-        char *slotdes, char *pslotdes, char *fslotdes, char *fpslotdes,
-        int minPwd, int pwRequired)
+PK11_ConfigurePKCS11(const char *man, const char *libdes, const char *tokdes,
+	const char *ptokdes, const char *slotdes, const char *pslotdes, 
+	const char *fslotdes, const char *fpslotdes, int minPwd, int pwRequired)
 {
    char *strings = NULL;
    char *newStrings;
@@ -281,19 +281,33 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
      * for file seps as we use for escapes! (sigh).
      */
     lconfigdir = nss_doubleEscape(configdir);
+    if (lconfigdir == NULL) {
+	goto loser;
+    }
     lcertPrefix = nss_doubleEscape(certPrefix);
+    if (lcertPrefix == NULL) {
+	goto loser;
+    }
     lkeyPrefix = nss_doubleEscape(keyPrefix);
+    if (lkeyPrefix == NULL) {
+	goto loser;
+    }
     lsecmodName = nss_doubleEscape(secmodName);
+    if (lsecmodName == NULL) {
+	goto loser;
+    }
 
     moduleSpec = PR_smprintf("name=\"%s\" parameters=\"configdir='%s' certPrefix='%s' keyPrefix='%s' secmod='%s' flags=%s %s\" NSS=\"flags=internal,moduleDB,moduleDBOnly,critical\"",
 		pk11_config_name ? pk11_config_name : NSS_DEFAULT_MOD_NAME,
 		lconfigdir,lcertPrefix,lkeyPrefix,lsecmodName,flags,
 		pk11_config_strings ? pk11_config_strings : "");
+
+loser:
     PORT_Free(flags);
-    PORT_Free(lconfigdir);
-    PORT_Free(lcertPrefix);
-    PORT_Free(lkeyPrefix);
-    PORT_Free(lsecmodName);
+    if (lconfigdir) PORT_Free(lconfigdir);
+    if (lcertPrefix) PORT_Free(lcertPrefix);
+    if (lkeyPrefix) PORT_Free(lkeyPrefix);
+    if (lsecmodName) PORT_Free(lsecmodName);
 
     if (moduleSpec) {
 	SECMODModule *module = SECMOD_LoadModule(moduleSpec,NULL,PR_TRUE);
@@ -370,24 +384,8 @@ NSS_NoDB_Init(const char * configdir)
 void
 NSS_Shutdown(void)
 {
-
-#ifdef notdef
     SECOID_Shutdown();
-
     SECMOD_Shutdown();
-    PR_FREEIF(secmodname);
-    certHandle = CERT_GetDefaultCertDB();
-    if (certHandle)
-    	CERT_ClosePermCertDB(certHandle);
-    CERT_SetDefaultCertDB(NULL); 
-
-    keyHandle = SECKEY_GetDefaultKeyDB();
-    if (keyHandle)
-    	SECKEY_CloseKeyDB(keyHandle);
-    SECKEY_SetDefaultKeyDB(NULL); 
-
-    isInitialized = PR_FALSE;
-#endif
     STAN_Shutdown();
 }
 
