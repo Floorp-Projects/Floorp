@@ -637,6 +637,7 @@ JSInstance *JSType::newInstance(Context *cx)
 {
     JSInstance *result = new JSInstance(cx, this);
     result->mPrototype = mPrototypeObject;
+    result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototypeObject));
     return result;
 }
 
@@ -666,6 +667,7 @@ JSInstance *JSArrayType::newInstance(Context *cx)
 {
     JSInstance *result = new JSArrayInstance(cx, this);
     result->mPrototype = mPrototypeObject;
+    result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototypeObject));
     return result;
 }
 
@@ -673,6 +675,7 @@ JSInstance *JSStringType::newInstance(Context *cx)
 {
     JSInstance *result = new JSStringInstance(cx, this);
     result->mPrototype = mPrototypeObject;
+    result->defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototypeObject));
     return result;
 }
 
@@ -1575,7 +1578,7 @@ Reference *JSType::genReference(bool hasBase, const String& name, NamespaceList 
     return NULL;
 }
 
-JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj) 
+JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj, JSObject *typeProto) 
             : JSObject(Type_Type),
                     mSuperType(super), 
                     mVariableCount(0),
@@ -1610,11 +1613,17 @@ JSType::JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *pro
     else  // must be Object_Type being initialized
         defineVariable(cx, cx->Prototype_StringAtom, (NamespaceList *)NULL, Property::ReadOnly | Property::DontDelete, this, JSValue(mPrototypeObject));
 
-    // the __proto__ of a type is the super-type's prototype object, or for 'class Object' type object it's the Object's prototype object
-    if (mSuperType)
-        mPrototype = mSuperType->mPrototypeObject;
-    else // must be Object_Type being initialized
-        mPrototype = mPrototypeObject;
+    if (typeProto)
+        mPrototype = typeProto;
+    else {
+        // the __proto__ of a type is the super-type's prototype object, or for 'class Object' type object it's the Object's prototype object
+        if (mSuperType)
+            mPrototype = mSuperType->mPrototypeObject;
+        else // must be Object_Type being initialized
+            mPrototype = mPrototypeObject;
+    }
+    defineVariable(cx, cx->UnderbarPrototype_StringAtom, NULL, 0, Object_Type, JSValue(mPrototype));
+    defineVariable(cx, cx->Constructor_StringAtom, (NamespaceList *)NULL, 0, Object_Type, JSValue(this));
 }
 
 JSType::JSType(JSType *xClass)     // used for constructing the static component type
@@ -2953,8 +2962,7 @@ void Context::initBuiltins()
 
     Object_Type  = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[0].name)], NULL);
     Object_Type->mPrototype->mType = Object_Type;
-    Object_Type->mIsDynamic = true;
-    // XXX aren't all the built-ins thus?
+    Object_Type->mIsDynamic = true;                     // XXX aren't all the built-ins thus?
 
     Type_Type           = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[1].name)], Object_Type);
     Object_Type->mType  = Type_Type;
@@ -2967,8 +2975,14 @@ void Context::initBuiltins()
     // For String, etc. this same issue needs to be finessed
 
     JSFunction *funProto = new JSFunction(this, Object_Type, NULL);
+    funProto->mPrototype = Object_Type->mPrototypeObject;
     Function_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[2].name)], Object_Type, funProto);
+    Function_Type->mPrototype = Function_Type->mPrototypeObject;
     funProto->mType = Function_Type;
+
+    // now we can bootstrap the Object prototype (__proto__) to be the Function prototype
+    Object_Type->mPrototype = Function_Type->mPrototypeObject;
+
     
     JSObject *numProto  = new JSObject();
     Number_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[3].name)], Object_Type, numProto);
@@ -2983,7 +2997,7 @@ void Context::initBuiltins()
     strProto->mPrivate = (void *)(&Empty_StringAtom);
     
     JSArrayInstance *arrayProto = new JSArrayInstance(this, NULL);
-    Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, arrayProto);
+    Array_Type          = new JSArrayType(this, Object_Type, &mWorld.identifiers[widenCString(builtInClasses[6].name)], Object_Type, arrayProto, Function_Type->mPrototypeObject);
     arrayProto->mType = Array_Type;
 
     Boolean_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[7].name)], Object_Type);
@@ -3001,7 +3015,7 @@ void Context::initBuiltins()
     TypeError_Type      = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[19].name)], Error_Type);
     UriError_Type       = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[20].name)], Error_Type);
     
-    // XXX RegExp.prototype is set to a RegExp instance, which isn't ECMA (it's supposed to be an Object instance) bu
+    // XXX RegExp.prototype is set to a RegExp instance, which isn't ECMA (it's supposed to be an Object instance) but
     // is SpiderMonkey compatible.
     RegExp_Type         = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[21].name)], Object_Type);
     Package_Type        = new JSType(this, &mWorld.identifiers[widenCString(builtInClasses[22].name)], Object_Type);
@@ -3241,6 +3255,7 @@ Context::Context(JSObject **global, World &world, Arena &a, Pragma::Flags flags)
       LeftContext_StringAtom    (world.identifiers["leftContext"]),
       RightContext_StringAtom   (world.identifiers["rightContext"]),
       Dollar_StringAtom		(world.identifiers["$"]),
+      UnderbarPrototype_StringAtom  (world.identifiers["__proto__"]),
 
       mWorld(world),
       mScopeChain(NULL),

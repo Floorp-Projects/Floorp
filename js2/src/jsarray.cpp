@@ -219,9 +219,14 @@ static JSValue Array_join(Context *cx, const JSValue& thisValue, JSValue *argv, 
     JSValue result = cx->popValue();
     uint32 length = (uint32)(result.toUInt32(cx).f64);    
 
+/* XXX ECMA says that if separator is undefined we use ',', but SpiderMonkey and
+  the test suite want 'undefined' in that case, and only use the ',' when the
+  separator is actually is missing
+*/
+
     const String *separator;
     if (argc == 0)
-        separator = new String(',', 1);
+        separator = new String(widenCString(","));
     else
         separator = argv[0].toString(cx).string;
 
@@ -231,7 +236,7 @@ static JSValue Array_join(Context *cx, const JSValue& thisValue, JSValue *argv, 
     String *S = new String();
 
     for (uint32 k = 0; k < length; k++) {
-        thisObj->getProperty(cx, *numberToString(0), CURRENT_ATTR);
+        thisObj->getProperty(cx, *numberToString(k), CURRENT_ATTR);
         result = cx->popValue();
         if (!result.isUndefined() && !result.isNull())
             *S += *result.toString(cx).string;

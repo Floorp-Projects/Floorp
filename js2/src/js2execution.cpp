@@ -238,11 +238,12 @@ JSValue Context::interpret(JS2Runtime::ByteCodeModule *bcm, int offset, ScopeCha
         mStack = prev->mStack;
         mStackTop = 0;      // we're processing an exception, no need to preserve the stack
         
-        if (jsx.hasKind(Exception::userException)) 
-            pushValue(x);
 
-        if (mCurModule)
+        if (mCurModule) {
             mStackMax = mCurModule->mStackDepth;
+            if (jsx.hasKind(Exception::userException)) 
+                pushValue(x);
+        }
         mLocals = prev->mLocals;
         mArgumentBase = prev->mArgumentBase;
         mThis = prev->mThis;
@@ -331,7 +332,7 @@ JSValue *Context::buildArgumentBlock(JSFunction *target, uint32 &argCount)
                     needDefault = false;
                 }
             }
-            if (needDefault)
+            if (needDefault && target->isChecked())
                 reportError(Exception::referenceError, "missing required argument");
         }
         else {

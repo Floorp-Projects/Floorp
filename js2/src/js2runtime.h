@@ -753,7 +753,7 @@ XXX ...couldn't get this to work...
 
     class JSType : public JSObject {
     public:        
-        JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL);
+        JSType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL, JSObject *typeProto = NULL);
         JSType(JSType *xClass);     // used for constructing the static component type
 
         virtual ~JSType() { }       // keeping gcc happy
@@ -918,8 +918,8 @@ XXX ...couldn't get this to work...
 
     class JSArrayType : public JSType {
     public:
-        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, JSObject *protoObj = NULL) 
-            : JSType(cx, name, super, protoObj), mElementType(elementType)
+        JSArrayType(Context *cx, JSType *elementType, const StringAtom *name, JSType *super, JSObject *protoObj = NULL, JSObject *typeProto = NULL) 
+            : JSType(cx, name, super, protoObj, typeProto), mElementType(elementType)
         {
         }
         virtual ~JSArrayType() { } // keeping gcc happy
@@ -954,8 +954,8 @@ XXX ...couldn't get this to work...
 
     class JSStringType : public JSType {
     public:
-        JSStringType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL) 
-            : JSType(cx, name, super, protoObj)
+        JSStringType(Context *cx, const StringAtom *name, JSType *super, JSObject *protoObj = NULL, JSObject *typeProto = NULL) 
+            : JSType(cx, name, super, protoObj, typeProto)
         {
         }
         virtual ~JSStringType() { } // keeping gcc happy
@@ -1688,6 +1688,7 @@ XXX ...couldn't get this to work...
         StringAtom& LeftContext_StringAtom;
         StringAtom& RightContext_StringAtom;
 	StringAtom& Dollar_StringAtom;
+        StringAtom& UnderbarPrototype_StringAtom;
 
         void initBuiltins();
         void initClass(JSType *type, ClassDef *cdef, PrototypeFunctions *pdef);

@@ -43,6 +43,8 @@
 #include "parser.h"
 #include "numerics.h"
 #include "js2runtime.h"
+#include "jslong.h"
+#include "prmjtime.h"
 
 #include "jsmath.h"
 
@@ -176,9 +178,81 @@ static JSValue Math_pow(Context *cx, const JSValue& /*thisValue*/, JSValue *argv
         return kNaNValue;
     return JSValue(fd::pow(argv[0].toNumber(cx).f64, argv[1].toNumber(cx).f64));
 }
-static JSValue Math_random(Context * /*cx*/, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+
+/*
+ * Math.random() support, lifted from java.util.Random.java.
+ */
+static void random_setSeed(Context *cx, int64 seed)
 {
-    return JSValue(42.0);
+    int64 tmp;
+
+    JSLL_I2L(tmp, 1000);
+    JSLL_DIV(seed, seed, tmp);
+    JSLL_XOR(tmp, seed, cx->mWorld.rngMultiplier);
+    JSLL_AND(cx->mWorld.rngSeed, tmp, cx->mWorld.rngMask);
+}
+
+static void random_init(Context *cx)
+{
+    int64 tmp, tmp2;
+
+    /* Do at most once. */
+    if (cx->mWorld.rngInitialized)
+	return;
+    cx->mWorld.rngInitialized = true;
+
+    /* cx->mWorld.rngMultiplier = 0x5DEECE66DL */
+    JSLL_ISHL(tmp, 0x5D, 32);
+    JSLL_UI2L(tmp2, 0xEECE66DL);
+    JSLL_OR(cx->mWorld.rngMultiplier, tmp, tmp2);
+
+    /* cx->mWorld.rngAddend = 0xBL */
+    JSLL_I2L(cx->mWorld.rngAddend, 0xBL);
+
+    /* cx->mWorld.rngMask = (1L << 48) - 1 */
+    JSLL_I2L(tmp, 1);
+    JSLL_SHL(tmp2, tmp, 48);
+    JSLL_SUB(cx->mWorld.rngMask, tmp2, tmp);
+
+    /* cx->mWorld.rngDscale = (jsdouble)(1L << 54) */
+    JSLL_SHL(tmp2, tmp, 54);
+    JSLL_L2D(cx->mWorld.rngDscale, tmp2);
+
+    /* Finally, set the seed from current time. */
+    random_setSeed(cx, PRMJ_Now());
+}
+
+static uint32 random_next(Context *cx, int bits)
+{
+    int64 nextseed, tmp;
+    uint32 retval;
+
+    JSLL_MUL(nextseed, cx->mWorld.rngSeed, cx->mWorld.rngMultiplier);
+    JSLL_ADD(nextseed, nextseed, cx->mWorld.rngAddend);
+    JSLL_AND(nextseed, nextseed, cx->mWorld.rngMask);
+    cx->mWorld.rngSeed = nextseed;
+    JSLL_USHR(tmp, nextseed, 48 - bits);
+    JSLL_L2I(retval, tmp);
+    return retval;
+}
+
+static float64 random_nextDouble(Context *cx)
+{
+    int64 tmp, tmp2;
+    float64 d;
+
+    JSLL_ISHL(tmp, random_next(cx, 27), 27);
+    JSLL_UI2L(tmp2, random_next(cx, 27));
+    JSLL_ADD(tmp, tmp, tmp2);
+    JSLL_L2D(d, tmp);
+    return d / cx->mWorld.rngDscale;
+}
+
+
+static JSValue Math_random(Context *cx, const JSValue& /*thisValue*/, JSValue * /*argv*/, uint32 /*argc*/)
+{
+    random_init(cx);
+    return JSValue(random_nextDouble(cx));
 }
 static JSValue Math_round(Context *cx, const JSValue& /*thisValue*/, JSValue *argv, uint32 argc)
 {

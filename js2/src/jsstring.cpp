@@ -105,6 +105,32 @@ static JSValue String_valueOf(Context *cx, const JSValue& thisValue, JSValue * /
     return JSValue((String *)thisObj->mPrivate);
 }
 
+static JSValue String_search(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
+{
+    ContextStackReplacement csr(cx);
+
+    ASSERT(thisValue.isObject() || thisValue.isFunction() || thisValue.isType());
+    JSValue S = thisValue.toString(cx);
+
+    JSValue regexp = argv[0];
+    if ((argc == 0) || !regexp.isObject() || (regexp.object->mType != RegExp_Type)) {
+        regexp = kNullValue;
+        regexp = RegExp_Constructor(cx, regexp, argv, 1);
+    }
+    REParseState *parseResult = (REParseState *)(regexp.object->mPrivate);
+
+    /* save & restore lastIndex as it's not to be modified */
+    uint32 lastIndex = parseResult->lastIndex;
+    parseResult->lastIndex = 0;
+    REState *regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
+    parseResult->lastIndex = lastIndex;
+
+    if (regexp_result)
+        return JSValue((float64)(regexp_result->endIndex));
+    else
+        return JSValue(-1.0);
+
+}
 
 static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
 {
@@ -274,13 +300,15 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 struct MatchResult {
     bool failure;
     uint32 endIndex;
-    String **captures;
+    uint32 capturesCount;
+    JSValue *captures;
 };
 
-static void splitMatch(const String *S, uint32 q, const String *R, MatchResult &result)
+static void strSplitMatch(const String *S, uint32 q, const String *R, MatchResult &result)
 {
     result.failure = true;
     result.captures = NULL;
+    result.capturesCount = 0;
 
     uint32 r = R->size();
     uint32 s = S->size();
@@ -292,6 +320,37 @@ static void splitMatch(const String *S, uint32 q, const String *R, MatchResult &
     }
     result.endIndex = q + r;
     result.failure = false;
+}
+
+static void regexpSplitMatch(const String *S, uint32 q, REParseState *RE, MatchResult &result)
+{
+    result.failure = true;
+    result.captures = NULL;
+
+    /* save & restore lastIndex as it's not to be modified */
+    uint32 lastIndex = RE->lastIndex;
+    RE->lastIndex = 0;
+    REState *regexp_result = REExecute(RE, S->begin() + q, S->length() - q);
+    RE->lastIndex = lastIndex;
+
+
+    if (regexp_result) {
+        result.endIndex = regexp_result->endIndex + q;
+        result.failure = false;
+        result.capturesCount = regexp_result->n;
+        if (regexp_result->n) {
+            result.captures = new JSValue[regexp_result->n];
+            for (uint32 i = 0; i < regexp_result->n; i++) {
+                if (regexp_result->parens[i].index != -1) {
+                    String *parenStr = new String(S->substr((uint32)(regexp_result->parens[i].index + q), (uint32)(regexp_result->parens[i].length)));
+                    result.captures[i] = JSValue(parenStr);
+                }
+		else
+                    result.captures[i] = kUndefinedValue;
+            }
+        }
+    }
+
 }
 
 static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -314,9 +373,12 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
     uint32 s = S.string->size();
     uint32 p = 0;
 
-    // XXX if separatorV.isRegExp() -->
-
-    const String *R = separatorV.toString(cx).string;
+    REParseState *RE = NULL;
+    const String *R = NULL;
+    if (separatorV.isObject() && (separatorV.object->mType == RegExp_Type))
+        RE = (REParseState *)(separatorV.object->mPrivate);
+    else
+        R = separatorV.toString(cx).string;
 
     if (lim == 0) 
         return JSValue(A);
@@ -330,13 +392,16 @@ static JSValue String_split(Context *cx, const JSValue& thisValue, JSValue *argv
 */
     if (s == 0) {
         MatchResult z;
-        splitMatch(S.string, 0, R, z);
+        if (RE)
+            regexpSplitMatch(S.string, 0, RE, z);
+        else
+            strSplitMatch(S.string, 0, R, z);
         if (!z.failure)
             return JSValue(A);
         A->setProperty(cx, widenCString("0"), NULL, S);
         return JSValue(A);
     }
-    
+
     while (true) {
         uint32 q = p;
 step11:
@@ -347,7 +412,10 @@ step11:
             return JSValue(A);
         }
         MatchResult z;
-        splitMatch(S.string, q, R, z);
+        if (RE)
+            regexpSplitMatch(S.string, q, RE, z);
+        else
+            strSplitMatch(S.string, q, R, z);
         if (z.failure) {
             q = q + 1;
             goto step11;
@@ -363,9 +431,13 @@ step11:
         if (A->mLength == lim)
             return JSValue(A);
         p = e;
-        // step 20 --> 27, handle captures array (we know it's empty for non regexp)    
-    }
 
+        for (uint32 i = 0; i < z.capturesCount; i++) {
+            A->setProperty(cx, *numberToString(A->mLength), NULL, JSValue(z.captures[i]));
+            if (A->mLength == lim)
+                return JSValue(A);
+        }
+    }
 }
 
 static JSValue String_charAt(Context *cx, const JSValue& thisValue, JSValue *argv, uint32 argc)
@@ -616,6 +688,7 @@ Context::PrototypeFunctions *getStringProtos()
         { "localeCompare",      Number_Type, 1, String_localeCompare },
         { "match",              Array_Type,  1, String_match },
         { "replace",            String_Type, 2, String_replace },
+        { "search",             Number_Type, 1, String_search },
         { "slice",              String_Type, 2, String_slice },
         { "split",              Array_Type,  1, String_split },         // XXX ECMA spec says 2, but tests want 1 XXX
         { "substring",          String_Type, 2, String_substring },

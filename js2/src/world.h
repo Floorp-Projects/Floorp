@@ -76,6 +76,14 @@ namespace JavaScript {
         StringAtomTable identifiers;
 
         World();
+
+        /* Random number generator state, used by jsmath.c. */
+        bool                rngInitialized;
+        int64               rngMultiplier;
+        int64               rngAddend;
+        int64               rngMask;
+        int64               rngSeed;
+        float64             rngDscale;
     };
 }
 #endif
