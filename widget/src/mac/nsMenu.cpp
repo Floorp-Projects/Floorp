@@ -186,7 +186,7 @@ nsMenu::~nsMenu()
   NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	 
    
   // Don't destroy the 4 Golden Hierarchical Menu
-  if((mMacMenuID > 5) || (mMacMenuID < 2) && !mIsHelpMenu) {
+  if( !IsSpecialHierarchicalMenu(mMacMenuID) && !mIsHelpMenu) {
     //printf("WARNING: DeleteMenu called!!! \n");
     ::DeleteMenu(mMacMenuID);
   }
@@ -938,8 +938,7 @@ NS_METHOD nsMenu::SetEnabled(PRBool aIsEnabled)
   // Otherwise we're working with a single "golden child" menu shared by all hierarchicals
   // so if we touch it, it will affect the display of every other hierarchical spawnded from
   // this menu (which would be bad).
-  if ( gCurrentMenuDepth < 2 &&
-       (mMacMenuID > 5 || mMacMenuID < 2)) {
+  if ( gCurrentMenuDepth < 2 && !IsSpecialHierarchicalMenu(mMacMenuID) ) {
     if ( aIsEnabled )
       ::EnableMenuItem(mMacMenuHandle, 0);
     else
@@ -1503,7 +1502,7 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
     // if we're a submenu, we don't have to go through all the gymnastics below
     // to remove ourselves from the menubar and re-add the menu. We just invalidate
     // our parent to change the text of the item.
-    if((mMacMenuID <= 5) && (mMacMenuID >= 2)) {
+    if ( IsSpecialHierarchicalMenu(mMacMenuID) ) {
       nsCOMPtr<nsIMenuListener> listener = do_QueryInterface(mParent);
       listener->SetRebuild(PR_TRUE);
       return NS_OK;
@@ -1548,8 +1547,11 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::hidden, hiddenValue);
     mMenuContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::collapsed, collapsedValue);
     if(hiddenValue == NS_LITERAL_STRING("true") || collapsedValue == NS_LITERAL_STRING("true")) {
-      // hide this menu
-      ::DeleteMenu(mMacMenuID);
+      if ( !IsSpecialHierarchicalMenu(mMacMenuID) ) {
+        // kill this menu, but not if we're special. baaaad things would happen if
+        // we did that.
+        ::DeleteMenu(mMacMenuID);
+      }
     }
     else {
       // Need to get the menuID of the next visible menu
@@ -1610,3 +1612,16 @@ nsMenu :: ContentInserted(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aI
   return NS_OK;
   
 } // ContentInserted
+
+
+//
+// IsSpecialHierarchicalMenu
+//
+// To get dynamic hierarchical menus, the mdef uses 4 "golden child" menus that it swaps in and out.
+// Use this to identify them. They will have id's in the range [2, 5].
+//
+PRBool
+nsMenu :: IsSpecialHierarchicalMenu ( PRInt32 inMenuId )
+{
+  return (mMacMenuID <= 5) && (mMacMenuID >= 2);
+}

@@ -150,6 +150,8 @@ protected:
     // fetch the content node associated with the menupopup item
   void GetMenuPopupContent ( nsIContent** aResult ) ;
 
+  PRBool IsSpecialHierarchicalMenu ( PRInt32 inMenuId ) ;
+  
     // fire handlers for oncreate/ondestroy
   PRBool OnDestroy() ;
   PRBool OnCreate() ;
