@@ -74,10 +74,9 @@ GetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case NOTATION_PUBLICID:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NOTATION_PUBLICID, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NOTATION_PUBLICID, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -92,10 +91,9 @@ GetNotationProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NOTATION_SYSTEMID:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NOTATION_SYSTEMID, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NOTATION_SYSTEMID, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -198,7 +196,9 @@ JSClass NotationClass = {
   EnumerateNotation,
   ResolveNotation,
   JS_ConvertStub,
-  FinalizeNotation
+  FinalizeNotation,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

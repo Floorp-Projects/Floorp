@@ -595,14 +595,11 @@ nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *a
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
   if (NS_FAILED(rv))
       return rv;
-  PRBool ok;
   if (NS_FAILED(rv = securityManager->CheckScriptAccess(cx, jsobj,
-                  NS_DOM_PROP_EVENTTARGET_ADDEVENTLISTENER, PR_TRUE, &ok)))
+                  NS_DOM_PROP_EVENTTARGET_ADDEVENTLISTENER, PR_TRUE)))
   {
     return rv;
   }
-  if (!ok)
-    return NS_ERROR_DOM_PROP_ACCESS_DENIED;
   return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, PR_FALSE);
 }
 

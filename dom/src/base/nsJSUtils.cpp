@@ -654,3 +654,20 @@ nsJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
                                   (void**)aScriptContext);
 }
 
+NS_EXPORT JSBool 
+nsJSUtils::nsCheckAccess(JSContext *cx, JSObject *obj, 
+                         jsid id, JSAccessMode mode,
+	                     jsval *vp)
+{
+    if (mode == JSACC_WATCH) {
+        jsval value, dummy;
+        if (JS_IdToValue(cx, id, &value)) {
+            char *name = JS_GetStringBytes(JS_ValueToString(cx, value));
+            return name && JS_GetProperty(cx, obj, name, &dummy);
+        }
+        return PR_FALSE;
+    }
+    return PR_TRUE;
+}
+
+

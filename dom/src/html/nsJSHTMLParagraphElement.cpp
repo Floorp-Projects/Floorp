@@ -73,10 +73,9 @@ GetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case HTMLPARAGRAPHELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPARAGRAPHELEMENT_ALIGN, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPARAGRAPHELEMENT_ALIGN, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsresult result = NS_OK;
@@ -124,10 +123,9 @@ SetHTMLParagraphElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *v
     switch(JSVAL_TO_INT(id)) {
       case HTMLPARAGRAPHELEMENT_ALIGN:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPARAGRAPHELEMENT_ALIGN, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLPARAGRAPHELEMENT_ALIGN, PR_TRUE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
@@ -192,7 +190,9 @@ JSClass HTMLParagraphElementClass = {
   EnumerateHTMLParagraphElement,
   ResolveHTMLParagraphElement,
   JS_ConvertStub,
-  FinalizeHTMLParagraphElement
+  FinalizeHTMLParagraphElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

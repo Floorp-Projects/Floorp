@@ -75,10 +75,9 @@ GetXULEditorElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     switch(JSVAL_TO_INT(id)) {
       case XULEDITORELEMENT_EDITORSHELL:
       {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULEDITORELEMENT_EDITORSHELL, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_SECURITY_ERR);
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULEDITORELEMENT_EDITORSHELL, PR_FALSE);
+        if (NS_FAILED(rv)) {
+          return nsJSUtils::nsReportError(cx, obj, rv);
         }
         nsIEditorShell* prop;
         nsresult result = NS_OK;
@@ -182,7 +181,9 @@ JSClass XULEditorElementClass = {
   EnumerateXULEditorElement,
   ResolveXULEditorElement,
   JS_ConvertStub,
-  FinalizeXULEditorElement
+  FinalizeXULEditorElement,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

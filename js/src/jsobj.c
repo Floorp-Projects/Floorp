@@ -2513,7 +2513,7 @@ js_CheckAccess(JSContext *cx, JSObject *obj, jsid id, JSAccessMode mode,
     clasp = LOCKED_OBJ_GET_CLASS(obj);
     if (clasp->checkAccess) {
 	JS_UNLOCK_OBJ(cx, pobj);
-	ok = clasp->checkAccess(cx, obj, sprop->id, mode, vp);
+	ok = clasp->checkAccess(cx, obj, id, mode, vp);
 	JS_LOCK_OBJ(cx, pobj);
     } else {
 	ok = JS_TRUE;

@@ -3729,18 +3729,17 @@ NavigatorImpl::Preference(JSContext* cx,
     return NS_ERROR_FAILURE;
   }
 
-  PRBool ok;
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &result);
   if (NS_FAILED(result)) {
     return result;
   }
 
-  secMan->CheckScriptAccess(cx, self, NS_DOM_PROP_NAVIGATOR_PREFERENCE, 
-                            (argc == 1 ? PR_FALSE : PR_TRUE), &ok);
-  if (!ok) {
+  result = secMan->CheckScriptAccess(cx, self, NS_DOM_PROP_NAVIGATOR_PREFERENCE,
+                                     (argc == 1 ? PR_FALSE : PR_TRUE));
+  if (NS_FAILED(result)) {
     //Need to throw error here
-    return NS_ERROR_FAILURE;
+    return result;
   }
 
   NS_WITH_SERVICE(nsIPref, pref, kPrefServiceCID, &result);

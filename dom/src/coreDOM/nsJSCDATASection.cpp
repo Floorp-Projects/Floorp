@@ -156,7 +156,9 @@ JSClass CDATASectionClass = {
   EnumerateCDATASection,
   ResolveCDATASection,
   JS_ConvertStub,
-  FinalizeCDATASection
+  FinalizeCDATASection,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 

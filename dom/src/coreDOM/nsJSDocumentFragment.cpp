@@ -156,7 +156,9 @@ JSClass DocumentFragmentClass = {
   EnumerateDocumentFragment,
   ResolveDocumentFragment,
   JS_ConvertStub,
-  FinalizeDocumentFragment
+  FinalizeDocumentFragment,
+  nsnull,
+  nsJSUtils::nsCheckAccess
 };
 
 
