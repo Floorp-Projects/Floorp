@@ -1263,6 +1263,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChanne
     rv = aNewChannel->GetURI(getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
 
+#ifdef HTTP_DOESNT_CALL_CHECKLOADURI
     // verify that this is a legal redirect
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
@@ -1270,6 +1271,7 @@ NS_IMETHODIMP nsDocLoaderImpl::OnRedirect(nsIHttpChannel *aOldChannel, nsIChanne
     rv = securityManager->CheckLoadURI(oldURI, newURI,
                                        nsIScriptSecurityManager::DISALLOW_FROM_MAIL);
     if (NS_FAILED(rv)) return rv;
+#endif
 
     nsLoadFlags loadFlags = 0;
     PRInt32 stateFlags = nsIWebProgressListener::STATE_REDIRECTING |
