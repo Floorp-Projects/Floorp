@@ -13,38 +13,29 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../../..
-
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-IGNORE_MANIFEST=1
-
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =			\
-	RobotMain.cpp 		\
-	$(NULL)
+PROGRAM		= htmlrobot
 
-BASE_LIBS =	     \
-	-lreg	     \
-	-lxpcom	     \
-	$(NULL)
+REQUIRES	= xpcom
 
-LIBS =		       \
-	-lDebugRobot	\
-	$(BASE_LIBS)   \
-	$(NSPR_LIBS)   \
-	$(NULL)
+CPPSRCS		= RobotMain.cpp
+
+LIBS		= \
+		-lDebugRobot \
+		-lmozreg \
+		-lxpcom \
+		$(NSPR_LIBS) \
+		$(NULL)
+
+include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -DUSE_NSREG
 
-REQUIRES=xpcom
-
-PROGRAM = htmlrobot
-
-include $(topsrcdir)/config/config.mk
-
-include $(topsrcdir)/config/rules.mk

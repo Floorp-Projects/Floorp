@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
@@ -14,166 +13,149 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
-DEPTH=../../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH			= ../../..
+topsrcdir		= @top_srcdir@
+srcdir			= @srcdir@
+VPATH			= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS	= public
+DIRS			= public
 
-PROGRAM	= viewer
+PROGRAM			= viewer
 
-EXPORT_RESOURCE_SAMPLES := \
-	$(wildcard $(srcdir)/samples/test*.html) \
-	$(wildcard $(srcdir)/samples/toolbarTest*.xul) \
-	$(wildcard $(srcdir)/samples/treeTest*.xul) \
-	$(wildcard $(srcdir)/samples/treeTest*.css) \
-	$(wildcard $(srcdir)/samples/xulTest.css) \
-	$(wildcard $(srcdir)/samples/aform.css) \
-	$(wildcard $(srcdir)/samples/bform.css) \
-	$(wildcard $(srcdir)/samples/cform.css) \
-	$(wildcard $(srcdir)/samples/mozform.css) \
-	$(wildcard $(srcdir)/samples/demoform.css) \
-	$(wildcard $(srcdir)/samples/slider*.xul) \
-	$(wildcard $(srcdir)/samples/scrollbar*.xul) \
-	$(srcdir)/resources/find.html \
-	$(srcdir)/resources/printsetup.html \
-	$(srcdir)/resources/image_props.html \
-	$(srcdir)/samples/raptor.jpg \
-	$(srcdir)/samples/Anieyes.gif \
-	$(srcdir)/samples/gear1.gif \
-	$(srcdir)/samples/rock_gra.gif \
-	$(srcdir)/samples/bg.jpg \
-	$(srcdir)/samples/checkboxTest.xul \
-	$(srcdir)/samples/beeptest.html \
-	$(srcdir)/samples/soundtest.html \
-	$(srcdir)/samples/test.wav \
-	$(NULL)
+RUN_VIEWER_SCRIPT	= $(srcdir)/mozilla-viewer.sh
 
-EXPORT_RESOURCE_THROBBER := \
-	$(wildcard $(srcdir)/throbber/anim*.gif) \
-	$(NULL)
+CPPSRCS			= \
+			$(TOOLKIT_CPPSRCS) \
+			nsBaseDialog.cpp \
+			nsFindDialog.cpp \
+			nsXPBaseWindow.cpp \
+			nsTableInspectorDialog.cpp \
+			nsImageInspectorDialog.cpp \
+			nsPrintSetupDialog.cpp \
+			nsBrowserWindow.cpp \
+			nsEditorMode.cpp \
+			nsSetupRegistry.cpp \
+			nsViewerApp.cpp \
+			nsWebCrawler.cpp \
+			$(NULL)
 
-TOOLKIT_CPPSRCS_beos := \
-	nsBeOSMain.cpp
+EXPORT_RESOURCE_SAMPLES	:= \
+			$(wildcard $(srcdir)/samples/test*.html) \
+			$(wildcard $(srcdir)/samples/toolbarTest*.xul) \
+			$(wildcard $(srcdir)/samples/treeTest*.xul) \
+			$(wildcard $(srcdir)/samples/treeTest*.css) \
+			$(wildcard $(srcdir)/samples/slider*.xul) \
+			$(wildcard $(srcdir)/samples/scrollbar*.xul) \
+			$(srcdir)/resources/find.html \
+			$(srcdir)/resources/printsetup.html \
+			$(srcdir)/resources/image_props.html \
+			$(srcdir)/samples/aform.css \
+			$(srcdir)/samples/bform.css \
+			$(srcdir)/samples/cform.css \
+			$(srcdir)/samples/demoform.css \
+			$(srcdir)/samples/mozform.css \
+			$(srcdir)/samples/xulTest.css \
+			$(srcdir)/samples/Anieyes.gif \
+			$(srcdir)/samples/gear1.gif \
+			$(srcdir)/samples/rock_gra.gif \
+			$(srcdir)/samples/beeptest.html \
+			$(srcdir)/samples/soundtest.html \
+			$(srcdir)/samples/bg.jpg \
+			$(srcdir)/samples/raptor.jpg \
+			$(srcdir)/samples/test.wav \
+			$(srcdir)/samples/checkboxTest.xul \
+			$(NULL)
 
-TOOLKIT_CPPSRCS_gtk := \
-	nsGTKMain.cpp \
-	nsGTKMenu.cpp
+EXPORT_RESOURCE_THROBBER := $(wildcard $(srcdir)/throbber/anim*.gif)
 
-TOOLKIT_CPPSRCS_motif := \
-	nsMotifMenu.cpp \
-	nsMotifMain.cpp
-
-TOOLKIT_CPPSRCS_photon := \
-	nsPhMain.cpp \
-	nsPhMenu.cpp
-
-TOOLKIT_CPPSRCS_xlib := \
-	nsXlibMain.cpp
-
+TOOLKIT_CPPSRCS_beos	:= nsBeOSMain.cpp
+TOOLKIT_CPPSRCS_gtk	:= nsGTKMain.cpp nsGTKMenu.cpp
+TOOLKIT_CPPSRCS_motif	:= nsMotifMenu.cpp nsMotifMain.cpp
+TOOLKIT_CPPSRCS_photon	:= nsPhMain.cpp nsPhMenu.cpp
+TOOLKIT_CPPSRCS_xlib	:= nsXlibMain.cpp
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-BEOS_PROGRAM_RESOURCE = $(srcdir)/viewer-beos.rsrc
+BEOS_PROGRAM_RESOURCE	= $(srcdir)/viewer-beos.rsrc
 endif
 
-TOOLKIT_CPPSRCS := $(TOOLKIT_CPPSRCS_$(MOZ_WIDGET_TOOLKIT))
-
-
-CPPSRCS =			   \
-	$(TOOLKIT_CPPSRCS)	   \
-	nsBaseDialog.cpp	   \
-	nsFindDialog.cpp	   \
-	nsXPBaseWindow.cpp	   \
-	nsTableInspectorDialog.cpp \
-	nsImageInspectorDialog.cpp \
-	nsPrintSetupDialog.cpp	   \
-	nsBrowserWindow.cpp	   \
-	nsEditorMode.cpp	   \
-	nsSetupRegistry.cpp	   \
-	nsViewerApp.cpp		   \
-	nsWebCrawler.cpp	   \
-	$(NULL)
+TOOLKIT_CPPSRCS		:= $(TOOLKIT_CPPSRCS_$(MOZ_WIDGET_TOOLKIT))
 
 ifdef MOZ_OJI
-	JSJ_LIB = -ljsj
+JSJ_LIB			= -ljsj
 endif
 
-BASE_LIBS =	     \
-	-lpref	     \
-	$(ZLIB_LIBS) \
-	-lreg	     \
-	-l$(MOZ_LIB_JS_PREFIX)js	     \
-	-lxpcom	     \
-	-lsecfree    \
-	-l$(MOZ_LIB_UTIL_PREFIX)util    \
-	$(NULL)
+BASE_LIBS		= \
+			-lpref \
+			$(ZLIB_LIBS) \
+			-lmozreg \
+			-l$(MOZ_LIB_JS_PREFIX)js \
+			-lxpcom \
+			-lsecfree \
+			-l$(MOZ_LIB_UTIL_PREFIX)util \
+			$(NULL)
 
-GECKO_LIBS =			\
-	-lraptorwebwidget	\
-	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
-	-lraptorgfx		\
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-	$(TIMER_LIBS) \
-	-lraptorhtmlpars	\
-	-lexpat			\
-	-lxmltok		\
-	-ljsdom			\
-	-lcaps          \
-	$(NULL)
+GECKO_LIBS		= \
+			-lraptorwebwidget \
+			$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+			-lraptorgfx \
+			$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+			$(TIMER_LIBS) \
+			-lraptorhtmlpars \
+			-lexpat \
+			-lxmltok \
+			-ljsdom \
+			-lcaps \
+			$(NULL)
 
-IMGLIB_LIBS =	     \
-	-limg	     \
-	$(NULL)
+IMGLIB_LIBS		= \
+			-limg \
+			$(NULL)
 
 ifndef NECKO
-NETLIB_LIBS =	      \
-	-labouturl    \
-	-lfileurl     \
-	-lftpurl      \
-	-lgophurl     \
-	-lhttpurl     \
-	-lremoturl    \
-	-lsockstuburl \
-	-lmimetype    \
-	-lnetcache    \
-	-lnetcnvts    \
-	-lnetlib      \
-	-lnetwork     \
-	-lxp	      \
-	-ljsurl	      \
-	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
-	-lpwcac	      \
-	$(NULL)
+NETLIB_LIBS		= \
+			-labouturl \
+			-lfileurl \
+			-lftpurl \
+			-lgophurl \
+			-lhttpurl \
+			-lremoturl \
+			-lsockstuburl \
+			-lmimetype \
+			-lnetcache \
+			-lnetcnvts \
+			-lnetlib \
+			-lnetwork \
+			-lxp \
+			-ljsurl \
+			-l$(MOZ_LIB_DBM_PREFIX)dbm \
+			-lpwcac \
+			$(NULL)
 else
-NETLIB_LIBS =	      \
-	-lneckoutil_s \
-	-lxp	      \
-	-ljsurl	      \
-	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
-	$(NULL)
+NETLIB_LIBS		= \
+			-lneckoutil_s \
+			-lxp \
+			-ljsurl \
+			-l$(MOZ_LIB_DBM_PREFIX)dbm \
+			$(NULL)
 endif
 
-LIBS =		       \
-	$(GECKO_LIBS)  \
-	$(NETLIB_LIBS) \
-	$(IMGLIB_LIBS) \
-	$(BASE_LIBS)   \
-	$(JSJ_LIB)     \
-	$(NSPR_LIBS)   \
-	$(TK_LIBS)     \
-	$(NULL)
-
-include $(topsrcdir)/config/config.mk
-
-CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
+LIBS			= \
+			$(GECKO_LIBS) \
+			$(NETLIB_LIBS) \
+			$(IMGLIB_LIBS) \
+			$(BASE_LIBS) \
+			$(JSJ_LIB) \
+			$(NSPR_LIBS) \
+			$(TK_LIBS) \
+			$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-RUN_VIEWER_SCRIPT= $(srcdir)/mozilla-viewer.sh
+CXXFLAGS		+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 
 install:: $(PROGRAM) $(RUN_VIEWER_SCRIPT)
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples

@@ -13,60 +13,51 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
+#
 
 DEPTH		= ../..
-
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
 
-IGNORE_MANIFEST=1
-
 include $(DEPTH)/config/autoconf.mk
 
-CPPSRCS =			\
-	TestSocketIO.cpp 	\
-	TestSocketInput.cpp 	\
-	TestSocketTransport.cpp \
-	TestFileInput.cpp 	\
-	TestProtocols.cpp 	\
-	urltest.cpp	 	\
-	TestFileInput2.cpp 	\
-	$(NULL)
+REQUIRES	= libreg xpcom
 
-BASE_LIBS =	     		\
-	-lreg        		\
-	-l$(MOZ_LIB_JS_PREFIX)js        \
-	-lxpcom      		\
-	-lsecfree    		\
-	-l$(MOZ_LIB_UTIL_PREFIX)util    \
-	-lxpcom	     		\
-	$(NULL)
+CPPSRCS		= \
+		TestSocketIO.cpp \
+		TestSocketInput.cpp \
+		TestSocketTransport.cpp \
+		TestFileInput.cpp \
+		TestProtocols.cpp \
+		urltest.cpp \
+		TestFileInput2.cpp \
+		$(NULL)
 
-NETLIB_LIBS =         \
-  	-lneckoutil_s \
-	-lxp          \
-	-ljsurl       \
-	-l$(MOZ_LIB_DBM_PREFIX)dbm      \
-	$(NULL)
+SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=)
 
-LIBS =		       \
-	$(BASE_LIBS)   \
-	$(NETLIB_LIBS) \
-	$(NSPR_LIBS)   \
-	$(NULL)
-
-DEFINES		+= -DUSE_NSREG
-
-REQUIRES=libreg xpcom
+LIBS		= \
+		-lmozreg \
+		-l$(MOZ_LIB_JS_PREFIX)js \
+		-lxpcom \
+		-lsecfree \
+		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-lxpcom \
+		-lneckoutil_s \
+		-lxp \
+		-ljsurl \
+		-l$(MOZ_LIB_DBM_PREFIX)dbm \
+		$(NSPR_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/config.mk
 
-SIMPLE_PROGRAMS	= $(addprefix $(OBJDIR)/, $(CPPSRCS:.cpp=))
-
 # hack until necko lands
 ifndef NECKO
-PUBLIC = $(DEPTH)/netwerk/dist/include
+PUBLIC		= $(DEPTH)/netwerk/dist/include
 endif
 
 include $(topsrcdir)/config/rules.mk
+
+DEFINES		+= -DUSE_NSREG
+

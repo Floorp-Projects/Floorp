@@ -21,65 +21,63 @@ srcdir		= @srcdir@
 VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+
+PROGRAM		= widget
+
+CPPSRCS		= \
+		main.cpp \
+		nsWidgetTest.cpp \
+		$(NULL)
+
 include $(topsrcdir)/config/config.mk
 
-PROGRAM = widget
-
-CPPSRCS = \
-	main.cpp	 \
-	nsWidgetTest.cpp \
-	$(NULL)
-
 ifndef NECKO
-NET_LIBS = 	\
-	-lnetlib \
-	-lremoturl \
-	-lnetcnvts \
-	-lgophurl \
-	-labouturl \
-	-lsockstuburl \
-	-lhttpurl \
-	-lmimetype \
-	-lfileurl \
-	-lftpurl \
-	-lpwcac \
-	-lnetwork \
-	-lnetcache \
-	$(NULL)
-
+NET_LIBS	= \
+		-lnetlib \
+		-lremoturl \
+		-lnetcnvts \
+		-lgophurl \
+		-labouturl \
+		-lsockstuburl \
+		-lhttpurl \
+		-lmimetype \
+		-lfileurl \
+		-lftpurl \
+		-lpwcac \
+		-lnetwork \
+		-lnetcache \
+		$(NULL)
 else
-NET_LIBS = 	\
-	-lneckoutil_s \
-	$(NULL)
+NET_LIBS	= -lneckoutil_s
 endif
 
-LIBS = \
-	-lpref \
-	-lsecfree \
-	-l$(MOZ_LIB_UTIL_PREFIX)util \
-	-limg \
-	$(PNG_LIBS) \
-	$(JPEG_LIBS) \
-	-lxpcom \
-	-lreg \
-	-l$(MOZ_LIB_JS_PREFIX)js \
-	$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
-	-lraptorgfx \
-	$(MOZ_GFX_TOOLKIT_LDFLAGS) \
-	$(TIMER_LIBS) \
-	-lxp \
-	-lraptorhtmlpars \
-	-lexpat \
-	-lxmltok \
-	-ljsurl \
-	-ljsdom \
-	$(NET_LIBS) \
-	$(ZLIB_LIBS) \
-	$(NSPR_LIBS) \
-	$(TK_LIBS) \
-	$(NULL)
-
-CXXFLAGS += $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
+LIBS		= \
+		-lpref \
+		-lsecfree \
+		-l$(MOZ_LIB_UTIL_PREFIX)util \
+		-limg \
+		$(PNG_LIBS) \
+		$(JPEG_LIBS) \
+		-lxpcom \
+		-lmozreg \
+		-l$(MOZ_LIB_JS_PREFIX)js \
+		$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
+		-lraptorgfx \
+		$(MOZ_GFX_TOOLKIT_LDFLAGS) \
+		$(TIMER_LIBS) \
+		-lxp \
+		-lraptorhtmlpars \
+		-lexpat \
+		-lxmltok \
+		-ljsurl \
+		-ljsdom \
+		$(NET_LIBS) \
+		$(ZLIB_LIBS) \
+		$(NSPR_LIBS) \
+		$(TK_LIBS) \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
+
+CXXFLAGS	+= $(MOZ_TOOLKIT_REGISTRY_CFLAGS)
 

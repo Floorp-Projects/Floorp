@@ -26,24 +26,21 @@ MODULE		= mozfind
 LIBRARY_NAME	= mozfind
 IS_COMPONENT	= 1
 
-CPPSRCS		= \
-		nsFindComponent.cpp \
-		$(NULL)
+CPPSRCS		= nsFindComponent.cpp
 
 EXTRA_DSO_LDOPTS = \
-		-L$(DIST)/bin	\
-		-L$(DIST)/lib	\
-		-lxpcom			\
-		-lreg			\
-		$(ZLIB_LIBS)	\
-		$(NSPR_LIBS)	\
-		-l$(MOZ_LIB_JS_PREFIX)js	\
+		-L$(DIST)/bin \
+		-L$(DIST)/lib \
+		-lxpcom \
+		-lmozreg \
+		$(ZLIB_LIBS) \
+		-l$(MOZ_LIB_JS_PREFIX)js \
+		$(NSPR_LIBS) \
 		$(NULL)
 
 ifndef NECKO
-EXTRA_DSO_LDOPTS += \
-		-lnetlib 	\
-		$(NULL)
+EXTRA_DSO_LDOPTS += -lnetlib
 endif
 
 include $(topsrcdir)/config/rules.mk
+
