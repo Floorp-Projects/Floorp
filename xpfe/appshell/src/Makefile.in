@@ -37,6 +37,7 @@ CPPSRCS= \
   nsJSXPConnectFactory.cpp \
   nsAppShellNameSet.cpp \
 	nsFileLocations.cpp     \
+	nsGlobalHistory.cpp	\
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
