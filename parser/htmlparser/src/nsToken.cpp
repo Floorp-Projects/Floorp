@@ -19,26 +19,26 @@
 #include "nsToken.h"
 #include "nsScanner.h"
 
-/**-------------------------------------------------------
+/**
  *  Default constructor
  *  
  *  @update gess 3/25/98
  *  @param  nsString--name of token
- *------------------------------------------------------*/
+ */
 CToken::CToken(const nsString& aName) : mTextValue(aName) {
   mOrdinalValue=0;
 }
  
-/**-------------------------------------------------------
+/**
  *  Decstructor
  *  
  *  @update gess 3/25/98
- *------------------------------------------------------*/
+ */
 CToken::~CToken() {
 }
 
  
-/**-------------------------------------------------------
+/**
  *  Virtual method used to tell this toke to consume his
  *  valid chars.
  *  
@@ -46,29 +46,29 @@ CToken::~CToken() {
  *  @param  aChar -- first char in sequence
  *  @param  aScanner -- object to retrieve data from
  *  @return int error code
- *------------------------------------------------------*/
+ */
 PRInt32 CToken::Consume(PRUnichar aChar,CScanner& aScanner) {
   PRInt32 result=kNoError;
   return result;
 }
 
-/**-------------------------------------------------------
+/**
  *  Method used to set the string value of this token
  *  
  *  @update gess 3/25/98
  *  @param  aValue -- char* containing new value
- *------------------------------------------------------*/
+ */
 void CToken::SetStringValue(const char* aValue) {
   mTextValue=aValue;
 }
 
-/**-------------------------------------------------------
+/**
  *  This debug method causes the token to dump its content
  *  to the given stream (formated for debugging).
  *  
  *  @update gess 3/25/98
  *  @param  ostream -- output stream to accept output data
- *------------------------------------------------------*/
+ */
 void CToken::DebugDumpToken(ostream& anOutputStream) {
   anOutputStream << "[" << GetClassName() << "] ";
   for(int i=0;i<mTextValue.Length();i++){
@@ -77,79 +77,85 @@ void CToken::DebugDumpToken(ostream& anOutputStream) {
   anOutputStream << ": " << mOrdinalValue << endl;
 }
 
-/**-------------------------------------------------------
+/**
  *  This debug method causes the token to dump its content
  *  to the given stream, formated as text.
  *  
  *  @update gess 3/25/98
  *  @param  ostream -- output stream to accept output data
- *------------------------------------------------------*/
+ */
 void CToken::DebugDumpSource(ostream& anOutputStream) {
   char buf[256];
   anOutputStream << mTextValue.ToCString(buf,256);
 }
 
-/**-------------------------------------------------------
+/**
  *  This method retrieves the value of this internal string. 
  *  
  *  @update gess 3/25/98
  *  @return nsString reference to internal string value
- *------------------------------------------------------*/
+ */
 nsString& CToken::GetStringValue(void) {
   return mTextValue;
 }
 
+/**
+ *  This method retrieves the value of this internal string. 
+ *  
+ *  @update gess 3/25/98
+ *  @return nsString reference to internal string value
+ */
 nsString& CToken::GetText(void) {
   return mTextValue;
 }
 
-/**-------------------------------------------------------
+/**
  *  Sets the internal ordinal value for this token.
  *  This method is deprecated, and will soon be going away.
  *  
  *  @update gess 3/25/98
  *  @param  value -- new ordinal value for this token
- *------------------------------------------------------*/
+ */
 void CToken::SetOrdinal(PRInt32 value) {
   mOrdinalValue=value;
 }
 
-/**-------------------------------------------------------
+/**
  *  Retrieves copy of internal ordinal value.
  *  This method is deprecated, and will soon be going away.
  *  
  *  @update gess 3/25/98
  *  @return int containing ordinal value
- *------------------------------------------------------*/
+ */
 PRInt32  CToken::GetOrdinal(void) {
   return mOrdinalValue;
 }
 
-/**-------------------------------------------------------
+/**
  *  Retrieve type of token. This class returns -1, but 
  *  subclasses return something more meaningful.
  *  
  *  @update gess 3/25/98
  *  @return int value containing token type.
- *------------------------------------------------------*/
+ */
 PRInt32  CToken::GetTokenType(void) {
   return -1;
 }
 
-/**-------------------------------------------------------
+/**
  *  retrieve this tokens classname.  
  *  
  *  @update gess 3/25/98
  *  @return char* containing name of class
- *------------------------------------------------------*/
+ */
 const char*  CToken::GetClassName(void) {
   return "token";
 }
 
-/**-------------------------------------------------------
+/**
  *  
  *  @update gess 3/25/98
- *------------------------------------------------------*/
+ */
 void CToken::SelfTest(void) {
 #ifdef _DEBUG
 #endif

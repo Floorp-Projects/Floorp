@@ -49,10 +49,10 @@ class CScanner {
       PRInt32     GetChar(PRUnichar& ch);
       PRInt32     Peek(PRUnichar& ch);
       PRInt32     PutBack(PRUnichar ch);
-      PRInt32      SkipOver(nsString& SkipChars);
+      PRInt32     SkipOver(nsString& SkipChars);
+      PRInt32     SkipOver(PRUnichar aSkipChar);
       PRInt32     SkipPast(nsString& aSequence);
-      PRInt32     SkipPast(PRUnichar aChar);
-      PRInt32      SkipWhite(void);
+      PRInt32     SkipWhite(void);
       PRBool      Eof(void);
 
       PRInt32     ReadUntil(nsString& aString,PRUnichar aTerminal,PRBool addTerminal);

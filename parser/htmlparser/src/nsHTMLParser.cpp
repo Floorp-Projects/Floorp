@@ -459,10 +459,11 @@ PRBool nsHTMLParser::IterateTokens() {
  */
 PRBool nsHTMLParser::Parse(nsIURL* aURL){
   eParseMode  theMode=eParseMode_navigator;
-  char*       theModeStr= PR_GetEnv("PARSE_MODE");
+  const char* theModeStr= PR_GetEnv("PARSE_MODE");
+  const char* other="other";
 
   if(theModeStr) 
-    if(0==nsCRT::strncasecmp("other",theModeStr,5))
+    if(0==nsCRT::strcasecmp(other,theModeStr))
       theMode=eParseMode_other;
 
   return Parse(aURL,theMode);

@@ -41,7 +41,7 @@
 
 class CScanner;
 
-/**-------------------------------------------------------
+/**
  *  Token objects represent sequences of characters as they
  *  are consumed from the input stream (URL). While they're
  *  pretty general in nature, we use subclasses (found in
@@ -49,7 +49,7 @@ class CScanner;
  *  <comment>, <&entity>, <newline>, and <whitespace> tokens.
  *  
  *  @update  gess 3/25/98
- *------------------------------------------------------*/
+ */
 class CToken {
   public:
                           CToken(const nsString& aName);

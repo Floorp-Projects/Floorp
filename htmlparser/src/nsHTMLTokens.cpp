@@ -35,7 +35,7 @@ static nsString     gIdentChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTU
 static nsString     gAttrTextChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-%.");
 static nsString     gAlphaChars("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ");
 static nsAutoString gDigits("0123456789");
-static nsAutoString gWhitespace(" \n\r\t\b");
+static nsAutoString gWhitespace(" \t\b");
 static nsAutoString gOperatorChars("/?.<>[]{}~^+=-!%&*(),|:");
 
 //debug error messages...
@@ -94,9 +94,7 @@ static StrToUnicodeStruct gStrToUnicodeTable[] =
 };
 
 
-
-struct HTMLTagEntry
-{
+struct HTMLTagEntry {
   char      fName[12];
   eHTMLTags  fTagID;
 };
@@ -253,116 +251,116 @@ HTMLAttrEntry gHTMLAttributeTable[] =
 };
 
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CHTMLToken::CHTMLToken(const nsString& aName) : CToken(aName) {
   mTagType=eHTMLTag_unknown;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 eHTMLTags CHTMLToken::GetHTMLTag() {
   return mTagType;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 void CHTMLToken::SetHTMLTag(eHTMLTags aTagType) {
   mTagType=aTagType; 
   return;
 }
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CStartToken::CStartToken(const nsString& aName) : CHTMLToken(aName) {
   mAttributed=PR_FALSE;
 }
 
-/**-------------------------------------------------------
+/*
  *  default destructor
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 eHTMLTags CStartToken::GetHTMLTag(){
   if(eHTMLTag_unknown==mTagType)
     mTagType=DetermineHTMLTagType(mTextValue);
   return mTagType;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CStartToken::GetClassName(void) {
   return "start";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CStartToken::GetTokenType(void) {
   return eToken_start;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 void CStartToken::SetAttributed(PRBool aValue) {
   mAttributed=aValue;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRBool CStartToken::IsAttributed(void) {
   return mAttributed;
 }
 
-/**-------------------------------------------------------
+/*
  *  Consume the identifier portion of the start tag
  *  
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   //if you're here, we've already Consumed the < char, and are
@@ -388,13 +386,13 @@ PRInt32 CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 };
 
 
-/**-------------------------------------------------------
+/*
  *  Dump contents of this token to givne output stream
  *  
  *  @update  gess 3/25/98
  *  @param   out -- ostream to output content
  *  @return  
- *------------------------------------------------------*/
+ */
 void CStartToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
   out << "<" << *cp;
@@ -404,25 +402,25 @@ void CStartToken::DebugDumpSource(ostream& out) {
 }
 
 
-/**-------------------------------------------------------
+/*
  *  default constructor for end token
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- char* containing token name
  *  @return  
- *------------------------------------------------------*/
+ */
 CEndToken::CEndToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_end;
 }
 
-/**-------------------------------------------------------
+/*
  *  Consume the identifier portion of the end tag
  *  
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   //if you're here, we've already Consumed the <! chars, and are
@@ -438,7 +436,7 @@ PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 };
 
 
-/**-------------------------------------------------------
+/*
  *  Asks the token to determine the <i>HTMLTag type</i> of
  *  the token. This turns around and looks up the tag name
  *  in the tag dictionary.
@@ -446,42 +444,42 @@ PRInt32 CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
  *  @update  gess 3/25/98
  *  @param   
  *  @return  eHTMLTag id of this endtag
- *------------------------------------------------------*/
+ */
 eHTMLTags CEndToken::GetHTMLTag(){
   if(eHTMLTag_unknown==mTagType)
     mTagType=DetermineHTMLTagType(mTextValue);
   return mTagType;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CEndToken::GetClassName(void) {
   return "/end";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CEndToken::GetTokenType(void) {
   return eToken_end;
 }
 
-/**-------------------------------------------------------
+/*
  *  Dump contents of this token to givne output stream
  *  
  *  @update  gess 3/25/98
  *  @param   out -- ostream to output content
  *  @return  
- *------------------------------------------------------*/
+ */
 void CEndToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
   out << "</" << *cp << ">";
@@ -489,48 +487,48 @@ void CEndToken::DebugDumpSource(ostream& out) {
 }
 
 
-/**-------------------------------------------------------
+/*
  *  Default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string to init token name with
  *  @return  
- *------------------------------------------------------*/
+ */
 CTextToken::CTextToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_text;
   mTagType=eHTMLTag_text;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CTextToken::GetClassName(void) {
   return "text";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CTextToken::GetTokenType(void) {
   return eToken_text;
 }
 
-/**-------------------------------------------------------
+/*
  *  Consume as much clear text from scanner as possible.
  *
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   static nsAutoString terminals("&<\r\n");
   PRInt32 result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
@@ -538,19 +536,19 @@ PRInt32 CTextToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 };
 
 
-/**-------------------------------------------------------
+/*
  *  Default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_comment;
   mTagType=eHTMLTag_comment;
 }
 
-/**-------------------------------------------------------
+/*
  *  Consume the identifier portion of the comment. 
  *  Note that we've already eaten the "<!" portion.
  *  
@@ -558,7 +556,7 @@ CCommentToken::CCommentToken(const nsString& aName) : CHTMLToken(aName) {
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   PRUnichar ch,ch2;
@@ -587,120 +585,150 @@ PRInt32 CCommentToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   return result;
 };
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char* CCommentToken::GetClassName(void){
   return "/**/";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CCommentToken::GetTokenType(void) {
   return eToken_comment;
 }
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
  *  @return  
- *------------------------------------------------------*/
+ */
 CNewlineToken::CNewlineToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_newline;
   mTagType=eHTMLTag_newline;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CNewlineToken::GetClassName(void) {
   return "crlf";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CNewlineToken::GetTokenType(void) {
   return eToken_newline;
 }
 
-/**-------------------------------------------------------
+/**
+ *  This method retrieves the value of this internal string. 
+ *  
+ *  @update gess 3/25/98
+ *  @return nsString reference to internal string value
+ */
+nsString& CNewlineToken::GetText(void) {
+  static nsAutoString theStr("\n");
+  return theStr;
+}
+
+/*
  *  Consume as many cr/lf pairs as you can find.
  *  
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   mTextValue=aChar;
-  static nsAutoString crlfChars("\r\n");
-  PRInt32 result=aScanner.ReadWhile(mTextValue,crlfChars,PR_FALSE);
-  mTextValue.StripChars("\r");
+
+    //we already read the \r or \n, let's see what's next!
+  PRUnichar nextChar;
+  PRInt32 result=aScanner.Peek(nextChar);
+
+  switch(aChar) {
+    case kNewLine:
+      if(kCR==nextChar) {
+        result=aScanner.GetChar(nextChar);
+        mTextValue+=nextChar;
+      }
+      break;
+    case kCR:
+      if(kNewLine==nextChar) {
+        result=aScanner.GetChar(nextChar);
+        mTextValue+=nextChar;
+      }
+      break;
+    default:
+      break;
+  }
+  
   return result;
 };
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
  *  @return  
- *------------------------------------------------------*/
+ */
 CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),  
   mTextKey() {
   mLastAttribute=PR_FALSE;
   mOrdinalValue=eToken_attribute;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CAttributeToken::GetClassName(void) {
   return "attr";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CAttributeToken::GetTokenType(void) {
   return eToken_attribute;
 }
 
-/**-------------------------------------------------------
+/*
  *  Dump contents of this token to givne output stream
  *  
  *  @update  gess 3/25/98
  *  @param   out -- ostream to output content
  *  @return  
- *------------------------------------------------------*/
+ */
 void CAttributeToken::DebugDumpToken(ostream& out) {
   char* cp=mTextKey.ToNewCString();
   out << "[" << GetClassName() << "] " << *cp << "=";
@@ -710,7 +738,7 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
 }
 
 
-/**-------------------------------------------------------
+/*
  *  This general purpose method is used when you want to
  *  consume a known quoted string. 
  *  
@@ -718,7 +746,7 @@ void CAttributeToken::DebugDumpToken(ostream& out) {
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner){
   static nsAutoString terminals1(">'");
   static nsAutoString terminals2(">\"");
@@ -740,7 +768,7 @@ PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner
   return result;
 }
 
-/**-------------------------------------------------------
+/*
  *  This general purpose method is used when you want to
  *  consume attributed text value.
  *  
@@ -748,7 +776,7 @@ PRInt32 ConsumeQuotedString(PRUnichar aChar,nsString& aString,CScanner& aScanner
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner& aScanner){
 
   PRInt32 result=kNotFound;
@@ -758,14 +786,14 @@ PRInt32 ConsumeAttributeValueText(PRUnichar aChar,nsString& aString,CScanner& aS
 }
 
 
-/**-------------------------------------------------------
+/*
  *  Consume the key and value portions of the attribute.
  *  
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   aScanner.SkipWhite();             //skip leading whitespace                                      
@@ -815,13 +843,13 @@ PRInt32 CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   return result;
 };
 
-/**-------------------------------------------------------
+/*
  *  Dump contents of this token to givne output stream
  *  
  *  @update  gess 3/25/98
  *  @param   out -- ostream to output content
  *  @return  
- *------------------------------------------------------*/
+ */
 void CAttributeToken::DebugDumpSource(ostream& out) {
   char* cp=mTextKey.ToNewCString();
   out << " " << *cp;
@@ -835,41 +863,41 @@ void CAttributeToken::DebugDumpSource(ostream& out) {
     out<<">";
 }
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
  *  @return  
- *------------------------------------------------------*/
+ */
 CWhitespaceToken::CWhitespaceToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_whitespace;
   mTagType=eHTMLTag_whitespace;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CWhitespaceToken::GetClassName(void) {
   return "ws";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CWhitespaceToken::GetTokenType(void) {
   return eToken_whitespace;
 }
 
-/**-------------------------------------------------------
+/*
  *  This general purpose method is used when you want to
  *  consume an aribrary sequence of whitespace. 
  *  
@@ -877,7 +905,7 @@ PRInt32 CWhitespaceToken::GetTokenType(void) {
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   mTextValue=aChar;
@@ -886,13 +914,13 @@ PRInt32 CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   return result;
 };
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
  *  @return  
- *------------------------------------------------------*/
+ */
 CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
   mOrdinalValue=eToken_entity;
 #ifdef VERBOSE_DEBUG
@@ -902,14 +930,14 @@ CEntityToken::CEntityToken(const nsString& aName) : CHTMLToken(aName) {
 #endif
 }
 
-/**-------------------------------------------------------
+/*
  *  Consume the rest of the entity. We've already eaten the "&".
  *  
  *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   mTextValue=aChar;
@@ -917,29 +945,29 @@ PRInt32 CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   return result;
 };
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CEntityToken::GetClassName(void) {
   return "&entity";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CEntityToken::GetTokenType(void) {
   return eToken_entity;
 }
 
-/**-------------------------------------------------------
+/*
  *  This general purpose method is used when you want to
  *  consume an entity &xxxx;. Keep in mind that entities
  *  are <i>not</i> reduced inline.
@@ -948,7 +976,7 @@ PRInt32 CEntityToken::GetTokenType(void) {
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& aScanner){
 
   PRInt32 result=kNotFound;
@@ -976,14 +1004,14 @@ PRInt32 CEntityToken::ConsumeEntity(PRUnichar aChar,nsString& aString,CScanner& 
 }
 
 
-/**-------------------------------------------------------
+/*
  *  This method converts this entity into its underlying
  *  unicode equivalent.
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
   char* cp = mTextValue.ToNewCString();
   PRInt32 index=FindEntityIndex(cp);
@@ -1000,13 +1028,13 @@ PRInt32 CEntityToken::TranslateToUnicodeStr(nsString& aString) {
 }
  
 
-/**-------------------------------------------------------
+/*
  *  This method ensures that the entity table doesn't get
  *  out of sync. Make sure you call this at least once.
  *  
  *  @update  gess 3/25/98
  *  @return  PR_TRUE if valid (ordered correctly)
- *------------------------------------------------------*/
+ */
 PRBool CEntityToken::VerifyEntityTable(){
   PRInt32  count=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
   PRInt32 i,j;
@@ -1020,7 +1048,7 @@ PRBool CEntityToken::VerifyEntityTable(){
 }
 
 
-/**-------------------------------------------------------
+/*
  *  This method is used to convert from a given string (char*)
  *  into a entity index (offset within entity table).
  *  
@@ -1028,7 +1056,7 @@ PRBool CEntityToken::VerifyEntityTable(){
  *  @param   aBuffer -- string to be converted
  *  @param   aBuflen -- optional string length
  *  @return  integer offset of string in table, or kNotFound
- *------------------------------------------------------*/
+ */
 PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
   PRInt32  result=kNotFound;
   PRInt32  cnt=sizeof(gStrToUnicodeTable)/sizeof(StrToUnicodeStruct);
@@ -1059,14 +1087,14 @@ PRInt32 CEntityToken::FindEntityIndex(const char* aBuffer,PRInt32 aBufLen) {
 }
 
 
-/**-------------------------------------------------------
+/*
  *  This method reduces all text entities into their char
  *  representation.
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CEntityToken::ReduceEntities(nsString& aString) {
   PRInt32 result=0;
   PRInt32 amppos=0;
@@ -1094,99 +1122,99 @@ PRInt32 CEntityToken::ReduceEntities(nsString& aString) {
   return result;
 }
 
-/**-------------------------------------------------------
+/*
  *  Dump contents of this token to givne output stream
  *  
  *  @update  gess 3/25/98
  *  @param   out -- ostream to output content
  *  @return  
- *------------------------------------------------------*/
+ */
 void CEntityToken::DebugDumpSource(ostream& out) {
   char* cp=mTextValue.ToNewCString();
   out << "&" << *cp;
   delete cp;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CScriptToken::GetClassName(void) {
   return "script";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CScriptToken::GetTokenType(void) {
   return eToken_script;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CStyleToken::GetClassName(void) {
   return "style";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CStyleToken::GetTokenType(void) {
   return eToken_style;
 }
 
 
-/**-------------------------------------------------------
+/*
  *  default constructor
  *  
  *  @update  gess 3/25/98
  *  @param   aName -- string value to init token name with
  *  @return  
- *------------------------------------------------------*/
+ */
 CSkippedContentToken::CSkippedContentToken(const nsString& aName) : CAttributeToken(aName) {
   mTextKey = "$skipped-content";/* XXX need a better answer! */
   mOrdinalValue=eToken_skippedcontent;
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 const char*  CSkippedContentToken::GetClassName(void) {
   return "skipped";
 }
 
-/**-------------------------------------------------------
+/*
  *  
  *  
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 PRInt32 CSkippedContentToken::GetTokenType(void) {
   return eToken_skippedcontent;
 }
 
-/**-------------------------------------------------------
+/*
  *  Consume content until you find a sequence that matches
  *  this objects mTextValue.
  *  
@@ -1194,7 +1222,7 @@ PRInt32 CSkippedContentToken::GetTokenType(void) {
  *  @param   aChar -- last char consumed from stream
  *  @param   aScanner -- controller of underlying input source
  *  @return  error result
- *------------------------------------------------------*/
+ */
 PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
   PRBool      done=PR_FALSE;
   PRInt32     result=kNoError;
@@ -1210,7 +1238,7 @@ PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
 }
 
 
-/**-------------------------------------------------------
+/*
  *  This method iterates the tagtable to ensure that is 
  *  is proper sort order. This method only needs to be
  *  called once.
@@ -1218,7 +1246,7 @@ PRInt32 CSkippedContentToken::Consume(PRUnichar aChar,CScanner& aScanner) {
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 class CTagTableVerifier {
 public:
   CTagTableVerifier::CTagTableVerifier(){
@@ -1244,19 +1272,19 @@ public:
  * @update  gess4/6/98
  * @param 
  * @return
- *------------------------------------------------------*/
+ */
 eHTMLTokenTypes DetermineTokenType(const nsString& aString){
   return eToken_unknown;
 }
 
-/**-------------------------------------------------------
+/*
  *  This method accepts a string (and optionally, its length)
  *  and determines the eHTMLTag (id) value.
  *  
  *  @update  gess 3/25/98
  *  @param   aString -- string to be convered to id
  *  @return  valid id, or user_defined.
- *------------------------------------------------------*/
+ */
 eHTMLTags DetermineHTMLTagType(const nsString& aString)
 {
   PRInt32  result=-1;
@@ -1297,7 +1325,7 @@ const char* GetTagName(PRInt32 aTag) {
   return result;
 }
 
-/**-------------------------------------------------------
+/*
  *  This method iterates the attribute-table to ensure that is 
  *  is proper sort order. This method only needs to be
  *  called once.
@@ -1305,7 +1333,7 @@ const char* GetTagName(PRInt32 aTag) {
  *  @update  gess 3/25/98
  *  @param   
  *  @return  
- *------------------------------------------------------*/
+ */
 class CAttributeTableVerifier {
 public:
   CAttributeTableVerifier::CAttributeTableVerifier(){
@@ -1326,10 +1354,10 @@ public:
 };
 
 
-/**-------------------------------------------------------
+/*
  *  These objects are here to force the validation of the
  *  tag and attribute tables.
- *------------------------------------------------------*/
+ */
 
 CAttributeTableVerifier gAttributeTableVerifier;
 CTagTableVerifier gTableVerifier;
