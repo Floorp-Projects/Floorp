@@ -2327,7 +2327,7 @@ PresShell::SetPrefNoScriptRule()
     nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&rv));
     NS_ENSURE_SUCCESS(rv, rv);
     PRUint32 index = 0;
-    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:block}"), sInsertPrefSheetRulesAt, &index);
+    rv = sheet->InsertRule(NS_LITERAL_STRING("noscript{display:inline}"), sInsertPrefSheetRulesAt, &index);
     NS_ENSURE_SUCCESS(rv, rv);
   }
   return NS_OK;
