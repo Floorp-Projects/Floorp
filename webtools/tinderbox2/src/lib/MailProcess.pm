@@ -4,9 +4,9 @@
 # mailprocessing program.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2001/01/04 00:30:13 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.5 $ 
+# $Date: 2001/02/16 20:07:03 $ 
+# $Author: kestes%tradinglinx.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/MailProcess.pm,v $ 
 # $Name:  $ 
 
@@ -73,9 +73,13 @@ sub parse_mailprocess_args {
     usage();
   }
 
-  if ($ENV{"REQUEST_METHOD"}) {
-    die("$0: is not a web program, can not be run from the webserver\n");
-  }
+  # For security purposes we may wish to disable web access to the mail
+  # programs but I have also found it useful to bypass sendmail and have
+  # bugzilla run the mail processors directly.
+
+  #  if ($ENV{"REQUEST_METHOD"}) {
+  #    die("$0: is not a web program, can not be run from the webserver\n");
+  #  }
 
   return 1;
 } # parse_args
