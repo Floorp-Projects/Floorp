@@ -349,7 +349,6 @@ nsDST::Insert(void* aKey, void* aValue, void** aOldValue)
 {
   NS_PRECONDITION(0 == (PtrBits(aKey) & (mLevelZeroBit - 1)),
                   "ignored low-order bits are not zero");
-  NS_ENSURE_ARG_POINTER(aValue);
 
   // Initialize OUT parameter
   if (aOldValue) {
