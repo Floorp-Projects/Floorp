@@ -39,15 +39,24 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 import org.mozilla.classfile.JavaVariable;
 
-final class OptLocalVariable implements JavaVariable {
+final class OptLocalVariable implements JavaVariable
+{
 
-    public OptLocalVariable(String name, boolean isParameter) {
+    OptLocalVariable(String name, boolean isParameter)
+    {
         itsName = name;
         itsIsParameter = isParameter;
         // If the variable is a parameter, it could have any type.
         // If it is from a "var" statement, its typeEvent will be set
         // when we see the setVar node.
         itsTypeUnion = isParameter ? Optimizer.AnyType : Optimizer.NoType;
+    }
+
+    static OptLocalVariable get(Node n)
+    {
+        int type = n.getType();
+        if (type != Token.GETVAR && type != Token.SETVAR) Kit.codeBug();
+        return (OptLocalVariable)n.getProp(Node.VARIABLE_PROP);
     }
 
     public String toString() {

@@ -267,13 +267,10 @@ class Block
                 {
                     Node child = n.getFirstChild();
                     if (child.getType() == Token.GETVAR) {
-                        Object theVarProp = child.getProp(Node.VARIABLE_PROP);
-                        if (theVarProp != null) {
-                            int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
-                            if (!itsNotDefSet.test(theVarIndex))
-                                itsUseBeforeDefSet.set(theVarIndex);
-                            itsNotDefSet.set(theVarIndex);
-                        }
+                        int theVarIndex = OptLocalVariable.get(child).getIndex();
+                        if (!itsNotDefSet.test(theVarIndex))
+                            itsUseBeforeDefSet.set(theVarIndex);
+                        itsNotDefSet.set(theVarIndex);
                     }
                 }
                 break;
@@ -282,25 +279,19 @@ class Block
                     Node lhs = n.getFirstChild();
                     Node rhs = lhs.getNext();
                     lookForVariableAccess(rhs, lastUse);
-                    Object theVarProp = n.getProp(Node.VARIABLE_PROP);
-                    if (theVarProp != null) {
-                        int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
-                        itsNotDefSet.set(theVarIndex);
-                        if (lastUse[theVarIndex] != null)
-                            lastUse[theVarIndex].putProp(Node.LASTUSE_PROP,
-                                                                   theVarProp);
-                    }
+                    OptLocalVariable theVar = OptLocalVariable.get(n);
+                    int theVarIndex = theVar.getIndex();
+                    itsNotDefSet.set(theVarIndex);
+                    if (lastUse[theVarIndex] != null)
+                        lastUse[theVarIndex].putProp(Node.LASTUSE_PROP, theVar);
                 }
                 break;
             case Token.GETVAR :
                 {
-                    Object theVarProp = n.getProp(Node.VARIABLE_PROP);
-                    if (theVarProp != null) {
-                        int theVarIndex = ((OptLocalVariable)theVarProp).getIndex();
-                        if (!itsNotDefSet.test(theVarIndex))
-                            itsUseBeforeDefSet.set(theVarIndex);
-                        lastUse[theVarIndex] = n;
-                    }
+                    int theVarIndex = OptLocalVariable.get(n).getIndex();
+                    if (!itsNotDefSet.test(theVarIndex))
+                        itsUseBeforeDefSet.set(theVarIndex);
+                    lastUse[theVarIndex] = n;
                 }
                 break;
             default :
@@ -372,12 +363,8 @@ class Block
             case Token.GETELEM :
                return Optimizer.AnyType;
 
-            case Token.GETVAR : {
-                    OptLocalVariable theVar = (OptLocalVariable)
-                                      (n.getProp(Node.VARIABLE_PROP));
-                    if (theVar != null)
-                        return theVar.getTypeUnion();
-                }
+            case Token.GETVAR :
+                return OptLocalVariable.get(n).getTypeUnion();
 
             case Token.INC :
             case Token.DEC :
@@ -416,7 +403,7 @@ class Block
         }
     }
 
-    boolean findDefPoints(Node n)
+    private static boolean findDefPoints(Node n)
     {
         boolean result = false;
         switch (n.getType()) {
@@ -431,10 +418,9 @@ class Block
             case Token.DEC :
             case Token.INC : {
                     Node firstChild = n.getFirstChild();
-                    OptLocalVariable theVar = (OptLocalVariable)
-                                      (firstChild.getProp(Node.VARIABLE_PROP));
-                    if (theVar != null) {
+                    if (firstChild.getType() == Token.GETVAR) {
                         // theVar is a Number now
+                        OptLocalVariable theVar = OptLocalVariable.get(firstChild);
                         result |= theVar.assignType(Optimizer.NumberType);
                     }
                 }
@@ -447,10 +433,8 @@ class Block
                     Node rhs = nameChild.getNext();
                     if (baseChild != null) {
                         if (baseChild.getType() == Token.GETVAR) {
-                            OptLocalVariable theVar = (OptLocalVariable)
-                                              (baseChild.getProp(Node.VARIABLE_PROP));
-                            if (theVar != null)
-                                theVar.assignType(Optimizer.AnyType);
+                            OptLocalVariable theVar = OptLocalVariable.get(baseChild);
+                            theVar.assignType(Optimizer.AnyType);
                         }
                         result |= findDefPoints(baseChild);
                     }
@@ -461,13 +445,10 @@ class Block
 
             case Token.SETVAR : {
                     Node firstChild = n.getFirstChild();
-                    OptLocalVariable theVar = (OptLocalVariable)
-                                      (n.getProp(Node.VARIABLE_PROP));
-                    if (theVar != null) {
-                        Node rValue = firstChild.getNext();
-                        int theType = findExpressionType(rValue);
-                        result |= theVar.assignType(theType);
-                    }
+                    OptLocalVariable theVar = OptLocalVariable.get(n);
+                    Node rValue = firstChild.getNext();
+                    int theType = findExpressionType(rValue);
+                    result |= theVar.assignType(theType);
                 }
                 break;
         }
@@ -476,7 +457,7 @@ class Block
 
     // a total misnomer for now. To start with we're only trying to find
     // duplicate getProp calls on 'this' that can be merged
-    void localCSE(Node parent, Node n, Hashtable theCSETable, OptFunctionNode theFunction)
+    private void localCSE(Node parent, Node n, Hashtable theCSETable, OptFunctionNode theFunction)
     {
         switch (n.getType()) {
             default : {

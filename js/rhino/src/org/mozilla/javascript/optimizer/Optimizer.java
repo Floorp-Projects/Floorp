@@ -328,11 +328,8 @@ class Optimizer
 */
     private void markDCPNumberContext(Node n)
     {
-        if (inDirectCallFunction && (n.getType() == Token.GETVAR))
-        {
-            OptLocalVariable theVar
-                 = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
-            if ((theVar != null) && theVar.isParameter()) {
+        if (inDirectCallFunction && n.getType() == Token.GETVAR) {
+            if (OptLocalVariable.get(n).isParameter()) {
                 parameterUsedInNumberContext = true;
             }
         }
@@ -340,11 +337,8 @@ class Optimizer
 
     private boolean convertParameter(Node n)
     {
-        if (inDirectCallFunction && (n.getType() == Token.GETVAR))
-        {
-            OptLocalVariable theVar
-                 = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
-            if ((theVar != null) && theVar.isParameter()) {
+        if (inDirectCallFunction && n.getType() == Token.GETVAR) {
+            if (OptLocalVariable.get(n).isParameter()) {
                 n.removeProp(Node.ISNUMBER_PROP);
                 return true;
             }
@@ -367,18 +361,14 @@ class Optimizer
                 return NumberType;
 
             case Token.GETVAR : {
-                    OptLocalVariable theVar
-                         = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
-                    if (theVar != null) {
-                        if (inDirectCallFunction && theVar.isParameter()) {
-                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                            return NumberType;
-                        }
-                        else
-                            if (theVar.isNumber()) {
-                                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                                return NumberType;
-                            }
+                    OptLocalVariable theVar = OptLocalVariable.get(n);
+                    if (inDirectCallFunction && theVar.isParameter()) {
+                        n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
+                        return NumberType;
+                    }
+                    else if (theVar.isNumber()) {
+                        n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
+                        return NumberType;
                     }
                     return NoType;
                 }
@@ -387,9 +377,8 @@ class Optimizer
             case Token.DEC : {
                     Node child = n.getFirstChild();     // will be a GETVAR or GETPROP
                     if (child.getType() == Token.GETVAR) {
-                        OptLocalVariable theVar
-                             = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
-                        if ((theVar != null) && theVar.isNumber()) {
+                        OptLocalVariable theVar = OptLocalVariable.get(child);
+                        if (theVar.isNumber()) {
                             n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             markDCPNumberContext(child);
                             return NumberType;
@@ -404,8 +393,7 @@ class Optimizer
                     Node lChild = n.getFirstChild();
                     Node rChild = lChild.getNext();
                     int rType = rewriteForNumberVariables(rChild);
-                    OptLocalVariable theVar
-                         = (OptLocalVariable)(n.getProp(Node.VARIABLE_PROP));
+                    OptLocalVariable theVar = OptLocalVariable.get(n);
                     if (inDirectCallFunction && theVar.isParameter()) {
                         if (rType == NumberType) {
                             if (!convertParameter(rChild)) {
@@ -418,26 +406,24 @@ class Optimizer
                         else
                             return rType;
                     }
+                    else if (theVar.isNumber()) {
+                        if (rType != NumberType) {
+                            n.removeChild(rChild);
+                            n.addChildToBack(new Node(TO_DOUBLE, rChild));
+                        }
+                        n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
+                        markDCPNumberContext(rChild);
+                        return NumberType;
+                    }
                     else {
-                        if ((theVar != null) && theVar.isNumber()) {
-                            if (rType != NumberType) {
+                        if (rType == NumberType) {
+                            if (!convertParameter(rChild)) {
                                 n.removeChild(rChild);
-                                n.addChildToBack(new Node(TO_DOUBLE, rChild));
+                                n.addChildToBack(new Node(TO_OBJECT,
+                                                          rChild));
                             }
-                            n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
-                            markDCPNumberContext(rChild);
-                            return NumberType;
                         }
-                        else {
-                            if (rType == NumberType) {
-                                if (!convertParameter(rChild)) {
-                                    n.removeChild(rChild);
-                                    n.addChildToBack(new Node(TO_OBJECT,
-                                                              rChild));
-                                }
-                            }
-                            return NoType;
-                        }
+                        return NoType;
                     }
                 }
             case Token.LE :
@@ -685,16 +671,10 @@ class Optimizer
         int type = n.getType();
         if (type == Token.SETVAR) {
             String name = n.getFirstChild().getString();
-            OptLocalVariable theVar = fn.getVar(name);
-            if (theVar != null) {
-                n.putProp(Node.VARIABLE_PROP, theVar);
-            }
+            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
         } else if (type == Token.GETVAR) {
             String name = n.getString();
-            OptLocalVariable theVar = fn.getVar(name);
-            if (theVar != null) {
-                n.putProp(Node.VARIABLE_PROP, theVar);
-            }
+            n.putProp(Node.VARIABLE_PROP, fn.getVar(name));
         }
     }
     private static void buildStatementList_r(Node node, ObjArray statements)

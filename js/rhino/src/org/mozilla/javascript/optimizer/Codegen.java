@@ -1820,8 +1820,7 @@ class BodyCodegen
                 break;
 
               case Token.GETVAR: {
-                OptLocalVariable lVar
-                        = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
+                OptLocalVariable lVar = OptLocalVariable.get(node);
                 visitGetVar(lVar,
                             node.getIntProp(Node.ISNUMBER_PROP, -1) != -1,
                             node.getString());
@@ -2217,8 +2216,7 @@ class BodyCodegen
                 boolean handled = false;
                 if ((child.getType() == Token.GETVAR)
                         && inDirectCallFunction) {
-                    OptLocalVariable lVar
-                        = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
+                    OptLocalVariable lVar = OptLocalVariable.get(child);
                     if (lVar != null && lVar.isParameter()) {
                         handled = true;
                         cfw.addALoad(lVar.getJRegister());
@@ -2417,8 +2415,7 @@ class BodyCodegen
                     boolean handled = false;
                     if ((child.getType() == Token.GETVAR)
                             && inDirectCallFunction) {
-                        OptLocalVariable lVar
-                          = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
+                        OptLocalVariable lVar = OptLocalVariable.get(child);
                         if (lVar != null && lVar.isParameter()) {
                             child.removeProp(Node.ISNUMBER_PROP);
                             generateCodeFromNode(child, node);
@@ -2762,8 +2759,7 @@ class BodyCodegen
     {
         Node child = node.getFirstChild();
         if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-            OptLocalVariable lVar
-                    = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
+            OptLocalVariable lVar = OptLocalVariable.get(child);
             if (lVar.getJRegister() == -1)
                 lVar.assignJRegister(getNewWordPairLocal());
             cfw.addDLoad(lVar.getJRegister());
@@ -2772,10 +2768,9 @@ class BodyCodegen
             cfw.add((isInc) ? ByteCode.DADD : ByteCode.DSUB);
             cfw.addDStore(lVar.getJRegister());
         } else {
-            OptLocalVariable lVar
-                    = (OptLocalVariable)(child.getProp(Node.VARIABLE_PROP));
             int childType = child.getType();
             if (hasVarsInRegs && childType == Token.GETVAR) {
+                OptLocalVariable lVar = OptLocalVariable.get(child);
                 if (lVar == null)
                     lVar = fnCurrent.getVar(child.getString());
                 int reg = lVar.getJRegister();
@@ -2916,8 +2911,7 @@ class BodyCodegen
     private int nodeIsDirectCallParameter(Node node)
     {
         if (node.getType() == Token.GETVAR) {
-            OptLocalVariable lVar
-                    = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
+            OptLocalVariable lVar = OptLocalVariable.get(node);
             if (lVar != null && lVar.isParameter() && inDirectCallFunction &&
                 !itsForcedObjectParameters)
             {
@@ -3267,8 +3261,7 @@ class BodyCodegen
 
     private void visitSetVar(Node node, Node child, boolean needValue)
     {
-        OptLocalVariable lVar;
-        lVar = (OptLocalVariable)(node.getProp(Node.VARIABLE_PROP));
+        OptLocalVariable lVar = OptLocalVariable.get(node);
         // XXX is this right? If so, clean up.
         if (hasVarsInRegs && lVar == null)
             lVar = fnCurrent.getVar(child.getString());
