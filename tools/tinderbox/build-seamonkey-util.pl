@@ -21,7 +21,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.125 $ ';
+$::UtilsVersion = '$Revision: 1.126 $ ';
 
 package TinderUtils;
 
@@ -1695,8 +1695,8 @@ sub BloatTest {
     }
 
     # Figure out testname labels
-    my $leaks_testname_label = "refcnt_leaks";
-    my $bloat_testname_label = "refcnt_bloat";
+    my $leaks_testname_label = "refcnt Leaks";
+    my $bloat_testname_label = "refcnt Bloat";
     unless($bloatdiff_label eq "") {
       $leaks_testname_label = $label_prefix . "refcnt_leaks";
       $bloat_testname_label = $label_prefix . "refcnt_bloat";
