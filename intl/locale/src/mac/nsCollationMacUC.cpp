@@ -227,7 +227,7 @@ NS_IMETHODIMP nsCollationMacUC::CreateRawSortKey(
   if (mCachedKeyLen && 
       mCachedStringLen == stringInLen &&
       !memcmp((void *) mCachedString, 
-              (void *) (const UniChar*) PromiseFlatString(stringIn).get(), stringInLen))
+              (void *) (const UniChar*) PromiseFlatString(stringIn).get(), stringInLen*sizeof(UniChar)))
   {
     memcpy((void *) key, (void *) mCachedKey, mCachedKeyLen);
     *outLen = mCachedKeyLen;
