@@ -306,14 +306,19 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
                                    PRUint32 aLength)
 {
   char buf[1025];
-  PRUint32 amt;
+  PRUint32 amt, size;
   nsresult rv;
   URLLoadInfo* info = (URLLoadInfo*)context;
 
-  do {
-    rv = aIStream->Read(buf, 1024, &amt);
-    if (NS_FAILED(rv)) return rv;
-    if (amt == 0) break;
+  while (aLength) {
+    size = min(aLength, sizeof(buf));
+
+    rv = aIStream->Read(buf, size, &amt);
+    if (NS_FAILED(rv)) {
+      NS_ASSERTION((NS_BASE_STREAM_WOULD_BLOCK != rv), 
+                   "The stream should never block.");
+      return rv;
+    }
     if (gVerbose) {
       buf[amt] = '\0';
       puts(buf);
@@ -321,8 +326,9 @@ InputTestConsumer::OnDataAvailable(nsIChannel* channel,
     if (info) {
       info->mBytesRead += amt;
     }
-  } while (amt);
 
+    aLength -= amt;
+  }
   return NS_OK;
 }
 
