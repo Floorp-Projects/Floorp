@@ -2590,7 +2590,7 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIContent> childcontainer;
-    if ((tmplParentTag == kRuleAtom) || (tmplParentTag == kTemplateAtom)) {
+    if ((tmplParentTag.get() == kRuleAtom) || (tmplParentTag.get() == kTemplateAtom)) {
         childcontainer = dont_QueryInterface(aElement);
     }
     else {
