@@ -498,10 +498,18 @@
 /*----------------------------------------------------------------------*/
 #if XmVersion < 2000
 #define XmNdragStartCallback			"dragStartCallback"
-#define XmNlist							"list"
 #define XmNcomboBoxType					"comboBoxType"
 #define XmCComboBoxType					"ComboBoxType"
 #define XmRComboBoxType					"ComboBoxType"
+#endif
+
+/*----------------------------------------------------------------------*/
+/*																		*/
+/* Things that conflict elsewhere										*/
+/*																		*/
+/*----------------------------------------------------------------------*/
+#ifndef XmNlist
+#define XmNlist							"list"
 #endif
 
 #endif											/* end StringDefs.h		*/
