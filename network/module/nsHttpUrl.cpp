@@ -672,7 +672,9 @@ PRBool nsHttpUrlImpl::Equals(const nsIURL* aURL) const
             nsHttpUrlImpl* other = (nsHttpUrlImpl*)otherURL;
             bIsEqual = PRBool((0 == PL_strcmp(mProtocol, other->mProtocol)) && 
                               (0 == PL_strcasecmp(mHost, other->mHost)) &&
-                              (0 == PL_strcmp(mFile, other->mFile)));
+                              (0 == PL_strcmp(mFile, other->mFile)) &&
+                              (0 == PL_strcmp(mRef, other->mRef)) &&
+                              (0 == PL_strcmp(mSearch, other->mSearch)));
             NS_RELEASE(otherURL);
         }
         NS_UNLOCK_INSTANCE();
