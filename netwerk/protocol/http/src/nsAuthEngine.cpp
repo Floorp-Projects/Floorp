@@ -34,7 +34,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsAuthEngine::nsAuthEngine()
 {
-    Init();
+    if (NS_FAILED(Init()))
+        NS_ERROR("Failed to initialize the auth engine!");
 }
 
 nsAuthEngine::~nsAuthEngine()
@@ -50,7 +51,9 @@ nsAuthEngine::Init()
         return NS_ERROR_OUT_OF_MEMORY;
     if (NS_FAILED(NS_NewISupportsArray(getter_AddRefs(mProxyAuthList))))
         return NS_ERROR_OUT_OF_MEMORY;
-    return NS_OK;
+    nsresult rv = NS_OK;
+    mIOService = do_GetService(kIOServiceCID, &rv);;
+    return rv;
 }
 
 nsresult
@@ -163,11 +166,7 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
         PRBool bProxyAuth)
 {
     nsresult rv;
-    if (!i_URI || !i_AuthString)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_ARG_POINTER(i_URI);
 
     nsISupportsArray* list = bProxyAuth ? mProxyAuthList : mAuthList; 
 
@@ -179,9 +178,29 @@ nsAuthEngine::SetAuth(nsIURI* i_URI,
     if (!list)
         return rv;
 
+    //cleanup case
+    if (!i_AuthString)
+    {
+        PRUint32 count=0; 
+        (void)mAuthList->Count(&count);
+        if (count<=0)
+            return NS_OK; // not found
+        for (PRInt32 i = count-1; i>=0; --i)
+        {
+            nsAuth* auth = (nsAuth*)mAuthList->ElementAt(i);
+            // perfect match case
+            if (auth->uri.get() == i_URI)
+            {
+                rv = list->RemoveElement(auth) ? NS_OK : NS_ERROR_FAILURE;
+                return rv;
+            }
+            // other wacky cases too TODO
+        }
+    }
+
     // TODO Extract user/pass info if available
     char *unescaped_AuthString = nsnull;
-    rv = serv->Unescape(i_AuthString, &unescaped_AuthString);
+    rv = mIOService->Unescape(i_AuthString, &unescaped_AuthString);
     if (NS_FAILED(rv)) {
         CRTFREEIF(unescaped_AuthString);
         return rv;
@@ -245,10 +264,10 @@ nsAuthEngine::SetProxyAuthString(const char* host,
     spec.Append(':');
     spec.AppendInt(port);
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+    if (!mIOService)
+        return NS_ERROR_FAILURE; // Init didn't make ioservice?
 
-    rv = serv->NewURI(spec.GetBuffer(), nsnull, getter_AddRefs(uri));
+    rv = mIOService->NewURI(spec.GetBuffer(), nsnull, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
     return SetAuth(uri, i_AuthString, PR_TRUE);
