@@ -256,7 +256,7 @@ tbx_dirs()
     if [ "$O_WIN" = "ON" ] ; then
         win_set_d1 #also gets the TMP straight and we need the D1 later
     else
-        D1=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER
+        D1=/h/blds-sca15a/export/builds/mccrel/nss/nss$NSSVER
     fi
     if [ -z "${RESULTDIR}" ] ; then # needs to be different for tinderbox
         Debug "Setting RESULTDIR for tinderbox"
@@ -305,13 +305,13 @@ init_dirs()
     elif [ "$O_WIN" = "ON" ] ; then
         win_set_d1
     else
-        D1=/h/hs-sca15c/export/builds/mccrel/nss/nss$NSSVER
+        D1=/h/blds-sca15a/export/builds/mccrel/nss/nss$NSSVER
     fi
 
     set_d2
 
     if [ -z "${BCDIST}" ] ; then
-        #BCDIST=/h/hs-sca15c/export/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
+        #BCDIST=/h/blds-sca15a/export/builds/mccrel/nss/${BC_MASTER}/${MASTERBUILD}/mozilla/dist
         BCDIST=${D1}/../${BC_MASTER}/${MASTERBUILD}/mozilla/dist
         if [ ! -d $BCDIST ] ; then
             ask "Backward compatibility dierectory $BCDIST does not exist, continue" "y" "n" || Exit
