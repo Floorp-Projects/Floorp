@@ -86,8 +86,13 @@ nsGopherChannel::Init(nsIURI* uri)
     if (NS_FAILED(rv))
         return rv;
 
+    // For security reasons, don't allow anything expect the default
+    // gopher port (70). See bug 71916 - bbaetz@cs.mcgill.ca
+/*
     if (mPort==-1)
         mPort=GOPHER_PORT;
+*/
+    mPort=GOPHER_PORT;
 
     // No path given
     if (buffer[0]=='\0' || (buffer[0]=='/' && buffer[1]=='\0')) {
