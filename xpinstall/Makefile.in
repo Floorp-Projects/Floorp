@@ -32,7 +32,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= public res src stub
 
-ifeq ($(OS_ARCH),Linux))
+ifeq ($(OS_ARCH),Linux)
 ifdef MOZ_ENABLE_GTK
 DIRS		+= wizard/unix/src2
 endif
