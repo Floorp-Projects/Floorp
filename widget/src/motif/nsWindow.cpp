@@ -63,14 +63,13 @@ extern XtAppContext gAppContext;
 //
 //-------------------------------------------------------------------------
 nsWindow::nsWindow():
-  mEventListener(nsnull),
-  mMouseListener(nsnull),
-  mToolkit(nsnull),
-  mFontMetrics(nsnull),
-  mContext(nsnull),
   mWidget(nsnull),
   mEventCallback(nsnull),
-  mIgnoreResize(PR_FALSE)
+  mContext(nsnull),
+  mFontMetrics(nsnull),
+  mToolkit(nsnull),
+  mMouseListener(nsnull),
+  mEventListener(nsnull)
 {
   NS_INIT_REFCNT();
   strcpy(gInstanceClassName, "nsWindow");
@@ -267,8 +266,6 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
   InitDeviceContext(aContext, 
                     (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL));
   
-  Widget frameParent = 0;
-
    // XXX: This is a kludge, need to be able to create multiple top 
    // level windows instead.
   if (gFirstTopLevelWindow == 0) {
@@ -494,7 +491,6 @@ nsresult nsWindow::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_OK;
     }
 
-    static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
     if (aIID.Equals(kIWidgetIID)) {
         *aInstancePtr = (void*) ((nsIWidget*)this);
         AddRef();
@@ -639,6 +635,7 @@ NS_METHOD nsWindow::Show(PRBool aState)
 NS_METHOD nsWindow::SetModal(void)
 {
   //XXX:Implement this
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -1157,7 +1154,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   if (numChildren > 0) {
     WidgetList children;
     XtVaGetValues(mWidget, XtNchildren, &children, nsnull);
-    int i ;
+    unsigned int i;
     for(i = 0; i < numChildren; i++) {
       Position x;
       Position y;
@@ -1419,7 +1416,7 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
   nsRect* size = aEvent.windowSize;
 
-  if (mEventCallback && !mIgnoreResize) {
+  if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
   return FALSE;
@@ -1447,16 +1444,6 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
  return FALSE;
-}
-
-void nsWindow::SetIgnoreResize(PRBool aIgnore)
-{
-  mIgnoreResize = aIgnore;
-}
-
-PRBool nsWindow::IgnoreResize()
-{
-  return mIgnoreResize;
 }
 
 void nsWindow::SetResizeRect(nsRect& aRect) 
