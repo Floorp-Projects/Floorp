@@ -289,22 +289,22 @@ nsWindowsHooks::CheckSettings( nsIDOMWindowInternal *aParent ) {
                             textKey  = "initialPromptText";
                         }
                         nsXPIDLString text, label, title, yesButtonLabel, noButtonLabel, cancelButtonLabel;
-                        if ( NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( textKey ).GetUnicode(),
+                        if ( NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( textKey ).get(),
                                                                              getter_Copies( text ) ) ) )
                              &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "checkBoxLabel" ),
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "checkBoxLabel" ).get(),
                                                                              getter_Copies( label ) ) ) )
                              &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "title" ),
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "title" ).get(),
                                                                              getter_Copies( title ) ) ) )
                              &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "yesButtonLabel" ),
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "yesButtonLabel" ).get(),
                                                                              getter_Copies( yesButtonLabel ) ) ) )
                              &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "noButtonLabel" ),
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "noButtonLabel" ).get(),
                                                                              getter_Copies( noButtonLabel ) ) ) )
                              &&
-                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "cancelButtonLabel" ),
+                             NS_SUCCEEDED( ( rv = bundle->GetStringFromName( NS_LITERAL_STRING( "cancelButtonLabel" ).get(),
                                                                              getter_Copies( cancelButtonLabel ) ) ) ) ) {
                             // Got the text, now show dialog.
                             PRBool  showDialog = settings->mShowDialog;
