@@ -187,10 +187,14 @@ sub GenerateSQL {
         push(@specialchart, ["bug_id", $type, join(',', @{$M{'bug_id'}})]);
     }
 
-    if (defined $F{'sql'}) {
-        die "Invalid sql: $F{'sql'}" if $F{'sql'} =~ /;/;
-        push(@wherepart, "( $F{'sql'} )");
-    }
+# This is evil.  We should never allow a user to directly append SQL to
+# any query without a huge amount of validation.  Even then, it would
+# be a bad idea.  Beware that uncommenting this will allow someone to
+# peak at virtually anything they want in the bugs database.
+#    if (defined $F{'sql'}) {
+#        die "Invalid sql: $F{'sql'}" if $F{'sql'} =~ /;/;
+#        push(@wherepart, "( $F{'sql'} )");
+#    }
 
     my @legal_fields = ("product", "version", "rep_platform", "op_sys",
                         "bug_status", "resolution", "priority", "bug_severity",
