@@ -21,10 +21,6 @@
 
 DEPTH=..\..
 
-DIRS=public src build resources \
-!if !defined(DISABLE_TESTS)
-     tests \
-!endif
-     $(NULL)
+DIRS=public src build resources
 
 include <$(DEPTH)\config\rules.mak>
