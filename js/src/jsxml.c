@@ -1051,7 +1051,7 @@ XMLArrayCursorFinish(JSXMLArrayCursor *cursor)
     next = cursor->next;
     if (next)
         next->prevp = cursor->prevp;
-    *cursor->prevp = cursor->next;
+    *cursor->prevp = next;
     cursor->array = NULL;
 }
 
@@ -4159,10 +4159,10 @@ PutProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                      */
                     if (rxml) {
                         JS_ASSERT(JSXML_HAS_KIDS(rxml));
-                        JS_ASSERT(rxml->xml_kids.length != 0);
-                        j = n = rxml->xml_kids.length - 1;
-                        if (i != 0) {
-                            for (j = 0; j < n; j++) {
+                        n = rxml->xml_kids.length;
+                        j = n - 1;
+                        if (n != 0 && i != 0) {
+                            for (n = j, j = 0; j < n; j++) {
                                 if (rxml->xml_kids.vector[j] ==
                                     xml->xml_kids.vector[i-1]) {
                                     break;
