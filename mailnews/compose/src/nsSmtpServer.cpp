@@ -151,7 +151,8 @@ nsSmtpServer::SetDescription(const nsACString &aDescription)
     if (!aDescription.IsEmpty())
         return mPrefBranch->SetCharPref("description", PromiseFlatCString(aDescription).get());
     else
-        return mPrefBranch->ClearUserPref("description");
+        mPrefBranch->ClearUserPref("description");
+    return NS_OK;
 }
 
 // if GetPort returns 0, it means default port
