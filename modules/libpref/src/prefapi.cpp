@@ -1014,7 +1014,7 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
     else if ((((PrefType)(pref->flags)) & PREF_VALUETYPE_MASK) !=
                  (type & PREF_VALUETYPE_MASK))
     {
-        NS_WARNING(nsPrintfCString("Trying to set pref %s to with the wrong type!", key).get());
+        NS_WARNING(nsPrintfCString(192, "Trying to set pref %s to with the wrong type!", key).get());
         return PREF_TYPE_CHANGE_ERR;
     }
 
