@@ -56,7 +56,6 @@
 #include "nsNetUtil.h"
 #include "nsISupportsArray.h"
 #include "nsIIOService.h"
-#include "nsIResProtocolHandler.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
