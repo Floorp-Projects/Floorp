@@ -23,6 +23,7 @@
 
 #include "nsICollation.h"
 #include "nsCollation.h"  // static library
+#include "nsCRT.h"
 
 
 
