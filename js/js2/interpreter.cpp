@@ -112,7 +112,7 @@ struct Activation : public gc_base {
  * Stores saved state from the *previous* activation, the current
  * activation is alive and well in locals of the interpreter loop.
  */
-struct Linkage : public gc_base, public Context::Frame {
+struct Linkage : public Context::Frame, public gc_base {
     Linkage*            mNext;              // next linkage in linkage stack.
     InstructionIterator mReturnPC;
     InstructionIterator mBasePC;
