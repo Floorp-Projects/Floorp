@@ -569,26 +569,35 @@ CompositeDataSourceImpl::Release()
     // it "composes", and each database that the composite datasource
     // observes holds a reference _back_ to the composite datasource.
     NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
-    --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "CompositeDataSourceImpl");
+    nsrefcnt count =
+      PR_AtomicDecrement(NS_REINTERPRET_CAST(PRInt32 *, &mRefCnt));
 
     // When the number of references == the number of datasources,
     // then we know that all that remains are the circular
     // references from those datasources back to us. Release them.
-    if (PRInt32(mRefCnt) == mDataSources.Count()) {
+    if (count == 0) {
+        NS_LOG_RELEASE(this, count, "CompositeDataSourceImpl");
+        mRefCnt = 1;
+        NS_DELETEXPCOM(this);
+        return 0;
+    }
+    else if (PRInt32(count) == mDataSources.Count()) {
+        // We must add count+1 here because otherwise the nested releases
+        // on this object will enter this same code path.
+        PR_AtomicAdd(NS_REINTERPRET_CAST(PRInt32 *, &mRefCnt), count+1);
         for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
-            nsIRDFDataSource* ds = NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
+            nsIRDFDataSource* ds =
+              NS_STATIC_CAST(nsIRDFDataSource*, mDataSources[i]);
             ds->RemoveObserver(this);
             NS_RELEASE(ds);
         }
-        return 0;
-    }
-    else if (mRefCnt == 0) {
-        delete this;
+        NS_LOG_RELEASE(this, 0, "CompositeDataSourceImpl");
+        NS_DELETEXPCOM(this);
         return 0;
     }
     else {
-        return mRefCnt;
+        NS_LOG_RELEASE(this, count, "CompositeDataSourceImpl");
+        return count;
     }
 }
 
