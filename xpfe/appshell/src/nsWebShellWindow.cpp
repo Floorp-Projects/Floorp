@@ -21,6 +21,7 @@
 #include "nsWebShellWindow.h"
 
 #include "nsRepository.h"
+#include "nsIServiceManager.h"
 #include "nsIURL.h"
 
 #include "nsGUIEvent.h"
@@ -30,14 +31,20 @@
 
 #include "nsIWebShell.h"
 
+#include "nsIAppShellService.h"
+
+
 /* Define Class IDs */
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
+static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
 
 /* Define Interface IDs */
 static NS_DEFINE_IID(kISupportsIID,        NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWidgetIID,          NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID,        NS_IWEB_SHELL_IID);
+static NS_DEFINE_IID(kIAppShellServiceIID, NS_IAPPSHELL_SERVICE_IID);
+
 
 
 
@@ -46,6 +53,8 @@ static NS_DEFINE_IID(kIWebShellIID,        NS_IWEB_SHELL_IID);
 
 nsWebShellWindow::nsWebShellWindow()
 {
+  NS_INIT_REFCNT();
+
   mWebShell = nsnull;
   mWindow   = nsnull;
 }
@@ -62,7 +71,25 @@ nsWebShellWindow::~nsWebShellWindow()
 }
 
 
-NS_IMPL_ISUPPORTS(nsWebShellWindow, kISupportsIID);
+NS_IMPL_ADDREF(nsWebShellWindow);
+NS_IMPL_RELEASE(nsWebShellWindow);
+
+nsresult
+nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  nsresult rv = NS_NOINTERFACE;
+
+  if (NULL == aInstancePtr) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  if (aIID.Equals(kISupportsIID)) {
+    *aInstancePtr = (void*)(nsISupports*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return rv;
+}
+
 
 nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
 {
@@ -115,7 +142,7 @@ nsresult nsWebShellWindow::Initialize(nsIAppShell* aShell, nsIURL* aUrl)
   r.x = r.y = 0;
   rv = mWebShell->Init(mWindow->GetNativeData(NS_NATIVE_WIDGET), 
                        r.x, r.y, r.width, r.height,
-                       nsScrollPreference_kAuto, 
+                       nsScrollPreference_kNeverScroll, 
                        PR_TRUE,                     // Allow Plugins 
                        PR_TRUE);
 ///  webShell->SetContainer((nsIWebShellContainer*) this);
@@ -141,6 +168,7 @@ done:
 nsEventStatus PR_CALLBACK
 nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
 {
+  nsresult rv;
   nsEventStatus result = nsEventStatus_eIgnore;
   nsIWebShell* webShell = nsnull;
 
@@ -169,8 +197,19 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
       /*
        * Notify the ApplicationShellService that the window is being closed...
        */
-      case NS_DESTROY:
+      case NS_DESTROY: {
+        nsIAppShellService* appShell;
+
+        rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                          kIAppShellServiceIID,
+                                          (nsISupports**)&appShell);
+        if (NS_SUCCEEDED(rv)) {
+          appShell->CloseTopLevelWindow(aEvent->widget);
+          
+          nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+        }
         break;
+      }
     }
   }
   return nsEventStatus_eIgnore;
