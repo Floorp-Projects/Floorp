@@ -36,7 +36,7 @@
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift"
         command="cmd_cutOrDelete"/>
       <handler event="keypress" keycode="VK_DELETE" modifiers="control"
-        command="cmd_copyOrDelete"/>
+        command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control"
         command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift"
@@ -72,7 +72,7 @@
       <handler event="keypress" key="y" modifiers="accel" command="cmd_redo"/>
 
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cutOrDelete"/>
-      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copyOrDelete"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_undo"/>
@@ -82,7 +82,7 @@
   <binding id="browser">
     <handlers>
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cut"/>
-      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copy"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_HOME" modifiers="control" command="cmd_scrollTop"/>
@@ -103,7 +103,7 @@
   <binding id="editor">
     <handlers>
       <handler event="keypress" keycode="VK_DELETE" modifiers="shift" command="cmd_cutOrDelete"/>
-      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_copyOrDelete"/>
+      <handler event="keypress" keycode="VK_DELETE" modifiers="control" command="cmd_deleteToEndOfLine"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="control" command="cmd_copy"/>
       <handler event="keypress" keycode="VK_INSERT" modifiers="shift" command="cmd_paste"/>
       <handler event="keypress" keycode="VK_BACK" modifiers="alt" command="cmd_undo"/>
