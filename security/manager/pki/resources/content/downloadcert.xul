@@ -38,6 +38,8 @@
 <script src="chrome://global/content/strres.js" />
 <script src="downloadcert.js"/>
 <script src="pippki.js" />
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
+
 
 <box orient="vertical" style="margin: 5px;" flex="1">
 
@@ -107,7 +109,7 @@
     <button id="cancel-button" class="dialog" label="&cancel.label;"
          style="width: 8ex" oncommand="doCancel();" /> 
     <button id="help-button" class="dialog" label="&help.label;"
-         style="width: 8ex" oncommand="alert('Help to add here');" /> 
+         style="width: 8ex" oncommand="openHelp('chrome://help/content/help.xul?new_ca');" /> 
   </box>
 
 </box>

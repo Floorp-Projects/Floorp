@@ -43,6 +43,8 @@
 <script src="chrome://global/content/strres.js" />
 <script src="viewCertDetails.js" />
 <script src="pippki.js" />
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
+
   <grid flex="1">
     <column flex="1"/>
     <rows autostretch="always" >
@@ -65,7 +67,8 @@
         <hbox align="right" flex="1">
           <button id="HelpButton" class="normal" 
                   label="&certmgr.help.label;" 
-                  orient="horizontal" accesskey="h" />
+                  orient="horizontal" accesskey="h" 
+                  oncommand="openHelp('chrome://help/content/help.xul?cert_details');" />
           <button id="closeButton" class="normal" 
                   label="&certmgr.close.label;" 
                   orient="horizontal" accesskey="c"

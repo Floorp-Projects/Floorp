@@ -32,6 +32,7 @@
 <script src="chrome://global/content/strres.js" />
 <script src="pippki.js" />
 <script src="serverCertExpired.js" />
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 <keyset id="keys">
   <key id="enter-key"  keycode="VK_ENTER"  oncommand="doOK()"    />
@@ -58,7 +59,7 @@
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
+    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?exp_web_cert');" /> 
   </box>
 </box>
 </window>

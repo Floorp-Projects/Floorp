@@ -29,6 +29,9 @@ const nsIX509Cert = Components.interfaces.nsIX509Cert;
 const nsICertOutliner = Components.interfaces.nsICertOutliner;
 const nsCertOutliner = "@mozilla.org/security/nsCertOutliner;1";
 
+var helpURL = "chrome://help/content/help.xul";
+var key;
+
 var selected_certs = [];
 var certdb;
 
@@ -76,6 +79,28 @@ function ReloadCerts()
   //emailOutlinerView.loadCerts(nsIX509Cert.EMAIL_CERT);
   userOutlinerView.loadCerts(nsIX509Cert.USER_CERT);
 }
+
+function getSelectedTab()
+{
+  var selTab = document.getElementById('certMgrTabbox').selectedTab;
+  var selTabID = selTab.getAttribute('id');
+  if (selTabID == 'mine_tab') {
+    key = "?my_certs";
+  } else if (selTabID == "websites_tab") {
+    key = "?web_certs";
+  } else if (selTab == "ca_tab") {
+    key = "?ca_certs";
+  }  
+  var context = helpURL + key;
+  return context;
+}
+
+
+function doHelpButton() {
+   var uri = getSelectedTab();
+   openHelp(uri);
+}
+
 
 function getSelectedCerts()
 {

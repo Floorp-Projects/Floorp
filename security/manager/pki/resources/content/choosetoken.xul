@@ -41,6 +41,7 @@
 <script src="chrome://global/content/strres.js" />
 <script src="pippki.js" />
 <script src="choosetoken.js" />
+<script type="application/x-javascript" src="chrome://help/content/help.js" />
 
 <box orient="vertical" style="margin: 5px;" flex="1">
     <titledbox orient="vertical">
@@ -56,7 +57,7 @@
   <button id="cancel-button" class="dialog" label="&cancel.label;"
      style="width: 10ex" onclick="doCancel();" /> 
   <button id="help-button" class="dialog" label="&help.label;"
-    style="width: 10ex" onclick="alert('Will bring up help one day');" /> 
+    style="width: 10ex" oncommand="openHelp('chrome://help/content/help.xul?which_token');" /> 
   </box>
 </box>
 </window>
