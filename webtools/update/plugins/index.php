@@ -146,7 +146,7 @@ include"$page_header";
 <DIV class="item">
     <h2 class="first"><A HREF="http://www.microsoft.com/windows/windowsmedia/default.aspx">Windows Media Player</A></h2>
     <P class="first">By <A HREF="http://www.microsoft.com">Microsoft</A></P>
-    <p class="first">RealPlayer lets you play streaming audio, video, animations, and multimedia presentations on the web.</p>
+    <p class="first">Windows Media Player lets you play streaming audio, video, animations, and multimedia presentations on the web.</p>
     <h3><IMG SRC="/images/install.png" HEIGHT=24 WIDTH=24 ALT="">&nbsp;Download</h3>
     <DIV style="margin-top: 5px; height: 38px">
         <DIV class="iconbar"><IMG SRC="/images/windows_icon.png" HEIGHT=34 WIDTH=34 ALT="">&nbsp;For Windows:<BR>&nbsp;&nbsp;<a href="http://www.microsoft.com/windows/windowsmedia/mp10/default.aspx">Version 10 for Windows XP</a>, <a href="http://www.microsoft.com/windows/windowsmedia/9series/player.aspx">Version 9</a></DIV>
