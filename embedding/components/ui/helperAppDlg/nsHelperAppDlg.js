@@ -408,10 +408,10 @@ nsHelperAppDialog.prototype = {
         }
 
         var useDefault = this.dialogElement( "useSystemDefault" );;
-        if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault) {
+        if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useSystemDefault && !this.mForced) {
             // Open (using system default).
             useDefault.radioGroup.selectedItem = useDefault;
-        } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp) {
+        } else if (this.mLauncher.MIMEInfo.preferredAction == this.nsIMIMEInfo.useHelperApp && !this.mForced) {
             // Open with given helper app.
             var openUsing = this.dialogElement( "openUsing" );
             openUsing.radioGroup.selectedItem = openUsing;
@@ -509,7 +509,9 @@ nsHelperAppDialog.prototype = {
         var needUpdate = false;
         // If current selection differs from what's in the mime info object,
         // then we need to update.
-        if ( this.dialogElement( "saveToDisk" ).selected ) {
+        // However, we don't want to change the action all nsIMIMEInfo objects to
+        // saveToDisk if mForced is true.
+        if ( this.dialogElement( "saveToDisk" ).selected && !this.mForced ) {
             needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.saveToDisk;
             if ( needUpdate )
                 this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.saveToDisk;
@@ -517,7 +519,7 @@ nsHelperAppDialog.prototype = {
             needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.useSystemDefault;
             if ( needUpdate )
                 this.mLauncher.MIMEInfo.preferredAction = this.nsIMIMEInfo.useSystemDefault;
-        } else {
+        } else if ( this.dialogElement( "openUsing" ).selected ) {
             // For "open with", we need to check both preferred action and whether the user chose
             // a new app.
             needUpdate = this.mLauncher.MIMEInfo.preferredAction != this.nsIMIMEInfo.useHelperApp || this.appChanged();
