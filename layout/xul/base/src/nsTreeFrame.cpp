@@ -26,7 +26,10 @@
 #include "nsCellMap.h"
 #include "nsIDOMXULTreeElement.h"
 #include "nsINameSpaceManager.h"
-
+#include "nsTreeRowGroupFrame.h"
+#include "nsXULAtoms.h"
+#include "nsIDOMNodeList.h"
+#include "nsIDOMXULTreeElement.h"
 //
 // NS_NewTreeFrame
 //
@@ -107,6 +110,28 @@ void nsTreeFrame::RangedSelection(nsIPresContext& aPresContext, nsTreeCellFrame*
  // XXX Re-implement!
 }
 
+void
+nsTreeFrame::GetTreeBody(nsTreeRowGroupFrame** aResult)
+{
+  nsIFrame* curr = mFrames.FirstChild();
+  while (curr) {
+    nsCOMPtr<nsIContent> content;
+    curr->GetContent(getter_AddRefs(content));
+    if (content) {
+      nsCOMPtr<nsIAtom> tag;
+      content->GetTag(*getter_AddRefs(tag));
+      if (tag && tag.get() == nsXULAtoms::treechildren) {
+        // This is our actual treechildren frame.
+        nsTreeRowGroupFrame* rowGroup = (nsTreeRowGroupFrame*)curr; // XXX I am evil.
+        *aResult = rowGroup;
+        return;
+      }
+    }
+
+    curr->GetNextSibling(&curr);
+  }
+}
+
 NS_IMETHODIMP 
 nsTreeFrame::HandleEvent(nsIPresContext& aPresContext, 
                              nsGUIEvent*     aEvent,
@@ -114,7 +139,74 @@ nsTreeFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eConsumeDoDefault;
   if (aEvent->message == NS_KEY_DOWN) {
-    printf("YES!\n");
+    nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+    PRUint32 keyCode = keyEvent->keyCode;
+    if (keyCode == NS_VK_UP ||
+        keyCode == NS_VK_DOWN) {
+
+      // Get our treechildren child frame.
+      nsTreeRowGroupFrame* treeRowGroup = nsnull;
+      GetTreeBody(&treeRowGroup);
+
+      if (!treeRowGroup)
+        return NS_OK; // No tree body. Just bail.
+
+      nsCOMPtr<nsIDOMXULTreeElement> treeElement = do_QueryInterface(mContent);
+      nsCOMPtr<nsIDOMNodeList> itemNodeList;
+      nsCOMPtr<nsIDOMNodeList> cellNodeList;
+      treeElement->GetSelectedItems(getter_AddRefs(itemNodeList));
+      treeElement->GetSelectedCells(getter_AddRefs(cellNodeList));
+      PRUint32 itemLength;
+      PRUint32 cellLength;
+      itemNodeList->GetLength(&itemLength);
+      cellNodeList->GetLength(&cellLength);
+
+      PRInt32 rowIndex = -1;
+      PRInt32 cellIndex = 0;
+
+      if (cellLength != 0 && itemLength == 0) {
+        nsCOMPtr<nsIDOMNode> node;
+        cellNodeList->Item(0, getter_AddRefs(node));
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        treeRowGroup->IndexOfCell(content, rowIndex, cellIndex);
+      }
+      else if (cellLength == 0 && itemLength != 0) {
+        nsCOMPtr<nsIDOMNode> node;
+        itemNodeList->Item(0, getter_AddRefs(node));
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        treeRowGroup->IndexOfRow(content, rowIndex);
+      }
+      else if (cellLength != 0 && itemLength != 0) {
+        nsCOMPtr<nsIDOMNode> node;
+        cellNodeList->Item(0, getter_AddRefs(node));
+        nsCOMPtr<nsIContent> content = do_QueryInterface(node);
+        treeRowGroup->IndexOfCell(content, rowIndex, cellIndex);
+      }
+      
+      // We now have a valid row and cell index for the current selection.  Based on the
+      // direction, let's adjust the row and column index.
+      if (rowIndex == -1)
+        rowIndex = 0;
+      else if (keyCode == NS_VK_DOWN)
+        rowIndex++;
+      else if (keyCode == NS_VK_UP)
+        rowIndex--;
+      
+      if (!treeRowGroup->IsValidRow(rowIndex))
+        return NS_OK;
+
+      // Ensure that the required index is visible.
+      treeRowGroup->EnsureRowIsVisible(rowIndex);
+
+      // Now that the row is scrolled into view, we have a frame created. We can retrieve the cell.
+      nsTreeCellFrame* cellFrame;
+      treeRowGroup->GetCellFrameAtIndex(rowIndex, cellIndex, &cellFrame);
+      if (!cellFrame)
+        return NS_OK; // No cell. Whatever. Bail.
+
+      // We got it! Perform the selection.
+      SetSelection(aPresContext, cellFrame);
+    }
   }
   return NS_OK;
 }
@@ -127,7 +219,7 @@ void nsTreeFrame::MoveUp(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
   pFrame->GetColIndex(colIndex);
 	if (rowIndex > 0)
 	{
-		MoveToRowCol(aPresContext, rowIndex-1, colIndex, pFrame);
+		MoveToRowCol(aPresContext, rowIndex-1, colIndex);
 	}
 }
 
@@ -141,7 +233,7 @@ void nsTreeFrame::MoveDown(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
 
 	if (rowIndex < totalRows-1)
 	{
-		MoveToRowCol(aPresContext, rowIndex+1, colIndex, pFrame);
+		MoveToRowCol(aPresContext, rowIndex+1, colIndex);
 	}
 }
 
@@ -153,31 +245,31 @@ void nsTreeFrame::MoveLeft(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame
   pFrame->GetColIndex(colIndex);
 	if (colIndex > 0)
 	{
-		MoveToRowCol(aPresContext, rowIndex, colIndex-1, pFrame);
+		MoveToRowCol(aPresContext, rowIndex, colIndex-1);
 	}
 }
 
-void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+void nsTreeFrame::MoveRight(nsIPresContext& aPresContext, nsTreeCellFrame* aFrame)
 {
 	PRInt32 rowIndex;
-  pFrame->GetRowIndex(rowIndex);
+  aFrame->GetRowIndex(rowIndex);
 	PRInt32 colIndex;
-  pFrame->GetColIndex(colIndex);
+  aFrame->GetColIndex(colIndex);
 	PRInt32 totalCols = mCellMap->GetColCount();
 
 	if (colIndex < totalCols-1)
 	{
-		MoveToRowCol(aPresContext, rowIndex, colIndex+1, pFrame);
+		MoveToRowCol(aPresContext, rowIndex, colIndex+1);
 	}
 }
 
-void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 row, PRInt32 col, nsTreeCellFrame* pFrame)
+void nsTreeFrame::MoveToRowCol(nsIPresContext& aPresContext, PRInt32 aRow, PRInt32 aCol)
 {
-	nsTableCellFrame *cellFrame = mCellMap->GetCellInfoAt(row, col);
+	nsTableCellFrame* cellFrame = mCellMap->GetCellInfoAt(aRow, aCol);
 
 	// We now have the cell that should be selected. 
-	nsTreeCellFrame* pTreeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
-	SetSelection(aPresContext, pTreeCell);
+	nsTreeCellFrame* treeCell = NS_STATIC_CAST(nsTreeCellFrame*, cellFrame);
+	SetSelection(aPresContext, treeCell);
 }
 
 NS_IMETHODIMP 

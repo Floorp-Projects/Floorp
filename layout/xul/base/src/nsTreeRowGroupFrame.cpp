@@ -364,7 +364,7 @@ nsTreeRowGroupFrame::FindPreviousRowContent(PRInt32& aDelta, nsIContent* aUpward
 }
 
 void
-nsTreeRowGroupFrame::GetVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
+nsTreeRowGroupFrame::ComputeVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
 {
   PRInt32 childCount;
   aParent->ChildCount(childCount);
@@ -379,7 +379,7 @@ nsTreeRowGroupFrame::GetVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
     }
     else if (tag.get() == nsXULAtoms::treeitem) {
       // Descend into this row group and try to find the next row.
-      GetVisibleRowCount(aCount, childContent);
+      ComputeVisibleRowCount(aCount, childContent);
 
       // If it's open, descend into its treechildren.
       nsCOMPtr<nsIAtom> openAtom = dont_AddRef(NS_NewAtom("open"));
@@ -401,7 +401,7 @@ nsTreeRowGroupFrame::GetVisibleRowCount(PRInt32& aCount, nsIContent* aParent)
             break;
         }
         if (j >= 0 && grandChild)
-          GetVisibleRowCount(aCount, grandChild);
+          ComputeVisibleRowCount(aCount, grandChild);
       }
     }
   }
@@ -656,7 +656,7 @@ nsTreeRowGroupFrame::ReflowAfterRowLayout(nsIPresContext&       aPresContext,
       CreateScrollbar(aPresContext);
 
     PRInt32 rowCount = 0;
-    GetVisibleRowCount(rowCount, mContent); // XXX This sucks! Needs to be cheap!
+    ComputeVisibleRowCount(rowCount, mContent); // XXX This sucks! Needs to be cheap!
 
     // Set the maxpos of the scrollbar.
     nsCOMPtr<nsIContent> scrollbarContent;
@@ -1091,3 +1091,34 @@ void nsTreeRowGroupFrame::CreateScrollbar(nsIPresContext& aPresContext)
 
   }
 }
+
+void
+nsTreeRowGroupFrame::IndexOfCell(nsIContent* aCellContent, PRInt32& aRowIndex, PRInt32& aColIndex)
+{
+}
+  
+void
+nsTreeRowGroupFrame::IndexOfRow(nsIContent* aRowContent, PRInt32& aRowIndex)
+{
+
+}
+
+PRBool
+nsTreeRowGroupFrame::IsValidRow(PRInt32 aRowIndex)
+{
+  return PR_FALSE;
+}
+
+void
+nsTreeRowGroupFrame::EnsureRowIsVisible(PRInt32 aRowIndex)
+{
+
+}
+
+void
+nsTreeRowGroupFrame::GetCellFrameAtIndex(PRInt32 aRowIndex, PRInt32 aColIndex, 
+                                         nsTreeCellFrame** aResult)
+{
+
+}
+
