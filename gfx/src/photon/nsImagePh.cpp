@@ -480,7 +480,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	  return NS_ERROR_FAILURE;
     }
 
-#if 1
+#if 0
+#ifdef DEBUG
     /* Try to dump the image to a BMP file */
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image to BMP\n"));
 
@@ -492,6 +493,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 
 
     do_bmp(ptr, mImage.bpl/3, mImage.size.w, mImage.size.h);
+#endif
 #endif
 
   }
