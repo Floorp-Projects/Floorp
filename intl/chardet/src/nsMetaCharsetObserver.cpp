@@ -29,6 +29,7 @@
 #include "nsISupports.h"
 #include "nsCRT.h"
 #include "nsIParser.h"
+#include "nsIAppStartupNotifier.h"
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsIServiceManager.h"
@@ -256,10 +257,17 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports*, const PRUnichar*, const PRUnichar*)
+NS_IMETHODIMP nsMetaCharsetObserver::Observe(nsISupports *aSubject,
+                            const PRUnichar *aTopic,
+                               const PRUnichar *aData) 
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
-}                                                  
+  nsresult rv = NS_OK;
+  nsLiteralString aTopicString(aTopic);
+  if (aTopicString.Equals(NS_LITERAL_STRING(APPSTARTUP_CATEGORY))) //"app_startup"
+    rv = Start();
+  return rv;
+}
+
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::Start() 
 {
