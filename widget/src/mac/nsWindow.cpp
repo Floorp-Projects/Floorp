@@ -178,7 +178,6 @@ nsWindow::nsWindow(nsISupports *aOuter):
   mDisplayed = PR_FALSE;
   mLowerLeft = PR_FALSE;
   mCursor = eCursor_standard;
-  mClientData = nsnull;
 }
 
 
@@ -248,8 +247,8 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
 	bounds.left = aRect.y;
 	bounds.bottom = aRect.y+aRect.height;
 	bounds.right = aRect.x+aRect.width;
-	mWindowPtr = NewCWindow(0,&bounds,"\p",TRUE,0,(GrafPort*)-1,TRUE,0);
-
+	mWindowPtr = NewCWindow(&mWindowRecord,&bounds,"\ptestwindow",TRUE,0,(GrafPort*)-1,TRUE,(long)this);
+	
   //InitToolkit(aToolkit, aWidgetParent);
   
   // save the event callback function
@@ -345,9 +344,6 @@ void nsWindow::CreateWindow(nsNativeWidget aNativeParent,
         aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 }
 
-
-
-
 //-------------------------------------------------------------------------
 //
 // create with nsIWidget parent
@@ -364,6 +360,7 @@ void nsWindow::Create(nsIWidget *aParent,
 {
     if (aParent)
       aParent->AddChild(this);
+      
     CreateWindow((nsNativeWidget)((aParent) ? aParent->GetNativeData(NS_NATIVE_WIDGET) : 0), 
         aParent, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit,
         aInitData);
@@ -385,24 +382,6 @@ void nsWindow::Create(nsNativeWidget aParent,
     CreateWindow(aParent, 0, aRect, aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Accessor functions to get/set the client data
-//
-//-------------------------------------------------------------------------
-
-NS_IMETHODIMP nsWindow::GetClientData(void*& aClientData)
-{
-  aClientData = mClientData;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsWindow::SetClientData(void* aClientData)
-{
-  mClientData = aClientData;
-  return NS_OK;
-}
 
 //-------------------------------------------------------------------------
 //
@@ -829,28 +808,38 @@ void nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
 }
 
-
+//-------------------------------------------------------------------------
+//
+// Scroll the bits of a window
+//
+//-------------------------------------------------------------------------
 void nsWindow::SetBorderStyle(nsBorderStyle aBorderStyle) 
 {
 } 
 
+//-------------------------------------------------------------------------
+//
+// Scroll the bits of a window
+//
+//-------------------------------------------------------------------------
 void nsWindow::SetTitle(const nsString& aTitle) 
 {
 } 
 
-
-/**
- * Processes a mouse pressed event
- *
- **/
+//-------------------------------------------------------------------------
+//
+// Processes a mouse pressed event
+//
+//-------------------------------------------------------------------------
 void nsWindow::AddMouseListener(nsIMouseListener * aListener)
 {
 }
 
-/**
- * Processes a mouse pressed event
- *
- **/
+//-------------------------------------------------------------------------
+//
+// Processes a mouse pressed event
+//
+//-------------------------------------------------------------------------
 void nsWindow::AddEventListener(nsIEventListener * aListener)
 {
 }
@@ -876,7 +865,6 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 // Invokes callback and  ProcessEvent method on Event Listener object
 //
 //-------------------------------------------------------------------------
-
 PRBool nsWindow::DispatchEvent(nsGUIEvent* event)
 {
   PRBool result = PR_FALSE;
@@ -949,6 +937,11 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent aEvent)
 }
 
 
+//-------------------------------------------------------------------------
+//
+// Invokes callback and  ProcessEvent method on Event Listener object
+//
+//-------------------------------------------------------------------------
 /**
  * Processes an Expose Event
  *
@@ -994,20 +987,38 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
   return result;
 }
 
-
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::BeginResizingChildren(void)
 {
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::EndResizingChildren(void)
 {
 }
 
-
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::OnDestroy()
 {
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
     nsRect* size = aEvent.windowSize;
@@ -1027,6 +1038,11 @@ PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
   return FALSE;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEvent)
 {
   if (mEventCallback) {
@@ -1036,7 +1052,11 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode, nsKeyEvent* aEven
    return FALSE;
 }
 
-
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 {
   if (mEventCallback) {
@@ -1046,21 +1066,42 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
  return FALSE;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 PRBool nsWindow::OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos)
 {
  return FALSE;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::SetIgnoreResize(PRBool aIgnore)
 {
   mIgnoreResize = aIgnore;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
+\
 PRBool nsWindow::IgnoreResize()
 {
   return mIgnoreResize;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::SetResizeRect(nsRect& aRect) 
 {
   mResizeRect = aRect;
@@ -1074,16 +1115,45 @@ void nsWindow::GetResizeRect(nsRect* aRect)
   aRect->height = mResizeRect.height;
 } 
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::SetResized(PRBool aResized)
 {
   mResized = aResized;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 PRBool nsWindow::GetResized()
 {
   return(mResized);
 }
 
+//-------------------------------------------------------------------------
+//
+// find the widget that was hit
+//
+//-------------------------------------------------------------------------
+nsIWidget* nsWindow::FindWidgetHit(Point)
+{
+nsIWidget*	thewidget = NULL;
+
+	
+
+	return(thewidget);
+}
+
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::UpdateVisibilityFlag()
 {
   //Widget parent = XtParent(mWidget);
@@ -1104,6 +1174,11 @@ void nsWindow::UpdateVisibilityFlag()
   mVisible = PR_TRUE;
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 void nsWindow::UpdateDisplay()
 {
     // If not displayed and needs to be displayed
@@ -1123,6 +1198,11 @@ void nsWindow::UpdateDisplay()
   }
 }
 
+//-------------------------------------------------------------------------
+//
+// 
+//
+//-------------------------------------------------------------------------
 PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
 {
   if (PR_TRUE==mLowerLeft) {
