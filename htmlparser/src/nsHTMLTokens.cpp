@@ -2039,6 +2039,12 @@ CEntityToken::ConsumeEntity(PRUnichar aChar,
       result = aScanner.Peek(theChar,2);
        
       if (NS_FAILED(result)) {
+        if (kEOF == result && !aScanner.IsIncremental()) {
+          // If this is the last buffer then we are certainly
+          // not dealing with an entity. That's, there are
+          // no more characters after &#. Bug 188278.
+          return NS_HTMLTOKENS_NOT_AN_ENTITY;
+        }
         return result;
       }
 
