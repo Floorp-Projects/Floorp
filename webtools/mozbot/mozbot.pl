@@ -44,7 +44,8 @@ $SIG{'INT'}  = 'killed';
 $SIG{'KILL'} = 'killed';
 $SIG{'TERM'} = 'killed';
 
-use strict 'vars';
+use strict;
+use diagnostics;
 use lib ".";
 use Net::IRC;
 use LWP::Simple;
@@ -58,8 +59,8 @@ my $debug = 1; # debug output also includes warnings, errors
 
 my %cmds = 
     (
-    "about" => "bot_about", "hi" => "bot_hi", "moon" => "bot_moon",
-    "up" => "bot_up", "trees" =>  "bot_tinderbox", "url" => "bot_urls",
+    "about" => \&bot_about, "hi" => \&bot_hi, "moon" => \&bot_moon,
+    "up" => \&bot_up, "trees" =>  \&bot_tinderbox, "url" => \&bot_urls,
     );
 
 @::origargv = @ARGV;
@@ -81,14 +82,14 @@ $channel = $channel             || "#mozilla";
 # read admin list 
 my %admins = ( "sar" => "netscape.com", "terry" => "netscape.com",
 	"harrison" => "(censor.com|netscape.com)");
-my $adminf = "$ENV{'HOME'}/.mozbot-admins";
+my $adminf = ".mozbot-admins";
 &fetch_admin_conf (\%admins);
 
 my $uptime = 0;
 
-my $moon = "$ENV{'HOME'}/bots/bin/moon";
-$moon = (-f $moon) ? $moon : ""; 
-delete $cmds{'moon'} if (! $moon);
+$::moon = "./moon";
+$::moon = (-f $::moon) ? $::moon : ""; 
+delete $cmds{'moon'} if (! $::moon);
 
 my $phase;
 my $last_moon = 0;
@@ -450,6 +451,8 @@ sub bot_tinderbox
     
     # loop through requested trees
 
+    push @buf, "Tinderbox status from http://cvs-mirror.mozilla.org/webtools/tinderbox/showbuilds.cgi";
+
     foreach my $t (@tree)
         {
         $bustage = 0;
@@ -478,7 +481,7 @@ sub bot_tinderbox
     $buf = $buf || 
 			"something broke. report a bug here: " .
 			"http://cvs-mirror.mozilla.org/webtools/bugzilla/enter_bug.cgi " .
-			"with component set to Mozbot";
+			"with product of Webtools and component set to Mozbot";
 
     push @buf, "last update: " .
         &logdate ($last_tree) . " (" . &days ($last_tree) . " ago)";
@@ -600,7 +603,7 @@ sub fetch_admin_conf
 
 sub create_pid_file
 	{
-	my $pid = "$ENV{'HOME'}/.mozbot-pid";
+	my $pid = ".mozbot-pid";
 
 	if (open PID, ">$pid")
     {
