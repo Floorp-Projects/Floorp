@@ -748,6 +748,20 @@ date_parse(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return js_NewNumberValue(cx, result, rval);
 }
 
+static JSBool
+date_now(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+    int64 us, ms, us2ms;
+    jsdouble msec_time;
+
+    us = PRMJ_Now();
+    JSLL_UI2L(us2ms, PRMJ_USEC_PER_MSEC);
+    JSLL_DIV(ms, us, us2ms);
+    JSLL_L2D(msec_time, ms);
+
+    return js_NewDoubleValue(cx, msec_time, rval);
+}
+
 /*
  * Check that obj is an object of class Date, and get the date value.
  * Return NULL on failure.
@@ -1781,6 +1795,7 @@ date_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
 static JSFunctionSpec date_static_methods[] = {
     {"UTC",               date_UTC,               MAXARGS,0,0 },
     {"parse",             date_parse,             1,0,0 },
+    {"now",               date_now,               0,0,0 },
     {0,0,0,0,0}
 };
 
