@@ -165,7 +165,9 @@ PREventQueue *mozilla_event_queue = NULL;
 #include "m_cvstrm.h"
 #include "prefapi.h"
 #include "NSReg.h"
-
+#ifdef MOZ_SMARTUPDATE
+#include "softupdt.h"
+#endif
 #include <Balloons.h>
 
 // HERE ONLY UNTIL NAV SERVICES CODE MERGED INTO TIP
@@ -836,6 +838,9 @@ CFrontApp::CFrontApp()
 
 	UHTMLPrinting::InitCustomPageSetup();
 	
+#ifdef MOZ_SMARTUPDATE
+    SU_Startup();
+#endif
     NR_StartupRegistry();
     
 	// ¥ PowerPlant initialization
@@ -1031,6 +1036,9 @@ CFrontApp::~CFrontApp()
 	SetCursor( &qd.arrow );
 
 	NR_ShutdownRegistry();
+#ifdef MOZ_SMARTUPDATE
+    SU_Shutdown();
+#endif
 
 	ET_FinishMocha();
 
