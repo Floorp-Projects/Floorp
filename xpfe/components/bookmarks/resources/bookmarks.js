@@ -598,10 +598,10 @@ function fillContextMenu(name)
         debug("Command #" + cmdIndex + ": id='" + cmdResource.Value + "'  name='" + cmdName + "'");
 
         var menuItem = document.createElement("menuitem");
-        menuItem.setAttribute("value", cmdName);
-        menuItem.setAttribute("oncommand", "return doContextCmd('" + cmdResource.Value + "');");
-        
+        menuItem.setAttribute("value", cmdName);        
         popupNode.appendChild(menuItem);
+        // work around bug # 26402 by setting "oncommand" attribute AFTER appending menuitem
+        menuItem.setAttribute("oncommand", "return doContextCmd('" + cmdResource.Value + "');");
     }
 
 	// if one and only one node is selected
@@ -625,8 +625,9 @@ function fillContextMenu(name)
 			
 			var menuItem = document.createElement("menuitem");
 			menuItem.setAttribute("value", propMenuName);
-			menuItem.setAttribute("oncommand", "return BookmarkProperties();");
 			popupNode.appendChild(menuItem);
+		        // work around bug # 26402 by setting "oncommand" attribute AFTER appending menuitem
+			menuItem.setAttribute("oncommand", "return BookmarkProperties();");
 		}
 	}
 
