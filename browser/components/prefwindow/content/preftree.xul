@@ -97,7 +97,7 @@
 #ifdef XP_WIN
         <treeitem id="winhooks">
           <treerow>
-            <treecell url="chrome://communicator/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
+            <treecell url="chrome://browser/content/pref/pref-winhooks.xul" label="&winhooks.label;"/>
           </treerow>
         </treeitem> 
 #endif
