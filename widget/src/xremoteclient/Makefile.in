@@ -88,6 +88,9 @@ LIBS            = \
 
 ifdef MOZ_ENABLE_PHOTON
 	LIBS += -lph
+ifdef MOZ_DEBUG
+	LIBS += -lxpcom
+endif
 endif
 
 include $(topsrcdir)/config/rules.mk
