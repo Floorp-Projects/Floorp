@@ -59,6 +59,7 @@ static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define PREF_NEWS_MAX_HEADERS_TO_SHOW "news.max_headers_to_show"
+#define PREF_NEWS_ABBREVIATE_PRETTY_NAMES "news.abbreviate_pretty_name"
 #define NEWSRC_FILE_BUFFER_SIZE 1024
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -837,13 +838,106 @@ NS_IMETHODIMP nsMsgNewsFolder::GetName(PRUnichar **name)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(PRUnichar ** prettyName)
 {
+  nsresult rv = NS_OK;
+
   if (!prettyName)
     return NS_ERROR_NULL_POINTER;
-  
-  nsresult rv = NS_OK;;
-  rv = nsMsgFolder::GetPrettyName(prettyName); 
+
+  rv = nsMsgFolder::GetPrettyName(prettyName);
+
+  //not ready for prime time yet, as I don't know how to test this yet.
+#ifdef NOT_READY_FOR_PRIME_TIME
+  // only do this for newsgroup names, not for newsgroup hosts.
+  if (!isNewsHost()) {
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    PRInt32 numFullWords;
+    rv = prefs->GetIntPref(PREF_NEWS_ABBREVIATE_PRETTY_NAMES, &numFullWords);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (numFullWords != 0) { 
+      rv = AbbreviatePrettyName(prettyName, numFullWords);
+    }
+  }
+#endif /* NOT_READY_FOR_PRIME_TIME */
   return rv;
 }
+
+// original code from Oleg Rekutin
+// rekusha@asan.com
+// Public domain, created by Oleg Rekutin
+//
+// takes a newsgroup name, number of words from the end to leave unabberviated
+// the newsgroup name, will get reset to the following format:
+// x.x.x, where x is the first letter of each word and with the
+// exception of last 'fullwords' words, which are left intact.
+// If a word has a dash in it, it is abbreviated as a-b, where
+// 'a' is the first letter of the part of the word before the
+// dash and 'b' is the first letter of the part of the word after
+// the dash
+nsresult nsMsgNewsFolder::AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords)
+{
+  if (!prettyName)
+		return NS_ERROR_NULL_POINTER;
+  
+  nsString name(*prettyName);
+  PRInt32 totalwords = 0; // total no. of words
+
+  // get the total no. of words
+  for (PRInt32 pos = 0;
+       (pos++) != name.Length();
+       pos = name.Find('.', pos))
+    totalwords ++;
+
+  // get the no. of words to abbreviate
+  PRInt32 abbrevnum = totalwords - fullwords;
+  if (abbrevnum < 1)
+    return NS_OK; // nothing to abbreviate
+  
+  // build the ellipsis
+  nsString out;
+  
+  out += name[0];
+  
+  PRInt32    length = name.Length();
+  PRInt32    newword = 0;     // == 2 if done with all abbreviated words
+  
+  fullwords = 0;
+  for (PRInt32 i = 1; i < length; i++) {
+    if (newword < 2) {
+      switch (name[i]) {
+      case '.':
+        fullwords++;
+        // check if done with all abbreviated words...
+        if (fullwords == abbrevnum)
+          newword = 2;
+        else
+          newword = 1;
+        break;
+      case '-':
+        newword = 1;
+        break;
+      default:
+        if (newword)
+          newword = 0;
+        else
+          continue;
+      }
+    }
+    out += name[i];
+  }
+
+  if (!prettyName)
+		return NS_ERROR_NULL_POINTER;
+  // we are going to set *prettyName to something else, so free what was there
+  
+  PR_FREEIF(*prettyName);
+  *prettyName = out.ToNewUnicode();
+  
+  return (*prettyName) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
 
 nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db)
 {

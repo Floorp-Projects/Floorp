@@ -98,6 +98,7 @@ public:
   NS_IMETHOD SetUnreadSetStr(char * aUnreadSetStr);
 
 protected:
+  nsresult AbbreviatePrettyName(PRUnichar ** prettyName, PRInt32 fullwords);
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
