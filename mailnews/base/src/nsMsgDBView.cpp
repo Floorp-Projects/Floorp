@@ -887,7 +887,11 @@ NS_IMETHODIMP nsMsgDBView::LoadMessageByMsgKey(nsMsgKey aMsgKey)
 
 NS_IMETHODIMP nsMsgDBView::SelectionChanged()
 {
-  // if the currentSelection changed then we have a message to display
+  // if the currentSelection changed then we have a message to display - not if we are in the middle of deleting rows
+
+  if (m_deletingRows)
+    return NS_OK;
+
   PRUint32 numSelected = 0;
 
   GetNumSelected(&numSelected);
