@@ -102,11 +102,10 @@
 #include "nsDOMError.h"
 #include "nsIScrollable.h"
 
-// #define ALLOW_ASYNCH_STYLE_SHEETS
 #ifdef ALLOW_ASYNCH_STYLE_SHEETS
-const PRBool kBlock=PR_FALSE;
+const PRBool kBlockByDefault=PR_FALSE;
 #else
-const PRBool kBlock=PR_TRUE;
+const PRBool kBlockByDefault=PR_TRUE;
 #endif
 
 static NS_DEFINE_IID(kIDOMHTMLTitleElementIID, NS_IDOMHTMLTITLEELEMENT_IID);
@@ -345,11 +344,6 @@ public:
   nsICSSLoader*       mCSSLoader;
   PRInt32             mInsideNoXXXTag;
   PRInt32             mInMonolithicContainer;
-
-  nsCOMPtr<nsITimer>  mStyleSheetTimer;           // timer used to prevent infinite wait for style sheet
-  PRBool              mStyleSheetTimerSet;        // TRUE if a timer has been set since Init
-  PRInt32             mStyleSheetTimerInterval;   // interval in milliseconds
-  PRUint32            mNumStyleSheetsLoading;     // number of style sheets still loading
 
   void StartLayout();
 
@@ -1874,7 +1868,7 @@ nsresult
 SinkContext::FlushTags(PRBool aNotify)
 {
   nsresult result = NS_OK;
- 
+
   // Don't release last text node in case we need to add to it again
   FlushText();
 
@@ -2096,8 +2090,6 @@ HTMLContentSink::HTMLContentSink() {
   mInNotification = 0;
   mInMonolithicContainer = 0;
   mInsideNoXXXTag  = 0;
-
-  mStyleSheetTimerSet = PR_FALSE;
 }
 
 HTMLContentSink::~HTMLContentSink()
@@ -2124,10 +2116,6 @@ HTMLContentSink::~HTMLContentSink()
 
   if (mNotificationTimer) {
     mNotificationTimer->Cancel();
-  }
-
-  if (mStyleSheetTimer) {
-    mStyleSheetTimer->Cancel();
   }
 
   PRInt32 numContexts = mContextStack.Count();
@@ -2223,11 +2211,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mMaxTextRun = 8192;
   prefs->GetIntPref("content.maxtextrun", &mMaxTextRun);
 
-  mStyleSheetTimerSet = PR_FALSE;
-  mNumStyleSheetsLoading = 0;
-  mStyleSheetTimerInterval = (120*1000);
-  prefs->GetIntPref("content.notify.stylesheettimeout", &mStyleSheetTimerInterval);
-
   nsIHTMLContentContainer* htmlContainer = nsnull;
   if (NS_SUCCEEDED(aDoc->QueryInterface(kIHTMLContentContainerIID, (void**)&htmlContainer))) {
     htmlContainer->GetCSSLoader(mCSSLoader);
@@ -2307,11 +2290,6 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
     mNotificationTimer = 0;
   }
 
-  if (mStyleSheetTimer) {
-    mStyleSheetTimer->Cancel();
-    mStyleSheetTimer = 0;
-  } 
-  
   if (nsnull == mTitle) {
     mHTMLDocument->SetTitle("");
   }
@@ -2348,40 +2326,30 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 NS_IMETHODIMP_(void)
 HTMLContentSink::Notify(nsITimer *timer)
 {
-  if (timer == mStyleSheetTimer.get()) {
-    // our first sheet timer has expired: resume the parser now
-    mStyleSheetTimer = 0;
-    ResumeParsing();
-  } else {
+  MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
+  MOZ_TIMER_START(mWatch);
+#ifdef MOZ_DEBUG
+  PRTime now = PR_Now();
+  PRInt64 diff, interval;
+  PRInt32 delay;
 
-    MOZ_TIMER_DEBUGLOG(("Start: nsHTMLContentSink::Notify()\n"));
-    MOZ_TIMER_START(mWatch);
-  
-  #ifdef MOZ_DEBUG
-    PRTime now = PR_Now();
-    PRInt64 diff, interval;
-    PRInt32 delay;
+  LL_I2L(interval, mNotificationInterval);
+  LL_SUB(diff, now, mLastNotificationTime);
 
-    LL_I2L(interval, mNotificationInterval);
-    LL_SUB(diff, now, mLastNotificationTime);
+  LL_SUB(diff, diff, interval);
+  LL_L2I(delay, diff);
+  delay /= PR_USEC_PER_MSEC;
 
-    LL_SUB(diff, diff, interval);
-    LL_L2I(delay, diff);
-    delay /= PR_USEC_PER_MSEC;
-
-    mBackoffCount--;
-    SINK_TRACE(SINK_TRACE_REFLOW,
-               ("HTMLContentSink::Notify: reflow on a timer: %d milliseconds late, backoff count: %d", delay, mBackoffCount));
-  #endif
-
-    if (mCurrentContext) {
-      mCurrentContext->FlushTags(PR_TRUE);
-    }
-    mNotificationTimer = 0;
-
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
-    MOZ_TIMER_STOP(mWatch);
+  mBackoffCount--;
+  SINK_TRACE(SINK_TRACE_REFLOW,
+             ("HTMLContentSink::Notify: reflow on a timer: %d milliseconds late, backoff count: %d", delay, mBackoffCount));
+#endif
+  if (mCurrentContext) {
+    mCurrentContext->FlushTags(PR_TRUE);
   }
+  mNotificationTimer = 0;
+  MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Notify()\n"));
+  MOZ_TIMER_STOP(mWatch);
 }
 
 NS_IMETHODIMP
@@ -2458,7 +2426,6 @@ HTMLContentSink::WillResume()
 {
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::WillResume: this=%p", this));
-
   // Cancel a timer if we had one out there
   if (mNotificationTimer) {
     SINK_TRACE(SINK_TRACE_REFLOW,
@@ -2466,6 +2433,7 @@ HTMLContentSink::WillResume()
     mNotificationTimer->Cancel();
     mNotificationTimer = 0;
   }
+
   return NS_OK;
 }
 
@@ -3697,14 +3665,6 @@ NS_IMETHODIMP
 HTMLContentSink::StyleSheetLoaded(nsICSSStyleSheet* aSheet, 
                                   PRBool aDidNotify)
 {
-  mNumStyleSheetsLoading--;
-
-  // if out timer is still pending, cancel it.
-  if (mNumStyleSheetsLoading==0 && mStyleSheetTimer) {
-    mStyleSheetTimer->Cancel();
-    mStyleSheetTimer = 0;
-  }
-
   // If there was a notification done for this style sheet, we know
   // that frames have been created for all content seen so far
   // (processing of a new style sheet causes recreation of the frame
@@ -3727,12 +3687,15 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 
   nsStringArray linkTypes;
   ParseLinkTypes(aRel, linkTypes);
+  PRBool isAlternate = PR_FALSE;
 
   if (-1 != linkTypes.IndexOf("stylesheet")) {  // is it a stylesheet link?
 
     if (-1 != linkTypes.IndexOf("alternate")) { // if alternate, does it have title?
       if (0 == aTitle.Length()) { // alternates must have title
         return NS_OK; //return without error, for now
+      } else {
+        isAlternate = PR_TRUE;
       }
     }
 
@@ -3765,9 +3728,6 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
 		}
 		
     if (isStyleSheet) {
-      PRBool blockParser = kBlock;
-      PRBool important = PR_FALSE;
-      PRBool alternate = PR_FALSE;  // alternate (non-preferred) style sheet
       nsIURI* url = nsnull;
       {
         result = NS_NewURI(&url, aHref, mDocumentBaseURL);
@@ -3782,20 +3742,22 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
             mPreferredStyle = aTitle;
             mCSSLoader->SetPreferredSheet(aTitle);
             mDocument->SetHeaderData(nsHTMLAtoms::headerDefaultStyle, aTitle);
-          } else {
-            alternate = PR_TRUE;
           }
         }
       }
 
-      if (-1 != linkTypes.IndexOf("important")) {
-        blockParser = PR_TRUE;
-        important = PR_TRUE;
-      }
-
-      if (alternate && !important) {
+      PRBool blockParser = kBlockByDefault;
+      if (isAlternate) {
         blockParser = PR_FALSE;
       }
+
+      /* NOTE: no longer honoring the important keyword to indicate blocking
+               as it is proprietary and unnecessary since all non-alternate 
+               will block the parser now  -mja
+      if (-1 != linkTypes.IndexOf("important")) {
+        blockParser = PR_TRUE;
+      }
+      */
 
       PRBool doneLoading;
       result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_HTML,
@@ -3804,35 +3766,9 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
                                          doneLoading, 
                                          this);
       NS_RELEASE(url);
-      if (NS_SUCCEEDED(result) && (!doneLoading)) {
-        // we are loading another one, so increment the counter
-        mNumStyleSheetsLoading++;
-        // if important, then just block
-        if (important) {
-          NS_ASSERTION(blockParser, "Must block for important styleSheets");
-          result = NS_ERROR_HTMLPARSER_BLOCK;
-        } else {
-          // if not blocking the parser absolutely (!important) 
-          // then setup a notification timer so we can locally 
-          // unblock the parser if it takes too long
-          // bug=17309
-          if (blockParser) {
-            NS_ASSERTION(!alternate, "Alternates should not block parser");
-            // if no stylesheet timer, and none was previously set (ie. first one), then start one
-            if (!mStyleSheetTimer && !mStyleSheetTimerSet) {
-              result = NS_NewTimer(getter_AddRefs(mStyleSheetTimer));
-              if (NS_SUCCEEDED(result)) {
-                result = mStyleSheetTimer->Init(this, mStyleSheetTimerInterval);
-                if( NS_SUCCEEDED(result)) {
-                  mStyleSheetTimerSet = PR_TRUE;
-                  // block the parser: we will unblock it when the timer expires
-                  result = NS_ERROR_HTMLPARSER_BLOCK;
-                }
-              }
-            }// if no stylesheet timer
-          }// if !important and blockParser
-        } // if important
-      } // if succeeded && !doneLoading
+      if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
+        result = NS_ERROR_HTMLPARSER_BLOCK;
+      }
     }
   }
   return result;
@@ -4716,7 +4652,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       nsAutoString  params;
       SplitMimeType(type, mimeType, params);
 
-      PRBool blockParser = kBlock;
+      PRBool blockParser = kBlockByDefault;
 
       if ((0 == mimeType.Length()) || mimeType.EqualsIgnoreCase("text/css")) { 
 
