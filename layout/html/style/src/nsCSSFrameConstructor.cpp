@@ -3944,7 +3944,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
                                          nsIAtom*                 aTag,
                                          nsIStyleContext*         aStyleContext,
                                          nsFrameItems&            aFrameItems,
-                                         PRBool&                  haltProcessing)
+                                         PRBool&                  aHaltProcessing)
 { 
   PRBool    primaryFrameSet = PR_FALSE;
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
@@ -4060,12 +4060,16 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
     }
     else if (aTag == nsXULAtoms::treecell)
     {
-      // We make a tree cell frame and process the children.
-	    // Find out what the attribute value for event allowance is.
-      nsIFrame* ignore2;
-      rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aStyleContext, 
+      // We could be in a hidden column.
+      // XXX This is so disgusting.
+      if (nsTreeCellFrame::ShouldBuildCell(aParentFrame, aContent)) {
+        // We make a tree cell frame and process the children.
+        nsIFrame* ignore2;
+        rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, aParentFrame, aStyleContext, 
                                    newFrame, ignore, ignore2, treeCreator);
-      aFrameItems.AddChild(newFrame);
+        aFrameItems.AddChild(newFrame);
+      }
+      else aHaltProcessing = PR_TRUE;
       return rv;
     }
     else if (aTag == nsXULAtoms::treeindentation)
@@ -4151,7 +4155,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
     }
     else if (aTag == nsXULAtoms::menubar) {
 #ifdef XP_MAC // The Mac uses its native menu bar.
-      haltProcessing = PR_TRUE;
+      aHaltProcessing = PR_TRUE;
       return NS_OK;
 #else
       processChildren = PR_TRUE;
