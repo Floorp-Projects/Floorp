@@ -360,7 +360,8 @@ nsBindingManager::AddLayeredBinding(nsIContent* aContent, const nsAReadableStrin
 
   // Load the bindings.
   nsCOMPtr<nsIXBLBinding> binding;
-  xblService->LoadBindings(aContent, aURL, PR_TRUE, getter_AddRefs(binding));
+  PRBool dummy;
+  xblService->LoadBindings(aContent, aURL, PR_TRUE, getter_AddRefs(binding), &dummy);
   if (binding) {
     AddToAttachedQueue(binding);
     ProcessAttachedQueue();

@@ -158,8 +158,9 @@ nsGenericXMLElement::GetScriptObject(nsIScriptContext* aContext,
                 if (!value.IsEmpty()) {
                   // We have a binding that must be installed.
                   nsresult rv;
+                  PRBool dummy;
                   NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-                  xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding));
+                  xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding), &dummy);
                   if (binding) {
                     binding->ExecuteAttachedHandler();
                   }

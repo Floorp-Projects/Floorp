@@ -473,6 +473,27 @@ nsXBLBinding::SetBoundElement(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
+nsXBLBinding::HasStyleSheets(PRBool* aResolveStyle)
+{
+  // Find out if we need to re-resolve style.  We'll need to do this
+  // if we have additional stylesheets in our binding document.
+  nsCOMPtr<nsIXBLDocumentInfo> info;
+  gXBLService->GetXBLDocumentInfo(mDocURI, mBoundElement, getter_AddRefs(info));
+  if (!info)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsISupportsArray> rules;
+  info->GetRuleProcessors(getter_AddRefs(rules));
+  if (rules) {
+    *aResolveStyle = PR_TRUE;
+    return NS_OK;
+  }
+
+  if (mNextBinding)
+    return mNextBinding->HasStyleSheets(aResolveStyle);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
   // Fetch the content element for this binding.
@@ -1241,20 +1262,23 @@ nsXBLBinding::InheritsStyle(PRBool* aResult)
 NS_IMETHODIMP
 nsXBLBinding::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData)
 {
-  if (mContent) {
-    nsCOMPtr<nsIXBLDocumentInfo> info;
-    gXBLService->GetXBLDocumentInfo(mDocURI, mBoundElement, getter_AddRefs(info));
-    if (!info)
-      return NS_ERROR_FAILURE;
-    nsCOMPtr<nsISupportsArray> rules;
-    info->GetRuleProcessors(getter_AddRefs(rules));
-    if (rules)
-      rules->EnumerateForwards(aFunc, aData);
+  nsresult rv = NS_OK;
+  if (mNextBinding) {
+    rv = mNextBinding->WalkRules(aFunc, aData);
+    if (NS_FAILED(rv))
+      return rv;
   }
-  else if (mNextBinding)
-    return mNextBinding->WalkRules(aFunc, aData);
 
-  return NS_OK;
+  nsCOMPtr<nsIXBLDocumentInfo> info;
+  gXBLService->GetXBLDocumentInfo(mDocURI, mBoundElement, getter_AddRefs(info));
+  if (!info)
+    return NS_ERROR_FAILURE;
+  nsCOMPtr<nsISupportsArray> rules;
+  info->GetRuleProcessors(getter_AddRefs(rules));
+  if (rules)
+    rules->EnumerateForwards(aFunc, aData);
+  
+  return rv;
 }
 
 // Internal helper methods ////////////////////////////////////////////////////////////////

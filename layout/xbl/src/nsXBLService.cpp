@@ -590,9 +590,10 @@ nsXBLService::~nsXBLService(void)
 // onto the element.
 NS_IMETHODIMP
 nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, PRBool aAugmentFlag,
-                           nsIXBLBinding** aBinding) 
+                           nsIXBLBinding** aBinding, PRBool* aResolveStyle) 
 { 
   *aBinding = nsnull;
+  *aResolveStyle = PR_FALSE;
 
   nsresult rv;
 
@@ -680,6 +681,8 @@ nsXBLService::LoadBindings(nsIContent* aContent, const nsAReadableString& aURL, 
 
   // Set up our properties
   newBinding->InstallProperties(aContent);
+
+  newBinding->HasStyleSheets(aResolveStyle);
 
   return NS_OK; 
 }

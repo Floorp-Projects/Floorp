@@ -5236,7 +5236,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*        aPresShell,
 
     // Load the bindings.
     nsCOMPtr<nsIXBLBinding> binding;
-    rv = xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+    PRBool dummy;
+    rv = xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding), &dummy);
     if (NS_FAILED(rv))
       return NS_OK;
 
@@ -5470,7 +5471,8 @@ nsCSSFrameConstructor::CreateAnonymousTableCellFrames(nsIPresShell*        aPres
 
     // Load the bindings.
     nsCOMPtr<nsIXBLBinding> binding;
-    rv = xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+    PRBool dummy;
+    rv = xblService->LoadBindings(aParent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding), &dummy);
     if (NS_FAILED(rv))
       return NS_OK;
 
@@ -7414,6 +7416,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   // The following code allows the user to specify the base tag
   // of a XUL object using XBL.  XUL objects (like boxes, menus, etc.)
   // can then be extended arbitrarily.
+  nsCOMPtr<nsIStyleContext> styleContext(do_QueryInterface(aStyleContext));
   nsCOMPtr<nsIXBLBinding> binding;
   if (!aXBLBaseTag)
   {
@@ -7429,9 +7432,16 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
         return rv;
 
       // Load the bindings.
-      rv = xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding));
+      PRBool resolveStyle;
+      rv = xblService->LoadBindings(aContent, ui->mBehavior, PR_FALSE, getter_AddRefs(binding), &resolveStyle);
       if (NS_FAILED(rv))
         return NS_OK;
+
+      if (resolveStyle) {
+        rv = ResolveStyleContext(aPresContext, aParentFrame, aContent, aTag, getter_AddRefs(styleContext));
+        if (NS_FAILED(rv))
+          return rv;
+      }
 
       nsCOMPtr<nsIAtom> baseTag;
       PRInt32 nameSpaceID;
@@ -7446,7 +7456,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                                   aParentFrame,
                                   baseTag,
                                   nameSpaceID,
-                                  aStyleContext,
+                                  styleContext,
                                   aFrameItems,
                                   PR_TRUE);
         if (binding) {
@@ -7465,7 +7475,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
 
   // Handle specific frame types
   nsresult rv = ConstructFrameByTag(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                           aTag, aNameSpaceID, aStyleContext, aFrameItems);
+                           aTag, aNameSpaceID, styleContext, aFrameItems);
 
 #ifdef INCLUDE_XUL
   // Failing to find a matching HTML frame, try creating a specialized
@@ -7475,7 +7485,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
                          (lastChild == aFrameItems.lastChild))) {
     PRBool haltProcessing = PR_FALSE;
     rv = ConstructXULFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                           aTag, aNameSpaceID, aStyleContext, aFrameItems, haltProcessing);
+                           aTag, aNameSpaceID, styleContext, aFrameItems, haltProcessing);
     if (haltProcessing) {
       return rv;
     }
@@ -7487,7 +7497,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     rv = ConstructMathMLFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              aTag, aNameSpaceID, aStyleContext, aFrameItems);
+                              aTag, aNameSpaceID, styleContext, aFrameItems);
   }
 #endif
 
@@ -7496,7 +7506,7 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
   if (NS_SUCCEEDED(rv) && ((nsnull == aFrameItems.childList) ||
                            (lastChild == aFrameItems.lastChild))) {
     rv = ConstructSVGFrame(aPresShell, aPresContext, aState, aContent, aParentFrame,
-                              aTag, aNameSpaceID, aStyleContext, aFrameItems);
+                              aTag, aNameSpaceID, styleContext, aFrameItems);
   }
 #endif
 
@@ -7505,10 +7515,10 @@ nsCSSFrameConstructor::ConstructFrameInternal( nsIPresShell*            aPresShe
     // When there is no explicit frame to create, assume it's a
     // container and let display style dictate the rest
     const nsStyleDisplay* display = (const nsStyleDisplay*)
-      aStyleContext->GetStyleData(eStyleStruct_Display);
+      styleContext->GetStyleData(eStyleStruct_Display);
 
     rv = ConstructFrameByDisplayType(aPresShell, aPresContext, aState, display, aContent,
-                                     aParentFrame, aStyleContext, aFrameItems);
+                                     aParentFrame, styleContext, aFrameItems);
   }
 
   if (binding) {

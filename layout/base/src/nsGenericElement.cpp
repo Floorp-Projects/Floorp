@@ -1695,14 +1695,15 @@ nsGenericElement::GetScriptObject(nsIScriptContext* aContext,
               nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mContent));
               viewCSS->GetComputedStyle(elt, empty, getter_AddRefs(cssDecl));
               if (cssDecl) {
-                nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("behavior"));
+                nsAutoString behavior; behavior.Assign(NS_LITERAL_STRING("-moz-binding"));
                 nsAutoString value;
                 cssDecl->GetPropertyValue(behavior, value);
                 if (!value.IsEmpty()) {
                   // We have a binding that must be installed.
                   nsresult rv;
+                  PRBool dummy;
                   NS_WITH_SERVICE(nsIXBLService, xblService, "component://netscape/xbl", &rv);
-                  xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding));
+                  xblService->LoadBindings(mContent, value, PR_FALSE, getter_AddRefs(binding), &dummy);
                   if (binding) {
                     binding->ExecuteAttachedHandler();
                   }
