@@ -60,6 +60,8 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsTransform2D.h"
 #include "nsSVGPoint.h"
+#include "nsSVGRect.h"
+#include "nsSVGMatrix.h"
 
 typedef nsBlockFrame nsSVGForeignObjectFrameBase;
 
@@ -131,6 +133,7 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate);
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGContainerFrame interface:
@@ -153,6 +156,7 @@ protected:
   nsCOMPtr<nsIDOMSVGLength> mWidth;
   nsCOMPtr<nsIDOMSVGLength> mHeight;
   nsCOMPtr<nsIDOMSVGMatrix> mCanvasTM;
+  PRBool mPropagateTransform;
 };
 
 //----------------------------------------------------------------------
@@ -181,7 +185,7 @@ NS_NewSVGForeignObjectFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIF
 }
 
 nsSVGForeignObjectFrame::nsSVGForeignObjectFrame()
-    : mIsDirty(PR_TRUE)
+  : mIsDirty(PR_TRUE), mPropagateTransform(PR_TRUE)
 {
 }
 
@@ -603,10 +607,50 @@ nsSVGForeignObjectFrame::NotifyRedrawUnsuspended()
 }
 
 NS_IMETHODIMP
+nsSVGForeignObjectFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  mPropagateTransform = aPropagate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSVGForeignObjectFrame::GetBBox(nsIDOMSVGRect **_retval)
 {
   *_retval = nsnull;
-  return NS_ERROR_FAILURE;
+
+  float x[4], y[4], width, height;
+  mX->GetValue(&x[0]);
+  mY->GetValue(&y[0]);
+  mWidth->GetValue(&width);
+  mHeight->GetValue(&height);
+
+  x[1] = x[0] + width;
+  y[1] = y[0];
+  x[2] = x[0] + width;
+  y[2] = y[0] + height;
+  x[3] = x[0];
+  y[3] = y[0] + height;
+
+  TransformPoint(x[0], y[0]);
+  TransformPoint(x[1], y[1]);
+  TransformPoint(x[2], y[2]);
+  TransformPoint(x[3], y[3]);
+
+  float xmin, xmax, ymin, ymax;
+  xmin = xmax = x[0];
+  ymin = ymax = y[0];
+  for (int i=1; i<4; i++) {
+    if (x[i] < xmin)
+      xmin = x[i];
+    if (y[i] < ymin)
+      ymin = y[i];
+    if (x[i] > xmax)
+      xmax = x[i];
+    if (y[i] > ymax)
+      ymax = y[i];
+  }
+
+  return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
 //----------------------------------------------------------------------
@@ -630,6 +674,12 @@ nsSVGForeignObjectFrame::GetOuterSVGFrame()
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGForeignObjectFrame::GetCanvasTM()
 {
+  if (!mPropagateTransform) {
+    nsIDOMSVGMatrix *retval;
+    NS_NewSVGMatrix(&retval);
+    return retval;
+  }
+
   if (!mCanvasTM) {
     // get our parent's tm and append local transforms (if any):
     NS_ASSERTION(mParent, "null parent");

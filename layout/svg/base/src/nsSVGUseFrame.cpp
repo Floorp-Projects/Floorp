@@ -42,6 +42,7 @@
 #include "nsIDOMSVGUseElement.h"
 #include "nsISVGValue.h"
 #include "nsIAnonymousContentCreator.h"
+#include "nsSVGMatrix.h"
 
 typedef nsSVGGFrame nsSVGUseFrameBase;
 
@@ -178,6 +179,12 @@ nsSVGUseFrame::Init(nsPresContext*  aPresContext,
 already_AddRefed<nsIDOMSVGMatrix>
 nsSVGUseFrame::GetCanvasTM()
 {
+  if (!mPropagateTransform) {
+    nsIDOMSVGMatrix *retval;
+    NS_NewSVGMatrix(&retval);
+    return retval;
+  }
+
   nsCOMPtr<nsIDOMSVGMatrix> currentTM = nsSVGUseFrameBase::GetCanvasTM();
 
   // x and y:

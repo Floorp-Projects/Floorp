@@ -73,5 +73,6 @@
 #include "art_bpath.h"
 #include "art_vpath_bpath.h"
 #include "art_vpath_filters.h"
+#include "art_rect_svp.h"
 
 #endif //__LIBART_INCS_H__

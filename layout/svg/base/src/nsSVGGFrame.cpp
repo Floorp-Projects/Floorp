@@ -43,6 +43,7 @@
 #include "nsISVGOuterSVGFrame.h"
 #include "nsISVGRendererCanvas.h"
 #include "nsIFrame.h"
+#include "nsSVGMatrix.h"
 #include <math.h>
 
 //----------------------------------------------------------------------
@@ -170,4 +171,73 @@ nsSVGGFrame::GetCoveredRegion()
   }
   
   return accu_region;
+}
+
+NS_IMETHODIMP
+nsSVGGFrame::GetBBox(nsIDOMSVGRect **_retval)
+{
+  float minx, miny, maxx, maxy;
+  minx = miny = FLT_MAX;
+  maxx = maxy = -1.0 * FLT_MAX;
+
+  nsCOMPtr<nsIDOMSVGRect> unionRect;
+
+  nsIFrame* kid = mFrames.FirstChild();
+  while (kid) {
+    nsISVGChildFrame* SVGFrame=0;
+    kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
+    if (SVGFrame) {
+      nsCOMPtr<nsIDOMSVGRect> box;
+      SVGFrame->GetBBox(getter_AddRefs(box));
+
+      if (box) {
+        float bminx, bminy, bmaxx, bmaxy, width, height;
+        box->GetX(&bminx);
+        box->GetY(&bminy);
+        box->GetWidth(&width);
+        box->GetHeight(&height);
+        bmaxx = bminx+width;
+        bmaxy = bminy+height;
+
+        if (!unionRect)
+          unionRect = box;
+        minx = PR_MIN(minx, bminx);
+        miny = PR_MIN(miny, bminy);
+        maxx = PR_MAX(maxx, bmaxx);
+        maxy = PR_MAX(maxy, bmaxy);
+      }
+    }
+    kid = kid->GetNextSibling();
+  }
+
+  if (unionRect) {
+    unionRect->SetX(minx);
+    unionRect->SetY(miny);
+    unionRect->SetWidth(maxx-minx);
+    unionRect->SetHeight(maxy-miny);
+    *_retval = unionRect;
+    NS_ADDREF(*_retval);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSVGGFrame::SetMatrixPropagation(PRBool aPropagate)
+{
+  mPropagateTransform = aPropagate;
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(already_AddRefed<nsIDOMSVGMatrix>)
+nsSVGGFrame::GetCanvasTM()
+{
+  if (!mPropagateTransform) {
+    nsIDOMSVGMatrix *retval;
+    NS_NewSVGMatrix(&retval);
+    return retval;
+  }
+
+  return nsSVGDefsFrame::GetCanvasTM();
 }

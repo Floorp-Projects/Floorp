@@ -56,6 +56,8 @@
 #include "nsIDOMSVGRect.h"
 #include "nsILookAndFeel.h"
 #include "nsTextFragment.h"
+#include "nsSVGRect.h"
+#include "nsSVGPoint.h"
 
 typedef nsFrame nsSVGGlyphFrameBase;
 
@@ -106,6 +108,7 @@ public:
   NS_IMETHOD NotifyCanvasTMChanged();
   NS_IMETHOD NotifyRedrawSuspended();
   NS_IMETHOD NotifyRedrawUnsuspended();
+  NS_IMETHOD SetMatrixPropagation(PRBool aPropagate) { return NS_OK; }
   NS_IMETHOD GetBBox(nsIDOMSVGRect **_retval);
   
   // nsISVGGeometrySource interface: 
@@ -142,6 +145,7 @@ protected:
   void UpdateFragmentTree();
   nsISVGOuterSVGFrame *GetOuterSVGFrame();
   nsISVGTextFrame *GetTextFrame();
+  void TransformPoint(float& x, float& y);
   
   nsCOMPtr<nsISVGRendererGlyphGeometry> mGeometry;
   nsCOMPtr<nsISVGRendererGlyphMetrics> mMetrics;
@@ -424,14 +428,43 @@ nsSVGGlyphFrame::GetBBox(nsIDOMSVGRect **_retval)
   nsresult rv = mMetrics->GetBoundingBox(_retval);
   if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
   
+  float x[4], y[4], width, height;
+  (*_retval)->GetX(&x[0]);
+  (*_retval)->GetY(&y[0]);
+  (*_retval)->GetWidth(&width);
+  (*_retval)->GetHeight(&height);
+
   // offset the bounds by the position of this glyph fragment:
-  float x,y;
-  (*_retval)->GetX(&x);
-  (*_retval)->GetY(&y);
-  (*_retval)->SetX(x+mX);
-  (*_retval)->SetY(y+mY);
-  
-  return NS_OK;
+  x[0] += mX;
+  y[0] += mY;
+
+  x[1] = x[0] + width;
+  y[1] = y[0];
+  x[2] = x[0] + width;
+  y[2] = y[0] + height;
+  x[3] = x[0];
+  y[3] = y[0] + height;
+
+  TransformPoint(x[0], y[0]);
+  TransformPoint(x[1], y[1]);
+  TransformPoint(x[2], y[2]);
+  TransformPoint(x[3], y[3]);
+
+  float xmin, xmax, ymin, ymax;
+  xmin = xmax = x[0];
+  ymin = ymax = y[0];
+  for (int i=1; i<4; i++) {
+    if (x[i] < xmin)
+      xmin = x[i];
+    if (y[i] < ymin)
+      ymin = y[i];
+    if (x[i] > xmax)
+      xmax = x[i];
+    if (y[i] > ymax)
+      ymax = y[i];
+  }
+
+  return NS_NewSVGRect(_retval, xmin, ymin, xmax - xmin, ymax - ymin);
 }
 
 //----------------------------------------------------------------------
@@ -1083,4 +1116,30 @@ nsSVGGlyphFrame::GetTextFrame()
   }
 
   return containerFrame->GetTextFrame();
+}
+
+void
+nsSVGGlyphFrame::TransformPoint(float& x, float& y)
+{
+  nsCOMPtr<nsIDOMSVGMatrix> ctm;
+  GetCanvasTM(getter_AddRefs(ctm));
+  if (!ctm)
+    return;
+
+  // XXX this is absurd! we need to add another method (interface
+  // even?) to nsIDOMSVGMatrix to make this easier. (something like
+  // nsIDOMSVGMatrix::TransformPoint(float*x,float*y))
+  
+  nsCOMPtr<nsIDOMSVGPoint> point;
+  NS_NewSVGPoint(getter_AddRefs(point), x, y);
+  if (!point)
+    return;
+
+  nsCOMPtr<nsIDOMSVGPoint> xfpoint;
+  point->MatrixTransform(ctm, getter_AddRefs(xfpoint));
+  if (!xfpoint)
+    return;
+
+  xfpoint->GetX(&x);
+  xfpoint->GetY(&y);
 }
