@@ -175,9 +175,14 @@ morkBeadMap::AddBead(morkEnv* ev, morkBead* ioBead)
       
     if ( put ) // replaced an existing key?
     {
+      if ( oldBead != ioBead ) // new bead was not already in table?
+        ioBead->AddStrongRef(ev); // now there's another ref
+        
       if ( oldBead && oldBead != ioBead ) // need to release old node?
         oldBead->CutStrongRef(ev);
     }
+    else
+      ioBead->AddStrongRef(ev); // another ref if not already in table
   }
   else if ( !ioBead )
     ev->NilPointerError();
@@ -395,9 +400,14 @@ morkBeadProbeMap::AddBead(morkEnv* ev, morkBead* ioBead)
           
     if ( put ) // replaced an existing key?
     {
+      if ( bead != ioBead ) // new bead was not already in table?
+        ioBead->AddStrongRef(ev); // now there's another ref
+        
       if ( bead && bead != ioBead ) // need to release old node?
         bead->CutStrongRef(ev);
     }
+    else
+      ioBead->AddStrongRef(ev); // now there's another ref
   }
   else if ( !ioBead )
     ev->NilPointerError();
