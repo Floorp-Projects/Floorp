@@ -2602,7 +2602,7 @@ nsChromeRegistry::CheckForNewChrome()
   }
 
   PRFileDesc *file;
-  rv = listFile->OpenNSPRFileDesc(PR_RDWR, 0, &file);
+  rv = listFile->OpenNSPRFileDesc(PR_RDONLY, 0, &file);
   if (NS_FAILED(rv)) return rv;
 
   // file is open. 
