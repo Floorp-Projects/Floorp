@@ -32,6 +32,57 @@
 #include "nsIWidget.h"
 #include "nsIPref.h"
 
+
+#include "glib.h"
+
+struct OurGdkIOClosure {
+  GdkInputFunction  function;
+  gpointer          data;
+};
+
+static gboolean
+our_gdk_io_invoke(GIOChannel* source, GIOCondition condition, gpointer data)
+{
+  OurGdkIOClosure* ioc = (OurGdkIOClosure*) data;
+  if (ioc) {
+    (*ioc->function)(ioc->data, g_io_channel_unix_get_fd(source),
+                     GDK_INPUT_READ);
+  }
+  return TRUE;
+}
+
+static void
+our_gdk_io_destroy(gpointer data)
+{
+  OurGdkIOClosure* ioc = (OurGdkIOClosure*) data;
+  if (ioc) {
+    g_free(ioc);
+  }
+}
+
+static gint
+our_gdk_input_add (gint              source,
+                   GdkInputFunction  function,
+                   gpointer          data,
+                   gint              priority)
+{
+  guint result;
+  OurGdkIOClosure *closure = g_new (OurGdkIOClosure, 1);
+  GIOChannel *channel;
+
+  closure->function = function;
+  closure->data = data;
+
+  channel = g_io_channel_unix_new (source);
+  result = g_io_add_watch_full (channel, priority, G_IO_IN,
+                                our_gdk_io_invoke,
+                                closure, our_gdk_io_destroy);
+  g_io_channel_unref (channel);
+
+  return result;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // XPCOM CIDs
@@ -434,10 +485,9 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
   gint queueToken;
 
   if (aListen) {
-    queueToken = gdk_input_add(aQueue->GetEventQueueSelectFD(),
-                               GDK_INPUT_READ,
-                               event_processor_callback,
-                               aQueue);
+    queueToken = our_gdk_input_add(aQueue->GetEventQueueSelectFD(),
+                                   event_processor_callback,
+                                   aQueue, G_PRIORITY_DEFAULT_IDLE);
     mEventQueueTokens->PushToken(aQueue, queueToken);
   } else {
     if (mEventQueueTokens->PopToken(aQueue, &queueToken))
