@@ -91,7 +91,6 @@ components\imglib2.dll
 
 ; accessibility (out of process API support)
 ; see http://www.mozilla.org/projects/ui/accessibility/vendors-win.html
-components\accessibility.dll              
 components\accessibility.xpt                 
 
 ; caps (JavaScript security)

@@ -73,8 +73,22 @@ endif
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
+ifdef ACCESSIBILITY
+SHARED_LIBRARY_LIBS += \
+    $(DIST)/lib/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
+    $(DIST)/lib/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
+    $(NULL)
+
+ifdef MOZ_XUL
+SHARED_LIBRARY_LIBS += $(DIST)/lib/$(LIB_PREFIX)accessibility_xul_s.$(LIB_SUFFIX)
+endif
+
+EXTRA_DSO_LIBS += gkconshared_s
+endif
+
 EXTRA_DSO_LDOPTS += \
 		$(MOZ_COMPONENT_LIBS) \
+		$(EXTRA_DSO_LIBS) \
 		-lgkgfx \
 		$(XLDFLAGS) \
 		$(XLIBS) \
@@ -94,6 +108,7 @@ CXXFLAGS	+= $(MOZ_GTK2_CFLAGS)
 
 INCLUDES	+= \
 		-I$(srcdir)/../xpwidgets \
+		-I$(srcdir)/../../../accessible/src/base \
 		$(NULL)
 
 test_container: mozdrawingarea.o mozcontainer.o test_container.c
