@@ -150,11 +150,10 @@ public class BaseFunction extends IdScriptable implements Function {
     public int methodArity(int methodId) {
         if (prototypeFlag) {
             switch (methodId) {
-                case Id_constructor:
-                case Id_toString:
-                case Id_apply:
-                case Id_call:
-                    return 1;
+                case Id_constructor: return 1;
+                case Id_toString:    return 1;
+                case Id_apply:       return 2;
+                case Id_call:        return 1;
             }
         }
         return super.methodArity(methodId);
@@ -174,10 +173,10 @@ public class BaseFunction extends IdScriptable implements Function {
                     return jsFunction_toString(cx, thisObj, args);
 
                 case Id_apply:
-                    return jsFunction_apply(cx, scope, thisObj, args);
+                    return applyOrCall(true, cx, scope, thisObj, args);
 
                 case Id_call:
-                    return jsFunction_call(cx, scope, thisObj, args);
+                    return applyOrCall(false, cx, scope, thisObj, args);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
@@ -385,58 +384,53 @@ public class BaseFunction extends IdScriptable implements Function {
     }
 
     /**
-     * Function.prototype.apply
+     * Function.prototype.apply and Function.prototype.call
      *
-     * A proposed ECMA extension for round 2.
+     * See Ecma 15.3.4.[34]
      */
-    private static Object jsFunction_apply(Context cx, Scriptable scope,
-                                           Scriptable thisObj, Object[] args)
+    private static Object applyOrCall(boolean isApply,
+                                      Context cx, Scriptable scope,
+                                      Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        if (args.length != 2)
-            return jsFunction_call(cx, scope, thisObj, args);
-        Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        Scriptable newThis = args[0] == null
-                             ? ScriptableObject.getTopLevelScope(thisObj)
-                             : ScriptRuntime.toObject(cx, scope, args[0]);
-        Object[] newArgs;
-        if (args.length > 1) {
-            if ((args[1] instanceof NativeArray)
-                    || (args[1] instanceof Arguments))
-                newArgs = cx.getElements((Scriptable) args[1]);
-            else
-                throw NativeGlobal.typeError0("msg.arg.isnt.array", thisObj);
-        }
-        else
-            newArgs = ScriptRuntime.emptyArgs;
-        return ScriptRuntime.call(cx, val, newThis, newArgs, newThis);
-    }
+        int L = args.length;
+        Object function = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
 
-    /**
-     * Function.prototype.call
-     *
-     * A proposed ECMA extension for round 2.
-     */
-    private static Object jsFunction_call(Context cx, Scriptable scope,
-                                          Scriptable thisObj, Object[] args)
-        throws JavaScriptException
-    {
-        Object val = thisObj.getDefaultValue(ScriptRuntime.FunctionClass);
-        if (args.length == 0) {
-            Scriptable s = ScriptRuntime.toObject(cx, scope, val);
-            Scriptable topScope = s.getParentScope();
-            return ScriptRuntime.call(cx, val,
-                                      topScope, ScriptRuntime.emptyArgs,
-                                      topScope);
+        Object callThis;
+        if (L == 0 || args[0] == null || args[0] == Undefined.instance) {
+            callThis = ScriptableObject.getTopLevelScope(scope);
         } else {
-            Scriptable newThis = args[0] == null
-                                 ? ScriptableObject.getTopLevelScope(thisObj)
-                                 : ScriptRuntime.toObject(cx, scope, args[0]);
-
-            Object[] newArgs = new Object[args.length - 1];
-            System.arraycopy(args, 1, newArgs, 0, newArgs.length);
-            return ScriptRuntime.call(cx, val, newThis, newArgs, newThis);
+            callThis = ScriptRuntime.toObject(cx, scope, args[0]);
         }
+
+        Object[] callArgs;
+        if (isApply) {
+            // Follow Ecma 15.3.4.3
+            if (L <= 1) {
+                callArgs = ScriptRuntime.emptyArgs;
+            } else {
+                Object arg1 = args[1];
+                if (arg1 == null || arg1 == Undefined.instance) {
+                    callArgs = ScriptRuntime.emptyArgs;
+                } else if (arg1 instanceof NativeArray
+                           || arg1 instanceof Arguments)
+                {
+                    callArgs = cx.getElements((Scriptable) arg1);
+                } else {
+                    throw NativeGlobal.typeError0("msg.arg.isnt.array", scope);
+                }
+            }
+        } else {
+            // Follow Ecma 15.3.4.4
+            if (L <= 1) {
+                callArgs = ScriptRuntime.emptyArgs;
+            } else {
+                callArgs = new Object[L - 1];
+                System.arraycopy(args, 1, callArgs, 0, L - 1);
+            }
+        }
+
+        return ScriptRuntime.call(cx, function, callThis, callArgs, scope);
     }
 
     protected String getIdName(int id) {
