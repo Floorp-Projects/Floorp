@@ -1,0 +1,28 @@
+#
+# Copyright 2002 Sun Microsystems, Inc.  All rights reserved.
+# Use is subject to license terms.
+#
+#ident	"$Id: prototype_com,v 1.2 2002/10/02 23:11:35 kirk.erickson%sun.com Exp $"
+#
+# This required package information file contains a list of package contents.
+# The 'pkgmk' command uses this file to identify the contents of a package
+# and their location on the development machine when building the package.
+# Can be created via a text editor or through use of the 'pkgproto' command.
+
+#!search <pathname pathname ...>	# where to find pkg objects
+#!include <filename>			# include another 'prototype' file
+#!default <mode> <owner> <group>	# default used if not specified on entry
+#!<param>=<value>			# puts parameter in pkg environment
+
+# packaging files
+i copyright
+i pkginfo
+i depend=pkgdepend
+#
+# source locations relative to the prototype file
+#
+# SUNWtlsx
+#
+d none usr 755 root sys
+d none usr/lib 755 root bin
+d none usr/lib/mps 755 root bin
