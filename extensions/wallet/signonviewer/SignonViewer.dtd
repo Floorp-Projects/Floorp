@@ -1,8 +1,8 @@
 <!ENTITY      windowtitle.label               "Stored Passwords">
 <!ENTITY      tab.signonsstored.label         "Passwords Saved">
 <!ENTITY      tab.signonsnotstored.label      "Passwords Never Saved">
-<!ENTITY      tab.nopreview.label             "Forms never Previewed">
-<!ENTITY      tab.nocapture.label             "Forms never Saved">
+<!ENTITY      tab.nopreview.label             "Forms Never Previewed">
+<!ENTITY      tab.nocapture.label             "Forms Never Saved">
 
 <!ENTITY      spiel.signonsstored.label       "Browser has saved login information for the following sites:">
 <!ENTITY      spiel.signonsnotstored.label    "Browser will never save login information for the following sites:">
