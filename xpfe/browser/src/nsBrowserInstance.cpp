@@ -611,18 +611,18 @@ nsBrowserAppCore::UpdateGoMenu()
   // Check if toolbar has children.
   rv = mainMenubarNode->HasChildNodes(&hasChildren);
   if (NS_SUCCEEDED(rv) && hasChildren) {	
-     nsIDOMNodeList *   childList=nsnull;
+     nsCOMPtr<nsIDOMNodeList>   childList;
 
      //Get handle to the children list
-     rv = mainMenubarNode->GetChildNodes(&childList);
+     rv = mainMenubarNode->GetChildNodes(getter_AddRefs(childList));
      if (NS_SUCCEEDED(rv) && childList) {
         PRInt32 ccount=0;
         childList->GetLength((unsigned int *)&ccount);
         
 		// Get the 'Go' menu
         for (PRInt32 i=0; i<ccount; i++) {
-            nsIDOMNode * child=nsnull;
-            rv = childList->Item(i, &child);
+            nsCOMPtr<nsIDOMNode> child;
+            rv = childList->Item(i, getter_AddRefs(child));
 			if (!NS_SUCCEEDED(rv) || !child) {
                if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Couldn't get child %d from menu bar\n", i);
 			   return NS_ERROR_FAILURE;
@@ -646,10 +646,8 @@ nsBrowserAppCore::UpdateGoMenu()
 				goMenuNode = child;
 				break;
 			}
-			NS_RELEASE(child);
         } //(for)	
      }   // if (childList)
-	 NS_RELEASE(childList);
   }    // hasChildren
   else {
 	  if (APP_DEBUG) printf("nsBrowserAppCore::UpdateGoMenu Menubar has no children\n");
@@ -716,20 +714,20 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
 {
 
 	 nsresult rv;
-	 nsIDOMNode * menu = aParent;
+	 nsCOMPtr<nsIDOMNode> menu = dont_QueryInterface(aParent);
 
-     nsIDOMNodeList *   childList=nsnull;
+     nsCOMPtr<nsIDOMNodeList>   childList;
 
      //Get handle to the children list
-     rv = menu->GetChildNodes(&childList);
+     rv = menu->GetChildNodes(getter_AddRefs(childList));
      if (NS_SUCCEEDED(rv) && childList) {
         PRInt32 ccount=0;
         childList->GetLength((unsigned int *)&ccount);
 
         // Remove the children that has the 'hist' attribute set to true.
         for (PRInt32 i=0; i<ccount; i++) {
-            nsIDOMNode * child=nsnull;
-            rv = childList->Item(i, &child);
+            nsCOMPtr<nsIDOMNode> child;
+            rv = childList->Item(i, getter_AddRefs(child));
 			if (!NS_SUCCEEDED(rv) ||  !child) {
 				printf("nsBrowserAppCore::ClearHistoryPopup, Could not get child\n");
 				return NS_ERROR_FAILURE;
@@ -745,27 +743,24 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
 			rv = childElement->GetAttribute(attrname, attrvalue);
 			if (NS_SUCCEEDED(rv) && attrvalue == "true") {
 				// It is a history menu item. Remove it
-                nsIDOMNode * ret=nsnull;			    
-                rv = menu->RemoveChild(child, &ret);
+                nsCOMPtr<nsIDOMNode> ret;			    
+                rv = menu->RemoveChild(child, getter_AddRefs(ret));
 			    if (NS_SUCCEEDED(rv)) {
 				   if (ret) {
-				      if (APP_DEBUG) printf("nsBrowserAppCore::ClearHistoryPopup Child %x removed from the popuplist \n", (unsigned int) child);			          
-					  NS_IF_RELEASE(child);					  
+				      if (APP_DEBUG) printf("nsBrowserAppCore::ClearHistoryPopup Child %x removed from the popuplist \n", (unsigned int) child.get());			          
 				   }
 				   else {
-				      printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child);
+				      printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
 				   }
 				}  // NS_SUCCEEDED(rv)
 			    else
 				{
-				   printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child);
+				   printf("nsBrowserAppCore::ClearHistoryPopup Child %x was not removed from popuplist\n", (unsigned int) child.get());
                    return NS_ERROR_FAILURE;
 				}				  
-			    NS_IF_RELEASE(ret);
 			}  // atrrvalue == true			 
 		} //(for)	
 	 }   // if (childList)
-	 NS_RELEASE(childList);
 	 return NS_OK;
 }
 
