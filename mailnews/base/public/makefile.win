@@ -28,7 +28,7 @@ XPIDLSRCS =                                       \
 			.\nsIMsgIncomingServer.idl			\
 			.\nsIMsgThread.idl					\
 			.\nsIMsgMessageService.idl			\
-			.\nsIDOMMsgAppcore.idl				\
+#			.\nsIDOMMsgAppcore.idl				\
 			.\nsIUrlListener.idl				\
 			$(NULL)
 
