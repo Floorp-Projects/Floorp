@@ -2202,21 +2202,16 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     convertFileToURL(urlStr, urlSpec);
     rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
     if (NS_FAILED(rv)) {
-#if 0
       // keyword failover
       // we kick the following cases to the keyword server:
       //   * starts with a '?'
       //   * contains a space
-      //   * is a single word (contains no dots or scheme) XXX: this breaks
-      //     intranet host lookups. This latter case needs to be handled by 
-      //     dns notifications rather than string interrogation.
-      if ( (urlStr.FindChar('.') == -1) || (urlStr.First() == '?') || (urlStr.FindChar(' ') > -1) ) {
+      if ( (urlStr.First() == '?') || (urlStr.FindChar(' ') > -1) ) {
           nsAutoString keywordSpec("keyword:");
           keywordSpec.Append(aURLSpec);
 
           rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
       }
-#endif // 0
 
       if (NS_FAILED(rv)) {
           PRInt32 colon, fSlash = urlSpec.FindChar('/');
