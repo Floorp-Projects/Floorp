@@ -375,8 +375,7 @@ NS_NewStreamObserverProxy(nsIStreamObserver **aResult,
     rv = proxy->Init(aObserver, aEventQ);
     if (NS_FAILED(rv)) return rv;
 
-    NS_ADDREF(*aResult = proxy);
-    return NS_OK;
+    return CallQueryInterface(proxy, aResult);
 }
 
 inline nsresult
@@ -569,6 +568,18 @@ NS_AsyncWriteFromStream(nsIRequest **aRequest,
                                     aSource,
                                     aObserver);
     if (NS_FAILED(rv)) return rv;
+
+    //
+    // We can safely allow the transport impl to bypass proxying the provider
+    // since we are using a simple stream provider.
+    // 
+    // A simple stream provider masks the OnDataWritable from consumers.  
+    // Moreover, it makes an assumption about the underlying nsIInputStream
+    // implementation: namely, that it is thread-safe and blocking.
+    //
+    // So, let's always make this optimization.
+    //
+    aFlags |= nsITransport::DONT_PROXY_STREAM_PROVIDER;
 
     return aTransport->AsyncWrite(provider, aContext,
                                   aOffset,

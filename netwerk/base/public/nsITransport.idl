@@ -48,7 +48,7 @@ interface nsITransport : nsISupports
      * Open an input stream on this transport.
      *
      * @param offset - read starting at this offset
-     * @param count  - read this many bytes
+     * @param count  - read this many bytes (pass ULONG_MAX if unlimited)
      * @param flags  - optional transport specific flags
      */
     nsIInputStream openInputStream(in unsigned long offset,
@@ -59,7 +59,7 @@ interface nsITransport : nsISupports
      * Open an output stream on this transport.
      *
      * @param offset - write starting at this offset
-     * @param count  - write no more than this many bytes
+     * @param count  - write no more than this many bytes (pass ULONG_MAX if unlimited)
      * @param flags  - optional transport specific flags
      */
     nsIOutputStream openOutputStream(in unsigned long offset,
@@ -72,7 +72,7 @@ interface nsITransport : nsISupports
      * @param listener - notify this listener when data is available
      * @param ctxt     - opaque parameter passed to listener methods
      * @param offset   - read starting at this offset
-     * @param count    - read this many bytes
+     * @param count    - read this many bytes (pass ULONG_MAX if unlimited)
      * @param flags    - optional transport specific flags
      */
     nsIRequest asyncRead(in nsIStreamListener listener,
@@ -87,7 +87,7 @@ interface nsITransport : nsISupports
      * @param provider - notify this provider when data can be written
      * @param ctxt     - opaque parameter passed to provider methods
      * @param offset   - write starting at this offset
-     * @param count    - write this many bytes
+     * @param count    - write no more than this many bytes (pass ULONG_MAX if unlimited)
      * @param flags    - optional transport specific flags
      */
     nsIRequest asyncWrite(in nsIStreamProvider provider,
@@ -95,6 +95,19 @@ interface nsITransport : nsISupports
                           in unsigned long offset,
                           in unsigned long count,
                           in unsigned long flags);
+
+    /**
+     * Callbacks from asyncRead and asyncWrite may be proxied from a
+     * background thread (if one exists) to the thread which initiated
+     * the request.  This is the expected behavior of such a nsITransport
+     * implementation.  A caller of asyncRead or asyncWrite can explicitly
+     * ask the transport to not proxy the callback.  The caller must then
+     * be prepared to handle callbacks on any thread.
+     */
+    const unsigned long DONT_PROXY_STREAM_OBSERVER = 1 << 0;
+    const unsigned long DONT_PROXY_STREAM_LISTENER = 1 << 1;
+    const unsigned long DONT_PROXY_STREAM_PROVIDER = 1 << 1;
+
 };
 
 [scriptable, uuid(d7abf5a4-ce72-482a-9217-a219a905c019)]

@@ -57,7 +57,7 @@ public:
     nsCAutoString    mCwd;                  // what dir are we in
     PRBool           mList;                 // are we sending LIST or NLST
     nsAutoString     mPassword;
-    PRBool           mSuspendedWrite;
+    PRInt32          mSuspendedWrite;
 
 private:
 	PRLock* mLock;  // protects mListener.

@@ -353,6 +353,9 @@ public:
     PRErrorCode GetError() { return mError; }
 
 private:
+    static NS_METHOD WriteFromSegments(nsIInputStream *, void *, const char *,
+                                       PRUint32, PRUint32, PRUint32 *);
+
     PRUint32    mOffset;
     PRFileDesc *mSock;
     PRErrorCode mError;
@@ -376,22 +379,23 @@ public:
     PRBool IsCanceled() { return mCanceled; }
 
     void SetTransport(nsSocketTransport *);
+    void SetObserver(nsIStreamObserver *obs) { mObserver = obs; }
+    void SetContext(nsISupports *ctx) { mContext = ctx; }
     void SetStatus(nsresult status) { mStatus = status; }
-    
-    virtual nsISupports *GetContext() = 0;
 
-    virtual nsresult OnStart() = 0;
-    virtual nsresult OnStop() = 0;
+    nsISupports *Context() { return mContext; }
+    
+    nsresult OnStart();
+    nsresult OnStop();
 
 protected:
-    nsresult OnStart(nsIStreamObserver *, nsISupports *);
-    nsresult OnStop(nsIStreamObserver *, nsISupports *);
-
-    nsSocketTransport *mTransport;
-    nsresult           mStatus;
-    PRIntn             mSuspendCount;
-    PRPackedBool       mCanceled;
-    PRPackedBool       mStartFired;
+    nsSocketTransport          *mTransport;
+    nsCOMPtr<nsIStreamObserver> mObserver;
+    nsCOMPtr<nsISupports>       mContext;
+    nsresult                    mStatus;
+    PRIntn                      mSuspendCount;
+    PRPackedBool                mCanceled;
+    PRPackedBool                mStartFired;
 };
 
 /**
@@ -405,18 +409,12 @@ public:
 
     void SetSocket(PRFileDesc *);
     void SetListener(nsIStreamListener *l) { mListener = l; }
-    void SetListenerContext(nsISupports *c) { mListenerContext = c; }
 
-    nsISupports *GetContext() { return mListenerContext; }
-
-    nsresult OnStart() { return nsSocketRequest::OnStart(mListener, mListenerContext); }
-    nsresult OnStop() { return nsSocketRequest::OnStop(mListener, mListenerContext); }
     nsresult OnRead();
 
 private:
     nsSocketIS                 *mInputStream;
     nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsISupports>       mListenerContext;
 };
 
 /**
@@ -430,18 +428,12 @@ public:
 
     void SetSocket(PRFileDesc *);
     void SetProvider(nsIStreamProvider *p) { mProvider = p; }
-    void SetProviderContext(nsISupports *c) { mProviderContext = c; }
 
-    nsISupports *GetContext() { return mProviderContext; }
-
-    nsresult OnStart() { return nsSocketRequest::OnStart(mProvider, mProviderContext); }
-    nsresult OnStop() { return nsSocketRequest::OnStop(mProvider, mProviderContext); }
     nsresult OnWrite();
 
 private:
     nsSocketOS                 *mOutputStream;
     nsCOMPtr<nsIStreamProvider> mProvider;
-    nsCOMPtr<nsISupports>       mProviderContext;
 };
 
 #endif /* nsSocketTransport_h___ */
