@@ -6,8 +6,8 @@
 # as a Dump of the $DATABASE reference.
 
 
-# $Revision: 1.8 $ 
-# $Date: 2002/04/26 22:04:55 $ 
+# $Revision: 1.9 $ 
+# $Date: 2002/05/01 01:48:13 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/BasicTxtDB.pm,v $ 
 # $Name:  $ 
@@ -50,7 +50,7 @@ use FileStructure;
 use Persistence;
 
 
-$VERSION = ( qw $Revision: 1.8 $ )[1];
+$VERSION = ( qw $Revision: 1.9 $ )[1];
 
 
 # To help preserve the database in the event of a serious system
@@ -240,5 +240,53 @@ sub savetree_db {
 
   return ;
 }
+
+# -------------------------------------------------------------- 
+
+# These functions assume that the data is stored in a structure which
+# looks like:
+# 		$DATABASE{$tree}{$time};
+
+
+# remove all records from the database which are older then last_time.
+
+sub trim_db_history {
+  my ($self, $tree,) = (@_);
+
+  my ($last_time) =  $main::TIME - $TinderDB::TRIM_SECONDS;
+
+  # sort numerically ascending
+  my (@times) = sort {$a <=> $b} keys %{ $DATABASE{$tree} };
+  foreach $time (@times) {
+    ($time >= $last_time) && last;
+
+    delete $DATABASE{$tree}{$time};
+  }
+
+  return ;
+}
+
+# return a list of all the times where an even occured.
+
+sub event_times_vec {
+  my ($self, $start_time, $end_time, $tree) = (@_);
+
+  my ($name_space) = ref($self);
+  my ($name_db) = "${name_space}::DATABASE";
+
+  # sort numerically descending
+  my (@times) = sort {$b <=> $a} keys %{ $ { $name_db }{$tree} };
+
+  my @out;
+  foreach $time (@times) {
+    ($time <= $start_time) || next;
+    ($time <= $end_time) && last;
+    push @out, $time;
+  }
+
+  return @out;
+}
+
+
 
 1;
