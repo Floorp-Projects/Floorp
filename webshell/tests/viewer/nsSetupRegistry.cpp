@@ -63,7 +63,8 @@
 #include "nsIGenericFactory.h"
 
 #include "nsSpecialSystemDirectory.h"	// For exe dir
-#include "nspr.h"
+#include "prprf.h"
+#include "prmem.h"
 
 #ifdef XP_PC
 #define XPCOM_DLL  "xpcom32.dll"
@@ -271,19 +272,29 @@ NS_SetupRegistry()
 {
   // Autoregistration happens here. The rest of RegisterComponent() calls should happen
   // only for dlls not in the components directory.
-#ifdef XP_UNIX
+#if defined(XP_UNIX) || defined(XP_PC)
+  // Create exeDir/"components"
   nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
+  sysdir += "components";
   nsFilePath filePath(sysdir);
-  char *componentsDir = PR_smprintf("%s/components", (char *) filePath);
+  char *componentsDir = (char *) filePath;
   if (componentsDir != NULL)
-    {
-      printf("nsComponentManager: Using components dir: %s\n", componentsDir);
-      nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
-      PR_Free(componentsDir);
-      // XXX Look for user specific components
-      // XXX UNIX: ~/.mozilla/components
-    }
-#endif /* XP_UNIX */
+  {
+#ifdef XP_PC
+	  /* The PC version of the directory from filePath is of the form
+	   *	/y|/moz/mozilla/dist/bin/components
+	   * We need to remove the initial / and change the | to :
+	   * for all this to work with NSPR.
+	   */
+	  componentsDir++;
+	  componentsDir[1] = ':';
+#endif /* XP_PC */
+	  printf("nsComponentManager: Using components dir: %s\n", componentsDir);
+	  nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup, componentsDir);
+	  // XXX Look for user specific components
+	  // XXX UNIX: ~/.mozilla/components
+  }
+#endif
 
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kAllocatorCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
