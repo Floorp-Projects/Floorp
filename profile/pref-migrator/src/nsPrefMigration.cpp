@@ -690,7 +690,7 @@ nsPrefMigration::ProcessPrefsCallback(const char* oldProfilePathStr, const char 
   //
   // Start computing the sizes required for migration
   //
-  rv = GetSizes(oldProfileSpec, PR_TRUE, &totalProfileSize);
+  rv = GetSizes(oldProfileSpec, PR_FALSE, &totalProfileSize);
   profileDrive = newProfileSpec.GetDiskSpaceAvailable();
 
   rv = m_prefs->GetIntPref(PREF_MAIL_SERVER_TYPE, &serverType);
