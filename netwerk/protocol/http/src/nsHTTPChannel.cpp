@@ -91,23 +91,6 @@ PRTimeToSeconds(PRTime t_usec)
     return t_sec;
 }
 
-static void
-SecondsToTimeString(char *buf, PRUint32 bufsize, PRUint32 t_sec)
-{
-    PRTime t_usec = SecondsToPRTime(t_sec);
-    PRExplodedTime et;
-    PR_ExplodeTime(t_usec, PR_LocalTimeParameters, &et);
-    PR_FormatTime(buf, bufsize, "%c", &et);
-}
-
-static void
-TimeStringToSeconds(const char *str, PRUint32 *t_sec)
-{
-    PRTime t_usec = LL_ZERO;
-    PR_ParseTimeString(str, PR_TRUE, &t_usec);
-    *t_sec = PRTimeToSeconds(t_usec);
-}
-
 #define NowInSeconds() PRTimeToSeconds(PR_Now())
 
 #else // MOZ_NEW_CACHE
@@ -148,6 +131,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI *aURL, nsHTTPHandler *aHandler)
 #ifdef MOZ_NEW_CACHE
     , mCacheAccess(nsICache::ACCESS_NONE)
     , mPostID(0)
+    , mRequestTime(0)
 #endif
     , mAuthRealm(nsnull)
     , mProxyType(nsnull)
@@ -916,69 +900,13 @@ nsHTTPChannel::GenerateCacheKey(nsAWritableCString &cacheKey)
     return NS_OK;
 }
 
-// The request-time is the time at which we sent the request.
-nsresult
-nsHTTPChannel::GetRequestTime(PRUint32 *value)
-{
-    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
-
-    nsXPIDLCString str;
-    nsresult rv = mCacheEntry->GetMetaDataElement("request-time", getter_Copies(str));
-    if (NS_FAILED(rv)) return rv;
-
-    *value = 0;
-
-    if (str)
-        TimeStringToSeconds(str, value);
-
-    return NS_OK;
-}
-
-nsresult
-nsHTTPChannel::SetRequestTime(PRUint32 value)
-{
-    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
-
-    char buf[256];
-    SecondsToTimeString(buf, sizeof(buf), value);
-
-    return mCacheEntry->SetMetaDataElement("request-time", buf); 
-}
-
-// The response-time is the time at which we received the response.
-nsresult
-nsHTTPChannel::GetResponseTime(PRUint32 *value)
-{
-    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
-
-    nsXPIDLCString str;
-    nsresult rv = mCacheEntry->GetMetaDataElement("response-time", getter_Copies(str));
-    if (NS_FAILED(rv)) return rv;
-
-    *value = 0;
-
-    if (str)
-        TimeStringToSeconds(str, value);
-
-    return NS_OK;
-}
-
-nsresult
-nsHTTPChannel::SetResponseTime(PRUint32 value)
-{
-    NS_ENSURE_TRUE(mCacheEntry, NS_ERROR_NOT_AVAILABLE);
-
-    char buf[256];
-    SecondsToTimeString(buf, sizeof(buf), value);
-
-    return mCacheEntry->SetMetaDataElement("response-time", buf); 
-}
-
 // From section 13.2.3 of RFC2616, we compute the current age of a cached
 // response as follows:
 //
 //    currentAge = max(max(0, responseTime - dateValue), ageValue)
 //               + now - requestTime
+//
+//    where responseTime == now
 //
 // This is typically a very small number.
 //
@@ -988,7 +916,7 @@ nsHTTPChannel::ComputeCurrentAge(PRUint32 now,
 {
     NS_ENSURE_TRUE(mResponse, NS_ERROR_NOT_AVAILABLE);
 
-    PRUint32 requestTime, responseTime, dateValue;
+    PRUint32 dateValue;
     PRUint32 ageValue = 0;
     PRBool avail = PR_FALSE;
     nsresult rv;
@@ -1004,27 +932,21 @@ nsHTTPChannel::ComputeCurrentAge(PRUint32 now,
         dateValue = now;
     }
 
-    rv = GetRequestTime(&requestTime);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = GetResponseTime(&responseTime);
-    if (NS_FAILED(rv)) return rv;
-
     rv = mResponse->GetAgeValue(&ageValue, &avail);
     if (NS_FAILED(rv)) return rv;
 
     // Compute apparent age
-    if (responseTime > dateValue)
-        *result = responseTime - dateValue;
+    if (now > dateValue)
+        *result = now - dateValue;
 
     // Compute corrected received age
     if (avail)
         *result = PR_MAX(*result, ageValue);
 
-    NS_ASSERTION(now >= requestTime, "bogus request time");
+    NS_ASSERTION(now >= mRequestTime, "bogus request time");
 
     // Compute current age
-    *result += (now - requestTime);
+    *result += (now - mRequestTime);
 
     return NS_OK;
 }
@@ -1103,9 +1025,6 @@ nsHTTPChannel::UpdateExpirationTime()
     nsresult rv;
     PRUint32 now = NowInSeconds();
     PRUint32 freshnessLifetime, currentAge, timeRemaining = 0;
-
-    rv = SetResponseTime(now);
-    if (NS_FAILED(rv)) return rv;
 
     rv = ComputeCurrentAge(now, &currentAge); 
     if (NS_FAILED(rv)) return rv;
@@ -2229,7 +2148,7 @@ nsHTTPChannel::Connect()
     
 #ifdef MOZ_NEW_CACHE
     if (mCacheEntry)
-        SetRequestTime(NowInSeconds());
+        mRequestTime = NowInSeconds();
 #endif
 
     mState = HS_WAITING_FOR_RESPONSE;
