@@ -339,6 +339,7 @@ var gEditorDocumentObserver =
             HideItem("linkButton");
             HideItem("namedAnchorButton");
             HideItem("hlineButton");
+            HideItem("tableButton");
 
             SetElementEnabledById("cmd_viewFormatToolbar", false);
             SetElementEnabledById("cmd_viewEditModeToolbar", false);
@@ -3013,8 +3014,6 @@ function SwitchInsertCharToAnotherEditorOrClose()
       {
         tempWindow.InsertCharWindow = window.InsertCharWindow;
         window.InsertCharWindow = null;
-
-        tempWindow.InsertCharWindow.editorShell = tempWindow.editorShell;
         tempWindow.InsertCharWindow.opener = tempWindow;
         return;
       }
