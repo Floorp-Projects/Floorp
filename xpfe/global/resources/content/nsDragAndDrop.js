@@ -150,7 +150,14 @@ var nsDragAndDrop = {
       while (transferData._XferID == "TransferDataSet" && 
              count < transferData.dataList.length);
       
-      this.mDragService.invokeDragSession(aEvent.target, transArray, region, dragAction.action);
+      try {
+        this.mDragService.invokeDragSession(aEvent.target, transArray, region, dragAction.action);
+      }
+      catch(ex) {
+        // this could be because the user pressed escape to
+        // cancel the drag. even if it's not, there's not much
+        // we can do, so be silent.
+      }
       aEvent.preventBubble();
     },
 
