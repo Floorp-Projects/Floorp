@@ -1381,7 +1381,7 @@ ArrowCreate(Widget w)
 							 XmNbackgroundPixmap,	_XfeBackgroundPixmap(w),
  							 XmNshadowThickness,		1,
 /*  							 XmNemulateMotif,			False, */
- 							 XmNraiseBorderThickness,	0,
+ 							 XmNaccentBorderThickness,	0,
 							 XmNraiseOnEnter,			False,
  							 XmNfillOnEnter,			False,
  							 XmNshadowThickness,		0,

@@ -54,7 +54,7 @@
 #define MESSAGE18 "XmNraised can only be set when XmNraiseOnEnter is True."
 
 #define RAISE_OFFSET(bp) \
-(bp->raise_on_enter ? bp->raise_border_thickness : 0)
+(bp->raise_on_enter ? bp->accent_border_thickness : 0)
 
 #define XY_IN_LABEL(_lp,_x,_y) XfePointInRect(&(_lp)->label_rect,(_x),(_y))
 #define XY_IN_PIXMAP(_bp,_x,_y) XfePointInRect(&(_bp)->pixmap_rect,(_x),(_y))
@@ -106,7 +106,7 @@ static GC	GetLabelGC			(Widget);
 /*----------------------------------------------------------------------*/
 static void	LayoutPixmap		(Widget);
 static void	DrawPixmap			(Widget,XEvent *,Region,XRectangle *);
-static void	DrawRaiseBorder		(Widget,XEvent *,Region,XRectangle *);
+static void	DrawAccentBorder	(Widget,XEvent *,Region,XRectangle *);
 static void	DrawUnderline		(Widget,XEvent *,Region,XRectangle *);
 static void	ArmTimeout			(XtPointer,XtIntervalId *);
 
@@ -309,11 +309,11 @@ static XtResource resources[] =
 		(XtPointer) DefaultRaiseBackground
     },
     { 
-		XmNraiseBorderThickness,
-		XmCRaiseBorderThickness,
+		XmNaccentBorderThickness,
+		XmCAccentBorderThickness,
 		XmRHorizontalDimension,
 		sizeof(Dimension),
-		XtOffsetOf(XfeButtonRec , xfe_button . raise_border_thickness),
+		XtOffsetOf(XfeButtonRec , xfe_button . accent_border_thickness),
 		XmRImmediate, 
 		(XtPointer) 1
     },
@@ -517,9 +517,9 @@ static XmSyntheticResource syn_resources[] =
 		_XmToHorizontalPixels 
     },
     { 
-		XmNraiseBorderThickness,
+		XmNaccentBorderThickness,
 		sizeof(Dimension),
-		XtOffsetOf(XfeButtonRec , xfe_button . raise_border_thickness),
+		XtOffsetOf(XfeButtonRec , xfe_button . accent_border_thickness),
 		_XmFromHorizontalPixels,
 		_XmToHorizontalPixels 
     },
@@ -662,7 +662,7 @@ _XFE_WIDGET_CLASS_RECORD(button,Button) =
     {
 		LayoutPixmap,							/* layout_pixmap		*/
 		DrawPixmap,								/* draw_pixmap			*/
-		DrawRaiseBorder,						/* draw_raise_border	*/
+		DrawAccentBorder,						/* draw_accent_border	*/
 		DrawUnderline,							/* draw_underline		*/
 		ArmTimeout,								/* arm_timeout			*/
 		NULL,									/* extension            */
@@ -785,8 +785,8 @@ ClassPartInit(WidgetClass wc)
 	_XfeResolve(cc,sc,xfe_button_class,layout_pixmap,XfeInheritLayoutPixmap);
 	_XfeResolve(cc,sc,xfe_button_class,draw_pixmap,XfeInheritDrawPixmap);
 
-	_XfeResolve(cc,sc,xfe_button_class,draw_raise_border,
-				XfeInheritDrawRaiseBorder);
+	_XfeResolve(cc,sc,xfe_button_class,draw_accent_border,
+				XfeInheritDrawAccentBorder);
 
 	_XfeResolve(cc,sc,xfe_button_class,draw_underline,
 				XfeInheritDrawUnderline);
@@ -930,8 +930,8 @@ SetValues(Widget ow,Widget rw,Widget nw,ArgList args,Cardinal *nargs)
 		}
     }
 
-    /* raise_border_thickness */
-    if (np->raise_border_thickness != op->raise_border_thickness)
+    /* accent_border_thickness */
+    if (np->accent_border_thickness != op->accent_border_thickness)
     {
 		_XfeConfigFlags(nw) |= XfeConfigGLE;
     }
@@ -1217,8 +1217,8 @@ PreferredGeometry(Widget w,Dimension *width,Dimension *height)
 	/* Include the raise_border_thickenss if needed */
 	if (bp->raise_on_enter)
 	{
-		*width  += (2 * bp->raise_border_thickness);
-		*height += (2 * bp->raise_border_thickness);
+		*width  += (2 * bp->accent_border_thickness);
+		*height += (2 * bp->accent_border_thickness);
 	}
 	
     switch(bp->button_layout)
@@ -1359,8 +1359,8 @@ DrawComponents(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 	/* Invoke draw_pixmap method */
 	_XfeButtonDrawPixmap(w,event,region,clip_rect);
 
-	/* Invoke draw_raise_border method */
-	_XfeButtonDrawRaiseBorder(w,event,region,clip_rect);
+	/* Invoke draw_accent_border method */
+	_XfeButtonDrawAccentBorder(w,event,region,clip_rect);
 
 	/* Invoke draw_underline method */
 	_XfeButtonDrawUnderline(w,event,region,clip_rect);
@@ -1705,12 +1705,12 @@ DrawPixmap(Widget w,XEvent * event,Region region,XRectangle * clip_rect)
 }
 /*----------------------------------------------------------------------*/
 static void
-DrawRaiseBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
+DrawAccentBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 {
     XfeButtonPart *	bp = _XfeButtonPart(w);
 
 	/* Make sure the thickness of the raise border ain't 0 */
-	if (bp->raise_border_thickness == 0)
+	if (bp->accent_border_thickness == 0)
 	{
 		return;
 	}
@@ -1740,7 +1740,7 @@ DrawRaiseBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 							 
 						 _XfeHeight(w) - 2 * _XfeHighlightThickness(w),
 							 
-						 bp->raise_border_thickness);
+						 bp->accent_border_thickness);
 	}
 	else
 	{
@@ -1758,7 +1758,7 @@ DrawRaiseBorder(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 							 
 						 _XfeHeight(w) - 2 * _XfeHighlightThickness(w),
 							 
-						 bp->raise_border_thickness);
+						 bp->accent_border_thickness);
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -2244,16 +2244,16 @@ _XfeButtonDrawPixmap(Widget			w,
 }
 /*----------------------------------------------------------------------*/
 /* extern */ void
-_XfeButtonDrawRaiseBorder(Widget		w,
+_XfeButtonDrawAccentBorder(Widget		w,
 						  XEvent *		event,
 						  Region		region,
 						  XRectangle *	clip_rect)
 {
 	XfeButtonWidgetClass bc = (XfeButtonWidgetClass) XtClass(w);
 
-	if (bc->xfe_button_class.draw_raise_border)
+	if (bc->xfe_button_class.draw_accent_border)
 	{
-		(*bc->xfe_button_class.draw_raise_border)(w,event,region,clip_rect);
+		(*bc->xfe_button_class.draw_accent_border)(w,event,region,clip_rect);
 	}
 }
 /*----------------------------------------------------------------------*/

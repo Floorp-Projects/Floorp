@@ -191,13 +191,13 @@ static XtResource resources[] =
 		(XtPointer) XmVERTICAL
     },
 
-	/* Force XmNraiseBorderThickness to 0 */
+	/* Force XmNaccentBorderThickness to 0 */
     { 
-		XmNraiseBorderThickness,
-		XmCRaiseBorderThickness,
+		XmNaccentBorderThickness,
+		XmCAccentBorderThickness,
 		XmRHorizontalDimension,
 		sizeof(Dimension),
-		XtOffsetOf(XfeTabRec , xfe_button . raise_border_thickness),
+		XtOffsetOf(XfeTabRec , xfe_button . accent_border_thickness),
 		XmRImmediate, 
 		(XtPointer) 0
     },
@@ -317,7 +317,7 @@ _XFE_WIDGET_CLASS_RECORD(tab,Tab) =
     {
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		XfeInheritDrawPixmap,					/* draw_pixmap			*/
-		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border	*/
 		XfeInheritDrawUnderline,				/* draw_underline		*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */

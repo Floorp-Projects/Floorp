@@ -39,7 +39,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*----------------------------------------------------------------------*/
 #define XfeInheritLayoutPixmap				((XtWidgetProc)			_XtInherit)
 #define XfeInheritDrawPixmap				((XfeExposeProc)		_XtInherit)
-#define XfeInheritDrawRaiseBorder			((XfeExposeProc)		_XtInherit)
+#define XfeInheritDrawAccentBorder			((XfeExposeProc)		_XtInherit)
 #define XfeInheritDrawUnderline				((XfeExposeProc)		_XtInherit)
 #define XfeInheritArmTimeout				((XtTimerCallbackProc)	_XtInherit)
    
@@ -52,7 +52,7 @@ typedef struct
 {
     XtWidgetProc			layout_pixmap;		/* layout_pixmap		*/
     XfeExposeProc			draw_pixmap;		/* draw_pixmap			*/
-    XfeExposeProc			draw_raise_border;	/* draw_raise_border	*/
+    XfeExposeProc			draw_accent_border;	/* draw_raise_border	*/
     XfeExposeProc			draw_underline;		/* draw_underline		*/
 	XtTimerCallbackProc		arm_timeout;		/* arm_timeout			*/
     XtPointer				extension;			/* Extension			*/
@@ -110,7 +110,7 @@ typedef struct _XfeButtonPart
     Boolean				fill_on_enter;			/* Fill on enter ?		*/
     Pixel				raise_foreground;		/* Raise foreground		*/
     Pixel				raise_background;		/* Raise background		*/
-	Dimension			raise_border_thickness;	/* Raise border thickness*/
+	Dimension			accent_border_thickness;	/* Raise border thickness*/
     Boolean				raise_on_enter;			/* Raise on enter ?		*/
     Boolean				raised;					/* Raised ?				*/
     Boolean				determinate;			/* Determinate ?		*/
@@ -181,7 +181,7 @@ _XfeButtonDrawPixmap			(Widget			w,
 								 XRectangle *	clip_rect);
 /*----------------------------------------------------------------------*/
 extern void
-_XfeButtonDrawRaiseBorder		(Widget			w,
+_XfeButtonDrawAccentBorder		(Widget			w,
 								 XEvent *		event,
 								 Region			region,
 								 XRectangle *	clip_rect);

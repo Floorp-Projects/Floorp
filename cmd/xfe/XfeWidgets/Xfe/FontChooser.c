@@ -218,7 +218,7 @@ _XFE_WIDGET_CLASS_RECORD(fontchooser,FontChooser) =
     {
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		XfeInheritDrawPixmap,					/* draw_pixmap			*/
-		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border	*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */
     },

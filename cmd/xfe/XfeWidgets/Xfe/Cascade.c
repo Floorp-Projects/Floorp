@@ -419,7 +419,7 @@ _XFE_WIDGET_CLASS_RECORD(cascade,Cascade) =
     {
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		XfeInheritDrawPixmap,					/* draw_pixmap			*/
-		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border	*/
 		XfeInheritDrawUnderline,				/* draw_underline		*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */
@@ -709,7 +709,7 @@ DrawComponents(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 	_XfeButtonDrawPixmap(w,event,region,clip_rect);
 
 	/* Invoke draw_border method */
-	_XfeButtonDrawRaiseBorder(w,event,region,clip_rect);
+	_XfeButtonDrawAccentBorder(w,event,region,clip_rect);
 
 	/* Invoke draw_underline method */
 	_XfeButtonDrawUnderline(w,event,region,clip_rect);
@@ -905,7 +905,7 @@ GetPostPosition(Widget w,Position * x_out,Position * y_out)
 	
 	if (bp->raise_on_enter)
 	{
-		deco_offset += bp->raise_border_thickness;
+		deco_offset += bp->accent_border_thickness;
 	}
 
 	switch(cp->sub_menu_alignment)

@@ -5329,7 +5329,7 @@ Drag this to create a link to this page
 *urlLocationProxyIcon.cursor:			hand2
 
 *urlLocationProxyIcon.shadowThickness:			0
-*urlLocationProxyIcon.raiseBorderThickness:		0
+*urlLocationProxyIcon.accentBorderThickness:		0
 *urlLocationProxyIcon.fillOnArm:				false
 *urlLocationProxyIcon.buttonLayout:				button_pixmap_only
 
@@ -5383,7 +5383,7 @@ Drag this to create a link to this page
 *toolBoxItem*XfeToolBar.marginBottom:					0
 
 *toolBoxItem*XfeToolBar.spacing:						1
-*toolBoxItem*XfeToolBar.raiseBorderThickness:			2
+*toolBoxItem*XfeToolBar.accentBorderThickness:			2
 *toolBoxItem*XfeToolBar.indicatorThreshold:			10
 
 *toolBoxItem*XfeToolBar*XfeButton.marginBottom:		1
@@ -6625,7 +6625,7 @@ for download.
 *taskBarUndockButton.armOffset:					0
 *taskBarUndockButton.raiseOffset:				0
 *taskBarUndockButton.fillOnEnter:				true
-*taskBarUndockButton.raiseBorderThickness:		0
+*taskBarUndockButton.accentBorderThickness:		0
 *taskBarUndockButton.raiseOnEnter:				false
 *taskBarUndockButton.fillOnArm:					true
 *taskBarUndockButton.shadowThickness:			1

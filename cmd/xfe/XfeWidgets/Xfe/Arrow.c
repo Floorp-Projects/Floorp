@@ -300,7 +300,7 @@ _XFE_WIDGET_CLASS_RECORD(arrow,Arrow) =
     {
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		XfeInheritDrawPixmap,					/* draw_pixmap			*/
-		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border	*/
 		XfeInheritDrawUnderline,				/* draw_underline		*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */
@@ -433,8 +433,8 @@ PreferredGeometry(Widget w,Dimension *width,Dimension *height)
 	/* Include the raise_border_thickenss if needed */
 	if (bp->raise_on_enter)
 	{
-		*width  += (2 * bp->raise_border_thickness);
-		*height += (2 * bp->raise_border_thickness);
+		*width  += (2 * bp->accent_border_thickness);
+		*height += (2 * bp->accent_border_thickness);
 	}
 }
 /*----------------------------------------------------------------------*/
@@ -485,7 +485,7 @@ DrawComponents(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 	_XfeButtonDrawPixmap(w,event,region,clip_rect);
 
 	/* Invoke draw_border method */
-	_XfeButtonDrawRaiseBorder(w,event,region,clip_rect);
+	_XfeButtonDrawAccentBorder(w,event,region,clip_rect);
 
 	/* Draw the arrow */
 	DrawArrow(w,event,region,clip_rect);

@@ -410,7 +410,7 @@ LabelCreate(Widget w)
 
 /* 	XtSetArg(av[ac],XmNshadowThickness,			0); ac++; */
 /* 	XtSetArg(av[ac],XmNstringDirection,			tp->title_direction); ac++; */
-	XtSetArg(av[ac],XmNraiseBorderThickness,	0); ac++;
+	XtSetArg(av[ac],XmNaccentBorderThickness,	0); ac++;
 	XtSetArg(av[ac],XmNraiseOnEnter,			False); ac++;
 	XtSetArg(av[ac],XmNfillOnArm,				False); ac++;
 	XtSetArg(av[ac],XmNarmOffset,				0); ac++;

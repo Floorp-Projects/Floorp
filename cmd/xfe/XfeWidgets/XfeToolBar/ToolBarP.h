@@ -38,10 +38,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 /*																		*/
 /*----------------------------------------------------------------------*/
 #define XfeInheritLayoutIndicator			((XtWidgetProc)			_XtInherit)
-
-#ifndef XfeInheritDrawRaiseBorder
 #define XfeInheritDrawRaiseBorder			((XfeExposeProc)		_XtInherit)
-#endif
 
 /*----------------------------------------------------------------------*/
 /*																		*/

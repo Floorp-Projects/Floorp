@@ -39,6 +39,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNbutton3DownCallback				"button3DownCallback"
 #define XmNbutton3UpCallback				"button3UpCallback"
 
+#define XmNaccentBorderThickness			"accentBorderThickness"
 #define XmNarmBackground					"armBackground"
 #define XmNarmForeground					"armForeground"
 #define XmNarmOffset						"armOffset"
@@ -54,7 +55,6 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNinsensitivePixmapMask			"insensitivePixmapMask"
 #define XmNpixmapMask						"pixmapMask"
 #define XmNraiseBackground					"raiseBackground"
-#define XmNraiseBorderThickness				"raiseBorderThickness"
 #define XmNraiseForeground					"raiseForeground"
 #define XmNraiseOffset						"raiseOffset"
 #define XmNraiseOnEnter						"raiseOnEnter"
@@ -63,6 +63,7 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmNraisedPixmapMask					"raisedPixmapMask"
 #define XmNtransparentCursor				"transparentCursor"
 
+#define XmCAccentBorderThickness			"AccentBorderThickness"
 #define XmCArmBackground					"ArmBackground"
 #define XmCArmForeground					"ArmForeground"
 #define XmCArmOffset						"ArmOffset"
@@ -80,13 +81,12 @@ XFE_BEGIN_CPLUSPLUS_PROTECTION
 #define XmCPixmapMask						"PixmapMask"
 #define XmCRaiseBackground					"RaiseBackground"
 #define XmCRaiseForeground					"RaiseForeground"
+#define XmCRaiseOnEnter						"RaiseOnEnter"
+#define XmCRaised							"Raised"
 #define XmCRaisedPixmap						"RaisedPixmap"
 #define XmCRaisedPixmapMask					"RaisedPixmapMask"
 #define XmCUnderlineThickness				"UnderlineThickness"
 
-#define XmCRaiseBorderThickness				"RaiseBorderThickness"
-#define XmCRaiseOnEnter						"RaiseOnEnter"
-#define XmCRaised							"Raised"
 #define XmRButtonLayout						"ButtonLayout"
 #define XmRButtonTrigger					"ButtonTrigger"
 

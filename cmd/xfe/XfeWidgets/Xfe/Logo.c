@@ -245,7 +245,7 @@ _XFE_WIDGET_CLASS_RECORD(logo,Logo) =
     {
 		XfeInheritLayoutPixmap,					/* layout_pixmap		*/
 		DrawPixmap,								/* draw_pixmap			*/
-		XfeInheritDrawRaiseBorder,				/* draw_raise_border	*/
+		XfeInheritDrawAccentBorder,				/* draw_accent_border	*/
 		XfeInheritDrawUnderline,				/* draw_underline		*/
 		XfeInheritArmTimeout,					/* arm_timeout			*/
 		NULL,									/* extension            */
