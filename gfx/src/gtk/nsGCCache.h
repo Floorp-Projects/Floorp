@@ -64,6 +64,15 @@ private:
   static GdkRegion * gdk_region_copy(GdkRegion *region);
   static GdkRegion *copyRegion;
   void ReportStats();
+
+  DEBUG_METER(
+              struct {
+                int hits[GC_CACHE_SIZE];
+                int misses;
+                int reclaim;
+              } GCCacheStats;
+              )
+
 };
 
 #endif
