@@ -533,7 +533,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
         if (streamIsSecure) {
           // Secure stream, i.e., prefixed with cookie; fragments allowed
-          streamURL = "chrome://communicator/content/xmlterm/xmltblank.html";
+          streamURL = "chrome://xmlterm/content/xmltblank.html";
 
           if (opcodes & LTERM_JSSTREAM_CODE) {
             // Javascript stream 
@@ -3117,7 +3117,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     imgElement->SetAttribute(attName, attValue);
 
     attName = "src";
-    attValue = "chrome://communicator/skin/xmlterm/wheel.gif";
+    attValue = "chrome://xmlterm/skin/wheel.gif";
     imgElement->SetAttribute(attName, attValue);
 
     attName = "align";

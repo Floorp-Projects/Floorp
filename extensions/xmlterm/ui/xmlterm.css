@@ -1,6 +1,6 @@
 /* xmlterm.css: Stylesheet for XUL wrapper ../content/xmlterm.xul */
 
-@import url(chrome://global/skin/global.css);
+@import url(chrome://global/skin/);
 
 /**
  * remove black border from iframe
