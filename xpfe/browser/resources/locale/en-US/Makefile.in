@@ -47,7 +47,7 @@ include $(topsrcdir)/config/rules.mk
 # GARBAGE	+= navigator.dtd.out
 GARBAGE_DIRS	+= navigator.dtd.out
 
-ifneq ($(MOZ_ENABLE_JAR_PACKAGING),)
+ifeq ($(MOZ_ENABLE_JAR_PACKAGING),)
 navigator.dtd.out: navigator.dtd $(DEPTH)/config/build_number
 	cp $(srcdir)/navigator.dtd $@
 	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
