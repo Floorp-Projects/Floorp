@@ -400,7 +400,7 @@ function selectProduct(f) {
     }
     var doall = (cnt == f.product.length || cnt == 0);
 
-    var csel = new Array();
+    var csel = new Object();
     for (i=0 ; i<f.component.length ; i++) {
         if (f.component[i].selected) {
             csel[f.component[i].value] = 1;
@@ -428,13 +428,13 @@ function selectProduct(f) {
         if (doit) {
             var l = f.component.length;
             f.component[l] = new Option(c, c);
-            if (csel.length && csel[c]) {
+            if (csel[c]) {
                 f.component[l].selected = true;
             }
         }
     }
 
-    var vsel = new Array();
+    var vsel = new Object();
     for (i=0 ; i<f.version.length ; i++) {
         if (f.version[i].selected) {
             vsel[f.version[i].value] = 1;
@@ -462,7 +462,7 @@ function selectProduct(f) {
         if (doit) {
             l = f.version.length;
             f.version[l] = new Option(v, v);
-            if (vsel.length && vsel[v]) {
+            if (vsel[v]) {
                 f.version[l].selected = true;
             }
         }
@@ -472,7 +472,7 @@ ENDSCRIPT
 if (Param("usetargetmilestone")) {
     $jscript .= q{
       if (f.target_milestone) {
-        var tmsel = new Array();
+        var tmsel = new Object();
         for (i=0 ; i<f.target_milestone.length ; i++) {
             if (f.target_milestone[i].selected) {
                 tmsel[f.target_milestone[i].value] = 1;
@@ -500,7 +500,7 @@ if (Param("usetargetmilestone")) {
             if (doit) {
                 l = f.target_milestone.length;
                 f.target_milestone[l] = new Option(tm, tm);
-                if (tmsel.length && tmsel[tm]) {
+                if (tmsel[tm]) {
                     f.target_milestone[l].selected = true;
                 }
             }
