@@ -483,9 +483,11 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
     rv = GetMessageServiceFromURI(m_uri, &messageService);
     if (NS_SUCCEEDED(rv) && messageService)
     {
+      nsCAutoString uri(m_uri);
+      uri.Append("?fetchCompleteMessage=true");
       nsCOMPtr<nsIStreamListener> strListener;
       mFetcher->QueryInterface(NS_GET_IID(nsIStreamListener), getter_AddRefs(strListener));
-      rv = messageService->DisplayMessage(m_uri, strListener, nsnull, nsnull, nsnull, nsnull);
+      rv = messageService->DisplayMessage(uri, strListener, nsnull, nsnull, nsnull, nsnull);
     }
   }
 done:

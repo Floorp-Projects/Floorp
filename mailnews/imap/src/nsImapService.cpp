@@ -454,6 +454,17 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
             aImapServer->GetMimePartsOnDemand(&useMimePartsOnDemand);
       }
 
+      nsCAutoString uriStr(aMessageURI);
+      PRInt32 keySeparator = uriStr.FindChar('#');
+      if(keySeparator != -1)
+      {
+        PRInt32 keyEndSeparator = uriStr.FindCharInSet("/?&", 
+                                                       keySeparator); 
+        PRInt32 mpodFetchPos = uriStr.Find("fetchCompleteMessage=true", PR_FALSE, keyEndSeparator);
+        if (mpodFetchPos != -1)
+          useMimePartsOnDemand = PR_FALSE;
+      }
+
       if (!useMimePartsOnDemand || (messageSize < (uint32) gMIMEOnDemandThreshold))
 //                allowedToBreakApart && 
 //              !GetShouldFetchAllParts() &&
