@@ -305,7 +305,7 @@ nsCommentNode::ConvertContentToXIF(nsXIFConverter& aConverter) const
   if (!NS_SUCCEEDED(res))
     return res;
 
-  nsTextFragment* textFrag;
+  const nsTextFragment* textFrag;
   PRInt32 numFragments;
   // XXX This method is const, but GetText() isn't, so cast away the
   // XXX constness of mInner to fix windows build bustage temporarily.
