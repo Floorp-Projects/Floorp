@@ -528,35 +528,13 @@ nsXBLPrototypeBinding::LoadResources(PRBool* aResult)
         PRBool doneLoading;
         nsAutoString empty, media;
         resource->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::media, media);
-        PRInt32 numSheets = doc->GetNumberOfStyleSheets();
+        PRInt32 numSheets = doc->GetNumberOfStyleSheets();      
         rv = cssLoader->LoadStyleLink(nsnull, url, empty, media, kNameSpaceID_Unknown,
-                                      doc->GetNumberOfStyleSheets(),
+                                      numSheets,
                                       nsnull,
                                       doneLoading, this);
-        PRInt32 newNumSheets = doc->GetNumberOfStyleSheets();
         if (!doneLoading)
           mPendingSheets++;
-        else if (doneLoading && (newNumSheets == numSheets)) {
-          // XXX In this case the loader observer gets no notifications.
-          // When this happens, we have to manually ensure that
-          // the stylesheet gets into the array.
-          // This seems to be a bug in the CSS loader, but fixing it
-          // there looks problematic and risky.
-          for (PRInt32 i = 0; i < numSheets; i++) {
-            nsCOMPtr<nsIStyleSheet> sheet = getter_AddRefs(doc->GetStyleSheetAt(i));
-            nsCOMPtr<nsIURI> uri;
-            sheet->GetURL(*getter_AddRefs(uri));
-            PRBool equals;
-            url->Equals(uri, &equals);
-            if (equals) {
-              nsCOMPtr<nsICSSStyleSheet> cssSheet(do_QueryInterface(sheet));
-              if (cssSheet)
-                StyleSheetLoaded(cssSheet, PR_TRUE);
-              break;
-            }
-          }
-
-        }
       }
     }
 
