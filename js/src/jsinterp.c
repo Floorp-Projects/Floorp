@@ -5363,6 +5363,9 @@ out:
                 len = 0;
                 cx->throwing = JS_FALSE;    /* caught */
                 ok = JS_TRUE;
+#if JS_HAS_XML_SUPPORT
+                foreach = JS_FALSE;
+#endif
                 goto advance_pc;
             }
         }
