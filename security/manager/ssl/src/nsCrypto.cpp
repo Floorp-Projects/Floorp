@@ -1650,7 +1650,7 @@ nsP12Runnable::~nsP12Runnable()
 void
 alertUser(const PRUnichar *message)
 {
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIPrompt> prompter;
   if (wwatch)
   wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
@@ -2129,7 +2129,7 @@ PRBool
 confirm_user(const PRUnichar *message)
 {
   PRBool confirmation = PR_FALSE;
-  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
   nsCOMPtr<nsIPrompt> prompter;
   if (wwatch)
     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));

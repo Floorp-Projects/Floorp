@@ -90,7 +90,7 @@ nsNSSDialogHelper::openDialog(
 {
   nsresult rv;
   nsCOMPtr<nsIWindowWatcher> windowWatcher = 
-           do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv);
+           do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   nsIDOMWindowInternal *parent = window;

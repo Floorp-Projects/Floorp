@@ -981,7 +981,7 @@ nsNSSComponent::InitializeNSS()
 
     if (NS_SUCCEEDED(rv)) {
       PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get error string\n"));
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       if (!wwatch) {
         PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("can't get window watcher\n"));
       }
@@ -1533,7 +1533,7 @@ NS_IMETHODIMP PipUIContext::GetInterface(const nsIID & uuid, void * *result)
     if (!proxyman) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIPrompt> prompter;
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
     if (wwatch) {
       wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
       if (prompter) {
@@ -1780,7 +1780,7 @@ PSMContentDownloader::handleContentDownloadError(nsresult errCode)
       pref->SavePrefFile(nsnull);
     }else{
       nsString message;
-      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
       nsCOMPtr<nsIPrompt> prompter;
       if (wwatch){
         wwatch->GetNewPrompter(0, getter_AddRefs(prompter));

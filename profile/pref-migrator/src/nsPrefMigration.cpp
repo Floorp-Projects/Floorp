@@ -336,7 +336,7 @@ nsPrefMigration::ProcessPrefs(PRBool showProgressAsModalWindow)
 {
   nsresult rv;
   
-  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   // WindowWatcher can work with or without parent window
@@ -473,7 +473,7 @@ NS_IMETHODIMP
 nsPrefMigration::ShowSpaceDialog(PRInt32 *choice)
 {
   nsresult rv;
-  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService("@mozilla.org/embedcomp/window-watcher;1", &rv));
+  nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
   nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));

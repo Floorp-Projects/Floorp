@@ -129,7 +129,6 @@
 #define CHROME_STYLE nsIWebBrowserChrome::CHROME_ALL | nsIWebBrowserChrome::CHROME_CENTER_SCREEN
 #endif 
 
-const char* kWindowWatcherContractID = "@mozilla.org/embedcomp/window-watcher;1";
 const char* kDialogParamBlockContractID = "@mozilla.org/embedcomp/dialogparam;1";
 
 const char* kDefaultOpenWindowParams = "centerscreen,chrome,modal,titlebar";
@@ -569,7 +568,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr, PRBool canInteract)
     {
         if (!canInteract) return NS_ERROR_PROFILE_REQUIRES_INTERACTION;
 
-        nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(kWindowWatcherContractID, &rv));
+        nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
         if (NS_FAILED(rv)) return rv;
  
         // We need to send a param to OpenWindow if the window is to be considered
@@ -2354,7 +2353,7 @@ nsresult
 nsProfile::ShowProfileWizard(void)
 {
     nsresult rv;
-    nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(kWindowWatcherContractID, &rv));
+    nsCOMPtr<nsIWindowWatcher> windowWatcher(do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv));
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1", &rv));
