@@ -20,6 +20,7 @@
  *
  * Contributors: Jeff Galyan <talisman@anamorphic.com>
  *               Giao Nguyen <grail@cafebabe.org>
+ *               Mauro Botelho <mabotelh@bellsouth.net>
  */
 
 package grendel.ui;
@@ -87,9 +88,7 @@ import calypso.util.Preferences;
 import calypso.util.PreferencesFactory;
 
 import grendel.ui.ToolBarLayout;
-import grendel.widgets.Animation;
-import grendel.widgets.CollapsiblePanel;
-import grendel.widgets.GrendelToolBar;
+import grendel.widgets.*;
 
 public class GeneralFrame extends JFrame
 {
@@ -271,8 +270,8 @@ public class GeneralFrame extends JFrame
    * @param file the XML file to build the menu from
    * @return a menubar built from the file
    */
-  protected JMenuBar buildMenu(String file, UIAction[] actions) {
-    JMenuBar menubar = null;
+  protected MenuBarCtrl buildMenu(String file, UIAction[] actions) {
+    MenuBarCtrl menubar = null;
     URL url;
     XMLMenuBuilder builder = 
       new XMLMenuBuilder(this, actions);

@@ -15,6 +15,8 @@
  * The Initial Developer of the Original Code is Giao Nguyen
  * <grail@cafebabe.org>.  Portions created by Giao Nguyen are Copyright 
  * (C) 1999 Giao Nguyen.  All Rights Reserved.
+ *
+ * Contributors: Mauro Botelho <mabotelh@bellsouth.net>
  */
 
 package grendel.widgets;
@@ -44,7 +46,7 @@ public class MenuBarCtrl extends JMenuBar {
     JMenuItem item = (JMenuItem)controls.get(name);
     
     // if it's not a toplevel item, it must be in one of the submenus
-    if (item != null) {
+    if (item == null) {
       Enumeration e = controls.elements();
       
       while (e.hasMoreElements()) {
@@ -52,7 +54,7 @@ public class MenuBarCtrl extends JMenuBar {
         
         if (o instanceof MenuCtrl) {
           MenuCtrl c = (MenuCtrl)o;
-          item = (JMenuItem)c.getItemByName(name);
+          item = (JMenuItem)(c.getItemByName(name));
           if (item != null) {
             break;
           }
