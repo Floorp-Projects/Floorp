@@ -928,7 +928,7 @@ nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anUR
   dummyShell->SetContainer(this);
 
   // Cache our webshell info.
-  newWindow->AddWebShellInfo("content-frame", aName, anURL, aOpenerShell, dummyShell);
+  newWindow->AddWebShellInfo("content", aName, anURL, aOpenerShell, dummyShell);
   return NS_OK;
 }
 
