@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.172 $ ';
+$::UtilsVersion = '$Revision: 1.173 $ ';
 
 package TinderUtils;
 
@@ -777,7 +777,10 @@ sub BuildIt {
 
         if ($build_status ne 'busted' and BinaryExists($full_binary_name)) {
             print_log "$binary_basename binary exists, build successful.\n";
-            if ($Settings::RunTest) {
+
+            # Renamed RunTest to RunMozillaTests, we check both here
+            # in case some clients are relying on RunTest.
+            if ($Settings::RunMozillaTests or $Settings::RunTest) {
                 $build_status = run_all_tests($full_binary_name,
                                               $full_embed_binary_name,
                                               $build_dir);
