@@ -429,8 +429,8 @@ protected:
 
   nsresult ConstructDocElementFrame(nsIPresContext*  aPresContext,
                                     nsIContent*      aDocElement,
-                                    nsIFrame*        aRootFrame,
-                                    nsIStyleContext* aRootStyleContext,
+                                    nsIFrame*        aParentFrame,
+                                    nsIStyleContext* aParentStyleContext,
                                     nsIFrame*&       aNewFrame);
 
   nsresult ConstructTableFrame(nsIPresContext*  aPresContext,
@@ -1498,39 +1498,21 @@ HTMLStyleSheetImpl::ConstructTableCellFrame(nsIPresContext*  aPresContext,
 nsresult
 HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
                                              nsIContent*      aDocElement,
-                                             nsIFrame*        aRootFrame,
-                                             nsIStyleContext* aRootStyleContext,
+                                             nsIFrame*        aParentFrame,
+                                             nsIStyleContext* aParentStyleContext,
                                              nsIFrame*&       aNewFrame)
 {
+  // Resolve the style context for the document element
+  nsIStyleContext*  styleContext;
+  styleContext = aPresContext->ResolveStyleContextFor(aDocElement, aParentStyleContext);
+  
   // See if we're paginated
   if (aPresContext->IsPaginated()) {
-    nsIFrame* pageSequenceFrame;
-
-    // Create a page sequence frame
-    NS_NewSimplePageSequenceFrame(pageSequenceFrame);
-    pageSequenceFrame->Init(*aPresContext, nsnull, aRootFrame, aRootStyleContext);
-
-    // Create the first page
-    nsIFrame* pageFrame;
-    NS_NewPageFrame(pageFrame);
-
-    // Initialize the page and force it to have a view. This makes printing of
-    // the pages easier and faster.
-    // XXX Use a PAGE style context...
-    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, aRootStyleContext);
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
-                                             aRootStyleContext, PR_TRUE);
-
-    // Resolve the style context for the document element
-    nsIStyleContext*  styleContext;
-    styleContext = aPresContext->ResolveStyleContextFor(aDocElement, aRootStyleContext);
-
     // Create an area frame for the document element
     nsIFrame* areaFrame;
 
     NS_NewAreaFrame(areaFrame, 0);
-    areaFrame->Init(*aPresContext, aDocElement, pageFrame, styleContext);
-    NS_RELEASE(styleContext);
+    areaFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext);
 
     // The area frame is the "initial containing block"
     mInitialContainingBlock = areaFrame;
@@ -1547,17 +1529,11 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
       areaFrame->SetInitialChildList(*aPresContext, nsLayoutAtoms::absoluteList,
                                      absoluteItems.childList);
     }
-    pageFrame->SetInitialChildList(*aPresContext, nsnull, areaFrame);
-    pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
 
-    // Return the page sequence frame as the frame sub-tree
-    aNewFrame = pageSequenceFrame;
+    // Return the area frame
+    aNewFrame = areaFrame;
   
   } else {
-    // Resolve the style context for the document element
-    nsIStyleContext*  styleContext;
-    styleContext = aPresContext->ResolveStyleContextFor(aDocElement, aRootStyleContext);
-  
     // Unless the 'overflow' policy forbids scrolling, wrap the frame in a
     // scroll frame.
     nsIFrame* scrollFrame = nsnull;
@@ -1567,7 +1543,7 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
 
     if (IsScrollable(aPresContext, display)) {
       NS_NewScrollFrame(scrollFrame);
-      scrollFrame->Init(*aPresContext, aDocElement, aRootFrame, styleContext);
+      scrollFrame->Init(*aPresContext, aDocElement, aParentFrame, styleContext);
     
       // The scrolled frame gets a pseudo element style context
       nsIStyleContext*  scrolledPseudoStyle =
@@ -1585,11 +1561,10 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     // XXX Until we clean up how painting damage is handled, we need to use the
     // flag that says that this is the body...
     NS_NewAreaFrame(areaFrame, NS_BLOCK_DOCUMENT_ROOT|NS_BLOCK_MARGIN_ROOT);
-    nsIFrame* parentFrame = scrollFrame ? scrollFrame : aRootFrame;
-    areaFrame->Init(*aPresContext, aDocElement, parentFrame, styleContext);
+    areaFrame->Init(*aPresContext, aDocElement, scrollFrame ? scrollFrame :
+                    aParentFrame, styleContext);
     nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, areaFrame,
                                              styleContext, PR_FALSE);
-    NS_RELEASE(styleContext);
 
     // The area frame is the "initial containing block"
     mInitialContainingBlock = areaFrame;
@@ -1613,6 +1588,7 @@ HTMLStyleSheetImpl::ConstructDocElementFrame(nsIPresContext*  aPresContext,
     aNewFrame = scrollFrame ? scrollFrame : areaFrame;
   }
 
+  NS_RELEASE(styleContext);
   return NS_OK;
 }
 
@@ -1688,36 +1664,77 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext* aPresContext,
     scrollFrame->Init(*aPresContext, nsnull, viewportFrame, rootPseudoStyle);
   }
 
-  // Create the root frame. The document element's frame is a child of the
-  // root frame.
-  //
-  // Note: the major reason we need the root frame is to implement margins for
-  // the document element's frame. If we didn't need to support margins on the
-  // document element's frame, then we could eliminate the root frame and make
-  // the document element frame a child of the viewport (or its scroll frame)
-  nsIFrame* rootFrame;
-  NS_NewRootFrame(rootFrame);
+  if (aPresContext->IsPaginated()) {
+    nsIFrame* pageSequenceFrame;
 
-  rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
-                  viewportFrame, rootPseudoStyle);
-  if (isScrollable) {
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
+    // Create a page sequence frame
+    NS_NewSimplePageSequenceFrame(pageSequenceFrame);
+    pageSequenceFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
+                            viewportFrame, rootPseudoStyle);
+    if (isScrollable) {
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageSequenceFrame,
+                                               rootPseudoStyle, PR_TRUE);
+    }
+
+    // Create the first page
+    nsIFrame* pageFrame;
+    NS_NewPageFrame(pageFrame);
+
+    // Initialize the page and force it to have a view. This makes printing of
+    // the pages easier and faster.
+    // XXX Use a PAGE style context...
+    pageFrame->Init(*aPresContext, nsnull, pageSequenceFrame, rootPseudoStyle);
+    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, pageFrame,
                                              rootPseudoStyle, PR_TRUE);
-  }
 
-  // Create frames for the document element and its child elements
-  nsIFrame* docElementFrame;
-  ConstructDocElementFrame(aPresContext, aDocElement, rootFrame,
-                           rootPseudoStyle, docElementFrame);
-  NS_RELEASE(rootPseudoStyle);
+    // Create frames for the document element and its child elements
+    nsIFrame* docElementFrame;
+    ConstructDocElementFrame(aPresContext, aDocElement, pageFrame,
+                             rootPseudoStyle, docElementFrame);
+    NS_RELEASE(rootPseudoStyle);
 
-  // Set the initial child lists
-  rootFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
-  if (isScrollable) {
-    scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
-    viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+    // Set the initial child lists
+    pageFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
+    pageSequenceFrame->SetInitialChildList(*aPresContext, nsnull, pageFrame);
+    if (isScrollable) {
+      scrollFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+      viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+    } else {
+      viewportFrame->SetInitialChildList(*aPresContext, nsnull, pageSequenceFrame);
+    }
+  
   } else {
-    viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+    // Create the root frame. The document element's frame is a child of the
+    // root frame.
+    //
+    // Note: the major reason we need the root frame is to implement margins for
+    // the document element's frame. If we didn't need to support margins on the
+    // document element's frame, then we could eliminate the root frame and make
+    // the document element frame a child of the viewport (or its scroll frame)
+    nsIFrame* rootFrame;
+    NS_NewRootFrame(rootFrame);
+
+    rootFrame->Init(*aPresContext, nsnull, isScrollable ? scrollFrame :
+                    viewportFrame, rootPseudoStyle);
+    if (isScrollable) {
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, rootFrame,
+                                               rootPseudoStyle, PR_TRUE);
+    }
+
+    // Create frames for the document element and its child elements
+    nsIFrame* docElementFrame;
+    ConstructDocElementFrame(aPresContext, aDocElement, rootFrame,
+                             rootPseudoStyle, docElementFrame);
+    NS_RELEASE(rootPseudoStyle);
+
+    // Set the initial child lists
+    rootFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
+    if (isScrollable) {
+      scrollFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+      viewportFrame->SetInitialChildList(*aPresContext, nsnull, scrollFrame);
+    } else {
+      viewportFrame->SetInitialChildList(*aPresContext, nsnull, rootFrame);
+    }
   }
 
   aNewFrame = viewportFrame;
