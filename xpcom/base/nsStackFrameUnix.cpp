@@ -46,8 +46,6 @@
 #define __USE_GNU
 #endif
 
-#include <dlfcn.h>
-
 #ifdef HAVE_LIBDL
 #include <dlfcn.h>
 #endif
