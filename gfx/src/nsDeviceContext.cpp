@@ -19,7 +19,7 @@
 #include "nsDeviceContext.h"
 #include "nsIFontCache.h"
 #include "nsIView.h"
-#include "../nsGfxCIID.h"
+#include "nsGfxCIID.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kDeviceContextIID, NS_IDEVICE_CONTEXT_IID);
