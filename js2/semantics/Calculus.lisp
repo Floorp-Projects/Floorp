@@ -102,47 +102,60 @@
 ;;; DOUBLE-PRECISION FLOATING-POINT NUMBERS
 
 (deftype float64 ()
-         '(or (and float (not (eql 0.0)) (not (eql -0.0))) (member :+zero :-zero :+infinity :-infinity :nan)))
+         '(or (and double-float (not (eql 0.0)) (not (eql -0.0))) (member :+zero64 :-zero64 :+infinity64 :-infinity64 :nan64)))
+
+(declaim (inline finite64?))
+(defun finite64? (n)
+  (and (typep n 'double-float) (not (zerop n))))
 
 (defun float64? (n)
-  (or (and (floatp n) (not (zerop n)))
-      (member n '(:+zero :-zero :+infinity :-infinity :nan))))
+  (or (finite64? n) (member n '(:+zero64 :-zero64 :+infinity64 :-infinity64 :nan64))))
 
 ; Evaluate expr.  If it evaluates successfully, return its value except if it evaluates to
-; +0.0 or -0.0, in which case return :+zero (but not :-zero).
-; If evaluating expr overflows, evaluate sign; if it returns a positive value, return :+infinity;
-; otherwise return :-infinity.  sign should not return zero.
-(defmacro handle-overflow (expr &body sign)
+; +0.0 or -0.0, in which case return :+zero64 (but not :-zero64).
+; If evaluating expr overflows, evaluate sign; if it returns a positive value, return :+infinity64;
+; otherwise return :-infinity64.  sign should not return zero.
+(defmacro handle-overflow64 (expr &body sign)
   (let ((x (gensym)))
     `(handler-case (let ((,x ,expr))
-                     (if (zerop ,x) :+zero ,x))
-       (floating-point-overflow () (if (minusp (progn ,@sign)) :-infinity :+infinity)))))
+                     (if (zerop ,x) :+zero64 ,x))
+       (floating-point-overflow () (if (minusp (progn ,@sign)) :-infinity64 :+infinity64)))))
 
 
 (defun rational-to-float64 (r)
-  (let ((f (handle-overflow (coerce r 'double-float)
+  (let ((f (handle-overflow64 (coerce r 'double-float)
              r)))
-    (if (eq f :+zero)
-      (if (minusp r) :-zero :+zero)
+    (if (eq f :+zero64)
+      (if (minusp r) :-zero64 :+zero64)
       f)))
+
+
+(defun float32-to-float64 (x)
+  (case x
+    (:+zero32 :+zero64)
+    (:-zero32 :-zero64)
+    (:+infinity32 :+infinity64)
+    (:-infinity32 :-infinity64)
+    (:nan32 :nan64)
+    (t (coerce x 'double-float))))
 
 
 ; Return true if n is +0 or -0 and false otherwise.
 (declaim (inline float64-is-zero))
 (defun float64-is-zero (n)
-  (or (eq n :+zero) (eq n :-zero)))
+  (or (eq n :+zero64) (eq n :-zero64)))
 
 
 ; Return true if n is NaN and false otherwise.
 (declaim (inline float64-is-nan))
 (defun float64-is-nan (n)
-  (eq n :nan))
+  (eq n :nan64))
 
 
-; Return true if n is :+infinity or :-infinity and false otherwise.
+; Return true if n is :+infinity64 or :-infinity64 and false otherwise.
 (declaim (inline float64-is-infinite))
 (defun float64-is-infinite (n)
-  (or (eq n :+infinity) (eq n :-infinity)))
+  (or (eq n :+infinity64) (eq n :-infinity64)))
 
 
 ; Truncate n to the next lower integer.  Signal an error if n isn't finite.
@@ -167,7 +180,7 @@
 ;   :less if n<m;
 ;   :equal if n=m;
 ;   :greater if n>m;
-;   :unordered if either n or m is :nan.
+;   :unordered if either n or m is :nan64.
 (defun float64-compare (n m)
   (when (float64-is-zero n)
     (setq n 0.0))
@@ -176,27 +189,27 @@
   (cond
    ((or (float64-is-nan n) (float64-is-nan m)) :unordered)
    ((eql n m) :equal)
-   ((or (eq n :+infinity) (eq m :-infinity)) :greater)
-   ((or (eq m :+infinity) (eq n :-infinity)) :less)
+   ((or (eq n :+infinity64) (eq m :-infinity64)) :greater)
+   ((or (eq m :+infinity64) (eq n :-infinity64)) :less)
    ((< n m) :less)
    ((> n m) :greater)
    (t :equal)))
 
 
 ; Return
-;    1 if n is +0.0, :+infinity, or any positive floating-point number;
-;   -1 if n is -0.0, :-infinity, or any positive floating-point number;
-;    0 if n is :nan.
+;    1 if n is +0.0, :+infinity64, or any positive floating-point number;
+;   -1 if n is -0.0, :-infinity64, or any positive floating-point number;
+;    0 if n is :nan64.
 (defun float64-sign (n)
   (case n
-    ((:+zero :+infinity) 1)
-    ((:-zero :-infinity) -1)
-    (:nan 0)
+    ((:+zero64 :+infinity64) 1)
+    ((:-zero64 :-infinity64) -1)
+    (:nan64 0)
     (t (round (float-sign n)))))
 
 
 ; Return
-;   0 if either n or m is :nan;
+;   0 if either n or m is :nan64;
 ;   1 if n and m have the same float64-sign;
 ;  -1 if n and m have different float64-signs.
 (defun float64-sign-xor (n m)
@@ -206,48 +219,48 @@
 ; Return d truncated towards zero into a 32-bit integer.  Overflows wrap around.
 (defun float64-to-uint32 (d)
   (case d
-    ((:+zero :-zero :+infinity :-infinity :nan) 0)
+    ((:+zero64 :-zero64 :+infinity64 :-infinity64 :nan64) 0)
     (t (mod (truncate d) #x100000000))))
 
 
 ; Return the absolute value of n.
 (defun float64-abs (n)
   (case n
-    ((:+zero :-zero) :+zero)
-    ((:+infinity :-infinity) :+infinity)
-    (:nan :nan)
+    ((:+zero64 :-zero64) :+zero64)
+    ((:+infinity64 :-infinity64) :+infinity64)
+    (:nan64 :nan64)
     (t (abs n))))
 
 
 ; Return -n.
 (defun float64-neg (n)
   (case n
-    (:+zero :-zero)
-    (:-zero :+zero)
-    (:+infinity :-infinity)
-    (:-infinity :+infinity)
-    (:nan :nan)
+    (:+zero64 :-zero64)
+    (:-zero64 :+zero64)
+    (:+infinity64 :-infinity64)
+    (:-infinity64 :+infinity64)
+    (:nan64 :nan64)
     (t (- n))))
 
 
 ; Return n+m.
 (defun float64-add (n m)
   (case n
-    (:+zero (if (eq m :-zero) :+zero m))
-    (:-zero m)
-    (:+infinity (case m
-                  ((:-infinity :nan) :nan)
-                  (t :+infinity)))
-    (:-infinity (case m
-                  ((:+infinity :nan) :nan)
-                  (t :-infinity)))
-    (:nan :nan)
+    (:+zero64 (if (eq m :-zero64) :+zero64 m))
+    (:-zero64 m)
+    (:+infinity64 (case m
+                    ((:-infinity64 :nan64) :nan64)
+                    (t :+infinity64)))
+    (:-infinity64 (case m
+                    ((:+infinity64 :nan64) :nan64)
+                    (t :-infinity64)))
+    (:nan64 :nan64)
     (t (case m
-         ((:+zero :-zero) n)
-         (:+infinity :+infinity)
-         (:-infinity :-infinity)
-         (:nan :nan)
-         (t (handle-overflow (+ n m)
+         ((:+zero64 :-zero64) n)
+         (:+infinity64 :+infinity64)
+         (:-infinity64 :-infinity64)
+         (:nan64 :nan64)
+         (t (handle-overflow64 (+ n m)
               (let ((n-sign (float-sign n))
                     (m-sign (float-sign m)))
                 (assert-true (= n-sign m-sign)) ;If the signs are opposite, we can't overflow.
@@ -265,11 +278,11 @@
         (n (float64-abs n))
         (m (float64-abs m)))
     (let ((result (cond
-                   ((zerop sign) :nan)
-                   ((eq n :+infinity) (if (eq m :+zero) :nan :+infinity))
-                   ((eq m :+infinity) (if (eq n :+zero) :nan :+infinity))
-                   ((or (eq n :+zero) (eq m :+zero)) :+zero)
-                   (t (handle-overflow (* n m) 1)))))
+                   ((zerop sign) :nan64)
+                   ((eq n :+infinity64) (if (eq m :+zero64) :nan64 :+infinity64))
+                   ((eq m :+infinity64) (if (eq n :+zero64) :nan64 :+infinity64))
+                   ((or (eq n :+zero64) (eq m :+zero64)) :+zero64)
+                   (t (handle-overflow64 (* n m) 1)))))
       (if (minusp sign)
         (float64-neg result)
         result))))
@@ -281,12 +294,12 @@
         (n (float64-abs n))
         (m (float64-abs m)))
     (let ((result (cond
-                   ((zerop sign) :nan)
-                   ((eq n :+infinity) (if (eq m :+infinity) :nan :+infinity))
-                   ((eq m :+infinity) :+zero)
-                   ((eq m :+zero) (if (eq n :+zero) :nan :+infinity))
-                   ((eq n :+zero) :+zero)
-                   (t (handle-overflow (/ n m) 1)))))
+                   ((zerop sign) :nan64)
+                   ((eq n :+infinity64) (if (eq m :+infinity64) :nan64 :+infinity64))
+                   ((eq m :+infinity64) :+zero64)
+                   ((eq m :+zero64) (if (eq n :+zero64) :nan64 :+infinity64))
+                   ((eq n :+zero64) :+zero64)
+                   (t (handle-overflow64 (/ n m) 1)))))
       (if (minusp sign)
         (float64-neg result)
         result))))
@@ -295,12 +308,327 @@
 ; Return n%m, using the ECMAScript definition of %.
 (defun float64-remainder (n m)
   (cond
-   ((or (float64-is-nan n) (float64-is-nan m) (float64-is-infinite n) (float64-is-zero m)) :nan)
+   ((or (float64-is-nan n) (float64-is-nan m) (float64-is-infinite n) (float64-is-zero m)) :nan64)
    ((or (float64-is-infinite m) (float64-is-zero n)) n)
    (t (let ((result (float (rem (rational n) (rational m)))))
         (if (zerop result)
-          (if (minusp n) :-zero :+zero)
+          (if (minusp n) :-zero64 :+zero64)
           result)))))
+
+
+; s should be a string of decimal digits optionally preceded by a plus or minus sign.  Return s's
+; value as an integer.
+(defun string-to-integer (s)
+  (let ((p 0)
+        (sign 1)
+        (n 0)
+        (length (length s)))
+    (case (char s 0)
+      (#\+ (setq p 1))
+      (#\- (setq sign -1) (setq p 1)))
+    (assert (< p length))
+    (do ()
+        ((= p length))
+      (setq n (+ (* n 10) (digit-char-p (char s p))))
+      (incf p))
+    (* sign n)))
+
+
+; The number x should not be a non-zero floating-point number that uses the given exponent-char when
+; printed in exponential notation.
+; Return three values:
+;   A sign, which is either nil or "-";
+;   A significand s, expressed as a string of decimal digits, the last of which is nonzero;
+;   An exponent n, such that s*10^(n-length(s)) is the absolute value of the original number.
+;
+; ***** Assumes that Common Lisp implements proper rounding and round-tripping when formatting a floating-point number.
+(defun decompose-float (x exponent-char)
+  (let ((sign nil))
+    (when (minusp x)
+      (setq sign "-")
+      (setq x (- x)))
+    (let* ((str (format nil "~E" x))
+           (p (position exponent-char str)))
+      (assert (and p (eql (char str 1) #\.)))
+      (let ((s-first (subseq str 0 1))
+            (s-rest (subseq str 2 p)))
+        (values
+         sign
+         (if (string= s-rest "0") s-first (concatenate 'string s-first s-rest))
+         (1+ (string-to-integer (subseq str (1+ p)))))))))
+
+
+; The number x should not be a non-zero floating-point number that uses the given exponent-char when
+; printed in exponential notation.
+; Return three values:
+;   A sign, which is either nil or "-";
+;   A significand s, expressed as a string of decimal digits possibly containing a decimal point;
+;   An exponent e, such that s*10^e is the absolute value of the original number.  e is nil if it would be zero.
+; The number is expressed with e being nil if its absolute value is between 1e-6 inclusive and 1e21 exclusive.
+; If always-show-point is true, then s always contains a decimal point with at least one digit after it.
+(defun float-to-string-components (x exponent-char always-show-point)
+  (multiple-value-bind (sign s n) (decompose-float x exponent-char)
+    (let ((k (length s))
+          (e nil))
+      (cond
+       ((<= k n 21)
+        (setq s (concatenate 'string s (make-string (- n k) :initial-element #\0)))
+        (when always-show-point
+          (setq s (concatenate 'string s ".0"))))
+       ((<= 1 n 21)
+        (setq s (concatenate 'string (subseq s 0 n) "." (subseq s n))))
+       ((<= -5 n 0)
+        (setq s (concatenate 'string "0." (make-string (- n) :initial-element #\0) s)))
+       ((= k 1)
+        (setq e (1- n))
+        (when always-show-point
+          (setq s (concatenate 'string s ".0"))))
+       (t
+        (setq e (1- n))
+        (setq s (concatenate 'string (subseq s 0 1) "." (subseq s 1)))))
+      (values sign s e))))
+
+
+; Return x converted to a string using ECMAScript's ToString rules.
+(defun float64-to-string (x)
+  (case x
+    (:nan64 "NaN")
+    (:+infinity64 "Infinity")
+    (:-infinity64 "-Infinity")
+    ((:+zero64 :-zero64) "0")
+    (t (assert (finite64? x))
+       (with-standard-io-syntax
+         (multiple-value-bind (sign s e) (float-to-string-components x #\E nil)
+           (when sign
+             (setq s (concatenate 'string "-" s)))
+           (when e
+             (setq s (concatenate 'string s (format nil "e~@D" e))))
+           s)))))
+
+
+;;; ------------------------------------------------------------------------------------------------------
+;;; SINGLE-PRECISION FLOATING-POINT NUMBERS
+
+(deftype float32 ()
+         '(or (and short-float (not (eql 0.0)) (not (eql -0.0))) (member :+zero32 :-zero32 :+infinity32 :-infinity32 :nan32)))
+
+(declaim (inline finite32?))
+(defun finite32? (n)
+  (and (typep n 'short-float) (not (zerop n))))
+
+(defun float32? (n)
+  (or (finite32? n) (member n '(:+zero32 :-zero32 :+infinity32 :-infinity32 :nan32))))
+
+; Evaluate expr.  If it evaluates successfully, return its value except if it evaluates to
+; +0.0 or -0.0, in which case return :+zero32 (but not :-zero32).
+; If evaluating expr overflows, evaluate sign; if it returns a positive value, return :+infinity32;
+; otherwise return :-infinity32.  sign should not return zero.
+(defmacro handle-overflow32 (expr &body sign)
+  (let ((x (gensym)))
+    `(handler-case (let ((,x ,expr))
+                     (if (zerop ,x) :+zero32 ,x))
+       (floating-point-overflow () (if (minusp (progn ,@sign)) :-infinity32 :+infinity32)))))
+
+
+(defun rational-to-float32 (r)
+  (let ((f (handle-overflow32 (coerce r 'short-float)
+             r)))
+    (if (eq f :+zero32)
+      (if (minusp r) :-zero32 :+zero32)
+      f)))
+
+
+; Return true if n is +0 or -0 and false otherwise.
+(declaim (inline float32-is-zero))
+(defun float32-is-zero (n)
+  (or (eq n :+zero32) (eq n :-zero32)))
+
+
+; Return true if n is NaN and false otherwise.
+(declaim (inline float32-is-nan))
+(defun float32-is-nan (n)
+  (eq n :nan32))
+
+
+; Return true if n is :+infinity32 or :-infinity32 and false otherwise.
+(declaim (inline float32-is-infinite))
+(defun float32-is-infinite (n)
+  (or (eq n :+infinity32) (eq n :-infinity32)))
+
+
+; Truncate n to the next lower integer.  Signal an error if n isn't finite.
+(defun truncate-finite-float32 (n)
+  (if (float32-is-zero n)
+    0
+    (truncate n)))
+
+
+; Return:
+;   :less if n<m;
+;   :equal if n=m;
+;   :greater if n>m;
+;   :unordered if either n or m is :nan32.
+(defun float32-compare (n m)
+  (when (float32-is-zero n)
+    (setq n 0.0))
+  (when (float32-is-zero m)
+    (setq m 0.0))
+  (cond
+   ((or (float32-is-nan n) (float32-is-nan m)) :unordered)
+   ((eql n m) :equal)
+   ((or (eq n :+infinity32) (eq m :-infinity32)) :greater)
+   ((or (eq m :+infinity32) (eq n :-infinity32)) :less)
+   ((< n m) :less)
+   ((> n m) :greater)
+   (t :equal)))
+
+
+; Return
+;    1 if n is +0.0, :+infinity32, or any positive floating-point number;
+;   -1 if n is -0.0, :-infinity32, or any positive floating-point number;
+;    0 if n is :nan32.
+(defun float32-sign (n)
+  (case n
+    ((:+zero32 :+infinity32) 1)
+    ((:-zero32 :-infinity32) -1)
+    (:nan32 0)
+    (t (round (float-sign n)))))
+
+
+; Return
+;   0 if either n or m is :nan32;
+;   1 if n and m have the same float32-sign;
+;  -1 if n and m have different float32-signs.
+(defun float32-sign-xor (n m)
+  (* (float32-sign n) (float32-sign m)))
+
+
+; Return the absolute value of n.
+(defun float32-abs (n)
+  (case n
+    ((:+zero32 :-zero32) :+zero32)
+    ((:+infinity32 :-infinity32) :+infinity32)
+    (:nan32 :nan32)
+    (t (abs n))))
+
+
+; Return -n.
+(defun float32-neg (n)
+  (case n
+    (:+zero32 :-zero32)
+    (:-zero32 :+zero32)
+    (:+infinity32 :-infinity32)
+    (:-infinity32 :+infinity32)
+    (:nan32 :nan32)
+    (t (- n))))
+
+
+; Return n+m.
+(defun float32-add (n m)
+  (case n
+    (:+zero32 (if (eq m :-zero32) :+zero32 m))
+    (:-zero32 m)
+    (:+infinity32 (case m
+                    ((:-infinity32 :nan32) :nan32)
+                    (t :+infinity32)))
+    (:-infinity32 (case m
+                    ((:+infinity32 :nan32) :nan32)
+                    (t :-infinity32)))
+    (:nan32 :nan32)
+    (t (case m
+         ((:+zero32 :-zero32) n)
+         (:+infinity32 :+infinity32)
+         (:-infinity32 :-infinity32)
+         (:nan32 :nan32)
+         (t (handle-overflow32 (+ n m)
+              (let ((n-sign (float-sign n))
+                    (m-sign (float-sign m)))
+                (assert-true (= n-sign m-sign)) ;If the signs are opposite, we can't overflow.
+                n-sign)))))))
+
+
+; Return n-m.
+(defun float32-subtract (n m)
+  (float32-add n (float32-neg m)))
+
+
+; Return n*m.
+(defun float32-multiply (n m)
+  (let ((sign (float32-sign-xor n m))
+        (n (float32-abs n))
+        (m (float32-abs m)))
+    (let ((result (cond
+                   ((zerop sign) :nan32)
+                   ((eq n :+infinity32) (if (eq m :+zero32) :nan32 :+infinity32))
+                   ((eq m :+infinity32) (if (eq n :+zero32) :nan32 :+infinity32))
+                   ((or (eq n :+zero32) (eq m :+zero32)) :+zero32)
+                   (t (handle-overflow32 (* n m) 1)))))
+      (if (minusp sign)
+        (float32-neg result)
+        result))))
+
+
+; Return n/m.
+(defun float32-divide (n m)
+  (let ((sign (float32-sign-xor n m))
+        (n (float32-abs n))
+        (m (float32-abs m)))
+    (let ((result (cond
+                   ((zerop sign) :nan32)
+                   ((eq n :+infinity32) (if (eq m :+infinity32) :nan32 :+infinity32))
+                   ((eq m :+infinity32) :+zero32)
+                   ((eq m :+zero32) (if (eq n :+zero32) :nan32 :+infinity32))
+                   ((eq n :+zero32) :+zero32)
+                   (t (handle-overflow32 (/ n m) 1)))))
+      (if (minusp sign)
+        (float32-neg result)
+        result))))
+
+
+; Return n%m, using the ECMAScript definition of %.
+(defun float32-remainder (n m)
+  (cond
+   ((or (float32-is-nan n) (float32-is-nan m) (float32-is-infinite n) (float32-is-zero m)) :nan32)
+   ((or (float32-is-infinite m) (float32-is-zero n)) n)
+   (t (let ((result (float (rem (rational n) (rational m)))))
+        (if (zerop result)
+          (if (minusp n) :-zero32 :+zero32)
+          result)))))
+
+
+; s should be a string of decimal digits optionally preceded by a plus or minus sign.  Return s's
+; value as an integer.
+(defun string-to-integer (s)
+  (let ((p 0)
+        (sign 1)
+        (n 0)
+        (length (length s)))
+    (case (char s 0)
+      (#\+ (setq p 1))
+      (#\- (setq sign -1) (setq p 1)))
+    (assert (< p length))
+    (do ()
+        ((= p length))
+      (setq n (+ (* n 10) (digit-char-p (char s p))))
+      (incf p))
+    (* sign n)))
+
+
+; Return x converted to a string using ECMAScript's ToString rules.
+(defun float32-to-string (x)
+  (case x
+    (:nan32 "NaN")
+    (:+infinity32 "Infinity")
+    (:-infinity32 "-Infinity")
+    ((:+zero32 :-zero32) "0")
+    (t (assert (finite32? x))
+       (with-standard-io-syntax
+         (multiple-value-bind (sign s e) (float-to-string-components x #\S nil)
+           (when sign
+             (setq s (concatenate 'string "-" s)))
+           (when e
+             (setq s (concatenate 'string s (format nil "e~@D" e))))
+           s)))))
 
 
 ;;; ------------------------------------------------------------------------------------------------------
@@ -644,11 +972,13 @@
                   (:copier nil)
                   (:predicate world?))
   (conditionals nil :type list)                      ;Assoc list of (conditional . highlight), where highlight can be a style keyword, nil (no style), or 'delete
-  (package nil :type package)                        ;The package in which this world's identifiers are interned
+  (package nil :type (or null package))              ;The package in which this world's identifiers are interned
   (next-type-serial-number 0 :type integer)          ;Serial number to be used for the next type defined
   (types-reverse nil :type (or null hash-table))     ;Hash table of (kind tag parameters) -> type; nil if invalid
   (false-tag nil :type (or null tag))                ;Tag used for false
   (true-tag nil :type (or null tag))                 ;Tag used for true
+  (finite32-tag nil :type (or null tag))             ;Pseudo-tag used for accessing the value field of a finite32
+  (finite64-tag nil :type (or null tag))             ;Pseudo-tag used for accessing the value field of a finite64
   (bottom-type nil :type (or null type))             ;Subtype of all types used for nonterminating computations
   (void-type nil :type (or null type))               ;Type used for placeholders
   (false-type nil :type (or null type))              ;Type used for false
@@ -656,6 +986,7 @@
   (boolean-type nil :type (or null type))            ;Type used for booleans
   (integer-type nil :type (or null type))            ;Type used for integers
   (rational-type nil :type (or null type))           ;Type used for rational numbers
+  (finite32-type nil :type (or null type))           ;Type used for nonzero finite single-precision floating-point numbers
   (finite64-type nil :type (or null type))           ;Type used for nonzero finite double-precision floating-point numbers
   (character-type nil :type (or null type))          ;Type used for characters
   (string-type nil :type (or null type))             ;Type used for strings (vectors of characters)
@@ -856,6 +1187,7 @@
 ;;;   <value>        value of this identifier if it is a variable of type other than ->
 ;;;   <function>     value of this identifier if it is a variable of type ->
 ;;;   :value-expr    unparsed expression defining the value of this identifier if it is a variable
+;;;   :lisp-value-expr unparsed lisp expression defining the value of this identifier; overrides :value-expr
 ;;;   :mutable       if present and non-nil, this identifier is a mutable variable
 ;;;   :type          type of this identifier if it is a variable
 ;;;   :type-expr     unparsed expression defining the type of this identifier if it is a variable
@@ -964,13 +1296,14 @@
   optional)                 ;True if this field can be in an uninitialized state
 
 
-(defstruct (tag (:constructor make-tag (name keyword mutable fields =-name link)) (:predicate tag?))
+(defstruct (tag (:constructor make-tag (name keyword mutable fields =-name link base)) (:predicate tag?))
   (name nil :type symbol :read-only t)               ;This tag's world-interned name
   (keyword nil :type (or null keyword) :read-only t) ;This tag's keyword (non-null only when the tag is immutable and has no fields)
   (mutable nil :type bool :read-only t)              ;True if this tag's equality is based on identity, in which case the tag's values have a hidden serial-number field
   (fields nil :type list :read-only t)               ;List of fields after eval-tags-types or (field-name field-type-expression [:const|:var|:opt-const|:opt-var]) before eval-tags-types
   (=-name nil :type symbol)                          ;Lazily computed name of a function that compares two values of this tag for equality; nil if not known yet
-  (link nil :type (or null keyword) :read-only t))   ;:reference if this is a local tag, :external if it's a predefined tag, or nil for no cross-references to this tag
+  (link nil :type (or null keyword) :read-only t)    ;:reference if this is a local tag, :external if it's a predefined tag, or nil for no cross-references to this tag
+  (base nil :type integer :read-only t))             ;Position of first field in the list; -1 if it's special
 
 ; Return four values:
 ;   the one-based position of the tag's field corresponding to the given label or nil if the label is not present;
@@ -979,7 +1312,7 @@
 ;   true if the field is optional.
 (defun tag-find-field (tag label)
   (do ((fields (tag-fields tag) (cdr fields))
-       (n (if (tag-mutable tag) 2 1) (1+ n)))
+       (n (tag-base tag) (1+ n)))
       ((endp fields) (values nil nil nil nil))
     (let ((field (car fields)))
       (when (eq label (field-label field))
@@ -1001,7 +1334,7 @@
       (when (or mutable (null fields))
         (setq =-name 'eq)
         (setf (get name :tag=) #'eq))
-      (let ((tag (make-tag name keyword mutable fields =-name link)))
+      (let ((tag (make-tag name keyword mutable (copy-list fields) =-name link (if mutable 2 1))))
         (setf (symbol-tag name) tag)
         (when hidden
           (setf (get name :tag-hidden) t))
@@ -1054,8 +1387,8 @@
 ; Return:
 ;   the label's position;
 ;   its field type;
-;   a flag indicating whether it is mutable;
-;   a flag indicating whether it is optional.
+;   a flag indicating whether the field is mutable;
+;   a flag indicating whether the field is optional.
 (defun scan-label (tag label)
   (multiple-value-bind (position field-type mutable optional) (tag-find-field tag label)
     (unless position
@@ -1091,6 +1424,7 @@
            :boolean          ;nil            ;nil
            :integer          ;nil            ;nil
            :rational         ;nil            ;nil
+           :finite32         ;nil            ;nil    ;All non-zero finite 32-bit single-precision floating-point numbers
            :finite64         ;nil            ;nil    ;All non-zero finite 64-bit double-precision floating-point numbers
            :character        ;nil            ;nil
            :->               ;nil            ;(result-type arg1-type arg2-type ... argn-type)
@@ -1111,7 +1445,7 @@
 ;
 ;A union type must have:
 ;  at least two types
-;  only types with kinds :integer, :rational, :finite64, :character, :->, :string, :vector, :list-set, or :tag
+;  only types with kinds :integer, :rational, :finite32, :finite64, :character, :->, :string, :vector, :list-set, or :tag
 ;  no type that is a duplicate or subtype of another type in the union
 ;  at most one type each with kind :->
 ;  at most one type each with kind :vector or :list-set; furthermore, if such a type is present, then only keyword :tag types may be present
@@ -1251,14 +1585,24 @@
   (car (type-parameters type)))
 
 
+; Return the type's tag if it has one.
+; The types float32 and float64 are considered to have fake tags that have one field, named "value", at position -1.
+; Return nil if the type is not one of the above.
+(defun type-pseudo-tag (world type)
+  (case (type-kind type)
+    (:tag (type-tag type))
+    (:finite32 (world-finite32-tag world))
+    (:finite64 (world-finite64-tag world))))
+
+  
 ; Return true if the type is a tag type or a union of tag types all of which have a field with
 ; the given label.
-(defun type-has-field (type label)
+(defun type-has-field (world type label)
   (flet ((test (type)
-           (and (eq (type-kind type) :tag)
-                (tag-find-field (type-tag type) label))))
+           (let ((tag (type-pseudo-tag world type)))
+             (and tag (tag-find-field tag label)))))
     (case (type-kind type)
-      (:tag (test type))
+      ((:tag :finite32 :finite64) (test type))
       (:union (every #'test (type-parameters type))))))
 
 
@@ -1266,13 +1610,6 @@
 (declaim (inline type=))
 (defun type= (type1 type2)
   (eq type1 type2))
-
-
-; Convert a value of a union type that includes finite64 into a value of a union type that includes rational.
-(defun union-finite64-to-rational (value)
-  (if (floatp value)
-    (rational value)
-    value))
 
 
 ; code is a lisp expression that evaluates to either :true or :false.
@@ -1322,10 +1659,9 @@
                (bool-unboxing-code code)
                (type-mismatch)))
             (:rational
-             (case kind
-               (:integer code)
-               (:finite64 (list 'rational code))
-               (t (type-mismatch))))
+             (if (eq kind :integer)
+               code
+               (type-mismatch)))
             (:union
              (let ((supertype-types (type-parameters supertype)))
                (case kind
@@ -1337,7 +1673,7 @@
                   (if (or (member type supertype-types) (member (world-rational-type world) supertype-types))
                     code
                     (type-mismatch)))
-                 ((:rational :character :-> :string :tag)
+                 ((:rational :finite32 :finite64 :character :-> :string :tag)
                   (if (member type supertype-types)
                     code
                     (type-mismatch)))
@@ -1346,24 +1682,13 @@
                     (if super-collection-type
                       (widening-coercion-code world super-collection-type type code expr)
                       (type-mismatch))))
-                 (:finite64
-                  (cond
-                   ((member type supertype-types) code)
-                   ((member (world-rational-type world) supertype-types) (list 'rational code))
-                   (t (type-mismatch))))
                  (:union
-                  (let ((convert-finite64-to-rational nil))
-                    (dolist (type-type (type-parameters type))
-                      (unless (case (type-kind type-type)
-                                (:integer (or (member type-type supertype-types) (member (world-rational-type world) supertype-types)))
-                                ((:rational :character :-> :string :tag :vector :list-set) (member type-type supertype-types))
-                                (:finite64
-                                 (or (member type-type supertype-types)
-                                     (and (member (world-rational-type world) supertype-types) (setq convert-finite64-to-rational t)))))
-                        (type-mismatch)))
-                    (if convert-finite64-to-rational
-                      (list 'union-finite64-to-rational code)
-                      code)))
+                  (dolist (type-type (type-parameters type))
+                    (unless (case (type-kind type-type)
+                              (:integer (or (member type-type supertype-types) (member (world-rational-type world) supertype-types)))
+                              ((:rational :finite32 :finite64 :character :-> :string :tag :vector :list-set) (member type-type supertype-types)))
+                      (type-mismatch)))
+                  code)
                  (t (type-mismatch)))))
             ((:vector :list-set)
              (unless (eq kind (type-kind supertype))
@@ -1395,7 +1720,7 @@
 (defun type-to-union (world type)
   (ecase (type-kind type)
     (:boolean (type-parameters (world-boxed-boolean-type world)))
-    ((:integer :rational :finite64 :character :-> :string :vector :list-set :tag) (list type))
+    ((:integer :rational :finite32 :finite64 :character :-> :string :vector :list-set :tag) (list type))
     (:denormalized-tag (make-tag-type world (type-tag type)))
     (:union (type-parameters type))))
 
@@ -1439,7 +1764,7 @@
 
 
 (defun coercable-to-union-kind (kind)
-  (member kind '(:boolean :integer :rational :finite64 :character :-> :string :vector :list-set :tag :denormalized-tag :union)))
+  (member kind '(:boolean :integer :rational :finite32 :finite64 :character :-> :string :vector :list-set :tag :denormalized-tag :union)))
 
 
 ; types is a list of distinct, non-overlapping types appropriate for inclusion in a union and
@@ -1465,7 +1790,7 @@
 (defun type-union (world type1 type2)
   (labels
     ((numeric-kind (kind)
-       (member kind '(:integer :rational :finite64)))
+       (member kind '(:integer :rational)))
      (numeric-type (type)
        (numeric-kind (type-kind type))))
     (if (type= type1 type2)
@@ -1587,8 +1912,8 @@
 
 
 ; types must be a list of types suitable for inclusion in a :union type's parameters.  Return the following values:
-;    a list of integerp, rationalp, floatp, characterp, functionp, stringp, and/or listp depending on whether types include the
-;       :integer, :rational, :finite64, :character, :->, :string and/or :vector or :list-set member kinds;
+;    a list of integerp, rationalp, finite32?, finite64?, characterp, functionp, stringp, and/or listp depending on whether types include the
+;       :integer, :rational, :finite32, :finite64, :character, :->, :string and/or :vector or :list-set member kinds;
 ;    a list of keywords used by non-list tags in the types;
 ;    a list of tag names used by list tags in the types
 (defun analyze-union-types (types)
@@ -1600,7 +1925,8 @@
       (ecase (type-kind type)
         (:integer (push 'integerp atom-tests))
         (:rational (push 'rationalp atom-tests))
-        (:finite64 (push 'floatp atom-tests))
+        (:finite32 (push 'finite32? atom-tests))
+        (:finite64 (push 'finite64? atom-tests))
         (:character (push 'characterp atom-tests))
         (:-> (push 'functionp atom-tests))
         (:string (push 'stringp atom-tests))
@@ -1677,6 +2003,7 @@
       (:boolean (write-string "boolean" stream))
       (:integer (write-string "integer" stream))
       (:rational (write-string "rational" stream))
+      (:finite32 (write-string "finite32" stream))
       (:finite64 (write-string "finite64" stream))
       (:character (write-string "character" stream))
       (:-> (pprint-logical-block (stream nil :prefix "(" :suffix ")")
@@ -2500,7 +2827,8 @@
 ;;;   A boolean (nil for false; non-nil for true)
 ;;;   An integer
 ;;;   A rational number
-;;;   A double-precision floating-point number (or :+infinity, :-infinity, or :nan)
+;;;   A short-float (or :+zero32, :-zero32, :+infinity32, :-infinity32, or :nan32)
+;;;   A double-float (or :+zero64, :-zero64, :+infinity64, :-infinity64, or :nan64)
 ;;;   A character
 ;;;   A function (represented by a lisp function)
 ;;;   A string
@@ -2561,7 +2889,8 @@
     (:boolean t)
     (:integer (integerp value))
     (:rational (rationalp value))
-    (:finite64 (and (floatp value) (not (zerop value))))
+    (:finite32 (and (finite32? value) (not (zerop value))))
+    (:finite64 (and (finite64? value) (not (zerop value))))
     (:character (characterp value))
     (:-> (functionp value))
     (:string (stringp value))
@@ -2609,7 +2938,7 @@
            (write-string "empty" stream))
     (:boolean (write-string (if value "true" "false") stream))
     ((:integer :rational :character :->) (write value :stream stream))
-    (:finite64 (write value :stream stream))
+    ((:finite32 :finite64) (write value :stream stream))
     (:string (prin1 value stream))
     (:vector (let ((element-type (vector-element-type type)))
                (pprint-logical-block (stream value :prefix "(" :suffix ")")
@@ -2861,9 +3190,13 @@
       ((consp value-expr) (scan-cons (first value-expr) (rest value-expr)))
       ((identifier? value-expr) (scan-identifier (world-intern world value-expr)))
       ((integerp value-expr) (scan-constant value-expr (world-integer-type world)))
-      ((floatp value-expr)
+      ((typep value-expr 'short-float)
        (if (zerop value-expr)
-         (error "Use +zero or -zero instead of 0.0")
+         (error "Use +zero32 or -zero32 instead of 0.0s0")
+         (scan-constant value-expr (world-finite32-type world))))
+      ((typep value-expr 'double-float)
+       (if (zerop value-expr)
+         (error "Use +zero64 or -zero64 instead of 0.0")
          (scan-constant value-expr (world-finite64-type world))))
       ((characterp value-expr) (scan-constant value-expr (world-character-type world)))
       ((stringp value-expr) (scan-constant value-expr (world-string-type world)))
@@ -2937,27 +3270,28 @@
       (values value kind (collection-element-type type) annotated-expr))))
 
 
-; Same as scan-value except that ensure that the value is a tag type or a union of tag types.
+; Same as scan-value except that ensure that the value is a tag type, float32, float64, or a union of these types.
+; The types float32 and float64 are converted into fake tags that have one field, named "value", at position -1.
 ; Return four values:
 ;   The expression's value (a lisp expression)
 ;   The expression's type
-;   A list of tags in the expression's type
+;   A list of tags in the expression's type (includes pseudo-tags with a value field at offset -1 for :finite32 and :finite64 if these types are present)
 ;   The annotated value-expr
 (defun scan-union-tag-value (world type-env value-expr)
   (multiple-value-bind (value type annotated-expr) (scan-value world type-env value-expr)
     (flet ((bad-type ()
              (error "Value ~S:~A should be a tag or union of tags" value-expr (print-type-to-string type))))
-      (let ((tags nil))
-        (case (type-kind type)
-          (:tag
-            (setq tags (list (type-tag type))))
-          (:union
-           (setq tags (mapcar #'(lambda (type2) (if (eq (type-kind type2) :tag)
-                                                  (type-tag type2)
-                                                  (bad-type)))
-                              (type-parameters type))))
-          (t (bad-type)))
-        (values value type tags annotated-expr)))))
+      (values
+       value
+       type
+       (case (type-kind type)
+         ((:tag :finite32 :finite64) (list (type-pseudo-tag world type)))
+         (:union (mapcar #'(lambda (type2)
+                             (or (type-pseudo-tag world type2)
+                                 (bad-type)))
+                         (type-parameters type)))
+         (t (bad-type)))
+       annotated-expr))))
 
 
 ; Generate a lisp expression that will compute the boolean condition expression in condition-expr.
@@ -3010,7 +3344,10 @@
                       (declare (ignore condition))
                       (format *error-output* "~&~@<~2IWhile computing ~A: ~_~:W~:>~%" symbol value-expr))))
     (assert-true (not (or (boundp symbol) (fboundp symbol))))
-    (let ((code (strip-function (scan-global-value symbol value-expr type) symbol (length (->-argument-types type)))))
+    (let ((code (strip-function (scan-global-value symbol value-expr type) symbol (length (->-argument-types type))))
+          (code2 (get symbol :lisp-value-expr)))
+      (when code2
+        (setq code code2))
       (when *trace-variables*
         (format *trace-output* "~&~S ::= ~:W~%" symbol code))
       (quiet-compile symbol code))))
@@ -3031,6 +3368,8 @@
    (t (let* ((*busy-variables* (cons symbol *busy-variables*))
              (value-expr (get symbol :value-expr))
              (type (symbol-type symbol)))
+        (when (get symbol :lisp-value-expr)
+          (error "Can't use defprimitive on non-function ~S" symbol))
         (handler-bind (((or error warning)
                         #'(lambda (condition)
                             (declare (ignore condition))
@@ -3057,6 +3396,17 @@
   (declare (ignore type-env))
   (values
    '(eval-todo)
+   (world-bottom-type world)
+   (list 'expr-annotation:special-form special-form)))
+
+
+; (bottom)
+; Raises an error.  Same as todo except that it doesn't carry the connotation of something that
+; should be filled in in the future.
+(defun scan-bottom-expr (world type-env special-form)
+  (declare (ignore type-env))
+  (values
+   '(eval-bottom)
    (world-bottom-type world)
    (list 'expr-annotation:special-form special-form)))
 
@@ -3400,6 +3750,21 @@
       (make-vector-expr world special-form element-type element-codes element-annotated-exprs))))
 
 
+; (repeat <element-type> <element-expr> <count-expr>)
+; Makes a vector of count-expr copies of element-expr coerced to the given type.
+(defun scan-repeat (world type-env special-form element-type-expr element-expr count-expr)
+  (let ((element-type (scan-type world element-type-expr)))
+    (multiple-value-bind (element-code element-annotated-expr) (scan-typed-value world type-env element-expr element-type)
+      (multiple-value-bind (count-code count-annotated-expr) (scan-typed-value world type-env count-expr (world-integer-type world))
+        (let ((vector-type (make-vector-type world element-type)))
+          (values
+           (if (eq vector-type (world-string-type world))
+             `(make-string ,count-code :initial-element ,element-code)
+             `(make-list ,count-code :initial-element ,element-code))
+           vector-type
+           (list 'expr-annotation:special-form special-form element-annotated-expr count-annotated-expr)))))))
+
+
 ; Same as nth, except that ensures that the element is actually present.
 (defun checked-nth (list n)
   (car (non-empty-vector (nthcdr n list) "nth")))
@@ -3458,17 +3823,21 @@
        (list 'expr-annotation:special-form special-form value-annotated-expr vector-annotated-expr)))))
 
 
-; (append <vector-expr> <vector-expr>)
-; Returns a vector contatenating the two given vectors, which must have the same element type.
-(defun scan-append (world type-env special-form vector1-expr vector2-expr)
+; (append <vector-expr> <vector-expr> ... <vector-expr>)
+; Returns a vector contatenating the given vectors, which must have the same element type.
+(defun scan-append (world type-env special-form vector1-expr &rest vector-exprs)
+  (unless vector-exprs
+    (error "append requires at least two lists"))
   (multiple-value-bind (vector1-code vector-type vector1-annotated-expr) (scan-vector-value world type-env vector1-expr)
-    (multiple-value-bind (vector2-code vector2-annotated-expr) (scan-typed-value world type-env vector2-expr vector-type)
+    (multiple-value-map-bind (vector-codes vector-annotated-exprs)
+                             #'(lambda (vector-expr) (scan-typed-value world type-env vector-expr vector-type))
+                             (vector-exprs)
       (values
        (if (eq vector-type (world-string-type world))
-         `(concatenate 'string ,vector1-code ,vector2-code)
-         (list 'append vector1-code vector2-code))
+         `(concatenate 'string ,vector1-code ,@vector-codes)
+         (list* 'append vector1-code vector-codes))
        vector-type
-       (list 'expr-annotation:special-form special-form vector1-annotated-expr vector2-annotated-expr)))))
+       (list* 'expr-annotation:special-form special-form vector1-annotated-expr vector-annotated-exprs)))))
 
 
 ; (set-nth <vector-expr> <n-expr> <value-expr>)
@@ -3962,13 +4331,24 @@
         (dolist (field-type field-types)
           (unless (eq (widening-coercion-code world result-type field-type 'test 'test) 'test)
             (error "Nontrivial type coercions in & are not implemented yet")))
-        (let ((code (if (endp (cdr position-alist))
-                      (gen-nth-code (caar position-alist) record-code)
-                      (let ((var (gen-local-var record-code)))
-                        (let-local-var var record-code
-                          `(case (car ,var)
-                             ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
-                                       position-alist)))))))
+        (let ((code (let ((n (caar position-alist)))
+                      (if (endp (cdr position-alist))
+                        (if (= n -1)
+                          (list 'rational record-code)
+                          (gen-nth-code n record-code))
+                        (let ((var (gen-local-var record-code)))
+                          (let-local-var var record-code
+                            (if (/= n -1)
+                              `(case (car ,var)
+                                 ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
+                                           position-alist))
+                              `(if (floatp ,var)
+                                 (rational ,var)
+                                 ,(if (endp (cddr position-alist))
+                                    (gen-nth-code (caadr position-alist) record-code)
+                                    `(case (car ,var)
+                                       ,@(mapcar #'(lambda (entry) (list (cdr entry) (gen-nth-code (car entry) var)))
+                                                 (cdr position-alist))))))))))))
           (values
            (if any-opt
              (list 'assert-not-%uninit% code)
@@ -4035,19 +4415,14 @@
 ;;; Unions
 
 ; (in <expr> <type>)
-; In addition to the standard queries, this specially allows the case where <expr> has type nonzero-finite-float64
-; and <type> is integer.
 (defun scan-in (world type-env special-form value-expr type-expr)
   (let ((type (scan-type world type-expr)))
     (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
+      (type-difference world value-type type)
       (values
-       (if (and (type= value-type (world-finite64-type world)) (type= type (world-integer-type world)))
-         `(zerop (nth-value 1 (floor ,value-code)))
-         (progn
-           (type-difference world value-type type)
-           (let ((var (gen-local-var value-code)))
-             (let-local-var var value-code
-               (type-member-test-code world type value-type var)))))
+       (let ((var (gen-local-var value-code)))
+         (let-local-var var value-code
+           (type-member-test-code world type value-type var)))
        (world-boolean-type world)
        (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr)))))
 
@@ -4113,29 +4488,18 @@
 
 ; (assert-in <expr> <type>)
 ; Returns the value of <expr>.
-; In addition to the standard queries, this specially allows the case where <expr> has type nonzero-finite-float64
-; and <type> is integer.
 (defun scan-assert-in (world type-env special-form value-expr type-expr)
   (let ((type (scan-type world type-expr)))
     (multiple-value-bind (value-code value-type value-annotated-expr) (scan-value world type-env value-expr)
-      (if (and (type= value-type (world-finite64-type world)) (type= type (world-integer-type world)))
+      (multiple-value-bind (true-type false-type) (type-difference world value-type type)
+        (declare (ignore false-type))
         (values
-         (let ((q (gensym "QUO"))
-               (r (gensym "REM")))
-           `(multiple-value-bind (,q ,r) (floor ,value-code)
-              (assert (zerop ,r))
-              ,q))
-         type
-         (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr))
-        (multiple-value-bind (true-type false-type) (type-difference world value-type type)
-          (declare (ignore false-type))
-          (values
-           (let ((var (gen-local-var value-code)))
-             (let-local-var var value-code
-               (list 'assert (type-member-test-code world type value-type var))
-               var))
-           true-type
-           (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr)))))))
+         (let ((var (gen-local-var value-code)))
+           (let-local-var var value-code
+             (list 'assert (type-member-test-code world type value-type var))
+             var))
+         true-type
+         (list 'expr-annotation:special-form special-form value-annotated-expr type type-expr))))))
 
 
 ; (assert-not-in <expr> <type>)
@@ -4346,6 +4710,35 @@
       symbols)))
 
 
+; text is a list of strings and forms intended for a comment.  Interpret a few special forms as follows:
+;   (:expr <result-type> <expr>)
+;     becomes converted to (:annotated-expr <annotated-expr>)
+;   (:def-const <name> <type>)
+;     augments the environment for the rest of the comment with a local variable named <name> with type <type>.
+(defun scan-expressions-in-comment (world type-env text)
+  (mapcan #'(lambda (item)
+              (if (consp item)
+                (let ((key (first item)))
+                  (case key
+                    (:expr
+                     (unless (= (length item) 3)
+                       (error "Bad :expr ~S" item))
+                     (let ((result-type (scan-type world (second item))))
+                       (multiple-value-bind (value-code value-annotated-expr) (scan-typed-value world type-env (third item) result-type)
+                         (declare (ignore value-code))
+                         (list (list :annotated-expr value-annotated-expr)))))
+                    (:def-const
+                      (unless (= (length item) 3)
+                        (error "Bad :expr ~S" item))
+                      (let* ((symbol (scan-name world (second item)))
+                             (type (scan-type world (third item))))
+                        (setq type-env (type-env-add-binding type-env symbol type :const)))
+                      nil)
+                    (t (list item))))
+                (list item)))
+          text))
+
+
 ;;; ------------------------------------------------------------------------------------------------------
 ;;; STATEMENTS
 
@@ -4355,10 +4748,11 @@
 (defun scan-// (world type-env rest-statements last special-form &rest text)
   (unless text
     (error "// should have non-empty text"))
-  (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
-    (values rest-codes
-            rest-live
-            (cons (cons special-form text) rest-annotated-stmts))))
+  (let ((text2 (scan-expressions-in-comment world type-env text)))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
+      (values rest-codes
+              rest-live
+              (cons (cons special-form text2) rest-annotated-stmts)))))
 
 
 ; (/* . <styled-text>)
@@ -4367,21 +4761,22 @@
 (defun scan-/* (world type-env rest-statements last special-form &rest text)
   (unless text
     (error "/* should have non-empty text"))
-  (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
-    (let ((end-special-form (assert-non-null (world-find-symbol world '*/))))
-      (loop
-        (when (endp rest-annotated-stmts)
-          (error "Missing */"))
-        (let* ((annotated-stmt (pop rest-annotated-stmts))
-               (stmt-keyword (first annotated-stmt)))
-          (cond
-           ((eq stmt-keyword special-form)
-            (error "/* comments can't nest"))
-           ((eq stmt-keyword end-special-form)
-            (return))))))
-    (values rest-codes
-            rest-live
-            (cons (cons special-form text) rest-annotated-stmts))))
+  (let ((text2 (scan-expressions-in-comment world type-env text)))
+    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world type-env rest-statements last)
+      (let ((end-special-form (assert-non-null (world-find-symbol world '*/))))
+        (loop
+          (when (endp rest-annotated-stmts)
+            (error "Missing */"))
+          (let* ((annotated-stmt (pop rest-annotated-stmts))
+                 (stmt-keyword (first annotated-stmt)))
+            (cond
+             ((eq stmt-keyword special-form)
+              (error "/* comments can't nest"))
+             ((eq stmt-keyword end-special-form)
+              (return))))))
+      (values rest-codes
+              rest-live
+              (cons (cons special-form text2) rest-annotated-stmts)))))
 
 
 ; (*/)
@@ -4399,12 +4794,12 @@
 ; (bottom . <styled-text>)
 ; Raises an error.
 (defun scan-bottom (world type-env rest-statements last special-form &rest text)
-  (declare (ignore type-env))
-  (scan-statements world nil rest-statements last)
-  (values
-   (list '(eval-bottom))
-   :dead
-   (list (cons special-form text))))
+  (let ((text2 (scan-expressions-in-comment world type-env text)))
+    (scan-statements world nil rest-statements last)
+    (values
+     (list '(eval-bottom))
+     :dead
+     (list (cons special-form text2)))))
 
 
 ; (assert <condition-expr> . <styled-text>)
@@ -4414,13 +4809,14 @@
 (defun scan-assert (world type-env rest-statements last special-form condition-expr &rest text)
   (unless text
     (error "assert should have non-empty text"))
-  (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
-                       (scan-condition world type-env condition-expr)
-    (declare (ignore false-type-env))
-    (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world true-type-env rest-statements last)
-      (values (cons (list 'assert condition-code) rest-codes)
-              rest-live
-              (cons (list* special-form condition-annotated-expr text) rest-annotated-stmts)))))
+  (let ((text2 (scan-expressions-in-comment world type-env text)))
+    (multiple-value-bind (condition-code condition-annotated-expr true-type-env false-type-env)
+                         (scan-condition world type-env condition-expr)
+      (declare (ignore false-type-env))
+      (multiple-value-bind (rest-codes rest-live rest-annotated-stmts) (scan-statements world true-type-env rest-statements last)
+        (values (cons (list 'assert condition-code) rest-codes)
+                rest-live
+                (cons (list* special-form condition-annotated-expr text2) rest-annotated-stmts))))))
 
 
 ; (exec <expr>)
@@ -4946,11 +5342,13 @@
   (add-tag world name nil nil :reference nil))
 
 
-(defun scan-deftuple-or-defrecord (world record name fields)
+; Create the tuple or record.  Return the type.
+(defun scan-deftuple-or-defrecord (world record name fields user-defined)
   (let* ((tag (add-tag world name record fields :reference t))
          (symbol (tag-name tag))
          (type (make-tag-type world tag)))
-    (add-type-name world type symbol t)))
+    (add-type-name world type symbol user-defined)
+    type))
 
 
 ; (deftuple <name> (<name1> <type1>) ... (<namen> <typen>))
@@ -4960,7 +5358,7 @@
   (declare (ignore grammar-info-var))
   (unless fields
     (error "A tuple must have at least one field; use a tag instead"))
-  (scan-deftuple-or-defrecord world nil name fields))
+  (scan-deftuple-or-defrecord world nil name fields t))
 
 
 ; (defrecord <name> (<name1> <type1> [:const | :var | :opt-const | :opt-var]) ... (<namen> <typen> [:const | :var | :opt-const | :opt-var]))
@@ -4972,7 +5370,7 @@
 ; :opt-var fields are mutable and can be left uninitialized.
 (defun scan-defrecord (world grammar-info-var name &rest fields)
   (declare (ignore grammar-info-var))
-  (scan-deftuple-or-defrecord world t name fields))
+  (scan-deftuple-or-defrecord world t name fields t))
 
 
 ; (deftype <name> <type>)
@@ -4995,6 +5393,16 @@
     (setf (get symbol :value-expr) value-expr)
     (setf (get symbol :type-expr) type-expr)
     (export-symbol symbol)))
+
+
+; (defprimitive <name> <lisp-lambda-expr>)
+; Overrides a defun of <name> with the result of compiling <lisp-lambda-expr>.
+(defun scan-defprimitive (world grammar-info-var name lisp-lambda-expr)
+  (declare (ignore grammar-info-var))
+  (let ((symbol (scan-name world name)))
+    (unless (get symbol :value-expr)
+      (error "Need to define ~A before using defprimitive on it" symbol))
+    (setf (get symbol :lisp-value-expr) lisp-lambda-expr)))
 
 
 ; (defvar <name> <type> <value>)
@@ -5110,6 +5518,7 @@
      (deftype scan-deftype depict-deftype)
      (define scan-define depict-define)
      (defun scan-define depict-defun)    ;Occurs from desugaring a function define
+     (defprimitive scan-defprimitive depict-defprimitive)
      (defvar scan-defvar depict-defvar)
      (set-grammar scan-set-grammar depict-set-grammar)
      (clear-grammar scan-clear-grammar depict-clear-grammar)
@@ -5147,6 +5556,7 @@
     (:special-form
      ;;Constants
      (todo scan-todo depict-todo)
+     (bottom scan-bottom-expr depict-bottom-expr)
      (hex scan-hex depict-hex)
      
      ;;Expressions
@@ -5167,6 +5577,7 @@
      ;;Vectors
      (vector scan-vector-expr depict-vector-expr)
      (vector-of scan-vector-of depict-vector-expr)
+     (repeat scan-repeat depict-repeat)
      (nth scan-nth depict-nth)
      (subseq scan-subseq depict-subseq)
      (cons scan-cons depict-cons)
@@ -5236,7 +5647,7 @@
     (+ (-> (integer integer) integer) #'+ :infix "+" t %term% %term% %term%)
     (- (-> (integer integer) integer) #'- :infix :minus t %term% %term% %factor%)
     
-    (rational-compare (-> (rational rational) order) #'rational-compare)
+    ;(rational-compare (-> (rational rational) order) #'rational-compare)
     (rat-neg (-> (rational) rational) #'- :unary "-" nil %suffix% %suffix%)
     (rat* (-> (rational rational) rational) #'* :infix :cartesian-product-10 nil %factor% %factor% %factor%)
     (rat/ (-> (rational rational) rational) #'/ :infix "/" nil %factor% %factor% %unary%)
@@ -5252,10 +5663,23 @@
     (bitwise-xor (-> (integer integer) integer) #'logxor)
     (bitwise-shift (-> (integer integer) integer) #'ash)
     
+    (real-to-float32 (-> (rational) finite-float32) #'rational-to-float32)
+    (truncate-finite-float32 (-> (finite-float32) integer) #'truncate-finite-float32)
+    
+    ;(float32-compare (-> (float32 float32) order) #'float32-compare)
+    (float32-abs (-> (float32 float32) float32) #'float32-abs)
+    (float32-negate (-> (float32) float32) #'float32-neg)
+    (float32-add (-> (float32 float32) float32) #'float32-add)
+    (float32-subtract (-> (float32 float32) float32) #'float32-subtract)
+    (float32-multiply (-> (float32 float32) float32) #'float32-multiply)
+    (float32-divide (-> (float32 float32) float32) #'float32-divide)
+    (float32-remainder (-> (float32 float32) float32) #'float32-remainder)
+    
     (real-to-float64 (-> (rational) finite-float64) #'rational-to-float64)
+    (float32-to-float64 (-> (float32) float64) #'float32-to-float64)
     (truncate-finite-float64 (-> (finite-float64) integer) #'truncate-finite-float64)
     
-    (float64-compare (-> (float64 float64) order) #'float64-compare)
+    ;(float64-compare (-> (float64 float64) order) #'float64-compare)
     (float64-abs (-> (float64 float64) float64) #'float64-abs)
     (float64-negate (-> (float64) float64) #'float64-neg)
     (float64-add (-> (float64 float64) float64) #'float64-add)
@@ -5367,7 +5791,10 @@
       (setf (world-boolean-type world) (make-simple-type 'boolean :boolean 'boolean= nil))
       (setf (world-integer-type world) (make-simple-type 'integer :integer '= '/=))
       (setf (world-rational-type world) (make-simple-type 'rational :rational '= '/=))
+      (setf (world-finite32-type world) (make-simple-type 'nonzero-finite-float32 :finite32 '= '/=))
       (setf (world-finite64-type world) (make-simple-type 'nonzero-finite-float64 :finite64 '= '/=))
+      (setf (world-finite32-tag world) (make-tag :finite32 nil nil (list (make-field 'value (world-rational-type world) nil nil)) '= nil -1))
+      (setf (world-finite64-tag world) (make-tag :finite64 nil nil (list (make-field 'value (world-rational-type world) nil nil)) '= nil -1))
       (setf (world-character-type world) (make-simple-type 'character :character 'char= 'char/=))
       (let ((string-type (make-type world :string nil (list (world-character-type world)) 'string= 'string/=)))
         (add-type-name world string-type (world-intern world 'string) nil)
@@ -5375,20 +5802,33 @@
     (add-type-name world (make-range-set-type world (world-integer-type world)) (world-intern world 'integer-set) nil)
     (add-type-name world (make-range-set-type world (world-character-type world)) (world-intern world 'character-set) nil)
     
-    ;Define order and floating-point types
-    (let ((order-types (mapcar
-                        #'(lambda (tag-name)
-                            (make-tag-type world (add-tag world tag-name nil nil nil nil)))
-                        '(less equal greater unordered)))
+    ;Define order, floating-point, and long integer types
+    (let (;(order-types (mapcar
+          ;              #'(lambda (tag-name)
+          ;                  (make-tag-type world (add-tag world tag-name nil nil nil nil)))
+          ;              '(less equal greater unordered)))
+          (float32-tag-types (mapcar
+                              #'(lambda (tag-name)
+                                  (make-tag-type world (add-tag world tag-name nil nil nil nil)))
+                              '(+zero32 -zero32 +infinity32 -infinity32 nan32)))
           (float64-tag-types (mapcar
                               #'(lambda (tag-name)
                                   (make-tag-type world (add-tag world tag-name nil nil nil nil)))
-                              '(+zero -zero +infinity -infinity nan))))
-      (add-type-name world (apply #'make-union-type world order-types) (world-intern world 'order) nil)
-      (add-type-name world (apply #'make-union-type world (world-finite64-type world) float64-tag-types)
-                     (world-intern world 'float64) nil)
-      (add-type-name world (make-union-type world (world-finite64-type world) (first float64-tag-types) (second float64-tag-types))
-                     (world-intern world 'finite-float64) nil))
+                              '(+zero64 -zero64 +infinity64 -infinity64 nan64))))
+      ;(add-type-name world (apply #'make-union-type world order-types) (world-intern world 'order) nil)
+      (let ((float32-type (apply #'make-union-type world (world-finite32-type world) float32-tag-types))
+            (float64-type (apply #'make-union-type world (world-finite64-type world) float64-tag-types))
+            (finite-float32-type (make-union-type world (world-finite32-type world) (first float32-tag-types) (second float32-tag-types)))
+            (finite-float64-type (make-union-type world (world-finite64-type world) (first float64-tag-types) (second float64-tag-types))))
+        (add-type-name world float32-type (world-intern world 'float32) nil)
+        (add-type-name world float64-type (world-intern world 'float64) nil)
+        (add-type-name world finite-float32-type (world-intern world 'finite-float32) nil)
+        (add-type-name world finite-float64-type (world-intern world 'finite-float64) nil)
+        (let ((long-type (scan-deftuple-or-defrecord world nil 'long '((value (integer-range (neg (expt 2 63)) (- (expt 2 63) 1)))) nil))
+              (u-long-type (scan-deftuple-or-defrecord world nil 'u-long '((value (integer-range 0 (- (expt 2 64) 1)))) nil)))
+          (add-type-name world (make-union-type world float32-type float64-type long-type u-long-type) (world-intern world 'general-number) nil)
+          (add-type-name world (make-union-type world finite-float32-type finite-float64-type long-type u-long-type)
+                         (world-intern world 'finite-general-number) nil))))
     world))
 
 

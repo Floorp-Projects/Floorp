@@ -40,6 +40,7 @@
 (defvar *depict-trivial-functions-as-expressions* nil)
 
 (defvar *styled-text-world*)
+(defvar *compact-infix* nil) ; If true, spaces are eliminated around infix primitives
 
 
 (defun hidden-nonterminal? (general-nonterminal)
@@ -181,11 +182,20 @@
 
 
 (defparameter *tag-name-special-cases*
-  '((:+zero "PlusZero" "+zero")
-    (:-zero "MinusZero" (:minus "zero"))
+  '((:+zero32 "PlusZero32" ("+zero" (:subscript "f32")))
+    (:-zero32 "MinusZero32" (:minus "zero" (:subscript "f32")))
+    (:+infinity32 "PlusInfinity32" ("+" :infinity (:subscript "f32")))
+    (:-infinity32 "MinusInfinity32" (:minus :infinity (:subscript "f32")))
+    (:nan32 "NaN" ("NaN32" (:subscript "f32")))
+    
+    (:+zero64 "PlusZero64" ("+zero" (:subscript "f64")))
+    (:-zero64 "MinusZero64" (:minus "zero" (:subscript "f64")))
+    (:+infinity64 "PlusInfinity64" ("+" :infinity (:subscript "f64")))
+    (:-infinity64 "MinusInfinity64" (:minus :infinity (:subscript "f64")))
+    (:nan64 "NaN" ("NaN64" (:subscript "f64")))
+    
     (:+infinity "PlusInfinity" ("+" :infinity))
-    (:-infinity "MinusInfinity" (:minus :infinity))
-    (:nan "NaN" "NaN")))
+    (:-infinity "MinusInfinity" (:minus :infinity))))
 
 
 ; Return two values:
@@ -211,20 +221,21 @@
   (multiple-value-bind (link-name name) (tag-link-name-and-name tag)
     (depict-link (markup-stream link "T-" link-name nil)
       (depict-char-style (markup-stream :tag-name)
-        (depict-item-or-list markup-stream name)))))
+        (depict-item-or-group-list markup-stream name)))))
 
 
 ; Emit markup for a tuple or record type's label, which must be a symbol.
 ; link should be one of:
 ;   :reference   if this is a reference or external reference to this label;
 ;   nil          if this use of the label should not be cross-referenced.
-(defun depict-label-name (markup-stream type label link)
-  (unless (type-has-field type label)
+(defun depict-label-name (markup-stream world type label link)
+  (unless (type-has-field world type label)
     (error "Type ~A doesn't have label ~A" type label))
   (let ((type-name (type-name type)))
-    (unless type-name
-      ;(warn "Accessing field ~A of anonymous type ~S" label type)
-      (setq link nil))
+    (cond
+     ((null type-name) (setq link nil))
+     ((and (eq link :reference) (not (symbol-type-user-defined type-name)))
+      (setq link :external)))
     (depict-link (markup-stream link "D-" (symbol-upper-mixed-case-name type-name) nil)
       (depict-char-style (markup-stream :field-name)
         (depict markup-stream (symbol-lower-mixed-case-name label))))))
@@ -418,20 +429,36 @@
     (depict markup-stream (symbol-upper-mixed-case-name action-name))))
 
 
+; Emit markup for the float32 or float64 value.
+(defun depict-float (markup-stream x exponent-char suffix)
+  (if (keywordp x)
+    (depict-tag-name markup-stream x :reference)
+    (with-standard-io-syntax
+      (multiple-value-bind (sign s e) (float-to-string-components x exponent-char t)
+        (when e
+          (depict markup-stream "("))
+        (when sign
+          (depict markup-stream :minus))
+        (depict markup-stream s)
+        (when e
+          (depict markup-stream :cartesian-product-10 "10")
+          (depict-char-style (markup-stream :superscript)
+            (depict-integer markup-stream e))
+          (depict markup-stream ")")))
+      (depict-char-style (markup-stream :subscript)
+        (depict-char-style (markup-stream :tag-name)
+          (depict markup-stream suffix))))))
+
+
 ; Emit markup for the value constant.
 (defun depict-constant (markup-stream constant)
   (cond
    ((integerp constant)
     (depict-integer markup-stream constant))
-   ((floatp constant)
-    (depict markup-stream
-            (if (zerop constant)
-              (if (minusp (float64-sign constant)) "-0.0" "+0.0")
-              (progn
-                (when (minusp constant)
-                  (depict markup-stream :minus)
-                  (setq constant (- constant)))
-                (format nil (if (= constant (floor constant 1)) "~,1F" "~F") constant)))))
+   ((and (typep constant 'double-float) (not (zerop constant)))
+    (depict-float markup-stream constant #\E "f64"))
+   ((and (typep constant 'short-float) (not (zerop constant)))
+    (depict-float markup-stream constant #\S "f32"))
    ((characterp constant)
     (depict markup-stream :left-single-quote)
     (depict-char-style (markup-stream :character-literal)
@@ -482,7 +509,7 @@
            (assert-true (= (length annotated-arg-exprs) 2))
            (depict-logical-block (markup-stream 0)
              (depict-expression markup-stream world (first annotated-arg-exprs) (primitive-level1 primitive))
-             (let ((spaces (primitive-markup2 primitive)))
+             (let ((spaces (and (primitive-markup2 primitive) (not *compact-infix*))))
                (when spaces
                  (depict-space markup-stream))
                (depict-item-or-group-list markup-stream (primitive-markup1 primitive))
@@ -540,6 +567,13 @@
   (depict markup-stream "????"))
 
 
+; (bottom)
+(defun depict-bottom-expr (markup-stream world level)
+  (declare (ignore world level))
+  (warn "Depicting a bottom expression")
+  (depict markup-stream :bottom-10))
+
+
 ; (hex <integer> [<length>])
 (defun depict-hex (markup-stream world level n length)
   (if (minusp n)
@@ -554,7 +588,8 @@
   (depict-expr-parentheses (markup-stream level %prefix%)
     (depict-expression markup-stream world base-annotated-expr %primary%)
     (depict-char-style (markup-stream :superscript)
-      (depict-expression markup-stream world exponent-annotated-expr %term%))))
+      (let ((*compact-infix* t))
+        (depict-expression markup-stream world exponent-annotated-expr %term%)))))
 
 
 ; (= <expr1> <expr2> [<type>])
@@ -647,19 +682,23 @@
     (depict markup-stream :empty-vector)))
 
 
-#|
-(defun depict-subscript-type-expr (markup-stream world type-expr)
-  (depict-char-style (markup-stream 'sub)
-    (depict-type-expr markup-stream world type-expr)))
-|#
-
-
-#|
 (defun depict-special-function (markup-stream world name-str &rest arg-annotated-exprs)
   (depict-link (markup-stream :external "V-" name-str nil)
     (depict-char-style (markup-stream :global-variable)
       (depict markup-stream name-str)))
   (depict-call-parameters markup-stream world arg-annotated-exprs))
+
+
+; (repeat <element-type> <element-expr> <count-expr>)
+(defun depict-repeat (markup-stream world level element-annotated-expr count-annotated-expr)
+  (declare (ignore level))
+  (depict-special-function markup-stream world "repeat" element-annotated-expr count-annotated-expr))
+
+
+#|
+(defun depict-subscript-type-expr (markup-stream world type-expr)
+  (depict-char-style (markup-stream 'sub)
+    (depict-type-expr markup-stream world type-expr)))
 |#
 
 
@@ -697,14 +736,15 @@
       (depict-expression markup-stream world vector-annotated-expr %term%))))
 
 
-; (append <vector-expr> <vector-expr>)
-(defun depict-append (markup-stream world level vector1-annotated-expr vector2-annotated-expr)
+; (append <vector-expr> <vector-expr> ... <vector-expr>)
+(defun depict-append (markup-stream world level vector1-annotated-expr &rest vector-annotated-exprs)
   (depict-expr-parentheses (markup-stream level %term%)
     (depict-logical-block (markup-stream 0)
       (depict-expression markup-stream world vector1-annotated-expr %term%)
-      (depict markup-stream " " :vector-append)
-      (depict-break markup-stream 1)
-      (depict-expression markup-stream world vector2-annotated-expr %term%))))
+      (dolist (vector-annotated-expr vector-annotated-exprs)
+        (depict markup-stream " " :vector-append)
+        (depict-break markup-stream 1)
+        (depict-expression markup-stream world vector-annotated-expr %term%)))))
 
 
 ; (set-nth <vector-expr> <n-expr> <value-expr>)
@@ -910,7 +950,7 @@
       ((depict-tag-and-args (markup-stream)
          (let ((fields (tag-fields tag)))
            (assert-true (= (length fields) (length annotated-exprs)))
-           (depict-type-name markup-stream type-name :reference)
+           (depict-type-name markup-stream type-name (if (symbol-type-user-defined (world-intern world type-name)) :reference :external))
            (if (tag-keyword tag)
              (assert-true (null annotated-exprs))
              (let ((fields-and-parameters (mapcan #'(lambda (field parameter)
@@ -920,7 +960,7 @@
                (depict-list markup-stream
                             #'(lambda (markup-stream field-and-parameter)
                                 (depict-logical-block (markup-stream 4)
-                                  (depict-label-name markup-stream type (field-label (car field-and-parameter)) nil)
+                                  (depict-label-name markup-stream world type (field-label (car field-and-parameter)) nil)
                                   (depict markup-stream ":")
                                   (depict-break markup-stream 1)
                                   (depict-expression markup-stream world (cdr field-and-parameter) %expr%)))
@@ -946,7 +986,7 @@
   (depict-expr-parentheses (markup-stream level %suffix%)
     (depict-expression markup-stream world annotated-expr %suffix%)
     (depict markup-stream ".")
-    (depict-label-name markup-stream record-type label :reference)))
+    (depict-label-name markup-stream world record-type label :reference)))
 
 
 ; (set-field <expr> <label> <field-expr> ... <label> <field-expr>)
@@ -965,7 +1005,7 @@
                             (if parameter
                               (let ((label (first parameter))
                                     (field-annotated-expr (second parameter)))
-                                (depict-label-name markup-stream record-type label nil)
+                                (depict-label-name markup-stream world record-type label nil)
                                 (depict markup-stream ":")
                                 (depict-break markup-stream 1)
                                 (depict-expression markup-stream world field-annotated-expr %expr%))
@@ -1453,8 +1493,9 @@
 ;   nil         This is a general comment
 (defun depict-%text (markup-stream world depict-env mode &rest text)
   (when (depict-mode markup-stream depict-env (if (eq mode :comment) :semantics mode))
-    (depict-text-environment world depict-env
-      (depict-text-paragraph markup-stream (if (eq mode :comment) :semantic-comment :body-text) text))))
+    (let ((text2 (scan-expressions-in-comment world *null-type-env* text)))
+      (depict-text-environment world depict-env
+        (depict-text-paragraph markup-stream (if (eq mode :comment) :semantic-comment :body-text) text2)))))
 
 
 ; (grammar-argument <argument> <attribute> <attribute> ... <attribute>)
@@ -1574,7 +1615,7 @@
                       (let ((field (car fields)))
                         (depict-paragraph (markup-stream :statement)
                           (depict-logical-block (markup-stream 4)
-                            (depict-label-name markup-stream type (first field) nil)
+                            (depict-label-name markup-stream world type (first field) nil)
                             (depict markup-stream ": ")
                             (depict-type-expr markup-stream world (second field) %%type%%)
                             (when (cdr fields)
@@ -1671,6 +1712,10 @@
             (depict-lambda-signature markup-stream world type-expr value-annotated-expr t))
           (depict-function-body markup-stream world t :statement-last body-annotated-stmts))))))
 
+
+; (defprimitive <name> <lisp-lambda-expr>)
+(defun depict-defprimitive (markup-stream world depict-env name lisp-lambda-expr)
+  (declare (ignore markup-stream world depict-env name lisp-lambda-expr)))
 
 
 ; (set-grammar <name>)
@@ -1888,6 +1933,15 @@
 ; Styled text can include the formats below as long as *styled-text-world* is bound around the call
 ; to depict-styled-text.
 
+; (:annotated-expr <annotated-expr>)
+; Don't use :annotated-expr directly; instead, use the following, which is transformed into :annotated-expr:
+; (:expr <result-type> <expr>)
+(defun depict-styled-text-annotated-expr (markup-stream annotated-expr)
+  (depict-expression markup-stream *styled-text-world* annotated-expr %expr%))
+
+(setf (styled-text-depictor :annotated-expr) #'depict-styled-text-annotated-expr)
+
+
 ; (:type <type-expression>)
 (defun depict-styled-text-type (markup-stream type-expression)
   (depict-type-expr markup-stream *styled-text-world* type-expression))
@@ -1905,7 +1959,7 @@
 ; (:label <type-name> <label>)
 (defun depict-styled-text-label (markup-stream type-name label)
   (let ((type (scan-type *styled-text-world* type-name)))
-    (depict-label-name markup-stream type label :reference)))
+    (depict-label-name markup-stream *styled-text-world* type label :reference)))
 
 (setf (styled-text-depictor :label) #'depict-styled-text-label)
 
