@@ -135,76 +135,19 @@ then
 fi
 MOZ_BUILD_ROOT=`pwd`
 
-dnl Special win32 checks
+dnl Default to MSVC for win32
 dnl ==============================================================
 case "$target" in
 *-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
-    # Check to see if we are really running in a msvc environemnt
-    _WIN32_MSVC=1
     MAKE_VERSION=3.79
-    AC_CHECK_PROGS(CC, cl)
-    AC_CHECK_PROGS(CXX, cl)
-    AC_CHECK_PROGS(LD, link)
-    AC_CHECK_PROGS(MIDL, midl)    
-    AC_PATH_PROGS(AS, ml)
-
-    # Make sure compilers are valid
-    CFLAGS="$CFLAGS -TC"
-    CXXFLAGS="$CXXFLAGS -TP"
-    AC_LANG_SAVE
-    AC_LANG_C
-    AC_TRY_COMPILE([#include <stdio.h>],
-        [ printf("Hello World\n"); ],,
-        AC_MSG_ERROR([\$(CC) test failed.  You must have MS VC++ in your path to build.]) )
-
-    AC_LANG_CPLUSPLUS
-    AC_TRY_COMPILE([#include <iostream.h>],
-        [ cout << "Hello World" << endl; ],,
-        AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
-    AC_LANG_RESTORE
-
-    # Determine compiler version
-    _CC_FULL_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
-    _CC_MAJOR_VERSION=`echo ${_CC_FULL_VERSION} | awk -F\. '{ print $ 1 }'`
-    _CXX_FULL_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
-    _CXX_MAJOR_VERSION=`echo ${_CXX_FULL_VERSION} | awk -F\. '{ print $ 1 }'`
-    if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
-        AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
-    fi
-    if test "$_CC_MAJOR_VERSION" = "12"; then
-        _CC_SUITE=6
-    elif test "$_CC_MAJOR_VERSION" = "13"; then
-        _CC_SUITE=7
-    else
-        AC_MSG_ERROR([This version of the MSVC compiler, $_CC_FULL_VERSION , is unsupported.])
-    fi
-
-    # Check linker version
-    _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
-    _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | awk -F\. '{ print $ 1 }'`
-    if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
-        AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
-    fi
-
-    # Check midl version
-    _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
-    _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | awk -F\. '{ print $ 1 }'`
-    _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | awk -F\. '{ print $ 2 }'`
-    _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | awk -F\. '{ print $ 3 }'`
-    if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347"; then
-        AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7).])
-    fi
+    if test -z "$CC"; then CC=cl; fi
+    if test -z "$CXX"; then CXX=cl; fi
+    if test -z "$CPP"; then CPP=cl; fi
+    if test -z "$LD"; then LD=link; fi
+    if test -z "$AS"; then AS=ml; fi
     ;;
 esac
 
-if test -n "$_WIN32_MSVC"; then
-    SKIP_PATH_CHECKS=1
-    SKIP_COMPILER_CHECKS=1
-    SKIP_LIBRARY_CHECKS=1
-    AC_CHECK_HEADERS(mmintrin.h)
-fi
-
-if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl ========================================================
 dnl Checks for compilers.
 dnl ========================================================
@@ -221,32 +164,32 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
 
     AC_MSG_CHECKING([for host c compiler])
     if test -z "$HOST_CC"; then
-	AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc icc, "")
-	if test -z "$HOST_CC"; then
-	    AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
-	fi
+        AC_CHECK_PROGS(HOST_CC, gcc cc /usr/ucb/cc cl icc, "")
+        if test -z "$HOST_CC"; then
+	        AC_MSG_ERROR([no acceptable c compiler found in \$PATH])
+	    fi
     fi
     AC_MSG_RESULT([$HOST_CC])
     AC_MSG_CHECKING([for host c++ compiler])
     if test -z "$HOST_CXX"; then
-	AC_CHECK_PROGS(HOST_CXX, $CCC c++ g++ gcc CC cxx cc++ cl icc, "")
-	if test -z "$HOST_CXX"; then
-	    AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
-	fi
+        AC_CHECK_PROGS(HOST_CXX, $CCC c++ g++ gcc CC cxx cc++ cl icc, "")
+        if test -z "$HOST_CXX"; then
+            AC_MSG_ERROR([no acceptable c++ compiler found in \$PATH])
+        fi
     fi
     AC_MSG_RESULT([$HOST_CXX])
 
     if test -z "$HOST_CFLAGS"; then
-	HOST_CFLAGS="$CFLAGS"
+        HOST_CFLAGS="$CFLAGS"
     fi
     if test -z "$HOST_CXXFLAGS"; then
-	HOST_CXXFLAGS="$CXXFLAGS"
+        HOST_CXXFLAGS="$CXXFLAGS"
     fi
     if test -z "$HOST_LDFLAGS"; then
-	HOST_LDFLAGS="$LDFLAGS"
+        HOST_LDFLAGS="$LDFLAGS"
     fi
     if test -z "$HOST_RANLIB"; then
-	AC_CHECK_PROG(HOST_RANLIB, ranlib, ranlib, :)
+        AC_CHECK_PROG(HOST_RANLIB, ranlib, ranlib, :)
     fi
     if test -z "$HOST_AR"; then
 	AC_CHECK_PROG(HOST_AR, ar, ar, :)
@@ -273,35 +216,32 @@ if test -n "$CROSS_COMPILE" && test "$target" != "$host"; then
     LDFLAGS=$_SAVE_LDFLAGS
 
     if test -z "$CC"; then
-	AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
+        AC_CHECK_PROGS(CC, "${target_alias}-gcc" "${target}-gcc", :)
     fi
     unset ac_cv_prog_CC
     AC_PROG_CC
     if test -z "$CXX"; then
-	AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
+        AC_CHECK_PROGS(CXX, "${target_alias}-g++" "${target}-g++", :)
     fi
     unset ac_cv_prog_CXX
     AC_PROG_CXX
     if test -z "$RANLIB"; then
-	AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
+        AC_CHECK_PROGS(RANLIB, "${target_alias}-ranlib" "${target}-ranlib", :)
     fi
     if test -z "$AR"; then
-	AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
+        AC_CHECK_PROGS(AR, "${target_alias}-ar" "${target}-ar", :)
     fi
     if test -z "$AS"; then
-	AC_CHECK_PROGS(AS, "${target_alias}-as" "${target}-as", :)
+        AC_PATH_PROGS(AS, "${target_alias}-as" "${target}-as", :)
     fi
     if test -z "$LD"; then
-	AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
+        AC_CHECK_PROGS(LD, "${target_alias}-ld" "${target}-ld", :)
     fi
     if test -z "$STRIP"; then
-	AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
-    fi
-    if test -z "$DLLTOOL"; then
-	AC_CHECK_PROGS(DLLTOOL, "${target_alias}-dlltool" "${target}-dlltool", :)
+        AC_CHECK_PROGS(STRIP, "${target_alias}-strip" "${target}-strip", :)
     fi
     if test -z "$WINDRES"; then
-	AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
+        AC_CHECK_PROGS(WINDRES, "${target_alias}-windres" "${target}-windres", :)
     fi
     AC_DEFINE(CROSS_COMPILE)
 else
@@ -309,10 +249,10 @@ else
     AC_PROG_CXX
     AC_PROG_RANLIB
     AC_PATH_PROGS(AS, as, $CC)
-    AC_PATH_PROGS(AR, ar, :)
-    AC_PATH_PROGS(LD, ld, :)
-    AC_PATH_PROGS(STRIP, strip, :)
-    AC_PATH_PROGS(DLLTOOL, dlltool, :)
+    AC_CHECK_PROGS(AR, ar, :)
+    AC_CHECK_PROGS(LD, ld, :)
+    AC_CHECK_PROGS(STRIP, strip, :)
+    AC_CHECK_PROGS(WINDRES, windres, :)
     if test -z "$HOST_CC"; then
 	HOST_CC="$CC"
     fi
@@ -336,18 +276,6 @@ else
     fi
 fi
 
-dnl Breaks icc on OS/2
-if test "$CC" != "icc"; then
-    AC_PROG_CC_C_O
-    if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
-        USING_HCC=1
-        _OLDCC=$CC
-        _OLDCXX=$CXX
-        CC="${srcdir}/build/hcc '$CC'"
-        CXX="${srcdir}/build/hcpp '$CXX'"
-    fi
-fi
-
 GNU_AS=
 GNU_LD=
 GNU_CC=
@@ -368,8 +296,86 @@ fi
 if test "`echo | $LD -v 2>&1 | grep -c GNU`" != "0"; then
     GNU_LD=1
 fi
-rm -f a.out
-fi # SKIP_COMPILER_CHECKS
+
+dnl Special win32 checks
+dnl ========================================================
+case "$target" in
+*-cygwin*|*-mingw*|*-msvc*|*-mksnt*)
+    if test "$GCC" != "yes"; then
+        # Check to see if we are really running in a msvc environemnt
+        _WIN32_MSVC=1
+        AC_CHECK_PROGS(MIDL, midl)
+
+        # Make sure compilers are valid
+        CFLAGS="$CFLAGS -TC -nologo"
+        CXXFLAGS="$CXXFLAGS -TP -nologo"
+        AC_LANG_SAVE
+        AC_LANG_C
+        AC_TRY_COMPILE([#include <stdio.h>],
+            [ printf("Hello World\n"); ],,
+            AC_MSG_ERROR([\$(CC) test failed.  You must have MS VC++ in your path to build.]) )
+
+        AC_LANG_CPLUSPLUS
+        AC_TRY_COMPILE([#include <iostream.h>],
+            [ cout << "Hello World" << endl; ],,
+            AC_MSG_ERROR([\$(CXX) test failed.  You must have MS VC++ in your path to build.]) )
+        AC_LANG_RESTORE
+
+        # Determine compiler version
+        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
+        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | awk -F\. '{ print $ 1 }'`
+
+        CXX_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
+        _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | awk -F\. '{ print $ 1 }'`
+
+        if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
+            AC_MSG_ERROR([The major versions of \$CC and \$CXX do not match.])
+        fi
+        if test "$_CC_MAJOR_VERSION" = "12"; then
+            _CC_SUITE=6
+        elif test "$_CC_MAJOR_VERSION" = "13"; then
+            _CC_SUITE=7
+        else
+            AC_MSG_ERROR([This version of the MSVC compiler, $CC_VERSION , is unsupported.])
+        fi
+
+        # Check linker version
+        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
+        _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | awk -F\. '{ print $ 1 }'`
+        if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
+            AC_MSG_ERROR([The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE.])
+        fi
+
+        # Check midl version
+        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's|[ ]*$||'`
+        _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | awk -F\. '{ print $ 1 }'`
+        _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | awk -F\. '{ print $ 2 }'`
+        _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | awk -F\. '{ print $ 3 }'`
+        if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347"; then
+            AC_MSG_ERROR([Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7).])
+        fi
+    fi # !GNU_CC
+    ;;
+esac
+
+if test -n "$_WIN32_MSVC"; then
+    SKIP_PATH_CHECKS=1
+    SKIP_COMPILER_CHECKS=1
+    SKIP_LIBRARY_CHECKS=1
+    AC_CHECK_HEADERS(mmintrin.h)
+fi
+
+dnl Test breaks icc on OS/2 && MSVC
+if test "$CC" != "icc" -a -z "$_WIN32_MSVC"; then
+    AC_PROG_CC_C_O
+    if grep "NO_MINUS_C_MINUS_O 1" ./confdefs.h >/dev/null; then
+        USING_HCC=1
+        _OLDCC=$CC
+        _OLDCXX=$CXX
+        CC="${srcdir}/build/hcc '$CC'"
+        CXX="${srcdir}/build/hcpp '$CXX'"
+    fi
+fi
 
 AC_SUBST(GNU_AS)
 AC_SUBST(GNU_LD)
@@ -385,7 +391,7 @@ AC_PROG_CXXCPP
 AC_PROG_INSTALL
 AC_PROG_LN_S
 AC_PROG_AWK
-AC_PATH_PROGS(PERL, $PERL perl5 perl )
+AC_CHECK_PROGS(PERL, $PERL perl5 perl )
 if test -z "$PERL" || test "$PERL" = ":"; then
     AC_MSG_ERROR([perl not found in \$PATH])
 fi
@@ -733,7 +739,10 @@ case "$host" in
     ;;
 
 *cygwin*|*mingw*|*mksnt*|*msvc*)
-    HOST_CFLAGS="$HOST_CFLAGS -TC -nologo -DXP_PC -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11"
+    if test -n "$_WIN32_MSVC"; then
+        HOST_CFLAGS="$HOST_CFLAGS -TC -nologo"
+    fi
+    HOST_CFLAGS="$HOST_CFLAGS -DXP_PC -DXP_WIN32 -DXP_WIN -DWIN32 -D_WIN32 -DNO_X11"
     HOST_NSPR_MDCPUCFG='\"md/_winnt.cfg\"'
     HOST_OPTIMIZE_FLAGS="${HOST_OPTIMIZE_FLAGS=-O2}"
     ;;
@@ -952,15 +961,39 @@ case "$target" in
     ;;
 
 *-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+    CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
+    if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
+        _pwd=`pwd`
+         CYGWIN_WRAPPER="sh ${_pwd}/${srcdir}/build/cygwin-wrapper"
+    fi
+    if test -z "$PERL"; then
+        PERL=perl
+    fi
+    _WIN32_PERL=$PERL
+    if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
+        PERL="${CYGWIN_WRAPPER} -up ${PERL}"
+        _CYGWIN_PERL=1
+    fi
+    DSO_CFLAGS=
+    DSO_PIC_CFLAGS=
+    DLL_SUFFIX=.dll
+    RC='$(CYGWIN_WRAPPER) rc.exe'
     if test -n "$GNU_CC"; then
-        AC_DEFINE(WIN32_LEAN_AND_MEAN)
-        AC_DEFINE(NONAMELESSUNION)
-        CFLAGS="$(CFLAGS) -fvtable-thunks"
-        CXXFLAGS="$(CXXFLAGS) -fvtable-thunks"
-        MKSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
-        MKCSHLIB='$(DLLTOOL) --as=$(AS) -k --dllname $(LIBRARY_NAME).dll --output-lib $@'
-        MKSHLIB_FORCE_ALL=
-        MKSHLIB_UNFORCE_ALL=
+        CC="$CC -mno-cygwin"
+        CXX="$CXX -mno-cygwin"
+        CFLAGS="$CFLAGS -mms-bitfields"
+        CXXFLAGS="$CXXFLAGS -mms-bitfields"
+        DSO_LDOPTS='-shared -Wl,--export-all-symbols -Wl,--out-implib -Wl,$(IMPORT_LIBRARY)'
+        MKSHLIB='$(CXX) $(DSO_LDOPTS) -o $@'
+        MKCSHLIB='$(CC) $(DSO_LDOPTS) -o $@'
+        RC='$(CYGWIN_WRAPPER) $(WINDRES)'
+        RCFLAGS='-O coff'
+        MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg$(MOZ_BITS)$(VERSION_NUMBER)'
+        MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
+        MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
+        MOZ_MNG_LIBS='-L$(DIST)/lib -lmng'
+        MOZ_JS_LIBS='-L$(DIST)/lib -ljs$(MOZ_BITS)$(VERSION_NUMBER)'
+        XPCOM_LIBS='-L$(DIST)/lib -lxpcom'
     else
         CYGWIN_WRAPPER="sh ${srcdir}/build/cygwin-wrapper"
         if test "`echo ${srcdir} | grep -c ^/ 2>/dev/null`" = 0; then
@@ -974,29 +1007,19 @@ case "$target" in
         AR_FLAGS=
         RANLIB='echo not_ranlib'
         STRIP='echo not_strip'
-        RC='$(CYGWIN_WRAPPER) rc.exe'
-        PERL=perl
-        _WIN32_PERL=$PERL
-        if test "`${PERL} -v | grep -c cygwin  2>/dev/null`" != 0; then
-            PERL="${CYGWIN_WRAPPER} -up ${PERL}"
-            _CYGWIN_PERL=1
-        fi
         XARGS=xargs
         ZIP=zip
         UNZIP=unzip
         DOXYGEN=:
         GARBAGE='$(OBJDIR)/vc20.pdb $(OBJDIR)/vc40.pdb'
+        OBJ_SUFFIX=obj
+        LIB_SUFFIX=lib
         LIB_PREFIX=
-    	OBJ_SUFFIX=obj
-    	LIB_SUFFIX=lib
-    	DLL_SUFFIX=.dll
         MKSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
         MKCSHLIB='$(LD) /NOLOGO /DLL /OUT:$@ /PDB:$(PDBFILE) $(DSO_LDOPTS)'
         MKSHLIB_FORCE_ALL=
         MKSHLIB_UNFORCE_ALL=
         DSO_LDOPTS=/SUBSYSTEM:WINDOWS
-        DSO_CFLAGS=
-        DSO_PIC_CFLAGS=
         CFLAGS="$CFLAGS -W3 -nologo -Gy -Fd\$(PDBFILE)"
         CXXFLAGS="$CXXFLAGS -W3 -nologo -Gy -Fd\$(PDBFILE)"
         LIBS="$LIBS kernel32.lib user32.lib gdi32.lib winmm.lib wsock32.lib advapi32.lib"
@@ -1011,8 +1034,6 @@ case "$target" in
         XPCOM_LIBS='$(DIST)/lib/xpcom.lib'
         MOZ_COMPONENT_NSPR_LIBS='$(NSPR_LIBS)'
         MOZ_COMPONENT_XPCOM_LIBS='$(XPCOM_LIBS)'
-        WIDGET_DLL='\"gkwidget$(DLL_SUFFIX)\"'
-        GFXWIN_DLL='\"gkgfxwin$(DLL_SUFFIX)\"'
     fi
     AC_DEFINE(HAVE_SNPRINTF)
     AC_DEFINE(_WINDOWS)
@@ -1023,7 +1044,6 @@ case "$target" in
     AC_DEFINE(XP_WIN32)
     AC_DEFINE(HW_THREADS)
     AC_DEFINE_UNQUOTED(WINVER,0x400)
-    AC_DEFINE(MSVC4)
     AC_DEFINE(STDC_HEADERS)
     AC_DEFINE(NEW_H, <new>)
     AC_DEFINE(WIN32_LEAN_AND_MEAN)
@@ -1202,7 +1222,6 @@ case "$target" in
     LIB_SUFFIX=lib
     DLL_SUFFIX=.dll
     ASM_SUFFIX=asm
-    DLLTOOL=''
     LD='$(CC)'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS=''
@@ -1482,6 +1501,11 @@ case "$target" in
           AC_MSG_RESULT(yes)
         else
           AC_MSG_RESULT(no)
+        fi
+        ;;
+    *-cygwin*|*-mingw*|*-mksnt|*-msvc)
+        if test -n "$GNU_CC"; then
+           MOZ_COMPONENTS_VERSION_SCRIPT_LDFLAGS='-Wl,--version-script,$(BUILD_TOOLS)/gnu-ld-scripts/components-version-script'
         fi
         ;;
 esac
@@ -2791,11 +2815,15 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     NSPR_CFLAGS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --cflags`'
     # explicitly set libs for Visual Age C++ for OS/2
-    if test "$VACPP" = "yes"; then
+    if test "$OS_ARCH" = "OS2" -a "$VACPP" = "yes"; then
         NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '$_PTHREAD_LDFLAGS''
-    elif test "$_WIN32_MSVC"; then
+    elif test "$OS_ARCH" = "WINNT"; then
+        NSPR_CFLAGS='-I$(DIST)/include/nspr'
+        if test -n "$GNU_CC"; then
+            NSPR_LIBS="-L\$(DIST)/lib -lnspr$NSPR_VERSION -lplc$NSPR_VERSION -lplds$NSPR_VERSION"
+        else
             NSPR_LIBS='$(DIST)/lib/nspr'$NSPR_VERSION'.lib $(DIST)/lib/plc'$NSPR_VERSION'.lib $(DIST)/lib/plds'$NSPR_VERSION'.lib '
-            NSPR_CFLAGS='-I$(DIST)/include/nspr'
+        fi
     else
         NSPR_LIBS='`$(DEPTH)/nsprpub/config/nspr-config --prefix=$(DIST) --libs`'
     fi
@@ -4296,7 +4324,7 @@ MOZ_ARG_DISABLE_BOOL(md,
   [_cpp_md_flag=],
   [_cpp_md_flag=1],
   [dnl Default is to turn on -MD if using GNU-compatible compilers
-   if test "$GNU_CC" -a "$GNU_CXX"; then
+   if test "$GNU_CC" -a "$GNU_CXX" -a "$OS_ARCH" != "WINNT"; then
      _cpp_md_flag=1
    fi])
 if test "$_cpp_md_flag"; then
@@ -4422,11 +4450,14 @@ fi
 
 dnl Check for GLib and libIDL.
 dnl ========================================================
-SKIP_IDL_CHECK="no"
-
-if test "$_WIN32_MSVC"; then
+case "$target_os" in
+msvc*|mksnt*|cygwin*|mingw*)
     SKIP_IDL_CHECK="yes"
-fi
+    ;;
+*)
+    SKIP_IDL_CHECK="no"
+    ;;
+esac
 
 dnl = Allow users to disable libIDL checking for standalone modules
 MOZ_ARG_WITHOUT_BOOL(libIDL,
@@ -4551,7 +4582,7 @@ dnl ========================================================
 dnl =
 dnl = Cleanup section for misc ordering snafus
 dnl =
-if test "$_WIN32_MSVC"; then
+if test "$OS_ARCH" = "WINNT" -a -z "$GNU_CC"; then
     XPCOM_GLUE_LIBS='$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_s.$(LIB_SUFFIX) $(DIST)/lib/$(LIB_PREFIX)string_obsolete_s.$(LIB_SUFFIX)'
 else
     XPCOM_GLUE_LIBS='-L${DIST}/bin -L${DIST}/lib -lxpcomglue -lstring_s -lstring_obsolete_s'
@@ -4564,8 +4595,12 @@ fi
 
 if test "$MOZ_LDAP_XPCOM"; then
     LDAP_CFLAGS='-I${DIST}/public/ldap'
-    if test "$_WIN32_MSVC"; then
-        LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/nsldappr32v50.${LIB_SUFFIX}'
+    if test "$OS_ARCH" = "WINNT"; then
+        if test -n "$GNU_CC"; then
+            LDAP_LIBS='-L$(DIST)/lib -lnsldap32v50 -lnsldappr32v50'
+        else
+            LDAP_LIBS='$(DIST)/lib/$(LIB_PREFIX)nsldap32v50.${LIB_SUFFIX} $(DIST)/lib/$(LIB_PREFIX)/nsldappr32v50.${LIB_SUFFIX}'
+        fi
     else
         LDAP_LIBS='-L${DIST}/bin -L${DIST}/lib -lldap50 -llber50 -lprldap50'
     fi
@@ -4600,7 +4635,6 @@ AC_SUBST(AS)
 AC_SUBST(ASFLAGS)
 AC_SUBST(AS_DASH_C_FLAG)
 AC_SUBST(LD)
-AC_SUBST(DLLTOOL)
 AC_SUBST(RC)
 AC_SUBST(RCFLAGS)
 AC_SUBST(WINDRES)
@@ -4988,15 +5022,14 @@ LDFLAGS="$_SUBDIR_LDFLAGS"
 HOST_CC="$_SUBDIR_HOST_CC" 
 HOST_CFLAGS="$_SUBDIR_HOST_CFLAGS"
 HOST_LDFLAGS="$_SUBDIR_HOST_LDFLAGS"
-WINDRES=
-DLLTOOL=
+RC=
 
 unset MAKEFILES
 unset CONFIG_FILES
 
 if test -z "$MOZ_NATIVE_NSPR" || test "$MOZ_LDAP_XPCOM"; then
     ac_configure_args="$_SUBDIR_CONFIG_ARGS --with-dist-prefix=$MOZ_BUILD_ROOT/dist --with-mozilla"
-    if test "$_WIN32_MSVC" && test "$NS_TRACE_MALLOC"; then
+    if test "$OS_ARCH" = "WINNT" && test "$NS_TRACE_MALLOC"; then
        ac_configure_args="$ac_configure_args --enable-debug --disable-optimize"
     fi
     if test -n "$HAVE_64BIT_OS"; then
@@ -5009,11 +5042,11 @@ fi
 if test -z "$MOZ_NATIVE_NSPR"; then
     # Hack to deal with the fact that we use NSPR_CFLAGS everywhere
     AC_MSG_WARN([Recreating autoconf.mk with updated nspr-config output])
-    if test ! "$VACPP" && test -z "$_WIN32_MSVC"; then
+    if test ! "$VACPP" && test "$OS_ARCH" != "WINNT"; then
         NSPR_LIBS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --libs`
         $PERL -pi.bak -e "s {^NSPR_LIBS\s*=.*} {NSPR_LIBS = $NSPR_LIBS }" config/autoconf.mk
     fi
-    if test -z "$_WIN32_MSVC"; then
+    if test "$OS_ARCH" != "WINNT"; then
         NSPR_CFLAGS=`./nsprpub/config/nspr-config --prefix=$MOZ_BUILD_ROOT/dist --exec-prefix=$MOZ_BUILD_ROOT/dist --cflags`
         $PERL -pi.bak -e "s {^NSPR_CFLAGS\s*=.*} {NSPR_CFLAGS = $NSPR_CFLAGS }" config/autoconf.mk
     fi
