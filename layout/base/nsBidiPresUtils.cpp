@@ -900,6 +900,7 @@ nsBidiPresUtils::FormatUnicodeText(nsIPresContext*  aPresContext,
         HandleNumbers(aText,aTextLength,IBMBIDI_NUMERAL_ARABIC);
       break;
 
+    case IBMBIDI_NUMERAL_NOMINAL:
     default:
       break;
   }
