@@ -37,6 +37,7 @@ CPPSRCS=				\
 	nsDST.cpp			\
 	nsFirstLetterFrame.cpp		\
 	nsFrame.cpp			\
+	nsFrameManager.cpp		\
 	nsHRFrame.cpp			\
 	nsHTMLAtoms.cpp			\
 	nsHTMLContainerFrame.cpp	\
