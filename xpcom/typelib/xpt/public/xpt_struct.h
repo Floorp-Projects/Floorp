@@ -141,8 +141,6 @@ struct XPTInterfaceDirectoryEntry {
     char                   *name_space;
     XPTInterfaceDescriptor *interface_descriptor;
 
-    /* not stored on disk. Available for compiler and at runtime */
-    void                   *user_data;
 #if 0 /* not yet */
     /* not stored on disk */
     PRUint32                 offset; /* the offset for an ID still to be read */
@@ -152,8 +150,7 @@ struct XPTInterfaceDirectoryEntry {
 extern XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
-                                XPTInterfaceDescriptor *descriptor,
-                                void *user_data);
+                                XPTInterfaceDescriptor *descriptor);
 
 /*
  * An InterfaceDescriptor is a variable-size record used to describe a 

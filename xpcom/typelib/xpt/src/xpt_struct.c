@@ -197,14 +197,12 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
 XPT_PUBLIC_API(PRBool)
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
                                 nsID *iid, char *name, char *name_space,
-                                XPTInterfaceDescriptor *descriptor,
-                                void *user_data)
+                                XPTInterfaceDescriptor *descriptor)
 {
     XPT_COPY_IID(ide->iid, *iid);
     ide->name = name ? strdup(name) : NULL; /* what good is it w/o a name? */
     ide->name_space = name_space ? strdup(name_space) : NULL;
     ide->interface_descriptor = descriptor;
-    ide->user_data = user_data;
     return PR_TRUE;
 }
 
