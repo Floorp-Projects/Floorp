@@ -654,32 +654,6 @@ nsImapService::CopyMessage(const char * aSrcMailboxURI, nsIStreamListener *
             if (moveMessage)
                 imapAction = nsIImapUrl::nsImapOnlineToOfflineMove; 
 			      rv = FetchMessage(imapUrl,imapAction, folder, imapMessageSink,aURL, streamSupport, msgKey, PR_TRUE);
-           if (NS_SUCCEEDED(rv) && moveMessage)
-           {
-               nsCOMPtr<nsIEventQueue> queue;	
-               // get the Event Queue for this thread...
-	             NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv);
-
-               if (NS_FAILED(rv)) return rv;
-
-               rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
-               if (NS_FAILED(rv)) return rv;
-               
-               // ** jt -- this really isn't an optimal way of deleting a
-               // list of messages but I don't have a better way at this
-               // moment
-               rv = AddMessageFlags(queue, folder, aUrlListener, nsnull,
-                                    msgKey,
-                                    kImapMsgDeletedFlag,
-                                    PR_TRUE);
-#if 0
-               // ** jt -- don't think this is needed
-               // ** jt -- force to update the folder
-               if (NS_SUCCEEDED(rv))
-                  rv = SelectFolder(queue, folder, aUrlListener, nsnull,
-                                    nsnull);
-#endif
-            } // if move message
         } // if we got an imap message sink
     } // if we decomposed the imap message 
     return rv;

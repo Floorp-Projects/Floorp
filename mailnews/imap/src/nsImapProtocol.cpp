@@ -40,6 +40,7 @@
 #include "nsImapProxyEvent.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsIMAPBodyShell.h"
+#include "nsImapMailFolder.h"
 #include "nsImapServerResponseParser.h"
 #include "nspr.h"
 #include "plbase64.h"
@@ -76,7 +77,6 @@ PRLogModuleInfo *IMAP;
 #endif
 
 #define ONE_SECOND ((PRUint32)1000)    // one second
-#define FOUR_K ((PRUint32)4096)
 
 const char *kImapTrashFolderName = "Trash"; // **** needs to be localized ****
 
@@ -3285,43 +3285,46 @@ PRBool nsImapProtocol::CheckNewMail()
 // log info including current state...
 void nsImapProtocol::Log(const char *logSubName, const char *extraInfo, const char *logData)
 {
-  static char *nonAuthStateName = "NA";
-  static char *authStateName = "A";
-  static char *selectedStateName = "S";
-    //  static char *waitingStateName = "W";
-  char *stateName = NULL;
-    const char *hostName = GetImapHostName();  // initilize to empty string
-  switch (GetServerStateParser().GetIMAPstate())
+  if (PR_LOG_TEST(IMAP, PR_LOG_ALWAYS))
   {
-  case nsImapServerResponseParser::kFolderSelected:
+    static char *nonAuthStateName = "NA";
+    static char *authStateName = "A";
+    static char *selectedStateName = "S";
+      //  static char *waitingStateName = "W";
+    char *stateName = NULL;
+      const char *hostName = GetImapHostName();  // initilize to empty string
+    switch (GetServerStateParser().GetIMAPstate())
+    {
+    case nsImapServerResponseParser::kFolderSelected:
+      if (m_runningUrl)
+      {
+        if (extraInfo)
+          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
+        else
+          PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
+      }
+      return;
+      break;
+    case nsImapServerResponseParser::kNonAuthenticated:
+      stateName = nonAuthStateName;
+      break;
+    case nsImapServerResponseParser::kAuthenticated:
+      stateName = authStateName;
+      break;
+  #if 0 // *** this isn't a server state; its a status ***
+    case nsImapServerResponseParser::kWaitingForMoreClientInput:
+      stateName = waitingStateName;
+      break;
+  #endif 
+    }
+
     if (m_runningUrl)
     {
       if (extraInfo)
-        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, extraInfo, logData));
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s:%s: %s", hostName,stateName,logSubName,extraInfo,logData));
       else
-        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s-%s:%s: %s", hostName,selectedStateName, GetServerStateParser().GetSelectedMailboxName(), logSubName, logData));
+        PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s: %s",hostName,stateName,logSubName,logData));
     }
-    return;
-    break;
-  case nsImapServerResponseParser::kNonAuthenticated:
-    stateName = nonAuthStateName;
-    break;
-  case nsImapServerResponseParser::kAuthenticated:
-    stateName = authStateName;
-    break;
-#if 0 // *** this isn't a server state; its a status ***
-  case nsImapServerResponseParser::kWaitingForMoreClientInput:
-    stateName = waitingStateName;
-    break;
-#endif 
-  }
-
-  if (m_runningUrl)
-  {
-    if (extraInfo)
-      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s:%s: %s", hostName,stateName,logSubName,extraInfo,logData));
-    else
-      PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s:%s: %s",hostName,stateName,logSubName,logData));
   }
 }
 
@@ -4204,11 +4207,18 @@ void nsImapProtocol::HandleCurrentUrlError()
       UpdatedMailboxSpec(notSelectedSpec);
     }
   }
-  else if (fCurrentUrl->GetIMAPurlType() == TIMAPUrl::kOfflineToOnlineMove)
-  {
-    OnlineCopyCompleted(this, kFailedCopy);
-  }
+  else 
 #endif
+    // this is to handle a move/copy failing, especially because the user
+    // cancelled the password prompt.
+  nsresult res;
+  res = m_runningUrl->GetImapAction(&m_imapAction);
+    if (m_imapAction == nsIImapUrl::nsImapOfflineToOnlineMove || m_imapAction == nsIImapUrl::nsImapAppendMsgFromFile
+      || m_imapAction == nsIImapUrl::nsImapAppendDraftFromFile)
+  {
+    if (m_imapMailFolderSink)
+      m_imapMailFolderSink->OnlineCopyCompleted(this, ImapOnlineCopyStateType::kFailedCopy);
+  }
 }
 
 void nsImapProtocol::Capability()
@@ -4510,8 +4520,28 @@ void nsImapProtocol::OnAppendMsgFromFile()
             OnCreateServerSourceFolderPathString();
         if (mailboxName)
         {
-            UploadMessageFromFile(fileSpec, mailboxName, kImapMsgSeenFlag);
-            PR_Free( mailboxName );
+          imapMessageFlagsType flagsToSet = kImapMsgSeenFlag;
+          nsCOMPtr <nsISupports> copyState;
+          m_runningUrl->GetCopyState(getter_AddRefs(copyState));
+          if (copyState)
+          {
+            nsCOMPtr<nsImapMailCopyState> mailCopyState = do_QueryInterface(copyState, &rv);
+            if (mailCopyState)
+            {
+              nsCOMPtr <nsIMessage> curMsg = mailCopyState->m_message;
+              PRUint32 flags;
+
+              if (curMsg)
+              {
+                curMsg->GetFlags(&flags);
+                if (! (flags & MSG_FLAG_READ))
+                  flagsToSet &= ~MSG_FLAG_READ;
+              }
+
+            }
+          }
+          UploadMessageFromFile(fileSpec, mailboxName, flagsToSet);
+          PR_Free( mailboxName );
         }
         else
         {

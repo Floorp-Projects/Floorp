@@ -2765,61 +2765,72 @@ nsresult nsImapMailFolder::GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr
 NS_IMETHODIMP 
 nsImapMailFolder::OnlineCopyCompleted(nsIImapProtocol *aProtocol, ImapOnlineCopyState aCopyState)
 {
-    NS_ENSURE_ARG_POINTER(aProtocol);
+  NS_ENSURE_ARG_POINTER(aProtocol);
 
-    nsresult rv;
+  nsresult rv;
   if (aCopyState == ImapOnlineCopyStateType::kSuccessfulCopy)
   {
+      
     nsCOMPtr <nsIImapUrl> imapUrl;
     rv = aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
         if (NS_FAILED(rv) || !imapUrl) return NS_ERROR_FAILURE;
-        
-        nsImapAction action;
-        rv = imapUrl->GetImapAction(&action);
+    nsImapAction action;
+    rv = imapUrl->GetImapAction(&action);
+    if (NS_FAILED(rv)) return rv;
+    
+    if (action == nsIImapUrl::nsImapOnlineToOfflineMove)
+    {
+        nsXPIDLCString messageIds;
+        rv = imapUrl->CreateListOfMessageIdsString(getter_Copies(messageIds));
+
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsIEventQueue> queue;  
+        // get the Event Queue for this thread...
+        NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
+                        kEventQueueServiceCID, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
+                                                 getter_AddRefs(queue));
         if (NS_FAILED(rv)) return rv;
         
-        if (action == nsIImapUrl::nsImapOnlineToOfflineMove)
-        {
-            nsXPIDLCString messageIds;
-            rv = imapUrl->CreateListOfMessageIdsString(getter_Copies(messageIds));
-
-            if (NS_FAILED(rv)) return rv;
-            nsCOMPtr<nsIEventQueue> queue;  
-            // get the Event Queue for this thread...
-            NS_WITH_SERVICE(nsIEventQueueService, pEventQService,
-                            kEventQueueServiceCID, &rv);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD,
-                                                     getter_AddRefs(queue));
-            if (NS_FAILED(rv)) return rv;
-            
-            NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
-            if (NS_FAILED(rv)) return rv;
-       
-            rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
-                                              messageIds,
-                                              kImapMsgDeletedFlag,
-                                              PR_TRUE);
-          if (NS_SUCCEEDED(rv))
-          {
-            nsMsgKeyArray affectedMessages;
-            char *keyTokenString = nsCRT::strdup(messageIds);
-            ParseUidString(keyTokenString, affectedMessages);
-            if (mDatabase) 
-              mDatabase->DeleteMessages(&affectedMessages,NULL);
-            nsCRT::free(keyTokenString);
-            return rv;
-          }
-        }
-        /* unhandled action */
-        else return NS_ERROR_FAILURE;
+        NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
+        if (NS_FAILED(rv)) return rv;
+   
+        rv = imapService->AddMessageFlags(queue, this, nsnull, nsnull,
+                                          messageIds,
+                                          kImapMsgDeletedFlag,
+                                          PR_TRUE);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsMsgKeyArray affectedMessages;
+        char *keyTokenString = nsCRT::strdup(messageIds);
+        ParseUidString(keyTokenString, affectedMessages);
+        if (mDatabase) 
+          mDatabase->DeleteMessages(&affectedMessages,NULL);
+        nsCRT::free(keyTokenString);
+        return rv;
+      }
     }
-
-    /* unhandled copystate */
+    /* unhandled action */
     else return NS_ERROR_FAILURE;
+  }
 
-    return rv;
+  /* unhandled copystate */
+  else 
+  {
+    // whoops, this is the wrong folder - should use the source folder
+    if (m_copyState)
+    {
+       nsCOMPtr<nsIMsgFolder> srcFolder;
+       srcFolder = do_QueryInterface(m_copyState->m_srcSupport, &rv);
+       if (srcFolder)
+        srcFolder->NotifyFolderEvent(mDeleteOrMoveMsgCompletedAtom);
+    }
+    return NS_ERROR_FAILURE;
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -3115,7 +3126,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
                 UpdateFolder(aWindow);
               else
                 UpdatePendingCounts(PR_TRUE, PR_FALSE);
-              if (m_copyState->m_isMove)
+              if (m_copyState->m_isMove && !m_copyState->m_isCrossServerOp)
               {
                 nsCOMPtr<nsIMsgFolder> srcFolder;
                 srcFolder =
@@ -3777,11 +3788,12 @@ nsImapMailFolder::CreateDirectoryForFolder(nsFileSpec &path) //** dup
 
   return rv;
 }
-// used when copying from local mail folder (or other imap server?)
+// used when copying from local mail folder, or other imap server)
 nsresult
 nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                                 nsISupportsArray* messages,
                                 PRBool isMove,
+                                PRBool isCrossServerOp,
                                 nsIMsgWindow *msgWindow,
                                 nsIMsgCopyServiceListener* listener)
 {
@@ -3794,6 +3806,7 @@ nsImapMailFolder::CopyMessagesWithStream(nsIMsgFolder* srcFolder,
     if(NS_FAILED(rv)) return rv;
 
     m_copyState->m_streamCopy = PR_TRUE;
+    m_copyState->m_isCrossServerOp = isCrossServerOp;
 
     // ** jt - needs to create server to server move/copy undo msg txn
     nsCString messageIds;
@@ -3883,7 +3896,7 @@ nsImapMailFolder::CopyMessages(nsIMsgFolder* srcFolder,
 
     // if the folders aren't on the same server, do a stream base copy
     if (!sameServer) {
-        rv = CopyMessagesWithStream(srcFolder, messages, isMove, msgWindow, listener);
+        rv = CopyMessagesWithStream(srcFolder, messages, isMove, PR_TRUE, msgWindow, listener);
         goto done;
     }
 
@@ -4040,7 +4053,7 @@ nsImapMailFolder::CopyStreamMessage(nsIMessage* message,
       return NS_ERROR_NO_INTERFACE;
 
         rv = m_copyState->m_msgService->CopyMessage(uri, streamListener,
-                                                     isMove, nsnull, &url);
+                                                     isMove && !m_copyState->m_isCrossServerOp, nsnull, &url);
   }
     return rv;
 }
@@ -4048,7 +4061,7 @@ nsImapMailFolder::CopyStreamMessage(nsIMessage* message,
 nsImapMailCopyState::nsImapMailCopyState() : m_msgService(nsnull),
     m_isMove(PR_FALSE), m_selectedState(PR_FALSE), m_curIndex(0),
     m_totalCount(0), m_streamCopy(PR_FALSE), m_dataBuffer(nsnull),
-    m_leftOver(0)
+    m_leftOver(0), m_isCrossServerOp(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -4081,7 +4094,6 @@ nsImapMailCopyState::~nsImapMailCopyState()
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapMailCopyState, nsImapMailCopyState)
 
-
 nsresult
 nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
                                 nsISupportsArray* messages,
@@ -4092,7 +4104,7 @@ nsImapMailFolder::InitCopyState(nsISupports* srcSupport,
     nsresult rv = NS_OK;
 
     if (!srcSupport || !messages) return NS_ERROR_NULL_POINTER;
-//    NS_ASSERTION(!m_copyState, "move/copy already in progress");
+    NS_ASSERTION(!m_copyState, "move/copy already in progress");
     if (m_copyState) return NS_ERROR_FAILURE;
 
     nsImapMailCopyState* copyState = new nsImapMailCopyState();

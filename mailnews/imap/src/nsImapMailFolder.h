@@ -82,6 +82,7 @@ public:
                                         // be Nntp, Mailbox, or Imap
     PRBool m_isMove;             // is a move
     PRBool m_selectedState;      // needs to be in selected state; append msg
+    PRBool m_isCrossServerOp; // are we copying between imap servers?
     PRUint32 m_curIndex; // message index to the message array which we are
                          // copying 
     PRUint32 m_totalCount;// total count of messages we have to do
@@ -295,6 +296,7 @@ protected:
   nsresult CopyMessagesWithStream(nsIMsgFolder* srcFolder,
                          nsISupportsArray* messages,
                          PRBool isMove,
+                         PRBool isCrossServerOp,
                          nsIMsgWindow *msgWindow,
                          nsIMsgCopyServiceListener* listener);
   nsresult CopyStreamMessage(nsIMessage* message, nsIMsgFolder* dstFolder,
