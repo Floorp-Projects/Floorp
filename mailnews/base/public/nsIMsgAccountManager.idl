@@ -58,6 +58,9 @@ interface nsIMsgAccountManager : nsISupports {
   readonly attribute nsISupportsArray allIdentities;
   readonly attribute nsISupportsArray allServers;
 
+  /* lots of utility routines for finding specific identities and servers */
+  nsIMsgIdentity GetIdentityByKey(in string key);
+      
   nsIMsgIncomingServer
       FindServer(in string userName, in string hostname, in string type);
   nsISupportsArray GetIdentitiesForServer(in nsIMsgIncomingServer server);

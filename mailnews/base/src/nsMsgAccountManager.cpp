@@ -78,6 +78,11 @@ typedef struct _findServersByIdentityEntry {
   nsIMsgIdentity *identity;
 } findServersByIdentityEntry;
 
+typedef struct _findIdentityByKeyEntry {
+  const char *key;
+  nsIMsgIdentity *identity;
+} findIdentityByKeyEntry;
+
 class nsMsgAccountManager : public nsIMsgAccountManager {
 public:
 
@@ -119,6 +124,9 @@ public:
 
   NS_IMETHOD LoadAccounts();
   NS_IMETHOD UnloadAccounts();
+
+  /* nsIMsgIdentity GetIdentityByKey (in string key); */
+  NS_IMETHOD GetIdentityByKey(const char *key, nsIMsgIdentity **_retval);
 
   NS_IMETHOD FindServer(const char* username,
                         const char* hostname,
@@ -170,6 +178,7 @@ private:
 
   // nsISupportsArray enumerators
   static PRBool findServerByName(nsISupports *aElement, void *data);
+  static PRBool findIdentityByKey(nsISupports *aElement, void *data);
 
   PRBool isUnique(nsIMsgIncomingServer *server);
   nsresult upgradePrefs();
@@ -253,19 +262,23 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
     if (NS_FAILED(rv)) return rv;
 
 
+    nsXPIDLCString accountKey;
+    account->GetKey(getter_Copies(accountKey));
+    nsCStringKey key(accountKey);
+    
     // check for uniqueness
     nsCOMPtr<nsIMsgIncomingServer> server;
     rv = account->GetIncomingServer(getter_AddRefs(server));
     if (NS_FAILED(rv)) return rv;
     if (!isUnique(server)) {
+#ifdef NS_DEBUG
+      printf("nsMsgAccountManager::AddAccount(%s) failed because server was not unique\n", (const char*)accountKey);
+#endif
       // this means the server was found, which is bad.
       return NS_ERROR_UNEXPECTED;
     }
 
     
-    nsXPIDLCString accountKey;
-    account->GetKey(getter_Copies(accountKey));
-    nsCStringKey key(accountKey);
     
 #ifdef DEBUG_alecf
     printf("Adding account %s\n", (const char *)accountKey);
@@ -414,10 +427,30 @@ nsMsgAccountManager::isUnique(nsIMsgIncomingServer *server)
 
   nsCOMPtr<nsIMsgIncomingServer> dupeServer;
   rv = FindServer(username, hostname, type, getter_AddRefs(dupeServer));
+
+  // if the server was not found, then it really is unique.
+  if (NS_FAILED(rv)) return PR_TRUE;
   
-  if (NS_SUCCEEDED(rv))
+  // if we're here, then we found it, but maybe it's literally the
+  // same server that we're searching for.
+
+  // return PR_FALSE on error because if one of the keys doesn't
+  // exist, then it's likely a different server
+  
+  nsXPIDLCString dupeKey;
+  rv = dupeServer->GetKey(getter_Copies(dupeKey));
+  if (NS_FAILED(rv)) return PR_FALSE;
+  
+  nsXPIDLCString serverKey;
+  server->GetKey(getter_Copies(serverKey));
+  if (NS_FAILED(rv)) return PR_FALSE;
+  
+  if (!PL_strcmp(dupeKey, serverKey))
+    // it's unique because this EXACT server is the only one that exists
+    return PR_TRUE;
+  else
+    // there is already a server with this {username, hostname, type}
     return PR_FALSE;
-  return PR_TRUE;
 }
 
 
@@ -663,22 +696,21 @@ nsMsgAccountManager::LoadAccounts()
       str.StripWhitespace();
       
       if (str != "") {
-#ifdef DEBUG_ACCOUNTMANAGER
-        printf("accountKey = %s\n", str.GetBuffer());
-#endif
         account = getter_AddRefs(LoadAccount(str));
         if (account) {
-          AddAccount(account);
+          rv = AddAccount(account);
+          if (NS_FAILED(rv)) {
+
+#ifdef NS_DEBUG
+            printf("Error adding account %s\n", str.GetBuffer());
+#endif
+            // warn the user here?
+            // don't break out of the loop because there might
+            // be other accounts worth loading
+          }
         }
-        else
-          return NS_ERROR_NULL_POINTER;
         str = "";
       }
-#ifdef DEBUG_ACCOUNTMANAGER
-      else {
-        printf("nothing between two commas. ignore and keep going...\n");
-      }
-#endif
       token = nsCRT::strtok(rest, ",", &rest);
     }
 
@@ -872,6 +904,53 @@ nsMsgAccountManager::upgradePrefs()
     }
 
     return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsMsgAccountManager::GetIdentityByKey(const char *key,
+                                      nsIMsgIdentity **_retval)
+{
+  // there might be a better way, do it the cheesy way for now
+  nsresult rv;
+  
+  nsCOMPtr<nsISupportsArray> identities;
+  rv = GetAllIdentities(getter_AddRefs(identities));
+
+  findIdentityByKeyEntry findEntry;
+  findEntry.key = key;
+  findEntry.identity = nsnull;
+
+  identities->EnumerateForwards(findIdentityByKey, (void *)&findEntry);
+
+  if (findEntry.identity) {
+    *_retval = findEntry.identity;
+    NS_ADDREF(*_retval);
+  }
+  return NS_OK;
+
+}
+
+PRBool
+nsMsgAccountManager::findIdentityByKey(nsISupports *aElement, void *data)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgIdentity> identity = do_QueryInterface(aElement, &rv);
+  if (NS_FAILED(rv)) return PR_TRUE;
+
+  findIdentityByKeyEntry *entry = (findIdentityByKeyEntry*) data;
+
+  nsXPIDLCString key;
+  rv = identity->GetKey(getter_Copies(key));
+  if (NS_FAILED(rv)) return rv;
+  
+  if (key && entry->key && !PL_strcmp(key, entry->key)) {
+    entry->identity = identity;
+    NS_ADDREF(entry->identity);
+    return PR_FALSE;
+  }
+
+  return PR_TRUE;
 }
 
 NS_IMETHODIMP
