@@ -79,7 +79,7 @@ protected:
   static nsIAtom* gAbsoluteAtom;
 
   nsBodyFrame();
-  ~nsBodyFrame();
+  virtual ~nsBodyFrame();
 
   void ReflowAbsoluteItems(nsIPresContext& aPresContext,
                            const nsHTMLReflowState& aReflowState);
