@@ -29,8 +29,14 @@ CPPSRCS         = jvmmgr.cpp \
 
 
 REQUIRES	= img java js lay layer plugin plugimpl pref style util xpcom raptor oji caps
-CFLAGS += -DJSJDLL=\"$(JSJDLL)\" 
+
+ifeq ($(NSPR_INCLUDE_DIR),)
+INCLUDES +=		-I$(DIST)/include/private
+else
 INCLUDES +=		-I$(NSPR_INCLUDE_DIR)/private
+endif
+
+CFLAGS += -DJSJDLL=\"$(JSJDLL)\" 
 endif # MOZ_OJI
 
 EXPORTS         = jvmmgr.h	 \
