@@ -106,15 +106,15 @@
   </groupbox>
   <spacer class="spacer"/>
   <label value="&backgroundImage.label;"/>
-  <hbox>
-    <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
-     tooltiptext="&backgroundImage.tooltip;" 
-     style="min-width : 21em"/>
+  <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
+   tooltiptext="&backgroundImage.tooltip;" flex="1"/>
+  <hbox align="center">
+    <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
+    <checkbox id="MakeRelativeCheckbox" for="BackgroundImageInput"/>
+    <spacer flex="1"/>
     <!-- from EdDialogOverlay.xul -->
     <button id="ChooseFile"/>
   </hbox>
-  <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
-  <checkbox id="MakeRelativeCheckbox" for="BackgroundImageInput"/>
   <spacer class="smallspacer"/>
   <hbox>
     <spacer flex="1"/>
