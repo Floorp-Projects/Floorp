@@ -334,7 +334,7 @@ protected:
                                 nsReflowStatus&        aStatus,
                                 nsIFrame *             aDeletedFrame);
   
-  NS_IMETHOD nsTableFrame::IR_UnknownFrameInserted(nsIPresContext&        aPresContext,
+  NS_IMETHOD IR_UnknownFrameInserted(nsIPresContext&        aPresContext,
                                                    nsHTMLReflowMetrics&   aDesiredSize,
                                                    InnerTableReflowState& aReflowState,
                                                    nsReflowStatus&        aStatus,
