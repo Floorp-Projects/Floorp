@@ -70,7 +70,6 @@ nsSVGTransformList::Create(nsIDOMSVGTransformList** aResult)
 
 nsSVGTransformList::nsSVGTransformList()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsSVGTransformList::~nsSVGTransformList()

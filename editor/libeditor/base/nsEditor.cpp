@@ -176,7 +176,6 @@ nsEditor::nsEditor()
 ,  mPhonetic(nsnull)
 {
   //initialize member variables here
-  NS_INIT_ISUPPORTS();
 
   PR_AtomicIncrement(&gInstanceCount);
 

@@ -101,7 +101,6 @@ nsSVGTransform::nsSVGTransform()
       mOriginY(0.0f),
       mType( SVG_TRANSFORM_MATRIX )
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsresult nsSVGTransform::Init()

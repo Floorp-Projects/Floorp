@@ -96,7 +96,6 @@ nsEditingSession::nsEditingSession()
 , mDocStateControllerId(0)
 , mHTMLCommandControllerId(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 /*---------------------------------------------------------------------------

@@ -212,7 +212,6 @@ nsString* XULSortServiceImpl::kDescendingStr = nsnull;
 
 XULSortServiceImpl::XULSortServiceImpl(void)
 {
-  NS_INIT_ISUPPORTS();
   if (gRefCnt == 0) {
     kStaticHintAtom = NS_NewAtom("staticHint");
     kStaticsSortLastHintAtom   = NS_NewAtom("sortStaticsLast");

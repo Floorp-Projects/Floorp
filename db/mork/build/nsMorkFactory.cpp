@@ -97,7 +97,6 @@ nsMorkFactoryFactory::QueryInterface(REFNSIID iid, void** result)
 
 nsMorkFactoryFactory::nsMorkFactoryFactory()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 NS_IMETHODIMP nsMorkFactoryFactory::GetMdbFactory(nsIMdbFactory **aFactory)

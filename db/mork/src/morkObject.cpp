@@ -95,7 +95,6 @@ morkObject::morkObject(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
 : morkBead(inUsage, ioHeap, inBeadColor)
 , mObject_Handle( 0 )
 {
-  NS_INIT_ISUPPORTS();
   mMorkEnv = nsnull;
 }
 
@@ -107,7 +106,6 @@ morkObject::morkObject(morkEnv* ev,
 , mObject_Handle( 0 )
 {
   mMorkEnv = ev;
-  NS_INIT_ISUPPORTS();
   if ( ev->Good() )
   {
     if ( ioHandle )

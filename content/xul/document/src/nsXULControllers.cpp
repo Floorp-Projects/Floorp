@@ -59,7 +59,6 @@
 nsXULControllers::nsXULControllers()
 : mCurControllerID(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXULControllers::~nsXULControllers(void)

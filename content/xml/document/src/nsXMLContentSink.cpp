@@ -155,7 +155,6 @@ NS_NewXMLContentSink(nsIXMLContentSink** aResult,
 
 nsXMLContentSink::nsXMLContentSink()
 {
-  NS_INIT_ISUPPORTS();
 
   mDocument = nsnull;
   mDocumentURL = nsnull;
@@ -1545,7 +1544,6 @@ public:
 
 XMLElementFactoryImpl::XMLElementFactoryImpl()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 XMLElementFactoryImpl::~XMLElementFactoryImpl()
@@ -1606,7 +1604,6 @@ public:
 
 MathMLElementFactoryImpl::MathMLElementFactoryImpl()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 MathMLElementFactoryImpl::~MathMLElementFactoryImpl()

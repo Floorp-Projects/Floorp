@@ -45,7 +45,6 @@
 nsXBLInsertionPoint::nsXBLInsertionPoint(nsIContent* aParentElement, PRUint32 aIndex, nsIContent* aDefaultContent)
 :mElements(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   mParentElement = aParentElement;
   mIndex = aIndex;
   mDefaultContentTemplate = aDefaultContent;

@@ -386,7 +386,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 
 nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
 {
-  NS_INIT_ISUPPORTS();
 
   ++sContextCount;
 

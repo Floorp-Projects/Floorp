@@ -48,7 +48,6 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 MimeTypeArrayImpl::MimeTypeArrayImpl(nsIDOMNavigator* navigator)
 {
-	NS_INIT_ISUPPORTS();
 	mNavigator = navigator;
 	mMimeTypeCount = 0;
 	mMimeTypeArray = nsnull;
@@ -201,7 +200,6 @@ nsresult MimeTypeArrayImpl::GetMimeTypes()
 MimeTypeElementImpl::MimeTypeElementImpl(nsIDOMPlugin* aPlugin,
                                          nsIDOMMimeType* aMimeType)
 {
-	NS_INIT_ISUPPORTS();
 	mPlugin = aPlugin;
 	mMimeType = aMimeType;
 }

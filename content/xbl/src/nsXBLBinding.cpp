@@ -243,7 +243,6 @@ nsXBLBinding::nsXBLBinding(nsIXBLPrototypeBinding* aBinding)
   mIsStyleBinding(PR_TRUE),
   mMarkedForDeath(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
   mPrototypeBinding = aBinding;
   gRefCnt++;
   //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);

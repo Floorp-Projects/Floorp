@@ -85,7 +85,6 @@ private:                                                                     \
                                                                              \
 classname::classname(nsIException* aInner) : mBase(aInner)                   \
 {                                                                            \
-  NS_INIT_ISUPPORTS();                                                       \
 }                                                                            \
 classname::~classname() {}                                                   \
                                                                              \

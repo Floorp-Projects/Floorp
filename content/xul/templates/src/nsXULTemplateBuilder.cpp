@@ -157,7 +157,6 @@ nsXULTemplateBuilder::nsXULTemplateBuilder(void)
       mFlags(0),
       mTop(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXULTemplateBuilder::~nsXULTemplateBuilder(void)

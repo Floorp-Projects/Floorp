@@ -62,7 +62,6 @@ nsXMLPrettyPrinter::nsXMLPrettyPrinter() : mDocument(nsnull),
                                            mUpdateDepth(0),
                                            mUnhookPending(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsXMLPrettyPrinter::~nsXMLPrettyPrinter()

@@ -62,7 +62,6 @@ NS_NewTransformMediator(nsITransformMediator** aInstancePtrResult,
 nsTransformMediator::nsTransformMediator() : mEnabled(PR_FALSE),
                                              mStyleInvalid(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsTransformMediator::~nsTransformMediator()

@@ -61,7 +61,6 @@ nsFocusController::nsFocusController(void)
   mActive(PR_FALSE),
   mUpdateWindowWatcher(PR_FALSE)
 {
-	NS_INIT_ISUPPORTS();
 }
 
 nsFocusController::~nsFocusController(void)

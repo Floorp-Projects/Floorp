@@ -57,7 +57,6 @@
 
 nsDOMWindowList::nsDOMWindowList(nsIDocShell *aDocShell)
 {
-  NS_INIT_ISUPPORTS();
   SetDocShell(aDocShell);
 }
 

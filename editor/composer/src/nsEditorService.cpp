@@ -41,7 +41,6 @@
 
 nsEditorService::nsEditorService()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsEditorService::~nsEditorService()

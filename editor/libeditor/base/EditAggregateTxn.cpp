@@ -44,7 +44,6 @@
 EditAggregateTxn::EditAggregateTxn()
   : EditTxn()
 {
-  // base class does this: NS_INIT_ISUPPORTS();
   nsresult res = NS_NewISupportsArray(getter_AddRefs(mChildren));
   NS_POSTCONDITION(NS_SUCCEEDED(res), "EditAggregateTxn failed in constructor");
 }

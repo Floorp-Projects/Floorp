@@ -58,7 +58,6 @@
 //
 HistoryImpl::HistoryImpl(nsIDocShell* aDocShell) : mDocShell(aDocShell)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 HistoryImpl::~HistoryImpl()

@@ -45,7 +45,6 @@
 nsComposeTxtSrvFilter::nsComposeTxtSrvFilter() :
   mIsForMail(PR_FALSE)
 {
-  NS_INIT_ISUPPORTS();
 
   mBlockQuoteAtom  = getter_AddRefs(do_GetAtom("blockquote"));
   mTypeAtom        = getter_AddRefs(do_GetAtom("type"));

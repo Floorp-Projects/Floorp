@@ -159,7 +159,6 @@ nsXULAttribute::nsXULAttribute(nsIContent* aContent,
     : mContent(aContent),
       mNodeInfo(aNodeInfo)
 {
-    NS_INIT_ISUPPORTS();
     NS_IF_ADDREF(aNodeInfo);
     SetValueInternal(aValue);
 }
@@ -506,7 +505,6 @@ nsXULAttributes::nsXULAttributes(nsIContent* aContent)
       mClassList(nsnull),
       mStyleRule(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 

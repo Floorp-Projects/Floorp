@@ -53,7 +53,6 @@
 nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext, 
                                      nsISupports *aObject) 
 {
-  NS_INIT_ISUPPORTS();
 
   // mObject is a weak reference. We are guaranteed
   // because of the ownership model that this object will be

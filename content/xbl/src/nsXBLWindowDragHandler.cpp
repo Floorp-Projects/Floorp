@@ -62,7 +62,6 @@ nsIAtom* nsXBLWindowDragHandler::kDragDropAtom = nsnull;
 nsXBLWindowDragHandler::nsXBLWindowDragHandler(nsIDOMEventReceiver* aReceiver)
   : nsXBLWindowHandler(nsnull, aReceiver)
 {
-  NS_INIT_ISUPPORTS();
 
   gRefCnt++;
   if (gRefCnt == 1) {

@@ -137,7 +137,7 @@ public:
 
 protected:
   nsXBLAttributeEntry(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, nsIContent* aContent) {
-    NS_INIT_ISUPPORTS(); mSrcAttribute = aSrcAtom; mDstAttribute = aDstAtom; mElement = aContent;
+    mSrcAttribute = aSrcAtom; mDstAttribute = aDstAtom; mElement = aContent;
   }
 
   virtual ~nsXBLAttributeEntry() {}
@@ -208,7 +208,6 @@ public:
 
 protected:
   nsXBLInsertionPointEntry(nsIContent* aParent) {
-    NS_INIT_ISUPPORTS();
     mInsertionIndex = 0;
     mInsertionParent = aParent;
   };
@@ -266,7 +265,6 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID, nsIXBLDocume
   mInsertionPointTable(nsnull),
   mInterfaceTable(nsnull)
 {
-  NS_INIT_ISUPPORTS();
   
   mID = ToNewCString(aID);
 

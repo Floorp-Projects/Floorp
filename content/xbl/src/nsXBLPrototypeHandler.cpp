@@ -101,7 +101,6 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUn
                                              const PRUnichar* aModifiers, const PRUnichar* aButton,
                                              const PRUnichar* aClickCount, const PRUnichar* aPreventDefault)
 {
-  NS_INIT_ISUPPORTS();
   ++gRefCnt;
   if (gRefCnt == 1)
     // Get the primary accelerator key.
@@ -115,7 +114,6 @@ nsXBLPrototypeHandler::nsXBLPrototypeHandler(const PRUnichar* aEvent, const PRUn
 
 nsXBLPrototypeHandler::nsXBLPrototypeHandler(nsIContent* aHandlerElement)
 {
-  NS_INIT_ISUPPORTS();
   
   ++gRefCnt;
   if (gRefCnt == 1)

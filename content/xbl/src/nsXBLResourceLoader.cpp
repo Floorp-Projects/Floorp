@@ -70,7 +70,6 @@ nsXBLResourceLoader::nsXBLResourceLoader(nsIXBLPrototypeBinding* aBinding, nsXBL
  mInLoadResourcesFunc(PR_FALSE),
  mPendingSheets(0)
 {
-  NS_INIT_ISUPPORTS();
 }
 
 nsXBLResourceLoader::~nsXBLResourceLoader()
