@@ -101,6 +101,7 @@ install:: $(DLL)
         $(MAKE_INSTALL) ..\resources\flash.js  $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\remote-flash-1.rdf $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) ..\resources\remote-flash-2.rdf $(DIST)\bin\res\rdf
+        $(MAKE_INSTALL) ..\resources\remote-flash-3.rdf $(DIST)\bin\res\rdf
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\nsISupports.xpt   $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpccomponents.xpt $(DIST)\bin\components
         $(MAKE_INSTALL) $(DEPTH)\js\src\xpconnect\typelib\xpcjsid.xpt       $(DIST)\bin\components
