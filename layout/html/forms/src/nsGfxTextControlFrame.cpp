@@ -78,8 +78,6 @@ static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID, NS_IWEB_SHELL_CONTAINER_IID);
@@ -607,11 +605,10 @@ nsGfxTextControlFrame::PaintTextControl(nsIPresContext& aPresContext,
     nsRect rect(0, 0, mRect.width, mRect.height);
     if (eCompatibility_NavQuirks == mode) {
       nscoord borderTwips = 0;
-      nsILookAndFeel * lookAndFeel;
-      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+      nsCOMPtr<nsILookAndFeel> lookAndFeel;
+      if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
         PRInt32 tfBorder;
         lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, tfBorder);
-        NS_RELEASE(lookAndFeel);
         float p2t;
         aPresContext.GetScaledPixelsToTwips(&p2t);
         borderTwips = NSIntPixelsToTwips(tfBorder, p2t);
@@ -933,12 +930,25 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     // Quirks mode will NOT obey CSS border and padding
     // GetDesiredSize calculates the size without CSS borders
     // the nsLeafFrame::Reflow will add in the borders
-    if (eCompatibility_NavQuirks == mode) {
-      GetDesiredSize(&aPresContext, aReflowState, aMetrics);
-      aStatus = NS_FRAME_COMPLETE;
+    if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth &&
+        NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+      aMetrics.width = aReflowState.mComputedWidth;
+      aMetrics.height = aReflowState.mComputedHeight;
     } else {
-      rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+      if (eCompatibility_NavQuirks == mode) {
+        GetDesiredSize(&aPresContext, aReflowState, aMetrics);
+      } else {
+        rv = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+      }
+
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+        aMetrics.width = aReflowState.mComputedWidth;
+      }
+      if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
+        aMetrics.height = aReflowState.mComputedHeight;
+      }
     }
+    aStatus = NS_FRAME_COMPLETE;
     // Now resize the widget if there is one, in this case it is 
     // the webshell for the editor
     if (!mDidInit) {
@@ -965,15 +975,14 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
     // otherwise it comes from style
     nsMargin border;
     if (eCompatibility_NavQuirks == mode) {
-      nsILookAndFeel * lookAndFeel;
-      if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+      nsCOMPtr<nsILookAndFeel> lookAndFeel;
+      if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
         float p2t;
         aPresContext.GetPixelsToTwips(&p2t);
         PRInt32 borderSize;
         lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldBorder, borderSize);
         nscoord borderTwips = NSIntPixelsToTwips(borderSize, p2t);
         border.SizeTo(borderTwips, borderTwips, borderTwips, borderTwips);
-        NS_RELEASE(lookAndFeel);
       }
 
     } else {
@@ -985,6 +994,11 @@ nsGfxTextControlFrame::Reflow(nsIPresContext& aPresContext,
 
     float t2p;
     aPresContext.GetTwipsToPixels(&t2p);
+
+#ifdef DEBUG_rods
+    printf ("nsGfxTextControlFrame::Reflow: size=%d,%d   %d,%d\n\n",
+           aMetrics.width, aMetrics.height, NSToCoordRound(aMetrics.width * t2p), NSToCoordRound(aMetrics.height * t2p));
+#endif 
 
     nsRect subBounds;
 

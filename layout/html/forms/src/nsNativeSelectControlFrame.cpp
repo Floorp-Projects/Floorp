@@ -64,8 +64,6 @@ static NS_DEFINE_IID(kComboBoxIID, NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kListBoxIID, NS_ILISTBOX_IID);
 static NS_DEFINE_IID(kComboCID, NS_COMBOBOX_CID);
 static NS_DEFINE_IID(kListCID, NS_LISTBOX_CID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kISelectControlFrameIID, NS_ISELECTCONTROLFRAME_IID);
  
 class nsOption;
@@ -95,7 +93,8 @@ public:
 
   virtual nscoord GetVerticalBorderWidth(float aPixToTwip) const;
   virtual nscoord GetHorizontalBorderWidth(float aPixToTwip) const;
-  virtual nscoord GetVerticalInsidePadding(float aPixToTwip,
+  virtual nscoord GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                           float aPixToTwip,
                                            nscoord aInnerHeight) const;
   virtual nscoord GetHorizontalInsidePadding(nsIPresContext& aPresContext,
                                              float aPixToTwip, 
@@ -265,8 +264,9 @@ nsNativeSelectControlFrame::GetHorizontalBorderWidth(float aPixToTwip) const
 }
 
 nscoord 
-nsNativeSelectControlFrame::GetVerticalInsidePadding(float aPixToTwip, 
-                                               nscoord aInnerHeight) const
+nsNativeSelectControlFrame::GetVerticalInsidePadding(nsIPresContext& aPresContext,
+                                                     float aPixToTwip, 
+                                                     nscoord aInnerHeight) const
 {
   // XXX NOTE: the enums eMetric_ListVerticalInsidePadding and eMetric_ListShouldUseVerticalInsidePadding
   // are ONLY needed because GTK is not using the "float" padding values and wants to only use an 
@@ -281,13 +281,12 @@ nsNativeSelectControlFrame::GetVerticalInsidePadding(float aPixToTwip,
   float   pad;
   PRInt32 padInside;
   PRInt32 shouldUsePadInside;
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ListVerticalInsidePadding,  pad);
    // These two (below) are really only needed for GTK
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListVerticalInsidePadding,  padInside);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListShouldUseVerticalInsidePadding,  shouldUsePadInside);
-   NS_RELEASE(lookAndFeel);
   }
 
   if (1 == shouldUsePadInside) {
@@ -316,13 +315,12 @@ nsNativeSelectControlFrame::GetHorizontalInsidePadding(nsIPresContext& aPresCont
   float pad;
   PRInt32 padMin;
   PRInt32 shouldUsePadMin;
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext.GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetricFloat_ListHorizontalInsidePadding,  pad);
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListHorizontalInsideMinimumPadding,  padMin);
    // This one (below) is really only needed for GTK
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_ListShouldUseHorizontalInsideMinimumPadding,  shouldUsePadMin);
-   NS_RELEASE(lookAndFeel);
   }
 
   if (1 == shouldUsePadMin) {
@@ -360,9 +358,9 @@ nsNativeSelectControlFrame::GetCID()
 
 void 
 nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
-                                     const nsHTMLReflowState& aReflowState,
-                                     nsHTMLReflowMetrics&     aDesiredLayoutSize,
-                                     nsSize&                  aDesiredWidgetSize)
+                                           const nsHTMLReflowState& aReflowState,
+                                           nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                           nsSize&                  aDesiredWidgetSize)
 {
   nsIDOMHTMLCollection* options = GetOptions();
   if (!options)
@@ -458,11 +456,11 @@ nsNativeSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext
 
   // XXX put this in widget library, combo boxes are fixed height (visible part)
   aDesiredLayoutSize.height = (mIsComboBox)
-    ? rowHeight + (2 * GetVerticalInsidePadding(p2t, rowHeight))
+    ? rowHeight + (2 * GetVerticalInsidePadding(*aPresContext, p2t, rowHeight))
     : desiredSize.height; 
   if (aDesiredLayoutSize.maxElementSize) {
     aDesiredLayoutSize.maxElementSize->height = (mIsComboBox)
-      ? rowHeight + (2 * GetVerticalInsidePadding(p2t, rowHeight))
+      ? rowHeight + (2 * GetVerticalInsidePadding(*aPresContext, p2t, rowHeight))
       : minSize.height; 
   }
 

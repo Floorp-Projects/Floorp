@@ -27,11 +27,10 @@
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
 #include "nsStyleUtil.h"
+#include "nsCOMPtr.h"
 
 
 static NS_DEFINE_IID(kIRadioIID, NS_IRADIOBUTTON_IID);
-static NS_DEFINE_IID(kLookAndFeelCID,  NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 
 #define NS_DEFAULT_RADIOBOX_SIZE  12
 
@@ -54,13 +53,12 @@ NS_NewNativeRadioControlFrame(nsIFrame** aNewFrame)
 
 
 nscoord 
-nsNativeRadioControlFrame::GetRadioboxSize(float aPixToTwip) const
+nsNativeRadioControlFrame::GetRadioboxSize(nsIPresContext* aPresContext, float aPixToTwip) const
 {
-  nsILookAndFeel * lookAndFeel;
   PRInt32 radioboxSize = 0;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
+  nsCOMPtr<nsILookAndFeel> lookAndFeel;
+  if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(getter_AddRefs(lookAndFeel)))) {
    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_RadioboxSize,  radioboxSize);
-   NS_RELEASE(lookAndFeel);
   }
  if (radioboxSize == 0)
    radioboxSize = NS_DEFAULT_RADIOBOX_SIZE;
@@ -69,9 +67,9 @@ nsNativeRadioControlFrame::GetRadioboxSize(float aPixToTwip) const
 
 void 
 nsNativeRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
-                                  const nsHTMLReflowState& aReflowState,
-                                  nsHTMLReflowMetrics&     aDesiredLayoutSize,
-                                  nsSize&                  aDesiredWidgetSize)
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsHTMLReflowMetrics&     aDesiredLayoutSize,
+                                          nsSize&                  aDesiredWidgetSize)
 {
 
   nsWidgetRendering mode;
@@ -82,7 +80,7 @@ nsNativeRadioControlFrame::GetDesiredSize(nsIPresContext*        aPresContext,
   } else {
     float p2t;
     aPresContext->GetScaledPixelsToTwips(&p2t);
-    aDesiredWidgetSize.width  = GetRadioboxSize(p2t);
+    aDesiredWidgetSize.width  = GetRadioboxSize(aPresContext, p2t);
     aDesiredWidgetSize.height = aDesiredWidgetSize.width;
 
     aDesiredLayoutSize.width  = aDesiredWidgetSize.width;
