@@ -511,7 +511,8 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
 
   // Now lay it all out
-  Layout(r.width, r.height);
+  mWindow->Resize(0, 0, PR_FALSE); // force resize
+  mWindow->Resize(r.width, r.height, PR_FALSE);
 
 
   return NS_OK;
