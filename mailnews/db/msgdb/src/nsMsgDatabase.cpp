@@ -2267,8 +2267,13 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 			struct mdbYarn yarn;
 			hdrCell->AliasYarn(GetEnv(), &yarn);
 			*result = (char *) PR_CALLOC(yarn.mYarn_Fill + 1);
-			if (*result && yarn.mYarn_Fill > 0)
-				nsCRT::memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+			if (*result)
+			{
+				if (yarn.mYarn_Fill > 0)
+					nsCRT::memcpy(*result, yarn.mYarn_Buf, yarn.mYarn_Fill);
+				else
+					**result = 0;
+			}
 			else
 				err = NS_ERROR_OUT_OF_MEMORY;
 
