@@ -42,13 +42,10 @@ function onLoad()
         var slot = controls[i].id;
         var val = server[slot];
 
-        if (val) {
-            if (controls[i].tagName.toLowerCase() == "checkbox") {
-                controls[i].checked = val;
-            }
-            else
-                controls[i].value = val;
-        }
+        if (controls[i].tagName.toLowerCase() == "checkbox")
+            controls[i].checked = val;
+        else
+            controls[i].value = val;
     }
 
     doSetOKCancel(onOk, 0);

@@ -134,8 +134,8 @@ function getImapServer() {
 function saveServerLocally(imapServer)
 {
     // boolean prefs, JS does the conversion for us
-    document.getElementById("imap.dualUseFolders").value = imapServer.dualUseFolders;
-    document.getElementById("imap.usingSubscription").value = imapServer.usingSubscription;
+    document.getElementById("imap.dualUseFolders").value = imapServer.dualUseFolders.toString();
+    document.getElementById("imap.usingSubscription").value = imapServer.usingSubscription.toString();
 
     // string prefs
     document.getElementById("imap.personalNamespace").value = imapServer.personalNamespace;
@@ -144,7 +144,7 @@ function saveServerLocally(imapServer)
     document.getElementById("imap.otherUsersNamespace").value = imapServer.otherUsersNamespace;
 
     // boolean prefs, JS does the conversion for us
-    document.getElementById("imap.overrideNamespaces").value = imapServer.overrideNamespaces;
+    document.getElementById("imap.overrideNamespaces").value = imapServer.overrideNamespaces.toString();
 
 }
 
