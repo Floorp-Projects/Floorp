@@ -284,7 +284,9 @@ PRBool nsFileSpec::IsSymlink() const
         // Release the pointer to the IShellLink interface. 
         psl->Release();
     }
-    
+
+    CoUninitialize();
+
     return isSymlink;
 }
 
@@ -297,6 +299,8 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
 
     HRESULT hres; 
     IShellLink* psl; 
+
+    CoInitialize(NULL);
 
     // Get a pointer to the IShellLink interface. 
     hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (void**)&psl); 
@@ -343,6 +347,8 @@ nsresult nsFileSpec::ResolveSymlink(PRBool& wasSymlink)
         // Release the pointer to the IShellLink interface. 
         psl->Release();
     }
+
+    CoUninitialize();
 
     if (SUCCEEDED(hres))
         return NS_OK;
@@ -595,11 +601,13 @@ nsDirectoryIterator::nsDirectoryIterator(const nsFileSpec& inDirectory, PRBool r
 //----------------------------------------------------------------------------------------
 	: mCurrent(inDirectory)
 	, mDir(nsnull)
+    , mStarting(inDirectory)
 	, mExists(PR_FALSE)
     , mResoveSymLinks(resolveSymlink)
 {
     mDir = PR_OpenDir(inDirectory);
 	mCurrent += "dummy";
+    mStarting += "dummy";
     ++(*this);
 } // nsDirectoryIterator::nsDirectoryIterator
 
@@ -622,6 +630,7 @@ nsDirectoryIterator& nsDirectoryIterator::operator ++ ()
 	if (entry)
     {
       mExists = PR_TRUE;
+      mCurrent = mStarting;
       mCurrent.SetLeafName(entry->name);
       if (mResoveSymLinks)
       {   
