@@ -66,8 +66,11 @@ XUL_ATOM(treepusher, "treepusher") // A column pusher (left or right) for the tr
 XUL_ATOM(menuitem, "menuitem") // The menu element
 XUL_ATOM(menubar, "menubar") // The menubar element
 XUL_ATOM(menu, "menu") // A single menu item
-XUL_ATOM(menubutton, "menubutton") // A button inside an XP menu.
-XUL_ATOM(menuchildren, "menuchildren") // The menu's children.
+
+XUL_ATOM(xpmenubar, "xpmenubar") // An XP menu bar.
+XUL_ATOM(xpmenu, "xpmenu") // Represents an XP menu
+XUL_ATOM(xpmenubutton, "xpmenubutton") // A titled button (with improved behavior) inside an XP menu.
+XUL_ATOM(xpmenuchildren, "xpmenuchildren") // The XP menu's children.
 
 XUL_ATOM(progressmeter, "progressmeter")
 XUL_ATOM(titledbutton, "titledbutton")
