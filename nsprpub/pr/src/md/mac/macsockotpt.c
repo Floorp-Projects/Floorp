@@ -1680,10 +1680,13 @@ PRInt32 _MD_writev(PRFileDesc *fd, const struct PRIOVec *iov, PRInt32 iov_size, 
 static PRBool GetState(PRFileDesc *fd, PRBool *readReady, PRBool *writeReady, PRBool *exceptReady)
 {
     OTResult resultOT;
-	size_t   availableData;
-    
-	resultOT = OTCountDataBytes((EndpointRef)fd->secret->md.osfd, &availableData);   
-	*readReady = fd->secret->md.readReady && (availableData > 0);
+    // hack to emulate BSD sockets; say that a socket that has disconnected
+    // is still readable.
+    size_t   availableData = 1;
+    if (!fd->secret->md.orderlyDisconnect)
+        OTCountDataBytes((EndpointRef)fd->secret->md.osfd, &availableData);
+
+    *readReady = fd->secret->md.readReady && (availableData > 0);
 	*exceptReady = fd->secret->md.exceptReady;
 
     resultOT = OTGetEndpointState((EndpointRef)fd->secret->md.osfd);
