@@ -51,12 +51,6 @@
 #define NS_GFX_(type) NS_IMPORT_(type)
 #endif
 
-#ifdef _IMPL_NS_PLUGIN
-#define NS_PLUGIN NS_EXPORT
-#else
-#define NS_PLUGIN NS_IMPORT
-#endif
-
 #ifdef _IMPL_NS_APPSHELL
 #define NS_APPSHELL NS_EXPORT
 #else

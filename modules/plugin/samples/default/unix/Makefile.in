@@ -38,8 +38,6 @@ CSRCS		= \
 		npunix.c\
 		$(NULL)
 
-DEFINES		+= -D_IMPL_NS_PLUGIN
-
 # plugins should always be shared, even in the "static" build
 FORCE_SHARED_LIB = 1
 
