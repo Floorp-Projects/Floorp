@@ -109,6 +109,7 @@ private:
 
 nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
 {   
+ NS_INIT_REFCNT();
  mClassID = aClass;
 }   
 
