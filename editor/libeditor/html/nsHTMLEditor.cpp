@@ -3027,18 +3027,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
                                            const nsString& aFormatType,
                                            PRUint32 aFlags)
 {
-//  PRBool cancel;
-//  nsString resultString;
-//  nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
-//  ruleInfo.outString = &resultString;
-//  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel);
-//  if (NS_FAILED(rv)) { return rv; }
-//  if (PR_TRUE==cancel)
-//  { // this case will get triggered by password fields
-//    aOutputString = *(ruleInfo.outString);
-//  }
-//  else
-//  { // default processing
+  PRBool cancel;
+  nsString resultString;
+  nsTextRulesInfo ruleInfo(nsTextEditRules::kOutputText);
+  ruleInfo.outString = &resultString;
+  ruleInfo.outputFormat = &aFormatType;
+  nsresult rv = mRules->WillDoAction(nsnull, &ruleInfo, &cancel);
+  if (NS_FAILED(rv)) { return rv; }
+  if (PR_TRUE==cancel)
+  { // this case will get triggered by password fields
+    aOutputString = *(ruleInfo.outString);
+  }
+  else
+  { // default processing
 
 
     nsresult rv = NS_OK;
@@ -3115,7 +3116,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
     }
 
     rv = encoder->EncodeToString(aOutputString);
-//  }
+  }
   return rv;
 }
 

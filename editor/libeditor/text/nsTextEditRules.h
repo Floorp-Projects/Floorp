@@ -117,7 +117,18 @@ protected:
   nsresult WillRedo(nsIDOMSelection *aSelection, PRBool *aCancel);
   nsresult DidRedo(nsIDOMSelection *aSelection, nsresult aResult);
 
-  nsresult WillOutputText(nsIDOMSelection *aSelection, nsString *aOutText, PRBool *aCancel);
+  /** called prior to nsIEditor::OutputToString
+    * @param aSelection
+    * @param aInFormat  the format requested for the output, a MIME type
+    * @param aOutText   the string to use for output, if aCancel is set to true
+    * @param aOutCancel if set to PR_TRUE, the caller should cancel the operation
+    *                   and use aOutText as the result.
+    */
+  nsresult WillOutputText(nsIDOMSelection *aSelection,
+                          const nsString  *aInFormat,
+                          nsString *aOutText, 
+                          PRBool   *aOutCancel);
+
   nsresult DidOutputText(nsIDOMSelection *aSelection, nsresult aResult);
 
 
@@ -189,6 +200,7 @@ class nsTextRulesInfo : public nsRulesInfo
     placeTxn(0),
     inString(0),
     outString(0),
+    outputFormat(0),
     typeInState(),
     maxLength(-1),
     collapsedAction(nsIEditor::eDeleteNext),
@@ -204,6 +216,7 @@ class nsTextRulesInfo : public nsRulesInfo
   PlaceholderTxn **placeTxn;
   const nsString *inString;
   nsString *outString;
+  const nsString *outputFormat;
   TypeInState typeInState;
   PRInt32 maxLength;
   
