@@ -39,3 +39,7 @@
 #palette-box > hbox {
   min-height: 8em;
 }
+
+#main-box > box {
+  overflow: auto; 
+}
