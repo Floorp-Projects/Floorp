@@ -42,6 +42,8 @@ extern unsigned long gJanuaryFirst1970Seconds;
 
 extern void WaitOnThisThread(PRThread *thread, PRIntervalTime timeout);
 extern void DoneWaitingOnThisThread(PRThread *thread);
+extern void AsyncNotify(PRThread *thread);
+
 
 /* PB for Read and Write */
 struct ExtendedParamBlock {
@@ -61,7 +63,7 @@ static void AsyncIOCompletion (ExtendedParamBlock *pbAsyncPtr)
 
     if (_PR_MD_GET_INTSOFF()) {
         cpu->u.missed[cpu->where] |= _PR_MISSED_IO;
-        thread->md.notifyPending = PR_TRUE;
+        thread->md.missedIONotify = PR_TRUE;
 		return;
     }
     _PR_MD_SET_INTSOFF(1);
@@ -173,9 +175,14 @@ void _MD_IOInterrupt(void)
 
 		qp = qp->next;
 		
-		if (thread->md.notifyPending) {
-			thread->md.notifyPending = PR_FALSE;
+		if (thread->md.missedIONotify) {
+			thread->md.missedIONotify = PR_FALSE;
 			DoneWaitingOnThisThread(thread);
+		}
+
+		if (thread->md.missedAsyncNotify) {
+			thread->md.missedAsyncNotify = PR_FALSE;
+			AsyncNotify(thread);
 		}
     }
     qp = _PR_SLEEPQ(me->cpu).next;
@@ -186,9 +193,14 @@ void _MD_IOInterrupt(void)
 
 		qp = qp->next;
 		
-		if (thread->md.notifyPending) {
-			thread->md.notifyPending = PR_FALSE;
+		if (thread->md.missedIONotify) {
+			thread->md.missedIONotify = PR_FALSE;
 			DoneWaitingOnThisThread(thread);
+		}
+
+		if (thread->md.missedAsyncNotify) {
+			thread->md.missedAsyncNotify = PR_FALSE;
+			AsyncNotify(thread);
 		}
     }
 	_PR_SLEEPQ_UNLOCK(thread->cpu);

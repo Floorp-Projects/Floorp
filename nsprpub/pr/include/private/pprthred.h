@@ -301,11 +301,19 @@ PR_EXTERN(PRIntn) PR_GetMonitorEntryCount(PRMonitor *mon);
 */
 PR_EXTERN(PRMonitor*) PR_CTestAndEnterMonitor(void *address);
 
+/*---------------------------------------------------------------------------
+** PLATFORM-SPECIFIC THREAD SYNCHRONIZATION FUNCTIONS
+---------------------------------------------------------------------------*/
+#if defined(XP_MAC)
+
+PR_EXTERN(void) PR_Mac_WaitForAsyncNotify(PRIntervalTime timeout);
+PR_EXTERN(void) PR_Mac_PostAsyncNotify(PRThread *thread);
+
+#endif /* XP_MAC */
 
 /*---------------------------------------------------------------------------
 ** PLATFORM-SPECIFIC INITIALIZATION FUNCTIONS
 ---------------------------------------------------------------------------*/
-
 #if defined(IRIX)
 /*
 ** Irix specific initialization funtion to be called before PR_Init
