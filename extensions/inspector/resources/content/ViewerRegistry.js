@@ -138,15 +138,19 @@ ViewerRegistry.prototype =
   // object.
   //
   // @param Object aObject - the object being searched against
+  // @param String aPanelId - the id of the panel requesting viewers
   // @return nsIRDFResource[] - array of entries in the viewer registry
   ///////////////////////////////////////////////////////////////////////////
-  findViewersForObject: function(aObject)
+  findViewersForObject: function(aObject, aPanelId)
   {
     // check each entry in the registry
     var len = this.mViewerDS.length;
     var entry;
     var urls = [];
-  	for (var i = 0; i < len; ++i) {
+    for (var i = 0; i < len; ++i) {
+      if (this.getEntryProperty(i, "panels").indexOf(aPanelId) == -1) {
+        continue;
+      }
       if (this.objectMatchesEntry(aObject, i)) {
         if (this.getEntryProperty(i, "important")) {
           urls.unshift(i); 
@@ -154,7 +158,7 @@ ViewerRegistry.prototype =
           urls.push(i);
         }
       }
-   	}
+    }
 
     return urls;
   },

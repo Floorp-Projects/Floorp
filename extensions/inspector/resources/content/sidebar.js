@@ -82,6 +82,7 @@ InspectorSidebar.prototype =
     this.installNavObserver();
 
     this.mPanelSet = document.getElementById("bxPanelSet");
+    this.mPanelSet.addObserver("panelsetready", this, false);
     this.mPanelSet.initialize();
   },
   
@@ -97,6 +98,23 @@ InspectorSidebar.prototype =
   getViewer: function(aUID)
   {
     return this.mPanelSet.registry.getViewerByUID(aUID);
+  },
+
+  ////////////////////////////////////////////////////////////////////////////
+  //// Viewer Panels
+  
+  initViewerPanels: function()
+  {
+    this.mDocPanel = this.mPanelSet.getPanel(0);
+    this.mDocPanel.addObserver("subjectChange", this, false);
+    this.mObjectPanel = this.mPanelSet.getPanel(1);
+  },
+
+  onEvent: function(aEvent)
+  {
+    if (aEvent.type == "panelsetready") {
+      this.initViewerPanels();
+    }
   },
   
   ////////////////////////////////////////////////////////////////////////////
