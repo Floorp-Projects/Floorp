@@ -482,9 +482,9 @@ nsMsgAppCore::SetWindow(nsIDOMWindow* aWin)
     rootWebShell->FindChildWithName(webShellName.GetUnicode(), mWebShell);
 #ifdef NS_DEBUG
     if (nsnull != mWebShell)
-        printf("nsMsgAppCore::SetWindow(): Got the webShell %s.\n", (const char *) nsAutoCString(webShellName));
+        printf("nsMsgAppCore::SetWindow(): Got the webShell %s.\n", nsCAutoString(webShellName));
     else
-        printf("nsMsgAppCore::SetWindow(): Failed to find webshell %s.\n", (const char *) nsAutoCString(webShellName));
+        printf("nsMsgAppCore::SetWindow(): Failed to find webshell %s.\n", nsCAutoString(webShellName));
 #endif
     NS_RELEASE(rootWebShell);
   }
