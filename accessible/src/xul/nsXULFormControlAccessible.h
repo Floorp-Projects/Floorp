@@ -42,10 +42,11 @@
 
 // NOTE: alphabetically ordered
 #include "nsAccessibleWrap.h"
-#include "nsHTMLFormControlAccessible.h"
 #include "nsIDOMXULTextboxElement.h"
 #ifdef MOZ_ACCESSIBILITY_ATK
 #include "nsHTMLFormControlAccessibleWrap.h"
+#else
+#include "nsHTMLFormControlAccessible.h"
 #endif
 
 class nsXULButtonAccessible : public nsAccessibleWrap
