@@ -455,8 +455,10 @@ form {
 
 input {
   vertical-align: bottom;
+	text-align: left;
   border: 2px inset rgb(204, 204, 204);
   color: black;
+	background-color: white;
 }
 input[type=hidden] {
   border: none;
@@ -1519,6 +1521,8 @@ select[-moz-dropdown-active]:-moz-dropdown-list {
 :-moz-singleline-textcontrol-frame {
   overflow:hidden;
 	white-space:nowrap;
+	background-color: inherit;
+	text-align: inherit;
 }
 
 
