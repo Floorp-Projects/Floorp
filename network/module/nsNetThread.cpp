@@ -39,6 +39,7 @@ extern "C" {
 #include "mkstream.h"
 #include "cvchunk.h"
 #include "cvunzip.h"
+#include "cvplugin.h"
 
 #include "fileurl.h"
 #include "httpurl.h"
@@ -105,6 +106,13 @@ nsresult NS_InitNetlib(void)
                                      NET_NGLayoutConverter);
     NET_RegisterContentTypeConverter(APPLICATION_HTTP_INDEX, FO_NGLAYOUT,
                                     NULL, NET_HTTPIndexFormatToHTMLConverter);
+
+    NET_RegisterContentTypeConverter("text/*", FO_NGLAYOUT, NULL,
+                                     NET_PluginStream);
+    NET_RegisterContentTypeConverter("image/*", FO_NGLAYOUT, NULL,
+                                     NET_PluginStream);
+    NET_RegisterContentTypeConverter("application/*", FO_NGLAYOUT, NULL,
+                                     NET_PluginStream);
 
     NET_RegisterEncodingConverter(ENCODING_GZIP,
                                   (void *) ENCODING_GZIP,
