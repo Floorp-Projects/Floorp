@@ -5127,26 +5127,23 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
         continue;
 
       content->SetNativeAnonymous(PR_TRUE);
+      content->SetParent(aParent);
       content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
-      // Set the binding parent first, since setting the parent may cause
-      // relative URIs to change (due to xml:base) and |child| may need to be
-      // able to tell that it's anonymous content as it recomputes its base
-      // URI.
-      nsIContent* bindingParent = content;
+
 #ifdef MOZ_XUL
       // Only cut XUL scrollbars off if they're not in a XUL document.  This allows
       // scrollbars to be styled from XUL (although not from XML or HTML).
       nsCOMPtr<nsIAtom> tag;
       content->GetTag(getter_AddRefs(tag));
-      if (tag == nsXULAtoms::scrollbar) {
+      if (tag.get() == nsXULAtoms::scrollbar) {
         nsCOMPtr<nsIDOMXULDocument> xulDoc(do_QueryInterface(aDocument));
-        if (xulDoc) {
-          bindingParent = aParent;
-        }
+        if (xulDoc)
+          content->SetBindingParent(aParent);
+        else content->SetBindingParent(content);
       }
+      else
 #endif
-      content->SetBindingParent(bindingParent);
-      content->SetParent(aParent);
+        content->SetBindingParent(content);
     
       nsIFrame * newFrame = nsnull;
       nsresult rv = creator->CreateFrameFor(aPresContext, content, &newFrame);

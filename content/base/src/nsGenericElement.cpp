@@ -2252,46 +2252,14 @@ nsGenericElement::GetBaseURL(nsIURI** aBaseURL) const
     mNodeInfo->GetDocument(getter_AddRefs(doc));
   }
 
-  // Our base URL depends on whether we have an xml:base attribute, as well as
-  // on whether any of our ancestors do.  The basic idea is to ask our parent
-  // (mParent if we have one, our document otherwise) for its base URL. Then we
-  // resolve our xml:base attr, if any, relative to that.
-
-  // The one complication is that we may be an anonymous node bound via XBL.
-  // If this is the case, we still want to use our parent's baseURL unless our
-  // parent is not part of our own binding (eg is the element the binding is
-  // attached to).  If that is the case, we want to use the binding url as the
-  // "parent" url.
-  
-  nsCOMPtr<nsIContent> bindingParent, parentsBindingParent;
-  GetBindingParent(getter_AddRefs(bindingParent));
-
-  if (mParent) {
-    mParent->GetBindingParent(getter_AddRefs(parentsBindingParent));
-  }
-  
+  // Our base URL depends on whether we have an xml:base attribute, as
+  // well as on whether any of our ancestors do.
   nsCOMPtr<nsIURI> parentBase;
-  // XXX Not all things with a bindingParent are actually XBL anonymous
-  // content, so we may not end up getting a binding in the case when we have a
-  // bindingParent...  This seems very wrong.  Perhaps it should be fixed?
-  if (bindingParent && bindingParent != parentsBindingParent) {
-    // Get hold of the binding and get its URI
-    nsCOMPtr<nsIBindingManager> bindingMgr;
-    doc->GetBindingManager(getter_AddRefs(bindingMgr));
-    if (bindingMgr) {
-      nsCOMPtr<nsIXBLBinding> binding;
-      bindingMgr->GetBinding(bindingParent, getter_AddRefs(binding));
-      if (binding) {
-        nsCAutoString bindingURI;
-        binding->GetBindingURI(bindingURI);
-        NS_NewURI(getter_AddRefs(parentBase), bindingURI);
-      }
-    }
-  } else if (mParent) {
+  if (mParent) {
     mParent->GetBaseURL(getter_AddRefs(parentBase));
-  }
-
-  if (!parentBase && doc) {
+  } else if (doc) {
+    // No parent, so just use the document (we must be the root or not in the
+    // tree).
     doc->GetBaseURL(getter_AddRefs(parentBase));
   }
   
