@@ -4858,7 +4858,7 @@ nsCSSFrameConstructor::InitAndRestoreFrame(nsIPresContext*          aPresContext
                        aStyleContext, aPrevInFlow);
 
   if (aState.mFrameState && aState.mFrameManager) {
-    // aState.mFrameManager->RestoreFrameState(aPresContext, aNewFrame, aState.mFrameState);
+    aState.mFrameManager->RestoreFrameState(aPresContext, aNewFrame, aState.mFrameState);
   }
 
   return rv;
@@ -8120,7 +8120,7 @@ nsCSSFrameConstructor::CaptureStateFor(nsIPresContext* aPresContext,
       nsCOMPtr<nsIFrameManager> frameManager;
       rv = presShell->GetFrameManager(getter_AddRefs(frameManager));
       if (NS_SUCCEEDED(rv) && frameManager) {
-        // rv = frameManager->CaptureFrameState(aPresContext, aFrame, aHistoryState);
+        rv = frameManager->CaptureFrameState(aPresContext, aFrame, aHistoryState);
       }
     }
   }
@@ -9281,7 +9281,6 @@ nsCSSFrameConstructor::CreateTreeWidgetContent(nsIPresContext* aPresContext,
     nsFrameItems            frameItems;
     nsFrameConstructorState state(aPresContext, mFixedContainingBlock,
                                   GetAbsoluteContainingBlock(aPresContext, aParentFrame),
-
                                   GetFloaterContainingBlock(aPresContext, aParentFrame), 
                                   aFrameState);
 
