@@ -459,7 +459,9 @@ if ($canedit || $::userid == $assignedtoid ||
         }
         $knum++;
         print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
-          Reassign bug to owner of selected component<br>\n";
+          Reassign bug to owner ";
+        if (Param("useqacontact")) { print "and QA contact "; }
+        print "of selected component<br>\n";
         if ($status eq $::unconfirmedstate && ($canconfirm || $canedit)) {
             print "&nbsp;&nbsp;&nbsp;&nbsp;<INPUT TYPE=checkbox NAME=compconfirm> and confirm bug (change status to <b>NEW</b>)<BR>";
         }
