@@ -688,6 +688,9 @@ nsSliderFrame::CurrentPositionChanged(nsIPresContext* aPresContext)
 
     // get the thumb's rect
     nsIFrame* thumbFrame = mFrames.FirstChild();
+    if (!thumbFrame)
+      return NS_OK; // The thumb may stream in asynchronously via XBL.
+
     nsRect thumbRect;
     thumbFrame->GetRect(thumbRect);
 
