@@ -75,7 +75,7 @@ use FileHandle;
 # )
 
 sub usage {
-  warn "usage: warnings.pl <tree_directory>\n";
+  warn "usage: warnings.pl <tree/logfile>\n";
 }
 
 # This is for gunzip (should add a configure script to handle this).
@@ -87,9 +87,16 @@ $debug = 1, shift @ARGV if $ARGV[0] eq '--debug';
 
 # Load tinderbox build data.
 #   (So we can find the last successful build for the tree of intestest.)
-$tree = shift @ARGV;
+$log_file = shift @ARGV;
 # tinderbox/tbglobals.pl uses many shameful globals
+
+&usage, die "Logfile does not exist, $log_file\n" unless -e $log_file;
+
+($tree, $log_file) = split '/', $log_file;
 $form{tree} = $tree;
+
+&usage, die "Tree does not exist, $tree\n" unless -d $tree;
+
 require 'tbglobals.pl';
 require "$tree/treedata.pl";
 
@@ -97,6 +104,12 @@ $source_root = 'mozilla';
 
 # ===================================================================
 # Warnings to ignore
+
+@mac_ignore = (
+  'function has no prototype',
+  'inline function call .* not inlined',
+  'variable / argument .* is not used in function',
+);
 
 @ignore = ( 
   'location of the previous definition',
@@ -133,23 +146,32 @@ $source_root = 'mozilla';
 #   paths to files.
 #
 print STDERR "Building hash of file names...";
-($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
+#($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
+$file_bases = {};
+$file_fullpaths = {};
 print STDERR "done.\n";
 
 # Find the build we want and generate warnings for it
 #
-for $br (last_successful_builds($tree)) {
-  next unless $br->{buildname} =~ /^$warning_buildnames_pat$/;
-
-  my $log_file = "$br->{logfile}";
+$br = find_build_record($tree,$log_file);
+  
+%warnings = ();
+%warnings_by_who = ();
+%who_count = ();
+$total_warnings_count = 0;
+$total_ignored_count = 0;
 
   # Parse the build log for warnings
   #
-  warn "Parsing build log, $log_file\n";
+  warn "Parsing $br->{buildname}, $log_file\n";
 
   $fh = new FileHandle "gunzip -c $tree/$log_file |" 
     or die "Unable to open $tree/$log_file\n";
-  &gcc_parser($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+  if ($br->{errorparser} eq 'unix') {
+    gcc_parser($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+  } elsif ($br->{errorparser} eq 'mac') {
+    mac_parser($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullpaths);
+  }
   $fh->close;
 
   # Attach blame to all the warnings
@@ -186,7 +208,7 @@ for $br (last_successful_builds($tree)) {
   unlink("$tree/warnings.html");
   my $file_to_link = $warn_file;
   $file_to_link =~ s|^$tree/||;
-  symlink($file_to_link, "$tree/warnings.html");
+  #XXXsymlink($file_to_link, "$tree/warnings.html");
 
   # Add an entry to the warning log
   #
@@ -195,8 +217,6 @@ for $br (last_successful_builds($tree)) {
   print $fh "$log_file|$total_unignored_warnings\n";
   $fh->close;
 
-  last;
-}
 
 # end of main
 # ===================================================================
@@ -270,26 +290,26 @@ sub find_cvs_files {
   $fullpath{"$dir/$file"} = 1;
 }
 
-sub last_successful_builds {
+sub find_build_record {
   my $tree = shift;
+  my $log_file = shift;
   my @build_records = ();
   my $br;
 
   $maxdate = time;
   $mindate = $maxdate - 5*60*60; # Go back 5 hours
-  
+
   print STDERR "Loading build data...";
   tb_load_data();
   print STDERR "done\n";
-  
+
   for (my $ii=1; $ii <= $name_count; $ii++) {
     for (my $tt=1; $tt <= $time_count; $tt++) {
       if (defined($br = $build_table->[$tt][$ii])
-          and $br->{buildstatus} eq 'success') {
-        push @build_records, $br;
-        last;
+          and $br->{logfile} eq $log_file) {
+        return $br;
   } } }
-  return @build_records;
+  return undef;
 }
 
 sub gcc_parser {
@@ -341,6 +361,77 @@ sub gcc_parser {
     }
     my $ignore_it = /$ignore_pat/o;
     unless ($ignore_it) {
+      # Now check if the warning should be ignored based on directory
+      for $ignore_rec (@ignore_dir) {
+        next unless $dir =~ /^$ignore_rec->{dir}/;
+        next unless /$ignore_rec->{warning}/;
+        $ignore_it = 1;
+        last;
+      }
+    }
+    if ($ignore_it) {
+      $warnings{$file}{$line}->{ignorecount}++;
+      $total_ignored_count++;
+    }
+
+    $warnings{$file}{$line}->{count}++;
+    $total_warnings_count++;
+
+    # Do not re-add this warning if it has been seen before
+    for my $rec (@{ $warnings{$file}{$line}->{list} }) {
+      next PARSE_TOP if $rec->{warning_text} eq $warning_text;
+    }
+
+    # Remember where in the build log the warning occured
+    push @{ $warnings{$file}{$line}->{list} }, {
+         log_file        => $log_file,
+         warning_text    => $warning_text,
+         ignore          => $ignore_it,
+    };
+  }
+  warn "debug> $. lines read\n" if $debug;
+}
+
+sub mac_parser {
+  my ($fh, $cvs_root, $tree, $log_file, $file_bases, $file_fullnames) = @_;
+  my $build_dir = '';
+
+  my $ignore_pat = "(?:".join('|',@mac_ignore).")";
+
+ PARSE_TOP: while (<$fh>) {
+    # Now only match lines with "warning:"
+    next unless /^Warning :/;
+#print STDERR "Found a warning: $_";
+    chomp; # Yum, yum
+
+    warn "debug> $_\n" if $debug;
+
+    my ($filename, $line, $warning_text);
+    (undef, $warning_text) = split /:\s*/, $_, 2;
+    $_ = <$fh>;
+    while (not /^\S+ line \d+/) {
+      next PARSE_TOP if /^\S*$/;
+      chomp;
+      $warning_text .= " $_";
+      $_ = <$fh>;
+    }
+    ($filename, undef, $line, undef) = split;
+    
+    # Look up the file name to determine the directory
+    my $dir = '';
+    unless(defined($dir = $file_bases->{$filename})) {
+      $dir = '[no_match]';
+    }
+    my $file = "$dir/$filename";
+
+    # Remember line of first occurrence in the build log
+    unless (defined $warnings{$file}{$line}) {
+      $warnings{$file}{$line}->{first_seen_line} = $.;
+      $warnings{$file}{$line}->{ignorecount} = 0;
+    }
+    $ignore_it = 0;
+    $ignore_it = 1 if $warning_text =~ /^$ignore_pat$/o;
+    if (0) { # unless ($ignore_it) {
       # Now check if the warning should be ignored based on directory
       for $ignore_rec (@ignore_dir) {
         next unless $dir =~ /^$ignore_rec->{dir}/;
