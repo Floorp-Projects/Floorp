@@ -57,10 +57,16 @@ CSRCS = \
 	nsPSMShimLayer.c	\
 	$(NULL)
 
+ 
+ifeq ($(OS_ARCH),OS2)
+PSM_LIBS = -llibcmt -llibprotocol
+else
+PSM_LIBS = -lcmt -lprotocol
+endif
+
 EXTRA_DSO_LDOPTS = \
 	$(MOZ_COMPONENT_LIBS) \
-	-lcmt \
-	-lprotocol \
+	$(PSM_LIBS) \
 	$(MOZ_JS_LIBS) \
 	$(NULL)
 
