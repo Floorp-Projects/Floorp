@@ -95,7 +95,7 @@ function changePasswordSettings()
   internal_token.setAskPasswordDefaults(askTimes, timeout);
 
   var askEveryTimeHidden = document.getElementById("askEveryTimeHidden");
-  askEveryTimeHidden.setAttribute("checked",(radiogroup.value == 1)?"true":"false");
+  askEveryTimeHidden.checked = (radiogroup.value == 1) ? true : false;
 }
 
 function ChangePW()
