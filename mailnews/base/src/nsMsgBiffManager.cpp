@@ -141,9 +141,9 @@ NS_IMETHODIMP nsMsgBiffManager::RemoveServerBiff(nsIMsgIncomingServer *server)
 	PRInt32 pos = FindServer(server);
 	if(pos != -1)
 	{
+		nsBiffEntry *biffEntry = (nsBiffEntry*)mBiffArray->ElementAt(pos);
 		mBiffArray->RemoveElementAt(pos);
-		//Need to release mBiffArray's ref on server.
-		NS_IF_RELEASE(server);
+		delete biffEntry;
 	}
 
 	//Should probably reset biff time if this was the server that gets biffed next.
