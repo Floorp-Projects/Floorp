@@ -126,7 +126,7 @@
 	<key>CFBundleIconFile</key>
 	<string>128</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.mozilla.mozilla</string>
+	<string>org.mozilla.Mozilla</string>
 	<key>CFBundleName</key>
 	<string>Mozilla</string>
 	<key>CFBundlePackageType</key>
