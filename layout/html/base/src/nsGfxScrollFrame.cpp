@@ -1415,7 +1415,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (mHasVerticalScrollbar && mVScrollbarBox) {
     SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY);
     SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(scrollAreaRect.height - fontHeight));
-    SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight, PR_FALSE);
+    SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight);
   }
 
   if (mVScrollbarBox) {
