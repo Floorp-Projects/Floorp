@@ -8,7 +8,6 @@
             Chimera.HelpersPrefPane,
             Chimera.SecurityPrefPane,
             Chimera.AdvancedPrefPane,
-            org.mozilla.chimera.preference.personal
 		); 
 	} 
 )
