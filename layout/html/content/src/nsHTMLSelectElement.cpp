@@ -282,7 +282,7 @@ nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement, nsIDOMHTMLElement* aBefore
   nsresult result;
   nsIDOMNode* ret;
 
-  if (nsnull != aBefore) {
+  if (nsnull == aBefore) {
     result = mInner.AppendChild(aElement, &ret);
     NS_IF_RELEASE(ret);
   }
