@@ -24,11 +24,11 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = ps $(MOZ_GFX_TOOLKIT)
-
 ifeq ($(MOZ_GFX_TOOLKIT),xlib)
-DIRS += xlibrgb
+XLIBRGB_DIRS = xlibrgb
 endif
+
+DIRS = ps $(XLIBRGB_DIRS) $(MOZ_GFX_TOOLKIT)
 
 LIBRARY_NAME = raptorgfx
 
@@ -47,3 +47,6 @@ CPPSRCS=nsColor.cpp nsColorNames.cpp nsColorNamesRGB.cpp nsFont.cpp \
     nsJSRenderingContext.cpp
 
 include $(topsrcdir)/config/rules.mk
+
+caca:
+	@echo $(DIRS)
