@@ -22,7 +22,7 @@
 #include "nsIString.h"
 #include "nsCRT.h"
 
-class nsMarshalingStreamObserver : public nsIStreamObserver
+class nsAsyncStreamObserver : public nsIStreamObserver
 {
 public:
     NS_DECL_ISUPPORTS
@@ -33,14 +33,14 @@ public:
                              nsresult aStatus,
                              nsIString* aMsg);
 
-    // nsMarshalingStreamObserver methods:
-    nsMarshalingStreamObserver(PLEventQueue* aEventQ) 
+    // nsAsyncStreamObserver methods:
+    nsAsyncStreamObserver(PLEventQueue* aEventQ) 
       : mEventQueue(aEventQ), mReceiver(nsnull), mStatus(NS_OK) 
     { 
       NS_INIT_REFCNT();
     }
     
-    virtual ~nsMarshalingStreamObserver();
+    virtual ~nsAsyncStreamObserver();
 
     void Init(nsIStreamObserver* aListener) {
       mReceiver = aListener;
@@ -58,7 +58,7 @@ protected:
 };
 
 
-class nsMarshalingStreamListener : public nsMarshalingStreamObserver,
+class nsAsyncStreamListener : public nsAsyncStreamObserver,
                                    public nsIStreamListener
 {
 public:
@@ -67,14 +67,14 @@ public:
     // nsIStreamListener methods:
     NS_IMETHOD OnStartBinding(nsISupports* context) 
     { 
-      return nsMarshalingStreamObserver::OnStartBinding(context); 
+      return nsAsyncStreamObserver::OnStartBinding(context); 
     }
 
     NS_IMETHOD OnStopBinding(nsISupports* context,
                              nsresult aStatus,
                              nsIString* aMsg) 
     { 
-      return nsMarshalingStreamObserver::OnStopBinding(context, aStatus, aMsg); 
+      return nsAsyncStreamObserver::OnStopBinding(context, aStatus, aMsg); 
     }
 
     NS_IMETHOD OnDataAvailable(nsISupports* context,
@@ -82,9 +82,9 @@ public:
                                PRUint32 aSourceOffset,
                                PRUint32 aLength);
 
-    // nsMarshalingStreamListener methods:
-    nsMarshalingStreamListener(PLEventQueue* aEventQ) 
-      : nsMarshalingStreamObserver(aEventQ) {}
+    // nsAsyncStreamListener methods:
+    nsAsyncStreamListener(PLEventQueue* aEventQ) 
+      : nsAsyncStreamObserver(aEventQ) {}
 
     void Init(nsIStreamListener* aListener) {
       mReceiver = aListener;
@@ -97,7 +97,7 @@ public:
 class nsStreamListenerEvent : public PLEvent 
 {
 public:
-    nsStreamListenerEvent(nsMarshalingStreamObserver* listener,
+    nsStreamListenerEvent(nsAsyncStreamObserver* listener,
                           nsISupports* context);
     virtual ~nsStreamListenerEvent();
 
@@ -109,13 +109,13 @@ protected:
     static void PR_CALLBACK HandlePLEvent(PLEvent* aEvent);
     static void PR_CALLBACK DestroyPLEvent(PLEvent* aEvent);
 
-    nsMarshalingStreamObserver* mListener;
+    nsAsyncStreamObserver* mListener;
     nsISupports*                mContext;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsStreamListenerEvent::nsStreamListenerEvent(nsMarshalingStreamObserver* listener,
+nsStreamListenerEvent::nsStreamListenerEvent(nsAsyncStreamObserver* listener,
                                              nsISupports* context)
     : mListener(listener), mContext(context)
 {
@@ -163,15 +163,15 @@ nsStreamListenerEvent::Fire(PLEventQueue* aEventQueue)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsMarshalingStreamObserver::~nsMarshalingStreamObserver()
+nsAsyncStreamObserver::~nsAsyncStreamObserver()
 {
   NS_RELEASE(mReceiver);
 }
 
-NS_IMPL_ISUPPORTS(nsMarshalingStreamObserver, nsIStreamObserver::GetIID());
+NS_IMPL_ISUPPORTS(nsAsyncStreamObserver, nsIStreamObserver::GetIID());
 
-NS_IMPL_ISUPPORTS_INHERITED(nsMarshalingStreamListener, 
-                            nsMarshalingStreamObserver, 
+NS_IMPL_ISUPPORTS_INHERITED(nsAsyncStreamListener, 
+                            nsAsyncStreamObserver, 
                             nsIStreamListener);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -183,7 +183,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsMarshalingStreamListener,
 class nsOnStartBindingEvent : public nsStreamListenerEvent
 {
 public:
-    nsOnStartBindingEvent(nsMarshalingStreamObserver* listener, 
+    nsOnStartBindingEvent(nsAsyncStreamObserver* listener, 
                           nsISupports* context)
         : nsStreamListenerEvent(listener, context), mContentType(nsnull) {}
     virtual ~nsOnStartBindingEvent();
@@ -208,7 +208,7 @@ nsOnStartBindingEvent::HandleEvent()
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamObserver::OnStartBinding(nsISupports* context)
+nsAsyncStreamObserver::OnStartBinding(nsISupports* context)
 {
     nsresult rv = GetStatus();
     if (NS_FAILED(rv)) return rv;
@@ -236,7 +236,7 @@ nsMarshalingStreamObserver::OnStartBinding(nsISupports* context)
 class nsOnDataAvailableEvent : public nsStreamListenerEvent
 {
 public:
-    nsOnDataAvailableEvent(nsMarshalingStreamObserver* listener, 
+    nsOnDataAvailableEvent(nsAsyncStreamObserver* listener, 
                            nsISupports* context)
         : nsStreamListenerEvent(listener, context),
           mIStream(nsnull), mLength(0) {}
@@ -276,7 +276,7 @@ nsOnDataAvailableEvent::HandleEvent()
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
+nsAsyncStreamListener::OnDataAvailable(nsISupports* context,
                                             nsIInputStream *aIStream, 
                                             PRUint32 aSourceOffset,
                                             PRUint32 aLength)
@@ -309,7 +309,7 @@ nsMarshalingStreamListener::OnDataAvailable(nsISupports* context,
 class nsOnStopBindingEvent : public nsStreamListenerEvent
 {
 public:
-    nsOnStopBindingEvent(nsMarshalingStreamObserver* listener, 
+    nsOnStopBindingEvent(nsAsyncStreamObserver* listener, 
                          nsISupports* context)
         : nsStreamListenerEvent(listener, context),
           mStatus(NS_OK), mMessage(nsnull) {}
@@ -345,7 +345,7 @@ nsOnStopBindingEvent::HandleEvent()
 }
 
 NS_IMETHODIMP 
-nsMarshalingStreamObserver::OnStopBinding(nsISupports* context,
+nsAsyncStreamObserver::OnStopBinding(nsISupports* context,
                                           nsresult aStatus,
                                           nsIString* aMsg)
 {
@@ -375,8 +375,8 @@ NS_NewAsyncStreamObserver(nsIStreamObserver* *result,
                           PLEventQueue* eventQueue,
                           nsIStreamObserver* receiver)
 {
-    nsMarshalingStreamObserver* l =
-        new nsMarshalingStreamObserver(eventQueue);
+    nsAsyncStreamObserver* l =
+        new nsAsyncStreamObserver(eventQueue);
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     l->Init(receiver);
@@ -390,8 +390,8 @@ NS_NewAsyncStreamListener(nsIStreamListener* *result,
                           PLEventQueue* eventQueue,
                           nsIStreamListener* receiver)
 {
-    nsMarshalingStreamListener* l =
-        new nsMarshalingStreamListener(eventQueue);
+    nsAsyncStreamListener* l =
+        new nsAsyncStreamListener(eventQueue);
     if (l == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     l->Init(receiver);
