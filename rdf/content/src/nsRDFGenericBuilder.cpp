@@ -73,7 +73,10 @@
 
 #include "nsIDOMXULDocument.h"
 
-#define	XUL_TEMPLATES	1
+#define	XUL_TEMPLATES			1
+/*
+#define	XUL_TEMPLATES_ASSERTIONS	1
+*/
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -1350,7 +1353,7 @@ RDFGenericBuilderImpl::OnAssert(nsIRDFResource* aSubject,
             rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
             if (NS_FAILED(rv)) return rv;
 
-#ifdef XUL_TEMPLATES
+#ifdef XUL_TEMPLATES_ASSERTIONS
 		nsAutoString	templateID;
 		if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None,
 			kTreeTemplateAtom, templateID)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
@@ -1572,7 +1575,7 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
             rv = mDB->GetTarget(aSubject, aPredicate, PR_TRUE, getter_AddRefs(target));
             if (NS_FAILED(rv)) return rv;
 
-#ifdef XUL_TEMPLATES
+#ifdef XUL_TEMPLATES_ASSERTIONS
 		nsAutoString	templateID;
 		if (NS_SUCCEEDED(rv = element->GetAttribute(kNameSpaceID_None,
 			kTreeTemplateAtom, templateID)) && (rv == NS_CONTENT_ATTR_HAS_VALUE))
