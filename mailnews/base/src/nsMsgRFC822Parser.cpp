@@ -53,9 +53,9 @@ char *INTL_Strstr(int16 charSetID, const char *s1, const char *s2)
 
 #define COPY_CHAR(_CSID,_D,_S)      do { if (!_S || !*_S) { *_D++ = 0; }\
                                          else { int _LEN = INTL_CharLen(_CSID,(unsigned char *)_S);\
-                                                XP_MEMCPY(_D,_S,_LEN); _D += _LEN; } } while (0)
+                                                nsCRT::memcpy(_D,_S,_LEN); _D += _LEN; } } while (0)
 #define NEXT_CHAR(_CSID,_STR)       (_STR += MAX(1,INTL_CharLen(_CSID,(unsigned char *)_STR)))
-#define TRIM_WHITESPACE(_S,_E,_T)   do { while (_E > _S && XP_IS_SPACE(_E[-1])) _E--;\
+#define TRIM_WHITESPACE(_S,_E,_T)   do { while (_E > _S && IS_SPACE(_E[-1])) _E--;\
                                          *_E++ = _T; } while (0)
 
 /*
@@ -336,7 +336,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
   
 	/* Skip over extra whitespace or commas before addresses.
 	 */
-	while (*line_end && (XP_IS_SPACE(*line_end) || *line_end == ','))
+	while (*line_end && (IS_SPACE(*line_end) || *line_end == ','))
 		NEXT_CHAR(csid, line_end);
 
 	while (*line_end)
@@ -427,12 +427,12 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 					/* Push out some whitespace before the paren, if
 					 * there is non-whitespace there already.
 					 */
-					if (name_out > name_start && !XP_IS_SPACE(name_out [-1]))
+					if (name_out > name_start && !IS_SPACE(name_out [-1]))
 						*name_out++ = ' ';
 
 					/* Skip leading whitespace.
 					 */
-					while (XP_IS_SPACE(*s) && s < line_end)
+					while (IS_SPACE(*s) && s < line_end)
 						s++;
 
 					while (s < line_end)
@@ -448,7 +448,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 						if (*s == '\\')	/* remove one \ */
 							s++;
 
-						if (XP_IS_SPACE(*s) && name_out > name_start && XP_IS_SPACE(name_out[-1]))
+						if (IS_SPACE(*s) && name_out > name_start && IS_SPACE(name_out[-1]))
 							/* collapse consecutive whitespace */;
 						else
 							COPY_CHAR(csid, name_out, s);
@@ -468,8 +468,8 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 					/* Eat whitespace at the beginning of the line,
 					 * and eat consecutive whitespace within the line.
 					 */
-					if (   XP_IS_SPACE(*line_end)
-					    && (addr_out == addr_start || XP_IS_SPACE(addr_out[-1])))
+					if (   IS_SPACE(*line_end)
+					    && (addr_out == addr_start || IS_SPACE(addr_out[-1])))
 						/* skip it */;
 					else
 						COPY_CHAR(csid, addr_out, line_end);
@@ -508,7 +508,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 
 			/* Skip leading whitespace.
 			 */
-			while (XP_IS_SPACE(*s) && s < mailbox_start)
+			while (IS_SPACE(*s) && s < mailbox_start)
 				s++;
 
 			/* Copy up to (not including) the <
@@ -527,7 +527,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 					else
 						s++;
 				}
-				if (XP_IS_SPACE(*s) && name_out > name_start && XP_IS_SPACE(name_out[-1]))
+				if (IS_SPACE(*s) && name_out > name_start && IS_SPACE(name_out[-1]))
 					/* collapse consecutive whitespace */;
 				else
 					COPY_CHAR(csid, name_out, s);
@@ -542,7 +542,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 
 			/* Skip whitespace after >
 			 */
-			while (XP_IS_SPACE(*s) && s < line_end)
+			while (IS_SPACE(*s) && s < line_end)
 				s++;
 
 			/* Copy from just after > to the end.
@@ -561,7 +561,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 					else
 						s++;
 				}
-				if (XP_IS_SPACE (*s) && name_out > name_start && XP_IS_SPACE (name_out[-1]))
+				if (IS_SPACE (*s) && name_out > name_start && IS_SPACE (name_out[-1]))
 					/* collapse consecutive whitespace */;
 				else
 					COPY_CHAR(csid, name_out, s);
@@ -579,7 +579,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 
 			/* Skip leading whitespace.
 			 */
-			while (XP_IS_SPACE(*s) && s < mailbox_end)
+			while (IS_SPACE(*s) && s < mailbox_end)
 				s++;
 
 			/* Copy up to (not including) the >
@@ -625,7 +625,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 				{
 					if (*s == '\\')
 						s++;
-					else if (!space && XP_IS_SPACE(*s))
+					else if (!space && IS_SPACE(*s))
 						space = s;
 					else if (*s == '\"')
 					{
@@ -639,7 +639,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 					{
 						if (*s == '\\')
 							s++;
-						else if (XP_IS_SPACE(*s))
+						else if (IS_SPACE(*s))
 						{
 							*s = 0;
 							*name_out++ = 0;
@@ -677,7 +677,7 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 			NEXT_CHAR(csid, line_end);
 
 		/* Skip over extra whitespace or commas between addresses. */
-		while (*line_end && (XP_IS_SPACE(*line_end) || *line_end == ','))
+		while (*line_end && (IS_SPACE(*line_end) || *line_end == ','))
 			line_end++;
 
 		this_start = line_end;
@@ -691,10 +691,10 @@ static int msg_parse_rfc822_addresses (PRInt16 csid, const char *line, char **na
 	{
 		char *s;
 		for (s = name_buf; s < name_out; NEXT_CHAR(csid, s))
-			if (XP_IS_SPACE(*s) && *s != ' ')
+			if (IS_SPACE(*s) && *s != ' ')
 				*s = ' ';
 		for (s = addr_buf; s < addr_out; NEXT_CHAR(csid, s))
-			if (XP_IS_SPACE(*s) && *s != ' ')
+			if (IS_SPACE(*s) && *s != ' ')
 				*s = ' ';
 	}
 
@@ -745,7 +745,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
 				address = in;
 				break;
 			}
-			else if (!XP_IS_DIGIT(*in) && !XP_IS_ALPHA(*in) && *in != '@' && *in != '.')
+			else if (!IS_DIGIT(*in) && !IS_ALPHA(*in) && *in != '@' && *in != '.')
 				break;
 		}
 	}
@@ -889,7 +889,7 @@ msg_quote_phrase_or_addr(PRInt16 csid, char *address, PRInt32 length, PRBool add
 	*out++ = 0;
 
 	NS_ASSERTION(new_length == (out - orig_out), "");
-	XP_MEMCPY(address, orig_out, new_length);
+	nsCRT::memcpy(address, orig_out, new_length);
 	PR_FREEIF(orig_out); /* make sure we release the string we allocated */
 
     return full_length + unquotable_count + 2;
@@ -981,7 +981,7 @@ msg_extract_rfc822_address_mailboxes(PRInt16 csid, const char *line)
 	for (i = 0; (int)i < status; i++)
 	{
 		PRUint32 j = PL_strlen(s);
-		XP_MEMCPY(out, s, j);
+		nsCRT::memcpy(out, s, j);
 		out += j;
 		if ((int)(i+1) < status)
 		{
@@ -1046,12 +1046,12 @@ msg_extract_rfc822_address_names(PRInt16 csid, const char *line)
 
 		if (j1)
 		{
-			XP_MEMCPY(out, s1, j1);
+			nsCRT::memcpy(out, s1, j1);
 			out += j1;
 		}
 		else
 		{
-			XP_MEMCPY(out, s2, j2);
+			nsCRT::memcpy(out, s2, j2);
 			out += j2;
 		}
 
@@ -1155,12 +1155,12 @@ msg_format_rfc822_addresses (const char *names, const char *addrs,
 
 		if (j1)
 		{
-			XP_MEMCPY(out, s1, j1);
+			nsCRT::memcpy(out, s1, j1);
 			out += j1;
 			*out++ = ' ';
 			*out++ = '<';
 		}
-		XP_MEMCPY(out, s2, j2);
+		nsCRT::memcpy(out, s2, j2);
 		out += j2;
 		if (j1)
 			*out++ = '>';
@@ -1416,6 +1416,6 @@ msg_make_full_address(PRInt16 csid, const char* name, const char* addr)
 		*s++ = '>';
 	*s = 0;
 	L = (s - buf) + 1;
-	buf = (char *)XP_REALLOC (buf, L);
+	buf = (char *)PR_Realloc (buf, L);
 	return buf;
 }
