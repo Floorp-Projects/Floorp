@@ -278,22 +278,24 @@ nsLDAPDataSource.prototype = {
 		  "\n\t" + aProperty.Value + "\n\t" + aTruthValue + "\n\n");
 	 }
 
-	 var url = Components.classes["mozilla.network.ldapurl"]
+	 var url = Components.classes["@mozilla.org/network/ldap-url;1"]
 	                        .getService(Components.interfaces.nsILDAPURL);
 	 url.spec = aSource.Value;
 	 
 	 // get a connection object
 	 //
 	 var connection = Components.classes
-	                   ["mozilla.network.ldapconnection"].createInstance(
-			   Components.interfaces.nsILDAPConnection);
+	                   ["@mozilla.org/network/ldap-connection;1"].
+	                   createInstance(
+		           Components.interfaces.nsILDAPConnection);
 	 connection.init(url.host, url.port, null);
 
 	 // get and initialize an operation object
 	 //
-	 var operation = Components.classes["mozilla.network.ldapoperation"].
-	                     createInstance(Components.interfaces.
-					    nsILDAPOperation);
+	 var operation = Components.classes
+	                  ["@mozilla.org/network/ldap-operation;1"].
+	                  createInstance(Components.interfaces.
+					 nsILDAPOperation);
 	 operation.init(connection, generateGetTargetsBoundCallback());
 
 	 // bind to the server.  we'll get a callback when this finishes.
