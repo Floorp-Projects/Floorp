@@ -83,13 +83,13 @@ nss_build_all:
 	$(MAKE)
 
 build_coreconf:
-	(cd $(CORE_DEPTH)/coreconf ;  $(MAKE))
+	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
 
 build_nspr:
-	(cd $(CORE_DEPTH)/../nsprpub ; $(MAKE) OBJDIR_NAME=${OBJDIR_NAME} )
+	cd $(CORE_DEPTH)/../nsprpub ; $(MAKE) OBJDIR_NAME=${OBJDIR_NAME} 
 
 build_dbm:
-	(cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs)
+	cd $(CORE_DEPTH)/dbm ; $(MAKE) export libs
 
 	
 
