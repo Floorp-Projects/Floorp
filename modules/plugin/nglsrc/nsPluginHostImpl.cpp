@@ -49,6 +49,9 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsILocale.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectOwner.h"
+#include "nsIPrincipal.h"
 
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"
@@ -2738,6 +2741,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
   // get the full URL of the document that the plugin is embedded
   //   in to create an absolute url in case aURL is relative
+  nsCOMPtr<nsIDocument> doc;
   nsPluginInstancePeerImpl *peer;
   rv = aInstance->GetPeer(NS_REINTERPRET_CAST(nsIPluginInstancePeer **, &peer));
   if (NS_SUCCEEDED(rv))
@@ -2746,7 +2750,6 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
     rv = peer->GetOwner(*getter_AddRefs(owner));
     if (NS_SUCCEEDED(rv))
     {
-      nsCOMPtr<nsIDocument> doc;
       rv = owner->GetDocument(getter_AddRefs(doc));
       if (NS_SUCCEEDED(rv))
       {
@@ -2774,8 +2777,37 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
     rv = listenerPeer->Initialize(url, aInstance, aListener);
 
     if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIInterfaceRequestor> callbacks;
+
+      if (doc) {
+        // Get the script global object owner and use that as the notification callback
+        nsCOMPtr<nsIScriptGlobalObject> global;
+        doc->GetScriptGlobalObject(getter_AddRefs(global));
+
+        if (global) {
+          nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
+          global->GetGlobalObjectOwner(getter_AddRefs(owner));
+
+          callbacks = do_QueryInterface(owner);
+        }
+      }
+
+      nsCOMPtr<nsIChannel> channel;
+
       // XXX: Null LoadGroup?
-      rv = NS_OpenURI(listenerPeer, nsnull, url, nsnull);
+      rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull,
+                      nsnull, callbacks);
+      if (NS_FAILED(rv)) return rv;
+
+      if (doc) {
+        // Set the owner of channel to the document principal...
+        nsCOMPtr<nsIPrincipal> principal;
+        doc->GetPrincipal(getter_AddRefs(principal));
+
+        channel->SetOwner(principal);
+      }
+
+      rv = channel->AsyncRead(listenerPeer, nsnull);
     }
     NS_RELEASE(listenerPeer);
   }
