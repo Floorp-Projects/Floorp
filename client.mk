@@ -404,7 +404,7 @@ ifdef RUN_AUTOCONF_LOCALLY
 	@echo "Removing local configures" ; \
 	cd $(ROOTDIR) && \
 	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/ldap/configure
+		mozilla/directory/c-sdk/configure
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
@@ -444,7 +444,7 @@ ifdef RUN_AUTOCONF_LOCALLY
 	@echo Generating configures using $(AUTOCONF) ; \
 	cd $(TOPSRCDIR) && $(AUTOCONF) && \
 	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/directory/c-sdk/ldap && $(AUTOCONF)
+	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
 endif
 
 fast-update:
@@ -457,7 +457,7 @@ ifdef RUN_AUTOCONF_LOCALLY
 	@echo "Removing local configures" ; \
 	cd $(ROOTDIR) && \
 	$(RM) -f mozilla/configure mozilla/nsprpub/configure \
-		mozilla/directory/c-sdk/ldap/configure
+		mozilla/directory/c-sdk/configure
 endif
 	@echo "checkout start: "`date` | tee $(CVSCO_LOGFILE)
 	@echo '$(CVSCO) mozilla/client.mk mozilla/build/unix/modules.mk'; \
@@ -504,7 +504,7 @@ ifdef RUN_AUTOCONF_LOCALLY
 	@echo Generating configures using $(AUTOCONF) ; \
 	cd $(TOPSRCDIR) && $(AUTOCONF) && \
 	cd $(TOPSRCDIR)/nsprpub && $(AUTOCONF) && \
-	cd $(TOPSRCDIR)/directory/c-sdk/ldap && $(AUTOCONF)
+	cd $(TOPSRCDIR)/directory/c-sdk && $(AUTOCONF)
 endif
 
 ####################################
@@ -564,7 +564,7 @@ CONFIG_STATUS_DEPS := \
 	$(TOPSRCDIR)/allmakefiles.sh \
 	$(TOPSRCDIR)/.mozconfig.mk \
 	$(wildcard $(TOPSRCDIR)/nsprpub/configure) \
-	$(wildcard $(TOPSRCDIR)/directory/c-sdk/ldap/configure) \
+	$(wildcard $(TOPSRCDIR)/directory/c-sdk/configure) \
 	$(wildcard $(TOPSRCDIR)/mailnews/makefiles) \
 	$(CONFIG_STATUS_DEPS_L10N) \
 	$(wildcard $(TOPSRCDIR)/themes/makefiles) \
