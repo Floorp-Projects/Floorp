@@ -104,7 +104,7 @@ JSValStorageStatementBinder (JSContext *cx,
         aStatement->BindDoubleParameter(aParamIndex, d);
     } else if (JSVAL_IS_STRING(val)) {
         JSString *str = JSVAL_TO_STRING(val);
-        aStatement->BindWStringParameter(aParamIndex, NS_STATIC_CAST(PRUnichar*, JS_GetStringChars(str)));
+        aStatement->BindWStringParameter(aParamIndex, NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str)));
     } else if (JSVAL_IS_BOOLEAN(val)) {
         if (val == JSVAL_TRUE) {
             aStatement->BindInt32Parameter(aParamIndex, 1);
