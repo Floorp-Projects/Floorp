@@ -75,7 +75,8 @@ public:
 
 	nsresult				SetSourceMailbox(nsOfflineImapOperation *op, const char *mailbox, nsMsgKey key);
 	
-    NS_IMETHOD				SetSummaryValid(PRBool valid);
+  NS_IMETHOD  SetSummaryValid(PRBool valid);
+  NS_IMETHOD  GetSummaryValid(PRBool *valid);
 	
   NS_IMETHOD    EnumerateOfflineOps(nsISimpleEnumerator **enumerator);
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);

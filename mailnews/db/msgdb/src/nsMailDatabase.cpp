@@ -131,27 +131,11 @@ NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBo
       // can pull out the transfer info for the new db.
       if (!newFile && summaryFileExists && !upgrading)
       {
-        PRInt32 numNewMessages;
-        PRUint32 folderSize;
-        PRUint32  folderDate;
-        nsFileSpec::TimeStamp actualFolderTimeStamp;
-        
-        mailDB->m_folderSpec->GetModDate(actualFolderTimeStamp) ;
-        
-        
-        folderInfo->GetNumNewMessages(&numNewMessages);
-        folderInfo->GetFolderSize(&folderSize);
-        folderInfo->GetFolderDate(&folderDate);
-        if (folderSize != mailDB->m_folderSpec->GetFileSize()||
-          folderDate != actualFolderTimeStamp ||
-          numNewMessages < 0)
+        PRBool valid;
+        mailDB->GetSummaryValid(&valid);
+        if (!valid)
           err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
       }
-      // compare current version of db versus filed out version info.
-      PRUint32 version;
-      folderInfo->GetVersion(&version);
-      if (mailDB->GetCurVersion() != version)
-        err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
       NS_RELEASE(folderInfo);
     }
     if (err != NS_OK)
@@ -458,7 +442,39 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
       *ppFileStream = fileStream; // This tells the caller that we opened the file, and please to close it.
 }
 
-/* static */  nsresult nsMailDatabase::SetSummaryValid(PRBool valid)
+NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  PRUint32 folderSize;
+  PRUint32  folderDate;
+  nsFileSpec::TimeStamp actualFolderTimeStamp;
+  PRInt32 numNewMessages;
+        
+  
+  if (m_folderSpec && m_dbFolderInfo)
+  {
+    m_folderSpec->GetModDate(actualFolderTimeStamp) ;
+  
+    m_dbFolderInfo->GetNumNewMessages(&numNewMessages);
+    m_dbFolderInfo->GetFolderSize(&folderSize);
+    m_dbFolderInfo->GetFolderDate(&folderDate);
+
+    // compare current version of db versus filed out version info.
+    PRUint32 version;
+    m_dbFolderInfo->GetVersion(&version);
+    if (folderSize == m_folderSpec->GetFileSize() &&
+      folderDate == actualFolderTimeStamp &&
+        numNewMessages >= 0 && GetCurVersion() == version)
+    {
+      *aResult = PR_TRUE;
+      return NS_OK;
+    }
+  }
+  *aResult = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsMailDatabase::SetSummaryValid(PRBool valid)
 {
   nsresult ret = NS_OK;
   

@@ -177,9 +177,9 @@ NS_IMETHODIMP nsImapMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, 
 
 NS_IMETHODIMP	nsImapMailDatabase::SetSummaryValid(PRBool /* valid */)
 {
-	return NS_OK;
+  return NS_OK;
 }
-	
+
 // IMAP does not set local file flags, override does nothing
 void	nsImapMailDatabase::UpdateFolderFlag(nsIMsgDBHdr * /* msgHdr */, PRBool /* bSet */, 
 									 MsgFlags /* flag */, nsIOFileStream ** /* ppFileStream */)

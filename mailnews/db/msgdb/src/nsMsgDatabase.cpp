@@ -3178,6 +3178,15 @@ NS_IMETHODIMP nsMsgDatabase::SetSummaryValid(PRBool valid /* = PR_TRUE */)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP	nsMsgDatabase::GetSummaryValid(PRBool *aResult)
+{
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+	
+
 // protected routines
 
 nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, nsMsgThread **pnewThread)

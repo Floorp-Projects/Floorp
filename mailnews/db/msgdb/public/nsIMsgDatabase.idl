@@ -236,7 +236,9 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   // used mainly to force the timestamp of a local mail folder db to
   // match the time stamp of the corresponding berkeley mail folder,
   // but also useful to tell the summary to mark itself invalid
-  void SetSummaryValid(in boolean valid);
+  // Also, if a local folder is being reparsed, summary will be invalid
+  // until the reparsing is done.
+  attribute boolean summaryValid;
 
   // batching - can be used to cache file stream for local mail,
   // and perhaps to use the mdb batching mechanism as well.
