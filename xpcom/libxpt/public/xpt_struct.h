@@ -96,6 +96,14 @@ struct XPTHeader {
 XPTHeader *
 XPT_NewHeader(uint32 num_interfaces);
 
+/* size of header and annotations */
+uint32
+XPT_SizeOfHeader(XPTHeader *header);
+
+/* size of header and annotations and InterfaceDirectoryEntries */
+uint32
+XPT_SizeOfHeaderBlock(XPTHeader *header);
+
 /*
  * A contiguous array of fixed-size InterfaceDirectoryEntry records begins at 
  * the byte offset identified by the interface_directory field in the file 
