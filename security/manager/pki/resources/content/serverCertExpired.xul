@@ -22,7 +22,7 @@
 
 <window id="serverCertExpired"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  width="300"
+  style="width: 30em;"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

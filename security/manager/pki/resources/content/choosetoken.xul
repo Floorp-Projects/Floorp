@@ -31,8 +31,7 @@
 
 <window id="ssl_warning" title="&chooseToken.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"      
-  height="360"
-  width="400"
+  style="width: 40em;"
   onload="onLoad();">
 
 <script type="application/x-javascript" src="chrome://global/content/strres.js"/>

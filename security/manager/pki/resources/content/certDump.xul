@@ -38,7 +38,7 @@
     </treecolgroup>
     <treechildren id="chainDump"/>
   </tree>
-  <outliner id="prettyDumpOutliner" class="inset" style="height:150px"
+  <outliner id="prettyDumpOutliner" class="inset" style="height: 15em"
             onselect="displaySelected();">
     <outlinercols>
       <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;"

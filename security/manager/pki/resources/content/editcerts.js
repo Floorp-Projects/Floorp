@@ -69,16 +69,6 @@ function setWindowName()
   } else {
     objsign.setAttribute("checked", "false");
   }
-
-  var xulWindow = document.getElementById("editCaCert");
-  var wdth = window.innerWidth; // THIS IS NEEDED,
-  window.sizeToContent();
-  xulWindow.setAttribute("width",window.innerWidth + 30);
-  var hght = window.innerHeight; // THIS IS NEEDED,
-  window.sizeToContent();
-  xulWindow.setAttribute("height",window.innerHeight + 70);
-  
-
 }
 
 function doOK()
@@ -144,15 +134,6 @@ function doLoadForSSLCert()
   } else {
     trustssl.radioGroup.selectedItem = notrustssl;
   }
-
-  var xulWindow = document.getElementById("editWebsiteCert");
-  var wdth = window.innerWidth; // THIS IS NEEDED,
-  window.sizeToContent();
-  xulWindow.setAttribute("width",window.innerWidth + 30);
-  var hght = window.innerHeight; // THIS IS NEEDED,
-  window.sizeToContent();
-  xulWindow.setAttribute("height",window.innerHeight + 70);
-
 }
 
 function doSSLOK()
