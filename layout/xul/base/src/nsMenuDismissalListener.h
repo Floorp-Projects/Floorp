@@ -29,6 +29,7 @@
 #include "nsIRollupListener.h"
 #include "nsIMenuRollup.h"
 #include "nsIDOMEventReceiver.h"
+#include "nsCOMPtr.h"
 
 class nsMenuPopupFrame;
 class nsIPresContext;
@@ -66,7 +67,7 @@ public:
   
 protected:
   nsIMenuParent* mMenuParent;
-  nsIWidget* mWidget;
+  nsCOMPtr<nsIWidget> mWidget;
   PRBool mEnabled;
 };
 

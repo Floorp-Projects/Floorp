@@ -38,7 +38,7 @@ NS_IMPL_QUERY_INTERFACE3(nsMenuDismissalListener, nsIDOMMouseListener, nsIMenuRo
 ////////////////////////////////////////////////////////////////////////
 
 nsMenuDismissalListener::nsMenuDismissalListener() :
-  mWidget(0), mEnabled(PR_TRUE)
+  mEnabled(PR_TRUE)
 {
   NS_INIT_REFCNT();
   mMenuParent = nsnull;
@@ -162,8 +162,10 @@ nsMenuDismissalListener::NextMenuParent(nsIMenuParent * inCurrent, nsIMenuParent
 NS_IMETHODIMP
 nsMenuDismissalListener::Unregister()
 {
-  if (mWidget)
-    mWidget->CaptureRollupEvents(this, PR_FALSE, PR_FALSE);    
+  if (mWidget) {
+    mWidget->CaptureRollupEvents(this, PR_FALSE, PR_FALSE);
+    mWidget = nsnull;
+  }
   
   NS_RELEASE(nsMenuFrame::mDismissalListener);
   return NS_OK;
