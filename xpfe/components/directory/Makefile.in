@@ -35,9 +35,6 @@ XPIDLSRCS	= nsIHTTPIndex.idl
 CPPSRCS		= nsDirectoryViewer.cpp
 
 CHROME_DIR	= directory
-CHROME_CONTENT_DIR = content/default
-CHROME_SKIN_DIR	= skin/default
-CHROME_SOURCE_DIR = $(srcdir)
 
 CHROME_CONTENT	= \
 		directory.xul \
@@ -46,7 +43,7 @@ CHROME_CONTENT	= \
 
 CHROME_SKIN	= directory.css
 
-CHROME_L10N	= ./locale/en-US/directory.dtd
+CHROME_L10N	= locale/en-US/directory.dtd
 
 EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
