@@ -91,16 +91,14 @@ public:
 
   CSharedParserObjects() : mDTDDeque(0) {
 
+    //Note: To cut down on startup time/overhead, we defer the construction of non-html DTD's. 
+
     nsIDTD* theDTD;
-
-    NS_NewWellFormed_DTD(&theDTD);
-    mDTDDeque.Push(theDTD);
-
     NS_NewNavHTMLDTD(&theDTD);    //do this as the default HTML DTD...
     mDTDDeque.Push(theDTD);
 
-    NS_NewViewSourceHTML(&theDTD);  //do this so all html files can be viewed...
-    mDTDDeque.Push(theDTD);
+    mHasViewSourceDTD=PR_FALSE;
+    mHasXMLDTD=PR_FALSE;
   }
 
   ~CSharedParserObjects() {
@@ -122,6 +120,8 @@ public:
   }
   
   nsDeque mDTDDeque;
+  PRBool  mHasViewSourceDTD;  //this allows us to defer construction of this object.
+  PRBool  mHasXMLDTD;         //also defer XML dtd construction
 };
 
 static CSharedParserObjects* gSharedParserObjects=0;
@@ -414,28 +414,39 @@ eParseMode nsParser::GetParseMode(void){
  */
 static
 PRBool FindSuitableDTD( CParserContext& aParserContext,nsString& aCommand,nsString& aBuffer) {
-
-    //Let's start by tring the defaultDTD, if one exists...
+  
+  //Let's start by trying the defaultDTD, if one exists...
   if(aParserContext.mDTD)
     if(aParserContext.mDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0))
       return PR_TRUE;
 
   CSharedParserObjects& gSharedObjects=GetSharedObjects();
-  nsDequeIterator b=gSharedObjects.mDTDDeque.Begin(); 
-  nsDequeIterator e=gSharedObjects.mDTDDeque.End(); 
 
   aParserContext.mAutoDetectStatus=eUnknownDetect;
+  PRInt32 theDTDIndex=0;
   nsIDTD* theBestDTD=0;
-  while((b<e) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
-    nsIDTD* theDTD=(nsIDTD*)b.GetCurrent();
-    if(theDTD) {
+  nsIDTD* theDTD=0;
+
+  while((theDTDIndex<=gSharedObjects.mDTDDeque.GetSize()) && (aParserContext.mAutoDetectStatus!=ePrimaryDetect)){
+    if(theDTD=(nsIDTD*)gSharedObjects.mDTDDeque.ObjectAt(theDTDIndex++)) {
       aParserContext.mAutoDetectStatus=theDTD->CanParse(aParserContext.mSourceType,aCommand,aBuffer,0);
       if((eValidDetect==aParserContext.mAutoDetectStatus) || (ePrimaryDetect==aParserContext.mAutoDetectStatus)) {
         theBestDTD=theDTD;
       }
     }
-    b++;
-  } 
+    if((theDTDIndex==gSharedObjects.mDTDDeque.GetSize()) && (!theBestDTD)) {
+      if(!gSharedObjects.mHasXMLDTD) {
+        NS_NewWellFormed_DTD(&theDTD);  //do this to view XML files...
+        gSharedObjects.mDTDDeque.Push(theDTD);
+        gSharedObjects.mHasXMLDTD=PR_TRUE;
+      }
+      else if(!gSharedObjects.mHasViewSourceDTD) {
+        NS_NewViewSourceHTML(&theDTD);  //do this so all non-html files can be viewed...
+        gSharedObjects.mDTDDeque.Push(theDTD);
+        gSharedObjects.mHasViewSourceDTD=PR_TRUE;
+      }
+    }
+  }
 
   if(theBestDTD) {
     theBestDTD->CreateNewInstance(&aParserContext.mDTD);
