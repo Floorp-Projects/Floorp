@@ -56,6 +56,12 @@ SHARED_LIBRARY_LIBS = \
 		$(DIST)/lib/libraptorlayout_s.a \
 		$(NULL)
 
+ifdef MOZ_PERF
+SHARED_LIBRARY_LIBS += \
+		$(DIST)/lib/libmozutil_s.a \
+		$(NULL)
+endif
+
 ifdef MOZ_MATHML
 SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/libraptormathmlcontent_s.a \

@@ -38,6 +38,11 @@ EXTRA_DSO_LDOPTS = \
 		-L$(DIST)/bin \
 		-ljsdom \
 		$(NULL)
+ifdef MOZ_PERF
+EXTRA_DSO_LDOPTS += \
+		$(DIST)/lib/libmozutil_s.a \
+		$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 

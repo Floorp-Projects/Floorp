@@ -109,6 +109,11 @@ EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/libexpat_s.a \
 		$(DIST)/lib/libxmltok_s.a \
 		$(NULL)
+ifdef MOZ_PERF
+EXTRA_DSO_LDOPTS += \
+		$(DIST)/lib/libmozutil_s.a \
+		$(NULL)
+endif
 
 include $(topsrcdir)/config/rules.mk
 
