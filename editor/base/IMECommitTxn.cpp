@@ -52,7 +52,7 @@ NS_IMETHODIMP IMECommitTxn::Init(void)
 
 NS_IMETHODIMP IMECommitTxn::Do(void)
 {
-#ifdef DEBUG_tague
+#if  defined(DEBUG_tague) || defined(DEBUG_ftang)
 	printf("Do IME Commit");
 #endif
 
@@ -61,7 +61,7 @@ NS_IMETHODIMP IMECommitTxn::Do(void)
 
 NS_IMETHODIMP IMECommitTxn::Undo(void)
 {
-#ifdef DEBUG_TAGUE
+#if  defined(DEBUG_TAGUE) || defined(DEBUG_ftang)
 	printf("Undo IME Commit");
 #endif
 	
@@ -70,7 +70,7 @@ NS_IMETHODIMP IMECommitTxn::Undo(void)
 
 NS_IMETHODIMP IMECommitTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
-#ifdef DEBUG_TAGUE
+#if  defined(DEBUG_TAGUE) || defined(DEBUG_ftang)
 	printf("Merge IME Commit");
 #endif
 
