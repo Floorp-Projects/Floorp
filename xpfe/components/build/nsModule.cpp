@@ -52,6 +52,7 @@
 #include "nsCharsetMenu.h"
 #include "nsFontPackageHandler.h"
 #if defined(XP_WIN)
+#include "nsAlertsService.h" 
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
@@ -75,6 +76,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 #if defined(XP_WIN)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
@@ -171,7 +173,7 @@ static const nsModuleComponentInfo components[] = {
       NS_INTERNETSEARCH_DATASOURCE_CONTRACTID, InternetSearchDataSourceConstructor },
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
 	  RelatedLinksHandlerImplConstructor},
-	{ "Netscape TimeBomb", NS_TIMEBOMB_CID, NS_TIMEBOMB_CONTRACTID, nsTimeBombConstructor},
+    { "Netscape TimeBomb", NS_TIMEBOMB_CID, NS_TIMEBOMB_CONTRACTID, nsTimeBombConstructor},
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
@@ -185,6 +187,7 @@ static const nsModuleComponentInfo components[] = {
 #if defined(XP_WIN)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
       nsUrlWidgetConstructor },
+    { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },
 #endif // Windows

@@ -44,6 +44,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  downloadmanager \
+                  alerts\
       uriloader \
       webbrowserpersist \
       progressDlg \
@@ -93,11 +94,13 @@ DEFINES		+= -DWIN32_LEAN_AND_MEAN
 SHARED_LIBRARY_LIBS += \
 	$(DIST)/lib/$(LIB_PREFIX)urlwidgt_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+        $(DIST)/lib/$(LIB_PREFIX)alerts_s.$(LIB_SUFFIX) \
 	$(NULL)
 OS_LIBS		+= ole32.lib shell32.lib
 LOCAL_INCLUDES	+= \
 	-I$(srcdir)/../urlwidget \
 	-I$(srcdir)/../winhooks \
+        -I$(srcdir)/../alerts/src \
 	$(NULL)
 endif
 
