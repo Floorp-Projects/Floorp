@@ -31,6 +31,8 @@
 #include <photon/Pg.h>
 #include <Pt.h>
 
+#define PRINTF printf
+
 static nsNativeViewerApp* gTheApp;
 
 nsNativeViewerApp::nsNativeViewerApp()
@@ -44,7 +46,7 @@ nsNativeViewerApp::~nsNativeViewerApp()
 int
 nsNativeViewerApp::Run()
 {
-  printf( ">>> nsViewerApp::Run() <<<\n" );
+  PRINTF( ">>> nsViewerApp::Run() <<<\n" );
   OpenWindow();
   mAppShell->Run();
   return 0;
@@ -79,25 +81,17 @@ extern void  CreateViewerMenus(PtWidget_t*, void *);
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
-  nsIMenuBar  * menubar  = nsnull;
-  void *PhMenuBar;
+  PtWidget_t *mMenuBar= nsnull;
+  void        *voidData;
 
-  /* Create the MenuBar */
-  nsComponentManager::CreateInstance( kMenuBarCID, nsnull, kIMenuBarIID, (void**)&menubar );
-  if( menubar )
+  voidData = mWindow->GetNativeData(NS_NATIVE_WINDOW);
+  mMenuBar = PtCreateWidget( PtMenuBar, (PtWidget_t *) voidData , 0, NULL);
+
+  if (mMenuBar)
   {
-    menubar->Create( mWindow );
-
-    // REVISIT - strange problem here. May be a race condition or a compiler bug.
-
-    if( mWindow->SetMenuBar( menubar ) == NS_OK )
-    {
       mWindow->ShowMenuBar( PR_TRUE );
-      menubar->GetNativeData(PhMenuBar);
-      ::CreateViewerMenus((PtWidget_t *) PhMenuBar,this);
-    }
+      ::CreateViewerMenus(mMenuBar,this);
   }
-
   return NS_OK;
 }
 
@@ -106,7 +100,7 @@ nsNativeBrowserWindow::GetMenuBarHeight(PRInt32 * aHeightOut)
 {
   NS_ASSERTION(nsnull != aHeightOut,"null out param.");
 
-  *aHeightOut = 0;
+  *aHeightOut = 31;
 
   return NS_OK;
 }
