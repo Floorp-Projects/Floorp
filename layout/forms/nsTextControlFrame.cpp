@@ -1598,11 +1598,14 @@ nsTextControlFrame::InitEditor()
   return NS_OK;
 }
 
+// XXXldb I'm not sure if we really want the 'text-decoration: inherit',
+// but it's needed to make 'text-decoration' "work" on text inputs.
 #define DIV_STRING \
   "-moz-user-focus: none;" \
   "border: 0px !important;" \
   "padding: 0px;" \
   "margin: 0px;" \
+  "text-decoration: inherit;" \
   ""
 
 #define DIV_STRING_SINGLELINE \
@@ -1612,6 +1615,7 @@ nsTextControlFrame::InitEditor()
   "border: 0px !important;" \
   "padding: 0px;" \
   "margin: 0px;" \
+  "text-decoration: inherit;" \
   ""
 
 NS_IMETHODIMP

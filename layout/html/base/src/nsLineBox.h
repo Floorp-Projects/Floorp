@@ -354,7 +354,16 @@ public:
     }
   }
 
-  //----------------------------------------
+  /**
+   * The ascent (distance from top to baseline) of the linebox is the
+   * ascent of the anonymous inline box (for which we don't actually
+   * create a frame) that wraps all the consecutive inline children of a
+   * block.
+   *
+   * This is currently unused for block lines.
+   */
+  nscoord GetAscent() const { return mAscent; }
+  void SetAscent(nscoord aAscent) { mAscent = aAscent; }
 
   nscoord GetHeight() const {
     return mBounds.height;
@@ -442,6 +451,7 @@ public:
   };
 
 protected:
+  nscoord mAscent;           // see |SetAscent| / |GetAscent|
   union {
     PRUint32 mAllFlags;
     FlagBits mFlags;

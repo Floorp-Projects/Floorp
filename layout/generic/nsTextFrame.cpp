@@ -69,6 +69,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsILineBreaker.h"
 #include "nsIWordBreaker.h"
+#include "nsCompatibility.h"
 
 #include "nsITextContent.h"
 #include "nsTextFragment.h"
@@ -686,6 +687,7 @@ public:
 
   void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                             nsIStyleContext* aStyleContext,
+                            nsIPresContext* aPresContext,
                             TextStyle& aStyle,
                             nscoord aX, nscoord aY, nscoord aWidth,
                             PRUnichar* aText = nsnull,
@@ -702,6 +704,7 @@ public:
 
   void RenderString(nsIRenderingContext& aRenderingContext,
                     nsIStyleContext* aStyleContext,
+                    nsIPresContext* aPresContext,
                     TextStyle& aStyle,
                     PRUnichar* aBuffer, PRInt32 aLength,
                     nscoord aX, nscoord aY,
@@ -1814,6 +1817,7 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 void 
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                   nsIStyleContext* aStyleContext,
+                                  nsIPresContext* aPresContext,
                                   TextStyle& aTextStyle,
                                   nscoord aX, nscoord aY, nscoord aWidth,
                                   PRUnichar *aText, /*=nsnull*/
@@ -1823,78 +1827,90 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                   const nscoord* aSpacing /* = nsnull*/ )
 
 {
-  nscolor overColor;
-  nscolor underColor;
-  nscolor strikeColor;
-  nsCOMPtr<nsIStyleContext> context = aStyleContext;
+  // Quirks mode text  decoration are rendered by children; see bug 1777
+  // In non-quirks mode, nsHTMLContainer::Paint and nsBlockFrame::Paint
+  // does the painting of text decorations.
+  nsCompatibility mode;
+  aPresContext->GetCompatibilityMode(&mode);
+  if (eCompatibility_NavQuirks == mode) {
+    nscolor overColor, underColor, strikeColor;
   
-  PRBool useOverride = PR_FALSE;
-  nscolor overrideColor;
+    PRBool useOverride = PR_FALSE;
+    nscolor overrideColor;
 
-  PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE; // Begin with no decorations
-  PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | NS_STYLE_TEXT_DECORATION_OVERLINE |
-                      NS_STYLE_TEXT_DECORATION_LINE_THROUGH; // A mask of all possible decorations.
-  PRBool hasDecorations = context->HasTextDecorations();
+    PRUint8 decorations = NS_STYLE_TEXT_DECORATION_NONE;
+    // A mask of all possible decorations.
+    PRUint8 decorMask = NS_STYLE_TEXT_DECORATION_UNDERLINE | 
+                        NS_STYLE_TEXT_DECORATION_OVERLINE |
+                        NS_STYLE_TEXT_DECORATION_LINE_THROUGH;    
+    nsCOMPtr<nsIStyleContext> context = aStyleContext;
+    PRBool hasDecorations = context->HasTextDecorations();
 
-  do {  // find decoration colors
-    const nsStyleTextReset* styleText = 
-      (const nsStyleTextReset*)context->GetStyleData(eStyleStruct_TextReset);
-    if (!useOverride && (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & styleText->mTextDecoration)) {
-      // This handles the <a href="blah.html"><font color="green">La la la</font></a> case.
-      // The link underline should be green.
-      const nsStyleColor* styleColor =
-        (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
-      useOverride = PR_TRUE;
-      overrideColor = styleColor->mColor;          
-    }
+    while (hasDecorations) {
+      const nsStyleTextReset* styleText;
+      ::GetStyleData(context.get(), &styleText);
+      if (!useOverride && 
+          (NS_STYLE_TEXT_DECORATION_OVERRIDE_ALL & 
+           styleText->mTextDecoration)) {
+        // This handles the <a href="blah.html"><font color="green">La 
+        // la la</font></a> case. The link underline should be green.
+        const nsStyleColor* styleColor;
+        ::GetStyleData(context.get(), &styleColor);
+        useOverride = PR_TRUE;
+        overrideColor = styleColor->mColor;          
+      }
 
-    if (decorMask & styleText->mTextDecoration) {  // a decoration defined here
-      const nsStyleColor* styleColor =
-        (const nsStyleColor*)context->GetStyleData(eStyleStruct_Color);
+      PRUint8 useDecorations = decorMask & styleText->mTextDecoration;
+      if (useDecorations) {// a decoration defined here
+        const nsStyleColor* styleColor;
+        ::GetStyleData(context.get(), &styleColor);
     
-      if (NS_STYLE_TEXT_DECORATION_UNDERLINE & decorMask & styleText->mTextDecoration) {
-        underColor = useOverride ? overrideColor : styleColor->mColor;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
-        decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        if (NS_STYLE_TEXT_DECORATION_UNDERLINE & useDecorations) {
+          underColor = useOverride ? overrideColor : styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_UNDERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_UNDERLINE;
+        }
+        if (NS_STYLE_TEXT_DECORATION_OVERLINE & useDecorations) {
+          overColor = useOverride ? overrideColor : styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
+          decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
+        }
+        if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & useDecorations) {
+          strikeColor = useOverride ? overrideColor : styleColor->mColor;
+          decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+          decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
+        }
       }
-      if (NS_STYLE_TEXT_DECORATION_OVERLINE & decorMask & styleText->mTextDecoration) {
-        overColor = useOverride ? overrideColor : styleColor->mColor;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_OVERLINE;
-        decorations |= NS_STYLE_TEXT_DECORATION_OVERLINE;
-      }
-      if (NS_STYLE_TEXT_DECORATION_LINE_THROUGH & decorMask & styleText->mTextDecoration) {
-        strikeColor = useOverride ? overrideColor : styleColor->mColor;
-        decorMask &= ~NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-        decorations |= NS_STYLE_TEXT_DECORATION_LINE_THROUGH;
-      }
-    }
-    if (0 != decorMask) {
+      if (0 == decorMask)
+        break;
       context = context->GetParent();
-      if (context) {
-        hasDecorations = context->HasTextDecorations();
+      if (!context)
+        break;
+      hasDecorations = context->HasTextDecorations();
+    }
+
+    nscoord offset;
+    nscoord size;
+    nscoord baseline = mAscent;
+    if (decorations & (NS_FONT_DECORATION_OVERLINE |
+                       NS_FONT_DECORATION_UNDERLINE)) {
+      aTextStyle.mNormalFont->GetUnderline(offset, size);
+      if (decorations & NS_FONT_DECORATION_OVERLINE) {
+        aRenderingContext.SetColor(overColor);
+        aRenderingContext.FillRect(aX, aY, aWidth, size);
+      }
+      if (decorations & NS_FONT_DECORATION_UNDERLINE) {
+        aRenderingContext.SetColor(underColor);
+        aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
       }
     }
-  } while (context && hasDecorations && (0 != decorMask));
-
-  nscoord offset;
-  nscoord size;
-  nscoord baseline = mAscent;
-  if (decorations & (NS_FONT_DECORATION_OVERLINE | NS_FONT_DECORATION_UNDERLINE)) {
-    aTextStyle.mNormalFont->GetUnderline(offset, size);
-    if (decorations & NS_FONT_DECORATION_OVERLINE) {
-      aRenderingContext.SetColor(overColor);
-      aRenderingContext.FillRect(aX, aY, aWidth, size);
-    }
-    if (decorations & NS_FONT_DECORATION_UNDERLINE) {
-      aRenderingContext.SetColor(underColor);
+    if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
+      aTextStyle.mNormalFont->GetStrikeout(offset, size);
+      aRenderingContext.SetColor(strikeColor);
       aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
     }
   }
-  if (decorations & NS_FONT_DECORATION_LINE_THROUGH) {
-    aTextStyle.mNormalFont->GetStrikeout(offset, size);
-    aRenderingContext.SetColor(strikeColor);
-    aRenderingContext.FillRect(aX, aY + baseline - offset, aWidth, size);
-  }
+
   if (aDetails){
     nsRect rect;
     GetRect(rect);
@@ -1932,6 +1948,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
                                            PRUint32(end - start), textWidth);
   
           }
+          nscoord offset, size, baseline;
           switch (aDetails->mType)
           {
           case nsISelectionController::SELECTION_NORMAL:
@@ -2365,8 +2382,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
-      PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                           dx, dy, width);
+      PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
+                           aTextStyle, dx, dy, width);
     }
     else 
     { //we draw according to selection rules
@@ -2497,8 +2514,9 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       }
-      PaintTextDecorations(aRenderingContext, aStyleContext,
-                           aTextStyle, dx, dy, width, text, details,0,(PRUint32)textLength);
+      PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
+                           aTextStyle, dx, dy, width, text, details, 0,
+                           (PRUint32)textLength);
       sdptr = details;
       if (details){
         while ((sdptr = details->mNext) != nsnull) {
@@ -2674,6 +2692,7 @@ nsTextFrame::GetPositionSlowly(nsIPresContext* aPresContext,
 void
 nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
                           nsIStyleContext* aStyleContext,
+                          nsIPresContext* aPresContext,
                           TextStyle& aTextStyle,
                           PRUnichar* aBuffer, PRInt32 aLength,
                           nscoord aX, nscoord aY,
@@ -2794,8 +2813,9 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 
         // Note: use aY not small-y so that decorations are drawn with
         // respect to the normal-font not the current font.
-        PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                             aX, aY, width, runStart, aDetails,countSoFar,pendingCount, spacing ? sp0 : nsnull);
+        PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
+                             aTextStyle, aX, aY, width, runStart, aDetails,
+                             countSoFar, pendingCount, spacing ? sp0 : nsnull);
         countSoFar += pendingCount;
         aWidth -= width;
         aX += width;
@@ -2819,9 +2839,9 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
 
     // Note: use aY not small-y so that decorations are drawn with
     // respect to the normal-font not the current font.
-    PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                         aX, aY, aWidth, runStart, aDetails,countSoFar,pendingCount,
-                         spacing ? sp0 : nsnull);
+    PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
+                         aTextStyle, aX, aY, aWidth, runStart, aDetails,
+                         countSoFar, pendingCount, spacing ? sp0 : nsnull);
   }
   aTextStyle.mLastFont = lastFont;
 
@@ -3067,7 +3087,7 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-      RenderString(aRenderingContext, aStyleContext, aTextStyle,
+      RenderString(aRenderingContext, aStyleContext, aPresContext, aTextStyle,
                    text, textLength, dx, dy, width);
     }
     else 
@@ -3132,12 +3152,14 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 
         if (isPaginated && !iter.IsBeforeOrAfter()) {
           aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-	        RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
-					        currentlength, currentX, dy, width, details);
+          RenderString(aRenderingContext, aStyleContext, aPresContext,
+                       aTextStyle, currenttext, currentlength,
+                       currentX, dy, width, details);
         } else if (!isPaginated) {
           aRenderingContext.SetColor(nsCSSRendering::TransformColor(currentFGColor,canDarkenColor));
-	        RenderString(aRenderingContext,aStyleContext, aTextStyle, currenttext, 
-					        currentlength, currentX, dy, width, details);
+          RenderString(aRenderingContext,aStyleContext, aPresContext,
+                       aTextStyle, currenttext, currentlength, currentX,
+                       dy, width, details);
         }
 
           //increment twips X start but remember to get ready for next draw by reducing current x by letter spacing amount
@@ -3149,8 +3171,9 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
       else if (!isPaginated) 
       {
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
-        RenderString(aRenderingContext,aStyleContext, aTextStyle, text, 
-                    PRUint32(textLength), dx, dy, width, details);
+        RenderString(aRenderingContext, aStyleContext, aPresContext,
+                     aTextStyle, text, PRUint32(textLength),
+                     dx, dy, width, details);
       }
       sdptr = details;
       if (details){
@@ -3289,8 +3312,8 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
       // simplest rendering approach
       aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
       aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
-      PaintTextDecorations(aRenderingContext, aStyleContext, aTextStyle,
-                           dx, dy, width);
+      PaintTextDecorations(aRenderingContext, aStyleContext,
+                           aPresContext, aTextStyle, dx, dy, width);
     }
     else {
       SelectionDetails *details;
@@ -3364,7 +3387,7 @@ nsTextFrame::PaintAsciiText(nsIPresContext* aPresContext,
         aRenderingContext.SetColor(nsCSSRendering::TransformColor(aTextStyle.mColor->mColor,canDarkenColor));
         aRenderingContext.DrawString(text, PRUint32(textLength), dx, dy + mAscent);
       }
-      PaintTextDecorations(aRenderingContext, aStyleContext,
+      PaintTextDecorations(aRenderingContext, aStyleContext, aPresContext,
                            aTextStyle, dx, dy, width,
                            unicodePaintBuffer.mBuffer,
                            details, 0, textLength);

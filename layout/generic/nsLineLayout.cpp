@@ -1822,8 +1822,7 @@ PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
 
 void
 nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
-                                nsSize& aMaxElementSizeResult,
-                                nscoord& aLineBoxAscent)
+                                nsSize& aMaxElementSizeResult)
 {
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
@@ -2038,13 +2037,13 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
   mFinalLineHeight = lineHeight;
   aMaxElementSizeResult.width = maxElementWidth;
   aMaxElementSizeResult.height = maxElementHeight;
-  aLineBoxAscent = baselineY;
+  aLineBox->SetAscent(baselineY - mTopEdge);
 #ifdef NOISY_VERTICAL_ALIGN
   printf(
     "  [line]==> bounds{x,y,w,h}={%d,%d,%d,%d} lh=%d a=%d mes{w,h}={%d,%d}\n",
     aLineBox->mBounds.x, aLineBox->mBounds.y,
     aLineBox->mBounds.width, aLineBox->mBounds.height,
-    mFinalLineHeight, aLineBoxAscent,
+    mFinalLineHeight, aLineBox->GetAscent(),
     aMaxElementSizeResult.width, aMaxElementSizeResult.height);
 #endif
 

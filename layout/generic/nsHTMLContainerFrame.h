@@ -122,7 +122,84 @@ public:
 
 protected:
   virtual PRIntn GetSkipSides() const = 0;
+
+  /**
+   * To be called by |Paint| of this class or derived classes to paint
+   * the background, border, and outline, when in the correct layer to
+   * do so.
+   */
+  void PaintSelf(nsIPresContext*      aPresContext,
+                 nsIRenderingContext& aRenderingContext,
+                 const nsRect&        aDirtyRect,
+                 PRUint32             aFlags);
+
+  /**
+   * To be called *instead* of |PaintChildren| by frames that paint text
+   * decorations (block and inline frames).  It will paint the
+   * decorations before and after the call to PaintChildren.
+   */
+  void PaintDecorationsAndChildren(nsIPresContext*      aPresContext,
+                                   nsIRenderingContext& aRenderingContext,
+                                   const nsRect&        aDirtyRect,
+                                   nsFramePaintLayer    aWhichLayer,
+                                   PRBool               aIsBlock,
+                                   PRUint32             aFlags = 0);
+
+  /**
+   * Helper function to paint text decorations for this frame. This
+   * function attempts to be general; hopefully particular frames can
+   * get away with overriding PaintTextDecorationLines.  The function
+   * should be called for one text-decoration at the time. This is so
+   * line-through can be painted in front of children, while the other
+   * decorations can be drawn behind.
+   */
+  void PaintTextDecorations(nsIRenderingContext& aRenderingContext,
+                            nsIFontMetrics* aFontMetrics,
+                            PRUint8 aDecoration,
+                            nscolor aColor);
+
+  /**
+   * Fetch the text decorations for this frame. 
+   *  @param aIsBlock      whether |this| is a block frame or no.
+   *  @param aDecorations  mask with all decorations. 
+   *                         See bug 1777 and 20163 to understand how a
+   *                         frame can end up with several decorations.
+   *  @param aUnderColor   The color of underline if the appropriate bit 
+   *                         in aDecoration is set. It is undefined otherwise.
+   *  @param aOverColor    The color of overline if the appropriate bit 
+   *                         in aDecoration is set. It is undefined otherwise.
+   *  @param aStrikeColor  The color of strike-through if the appropriate bit 
+   *                         in aDecoration is set. It is undefined otherwise.
+   *  NOTE: This function assigns NS_STYLE_TEXT_DECORATION_NONE to
+   *        aDecorations for text-less frames.  See bug 20163 for
+   *        details.
+   */
+  void GetTextDecorations(nsIPresContext* aPresContext, 
+                          PRBool aIsBlock,
+                          PRUint8& aDecorations, 
+                          nscolor& aUnderColor, 
+                          nscolor& aOverColor, 
+                          nscolor& aStrikeColor);
+
+  /** 
+   * Function that does the actual drawing of the textdecoration. 
+   *   input:
+   *    @param aRenderingContext.
+   *    @param aColor             the color of the text-decoration
+   *    @param aAscent            ascent of the font from which the
+   *                                text-decoration was derived. 
+   *    @param aOffset            distance *above* baseline where the
+   *                                text-decoration should be drawn,
+   *                                i.e. negative offsets draws *below*
+   *                                the baseline.
+   *    @param aSize              the thickness of the line
+   */
+  virtual void PaintTextDecorationLines(nsIRenderingContext& aRenderingContext,
+                                        nscolor aColor,
+                                        nscoord aOffset,
+                                        nscoord aAscent,
+                                        nscoord aSize);
+
 };
 
 #endif /* nsHTMLContainerFrame_h___ */
-
