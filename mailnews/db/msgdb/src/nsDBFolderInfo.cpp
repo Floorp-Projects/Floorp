@@ -636,7 +636,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetCharacterSetOverride(PRBool *characterSetOverri
 {
   *characterSetOverride = PR_FALSE;
   PRUint32 propertyValue;
-  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue);
+  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue, 0);
   if (NS_SUCCEEDED(rv))
     *characterSetOverride = propertyValue;
   return rv;
@@ -839,17 +839,17 @@ nsresult nsDBFolderInfo::GetPropertyWithToken(mdb_token aProperty, nsString *res
 	return m_mdb->RowCellColumnTonsString(m_mdbRow, aProperty, *resultProperty);
 }
 
-nsresult nsDBFolderInfo::GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue)
+nsresult nsDBFolderInfo::GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue)
 {
-	return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, propertyValue);
+	return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, propertyValue, defaultValue);
 }
 
-nsresult nsDBFolderInfo::GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue)
+nsresult nsDBFolderInfo::GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue)
 {
-	return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, (PRUint32 &) propertyValue);
+	return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, (PRUint32 &) propertyValue, defaultValue);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint32 *propertyValue)
+NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint32 *propertyValue, PRUint32 defaultValue)
 {
 	nsresult err = NS_OK;
 	mdb_token	property_token;
@@ -858,7 +858,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint
 		return NS_ERROR_NULL_POINTER;
 	err = m_mdb->GetStore()->StringToToken(m_mdb->GetEnv(),  propertyName, &property_token);
 	if (err == NS_OK)
-		return GetUint32PropertyWithToken(property_token, *propertyValue);
+		return GetUint32PropertyWithToken(property_token, *propertyValue, defaultValue);
 	return err;
 }
 

@@ -1057,15 +1057,35 @@ nsMsgIncomingServer::getProtocolInfo(nsIMsgProtocolInfo **aResult)
 NS_IMETHODIMP nsMsgIncomingServer::GetRetentionSettings(nsIMsgRetentionSettings **settings)
 {
   NS_ENSURE_ARG_POINTER(settings);
+  nsMsgRetainByPreference retainByPreference;
+  PRInt32 daysToKeepHdrs = 0;
+  PRInt32 numHeadersToKeep = 0;
+  PRBool keepUnreadMessagesOnly = PR_FALSE;
+  PRInt32 daysToKeepBodies = 0;
+  nsresult rv = NS_OK;
   if (!m_retentionSettings)
   {
     m_retentionSettings = do_CreateInstance(NS_MSG_RETENTIONSETTINGS_CONTRACTID);
-
+    if (m_retentionSettings)
+    {
+      rv = GetBoolValue("keepUnreadOnly", &keepUnreadMessagesOnly);
+      rv = GetIntValue("retainBy", (PRInt32*) &retainByPreference);
+      rv = GetIntValue("numHdrsToKeep", &numHeadersToKeep);
+      rv = GetIntValue("daysToKeepHdrs", &daysToKeepHdrs);
+      rv = GetIntValue("daysToKeepBodies", &daysToKeepBodies);
+      m_retentionSettings->SetRetainByPreference(retainByPreference);
+      m_retentionSettings->SetNumHeadersToKeep((PRUint32) numHeadersToKeep);
+      m_retentionSettings->SetKeepUnreadMessagesOnly(keepUnreadMessagesOnly);
+      m_retentionSettings->SetDaysToKeepBodies(daysToKeepBodies);
+      m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
+    }
+    else
+      rv = NS_ERROR_OUT_OF_MEMORY;
     // Create an empty retention settings object, 
     // get the settings from the server prefs, and init the object from the prefs.
   }
   *settings = m_retentionSettings;
-  return NS_OK;
+  NS_IF_ADDREF(*settings);  return rv;
 }
 
 NS_IMETHODIMP nsMsgIncomingServer::SetRetentionSettings(nsIMsgRetentionSettings *settings)

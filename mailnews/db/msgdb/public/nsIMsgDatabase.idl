@@ -192,6 +192,8 @@ interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
   readonly attribute nsMsgKey FirstNew;
 
   attribute nsIMsgRetentionSettings msgRetentionSettings;
+  // purge unwanted message headers and/or bodies
+  void ApplyRetentionSettings(in nsIMsgRetentionSettings msgRetentionSettings);
 
   boolean HasNew();  
   void ClearNewList(in boolean notify);

@@ -3507,11 +3507,11 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
       PRBool keepUnreadMessagesOnly = PR_FALSE;
       PRUint32 daysToKeepBodies = 0;
 
-      rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference);
-      m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", &daysToKeepHdrs);
-      m_dbFolderInfo->GetUint32Property("numHdrsToKeep", &numHeadersToKeep);
-      m_dbFolderInfo->GetUint32Property("daysToKeepBodies", &daysToKeepBodies);
-      m_dbFolderInfo->GetUint32Property("keepUnreadOnly", &keepUnreadMessagesProp);
+      rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference, nsIMsgRetentionSettings::nsMsgRetainByServerDefaults);
+      m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", &daysToKeepHdrs, 0);
+      m_dbFolderInfo->GetUint32Property("numHdrsToKeep", &numHeadersToKeep, 0);
+      m_dbFolderInfo->GetUint32Property("daysToKeepBodies", &daysToKeepBodies, 0);
+      m_dbFolderInfo->GetUint32Property("keepUnreadOnly", &keepUnreadMessagesProp, 0);
       keepUnreadMessagesOnly = (keepUnreadMessagesProp == 1);
       m_retentionSettings->SetRetainByPreference(retainByPreference);
       m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
@@ -3523,6 +3523,152 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
   *retentionSettings = m_retentionSettings;
   NS_IF_ADDREF(*retentionSettings);
   return NS_OK;
+}
+
+NS_IMETHODIMP nsMsgDatabase::ApplyRetentionSettings(nsIMsgRetentionSettings *msgRetentionSettings)
+{
+  NS_ENSURE_ARG_POINTER(msgRetentionSettings);
+  nsresult rv = NS_OK;
+
+  nsMsgRetainByPreference retainByPreference;
+  PRUint32 daysToKeepHdrs = 0;
+  PRUint32 numHeadersToKeep = 0;
+  PRUint32 keepUnreadMessagesProp = 0;
+  PRBool keepUnreadMessagesOnly = PR_FALSE;
+  PRUint32 daysToKeepBodies = 0;
+  msgRetentionSettings->GetRetainByPreference(&retainByPreference);
+  msgRetentionSettings->GetKeepUnreadMessagesOnly(&keepUnreadMessagesOnly);
+
+  switch (retainByPreference)
+  {
+  case nsIMsgRetentionSettings::nsMsgRetainByServerDefaults:
+    NS_ASSERTION(PR_FALSE, "shouldn't be passing this in here"); // fall through and ignore
+  case nsIMsgRetentionSettings::nsMsgRetainAll:
+    break;
+  case nsIMsgRetentionSettings::nsMsgRetainByAge:
+    msgRetentionSettings->GetDaysToKeepHdrs(&daysToKeepHdrs);
+    return PurgeMessagesOlderThan(daysToKeepHdrs, keepUnreadMessagesOnly);
+  case nsIMsgRetentionSettings::nsMsgRetainByNumHeaders:
+    msgRetentionSettings->GetNumHeadersToKeep(&numHeadersToKeep);
+    return PurgeExcessMessages(numHeadersToKeep, keepUnreadMessagesOnly);
+  }
+  return rv;
+}
+
+nsresult nsMsgDatabase::PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool keepUnreadMessagesOnly)
+{
+  nsresult rv = NS_OK;
+  PRInt32 numPurged = 0;
+	nsMsgHdr		*pHeader;
+  nsCOMPtr <nsISimpleEnumerator> hdrs;
+  rv = EnumerateMessages(getter_AddRefs(hdrs));
+  if (NS_FAILED(rv))
+  	return rv;
+	PRBool hasMore = PR_FALSE;
+
+	PRTime now = PR_Now();
+	PRTime cutOffDay;
+
+	PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDay;
+	
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+  LL_UI2L(secondsInDays, 60 * 60 * 24 * daysToKeepHdrs);
+	LL_MUL(microSecondsInDay, secondsInDays, microSecondsPerSecond);
+
+	LL_SUB(cutOffDay, now, microSecondsInDay); // = now - term->m_value.u.age * 60 * 60 * 24; 
+  // so now cutOffDay is the PRTime cut-off point. Any msg with a date less than that will get purged.
+	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+	{
+    PRBool purgeHdr = PR_FALSE;
+
+    rv = hdrs->GetNext((nsISupports**)&pHeader);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+    if (NS_FAILED(rv)) 
+      break;
+
+    if (keepUnreadMessagesOnly)
+    {
+      PRBool isRead;
+      IsHeaderRead(pHeader, &isRead);
+      if (isRead)
+        purgeHdr = PR_TRUE;
+
+    }
+    if (!purgeHdr)
+    {
+      PRTime date;
+      pHeader->GetDate(&date);
+      if (LL_CMP(date, <, cutOffDay))
+        purgeHdr = PR_TRUE;
+    }
+    if (purgeHdr)
+    {
+      DeleteHeader(pHeader, nsnull, PR_FALSE, PR_TRUE);
+		  numPurged++;
+    }
+		NS_RELEASE(pHeader);
+	}
+
+	if (numPurged > 10)	// commit every once in a while
+		Commit(nsMsgDBCommitType::kCompressCommit);
+  else if (numPurged > 0)
+    Commit(nsMsgDBCommitType::kLargeCommit);
+  return rv;
+}
+
+nsresult nsMsgDatabase::PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool keepUnreadMessagesOnly)
+{
+  nsresult rv = NS_OK;
+  PRInt32 numPurged = 0;
+	nsMsgHdr		*pHeader;
+  nsCOMPtr <nsISimpleEnumerator> hdrs;
+  rv = EnumerateMessages(getter_AddRefs(hdrs));
+  if (NS_FAILED(rv))
+  	return rv;
+	PRBool hasMore = PR_FALSE;
+
+  mdb_count numHdrs = 0;
+  if (m_mdbAllMsgHeadersTable)
+    m_mdbAllMsgHeadersTable->GetCount(GetEnv(), &numHdrs);
+  else
+    return NS_ERROR_NULL_POINTER;
+
+	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+	{
+    PRBool purgeHdr = PR_FALSE;
+    rv = hdrs->GetNext((nsISupports**)&pHeader);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
+    if (NS_FAILED(rv)) 
+      break;
+
+    if (keepUnreadMessagesOnly)
+    {
+      PRBool isRead;
+      IsHeaderRead(pHeader, &isRead);
+      if (isRead)
+        purgeHdr = PR_TRUE;
+
+    }
+    // this isn't quite right - we want to prefer unread messages (keep all of those we can)
+    if (numHdrs > numHeadersToKeep)
+      purgeHdr = PR_TRUE;
+
+    if (purgeHdr)
+    {
+      DeleteHeader(pHeader, nsnull, PR_FALSE, PR_TRUE);
+      numHdrs--;
+		  numPurged++;
+    }
+		NS_RELEASE(pHeader);
+	}
+
+	if (numPurged > 10)	// commit every once in a while
+		Commit(nsMsgDBCommitType::kCompressCommit);
+  else if (numPurged > 0)
+    Commit(nsMsgDBCommitType::kLargeCommit);
+  return rv;
+
+  return rv;
 }
 
 NS_IMPL_ISUPPORTS1(nsMsgRetentionSettings, nsIMsgRetentionSettings)

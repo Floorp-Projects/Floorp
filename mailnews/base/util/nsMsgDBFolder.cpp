@@ -1281,6 +1281,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetRetentionSettings(nsIMsgRetentionSettings **sett
     }
   }
   *settings = m_retentionSettings;
+  NS_IF_ADDREF(*settings);
   return rv;
 }
 

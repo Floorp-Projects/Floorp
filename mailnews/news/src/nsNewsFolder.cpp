@@ -396,6 +396,13 @@ NS_IMETHODIMP
 nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
   GetDatabase(aWindow);	// want this cached...
+  if (mDatabase)
+  {
+    nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
+    nsresult rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
+    if (NS_SUCCEEDED(rv))
+      rv = mDatabase->ApplyRetentionSettings(retentionSettings);
+  }
   return GetNewMessages(aWindow);
 }
 
@@ -1757,3 +1764,18 @@ NS_IMETHODIMP nsMsgNewsFolder::NotifyDownloadedLine(const char *line, nsMsgKey k
   return rv;
 
 }
+NS_IMETHODIMP nsMsgNewsFolder::Compact(nsIUrlListener *aListener)
+{
+  nsresult rv;
+
+  rv = GetDatabase(nsnull);
+  if (mDatabase)
+  {
+    nsCOMPtr<nsIMsgRetentionSettings> retentionSettings;
+    rv = GetRetentionSettings(getter_AddRefs(retentionSettings));
+    if (NS_SUCCEEDED(rv))
+      rv = mDatabase->ApplyRetentionSettings(retentionSettings);
+  }
+  return rv;
+}
+

@@ -78,8 +78,8 @@ public:
 	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
 	nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
 	nsresult	GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty);
-	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue);
-	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue);
+	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue = 0);
+	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue = 0);
 
 
 	nsMsgKeyArray m_lateredKeys;		// list of latered messages

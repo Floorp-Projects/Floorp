@@ -170,6 +170,9 @@ protected:
 	nsCOMPtr <nsIMimeConverter> m_mimeConverter;
   nsCOMPtr <nsIMsgRetentionSettings> m_retentionSettings;
 
+  nsresult PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool keepUnreadMessagesOnly);
+  nsresult PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool keepUnreadMessagesOnly);
+
 	// mdb bookkeeping stuff
 	nsresult			InitExistingDB();
 	nsresult			InitNewDB();
