@@ -994,7 +994,7 @@
       <rdf:Seq>
         <rdf:li>
 	<rdf:Description ID="ssl-settings" nc:name="SSL Settings"
-  		nc:link="chrome://help/locale/ssl_help.html"/> </rdf:li>
+  		nc:link="chrome://help/locale/ssl_help.xhtml"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -1002,8 +1002,8 @@
 <rdf:Description about="#ssl-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="ssl_prefs" nc:name="SSL Preferences" nc:link="chrome://help/locale/ssl_help.html#ssl_prefs"/> </rdf:li>
-        <rdf:li><rdf:Description ID="cipher_help" nc:name="Edit Ciphers" nc:link="chrome://help/locale/ssl_help.html#cipher_help"/> </rdf:li>
+        <rdf:li><rdf:Description ID="ssl_prefs" nc:name="SSL Preferences" nc:link="chrome://help/locale/ssl_help.xhtml#privacy_and_security_preferences_ssl"/> </rdf:li>
+        <rdf:li><rdf:Description ID="cipher_help" nc:name="Edit Ciphers" nc:link="chrome://help/locale/ssl_help.xhtml#edit_ciphers"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>

@@ -600,7 +600,7 @@
      <rdf:li>
        <rdf:Description ID="encryption:technologies"
          nc:name="cipher technologies"
-	 nc:link="ssl_help.html#encryption:technologiesIDX"/>
+	 nc:link="ssl_help.xhtml#edit_ciphers"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1666,7 +1666,7 @@
      <rdf:li>
        <rdf:Description ID="preferences:SSL"
          nc:name="SSL preferences"
-	 nc:link="ssl_help.html#preferences:SSLIDX"/>
+	 nc:link="ssl_help.xhtml#privacy_and_security_preferences_ssl"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="preferences:Tabbed_Browsing"
@@ -1890,7 +1890,7 @@
      <rdf:li>
        <rdf:Description ID="SSL"
          nc:name="SSL"
-	 nc:link="ssl_help.html#SSLIDX"/>
+	 nc:link="ssl_help.xhtml"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="SMTP"
@@ -1905,7 +1905,7 @@
      <rdf:li>
        <rdf:Description ID="SSL"
          nc:name="SSL"
-	 nc:link="ssl_help.html#SSL:ciphersIDX"/>
+	 nc:link="ssl_help.xhtml#edit_ciphers"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="System"
@@ -2011,7 +2011,7 @@
      <rdf:li>
        <rdf:Description ID="settings:SSL"
          nc:name="SSL settings"
-	 nc:link="ssl_help.html#settings:SSLIDX"/>
+	 nc:link="ssl_help.xhtml#ssl_settings"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="settings:validation"
@@ -2086,12 +2086,12 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="SSL:ciphers"
          nc:name="ciphers"
-	 nc:link="ssl_help.html#SSL:ciphersIDX"/>
+	 nc:link="ssl_help.xhtml#edit_ciphers"/>
      </rdf:li>
      <rdf:li>
        <rdf:Description ID="SSL:preferences"
          nc:name="SSL preferences"
-	 nc:link="ssl_help.html#SSL:preferencesIDX"/>
+	 nc:link="ssl_help.xhtml#privacy_and_security_preferences_ssl"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>

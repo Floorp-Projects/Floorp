@@ -37,7 +37,7 @@ en-US.jar:
         locale/en-US/help/privacy_help.xhtml            (locale/en-US/privacy_help.xhtml)
         locale/en-US/help/privsec_help.html             (locale/en-US/privsec_help.html)
         locale/en-US/help/profiles_help.html            (locale/en-US/profiles_help.html)
-        locale/en-US/help/ssl_help.html                 (locale/en-US/ssl_help.html)
+        locale/en-US/help/ssl_help.xhtml                (locale/en-US/ssl_help.xhtml)
         locale/en-US/help/using_priv_help.html          (locale/en-US/using_priv_help.html)
         locale/en-US/help/using_certs_help.html         (locale/en-US/using_certs_help.html)
         locale/en-US/help/validation_help.html          (locale/en-US/validation_help.html)

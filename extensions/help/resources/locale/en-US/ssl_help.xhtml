@@ -1,139 +1,162 @@
-<html>
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" [
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
+  %brandDTD;
+]>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<title>SSL_Settings</title>
-
-<link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
-
+<title>SSL Settings</title>
+<link rel="stylesheet" href="chrome://help/locale/helpFileLayout.css"
+  type="text/css"></link>
 </head>
-
 <body>
 
-<hr>
-<a NAME="settings:SSLIDX"></a>
-<a NAME="ssl_settings"></a>
-<h1>SSL Settings</h1>
+<h1 id="ssl_settings">SSL Settings</h1>
+
 <p>This section describes how to set your SSL preferences and ciphers.</p>
 
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissections">
-<p>In this section:</p>
-<p><a href="#ssl_prefs">Privacy &amp; Security Preferences - SSL</a></p>
-<p><a href="#cipher_help">Edit Ciphers</a></p>
-</td>
-</tr>
-</table>
+<div class="contentsBox">In this section:
+<ul>
+  <li><a href="#privacy_and_security_preferences_ssl">Privacy &amp; Security
+    Preferences - SSL</a></li>
+  <li><a href="#edit_ciphers">Edit Ciphers</a></li>
+</ul>
+</div>
 
-<p>&nbsp;</p>
+<h2 id="privacy_and_security_preferences_ssl">Privacy &amp; Security
+  Preferences - SSL</h2>
 
-
-
-
-
-<hr><a NAME="preferences:SSLIDX"></a>
-<a NAME="ssl_prefs"></a>
-<a NAME="SSL:preferencesIDX"></a>
-<h2>Privacy &amp; Security Preferences - SSL</h2>
-<p>This section describes how to use the SSL preferences panel. If you are not already viewing the panel, follow these steps:
+<p>This section describes how to use the SSL preferences panel. If you are not
+  already viewing the panel, follow these steps:</p>
 
 <ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)</li>
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click SSL. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
 </ol>
 
-<table summary="list of headings" cellpadding=4 cellspacing=2 bgcolor="#cccccc" Width=324>
-<tr>
-<td class="inthissections">
-<p>In this section:</p>
-<p><a href="#SSL_Protocol_Versions">SSL Protocol Versions</a></p>
-<p><a href="#SSL_Warnings">SSL Warnings</a></p>
-</td>
-</tr>
-</table>
+<h3 id="ssl_protocol_versions">SSL Protocol Versions</h3>
 
+<p>The Secure Sockets Layer (SSL) protocol defines rules governing mutual
+  authentication between a web site and browser software and the encryption of
+  information that flows between them. The Transport Layer Security (TLS)
+  protocol is an IETF standard based on SSL. TLS 1.0 can be thought of as SSL
+  3.1.</p>
 
-
-
-
-<p>&nbsp;</p>
-<a NAME="SSL_Protocol_Versions"></a>
-<h3>SSL Protocol Versions</h3>
-
-
-<p>The Secure Sockets Layer (SSL) protocol defines rules governing mutual authentication 
-between a web site and browser software and the encryption of information that flows 
-between them. The Transport Layer Security (TLS) protocol is an IETF standard based on 
-SSL. TLS 1.0 can be thought of as SSL 3.1.
-
-<p>You should normally leave these three checkboxes selected to ensure that both older and newer web servers can work with the browser:
-<ul>
-	<li><b>Enable SSL version 2:</b> Allows older web servers to work with the browser.
-	<li><b>Enable SSL version 3:</b> Allows newer web servers to work with the browser.
-	<li><b>Enable TLS:</b> Allows web servers that support TLS to take advantage of it.</li>
-</ul>
-
-<p>To turn individual ciphers on or off, click the Edit Ciphers button:
-
-<ul><li><b>Edit Ciphers:</b> Don't attempt to edit ciphers individually unless you know exactly what you are doing and have cleared the changes with your system administrator. For more information, see <a href="#cipher_help">Edit Ciphers</a>. </li></ul>
-
-<p><b>Important note re TLS:</b> Some servers that do not implement SSL correctly cannot negotiate the SSL handshake with client software (such as the browser) that supports TLS. Such servers are known as "TLS intolerant."
-<p>When the Enable TLS option in the SSL preferences panel is selected, the browser attempts to use the TLS protocol when making secure connections with a server. If that connection fails because the server is TLS intolerant, the browser will fall back to using SSL 3.0.
-
-
-
-<p>&nbsp;</p>
-<a NAME="SSL_Warnings"></a>
-<h3>SSL Warnings</h3>
-
-<p>It's easy to tell when the web site you are viewing is using an encrypted connection. 
-If the connection is encrypted, the lock icon in the lower-right corner of the Navigator 
-window is locked. If the connection is not encrypted, the lock icon is unlocked.</P> 
-
-<p>If you want additional warnings, you can select one or more of 
-the warning checkboxes in the SSL preferences panel. Some people find these warnings annoying.
-
-<p>To activate any of these Navigator warnings, select the corresponding checkbox:
-</P>
+<p>You should normally leave these three checkboxes selected to ensure that
+  both older and newer web servers can work with the browser:</p>
 
 <ul>
-	<LI><b>Loading a page that supports encryption:</b> Select this warning if you want to be reminded whenever you are loading a page that supports encryption.
-	<LI><b>Loading a page that uses low-grade encryption:</b> Select this warning if you want to be reminded whenever you are loading a page that supports low-grade encryption. (Low-grade encryption is the weakest encryption available, using 40-bit keys.) 
-	<LI><b>Leaving a page that supports encryption:</b> Select this warning if you want to be reminded whenever you are leaving a page that supports encryption for one that does not.
-	<LI><b>Sending form data from an unencrypted page to an unencrypted page:</b> Select this warning if you want to be reminded whenever you are submitting data over an unencrypted connection. If you send unencrypted information over the Internet, it can easily be intercepted by other people.
-	<LI><b>Viewing a page with an encrypted/unencrypted mix:</b> Select this warning if you want to be alerted whenever you are viewing a page that includes any information that's not encrypted. 
+  <li><strong>Enable SSL version 2:</strong> Allows older web servers to work
+    with the browser.</li>
+  <li><strong>Enable SSL version 3:</strong> Allows newer web servers to work
+    with the browser.</li>
+  <li><strong>Enable TLS:</strong> Allows web servers that support TLS to take
+    advantage of it.</li>
 </ul>
 
-<p>For short definitions, click <a href="glossary.xhtml#authentication">authentication</a>, <a href="glossary.xhtml#encryption">encryption</a>, or <a href="glossary.xhtml#certificate">certificate</a>.</P>
+<p>To turn individual ciphers on or off, click the Edit Ciphers button:</p>
 
+<ul>
+  <li><strong>Edit Ciphers:</strong> Don't attempt to edit ciphers individually
+    unless you know exactly what you are doing and have cleared the changes
+    with your system administrator. For more information, see
+    <a href="#cipher_help">Edit Ciphers</a>.</li>
+</ul>
 
-<hr>
-<a NAME="cipher_help"></a>
-<a NAME="SSL:ciphersIDX"></a>
-<a NAME="encryption:technologiesIDX"></a>
-<a NAME="encryption_technologiesSDX"></a>
-<h2>Edit Ciphers</h2>
-<p>This section describes how to use the Edit Ciphers dialog box. If you're not already viewing it, follow these steps:
+<p><strong>Important note regarding TLS:</strong> Some servers that do not
+  implement SSL correctly cannot negotiate the SSL handshake with client
+  software (such as the browser) that supports TLS. Such servers are known as
+  &quot;TLS intolerant&quot;.</p>
+
+<p>When the Enable TLS option in the SSL preferences panel is selected, the
+  browser attempts to use the TLS protocol when making secure connections with
+  a server. If that connection fails because the server is TLS intolerant, the
+  browser will fall back to using SSL 3.0.</p>
+
+<h3 id="ssl_warnings">SSL Warnings</h3>
+
+<p>It's easy to tell when the web site you are viewing is using an encrypted
+  connection. If the connection is encrypted, the lock icon in the lower-right
+  corner of the Navigator window is locked. If the connection is not encrypted,
+  the lock icon is unlocked.</p>
+
+<p>If you want additional warnings, you can select one or more of the warning
+  checkboxes in the SSL preferences panel. Some people find these warnings
+  annoying.</p>
+
+<p>To activate any of these Navigator warnings, select the corresponding
+  checkbox:</p>
+
+<ul>
+  <li><strong>Loading a page that supports encryption:</strong> Select this
+    warning if you want to be reminded whenever you are loading a page that
+    supports encryption.</li>
+  <li><strong>Loading a page that uses low-grade encryption:</strong> Select
+    this warning if you want to be reminded whenever you are loading a page
+    that supports low-grade encryption. (Low-grade encryption is the weakest
+    encryption available, using 40-bit keys.)</li>
+  <li><strong>Leaving a page that supports encryption:</strong> Select this
+   warning if you want to be reminded whenever you are leaving a page that
+   supports encryption for one that does not.</li>
+  <li><strong>Sending form data from an unencrypted page to an unencrypted
+    page:</strong> Select this warning if you want to be reminded whenever you
+    are submitting data over an unencrypted connection. If you send unencrypted
+    information over the Internet, it can easily be intercepted by other
+    people.</li>
+  <li><strong>Viewing a page with an encrypted/unencrypted mix:</strong>
+    Select this warning if you want to be alerted whenever you are viewing a
+    page that includes any information that's not encrypted.</li>
+</ul>
+
+<p>For short definitions, click
+  <a href="glossary.xhtml#authentication">authentication</a>,
+  <a href="glossary.xhtml#encryption">encryption</a>, or
+  <a href="glossary.xhtml#certificate">certificate</a>.</p>
+
+<h2 id="edit_ciphers">Edit Ciphers</h2>
+
+<p>This section describes how to use the Edit Ciphers dialog box. If you're not
+  already viewing it, follow these steps:</p>
 
 <ol>
-	<li>Open the Edit menu (Mozilla menu on Mac OS X) and choose Preferences.
-	<li>Under the Privacy &amp; Security category, click SSL. (If no subcategories are visible, double-click Privacy &amp; Security to expand the list.)
-	<li>Click the Edit Ciphers button.
+  <li>Open the Edit menu (&brandShortName; menu on Mac OS X) and choose
+    Preferences.</li>
+  <li>Under the Privacy &amp; Security category, click SSL. (If no
+    subcategories are visible, double-click Privacy &amp; Security to expand
+    the list.)</li>
+  <li>Click the Edit Ciphers button.</li>
 </ol>
 
-<p>The Edit Ciphers dialog box allows you to select or deselect ciphers, or <a href="glossary.xhtml#cryptographic_algorithm">cryptographic algorithms</a>. Consult your system administrator before changing any of these settings.
+<p>The Edit Ciphers dialog box allows you to select or deselect ciphers, or
+  <a href="glossary.xhtml#cryptographic_algorithm">cryptographic
+  algorithms</a>. Consult your system administrator before changing any of
+  these settings.</p>
+<p>Each checkbox corresponds to a cipher suite, or set of cryptographic
+  algorithms.</p>
 
-<p>Each checkbox corresponds to a cipher suite, or set of cryptographic algorithms. 
-
-<p>For more information about ciphers and encryption, see the following online documents:
+<p>For more information about ciphers and encryption, see the following online
+  documents:</p>
 
 <ul>
-	<li><a href="http://developer.netscape.com/docs/manuals/security/pkin/index.htm" target="_blank">Introduction to Public-Key Cryptography</a>
-	<li><a href="http://developer.netscape.com/docs/manuals/security/sslin/index.htm" target="_blank">Introduction to SSL</a>
-	<li><a href="http://www.mozilla.org/projects/security/pki/nss/nss-3.4/nss-3.4-algorithms.html" target="_blank">Encryption Technologies Available in NSS 3.4</a>.
+  <li>
+    <a href="http://developer.netscape.com/docs/manuals/security/pkin/index.htm"
+    target="_blank">Introduction to Public-Key Cryptography</a></li>
+  <li>
+    <a href="http://developer.netscape.com/docs/manuals/security/sslin/index.htm"
+    target="_blank">Introduction to SSL</a></li>
+  <li>
+    <a href=
+    "http://www.mozilla.org/projects/security/pki/nss/nss-3.4/nss-3.4-algorithms.html"
+    target="_blank">Encryption Technologies Available in NSS 3.4</a>.</li>
 </ul>
 
-<p>&nbsp;
+<p>Copyright &copy; 2003-2004 The Mozilla Foundation.</p>
 
 </body>
 </html>
