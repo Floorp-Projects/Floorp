@@ -1236,7 +1236,7 @@ void nsViewManager::RenderViews(nsIView *aRootView, nsIRenderingContext& aRC, co
       // XXX Which color should we use for these bits?
       aRC.SetColor(NS_RGB(128, 128, 128));
       aRC.FillRect(finalTransparentRect);
-#ifdef DEBUG
+#ifdef DEBUG_roc
       printf("XXX: Using final transparent rect, x=%d, y=%d, width=%d, height=%d\n",
         finalTransparentRect.x, finalTransparentRect.y, finalTransparentRect.width, finalTransparentRect.height);
 #endif
