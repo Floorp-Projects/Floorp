@@ -50,6 +50,7 @@ public:
   NS_IMETHOD    Back();
   NS_IMETHOD    Forward();
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);
+  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);
 
 protected:
   nsIDocShell* mDocShell;

@@ -121,7 +121,16 @@ GetHistoryProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         break;
       }
       default:
-        return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, obj, id, vp);
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HISTORY_ITEM, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          nsAutoString prop;
+          rv = a->Item(JSVAL_TO_INT(id), prop);
+          if (NS_SUCCEEDED(rv)) {
+            nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
+          }
+        }
+      }
     }
   }
   else {
@@ -303,6 +312,50 @@ HistoryGo(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 }
 
 
+//
+// Native method Item
+//
+PR_STATIC_CALLBACK(JSBool)
+HistoryItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHistory *nativeThis = (nsIDOMHistory*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsAutoString nativeRet;
+  PRUint32 b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HISTORY_ITEM, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->Item(b0, nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    nsJSUtils::nsConvertStringToJSVal(nativeRet, cx, rval);
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for History
@@ -344,6 +397,7 @@ static JSFunctionSpec HistoryMethods[] =
   {"back",          HistoryBack,     0},
   {"forward",          HistoryForward,     0},
   {"go",          HistoryGo,     0},
+  {"item",          HistoryItem,     1},
   {0}
 };
 

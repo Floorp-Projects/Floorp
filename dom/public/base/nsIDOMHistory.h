@@ -51,6 +51,8 @@ public:
   NS_IMETHOD    Forward()=0;
 
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc)=0;
+
+  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn)=0;
 };
 
 
@@ -62,6 +64,7 @@ public:
   NS_IMETHOD    Back();  \
   NS_IMETHOD    Forward();  \
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc);  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn);  \
 
 
 
@@ -73,6 +76,7 @@ public:
   NS_IMETHOD    Back() { return _to Back(); }  \
   NS_IMETHOD    Forward() { return _to Forward(); }  \
   NS_IMETHOD    Go(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Go(cx, argv, argc); }  \
+  NS_IMETHOD    Item(PRUint32 aIndex, nsString& aReturn) { return _to Item(aIndex, aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitHistoryClass(nsIScriptContext *aContext, void **aPrototype);

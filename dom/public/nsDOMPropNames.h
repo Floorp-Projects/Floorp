@@ -305,6 +305,7 @@
     "history.current", \
     "history.forward", \
     "history.go", \
+    "history.item", \
     "history.length", \
     "history.next", \
     "history.previous", \
