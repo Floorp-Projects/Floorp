@@ -24,6 +24,7 @@ MODULE = xpcom
 ## exports
 
 EXPORTS =                          \
+        nsTextFormater.h           \
         nsAVLTree.h                \
         nsCppSharedAllocator.h     \
         nsCRT.h                    \
@@ -80,6 +81,7 @@ LINCS =                         \
 LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN
 
 CPP_OBJS =                                        \
+        .\$(OBJDIR)\nsTextFormater.obj            \
         .\$(OBJDIR)\nsArena.obj                   \
         .\$(OBJDIR)\nsAtomTable.obj               \
         .\$(OBJDIR)\nsAVLTree.obj                 \
