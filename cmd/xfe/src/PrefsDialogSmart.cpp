@@ -27,7 +27,6 @@
 #include "xfe.h"
 #include "prefapi.h"
 #include "PrefsDialog.h"
-#include "prefapi.h"
 
 #include <Xm/LabelG.h> 
 #include <Xm/ToggleBG.h> 
@@ -39,11 +38,24 @@
 // Smart Browsing preferences
 //
 
+#define PREF_BROWSER_RELATED_ENABLED   "browser.related.enabled"
+#define PREF_BROWSER_RELATED_AUTOLOAD  "browser.related.autoload"
+#define PREF_BROWSER_RELATED_DISABLEDFORDOMAINS "browser.related.disabledForDomains"
+#define PREF_BROWSER_GOBROWSING_ENABLED "browser.goBrowsing.enabled"
+
+/* related links autoload */
+#define RELATED_LINKS_AUTOLOAD_ALWAYS			0
+#define RELATED_LINKS_AUTOLOAD_ADAPTIVE			1
+#define RELATED_LINKS_AUTOLOAD_NEVER			2
+
+
 //////////////////////////////////////////////////////////////////////////
 XFE_PrefsPageBrowserSmart::XFE_PrefsPageBrowserSmart(XFE_PrefsDialog *dialog)
 	: XFE_PrefsPage(dialog),
 	  m_prefsDataBrowserSmart(0)
 {
+  
+
 	m_rl_need_chrome_update = FALSE;
 }
 //////////////////////////////////////////////////////////////////////////
@@ -303,31 +315,72 @@ XFE_PrefsPageBrowserSmart::create()
 				  cb_toggleRelatedAutoload, 
 				  (XtPointer) fep);
 
-	// Add callbacks to internet keyword toggle button
+// Add callbacks to internet keyword toggle button
 // 	XtAddCallback(fep->enable_internet_keywords, XmNvalueChangedCallback,
 // 				  cb_toggleInternetKeywords, fep);
 
 	setCreated(TRUE);
 }
 //////////////////////////////////////////////////////////////////////////
+
+// Pull the prefs out of the backend and display them.
 void 
-XFE_PrefsPageBrowserSmart::init()
+XFE_PrefsPageBrowserSmart::read()
 {
 	XP_ASSERT( m_prefsDataBrowserSmart != NULL );
 
 	PrefsDataBrowserSmart *		fep = m_prefsDataBrowserSmart;
+	XP_Bool  backendBoolValue;
+    char     *backendCharValue;
+    int      backendIntValue;
+    int      prefStatus;
 
 	// Related links enabled
+	PREF_GetBoolPref(PREF_BROWSER_RELATED_ENABLED, &backendBoolValue);
 	XtVaSetValues(fep->rl_enabled_toggle, 
-                  XmNset,			fe_globalPrefs.related_links_enabled, 
-                  XmNsensitive,		!PREF_PrefIsLocked("browser.related.enabled"),
+                  XmNset, backendBoolValue,
+                  XmNsensitive,	!PREF_PrefIsLocked(PREF_BROWSER_RELATED_ENABLED),
                   NULL);
 
-	// Excluded domaings
-	XmTextSetString(fep->rl_excluded_text,
-					fe_globalPrefs.related_disabled_domains);
+    // Autoload
+    prefStatus = PREF_GetIntPref(PREF_BROWSER_RELATED_AUTOLOAD, 
+                                 &backendIntValue);
+    
+    // Unset everybody
+    XmToggleButtonGadgetSetState(fep->rl_autoload_radio_never, False, False);
+    XmToggleButtonGadgetSetState(fep->rl_autoload_radio_adaptive, False, False);
+    XmToggleButtonGadgetSetState(fep->rl_autoload_radio_always, False, False);
+    
+    // Set the right one.
+    switch(backendIntValue) {
+    case RELATED_LINKS_AUTOLOAD_NEVER:
+      XmToggleButtonGadgetSetState(fep->rl_autoload_radio_never, True, False);
+      break;
+    case RELATED_LINKS_AUTOLOAD_ADAPTIVE:
+      XmToggleButtonGadgetSetState(fep->rl_autoload_radio_adaptive, True, False);
+      break;
+    case RELATED_LINKS_AUTOLOAD_ALWAYS:
+      XmToggleButtonGadgetSetState(fep->rl_autoload_radio_always, True, False);
+      break;
+    default:
+      XP_ASSERT(0);      
+      break;
+    }
 
-	updateRelatedAutoloadSensitive();
+	// Excluded domaings
+    fe_PrefReadString(PREF_BROWSER_RELATED_DISABLEDFORDOMAINS, &backendCharValue);
+	XmTextSetString(fep->rl_excluded_text, backendCharValue);
+
+
+	// Related links enabled
+	PREF_GetBoolPref(PREF_BROWSER_GOBROWSING_ENABLED, &backendBoolValue);
+	XtVaSetValues(fep->enable_internet_keywords,
+                  XmNset,		backendBoolValue,
+                  XmNsensitive,	!PREF_PrefIsLocked(PREF_BROWSER_GOBROWSING_ENABLED),
+                  NULL);
+
+
+	updateRelatedLinksSensitive();
 
 	updateInternetKeywordsSensitive();
 
@@ -345,56 +398,50 @@ XFE_PrefsPageBrowserSmart::install()
 	}
 }
 //////////////////////////////////////////////////////////////////////////
+// Write UI values to PREF backend.
 void 
-XFE_PrefsPageBrowserSmart::save()
+XFE_PrefsPageBrowserSmart::write()
 {
 	PrefsDataBrowserSmart *		fep = m_prefsDataBrowserSmart;
+	XP_Bool	old_related_links_enabled;
+    XP_Bool currentValue;
 
 	XP_ASSERT(fep);
 
-	// Related links
-	XP_Bool	old_related_links_enabled = fe_globalPrefs.related_links_enabled;
-
 	// Related links enabled
-	fe_globalPrefs.related_links_enabled = 
-		XfeToggleButtonIsSet(fep->rl_enabled_toggle);
+    PREF_GetBoolPref(PREF_BROWSER_RELATED_ENABLED, &old_related_links_enabled);
+    currentValue = XfeToggleButtonIsSet(fep->rl_enabled_toggle);
+    PREF_SetBoolPref("browser.related.enabled",
+                     currentValue);
+    
+    // If something changed, we need to update senitivity.
+    if(old_related_links_enabled != currentValue) {
+      m_rl_need_chrome_update = TRUE;
+    }
 
 	// Related links autoload
-	if (old_related_links_enabled != fe_globalPrefs.related_links_enabled) 
-	{
-		m_rl_need_chrome_update = TRUE;
-	}
-
-	// Related links autoload
-	if (XfeToggleButtonIsSet(fep->rl_autoload_radio_always))
-	{
-		fe_globalPrefs.related_links_autoload = RELATED_LINKS_AUTOLOAD_ALWAYS;
-	}
-
-	if (XfeToggleButtonIsSet(fep->rl_autoload_radio_adaptive))
-	{
-		fe_globalPrefs.related_links_autoload = RELATED_LINKS_AUTOLOAD_ADAPTIVE;
-	}
-
-	if (XfeToggleButtonIsSet(fep->rl_autoload_radio_never))
-	{
-		fe_globalPrefs.related_links_autoload = RELATED_LINKS_AUTOLOAD_NEVER;
-	}
+	if (XfeToggleButtonIsSet(fep->rl_autoload_radio_always)) {
+      PREF_SetIntPref(PREF_BROWSER_RELATED_AUTOLOAD, RELATED_LINKS_AUTOLOAD_ALWAYS);
+	} else if (XfeToggleButtonIsSet(fep->rl_autoload_radio_adaptive)) {
+      PREF_SetIntPref(PREF_BROWSER_RELATED_AUTOLOAD, RELATED_LINKS_AUTOLOAD_ADAPTIVE);
+	} else if (XfeToggleButtonIsSet(fep->rl_autoload_radio_never)) {
+      PREF_SetIntPref(PREF_BROWSER_RELATED_AUTOLOAD, RELATED_LINKS_AUTOLOAD_NEVER);
+	} else {
+      XP_ASSERT(0);
+    }
 
 	// Excluded domains
-	fe_globalPrefs.related_disabled_domains = 
-		XmTextGetString(fep->rl_excluded_text);
-
+	PREF_SetCharPref(PREF_BROWSER_RELATED_DISABLEDFORDOMAINS,
+                     XmTextGetString(fep->rl_excluded_text));
 
 	// Internet Keywords
-	fe_globalPrefs.internet_keywords_enabled = 
-		XfeToggleButtonIsSet(fep->enable_internet_keywords);
-
-
-	// Install preferences
-	install();
+    PREF_SetBoolPref(PREF_BROWSER_GOBROWSING_ENABLED,
+                     XfeToggleButtonIsSet(fep->enable_internet_keywords));
+    // Install
+    install();
 }
-//////////////////////////////////////////////////////////////////////////
+
+
 PrefsDataBrowserSmart *
 XFE_PrefsPageBrowserSmart::getData()
 {
@@ -402,15 +449,17 @@ XFE_PrefsPageBrowserSmart::getData()
 }
 //////////////////////////////////////////////////////////////////////////
 void
-XFE_PrefsPageBrowserSmart::updateRelatedAutoloadSensitive()
+XFE_PrefsPageBrowserSmart::updateRelatedLinksSensitive()
 {
 	XP_ASSERT( m_prefsDataBrowserSmart != NULL );
 
 	PrefsDataBrowserSmart *		fep = m_prefsDataBrowserSmart;
+    XP_Bool backendBoolValue;
 
+	// Related links enabled
+	PREF_GetBoolPref(PREF_BROWSER_RELATED_ENABLED, &backendBoolValue);
 	Boolean sensitive = 
-		!PREF_PrefIsLocked("browser.related.enabled") && 
-		fe_globalPrefs.related_links_enabled;
+		!PREF_PrefIsLocked("PREF_BROWSER_RELATED_ENABLED") && backendBoolValue;
 
 	// autoload label
 	XtVaSetValues(fep->rl_autoload_label, 
@@ -419,19 +468,16 @@ XFE_PrefsPageBrowserSmart::updateRelatedAutoloadSensitive()
 
 	// autoload always
 	XtVaSetValues(fep->rl_autoload_radio_always, 
-				  XmNset,		(fe_globalPrefs.related_links_autoload == RELATED_LINKS_AUTOLOAD_ALWAYS), 
                   XmNsensitive,	sensitive,
 				  NULL);
 
 	// autoload adaptive
 	XtVaSetValues(fep->rl_autoload_radio_adaptive, 
-				  XmNset,		(fe_globalPrefs.related_links_autoload == RELATED_LINKS_AUTOLOAD_ADAPTIVE),
                   XmNsensitive,	sensitive,
 				  NULL);
 
 	// autoload never
 	XtVaSetValues(fep->rl_autoload_radio_never,
-				  XmNset,		(fe_globalPrefs.related_links_autoload == RELATED_LINKS_AUTOLOAD_NEVER),
                   XmNsensitive,	sensitive,
 				  NULL);
 
@@ -458,11 +504,12 @@ XFE_PrefsPageBrowserSmart::updateInternetKeywordsSensitive()
 
 	// enable keywords
 	XtVaSetValues(fep->enable_internet_keywords, 
-				  XmNset,			fe_globalPrefs.internet_keywords_enabled,
 				  XmNsensitive,		keywords_sensitive,
 				  NULL);
 }
+
 //////////////////////////////////////////////////////////////////////////
+
 void 
 XFE_PrefsPageBrowserSmart::cb_toggleRelatedEnabled(Widget    w,
 												   XtPointer clientData,
@@ -481,11 +528,12 @@ XFE_PrefsPageBrowserSmart::cb_toggleRelatedEnabled(Widget    w,
 	XP_ASSERT( cb != NULL );
  	XP_ASSERT( w == fep->rl_enabled_toggle );
 
-	fe_globalPrefs.related_links_enabled = (XP_Bool) cb->set;
-	
-	obj->m_rl_need_chrome_update = True;
+    // Actually set the pref so that read() will read it from
+    // the backend properly.
+    PREF_SetBoolPref(PREF_BROWSER_RELATED_ENABLED, (XP_Bool)cb->set);
 
-	obj->updateRelatedAutoloadSensitive();
+	obj->m_rl_need_chrome_update = True;
+	obj->updateRelatedLinksSensitive();
 }
 //////////////////////////////////////////////////////////////////////////
 void 
@@ -493,34 +541,29 @@ XFE_PrefsPageBrowserSmart::cb_toggleRelatedAutoload(Widget    w,
 													XtPointer closure,
 													XtPointer callData)
 {
-	XmToggleButtonCallbackStruct *	cb = 
-		(XmToggleButtonCallbackStruct *) callData;
-
-	PrefsDataBrowserSmart     *		fep = (PrefsDataBrowserSmart *) closure;
-
- 	if (! cb->set) 
-	{
- 		XtVaSetValues(w, XmNset, True, 0);
- 	}
- 	else if (w == fep->rl_autoload_radio_always)
-	{
- 		XtVaSetValues(fep->rl_autoload_radio_adaptive, XmNset, False, 0);
- 		XtVaSetValues(fep->rl_autoload_radio_never, XmNset, False, 0);
+  XmToggleButtonCallbackStruct *	cb = 
+    (XmToggleButtonCallbackStruct *) callData;
+  
+  PrefsDataBrowserSmart     *		fep = (PrefsDataBrowserSmart *) closure;
+  
+  if (! cb->set) {
+    // We didn't get a set-toggle-button event, bail.
+    XtVaSetValues(w, XmNset, True, 0);
+  } else {
+    // Ok which one was it?  Unset the others.
+ 	if (w == fep->rl_autoload_radio_always) {
+      XtVaSetValues(fep->rl_autoload_radio_adaptive, XmNset, False, 0);
+      XtVaSetValues(fep->rl_autoload_radio_never, XmNset, False, 0);
+    } else if (w == fep->rl_autoload_radio_adaptive) {
+      XtVaSetValues(fep->rl_autoload_radio_always, XmNset, False, 0);
+      XtVaSetValues(fep->rl_autoload_radio_never, XmNset, False, 0);
+	} else if (w == fep->rl_autoload_radio_never) {
+      XtVaSetValues(fep->rl_autoload_radio_always, XmNset, False, 0);
+      XtVaSetValues(fep->rl_autoload_radio_adaptive, XmNset, False, 0);
+	} else {
+      XP_ASSERT(0);
 	}
- 	else if (w == fep->rl_autoload_radio_adaptive)
-	{
- 		XtVaSetValues(fep->rl_autoload_radio_always, XmNset, False, 0);
- 		XtVaSetValues(fep->rl_autoload_radio_never, XmNset, False, 0);
-	}
- 	else if (w == fep->rl_autoload_radio_never)
-	{
- 		XtVaSetValues(fep->rl_autoload_radio_always, XmNset, False, 0);
- 		XtVaSetValues(fep->rl_autoload_radio_adaptive, XmNset, False, 0);
-	}
- 	else
-	{
- 		abort();
-	}
+  }
 }
 //////////////////////////////////////////////////////////////////////////
 

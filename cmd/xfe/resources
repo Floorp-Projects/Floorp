@@ -5401,6 +5401,23 @@ Sometimes a document will provide its own colors and background
 *prefsLang*langList.visibleItemCount:	15
 *prefsLang*otherLabel.labelString:		Others:
 
+! Preferences dialog - Smart Browsing
+*prefs*relatedFrame*relatedBoxLabel.labelString:	What's Related
+*prefs*relatedFrame*enableRelated.labelString:		Enable What's Related
+
+*prefs*relatedFrame*autoloadLabel.labelString:		Automatically Load What's Related
+
+*prefs*relatedFrame*autoloadAlways.labelString:		Always
+*prefs*relatedFrame*autoloadAdaptive.labelString:	After First Use
+*prefs*relatedFrame*autoloadNever.labelString:		Never
+
+*prefs*relatedFrame*excludedLabel.labelString:		\
+Do not request "What's Related" information for\n\
+the following domains: (a comma separated list)
+
+*prefs*keywordFrame*keywordBoxLabel.labelString:	Internet Keywords
+*prefs*keywordFrame*enableKeywords.labelString:		Enable Internet Keywords
+
 ! Preferences dialog - Advanced
 
 *prefs*advanced*showImage.labelString:			\
@@ -5977,6 +5994,7 @@ for download.
 *pref.colors:						Colors
 *pref.browser:						Navigator
 *pref.lang:							Languages
+*pref.smart:						Smart Browsing
 *pref.applications:					Applications
 *pref.privacy:						Privacy
 *pref.mailNews:						Mail & Groups
@@ -6007,6 +6025,7 @@ for download.
 *prefDesc.colors:					Change the colors in your display
 *prefDesc.browser:					Specify the home page location
 *prefDesc.lang:						View web pages in different languages
+*prefDesc.smart:					Configure browsing aids
 *prefDesc.applications:				Specify helper applications for different file types
 *prefDesc.privacy:					Establish your level of privacy protection
 *prefDesc.mailNews:					Change appearance settings for Mail & Groups

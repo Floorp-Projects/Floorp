@@ -36,7 +36,6 @@ struct PrefsDataGeneralAppearance
 	Widget     page;
 
 	// Launch
-
 	Widget     navigator_toggle;
 	Widget     messenger_toggle;
 	Widget     collabra_toggle;
@@ -46,7 +45,6 @@ struct PrefsDataGeneralAppearance
 	Widget     calendar_toggle;
 
     // Show Toolbar as
-
 	Widget     pic_and_text_toggle;
 	Widget     pic_only_toggle;
 	Widget     text_only_toggle;
@@ -60,7 +58,6 @@ struct PrefsDataGeneralFonts
 	Widget     page;
 
 	// Font
-
 	Widget     encoding_label;
 	Widget     proportional_label;
 	Widget     fixed_label;
@@ -91,7 +88,6 @@ struct PrefsDataGeneralColors
 	Widget     page;
 
 	// Colors
-
 	Widget     text_color_button;
 	Widget     bg_color_button;
 	Widget     links_color_button;
@@ -102,7 +98,6 @@ struct PrefsDataGeneralColors
 };
 
 // ---------- Advanced ----------
-
 struct PrefsDataGeneralAdvanced
 {
 	MWContext *context;
@@ -205,7 +200,6 @@ struct PrefsDataHelpFiles
 #endif /* PREFS_UNSUPPORTED */
 
 // ---------- Browser ----------
-
 struct PrefsDataBrowser
 {
 	MWContext *context;
@@ -255,8 +249,33 @@ struct PrefsDataBrowserLang
 	int            pref_lang_count;
 };
 
-// ---------- Mail News ----------
+// ---------- Smart ----------
+struct PrefsDataBrowserSmart
+{
+	MWContext *context;
+	Widget     prompt_dialog;
+	Widget     page;
 
+	// Related links
+	Widget     rl_enabled_toggle;
+
+	// Related links autoload
+	Widget     rl_autoload_label;
+
+	Widget     rl_autoload_radio_always;
+	Widget     rl_autoload_radio_adaptive;
+	Widget     rl_autoload_radio_never;
+
+	// Related links excluded domains
+	Widget     rl_excluded_label;
+	Widget     rl_excluded_text;
+
+	// Internet Keywords
+	Widget     enable_internet_keywords;
+};
+
+
+// ---------- Mail News ----------
 struct PrefsDataMailNews
 {
 	MWContext *context;
@@ -322,7 +341,6 @@ struct PrefsDataApplEdit
 };
 
 // ---------- Editor ----------
-
 struct PrefsDataEditor
 {
 	MWContext *context;
@@ -369,7 +387,6 @@ struct PrefsDataEditorPublish
 
 #ifdef PREFS_UNSUPPORTED
 // ---------- Offline ----------
-
 struct PrefsDataOffline
 {
 	MWContext *context;

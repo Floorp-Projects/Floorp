@@ -74,6 +74,7 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_APPS                 "Applications"
 #define CAT_PRIVACY              "Privacy"
 #define CAT_LANG                 "Languages"
+#define CAT_SMART                "Smart Browsing"
 #define CAT_CACHE                "Cache"
 #define CAT_PROXIES              "Proxies"
 #define CAT_MAILNEWS_IDENTITY    "Identity"
@@ -102,6 +103,7 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESNAME_COLORS               "pref.colors"
 #define CAT_RESNAME_BROWSER              "pref.browser"
 #define CAT_RESNAME_LANG                 "pref.lang"
+#define CAT_RESNAME_SMART                "pref.smart"
 #define CAT_RESNAME_APPS                 "pref.applications"
 #define CAT_RESNAME_PRIVACY              "pref.privacy"
 #define CAT_RESNAME_MAILNEWS             "pref.mailNews"
@@ -136,6 +138,7 @@ static       char *TAG_BOLD = "BOLD";
 #define CAT_RESCLASS_COLORS               "Pref.Colors"
 #define CAT_RESCLASS_BROWSER              "Pref.Browser"
 #define CAT_RESCLASS_LANG                 "Pref.Lang"
+#define CAT_RESCLASS_SMART                "Pref.Smart"
 #define CAT_RESCLASS_APPS                 "Pref.Applications"
 #define CAT_RESCLASS_PRIVACY              "Pref.Privacy"
 #define CAT_RESCLASS_MAILNEWS             "Pref.MailNews"
@@ -170,6 +173,7 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESNAME_COLORS               "prefDesc.colors"
 #define DESC_RESNAME_BROWSER              "prefDesc.browser"
 #define DESC_RESNAME_LANG                 "prefDesc.lang"
+#define DESC_RESNAME_SMART                "prefDesc.smart"
 #define DESC_RESNAME_APPS                 "prefDesc.applications"
 #define DESC_RESNAME_PRIVACY              "prefDesc.privacy"
 #define DESC_RESNAME_MAILNEWS             "prefDesc.mailNews"
@@ -204,6 +208,7 @@ static       char *TAG_BOLD = "BOLD";
 #define DESC_RESCLASS_COLORS               "PrefDesc.Colors"
 #define DESC_RESCLASS_BROWSER              "PrefDesc.Browser"
 #define DESC_RESCLASS_LANG                 "PrefDesc.Lang"
+#define DESC_RESCLASS_SMART                "PrefDesc.Smart"
 #define DESC_RESCLASS_APPS                 "PrefDesc.Applications"
 #define DESC_RESCLASS_PRIVACY              "PrefDesc.Privacy"
 #define DESC_RESCLASS_MAILNEWS             "PrefDesc.MailNews"
@@ -239,6 +244,7 @@ typedef enum _prefsPageType {
 	PAGE_TYPE_COLORS,
 	PAGE_TYPE_BROWSER,
 	PAGE_TYPE_LANG,
+	PAGE_TYPE_SMART,
 	PAGE_TYPE_APPS,
 	PAGE_TYPE_PRIVACY,
 	PAGE_TYPE_MAILNEWS,
@@ -474,6 +480,17 @@ struct _prefsCategory prefsBrowser[] = {
 		NULL,
 		0,
 		PAGE_TYPE_APPS,
+	},
+	{
+		CAT_SMART, 
+		CAT_RESNAME_SMART, 
+		CAT_RESCLASS_SMART, 
+		DESC_RESNAME_SMART, 
+		DESC_RESCLASS_SMART, 
+		TRUE,
+		NULL,
+		0,
+		PAGE_TYPE_SMART,
 	},
 	{
 		CAT_PRIVACY, 
@@ -987,7 +1004,8 @@ void XFE_PrefsPage::map()
 	// Initialize the page
 
 	if (doInitInMap()){
-		if (! isInitialized()) init();
+		if (! isInitialized()) 
+          read();
 		setChanged(TRUE);
 	}
 	
@@ -1433,7 +1451,7 @@ void XFE_PrefsDialog::saveChanges()
 
 	for (int i = 0; i < m_numPages; i++) {
 		if (m_pages[i]->isChanged()) {
-			m_pages[i]->save();
+			m_pages[i]->write();
 		}
 	}
 
@@ -1826,6 +1844,9 @@ void XFE_PrefsDialog::newPage(XFE_PrefsPage *&page,
 		break;
 	case PAGE_TYPE_APPS:
 		page = new XFE_PrefsPageGeneralAppl(this);
+		break;
+	case PAGE_TYPE_SMART:
+		page = new XFE_PrefsPageBrowserSmart(this);
 		break;
 	case PAGE_TYPE_PRIVACY:
 		page = new XFE_PrefsPageGeneralPrivacy(this);

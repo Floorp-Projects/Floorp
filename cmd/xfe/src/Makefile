@@ -123,6 +123,7 @@ CPPSRCS		= \
 		  PrefsDialogBrowser.cpp \
 		  PrefsDialogGeneral.cpp \
 		  PrefsDialogMailnews.cpp \
+		  PrefsDialogSmart.cpp \
 		  PrefsLang.cpp \
 		  PrefsProxiesView.cpp \
 		  RDFBase.cpp \
