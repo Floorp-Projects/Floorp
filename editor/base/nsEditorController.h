@@ -25,19 +25,25 @@
 
 #include "nsIController.h"
 #include "nsIEditorController.h"
+#include "nsIControllerCommand.h"
 
+#include "nsHashTable.h"
 #include "nsString.h"
-#include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
 
 class nsIHTMLContent;
 class nsIGfxTextControlFrame;
 class nsIEditor;
 class nsISelectionController;
+class nsBaseCommand;
 
-class nsEditorController : public nsIController ,public nsIEditorController
+
+class nsEditorController :  public nsIController,
+                            public nsIEditorController
 {
 public:
-  nsEditorController();
+
+          nsEditorController();
   virtual ~nsEditorController();
 
   // nsISupports
@@ -45,6 +51,9 @@ public:
     
   // nsIController
   NS_DECL_NSICONTROLLER
+
+  /** init the controller */
+  NS_IMETHOD Init();
 
   /** set the content for this controller instance */
   NS_IMETHOD SetContent(nsIHTMLContent *aContent);
@@ -65,66 +74,27 @@ protected:
   /** return PR_TRUE if the editor associated with mContent is enabled */
   PRBool IsEnabled();
 
-  /* Return true if we have pastable data on the clipboard */
-  PRBool DataOnClipboard();
+  /* register a command */
+  nsresult RegisterEditorCommand(nsBaseCommand* aCommand);
   
-  nsCOMPtr<nsIAtom> mUndoCmd;
-  nsCOMPtr<nsIAtom> mRedoCmd;
-  nsCOMPtr<nsIAtom> mCutCmd;
-  nsCOMPtr<nsIAtom> mCopyCmd;
-  nsCOMPtr<nsIAtom> mPasteCmd;
-  nsCOMPtr<nsIAtom> mDeleteCmd;
-  nsCOMPtr<nsIAtom> mSelectAllCmd;
-
-  nsCOMPtr<nsIAtom> mBeginLineCmd;
-  nsCOMPtr<nsIAtom> mEndLineCmd;
-  nsCOMPtr<nsIAtom> mSelectBeginLineCmd;
-  nsCOMPtr<nsIAtom> mSelectEndLineCmd;
-
-  nsCOMPtr<nsIAtom> mScrollTopCmd;
-  nsCOMPtr<nsIAtom> mScrollBottomCmd;
-
-  nsCOMPtr<nsIAtom> mMoveTopCmd;
-  nsCOMPtr<nsIAtom> mMoveBottomCmd;
-  nsCOMPtr<nsIAtom> mSelectMoveTopCmd;
-  nsCOMPtr<nsIAtom> mSelectMoveBottomCmd;
-
-  nsCOMPtr<nsIAtom> mLineNextCmd;
-  nsCOMPtr<nsIAtom> mLinePreviousCmd;
-  nsCOMPtr<nsIAtom> mSelectLineNextCmd;
-  nsCOMPtr<nsIAtom> mSelectLinePreviousCmd;
-
-  nsCOMPtr<nsIAtom> mLeftCmd;
-  nsCOMPtr<nsIAtom> mRightCmd;
-  nsCOMPtr<nsIAtom> mSelectLeftCmd;
-  nsCOMPtr<nsIAtom> mSelectRightCmd;
-
-  nsCOMPtr<nsIAtom> mWordLeftCmd;
-  nsCOMPtr<nsIAtom> mWordRightCmd;
-  nsCOMPtr<nsIAtom> mSelectWordLeftCmd;
-  nsCOMPtr<nsIAtom> mSelectWordRightCmd;
-
-  nsCOMPtr<nsIAtom> mScrollPageUpCmd;
-  nsCOMPtr<nsIAtom> mScrollPageDownCmd;
-  nsCOMPtr<nsIAtom> mScrollLineUpCmd;
-  nsCOMPtr<nsIAtom> mScrollLineDownCmd;
-
-  nsCOMPtr<nsIAtom> mMovePageUpCmd;
-  nsCOMPtr<nsIAtom> mMovePageDownCmd;
-  nsCOMPtr<nsIAtom> mSelectMovePageUpCmd;
-  nsCOMPtr<nsIAtom> mSelectMovePageDownCmd;
-
-  nsCOMPtr<nsIAtom> mDeleteCharBackwardCmd;
-  nsCOMPtr<nsIAtom> mDeleteCharForwardCmd;
-  nsCOMPtr<nsIAtom> mDeleteWordBackwardCmd;
-  nsCOMPtr<nsIAtom> mDeleteWordForwardCmd;
-  nsCOMPtr<nsIAtom> mDeleteToBeginningOfLineCmd;
-  nsCOMPtr<nsIAtom> mDeleteToEndOfLineCmd;
-
 protected:
+
    nsIHTMLContent* mContent;    // weak reference, the content object owns this object
 
    //if editor is null then look to mContent. this is for dual use of window and content
    //attached controller.
    nsIEditor *mEditor;
+   
+   nsCOMPtr<nsIControllerCommandManager> mCommandManager;     // our reference to the command manager
+   
+
+private:
+
+  static nsresult GetCommandManager(nsIControllerCommandManager* *outCommandManager);
+  static nsresult RegisterEditorCommands(nsIControllerCommandManager* inCommandManager);
+  static nsresult RegisterOneCommand(const PRUnichar* aCommandName, nsIControllerCommandManager *inCommandManager, nsBaseCommand* aCommand);
+  
+  // the singleton command manager
+  static nsWeakPtr sCommandManager;
+   
 };

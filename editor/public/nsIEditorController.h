@@ -38,6 +38,9 @@ class nsIEditorController : public nsISupports
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IEDITORCONTROLLER_IID)
 
+  /** init the controller */
+  NS_IMETHOD Init() = 0;
+
   /** set the content for this controller instance */
   NS_IMETHOD SetContent(nsIHTMLContent *aContent) = 0;
 
