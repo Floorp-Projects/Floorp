@@ -156,6 +156,7 @@ if (Param("usetargetmilestone")) {
     if ($bug{'target_milestone'} eq "") {
         $bug{'target_milestone'} = " ";
     }
+    push(@::legal_target_milestone, " ");
     print "
 <TD ALIGN=RIGHT><A href=\"$url\"><B>Target Milestone:</B></A></TD>
 <TD><SELECT NAME=target_milestone>" .
