@@ -152,8 +152,7 @@ nsLegendFrame::Reflow(nsIPresContext& aPresContext,
 
   // adjust our max element size, if necessary
   if (aDesiredSize.maxElementSize) {
-    aDesiredSize.maxElementSize->width  += borderPadding.left + borderPadding.right;
-    aDesiredSize.maxElementSize->height += borderPadding.top + borderPadding.bottom;
+    aDesiredSize.AddBorderPaddingToMaxElementSize(borderPadding);
   }
   aDesiredSize.ascent  = aDesiredSize.height;
   aDesiredSize.descent = 0;
