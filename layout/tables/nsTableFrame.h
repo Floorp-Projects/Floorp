@@ -686,8 +686,12 @@ protected:
 
   nsIFrame* GetFirstBodyRowGroupFrame();
   PRBool MoveOverflowToChildList(nsPresContext* aPresContext);
-  void PushChildren(nsIFrame*       aFromChild,
-                    nsIFrame*       aPrevSibling);
+  /**
+   * Push all our child frames from the aFrames array, in order, starting from the
+   * frame at aPushFrom to the end of the array. The frames are put on our overflow
+   * list or moved directly to our next-in-flow if one exists.
+   */
+  void PushChildren(const nsAutoVoidArray& aFrames, PRInt32 aPushFrom);
 
 public:
   // put the children frames in the display order (e.g. thead before tbody before tfoot)

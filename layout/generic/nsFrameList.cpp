@@ -177,7 +177,7 @@ nsFrameList::AppendFrame(nsIFrame* aParent, nsIFrame* aFrame)
 }
 
 PRBool
-nsFrameList::RemoveFrame(nsIFrame* aFrame)
+nsFrameList::RemoveFrame(nsIFrame* aFrame, nsIFrame* aPrevSiblingHint)
 {
   NS_PRECONDITION(nsnull != aFrame, "null ptr");
   if (nsnull != aFrame) {
@@ -188,7 +188,10 @@ nsFrameList::RemoveFrame(nsIFrame* aFrame)
       return PR_TRUE;
     }
     else {
-      nsIFrame* prevSibling = GetPrevSiblingFor(aFrame);
+      nsIFrame* prevSibling = aPrevSiblingHint;
+      if (!prevSibling || prevSibling->GetNextSibling() != aFrame) {
+        prevSibling = GetPrevSiblingFor(aFrame);
+      }
       if (prevSibling) {
         prevSibling->SetNextSibling(nextFrame);
         return PR_TRUE;

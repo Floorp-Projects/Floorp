@@ -2179,15 +2179,27 @@ nsTableFrame::GetFirstBodyRowGroupFrame()
 // Table specific version that takes into account repeated header and footer
 // frames when continuing table frames
 void
-nsTableFrame::PushChildren(nsIFrame*       aFromChild,
-                           nsIFrame*       aPrevSibling)
+nsTableFrame::PushChildren(const nsAutoVoidArray& aFrames,
+                           PRInt32 aPushFrom)
 {
-  NS_PRECONDITION(nsnull != aFromChild, "null pointer");
-  NS_PRECONDITION(nsnull != aPrevSibling, "pushing first child");
-  NS_PRECONDITION(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
+  NS_PRECONDITION(aPushFrom > 0, "pushing first child");
 
-  // Disconnect aFromChild from its previous sibling
-  aPrevSibling->SetNextSibling(nsnull);
+  // extract the frames from the array into a sibling list
+  nsFrameList frames;
+  nsIFrame* lastFrame = nsnull;
+  PRUint32 childX;
+  nsIFrame* prevSiblingHint =
+    NS_STATIC_CAST(nsIFrame*, aFrames.ElementAt(aPushFrom - 1));
+  for (childX = aPushFrom; childX < aFrames.Count(); ++childX) {
+    nsIFrame* f = NS_STATIC_CAST(nsIFrame*, aFrames.FastElementAt(childX));
+    // Don't push repeatable frames, do push non-rowgroup frames
+    if (f->GetType() != nsLayoutAtoms::tableRowGroupFrame ||
+        !NS_STATIC_CAST(nsTableRowGroupFrame*, f)->IsRepeatable()) {
+      mFrames.RemoveFrame(f, prevSiblingHint);
+      frames.InsertFrame(nsnull, lastFrame, f);
+      lastFrame = f;
+    }
+  }
 
   if (nsnull != mNextInFlow) {
     nsTableFrame* nextInFlow = (nsTableFrame*)mNextInFlow;
@@ -2200,14 +2212,14 @@ nsTableFrame::PushChildren(nsIFrame*       aFromChild,
     }
     // When pushing and pulling frames we need to check for whether any
     // views need to be reparented.
-    for (nsIFrame* f = aFromChild; f; f = f->GetNextSibling()) {
+    for (nsIFrame* f = frames.FirstChild(); f; f = f->GetNextSibling()) {
       nsHTMLContainerFrame::ReparentFrameView(GetPresContext(), f, this, nextInFlow);
     }
-    nextInFlow->mFrames.InsertFrames(mNextInFlow, prevSibling, aFromChild);
+    nextInFlow->mFrames.InsertFrames(mNextInFlow, prevSibling, frames.FirstChild());
   }
   else {
     // Add the frames to our overflow list
-    SetOverflowFrames(GetPresContext(), aFromChild);
+    SetOverflowFrames(GetPresContext(), frames.FirstChild());
   }
 }
 
@@ -3146,7 +3158,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
 
     if (doReflowChild) {
       if (pageBreak) {
-        PushChildren(kidFrame, prevKidFrame);
+        PushChildren(rowGroups, childX);
         aStatus = NS_FRAME_NOT_COMPLETE;
         break;
       }
@@ -3209,7 +3221,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
               if (nextRowGroupFrame) {
                 PlaceChild(aReflowState, kidFrame, desiredSize);
                 aStatus = NS_FRAME_NOT_COMPLETE;
-                PushChildren(nextRowGroupFrame, kidFrame);
+                PushChildren(rowGroups, childX + 1);
                 aLastChildReflowed = kidFrame;
                 break;
               }
@@ -3218,7 +3230,7 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
           else { // we are not on top, push this rowgroup onto the next page
             if (prevKidFrame) { // we had a rowgroup before so push this
               aStatus = NS_FRAME_NOT_COMPLETE;
-              PushChildren(kidFrame, prevKidFrame);
+              PushChildren(rowGroups, childX);
               aLastChildReflowed = prevKidFrame;
               break;
             }
@@ -3256,12 +3268,17 @@ nsTableFrame::ReflowChildren(nsTableReflowState& aReflowState,
             // Add the continuing frame to the sibling list
             continuingFrame->SetNextSibling(kidFrame->GetNextSibling());
             kidFrame->SetNextSibling(continuingFrame);
+            // Update rowGroups with the new rowgroup, just as it
+            // would have been if we had called OrderRowGroups
+            // again. Note that rowGroups doesn't get used again after
+            // we PushChildren below, anyway.
+            rowGroups.InsertElementAt(continuingFrame, childX + 1);
           }
           // We've used up all of our available space so push the remaining
           // children to the next-in-flow
           nsIFrame* nextSibling = kidFrame->GetNextSibling();
           if (nsnull != nextSibling) {
-            PushChildren(nextSibling, kidFrame);
+            PushChildren(rowGroups, childX + 1);
           }
           if (repeatedFooter) {
             kidAvailSize.height = repeatedFooterHeight;
