@@ -214,7 +214,7 @@ function EditorSetParagraphFormat(paraFormat)
 function EditorSetFontSize(size)
 {
   if( size == "0" || size == "normal" || 
-      size === "+0" )
+      size == "+0" )
   {
     window.editorShell.RemoveTextProperty("font", size);
     dump("Removing font size\n");
