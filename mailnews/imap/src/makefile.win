@@ -75,19 +75,6 @@ EXPORTS=	nsImapUrl.h									\
 			nsImapMessage.h								\
             $(NULL)
 
-LINCS=													\
-		-I$(PUBLIC)\xpcom								\
-		-I$(PUBLIC)\mailnews							\
-		-I$(PUBLIC)\nsprpub								\
-		-I$(PUBLIC)\js									\
-		-I$(PUBLIC)\rdf \
-		-I$(PUBLIC)\rdfutil \
-		-I$(PUBLIC)\raptor								\
-		-I$(PUBLIC)\netlib								\
-		-I$(PUBLIC)\pref								\
-		-I$(PUBLIC)\mime								\
-		 $(NULL)
-
 LCFLAGS =		   \
         $(LCFLAGS) \
         $(DEFINES) \
