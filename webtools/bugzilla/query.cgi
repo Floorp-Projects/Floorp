@@ -289,7 +289,6 @@ Array.prototype.push = array_push;
 
 var cpts = new Array();
 var vers = new Array();
-var agt=navigator.userAgent.toLowerCase();
 ENDSCRIPT
 
 
@@ -328,7 +327,6 @@ $jscript .= q{
 // Only display versions/components valid for selected product(s)
 
 function selectProduct(f) {
-    var agt=navigator.userAgent.toLowerCase();
     // Netscape 4.04 and 4.05 also choke with an "undefined"
     // error.  if someone can figure out how to "define" the
     // whatever, we'll remove this hack.  in the mean time, we'll
