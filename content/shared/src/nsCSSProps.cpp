@@ -720,6 +720,9 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_background_y_position:
     return SearchKeywordTable(aValue, kBackgroundYPositionKTable);
 
+  case eCSSProperty_behavior:
+    break;
+
   case eCSSProperty_border:
     break;
 

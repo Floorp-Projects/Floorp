@@ -9,7 +9,8 @@
       attribute wstring backgroundColor; 
       attribute wstring backgroundImage; 
       attribute wstring backgroundPosition; 
-      attribute wstring backgroundRepeat; 
+      attribute wstring backgroundRepeat;
+	  attribute wstring behavior;
       attribute wstring border; 
       attribute wstring borderCollapse; 
       attribute wstring borderColor; 

@@ -56,6 +56,7 @@
     "css2properties.backgroundimage", \
     "css2properties.backgroundposition", \
     "css2properties.backgroundrepeat", \
+    "css2properties.behavior", \
     "css2properties.border", \
     "css2properties.borderbottom", \
     "css2properties.borderbottomcolor", \

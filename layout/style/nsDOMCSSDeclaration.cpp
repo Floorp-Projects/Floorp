@@ -297,6 +297,18 @@ nsDOMCSSDeclaration::SetBackgroundRepeat(const nsString& aBackgroundRepeat)
 }
 
 NS_IMETHODIMP
+nsDOMCSSDeclaration::GetBehavior(nsString& aBehavior)
+{
+  return GetPropertyValue("behavior", aBehavior);
+}
+
+NS_IMETHODIMP
+nsDOMCSSDeclaration::SetBehavior(const nsString& aBehavior)
+{
+  return SetProperty("behavior", aBehavior, "");
+}
+
+NS_IMETHODIMP
 nsDOMCSSDeclaration::GetBorder(nsString& aBorder)
 {
   return GetPropertyValue("border", aBorder);
