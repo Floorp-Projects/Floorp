@@ -69,7 +69,6 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    WalletChangePassword();
     NS_IMETHOD    WalletQuickFillin(nsIDOMWindow* aWin);
     NS_IMETHOD    WalletSamples();
-    NS_IMETHOD    CookieViewer();
 
     NS_IMETHOD    LoadUrl(const nsString& aUrl);
     NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);

@@ -468,91 +468,6 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow* aWin)
   }
 }
 
-#ifdef xxx
-NS_IMETHODIMP    
-nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
-{
-  NS_PRECONDITION(aForm != nsnull, "null ptr");
-  if (! aForm)
-    return NS_ERROR_NULL_POINTER;
-
-  nsIPresShell* shell;
-  shell = nsnull;
-  nsCOMPtr<nsIWebShell> webcontent; 
-
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject; 
-  scriptGlobalObject = do_QueryInterface(aForm); 
-  scriptGlobalObject->GetWebShell(getter_AddRefs(webcontent)); 
-
-  nsresult res;
-  nsString urlString = nsString("");
-  if ( mContentAreaWebShell ) {
-    const PRUnichar *url = 0;
-    PRInt32 history;
-    res = mContentAreaWebShell->GetHistoryIndex(history);
-    if (NS_SUCCEEDED(res)) {
-      res = mContentAreaWebShell->GetURL( history, &url );
-      if (NS_SUCCEEDED(res)) {
-        urlString = nsString(url);
-      }
-    }
-  }
-
-  shell = GetPresShellFor(webcontent);
-  nsIWalletService *walletservice;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if (NS_SUCCEEDED(res) && (nsnull != walletservice)) {
-    res = walletservice->WALLET_Prefill(shell, urlString, PR_TRUE);
-    nsServiceManager::ReleaseService(kWalletServiceCID, walletservice);
-  }
-
-    // (code adapted from nsToolkitCore::ShowModal. yeesh.)
-    nsresult           rv;
-    nsIAppShellService *appShell;
-    nsIWebShellWindow  *window;
-
-    window = nsnull;
-
-    nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/htmldlgs.htm");
-    if (NS_FAILED(rv))
-        return rv;
-
-    rv = nsServiceManager::GetService(kAppShellServiceCID, kIAppShellServiceIID,
-                                    (nsISupports**) &appShell);
-    if (NS_FAILED(rv))
-        return rv;
-
-    // Create "save to disk" nsIXULCallbacks...
-    //nsIXULWindowCallbacks *cb = new nsFindDialogCallbacks( aURL, aContentType );
-    nsIXULWindowCallbacks *cb = nsnull;
-
-    nsCOMPtr<nsIWebShellWindow> parent;
-    DOMWindowToWebShellWindow(aCurrentFrontWin, &parent);
-    appShell->CreateDialogWindow(parent, urlObj, PR_TRUE, window,
-                                 nsnull, cb, 504, 436);
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-
-    if (window != nsnull) {
-        nsCOMPtr<nsIWidget> parentWindowWidgetThing;
-        nsresult gotParent;
-        gotParent = parent ? parent->GetWidget(*getter_AddRefs(parentWindowWidgetThing)) :
-                             NS_ERROR_FAILURE;
-        // Windows OS is the only one that needs the parent disabled, or cares
-        // arguably this should be done by the new window, within ShowModal...
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_FALSE);
-        window->ShowModal();
-        if (NS_SUCCEEDED(gotParent))
-            parentWindowWidgetThing->Enable(PR_TRUE);
-    }
-
-    return rv;
-}
-#endif
-
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletSamples()
 {
@@ -581,32 +496,6 @@ nsBrowserAppCore::WalletQuickFillin(nsIDOMWindow*) {
 NS_IMETHODIMP
 nsBrowserAppCore::WalletSafeFillin(nsIDOMWindow*, nsIDOMWindow*) {
   return NS_OK;
-}
-#endif
-
-#ifdef CookieManagement
-NS_IMETHODIMP    
-nsBrowserAppCore::CookieViewer()
-{
-  nsINetService *netservice;
-  nsresult res;
-  res = nsServiceManager::GetService(kNetServiceCID,
-                                     kINetServiceIID,
-                                     (nsISupports **)&netservice);
-  if ((NS_OK == res) && (nsnull != netservice)) {
-    res = netservice->NET_DisplayCookieInfoAsHTML();
-    nsServiceManager::ReleaseService(kNetServiceCID, netservice);
-  }
-#ifndef HTMLDialogs 
-  return newWind("file:///htmldlgs.htm");
-#endif
-  return NS_OK;
-}
-#else
-NS_IMETHODIMP    
-nsBrowserAppCore::CookieViewer()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 #endif
 

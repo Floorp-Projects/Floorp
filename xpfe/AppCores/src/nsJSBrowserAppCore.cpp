@@ -441,39 +441,6 @@ BrowserAppCoreWalletSamples(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 
 
 //
-// Native method CookieViewer
-//
-PR_STATIC_CALLBACK(JSBool)
-BrowserAppCoreCookieViewer(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->CookieViewer()) {
-      return JS_FALSE;
-    }
-
-    *rval = JSVAL_VOID;
-  }
-  else {
-    JS_ReportError(cx, "Function cookieViewer requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method SetToolbarWindow
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -937,7 +904,6 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"walletChangePassword",          BrowserAppCoreWalletChangePassword,     0},
   {"walletQuickFillin",          BrowserAppCoreWalletQuickFillin,     1},
   {"walletSamples",          BrowserAppCoreWalletSamples,     0},
-  {"cookieViewer",          BrowserAppCoreCookieViewer,     0},
   {"setToolbarWindow",          BrowserAppCoreSetToolbarWindow,     1},
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},
   {"setWebShellWindow",          BrowserAppCoreSetWebShellWindow,     1},
