@@ -463,7 +463,7 @@ NS_IMETHODIMP ns4xPluginInstance::SetWindow(nsPluginWindow* window)
 {
     // XXX 4.x plugins don't want a SetWindow(NULL).
 
-    if (window == NULL)
+    if (window == NULL || mStarted == PR_FALSE)
         return NS_OK;
 
     NPError error;
