@@ -178,7 +178,9 @@ NS_IMETHODIMP nsXIFFormatConverter::Convert(nsString * aFromDataFlavor, void * a
   nsAutoString srcText;
 
   // XIF on clipboard is going to always be double byte
-  srcText.SetString((PRUnichar *)aFromData, aDataLen);
+  // since the data is in two byte chunks the length represents
+  // the length in single 8 bit chars, so we need to divide by two
+  srcText.SetString((PRUnichar *)aFromData, aDataLen/2);
 
   if (aToDataFlavor->Equals(kTextMime)) {
     if (NS_OK == ConvertFromXIFToText(srcText, text)) {
