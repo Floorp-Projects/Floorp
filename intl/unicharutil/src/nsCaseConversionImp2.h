@@ -44,7 +44,8 @@ class nsCaseConversionImp2 : public nsICaseConversion {
 
   NS_IMETHOD ToLower(const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen);
 
-  NS_IMETHOD ToTitle(const PRUnichar* anArray, PRUnichar* aReturn, PRUint32 aLen);
+  NS_IMETHOD ToTitle(const PRUnichar* anArray, PRUnichar* aReturn, 
+                     PRUint32 aLen, PRBool aStartInWordBoundary = PR_TRUE);
    
   void Init();
 private:
