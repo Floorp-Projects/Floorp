@@ -46,7 +46,7 @@ public:
     NS_IMETHOD GetOutputStream(nsIOutputStream* *result);
 
     // nsIHttpProtocolConnection methods:
-    NS_IMETHOD GetHeader(const char* header);
+    NS_IMETHOD GetHeader(const char* header, char* *result);
     NS_IMETHOD AddHeader(const char* header, const char* value);
     NS_IMETHOD RemoveHeader(const char* header);
     NS_IMETHOD Get(void);
@@ -90,5 +90,17 @@ protected:
     nsITransport*               mTransport;
     PLEventQueue*               mEventQueue;
 };
+
+const char HTTP_VERSION_STRING_1_1[] = "HTTP/1.1";
+const char HTTP_VERSION_STRING_1_0[] = "HTTP/1.0";
+const PRUint32 HTTP_VERSION_STRING_LENGTH = 8;
+#define HTTP_DEFAULT_VERSION_STRING     HTTP_VERSION_STRING_1_1
+
+enum nsHttpVersion {
+    nsHttpVersion_0_9,
+    nsHttpVersion_1_0,
+    nsHttpVersion_1_1
+};
+const nsHttpVersion kHttpDefaultVersion = nsHttpVersion_1_1;
 
 #endif /* nsHttpProtocolConnection_h___ */

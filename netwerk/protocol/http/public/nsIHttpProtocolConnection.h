@@ -37,7 +37,8 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // Things that can be done at any time:
 
-    NS_IMETHOD GetHeader(const char* header) = 0;
+    // free result with nsCRT::free
+    NS_IMETHOD GetHeader(const char* header, char* *result) = 0;
     
     ////////////////////////////////////////////////////////////////////////////
     // Things done before connecting:
