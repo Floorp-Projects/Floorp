@@ -95,6 +95,18 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 #endif
     }
 
+    // Create the Event Queue for the UI thread...
+    //
+    // If an event queue already exists for the thread, then 
+    // CreateThreadEventQueue(...) will fail...
+    // CreateThread0ueue(...) will fail...
+    nsCOMPtr<nsIEventQueueService> eventQService(
+                do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv));
+    if (NS_FAILED(rv))
+      return rv;
+
+    eventQService->CreateThreadEventQueue();
+
     // Register components
     if (!sRegistryInitializedFlag)
     {
@@ -116,20 +128,6 @@ nsresult NS_InitEmbedding(nsILocalFile *mozBinDirectory,
 	if(NS_FAILED(rv))
 		return rv;
 	mStartupNotifier->Observe(nsnull, APPSTARTUP_TOPIC, nsnull);
-
-    // Create the Event Queue for the UI thread...
-    //
-    // If an event queue already exists for the thread, then 
-    // CreateThreadEventQueue(...) will fail...
-    // CreateThread0ueue(...) will fail...
-    nsCOMPtr<nsIEventQueueService> eventQService;
-    rv = sServiceManager->GetService(NS_EVENTQUEUESERVICE_CONTRACTID, 
-                                     nsIEventQueueService::GetIID(), 
-                                     getter_AddRefs(eventQService));
-    if (NS_FAILED(rv))
-      return rv;
-
-    eventQService->CreateThreadEventQueue();
 
 #ifdef HACK_AROUND_THREADING_ISSUES
     // XXX force certain objects to be created on the main thread
