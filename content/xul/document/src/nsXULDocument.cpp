@@ -5000,6 +5000,17 @@ nsXULDocument::PrepareToWalk()
         }
     }
 
+    // There'd better not be anything on the context stack at this
+    // point! This is the basis case for our "induction" in
+    // ResumeWalk(), below, which'll assume that there's always a
+    // content element on the context stack if either 1) we're in the
+    // "master" document, or 2) we're in an overlay, and we've got
+    // more than one prototype element (the single, root "overlay"
+    // element) on the stack.
+    NS_ASSERTION(mContextStack.Depth() == 0, "something's on the context stack already");
+    if (mContextStack.Depth() != 0)
+        return NS_ERROR_UNEXPECTED;
+
     rv = mContextStack.Push(proto, root);
     if (NS_FAILED(rv)) return rv;
 
@@ -5123,6 +5134,8 @@ nsXULDocument::ResumeWalk()
                     // overlay, and far enough down into the overlay's
                     // content that we can simply build the delegates
                     // and attach them to the parent node.
+                    NS_ASSERTION(element != nsnull, "no element on context stack");
+
                     rv = CreateElement(protoele, getter_AddRefs(child));
                     if (NS_FAILED(rv)) return rv;
 
@@ -5186,31 +5199,36 @@ nsXULDocument::ResumeWalk()
 
             case nsXULPrototypeNode::eType_Text: {
                 // A simple text node.
-                nsCOMPtr<nsITextContent> text;
-                rv = nsComponentManager::CreateInstance(kTextNodeCID,
-                                                        nsnull,
-                                                        NS_GET_IID(nsITextContent),
-                                                        getter_AddRefs(text));
-                if (NS_FAILED(rv)) return rv;
+                if ((mState == eState_Master) || (mContextStack.Depth() > 1)) {
+                    // We're in the master document -or -we're in an
+                    // overlay, and far enough down into the overlay's
+                    // content that we can simply build the delegates
+                    // and attach them to the parent node.
+                    NS_ASSERTION(element != nsnull, "no element on context stack");
 
-                nsXULPrototypeText* textproto =
-                    NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);
+                    nsCOMPtr<nsITextContent> text;
+                    rv = nsComponentManager::CreateInstance(kTextNodeCID,
+                                                            nsnull,
+                                                            NS_GET_IID(nsITextContent),
+                                                            getter_AddRefs(text));
+                    if (NS_FAILED(rv)) return rv;
 
-                rv = text->SetText(textproto->mValue.GetUnicode(),
-                                   textproto->mValue.Length(),
-                                   PR_FALSE);
+                    nsXULPrototypeText* textproto =
+                        NS_REINTERPRET_CAST(nsXULPrototypeText*, childproto);
 
-                if (NS_FAILED(rv)) return rv;
+                    rv = text->SetText(textproto->mValue.GetUnicode(),
+                                       textproto->mValue.Length(),
+                                       PR_FALSE);
 
-                nsCOMPtr<nsIContent> child = do_QueryInterface(text);
-                if (! child)
-                    return NS_ERROR_UNEXPECTED;
+                    if (NS_FAILED(rv)) return rv;
 
-				NS_ASSERTION(element,"element is null");
-				if (!element) return NS_ERROR_FAILURE;
+                    nsCOMPtr<nsIContent> child = do_QueryInterface(text);
+                    if (! child)
+                        return NS_ERROR_UNEXPECTED;
 
-                rv = element->AppendChildTo(child, PR_FALSE);
-                if (NS_FAILED(rv)) return rv;
+                    rv = element->AppendChildTo(child, PR_FALSE);
+                    if (NS_FAILED(rv)) return rv;
+                }
             }
             break;
 
