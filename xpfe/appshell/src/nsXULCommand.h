@@ -69,8 +69,7 @@ public:
   virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
   
 protected:
-  NS_IMETHOD ExecuteJavaScriptString(nsIWebShell* aWebShell, nsString& aJavaScript);
-
+  
   nsString        mCommandStr;
   nsIWebShell   * mWebShell;
   nsIDOMElement * mDOMElement;
