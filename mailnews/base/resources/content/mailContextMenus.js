@@ -178,7 +178,7 @@ function fillFolderPaneContextMenu()
   var endIndex = {};
   folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
   if (startIndex.value < 0)
-    return;
+    return false;
   var numSelected = endIndex.value - startIndex.value + 1;
   var folderResource = GetFolderResource(folderOutliner, startIndex.value);
 

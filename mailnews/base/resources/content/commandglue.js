@@ -608,6 +608,7 @@ function SortFolderPane(column)
   {
     dump("failed to cycle header: " + ex + "\n");
   }
+  return true;
 }
 
 function GetSelectedFolderResource()

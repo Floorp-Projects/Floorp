@@ -209,7 +209,7 @@ function CanDropBeforeAfterFolderOutliner(index, before)
 function DropOnFolderOutliner(row, orientation)
 {
     if (orientation != Components.interfaces.nsIOutlinerView.inDropOn)
-        return;
+        return false;
 
     var folderOutliner = GetFolderOutliner();
     var targetResource = GetFolderResource(folderOutliner, row);
@@ -219,7 +219,7 @@ function DropOnFolderOutliner(row, orientation)
 
     var dragSession = dragService.getCurrentSession();
     if (! dragSession )
-        return;
+        return false;
 
     var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
     trans.addDataFlavor("text/nsmessageOrfolder");
@@ -332,6 +332,7 @@ function DropOnFolderOutliner(row, orientation)
             dump ("Exception : CopyFolders " + ex + "\n");
         }
     }
+    return true;
 }
 
 function BeginDragFolderOutliner(event)
