@@ -96,6 +96,11 @@ window.dialog {
 }
 */
 
+/******* Scrollbar *******/
+
+scrollbar { 
+  user-focus:ignore; 
+} 
 
 /******* ToolBox & ToolBar *******/
 
@@ -1006,6 +1011,7 @@ treeitem > treerow > treecell > .tree-icon > .twisty {
  margin: 0px;
  width: 16px;
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
+ user-focus:ignore;
 }
 
 .twisty:hover {
@@ -1299,5 +1305,6 @@ html|input[type=checkbox][disabled]:hover {
 html|input[type=checkbox]:focus {
   border:1px dotted rgb(153, 153, 153);
 }
+
 
 
