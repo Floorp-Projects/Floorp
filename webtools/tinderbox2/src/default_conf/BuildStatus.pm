@@ -1,8 +1,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 
 
-# $Revision: 1.7 $ 
-# $Date: 2001/07/20 19:04:53 $ 
+# $Revision: 1.8 $ 
+# $Date: 2001/10/09 15:38:27 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/BuildStatus.pm,v $ 
 # $Name:  $ 
@@ -97,7 +97,7 @@ package BuildStatus;
                             'html_color'=>  'yellow',
                             'hdml_char'=> '.',
                             'handler'=> \&main::null,
-                            'description'=>  'Build is not running',
+                            'description'=>  'Build in progress - status unavailible',
                             'order'=>  0,
                            },
            
@@ -105,7 +105,7 @@ package BuildStatus;
                           'html_color'=>  'yellow',
                           'hdml_char'=> '.',
                           'handler'=> \&main::null,
-                          'description'=>  'Build in progress',
+                          'description'=>  'Build in progress - status availible',
                           'order'=>  1,
                          },
            
