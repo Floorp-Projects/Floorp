@@ -53,6 +53,7 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
   if (xp_locale!=nsnull) {
     if (!ParseLocaleString(xp_locale,lang_code,country_code,region_code,'-')) {
       strncpy(posixLocale,"C",length);
+      delete [] xp_locale;
       return NS_OK;
     }
 
@@ -63,6 +64,7 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
     }
 
     strncpy(posixLocale,posix_locale,length);
+    delete [] xp_locale;
     return NS_OK;
   }
 
