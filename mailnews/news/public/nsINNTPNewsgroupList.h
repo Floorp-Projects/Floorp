@@ -27,7 +27,7 @@ class nsINNTPNewsgroupList : public nsISupports {
   }
 
   /*  <IDL>  */
-  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 *status, PRInt32 first_message, PRInt32 last_message, PRInt32 maxextra, PRInt32 *real_first_message, PRInt32 *real_last_message) = 0;
+  NS_IMETHOD GetRangeOfArtsToDownload(PRInt32 first_message, PRInt32 last_message, PRInt32 maxextra, PRInt32 *real_first_message, PRInt32 *real_last_message, PRInt32 *_retval) = 0;
 
   /*  <IDL>  */
   NS_IMETHOD AddToKnownArticles(PRInt32 first_message, PRInt32 last_message) = 0;

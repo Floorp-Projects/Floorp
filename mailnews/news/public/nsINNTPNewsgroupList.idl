@@ -30,8 +30,7 @@ interface nsINNTPNewsgroupList : nsISupports {
      get in a big newsgroup. */
 
 
-  void GetRangeOfArtsToDownload(out long status,
-                                in long first_message,
+  long GetRangeOfArtsToDownload(in long first_message,
                                 in long last_message,
                                 in long maxextra,
                                 out long real_first_message,
