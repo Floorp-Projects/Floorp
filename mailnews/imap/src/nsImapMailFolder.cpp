@@ -2064,99 +2064,102 @@ nsImapMailFolder::DeleteSubFolders(nsISupportsArray* folders, nsIMsgWindow *msgW
     PRUint32 i, folderCount = 0;
     nsresult rv;
     // "this" is the folder we're deleting from
-    PRBool deleteNoTrash = TrashOrDescendentOfTrash(this);
+    PRBool deleteNoTrash = TrashOrDescendentOfTrash(this) || !DeleteIsMoveToTrash();
     PRBool confirmed = PR_FALSE;
+    PRBool confirmDeletion = PR_TRUE;
 
     nsCOMPtr<nsIImapService> imapService(do_GetService(kCImapService, &rv));
     if (NS_SUCCEEDED(rv))
     {
-        rv = folders->Count(&folderCount);
-        if (NS_SUCCEEDED(rv))
+      rv = folders->Count(&folderCount);
+      NS_ENSURE_SUCCESS(rv, rv);
+      if (!deleteNoTrash)
+      {
+         rv = GetTrashFolder(getter_AddRefs(trashFolder));
+
+			   //If we can't find the trash folder and we are supposed to move it to the trash
+			   //return failure.
+			   if(NS_FAILED(rv) || !trashFolder)
+				   return NS_ERROR_FAILURE;
+
+         PRBool canHaveSubFoldersOfTrash = PR_TRUE;
+         trashFolder->GetCanCreateSubfolders(&canHaveSubFoldersOfTrash);
+         if (canHaveSubFoldersOfTrash) // UW server doesn't set NOINFERIORS - check dual use pref
+         {
+           nsCOMPtr<nsIImapIncomingServer> imapServer;
+           rv = GetImapIncomingServer(getter_AddRefs(imapServer));
+
+           if (NS_SUCCEEDED(rv) && imapServer) 
+           {
+             PRBool serverSupportsDualUseFolders;
+             imapServer->GetDualUseFolders(&serverSupportsDualUseFolders);
+             if (!serverSupportsDualUseFolders)
+               canHaveSubFoldersOfTrash = PR_FALSE;
+           }
+         }
+         if (!canHaveSubFoldersOfTrash)
+           deleteNoTrash = PR_TRUE;
+
+         nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
+         if (NS_SUCCEEDED(rv))
+           prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
+      }
+      if (confirmDeletion || deleteNoTrash) //let us alert the user if we are deleting folder immediately
+      {
+        nsXPIDLString confirmationStr;
+        IMAPGetStringByID(((!deleteNoTrash) ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH),
+        getter_Copies(confirmationStr));
+
+        if (!msgWindow) 
+          return NS_ERROR_NULL_POINTER;
+        nsCOMPtr<nsIDocShell> docShell;
+        msgWindow->GetRootDocShell(getter_AddRefs(docShell));
+
+        nsCOMPtr<nsIPrompt> dialog;
+        if (docShell) 
+          dialog = do_GetInterface(docShell);
+
+        if (dialog && confirmationStr)
+          dialog->Confirm(nsnull, confirmationStr, &confirmed);
+      }
+      else
+        confirmed = PR_TRUE;
+
+      if (confirmed)
+      {
+        for (i = 0; i < folderCount; i++)
         {
-            rv = GetTrashFolder(getter_AddRefs(trashFolder));
-            if (!msgWindow) return NS_ERROR_NULL_POINTER;
-            nsCOMPtr<nsIDocShell> docShell;
-            msgWindow->GetRootDocShell(getter_AddRefs(docShell));
-			//If we can't find the trash folder and we are supposed to move it to the trash
-			//return failure.
-			if((NS_FAILED(rv) || !trashFolder) && !deleteNoTrash)
-				return NS_ERROR_FAILURE;
-
-            nsCOMPtr<nsIPrompt> dialog;
-            if (docShell) dialog = do_GetInterface(docShell);
-            if (!deleteNoTrash)
-            {
-              PRBool canHaveSubFoldersOfTrash = PR_TRUE;
-              trashFolder->GetCanCreateSubfolders(&canHaveSubFoldersOfTrash);
-              if (canHaveSubFoldersOfTrash) // UW server doesn't set NOINFERIORS - check dual use pref
-              {
-                nsCOMPtr<nsIImapIncomingServer> imapServer;
-                rv = GetImapIncomingServer(getter_AddRefs(imapServer));
-
-                if (NS_SUCCEEDED(rv) && imapServer) 
-                {
-                  PRBool serverSupportsDualUseFolders;
-                  imapServer->GetDualUseFolders(&serverSupportsDualUseFolders);
-                  if (!serverSupportsDualUseFolders)
-                    canHaveSubFoldersOfTrash = PR_FALSE;
-                }
-              }
-              if (!canHaveSubFoldersOfTrash)
-                deleteNoTrash = PR_TRUE;
-            }
-
-            PRBool confirmDeletion = PR_TRUE;
-            nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
-            if (NS_SUCCEEDED(rv))
-                prefs->GetBoolPref("mailnews.confirm.moveFoldersToTrash", &confirmDeletion);
-
-            if (confirmDeletion)
-            {
-              nsXPIDLString confirmationStr;
-              IMAPGetStringByID(((!deleteNoTrash) ? IMAP_MOVE_FOLDER_TO_TRASH : IMAP_DELETE_NO_TRASH),
-              getter_Copies(confirmationStr));
-
-              if (dialog && confirmationStr)
-                dialog->Confirm(nsnull, confirmationStr, &confirmed);
-            }
+          folderSupport = getter_AddRefs(folders->ElementAt(i));
+          curFolder = do_QueryInterface(folderSupport, &rv);
+          if (NS_SUCCEEDED(rv))
+          {
+            urlListener = do_QueryInterface(curFolder);
+            if (deleteNoTrash)
+              rv = imapService->DeleteFolder(m_eventQueue,
+                                             curFolder,
+                                             urlListener,
+                                             nsnull);
             else
-              confirmed = PR_TRUE;
-
-            if (confirmed)
             {
-              for (i = 0; i < folderCount; i++)
+              PRBool confirm = PR_FALSE;
+              PRBool match = PR_FALSE;
+              rv = curFolder->MatchOrChangeFilterDestination(nsnull, PR_FALSE, &match);
+              if (match)
               {
-                  folderSupport = getter_AddRefs(folders->ElementAt(i));
-                  curFolder = do_QueryInterface(folderSupport, &rv);
-                  if (NS_SUCCEEDED(rv))
-                  {
-                      urlListener = do_QueryInterface(curFolder);
-                      if (deleteNoTrash)
-                          rv = imapService->DeleteFolder(m_eventQueue,
-                                                         curFolder,
-                                                         urlListener,
-                                                         nsnull);
-                      else
-                      {
-                        PRBool confirm = PR_FALSE;
-                        PRBool match = PR_FALSE;
-                        rv = curFolder->MatchOrChangeFilterDestination(nsnull, PR_FALSE, &match);
-                        if (match)
-                        {
-                          curFolder->ConfirmFolderDeletionForFilter(msgWindow, &confirm);
-                          if (!confirm) return NS_OK;
-                        }
-                        rv = imapService->MoveFolder(m_eventQueue,
-                                                     curFolder,
-                                                     trashFolder,
-                                                     urlListener,
-                                                     msgWindow,
-                                                     nsnull);
-                      }
-                  }
+                curFolder->ConfirmFolderDeletionForFilter(msgWindow, &confirm);
+                if (!confirm) 
+                  return NS_OK;
               }
+              rv = imapService->MoveFolder(m_eventQueue,
+                                           curFolder,
+                                           trashFolder,
+                                           urlListener,
+                                           msgWindow,
+                                           nsnull);
             }
+          }
         }
+      }
     }
     
     if (confirmed && deleteNoTrash)   //delete subfolders only if you are  deleting things from trash
