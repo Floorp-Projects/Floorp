@@ -351,9 +351,9 @@ $sql = "SELECT TM.ID, TM.Name, TM.DateAdded, TM.DateUpdated, TM.Homepage, TM.Des
             if ($appname=="Thunderbird") { 
                 echo"<A HREF=\"/core/install.php?passthrough=yes&amp;uri=$uri\" onclick=\"return install(event,'$name $version for Thunderbird', '/images/default.png');\"  TITLE=\"Right-Click to Download $name $version\">";
             } else {
-                echo"<a href=\"$uri\" onclick=\"return install(event,'$name $version', '/images/default.png');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
+                echo"<b><a href=\"$uri\" onclick=\"return install(event,'$name $version', '/images/default.png');\" TITLE=\"Install $name $version (Right-Click to Download)\">";
             }
-        ?><strong>Install Now</strong> (<?php echo"$filesize"; ?>&nbsp;KB&nbsp;File)</a></div></div>
+        ?>Install Now</a></b> (<?php echo"$filesize"; ?>&nbsp;KB&nbsp;File)</div></div>
 
         <?php
         //Special Extension Installation Instructions for Thunderbird users
