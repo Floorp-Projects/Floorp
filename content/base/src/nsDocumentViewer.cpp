@@ -1413,54 +1413,9 @@ DocumentViewerImpl::Show(void)
     nsRect tbounds;
     mParentWidget->GetBounds(tbounds);
 
-    float p2t;
-    mPresContext->GetPixelsToTwips(&p2t);
-    tbounds *= p2t;
-
-    // Create the view manager
-    mViewManager = do_CreateInstance(kViewManagerCID);
-    NS_ENSURE_TRUE(mViewManager, NS_ERROR_NOT_AVAILABLE);
-
-    // Initialize the view manager with an offset. This allows the
-    // viewmanager to manage a coordinate space offset from (0,0)
-    rv = mViewManager->Init(mDeviceContext);
+    rv = MakeWindow(mParentWidget, tbounds);
     if (NS_FAILED(rv))
       return rv;
-
-    rv = mViewManager->SetWindowOffset(tbounds.x, tbounds.y);
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Reset the bounds offset so the root view is set to 0,0. The
-    // offset is specified in nsIViewManager::Init above.
-    // Besides, layout will reset the root view to (0,0) during reflow,
-    // so changing it to 0,0 eliminates placing the root view in the
-    // wrong place initially.
-    tbounds.x = 0;
-    tbounds.y = 0;
-
-    // Create a child window of the parent that is our "root
-    // view/window" Create a view
-
-    nsIView *view = nsnull;
-    rv = CallCreateInstance(kViewCID, &view);
-    if (NS_FAILED(rv))
-      return rv;
-    rv = view->Init(mViewManager, tbounds, nsnull);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = view->CreateWidget(kWidgetCID, nsnull,
-                            mParentWidget->GetNativeData(NS_NATIVE_WIDGET),
-                            PR_TRUE, PR_FALSE);
-
-    if (NS_FAILED(rv))
-      return rv;
-
-    // Setup hierarchical relationship in view manager
-    mViewManager->SetRootView(view);
-
-    view->GetWidget(*getter_AddRefs(mWindow));
 
     if (mPresContext && mContainer) {
       nsCOMPtr<nsILinkHandler> linkHandler(do_GetInterface(mContainer));
@@ -1800,8 +1755,6 @@ DocumentViewerImpl::IsWebShellAFrameSet(nsIWebShell * aWebShell)
   return doesContainFrameSet;
 }
 
-
-
 nsresult
 DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
                                const nsRect& aBounds)
@@ -1906,7 +1859,7 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   rv = view->CreateWidget(kWidgetCID, nsnull,
                           containerView != nsnull ? nsnull : aParentWidget->GetNativeData(NS_NATIVE_WIDGET),
                           PR_TRUE, PR_FALSE);
-  if (rv != NS_OK)
+  if (NS_FAILED(rv))
     return rv;
 
   // Setup hierarchical relationship in view manager
