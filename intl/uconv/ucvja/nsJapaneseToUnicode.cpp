@@ -167,9 +167,9 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
                  ch = 0x30fb;
                *dest++ = ch;
             }
+            mState = 0;
             if(dest >= destEnd)
               goto error1;
-            mState = 0;
           }
           break;
 
@@ -181,9 +181,9 @@ NS_IMETHODIMP nsShiftJISToUnicode::Convert(
             } else {
                *dest++ = mData + off;
             }
+            mState = 0;
             if(dest >= destEnd)
               goto error1;
-            mState = 0;
           }
           break;
 
@@ -311,9 +311,9 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
             } else {
                *dest++ = gJapaneseMap[mData+off];
             }
+            mState = 0;
             if(dest >= destEnd)
               goto error1;
-            mState = 0;
           }
           break;
 
@@ -328,9 +328,9 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
               if ( (PRUint8)*src < (PRUint8)0x7f )
                  *dest++ = (PRUnichar) *src;
             }
+            mState = 0;
             if(dest >= destEnd)
               goto error1;
-            mState = 0;
           }
           break;
 
@@ -358,17 +358,17 @@ NS_IMETHODIMP nsEUCJPToUnicodeV2::Convert(
             } else {
                *dest++ = gJapaneseMap[mData+off];
             }
+            mState = 0;
             if(dest >= destEnd)
               goto error1;
-            mState = 0;
           }
           break;
           case 5: // two bytes undefined
           {
             *dest++ = 0xFFFD;
+            mState = 0;
             if(dest >= destEnd)
               goto error1;
-            mState = 0;
           }
           break;
        }
@@ -688,9 +688,9 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                // in the next line before pass to *dest++
                *dest++ = gJapaneseMap[mData+off];
             }
+            mState = mState_JISX0208_1978;
             if(dest >= destEnd)
               goto error1;
-            mState = mState_JISX0208_1978;
           }
           break;
 
@@ -726,9 +726,9 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 *dest++ = uni;
               }
             }
+            mState = mState_GB2312_1980;
             if(dest >= destEnd)
               goto error1;
-            mState = mState_GB2312_1980;
           }
           break;
 
@@ -740,9 +740,9 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
                *dest++ = gJapaneseMap[mData+off];
             }
+            mState = mState_JISX0208_1983;
             if(dest >= destEnd)
               goto error1;
-            mState = mState_JISX0208_1983;
           }
           break;
 
@@ -778,9 +778,9 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
                 *dest++ = uni;
               }
             }
+            mState = mState_KSC5601_1987;
             if(dest >= destEnd)
               goto error1;
-            mState = mState_KSC5601_1987;
           }
           break;
 
@@ -792,9 +792,9 @@ NS_IMETHODIMP nsISO2022JPToUnicodeV2::Convert(
             } else {
                *dest++ = gJapaneseMap[mData+off];
             }
+            mState = mState_JISX0212_1990;
             if(dest >= destEnd)
               goto error1;
-            mState = mState_JISX0212_1990;
           }
           break;
 
