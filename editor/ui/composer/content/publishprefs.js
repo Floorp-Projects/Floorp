@@ -114,24 +114,24 @@ function CreatePublishDataFromUrl(docUrl)
     return null;
 
   var pubSiteData = GetPublishSiteData();
-  if (!pubSiteData)
-    return null;
-
-  var dirObj = {};
-  var index = FindSiteIndexAndDocDir(pubSiteData, docUrl, dirObj);
-  var publishData;
-  if (index != -1)
+  if (pubSiteData)
   {
-    publishData = pubSiteData[index];
-    publishData.docDir = FormatDirForPublishing(dirObj.value)
+    var dirObj = {};
+    var index = FindSiteIndexAndDocDir(pubSiteData, docUrl, dirObj);
+    var publishData;
+    if (index != -1)
+    {
+      publishData = pubSiteData[index];
+      publishData.docDir = FormatDirForPublishing(dirObj.value)
 
-    //XXX Problem: OtherDir: How do we decide when to use the dir in 
-    //    publishSiteData (default DocDir) or docDir from current filepath?
-    publishData.otherDir = FormatDirForPublishing(pubSiteData[index].otherDir);
+      //XXX Problem: OtherDir: How do we decide when to use the dir in 
+      //    publishSiteData (default DocDir) or docDir from current filepath?
+      publishData.otherDir = FormatDirForPublishing(pubSiteData[index].otherDir);
 
-    publishData.filename = GetFilename(docUrl);
-    publishData.notInSiteData = false;
-    return publishData;
+      publishData.filename = GetFilename(docUrl);
+      publishData.notInSiteData = false;
+      return publishData;
+    }
   }
 
   // Document wasn't found in publish site database
@@ -676,26 +676,12 @@ function GetSavedPassword(publishData)
   if (!passwordManager)
     return "";
 
-  var enumerator = passwordManager.enumerator;
-  if (!enumerator)
-    return "";
-  
-  //XXX After fix for bug 80296 is checked in, following can be replaced by:
-  // var host = { value:publishData.publishUrl };
-  // var user =  { value:publishData.username };
-  // var password = { value:"" }; 
-  // passwordManager.findPasswordEntry(host, user, password);
-  // return password.value;
+  var host = { value:publishData.publishUrl };
+  var user =  { value:publishData.username };
+  var password = {}; 
   try {
-    while (enumerator.hasMoreElements())
-    {
-      var passwordObj = enumerator.getNext();
-      passwordObj = passwordObj.QueryInterface(Components.interfaces.nsIPassword);
-      if (passwordObj && 
-          passwordObj.host == publishData.publishUrl && 
-          passwordObj.user == publishData.username)
-        return passwordObj.password;
-    }
+    passwordManager.findPasswordEntry(host, user, password);
+    return password.value;
   } catch (e) {}
 
   return "";
