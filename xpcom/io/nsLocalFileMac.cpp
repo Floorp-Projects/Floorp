@@ -38,6 +38,8 @@
 #include "prerror.h"
 #include "nsEscape.h"
 
+#include "nsReadableUtils.h"
+
 #ifdef MACOSX
 #include "nsXPIDLString.h"
 
@@ -1626,7 +1628,7 @@ nsLocalFile::GetPath(char **_retval)
     		    if (NS_FAILED(rv))
     		        return rv;
     		    // When nsIFile params are all nsAString&, we won't have to do this
-    		    *_retval = fsCharSetPathStr.ToNewCString();
+    		    *_retval = ToNewCString(fsCharSetPathStr);
     		    if (!*_retval)
     		        return NS_ERROR_OUT_OF_MEMORY;
 		    }
