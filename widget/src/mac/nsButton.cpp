@@ -26,6 +26,7 @@
 #include "nsUnitConversion.h"
 
 #include <Controls.h>
+#include <quickdraw.h>
 
 
 #define DBG 0
@@ -37,6 +38,7 @@
 nsButton::nsButton(nsISupports *aOuter) : nsWindow(aOuter)
 {
   strcpy(gInstanceClassName, "nsButton");
+  mWidgetArmed = PR_FALSE;
 }
 
 
@@ -127,15 +129,15 @@ void nsButton::Create(nsIWidget *aParent,
 		Rect r;
 		nsRectToMacRect(aRect,r);
 				
-		mControl = NewControl ( window, &r, title, visible, 
-												    initialValue, minValue, maxValue, 
-												    ctrlType, (long)this);
+		//mControl = NewControl ( window, &r, title, visible, 
+												    //initialValue, minValue, maxValue, 
+												    //ctrlType, (long)this);
 
 		mWindowRegion = NewRgn();
 		SetRectRgn(mWindowRegion,aRect.x,aRect.y,aRect.x+aRect.width,aRect.y+aRect.height);		 
 
 
-	  if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mControl, this);
+	  //if (DBG) fprintf(stderr, "Button 0x%x  this 0x%x\n", mControl, this);
 
 	  // save the event callback function
 	  mEventCallback = aHandleEventFunction;
@@ -200,10 +202,7 @@ void nsButton::StringToStr255(const nsString& aText, Str255& aStr255)
 	memcpy(&aStr255[1],buffer,len);
 	aStr255[0] = len;
 	
-		
 }
-
-
 
 //-------------------------------------------------------------------------
 //
@@ -212,13 +211,13 @@ void nsButton::StringToStr255(const nsString& aText, Str255& aStr255)
 //-------------------------------------------------------------------------
 void nsButton::SetLabel(const nsString& aText)
 {
+
 	NS_ASSERTION(mControl != nsnull,"Control must not be null");
-	if (mControl != nsnull)
-	{
-		Str255 s;
-		StringToStr255(aText,s);
-		SetControlTitle(mControl,s);
-	}
+	//if (mControl != nsnull)
+	//{
+		StringToStr255(aText,mLabel);
+		//SetControlTitle(mControl,s);
+	//}
 }
 
 
@@ -325,11 +324,13 @@ PRBool 	result;
 void
 nsButton::DrawWidget(PRBool	aMouseInside)
 {
+PRInt16							width,x,y;
 nsRect							therect;
 Rect								macrect;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
+//FontInfo						fi;
 
 
 	GetPort(&theport);
@@ -343,9 +344,23 @@ RgnHandle						thergn;
 	::RGBForeColor(&blackcolor);
 	
 	::EraseRoundRect(&macrect,10,10);
-	::PenSize(3,3);
+	::PenSize(1,1);
 	::FrameRoundRect(&macrect,10,10); 
 	
+	
+	width = ::StringWidth(mLabel);
+	x = (macrect.left+macrect.right)/2 - (width/2);
+	
+	::TextFont(0);
+	::TextSize(12);
+	::TextFace(bold);
+	//::GetFontInfo(&fi);
+	//height = fi.ascent;
+	//height = 6;
+	y = (macrect.top+macrect.bottom)/2 + 6;
+	::MoveTo(x,y);
+	::DrawString(mLabel);
+		
 	if(mMouseDownInButton && aMouseInside)
 		 ::InvertRoundRect(&macrect,10,10);
 		

@@ -62,7 +62,7 @@ public:
   // Mac specific methods
   void LocalToWindowCoordinate(nsPoint& aPoint);
   void LocalToWindowCoordinate(nsRect& aRect);
-	ControlHandle GetControl() { return mControl; } 
+	//ControlHandle GetControl() { return mControl; } 
 	
   
   // Overriden from nsWindow
@@ -98,7 +98,7 @@ private:
   AggButton mAggWidget;
   friend class AggButton;
   
-  ControlHandle	mControl;
+  Str255				mLabel;
   PRBool				mMouseDownInButton;
   PRBool				mWidgetArmed;
 
