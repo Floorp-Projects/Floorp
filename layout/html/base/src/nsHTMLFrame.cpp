@@ -37,8 +37,10 @@
 #include "nsIEventStateManager.h"
 #include "nsIDeviceContext.h"
 #include "nsIScrollableView.h"
+#include "nsIAreaFrame.h"
 
 // Interface IDs
+static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 
@@ -227,6 +229,22 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
         kidReflowState.computedMargin.right;
       ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
                   aStatus);
+
+      // Get the total size including any space needed for absolute positioned
+      // elements
+      // XXX It would be nice if this were part of the reflow metrics...
+      nsIAreaFrame* areaFrame;
+      if (NS_SUCCEEDED(kidFrame->QueryInterface(kAreaFrameIID, (void**)&areaFrame))) {
+        nscoord xMost, yMost;
+
+        areaFrame->GetPositionedInfo(xMost, yMost);
+        if (xMost > kidDesiredSize.width) {
+          kidDesiredSize.width = xMost;
+        }
+        if (yMost > kidDesiredSize.height) {
+          kidDesiredSize.height = yMost;
+        }
+      }
     
       nsRect  rect(kidReflowState.computedMargin.left, kidReflowState.computedMargin.top,
                    kidDesiredSize.width, kidDesiredSize.height);
