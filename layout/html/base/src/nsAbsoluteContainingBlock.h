@@ -136,6 +136,12 @@ protected:
 
 protected:
   nsFrameList mAbsoluteFrames;  // additional named child list
+
+#ifdef DEBUG
+  // helper routine for debug printout
+  void PrettyUC(nscoord aSize,
+                char*   aBuf);
+#endif
 };
 
 #endif /* nsnsAbsoluteContainingBlock_h___ */
