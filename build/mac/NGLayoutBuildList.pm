@@ -1149,7 +1149,8 @@ sub MakeResourceAliases()
 	_MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 
 	_InstallResources(":mozilla:extensions:wallet:src:MANIFEST",						"$resource_dir");
-	_InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",						"$resource_dir");
+	my($entitytab_dir) = "$resource_dir" . "entityTables";
+	_InstallResources(":mozilla:intl:unicharutil:tables:MANIFEST",						"$entitytab_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
     _InstallResources(":mozilla:layout:html:base:src:MANIFEST_RES",						"$html_dir");
