@@ -673,3 +673,54 @@ WeekView.prototype.clearSelectedDate = function( )
       this.selectedBox = null;
    }
 }
+
+
+var gStartDate = null;
+
+var eventEndObserver = {
+  getSupportedFlavours : function () {
+    var flavours = new FlavourSet();
+    flavours.appendFlavour("text/unicode");
+    return flavours;
+  },
+  onDragOver: function (evt,flavour,session){
+    evt.target.setAttribute( "draggedover", "true" );    
+  },
+  onDrop: function (evt,dropdata,session){
+      var EndDate = new Date( gStartDate.getTime() );
+      EndDate.setHours( evt.target.getAttribute( "hour" ) );
+      if( EndDate.getTime() < gStartDate.getTime() )
+      {
+         var Temp = EndDate;
+         EndDate = gStartDate;
+         gStartDate = Temp;
+      }
+
+      newEvent( gStartDate, EndDate );  
+      var allDraggedElements = document.getElementsByAttribute( "draggedover", "true" );
+      for( var i = 0; i < allDraggedElements.length; i++ )
+      {
+         allDraggedElements[i].removeAttribute( "draggedover" );
+      }
+  }
+};
+
+var eventStartObserver  = {
+  onDragStart: function (evt, transferData, action){
+      var dayIndex = evt.target.getAttribute( "day" );
+
+      newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
+
+      gCalendarWindow.setSelectedDate( newDate );
+   
+      gStartDate = newDate;
+      gStartDate.setHours( evt.target.getAttribute( "hour" ) );
+      gStartDate.setMinutes( 0 );
+      gStartDate.setSeconds( 0 );
+   
+     transferData.data=new TransferData();
+     transferData.data.addDataForFlavour("text/unicode",0);
+  }
+};
+
+
