@@ -362,7 +362,7 @@ nsHTMLDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
 NS_IMETHODIMP 
 nsHTMLDocument::GetContentType(nsString& aContentType) const
 {
-  aContentType.Assign("text/html");
+  aContentType.AssignWithConversion("text/html");
   return NS_OK;
 }
 
@@ -395,8 +395,8 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   PRBool needsParser=PR_TRUE;
   if (aCommand)
   {
-    nsAutoString command(aCommand);
-    nsAutoString delayedView("view delayedContentLoad");
+    nsAutoString command; command.AssignWithConversion(aCommand);
+    nsAutoString delayedView; delayedView.AssignWithConversion("view delayedContentLoad");
     if (command.Equals(delayedView)) {
       needsParser = PR_FALSE;
     }
@@ -408,7 +408,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                                               aDocListener);
   if (NS_FAILED(rv)) { return rv; }
 
-  nsAutoString charset = "ISO-8859-1"; // fallback value in case webShell return error
+  nsAutoString charset; charset.AssignWithConversion("ISO-8859-1"); // fallback value in case webShell return error
   nsCharsetSource charsetSource = kCharsetFromWeakDocTypeDefault;
 
   nsCOMPtr<nsIURI> aURL;
@@ -427,7 +427,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     NS_RELEASE(lastModKey);
     if (NS_SUCCEEDED(rv)) {
-      lastModified.Assign(lastModHeader);
+      lastModified.AssignWithConversion( NS_STATIC_CAST(const char*, lastModHeader) );
       SetLastModified(lastModified);
     }
 
@@ -441,7 +441,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 
     NS_RELEASE(referrerKey);
     if (NS_SUCCEEDED(rv)) {
-      referrer.Assign(referrerHeader);
+      referrer.AssignWithConversion( NS_STATIC_CAST(const char*, referrerHeader) );
       SetReferrer(referrer);
     }
 
@@ -453,7 +453,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
       NS_RELEASE(contentTypeKey);
       if (NS_SUCCEEDED(rv)) {
         nsAutoString contentType;
-        contentType.Assign(contenttypeheader);
+        contentType.AssignWithConversion( NS_STATIC_CAST(const char*, contenttypeheader) );
         PRInt32 start = contentType.RFind("charset=", PR_TRUE ) ;
         if(kNotFound != start)
         {
@@ -517,7 +517,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
                   "%c",
 #endif
                   &prtime);
-    lastModified.Assign(buf);
+    lastModified.AssignWithConversion(buf);
     SetLastModified(lastModified);
   }
 
@@ -1061,7 +1061,7 @@ nsHTMLDocument::SetHeaderData(nsIAtom* aHeaderField, const nsString& aData)
       // switch alternate style sheets based on default
       nsAutoString type;
       nsAutoString title;
-      nsAutoString textHtml("text/html");
+      nsAutoString textHtml; textHtml.AssignWithConversion("text/html");
       PRInt32 index;
       PRInt32 count = mStyleSheets.Count();
       for (index = 0; index < count; index++) {
@@ -1473,7 +1473,7 @@ nsHTMLDocument::GetDomain(nsString& aDomain)
   char *hostName;
   if (NS_FAILED(uri->GetHost(&hostName)))
     return NS_ERROR_FAILURE;
-  aDomain.Assign(hostName);
+  aDomain.AssignWithConversion(hostName);
   nsCRT::free(hostName);
 
   return NS_OK;
@@ -1512,10 +1512,10 @@ nsHTMLDocument::SetDomain(const nsString& aDomain)
   nsXPIDLCString path;
   if (NS_FAILED(uri->GetPath(getter_Copies(path))))
     return NS_ERROR_FAILURE;
-  nsAutoString newURIString = (const char *)scheme;
-  newURIString += "://";
+  nsAutoString newURIString; newURIString.AssignWithConversion( NS_STATIC_CAST(const char*, scheme) );
+  newURIString.AppendWithConversion("://");
   newURIString += aDomain;
-  newURIString += path;
+  newURIString.AppendWithConversion(path);
   nsIURI *newURI;
   if (NS_FAILED(NS_NewURI(&newURI, newURIString)))
     return NS_ERROR_FAILURE;
@@ -1543,7 +1543,7 @@ nsHTMLDocument::GetURL(nsString& aURL)
   if (nsnull != mDocumentURL) {
     char* str;
     mDocumentURL->GetSpec(&str);
-    aURL = str;
+    aURL.AssignWithConversion(str);
     nsCRT::free(str);
   }
   return NS_OK;
@@ -1568,7 +1568,7 @@ nsHTMLDocument::SetBody(nsIDOMHTMLElement* aBody)
     return result;
   }
 
-  nsAutoString bodyStr("BODY");
+  nsAutoString bodyStr; bodyStr.AssignWithConversion("BODY");
   nsIDOMNode * child;
   root->GetFirstChild(&child);
 
@@ -1880,10 +1880,10 @@ nsHTMLDocument::Close()
   nsresult result = NS_OK;
 
   if ((nsnull != mParser) && mIsWriting) {
-    nsAutoString emptyStr("</HTML>");
+    nsAutoString emptyStr; emptyStr.AssignWithConversion("</HTML>");
     mWriteLevel++;
     result = mParser->Parse(emptyStr, NS_GENERATE_PARSER_KEY(), 
-                            "text/html", PR_FALSE, PR_TRUE);
+                            NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);
     mWriteLevel--;
     mIsWriting = 0;
   }
@@ -1907,12 +1907,12 @@ nsHTMLDocument::WriteCommon(const nsString& aText,
   nsAutoString str(aText);
 
   if (aNewlineTerminate) {
-    str.Append('\n');
+    str.AppendWithConversion('\n');
   }
 
   mWriteLevel++;
   result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
-                          "text/html", PR_FALSE, 
+                          NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, 
                           (!mIsWriting || (mWriteLevel > 1)));
   mWriteLevel--;
   if (NS_OK != result) {
@@ -2001,12 +2001,12 @@ nsHTMLDocument::ScriptWriteCommon(JSContext *cx,
     }
 
     if (aNewlineTerminate) {
-      str.Append('\n');
+      str.AppendWithConversion('\n');
     }
 
     mWriteLevel++;
     result = mParser->Parse(str, NS_GENERATE_PARSER_KEY(), 
-                            "text/html", PR_FALSE, 
+                            NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, 
                             (!mIsWriting || (mWriteLevel > 1)));
     mWriteLevel--;
     if (NS_OK != result) {
@@ -2377,7 +2377,7 @@ nsHTMLDocument::GetLastModified(nsString& aLastModified)
     aLastModified = *mLastModified;
   }
   else {
-    aLastModified.Assign("January 1, 1970 GMT");
+    aLastModified.AssignWithConversion("January 1, 1970 GMT");
   }
 
   return NS_OK;
@@ -2635,10 +2635,10 @@ nsHTMLDocument::NamedItem(JSContext* cx, jsval* argv, PRUint32 argc,
     return NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR;
 
   char *str = JS_GetStringBytes(JS_ValueToString(cx, argv[0]));
-  nsAutoString name(str);
+  nsAutoString name; name.AssignWithConversion(str);
 
-  if (!name.Equals("write") && !name.Equals("writeln") &&
-      !name.Equals("close") && !name.Equals("open")) {
+  if (!name.EqualsWithConversion("write") && !name.EqualsWithConversion("writeln") &&
+      !name.EqualsWithConversion("close") && !name.EqualsWithConversion("open")) {
     // XXX If we have a parser, it means that we're still loading the
     // document. Since there's still content coming in (and not all
     // may yet have been explicitly added to the document), we do
@@ -2877,7 +2877,7 @@ void BlockText::AddSubText(nsIDOMNode * aNode, nsString & aStr, PRInt32 aDirecti
         mSubTexts[i]->mOffset += aStr.Length();
       }
       mNumSubTexts++;
-      mText.Insert(aStr, 0, aStr.Length());
+      mText.Insert(aStr, 0);
       mSubTexts[0] = subTxt;
     }
   }
@@ -3690,7 +3690,7 @@ nsHTMLDocument::GetBodyContent()
     return PR_FALSE;
   }
 
-  nsAutoString bodyStr("BODY");
+  nsAutoString bodyStr; bodyStr.AssignWithConversion("BODY");
   nsIDOMNode * child;
   root->GetFirstChild(&child);
 

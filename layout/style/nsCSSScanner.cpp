@@ -100,27 +100,27 @@ nsCSSToken::AppendToString(nsString& aBuffer)
       break;
     case eCSSToken_Number:
       if (mIntegerValid) {
-        aBuffer.Append(mInteger, 10);
+        aBuffer.AppendInt(mInteger, 10);
       }
       else {
-        aBuffer.Append(mNumber);
+        aBuffer.AppendFloat(mNumber);
       }
       break;
     case eCSSToken_Percentage:
       if (mIntegerValid) {
-        aBuffer.Append(mInteger, 10);
+        aBuffer.AppendInt(mInteger, 10);
       }
       else {
-        aBuffer.Append(mNumber);
+        aBuffer.AppendFloat(mNumber);
       }
-      aBuffer.Append(PRUnichar('%'));
+      aBuffer.Append(PRUnichar('%')); // STRING USE WARNING: technically, this should be |AppendWithConversion|
       break;
     case eCSSToken_Dimension:
       if (mIntegerValid) {
-        aBuffer.Append(mInteger, 10);
+        aBuffer.AppendInt(mInteger, 10);
       }
       else {
-        aBuffer.Append(mNumber);
+        aBuffer.AppendFloat(mNumber);
       }
       aBuffer.Append(mIdent);
       break;
@@ -420,12 +420,12 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
           aToken.mType = eCSSToken_HTMLComment;
           aToken.mIdent.SetLength(0);
           while (0 < dashCount--) {
-            aToken.mIdent.Append('-');
+            aToken.mIdent.AppendWithConversion('-');
           }
           if (white) {
-            aToken.mIdent.Append(' ');
+            aToken.mIdent.AppendWithConversion(' ');
           }
-          aToken.mIdent.Append('>');
+          aToken.mIdent.AppendWithConversion('>');
           return PR_TRUE;
         }
         else {  // wasn't an end comment, push it all back
@@ -751,8 +751,8 @@ PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
     if (ch < 0) break;
     if (ch == '*') {
       if (LookAhead(aErrorCode, '/')) {
-        ident.Append(PRUnichar(ch));
-        ident.Append('/');
+        ident.Append(PRUnichar(ch));  // STRING USE WARNING: technically, this should be |AppendWithConversion|
+        ident.AppendWithConversion('/');
         break;
       }
     }

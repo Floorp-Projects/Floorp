@@ -1430,8 +1430,7 @@ CSSStyleSheetImpl::SetTitle(const nsString& aTitle)
 NS_IMETHODIMP
 CSSStyleSheetImpl::GetType(nsString& aType) const
 {
-  aType.Truncate();
-  aType.Append("text/css");
+  aType.AssignWithConversion("text/css");
   return NS_OK;
 }
 
@@ -2025,8 +2024,7 @@ CSSStyleSheetImpl::SetModified(PRBool aModified)
 NS_IMETHODIMP    
 CSSStyleSheetImpl::GetType(nsString& aType)
 {
-  aType.Truncate();
-  aType.Append("text/css");
+  aType.AssignWithConversion("text/css");
   return NS_OK;
 }
 
@@ -2084,7 +2082,7 @@ CSSStyleSheetImpl::GetHref(nsString& aHref)
   if (mInner && mInner->mURL) {
     char* str = nsnull;
     mInner->mURL->GetSpec(&str);
-    aHref = str;
+    aHref.AssignWithConversion(str);
     if (str) {
       nsCRT::free(str);
     }
@@ -2119,7 +2117,7 @@ CSSStyleSheetImpl::GetMedia(nsString& aMedia)
       medium->ToString(buffer);
       aMedia.Append(buffer);
       if (index < count) {
-        aMedia.Append(", ");
+        aMedia.AppendWithConversion(", ");
       }
     }
   }

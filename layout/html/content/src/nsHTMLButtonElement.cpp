@@ -245,13 +245,13 @@ nsHTMLButtonElement::SetDisabled(PRBool aValue)
   nsHTMLValue empty(eHTMLUnit_Empty);                              
   if (aValue) {                                                     
     nsresult status = mInner.SetHTMLAttribute(nsHTMLAtoms::disabled, empty, PR_TRUE); 
-    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "DISABLED", PR_TRUE);
+    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, NS_ConvertASCIItoUCS2("DISABLED"), PR_TRUE);
     return status;
 
   }                                                                 
   else {                                                            
     mInner.UnsetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::disabled, PR_TRUE);  
-    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, "", PR_TRUE);
+    mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, nsAutoString(), PR_TRUE);
     return NS_OK;                                                   
   }                                                                 
 }

@@ -277,8 +277,8 @@ nsHTMLAreaElement::GetProtocol(nsString& aProtocol)
       char* protocol;
       result = url->GetScheme(&protocol);
       if (result == NS_OK) {
-        aProtocol.SetString(protocol);
-        aProtocol.Append(":");
+        aProtocol.AssignWithConversion(protocol);
+        aProtocol.AppendWithConversion(":");
         nsCRT::free(protocol);
       }
       NS_RELEASE(url);
@@ -302,13 +302,13 @@ nsHTMLAreaElement::GetHost(nsString& aHost)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHost.SetString(host);
+        aHost.AssignWithConversion(host);
         nsCRT::free(host);
         PRInt32 port;
         (void)url->GetPort(&port);
         if (-1 != port) {
-          aHost.Append(":");
-          aHost.Append(port, 10);
+          aHost.AppendWithConversion(":");
+          aHost.AppendInt(port, 10);
         }
       }
       NS_RELEASE(url);
@@ -332,7 +332,7 @@ nsHTMLAreaElement::GetHostname(nsString& aHostname)
       char* host;
       result = url->GetHost(&host);
       if (result == NS_OK) {
-        aHostname.SetString(host);
+        aHostname.AssignWithConversion(host);
         nsCRT::free(host);
       }
       NS_RELEASE(url);
@@ -356,7 +356,7 @@ nsHTMLAreaElement::GetPathname(nsString& aPathname)
       char* file;
       result = url->GetPath(&file);
       if (result == NS_OK) {
-        aPathname.SetString(file);
+        aPathname.AssignWithConversion(file);
         nsCRT::free(file);
       }
       NS_IF_RELEASE(url);
@@ -385,8 +385,8 @@ nsHTMLAreaElement::GetSearch(nsString& aSearch)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != search) && ('\0' != *search)) {
-        aSearch.SetString("?");
-        aSearch.Append(search);
+        aSearch.AssignWithConversion("?");
+        aSearch.AppendWithConversion(search);
         nsCRT::free(search);
       }
       else {
@@ -414,7 +414,7 @@ nsHTMLAreaElement::GetPort(nsString& aPort)
       PRInt32 port;
       (void)url->GetPort(&port);
       if (-1 != port) {
-        aPort.Append(port, 10);
+        aPort.AppendInt(port, 10);
       }
       NS_RELEASE(url);
     }
@@ -443,8 +443,8 @@ nsHTMLAreaElement::GetHash(nsString& aHash)
         NS_RELEASE(url);
       }
       if (result == NS_OK && (nsnull != ref) && ('\0' != *ref)) {
-        aHash.SetString("#");
-        aHash.Append(ref);
+        aHash.AssignWithConversion("#");
+        aHash.AppendWithConversion(ref);
         nsCRT::free(ref);
       }
       else {

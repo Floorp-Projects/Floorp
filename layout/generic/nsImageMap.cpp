@@ -335,7 +335,7 @@ void Area::ToHTML(nsString& aResult)
   if (nsnull != mCoords) {
     PRInt32 i, n = mNumCoords;
     for (i = 0; i < n; i++) {
-      aResult.AppendWithConversion(mCoords[i], 10);
+      aResult.AppendInt(mCoords[i], 10);
       if (i < n - 1) {
         aResult.AppendWithConversion(',');
       }
@@ -390,9 +390,9 @@ void Area::BeginConvertToXIF(nsXIFConverter& aConverter) const
   if (nsnull != mCoords) {
     PRInt32 i, n = mNumCoords;
     for (i = 0; i < n; i++) {
-      coords.AppendWithConversion(mCoords[i], 10);
+      coords.AppendInt(mCoords[i], 10);
       if (i < n - 1) {
-        coords.Append(',');
+        coords.AppendWithConversion(',');
       }
     }
   }

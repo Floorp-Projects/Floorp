@@ -1274,26 +1274,25 @@ nsGenericHTMLElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom *aAttribute,
 
     case eHTMLUnit_Integer:
       aResult.Truncate();
-      aResult.Append(value->GetIntValue(), 10);
+      aResult.AppendInt(value->GetIntValue(), 10);
       break;
 
     case eHTMLUnit_Pixel:
       aResult.Truncate();
-      aResult.Append(value->GetPixelValue(), 10);
+      aResult.AppendInt(value->GetPixelValue(), 10);
       break;
 
     case eHTMLUnit_Percent:
       aResult.Truncate();
-      aResult.Append(PRInt32(value->GetPercentValue() * 100.0f), 10);
-      aResult.Append('%');
+      aResult.AppendInt(PRInt32(value->GetPercentValue() * 100.0f), 10);
+      aResult.AppendWithConversion('%');
       break;
 
     case eHTMLUnit_Color:
       color = nscolor(value->GetColorValue());
       PR_snprintf(cbuf, sizeof(cbuf), "#%02x%02x%02x",
                   NS_GET_R(color), NS_GET_G(color), NS_GET_B(color));
-      aResult.Truncate();
-      aResult.Append(cbuf);
+      aResult.AssignWithConversion(cbuf);
       break;
 
     default:
@@ -1492,7 +1491,7 @@ nsGenericHTMLElement::ListAttributes(FILE* out) const
     // value
     nsAutoString value;
     GetAttribute(nameSpaceID, attr, value);
-    buffer.Append("=");
+    buffer.AppendWithConversion("=");
     buffer.Append(value);
 
     fputs(" ", out);
@@ -1580,41 +1579,39 @@ void NS_QuoteForHTML(const nsString& aValue, nsString& aResult);
 void
 NS_QuoteForHTML(const nsString& aValue, nsString& aResult)
 {
-  aResult.Truncate();
   const PRUnichar* cp = aValue.GetUnicode();
   const PRUnichar* end = aValue.GetUnicode() + aValue.Length();
-  aResult.Append('"');
+  aResult.AssignWithConversion('"');
   while (cp < end) {
     PRUnichar ch = *cp++;
     if ((ch >= 0x20) && (ch <= 0x7f)) {
       if (ch == '\"') {
-        aResult.Append("&quot;");
+        aResult.AppendWithConversion("&quot;");
       }
       else {
         aResult.Append(ch);
       }
     }
     else {
-      aResult.Append("&#");
-      aResult.Append((PRInt32) ch, 10);
-      aResult.Append(';');
+      aResult.AppendWithConversion("&#");
+      aResult.AppendInt((PRInt32) ch, 10);
+      aResult.AppendWithConversion(';');
     }
   }
-  aResult.Append('"');
+  aResult.AppendWithConversion('"');
 }
 
 nsresult
 nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
 {
-  aBuf.Truncate(0);
-  aBuf.Append('<');
+  aBuf.AssignWithConversion('<');
 
   if (nsnull != mTag) {
     nsAutoString tmp;
     mTag->ToString(tmp);
     aBuf.Append(tmp);
   } else {
-    aBuf.Append("?NULL");
+    aBuf.AppendWithConversion("?NULL");
   }
 
   if (nsnull != mAttributes) {
@@ -1625,20 +1622,20 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
       nsIAtom* atom = nsnull;
       mAttributes->GetAttributeNameAt(index, atom);
       atom->ToString(name);
-      aBuf.Append(' ');
+      aBuf.AppendWithConversion(' ');
       aBuf.Append(name);
       value.Truncate();
       GetAttribute(kNameSpaceID_None, atom, value);
       NS_RELEASE(atom);
       if (value.Length() > 0) {
-        aBuf.Append('=');
+        aBuf.AppendWithConversion('=');
         NS_QuoteForHTML(value, quotedValue);
         aBuf.Append(quotedValue);
       }
     }
   }
 
-  aBuf.Append('>');
+  aBuf.AppendWithConversion('>');
   return NS_OK;
 }
 
@@ -1664,7 +1661,7 @@ nsGenericHTMLElement::AttributeToString(nsIAtom* aAttribute,
           NS_RELEASE(cssRule);
         }
         else {
-          aResult = "Unknown rule type";
+          aResult.AssignWithConversion("Unknown rule type");
         }
         NS_RELEASE(rule);
       }
@@ -1705,7 +1702,7 @@ nsGenericHTMLElement::ParseCaseSensitiveEnumValue(const nsString& aValue,
                                                   nsHTMLValue& aResult)
 {
   while (nsnull != aTable->tag) {
-    if (aValue.Equals(aTable->tag)) {
+    if (aValue.EqualsWithConversion(aTable->tag)) {
       aResult.SetIntValue(aTable->value, eHTMLUnit_Enumerated);
       return PR_TRUE;
     }
@@ -1725,7 +1722,7 @@ nsGenericHTMLElement::EnumValueToString(const nsHTMLValue& aValue,
     PRInt32 v = aValue.GetIntValue();
     while (nsnull != aTable->tag) {
       if (aTable->value == v) {
-        aResult.Append(aTable->tag);
+        aResult.AppendWithConversion(aTable->tag);
         if (aFoldCase) {
           aResult.SetCharAt(nsCRT::ToUpper(aResult[0]), 0);
         }
@@ -1804,14 +1801,14 @@ nsGenericHTMLElement::ValueOrPercentToString(const nsHTMLValue& aValue,
   aResult.Truncate(0);
   switch (aValue.GetUnit()) {
     case eHTMLUnit_Integer:
-      aResult.Append(aValue.GetIntValue(), 10);
+      aResult.AppendInt(aValue.GetIntValue(), 10);
       return PR_TRUE;
     case eHTMLUnit_Pixel:
-      aResult.Append(aValue.GetPixelValue(), 10);
+      aResult.AppendInt(aValue.GetPixelValue(), 10);
       return PR_TRUE;
     case eHTMLUnit_Percent:
-      aResult.Append(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
-      aResult.Append('%');
+      aResult.AppendInt(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
+      aResult.AppendWithConversion('%');
       return PR_TRUE;
     default:
       break;
@@ -1826,18 +1823,18 @@ nsGenericHTMLElement::ValueOrPercentOrProportionalToString(const nsHTMLValue& aV
   aResult.Truncate(0);
   switch (aValue.GetUnit()) {
   case eHTMLUnit_Integer:
-    aResult.Append(aValue.GetIntValue(), 10);
+    aResult.AppendInt(aValue.GetIntValue(), 10);
     return PR_TRUE;
   case eHTMLUnit_Pixel:
-    aResult.Append(aValue.GetPixelValue(), 10);
+    aResult.AppendInt(aValue.GetPixelValue(), 10);
     return PR_TRUE;
   case eHTMLUnit_Percent:
-    aResult.Append(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
-    aResult.Append('%');
+    aResult.AppendInt(PRInt32(aValue.GetPercentValue() * 100.0f), 10);
+    aResult.AppendWithConversion('%');
     return PR_TRUE;
   case eHTMLUnit_Proportional:
-    aResult.Append(aValue.GetIntValue(), 10);
-    aResult.Append('*');
+    aResult.AppendInt(aValue.GetIntValue(), 10);
+    aResult.AppendWithConversion('*');
     return PR_TRUE;
   default:
     break;
@@ -1928,8 +1925,7 @@ nsGenericHTMLElement::ColorToString(const nsHTMLValue& aValue,
     char buf[10];
     PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
                 NS_GET_R(v), NS_GET_G(v), NS_GET_B(v));
-    aResult.Truncate(0);
-    aResult.Append(buf);
+    aResult.AssignWithConversion(buf);
     return PR_TRUE;
   }
   if ((aValue.GetUnit() == eHTMLUnit_ColorName) || 

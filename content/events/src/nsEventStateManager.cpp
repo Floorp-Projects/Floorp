@@ -1764,7 +1764,7 @@ nsEventStateManager::GetNextTabbableContent(nsIContent* aRootContent, nsIFrame* 
         child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::disabled, value);
         nsAutoString tabStr;
         child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::tabindex, tabStr);
-        if (tabStr != "") {
+        if (!tabStr.IsEmpty()) {
           PRInt32 errorCode;
           tabIndex = tabStr.ToInteger(&errorCode);
         }
