@@ -1775,7 +1775,7 @@ PRBool nsWindow::OnKey( MPARAM mp1, MPARAM mp2)
    // XXX this may be wrong, but is what gtk is doing...
    if( fsFlags & KC_VIRTUALKEY &&
       (usVKey == VK_SHIFT || usVKey == VK_CTRL ||
-       usVKey == VK_ALT || usVKey == VK_ALTGRAF)) return PR_FALSE;
+       usVKey == VK_ALTGRAF)) return PR_FALSE;
 
    // Now check if it's a dead-key
    if( fsFlags & KC_DEADKEY)
@@ -1940,8 +1940,10 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
                 // a WM_OPEN message.  When this happens we do not get a
                 // WM_CHAR for the down transition of the enter key when
                 // shift is also pressed and OnKeyDown will not be called.
-                if ( (SHORT1FROMMP(mp1) & (KC_VIRTUALKEY | KC_SHIFT)) &&
-                     (SHORT2FROMMP(mp2) == VK_ENTER)
+                if (((SHORT1FROMMP(mp1) & (KC_VIRTUALKEY | KC_SHIFT)) &&
+                     (SHORT2FROMMP(mp2) == VK_ENTER)) ||
+                    ((SHORT1FROMMP(mp1) & KC_KEYUP) && (SHORT1FROMMP(mp1) & KC_LONEKEY) &&
+                     (SHORT2FROMMP(mp2) == VK_ALT)) 
                    )
                 {
                   return(PR_TRUE);
