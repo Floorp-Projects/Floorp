@@ -1711,23 +1711,21 @@ nsSmtpProtocol::GetPassword(char **aPassword)
     
     const PRUnichar *formatStrings[] =
     {
-      NS_ConvertASCIItoUCS2(username).get()
+      NS_ConvertASCIItoUCS2(username).get(),
+      nsnull  // this will be overwritten in some cases.
     };
 
     PRBool hideHostnameForPassword = PR_FALSE;
     rv = prefBranch->GetBoolPref(prefName.get(), &hideHostnameForPassword);
-    if (NS_SUCCEEDED(rv) && hideHostnameForPassword) {
-      // for certain redirector types, we don't want to show the
-      // hostname to the user when prompting for password
-      formatStrings[1] = nsnull;
-    }
-    else {
+    // for certain redirector types, we don't want to show the
+    // hostname to the user when prompting for password
+    if (!hideHostnameForPassword) 
+    {
       nsXPIDLCString hostname;      
       rv = smtpServer->GetHostname(getter_Copies(hostname));
       NS_ENSURE_SUCCESS(rv, rv);
       formatStrings[1] = NS_ConvertASCIItoUCS2(hostname).get();
     }
-
     rv = PromptForPassword(smtpServer, smtpUrl, formatStrings, aPassword);
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
