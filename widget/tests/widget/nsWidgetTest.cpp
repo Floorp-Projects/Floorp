@@ -832,15 +832,18 @@ void DumpRects()
   // print all children's position
   nsIEnumerator *enumerator = window->GetChildren();
   nsISupports * widget;
-  while (widget = enumerator->Next()) {
-      nsIWidget *child;
-      if (NS_OK == widget->QueryInterface(kIWidgetIID, (void**)&child)) {
-          //
-          child->GetBounds(rect);
-          printf("Bounds(%d, %d, %d, %d)\n", rect.x, rect.y, rect.width, rect.height);
-          NS_RELEASE(child);
-      }
-      NS_RELEASE(widget);
+  if (NS_SUCCEEDED(enumerator->CurrentItem(&widget))) {
+    do {
+        nsIWidget *child;
+        if (NS_OK == widget->QueryInterface(kIWidgetIID, (void**)&child)) {
+            //
+            child->GetBounds(rect);
+            printf("Bounds(%d, %d, %d, %d)\n", rect.x, rect.y, rect.width, rect.height);
+            NS_RELEASE(child);
+        }
+        NS_RELEASE(widget);
+    }
+    while (enumerator->Next());
   }
 
   NS_RELEASE(enumerator);
