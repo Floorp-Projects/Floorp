@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.3 $ $Date: 2000/04/20 03:14:04 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.4 $ $Date: 2000/05/16 01:54:45 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -236,6 +236,8 @@ nssCKFWObject_Finalize
   NSSCKFWObject *fwObject
 )
 {
+  nssCKFWHash *mdObjectHash;
+
 #ifdef NSSDEBUG
   if( CKR_OK != nssCKFWObject_verifyPointer(fwObject) ) {
     return;
@@ -250,6 +252,12 @@ nssCKFWObject_Finalize
       fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance);
   }
 
+  mdObjectHash = nssCKFWToken_GetMDObjectHash(fwObject->fwToken);
+  if( (nssCKFWHash *)NULL != mdObjectHash ) {
+    nssCKFWHash_Remove(mdObjectHash, fwObject->mdObject);
+  }
+
+  nssCKFWSession_DeregisterSessionObject(fwObject->fwSession, fwObject);
   nss_ZFreeIf(fwObject);
 
 #ifdef DEBUG
@@ -269,6 +277,8 @@ nssCKFWObject_Destroy
   NSSCKFWObject *fwObject
 )
 {
+  nssCKFWHash *mdObjectHash;
+
 #ifdef NSSDEBUG
   if( CKR_OK != nssCKFWObject_verifyPointer(fwObject) ) {
     return;
@@ -283,6 +293,12 @@ nssCKFWObject_Destroy
       fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance);
   }
 
+  mdObjectHash = nssCKFWToken_GetMDObjectHash(fwObject->fwToken);
+  if( (nssCKFWHash *)NULL != mdObjectHash ) {
+    nssCKFWHash_Remove(mdObjectHash, fwObject->mdObject);
+  }
+
+  nssCKFWSession_DeregisterSessionObject(fwObject->fwSession, fwObject);
   nss_ZFreeIf(fwObject);
 
 #ifdef DEBUG
@@ -739,6 +755,24 @@ nssCKFWObject_SetAttribute
 
     (void)nssCKFWMutex_Unlock(newFwObject->mutex);
     (void)nssCKFWMutex_Unlock(fwObject->mutex);
+
+    /*
+     * Either remove or add this to the list of session objects
+     */
+
+    if( CK_FALSE == *(CK_BBOOL *)value->data ) {
+      /* 
+       * New one is a session object, except since we "stole" the fwObject, it's
+       * not in the list.  Add it.
+       */
+      nssCKFWSession_RegisterSessionObject(fwObject->fwSession, fwObject);
+    } else {
+      /*
+       * New one is a token object, except since we "stole" the fwObject, it's
+       * in the list.  Remove it.
+       */
+      nssCKFWSession_DeregisterSessionObject(fwObject->fwSession, fwObject);
+    }
 
     /*
      * Now delete the old object.  Remember the names have changed.

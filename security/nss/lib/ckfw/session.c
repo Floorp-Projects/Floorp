@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.3 $ $Date: 2000/04/20 03:14:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.4 $ $Date: 2000/05/16 01:54:46 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -74,6 +74,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: session.c,v $ $Revision: 1.3 $ $Dat
  *  nssCKFWSession_SetMDSession
  *  nssCKFWSession_SetHandle
  *  nssCKFWSession_GetHandle
+ *  nssCKFWSession_RegisterSessionObject
+ *  nssCKFWSession_DeegisterSessionObject
  *
  *  -- module fronts --
  *  nssCKFWSession_GetDeviceError
@@ -109,6 +111,7 @@ struct NSSCKFWSessionStr {
 
   CK_BBOOL rw;
   NSSCKFWFindObjects *fwFindObjects;
+  nssCKFWHash *sessionObjectHash;
   CK_SESSION_HANDLE hSession;
 };
 
@@ -209,6 +212,14 @@ nssCKFWSession_Create
 
   fwSession->fwFindObjects = (NSSCKFWFindObjects *)NULL;
 
+  fwSession->sessionObjectHash = nssCKFWHash_Create(fwSession->fwInstance, arena, pError);
+  if( (nssCKFWHash *)NULL == fwSession->sessionObjectHash ) {
+    if( CKR_OK == *pError ) {
+      *pError = CKR_GENERAL_ERROR;
+    }
+    goto loser;
+  }
+
 #ifdef DEBUG
   *pError = session_add_pointer(fwSession);
   if( CKR_OK != *pError ) {
@@ -220,10 +231,25 @@ nssCKFWSession_Create
 
  loser:
   if( (NSSArena *)NULL != arena ) {
+    if( (nssCKFWHash *)NULL != fwSession->sessionObjectHash ) {
+      (void)nssCKFWHash_Destroy(fwSession->sessionObjectHash);
+    }
     NSSArena_Destroy(arena);
   }
 
   return (NSSCKFWSession *)NULL;
+}
+
+static void
+nss_ckfw_session_object_destroy_iterator
+(
+  const void *key,
+  void *value,
+  void *closure
+)
+{
+  NSSCKFWObject *fwObject = (NSSCKFWObject *)value;
+  nssCKFWObject_Finalize(fwObject);
 }
 
 /*
@@ -238,6 +264,7 @@ nssCKFWSession_Destroy
 )
 {
   CK_RV error = CKR_OK;
+  nssCKFWHash *sessionObjectHash;
 
 #ifdef NSSDEBUG
   error = nssCKFWSession_verifyPointer(fwSession);
@@ -254,9 +281,17 @@ nssCKFWSession_Destroy
    * Invalidate session objects
    */
 
+  sessionObjectHash = fwSession->sessionObjectHash;
+  fwSession->sessionObjectHash = (nssCKFWHash *)NULL;
+
+  nssCKFWHash_Iterate(sessionObjectHash, 
+                      nss_ckfw_session_object_destroy_iterator, 
+                      (void *)NULL);
+
 #ifdef DEBUG
   (void)session_remove_pointer(fwSession);
 #endif /* DEBUG */
+  (void)nssCKFWHash_Destroy(sessionObjectHash);
   NSSArena_Destroy(fwSession->arena);
 
   return error;
@@ -577,6 +612,56 @@ nssCKFWSession_GetHandle
 #endif /* NSSDEBUG */
 
   return fwSession->hSession;
+}
+
+/*
+ * nssCKFWSession_RegisterSessionObject
+ *
+ */
+NSS_IMPLEMENT CK_RV
+nssCKFWSession_RegisterSessionObject
+(
+  NSSCKFWSession *fwSession,
+  NSSCKFWObject *fwObject
+)
+{
+  CK_RV rv = CKR_OK;
+
+#ifdef NSSDEBUG
+  if( CKR_OK != nssCKFWSession_verifyPointer(fwSession) ) {
+    return CKR_GENERAL_ERROR;
+  }
+#endif /* NSSDEBUG */
+
+  if( (nssCKFWHash *)NULL != fwSession->sessionObjectHash ) {
+    rv = nssCKFWHash_Add(fwSession->sessionObjectHash, fwObject, fwObject);
+  }
+
+  return rv;
+}
+
+/*
+ * nssCKFWSession_DeregisterSessionObject
+ *
+ */
+NSS_IMPLEMENT CK_RV
+nssCKFWSession_DeregisterSessionObject
+(
+  NSSCKFWSession *fwSession,
+  NSSCKFWObject *fwObject
+)
+{
+#ifdef NSSDEBUG
+  if( CKR_OK != nssCKFWSession_verifyPointer(fwSession) ) {
+    return CKR_GENERAL_ERROR;
+  }
+#endif /* NSSDEBUG */
+
+  if( (nssCKFWHash *)NULL != fwSession->sessionObjectHash ) {
+    nssCKFWHash_Remove(fwSession->sessionObjectHash, fwObject);
+  }
+
+  return CKR_OK;
 }
 
 /*
@@ -1185,6 +1270,7 @@ nssCKFWSession_CreateObject
   NSSArena *arena;
   NSSCKMDObject *mdObject;
   NSSCKFWObject *fwObject;
+  CK_BBOOL isTokenObject;
 
 #ifdef NSSDEBUG
   if( (CK_RV *)NULL == pError ) {
@@ -1211,7 +1297,8 @@ nssCKFWSession_CreateObject
    * Here would be an excellent place to sanity-check the object.
    */
 
-  if( CK_TRUE == nss_attributes_form_token_object(pTemplate, ulAttributeCount) ) {
+  isTokenObject = nss_attributes_form_token_object(pTemplate, ulAttributeCount);
+  if( CK_TRUE == isTokenObject ) {
     /* === TOKEN OBJECT === */
 
     if( (void *)NULL == (void *)fwSession->mdSession->CreateObject ) {
@@ -1285,6 +1372,16 @@ nssCKFWSession_CreateObject
     }
     
     return (NSSCKFWObject *)NULL;
+  }
+
+  if( CK_FALSE == isTokenObject ) {
+    if( CK_FALSE == nssCKFWHash_Exists(fwSession->sessionObjectHash, fwObject) ) {
+      *pError = nssCKFWHash_Add(fwSession->sessionObjectHash, fwObject, fwObject);
+      if( CKR_OK != *pError ) {
+        nssCKFWObject_Finalize(fwObject);
+        return (NSSCKFWObject *)NULL;
+      }
+    }
   }
   
   return fwObject;
@@ -1398,6 +1495,16 @@ nssCKFWSession_CopyObject
       }
     
       return (NSSCKFWObject *)NULL;
+    }
+
+    if( CK_FALSE == newIsToken ) {
+      if( CK_FALSE == nssCKFWHash_Exists(fwSession->sessionObjectHash, rv) ) {
+        *pError = nssCKFWHash_Add(fwSession->sessionObjectHash, rv, rv);
+        if( CKR_OK != *pError ) {
+          nssCKFWObject_Finalize(rv);
+          return (NSSCKFWObject *)NULL;
+        }
+      }
     }
 
     return rv;
