@@ -70,7 +70,11 @@ nsSmtpServer::SetHostname(const char * aHostname)
     nsCAutoString pref;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     getPrefString("hostname", pref);
-    return prefs->SetCharPref(pref, aHostname);
+    if (aHostname)
+        return prefs->SetCharPref(pref, aHostname);
+    else
+        prefs->ClearUserPref(pref);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -92,7 +96,11 @@ nsSmtpServer::SetUsername(const char * aUsername)
     nsCAutoString pref;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     getPrefString("username", pref);
-    return prefs->SetCharPref(pref, aUsername);
+    if (aUsername)
+        return prefs->SetCharPref(pref, aUsername);
+    else
+        prefs->ClearUserPref(pref);
+    return NS_OK;
 }
 
 NS_IMETHODIMP
