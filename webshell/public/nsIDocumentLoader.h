@@ -102,26 +102,18 @@ class nsIDocumentLoader : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IDOCUMENTLOADER_IID)
 
-    NS_IMETHOD LoadDocument(const nsString& aURLSpec, 
+    NS_IMETHOD LoadDocument(nsIURI * aUri, 
                             const char* aCommand,
                             nsIContentViewerContainer* aContainer,
                             nsIInputStream* aPostDataStream = nsnull,
                             nsISupports* aExtraInfo = nsnull,
                             nsIStreamObserver* anObserver = nsnull,
-#ifdef NECKO
                             nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                            nsURLReloadType aType = nsURLReload,
-#endif
                             const PRUint32 aLocalIP = 0) = 0;
 
-    NS_IMETHOD LoadSubDocument(const nsString& aURLSpec,
+    NS_IMETHOD LoadSubDocument(nsIURI * aUri,
                                nsISupports* aExtraInfo = nsnull,
-#ifdef NECKO
                                nsLoadFlags aType = nsIChannel::LOAD_NORMAL,
-#else
-                               nsURLReloadType aType = nsURLReload,
-#endif
                                const PRUint32 aLocalIP = 0) = 0;
 
     NS_IMETHOD Stop(void) = 0;

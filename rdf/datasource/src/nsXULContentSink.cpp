@@ -813,8 +813,11 @@ XULContentSinkImpl::ProcessOverlay(const nsString& aHref)
       return result;
   }
 
-  docLoader->LoadSubDocument(aHref,
-                             docInfo.get());
+  nsCOMPtr<nsIURI> uri;
+  result = NS_NewURI(getter_AddRefs(uri), aHref, mDocumentBaseURL);
+  if (NS_FAILED(result)) return result;
+
+  return docLoader->LoadSubDocument(uri, docInfo.get());
   return result;
 }
 
