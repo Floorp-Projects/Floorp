@@ -61,6 +61,7 @@ XPIDLSRCS	= \
 		nsICommandHandler.idl			\
 		nsIContextMenuListener.idl		\
 		nsIEmbeddingSiteWindow.idl  \
+		nsIEmbeddingSiteWindow2.idl \
 		nsITooltipListener.idl		\
 		nsITooltipTextProvider.idl	\
 		nsIWebBrowserFocus.idl		\
