@@ -2095,7 +2095,8 @@ nsPop3Protocol::SendRetr()
                                               getter_Copies(finalString));
               NS_ASSERTION(NS_SUCCEEDED(rv), "couldn't format string");
 
-              m_statusFeedback->ShowStatusString(finalString);
+              if (m_statusFeedback)
+                m_statusFeedback->ShowStatusString(finalString);
             }
             
 		}
