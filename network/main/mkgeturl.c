@@ -4511,8 +4511,12 @@ NET_FreeURLStruct (URL_Struct * URL_s)
   PR_FREEIF(URL_s->add_crlf);
 
 	 PR_FREEIF(URL_s->page_services_url);
-    PR_FREEIF(URL_s->privacy_policy_url);
 
+	if (URL_s->privacy_policy_url != (char*)(-1)) {
+		PR_FREEIF(URL_s->privacy_policy_url);
+	} else {
+		URL_s->privacy_policy_url = NULL;
+	}
 
 #ifdef TRUST_LABELS
 	/* delete the entries and the trust list, if the list was created then there
