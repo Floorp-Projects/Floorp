@@ -18,7 +18,6 @@
 DEPTH=..
 IGNORE_MANIFEST=1
 
-# add "guimgr" after testing builds on other platforms
-DIRS=public core
+DIRS=public core guimgr
 
 include <$(DEPTH)\config\rules.mak>
