@@ -490,9 +490,11 @@ nsresult NS_COM NS_ShutdownXPCOM(nsIServiceManager* servMgr)
 
     NS_PurgeAtomTable();
 
-#ifdef DEBUG_kipp
-    nsTraceRefcnt::DumpLeaks(stderr);
-    nsTraceRefcnt::FlushCtorRegistry();
+#if defined(DEBUG) && (defined(_WIN32) || defined(XP_UNIX))
+    if (getenv("MOZ_DUMP_LEAKS")) {
+        nsTraceRefcnt::DumpLeaks(stderr);
+        nsTraceRefcnt::FlushCtorRegistry();
+    }
 #endif
 
 #ifdef GC_LEAK_DETECTOR
