@@ -203,24 +203,14 @@
 			  <html:img src="resource:/res/toolbar/TB_Print.gif"/><html:br/>Print
       </html:button>
 
+     <html:input html:id="urlbar" html:type="text" 
+		  html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
+
       <html:button onClick="window.frames[0].home()">
         <html:img src="resource:/res/throbber/anims00.gif"/>
       </html:button>	      
     </xul:toolbar>
 
-    <xul:toolbar style="background-color:rgb(192,192,192);">
-      <html:button style="background-color:rgb(192,192,192);">
-        <html:img src="resource:/res/toolbar/TB_Bookmarks.gif"/>Bookmarks
-      </html:button>
-		  
-		  <html:input html:id="urlbar" html:type="text" 
-		    html:onkeyup="if (event.which == 13) { window.frames[0].location.href=document.getElementByID('urlbar').value; }" style="width:325px;"/>   
-
-		  <html:button style="background-color:rgb(192,192,192);">
-        <html:img src="resource:/res/toolbar/TB_WhatsRelated.gif"/>What's Related
-      </html:button>
-    </xul:toolbar>
-    
     <xul:toolbar>
       <html:button onClick="window.frames[0].home()">
         <html:img src="resource:/res/toolbar/TB_Location.gif"/>Mozilla.org
