@@ -782,8 +782,16 @@ PRIVATE PRBool uCnGAlways8BytesDecomposedHangul(
     VIndex = (SIndex % NCount) / TCount;
     TIndex = SIndex % TCount;
     
+    /* 
+     * A Hangul syllable not enumerated in KS X 1001 is represented
+     * by a sequence of 8 bytes beginning with Hangul-filler
+     * (0xA4D4 in EUC-KR and 0x2454 in ISO-2022-KR) followed by three 
+     * Jamos (2 bytes each the first of which is 0xA4 in EUC-KR) making 
+     * up the syllable.  ref. KS X 1001:1998 Annex 3
+     */
     *outlen = 8;
     out[0] = out[2] = out[4] = out[6] = 0xa4;
+    out[1] = 0xd4;
     out[3] = lMap[LIndex] ;
     out[5] = (VIndex + 0xbf);
     out[7] = tMap[TIndex];
