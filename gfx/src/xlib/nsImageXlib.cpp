@@ -28,8 +28,6 @@
 
 #define IsFlagSet(a,b) ((a) & (b))
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
-
 static PRLogModuleInfo *ImageXlibLM = PR_NewLogModule("ImageXlib");
 
 nsImageXlib::nsImageXlib()
@@ -98,7 +96,7 @@ nsImageXlib::~nsImageXlib()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsImageXlib, kIImageIID);
+NS_IMPL_ISUPPORTS1(nsImageXlib, nsIImage)
 
 nsresult nsImageXlib::Init(PRInt32 aWidth, PRInt32 aHeight,
                            PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
@@ -894,8 +892,6 @@ NS_IMETHODIMP nsImageXlib::DrawTile(nsIRenderingContext &aContext,
                                     nsRect &aSrcRect,
                                     nsRect &aTileRect)
 {
-  nsDrawingSurfaceXlib *drawing = (nsDrawingSurfaceXlib*)aSurface;
-
   PRInt32
     aY0 = aTileRect.y,
     aX0 = aTileRect.x,
@@ -1055,3 +1051,47 @@ nsImageXlib::SetDecodedRect(PRInt32 x1, PRInt32 y1, PRInt32 x2, PRInt32 y2)
   return NS_OK;
 }
 
+#ifdef USE_IMG2
+NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
+                                       nscoord aDX, nscoord aDY,
+                                       nscoord aDWidth, nscoord aDHeight)
+{
+#if 0
+    // XXX This is a copy of the GTK version, partially converted for
+    // the xlib port.  I can't figure out how to finish it.
+  nsImageXlib *dest = NS_STATIC_CAST(nsImageXlib *, aDstImage);
+  if (!dest)
+    return NS_ERROR_FAILURE;
+
+  nsDrawingSurfaceXlib *drawing = /* XXX What should this be!?!?! */ nsnull;
+  NS_ENSURE_TRUE(drawing, NS_ERROR_FAILURE);
+  
+  if (!dest->mImagePixmap)
+    dest->CreateOffscreenPixmap(dest->mWidth, dest->mHeight, drawing);
+  
+  if (!dest->mImagePixmap || !mImagePixmap)
+    return NS_ERROR_FAILURE;
+
+  if (!mDisplay)
+    mDisplay = drawing->GetDisplay();
+  GC gc = XCreateGC(mDisplay, dest->mImagePixmap, 0, NULL);
+
+  if (mAlphaDepth == 1)
+    CreateAlphaBitmap(mWidth, mHeight, drawing);
+  
+  if (mAlphaPixmap) {
+    SetupGCForAlpha(gc, 0, 0);
+  }
+
+  XCopyArea(dest->mDisplay, mImagePixmap, dest->mImagePixmap, gc,
+            0, 0, mWidth, mHeight, aDX, aDY);
+
+  XFreeGC(mDisplay, gc);
+
+  return NS_OK;
+#else
+  NS_NOTREACHED("nsImageXlib::DrawToImage not yet implemented");
+  return NS_ERROR_FAILURE;
+#endif
+}
+#endif // USE_IMG2

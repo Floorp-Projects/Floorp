@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= widget
 LIBRARY_NAME	= widget_xlib
 IS_COMPONENT	= 1
-REQUIRES	= xpcom string appshell layout dom js xlibrgb timer uconv pref webshell htmlparser view necko
+REQUIRES	= xpcom string appshell layout dom js xlibrgb timer uconv pref webshell htmlparser view necko gfx2
 
 DIRS		= window_service
 

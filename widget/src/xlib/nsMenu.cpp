@@ -25,42 +25,11 @@
 #include "nsIMenuItem.h"
 #include "nsIMenuListener.h"
 
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
-static NS_DEFINE_IID(kIMenuItemIID, NS_IMENUITEM_IID);
+NS_IMPL_ISUPPORTS2(nsMenu, nsIMenu, nsIMenuListener)
 
-nsresult nsMenu::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                                        
-  if (aIID.Equals(kIMenuIID)) {                                         
-    *aInstancePtr = (void*)(nsIMenu*) this;                                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(NS_GET_IID(nsIMenuListener))) {                                      
-    *aInstancePtr = (void*)(nsIMenuListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                     
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIMenu*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  return NS_NOINTERFACE;                                                 
-}
-
-NS_IMPL_ADDREF(nsMenu)
-NS_IMPL_RELEASE(nsMenu)
-
-nsMenu::nsMenu() : nsIMenu()
+nsMenu::nsMenu()
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
   mMenuBarParent = nsnull;
   mMenuParent    = nsnull;
   mListener      = nsnull;
@@ -77,7 +46,10 @@ nsMenu::~nsMenu()
   mItems->Clear();
 }
 
-NS_METHOD nsMenu::Create(nsISupports *aParent, const nsString &aLabel)
+NS_METHOD nsMenu::Create(nsISupports * aParent, const nsAReadableString &aLabel,
+                         const nsAReadableString &aAccessKey, 
+                         nsIChangeManager* aManager, nsIWebShell* aShell,
+                         nsIContent* aContent )
 {
   return NS_OK;
 }
@@ -92,7 +64,7 @@ NS_METHOD nsMenu::GetLabel(nsString &aText)
   return NS_OK;
 }
 
-NS_METHOD nsMenu::SetLabel(const nsString &aText)
+NS_METHOD nsMenu::SetLabel(const nsAReadableString &aText)
 {
   return NS_OK;
 }
@@ -242,7 +214,7 @@ NS_METHOD nsMenu::GetAccessKey(nsString &aText)
 }
 
 //-------------------------------------------------------------------------
-NS_METHOD nsMenu::SetAccessKey(const nsString &aText)
+NS_METHOD nsMenu::SetAccessKey(const nsAReadableString &aText)
 {
   return NS_OK;
 }

@@ -41,6 +41,7 @@ class nsIPopUpMenu;
 class nsIWidget;
 class nsIMenuListener;
 class nsIChangeManager;
+class nsIContent;
 
 enum {
   knsMenuItemNoModifier      = 0,
