@@ -244,7 +244,8 @@ NS_IMETHODIMP nsRegionGTK::GetNativeRegion(void *&aRegion) const
 
 NS_IMETHODIMP nsRegionGTK::GetRegionComplexity(nsRegionComplexity &aComplexity) const
 {
-  if (IsEmpty())
+  // cast to avoid const-ness problems on some compilers
+  if (((nsRegionGTK*)this)->IsEmpty())
     aComplexity = eRegionComplexity_empty;
   else
     aComplexity = eRegionComplexity_rect;
