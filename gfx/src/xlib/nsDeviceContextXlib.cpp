@@ -78,6 +78,12 @@ NS_IMETHODIMP nsDeviceContextXlib::Init(nsNativeWidget aNativeWidget)
   mVisual = gVisual;
   mDepth = gDepth;
 
+  printf("nsDeviceContextXlib::Init(dpy=%p  screen=%p  visual=%p  depth=%d)\n",
+         mDisplay,
+         mScreen,
+         mVisual,
+         mDepth);
+
   CommonInit();
 
   return NS_OK;
