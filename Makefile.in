@@ -148,7 +148,6 @@ tier_9_dirs += \
 ifdef MOZ_OJI
 tier_9_dirs	+= \
 		js/src/liveconnect \
-		sun-java \
 		modules/oji \
 		$(NULL)
 endif
@@ -181,6 +180,7 @@ tier_9_dirs	+= \
 		htmlparser \
 		gfx \
 		modules/libpr0n \
+		sun-java \
 		modules/plugin \
 		dom \
 		view \

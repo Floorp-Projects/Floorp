@@ -38,7 +38,7 @@
 
 
 /*
- *  npupp.h $Revision: 3.13 $
+ *  npupp.h $Revision: 3.14 $
  *  function call mecahnics needed by platform specific glue code.
  */
 
@@ -58,9 +58,7 @@
 #include "npapi.h"
 #endif
 
-#ifdef OJI
 #include "jri.h"
-#endif
 
 /******************************************************************************************
    plug-in function table macros
@@ -932,8 +930,6 @@ typedef void (* NP_LOADDS NPN_ReloadPluginsUPP)(NPBool reloadPages);
 
 #endif
 
-#ifdef OJI
-
 /* NPN_GetJavaEnv */
 
 #if _NPUPP_USE_UPP_
@@ -984,8 +980,6 @@ typedef jref (* NP_LOADDS NPN_GetJavaPeerUPP)(NPP instance);
 		(*(FUNC))((ARG1))	
 
 #endif
-
-#endif /* OJI */
 
 /* NPN_InvalidateRect */
 
@@ -1093,9 +1087,7 @@ typedef struct _NPPluginFuncs {
     NPP_PrintUPP print;
     NPP_HandleEventUPP event;
     NPP_URLNotifyUPP urlnotify;
-#ifdef OJI
     JRIGlobalRef javaClass;
-#endif
     NPP_GetValueUPP getvalue;
     NPP_SetValueUPP setvalue;
 } NPPluginFuncs;
@@ -1115,10 +1107,8 @@ typedef struct _NPNetscapeFuncs {
     NPN_MemFreeUPP memfree;
     NPN_MemFlushUPP memflush;
     NPN_ReloadPluginsUPP reloadplugins;
-#ifdef OJI
     NPN_GetJavaEnvUPP getJavaEnv;
     NPN_GetJavaPeerUPP getJavaPeer;
-#endif
     NPN_GetURLNotifyUPP geturlnotify;
     NPN_PostURLNotifyUPP posturlnotify;
     NPN_GetValueUPP getvalue;
