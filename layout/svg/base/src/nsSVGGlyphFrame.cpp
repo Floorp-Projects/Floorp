@@ -352,6 +352,41 @@ nsSVGGlyphFrame::GetFrameForPoint(float x, float y, nsIFrame** hit)
 #endif
   // test for hit:
   *hit = nsnull;
+
+  PRBool events = PR_FALSE;
+  switch (GetStyleSVG()->mPointerEvents) {
+    case NS_STYLE_POINTER_EVENTS_NONE:
+      break;
+    case NS_STYLE_POINTER_EVENTS_VISIBLEPAINTED:
+      if (GetStyleVisibility()->IsVisible() &&
+          (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
+           GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None))
+        events = PR_TRUE;
+      break;
+    case NS_STYLE_POINTER_EVENTS_VISIBLEFILL:
+    case NS_STYLE_POINTER_EVENTS_VISIBLESTROKE:
+    case NS_STYLE_POINTER_EVENTS_VISIBLE:
+      if (GetStyleVisibility()->IsVisible())
+        events = PR_TRUE;
+      break;
+    case NS_STYLE_POINTER_EVENTS_PAINTED:
+      if (GetStyleSVG()->mFill.mType != eStyleSVGPaintType_None ||
+          GetStyleSVG()->mStroke.mType != eStyleSVGPaintType_None)
+        events = PR_TRUE;
+      break;
+    case NS_STYLE_POINTER_EVENTS_FILL:
+    case NS_STYLE_POINTER_EVENTS_STROKE:
+    case NS_STYLE_POINTER_EVENTS_ALL:
+      events = PR_TRUE;
+      break;
+    default:
+      NS_ERROR("not reached");
+      break;
+  }
+
+  if (!events)
+    return NS_OK;
+
   PRBool isHit;
   mGeometry->ContainsPoint(x, y, &isHit);
   if (isHit) 
