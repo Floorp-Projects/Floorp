@@ -3272,7 +3272,13 @@ if (GetFieldDef("products", "product")) {
     AddField("versions", "product_id", "smallint not null");
     AddField("milestones", "product_id", "smallint not null");
     AddField("bugs", "product_id", "smallint not null");
-    AddField("attachstatusdefs", "product_id", "smallint not null");
+    # The attachstatusdefs table was added in version 2.15, but removed again
+    # in early 2.17.  If it exists now, we still need to perform this change
+    # with product_id because the code further down which converts the
+    # attachment statuses to flags depends on it.  But we need to avoid this
+    # if the user is upgrading from 2.14 or earlier (because it won't be
+    # there to convert).
+    AddField("attachstatusdefs", "product_id", "smallint not null") if TableExists("attachstatusdefs");
     my %products;
     my $sth = $dbh->prepare("SELECT id, product FROM products");
     $sth->execute;
@@ -3292,7 +3298,7 @@ if (GetFieldDef("products", "product")) {
         $dbh->do("UPDATE bugs SET product_id = $product_id, delta_ts=delta_ts " .
                  "WHERE product = " . $dbh->quote($product));
         $dbh->do("UPDATE attachstatusdefs SET product_id = $product_id " .
-                 "WHERE product = " . $dbh->quote($product));
+                 "WHERE product = " . $dbh->quote($product)) if TableExists("attachstatusdefs");
     }
 
     print "Updating the database to use component IDs.\n";
@@ -3330,7 +3336,7 @@ if (GetFieldDef("products", "product")) {
     DropField("milestones", "product");
     DropField("bugs", "product");
     DropField("bugs", "component");
-    DropField("attachstatusdefs", "product");
+    DropField("attachstatusdefs", "product") if TableExists("attachstatusdefs");
     RenameField("products", "product", "name");
     ChangeFieldType("products", "name", "varchar(64) not null");
     RenameField("components", "value", "name");
