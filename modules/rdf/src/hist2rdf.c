@@ -135,6 +135,8 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
 #ifdef	XP_MAC
 	time->tm_year += 4;
 	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#elif	XP_UNIX
+	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
@@ -145,6 +147,8 @@ collateOneHist (RDFT r, RDF_Resource u, char* url, char* title, time_t lastAcces
   {
 #ifdef	XP_MAC
 	time->tm_year += 4;
+	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#elif	XP_UNIX
 	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 	strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);

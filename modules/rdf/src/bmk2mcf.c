@@ -298,6 +298,8 @@ newLeafBkItem (RDFFile f, char* token)
 #ifdef	XP_MAC
 		time->tm_year += 4;
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#elif	XP_UNIX
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
@@ -313,6 +315,8 @@ newLeafBkItem (RDFFile f, char* token)
 #ifdef	XP_MAC
 		time->tm_year += 4;
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#elif	XP_UNIX
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
@@ -327,6 +331,8 @@ newLeafBkItem (RDFFile f, char* token)
 	{
 #ifdef	XP_MAC
 		time->tm_year += 4;
+		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#elif	XP_UNIX
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 		strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);

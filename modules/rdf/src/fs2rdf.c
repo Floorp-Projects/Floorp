@@ -493,6 +493,8 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 #ifdef	XP_MAC
 							time->tm_year += 4;
 							strftime(buffer, sizeof(buffer), XP_GetString(RDF_HTML_MACDATE), time);
+#elif	XP_UNIX
+							strftime(buffer, sizeof(buffer), XP_GetString(RDF_HTML_MACDATE), time);
 #else
 							strftime(buffer, sizeof(buffer), XP_GetString(RDF_HTML_WINDATE), time);
 #endif
@@ -526,6 +528,8 @@ fsGetSlotValue (RDFT rdf, RDF_Resource u, RDF_Resource s, RDF_ValueType type, PR
 						{
 #ifdef	XP_MAC
 							time->tm_year += 4;
+							strftime(buffer, sizeof(buffer), XP_GetString(RDF_HTML_MACDATE), time);
+#elif	XP_UNIX
 							strftime(buffer, sizeof(buffer), XP_GetString(RDF_HTML_MACDATE), time);
 #else
 							strftime(buffer, sizeof(buffer), XP_GetString(RDF_HTML_WINDATE), time);

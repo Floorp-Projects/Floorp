@@ -1141,6 +1141,8 @@ htSetBookmarkAddDateToNow(RDF_Resource r)
 #ifdef	XP_MAC
 			time->tm_year += 4;
 			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
+#elif	XP_UNIX
+			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
 #endif
@@ -5546,6 +5548,8 @@ constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 			if ((time = localtime(&dateVal)) == NULL)       break;
 #ifdef	XP_WIN
 			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
+#elif	XP_UNIX
+			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #endif
@@ -5556,6 +5560,8 @@ constructHTML(char *dynStr, HT_Resource node, void *token, uint32 tokenType)
 			if ((time = localtime((time_t *) &data)) == NULL)       break;
 #ifdef	XP_WIN
 			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_WINDATE),time);
+#elif	XP_UNIX
+			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #else
 			strftime(buffer,sizeof(buffer),XP_GetString(RDF_HTML_MACDATE),time);
 #endif
