@@ -254,13 +254,6 @@ nsXMLDocument::StartDocumentLoad(const char* aCommand,
 
       if (NS_OK == rv) {
 
-        nsIDTD* theDTD=0;
-        // XXX For now, we'll use the HTML DTD
-        NS_NewWellFormed_DTD(&theDTD);
-
-        /* Commenting out the call to RegisterDTD() as per rickg's instructions.
-           XML and HTML DTD's are going to be pre-registered withing nsParser. */
-        // mParser->RegisterDTD(theDTD);
         nsAutoString utf8("utf-8");
         mParser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
         mParser->SetCommand(aCommand);

@@ -65,6 +65,8 @@
 #include <windows.h>
 #include "nsISupports.h"
 #include "nsParserCIID.h"
+#include "nsIIOService.h"
+#include "nsIServiceManager.h"
 #endif
 
 // XXX misnamed header file, but oh well
@@ -93,7 +95,10 @@ static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIObserverIID, NS_IOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 #endif
+
 
 static void SetTextStringOnTextNode(const nsString& aTextString, nsIContent* aTextNode);
 
@@ -1109,35 +1114,34 @@ static void SplitMimeType(const nsString& aValue, nsString& aType, nsString& aPa
 }
 
 #ifdef XSL
+nsresult
 nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl, 
                                       const nsAutoString& aHref)
 {
-   nsAutoString absURL;
-   nsIURI* docURL = mDocument->GetDocumentURL();
-   nsILoadGroup* LoadGroup; 
-   nsresult result = NS_OK;
-   
-   result = docURL->GetLoadGroup(&LoadGroup);
-
-   if ((NS_SUCCEEDED(result)) && LoadGroup) {
-     result = LoadGroup->CreateURL(aUrl, docURL, aHref, nsnull);
-     NS_RELEASE(LoadGroup);
-   }
-   else {
-#ifndef NECKO
-     result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
-     if (NS_SUCCEEDED(result)) {
-       result = NS_NewURL(aUrl, absURL);
-     }
+  nsresult result = NS_OK;
+#ifdef NECKO
+  result = NS_NewURI(aUrl, aHref, mDocumentBaseURL);
 #else
-     result = NS_MakeAbsoluteURI(aHref, docURL, absURL);
-     if (NS_SUCCEEDED(result)) {
-       result = NS_NewURI(aUrl, absURL);
-     }
-#endif // NECKO
+  nsAutoString absURL;
+  nsIURI* docURL = mDocument->GetDocumentURL();
+  nsILoadGroup* LoadGroup; 
+
+  result = docURL->GetLoadGroup(&LoadGroup);
+
+  if ((NS_SUCCEEDED(result)) && LoadGroup) {
+   result = LoadGroup->CreateURL(aUrl, docURL, aHref, nsnull);
+   NS_RELEASE(LoadGroup);
+  }
+  else {
+   result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
+   if (NS_SUCCEEDED(result)) {
+     result = NS_NewURL(aUrl, absURL);
    }
-   NS_RELEASE(docURL);
-   return result;
+  }
+  NS_RELEASE(docURL);
+#endif
+  return result;
+
 }
 
 // Create an XML parser and an XSL content sink and start parsing
@@ -1146,7 +1150,7 @@ nsresult
 nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
 {  
   nsresult rv = NS_OK;
-  nsIParser* parser;
+  nsCOMPtr<nsIParser> parser;
 
   static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
   static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
@@ -1155,50 +1159,49 @@ nsXMLContentSink::LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType)
   rv = nsComponentManager::CreateInstance(kCParserCID, 
                                     nsnull, 
                                     kCParserIID, 
-                                    (void **)&parser);
+                                    getter_AddRefs(parser));
 
-  if (NS_SUCCEEDED(rv)) {
-    // Create a transform mediator
-    rv = NS_NewTransformMediator(&mXSLTransformMediator, aType);
+  if (NS_FAILED(rv)) return rv;
 
-    if (NS_SUCCEEDED(rv)) {
-      // Enable the transform mediator. It will start the transform
-      // as soon as it has enough state to do so.  The state needed is
-      // the source content model, the style content model, the current
-      // document, and an observer.  The XML and XSL content sinks provide 
-      // this state by calling the various setters on nsITransformMediator.
-      mXSLTransformMediator->SetEnabled(PR_TRUE);
+  // Create a transform mediator
+  rv = NS_NewTransformMediator(&mXSLTransformMediator, aType);
+  if (NS_FAILED(rv)) return rv;
 
-      // The XML document owns the transform mediator.  Give the mediator to
-      // the XML document.
-      nsIXMLDocument* xmlDoc;
-      rv = mDocument->QueryInterface(kIXMLDocumentIID, (void **) &xmlDoc);
-      if (NS_SUCCEEDED(rv)) {
-        xmlDoc->SetTransformMediator(mXSLTransformMediator);
-
-        // Create the XSL content sink
-        nsIXMLContentSink* sink;
-        rv = NS_NewXSLContentSink(&sink, mXSLTransformMediator, mDocument, aUrl, mWebShell);
-
-        if (NS_SUCCEEDED(rv)) {
-          // Hook up the content sink to the parser's output and ask the parser
-          // to start parsing the URL specified by aURL.   
-          parser->SetContentSink(sink);
-
-          nsAutoString utf8("UTF-8");
-          mDocument->SetDocumentCharacterSet(utf8);
-          parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
-          parser->Parse(aUrl);
     
-          // XXX Don't we have to NS_RELEASE() theDTD?
-          NS_RELEASE(sink);
-        }
-        NS_RELEASE(xmlDoc);
-      }
-      NS_RELEASE(mXSLTransformMediator);
-    }    
-    NS_RELEASE(parser);
-  }
+  // Enable the transform mediator. It will start the transform
+  // as soon as it has enough state to do so.  The state needed is
+  // the source content model, the style content model, the current
+  // document, and an observer.  The XML and XSL content sinks provide 
+  // this state by calling the various setters on nsITransformMediator.
+  mXSLTransformMediator->SetEnabled(PR_TRUE);
+
+  // The XML document owns the transform mediator.  Give the mediator to
+  // the XML document.
+  nsCOMPtr<nsIXMLDocument> xmlDoc;
+  rv = mDocument->QueryInterface(kIXMLDocumentIID, (void**) getter_AddRefs(xmlDoc));  
+  if (NS_FAILED(rv)) return rv;
+  xmlDoc->SetTransformMediator(mXSLTransformMediator);
+
+  // Create the XSL content sink
+  nsCOMPtr<nsIXMLContentSink> sink;
+  rv = NS_NewXSLContentSink(getter_AddRefs(sink), mXSLTransformMediator, mDocument, aUrl, mWebShell);
+  if (NS_FAILED(rv)) return rv;  
+              
+  // Hook up the content sink to the parser's output and ask the parser
+  // to start parsing the URL specified by aURL.   
+  parser->SetContentSink(sink);
+  nsAutoString utf8("UTF-8");
+  mDocument->SetDocumentCharacterSet(utf8);
+  parser->SetDocumentCharset(utf8, kCharsetFromDocTypeDefault);
+  parser->Parse(aUrl);
+
+  // Set the parser as the stream listener and start the URL load
+  nsCOMPtr<nsIStreamListener> sl;
+  rv = mParser->QueryInterface(kIStreamListenerIID, (void**)getter_AddRefs(sl));
+  if (NS_FAILED(rv)) return rv; 
+  
+  rv = NS_OpenURI(sl, nsnull, aUrl);  
+
   return rv;
 }
 
