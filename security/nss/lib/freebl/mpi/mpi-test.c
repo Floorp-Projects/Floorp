@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.4 2000/07/28 23:04:23 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.5 2000/08/29 04:26:23 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -378,6 +378,10 @@ void reason(char *fmt, ...);
 
 char g_intbuf[4096];  /* buffer for integer comparison   */
 int  g_verbose = 1;   /* print out reasons for failure?  */
+int  res;
+
+#define IFOK(x) { if (MP_OKAY > (res = (x))) { \
+  reason("test %s failed: error %d\n", #x, res); return 1; }}
 
 int main(int argc, char *argv[])
 {
@@ -764,7 +768,7 @@ int test_mul_d(void)
   mp_init(&a);
   mp_read_radix(&a, mp1, 16);
 
-  mp_mul_d(&a, md4, &a);
+  IFOK( mp_mul_d(&a, md4, &a) );
   mp_toradix(&a, g_intbuf, 16);
   
   if(strcmp(g_intbuf, p_mp1d4) != 0) {
@@ -774,7 +778,7 @@ int test_mul_d(void)
   }
 
   mp_read_radix(&a, mp8, 16);
-  mp_mul_d(&a, md6, &a);
+  IFOK( mp_mul_d(&a, md6, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   mp_clear(&a);
@@ -796,7 +800,7 @@ int test_mul(void)
   mp_init(&a); mp_init(&b);
   mp_read_radix(&a, mp1, 16); mp_read_radix(&b, mp2, 16);
 
-  mp_mul(&a, &b, &a);
+  IFOK( mp_mul(&a, &b, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, p_mp12) != 0) {
@@ -805,7 +809,7 @@ int test_mul(void)
   }
 
   mp_read_radix(&a, mp3, 16); mp_read_radix(&b, mp4, 16);
-  mp_mul(&a, &b, &a);
+  IFOK( mp_mul(&a, &b, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, p_mp34) !=0) {
@@ -814,7 +818,7 @@ int test_mul(void)
   }
 
   mp_read_radix(&a, mp5, 16); mp_read_radix(&b, mp7, 16);
-  mp_mul(&a, &b, &a);
+  IFOK( mp_mul(&a, &b, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, p_mp57) != 0) {
@@ -823,7 +827,7 @@ int test_mul(void)
   }
 
   mp_read_radix(&a, mp11, 16); mp_read_radix(&b, mp13, 16);
-  mp_mul(&a, &b, &a);
+  IFOK( mp_mul(&a, &b, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, p_mp1113) != 0) {
@@ -832,7 +836,7 @@ int test_mul(void)
   }
 
   mp_read_radix(&a, mp14, 16); mp_read_radix(&b, mp15, 16);
-  mp_mul(&a, &b, &a);
+  IFOK( mp_mul(&a, &b, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, p_mp1415) != 0) {
@@ -877,7 +881,7 @@ int test_div_d(void)
   mp_init(&a); mp_init(&q);
   mp_read_radix(&a, mp3, 16);
 
-  mp_div_d(&a, md6, &q, &r);
+  IFOK( mp_div_d(&a, md6, &q, &r) );
   mp_toradix(&q, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp3d6) != 0) {
@@ -893,7 +897,7 @@ int test_div_d(void)
   }
 
   mp_read_radix(&a, mp9, 16);
-  mp_div_d(&a, 16, &q, &r);
+  IFOK( mp_div_d(&a, 16, &q, &r) );
   mp_toradix(&q, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp9c16) != 0) {
@@ -919,7 +923,7 @@ int test_div_2(void)
   mp_int  a;
 
   mp_init(&a); mp_read_radix(&a, mp7, 16);
-  mp_div_2(&a, &a);
+  IFOK( mp_div_2(&a, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   mp_clear(&a);
@@ -940,7 +944,7 @@ int test_div_2d(void)
   mp_init(&q); mp_init(&r);
   mp_init(&a); mp_read_radix(&a, mp13, 16);
 
-  mp_div_2d(&a, 64, &q, &r);
+  IFOK( mp_div_2d(&a, 64, &q, &r) );
   mp_clear(&a);
 
   mp_toradix(&q, g_intbuf, 16);
@@ -975,7 +979,7 @@ int test_div(void)
   mp_init(&a); mp_init(&b); mp_init(&r);
 
   mp_read_radix(&a, mp4, 16); mp_read_radix(&b, mp2, 16);
-  mp_div(&a, &b, &a, &r);
+  IFOK( mp_div(&a, &b, &a, &r) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp42) != 0) {
@@ -991,7 +995,7 @@ int test_div(void)
   }
 
   mp_read_radix(&a, mp4, 16); mp_read_radix(&b, mp5a, 16);
-  mp_div(&a, &b, &a, &r);
+  IFOK( mp_div(&a, &b, &a, &r) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp45a) != 0) {
@@ -1007,7 +1011,7 @@ int test_div(void)
   }
 
   mp_read_radix(&a, mp14, 16); mp_read_radix(&b, mp4, 16);
-  mp_div(&a, &b, &a, &r);
+  IFOK( mp_div(&a, &b, &a, &r) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, q_mp1404) != 0) {
@@ -1124,7 +1128,7 @@ int test_mod_d(void)
   mp_digit   r;
 
   mp_init(&a); mp_read_radix(&a, mp5, 16);
-  mp_mod_d(&a, md5, &r);
+  IFOK( mp_mod_d(&a, md5, &r) );
   sprintf(g_intbuf, "%X", r);
   mp_clear(&a);
 
@@ -1144,7 +1148,7 @@ int test_mod(void)
 
   mp_init(&a); mp_init(&m);
   mp_read_radix(&a, mp4, 16); mp_read_radix(&m, mp7, 16);
-  mp_mod(&a, &m, &a);
+  IFOK( mp_mod(&a, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&m);
 
@@ -1166,7 +1170,7 @@ int test_addmod(void)
   mp_read_radix(&a, mp3, 16); mp_read_radix(&b, mp4, 16);
   mp_read_radix(&m, mp5, 16);
 
-  mp_addmod(&a, &b, &m, &a);
+  IFOK( mp_addmod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&b); mp_clear(&m);
 
@@ -1188,7 +1192,7 @@ int test_submod(void)
   mp_read_radix(&a, mp3, 16); mp_read_radix(&b, mp4, 16);
   mp_read_radix(&m, mp5, 16);
 
-  mp_submod(&a, &b, &m, &a);
+  IFOK( mp_submod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&b); mp_clear(&m);
 
@@ -1210,7 +1214,7 @@ int test_mulmod(void)
   mp_read_radix(&a, mp3, 16); mp_read_radix(&b, mp4, 16);
   mp_read_radix(&m, mp5, 16);
 
-  mp_mulmod(&a, &b, &m, &a);
+  IFOK( mp_mulmod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&b); mp_clear(&m);
 
@@ -1231,7 +1235,7 @@ int test_sqrmod(void)
   mp_init(&a); mp_init(&m);
   mp_read_radix(&a, mp3, 16); mp_read_radix(&m, mp5, 16);
 
-  mp_sqrmod(&a, &m, &a);
+  IFOK( mp_sqrmod(&a, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&m);
 
@@ -1254,7 +1258,7 @@ int test_exptmod(void)
   mp_read_radix(&a, mp8, 16); mp_read_radix(&b, mp1, 16);
   mp_read_radix(&m, mp7, 16);
 
-  mp_exptmod(&a, &b, &m, &a);
+  IFOK( mp_exptmod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, me_mp817) != 0) {
@@ -1265,7 +1269,7 @@ int test_exptmod(void)
   mp_read_radix(&a, mp1, 16); mp_read_radix(&b, mp5, 16);
   mp_read_radix(&m, mp12, 16);
 
-  mp_exptmod(&a, &b, &m, &a);
+  IFOK( mp_exptmod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, me_mp1512) != 0) {
@@ -1276,7 +1280,7 @@ int test_exptmod(void)
   mp_read_radix(&a, mp5, 16); mp_read_radix(&b, mp1, 16);
   mp_read_radix(&m, mp14, 16);
 
-  mp_exptmod(&a, &b, &m, &a);
+  IFOK( mp_exptmod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, me_mp5114) != 0) {
@@ -1287,7 +1291,7 @@ int test_exptmod(void)
   mp_read_radix(&a, mp16, 16); mp_read_radix(&b, mp17, 16);
   mp_read_radix(&m, mp18, 16);
 
-  mp_exptmod(&a, &b, &m, &a);
+  IFOK( mp_exptmod(&a, &b, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
 
   if(strcmp(g_intbuf, me_mp161718) != 0) {
@@ -1309,7 +1313,7 @@ int test_exptmod_d(void)
   mp_init(&a); mp_init(&m);
   mp_read_radix(&a, mp5, 16); mp_read_radix(&m, mp7, 16);
 
-  mp_exptmod_d(&a, md4, &m, &a);
+  IFOK( mp_exptmod_d(&a, md4, &m, &a) );
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&m);
 
@@ -1331,11 +1335,7 @@ int test_invmod(void)
   mp_init(&a); mp_init(&m);
   mp_read_radix(&a, mp2, 16); mp_read_radix(&m, mp7, 16);
 
-  if((res = mp_invmod(&a, &m, &a)) != MP_OKAY) {
-    reason("error: %s\n", mp_strerror(res));
-    mp_clear(&a); mp_clear(&m);
-    return 1;
-  }
+  IFOK( mp_invmod(&a, &m, &a) );
 
   mp_toradix(&a, g_intbuf, 16);
   mp_clear(&a); mp_clear(&m);
