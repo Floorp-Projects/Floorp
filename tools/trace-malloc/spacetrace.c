@@ -1463,6 +1463,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                 PRUint64 lifetime64 = LL_INIT(0, 0);
                 int appendRes = 0;
                 int looper = 0;
+                PRBool matched = PR_FALSE;
 
                 /*
                 ** Use this as an opportune time to fixup a memory
@@ -1559,8 +1560,17 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
                             break;
                         }
                     }
+                    else
+                    {
+                        matched = PR_TRUE;
+                        break;
+                    }
                 }
-                if(ST_SUBSTRING_MATCH_MAX != looper)
+                if(ST_SUBSTRING_MATCH_MAX == looper)
+                {
+                    matched = PR_TRUE;
+                }
+                if(PR_FALSE == matched)
                 {
                     continue;
                 }
@@ -5098,7 +5108,8 @@ int displaySettings(void)
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     PR_fprintf(globals.mRequest.mFD, "Restrict callsite backtraces to thost only containing the specified text.\n");
-    PR_fprintf(globals.mRequest.mFD, "This allows targeting of specific creation functions.<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "This allows targeting of specific creation functions.\n");
+    PR_fprintf(globals.mRequest.mFD, "Keep all the strings together near the top of this list, as the code will stop trying to match on the first empty string.<br>\n");
     for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
     {
         PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mRestrictText%d\" value=\"%s\"><br>\n", looper, NULL == globals.mOptions.mRestrictText[looper] ? "" : globals.mOptions.mRestrictText[looper]);
