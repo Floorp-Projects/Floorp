@@ -19,7 +19,7 @@
 <!ENTITY viewImagesExplanation.label    "View list of sites about which image acceptance information is stored">
 <!ENTITY viewImages.label               "View Image Permissions">
 <!ENTITY viewImages.accesskey           "p">
-<!ENTITY animLoopingTitle.label         "Animated images should loop:">
+<!ENTITY animLoopingTitle.label         "Animated images should loop">
 <!ENTITY animLoopAsSpecified.label          "As many times as the image specifies">
 <!ENTITY animLoopAsSpecified.accesskey      "A">
 <!ENTITY animLoopOnce.label             "Once">
