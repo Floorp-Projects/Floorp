@@ -2185,7 +2185,7 @@ nsBrowserInstance::SetIsViewSource(PRBool aBool) {
 
 NS_DEFINE_MODULE_INSTANCE_COUNTER()
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBrowserInstance, Init)
 
 struct components_t {
   nsCID cid;
