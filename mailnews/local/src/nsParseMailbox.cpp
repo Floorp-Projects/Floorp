@@ -51,10 +51,10 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 	// extract the appropriate event sinks from the url and initialize them in our protocol data
 	// the URL should be queried for a nsIMailboxURL. If it doesn't support a mailbox URL interface then
 	// we have an error.
-	nsIMailboxUrl *runningUrl;
+	nsresult rv = NS_OK;
+	nsCOMPtr<nsIMailboxUrl> runningUrl = do_QueryInterface(aURL, &rv);
 	printf("\n+++ nsMsgMailboxParser::OnStartBinding: URL: %p, Content type: %s\n", aURL, aContentType);
 
-	nsresult rv = aURL->QueryInterface(nsIMailboxUrl::GetIID(), (void **)&runningUrl);
 	if (NS_SUCCEEDED(rv) && runningUrl)
 	{
 		// okay, now fill in our event sinks...Note that each getter ref counts before
@@ -66,18 +66,13 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 			nsFilePath dbPath(fileName);
 			nsFileSpec dbName(dbPath);
 
-			nsIMsgDatabase * mailDB = nsnull;
-			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDB);
+			nsCOMPtr<nsIMsgDatabase> mailDB;
+			rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
 			if (NS_SUCCEEDED(rv) && mailDB)
-			{
-				rv = mailDB->Open(dbName, PR_TRUE, (nsIMsgDatabase **) &m_mailDB, PR_TRUE);
-				mailDB->Release();
-			}
+				rv = mailDB->Open(dbName, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_TRUE);
 			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 			printf("url file = %s\n", fileName);
 		}
-
-		NS_RELEASE(runningUrl);
 	}
 
 	// need to get the mailbox name out of the url and call SetMailboxName with it.
@@ -107,24 +102,19 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStopBinding(nsIURL* aURL, nsresult aStatus, 
 		m_mailDB->ListAllKeys(keys);
 		for (PRUint32 index = 0; index < keys.GetSize(); index++)
 		{
-			nsIMsgDBHdr *msgHdr = NULL;
-			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], &msgHdr);
-			if (ret == NS_OK && msgHdr)
+			nsCOMPtr<nsIMsgDBHdr> msgHdr;
+			nsresult ret = m_mailDB->GetMsgHdrForKey(keys[index], getter_AddRefs(msgHdr));
+			if (NS_SUCCEEDED(ret) && msgHdr)
 			{
 				nsMsgKey key;
 
 				msgHdr->GetMessageKey(&key);
 				msgHdr->GetAuthor(author);
 				msgHdr->GetSubject(subject);
-				char *authorStr = author.ToNewCString();
-				char *subjectStr = subject.ToNewCString();
 #ifdef DEBUG
 				// leak nsString return values...
-				printf("hdr key = %d, author = %s subject = %s\n", key, (authorStr) ? authorStr : "", (subjectStr) ? subjectStr : "");
+				printf("hdr key = %d, author = %s subject = %s\n", key, (const char *) nsAutoCString(author), (const char *) nsAutoCString(subject));
 #endif
-				delete [] authorStr;
-				delete [] subjectStr;
-				msgHdr->Release();
 			}
 		}
 		m_mailDB->Close(TRUE);
@@ -139,7 +129,6 @@ nsMsgMailboxParser::nsMsgMailboxParser() : nsMsgLineBuffer(NULL, PR_FALSE)
   /* the following macro is used to initialize the ref counting data */
 	NS_INIT_REFCNT();
 
-	m_mailDB = NULL;
 	m_mailboxName = NULL;
 	m_obuffer = NULL;
 	m_obuffer_size = 0;
@@ -218,7 +207,7 @@ void nsMsgMailboxParser::DoneParsingFolder()
 	FlushLastLine();
 	PublishMsgHeader();
 
-	if (m_mailDB != NULL)	// finished parsing, so flush db folder info 
+	if (m_mailDB)	// finished parsing, so flush db folder info 
 		UpdateDBFolderInfo();
 
 //	if (m_folder != NULL)
@@ -267,32 +256,25 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
         (void)m_newMsgHdr->GetFlags(&flags);
 		if (flags & MSG_FLAG_EXPUNGED)
 		{
-			nsIDBFolderInfo *folderInfo = nsnull;
-			m_mailDB->GetDBFolderInfo(&folderInfo);
+			nsCOMPtr<nsIDBFolderInfo> folderInfo;
+			m_mailDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
             PRUint32 size;
             (void)m_newMsgHdr->GetMessageSize(&size);
             folderInfo->ChangeExpungedBytes(size);
-			if (m_newMsgHdr)
-			{
-				m_newMsgHdr->Release();;
-				m_newMsgHdr = NULL;
-			}
-			NS_RELEASE(folderInfo);
+			m_newMsgHdr = null_nsCOMPtr();
 		}
-		else if (m_mailDB != NULL)
+		else if (m_mailDB)
 		{
 			m_mailDB->AddNewHdrToDB(m_newMsgHdr, m_updateAsWeGo);
-			m_newMsgHdr->Release();
-			// should we release here?
-			m_newMsgHdr = NULL;
+			m_newMsgHdr = null_nsCOMPtr();
 		}
 		else
 			NS_ASSERTION(FALSE, "no database while parsing local folder");	// should have a DB, no?
 	}
 	else if (m_mailDB)
 	{
-		nsIDBFolderInfo *folderInfo = nsnull;
-		m_mailDB->GetDBFolderInfo(&folderInfo);
+		nsCOMPtr<nsIDBFolderInfo> folderInfo;
+		m_mailDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 		if (folderInfo)
 			folderInfo->ChangeExpungedBytes(m_position - m_envelope_pos);
 	}
@@ -302,10 +284,7 @@ PRInt32 nsMsgMailboxParser::PublishMsgHeader()
 void nsMsgMailboxParser::AbortNewHeader()
 {
 	if (m_newMsgHdr && m_mailDB)
-	{
-		m_newMsgHdr->Release();
-		m_newMsgHdr = NULL;
-	}
+		m_newMsgHdr = null_nsCOMPtr();
 }
 
 PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
@@ -366,7 +345,6 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 nsParseMailMessageState::nsParseMailMessageState()
 {
-	m_mailDB = NULL;
 	m_position = 0;
 	m_IgnoreXMozillaStatus = FALSE;
 	m_state = MBOX_PARSE_BODY;
@@ -377,22 +355,20 @@ nsParseMailMessageState::nsParseMailMessageState()
     nsComponentManager::CreateInstance(kMsgHeaderParserCID,
                                        nsnull,
                                        nsIMsgHeaderParser::GetIID(),
-                                       (void **)&m_HeaderAddressParser);
+                                       (void **) getter_AddRefs(m_HeaderAddressParser));
 }
 
 nsParseMailMessageState::~nsParseMailMessageState()
 {
 	ClearAggregateHeader (m_toList);
 	ClearAggregateHeader (m_ccList);
-	
-	NS_RELEASE(m_HeaderAddressParser);
 }
 
 void nsParseMailMessageState::Init(PRUint32 fileposition)
 {
 	m_state = MBOX_PARSE_BODY;
 	m_position = fileposition;
-	m_newMsgHdr = NULL;
+	m_newMsgHdr = null_nsCOMPtr();
 }
 
 void nsParseMailMessageState::Clear()
@@ -414,7 +390,7 @@ void nsParseMailMessageState::Clear()
 	m_return_path.length = 0;
 	m_mdn_original_recipient.length = 0;
 	m_body_lines = 0;
-	m_newMsgHdr = NULL;
+	m_newMsgHdr = null_nsCOMPtr();
 	m_envelope_pos = 0;
 	ClearAggregateHeader (m_toList);
 	ClearAggregateHeader (m_ccList);
@@ -462,7 +438,7 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 
 void nsParseMailMessageState::SetMailDB(nsIMsgDatabase *mailDB)
 {
-	m_mailDB = mailDB;
+	m_mailDB = dont_QueryInterface(mailDB);
 }
 
 /* #define STRICT_ENVELOPE */
@@ -1042,8 +1018,8 @@ int nsParseMailMessageState::FinalizeHeaders()
 
 	if (!(flags & MSG_FLAG_EXPUNGED))	// message was deleted, don't bother creating a hdr.
 	{
-		nsresult ret = m_mailDB->CreateNewHdr(m_envelope_pos, &m_newMsgHdr);
-		if (ret == NS_OK && m_newMsgHdr)
+		nsresult ret = m_mailDB->CreateNewHdr(m_envelope_pos, getter_AddRefs(m_newMsgHdr));
+		if (NS_SUCCEEDED(ret) && m_newMsgHdr)
 		{
             PRUint32 origFlags;
             (void)m_newMsgHdr->GetFlags(&origFlags);
@@ -1309,13 +1285,10 @@ nsParseNewMailState::Init(MSG_Master *master, nsFileSpec &folder)
 	m_position = folder.GetFileSize();
 	// the new mail parser isn't going to get the stream input, it seems, so we can't use
 	// the OnStartBinding mechanism the mailbox parser uses. So, let's open the db right now.
-	nsIMsgDatabase * mailDB = nsnull;
-	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) &mailDB);
+	nsCOMPtr<nsIMsgDatabase> mailDB;
+	rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDB));
 	if (NS_SUCCEEDED(rv) && mailDB)
-	{
-		rv = mailDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) &m_mailDB, PR_FALSE);
-		mailDB->Release();
-	}
+		rv = mailDB->Open(folder, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB), PR_FALSE);
 //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
     if (NS_FAILED(rv)) return rv;
 
@@ -1416,7 +1389,7 @@ void nsParseNewMailState::DoneParsingFolder()
 		m_ibuffer_fp = 0;
 	}
 	PublishMsgHeader();
-	if (!moved && m_mailDB != NULL)	// finished parsing, so flush db folder info 
+	if (!moved && m_mailDB)	// finished parsing, so flush db folder info 
 		UpdateDBFolderInfo();
 
 #ifdef HAVE_FOLDERINFO
@@ -1461,11 +1434,8 @@ PRInt32 nsParseNewMailState::PublishMsgHeader()
 #endif
 
 		}		// if it was moved by imap filter, m_parseMsgState->m_newMsgHdr == NULL
-		else if (m_newMsgHdr)
-		{
-			m_newMsgHdr->Release();
-		}
-		m_newMsgHdr = NULL;
+	
+		m_newMsgHdr = null_nsCOMPtr();
 	}
 	return 0;
 }

@@ -25,11 +25,12 @@
 #include "nsITransport.h"
 #include "nsMsgLineBuffer.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsIMsgDatabase.h"
+#include "nsIMsgHdr.h"
+#include "nsCOMPtr.h"
 
 class nsFileSpec;
 class nsByteArray;
-class nsIMsgDBHdr;
-class nsIMsgDatabase;
 class nsOutputFileStream;
 class nsInputFileStream;
 class MSG_Filter;
@@ -87,11 +88,10 @@ public:
 	static PRBool	msg_StripRE(const char **stringP, PRUint32 *lengthP);
 	static int		msg_UnHex(char C); 
 
-	nsIMsgHeaderParser* m_HeaderAddressParser;
+	nsCOMPtr<nsIMsgHeaderParser> m_HeaderAddressParser;
 
-	nsIMsgDatabase	*GetMailDB() {return m_mailDB;}
-	nsIMsgDBHdr		*m_newMsgHdr;		/* current message header we're building */
-	nsIMsgDatabase	*m_mailDB;
+	nsCOMPtr<nsIMsgDBHdr>		m_newMsgHdr;		/* current message header we're building */
+	nsCOMPtr<nsIMsgDatabase>	m_mailDB;
 
 	MBOX_PARSE_STATE m_state;
 	PRUint32			m_position;
@@ -181,13 +181,11 @@ public:
 	NS_IMETHOD OnProgress(nsIURL* aURL, PRUint32 aProgress, PRUint32 aProgressMax) { return NS_OK;}
 	NS_IMETHOD OnStatus(nsIURL* aURL, const PRUnichar* aMsg) { return NS_OK;}
 
-	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = mailDB; }
-	nsIMsgDatabase			*GetDB() {return m_mailDB;}
+	void			SetDB (nsIMsgDatabase *mailDB) {m_mailDB = dont_QueryInterface(mailDB); }
 	char			*GetMailboxName() {return m_mailboxName;}
 
 	void			SetIncrementalUpdate(PRBool update) {m_updateAsWeGo = update;}
 	void			SetIgnoreNonMailFolder(PRBool ignoreNonMailFolder) {m_ignoreNonMailFolder = ignoreNonMailFolder;}
-	nsIMsgDBHdr *GetCurrentMsg() {return m_newMsgHdr;}
 	PRBool			GetIsRealMailFolder() {return m_isRealMailFolder;}
 
 	// message socket libnet callbacks, which come through folder pane
