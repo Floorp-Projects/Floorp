@@ -1,40 +1,41 @@
 <?xml version="1.0"?> 
 
-
 <!DOCTYPE window SYSTEM "chrome://global/locale/unknownContent.dtd">
+
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&unknownWindow.title;"
         onload="onLoad()"
         onunload="onUnload()"
         class="dialog"
         orient="vertical">
 
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script src="chrome://global/content/unknownContent.js"/>
+	<script language="javascript" src="chrome://global/content/strres.js"></script>
+  <script src="chrome://global/content/unknownContent.js"></script>
 
-  <titledbox>
- 		<html:div style="width: 45px; margin: 5px;">
-      <titledbutton/>
-	  </html:div>
- 		<box orient="vertical" flex="100%">    
-      <html:div>&startDownload;</html:div>
-      <html:div style="width: 100%; margin: 3px;">
-        <titledbutton id="dialog.contentType" align="left" flex="100%" style="width: 100%; font-weight: bold;"/>
-      </html:div> 
-  		<html:div style="margin-bottom: 0.5em;">&helpText;</html:div> 
+  <box>
+    <separator orient="vertical" class="thin"/>
+    <box orient="vertical" autostretch="never" valign="top">
+      <image class="message-icon" id="fileIcon"/>
     </box>
-  </titledbox>
-  
-  <box style="width: 100%" autostretch="never">
-    <spring flex="5%"/>
-    <html:div><titledbutton id="dialog.more" value="&dialogMore.label;" onclick="more()"/></html:div>
-    <spring flex="100%"/>
+    <separator orient="vertical" class="thin"/>
+    <box orient="vertical">
+      <html>&startDownload;</html>
+      <text class="label header indent" id="dialog.contentType"/>
+      <html>&helpText;</html>
+    </box>
+    <separator orient="vertical" class="thin"/>
+  </box>
+    
+  <separator class="groove"/>
+    
+  <box autostretch="never">
+    <button class="dialog" id="dialog.more" value="&dialogMore.label;" oncommand="more()"/>
+    <spring flex="1"/>
     <box id="okCancelButtons"/>
-    <spring flex="5%"/>
   </box>
 
   <keyset id="keyset"/>
