@@ -303,11 +303,8 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
         grippyHeight = collapsedGrippyHeight;
       }
 
-      PRInt32 oldPos = 0;
-      if ( oldGrippies.Count() )
-        oldPos = oldGrippies.IndexOf(childContent);
-      if ( oldPos >= 0 ) {  // Inherit the old size...
-        TabInfo* oldGrippy = NS_STATIC_CAST(TabInfo*, oldGrippies[oldPos]);
+      TabInfo* oldGrippy = FindGrippyForToolbar ( oldGrippies, childContent );
+      if ( oldGrippy ) {  // Inherit the old size...
         if ( isHorz ) {     // If laying out children horizontally...
           if ( oldGrippy->mCollapsed)    // Did it used to be collapsed? 
             grippyHeight = oldGrippy->mBoundingRect.height;  // Copy old width
@@ -379,7 +376,7 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
       grippyRect.width = grippyWidth;
     }
 
-    TabInfo *grippyInfo = FindGrippyForToolbar(childContent);
+    TabInfo *grippyInfo = FindGrippyForToolbar(mGrippies, childContent);
     NS_ASSERTION(grippyInfo != 0, "Grippy Info Struct dissapeared!");
     NS_ASSERTION(grippyInfo->mCollapsed == 0, "Collapsed toolbar has frame!");
 
@@ -413,11 +410,19 @@ nsToolboxFrame :: Reflow(nsIPresContext&          aPresContext,
 } // Reflow
 
 
+//
+// FindGrippyForToolbar
+//
+// Utility routine to scan through the grippy list looking for one in the list
+// associated with the given content object (which is the toolbar's content object).
+//
+// Will return nsnull if it cannot find the toolbar.
+//
 nsToolboxFrame::TabInfo*
-nsToolboxFrame :: FindGrippyForToolbar ( const nsIContent* inContent ) const
+nsToolboxFrame :: FindGrippyForToolbar ( nsVoidArray & inList, const nsIContent* inContent ) const
 {
-  for ( PRInt32 i = 0; i < mGrippies.Count(); ++i ) {
-    TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, mGrippies[i]);
+  for ( PRInt32 i = 0; i < inList.Count(); ++i ) {
+    TabInfo* currGrippy = NS_STATIC_CAST(TabInfo*, inList[i]);
     if ( currGrippy->mToolbar == inContent )
       return currGrippy;
   }

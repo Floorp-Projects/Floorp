@@ -112,9 +112,7 @@ protected:
   void DrawGrippy ( nsIPresContext& aPresContext, nsIRenderingContext & aContext, 
                       const nsRect & aBoundingRect, PRBool aDrawHilighted ) const ;
   void CollapseToolbar ( TabInfo & inTab ) ; 
-
   void ExpandToolbar ( TabInfo & inTab ) ; 
-
 
   void ConvertToLocalPoint ( nsPoint & ioPoint ) ;
   void OnMouseMove ( nsPoint & aMouseLoc ) ;
@@ -122,7 +120,7 @@ protected:
   void OnMouseLeftClick ( nsPoint & aMouseLoc ) ;
 
     // utility routines
-  TabInfo* FindGrippyForToolbar ( const nsIContent* inContent ) const ;
+  TabInfo* FindGrippyForToolbar ( nsVoidArray & inList, const nsIContent* inContent ) const ;
   void ClearGrippyList ( nsVoidArray & inList ) ;
 
     // style context for the normal state and rollover state of grippies
