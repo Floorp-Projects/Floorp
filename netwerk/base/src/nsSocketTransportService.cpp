@@ -77,8 +77,6 @@ nsSocketTransportService::nsSocketTransportService ()   :
     gSocketTransportServiceLog = PR_NewLogModule("nsSocketTransportService");
 #endif
   LOG(("nsSocketTransportService::nsSocketTransportService"));
-    
-  NS_INIT_ISUPPORTS();
 
   PR_INIT_CLIST(&mWorkQ);
 

@@ -53,7 +53,6 @@
 
 nsHttpBasicAuth::nsHttpBasicAuth()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsHttpBasicAuth::~nsHttpBasicAuth()

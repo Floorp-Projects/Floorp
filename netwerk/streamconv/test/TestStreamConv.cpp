@@ -88,7 +88,7 @@ public:
     // nsISupports declaration
     NS_DECL_ISUPPORTS
 
-    EndListener() {NS_INIT_ISUPPORTS();};
+    EndListener() {};
 
     // nsIStreamListener method
     NS_IMETHOD OnDataAvailable(nsIRequest* request, nsISupports *ctxt, nsIInputStream *inStr, 

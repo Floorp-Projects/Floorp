@@ -91,7 +91,6 @@ nsSanePluginInstance::nsSanePluginInstance( void )
     printf("nsSanePluginInstance::nsSanePluginInstance()\n");
 #endif
 
-    NS_INIT_ISUPPORTS();
     PR_AtomicIncrement(&gPluginObjectCount);
 
     // set default jpeg compression attributes
@@ -1994,7 +1993,6 @@ nsSanePluginStreamListener::nsSanePluginStreamListener(nsSanePluginInstance* ins
 #endif
 
     PR_AtomicIncrement(&gPluginObjectCount);
-    NS_INIT_ISUPPORTS();
 
     mPlugInst = inst;
 }

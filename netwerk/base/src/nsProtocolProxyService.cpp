@@ -74,7 +74,6 @@ nsProtocolProxyService::nsProtocolProxyService()
     , mSOCKSProxyPort(-1)
     , mSOCKSProxyVersion(4)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsProtocolProxyService::~nsProtocolProxyService()

@@ -79,8 +79,6 @@ nsHttpChannel::nsHttpChannel()
 {
     LOG(("Creating nsHttpChannel @%x\n", this));
 
-    NS_INIT_ISUPPORTS();
-
     // grab a reference to the handler to ensure that it doesn't go away.
     nsHttpHandler *handler = nsHttpHandler::get();
     NS_ADDREF(handler);
@@ -3329,7 +3327,6 @@ nsHttpChannel::nsContentEncodings::nsContentEncodings(nsIHttpChannel* aChannel,
 {
     mCurEnd = aEncodingHeader + strlen(aEncodingHeader);
     mCurStart = mCurEnd;
-    NS_INIT_ISUPPORTS();
 }
     
 nsHttpChannel::nsContentEncodings::~nsContentEncodings()

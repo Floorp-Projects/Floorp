@@ -32,7 +32,6 @@
 nsJARURI::nsJARURI()
     : mJAREntry(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
  
 nsJARURI::~nsJARURI()

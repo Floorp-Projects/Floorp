@@ -57,7 +57,6 @@ NS_IMPL_ISUPPORTS1(nsClassicPluginFactory, nsIClassicPluginFactory)
 
 nsClassicPluginFactory::nsClassicPluginFactory()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult nsClassicPluginFactory::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)

@@ -202,7 +202,6 @@ NS_NewPluginContentViewer(const char* aCommand,
 // Note: operator new zeros our memory
 PluginViewerImpl::PluginViewerImpl(const char* aCommand)
 {
-  NS_INIT_ISUPPORTS();
   mEnableRendering = PR_TRUE;
 }
 
@@ -985,7 +984,6 @@ PluginViewerImpl::CopyImageContents()
 
 PluginListener::PluginListener(PluginViewerImpl* aViewer)
 {
-  NS_INIT_ISUPPORTS();
   mViewer = aViewer;
   NS_ADDREF(aViewer);
   mNextStream = nsnull;                                                         
@@ -1038,8 +1036,6 @@ PluginListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
 
 pluginInstanceOwner :: pluginInstanceOwner()
 {
-  NS_INIT_ISUPPORTS();
-
   // create nsPluginNativeWindow object, it is derived from nsPluginWindow
   // struct and allows to manipulate native window procedure
   nsCOMPtr<nsIPluginHost> ph = do_GetService(kCPluginManagerCID);

@@ -53,7 +53,6 @@ NS_IMPL_ISUPPORTS5(nsURIChecker, nsIURIChecker,
 
 nsURIChecker::nsURIChecker()
 {
-    NS_INIT_ISUPPORTS();
     mStatus = NS_OK;
     mIsPending = PR_FALSE;
 }

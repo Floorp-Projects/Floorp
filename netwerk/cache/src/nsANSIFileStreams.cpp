@@ -27,7 +27,6 @@ NS_IMPL_ISUPPORTS2(nsANSIInputStream, nsIInputStream, nsISeekableStream);
 
 nsANSIInputStream::nsANSIInputStream() : mFile(nsnull), mSize(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsANSIInputStream::~nsANSIInputStream()
@@ -113,7 +112,6 @@ NS_IMPL_ISUPPORTS2(nsANSIOutputStream, nsIOutputStream, nsISeekableStream);
 
 nsANSIOutputStream::nsANSIOutputStream() : mFile(nsnull)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsANSIOutputStream::~nsANSIOutputStream()
@@ -212,7 +210,6 @@ NS_IMPL_ISUPPORTS3(nsANSIFileStream, nsIInputStream, nsIOutputStream, nsISeekabl
 
 nsANSIFileStream::nsANSIFileStream() : mFile(nsnull), mSize(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsANSIFileStream::~nsANSIFileStream()

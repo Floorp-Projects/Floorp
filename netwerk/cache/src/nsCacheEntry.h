@@ -247,7 +247,6 @@ public:
     nsCacheEntryInfo(nsCacheEntry* entry)
         :   mCacheEntry(entry)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsCacheEntryInfo() {}

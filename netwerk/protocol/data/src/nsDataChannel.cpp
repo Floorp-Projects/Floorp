@@ -56,8 +56,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // nsDataChannel methods
 nsDataChannel::nsDataChannel() {
-    NS_INIT_ISUPPORTS();
-
     mStatus = NS_OK;
     mContentLength = -1;
     mLoadFlags = nsIRequest::LOAD_NORMAL;

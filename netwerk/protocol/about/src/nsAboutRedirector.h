@@ -48,7 +48,7 @@ public:
 
     NS_DECL_NSIABOUTMODULE
 
-    nsAboutRedirector() { NS_INIT_ISUPPORTS(); }
+    nsAboutRedirector() {}
     virtual ~nsAboutRedirector() {}
 
     static NS_METHOD

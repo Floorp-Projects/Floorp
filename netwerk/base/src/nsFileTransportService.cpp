@@ -61,7 +61,6 @@ nsFileTransportService::nsFileTransportService()    :
     mShuttingDown(PR_FALSE),
     mLock(nsnull)
 {
-    NS_INIT_ISUPPORTS();
     mInstance = this;
 }
 

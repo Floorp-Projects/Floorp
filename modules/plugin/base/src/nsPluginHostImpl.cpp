@@ -1305,8 +1305,6 @@ private:
 ////////////////////////////////////////////////////////////////////////
 nsPluginStreamInfo::nsPluginStreamInfo()
 {
-  NS_INIT_ISUPPORTS();
-
   mPluginInstance = nsnull;
   mPluginStreamListenerPeer = nsnull;
 
@@ -1618,8 +1616,6 @@ private:
 ////////////////////////////////////////////////////////////////////////
 nsPluginCacheListener::nsPluginCacheListener(nsPluginStreamListenerPeer* aListener)
 {
-  NS_INIT_ISUPPORTS();
-
   mListener = aListener;
   NS_ADDREF(mListener);
 }
@@ -1680,8 +1676,6 @@ nsPluginCacheListener::OnStopRequest(nsIRequest *request,
 
 nsPluginStreamListenerPeer::nsPluginStreamListenerPeer()
 {
-  NS_INIT_ISUPPORTS();
-
   mURL = nsnull;
   mOwner = nsnull;
   mInstance = nsnull;
@@ -2567,7 +2561,6 @@ nsPluginStreamListenerPeer::VisitHeader(const nsACString &header, const nsACStri
 
 nsPluginHostImpl::nsPluginHostImpl()
 {
-  NS_INIT_ISUPPORTS();
   mPluginsLoaded = PR_FALSE;
   mDontShowBadPluginMessage = PR_FALSE;
   mIsDestroyed = PR_FALSE;
@@ -4183,7 +4176,6 @@ public:
 
   DOMMimeTypeImpl(nsPluginTag* aPluginTag, PRUint32 aMimeTypeIndex)
   {
-    NS_INIT_ISUPPORTS();
     (void) CreateUnicodeDecoder(getter_AddRefs(mUnicodeDecoder));
     if (aPluginTag) {
       if (aPluginTag->mMimeDescriptionArray)
@@ -4241,8 +4233,6 @@ public:
   
   DOMPluginImpl(nsPluginTag* aPluginTag) : mPluginTag(aPluginTag)
   {
-    NS_INIT_ISUPPORTS();
-
     (void) CreateUnicodeDecoder(getter_AddRefs(mUnicodeDecoder));
   }
   
@@ -6548,7 +6538,6 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
 NS_IMPL_ISUPPORTS1(nsPluginByteRangeStreamListener, nsIStreamListener)
 nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr)
 {
-  NS_INIT_ISUPPORTS();
   mWeakPtrPluginStreamListenerPeer = aWeakPtr;
   mRemoveMagicNumber = PR_FALSE;
 }

@@ -177,7 +177,6 @@ public:
     nsReader()
         : mStartTime(0), mBytesRead(0)
     {
-        NS_INIT_ISUPPORTS();
         gNumReaders++;
     }
 

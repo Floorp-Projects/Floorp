@@ -205,7 +205,6 @@ nsTXTToHTMLConv::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
 } 
 // nsTXTToHTMLConv methods
 nsTXTToHTMLConv::nsTXTToHTMLConv() {
-    NS_INIT_ISUPPORTS();
     mToken = nsnull;
     mPreFormatHTML = PR_FALSE;
 }

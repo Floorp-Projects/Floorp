@@ -56,7 +56,7 @@ public:
   NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 
-  nsUnicharStreamLoader() { NS_INIT_ISUPPORTS(); }
+  nsUnicharStreamLoader() { }
   virtual ~nsUnicharStreamLoader() {};
 
   static NS_METHOD

@@ -84,7 +84,7 @@ public:
     //////////////////////////////////////////////////////////////////////
     // from nsISecureJNI:
 
-    nsCNullSecurityContext() { NS_INIT_ISUPPORTS();};
+    nsCNullSecurityContext() { };
 };
 
 #endif // CSecurityContext_h___

@@ -66,7 +66,7 @@ public:
 
     nsAboutCacheEntry()
         : mBuffer(nsnull)
-    { NS_INIT_ISUPPORTS(); }
+    {}
 
     virtual ~nsAboutCacheEntry() {}
 

@@ -45,8 +45,6 @@
 
 nsHttpDigestAuth::nsHttpDigestAuth()
 {
-  NS_INIT_ISUPPORTS();
-
   mVerifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID);
   mGotVerifier = (mVerifier != nsnull);
 

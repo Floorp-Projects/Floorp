@@ -35,7 +35,6 @@ nsCacheSession::nsCacheSession(const char *         clientID,
     : mClientID(clientID),
       mInfo(0)
 {
-  NS_INIT_ISUPPORTS();
   SetStoragePolicy(storagePolicy);
 
   if (streamBased) MarkStreamBased();

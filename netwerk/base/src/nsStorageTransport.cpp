@@ -93,8 +93,6 @@ nsStorageTransport::nsStorageTransport()
     , mWriteSegment(nsnull)
     , mWriteCursor(0)
 {
-    NS_INIT_ISUPPORTS();
-
     PR_INIT_CLIST(&mReadRequests);
     PR_INIT_CLIST(&mInputStreams);
 }
@@ -433,7 +431,6 @@ nsStorageTransport::nsReadRequest::nsReadRequest()
     , mOnStartFired(PR_FALSE)
     , mWaitingForWrite(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
     PR_INIT_CLIST(this);
 }
 
@@ -792,7 +789,6 @@ nsStorageTransport::nsBlockingStream::~nsBlockingStream()
 nsStorageTransport::nsInputStream::nsInputStream()
     : mOffset(0)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsStorageTransport::nsInputStream::~nsInputStream()
@@ -843,7 +839,6 @@ nsStorageTransport::nsInputStream::IsNonBlocking(PRBool *aNonBlocking)
 
 nsStorageTransport::nsOutputStream::nsOutputStream()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsStorageTransport::nsOutputStream::~nsOutputStream()

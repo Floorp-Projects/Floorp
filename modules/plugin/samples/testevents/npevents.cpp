@@ -337,7 +337,6 @@ NS_IMPL_ISUPPORTS2(EventsPluginInstance, nsIPluginInstance, nsIEventsSampleInsta
 EventsPluginInstance::EventsPluginInstance() :
 		fPeer(NULL), fWindow(NULL), fMode(nsPluginMode_Embedded)
 {
-	NS_INIT_ISUPPORTS();
 	wChild = 0;
 }
 
@@ -560,7 +559,6 @@ NS_METHOD EventsPluginInstance::GetValue(nsPluginInstanceVariable /*variable*/, 
 EventsPluginStreamListener::EventsPluginStreamListener(EventsPluginInstance* inst_,
         const char* msgName)
 		: fMessageName(msgName), inst(inst_) {
-	NS_INIT_ISUPPORTS();
 #ifdef EVENTSPLUGIN_DEBUG
 	printf("EventsPluginStreamListener: EventsPluginStreamListener for %s\n", fMessageName);
 #endif

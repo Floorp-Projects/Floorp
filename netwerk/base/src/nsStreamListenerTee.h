@@ -51,7 +51,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMLISTENERTEE
 
-    nsStreamListenerTee() { NS_INIT_ISUPPORTS(); }
+    nsStreamListenerTee() { }
     virtual ~nsStreamListenerTee() { }
 
 private:

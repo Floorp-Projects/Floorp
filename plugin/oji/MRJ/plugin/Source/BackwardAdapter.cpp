@@ -742,7 +742,6 @@ public:
 	CPluginStreamInfo(const char* URL, nsIPluginInputStream* inStr, nsMIMEType type, PRBool seekable)
 		 : mURL(URL), mInputStream(inStr), mMimeType(type), mIsSeekable(seekable)
 	{
-		NS_INIT_ISUPPORTS();
 	}
 
 	virtual ~CPluginStreamInfo() {}
@@ -1490,9 +1489,6 @@ NPP_HandleEvent(NPP instance, void* event)
 
 CPluginManager::CPluginManager(void)
 {
-    // Set reference count to 0.
-    NS_INIT_ISUPPORTS();
-    
     mLiveconnect = NULL;
 
 #ifdef XP_MAC
@@ -2066,9 +2062,6 @@ CPluginInstancePeer::CPluginInstancePeer(nsIPluginInstance* pluginInstance,
 		npp(npp), typeString(typeString), type(type), attribute_cnt(attr_cnt),
 		attribute_list(NULL), values_list(NULL)
 {
-    // Set the reference count to 0.
-    NS_INIT_ISUPPORTS();
-    
     NS_IF_ADDREF(mInstance);
 
     attribute_list = (char**) NPN_MemAlloc(attr_cnt * sizeof(const char*));
@@ -2362,8 +2355,6 @@ CPluginInstancePeer::QueryInterface(const nsIID& iid, void** ptr)
 CPluginManagerStream::CPluginManagerStream(NPP npp, NPStream* pstr)
     : npp(npp), pstream(pstr)
 {
-    // Set the reference count to 0.
-    NS_INIT_ISUPPORTS();
 }
 
 CPluginManagerStream::~CPluginManagerStream(void)
@@ -2496,8 +2487,6 @@ CPluginInputStream::CPluginInputStream(nsIPluginStreamListener* listener)
       mBuffer(NULL), mBufferLength(0), mAmountRead(0),
       mStreamInfo(NULL)
 {
-    NS_INIT_ISUPPORTS();
-
     if (mListener != NULL) {
         mListener->AddRef();
         mListener->GetStreamType(&mStreamType);

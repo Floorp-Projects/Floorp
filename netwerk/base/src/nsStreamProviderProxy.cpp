@@ -67,7 +67,6 @@ nsStreamProviderProxy::nsStreamProviderProxy()
     : mObserverProxy(nsnull),
       mProviderStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsStreamProviderProxy::~nsStreamProviderProxy()

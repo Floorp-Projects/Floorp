@@ -141,7 +141,7 @@ class Listener : public nsIStreamListener
 public:
     NS_DECL_ISUPPORTS
 
-    Listener() { NS_INIT_ISUPPORTS(); }
+    Listener() {}
     virtual ~Listener() {}
 
     NS_IMETHOD OnStartRequest(nsIRequest *request, nsISupports *ctxt) {

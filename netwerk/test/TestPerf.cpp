@@ -57,7 +57,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
-    MyListener() { NS_INIT_ISUPPORTS(); }
+    MyListener() { }
     virtual ~MyListener() {}
 };
 

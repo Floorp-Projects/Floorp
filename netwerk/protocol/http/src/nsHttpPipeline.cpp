@@ -149,8 +149,6 @@ nsHttpPipeline::nsHttpPipeline()
     , mLock(nsnull)
     , mStatus(NS_OK)
 {
-    NS_INIT_ISUPPORTS();
-
     memset(mTransactionQ,     0, sizeof(PRUint32) * NS_HTTP_MAX_PIPELINED_REQUESTS);
     memset(mTransactionFlags, 0, sizeof(PRUint32) * NS_HTTP_MAX_PIPELINED_REQUESTS);
 }

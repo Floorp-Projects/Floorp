@@ -128,8 +128,6 @@ nsHttpHandler::nsHttpHandler()
     , mUseCache(PR_TRUE)
     , mSendSecureXSiteReferrer(PR_TRUE)
 {
-    NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
     gHttpLog = PR_NewLogModule("nsHttp");
 #endif

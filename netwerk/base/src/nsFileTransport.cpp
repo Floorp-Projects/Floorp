@@ -75,7 +75,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsFileTransportSourceWrapper()
-        : mBytesRead(0), mLastError(NS_OK) { NS_INIT_ISUPPORTS(); }
+        : mBytesRead(0), mLastError(NS_OK) { }
     virtual ~nsFileTransportSourceWrapper() {}
 
     //
@@ -143,7 +143,7 @@ public:
     NS_DECL_ISUPPORTS
 
     nsFileTransportSinkWrapper()
-        : mBytesWritten(0), mLastError(NS_OK) { NS_INIT_ISUPPORTS(); }
+        : mBytesWritten(0), mLastError(NS_OK) { }
     virtual ~nsFileTransportSinkWrapper() {}
 
     //
@@ -226,8 +226,6 @@ nsFileTransport::nsFileTransport()
       mSinkWrapper(nsnull),
       mService(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
     if (!gFileTransportLog)
         gFileTransportLog = PR_NewLogModule("nsFileTransport");

@@ -48,7 +48,7 @@ public:
     NS_DECL_NSISTREAMPROVIDER
     NS_DECL_NSISIMPLESTREAMPROVIDER
 
-    nsSimpleStreamProvider() { NS_INIT_ISUPPORTS(); }
+    nsSimpleStreamProvider() { }
     virtual ~nsSimpleStreamProvider() {}
 
 protected:

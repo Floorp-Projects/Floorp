@@ -51,7 +51,6 @@
 nsScriptablePeer::nsScriptablePeer(CPlugin* aPlugin)
 {
 
-  NS_INIT_ISUPPORTS();
   mPlugin = aPlugin;
 }
 

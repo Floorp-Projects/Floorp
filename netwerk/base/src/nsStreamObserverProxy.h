@@ -54,7 +54,7 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMOBSERVER
 
-    nsStreamProxyBase() { NS_INIT_ISUPPORTS(); }
+    nsStreamProxyBase() { }
     virtual ~nsStreamProxyBase() {}
 
     nsIEventQueue *GetEventQueue() { return mEventQ.get(); }

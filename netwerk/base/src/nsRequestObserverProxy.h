@@ -54,7 +54,7 @@ public:
     NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIREQUESTOBSERVERPROXY
 
-    nsRequestObserverProxy() { NS_INIT_ISUPPORTS(); }
+    nsRequestObserverProxy() { }
     virtual ~nsRequestObserverProxy();
 
     nsIRequestObserver *Observer() { return mObserver; }

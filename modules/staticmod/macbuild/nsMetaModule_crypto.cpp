@@ -90,7 +90,6 @@ public:
 
 nsMetaModuleImpl::nsMetaModuleImpl()
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsMetaModuleImpl::~nsMetaModuleImpl()

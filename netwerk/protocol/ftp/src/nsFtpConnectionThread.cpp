@@ -155,7 +155,6 @@ DataRequestForwarder::DataRequestForwarder()
 
     mBytesTransfered = 0;
     mRetrying = mUploading = mDelayedOnStartFired = PR_FALSE;
-    NS_INIT_ISUPPORTS();
 }
 
 DataRequestForwarder::~DataRequestForwarder()
@@ -400,8 +399,6 @@ NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState,
                               nsIRequest);
 
 nsFtpState::nsFtpState() {
-    NS_INIT_ISUPPORTS();
-
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpState created", this));
     // bool init
     mRETRFailed = PR_FALSE;

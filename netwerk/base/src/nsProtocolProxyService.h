@@ -87,7 +87,6 @@ public:
         }
 
         nsProxyInfo() : mType(nsnull), mHost(nsnull), mPort(-1) {
-            NS_INIT_ISUPPORTS();
         }
 
         const char* mType;

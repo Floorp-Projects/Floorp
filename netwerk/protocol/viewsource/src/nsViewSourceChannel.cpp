@@ -34,7 +34,6 @@
 // nsViewSourceChannel methods
 nsViewSourceChannel::nsViewSourceChannel() : mIsDocument(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
 }
 
 nsViewSourceChannel::~nsViewSourceChannel()

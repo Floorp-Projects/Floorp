@@ -84,7 +84,7 @@ static nsIEventQueue* gEventQ = nsnull;
 class TestListener : public nsIStreamListener
 {
 public:
-    TestListener() { NS_INIT_ISUPPORTS(); }
+    TestListener() {}
     virtual ~TestListener() {}
 
     NS_DECL_ISUPPORTS
@@ -159,7 +159,6 @@ NS_IMPL_ISUPPORTS2(TestProvider,
 
 TestProvider::TestProvider(char *data)
 {
-    NS_INIT_ISUPPORTS();
     NS_NewByteArrayInputStream(getter_AddRefs(mData), data, strlen(data));
     LOG(("Constructing TestProvider [this=%x]\n", this));
 }

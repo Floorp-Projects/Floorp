@@ -201,8 +201,6 @@ static jobject GetCurrentThread(JNIEnv* env)
 MRJSecurityContext::MRJSecurityContext(const char* location)
     :   mLocation(nsnull), mConnection(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-    
     mLocation = ::strdup(location);
     if (mLocation) {
         // find the 3rd slash of the URL, hopefully it's in canonical form.

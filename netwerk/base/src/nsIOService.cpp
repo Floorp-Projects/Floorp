@@ -154,8 +154,6 @@ nsIOService::nsIOService()
     : mOffline(PR_FALSE),
       mOfflineForProfileChange(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-
     // Get the allocator ready
     if (!gBufferCache)
     {

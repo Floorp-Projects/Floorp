@@ -103,8 +103,6 @@ nsResURL::GetFile(nsIFile **result)
 nsResProtocolHandler::nsResProtocolHandler()
     : mSubstitutions(32)
 {
-    NS_INIT_ISUPPORTS();
-
 #if defined(PR_LOGGING)
     gResLog = PR_NewLogModule("nsResProtocol");
 #endif

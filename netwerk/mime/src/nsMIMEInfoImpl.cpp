@@ -50,12 +50,10 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsMIMEInfoImpl, nsIMIMEInfo);
 
 // nsMIMEInfoImpl methods
 nsMIMEInfoImpl::nsMIMEInfoImpl() {
-    NS_INIT_ISUPPORTS();
     mPreferredAction = nsIMIMEInfo::saveToDisk;
 }
 
 nsMIMEInfoImpl::nsMIMEInfoImpl(const char *aMIMEType) :mMIMEType( aMIMEType ){
-    NS_INIT_ISUPPORTS();
     mPreferredAction = nsIMIMEInfo::saveToDisk;
 }
 

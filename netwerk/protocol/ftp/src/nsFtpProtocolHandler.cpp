@@ -76,7 +76,6 @@ nsVoidArray* nsFtpProtocolHandler::mRootConnectionList = nsnull;
 PRInt32 nsFtpProtocolHandler::mIdleTimeout = -1;
 ////////////////////////////////////////////////////////////////////////////////
 nsFtpProtocolHandler::nsFtpProtocolHandler() {
-    NS_INIT_ISUPPORTS();
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {

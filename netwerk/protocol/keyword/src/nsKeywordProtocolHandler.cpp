@@ -54,7 +54,6 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsKeywordProtocolHandler::nsKeywordProtocolHandler() {
-    NS_INIT_ISUPPORTS();
 }
 
 nsresult

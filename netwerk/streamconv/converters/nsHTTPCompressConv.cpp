@@ -58,7 +58,6 @@ nsHTTPCompressConv::nsHTTPCompressConv ()
         mGzipStreamEnded (PR_FALSE), mGzipStreamInitialized (PR_FALSE),
         mLen (0), hMode (0), mSkipCount (0), mFlags (0)
 {
-    NS_INIT_ISUPPORTS ();
 }
 
 nsHTTPCompressConv::~nsHTTPCompressConv ()

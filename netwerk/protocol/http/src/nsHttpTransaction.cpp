@@ -107,8 +107,6 @@ nsHttpTransaction::nsHttpTransaction(nsIStreamListener *listener,
 {
     LOG(("Creating nsHttpTransaction @%x\n", this));
 
-    NS_INIT_ISUPPORTS();
-
     NS_PRECONDITION(listener, "null listener");
 }
 

@@ -57,7 +57,7 @@ class nsIStreamListener;
 class nsPluginDocLoaderFactory : public nsIDocumentLoaderFactory
 {
 protected:
-  nsPluginDocLoaderFactory() { NS_INIT_ISUPPORTS(); }
+  nsPluginDocLoaderFactory() { }
   virtual ~nsPluginDocLoaderFactory() {}
 
 public:

@@ -56,7 +56,7 @@ class nsFtpStreamProvider : public nsIStreamProvider {
 public:
     NS_DECL_ISUPPORTS
 
-    nsFtpStreamProvider() { NS_INIT_ISUPPORTS(); }
+    nsFtpStreamProvider() {}
     virtual ~nsFtpStreamProvider() {}
 
     //
@@ -112,7 +112,6 @@ nsFtpControlConnection::nsFtpControlConnection(const char* host,
                                                PRUint32 port) 
     : mServerType(0), mSuspendedWrite(0), mPort(port)
 {
-    NS_INIT_ISUPPORTS();
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection created", this));
 
     mHost.Adopt(nsCRT::strdup(host));

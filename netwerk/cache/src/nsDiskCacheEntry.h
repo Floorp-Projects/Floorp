@@ -108,7 +108,6 @@ public:
         : mDeviceID(deviceID)
         , mDiskEntry(diskEntry)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsDiskCacheEntryInfo() {}
