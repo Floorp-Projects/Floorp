@@ -205,6 +205,7 @@ bin/chrome/regviewer/*
 bin/chrome/related/*
 bin/chrome/search/*
 bin/chrome/sidebar/*
+bin/chrome/timebomb/*
 bin/chrome/wallet/*
 bin/chrome/xpinstall/*
 bin/chrome/layout/*
