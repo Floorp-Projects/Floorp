@@ -976,7 +976,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
         return NS_OK;
     }
 
-    if(REGERR_OK == VR_GetPath(szRegPackageName, MAXREGPATHLEN, szRegPackagePath))
+    if(REGERR_OK == VR_GetDefaultDirectory(szRegPackageName, MAXREGPATHLEN, szRegPackagePath))
     {
       mPackageFolder = szRegPackagePath;
     }
