@@ -53,7 +53,16 @@ interface nsIURI;
 
 #define NS_X509CERTDB_CONTRACTID "@mozilla.org/security/x509certdb;1"
 
-typedef int (*nsCertCompareFunc)(nsIX509Cert *a, nsIX509Cert *b);
+typedef int (*nsCertCompareFunc)(void *, nsIX509Cert *a, nsIX509Cert *b);
+
+#define NS_NSSCERTCACHE_CID { /* 3f429a14-dffe-417d-8cb8-fdf09bacd09e */ \
+    0x3f429a14,                                                          \
+    0xdffe,                                                              \
+    0x417d,                                                              \
+    {0x8c, 0xb8, 0xfd, 0xf0, 0x9b, 0xac, 0xd0, 0x9e}                     \
+  }
+
+#define NS_NSSCERTCACHE_CONTRACTID "@mozilla.org/security/nsscertcache;1"
 
 %}
 
@@ -83,6 +92,24 @@ interface nsICrlEntry : nsISupports {
                                     in double noOfDays);
 
   
+};
+
+[scriptable, uuid(6c143dac-bd65-4333-b594-7ed1e748e0f9)]
+interface nsINSSCertCache : nsISupports {
+
+  /*
+   * cacheAllCerts
+   *
+   * Creates a cache of all certificates currently known to NSS.
+   */
+  void cacheAllCerts();
+
+  /*
+   * getCachedCerts
+   *
+   * Returns the cached CERTCertList*
+   */
+  [notxpcom, noscript] voidPtr getCachedCerts();
 };
 
 [scriptable, uuid(da48b3c0-1284-11d5-ac67-000064657374)]
@@ -129,8 +156,21 @@ interface nsIX509CertDB : nsISupports {
    * Obtain a list of certs from the database.
    *
    */
+  [notxpcom, noscript] boolean getCertsByTypeFromCache(in nsINSSCertCache cache,
+                                                       in unsigned long aType,
+                                                       in nsCertCompareFunc aCertCmpFn,
+                                                       in voidPtr aCertCmpFnArg,
+                                                       out nsISupportsArray certs);
+
+  /*
+   * getCertsByType
+   *
+   * Obtain a list of certs from the database.
+   *
+   */
   [notxpcom, noscript] boolean getCertsByType(in unsigned long aType,
                                               in nsCertCompareFunc aCertCmpFn,
+                                              in voidPtr aCertCmpFnArg,
                                               out nsISupportsArray certs);
 
   /* Get the user encryption cert */

@@ -43,8 +43,21 @@
 #include "nsITreeBoxObject.h"
 #include "nsITreeSelection.h"
 #include "nsISupportsArray.h"
+#include "pldhash.h"
 
 typedef struct treeArrayElStr treeArrayEl;
+
+struct CompareCacheHashEntry : PLDHashEntryHdr {
+  CompareCacheHashEntry();
+
+  void *key; // no ownership
+  PRPackedBool mTokenInit;
+  PRPackedBool mIssuerOrgInit;
+  PRPackedBool mOrgInit;
+  nsXPIDLString mToken;
+  nsXPIDLString mIssuerOrg;
+  nsXPIDLString mOrg;
+};
 
 class nsCertTree : public nsICertTree
 {
@@ -57,10 +70,15 @@ public:
   virtual ~nsCertTree();
 
 protected:
-  static PRInt32 CmpByToken(nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByName(nsIX509Cert *a, nsIX509Cert *b);
-  static PRInt32 CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b);
+  void InitCompareHash();
+  void ClearCompareHash();
+  void RemoveCacheEntry(void *key);
+
+  static CompareCacheHashEntry *getCacheEntry(void *cache, void *aCert);
+  static PRInt32 CmpByToken(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByIssuerOrg(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByOrg(void *cache, nsIX509Cert *a, nsIX509Cert *b);
+  static PRInt32 CmpByTok_IssuerOrg_Org(void *cache, nsIX509Cert *a, nsIX509Cert *b);
   PRInt32 CountOrganizations();
 
 private:
@@ -70,6 +88,7 @@ private:
   treeArrayEl                *mTreeArray;
   PRInt32                         mNumOrgs;
   PRInt32                         mNumRows;
+  PLDHashTable mCompareCache;
 
   treeArrayEl *GetThreadDescAtIndex(PRInt32 _index);
   nsIX509Cert *GetCertAtIndex(PRInt32 _index);

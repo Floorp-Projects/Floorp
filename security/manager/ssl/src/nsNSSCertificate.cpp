@@ -60,6 +60,7 @@
 #include "nsTime.h"
 #include "nsIProxyObjectManager.h"
 #include "nsCRT.h"
+#include "nsAutoLock.h"
 
 #include "nspr.h"
 extern "C" {
@@ -1008,6 +1009,7 @@ nsNSSCertificate::GetCommonName(PRUnichar **aCommonName)
     char *commonName = CERT_GetCommonName(&mCert->subject);
     if (commonName) {
       *aCommonName = ToNewUnicode(NS_ConvertUTF8toUCS2(commonName));
+      PORT_Free(commonName);
     } /*else {
       *aCommonName = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
@@ -1024,6 +1026,7 @@ nsNSSCertificate::GetOrganization(PRUnichar **aOrganization)
     char *organization = CERT_GetOrgName(&mCert->subject);
     if (organization) {
       *aOrganization = ToNewUnicode(NS_ConvertUTF8toUCS2(organization));
+      PORT_Free(organization);
     } /*else {
       *aOrganization = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
@@ -1040,6 +1043,7 @@ nsNSSCertificate::GetIssuerCommonName(PRUnichar **aCommonName)
     char *commonName = CERT_GetCommonName(&mCert->issuer);
     if (commonName) {
       *aCommonName = ToNewUnicode(NS_ConvertUTF8toUCS2(commonName));
+      PORT_Free(commonName);
     }
   }
   return NS_OK;
@@ -1054,6 +1058,7 @@ nsNSSCertificate::GetIssuerOrganization(PRUnichar **aOrganization)
     char *organization = CERT_GetOrgName(&mCert->issuer);
     if (organization) {
       *aOrganization = ToNewUnicode(NS_ConvertUTF8toUCS2(organization));
+      PORT_Free(organization);
     }
   }
   return NS_OK;
@@ -1068,6 +1073,7 @@ nsNSSCertificate::GetIssuerOrganizationUnit(PRUnichar **aOrganizationUnit)
     char *organizationUnit = CERT_GetOrgUnitName(&mCert->issuer);
     if (organizationUnit) {
       *aOrganizationUnit = ToNewUnicode(NS_ConvertUTF8toUCS2(organizationUnit));
+      PORT_Free(organizationUnit);
     }
   }
   return NS_OK;
@@ -1099,6 +1105,7 @@ nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
     char *orgunit = CERT_GetOrgUnitName(&mCert->subject);
     if (orgunit) {
       *aOrganizationalUnit = ToNewUnicode(NS_ConvertUTF8toUCS2(orgunit));
+      PORT_Free(orgunit);
     } /*else {
       *aOrganizationalUnit = ToNewUnicode(NS_LITERAL_STRING("<not set>")), 
     }*/
@@ -2905,61 +2912,75 @@ cleanup:
   return rv;
 }
 
-/*
- *  [noscript] unsigned long getCertsByType(in unsigned long aType,
- *                                          in nsCertCompareFunc aCertCmpFn,
- *                                          out nsISupportsArray certs);
- */
-PRBool 
-nsNSSCertificateDB::GetCertsByType(PRUint32           aType,
-                                   nsCertCompareFunc  aCertCmpFn,
-                                   nsISupportsArray **_certs)
+PRBool
+nsNSSCertificateDB::GetCertsByTypeFromCertList(CERTCertList *aCertList,
+                                               PRUint32 aType,
+                                               nsCertCompareFunc  aCertCmpFn,
+                                               void *aCertCmpFnArg,
+                                               nsISupportsArray **_certs)
 {
-  CERTCertList *certList = NULL;
-  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("GetCertsByType"));
+  PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("GetCertsByTypeFromCertList"));
+  if (!aCertList)
+    return PR_FALSE;
   nsCOMPtr<nsISupportsArray> certarray;
   nsresult rv = NS_NewISupportsArray(getter_AddRefs(certarray));
   if (NS_FAILED(rv)) return PR_FALSE;
-  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
-#ifdef NSS_3_4
-  if (aType == nsIX509Cert::USER_CERT) {
-    certList = PK11_ListCerts(PK11CertListUser, cxt);
-  } else if (aType == nsIX509Cert::CA_CERT) {
-    certList = PK11_ListCerts(PK11CertListCA, cxt); /* or RootUnique? */
-  } else {
-    certList = PK11_ListCerts(PK11CertListUnique, cxt);
-  }
-#else
-  certList = PK11_ListCerts(PK11CertListUnique, cxt);
-#endif
   CERTCertListNode *node;
   int i, count = 0;
-  for (node = CERT_LIST_HEAD(certList);
-       !CERT_LIST_END(node, certList);
+  for (node = CERT_LIST_HEAD(aCertList);
+       !CERT_LIST_END(node, aCertList);
        node = CERT_LIST_NEXT(node)) {
     if (getCertType(node->cert) == aType) {
       nsCOMPtr<nsIX509Cert> pipCert = new nsNSSCertificate(node->cert);
       if (pipCert) {
         for (i=0; i<count; i++) {
           nsCOMPtr<nsISupports> isupport = 
-                                      getter_AddRefs(certarray->ElementAt(i));
+            dont_AddRef(certarray->ElementAt(i));
           nsCOMPtr<nsIX509Cert> cert = do_QueryInterface(isupport);
-	  if ((*aCertCmpFn)(pipCert, cert) < 0) {
+          if ((*aCertCmpFn)(aCertCmpFnArg, pipCert, cert) < 0) {
             certarray->InsertElementAt(pipCert, i);
-	    break;
-	  }
-	}
-	if (i == count) certarray->AppendElement(pipCert);
-	count++;
+            break;
+          }
+        }
+        if (i == count) certarray->AppendElement(pipCert);
+          count++;
       }
     }
   }
   *_certs = certarray;
   NS_ADDREF(*_certs);
-  if (certList)
-    CERT_DestroyCertList(certList);
   return PR_TRUE;
 }
+
+PRBool 
+nsNSSCertificateDB::GetCertsByType(PRUint32           aType,
+                                   nsCertCompareFunc  aCertCmpFn,
+                                   void              *aCertCmpFnArg,
+                                   nsISupportsArray **_certs)
+{
+  CERTCertList *certList = NULL;
+  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+  certList = PK11_ListCerts(PK11CertListUnique, cxt);
+  PRBool rv = GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg, _certs);
+  if (certList)
+    CERT_DestroyCertList(certList);
+  return rv;
+}
+
+PRBool 
+nsNSSCertificateDB::GetCertsByTypeFromCache(nsINSSCertCache   *aCache,
+                                            PRUint32           aType,
+                                            nsCertCompareFunc  aCertCmpFn,
+                                            void              *aCertCmpFnArg,
+                                            nsISupportsArray **_certs)
+{
+  NS_ENSURE_ARG_POINTER(aCache);
+  CERTCertList *certList = NS_REINTERPRET_CAST(CERTCertList*, aCache->GetCachedCerts());
+  if (!certList)
+    return NS_ERROR_FAILURE;
+  return GetCertsByTypeFromCertList(certList, aType, aCertCmpFn, aCertCmpFnArg, _certs);
+}
+
 
 SECStatus PR_CALLBACK
 collect_certs(void *arg, SECItem **certs, int numcerts)
@@ -4022,7 +4043,7 @@ GetOCSPResponders (CERTCertificate *aCert,
   // Sort the items according to nickname //
   rv = array->Count(&count);
   for (i=0; i < count; ++i) {
-    nsCOMPtr<nsISupports> isupport = getter_AddRefs(array->ElementAt(i));
+    nsCOMPtr<nsISupports> isupport = dont_AddRef(array->ElementAt(i));
     nsCOMPtr<nsIOCSPResponder> entry = do_QueryInterface(isupport);
     if (nsOCSPResponder::CompareEntries(new_entry, entry) < 0) {
       array->InsertElementAt(new_entry, i);
@@ -4940,4 +4961,52 @@ nsNSSCertificateDB::ConstructX509FromBase64(const char * base64, nsIX509Cert **_
     nsCRT::free(certDER);
   }
   return rv;
+}
+
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsNSSCertCache, nsINSSCertCache)
+
+nsNSSCertCache::nsNSSCertCache()
+:mCertList(nsnull)
+{
+  mutex = PR_NewLock();
+}
+
+nsNSSCertCache::~nsNSSCertCache()
+{
+  if (mCertList) {
+    CERT_DestroyCertList(mCertList);
+  }
+  if (mutex) {
+    PR_DestroyLock(mutex);
+    mutex = nsnull;
+  }
+}
+
+NS_IMETHODIMP
+nsNSSCertCache::CacheAllCerts()
+{
+  {
+    nsAutoLock lock(mutex);
+    if (mCertList) {
+      CERT_DestroyCertList(mCertList);
+      mCertList = nsnull;
+    }
+  }
+
+  nsCOMPtr<nsIInterfaceRequestor> cxt = new PipUIContext();
+  
+  CERTCertList *newList = PK11_ListCerts(PK11CertListUnique, cxt);
+
+  if (newList) {
+    nsAutoLock lock(mutex);
+    mCertList = newList;
+  }
+  
+  return NS_OK;
+}
+
+void* nsNSSCertCache::GetCachedCerts()
+{
+  nsAutoLock lock(mutex);
+  return mCertList;
 }

@@ -36,11 +36,13 @@
 #include "nsISupports.idl"
 #include "nsITreeView.idl"
 #include "nsIX509Cert.idl"
+#include "nsIX509CertDB.idl"
 
 [scriptable, uuid(4ea60761-31d6-491d-9e34-4b53a26c416c)]
 interface nsICertTree : nsITreeView {
 
   void loadCerts(in unsigned long type);
+  void loadCertsFromCache(in nsINSSCertCache cache, in unsigned long type);
 
   nsIX509Cert getCert(in unsigned long index);
   

@@ -59,15 +59,85 @@ struct treeArrayElStr {
   PRInt32    numChildren; /* number of chidren (certs) for thread */
 };
 
+CompareCacheHashEntry::CompareCacheHashEntry()
+:key(nsnull),
+ mTokenInit(PR_FALSE), 
+ mIssuerOrgInit(PR_FALSE), 
+ mOrgInit(PR_FALSE)
+{
+}
+
+PR_STATIC_CALLBACK(const void *)
+CompareCacheGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
+  return entry->key;
+}
+
+PR_STATIC_CALLBACK(PRBool)
+CompareCacheMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
+                         const void *key)
+{
+  const CompareCacheHashEntry *entry = NS_STATIC_CAST(const CompareCacheHashEntry*, hdr);
+  return entry->key == key;
+}
+
+PR_STATIC_CALLBACK(void)
+CompareCacheInitEntry(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                     const void *key)
+{
+  new (hdr) CompareCacheHashEntry();
+  CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
+  entry->key = (void*)key;
+}
+
+PR_STATIC_CALLBACK(void)
+CompareCacheClearEntry(PLDHashTable *table, PLDHashEntryHdr *hdr)
+{
+  CompareCacheHashEntry *entry = NS_STATIC_CAST(CompareCacheHashEntry*, hdr);
+  entry->~CompareCacheHashEntry();
+}
+
+static PLDHashTableOps gMapOps = {
+  PL_DHashAllocTable,
+  PL_DHashFreeTable,
+  CompareCacheGetKey,
+  PL_DHashVoidPtrKeyStub,
+  CompareCacheMatchEntry,
+  PL_DHashMoveEntryStub,
+  CompareCacheClearEntry,
+  PL_DHashFinalizeStub,
+  CompareCacheInitEntry
+};
+
+
+
 NS_IMPL_ISUPPORTS2(nsCertTree, nsICertTree, nsITreeView)
 
 nsCertTree::nsCertTree() : mTreeArray(NULL)
 {
   NS_INIT_ISUPPORTS();
+  mCompareCache.ops = nsnull;
+}
+
+void nsCertTree::ClearCompareHash()
+{
+  if (mCompareCache.ops) {
+    PL_DHashTableFinish(&mCompareCache);
+    mCompareCache.ops = nsnull;
+  }
+}
+
+void nsCertTree::InitCompareHash()
+{
+  ClearCompareHash();
+  PL_DHashTableInit(&mCompareCache, &gMapOps, nsnull,
+                    sizeof(CompareCacheHashEntry), 128);
 }
 
 nsCertTree::~nsCertTree()
 {
+  ClearCompareHash();
   if (mTreeArray)
     nsMemory::Free(mTreeArray);
 }
@@ -91,23 +161,56 @@ nsCertTree::FreeCertArray()
   }
 }
 
+CompareCacheHashEntry *
+nsCertTree::getCacheEntry(void *cache, void *aCert)
+{
+  PLDHashTable &aCompareCache = *NS_REINTERPRET_CAST(PLDHashTable*, cache);
+  PLDHashEntryHdr *entry = PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_LOOKUP);
+  if (PL_DHASH_ENTRY_IS_BUSY(entry))
+  {
+    return NS_STATIC_CAST(CompareCacheHashEntry*, entry);
+  }
+  else
+  {
+    return NS_STATIC_CAST(CompareCacheHashEntry*, PL_DHashTableOperate(&aCompareCache, aCert, PL_DHASH_ADD));
+  }
+}
+
+void nsCertTree::RemoveCacheEntry(void *key)
+{
+  PL_DHashTableOperate(&mCompareCache, key, PL_DHASH_REMOVE);
+}
+
 // CmpByToken
 //
 // Compare two certificate by their token name.  Returns -1, 0, 1 as
 // in strcmp.  No token name (null) is treated as <.
 PRInt32
-nsCertTree::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByToken(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
-  PRInt32 cmp1;
-  nsXPIDLString aTok, bTok;
-  a->GetTokenName(getter_Copies(aTok));
-  b->GetTokenName(getter_Copies(bTok));
-  if (aTok != nsnull && bTok != nsnull) {
-    cmp1 = Compare(aTok, bTok);
-  } else {
-    cmp1 = (aTok == nsnull) ? -1 : 1;
+  if (a == b)
+    return 0;
+
+  CompareCacheHashEntry *ace = getCacheEntry(cache, a);
+  CompareCacheHashEntry *bce = getCacheEntry(cache, b);
+
+  if (!ace->mTokenInit)
+  {
+    ace->mTokenInit = PR_TRUE;
+    a->GetTokenName(getter_Copies(ace->mToken));
   }
-  return cmp1;
+  
+  if (!bce->mTokenInit)
+  {
+    bce->mTokenInit = PR_TRUE;
+    b->GetTokenName(getter_Copies(bce->mToken));
+  }
+
+  if (ace->mToken != nsnull && bce->mToken != nsnull) {
+    return Compare(ace->mToken, bce->mToken);
+  } else {
+    return !ace->mToken ? (!bce->mToken ? 0 : -1) : 1;
+  }
 }
 
 // CmpByIssuerOrg
@@ -115,37 +218,63 @@ nsCertTree::CmpByToken(nsIX509Cert *a, nsIX509Cert *b)
 // Compare two certificates by their O= field.  Returns -1, 0, 1 as
 // in strcmp.  No organization (null) is treated as <.
 PRInt32
-nsCertTree::CmpByIssuerOrg(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByIssuerOrg(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
-  PRInt32 cmp1;
-  nsXPIDLString aOrg, bOrg;
-  a->GetIssuerOrganization(getter_Copies(aOrg));
-  b->GetIssuerOrganization(getter_Copies(bOrg));
-  if (aOrg != nsnull && bOrg != nsnull) {
-    cmp1 = Compare(aOrg, bOrg);
-  } else {
-    cmp1 = (aOrg == nsnull) ? -1 : 1;
+  if (a == b)
+    return 0;
+
+  CompareCacheHashEntry *ace = getCacheEntry(cache, a);
+  CompareCacheHashEntry *bce = getCacheEntry(cache, b);
+
+  if (!ace->mIssuerOrgInit)
+  {
+    ace->mIssuerOrgInit = PR_TRUE;
+    a->GetIssuerOrganization(getter_Copies(ace->mIssuerOrg));
   }
-  return cmp1;
+  
+  if (!bce->mIssuerOrgInit)
+  {
+    bce->mIssuerOrgInit = PR_TRUE;
+    b->GetIssuerOrganization(getter_Copies(bce->mIssuerOrg));
+  }
+
+  if (ace->mIssuerOrg != nsnull && bce->mIssuerOrg != nsnull) {
+    return Compare(ace->mIssuerOrg, bce->mIssuerOrg);
+  } else {
+    return !ace->mIssuerOrg ? (!bce->mIssuerOrg ? 0 : -1) : 1;
+  }
 }
 
-// CmpByName
+// CmpByOrg
 //
 // Compare two certificates by their CN= field.  Returns -1, 0, 1 as
 // in strcmp.  No common name (null) is treated as <.
 PRInt32
-nsCertTree::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByOrg(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
-  PRInt32 cmp1;
-  nsXPIDLString aName, bName;
-  a->GetOrganization(getter_Copies(aName));
-  b->GetOrganization(getter_Copies(bName));
-  if (aName != nsnull && bName != nsnull) {
-    cmp1 = Compare(aName, bName);
-  } else {
-    cmp1 = (aName == nsnull) ? -1 : 1;
+  if (a == b)
+    return 0;
+
+  CompareCacheHashEntry *ace = getCacheEntry(cache, a);
+  CompareCacheHashEntry *bce = getCacheEntry(cache, b);
+
+  if (!ace->mOrgInit)
+  {
+    ace->mOrgInit = PR_TRUE;
+    a->GetOrganization(getter_Copies(ace->mOrg));
   }
-  return cmp1;
+  
+  if (!bce->mOrgInit)
+  {
+    bce->mOrgInit = PR_TRUE;
+    b->GetOrganization(getter_Copies(bce->mOrg));
+  }
+
+  if (ace->mOrg != nsnull && bce->mOrg != nsnull) {
+    return Compare(ace->mOrg, bce->mOrg);
+  } else {
+    return !ace->mOrg ? (!bce->mOrg ? 0 : -1) : 1;
+  }
 }
 
 // CmpByTok_IssuerOrg_Name
@@ -153,14 +282,14 @@ nsCertTree::CmpByName(nsIX509Cert *a, nsIX509Cert *b)
 // Compare two certificates by token name, issuer organization, 
 // and common name, in that order.  Used to sort cert list.
 PRInt32
-nsCertTree::CmpByTok_IssuerOrg_Name(nsIX509Cert *a, nsIX509Cert *b)
+nsCertTree::CmpByTok_IssuerOrg_Org(void *cache, nsIX509Cert *a, nsIX509Cert *b)
 {
   PRInt32 cmp;
-  cmp = CmpByToken(a, b);
+  cmp = CmpByToken(cache, a, b);
   if (cmp != 0) return cmp;
-  cmp = CmpByIssuerOrg(a, b);
+  cmp = CmpByIssuerOrg(cache, a, b);
   if (cmp != 0) return cmp;
-  return CmpByName(a, b);
+  return CmpByOrg(cache, a, b);
 }
 
 // CountOrganizations
@@ -182,8 +311,8 @@ nsCertTree::CountOrganizations()
   for (i=1; i<certCount; i++) {
     isupport = dont_AddRef(mCertArray->ElementAt(i));
     nextCert = do_QueryInterface(isupport);
-    if (!(CmpByToken(orgCert, nextCert) == 0 &&
-          CmpByIssuerOrg(orgCert, nextCert) == 0)) {
+    if (!(CmpByToken(&mCompareCache, orgCert, nextCert) == 0 &&
+          CmpByIssuerOrg(&mCompareCache, orgCert, nextCert) == 0)) {
       orgCert = nextCert;
       orgCount++;
     }
@@ -250,6 +379,26 @@ nsCertTree::GetCertAtIndex(PRInt32 index)
 // Load all of the certificates in the DB for this type.  Sort them
 // by token, organization, then common name.
 NS_IMETHODIMP 
+nsCertTree::LoadCertsFromCache(nsINSSCertCache *aCache, PRUint32 aType)
+{
+  nsresult rv;
+  if (mTreeArray) {
+    FreeCertArray();
+    nsMemory::Free(mTreeArray);
+    mTreeArray = NULL;
+    mNumRows = 0;
+  }
+  InitCompareHash();
+  nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
+  if (certdb == nsnull) return NS_ERROR_FAILURE;
+  rv = certdb->GetCertsByTypeFromCache(aCache, aType, 
+                              CmpByTok_IssuerOrg_Org, &mCompareCache,
+                              getter_AddRefs(mCertArray));
+  if (NS_FAILED(rv)) return rv;
+  return UpdateUIContents();
+}
+
+NS_IMETHODIMP 
 nsCertTree::LoadCerts(PRUint32 aType)
 {
   nsresult rv;
@@ -259,10 +408,11 @@ nsCertTree::LoadCerts(PRUint32 aType)
     mTreeArray = NULL;
     mNumRows = 0;
   }
+  InitCompareHash();
   nsCOMPtr<nsIX509CertDB> certdb = do_GetService(NS_X509CERTDB_CONTRACTID);
   if (certdb == nsnull) return NS_ERROR_FAILURE;
   rv = certdb->GetCertsByType(aType, 
-                              CmpByTok_IssuerOrg_Name,
+                              CmpByTok_IssuerOrg_Org, &mCompareCache,
                               getter_AddRefs(mCertArray));
   if (NS_FAILED(rv)) return rv;
   return UpdateUIContents();
@@ -288,7 +438,7 @@ nsCertTree::UpdateUIContents()
     if (++j >= count) break;
     isupport = dont_AddRef(mCertArray->ElementAt(j));
     nsCOMPtr<nsIX509Cert> nextCert = do_QueryInterface(isupport);
-    while (CmpByIssuerOrg(orgCert, nextCert) == 0) {
+    while (CmpByIssuerOrg(&mCompareCache, orgCert, nextCert) == 0) {
       mTreeArray[i].numChildren++;
       if (++j >= count) break;
       isupport = dont_AddRef(mCertArray->ElementAt(j));
@@ -312,7 +462,6 @@ nsCertTree::RemoveCert(PRUint32 index)
   }
 
   int i, idx = 0, cIndex = 0, nc;
-  nsIX509Cert *rawPtr = nsnull;
   // Loop over the threads
   for (i=0; i<mNumOrgs; i++) {
     if (index == idx)
@@ -321,6 +470,8 @@ nsCertTree::RemoveCert(PRUint32 index)
     nc = (mTreeArray[i].open) ? mTreeArray[i].numChildren : 0;
     if (index < idx + nc) { // cert is within range of this thread
       PRInt32 certIndex = cIndex + index - idx;
+      nsCOMPtr<nsISupports> isupport = dont_AddRef(mCertArray->ElementAt(certIndex));
+      RemoveCacheEntry(isupport);
       mCertArray->RemoveElementAt(certIndex);
       nsMemory::Free(mTreeArray);
       mTreeArray = NULL;
