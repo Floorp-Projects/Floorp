@@ -28,6 +28,8 @@
 #include "nsString.h"
 #include "nsIScriptContext.h"
 
+class nsIDOMDocument;
+class nsIDOMSelection;
 
 #define NS_IDOMSELECTIONLISTENER_IID \
  { 0xa6cf90e2, 0x15b3, 0x11d2,             \
@@ -37,17 +39,17 @@ class nsIDOMSelectionListener : public nsISupports {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMSELECTIONLISTENER_IID; return iid; }
 
-  NS_IMETHOD    NotifySelectionChanged()=0;
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel)=0;
 };
 
 
 #define NS_DECL_IDOMSELECTIONLISTENER   \
-  NS_IMETHOD    NotifySelectionChanged();  \
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel);  \
 
 
 
 #define NS_FORWARD_IDOMSELECTIONLISTENER(_to)  \
-  NS_IMETHOD    NotifySelectionChanged() { return _to NotifySelectionChanged(); }  \
+  NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel) { return _to NotifySelectionChanged(aDoc, aSel); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionListenerClass(nsIScriptContext *aContext, void **aPrototype);
