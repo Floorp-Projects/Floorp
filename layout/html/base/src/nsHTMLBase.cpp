@@ -15,11 +15,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include "nsHTMLBase.h"
+#include "nsAbsoluteFrame.h"
 #include "nsFrame.h"
-#include "nsIStyleContext.h"
+#include "nsHTMLBase.h"
+#include "nsPlaceholderFrame.h"
+#include "nsScrollFrame.h"
 #include "nsStyleConsts.h"
 #include "nsViewsCID.h"
+
+#include "nsIContentDelegate.h"
+#include "nsIPresContext.h"
+#include "nsIStyleContext.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 
@@ -119,4 +125,83 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
     }
   }
   return NS_OK;
+}
+
+nsresult
+nsHTMLBase::CreateFrame(nsIPresContext* aPresContext,
+                        nsIFrame*       aParentFrame,
+                        nsIContent*     aKid,
+                        nsIFrame*       aKidPrevInFlow,
+                        nsIFrame*&      aResult)
+{
+  nsIStyleContext* kidSC =
+    aPresContext->ResolveStyleContextFor(aKid, aParentFrame);
+  if (nsnull == kidSC) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  const nsStylePosition* kidPosition = (const nsStylePosition*)
+    kidSC->GetStyleData(eStyleStruct_Position);
+  const nsStyleDisplay* kidDisplay = (const nsStyleDisplay*)
+    kidSC->GetStyleData(eStyleStruct_Display);
+
+  // Check whether it wants to floated or absolutely positioned
+  PRBool isBlock = PR_FALSE;
+  nsIFrame* kidFrame = nsnull;
+  nsresult rv;
+  if (NS_STYLE_POSITION_ABSOLUTE == kidPosition->mPosition) {
+    rv = nsAbsoluteFrame::NewFrame(&kidFrame, aKid, aParentFrame);
+    if (NS_OK == rv) {
+      kidFrame->SetStyleContext(aPresContext, kidSC);
+    }
+  }
+  else if (NS_STYLE_FLOAT_NONE != kidDisplay->mFloats) {
+    rv = nsPlaceholderFrame::NewFrame(&kidFrame, aKid, aParentFrame);
+    if (NS_OK == rv) {
+      kidFrame->SetStyleContext(aPresContext, kidSC);
+    }
+  }
+  else if ((NS_STYLE_OVERFLOW_SCROLL == kidDisplay->mOverflow) ||
+           (NS_STYLE_OVERFLOW_AUTO == kidDisplay->mOverflow)) {
+    rv = NS_NewScrollFrame(&kidFrame, aKid, aParentFrame);
+    if (NS_OK == rv) {
+      kidFrame->SetStyleContext(aPresContext, kidSC);
+    }
+  }
+  else if (nsnull == aKidPrevInFlow) {
+    // Create initial frame for the child
+    nsIContentDelegate* kidDel;
+    switch (kidDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_NONE:
+      rv = nsFrame::NewFrame(&kidFrame, aKid, aParentFrame);
+      if (NS_OK == rv) {
+        kidFrame->SetStyleContext(aPresContext, kidSC);
+      }
+      break;
+
+    case NS_STYLE_DISPLAY_BLOCK:
+    case NS_STYLE_DISPLAY_LIST_ITEM:
+      isBlock = PR_TRUE;
+      // FALL THROUGH
+    default:
+      kidDel = aKid->GetDelegate(aPresContext);
+      rv = kidDel->CreateFrame(aPresContext, aKid, aParentFrame,
+                               kidSC, kidFrame);
+      NS_RELEASE(kidDel);
+      break;
+    }
+  } else {
+    // Since kid has a prev-in-flow, use that to create the next
+    // frame.
+    rv = aKidPrevInFlow->CreateContinuingFrame(aPresContext, aParentFrame,
+                                               kidSC, kidFrame);
+  }
+
+  if (NS_OK == rv) {
+    // Wrap the frame in a view if necessary
+    rv = CreateViewForFrame(aPresContext, kidFrame, kidSC, PR_FALSE);
+  }
+
+  aResult = kidFrame;
+  NS_RELEASE(kidSC);
+  return rv;
 }

@@ -33,6 +33,16 @@ public:
                                      nsIFrame*        aFrame,
                                      nsIStyleContext* aStyleContext,
                                      PRBool           aForce);
+
+  /**
+   * Create a frame for a given piece of content using the style
+   * as a guide for determining which frame to create.
+   */
+  static nsresult CreateFrame(nsIPresContext* aPresContext,
+                              nsIFrame*       aParentFrame,
+                              nsIContent*     aKid,
+                              nsIFrame*       aKidPrevInFlow,
+                              nsIFrame*&      aResult);
 };
 
 #endif /* nsHTMLBase_h___ */
