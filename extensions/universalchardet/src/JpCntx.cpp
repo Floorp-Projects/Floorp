@@ -206,8 +206,7 @@ PRInt32 SJISContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
         (unsigned char)*(str+1) >= (unsigned char)0x9f && 
         (unsigned char)*(str+1) <= (unsigned char)0xf1)
     return (unsigned char)*(str+1) - (unsigned char)0x9f;
-  else 
-    return -1;
+  return -1;
 }
 
 PRInt32 EUCJPContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
@@ -223,10 +222,11 @@ PRInt32 EUCJPContextAnalysis::GetOrder(const char* str, PRUint32 *charLen)
     *charLen = 1;
 
   //return its order if it is hiragana
-  if ((unsigned char)*str == (unsigned char)0xa4)
-    return (unsigned char)*(str+1) - (unsigned char)0xa1;
-  else 
-    return -1;
+  if ((unsigned char)*str == (unsigned char)0xa4 &&
+      (unsigned char)*(str+1) >= (unsigned char)0xa1 && 
+      (unsigned char)*(str+1) <= (unsigned char)0xf3)
+     return (unsigned char)*(str+1) - (unsigned char)0xa1;
+  return -1;
 }
 
 
