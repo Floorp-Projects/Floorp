@@ -4147,6 +4147,7 @@ nsHTMLEditRules::ConfirmSelectionInBody()
     selection->Collapse(bodyNode,0);
   }
   
+  return res;
 }
 
 
