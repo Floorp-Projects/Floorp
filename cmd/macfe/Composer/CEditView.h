@@ -108,7 +108,6 @@ public:
 	
 	Bool 			PtInSelectedRegion(SPoint32 cpPoint );
 	virtual void	DrawSelf( void );
-	virtual Boolean	EstablishPort();
 	virtual void 	ActivateSelf();
 	virtual void 	DeactivateSelf();
 	

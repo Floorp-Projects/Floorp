@@ -716,41 +716,6 @@ void CEditView::DrawSelf()
 		HiliteDropArea(mDragRef);
 }
 
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-//	¥	EstablishPort
-// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
-// This is identical to CHTMLView's EstablishPort except we don't have the
-// SetGDevice( GetMainDevice() ) call at the which CHTMLView does. That SetGDevice
-// messed up our offscreen GWorld. 
-Boolean CEditView::EstablishPort()
-{
-	Boolean portSet = false;
-	GWorldPtr gworld = NULL;
-	
-
-	// if the current drawable, is an offscreen one, be sure to set it
-	if ( mCurrentDrawable != NULL )
-	{
-		gworld = mCurrentDrawable->GetDrawableOffscreen();
-	}
-	
-	if ( gworld != NULL )
-	{
-		portSet = true;
-		if ( UQDGlobals::GetCurrentPort() != (GrafPtr) mGWorld )
-		{
-			SetGWorld ( gworld, NULL );
-			mOffscreenDrawable->mClipChanged = true;
-		}
-	}
-	else
-	{
-		portSet = LView::EstablishPort();
-	}	
-
-	return portSet;
-}
-
 
 /*
 Keep track of the drag reference number so we can re-hilite the drag area manually in DrawSelf.
