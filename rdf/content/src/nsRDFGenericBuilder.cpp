@@ -1156,7 +1156,7 @@ RDFGenericBuilderImpl::FindWidgetRootElement(nsIContent* aElement,
             if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(tag))))
                 return rv;
 
-            if (tag.get() == rootAtom) {
+            if (tag == rootAtom) {
                 *aWidgetElement = element;
                 NS_ADDREF(*aWidgetElement);
                 return NS_OK;
@@ -1199,7 +1199,7 @@ RDFGenericBuilderImpl::IsItemOrFolder(nsIContent* aElement)
     if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag))))
         return PR_FALSE;
 
-    if (tag.get() != itemAtom && tag.get() != folderAtom)
+    if (tag != itemAtom && tag != folderAtom)
         return PR_FALSE;
 
     return PR_TRUE;
@@ -1231,7 +1231,7 @@ RDFGenericBuilderImpl::IsWidgetInsertionRootElement(nsIContent* element)
         return PR_FALSE;
     }
 
-    if (elementTag.get() != rootAtom)
+    if (elementTag != rootAtom)
         return PR_FALSE; // not the place to insert a child
 
     return PR_TRUE;
@@ -1266,7 +1266,7 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
         PRInt32 nameSpaceID;
         if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID))) {
             NS_ERROR("unable to get element namespace");
-            PR_FALSE;
+            return PR_FALSE;
         }
 
         if (nameSpaceID != kNameSpaceID_HTML) {
@@ -1327,7 +1327,7 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
 
     while (1) {
         PRBool hasMore;
-        nsresult rv = arcs->HasMoreElements(&hasMore);
+        rv = arcs->HasMoreElements(&hasMore);
         NS_ASSERTION(NS_SUCCEEDED(rv), "severe error advancing cursor");
         if (NS_FAILED(rv))
             return PR_FALSE;
@@ -1382,11 +1382,11 @@ RDFGenericBuilderImpl::IsOpen(nsIContent* aElement)
     }
 
     // The insertion root is _always_ open.
-    if (tag.get() == insertionAtom)
+    if (tag == insertionAtom)
         return PR_TRUE;
 
     // If it's not a widget folder item, then it's not open.
-    if (tag.get() != folderAtom)
+    if (tag != folderAtom)
         return PR_FALSE;
 
     nsAutoString value;
@@ -1531,7 +1531,7 @@ RDFGenericBuilderImpl::CloseWidgetItem(nsIContent* aElement)
     if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag))))
         return rv; // XXX fatal
 
-    if (tag.get() == parentAtom) {
+    if (tag == parentAtom) {
         parentNode = dont_QueryInterface(aElement);
         rv = NS_OK;
     }

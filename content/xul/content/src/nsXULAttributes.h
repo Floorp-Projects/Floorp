@@ -145,7 +145,7 @@ public:
     PRInt32 Count() { return mAttributes.Count(); };
     nsXULAttribute* ElementAt(PRInt32 i) { return (nsXULAttribute*)mAttributes.ElementAt(i); };
     void AppendElement(nsXULAttribute* aElement) { mAttributes.AppendElement((void*)aElement); };
-    void RemoveElementAt(PRInt32 index) { mAttributes.RemoveElementAt(index); };
+    void RemoveElementAt(PRInt32 aIndex) { mAttributes.RemoveElementAt(aIndex); };
 
     // Style Helpers
     nsresult GetClasses(nsVoidArray& aArray) const;

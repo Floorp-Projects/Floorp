@@ -338,9 +338,9 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mListenerManager(nsnull),
       mAttributes(nsnull),
       mContentsMustBeGenerated(PR_FALSE),
-      mInnerXULElement(nsnull),
       mBroadcastListeners(nsnull),
-      mBroadcaster(nsnull)
+      mBroadcaster(nsnull),
+      mInnerXULElement(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -573,9 +573,9 @@ RDFElementImpl::GetChildNodes(nsIDOMNodeList** aChildNodes)
 
     PRInt32 count;
     if (NS_SUCCEEDED(rv = ChildCount(count))) {
-        for (PRInt32 index = 0; index < count; ++index) {
+        for (PRInt32 i = 0; i < count; ++i) {
             nsCOMPtr<nsIContent> child;
-            rv = ChildAt(index, *getter_AddRefs(child));
+            rv = ChildAt(i, *getter_AddRefs(child));
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get child");
             if (NS_FAILED(rv))
                 break;
@@ -1207,7 +1207,7 @@ RDFElementImpl::GetScriptObject(nsIScriptContext* aContext, void** aScriptObject
 
             char buf[64];
             char* p = buf;
-            if (tag.Length() >= sizeof(buf))
+            if (tag.Length() >= PRInt32(sizeof buf))
                 p = new char[tag.Length() + 1];
 
             aContext->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
@@ -1378,7 +1378,7 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
                     char buf[64];
                     char* p = buf;
-                    if (tag.Length() >= sizeof(buf))
+                    if (tag.Length() >= PRInt32(sizeof buf))
                         p = new char[tag.Length() + 1];
 
                     context->AddNamedReference((void*) &mScriptObject, mScriptObject, buf);
@@ -1595,9 +1595,9 @@ RDFElementImpl::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     nsIContent* oldKid = (nsIContent *)mChildren->ElementAt(aIndex);
     if (nsnull != oldKid ) {
         nsIDocument* doc = mDocument;
-        PRBool rv = mChildren->RemoveElementAt(aIndex);
+        PRBool removeOk = mChildren->RemoveElementAt(aIndex);
         //nsRange::OwnerChildRemoved(this, aIndex, oldKid);
-        if (aNotify) {
+        if (aNotify && removeOk) {
             if (nsnull != doc) {
                 doc->ContentRemoved(NS_STATIC_CAST(nsIStyledContent*, this), oldKid, aIndex);
             }
@@ -1739,17 +1739,16 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     // to unhook the old one.
     
     nsXULAttribute* attr;
-    PRBool successful = PR_FALSE;
-    PRInt32 index = 0;
+    PRInt32 i = 0;
     PRInt32 count = mAttributes->Count();
-    while (index < count) {
-        attr = mAttributes->ElementAt(index);
+    while (i < count) {
+        attr = mAttributes->ElementAt(i);
         if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName))
             break;
-        index++;
+        i++;
     }
 
-    if (index < count) {
+    if (i < count) {
         attr->mValue = aValue;
     }
     else { // didn't find it
@@ -1798,7 +1797,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
     if (mBroadcastListeners != nsnull)
     {
         count = mBroadcastListeners->Count();
-        for (PRInt32 i = 0; i < count; i++) {
+        for (i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
             nsString aString;
             aName->ToString(aString);
@@ -1927,9 +1926,9 @@ done:
 
     if (nsnull != mAttributes) {
         PRInt32 count = mAttributes->Count();
-        PRInt32 index;
-        for (index = 0; index < count; index++) {
-            const nsXULAttribute* attr = (const nsXULAttribute*)mAttributes->ElementAt(index);
+        PRInt32 i;
+        for (i = 0; i < count; i++) {
+            const nsXULAttribute* attr = (const nsXULAttribute*)mAttributes->ElementAt(i);
             if (((attr->mNameSpaceID == aNameSpaceID) ||
                  (aNameSpaceID == kNameSpaceID_Unknown) ||
                  (aNameSpaceID == kNameSpaceID_None)) &&
@@ -1995,11 +1994,11 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
     PRBool successful = PR_FALSE;
     if (nsnull != mAttributes) {
         PRInt32 count = mAttributes->Count();
-        PRInt32 index;
-        for (index = 0; index < count; index++) {
-            nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(index);
+        PRInt32 i;
+        for (i = 0; i < count; i++) {
+            nsXULAttribute* attr = (nsXULAttribute*)mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
-                mAttributes->RemoveElementAt(index);
+                mAttributes->RemoveElementAt(i);
                 NS_RELEASE(attr);
                 successful = PR_TRUE;
                 break;
