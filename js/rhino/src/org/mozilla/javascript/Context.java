@@ -1590,6 +1590,14 @@ public class Context {
         throw new RuntimeException("Bad feature index: " + featureIndex);
     }
 
+    /**
+     * Get/Set threshold of executed instructions counter that triggers call to
+     * <code>observeInstructionCount()</code>.
+     * When the threshold is zero, instruction counting is disabled, 
+     * otherwise each time the run-time executes at least the threshold value
+     * of script instructions, <code>observeInstructionCount()</code> will 
+     * be called.
+     */
     public int getInstructionObserverThreshold() {
         return instructionThreshold;
     }
@@ -1598,6 +1606,17 @@ public class Context {
         instructionThreshold = threshold;
     }
     
+    /** 
+     * Allow application to monitor counter of executed script instructions
+     * in Context subclasses.
+     * Run-time calls this when instruction counting is enabled and the counter
+     * reaches limit set by <code>setInstructionObserverThreshold()</code>.
+     * The method is useful to observe long running scripts and if necessary
+     * to terminate them.
+     * @param instructionCount amount of script instruction executed since 
+     * last call to <code>observeInstructionCount</code> 
+     * @throws Error to terminate the script
+     */
     protected void observeInstructionCount(int instructionCount) {}
     
     /********** end of API **********/

@@ -2075,14 +2075,12 @@ public class Interpreter extends LabelTable {
                         stack[++stackTop] = Undefined.instance;
                         break;
                     case TokenStream.THROW :
-                        cx.interpreterSecurityDomain = null;
                         result = stack[stackTop];
                         if (result == DBL_MRK) 
                             result = doubleWrap(sDbl[stackTop]);
                         --stackTop;
                         throw new JavaScriptException(result);
                     case TokenStream.JTHROW :
-                        cx.interpreterSecurityDomain = null;
                         result = stack[stackTop];
                         // No need to check for DBL_MRK: result is Exception
                         --stackTop;
@@ -2197,6 +2195,8 @@ public class Interpreter extends LabelTable {
 
                 int exceptionType;
                 Object errObj;
+                if (ex instanceof WrappedException)
+                    ex = (Exception) ((WrappedException)ex).unwrap();
                 if (ex instanceof EcmaError) {
                     errObj = ((EcmaError)ex).getErrorObject();
                     exceptionType = ECMA;

@@ -102,7 +102,8 @@ class JavaMembers {
             throw new RuntimeException("unexpected IllegalAccessException "+
                                        "accessing Java field");
         } catch (InvocationTargetException e) {
-            throw new WrappedException(e.getTargetException());
+            throw WrappedException.wrapException(
+                JavaScriptException.wrapException(scope, e));
         }
         // Need to wrap the object before we return it.
         scope = ScriptableObject.getTopLevelScope(scope);
@@ -183,8 +184,8 @@ class JavaMembers {
     }
 
 
-    public void put(String name, Object javaObject, Object value,
-                    boolean isStatic)
+    public void put(Scriptable scope, String name, Object javaObject, 
+                    Object value, boolean isStatic)
     {
         Hashtable ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
@@ -212,7 +213,8 @@ class JavaMembers {
                 throw new RuntimeException("unexpected IllegalAccessException " +
                                            "accessing Java field");
             } catch (InvocationTargetException e) {
-                throw new WrappedException(e.getTargetException());
+                throw WrappedException.wrapException(
+                    JavaScriptException.wrapException(scope, e));
             }
         }
         else {

@@ -676,6 +676,17 @@ public class ScriptRuntime {
         return jse.value;
     }
 
+    /**
+     * Check a WrappedException. Unwrap a JavaScriptException and return
+     * the value, otherwise rethrow.
+     */
+    public static Object unwrapWrappedException(WrappedException we) {
+        Throwable t = we.getWrappedException();
+        if (t instanceof JavaScriptException)
+            return ((JavaScriptException) t).value;
+        throw we;
+    }
+
     public static Object getProp(Object obj, String id, Scriptable scope) {
         Scriptable start;
         if (obj instanceof Scriptable) {

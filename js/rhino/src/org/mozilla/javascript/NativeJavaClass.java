@@ -111,7 +111,7 @@ public class NativeJavaClass extends NativeJavaObject implements Function {
     }
 
     public void put(String name, Scriptable start, Object value) {
-        members.put(name, javaObject, value, true);
+        members.put(this, name, javaObject, value, true);
     }
 
     public Object[] getIds() {

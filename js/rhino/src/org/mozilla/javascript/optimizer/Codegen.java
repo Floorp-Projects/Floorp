@@ -2184,44 +2184,29 @@ public class Codegen extends Interpreter {
         int realEnd = acquireLabel();
         addByteCode(ByteCode.GOTO, realEnd);
 
+
         // javascript handler; unwrap exception and GOTO to javascript
         // catch area.
         if (catchTarget != null) {
-            int jsHandler = classFile.markHandler(acquireLabel());
-
-            // MS JVM gets cranky if the exception object is left on the stack
-            short exceptionObject = getNewWordLocal();
-            astore(exceptionObject);
-            
-            // reset the variable object local
-            aload(savedVariableObject);
-            astore(variableObjectLocal);
-
-            aload(exceptionObject);
-            releaseWordLocal(exceptionObject);
-
-            // unwrap the exception...
-            addScriptRuntimeInvoke("unwrapJavaScriptException",
-                          "(Lorg/mozilla/javascript/JavaScriptException;)",
-                          "Ljava/lang/Object;");
-
             // get the label to goto
             int catchLabel =
                 ((Integer)catchTarget.getProp(Node.LABEL_PROP)).intValue();
-            addByteCode(ByteCode.GOTO, catchLabel);
 
-            // mark the handler
-            classFile.addExceptionHandler
-                (startLabel, catchLabel, jsHandler,
-                 "org/mozilla/javascript/JavaScriptException");
-
+            generateCatchBlock(JAVASCRIPTEXCEPTION, savedVariableObject, 
+                               catchLabel, startLabel);
+            /*
+             * catch WrappedExceptions, see if they are wrapped 
+             * JavaScriptExceptions. Otherwise, rethrow.
+             */
+            generateCatchBlock(WRAPPEDEXCEPTION, savedVariableObject,
+                               catchLabel, startLabel);
             
             /*
                 we also need to catch EcmaErrors and feed the 
                 associated error object to the handler
             */
-            jsHandler = classFile.markHandler(acquireLabel());
-            exceptionObject = getNewWordLocal();
+            int jsHandler = classFile.markHandler(acquireLabel());
+            short exceptionObject = getNewWordLocal();
             astore(exceptionObject);
             aload(savedVariableObject);
             astore(variableObjectLocal);
@@ -2266,6 +2251,51 @@ public class Codegen extends Interpreter {
         }
         releaseWordLocal(savedVariableObject);
         markLabel(realEnd);
+    }
+
+    private final int JAVASCRIPTEXCEPTION = 0;
+    private final int WRAPPEDEXCEPTION    = 1;
+
+    private void generateCatchBlock(int exceptionType, 
+                                    short savedVariableObject,
+                                    int catchLabel,
+                                    int startLabel)
+    {
+        int handler = classFile.markHandler(acquireLabel());
+
+        // MS JVM gets cranky if the exception object is left on the stack
+        short exceptionObject = getNewWordLocal();
+        astore(exceptionObject);
+        
+        // reset the variable object local
+        aload(savedVariableObject);
+        astore(variableObjectLocal);
+
+        aload(exceptionObject);
+        releaseWordLocal(exceptionObject);
+
+        if (exceptionType == JAVASCRIPTEXCEPTION) {
+            // unwrap the exception...
+            addScriptRuntimeInvoke("unwrapJavaScriptException",
+                          "(Lorg/mozilla/javascript/JavaScriptException;)",
+                          "Ljava/lang/Object;");
+        } else {
+            // unwrap the exception...
+            addScriptRuntimeInvoke("unwrapWrappedException",
+                          "(Lorg/mozilla/javascript/WrappedException;)",
+                          "Ljava/lang/Object;");
+        }
+
+
+        String exceptionName = exceptionType == JAVASCRIPTEXCEPTION
+                               ? "org/mozilla/javascript/JavaScriptException"
+                               : "org/mozilla/javascript/WrappedException";
+
+        // mark the handler
+        classFile.addExceptionHandler(startLabel, catchLabel, handler, 
+                                      exceptionName);
+
+        addByteCode(ByteCode.GOTO, catchLabel);
     }
 
     private void visitThrow(Node node, Node child) {
