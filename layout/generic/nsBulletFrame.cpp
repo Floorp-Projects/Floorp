@@ -429,7 +429,8 @@ static void CJKIdeographicToText(PRInt32 ordinal, nsString& result,
 			 buf[--idx] = c10kUnit;
 		  if(0 != cUnit)
 			 buf[--idx] = cUnit;
-		  if((0 != cDigit) && ( 1 == (ud%4)) && (ordinal < 10))
+		  if((0 != cDigit) && 
+                     ( (1 != cur) || (1 != (ud%4)) || ( ordinal > 10)) )
 			 buf[--idx] = cDigit;
 
 		  c10kUnit =  0;
