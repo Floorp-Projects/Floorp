@@ -3134,7 +3134,25 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
     nsCOMPtr<nsIDOMNode> theNode( do_QueryInterface(isupports ) );
     if (nsTextEditUtils::IsBreak(theNode))
     {
-      emptyDiv = PR_TRUE;
+      // The special case emptyDiv code (below) that consumes BRs can
+      // cause tables to split if the start node of the selection is
+      // not in a table cell or caption, for example parent is a <tr>.
+      // Avoid this unnecessary splitting if possible by leaving emptyDiv
+      // FALSE so that we fall through to the normal case alignment code.
+      //
+      // XXX: It seems a little error prone for the emptyDiv special
+      //      case code to assume that the start node of the selection
+      //      is the parent of the single node in the arrayOfNodes, as
+      //      the paragraph above points out. Do we rely on the selection
+      //      start node because of the fact that arrayOfNodes can be empty?
+      //      We should probably revisit this issue. - kin
+
+      nsCOMPtr<nsIDOMNode> parent;
+      PRInt32 offset;
+      res = mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(parent), &offset);
+
+      if (!nsHTMLEditUtils::IsTableElement(parent) || nsHTMLEditUtils::IsTableCellOrCaption(parent))
+        emptyDiv = PR_TRUE;
     }
   }
   if (emptyDiv)
@@ -3215,10 +3233,19 @@ nsHTMLEditRules::WillAlign(nsISelection *aSelection,
       continue;
     }
     
-    // if it's a table element (but not a table) or a list item, forget any "current" div, and 
-    // instead put divs inside the appropriate block (td, li, etc)
+    // Skip insignificant formatting text nodes to prevent
+    // unnecessary structure splitting!
+    if (nsEditor::IsTextNode(curNode) &&
+       ((nsHTMLEditUtils::IsTableElement(curParent) && !nsHTMLEditUtils::IsTableCellOrCaption(curParent)) ||
+        nsHTMLEditUtils::IsList(curParent)))
+      continue;
+
+    // if it's a table element (but not a table) or a list item, or a list
+    // inside a list, forget any "current" div, and instead put divs inside
+    // the appropriate block (td, li, etc)
     if ( (nsHTMLEditUtils::IsTableElement(curNode) && !nsHTMLEditUtils::IsTable(curNode))
-         || nsHTMLEditUtils::IsListItem(curNode) )
+         || nsHTMLEditUtils::IsListItem(curNode)
+         || (nsHTMLEditUtils::IsList(curNode) && nsHTMLEditUtils::IsList(curParent)))
     {
       res = AlignInnerBlocks(curNode, alignType);
       if (NS_FAILED(res)) return res;
