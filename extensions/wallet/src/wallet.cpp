@@ -458,15 +458,15 @@ enum PlacementType {DUP_IGNORE, DUP_OVERWRITE, DUP_BEFORE, DUP_AFTER, AT_END};
 class wallet_MapElement {
 public:
   wallet_MapElement() : itemList(nsnull) {}
-  nsAutoString  item1;
-  nsAutoString  item2;
+  nsString  item1;
+  nsString  item2;
   nsVoidArray * itemList;
 };
 
 class wallet_Sublist {
 public:
   wallet_Sublist() {}
-  nsAutoString item;
+  nsString item;
 };
 
 PRIVATE nsVoidArray * wallet_URLFieldToSchema_list=0;
@@ -1217,6 +1217,9 @@ wallet_WriteToList(
     }
     item2 = crypt;
   }
+  mapElement->item1.SetCapacity(item1.Length());
+  mapElement->item2.SetCapacity(item2.Length());
+
   mapElement->item1 = item1;
   mapElement->item2 = item2;
   mapElement->itemList = itemList;
@@ -1244,8 +1247,11 @@ wallet_WriteToList(
     if((ptr->item1.Compare(item1))==0) {
       if (DUP_OVERWRITE==placement) {
         delete mapElement;
+        ptr->item1.SetCapacity(item1.Length());
+        ptr->item2.SetCapacity(item2.Length());
         ptr->item1 = item1;
         ptr->item2 = item2;
+        ptr->itemList = itemList;
       } else if (DUP_BEFORE==placement) {
         list->InsertElementAt(mapElement, i);
       }
@@ -1765,12 +1771,14 @@ wallet_ReadFromFile
       if (!sublist) {
         break;
       }
+      sublist->item.SetCapacity(item2.Length());
       sublist->item = item2;
       itemList->AppendElement(sublist);
       sublist = new wallet_Sublist;
       if (!sublist) {
         break;
       }
+      sublist->item.SetCapacity(item3.Length());
       sublist->item = item3;
       itemList->AppendElement(sublist);
       /* add any following items to sublist up to next blank line */
@@ -1796,6 +1804,7 @@ wallet_ReadFromFile
           break;
         }
         sublist->item = item3;
+        sublist->item.SetCapacity(item3.Length());
         itemList->AppendElement(sublist);
       }
     }
