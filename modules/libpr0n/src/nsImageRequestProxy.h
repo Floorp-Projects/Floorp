@@ -24,7 +24,7 @@
 #include "nsImageRequest.h"
 #include "nsIImageDecoderObserver.h"
 
-#include "nsIImageContainer.h"
+#include "gfxIImageContainer.h"
 #include "nsIImageDecoder.h"
 #include "nsCOMPtr.h"
 

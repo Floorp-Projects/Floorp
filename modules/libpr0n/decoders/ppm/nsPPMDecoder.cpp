@@ -25,8 +25,8 @@
 #include "nsPPMDecoder.h"
 
 #include "nsIInputStream.h"
-#include "nsIImageContainer.h"
-#include "nsIImageContainerObserver.h"
+#include "gfxIImageContainer.h"
+#include "gfxIImageContainerObserver.h"
 
 #include "nspr.h"
 
@@ -219,7 +219,7 @@ NS_IMETHODIMP nsPPMDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
     if (mObserver)
       mObserver->OnStartContainer(nsnull, nsnull, mImage);
 
-    mFrame->Init(0, 0, w, h, nsIGFXFormat::RGB);
+    mFrame->Init(0, 0, w, h, gfxIFormats::RGB);
     mImage->AppendFrame(mFrame);
     if (mObserver)
       mObserver->OnStartFrame(nsnull, nsnull, mFrame);
