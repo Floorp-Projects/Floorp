@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.188 $ ';
+$::UtilsVersion = '$Revision: 1.189 $ ';
 
 package TinderUtils;
 
@@ -1615,7 +1615,7 @@ sub run_all_tests {
         chomp($z_data);
         my $time = POSIX::strftime "%Y:%m:%d:%H:%M:%S", localtime;
         print_log "TinderboxPrint:" .
-        "<a title=\"Garrett's codesize test (bytes)\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
+        "<a title=\"Code + data size of all shared libs & executables\" href=\"http://$Settings::results_server/graph/query.cgi?testname=codesize&tbox=" .
           ::hostname() . "&autoscale=1&units=bytes&days=7&avg=1&showpoint=$time,$z_data\">Z:$z_data" . "</a>\n";
 
         if($Settings::TestsPhoneHome) {
@@ -1624,7 +1624,7 @@ sub run_all_tests {
 
         my $zdiff_data = extract_token_from_file("$build_dir/$test_log", "__codesizeDiff", ":");
         chomp($zdiff_data);
-        print_log "TinderboxPrint:Zdiff:$zdiff_data\n";
+        print_log "<a title=\"Change from last Z value (+added/-subtracted)\" TinderboxPrint:Zdiff:$zdiff_data</a>\n";
 
         # Get ready for next cycle.
         rename("$build_dir/$new_log", "$build_dir/$old_log");
