@@ -19,7 +19,7 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..
+DEPTH=..\..\..
 MODULE=rdfldapds
 SAMPLES_DIR = $(DIST)/bin/chrome/communicator/content/ldapviewer
 
