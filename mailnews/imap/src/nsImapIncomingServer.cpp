@@ -1409,6 +1409,7 @@ NS_IMETHODIMP nsImapIncomingServer::GetRedirectorType(char **redirectorType)
 
 NS_IMETHODIMP nsImapIncomingServer::SetRedirectorType(const char *redirectorType)
 {
+  m_redirectorType = redirectorType;
   return (SetCharValue("redirector_type", redirectorType));
 }
 
