@@ -50,9 +50,7 @@
 #include "nsLookAndFeel.h"
 #include "nsFilePicker.h"
 #include "nsScrollbar.h"
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 // Drag & Drop, Clipboard
 #include "nsTransferable.h"
@@ -74,9 +72,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static nsresult nsHorizScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
                                             void **aResult)
@@ -184,12 +180,10 @@ static const nsModuleComponentInfo components[] =
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
     nsDragServiceConstructor },
-#ifdef IBMBIDI
-    { "BeOS Bidi Keyboard",
+  { "BeOS Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-#endif // IBMBIDI
   { "BeOS File Picker",
     NS_FILEPICKER_CID,
     "@mozilla.org/filepicker;1",

@@ -72,9 +72,7 @@
 #include "nsScrollbar.h"
 #include "nsNativeScrollbar.h"
 
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 
 #include "nsIGenericFactory.h"
@@ -99,9 +97,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragHelperService)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 
 static nsModuleComponentInfo components[] =
@@ -174,12 +170,10 @@ static nsModuleComponentInfo components[] =
 		NS_DRAGHELPERSERVICE_CID,
 		"@mozilla.org/widget/draghelperservice;1",
 		nsDragHelperServiceConstructor },
-#ifdef IBMBIDI
 		{ "Gtk Bidi Keyboard",
 		NS_BIDIKEYBOARD_CID,
 		"@mozilla.org/widget/bidikeyboard;1",
 		nsBidiKeyboardConstructor },
-#endif // IBMBIDI
 	{	"Horiz Scrollbar",
 		NS_HORZSCROLLBAR_CID,
 		"@mozilla.org/widgets/horizscroll/mac;1",

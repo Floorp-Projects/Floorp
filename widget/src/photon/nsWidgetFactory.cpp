@@ -52,9 +52,7 @@
 #include "nsDragService.h"
 #include "nsScrollbar.h"
 #include "nsSound.h"
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 #include <prlog.h>
 struct PRLogModuleInfo  *PhWidLog =  nsnull;
@@ -70,9 +68,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSound)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static nsresult nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
@@ -182,12 +178,10 @@ static nsModuleComponentInfo components[] =
     NS_SOUND_CID,
     "@mozilla.org/sound;1",
     nsSoundConstructor },
-#ifdef IBMBIDI
-    { "Gtk Bidi Keyboard",
+  { "Gtk Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-#endif // IBMBIDI
 };
 
 PR_STATIC_CALLBACK(void)

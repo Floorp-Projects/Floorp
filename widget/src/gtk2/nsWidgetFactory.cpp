@@ -50,9 +50,7 @@
 #include "nsClipboard.h"
 #include "nsDragService.h"
 #include "nsSound.h"
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityInterface.h"
@@ -63,9 +61,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsChildWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
@@ -185,12 +181,10 @@ static const nsModuleComponentInfo components[] =
     NS_HTMLFORMATCONVERTER_CID,
     "@mozilla.org/widget/htmlformatconverter/gtk;1",
     nsHTMLFormatConverterConstructor },
-#ifdef IBMBIDI
-    { "Gtk2 Bidi Keyboard",
-      NS_BIDIKEYBOARD_CID,
-      "@mozilla.org/widget/bidikeyboard;1",
-      nsBidiKeyboardConstructor },
-#endif /* IBMBIDI */
+  { "Gtk2 Bidi Keyboard",
+    NS_BIDIKEYBOARD_CID,
+    "@mozilla.org/widget/bidikeyboard;1",
+    nsBidiKeyboardConstructor },
 };
 
 PR_STATIC_CALLBACK(void)

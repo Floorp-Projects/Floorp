@@ -53,9 +53,7 @@
 #include "nsDragService.h"
 #include "nsScrollbar.h"
 
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
 NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
@@ -67,9 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static nsresult nsHorizScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
                                             void **aResult)
@@ -172,13 +168,11 @@ static const nsModuleComponentInfo components[] =
   { "Qt Drag Service",
     NS_DRAGSERVICE_CID,
     "@mozilla.org/widget/dragservice;1",
-    nsDragServiceConstructor }
-#ifdef IBMBIDI
-    , { "Qt Bidi Keyboard",
+    nsDragServiceConstructor },
+  { "Qt Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor }
-#endif // IBMBIDI
 };
 
 NS_IMPL_NSGETMODULE(nsWidgetQTModule,components)

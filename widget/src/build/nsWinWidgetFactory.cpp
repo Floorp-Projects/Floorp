@@ -52,9 +52,7 @@
 #include "nsSound.h"
 #include "nsFullScreen.h"
 
-#ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
-#endif
 
 
 // Drag & Drop, Clipboard
@@ -79,9 +77,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFullScreen)
-#ifdef IBMBIDI
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-#endif
 
 static NS_IMETHODIMP
 nsHorizScrollbarConstructor (nsISupports *aOuter, REFNSIID aIID, void **aResult)
@@ -207,12 +203,10 @@ static const nsModuleComponentInfo components[] =
     nsDragServiceConstructor },
     { "Full Screen", NS_FULLSCREEN_SERVICE_CID,
       NS_FULLSCREEN_SERVICE_CONTRACTID, nsFullScreenConstructor },
-#ifdef IBMBIDI
   { "Bidi Keyboard",
     NS_BIDIKEYBOARD_CID,
     "@mozilla.org/widget/bidikeyboard;1",
     nsBidiKeyboardConstructor },
-#endif // IBMBIDI
 };
 
 
