@@ -421,6 +421,19 @@ endif
 MOZ_META_COMPONENTS_crypto = BOOT PKI NSS
 MOZ_META_COMPONENTS_crypto_comps = pipboot pippki pipnss
 
+# If we're applying MOZ_PROFILE_GENERATE to a non-static build, then we
+# need to create a static build _with_ PIC.  This allows us to generate
+# profile data that will still be valid when the object files are linked into
+# shared libraries.
+ifdef MOZ_PROFILE_GENERATE
+ifdef BUILD_SHARED_LIBS
+BUILD_SHARED_LIBS=
+BUILD_STATIC_LIBS=1
+MOZ_STATIC_COMPONENT_LIBS=1
+STATIC_BUILD_PIC=1
+endif
+endif
+
 #
 # Build using PIC by default
 # Do not use PIC if not building a shared lib (see exceptions below)
@@ -466,6 +479,15 @@ ifneq (,$(findstring mozcomps, $(MOZ_META_COMPONENTS)))
 _ENABLE_PIC=1
 endif
 
+ifdef STATIC_BUILD_PIC
+ifndef _ENABLE_PIC
+# If PIC hasn't been enabled now, object files in this directory will not
+# ever be linked into a DSO.  Turn PIC on and set ENABLE_PROFILE_GENERATE.
+ENABLE_PROFILE_GENERATE=1
+_ENABLE_PIC=1
+endif
+endif
+
 #
 # Disable PIC if necessary
 #
@@ -478,17 +500,23 @@ else
 DSO_PIC_CFLAGS=
 endif
 
+MKSHLIB=
+endif
+
 # Enable profile-based feedback for non-PIC objects
+ifdef ENABLE_PROFILE_GENERATE
 ifdef MOZ_PROFILE_GENERATE
 DSO_PIC_CFLAGS += $(PROFILE_GEN_CFLAGS)
-else
+endif
+endif
+# We always use the profile-use flags, even in cases where we didn't use the
+# profile-generate flags.  It's harmless, and it saves us from having to
+# answer the question "Would these objects have been built using
+# the profile-generate flags?" which is not trivial.
 ifdef MOZ_PROFILE_USE
 DSO_PIC_CFLAGS += $(PROFILE_USE_CFLAGS)
 endif
-endif
 
-MKSHLIB=
-endif
 
 # Force _all_ exported methods to be |_declspec(dllexport)| when we're
 # building them into the executable.
