@@ -285,7 +285,6 @@ NS_IMETHODIMP _class::QueryInterface(REFNSIID aIID, void** aInstancePtr) \
   NS_IMPL_QUERY_TAIL(_i1)
 
 
-
 	/*
 		The following macro is deprecated.  We need to switch all instances
 		to |NS_IMPL_QUERY_INTERFACE1|, or |NS_IMPL_QUERY_INTERFACE0| depending
@@ -797,13 +796,24 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 ////////////////////////////////////////////////////////////////////////////////
 #if defined(NS_DEBUG)
 
-	#define NS_ENSURE(x, ret) { if(!(x)) { NS_ERROR("Ensure Failed"); return ret; } }
+#define NS_ENSURE(x, ret)							\
+PR_BEGIN_MACRO											\
+	if(!(x))												\
+		{													\
+		NS_ERROR("NS_ENSURE(" #x ") failed");	\
+		return ret;										\
+		}													\
+PR_END_MACRO
 
-#else // NS_DEBUG
+#else // !NS_DEBUG
 
-	#define NS_ENSURE(x, ret) {if(!(x)) {return ret; } }
+#define NS_ENSURE(x, ret)				\
+PR_BEGIN_MACRO								\
+	if(!(x))									\
+		return ret;							\
+PR_END_MACRO
 
-#endif // NS_DEBUG
+#endif // !NS_DEBUG
 
 #define NS_ENSURE_NOT(x, ret) \
 NS_ENSURE(!(x), ret)
