@@ -6,7 +6,7 @@
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/TR/WD-rdf-syntax#">
 
-<xul:tree xul:datasources="rdf:bookmarks rdf:mail">
+<xul:tree xul:datasources="rdf:files rdf:bookmarks rdf:mail">
   <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <xul:treecol rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
   <xul:treecol rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
@@ -45,6 +45,12 @@
 
     <xul:treeitem xul:id="NC:BookmarksRoot">
       <xul:treecell>Bookmarks</xul:treecell>
+      <xul:treecell></xul:treecell>
+      <xul:treecell></xul:treecell>
+    </xul:treeitem>
+
+    <xul:treeitem xul:id="NC:FilesRoot">
+      <xul:treecell>File System</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
