@@ -39,6 +39,7 @@
 
 interface nsIFile;
 interface nsIURI;
+interface nsIDOMWindow;
 
 /**
  * Represents the command line used to invoke a XUL application. This may be the
@@ -54,7 +55,7 @@ interface nsIURI;
  *                      yet. Please use with care.
  */
 
-[scriptable, uuid(d2368f41-b2ed-424e-891e-f7aedd92d5d3)]
+[scriptable, uuid(bc3173bd-aa46-46a0-9d25-d9867a9659b6)]
 interface nsICommandLine : nsISupports
 {
   /**
@@ -148,6 +149,12 @@ interface nsICommandLine : nsISupports
    * command line may have had a different working directory.
    */
   readonly attribute nsIFile workingDirectory;
+
+  /**
+   * A window to be targeted by this command line. In most cases, this will
+   * be null (xremote will sometimes set this attribute).
+   */
+  readonly attribute nsIDOMWindow windowContext;
 
   /**
    * Resolve a file-path argument into an nsIFile. This method gracefully

@@ -35,6 +35,10 @@
 #
 # ***** END LICENSE BLOCK *****
 
+# NOTE: This directory is part of tier 50, and is linked directly into
+# the application binaries. The fact that it's under mozilla/widget is a fluke
+# of tree history.
+
 DEPTH		= ../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
@@ -42,21 +46,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= widget
-LIBRARY_NAME	= xremote_client
-EXPORT_LIBRARY = 1
-IS_COMPONENT	= 1
-MODULE_NAME	= XRemoteClientModule
-LIBXUL_LIBRARY = 1
+MODULE		= xremoteclient
+LIBRARY_NAME = xremote_client_s
+FORCE_STATIC_LIB = 1
 
-PACKAGE_FILE = xremoteclient.pkg
-
-REQUIRES	= xpcom \
-		  $(NULL)
-
-CPPSRCS		= \
-		XRemoteClientFactory.cpp \
-		$(NULL)
+REQUIRES = \
+	xpcom \
+	$(NULL)
 
 ifdef MOZ_ENABLE_PHOTON
 	CPPSRCS		+= PhRemoteClient.cpp
@@ -72,9 +68,6 @@ EXTRA_DSO_LDOPTS = \
 ifdef MOZ_ENABLE_PHOTON
 	EXTRA_DSO_LDOPTS += -lph
 endif
-
-EXPORTS		= \
-		nsXRemoteClientCID.h
 
 PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
 
@@ -101,8 +94,8 @@ endif
 
 ifndef MOZ_ENABLE_PHOTON
 XRemoteClient_standalone.$(OBJ_SUFFIX): XRemoteClient.cpp
-	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) -DXREMOTE_STANDALONE $<
+	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
 else
 XRemoteClient_standalone.$(OBJ_SUFFIX): PhRemoteClient.cpp
-	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) -DXREMOTE_STANDALONE $<
+	$(CXX) $(OUTOPTION)$@ -c $(COMPILE_CXXFLAGS) $<
 endif

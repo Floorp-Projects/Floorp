@@ -48,11 +48,7 @@
 #include <nsIDocShell.h>
 #include <nsIScriptGlobalObject.h>
 #include <nsIBaseWindow.h>
-#include <nsWidgetsCID.h>
-#include <nsIXRemoteWidgetHelper.h>
 #include <nsIServiceManager.h>
-#include <nsIObserverService.h>
-#include <nsRect.h>
 #include <nsString.h>
 #include <nsCRT.h>
 #include <nsIPref.h>
@@ -74,117 +70,41 @@
 #include <nsIExternalProtocolService.h>
 #include <nsIProfile.h>
 
-#ifdef MOZ_XUL_APP
-#include "nsICommandLineRunner.h"
-#else
 #include "nsICmdLineHandler.h"
-#endif
-
-NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
-
-// protocol strings
-static const char s200ExecutedCommand[]     = "200 executed command:";
-static const char s500ParseCommand[]        = "500 command not parsable:";
-static const char s501UnrecognizedCommand[] = "501 unrecognized command:";
-// not used
-//static const char s502NoWindow[]            = "502 no appropriate window for:";
-static const char s509InternalError[]       = "509 internal error";
 
 XRemoteService::XRemoteService()
 {
-  mNumWindows = 0;
-  mRunning = PR_FALSE;
 }
 
 XRemoteService::~XRemoteService()
 {
-  Shutdown();
 }
 
-NS_IMPL_ISUPPORTS2(XRemoteService, nsIXRemoteService, nsIObserver)
+NS_IMPL_ISUPPORTS1(XRemoteService, nsISuiteRemoteService)
 
 NS_IMETHODIMP
-XRemoteService::Startup(const char *aProgram)
+XRemoteService::ParseCommand(const char *aCommand, nsIDOMWindow* aWindow)
 {
-  // We have to destroy the proxy window before the event loop stops running.
-  nsCOMPtr<nsIObserverService> obsServ =
-    do_GetService("@mozilla.org/observer-service;1");
-  obsServ->AddObserver(this, "quit-application", PR_FALSE);
-  obsServ->AddObserver(this, "profile-after-change", PR_FALSE);
-
-  mProgram.Assign(aProgram);
-
-  // Normalize program names to lowercase.
-  ToLowerCase(mProgram);
-
-  mRunning = PR_TRUE;
-  if (mNumWindows == 0)
-    CreateProxyWindow();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XRemoteService::Shutdown(void)
-{
-  DestroyProxyWindow();
-  mRunning = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XRemoteService::Observe(nsISupports *aSubject, const char *aTopic,
-                        const PRUnichar *aData)
-{
-  if (!strcmp(aTopic, "quit-application")) {
-    Shutdown();
-  } else {
-    NS_NOTREACHED("unexpected topic");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XRemoteService::ParseCommand(nsIWidget *aWidget,
-			     const char *aCommand, char **aResponse)
-{
-  if (!aCommand || !aResponse)
-    return NS_ERROR_INVALID_ARG;
-
-  // is there no command?
-  if (aCommand[0] == '\0') {
-    *aResponse = nsCRT::strdup(s509InternalError);
-    return NS_OK;
-  }
-
-  *aResponse = nsnull;
+  NS_ASSERTION(aCommand, "Tell me what to do, or shut up!");
 
   // begin our parse
-  nsCString tempString;
-  PRInt32 begin_arg = 0;
-  PRInt32 end_arg = 0;
+  nsCString tempString(aCommand);
 
-  tempString.Append(aCommand);
-  
   // find the () in the command
-  begin_arg = tempString.FindChar('(');
-  end_arg = tempString.RFindChar(')');
+  PRInt32 begin_arg = tempString.FindChar('(');
+  PRInt32 end_arg = tempString.RFindChar(')');
 
   // make sure that both were found, the string doesn't start with '('
   // and that the ')' follows the '('
   if (begin_arg == kNotFound || end_arg == kNotFound ||
-      begin_arg == 0 || end_arg < begin_arg) {
-    *aResponse = BuildResponse(s500ParseCommand, aCommand);
-    return NS_OK;
-  }
+      begin_arg == 0 || end_arg < begin_arg)
+    return NS_ERROR_INVALID_ARG;
 
   // truncate the closing paren and anything following it
   tempString.Truncate(end_arg);
 
   // save the argument and trim whitespace off of it
-  nsCString argument;
-  argument.Append(tempString);
+  nsCString argument(tempString);
   argument.Cut(0, begin_arg + 1);
   argument.Trim(" ", PR_TRUE, PR_TRUE);
 
@@ -192,8 +112,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   tempString.Truncate(begin_arg);
 
   // get the action, strip off whitespace and convert to lower case
-  nsCString action;
-  action.Append(tempString);
+  nsCString action(tempString);
   action.Trim(" ", PR_TRUE, PR_TRUE);
   ToLowerCase(action);
 
@@ -210,17 +129,6 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
 
   nsresult rv = NS_OK;
   
-  // find the DOM window for the passed in parameter
-  nsVoidKey *key;
-  key = new nsVoidKey(aWidget);
-  if (!key)
-    return NS_ERROR_FAILURE;
-  // If this fails it's OK since it just means that we got a request
-  // on an unknown window.  We can handle that case.
-  nsIDOMWindowInternal *domWindow = NS_STATIC_CAST(nsIDOMWindowInternal *,
-						   mWindowList.Get(key));
-  delete key;
-
   /*   
       openURL ( ) 
             Prompts for a URL with a dialog box. 
@@ -240,9 +148,9 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
 
   if (action.Equals("openurl") || action.Equals("openfile")) {
     if (argument.IsEmpty())
-      rv = OpenURLDialog(domWindow);
+      rv = OpenURLDialog(aWindow);
     else
-      rv = OpenURL(argument, domWindow, PR_TRUE);
+      rv = OpenURL(argument, aWindow, PR_TRUE);
   }
 
   /*
@@ -296,7 +204,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
     // and openurl should work fine.
     nsCString tempArg("mailto:");
     tempArg.Append(argument);
-    rv = OpenURL(tempArg, domWindow, PR_FALSE);
+    rv = OpenURL(tempArg, aWindow, PR_FALSE);
   }
 
   /*
@@ -310,21 +218,7 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("addbookmark")) {
-    if (argument.IsEmpty()) {
-      rv = NS_ERROR_NOT_IMPLEMENTED;
-    }
-    else {
-      index = 0;
-      FindLastInList(argument, lastArgument, &index);
-      if (!lastArgument.IsEmpty()) {
-	nsCString title(lastArgument);
-	argument.Truncate(index);
-	rv = NS_ERROR_NOT_IMPLEMENTED;
-      }
-      else {
-	rv = NS_ERROR_NOT_IMPLEMENTED;
-      }
-    }
+    rv = NS_ERROR_NOT_IMPLEMENTED;
   }
 
   /* some extensions! */
@@ -346,225 +240,15 @@ XRemoteService::ParseCommand(nsIWidget *aWidget,
   */
 
   else if (action.Equals("xfedocommand")) {
-    rv = XfeDoCommand(argument, domWindow);
+    rv = XfeDoCommand(argument, aWindow);
   }
 
   // bad command
   else {
     rv = NS_ERROR_FAILURE;
-    *aResponse = BuildResponse(s501UnrecognizedCommand, aCommand);
   }
-
-  // if we failed and *aResponse isn't already filled in, fill it in
-  // with a generic internal error message.
-  if (NS_FAILED(rv)) {
-    if (!*aResponse) {
-      if (rv == NS_ERROR_NOT_IMPLEMENTED)
-	*aResponse = BuildResponse(s501UnrecognizedCommand, aCommand);
-      else
-	*aResponse = nsCRT::strdup(s509InternalError);
-    }
-  }
-
-  // if we got this far then everything worked.
-  if (!*aResponse)
-    *aResponse = BuildResponse(s200ExecutedCommand, aCommand);
 
   return rv;
-}
-
-NS_IMETHODIMP
-XRemoteService::AddBrowserInstance(nsIDOMWindowInternal *aBrowser)
-{
-
-  // get the native window for this instance
-  nsCOMPtr<nsIScriptGlobalObject> scriptObject;
-  scriptObject = do_QueryInterface(aBrowser);
-  if (!scriptObject) {
-    NS_WARNING("Failed to get script object for browser instance");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIBaseWindow> baseWindow;
-  baseWindow = do_QueryInterface(scriptObject->GetDocShell());
-  if (!baseWindow) {
-    NS_WARNING("Failed to get base window for browser instance");
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIWidget> mainWidget;
-  baseWindow->GetMainWidget(getter_AddRefs(mainWidget));
-  if (!mainWidget) {
-    NS_WARNING("Failed to get main widget for browser instance");
-    return NS_ERROR_FAILURE;
-  }
-
-  // walk up the widget tree and find the toplevel window in the
-  // hierarchy
-
-  nsCOMPtr<nsIWidget> tempWidget;
-
-  tempWidget = getter_AddRefs(mainWidget->GetParent());
-
-  while (tempWidget) {
-    tempWidget = getter_AddRefs(tempWidget->GetParent());
-    if (tempWidget)
-      mainWidget = tempWidget;
-  }
-
-  // Tell the widget code to set up X remote for this window
-  nsCOMPtr<nsIXRemoteWidgetHelper> widgetHelper =
-    do_GetService(NS_IXREMOTEWIDGETHELPER_CONTRACTID);
-  if (!widgetHelper) {
-    NS_WARNING("couldn't get widget helper service");
-    return NS_ERROR_FAILURE;
-  }
-
-
-  nsCAutoString profile;
-  GetProfileName(profile);
-
-  // Make sure that the profile is actually set to something.
-  const char *profileTmp = NULL;
-  if (profile.Length())
-      profileTmp = profile.get();
-
-  // Make sure we actually have a name.
-  const char *programTmp = NULL;
-  if (!mProgram.IsEmpty())
-      programTmp = mProgram.get();
-
-  nsresult rv;
-  rv = widgetHelper->EnableXRemoteCommands(mainWidget, profileTmp,
-                                           programTmp);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to enable x remote commands for widget");
-    return rv;
-  }
-
-  // It's assumed that someone will call RemoveBrowserInstance before
-  // this DOM window is destroyed so we don't addref or release or
-  // keep a weak ptr or anything.
-  nsVoidKey *key;
-  key = new nsVoidKey (mainWidget.get());
-  if (!key)
-    return NS_ERROR_FAILURE;
-  mWindowList.Put(key, aBrowser);
-  delete key;
-
-  // ...and the reverse lookup
-  key = new nsVoidKey (aBrowser);
-  if (!key)
-    return NS_ERROR_FAILURE;
-  mBrowserList.Put(key, mainWidget.get());
-  delete key;
-
-  // now that we have a real browser window listening to requests
-  // destroy the proxy window.
-  DestroyProxyWindow();
-  mNumWindows++;
-  
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-XRemoteService::RemoveBrowserInstance(nsIDOMWindowInternal *aBrowser)
-{
-  mNumWindows--;
-  if (mNumWindows == 0 && mRunning)
-    CreateProxyWindow();
-
-  // remove our keys
-  nsVoidKey *key;
-  key = new nsVoidKey(aBrowser);
-  if (!key)
-    return NS_ERROR_FAILURE;
-  nsIWidget *widget = NS_STATIC_CAST(nsIWidget *,
-				     mBrowserList.Remove(key));
-  delete key;
-
-  key = new nsVoidKey(widget);
-  if (!key)
-    return NS_ERROR_FAILURE;
-  mWindowList.Remove(key);
-  delete key;
-
-  return NS_OK;
-}
-
-void
-XRemoteService::CreateProxyWindow(void)
-{
-  if (mProxyWindow)
-    return;
-
-  mProxyWindow = do_CreateInstance(kWindowCID);
-  if (!mProxyWindow)
-    return;
-
-  nsWidgetInitData initData;
-  initData.mWindowType = eWindowType_toplevel;
-  initData.mContentType = eContentTypeUI;
-
-  // create the window as a new toplevel
-  nsRect rect(0,0,100,100);
-  nsresult rv;
-  rv = mProxyWindow->Create(NS_STATIC_CAST(nsIWidget *, nsnull),
-			    rect,
-			    nsnull, nsnull, nsnull, nsnull,
-			    &initData);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to create proxy window");
-    return;
-  }
-
-  // Tell the widget code to set up X remote for this window
-  nsCOMPtr<nsIXRemoteWidgetHelper> widgetHelper =
-    do_GetService(NS_IXREMOTEWIDGETHELPER_CONTRACTID);
-  if (!widgetHelper) {
-    NS_WARNING("couldn't get widget helper service");
-    return;
-  }
-
-  nsCAutoString profile;
-  GetProfileName(profile);
-
-  rv = widgetHelper->EnableXRemoteCommands(mProxyWindow, profile.get(),
-                                           mProgram.get());
-  if (NS_FAILED(rv)) {
-    NS_WARNING("failed to enable x remote commands for proxy window");
-    return;
-  }
-
-}
-
-void
-XRemoteService::DestroyProxyWindow(void)
-{
-  if (!mProxyWindow)
-    return;
-
-  mProxyWindow->Destroy();
-  mProxyWindow = nsnull;
-}
-
-char *
-XRemoteService::BuildResponse(const char *aError, const char *aMessage)
-{
-  nsCString retvalString;
-  char *retval;
-  
-  // check to make sure that we have the minimum for allocating this
-  // buffer
-  if (!aError || !aMessage)
-    return nsnull;
-  
-  retvalString.Append(aError);
-  retvalString.Append(" ");
-  retvalString.Append(aMessage);
-
-  retval = ToNewCString(retvalString);
-  return retval;
 }
 
 void
@@ -760,11 +444,11 @@ XRemoteService::MayOpenURL(const nsCString &aURL)
 
 nsresult
 XRemoteService::OpenURL(nsCString &aArgument,
-			nsIDOMWindowInternal *aParent,
+			nsIDOMWindow *aParent,
 			PRBool aOpenBrowser)
 {
   // the eventual toplevel target of the load
-  nsCOMPtr<nsIDOMWindowInternal> finalWindow = aParent;
+  nsCOMPtr<nsIDOMWindowInternal> finalWindow = do_QueryInterface(aParent);
 
   // see if there's a new-window or new-tab argument on the end
   nsCString lastArgument;
@@ -794,10 +478,6 @@ XRemoteService::OpenURL(nsCString &aArgument,
   // If we're trying to open a new tab, we'll fall back to opening
   // a new window if there's no browser window open, so look for it
   // here.
-#ifdef MOZ_THUNDERBIRD
-  newWindow = PR_FALSE;
-  finalWindow = nsnull; // always use the URILoader code below
-#else
   if (aOpenBrowser && (!newWindow || newTab)) {
     nsCOMPtr<nsIDOMWindowInternal> lastUsedWindow;
     FindWindow(NS_LITERAL_STRING("navigator:browser").get(),
@@ -819,7 +499,6 @@ XRemoteService::OpenURL(nsCString &aArgument,
     if (!finalWindow || !bwin)
       newWindow = PR_TRUE;
   }
-#endif
 
   // check if we can handle this type of URL
   if (!MayOpenURL(aArgument))
@@ -966,7 +645,7 @@ XRemoteService::OpenURL(nsCString &aArgument,
 }
 
 nsresult
-XRemoteService::OpenURLDialog(nsIDOMWindowInternal *aParent)
+XRemoteService::OpenURLDialog(nsIDOMWindow *aParent)
 {
   nsresult rv;
 
@@ -1002,7 +681,7 @@ XRemoteService::OpenURLDialog(nsIDOMWindowInternal *aParent)
 
 nsresult
 XRemoteService::XfeDoCommand(nsCString &aArgument,
-			     nsIDOMWindowInternal *aParent)
+                             nsIDOMWindow *aParent)
 {
   nsresult rv = NS_OK;
   
@@ -1029,7 +708,7 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
     nsCOMPtr<nsIDOMWindowInternal> domWindow;
 
     rv = FindWindow(NS_LITERAL_STRING("mail:3pane").get(),
-		    getter_AddRefs(domWindow));
+                    getter_AddRefs(domWindow));
 
     if (NS_FAILED(rv))
       return rv;
@@ -1055,19 +734,6 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
 
   // open a new browser window
   else if (aArgument.LowerCaseEqualsLiteral("openbrowser")) {
-#ifdef MOZ_XUL_APP
-    char* argc = "-browser";
-
-    nsCOMPtr<nsICommandLineRunner> cmdLine
-      (do_GetService("@mozilla.org/toolkit/command-line;1"));
-    NS_ENSURE_TRUE(cmdLine, NS_ERROR_FAILURE);
-
-    rv = cmdLine->Init(1, &argc, nsnull, nsICommandLine::STATE_REMOTE_EXPLICIT);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    rv = cmdLine->Run();
-
-#else
     // Get the browser URL and the default start page URL.
     nsCOMPtr<nsICmdLineHandler> browserHandler =
         do_GetService("@mozilla.org/commandlinehandler/general-startup;1?type=browser");
@@ -1086,7 +752,6 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
     nsCOMPtr<nsIDOMWindow> newWindow;
     rv = OpenChromeWindow(0, browserLocation, "chrome,all,dialog=no",
                           arg, getter_AddRefs(newWindow));
-#endif
   }
 
   // open a new compose window
@@ -1109,17 +774,17 @@ XRemoteService::XfeDoCommand(nsCString &aArgument,
   else if (aArgument.LowerCaseEqualsLiteral("opencalendar")) {
 
     // check to see if it's already running
-    nsCOMPtr<nsIDOMWindowInternal> domWindow;
+    nsCOMPtr<nsIDOMWindowInternal> aWindow;
 
     rv = FindWindow(NS_LITERAL_STRING("calendarMainWindow").get(),
-		    getter_AddRefs(domWindow));
+		    getter_AddRefs(aWindow));
 
     if (NS_FAILED(rv))
       return rv;
 
     // focus the window if it was found
-    if (domWindow) {
-      domWindow->Focus();
+    if (aWindow) {
+      aWindow->Focus();
     }
 
     // otherwise open a new calendar window
@@ -1151,28 +816,12 @@ XRemoteService::FindWindow(const PRUnichar *aType,
   return mediator->GetMostRecentWindow(aType, _retval);
 }
 
-void
-XRemoteService::GetProfileName(nsACString &aProfile)
-{
-  // Get the current profile name and save it.
-  nsresult rv;
-  nsCOMPtr<nsIProfile> profileMgr;
-  profileMgr = do_GetService(NS_PROFILE_CONTRACTID, &rv);
-  if (!profileMgr)
-    return;
-
-  nsXPIDLString name;
-  rv = profileMgr->GetCurrentProfile(getter_Copies(name));
-  if (NS_SUCCEEDED(rv))
-    LossyCopyUTF16toASCII(name, aProfile);
-}
-
 NS_GENERIC_FACTORY_CONSTRUCTOR(XRemoteService)
 
 static const nsModuleComponentInfo components[] = {
-  { NS_IXREMOTESERVICE_CLASSNAME,
+  { "XRemoteService",
     NS_XREMOTESERVICE_CID,
-    NS_IXREMOTESERVICE_CONTRACTID,
+    "@mozilla.org/browser/xremoteservice;2",
     XRemoteServiceConstructor }
 };
 

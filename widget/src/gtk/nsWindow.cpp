@@ -79,8 +79,6 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
-#include "nsGtkMozRemoteHelper.h"
-
 #include "nsIDragService.h"
 #include "nsIDragSessionGTK.h"
 
@@ -158,11 +156,6 @@ gint handle_mozarea_focus_out (
 void handle_toplevel_configure (
     GtkMozArea *      aArea,
     nsWindow   *      aWindow);
-
-gboolean handle_toplevel_property_change (
-    GtkWidget *aGtkWidget,
-    GdkEventProperty *event,
-    nsWindow *aWindow);
 
 // are we grabbing?
 PRBool      nsWindow::sIsGrabbing = PR_FALSE;
@@ -1984,12 +1977,7 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
   // set up all the focus handling
 
   if (mShell) {
-    gtk_signal_connect(GTK_OBJECT(mShell),
-                       "property_notify_event",
-                       GTK_SIGNAL_FUNC(handle_toplevel_property_change),
-                       this);
-    mask = (GdkEventMask) (GDK_PROPERTY_CHANGE_MASK |
-                           GDK_KEY_PRESS_MASK |
+    mask = (GdkEventMask) (GDK_KEY_PRESS_MASK |
                            GDK_KEY_RELEASE_MASK |
                            GDK_FOCUS_CHANGE_MASK );
     gdk_window_set_events(mShell->window, 
@@ -2202,6 +2190,9 @@ void * nsWindow::GetNativeData(PRUint32 aDataType)
       return (void *)GDK_WINDOW_XWINDOW(mSuperWin->bin_window);
     }
     return NULL;
+  }
+  else if (aDataType == NS_NATIVE_SHELLWIDGET) {
+    return (void *) mShell;
   }
 
   return nsWidget::GetNativeData(aDataType);
@@ -2895,17 +2886,6 @@ void handle_toplevel_configure (
   }
 
   aWindow->OnMove(x, y);
-}
-
-
-gboolean handle_toplevel_property_change (
-    GtkWidget *aGtkWidget,
-    GdkEventProperty *event,
-    nsWindow *aWindow)
-{
-  nsIWidget *widget = NS_STATIC_CAST(nsIWidget *, aWindow);
-  return nsGtkMozRemoteHelper::HandlePropertyChange(aGtkWidget, event,
-                                                    widget);
 }
 
 void

@@ -201,7 +201,6 @@ tier_9_dirs	+= \
 		embedding \
 		editor \
 		xpfe/appshell \
-		xpfe/components/xremote/public \
 		$(NULL)
 
 ifdef MOZ_OJI
@@ -243,6 +242,7 @@ endif
 tier_50_dirs	+= \
 	db \
 	xpfe \
+	toolkit/components \
 	$(NULL)
 
 ifndef MOZ_XUL_APP

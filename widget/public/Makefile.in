@@ -69,7 +69,6 @@ EXPORTS		= \
 		nsIDragSessionXlib.h \
 		nsIDragSessionMac.h \
 		nsIDragSessionOS2.h \
-		nsIXRemoteWidgetHelper.h \
 		nsIPluginWidget.h \
 		nsINativeKeyBindings.h \
 		$(NULL)
@@ -101,7 +100,6 @@ XPIDLSRCS	= \
 		nsIMenuRollup.idl \
 		nsIBaseWindow.idl \
 		nsIBidiKeyboard.idl \
-		nsIXRemoteClient.idl \
 		nsIFullScreen.idl \
 		nsINativeScrollbar.idl \
 		$(NULL)

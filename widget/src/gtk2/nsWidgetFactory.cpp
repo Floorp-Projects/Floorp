@@ -42,7 +42,6 @@
 #include "nsBaseWidget.h"
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
-#include "nsGtkMozRemoteHelper.h"
 #include "nsTransferable.h"
 #include "nsClipboardHelper.h"
 #include "nsHTMLFormatConverter.h"
@@ -71,7 +70,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGtkXRemoteWidgetHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsClipboard, Init)
@@ -171,10 +169,6 @@ static const nsModuleComponentInfo components[] =
       NS_SOUND_CID,
       "@mozilla.org/sound;1",
       nsSoundConstructor },
-  { NS_IXREMOTEWIDGETHELPER_CLASSNAME,
-    NS_GTKXREMOTEWIDGETHELPER_CID,
-    NS_IXREMOTEWIDGETHELPER_CONTRACTID,
-    nsGtkXRemoteWidgetHelperConstructor },
   { "Transferable",
     NS_TRANSFERABLE_CID,
     "@mozilla.org/widget/transferable;1",

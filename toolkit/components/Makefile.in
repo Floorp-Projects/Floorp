@@ -43,7 +43,16 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = \
+# These component dirs are built for all apps (including seamonkey)
+
+ifdef MOZ_ENABLE_XREMOTE
+DIRS += remote
+endif
+
+# These component dirs are built only for XUL apps
+
+ifdef MOZ_XUL_APP
+DIRS += \
 	console \
 	filepicker \
 	printing \
@@ -62,7 +71,7 @@ DIRS +=	\
 	typeaheadfind \
 	downloads \
 	$(NULL)
-endif
+endif # MOZ_THUNDERBIRD
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS += alerts
@@ -75,5 +84,7 @@ DIRS += \
 	$(NULL)
 
 EXTRA_PP_COMPONENTS = nsDefaultCLH.js
+
+endif # MOZ_XUL_APP
 
 include $(topsrcdir)/config/rules.mk

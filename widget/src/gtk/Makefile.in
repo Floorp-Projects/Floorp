@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 		  dom \
 		  uconv \
 		  necko \
-		  xremoteservice \
 		  view \
 		  util \
 		  unicharutil \
@@ -92,7 +91,6 @@ CPPSRCS		= \
 		nsWidgetFactory.cpp \
 		nsWindow.cpp \
 		nsGtkIMEHelper.cpp \
-		nsGtkMozRemoteHelper.cpp \
 		$(NULL)
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a

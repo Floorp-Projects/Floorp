@@ -90,6 +90,7 @@ typedef nsEventStatus (*PR_CALLBACK EVENT_CALLBACK)(nsGUIEvent *event);
 #define NS_NATIVE_OFFSETY     7
 #define NS_NATIVE_PLUGIN_PORT 8
 #define NS_NATIVE_SCREEN      9
+#define NS_NATIVE_SHELLWIDGET 10      // Get the shell GtkWidget
 
 // {18032AD5-B265-11d1-AA2A-000000000000}
 #define NS_IWIDGET_IID \

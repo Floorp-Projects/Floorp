@@ -50,7 +50,7 @@
  *                    Smedberg <benjamin@smedbergs.us>.
  */
 
-[uuid(8089187e-2f73-48dc-a8e1-baa2633618e3)]
+[uuid(c1f4cfbf-a41f-4628-aa6c-9fb914478af8)]
 interface nsICommandLineRunner : nsICommandLine
 {
   /**
@@ -64,6 +64,11 @@ interface nsICommandLineRunner : nsICommandLine
    */
   void init(in long argc, in nsCharPtrArray argv,
             in nsIFile workingDir, in unsigned long state);
+
+  /**
+   * Set the windowContext parameter.
+   */
+  void setWindowContext(in nsIDOMWindow aWindow);
 
   /**
    * Process the command-line handlers in the proper order, calling "handle()" on

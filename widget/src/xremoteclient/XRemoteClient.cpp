@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* vim:expandtab:shiftwidth=4:tabstop=4:
  */
 /* vim:set ts=8 sw=2 et cindent: */
@@ -45,8 +45,10 @@
 #include "prsystem.h"
 #include "prlog.h"
 #include "prenv.h"
+#include "prdtoa.h"
 #include <stdlib.h>
 #include <unistd.h>
+#include <string.h>
 #include <strings.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -59,10 +61,15 @@
 #define MOZILLA_VERSION_PROP   "_MOZILLA_VERSION"
 #define MOZILLA_LOCK_PROP      "_MOZILLA_LOCK"
 #define MOZILLA_COMMAND_PROP   "_MOZILLA_COMMAND"
+#define MOZILLA_COMMANDLINE_PROP "_MOZILLA_COMMANDLINE"
 #define MOZILLA_RESPONSE_PROP  "_MOZILLA_RESPONSE"
 #define MOZILLA_USER_PROP      "_MOZILLA_USER"
 #define MOZILLA_PROFILE_PROP   "_MOZILLA_PROFILE"
 #define MOZILLA_PROGRAM_PROP   "_MOZILLA_PROGRAM"
+
+#ifndef MAX_PATH
+#define MAX_PATH 1024
+#endif
 
 #define ARRAY_LENGTH(array_) (sizeof(array_)/sizeof(array_[0]))
 
@@ -91,10 +98,6 @@ XRemoteClient::~XRemoteClient()
     Shutdown();
 }
 
-#ifndef XREMOTE_STANDALONE
-NS_IMPL_ISUPPORTS1(XRemoteClient, nsIXRemoteClient)
-#endif
-
 // Minimize the roundtrips to the X-server
 static char *XAtomNames[] = {
   MOZILLA_VERSION_PROP,
@@ -104,17 +107,19 @@ static char *XAtomNames[] = {
   "WM_STATE",
   MOZILLA_USER_PROP,
   MOZILLA_PROFILE_PROP,
-  MOZILLA_PROGRAM_PROP
+  MOZILLA_PROGRAM_PROP,
+  MOZILLA_COMMANDLINE_PROP
 };
 static Atom XAtoms[ARRAY_LENGTH(XAtomNames)];
 
-NS_IMETHODIMP
-XRemoteClient::Init (void)
+nsresult
+XRemoteClient::Init()
 {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::Init"));
 
   if (mInitialized)
     return NS_OK;
+
   // try to open the display
   mDisplay = XOpenDisplay(0);
   if (!mDisplay)
@@ -132,19 +137,21 @@ XRemoteClient::Init (void)
   mMozUserAtom     = XAtoms[i++];
   mMozProfileAtom  = XAtoms[i++];
   mMozProgramAtom  = XAtoms[i++];
+  mMozCommandLineAtom = XAtoms[i++];
 
   mInitialized = PR_TRUE;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 XRemoteClient::Shutdown (void)
 {
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::Shutdown"));
 
   if (!mInitialized)
-    return NS_OK;
+    return;
+
   // shut everything down
   XCloseDisplay(mDisplay);
   mDisplay = 0;
@@ -153,10 +160,9 @@ XRemoteClient::Shutdown (void)
     free(mLockData);
     mLockData = 0;
   }
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
                             const char *aProfile, const char *aCommand,
                             char **aResponse, PRBool *aWindowFound)
@@ -165,7 +171,7 @@ XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
 
   *aWindowFound = PR_FALSE;
 
-  Window w = FindBestWindow(aProgram, aUsername, aProfile);
+  Window w = FindBestWindow(aProgram, aUsername, aProfile, PR_FALSE);
 
   nsresult rv = NS_OK;
 
@@ -195,6 +201,50 @@ XRemoteClient::SendCommand (const char *aProgram, const char *aUsername,
   }
 
   PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("SendCommand returning 0x%x\n", rv));
+
+  return rv;
+}
+
+nsresult
+XRemoteClient::SendCommandLine (const char *aProgram, const char *aUsername,
+                                const char *aProfile,
+                                PRInt32 argc, char **argv,
+                                char **aResponse, PRBool *aWindowFound)
+{
+  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("XRemoteClient::SendCommandLine"));
+
+  *aWindowFound = PR_FALSE;
+
+  Window w = FindBestWindow(aProgram, aUsername, aProfile, PR_TRUE);
+
+  nsresult rv = NS_OK;
+
+  if (w) {
+    // ok, let the caller know that we at least found a window.
+    *aWindowFound = PR_TRUE;
+
+    // make sure we get the right events on that window
+    XSelectInput(mDisplay, w,
+                 (PropertyChangeMask|StructureNotifyMask));
+        
+    PRBool destroyed = PR_FALSE;
+
+    // get the lock on the window
+    rv = GetLock(w, &destroyed);
+
+    if (NS_SUCCEEDED(rv)) {
+      // send our command
+      rv = DoSendCommandLine(w, argc, argv, aResponse, &destroyed);
+
+      // if the window was destroyed, don't bother trying to free the
+      // lock.
+      if (!destroyed)
+          FreeLock(w); // doesn't really matter what this returns
+
+    }
+  }
+
+  PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("SendCommandLine returning 0x%x\n", rv));
 
   return rv;
 }
@@ -389,7 +439,8 @@ XRemoteClient::GetLock(Window aWindow, PRBool *aDestroyed)
 
 Window
 XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
-                              const char *aProfile)
+                              const char *aProfile,
+                              PRBool aSupportsCommandLine)
 {
   Window root = RootWindowOfScreen(DefaultScreenOfDisplay(mDisplay));
   Window bestWindow = 0;
@@ -432,7 +483,12 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
     if (!data_return)
       continue;
 
+    PRFloat64 version = PR_strtod((char*) data_return, nsnull);
     XFree(data_return);
+
+    if (aSupportsCommandLine && !(version >= 5.1 && version < 6))
+      continue;
+
     data_return = 0;
 
     if (status != Success || type == None)
@@ -518,6 +574,9 @@ XRemoteClient::FindBestWindow(const char *aProgram, const char *aUsername,
         }
     }
 
+    // Check to see if the window supports the new command-line passing
+    // protocol, if that is requested.
+
     // If we got this far, this is the best window so far.  It passed
     // all the tests.
     bestWindow = w;
@@ -571,129 +630,208 @@ nsresult
 XRemoteClient::DoSendCommand(Window aWindow, const char *aCommand,
                              char **aResponse, PRBool *aDestroyed)
 {
-  PRBool done = PR_FALSE;
-  PRBool accepted = PR_FALSE;
   *aDestroyed = PR_FALSE;
 
   PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	 ("(writing " MOZILLA_COMMAND_PROP " \"%s\" to 0x%x)\n",
-	  aCommand, (unsigned int) aWindow));
+     ("(writing " MOZILLA_COMMAND_PROP " \"%s\" to 0x%x)\n",
+      aCommand, (unsigned int) aWindow));
 
   XChangeProperty (mDisplay, aWindow, mMozCommandAtom, XA_STRING, 8,
-		   PropModeReplace, (unsigned char *)aCommand,
-		   strlen(aCommand));
+           PropModeReplace, (unsigned char *)aCommand,
+           strlen(aCommand));
+
+  if (!WaitForResponse(aWindow, aResponse, aDestroyed, mMozCommandAtom))
+    return NS_ERROR_FAILURE;
+  
+  return NS_OK;
+}
+
+/* like strcpy, but return the char after the final null */
+static char*
+estrcpy(char* s, char* d)
+{
+  while (*s)
+    *d++ = *s++;
+
+  *d++ = '\0';
+  return d;
+}
+
+nsresult
+XRemoteClient::DoSendCommandLine(Window aWindow, PRInt32 argc, char **argv,
+                                 char **aResponse, PRBool *aDestroyed)
+{
+  int i;
+
+  *aDestroyed = PR_FALSE;
+
+  char cwdbuf[MAX_PATH];
+  if (!getcwd(cwdbuf, MAX_PATH))
+    return NS_ERROR_UNEXPECTED;
+
+  // the commandline property is constructed as an array of PRInt32
+  // followed by a series of null-terminated strings:
+  //
+  // [argc][offsetargv0][offsetargv1...]<workingdir>\0<argv[0]>\0argv[1]...\0
+  // (offset is from the beginning of the buffer)
+
+  PRInt32 argvlen = strlen(cwdbuf);
+  for (i = 0; i < argc; ++i)
+    argvlen += strlen(argv[i]);
+
+  PRInt32* buffer = (PRInt32*) malloc(argvlen + argc + 1 +
+                                      sizeof(PRInt32) * (argc + 1));
+  if (!buffer)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  buffer[0] = argc;
+
+  char *bufend = (char*) (buffer + argc + 1);
+
+  bufend = estrcpy(cwdbuf, bufend);
+
+  for (int i = 0; i < argc; ++i) {
+    buffer[i + 1] = bufend - ((char*) buffer);
+    bufend = estrcpy(argv[i], bufend);
+  }
+
+#ifdef DEBUG_bsmedberg
+  PRInt32   debug_argc   = *buffer;
+  char *debug_workingdir = (char*) (buffer + argc + 1);
+
+  printf("Sending command line:\n"
+         "  working dir: %s\n"
+         "  argc:\t%i",
+         debug_workingdir,
+         debug_argc);
+
+  PRInt32  *debug_offset = buffer + 1;
+  for (int debug_i = 0; debug_i < debug_argc; ++debug_i)
+    printf("  argv[%i]:\t%s\n", debug_i,
+           ((char*) buffer) + debug_offset[debug_i]);
+#endif
+
+  XChangeProperty (mDisplay, aWindow, mMozCommandLineAtom, XA_STRING, 8,
+                   PropModeReplace, (unsigned char *) buffer,
+                   bufend - ((char*) buffer));
+
+  if (!WaitForResponse(aWindow, aResponse, aDestroyed, mMozCommandLineAtom))
+    return NS_ERROR_FAILURE;
+  
+  return NS_OK;
+}
+
+PRBool
+XRemoteClient::WaitForResponse(Window aWindow, char **aResponse,
+                               PRBool *aDestroyed, Atom aCommandAtom)
+{
+  PRBool done = PR_FALSE;
+  PRBool accepted = PR_FALSE;
 
   while (!done) {
     XEvent event;
     XNextEvent (mDisplay, &event);
     if (event.xany.type == DestroyNotify &&
-	event.xdestroywindow.window == aWindow) {
+        event.xdestroywindow.window == aWindow) {
       /* Print to warn user...*/
       PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	     ("window 0x%x was destroyed.\n",
-	      (unsigned int) aWindow));
+             ("window 0x%x was destroyed.\n",
+              (unsigned int) aWindow));
       *aResponse = strdup("Window was destroyed while reading response.");
       *aDestroyed = PR_TRUE;
-      goto DONE;
+      return PR_FALSE;
     }
     else if (event.xany.type == PropertyNotify &&
-	     event.xproperty.state == PropertyNewValue &&
-	     event.xproperty.window == aWindow &&
-	     event.xproperty.atom == mMozResponseAtom) {
+             event.xproperty.state == PropertyNewValue &&
+             event.xproperty.window == aWindow &&
+             event.xproperty.atom == mMozResponseAtom) {
       Atom actual_type;
       int actual_format;
       unsigned long nitems, bytes_after;
       unsigned char *data = 0;
       Bool result;
       result = XGetWindowProperty (mDisplay, aWindow, mMozResponseAtom,
-				   0, (65536 / sizeof (long)),
-				   True, /* atomic delete after */
-				   XA_STRING,
-				   &actual_type, &actual_format,
-				   &nitems, &bytes_after,
-				   &data);
+                                   0, (65536 / sizeof (long)),
+                                   True, /* atomic delete after */
+                                   XA_STRING,
+                                   &actual_type, &actual_format,
+                                   &nitems, &bytes_after,
+                                   &data);
       if (result != Success) {
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	       ("failed reading " MOZILLA_RESPONSE_PROP
-		" from window 0x%0x.\n",
-		(unsigned int) aWindow));
-    *aResponse = strdup("Internal error reading response from window.");
-	done = PR_TRUE;
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+               ("failed reading " MOZILLA_RESPONSE_PROP
+                " from window 0x%0x.\n",
+                (unsigned int) aWindow));
+        *aResponse = strdup("Internal error reading response from window.");
+        done = PR_TRUE;
       }
       else if (!data || strlen((char *) data) < 5) {
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	       ("invalid data on " MOZILLA_RESPONSE_PROP
-		" property of window 0x%0x.\n",
-		(unsigned int) aWindow));
-    *aResponse = strdup("Server returned invalid data in response.");
-	done = PR_TRUE;
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+               ("invalid data on " MOZILLA_RESPONSE_PROP
+                " property of window 0x%0x.\n",
+                (unsigned int) aWindow));
+        *aResponse = strdup("Server returned invalid data in response.");
+        done = PR_TRUE;
       }
-      else if (*data == '1') {	/* positive preliminary reply */
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG,  ("%s\n", data + 4));
-	/* keep going */
-	done = PR_FALSE;
+      else if (*data == '1') {  /* positive preliminary reply */
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG,  ("%s\n", data + 4));
+        /* keep going */
+        done = PR_FALSE;
       }
 
       else if (!strncmp ((char *)data, "200", 3)) { /* positive completion */
-	*aResponse = strdup((char *)data);
-	accepted = PR_TRUE;
-	done = PR_TRUE;
+        *aResponse = strdup((char *)data);
+        accepted = PR_TRUE;
+        done = PR_TRUE;
       }
 
-      else if (*data == '2') {	/* positive completion */
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("%s\n", data + 4));
-    *aResponse = strdup((char *)data);
-	accepted = PR_TRUE;
-	done = PR_TRUE;
+      else if (*data == '2') {  /* positive completion */
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("%s\n", data + 4));
+        *aResponse = strdup((char *)data);
+        accepted = PR_TRUE;
+        done = PR_TRUE;
       }
 
-      else if (*data == '3') {	/* positive intermediate reply */
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	       ("internal error: "
-		"server wants more information?  (%s)\n",
-		data));
-	*aResponse = strdup((char *)data);
-	done = PR_TRUE;
+      else if (*data == '3') {  /* positive intermediate reply */
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+               ("internal error: "
+                "server wants more information?  (%s)\n",
+                data));
+        *aResponse = strdup((char *)data);
+        done = PR_TRUE;
       }
 
-      else if (*data == '4' ||	/* transient negative completion */
-	       *data == '5') {	/* permanent negative completion */
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("%s\n", data + 4));
-	*aResponse = strdup((char *)data);
-	done = PR_TRUE;
+      else if (*data == '4' ||  /* transient negative completion */
+               *data == '5') {  /* permanent negative completion */
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG, ("%s\n", data + 4));
+        *aResponse = strdup((char *)data);
+        done = PR_TRUE;
       }
 
       else {
-	PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	       ("unrecognised " MOZILLA_RESPONSE_PROP
-		" from window 0x%x: %s\n",
-		(unsigned int) aWindow, data));
-	*aResponse = strdup((char *)data);
-	done = PR_TRUE;
+        PR_LOG(sRemoteLm, PR_LOG_DEBUG,
+               ("unrecognised " MOZILLA_RESPONSE_PROP
+                " from window 0x%x: %s\n",
+                (unsigned int) aWindow, data));
+        *aResponse = strdup((char *)data);
+        done = PR_TRUE;
       }
 
       if (data)
-	XFree(data);
+        XFree(data);
     }
 
     else if (event.xany.type == PropertyNotify &&
-	     event.xproperty.window == aWindow &&
-	       event.xproperty.state == PropertyDelete &&
-	     event.xproperty.atom == mMozCommandAtom) {
+             event.xproperty.window == aWindow &&
+             event.xproperty.state == PropertyDelete &&
+             event.xproperty.atom == aCommandAtom) {
       PR_LOG(sRemoteLm, PR_LOG_DEBUG,
-	     ("(server 0x%x has accepted "
-	      MOZILLA_COMMAND_PROP ".)\n",
-	      (unsigned int) aWindow));
+             ("(server 0x%x has accepted "
+              MOZILLA_COMMAND_PROP ".)\n",
+              (unsigned int) aWindow));
     }
     
   }
 
- DONE:
-
-  if (!accepted)
-    return NS_ERROR_FAILURE;
-  
-  return NS_OK;
+  return accepted;
 }
-
-  

@@ -640,6 +640,9 @@ xpinstall/wizard/windows/GetShortPathName/Makefile
 "
 
 MAKEFILES_xpfe="
+widget/src/xremoteclient/Makefile
+toolkit/components/Makefile
+toolkit/components/remote/Makefile
 xpfe/Makefile
 xpfe/browser/Makefile
 xpfe/browser/public/Makefile

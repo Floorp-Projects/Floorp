@@ -138,8 +138,10 @@ endif
 
 endif
 
+ifndef MOZ_XUL_APP
 ifdef MOZ_ENABLE_XREMOTE
 TOOL_DIRS	+= xremote
+endif
 endif
 
 ifdef MOZ_HAVE_BROWSER

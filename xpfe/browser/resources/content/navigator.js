@@ -38,7 +38,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-const XREMOTESERVICE_CONTRACTID = "@mozilla.org/browser/xremoteservice;1";
+const REMOTESERVICE_CONTRACTID = "@mozilla.org/toolkit/remote-service;1";
 const XUL_NAMESPACE = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 var gURLBar = null;
 var gProxyButton = null;
@@ -695,11 +695,11 @@ function Startup()
     window.browserDOMWindow = new nsBrowserAccess();
 
     // hook up remote support
-    if (XREMOTESERVICE_CONTRACTID in Components.classes) {
-      var remoteService;
-      remoteService = Components.classes[XREMOTESERVICE_CONTRACTID]
-                                .getService(Components.interfaces.nsIXRemoteService);
-      remoteService.addBrowserInstance(window);
+    if (REMOTESERVICE_CONTRACTID in Components.classes) {
+      var remoteService =
+        Components.classes[REMOTESERVICE_CONTRACTID]
+                  .getService(Components.interfaces.nsIRemoteService);
+      remoteService.registerWindow(window);
 
       var observerService = Components.classes["@mozilla.org/observer-service;1"]
         .getService(Components.interfaces.nsIObserverService);
