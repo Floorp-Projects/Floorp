@@ -305,8 +305,6 @@ nsCocoaWindow::nsCocoaWindow()
 , mWindowMadeHere(PR_FALSE)
 , mWindow(nil)
 {
-  printf("COCOA WINDOW GOT MADE!\n");
-
 #if 0
   mMacEventHandler.reset(new nsMacEventHandler(this));
   WIDGET_SET_CLASSNAME("nsCocoaWindow");  
@@ -1021,7 +1019,7 @@ NS_IMETHODIMP nsCocoaWindow::Move(PRInt32 aX, PRInt32 aY)
     
     NSPoint coord = {aX, aY};
     //coord = [mWindow convertBaseToScreen:coord];
-printf("moving to %d %d. screen coords %f %f\n", aX, aY, coord.x, coord.y);
+//printf("moving to %d %d. screen coords %f %f\n", aX, aY, coord.x, coord.y);
 
  //FIXME -- ensure it's on the screen. Cocoa automatically corrects for windows
  //   with title bars, but for other windows, we have to do this...
@@ -1031,10 +1029,10 @@ printf("moving to %d %d. screen coords %f %f\n", aX, aY, coord.x, coord.y);
     //FIXME -- doesn't work on monitors other than primary
     NSRect screenRect = [[NSScreen mainScreen] frame];
     coord.y = (screenRect.origin.y + screenRect.size.height) - coord.y;
-printf("final coords %f %f\n", coord.x, coord.y);
-printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
+//printf("final coords %f %f\n", coord.x, coord.y);
+//printf("- window coords before %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
     [mWindow setFrameTopLeftPoint:coord];
-printf("- window coords after %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
+//printf("- window coords after %f %f\n", [mWindow frame].origin.x, [mWindow frame].origin.y);
   }
   
 #if 0

@@ -135,7 +135,6 @@ nsChildView::nsChildView() : nsBaseWidget() , nsDeleteObserved(this)
 {
   WIDGET_SET_CLASSNAME("nsChildView");
 
-  mWindow = nil;
   mView = nil;
   
   mParentView = nil;
@@ -227,7 +226,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     // regardless of if we're asking a window or a view (for compatibility
     // with windows).
     mParentView = (NSView*)aParent->GetNativeData(NS_NATIVE_WIDGET);
-    
+   
 #if 0
     // get the event sink for our view. Walk up the parent chain to the
     // toplevel window, it's the sink.
@@ -245,7 +244,7 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
   }
   else
     mParentView = NS_REINTERPRET_CAST(NSView*,aNativeParent);
- 
+   
   NS_ASSERTION(mParentView, "no parent view at all :(");
   
   // create our parallel NSView and hook it up to our parent. Recall
@@ -260,9 +259,10 @@ nsresult nsChildView::StandardCreate(nsIWidget *aParent,
     if (![mParentView isKindOfClass: [ChildView class]]) {
       [mParentView addSubview:mView];
       mVisible = PR_TRUE;
+      [mView setNativeWindow: [mParentView window]];
     }
-
-    mWindow = [mParentView window];
+    else
+      [mView setNativeWindow: [mParentView getNativeWindow]];
   }
   
   return NS_OK;
@@ -365,10 +365,7 @@ void* nsChildView::GetNativeData(PRUint32 aDataType)
       break;
 
     case NS_NATIVE_WINDOW:
-      if (!mWindow)
-        retVal = [mView window];
-      else
-        retVal = mWindow;
+      retVal = [mView getNativeWindow];
       break;
       
     case NS_NATIVE_GRAPHIC:           // quickdraw port (for now)
@@ -1577,7 +1574,7 @@ NS_IMETHODIMP nsChildView::WidgetToScreen(const nsRect& aLocalRect, nsRect& aGlo
   NSRect temp;
   ConvertGeckoToCocoaRect(aLocalRect, temp);
   temp = [mView convertRect:temp toView:nil];                       // convert to window coords
-  temp.origin = [mWindow convertBaseToScreen:temp.origin];   // convert to screen coords
+  temp.origin = [[mView getNativeWindow] convertBaseToScreen:temp.origin];   // convert to screen coords
   ConvertCocoaToGeckoRect(temp, aGlobalRect);
     
   return NS_OK;
@@ -1595,7 +1592,7 @@ NS_IMETHODIMP nsChildView::ScreenToWidget(const nsRect& aGlobalRect, nsRect& aLo
 {
   NSRect temp;
   ConvertGeckoToCocoaRect(aGlobalRect, temp);
-  temp.origin = [mWindow convertScreenToBase:temp.origin];   // convert to screen coords
+  temp.origin = [[mView getNativeWindow] convertScreenToBase:temp.origin];   // convert to screen coords
   temp = [mView convertRect:temp fromView:nil];                     // convert to window coords
   ConvertCocoaToGeckoRect(temp, aLocalRect);
   
@@ -1746,6 +1743,19 @@ nsChildView::GetQuickDrawPort ( )
   return self;
 }
 
+- (NSWindow*) getNativeWindow
+{
+  NSWindow* currWin = [self window];
+  if (currWin)
+     return currWin;
+  else
+     return mWindow;
+}
+
+- (void) setNativeWindow: (NSWindow*)aWindow
+{
+  mWindow = aWindow;
+}
 
 - (void) dealloc
 {

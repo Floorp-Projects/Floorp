@@ -122,7 +122,7 @@ printf("++ creating native scrollbar\n");
     orientation.size.width = 100;
     orientation.size.height = 20;
   }
-  return [[[NSScroller alloc] initWithFrame:orientation] autorelease];
+  return [[[ScrollbarView alloc] initWithFrame:orientation] autorelease];
 }
 
 
@@ -519,6 +519,19 @@ nsScrollbar::Enable(PRBool bState)
 
 @implementation ScrollbarView
 
+- (NSWindow*) getNativeWindow
+{
+  NSWindow* currWin = [self window];
+  if (currWin)
+     return currWin;
+  else
+     return mWindow;
+}
+
+- (void) setNativeWindow: (NSWindow*)aWindow
+{
+  mWindow = aWindow;
+}
 
 - (void)trackKnob:(NSEvent *)theEvent
 {
