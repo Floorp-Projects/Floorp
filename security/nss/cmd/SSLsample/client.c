@@ -444,7 +444,9 @@ main(int argc, char **argv)
 
 	client_main(port, connections, hostName);
 
-	NSS_Shutdown();
+	if (NSS_Shutdown() != SECSuccess) {
+            exit(1);
+        }
 	PR_Cleanup();
 	return 0;
 }

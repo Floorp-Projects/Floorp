@@ -1144,7 +1144,10 @@ main(int argc, char **argv)
                 (certsTested != connections);
 
     exitVal = ( exitVal || failed_already );
-    NSS_Shutdown();
+    if (NSS_Shutdown() != SECSuccess) {
+        exit(1);
+    }
+
     PR_Cleanup();
     return exitVal;
 }
