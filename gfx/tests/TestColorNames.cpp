@@ -76,7 +76,8 @@ int main(int argc, char** argv)
     }
     if (nsColorNames::kColors[et->id] != rgb) {
       printf("bug: name='%s' ColorNameToRGB=%x kColors[%d]=%x\n",
-             et->name, rgb, nsColorNames::kColors[et->id]);
+             et->name, rgb, nsColorNames::kColors[et->id],
+             nsColorNames::kColors[et->id]);
       rv = -1;
     }
 
@@ -103,7 +104,7 @@ int main(int argc, char** argv)
   }
 
   // Now make sure we don't find some garbage
-  for (int i = 0; i < sizeof(kJunkNames) / sizeof(const char*); i++) {
+  for (int i = 0; i < int(sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* tag = kJunkNames[i];
     id = nsColorNames::LookupName(tag);
     if (id >= 0) {
