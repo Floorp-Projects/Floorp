@@ -8,7 +8,6 @@ comm.jar:
         content/navigator/pageInfo.xul                 (resources/content/pageInfo.xul)
         content/navigator/navigator.xul                (resources/content/navigator.xul)
         content/navigator/sessionHistoryUI.js          (resources/content/sessionHistoryUI.js)
-        content/navigator/keywords.js                  (resources/content/keywords.js)
         content/navigator/navigatorOverlay.xul         (resources/content/navigatorOverlay.xul)
         content/navigator/navExtraOverlay.xul          (resources/content/navExtraOverlay.xul)
         content/navigator/navigator.js                 (resources/content/navigator.js)
