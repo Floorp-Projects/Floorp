@@ -35,11 +35,11 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsRect.h"
 #include "nsIWidget.h"
+#include "nsIWebProgressListener.h"
 
 #include "CBrowserWindow.h"
 #include "CBrowserShell.h"
 #include "CBrowserMsgDefs.h"
-#include "CWebBrowserChrome.h"
 #include "CThrobber.h"
 #include "ApplIDs.h"
 #include "UMacUnicode.h"
@@ -49,6 +49,7 @@
 #include <LWindowHeader.h>
 #include <LBevelButton.h>
 #include <LProgressBar.h>
+#include <LIconControl.h>
 
 #if PP_Target_Carbon
 #include <UEventMgr.h>
@@ -70,10 +71,11 @@ enum
     paneID_ForwardButton    = 'Forw',
     paneID_ReloadButton     = 'RLoa',
     paneID_StopButton       = 'Stop',
-    paneID_URLField     = 'gUrl',
+    paneID_URLField         = 'gUrl',
     paneID_StatusBar        = 'Stat',
-    paneID_Throbber    = 'THRB',
-    paneID_ProgressBar   = 'Prog'
+    paneID_Throbber         = 'THRB',
+    paneID_ProgressBar      = 'Prog',
+    paneID_LockIcon         = 'Lock'
 };
 
 
@@ -84,7 +86,7 @@ enum
 CBrowserWindow::CBrowserWindow() :
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
-    mProgressBar(NULL)
+    mProgressBar(NULL), mLockIcon(NULL)
 {
 }
 
@@ -102,7 +104,7 @@ CBrowserWindow::CBrowserWindow(LCommander*      inSuperCommander,
     LWindow(inSuperCommander, inGlobalBounds, inTitle, inProcID, inAttributes, inBehind),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
-    mProgressBar(NULL)
+    mProgressBar(NULL), mLockIcon(NULL)
 {
 }
 
@@ -115,7 +117,7 @@ CBrowserWindow::CBrowserWindow(LStream* inStream) :
     LWindow(inStream),
     mURLField(NULL), mStatusBar(NULL), mThrobber(NULL),
     mBackButton(NULL), mForwardButton(NULL), mStopButton(NULL),
-    mProgressBar(NULL)
+    mProgressBar(NULL), mLockIcon(NULL)
 {
 }
 
@@ -147,6 +149,7 @@ void CBrowserWindow::FinishCreateSelf()
     mURLField = dynamic_cast<LEditText*>(FindPaneByID(paneID_URLField));
     mStatusBar = dynamic_cast<LStaticText*>(FindPaneByID(paneID_StatusBar));
     mThrobber = dynamic_cast<CThrobber*>(FindPaneByID(paneID_Throbber));
+    mLockIcon = dynamic_cast<LIconControl*>(FindPaneByID(paneID_LockIcon));
     mProgressBar = dynamic_cast<LProgressBar*>(FindPaneByID(paneID_ProgressBar));
     if (mProgressBar)
        mProgressBar->Hide();
@@ -277,6 +280,35 @@ void CBrowserWindow::ListenToMessage(MessageT       inMessage,
                     nsCAutoString cStr;
                     CPlatformUCSConversion::GetInstance()->UCSToPlatform(nsDependentString(info->mMessage), cStr);
                     mStatusBar->SetText(const_cast<char *>(cStr.get()), cStr.Length());
+                }
+            }
+            break;
+            
+        case msg_OnSecurityChange:
+            {
+                const MsgSecurityChangeInfo *info = reinterpret_cast<MsgSecurityChangeInfo*>(ioParam);
+
+                if (mLockIcon) {
+                    SInt16 iconID;
+                    switch (info->mState & 0x0000FFFF)
+                    {
+                        case nsIWebProgressListener::STATE_IS_SECURE:
+                            iconID = icon_LockSecure;
+                            break;
+                        case nsIWebProgressListener::STATE_IS_BROKEN:
+                            iconID = icon_LockBroken;
+                            break;
+                        case nsIWebProgressListener::STATE_IS_INSECURE:
+                            iconID = icon_LockInsecure;
+                            break;
+                        default:
+                            NS_ERROR("Unknown security state!");
+                            iconID = icon_LockInsecure;
+                            break;
+                    }
+                    // The kControlIconResourceIDTag requires Appearance 1.1
+                    // That's present on 8.5 and up and mozilla requires 8.6.
+                    mLockIcon->SetDataTag(0, kControlIconResourceIDTag, sizeof(iconID), &iconID);
                 }
             }
             break;
