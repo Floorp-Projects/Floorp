@@ -25,7 +25,7 @@
 #define ICAL_SAFESAVES 1
 
 /* Define to terminate lines with "\n" instead of "\r\n" */
-#define ICAL_UNIX_NEWLINE 1
+/* #undef ICAL_UNIX_NEWLINE */
 
 /* Define to 1 if you DO NOT WANT to see deprecated messages */
 #define NO_WARN_DEPRECATED 1
