@@ -98,7 +98,8 @@
 
 #include "nsIInterfaceRequestor.h"
 #include "nsIDOMWindowInternal.h"
-
+#include "nsPIDOMWindow.h"
+#include "nsIFocusController.h"
 #include "nsIDOMElement.h"
 
 #include "nsIBoxObject.h"
@@ -1410,9 +1411,28 @@ nsDocument::SetScriptGlobalObject(nsIScriptGlobalObject *aScriptGlobalObject)
 #endif
 
     mContentWrapperHash.Reset();
+  } else if (aScriptGlobalObject != mScriptGlobalObject) {
+    // Update our weak ref to the focus controller
+    nsCOMPtr<nsPIDOMWindow> domPrivate = do_QueryInterface(aScriptGlobalObject);
+    if (domPrivate) {
+      nsCOMPtr<nsIFocusController> fc;
+      domPrivate->GetRootFocusController(getter_AddRefs(fc));
+      mFocusController = getter_AddRefs(NS_GetWeakReference(fc));
+    }
   }
 
   mScriptGlobalObject = aScriptGlobalObject;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocument::GetFocusController(nsIFocusController** aFocusController)
+{
+  NS_ENSURE_ARG_POINTER(aFocusController);
+
+  nsCOMPtr<nsIFocusController> fc = do_QueryReferent(mFocusController);
+  *aFocusController = fc;
+  NS_IF_ADDREF(*aFocusController);
   return NS_OK;
 }
 

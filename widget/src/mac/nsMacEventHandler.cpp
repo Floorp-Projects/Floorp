@@ -320,10 +320,10 @@ void nsMacEventDispatchHandler::SetDeactivated(nsWindow *aDeactivatedWidget)
 	if (mActiveWidget)
 	{	
 	    //printf("   nsMacEventDispatchHandler::SetDeactivated sends NS_DEACTIVATE\n");
-		DispatchGuiEvent(mActiveWidget, NS_DEACTIVATE);		
 		mActiveWidget->RemoveDeleteObserver(this);
 		mActiveWidget = nsnull;
 	}
+	DispatchGuiEvent(aDeactivatedWidget, NS_DEACTIVATE);	
 }
 
 //-------------------------------------------------------------------------

@@ -393,6 +393,14 @@ public:
   NS_IMETHOD GetScriptLoader(nsIScriptLoader** aScriptLoader);
 
   /**
+   * Get the focus controller for this document
+   * This can usually be gotten through the ScriptGlobalObject, but
+   * it is set to null during document destruction, when we still might
+   * need to fire focus events.
+   */
+  NS_IMETHOD GetFocusController(nsIFocusController** aFocusController);
+
+  /**
    * Add a new observer of document change notifications. Whenever
    * content is changed, appended, inserted or removed the observers are
    * informed.
@@ -572,6 +580,7 @@ protected:
   nsSupportsHashtable mContentWrapperHash;
 
   nsCOMPtr<nsICSSLoader> mCSSLoader;
+  nsWeakPtr mFocusController;
 
 private:
   // These are not implemented and not supported.

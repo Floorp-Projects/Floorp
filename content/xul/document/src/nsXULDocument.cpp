@@ -1428,10 +1428,29 @@ nsXULDocument::SetScriptGlobalObject(nsIScriptGlobalObject* aScriptGlobalObject)
 #endif
 
         mContentWrapperHash.Reset();
+    } else if (mScriptGlobalObject != aScriptGlobalObject) {
+      // Update our weak ref to the focus controller
+      nsCOMPtr<nsPIDOMWindow> domPrivate = do_QueryInterface(aScriptGlobalObject);
+      if (domPrivate) {
+        nsCOMPtr<nsIFocusController> fc;
+        domPrivate->GetRootFocusController(getter_AddRefs(fc));
+        mFocusController = getter_AddRefs(NS_GetWeakReference(fc));
+      }
     }
 
     mScriptGlobalObject = aScriptGlobalObject;
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULDocument::GetFocusController(nsIFocusController** aFocusController)
+{
+  NS_ENSURE_ARG_POINTER(aFocusController);
+
+  nsCOMPtr<nsIFocusController> fc = do_QueryReferent(mFocusController);
+  *aFocusController = fc;
+  NS_IF_ADDREF(*aFocusController);
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -6315,31 +6334,3 @@ XULElementFactoryImpl::CreateInstanceByTag(nsINodeInfo *aNodeInfo,
   return nsXULElement::Create(aNodeInfo, aResult); 
 }
 
-
-
-nsresult nsXULDocument::GetFocusController(nsIFocusController** aController)
-{
-    NS_ENSURE_ARG_POINTER(aController);
-
-    nsresult rv;
-
-    // get the script global object
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    rv = GetScriptGlobalObject(getter_AddRefs(global));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-    // get the internal dom window
-    nsCOMPtr<nsIDOMWindowInternal> internalWin(do_QueryInterface(global, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(internalWin, NS_ERROR_FAILURE);
-    // get the private dom window
-    nsCOMPtr<nsPIDOMWindow> privateWin(do_QueryInterface(internalWin, &rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(privateWin, NS_ERROR_FAILURE);
-    // get the focus controller
-    rv = privateWin->GetRootFocusController(aController); // addref is here
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ENSURE_TRUE(*aController, NS_ERROR_FAILURE);
-
-    return rv;
-}

@@ -624,9 +624,6 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
     {
       EnsureDocument(aPresContext);
 
-      if (gLastFocusedDocument != mDocument)
-        break;
-
       nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
       mDocument->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
 
@@ -635,22 +632,23 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
       // focused sub-window and sub-element for this top-level
       // window.
       nsCOMPtr<nsIFocusController> focusController;
-      nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-      nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
-      if(ourWindow) {
-        ourWindow->GetRootFocusController(getter_AddRefs(focusController));
+      mDocument->GetFocusController(getter_AddRefs(focusController));
         if (focusController) {
           // Suppress the command dispatcher.
           focusController->SetSuppressFocus(PR_TRUE, "Deactivate Suppression");
         }
-      }
 
       // Now fire blurs.  We have to fire a blur on the focused window
       // and on the focused element if there is one.
-      if (gLastFocusedDocument && gLastFocusedPresContext) {
+      if (gLastFocusedDocument && gLastFocusedDocument == mDocument) {
         if (gLastFocusedContent) {
           // Blur the element.
           nsCOMPtr<nsIPresShell> shell;
+          
+          nsCOMPtr<nsIDOMElement> focusedElement;
+          focusController->GetFocusedElement(getter_AddRefs(focusedElement));
+          nsCOMPtr<nsIContent> focusedContent = do_QueryInterface(focusedElement);
+          
           gLastFocusedDocument->GetShellAt(0, getter_AddRefs(shell));
           if (shell) {
             nsCOMPtr<nsIPresContext> oldPresContext;
@@ -663,7 +661,8 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
             nsCOMPtr<nsIEventStateManager> esm;
             oldPresContext->GetEventStateManager(getter_AddRefs(esm));
             esm->SetFocusedContent(gLastFocusedContent);
-            gLastFocusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
+            if(focusedContent)
+              focusedContent->HandleDOMEvent(oldPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
             esm->SetFocusedContent(nsnull);
             NS_IF_RELEASE(gLastFocusedContent);
           }
@@ -678,6 +677,16 @@ nsEventStateManager::PreHandleEvent(nsIPresContext* aPresContext,
         mDocument->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
         if (ourGlobal)
           ourGlobal->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status);
+        else {
+          // If the document is being torn down, we can't fire a blur on
+          // the window, but we still need to tell the focus controller
+          // that it isn't active.
+          
+          nsCOMPtr<nsIFocusController> fc;
+          gLastFocusedDocument->GetFocusController(getter_AddRefs(fc));
+          if (fc)
+            fc->SetActive(PR_FALSE);
+        }
 
         // Now clear our our global variables
         mCurrentTarget = nsnull;
