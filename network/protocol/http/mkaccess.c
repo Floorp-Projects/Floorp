@@ -3841,7 +3841,7 @@ char *GetTrustLabelString(char *CookieName)
 
 #define NumRecpBits 4 /* number of bits in the recipient value */
     /* the list of msg Ids for the recipient value. */
-    int RecpIds[NumRecpBit];
+    int RecpIds[NumRecpBits];
 
 #if NumPurposeBits > NumRecpBits
 #define NumStrs  NumPurposeBits
