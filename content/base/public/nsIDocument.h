@@ -469,6 +469,8 @@ public:
                                nsAString& Standalone) = 0;
 
   NS_IMETHOD_(PRBool) IsCaseSensitive() = 0;
+
+  NS_IMETHOD_(PRBool) IsScriptEnabled() = 0;
 };
 
 

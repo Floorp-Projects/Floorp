@@ -4060,6 +4060,33 @@ nsDocument::IsCaseSensitive()
   return PR_TRUE;
 }
 
+NS_IMETHODIMP_(PRBool)
+nsDocument::IsScriptEnabled()
+{
+  nsCOMPtr<nsIScriptSecurityManager> sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(sm, PR_TRUE);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  GetPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, PR_TRUE);
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  GetScriptGlobalObject(getter_AddRefs(globalObject));
+  NS_ENSURE_TRUE(globalObject, PR_TRUE);
+
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  globalObject->GetContext(getter_AddRefs(scriptContext));
+  NS_ENSURE_TRUE(scriptContext, PR_TRUE);
+
+  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx, PR_TRUE);
+
+  PRBool enabled;
+  nsresult rv = sm->CanExecuteScripts(cx, principal, &enabled);
+  NS_ENSURE_SUCCESS(rv, PR_TRUE);
+  return enabled;
+}
+
 nsresult
 nsDocument::GetRadioGroup(const nsAString& aName,
                           nsRadioGroupStruct **aRadioGroup)

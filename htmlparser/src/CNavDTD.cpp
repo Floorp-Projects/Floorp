@@ -3429,11 +3429,13 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       break;
     
     case eHTMLTag_noscript:
+      // we want to make sure that OpenContainer gets called below since we're
+      // not doing it here
+      done=PR_FALSE;
       // If the script is disabled noscript should not be
       // in the content model until the layout can somehow
       // turn noscript's display property to block <-- bug 67899
       if(mFlags & NS_DTD_FLAG_SCRIPT_ENABLED) {
-        done=PR_FALSE;
         mScratch.Truncate();
         mFlags |= NS_DTD_FLAG_ALTERNATE_CONTENT;
       }
