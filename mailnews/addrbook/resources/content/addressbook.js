@@ -48,10 +48,6 @@ function ChangeDirectoryByDOMNode(dirNode)
 	var uri = dirNode.getAttribute('id');
 	dump(uri + "\n");
 	ChangeDirectoryByURI(uri);
-	
-	// HACK to clear the card view pane - when onchange="MyOnChangeFunction()" is working
-	// then we can do this correctly
-	ClearCardViewPane();
 }
 
 function ChangeDirectoryByURI(uri)
@@ -214,12 +210,14 @@ function cvSetNode(node, text)
 	node.childNodes[0].nodeValue = text;
 	if ( text == "" )
 	{
-		node.style.display = "none";
+		node.setAttribute("style", "display:none");
+		//node.style.display = "none";
 		return false;
 	}
 	else
 	{
-		node.style.display = "block";
+		node.setAttribute("style", "display:block");
+		//node.style.display = "block";
 		return true;
 	}
 }
@@ -227,9 +225,11 @@ function cvSetNode(node, text)
 function cvSetVisible(node, visible)
 {
 	if ( visible )
-		node.style.display = "block";
+		node.setAttribute("style", "display:block");
+		//node.style.display = "block";
 	else
-		node.style.display = "none";
+		node.setAttribute("style", "display:none");
+		//node.style.display = "none";
 }
 
 // -------
