@@ -895,13 +895,6 @@ nsBoxFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.ascent = ascent;
   aDesiredSize.descent = r.height - ascent;
 
-  // NS_FRAME_OUTSIDE_CHILDREN is set in SetBounds() above
-  if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
-    nsRect* overflowArea = GetOverflowAreaProperty();
-    NS_ASSERTION(overflowArea, "Failed to set overflow area property");
-    aDesiredSize.mOverflowArea = *overflowArea;
-  }
-
   // max sure the max element size reflects
   // our min width
   nscoord* maxElementWidth = state.GetMaxElementWidth();

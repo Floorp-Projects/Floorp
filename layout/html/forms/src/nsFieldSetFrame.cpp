@@ -601,8 +601,7 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
       ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, mLegendFrame);
     if (mContentFrame)
       ConsiderChildOverflow(aPresContext, aDesiredSize.mOverflowArea, mContentFrame);
-    FinishAndStoreOverflow(&aDesiredSize);
-
+    StoreOverflow(aPresContext, aDesiredSize);
 #ifdef NOISY_REFLOW
     printf("FIELDSET:  w=%d, maxWidth=%d, MEW=%d\n",
            aDesiredSize.width, aDesiredSize.mMaximumWidth, 

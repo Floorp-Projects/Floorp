@@ -908,8 +908,7 @@ IncrementalReflow::Dispatch(nsIPresContext      *aPresContext,
 
     first->SetSize(nsSize(aDesiredSize.width, aDesiredSize.height));
 
-    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, first->GetView(),
-                                               &aDesiredSize.mOverflowArea);
+    nsContainerFrame::SyncFrameViewAfterReflow(aPresContext, first, first->GetView(), nsnull);
 
     first->DidReflow(aPresContext, nsnull, NS_FRAME_REFLOW_FINISHED);
   }

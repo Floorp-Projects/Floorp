@@ -176,15 +176,6 @@ printf("\n");
     aDesiredSize.mMaxElementWidth = childDesiredSize.mMaxElementWidth;
   }
 
-  FinishAndStoreOverflow(&aDesiredSize);
-  // Act as if there is overflow no matter what. This is a 
-  // safety measure to cater for math fonts with metrics that sometimes
-  // cause glyphs in the text frames to protrude outside. Without this,
-  // such glyphs may be clipped at the painting stage
-  // This flag has already been set on the children as well in 
-  // SetInitialChildList()
-  mState |= NS_FRAME_OUTSIDE_CHILDREN;
-
   // cache the frame's mBoundingMetrics
   mBoundingMetrics = aDesiredSize.mBoundingMetrics;
 

@@ -471,7 +471,15 @@ nsMathMLmpaddedFrame::Reflow(nsIPresContext*          aPresContext,
   mReference.x = 0;
   mReference.y = aDesiredSize.ascent;
 
-  FinishAndStoreOverflow(&aDesiredSize);
+  // If we have tweaked things so that our children now stick outside,
+  // we need to update our NS_FRAME_OUTSIDE_CHILDREN bit
+  if (aDesiredSize.mOverflowArea.x < 0 ||
+      aDesiredSize.mOverflowArea.y < 0 ||
+      aDesiredSize.mOverflowArea.XMost() > aDesiredSize.width ||
+      aDesiredSize.mOverflowArea.YMost() > aDesiredSize.height)
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  else
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
 
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return NS_OK;

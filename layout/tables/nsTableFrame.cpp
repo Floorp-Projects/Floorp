@@ -2098,20 +2098,20 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
     nsRect damage(0, 0, PR_MAX(mRect.width, aDesiredSize.width),
                   PR_MAX(mRect.height, aDesiredSize.height));
     damage.UnionRect(damage, aDesiredSize.mOverflowArea);
-    nsRect* oldOverflowArea = GetOverflowAreaProperty();
+    nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
     if (oldOverflowArea) {
       damage.UnionRect(damage, *oldOverflowArea);
     }
     Invalidate(damage);
   } else {
     // use the old overflow area
-     nsRect* oldOverflowArea = GetOverflowAreaProperty();
+     nsRect* oldOverflowArea = GetOverflowAreaProperty(aPresContext);
      if (oldOverflowArea) {
        aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, *oldOverflowArea);
      }
   }
 
-  FinishAndStoreOverflow(&aDesiredSize);
+  StoreOverflow(aPresContext, aDesiredSize);
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
 }
@@ -3007,8 +3007,7 @@ nsTableFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
     for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
       ConsiderChildOverflow(aPresContext, desiredSize.mOverflowArea, kidFrame);
     }  
-    FinishAndStoreOverflow(&desiredSize.mOverflowArea,
-                           nsSize(desiredSize.width, desiredSize.height));
+    StoreOverflow(aPresContext, desiredSize);
   }
   return rv;
 }
@@ -3490,15 +3489,13 @@ void ResizeCells(nsTableFrame&            aTableFrame,
       rgFrame->ConsiderChildOverflow(aPresContext, groupDesiredSize.mOverflowArea, rowFrame);
       rowFrame = rowFrame->GetNextRow();
     }
-    rgFrame->FinishAndStoreOverflow(&groupDesiredSize.mOverflowArea,
-                                    nsSize(groupDesiredSize.width, groupDesiredSize.height));
+    rgFrame->StoreOverflow(aPresContext, groupDesiredSize);
     // make the coordinates of |desiredSize.mOverflowArea| incorrect
     // since it's about to go away:
     groupDesiredSize.mOverflowArea.MoveBy(rgFrame->GetPosition());
     tableDesiredSize.mOverflowArea.UnionRect(tableDesiredSize.mOverflowArea, groupDesiredSize.mOverflowArea);
   }
-  aTableFrame.FinishAndStoreOverflow(&tableDesiredSize.mOverflowArea,
-                                     nsSize(tableDesiredSize.width, tableDesiredSize.height));
+  aTableFrame.StoreOverflow(aPresContext, tableDesiredSize);
 }
 
 void
