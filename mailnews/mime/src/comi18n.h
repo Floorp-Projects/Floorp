@@ -43,7 +43,6 @@ extern "C" {
 
 /**
  * Decode MIME header to UTF-8.
- * This is a replacement for MIME_DecodeMimePartIIStr
  * Uses MIME_ConvertCharset if the decoded string needs a conversion.
  *
  *
@@ -57,20 +56,6 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
                                        const char *default_charset,
                                        PRBool override_charset,
                                        PRBool eatContinuations);
-
-/**
- * If a header is MIME encoded then decode a header and sets a charset name.
- * Obsolete.
- * Uses MIME_ConvertCharset if the decoded string needs a conversion.
- *
- *
- * @param header      [IN] A header to decode.
- * @param charset     [OUT] Charset name (in C string) from a MIME header is set.
- *                    Caller should allocate at least 65 bytes (kMAX_CSNAME + 1) for a charset name.
- * @return            Decoded buffer (in C string) or return NULL if the header is not MIME encoded.
- */
-extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
-										  PRBool eatContinuations);
 
 /**
  * Encode an input string into RFC 2047 form.

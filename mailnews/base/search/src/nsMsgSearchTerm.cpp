@@ -772,7 +772,8 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
 	char *stringToMatch = 0;
     nsresult res = mimeConverter->DecodeMimeHeader(rfc2047string,
                                                    &stringToMatch,
-                                                   charset, charsetOverride);
+                                                   charset, charsetOverride,
+                                                   PR_FALSE);
 
 	res = MatchString(stringToMatch ? stringToMatch : rfc2047string,
                       nsnull, pResult);

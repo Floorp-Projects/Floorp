@@ -1615,44 +1615,6 @@ extern "C" char *MIME_DecodeMimeHeader(const char *header,
   return result;
 }  
 
-extern "C" char *MIME_DecodeMimePartIIStr(const char *header, char *charset,
-                                          PRBool eatContinuations)
-{
-  char *result = nsnull;
-
-  if (header == 0)
-    return nsnull;
-
-  // If no MIME encoded then do nothing otherwise decode the input.
-  if (*header != '\0' && PL_strstr(header, "=?")) {
-	  result = intl_decode_mime_part2_str(header, NULL, PR_FALSE);
-      if (charset) PL_strcpy(charset, "UTF-8");
-  }
-  else if (charset && *charset == '\0') {
-    // no charset name is specified then assume it's us-ascii (or ISO-8859-1 if 8bit) 
-    // and dup the input (later change the caller to avoid the duplication)
-    unsigned char *cp = (unsigned char *) header;
-    PL_strcpy(charset, "us-ascii");
-    while (*cp) {
-      if (*cp > 127) {
-        PL_strcpy(charset, "ISO-8859-1");
-        break;
-      }
-      cp++;
-    }
-    result = nsCRT::strdup(header); 
-  } else if (eatContinuations && 
-             (PL_strchr(header, '\n') || PL_strchr(header, '\r'))) {
-    result = nsCRT::strdup(header);
-  } else {
-    eatContinuations = PR_FALSE;
-  }
-  if (eatContinuations)
-    result = MIME_StripContinuations(result);
-
-  return result;
-}
-
 char *MIME_EncodeMimePartIIStr(const char* header, const char* mailCharset, const PRInt32 encodedWordSize)
 {
   return utf8_EncodeMimePartIIStr((char *) header, (char *) mailCharset, encodedWordSize);

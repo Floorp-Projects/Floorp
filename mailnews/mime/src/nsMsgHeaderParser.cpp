@@ -27,15 +27,12 @@
 #include "nsISimpleEnumerator.h"	 
 #include "comi18n.h"
 #include "prmem.h"
-#include "nsMsgMimeCID.h"
-
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 class nsMsgHeaderParserResult : public nsIMsgHeaderParserResult, public nsISimpleEnumerator
 {
 public:
   nsMsgHeaderParserResult();
-  nsresult Init(char * aNames, char * aAddresses, PRUint32 numAddresses, nsIMimeConverter * aUnicodeConverter,
+  nsresult Init(char * aNames, char * aAddresses, PRUint32 numAddresses,
                 nsIMsgHeaderParser * aHeaderParser);
   virtual ~nsMsgHeaderParserResult();
   
@@ -56,7 +53,6 @@ protected:
   char * mCurrentName;
   char * mCurrentAddress;
 
-  nsCOMPtr<nsIMimeConverter> mUnicodeConverter;
   nsCOMPtr<nsIMsgHeaderParser> mHeaderParser;
 
   PRBool mFirstPass;
@@ -85,7 +81,6 @@ nsMsgHeaderParserResult::~nsMsgHeaderParserResult()
 }
 
 nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint32 numAddresses, 
-                                       nsIMimeConverter * aUnicodeConverter,
                                        nsIMsgHeaderParser * aHeaderParser)
 {
   nsresult rv = NS_OK;
@@ -95,7 +90,6 @@ nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint3
   mStartofAddresses = aAddresses;
   mCurrentAddress = mStartofAddresses;
 
-  mUnicodeConverter = aUnicodeConverter;
   mHeaderParser = aHeaderParser;
   return rv;
 }
@@ -103,20 +97,18 @@ nsresult nsMsgHeaderParserResult::Init(char * aNames, char * aAddresses, PRUint3
 NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, PRUnichar ** aName, PRUnichar ** aFullAddress)
 {
   nsresult rv = NS_OK;
-  // *yuck* the mime converter interface is requiring us to pass in nsStrings which is forcing
-  // all this extra string copying...we need to fix the interface!
-  nsAutoString charset; charset.AssignWithConversion("UTF-8");
-  nsXPIDLString unicodeValue;
-  nsAutoString value;
+  char *result;
   if (aAddress)
   {
-    value.AssignWithConversion(mCurrentAddress);
-    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aAddress);
+    result = MIME_DecodeMimeHeader(mCurrentAddress, NULL, PR_FALSE, PR_TRUE);
+    *aAddress = NS_ConvertUTF8toUCS2(result ? result : mCurrentAddress).ToNewUnicode();
+    PR_FREEIF(result);
   }
   if (aName)
   {
-    value.AssignWithConversion(mCurrentName);
-    rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aName);
+    result = MIME_DecodeMimeHeader(mCurrentName, NULL, PR_FALSE, PR_TRUE);
+    *aName = NS_ConvertUTF8toUCS2(result ? result : mCurrentName).ToNewUnicode();
+    PR_FREEIF(result);
   }
   if (aFullAddress)
   {
@@ -126,8 +118,9 @@ NS_IMETHODIMP nsMsgHeaderParserResult::GetAddressAndName(PRUnichar ** aAddress, 
                                         getter_Copies(fullAddress));
     if (NS_SUCCEEDED(rv) && (const char*)fullAddress)
     {
-      value.AssignWithConversion(fullAddress);
-      rv = mUnicodeConverter->DecodeMimePartIIStr(value, charset, aFullAddress);
+      result = MIME_DecodeMimeHeader(fullAddress, NULL, PR_FALSE, PR_TRUE);
+      *aName = NS_ConvertUTF8toUCS2(result ? result : (const char*)fullAddress).ToNewUnicode();
+      PR_FREEIF(result);
     }
 
   }
@@ -226,7 +219,6 @@ nsMsgHeaderParser::nsMsgHeaderParser()
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
-  mUnicodeConverter = do_GetService(kCMimeConverterCID);
 }
 
 nsMsgHeaderParser::~nsMsgHeaderParser()
@@ -255,7 +247,7 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *lin
     nsMsgHeaderParserResult * parserResult = new nsMsgHeaderParserResult();
     if (parserResult)
     {
-      rv = parserResult->Init(names, addresses, numAddresses, mUnicodeConverter, this); // ownership of all strings is now passed here...
+      rv = parserResult->Init(names, addresses, numAddresses, this); // ownership of all strings is now passed here...
       parserResult->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **) aResultEnumerator);
     }
     else

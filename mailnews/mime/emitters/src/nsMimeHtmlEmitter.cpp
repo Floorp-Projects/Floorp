@@ -327,12 +327,11 @@ nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentT
     // we need to convert the attachment name from UTF-8 to unicode before
     // we emit it...
     nsXPIDLString unicodeHeaderValue;
-    nsAutoString charset; charset.AssignWithConversion("UTF-8");
 
     rv = NS_OK;
     if (mUnicodeConverter)
-  	  rv = mUnicodeConverter->DecodeMimePartIIStr(NS_ConvertASCIItoUCS2(name), charset,
-                                                  getter_Copies(unicodeHeaderValue));
+  	  rv = mUnicodeConverter->DecodeMimeHeader(name,
+                                               getter_Copies(unicodeHeaderValue));
     else {
       nsAutoString attachmentName; attachmentName.AssignWithConversion(name);
       *((PRUnichar **)getter_Copies(unicodeHeaderValue)) =

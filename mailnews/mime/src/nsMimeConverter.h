@@ -76,11 +76,6 @@ public:
                               PRBool override_charset = PR_FALSE,
                               PRBool eatContinuations = PR_TRUE);
 
-  // OBSOLESCENT Decode routine (also converts output to unicode)
-  NS_IMETHOD DecodeMimePartIIStr(const nsString& header, 
-                                 nsString& charset, 
-                                 PRUnichar **decodedString,
-								 PRBool eatContinuations = PR_TRUE);
   // Encode routine
   NS_IMETHOD EncodeMimePartIIStr(const char    *header, 
                                  const char    *mailCharset, 
@@ -113,11 +108,6 @@ public:
 
   NS_IMETHOD EncoderWrite (MimeEncoderData *data, const char *buffer, PRInt32 size, PRInt32 *written);
 
-private:
-  // cache unicode decoder
-  nsCOMPtr <nsIUnicodeDecoder>            mDecoder;
-  nsCOMPtr <nsIAtom>                      mDecoderCharsetAtom;
-  nsCOMPtr <nsICharsetConverterManager2>  mCharsetConverterManager;
 }; 
 
 #endif /* nsMimeConverter_h_ */
