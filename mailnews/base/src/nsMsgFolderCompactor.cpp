@@ -396,7 +396,8 @@ nsFolderCompactState::FinishCompact()
   delete m_fileStream;
   m_fileStream = nsnull;
 
-    // make sure the new database is valid
+  // make sure the new database is valid.
+  // Close it so we can rename the .msf file.
   m_db->SetSummaryValid(PR_TRUE);
   m_db->Commit(nsMsgDBCommitType::kLargeCommit);
   m_db->ForceClosed();
@@ -421,6 +422,17 @@ nsFolderCompactState::FinishCompact()
   rv = ReleaseFolderLock();
   NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
   m_folder->SetDBTransferInfo(transferInfo);
+
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+
+  m_folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(m_db));
+
+  // since we're transferring info from the old db, we need to reset the expunged bytes,
+  // and set the summary valid again.
+  if(dbFolderInfo)
+    dbFolderInfo->SetExpungedBytes(0);
+  m_db->Close(PR_TRUE);
+  m_db = nsnull;
 
   m_folder->NotifyCompactCompleted();
 
