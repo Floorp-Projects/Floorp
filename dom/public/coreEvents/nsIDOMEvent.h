@@ -176,6 +176,9 @@ public:
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey)=0;
   NS_IMETHOD    SetMetaKey(PRBool aMetaKey)=0;
 
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble)=0;
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble)=0;
+
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode)=0;
   NS_IMETHOD    SetCharCode(PRUint32 aCharCode)=0;
 
@@ -208,6 +211,8 @@ public:
   NS_IMETHOD    SetShiftKey(PRBool aShiftKey);  \
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey);  \
   NS_IMETHOD    SetMetaKey(PRBool aMetaKey);  \
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble);  \
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble);  \
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode);  \
   NS_IMETHOD    SetCharCode(PRUint32 aCharCode);  \
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode);  \
@@ -238,6 +243,8 @@ public:
   NS_IMETHOD    SetShiftKey(PRBool aShiftKey) { return _to##SetShiftKey(aShiftKey); } \
   NS_IMETHOD    GetMetaKey(PRBool* aMetaKey) { return _to##GetMetaKey(aMetaKey); } \
   NS_IMETHOD    SetMetaKey(PRBool aMetaKey) { return _to##SetMetaKey(aMetaKey); } \
+  NS_IMETHOD    GetCancelBubble(PRBool* aCancelBubble) { return _to##GetCancelBubble(aCancelBubble); } \
+  NS_IMETHOD    SetCancelBubble(PRBool aCancelBubble) { return _to##SetCancelBubble(aCancelBubble); } \
   NS_IMETHOD    GetCharCode(PRUint32* aCharCode) { return _to##GetCharCode(aCharCode); } \
   NS_IMETHOD    SetCharCode(PRUint32 aCharCode) { return _to##SetCharCode(aCharCode); } \
   NS_IMETHOD    GetKeyCode(PRUint32* aKeyCode) { return _to##GetKeyCode(aKeyCode); } \

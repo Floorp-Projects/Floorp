@@ -52,11 +52,11 @@ enum Window_slots {
   WINDOW_SELF = -12,
   WINDOW_DOCUMENT = -13,
   WINDOW_NAVIGATOR = -14,
-  WINDOW_OPENER = -15,
-  WINDOW_PARENT = -16,
-  WINDOW_TOP = -17,
-  WINDOW_CLOSED = -18,
-  WINDOW_FRAMES = -19,
+  WINDOW_PARENT = -15,
+  WINDOW_TOP = -16,
+  WINDOW_CLOSED = -17,
+  WINDOW_FRAMES = -18,
+  WINDOW_OPENER = -19,
   WINDOW_STATUS = -110,
   WINDOW_DEFAULTSTATUS = -111,
   WINDOW_NAME = -112
@@ -186,33 +186,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case WINDOW_OPENER:
-      {
-        nsIDOMWindow* prop;
-        if (NS_OK == a->GetOpener(&prop)) {
-          // get the js object
-          if (prop != nsnull) {
-            nsIScriptObjectOwner *owner = nsnull;
-            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-              JSObject *object = nsnull;
-              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-                // set the return value
-                *vp = OBJECT_TO_JSVAL(object);
-              }
-              NS_RELEASE(owner);
-            }
-            NS_RELEASE(prop);
-          }
-          else {
-            *vp = JSVAL_NULL;
-          }
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
       case WINDOW_PARENT:
       {
         nsIDOMWindow* prop;
@@ -282,6 +255,33 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIDOMWindowCollection* prop;
         if (NS_OK == a->GetFrames(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case WINDOW_OPENER:
+      {
+        nsIDOMWindow* prop;
+        if (NS_OK == a->GetOpener(&prop)) {
           // get the js object
           if (prop != nsnull) {
             nsIScriptObjectOwner *owner = nsnull;
@@ -385,6 +385,29 @@ SetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
+      case WINDOW_OPENER:
+      {
+        nsIDOMWindow* prop;
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
+          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
+          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
+          if (NS_OK != supports->QueryInterface(kIWindowIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type Window");
+            return JS_FALSE;
+          }
+        }
+        else {
+          JS_ReportError(cx, "Parameter must be an object");
+          return JS_FALSE;
+        }
+      
+        a->SetOpener(prop);
+        if (prop) NS_RELEASE(prop);
+        break;
+      }
       case WINDOW_STATUS:
       {
         nsAutoString prop;
@@ -590,6 +613,72 @@ WindowAlert(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 
 //
+// Native method Focus
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Focus()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function focus requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Blur
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->Blur()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function blur requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ClearTimeout
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -743,7 +832,7 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMWindow *nativeThis = (nsIDOMWindow*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  PRInt32 nativeRet;
+  nsIDOMWindow* nativeRet;
 
   *rval = JSVAL_NULL;
 
@@ -758,7 +847,22 @@ WindowOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
       return JS_FALSE;
     }
 
-    *rval = INT_TO_JSVAL(nativeRet);
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function open requires 0 parameters");
@@ -796,11 +900,11 @@ static JSPropertySpec WindowProperties[] =
   {"self",    WINDOW_SELF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"navigator",    WINDOW_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"top",    WINDOW_TOP,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOW_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"opener",    WINDOW_OPENER,    JSPROP_ENUMERATE},
   {"status",    WINDOW_STATUS,    JSPROP_ENUMERATE},
   {"defaultStatus",    WINDOW_DEFAULTSTATUS,    JSPROP_ENUMERATE},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
@@ -815,6 +919,8 @@ static JSFunctionSpec WindowMethods[] =
 {
   {"dump",          WindowDump,     1},
   {"alert",          WindowAlert,     1},
+  {"focus",          WindowFocus,     0},
+  {"blur",          WindowBlur,     0},
   {"clearTimeout",          WindowClearTimeout,     1},
   {"clearInterval",          WindowClearInterval,     1},
   {"setTimeout",          WindowSetTimeout,     0},
@@ -872,6 +978,9 @@ extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOM
 
     // assign "this" to the js object, don't AddRef
     ::JS_SetPrivate(jscontext, global, aSupports);
+
+    JS_DefineProperties(jscontext, global, WindowProperties);
+    JS_DefineFunctions(jscontext, global, WindowMethods);
 
     *aReturn = (void*)global;
     return NS_OK;

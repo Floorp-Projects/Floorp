@@ -110,7 +110,7 @@
 	const int VK_NUM_LOCK       = 0x90;
 	const int VK_SCROLL_LOCK    = 0x91;
 
-	const int VK_COMMA		= 0xBC;
+	const int VK_COMMA	    = 0xBC;
 	const int VK_PERIOD         = 0xBE;
 	const int VK_SLASH          = 0xBF;
 	const int VK_BACK_QUOTE     = 0xC0;
@@ -132,6 +132,8 @@
 	attribute   boolean	    ctrlKey;
 	attribute   boolean	    shiftKey;
 	attribute   boolean	    metaKey;
+
+	attribute   boolean	    cancelBubble;
 
 	attribute   unsigned long   charCode;
 	attribute   unsigned long   keyCode;

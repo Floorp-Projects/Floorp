@@ -3,21 +3,23 @@
         readonly attribute  Window self;
 	readonly attribute  Document document;
 	readonly attribute  Navigator navigator;
-	readonly attribute  Window opener;
         readonly attribute  Window parent;
         readonly attribute  Window top;
 	readonly attribute  boolean closed;
 	readonly attribute  WindowCollection frames;
+	attribute  Window opener;
 	attribute  wstring status;
 	attribute  wstring defaultStatus;
 	attribute  wstring name;
 	void  dump(in wstring str);
 	void  alert(in wstring str);
+	void  focus();
+	void  blur();
  
         void clearTimeout(in long timerID);
         void clearInterval(in long timerID);
         long setTimeout(/* ... */);
         long setInterval(/* ... */);
-        long open(/* ... */);
+        Window open(/* ... */);
       };
 

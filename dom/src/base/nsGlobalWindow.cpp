@@ -44,6 +44,8 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIDocument.h"
+#include "nsIURL.h"
 #include "nsCRT.h"
 
 #include "jsapi.h"
@@ -68,6 +70,7 @@ static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
+static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
 
 GlobalWindowImpl::GlobalWindowImpl()
 {
@@ -78,6 +81,7 @@ GlobalWindowImpl::GlobalWindowImpl()
   mNavigator = nsnull;
   mLocation = nsnull;
   mFrames = nsnull;
+  mOpener = nsnull;
 
   mTimeouts = nsnull;
   mTimeoutInsertionPoint = nsnull;
@@ -93,17 +97,12 @@ GlobalWindowImpl::~GlobalWindowImpl()
     mScriptObject = nsnull;
   }
   
-  if (nsnull != mContext) {
-    NS_RELEASE(mContext);
-  }
-
-  if (nsnull != mDocument) {
-    NS_RELEASE(mDocument);
-  }
-  
+  NS_IF_RELEASE(mContext);
+  NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mNavigator);
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
+  NS_IF_RELEASE(mOpener);
   NS_IF_RELEASE(mListenerManager);
 }
 
@@ -196,7 +195,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
   if (nsnull != mDocument) {
     ClearAllTimeouts();
 
-    if (nsnull != mScriptObject) {
+    if (nsnull != mScriptObject && nsnull != mContext) {
       JS_ClearScope((JSContext *)mContext->GetNativeContext(),
                     (JSObject *)mScriptObject);
     }
@@ -229,6 +228,14 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
   if (nsnull != mFrames) {
     mFrames->SetWebShell(aWebShell);
   }
+}
+
+NS_IMETHODIMP_(void)       
+GlobalWindowImpl::SetOpenerWindow(nsIDOMWindow *aOpener)
+{
+  NS_IF_RELEASE(mOpener);
+  mOpener = aOpener;
+  NS_IF_ADDREF(mOpener);
 }
 
 NS_IMETHODIMP    
@@ -275,9 +282,19 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 NS_IMETHODIMP
 GlobalWindowImpl::GetOpener(nsIDOMWindow** aOpener)
 {
-  *aOpener = nsnull;
+  *aOpener = mOpener;
   NS_IF_ADDREF(*aOpener);
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::SetOpener(nsIDOMWindow* aOpener)
+{
+  if (nsnull == aOpener) {
+    NS_IF_RELEASE(mOpener);
+    mOpener = nsnull;
+  }
   return NS_OK;
 }
 
@@ -447,6 +464,18 @@ GlobalWindowImpl::Alert(const nsString& aStr)
 {
   // XXX Temporary
   return Dump(aStr);
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Focus()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::Blur()
+{
+  return NS_OK;
 }
 
 nsresult
@@ -875,21 +904,36 @@ NS_IMETHODIMP
 GlobalWindowImpl::Open(JSContext *cx,
                        jsval *argv, 
                        PRUint32 argc, 
-                       PRInt32* aReturn)
+                       nsIDOMWindow** aReturn)
 {
   PRUint32 mChrome = 0;
   PRInt32 mWidth, mHeight;
   PRInt32 mLeft, mTop;
-  nsString mURL, mName;
+  nsString mName;
+  nsAutoString mAbsURL;
   JSString* str;
-  *aReturn = JSVAL_NULL;
+  *aReturn = nsnull;
 
   if (argc > 0) {
     JSString *mJSStrURL = JS_ValueToString(cx, argv[0]);
-    if (nsnull == mJSStrURL) {
+    if (nsnull == mJSStrURL || nsnull == mDocument) {
       return NS_ERROR_FAILURE;
     }
+
+    nsAutoString mURL, mEmpty;
+    nsIURL* mDocURL;
+    nsIDocument* mDoc;
+
     mURL.SetString(JS_GetStringChars(mJSStrURL));
+
+    if (NS_OK == mDocument->QueryInterface(kIDocumentIID, (void**)&mDoc)) {
+      mDocURL = mDoc->GetDocumentURL();
+      NS_RELEASE(mDoc);
+    }
+     
+    if (NS_OK != NS_MakeAbsoluteURL(mDocURL, mEmpty, mURL, mAbsURL)) {
+      return NS_ERROR_FAILURE;
+    }
   }
   
   /* Sanity-check the optional window_name argument. */
@@ -966,14 +1010,14 @@ GlobalWindowImpl::Open(JSContext *cx,
   }
 
   nsIBrowserWindow *mNewWindow, *mBrowser;
-  void *mNewScriptObject = nsnull;
+  nsIScriptGlobalObject *mNewGlobalObject = nsnull;
   
   /* XXX check for existing window of same name.  If exists, set url and 
    * update chrome */
   
   if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
     mBrowser->OpenWindow(mChrome, mNewWindow);
-    mNewWindow->LoadURL(mURL);
+    mNewWindow->LoadURL(mAbsURL);
     //How should we do default size/pos
     mNewWindow->SizeTo(mWidth ? mWidth : 620, mHeight ? mHeight : 400);
     mNewWindow->MoveTo(mLeft, mTop);
@@ -981,56 +1025,34 @@ GlobalWindowImpl::Open(JSContext *cx,
 
     NS_RELEASE(mBrowser);
 
-    /*XXX Get win obj */
-    nsIWebShell *mNewWebShell;
-    nsIScriptGlobalObject *mNewGlobalObject;
-    nsIScriptContextOwner *mNewContextOwner;
+    /* Get win obj */
+    nsIWebShell *mNewWebShell = nsnull;
+    nsIScriptContextOwner *mNewContextOwner = nsnull;
 
-    if (NS_OK != mNewWindow->GetWebShell(mNewWebShell)) {
-      NS_RELEASE(mNewWindow);
-      return NS_ERROR_FAILURE;
-    }
-    
-    if (NS_OK != mNewWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mNewContextOwner)) {
-      NS_RELEASE(mNewWebShell);
-      return NS_ERROR_FAILURE;
-    }
+    if (NS_OK != mNewWindow->GetWebShell(mNewWebShell) ||
+        NS_OK != mNewWebShell->QueryInterface(kIScriptContextOwnerIID, (void**)&mNewContextOwner) ||
+        NS_OK != mNewContextOwner->GetScriptGlobalObject(&mNewGlobalObject)) {
 
-    if (NS_OK != mNewContextOwner->GetScriptGlobalObject(&mNewGlobalObject)) {
-      NS_RELEASE(mNewContextOwner);
+      NS_IF_RELEASE(mNewWindow);
+      NS_IF_RELEASE(mNewWebShell);
+      NS_IF_RELEASE(mNewContextOwner);
       return NS_ERROR_FAILURE;
     }
     
     NS_RELEASE(mNewWindow);
     NS_RELEASE(mNewWebShell);
-    
-    nsIScriptContext *mNewContext;
-    if (NS_OK != mNewContextOwner->GetScriptContext(&mNewContext)) {
-      NS_RELEASE(mNewContextOwner);
-      return NS_ERROR_FAILURE;
-    }
-
-    nsIScriptObjectOwner *mNewObjectOwner;
-    if (NS_OK == mNewGlobalObject->QueryInterface(kIScriptObjectOwnerIID, (void**)&mNewObjectOwner)) {
-      mNewObjectOwner->GetScriptObject(mNewContext, &mNewScriptObject);
-    }
-
-    NS_RELEASE(mNewGlobalObject);
-    NS_RELEASE(mNewObjectOwner);
     NS_RELEASE(mNewContextOwner);
-
-    /* Set opener in private data, too? */
-    /*Need the tiny id
-    if (!JS_DefinePropertyWithTinyId(cx, (JSObject*)mNewScriptObject, 
-                                     "opener", WIN_OPENER, 
-                                     OBJECT_TO_JSVAL(mScriptObject),
-                                     nsnull, nsnull, JSPROP_ENUMERATE)) {
-      return NS_ERROR_FAILURE;
-    } 
-    */
   }
 
-  *aReturn = OBJECT_TO_JSVAL((JSObject*)mNewScriptObject);
+  nsIDOMWindow *mNewDOMWindow;
+  if (nsnull != mNewGlobalObject && NS_OK == mNewGlobalObject->QueryInterface(kIDOMWindowIID, (void**)&mNewDOMWindow)) {
+    *aReturn = mNewDOMWindow;
+  }
+
+  /* Set opener */
+  mNewGlobalObject->SetOpenerWindow(mNewDOMWindow);
+
+  NS_IF_RELEASE(mNewGlobalObject);
 
   return NS_OK;
 }

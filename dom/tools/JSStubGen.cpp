@@ -1501,6 +1501,9 @@ static const char *kNewGlobalJSObjectStr =
 "    // assign \"this\" to the js object, don't AddRef\n"
 "    ::JS_SetPrivate(jscontext, global, aSupports);\n"
 "\n"
+"    JS_DefineProperties(jscontext, global, %sProperties);\n"
+"    JS_DefineFunctions(jscontext, global, %sMethods);\n"
+"\n"
 "    *aReturn = (void*)global;\n"
 "    return NS_OK;\n"
 "  }\n"
@@ -1510,7 +1513,7 @@ static const char *kNewGlobalJSObjectStr =
 
 #define JSGEN_GENERATE_NEWGLOBALJSOBJECT(buffer, className)        \
     sprintf(buffer, kNewGlobalJSObjectStr, className, className,   \
-            className, className)
+            className, className, className, className)
 
 static const char *kNewJSObjectStr =
 "\n\n//\n"

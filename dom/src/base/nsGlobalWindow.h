@@ -62,17 +62,20 @@ public:
   NS_IMETHOD_(void)       SetContext(nsIScriptContext *aContext);
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument);
   NS_IMETHOD_(void)       SetWebShell(nsIWebShell *aWebShell);
+  NS_IMETHOD_(void)       SetOpenerWindow(nsIDOMWindow *aOpener);
 
   NS_IMETHOD    GetWindow(nsIDOMWindow** aWindow);
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
-  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetLocation(nsIDOMLocation** aLocation);
   NS_IMETHOD    GetParent(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);
   NS_IMETHOD    GetClosed(PRBool* aClosed);
   NS_IMETHOD    GetFrames(nsIDOMWindowCollection** aFrames);
+
+  NS_IMETHOD    GetOpener(nsIDOMWindow** aOpener);
+  NS_IMETHOD    SetOpener(nsIDOMWindow* aOpener);
 
   NS_IMETHOD    GetStatus(nsString& aStatus);
   NS_IMETHOD    SetStatus(const nsString& aStatus);
@@ -85,6 +88,8 @@ public:
 
   NS_IMETHOD    Dump(const nsString& aStr);
   NS_IMETHOD    Alert(const nsString& aStr);
+  NS_IMETHOD    Focus();
+  NS_IMETHOD    Blur();
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, 
@@ -92,7 +97,7 @@ public:
   NS_IMETHOD    SetInterval(JSContext *cx, jsval *argv, PRUint32 argc, 
                             PRInt32* aReturn);
   NS_IMETHOD    Open(JSContext *cx, jsval *argv, PRUint32 argc, 
-                            PRInt32* aReturn);
+                            nsIDOMWindow** aReturn);
 
   // nsIDOMEventCapturer interface
   NS_IMETHOD CaptureEvent(nsIDOMEventListener *aListener);
@@ -142,6 +147,7 @@ protected:
   NavigatorImpl *mNavigator;
   LocationImpl *mLocation;
   nsIWebShell *mWebShell;
+  nsIDOMWindow *mOpener;
   
   nsTimeoutImpl *mTimeouts;
   nsTimeoutImpl **mTimeoutInsertionPoint;
