@@ -69,7 +69,7 @@
 
 enum eFieldType {
     kCollationKey,
-    kU32,
+    kU32
 };
 
 // reserve the top 8 bits in the msg flags for the view-only flags.
