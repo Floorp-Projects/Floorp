@@ -58,6 +58,7 @@
 // DDE application name
 #define ID_DDE_APPLICATION_NAME 102
 
+#define IDI_APPICON 0
 #define IDI_DOCUMENT 1
 
 #endif
