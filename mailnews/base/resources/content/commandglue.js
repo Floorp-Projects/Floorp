@@ -52,7 +52,7 @@ function GetThreadTree()
 function GetThreadTreeFolder()
 {
   var tree = GetThreadTree();
-  return tree.childNodes[6];
+  return tree.childNodes[8];
 }
 
 function FindMessenger()
