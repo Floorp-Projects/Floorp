@@ -41,6 +41,7 @@ use Bugzilla::Error;
 use Bugzilla::Util;
 use Bugzilla::Constants;
 use Bugzilla::Group;
+use Bugzilla::User;
 
 use Date::Format;
 use Date::Parse;
@@ -1414,7 +1415,7 @@ sub ListIDsForEmail {
     if ($type eq 'anyexact') {
         foreach my $w (split(/,/, $email)) {
             $w = trim($w);
-            my $id = &::DBname_to_id($w);
+            my $id = login_to_id($w);
             if ($id > 0) {
                 push(@list,$id)
             }

@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.24 2005/02/18 16:01:48 mkanat%kerio.com Exp $
+# $Id: bug_email.pl,v 1.25 2005/02/24 23:42:48 mkanat%kerio.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -94,6 +94,7 @@ use lib ".";
 use lib "../";
 use Bugzilla::Constants;
 use Bugzilla::BugMail;
+use Bugzilla::User;
 
 my @mailerrors = ();       # Buffer for Errors in the mail
 my @mailwarnings = ();     # Buffer for Warnings found in the mail
@@ -920,7 +921,7 @@ $Control{'component'} = $Component;
 # otherwise, retrieve it from the database.
 if ( defined($Control{'assigned_to'}) 
      && $Control{'assigned_to'} !~ /^\s*$/ ) {
-    $Control{'assigned_to'} = DBname_to_id($Control{'assigned_to'});
+    $Control{'assigned_to'} = login_to_id($Control{'assigned_to'});
 } else {
     SendSQL("select initialowner from components, products where " .
             "  components.product_id=products.id AND products.name=" .
@@ -940,7 +941,7 @@ if ( $Control{'assigned_to'} == 0 ) {
 }
 
 
-$Control{'reporter'} = DBname_to_id($Control{'reporter'});
+$Control{'reporter'} = login_to_id($Control{'reporter'});
 if ( ! $Control{'reporter'} ) {
     BugMailError( 1, "Could not resolve reporter !\n" );
 }

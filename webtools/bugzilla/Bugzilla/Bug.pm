@@ -131,7 +131,7 @@ sub initBug  {
   }
   else {
      if ($user_id =~ /^\@/) {
-        $user_id = &::DBname_to_id($user_id); 
+        $user_id = login_to_id($user_id); 
      }
   }
 

@@ -248,7 +248,7 @@ if ($cgi->param('update')) {
                             my $emailregexp = Param('emailregexp');
                             $mailto =~ /($emailregexp)/;
                             $mailto =~ $1;
-                            $mailto_id = DBname_to_id($mailto);
+                            $mailto_id = login_to_id($mailto);
                         }
                         elsif ($mailto_type == MAILTO_GROUP) {
                             # detaint the group parameter

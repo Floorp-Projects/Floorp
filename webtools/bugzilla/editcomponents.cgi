@@ -35,6 +35,7 @@ use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
 use Bugzilla::Util;
+use Bugzilla::User;
 
 use vars qw($template $vars);
 
@@ -296,7 +297,7 @@ if ($action eq 'new') {
         exit;
     }
 
-    my $initialownerid = DBname_to_id ($initialowner);
+    my $initialownerid = login_to_id ($initialowner);
     if (!$initialownerid) {
         ThrowUserError('component_need_valid_initialowner',
                        {'name' => $component});
@@ -304,7 +305,7 @@ if ($action eq 'new') {
     }
 
     my $initialqacontact = trim($cgi->param('initialqacontact') || '');
-    my $initialqacontactid = DBname_to_id ($initialqacontact);
+    my $initialqacontactid = login_to_id ($initialqacontact);
     if (Param('useqacontact')) {
         if (!$initialqacontactid && $initialqacontact ne '') {
             ThrowUserError('component_need_valid_initialqacontact',
@@ -600,7 +601,7 @@ if ($action eq 'update') {
 
     if ($initialowner ne $initialownerold) {
 
-        my $initialownerid = DBname_to_id($initialowner);
+        my $initialownerid = login_to_id($initialowner);
         unless ($initialownerid) {
             $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_need_valid_initialowner',
@@ -618,7 +619,7 @@ if ($action eq 'update') {
     }
 
     if (Param('useqacontact') && $initialqacontact ne $initialqacontactold) {
-        my $initialqacontactid = DBname_to_id($initialqacontact);
+        my $initialqacontactid = login_to_id($initialqacontact);
         if (!$initialqacontactid && $initialqacontact ne '') {
             $dbh->bz_unlock_tables(UNLOCK_ABORT);
             ThrowUserError('component_need_valid_initialqacontact',

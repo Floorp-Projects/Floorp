@@ -627,7 +627,7 @@ sub filterEmailGroup ($$$) {
         # but the code that was here before I re-wrote it allows this),
         # then we do not have any preferences for them, so assume the
         # default preference is to receive all mail.
-        my $userid = DBname_to_id($user);
+        my $userid = login_to_id($user);
         if (!$userid) {
             push(@recipients, $user);
             next;

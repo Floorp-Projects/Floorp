@@ -37,6 +37,7 @@ use Bugzilla::Util;
 use Bugzilla::Config qw(:DEFAULT ChmodDataFile $localconfig $datadir);
 use Bugzilla::BugMail;
 use Bugzilla::Auth;
+use Bugzilla::User;
 
 # Shut up misguided -w warnings about "used only once".  For some reason,
 # "use vars" chokes on me when I try it here.
@@ -654,24 +655,9 @@ sub DBID_to_name {
     return $::cachedNameArray{$id};
 }
 
-sub DBname_to_id {
-    my ($name) = (@_);
-    PushGlobalSQLState();
-    SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
-    my $r = FetchOneColumn();
-    PopGlobalSQLState();
-    # $r should be a positive integer, this makes Taint mode happy
-    if (defined $r && $r =~ m/^([1-9][0-9]*)$/) {
-        return $1;
-    } else {
-        return 0;
-    }
-}
-
-
 sub DBNameToIdAndCheck {
     my ($name) = (@_);
-    my $result = DBname_to_id($name);
+    my $result = login_to_id($name);
     if ($result > 0) {
         return $result;
     }

@@ -67,6 +67,7 @@ use XML::Parser;
 use Data::Dumper;
 $Data::Dumper::Useqq = 1;
 use Bugzilla::BugMail;
+use Bugzilla::User;
 
 require "CGI.pl";
 require "globals.pl";
@@ -202,7 +203,7 @@ unless ( Param("move-enabled") ) {
   exit;
 }
 
-my $exporterid = DBname_to_id($exporter);
+my $exporterid = login_to_id($exporter);
 if ( ! $exporterid ) {
   my $subject = "Bug import error: invalid exporter";
   my $message = "The user <$tree->[1][0]->{'exporter'}> who tried to move\n";
@@ -504,7 +505,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
     $err .= ". Setting to default severity \"normal\".\n";
   }
 
-  my $reporterid = DBname_to_id($bug_fields{'reporter'});
+  my $reporterid = login_to_id($bug_fields{'reporter'});
   if ( ($bug_fields{'reporter'}) && ( $reporterid ) ) {
     push (@values, SqlQuote($reporterid));
     push (@query, "reporter");
@@ -523,8 +524,8 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
 
   my $changed_owner = 0;
   if ( ($bug_fields{'assigned_to'}) && 
-       ( DBname_to_id($bug_fields{'assigned_to'})) ) {
-    push (@values, SqlQuote(DBname_to_id($bug_fields{'assigned_to'})));
+       ( login_to_id($bug_fields{'assigned_to'})) ) {
+    push (@values, SqlQuote(login_to_id($bug_fields{'assigned_to'})));
     push (@query, "assigned_to");
   } else {
     push (@values, SqlQuote($exporterid) );
@@ -587,7 +588,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   if (Param("useqacontact")) {
     my $qa_contact;
     if ( (defined $bug_fields{'qa_contact'}) &&
-         ($qa_contact  = DBname_to_id($bug_fields{'qa_contact'})) ){
+         ($qa_contact  = login_to_id($bug_fields{'qa_contact'})) ){
       push (@values, $qa_contact);
       push (@query, "qa_contact");
     } else {
@@ -615,7 +616,7 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
   if (defined $bug_fields{'cc'}) {
     foreach my $person (split(/[ ,]/, $bug_fields{'cc'})) {
       my $uid;
-      if ( ($person ne "") && ($uid = DBname_to_id($person)) ) {
+      if ( ($person ne "") && ($uid = login_to_id($person)) ) {
         SendSQL("insert into cc (bug_id, who) values ($id, " . SqlQuote($uid) .")");
       }
     }

@@ -4,7 +4,7 @@
 #
 # Nick Barnes, Ravenbrook Limited, 2004-04-01.
 #
-# $Id: sendbugmail.pl,v 1.2 2004/11/20 12:35:17 jocuri%softhome.net Exp $
+# $Id: sendbugmail.pl,v 1.3 2005/02/24 23:42:48 mkanat%kerio.com Exp $
 # 
 # Bugzilla email script for Bugzilla 2.17.4 and later.  Invoke this to send
 # bugmail for a bug which has been changed directly in the database.
@@ -18,6 +18,7 @@ use lib qw(.);
 
 require "globals.pl";
 use Bugzilla::BugMail;
+use Bugzilla::User;
 
 sub usage {
     print STDERR "Usage: $0 bug_id user_email\n";
@@ -53,7 +54,7 @@ if ($changer !~ /$match/) {
     print STDERR "Changer \"$changer\" doesn't match email regular expression.\n";
     usage();
 }
-if(!DBname_to_id($changer)) {
+if(!login_to_id($changer)) {
     print STDERR "\"$changer\" is not a login ID.\n";
     usage();
 }

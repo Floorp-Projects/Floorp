@@ -536,7 +536,7 @@ if ($action eq 'del') {
     SendSQL("SELECT products.name, components.name " .
             "FROM products, components " .
             "WHERE products.id = components.product_id " .
-            " AND initialowner=" . DBname_to_id($user));
+            " AND initialowner=" . login_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
         if ($found) {
@@ -561,7 +561,7 @@ if ($action eq 'del') {
     SendSQL("SELECT products.name, components.name " .
             "FROM products, components " .
             "WHERE products.id = components.product_id " .
-            " AND initialqacontact=" . DBname_to_id($user));
+            " AND initialqacontact=" . login_to_id($user));
     $found = 0;
     while (MoreSQLData()) {
         if ($found) {

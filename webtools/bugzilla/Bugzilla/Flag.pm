@@ -449,7 +449,7 @@ sub modify {
             # Get the requestee, if any.
             my $requestee_id = "NULL";
             if ($requestee_email) {
-                $requestee_id = &::DBname_to_id($requestee_email);
+                $requestee_id = login_to_id($requestee_email);
                 $flag->{'requestee'} = new Bugzilla::User($requestee_id);
             }
 
@@ -531,7 +531,7 @@ sub FormToNewFlags {
         if ($status eq "?") {
             my $requestee = $data->{"requestee_type-$type_id"};
             if ($requestee) {
-                my $requestee_id = &::DBname_to_id($requestee);
+                my $requestee_id = login_to_id($requestee);
                 $flag->{'requestee'} = new Bugzilla::User($requestee_id);
             }
         }

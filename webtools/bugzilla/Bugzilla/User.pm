@@ -22,6 +22,7 @@
 #                 Bradley Baetz <bbaetz@acm.org>
 #                 Joel Peshkin <bugreport@peshkin.net> 
 #                 Byron Jones <bugzilla@glob.com.au>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 ################################################################################
 # Module Initialization
@@ -40,7 +41,9 @@ use Bugzilla::Constants;
 use Bugzilla::Auth;
 
 use base qw(Exporter);
-@Bugzilla::User::EXPORT = qw(insert_new_user is_available_username);
+@Bugzilla::User::EXPORT = qw(insert_new_user is_available_username
+    login_to_id
+);
 
 ################################################################################
 # Functions
@@ -961,7 +964,7 @@ sub insert_new_user ($$) {
 sub is_available_username ($;$) {
     my ($username, $old_username) = @_;
 
-    if(&::DBname_to_id($username) != 0) {
+    if(login_to_id($username) != 0) {
         return 0;
     }
 
@@ -990,6 +993,19 @@ sub is_available_username ($;$) {
     }
 
     return 1;
+}
+
+sub login_to_id ($) {
+    my ($login) = (@_);
+    my $dbh = Bugzilla->dbh;
+    my $user_id = $dbh->selectrow_array(
+        "SELECT userid FROM profiles WHERE login_name = ?", undef, $login);
+    # $user_id should be a positive integer, this makes Taint mode happy
+    if (defined $user_id && detaint_natural($user_id)) {
+        return $user_id;
+    } else {
+        return 0;
+    }
 }
 
 1;
@@ -1231,6 +1247,20 @@ Params: $username (scalar, string) - The full login name of the username
             will return a boolean true value).
 
 =back
+
+=item C<login_to_id($login)>
+
+Takes a login name of a Bugzilla user and changes that into a numeric
+ID for that user. This ID can then be passed to Bugzilla::User::new to
+create a new user.
+
+If no valid user exists with that login name, then the function will return 0.
+
+This function can also be used when you want to just find out the userid
+of a user, but you don't want the full weight of Bugzilla::User.
+
+However, consider using a Bugzilla::User object instead of this function
+if you need more information about the user than just their ID.
 
 =head1 SEE ALSO
 
