@@ -995,24 +995,9 @@ nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject, nsIURI
     nsCOMPtr<nsIURI> objAsURI = do_QueryInterface(aObject);
     if (objAsURI)
     {
-        PRBool isFile = PR_FALSE;
-        objAsURI->SchemeIs("file", &isFile);
-        if (isFile)
-        {
-            nsCOMPtr<nsIFileURL> objAsFileURL = do_QueryInterface(objAsURI);
-            if (objAsFileURL)
-            {
-                *aURI = objAsFileURL;
-                NS_ADDREF(*aURI);
-                return NS_OK;
-            }
-        }
-        else
-        {
-            *aURI = objAsURI;
-            NS_ADDREF(*aURI);
-            return NS_OK;
-        }
+        *aURI = objAsURI;
+        NS_ADDREF(*aURI);
+        return NS_OK;
     }
 
     return NS_ERROR_FAILURE;

@@ -44,21 +44,16 @@
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
-#include "nsFileSpec.h"
 #include "nsIURI.h"
-#include "nsCOMPtr.h"
-#include "nsIRunnable.h"
-#include "nsIThread.h"
-#include "prlock.h"
-#include "nsIEventQueueService.h"
-#include "nsIPipe.h"
-#include "nsCOMPtr.h"
 #include "nsIFile.h"        /* Solaris/gcc needed this here. */
 #include "nsIFileChannel.h"
 #include "nsIUploadChannel.h"
 #include "nsIInputStream.h"
 #include "nsIProgressEventSink.h"
 #include "nsITransport.h"
+#include "nsString.h"
+#include "nsCOMPtr.h"
+#include "prthread.h"
 
 class nsFileChannel : public nsIFileChannel,
                       public nsIUploadChannel,

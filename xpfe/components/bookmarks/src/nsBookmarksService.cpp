@@ -3258,9 +3258,6 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
     if (NS_FAILED(rv)) 
       break;
 
-    nsCOMPtr<nsIFileURL> fileURL(do_QueryInterface(uri));
-    fileURL->SetFile(currFile);
-
     nsAutoString bookmarkName;
     currFile->GetLeafName(bookmarkName);
 
@@ -3277,8 +3274,10 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
         continue;
     }
     else {
+      nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
       nsCAutoString extension;
-      fileURL->GetFileExtension(extension);
+      url->GetFileExtension(extension);
       ToLowerCase(extension);
       if (!extension.Equals(NS_LITERAL_CSTRING("url"))) 
         continue;
@@ -3289,11 +3288,11 @@ nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aP
       nsAutoString path;
       currFile->GetPath(path);
 
-      nsXPIDLCString url;
-      ResolveShortcut(path, getter_Copies(url));
+      nsXPIDLCString resolvedURL;
+      ResolveShortcut(path, getter_Copies(resolvedURL));
 
       nsCOMPtr<nsIRDFResource> bookmark;
-      rv = CreateBookmarkInContainer(name.get(), url.get(), nsnull, aParentResource, -1, getter_AddRefs(bookmark));
+      rv = CreateBookmarkInContainer(name.get(), resolvedURL.get(), nsnull, aParentResource, -1, getter_AddRefs(bookmark));
       if (NS_FAILED(rv)) 
         continue;
     }

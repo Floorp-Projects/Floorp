@@ -2019,17 +2019,13 @@ NS_IMETHODIMP nsExternalHelperAppService::GetTypeFromURI(nsIURI *aURI, char **aC
     nsCOMPtr<nsIFileURL> fileurl = do_QueryInterface( url, &rv2 );
     if ( NS_SUCCEEDED ( rv2 ) )
     {
-      PRBool isFileScheme = PR_FALSE;
-      if (NS_SUCCEEDED(fileurl->SchemeIs("file", &isFileScheme)) && isFileScheme)
+      nsCOMPtr <nsIFile> file;
+      rv2 = fileurl->GetFile(getter_AddRefs(file));
+      if (NS_SUCCEEDED(rv2))
       {
-        nsCOMPtr <nsIFile> file;
-        rv2 = fileurl->GetFile(getter_AddRefs(file));
+        rv2 = GetTypeFromFile(file, aContentType);
         if (NS_SUCCEEDED(rv2))
-        {
-          rv2 = GetTypeFromFile(file, aContentType);
-          if (NS_SUCCEEDED(rv2))
-            return rv2;
-        }
+          return rv2;
       }
     }
   }

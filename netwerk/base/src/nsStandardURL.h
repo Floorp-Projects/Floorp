@@ -75,7 +75,7 @@ public:
     NS_DECL_NSISERIALIZABLE
     NS_DECL_NSICLASSINFO
 
-    nsStandardURL();
+    nsStandardURL(PRBool aSupportsFileURL = PR_FALSE);
     virtual ~nsStandardURL();
 
     static void InitGlobalObjects();
@@ -236,7 +236,8 @@ private:
     nsEncodingType mHostEncoding;
     nsEncodingType mSpecEncoding;
 
-    PRPackedBool mMutable; // nsIStandardURL::mutable
+    PRPackedBool mMutable;         // nsIStandardURL::mutable
+    PRPackedBool mSupportsFileURL; // QI to nsIFileURL?
 
     // global objects.  don't use COMPtr as its destructor will cause a
     // coredump if we leak it.

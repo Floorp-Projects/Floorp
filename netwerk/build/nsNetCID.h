@@ -70,7 +70,7 @@
     {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-// component implementing nsIURI and nsISerializable.
+// component implementing nsIURI, nsISerializable, and nsIClassInfo.
 #define NS_SIMPLEURI_CLASSNAME \
     "nsSimpleURI"
 #define NS_SIMPLEURI_CONTRACTID \
@@ -83,7 +83,8 @@
      {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-// component implementing nsIStandardURL, nsIFileURL, and nsISerializable.
+// component implementing nsIStandardURL, nsIURI, nsIURL, nsISerializable,
+// and nsIClassInfo.
 #define NS_STANDARDURL_CLASSNAME \
     "nsStandardURL"
 #define NS_STANDARDURL_CONTRACTID \

@@ -78,6 +78,7 @@ static PRLogModuleInfo *gResLog;
 class nsResURL : public nsStandardURL
 {
 public:
+    nsResURL() : nsStandardURL(PR_TRUE) {}
     NS_IMETHOD GetFile(nsIFile **);
 };
 

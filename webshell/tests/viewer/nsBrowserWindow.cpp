@@ -40,9 +40,9 @@
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
+#include "nsNetUtil.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIFilePicker.h"
-#include "nsIFileURL.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
@@ -1138,16 +1138,15 @@ nsBrowserWindow::DoFileOpen()
 
   if (GetFileFromFileSelector(parentWindow, getter_AddRefs(file),
                               getter_AddRefs(mOpenFileDirectory))) {
-    nsCOMPtr<nsIFileURL> fileURL = do_CreateInstance(NS_STANDARDURL_CONTRACTID);
-    if (fileURL) {
-      fileURL->SetFile(file);
-
-      nsCAutoString url;
-      fileURL->GetSpec(url);
+    nsCOMPtr<nsIURI> uri;
+    NS_NewFileURI(getter_AddRefs(uri), file);
+    if (uri) {
+      nsCAutoString spec;
+      uri->GetSpec(spec);
       
       // Ask the Web widget to load the file URL
       nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
-      webNav->LoadURI(NS_ConvertUTF8toUCS2(url).get(),
+      webNav->LoadURI(NS_ConvertUTF8toUCS2(spec).get(),
                       nsIWebNavigation::LOAD_FLAGS_NONE,
                       nsnull,
                       nsnull,
