@@ -2838,12 +2838,14 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     aLine->ClearLastContentIsComplete();
   }
 
-  // XXX block's can't (currently) return break before/after, right???
-  // If we want to consolidate inline/block reflow then we need to
-  // pretend that they can and make this class return break
-  // before/after status based on the placed frame count in the
-  // line...
-  NS_ASSERTION(!NS_INLINE_IS_BREAK(reflowStatus), "bad block reflow status");
+  // XXX We need to check the *type* of break and if it's a column/page
+  // break apply and cause the block to be split (assuming we are
+  // laying out in a column).
+#if XXX
+  if (NS_INLINE_IS_BREAK(reflowStatus)) {
+    // XXX For now we ignore it
+  }
+#endif
 
   // Align the frame
   ir.VerticalAlignFrames(aLine->mBounds);
