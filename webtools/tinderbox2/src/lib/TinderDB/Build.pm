@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.38 $ 
-# $Date: 2002/05/02 01:52:33 $ 
+# $Revision: 1.39 $ 
+# $Date: 2002/05/02 02:19:44 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -910,7 +910,7 @@ sub apply_db_updates {
 
       # fix for mozilla.org issues
 
-      $record->{'deadtime'} = max( 0, $record->{'deadtime'} );
+      $record->{'deadtime'} = main::max( 0, $record->{'deadtime'} );
 
       $record->{'endtime'} = $record->{'timenow'};
 
