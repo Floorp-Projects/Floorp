@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.3 2000/10/06 21:37:25 nelsonb%netscape.com Exp $
+ # $Id: nssinit.c,v 1.4 2000/11/09 22:59:38 mcgreer%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -161,11 +161,11 @@ nss_Init(const char *configdir, PRBool readOnly)
     RNG_RNGInit();     		/* initialize random number generator */
     RNG_SystemInfoForRNG();
 
-    status = nss_OpenCertDB(configdir, PR_TRUE);
+    status = nss_OpenCertDB(configdir, readOnly);
     if (status != SECSuccess)
 	goto loser;
 
-    status = nss_OpenKeyDB(configdir, PR_TRUE);
+    status = nss_OpenKeyDB(configdir, readOnly);
     if (status != SECSuccess)
 	goto loser;
 
