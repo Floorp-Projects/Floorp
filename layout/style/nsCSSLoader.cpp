@@ -1116,7 +1116,8 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
         nsCOMPtr<nsILoadGroup> loadGroup;
         mDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
 
-        result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup);
+        result = NS_NewStreamLoader(&loader, urlClone, aData, nsnull, loadGroup,
+        																			nsnull, nsIChannel::FORCE_RELOAD);
 #ifdef NS_DEBUG
         mSyncCallback = PR_FALSE;
 #endif
