@@ -275,6 +275,31 @@ public class CertificateInfo implements ASN1Value {
     }
 
     /**
+     * Linearly searches the extension list for an extension with the given
+     * object identifier. If it finds one, returns <tt>true</tt>. Otherwise,
+     * returns <tt>false</tt>.
+     */
+    public boolean isExtensionPresent(OBJECT_IDENTIFIER oid) {
+        return ( getExtension(oid) != null );
+    }
+
+    /**
+     * Linearly searches the extension list for an extension with the given
+     * object identifier. It returns the first one it finds. If none are found,
+     * returns <tt>null</tt>.
+     */
+    public Extension getExtension(OBJECT_IDENTIFIER oid) {
+        int numExtensions = extensions.size();
+        for( int i=0; i < numExtensions; ++i) {
+            Extension ext = (Extension) extensions.elementAt(i);
+            if( oid.equals(ext.getExtnId()) ) {
+                return ext;
+            }
+        }
+        return null;
+    }
+
+    /**
      * @exception CertificateException If the certificate is not a v3
      *      certificate.
      */
