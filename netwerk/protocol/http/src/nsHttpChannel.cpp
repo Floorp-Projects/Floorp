@@ -3614,6 +3614,18 @@ nsHttpChannel::SetCookie(const char *aCookieHeader)
                                        this);
 }
 
+NS_IMETHODIMP
+nsHttpChannel::GetProxyInfo(nsIProxyInfo **result)
+{
+    if (!mConnectionInfo)
+        *result = nsnull;
+    else {
+        *result = mConnectionInfo->ProxyInfo();
+        NS_IF_ADDREF(*result);
+    }
+    return NS_OK;
+}
+
 //-----------------------------------------------------------------------------
 // nsHttpChannel::nsIRequestObserver
 //-----------------------------------------------------------------------------
