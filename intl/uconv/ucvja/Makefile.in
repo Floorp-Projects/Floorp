@@ -30,6 +30,8 @@ CSRCS		=  \
 
 CPPSRCS		= \
                   nsSJIS2Unicode.cpp \
+                  nsUnicodeToSJIS.cpp \
+                  nsUCvJaSupport.cpp \
                   nsUCVJADll.cpp \
 		  $(NULL)
 

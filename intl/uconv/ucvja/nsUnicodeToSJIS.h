@@ -17,19 +17,41 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsUCVJACID_h___
-#define nsUCVJACID_h___
+#ifndef nsUnicodeToSJIS_h___
+#define nsUnicodeToSJIS_h___
 
-#include "nsISupports.h"
+#include "nsUCvJaSupport.h"
 
-// Class ID for our SJIS2Unicode charset converter
-// {0E6892C1-A9AD-11d2-B3AE-00805F8A6670}
-NS_DECLARE_ID(kSJIS2UnicodeCID, 
-  0xe6892c1, 0xa9ad, 0x11d2, 0xb3, 0xae, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x70);
+//----------------------------------------------------------------------
+// Class nsUnicodeToSJIS [declaration]
 
-// Class ID for our UnicodeToSJIS charset converter
-// {E28AB250-D66D-11d2-8AAC-00600811A836}
-NS_DECLARE_ID(kUnicodeToSJISCID, 
-  0xe28ab250, 0xd66d, 0x11d2, 0x8a, 0xac, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
+/**
+ * A character set converter from Unicode to SJIS.
+ *
+ * @created         17/Feb/1999
+ * @author  Catalin Rotaru [CATA]
+ */
+class nsUnicodeToSJIS : public nsTableEncoderSupport
+{
+public:
 
-#endif /* nsUCVJACID_h___ */
+  /**
+   * Class constructor.
+   */
+  nsUnicodeToSJIS();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
+
+protected:
+
+  //--------------------------------------------------------------------
+  // Subclassing of nsEncoderSupport class [declaration]
+
+  NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+};
+
+#endif /* nsUnicodeToSJIS_h___ */

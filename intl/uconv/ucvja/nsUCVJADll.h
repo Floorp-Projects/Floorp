@@ -22,7 +22,7 @@
 
 #include "prtypes.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
+extern PRInt32 g_InstanceCount;
+extern PRInt32 g_LockCount;
 
 #endif /* nsUCVJADll_h___ */
