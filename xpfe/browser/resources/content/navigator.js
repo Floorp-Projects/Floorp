@@ -131,12 +131,19 @@
     }
   }
 
-function UpdateBookmarksLastVisitiedDate(event)
+function UpdateBookmarksLastVisitedDate(event)
 {
 	// if the URL is bookmarked, update its "Last Visited" date
 	var bmks = Components.classes["component://netscape/browser/bookmarks-service"].getService();
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
-	if (bmks)	bmks.UpdateBookmarkLastVisitedDate(document.getElementById('urlbar').value);
+	try
+	{
+		if (bmks)	bmks.UpdateBookmarkLastVisitedDate(window.content.location.href);
+	}
+	catch(ex)
+	{
+		dump("failed to update bookmark last visited date.\n");
+	}
 }
 
   function createBrowserInstance() {
@@ -181,7 +188,7 @@ function UpdateBookmarksLastVisitiedDate(event)
     // Add a capturing event listener to the content window so we'll
     // be notified when onloads complete.
     window.addEventListener("load", UpdateHistory, true);
-    window.addEventListener("load", UpdateBookmarksLastVisitiedDate, true);
+    window.addEventListener("load", UpdateBookmarksLastVisitedDate, true);
 
     // Check for window.arguments[0].  If present, go to that url.
     if ( window.arguments && window.arguments[0] ) {
@@ -324,11 +331,21 @@ function UpdateBookmarksLastVisitiedDate(event)
 
   function Translate(src, dest, engine)
   {
-	var service = "http://levis.alis.com:8081";
+	var service = "http://levis.alis.com:8080";
 	service += "?AlisSourceLang=" + src;
 	service += "&AlisTargetLang=" + dest;
 	service += "&AlisMTEngine=" + engine;
-	service += "&AlisTargetURI=" + window.content.location.href;
+
+	// if we're already viewing a translated page, the just get the
+	// last argument (which we expect to always be "AlisMTEngine")
+	var targetURI = window.content.location.href;
+	var targetURIIndex = targetURI.indexOf("AlisTargetURI=");
+	if (targetURIIndex >= 0)
+	{
+		targetURI = targetURI.substring(targetURIIndex + 14);
+	}
+	service += "&AlisTargetURI=" + targetURI;
+
 	window.content.location.href = service;
   }
 
