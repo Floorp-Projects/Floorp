@@ -229,7 +229,7 @@ extern "C" NS_EXPORT int DebugRobot(
 
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;
-    parser->Parse(url, pl, PR_TRUE, pIParserDebug);/* XXX hook up stream listener here! */
+    parser->Parse(url, pl, pIParserDebug);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
        if (yieldProc != NULL)
           (*yieldProc)(url->GetSpec());
