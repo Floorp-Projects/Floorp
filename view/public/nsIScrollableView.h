@@ -104,6 +104,13 @@ public:
    * @return current scrollbar selection
    */
   virtual nsScrollPreference GetScrollPreference(void) = 0;
+
+  /**
+   * Scroll the view to the given x,y, update's the scrollbar's thumb
+   * positions and the view's offset. Clamps the values to be
+   * legal. Updates the display based on aUpdateFlags.
+   */
+  NS_IMETHOD ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags) = 0;
 };
 
 #endif
