@@ -40,6 +40,7 @@
 #define _nsAbView_H_
 
 #include "nsISupports.h"
+#include "nsString.h"
 #include "nsIAbView.h"
 #include "nsIOutlinerView.h"
 #include "nsIOutlinerBoxObject.h"

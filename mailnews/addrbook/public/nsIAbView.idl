@@ -52,19 +52,20 @@ interface nsIAbViewListener : nsISupports
 interface nsIAbView : nsISupports
 {
     /**
-	 * returns the actual sortColumn.  migration, switching from mozilla to netscape 6.x, etc, could cause
-	 * the "persisted" sortColumn to be bogus.
-	 */
+     * returns the actual sortColumn.  migration, switching from mozilla 
+     * to netscape 6.x, etc, could cause
+     * the "persisted" sortColumn to be bogus.
+     */
     wstring init(in string URI, in nsIAbViewListener abViewListener, in wstring sortColumn, in wstring sortDirection);
     void close();
 
     void sortBy(in wstring sortColumn, in wstring sortDirection);
-	readonly attribute string URI;
-    readonly attribute wstring sortColumn;
-	readonly attribute wstring sortDirection;
+    readonly attribute string URI;
+    readonly attribute AString sortColumn;
+    readonly attribute AString sortDirection;
     readonly attribute nsIAbDirectory directory;
 
     nsIAbCard getCardFromRow(in long row);
     void selectAll();
-	void deleteSelectedCards();
+    void deleteSelectedCards();
 };

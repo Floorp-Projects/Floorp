@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -65,16 +65,7 @@
 
 static NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
 
-NS_IMPL_ADDREF(nsAbView)
-NS_IMPL_RELEASE(nsAbView)
-
-NS_INTERFACE_MAP_BEGIN(nsAbView)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIAbView)
-   NS_INTERFACE_MAP_ENTRY(nsIAbView)
-   NS_INTERFACE_MAP_ENTRY(nsIOutlinerView)
-   NS_INTERFACE_MAP_ENTRY(nsIAbListener)
-   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-NS_INTERFACE_MAP_END
+NS_IMPL_ISUPPORTS4(nsAbView, nsIAbView, nsIOutlinerView, nsIAbListener, nsIObserver);
 
 nsAbView::nsAbView()
 {
@@ -98,6 +89,8 @@ NS_IMETHODIMP nsAbView::Close()
   mURI = "";
   mDirectory = nsnull;
   mAbViewListener = nsnull;
+  mOutliner = nsnull;
+  mOutlinerSelection = nsnull;
 
   nsresult rv = NS_OK;
 
@@ -108,7 +101,7 @@ NS_IMETHODIMP nsAbView::Close()
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = abSession->RemoveAddressBookListener(this);
-	NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
   PRInt32 i = mCards.Count();
   while(i-- > 0)
@@ -141,7 +134,7 @@ nsresult nsAbView::RemoveCardAt(PRInt32 row)
 
 NS_IMETHODIMP nsAbView::GetURI(char **aURI)
 {
-  *aURI = nsCRT::strdup(mURI.get());
+  *aURI = ToNewCString(mURI);
   return NS_OK;
 }
 
@@ -227,12 +220,13 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
   rv = EnumerateCards();
   NS_ENSURE_SUCCESS(rv, rv);
 
+  NS_NAMED_LITERAL_STRING(generatedNameColumnId, GENERATED_NAME_COLUMN_ID);
+
   // see if the persisted sortColumn is valid.
   // it may not be, if you migrated from older versions, or switched between
   // a mozilla build and a commercial build, which have different columns.
   nsAutoString actualSortColumn;
-  actualSortColumn = colID; 
-  if (nsCRT::strcmp(colID, NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get()) && mCards.Count()) {
+  if (generatedNameColumnId.Equals(colID) && mCards.Count()) {
     nsIAbCard *card = ((AbCard *)(mCards.ElementAt(0)))->card;
     nsXPIDLString value;
     // XXX todo
@@ -241,16 +235,22 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
     // it might not be.  example:  _ScreenName is valid in Netscape, but not Mozilla.
     rv = GetCardValue(card, colID, getter_Copies(value));
     if (NS_FAILED(rv))
-      actualSortColumn = NS_LITERAL_STRING(GENERATED_NAME_COLUMN_ID).get();
+      actualSortColumn = generatedNameColumnId.get();
+    else
+      actualSortColumn = colID; 
+  }
+  else {
+    actualSortColumn = colID; 
   }
 
   rv = SortBy(actualSortColumn.get(), sortDirection);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv); 
-	NS_ENSURE_SUCCESS(rv,rv);
+  NS_ENSURE_SUCCESS(rv,rv);
 
-	rv = abSession->AddAddressBookListener(this);
+  // this listener cares about all events
+  rv = abSession->AddAddressBookListener(this, nsIAbListener::all);
   NS_ENSURE_SUCCESS(rv,rv);
   
   if (mAbViewListener && !mSuppressCountChange) {
@@ -258,15 +258,14 @@ NS_IMETHODIMP nsAbView::Init(const char *aURI, nsIAbViewListener *abViewListener
     NS_ENSURE_SUCCESS(rv,rv);
   }
 
-  *result = nsCRT::strdup(actualSortColumn.get());
+  *result = ToNewUnicode(actualSortColumn);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::GetDirectory(nsIAbDirectory **aDirectory)
 {
   NS_ENSURE_ARG_POINTER(aDirectory);
-  *aDirectory = mDirectory;
-  NS_IF_ADDREF(*aDirectory);
+  NS_IF_ADDREF(*aDirectory = mDirectory);
   return NS_OK;
 }
 
@@ -282,9 +281,9 @@ nsresult nsAbView::EnumerateCards()
   rv = mDirectory->GetChildCards(getter_AddRefs(cardsEnumerator));
   if (NS_SUCCEEDED(rv) && cardsEnumerator)
   {
-		nsCOMPtr<nsISupports> item;
-	  for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next())
-	  {
+    nsCOMPtr<nsISupports> item;
+    for (rv = cardsEnumerator->First(); NS_SUCCEEDED(rv); rv = cardsEnumerator->Next())
+    {
       rv = cardsEnumerator->CurrentItem(getter_AddRefs(item));
       if (NS_SUCCEEDED(rv))
       {
@@ -320,8 +319,7 @@ NS_IMETHODIMP nsAbView::GetRowCount(PRInt32 *aRowCount)
 
 NS_IMETHODIMP nsAbView::GetSelection(nsIOutlinerSelection * *aSelection)
 {
-  *aSelection = mOutlinerSelection;
-  NS_IF_ADDREF(*aSelection);
+  NS_IF_ADDREF(*aSelection = mOutlinerSelection);
   return NS_OK;
 }
 
@@ -342,17 +340,19 @@ NS_IMETHODIMP nsAbView::GetCellProperties(PRInt32 row, const PRUnichar *colID, n
     return NS_OK;
 
   // "G" == "GeneratedName"
-  if (colID[0] != 'G')
+  if (colID[0] != PRUnichar('G'))
     return NS_OK;
 
   nsIAbCard *card = ((AbCard *)(mCards.ElementAt(row)))->card;
 
-  PRBool isMailList = PR_FALSE;
+  PRBool isMailList;
   nsresult rv = card->GetIsMailList(&isMailList);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  if (isMailList)
-    properties->AppendElement(mMailListAtom);  
+  if (isMailList) {
+    rv = properties->AppendElement(mMailListAtom);  
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
 
   return NS_OK;
 }
@@ -428,25 +428,20 @@ nsresult nsAbView::GetCardValue(nsIAbCard *card, const PRUnichar *colID, PRUnich
   // "G" == "GeneratedName"
   // "_" == generic column (like _AimScreenName)
   // else, standard column (like PrimaryEmail)
-  if (colID[0] == 'G') {
+  if (colID[0] == PRUnichar('G')) {
     // XXX todo 
     // cache the ab session?
     nsCOMPtr<nsIAddrBookSession> abSession = do_GetService(NS_ADDRBOOKSESSION_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv,rv);
-
+    
     rv = abSession->GenerateNameFromCard(card, mGeneratedNameFormat, _retval);
-  NS_ENSURE_SUCCESS(rv,rv);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
   else {
-    // XXX todo
-    // do this conversion once, and cache it?
-    nsCAutoString column;
-    column.AssignWithConversion(colID);
-
-    if (colID[0] == '_')
-      rv = mDirectory->GetValueForCard(card, column.get(), _retval);
+    if (colID[0] == PRUnichar('_'))
+      rv = mDirectory->GetValueForCard(card, NS_LossyConvertUCS2toASCII(colID).get(), _retval);
     else 
-      rv = card->GetCardUnicharValue(column.get(), _retval);
+      rv = card->GetCardValue(NS_LossyConvertUCS2toASCII(colID).get(), _retval);
   }
   return rv;
 }
@@ -559,7 +554,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
   // PrimaryEmail.  use the last primary key as the secondary key.
   //
   // "Pr" to distinguish "PrimaryEmail" from "PagerNumber"
-  if (closure->colID[0] == 'P' && closure->colID[1] == 'r') {
+  if (closure->colID[0] == PRUnichar('P') && closure->colID[1] == PRUnichar('r')) {
     sortValue = closure->abView->CompareCollationKeys(card1->secondaryCollationKey,card1->secondaryCollationKeyLen,card2->secondaryCollationKey,card2->secondaryCollationKeyLen);
     if (sortValue)
       return sortValue * closure->factor;
@@ -667,7 +662,7 @@ NS_IMETHODIMP nsAbView::SortBy(const PRUnichar *colID, const PRUnichar *sortDir)
 
   rv = InvalidateOutliner(ALL_ROWS);
   NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
+  return rv;
 }
 
 PRInt32 nsAbView::CompareCollationKeys(PRUint8 *key1, PRUint32 len1, PRUint8 *key2, PRUint32 len2)
@@ -721,39 +716,39 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
   NS_ENSURE_ARG_POINTER(aKey);
   NS_ENSURE_ARG_POINTER(aKeyLen);
 
-	nsresult rv;
-	if (!mCollationKeyGenerator)
-	{
-		nsCOMPtr<nsILocaleService> localeSvc = do_GetService(NS_LOCALESERVICE_CONTRACTID,&rv); 
-		NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
+  if (!mCollationKeyGenerator)
+  {
+    nsCOMPtr<nsILocaleService> localeSvc = do_GetService(NS_LOCALESERVICE_CONTRACTID,&rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
 
-		nsCOMPtr<nsILocale> locale; 
-		rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
-		NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsILocale> locale; 
+    rv = localeSvc->GetApplicationLocale(getter_AddRefs(locale));
+    NS_ENSURE_SUCCESS(rv, rv);
 
-		nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv); 
-		NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsICollationFactory> factory = do_CreateInstance(kCollationFactoryCID, &rv); 
+    NS_ENSURE_SUCCESS(rv, rv);
 
-		rv = factory->CreateCollation(locale, getter_AddRefs(mCollationKeyGenerator));
-		NS_ENSURE_SUCCESS(rv, rv);
-	}
+    rv = factory->CreateCollation(locale, getter_AddRefs(mCollationKeyGenerator));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
 
         // XXX can we avoid this copy?
-	nsAutoString sourceString(aSource);
-	rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, aKeyLen);
-	NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoString sourceString(aSource);
+  rv = mCollationKeyGenerator->GetSortKeyLen(kCollationCaseInSensitive, sourceString, aKeyLen);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-	*aKey = (PRUint8*) nsMemory::Alloc (*aKeyLen);
-	if (!aKey)
-		return NS_ERROR_OUT_OF_MEMORY;
+  *aKey = (PRUint8*) nsMemory::Alloc (*aKeyLen);
+  if (!aKey)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, *aKey, aKeyLen);
-	if (NS_FAILED(rv))
-	{
-		nsMemory::Free(aKey);
-		return rv;
-	}
-	return NS_OK;
+  rv = mCollationKeyGenerator->CreateRawSortKey(kCollationCaseInSensitive, sourceString, *aKey, aKeyLen);
+  if (NS_FAILED(rv))
+  {
+    nsMemory::Free(aKey);
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsAbView::OnItemAdded(nsISupports *parentDir, nsISupports *item)
@@ -872,9 +867,10 @@ PRInt32 nsAbView::FindIndexForInsert(AbCard *abcard)
 NS_IMETHODIMP nsAbView::OnItemRemoved(nsISupports *parentDir, nsISupports *item)
 {
   nsresult rv;
+
   nsCOMPtr <nsIAbDirectory> directory = do_QueryInterface(parentDir,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
-  
+
   if (directory.get() == mDirectory.get()) {
     rv = RemoveCardAndSelectNextCard(item);
     NS_ENSURE_SUCCESS(rv,rv);
@@ -1006,10 +1002,8 @@ NS_IMETHODIMP nsAbView::OnItemPropertyChanged(nsISupports *item, const char *pro
     mSuppressCountChange = PR_FALSE;
 
     // ensure restored selection is visible
-    if (cardWasSelected) {
-      if (mOutliner) 
-        mOutliner->EnsureRowIsVisible(index);
-    }
+    if (cardWasSelected && mOutliner) 
+      mOutliner->EnsureRowIsVisible(index);
   }
   return NS_OK;
 }
@@ -1023,22 +1017,22 @@ NS_IMETHODIMP nsAbView::SelectAll()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetSortDirection(PRUnichar **direction)
+NS_IMETHODIMP nsAbView::GetSortDirection(nsAWritableString & aDirection)
 {
-  *direction = nsCRT::strdup(mSortDirection.get());
+  aDirection = mSortDirection;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsAbView::GetSortColumn(PRUnichar **column)
+NS_IMETHODIMP nsAbView::GetSortColumn(nsAWritableString & aColumn)
 {
-  *column = nsCRT::strdup(mSortColumn.get());
+  aColumn = mSortColumn;
   return NS_OK;
 }
 
 nsresult nsAbView::ReselectCards(nsISupportsArray *cards, nsIAbCard *indexCard)
 {
   PRUint32 count;
-	PRUint32 i;
+  PRUint32 i;
 
   if (!mOutlinerSelection)
     return NS_OK;
@@ -1085,7 +1079,7 @@ NS_IMETHODIMP nsAbView::DeleteSelectedCards()
 
   rv = mDirectory->DeleteCards(cardsToDelete);
   NS_ENSURE_SUCCESS(rv,rv);
-  return NS_OK;
+  return rv;
 }
 
 nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
@@ -1093,18 +1087,16 @@ nsresult nsAbView::GetSelectedCards(nsISupportsArray **selectedCards)
   *selectedCards = nsnull;
   if (!mOutlinerSelection)
     return NS_OK;
-
-  nsresult rv = NS_NewISupportsArray(selectedCards);
-  NS_ENSURE_SUCCESS(rv,rv);
   
   PRInt32 selectionCount; 
-  rv = mOutlinerSelection->GetRangeCount(&selectionCount);
+  nsresult rv = mOutlinerSelection->GetRangeCount(&selectionCount);
   NS_ENSURE_SUCCESS(rv,rv);
   
   if (!selectionCount)
     return NS_OK;
   
-  NS_NewISupportsArray(selectedCards);
+  rv = NS_NewISupportsArray(selectedCards);
+  NS_ENSURE_SUCCESS(rv,rv);
   
   for (PRInt32 i = 0; i < selectionCount; i++)
   {
