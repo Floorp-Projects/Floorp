@@ -113,11 +113,13 @@ endif
 # we use a relative pathname as NSPR's prefix on Windows.
 #
 
-USEABSPATH=':'
+USEABSPATH="YES"
 ifeq ($(OS_ARCH),WINNT)
-USEABSPATH=$(findstring :,$(shell pwd))
+ifeq (,$(findstring :,$(shell pwd)))
+USEABSPATH="NO"
 endif
-ifeq ($(USEABSPATH),':')
+endif
+ifeq ($(USEABSPATH),"YES")
 NSPR_PREFIX = $(shell pwd)/../../dist/$(OBJDIR_NAME)
 else
 NSPR_PREFIX = $$(topsrcdir)/../dist/$(OBJDIR_NAME)
