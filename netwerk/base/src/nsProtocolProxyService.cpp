@@ -28,7 +28,7 @@
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 static const char PROXY_PREFS[] = "network.proxy";
-PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
+static PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
 {
     nsProtocolProxyService* proxyServ = (nsProtocolProxyService*) instance;
     NS_ASSERTION(proxyServ, "bad instance data");

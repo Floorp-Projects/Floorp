@@ -890,7 +890,7 @@ typedef struct {
 } nsReadFromSocketClosure;
 
 
-NS_METHOD
+static NS_METHOD
 nsReadFromSocket(void* closure,
                  char* toRawSegment,
                  PRUint32 offset,
@@ -943,7 +943,7 @@ nsReadFromSocket(void* closure,
   return rv;
 }
 
-NS_METHOD
+static NS_METHOD
 nsWriteToSocket(void* closure,
                 const char* fromRawSegment,
                 PRUint32 toOffset,

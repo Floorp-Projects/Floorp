@@ -45,7 +45,7 @@ static NS_DEFINE_CID(kThisStdURLImplementationCID,
 static NS_DEFINE_CID(kStdURLParserCID, NS_STANDARDURLPARSER_CID);
 
 #if defined (XP_MAC)
-void SwapSlashColon(char * s)
+static void SwapSlashColon(char * s)
 {
 	while (*s)
 	{

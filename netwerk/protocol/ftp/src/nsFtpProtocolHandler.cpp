@@ -256,7 +256,7 @@ nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) 
 }
 
 // cleans up a connection list entry
-PRBool PR_CALLBACK CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
+static PRBool PR_CALLBACK CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
     delete (nsConnectionCacheObj*)aData;
     return PR_TRUE;
 }

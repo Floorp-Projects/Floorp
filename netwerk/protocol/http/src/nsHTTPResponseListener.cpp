@@ -822,7 +822,7 @@ nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener,
     return rv;
 }
 
-NS_METHOD
+static NS_METHOD
 nsWriteToString(void* closure,
                 const char* fromRawSegment,
                 PRUint32 offset,
