@@ -205,7 +205,8 @@ void listSelfTest(FILE * fd, char * aTitle, nsIListWidget * listBox) {
   fprintf(fd, "\tSelection should be [%d] is [%d]  Test: [%s]\n", 
           inx, sel, eval(inx == (int)sel)); fflush(fd);
 
-  sel = listBox->FindItem(item4, 0);
+  nsString item4Str(item4);
+  sel = listBox->FindItem(item4Str, 0);
   fprintf(fd, "\nTesting FindItem\n");fflush(fd);
   fprintf(fd, "\tItem index should be [%d] index is [%d] Test: [%s]\n", 
           inx, sel, eval(inx == (int)sel)); fflush(fd);
@@ -1086,6 +1087,8 @@ nsEventStatus PR_CALLBACK DoSelfTests(nsGUIEvent *aEvent)
   listSelfTest(gFD, "ListBox", listBox);
   listSelfTest(gFD, "ComboBox", comboBox);
   multiListSelfTest(gFD, "Multi-ListBox", gMultiListBox);
+
+  return nsEventStatus_eIgnore;
 
 }
 
