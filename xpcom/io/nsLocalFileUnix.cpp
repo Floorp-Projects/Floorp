@@ -20,6 +20,7 @@
  *
  * Contributor(s): 
  *     Mike Shaver <shaver@mozilla.org>
+ *     Christopher Blizzard <blizzard@mozilla.org>
  */
 
 /*
@@ -34,6 +35,7 @@
 #include <errno.h>
 #include <utime.h>
 #include <dirent.h>
+#include <ctype.h>
 
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
@@ -42,6 +44,7 @@
 #include "nsILocalFile.h"
 #include "nsLocalFileUnix.h"
 #include "nsIComponentManager.h"
+#include "prproces.h"
 
 // On some platforms file/directory name comparisons need to
 // be case-blind.
@@ -404,7 +407,17 @@ nsLocalFile::Append(const char *fragment)
 NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    char  resolved_path[PATH_MAX];
+    char *resolved_path_ptr = NULL;
+    CHECK_mPath();
+    resolved_path_ptr = realpath(mPath, resolved_path);
+    // if there is an error, the return is null.
+    if (resolved_path_ptr == NULL) {
+        return NSRESULT_FOR_ERRNO();
+    }
+    // nsXPIDLCString will copy.
+    mPath = resolved_path;
+    return NS_OK;
 }
 
 nsresult
@@ -1065,9 +1078,43 @@ nsLocalFile::GetTarget(char **_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::Spawn(const char *args)
+nsLocalFile::Spawn(const char **args, PRUint32 count)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    CHECK_mPath();
+
+    // status from our create process
+    PRStatus rv = PR_FAILURE;
+
+    // this is the argv that will hold the args that 
+    char ** my_argv = NULL;
+
+    // make sure that when we allocate we have 1 greater than the
+    // count since we need to null terminate the list for the argv to
+    // pass into PR_CreateProcessDetached
+    my_argv = (char **)malloc(sizeof(char *) * (count + 2) );
+    if (!my_argv) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    // copy the args
+    PRUint32 i;
+    for (i=0; i < count; i++) {
+        my_argv[i+1] = (char *)args[i];
+    }
+    // we need to set argv[0] to the program name.
+    my_argv[0] = (char *)(const char *)mPath;
+    
+    // null terminate the array
+    my_argv[count+1] = NULL;
+
+    rv = PR_CreateProcessDetached(mPath, my_argv, NULL, NULL);
+
+    // free up our argv
+    free(my_argv);
+
+    if (PR_SUCCESS == rv)
+        return NS_OK;
+    else  
+        return NS_ERROR_FILE_EXECUTION_FAILED;
 }
 
 NS_IMETHODIMP
