@@ -51,6 +51,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
         mXPCContext(nsnull),
         mJSContext(cx),
         mContextPopRequired(JS_FALSE),
+        mDestroyJSContextInDestructor(JS_FALSE),
         mCallerLanguage(callerLanguage)
 {
     NS_INIT_ISUPPORTS();
@@ -312,8 +313,25 @@ XPCCallContext::~XPCCallContext()
     }
 
     if(mJSContext)
+    {
         if(mCallerLanguage == NATIVE_CALLER && JS_GetContextThread(mJSContext))
             JS_EndRequest(mJSContext);
+        
+        if(mDestroyJSContextInDestructor)
+        {
+#ifdef DEBUG_xpc_hacker
+            printf("!xpc - doing deferred destruction of JSContext @ %0x\n", 
+                   mJSContext);
+#endif
+            NS_ASSERTION(!mThreadData->GetJSContextStack() || 
+                         !mThreadData->GetJSContextStack()->
+                            DEBUG_StackHasJSContext(mJSContext),
+                         "JSContext still in threadjscontextstack!");
+        
+            JS_DestroyContext(mJSContext);
+            mXPC->SyncJSContexts();
+        }
+    }
 
     NS_IF_RELEASE(mXPC);
 }

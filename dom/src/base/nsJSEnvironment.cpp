@@ -228,7 +228,8 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
 {
   // Get the native context
   nsJSContext *ctx = NS_STATIC_CAST(nsJSContext *, ::JS_GetContextPrivate(cx));
-  NS_ENSURE_TRUE(ctx, JS_TRUE);
+  if (!ctx)
+    return JS_TRUE;
 
   // Filter out most of the calls to this callback
   if (++ctx->mBranchCallbackCount & MAYBE_GC_BRANCH_COUNT_MASK)
@@ -383,15 +384,12 @@ nsJSContext::~nsJSContext()
                               this);
   }
 
-  /* Remove global object reference to window object, so it can be collected. */
-  ::JS_SetGlobalObject(mContext, nsnull); // XXX: Do we need this call?
-  ::JS_DestroyContext(mContext);
-
-  // Let xpconnect resync its JSContext tracker.
+  // Let xpconnect destroy the JSContext when it thinks the time is right.
   nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
-
   if (xpc) {
-    xpc->SyncJSContexts();
+    xpc->ReleaseJSContext(mContext, PR_FALSE);
+  } else {
+    ::JS_DestroyContext(mContext);
   }
 }
 

@@ -763,6 +763,9 @@ public:
     inline PRUint16                     GetMethodIndex() const ;
     inline void                         SetMethodIndex(PRUint16 index) ;
 
+    inline JSBool   GetDestroyJSContextInDestructor() const;
+    inline void     SetDestroyJSContextInDestructor(JSBool b);
+
     inline jsval GetResolveName() const;
     inline jsval SetResolveName(jsval name);
 
@@ -816,6 +819,7 @@ private:
     XPCContext*                     mXPCContext;
     JSContext*                      mJSContext;
     JSBool                          mContextPopRequired;
+    JSBool                          mDestroyJSContextInDestructor;
 
     XPCContext::LangType            mCallerLanguage;
 
@@ -2463,6 +2467,10 @@ public:
 
     XPCJSContextStack();
     virtual ~XPCJSContextStack();
+
+#ifdef DEBUG
+    JSBool DEBUG_StackHasJSContext(JSContext*  aJSContext);
+#endif    
 
 private:
     void SyncJSContexts();

@@ -315,6 +315,20 @@ XPCCallContext::SetMethodIndex(PRUint16 index)
     mMethodIndex = index;
 }
 
+inline JSBool   
+XPCCallContext::GetDestroyJSContextInDestructor() const
+{
+    CHECK_STATE(HAVE_CONTEXT);
+    return mDestroyJSContextInDestructor;
+}
+
+inline void
+XPCCallContext::SetDestroyJSContextInDestructor(JSBool b)
+{
+    CHECK_STATE(HAVE_CONTEXT);
+    mDestroyJSContextInDestructor = b;
+}
+
 /***************************************************************************/
 
 inline const nsIID*
