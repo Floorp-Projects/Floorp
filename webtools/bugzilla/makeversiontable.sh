@@ -34,18 +34,18 @@ program tinytext
 
 
 
+insert into versions (value, program) values ("other", "Browser");
 insert into versions (value, program) values ("other", "Calendar");
 insert into versions (value, program) values ("other", "CCK");
 insert into versions (value, program) values ("other", "Directory");
 insert into versions (value, program) values ("other", "MailNews");
-insert into versions (value, program) values ("other", "Mozilla");
-insert into versions (value, program) values ("1998-03-31", "Mozilla");
-insert into versions (value, program) values ("1998-04-08", "Mozilla");
-insert into versions (value, program) values ("1998-04-29", "Mozilla");
-insert into versions (value, program) values ("1998-06-03", "Mozilla");
-insert into versions (value, program) values ("1998-07-28", "Mozilla");
-insert into versions (value, program) values ("1998-09-04", "Mozilla");
-insert into versions (value, program) values ("other", "NGLayout");
+insert into versions (value, program) values ("other", "MozillaClassic");
+insert into versions (value, program) values ("1998-03-31", "MozillaClassic");
+insert into versions (value, program) values ("1998-04-08", "MozillaClassic");
+insert into versions (value, program) values ("1998-04-29", "MozillaClassic");
+insert into versions (value, program) values ("1998-06-03", "MozillaClassic");
+insert into versions (value, program) values ("1998-07-28", "MozillaClassic");
+insert into versions (value, program) values ("1998-09-04", "MozillaClassic");
 insert into versions (value, program) values ("other", "Webtools");
 
 select * from versions;
