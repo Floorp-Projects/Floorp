@@ -262,7 +262,7 @@ PRInt32 nsIMAPBodyShell::Generate(char *partNum)
 #endif
 		m_generatingWholeMessage = PR_TRUE;
 		PRUint32 messageSize = m_protocolConnection->GetMessageSize(GetUID(), PR_TRUE);
-		m_protocolConnection->SetContentModified(PR_FALSE);	// So that when we cache it, we know we have the whole message
+		m_protocolConnection->SetContentModified(IMAP_CONTENT_NOT_MODIFIED);	// So that when we cache it, we know we have the whole message
 		if (!DeathSignalReceived())
 			m_protocolConnection->FetchTryChunking(GetUID(), kEveryThingRFC822, PR_TRUE, NULL, messageSize, PR_TRUE);
 		contentLength = (PRInt32) messageSize;	// ugh

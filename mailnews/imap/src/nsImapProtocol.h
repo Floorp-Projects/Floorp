@@ -196,7 +196,7 @@ public:
 
 	// Sets whether or not the content referenced by the current ActiveEntry has been modified.
 	// Used for MIME parts on demand.
-	void	SetContentModified(PRBool modified);
+	void	SetContentModified(IMAP_ContentModifiedType modified);
 	PRBool	GetShouldFetchAllParts();
 
 	// Generic accessors required by the imap parser

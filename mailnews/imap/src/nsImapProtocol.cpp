@@ -3476,9 +3476,10 @@ PRBool  nsImapProtocol::GetActive()
   return ret;
 }
 
-void nsImapProtocol::SetContentModified(PRBool modified)
+void nsImapProtocol::SetContentModified(IMAP_ContentModifiedType modified)
 {
-  // ### DMB this used to poke the content_modified member of the url struct...
+  if (m_runningUrl)
+    m_runningUrl->SetContentModified(modified);
 }
 
 
