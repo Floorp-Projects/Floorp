@@ -124,7 +124,15 @@ public:
     mRegressing = aSetting;
   }
 
-  void LoadNextURL();
+  void LoadNextURL(PRBool aQueueLoad);
+
+  nsresult QueueLoadURL(const nsString& aURL);
+
+  void GoToQueuedURL(const nsString& aURL);
+
+  void QueueExit();
+
+  void Exit();
 
   void SetVerbose(PRBool aSetting) {
     mVerbose = aSetting;
@@ -175,6 +183,8 @@ protected:
   nsVoidArray mPendingURLs;
   nsVoidArray mSafeDomains;
   nsVoidArray mAvoidDomains;
+
+  PRInt32 mQueuedLoadURLs;
 };
 
 #endif /* nsWebCrawler_h___ */

@@ -30,9 +30,7 @@
 #include "nsIViewManager.h"
 #include "nsIFrame.h"
 #include "nsIURL.h"
-#ifdef NECKO
 #include "nsNeckoUtil.h"
-#endif // NECKO
 #include "nsITimer.h"
 #include "nsIAtom.h"
 #include "nsIFrameUtil.h"
@@ -42,6 +40,9 @@
 #include "plhash.h"
 #include "nsINameSpaceManager.h"
 #include "nsXPIDLString.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -152,6 +153,7 @@ AtomHashTable::Remove(nsIAtom* aKey)
 //----------------------------------------------------------------------
 
 nsWebCrawler::nsWebCrawler(nsViewerApp* aViewer)
+  : mQueuedLoadURLs(0)
 {
   NS_INIT_REFCNT();
 
@@ -204,41 +206,26 @@ nsWebCrawler::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
                                 nsIChannel* channel,
                                 nsresult aStatus,
                                 nsIDocumentLoaderObserver* aObserver)
-#else
-nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                nsIURI* aURL,
-                                PRInt32 aStatus,
-                                nsIDocumentLoaderObserver * aObserver)
-#endif
 {
   nsresult rv;
 
-#ifdef NECKO
   nsCOMPtr<nsIURI> aURL;
   rv = channel->GetURI(getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
-#endif
   
   if (nsnull == aURL) {
     return NS_OK;
   }
 
   if (mVerbose) {
-#ifdef NECKO
     char* spec;
-#else
-    const char* spec;
-#endif
     aURL->GetSpec(&spec);
     printf("Crawler: done loading %s\n", spec);
-#ifdef NECKO
     nsCRT::free(spec);
-#endif
   }
 
   // Make sure the document bits make it to the screen at least once
@@ -272,17 +259,10 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
             }
           }
           else {
-#ifdef NECKO
             char* file;
             (void)aURL->GetPath(&file);
-#else
-            const char* file;
-            (void)aURL->GetFile(&file);
-#endif
             printf("could not open output file for %s\n", file);
-#ifdef NECKO
             nsCRT::free(file);
-#endif
           }
         }
         else
@@ -309,7 +289,7 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
     }
 
     if (0 == mDelay) {
-      LoadNextURL();
+      LoadNextURL(PR_TRUE);
     }
     NS_RELEASE(shell);
   }
@@ -321,71 +301,42 @@ nsWebCrawler::OnEndDocumentLoad(nsIDocumentLoader* loader,
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader,
                              nsIChannel* channel,
                              nsIContentViewer* aViewer)
-#else
-nsWebCrawler::OnStartURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                             const char* aContentType, 
-                             nsIContentViewer* aViewer)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
                                 nsIChannel* channel,
                                 PRUint32 aProgress, 
                                 PRUint32 aProgressMax)
-#else
-nsWebCrawler::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                nsIURI* aURL, PRUint32 aProgress, 
-                                PRUint32 aProgressMax)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader,
                               nsIChannel* channel, 
                               nsString& aMsg)
-#else
-nsWebCrawler::OnStatusURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                              nsString& aMsg)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIChannel* channel,
                            nsresult aStatus)
-#else
-nsWebCrawler::OnEndURLLoad(nsIDocumentLoader* loader, nsIURI* aURL,
-                           PRInt32 aStatus)
-#endif
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-#ifdef NECKO
 nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
                                        nsIChannel* channel,
                                        const char *aContentType,
                                        const char *aCommand)
-#else
-nsWebCrawler::HandleUnknownContentType(nsIDocumentLoader* loader,
-                                       nsIURI *aURL,
-                                       const char *aContentType,
-                                       const char *aCommand)
-#endif
 {
   return NS_OK;
 }
@@ -398,17 +349,10 @@ nsWebCrawler::GetOutputFile(nsIURI *aURL, nsString& aOutputName)
   if (nsnull!=aURL)
   {
     char *inputFileName;
-#ifdef NECKO
     char* file;
     (void)aURL->GetPath(&file);
-#else
-    const char* file;
-    (void)aURL->GetFile(&file);
-#endif
     nsAutoString inputFileFullPath(file);
-#ifdef NECKO
     nsCRT::free(file);
-#endif
     PRInt32 fileNameOffset = inputFileFullPath.RFindChar('/');
     if (-1==fileNameOffset)
     {
@@ -492,12 +436,13 @@ nsWebCrawler::SetRegressionDir(const nsString& aDir)
 void
 nsWebCrawler::Start()
 {
+printf("start: thread=%p\n", PR_CurrentThread());
   // Enable observing each URL load...
   nsIWebShell* shell = nsnull;
   mBrowser->GetWebShell(shell);
   shell->SetDocLoaderObserver(this);
   NS_RELEASE(shell);
-  LoadNextURL();
+  LoadNextURL(PR_FALSE);
 }
 
 void
@@ -580,20 +525,11 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
   PRBool ok = PR_TRUE;
   nsIURI* url;
   nsresult rv;
-#ifndef NECKO
-  rv = NS_NewURL(&url, aURLSpec);
-#else
   rv = NS_NewURI(&url, aURLSpec);
-#endif // NECKO
 
   if (NS_OK == rv) {
-#ifdef NECKO
     nsXPIDLCString host;
     rv = url->GetHost(getter_Copies(host));
-#else
-    const char* host;
-    rv = url->GetHost(&host);
-#endif
     if (rv == NS_OK) {
       PRInt32 hostlen = PL_strlen(host);
 
@@ -655,12 +591,7 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     }
     nsIURI* docURL = aDocument->GetDocumentURL();
     nsresult rv;
-#ifndef NECKO
-    aNode->GetAttribute(kNameSpaceID_HTML, mBaseHrefAttr, base);/* XXX not public knowledge! */
-    rv = NS_MakeAbsoluteURL(docURL, base, src, absURLSpec);
-#else
     rv = NS_MakeAbsoluteURI(src, docURL, absURLSpec);
-#endif // NECKO
     if (NS_OK == rv) {
       nsCOMPtr<nsIAtom> urlAtom = getter_AddRefs(NS_NewAtom(absURLSpec));
       if (0 == mVisited->Get(urlAtom)) {
@@ -759,11 +690,11 @@ static void
 TimerCallBack(nsITimer *aTimer, void *aClosure)
 {
   nsWebCrawler* wc = (nsWebCrawler*) aClosure;
-  wc->LoadNextURL();
+  wc->LoadNextURL(PR_TRUE);
 }
 
 void
-nsWebCrawler::LoadNextURL()
+nsWebCrawler::LoadNextURL(PRBool aQueueLoad)
 {
   if (0 != mDelay) {
     NS_IF_RELEASE(mTimer);
@@ -780,8 +711,13 @@ nsWebCrawler::LoadNextURL()
           RecordLoadedURL(*url);
           nsIWebShell* webShell;
           mBrowser->GetWebShell(webShell);
-          mCurrentURL = *url;
-          webShell->LoadURL(url->GetUnicode());
+          if (aQueueLoad) {
+            QueueLoadURL(*url);
+          }
+          else {
+            mCurrentURL = *url;
+            webShell->LoadURL(url->GetUnicode());
+          }
           NS_RELEASE(webShell);
 
           if (mMaxPages > 0) {
@@ -800,8 +736,8 @@ nsWebCrawler::LoadNextURL()
     mRecord = nsnull;
   }
 
-  if (mPostExit) {
-    mViewer->Exit();
+  if (mPostExit && (0 == mQueuedLoadURLs)) {
+    QueueExit();
   }
 } 
 
@@ -883,4 +819,159 @@ nsWebCrawler::PerformRegressionTest(const nsString& aOutputName)
   aOutputName.ToCString(fileName, BUF_SIZE-1);
 
   printf("regression test %s%s %s\n", dirName, fileName, NS_SUCCEEDED(rv) ? "passed" : "failed");
+}
+
+//----------------------------------------------------------------------
+
+static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
+static nsresult
+QueueEvent(PLEvent* aEvent)
+{
+  nsISupports* is;
+  nsresult rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                             kIEventQueueServiceIID,
+                                             &is,
+                                             nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIEventQueueService> eqs = do_QueryInterface(is);
+  if (eqs) {
+    PRThread* me = PR_CurrentThread();
+    nsCOMPtr<nsIEventQueue> eq;
+    rv = eqs->GetThreadEventQueue(me, getter_AddRefs(eq));
+    if (eq) {
+      eq->PostEvent(aEvent);
+    }
+  }
+
+  nsServiceManager::ReleaseService(kEventQueueServiceCID, is, nsnull);
+  return rv;
+}
+
+//----------------------------------------------------------------------
+
+struct ExitEvent : public PLEvent {
+  ExitEvent(nsWebCrawler* aCrawler);
+  ~ExitEvent();
+
+  void DoIt() {
+    crawler->Exit();
+  }
+
+  nsWebCrawler* crawler;
+
+  static PR_CALLBACK void HandleMe(ExitEvent* e);
+  static PR_CALLBACK void DeleteMe(ExitEvent* e);
+};
+
+ExitEvent::ExitEvent(nsWebCrawler* aCrawler)
+  : crawler(aCrawler)
+{
+  PL_InitEvent(this, crawler, (PLHandleEventProc) HandleMe,
+               (PLDestroyEventProc) DeleteMe);
+  NS_ADDREF(aCrawler);
+}
+
+ExitEvent::~ExitEvent()
+{
+  NS_RELEASE(crawler);
+}
+
+void
+ExitEvent::HandleMe(ExitEvent* e)
+{
+  e->DoIt();
+}
+
+void
+ExitEvent::DeleteMe(ExitEvent* e)
+{
+  delete e;
+}
+
+void
+nsWebCrawler::QueueExit()
+{
+  ExitEvent* event = new ExitEvent(this);
+  QueueEvent(event);
+}
+
+void
+nsWebCrawler::Exit()
+{
+  mViewer->Exit();
+}
+
+//----------------------------------------------------------------------
+
+struct LoadEvent : public PLEvent {
+  LoadEvent(nsWebCrawler* aCrawler, const nsString& aURL);
+  ~LoadEvent();
+
+  void DoIt() {
+    crawler->GoToQueuedURL(url);
+  }
+
+  nsString url;
+  nsWebCrawler* crawler;
+
+  static PR_CALLBACK void HandleMe(LoadEvent* e);
+  static PR_CALLBACK void DeleteMe(LoadEvent* e);
+};
+
+LoadEvent::LoadEvent(nsWebCrawler* aCrawler, const nsString& aURL)
+  : url(aURL),
+    crawler(aCrawler)
+{
+  PL_InitEvent(this, crawler, (PLHandleEventProc) HandleMe,
+               (PLDestroyEventProc) DeleteMe);
+  NS_ADDREF(aCrawler);
+}
+
+LoadEvent::~LoadEvent()
+{
+  NS_RELEASE(crawler);
+}
+
+void
+LoadEvent::HandleMe(LoadEvent* e)
+{
+  e->DoIt();
+}
+
+void
+LoadEvent::DeleteMe(LoadEvent* e)
+{
+  delete e;
+}
+
+void
+nsWebCrawler::GoToQueuedURL(const nsString& aURL)
+{
+  nsIWebShell* webShell;
+  mBrowser->GetWebShell(webShell);
+  if (webShell) {
+    mCurrentURL = aURL;
+    webShell->LoadURL(aURL.GetUnicode());
+    NS_RELEASE(webShell);
+  }
+  mQueuedLoadURLs--;
+  if ((0 == mQueuedLoadURLs) && (0 == mPendingURLs.Count())) {
+    QueueExit();
+  }
+}
+
+nsresult
+nsWebCrawler::QueueLoadURL(const nsString& aURL)
+{
+  LoadEvent* event = new LoadEvent(this, aURL);
+  nsresult rv = QueueEvent(event);
+  if (NS_SUCCEEDED(rv)) {
+    mQueuedLoadURLs++;
+  }
+  return rv;
 }
