@@ -140,7 +140,7 @@ ValueIsLength(JSContext *cx, jsval v, jsuint *lengthp)
 	    return JS_FALSE;
         if (!js_DoubleToECMAUint32(cx, d, (uint32 *)lengthp))
             return JS_FALSE;
-        if (d != *(uint32 *)lengthp) {
+        if (JSDOUBLE_IS_NaN(d) || (d != *(uint32 *)lengthp)) {
             JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 				 JSMSG_BAD_ARRAY_LENGTH);
             return JS_FALSE;
