@@ -263,6 +263,11 @@ HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 HRESULT CControlSite::SetPosition(const RECT &rcPos)
 {
 	NG_TRACE_METHOD(CControlSite::SetPosition);
+	
+	if (m_spIOleInPlaceObject == NULL)
+	{
+		return E_UNEXPECTED;
+	}
 
 	m_rcObjectPos = rcPos;
 	m_spIOleInPlaceObject->SetObjectRects(&m_rcObjectPos, &m_rcObjectPos);
