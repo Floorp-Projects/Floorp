@@ -2286,6 +2286,15 @@ nsAutoString::nsAutoString(const PRUnichar* aString,PRInt32 aLength) : nsString(
   Append(aString,aLength);
 }
 
+nsAutoString::nsAutoString( const nsString& aString )
+  : nsString()
+{
+  Initialize(*this, mBuffer, (sizeof(mBuffer)>>eTwoByte)-1, 0, eTwoByte, PR_FALSE);
+  AddNullTerminator(*this);
+  Append(aString);
+}
+
+
 /**
  * constructor that uses external buffer
  * @param   aBuffer describes the external buffer

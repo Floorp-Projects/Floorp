@@ -34,6 +34,9 @@
     4. Subsumable strings
  ***********************************************************************/
 
+#ifndef NEW_STRING_APIS
+//#define NEW_STRING_APIS 1
+#endif //NEW_STRING_APIS
 
 #ifndef _nsCString_
 #define _nsCString_

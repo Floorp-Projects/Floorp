@@ -162,6 +162,7 @@ typedef PRUint16 PRUnichar;
   /* under Metrowerks (Mac), we don't have autoconf yet */
 #ifdef __MWERKS__
   #define HAVE_CPP_SPECIALIZATION
+  #define HAVE_CPP_PARTIAL_SPECIALIZATION
   #define HAVE_CPP_MODERN_SPECIALIZE_TEMPLATE_SYNTAX
 
   #define HAVE_ACCESS_CHANGING_CPP_USING

@@ -1,6 +1,6 @@
 #include <iostream.h>
 
-#define TEST_STD_STRING
+//#define TEST_STD_STRING
 
 
 #include "nsString.h"

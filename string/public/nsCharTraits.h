@@ -487,6 +487,8 @@ struct nsCharSourceTraits
       }
   };
 
+#ifdef HAVE_CPP_PARTIAL_SPECIALIZATION
+
 template <class CharT>
 struct nsCharSourceTraits<CharT*>
   {
@@ -513,6 +515,37 @@ struct nsCharSourceTraits<CharT*>
       }
   };
 
+#else
+
+NS_SPECIALIZE_TEMPLATE
+struct nsCharSourceTraits<const char*>
+  {
+    static
+    PRUint32
+    readable_size( const char* s )
+      {
+        return PRUint32(nsCharTraits<char>::length(s));
+//      return numeric_limits<PRUint32>::max();
+      }
+
+    static
+    PRUint32
+    readable_size( const char* first, const char* last )
+      {
+        return PRUint32(last-first);
+      }
+
+    static
+    const char*
+    read( const char* s )
+      {
+        return s;
+      }
+ };
+
+// Add specialization for |PRUnichar| only if it is needed
+
+#endif
 
 
 template <class OutputIterator>
@@ -525,6 +558,8 @@ struct nsCharSinkTraits
         return iter.write(s, n);
       }
   };
+
+#ifdef HAVE_CPP_PARTIAL_SPECIALIZATION
 
 template <class CharT>
 struct nsCharSinkTraits<CharT*>
@@ -539,5 +574,34 @@ struct nsCharSinkTraits<CharT*>
       }
   };
 
+#else
+
+NS_SPECIALIZE_TEMPLATE
+struct nsCharSinkTraits<char*>
+  {
+    static
+    PRUint32
+    write( char*& iter, const char* s, PRUint32 n )
+      {
+        nsCharTraits<char>::copy(iter, s, n);
+        iter += n;
+        return n;
+      }
+  };
+
+NS_SPECIALIZE_TEMPLATE
+struct nsCharSinkTraits<PRUnichar*>
+  {
+    static
+    PRUint32
+    write( PRUnichar*& iter, const PRUnichar* s, PRUint32 n )
+      {
+        nsCharTraits<PRUnichar>::copy(iter, s, n);
+        iter += n;
+        return n;
+      }
+  };
+
+#endif
 
 #endif // !defined(_nsCharTraits_h__)

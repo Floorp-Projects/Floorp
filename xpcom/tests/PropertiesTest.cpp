@@ -136,8 +136,8 @@ main(int argc, char* argv[])
     char name[16];
     name[0] = 0;
     sprintf(name, "%d", i);
-    nsAutoString v("");
-    ret = props->GetStringProperty(name, v);
+    nsAutoString v;
+    ret = props->GetStringProperty(NS_ConvertASCIItoUCS2(name), v);
     if (NS_FAILED(ret) || (!v.Length())) {
       break;
     }

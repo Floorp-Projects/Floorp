@@ -51,7 +51,7 @@ extern ostream &operator<<( ostream &s, nsString &str ) {
 
 class TestObserver : public nsIObserver, public nsSupportsWeakReference {
 public:
-    TestObserver( const nsString &name = "unknown" )
+    TestObserver( const nsString &name = NS_ConvertASCIItoUCS2("unknown") )
         : mName( name ) {
         NS_INIT_REFCNT();
     }
@@ -82,8 +82,8 @@ TestObserver::Observe( nsISupports     *aSubject,
 
 int main(int argc, char *argv[])
 {
-    nsString topicA( "topic-A" );
-    nsString topicB( "topic-B" );
+    nsString topicA; topicA.AssignWithConversion( "topic-A" );
+    nsString topicB; topicB.AssignWithConversion( "topic-B" );
     nsresult rv;
 
     nsresult res = nsComponentManager::CreateInstance(NS_OBSERVERSERVICE_PROGID,
@@ -94,9 +94,9 @@ int main(int argc, char *argv[])
     if (res == NS_OK) {
 
         nsIObserver *anObserver;
-        nsIObserver *aObserver = new TestObserver("Observer-A");
+        nsIObserver *aObserver = new TestObserver(NS_ConvertASCIItoUCS2("Observer-A"));
         aObserver->AddRef();
-        nsIObserver *bObserver = new TestObserver("Observer-B");
+        nsIObserver *bObserver = new TestObserver(NS_ConvertASCIItoUCS2("Observer-B"));
         bObserver->AddRef();
             
         cout << "Adding Observer-A as observer of topic-A..." << endl;
@@ -114,13 +114,13 @@ int main(int argc, char *argv[])
         cout << "Testing Notify(observer-A, topic-A)..." << endl;
         rv = anObserverService->Notify( aObserver,
                                    topicA.GetUnicode(),
-                                   nsString("Testing Notify(observer-A, topic-A)").GetUnicode() );
+                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-A, topic-A)").GetUnicode() );
         testResult(rv);
 
         cout << "Testing Notify(observer-B, topic-B)..." << endl;
         rv = anObserverService->Notify( bObserver,
                                    topicB.GetUnicode(),
-                                   nsString("Testing Notify(observer-B, topic-B)").GetUnicode() );
+                                   NS_ConvertASCIItoUCS2("Testing Notify(observer-B, topic-B)").GetUnicode() );
         testResult(rv);
  
         cout << "Testing EnumerateObserverList (for topic-A)..." << endl;
@@ -138,7 +138,7 @@ int main(int argc, char *argv[])
                   rv = inst->QueryInterface(NS_GET_IID(nsIObserver),(void**)&anObserver);
                   cout << "Calling observe on enumerated observer "
                         << NS_REINTERPRET_CAST(TestObserver*, NS_REINTERPRET_CAST(void*, inst))->mName << "..." << endl;
-                  rv = anObserver->Observe( inst, topicA.GetUnicode(), nsString("during enumeration").GetUnicode() );
+                  rv = anObserver->Observe( inst, topicA.GetUnicode(), NS_ConvertASCIItoUCS2("during enumeration").GetUnicode() );
                   testResult(rv);
                 }
             }
