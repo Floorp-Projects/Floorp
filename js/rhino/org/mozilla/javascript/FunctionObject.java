@@ -55,15 +55,15 @@ public class FunctionObject extends NativeFunction {
      * form. If the FunctionObject will be used as a constructor,
      * the member must have the following parameters
      * <pre>
-     *      (Context cx, Scriptable thisObj, Object[] args,
-     *       Function funObj) </pre>
-     * and if it is a Method, be static and return an Object result.<p>
-     *
-     * Otherwise, if the FunctionObject will not be used to define a
-     * constructor, the member must be a static Method with parameters
-     * <pre>
      *      (Context cx, Object[] args, Function ctorObj,
      *       boolean inNewExpr)</pre>
+     * and if it is a Method, be static and return an Object result.<p>
+     *
+     * Otherwise, if the FunctionObject will <i>not</i> be used to define a
+     * constructor, the member must be a static Method with parameters
+     *      (Context cx, Scriptable thisObj, Object[] args,
+     *       Function funObj) </pre>
+     * <pre>
      * and an Object result.<p>
      *
      * When the function varargs form is called as part of a function call,
