@@ -44,6 +44,7 @@
 #include "nsHTMLForms.h"
 #include "nsHTMLImage.h"
 #include "nsStyleUtil.h"
+#include "nsDOMEvent.h"
 
 enum nsButtonTagType {
   kButtonTag_Button,
@@ -443,11 +444,25 @@ nsInputButtonFrame::MouseClicked(nsIPresContext* aPresContext)
     nsButtonType    butType    = button->GetButtonType();
     nsButtonTagType butTagType = button->GetButtonTagType();
     if (kButton_Reset == butType) {
+      //Send DOM event
+      nsEventStatus mStatus;
+      nsEvent mEvent;
+      mEvent.eventStructType = NS_EVENT;
+      mEvent.message = NS_FORM_RESET;
+      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+
       formMan->OnReset();
     } 
     else if ((kButton_Submit == butType) ||
              ((kButton_Image == butType) && (kButtonTag_Input == butTagType))) {
       //NS_ADDREF(this);
+      //Send DOM event
+      nsEventStatus mStatus;
+      nsEvent mEvent;
+      mEvent.eventStructType = NS_EVENT;
+      mEvent.message = NS_FORM_SUBMIT;
+      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+
       nsIFormControl* control;
       mContent->QueryInterface(kIFormControlIID, (void**)&control);
       formMan->OnSubmit(aPresContext, this, control);
