@@ -103,11 +103,11 @@ PR_END_EXTERN_C
 
 #if defined(NO_TIMING)
 
-#define TIMING_MESSAGE(args)                    ((void) 0)
-#define TIMING_STARTCLOCK_NAME(op, name)        ((void) 0)
-#define TIMING_STOPCLOCK_NAME(op, name, msg)    ((void) 0)
-#define TIMING_STARTCLOCK_OBJECT(op, name)      ((void) 0)
-#define TIMING_STOPCLOCK_OBJECT(op, name, msg)  ((void) 0)
+#define TIMING_MESSAGE(args)                       ((void) 0)
+#define TIMING_STARTCLOCK_NAME(op, name)           ((void) 0)
+#define TIMING_STOPCLOCK_NAME(op, name, cx, msg)   ((void) 0)
+#define TIMING_STARTCLOCK_OBJECT(op, obj)          ((void) 0)
+#define TIMING_STOPCLOCK_OBJECT(op, obj, cx, msg)  ((void) 0)
 
 #else /* !defined(NO_TIMING) */
 
