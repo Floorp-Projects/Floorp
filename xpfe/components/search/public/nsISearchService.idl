@@ -1,0 +1,58 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+/*
+
+  The Browser Search service
+
+*/
+
+#include "nsISupports.idl"
+
+[scriptable, uuid(1222e6f0-a5e3-11d2-8b7c-00805f8a7db6)]
+interface nsILocalSearchService : nsISupports
+{
+};
+
+[scriptable, uuid(6bd1d803-1c67-11d3-9820-ed1b357eb3c4)]
+interface nsInternetSearchService : nsISupports
+{
+};
+
+%{C++
+
+#define NS_IINTERNETSEARCHDATASOURCECALLBACK_IID \
+{ 0x88774583, 0x1edd, 0x11d3, { 0x98, 0x20, 0xbf, 0x1b, 0xe7, 0x7e, 0x61, 0xc4 } }
+
+#define NS_IINTERNETSEARCHDATAOURCE_IID \
+{ 0x6bd1d803, 0x1c67, 0x11d3, { 0x98, 0x20, 0xed, 0x1b, 0x35, 0x7e, 0xb3, 0xc4 } }
+
+#define NS_ILOCALSEARCHDATASOURCE_IID \
+{ 0x1222e6f0, 0xa5e3, 0x11d2, { 0x8b, 0x7c, 0x00, 0x80, 0x5f, 0x8a, 0x7d, 0xb6 } }
+
+#define NS_LOCALSEARCH_SERVICE_PROGID \
+    "component://netscape/browser/localsearch-service"
+#define NS_LOCALSEARCH_DATASOURCE_PROGID \
+    "component://netscape/rdf/datasource?name=localsearch"
+
+#define NS_INTERNETSEARCH_SERVICE_PROGID \
+    "component://netscape/browser/internetsearch-service"
+#define NS_INTERNETSEARCH_DATASOURCE_PROGID \
+    "component://netscape/rdf/datasource?name=internetsearch"
+
+%}
