@@ -68,19 +68,6 @@ while ( <STDIN> ) {
     }
 }
 
-# if we found anything, kill the database thread and send mail about it
-#
-if ($LONGEST[6] != 0) {
-
-    system ("/usr/bonsaitools/bin/mysqladmin", "kill", $LONGEST[1]);
-
-    # fire off an email telling the maintainer that we had to kill a thread
-    #
-    sendEmail($mail_from, Param("maintainer"), 
-	     "long running MySQL thread killed",
-	     join(" ", @LONGEST) . "\n");
-}
-
 # send an email message
 #
 # should perhaps be moved to somewhere more global for use in bugzilla as a 
@@ -99,4 +86,17 @@ sub sendEmail($$$$) {
     print MTA "\n";
     close(MTA);
    
+}
+
+# if we found anything, kill the database thread and send mail about it
+#
+if ($LONGEST[6] != 0) {
+
+    system ("/usr/bonsaitools/bin/mysqladmin", "kill", $LONGEST[1]);
+
+    # fire off an email telling the maintainer that we had to kill a thread
+    #
+    sendEmail($mail_from, Param("maintainer"), 
+	     "long running MySQL thread killed",
+	     join(" ", @LONGEST) . "\n");
 }
