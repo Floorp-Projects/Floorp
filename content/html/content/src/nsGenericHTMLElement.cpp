@@ -2354,9 +2354,8 @@ nsGenericHTMLElement::RestoreFormControlState(nsIHTMLContent* aContent,
   // Get the pres state for this key
   rv = history->GetState(key, getter_AddRefs(state));
   if (state) {
-    rv = aControl->RestoreState(state);
     history->RemoveState(key);
-    return NS_SUCCEEDED(rv);
+    return aControl->RestoreState(state);
   }
 
   return PR_FALSE;

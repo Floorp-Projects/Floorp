@@ -238,7 +238,7 @@ public:
   NS_IMETHOD SubmitNamesValues(nsIFormSubmission* aFormSubmission,
                                nsIContent* aSubmitElement);
   NS_IMETHOD SaveState();
-  NS_IMETHOD RestoreState(nsIPresState* aState);
+  virtual PRBool RestoreState(nsIPresState* aState);
 
   // nsISelectElement
   NS_DECL_NSISELECTELEMENT
@@ -1834,7 +1834,7 @@ nsHTMLSelectElement::SaveState()
   return rv;
 }
 
-NS_IMETHODIMP
+PRBool
 nsHTMLSelectElement::RestoreState(nsIPresState* aState)
 {
   // Get the presentation state object to retrieve our stuff out of.
@@ -1852,7 +1852,7 @@ nsHTMLSelectElement::RestoreState(nsIPresState* aState)
     }
   }
 
-  return rv;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
