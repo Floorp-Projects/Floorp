@@ -276,23 +276,23 @@ cert_all_CA()
     echo nss > ${PWFILE}
 
     ALL_CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
-    cert_CA $CADIR TestCA -x "CTu,CTu,CTu" ${D_CA}
+    cert_CA $CADIR TestCA -x "CTu,CTu,CTu" ${D_CA} "1"
 
     ALL_CU_SUBJECT="CN=NSS Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR serverCA -x "Cu,Cu,Cu" ${D_SERVER_CA}
+    cert_CA $SERVER_CADIR serverCA -x "Cu,Cu,Cu" ${D_SERVER_CA} "2"
     ALL_CU_SUBJECT="CN=NSS Chain1 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "u,u,u" ${D_SERVER_CA}
-    ALL_CU_SUBJECT="CN=NSS Chain2 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "u,u,u" ${D_SERVER_CA}
+    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "u,u,u" ${D_SERVER_CA} "3"
+    ALL_CU_SUBJECT="CN=NSS Chain2 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US" 
+    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "u,u,u" ${D_SERVER_CA} "4"
 
 
 
     ALL_CU_SUBJECT="CN=NSS Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR clientCA -x "Tu,Cu,Cu" ${D_CLIENT_CA}
+    cert_CA $CLIENT_CADIR clientCA -x "Tu,Cu,Cu" ${D_CLIENT_CA} "5"
     ALL_CU_SUBJECT="CN=NSS Chain1 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "u,u,u" ${D_CLIENT_CA}
+    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "u,u,u" ${D_CLIENT_CA} "6"
     ALL_CU_SUBJECT="CN=NSS Chain2 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "u,u,u" ${D_CLIENT_CA}
+    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "u,u,u" ${D_CLIENT_CA} "7"
 
     rm $CLIENT_CADIR/root.cert $SERVER_CADIR/root.cert
     # root.cert in $CLIENT_CADIR and in $SERVER_CADIR is the one of the last 
@@ -310,6 +310,7 @@ cert_CA()
   SIGNER=$3
   TRUSTARG=$4
   DOMAIN=$5
+  CERTSERIAL=$6
 
   echo "$SCRIPTNAME: Creating a CA Certificate $NICKNAME =========================="
 
@@ -339,7 +340,7 @@ cert_CA()
   CU_ACTION="Creating CA Cert $NICKNAME "
   CU_SUBJECT=$ALL_CU_SUBJECT
   certu -S -n $NICKNAME -t $TRUSTARG -v 60 $SIGNER -d ${LPROFILE} -1 -2 -5 \
-        -f ${R_PWFILE} -z ${R_NOISE_FILE} 2>&1 <<CERTSCRIPT
+        -f ${R_PWFILE} -z ${R_NOISE_FILE} -m $CERTSERIAL 2>&1 <<CERTSCRIPT
 5
 9
 n
@@ -376,14 +377,14 @@ cert_smime_client()
   CERTFAILED=0
   echo "$SCRIPTNAME: Creating Client CA Issued Certificates =============="
 
-  cert_create_cert ${ALICEDIR} "Alice" 3 ${D_ALICE}
-  cert_create_cert ${BOBDIR} "Bob" 4  ${D_BOB}
+  cert_create_cert ${ALICEDIR} "Alice" 30 ${D_ALICE}
+  cert_create_cert ${BOBDIR} "Bob" 40  ${D_BOB}
 
   echo "$SCRIPTNAME: Creating Dave's Certificate -------------------------"
-  cert_create_cert "${DAVEDIR}" Dave 5 ${D_DAVE}
+  cert_create_cert "${DAVEDIR}" Dave 50 ${D_DAVE}
 
   echo "$SCRIPTNAME: Creating multiEmail's Certificate --------------------"
-  cert_create_cert "${EVEDIR}" "Eve" 6 ${D_EVE} "-7 eve@bogus.net,eve@bogus.cc,beve@bogus.com"
+  cert_create_cert "${EVEDIR}" "Eve" 60 ${D_EVE} "-7 eve@bogus.net,eve@bogus.cc,beve@bogus.com"
 
   #echo "************* Copying CA files to ${SERVERDIR}"
   #cp ${CADIR}/*.db .
@@ -458,7 +459,7 @@ cert_extended_ssl()
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
   cp ${CERTDIR}/req ${SERVER_CADIR}
-  certu -C -c "chain-2-serverCA" -m "$CERTSERIAL" -v 60 -d "${P_SERVER_CADIR}" \
+  certu -C -c "chain-2-serverCA" -m 200 -v 60 -d "${P_SERVER_CADIR}" \
         -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
 
   CU_ACTION="Import $CERTNAME's Cert  -t u,u,u (ext)"
@@ -494,7 +495,7 @@ cert_extended_ssl()
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
   cp ${CERTDIR}/req ${CLIENT_CADIR}
-  certu -C -c "chain-2-clientCA" -m "$CERTSERIAL" -v 60 -d "${P_CLIENT_CADIR}" \
+  certu -C -c "chain-2-clientCA" -m 300 -v 60 -d "${P_CLIENT_CADIR}" \
         -i req -o "${CERTNAME}.cert" -f "${R_PWFILE}" 2>&1
 
   CU_ACTION="Import $CERTNAME's Cert -t u,u,u (ext)"
@@ -532,11 +533,11 @@ cert_ssl()
   #
   CERTFAILED=0
   echo "$SCRIPTNAME: Creating Client CA Issued Certificates ==============="
-  cert_create_cert ${CLIENTDIR} "TestUser" 6 ${D_CLIENT}
+  cert_create_cert ${CLIENTDIR} "TestUser" 70 ${D_CLIENT}
 
   echo "$SCRIPTNAME: Creating Server CA Issued Certificate for \\"
   echo "             ${HOSTADDR} ------------------------------------"
-  cert_create_cert ${SERVERDIR} "${HOSTADDR}" 1 ${D_SERVER}
+  cert_create_cert ${SERVERDIR} "${HOSTADDR}" 100 ${D_SERVER}
   certu -M -n "TestCA" -t "TC,TC,TC" -d ${PROFILEDIR}
 #  cert_init_cert ${SERVERDIR} "${HOSTADDR}" 1 ${D_SERVER}
 #  echo "************* Copying CA files to ${SERVERDIR}"
@@ -615,7 +616,7 @@ MODSCRIPT
 
   CU_ACTION="Generate Certificate for ${CERTNAME}"
   CU_SUBJECT="CN=${CERTNAME}, E=fips@bogus.com, O=BOGUS NSS, OU=FIPS PUB 140-1, L=Mountain View, ST=California, C=US"
-  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -m ${CERTSERIAL} -z "${R_NOISE_FILE}" 2>&1
+  certu -S -n ${FIPSCERTNICK} -x -t "Cu,Cu,Cu" -d "${PROFILEDIR}" -f "${R_FIPSPWFILE}" -k dsa -m 500 -z "${R_NOISE_FILE}" 2>&1
   if [ "$RET" -eq 0 ]; then
     cert_log "SUCCESS: FIPS passed"
   fi
