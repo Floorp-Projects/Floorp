@@ -21,3 +21,6 @@ DEPTH = ..
 DIRS=langpacks
 
 include <$(DEPTH)\config\rules.mak>
+
+chrome::
+   echo locale,install,select,en-US >> $(DIST)\bin\chrome\installed-chrome.txt
