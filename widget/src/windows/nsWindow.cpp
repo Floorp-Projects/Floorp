@@ -75,7 +75,7 @@ static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 
 BOOL nsWindow::sIsRegistered = FALSE;
-
+UINT nsWindow::uMSH_MOUSEWHEEL = 0;
 
 ////////////////////////////////////////////////////
 static nsIRollupListener * gRollupListener           = nsnull;
@@ -289,6 +289,9 @@ nsWindow::nsWindow() : nsBaseWidget()
 
   mNativeDragTarget = nsnull;
   mIsTopWidgetWindow = PR_FALSE;
+ 
+  if (!nsWindow::uMSH_MOUSEWHEEL)
+    nsWindow::uMSH_MOUSEWHEEL = RegisterWindowMessage(MSH_MOUSEWHEEL);
 }
 
 
@@ -617,7 +620,7 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
        // is plugged into the scrollbar scrolling in odd ways
        // which make it difficult to find a message which will
        // reliably be generated when the mouse wheel changes position
-      if (msg == WM_MOUSEWHEEL) {
+      if ((msg == WM_MOUSEWHEEL) || (msg == uMSH_MOUSEWHEEL)) {
         gRollupListener->Rollup();
         return TRUE;
       }
@@ -2462,59 +2465,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
         case WM_SETTINGCHANGE:
           firstTime = TRUE;
-          // Fall through
-
-        case WM_MOUSEWHEEL:
-        {
-         if (firstTime) {
-           firstTime = FALSE;
-            SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
-          
-            // ulScrollLines usually equals 3 or 0 (for no scrolling)
-            // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
-
-            if (ulScrollLines)
-              iDeltaPerLine = WHEEL_DELTA / ulScrollLines ;
-            else
-              iDeltaPerLine = 0 ;
-
-            if (msg == WM_SETTINGCHANGE) {
-              return 0;
-            }
-         }
-         if (iDeltaPerLine == 0)
-           return 0;
-
-         // The mousewheel event will be dispatched to the toplevel
-         // window.  We need to give it to the child window
-
-         POINT point;
-         point.x = (short) LOWORD(lParam);
-         point.y = (short) HIWORD(lParam);
-         HWND destWnd = ::WindowFromPoint(point);
-
-         if (destWnd != mWnd) {
-           nsWindow* destWindow = (nsWindow*) ::GetWindowLong(destWnd, GWL_USERDATA);
-           if (destWindow)
-             return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
-#ifdef DEBUG
-           else
-             printf("WARNING: couldn't get child window for MW event\n");
-#endif
-         }
-
-         nsMouseScrollEvent scrollEvent;
-         scrollEvent.deltaLines = -((short) HIWORD (wParam) / iDeltaPerLine);
-         scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
-         scrollEvent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
-         scrollEvent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
-         scrollEvent.isMeta    = PR_FALSE;
-         scrollEvent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
-         InitEvent(scrollEvent, NS_MOUSE_SCROLL);
-         if (nsnull != mEventCallback)
-           result = DispatchWindowEvent(&scrollEvent);
-         NS_RELEASE(scrollEvent.widget);
-        }
         break;
 
         case WM_PALETTECHANGED:
@@ -2621,6 +2571,59 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
         nsServiceManager::ReleaseService(kCClipboardCID, clipboard);
       } break;
 
+      default: {
+        // Handle both flavors of mouse wheel events.
+        if ( msg == WM_MOUSEWHEEL || msg == uMSH_MOUSEWHEEL ) {
+            // Get mouse wheel metrics (but only once).
+            if (firstTime) {
+                firstTime = FALSE;
+                SystemParametersInfo (104, 0, &ulScrollLines, 0) ;
+    
+                // ulScrollLines usually equals 3 or 0 (for no scrolling)
+                // WHEEL_DELTA equals 120, so iDeltaPerLine will be 40
+    
+                if (ulScrollLines)
+                    iDeltaPerLine = WHEEL_DELTA / ulScrollLines ;
+                else
+                    iDeltaPerLine = 0 ;
+            }
+            if (iDeltaPerLine == 0)
+                return 0;
+    
+            // The mousewheel event will be dispatched to the toplevel
+            // window.  We need to give it to the child window
+    
+            POINT point;
+            point.x = (short) LOWORD(lParam);
+            point.y = (short) HIWORD(lParam);
+            HWND destWnd = ::WindowFromPoint(point);
+            
+            if (destWnd != mWnd) {
+                nsWindow* destWindow = (nsWindow*) ::GetWindowLong(destWnd, GWL_USERDATA);
+                if (destWindow)
+                    return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
+                #ifdef DEBUG
+                else
+                    printf("WARNING: couldn't get child window for MW event\n");
+                #endif
+            }
+            
+            nsMouseScrollEvent scrollEvent;
+            if (msg == WM_MOUSEWHEEL)
+                scrollEvent.deltaLines = -((short) HIWORD (wParam) / iDeltaPerLine);
+            else
+                scrollEvent.deltaLines = -((int) wParam / iDeltaPerLine);
+            scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
+            scrollEvent.isShift   = IS_VK_DOWN(NS_VK_SHIFT);
+            scrollEvent.isControl = IS_VK_DOWN(NS_VK_CONTROL);
+            scrollEvent.isMeta    = PR_FALSE;
+            scrollEvent.isAlt     = IS_VK_DOWN(NS_VK_ALT);
+            InitEvent(scrollEvent, NS_MOUSE_SCROLL);
+            if (nsnull != mEventCallback)
+                result = DispatchWindowEvent(&scrollEvent);
+            NS_RELEASE(scrollEvent.widget);
+        } // WM_MOUSEWHEEL || uMSH_MOUSEWHEEL
+      } break;
     }
 
     //*aRetValue = result;
