@@ -25,6 +25,8 @@
 <!ENTITY printCmd.label "Print...">
 <!ENTITY printCmd.accesskey "P">
 <!ENTITY printCmd.commandkey "p">
+<!ENTITY import.label "Import...">
+<!ENTITY import.accesskey "I">
 
 <!ENTITY goOfflineCmd.label "Work Offline">
 <!ENTITY goOfflineCmd.accesskey "w">

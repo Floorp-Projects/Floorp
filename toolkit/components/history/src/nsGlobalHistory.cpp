@@ -603,6 +603,15 @@ NS_IMPL_ISUPPORTS7(nsGlobalHistory,
 NS_IMETHODIMP
 nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
 {
+  PRInt64 now = GetNow();
+
+  return AddPageToDatabase(aURI, aRedirect, aTopLevel, now);
+}
+
+nsresult
+nsGlobalHistory::AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLevel,
+                                   PRInt64 aLastVisitDate)
+{
   nsresult rv;
   NS_ENSURE_ARG_POINTER(aURI);
 
@@ -661,15 +670,13 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
          aTopLevel ? ", toplevel" : "");
 #endif
 
-  PRInt64 now = GetNow();
-
   // For notifying observers, later...
   nsCOMPtr<nsIRDFResource> url;
   rv = gRDFService->GetResource(URISpec, getter_AddRefs(url));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIRDFDate> date;
-  rv = gRDFService->GetDateLiteral(now, getter_AddRefs(date));
+  rv = gRDFService->GetDateLiteral(aLastVisitDate, getter_AddRefs(date));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIMdbRow> row;
@@ -679,7 +686,7 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
     // update the database, and get the old info back
     PRInt64 oldDate;
     PRInt32 oldCount;
-    rv = AddExistingPageToDatabase(row, now, &oldDate, &oldCount);
+    rv = AddExistingPageToDatabase(row, aLastVisitDate, &oldDate, &oldCount);
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddExistingPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
@@ -711,7 +718,7 @@ nsGlobalHistory::AddURI(nsIURI *aURI, PRBool aRedirect, PRBool aTopLevel)
 #endif
   }
   else {
-    rv = AddNewPageToDatabase(URISpec.get(), now, getter_AddRefs(row));
+    rv = AddNewPageToDatabase(URISpec.get(), aLastVisitDate, getter_AddRefs(row));
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddNewPageToDatabase failed; see bug 88961");
     if (NS_FAILED(rv)) return rv;
     
@@ -805,6 +812,8 @@ nsGlobalHistory::AddNewPageToDatabase(const char *aURL,
 {
   mdb_err err;
   
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_NOT_INITIALIZED);
+
   // Create a new row
   mdbOid rowId;
   rowId.mOid_Scope = kToken_HistoryRowScope;
@@ -994,6 +1003,20 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
     aResult.Truncate();
   
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::AddPageWithDetails(const char *aURL, const PRUnichar *aTitle, 
+                                    PRInt64 aLastVisitDate)
+{
+  nsCOMPtr<nsIURI> uri;
+  nsresult rv = NS_NewURI(getter_AddRefs(uri), aURL);
+  if (NS_FAILED(rv)) return rv;
+  
+  rv = AddPageToDatabase(uri, PR_FALSE, PR_TRUE, aLastVisitDate);
+  if (NS_FAILED(rv)) return rv;
+
+  return SetPageTitle(uri, nsDependentString(aTitle));
 }
 
 NS_IMETHODIMP

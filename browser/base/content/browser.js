@@ -284,6 +284,11 @@ function Startup()
       }
     }
   }
+
+  // Certain kinds of automigration rely on this notification to complete their
+  // tasks BEFORE the browser window is shown.   
+  var obs = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+  obs.notifyObservers(null, "browser-window-before-show", "");
   
   setTimeout(delayedStartup, 0);
 }
@@ -371,16 +376,6 @@ function delayedStartup()
     sidebar.setAttribute("src", sidebarBox.getAttribute("src"));
   }
  
-#ifdef XP_WIN
-  // Perform default browser checking (after window opens).
-  try {
-    var dialogShown = Components.classes["@mozilla.org/winhooks;1"]
-                    .getService(Components.interfaces.nsIWindowsHooks)
-                    .checkSettings(window);
-  } catch(e) {
-  }
-#endif
-
   // now load bookmarks
   BMSVC.readBookmarks();  
   var bt = document.getElementById("bookmarks-ptf");
@@ -471,6 +466,16 @@ function delayedStartup()
   }
 
   clearObsoletePrefs();
+
+#ifdef XP_WIN
+  // Perform default browser checking (after window opens).
+  try {
+    var dialogShown = Components.classes["@mozilla.org/winhooks;1"]
+                    .getService(Components.interfaces.nsIWindowsHooks)
+                    .checkSettings(window);
+  } catch(e) {
+  }
+#endif
 
 }
 
@@ -1385,6 +1390,12 @@ function updateToolbarStates(toolbarMenuElt)
       mainWindow.removeAttribute("chromehidden");
     }
   }
+}
+
+function BrowserImport()
+{
+  // goats
+  window.openDialog("chrome://browser/content/migration/migration.xul", "migration", "modal,centerscreen,chrome,resizable=no");
 }
 
 function BrowserFullScreen()

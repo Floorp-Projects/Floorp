@@ -303,6 +303,8 @@ protected:
   //
   // AddPage-oriented stuff
   //
+  nsresult AddPageToDatabase(nsIURI* aURI, PRBool aRedirect, PRBool aTopLevel,
+                             PRInt64 aLastVisitDate);
   nsresult AddExistingPageToDatabase(nsIMdbRow *row,
                                      PRInt64 aDate,
                                      PRInt64 *aOldDate,

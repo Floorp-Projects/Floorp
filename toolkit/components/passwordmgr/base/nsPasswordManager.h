@@ -132,8 +132,8 @@ public:
 
   // nsIDOMLoadListener
   NS_IMETHOD Load(nsIDOMEvent* aEvent);
-  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
   NS_IMETHOD Unload(nsIDOMEvent* aEvent);
+  NS_IMETHOD BeforeUnload(nsIDOMEvent* aEvent);
   NS_IMETHOD Abort(nsIDOMEvent* aEvent);
   NS_IMETHOD Error(nsIDOMEvent* aEvent);
 
@@ -144,7 +144,9 @@ public:
                             nsIAutoCompleteResult** aResult);
 
 protected:
-  void ReadSignonFile();
+#ifndef MIGRATION_ENABLED
+  nsresult ReadPasswords(nsIFile* aPasswordFile);
+#endif
   void WriteSignonFile();
   void AddSignonData(const nsACString& aRealm, SignonDataEntry* aEntry);
 

@@ -87,11 +87,6 @@
 #include "nsIPlatformCharset.h"
 #include "nsIPref.h"
 
-#ifdef XP_WIN
-#include <SHLOBJ.H>
-#include <INTSHCUT.H>
-#endif
-
 nsIRDFResource      *kNC_IEFavoritesRoot;
 nsIRDFResource      *kNC_SystemBookmarksStaticRoot;
 nsIRDFResource      *kNC_Bookmark;
@@ -3117,195 +3112,12 @@ nsBookmarksService::ResolveKeyword(const PRUnichar *aUserInput, char **aShortcut
     return NS_RDF_NO_VALUE;
 }
 
-#ifdef XP_WIN
-// *** code copied from widget/src/windows/nsClipboard.cpp
-// Determines the URL for a shortcut file 
-
-static void ResolveShortcut(const nsAFlatString &aFileName, char** aOutURL)
-{
-
-// IUniformResourceLocator isn't supported by VC5 (bless its little heart)
-#if _MSC_VER >= 1200
-    HRESULT result;
-
-    IUniformResourceLocator* urlLink = nsnull;
-    result = ::CoCreateInstance(CLSID_InternetShortcut, NULL, CLSCTX_INPROC_SERVER,
-                                IID_IUniformResourceLocator, (void**)&urlLink);
-    if (SUCCEEDED(result) && urlLink) {
-        IPersistFile* urlFile = nsnull;
-        result = urlLink->QueryInterface(IID_IPersistFile, (void**)&urlFile);
-        if (SUCCEEDED(result) && urlFile) {
-
-            result = urlFile->Load(aFileName.get(), STGM_READ);
-            if (SUCCEEDED(result) ) {
-                LPSTR lpTemp = nsnull;
-
-                result = urlLink->GetURL(&lpTemp);
-                if (SUCCEEDED(result) && lpTemp) {
-                    *aOutURL = PL_strdup(lpTemp);
-
-                    // free the string that GetURL alloc'd
-                    IMalloc* pMalloc;
-                    result = SHGetMalloc(&pMalloc);
-                    if (SUCCEEDED(result)) {
-                        pMalloc->Free(lpTemp);
-                        pMalloc->Release();
-                    }
-                }
-            }
-            urlFile->Release();
-        }
-        urlLink->Release();
-    }
-#endif
-} 
-
-nsresult
-nsBookmarksService::ParseFavoritesFolder(nsIFile* aDirectory, nsIRDFResource* aParentResource)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsISimpleEnumerator> entries;
-    rv = aDirectory->GetDirectoryEntries(getter_AddRefs(entries));
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    do
-    {
-        PRBool hasMore = PR_FALSE;
-        rv = entries->HasMoreElements(&hasMore);
-        if (NS_FAILED(rv) || !hasMore) 
-            break;
-
-        nsCOMPtr<nsISupports> supp;
-        rv = entries->GetNext(getter_AddRefs(supp));
-        if (NS_FAILED(rv)) 
-            break;
-
-        nsCOMPtr<nsIFile> currFile(do_QueryInterface(supp));
-    
-        nsCOMPtr<nsIURI> uri;
-        rv = NS_NewFileURI(getter_AddRefs(uri), currFile);
-        if (NS_FAILED(rv)) 
-            break;
-
-        nsAutoString bookmarkName;
-        currFile->GetLeafName(bookmarkName);
-
-        PRBool isSymlink = PR_FALSE;
-        PRBool isDir = PR_FALSE;
-
-        currFile->IsSymlink(&isSymlink);
-        currFile->IsDirectory(&isDir);
-
-        if (isSymlink)
-        {
-            // It's a .lnk file.  Get the native path and check to see if it's
-            // a dir.  If so, create a bookmark for the dir.  If not, then
-            // simply do nothing and continue.
-
-            // Get the native path that the .lnk file is pointing to.
-            nsCAutoString path;
-            rv = currFile->GetNativeTarget(path);
-            if (NS_FAILED(rv)) 
-                continue;
-
-            nsCOMPtr<nsILocalFile> localFile;
-            rv = NS_NewNativeLocalFile(path, PR_TRUE, getter_AddRefs(localFile));
-            if (NS_FAILED(rv)) 
-                continue;
-
-            // Check for dir here.  If path is not a dir, just continue with
-            // next import.
-            rv = localFile->IsDirectory(&isDir);
-            NS_ENSURE_SUCCESS(rv, rv);
-            if (!isDir)
-                continue;
-
-            nsCAutoString spec;
-            nsCOMPtr<nsIFile> filePath(localFile);
-            // Get the file url format (file:///...) of the native file path.
-            rv = NS_GetURLSpecFromFile(filePath, spec);
-            if (NS_FAILED(rv)) 
-                continue;
-
-            // Look for and strip out the .lnk extension.
-            NS_NAMED_LITERAL_STRING(lnkExt, ".lnk");
-            PRInt32 lnkExtStart = bookmarkName.Length() - lnkExt.Length();
-            if (StringEndsWith(bookmarkName, lnkExt,
-                  nsCaseInsensitiveStringComparator()))
-                bookmarkName.Truncate(lnkExtStart);
-
-            nsCOMPtr<nsIRDFResource> bookmark;
-            CreateBookmarkInContainer(bookmarkName.get(), spec.get(), nsnull,
-                nsnull, nsnull, aParentResource, -1, getter_AddRefs(bookmark));
-            if (NS_FAILED(rv)) 
-                continue;
-        }
-        else if (isDir)
-        {
-            nsCOMPtr<nsIRDFResource> folder;
-            rv = CreateFolderInContainer(bookmarkName.get(), aParentResource, -1, getter_AddRefs(folder));
-            if (NS_FAILED(rv)) 
-                continue;
-
-            rv = ParseFavoritesFolder(currFile, folder);
-            if (NS_FAILED(rv)) 
-                continue;
-        }
-        else
-        {
-            nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-            nsCAutoString extension;
-
-            url->GetFileExtension(extension);
-            if (!extension.Equals(NS_LITERAL_CSTRING("url"),
-                                  nsCaseInsensitiveCStringComparator()))
-                continue;
-
-            nsAutoString name(Substring(bookmarkName, 0, 
-                                        bookmarkName.Length() - extension.Length() - 1));
-     
-            nsAutoString path;
-            currFile->GetPath(path);
-
-            nsXPIDLCString resolvedURL;
-            ResolveShortcut(path, getter_Copies(resolvedURL));
-
-            nsCOMPtr<nsIRDFResource> bookmark;
-            rv = CreateBookmarkInContainer(name.get(), resolvedURL.get(), nsnull, nsnull, nsnull, aParentResource, -1, getter_AddRefs(bookmark));
-            if (NS_FAILED(rv)) 
-                continue;
-        }
-    }
-    while (1);
-
-    return rv;
-}
-#endif
-
 NS_IMETHODIMP
 nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
 {
     gImportedSystemBookmarks = PR_TRUE;
 
-#if defined(XP_WIN)
-    nsresult rv;
-
-    nsCOMPtr<nsIProperties> fileLocator(do_GetService("@mozilla.org/file/directory_service;1", &rv));
-    if (NS_FAILED(rv)) 
-        return rv;
-
-    nsCOMPtr<nsIFile> favoritesDirectory;
-    fileLocator->Get("Favs", NS_GET_IID(nsIFile), getter_AddRefs(favoritesDirectory));
-
-    // If |favoritesDirectory| is null, it means that we're on a Windows 
-    // platform that does not have a Favorites folder, e.g. Windows 95 
-    // (early SRs, before IE integrated with the shell). Only try to 
-    // read Favorites folder if it exists on the machine. 
-    if (favoritesDirectory) 
-        return ParseFavoritesFolder(favoritesDirectory, aParentFolder);
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     nsCOMPtr<nsIFile> ieFavoritesFile;
     nsresult rv = NS_GetSpecialDirectory(NS_MAC_PREFS_DIR, getter_AddRefs(ieFavoritesFile));
     NS_ENSURE_SUCCESS(rv, rv);
@@ -3323,7 +3135,7 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
     return NS_OK;
 }
 
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
 void
 nsBookmarksService::HandleSystemBookmarks(nsIRDFNode* aNode) 
 {
@@ -3830,7 +3642,7 @@ nsBookmarksService::HasAssertion(nsIRDFResource* source,
                 PRBool tv,
                 PRBool* hasAssertion)
 {
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(source);
 #endif
 
@@ -3864,7 +3676,7 @@ nsBookmarksService::RemoveObserver(nsIRDFObserver* aObserver)
 NS_IMETHODIMP
 nsBookmarksService::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_retval)
 {
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(aNode);
 #endif
 
@@ -3874,7 +3686,7 @@ nsBookmarksService::HasArcIn(nsIRDFNode *aNode, nsIRDFResource *aArc, PRBool *_r
 NS_IMETHODIMP
 nsBookmarksService::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool *_retval)
 {
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(aSource);
 #endif
   
@@ -3885,7 +3697,7 @@ NS_IMETHODIMP
 nsBookmarksService::ArcLabelsOut(nsIRDFResource* source,
                 nsISimpleEnumerator** labels)
 {
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(source);
 #endif
 
@@ -3895,7 +3707,7 @@ nsBookmarksService::ArcLabelsOut(nsIRDFResource* source,
 NS_IMETHODIMP
 nsBookmarksService::GetAllResources(nsISimpleEnumerator** aResult)
 {
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     HandleSystemBookmarks(kNC_SystemBookmarksStaticRoot);
 #endif
   
@@ -4033,7 +3845,14 @@ nsBookmarksService::importBookmarks(nsISupportsArray *aArguments)
     parser.Init(file, mInner, PR_TRUE);
 
     // Note: can't Begin|EndUpdateBatch() this as notifications are required
-    parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
+    nsCOMPtr<nsIRDFNode> parentNode;
+    nsCOMPtr<nsIRDFResource> parentFolder;
+    rv = getArgumentN(aArguments, kNC_Folder, 0, getter_AddRefs(parentNode));
+    if (NS_FAILED(rv) || !parentNode)
+      parentFolder = kNC_BookmarksRoot;
+    else
+      parentFolder = do_QueryInterface(parentNode);
+    parser.Parse(parentFolder, kNC_Bookmark);
 
     return NS_OK;
 }
@@ -4434,14 +4253,10 @@ nsBookmarksService::LoadBookmarks()
         bookmarksPrefs->GetBoolPref("import_system_favorites", &useDynamicSystemBookmarks);
 #endif
 
-#if defined(XP_WIN) || defined(XP_BEOS)
+#ifdef XP_BEOS 
     nsCOMPtr<nsIRDFResource> systemFavoritesFolder;
     nsCOMPtr<nsIFile> systemBookmarksFolder;
 
-#if defined(XP_WIN)
-    rv = NS_GetSpecialDirectory(NS_WIN_FAVORITES_DIR, getter_AddRefs(systemBookmarksFolder));
-    NS_ENSURE_SUCCESS(rv, rv);
-#elif defined(XP_BEOS)
     rv = NS_GetSpecialDirectory(NS_BEOS_SETTINGS_DIR, getter_AddRefs(systemBookmarksFolder));
     NS_ENSURE_SUCCESS(rv, rv);
     rv = systemBookmarksFolder->AppendNative(NS_LITERAL_CSTRING("NetPositive"));
@@ -4449,7 +4264,6 @@ nsBookmarksService::LoadBookmarks()
    
     rv = systemBookmarksFolder->AppendNative(NS_LITERAL_CSTRING("Bookmarks"));
     NS_ENSURE_SUCCESS(rv, rv);
-#endif
 
     nsCOMPtr<nsIURI> bookmarksURI;
     rv = NS_NewFileURI(getter_AddRefs(bookmarksURI), systemBookmarksFolder);
@@ -4466,7 +4280,7 @@ nsBookmarksService::LoadBookmarks()
         {
 #if defined(XP_MAC) || defined(XP_MACOSX)
             parser.SetIEFavoritesRoot(nsCString(kURINC_IEFavoritesRoot));
-#elif defined(XP_WIN) || defined(XP_BEOS)
+#elif defined(XP_BEOS)
             parser.SetIEFavoritesRoot(bookmarksURICString);
 #endif
             parser.ParserFoundIEFavoritesRoot(&foundIERoot);
@@ -4511,7 +4325,7 @@ nsBookmarksService::LoadBookmarks()
     // When the user opens this folder for the first time, system bookmarks are 
     // imported into this folder. A pref is used to keep track of whether or 
     // not to perform this operation. 
-#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
     PRBool addedStaticRoot = PR_FALSE;
     if (bookmarksPrefs) 
         bookmarksPrefs->GetBoolPref("added_static_root", 
@@ -4555,10 +4369,7 @@ nsBookmarksService::LoadBookmarks()
             if (NS_FAILED(rv)) return rv;
 
             nsCOMPtr<nsIRDFResource> systemFolderResource;
-#if defined(XP_WIN)
-            rv = gRDF->GetResource(bookmarksURICString,
-                                   getter_AddRefs(systemFolderResource));
-#elif defined(XP_MAC) || defined(XP_MACOSX)
+#if defined(XP_MAC) || defined(XP_MACOSX)
             rv = gRDF->GetResource(NS_LITERAL_CSTRING(kURINC_IEFavoritesRoot),
                                    getter_AddRefs(systemFolderResource));
 #endif
@@ -4592,18 +4403,14 @@ nsBookmarksService::LoadBookmarks()
             rv = mInner->Assert(kNC_IEFavoritesRoot, kRDF_type, kNC_IEFavoriteFolder, PR_TRUE);
             if (NS_FAILED(rv)) return rv;
         }
-#elif defined(XP_WIN) || defined(XP_BEOS)
+#elif defined(XP_BEOS)
         nsCOMPtr<nsIRDFResource> systemFolderResource;
         rv = gRDF->GetResource(bookmarksURICString,
                                getter_AddRefs(systemFolderResource));
         if (NS_SUCCEEDED(rv))
         {
             nsAutoString systemBookmarksFolderTitle;
-#ifdef XP_BEOS
             getLocaleString("ImportedNetPositiveBookmarks", systemBookmarksFolderTitle);
-#else
-            getLocaleString("ImportedIEFavorites", systemBookmarksFolderTitle);
-#endif
 
             nsCOMPtr<nsIRDFLiteral>   systemFolderTitleLiteral;
             rv = gRDF->GetLiteral(systemBookmarksFolderTitle.get(), 

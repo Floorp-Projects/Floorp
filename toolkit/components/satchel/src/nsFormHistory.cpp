@@ -220,6 +220,9 @@ nsFormHistory::GetValueAt(PRUint32 aIndex, nsAString &aValue)
 NS_IMETHODIMP
 nsFormHistory::AddEntry(const nsAString &aName, const nsAString &aValue)
 {
+  nsresult rv = OpenDatabase(); // lazily ensure that the database is open
+  NS_ENSURE_SUCCESS(rv, rv);
+
   nsCOMPtr<nsIMdbRow> row;
   AppendRow(aName, aValue, getter_AddRefs(row));
   return NS_OK;
