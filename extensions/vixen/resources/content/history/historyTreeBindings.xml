@@ -4,7 +4,7 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="history-tree-cell" extends="chrome://global/content/treeBindings.xml#treecell">
+  <binding id="history-tree-cell" extends="chrome://global/content/bindings/tree.xml#treecell">
     <content>
       <xul:box class="cell-grabber" inherits="state,value,crop" flex="1"/>
     </content>
@@ -105,7 +105,7 @@
     </content>
   </binding>
   
-  <binding id="cell-redo" extends="chrome://global/content/treeBindings.xml#treecell">
+  <binding id="cell-redo" extends="chrome://global/content/bindings/tree.xml#treecell">
     <content>
       <xul:stack class="cell-redo-stack">
         <xul:text class="cell-redo-lower" inherits="value,crop"/>

@@ -33,7 +33,7 @@ var vxHistory =
     var rootShell = vxUtils.getRootShell();
     if (rootShell && "observerService" in rootShell)
       rootShell.observerService.AddObserver(vfdFocusObserver, "vfd-focus");
-    
+   
     this.mBundle = document.getElementById("historyBundle");
   }
 };
