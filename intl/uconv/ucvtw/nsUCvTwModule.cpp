@@ -213,8 +213,11 @@ NS_IMETHODIMP nsConverterFactory::CreateInstance(nsISupports *aDelegate,
   mData->CreateInstance(&t);
   if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
   
+  NS_ADDREF(t);  // Stabilize
+
   nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
+
+  NS_RELEASE(t); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 
   return res;
 }
