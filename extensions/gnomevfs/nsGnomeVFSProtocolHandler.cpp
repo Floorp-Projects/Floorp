@@ -491,6 +491,11 @@ nsGnomeVFSInputStream::DoOpen()
 
       // XXX truncates size from 64-bit to 32-bit
       mBytesRemaining = (PRUint32) info.size;
+
+      // Update the content length attribute on the channel.  We do this
+      // synchronously without proxying.  This hack is not as bad as it looks!
+      if (mBytesRemaining != PR_UINT32_MAX)
+        mChannel->SetContentLength(mBytesRemaining);
     }
     else
     {
@@ -737,9 +742,6 @@ nsGnomeVFSInputStream::Close()
 NS_IMETHODIMP
 nsGnomeVFSInputStream::Available(PRUint32 *aResult)
 {
-  // There is no way to implement this using GnomeVFS, but fortunately
-  // that doesn't matter.  We'll just fudge it here...
-
   if (NS_FAILED(mStatus))
     return mStatus;
 
