@@ -25,7 +25,8 @@
 // Defines for various style related constants
 
 // Style change hints
-#define NS_STYLE_HINT_UNKNOWN     0
+#define NS_STYLE_HINT_UNKNOWN    -1
+#define NS_STYLE_HINT_NONE        0   // change has no impact
 #define NS_STYLE_HINT_AURAL       1   // change was aural
 #define NS_STYLE_HINT_CONTENT     2   // change was contentual (ie: SRC=)
 #define NS_STYLE_HINT_VISUAL      3   // change was visual only (ie: COLOR=)
