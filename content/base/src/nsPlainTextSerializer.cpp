@@ -1019,10 +1019,8 @@ nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag,
     nsAutoString desc, temp;
     if (NS_SUCCEEDED(GetAttributeValue(nsHTMLAtoms::alt, desc))) {
       if (!desc.IsEmpty()) {
-        temp.Append(NS_LITERAL_STRING(" [")); // Should we output chars at all here?
         desc.StripChars("\"");
         temp += desc;
-        temp.Append(NS_LITERAL_STRING("] "));
       }
       // If the alt attribute has an empty value (|alt=""|), output nothing
     }
