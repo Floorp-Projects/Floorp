@@ -1581,49 +1581,52 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
     return NS_ERROR_NULL_POINTER;
   
 
+  // get httpChannel to retrieve some info we need for nsIPluginStreamInfo setup
+  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+
   /*
-
    * Assumption
-
    * By the time nsPluginStreamListenerPeer::OnDataAvailable() gets
    * called, all the headers have been read.
-
    */
-
-  nsCOMPtr<nsIHTTPHeaderListener> headerListener = 
-    do_QueryInterface(mPStreamListener);
-  if (headerListener) {
-    
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-    nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
-    if (httpChannel) {
-      ReadHeadersFromChannelAndPostToListener(httpChannel, headerListener);
-    }
-  }
-
+  nsCOMPtr<nsIHTTPHeaderListener> headerListener = do_QueryInterface(mPStreamListener);
+  if (headerListener && httpChannel) 
+    ReadHeadersFromChannelAndPostToListener(httpChannel, headerListener);
   
   mSetUpListener = PR_TRUE;
-  mPluginStreamInfo->SetSeekable(PR_FALSE);
   
-  // get Last-Modified header for plugin info
-  
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  nsCOMPtr<nsIHTTPChannel>	theHTTPChannel = do_QueryInterface(channel);
-  if (theHTTPChannel) {
-     char * lastModified;
-     nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom("last-modified")));
-
-     theHTTPChannel->GetResponseHeader(header, &lastModified);
-     if (lastModified) {
-       PRTime time64;
-       PR_ParseTimeString(lastModified, PR_TRUE, &time64);  //convert string time to interger time
+  // set seekability
+  PRBool bSeekable = PR_FALSE;
+  if (httpChannel)
+  {
+    nsXPIDLCString range;
+    nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom("accept-ranges")));
+    if(NS_SUCCEEDED(httpChannel->GetResponseHeader(header, getter_Copies(range))))
+    {
+      if (0 == PL_strcmp(range.get(), "bytes"))
+        bSeekable = PR_TRUE;
+    }
+  }
+  mPluginStreamInfo->SetSeekable(bSeekable);
  
-       // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
-       double fpTime;
-       LL_L2D(fpTime, time64);
-       mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
-       nsCRT::free(lastModified);
-     }
+  // get Last-Modified header for plugin info
+  if (httpChannel) 
+  {
+    char * lastModified;
+    nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom("last-modified")));
+    httpChannel->GetResponseHeader(header, &lastModified);
+    if (lastModified) 
+    {
+      PRTime time64;
+      PR_ParseTimeString(lastModified, PR_TRUE, &time64);  //convert string time to interger time
+ 
+      // Convert PRTime to unix-style time_t, i.e. seconds since the epoch
+      double fpTime;
+      LL_L2D(fpTime, time64);
+      mPluginStreamInfo->SetLastModified((PRUint32)(fpTime * 1e-6 + 0.5));
+      nsCRT::free(lastModified);
+    }
   } 
 
   char* urlString;
