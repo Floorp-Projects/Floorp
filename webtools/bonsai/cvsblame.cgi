@@ -236,7 +236,8 @@ print qq(
 </TABLE>
 );
 
-print "<pre>";
+$open_table_tag = '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">';
+print "$open_table_tag<TR><TD colspan=3><PRE>";
 
 # Print each line of the revision, preceded by its annotation.
 #
@@ -250,12 +251,13 @@ $author_width = 5;
 $line = 0;
 $usedlog{$revision} = 1;
 $old_revision = 0;
-$useAlternateColor = 1;
+$row_color = '';
+$lines_in_table = 0;
 foreach $revision (@revision_map)
 {
     $text = $text[$line++];
     $usedlog{$revision} = 1;
-
+    $lines_in_table++;
 
     if ($opt_html_comments) {
         # Don't escape HTML in C/C++ comments
@@ -271,34 +273,35 @@ foreach $revision (@revision_map)
     # Add a link to traverse to included files
     $text = &link_includes($text) if $opt_includes;
 
-    $output = "<A NAME=$line></A>";
+    $output = '';
 
     # Highlight lines
     if (defined($mark_cmd = $mark_line{$line})
         && $mark_cmd ne 'end') {
-	$output .= '</td></tr></TABLE>' if $useAlternateColor;
-        $output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>'
-            ."<TR><TD BGCOLOR=LIGHTGREEN WIDTH='100%'><pre>";
+	$output .= '</TD></TR><TR><TD BGCOLOR=LIGHTGREEN WIDTH="100%"><PRE>';
 	$inMark = 1;
-	$inTable = 1;
     }
 
-    if ($old_revision ne $revision) {
-      if ($useAlternateColor) {
-	$useAlternateColor = 0;
-	if ($inTable and not $inMark) {
-	  $output .= "</td></tr></TABLE><pre>";
-	  $inTable = 0;
-	}	
+    if ($old_revision ne $revision and $line != 1) {
+      if ($row_color eq '') {
+	$row_color=' BGCOLOR="#e7e7e7"';
       } else {
-	$useAlternateColor = 1;
-	if (not $inTable) {
-	  $output .= '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">'
-	    . "<TR><TD BGCOLOR=#e7e7e7><pre>";
-	  $inTable = 1;
+	$row_color='';
+      }
+      if (not $inMark) {
+	if ($lines_in_table > 100) {
+	  $output .= "</TD></TR></TABLE>$open_table_tag<TR><TD colspan=3$row_color><PRE>";
+	  $lines_in_table=0;
+	} else {
+	  $output .= "</TD></TR><TR><TD colspan=3$row_color><PRE>";
 	}
       }
+    } elsif ($lines_in_table > 200 and not $inMark) {
+      $output .= "</TD></TR></TABLE>$open_table_tag<TR><TDcolspan=3$row_color><PRE>";
+      $lines_in_table=0;
     }
+
+    $output .= "<A NAME=$line></A>";
 
     $output .= sprintf("%${line_num_width}s ", $line) if $opt_line_nums;
 
@@ -328,23 +331,16 @@ foreach $revision (@revision_map)
     # Close the highlighted section
     if (defined($mark_cmd) and $mark_cmd ne 'begin') {
         chop($output);
-        $output .= "</TD>";
         #if( defined($prev_revision{$file_rev})) {
-            $output .= "<TD ALIGN=RIGHT><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;</TD>";
+            $output .= "</TD><TD ALIGN=RIGHT$row_color><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;";
         #}
-        $output .= "</TR></TABLE>";
-
+        $output .= "</TD></TR><TR><TD colspan=3$row_color><PRE>";
 	$inMark = 0;
-	$inTable = 0;
     }
 
     print $output;
 }
-if ($inTable) {
-  print "</td></tr></table>";
-} else {
-  print "</pre>";
-}
+print "</TD></TR></TABLE>\n";
 
 if ($useLayers) {
   # Write out cvs log messages as a JS variables
@@ -464,7 +460,7 @@ initialLayer = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#F0A
 </HEAD>
 <BODY onLoad="finishedLoad();" BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">
 <LAYER SRC="javascript:initialLayer" NAME='popup' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
-<LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>
+<LAYER SRC="javascript:initialLayer" NAME='popup_guide' onMouseOut="this.visibility='hide';" LEFT=0 TOP=0 VISIBILITY='hide'></LAYER>
 __TOP__
   print '<BODY BGCOLOR="#FFFFFF" TEXT="#000000" LINK="#0000EE" VLINK="#551A8B" ALINK="#F0A000">' if not $useLayers;
 } # print_top
