@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.4 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.5 2001/01/03 19:50:39 larryh%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -50,7 +50,7 @@
 #include "sslerr.h"
 #include "ssl3prot.h"
 #include "hasht.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "pkcs11t.h"
 #ifdef XP_UNIX
 #include "unistd.h"
@@ -93,7 +93,7 @@ extern int Debug;
 #else
 #include "private/pprthred.h"	/* for PR_InMonitor() */
 #endif
-#define ssl_InMonitor(m) PR_InMonitor(m)
+#define ssl_InMonitor(m) PZ_InMonitor(m)
 #endif
 
 #define LSB(x) ((unsigned char) (x & 0xff))
@@ -324,22 +324,22 @@ const unsigned char *  preferredCipher;
     PRIntervalTime            wTimeout; /* timeout for NSPR I/O */
     PRIntervalTime            cTimeout; /* timeout for NSPR I/O */
 
-    PRLock *      recvLock;	/* lock against multiple reader threads. */
-    PRLock *      sendLock;	/* lock against multiple sender threads. */
+    PZLock *      recvLock;	/* lock against multiple reader threads. */
+    PZLock *      sendLock;	/* lock against multiple sender threads. */
 
-    PRMonitor *   recvBufLock;	/* locks low level recv buffers. */
-    PRMonitor *   xmitBufLock;	/* locks low level xmit buffers. */
+    PZMonitor *   recvBufLock;	/* locks low level recv buffers. */
+    PZMonitor *   xmitBufLock;	/* locks low level xmit buffers. */
 
     /* Only one thread may operate on the socket until the initial handshake
     ** is complete.  This Monitor ensures that.  Since SSL2 handshake is
     ** only done once, this is also effectively the SSL2 handshake lock.
     */
-    PRMonitor *   firstHandshakeLock; 
+    PZMonitor *   firstHandshakeLock; 
 
     /* This monitor protects the ssl3 handshake state machine data.
     ** Only one thread (reader or writer) may be in the ssl3 handshake state
     ** machine at any time.  */
-    PRMonitor *   ssl3HandshakeLock;
+    PZMonitor *   ssl3HandshakeLock;
 
     /* reader/writer lock, protects the secret data needed to encrypt and MAC
     ** outgoing records, and to decrypt and MAC check incoming ciphertext 
@@ -1053,18 +1053,18 @@ extern PRBool    ssl_SocketIsBlocking(sslSocket *ss);
 
 extern void      ssl_SetAlwaysBlock(sslSocket *ss);
 
-#define SSL_LOCK_READER(ss)		if (ss->recvLock) PR_Lock(ss->recvLock)
-#define SSL_UNLOCK_READER(ss)	if (ss->recvLock) PR_Unlock(ss->recvLock)
-#define SSL_LOCK_WRITER(ss)		if (ss->sendLock) PR_Lock(ss->sendLock)
-#define SSL_UNLOCK_WRITER(ss)	if (ss->sendLock) PR_Unlock(ss->sendLock)
+#define SSL_LOCK_READER(ss)		if (ss->recvLock) PZ_Lock(ss->recvLock)
+#define SSL_UNLOCK_READER(ss)	if (ss->recvLock) PZ_Unlock(ss->recvLock)
+#define SSL_LOCK_WRITER(ss)		if (ss->sendLock) PZ_Lock(ss->sendLock)
+#define SSL_UNLOCK_WRITER(ss)	if (ss->sendLock) PZ_Unlock(ss->sendLock)
 
-#define ssl_Get1stHandshakeLock(ss)    PR_EnterMonitor((ss)->firstHandshakeLock)
-#define ssl_Release1stHandshakeLock(ss) PR_ExitMonitor((ss)->firstHandshakeLock)
-#define ssl_Have1stHandshakeLock(ss)	PR_InMonitor(  (ss)->firstHandshakeLock)
+#define ssl_Get1stHandshakeLock(ss)    PZ_EnterMonitor((ss)->firstHandshakeLock)
+#define ssl_Release1stHandshakeLock(ss) PZ_ExitMonitor((ss)->firstHandshakeLock)
+#define ssl_Have1stHandshakeLock(ss)	PZ_InMonitor(  (ss)->firstHandshakeLock)
 
-#define ssl_GetSSL3HandshakeLock(ss)	PR_EnterMonitor((ss)->ssl3HandshakeLock)
-#define ssl_ReleaseSSL3HandshakeLock(ss) PR_ExitMonitor((ss)->ssl3HandshakeLock)
-#define ssl_HaveSSL3HandshakeLock(ss)	PR_InMonitor(   (ss)->ssl3HandshakeLock)
+#define ssl_GetSSL3HandshakeLock(ss)	PZ_EnterMonitor((ss)->ssl3HandshakeLock)
+#define ssl_ReleaseSSL3HandshakeLock(ss) PZ_ExitMonitor((ss)->ssl3HandshakeLock)
+#define ssl_HaveSSL3HandshakeLock(ss)	PZ_InMonitor(   (ss)->ssl3HandshakeLock)
 
 #define ssl_GetSpecReadLock(ss)		NSSRWLock_LockRead(     (ss)->specLock)
 #define ssl_ReleaseSpecReadLock(ss)	NSSRWLock_UnlockRead(   (ss)->specLock)
@@ -1073,13 +1073,13 @@ extern void      ssl_SetAlwaysBlock(sslSocket *ss);
 #define ssl_ReleaseSpecWriteLock(ss)	NSSRWLock_UnlockWrite((ss)->specLock)
 #define ssl_HaveSpecWriteLock(ss)	NSSRWLock_HaveWriteLock((ss)->specLock)
 
-#define ssl_GetRecvBufLock(ss)		PR_EnterMonitor((ss)->recvBufLock)
-#define ssl_ReleaseRecvBufLock(ss)	PR_ExitMonitor( (ss)->recvBufLock)
-#define ssl_HaveRecvBufLock(ss)		PR_InMonitor(   (ss)->recvBufLock)
+#define ssl_GetRecvBufLock(ss)		PZ_EnterMonitor((ss)->recvBufLock)
+#define ssl_ReleaseRecvBufLock(ss)	PZ_ExitMonitor( (ss)->recvBufLock)
+#define ssl_HaveRecvBufLock(ss)		PZ_InMonitor(   (ss)->recvBufLock)
 
-#define ssl_GetXmitBufLock(ss)		PR_EnterMonitor((ss)->xmitBufLock)
-#define ssl_ReleaseXmitBufLock(ss)	PR_ExitMonitor( (ss)->xmitBufLock)
-#define ssl_HaveXmitBufLock(ss)		PR_InMonitor(   (ss)->xmitBufLock)
+#define ssl_GetXmitBufLock(ss)		PZ_EnterMonitor((ss)->xmitBufLock)
+#define ssl_ReleaseXmitBufLock(ss)	PZ_ExitMonitor( (ss)->xmitBufLock)
+#define ssl_HaveXmitBufLock(ss)		PZ_InMonitor(   (ss)->xmitBufLock)
 
 
 /* These functions are called from secnav, even though they're "private". */

@@ -38,7 +38,7 @@
  * 
  * NOTE - These are not public interfaces
  *
- * $Id: secport.c,v 1.4 2000/09/20 17:07:22 relyea%netscape.com Exp $
+ * $Id: secport.c,v 1.5 2001/01/03 19:51:22 larryh%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -182,23 +182,23 @@ PORT_GetError(void)
 
 /********************* Arena code follows *****************************/
 
-PRMonitor * arenaMonitor;
+PZMonitor * arenaMonitor;
 
 static void
 getArenaLock(void)
 {
     if (!arenaMonitor) {
-	nss_InitMonitor(&arenaMonitor);
+	nss_InitMonitor(&arenaMonitor, nssILockArena);
     }
     if (arenaMonitor) 
-	PR_EnterMonitor(arenaMonitor);
+	PZ_EnterMonitor(arenaMonitor);
 }
 
 static void
 releaseArenaLock(void)
 {
     if (arenaMonitor) 
-	PR_ExitMonitor(arenaMonitor);
+	PZ_ExitMonitor(arenaMonitor);
 }
 
 PLArenaPool *

@@ -35,7 +35,7 @@
 #define BASET_H
 
 #ifdef DEBUG
-static const char BASET_CVS_ID[] = "@(#) $RCSfile: baset.h,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:50:09 $ $Name:  $";
+static const char BASET_CVS_ID[] = "@(#) $RCSfile: baset.h,v $ $Revision: 1.2 $ $Date: 2001/01/03 19:48:42 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -112,7 +112,7 @@ typedef struct nssArenaMarkStr nssArenaMark;
 #ifdef DEBUG
 struct nssPointerTrackerStr {
   PRCallOnceType once;
-  PRLock *lock;
+  PZLock *lock;
   PLHashTable *table;
 };
 typedef struct nssPointerTrackerStr nssPointerTracker;

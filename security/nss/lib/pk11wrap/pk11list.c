@@ -36,7 +36,7 @@
  */
 
 #include "seccomon.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "prmon.h"
 #include "secmod.h"
 #include "secmodi.h"
@@ -56,7 +56,7 @@ SECMODListLock *SECMOD_NewListLock() {
     modLock = (SECMODListLock*)PORT_Alloc(sizeof(SECMODListLock));
 #ifdef PKCS11_USE_THREADS
     modLock->mutex = NULL;
-    modLock->monitor = PR_NewMonitor();
+    modLock->monitor = PZ_NewMonitor(nssILockList);
 #else
     modLock->mutex = NULL;
     modLock->monitor = NULL;
@@ -70,7 +70,7 @@ SECMODListLock *SECMOD_NewListLock() {
  * destroy the lock
  */
 void SECMOD_DestroyListLock(SECMODListLock *lock) {
-    PK11_USE_THREADS(PR_DestroyMonitor(lock->monitor);)
+    PK11_USE_THREADS(PZ_DestroyMonitor(lock->monitor);)
     PORT_Free(lock);
 }
 
@@ -82,13 +82,13 @@ void SECMOD_DestroyListLock(SECMODListLock *lock) {
 void SECMOD_GetReadLock(SECMODListLock *modLock) {
 #ifdef PKCS11_USE_THREADS
     if (modLock == NULL) return;
-    PR_EnterMonitor(modLock->monitor);
+    PZ_EnterMonitor(modLock->monitor);
     while (modLock->state & ISWRITING) {
-	PR_Wait(modLock->monitor,PR_INTERVAL_NO_TIMEOUT); /* wait until woken up */
+	PZ_Wait(modLock->monitor,PR_INTERVAL_NO_TIMEOUT); /* wait until woken up */
     }
     modLock->state |= ISREADING;
     modLock->count++;
-    PR_ExitMonitor(modLock->monitor);
+    PZ_ExitMonitor(modLock->monitor);
 #endif
 }
 
@@ -98,15 +98,15 @@ void SECMOD_GetReadLock(SECMODListLock *modLock) {
 void SECMOD_ReleaseReadLock(SECMODListLock *modLock) {
 #ifdef PKCS11_USE_THREADS
     if (modLock == NULL) return;
-    PR_EnterMonitor(modLock->monitor);
+    PZ_EnterMonitor(modLock->monitor);
     modLock->count--;
     if (modLock->count == 0) {
 	modLock->state &= ~ISREADING;
 	if (modLock->state & WANTWRITE) {
-	    PR_Notify(modLock->monitor);  /* only one writer at a time */
+	    PZ_Notify(modLock->monitor);  /* only one writer at a time */
 	}
     }
-    PR_ExitMonitor(modLock->monitor);
+    PZ_ExitMonitor(modLock->monitor);
 #endif
 }
 
@@ -117,13 +117,13 @@ void SECMOD_ReleaseReadLock(SECMODListLock *modLock) {
 void SECMOD_GetWriteLock(SECMODListLock *modLock) {
 #ifdef PKCS11_USE_THREADS
     if (modLock == NULL) return;
-    PR_EnterMonitor(modLock->monitor);
+    PZ_EnterMonitor(modLock->monitor);
     while (modLock->state & ISLOCKED) {
 	modLock->state |= WANTWRITE;
-	PR_Wait(modLock->monitor,PR_INTERVAL_NO_TIMEOUT); /* wait until woken up */
+	PZ_Wait(modLock->monitor,PR_INTERVAL_NO_TIMEOUT); /* wait until woken up */
     }
     modLock->state = ISWRITING;
-    PR_ExitMonitor(modLock->monitor);
+    PZ_ExitMonitor(modLock->monitor);
 #endif
 }
 
@@ -135,10 +135,10 @@ void SECMOD_GetWriteLock(SECMODListLock *modLock) {
 void SECMOD_ReleaseWriteLock(SECMODListLock *modLock) {
 #ifdef PKCS11_USE_THREADS
     if (modLock == NULL) return;
-    PR_EnterMonitor(modLock->monitor);
+    PZ_EnterMonitor(modLock->monitor);
     modLock->state = 0;
     PR_NotifyAll(modLock->monitor); /* enable all the readers */
-    PR_ExitMonitor(modLock->monitor);
+    PZ_ExitMonitor(modLock->monitor);
 #endif
 }
 

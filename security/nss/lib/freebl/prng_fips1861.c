@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.8 2000/11/17 01:01:36 mcgreer%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.9 2001/01/03 19:49:32 larryh%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -40,7 +40,7 @@
 #include "prtypes.h"
 #include "prinit.h"
 #include "blapi.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "secitem.h"
 #include "sha_fast.h"
 
@@ -120,7 +120,7 @@ RNG_UpdateAndEnd_FIPS186_1(SHA1Context *ctx,
 struct RNGContextStr {
     PRUint8   XKEY[BSIZE]; /* Seed for next SHA iteration */
     PRUint8   Xj[BSIZE];   /* Output from previous operation */
-    PRLock   *lock;        /* Lock to serialize access to global rng */
+    PZLock   *lock;        /* Lock to serialize access to global rng */
     PRUint8   avail;       /* # bytes of output available, [0...20] */
     PRUint32  seedCount;   /* number of seed bytes given to generator */
     PRBool    isValid;     /* false if RNG reaches an invalid state */
@@ -134,7 +134,7 @@ static RNGContext *globalrng = NULL;
 static void
 freeRNGContext()
 {
-    PR_DestroyLock(globalrng->lock);
+    PZ_DestroyLock(globalrng->lock);
     PORT_ZFree(globalrng, sizeof *globalrng);
     globalrng = NULL;
 }
@@ -233,7 +233,7 @@ static PRStatus rng_init(void)
 	    return PR_FAILURE;
 	}
 	/* create a lock for it */
-	globalrng->lock = PR_NewLock();
+	globalrng->lock = PZ_NewLock(nssILockOther);
 	if (globalrng->lock == NULL) {
 	    PORT_SetError(PR_OUT_OF_MEMORY_ERROR);
 	    return PR_FAILURE;
@@ -295,7 +295,7 @@ prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
 	return SECFailure;
     }
     /* --- LOCKED --- */
-    PR_Lock(rng->lock);
+    PZ_Lock(rng->lock);
     /*
      * Random information is initially supplied by a call to
      * RNG_SystemInfoForRNG().  That function collects entropy from
@@ -330,7 +330,7 @@ prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
     }
     /* If got this far, have added bytes of seed data. */
     rng->seedCount += bytes;
-    PR_Unlock(rng->lock);
+    PZ_Unlock(rng->lock);
     /* --- UNLOCKED --- */
     /* housekeeping */
     memset(inputhash, 0, BSIZE);
@@ -365,12 +365,12 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
 	return SECFailure;
     }
     /* --- LOCKED --- */
-    PR_Lock(rng->lock);
+    PZ_Lock(rng->lock);
     /* Check the amount of seed data in the generator.  If not enough,
      * don't produce any data.
      */
     if (rng->seedCount < MIN_SEED_COUNT) {
-	PR_Unlock(rng->lock);
+	PZ_Unlock(rng->lock);
 	PORT_SetError(SEC_ERROR_NEED_RANDOM);
 	return SECFailure;
     }
@@ -390,7 +390,7 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
 	len -= num;
 	output += num;
     }
-    PR_Unlock(rng->lock);
+    PZ_Unlock(rng->lock);
     /* --- UNLOCKED --- */
     return rv;
 }

@@ -39,7 +39,7 @@
  * SW FORTEZZA to link with some low level security functions without dragging
  * in NSPR.
  *
- * $Id: stub.c,v 1.1 2000/03/31 19:23:15 relyea%netscape.com Exp $
+ * $Id: stub.c,v 1.2 2001/01/03 19:49:18 larryh%netscape.com Exp $
  */
 
 #include "seccomon.h"
@@ -260,7 +260,7 @@ PR_IMPLEMENT(PRInt32) PR_AtomicDecrement(PRInt32 *val) { return --(*val); }
 
 PR_IMPLEMENT(PRStatus) PR_Sleep(PRIntervalTime ticks) { return PR_SUCCESS; }
 
-#include "prlock.h"
+#include "nssilock.h"
 #include "fmutex.h"
 PR_IMPLEMENT(PRLock *)
 PR_NewLock(void) {

@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tracker.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:51:11 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tracker.c,v $ $Revision: 1.2 $ $Date: 2001/01/03 19:48:49 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -70,8 +70,8 @@ static PRCallOnceType myCallOnce;
  * before the initializer has finished.
  */
 static struct {
-  PRLock *ml;
-  PRCondVar *cv;
+  PZLock *ml;
+  PZCondVar *cv;
 } mod_init;
 
 /*
@@ -83,15 +83,15 @@ myOnceFunction
   void
 )
 {
-  mod_init.ml = PR_NewLock();
-  if( (PRLock *)NULL == mod_init.ml ) {
+  mod_init.ml = PZ_NewLock(nssILockOther);
+  if( (PZLock *)NULL == mod_init.ml ) {
     return PR_FAILURE;
   }
 
-  mod_init.cv = PR_NewCondVar(mod_init.ml);
-  if( (PRCondVar *)NULL == mod_init.cv ) {
-    PR_DestroyLock(mod_init.ml);
-    mod_init.ml = (PRLock *)NULL;
+  mod_init.cv = PZ_NewCondVar(mod_init.ml);
+  if( (PZCondVar *)NULL == mod_init.cv ) {
+    PZ_DestroyLock(mod_init.ml);
+    mod_init.ml = (PZLock *)NULL;
     return PR_FAILURE;
   }
 
@@ -126,16 +126,16 @@ call_once
   if( !once->initialized ) {
     if( 0 == PR_AtomicSet(&once->inProgress, 1) ) {
       once->status = (*func)(arg);
-      PR_Lock(mod_init.ml);
+      PZ_Lock(mod_init.ml);
       once->initialized = 1;
-      PR_NotifyAllCondVar(mod_init.cv);
-      PR_Unlock(mod_init.ml);
+      PZ_NotifyAllCondVar(mod_init.cv);
+      PZ_Unlock(mod_init.ml);
     } else {
-      PR_Lock(mod_init.ml);
+      PZ_Lock(mod_init.ml);
       while( !once->initialized ) {
-        PR_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
+        PZ_WaitCondVar(mod_init.cv, PR_INTERVAL_NO_TIMEOUT);
       }
-      PR_Unlock(mod_init.ml);
+      PZ_Unlock(mod_init.ml);
     }
   }
 
@@ -180,8 +180,8 @@ trackerOnceFunc
 {
   nssPointerTracker *tracker = (nssPointerTracker *)arg;
 
-  tracker->lock = PR_NewLock();
-  if( (PRLock *)NULL == tracker->lock ) {
+  tracker->lock = PZ_NewLock(nssILockOther);
+  if( (PZLock *)NULL == tracker->lock ) {
     return PR_FAILURE;
   }
 
@@ -192,8 +192,8 @@ trackerOnceFunc
                                    (PLHashAllocOps *)NULL, 
                                    (void *)NULL);
   if( (PLHashTable *)NULL == tracker->table ) {
-    PR_DestroyLock(tracker->lock);
-    tracker->lock = (PRLock *)NULL;
+    PZ_DestroyLock(tracker->lock);
+    tracker->lock = (PZLock *)NULL;
     return PR_FAILURE;
   }
 
@@ -297,7 +297,7 @@ nssPointerTracker_finalize
   nssPointerTracker *tracker
 )
 {
-  PRLock *lock;
+  PZLock *lock;
   PRIntn count;
 
   if( (nssPointerTracker *)NULL == tracker ) {
@@ -305,16 +305,16 @@ nssPointerTracker_finalize
     return PR_FAILURE;
   }
 
-  if( (PRLock *)NULL == tracker->lock ) {
+  if( (PZLock *)NULL == tracker->lock ) {
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
   lock = tracker->lock;
-  PR_Lock(lock);
+  PZ_Lock(lock);
 
   if( (PLHashTable *)NULL == tracker->table ) {
-    PR_Unlock(lock);
+    PZ_Unlock(lock);
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
@@ -329,7 +329,7 @@ nssPointerTracker_finalize
                                        (void *)NULL);
 
   if( 0 != count ) {
-    PR_Unlock(lock);
+    PZ_Unlock(lock);
     nss_SetError(NSS_ERROR_TRACKER_NOT_EMPTY);
     return PR_FAILURE;
   }
@@ -338,11 +338,11 @@ nssPointerTracker_finalize
   PL_HashTableDestroy(tracker->table);
   /* memset(tracker, 0, sizeof(nssPointerTracker)); */
   tracker->once = zero_once;
-  tracker->lock = (PRLock *)NULL;
+  tracker->lock = (PZLock *)NULL;
   tracker->table = (PLHashTable *)NULL;
 
-  PR_Unlock(lock);
-  PR_DestroyLock(lock);
+  PZ_Unlock(lock);
+  PZ_DestroyLock(lock);
 
   return PR_SUCCESS;
 }
@@ -385,29 +385,29 @@ nssPointerTracker_add
     return PR_FAILURE;
   }
 
-  if( (PRLock *)NULL == tracker->lock ) {
+  if( (PZLock *)NULL == tracker->lock ) {
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
-  PR_Lock(tracker->lock);
+  PZ_Lock(tracker->lock);
 
   if( (PLHashTable *)NULL == tracker->table ) {
-    PR_Unlock(tracker->lock);
+    PZ_Unlock(tracker->lock);
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
   check = PL_HashTableLookup(tracker->table, pointer);
   if( (void *)NULL != check ) {
-    PR_Unlock(tracker->lock);
+    PZ_Unlock(tracker->lock);
     nss_SetError(NSS_ERROR_DUPLICATE_POINTER);
     return PR_FAILURE;
   }
 
   entry = PL_HashTableAdd(tracker->table, pointer, (void *)pointer);
 
-  PR_Unlock(tracker->lock);
+  PZ_Unlock(tracker->lock);
 
   if( (PLHashEntry *)NULL == entry ) {
     nss_SetError(NSS_ERROR_NO_MEMORY);
@@ -454,21 +454,21 @@ nssPointerTracker_remove
     return PR_FAILURE;
   }
 
-  if( (PRLock *)NULL == tracker->lock ) {
+  if( (PZLock *)NULL == tracker->lock ) {
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
-  PR_Lock(tracker->lock);
+  PZ_Lock(tracker->lock);
 
   if( (PLHashTable *)NULL == tracker->table ) {
-    PR_Unlock(tracker->lock);
+    PZ_Unlock(tracker->lock);
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
   registered = PL_HashTableRemove(tracker->table, pointer);
-  PR_Unlock(tracker->lock);
+  PZ_Unlock(tracker->lock);
 
   if( !registered ) {
     nss_SetError(NSS_ERROR_POINTER_NOT_REGISTERED);
@@ -517,21 +517,21 @@ nssPointerTracker_verify
     return PR_FAILURE;
   }
 
-  if( (PRLock *)NULL == tracker->lock ) {
+  if( (PZLock *)NULL == tracker->lock ) {
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
-  PR_Lock(tracker->lock);
+  PZ_Lock(tracker->lock);
 
   if( (PLHashTable *)NULL == tracker->table ) {
-    PR_Unlock(tracker->lock);
+    PZ_Unlock(tracker->lock);
     nss_SetError(NSS_ERROR_TRACKER_NOT_INITIALIZED);
     return PR_FAILURE;
   }
 
   check = PL_HashTableLookup(tracker->table, pointer);
-  PR_Unlock(tracker->lock);
+  PZ_Unlock(tracker->lock);
 
   if( (void *)NULL == check ) {
     nss_SetError(NSS_ERROR_POINTER_NOT_REGISTERED);

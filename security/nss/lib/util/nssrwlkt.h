@@ -33,7 +33,7 @@
 
 #ifndef nssrwlkt_h___
 #define nssrwlkt_h___
-
+#include "nssilock.h"
 /*
  * NSSRWLock --
  *

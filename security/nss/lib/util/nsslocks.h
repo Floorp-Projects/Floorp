@@ -36,31 +36,31 @@
  *
  * NOTE - These are not public interfaces
  *
- * $Id: nsslocks.h,v 1.1 2000/03/31 19:38:23 relyea%netscape.com Exp $
+ * $Id: nsslocks.h,v 1.2 2001/01/03 19:51:06 larryh%netscape.com Exp $
  */
 
 #ifndef _NSSLOCKS_H_
 #define _NSSLOCKS_H_
 
 #include "seccomon.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "prmon.h"
 
 SEC_BEGIN_PROTOS
 
-/* Given the address of a (global) pointer to a PRLock, 
+/* Given the address of a (global) pointer to a PZLock, 
  * atomicly create the lock and initialize the (global) pointer, 
  * if it is not already created/initialized.
  */
 
-extern SECStatus nss_InitLock(   PRLock    **ppLock);
+extern SECStatus nss_InitLock(   PZLock    **ppLock, nssILockType ltype );
 
-/* Given the address of a (global) pointer to a PRMonitor, 
+/* Given the address of a (global) pointer to a PZMonitor, 
  * atomicly create the monitor and initialize the (global) pointer, 
  * if it is not already created/initialized.
  */
 
-extern SECStatus nss_InitMonitor(PRMonitor **ppMonitor);
+extern SECStatus nss_InitMonitor(PZMonitor **ppMonitor, nssILockType ltype );
 
 SEC_END_PROTOS
 

@@ -37,7 +37,7 @@
  */
 #include "seccomon.h"
 #include "secmod.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "pkcs11.h"
 #include "secmodi.h"
 #include "pk11func.h"
@@ -82,7 +82,7 @@ SECMODModule *SECMOD_NewModule(void) {
     newMod->ssl[0] = 0;
     newMod->ssl[1] = 0;
 #ifdef PKCS11_USE_THREADS
-    newMod->refLock = (void *)PR_NewLock();
+    newMod->refLock = (void *)PZ_NewLock(nssILockRefLock);
     if (newMod->refLock == NULL) {
 	PORT_FreeArena(arena,PR_FALSE);
 	return NULL;
@@ -178,11 +178,11 @@ SECMODModule *SECMOD_DupModule(SECMODModule *old) {
  */
 SECMODModule *
 SECMOD_ReferenceModule(SECMODModule *module) {
-    PK11_USE_THREADS(PR_Lock((PRLock *)module->refLock);)
+    PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
     PORT_Assert(module->refCount > 0);
 
     module->refCount++;
-    PK11_USE_THREADS(PR_Unlock((PRLock*)module->refLock);)
+    PK11_USE_THREADS(PZ_Unlock((PZLock*)module->refLock);)
     return module;
 }
 
@@ -194,12 +194,12 @@ SECMOD_DestroyModule(SECMODModule *module) {
     int slotCount;
     int i;
 
-    PK11_USE_THREADS(PR_Lock((PRLock *)module->refLock);)
+    PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
     if (module->refCount-- == 1) {
 	willfree = PR_TRUE;
     }
     PORT_Assert(willfree || (module->refCount > 0));
-    PK11_USE_THREADS(PR_Unlock((PRLock *)module->refLock);)
+    PK11_USE_THREADS(PZ_Unlock((PZLock *)module->refLock);)
 
     if (!willfree) {
 	return;
@@ -233,18 +233,18 @@ SECMOD_SlotDestroyModule(SECMODModule *module, PRBool fromSlot) {
     PRBool willfree = PR_FALSE;
     if (fromSlot) {
         PORT_Assert(module->refCount == 0);
-	PK11_USE_THREADS(PR_Lock((PRLock *)module->refLock);)
+	PK11_USE_THREADS(PZ_Lock((PZLock *)module->refLock);)
 	if (module->slotCount-- == 1) {
 	    willfree = PR_TRUE;
 	}
 	PORT_Assert(willfree || (module->slotCount > 0));
-	PK11_USE_THREADS(PR_Unlock((PRLock *)module->refLock);)
+	PK11_USE_THREADS(PZ_Unlock((PZLock *)module->refLock);)
         if (!willfree) return;
     }
     if (module->loaded) {
 	SECMOD_UnloadModule(module);
     }
-    PK11_USE_THREADS(PR_DestroyLock((PRLock *)module->refLock);)
+    PK11_USE_THREADS(PZ_DestroyLock((PZLock *)module->refLock);)
     PORT_FreeArena(module->arena,PR_FALSE);
 }
 

@@ -36,7 +36,7 @@
 #ifndef _PKCS11I_H_
 #define _PKCS11I_H_ 1
 
-#include "prlock.h"
+#include "nssilock.h"
 #include "seccomon.h"
 #include "secoidt.h"
 #include "keytlow.h"
@@ -120,7 +120,7 @@ struct PK11AttributeStr {
     PK11Attribute  	*prev;
 #ifdef REF_COUNT_ATTRIBUTE
     int 		refCount;
-    PRLock 		*refLock;
+    PZLock 		*refLock;
 #endif
     /*must be called handle to make pk11queue_find work */
     CK_ATTRIBUTE_TYPE	handle;
@@ -154,8 +154,8 @@ struct PK11ObjectStr {
     PLArenaPool	*arena;
 #endif
     int refCount;
-    PRLock 		*refLock;
-    PRLock		*attributeLock;
+    PZLock 		*refLock;
+    PZLock		*attributeLock;
     PK11Session   	*session;
     PK11Slot	   	*slot;
     CK_OBJECT_CLASS 	objclass;
@@ -237,8 +237,8 @@ struct PK11SessionStr {
     PK11Session        *prev;
     CK_SESSION_HANDLE	handle;
     int			refCount;
-    PRLock 		*refLock;
-    PRLock		*objectLock;
+    PZLock 		*refLock;
+    PZLock		*objectLock;
     int			objectIDCount;
     CK_SESSION_INFO	info;
     CK_NOTIFY		notify;
@@ -256,8 +256,8 @@ struct PK11SessionStr {
  */
 struct PK11SlotStr {
     CK_SLOT_ID		slotID;
-    PRLock		*sessionLock;
-    PRLock		*objectLock;
+    PZLock		*sessionLock;
+    PZLock		*objectLock;
     SECItem		*password;
     PRBool		hasTokens;
     PRBool		isLoggedIn;
@@ -396,7 +396,7 @@ extern void pk11_AddSlotObject(PK11Slot *slot, PK11Object *object);
 extern void pk11_AddObject(PK11Session *session, PK11Object *object);
 
 extern CK_RV pk11_searchObjectList(PK11ObjectListElement **objectList,
-				   PK11Object **head, PRLock *lock,
+				   PK11Object **head, PZLock *lock,
 				   CK_ATTRIBUTE_PTR inTemplate, int count,
 				   PRBool isLoggedIn);
 extern PK11ObjectListElement *pk11_FreeObjectListElement(

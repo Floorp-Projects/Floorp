@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.5 2000/09/12 20:15:43 jgmyers%netscape.com Exp $
+ * $Id: sslsock.c,v 1.6 2001/01/03 19:50:53 larryh%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -405,11 +405,11 @@ ssl_FreeSocket(sslSocket *ss)
 
     /* Destroy locks. */
     if (fs->firstHandshakeLock) {
-    	PR_DestroyMonitor(fs->firstHandshakeLock);
+    	PZ_DestroyMonitor(fs->firstHandshakeLock);
 	fs->firstHandshakeLock = NULL;
     }
     if (fs->ssl3HandshakeLock) {
-    	PR_DestroyMonitor(fs->ssl3HandshakeLock);
+    	PZ_DestroyMonitor(fs->ssl3HandshakeLock);
 	fs->ssl3HandshakeLock = NULL;
     }
     if (fs->specLock) {
@@ -418,19 +418,19 @@ ssl_FreeSocket(sslSocket *ss)
     }
 
     if (fs->recvLock) {
-    	PR_DestroyLock(fs->recvLock);
+    	PZ_DestroyLock(fs->recvLock);
 	fs->recvLock = NULL;
     }
     if (fs->sendLock) {
-    	PR_DestroyLock(fs->sendLock);
+    	PZ_DestroyLock(fs->sendLock);
 	fs->sendLock = NULL;
     }
     if (fs->xmitBufLock) {
-    	PR_DestroyMonitor(fs->xmitBufLock);
+    	PZ_DestroyMonitor(fs->xmitBufLock);
 	fs->xmitBufLock = NULL;
     }
     if (fs->recvBufLock) {
-    	PR_DestroyMonitor(fs->recvBufLock);
+    	PZ_DestroyMonitor(fs->recvBufLock);
 	fs->recvBufLock = NULL;
     }
     if (fs->cipherSpecs) {
@@ -1840,14 +1840,14 @@ ssl_NewSocket(void)
 	ssl2_InitSocketPolicy(ss);
 	ssl3_InitSocketPolicy(ss);
 
-	ss->firstHandshakeLock = PR_NewMonitor();
-	ss->ssl3HandshakeLock  = PR_NewMonitor();
+	ss->firstHandshakeLock = PZ_NewMonitor(nssILockSSL);
+	ss->ssl3HandshakeLock  = PZ_NewMonitor(nssILockSSL);
 	ss->specLock           = NSSRWLock_New(SSL_LOCK_RANK_SPEC, NULL);
-	ss->recvBufLock        = PR_NewMonitor();
-	ss->xmitBufLock        = PR_NewMonitor();
+	ss->recvBufLock        = PZ_NewMonitor(nssILockSSL);
+	ss->xmitBufLock        = PZ_NewMonitor(nssILockSSL);
 	if (ssl_lock_readers) {
-	    ss->recvLock       = PR_NewLock();
-	    ss->sendLock       = PR_NewLock();
+	    ss->recvLock       = PZ_NewLock(nssILockSSL);
+	    ss->sendLock       = PZ_NewLock(nssILockSSL);
 	}
     }
     return ss;

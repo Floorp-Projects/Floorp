@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.1 $ $Date: 2000/03/31 19:16:22 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: oid.c,v $ $Revision: 1.2 $ $Date: 2001/01/03 19:50:17 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -273,7 +273,7 @@ static PLHashTable *oid_hash_table;
  * And this is its lock.
  */
 
-static PRLock *oid_hash_lock;
+static PZLock *oid_hash_lock;
 
 /*
  * This is the hash function.  We simply XOR the encoded form with
@@ -422,8 +422,8 @@ oid_once_func
   }
 
   /* Create the hash table lock */
-  oid_hash_lock = PR_NewLock();
-  if( (PRLock *)NULL == oid_hash_lock ) {
+  oid_hash_lock = PZ_NewLock(nssILockOID);
+  if( (PZLock *)NULL == oid_hash_lock ) {
     nss_SetError(NSS_ERROR_NO_MEMORY);
     goto loser;
   }
@@ -462,9 +462,9 @@ oid_once_func
     oid_hash_table = (PLHashTable *)NULL;
   }
 
-  if( (PRLock *)NULL != oid_hash_lock ) {
-    PR_DestroyLock(oid_hash_lock);
-    oid_hash_lock = (PRLock *)NULL;
+  if( (PZLock *)NULL != oid_hash_lock ) {
+    PZ_DestroyLock(oid_hash_lock);
+    oid_hash_lock = (PZLock *)NULL;
   }
 
   if( (NSSArena *)NULL != oid_arena ) {
@@ -657,9 +657,9 @@ nssOID_CreateFromBER
   /*
    * Does it exist?
    */
-  PR_Lock(oid_hash_lock);
+  PZ_Lock(oid_hash_lock);
   rv = (NSSOID *)PL_HashTableLookup(oid_hash_table, berOid);
-  (void)PR_Unlock(oid_hash_lock);
+  (void)PZ_Unlock(oid_hash_lock);
   if( (NSSOID *)NULL != rv ) {
     /* Found it! */
     return rv;
@@ -686,9 +686,9 @@ nssOID_CreateFromBER
   rv->expl = "(OID registered at runtime)";
 #endif /* DEBUG */
 
-  PR_Lock(oid_hash_lock);
+  PZ_Lock(oid_hash_lock);
   e = PL_HashTableAdd(oid_hash_table, &rv->data, rv);
-  (void)PR_Unlock(oid_hash_lock);
+  (void)PZ_Unlock(oid_hash_lock);
   if( (PLHashEntry *)NULL == e ) {
     nss_ZFreeIf(rv->data.data);
     nss_ZFreeIf(rv);
@@ -701,9 +701,9 @@ nssOID_CreateFromBER
     PRStatus st;
     st = oid_add_pointer(rv);
     if( PR_SUCCESS != st ) {
-      PR_Lock(oid_hash_lock);
+      PZ_Lock(oid_hash_lock);
       (void)PL_HashTableRemove(oid_hash_table, &rv->data);
-      (void)PR_Unlock(oid_hash_lock);
+      (void)PZ_Unlock(oid_hash_lock);
       (void)nss_ZFreeIf(rv->data.data);
       (void)nss_ZFreeIf(rv);
       return (NSSOID *)NULL;
@@ -1122,9 +1122,9 @@ nssOID_CreateFromUTF8
   /*
    * Does it exist?
    */
-  PR_Lock(oid_hash_lock);
+  PZ_Lock(oid_hash_lock);
   rv = (NSSOID *)PL_HashTableLookup(oid_hash_table, &candidate->data);
-  (void)PR_Unlock(oid_hash_lock);
+  (void)PZ_Unlock(oid_hash_lock);
   if( (NSSOID *)NULL != rv ) {
     /* Already exists.  Delete my copy and return the original. */
     (void)nss_ZFreeIf(candidate->data.data);
@@ -1157,9 +1157,9 @@ nssOID_CreateFromUTF8
   rv->expl = "(OID registered at runtime)";
 #endif /* DEBUG */
 
-  PR_Lock(oid_hash_lock);
+  PZ_Lock(oid_hash_lock);
   e = PL_HashTableAdd(oid_hash_table, &rv->data, rv);
-  (void)PR_Unlock(oid_hash_lock);
+  (void)PZ_Unlock(oid_hash_lock);
   if( (PLHashEntry *)NULL == e ) {
     nss_SetError(NSS_ERROR_NO_MEMORY);
     goto loser;
@@ -1170,9 +1170,9 @@ nssOID_CreateFromUTF8
     PRStatus st;
     st = oid_add_pointer(rv);
     if( PR_SUCCESS != st ) {
-      PR_Lock(oid_hash_lock);
+      PZ_Lock(oid_hash_lock);
       (void)PL_HashTableRemove(oid_hash_table, &rv->data);
-      (void)PR_Unlock(oid_hash_lock);
+      (void)PZ_Unlock(oid_hash_lock);
       goto loser;
     }
   }

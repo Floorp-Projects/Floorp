@@ -116,12 +116,12 @@ int ssl3CipherSuites[] = {
 
 /* data and structures for shutdown */
 int	stopping;
-PRLock    * stopLock;
-PRCondVar * stopQ;
 
 int     requestCert;
 int	verbose;
 SECItem	bigBuf;
+
+PRLogModuleInfo *lm;
 
 /* Add custom password handler because SECU_GetModulePassword 
  * makes automation of this program next to impossible.
@@ -142,6 +142,7 @@ ownPasswd(PK11SlotInfo *info, PRBool retry, void *arg)
 #define PRINTF  if (verbose)  printf
 #define FPRINTF if (verbose) fprintf
 #define FLUSH	if (verbose) { fflush(stdout); fflush(stderr); }
+#define VLOG(arg) PR_LOG(lm,PR_LOG_DEBUG,arg)
 
 static void
 Usage(const char *progName)
@@ -376,11 +377,11 @@ static int  maxThreads = DEFAULT_THREADS;
 
 typedef int startFn(PRFileDesc *a, PRFileDesc *b, int c);
 
-PRLock    * threadLock;
-PRCondVar * threadQ;
+PZLock    * threadLock;
+PZCondVar * threadQ;
 
-PRLock    * stopLock;
-PRCondVar * stopQ;
+PZLock    * stopLock;
+PZCondVar * stopQ;
 static int threadCount = 0;
 
 typedef enum { rs_idle = 0, rs_running = 1, rs_zombie = 2 } runState;
@@ -405,11 +406,11 @@ thread_wrapper(void * arg)
     slot->rv = (* slot->startFunc)(slot->a, slot->b, slot->c);
 
     /* notify the thread exit handler. */
-    PR_Lock(threadLock);
+    PZ_Lock(threadLock);
     slot->state = rs_zombie;
     --threadCount;
-    PR_NotifyAllCondVar(threadQ);
-    PR_Unlock(threadLock);
+    PZ_NotifyAllCondVar(threadQ);
+    PZ_Unlock(threadLock);
 }
 
 SECStatus
@@ -424,7 +425,7 @@ launch_thread(
     static int highWaterMark = 0;
     int workToDo = 1;
 
-    PR_Lock(threadLock);
+    PZ_Lock(threadLock);
     /* for each perThread structure in the threads array */
     while( workToDo )  {
         for (i = 0; i < maxThreads; ++i) {
@@ -448,16 +449,17 @@ launch_thread(
                 } 
 
                 highWaterMark = ( i > highWaterMark )? i : highWaterMark;
-                PRINTF("selfserv: Launched thread in slot %d, highWaterMark: %d \n", i, highWaterMark );
+                VLOG(("selfserv: Launched thread in slot %d, highWaterMark: %d \n", 
+                      i, highWaterMark ));
                 FLUSH;
                 ++threadCount;
                 break; /* we did what we came here for, leave */
             }
         } /* end for() */
         if ( workToDo )
-            PR_WaitCondVar(threadQ, PR_INTERVAL_NO_TIMEOUT);
+            PZ_WaitCondVar(threadQ, PR_INTERVAL_NO_TIMEOUT);
     } /* end while() */
-    PR_Unlock(threadLock); 
+    PZ_Unlock(threadLock); 
 
     return SECSuccess;
 }
@@ -468,11 +470,11 @@ destroy_thread_data(void)
     PORT_Memset(threads, 0, sizeof threads);
 
     if (threadQ) {
-        PR_DestroyCondVar(threadQ);
+        PZ_DestroyCondVar(threadQ);
     	threadQ = NULL;
     }
     if (threadLock) {
-        PR_DestroyLock(threadLock);
+        PZ_DestroyLock(threadLock);
         threadLock = NULL;
     }
 }
@@ -496,10 +498,10 @@ static const char outHeader[] = {
 };
 
 struct lockedVarsStr {
-    PRLock *	lock;
+    PZLock *	lock;
     int		count;
     int		waiters;
-    PRCondVar *	condVar;
+    PZCondVar *	condVar;
 };
 
 typedef struct lockedVarsStr lockedVars;
@@ -509,28 +511,28 @@ lockedVars_Init( lockedVars * lv)
 {
     lv->count   = 0;
     lv->waiters = 0;
-    lv->lock    = PR_NewLock();
-    lv->condVar = PR_NewCondVar(lv->lock);
+    lv->lock    = PZ_NewLock(nssILockSelfServ);
+    lv->condVar = PZ_NewCondVar(lv->lock);
 }
 
 void
 lockedVars_Destroy( lockedVars * lv)
 {
-    PR_DestroyCondVar(lv->condVar);
+    PZ_DestroyCondVar(lv->condVar);
     lv->condVar = NULL;
 
-    PR_DestroyLock(lv->lock);
+    PZ_DestroyLock(lv->lock);
     lv->lock = NULL;
 }
 
 void
 lockedVars_WaitForDone(lockedVars * lv)
 {
-    PR_Lock(lv->lock);
+    PZ_Lock(lv->lock);
     while (lv->count > 0) {
-    	PR_WaitCondVar(lv->condVar, PR_INTERVAL_NO_TIMEOUT);
+    	PZ_WaitCondVar(lv->condVar, PR_INTERVAL_NO_TIMEOUT);
     }
-    PR_Unlock(lv->lock);
+    PZ_Unlock(lv->lock);
 }
 
 int	/* returns count */
@@ -538,12 +540,12 @@ lockedVars_AddToCount(lockedVars * lv, int addend)
 {
     int rv;
 
-    PR_Lock(lv->lock);
+    PZ_Lock(lv->lock);
     rv = lv->count += addend;
     if (rv <= 0) {
-	PR_NotifyCondVar(lv->condVar);
+	PZ_NotifyCondVar(lv->condVar);
     }
-    PR_Unlock(lv->lock);
+    PZ_Unlock(lv->lock);
     return rv;
 }
 
@@ -558,6 +560,7 @@ do_writes(
     int 		count = 0;
     lockedVars *	lv = (lockedVars *)model_sock;
 
+    VLOG(("selfserv: do_writes: starting"));
     while (sent < bigBuf.len) {
 
 	count = PR_Write(ssl_sock, bigBuf.data + sent, bigBuf.len - sent);
@@ -575,6 +578,7 @@ do_writes(
     /* notify the reader that we're done. */
     lockedVars_AddToCount(lv, -1);
     FLUSH;
+    VLOG(("selfserv: do_writes: exiting"));
     return (sent < bigBuf.len) ? SECFailure : SECSuccess;
 }
 
@@ -592,6 +596,8 @@ handle_fdx_connection(
     PRSocketOptionData opt;
     char               buf[10240];
 
+
+    VLOG(("selfserv: handle_fdx_connection: starting"));
     opt.option             = PR_SockOpt_Nonblocking;
     opt.value.non_blocking = PR_FALSE;
     PR_SetSocketOption(tcp_sock, &opt);
@@ -646,6 +652,7 @@ cleanup:
     else
 	PR_Close(tcp_sock);
 
+    VLOG(("selfserv: handle_fdx_connection: exiting"));
     return SECSuccess;
 }
 
@@ -675,10 +682,12 @@ handle_connection(
     bufRem = sizeof buf;
     memset(buf, 0, sizeof buf);
 
+    VLOG(("selfserv: handle_connection: starting"));
     opt.option             = PR_SockOpt_Nonblocking;
     opt.value.non_blocking = PR_FALSE;
     PR_SetSocketOption(tcp_sock, &opt);
 
+    VLOG(("selfserv: handle_connection: starting\n"));
     if (useModelSocket && model_sock) {
 	SECStatus rv;
 	ssl_sock = SSL_ImportFD(model_sock, tcp_sock);
@@ -874,12 +883,15 @@ send_answer:
 
 cleanup:
     PR_Close(ssl_sock);
+    VLOG(("selfserv: handle_connection: exiting\n"));
 
     /* do a nice shutdown if asked. */
     if (!strncmp(buf, stopCmd, strlen(stopCmd))) {
 	stopping = 1;
-/*	return SECFailure; */
+        VLOG(("selfserv: handle_connection: stop command"));
+        PZ_TraceFlush();
     }
+    VLOG(("selfserv: handle_connection: exiting"));
     return SECSuccess;	/* success */
 }
 
@@ -892,6 +904,9 @@ do_accepts(
 {
     PRNetAddr   addr;
 
+    VLOG(("selfserv: do_accepts: starting"));
+    PR_SetThreadPriority( PR_GetCurrentThread(), PR_PRIORITY_HIGH);
+
     while (!stopping) {
 	PRFileDesc *tcp_sock;
 	SECStatus   result;
@@ -903,6 +918,7 @@ do_accepts(
 	    break;
 	}
 
+        VLOG(("selfserv: do_accept: Got connection\n"));
 	if (bigBuf.data != NULL)
 	    result = launch_thread(handle_fdx_connection, tcp_sock, model_sock, requestCert);
 	else
@@ -915,6 +931,7 @@ do_accepts(
     }
 
     fprintf(stderr, "selfserv: Closing listen socket.\n");
+    VLOG(("selfserv: do_accepts: exiting"));
     PR_Close(listen_sock);
     return SECSuccess;
 }
@@ -933,14 +950,15 @@ server_main(
     PRNetAddr   addr;
     SECStatus	secStatus;
     PRSocketOptionData opt;
+    int         listenQueueDepth = 5 + (2 * maxThreads);
 
     networkStart();
     
     /* create the thread management serialization structs */
-  	threadLock = PR_NewLock();
-    threadQ   = PR_NewCondVar(threadLock);
-    stopLock = PR_NewLock();
-    stopQ = PR_NewCondVar(stopLock);
+  	threadLock = PZ_NewLock(nssILockSelfServ);
+    threadQ   = PZ_NewCondVar(threadLock);
+    stopLock = PZ_NewLock(nssILockSelfServ);
+    stopQ = PZ_NewCondVar(stopLock);
 
 
     addr.inet.family = PR_AF_INET;
@@ -1055,7 +1073,7 @@ server_main(
 	errExit("PR_Bind");
     }
 
-    rv = PR_Listen(listen_sock, 5);
+    rv = PR_Listen(listen_sock, listenQueueDepth);
     if (rv < 0) {
 	errExit("PR_Listen");
     }
@@ -1064,12 +1082,14 @@ server_main(
     if (rv != SECSuccess) {
     	PR_Close(listen_sock);
     } else {
-        PR_Lock( stopLock );
+        VLOG(("selfserv: server_thead: waiting on stopping"));
+        PZ_Lock( stopLock );
         while ( !stopping && threadCount > 0 ) {
-            PR_WaitCondVar(stopQ, PR_INTERVAL_NO_TIMEOUT);
+            PZ_WaitCondVar(stopQ, PR_INTERVAL_NO_TIMEOUT);
         }
-        PR_Unlock( stopLock );
+        PZ_Unlock( stopLock );
 	destroy_thread_data();
+        VLOG(("selfserv: server_thread: exiting"));
     }
 
     if (useModelSocket && model_sock) {
@@ -1261,6 +1281,15 @@ main(int argc, char **argv)
 
     /* Call the NSPR initialization routines */
     PR_Init( PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
+
+    lm = PR_NewLogModule("TestCase");
+
+    /* allocate the array of thread slots */
+    threads = PR_Calloc(maxThreads, sizeof(perThread));
+    if ( NULL == threads )  {
+        fprintf(stderr, "Oh Drat! Can't allocate the perThread array\n");
+        goto mainExit;
+    }
 
     if (fileName)
     	readBigFile(fileName);

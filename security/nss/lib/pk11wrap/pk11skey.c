@@ -37,7 +37,7 @@
 
 #include "seccomon.h"
 #include "secmod.h"
-#include "prlock.h"
+#include "nssilock.h"
 #include "secmodi.h"
 #include "pkcs11.h"
 #include "pk11func.h"
@@ -161,13 +161,13 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
     PK11SymKey *symKey = NULL;
 
 
-    PK11_USE_THREADS(PR_Lock(slot->freeListLock);)
+    PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
     if (slot->freeSymKeysHead) {
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
 	slot->keyCount--;
     }
-    PK11_USE_THREADS(PR_Unlock(slot->freeListLock);)
+    PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
     if (symKey) {
 	symKey->next = NULL;
 	if (!symKey->sessionOwner)
@@ -179,7 +179,7 @@ pk11_getKeyFromList(PK11SlotInfo *slot) {
     if (symKey == NULL) {
 	return NULL;
     }
-    symKey->refLock = PR_NewLock();
+    symKey->refLock = PZ_NewLock(nssILockRefLock);
     if (symKey->refLock == NULL) {
 	PORT_Free(symKey);
 	return NULL;
@@ -198,7 +198,7 @@ PK11_CleanKeyList(PK11SlotInfo *slot)
     	symKey = slot->freeSymKeysHead;
 	slot->freeSymKeysHead = symKey->next;
 	pk11_CloseSession(symKey->slot, symKey->session,symKey->sessionOwner);
-	PK11_USE_THREADS(PR_DestroyLock(symKey->refLock);)
+	PK11_USE_THREADS(PZ_DestroyLock(symKey->refLock);)
 	PORT_Free(symKey);
     };
     return;
@@ -246,11 +246,11 @@ PK11_FreeSymKey(PK11SymKey *symKey)
     PK11SlotInfo *slot;
     PRBool freeit = PR_TRUE;
 
-    PK11_USE_THREADS(PR_Lock(symKey->refLock);)
+    PK11_USE_THREADS(PZ_Lock(symKey->refLock);)
      if (symKey->refCount-- == 1) {
 	destroy= PR_TRUE;
     }
-    PK11_USE_THREADS(PR_Unlock(symKey->refLock);)
+    PK11_USE_THREADS(PZ_Unlock(symKey->refLock);)
     if (destroy) {
 	if ((symKey->owner) && symKey->objectID != CK_INVALID_KEY) {
 	    pk11_EnterKeyMonitor(symKey);
@@ -263,7 +263,7 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 	    PORT_Free(symKey->data.data);
 	}
         slot = symKey->slot;
-        PK11_USE_THREADS(PR_Lock(slot->freeListLock);)
+        PK11_USE_THREADS(PZ_Lock(slot->freeListLock);)
 	if (slot->keyCount < slot->maxKeyCount) {
 	   symKey->next = slot->freeSymKeysHead;
 	   slot->freeSymKeysHead = symKey;
@@ -271,11 +271,11 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 	   symKey->slot = NULL;
 	   freeit = PR_FALSE;
         }
-	PK11_USE_THREADS(PR_Unlock(slot->freeListLock);)
+	PK11_USE_THREADS(PZ_Unlock(slot->freeListLock);)
         if (freeit) {
 	    pk11_CloseSession(symKey->slot, symKey->session,
 							symKey->sessionOwner);
-	    PK11_USE_THREADS(PR_DestroyLock(symKey->refLock);)
+	    PK11_USE_THREADS(PZ_DestroyLock(symKey->refLock);)
 	    PORT_Free(symKey);
 	}
 	PK11_FreeSlot(slot);
@@ -285,9 +285,9 @@ PK11_FreeSymKey(PK11SymKey *symKey)
 PK11SymKey *
 PK11_ReferenceSymKey(PK11SymKey *symKey)
 {
-    PK11_USE_THREADS(PR_Lock(symKey->refLock);)
+    PK11_USE_THREADS(PZ_Lock(symKey->refLock);)
     symKey->refCount++;
-    PK11_USE_THREADS(PR_Unlock(symKey->refLock);)
+    PK11_USE_THREADS(PZ_Unlock(symKey->refLock);)
     return symKey;
 }
 
@@ -3133,7 +3133,7 @@ PK11_EnterContextMonitor(PK11Context *cx) {
      * the Context */
     if ((cx->ownSession) && (cx->slot->isThreadSafe)) {
 	/* Should this use monitors instead? */
-	PR_Lock(cx->sessionLock);
+	PZ_Lock(cx->sessionLock);
     } else {
 	PK11_EnterSlotMonitor(cx->slot);
     }
@@ -3145,7 +3145,7 @@ PK11_ExitContextMonitor(PK11Context *cx) {
      * the Context */
     if ((cx->ownSession) && (cx->slot->isThreadSafe)) {
 	/* Should this use monitors instead? */
-	PR_Unlock(cx->sessionLock);
+	PZ_Unlock(cx->sessionLock);
     } else {
 	PK11_ExitSlotMonitor(cx->slot);
     }
@@ -3162,7 +3162,7 @@ PK11_DestroyContext(PK11Context *context, PRBool freeit)
     if (context->savedData != NULL ) PORT_Free(context->savedData);
     if (context->key) PK11_FreeSymKey(context->key);
     if (context->param) SECITEM_FreeItem(context->param, PR_TRUE);
-    if (context->sessionLock) PR_DestroyLock(context->sessionLock);
+    if (context->sessionLock) PZ_DestroyLock(context->sessionLock);
     PK11_FreeSlot(context->slot);
     if (freeit) PORT_Free(context);
 }
@@ -3351,7 +3351,7 @@ static PK11Context *pk11_CreateNewContextInSlot(CK_MECHANISM_TYPE type,
     context->type = type;
     context->param = SECITEM_DupItem(param);
     context->init = PR_FALSE;
-    context->sessionLock = PR_NewLock();
+    context->sessionLock = PZ_NewLock(nssILockPK11cxt);
     if ((context->param == NULL) || (context->sessionLock == NULL)) {
 	PK11_DestroyContext(context,PR_TRUE);
 	return NULL;
