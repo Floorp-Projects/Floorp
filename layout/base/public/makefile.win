@@ -81,6 +81,7 @@ MODULE=raptor
 XPIDLSRCS=						\
 		.\nsIChromeEventHandler.idl			\
 		.\nsISelectionController.idl		\
+		.\nsIPrintListener.idl          \
 		$(NULL)
 
 
