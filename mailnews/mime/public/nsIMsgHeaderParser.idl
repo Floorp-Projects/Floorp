@@ -52,105 +52,109 @@ interface nsISimpleEnumerator;
 [scriptable, uuid(10A88A11-729E-11d2-804A-006008128C4E)]
 interface nsIMsgHeaderParser : nsISupports {
 
-	void parseHeadersWithArray(in wstring aLine, 
-	                           [array, size_is(count)] out wstring aEmailAddresses,
-                               [array, size_is(count)] out wstring aNames,
-							   [array, size_is(count)] out wstring aFullNames,
-							   [retval] out unsigned long count);
+  void parseHeadersWithArray(in wstring aLine, 
+                             [array, size_is(count)] out wstring aEmailAddresses,
+                             [array, size_is(count)] out wstring aNames,
+                             [array, size_is(count)] out wstring aFullNames,
+                             [retval] out unsigned long count);
 
 
-	/* Given a string which contains a list of Header addresses, parses it into
-	   their component names and mailboxes.
+  /* Given a string which contains a list of Header addresses, parses it into
+     their component names and mailboxes.
 
-       The returned value is the number of addresses, or a negative error code;
-       the names and addresses are returned into the provided pointers as
-       consecutive null-terminated strings.  It is up to the caller to free them.
-       Note that some of the strings may be zero-length.
-
-       The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
-
-       Either of the provided pointers may be NULL if the caller is not interested
-       in those components.
-    */
-	[noscript] void parseHeaderAddresses (in string charset, in string line, out string names, 
-	                           out string addresses, out PRUint32 numAddresses);
-
-	/* Given a string which contains a list of Header addresses, returns a
-	   comma-seperated list of just the `mailbox' portions.
+     The returned value is the number of addresses, or a negative error code;
+     the names and addresses are returned into the provided pointers as
+     consecutive null-terminated strings.  It is up to the caller to free them.
+     Note that some of the strings may be zero-length.
 
      The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
 
-	   Caller must call PL_strfree on returnValue (which is allocated by the function)
-    */
-	[noscript] void extractHeaderAddressMailboxes (in string charset, in string line, out string mailboxes);
+     Either of the provided pointers may be NULL if the caller is not interested
+     in those components.
+  */
+  [noscript] void parseHeaderAddresses (in string charset, in string line, out string names, 
+                             out string addresses, out PRUint32 numAddresses);
 
-
-	/* Given a string which contains a list of Header addresses, returns a
-	   comma-seperated list of just the `user name' portions.  If any of
-	   the addresses doesn't have a name, then the mailbox is used instead.
-
-     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
-
-	   Caller must PL_strfree usernames.
-	 */
-	[noscript] void extractHeaderAddressNames (in string charset, in string line, out string userNames);
-
-	/* Like MSG_ExtractHeaderAddressNames(), but only returns the first name
-	   in the list, if there is more than one. 
-	   
-     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
-
-	   Caller must call PL_strfree on name
-	 */
-	[noscript] void extractHeaderAddressName (in string charset, in string line, out string name);
-
-	/* Given a string which contains a list of Header addresses, returns a new
-	   string with the same data, but inserts missing commas, parses and reformats
-	   it, and wraps long lines with newline-tab.
+  /* Given a string which contains a list of Header addresses, returns a
+     comma-seperated list of just the `mailbox' portions.
 
      The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
 
-       Caller must call PL_strfree on reformattedAddress
-	 */
-	[noscript] void reformatHeaderAddresses (in string charset, in string line, 
-	                              out string reformattedAddress);
+     Caller must call PL_strfree on returnValue (which is allocated by the function)
+  */
+  [noscript] void extractHeaderAddressMailboxes (in string charset, in string line, out string mailboxes);
 
-	/* Returns a copy of ADDRS which may have had some addresses removed.
-	   Addresses are removed if they are already in either ADDRS or OTHER_ADDRS.
-	   (If OTHER_ADDRS contain addresses which are not in ADDRS, they are not
-	   added.  That argument is for passing in addresses that were already
-	   mentioned in other header fields.)
 
-	   Addresses are considered to be the same if they contain the same mailbox
-	   part (case-insensitive.)  Real names and other comments are not compared.
-
-	   removeAliasesToMe allows the address parser to use the preference which
-	   contains regular expressions which also mean 'me' for the purpose of
-	   stripping the user's email address(es) out of addrs
+  /* Given a string which contains a list of Header addresses, returns a
+     comma-seperated list of just the `user name' portions.  If any of
+     the addresses doesn't have a name, then the mailbox is used instead.
 
      The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
 
-       Caller must call PL_strfree on newAddress which is the return value.
-	 */
-	[noscript] void removeDuplicateAddresses (in string charset,  in string addrs, in string other_addrs, 
-	                               in PRBool removeAliasesToMe, out string newAddress);
+     Caller must PL_strfree usernames.
+  */
+  [noscript] void extractHeaderAddressNames (in string charset, in string line, out string userNames);
 
+  /* Like MSG_ExtractHeaderAddressNames(), but only returns the first name
+     in the list, if there is more than one. 
+     
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
 
-	/* Given an e-mail address and a person's name, cons them together into a
-	   single string of the form "name <address>", doing all the necessary quoting.
-	   A new string is returned, which you must free when you're done with it.
+     Caller must call PL_strfree on name
+  */
+  [noscript] void extractHeaderAddressName (in string charset, in string line, out string name);
+
+  /* Given a string which contains a list of Header addresses, returns a new
+     string with the same data, but inserts missing commas, parses and reformats
+     it, and wraps long lines with newline-tab.
 
      The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
 
-       Caller must call PL_strfree on fullAddress (this is the out parameter)
-	 */
-	[noscript] string makeFullAddress (in string charset, in string name, in string addr);
-	wstring makeFullAddressWString (in wstring name, in wstring addr);
+     Caller must call PL_strfree on reformattedAddress
+  */
+  [noscript] void reformatHeaderAddresses (in string charset, in string line, 
+                                out string reformattedAddress);
 
-	/* MSG_ParseHeaderAddresses returns quoted parsable addresses
-	   This function removes the quoting if you want to show the
-	   names to users. e.g. summary file, address book
-	 */
-	[noscript] void unquotePhraseOrAddr (in string charset, in string line, out string lineout);
+  /* Returns a copy of ADDRS which may have had some addresses removed.
+     Addresses are removed if they are already in either ADDRS or OTHER_ADDRS.
+     (If OTHER_ADDRS contain addresses which are not in ADDRS, they are not
+     added.  That argument is for passing in addresses that were already
+     mentioned in other header fields.)
+
+     Addresses are considered to be the same if they contain the same mailbox
+     part (case-insensitive.)  Real names and other comments are not compared.
+
+     removeAliasesToMe allows the address parser to use the preference which
+     contains regular expressions which also mean 'me' for the purpose of
+     stripping the user's email address(es) out of addrs
+
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
+     Caller must call PL_strfree on newAddress which is the return value.
+  */
+  [noscript] void removeDuplicateAddresses (in string charset,  in string addrs, in string other_addrs, 
+                                 in PRBool removeAliasesToMe, out string newAddress);
+
+
+  /* Given an e-mail address and a person's name, cons them together into a
+     single string of the form "name <address>", doing all the necessary quoting.
+     A new string is returned, which you must free when you're done with it.
+
+     The caller may pass nsnull for charset and it will be interpreted as "us-ascii".
+
+     Caller must call PL_strfree on fullAddress (this is the out parameter)
+  */
+  [noscript] string makeFullAddress (in string charset, in string name, in string addr);
+  wstring makeFullAddressWString (in wstring name, in wstring addr);
+
+  /* This function removes the quoting if you want to show the
+     names to users. e.g. summary file, address book. If preserveIntegrity is set to true,
+     quote will not be removed in case the name part of the email contains a comma.
+  */
+  [noscript] string unquotePhraseOrAddr (in string line, in boolean preserveIntegrity);
+  wstring unquotePhraseOrAddrWString (in wstring line, in boolean preserveIntegrity);
+
+  /* Given a string, will make it safe to use by adding missing quote and escaping needed quote */
+  wstring reformatUnquotedAddresses(in wstring line);
 };
 

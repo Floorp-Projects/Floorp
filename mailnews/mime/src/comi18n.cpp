@@ -637,6 +637,8 @@ RFC822AddressList * construct_addresslist(char *s)
         if (!addrspec && displayname) {
           *s = '\0';
           list->addrspec = nsCRT::strdup(displayname);
+          /* and don't forget to free the display name in the list, in that case it's bogus */
+          PR_FREEIF(list->displayname);
         }
         /* prepare for next address */
         addrspec = displayname = nsnull;
@@ -659,7 +661,11 @@ RFC822AddressList * construct_addresslist(char *s)
 
   /* deal with addr-spec only address comes at last */
   if (!addrspec && displayname)
+  {
     list->addrspec = nsCRT::strdup(displayname);
+    /* and don't forget to free the display name in the list, in that case it's bogus */
+    PR_FREEIF(list->displayname);
+  }
 
   return listhead;
 }

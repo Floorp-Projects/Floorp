@@ -44,6 +44,7 @@ var gNumberOfCols = 0;
 
 var gDragService = Components.classes["@mozilla.org/widget/dragservice;1"].getService();
 gDragService = gDragService.QueryInterface(Components.interfaces.nsIDragService);
+gMimeHeaderParser = null;
 
 /**
  * global variable inherited from MsgComposeCommands.js
@@ -129,37 +130,59 @@ function Recipients2CompFields(msgCompFields)
     var ng_Sep = "";
     var follow_Sep = "";
 
+    gMimeHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+
+    var recipientType;
     var inputField;
-      while ((inputField = awGetInputElement(i)))
+    var fieldValue;
+    var recipient;
+    while ((inputField = awGetInputElement(i)))
+    {
+      fieldValue = inputField.value;
+
+      if (fieldValue == null)
+        fieldValue = inputField.getAttribute("value");
+
+      if (fieldValue != "")
       {
-        var fieldValue = inputField.value;
+        recipientType = awGetPopupElement(i).selectedItem.getAttribute("value");
+        recipient = null;
 
-        if (fieldValue == null)
-          fieldValue = inputField.getAttribute("value");
-
-        if (fieldValue != "")
+        switch (recipientType)
         {
-          switch (awGetPopupElement(i).selectedItem.getAttribute("value"))
-          {
-            case "addr_to"      : addrTo += to_Sep + fieldValue; to_Sep = ",";          break;
-            case "addr_cc"      : addrCc += cc_Sep + fieldValue; cc_Sep = ",";          break;
-            case "addr_bcc"     : addrBcc += bcc_Sep + fieldValue; bcc_Sep = ",";       break;
-            case "addr_reply"   : addrReply += reply_Sep + fieldValue; reply_Sep = ",";     break;
-            case "addr_newsgroups"  : addrNg += ng_Sep + fieldValue; ng_Sep = ",";          break;
-            case "addr_followup"  : addrFollow += follow_Sep + fieldValue; follow_Sep = ",";    break;
-          case "addr_other"   : addrOther += sOther_header + ": " + fieldValue + "\n";     break;
-          }
+          case "addr_to"    :
+          case "addr_cc"    :
+          case "addr_bcc"   :
+          case "addr_reply" :
+            try {
+              recipient = gMimeHeaderParser.reformatUnquotedAddresses(fieldValue);
+            } catch (ex) {recipient = fieldValue;}
+            break;
         }
-        i ++;
-      }
 
-      msgCompFields.to = addrTo;
-      msgCompFields.cc = addrCc;
-      msgCompFields.bcc = addrBcc;
-      msgCompFields.replyTo = addrReply;
-      msgCompFields.newsgroups = addrNg;
-      msgCompFields.followupTo = addrFollow;
-      msgCompFields.otherRandomHeaders = addrOther;
+        switch (recipientType)
+        {
+          case "addr_to"          : addrTo += to_Sep + recipient; to_Sep = ",";               break;
+          case "addr_cc"          : addrCc += cc_Sep + recipient; cc_Sep = ",";               break;
+          case "addr_bcc"         : addrBcc += bcc_Sep + recipient; bcc_Sep = ",";            break;
+          case "addr_reply"       : addrReply += reply_Sep + recipient; reply_Sep = ",";      break; 
+          case "addr_newsgroups"  : addrNg += ng_Sep + fieldValue; ng_Sep = ",";              break;
+          case "addr_followup"    : addrFollow += follow_Sep + fieldValue; follow_Sep = ",";  break;
+          case "addr_other"       : addrOther += sOther_header + ": " + fieldValue + "\n";    break;
+        }
+      }
+      i ++;
+    }
+
+    msgCompFields.to = addrTo;
+    msgCompFields.cc = addrCc;
+    msgCompFields.bcc = addrBcc;
+    msgCompFields.replyTo = addrReply;
+    msgCompFields.newsgroups = addrNg;
+    msgCompFields.followupTo = addrFollow;
+    msgCompFields.otherRandomHeaders = addrOther;
+
+    gMimeHeaderParser = null;
   }
   else
     dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
@@ -168,6 +191,8 @@ function Recipients2CompFields(msgCompFields)
 function CompFields2Recipients(msgCompFields, msgType)
 {
   if (msgCompFields) {
+    gMimeHeaderParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+
     var listbox = document.getElementById('addressingWidget');
     var newListBoxNode = listbox.cloneNode(false);
     var listBoxColsClone = listbox.firstChild.cloneNode(true);
@@ -209,6 +234,8 @@ function CompFields2Recipients(msgCompFields, msgType)
     parent.replaceChild(newListBoxNode, listbox);
     awFitDummyRows(2);
     setTimeout("awFinishCopyNodes();", 0);
+
+    gMimeHeaderParser = null; //Release the mime parser
   }
 }
 
@@ -261,8 +288,18 @@ function awSetInputAndPopupFromArray(inputArray, popupValue, parentNode, templat
 {
   if ( inputArray && popupValue )
   {
+    var recipient;
     for ( var index = 0; index < inputArray.count; index++ )
-        _awSetInputAndPopup(inputArray.StringAt(index), popupValue, parentNode, templateNode);
+    {
+      recipient = null;
+      if (gMimeHeaderParser)
+        try {
+          recipient = gMimeHeaderParser.unquotePhraseOrAddrWString(inputArray.StringAt(index), true);
+        } catch (ex) {};
+      if (!recipient)
+        recipient = inputArray.StringAt(index)
+      _awSetInputAndPopup(recipient, popupValue, parentNode, templateNode);
+    }
   }
 }
 

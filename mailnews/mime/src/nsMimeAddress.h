@@ -51,17 +51,6 @@ ParseRFC822Addresses (const char *line,
 						              char **names,
 						              char **addresses);
 
-/* Given a name or address that might have been quoted
- it will take out the escape and double quotes
- The caller is responsible for freeing the resulting
- string.
- */
-int
-UnquotePhraseOrAddr (char *line, char** lineout);
-
-/* Given a string which contains a list of RFC822 addresses, returns a
-   comma-seperated list of just the `mailbox' portions.
- */
 char *
 ExtractRFC822AddressMailboxes (const char *line);
 

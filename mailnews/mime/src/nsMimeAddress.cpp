@@ -62,26 +62,6 @@ ParseRFC822Addresses (const char *line,
   return 0;
 }
 
-/* Given a name or address that might have been quoted
- it will take out the escape and double quotes
- The caller is responsible for freeing the resulting
- string.
- */
-int
-UnquotePhraseOrAddr (char *line, char** lineout)
-{
-  nsresult res;
-  nsCOMPtr<nsIMsgHeaderParser> pHeader = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID, &res);
-
-  if (NS_SUCCEEDED(res) && pHeader)
-  {
-    pHeader->UnquotePhraseOrAddr(NULL, line, lineout);
-    return NS_OK;
-  }
-
-  return NS_ERROR_FAILURE;
-}
-
 /* Given a string which contains a list of RFC822 addresses, returns a
    comma-seperated list of just the `mailbox' portions.
  */

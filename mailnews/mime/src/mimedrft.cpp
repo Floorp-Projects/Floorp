@@ -62,6 +62,7 @@
 #include "nsCExternalHandlerService.h"
 #include "nsIMIMEService.h"
 #include "nsIMIMEInfo.h"
+#include "nsIMsgHeaderParser.h"
 
 //
 // Header strings...
@@ -698,6 +699,28 @@ MimeGetNamedString(PRInt32 id)
   return retString;
 }
 
+/* given an address string passed though parameter "address", this one will be converted
+   and returned through the same parameter. The original string will be destroyed
+*/
+static void UnquoteMimeAddress(nsIMsgHeaderParser* parser, char** address)
+{
+  if (parser && address && *address && **address)
+  {
+    char *result;
+    if (NS_SUCCEEDED(parser->UnquotePhraseOrAddr(*address, PR_FALSE, &result)))
+    {
+      if (result && *result)
+      {
+        PR_Free(*address);
+        *address = result;
+        return;
+      }
+      PR_FREEIF(result);
+    }
+  }
+
+  return;
+}
 
 static void 
 mime_insert_all_headers(char            **body,
@@ -705,6 +728,8 @@ mime_insert_all_headers(char            **body,
                         MSG_ComposeFormat composeFormat,
                         char            *mailcharset)
 {
+  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+
   PRBool htmlEdit = (composeFormat == nsIMsgCompFormat::HTML);
   char *newBody = NULL;
   char *html_tag = nsnull;
@@ -800,10 +825,16 @@ mime_insert_all_headers(char            **body,
     */
     if (nsCRT::strcasecmp(name, "bcc") != 0)
     {
-      if (htmlEdit) mime_fix_up_html_address(&c2);
+      if (htmlEdit)
+        mime_fix_up_html_address(&c2);
         
-      mime_intl_insert_message_header_1(&newBody, &c2, name, name, mailcharset,
-                      htmlEdit);
+      if (!nsCRT::strcasecmp(name, "resent-from") || !nsCRT::strcasecmp(name, "from") ||
+          !nsCRT::strcasecmp(name, "resent-to") || !nsCRT::strcasecmp(name, "to") ||
+          !nsCRT::strcasecmp(name, "resent-cc") || !nsCRT::strcasecmp(name, "cc") ||
+          !nsCRT::strcasecmp(name, "reply-to"))
+        UnquoteMimeAddress(parser, &c2);
+
+      mime_intl_insert_message_header_1(&newBody, &c2, name, name, mailcharset, htmlEdit);
     }
     PR_Free(name);
     PR_Free(c2);
@@ -838,27 +869,21 @@ mime_insert_normal_headers(char             **body,
                            MSG_ComposeFormat  composeFormat,
                            char             *mailcharset)
 {
-  char *newBody = NULL;
+  char *newBody = nsnull;
   char *subject = MimeHeaders_get(headers, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
-  char *resent_comments = MimeHeaders_get(headers, HEADER_RESENT_COMMENTS,
-                      PR_FALSE, PR_FALSE);
-  char *resent_date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE,
-                    PR_TRUE); 
-  char *resent_from = MimeHeaders_get(headers, HEADER_RESENT_FROM, PR_FALSE,
-                    PR_TRUE);
+  char *resent_comments = MimeHeaders_get(headers, HEADER_RESENT_COMMENTS, PR_FALSE, PR_FALSE);
+  char *resent_date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE, PR_TRUE); 
+  char *resent_from = MimeHeaders_get(headers, HEADER_RESENT_FROM, PR_FALSE, PR_TRUE);
   char *resent_to = MimeHeaders_get(headers, HEADER_RESENT_TO, PR_FALSE, PR_TRUE);
   char *resent_cc = MimeHeaders_get(headers, HEADER_RESENT_CC, PR_FALSE, PR_TRUE);
   char *date = MimeHeaders_get(headers, HEADER_DATE, PR_FALSE, PR_TRUE);
   char *from = MimeHeaders_get(headers, HEADER_FROM, PR_FALSE, PR_TRUE);
   char *reply_to = MimeHeaders_get(headers, HEADER_REPLY_TO, PR_FALSE, PR_TRUE);
-  char *organization = MimeHeaders_get(headers, HEADER_ORGANIZATION,
-                     PR_FALSE, PR_FALSE);
+  char *organization = MimeHeaders_get(headers, HEADER_ORGANIZATION, PR_FALSE, PR_FALSE);
   char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
   char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
-  char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
-                     PR_TRUE);
-  char *followup_to = MimeHeaders_get(headers, HEADER_FOLLOWUP_TO, PR_FALSE,
-                    PR_TRUE);
+  char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE, PR_TRUE);
+  char *followup_to = MimeHeaders_get(headers, HEADER_FOLLOWUP_TO, PR_FALSE, PR_TRUE);
   char *references = MimeHeaders_get(headers, HEADER_REFERENCES, PR_FALSE, PR_TRUE);
   const char *html_tag = nsnull;
   if (*body)
@@ -871,6 +896,15 @@ mime_insert_normal_headers(char             **body,
     resent_from = MimeHeaders_get(headers, HEADER_RESENT_SENDER, PR_FALSE,
                     PR_TRUE); 
   
+  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+  UnquoteMimeAddress(parser, &resent_from);
+  UnquoteMimeAddress(parser, &resent_to);
+  UnquoteMimeAddress(parser, &resent_cc);
+  UnquoteMimeAddress(parser, &reply_to);
+  UnquoteMimeAddress(parser, &from);
+  UnquoteMimeAddress(parser, &to);
+  UnquoteMimeAddress(parser, &cc);
+
   if (htmlEdit)
   {
     NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
@@ -1047,6 +1081,12 @@ mime_insert_micro_headers(char            **body,
   if (!date)
     date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE, PR_TRUE);
   
+  nsCOMPtr<nsIMsgHeaderParser> parser = do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID);
+  UnquoteMimeAddress(parser, &resent_from);
+  UnquoteMimeAddress(parser, &from);
+  UnquoteMimeAddress(parser, &to);
+  UnquoteMimeAddress(parser, &cc);
+
   if (htmlEdit)
   {
     NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
