@@ -107,7 +107,6 @@
       <box class="tabpanel" id="servers" flex="100%" align="vertical">
         <html:div>&div.bannedservers.label;</html:div>
         <spring flex="5%"/>
-        <html:div flex="100%">
           <tree id="permissionstree" class="inset" style="height: 280px; width: 380px;" align="vertical"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
                 onclick="ViewPermissionSelected();">
@@ -119,7 +118,6 @@
             </treehead>
             <treechildren id="permissionslist"/>
           </tree>
-        </html:div>
         <spring style="height: 5px;"/>
         <box align="horizontal">
           <titledbutton id="removePermissions" class="dialog push" disabled="true" 
