@@ -84,38 +84,44 @@ FORCE_STATIC_LIB = 1
 
 EXPORTS = nsXULAppAPI.h
 
-SHAREDSRCS = \
+SHAREDCPPSRCS = \
 	nsNativeAppSupportBase.cpp \
 	nsWindowCreator.cpp \
 	showOSAlert.cpp \
 	$(NULL)
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),windows)
-SHAREDSRCS += nsNativeAppSupportWin.cpp
+SHAREDCPPSRCS += nsNativeAppSupportWin.cpp
 DEFINES += -DWIN32_LEAN_AND_MEAN
 endif
 
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
-SHAREDSRCS += nsNativeAppSupportGtk.cpp
+SHAREDCPPSRCS += nsNativeAppSupportGtk.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-SHAREDSRCS += nsNativeAppSupportOS2.cpp
+SHAREDCPPSRCS += nsNativeAppSupportOS2.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),beos)
-SHAREDSRCS += nsNativeAppSupportBeOS.cpp
+SHAREDCPPSRCS += nsNativeAppSupportBeOS.cpp
 endif
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
-SHAREDSRCS += nsNativeAppSupportMac.cpp
+SHAREDCPPSRCS += nsNativeAppSupportMac.cpp
+endif
+
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+SHAREDCMMSRCS += nsNativeAppSupportForCocoa.mm
 endif
 
 CPPSRCS = \
-	$(SHAREDSRCS) \
+	$(SHAREDCPPSRCS) \
 	nsAppRunner.cpp \
 	nsXREDirProvider.cpp \
 	$(NULL)
+
+CMMSRCS = $(SHAREDCMMSRCS)
 
 ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 STACKWALK_SRC_LCSRCS =               \
@@ -125,7 +131,7 @@ STACKWALK_SRC_LCSRCS =               \
 
 STACKWALK_CPPSRCS := $(addprefix $(topsrcdir)/xpcom/base/, $(STACKWALK_SRC_LCSRCS))
 CPPSRCS           += nsStackFrameUnix.cpp
-SHAREDSRCS	  += nsSigHandlers.cpp
+SHAREDCPPSRCS	  += nsSigHandlers.cpp
 endif
 
 GARBAGE += $(SHAREDSRCS) $(wildcard *.$(OBJ_SUFFIX))
@@ -145,7 +151,7 @@ ifdef BUILD_STATIC_LIBS
 DEFINES += -D_BUILD_STATIC_BIN
 endif
 
-export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDSRCS)) $(STACKWALK_CPPSRCS)
+export:: $(addprefix $(topsrcdir)/xpfe/bootstrap/, $(SHAREDCPPSRCS) $(SHAREDCMMSRCS)) $(STACKWALK_CPPSRCS)
 ifeq ($(OS_ARCH),WINNT)
 	$(INSTALL) $^ $(srcdir)
 else

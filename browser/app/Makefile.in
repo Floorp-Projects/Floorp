@@ -67,6 +67,10 @@ ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),cocoa)
+TK_LIBS := -framework Cocoa $(TK_LIBS)
+endif
+
 LIBS = \
 	$(STATIC_COMPONENTS_LINKER_PATH) \
 	$(EXTRA_DSO_LIBS) \
