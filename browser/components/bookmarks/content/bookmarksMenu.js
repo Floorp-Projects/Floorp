@@ -412,10 +412,12 @@ var BookmarksMenuController = {
     if (content)
       content.focus();
     BookmarksMenuDNDObserver.onDragRemoveFeedBack(document.popupNode);
-#   when a dialog opens, the popup chain is not correctly dismissed,
-#   the child of the a menu won''t be closed.
-    if (document.popupNode.firstChild)
-      document.popupNode.firstChild.hidePopup();
+
+#   if a dialog opens, the "open" attribute of a menuitem-container
+#   rclicked on won''t be removed. We do it manually.
+    var element = document.popupNode.firstChild;
+    if (element && element.localName == "menupopup")
+      element.hidePopup();
 
     var selection = BookmarksMenu._selection;
     var target    = BookmarksMenu._target;
