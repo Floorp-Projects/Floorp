@@ -53,11 +53,6 @@ void nsPageFrame::CreateFirstChild(nsIPresContext* aPresContext)
           nsresult rv = cd->CreateFrame(aPresContext, child, this,
                                         kidStyleContext, mFirstChild);
           NS_RELEASE(kidStyleContext);
-          if (NS_OK == rv) {
-            mChildCount = 1;
-            mFirstContentOffset = i;
-            mLastContentOffset = i;
-          }
           NS_RELEASE(cd);
         }
 #endif
@@ -119,7 +114,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
       } else {
         nsPageFrame*  prevPage = (nsPageFrame*)mPrevInFlow;
   
-        NS_ASSERTION(!prevPage->mLastContentIsComplete, "bad continuing page");
         nsIFrame* prevLastChild;
         prevPage->LastFrame(prevLastChild);
   
@@ -129,9 +123,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
         nsresult rv = prevLastChild->CreateContinuingFrame(aPresContext, this,
                                                            kidSC, mFirstChild);
         NS_RELEASE(kidSC);
-  
-        mChildCount = 1;
-        mLastContentOffset = mFirstContentOffset;
       }
     }
   
@@ -143,7 +134,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
       // Get the child's desired size
       mFirstChild->WillReflow(aPresContext);
       aStatus = ReflowChild(mFirstChild, &aPresContext, aDesiredSize, kidReflowState);
-      mLastContentIsComplete = NS_FRAME_IS_COMPLETE(aStatus);
   
       // Make sure the child is at least as tall as our max size (the containing window)
       if (aDesiredSize.height < aReflowState.maxSize.height) {
@@ -168,12 +158,6 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&      aPresContext,
     aDesiredSize.width = aReflowState.maxSize.width;
     aDesiredSize.height = aReflowState.maxSize.height;
   }
-
-  // We are always a pseudo-frame; make sure our content offset is
-  // properly pushed upwards
-  nsContainerFrame* parent = (nsContainerFrame*) mGeometricParent;
-  parent->PropagateContentOffsets(this, mFirstContentOffset,
-                                  mLastContentOffset, mLastContentIsComplete);
 
 #ifdef NS_DEBUG
   PostReflowCheck(aStatus);
