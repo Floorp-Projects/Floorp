@@ -225,7 +225,7 @@ nsMsgIncomingServer::getDefaultCharPref(const char *prefname,
   PR_Free(fullPrefName);
 
   if (NS_FAILED(rv)) {
-    *val = nsnull;
+    *val = PL_strdup("");
     rv = NS_OK;
   }
   return rv;
