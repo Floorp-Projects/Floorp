@@ -85,12 +85,6 @@ menulist[editable] {
   -moz-user-focus: ignore;
 }
 
-treecol,
-treerows,
-radio {
-  -moz-user-focus: none;
-}
-
 /******** window & page ******/
 
 window, 
