@@ -37,7 +37,7 @@
   background-position: top left;
 }
 
-a {
+a:not([\_moz_anonclass]) {
   min-height: 16px; margin-left: 2px; margin-top: 2px;
   padding-left: 20px; 
   background-image: url(chrome://editor/content/images/tag-a.gif);
@@ -381,7 +381,7 @@ iframe {
   background-position: top left;
 }
 
-img {
+img:not([\_moz_anonclass]) {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   padding-left: 31px; 
   background-image: url(chrome://editor/content/images/tag-img.gif);
@@ -605,7 +605,7 @@ small {
   background-position: top left;
 }
 
-span {
+span:not([\_moz_anonclass]) {
   min-height: 35px; margin-left: 2px; margin-top: 2px;
   /* TEMPORARY TO COMPENSATE FOR BUG */
   padding-left: 39px; 
