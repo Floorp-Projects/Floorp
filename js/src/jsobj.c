@@ -1091,7 +1091,18 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         principals = NULL;
     }
 
-    fp->flags |= JSFRAME_EVAL;
+    /*
+     * Set JSFRAME_EVAL on fp and any frames (e.g., fun_call if eval.call was
+     * invoked) between fp and its scripted caller, to help the compiler easily
+     * find the same caller whose scope and var obj we've set.
+     *
+     * XXX this nonsense could, and perhaps should, go away with a better way
+     * to pass params to the compiler than via the top-most frame.
+     */
+    do {
+        fp->flags |= JSFRAME_EVAL;
+    } while ((fp = fp->down) != caller);
+
     script = JS_CompileUCScriptForPrincipals(cx, scopeobj, principals,
                                              JSSTRING_CHARS(str),
                                              JSSTRING_LENGTH(str),
