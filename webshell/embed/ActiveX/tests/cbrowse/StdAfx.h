@@ -22,9 +22,19 @@
 #define _ATL_APARTMENT_THREADED
 // ATL headers
 #include <atlbase.h>
-//You may derive a class from CComModule and use it if you want to override
-//something, but do not change the name of _Module
-extern CComModule _Module;
+
+class CBrowseModule : public CComModule
+{
+public:
+	DWORD dwThreadID;
+
+	LPCTSTR FindOneOf(LPCTSTR p1, LPCTSTR p2);
+	virtual LONG Unlock();
+	virtual LONG Lock();
+};
+	
+extern CBrowseModule _Module;
+
 #include <atlcom.h>
 #include <atlctl.h>
 
@@ -34,6 +44,7 @@ extern CComModule _Module;
 
 #include <string>
 #include <vector>
+#include <map>
 #include <list>
 
 #include "..\..\ActiveXTypes.h"

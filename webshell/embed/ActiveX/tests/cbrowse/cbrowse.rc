@@ -196,6 +196,7 @@ END
 //
 
 IDR_CBROWSE             REGISTRY DISCARDABLE    "Cbrowse.rgs"
+IDR_TESTSCRIPTHELPER    REGISTRY DISCARDABLE    "TestScriptHelper.rgs"
 #endif    // English (U.S.) resources
 /////////////////////////////////////////////////////////////////////////////
 
