@@ -225,10 +225,19 @@ public:
   
   NS_IMETHOD FindFrameAt(PRInt32 aLineNumber,
                          nscoord aX,
+#ifdef IBMBIDI
+                         PRBool aCouldBeReordered,
+#endif
                          nsIFrame** aFrameFound,
                          PRBool* aXIsBeforeFirstFrame,
                          PRBool* aXIsAfterLastFrame);
 
+#ifdef IBMBIDI
+  NS_IMETHOD CheckLineOrder(PRInt32                  aLine,
+                            PRBool                   *aIsReordered,
+                            nsIFrame                 **aFirstVisual,
+                            nsIFrame                 **aLastVisual);
+#endif
   NS_IMETHOD GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber);
 
 
