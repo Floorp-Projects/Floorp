@@ -52,5 +52,5 @@ FILES		= \
 include $(topsrcdir)/config/rules.mk
 
 install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/searchplugins
+	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/chrome/locales/en-US/communicator/locale/search/searchplugins
 
