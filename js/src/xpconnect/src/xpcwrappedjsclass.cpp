@@ -71,6 +71,13 @@ static inline void DoPostScriptEvaluated(JSContext* cx)
 #endif /* XPCONNECT_STANDALONE */
 }
 
+// It turns out that some errors may be not worth reporting. So, this
+// this function is factored out to manage that.
+static inline JSBool IsReportableErrorCode(nsresult code)
+{
+    return NS_FAILED(code) && code != NS_ERROR_FACTORY_REGISTER_AGAIN;
+}
+
 // static
 nsXPCWrappedJSClass*
 nsXPCWrappedJSClass::GetNewOrUsedClass(XPCJSRuntime* rt,
@@ -348,6 +355,22 @@ xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
 {
     nsIXPCException* e;
     XPCContext* xpcc;
+    
+    if(report)
+    {
+        // If it is an exception report, then we can just deal with the 
+        // exception later (if not caught in the JS code).
+        if(JSREPORT_IS_EXCEPTION(report->flags))
+            return;
+            
+        if(JSREPORT_IS_WARNING(report->flags))
+        {
+            // XXX printf the warning.
+            // XXX send the warning to the console service.
+            return;
+        }
+    }
+    
     if(nsnull != (e = XPCConvert::JSErrorToXPCException(cx, message, 
                                         nsnull, nsnull, report)) &&
        nsnull != (xpcc = nsXPConnect::GetContext(cx)))
@@ -833,7 +856,7 @@ pre_call_clean_up:
         nsresult e_result;
         if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
         {
-            if(NS_FAILED(e_result))
+            if(IsReportableErrorCode(e_result))
             {
                 static const char line[] = 
                     "************************************************************\n";

@@ -143,32 +143,29 @@ nsXPConnect::nsXPConnect()
                                  (nsISupports **)&mContextStack);
 
 #ifdef XPC_TOOLS_SUPPORT
-    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-    if(prefs)
+  {
+    const char* filename = PR_GetEnv("MOZILLA_JS_PROFILER_OUTPUT");
+    if(filename)
     {
-        char* filename;
-        if(NS_SUCCEEDED(prefs->CopyCharPref("xpctools.profiler.outputfilename",
-                                            &filename)) && filename)
+        
+        mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
+        if(mProfilerOutputFile && 
+           NS_SUCCEEDED(mProfilerOutputFile->InitWithPath(filename)))
         {
-            mProfilerOutputFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID);         
-            if(mProfilerOutputFile && 
-               NS_SUCCEEDED(mProfilerOutputFile->InitWithPath(filename)))
+            mProfiler = do_GetService(XPCTOOLS_PROFILER_CONTRACTID);
+            if(mProfiler)
             {
-                mProfiler = do_GetService(XPCTOOLS_PROFILER_CONTRACTID);
-                if(mProfiler)
+                if(NS_SUCCEEDED(mProfiler->Start()))
                 {
-                    if(NS_SUCCEEDED(mProfiler->Start()))
-                    {
 #ifdef DEBUG
-                        printf("***** profiling JavaScript. Output to: %s\n",
-                               filename);
+                    printf("***** profiling JavaScript. Output to: %s\n",
+                           filename);
 #endif
-                    }
                 }
             }
-            nsCRT::free(filename);
         }
     }
+  }
 #endif
 
 }
@@ -192,6 +189,9 @@ nsXPConnect::~nsXPConnect()
     // http://bugzilla.mozilla.org/show_bug.cgi?id=37058
     //
     xpcPerThreadData::CleanupAllThreads();
+
+    // shutdown the logging system
+    XPC_LOG_FINISH();
 
     if(mThrower)
         delete mThrower;
@@ -282,6 +282,8 @@ nsXPConnect::ReleaseXPConnectSingleton()
 #ifdef XPC_DUMP_AT_SHUTDOWN
         if (0 != cnt) {
             printf("*** dangling reference to nsXPConnect: refcnt=%d\n", cnt);
+        } else {
+            printf("+++ XPConnect had no dangling references.\n");
         }
 #endif
     }

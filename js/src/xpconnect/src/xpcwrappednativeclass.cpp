@@ -432,7 +432,7 @@ nsXPCWrappedNativeClass::GetArraySizeFromParam(
                                     const nsXPTMethodInfo* method,
                                     const XPCNativeMemberDescriptor* desc,
                                     const nsXPTParamInfo& param,
-                                    uint8 vtblIndex,
+                                    uint16 vtblIndex,
                                     uint8 paramIndex,
                                     SizeMode mode,
                                     nsXPTCVariant* dispatchParams,
@@ -475,7 +475,7 @@ nsXPCWrappedNativeClass::GetInterfaceTypeFromParam(
                                     const nsXPTMethodInfo* method,
                                     const XPCNativeMemberDescriptor* desc,
                                     const nsXPTParamInfo& param,
-                                    uint8 vtblIndex,
+                                    uint16 vtblIndex,
                                     uint8 paramIndex,
                                     const nsXPTType& datum_type,
                                     nsXPTCVariant* dispatchParams,
@@ -544,7 +544,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     uint8 requiredArgs;
     uint8 paramCount;
     jsval src;
-    uint8 vtblIndex;
+    uint16 vtblIndex;
     nsresult invokeResult;
     nsID* conditional_iid = nsnull;
     uintN err;

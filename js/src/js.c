@@ -314,8 +314,10 @@ Process(JSContext *cx, JSObject *obj, char *filename)
 	}
 	ungetc(ch, fh);
         script = JS_CompileFileHandle(cx, obj, filename, fh);
-        if (script)
+        if (script) {
             (void)JS_ExecuteScript(cx, obj, script, &result);
+            JS_DestroyScript(cx, script);
+        }
         return;
     }
 
