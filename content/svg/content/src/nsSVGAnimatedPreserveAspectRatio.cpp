@@ -12,15 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is the Mozilla SVG project.
+ * The Original Code is Mozilla SVG Project code.
  *
  * The Initial Developer of the Original Code is
- * Crocodile Clips Ltd..
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * Jonathan Watt.
+ * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Alex Fritze <alex.fritze@crocodile-clips.com> (original author)
+ *   Jonathan Watt <jonathan.watt@strath.ac.uk> (original author)
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,33 +36,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsSVGAnimatedRect.h"
-#include "nsSVGRect.h"
+#include "nsSVGAnimatedPreserveAspectRatio.h"
+#include "nsSVGPreserveAspectRatio.h"
 #include "nsSVGValue.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////
-// nsSVGAnimatedRect
+// nsSVGAnimatedPreserveAspectRatio
 
-class nsSVGAnimatedRect : public nsIDOMSVGAnimatedRect,
-                          public nsSVGValue,
-                          public nsISVGValueObserver,
-                          public nsSupportsWeakReference
-{  
+class nsSVGAnimatedPreserveAspectRatio : public nsIDOMSVGAnimatedPreserveAspectRatio,
+                                         public nsSVGValue,
+                                         public nsISVGValueObserver,
+                                         public nsSupportsWeakReference
+{
 protected:
-  friend nsresult NS_NewSVGAnimatedRect(nsIDOMSVGAnimatedRect** result,
-                                        nsIDOMSVGRect* baseVal);
+  friend nsresult NS_NewSVGAnimatedPreserveAspectRatio(
+                                 nsIDOMSVGAnimatedPreserveAspectRatio** result,
+                                 nsIDOMSVGPreserveAspectRatio* baseVal);
 
-  nsSVGAnimatedRect();
-  ~nsSVGAnimatedRect();
-  void Init(nsIDOMSVGRect* baseVal);
-  
+  nsSVGAnimatedPreserveAspectRatio();
+  ~nsSVGAnimatedPreserveAspectRatio();
+  void Init(nsIDOMSVGPreserveAspectRatio* baseVal);
+
 public:
   // nsISupports interface:
   NS_DECL_ISUPPORTS
 
-  // nsIDOMSVGAnimatedRect interface:
-  NS_DECL_NSIDOMSVGANIMATEDRECT
+  // nsIDOMSVGAnimatedPreserveAspectRatio interface:
+  NS_DECL_NSIDOMSVGANIMATEDPRESERVEASPECTRATIO
 
   // remainder of nsISVGValue interface:
   NS_IMETHOD SetValueString(const nsAString& aValue);
@@ -71,36 +72,35 @@ public:
   // nsISVGValueObserver
   NS_IMETHOD WillModifySVGObservable(nsISVGValue* observable);
   NS_IMETHOD DidModifySVGObservable (nsISVGValue* observable);
-  
+
   // nsISupportsWeakReference
   // implementation inherited from nsSupportsWeakReference
-  
+
 protected:
-  nsCOMPtr<nsIDOMSVGRect> mBaseVal;
+  nsCOMPtr<nsIDOMSVGPreserveAspectRatio> mBaseVal;
 };
 
 
 //----------------------------------------------------------------------
 // Implementation
 
-nsSVGAnimatedRect::nsSVGAnimatedRect()
+nsSVGAnimatedPreserveAspectRatio::nsSVGAnimatedPreserveAspectRatio()
 {
 }
 
-nsSVGAnimatedRect::~nsSVGAnimatedRect()
+nsSVGAnimatedPreserveAspectRatio::~nsSVGAnimatedPreserveAspectRatio()
 {
-  if (!mBaseVal) return;
-    nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBaseVal);
+  nsCOMPtr<nsISVGValue> val( do_QueryInterface(mBaseVal) );
   if (!val) return;
   val->RemoveObserver(this);
 }
 
 void
-nsSVGAnimatedRect::Init(nsIDOMSVGRect* baseVal)
+nsSVGAnimatedPreserveAspectRatio::Init(nsIDOMSVGPreserveAspectRatio* aBaseVal)
 {
-  mBaseVal = baseVal;
-  if (!mBaseVal) return;
-  nsCOMPtr<nsISVGValue> val = do_QueryInterface(mBaseVal);
+  mBaseVal = aBaseVal;
+  nsCOMPtr<nsISVGValue> val( do_QueryInterface(mBaseVal) );
+  NS_ASSERTION(val, "baseval needs to implement nsISVGValue interface");
   if (!val) return;
   val->AddObserver(this);
 }
@@ -108,15 +108,15 @@ nsSVGAnimatedRect::Init(nsIDOMSVGRect* baseVal)
 //----------------------------------------------------------------------
 // nsISupports methods:
 
-NS_IMPL_ADDREF(nsSVGAnimatedRect)
-NS_IMPL_RELEASE(nsSVGAnimatedRect)
+NS_IMPL_ADDREF(nsSVGAnimatedPreserveAspectRatio)
+NS_IMPL_RELEASE(nsSVGAnimatedPreserveAspectRatio)
 
-NS_INTERFACE_MAP_BEGIN(nsSVGAnimatedRect)
+NS_INTERFACE_MAP_BEGIN(nsSVGAnimatedPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISVGValue)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedRect)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMSVGAnimatedPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsISVGValueObserver)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedRect)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(SVGAnimatedPreserveAspectRatio)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsISVGValue)
 NS_INTERFACE_MAP_END
 
@@ -124,34 +124,36 @@ NS_INTERFACE_MAP_END
 // nsISVGValue methods:
 
 NS_IMETHODIMP
-nsSVGAnimatedRect::SetValueString(const nsAString& aValue)
+nsSVGAnimatedPreserveAspectRatio::SetValueString(const nsAString& aValue)
 {
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(mBaseVal);
-  return value->SetValueString(aValue);
+  nsresult rv;
+  nsCOMPtr<nsISVGValue> val( do_QueryInterface(mBaseVal, &rv) );
+  return NS_FAILED(rv)? rv: val->SetValueString(aValue);
 }
 
 NS_IMETHODIMP
-nsSVGAnimatedRect::GetValueString(nsAString& aValue)
+nsSVGAnimatedPreserveAspectRatio::GetValueString(nsAString& aValue)
 {
-  nsCOMPtr<nsISVGValue> value = do_QueryInterface(mBaseVal);
-  return value->GetValueString(aValue);
+  nsresult rv;
+  nsCOMPtr<nsISVGValue> val( do_QueryInterface(mBaseVal, &rv) );
+  return NS_FAILED(rv)? rv: val->GetValueString(aValue);
 }
 
 //----------------------------------------------------------------------
-// nsIDOMSVGAnimatedRect methods:
+// nsIDOMSVGAnimatedPreserveAspectRatio methods:
 
-/* readonly attribute nsIDOMSVGRect baseVal; */
+/* readonly attribute nsIDOMSVGPreserveAspectRatio baseVal; */
 NS_IMETHODIMP
-nsSVGAnimatedRect::GetBaseVal(nsIDOMSVGRect * *aBaseVal)
+nsSVGAnimatedPreserveAspectRatio::GetBaseVal(nsIDOMSVGPreserveAspectRatio** aBaseVal)
 {
   *aBaseVal = mBaseVal;
   NS_ADDREF(*aBaseVal);
   return NS_OK;
 }
 
-/* readonly attribute nsIDOMSVGRect animVal; */
+/* readonly attribute nsIDOMSVGPreserveAspectRatio animVal; */
 NS_IMETHODIMP
-nsSVGAnimatedRect::GetAnimVal(nsIDOMSVGRect * *aAnimVal)
+nsSVGAnimatedPreserveAspectRatio::GetAnimVal(nsIDOMSVGPreserveAspectRatio** aAnimVal)
 {
   *aAnimVal = mBaseVal;
   NS_ADDREF(*aAnimVal);
@@ -162,37 +164,40 @@ nsSVGAnimatedRect::GetAnimVal(nsIDOMSVGRect * *aAnimVal)
 // nsISVGValueObserver methods
 
 NS_IMETHODIMP
-nsSVGAnimatedRect::WillModifySVGObservable(nsISVGValue* observable)
+nsSVGAnimatedPreserveAspectRatio::WillModifySVGObservable(nsISVGValue* observable)
 {
   WillModify();
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSVGAnimatedRect::DidModifySVGObservable (nsISVGValue* observable)
+nsSVGAnimatedPreserveAspectRatio::DidModifySVGObservable (nsISVGValue* observable)
 {
   DidModify();
   return NS_OK;
 }
 
-
 ////////////////////////////////////////////////////////////////////////
 // Exported creation functions:
 
 nsresult
-NS_NewSVGAnimatedRect(nsIDOMSVGAnimatedRect** result,
-                      nsIDOMSVGRect* baseVal)
+NS_NewSVGAnimatedPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio** result,
+                                     nsIDOMSVGPreserveAspectRatio* baseVal)
 {
   *result = nsnull;
-  
-  nsSVGAnimatedRect* animatedRect = new nsSVGAnimatedRect();
-  if(!animatedRect) return NS_ERROR_OUT_OF_MEMORY;
-  NS_ADDREF(animatedRect);
 
-  animatedRect->Init(baseVal);
-  
-  *result = (nsIDOMSVGAnimatedRect*) animatedRect;
-  
+  if (!baseVal) {
+    NS_ERROR("need baseVal");
+    return NS_ERROR_FAILURE;
+  }
+
+  nsSVGAnimatedPreserveAspectRatio* animatedPreserveAspectRatio = new nsSVGAnimatedPreserveAspectRatio();
+  if (!animatedPreserveAspectRatio)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(animatedPreserveAspectRatio);
+  animatedPreserveAspectRatio->Init(baseVal);
+  *result = (nsIDOMSVGAnimatedPreserveAspectRatio*) animatedPreserveAspectRatio;
+
   return NS_OK;
 }
-

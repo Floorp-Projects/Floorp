@@ -48,6 +48,7 @@
 #include "nsIPresContext.h"
 #include "nsISVGViewportRect.h"
 #include "nsSVGAnimatedRect.h"
+#include "nsSVGAnimatedPreserveAspectRatio.h"
 #include "nsSVGMatrix.h"
 #include "nsSVGPoint.h"
 #include "nsSVGTransform.h"
@@ -62,6 +63,7 @@
 #include "nsISVGOuterSVGFrame.h" //XXX
 #include "nsSVGNumber.h"
 #include "nsSVGRect.h"
+#include "nsSVGPreserveAspectRatio.h"
 #include "nsISVGValueUtils.h"
 
 typedef nsSVGStylableElement nsSVGSVGElementBase;
@@ -112,6 +114,7 @@ protected:
   nsCOMPtr<nsISVGViewportRect>      mViewport;
   nsCOMPtr<nsIDOMSVGAnimatedRect>   mViewBox;
   nsCOMPtr<nsIDOMSVGMatrix>         mViewBoxToViewportTransform;
+  nsCOMPtr<nsIDOMSVGAnimatedPreserveAspectRatio> mPreserveAspectRatio;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mX;
   nsCOMPtr<nsIDOMSVGAnimatedLength> mY;
   
@@ -149,6 +152,9 @@ nsSVGSVGElement::nsSVGSVGElement(nsINodeInfo* aNodeInfo)
 
 nsSVGSVGElement::~nsSVGSVGElement()
 {
+  if (mPreserveAspectRatio) {
+    NS_REMOVE_SVGVALUE_OBSERVER(mPreserveAspectRatio);
+  }
   if (mViewBox) {
     NS_REMOVE_SVGVALUE_OBSERVER(mViewBox);
   }
@@ -301,12 +307,25 @@ nsSVGSVGElement::Init()
     NS_ENSURE_SUCCESS(rv,rv);
     rv = AddMappedSVGValue(nsSVGAtoms::viewBox, mViewBox);
     NS_ENSURE_SUCCESS(rv,rv);
+
+    // DOM property: preserveAspectRatio , #IMPLIED attrib: preserveAspectRatio
+    nsCOMPtr<nsIDOMSVGPreserveAspectRatio> preserveAspectRatio;
+    rv = NS_NewSVGPreserveAspectRatio(getter_AddRefs(preserveAspectRatio));
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = NS_NewSVGAnimatedPreserveAspectRatio(
+                                          getter_AddRefs(mPreserveAspectRatio),
+                                          preserveAspectRatio);
+    NS_ENSURE_SUCCESS(rv,rv);
+    rv = AddMappedSVGValue(nsSVGAtoms::preserveAspectRatio,
+                                      mPreserveAspectRatio);
+    NS_ENSURE_SUCCESS(rv,rv);
   }
 
 
   // add observers -------------------------- :
   NS_ADD_SVGVALUE_OBSERVER(mViewport);
   NS_ADD_SVGVALUE_OBSERVER(mViewBox);
+  NS_ADD_SVGVALUE_OBSERVER(mPreserveAspectRatio);
 
   return rv;
 }
@@ -768,15 +787,15 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
     mViewport->GetWidth(&viewportWidth);
     mViewport->GetHeight(&viewportHeight);
     
-    float viewboxWidth, viewboxHeight, viewboxX, viewboxY;
+    float viewboxX, viewboxY, viewboxWidth, viewboxHeight;
     {
       nsCOMPtr<nsIDOMSVGRect> vb;
       mViewBox->GetAnimVal(getter_AddRefs(vb));
       NS_ASSERTION(vb, "could not get viewbox");
-      vb->GetWidth(&viewboxWidth);
-      vb->GetHeight(&viewboxHeight);
       vb->GetX(&viewboxX);
       vb->GetY(&viewboxY);
+      vb->GetWidth(&viewboxWidth);
+      vb->GetHeight(&viewboxHeight);
     }
     if (viewboxWidth==0.0f || viewboxHeight==0.0f) {
       NS_ERROR("XXX. We shouldn't get here. Viewbox width/height is set to 0. Need to disable display of element as per specs.");
@@ -784,14 +803,85 @@ nsSVGSVGElement::GetViewboxToViewportTransform(nsIDOMSVGMatrix **_retval)
       viewboxHeight = 1.0f;
     }
     
-    // case with preserveAspectRatio=none:
-    float a, e, d, f;
+    PRUint16 align, meetOrSlice;
+    {
+      nsCOMPtr<nsIDOMSVGPreserveAspectRatio> par;
+      mPreserveAspectRatio->GetAnimVal(getter_AddRefs(par));
+      NS_ASSERTION(par, "could not get preserveAspectRatio");
+      par->GetAlign(&align);
+      par->GetMeetOrSlice(&meetOrSlice);
+    }
+
+    // default to the defaults
+    if (align == nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_UNKNOWN)
+      align = nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID;
+    if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_UNKNOWN)
+      align = nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET;
     
+    float a, d, e, f;
     a = viewportWidth/viewboxWidth;
-    e = -a*viewboxX;
-    
     d = viewportHeight/viewboxHeight;
-    f = -d*viewboxY;
+
+    if (align != nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE &&
+        a != d) {
+      if (meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
+          a < d ||
+          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
+          d < a) {
+        d = a;
+        e = 0;
+        switch (align) {
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
+            f = 0;
+            break;
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
+            f = (viewportHeight - a * viewboxHeight) / 2;
+            break;
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
+            f = viewportHeight - a * viewboxHeight;
+            break;
+          default:
+            NS_NOTREACHED("Unknown value for align");
+        }
+      }
+      else if (
+          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_MEET &&
+          d < a ||
+          meetOrSlice == nsIDOMSVGPreserveAspectRatio::SVG_MEETORSLICE_SLICE &&
+          a < d) {
+        a = d;
+        f = 0;
+        switch (align) {
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMIN:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMID:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMINYMAX:
+            e = 0;
+            break;
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMIN:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMID:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMIDYMAX:
+            e = (viewportWidth - a * viewboxWidth) / 2;
+            break;
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMIN:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMID:
+          case nsIDOMSVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_XMAXYMAX:
+            e = viewportWidth - a * viewboxWidth;
+            break;
+          default:
+            NS_NOTREACHED("Unknown value for align");
+        }
+      }
+      else NS_NOTREACHED("Unknown value for meetOrSlice");
+    }
+
+    if (viewboxX) e += -a * viewboxX;
+    if (viewboxY) f += -d * viewboxY;
     
 #ifdef DEBUG
     printf("SVG Viewport=(0?,0?,%f,%f)\n", viewportWidth, viewportHeight);
@@ -825,8 +915,9 @@ nsSVGSVGElement::GetViewBox(nsIDOMSVGAnimatedRect * *aViewBox)
 NS_IMETHODIMP
 nsSVGSVGElement::GetPreserveAspectRatio(nsIDOMSVGAnimatedPreserveAspectRatio * *aPreserveAspectRatio)
 {
-  NS_NOTYETIMPLEMENTED("write me!");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  *aPreserveAspectRatio = mPreserveAspectRatio;
+  NS_ADDREF(*aPreserveAspectRatio);
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------
@@ -1058,7 +1149,7 @@ NS_IMETHODIMP
 nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable)
 {
 #ifdef DEBUG
-  printf("viewport/viewbox will be changed\n");
+  printf("viewport/viewbox/preserveAspectRatio will be changed\n");
 #endif
   return NS_OK;
 }
@@ -1067,7 +1158,7 @@ nsSVGSVGElement::WillModifySVGObservable(nsISVGValue* observable)
 NS_IMETHODIMP
 nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
 {
-  // either viewport or viewbox have changed
+  // either viewport, viewbox or preserveAspectRatio have changed
   // invalidate viewbox -> viewport xform & inform frames
   
   mViewBoxToViewportTransform = nsnull;
@@ -1090,7 +1181,7 @@ nsSVGSVGElement::DidModifySVGObservable (nsISVGValue* observable)
   
   
 #ifdef DEBUG
-  printf("viewport/viewbox have been changed\n");
+  printf("viewport/viewbox/preserveAspectRatio have been changed\n");
 #endif
   return NS_OK;
 }
