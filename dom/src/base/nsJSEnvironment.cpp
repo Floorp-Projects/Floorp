@@ -516,8 +516,13 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& 
   if (aHandler)
     *aHandler = (void*) JS_GetFunctionObject(fun);
 
-  /* Break scope link to avoid entraining compilation scope. */
-  JS_SetParent(mContext, (JSObject *)*aHandler, nsnull);
+  nsISupports* supports = NS_STATIC_CAST(nsISupports*, JS_GetPrivate(mContext, (JSObject*)aTarget));
+  nsCOMPtr<nsIScriptEventHandlerOwner> owner = do_QueryInterface(supports);
+
+  if (owner) {
+    /* Break scope link to avoid entraining compilation scope. */
+    JS_SetParent(mContext, (JSObject *)*aHandler, nsnull);
+  }
   return NS_OK;
 }
 
