@@ -41,11 +41,10 @@
 ** Note: on some platforms va_list is defined as an array,
 ** and requires array notation.
 */
-#if (defined(LINUX) && defined(__powerpc__)) || defined(WIN16) || \
-    defined(QNX) || (defined(__NetBSD__) && defined(__powerpc__))
-#define VARARGS_ASSIGN(foo, bar) foo[0] = bar[0]
+#ifdef HAVE_VA_LIST_AS_ARRAY
+#define VARARGS_ASSIGN(foo, bar)	foo[0] = bar[0]
 #else
-#define VARARGS_ASSIGN(foo, bar) (foo) = (bar)
+#define VARARGS_ASSIGN(foo, bar)	(foo) = (bar)
 #endif
 
 /*
