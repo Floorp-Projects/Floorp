@@ -453,10 +453,10 @@ nsBaseStatsTable.prototype =
 function nsGrahamCalculations()
 {
 }
-nsGrahamCalculations.prototype = new nsBaseStatsTable();
-
-nsGrahamCalculations.prototype.calculateToken =
-    function _grahamCalculateToken(aToken, aExtrema, aTime)
+nsGrahamCalculations.prototype =
+{
+    __proto__: nsBaseStatsTable.prototype,
+    calculateToken: function _grahamCalculateToken(aToken, aExtrema, aTime)
     {
         var prob;
         if (aToken in this.mHash) {
@@ -491,10 +491,9 @@ nsGrahamCalculations.prototype.calculateToken =
                            mProb: prob,
                            mToken: aToken });
         }
-    };
+    },
 
-nsGrahamCalculations.prototype.calculate =
-    function _grahamCalculate(aExtrema)
+    calculate: function _grahamCalculate(aExtrema)
     {
         var minWordsLength = 0;
         if (typeof aExtrema.mMinWords != undefined) {
@@ -538,10 +537,9 @@ nsGrahamCalculations.prototype.calculate =
             extremum = extremum.mNext;
         }
         return product / (product + invProduct);
-    };
+    },
 
-nsGrahamCalculations.prototype.updateProbabilities =
-    function _grahamUpdateProbabilities()
+    updateProbabilities: function _grahamUpdateProbabilities()
     {
         var hamTotal = Math.max(this.mHamCount, 1);
         var spamTotal = Math.max(this.mSpamCount, 1);
@@ -575,7 +573,8 @@ nsGrahamCalculations.prototype.updateProbabilities =
             }
 // XXX DEBUG_END
         }
-    };
+    }
+};
 
 /**
  * Class implementing Robinson's calculations.
@@ -583,10 +582,10 @@ nsGrahamCalculations.prototype.updateProbabilities =
 function nsRobinsonCalculations()
 {
 }
-nsRobinsonCalculations.prototype = new nsBaseStatsTable();
-
-nsRobinsonCalculations.prototype.calculateToken =
-    function _robinsonCalculateToken(aToken, aExtrema, aTime)
+nsRobinsonCalculations.prototype =
+{
+    __proto__: nsBaseStatsTable.prototype,
+    calculateToken: function _robinsonCalculateToken(aToken, aExtrema, aTime)
     {
         var prob;
         if (aToken in this.mHash) {
@@ -615,10 +614,9 @@ nsRobinsonCalculations.prototype.calculateToken =
                            mProb: prob,
                            mToken: aToken });
         }
-    };
+    },
 
-nsRobinsonCalculations.prototype.calculate =
-    function _robinsonCalculate(aExtrema)
+    calculate: function _robinsonCalculate(aExtrema)
     {
         var cluesCount = 0;
         var P = 1;
@@ -647,10 +645,9 @@ nsRobinsonCalculations.prototype.calculate =
             prob = 0.5;
         }
         return prob;
-    };
+    },
 
-nsRobinsonCalculations.prototype.updateProbabilities =
-    function _robinsonUpdateProbabilities()
+    updateProbabilities: function _robinsonUpdateProbabilities()
     {
         var hamTotal = Math.max(this.mHamCount, 1);
         var spamTotal = Math.max(this.mSpamCount, 1);
@@ -689,15 +686,8 @@ nsRobinsonCalculations.prototype.updateProbabilities =
             }
 // XXX DEBUG_END
         }
-    };
-
-/**
- * The superclass for the table holding the stats. It's prototype will be
- * hooked up dynamically.
- */
-function nsStatsTable()
-{
-}
+    }
+};
 
 function nsJunkmail()
 {
@@ -732,17 +722,12 @@ nsJunkmail.prototype =
             gIOService = do_GetService(IOSERVICE_CTRID, nsIIOService);
         }
 
+        var nsStatsTable = nsRobinsonCalculations;
         if (gPrefs.prefHasUserValue("extensions.bayesianspam.algorithm")) {
             var algorithm = gPrefs.getCharPref("extensions.bayesianspam.algorithm");
             if (algorithm == "Graham") {
-                nsStatsTable.prototype = new nsGrahamCalculations();
+                nsStatsTable = nsGrahamCalculations;
             }
-            else {
-                nsStatsTable.prototype = new nsRobinsonCalculations();
-            }
-        }
-        else {
-            nsStatsTable.prototype = new nsRobinsonCalculations();
         }
         this.mTable = new nsStatsTable();
     },
