@@ -19,16 +19,9 @@
 #ifndef nsMacMessagePump_h__
 #define nsMacMessagePump_h__
 
-#include "nsToolKit.h"
-#include "nsWindow.h"
-#include <Fonts.h>
-#include <TextEdit.h>
-#include <Dialogs.h>
-#include <Traps.h>
-#include <Events.h>
-#include <Menus.h>
-
-
+#include "prtypes.h"
+class nsToolkit;
+class nsWindow;
 
 //================================================
 
@@ -54,17 +47,24 @@ class nsMacMessagePump
     virtual ~nsMacMessagePump();
   
 		PRBool			DoMessagePump();
-		void 				DoMouseDown(EventRecord *aTheEvent);
-		void				DoMouseUp(EventRecord *aTheEvent);
-		void				DoMouseMove(EventRecord *aTheEvent);
-		void				DoPaintEvent(EventRecord *aTheEvent);
-		void 				DoKey(EventRecord *aTheEvent);
-		void 				DoMenu(EventRecord *aTheEvent, long menuItem);
-		void 				DoIdleWidgets();
-  	void 				SetCurrentWindow(nsWindow *aTheWin) { gCurrentWindow = aTheWin;}
-  	void				StopRunning() {mRunning = PR_FALSE;}
-  	nsWindow* 	GetCurrentWindow(void) {return(gCurrentWindow);}
+  		void			StopRunning() {mRunning = PR_FALSE;}
 
+		void 			DoMouseDown(EventRecord *aTheEvent);
+		void			DoMouseUp(EventRecord *aTheEvent);
+		void			DoMouseMove(EventRecord *aTheEvent);
+		void			DoPaintEvent(EventRecord *aTheEvent);
+		void 			DoKey(EventRecord *aTheEvent);
+		void 			DoMenu(EventRecord *aTheEvent, long menuResult);
+		void 			DoIdleWidgets();
+
+
+  	void 				SetCurrentWindow(nsWindow *aTheWin) { gCurrentWindow = aTheWin;}
+  	nsWindow* 			GetCurrentWindow(void) {return(gCurrentWindow);}
+
+	typedef void (*nsWindowlessMenuEventHandler) (PRInt32 menuResult);
+	static nsWindowlessMenuEventHandler gWindowlessMenuEventHandler;
+	static void SetWindowlessMenuEventHandler(nsWindowlessMenuEventHandler func)
+						{gWindowlessMenuEventHandler = func;}
 };
 
 

@@ -96,6 +96,9 @@ public:
   ~nsNativeViewerApp();
 
   virtual int Run();
+#ifdef XP_MAC
+  static void DispatchMenuItemWithoutWindow(PRInt32 menuResult);
+#endif
 };
 
 #endif /* nsViewerApp_h___ */

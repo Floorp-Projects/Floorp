@@ -23,43 +23,15 @@
 #include <stdlib.h>
 #include "resources.h"
 
-#include <ToolUtils.h>		// MacOS includes
+#include <ToolUtils.h>			// MacOS includes
 #include <Menus.h>
 #include <Windows.h>
 #include <Devices.h>
 #include <Resources.h>
 #include <Dialogs.h>
 
-#include <PP_Messages.h>	// PP includes
-
-
-static nsNativeViewerApp* gTheApp;
-
-nsNativeViewerApp::nsNativeViewerApp()
-{
-}
-
-nsNativeViewerApp::~nsNativeViewerApp()
-{
-}
-
-int
-nsNativeViewerApp::Run()
-{
-  OpenWindow();
-  mAppShell->Run();
-  return 0;
-}
-
-//----------------------------------------------------------------------
-
-nsNativeBrowserWindow::nsNativeBrowserWindow()
-{
-}
-
-nsNativeBrowserWindow::~nsNativeBrowserWindow()
-{
-}
+#include <PP_Messages.h>		// for PP standard menu commands
+#include "nsMacMessagePump.h"	// for the windowless menu event handler
 
 enum
 {
@@ -76,6 +48,76 @@ enum
 	cmd_PrintOneColumn	= 2000,
 	cmd_Find			= 3000
 };
+
+
+static nsNativeViewerApp* gTheApp;
+
+nsNativeViewerApp::nsNativeViewerApp()
+{
+	nsMacMessagePump::SetWindowlessMenuEventHandler(DispatchMenuItemWithoutWindow);
+}
+
+nsNativeViewerApp::~nsNativeViewerApp()
+{
+}
+
+int
+nsNativeViewerApp::Run()
+{
+  OpenWindow();
+  mAppShell->Run();
+  return 0;
+}
+
+void nsNativeViewerApp::DispatchMenuItemWithoutWindow(PRInt32 menuResult)
+{
+	long menuID = HiWord(menuResult);
+	long menuItem = LoWord(menuResult);
+	switch (menuID)
+	{
+		case menu_Apple:
+			switch (menuItem)
+			{
+				case cmd_About:
+					::Alert(128, nil);
+					break;
+				default:
+					Str255 daName;
+					GetMenuItemText(GetMenuHandle(menu_Apple), menuItem, daName);
+					OpenDeskAcc(daName);
+					break;
+			}
+			break;
+
+		case menu_File:
+			
+			switch (menuItem)
+			{
+				case cmd_New:
+					gTheApp->OpenWindow();
+					break;
+				case cmd_Open:
+					nsBrowserWindow * newWindow;
+					gTheApp->OpenWindow(0, newWindow);
+					newWindow->DoFileOpen();
+					break;
+				case cmd_Quit:
+					gTheApp->Exit();
+					break;
+			}
+			break;
+	}
+}
+
+//----------------------------------------------------------------------
+
+nsNativeBrowserWindow::nsNativeBrowserWindow()
+{
+}
+
+nsNativeBrowserWindow::~nsNativeBrowserWindow()
+{
+}
 
 nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
@@ -97,21 +139,6 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 	long menuID = HiWord(aID);
 	long menuItem = LoWord(aID);
 	
-	Int16**	theMcmdH = (Int16**) ::GetResource('Mcmd', menuID);
-	if (theMcmdH != nil)
-	{
-		if (::GetHandleSize((Handle)theMcmdH) > 0)
-		{
-			Int16 numCommands = (*theMcmdH)[0];
-			if (numCommands >= menuItem)
-			{
-				CommandT* theCommandNums = (CommandT*)(&(*theMcmdH)[1]);
-				menuItem = theCommandNums[menuItem-1];
-			}
-		}
-		::ReleaseResource((Handle) theMcmdH);
-	}
-
 	switch (menuID)
 	{
 		case menu_Apple:
