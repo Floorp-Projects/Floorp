@@ -330,15 +330,6 @@ public:
 
     nsresult  DoFragment(PRBool aFlag);
 
-    nsresult  PushIntoMisplacedStack(CToken* aToken)
-    {
-      NS_ENSURE_ARG_POINTER(aToken);
-      aToken->SetNewlineCount(0); // Note: We have already counted the newlines for these tokens
-
-      mMisplacedContent.Push(aToken);
-      return NS_OK;
-    }
-
 protected:
 
 		nsresult        CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 aCount);
@@ -357,7 +348,7 @@ protected:
     nsDTDContext*       mBodyContext;
     nsDTDContext*       mTempContext;
     nsParser*           mParser;
-    nsITokenizer*       mTokenizer; // weak
+    nsITokenizer*       mTokenizer;
    
     nsString            mFilename; 
     nsString            mScratch;  //used for various purposes; non-persistent

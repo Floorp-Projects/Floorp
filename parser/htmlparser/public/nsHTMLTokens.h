@@ -126,14 +126,14 @@ class CStartToken: public CHTMLToken {
     virtual const char*   GetClassName(void);
     virtual PRInt32       GetTokenType(void);
 
-    virtual PRBool        IsEmpty(void);
-    virtual void          SetEmpty(PRBool aValue);
+            PRBool        IsEmpty(void);
+            void          SetEmpty(PRBool aValue);
 #ifdef DEBUG
     virtual void          DebugDumpSource(nsOutputStream& out);
 #endif
     virtual const nsAString& GetStringValue();
     virtual void          GetSource(nsString& anOutputString);
-    virtual void          AppendSourceTo(nsAString& anOutputString);
+    virtual void          AppendSource(nsString& anOutputString);
 
       //the following info is used to set well-formedness state on start tags...
     virtual eContainerInfo GetContainerInfo(void) const {return mContainerInfo;}
@@ -185,7 +185,7 @@ class CEndToken: public CHTMLToken {
 #endif
     virtual const nsAString& GetStringValue();
     virtual void        GetSource(nsString& anOutputString);
-    virtual void        AppendSourceTo(nsAString& anOutputString);
+    virtual void        AppendSource(nsString& anOutputString);
 
   protected:
     nsString          mTextValue;
@@ -241,7 +241,7 @@ class CEntityToken : public CHTMLToken {
 #endif
     virtual const nsAString& GetStringValue(void);
     virtual void        GetSource(nsString& anOutputString);
-    virtual void        AppendSourceTo(nsAString& anOutputString);
+    virtual void        AppendSource(nsString& anOutputString);
 
   protected:
     nsString          mTextValue;
@@ -373,7 +373,7 @@ class CAttributeToken: public CHTMLToken {
 #endif
     virtual const nsAString& GetStringValue(void);
     virtual void          GetSource(nsString& anOutputString);
-    virtual void          AppendSourceTo(nsAString& anOutputString);
+    virtual void          AppendSource(nsString& anOutputString);
 #ifdef DEBUG
     virtual void          DebugDumpSource(nsOutputStream& out);
 #endif

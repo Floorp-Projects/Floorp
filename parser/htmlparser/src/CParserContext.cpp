@@ -40,8 +40,6 @@
 #include "CParserContext.h"
 #include "nsToken.h"
 #include "prenv.h"  
-#include "nsHTMLTokenizer.h"
-#include "nsExpatDriver.h"
 
 MOZ_DECL_CTOR_COUNTER(CParserContext)
 
@@ -72,8 +70,7 @@ CParserContext::CParserContext(nsScanner* aScanner,
   mAutoDetectStatus=aStatus; 
   mTransferBuffer=0; 
   mDTD=aDTD; 
-  NS_IF_ADDREF(mDTD);
-  mTokenizer = 0;
+  NS_IF_ADDREF(mDTD); 
   mTransferBufferSize=eTransferBufferSize; 
   mStreamListenerState=eNone; 
   mMultipart=PR_TRUE; 
@@ -106,9 +103,6 @@ CParserContext::CParserContext(const CParserContext &aContext) : mMimeType() {
   mDTD=aContext.mDTD;
   NS_IF_ADDREF(mDTD);
 
-  mTokenizer = aContext.mTokenizer;
-  NS_IF_ADDREF(mTokenizer);
-
   mTransferBufferSize=eTransferBufferSize;
   mStreamListenerState=aContext.mStreamListenerState;
   mMultipart=aContext.mMultipart;
@@ -138,7 +132,6 @@ CParserContext::~CParserContext(){
 
   NS_IF_RELEASE(mDTD);
   NS_IF_RELEASE(mListener);
-  NS_IF_RELEASE(mTokenizer);
 
   //Remember that it's ok to simply ingore the PrevContext.
 
@@ -156,37 +149,11 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
 
   if(mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType)))
     mDocType=eHTML_Strict;
-  else if (mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType))          ||
-           mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))   ||
+  else if (mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType)) ||
            mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType)) ||
-           mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType))          ||
-           mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)))
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)) ||
+           mMimeType.Equals(NS_LITERAL_CSTRING(kXIFTextContentType)))
     mDocType=eXML;
-}
-
-nsresult
-CParserContext::GetTokenizer(nsITokenizer*& aTokenizer) {
-  nsresult result = NS_OK;
-  
-  if(!mTokenizer) {
-    if (mParserCommand == eViewSource                                   ||
-        mMimeType.Equals(NS_LITERAL_CSTRING(kHTMLTextContentType))      ||
-        mMimeType.Equals(NS_LITERAL_CSTRING(kPlainTextContentType))     ||
-        mMimeType.Equals(NS_LITERAL_CSTRING(kTextCSSContentType))       ||
-        mMimeType.Equals(NS_LITERAL_CSTRING(kApplicationJSContentType)) ||
-        mMimeType.Equals(NS_LITERAL_CSTRING(kTextJSContentType))) {
-      result = NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
-    }
-    else if (mMimeType.Equals(NS_LITERAL_CSTRING(kXMLTextContentType))         ||
-             mMimeType.Equals(NS_LITERAL_CSTRING(kXMLApplicationContentType))  ||
-             mMimeType.Equals(NS_LITERAL_CSTRING(kXHTMLApplicationContentType))||
-             mMimeType.Equals(NS_LITERAL_CSTRING(kXULTextContentType))         ||
-             mMimeType.Equals(NS_LITERAL_CSTRING(kRDFTextContentType)))
-    {
-      result = CallQueryInterface(mDTD, &mTokenizer);
-    }
-  }
-  
-  aTokenizer = mTokenizer;
-  return result;
 }

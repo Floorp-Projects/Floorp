@@ -58,8 +58,10 @@ const nsString& GetEmptyString() {
  *  Default Constructor
  */
 nsCParserNode::nsCParserNode()
-  : mToken(nsnull),
+  : mLineNumber(1),
+    mToken(nsnull),
     mAttributes(nsnull),
+    mSkippedContent(nsnull),
     mUseCount(0),
     mGenericState(PR_FALSE),
     mTokenAllocator(nsnull)
@@ -77,9 +79,7 @@ nsCParserNode::nsCParserNode()
  *  @param   aToken -- token to init internal token
  *  @return  
  */
-nsCParserNode::nsCParserNode(CToken* aToken,
-                             nsTokenAllocator* aTokenAllocator,
-                             nsNodeAllocator* aNodeAllocator): 
+nsCParserNode::nsCParserNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator): 
     nsIParserNode() {
   mRefCnt = 0;
   MOZ_COUNT_CTOR(nsCParserNode);
@@ -87,10 +87,12 @@ nsCParserNode::nsCParserNode(CToken* aToken,
   static int theNodeCount=0;
   theNodeCount++;
   mAttributes=0;
+  mLineNumber=aLineNumber;
   mToken=aToken;
   IF_HOLD(mToken);
   mTokenAllocator=aTokenAllocator;
   mUseCount=0;
+  mSkippedContent=0;
   mGenericState=PR_FALSE;
 #ifdef HEAP_ALLOCATED_NODES
   mNodeAllocator=aNodeAllocator;
@@ -115,6 +117,7 @@ nsCParserNode::~nsCParserNode() {
   mNodeAllocator=nsnull;
 #endif
   mTokenAllocator=0;
+  mLineNumber=0;
 }
 
 
@@ -126,9 +129,7 @@ nsCParserNode::~nsCParserNode() {
  *  @return  
  */
 
-nsresult nsCParserNode::Init(CToken* aToken,
-                             nsTokenAllocator* aTokenAllocator,
-                             nsNodeAllocator* aNodeAllocator) {
+nsresult nsCParserNode::Init(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator,nsNodeAllocator* aNodeAllocator) {
   if(mAttributes && (mAttributes->GetSize())) {
     NS_ASSERTION(0!=mTokenAllocator, "Error: Attribute tokens on node without token allocator");
     if(mTokenAllocator) {
@@ -138,11 +139,15 @@ nsresult nsCParserNode::Init(CToken* aToken,
       }
     }
   }
+  mLineNumber=aLineNumber;
   mTokenAllocator=aTokenAllocator;
   mToken=aToken;
   IF_HOLD(mToken);
   mGenericState=PR_FALSE;
   mUseCount=0;
+  if(mSkippedContent) {
+    mSkippedContent->Truncate();
+  }
 #ifdef HEAP_ALLOCATED_NODES
   mNodeAllocator=aNodeAllocator;
 #endif
@@ -194,6 +199,36 @@ const nsString& nsCParserNode::GetName() const {
  */
 const nsAString& nsCParserNode::GetText() const {
   return (mToken) ? mToken->GetStringValue() : NS_STATIC_CAST(const nsAString&,GetEmptyString());
+}
+
+/**
+ *  Get text value of this node, which translates into 
+ *  getting the text value of the underlying token
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  string ref of text from internal token
+ */
+const nsString& nsCParserNode::GetSkippedContent() const {
+  if(mSkippedContent)
+    return *mSkippedContent;
+  return GetEmptyString();
+}
+
+
+/**
+ *  Get text value of this node, which translates into 
+ *  getting the text value of the underlying token
+ *  
+ *  @update  gess 3/25/98
+ *  @param   
+ *  @return  string ref of text from internal token
+ */
+void nsCParserNode::SetSkippedContent(nsString& aString) {
+  if(!mSkippedContent) {
+    mSkippedContent=new nsString(aString);
+  }
+  else *mSkippedContent=aString;
 }
 
 /**
@@ -293,7 +328,7 @@ PRInt32 nsCParserNode::TranslateToUnicodeStr(nsString& aString) const
  * @return  int containing the line number the token was found on
  */
 PRInt32 nsCParserNode::GetSourceLineNumber(void) const {
-  return mToken ? mToken->GetLineNumber() : 0;
+  return mLineNumber;
 }
 
 /**
@@ -329,7 +364,7 @@ void nsCParserNode::GetSource(nsString& aString) {
     for(index=0;index<mAttributes->GetSize();index++) {
       CAttributeToken *theToken=(CAttributeToken*)mAttributes->ObjectAt(index);
       if(theToken) {
-        theToken->AppendSourceTo(aString);
+        theToken->AppendSource(aString);
         aString.Append(PRUnichar(' ')); //this will get removed...
       }
     }
@@ -353,6 +388,10 @@ nsresult nsCParserNode::ReleaseAll() {
     }
     delete mAttributes;
     mAttributes=0;
+  }
+  if(mSkippedContent) {
+    delete mSkippedContent;
+    mSkippedContent=0;
   }
 
   if(mTokenAllocator) {

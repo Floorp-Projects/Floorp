@@ -629,15 +629,7 @@ nsHTMLFragmentContentSink::AddLeaf(const nsIParserNode& aNode)
              nodeType == eHTMLTag_xmp) {
             
             // Create a text node holding the content
-            nsCOMPtr<nsIDTD> dtd;
-            mParser->GetDTD(getter_AddRefs(dtd));
-            NS_ENSURE_TRUE(dtd, NS_ERROR_FAILURE);
-    
-            nsAutoString skippedContent;
-            PRInt32 lineNo = 0;
-
-            dtd->CollectSkippedContent(nodeType, skippedContent, lineNo);
-            result=AddTextToContent(content, skippedContent);
+            result=AddTextToContent(content,aNode.GetSkippedContent());
           }
           else if (nodeType == eHTMLTag_img || nodeType == eHTMLTag_frame
               || nodeType == eHTMLTag_input)    // elements with 'SRC='
