@@ -396,14 +396,14 @@ nsSVGGDIPlusGlyphGeometry::Render(nsISVGRendererCanvas *canvas)
       mSource->GetStrokeOpacity(&opacity);
 
       nsCOMPtr<nsISVGGradient> aGrad;
-      if (filltype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
+      if (stroketype != nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR)
         mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
       SolidBrush brush(Color((BYTE)(opacity*255), NS_GET_R(color), NS_GET_G(color), NS_GET_B(color)));
 
       if (sections.IsOnlySection() && !sections.IsHighlighted()) {
         // this is the 'normal' case
-        if (filltype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
+        if (stroketype == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
           gdiplusCanvas->GetGraphics()->FillPath(&brush, mStroke);
         } else {
           nsCOMPtr<nsISVGRendererRegion> region;
