@@ -277,14 +277,10 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
     if (aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
         NS_SUCCEEDED(EnsureContentListener())) {
         *aSink = mContentListener;
-        NS_IF_ADDREF(mContentListener);
     }
     else if (aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
-        nsIScriptGlobalObject* scrGlobObj = (nsIScriptGlobalObject*)mScriptGlobal.get();
-        NS_ASSERTION(scrGlobObj, "This MUST support this interface!");
-        NS_ADDREF(scrGlobObj);
-        *aSink = scrGlobObj;
+        *aSink = mScriptGlobal;
     }
     else if (aIID.Equals(NS_GET_IID(nsIDOMWindowInternal)) &&
              NS_SUCCEEDED(EnsureScriptEnvironment())) {
