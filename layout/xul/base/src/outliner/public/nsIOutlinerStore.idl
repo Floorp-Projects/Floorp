@@ -63,6 +63,12 @@ interface nsIOutlinerStore : nsISupports
 
   // Called on the store when the user hits delete on a nonempty selection.
   void deleteRows();
+
+  // Called on the store when a header is clicked.
+  void cycleHeader(in wstring colID);
+
+  // Called on the store when a cell in a non-selectable cycling column (e.g., unread/flag/etc.) is clicked.
+  void cycleCell(in long row, in wstring colID);
 };
 
 %{C++
