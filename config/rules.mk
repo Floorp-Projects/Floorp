@@ -254,6 +254,12 @@ endif
 
 all:: export libs install
 
+# Do depend as well
+alldep:: export depend libs install
+
+# Do everything from scratch
+everything:: clobber_all alldep
+
 #
 # Maybe this should be done in config/Makefile so it only happens once...?
 #
