@@ -33,18 +33,46 @@ XPCJSThrower::XPCJSThrower(JSBool Verbose /*= JS_FALSE*/)
 
 XPCJSThrower::~XPCJSThrower() {}
 
+
+char*
+XPCJSThrower::BuildCallerString(JSContext* cx)
+{
+    JSStackFrame* iter = NULL;
+    JSStackFrame* fp;
+
+    while(NULL != (fp = JS_FrameIterator(cx, &iter)) )
+    {
+        JSScript* script = JS_GetFrameScript(cx, fp);
+        jsbytecode* pc = JS_GetFramePC(cx, fp);
+
+        if(!script || !pc || JS_IsNativeFrame(cx, fp))
+            continue;
+
+        const char* filename = JS_GetScriptFilename(cx, script);
+        return JS_smprintf("{file: %s, line: %d}",
+                           filename ? filename : "<unknown>",
+                           JS_PCToLineNumber(cx, script, pc));
+    }
+    return NULL;
+}
+
 void
-XPCJSThrower::Verbosify(nsXPCWrappedNativeClass* clazz,
+XPCJSThrower::Verbosify(JSContext* cx,
+                        nsXPCWrappedNativeClass* clazz,
                         const XPCNativeMemberDescriptor* desc,
                         char** psz, PRBool own)
 {
     char* sz = NULL;
+    char* caller_string = BuildCallerString(cx);
 
     if(clazz && desc)
-        sz = JS_smprintf("%s [%s.%s]", 
-                         *psz, 
+        sz = JS_smprintf("%s [%s.%s, %s]",
+                         *psz,
                          clazz->GetInterfaceName(),
-                         clazz->GetMemberName(desc));
+                         clazz->GetMemberName(desc),
+                         caller_string ? caller_string : "");
+    if(caller_string)
+        JS_smprintf_free(caller_string);
     if(sz)
     {
         if(own)
@@ -53,8 +81,8 @@ XPCJSThrower::Verbosify(nsXPCWrappedNativeClass* clazz,
     }
 }
 
-void 
-XPCJSThrower::ThrowBadResultException(JSContext* cx, 
+void
+XPCJSThrower::ThrowBadResultException(JSContext* cx,
                                       nsXPCWrappedNativeClass* clazz,
                                       const XPCNativeMemberDescriptor* desc,
                                       nsresult result)
@@ -68,7 +96,7 @@ XPCJSThrower::ThrowBadResultException(JSContext* cx,
     sz = JS_smprintf("%s %x", format, result);
 
     if(sz && mVerbose)
-        Verbosify(clazz, desc, &sz, PR_TRUE);
+        Verbosify(cx, clazz, desc, &sz, PR_TRUE);
 
     if(sz)
     {
@@ -82,9 +110,9 @@ XPCJSThrower::ThrowBadResultException(JSContext* cx,
         JS_ReportOutOfMemory(cx);
 }
 
-void 
+void
 XPCJSThrower::ThrowBadParamException(uintN errNum,
-                            JSContext* cx, 
+                            JSContext* cx,
                             nsXPCWrappedNativeClass* clazz,
                             const XPCNativeMemberDescriptor* desc,
                             uintN paramNum)
@@ -98,7 +126,7 @@ XPCJSThrower::ThrowBadParamException(uintN errNum,
     sz = JS_smprintf("%s arg %d", format, paramNum);
 
     if(sz && mVerbose)
-        Verbosify(clazz, desc, &sz, PR_TRUE);
+        Verbosify(cx, clazz, desc, &sz, PR_TRUE);
 
     if(sz)
     {
@@ -112,9 +140,9 @@ XPCJSThrower::ThrowBadParamException(uintN errNum,
         JS_ReportOutOfMemory(cx);
 }
 
-void 
+void
 XPCJSThrower::ThrowException(uintN errNum,
-                    JSContext* cx, 
+                    JSContext* cx,
                     nsXPCWrappedNativeClass* clazz,
                     const XPCNativeMemberDescriptor* desc)
 {
@@ -126,7 +154,7 @@ XPCJSThrower::ThrowException(uintN errNum,
     sz = (char*) format;
 
     if(sz && mVerbose)
-        Verbosify(clazz, desc, &sz, PR_FALSE);
+        Verbosify(cx, clazz, desc, &sz, PR_FALSE);
 
     if(sz)
     {
@@ -139,4 +167,4 @@ XPCJSThrower::ThrowException(uintN errNum,
         JS_SetPendingException(cx, STRING_TO_JSVAL(str));
     else
         JS_ReportOutOfMemory(cx);
-}        
+}

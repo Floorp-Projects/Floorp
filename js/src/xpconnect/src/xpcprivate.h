@@ -36,6 +36,7 @@
 #include "jsapi.h"
 #include "jshash.h"
 #include "jsprf.h"
+#include "jsdbgapi.h"
 #include "xpt_cpp.h"
 #include "xpcforwards.h"
 #include "xpclog.h"
@@ -121,13 +122,13 @@ public:
     JSObject*       GetGlobalObject()   const {return mGlobalObj;}
     nsXPConnect*    GetXPConnect()      const {return mXPConnect;}
 
-    JSObject2WrappedJSMap*     GetWrappedJSMap()          const 
+    JSObject2WrappedJSMap*     GetWrappedJSMap()          const
         {return mWrappedJSMap;}
-    Native2WrappedNativeMap*   GetWrappedNativeMap()      const 
+    Native2WrappedNativeMap*   GetWrappedNativeMap()      const
         {return mWrappedNativeMap;}
-    IID2WrappedJSClassMap*     GetWrappedJSClassMap()     const 
+    IID2WrappedJSClassMap*     GetWrappedJSClassMap()     const
         {return mWrappedJSClassMap;}
-    IID2WrappedNativeClassMap* GetWrappedNativeClassMap() const 
+    IID2WrappedNativeClassMap* GetWrappedNativeClassMap() const
         {return mWrappedNativeClassMap;}
 
     jsid GetConstructorStrID() const {return mConstuctorStrID;}
@@ -180,19 +181,19 @@ struct XPCJSError
 class XPCJSThrower
 {
 public:
-    void ThrowBadResultException(JSContext* cx, 
+    void ThrowBadResultException(JSContext* cx,
                                  nsXPCWrappedNativeClass* clazz,
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result);
 
     void ThrowBadParamException(uintN errNum,
-                                JSContext* cx, 
+                                JSContext* cx,
                                 nsXPCWrappedNativeClass* clazz,
                                 const XPCNativeMemberDescriptor* desc,
                                 uintN paramNum);
 
     void ThrowException(uintN errNum,
-                        JSContext* cx, 
+                        JSContext* cx,
                         nsXPCWrappedNativeClass* clazz,
                         const XPCNativeMemberDescriptor* desc);
 
@@ -201,9 +202,12 @@ public:
 
 private:
 
-    void Verbosify(nsXPCWrappedNativeClass* clazz,
+    void Verbosify(JSContext* cx,
+                   nsXPCWrappedNativeClass* clazz,
                    const XPCNativeMemberDescriptor* desc,
                    char** psz, PRBool own);
+
+    char* BuildCallerString(JSContext* cx);
 
 private:
     static XPCJSErrorFormatString default_formats[XPCJSError::LIMIT+1];
@@ -474,21 +478,21 @@ private:
     nsXPCWrappedNativeClass(XPCContext* xpcc, REFNSIID aIID,
                            nsIInterfaceInfo* aInfo);
 
-    void ThrowBadResultException(JSContext* cx, 
+    void ThrowBadResultException(JSContext* cx,
                                  const XPCNativeMemberDescriptor* desc,
                                  nsresult result)
         {nsXPConnect::GetJSThrower()->
                 ThrowBadResultException(cx, this, desc, result);}
 
     void ThrowBadParamException(uintN errNum,
-                                JSContext* cx, 
+                                JSContext* cx,
                                 const XPCNativeMemberDescriptor* desc,
                                 uintN paramNum)
         {nsXPConnect::GetJSThrower()->
                 ThrowBadParamException(errNum, cx, this, desc, paramNum);}
 
     void ThrowException(uintN errNum,
-                        JSContext* cx, 
+                        JSContext* cx,
                         const XPCNativeMemberDescriptor* desc)
         {nsXPConnect::GetJSThrower()->
                 ThrowException(errNum, cx, this, desc);}
