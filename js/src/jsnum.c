@@ -441,9 +441,11 @@ static jsdouble NaN;
 #if !defined __MWERKS__ && defined XP_PC && (defined _M_IX86 || defined __GNUC__)
 
 /*
+ * Set the exception mask to mask all exceptions and set the FPU precision
+ * to 53 bit mantissa.
  * On Alpha platform this is handled via Compiler option.
  */
-#define FIX_FPU() _control87(MCW_EM, MCW_EM)
+#define FIX_FPU() _control87(MCW_EM | PC_53, MCW_EM | MCW_PC)
 
 #else
 
