@@ -25,12 +25,17 @@
 #define BAD_SCRIPT 0x7F
 #define STACK_TREASHOLD 1000
 
+//#define DISABLE_TEC_FALLBACK
+//#define DISABLE_ATSUI_FALLBACK
+
 
 
 #define BAD_TEXT_ENCODING 0xFFFFFFFF
 
 //------------------------------------------------------------------------
 static UnicodeToTextInfo gConverters[32] = { 
+	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
+	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
 	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull,
 	nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull, nsnull
 };
@@ -333,9 +338,12 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
   	  if( processLen < aLength)
   	  {
 		  PRBool fallbackDone = PR_FALSE;
+#ifndef DISABLE_TEC_FALLBACK
 		  // Fallback by try different Script code
 		 fallbackDone = TECFallbackGetWidth(aString, thisWidth, fontNum, scriptFallbackFonts);
-		  
+#endif
+
+#ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
 		  if(! fallbackDone)  {
 		  	nsFont *font;
@@ -346,6 +354,7 @@ nsresult nsUnicodeRenderingToolkit :: GetTextSegmentWidth(
 									  		((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
 									  		mGS->mColor );
 		  }
+#endif
 		  // Fallback to question mark
 		  if(! fallbackDone)
 		  	QuestionMarkFallbackGetWidth(aString, thisWidth);
@@ -444,9 +453,13 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
   	  if( processLen < aLength)
   	  {
 		  PRBool fallbackDone = PR_FALSE;
+
+#ifndef DISABLE_TEC_FALLBACK
 		  // Fallback by try different Script code
 		  fallbackDone = TECFallbackDrawChar(aString, x, y, thisWidth, fontNum, scriptFallbackFonts);
-		  
+#endif
+
+#ifndef DISABLE_ATSUI_FALLBACK  
 		  // Fallback by using ATSUI
 		  if(! fallbackDone)  {
 		  	nsFont *font;
@@ -457,6 +470,7 @@ nsresult nsUnicodeRenderingToolkit :: DrawTextSegment(
 									  		((NS_FONT_STYLE_ITALIC ==  font->style) || (NS_FONT_STYLE_OBLIQUE ==  font->style)),
 									  		mGS->mColor );
 		  }
+#endif
 		  // Fallback to question mark
 		  if(! fallbackDone)
 		  	QuestionMarkFallbackDrawChar(aString, x, y, thisWidth);
@@ -586,7 +600,7 @@ end_of_func:
 	return res;        
 }
 //------------------------------------------------------------------------
-NS_IMETHODIMP nsUnicodeRenderingToolkit :: PrepareToDraw(float aP2T, nsIDeviceContext* aContext, GraphicState* aGS, GrafPtr aPort)
+NS_IMETHODIMP nsUnicodeRenderingToolkit :: PrepareToDraw(float aP2T, nsIDeviceContext* aContext, nsGraphicState* aGS, GrafPtr aPort)
 {
 	mP2T = aP2T;
 	mContext = aContext;
