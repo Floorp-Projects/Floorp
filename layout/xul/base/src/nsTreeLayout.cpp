@@ -143,7 +143,7 @@ nsTreeLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aBoxLayoutState, nsSize
 
 
 NS_IMETHODIMP
-nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
+nsTreeLayout::LayoutInternal(nsIBox* aBox, nsBoxLayoutState& aState)
 {
   // Get the start y position.
   nsXULTreeGroupFrame* frame = GetGroupFrame(aBox);
@@ -160,7 +160,6 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   // height.
   nscoord availableHeight = frame->GetAvailableHeight();
   nscoord yOffset = frame->GetYPosition();
-  nscoord currY = 0;
   
   if (availableHeight <= 0)
     return NS_OK;
@@ -187,7 +186,9 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     if (clientRect.width != childRect.width || size.height != childRect.height)
       sizeChanged = PR_TRUE;
 
-    if (sizeChanged || dirty || dirtyChildren || aState.GetLayoutReason() == nsBoxLayoutState::Initial) {
+    PRBool relayoutAll = (frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutDirtyAll);
+
+    if (relayoutAll || sizeChanged || dirty || dirtyChildren || aState.GetLayoutReason() == nsBoxLayoutState::Initial) {
       PRBool isRow = PR_TRUE;
       nsXULTreeGroupFrame* childGroup = GetGroupFrame(box);
       if (childGroup) {
@@ -197,25 +198,33 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       }
       childRect.width = clientRect.width;
 
+      if (isRow)
+        childRect.height = frame->GetOuterFrame()->GetRowHeightTwips();
+
       box->GetMargin(margin);
       childRect.Deflate(margin);
       box->SetBounds(aState, childRect);
       box->Layout(aState);
-      // Get the prefsize.
-      nsSize size;
-      box->NeedsRecalc();
-      box->GetPrefSize(aState, size);
-      childRect.height = size.height;
-      box->SetBounds(aState, childRect);
-      if (isRow) {
-        frame->GetOuterFrame()->SetRowHeight(size.height);
+
+      if (!isRow) {
+        // We are a row group that might have dynamically
+        // constructed new rows.  We need to clear out
+        // and recompute our pref size and then adjust our
+        // rect accordingly.
+        nsSize size;
+        box->NeedsRecalc();
+        box->GetPrefSize(aState, size);
+        childRect.height = size.height;
+        box->SetBounds(aState, childRect);
       }
+      else // Check to see if the row height of the tree has changed.
+        frame->GetOuterFrame()->SetRowHeight(size.height);
     }
 
     // Place the child by just grabbing its rect and adjusting the x,y.
     box->GetContentRect(childRect);
     childRect.x = 0;
-    childRect.y = currY + yOffset;
+    childRect.y = yOffset;
     yOffset += childRect.height;
     availableHeight -= childRect.height;
     box->GetMargin(margin);
@@ -225,10 +234,50 @@ nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
     
     box->SetBounds(aState, childRect);
 
-    if (!frame->ContinueReflow(availableHeight))
+    if ((frame->GetOuterFrame()->GetTreeLayoutState() == eTreeLayoutAbort) || 
+        (!frame->ContinueReflow(availableHeight)))
       break;
 
     box = frame->GetNextTreeBox(box);
+  }
+
+  return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsTreeLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
+{
+  nsXULTreeGroupFrame* frame = GetGroupFrame(aBox);
+  PRBool isOuterGroup;
+  frame->IsOutermostFrame(&isOuterGroup);
+
+  if (isOuterGroup) {
+    nsXULTreeOuterGroupFrame* outer = (nsXULTreeOuterGroupFrame*) frame;
+    outer->SetTreeLayoutState(eTreeLayoutNormal);
+    nsTreeLayoutState state = outer->GetTreeLayoutState();
+
+#ifdef NS_DEBUG
+    PRInt32 loopCount = 0;
+#endif
+
+    do {
+#ifdef NS_DEBUG
+      NS_ASSERTION(loopCount < 10, "Row height keeps growing!!");
+      loopCount++;
+#endif
+      nsresult rv = LayoutInternal(aBox, aState);
+      if (NS_FAILED(rv)) return rv;
+      state = outer->GetTreeLayoutState();
+      if (state == eTreeLayoutDirtyAll)
+        outer->SetTreeLayoutState(eTreeLayoutNormal);
+      else if (state == eTreeLayoutAbort)
+        outer->SetTreeLayoutState(eTreeLayoutDirtyAll);
+      state = outer->GetTreeLayoutState();
+    } while (state == eTreeLayoutDirtyAll);
+  } else {
+    return LayoutInternal(aBox, aState);
   }
 
   return NS_OK;
