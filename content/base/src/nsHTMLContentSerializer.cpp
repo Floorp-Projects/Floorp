@@ -101,7 +101,7 @@ nsHTMLContentSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
                                                             : PR_FALSE;
   // Set the line break character:
   if ((mFlags & nsIDocumentEncoder::OutputCRLineBreak)
-      && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows/mail
+      && (mFlags & nsIDocumentEncoder::OutputLFLineBreak)) { // Windows
     mLineBreak.AssignWithConversion("\r\n");
   }
   else if (mFlags & nsIDocumentEncoder::OutputCRLineBreak) { // Mac
