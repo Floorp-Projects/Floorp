@@ -1533,13 +1533,3 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 }
 
 CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://messenger/content/addressbook/addressbook.xul","Start with the addressbook.",NS_ADDRESSBOOKSTARTUPHANDLER_CONTRACTID,"Addressbook Startup Handler",PR_FALSE,"", PR_TRUE)
-
-#ifdef XP_WIN32
-  //in addition to returning a version number for this module,
-  //this also provides a convenient hook for the preloader
-  //to keep (some if not all) of the module resident.
-extern "C" __declspec(dllexport) float GetVersionNumber(void) {
-  return 1.0;
-}
-#endif
-
