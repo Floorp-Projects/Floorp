@@ -658,7 +658,6 @@ unless (-d 'data' && -e 'data/nomail') {
     # permissions for non-webservergroup are fixed later on
     mkdir 'data', 0770;
     mkdir 'data/mimedump-tmp', 01777;
-    open FILE, '>>data/comments'; close FILE;
     open FILE, '>>data/nomail'; close FILE;
     open FILE, '>>data/mail'; close FILE;
 }
@@ -3044,29 +3043,20 @@ if (!GetFieldDef("bugs", "alias")) {
 
 # 2002-07-15 davef@tetsubo.com - bug 67950
 # Move quips to the db.
-my $renamed_comments_file = 0;
-if (GetFieldDef("quips", "quipid")) {
-    if (-e 'data/comments' && open (COMMENTS, "<data/comments")) {
-        print "Populating quips table from data/comments...\n";
-        while (<COMMENTS>) {
-            chomp;
-            $dbh->do("INSERT INTO quips (quip) VALUES ("
-                      . $dbh->quote($_) . ")");
-        }
-        print "The data/comments file (used to store quips) has been        
-               copied into the database, and the data/comments file
-               moved to data/comments.bak - you can delete this file
-               once you're satisfied the migration worked correctly.\n\n";
-        close COMMENTS;
-        rename("data/comments", "data/comments.bak") or next;        
-        $renamed_comments_file = 1;
+if (-r 'data/comments' && -s 'data/comments'
+    && open (COMMENTS, "<data/comments")) {
+    print "Populating quips table from data/comments...\n\n";
+    while (<COMMENTS>) {
+        chomp;
+        $dbh->do("INSERT INTO quips (quip) VALUES ("
+                 . $dbh->quote($_) . ")");
     }
-}
-
-# Warn if data/comments.bak exists, as it should be deleted.
-if (-e 'data/comments.bak' && !$renamed_comments_file) {
-    print "The data/comments.bak file can be removed, as it's no longer
-           used.\n\n";
+    print "The data/comments file (used to store quips) has been copied into\n" .
+      "the database, and the data/comments file moved to data/comments.bak - \n" .
+      "you can delete this fileonce you're satisfied the migration worked\n" .
+      "correctly.\n\n";
+    close COMMENTS;
+    rename("data/comments", "data/comments.bak");
 }
 
 # 2002-07-31 bbaetz@student.usyd.edu.au bug 158236
