@@ -1535,7 +1535,7 @@ JS_MarkGCThing(JSContext *cx, void *thing, const char *name, void *arg)
 JS_PUBLIC_API(void)
 JS_GC(JSContext *cx)
 {
-    if (!cx->fp)
+    if (cx->stackPool.current == &cx->stackPool.first)
 	JS_FinishArenaPool(&cx->stackPool);
     JS_FinishArenaPool(&cx->codePool);
     JS_FinishArenaPool(&cx->tempPool);
