@@ -131,7 +131,7 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 
 NS_IMETHODIMP nsWindow::Update()
 {
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Update()\n"));
+  //PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWindow::Update()\n"));
 
   nsPaintEvent pevent;
   pevent.message = NS_PAINT;
@@ -151,8 +151,6 @@ NS_IMETHODIMP nsWindow::Update()
 NS_IMETHODIMP nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
 {
   PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWindow::Scroll()\n"));
-  mScrollX += aDx;
-  mScrollY += aDy;
   
   //--------
   // Scroll the children

@@ -73,8 +73,6 @@ nsWidget::nsWidget() : nsBaseWidget()
   mGC = 0;
   mParentWidget = nsnull;
   mName = "unnamed";
-  mScrollX = 0;
-  mScrollY = 0;
   mIsShown = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mIsMapped = PR_FALSE;
@@ -409,9 +407,11 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
   if (mIsMapped && (mVisibility != VisibilityFullyObscured)) {
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::IsVisible: yes\n"));
     aState = PR_TRUE;
   }
   else {
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::IsVisible: no\n"));
     aState = PR_FALSE;
   }
   return NS_OK;
@@ -943,12 +943,12 @@ void nsWidget::WidgetShow(nsWidget *aWidget)
 
 PRBool nsWidget::WidgetVisible(nsRect &aBounds)
 {
-  nsRect mScrollArea;
-  mScrollArea.x = mScrollX;
-  mScrollArea.y = mScrollY;
-  mScrollArea.width = mBounds.width + mScrollX;
-  mScrollArea.height = mBounds.height + mScrollY;
-  if (mScrollArea.Intersects(aBounds)) {
+  nsRect scrollArea;
+  scrollArea.x = 0;
+  scrollArea.y = 0;
+  scrollArea.width = mBounds.width;
+  scrollArea.height = mBounds.height;
+  if (scrollArea.Intersects(aBounds)) {
     PR_LOG(XlibScrollingLM, PR_LOG_DEBUG, ("nsWidget::WidgetVisible(): widget is visible\n"));
     return PR_TRUE;
   }
