@@ -28,6 +28,7 @@
 
 <dialog title="&windowtitle.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        buttons="accept,cancel,help"
         ondialogaccept="return Save();"
         ondialogcancel="return Cancel();"
         ondialoghelp="return doHelpButton();"
