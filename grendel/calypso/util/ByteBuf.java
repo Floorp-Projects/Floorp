@@ -163,7 +163,7 @@ public final class ByteBuf {
     if (count < newLength) {
       ensureCapacity(newLength);
       for (; count < newLength; count++) {
-        value[count] = '\0';
+        value[count] = (byte)'\0';
       }
     }
     count = newLength;

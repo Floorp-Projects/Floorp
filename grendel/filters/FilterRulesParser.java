@@ -98,7 +98,7 @@ public class FilterRulesParser extends Object {
 
   // Instance classes
   private class StringToken extends Token {
-        private String fString;
+        String fString;
         StringToken(String s) {
           fString = s;
         }

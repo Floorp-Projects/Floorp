@@ -51,7 +51,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 
-public synchronized class StoreFactory {
+public class StoreFactory {
   static StoreFactory fInstance = null;
 
   Session fSession = null;

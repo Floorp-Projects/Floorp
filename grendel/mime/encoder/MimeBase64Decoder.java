@@ -170,7 +170,7 @@ public final class MimeBase64Decoder extends MimeEncoder {
   public final void eof(ByteBuf out) {
     if (token != null && token_length != 0) {
       while (token_length < 4)
-        token[token_length++] = '=';
+        token[token_length++] = (byte)'=';
       decode_final_token(out);
     }
     token_length = 0;
