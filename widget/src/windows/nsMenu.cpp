@@ -558,9 +558,26 @@ nsEventStatus nsMenu::MenuConstruct(
   if (domElement)
     domElement->SetAttribute("open", "true");
 
-  // Now get the kids
+  // Now get the kids. Retrieve our menupopup child.
+  nsCOMPtr<nsIDOMNode> menuPopupNode;
+  mDOMNode->GetFirstChild(getter_AddRefs(menuPopupNode));
+  while (menuPopupNode) {
+    nsCOMPtr<nsIDOMElement> menuPopupElement(do_QueryInterface(menuPopupNode));
+    if (menuPopupElement) {
+      nsString menuPopupNodeType;
+      menuPopupElement->GetNodeName(menuPopupNodeType);
+      if (menuPopupNodeType.Equals("menupopup"))
+        break;
+    }
+    nsCOMPtr<nsIDOMNode> oldMenuPopupNode(menuPopupNode);
+    oldMenuPopupNode->GetNextSibling(getter_AddRefs(menuPopupNode));
+  }
+
+  if (!menuPopupNode)
+    return nsEventStatus_eIgnore;
+
   nsCOMPtr<nsIDOMNode> menuitemNode;
-  mDOMNode->GetFirstChild(getter_AddRefs(menuitemNode));
+  menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
 	unsigned short menuIndex = 0;
 
