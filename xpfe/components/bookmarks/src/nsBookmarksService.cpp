@@ -72,13 +72,11 @@
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
 #include "nsIChannel.h"
-#include "nsIHTTPChannel.h"
-#include "nsHTTPEnums.h"
+#include "nsIHttpChannel.h"
 
 
 #include "nsIInputStream.h"
 #include "nsIInputStream.h"
-#include "nsIHTTPHeader.h"
 
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
@@ -1987,15 +1985,11 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull)))
 				{
 					channel->SetLoadFlags(nsIRequest::VALIDATE_ALWAYS);
-					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+					nsCOMPtr<nsIHttpChannel>	httpChannel = do_QueryInterface(channel);
 					if (httpChannel)
 					{
 						bmks->htmlSize = 0;
-						nsCOMPtr<nsIAtom> headAtom = getter_AddRefs(NS_NewAtom("HEAD"));
-						if (headAtom)
-						{
-							httpChannel->SetRequestMethod(headAtom);
-						}
+                        httpChannel->SetRequestMethod("HEAD");
 						if (NS_SUCCEEDED(rv = channel->AsyncOpen(bmks, nsnull)))
 						{
 							bmks->busySchedule = PR_TRUE;
@@ -2065,61 +2059,19 @@ nsBookmarksService::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
 #endif
 	}
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-	nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+	nsCOMPtr<nsIHttpChannel>	httpChannel = do_QueryInterface(channel);
 	if (httpChannel)
 	{
 		nsCAutoString			eTagValue, lastModValue, contentLengthValue;
-		nsCOMPtr<nsISimpleEnumerator>	enumerator;
-		if (NS_SUCCEEDED(rv = httpChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator))))
-		{
-			PRBool			bMoreHeaders;
 
-			while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&bMoreHeaders))
-				&& (bMoreHeaders == PR_TRUE))
-			{
-				nsCOMPtr<nsISupports>   item;
-				enumerator->GetNext(getter_AddRefs(item));
-				nsCOMPtr<nsIHTTPHeader>	header = do_QueryInterface(item);
-				NS_ASSERTION(header, "nsBookmarksService::OnStopRequest - Bad HTTP header.");
-				if (header)
-				{
-					nsCOMPtr<nsIAtom>       headerAtom;
-					header->GetField(getter_AddRefs(headerAtom));
-					nsAutoString		headerStr;
-					headerAtom->ToString(headerStr);
-
-					char	*val = nsnull;
-					
-					if (headerStr.EqualsIgnoreCase("eTag"))
-					{
-						header->GetValue(&val);
-						if (val)
-						{
-							eTagValue = val;
-							nsCRT::free(val);
-						}
-					}
-					else if (headerStr.EqualsIgnoreCase("Last-Modified"))
-					{
-						header->GetValue(&val);
-						if (val)
-						{
-							lastModValue = val;
-							nsCRT::free(val);
-						}
-					}
-					else if (headerStr.EqualsIgnoreCase("Content-Length"))
-					{
-						header->GetValue(&val);
-						if (val)
-						{
-							contentLengthValue = val;
-							nsCRT::free(val);
-						}
-					}
-				}
-			}
-		}
+        nsXPIDLCString val;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("ETag", getter_Copies(val))))
+            eTagValue = val;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Last-Modified", getter_Copies(val))))
+            lastModValue = val;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
+            contentLengthValue = val;
+        val = 0;
 
 		PRBool		changedFlag = PR_FALSE;
 

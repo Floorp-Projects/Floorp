@@ -30,7 +30,7 @@
 
 #include "nsNetUtil.h"
 #include "nsIFileTransportService.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsEscape.h"
 
 #include "nsCExternalHandlerService.h"
@@ -145,7 +145,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     // Post data
     if (aPostData)
     {
-        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(inputChannel));
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(inputChannel));
         if (httpChannel)
         {
             nsCOMPtr<nsIRandomAccessStore> stream(do_QueryInterface(aPostData));
@@ -155,8 +155,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
                 stream->Seek(PR_SEEK_SET, 0);
                 // Attach the postdata to the http channel
                 httpChannel->SetUploadStream(aPostData);
-                nsCOMPtr<nsIAtom> method = NS_NewAtom("POST");
-                httpChannel->SetRequestMethod(method);
             }
         }
     }

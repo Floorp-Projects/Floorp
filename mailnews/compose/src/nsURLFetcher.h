@@ -32,7 +32,7 @@
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
 #include "nsIWebProgressListener.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 #include "nsWeakReference.h"
 
 
@@ -41,7 +41,7 @@ class nsURLFetcher : public nsIURLFetcher,
                      public nsIURIContentListener, 
                      public nsIInterfaceRequestor,
                      public nsIWebProgressListener,
-                     public nsIHTTPEventSink,
+                     public nsIHttpEventSink,
                      public nsSupportsWeakReference
 { 
 public: 
@@ -69,7 +69,7 @@ public:
   // Methods for nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
 
-  // Methods for nsIHTTPEventSink
+  // Methods for nsIHttpEventSink
   NS_DECL_NSIHTTPEVENTSINK
 
 private:

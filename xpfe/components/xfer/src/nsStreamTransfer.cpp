@@ -30,7 +30,7 @@
 #include "nsIPref.h"
 #include "nsIURL.h"
 #include "nsEscape.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIStringBundle.h"
 #include "nsIAllocator.h"
 #include "nsIFileStream.h"
@@ -92,25 +92,22 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel, nsIDOMWin
     nsCAutoString suggestedName;
 
     // Try to get HTTP channel.
-    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
     if ( httpChannel ) {
         // Get content-disposition response header.
-        nsCOMPtr<nsIAtom> atom = NS_NewAtom( "content-disposition" );
-        if ( atom ) {
-            nsXPIDLCString disp; 
-            nsresult rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
-            if ( NS_SUCCEEDED( rv ) && disp ) {
-                // Parse out file name.
-                nsCAutoString contentDisp(NS_STATIC_CAST(const char*, disp));
-                // Remove whitespace.
-                contentDisp.StripWhitespace();
-                // Look for ";filename=".
-                char key[] = ";filename=";
-                PRInt32 i = contentDisp.Find( key );
-                if ( i != kNotFound ) {
-                    // Name comes after that.
-                    suggestedName = contentDisp.get() + i + PL_strlen( key ) + 1;
-                }
+        nsXPIDLCString disp; 
+        rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
+        if ( NS_SUCCEEDED( rv ) && disp ) {
+            // Parse out file name.
+            nsCAutoString contentDisp(NS_STATIC_CAST(const char*, disp));
+            // Remove whitespace.
+            contentDisp.StripWhitespace();
+            // Look for ";filename=".
+            char key[] = ";filename=";
+            PRInt32 i = contentDisp.Find( key );
+            if ( i != kNotFound ) {
+                // Name comes after that.
+                suggestedName = contentDisp.get() + i + PL_strlen( key ) + 1;
             }
         }
     }
@@ -124,7 +121,6 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
                                                  char const *suggestedName ) {
     // Prompt the user for the destination file.
     nsCOMPtr<nsILocalFile> outputFile;
-    PRBool isValid = PR_FALSE;
     nsresult rv = SelectFile( parent, 
                               getter_AddRefs( outputFile ),
                               SuggestNameFor( aChannel, suggestedName ) );
@@ -133,7 +129,7 @@ nsStreamTransfer::SelectFileAndTransferLocation( nsIChannel *aChannel,
          &&
          outputFile ) {
         // Try to get HTTP channel.
-        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+        nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
         if ( httpChannel ) {
             // Turn off content encoding conversions.
             httpChannel->SetApplyConversion( PR_FALSE );
@@ -183,15 +179,14 @@ nsStreamTransfer::SelectFileAndTransferLocationSpec( char const *aURL,
             // Post data provided?
             if ( postData ) {
                 // See if it's an http channel.
-                nsCOMPtr<nsIHTTPChannel> httpChannel( do_QueryInterface( channel ) );
+                nsCOMPtr<nsIHttpChannel> httpChannel( do_QueryInterface( channel ) );
                 if ( httpChannel ) {
                     // Rewind stream and attach to channel.
                     nsCOMPtr<nsIRandomAccessStore> stream( do_QueryInterface( postData ) );
                     if ( stream ) {
                         stream->Seek( PR_SEEK_SET, 0 );
                         httpChannel->SetUploadStream( postData );
-                        nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
-                        httpChannel->SetRequestMethod(method);
+                        httpChannel->SetRequestMethod("POST");
                     }
                 }
             }

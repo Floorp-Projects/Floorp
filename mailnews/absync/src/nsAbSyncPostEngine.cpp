@@ -39,10 +39,8 @@
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
-#include "nsIHTTPChannel.h"
-#include "nsHTTPEnums.h"
+#include "nsIHttpChannel.h"
 #include "nsTextFormatter.h"
-#include "nsIHTTPHeader.h"
 #include "nsICookieService.h"
 #include "nsIAbSync.h"
 #include "nsAbSyncCID.h"
@@ -454,7 +452,7 @@ nsAbSyncPostEngine::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */,
         mContentType = contentType;
       }
     }
-    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel)
     {
       if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
@@ -698,12 +696,10 @@ nsAbSyncPostEngine::FireURLRequest(nsIURI *aURL, const char *postData)
   // Tag the post stream onto the channel...but never seemed to work...so putting it
   // directly on the URL spec
   //
-  nsCOMPtr<nsIAtom> method = NS_NewAtom ("POST");
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(mChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mChannel);
   if (!httpChannel)
     return NS_ERROR_FAILURE;
 
-  httpChannel->SetRequestMethod(method);
   if (NS_SUCCEEDED(rv = NS_NewPostDataStream(getter_AddRefs(postStream), PR_FALSE, postData, 0)))
     httpChannel->SetUploadStream(postStream);
   

@@ -46,7 +46,7 @@
 
 #include "nsCURILoader.h"
 #include "nsIURIContentListener.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIStreamConverterService.h"
 #include "nsIPref.h"
 
@@ -310,7 +310,7 @@ ImageConsumer::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
     return NS_ERROR_ABORT;
   }
 
-  nsCOMPtr<nsIHTTPChannel> pHTTPCon(do_QueryInterface(channel));
+  nsCOMPtr<nsIHttpChannel> pHTTPCon(do_QueryInterface(channel));
   if (pHTTPCon) {
     pHTTPCon->GetResponseStatus(&httpStatus);
     if (httpStatus == 404) {
@@ -768,7 +768,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
     rv = NS_OpenURI(getter_AddRefs(channel), nsurl, nsnull, group, sink, flags);
     if (NS_FAILED(rv)) goto error;
 
-    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel);
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel);
     if (httpChannel)
     {
         // Get the defloadRequest from the loadgroup-
@@ -783,8 +783,7 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
             if (NS_SUCCEEDED(reqchannel->GetURI(getter_AddRefs(referrer))))
             {
                 // Set the referrer-
-                httpChannel->SetReferrer(referrer, 
-                    nsIHTTPChannel::REFERRER_INLINES);
+                httpChannel->SetReferrer(referrer, nsIHttpChannel::REFERRER_INLINES);
             }
         }
     }

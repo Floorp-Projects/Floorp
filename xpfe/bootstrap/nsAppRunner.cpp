@@ -60,7 +60,7 @@
 #include "nsIEventQueueService.h"
 #include "nsMPFileLocProvider.h" 
 #include "nsDirectoryServiceDefs.h" 
-#include "nsIHTTPProtocolHandler.h"
+#include "nsIHttpProtocolHandler.h"
 #include "nsBuildID.h"
 #include "nsWindowCreator.h"
 #include "nsIWindowWatcher.h"
@@ -1101,16 +1101,13 @@ static nsresult DumpVersion(char *appname)
   long buildID = NS_BUILD_ID;  // 10-digit number
 
   // Get httpHandler service.
-  nsCOMPtr <nsIHTTPProtocolHandler> httpHandler(do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
+  nsCOMPtr <nsIHttpProtocolHandler> httpHandler(do_GetService("@mozilla.org/network/protocol;1?name=http", &rv));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsXPIDLString agent;
+  nsXPIDLCString agent;
   httpHandler->GetUserAgent(getter_Copies(agent));
   
-  nsCAutoString agentCStr;
-  agentCStr.AssignWithConversion(agent);
-
-  printf("%s", agentCStr.get());
+  printf("%s", agent.get());
 
   if(buildID) {
     printf(", build %u\n", (unsigned int)buildID);

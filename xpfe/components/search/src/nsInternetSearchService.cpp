@@ -58,11 +58,9 @@
 #include "nsNetUtil.h"
 #include "nsIChannel.h"
 #include "nsIFileChannel.h"
-#include "nsIHTTPChannel.h"
-#include "nsHTTPEnums.h"
+#include "nsIHttpChannel.h"
 #include "nsIInputStream.h"
 #include "nsIBookmarksService.h"
-#include "nsIHTTPHeader.h"
 #include "nsIStringBundle.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
@@ -628,15 +626,11 @@ InternetSearchDataSource::FireTimer(nsITimer* aTimer, void* aClosure)
 
 		channel->SetLoadFlags(nsIRequest::VALIDATE_ALWAYS);
 
-		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+		nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return;
 
 		// rjc says: just check "HEAD" info for whether a search file has changed
-		nsCOMPtr<nsIAtom> headAtom = getter_AddRefs(NS_NewAtom("HEAD"));
-		if (headAtom)
-		{
-			httpChannel->SetRequestMethod(headAtom);
-		}
+        httpChannel->SetRequestMethod("HEAD");
 		if (NS_SUCCEEDED(rv = channel->AsyncOpen(search, engineContext)))
 		{
 			search->busySchedule = PR_TRUE;
@@ -3551,14 +3545,10 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		{
 
 			// send a "MultiSearch" header
-			nsCOMPtr<nsIHTTPChannel> httpMultiChannel (do_QueryInterface(channel));
+			nsCOMPtr<nsIHttpChannel> httpMultiChannel (do_QueryInterface(channel));
 			if (httpMultiChannel)
 			{
-				nsCOMPtr<nsIAtom>	multiSearchAtom = getter_AddRefs(NS_NewAtom("MultiSearch"));
-				if (multiSearchAtom)
-				{
-					httpMultiChannel->SetRequestHeader(multiSearchAtom, "true");
-				}
+                httpMultiChannel->SetRequestHeader("MultiSearch", "true");
 			}
 
 			// get it just from the cache if we can (do not validate)
@@ -3566,21 +3556,17 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 
 			if (methodStr.EqualsIgnoreCase("post"))
 			{
-				nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+				nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 				if (httpChannel)
 				{
-					nsCOMPtr<nsIAtom> postAtom = getter_AddRefs(NS_NewAtom("POST"));
-					if (postAtom)
-					{
-						httpChannel->SetRequestMethod(postAtom);
-					}
+                    httpChannel->SetRequestMethod("POST");
 
-			        	// construct post data to send
-			        	nsAutoString	postStr;
-			        	postStr.AssignWithConversion(POSTHEADER_PREFIX);
-			        	postStr.AppendInt(input.Length(), 10);
-			        	postStr.AppendWithConversion(POSTHEADER_SUFFIX);
-			        	postStr += input;
+                    // construct post data to send
+                    nsAutoString	postStr;
+                    postStr.AssignWithConversion(POSTHEADER_PREFIX);
+                    postStr.AppendInt(input.Length(), 10);
+                    postStr.AppendWithConversion(POSTHEADER_SUFFIX);
+                    postStr += input;
 			        	
 					nsCOMPtr<nsIInputStream>	postDataStream;
 					nsCAutoString			poststrC;
@@ -4443,7 +4429,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 	else if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT ||
 		 contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT)
 	{
-		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+		nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
 
 		// check HTTP status to ensure success
@@ -4470,7 +4456,7 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		busyResource = nsnull;
 
 		// we only have HTTP "HEAD" information when doing updates
-		nsCOMPtr<nsIHTTPChannel> httpChannel (do_QueryInterface(channel));
+		nsCOMPtr<nsIHttpChannel> httpChannel (do_QueryInterface(channel));
 		if (!httpChannel)	return(NS_ERROR_UNEXPECTED);
 
 		// check HTTP status to ensure success
@@ -4482,51 +4468,12 @@ InternetSearchDataSource::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
 		// get last-modified & content-length info
 		nsCAutoString			lastModValue, contentLengthValue;
 
-		nsCOMPtr<nsISimpleEnumerator>	enumerator;
-		if (NS_FAILED(rv = httpChannel->GetResponseHeaderEnumerator(getter_AddRefs(enumerator))))
-			return(rv);
-		PRBool			bMoreHeaders;
-		while (NS_SUCCEEDED(rv = enumerator->HasMoreElements(&bMoreHeaders))
-			&& (bMoreHeaders == PR_TRUE))
-		{
-			nsCOMPtr<nsISupports>   item;
-			enumerator->GetNext(getter_AddRefs(item));
-			nsCOMPtr<nsIHTTPHeader>	header (do_QueryInterface(item));
-			NS_ASSERTION(header, "InternetSearchDataSource::OnStopRequest - Bad HTTP header.");
-			if (!header)	return(NS_ERROR_UNEXPECTED);
-
-			nsCOMPtr<nsIAtom>       headerAtom;
-			header->GetField(getter_AddRefs(headerAtom));
-			nsAutoString		headerStr;
-			headerAtom->ToString(headerStr);
-
-			char	*val = nsnull;
-			
-			if (headerStr.EqualsIgnoreCase("Last-Modified"))
-			{
-				header->GetValue(&val);
-				if (val)
-				{
-#ifdef	DEBUG_SEARCH_UPDATES
-					printf("    Search engine='%s' Last-Modified='%s'\n", engineURI, val);
-#endif
-					lastModValue = val;
-					nsCRT::free(val);
-				}
-			}
-			else if (headerStr.EqualsIgnoreCase("Content-Length"))
-			{
-				header->GetValue(&val);
-				if (val)
-				{
-#ifdef	DEBUG_SEARCH_UPDATES
-					printf("    Search engine='%s' Content-Length='%s'\n", engineURI, val);
-#endif
-					contentLengthValue = val;
-					nsCRT::free(val);
-				}
-			}
-		}
+        nsXPIDLCString val;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Last-Modified", getter_Copies(val))))
+            lastModValue = val;
+        if (NS_SUCCEEDED(httpChannel->GetResponseHeader("Content-Length", getter_Copies(val))))
+            contentLengthValue = val;
+        val = 0;
 
 		// should we fetch the entire file?
 		PRBool		updateSearchEngineFile = PR_FALSE;

@@ -56,7 +56,7 @@
 
 #include "nsMimeTypes.h"
 // used for http content header disposition information.
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIAtom.h"
 
 #ifdef XP_MAC
@@ -634,42 +634,38 @@ void nsExternalAppHandler::ExtractSuggestedFileNameFromChannel(nsIChannel* aChan
   // then use the file name suggested there as the preferred file name to SUGGEST to the user.
   // we shouldn't actually use that without their permission...o.t. just use our temp file
   // Try to get HTTP channel....if we have a content-disposition header then we can
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
   if ( httpChannel ) 
   {
     // Get content-disposition response header and extract a file name if there is one...
     // content-disposition: has format: disposition-type < ; filename=value >
-    nsCOMPtr<nsIAtom> atom = NS_NewAtom( "content-disposition" );
-    if (atom) 
+    nsXPIDLCString disp; 
+    nsresult rv = httpChannel->GetResponseHeader( "content-disposition", getter_Copies( disp ) );
+    if ( NS_SUCCEEDED( rv ) && disp ) 
     {
-      nsXPIDLCString disp; 
-      nsresult rv = httpChannel->GetResponseHeader( atom, getter_Copies( disp ) );
-      if ( NS_SUCCEEDED( rv ) && disp ) 
+      nsCAutoString dispositionValue;
+      dispositionValue = disp;
+      PRInt32 pos = dispositionValue.Find("filename=", PR_TRUE);
+      if (pos > 0)
       {
-        nsCAutoString dispositionValue;
-        dispositionValue = disp;
-        PRInt32 pos = dispositionValue.Find("filename=", PR_TRUE);
-        if (pos > 0)
+        // extract everything after the filename= part and treat that as the file name...
+        nsCAutoString dispFileName;
+        dispositionValue.Mid(dispFileName, pos + nsCRT::strlen("filename="), -1);
+        if (!dispFileName.IsEmpty()) // if we got a file name back..
         {
-          // extract everything after the filename= part and treat that as the file name...
-          nsCAutoString dispFileName;
-          dispositionValue.Mid(dispFileName, pos + nsCRT::strlen("filename="), -1);
-          if (!dispFileName.IsEmpty()) // if we got a file name back..
-          {
-            pos = dispFileName.FindChar(';', PR_TRUE);
-            if (pos > 0)
-              dispFileName.Truncate(pos);
+          pos = dispFileName.FindChar(';', PR_TRUE);
+          if (pos > 0)
+            dispFileName.Truncate(pos);
 
-            // According to RFC 2183, filename can be given as filename=value,
-            // where value is token or quoted-string.  See bug 66181. 
-            dispFileName.StripChar('"');
+          // According to RFC 2183, filename can be given as filename=value,
+          // where value is token or quoted-string.  See bug 66181. 
+          dispFileName.StripChar('"');
 
-            // ONLY if we got here, will we remember the suggested file name...
-            mSuggestedFileName.AssignWithConversion(dispFileName);
-          }
-        } // if we found a file name in the header disposition field
-      } // we had a disp header 
-    } // we created the atom correctly
+          // ONLY if we got here, will we remember the suggested file name...
+          mSuggestedFileName.AssignWithConversion(dispFileName);
+        }
+      } // if we found a file name in the header disposition field
+    } // we had a disp header 
   } // if we had an http channel
 }
 
@@ -833,7 +829,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
   RetargetLoadNotifications(request);
   // ignore failure...
   ExtractSuggestedFileNameFromChannel(aChannel); 
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface( aChannel );
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface( aChannel );
   if ( httpChannel ) 
   {
     // Turn off content encoding conversions.

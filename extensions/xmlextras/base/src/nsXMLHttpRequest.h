@@ -34,7 +34,7 @@
 #include "nsIDOMDocument.h"
 #include "nsISecurityCheckedComponent.h"
 #include "nsIURI.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIDocument.h"
 #include "nsIStreamListener.h"
 #ifdef IMPLEMENT_SYNC_LOAD
@@ -102,7 +102,7 @@ protected:
                                nsIInputStream** aStream);
 
   nsCOMPtr<nsISupports> mContext;
-  nsCOMPtr<nsIHTTPChannel> mChannel;
+  nsCOMPtr<nsIHttpChannel> mChannel;
   nsCOMPtr<nsIRequest> mReadRequest;
   nsCOMPtr<nsIDOMDocument> mDocument;
   nsCOMPtr<nsIURI> mBaseURI;
@@ -121,6 +121,18 @@ protected:
                 PRUint32 toOffset,
                 PRUint32 count,
                 PRUint32 *writeCount);
+
+  // used to implement getAllResponseHeaders()
+  class nsHeaderVisitor : public nsIHttpHeaderVisitor {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIHTTPHEADERVISITOR
+    nsHeaderVisitor() { NS_INIT_ISUPPORTS(); }
+    virtual ~nsHeaderVisitor() {}
+    const nsACString &Headers() { return mHeaders; }
+  private:
+    nsCString mHeaders;
+  };
 
 #if 1 // When nsCString::Append()/Length() works for strings that contain nulls, remove this buffer impl
   class ResponseBodyBuffer {

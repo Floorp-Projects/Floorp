@@ -26,7 +26,7 @@
 #include "prmem.h"
 #include "nsMsgSend.h"
 #include "nsIIOService.h"
-#include "nsIHTTPProtocolHandler.h"
+#include "nsIHttpProtocolHandler.h"
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgHeaderParser.h"
@@ -44,7 +44,7 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
+static NS_DEFINE_CID(kHTTPHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 
 //
 // Hopefully, someone will write and XP call like this eventually!
@@ -431,19 +431,17 @@ mime_generate_headers (nsMsgCompFields *fields,
 	}
 
 
-	NS_WITH_SERVICE(nsIHTTPProtocolHandler, pHTTPHandler, kHTTPHandlerCID, &rv); 
+	NS_WITH_SERVICE(nsIHttpProtocolHandler, pHTTPHandler, kHTTPHandlerCID, &rv); 
 	if (NS_SUCCEEDED(rv) && pHTTPHandler)
 	{
-    nsXPIDLString userAgentString;
-    nsCAutoString   cStr;
-    pHTTPHandler->GetUserAgent(getter_Copies(userAgentString));
-    cStr.AssignWithConversion(userAgentString);
+        nsXPIDLCString userAgentString;
+        pHTTPHandler->GetUserAgent(getter_Copies(userAgentString));
 
-		if (!cStr.IsEmpty()) 
+		if (userAgentString)
 		{
 			// PUSH_STRING ("X-Mailer: ");  // To be more standards compliant
 			PUSH_STRING ("User-Agent: ");  
-			PUSH_STRING(cStr);
+			PUSH_STRING(userAgentString.get());
 			PUSH_NEWLINE ();
 		}
 	}

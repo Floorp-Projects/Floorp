@@ -38,7 +38,7 @@
 #include "nsIChannel.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIWebProgress.h"
 #include "nsMsgAttachmentHandler.h"
 #include "nsMsgSend.h"
@@ -46,7 +46,7 @@
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 
-NS_IMPL_ISUPPORTS7(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsIHTTPEventSink, nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS7(nsURLFetcher, nsIURLFetcher, nsIStreamListener, nsIURIContentListener, nsIInterfaceRequestor, nsIWebProgressListener, nsIHttpEventSink, nsISupportsWeakReference)
 
 
 /* 
@@ -317,7 +317,7 @@ nsURLFetcher::OnStopRequest(nsIRequest *request, nsISupports * /* ctxt */, nsres
     }
   }
 
-  nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
   if (httpChannel)
   {
     if (NS_SUCCEEDED(httpChannel->GetCharset(&charset)) && charset)
@@ -446,14 +446,7 @@ nsURLFetcher::OnSecurityChange(nsIWebProgress *aWebProgress,
 }
 
 NS_IMETHODIMP
-nsURLFetcher::OnHeadersAvailable(nsISupports *aContext)
-{
-  /* ignore this event */
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsURLFetcher::OnRedirect(nsIChannel *aOldChannel, nsIChannel *aNewChannel)
+nsURLFetcher::OnRedirect(nsIHttpChannel *aOldChannel, nsIChannel *aNewChannel)
 {
   mRedirection = PR_TRUE;
   return NS_OK;

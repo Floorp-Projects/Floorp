@@ -76,7 +76,7 @@
 #include "nsIUnicodeDecoder.h"
 #include "nsICharsetAlias.h"
 #include "nsIChannel.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
@@ -4341,24 +4341,23 @@ HTMLContentSink::ProcessHTTPHeaders(nsIChannel* aChannel) {
   nsresult rv=NS_OK;
 
   if(aChannel) {
-    nsCOMPtr<nsIHTTPChannel> httpchannel(do_QueryInterface(aChannel));
+    nsCOMPtr<nsIHttpChannel> httpchannel(do_QueryInterface(aChannel));
     if (httpchannel) {
       char*  headers[]={"link","default-style","content-base",0}; // add more http headers if you need
       char** name=headers;
       nsXPIDLCString tmp;
       while(*name) {
-        nsCOMPtr<nsIAtom> key(dont_AddRef(NS_NewAtom(*name++)));
-        if(key) {
-          httpchannel->GetResponseHeader(key, getter_Copies(tmp));
-          if(tmp.get()) {
-            nsAutoString value;
-            value.AssignWithConversion(tmp);
-            ProcessHeaderData(key,value);
-          }
+        httpchannel->GetResponseHeader(*name, getter_Copies(tmp));
+        if(tmp.get()) {
+          nsAutoString value;
+          value.AssignWithConversion(tmp);
+          nsCOMPtr<nsIAtom> key(dont_AddRef(NS_NewAtom(*name)));
+          ProcessHeaderData(key,value);
         }
         else {
           rv=NS_ERROR_OUT_OF_MEMORY;
         }
+        name++;
       }//while
     }//if - httpchannel 
   }//if - channel
@@ -4650,7 +4649,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     nsAutoString characterSet;
     nsCOMPtr<nsIUnicodeDecoder> unicodeDecoder;
     nsXPIDLCString contenttypeheader;
-    nsCOMPtr<nsIHTTPChannel> httpChannel;
+    nsCOMPtr<nsIHttpChannel> httpChannel;
 
     nsCOMPtr<nsIChannel> channel;
     nsCOMPtr<nsIRequest> request;
@@ -4663,10 +4662,7 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
     if (channel) {
       httpChannel = do_QueryInterface(channel);
       if (httpChannel) {
-        nsCOMPtr<nsIAtom> contentTypeKey =
-          dont_AddRef(NS_NewAtom("content-type"));
-
-        rv = httpChannel->GetResponseHeader(contentTypeKey,
+        rv = httpChannel->GetResponseHeader("content-type",
                                             getter_Copies(contenttypeheader));
       }
     }

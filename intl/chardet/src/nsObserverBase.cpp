@@ -31,7 +31,8 @@
 #include "nsIParser.h"
 #include "nsString.h"
 #include "nsIDocShell.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -58,14 +59,12 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
      nsCOMPtr<nsIChannel> channel=nsnull;
      res=bundle->GetDataFromBundle(theChannelKey,getter_AddRefs(channel));
      if(NS_SUCCEEDED(res)) {
-       nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel,&res));
+       nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel,&res));
        if(NS_SUCCEEDED(res)) {
-         nsCOMPtr<nsIAtom> atom=nsnull;
-         httpChannel->GetRequestMethod(getter_AddRefs(atom));
-         if(atom) {
-           nsAutoString method;
-           atom->ToString(method);
-           if(method.EqualsWithConversion("POST"))
+         nsXPIDLCString method;
+         httpChannel->GetRequestMethod(getter_Copies(method));
+         if(method) {
+           if(!PL_strcasecmp(method, "POST"))
              return NS_OK; 
          }
        }

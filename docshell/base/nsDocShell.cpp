@@ -48,7 +48,7 @@
 #include "nsIPrompt.h"
 #include "nsIAuthPrompt.h"
 #include "nsTextFormatter.h"
-#include "nsIHTTPEventSink.h"
+#include "nsIHttpEventSink.h"
 #include "nsISecurityEventSink.h"
 #include "nsScriptSecurityManager.h"
 #include "nsDocumentCharsetInfoCID.h"
@@ -62,10 +62,9 @@
 // Helper Classes
 #include "nsDOMError.h"
 #include "nsEscape.h"
-#include "nsHTTPEnums.h"
 
 // Interfaces Needed
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIDataChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebProgress.h"
@@ -275,7 +274,7 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
             return NS_NOINTERFACE;
     }
     else if (aIID.Equals(NS_GET_IID(nsIProgressEventSink))
-             || aIID.Equals(NS_GET_IID(nsIHTTPEventSink))
+             || aIID.Equals(NS_GET_IID(nsIHttpEventSink))
              || aIID.Equals(NS_GET_IID(nsIWebProgress))
              || aIID.Equals(NS_GET_IID(nsISecurityEventSink))) {
         nsCOMPtr<nsIURILoader>
@@ -3526,10 +3525,11 @@ nsDocShell::DoURILoad(nsIURI * aURI, nsIURI * aReferrerURI,
     }
     channel->SetOriginalURI(aURI);
 
-    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(channel));
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
     if (httpChannel) {
         nsCOMPtr<nsICachingChannel>
             cacheChannel(do_QueryInterface(httpChannel));
+        printf(">>> caching channel @%x\n", cacheChannel.get());
         /* Get the cache Key from SH */
         nsCOMPtr<nsISupports> cacheKey;
         if (LSHE) {
@@ -3537,6 +3537,8 @@ nsDocShell::DoURILoad(nsIURI * aURI, nsIURI * aReferrerURI,
         }
         else if (OSHE)          // for reload cases
             OSHE->GetCacheKey(getter_AddRefs(cacheKey));
+
+        printf(">>> cache key @%x\n", cacheKey.get());
 
         // figure out if we need to set the post data stream on the channel...
         // right now, this is only done for http channels.....
@@ -3550,8 +3552,6 @@ nsDocShell::DoURILoad(nsIURI * aURI, nsIURI * aReferrerURI,
                 postDataRandomAccess->Seek(PR_SEEK_SET, 0);
             }
 
-            nsCOMPtr<nsIAtom> method = NS_NewAtom("POST");
-            httpChannel->SetRequestMethod(method);
             httpChannel->SetUploadStream(aPostData);
             /* If there is a valid postdata *and* it is a History Load,
              * set up the cache key on the channel, to retrieve the
@@ -3584,7 +3584,7 @@ nsDocShell::DoURILoad(nsIURI * aURI, nsIURI * aReferrerURI,
         // Set the referrer explicitly
         if (aReferrerURI)       // Referrer is currenly only set for link clicks here.
             httpChannel->SetReferrer(aReferrerURI,
-                                     nsIHTTPChannel::REFERRER_LINK_CLICK);
+                                     nsIHttpChannel::REFERRER_LINK_CLICK);
     }
     else {
         // iff we are dealing with a JS or a data url, we may need an inherited owner.
@@ -3707,7 +3707,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
     if (nsnull == aHeadersData || nsnull == aGenericChannel) {
         return NS_ERROR_NULL_POINTER;
     }
-    nsCOMPtr<nsIHTTPChannel> aChannel = do_QueryInterface(aGenericChannel);
+    nsCOMPtr<nsIHttpChannel> aChannel = do_QueryInterface(aGenericChannel);
     if (!aChannel) {
         return NS_ERROR_NULL_POINTER;
     }
@@ -3725,7 +3725,6 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
     nsCAutoString headerValue;
     PRInt32 crlf = 0;
     PRInt32 colon = 0;
-    nsCOMPtr<nsIAtom> headerAtom;
 
     //
     // Suck all the data out of the nsIInputStream into a char * buffer.
@@ -3752,7 +3751,7 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
 
     //
     // Iterate over the nsString: for each "\r\n" delimeted chunk,
-    // add the value as a header to the nsIHTTPChannel
+    // add the value as a header to the nsIHttpChannel
     //
 
     while (PR_TRUE) {
@@ -3772,17 +3771,12 @@ nsDocShell::AddHeadersToChannel(nsIInputStream * aHeadersData,
         oneHeader.Left(headerName, colon);
         colon++;
         oneHeader.Mid(headerValue, colon, oneHeader.Length() - colon);
-        headerAtom = dont_AddRef(NS_NewAtom(headerName.get()));
-        if (!headerAtom) {
-            rv = NS_ERROR_NULL_POINTER;
-            goto AHTC_CLEANUP;
-        }
 
         //
         // FINALLY: we can set the header!
         // 
 
-        rv = aChannel->SetRequestHeader(headerAtom, headerValue.get());
+        rv = aChannel->SetRequestHeader(headerName.get(), headerValue.get());
         if (NS_FAILED(rv)) {
             rv = NS_ERROR_NULL_POINTER;
             goto AHTC_CLEANUP;
@@ -4030,7 +4024,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     // Get the post data from the channel
     nsCOMPtr<nsIInputStream> inputStream;
     if (aChannel) {
-        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
 
         if (httpChannel) {
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));
@@ -4254,7 +4248,7 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
 {
     nsresult
         rv;
-    nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel, &rv));
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel, &rv));
     if (NS_SUCCEEDED(rv)) {
         nsCOMPtr<nsIURI> referrer;
         rv = httpChannel->GetReferrer(getter_AddRefs(referrer));
@@ -4262,11 +4256,8 @@ NS_IMETHODIMP nsDocShell::SetupRefreshURI(nsIChannel * aChannel)
         if (NS_SUCCEEDED(rv)) {
             SetReferrerURI(referrer);
 
-            nsCOMPtr<nsIAtom>
-                refreshAtom(dont_AddRef(NS_NewAtom("refresh")));
-            nsXPIDLCString
-                refreshHeader;
-            rv = httpChannel->GetResponseHeader(refreshAtom,
+            nsXPIDLCString refreshHeader;
+            rv = httpChannel->GetResponseHeader("refresh",
                                                 getter_Copies(refreshHeader));
 
             if (refreshHeader)
@@ -4408,7 +4399,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         if (cacheChannel) {
             cacheChannel->GetCacheKey(getter_AddRefs(cacheKey));
         }
-        nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
+        nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
 
         if (httpChannel) {
             httpChannel->GetUploadStream(getter_AddRefs(inputStream));

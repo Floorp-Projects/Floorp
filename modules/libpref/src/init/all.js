@@ -234,7 +234,8 @@ pref("network.http.keep-alive", true); // set it to false in case of problems
 pref("network.http.proxy.keep-alive", true );
 pref("network.http.keep-alive.timeout", 300);
 
-pref("network.http.max-connections",  8);
+pref("network.http.max-connections", 16);
+pref("network.http.max-connections-per-server", 8);
 pref("network.http.keep-alive.max-connections", 20); // max connections to be kept alive
 pref("network.http.keep-alive.max-connections-per-server", 8);
 
