@@ -2695,9 +2695,11 @@ INTL_ResourceCharSet(void);
 /* Definition for the charset ID selector. 
  */ 
 typedef enum { 
-    INTL_FileNameCsidSel = 1, 
-    INTL_DefaultTextWidgetCsidSel = 2,
-    INTL_OldBookmarkCsidSel = 3 
+    INTL_FileNameCsidSel = 1, 	        /* The file name */
+    INTL_DefaultTextWidgetCsidSel,	/* The edit control or text widget */
+    INTL_OldBookmarkCsidSel,		/* The bookmark.html file */
+    INTL_XPResourcesCsidSel,		/* The cross-platform resources */
+    INTL_MenuCsidSel 			/* The menu and menu bar */
 } INTL_CharSetID_Selector; 
 
 /* Typedef for charset ID. 
