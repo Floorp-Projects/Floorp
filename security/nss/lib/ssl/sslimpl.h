@@ -33,7 +33,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslimpl.h,v 1.8 2001/01/13 02:05:08 nelsonb%netscape.com Exp $
+ * $Id: sslimpl.h,v 1.9 2001/02/07 00:34:55 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslimpl_h_
@@ -343,6 +343,8 @@ const unsigned char *  preferredCipher;
     ** with this socket. 
     */
     CERTCertDBHandle * dbHandle;
+
+    PRThread *  writerThread;   /* thread holds SSL_LOCK_WRITER lock */
 
     PRUint16	shutdownHow; 	/* See ssl_SHUTDOWN defines below. */
 

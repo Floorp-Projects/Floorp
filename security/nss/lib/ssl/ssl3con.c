@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3con.c,v 1.15 2001/01/30 21:02:23 wtc%netscape.com Exp $
+ * $Id: ssl3con.c,v 1.16 2001/02/07 00:34:54 nelsonb%netscape.com Exp $
  */
 
 #include "nssrenam.h"
@@ -6460,19 +6460,22 @@ ssl3_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
 
     if ((isServer && !ssl3->hs.isResuming) ||
 	(!isServer && ssl3->hs.isResuming)) {
+	PRInt32 flags = 0;
 
 	rv = ssl3_SendChangeCipherSpecs(ss);
 	if (rv != SECSuccess) {
 	    goto xmit_loser;	/* err is set. */
 	}
-	/* XXX Right here, if we knew, somehow, that this thread was in
-	** SSL_SecureSend (trying to write some data) and we weren't going
-	** to step up, then we could set the ssl_SEND_FLAG_FORCE_INTO_BUFFER
-	** flag, so that the last two handshake messages
-	** (e.g. change cipher spec and finished) would get
-	** sent out in the same send/write call as the application data.
+	/* If this thread is in SSL_SecureSend (trying to write some data) 
+	** or if it is going to step up, 
+	** then set the ssl_SEND_FLAG_FORCE_INTO_BUFFER flag, so that the 
+	** last two handshake messages (change cipher spec and finished) 
+	** will be sent in the same send/write call as the application data.
 	*/
-	rv = ssl3_SendFinished(ss, 0);
+	if (doStepUp || ss->writerThread == PR_GetCurrentThread()) {
+	    flags = ssl_SEND_FLAG_FORCE_INTO_BUFFER;
+	}
+	rv = ssl3_SendFinished(ss, flags);
 	if (rv != SECSuccess) {
 	    goto xmit_loser;	/* err is set. */
 	}

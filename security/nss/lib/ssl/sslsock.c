@@ -34,7 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsock.c,v 1.9 2001/01/13 02:05:09 nelsonb%netscape.com Exp $
+ * $Id: sslsock.c,v 1.10 2001/02/07 00:34:56 nelsonb%netscape.com Exp $
  */
 #include "seccomon.h"
 #include "cert.h"
@@ -1770,6 +1770,7 @@ ssl_NewSocket(void)
 	ss->specLock           = NSSRWLock_New(SSL_LOCK_RANK_SPEC, NULL);
 	ss->recvBufLock        = PZ_NewMonitor(nssILockSSL);
 	ss->xmitBufLock        = PZ_NewMonitor(nssILockSSL);
+	ss->writerThread       = NULL;
 	if (ssl_lock_readers) {
 	    ss->recvLock       = PZ_NewLock(nssILockSSL);
 	    ss->sendLock       = PZ_NewLock(nssILockSSL);

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.4 2001/01/18 16:36:41 wtc%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.5 2001/02/07 00:34:55 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -1020,6 +1020,7 @@ ssl_SecureRead(sslSocket *ss, unsigned char *buf, int len)
     return ssl_SecureRecv(ss, buf, len, 0);
 }
 
+/* Caller holds the SSL Socket's write lock. SSL_LOCK_WRITER(ss) */
 int
 ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 {
@@ -1053,6 +1054,8 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	return rv;
     }
 
+    if (len > 0) 
+    	ss->writerThread = PR_GetCurrentThread();
     /* If any of these is non-zero, the initial handshake is not done. */
     if (!ss->connected) {
 	ssl_Get1stHandshakeLock(ss);
@@ -1062,13 +1065,16 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
 	ssl_Release1stHandshakeLock(ss);
     }
     if (rv < 0) {
+    	ss->writerThread = NULL;
 	return rv;
     }
 
     /* Check for zero length writes after we do housekeeping so we make forward
      * progress.
      */
-    if (len == 0) return 0;
+    if (len == 0) {
+    	return 0;
+    }
     PORT_Assert(buf != NULL);
     
     SSL_TRC(2, ("%d: SSL[%d]: SecureSend: sending %d bytes",
@@ -1081,6 +1087,7 @@ ssl_SecureSend(sslSocket *ss, const unsigned char *buf, int len, int flags)
     ssl_GetXmitBufLock(ss);
     rv = (*sec->send)(ss, buf, len, flags);
     ssl_ReleaseXmitBufLock(ss);
+    ss->writerThread = NULL;
     return rv;
 }
 
