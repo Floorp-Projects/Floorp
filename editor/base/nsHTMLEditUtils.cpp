@@ -69,6 +69,42 @@ nsHTMLEditUtils::IsBreak(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsBreak: true if node an html break node
+//                  
+PRBool 
+nsHTMLEditUtils::IsBig(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsBig");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "big")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsBreak: true if node an html break node
+//                  
+PRBool 
+nsHTMLEditUtils::IsSmall(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditUtils::IsSmall");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag == "small")
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // IsMozBR: true if node an html br node with type = _moz
 //                  
 PRBool 

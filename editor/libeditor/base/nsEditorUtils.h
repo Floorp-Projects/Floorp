@@ -93,15 +93,16 @@ class nsAutoRules
 {
   public:
   
-  nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection) : 
-         mEd(ed), mAction(action), mDirection(aDirection)
+  nsAutoRules(nsEditor *ed, PRInt32 action, nsIEditor::EDirection aDirection, PRBool setSelection=PR_FALSE) : 
+         mEd(ed), mAction(action), mDirection(aDirection), mSetSelection(setSelection)
                 {if (mEd) mEd->StartOperation(mAction, mDirection);}
-  ~nsAutoRules() {if (mEd) mEd->EndOperation(mAction, mDirection);}
+  ~nsAutoRules() {if (mEd) mEd->EndOperation(mAction, mDirection, mSetSelection);}
   
   protected:
   nsEditor *mEd;
   PRInt32 mAction;
   nsIEditor::EDirection mDirection;
+  PRBool mSetSelection;
 };
 
 

@@ -34,6 +34,8 @@ public:
   // from nsTextEditRules:
   static PRBool IsBody(nsIDOMNode *aNode);
   static PRBool IsBreak(nsIDOMNode *aNode);
+  static PRBool IsBig(nsIDOMNode *aNode);
+  static PRBool IsSmall(nsIDOMNode *aNode);
   static PRBool IsMozBR(nsIDOMNode *aNode);
   static PRBool HasMozAttr(nsIDOMNode *aNode);
   static PRBool InBody(nsIDOMNode *aNode);

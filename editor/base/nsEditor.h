@@ -422,7 +422,7 @@ public:
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation, naming the action and direction */
-  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection, PRBool aSetSelection);
 
   /** return the string that represents text nodes in the content tree */
   static nsresult GetTextNodeTag(nsString& aOutString);
@@ -608,7 +608,9 @@ public:
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
-  
+  PRBool TagCanContain(const nsString &aParentTag, nsIDOMNode* aChild);
+  PRBool TagCanContainTag(const nsString &aParentTag, const nsString &aChildTag);
+
   /** returns PR_TRUE if aNode is a container */
   PRBool IsContainer(nsIDOMNode *aNode);
 

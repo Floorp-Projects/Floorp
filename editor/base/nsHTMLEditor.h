@@ -260,7 +260,7 @@ public:
 
   /** All editor operations which alter the doc should be followed
    *  with a call to EndOperation, naming the action and direction */
-  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
+  NS_IMETHOD EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection, PRBool aSetSelection);
 
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
@@ -545,6 +545,23 @@ protected:
 
   /* small utility routine to test the eEditorReadonly bit */
   PRBool IsModifiable();
+  
+  /* increase/decrease the font size of selection */
+  nsresult RelativeFontChange( PRInt32 aSizeChange);
+  
+  /* helper routines for font size changing */
+  nsresult RelativeFontChangeOnTextNode( PRInt32 aSizeChange, 
+                                         nsIDOMCharacterData *aTextNode, 
+                                         PRInt32 aStartOffset,
+                                         PRInt32 aEndOffset);
+  nsresult RelativeFontChangeOnNode( PRInt32 aSizeChange, 
+                                     nsIDOMNode *aNode);
+
+  /* helper routines for node/parent manipulations */
+  nsresult ReplaceContainer(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
+  nsresult RemoveContainer(nsIDOMNode *inNode);
+  nsresult InsertContainerAbove(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNode, const nsString &aNodeType);
+
   
 // Data members
 protected:

@@ -49,7 +49,7 @@ class nsEditRules
 public:
   NS_IMETHOD Init(nsHTMLEditor *aEditor, PRUint32 aFlags)=0;
   NS_IMETHOD BeforeEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
-  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)=0;
+  NS_IMETHOD AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection, PRBool aSetSelection)=0;
   NS_IMETHOD WillDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, PRBool *aCancel, PRBool *aHandled)=0;
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult)=0;
   NS_IMETHOD GetFlags(PRUint32 *aFlags)=0;

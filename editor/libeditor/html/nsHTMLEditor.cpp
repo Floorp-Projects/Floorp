@@ -102,6 +102,7 @@ static NS_DEFINE_CID(kCNavDTDCID,    NS_CNAVDTD_CID);
 
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
+static NS_DEFINE_IID(kSubtreeIteratorCID, NS_SUBTREEITERATOR_CID);
 static NS_DEFINE_CID(kCRangeCID,      NS_RANGE_CID);
 static NS_DEFINE_IID(kFileWidgetCID,  NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
@@ -1341,14 +1342,12 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
 
 NS_IMETHODIMP nsHTMLEditor::IncreaseFontSize()
 {
-  //TODO: Write this!
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return RelativeFontChange(1);
 }
 
 NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
 {
-  //TODO: Write this!
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return RelativeFontChange(-1);
 }
 
 NS_IMETHODIMP nsHTMLEditor::GetTypingState(nsIAtom *aProperty, PRBool &aPropIsSet, PRBool &aSetting)
@@ -4512,11 +4511,11 @@ nsHTMLEditor::StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
 /** All editor operations which alter the doc should be followed
  *  with a call to EndOperation, naming the action and direction */
 NS_IMETHODIMP
-nsHTMLEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection)
+nsHTMLEditor::EndOperation(PRInt32 opID, nsIEditor::EDirection aDirection, PRBool aSetSelection)
 {
   if (! ((opID==kOpInsertText) || (opID==kOpInsertIMEText)) )
     ClearInlineStylesCache();
-  if (mRules) return mRules->AfterEdit(opID, aDirection);
+  if (mRules) return mRules->AfterEdit(opID, aDirection, aSetSelection);
   return NS_OK;
 }
 
@@ -7213,7 +7212,7 @@ nsHTMLEditor::CollapseAdjacentTextNodes(nsIDOMSelection *aInSelection)
   {
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
     nsCOMPtr<nsIContentIterator> iter;
-    result = nsComponentManager::CreateInstance(kCContentIteratorCID, nsnull,
+    result = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
                                                 NS_GET_IID(nsIContentIterator), 
                                                 getter_AddRefs(iter));
     if (NS_FAILED(result)) return result;
@@ -7375,4 +7374,369 @@ nsHTMLEditor::GetNextElementByTagName(nsIDOMElement    *aCurrentElement,
 
   return res;
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsresult
+nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
+{
+  // Can only change font size by + or - 1
+  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
+    return NS_ERROR_ILLEGAL_VALUE;
+  
+  ForceCompositionEnd();
+
+  // wrap with txn batching, rules sniffing, and selection preservation code
+  nsAutoEditBatch batchIt(this);
+  nsAutoRules beginRulesSniffing(this, kOpSetTextProperty, nsIEditor::eNext, PR_TRUE);
+
+  // Get the selection 
+  nsCOMPtr<nsIDOMSelection>selection;
+  nsresult res = GetSelection(getter_AddRefs(selection));
+  if (NS_FAILED(res)) return res;
+  if (!selection) return NS_ERROR_FAILURE;
+  
+  // Is the selection collapsed?
+  PRBool bCollapsed;
+  res = selection->GetIsCollapsed(&bCollapsed);
+  if (NS_FAILED(res)) return res;
+  
+  // if it's collapsed dont do anything.  
+  // MOOSE: We should probably have typing state for this like
+  // we do for other things.
+  if (bCollapsed)
+  {
+    return NS_OK;
+  }
+  
+  // get selection range enumerator
+  nsCOMPtr<nsIEnumerator> enumerator;
+  res = selection->GetEnumerator(getter_AddRefs(enumerator));
+  if (NS_FAILED(res)) return res;
+  if (!enumerator)    return NS_ERROR_FAILURE;
+
+  // loop thru the ranges in the selection
+  enumerator->First(); 
+  nsCOMPtr<nsISupports> currentItem;
+  while ((NS_ENUMERATOR_FALSE == enumerator->IsDone()))
+  {
+    res = enumerator->CurrentItem(getter_AddRefs(currentItem));
+    if (NS_FAILED(res)) return res;
+    if (!currentItem)   return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+
+    // check for easy case: both range endpoints in same text node
+    nsCOMPtr<nsIDOMNode> startNode, endNode;
+    res = range->GetStartParent(getter_AddRefs(startNode));
+    if (NS_FAILED(res)) return res;
+    res = range->GetEndParent(getter_AddRefs(endNode));
+    if (NS_FAILED(res)) return res;
+    if ((startNode == endNode) && IsTextNode(startNode))
+    {
+      PRInt32 startOffset, endOffset;
+      range->GetStartOffset(&startOffset);
+      range->GetEndOffset(&endOffset);
+      nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
+      res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, startOffset, endOffset);
+      if (NS_FAILED(res)) return res;
+    }
+    else
+    {
+      // not the easy case.  range not contained in single text node. 
+      // there are up to three phases here.  There are all the nodes
+      // reported by the subtree iterator to be processed.  And there
+      // are potentially a starting textnode and an ending textnode
+      // which are only partially contained by the range.
+      
+      // lets handle the nodes reported by the iterator.  These nodes
+      // are entirely contained in the selection range.  We build up
+      // a list of them (since doing operations on the document during
+      // iteration would perturb the iterator).
+
+      nsCOMPtr<nsIContentIterator> iter;
+      res = nsComponentManager::CreateInstance(kSubtreeIteratorCID, nsnull,
+                                                NS_GET_IID(nsIContentIterator), 
+                                                getter_AddRefs(iter));
+      if (NS_FAILED(res)) return res;
+      if (!iter)          return NS_ERROR_FAILURE;
+
+      nsCOMPtr<nsISupportsArray> arrayOfNodes;
+      nsCOMPtr<nsIContent> content;
+      nsCOMPtr<nsIDOMNode> node;
+      nsCOMPtr<nsISupports> isupports;
+      
+      // make a array
+      res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
+      if (NS_FAILED(res)) return res;
+      
+      // iterate range and build up array
+      iter->Init(range);
+      while (NS_ENUMERATOR_FALSE == iter->IsDone())
+      {
+        res = iter->CurrentNode(getter_AddRefs(content));
+        if (NS_FAILED(res)) return res;
+        node = do_QueryInterface(content);
+        if (!node) return NS_ERROR_FAILURE;
+        isupports = do_QueryInterface(node);
+        arrayOfNodes->AppendElement(isupports);
+        res = iter->Next();
+        if (NS_FAILED(res)) return res;
+      }
+      
+      // now that we have the list, do the font size change on each node
+      PRUint32 listCount;
+      PRInt32 j;
+      arrayOfNodes->Count(&listCount);
+      for (j = 0; j < listCount; j++)
+      {
+        isupports = (dont_AddRef)(arrayOfNodes->ElementAt(0));
+        node = do_QueryInterface(isupports);
+        res = RelativeFontChangeOnNode(aSizeChange, node);
+        if (NS_FAILED(res)) return res;
+        arrayOfNodes->RemoveElementAt(0);
+      }
+      
+      // now check the start and end parents of the range to see if they need to 
+      // be seperately handled (they do if they are text nodes, due to how the
+      // subtree iterator works - it will not have reported them).
+      if (IsTextNode(startNode))
+      {
+        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
+        PRInt32 startOffset;
+        PRUint32 textLen;
+        range->GetStartOffset(&startOffset);
+        nodeAsText->GetLength(&textLen);
+        res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, startOffset, textLen);
+        if (NS_FAILED(res)) return res;
+      }
+      if (IsTextNode(endNode))
+      {
+        nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(endNode);
+        PRInt32 endOffset;
+        range->GetEndOffset(&endOffset);
+        res = RelativeFontChangeOnTextNode(aSizeChange, nodeAsText, 0, endOffset);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+    enumerator->Next();
+  }
+  
+  return res;  
+}
+
+nsresult
+nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange, 
+                                            nsIDOMCharacterData *aTextNode, 
+                                            PRInt32 aStartOffset,
+                                            PRInt32 aEndOffset)
+{
+  // Can only change font size by + or - 1
+  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
+    return NS_ERROR_ILLEGAL_VALUE;
+  if (!aTextNode) return NS_ERROR_NULL_POINTER;
+  
+  // dont need to do anything if no characters actually selected
+  if (aStartOffset == aEndOffset) return NS_OK;
+  
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
+  
+  // do we need to split the text node?
+  PRUint32 textLen;
+  aTextNode->GetLength(&textLen);
+  
+  if ( aEndOffset != textLen )
+  {
+    // we need to split off back of text node
+    res = SplitNode(node, aEndOffset, getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+    node = tmp;  // remember left node
+  }
+  if ( aStartOffset )
+  {
+    // we need to split off front of text node
+    res = SplitNode(node, aStartOffset, getter_AddRefs(tmp));
+    if (NS_FAILED(res)) return res;
+  }
+  
+  // reparent the node inside font node with appropriate relative size
+  nsAutoString tag;
+  if (aSizeChange == 1) tag = "big";
+  else tag = "small";
+  res = InsertContainerAbove(node, &tmp, tag);
+  return res;
+}
+
+
+nsresult
+nsHTMLEditor::RelativeFontChangeOnNode( PRInt32 aSizeChange, 
+                                        nsIDOMNode *aNode)
+{
+  // Can only change font size by + or - 1
+  if ( !( (aSizeChange==1) || (aSizeChange==-1) ) )
+    return NS_ERROR_ILLEGAL_VALUE;
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> tmp;
+  nsAutoString tag;
+  if (aSizeChange == 1) tag = "big";
+  else tag = "small";
+  
+  // is this node a text node?
+  if (IsTextNode(aNode))
+  {
+    res = InsertContainerAbove(aNode, &tmp, tag);
+    return res;
+  }
+  // is it the opposite of what we want?  
+  if ( ((aSizeChange == 1) && nsHTMLEditUtils::IsSmall(aNode)) || 
+       ((aSizeChange == -1) &&  nsHTMLEditUtils::IsBig(aNode)) )
+  {
+    // in that case, just remove this node and pull up the children
+    res = RemoveContainer(aNode);
+    return res;
+  }
+  // can it be put inside a "big" or "small"?
+  if (TagCanContain(tag, aNode))
+  {
+    // ok, chuck it in.
+    res = InsertContainerAbove(aNode, &tmp, tag);
+    return res;
+  }
+  // none of the above?  then cycle through the children.
+  // MOOSE: we should group the children together if possible
+  // into a single "big" or "small".  For the moment they are
+  // each getting their own.  
+  nsCOMPtr<nsIDOMNodeList> childNodes;
+  res = aNode->GetChildNodes(getter_AddRefs(childNodes));
+  if (NS_FAILED(res)) return res;
+  if (childNodes)
+  {
+    PRInt32 j;
+    PRUint32 childCount;
+    childNodes->GetLength(&childCount);
+    for (j=0 ; j<childCount; j++)
+    {
+      nsCOMPtr<nsIDOMNode> childNode;
+      res = childNodes->Item(j, getter_AddRefs(childNode));
+      if ((NS_SUCCEEDED(res)) && (childNode))
+      {
+        res = RelativeFontChangeOnNode(aSizeChange, childNode);
+        if (NS_FAILED(res)) return res;
+      }
+    }
+  }
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// ReplaceContainer: replace inNode with a new node (outNode) which is contructed 
+//                   to be of type aNodeType.  Put inNodes children into outNode.
+//                   Callers responsibility to make sure inNode's children can 
+//                   go in outNode.
+nsresult
+nsHTMLEditor::ReplaceContainer(nsIDOMNode *inNode, 
+                                  nsCOMPtr<nsIDOMNode> *outNode, 
+                                  const nsString &aNodeType)
+{
+  if (!inNode || !outNode)
+    return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = GetNodeLocation(inNode, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  res = CreateNode(aNodeType, parent, offset, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+  PRBool bHasMoreChildren;
+  inNode->HasChildNodes(&bHasMoreChildren);
+  nsCOMPtr<nsIDOMNode> child;
+  offset = 0;
+  while (bHasMoreChildren)
+  {
+    inNode->GetLastChild(getter_AddRefs(child));
+    res = DeleteNode(child);
+    if (NS_FAILED(res)) return res;
+    res = InsertNode(child, *outNode, 0);
+    if (NS_FAILED(res)) return res;
+    inNode->HasChildNodes(&bHasMoreChildren);
+  }
+  res = DeleteNode(inNode);
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// RemoveContainer: remove inNode, reparenting it's children into their
+//                  the parent of inNode
+//
+nsresult
+nsHTMLEditor::RemoveContainer(nsIDOMNode *inNode)
+{
+  if (!inNode)
+    return NS_ERROR_NULL_POINTER;
+  if (nsHTMLEditUtils::IsBody(inNode))
+    return NS_ERROR_UNEXPECTED;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = GetNodeLocation(inNode, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  
+  // loop through the child nodes of inNode and promote them
+  // into inNode's parent.
+  PRBool bHasMoreChildren;
+  inNode->HasChildNodes(&bHasMoreChildren);
+  nsCOMPtr<nsIDOMNode> child;
+  while (bHasMoreChildren)
+  {
+    inNode->GetLastChild(getter_AddRefs(child));
+    res = DeleteNode(child);
+    if (NS_FAILED(res)) return res;
+    res = InsertNode(child, parent, offset);
+    if (NS_FAILED(res)) return res;
+    inNode->HasChildNodes(&bHasMoreChildren);
+  }
+  res = DeleteNode(inNode);
+  return res;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// InsertContainerAbove:  insert a new parent for inNode, returned in outNode,
+//                   which is contructed to be of type aNodeType.  outNode becomes
+//                   a child of inNode's earlier parent.
+//                   Callers responsibility to make sure inNode's can be child
+//                   of outNode, and outNode can be child of old parent.
+nsresult
+nsHTMLEditor::InsertContainerAbove(nsIDOMNode *inNode, 
+                                  nsCOMPtr<nsIDOMNode> *outNode, 
+                                  const nsString &aNodeType)
+{
+  if (!inNode || !outNode)
+    return NS_ERROR_NULL_POINTER;
+  nsresult res;
+  nsCOMPtr<nsIDOMNode> parent;
+  PRInt32 offset;
+  res = GetNodeLocation(inNode, &parent, &offset);
+  if (NS_FAILED(res)) return res;
+  
+  // make new parent, outNode
+  res = CreateNode(aNodeType, parent, offset, getter_AddRefs(*outNode));
+  if (NS_FAILED(res)) return res;
+
+  // put inNode in new parent, outNode
+  res = DeleteNode(inNode);
+  if (NS_FAILED(res)) return res;
+  res = InsertNode(inNode, *outNode, 0);
+  if (NS_FAILED(res)) return res;
+
+  return NS_OK;
+}
+
 
