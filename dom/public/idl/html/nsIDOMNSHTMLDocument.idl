@@ -21,9 +21,6 @@
 
 #include "domstubs.idl"
 
-interface nsIDOMLocation;
-
-
 [scriptable, uuid(a6cf90c5-15b3-11d2-932e-00805f8add32)]
 interface nsIDOMNSHTMLDocument : nsISupports
 {
