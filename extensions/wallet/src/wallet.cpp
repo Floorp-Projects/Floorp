@@ -1238,6 +1238,7 @@ PRInt32 FieldToValue(
     SchemaToValue_list = resume;
     if (wallet_ReadFromList(field, value, itemList, SchemaToValue_list) != -1) {
       /* value found, prefill it into form */
+      schema = nsAutoString(field);
       resume = SchemaToValue_list;
       return 0;
     }
