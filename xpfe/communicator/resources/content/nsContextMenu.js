@@ -80,7 +80,6 @@ nsContextMenu.prototype = {
         // Remove open/edit link if not applicable.
         this.showItem( "context-openlink", this.onSaveableLink || ( this.inDirList && this.onLink ) );
         this.showItem( "context-openlinkintab", this.onSaveableLink || ( this.inDirList && this.onLink ) );
-        this.showItem( "context-editlink", this.onSaveableLink && !this.inDirList );
 
         // Remove open frame if not applicable.
         this.showItem( "context-openframe", this.inFrame );
@@ -155,8 +154,6 @@ nsContextMenu.prototype = {
         this.showItem( "context-bookmarkpage", !this.onLink );
         this.showItem( "context-bookmarklink", this.onLink );
         this.showItem( "context-searchselect", this.isTextSelected() );
-        // Send Page not working yet.
-        this.showItem( "context-sendpage", false );
     },
     initClipboardItems : function () {
         // Select All is always OK, unless in directory listing.
@@ -433,11 +430,6 @@ nsContextMenu.prototype = {
         // Determine linked-to URL.
         openNewTabWith( this.linkURL() );
     },
-    // Edit linked-to URL in a new window.
-    editLink : function () {
-        urlSecurityCheck( this.linkURL(), window.document );
-        editPage( this.linkURL(), window, false );
-    },
     // Reload clicked-in frame.
     reloadFrame : function () {
         this.target.ownerDocument.location.reload();
@@ -527,33 +519,8 @@ nsContextMenu.prototype = {
     },
     // Show/hide one item (specified via name or the item element itself).
     showItem : function ( itemOrId, show ) {
-        var item = null;
-        if ( itemOrId.constructor == String ) {
-            // Argument specifies item id.
-            item = document.getElementById( itemOrId );
-        } else {
-            // Argument is the item itself.
-            item = itemOrId;
-        }
-        if ( item ) {
-            var styleIn = item.getAttribute( "style" );
-            var styleOut = styleIn;
-            if ( show ) {
-                // Remove style="display:none;".
-                styleOut = styleOut.replace( "display:none;", "" );
-
-            } else {
-                // Set style="display:none;".
-                if ( styleOut.indexOf( "display:none;" ) == -1 ) {
-                    // Add style the first time we need to.
-                    styleOut += "display:none;";
-                }
-            }
-            // Only set style if it's different.
-            if ( styleIn != styleOut ) {
-                item.setAttribute( "style", styleOut );
-            }
-        }
+        var item = itemOrId.constructor == String ? document.getElementById(itemOrId) : itemOrId;
+        item.hidden = !show;
     },
     // Set given attribute of specified context-menu item.  If the
     // value is null, then it removes the attribute (which works
@@ -666,9 +633,10 @@ nsContextMenu.prototype = {
     //selected text.   Only use the first 15 chars.
     isTextSelected : function() {
        var result = false;
-       if (_content.getSelection() != "") {
+       var selection = _content.getSelection();
+       if (selection != "") {
           var searchSelect = document.getElementById('context-searchselect');
-          var searchSelectText = _content.getSelection().toString();
+          var searchSelectText = selection.toString();
           var bundle = srGetStrBundle("chrome://communicator/locale/contentAreaCommands.properties");
           if (searchSelectText.length > 15)
              searchSelectText = searchSelectText.substr(0,15) + "...";
