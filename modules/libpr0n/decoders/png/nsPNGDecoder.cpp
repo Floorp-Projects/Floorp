@@ -76,7 +76,8 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)
   mRequest = aRequest;
   mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
 
-  aRequest->GetImage(getter_AddRefs(mImage));
+  mImage = do_CreateInstance("@mozilla.org/image/container;1");
+  aRequest->SetImage(mImage);
 
   /* do png init stuff */
 
