@@ -17,23 +17,32 @@
 
 DEPTH		= ../../../..
 topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
 VPATH		= @srcdir@
+srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_CONTENT = \
-		$(srcdir)/alertl.gif \
-		$(srcdir)/errorl.gif \
-		$(srcdir)/messagel.gif \
-		$(srcdir)/navigator.css \
-		$(srcdir)/questionl.gif \
-		$(srcdir)/contentframe.css \
-		$(srcdir)/animthrob.gif \
-		$(srcdir)/animthrob_single.gif \
-		$(NULL)
-
-include $(topsrcdir)/config/rules.mk
+	$(srcdir)/alertl.gif \
+	$(srcdir)/errorl.gif \
+	$(srcdir)/messagel.gif \
+	$(srcdir)/navigator.css \
+	$(srcdir)/questionl.gif \
+	$(srcdir)/contentframe.css \
+	$(srcdir)/animthrob.gif \
+	$(srcdir)/animthrob_single.gif \
+	$(srcdir)/TB_Back.gif \
+	$(srcdir)/TB_Forward.gif \
+	$(srcdir)/TB_Home.gif \
+	$(srcdir)/TB_Location.gif \
+	$(srcdir)/TB_Location_mo.gif \
+	$(srcdir)/TB_Netscape.gif \
+	$(srcdir)/TB_Print.gif \
+	$(srcdir)/TB_Reload.gif \
+	$(srcdir)/TB_Search.gif \
+	$(srcdir)/TB_Stop.gif \
+	$(NULL)
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/navigator/skin/default
