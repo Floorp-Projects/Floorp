@@ -83,13 +83,6 @@
               commandupdater="true"
               events="focus"
               oncommandupdate="goUpdateGlobalEditMenuItems()"/>
-    <command id="cmd_printSetup" oncommand="NSPrintSetup()"/>
-    <command id="cmd_printCard" oncommand="AbPrintCard()"/>
-    <command id="cmd_printPreviewCard" oncommand="AbPrintPreviewCard()"/>
-    <command id="cmd_printAddressBook" oncommand="AbPrintAddressBook()"/>
-    <command id="cmd_printPreviewAddressBook" oncommand="AbPrintPreviewAddressBook()"/>
-    <command id="cmd_quit" oncommand="goQuitApplication()"/>
-    <command id="cmd_close" oncommand="AbClose()"/>
     <command id="cmd_properties" oncommand="goDoCommand('button_edit');"/>
     <command id="cmd_undo" oncommand="goDoCommand('cmd_undo')" disabled="true"/>
     <command id="cmd_redo" oncommand="goDoCommand('cmd_redo')" disabled="true"/>
@@ -98,7 +91,6 @@
     <command id="cmd_paste" oncommand="goDoCommand('cmd_paste')" disabled="true"/>
     <command id="cmd_delete" oncommand="goDoCommand('cmd_delete')" valueDefault="&deleteCmd.label;" disabled="true"/>
     <command id="cmd_selectAll" oncommand="goDoCommand('cmd_selectAll')" disabled="true"/>
-    <command id="cmd_swapFirstNameLastName" oncommand="AbSwapFirstNameLastName()"/>
 </commandset>
 
 <broadcasterset id="abBroadcasters">
@@ -114,7 +106,12 @@
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
-  <key id="key_printCard" key="&printCardViewCmd.key;" command="cmd_printCard"  modifiers="accel"/>
+  #ifdef XP_MACOSX
+    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel,shift"/>
+  #else
+    <key id="key_newMessage" key="&newMessageCmd.key;" modifiers="accel"/>
+  #endif
+  <key id="key_printCard" key="&printCardViewCmd.key;" modifiers="accel"/>
   <key id="key_close" key="&closeCmd.key;" modifiers="accel"/>
   <key id="key_quit" key="&quitApplicationCmd.key;" modifiers="accel"/>
   <!-- Edit Menu -->
@@ -125,7 +122,7 @@
   <key id="key_paste" key="&pasteCmd.key;" modifiers="accel"/>
   <key id="key_delete" keycode="VK_DELETE"/>
   <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="accel"/>
-  <key id="key_properties" key="&propertiesCmd.key;" command="cmd_properties" modifiers="accel"/>
+  <key id="key_properties" key="&propertiesCmd.key;" modifiers="accel"/>
 
   <!-- Tab/F6 Keys -->
   <key keycode="VK_TAB" oncommand="SwitchPaneFocus(event);" modifiers="control,shift"/>
@@ -138,11 +135,9 @@
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
 </keyset>
 
-<popupset id="aTooltipSet">
-  <popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
-    <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
-  </popup>
-</popupset>
+<popup id="aTooltip" class="tooltip" onpopupshowing="return FillInTooltip(document.tooltipNode);" > 
+  <label id="TOOLTIP-tooltipText" class="tooltip-label" flex="1"/>
+</popup>
 
 <toolbox id="ab-toolbox" class="toolbox-top" mode="icons">
   <toolbar type="menubar" id="addrbook-toolbar-menubar" class="chromeclass-menubar" customizable="true"
@@ -159,17 +154,18 @@
                       <menuitem label="&newAddressBookCmd.label;" accesskey="&newAddressBookCmd.accesskey;" oncommand="AbNewAddressBook()"/>
                       <menuitem label="&newLDAPDirectoryCmd.label;" id="addLDAP" accesskey="&newLDAPDirectoryCmd.accesskey;" oncommand="AbNewLDAPDirectory()"/>
                       <menuseparator/>
+                      <menuitem label="&newMessageCmd.label;" id="menu_newMessage" key="key_newMessage" accesskey="&newMessageCmd.accesskey;" oncommand="AbNewMessage()"/>
                     </menupopup>
                 </menu>
-                <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" command="cmd_close"/>
+                <menuitem id="menu_close" label="&closeCmd.label;" key="key_close" accesskey="&closeCmd.accesskey;" oncommand="AbClose()"/>
                 <menuseparator/>
-                <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" command="cmd_printSetup"/>
-                <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" accesskey="&printPreviewCardViewCmd.accesskey;" command="cmd_printPreviewCard"/>
-                <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" accesskey="&printPreviewAddressBook.accesskey;" command="cmd_printPreviewAddressBook"/>
-                <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" command="cmd_printCard"/>
-                <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" command="cmd_printAddressBook"/>
+                <menuitem id="printSetupMenuItem" label="&printSetupCmd.label;" accesskey="&printSetupCmd.accesskey;" oncommand="NSPrintSetup()"/>
+                <menuitem id="printPreviewMenuItem" label="&printPreviewCardViewCmd.label;" accesskey="&printPreviewCardViewCmd.accesskey;" oncommand="AbPrintPreviewCard()"/>
+                <menuitem id="printPreviewAddressBook" label="&printPreviewAddressBook.label;" accesskey="&printPreviewAddressBook.accesskey;" oncommand="AbPrintPreviewAddressBook()"/>
+                <menuitem id="printMenuItem" label="&printCardViewCmd.label;" accesskey="&printCardViewCmd.accesskey;" key="key_printCard" oncommand="AbPrintCard()"/>
+                <menuitem id="printAddressBook" label="&printAddressBook.label;" accesskey="&printAddressBook.accesskey;" oncommand="AbPrintAddressBook()"/>
                 <menuseparator id="menu_FileQuitSeparator"/>
-                <menuitem id="menu_FileQuitItem" label="&quitApplicationCmd.label;" accesskey="&quitApplicationCmd.accesskey;" key="key_quit" command="cmd_quit"/>
+                <menuitem id="menu_FileQuitItem" label="&quitApplicationCmd.label;" accesskey="&quitApplicationCmd.accesskey;" key="key_quit" oncommand="goQuitApplication()"/>
             </menupopup>
         </menu>
         
@@ -218,7 +214,7 @@
             <menuitem label="&swapFirstNameLastNameCmd.label;"
                       accesskey="&swapFirstNameLastNameCmd.accesskey;"
                       hidden="&hideSwapFnLnUI;"
-                      command="cmd_swapFirstNameLastName"/>
+                      oncommand="AbSwapFirstNameLastName()"/>
             <menuitem label="&propertiesCmd.label;"
                       accesskey="&propertiesCmd.accesskey;"
                       key="key_properties"
