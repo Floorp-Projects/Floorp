@@ -42,6 +42,7 @@
 #include "ScheduledTasks.h"
 #include "nsProcess.h"
 #include "nsReadableUtils.h"
+#include "nsInstallExecute.h"
 
 #ifdef _WINDOWS
 #include <windows.h>
@@ -988,26 +989,30 @@ nsInstallFileOpItem::NativeFileOpFileExecuteComplete()
 {
   //mTarget->Execute(*mParams);
   //mTarget->Spawn(NS_LossyConvertUCS2toASCII(*mParams).get(), 0);
+  #define ARG_SLOTS 256
 
-  char *cParams[1];
+  char *cParams[ARG_SLOTS];
+  int   argcount = -1;
+  nsresult rv;
+
+  cParams[0] = nsnull;
+
+  if (mTarget == nsnull)
+    return nsInstall::INVALID_ARGUMENTS;
 
   nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
 
-  cParams[0] = nsnull;
-  cParams[0] = ToNewCString(*mParams);
+  argcount = xpi_PrepareProcessArguments(*mParams, cParams, ARG_SLOTS);
 
-  if(cParams[0] == nsnull)
-    return nsInstall::OUT_OF_MEMORY;
-
-  nsresult rv = process->Init(mTarget);
-  if (NS_FAILED(rv))
+  if (argcount >= 0)
   {
-    if(cParams[0])
-      Recycle(cParams[0]);
-    return rv;
-  }
+    rv = process->Init(mTarget);
 
-  rv = process->Run(mBlocking, (const char **)&cParams[0], 1, nsnull);
+    if (NS_SUCCEEDED(rv))
+      rv = process->Run(mBlocking, (const char **)&cParams, argcount, nsnull);
+  }
+  else
+    rv = nsInstall::UNEXPECTED_ERROR;
 
   if(cParams[0])
     Recycle(cParams[0]);

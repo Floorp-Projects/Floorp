@@ -43,6 +43,100 @@ static NS_DEFINE_CID(kIProcessCID, NS_PROCESS_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsInstallExecute)
 
+// Chop the command-line up in place into an array of arguments
+//   by replacing spaces in the command-line string with null
+//   terminators and pointing the array elements to the 
+//   characters following the null terminators.
+//
+// aArgsString is a string containing the complete command-line.
+// aArgs points to an array which will be filled with the 
+//   individual arguments from the command-line.
+// aArgsAvailable is the size of aArgs, i.e. the maximum number of
+//   individual command-line arguments which can be stored in the array.
+//
+// Returns the count of the number of command-line arguments actually 
+//   stored into the array aArgs or -1 if it fails.
+PRInt32 xpi_PrepareProcessArguments(const nsString& aArgsString, char **aArgs, PRInt32 aArgsAvailable)
+{
+   int   argc;
+   char *c;
+   char *p; // look ahead
+   PRBool quoted = PR_FALSE;
+
+   aArgs[0] = ToNewCString(aArgsString);
+   if (!aArgs[0])
+      return -1;
+
+   // Strip leading spaces from command-line string.
+   argc = 0;
+   c = aArgs[argc];
+   while (*c == ' ') ++c;
+   aArgs[argc++] = c;
+
+   for (; *c && argc < aArgsAvailable; ++c) 
+   {
+      switch(*c) {
+
+      // Only handle escaped double quote and escaped backslash.
+      case '\\':
+         // See if next character is backslash or dquote
+         if ( *(c+1) == '\\' || *(c+1) == '\"' )
+         {
+            // Eat escape character (i.e., backslash) by
+            //   shifting all characters to the left one.
+            for (p=c; *p != 0; ++p)
+               *p = *(p+1);
+         }
+         break;
+
+      case '\"':
+         *c = 0; // terminate current arg
+         if (quoted) 
+         {
+            p = c+1; // look ahead
+            while (*p == ' ')
+               ++p; // eat spaces
+            if (*p)
+               aArgs[argc++] = p; //not at end, set next arg
+            c = p-1;
+
+            quoted = PR_FALSE;
+         }
+         else 
+         {
+            quoted = PR_TRUE;
+
+            if (aArgs[argc-1] == c)
+              // Quote is at beginning so 
+              //   start current argument after the quote.
+              aArgs[argc-1] = c+1;
+            else
+              // Quote is embedded so 
+              //   start a new argument after the quote.
+              aArgs[argc++] = c+1;
+         }
+         break;
+
+      case ' ':
+         if (!quoted) 
+         {
+            *c = 0; // terminate current arg
+            p = c+1; // look ahead
+            while (*p == ' ')
+               ++p; // eat spaces
+            if (*p)
+               aArgs[argc++] = p; //not at end, set next arg
+            c = p-1;
+         }
+         break;
+
+      default:
+         break;  // nothing to do
+      }
+   }
+   return argc;
+}
+
 nsInstallExecute:: nsInstallExecute(  nsInstall* inInstall,
                                       const nsString& inJarLocation,
                                       const nsString& inArgs,
@@ -85,47 +179,53 @@ PRInt32 nsInstallExecute::Prepare()
 
 PRInt32 nsInstallExecute::Complete()
 {
-    PRInt32 result = NS_OK;
-    PRInt32 rv = nsInstall::SUCCESS;
-    char *cArgs[1];
+   #define ARG_SLOTS       256
 
-    if (mExecutableFile == nsnull)
-        return nsInstall::INVALID_ARGUMENTS;
+   PRInt32 result = NS_OK;
+   PRInt32 rv = nsInstall::SUCCESS;
+   char *cArgs[ARG_SLOTS];
+   int   argcount = 0;
 
-    nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
+   if (mExecutableFile == nsnull)
+      return nsInstall::INVALID_ARGUMENTS;
 
-    cArgs[0] = ToNewCString(mArgs);
+   nsCOMPtr<nsIProcess> process = do_CreateInstance(kIProcessCID);
 
-    if(cArgs[0] == nsnull)
-      return nsInstall::OUT_OF_MEMORY;
+   if (!mArgs.IsEmpty())
+      argcount = xpi_PrepareProcessArguments(mArgs, cArgs, ARG_SLOTS);
 
-    result = process->Init(mExecutableFile);
-    if (NS_SUCCEEDED(result))
-    {
-        result = process->Run(mBlocking, (const char**)&cArgs, 1, mPid);
-        if (NS_SUCCEEDED(result))
-        {
+   if (argcount >= 0)
+   {
+      result = process->Init(mExecutableFile);
+      if (NS_SUCCEEDED(result))
+      {
+         result = process->Run(mBlocking, (const char**)&cArgs, argcount, mPid);
+         if (NS_SUCCEEDED(result))
+         {
             if (mBlocking)
             {
-                // should be OK to delete now since execution done
-                DeleteFileNowOrSchedule( mExecutableFile );
+               // should be OK to delete now since execution done
+               DeleteFileNowOrSchedule( mExecutableFile );
             }
             else
             {
-                // don't try to delete now since execution is async
-                ScheduleFileForDeletion( mExecutableFile );
+               // don't try to delete now since execution is async
+               ScheduleFileForDeletion( mExecutableFile );
             }
-        }
-        else
+         }
+         else
             rv = nsInstall::UNEXPECTED_ERROR;
-    }
-    else
-        rv = nsInstall::UNEXPECTED_ERROR;
+      }
+      else
+         rv = nsInstall::UNEXPECTED_ERROR;
 
-    if(cArgs[0])
-        Recycle(cArgs[0]);
+      if(cArgs[0])
+         Recycle(cArgs[0]);
+   }
+   else
+      rv = nsInstall::UNEXPECTED_ERROR;
 
-    return rv;
+   return rv;
 }
 
 void nsInstallExecute::Abort()
