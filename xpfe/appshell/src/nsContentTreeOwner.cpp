@@ -359,6 +359,10 @@ nsContentTreeOwner::GetPersistence(PRBool* aPersistPosition,
 
 NS_IMETHODIMP nsContentTreeOwner::SetStatus(PRUint32 aStatusType, const PRUnichar* aStatus)
 {
+  // We only allow the status to be set from the primary content shell
+  if (!mPrimary)
+    return NS_OK;
+  
   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow;
   mXULWindow->GetXULBrowserWindow(getter_AddRefs(xulBrowserWindow));
 
