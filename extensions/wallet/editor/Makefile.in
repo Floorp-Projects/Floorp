@@ -42,5 +42,5 @@ override NO_STATIC_LIB=
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/WalletEditor.xul $(srcdir)/WalletEditor.js $(DIST)/bin/chrome/packages/core/communicator/content/wallet
+	$(INSTALL) $(srcdir)/WalletEditor.xul $(srcdir)/WalletEditor.js $(srcdir)/interview.html $(DIST)/bin/chrome/packages/core/communicator/content/wallet
 	$(INSTALL) $(srcdir)/WalletEditor.properties  $(srcdir)/WalletEditor.dtd $(DIST)/bin/chrome/locales/en-US/communicator/locale/wallet
