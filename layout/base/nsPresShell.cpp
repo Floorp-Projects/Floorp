@@ -2270,7 +2270,7 @@ nsresult PresShell::SetPrefLinkRules(void)
           ColorToString(linkColor,strColor);
           NS_NAMED_LITERAL_STRING(notImportantStr, ";} ");
           NS_NAMED_LITERAL_STRING(importantStr, " !important;} ");
-          nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
+          const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
           result = sheet->InsertRule(NS_LITERAL_STRING("*:link, *:link:active {color:") +
                                      strColor +
                                      ruleClose,
