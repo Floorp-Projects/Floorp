@@ -33,6 +33,7 @@
 #include "xlibrgb.h"
 #include "prprf.h"
 #include "prmem.h"
+#include "prlog.h"
 #include "nsGCCache.h"
 #ifdef _IMPL_NS_XPRINT
 #include "imgIContainer.h"
