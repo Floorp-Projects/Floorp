@@ -1331,6 +1331,20 @@ nsWindow::OnButtonPressEvent(GtkWidget *aWidget, GdkEventButton *aEvent)
     PRUint32      eventType;
     nsEventStatus status;
 
+    // If you double click in GDK, it will actually generate a single
+    // click event before sending the double click event, and this is
+    // different than the DOM spec.  GDK puts this in the queue
+    // programatically, so it's safe to assume that if there's a
+    // double click in the queue, it was generated so we can just drop
+    // this click.
+    GdkEvent *peekedEvent = gdk_event_peek();
+    if (peekedEvent) {
+        GdkEventType type = peekedEvent->any.type;
+        gdk_event_free(peekedEvent);
+        if (type == GDK_2BUTTON_PRESS || type == GDK_3BUTTON_PRESS)
+            return;
+    }
+
     // Always save the time of this event
     mLastButtonPressTime = aEvent->time;
 
