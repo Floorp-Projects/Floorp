@@ -44,6 +44,13 @@ use Bugzilla::User;
 use Bugzilla::Util;
 use Bugzilla::Error;
 
+use base qw(Exporter);
+@Bugzilla::Bug::EXPORT = qw(
+    ValidateComment
+);
+
+use constant MAX_COMMENT_LENGTH => 65535;
+
 sub fields {
     # Keep this ordering in sync with bugzilla.dtd
     my @fields = qw(bug_id alias creation_ts short_desc delta_ts
@@ -583,6 +590,14 @@ sub CountOpenDependencies {
     }
 
     return @dependencies;
+}
+
+sub ValidateComment ($) {
+    my ($comment) = @_;
+
+    if (defined($comment) && length($comment) > MAX_COMMENT_LENGTH) {
+        ThrowUserError("comment_too_long");
+    }
 }
 
 sub AUTOLOAD {

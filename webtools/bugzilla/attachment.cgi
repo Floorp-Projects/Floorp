@@ -48,6 +48,7 @@ use Bugzilla::Flag;
 use Bugzilla::FlagType; 
 use Bugzilla::User;
 use Bugzilla::Util;
+use Bugzilla::Bug;
 
 # Check whether or not the user is logged in and, if so, set the $::userid 
 Bugzilla->login();

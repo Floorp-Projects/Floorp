@@ -188,16 +188,6 @@ sub ValidateBugID {
     }
 }
 
-sub ValidateComment {
-    # Make sure a comment is not too large (greater than 64K).
-    
-    my ($comment) = @_;
-    
-    if (defined($comment) && length($comment) > 65535) {
-        ThrowUserError("comment_too_long");
-    }
-}
-
 sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
