@@ -974,7 +974,7 @@ main(int argc, char *argv[])
   }
 
   if ( (elf_header->e_ident[EI_DATA] != ELFDATA2LSB) ||
-       ((elf_header->e_machine !=  EM_386 && elf_header->e_machine != EM_486)) ) {
+       (elf_header->e_machine !=  EM_386) ) {
     fprintf(stderr, "Only intel LSB binaries are supported right now\n");
     return 1;
   }
