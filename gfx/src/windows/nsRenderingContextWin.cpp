@@ -1663,6 +1663,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const PRUnichar *aString,
     nsFontWin* prevFont = nsnull;
 
     SetupFontAndColor();
+    HFONT selectedFont = mCurrFont;
 #ifdef ARABIC_HEBREW_RENDERING
     PRUnichar buf[8192];
     PRUint32 len;
@@ -1687,6 +1688,10 @@ FoundFont:
       // XXX avoid this test by duplicating code
       if (prevFont) {
         if (currFont != prevFont) {
+          if (prevFont->mFont != selectedFont) {
+            ::SelectObject(mDC, prevFont->mFont);
+            selectedFont = prevFont->mFont;
+          }
 #ifdef ARABIC_HEBREW_RENDERING
           PRBool bArabic=PR_FALSE;
           PRBool bHebrew=PR_FALSE;
@@ -1700,7 +1705,7 @@ FoundFont:
              } else if (bArabic) {
                 ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
             }
-            width += prevFont->GetWidth(mDC, buf, len);
+             width += prevFont->GetWidth(mDC, buf, len);
           } 
           else 
 #endif // ARABIC_HEBREW_RENDERING
@@ -1718,6 +1723,10 @@ FoundFont:
     }
 
     if (prevFont) {
+      if (prevFont->mFont != selectedFont) {
+        ::SelectObject(mDC, prevFont->mFont);
+        selectedFont = prevFont->mFont;
+      }
 #ifdef ARABIC_HEBREW_RENDERING
       PRBool bArabic=PR_FALSE;
       PRBool bHebrew=PR_FALSE;
@@ -1731,16 +1740,21 @@ FoundFont:
          } else if (bArabic) {
             ArabicShaping(&aString[start], i-start, buf, len, prevFont->mMap);
         }
-        width += prevFont->GetWidth(mDC, buf, len);
+         width += prevFont->GetWidth(mDC, buf, len);
       } 
       else 
 #endif // ARABIC_HEBREW_RENDERING
       {
-         width += prevFont->GetWidth(mDC, &aString[start], i - start);
+        width += prevFont->GetWidth(mDC, &aString[start], i - start);
       }
     }
 
     aWidth = NSToCoordRound(float(width) * mP2T);
+
+    if (selectedFont != mCurrFont) {
+      // Restore the font
+      ::SelectObject(mDC, mCurrFont);
+    }
 
     if (nsnull != aFontID)
       *aFontID = 0;
@@ -1805,6 +1819,7 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
     nsFontWin* prevFont = nsnull;
 
     SetupFontAndColor();
+    HFONT selectedFont = mCurrFont;
 #ifdef ARABIC_HEBREW_RENDERING
     PRUnichar buf[8192];
     PRUint32 len;
@@ -1827,6 +1842,10 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawString(const PRUnichar *aString, PRUi
 FoundFont:
       if (prevFont) {
         if (currFont != prevFont) {
+          if (prevFont->mFont != selectedFont) {
+            ::SelectObject(mDC, prevFont->mFont);
+            selectedFont = prevFont->mFont;
+          }
           if (aSpacing) {
             // XXX Fix path to use a twips transform in the DC and use the
             // spacing values directly and let windows deal with the sub-pixel
@@ -1881,6 +1900,10 @@ FoundFont:
     }
 
     if (prevFont) {
+      if (prevFont->mFont != selectedFont) {
+        ::SelectObject(mDC, prevFont->mFont);
+        selectedFont = prevFont->mFont;
+      }
       if (aSpacing) {
         // XXX Fix path to use a twips transform in the DC and use the
         // spacing values directly and let windows deal with the sub-pixel
@@ -1919,9 +1942,14 @@ FoundFont:
         else 
 #endif // ARABIC_HEBREW_RENDERING
         {
-           prevFont->DrawString(mDC, x, y, &aString[start], i - start);
+          prevFont->DrawString(mDC, x, y, &aString[start], i - start);
         }
       }
+    }
+
+    if (selectedFont != mCurrFont) {
+      // Restore the font
+      ::SelectObject(mDC, mCurrFont);
     }
 
     return NS_OK;
@@ -2548,6 +2576,7 @@ FoundFont:
       // XXX avoid this test by duplicating code
       if (prevFont) {
         if (currFont != prevFont) {
+          ::SelectObject(mDC, prevFont->mFont);
           width += prevFont->GetWidth(mDC, &aString[start], i - start);
           prevFont = currFont;
           start = i;
@@ -2560,6 +2589,7 @@ FoundFont:
     }
 
     if (prevFont) {
+      ::SelectObject(mDC, prevFont->mFont);
       width += prevFont->GetWidth(mDC, &aString[start], i - start);
     }
 
@@ -2626,6 +2656,7 @@ NS_IMETHODIMP nsRenderingContextWinA :: DrawString(const PRUnichar *aString, PRU
 FoundFont:
       if (prevFont) {
         if (currFont != prevFont) {
+          ::SelectObject(mDC, prevFont->mFont);
           if (aSpacing) {
             // XXX Fix path to use a twips transform in the DC and use the
             // spacing values directly and let windows deal with the sub-pixel
@@ -2660,6 +2691,7 @@ FoundFont:
     }
 
     if (prevFont) {
+      ::SelectObject(mDC, prevFont->mFont);
       if (aSpacing) {
         // XXX Fix path to use a twips transform in the DC and use the
         // spacing values directly and let windows deal with the sub-pixel

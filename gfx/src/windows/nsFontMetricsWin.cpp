@@ -1937,10 +1937,8 @@ nsFontWinUnicode::~nsFontWinUnicode()
 PRInt32
 nsFontWinUnicode::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
 {
-  HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
   SIZE size;
   ::GetTextExtentPoint32W(aDC, aString, aLength, &size);
-  ::SelectObject(aDC, oldFont);
 
   return size.cx;
 }
@@ -1949,9 +1947,7 @@ void
 nsFontWinUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   const PRUnichar* aString, PRUint32 aLength)
 {
-  HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
   ::ExtTextOutW(aDC, aX, aY, 0, NULL, aString, aLength, NULL);
-  ::SelectObject(aDC, oldFont);
 }
 
 #ifdef MOZ_MATHML
@@ -2064,10 +2060,8 @@ nsFontWinNonUnicode::GetWidth(HDC aDC, const PRUnichar* aString,
       pstr[i] = mConverter[aString[i]];
     }
 
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
     SIZE size;
     ::GetTextExtentPoint32A(aDC, pstr, aLength, &size);
-    ::SelectObject(aDC, oldFont);
 
     if (pstr != str) {
       delete[] pstr;
@@ -2092,9 +2086,7 @@ nsFontWinNonUnicode::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
       pstr[i] = mConverter[aString[i]];
     }
 
-    HFONT oldFont = (HFONT) ::SelectObject(aDC, mFont);
     ::ExtTextOutA(aDC, aX, aY, 0, NULL, pstr, aLength, NULL);
-    ::SelectObject(aDC, oldFont);
 
     if (pstr != str) {
       delete[] pstr;
@@ -2728,7 +2720,6 @@ nsFontSubset::GetWidth(HDC aDC, const PRUnichar* aString, PRUint32 aLength)
   int len = WideCharToMultiByte(mCodePage, 0, aString, aLength, str,
     sizeof(str), nsnull, nsnull);
   if (len) {
-    ::SelectObject(aDC, mFont);
     SIZE size;
     ::GetTextExtentPoint32A(aDC, str, len, &size);
     return size.cx;
@@ -2746,7 +2737,6 @@ nsFontSubset::DrawString(HDC aDC, PRInt32 aX, PRInt32 aY,
   int len = WideCharToMultiByte(mCodePage, 0, aString, aLength, str,
     sizeof(str), nsnull, nsnull);
   if (len) {
-    ::SelectObject(aDC, mFont);
     ::ExtTextOutA(aDC, aX, aY, 0, NULL, str, len, NULL);
   }
 }
