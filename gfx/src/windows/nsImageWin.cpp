@@ -45,6 +45,8 @@
 
 static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
 
+
+
 static PRBool
 IsWindowsNT()
 {
@@ -823,9 +825,15 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
       }
     } 
     return(PR_TRUE);
-  } else if(mAlphaDepth == 8 ){
-  }
+  } 
   
+  // now try to pattern blit.. if that fails.. we use our own algorithm to get
+  // things fast
+  if ( PR_TRUE == PatBltTile(aContext,aSurface,aX0,aY0,aX1,aY1) ){
+    return(PR_TRUE);
+  }
+
+
   // create a larger tile from the smaller one
   ((nsDrawingSurfaceWin *)aSurface)->GetDC(&TheHDC);
   if (NULL == TheHDC){
@@ -948,8 +956,7 @@ NS_IMETHODIMP nsImageWin::DrawTile(nsIRenderingContext &aContext,
  */
 PRBool 
 nsImageWin :: PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
-                                nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                nscoord aWidth, nscoord aHeight)
+                                nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1)
 {
   HDC     TheHDC;
   HBRUSH  hBrush,oldBrush;
@@ -957,6 +964,13 @@ nsImageWin :: PatBltTile(nsIRenderingContext &aContext, nsDrawingSurface aSurfac
   DWORD   rop;
   HBITMAP theBits;
   POINT   originalPoint;
+
+
+  if (PR_TRUE != gIsWinNT) {
+    if((mBHead->biWidth<8)&&(mBHead->biHeight<8)){
+      return PR_FALSE;    // this does not seem to work on win 98
+    }
+  }
 
   if (PR_FALSE==mCanOptimize) {
     return (PR_FALSE);
