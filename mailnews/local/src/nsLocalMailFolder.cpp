@@ -256,7 +256,7 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 
 	nsresult folderOpen;
 	if(!NS_SUCCEEDED(folderOpen = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_FALSE)) &&
-			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+			folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
 	{
 		// if it's out of date then reopen with upgrade.
 		if(!NS_SUCCEEDED(rv = nsMailDatabase::Open(path, PR_TRUE, &mMailDatabase, PR_TRUE)))
@@ -273,8 +273,8 @@ nsMsgLocalMailFolder::GetMessages(nsIEnumerator* *result)
 		{
 			if(NS_FAILED(rv = ParseFolder(path)))
 				return rv;
-
-
+			else
+				return NS_ERROR_NOT_INITIALIZED;
 		}
 	}
   }
