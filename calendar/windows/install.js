@@ -1,4 +1,4 @@
-initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.7");
+initInstall("Mozilla Calendar", "Mozilla/Calendar", "0.8");
 
 calendarDir = getFolder("Chrome","calendar");
 
@@ -8,10 +8,8 @@ addDirectory( "resources" );
 
 addDirectory("", "components", getFolder( "Components" ), "" );
 
-addDirectory( "", "icons", getFolder( "Chrome", "icons" ), "", true );
+addDirectory( "", "", "icons", getFolder( "Chrome", "icons" ), "", true );
 
-err = addFile( "", "calendar_pref.js", getFolder( getFolder( "Program", "defaults" ), "pref" ), "" );
-alert( err );
 var err = getLastError();
   
 if ( err == SUCCESS ) { 
