@@ -265,6 +265,10 @@ js_InternalInvoke(JSContext *cx, JSObject *obj, jsval fval, uintN flags,
                   uintN argc, jsval *argv, jsval *rval);
 
 extern JSBool
+js_InternalGetOrSet(JSContext *cx, JSObject *obj, jsid id, jsval fval,
+                    JSAccessMode mode, uintN argc, jsval *argv, jsval *rval);
+
+extern JSBool
 js_Execute(JSContext *cx, JSObject *chain, JSScript *script,
            JSStackFrame *down, uintN flags, jsval *result);
 

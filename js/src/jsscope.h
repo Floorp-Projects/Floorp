@@ -304,12 +304,16 @@ struct JSScopeProperty {
 
 #define SPROP_GET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_GETTER)                                         \
-     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL((sprop)->getter), 0, 0, vp)   \
+     ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
+                           OBJECT_TO_JSVAL((sprop)->getter), JSACC_READ,      \
+                           0, 0, vp)                                          \
      : SPROP_CALL_GETTER(cx, sprop, (sprop)->getter, obj, obj2, vp))
 
 #define SPROP_SET(cx,sprop,obj,obj2,vp)                                       \
     (((sprop)->attrs & JSPROP_SETTER)                                         \
-     ? js_InternalCall(cx, obj, OBJECT_TO_JSVAL((sprop)->setter), 1, vp, vp)  \
+     ? js_InternalGetOrSet(cx, obj, (sprop)->id,                              \
+                           OBJECT_TO_JSVAL((sprop)->setter), JSACC_WRITE,     \
+                           1, vp, vp)                                         \
      : ((sprop)->attrs & JSPROP_GETTER)                                       \
      ? (JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,                    \
                              JSMSG_GETTER_ONLY, NULL), JS_FALSE)              \
