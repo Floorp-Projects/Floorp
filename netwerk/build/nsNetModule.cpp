@@ -136,6 +136,9 @@ UnregisterBasicAuth(nsIComponentManager *aCompMgr, nsIFile *aPath,
 #include "nsAboutProtocolHandler.h"
 #include "nsAboutBlank.h"
 #include "nsAboutBloat.h"
+#if defined(XP_PC) || defined(XP_UNIX)
+#include "nsAboutCache.h"
+#endif /* XP_PC || XP_UNIX */
 #include "nsAboutCredits.h"
 #include "mzAboutMozilla.h"
 #include "nsKeywordProtocolHandler.h"
@@ -633,7 +636,13 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ABOUT_MODULE_CONTRACTID_PREFIX "mozilla",
       mzAboutMozilla::Create
     },
-
+#if defined(XP_PC) || defined(XP_UNIX)
+    { "about:cache", 
+      NS_ABOUT_CACHE_MODULE_CID,
+      NS_ABOUT_MODULE_CONTRACTID_PREFIX "cache", 
+      nsAboutCache::Create
+    },
+#endif /* XP_PC || XP_UNIX */
     // from netwerk/protocol/keyword:
     { "The Keyword Protocol Handler", 
       NS_KEYWORDPROTOCOLHANDLER_CID,
