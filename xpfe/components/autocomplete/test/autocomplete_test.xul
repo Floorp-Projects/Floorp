@@ -1,0 +1,78 @@
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+
+                   
+<window id="actest"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns:nc="http://home.netscape.com/NC-rdf#"
+    		align="vertical"
+        width="750"
+        height="500"
+        onload="Initialize();"
+        >
+        
+<html:script language="JavaScript">
+
+var AutoCompleteSession = {
+    onStartLookup: function(event, value, prevResult, listener)
+    {
+        dump("Search Session: onStartLookup\n");
+    },
+
+    onStopLookup: function(event)
+    {
+        dump("Search Session: onStopLookup\n");
+    },
+
+    onAutoComplete: function(event, value, prevResult, listener)
+    {
+        dump("Search Session: onAutoComplete, value =" + value +"\n");
+        
+        var results = Components.classes["component://netscape/autocomplete/results"].createInstance();
+        results = results.QueryInterface(Components.interfaces.nsIAutoCompleteResults);
+        results.searchString = value;
+        results.defaultItemIndex = 0;
+        results.param = null;
+        
+        var item = Components.classes["component://netscape/autocomplete/item"].createInstance();
+        item = item.QueryInterface(Components.interfaces.nsIAutoCompleteItem);
+        item.value = value + "@mozilla.org";
+        item.comment = "[put your comment here]";
+        item.className = "";
+        item.param = null;
+        
+        results.items.AppendElement(item);
+
+        item = Components.classes["component://netscape/autocomplete/item"].createInstance();
+        item = item.QueryInterface(Components.interfaces.nsIAutoCompleteItem);
+        item.value = value + "@netscape.com";
+        item.comment = "[put your comment here]";
+        item.className = "";
+        item.param = null;
+
+        results.items.AppendElement(item);
+
+        listener.onAutoComplete(results, Components.interfaces.nsIAutoCompleteStatus.matchFound);
+    }
+};
+
+function Initialize()
+{
+    dump("Initialize\n");
+    var myAutoComplete = document.getElementById("test");
+    dump("myAutoComplete = " + myAutoComplete + ", session = " + myAutoComplete.autoCompleteSession + "\n");
+    myAutoComplete.autoCompleteSession = AutoCompleteSession;
+}
+
+</html:script>
+
+
+<autocomplete id="test" timeout="300" />
+
+<!--autocomplete
+    searchSessionClass="netscape%2Fmessenger%2Fautocomplete%26type%3Daddrbook"
+    timeout="300"
+/-->
+</window>
