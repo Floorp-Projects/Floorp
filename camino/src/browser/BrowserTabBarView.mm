@@ -447,7 +447,7 @@ static const int kOverflowButtonMargin = 1;
     [self rebuildTabBar];
     // set up tracking rects
     [self registerTabButtonsForTracking];
-  } else if (!show && mVisible) { // being hi
+  } else if (!show && mVisible) { // being hidden
     mVisible = show;
     NSRect newFrame = [self frame];
     newFrame.size.height = 0.0;
