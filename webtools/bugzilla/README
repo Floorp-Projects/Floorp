@@ -52,6 +52,9 @@ news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
    Bugzilla has quite a few prerequisites, but none of them are TCL.
 Previous versions required TCL, but it no longer needed (or used).
 
+   You must also run Bugzilla on a filesystem that supports file locking via
+flock(). This is necessary for Bugzilla to operate safely with multiple instances.
+
 1.1. Getting and setting up MySQL database (3.22.5 or greater)
 
    Visit MySQL homepage at http://www.mysql.org and grab the latest stable
@@ -306,8 +309,14 @@ The first time you run it, it will create a file called "localconfig"
 which you should examine and perhaps tweak a bit.  Then re-run
 checksetup.pl and it will do the real work.
 
+It's worth noting that ./checksetup.pl will stall if it is on a filesystem
+that does not fully support file locking via flock(), such as NFS mounts.
+This support is required for Bugzilla to operate safely with multiple
+instances. If flock() is not fully supported, it will stall at:
 
-At ths point, you should have a nearly empty copy of the bug tracking
+   "Now regenerating the shadow database for all bugs."
+
+Should everything work, you should have a nearly empty copy of the bug tracking
 setup.
 
 4. Tweaking the Bugzilla->MySQL Connection Data
