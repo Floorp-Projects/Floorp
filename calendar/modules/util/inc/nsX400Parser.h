@@ -94,7 +94,7 @@ private:
   nsresult        DestroyEntry(PRInt32 aIndex);
 
   /**
-   * @return       the current number of keys and values.
+   * @return       the current number of key/value pairs.
    */
   PRInt32         GetLength()   { return miLength; }
 
@@ -104,7 +104,25 @@ public:
                   nsX400Parser(const JulianString& sVal);
   virtual         ~nsX400Parser();
 
+  /**
+   * Supply a new value for the parser. It should be of the form:
+   * /S=Steve/G=Mansour/Nd=10000/
+   * After this call, the values associated with keys can be accessed
+   * or modified. New key/value pairs can be added. Existing key/value
+   * pairs can be deleted.
+   * @param aKey    the key
+   * @return        NS_OK on success.
+   */
   nsresult        SetValue(const char* psVal);
+
+  /**
+   * Get the newly assembled string
+   * @param aStr    pointer to the character string. It refers
+   *                back to the internal string maintained by this
+   *                object. Do not modify this string.
+   * @return        NS_OK on success
+   */
+  nsresult        GetValue(char** aStr);
 
   /**
    * Set the supplied key to have the supplied value. Add the key
@@ -116,8 +134,20 @@ public:
    */
   nsresult        Set(const char* aKey, const char* aVal);
 
-  nsresult        Get(const char* psKey, char **ppsVal );
+  /**
+   * Retrieve the value associated with the supplied key.
+   * @param aKey    the key
+   * @param aValue  the returned value associated with the key.
+   *                *aValue will be 0 if the key was not found
+   * @return        NS_OK on success.
+   */
+  nsresult        Get(const char* aKey, char **aVal );
 
+  /**
+   * Delete the key and value for the supplied key.
+   * @param aKey    the key
+   * @return        NS_OK on success.
+   */
   nsresult        Delete(const char* psKey);
 
 };

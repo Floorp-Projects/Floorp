@@ -47,6 +47,7 @@
 nsX400Parser::nsX400Parser()
 {
   Init();
+  msValue = "";
 }
 
 nsX400Parser::nsX400Parser(const JulianString& sValue)
@@ -81,6 +82,13 @@ nsresult nsX400Parser::Init()
   if (0 == mppVals || 0 == mppKeys)
     return 1;   /* XXX: memory allocation error */
 
+  return NS_OK;
+}
+
+nsresult nsX400Parser::GetValue(char** aStr)
+{
+  Assemble();
+  *aStr = msValue.GetBuffer();
   return NS_OK;
 }
 
@@ -210,6 +218,11 @@ nsresult nsX400Parser::Get(const char* aKey, char **ppsVal )
 
 }
 
+/**
+ * Destroy the strings associated with the entry at the supplied index.
+ * @param aIndex the index where we want to delete the entry
+ * @return       NS_OK on success
+ */
 nsresult nsX400Parser::DestroyEntry(PRInt32 i)
 {
   if (0 != mppKeys[i])
@@ -324,6 +337,11 @@ nsresult nsX400Parser::Parse()
   return NS_OK;
 }
 
+/**
+ * Assembles a new internal value string based on the contents of
+ * the keys and vals arrays.
+ * @return       NS_OK on success.
+ */
 nsresult nsX400Parser::Assemble()
 {
   msValue = "/";
