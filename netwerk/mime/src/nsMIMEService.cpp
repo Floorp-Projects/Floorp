@@ -291,6 +291,16 @@ nsMIMEService::InitFromHack() {
     if (NS_FAILED(rv)) return rv;
     rv = AppendExtension("image/tiff", "tif");
     if (NS_FAILED(rv)) return rv;
+
+    rv = AddMapping("application/postscript", "ps", "Postscript File", nsnull);
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension("application/postscript", "eps");
+    if (NS_FAILED(rv)) return rv;
+    rv = AppendExtension("application/postscript", "ai");
+    if (NS_FAILED(rv)) return rv;
+                 
+    rv = AddMapping("application/rtf", "rtf", "Rich Text File", nsnull);
+    if (NS_FAILED(rv)) return rv;
     
     return NS_OK;
 }
