@@ -792,7 +792,7 @@ il_gif_write(il_container *ic, const uint8 *buf, int32 len)
     /* If this assert fires, some upstream data provider ignored the
        zero return value from il_gif_write_ready() which says not to
        send any more data to this stream until the delay timeout fires. */
-    PR_ASSERT ((len == 0) || (gs->gathered < MAX_READ_AHEAD));
+  //  PR_ASSERT ((len == 0) || (gs->gathered < MAX_READ_AHEAD));
     if (!((len == 0) || (gs->gathered < MAX_READ_AHEAD)))
         return MK_INTERRUPTED;
     
