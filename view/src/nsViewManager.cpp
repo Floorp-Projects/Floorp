@@ -3528,7 +3528,8 @@ PRBool nsViewManager::CreateDisplayList(nsView *aView, PRBool aReparentedViewsPr
     } else {
       if (aView->IsZPlaceholderView()) {
         EnsureZTreeNodeCreated(aView, aResult);
-        mMapPlaceholderViewToZTreeNode.Put(new nsVoidKey(aView), aResult);
+        nsVoidKey key(aView);
+        mMapPlaceholderViewToZTreeNode.Put(&key, aResult);
       }
     }
   }
