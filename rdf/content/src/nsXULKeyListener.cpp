@@ -414,11 +414,9 @@ nsXULKeyListenerImpl::Init(
   // Set the default for the xul key modifier
 #ifdef XP_MAC
   mXULKeyModifier = xulKeyMeta;
-#else 
-  // Based off current UI newsgroup discussions, it looks like CTRL is
-  // the preferred default for UNIX. This will of course be configurable
-  // so that ALT can be chosen by those who favor it, but CTRL will be
-  // the default.
+#elif XP_UNIX
+  mXULKeyModifier = xulKeyAlt;
+#else
   mXULKeyModifier = xulKeyControl;
 #endif
   return NS_OK;

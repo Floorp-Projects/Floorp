@@ -215,6 +215,8 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
     // XXX Eventually pick up using CSS3 key-equivalent property or somesuch
 #ifdef XP_MAC
     aKeyEvent->GetMetaKey(&isModifierPresent);
+#elif XP_UNIX
+    aKeyEvent->GetAltKey(&isModifierPresent);
 #else
     aKeyEvent->GetCtrlKey(&isModifierPresent);
 #endif
