@@ -203,13 +203,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     nsString buffer;
     buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0"));
 
-    nsXPIDLCString encoding;
-    rv = mParser->GetEncoding(getter_Copies(encoding));
-    if (NS_SUCCEEDED(rv) && !encoding.IsEmpty()) {
-        buffer.Append(NS_LITERAL_STRING("\" encoding=\""));
-        buffer.AppendWithConversion(encoding);
-    }
-    buffer.Append(NS_LITERAL_STRING("\"?>\n") +
+    buffer.Append(NS_LITERAL_STRING("\" encoding=\"UTF-8") +
+                  NS_LITERAL_STRING("\"?>\n") +
                   NS_LITERAL_STRING("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.1//EN\" ") +
                   NS_LITERAL_STRING("\"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd\">\n"));
 
@@ -217,12 +212,25 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     // otherwise we end up linking to file:///foo/dirfile
 
     char* spec = nsCRT::strdup(titleUri.get());
-    nsUnescape(spec);
 
     buffer.Append(NS_LITERAL_STRING("<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>"));
 
     nsXPIDLString title;
-    nsAutoString uniSpec; uniSpec.AssignWithConversion(spec);
+    nsString uniSpec; 
+    nsXPIDLCString encoding;
+    rv = mParser->GetEncoding(getter_Copies(encoding));
+    if (NS_FAILED(rv)) return rv;
+
+    if (!mTextToSubURI) {
+        mTextToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    PRUnichar   *unEscapeSpec = nsnull;
+    rv = mTextToSubURI->UnEscapeAndConvert(encoding, spec, &unEscapeSpec);
+    if (NS_FAILED(rv)) return rv;
+    
+    uniSpec.Adopt(unEscapeSpec);
 
     const PRUnichar* formatTitle[] = {
         uniSpec.get()
@@ -249,11 +257,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
 
     buffer.Append(NS_LITERAL_STRING("</head>\n<body>\n<h1>"));
     
-    char* escaped = nsEscapeHTML(spec);
-    nsAutoString escapedSpec; escapedSpec.AssignWithConversion(escaped);
-    nsMemory::Free(escaped);
     const PRUnichar* formatHeading[] = {
-        escapedSpec.get()
+        uniSpec.get()
     };
 
     rv = mBundle->FormatStringFromName(NS_LITERAL_STRING("DirTitle").get(),
@@ -286,12 +291,8 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIInputStream> inputData;
-    rv = NS_NewStringInputStream(getter_AddRefs(inputData), buffer);
-    if (NS_FAILED(rv)) return rv;
+    rv = FormatInputStream(request, aContext, buffer);
 
-    rv = mListener->OnDataAvailable(request, aContext,
-                                    inputData, 0, buffer.Length());
     return rv;
 }
 
@@ -302,13 +303,7 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     nsString buffer;
     buffer.Assign(NS_LITERAL_STRING("</table><hr/></body></html>\n"));
 
-    nsCOMPtr<nsIInputStream> inputData;
-    
-    rv = NS_NewStringInputStream(getter_AddRefs(inputData), buffer);
-    if (NS_FAILED(rv)) return rv;
-    
-    rv = mListener->OnDataAvailable(request, aContext,
-                                    inputData, 0, buffer.Length());
+    rv = FormatInputStream(request, aContext, buffer);
     if (NS_FAILED(rv)) return rv;
 
     rv = mParser->OnStopRequest(request, aContext, aStatus);
@@ -317,6 +312,19 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
     mParser = 0;
     
     return mListener->OnStopRequest(request, aContext, aStatus);
+}
+
+nsresult
+nsIndexedToHTML::FormatInputStream(nsIRequest* aRequest, nsISupports *aContext, const nsAString &aBuffer) 
+{
+    nsresult rv = NS_OK;
+    NS_ConvertUCS2toUTF8 buffer(aBuffer);
+    nsCOMPtr<nsIInputStream> inputData;
+    rv = NS_NewCStringInputStream(getter_AddRefs(inputData), buffer);
+    if (NS_FAILED(rv)) return rv;
+    rv = mListener->OnDataAvailable(aRequest, aContext,
+                                    inputData, 0, buffer.Length());
+    return (rv);
 }
 
 NS_IMETHODIMP
@@ -421,21 +429,7 @@ nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
         mRowCount = 0;
     }
     
-    nsCOMPtr<nsIInputStream> inputData;
-
-    nsresult rv = NS_NewStringInputStream(getter_AddRefs(inputData),
-                                          pushBuffer);
-    
-    if (NS_FAILED(rv))
-        return rv;
-    
-    rv = mListener->OnDataAvailable(aRequest, 
-                                    aCtxt,
-                                    inputData, 
-                                    0, 
-                                    pushBuffer.Length());
-
-    return rv; 
+    return FormatInputStream(aRequest, aCtxt, pushBuffer);
 }
 
 void nsIndexedToHTML::FormatSizeString(PRUint32 inSize, nsString& outSizeString)
