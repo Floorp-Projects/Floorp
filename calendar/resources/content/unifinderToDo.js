@@ -22,6 +22,7 @@
  *                 Mike Potter <mikep@oeone.com>
  *                 Chris Charabaruk <coldacid@meldstar.com>
  *						 Colin Phillips <colinp@oeone.com>
+ *                 ArentJan Banck <ajbanck@planet.nl>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -74,7 +75,7 @@ var unifinderToDoDataSourceObserver =
 
    onModifyItem : function( calendarToDo, originalToDo )
    {
-      toDoUnifinderRefesh();
+      toDoUnifinderItemUpdate( calendarToDo );
    },
 
    onDeleteItem : function( calendarToDo )
@@ -141,6 +142,12 @@ function toDoUnifinderRefesh()
 
 function unifinderClickToDo( event )
 {
+   var listItemCheckbox = event.target.getElementsByTagName( "checkbox" )[0];
+   if ( event.clientX > listItemCheckbox.boxObject.x && event.clientX < listItemCheckbox.boxObject.x + listItemCheckbox.boxObject.width )
+   {
+      listItemCheckbox.checked = !listItemCheckbox.checked;
+      checkboxClick( event )
+   }
 }
 
 /**
@@ -157,11 +164,25 @@ function unifinderDoubleClickToDo( event )
 
 }
 
+/**
+*  Delete all ToDo items that are selected in the ToDo unifinder list
+*/
+
+function unifinderDeleteToDoCommand( DoNotConfirm )
+{
+   var unifinderTodoTree = document.getElementById( ToDoUnifinderTreeName );
+
+   for( var i = 0; i < unifinderTodoTree.selectedCount; i++ ) {
+      gICalLib.deleteTodo( unifinderTodoTree.getSelectedItem( i ).toDo.id );
+   }
+}
+
 function checkboxClick( event )
 {
-   var ThisToDo = event.currentTarget.parentNode.parentNode.toDo;
+   // var ThisToDo = event.currentTarget.parentNode.parentNode.toDo;
+   var ThisToDo = event.currentTarget.toDo;
    
-   if( event.currentTarget.checked == true )
+   if( event.target.getElementsByTagName( "checkbox" )[0].checked == true )
    {
       var completedTime = new Date();
       
@@ -180,45 +201,25 @@ function checkboxClick( event )
          ThisToDo.status = ThisToDo.ICAL_STATUS_INPROCESS;
    }
    gICalLib.modifyTodo( ThisToDo );
-
-   toDoUnifinderRefesh();
 }
 
 
 /**
-*  Redraw the categories unifinder tree
+*  Attach the calendarToDo event to the treeitem
 */
 
-function refreshToDoTree( eventArray )
-{
-   // get the old tree children item and remove it
-   
-   var oldTreeChildren = document.getElementById( ToDoUnifinderTreeName );
-
-   var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
-   
-   for( var i = 0; i < elementsToRemove.length; i++ )
+function setUnifinderToDoTreeItem( treeItem, calendarToDo )
    {
-      elementsToRemove[i].parentNode.removeChild( elementsToRemove[i] );
-   }
-
-   // add: tree item, row, cell, box and text items for every event
-   for( var index = 0; index < eventArray.length; ++index )
-   {
-      var calendarToDo = eventArray[ index ];
-      
-      // make the items
-      var oldTreeItems = document.getElementsByAttribute( "name", "sample-todo-listitem" );
-
-      var oldTreeItem = oldTreeItems[0];
-      
-      var treeItem = oldTreeItem.cloneNode( true );
-      
       treeItem.toDo = calendarToDo;
 
       var now = new Date();
       
       var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
+
+      treeItem.removeAttribute( "completed" );
+      treeItem.removeAttribute( "started" );
+      treeItem.removeAttribute( "overdue" );
+
 
       if( calendarToDo.start.getTime() <= thisMorning.getTime() )
       {
@@ -257,7 +258,61 @@ function refreshToDoTree( eventArray )
       treeItem.removeAttribute( "collapsed" );
 
       treeItem.setAttribute( "taskitem", "true" );
+}
+
+/**
+*  Redraw the categories unifinder tree
+*/
+
+function refreshToDoTree( eventArray )
+{
+   // get the old tree children item and remove it
+   
+   var oldTreeChildren = document.getElementById( ToDoUnifinderTreeName );
+
+   var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
+   
+   var oldSelectedIndex = oldTreeChildren.selectedIndex;
+   
+   for( var i = 0; i < elementsToRemove.length; i++ )
+   {
+      elementsToRemove[i].parentNode.removeChild( elementsToRemove[i] );
+   }
+
+   // add: tree item, row, cell, box and text items for every event
+   for( var index = 0; index < eventArray.length; ++index )
+   {
+      var calendarToDo = eventArray[ index ];
+      
+      // make the items
+      var oldTreeItems = document.getElementsByAttribute( "name", "sample-todo-listitem" );
+
+      var oldTreeItem = oldTreeItems[0];
+      
+      var treeItem = oldTreeItem.cloneNode( true );
+      
+      setUnifinderToDoTreeItem( treeItem, calendarToDo );
 
       oldTreeChildren.appendChild( treeItem );
    }  
+   oldTreeChildren.selectedIndex = oldSelectedIndex;
+}
+
+/**
+*  Redraw a single item of the ToDo unifinder tree
+*/
+
+function toDoUnifinderItemUpdate( calendarToDo )
+{
+   var oldTreeChildren = document.getElementById( ToDoUnifinderTreeName );
+
+   var elementsToRemove = document.getElementsByAttribute( "taskitem", "true" );
+
+   for( var i = 0; i < elementsToRemove.length; i++ )
+   {
+      if(elementsToRemove[i].toDo == calendarToDo)
+      {
+         setUnifinderToDoTreeItem( elementsToRemove[i], calendarToDo );
+      }
+   }
 }

@@ -1119,9 +1119,14 @@
    border                  : none;
 }
 
-.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
+.unifinder-tree-class:focus > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
 {
    background-color        : #d5e3f2; 
+}
+
+.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
+{
+   background-color        : -moz-Dialog; 
 }
 
 .unifinder-treecell-box-class

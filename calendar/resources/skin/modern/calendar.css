@@ -1083,10 +1083,16 @@
    border                  : none;
 }
 
-.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
+.unifinder-tree-class:focus > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
 {
    background-color        : #d5e3f2; 
 }
+
+.unifinder-tree-class > listitem[selected="true"] > listcell > .unifinder-treecell-box-class
+{
+   background-color        : -moz-Dialog; 
+}
+
 
 .unifinder-treecell-box-class
 {
@@ -1111,4 +1117,14 @@
 #unifinder-todo-listbox > listitem[started="true"] > listcell
 {
    color                   : green;
+}
+
+#unifinder-todo-listbox:focus > listitem[selected="true"] > listcell
+{
+   background-color        : #d5e3f2; 
+}
+
+#unifinder-todo-listbox > listitem[selected="true"] > listcell
+{
+   background-color        : -moz-Dialog; 
 }

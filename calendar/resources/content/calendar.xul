@@ -25,6 +25,7 @@
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 Karl Guertin <grayrest@grayrest.com> 
    -                 Dan Parent <danp@oeone.com> 
+   -                 ArentJan Banck <ajbanck@planet.nl> 
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -92,7 +93,7 @@
    <command id="select_all_command" oncommand="selectAllEvents()"/>
    
    <command id="new_todo_command" oncommand="newToDoCommand()"/>
-   <command id="delete_todo_command" oncommand="deleteToDoCommand( event )"/>
+   <command id="delete_todo_command" oncommand="unifinderDeleteToDoCommand()"/>
 
    <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
    <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
@@ -192,6 +193,10 @@
    <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
 </popup>
 
+<popup id="taskitem-context-menu">
+   <menuitem label="&calendar.context.deletetask.label;" accesskey="&calendar.context.deletetask.accesskey;" observes="delete_todo_command"/>
+</popup>
+
 <popup id="oe-date-picker-popup"  position="after_start" oncommand="gCalendarWindow.goToDay( date )" value=""/>
 
 <commandset id="commands"/>
@@ -266,9 +271,9 @@
                      <listcol flex="5"/>
                      <listcol flex="3"/>
                   </listcols>
-                  <listitem allowevents="true" onmouseover="changeToolTipTextForToDo( event )" collapsed="true" name="sample-todo-listitem" ondblclick="unifinderDoubleClickToDo( event )">
+                  <listitem onmouseover="changeToolTipTextForToDo( event )" collapsed="true" name="sample-todo-listitem" onclick="unifinderClickToDo( event )"  ondblclick="unifinderDoubleClickToDo( event )"  context="taskitem-context-menu"  >
                      <listcell name="checkbox-listcell">
-                        <checkbox name="firstcheckbox" oncommand="checkboxClick( event )"/>
+                        <checkbox name="firstcheckbox"/>
                      </listcell>
                      <listcell name="title-listcell" label=""/>
                      <listcell name="due-date-listcell" label=""/>

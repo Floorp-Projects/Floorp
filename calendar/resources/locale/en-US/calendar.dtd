@@ -21,6 +21,7 @@
    - Contributor(s): Garth Smedley <garths@oeone.com> 
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
+   -                 ArentJan Banck <ajbanck@planet.nl>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -208,6 +209,8 @@
 <!ENTITY calendar.context.modifyevent.label           "Edit Event">
 <!ENTITY calendar.context.modifyevent.accesskey       "e">
 <!ENTITY calendar.context.deleteevent.label           "Delete Event">
+<!ENTITY calendar.context.deletetask.accesskey       "l">
+<!ENTITY calendar.context.deletetask.label           "Delete Task">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
 <!ENTITY calendar.context.cutevent.label              "Cut">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
