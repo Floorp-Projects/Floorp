@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.29 $ $Date: 2002/04/15 15:22:11 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.30 $ $Date: 2002/04/18 17:52:55 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -124,6 +124,7 @@ struct cache_entry_str
     PRUint32 hits;
     PRTime lastHit;
     NSSArena *arena;
+    NSSUTF8 *nickname;
 };
 
 typedef struct cache_entry_str cache_entry;
@@ -139,6 +140,7 @@ new_cache_entry(NSSArena *arena, void *value, PRBool ownArena)
 	if (ownArena) {
 	    ce->arena = arena;
 	}
+	ce->nickname = NULL;
     }
     return ce;
 }
@@ -274,6 +276,7 @@ remove_subject_entry
   nssTDCertificateCache *cache,
   NSSCertificate *cert,
   nssList **subjectList,
+  NSSUTF8 **nickname,
   NSSArena **arena
 )
 {
@@ -287,6 +290,7 @@ remove_subject_entry
 	/* Remove the cert from the subject hash */
 	nssList_Remove(ce->entry.list, cert);
 	*subjectList = ce->entry.list;
+	*nickname = ce->nickname;
 	*arena = ce->arena;
 	nssrv = PR_SUCCESS;
 #ifdef DEBUG_CACHE
@@ -303,12 +307,11 @@ static PRStatus
 remove_nickname_entry
 (
   nssTDCertificateCache *cache,
-  NSSCertificate *cert,
+  NSSUTF8 *nickname,
   nssList *subjectList
 )
 {
     PRStatus nssrv;
-    NSSUTF8 *nickname = nssCertificate_GetNickname(cert, NULL);
     if (nickname) {
 	nssHash_Remove(cache->nickname, nickname);
 	nssrv = PR_SUCCESS;
@@ -373,6 +376,8 @@ nssTrustDomain_RemoveCertFromCache
     PRStatus nssrv;
     cache_entry *ce;
     NSSArena *arena;
+    NSSUTF8 *nickname;
+
 #ifdef DEBUG_CACHE
     log_cert_ref("attempt to remove cert", cert);
 #endif
@@ -392,13 +397,14 @@ nssTrustDomain_RemoveCertFromCache
     if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
-    nssrv = remove_subject_entry(td->cache, cert, &subjectList, &arena);
+    nssrv = remove_subject_entry(td->cache, cert, &subjectList, 
+							&nickname, &arena);
     if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
     if (nssList_Count(subjectList) == 0) {
 	PRStatus nssrv2;
-	nssrv = remove_nickname_entry(td->cache, cert, subjectList);
+	nssrv = remove_nickname_entry(td->cache, nickname, subjectList);
 	nssrv2 = remove_email_entry(td->cache, cert, subjectList);
 #ifndef NSS_3_4_CODE
 	/* XXX Again, 3.4 allows for certs w/o either nickname or email */
@@ -502,6 +508,7 @@ add_subject_entry
   NSSArena *arena,
   nssTDCertificateCache *cache, 
   NSSCertificate *cert,
+  NSSUTF8 *nickname,
   nssList **subjectList
 )
 {
@@ -528,6 +535,9 @@ add_subject_entry
 	ce = new_cache_entry(arena, (void *)list, PR_TRUE);
 	if (!ce) {
 	    return PR_FAILURE;
+	}
+	if (nickname) {
+	    ce->nickname = nssUTF8_Duplicate(nickname, arena);
 	}
 	nssList_SetSortFunction(list, subject_list_sort);
 	/* Add the cert entry to this list of subjects */
@@ -557,12 +567,11 @@ add_nickname_entry
 (
   NSSArena *arena,
   nssTDCertificateCache *cache, 
-  NSSCertificate *cert,
+  NSSUTF8 *certNickname,
   nssList *subjectList
 )
 {
     PRStatus nssrv = PR_SUCCESS;
-    NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
     cache_entry *ce;
     ce = (cache_entry *)nssHash_Lookup(cache->nickname, certNickname);
     if (ce) {
@@ -662,11 +671,13 @@ add_cert_to_cache
 )
 {
     NSSArena *arena = NULL;
-    nssList *subjectList;
+    nssList *subjectList = NULL;
     PRStatus nssrv;
     PRUint32 added = 0;
     cache_entry *ce;
     NSSCertificate *rvCert = NULL;
+    NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
+
     PZ_Lock(td->cache->lock);
     /* If it exists in the issuer/serial hash, it's already in all */
     ce = (cache_entry *)nssHash_Lookup(td->cache->issuerAndSN, cert);
@@ -696,7 +707,8 @@ add_cert_to_cache
 	goto loser;
     }
     /* create a new subject list for this cert, or add to existing */
-    nssrv = add_subject_entry(arena, td->cache, cert, &subjectList);
+    nssrv = add_subject_entry(arena, td->cache, cert, 
+						certNickname, &subjectList);
     if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
@@ -704,9 +716,9 @@ add_cert_to_cache
     /* If a new subject entry was created, also need nickname and/or email */
     if (subjectList != NULL) {
 	PRBool handle = PR_FALSE;
-	NSSUTF8 *certNickname = nssCertificate_GetNickname(cert, NULL);
 	if (certNickname) {
-	    nssrv = add_nickname_entry(arena, td->cache, cert, subjectList);
+	    nssrv = add_nickname_entry(arena, td->cache, 
+						certNickname, subjectList);
 	    if (nssrv != PR_SUCCESS) {
 		goto loser;
 	    }
@@ -743,10 +755,11 @@ loser:
 	(void)remove_issuer_and_serial_entry(td->cache, cert);
     }
     if (added >= 2) {
-	(void)remove_subject_entry(td->cache, cert, &subjectList, &arena);
+	(void)remove_subject_entry(td->cache, cert, &subjectList, 
+						&certNickname, &arena);
     }
     if (added == 3 || added == 5) {
-	(void)remove_nickname_entry(td->cache, cert, subjectList);
+	(void)remove_nickname_entry(td->cache, certNickname, subjectList);
     }
     if (added >= 4) {
 	(void)remove_email_entry(td->cache, cert, subjectList);
