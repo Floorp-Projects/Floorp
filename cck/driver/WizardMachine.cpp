@@ -458,11 +458,7 @@ NODE* CWizardMachineApp::CreateNode(NODE *parentNode, CString iniFile)
 				}
 				else
 				{
-					BOOL readValue = FALSE;
-					if (widgetEntry->value == "")
-					{
-						readValue = TRUE;
-					}
+					BOOL readValue = (widgetEntry->value == "");
 					BuildWidget(widgetEntry, iniSection, iniFile, NewNode->pageBaseIndex, readValue);
 						
 					widgetEntry->cached = FALSE;
@@ -1412,7 +1408,7 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 
 		if (action == "GenerateDirList") 
 		{
-		    if (fileList.IsDirectory())  // skip if this is a dir
+		    if (fileList.IsDirectory())  // skip if this is not a dir
 		    {
 				CString tmpFile = fileList.GetFileName();
 				if (!(tmpFile == "." || tmpFile == "..")) {
@@ -1432,6 +1428,15 @@ void CWizardMachineApp::GenerateList(CString action, WIDGET* targetWidget, CStri
 	}
 
 	fileList.Close();
+
+	if(curWidget->type == "ListBox")
+	{
+		((CListBox*)curWidget->control)->SetCurSel(0);
+	}
+	else if(curWidget->type == "ComboBox")
+	{
+		((CComboBox*)curWidget->control)->SetCurSel(0);
+	}
 }
 
 void CWizardMachineApp::HelpWiz()
