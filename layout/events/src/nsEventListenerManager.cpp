@@ -30,6 +30,8 @@
 #include "nsIDOMDragListener.h"
 #include "nsIEventStateManager.h"
 #include "nsIPrivateDOMEvent.h"
+#include "nsIScriptObjectOwner.h"
+#include "nsIScriptEventListener.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
@@ -40,6 +42,7 @@ static NS_DEFINE_IID(kIDOMFocusListenerIID, NS_IDOMFOCUSLISTENER_IID);
 static NS_DEFINE_IID(kIDOMLoadListenerIID, NS_IDOMLOADLISTENER_IID);
 static NS_DEFINE_IID(kIDOMDragListenerIID, NS_IDOMDRAGLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
+static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 
 nsEventListenerManager::nsEventListenerManager() 
 {
@@ -151,6 +154,72 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
   NS_ADDREF(aListener);
 
   return NS_OK;
+}
+
+const char *mEventArgv[] = {"event"};
+
+nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID)
+{
+  nsVoidArray *mListeners;
+
+  if (NS_OK == GetEventListeners(&mListeners, aIID)) {
+    //Run through the listeners for this IID and see if a script listener is registered
+    //If so, we're set.
+    if (nsnull != mListeners) {
+      nsIScriptEventListener *mScriptListener;
+      nsIDOMEventListener *mEventListener;
+      for (int i=0; i<mListeners->Count(); i++) {
+        mEventListener = (nsIDOMEventListener*)mListeners->ElementAt(i);
+        if (NS_OK == mEventListener->QueryInterface(kIScriptEventListenerIID, (void**)&mScriptListener)) {
+          NS_RELEASE(mScriptListener);
+          return NS_OK;
+        }
+      }
+    }
+    //If we didn't find a script listener or no listeners existed create and add a new one.
+    nsIDOMEventListener *mScriptListener;
+    if (NS_OK == NS_NewScriptEventListener(&mScriptListener, aContext, aObject)) {
+      AddEventListener(mScriptListener, aIID);
+      NS_RELEASE(mScriptListener);
+      return NS_OK;
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
+                                nsIAtom *aName, const nsString& aFunc, REFNSIID aIID)
+{
+  JSObject *mScriptObject;
+  
+  if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
+    JSContext* mJSContext = (JSContext*)aContext->GetNativeContext();
+    nsString mName, mLowerName;
+    char* mCharName;
+
+    aName->ToString(mName);
+    mName.ToLowerCase(mLowerName);
+    mCharName = mLowerName.ToNewCString();
+
+    if (nsnull != mCharName) {
+      JS_CompileUCFunction(mJSContext, mScriptObject, mCharName,
+		           1, mEventArgv, (jschar*)aFunc.GetUnicode(), aFunc.Length(),
+		           nsnull, 0);
+      delete mCharName;
+      return SetJSEventListener(aContext, mScriptObject, aIID);
+    }
+  }
+  return NS_ERROR_FAILURE;
+}
+
+nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
+                                     REFNSIID aIID)
+{
+  JSObject *mScriptObject;
+  if (NS_OK == aScriptObjectOwner->GetScriptObject(aContext, (void**)&mScriptObject)) {
+    return SetJSEventListener(aContext, mScriptObject, aIID);
+  }
+  return NS_ERROR_FAILURE;
 }
 
 /**

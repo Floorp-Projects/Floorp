@@ -4,3 +4,4 @@
 nsEventListenerManager.h
 nsEventStateManager.h
 nsDOMEvent.h
+nsDOMEventsIIDs.h

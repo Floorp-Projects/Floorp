@@ -31,12 +31,11 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptEventListener.h"
 #include "nsDOMEvent.h"
+#include "nsDOMEventsIIDs.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIEventStateManager.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMMouseMotionListener.h"
 #include "nsContentList.h"
+#include "nsIDOMEventListener.h"
 
 #include "nsCSSPropIDs.h"
 #include "nsCSSProps.h"
@@ -63,9 +62,6 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventCapturerIID, NS_IDOMEVENTCAPTURER_IID);
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
 static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIPostDataIID, NS_IPOSTDATA_IID);

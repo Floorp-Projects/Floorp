@@ -36,9 +36,8 @@
 #include "nsISizeOfHandler.h"
 #include "nsIEventListenerManager.h"
 #include "nsIScriptEventListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMMouseMotionListener.h"
+#include "nsIScriptContextOwner.h"
+#include "nsDOMEventsIIDs.h"
 #include "jsapi.h"
 
 #include "nsXIFConverter.h"
@@ -46,10 +45,8 @@
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
+static NS_DEFINE_IID(kIScriptObjectOwner, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMMouseMotionListenerIID, NS_IDOMMOUSEMOTIONLISTENER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 
 
@@ -244,8 +241,49 @@ void nsHTMLTagContent::ToHTMLString(nsString& aBuf) const
   aBuf.Append('>');
 }
 
+void nsHTMLTagContent::SetDocument(nsIDocument* aDocument)
+{
+  nsHTMLContent::SetDocument(aDocument);
 
-
+  // Once the element is added to the doc tree we need to check if event handler
+  // were registered on it.  Unfortunately, this means doing a GetAttribute for
+  // every type of handler.
+  if (nsnull != mAttributes) {
+    nsHTMLValue mValue;
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onclick, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onclick, mValue, kIDOMMouseListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::ondblclick, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onclick, mValue, kIDOMMouseListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmousedown, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onmousedown, mValue, kIDOMMouseListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseup, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onmouseup, mValue, kIDOMMouseListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseover, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onmouseover, mValue, kIDOMMouseListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmouseout, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onmouseout, mValue, kIDOMMouseListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeydown, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onkeydown, mValue, kIDOMKeyListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeyup, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onkeyup, mValue, kIDOMKeyListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onkeypress, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onkeypress, mValue, kIDOMKeyListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onmousemove, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onmousemove, mValue, kIDOMMouseMotionListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onload, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onload, mValue, kIDOMLoadListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onunload, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onunload, mValue, kIDOMLoadListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onabort, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onabort, mValue, kIDOMLoadListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onerror, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onerror, mValue, kIDOMLoadListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onfocus, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onfocus, mValue, kIDOMFocusListenerIID); 
+    if (eContentAttr_HasValue == mAttributes->GetAttribute(nsHTMLAtoms::onblur, mValue))
+      AddScriptEventListener(nsHTMLAtoms::onblur, mValue, kIDOMFocusListenerIID); 
+  }
+}
 
 void nsHTMLTagContent::SetAttribute(const nsString& aName,
                                     const nsString& aValue)
@@ -337,6 +375,28 @@ nsHTMLTagContent::AttributeToString(nsIAtom* aAttribute,
   }
   aResult.Truncate();
   return eContentAttr_NotThere;
+}
+
+nsresult
+nsHTMLTagContent::AddScriptEventListener(nsIAtom* aAttribute, nsHTMLValue& aValue, REFNSIID aIID)
+{
+  nsresult mRet = NS_OK;  
+  nsIScriptContext* mContext;
+  nsIScriptContextOwner* mOwner;
+
+  if (nsnull != mDocument) {
+    mOwner = mDocument->GetScriptContextOwner();
+    if (NS_OK == mOwner->GetScriptContext(&mContext)) {
+      if (nsnull != mListenerManager || NS_OK == GetListenerManager(&mListenerManager)) {
+        nsString mValue;
+        aValue.GetStringValue(mValue);
+        mRet = mListenerManager->AddScriptEventListener(mContext, this, aAttribute, mValue, aIID); 
+      }
+      NS_RELEASE(mContext);
+    }
+    NS_RELEASE(mOwner);
+  }
+  return mRet;
 }
 
 // Note: Subclasses should override to parse the value string; in
@@ -524,18 +584,27 @@ PRBool    nsHTMLTagContent::SetProperty(JSContext *aContext, jsval aID, jsval *a
     if (mPrefix == "on") {
       if (mPropName == "onmousedown" || mPropName == "onmouseup" || mPropName ==  "onclick" ||
          mPropName == "onmouseover" || mPropName == "onmouseout") {
-        if (NS_OK != SetScriptEventListener(aContext, kIDOMMouseListenerIID)) {
-          return PR_FALSE;
+        if (nsnull != mListenerManager || NS_OK == GetListenerManager(&mListenerManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mListenerManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseListenerIID)) {
+            return PR_FALSE;
+          }
         }
       }
       else if (mPropName == "onkeydown" || mPropName == "onkeyup" || mPropName == "onkeypress" ) {
-        if (NS_OK != SetScriptEventListener(aContext, kIDOMKeyListenerIID)) {
-          return PR_FALSE;
+        if (nsnull != mListenerManager || NS_OK == GetListenerManager(&mListenerManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mListenerManager->RegisterScriptEventListener(mScriptCX, this, kIDOMKeyListenerIID)) {
+            return PR_FALSE;
+          }
         }
       }
       else if (mPropName == "onmousemove" ) {
-        if (NS_OK != SetScriptEventListener(aContext, kIDOMMouseMotionListenerIID)) {
-          return PR_FALSE;
+        if (nsnull != mListenerManager || NS_OK == GetListenerManager(&mListenerManager)) {
+          nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
+          if (NS_OK != mListenerManager->RegisterScriptEventListener(mScriptCX, this, kIDOMMouseMotionListenerIID)) {
+            return PR_FALSE;
+          }
         }
       }
     }
@@ -560,49 +629,6 @@ PRBool    nsHTMLTagContent::Convert(JSContext *aContext, jsval aID)
 
 void      nsHTMLTagContent::Finalize(JSContext *aContext)
 {
-}
-
-nsresult nsHTMLTagContent::SetScriptEventListener(JSContext *aContext, REFNSIID aListenerTypeIID)
-{
-  //First get the mScriptObject or make one if we don't have one.
-  nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
-
-  if (nsnull == mScriptObject) {
-    NS_NewScriptElement(mScriptCX, this, mParent, (void**)&mScriptObject);
-  }
-
-  if (nsnull != mScriptObject) {
-    nsIEventListenerManager *mManager = nsnull;
-    nsVoidArray *mListeners;
-
-    if (NS_OK == GetListenerManager(&mManager) && 
-        NS_OK == mManager->GetEventListeners(&mListeners, aListenerTypeIID)) {
-      //Run through the listeners for this IID and see if a script listener is registered
-      //If so, we're set.
-      if (nsnull != mListeners) {
-        nsIScriptEventListener *mScriptListener;
-        nsIDOMEventListener *mEventListener;
-        for (int i=0; i<mListeners->Count(); i++) {
-          mEventListener = (nsIDOMEventListener*)mListeners->ElementAt(i);
-          if (NS_OK == mEventListener->QueryInterface(kIScriptEventListenerIID, (void**)&mScriptListener)) {
-            NS_RELEASE(mScriptListener);
-            NS_RELEASE(mManager);
-            return NS_OK;
-          }
-        }
-      }
-      //If we didn't find a script listener or no listeners existed create and add a new one.
-      nsIDOMEventListener *mScriptListener;
-      if (NS_OK == NS_NewScriptEventListener(&mScriptListener, mScriptCX, mScriptObject)) {
-        mManager->AddEventListener(mScriptListener, aListenerTypeIID);
-        NS_RELEASE(mScriptListener);
-        NS_RELEASE(mManager);
-        return NS_OK;
-      }
-    }
-    NS_IF_RELEASE(mManager);
-  }
-  return NS_ERROR_FAILURE;
 }
 
 //
