@@ -156,7 +156,7 @@ nsWidget::~nsWidget()
 // windows, and destroy the appropriate children. 
 // KenF
 void
-nsWidget::DestroyNativeChildren()
+nsWidget::DestroyNativeChildren(Display *aDisplay, Window aWindow)
 {
   Window       root_return;
   Window       parent_return;
@@ -164,7 +164,7 @@ nsWidget::DestroyNativeChildren()
   unsigned int nchildren_return = 0;
   unsigned int i = 0;
   
-  XQueryTree(mDisplay, mBaseWindow, &root_return, &parent_return,
+  XQueryTree(aDisplay, aWindow, &root_return, &parent_return,
              &children_return, &nchildren_return);
   // walk the list of children
   for (i=0; i < nchildren_return; i++) {
@@ -182,10 +182,12 @@ nsWidget::DestroyNativeChildren()
 void
 nsWidget::DestroyNative()
 {
+  NS_ASSERTION(mBaseWindow, "no native window");
+
   // We have to destroy the children ourselves before we call XDestroyWindow
   // because otherwise XDestroyWindow will destroy the windows and leave us
   // with dangling references.
-  DestroyNativeChildren();
+  DestroyNativeChildren(mDisplay, mBaseWindow);
 
   // This is handled in nsDrawingSurfaceXlib for now
 #if 0
@@ -193,10 +195,8 @@ nsWidget::DestroyNative()
     XFreeGC(mDisplay, mGC);
 #endif
 
-  if (mBaseWindow) {
-    XDestroyWindow(mDisplay, mBaseWindow);
-    DeleteWindowCallback(mBaseWindow);
-  }
+  XDestroyWindow(mDisplay, mBaseWindow);
+  DeleteWindowCallback(mBaseWindow);
 }
 
 // Stub in nsWidget, real in nsWindow. KenF
