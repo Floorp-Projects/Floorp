@@ -53,6 +53,7 @@
 #include "nsIPrompt.h"
 #include "nsIObserverService.h"
 #include "nsScriptNameSpaceManager.h"
+#include "nsIThread.h"
 
 #ifdef MOZ_LOGGING
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
@@ -1483,8 +1484,30 @@ nsJSEnvironment::nsJSEnvironment()
 
   gDOMThread = PR_GetCurrentThread();
 
+#ifdef DEBUG
+  // Let's make sure that our main thread is the same as the xpcom main thread.
+  {
+    nsCOMPtr<nsIThread> t;
+    nsresult rv;
+    PRThread* mainThread;
+    rv = nsIThread::GetMainThread(getter_AddRefs(t));
+    NS_ASSERTION(NS_SUCCEEDED(rv) && t, "bad");
+    rv = t->GetPRThread(&mainThread);
+    NS_ASSERTION(NS_SUCCEEDED(rv) && mainThread == gDOMThread, "bad");
+  }
+#endif
+
   NS_ASSERTION(!gOldJSGCCallback, "nsJSEnvironment created more than once");
   gOldJSGCCallback = ::JS_SetGCCallbackRT(mRuntime, DOMGCCallback);
+
+  // Set these global xpconnect options...
+  NS_WITH_SERVICE(nsIXPConnect, xpc, nsIXPConnect::GetCID(), &rv);
+  if (NS_SUCCEEDED(rv)) {
+    xpc->SetCollectGarbageOnMainThreadOnly(PR_TRUE); 
+    xpc->SetDeferReleasesUntilAfterGarbageCollection(PR_TRUE); 
+  } else {
+    NS_WARNING("Failed to get XPConnect service!");
+  }
 
   // Initialize LiveConnect.  XXXbe use contractid rather than GetCID
   NS_WITH_SERVICE(nsILiveConnectManager, manager,
