@@ -190,13 +190,15 @@ void GC_trace_object(ptr_t p)
 		p = (ptr_t) *wp++;
 		GC_err_printf1("\t0x%08lX\n", p);
 		if (IS_PLAUSIBLE_POINTER(p)) {
-		    oh* header = (oh *)GC_base(p);
-		    if (header && !NEXT_WORD(header)) {
-			NEXT_OBJECT(tail) = header;
-			tail = header;
-			NEXT_WORD(tail) = 1;
-		    }
-		}
+                    oh* header = (oh *)GC_base(p);
+                    if (header && GC_has_debug_info(header)) {
+                        if(NEXT_WORD(header) == 0) {
+                            NEXT_OBJECT(tail) = header;
+                            tail = header;
+                            NEXT_WORD(tail) = 1;
+                        }
+                    }
+                }
 	    }
 	    PRINT_CALL_CHAIN(scan);
         
