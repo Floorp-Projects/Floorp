@@ -1732,14 +1732,10 @@ NS_IMETHODIMP  nsImapIncomingServer::FolderVerifiedOnline(const char *folderName
 NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 {
 	nsresult rv = NS_ERROR_FAILURE;
-	// first, we need some indication of whether this is the subscribe UI running or not.
-	// The subscribe UI doesn't want to delete non-verified folders, or go through the
-	// extra list process. I'll leave that as an exercise for Seth for now. I think 
-	// we'll probably need to add some state to the imap url to indicate whether the
-	// subscribe UI started the url, and need to pass that through to discovery done.
-
 //	m_haveDiscoveredAllFolders = PR_TRUE;
 
+  if (mDoingSubscribeDialog)
+    return NS_OK;
   nsCOMPtr<nsIFolder> rootFolder;
   rv = GetRootFolder(getter_AddRefs(rootFolder));
   if (NS_SUCCEEDED(rv) && rootFolder)
@@ -1821,77 +1817,6 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
 		}
 	}
 
-#if 0
-	if (currentContext->imapURLPane && (currentContext->imapURLPane->GetPaneType() == MSG_SUBSCRIBEPANE))
-	{
-		// Finished discovering folders for the subscribe pane.
-		((MSG_SubscribePane *)(currentContext->imapURLPane))->ReportIMAPFolderDiscoveryFinished();
-	}
-	else
-	{
-		// only do this if we're discovering folders for real (i.e. not subscribe UI)
-
-  
-		if (URL_s && URL_s->msg_pane && !URL_s->msg_pane->GetPreImapFolderVerifyUrlExitFunction())
-		{
-    		URL_s->msg_pane->SetPreImapFolderVerifyUrlExitFunction(URL_s->pre_exit_fn);
-    		URL_s->pre_exit_fn = DeleteNonVerifiedExitFunction;
-		}
-
-	    PR_ASSERT(currentContext->imapURLPane);
-
-		// Go through folders and find if there are still any that are left unverified.
-		// If so, manually LIST them to see if we can find out any info about them.
-		char *hostName = NET_ParseURL(URL_s->address, GET_HOST_PART);
-		if (hostName && currentContext->mailMaster && currentContext->imapURLPane)
-		{
-			MSG_FolderInfoContainer *hostContainerInfo = currentContext->mailMaster->GetImapMailFolderTreeForHost(hostName);
-			MSG_IMAPFolderInfoContainer *hostInfo = hostContainerInfo ? hostContainerInfo->GetIMAPFolderInfoContainer() : (MSG_IMAPFolderInfoContainer *)NULL;
-			if (hostInfo)
-			{
-				// for each folder
-
-				int32 numberOfUnverifiedFolders = hostInfo->GetUnverifiedFolders(NULL, 0);
-				if (numberOfUnverifiedFolders > 0)
-				{
-					MSG_IMAPFolderInfoMail **folderList = (MSG_IMAPFolderInfoMail **)PR_Malloc(sizeof(MSG_IMAPFolderInfoMail*) * numberOfUnverifiedFolders);
-					if (folderList)
-					{
-						int32 numUsed = hostInfo->GetUnverifiedFolders(folderList, numberOfUnverifiedFolders);
-						for (int32 k = 0; k < numUsed; k++)
-						{
-							MSG_IMAPFolderInfoMail *currentFolder = folderList[k];
-							if (currentFolder->GetExplicitlyVerify() ||
-								((currentFolder->GetNumSubFolders() > 0) && !NoDescendantsAreVerified(currentFolder)))
-							{
-								// If there are no subfolders and this is unverified, we don't want to run
-								// this url.  That is, we want to undiscover the folder.
-								// If there are subfolders and no descendants are verified, we want to 
-								// undiscover all of the folders.
-								// Only if there are subfolders and at least one of them is verified do we want
-								// to refresh that folder's flags, because it won't be going away.
-								currentFolder->SetExplicitlyVerify(PR_FALSE);
-								char *url = CreateIMAPListFolderURL(hostName, currentFolder->GetOnlineName(), currentFolder->GetOnlineHierarchySeparator());
-								if (url)
-								{
-									MSG_UrlQueue::AddUrlToPane(url, NULL, currentContext->imapURLPane);
-									XP_FREE(url);
-								}
-							}
-						}
-						XP_FREE(folderList);
-					}
-				}
-			}
-			XP_FREE(hostName);
-		}
-		else
-		{
-			PR_ASSERT(PR_FALSE);
-		}
-	}
-
-#endif
 	return rv;
 }
 
