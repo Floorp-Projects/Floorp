@@ -670,7 +670,7 @@ nsDiskCacheDevice::BindEntry(nsCacheEntry * newEntry)
         NS_ASSERTION(oldDiskEntry, "nsDiskCacheDevice::BindEntry");
         if (oldDiskEntry) {
             newDiskEntry->setGeneration(oldDiskEntry->getGeneration() + 1);
-            PR_APPEND_LINK(oldDiskEntry, newDiskEntry);
+            PR_APPEND_LINK(newDiskEntry, oldDiskEntry);
         }
                 
         // XXX Whom do we tell about this impending doom?
