@@ -219,7 +219,7 @@ NS_METHOD nsMenu::SetLabel(const nsString &aText)
     if(mDOMElement) {
       nsString menuIDstring;
       mDOMElement->GetAttribute(nsAutoString("id"), menuIDstring);
-      if(menuIDstring == "menu_Help") {
+      if(menuIDstring.Equals("menu_Help")) {
       mIsHelpMenu = PR_TRUE;
       ::HMGetHelpMenuHandle(&mMacMenuHandle);
       mMacMenuID = kHMHelpMenuID;
@@ -316,7 +316,7 @@ NS_METHOD nsMenu::AddMenuItem(nsIMenuItem * aMenuItem)
 	  // I want to be internationalized too!
 	  nsString keyEquivalent = " ";
 	  aMenuItem->GetShortcutChar(keyEquivalent);
-	  if(keyEquivalent != " ") {
+	  if(!keyEquivalent.Equals(" ")) {
 	    keyEquivalent.ToUpperCase();
 	    char keyStr[2];
 	    keyEquivalent.ToCString(keyStr, sizeof(keyStr));
@@ -1268,40 +1268,40 @@ void nsMenu::LoadMenuItem(
 	    
       nsAutoString xulkey;
       keyElement->GetAttribute("xulkey", xulkey);
-      if (xulkey == "true")
+      if (xulkey.Equals("true"))
         modifiers |= knsMenuItemCommandModifier;
 
-		if(keyChar != " ") 
+		if(!keyChar.Equals(" ")) 
 	      pnsMenuItem->SetShortcutChar(keyChar);
 	      
-		if(shiftValue == "true") 
+		if(shiftValue.Equals("true")) 
 		  modifiers |= knsMenuItemShiftModifier;
 	    
-	    if(altValue == "true")
+	    if(altValue.Equals("true"))
 	      modifiers |= knsMenuItemAltModifier;
 	    
-	    if(commandValue == "true")
+	    if(commandValue.Equals("true"))
 	      modifiers |= knsMenuItemCommandModifier;
 
-		if(controlValue == "true")
+		if(controlValue.Equals("true"))
 	      modifiers |= knsMenuItemControlModifier;
 	      
         pnsMenuItem->SetModifiers(modifiers);
     }
 
-	if(disabled == NS_STRING_TRUE)
+	if(disabled.Equals(NS_STRING_TRUE))
       pnsMenuItem->SetEnabled(PR_FALSE);
     else
       pnsMenuItem->SetEnabled(PR_TRUE);
 
-	if(checked == NS_STRING_TRUE)
+	if(checked.Equals(NS_STRING_TRUE))
       pnsMenuItem->SetChecked(PR_TRUE);
     else
       pnsMenuItem->SetChecked(PR_FALSE);
       
-    if(type == "checkbox")
+    if(type.Equals("checkbox"))
       pnsMenuItem->SetMenuItemType(nsIMenuItem::eCheckbox);
-    else if ( type == "radio" )
+    else if ( type.Equals("radio") )
       pnsMenuItem->SetMenuItemType(nsIMenuItem::eRadio);
       
 	nsISupports * supports = nsnull;
@@ -1338,7 +1338,7 @@ void nsMenu::LoadSubMenu(
     // set if it's enabled or disabled
     nsAutoString disabled;
     menuElement->GetAttribute(nsAutoString("disabled"), disabled);
-    if ( disabled == "true" )
+    if ( disabled.Equals("true") )
       pnsMenu->SetEnabled ( PR_FALSE );
     else
       pnsMenu->SetEnabled ( PR_TRUE );
@@ -1452,7 +1452,7 @@ nsMenu::AttributeChanged(
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aContent));
         nsString valueString;
         element->GetAttribute("disabled", valueString);
-        if(valueString == "true")
+        if(valueString.Equals("true"))
           SetEnabled(PR_FALSE);
         else
           SetEnabled(PR_TRUE);

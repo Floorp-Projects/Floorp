@@ -889,7 +889,7 @@ static PRBool debug_GetCachedBoolPref(const char * aPrefName)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-	  if (nsAutoString(debug_PrefValues[i].name) == aPrefName)
+	  if (nsAutoString(debug_PrefValues[i].name).Equals(aPrefName))
 	  {
 		  return debug_PrefValues[i].value;
 	  }
@@ -904,7 +904,7 @@ static void debug_SetCachedBoolPref(const char * aPrefName,PRBool aValue)
 
   for (PRUint32 i = 0; i < debug_NumPrefValues; i++)
   {
-	  if (nsAutoString(debug_PrefValues[i].name) == aPrefName)
+	  if (nsAutoString(debug_PrefValues[i].name).Equals(aPrefName))
 	  {
 		  debug_PrefValues[i].value = aValue;
 

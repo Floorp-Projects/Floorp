@@ -289,7 +289,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
                   
                   nsString menuIDstring;
                   menuElement->GetAttribute(nsAutoString("id"), menuIDstring);
-                  if(menuIDstring == "menu_Help") {
+                  if(menuIDstring.Equals("menu_Help")) {
                     nsMenuEvent event;
                     MenuHandle handle;
 #ifndef RHAPSODY
