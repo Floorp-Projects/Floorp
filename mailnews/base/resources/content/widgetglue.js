@@ -639,11 +639,22 @@ function MsgEmptyTrash()
             folder = folderList[0];
             if (folder)
 			{
-                messenger.EmptyTrash(tree.database, folder);
+                var trashUri = GetSelectTrashUri(folder);
+                if (trashUri)
+                {
+                    var trashElement = document.getElementById(trashUri);
+                    if (trashElement)
+                    {
+                        dump ('found trash folder\n');
+                        trashElement.setAttribute('open','');
+                    }
+                }
 				if(IsSpecialFolderSelected('Trash'))
 				{
-					RefreshThreadTreeView()
+                    tree.clearItemSelection();
+					RefreshThreadTreeView();
 				}
+                messenger.EmptyTrash(tree.database, folder);
 			}
         }
     }

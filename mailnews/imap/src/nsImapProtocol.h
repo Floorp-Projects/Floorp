@@ -115,7 +115,10 @@ public:
     // Get last active time stamp
     NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
 
-	NS_IMETHOD PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted);
+	NS_IMETHOD PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool
+                                      *interrupted);
+    NS_IMETHOD GetSelectedMailboxName(char ** folderName);
+    NS_IMETHOD ResetToAuthenticatedState();
 	////////////////////////////////////////////////////////////////////////////////////////
 	// End of nsIStreamListenerSupport
 	////////////////////////////////////////////////////////////////////////////////////////

@@ -743,6 +743,7 @@ void nsImapServerResponseParser::mailbox_data()
 void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 {
 	mailbox_spec *boxSpec = (mailbox_spec *)PR_CALLOC(sizeof(mailbox_spec));
+    PRBool needsToFreeBoxSpec = PR_TRUE;
 	if (!boxSpec)
 		HandleMemoryFailure();
 	else
@@ -788,13 +789,21 @@ void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 				boxSpec->hierarchySeparator = kOnlineHierarchySeparatorNil;
 			fNextToken = GetNextToken();	
 			if (ContinueParse())
+            {
+                // nsImapProtocol::DiscoverMailboxSpec() eventually frees the
+                // boxSpec
+                needsToFreeBoxSpec = PR_FALSE;
 				mailbox(boxSpec);
+            }
 		}
 	}
-
-	nsCRT::free(boxSpec->hostName);
-	PR_FREEIF(boxSpec->allocatedPathName);
-	PR_FREEIF(boxSpec); // mscott - do we have any fields we need to release?
+    if (needsToFreeBoxSpec)
+    {
+        nsCRT::free(boxSpec->hostName);
+        PR_FREEIF(boxSpec->allocatedPathName);
+        PR_FREEIF(boxSpec); // mscott - do we have any fields we need to
+                            // release?
+    }
 }
 
 /* mailbox         ::= "INBOX" / astring

@@ -773,9 +773,13 @@ nsImapService::DeleteFolder(nsIEventQueue* eventQueue,
                 urlSpec.Append((const char *) folderName);
                 rv = uri->SetSpec((char*) urlSpec.GetBuffer());
                 if (NS_SUCCEEDED(rv))
+                {
+                    rv = ResetImapConnection(imapUrl, 
+                                             (const char*) folderName);
                     rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
                                                          nsnull,
                                                          url);
+                }
             }
         }
     }
@@ -1367,6 +1371,25 @@ nsImapService::AppendMessageFromFile(nsIEventQueue* aClientEventQueue,
     return rv;
 }
 
+nsresult 
+nsImapService::ResetImapConnection(nsIImapUrl* aImapUrl, 
+                                   const char *folderName)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIMsgIncomingServer> aMsgIncomingServer;
+    nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = msgUrl->GetServer(getter_AddRefs(aMsgIncomingServer));
+    if (NS_SUCCEEDED(rv) && aMsgIncomingServer)
+    {
+        nsCOMPtr<nsIImapIncomingServer> aImapServer =
+            do_QueryInterface(aMsgIncomingServer, &rv);
+        if (NS_SUCCEEDED(rv) && aImapServer)
+            rv = aImapServer->ResetConnection(folderName);
+    }
+    return rv;
+}
+
 nsresult
 nsImapService::GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue,
                                            nsIImapUrl* aImapUrl,
@@ -1431,9 +1454,13 @@ nsImapService::MoveFolder(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append((const char *) folderName);
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
+            {
+                GetFolderName(srcFolder, getter_Copies(folderName));
+                rv = ResetImapConnection(imapUrl, (const char*)folderName);
                 rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
                                                  nsnull,
                                                  url);
+            }
         }
     }
     return rv;
@@ -1480,8 +1507,11 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append(newLeafName);
             rv = uri->SetSpec((char*) urlSpec.GetBuffer());
             if (NS_SUCCEEDED(rv))
+            {
+                rv = ResetImapConnection(imapUrl, (const char *) folderName);
                 rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
                                                  nsnull, url);
+            }
         } // if (NS_SUCCEEDED(rv))
     } // if (NS_SUCCEEDED(rv) && imapUrl)
     return rv;

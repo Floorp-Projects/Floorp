@@ -91,6 +91,7 @@ nsImapIncomingServer::nsImapIncomingServer()
 
 nsImapIncomingServer::~nsImapIncomingServer()
 {
+    CloseCachedConnections();
 }
 
 NS_IMETHODIMP nsImapIncomingServer::SetKey(const char * aKey)  // override nsMsgIncomingServer's implementation...
@@ -452,6 +453,41 @@ nsImapIncomingServer::CreateImapConnection(nsIEventQueue *aEventQueue,
 
     PR_CExitMonitor(this);
 	return rv;
+}
+
+NS_IMETHODIMP nsImapIncomingServer::ResetConnection(const char* folderName)
+{
+    nsresult rv = NS_OK;
+    nsCOMPtr<nsIImapProtocol> connection;
+    nsCOMPtr<nsISupports> aSupport;
+    PRBool isBusy = PR_FALSE, isInbox = PR_FALSE;
+    PRUint32 cnt = 0;
+    nsXPIDLCString curFolderName;
+
+    rv = m_connectionCache->Count(&cnt);
+    if (NS_FAILED(rv)) return rv;
+
+    PR_CEnterMonitor(this);
+    
+    for (PRUint32 i=0; i < cnt; i++)
+    {
+        aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
+        connection = do_QueryInterface(aSupport);
+        if (connection)
+        {
+            rv = connection->GetSelectedMailboxName(getter_Copies(curFolderName));
+            if (PL_strcmp(curFolderName,folderName) == 0)
+            {
+                rv = connection->IsBusy(isBusy, isInbox);
+                if (!isBusy)
+                    rv = connection->ResetToAuthenticatedState();
+                break; // found it, end of the loop
+            }
+        }
+    }
+
+    PR_CExitMonitor(this);
+    return rv;
 }
 
 NS_IMETHODIMP nsImapIncomingServer::PerformBiff()

@@ -3403,19 +3403,34 @@ PRMonitor *nsImapProtocol::GetDataMemberMonitor()
 // in 4.5 - we need to think about this some. Some of it may just go away in the new world order
 PRBool nsImapProtocol::DeathSignalReceived()
 {
-  PRBool returnValue = PR_FALSE;
-  if (m_mockChannel)
-    m_mockChannel->GetCancelled(&returnValue);
+	PRBool returnValue = PR_FALSE;
+	if (m_mockChannel)
+		m_mockChannel->GetCancelled(&returnValue);
 
-  if (!returnValue) // check the other way of cancelling.
-  {
-    PR_EnterMonitor(m_threadDeathMonitor);
-    returnValue = m_threadShouldDie;
-    PR_ExitMonitor(m_threadDeathMonitor);
-  }
-  return returnValue;
+	if (!returnValue)	// check the other way of cancelling.
+	{
+		PR_EnterMonitor(m_threadDeathMonitor);
+		returnValue = m_threadShouldDie;
+		PR_ExitMonitor(m_threadDeathMonitor);
+	}
+	return returnValue;
 }
 
+NS_IMETHODIMP nsImapProtocol::ResetToAuthenticatedState()
+{
+    GetServerStateParser().PreauthSetAuthenticatedState();
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP nsImapProtocol::GetSelectedMailboxName(char ** folderName)
+{
+    if (!folderName) return NS_ERROR_NULL_POINTER;
+    if (GetServerStateParser().GetSelectedMailboxName())
+        *folderName =
+            PL_strdup((GetServerStateParser().GetSelectedMailboxName())); 
+    return NS_OK;
+}
 
 PRBool nsImapProtocol::GetPseudoInterrupted()
 {
@@ -3867,7 +3882,8 @@ nsImapProtocol::DiscoverMailboxSpec(mailbox_spec * adoptedBoxSpec)
                          "Oops .. null m_deletableChildren\n");
             m_deletableChildren->AppendElement((void*)
                 adoptedBoxSpec->allocatedPathName);
-      delete adoptedBoxSpec->flagState;
+            PR_FREEIF(adoptedBoxSpec->hostName);
+			delete adoptedBoxSpec->flagState;
             PR_FREEIF( adoptedBoxSpec);
         }
         break;
@@ -4985,8 +5001,8 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
     PRInt32 numberToDelete = m_deletableChildren->Count();
         PRInt32 childIndex;
     
-    for (childIndex = 1; 
-             (childIndex <= numberToDelete) && renameSucceeded; childIndex++)
+    for (childIndex = 0; 
+             (childIndex < numberToDelete) && renameSucceeded; childIndex++)
     {
       // the imap parser has already converted to a non UTF7 string in the canonical
       // format so convert it back
@@ -4994,31 +5010,32 @@ PRBool nsImapProtocol::RenameHierarchyByHand(const char *oldParentMailboxName,
         if (currentName)
         {
           char *serverName = nsnull;
-                m_runningUrl->AllocateServerPath(currentName,
-                                                 onlineDirSeparator,
-                                                 &serverName);
+          m_runningUrl->AllocateServerPath(currentName,
+                                           onlineDirSeparator,
+                                           &serverName);
           char *convertedName = serverName ? 
-                    CreateUtf7ConvertedString(serverName, PR_TRUE) : (char *)NULL;
+              CreateUtf7ConvertedString(serverName, PR_TRUE) : (char *)NULL;
           PR_FREEIF(serverName);
+          PR_FREEIF(currentName);
           currentName = convertedName;
         }
         
         // calculate the new name and do the rename
         nsCString newChildName = newParentMailboxName;
-            newChildName += (currentName + PL_strlen(oldParentMailboxName));
-            RenameMailboxRespectingSubscriptions(currentName,
-                                                 newChildName.GetBuffer(), 
-                                                 nonHierarchicalRename);  
-            // pass in xNonHierarchicalRename to determine if we should really
-            // reanme, or just move subscriptions
-            renameSucceeded = GetServerStateParser().LastCommandSuccessful();
+        newChildName += (currentName + PL_strlen(oldParentMailboxName));
+        RenameMailboxRespectingSubscriptions(currentName,
+                                             newChildName.GetBuffer(), 
+                                             nonHierarchicalRename);  
+        // pass in xNonHierarchicalRename to determine if we should really
+        // reanme, or just move subscriptions
+        renameSucceeded = GetServerStateParser().LastCommandSuccessful();
         PR_FREEIF(currentName);
     }
     
-        delete m_deletableChildren;
+    delete m_deletableChildren;
     m_deletableChildren = nsnull;
   }
-
+  
   return renameSucceeded;
 }
 
@@ -5034,6 +5051,7 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
         char onlineDirSeparator = kOnlineHierarchySeparatorUnknown;
         m_runningUrl->GetOnlineSubDirSeparator(&onlineDirSeparator);
         pattern.Append(onlineDirSeparator);
+        pattern.Append('*');
 
     if (pattern.Length())
     {
@@ -5046,41 +5064,41 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
         // prevent the server from having problems about deleting parents
         // ** jt - why? I don't understand this.
     PRInt32 numberToDelete = m_deletableChildren->Count();
-        PRInt32 outerIndex, innerIndex;
-    
+    PRInt32 outerIndex, innerIndex;
+		
     deleteSucceeded = GetServerStateParser().LastCommandSuccessful();
-    for (outerIndex = 1; 
-             (outerIndex <= numberToDelete) && deleteSucceeded;
-             outerIndex++)
+    for (outerIndex = 0; 
+         (outerIndex < numberToDelete) && deleteSucceeded;
+         outerIndex++)
     {
-      char* longestName = nsnull;
-      for (innerIndex = 1; 
-                 innerIndex <= m_deletableChildren->Count();
-                 innerIndex++)
-      {
-        char *currentName = 
-                    (char *) m_deletableChildren->ElementAt(innerIndex);
-        if (!longestName || 
-                    PL_strlen(longestName) < PL_strlen(currentName))
-                {
-          longestName = currentName;
-                }
-      }
-      m_deletableChildren->RemoveElement(longestName);
+        char* longestName = nsnull;
+        for (innerIndex = 0; 
+             innerIndex < m_deletableChildren->Count();
+             innerIndex++)
+        {
+            char *currentName = 
+                (char *) m_deletableChildren->ElementAt(innerIndex);
+            if (!longestName || 
+                PL_strlen(longestName) < PL_strlen(currentName))
+            {
+                longestName = currentName;
+            }
+        }
+        m_deletableChildren->RemoveElement(longestName);
       
-      // the imap parser has already converted to a non UTF7 string in
-            // the canonical format so convert it back
+        // the imap parser has already converted to a non UTF7 string in
+        // the canonical format so convert it back
         if (longestName)
         {
-          char *serverName = nsnull;
-                m_runningUrl->AllocateServerPath(longestName,
-                                                 onlineDirSeparator,
-                                                 &serverName);
-          char *convertedName = serverName ?
-                    CreateUtf7ConvertedString(serverName, PR_TRUE) : 0;
-          PR_FREEIF(serverName);
-          PR_Free(longestName);
-          longestName = convertedName;
+            char *serverName = nsnull;
+            m_runningUrl->AllocateServerPath(longestName,
+                                             onlineDirSeparator,
+                                             &serverName);
+            char *convertedName = serverName ?
+                CreateUtf7ConvertedString(serverName, PR_TRUE) : 0;
+            PR_FREEIF(serverName);
+            PR_Free(longestName);
+            longestName = convertedName;
         }
       
       // some imap servers include the selectedMailbox in the list of 
@@ -5095,11 +5113,13 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox)
         !PL_strncmp(selectedMailbox, longestName,
                             PL_strlen(selectedMailbox)))
       { 
-              PRBool deleted =
-                    DeleteMailboxRespectingSubscriptions(longestName);
-        if (deleted)
-          FolderDeleted(longestName);
-        deleteSucceeded = deleted;
+          if (m_imapServer)
+              m_imapServer->ResetConnection(longestName);
+          PRBool deleted =
+              DeleteMailboxRespectingSubscriptions(longestName);
+          if (deleted)
+              FolderDeleted(longestName);
+          deleteSucceeded = deleted;
       }
       PR_FREEIF(longestName);
     }
@@ -6442,4 +6462,3 @@ nsImapMockChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
 {
   return NS_OK;       // don't fail when trying to set this
 }
-

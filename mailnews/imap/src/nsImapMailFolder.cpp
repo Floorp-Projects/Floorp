@@ -671,6 +671,38 @@ NS_IMETHODIMP nsImapMailFolder::EmptyTrash()
         if (NS_SUCCEEDED(rv))
             rv = imapService->DeleteAllMessages(m_eventQueue, trashFolder,
                                                 urlListener, nsnull);
+        PRBool hasSubfolders = PR_FALSE;
+        rv = trashFolder->GetHasSubFolders(&hasSubfolders);
+        if (hasSubfolders)
+        {
+            nsCOMPtr<nsIEnumerator> aEnumerator;
+            nsCOMPtr<nsISupports> aSupport;
+            nsCOMPtr<nsIMsgFolder> aFolder;
+            nsCOMPtr<nsISupportsArray> aSupportsArray;
+            rv = NS_NewISupportsArray(getter_AddRefs(aSupportsArray));
+            if (NS_FAILED(rv)) return rv;
+            rv = trashFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+            rv = aEnumerator->First();
+            while(NS_SUCCEEDED(rv))
+            {
+                rv = aEnumerator->CurrentItem(getter_AddRefs(aSupport));
+                if (NS_SUCCEEDED(rv))
+                {
+                    aSupportsArray->AppendElement(aSupport);
+                    rv = aEnumerator->Next();
+                }
+            }
+            PRUint32 cnt = 0;
+            aSupportsArray->Count(&cnt);
+            for (PRInt32 i = cnt-1; i >= 0; i--)
+            {
+                aSupport = aSupportsArray->ElementAt(i);
+                aSupportsArray->RemoveElementAt(i);
+                aFolder = do_QueryInterface(aSupport);
+                if (aFolder)
+                    trashFolder->PropagateDelete(aFolder, PR_TRUE);
+            }
+        }
     }
     return rv;
 }

@@ -206,6 +206,7 @@ protected:
                                          nsIImapUrl* aImapUrl,
                                          nsISupports* aConsumer,
                                          nsIURI** aURL);
+    nsresult ResetImapConnection(nsIImapUrl* aImapUrl, const char *folderName);
     nsresult SetImapUrlSink(nsIMsgFolder* aMsgFolder,
                               nsIImapUrl* aImapUrl);
 	nsresult DiddleFlags(nsIEventQueue * aClientEventQueue,

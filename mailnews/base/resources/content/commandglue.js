@@ -626,3 +626,33 @@ function SelectNextMessage(nextMessage)
 	ChangeSelection(tree, nextMessage);
 
 }
+
+function GetSelectTrashUri(folder)
+{
+    if (!folder) return null;
+    var uri = folder.getAttribute('id');
+    dump (uri + "\n");
+    var resource = RDF.GetResource(uri);
+    var msgFolder =
+        resource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    if (msgFolder)
+    {
+        dump("GetSelectTrashUri" + "\n");
+        var rootFolder = msgFolder.rootFolder;
+        var numFolder;
+        var out0 = new Object();
+        var trashFolder; 
+        var out1 = new Object();
+        
+        rootFolder.getFoldersWithFlag(0x0100, out0, 1, out1); 
+        trashFolder = out0.value;
+        numFolder = out1.value;
+        dump (numFolder + "\n");
+        if (trashFolder)
+        {
+            dump (trashFolder.URI + "\n");
+            return trashFolder.URI;
+        }
+    }
+    return null;
+}
