@@ -28,43 +28,44 @@ extern nsIID kIXPCOMApplicationShellCID ;
 
 static NS_DEFINE_IID(kCShellInstanceIID, NS_ISHELLINSTANCE_IID);
 
+XtAppContext app_context ;
+
 void main(int argc, char **argv)
 {
-        Widget topLevel;
-	XtAppContext app_context ;
+  Widget topLevel;
 
-	nsresult result = NS_OK ;
+  nsresult result = NS_OK ;
 
-	nsIShellInstance * pShellInstance ;
-	nsIApplicationShell * pApplicationShell ;
+  nsIShellInstance * pShellInstance ;
+  nsIApplicationShell * pApplicationShell ;
 
-	XtSetLanguageProc(NULL, NULL, NULL);
+  XtSetLanguageProc(NULL, NULL, NULL);
 
-	topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
+  topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
 
-    // Let get a ShellInstance for this Application instance
-    NSRepository::RegisterFactory(kCShellInstanceIID, SHELL_DLL, PR_FALSE, PR_FALSE);
+  // Let get a ShellInstance for this Application instance
+  NSRepository::RegisterFactory(kCShellInstanceIID, SHELL_DLL, PR_FALSE, PR_FALSE);
 
-	result = NSRepository::CreateInstance(kCShellInstanceIID,
-										  NULL,
-										  kCShellInstanceIID,
-										  (void **) &pShellInstance) ;
+  result = NSRepository::CreateInstance(kCShellInstanceIID,
+					NULL,
+					kCShellInstanceIID,
+					(void **) &pShellInstance) ;
 
-	if (result != NS_OK)
-		return  ;
+  if (result != NS_OK)
+    return  ;
 
-    // Let's instantiate the Application's Shell
-    NS_RegisterApplicationShellFactory() ;
+  // Let's instantiate the Application's Shell
+  NS_RegisterApplicationShellFactory() ;
 
-	result = NSRepository::CreateInstance(kIXPCOMApplicationShellCID,
-										  NULL,
-										  kIXPCOMApplicationShellCID,
-										  (void **) &pApplicationShell) ;
+  result = NSRepository::CreateInstance(kIXPCOMApplicationShellCID,
+					NULL,
+					kIXPCOMApplicationShellCID,
+					(void **) &pApplicationShell) ;
 		
-	if (result != NS_OK)
-		return  ;
+  if (result != NS_OK)
+    return  ;
 
-    // Let the the State know who it's Application Instance is
+  // Let the the State know who it's Application Instance is
     pShellInstance->SetNativeInstance((nsNativeApplicationInstance) topLevel);
     pShellInstance->SetApplicationShell(pApplicationShell);
 
@@ -72,17 +73,32 @@ void main(int argc, char **argv)
     // Application can look up its State
     nsApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
 
-    // Initialize the system
+    //  Initialize the system
+
     pShellInstance->Init();
-	pApplicationShell->Init();
+    pApplicationShell->Init();
 
     // Now, let actually start dispatching events.
-	result = pApplicationShell->Run();
+    result = pApplicationShell->Run();
 
     // We're done, clean up
-    nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
+  nsApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
 
-    // book out of here
-	return ;
+  // book out of here
+  return ;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
