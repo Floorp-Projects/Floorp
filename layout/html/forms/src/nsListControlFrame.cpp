@@ -112,6 +112,11 @@ nsListControlFrame::nsListControlFrame()
   mIsAllContentHere   = PR_FALSE;
   mIsAllFramesHere    = PR_FALSE;
   mHasBeenInitialized = PR_FALSE;
+
+  mCacheSize.width             = -1;
+  mCacheSize.height            = -1;
+  mCachedMaxElementSize.width  = -1;
+  mCachedMaxElementSize.height = -1;
 }
 
 //---------------------------------------------------------
@@ -290,6 +295,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   }
 #endif // DEBUG_rodsXXX
 
+
 #if 0
     // reflow optimization - why reflow if all the contents 
     // and frames aren't there yet
@@ -331,7 +337,14 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         shell->ExitReflowLock(PR_TRUE, PR_TRUE);
       }
     }
-  
+
+#if 1
+  nsresult skiprv = nsFormControlFrame::SkipResizeReflow(mCacheSize, mCachedMaxElementSize, aPresContext, 
+                                                         aDesiredSize, aReflowState, aStatus);
+  if (NS_SUCCEEDED(skiprv)) {
+    return skiprv;
+  }
+#endif
    // Strategy: Let the inherited reflow happen as though the width and height of the
    // ScrollFrame are big enough to allow the listbox to
    // shrink to fit the longest option element line in the list.
@@ -413,10 +426,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
   //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
 
-    // Subtract out the scrollbar width
-  scrolledAreaWidth -= scrollbarWidth;
-
-    // Subtract out the borders
+  // Subtract out the borders
   nsMargin border;
   if (!aReflowState.mStyleSpacing->GetBorder(border)) {
     NS_NOTYETIMPLEMENTED("percentage border");
@@ -429,24 +439,25 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     padding.SizeTo(0, 0, 0, 0);
   }
 
-  scrolledAreaWidth  -= (border.left + border.right + padding.left + padding.right);
-  scrolledAreaHeight -= (border.top + border.bottom);
+  mMaxWidth  -= (border.left + border.right + padding.left + padding.right);
+  mMaxHeight -= (border.top + border.bottom + padding.top + padding.bottom);
 
   // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
   // wide and high enough to enclose their contents
 
   PRBool isInDropDownMode = IsInDropDownMode();
 
+  scrolledAreaWidth  -= (border.left + border.right + padding.left + padding.right);
+  scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
+
   nscoord visibleWidth = 0;
   if (isInDropDownMode) {
-     // Calculate visible width for dropdown
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
     } else {
-      visibleWidth = aReflowState.mComputedWidth - (border.left + border.right);
-      if (visibleWidth < scrolledAreaWidth) {
-        visibleWidth = scrolledAreaWidth;
-      }
+      visibleWidth = aReflowState.mComputedWidth;
+      visibleWidth -= (border.left + border.right + padding.left + padding.right);
+      //scrolledAreaHeight -= (border.top + border.bottom + padding.top + padding.bottom);
     }
   } else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
@@ -457,7 +468,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
       //visibleWidth  -= (border.left + border.right + padding.left + padding.right);
     }
   }
-  
+
    // Determine if a scrollbar will be needed, If so we need to add
    // enough the width to allow for the scrollbar.
    // The scrollbar will be needed under two conditions:
@@ -487,7 +498,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     visibleHeight = scrolledAreaHeight;
 
     if (visibleHeight > (kMaxDropDownRows * heightOfARow)) {
-       visibleHeight = (kMaxDropDownRows * heightOfARow);
+      visibleHeight = (kMaxDropDownRows * heightOfARow);
     }
    
   } else {
@@ -511,7 +522,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
-
   // There are no items in the list
   // but we want to include space for the scrollbars
   // So fake like we will need scrollbars also
@@ -524,13 +534,9 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     needsVerticalScrollbar = PR_TRUE; 
   }
 
-  if (needsVerticalScrollbar && !isInDropDownMode) {
-    visibleWidth += scrollbarWidth;
+  if (needsVerticalScrollbar) {
     mIsScrollbarVisible = PR_TRUE; // XXX temp code
   } else {
-    if (!isInDropDownMode) {
-      visibleWidth += scrollbarWidth;
-    }
     mIsScrollbarVisible = PR_FALSE; // XXX temp code
   }
 
@@ -549,12 +555,16 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
+    visibleWidth += (border.left + border.right + padding.left + padding.right);
+  }
+
    // Do a second reflow with the adjusted width and height settings
    // This sets up all of the frames with the correct width and height.
   secondPassState.mComputedWidth  = visibleWidth;
   secondPassState.mComputedHeight = visibleHeight;
   secondPassState.reason = eReflowReason_Resize;
-  //printf("List: visible      %d %d\n", visibleWidth, visibleHeight);
+
   nsScrollFrame::Reflow(aPresContext, aDesiredSize, secondPassState, aStatus);
 
     // Set the max element size to be the same as the desired element size.
@@ -562,7 +572,6 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->width  = aDesiredSize.width;
 	  aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }
-  //printf("List: aDesiredSize %d %d\n", aDesiredSize.width, aDesiredSize.height);
 
   aStatus = NS_FRAME_COMPLETE;
 
@@ -580,6 +589,8 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
     }
   }
 #endif
+
+  nsFormControlFrame::SetupCachedSizes(mCacheSize, mCachedMaxElementSize, aDesiredSize);
 
   return NS_OK;
 }
