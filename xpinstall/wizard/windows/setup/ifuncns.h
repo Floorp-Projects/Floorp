@@ -96,6 +96,8 @@ void        AppendWinReg(HKEY hkRootKey,
                       BOOL bLogForUninstall,
                       BOOL bDnu);
 HRESULT     CleanupArgsRegistry();
+void        ProcessFileOpsForSelectedComponents(DWORD dwTiming);
+void        ProcessFileOpsForAll(DWORD dwTiming);
 
 #endif /* _IFUNCNS_H_ */
 

@@ -2810,7 +2810,7 @@ void DlgSequenceNext()
         DeleteFile(szInstallLogFile);
 
         /* PRE_DOWNLOAD process file manipulation functions */
-        ProcessFileOps(T_PRE_DOWNLOAD, NULL);
+        ProcessFileOpsForAll(T_PRE_DOWNLOAD);
 
         if(RetrieveArchives() == WIZ_OK)
         {
@@ -2819,9 +2819,9 @@ void DlgSequenceNext()
           SetTurboArgs();
 
           /* POST_DOWNLOAD process file manipulation functions */
-          ProcessFileOps(T_POST_DOWNLOAD, NULL);
+          ProcessFileOpsForAll(T_POST_DOWNLOAD);
           /* PRE_XPCOM process file manipulation functions */
-          ProcessFileOps(T_PRE_XPCOM, NULL);
+          ProcessFileOpsForAll(T_PRE_XPCOM);
 
           if(ProcessXpcomFile() != FO_SUCCESS)
           {
@@ -2835,9 +2835,9 @@ void DlgSequenceNext()
           }
 
           /* POST_XPCOM process file manipulation functions */
-          ProcessFileOps(T_POST_XPCOM, NULL);
+          ProcessFileOpsForAll(T_POST_XPCOM);
           /* PRE_SMARTUPDATE process file manipulation functions */
-          ProcessFileOps(T_PRE_SMARTUPDATE, NULL);
+          ProcessFileOpsForAll(T_PRE_SMARTUPDATE);
 
           /* save the installer files in the local machine */
           if(diDownloadOptions.bSaveInstaller)
@@ -2867,16 +2867,16 @@ void DlgSequenceNext()
             UpdateJSProxyInfo();
 
             /* POST_SMARTUPDATE process file manipulation functions */
-            ProcessFileOps(T_POST_SMARTUPDATE, NULL);
+            ProcessFileOpsForAll(T_POST_SMARTUPDATE);
             /* PRE_LAUNCHAPP process file manipulation functions */
-            ProcessFileOps(T_PRE_LAUNCHAPP, NULL);
+            ProcessFileOpsForAll(T_PRE_LAUNCHAPP);
 
             LaunchApps();
 
             /* POST_LAUNCHAPP process file manipulation functions */
-            ProcessFileOps(T_POST_LAUNCHAPP, NULL);
+            ProcessFileOpsForAll(T_POST_LAUNCHAPP);
             /* DEPEND_REBOOT process file manipulation functions */
-            ProcessFileOps(T_DEPEND_REBOOT, NULL);
+            ProcessFileOpsForAll(T_DEPEND_REBOOT);
             ClearWinRegUninstallFileDeletion();
             if(!gbIgnoreProgramFolderX)
               ProcessProgramFolderShowCmd();
