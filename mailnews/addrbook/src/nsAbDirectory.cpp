@@ -38,11 +38,6 @@ static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID);
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 nsABDirectory::nsABDirectory(void)
   :  nsRDFResource(), mListeners(nsnull),
      mInitialized(PR_FALSE), mCardInitialized(PR_FALSE),
@@ -250,7 +245,7 @@ nsresult nsABDirectory::GetAbDatabase()
 		dbPath += "abook.mab";
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory;
-		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsIAddrDatabase::GetIID(), 
+		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsCOMTypeInfo<nsIAddrDatabase>::GetIID(), 
 												(void **) getter_AddRefs(addrDBFactory));
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);
@@ -327,7 +322,7 @@ nsresult nsABDirectory::AddChildCards(nsAutoString name, nsIAbCard **childCard)
 	nsCOMPtr<nsIAbCard> personCard(do_QueryInterface(res, &rv));
 	if (NS_FAILED(rv))
 	{
-		rv = nsComponentManager::CreateInstance(kAbCardCID, nsnull, nsIAbCard::GetIID(), getter_AddRefs(personCard));
+		rv = nsComponentManager::CreateInstance(kAbCardCID, nsnull, nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(personCard));
 		if (NS_FAILED(rv) || !personCard)
 		{
 			delete[] uriStr;

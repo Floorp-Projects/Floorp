@@ -46,11 +46,6 @@ typedef struct _nsAbRDFNotification {
 
 static NS_DEFINE_CID(kRDFServiceCID,  NS_RDFSERVICE_CID);
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 static NS_DEFINE_CID(kAbDirectoryDataSourceCID, NS_ABDIRECTORYDATASOURCE_CID);
 
 nsIRDFResource* nsABDirectoryDataSource::kNC_Child;
@@ -182,7 +177,7 @@ nsABDirectoryDataSource::Init()
 		return NS_ERROR_ALREADY_INITIALIZED;
 
 	nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-											 nsIRDFService::GetIID(),
+											 nsCOMTypeInfo<nsIRDFService>::GetIID(),
 											 (nsISupports**) &mRDFService); 
   if (NS_FAILED(rv)) return rv;
 
@@ -219,14 +214,14 @@ nsABDirectoryDataSource::QueryInterface(REFNSIID iid, void** result)
 		return NS_ERROR_NULL_POINTER;
 
 	*result = nsnull;
-	if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-	    iid.Equals(kISupportsIID))
+	if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
+		iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
 	{
 		*result = NS_STATIC_CAST(nsIRDFDataSource*, this);
 		AddRef();
 		return NS_OK;
 	}
-	else if(iid.Equals(nsIAbListener::GetIID()))
+	else if(iid.Equals(nsCOMTypeInfo<nsIAbListener>::GetIID()))
 	{
 		*result = NS_STATIC_CAST(nsIAbListener*, this);
 		AddRef();
@@ -598,10 +593,10 @@ NS_IMETHODIMP nsABDirectoryDataSource::OnItemAdded(nsIAbBase *parentDirectory, n
 	nsCOMPtr<nsIAbDirectory> directory;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a directory
-		if(NS_SUCCEEDED(item->QueryInterface(nsIAbDirectory::GetIID(), getter_AddRefs(directory))))
+		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbDirectory>::GetIID(), getter_AddRefs(directory))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -621,10 +616,10 @@ NS_IMETHODIMP nsABDirectoryDataSource::OnItemRemoved(nsIAbBase *parentDirectory,
 	nsCOMPtr<nsIAbCard> card;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a card
-		if(NS_SUCCEEDED(item->QueryInterface(nsIAbCard::GetIID(), getter_AddRefs(card))))
+		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(card))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))

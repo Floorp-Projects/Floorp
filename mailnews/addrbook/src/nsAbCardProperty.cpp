@@ -87,9 +87,9 @@ NS_IMETHODIMP nsAbCardProperty::QueryInterface(REFNSIID aIID, void** aResult)
     if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-    if (aIID.Equals(nsIAbCard::GetIID()) ||
-        aIID.Equals(nsIAddrDBListener::GetIID()) ||
-        aIID.Equals(::nsISupports::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIAbCard>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIAddrDBListener>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIAbCard*, this);   
         NS_ADDREF_THIS();
         return NS_OK;

@@ -33,12 +33,6 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
-
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 nsABCard::nsABCard(void)
   : nsRDFResource(), mListeners(nsnull),
     mInitialized(PR_FALSE), 
@@ -710,7 +704,7 @@ NS_IMETHODIMP nsABCard::AddCardToDatabase()
 		dbPath += "abook.mab";
 
 		nsCOMPtr<nsIAddrDatabase> addrDBFactory;
-		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsIAddrDatabase::GetIID(), 
+		rv = nsComponentManager::CreateInstance(kAddressBookDB, nsnull, nsCOMTypeInfo<nsIAddrDatabase>::GetIID(), 
 												(void **) getter_AddRefs(addrDBFactory));
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
 			openAddrDB = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(mDatabase), PR_TRUE);

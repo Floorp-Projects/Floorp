@@ -32,11 +32,7 @@
 #include "nsIFileLocator.h"
 #include "nsFileLocations.h"
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
 static NS_DEFINE_CID(kRDFServiceCID,	NS_RDFSERVICE_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kAddressBookDB, NS_ADDRESSBOOKDB_CID);
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
@@ -63,9 +59,9 @@ NS_IMETHODIMP nsAddressBook::QueryInterface(REFNSIID aIID, void** aResult)
     if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-    if (aIID.Equals(nsIAddressBook::GetIID()) ||
-        aIID.Equals(nsIAbCard::GetIID()) ||
-        aIID.Equals(::nsISupports::GetIID())) {
+    if (aIID.Equals(nsCOMTypeInfo<nsIAddressBook>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIAbCard>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIAddressBook*, this);   
         NS_ADDREF_THIS();
         return NS_OK;

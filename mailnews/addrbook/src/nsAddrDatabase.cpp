@@ -139,8 +139,8 @@ NS_IMETHODIMP nsAddrDatabase::QueryInterface(REFNSIID aIID, void** aResult)
     if (aResult == NULL)  
         return NS_ERROR_NULL_POINTER;  
 
-    if (aIID.Equals(nsIAddrDatabase::GetIID()) ||
-        aIID.Equals(nsIAddrDBAnnouncer::GetIID()) ||
+    if (aIID.Equals(nsCOMTypeInfo<nsIAddrDatabase>::GetIID()) ||
+        aIID.Equals(nsCOMTypeInfo<nsIAddrDBAnnouncer>::GetIID()) ||
         aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
         *aResult = NS_STATIC_CAST(nsIAddrDatabase*, this);   
         NS_ADDREF_THIS();
@@ -896,7 +896,7 @@ nsAddrDBEnumerator::~nsAddrDBEnumerator()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsAddrDBEnumerator, nsIEnumerator::GetIID())
+NS_IMPL_ISUPPORTS(nsAddrDBEnumerator, nsCOMTypeInfo<nsIEnumerator>::GetIID())
 
 NS_IMETHODIMP nsAddrDBEnumerator::First(void)
 {

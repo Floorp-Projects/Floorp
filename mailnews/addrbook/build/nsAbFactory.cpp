@@ -100,7 +100,7 @@ nsresult nsAbFactory::QueryInterface(const nsIID &aIID, void **aResult)
 	// we support two interfaces....nsISupports and nsFactory.....
 	if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))    
 		*aResult = (void *)(nsISupports*)this;   
-	else if (aIID.Equals(nsIFactory::GetIID()))   
+	else if (aIID.Equals(nsCOMTypeInfo<nsIFactory>::GetIID()))   
 		*aResult = (void *)(nsIFactory*)this;   
 
 	if (*aResult == NULL)
@@ -215,7 +215,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 	*aFactory = new nsAbFactory(aClass, aClassName, aProgID);
 
 	if (aFactory)
-		return (*aFactory)->QueryInterface(nsIFactory::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
+		return (*aFactory)->QueryInterface(nsCOMTypeInfo<nsIFactory>::GetIID(), (void**)aFactory); // they want a Factory Interface so give it to them
 	else
 		return NS_ERROR_OUT_OF_MEMORY;
 }

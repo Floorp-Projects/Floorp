@@ -185,7 +185,7 @@ nsresult nsABCardDataSource::Init()
       return NS_ERROR_ALREADY_INITIALIZED;
 
   nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                             nsIRDFService::GetIID(),
+                                             nsCOMTypeInfo<nsIRDFService>::GetIID(),
                                              (nsISupports**) &mRDFService); // XXX probably need shutdown listener here
   if (NS_FAILED(rv)) return rv;
 
@@ -220,14 +220,14 @@ nsABCardDataSource::QueryInterface(REFNSIID iid, void** result)
     return NS_ERROR_NULL_POINTER;
 
   *result = nsnull;
-  if (iid.Equals(nsIRDFDataSource::GetIID()) ||
-      iid.Equals(kISupportsIID))
+  if (iid.Equals(nsCOMTypeInfo<nsIRDFDataSource>::GetIID()) ||
+      iid.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))
   {
     *result = NS_STATIC_CAST(nsIRDFDataSource*, this);
     AddRef();
     return NS_OK;
   }
-  else if(iid.Equals(nsIAbListener::GetIID()))
+  else if(iid.Equals(nsCOMTypeInfo<nsIAbListener>::GetIID()))
   {
     *result = NS_STATIC_CAST(nsIAbListener*, this);
     AddRef();
@@ -571,10 +571,10 @@ NS_IMETHODIMP nsABCardDataSource::OnItemAdded(nsIAbBase *parentDirectory, nsISup
 	nsCOMPtr<nsIAbCard> card;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a card
-		if(NS_SUCCEEDED(item->QueryInterface(nsIAbCard::GetIID(), getter_AddRefs(card))))
+		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(card))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
@@ -594,10 +594,10 @@ NS_IMETHODIMP nsABCardDataSource::OnItemRemoved(nsIAbBase *parentDirectory, nsIS
 	nsCOMPtr<nsIAbCard> card;
 	nsCOMPtr<nsIRDFResource> parentResource;
 
-	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsIRDFResource::GetIID(), getter_AddRefs(parentResource))))
+	if(NS_SUCCEEDED(parentDirectory->QueryInterface(nsCOMTypeInfo<nsIRDFResource>::GetIID(), getter_AddRefs(parentResource))))
 	{
 		//If we are adding a card
-		if(NS_SUCCEEDED(item->QueryInterface(nsIAbCard::GetIID(), getter_AddRefs(card))))
+		if(NS_SUCCEEDED(item->QueryInterface(nsCOMTypeInfo<nsIAbCard>::GetIID(), getter_AddRefs(card))))
 		{
 			nsCOMPtr<nsIRDFNode> itemNode(do_QueryInterface(item, &rv));
 			if(NS_SUCCEEDED(rv))
