@@ -45,15 +45,21 @@
 *       http://bugzilla.mozilla.org/show_bug.cgi?id=184107
 *
 *
-* However, if |x| does have a property |f|, a |with| statement can be
-* used to modify the value it contains. This should work even if we use
-* a |var| statement, like this:
+* However, if |x| already has a property |f|, a |with| statement can be
+* used to modify the value it contains:
+*
+*                 with (x) {f = 1;}
+*
+* This should work even if we use a |var| statement, like this:
 *
 *                 with (x) {var f = 1;}
 *
-* or a function statement, like this:
+* However, it should NOT work if we use a |function| statement, like this:
 *
 *                 with (x) {function f() {}}
+*
+* Instead, this should newly define a function f in global scope.
+* See http://bugzilla.mozilla.org/show_bug.cgi?id=185485
 *
 */
 //-----------------------------------------------------------------------------
@@ -67,27 +73,53 @@ var actualvalues = [];
 var expect= '';
 var expectedvalues = [];
 
-
 var x = { f:0, g:0 };
+
+with (x)
+{
+  f = 1;
+}
+status = inSection(1);
+actual = x.f;
+expect = 1;
+addThis();
+
+with (x)
+{
+  var f = 2;
+}
+status = inSection(2);
+actual = x.f;
+expect = 2;
+addThis();
+
+/*
+ * Use of a function statement under the with-block should not affect
+ * the local property |f|, but define a function |f| in global scope -
+ */
 with (x)
 {
   function f() {}
+}
+status = inSection(3);
+actual = x.f;
+expect = 2;
+addThis();
+
+status = inSection(4);
+actual = typeof this.f;
+expect = 'function';
+addThis();
+
+
+// Compare use of function expression instead of function statement
+with (x)
+{
   var g = function() {}
 }
-
-status = inSection(1);
-actual = x.f.toString();
-expect = (function f() {}).toString();
-addThis();
-
-status = inSection(2);
+status = inSection(5);
 actual = x.g.toString();
 expect = (function () {}).toString();
-addThis();
-
-status = inSection(3);
-actual = this.f;
-expect = undefined;
 addThis();
 
 
