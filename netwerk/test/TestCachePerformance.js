@@ -123,27 +123,61 @@ function test()
         print("disk cache metadata broken!");
 }
 
-function time()
+function median(array)
 {
-    var System = java.lang.System;
-    var url = new java.net.URL("http://www.mozilla.org");
-    var begin = System.currentTimeMillis();
-    for (var i = 0; i < 5; ++i)
-        download(url);
-    var end = System.currentTimeMillis();
-    print("5 downloads took " + (end - begin) + " milliseconds.");
-    print("average = " + ((end - begin) / 5) + " milliseconds.");
-
-    begin = System.currentTimeMillis();
-    for (var i = 0; i < 5; ++i)
-        read(url);
-    end = System.currentTimeMillis();
-    print("5 reads took " + (end - begin) + " milliseconds.");
-    print("average = " + ((end - begin) / 5) + " milliseconds.");
+    var cmp = function(x, y) { return x - y; }
+    array.sort(cmp);
+    var middle = Math.floor(array.length / 2);
+    return array[middle];
 }
 
+function sum(array)
+{
+    var s = 0;
+    var len = array.length;
+    for (var i = 0; i < len; ++i)
+        s += array[i];
+    return s;
+}
+
+function time()
+{
+    var N = 50;
+    var System = java.lang.System;
+    var url = new java.net.URL("http://www.mozilla.org");
+    var downloadTimes = new Array();
+    for (var i = 0; i < N; ++i) {
+        var begin = System.currentTimeMillis();
+        download(url);
+        var end = System.currentTimeMillis();
+        downloadTimes.push(end - begin);
+    }
+    var downloadTotal = sum(downloadTimes);
+    var downloadMean = downloadTotal / N;
+    var downloadMedian = median(downloadTimes);
+    print("" + N + " downloads took " + downloadTotal + " milliseconds.");
+    print("mean = " + downloadMean + " milliseconds.");
+    print("median = " + downloadMedian + " milliseconds.");
+
+    var readTimes = new Array();
+    for (var i = 0; i < N; ++i) {
+        var begin = System.currentTimeMillis();
+        read(url);
+        var end = System.currentTimeMillis();
+        readTimes.push(end - begin);
+    }
+    var readTotal = sum(readTimes);
+    var readMean = readTotal / N;
+    var readMedian = median(readTimes);
+    print("" + N + " reads took " + readTotal + " milliseconds.");
+    print("mean = " + readMean + " milliseconds.");
+    print("median = " + readMedian + " milliseconds.");
+}
+
+// load the cache service before doing anything with Java...
+getCacheService();
+
 if (DEBUG) {
-    getCacheService();
     print("cache service loaded.");
 } else {
     print("running disk cache test.");
