@@ -609,6 +609,8 @@ nsXMLContentSerializer::AppendElementEnd(nsIDOMElement *aElement,
   nsCOMPtr<nsIDOMNode> node(do_QueryInterface(aElement));
   PRBool hasChildren;
   if (NS_SUCCEEDED(node->HasChildNodes(&hasChildren)) && !hasChildren) {
+    PopNameSpaceDeclsFor(aElement);
+  
     return NS_OK;
   }
   
