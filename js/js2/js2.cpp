@@ -173,7 +173,7 @@ static void readEvalPrint(FILE *in, World &world)
                 	}
                 	f.end();
                 }
-#if 0
+#if 1
                 genCode(world, cx, parseTree);
 #endif
             }
@@ -370,7 +370,7 @@ static float64 testFunctionCall(World &world, float64 n)
     Register r_n =
         fun.allocateVariable(world.identifiers[widenCString("n")]);
     fun.beginStatement(position);
-    Register r1 = fun.op(COMPARE_GT, r_n, fun.loadImmediate(1.0));
+    Register r1 = fun.op(COMPARE_LT, fun.loadImmediate(1.0), r_n);
     fun.beginIfStatement(position, r1);
     fun.beginStatement(position);
     r1 = fun.op(SUBTRACT, r_n, fun.loadImmediate(1.0));
@@ -454,7 +454,7 @@ static float64 testFactorial(World &world, float64 n)
     {
         icg.beginWhileStatement(position);
         Register r1 = icg.loadImmediate(1.0);
-        Register r2 = icg.op(COMPARE_GT, r_n, r1);
+        Register r2 = icg.op(COMPARE_LT, r1, r_n);
         icg.endWhileExpression(r2);
         r2 = icg.op(MULTIPLY, r_result, r_n);
         icg.move(r_result, r2);
