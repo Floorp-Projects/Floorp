@@ -369,7 +369,7 @@ ns4xPlugin::Shutdown(void)
   if (nsnull != fShutdownEntry)
   {
 #ifdef NS_DEBUG
-	printf("shutting down plugin %08x\n", this);
+	printf("shutting down plugin %08x\n",(int)this);
 #endif
 #ifdef XP_MAC
 	CallNPP_ShutdownProc(fShutdownEntry);
