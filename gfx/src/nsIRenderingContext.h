@@ -54,7 +54,7 @@ typedef enum
 
 //----------------------------------------------------------------------
 
-//a cross platform way of specifying a navite rendering context
+//a cross platform way of specifying a native rendering context
 typedef void * nsDrawingSurface;
 
 // RenderingContext interface

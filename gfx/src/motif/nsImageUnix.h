@@ -49,7 +49,7 @@ public:
   virtual PRBool      IsOptimized()       { return (mImage!=nsnull); }
 
   virtual  nsresult   BuildImage(nsDrawingSurface aDrawingSurface);
-  virtual nsresult    Optimize(nsDrawingSurface aSurface);
+  virtual nsresult    Optimize(nsIDeviceContext* aContext);
   virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
   virtual PRInt32     GetAlphaHeight()   {return 0;}

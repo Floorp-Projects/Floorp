@@ -149,10 +149,10 @@ public:
 
   /**
    * Converted this pixelmap to an optimized pixelmap for the device
-   @param aSurface The surface to optimize for
+   @param aContext The device to optimize for
    @return the result of the operation, if NS_OK, then the pixelmap is optimized
    */
-  virtual nsresult Optimize(nsDrawingSurface aSurface) = 0;
+  virtual nsresult Optimize(nsIDeviceContext* aContext) = 0;
 
   /**
    * Get the colormap for the pixelmap

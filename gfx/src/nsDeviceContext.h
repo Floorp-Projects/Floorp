@@ -21,6 +21,7 @@
 
 #include "nsIDeviceContext.h"
 #include "libimg.h"
+
 class nsIImageRequest;
 
 class DeviceContextImpl : public nsIDeviceContext
@@ -59,16 +60,16 @@ public:
 
   virtual nsNativeWidget GetNativeWidget(void);
 
-  NS_IMETHOD LoadIconImage(nsIRenderingContext& aContext,
-                           PRInt32              aId,
-                           nsIImage*&           aImage);
+  NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage);
+
+  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
 
 protected:
   virtual ~DeviceContextImpl();
 
   nsresult CreateFontCache();
   void SetGammaTable(PRUint8 * aTable, float aCurrentGamma, float aNewGamma);
-  nsresult CreateImageGroupContext(nsIRenderingContext& aContext);
+  nsresult CreateIconILGroupContext();
 
   float             mTwipsToPixels;
   float             mPixelsToTwips;

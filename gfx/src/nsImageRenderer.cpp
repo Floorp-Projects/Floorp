@@ -83,7 +83,7 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
 			     PRInt32 aWidth, PRInt32 aHeight, 
 			     IL_Pixmap* aImage, IL_Pixmap* aMask)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
+    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
     nsIImage  *img;
     nsresult  rv;
 
@@ -161,9 +161,7 @@ ImageRendererImpl::NewPixmap(void* aDisplayContext,
           *mapptr++ = cmap->map[i].blue;
         }
 
-        nsIDeviceContext  *dx = rc->GetDeviceContext();
-        img->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
-        NS_IF_RELEASE(dx);
+        img->ImageUpdated(dc, nsImageUpdateFlags_kColorMapChanged, nsnull);
                 
         if (aImage->header.transparent_pixel) {
             PRUint8 red, green, blue;
@@ -200,38 +198,29 @@ ImageRendererImpl::UpdatePixmap(void* aDisplayContext,
 				PRInt32 aXOffset, PRInt32 aYOffset, 
 				PRInt32 aWidth, PRInt32 aHeight)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
-    nsIImage            *img = (nsIImage *)aImage->client_data;
-    nsIDeviceContext    *dx = rc->GetDeviceContext();
-    nsRect              drect(aXOffset, aYOffset, aWidth, aHeight);
+    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
+    nsIImage         *img = (nsIImage *)aImage->client_data;
+    nsRect            drect(aXOffset, aYOffset, aWidth, aHeight);
 
-    img->ImageUpdated(dx, nsImageUpdateFlags_kBitsChanged, &drect);
-
-    NS_IF_RELEASE(dx);
+    img->ImageUpdated(dc, nsImageUpdateFlags_kBitsChanged, &drect);
 }
 
 void 
 ImageRendererImpl::ControlPixmapBits(void* aDisplayContext, 
 				     IL_Pixmap* aImage, PRUint32 aControlMsg)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
+    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
     nsIImage *img = (nsIImage *)aImage->client_data;
 
     if (aControlMsg == IL_RELEASE_BITS) {
-      nsIDeviceContext  *dx = rc->GetDeviceContext();
-      if (nsnull != dx) {
-        nsDrawingSurface  surf = dx->GetDrawingSurface(*rc);
-        if (nsnull != surf)
-          img->Optimize(surf);
-        NS_RELEASE(dx);
-      }
+      img->Optimize(dc);
     }
 }
 
 void 
 ImageRendererImpl::DestroyPixmap(void* aDisplayContext, IL_Pixmap* aImage)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
+    nsIDeviceContext *dc = (nsIDeviceContext *)aDisplayContext;
     nsIImage *img = (nsIImage *)aImage->client_data;
 
     aImage->client_data = nsnull;
@@ -247,18 +236,15 @@ ImageRendererImpl::DisplayPixmap(void* aDisplayContext,
 				 PRInt32 aXOffset, PRInt32 aYOffset, 
 				 PRInt32 aWidth, PRInt32 aHeight)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
-    nsIImage *img = (nsIImage *)aImage->client_data;
-
-    // XXX Need better version of DrawImage
-    rc->DrawImage(img, aX, aY);
+  // Image library doesn't drive the display process.
+  // XXX Why is this part of the API?
 }
 
 void 
 ImageRendererImpl::DisplayIcon(void* aDisplayContext, 
 			       PRInt32 aX, PRInt32 aY, PRUint32 aIconNumber)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
+  // XXX Why is this part of the API?
 }
 
 void 
@@ -266,7 +252,7 @@ ImageRendererImpl::GetIconDimensions(void* aDisplayContext,
 				     PRInt32 *aWidthPtr, PRInt32 *aHeightPtr, 
 				     PRUint32 aIconNumber)
 {
-    nsIRenderingContext *rc = (nsIRenderingContext *)aDisplayContext;
+  // XXX Why is this part of the API?
 }
 
 extern "C" NS_GFX_(nsresult)
