@@ -405,7 +405,7 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
         pos = 2;
         break;
     }
-    SET_RESULT(auth, 0, -1);
+    SET_RESULT(auth, pos, 0);
     SET_RESULT(path, pos, specLen - pos);
 }
 
