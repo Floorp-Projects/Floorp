@@ -51,6 +51,7 @@
 #include "nsIPref.h" 
 #include "nsIMsgWindow.h"
 #include "nsIMsgFolder.h" // TO include biffState enum. Change to bool later...
+#include "nsIDocShell.h"
 
 #define EXTRA_SAFETY_SPACE 3096
 
@@ -423,8 +424,18 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
     }
 
     m_url = do_QueryInterface(aURL);
+
+    nsCOMPtr<nsIInterfaceRequestor> ir;
+    nsCOMPtr<nsIMsgWindow> msgwin;
+    mailnewsUrl->GetMsgWindow(getter_AddRefs(msgwin));
+    if (msgwin) {
+        nsCOMPtr<nsIDocShell> docshell;
+        msgwin->GetRootDocShell(getter_AddRefs(docshell));
+        ir = do_QueryInterface(docshell);
+    }
+
     // if the server is secure, pass in "ssl" for the last arg
-    rv = OpenNetworkSocket(aURL, nsnull);
+    rv = OpenNetworkSocket(aURL, nsnull, ir);
 	if(NS_FAILED(rv))
 		return rv;
   } // if we got a url...

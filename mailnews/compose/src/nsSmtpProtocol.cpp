@@ -352,27 +352,23 @@ void nsSmtpProtocol::Initialize(nsIURI * aURL)
     aURL->GetHost(getter_Copies(hostName));
     PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s", (const char *) hostName));
     
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
+    nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(aURL));
+    if (smtpUrl)
+        smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
+
     if (m_prefTrySSL != PREF_SSL_NEVER) {
-        rv = OpenNetworkSocket(aURL, "tls");
+        rv = OpenNetworkSocket(aURL, "tls", callbacks);
         if (NS_FAILED(rv) && m_prefTrySSL == PREF_SSL_TRY) {
             m_prefTrySSL = PREF_SSL_NEVER;
-            rv = OpenNetworkSocket(aURL, nsnull);
+            rv = OpenNetworkSocket(aURL, nsnull, callbacks);
         }
     } else {
-        rv = OpenNetworkSocket(aURL, nsnull);
+        rv = OpenNetworkSocket(aURL, nsnull, callbacks);
     }
     
     if (NS_FAILED(rv))
         return;
-
-    nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(aURL));
-    if (smtpUrl) {
-        nsCOMPtr<nsIInterfaceRequestor> callbacks;
-        smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
-        nsCOMPtr<nsIChannel> channel(do_QueryInterface(m_request));
-        if (channel)
-          channel->SetNotificationCallbacks(callbacks);
-    }
 }
 
 const char * nsSmtpProtocol::GetUserDomainName()
@@ -1778,11 +1774,13 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   // now that we have a host and port to connect to, 
   // open up the channel...
   // pass in "ssl" for the last arg if you want this to be over SSL
-  {
-    nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
-    PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", (const char *) hostCStr, aPort));
-    rv = OpenNetworkSocketWithInfo(hostCStr, aPort, nsnull);
-  }
+  nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
+  PR_LOG(SMTPLogModule, PR_LOG_ALWAYS, ("SMTP Connecting to: %s on port %d.", (const char *) hostCStr, aPort));
+  nsCOMPtr<nsIInterfaceRequestor> callbacks;
+  nsCOMPtr<nsISmtpUrl> smtpUrl(do_QueryInterface(m_runningURL));
+  if (smtpUrl)
+      smtpUrl->GetNotificationCallbacks(getter_AddRefs(callbacks));
+  rv = OpenNetworkSocketWithInfo(hostCStr, aPort, nsnull, callbacks);
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);

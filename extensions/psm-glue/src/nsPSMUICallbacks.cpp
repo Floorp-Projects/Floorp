@@ -45,7 +45,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIURL.h"
 #include "nsIXULWindow.h"
-#include "nsIChannel.h"
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -346,15 +345,13 @@ char * PromptUserCallback(void *arg, char *prompt, void* clientContext, int isPa
     PRBool  value;
     nsCOMPtr<nsIPrompt> proxyPrompt;
 
-    nsIChannelSecurityInfo* csi = NS_STATIC_CAST(nsIChannelSecurityInfo*, clientContext);
-    nsCOMPtr<nsIChannel> channel;
+    nsITransportSecurityInfo* csi = NS_STATIC_CAST(nsITransportSecurityInfo*, clientContext);
+    nsCOMPtr<nsIInterfaceRequestor> callbacks;
     if (csi) {
-      csi->GetChannel(getter_AddRefs(channel));
-      if (!channel) return nsnull;
+      csi->GetNotificationCallbacks(getter_AddRefs(callbacks));
+    }
 
-      nsCOMPtr<nsIInterfaceRequestor> callbacks;
-      channel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-      if (!callbacks) return nsnull;
+    if (csi && callbacks) {
 
       // The notification callbacks object may not be safe, so
       // proxy the call to get the nsIPrompt.

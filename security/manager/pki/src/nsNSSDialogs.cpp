@@ -262,10 +262,10 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   return rv;
 }
 
-/* boolean unknownIssuer (in nsIChannelSecurityInfo socketInfo,
+/* boolean unknownIssuer (in nsITransportSecurityInfo socketInfo,
                           in nsIX509Cert cert, out addType); */
 NS_IMETHODIMP
-nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo,
+nsNSSDialogs::UnknownIssuer(nsITransportSecurityInfo *socketInfo,
                             nsIX509Cert *cert, PRInt16 *outAddType,
                             PRBool *_retval)
 {
@@ -325,12 +325,12 @@ nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo,
   return NS_OK; 
 }
 
-/* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo, 
+/* boolean mismatchDomain (in nsITransportSecurityInfo socketInfo, 
                            in wstring targetURL, 
                            in nsIX509Cert cert); */
 
 NS_IMETHODIMP 
-nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo, 
+nsNSSDialogs::MismatchDomain(nsITransportSecurityInfo *socketInfo, 
                              const PRUnichar *targetURL, 
                              nsIX509Cert *cert, PRBool *_retval) 
 {
@@ -372,10 +372,10 @@ nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo,
   return NS_OK;  
 }
 
-/* boolean certExpired (in nsIChannelSecurityInfo socketInfo, 
+/* boolean certExpired (in nsITransportSecurityInfo socketInfo, 
                         in nsIX509Cert cert); */
 NS_IMETHODIMP 
-nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo, 
+nsNSSDialogs::CertExpired(nsITransportSecurityInfo *socketInfo, 
                           nsIX509Cert *cert, PRBool *_retval)
 {
   nsresult rv;

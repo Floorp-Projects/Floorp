@@ -78,7 +78,11 @@ nsresult nsMsgProtocol::InitFromURI(nsIURI *aUrl)
 nsMsgProtocol::~nsMsgProtocol()
 {}
 
-nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort, const char *connectionType)
+nsresult
+nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName,
+                                         PRInt32 aGetPort,
+                                         const char *connectionType,
+                                         nsIInterfaceRequestor* callbacks)
 {
   NS_ENSURE_ARG(aHostName);
 
@@ -86,27 +90,34 @@ nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt3
   nsCOMPtr<nsISocketTransportService> socketService (do_GetService(kSocketTransportServiceCID));
   NS_ENSURE_TRUE(socketService, NS_ERROR_FAILURE);
   
-	m_readCount = -1; // with socket connections we want to read as much data as arrives
-	m_startPosition = 0;
+  // with socket connections we want to read as much data as arrives
+  m_readCount = -1;
+  m_startPosition = 0;
 
-  rv = socketService->CreateTransportOfType(connectionType, aHostName, aGetPort, nsnull, -1, 0, 0, getter_AddRefs(m_transport));
+  rv = socketService->CreateTransportOfType(connectionType, aHostName,
+                                            aGetPort, nsnull, -1, 0, 0,
+                                            getter_AddRefs(m_transport));
   if (NS_FAILED(rv)) return rv;
 
+  m_transport->SetNotificationCallbacks(callbacks, PR_FALSE);
   m_socketIsOpen = PR_FALSE;
-	return SetupTransportState();
+  return SetupTransportState();
 }
 
-nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType) // open a connection on this url
+// open a connection on this url
+nsresult
+nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType,
+                                 nsIInterfaceRequestor* callbacks) 
 {
   NS_ENSURE_ARG(aURL);
 
   nsXPIDLCString hostName;
-	PRInt32 port = 0;
+  PRInt32 port = 0;
 
-	aURL->GetPort(&port);
-	aURL->GetHost(getter_Copies(hostName));
+  aURL->GetPort(&port);
+  aURL->GetHost(getter_Copies(hostName));
 
-  return OpenNetworkSocketWithInfo(hostName, port, connectionType);
+  return OpenNetworkSocketWithInfo(hostName, port, connectionType, callbacks);
 }
 
 nsresult nsMsgProtocol::OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount)

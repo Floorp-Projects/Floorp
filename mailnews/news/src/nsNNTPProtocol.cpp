@@ -74,6 +74,7 @@
 
 #include "nsIMsgFolder.h"
 #include "nsIMsgNewsFolder.h"
+#include "nsIDocShell.h"
 
 // for the memory cache...
 #include "nsICachedNetData.h"
@@ -588,12 +589,16 @@ NS_IMETHODIMP nsNNTPProtocol::Initialize(nsIURI * aURL, nsIMsgWindow *aMsgWindow
 	
   if (!m_socketIsOpen)
   {
-  // call base class to set up the transport
+    nsCOMPtr<nsIDocShell> docShell;
+    aMsgWindow->GetRootDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIInterfaceRequestor> ir(do_QueryInterface(docShell));
+
+    // call base class to set up the transport
     if (isSecure) {
-	    rv = OpenNetworkSocket(m_url, "ssl-forcehandshake");
+	    rv = OpenNetworkSocket(m_url, "ssl-forcehandshake", ir);
     }
     else {
-	    rv = OpenNetworkSocket(m_url, nsnull);
+	    rv = OpenNetworkSocket(m_url, nsnull, ir);
     }
 	m_nextState = NNTP_LOGIN_RESPONSE;
   }

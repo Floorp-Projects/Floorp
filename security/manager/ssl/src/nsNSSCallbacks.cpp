@@ -32,7 +32,6 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPrompt.h"
 #include "nsProxiedService.h"
-#include "nsIChannel.h"
 #include "nsIInterfaceRequestor.h"
 
 #include "ssl.h"
@@ -74,7 +73,10 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
 
   // Get the desired interface
   nsCOMPtr<nsIPrompt> prompt(do_GetInterface(proxiedCallbacks));
-  if (!prompt) return nsnull;
+  if (!prompt) {
+    NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
+    return nsnull;
+  }
 
   // Finally, get a proxy for the nsIPrompt
   proxyman->GetProxyForObject(NS_UI_THREAD_EVENTQ,
@@ -83,10 +85,6 @@ char* PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
                               PROXY_SYNC,
                               getter_AddRefs(proxyPrompt));
 
-  if (!proxyPrompt) {
-    NS_ASSERTION(PR_FALSE, "callbacks does not implement nsIPrompt");
-    return nsnull;
-  }
 
   nsString promptString;
   nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));

@@ -75,8 +75,18 @@ protected:
 	// methods for opening and closing a socket with core netlib....
 	// mscott -okay this is lame. I should break this up into a file protocol and a socket based
 	// protocool class instead of cheating and putting both methods here...
-	virtual nsresult OpenNetworkSocket(nsIURI * aURL, const char *connectionType); // open a connection on this url
-  virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName, PRInt32 aGetPort, const char *connectionType); // open a connection with a specific host and port
+
+        // open a connection on this url
+        virtual nsresult OpenNetworkSocket(nsIURI * aURL,
+                                           const char *connectionType,
+                                           nsIInterfaceRequestor* callbacks);
+
+        // open a connection with a specific host and port
+        virtual nsresult OpenNetworkSocketWithInfo(const char * aHostName,
+                                                   PRInt32 aGetPort,
+                                                   const char *connectionType,
+                                                   nsIInterfaceRequestor* callbacks);
+
 	virtual nsresult OpenFileSocket(nsIURI * aURL, const nsFileSpec * aFileSpec, PRUint32 aStartPosition, PRInt32 aReadCount); // used to open a file socket connection
 
 	// a Protocol typically overrides this method. They free any of their own connection state and then

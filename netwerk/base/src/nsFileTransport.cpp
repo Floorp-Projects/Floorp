@@ -978,34 +978,34 @@ nsFileTransport::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_OK;
 }
 
-
 NS_IMETHODIMP
-nsFileTransport::GetProgressEventSink(nsIProgressEventSink **aResult)
-{
-    NS_ENSURE_ARG_POINTER(aResult);
-    NS_IF_ADDREF(*aResult = mProgress);
+nsFileTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks) {
+    NS_ENSURE_ARG_POINTER(aCallbacks);
+    *aCallbacks = mNotificationCallbacks;
+    NS_IF_ADDREF(*aCallbacks);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFileTransport::SetProgressEventSink(nsIProgressEventSink *aProgress)
-{
-    mProgress = nsnull;
-    
-    if (aProgress) {
-        // Now generate a proxied event sink
-        nsresult rv;
-        NS_WITH_SERVICE(nsIProxyObjectManager,
-                        proxyMgr, kProxyObjectManagerCID, &rv);
-        if (NS_FAILED(rv)) return rv;
+nsFileTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                          PRBool isBackground) {
+    mNotificationCallbacks = aCallbacks;
+    mProgress = 0;
+    if (!mNotificationCallbacks || isBackground) return NS_OK;
+
+    nsCOMPtr<nsIProgressEventSink> sink(do_GetInterface(mNotificationCallbacks));
+    if (!sink) return NS_ERROR_FAILURE;
+
+    nsresult rv;
+    NS_WITH_SERVICE(nsIProxyObjectManager,
+                    proxyMgr, kProxyObjectManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
         
-        rv = proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
-                                         NS_GET_IID(nsIProgressEventSink),
-                                         aProgress,
-                                         PROXY_ASYNC | PROXY_ALWAYS,
-                                         getter_AddRefs(mProgress));
-    }
-    return NS_OK;
+    return proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
+                                       NS_GET_IID(nsIProgressEventSink),
+                                       sink,
+                                       PROXY_ASYNC | PROXY_ALWAYS,
+                                       getter_AddRefs(mProgress));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

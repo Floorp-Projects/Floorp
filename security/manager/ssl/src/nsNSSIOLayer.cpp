@@ -100,8 +100,7 @@ void MyLogFunction(const char *fmt, ...)
 #endif
 
 nsNSSSocketInfo::nsNSSSocketInfo()
-  : mChannel(nsnull),
-    mFd(nsnull),
+  : mFd(nsnull),
     mSecurityState(nsIWebProgressListener::STATE_IS_INSECURE),
     mForceHandshake(PR_FALSE),
     mUseTLS(PR_FALSE)
@@ -114,7 +113,7 @@ nsNSSSocketInfo::~nsNSSSocketInfo()
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSSocketInfo,
-                              nsIChannelSecurityInfo,
+                              nsITransportSecurityInfo,
                               nsISSLSocketControl,
                               nsIInterfaceRequestor)
 
@@ -185,17 +184,17 @@ nsNSSSocketInfo::SetProxyPort(PRInt32 aPort)
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::GetChannel(nsIChannel** aChannel)
+nsNSSSocketInfo::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
-  *aChannel = mChannel;
-  NS_IF_ADDREF(*aChannel);
+  *aCallbacks = mCallbacks;
+  NS_IF_ADDREF(*aCallbacks);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsNSSSocketInfo::SetChannel(nsIChannel* aChannel)
+nsNSSSocketInfo::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks)
 {
-  mChannel = aChannel;
+  mCallbacks = aCallbacks;
   return NS_OK;
 }
 
@@ -231,16 +230,12 @@ nsNSSSocketInfo::SetShortSecurityDescription(const PRUnichar* aText) {
 /* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
 NS_IMETHODIMP nsNSSSocketInfo::GetInterface(const nsIID & uuid, void * *result)
 {
-  if (!mChannel) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIInterfaceRequestor> callbacks;
-  mChannel->GetNotificationCallbacks(getter_AddRefs(callbacks));
-  if (!callbacks) return NS_ERROR_FAILURE;
+  if (!mCallbacks) return NS_ERROR_FAILURE;
 
   // Proxy of the channel callbacks should probably go here, rather
   // than in the password callback code
 
-  return callbacks->GetInterface(uuid, result);
+  return mCallbacks->GetInterface(uuid, result);
 }
 
 NS_IMETHODIMP
@@ -641,8 +636,8 @@ nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
                      NS_GET_IID(nsIBadCertListener));
   if (NS_FAILED(rv)) 
     return PR_FALSE;
-  nsIChannelSecurityInfo *csi =  NS_STATIC_CAST(nsIChannelSecurityInfo*,
-                                                infoObject);
+  nsITransportSecurityInfo *csi = NS_STATIC_CAST(nsITransportSecurityInfo*,
+                                                 infoObject);
   NS_ADDREF(nssCert);
   nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
   CERTCertificate *peerCert = nssCert->GetCert();

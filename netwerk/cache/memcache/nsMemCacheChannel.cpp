@@ -657,6 +657,15 @@ nsMemCacheChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotification
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsMemCacheChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                            PRBool isBackground)
+{
+    // Not required to be implemented, since it is implemented by cache manager
+    NS_NOTREACHED("nsMemCacheChannel::SetNotificationCallbacks");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP 
 nsMemCacheChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
@@ -664,14 +673,3 @@ nsMemCacheChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_OK;
 }
 
-NS_IMETHODIMP
-nsMemCacheChannel::GetProgressEventSink(nsIProgressEventSink **aSink)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsMemCacheChannel::SetProgressEventSink(nsIProgressEventSink *aSink)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}

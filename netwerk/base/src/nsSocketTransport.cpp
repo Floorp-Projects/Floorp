@@ -41,7 +41,7 @@
 #include "nsXPIDLString.h"
 #include "nsNetUtil.h"
 #include "nsISSLSocketControl.h"
-#include "nsIChannelSecurityInfo.h"
+#include "nsITransportSecurityInfo.h"
 #include "nsMemory.h"
 
 #if defined(PR_LOGGING)
@@ -133,6 +133,8 @@ nsSocketTransport::nsSocketTransport():
     mProxyHost(nsnull),
     mProxyTransparent(PR_FALSE),
     mSSLProxy(PR_FALSE),
+    mCloseConnectionOnceDone(PR_FALSE),
+    mWasConnected(PR_FALSE),
     mService(nsnull),
     mReadWriteState(0),
     mSelectFlags(0),
@@ -149,9 +151,7 @@ nsSocketTransport::nsSocketTransport():
     mBIS(nsnull),
     mBOS(nsnull),
     mReadRequest(nsnull),
-    mWriteRequest(nsnull),
-    mCloseConnectionOnceDone(PR_FALSE),
-    mWasConnected(PR_FALSE)
+    mWriteRequest(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -711,12 +711,17 @@ nsresult nsSocketTransport::doConnection(PRInt16 aSelectFlags)
                 if (nsCRT::strcmp(mSocketTypes[type], "ssl") == 0 ||
                     nsCRT::strcmp(mSocketTypes[type], "tls") == 0) {
                     mSecurityInfo = socketInfo;
+                    nsCOMPtr<nsITransportSecurityInfo> secInfo(do_QueryInterface(mSecurityInfo));
+                    if (secInfo)
+                        secInfo->SetNotificationCallbacks(mNotificationCallbacks);
                 }
                 else if (nsCRT::strcmp(mSocketTypes[type], "ssl-forcehandshake") == 0) {
                     mSecurityInfo = socketInfo;
-                    nsCOMPtr<nsIChannelSecurityInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
-                    if (NS_SUCCEEDED(rv) && securityInfo)
+                    nsCOMPtr<nsITransportSecurityInfo> securityInfo = do_QueryInterface(mSecurityInfo, &rv);
+                    if (NS_SUCCEEDED(rv) && securityInfo) {
                         securityInfo->SetForceHandshake(PR_TRUE);
+                        securityInfo->SetNotificationCallbacks(mNotificationCallbacks);
+                    }
                 }
                 else if (nsCRT::strcmp(mSocketTypes[type], "socks") == 0) {
                     // since socks is transparent, any layers above
@@ -1164,33 +1169,36 @@ nsSocketTransport::GetSecurityInfo(nsISupports **info)
 }
 
 NS_IMETHODIMP
-nsSocketTransport::GetProgressEventSink(nsIProgressEventSink **aResult)
+nsSocketTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
-    NS_ENSURE_ARG_POINTER(aResult);
-    *aResult = mNonProxiedEventSink;
-    NS_IF_ADDREF(*aResult);
+    NS_ENSURE_ARG_POINTER(aCallbacks);
+    *aCallbacks = mNotificationCallbacks;
+    NS_IF_ADDREF(*aCallbacks);
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsSocketTransport::SetProgressEventSink(nsIProgressEventSink *aEventSink)
+nsSocketTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                            PRBool isBackground)
 {
-    mEventSink = mNonProxiedEventSink = 0;
-    if (aEventSink) {
-        mNonProxiedEventSink = aEventSink;
-        nsresult rv;
-        // Now generate a proxied event sink-
-        NS_WITH_SERVICE(nsIProxyObjectManager, 
-                        proxyMgr, kProxyObjectManagerCID, &rv);
-        if (NS_SUCCEEDED(rv)) {
-            rv = proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
-                                             NS_GET_IID(nsIProgressEventSink),
-                                             aEventSink,
-                                             PROXY_ASYNC | PROXY_ALWAYS,
-                                             getter_AddRefs(mEventSink));
-        }
-    }
-    return NS_OK;
+    mNotificationCallbacks = aCallbacks;
+    mEventSink = 0;
+    if (!mNotificationCallbacks || isBackground) return NS_OK;
+
+    nsCOMPtr<nsIProgressEventSink> sink(do_GetInterface(mNotificationCallbacks));
+    if (!sink) return NS_ERROR_FAILURE;
+
+    // Now generate a proxied event sink-
+    nsresult rv;
+    NS_WITH_SERVICE(nsIProxyObjectManager, 
+                    proxyMgr, kProxyObjectManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    return proxyMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, // primordial thread - should change?
+                                       NS_GET_IID(nsIProgressEventSink),
+                                       sink,
+                                       PROXY_ASYNC | PROXY_ALWAYS,
+                                       getter_AddRefs(mEventSink));
 }
 
 

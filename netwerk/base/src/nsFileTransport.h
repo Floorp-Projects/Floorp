@@ -103,6 +103,7 @@ public:
 
 protected:
     nsCOMPtr<nsIProgressEventSink>      mProgress;
+    nsCOMPtr<nsIInterfaceRequestor>     mNotificationCallbacks;
     nsCOMPtr<nsIStreamIO>               mStreamIO;
     char                               *mContentType;
     PRUint32                            mBufferSegmentSize;

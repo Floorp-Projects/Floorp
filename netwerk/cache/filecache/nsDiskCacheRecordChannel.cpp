@@ -619,23 +619,20 @@ nsDiskCacheRecordChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aNotif
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsDiskCacheRecordChannel::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                                   PRBool isBackground)
+{
+    // Not required to be implemented, since it is implemented by cache manager
+    NS_NOTREACHED("nsDiskCacheRecordChannel::SetNotificationCallbacks");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 NS_IMETHODIMP 
 nsDiskCacheRecordChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     *aSecurityInfo = nsnull;
     return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetProgressEventSink(nsIProgressEventSink **aSink)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetProgressEventSink(nsIProgressEventSink *aSink)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

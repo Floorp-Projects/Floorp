@@ -27,7 +27,7 @@ interface nsIStreamListener;
 interface nsIStreamProvider;
 interface nsIInputStream;
 interface nsIOutputStream;
-interface nsIProgressEventSink;
+interface nsIInterfaceRequestor;
 
 [scriptable, uuid(fd01f9a4-d492-4cf8-b76e-160ffc8c01e8)]
 interface nsITransport : nsISupports
@@ -38,9 +38,11 @@ interface nsITransport : nsISupports
     readonly attribute nsISupports securityInfo;
 
     /**
-     * Get/set the progress event sink for this transport.
+     * Get/set notificationCallbacks for this transport.
      */
-    attribute nsIProgressEventSink progressEventSink;
+    readonly attribute nsIInterfaceRequestor notificationCallbacks;
+    void setNotificationCallbacks(in nsIInterfaceRequestor callbacks,
+                                  in boolean isBackground);
 
     /**
      * Open an input stream on this transport.

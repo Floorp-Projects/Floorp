@@ -53,12 +53,11 @@ class nsDiskCacheRecordChannel : public nsIChannel,
   NS_DECL_NSICHANNEL
 
   // Declare nsITransport methods
-  NS_IMETHOD GetProgressEventSink(nsIProgressEventSink **);
-  NS_IMETHOD SetProgressEventSink(nsIProgressEventSink *);
   NS_IMETHOD OpenInputStream(PRUint32, PRUint32, PRUint32, nsIInputStream **);
   NS_IMETHOD OpenOutputStream(PRUint32, PRUint32, PRUint32, nsIOutputStream **);
   NS_IMETHOD AsyncRead(nsIStreamListener *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
   NS_IMETHOD AsyncWrite(nsIStreamProvider *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*, PRBool);
 
   // Declare nsIStreamObserver methods
   NS_DECL_NSISTREAMOBSERVER

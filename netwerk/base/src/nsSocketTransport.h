@@ -38,6 +38,7 @@
 #include "nsIDNSService.h"
 #include "nsIPipe.h"
 #include "nsIProgressEventSink.h"
+#include "nsIInterfaceRequestor.h"
 
 #define NS_SOCKET_TRANSPORT_SEGMENT_SIZE        (2*1024)
 #define NS_SOCKET_TRANSPORT_BUFFER_SIZE         (8*1024)
@@ -216,7 +217,7 @@ protected:
     nsSocketState                   mCurrentState;
     nsCOMPtr<nsIRequest>            mDNSRequest;
     nsCOMPtr<nsIProgressEventSink>  mEventSink;
-    nsCOMPtr<nsIProgressEventSink>  mNonProxiedEventSink;
+    nsCOMPtr<nsIInterfaceRequestor> mNotificationCallbacks;
     char*                           mHostName;
     PRInt32                         mPort;
     PRIntervalTime                  mLastActiveTime;
@@ -231,6 +232,10 @@ protected:
     PRPackedBool                    mProxyTransparent;
     PRPackedBool                    mSSLProxy;
 
+    /* put all the packed bools together so we save space */
+    PRPackedBool                    mCloseConnectionOnceDone;
+    PRPackedBool                    mWasConnected;
+
     nsSocketTransportService*       mService;
 
     PRUint32                        mReadWriteState;
@@ -241,7 +246,7 @@ protected:
     PRUint32                        mSocketTypeCount;
     char*                          *mSocketTypes;
 
-    PRInt32		                    mBytesExpected;
+    PRInt32                         mBytesExpected;
     PRUint32                        mReuseCount;
     PRUint32                        mLastReuseCount;
 
@@ -254,9 +259,6 @@ protected:
     nsSocketBOS                    *mBOS;
     nsSocketReadRequest            *mReadRequest;
     nsSocketWriteRequest           *mWriteRequest;
-   
-    PRPackedBool                    mCloseConnectionOnceDone;
-    PRPackedBool                    mWasConnected;
 };
 
 /**

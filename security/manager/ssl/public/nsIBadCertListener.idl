@@ -36,7 +36,7 @@
 #include "nsISupports.idl"
 
 interface nsIX509Cert;
-interface nsIChannelSecurityInfo;
+interface nsITransportSecurityInfo;
 
 [scriptable, uuid(86960956-edb0-11d4-998b-00b0d02354a0)]
 interface nsIBadCertListener : nsISupports {
@@ -44,15 +44,15 @@ interface nsIBadCertListener : nsISupports {
   const short UNINIT_ADD_FLAG = -1;
   const short ADD_TRUSTED_FOR_SESSION =1;
   const short ADD_TRUSTED_PERMANENTLY = 2;
-  boolean unknownIssuer(in nsIChannelSecurityInfo socketInfo, 
+  boolean unknownIssuer(in nsITransportSecurityInfo socketInfo, 
                         in nsIX509Cert cert,
                         out short certAddType);
 
-  boolean mismatchDomain(in nsIChannelSecurityInfo socketInfo,
+  boolean mismatchDomain(in nsITransportSecurityInfo socketInfo,
                          in wstring targetURL,
                          in nsIX509Cert cert);
 
-  boolean certExpired(in nsIChannelSecurityInfo socketInfo,
+  boolean certExpired(in nsITransportSecurityInfo socketInfo,
                       in nsIX509Cert cert);
 };
 
