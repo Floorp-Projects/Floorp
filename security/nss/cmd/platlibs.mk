@@ -57,6 +57,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/softoken.lib \
 	$(DIST)/lib/freebl.lib \
 	$(CRYPTOLIB) \
+	$(DIST)/lib/freebl.lib \
 	$(DIST)/lib/swfci.lib \
 	$(DIST)/lib/secutil.lib \
 	$(DIST)/lib/dbm.lib \
@@ -97,6 +98,7 @@ EXTRA_LIBS += \
 	$(DIST)/lib/libswfci.a \
 	$(DIST)/lib/libfreebl.a \
 	$(CRYPTOLIB) \
+	$(DIST)/lib/libfreebl.a \
 	$(DIST)/lib/libsecutil.a \
 	$(DIST)/lib/libdbm.a \
 	$(NULL)
