@@ -824,7 +824,6 @@ nsHTMLContentSerializer::LineBreakAfterClose(nsIAtom* aName,
       (aName == nsHTMLAtoms::th) ||
       (aName == nsHTMLAtoms::td) ||
       (aName == nsHTMLAtoms::pre) ||
-      (aName == nsHTMLAtoms::a) ||
       (aName == nsHTMLAtoms::title) ||
       (aName == nsHTMLAtoms::li) ||
       (aName == nsHTMLAtoms::dt) ||
