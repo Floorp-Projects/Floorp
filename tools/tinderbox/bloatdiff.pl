@@ -148,7 +148,7 @@ sub PrintSize($) {
     } elsif ($size > 1000) {
         $rv = PrintNum($size / 1000.0) . "K";
     } else {
-        $rv = PrintNum($size) . "B";
+        $rv = PrintNum($size);
     }
 }
 
@@ -163,8 +163,8 @@ printf "%-40s %10s %10.2f%% %10s %10.2f%%\n",
         $newMap{"TOTAL"}{leaked}, $newMap{"TOTAL"}{leakPercent},
         $newMap{"TOTAL"}{bloat}, $newMap{"TOTAL"}{bloatPercent});
 
-my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "\n";
-my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "\n";
+my $leakstr  = PrintSize($newMap{"TOTAL"}{leaked}) . "B\n";
+my $bloatstr = PrintSize($newMap{"TOTAL"}{bloat}) . "B\n";
 
 print "TinderboxPrint:Lk:$leakstr\n";
 print "TinderboxPrint:Bl:$bloatstr\n";
