@@ -488,8 +488,9 @@ nsHTMLButtonControlFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.ascent  += aReflowState.mComputedBorderPadding.top + focusPadding.top;
   aDesiredSize.descent = aDesiredSize.height - aDesiredSize.ascent;
 
-  nsRect buttonRect(0, 0, aDesiredSize.width, aDesiredSize.height);
-  FinishAndStoreOverflow(&buttonRect, buttonRect.Size());
+  aDesiredSize.mOverflowArea = nsRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+  ConsiderChildOverflow(aDesiredSize.mOverflowArea, firstKid);
+  FinishAndStoreOverflow(&aDesiredSize);
 
   aStatus = NS_FRAME_COMPLETE;
 
