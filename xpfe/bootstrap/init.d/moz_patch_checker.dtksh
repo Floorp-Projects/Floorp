@@ -45,6 +45,14 @@ enumerate_patch_list()
     #cat patchlist.txt | grep "^Patch: "
 }
 
+# Exit with a warning for unsupported platforms
+
+unsupported_exit()
+{
+    echo "# WARNING: Patch checker not supported for $(uname -sr) on $(uname -p)."
+    exit 0
+}
+
 # Setup list of required patches
 typeset -A required_patches
 case "$(uname -p)" in
@@ -67,8 +75,8 @@ case "$(uname -p)" in
         # Solaris 2.8/SPARC
         "5.8")
             required_patches=(
-              [0]="108434-14" [0_title]="32-Bit Shared library patch for C++"
-              [1]="108435-14" [1_title]="64-Bit Shared library patch for C++"
+              [0]="108434-17" [0_title]="32-Bit Shared library patch for C++"
+              [1]="108435-17" [1_title]="64-Bit Shared library patch for C++"
               [2]="108652-79" [2_title]="X11 6.5.1: Xsun patch"
               [3]="108773-18" [3_title]="SunOS 5.8: IIIM and X Input & Output Method patch"
               [4]="109147-27" [4_title]="SunOS 5.8: linker patch"
@@ -84,8 +92,8 @@ case "$(uname -p)" in
         # Solaris 2.9/SPARC
         "5.9")
             required_patches=(
-              [0]="111711-08" [0_title]="32-Bit Shared library patch for C++"
-              [1]="111712-08" [1_title]="64-Bit Shared library patch for C++"
+              [0]="111711-11" [0_title]="32-Bit Shared library patch for C++"
+              [1]="111712-11" [1_title]="64-Bit Shared library patch for C++"
               [2]="111722-04" [2_title]="SunOS 5.9: Math Library (libm) patch"
               [3]="112661-06" [3_title]="SunOS 5.9: IIIM and X Input & Output Method patch"
               [4]="112785-34" [4_title]="X11 6.6.1: Xsun patch"
@@ -96,9 +104,14 @@ case "$(uname -p)" in
             )
             num_required_patches=9
             ;;
-        *)
-            echo "# WARNING: Patch checker not supported for $(uname -s)."
+
+	# Solaris 10/SPARC - no patches yet
+	"5.10")
             exit 0
+            ;;
+
+        *)
+            unsupported_exit
             ;;
       esac
       ;;
@@ -148,15 +161,18 @@ case "$(uname -p)" in
             num_required_patches=8
             ;;
 
-        *)
-            echo "# WARNING: Patch checker not supported for $(uname -s)."
+	# Solaris 10/x86 - no patches yet
+	"5.10")
             exit 0
+            ;;
+
+        *)
+            unsupported_exit
             ;;
       esac
       ;;
   *)
-      echo "# ERROR: Patch checker not supported for $(uname -p)."
-      exit 1
+      unsupported_exit
       ;;
 esac
 
