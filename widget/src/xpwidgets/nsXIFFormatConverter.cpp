@@ -219,10 +219,10 @@ nsXIFFormatConverter::Convert(const char *aFromDataFlavor, nsISupports *aFromDat
     // XIF on clipboard is going to always be double byte so it will be in a primitive
     // class of nsISupportsWString. Also, since the data is in two byte chunks the 
     // length represents the length in 1-byte chars, so we need to divide by two.
-    nsCOMPtr<nsISupportsWString> dataWrapper ( do_QueryInterface(aFromData) );
-    if ( dataWrapper ) {
+    nsCOMPtr<nsISupportsWString> dataWrapper0 ( do_QueryInterface(aFromData) );
+    if ( dataWrapper0 ) {
       nsXPIDLString data;
-      dataWrapper->ToString ( getter_Copies(data) );  //еее COPY #1
+      dataWrapper0->ToString ( getter_Copies(data) );  //еее COPY #1
       if ( data ) {
         PRUnichar* castedData = NS_CONST_CAST(PRUnichar*, NS_STATIC_CAST(const PRUnichar*, data));
         nsAutoString dataStr ( CBufDescriptor(castedData, PR_TRUE, aDataLen) );  //еее try not to copy the data

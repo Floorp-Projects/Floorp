@@ -44,8 +44,8 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, void* aDataB
 
   if ( strcmp(aFlavor,kTextMime) == 0 ) {
     nsCOMPtr<nsISupportsString> primitive;
-    nsresult rv = nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
-                                                      NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
+    nsComponentManager::CreateInstance(NS_SUPPORTS_STRING_PROGID, nsnull, 
+                                       NS_GET_IID(nsISupportsString), getter_AddRefs(primitive));
     if ( primitive ) {
       primitive->SetData ( (char*)aDataBuff );
       nsCOMPtr<nsISupports> genericPrimitive ( do_QueryInterface(primitive) );

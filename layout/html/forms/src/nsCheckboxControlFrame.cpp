@@ -213,7 +213,7 @@ nsCheckboxControlFrame::MouseUp(nsIPresContext* aPresContext)
     // attribute changed event since we just set the state of the checkbox ourselves.
     nsAutoString value;
     CheckStateToString ( newState, value );
-    nsresult res = mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
+    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
   }
   else {
     CheckState newState = GetCheckboxState() == eOn ? eOff : eOn;
@@ -384,7 +384,7 @@ nsCheckboxControlFrame :: SwitchModesWithEmergencyBrake ( PRBool inIsNowTristate
     // our parallel attribute.
     nsAutoString value;
     CheckStateToString ( GetCheckboxState(), value );
-    nsresult res = mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
+    mContent->SetAttribute ( kNameSpaceID_None, GetTristateValueAtom(), value, PR_FALSE );
   }
   else {
     // we were a tri-state checkbox, and now we're a normal checkbox. The current

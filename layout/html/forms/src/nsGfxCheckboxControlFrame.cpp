@@ -85,6 +85,10 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
       case eMixed:
         PaintMixedMark(aRenderingContext, p2t, checkRect);
         break;
+
+			  // no special drawing otherwise
+			default:
+				break;
     } // case of value of checkbox
   } else {
     // Get current checked state through content model.

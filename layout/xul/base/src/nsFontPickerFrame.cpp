@@ -83,7 +83,6 @@ nsFontPickerFrame :: GetDesiredSize(nsIPresContext* aPresContext,
                                            nsHTMLReflowMetrics& aDesiredLayoutSize)
 {
   const int CSS_NOTSET = -1;
-  const int ATTR_NOTSET = -1;
 
   nsSize styleSize;
   if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedWidth) {
