@@ -126,10 +126,7 @@ public:
   NS_IMETHOD  Init(nsIDeviceContext* aContext);
 
   NS_IMETHOD  GetRootView(nsIView *&aView);
-  NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget=nsnull);
-
-  NS_IMETHOD  GetWindowOffset(nscoord *aX, nscoord *aY);
-  NS_IMETHOD  SetWindowOffset(nscoord aX, nscoord aY);
+  NS_IMETHOD  SetRootView(nsIView *aView);
 
   NS_IMETHOD  GetWindowDimensions(nscoord *width, nscoord *height);
   NS_IMETHOD  SetWindowDimensions(nscoord width, nscoord height);
@@ -202,7 +199,7 @@ public:
 
   NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget);
   NS_IMETHOD GetWidget(nsIWidget **aWidget);
-  nsIWidget* GetWidget() { return mRootWindow; }
+  nsIWidget* GetWidget() { return mRootView ? mRootView->GetWidget() : nsnull; }
   NS_IMETHOD ForceUpdate();
  
   NS_IMETHOD IsCachingWidgetChanges(PRBool* aCaching);
@@ -383,10 +380,6 @@ private:
   float             mTwipsToPixels;
   float             mPixelsToTwips;
   nsIViewObserver   *mObserver;
-  nsIWidget         *mRootWindow;
-  PRBool            mRefreshEnabled;
-  PRBool            mPainting;
-  PRBool            mRecursiveRefreshPending;
   nsView            *mMouseGrabber;
   nsView            *mKeyGrabber;
   PRInt32           mUpdateCnt;
@@ -394,8 +387,18 @@ private:
   nsIScrollableView *mRootScrollable;
   PRInt32           mCachingWidgetChanges;
   nscolor           mDefaultBackgroundColor;
-
   nsHashtable       mMapPlaceholderViewToZTreeNode;
+  nsCOMPtr<nsIBlender> mBlender;
+  nsISupportsArray  *mCompositeListeners;
+  nsCOMPtr<nsIFactory> mRegionFactory;
+  nsView            *mRootView;
+  nsCOMPtr<nsIEventQueueService>  mEventQueueService;
+  nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
+  PRPackedBool      mRefreshEnabled;
+  PRPackedBool      mPainting;
+  PRPackedBool      mRecursiveRefreshPending;
+  PRPackedBool      mAllowDoubleBuffering;
+  PRPackedBool      mHasPendingInvalidates;
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers
@@ -406,20 +409,7 @@ private:
   //list of view managers
   static nsVoidArray       *gViewManagers;
 
-  nsCOMPtr<nsIBlender> mBlender;
-
-  nsISupportsArray  *mCompositeListeners;
   void DestroyZTreeNode(DisplayZTreeNode* aNode);
-
-  nsCOMPtr<nsIFactory> mRegionFactory;
-protected:
-  nsView            *mRootView;
-  nscoord           mX;
-  nscoord           mY;
-  PRBool            mAllowDoubleBuffering;
-  PRBool            mHasPendingInvalidates;
-  nsCOMPtr<nsIEventQueueService>  mEventQueueService;
-  nsCOMPtr<nsIEventQueue>         mInvalidateEventQueue;
   void PostInvalidateEvent();
 
 #ifdef NS_VM_PERF_METRICS

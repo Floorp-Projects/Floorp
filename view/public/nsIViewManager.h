@@ -86,24 +86,11 @@ public:
 
   /**
    * Set the root of the view tree. Does not destroy the current root view.
-   * At least one of following must be true:
-   * a) the aWidget parameter is an nsIWidget instance to render into 
-   *    that is not owned by any view and aView has no widget, or
-   * b) aView has a nsIWidget instance and aWidget is null, or
-   * c) aView has a parent view managed by a different view manager and
-   *    aWidget is null
+   * aView may have a parent view managed by a different view manager.
+   * aView may have a widget (anything but printing) or may not (printing).
    * @param aView view to set as root
-   * @param aWidget widget to render into. (Can not be owned by a view)
    */
-  NS_IMETHOD  SetRootView(nsIView *aView, nsIWidget* aWidget = nsnull) = 0;
-
-  /**
-   * Get/Set the offset within the root widget (see above) at which to render.
-   * @param aX out parameter for offset X in window in twips
-   * @param aY out parameter for offset Y in window in twips
-   */
-  NS_IMETHOD  GetWindowOffset(nscoord *aX, nscoord *aY) = 0;
-  NS_IMETHOD  SetWindowOffset(nscoord aX, nscoord aY) = 0;
+  NS_IMETHOD  SetRootView(nsIView *aView) = 0;
 
   /**
    * Get the dimensions of the root window. The dimensions are in
@@ -433,11 +420,10 @@ public:
   NS_IMETHOD GetWidgetForView(nsIView *aView, nsIWidget **aWidget) = 0;
 
   /**
-   * Retrieve the widget that a view manager renders into
-   * @param aWidget the widget that aView renders into.
-   * @result error status
+   * Retrieve the widget at the root of the view manager. This is the
+   * widget associated with the root view, if the root view exists and has
+   * a widget.
    */
-
   NS_IMETHOD GetWidget(nsIWidget **aWidget) = 0;
 
   /**
