@@ -78,15 +78,9 @@ sub SanityCheckBuildOptions()
         $bad_options = 1;
     }
 
-    if ($main::options{soap} && !$main::options{xmlextras})
+    if ($main::options{wsp} && !$main::options{xmlextras})
     {
-        print "Warning: \$options{soap} is on but \$options{xmlextras} is off. SOAP will not be built.\n";
-        $bad_options = 1;
-    }
-
-    if ($main::options{wsp} && !$main::options{soap})
-    {
-        print "Warning: \$options{wsp} is on but \$options{soap} is off. wsp will not be built.\n";
+        print "Warning: \$options{wsp} is on but \$options{xmlextras} is off. wsp will not be built.\n";
         $bad_options = 1;
     }
 
