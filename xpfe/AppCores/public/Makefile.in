@@ -27,7 +27,6 @@ EXPORTS =                       \
 		nsIDOMAppCoresManager.h \
 		nsIDOMBaseAppCore.h     \
 		nsIDOMDOMPropsCore.h    \
-		nsIDOMEditorAppCore.h   \
 		nsIDOMProfileCore.h     \
 		nsIDOMRDFCore.h	        \
 		nsIDOMToolkitCore.h		\
