@@ -29,10 +29,7 @@ config("timebomb.relative_timebomb_secret_name","general.bproxy_cert_digest");
 config("timebomb.relative_timebomb_days",-1);
 config("timebomb.relative_timebomb_warning_days",-1);
 
-// various default search settings
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
-pref("browser.search.opensidebarsearchpanel", true);
-pref("browser.search.powermode", 0);
 
 pref("general.bproxy_cert_digest",0);
 
@@ -104,6 +101,12 @@ pref("browser.download_window_rect",        "-1,-1,-1,-1");
 pref("browser.wfe.ignore_def_check",false);
 pref("browser.wfe.use_windows_colors",true);
 pref("browser.startup_mode",1);
+
+// various default search settings
+pref("browser.search.defaulturl", "http://search.netscape.com/cgi-bin/search?search=");
+pref("browser.search.opensidebarsearchpanel", true);
+pref("browser.search.powermode", 0);
+
 localDefPref("browser.bookmark_location",       "");
 localDefPref("browser.addressbook_location",    "");
 localDefPref("browser.socksfile_location",      "");
