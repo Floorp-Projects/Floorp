@@ -507,6 +507,31 @@ verify_method_declaration(IDL_tree method_tree)
             }
         }
 
+        /*
+         * inout is not allowed with "domstring" types
+         */
+        if (IDL_PARAM_DCL(param).attr == IDL_PARAM_INOUT &&
+            UP_IS_NATIVE(param_type) &&
+            IDL_tree_property_get(param_type, "domstring") != NULL) {
+            IDL_tree_error(method_tree,
+                           "[domstring] types cannot be used as inout "
+                           "parameters");
+            return FALSE;
+        }
+
+
+        /*
+         * arrays of "domstring" types not allowed
+         */
+        if (IDL_tree_property_get(simple_decl, "array") != NULL &&
+            UP_IS_NATIVE(param_type) &&
+            IDL_tree_property_get(param_type, "domstring") != NULL) {
+            IDL_tree_error(method_tree,
+                           "[domstring] types cannot be used in array "
+                           "parameters");
+            return FALSE;
+        }                
+
         if (!check_param_attribute(method_tree, param, IID_IS) ||
             !check_param_attribute(method_tree, param, LENGTH_IS) ||
             !check_param_attribute(method_tree, param, SIZE_IS))

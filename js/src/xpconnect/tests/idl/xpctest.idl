@@ -66,6 +66,10 @@ interface nsIEcho : nsISupports {
                           out long output1, out long output2);
 
     string In2OutOneString(in string input);
+
+    DOMString In2OutOneDOMString(in DOMString input);
+    DOMString EchoIn2OutOneDOMString(in DOMString input);
+
     void SimpleCallNoEcho();
     void SendManyTypes(in octet                 p1,
                        in short                 p2,

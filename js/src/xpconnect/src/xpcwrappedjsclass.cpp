@@ -1067,7 +1067,7 @@ pre_call_clean_up:
     for(i = 0; i < paramCount; i++)
     {
         const nsXPTParamInfo& param = info->GetParam(i);
-        if(!param.IsOut())
+        if(!param.IsOut() && !param.IsDipper())
             continue;
 
         const nsXPTType& type = param.GetType();
@@ -1082,7 +1082,10 @@ pre_call_clean_up:
         JSBool useAllocator = JS_FALSE;
         nsXPTCMiniVariant* pv;
 
-        pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
+        if(param.IsDipper())
+            pv = (nsXPTCMiniVariant*) &nativeParams[i].val.p;
+        else
+            pv = (nsXPTCMiniVariant*) nativeParams[i].val.p;
 
         if(param.IsRetval())
             val = result;
@@ -1100,7 +1103,7 @@ pre_call_clean_up:
                 HANDLE_OUT_CONVERSION_FAILURE;
             iidIsOwned = JS_TRUE;
         }
-        else if(type.IsPointer() && !param.IsShared())
+        else if(type.IsPointer() && !param.IsShared() && !param.IsDipper())
             useAllocator = JS_TRUE;
 
         if(!XPCConvert::JSData2Native(cx, &pv->val, val, type,
