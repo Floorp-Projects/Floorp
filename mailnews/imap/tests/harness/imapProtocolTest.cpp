@@ -1209,7 +1209,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 {
 	nsresult rv = NS_OK;
 
-	PL_strcpy(m_command, "?capability");
+	PL_strcpy(m_command, "capability");
 	// prompt for the command to run ....
 	printf("Enter IMAP command to run [%s]: ", m_command);
 	scanf("%[^\n]", m_command);
@@ -1217,6 +1217,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
 
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
+	PL_strcat(m_urlString, "?");
 	PL_strcat(m_urlString, m_command);
 
 	if (m_protocolInitialized == PR_FALSE)
