@@ -2,7 +2,8 @@
 <html>
   <head>
     <title>the complete guide to mozilla/string</title>
-    <link rel="stylesheet" href="http://www.mozilla.org/projects/string/string-guide.css" type="text/css">
+    <link rel="stylesheet" href="string-guide.css" type="text/css">
+    <!-- link rel="stylesheet" href="http://www.mozilla.org/projects/string/string-guide.css" type="text/css"-->
   </head>
   <body>
 <!-- ----|---------|---------|---------|---------|---------|---------|---------| -->
@@ -66,21 +67,26 @@
 <div class="contents">
   <ul>
     <li><a href="#users_guide_introduction">introduction</a></li>
-    <li><a href="#users_guide_how_to"      >using the string classes right; using the right string class</a></li>
+    <li><a href="#users_guide_how_to"      >using the string classes correctly; using the correct string class</a></li>
     <li><a href="#users_guide_iterators"   >using string iterators</a></li>
     <li><a href="#users_guide_summary"     >summary</a></li>
   </ul>
 </div>
 
 <h2><a name="users_guide_introduction">introduction</a></h2>
-  <h3>what is a string?</h3>
+  <h3>what and what isn't a string?</h3>
+<p>
+  A string is an opaque container holding a, possibly zero length, linear sequence of characters.
+  Understanding the implications of this statement is the foundation for understanding all mozilla's string classes.
+</p>
+
   <h3>readable and writable</h3>
   <h3>promises</h3>
   <h3>flat strings</h3>
   <h3>encoding</h3>
   <h3>sharing</h3>
 
-<h2><a name="users_guide_how_to">using the string classes right; using the right string class</a></h2>
+<h2><a name="users_guide_how_to">using the string classes correctly; using the correct string class</a></h2>
   <h3>basic string operations</h3>
     <h4>comparison</h4>
     <h4>concatenation</h4>
@@ -136,9 +142,159 @@
 
 <div class="contents">
   <ul>
-    <!-- li></li -->
+    <li>
+      I have a wide string, i.e., an instance of a class derived from <span class="code">nsAString</span>
+      <ul>
+        <li>I want a pointer to the characters</span>
+        <li>I want a narrow string</li>
+        <li>I want to <span class="code">printf</span> it</li>
+      </ul>
+    </li>
+    <li>
+      I have a <span class="code">PRUnichar*</span>
+      <ul>
+        <li>I want a wide string</span>
+        <li>I want a narrow string</span>
+        <li>I want to <span class="code">printf</span> it</li>
+      </ul>
+    </li>
+    <li>
+      I have a narrow string, i.e., an instance of a class derived from <span class="code">nsACString</span>
+      <ul>
+        <li>I want a pointer to the characters</span>
+        <li>I want a narrow string</li>
+        <li>I want to <span class="code">printf</span> it</li>
+      </ul>
+    </li>
+    <li>
+      I have a <span class="code">char*</span>
+      <ul>
+        <li>I want a wide string</span>
+        <li>I want a narrow string</span>
+      </ul>
+    </li>
+    <li>
+      I have a literal character sequence, e.g., <span class="code">"Hello, World!\n"</span>
+      <ul>
+        <li>I want a wide string</span>
+        <li>I want a narrow string</span>
+      </ul>
+    </li>
+    <li>What's the best way to return a string?</li>
+    <li>How can I get a pointer to the characters in a string?</li>
+    <li>How can I <span class="code">printf</span> a string?</li>
   </ul>
 </div>
+
+<div class="faq">
+  <dl>
+    <dt>
+      is there any string doc?
+    </dt>
+    <dd>
+      Yes, you're soaking in it!
+    </dd>
+
+    <dt>
+      I have a string, how to I get a pointer to the characters?
+    </dt>
+    <dd>
+      ...
+    </dd>
+
+    <dt>
+      What is the best way to return a string?
+    </dt>
+    <dd>
+      <p>
+        There are several reasonable ways to produce a string result from a function.
+        If you are already holding the answer as a sharable string,
+          you can simply return that string (pass-by-value).
+        Otherwise,
+          the most efficient and flexible way to return a string is
+          to assign your result into a non-<span class="code">const</span> reference parameter.
+        Don't bother to create a sharable string from scratch with your generated result.
+      </p>
+      <p>
+        Why?
+        The two things you want to minimize in string manipulation are,
+          in order of importance,
+            heap allocation, and
+            moving characters around.
+      </p>
+    </dd>
+<!--
+    <dd>
+<div class="source-code">
+<pre>
+class foo
+  {
+    public:
+      // ...
+      void GetShortName( nsAString&amp; aResult ) const;
+      nsSharableString GetFullName() const;
+      
+    private:
+      nsSharableString  mFullName;
+
+      const PRUnichar*  mShortName;
+      PRUint32          mShortNameLength;
+      
+  };
+
+nsSharableString
+foo::GetFullName() const
+  {
+    return mFullName;
+  }
+
+void
+foo::GetShortName( nsAString&amp; aResult ) const
+  {
+    aResult = DependentString(mShortName, mShortNameLength);
+  }
+</pre>
+</div>
+    </dd>
+-->
+
+    <dt>
+      If I have a <span class="code">PRUnichar *aKey</span> [or other representation of a wide] string,
+        what can I use (easily :)
+        to convert it
+        to a <span class="code">printf()</span> printable string?
+      Just for debugging...
+    </dt>
+    <dd>
+      If it's just for debugging,
+        you probably wouldn't care if something odd was printed in the case of a UCS2 character that didn't have
+        an ASCII equivalent.
+      The simplest thing in this case is to make a temporary conversion using <span class="code">NS_ConvertUCS2toUTF8</span>.
+      Remember not to hold onto the pointer you get out of this beyond the lifetime of temporary.
+    </dd>
+    <dd>
+<div class="source-code">
+<pre>
+const PRUnichar* aKey;
+
+printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aKey<span class="notice">).get()</span>);       // GOOD
+  // the simplest way to get a |printf|-able |const char*| out of a string
+
+  // works just as well with an formal wide string type...
+const nsAString&amp aString = ...;  // perhaps it's a parameter
+printf("%s\n", <span class="notice">NS_ConvertUCS2toUTF8(</span>aString<span class="notice">).get()</span>);
+
+
+  // But don't hold onto the pointer longer than the lifetime of the temporary!
+const char* cstring = NS_ConvertUCS2toUTF8(aKey).get(); <span class="warning">// BAD!</span>
+printf("%s\n", cstring);                                <span class="warning">// |cstring| is dangling</span>
+</pre>
+</div>
+    </dd>
+
+  </dl>
+</div>
+
 
 
 <!-- .................................................................End Matter -->
