@@ -29,7 +29,15 @@ public:
 	void GetReferrerTest(nsIHttpChannel *, PRInt16);
 	void SetRequestHeaderTest(nsIHttpChannel *, PRInt16);
 	void GetRequestHeaderTest(nsIHttpChannel *, PRInt16);
-	void VisitRequestHeadersTest(nsIHttpChannel *, PRInt16 );
+	void VisitRequestHeadersTest(nsIHttpChannel *, PRInt16);
+	void SetAllowPipeliningTest(nsIHttpChannel *, PRBool, PRInt16);
+	void GetAllowPipeliningTest(nsIHttpChannel *, PRInt16);
+	void SetRedirectionLimitTest(nsIHttpChannel *, PRUint32, PRInt16);
+	void GetRedirectionLimitTest(nsIHttpChannel *, PRInt16);
+
+	// response methods
+	void GetResponseStatusTest(nsIHttpChannel *, PRInt16);
+
 public:
 
 // Operations
