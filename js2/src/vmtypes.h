@@ -107,6 +107,7 @@ namespace VM {
         SHIFTLEFT, /* dest, source1, source2 */
         SHIFTRIGHT, /* dest, source1, source2 */
         SLOT_XCR, /* dest, source, slot number, value */
+        STATIC_CALL, /* result, target class, name, args */
         STATIC_XCR, /* dest, class, name, value */
         STRICT_EQ, /* dest, source1, source2 */
         STRICT_NE, /* dest, source1, source2 */
@@ -179,6 +180,7 @@ namespace VM {
         "SHIFTLEFT     ",
         "SHIFTRIGHT    ",
         "SLOT_XCR      ",
+        "STATIC_CALL   ",
         "STATIC_XCR    ",
         "STRICT_EQ     ",
         "STRICT_NE     ",
@@ -1125,6 +1127,22 @@ namespace VM {
         }
     };
 
+    class StaticCall : public Instruction_4<TypedRegister, JSClass*, const StringAtom*, RegisterList> {
+    public:
+        /* result, target class, name, args */
+        StaticCall (TypedRegister aOp1, JSClass* aOp2, const StringAtom* aOp3, RegisterList aOp4) :
+            Instruction_4<TypedRegister, JSClass*, const StringAtom*, RegisterList>
+            (STATIC_CALL, aOp1, aOp2, aOp3, aOp4) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[STATIC_CALL] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << ArgList(mOp4, registers);
+            return f;
+        }
+    };
+
     class StaticXcr : public Instruction_4<TypedRegister, JSClass*, uint32, double> {
     public:
         /* dest, class, index, value */
@@ -1294,7 +1312,6 @@ namespace VM {
             (XOR, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
-
 
 } /* namespace VM */
 

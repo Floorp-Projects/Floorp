@@ -233,8 +233,7 @@ static JSValue less_Default(const JSValue& r1, const JSValue& r2)
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
     if (lv.isString() && rv.isString()) {
-        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
-        return JSValue(double(lv.string->compare(*rv.string) < 0));
+        return JSValue(bool(lv.string->compare(*rv.string) < 0));
     }
     else {
         lv = lv.toNumber();
@@ -250,8 +249,7 @@ static JSValue lessEqual_Default(const JSValue& r1, const JSValue& r2)
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
     if (lv.isString() && rv.isString()) {
-        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
-        return JSValue();
+        return JSValue(bool(lv.string->compare(*rv.string) <= 0));
     }
     else {
         lv = lv.toNumber();
@@ -267,8 +265,7 @@ static JSValue equal_Default(const JSValue& r1, const JSValue& r2)
     JSValue lv = r1.toPrimitive(JSValue::Number);
     JSValue rv = r2.toPrimitive(JSValue::Number);
     if (lv.isString() && rv.isString()) {
-        // XXX FIXME urgh, call w_strcmp ??? on a JSString ???
-        return JSValue();
+        return JSValue(bool(lv.string->compare(*rv.string) == 0));
     }
     else {
         lv = lv.toNumber();
@@ -523,6 +520,37 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         JSClass *thisClass = dynamic_cast<JSClass*>(base.object->getType());
                         if (thisClass)
                             mGlobal = thisClass->getScope();
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
+                        continue;
+                    }
+                }
+
+            case STATIC_CALL:
+                {
+                    StaticCall* call = static_cast<StaticCall*>(instruction);
+                    ASSERT(op2(call)->getScope()->getProperty(*op3(call)).isFunction());
+                    JSFunction *target = op2(call)->getScope()->getProperty(*op3(call)).function;
+                    if (target->isNative()) {
+                        RegisterList &params = op4(call);
+                        JSValues argv(params.size() + 1);
+                        argv[0] = kNullValue;
+                        JSValues::size_type i = 1;
+                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                                        src != end; ++src, ++i) {
+                            argv[i] = (*registers)[src->first];
+                        }
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        if (op1(call).first != NotARegister)
+                            (*registers)[op1(call).first] = result;
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, mGlobal, op1(call));
+                        mActivation = new Activation(target->getICode(), mActivation, kNullValue, op4(call));
+                        mGlobal = op2(call)->getScope();
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         endPC = mActivation->mICode->its_iCode->end();

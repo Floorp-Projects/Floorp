@@ -123,6 +123,24 @@ static JSValue print(const JSValues &argv)
     return kUndefinedValue;
 }
 
+static JSValue dump(const JSValues &argv)
+{
+    size_t n = argv.size();
+    if (n > 1) {                // the 'this' parameter is un-interesting
+        if (argv[1].isFunction()) {
+            JSFunction *f = static_cast<JSFunction *>(argv[1].function);
+            if (f->isNative())
+                stdOut << "Native function";
+            else
+                stdOut << *f->getICode();
+        }
+        else
+            stdOut << "Not a function";
+    }
+    stdOut << "\n";
+    return kUndefinedValue;
+}
+
 static ICodeModule* genCode(Context &cx, StmtNode *p, const String &fileName)
 {
     ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
@@ -221,6 +239,7 @@ static void readEvalPrint(FILE *in, World &world)
     jsd.attachToContext (&cx);
 #endif
     global.defineNativeFunction(world.identifiers[widenCString("print")], print);
+    global.defineNativeFunction(world.identifiers[widenCString("dump")], dump);
     global.defineNativeFunction(world.identifiers[widenCString("load")], load);
 
     String buffer;

@@ -181,6 +181,7 @@ namespace ICG {
         }
 
         JSType *findType(const StringAtom& typeName);
+        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret);
     
     public:
         ICodeGenerator(World *world, JSScope *global, JSClass *aClass = NULL, bool atTopLevel = true);
@@ -205,23 +206,23 @@ namespace ICG {
         void returnStmt(TypedRegister r);
         void returnStmt();
         void throwStmt(TypedRegister r)
-        { iCode->push_back(new Throw(r)); }
+            { iCode->push_back(new Throw(r)); }
         void debuggerStmt()
-        { iCode->push_back(new Debugger()); }
+            { iCode->push_back(new Debugger()); }
 
         TypedRegister allocateVariable(const StringAtom& name);
         TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
 
         TypedRegister findVariable(const StringAtom& name)
-        { VariableList::iterator i = variableList->find(name);
+            { VariableList::iterator i = variableList->find(name);
         return (i == variableList->end()) ? TypedRegister(NotARegister, &None_Type) : (*i).second; }
         
         TypedRegister allocateParameter(const StringAtom& name) 
-        { parameterCount++; return grabRegister(name, &Any_Type); }
+            { parameterCount++; return grabRegister(name, &Any_Type); }
         TypedRegister allocateParameter(const StringAtom& name, const StringAtom& typeName) 
-        { parameterCount++; return grabRegister(name, findType(typeName)); }
+            { parameterCount++; return grabRegister(name, findType(typeName)); }
         TypedRegister allocateParameter(const StringAtom& name, JSType *type) 
-        { parameterCount++; return grabRegister(name, type); }
+            { parameterCount++; return grabRegister(name, type); }
         
         Formatter& print(Formatter& f);
         
@@ -229,6 +230,7 @@ namespace ICG {
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister call(TypedRegister target, const StringAtom &name, RegisterList args);
         TypedRegister methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList args);
+        TypedRegister staticCall(JSClass *c, const StringAtom &name, RegisterList args);
 
         void move(TypedRegister destination, TypedRegister source);
         TypedRegister logicalNot(TypedRegister source);
@@ -246,31 +248,25 @@ namespace ICG {
         
         TypedRegister loadName(const StringAtom &name);
         void saveName(const StringAtom &name, TypedRegister value);
-        TypedRegister nameInc(const StringAtom &name);
-        TypedRegister nameDec(const StringAtom &name);
+        TypedRegister nameXcr(const StringAtom &name, ICodeOp op);
        
         TypedRegister getProperty(TypedRegister base, const StringAtom &name);
         void setProperty(TypedRegister base, const StringAtom &name, TypedRegister value);
-        TypedRegister propertyInc(TypedRegister base, const StringAtom &name);
-        TypedRegister propertyDec(TypedRegister base, const StringAtom &name);
+        TypedRegister propertyXcr(TypedRegister base, const StringAtom &name, ICodeOp op);
         
         TypedRegister getStatic(JSClass *base, const StringAtom &name);
         void setStatic(JSClass *base, const StringAtom &name, TypedRegister value);
-        TypedRegister staticInc(JSClass *base, const StringAtom &name);
-        TypedRegister staticDec(JSClass *base, const StringAtom &name);
+        TypedRegister staticXcr(JSClass *base, const StringAtom &name, ICodeOp op);
         
         TypedRegister getElement(TypedRegister base, TypedRegister index);
         void setElement(TypedRegister base, TypedRegister index, TypedRegister value);
-        TypedRegister elementInc(TypedRegister base, TypedRegister index);
-        TypedRegister elementDec(TypedRegister base, TypedRegister index);
+        TypedRegister elementXcr(TypedRegister base, TypedRegister index, ICodeOp op);
 
         TypedRegister getSlot(TypedRegister base, uint32 slot);
         void setSlot(TypedRegister base, uint32 slot, TypedRegister value);
-        TypedRegister slotInc(TypedRegister base, uint32 slot);
-        TypedRegister slotDec(TypedRegister base, uint32 slot);
+        TypedRegister slotXcr(TypedRegister base, uint32 slot, ICodeOp op);
 
-        TypedRegister varInc(TypedRegister var);
-        TypedRegister varDec(TypedRegister var);
+        TypedRegister varXcr(TypedRegister var, ICodeOp op);
         
         Register getRegisterBase()                  { return topRegister; }
         InstructionStream *getICode()               { return iCode; }
@@ -280,6 +276,7 @@ namespace ICG {
     };
 
     Formatter& operator<<(Formatter &f, ICodeGenerator &i);
+    Formatter& operator<<(Formatter &f, ICodeModule &i);
     /*
       std::ostream &operator<<(std::ostream &s, ICodeGenerator &i);
       std::ostream &operator<<(std::ostream &s, StringAtom &str);

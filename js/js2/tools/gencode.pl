@@ -273,6 +273,12 @@ $ops{"CALL"} =
    rem    => "result, target, name, args",
    params => [ ("TypedRegister" , "TypedRegister", "const StringAtom*", "RegisterList") ]
   };
+$ops{"STATIC_CALL"} =
+  {
+   super  => "Instruction_4",
+   rem    => "result, target class, name, args",
+   params => [ ("TypedRegister" , "JSClass*", "const StringAtom*", "RegisterList") ]
+  };
 $ops{"METHOD_CALL"} =
   {
    super  => "Instruction_4",
