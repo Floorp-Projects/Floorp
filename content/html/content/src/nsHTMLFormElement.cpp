@@ -657,8 +657,9 @@ nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
 // a lightweight collection implementation somewhere
 
 nsFormControlList::nsFormControlList(nsIDOMHTMLFormElement* aForm)
-  : mForm(aForm), mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE),
-    mNoNameLookupTable(nsnull)
+  : mForm(aForm),
+    mNoNameLookupTable(nsnull),
+    mNameLookupTable(NS_FORM_CONTROL_LIST_HASHTABLE_SIZE)
 {
   NS_INIT_REFCNT();
 }

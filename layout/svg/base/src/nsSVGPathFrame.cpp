@@ -81,9 +81,9 @@ NS_NewSVGPathFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 // nsSVGPathFrame cntr
 //
 nsSVGPathFrame::nsSVGPathFrame() :
-  mPath(nsnull),
   mX(0),
-  mY(0)
+  mY(0),
+  mPath(nsnull)
 {
 
 }

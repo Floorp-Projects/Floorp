@@ -398,8 +398,8 @@ protected:
       mHistory(aHistory),
       mURLColumn(aURLColumn),
       mCommentColumn(aCommentColumn),
-      mSelectValue(aSelectValue),
-      mExclude(aExclude) {}
+      mExclude(aExclude),
+      mSelectValue(aSelectValue) {}
 
   protected:
     virtual PRBool   IsResult(nsIMdbRow* aRow);

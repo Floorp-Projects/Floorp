@@ -227,11 +227,11 @@ nsCSSText::nsCSSText(void)
 nsCSSText::nsCSSText(const nsCSSText& aCopy)
   : mWordSpacing(aCopy.mWordSpacing),
     mLetterSpacing(aCopy.mLetterSpacing),
-    mDecoration(aCopy.mDecoration),
     mVerticalAlign(aCopy.mVerticalAlign),
     mTextTransform(aCopy.mTextTransform),
     mTextAlign(aCopy.mTextAlign),
     mTextIndent(aCopy.mTextIndent),
+    mDecoration(aCopy.mDecoration),
     mTextShadow(nsnull),
     mUnicodeBidi(aCopy.mUnicodeBidi),
     mLineHeight(aCopy.mLineHeight),

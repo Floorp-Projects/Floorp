@@ -104,10 +104,18 @@ NS_INTERFACE_MAP_END_INHERITING(nsBoxFrame)
 
 // Constructor
 nsXULTreeGroupFrame::nsXULTreeGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsBoxFrame(aPresShell, aIsRoot, aLayoutManager), mFrameConstructor(nsnull), mPresContext(nsnull),
- mOuterFrame(nsnull), mAvailableHeight(10000), mTopFrame(nsnull), mBottomFrame(nsnull), mLinkupFrame(nsnull),
- mContentChain(nsnull), mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc), mDropOnContainer(PR_FALSE),
- mOnScreenRowCount(-1)
+  : nsBoxFrame(aPresShell, aIsRoot, aLayoutManager),
+    mFrameConstructor(nsnull),
+    mPresContext(nsnull),
+    mOuterFrame(nsnull),
+    mAvailableHeight(10000),
+    mTopFrame(nsnull),
+    mBottomFrame(nsnull),
+    mLinkupFrame(nsnull),
+    mContentChain(nsnull),
+    mOnScreenRowCount(-1),
+    mYDropLoc(nsTreeItemDragCapturer::kNoDropLoc),
+    mDropOnContainer(PR_FALSE)
 {}
 
 // Destructor

@@ -109,8 +109,8 @@ morkEnv::morkEnv(const morkUsage& inUsage, nsIMdbHeap* ioHeap,
 , mEnv_DoTrace( morkBool_kFalse )
 , mEnv_AutoClear( morkAble_kDisabled )
 , mEnv_ShouldAbort( morkBool_kFalse )
-, mEnv_OwnsHeap ( morkBool_kFalse )
 , mEnv_BeVerbose( morkEnv_kBeVerbose )
+, mEnv_OwnsHeap ( morkBool_kFalse )
 {
   MORK_ASSERT(ioSlotHeap && ioFactory );
   if ( ioSlotHeap )
@@ -150,8 +150,8 @@ morkEnv::morkEnv(morkEnv* ev, /*i*/
 , mEnv_DoTrace( morkBool_kFalse )
 , mEnv_AutoClear( morkAble_kDisabled )
 , mEnv_ShouldAbort( morkBool_kFalse )
-, mEnv_OwnsHeap ( morkBool_kFalse )
 , mEnv_BeVerbose( morkEnv_kBeVerbose )
+, mEnv_OwnsHeap ( morkBool_kFalse )
 {
   // $$$ do we need to refcount the inSelfAsMdbEnv nsIMdbEnv??
   

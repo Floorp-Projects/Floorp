@@ -63,9 +63,10 @@ static NS_DEFINE_CID(kStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 #define CR  '\015'
 #define LF '\012'
 
-nsBinHexDecoder::nsBinHexDecoder() : mCRC(0), mFileCRC(0), mOctetin(26), 
+nsBinHexDecoder::nsBinHexDecoder() :
+  mState(0), mCRC(0), mFileCRC(0), mOctetin(26), 
   mDonePos(3), mInCRC(0), mCount(0), mMarker(0), mPosInbuff(0), 
-  mPosOutputBuff(0), mState(0)
+  mPosOutputBuff(0)
 {
   NS_INIT_ISUPPORTS();
   mDataBuffer = nsnull;

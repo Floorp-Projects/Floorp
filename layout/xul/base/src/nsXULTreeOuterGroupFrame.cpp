@@ -258,12 +258,26 @@ NS_NewXULTreeOuterGroupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRB
 
 // Constructor
 nsXULTreeOuterGroupFrame::nsXULTreeOuterGroupFrame(nsIPresShell* aPresShell, PRBool aIsRoot, nsIBoxLayout* aLayoutManager)
-:nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager),
- mBatchCount(0), mRowGroupInfo(nsnull), mRowHeight(0), mCurrentIndex(0), mOldIndex(0),
- mTreeIsSorted(PR_FALSE), mDragOverListener(nsnull), mCanDropBetweenRows(PR_TRUE),
- mRowHeightWasSet(PR_FALSE), mReflowCallbackPosted(PR_FALSE), mYPosition(0), mScrolling(PR_FALSE),
- mScrollSmoother(nsnull), mTimePerRow(TIME_PER_ROW_INITAL), mAdjustScroll(PR_FALSE), mTreeItemTag(nsXULAtoms::treeitem),
- mTreeRowTag(nsXULAtoms::treerow), mTreeChildrenTag(nsXULAtoms::treechildren), mStringWidth(-1)
+  : nsXULTreeGroupFrame(aPresShell, aIsRoot, aLayoutManager),
+    mBatchCount(0),
+    mRowGroupInfo(nsnull),
+    mRowHeight(0),
+    mCurrentIndex(0),
+    mOldIndex(0),
+    mTreeIsSorted(PR_FALSE),
+    mCanDropBetweenRows(PR_TRUE),
+    mDragOverListener(nsnull),
+    mRowHeightWasSet(PR_FALSE),
+    mReflowCallbackPosted(PR_FALSE),
+    mScrolling(PR_FALSE),
+    mAdjustScroll(PR_FALSE),
+    mYPosition(0),
+    mScrollSmoother(nsnull),
+    mTimePerRow(TIME_PER_ROW_INITAL),
+    mTreeItemTag(nsXULAtoms::treeitem),
+    mTreeRowTag(nsXULAtoms::treerow),
+    mTreeChildrenTag(nsXULAtoms::treechildren),
+    mStringWidth(-1)
 {
 }
 

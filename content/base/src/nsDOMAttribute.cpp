@@ -49,7 +49,7 @@
 
 nsDOMAttribute::nsDOMAttribute(nsIContent* aContent, nsINodeInfo *aNodeInfo,
                                const nsAReadableString& aValue)
-  : mNodeInfo(aNodeInfo), mValue(aValue), mContent(aContent), mChild(nsnull),
+  : mContent(aContent), mNodeInfo(aNodeInfo), mValue(aValue), mChild(nsnull),
     mChildList(nsnull)
 {
   NS_ABORT_IF_FALSE(mNodeInfo, "We must get a nodeinfo here!");

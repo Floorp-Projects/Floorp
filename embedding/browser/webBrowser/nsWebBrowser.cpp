@@ -77,13 +77,17 @@ static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 //*****************************************************************************
 
 nsWebBrowser::nsWebBrowser() : mDocShellTreeOwner(nsnull), 
-   mInitInfo(nsnull), mContentType(typeContentWrapper),
-   mParentNativeWindow(nsnull), mParentWidget(nsnull), mParent(nsnull),
-   mProgressListener(nsnull), mListenerArray(nsnull),
+   mInitInfo(nsnull),
+   mContentType(typeContentWrapper),
+   mParentNativeWindow(nsnull),
+   mProgressListener(nsnull),
    mBackgroundColor(0),
    mPersistCurrentState(nsIWebBrowserPersist::PERSIST_STATE_READY),
+   mPersistResult(NS_OK),
    mPersistFlags(nsIWebBrowserPersist::PERSIST_FLAGS_NONE),
-   mPersistResult(NS_OK)
+   mParentWidget(nsnull),
+   mParent(nsnull),
+   mListenerArray(nsnull)
 {
     NS_INIT_REFCNT();
     mInitInfo = new nsWebBrowserInitInfo();

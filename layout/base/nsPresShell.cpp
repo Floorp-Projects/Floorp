@@ -252,7 +252,13 @@ protected:
 // Counting Class
 class IndiReflowCounter {
 public:
-  IndiReflowCounter(ReflowCountMgr * aMgr = nsnull):mMgr(aMgr),mCounter(aMgr),mFrame(nsnull), mCount(0), mHasBeenOutput(PR_FALSE) {}
+  IndiReflowCounter(ReflowCountMgr * aMgr = nsnull)
+    : mFrame(nsnull),
+      mCount(0),
+      mMgr(aMgr),
+      mCounter(aMgr),
+      mHasBeenOutput(PR_FALSE)
+    {}
   virtual ~IndiReflowCounter() {}
 
   nsAutoString mName;
