@@ -31,6 +31,7 @@
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
 #include "nsIDOMWindowInternal.h"
+#include "nsICmdLineHandler.h"
 #include <windows.h>
 #include <ddeml.h>
 #include <stdlib.h>
@@ -847,6 +848,22 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request ) {
             #if MOZ_DEBUG_DDE
             printf( "Unknown request [%s]\n", (char*) request );
             #endif
+            // if all else fails, open a browser window
+            const char * const contractID = "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
+            nsCOMPtr<nsICmdLineHandler> handler(do_GetService(contractID, &rv));
+
+            nsXPIDLString defaultArgs;
+            if (handler) {
+                handler->GetDefaultArgs(getter_Copies(defaultArgs));
+            }
+
+            if (defaultArgs) {
+                nsCString url;
+                url.AssignWithConversion( defaultArgs );
+                OpenWindow("chrome://navigator/content/", (const char*)url);
+            } else {
+                OpenWindow("chrome://navigator/content/", "about:blank");
+            }
         }
     
     }
