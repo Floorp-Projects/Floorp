@@ -65,9 +65,6 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
     // Process the newly added column frames
     for (nsIFrame* kidFrame = aChildList; nsnull != kidFrame; kidFrame->GetNextSibling(kidFrame)) {
       // Set the preliminary values for the column frame
-      nsIContent* kid;
-      kidFrame->GetContent(kid);
-
       PRInt32 colIndex = mStartColIndex + mColCount;
       ((nsTableColFrame *)(kidFrame))->InitColFrame (colIndex);
       PRInt32 repeat = ((nsTableColFrame *)(kidFrame))->GetSpan();
