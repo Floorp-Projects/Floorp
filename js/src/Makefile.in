@@ -38,6 +38,8 @@ endif
 
 DIRS		+= fdlibm xpconnect
 
+DEFINES     += -DEXPORT_JS_API
+
 GARBAGE		+= $(JSMATH_PRELINK) $(OBJDIR)/jscpucfg.o $(OBJDIR)/jsautocfg.h $(OBJDIR)/jsautocfg.tmp
 
 ifeq ($(OS_ARCH),OS2)

@@ -25,6 +25,9 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= netlib
 LIBRARY_NAME	= netlib
 
+DEFINES		+= -D_IMPL_NS_NET
+INHIBIT_STRIP_NOT_EXPORTED = 1
+
 CPPSRCS		= \
 		  nsNetService.cpp \
 		  nsNetThread.cpp \

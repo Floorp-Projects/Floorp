@@ -27,6 +27,8 @@ include $(topsrcdir)/config/config.mk
 MODULE		= xp
 LIBRARY_NAME	= xp
 
+INHIBIT_STRIP_NOT_EXPORTED = 1
+
 ifndef MODULAR_NETLIB
 CSRCS		= \
 		  xp_alloc.c \

@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= remoturl
 LIBRARY_NAME	= remoturl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mkremote.c	\
 	$(NULL)

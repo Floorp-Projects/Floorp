@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= fileurl
 LIBRARY_NAME	= fileurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mkfile.c	\
 	$(NULL)

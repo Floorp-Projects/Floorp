@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= httpurl
 LIBRARY_NAME	= httpurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mkhttp.c	\
 	mkaccess.c	\

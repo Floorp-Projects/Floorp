@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= pop3url
 LIBRARY_NAME	= pop3url
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mkpop3.c	\
 	$(NULL)

@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= nntpurl
 LIBRARY_NAME	= nntpurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CPPSRCS		= \
 	mknews.cpp	\
 	mknewsgr.cpp	\

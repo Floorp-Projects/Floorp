@@ -30,7 +30,7 @@ MODULE=raptor
 
 REQUIRES=util img xpcom raptor netlib ps
 
-DEFINES += -D_IMPL_NS_GFXONXP 
+DEFINES += -D_IMPL_NS_GFXNONXP
 CXXFLAGS += $(TK_CFLAGS)
 INCLUDES += $(TK_CFLAGS) -I$(srcdir)/..
 

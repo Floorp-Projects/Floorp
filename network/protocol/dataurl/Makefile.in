@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= dataurl
 LIBRARY_NAME	= dataurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mkdaturl.c	\
 	$(NULL)

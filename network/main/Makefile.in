@@ -27,6 +27,8 @@ include $(topsrcdir)/config/config.mk
 MODULE		= network
 LIBRARY_NAME	= network
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	jscookie.c	\
 	mkautocf.c	\

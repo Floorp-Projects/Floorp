@@ -25,6 +25,8 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= smtpurl
 LIBRARY_NAME	= smtpurl
 
+DEFINES		+= -D_IMPL_NS_NET
+
 CSRCS		= \
 	mksmtp.c	\
 	$(NULL)

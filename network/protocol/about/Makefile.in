@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= abouturl
 LIBRARY_NAME	= abouturl
+DEFINES		+= -D_IMPL_NS_NET
 
 CSRCS		= mkabout.c
 
