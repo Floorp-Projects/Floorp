@@ -86,7 +86,7 @@ CPPSRCS		= \
         nsTextBoxFrame.cpp \
         nsStackFrame.cpp \
         nsSpringFrame.cpp \
-		nsTitledBoxFrame.cpp \
+		nsGroupBoxFrame.cpp \
 		nsFrameNavigator.cpp \
 		nsSplitterFrame.cpp \
 		nsGrippyFrame.cpp \

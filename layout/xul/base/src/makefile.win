@@ -77,7 +77,7 @@ CPPSRCS=					\
         nsSpringFrame.cpp \
 		nsSliderFrame.cpp \
         nsProgressMeterFrame.cpp        \
-        nsTitledBoxFrame.cpp        \
+        nsGroupBoxFrame.cpp        \
         nsBox.cpp        \
         nsContainerBox.cpp        \
         nsBoxFrame.cpp        \
@@ -141,7 +141,7 @@ CPP_OBJS=					\
         .\$(OBJDIR)\nsSpringFrame.obj    \
 	 	.\$(OBJDIR)\nsSliderFrame.obj \
         .\$(OBJDIR)\nsProgressMeterFrame.obj    \
-         .\$(OBJDIR)\nsTitledBoxFrame.obj    \
+        .\$(OBJDIR)\nsGroupBoxFrame.obj    \
         .\$(OBJDIR)\nsBox.obj    \
         .\$(OBJDIR)\nsContainerBox.obj    \
         .\$(OBJDIR)\nsBoxFrame.obj    \
