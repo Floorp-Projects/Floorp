@@ -32,10 +32,11 @@ IS_COMPONENT	= 1
 
 CPPSRCS		= \
 		nsEditor.cpp \
-        nsEditorController.cpp \
+		nsEditorController.cpp \
 		nsEditorUtils.cpp \
 		nsEditorRegistration.cpp \
 		nsTextEditRules.cpp \
+		nsHTMLEditUtils.cpp \
 		TextEditorTest.cpp \
 		nsHTMLEditRules.cpp \
 		nsEditorEventListeners.cpp \

@@ -32,6 +32,7 @@ CPPSRCS =				\
       nsEditorRegistration.cpp \
       nsTextEditRules.cpp    \
       nsHTMLEditRules.cpp    \
+      nsHTMLEditUtils.cpp    \
       TextEditorTest.cpp     \
       nsEditorEventListeners.cpp   \
       nsEditProperty.cpp     \
