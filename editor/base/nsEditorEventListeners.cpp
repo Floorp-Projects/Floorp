@@ -131,9 +131,9 @@ nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
     return NS_OK;
   }
 
-  PRBool keyProcessed;
-  ProcessShortCutKeys(aKeyEvent, keyProcessed);
-  if (PR_FALSE==keyProcessed)
+//  PRBool keyProcessed;
+//  ProcessShortCutKeys(aKeyEvent, keyProcessed);
+//  if (PR_FALSE==keyProcessed)
 	{
 		if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
 				NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
@@ -243,6 +243,10 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 	//	eaiser
 	//
 
+  PRBool keyProcessed;
+  ProcessShortCutKeys(aKeyEvent, keyProcessed);
+  if (PR_FALSE==keyProcessed)
+  {
 	PRBool ctrlKey, altKey, metaKey;
 	uiEvent->GetCtrlKey(&ctrlKey);
 	uiEvent->GetAltKey(&altKey);
@@ -274,6 +278,7 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 		}
  		key += character;
  		htmlEditor->InsertText(key);
+ 	}
 	}
 
 	return NS_ERROR_BASE; // consumed
@@ -301,7 +306,8 @@ nsTextEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aPr
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
+  if (NS_SUCCEEDED(uiEvent->GetCharCode(&keyCode)) && 
+//  if (NS_SUCCEEDED(uiEvent->GetKeyCode(&keyCode)) && 
       NS_SUCCEEDED(uiEvent->GetShiftKey(&isShift)) &&
       NS_SUCCEEDED(uiEvent->GetCtrlKey(&ctrlKey)) &&
       NS_SUCCEEDED(uiEvent->GetAltKey(&altKey))
