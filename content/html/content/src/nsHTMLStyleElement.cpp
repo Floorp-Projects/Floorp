@@ -53,6 +53,7 @@
 #include "nsIDocument.h"
 #include "nsHTMLUtils.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 // XXX no SRC attribute
 
