@@ -1622,13 +1622,16 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
     }
 
     private Slot getSlotToSet(String id, int index, boolean getterSlot) {
-        if (slots == null)
-            slots = new Slot[5];
-        int start = (index & 0x7fffffff) % slots.length;
+        // Get stable reference
+        Slot[] array = slots;
+        if (array == null) {
+            return addSlot(id, index, getterSlot);
+        }
+        int start = (index & 0x7fffffff) % array.length;
         boolean sawRemoved = false;
         int i = start;
         do {
-            Slot slot = slots[i];
+            Slot slot = array[i];
             if (slot == null) {
                 return addSlot(id, index, getterSlot);
             }
@@ -1640,16 +1643,14 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
             {
                 return slot;
             }
-            if (++i == slots.length)
+            if (++i == array.length)
                 i = 0;
         } while (i != start);
-        if (sawRemoved) {
-            // Table could be full, but with some REMOVED elements. 
-            // Call to addSlot will use a slot currently taken by 
-            // a REMOVED.
-            return addSlot(id, index, getterSlot);
-        }
-        throw new RuntimeException("Hashtable internal error");
+        if (Context.check && !sawRemoved) Context.codeBug();
+        // Table could be full, but with some REMOVED elements. 
+        // Call to addSlot will use a slot currently taken by 
+        // a REMOVED.
+        return addSlot(id, index, getterSlot);
     }
 
     /**
@@ -1664,6 +1665,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
     {
         if (count == -1)
             throw Context.reportRuntimeError0("msg.add.sealed");
+        
+        if (slots == null) { slots = new Slot[5]; }
+
         int start = (index & 0x7fffffff) % slots.length;
         int i = start;
         do {
@@ -1689,7 +1693,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable {
             if (++i == slots.length)
                 i = 0;
         } while (i != start);
-        throw new RuntimeException("Hashtable internal error");
+        // Unreachable code
+        if (Context.check) Context.codeBug();
+        return null;
     }
 
     /**
