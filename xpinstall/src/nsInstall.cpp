@@ -1606,11 +1606,24 @@ nsInstall::FileOpDirCreate(nsInstallFolder& aTarget, PRInt32* aReturn)
 }
 
 PRInt32
-nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsIFile** aReturn)
+nsInstall::FileOpDirGetParent(nsInstallFolder& aTarget, nsInstallFolder** theParentFolder)
 {
+  nsCOMPtr<nsIFile> parent;
   nsCOMPtr<nsIFile> localFile = aTarget.GetFileSpec();
 
-  localFile->GetParent(aReturn);
+  nsresult rv = localFile->GetParent(getter_AddRefs(parent));
+  if (NS_SUCCEEDED(rv) && parent)
+  {
+    nsInstallFolder* folder = new nsInstallFolder();   
+    if (folder == nsnull)
+    {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+	  folder->Init(parent);
+	  *theParentFolder = folder;
+  }
+  else
+	  theParentFolder = nsnull;
 
   return NS_OK;
 }
