@@ -609,6 +609,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:xpfe:AppCores:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST",					"$distdirectory:xpfe:");
 	_InstallFromManifest(":mozilla:xpfe:appshell:public:MANIFEST_IDL",				"$distdirectory:idl:");
+	_InstallFromManifest(":mozilla:xpfe:browser:public:MANIFEST_IDL",				"$distdirectory:idl:");
 
 	# MAILNEWS
    _InstallFromManifest(":mozilla:mailnews:public:MANIFEST",							"$distdirectory:mailnews:");
@@ -845,6 +846,8 @@ sub BuildIDLProjects()
 	BuildIDLProject(":mozilla:xpfe:components:macbuild:mozcompsIDL.mcp",			"mozcomps");
 
 	BuildIDLProject(":mozilla:xpfe:appshell:macbuild:appshellIDL.mcp",				"appshell");
+	
+	BuildIDLProject(":mozilla:xpfe:browser:macbuild:mozBrowserIDL.mcp",				"mozBrowser");
 	
 	BuildIDLProject(":mozilla:mailnews:base:macbuild:msgCoreIDL.mcp",				"mailnews");
 	BuildIDLProject(":mozilla:mailnews:compose:macbuild:msgComposeIDL.mcp",			"MsgCompose");
@@ -1466,6 +1469,8 @@ sub BuildXPAppProjects()
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:xpfe:AppCores:macbuild:AppCores.mcp",				"AppCores$D.shlb", "AppCores.toc", 1, $main::ALIAS_SYM_FILES, 0);
+	
+	BuildOneProject(":mozilla:xpfe:browser:macbuild:mozBrowser.mcp",			"mozBrowser$D.shlb", "mozBrowser.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	print("--- XPApp projects complete ----\n")
 
