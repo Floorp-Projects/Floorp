@@ -106,31 +106,22 @@ nsresult nsCookieService::GetCookieService(nsICookieService** aCookieService) {
 nsresult nsCookieService::Init() {
   nsresult rv;
   NS_WITH_SERVICE(nsINetModuleMgr, pNetModuleMgr, kNetModuleMgrCID, &rv); 
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
+
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
-  if (NS_SUCCEEDED(rv)) 
-  {
-    rv = eventQService->CreateThreadEventQueue();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  } 
-  if (NS_FAILED(rv))
-    return rv;
+  if (NS_FAILED(rv)) return rv;
+  rv = eventQService->CreateThreadEventQueue();
+  if (NS_FAILED(rv)) return rv;
   
   if (NS_FAILED(rv = NS_NewCookieHTTPNotify(&mCookieHTTPNotify))) {
     return rv;
   }
   rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_REQUEST_PROGID, mCookieHTTPNotify);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
+
   rv = pNetModuleMgr->RegisterModule(NS_NETWORK_MODULE_MANAGER_HTTP_RESPONSE_PROGID, mCookieHTTPNotify);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  if (NS_FAILED(rv)) return rv;
+
   COOKIE_RegisterCookiePrefCallbacks();
   COOKIE_ReadCookies();     
   return rv;
