@@ -670,9 +670,9 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
                     //select from 2 to a
                     selectFrames(aFrame, aOffset, anchor, anchorFrameOffsetBegin, PR_TRUE, PR_FALSE);
                   }
-                  else if (result2 <= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
+                  else if (result2 >= 0 && result1 >= 0) {//2,1,a or 21,a or 2,1a or 21a
                     //continue selection from 2 to 1
-                    selectFrames(aFrame, aOffset, frame,focusFrameOffsetEnd, PR_TRUE, PR_FALSE);
+                    selectFrames(aFrame, aOffset, frame,PR_MAX(focusFrameOffsetEnd,focusFrameOffsetBegin), PR_TRUE, PR_FALSE);
                   }
                 }
                 mFocusNode = domNode;
