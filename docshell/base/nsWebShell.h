@@ -22,6 +22,7 @@
 #ifndef webshell____h
 #define webshell____h
 
+#include "nsError.h"
 #include "nsIWebShellServices.h"
 #include "nsIWebShell.h"
 #include "nsILinkHandler.h"
@@ -36,6 +37,8 @@ typedef enum {
     eCharsetReloadRequested,
     eCharsetReloadStopOrigional
 } eCharsetReloadState;
+
+#define NS_ERROR_WEBSHELL_REQUEST_REJECTED  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_GENERAL,1001)
 
 class nsWebShell : public nsDocShell,
                    public nsIWebShell,

@@ -102,5 +102,9 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
        }
      }
   }
-   return rv;
+  //if our reload request is not accepted, we should tell parser to go on
+  if (rv != NS_ERROR_HTMLPARSER_STOPPARSING) 
+    rv = NS_ERROR_HTMLPARSER_CONTINUE;
+
+  return rv;
 }
