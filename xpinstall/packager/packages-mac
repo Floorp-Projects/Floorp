@@ -16,7 +16,6 @@ viewer:Essential Files:dom.shlb
 viewer:Essential Files:JavaScript.shlb 
 viewer:Essential Files:libreg.shlb 
 viewer:Essential Files:LiveConnect.shlb 
-viewer:Essential Files:NetworkModular.shlb 
 viewer:Essential Files:NSPR20.shlb 
 viewer:Essential Files:NSRuntime.shlb 
 viewer:Essential Files:NSStdLib.shlb 
@@ -37,7 +36,7 @@ viewer:Mozilla Profile Migration
 viewer:Mozilla Profile Wizard
 viewer:Mozilla Select Profile
 ; viewer:NSPR Logging
-viewer:Plugins:MRJInaBox
+viewer:Plugins:MRJPlugin
 viewer:Plugins:MRJPlugin.jar
 viewer:Search Plugins:*
 
