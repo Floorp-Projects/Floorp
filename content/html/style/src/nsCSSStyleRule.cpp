@@ -545,12 +545,13 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
 {
   nsAutoString temp;
   PRBool aIsNegated = PRBool(0 < aNegatedIndex);
+  PRBool isPseudoElement = IsPseudoElement(mTag);
 
   // selectors are linked from right-to-left, so the next selector in the linked list
   // actually precedes this one in the resulting string
   if (mNext) {
     mNext->ToStringInternal(aString, aSheet, IsPseudoElement(mTag), 0);
-    if (!aIsNegated && !IsPseudoElement(mTag)) {
+    if (!aIsNegated && !isPseudoElement) {
       // don't add a leading whitespace if we have a pseudo-element
       // or a negated simple selector
       aString.Append(PRUnichar(' '));
@@ -562,20 +563,48 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
     NS_IF_NEGATED_START(aIsNegated, aString)
   }
 
-  // append the namespace prefix
-  if (mNameSpace > 0) {
-    nsCOMPtr<nsINameSpace> sheetNS;
-    aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
-    nsCOMPtr<nsIAtom> prefixAtom;
-    // will return null if namespace was the default
-    sheetNS->FindNameSpacePrefix(mNameSpace, getter_AddRefs(prefixAtom));
-    if (prefixAtom) {
-      nsAutoString prefix;
-      prefixAtom->ToString(prefix);
-      aString.Append(prefix);
+  // For non-pseudo-element selectors or for lone pseudo-elements, deal with
+  // namespace prefixes.
+  if (!isPseudoElement || !mNext) {
+    // append the namespace prefix if needed
+    if (mNameSpace == kNameSpaceID_None) {
+      // The only way to do this in CSS is to have an explicit namespace
+      // of "none" specified in the sheet by having a '|' with nothing
+      // before it.
       aString.Append(PRUnichar('|'));
+    } else {
+      nsCOMPtr<nsINameSpace> sheetNS;
+      aSheet->GetNameSpace(*getter_AddRefs(sheetNS));
+    
+      // sheetNS is non-null if and only if we had an @namespace rule.  If it's
+      // null, that means that the only namespaces we could have are the
+      // wildcard namespace (which can be implicit in this case) and the "none"
+      // namespace, which we handled above.  So no need to output anything when
+      // sheetNS is null.
+      if (sheetNS) {
+        nsCOMPtr<nsIAtom> prefixAtom;
+        // prefixAtom is non-null if and only if we have a prefix other than
+        // '*'
+        if (mNameSpace != kNameSpaceID_Unknown) {
+          sheetNS->FindNameSpacePrefix(mNameSpace, getter_AddRefs(prefixAtom));
+        }
+        if (prefixAtom) {
+          nsAutoString prefix;
+          prefixAtom->ToString(prefix);
+          aString.Append(prefix);
+          aString.Append(PRUnichar('|'));
+        } else if (mNameSpace == kNameSpaceID_Unknown) {
+          // explicit *| or only non-default namespace rules and we're not
+          // using any of those namespaces
+          aString.Append(PRUnichar('*'));
+          aString.Append(PRUnichar('|'));
+        }
+        // else we are in the default namespace and don't need to output
+        // anything
+      }
     }
   }
+      
   // smells like a universal selector
   if (!mTag && !mIDList && !mClassList) {
     if (1 != aNegatedIndex) {
@@ -587,8 +616,14 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
   } else {
     // Append the tag name, if there is one
     if (mTag) {
-      if (IsPseudoElement(mTag) && !nsCSSPseudoElements::IsCSS2PseudoElement(mTag)) {
-        aString.Append(PRUnichar(':'));
+      if (isPseudoElement) {
+        if (!mNext) {
+          // Lone pseudo-element selector -- toss in a wildcard type selector
+          aString.Append(PRUnichar('*'));
+        }
+        if (!nsCSSPseudoElements::IsCSS2PseudoElement(mTag)) {
+          aString.Append(PRUnichar(':'));
+        }
       }
       nsAutoString prefix;
       mTag->ToString(prefix);
