@@ -479,7 +479,7 @@ ImageFrame::DisplayAltText(nsIPresContext&      aPresContext,
 {
   // Clip so we don't render outside of the rect.
   aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(aRect, nsClipCombine_kReplace);
+  aRenderingContext.SetClipRect(aRect, nsClipCombine_kIntersect);
 
   const nsStyleColor* color =
     (const nsStyleColor*)mStyleContext->GetStyleData(eStyleStruct_Color);
