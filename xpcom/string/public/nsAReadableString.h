@@ -188,6 +188,13 @@ class nsReadingIterator
           return mFragment;
         }
 
+      const basic_nsAReadableString<CharT>&
+      string() const
+        {
+          NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
+          return *mOwningString;
+        }
+
       difference_type
       size_forward() const
         {
@@ -1167,8 +1174,8 @@ class nsPromiseSubstring
           // nothing else to do here
         }
 
-      nsPromiseSubstring( const basic_nsAReadableString<CharT>& aString, const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
-          : mString(aString)
+      nsPromiseSubstring( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
+          : mString(aStart.string())
         {
           nsReadingIterator<CharT> zeroPoint;
           mString.BeginReading(zeroPoint);
@@ -1278,18 +1285,32 @@ SameImplementation( const basic_nsAReadableString<CharT>& lhs, const basic_nsARe
     return imp_tag && (imp_tag==rhs.Implementation());
   }
 
-template <class CharT>
-nsPromiseSubstring<CharT>
-Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
+inline
+nsPromiseSubstring<char>
+Substring( const basic_nsAReadableString<char>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
-    return nsPromiseSubstring<CharT>(aString, aStartPos, aSubstringLength);
+    return nsPromiseSubstring<char>(aString, aStartPos, aSubstringLength);
   }
 
-template <class CharT>
-nsPromiseSubstring<CharT>
-Substring( const basic_nsAReadableString<CharT>& aString, const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
+inline
+nsPromiseSubstring<PRUnichar>
+Substring( const basic_nsAReadableString<PRUnichar>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
-    return nsPromiseSubstring<CharT>(aString, aStart, aEnd);
+    return nsPromiseSubstring<PRUnichar>(aString, aStartPos, aSubstringLength);
+  }
+
+inline
+nsPromiseSubstring<char>
+Substring( const nsReadingIterator<char>& aStart, const nsReadingIterator<char>& aEnd )
+  {
+    return nsPromiseSubstring<char>(aStart, aEnd);
+  }
+
+inline
+nsPromiseSubstring<PRUnichar>
+Substring( const nsReadingIterator<PRUnichar>& aStart, const nsReadingIterator<PRUnichar>& aEnd )
+  {
+    return nsPromiseSubstring<PRUnichar>(aStart, aEnd);
   }
 
 template <class CharT>

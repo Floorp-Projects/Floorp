@@ -144,6 +144,26 @@ class nsWritingIterator
           return mFragment;
         }
 
+      nsWritableFragment<CharT>&
+      fragment()
+        {
+          return mFragment;
+        }
+
+      const basic_nsAWritableString<CharT>&
+      string() const
+        {
+          NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
+          return *mOwningString;
+        }
+
+      basic_nsAWritableString<CharT>&
+      string()
+        {
+          NS_ASSERTION(mOwningString, "iterator not attached to a string (|mOwningString| == 0)");
+          return *mOwningString;
+        }
+
       difference_type
       size_forward() const
         {
