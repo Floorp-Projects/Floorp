@@ -287,7 +287,6 @@ MAKE_UNMANGLE=if exist unmangle.bat call unmangle.bat
 #// Common Libraries
 #//
 #//------------------------------------------------------------------------
-!ifdef NSPR20
 !if "$(MOZ_BITS)" == "16"
 LIBNSPR=$(DIST)\lib\nspr21.lib
 LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds21.lib
@@ -295,16 +294,9 @@ LIBNSPR=$(LIBNSPR) $(DIST)\lib\plds21.lib
 LIBNSPR=$(DIST)\lib\libnspr21.lib
 LIBNSPR=$(LIBNSPR) $(DIST)\lib\libplds21.lib
 !endif
-!else
-LIBNSPR=$(DIST)\lib\pr$(MOZ_BITS)$(VERSION_NUMBER).lib
-!endif
 
-!ifdef NSPR20
 NSPRDIR = nsprpub
 CFLAGS = $(CFLAGS) -DNSPR20
-!else
-NSPRDIR = nspr
-!endif
 
 LIBJPEG=$(DIST)\lib\jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib
 
