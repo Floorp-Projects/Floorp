@@ -39,7 +39,9 @@ Rights Reserved.
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <html:div flex="100%">
-<tree style="height: 100%" datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree" onclick="return parent.parent.parent.LoadMessage(event.target.parentNode.parentNode)" containment="http://home.netscape.com/NC-rdf#MessageChild">
+<tree style="height: 100%" datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree"
+	  		  onchange="top.ThreadPaneSelectionChange()"
+			  containment="http://home.netscape.com/NC-rdf#MessageChild">
 
   <template>
   	<rule>
