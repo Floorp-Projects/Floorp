@@ -1284,8 +1284,8 @@ public class ScriptRuntime {
             throw NativeGlobal.constructError(
                         Context.getContext(), "TypeError",
                         ScriptRuntime.getMessage("msg.isnt.function", 
-                                                    errorArgs),
-                        thisArg);
+                                                 errorArgs),
+                        fun);
         }
 
         Scriptable thisObj;
