@@ -26,6 +26,7 @@
 #ifndef _MCOM_H_
 #define _MCOM_H_
 
+#include "platform.h"
 #include "xp_core.h"
 #include "xp_mem.h"
 #include "xp_debug.h"
@@ -100,11 +101,11 @@ XP_END_PROTOS
 #define XP_MEMCPY(d, s, n)        memcpy((d), (s), (n))
 
 /* NOTE: XP_MEMMOVE gurantees that overlaps will be properly handled */
-#if defined( __sun) && !defined(__svr4__)
+#ifdef SUNOS4
 #define XP_MEMMOVE(Dest,Src,Len)  bcopy((Src),(Dest),(Len))
 #else
 #define XP_MEMMOVE(Dest,Src,Len)  memmove((Dest),(Src),(Len))
-#endif /* __sun */
+#endif /* SUNOS4 */
 
 #define XP_MEMSET                 memset
 #define XP_SPRINTF                sprintf
@@ -163,7 +164,7 @@ XP_END_PROTOS
 #endif
 #ifdef XP_UNIX
 #if !defined(XP_RANDOM) || !defined(XP_SRANDOM)   /* defined in both xp_mcom.h and xp_str.h */
-#if defined(UNIXWARE) || defined(_INCLUDE_HPUX_SOURCE) || (defined(__sun) && defined(__svr4__)) || defined(SNI) || defined(NCR)
+#if defined(UNIXWARE) || defined(_INCLUDE_HPUX_SOURCE) || defined(SOLARIS) || defined(SNI) || defined(NCR)
 #define XP_RANDOM		rand
 #define XP_SRANDOM(seed)	srand((seed))
 #else

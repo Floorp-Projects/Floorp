@@ -41,7 +41,7 @@ static char sccsid[] = "@(#)bcopy.c	8.1 (Berkeley) 6/4/93";
 
 #include "watcomfx.h"
 
-#ifndef _WINDOWS
+#ifdef HAVE_SYS_CDEFS_H
 #include <sys/cdefs.h>
 #else
 #include "cdefs.h"
