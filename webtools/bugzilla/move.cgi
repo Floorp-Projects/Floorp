@@ -73,7 +73,7 @@ if ( !defined $::FORM{'buglist'} ) {
 
 confirm_login();
 my $exporter = $::COOKIE{"Bugzilla_login"};
-if (! $exporter =~ /(lchaing\@netscape.com|leger\@netscape.com|endico\@mozilla.org|dmose\@mozilla.org)/) {
+unless ($exporter =~ /(lchaing\@netscape.com|leger\@netscape.com|endico\@mozilla.org|dmose\@mozilla.org)/) {
   print "Content-type: text/html\n\n";
   PutHeader("Move Bugs");
   print "<P>You do not have permission to move bugs<P>\n";
