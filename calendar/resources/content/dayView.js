@@ -124,7 +124,7 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
    while( allDayBox.hasChildNodes() )
       allDayBox.removeChild( allDayBox.firstChild );
    
-   this.removeElementsByAttribute("eventBox", "dayview");
+   this.removeElementsByAttribute("eventbox", "dayview");
    
    // set view limits for the day
    var limits = this.getViewLimits(dayEventList,this.calendarWindow.getSelectedDate());
