@@ -49,6 +49,7 @@ nsCommonWidget::nsCommonWidget()
     mNeedsShow        = PR_FALSE;
     mEnabled          = PR_TRUE;
     mCreated          = PR_FALSE;
+    mPlaced           = PR_FALSE;
 
     mPreferredWidth   = 0;
     mPreferredHeight  = 0;
@@ -329,6 +330,8 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     mBounds.y = aY;
     mBounds.width = aWidth;
     mBounds.height = aHeight;
+
+    mPlaced = PR_TRUE;
 
     if (!mCreated)
         return NS_OK;
