@@ -1063,7 +1063,7 @@ nsJSContext::InitializeLiveConnectClasses()
   NS_WITH_SERVICE(nsIJVMManager, jvmManager, nsIJVMManager::GetCID(), &rv);
   if (NS_SUCCEEDED(rv) && jvmManager != nsnull) {
     PRBool javaEnabled = PR_FALSE;
-    if (NS_SUCCEEDED(jvmManager->IsJavaEnabled(&javaEnabled)) && javaEnabled) {
+    if (NS_SUCCEEDED(jvmManager->GetJavaEnabled(&javaEnabled)) && javaEnabled) {
       nsCOMPtr<nsILiveConnectManager> liveConnectManager = do_QueryInterface(jvmManager);
       if (liveConnectManager) {
         rv = liveConnectManager->InitLiveConnectClasses(mContext, ::JS_GetGlobalObject(mContext));
