@@ -789,6 +789,7 @@ AC_CHECK_LIB(elf, elf_rawdata)
 AC_CHECK_LIB(intl, textdomain)
 AC_CHECK_LIB(posix4, shm_open)
 AC_CHECK_LIB(w, iswupper)
+AC_CHECK_LIB(c, random)
 AC_CHECK_LIB(l, yywrap,,
     AC_CHECK_LIB(fl, yywrap))
 
