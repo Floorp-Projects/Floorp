@@ -39,10 +39,13 @@
 #include "utilities.h"
 #include "interpreter.h"
 
+#include <iosfwd>
+
 namespace JavaScript {
 namespace Debugger {
 
     using namespace Interpreter;
+    using std::istream;
     
     class Breakpoint {
     public:
