@@ -24,6 +24,11 @@
 #define nsDocShellBase_h__
 
 #include "nsCOMPtr.h"
+#include "nsIPresShell.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
+#include "nsIViewManager.h"
+#include "nsIScrollableView.h"
 
 #include "nsIDocShell.h"
 #include "nsIDocShellEdit.h"
@@ -61,12 +66,17 @@ protected:
    nsDocShellBase();
    virtual ~nsDocShellBase();
 
+   nsresult GetChildOffset(nsIDOMNode* aChild, nsIDOMNode* aParent, 
+      PRInt32* aOffset);
+   nsresult GetRootScrollableView(nsIScrollableView** aOutScrollView);
+
 protected:
-   PRBool                  m_Created;
-   nsDocShellInitInfo*     m_BaseInitInfo;
-   nsCOMPtr<nsIDocShell>   m_Parent;
+   PRBool                     m_Created;
+   nsDocShellInitInfo*        m_BaseInitInfo;
+   nsCOMPtr<nsIDocShell>      m_Parent;
    nsCOMPtr<nsIPresContext>   m_PresContext;
-   nsCOMPtr<nsIWidget>     m_ParentWidget;
+   nsCOMPtr<nsIWidget>        m_ParentWidget;
+   nsCOMPtr<nsIPresShell>     m_PresShell;
 };
 
 #endif /* nsDocShellBase_h__ */

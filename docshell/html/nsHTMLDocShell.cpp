@@ -82,7 +82,7 @@ NS_IMETHODIMP nsHTMLDocShell::CanHandleContentType(const PRUnichar* contentType,
 
 NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
 {
-  NS_ENSURE_ARG(node);
+  NS_ENSURE_ARG(aNode);
 
   // get the presentation shell
   nsCOMPtr<nsIPresShell> presShell;
@@ -230,26 +230,6 @@ NS_IMETHODIMP nsHTMLDocShell::SetForceCharacterSet(const PRUnichar* forceCharact
 // nsHTMLDocShell::nsIDocShellEdit Overrides
 //*****************************************************************************   
 
-NS_IMETHODIMP ClearSelection()
-{
-  NS_ENSURE(mDoc, NS_ERROR_NOT_INITIALIZED);
-
-  // get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!presShell) { return NS_ERROR_NOT_INITIALIZED; }
-
-  // get the selection object
-  nsresult rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!selection) { return NS_ERROR_NULL_POINTER; }
-
-  // clear the selection
-  selection->ClearSelection();
-
-  return rv;
-}
 
 /* the basic idea here is to grab the topmost content object
  * (for HTML documents, that's the BODY)
@@ -303,130 +283,13 @@ NS_IMETHODIMP SelectAll()
   return rv;
 }
 
-// the pres shell knows how to copy, so let it do the work
-NS_IMETHODIMP CopySelection()
-{
-  // get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!presShell) { return NS_ERROR_NOT_INITIALIZED; }
-
-  return presShell->DoCopy();
-}
-
-/* the docShell is "copyable" if it has a selection and the selection is not
- * collapsed (that is, at least one token is selected, a character or a node
- */
-NS_IMETHODIMP GetCopyable(PRBool *aCopyable)
-{
-  NS_ENSURE_ARG_POINTER(aCopyable);
-  
-  *aCopyable = PR_FALSE;
-
-  // get the presentation shell
-  nsCOMPtr<nsIPresShell> presShell;
-  nsresult rv = GetPresShell(getter_AddRefs(presShell));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!presShell) { return NS_ERROR_NOT_INITIALIZED; }
-
-  // get the selection object
-  nsresult rv = presShell->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv)) { return rv; }
-  if (!selection) { return NS_OK; }   // no selection means not copyable
-
-  PRBool isCollapsed=PR_TRUE;
-  selection->GetIsCollapsed(&isCollapsed);
-  *aCopyable = (PRBool)(!isCollapsed);
-
-  return NS_OK;
-}
-
-/* cut is an editing operation, disallowed by base html doc shell */
-/* XXX: we could set this up so we look for the editor, and if there is
- *      one, we let it do the cut.
- *      This comment extends to GetCutable, Paste, and GetPasteable
- */
-NS_IMETHODIMP CutSelection()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-  /* readonly attribute boolean cutable; */
-NS_IMETHODIMP GetCutable(PRBool *aCutable)
-{
-  NS_ENSURE_ARG_POINTER(aCutable);
-  *aCutable = PR_FALSE;
-  return NS_OK; 
-}
-
-  /* void Paste (); */
-NS_IMETHODIMP Paste()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-  /* readonly attribute boolean pasteable; */
-NS_IMETHODIMP GetPasteable(PRBool *aPasteable)
-{
-  NS_ENSURE_ARG_POINTER(aCutable);
-  *aCutable = PR_FALSE;
-  return NS_OK; 
-}
-
 //*****************************************************************************
 // nsHTMLDocShell::nsIDocShellFile Overrides
 //*****************************************************************************   
 
-NS_IMETHODIMP Save()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-  /* readonly attribute boolean saveable; */
-NS_IMETHODIMP GetSaveable(PRBool *aSaveable)
-{
-  NS_ENSURE_ARG_POINTER(aSaveable);
-  *aSaveable = PR_TRUE;
-  return NS_OK;
-}
-
-  /* void Print (); */
-NS_IMETHODIMP Print()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-  /* readonly attribute boolean printable; */
-NS_IMETHODIMP GetPrintable(PRBool *aPrintable)
-{
-  NS_ENSURE_ARG_POINTER(aPrintable);
-  *aPrintable = PR_TRUE;
-  return NS_OK;
-}
-
-
 //*****************************************************************************
 // nsHTMLDocShell::nsIGenericWindow Overrides
 //*****************************************************************************   
-
-  /* [noscript] void initWindow (in nativeWindow parentNativeWindow, in nsIWidget parentWidget, in long x, in long y, in long cx, in long cy); */
-NS_IMETHODIMP InitWindow(nativeWindow aParentNativeWindow, nsIWidget * aParentWidget, PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY)
-{
-  NS_ENSURE_ARG_POINTER(aParentWidget);
-
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-  /* void create (); */
-NS_IMETHODIMP Create()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-  /* void destroy (); */
-NS_IMETHODIMP Destroy()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
 
   /* void setPosition (in long x, in long y); */
 NS_IMETHODIMP SetPosition(PRInt32 aX, PRInt32 aY)
@@ -606,39 +469,6 @@ NS_IMETHODIMP Repaint(PRBool aForce)
 	return rv;
 }
 
-NS_IMETHODIMP GetParentWidget(nsIWidget **aParentWidget)
-{
-  NS_ENSURE_ARG_POINTER(aParentWidget);
-
-  aParentWidget = mParentWidget;
-  return NS_OK;
-}
-
-NS_IMETHODIMP SetParentWidget(nsIWidget * aParentWidget)
-{
-  NS_ENSURE_ARG_POINTER(aParentWidget);
-  
-  mParentWidget = aParentWidget;
-  return NS_OK;
-}
-
-  /* attribute nativeWindow parentNativeWindow; */
-NS_IMETHODIMP GetParentNativeWindow(nativeWindow **aParentNativeWindow)
-{
-  NS_ENSURE_ARG_POINTER(aParentWidget);
-
-  aParentNativeWindow = mParentNativeWindow;
-  return NS_OK;
-}
-
-NS_IMETHODIMP SetParentNativeWindow(nativeWindow *aParentNativeWindow)
-{
-  NS_ENSURE_ARG_POINTER(aParentWidget);
-
-  mParentNativeWindow = aParentNativeWindow;
-  return NS_OK;
-}
-
 NS_IMETHODIMP GetVisibility(PRBool *aVisibility)
 {
   NS_ENSURE_ARG_POINTER(aVisibility);
@@ -671,14 +501,6 @@ NS_IMETHODIMP SetVisibility(PRBool aVisibility)
 
   rv = rootView->SetVisibility(aVisibility);
   return rv;
-}
-
-  /* readonly attribute nsIWidget mainWidget; */
-NS_IMETHODIMP GetMainWidget(nsIWidget **aMainWidget)
-{
-  NS_ENSURE_ARG_POINTER(aMainWidget);
-
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP SetFocus()
@@ -782,237 +604,16 @@ NS_IMETHODIMP SetZoom(float aZoom)
     vm->UpdateView(rootview, nsnull, 0);
   }
   return NS_OK;
-}
+} 
 
 //*****************************************************************************
 // nsHTMLDocShell::nsIScrollable Overrides
 //*****************************************************************************   
 
-NS_IMETHODIMP GetCurScrollPos(PRInt32 aScrollOrientation, PRInt32 *aCurPos)
-{
-  NS_ENSURE_ARG_POINTER(aCurPos);
-
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nscoord x, y;
-  rv = scrollView->GetScrollPosition(x, y);
-  if (NS_FAILED(rv)) { return rv; }
-
-  if (ScrollOrientation_X==aScrollOrientation)
-    *aCurPos = x;
-  else if (ScrollOrientation_Y==aScrollOrientation)
-    *aCurPos = y;
-  else
-    rv = NS_ERROR_INVALID_ARG;
-  return rv;
-}
-
-NS_IMETHODIMP GetCurScrollPos(PRInt32 aScrollOrientation, PRInt32 *aX, PRInt32 *aY)
-{
-  NS_ENSURE_ARG_POINTER(aX);
-  NS_ENSURE_ARG_POINTER(aY);
-
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->GetScrollPosition(*aX, *aY);
-  return rv;
-}
-
-NS_IMETHODIMP SetCurScrollPos(PRInt32 aScrollOrientation, PRInt32 aCurPos)
-{
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nscoord other, x, y;
-  GetCurScrollPos(aScrollOrientation, &other);
-  if (ScrollOrientation_X==aScrollOrientation)
-  {
-    x = aCurPos;
-    y = other;
-  }
-  else if (ScrollOrientation_Y==aScrollOrientation)
-  {
-    x = other;
-    y = aCurPos;
-  }
-  else
-    return NS_ERROR_INVALID_ARG;
-
-  rv = scrollView->ScrollTo(x, y, NS_VMREFRESH_IMMEDIATE);
-  if (NS_FAILED(rv)) { return rv; }
-
-  return rv;
-}
-
-NS_IMETHODIMP SetCurScrollPos(PRInt32 aX, PRInt32 aY)
-{
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->ScrollTo(aX, aY, NS_VMREFRESH_IMMEDIATE);
-  return rv;
-}
-
-//XXX: this is wrong
-NS_IMETHODIMP GetScrollRange(PRInt32 aScrollOrientation, PRInt32 *aMinPos, PRInt32 *aMaxPos)
-{
-  NS_ENSURE_ARG_POINTER(aMinPos);
-  NS_ENSURE_ARG_POINTER(aMaxPos);
-
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  nscoord width, height;
-  rv = scrollView->GetContainerSize(width, height);
-  *aMinPos = 0;
-  if (ScrollOrientation_X==aScrollOrientation)
-    *aMaxPos = width;
-  else if (ScrollOrientation_Y==aScrollOrientation)
-    *aMaxPos = height;
-  else
-    rv = NS_ERROR_INVALID_ARG;
-  return rv;
-}
-
-NS_IMETHODIMP SetScrollRange(PRInt32 aScrollOrientation, PRInt32 minPos, PRInt32 aMaxPos)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP GetScrollbarPreferences(PRInt32 aScrollOrientation, PRInt32 *aScrollbarPref)
-{
-  NS_ENSURE_ARG_POINTER(aScrollbarPref);
-
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->GetScrollPreference(*aScrollbarPref);
-  return rv;
-}
-
-NS_IMETHODIMP SetScrollbarPreferences(PRInt32 aScrollOrientation, PRInt32 aScrollbarPref)
-{
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->SetScrollPreference(aScrollbarPref);
-  return rv;
-}
-
-NS_IMETHODIMP GetScrollbarVisibility(PRBool *aVerticalVisible, PRBool *aHorizontalVisible)
-{
-  NS_ENSURE_ARG_POINTER(aVerticalVisible);
-  NS_ENSURE_ARG_POINTER(aHorizontalVisible);
-
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->GetScrollbarVisibility(aVerticalVisible, aHorizontalVisible);
-  return rv;
-}
-
-
 //*****************************************************************************
 // nsHTMLDocShell::nsITextScroll Overrides
 //*****************************************************************************   
 
-NS_IMETHODIMP ScrollByLines(PRInt32 aNumLines)
-{
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->ScrollByLines(aNumLines);
-  return rv;
-}
-
-NS_IMETHODIMP ScrollByPages(PRInt32 aNumPages)
-{
-  nsIScrollableView *scrollView=nsnull;
-  nsresult rv = GetRootScrollableView(&scrollView);
-  if (NS_FAILED(rv)) { return rv; }
-  if (!scrollView) { return NS_ERROR_NOT_INITIALIZED; }
-
-  rv = scrollView->ScrollByPages(aNumPages);
-  return rv;
-}
-
-
 //*****************************************************************************
-// private methods
+// nsHTMLDocShell: Helper Routines
 //***************************************************************************** 
-
-nsresult
-nsDocShell::GetPresShell(nsIPresShell **aOutPresShell)
-{
-  NS_ENSURE_ARG_POINTER(aOutPresShell);
-
-  *aOutPresShell = nsnull;
-  if (!mPresShell) { return NS_ERROR_NOT_INITIALIZED;
-  
-  aOutPreShell = do_QueryInterface(mPresShell);
-  return NS_OK;
-}
-
-nsresult 
-nsDocShell::GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
-{
-  NS_ASSERTION((aChild && aParent), "bad args");
-  nsresult result = NS_ERROR_NULL_POINTER;
-  if (aChild && aParent)
-  {
-    nsCOMPtr<nsIDOMNodeList> childNodes;
-    result = aParent->GetChildNodes(getter_AddRefs(childNodes));
-    if ((NS_SUCCEEDED(result)) && (childNodes))
-    {
-      PRInt32 i=0;
-      for ( ; NS_SUCCEEDED(result); i++)
-      {
-        nsCOMPtr<nsIDOMNode> childNode;
-        result = childNodes->Item(i, getter_AddRefs(childNode));
-        if ((NS_SUCCEEDED(result)) && (childNode))
-        {
-          if (childNode.get()==aChild)
-          {
-            aOffset = i;
-            break;
-          }
-        }
-        else if (!childNode)
-          result = NS_ERROR_NULL_POINTER;
-      }
-    }
-    else if (!childNodes)
-      result = NS_ERROR_NULL_POINTER;
-  }
-  return result;
-}
-
-
-nsresult
-nsDocShell::GetRootScrollableView(nsIScrollableView **aOutScrollView)
-{
-  NS_ENSURE_ARG_POINTER(aOutScrollView);
-
-  rv = vm->GetRootScrollableView(aOutScrollView);
-  return rv;
-}
