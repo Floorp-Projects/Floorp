@@ -1069,12 +1069,7 @@ nsFtpConnectionThread::R_pwd() {
             {
                 tmpPath = "";
             }
-
-            nsCAutoString   modPath(mPath);
-            if ((modPath.Length() > 0) && (!modPath.Equals("/")))
-            {
-                tmpPath = modPath;
-            }
+            tmpPath.Append(mPath);
 
             mResponseMsg = tmpPath;
             mURL->SetPath(tmpPath);
