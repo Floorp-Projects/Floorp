@@ -71,6 +71,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+#include "nsdefs.h"
 #include "resource.h"
 
 #ifdef DEBUG_sobotka
@@ -123,23 +124,16 @@ PRBool gIsDestroyingAny = PR_FALSE;
 static POINTL gLastMousePoint;
 static LONG   gLastMsgTime    = 0;
 static LONG   gLastClickCount = 0;
-static LONG   gLastButtonDown = 0;
+static POINTS gLastButton1Down = {0,0};
+
+#define XFROMMP(m)    (SHORT(LOUSHORT(m)))
+#define YFROMMP(m)    (SHORT(HIUSHORT(m)))
 ////////////////////////////////////////////////////
 
 static PRBool gGlobalsInitialized = PR_FALSE;
 static HPOINTER gPtrArray[IDC_COUNT];
 static PRBool gIsTrackPoint = PR_FALSE;
 static PRBool gIsDBCS = PR_FALSE;
-
-/* Older versions of the toolkit, as well as GCC do not have this - from bsedos.h */
-extern "C" {
-   APIRET APIENTRY  DosQueryModFromEIP(HMODULE *phMod,
-                                        ULONG *pObjNum,
-                                        ULONG BuffLen,
-                                        PCHAR pBuff,
-                                        ULONG *pOffset,
-                                        ULONG Address);
-}
 
 // The last user input event time in milliseconds. If there are any pending
 // native toolkit input events it returns the current time. The value is
@@ -1975,7 +1969,7 @@ void nsWindow::FreeNativeData(void * data, PRUint32 aDataType)
   {
     case NS_NATIVE_GRAPHIC:
       if (data) {
-        if (ReleaseDragHPS((HPS)data))
+        if (!ReleaseIfDragHPS((HPS)data))
           WinReleasePS((HPS)data);
       }
       break;
@@ -2034,7 +2028,7 @@ NS_METHOD nsWindow::Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect)
   Update();
 
   if (hps)
-    ReleaseDragHPS(hps);
+    ReleaseIfDragHPS(hps);
 
   return NS_OK;
 }
@@ -2053,7 +2047,7 @@ NS_IMETHODIMP nsWindow::ScrollWidgets(PRInt32 aDx, PRInt32 aDy)
   Update(); // Force synchronous generation of NS_PAINT
 
   if (hps)
-    ReleaseDragHPS(hps);
+    ReleaseIfDragHPS(hps);
 
   return NS_OK;
 }
@@ -2080,7 +2074,7 @@ NS_IMETHODIMP nsWindow::ScrollRect(nsRect &aRect, PRInt32 aDx, PRInt32 aDy)
   Update(); // Force synchronous generation of NS_PAINT
 
   if (hps)
-    ReleaseDragHPS(hps);
+    ReleaseIfDragHPS(hps);
 
   return NS_OK;
 }
@@ -2478,13 +2472,14 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_DOWN, mp1, mp2);
-          gLastButtonDown = 1;
+            // there's no need to clear this on button-up
+          gLastButton1Down.x = XFROMMP(mp1);
+          gLastButton1Down.y = YFROMMP(mp1);
           break;
         case WM_BUTTON1UP:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_LEFT_BUTTON_UP, mp1, mp2);
-          gLastButtonDown = 0;
           break;
         case WM_BUTTON1DBLCLK:
           result = DispatchMouseEvent( NS_MOUSE_LEFT_DOUBLECLICK, mp1, mp2);
@@ -2494,13 +2489,11 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, mWnd);
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_DOWN, mp1, mp2);
-          gLastButtonDown = 2;
           break;
         case WM_BUTTON2UP:
           if (!mIsScrollBar)
             WinSetCapture( HWND_DESKTOP, 0); // release
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_BUTTON_UP, mp1, mp2);
-          gLastButtonDown = 0;
           break;
         case WM_BUTTON2DBLCLK:
           result = DispatchMouseEvent( NS_MOUSE_RIGHT_DOUBLECLICK, mp1, mp2);
@@ -2518,34 +2511,40 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           }
           break;
     
+          // if MB1 & MB2 are both pressed, perform a copy or paste;
+          // see how far the mouse has moved since MB1-down to determine
+          // the operation (this really ought to look for selected content)
         case WM_CHORD:
-          {
+          if (WinGetKeyState(HWND_DESKTOP, VK_BUTTON1) & 
+              WinGetKeyState(HWND_DESKTOP, VK_BUTTON2) &
+              0x8000) {
+            PRBool isCopy = FALSE;
+            if (abs(XFROMMP(mp1) - gLastButton1Down.x) >
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CXMOTIONSTART) / 2) ||
+                abs(YFROMMP(mp1) - gLastButton1Down.y) >
+                  (WinQuerySysValue(HWND_DESKTOP, SV_CYMOTIONSTART) / 2))
+              isCopy = TRUE;
+
             nsKeyEvent event;
             nsPoint point(0,0);
+            InitEvent( event, NS_KEY_PRESS, &point);
 
-            if (gLastButtonDown == 2) {
-              InitEvent( event, NS_KEY_PRESS, &point);
-              event.keyCode   = NS_VK_INSERT;
+            event.keyCode   = NS_VK_INSERT;
+            if (isCopy) {
               event.isShift   = PR_FALSE;
               event.isControl = PR_TRUE;
-              event.isAlt     = PR_FALSE;
-              event.isMeta    = PR_FALSE;
-              event.eventStructType = NS_KEY_EVENT;
-              event.charCode = 0;
-              result = DispatchWindowEvent( &event);
-            } else if (gLastButtonDown == 1) {
-              InitEvent( event, NS_KEY_PRESS, &point);
-              event.keyCode   = NS_VK_INSERT;
+            } else {
               event.isShift   = PR_TRUE;
               event.isControl = PR_FALSE;
-              event.isAlt     = PR_FALSE;
-              event.isMeta    = PR_FALSE;
-              event.eventStructType = NS_KEY_EVENT;
-              event.charCode = 0;
-              result = DispatchWindowEvent( &event);
             }
+            event.isAlt     = PR_FALSE;
+            event.isMeta    = PR_FALSE;
+            event.eventStructType = NS_KEY_EVENT;
+            event.charCode = 0;
+            result = DispatchWindowEvent( &event);
           }
           break;
+
         case WM_BUTTON3DOWN:
           result = DispatchMouseEvent( NS_MOUSE_MIDDLE_BUTTON_DOWN, mp1, mp2);
           break;
@@ -2669,22 +2668,24 @@ PRBool nsWindow::ProcessMessage( ULONG msg, MPARAM mp1, MPARAM mp2, MRESULT &rc)
           break;
     
         case DM_DRAGOVER:
-          result = OnDragOver(mp1, mp2, rc);
+          OnDragOver(mp1, mp2, rc);
+          result = PR_TRUE;
           break;
     
         case DM_DRAGLEAVE:
-          result = OnDragLeave(mp1, mp2);
+          OnDragLeave(mp1, mp2);
+          result = PR_TRUE;
           break;
     
         case DM_DROP:
-          result = OnDrop( mp1, mp2);
+          OnDrop( mp1, mp2);
+          result = PR_TRUE;
           break;
     
-        // Need to handle this method in order to keep track of whether there
-        // is a drag inside the window; we need to do *this* so that we can
-        // generate DRAGENTER messages [which os/2 doesn't provide].
+          // this cancels a drag - after we do our cleanup
+          // pass this to the default wndproc to do its cleanup
         case DM_DROPHELP:
-          mNativeDrag = FALSE;
+          OnDragLeave(mp1, mp2);
           break;
     }
     
@@ -2919,7 +2920,7 @@ PRBool nsWindow::OnPaint()
      
       WinEndPaint(hPS);
       if (hpsDrag)
-        ReleaseDragHPS(hpsDrag);
+        ReleaseIfDragHPS(hpsDrag);
    }
 
    return rc;
@@ -3764,16 +3765,16 @@ PRUint32 nsWindow::GetDragStatus(PRUint32 aState, HPS * oHps)
 // if there's an outstanding drag hps & it matches the one
 // passed in, release it
 
-HPS nsWindow::ReleaseDragHPS(HPS aHps)
+PRBool nsWindow::ReleaseIfDragHPS(HPS aHps)
 {
 
   if (mDragHps && aHps == mDragHps) {
     DrgReleasePS(mDragHps);
     mDragHps = 0;
-    aHps = 0;
+    return PR_TRUE;
   }
 
-  return aHps;
+  return PR_FALSE;
 }
 
 // --------------------------------------------------------------------------

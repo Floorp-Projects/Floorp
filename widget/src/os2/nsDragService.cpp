@@ -47,6 +47,8 @@
 #include "nsIURL.h"
 #include "nsNetUtil.h"
 #include "nsOS2Uni.h"
+#include "nsdefs.h"
+#include "resource.h"
 
 // --------------------------------------------------------------------------
 // helper functions
@@ -65,6 +67,11 @@ int     UnicodeToCodepage( const nsAString& inString, char **outText);
 #endif
 
 // --------------------------------------------------------------------------
+// Global data
+
+static HPOINTER gPtrArray[IDC_DNDCOUNT];
+
+// --------------------------------------------------------------------------
 
 nsDragService::nsDragService()
 {
@@ -72,6 +79,11 @@ nsDragService::nsDragService()
    mDragWnd = WinCreateWindow( HWND_DESKTOP, WC_STATIC, 0, 0, 0, 0, 0, 0,
                                HWND_DESKTOP, HWND_BOTTOM, 0, 0, 0);
    WinSubclassWindow( mDragWnd, nsDragWindowProc);
+
+   HMODULE hModResources = NULLHANDLE;
+   DosQueryModFromEIP(&hModResources, NULL, 0, NULL, NULL, (ULONG) &gPtrArray);
+   for (int i = 0; i < IDC_DNDCOUNT; i++)
+     gPtrArray[i] = ::WinLoadPointer(HWND_DESKTOP, hModResources, i+IDC_DNDBASE);
 }
 
 // --------------------------------------------------------------------------
@@ -181,6 +193,11 @@ nsDragService::~nsDragService()
 {
   /* destructor code */
   WinDestroyWindow(mDragWnd);
+
+  for (int i = 0; i < IDC_DNDCOUNT; i++) {
+    WinDestroyPointer(gPtrArray[i]);
+    gPtrArray[i] = 0;
+  }
 }
 
 // --------------------------------------------------------------------------
@@ -223,6 +240,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
   dragitem.hstrSourceName      = NULLHANDLE;
 
   nsresult rv = NS_ERROR_FAILURE;
+  ULONG idIcon = 0;
 
   // reduce our footprint by ensuring any intermediate objects
   // go out of scope before the drag begins
@@ -249,6 +267,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
         dragitem.hstrRMF        = DrgAddStrHandle("<DRM_OS2FILE,DRF_UNKNOWN>");
         dragitem.hstrTargetName = DrgAddStrHandle(targetName);
         nsMemory::Free(targetName);
+        idIcon = IDC_DNDURL;
       }
     }
     else
@@ -260,6 +279,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
         dragitem.hstrRMF        = DrgAddStrHandle("<DRM_OS2FILE,DRF_TEXT>");
         dragitem.hstrTargetName = DrgAddStrHandle(targetName);
         nsMemory::Free(targetName);
+        idIcon = IDC_DNDTEXT;
       }
     }
   }
@@ -277,8 +297,15 @@ NS_IMETHODIMP nsDragService::InvokeDragSession(nsIDOMNode *aDOMNode, nsISupports
   DRAGIMAGE dragimage;
   memset(&dragimage, 0, sizeof(DRAGIMAGE));
   dragimage.cb = sizeof(DRAGIMAGE);
-  dragimage.hImage = WinQuerySysPointer(HWND_DESKTOP, SPTR_FILE, FALSE);
   dragimage.fl = DRG_ICON;
+  if (idIcon)
+    dragimage.hImage = gPtrArray[idIcon-IDC_DNDBASE];
+  if (dragimage.hImage) {
+    dragimage.cyOffset = 8;
+    dragimage.cxOffset = 2;
+  }
+  else
+    dragimage.hImage  = WinQuerySysPointer(HWND_DESKTOP, SPTR_FILE, FALSE);
     
   mDoingDrag = PR_TRUE;
   HWND hwndDest = DrgDrag(mDragWnd, pDragInfo, &dragimage, 1, VK_BUTTON2,
