@@ -45,8 +45,6 @@
 
 
 <!-- Overlays -->
-<?xul-overlay href="chrome://penglobal/content/penRootOverlay.xul"?>
-<?xul-overlay href="chrome://penglobal/content/penApplicationOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://calendar/content/calendarMenuOverlay.xul"?>
 

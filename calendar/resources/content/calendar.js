@@ -95,12 +95,6 @@ var gHeaderDateItemArray = null;
 
 //var gCategoryManager = null;
 
-// penapplication instance
-// At time of writing, this MUST BE CALLED calendar because the
-// control bar expects the handle name to be the same as the variable name.
-
-var calendar;
-
 // Show event details on mouseover
 
 var showEventDetails = true;
@@ -131,12 +125,9 @@ const kMAX_NUMBER_OF_DOTS_IN_MONTH_VIEW = "8"; //the maximum number of dots that
 
 function calendarInit() 
 {
-	// set up pen application
-   
-   calendar = penapplication;
    
    // get the calendar event data source
-   gEventSource = penapplication.getRoot().Root.gCalendarEventDataSource;
+   gEventSource = self.gCalendarEventDataSource;
    
    //get the category manager.
    
@@ -473,7 +464,7 @@ function newEvent( startDate, allDay )
    
    args.onOk =  self.addEventDialogResponse; 
    
-   args.calendarEvent = penapplication.getRoot().CalendarEvent.makeNewEvent( startDate, allDay );
+   args.calendarEvent = self.CalendarEvent.makeNewEvent( startDate, allDay );
    
    // open the dialog non modally
             

@@ -54,7 +54,6 @@
    args.onOk = <function>;          // funtion to call when OK is clicked
    args.calendarEvent = calendarEvent;    // newly creatd calendar event to be editted
     
-   calendar.openDialog("caNewEvent", "chrome://calendar/content/calendarEventDialog.xul", true, args );
 *
 *  Invoke this dialog to edit an existing event as follows:
 *
@@ -62,8 +61,6 @@
    args.mode = "edit";                    // "new" or "edit"
    args.onOk = <function>;                // funtion to call when OK is clicked
    args.calendarEvent = calendarEvent;    // javascript object containin the event to be editted
-
-   calendar.openDialog("caEditEvent", "chrome://calendar/content/calendarEventDialog.xul", true, args );
 
 * When the user clicks OK the onOk function will be called with a calendar event object.
 *

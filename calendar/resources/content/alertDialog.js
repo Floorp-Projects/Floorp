@@ -89,7 +89,7 @@ function acknowledgeAlarm( )
             
    //opener.gEventSource.modifyEvent( gCalendarEvent );
 
-   //pendialog.getRoot().Root.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
+   //self.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
    
    return( true );
 }
@@ -114,7 +114,7 @@ function snoozeAlarm( )
 
    //opener.gEventSource.modifyEvent( gCalendarEvent );
 
-   pendialog.getRoot().Root.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
+   self.gCalendarEventDataSource.respondAcknowledgeAlarm( gCalendarEvent );
 
    return( true );
 }
