@@ -49,8 +49,8 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 ////////////////////////////////////////////////////////////////////////////////
 
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
-    : mChannels(nsnull), mSubGroups(nsnull), 
-      mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
+    : mDefaultLoadAttributes(nsIChannel::LOAD_NORMAL),
+      mChannels(nsnull), mSubGroups(nsnull), 
       mParent(nsnull), mForegroundCount(0),
       mIsActive(PR_FALSE)
 {
@@ -253,7 +253,7 @@ nsLoadGroup::IsPending(PRBool *result)
             continue;
         PRBool pending;
         rv = req->IsPending(&pending);
-        nsIRequest* x = req;
+///        nsIRequest* x = req;
         NS_RELEASE(req);
         if (NS_FAILED(rv)) return rv;
         if (pending) {
@@ -440,6 +440,7 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
     }
 
 #ifdef DEBUG
+  {
     char* uriStr;
     nsCOMPtr<nsIURI> uri;
     rv = channel->GetURI(getter_AddRefs(uri));
@@ -453,6 +454,7 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
            ("LOADGROUP: %x Adding channel %x %s (count=%d).\n", 
             this, channel, uriStr, count));
     nsCRT::free(uriStr);
+  }
 #endif
 
     rv = mChannels->AppendElement(channel) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
@@ -465,6 +467,7 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
             mForegroundCount++;
             if (mForegroundCount == 1 && mObserver) {
 #ifdef DEBUG
+              {
                 char* uriStr;
                 nsCOMPtr<nsIURI> uri;
                 rv = channel->GetURI(getter_AddRefs(uri));
@@ -475,6 +478,7 @@ nsLoadGroup::AddChannel(nsIChannel *channel, nsISupports* ctxt)
                 PR_LOG(gLoadGroupLog, PR_LOG_DEBUG, 
                        ("LOADGROUP: %x First channel %x %s.\n", this, channel, uriStr));
                 nsCRT::free(uriStr);
+              }
 #endif
                 if (!mIsActive) {
                     //
@@ -508,6 +512,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
     NS_ASSERTION(mChannels, "Forgot to call AddChannel");
 
 #ifdef DEBUG
+  {
     char* uriStr;
     nsCOMPtr<nsIURI> uri;
     rv = channel->GetURI(getter_AddRefs(uri));
@@ -521,6 +526,7 @@ nsLoadGroup::RemoveChannel(nsIChannel *channel, nsISupports* ctxt,
            ("LOADGROUP: %x Removing channel %x %s status %d (count=%d).\n", 
             this, channel, uriStr, status, count-1));
     nsCRT::free(uriStr);
+  }
 #endif
 
     //
