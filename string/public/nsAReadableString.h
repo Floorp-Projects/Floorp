@@ -987,7 +987,7 @@ copy_string( InputIterator first, InputIterator last, OutputIterator result )
 
         NS_ASSERTION(lengthToCopy, "|copy_string| will never terminate");
 
-        nsCharTraits<typename InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
+        nsCharTraits<InputIterator::value_type>::copy(result.operator->(), first.operator->(), lengthToCopy);
 
         first += PRInt32(lengthToCopy);
         result += PRInt32(lengthToCopy);
@@ -1029,7 +1029,7 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
-        nsCharTraits<typename InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<InputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
 
         last -= PRInt32(lengthToCopy);
         result -= PRInt32(lengthToCopy);
