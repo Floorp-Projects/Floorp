@@ -26,7 +26,7 @@
 #define DBG 0
 //-------------------------------------------------------------------------
 //
-// nsButton constructor
+// nsRadioButton constructor
 //
 //-------------------------------------------------------------------------
 nsRadioButton::nsRadioButton(nsISupports *aOuter) : nsWindow(aOuter)
@@ -205,13 +205,7 @@ void nsRadioButton::StringToStr255(const nsString& aText, Str255& aStr255)
 //-------------------------------------------------------------------------
 void nsRadioButton::SetLabel(const nsString& aText)
 {
-
-	NS_ASSERTION(mControl != nsnull,"Control must not be null");
-	//if (mControl != nsnull)
-	//{
-		StringToStr255(aText,mLabel);
-		//SetControlTitle(mControl,s);
-	//}
+	mLabel = aText;
 }
 
 
@@ -223,7 +217,7 @@ void nsRadioButton::SetLabel(const nsString& aText)
 //-------------------------------------------------------------------------
 void nsRadioButton::GetLabel(nsString& aBuffer)
 {
-
+	aBuffer = mLabel;
 }
 
 //-------------------------------------------------------------------------
@@ -326,6 +320,7 @@ Rect								macrect,rb;
 GrafPtr							theport;
 RGBColor						blackcolor = {0,0,0};
 RgnHandle						thergn;
+Str255		tempstring;
 
 
 	GetPort(&theport);
@@ -345,7 +340,8 @@ RgnHandle						thergn;
 	::FrameOval(&rb); 
 	
 	
-	width = ::StringWidth(mLabel);
+	StringToStr255(mLabel,tempstring);
+	width = ::StringWidth(tempstring);
 	x = macrect.left+buttonsize+5;
 	
 	::TextFont(0);
@@ -353,7 +349,7 @@ RgnHandle						thergn;
 	::TextFace(bold);
 	y = macrect.bottom-1;
 	::MoveTo(x,y);
-	::DrawString(mLabel);
+	::DrawString(tempstring);
 		
 	if(  (mButtonSet && !mMouseDownInButton) ||  
 	     (mMouseDownInButton && aMouseInside && !mButtonSet) ||

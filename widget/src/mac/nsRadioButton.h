@@ -101,7 +101,7 @@ private:
   AggRadioButton mAggWidget;
   friend class AggRadioButton;
   
-  Str255				mLabel;
+  nsString			mLabel;
   PRBool				mMouseDownInButton;
   PRBool				mWidgetArmed;
   PRBool				mButtonSet;
@@ -109,4 +109,4 @@ private:
 
 };
 
-#endif // nsButton_h__
+#endif // nsRadioButton_h__
