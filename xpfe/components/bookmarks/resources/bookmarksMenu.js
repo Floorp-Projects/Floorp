@@ -212,15 +212,15 @@ var BookmarksMenu = {
       case "toolbarseparator":
       case "toolbarbutton":
         size = overButtonBoxObject.width;
-        coordValue = overButtonBoxObject.x;
+        coordValue = overButtonBoxObject.clientX;
         clientCoordValue = aEvent.clientX;
         break;
       case "menuseparator": 
       case "menu":
       case "menuitem":
         size = overButtonBoxObject.height;
-        coordValue = overButtonBoxObject.y-overParentBoxObject.y;
-        clientCoordValue = aEvent.clientY;
+        coordValue = overButtonBoxObject.screenY;
+        clientCoordValue = aEvent.screenY;
         break;
       default: return BookmarksUtils.DROP_ON;
     }
