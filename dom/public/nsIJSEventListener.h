@@ -45,4 +45,4 @@ public:
 
 extern "C" NS_DOM nsresult NS_NewJSEventListener(nsIDOMEventListener ** aInstancePtrResult, nsIScriptContext *aContext, nsIScriptObjectOwner* aOwner);
 
-#endif nsIJSEventListener_h__
+#endif // nsIJSEventListener_h__
