@@ -1222,9 +1222,7 @@ nsresult nsParser::WillBuildModel(nsString& aFilename){
       }
 
       if(PR_TRUE==FindSuitableDTD(*mParserContext,theBuffer)) {
-        nsITokenizer* tokenizer;
-        mParserContext->GetTokenizer(tokenizer);
-        mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
+        mParserContext->mDTD->WillBuildModel( *mParserContext,mSink);
       }//if        
     }//if
   } 
@@ -1550,10 +1548,10 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
     return result;
   }
 
-  
+  nsParser* me = this; 
   // Maintain a reference to ourselves so we don't go away 
   // till we're completely done. 
-  nsCOMPtr<nsIParser> kungFuDeathGrip(this);
+  NS_ADDREF(me); 
 
   if(aSourceBuffer.Length() || mUnusedInput.Length()) { 
     
@@ -1569,55 +1567,57 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
     if((!mParserContext) || (mParserContext->mKey!=aKey))  { 
       //only make a new context if we dont have one, OR if we do, but has a different context key... 
   
-      nsScanner* theScanner = new nsScanner(mUnusedInput,mCharset,mCharsetSource);
-      NS_ENSURE_TRUE(theScanner, NS_ERROR_OUT_OF_MEMORY);
-      
-      nsIDTD *theDTD = 0; 
-      eAutoDetectResult theStatus = eUnknownDetect; 
+      nsScanner* theScanner=new nsScanner(mUnusedInput,mCharset,mCharsetSource); 
+      nsIDTD *theDTD=0; 
+      eAutoDetectResult theStatus=eUnknownDetect; 
 
       if (mParserContext && mParserContext->mMimeType==aMimeType) {
         NS_ASSERTION(mParserContext->mDTD,"How come the DTD is null?"); // Ref. Bug 90379
         
-        if (mParserContext) {
-          // To fix bug 32263 we used create a new instance of the DTD!.
-          // All we need is a new tokenizer which now gets created with
-          // a parser context.
-          theDTD = mParserContext->mDTD; 
+        if (mParserContext->mDTD) {
+          mParserContext->mDTD->CreateNewInstance(&theDTD); // To fix 32263
           theStatus=mParserContext->mAutoDetectStatus; 
           //added this to fix bug 32022.
         }
       } 
 
-      pc = new CParserContext(theScanner, aKey, mCommand, 0, theDTD, theStatus, aLastCall);
-      NS_ENSURE_TRUE(pc, NS_ERROR_OUT_OF_MEMORY);
+      pc=new CParserContext(theScanner,aKey, mCommand,0,theDTD,theStatus,aLastCall); 
 
-      PushContext(*pc); 
+      if(pc && theScanner) { 
+        PushContext(*pc); 
 
-      pc->mMultipart=!aLastCall; //by default 
-      if (pc->mPrevContext) { 
-        pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available 
+        pc->mMultipart=!aLastCall; //by default 
+        if (pc->mPrevContext) { 
+          pc->mMultipart |= pc->mPrevContext->mMultipart;  //if available 
+        } 
+
+        // start fix bug 40143
+        if(pc->mMultipart) {
+          pc->mStreamListenerState=eOnDataAvail;
+          if(pc->mScanner) pc->mScanner->SetIncremental(PR_TRUE);
+        }
+        else {
+          pc->mStreamListenerState=eOnStop;
+          if(pc->mScanner) pc->mScanner->SetIncremental(PR_FALSE);
+        }
+        // end fix for 40143
+
+        pc->mContextType=CParserContext::eCTString; 
+        pc->SetMimeType(aMimeType);
+        pc->mDTDMode=aMode;
+        mUnusedInput.Truncate(0); 
+
+        //printf("Parse(string) iterate: %i",PR_FALSE); 
+        pc->mScanner->Append(aSourceBuffer); 
+        // Do not interrupt document.write() - bug 95487
+        result = ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
+
       } 
-
-      // start fix bug 40143
-      if(pc->mMultipart) {
-        pc->mStreamListenerState=eOnDataAvail;
-        if(pc->mScanner) pc->mScanner->SetIncremental(PR_TRUE);
-      }
-      else {
-        pc->mStreamListenerState=eOnStop;
-        if(pc->mScanner) pc->mScanner->SetIncremental(PR_FALSE);
-      }
-      // end fix for 40143
-
-      pc->mContextType=CParserContext::eCTString; 
-      pc->SetMimeType(aMimeType);
-      pc->mDTDMode=aMode;
-      mUnusedInput.Truncate(0); 
-
-      //printf("Parse(string) iterate: %i",PR_FALSE); 
-      pc->mScanner->Append(aSourceBuffer); 
-      // Do not interrupt document.write() - bug 95487
-      result = ResumeParse(PR_FALSE, PR_FALSE, PR_FALSE);
+      else { 
+        NS_RELEASE(me); 
+        return NS_ERROR_OUT_OF_MEMORY; 
+      } 
+      NS_IF_RELEASE(theDTD);
     } 
     else { 
       mParserContext->mScanner->Append(aSourceBuffer); 
@@ -1631,7 +1631,7 @@ nsresult nsParser::Parse(const nsAString& aSourceBuffer, void* aKey,
       }
     } 
   }//if 
-
+  NS_RELEASE(me); 
   return result; 
 }  
 
@@ -1841,28 +1841,33 @@ nsresult nsParser::ResumeParse(PRBool allowIteration, PRBool aIsFinalChunk, PRBo
  *  @return  error code -- 0 if ok, non-zero if error.
  */
 nsresult nsParser::BuildModel() {
-  CParserContext* theRootContext = mParserContext;
-  nsITokenizer*   theTokenizer = 0;
+  
+  //nsDequeIterator e=mParserContext->mTokenDeque.End(); 
 
-  nsresult result = (mParserContext)? mParserContext->GetTokenizer(theTokenizer):NS_OK;
-  if (theTokenizer) {
+//  if(!mParserContext->mCurrentPos)
+//    mParserContext->mCurrentPos=new nsDequeIterator(mParserContext->mTokenDeque.Begin());
 
     //Get the root DTD for use in model building...
-    while (theRootContext->mPrevContext) {
-      theRootContext = theRootContext->mPrevContext;
+
+  CParserContext* theRootContext=mParserContext;
+  nsITokenizer*   theTokenizer=0;
+
+  nsresult result = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
+  if(theTokenizer){
+
+    while(theRootContext->mPrevContext) {
+      theRootContext=theRootContext->mPrevContext;
     }
 
-    nsIDTD* theRootDTD = theRootContext->mDTD;
-    if (theRootDTD) {      
+    nsIDTD* theRootDTD=theRootContext->mDTD;
+    if(theRootDTD) {      
       MOZ_TIMER_START(mDTDTime);
-      
-      result = theRootDTD->BuildModel(this, theTokenizer, mTokenObserver, mSink);  
-      
+      result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);  
       MOZ_TIMER_STOP(mDTDTime);
     }
   }
   else{
-    mInternalState = result = NS_ERROR_HTMLPARSER_BADTOKENIZER;
+    mInternalState=result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
   }
   return result;
 }
@@ -1874,13 +1879,12 @@ nsresult nsParser::BuildModel() {
  * @param 
  * @return
  */
-nsresult nsParser::GetTokenizer(nsITokenizer*& aTokenizer) {
-  nsresult result = NS_OK;
-  aTokenizer = nsnull;
-  if(mParserContext) {
-    result = mParserContext->GetTokenizer(aTokenizer);
+nsITokenizer* nsParser::GetTokenizer(void) {
+  nsITokenizer* theTokenizer=0;
+  if(mParserContext && mParserContext->mDTD) {
+    mParserContext->mDTD->GetTokenizer(theTokenizer);
   }
-  return result;
+  return theTokenizer;
 }
 
 /*******************************************************************
@@ -2442,7 +2446,7 @@ nsresult nsParser::OnStopRequest(nsIRequest *request, nsISupports* aContext,
  */
 PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
   nsITokenizer* theTokenizer=0;
-  nsresult result = (mParserContext)? mParserContext->GetTokenizer(theTokenizer):NS_OK;
+  nsresult result = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
   if (theTokenizer) {
     result = theTokenizer->WillTokenize(aIsFinalChunk,&mTokenAllocator);
   }  
@@ -2463,18 +2467,15 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
   nsITokenizer* theTokenizer = 0;
     
   nsresult result = 
-    (mParserContext)? mParserContext->GetTokenizer(theTokenizer) : NS_OK;
+    (mParserContext && mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer) : NS_OK;
 
-  if (theTokenizer) { 
+  if (theTokenizer){ 
     if (mFlags & NS_PARSER_FLAG_FLUSH_TOKENS) {
       // For some reason tokens didn't get flushed ( probably
       // the parser got blocked before all the tokens in the
       // stack got handled ). Flush 'em now. Ref. bug 104856
       if (theTokenizer->GetCount() == 0) {
         mFlags &= ~NS_PARSER_FLAG_FLUSH_TOKENS; // reset since the tokens have been flushed.
-        // Resume tokenization for the rest of the document 
-        // since all the tokens in the tokenizer got flushed.
-        result = Tokenize(aIsFinalChunk); 
       }
     }
     else {
@@ -2533,7 +2534,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   PRBool result=PR_TRUE;
 
   nsITokenizer* theTokenizer=0;
-  nsresult rv = (mParserContext)? mParserContext->GetTokenizer(theTokenizer):NS_OK;
+  nsresult rv = (mParserContext->mDTD)? mParserContext->mDTD->GetTokenizer(theTokenizer):NS_OK;
 
   if (NS_SUCCEEDED(rv) && theTokenizer) {
     result = theTokenizer->DidTokenize(aIsFinalChunk);
@@ -2555,7 +2556,7 @@ void nsParser::DebugDumpSource(nsOutputStream& aStream) {
   PRInt32 theIndex=-1;
 
   nsITokenizer* theTokenizer=0;
-  if(NS_SUCCEEDED(mParserContext->GetTokenizer(theTokenizer))){
+  if(NS_SUCCEEDED(mParserContext->mDTD->GetTokenizer(theTokenizer))){
     CToken* theToken;
     while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {
       // theToken->DebugDumpToken(out);

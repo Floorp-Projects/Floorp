@@ -1383,8 +1383,7 @@ nsNodeAllocator::~nsNodeAllocator() {
 #endif
 }
   
-nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,  
-                                           nsTokenAllocator* aTokenAllocator) {
+nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,PRInt32 aLineNumber,nsTokenAllocator* aTokenAllocator) {
   nsCParserNode* result=0;
 
 #ifdef HEAP_ALLOCATED_NODES
@@ -1396,10 +1395,10 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,
 
   result=NS_STATIC_CAST(nsCParserNode*,mSharedNodes.Pop());
   if(result) {
-    result->Init(aToken, aTokenAllocator,this);
+    result->Init(aToken,aLineNumber,aTokenAllocator,this);
   }
   else{
-    result=nsCParserNode::Create(aToken, aTokenAllocator,this);
+    result=nsCParserNode::Create(aToken,aLineNumber,aTokenAllocator,this);
 #ifdef DEBUG_TRACK_NODES
     mCount++;
     AddNode(NS_STATIC_CAST(nsCParserNode*,result));
@@ -1407,7 +1406,7 @@ nsCParserNode* nsNodeAllocator::CreateNode(CToken* aToken,
     IF_HOLD(result);
   }
 #else
-  result=nsCParserNode::Create(aToken, aTokenAllocator,this);
+  result=nsCParserNode::Create(aToken,aLineNumber,aTokenAllocator,this);
   IF_HOLD(result);
 #endif
   return result;

@@ -266,6 +266,8 @@ CNavDTD::~CNavDTD(){
     mBodyContext=0;
   }
 
+  NS_IF_RELEASE(mTokenizer);
+
   if(mTempContext) {
     delete mTempContext;
     mTempContext=0;
@@ -383,9 +385,7 @@ CNavDTD::CanParse(CParserContext& aParserContext,
   * @param	aSink
   * @return	error code (almost always 0)
   */
-nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
-                                 nsITokenizer* aTokenizer,
-                                 nsIContentSink* aSink) {
+nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIContentSink* aSink) {
   nsresult result=NS_OK;
 
   mFilename=aParserContext.mScanner->GetFilename();
@@ -394,7 +394,7 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
   mDTDMode=aParserContext.mDTDMode;
   mParserCommand=aParserContext.mParserCommand;
   mMimeType=aParserContext.mMimeType;
-  mTokenizer = aTokenizer;
+    
   mBodyContext->SetNodeAllocator(&mNodeAllocator);
 
   if((!aParserContext.mPrevContext) && (aSink)) {
@@ -471,73 +471,97 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   NS_PRECONDITION(mBodyContext!=nsnull,"Create a context before calling build model");
 
-  nsresult result = NS_OK;
+  nsresult result=NS_OK;
 
-  if (aTokenizer && mSink && aParser) {
-    nsITokenizer*  oldTokenizer = mTokenizer;
+  if(aTokenizer) {
+    nsITokenizer*  oldTokenizer=mTokenizer;
+    mTokenizer=aTokenizer;
+    mParser=(nsParser*)aParser;
 
-    mTokenizer      = aTokenizer;
-    mParser         = (nsParser*)aParser;
-    mTokenAllocator = mTokenizer->GetTokenAllocator();
-    
+    if(mTokenizer) {
+      
+      mTokenAllocator=mTokenizer->GetTokenAllocator();
 
-    if (mBodyContext->GetCount() == 0) {
-      CStartToken* theToken=nsnull;
-      if(ePlainText==mDocType) {
-        //we do this little trick for text files, in both normal and viewsource mode...
-        theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre));
-        if(theToken) {
-          mTokenizer->PushTokenFront(theToken);
+      if(NS_FAILED(result)) return result;
+
+      if(mSink) {
+
+        if(!mBodyContext->GetCount()) {
+          CStartToken* theToken=nsnull;
+          if(ePlainText==mDocType) {
+            //we do this little trick for text files, in both normal and viewsource mode...
+            theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_pre));
+            if(theToken) {
+              mTokenizer->PushTokenFront(theToken);
+            }
+          }
+
+          // always open a body if frames are disabled....
+          if(!(mFlags & NS_DTD_FLAG_FRAMES_ENABLED)) {
+            theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
+            mTokenizer->PushTokenFront(theToken);
+          }
+            //if the content model is empty, then begin by opening <html>...
+          theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
+          if(theToken) {
+            mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
+          }
         }
-      }
+        
+        mSink->WillProcessTokens();
 
-      // always open a body if frames are disabled....
-      if(!(mFlags & NS_DTD_FLAG_FRAMES_ENABLED)) {
-        theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
-        mTokenizer->PushTokenFront(theToken);
-      }
-        //if the content model is empty, then begin by opening <html>...
-      theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));
-      if(theToken) {
-        mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
+        while(NS_SUCCEEDED(result)){
+          //Currently nsIHTMLContentSink does nothing with a call to WillProcessAToken.
+          //mSink->WillProcessAToken();
+
+#if 0
+          int n=aTokenizer->GetCount();
+          if(n>50) n=50;
+          for(int i=0;i<n;i++){
+            CToken* theToken=aTokenizer->GetTokenAt(i);
+            printf("\nToken[%i],%p",i,theToken);
+          }
+          printf("\n");
+#endif
+
+          if(!(mFlags & NS_DTD_FLAG_STOP_PARSING)) {
+            CToken* theToken=mTokenizer->PopToken();
+            if(theToken) { 
+              result=HandleToken(theToken,aParser);
+            }
+            else break;
+          }
+          else {
+            result = NS_ERROR_HTMLPARSER_STOPPARSING;
+            break;
+          }
+
+          if ((NS_ERROR_HTMLPARSER_INTERRUPTED == mSink->DidProcessAToken())) {
+            // The content sink has requested that DTD interrupt processing tokens
+            // So we need to make sure the parser is in a state where it can be
+            // interrupted. 
+            // The mParser->CanInterrupt will return TRUE if BuildModel was called
+            // from a place in the parser where it prepared to handle a return value of
+            // NS_ERROR_HTMLPARSER_INTERRUPTED.
+            // If the parser has mPrevContext then it may be processing
+            // Script so we should not allow it to be interrupted.
+            
+            if ((mParser->CanInterrupt()) && 
+              (nsnull == mParser->PeekContext()->mPrevContext) && 
+              (eHTMLTag_unknown==mSkipTarget)) {     
+              result = NS_ERROR_HTMLPARSER_INTERRUPTED;
+              break;
+            }
+          }
+        }//while
+        mTokenizer=oldTokenizer;
+        //Currently nsIHTMLContentSink does nothing with a call to DidProcessATokens().
+        //mSink->DidProcessTokens();
+
       }
     }
-    
-    mSink->WillProcessTokens();
-
-    while (NS_SUCCEEDED(result)) {
-      if (!(mFlags & NS_DTD_FLAG_STOP_PARSING)) {
-        CToken* theToken = mTokenizer->PopToken();
-        if (theToken) { 
-          result = HandleToken(theToken,aParser);
-        }
-        else break;
-      }
-      else {
-        result = NS_ERROR_HTMLPARSER_STOPPARSING;
-        break;
-      }
-
-      if ((NS_ERROR_HTMLPARSER_INTERRUPTED == mSink->DidProcessAToken())) {
-        // The content sink has requested that DTD interrupt processing tokens
-        // So we need to make sure the parser is in a state where it can be
-        // interrupted. 
-        // The mParser->CanInterrupt will return TRUE if BuildModel was called
-        // from a place in the parser where it prepared to handle a return value of
-        // NS_ERROR_HTMLPARSER_INTERRUPTED.
-        // If the parser has mPrevContext then it may be processing
-        // Script so we should not allow it to be interrupted.
-        
-        if ((mParser->CanInterrupt()) && 
-          (nsnull == mParser->PeekContext()->mPrevContext) && 
-          (eHTMLTag_unknown==mSkipTarget)) {     
-          result = NS_ERROR_HTMLPARSER_INTERRUPTED;
-          break;
-        }
-      }
-    }//while
-    mTokenizer = oldTokenizer;
   }
+  else result=NS_ERROR_HTMLPARSER_BADTOKENIZER;
 
   return result;
 }
@@ -722,10 +746,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
     eHTMLTags       theTag=(eHTMLTags)theToken->GetTypeID();
     PRBool          execSkipContent=PR_FALSE;
 
-    aToken->SetLineNumber(mLineNumber);
-    
-    mLineNumber += aToken->GetNewlineCount();
-   
     /* ---------------------------------------------------------------------------------
        To understand this little piece of code, you need to look below too.
        In essence, this code caches "skipped content" until we find a given skiptarget.
@@ -754,7 +774,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
       if(theTag != mBodyContext->Last() || theType!=eToken_end) {
         // attribute source is a part of start token.
         if(theType!=eToken_attribute) {
-          aToken->AppendSourceTo(mScratch);
+          aToken->AppendSource(mScratch);
         }
         IF_FREE(aToken, mTokenAllocator);
         return result;
@@ -798,7 +818,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           // Fall through if the skipped content collection is |not| in progress - bug 124788
         }
         else {
-          PushIntoMisplacedStack(theToken);
+          mMisplacedContent.Push(theToken);
           return result;
         }
       }
@@ -847,7 +867,7 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
                 //If you're here then we found a child of the body that was out of place.
                 //We're going to move it to the body by storing it temporarily on the misplaced stack.
                 //However, in quirks mode, a few tags request, ambiguosly, for a BODY. - Bugs 18928, 24204.-
-                PushIntoMisplacedStack(aToken);
+                mMisplacedContent.Push(aToken);
                 if(DoesRequireBody(aToken,mTokenizer)) {
                   CToken* theBodyToken=NS_STATIC_CAST(CToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
                   result=HandleToken(theBodyToken,aParser);
@@ -869,8 +889,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         (gHTMLElements[theTag].mSkipTarget) && 
         (!theStartToken->IsEmpty())) { // added empty token check for bug 44186
         //create a new target
-        NS_ASSERTION(mSkippedContent.GetSize() == 0, "all the skipped content tokens did not get handled");
-        mSkippedContent.Empty();
         mSkipTarget=gHTMLElements[theTag].mSkipTarget;
         mSkippedContent.Push(theToken);
       }
@@ -951,7 +969,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         if(theNextToken)  {
           eHTMLTokenTypes theType=eHTMLTokenTypes(theNextToken->GetTokenType());
           if(eToken_newline==theType){
-            mLineNumber += theNextToken->GetNewlineCount();
+            mLineNumber++;
             theNextToken=mTokenizer->PopToken();  //skip 1st newline inside PRE and LISTING
             IF_FREE(theNextToken, mTokenAllocator); // fix for Bug 29379
           }//if
@@ -965,15 +983,10 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
       {        
         STOP_TIMER()
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
-        nsAutoString theString;
-        PRInt32 lineNo = 0;
-        
-        result = CollectSkippedContent(aChildTag, theString, lineNo);
-        NS_ENSURE_SUCCESS(result, result);
-
+        const nsString& theString=aNode.GetSkippedContent();
         if(0<theString.Length()) {
           CTextToken *theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
-          nsCParserNode theNode(theToken, mTokenAllocator);
+          nsCParserNode theNode(theToken,0,mTokenAllocator);
           result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
@@ -993,7 +1006,7 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
 
         CTextToken theToken(theNumber);
         PRInt32 theLineNumber=0;
-        nsCParserNode theNode(&theToken, 0 /*stack token*/);
+        nsCParserNode theNode(&theToken,theLineNumber,0 /*stack token*/);
         result=mSink->AddLeaf(theNode);
       }
       break;
@@ -1340,7 +1353,12 @@ void WriteTokenToLog(CToken* aToken) {
  */
 nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode& aNode) {
   nsresult result=NS_OK; 
-  PRInt32 theAttrCount  = aNode.GetAttributeCount();  
+  PRInt32 theAttrCount  = aNode.GetAttributeCount(); 
+
+    //first let's see if there's some skipped content to deal with... 
+  if(gHTMLElements[aTag].mSkipTarget) { 
+    result=CollectSkippedContent(aNode,theAttrCount); 
+  } 
 
   //this little gem creates a special attribute for the editor team to use.
   //The attribute only get's applied to unknown tags, and is used by ender
@@ -1434,7 +1452,7 @@ nsresult CNavDTD::WillHandleStartTag(CToken* aToken,eHTMLTags aTag,nsIParserNode
 
               //because this code calls CloseHead() directly, stack-based token/nodes are ok.
             CEndToken     theToken(eHTMLTag_head);
-            nsCParserNode theNode(&theToken, 0 /*stack token*/);
+            nsCParserNode theNode(&theToken,mLineNumber,0 /*stack token*/);
             result=CloseHead(&theNode);
           }
         }
@@ -1452,7 +1470,6 @@ static void PushMisplacedAttributes(nsIParserNode& aNode,nsDeque& aDeque,PRInt32
       while(aCount){ 
         theAttrToken=theAttrNode->PopAttributeToken();
         if(theAttrToken) {
-          theAttrToken->SetNewlineCount(0);
           aDeque.Push(theAttrToken);
         }
         aCount--;
@@ -1501,7 +1518,7 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
 
       if(mBodyContext->mContextTopIndex>-1) {
                   
-        PushIntoMisplacedStack(aToken);  
+        mMisplacedContent.Push(aToken);  
 
         IF_HOLD(aToken);  // Hold on to this token for later use.
 
@@ -1509,14 +1526,8 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
         if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
 
         if(gHTMLElements[aChildTag].mSkipTarget) {
-          nsAutoString theString;
-          PRInt32 lineNo = 0;
-          
-          result = CollectSkippedContent(aChildTag, theString, lineNo);
-          NS_ENSURE_SUCCESS(result, result);
-
-          PushIntoMisplacedStack(mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
-          PushIntoMisplacedStack(mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag));      
+          mMisplacedContent.Push(mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,aNode->GetSkippedContent()));
+          mMisplacedContent.Push(mTokenAllocator->CreateTokenOfType(eToken_end,aChildTag));      
         }
               
         mFlags |= NS_DTD_FLAG_MISPLACED_CONTENT; // This state would help us in gathering all the misplaced elements
@@ -1527,7 +1538,7 @@ nsresult CNavDTD::HandleOmittedTag(CToken* aToken,eHTMLTags aChildTag,eHTMLTags 
       
       IF_HOLD(aToken);  // Hold on to this token for later use. Ref Bug. 53695
       
-      PushIntoMisplacedStack(aToken);
+      mMisplacedContent.Push(aToken);
       // If the token is attributed then save those attributes too.
        if(attrCount > 0) PushMisplacedAttributes(*aNode,mMisplacedContent,attrCount);
     }
@@ -1629,7 +1640,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
   //Begin by gathering up attributes...
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   
   eHTMLTags     theChildTag=(eHTMLTags)aToken->GetTypeID();
   PRInt16       attrCount=aToken->GetAttributeCount();
@@ -1668,10 +1679,15 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
         }
       }
 
+      mLineNumber += aToken->mNewlineCount;
       PRBool theExclusive=PR_FALSE;
       theHeadIsParent=nsHTMLElement::IsChildOfHead(theChildTag,theExclusive);
       
       switch(theChildTag) { 
+        case eHTMLTag_newline:
+          mLineNumber++;
+          break;
+
         case eHTMLTag_area:
           if(!mOpenMapCount) isTokenHandled=PR_TRUE;
 
@@ -1915,7 +1931,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
     case eHTMLTag_form:
       {
           //this is safe because we call close container directly. This node/token is not cached.
-        nsCParserNode theNode((CHTMLToken*)aToken, mTokenAllocator);
+        nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber,mTokenAllocator);
         result=CloseContainer(&theNode,theChildTag,PR_FALSE);
       }
       break;
@@ -2147,7 +2163,7 @@ nsresult CNavDTD::HandleEntityToken(CToken* aToken) {
 
   eHTMLTags theParentTag=mBodyContext->Last();
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
     PRBool theParentContains=-1; //set to -1 to force CanOmit to recompute...
     if(CanOmit(theParentTag,eHTMLTag_entity,theParentContains)) {
@@ -2180,8 +2196,11 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   
   nsresult  result=NS_OK;
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  CCommentToken* theToken = NS_STATIC_CAST(CCommentToken*,aToken);
+  const nsAString& theComment = theToken->GetStringValue();
+  mLineNumber += CountCharInReadable(theComment, PRUnichar(kNewLine));
 
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
 
   #ifdef  RICKG_DEBUG
@@ -2215,7 +2234,7 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
  */
 nsresult CNavDTD::HandleAttributeToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
-  NS_ERROR("attribute encountered -- this shouldn't happen unless the attribute was not part of a start tag!");
+  NS_ERROR("attribute encountered -- this shouldn't happen!");
 
   return NS_OK;
 }
@@ -2258,7 +2277,7 @@ nsresult CNavDTD::HandleProcessingInstructionToken(CToken* aToken){
 
   nsresult  result=NS_OK;
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
 
   #ifdef  RICKG_DEBUG
@@ -2308,7 +2327,7 @@ nsresult CNavDTD::HandleDocTypeDeclToken(CToken* aToken){
   docTypeStr.Cut(0,2); // Now remove "<!" from the begining
   theToken->SetStringValue(docTypeStr);
 
-  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken, mTokenAllocator);
+  nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
   if(theNode) {
 
   STOP_TIMER();
@@ -2375,7 +2394,6 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 
         // "SELECTED/", and ">". In this case the "SELECTED/" key will be sanitized to
         // a legitimate "SELECTED" key.
         ((CAttributeToken*)theToken)->SanitizeKey();
-        mLineNumber += theToken->GetNewlineCount();
 
   #ifdef  RICKG_DEBUG
     WriteTokenToLog(theToken);
@@ -2401,75 +2419,78 @@ nsresult CNavDTD::CollectAttributes(nsIParserNode& aNode,eHTMLTags aTag,PRInt32 
  * @param   holds the number of skipped content elements encountered
  * @return  Error condition.
  */
-NS_IMETHODIMP
-CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLineNo) {
+nsresult CNavDTD::CollectSkippedContent(nsIParserNode& aNode,PRInt32 &aCount) {
 
-  NS_ASSERTION(aTag >= eHTMLTag_unknown && aTag <= NS_HTML_TAG_MAX, "tag array out of bounds");
+  eHTMLTags       theNodeTag=(eHTMLTags)aNode.GetNodeType();
 
-  aContent.Truncate();
-
-  NS_ASSERTION(eHTMLTag_unknown != gHTMLElements[aTag].mSkipTarget, "cannot collect content for this tag");
-  if (eHTMLTag_unknown == gHTMLElements[aTag].mSkipTarget) {
-    // This tag doesn't support skipped content.
-    aLineNo = -1;
-    return NS_OK;
-  }
+  int aIndex=0;
+  int aMax=mSkippedContent.GetSize();
   
-  aLineNo = mLineNumber;
   // XXX rickg This linefeed conversion stuff should be moved out of
   // the parser and into the form element code
-  PRBool mustConvertLinebreaks = PR_FALSE;
+  PRBool aMustConvertLinebreaks = PR_FALSE;
 
   mScratch.Truncate();
   
-  PRInt32 i = 0;
-  PRInt32 tagCount = mSkippedContent.GetSize();
-  for (i = 0; i< tagCount; i++){
-    CHTMLToken* theNextToken = (CHTMLToken*)mSkippedContent.PopFront();
-      
-    if (theNextToken) {
-      eHTMLTokenTypes theTokenType = (eHTMLTokenTypes)theNextToken->GetTokenType();
+  nsCParserNode* theNode=NS_STATIC_CAST(nsCParserNode*,&aNode);
+  if(theNode) { 
+    theNode->SetSkippedContent(mScratch); //this guarantees us some skipped content storage.
+
+    for(aIndex=0;aIndex<aMax;aIndex++){
+      CHTMLToken* theNextToken=(CHTMLToken*)mSkippedContent.PopFront();
+
+      eHTMLTokenTypes theTokenType=(eHTMLTokenTypes)theNextToken->GetTokenType();
 
       // Dont worry about attributes here because it's already stored in 
       // the start token as mTrailing content and will get appended in 
       // start token's GetSource();
-      if (eToken_attribute!=theTokenType) {
+      if(eToken_attribute!=theTokenType) {
         if ((eToken_entity==theTokenType) &&
-           ((eHTMLTag_textarea == aTag) || (eHTMLTag_title == aTag))) {
+           ((eHTMLTag_textarea==theNodeTag) || (eHTMLTag_title==theNodeTag))) {
             mScratch.Truncate();
             ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
             // since this is an entity, we know that it's only one character.
             // check to see if it's a CR, in which case we'll need to do line
             // termination conversion at the end.
-            if (!mScratch.IsEmpty()){
-              mustConvertLinebreaks |= (mScratch[0] == kCR);
-              aContent.Append(mScratch);
+            if(!mScratch.IsEmpty()){
+              aMustConvertLinebreaks |= (mScratch[0] == kCR);
+              theNode->mSkippedContent->Append(mScratch);
             }
             else {
               // We thought it was an entity but it is not! - bug 79492
-              aContent.Append(PRUnichar('&'));
-              aContent.Append(theNextToken->GetStringValue());
+              theNode->mSkippedContent->Append(PRUnichar('&'));
+              theNode->mSkippedContent->Append(theNextToken->GetStringValue());
             }
           }
-        else theNextToken->AppendSourceTo(aContent);
+        else theNextToken->AppendSource(*theNode->mSkippedContent);
       }
+      IF_FREE(theNextToken, mTokenAllocator);
     }
-    IF_FREE(theNextToken, mTokenAllocator);
-  }
   
-  // if the string contained CRs (hence is either CR, or CRLF terminated)
-  // we need to convert line breaks
-  if (mustConvertLinebreaks)
-  {
-    InPlaceConvertLineEndings(aContent);
-  }
-
-  // Note: TEXTAREA content is PCDATA and hence the newlines are already accounted for.
-  mLineNumber += (aTag != eHTMLTag_textarea) ? aContent.CountChar(kNewLine) : 0;
+    // if the string contained CRs (hence is either CR, or CRLF terminated)
+    // we need to convert line breaks
+    if (aMustConvertLinebreaks)
+    {
+      /*
+      PRInt32  offset;
+      while ((offset = aNode.mSkippedContent.Find("\r\n")) != kNotFound)
+        aNode.mSkippedContent.Cut(offset, 1);		// remove the CR
   
+      // now replace remaining CRs with LFs
+      aNode.mSkippedContent.ReplaceChar("\r", kNewLine);
+      */
+  #if 1
+      nsLinebreakConverter::ConvertStringLineBreaks(*theNode->mSkippedContent,
+           nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+  #endif
+    }
+  
+    // Let's hope that this does not hamper the  PERFORMANCE!!
+    mLineNumber += theNode->mSkippedContent->CountChar(kNewLine);
+  }
   return NS_OK;
 }
-
+    
  /***********************************************************************************
    The preceeding tables determine the set of elements each tag can contain...
   ***********************************************************************************/
@@ -2983,7 +3004,7 @@ nsresult CNavDTD::CloseTransientStyles(eHTMLTags aChildTag){
     for(theTagPos=mBodyContext->mOpenStyles;theTagPos>0;theTagPos--){
       eHTMLTags theTag=GetTopNode();
       CStartToken   token(theTag);
-      nsCParserNode theNode(&token, 0 /*stack token*/);
+      nsCParserNode theNode(&token,mLineNumber,0 /*stack token*/);
       token.SetTypeID(theTag); 
       result=CloseContainer(theNode,theTag,PR_FALSE);
     }
@@ -3828,12 +3849,7 @@ nsresult CNavDTD::AddHeadLeaf(nsIParserNode *aNode){
     if(NS_OK==result) {
       if(eHTMLTag_title==theTag) {
 
-        nsAutoString theString;
-        PRInt32 lineNo = 0;
-        
-        result = CollectSkippedContent(eHTMLTag_title, theString, lineNo);
-        NS_ENSURE_SUCCESS(result, result);
-
+        const nsString& theString=aNode->GetSkippedContent();
         PRInt32 theLen=theString.Length();
         CBufDescriptor theBD(theString.get(), PR_TRUE, theLen+1, theLen);
         nsAutoString theString2(theBD);
@@ -3918,6 +3934,22 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
     }
     result=NS_OK;
   }
+  return result;
+}
+
+/**
+ * Retrieve the preferred tokenizer for use by this DTD.
+ * @update  gess12/28/98
+ * @param   none
+ * @return  ptr to tokenizer
+ */
+NS_IMETHODIMP
+CNavDTD::GetTokenizer(nsITokenizer*& aTokenizer) {
+  nsresult result=NS_OK;
+  if(!mTokenizer) {
+    result=NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
+  }
+  aTokenizer=mTokenizer;
   return result;
 }
 

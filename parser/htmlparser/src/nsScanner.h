@@ -185,7 +185,7 @@ class nsScanner {
        *  @update  gess 3/25/98
        *  @return  error status
        */
-      nsresult SkipWhitespace(PRInt32& aNewlinesSkipped);
+      nsresult SkipWhitespace(void);
 
       /**
        *  Determine if the scanner has reached EOF.
@@ -214,11 +214,9 @@ class nsScanner {
       nsresult ReadNumber(nsReadingIterator<PRUnichar>& aStart, 
                           nsReadingIterator<PRUnichar>& aEnd,
                           PRInt32 aBase);
-      nsresult ReadWhitespace(nsString& aString, 
-                              PRInt32& aNewlinesSkipped);
+      nsresult ReadWhitespace(nsString& aString);
       nsresult ReadWhitespace(nsReadingIterator<PRUnichar>& aStart, 
-                              nsReadingIterator<PRUnichar>& aEnd,
-                              PRInt32& aNewlinesSkipped);
+                              nsReadingIterator<PRUnichar>& aEnd);
 
       /**
        *  Consume characters until you find the terminal char
@@ -365,6 +363,8 @@ class nsScanner {
       PRBool    IsIncremental(void) {return mIncremental;}
       void      SetIncremental(PRBool anIncrValue) {mIncremental=anIncrValue;}
 
+      PRInt32   GetNewlinesSkipped(void) { return mNewlinesSkipped; }
+
   protected:
 
 
@@ -396,6 +396,7 @@ class nsScanner {
       PRInt32         mCharsetSource;
       nsString        mCharset;
       nsIUnicodeDecoder *mUnicodeDecoder;
+      PRInt32         mNewlinesSkipped;
 };
 
 #endif

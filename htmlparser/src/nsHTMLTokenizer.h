@@ -84,7 +84,7 @@ protected:
   virtual nsresult ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner,PRBool& aFlushTokens);
   virtual nsresult ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
-  virtual nsresult ConsumeAttributes(PRUnichar aChar, CToken* aToken, nsScanner& aScanner);
+  virtual nsresult ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,nsScanner& aScanner);
   virtual nsresult ConsumeEntity(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeWhitespace(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);
   virtual nsresult ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScanner& aScanner);

@@ -175,7 +175,7 @@ protected:
     nsString            mFilename;
     PRInt32             mLineNumber;
     nsParser*           mParser;
-    nsITokenizer*       mTokenizer; // weak
+    nsITokenizer*       mTokenizer;
     nsTokenAllocator*   mTokenAllocator;
     nsNodeAllocator*    mNodeAllocator;
     PRBool              mHasOpenScript;

@@ -263,17 +263,18 @@ public:
   }
 
   nsresult  AutoGenerateStructure(eHTMLTags *aTagList,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+    PRInt32   theLineNumber=0;
     nsresult  result=NS_OK;
 
     CStartToken theToken(*aTagList);
-    nsCParserNode theNode(&theToken, 0 /*stack token*/);
+    nsCParserNode theNode(&theToken,theLineNumber,0 /*stack token*/);
     result=OpenContainer(&theNode,*aTagList,aContext,aSink);
     if(eHTMLTag_unknown!=*(aTagList+1)) {
       AutoGenerateStructure(++aTagList,aContext,aSink);
     }
     
     CEndToken theEndToken(*aTagList--);
-    nsCParserNode theEndNode(&theEndToken, 0 /*stack token*/);
+    nsCParserNode theEndNode(&theEndToken,theLineNumber,0 /*stack token*/);
     result=CloseContainer(&theEndNode,*aTagList,aContext,aSink);
 
     return result;
@@ -824,7 +825,7 @@ public:
         if(aContext->mTableStates) {
           if(aContext->mTableStates->CanOpenTBody()) {
             CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_tbody);
-            nsCParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken, 0);
+            nsCParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
 
             result=HandleStartToken(theNode,eHTMLTag_tbody,aContext,aSink);
           }
@@ -1022,7 +1023,8 @@ public:
     aContext->IncrementCounter(theGrandParentTag,*theNode,theNumber);
 
     CTextToken theToken(theNumber);
-    nsCParserNode theNewNode(&theToken, 0 /*stack token*/);
+    PRInt32 theLineNumber=0;
+    nsCParserNode theNewNode(&theToken,theLineNumber,0 /*stack token*/);
     *theNode = theNewNode;
 #endif
     result=aSink->AddLeaf(*theNode);
@@ -1225,12 +1227,13 @@ public:
     if(aNode) {
 #if 0
       CStartToken   theToken(aTag);
-      nsCParserNode theNode(&theToken);
+      PRInt32 theLineNumber=0;
+      nsCParserNode theNode(&theToken,theLineNumber);
       theNode.SetSkippedContent(mText);
       result=aSink->AddLeaf(theNode);
 #endif
       nsCParserNode *theNode=(nsCParserNode*)aNode;
-      //theNode->SetSkippedContent(mText); XXX why do we need this?
+      theNode->SetSkippedContent(mText);
       result=aSink->AddLeaf(*theNode);
     }
     mText.Truncate(0);
@@ -1813,7 +1816,7 @@ public:
             //let's auto open the body            
             
             CToken* theToken=(CStartToken*)aContext->mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body);
-            nsCParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken, 0);
+            nsCParserNode* theNode=aContext->mNodeAllocator->CreateNode(theToken,0,0);
 
             result=theBody->HandleStartToken(theNode,eHTMLTag_body,aContext,aSink);
 

@@ -297,7 +297,7 @@ class nsParser : public nsIParser,
      * @param 
      * @return
      */
-    nsresult GetTokenizer(nsITokenizer*& aTokenizer);
+    virtual nsITokenizer* GetTokenizer(void);
 
     /** 
      * Get the channel associated with this parser
