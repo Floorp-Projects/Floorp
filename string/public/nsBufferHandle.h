@@ -65,24 +65,19 @@ template <class CharT>
 class nsSharedBufferHandle
     : public nsStringFragmentHandle<CharT>
   {
-    public:
-      ~nsSharedBufferHandle()
+    protected:
+      enum
         {
-          NS_ASSERTION(!IsReferenced(), "!IsReferenced()");
+          kIsShared                       = 1<<31,
+          kIsSingleAllocationWithBuffer   = 1<<30,
+          kIsStorageDefinedSeparately     = 1<<29,
 
-          if ( mFlags & kDeleteStorageFlag )
-            nsMemory::Free(mDataStart);
-              // OK, this is part of a hack.  Here's what's going on
-              
-              // In general, a handle points to a hunk of data where the data
-              // must start at the beginning of the allocated storage ... therefore,
-              // that's what we deallocate when we're going away.  We don't want
-              // any |virtual| functions, because we don't want to add a vptr to this
-              // structure.  So, later, when we have a more advanced version of this
-              // class that allows the real data to be an arbitrary sub-range of the
-              // allocated space, it's destructor will need to fix the data pointer
-              // to point to the storage to be de-allocated before it gets to here.
-        }
+          kFlagsMask                      = kIsShared | kIsSingleAllocationWithBuffer | kIsStorageDefinedSeparately,
+          kRefCountMask                   = ~kFlagsMask
+        };
+
+    public:
+      ~nsSharedBufferHandle();
 
       void
       AcquireReference() const
@@ -104,21 +99,7 @@ class nsSharedBufferHandle
         }
 
     protected:
-      PRUint32      mFlags;
-
-      enum
-        {
-          kIsShared
-          kIsSingleAllocationWithBuffer
-
-          kDeleteStorageFlag  = 1<<31,
-          kOffsetDataFlag     = 1<<30,
-
-          // room for other flags
-
-          kFlagsMask          = kDeleteStorageFlag | kOffsetDataFlag,
-          kRefCountMask       = ~kFlagsMask
-        };
+      PRUint32  mFlags;
 
       PRUint32
       get_refcount() const
@@ -137,26 +118,33 @@ class nsSharedBufferHandle
   };
 
 
-#if 0
+  // need a name for this
 template <class CharT>
-class ns...
+class nsXXXBufferHandle
     : public nsSharedBufferHandle<CharT>
   {
     public:
-      ~ns...()
-        {
-          mDataStart = mStorageStart;
-            // fix up |mDataStart| to point to the thing to be deallocated
-            // see the note above
-
-            // The problem is, since the destructor isn't virtual, that such an
-            // object must be destroyed in the static scope that knows its correct type
-        }
+      nsXXXBufferHandle() { mFlags |= kIsStorageDefinedSeparately; }
 
     protected:
       const CharT*  mStorageStart;
       const CharT*  mStorageEnd;
   };
-#endif
+
+template <class CharT>
+nsSharedBufferHandle<CharT>::~nsSharedBufferHandle()
+    // really don't want this to be |inline|
+  {
+    NS_ASSERTION(!IsReferenced(), "!IsReferenced()");
+
+    if ( !(mFlags & kIsSingleAllocationWithBuffer) )
+      {
+        CharT* string_storage = mDataStart;
+        if ( mFlags & kIsStorageDefinedSeparately )
+          string_storage = NS_STATIC_CAST(nsXXXBufferHandle*, this)->mStorageStart;
+        nsMemory::Free(string_storage);
+      }
+  }
+
 
 #endif // !defined(nsBufferHandle_h___)
