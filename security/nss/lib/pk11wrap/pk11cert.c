@@ -2131,7 +2131,7 @@ PK11_FindCertByIssuerAndSN(PK11SlotInfo **slotPtr, CERTIssuerAndSN *issuerSN,
                                                   &serial);
     if (cert) {
 	rvCert = STAN_GetCERTCertificate(cert);
-	if (slotPtr) *slotPtr = rvCert->slot;
+	if (slotPtr) *slotPtr = PK11_ReferenceSlot(rvCert->slot);
     }
     return rvCert;
 #endif
