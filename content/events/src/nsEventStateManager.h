@@ -51,7 +51,6 @@
 class nsIDocument;
 class nsIScrollableView;
 class nsIPresShell;
-class nsITreeFrame;
 class nsIFrameSelection;
 class nsIDocShell;
 class nsIDocShellTreeNode;

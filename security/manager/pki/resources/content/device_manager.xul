@@ -50,7 +50,7 @@
   <rows>
     <row>
       <hbox flex="1"> <!-- List of devices -->
-        <tree id="device_tree" rows="12" multiple="false"
+        <tree id="device_tree" rows="12" seltype="false"
               onselect="enableButtons();"
               flex="1" style="min-width:15em">
           <treecolgroup> 
@@ -67,7 +67,7 @@
         </tree>
       </hbox> <!-- / List of devices -->
       <hbox flex="1"> <!-- Device status -->
-        <tree id="info_tree" rows="12" multiple="false" 
+        <tree id="info_tree" rows="12" seltype="false" 
               class="list" flex="1" style="min-width:10em">
           <treecolgroup> 
             <treecol flex="5"/> 

@@ -34,7 +34,7 @@
   <vbox id="CACerts">
     <description>&certmgr.cas;</description>
     <separator class="thin"/>
-    <outliner id="ca-outliner" multiple="true" enableColumnDrag="true"
+    <outliner id="ca-outliner" seltype="multiple" enableColumnDrag="true"
               onselect="ca_enableButtons()" flex="1">
       <outlinercols>
         <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 

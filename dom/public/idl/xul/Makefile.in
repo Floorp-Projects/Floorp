@@ -40,11 +40,11 @@ XPIDLSRCS =					\
 	nsIDOMXULImageElement.idl               \
 	nsIDOMXULLabelElement.idl               \
 	nsIDOMXULLabeledControlEl.idl          \
-  	nsIDOMXULMenuListElement.idl     \
+	nsIDOMXULMenuListElement.idl     \
 	nsIDOMXULPopupElement.idl          \
 	nsIDOMXULSelectCntrlEl.idl       \
 	nsIDOMXULSelectCntrlItemEl.idl   \
-	nsIDOMXULTreeElement.idl		\
+	nsIDOMXULMultSelectCntrlEl.idl \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

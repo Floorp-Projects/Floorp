@@ -153,7 +153,7 @@ function onChangeHTMLAttribute()
 
 function ClearHTMLInputWidgets()
 {
-  gDialog.AddHTMLAttributeTree.clearItemSelection();
+  gDialog.AddHTMLAttributeTree.clearSelection();
   gDialog.AddHTMLAttributeNameInput.value ="";
   gDialog.AddHTMLAttributeValueInput.value = "";
   gDialog.AddHTMLAttributeNameInput.inputField.focus();

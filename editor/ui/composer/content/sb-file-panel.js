@@ -200,17 +200,8 @@ function OpenEditNode()
     saveNode = gEditNode;
 
     // unselect all nodes!
-    var select_list = document.getElementsByAttribute("selected", "true");
-    dump("# of Nodes selected: " + select_list.length + "\n\n");
-    for (var nodeIndex=0; nodeIndex<select_list.length; nodeIndex++)
-    {
-        var node = select_list[nodeIndex];
-        if (node)
-        {
-          dump("Unselecting node "+node.getAttribute("Name") + "\n");
-          node.removeAttribute("selected");
-        }
-    }
+    var tree = document.getElementById('fileTree');
+    tree.clearSelection();
 
     // XXX for now, just remove the child from the parent
     // optimally, we'd like to not remove the child-parent relationship
@@ -478,7 +469,7 @@ function doContextCmd(cmdName)
   cmdResource = cmdResource.QueryInterface(Components.interfaces.nsIRDFResource);
   if (!cmdResource)        return(false);
 
-  var select_list = treeNode.getElementsByAttribute("selected", "true");
+  var select_list = treeNode.selectedItems;
   if (select_list.length < 1)    return(false);
 
   dump("# of Nodes selected: " + select_list.length + "\n\n");

@@ -76,7 +76,7 @@
         </row>
         <separator class="thin"/>
         <row flex="1">
-          <tree id="disabledDomains" multiple="true" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
+          <tree id="disabledDomains" seltype="multiple" onkeyup="treeHandleEvent(event)" style="height: 0px; width: 0px;" flex="1">
             <treecolgroup>
               <treecol flex="1"/>   
             </treecolgroup>

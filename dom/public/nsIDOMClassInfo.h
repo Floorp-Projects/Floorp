@@ -172,7 +172,6 @@ enum nsDOMClassInfoID {
   // XUL classes
   eDOMClassInfo_XULDocument_id,
   eDOMClassInfo_XULElement_id,
-  eDOMClassInfo_XULTreeElement_id,
   eDOMClassInfo_XULCommandDispatcher_id,
   eDOMClassInfo_XULNodeList_id,
   eDOMClassInfo_XULNamedNodeMap_id,

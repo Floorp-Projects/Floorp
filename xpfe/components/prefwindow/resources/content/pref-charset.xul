@@ -47,7 +47,7 @@
       <tree id="available_charsets" flex="1"
             onselect="SelectAvailableCharset();" 
             ondblclick="AddAvailableCharset();"
-            datasources="rdf:null" multiple="true">
+            datasources="rdf:null" seltype="multiple">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
@@ -66,7 +66,7 @@
             onselect="SelectActiveCharset();"
             ondblclick="RemoveActiveCharset();"
             datasources="rdf:null"
-            indent="false" multiple="true">
+            indent="false" seltype="multiple">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>

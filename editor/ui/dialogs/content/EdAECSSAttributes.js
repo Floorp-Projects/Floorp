@@ -72,7 +72,7 @@ function onChangeCSSAttribute()
 
 function ClearCSSInputWidgets()
 {
-  gDialog.AddCSSAttributeTree.clearItemSelection();
+  gDialog.AddCSSAttributeTree.clearSelection();
   gDialog.AddCSSAttributeNameInput.value ="";
   gDialog.AddCSSAttributeValueInput.value = "";
   gDialog.AddCSSAttributeNameInput.inputField.focus();

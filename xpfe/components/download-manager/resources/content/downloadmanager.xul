@@ -124,7 +124,7 @@
 
   <tree id="downloadView" ref="NC:DownloadsRoot"
         datasources="rdf:downloads"
-        multiple="true" flags="dont-test-empty"
+        seltype="multiple" flags="dont-test-empty"
         ondragover="nsDragAndDrop.dragOver(event, downloadView);"
         ondraggesture="nsDragAndDrop.startDrag(event, downloadView);"
         ondragdrop="nsDragAndDrop.drop(event, downloadView);"

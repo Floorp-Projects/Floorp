@@ -52,7 +52,7 @@
     <hbox flex="1">
       <tree id="active_languages" flex="1" style="width: 0px; height: 0px;"
             preftype="localizedstring" prefstring="intl.accept_languages" prefvalue="" prefattribute="prefvalue" wsm_attributes="prefvalue"
-            datasources="rdf:null" multiple="true" onselect="SelectLanguage();">
+            datasources="rdf:null" seltype="multiple" onselect="SelectLanguage();">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>

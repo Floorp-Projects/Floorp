@@ -77,6 +77,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMXULElement.h"
+#include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDocument.h"
 #include "nsIEventListenerManager.h"
 #include "nsIEventStateManager.h"
@@ -117,7 +118,6 @@
 #include "nsXPIDLString.h"
 #include "nsXULAttributes.h"
 #include "nsXULControllers.h"
-#include "nsXULTreeElement.h"
 #include "nsIBoxObject.h"
 #include "nsPIBoxObject.h"
 #include "nsXULDocument.h"
@@ -649,8 +649,6 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
         return NS_ERROR_NULL_POINTER;
     *result = nsnull;
 
-    nsresult rv;
-
     if (iid.Equals(NS_GET_IID(nsIStyledContent)) ||
         iid.Equals(NS_GET_IID(nsIContent)) ||
         iid.Equals(NS_GET_IID(nsISupports))) {
@@ -679,46 +677,13 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
     else if (iid.Equals(NS_GET_IID(nsIChromeEventHandler))) {
         *result = NS_STATIC_CAST(nsIChromeEventHandler*, this);
     }
-    else if ((iid.Equals(NS_GET_IID(nsIDOMXULTreeElement)) ||
-              iid.Equals(NS_GET_IID(nsIXULTreeContent))) &&
-             (NodeInfo()->NamespaceEquals(kNameSpaceID_XUL))){
-      nsCOMPtr<nsIAtom> tag;
-      PRInt32 dummy;
-      nsIXBLService *xblService = GetXBLService();
-      xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-      if (tag == nsXULAtoms::tree) {
-        // We delegate XULTreeElement APIs to an aggregate object
-        if (! InnerXULElement()) {
-            rv = EnsureSlots();
-            if (NS_FAILED(rv)) return rv;
-
-            if ((mSlots->mInnerXULElement = new nsXULTreeElement(this)) == nsnull)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-
-        return InnerXULElement()->QueryInterface(iid, result);
-      }
-      else
-        return NS_NOINTERFACE;
-    }
     else if (iid.Equals(NS_GET_IID(nsIDOM3Node))) {
         *result = new nsNode3Tearoff(this);
         NS_ENSURE_TRUE(*result, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (iid.Equals(NS_GET_IID(nsIClassInfo))) {
-        nsISupports *inst = nsnull;
-
-        nsCOMPtr<nsIAtom> tag;
-        PRInt32 dummy;
-        nsIXBLService *xblService = GetXBLService();
-        xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-        if (tag == nsXULAtoms::tree) {
-            inst = nsContentUtils::
-                GetClassInfoInstance(eDOMClassInfo_XULTreeElement_id);
-        } else {
-            inst = nsContentUtils::
+        nsISupports *inst = nsContentUtils::
                 GetClassInfoInstance(eDOMClassInfo_XULElement_id);
-        }
 
         NS_ENSURE_TRUE(inst, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2394,7 +2359,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
     // the possibility exists that some of the items in the removed subtree
     // are selected (and therefore need to be deselected). We need to account for this.
     nsCOMPtr<nsIAtom> tag;
-    nsCOMPtr<nsIDOMXULTreeElement> treeElement;
+    nsCOMPtr<nsIDOMXULMultiSelectControlElement> controlElement;
     nsCOMPtr<nsITreeBoxObject> treeBox;
     PRBool fireSelectionHandler = PR_FALSE;
 
@@ -2404,50 +2369,40 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
 
     oldKid->GetTag(*getter_AddRefs(tag));
     if (tag && (tag == nsXULAtoms::treechildren || tag == nsXULAtoms::treeitem ||
-                tag == nsXULAtoms::treecell)) {
+                tag == nsXULAtoms::treecell || tag == nsXULAtoms::listitem)) {
       // This is the nasty case. We have (potentially) a slew of selected items
       // and cells going away.
       // First, retrieve the tree.
       // Check first whether this element IS the tree
-      treeElement = do_QueryInterface((nsIDOMXULElement*)this);
+      controlElement = do_QueryInterface((nsIDOMXULElement*)this);
 
       // If it's not, look at our parent
-      if (!treeElement)
-        rv = GetParentTree(getter_AddRefs(treeElement));
-      if (treeElement) {
-        nsCOMPtr<nsIDOMNodeList> itemList;
-        treeElement->GetSelectedItems(getter_AddRefs(itemList));
-
+      if (!controlElement)
+        rv = GetParentTree(getter_AddRefs(controlElement));
+      if (controlElement) {
         nsCOMPtr<nsIDOMNode> parentKid = do_QueryInterface(oldKid);
-        if (itemList) {
-          // Iterate over all of the items and find out if they are contained inside
-          // the removed subtree.
-          PRUint32 length;
-          itemList->GetLength(&length);
-          for (PRUint32 i = 0; i < length; i++) {
-            nsCOMPtr<nsIDOMNode> node;
-            itemList->Item(i, getter_AddRefs(node));
-            if (IsAncestor(parentKid, node)) {
-              nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-              content->UnsetAttr(kNameSpaceID_None, nsXULAtoms::selected, PR_FALSE);
-              nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
-              nsCOMPtr<nsIDOMXULElement> domxulnode = do_QueryInterface(node);
-              if (tree && domxulnode)
-                tree->CheckSelection(domxulnode);
-              length--;
-              i--;
-              fireSelectionHandler = PR_TRUE;
-            }
+        // Iterate over all of the items and find out if they are contained inside
+        // the removed subtree.
+        PRInt32 length;
+        controlElement->GetSelectedCount(&length);
+        for (PRInt32 i = 0; i < length; i++) {
+          nsCOMPtr<nsIDOMXULSelectControlItemElement> node;
+          controlElement->GetSelectedItem(i, getter_AddRefs(node));
+          if (IsAncestor(parentKid, node)) {
+            controlElement->RemoveItemFromSelection(node);
+            length--;
+            i--;
+            fireSelectionHandler = PR_TRUE;
           }
         }
 
-        nsCOMPtr<nsIDOMXULElement> curItem;
-        treeElement->GetCurrentItem(getter_AddRefs(curItem));
+        nsCOMPtr<nsIDOMXULSelectControlItemElement> curItem;
+        controlElement->GetCurrentItem(getter_AddRefs(curItem));
         nsCOMPtr<nsIDOMNode> curNode = do_QueryInterface(curItem);
         if (IsAncestor(parentKid, curNode)) {
             // Current item going away
             nsCOMPtr<nsIBoxObject> box;
-            treeElement->GetBoxObject(getter_AddRefs(box));
+            controlElement->GetBoxObject(getter_AddRefs(box));
             treeBox = do_QueryInterface(box);
             if (treeBox) {
                 nsCOMPtr<nsIDOMElement> domElem = do_QueryInterface(parentKid);
@@ -2471,7 +2426,7 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
         }
 
         if (newCurrentIndex == -2)
-            treeElement->SetCurrentItem(nsnull);
+            controlElement->SetCurrentItem(nsnull);
         else if (newCurrentIndex > -1) {
             // Make sure the index is still valid
             PRInt32 treeRows;
@@ -2481,19 +2436,23 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
                 nsCOMPtr<nsIDOMElement> newCurrentItem;
                 treeBox->GetItemAtIndex(newCurrentIndex, getter_AddRefs(newCurrentItem));
                 if (newCurrentItem) {
-                    nsCOMPtr<nsIDOMXULElement> xulCurItem = do_QueryInterface(newCurrentItem);
+                    nsCOMPtr<nsIDOMXULSelectControlItemElement> xulCurItem = do_QueryInterface(newCurrentItem);
                     if (xulCurItem)
-                        treeElement->SetCurrentItem(xulCurItem);
+                        controlElement->SetCurrentItem(xulCurItem);
                 }
             } else {
-                treeElement->SetCurrentItem(nsnull);
+                controlElement->SetCurrentItem(nsnull);
             }
         }
-
+  
         if (fireSelectionHandler) {
-          nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
-          if (tree) {
-            tree->FireOnSelectHandler();
+          nsCOMPtr<nsIDOMDocumentEvent> doc(do_QueryInterface(mDocument));
+          nsCOMPtr<nsIDOMEvent> event;
+          doc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
+          if (event) {
+            event->InitEvent(NS_LITERAL_STRING("select"), PR_FALSE, PR_TRUE);
+            PRBool noDefault;
+            DispatchEvent(event, &noDefault);
           }
         }
 
@@ -2624,31 +2583,6 @@ nsXULElement::SetAttr(nsINodeInfo* aNodeInfo,
         mDocument->GetBaseURL(*getter_AddRefs(docURL));
         Attributes()->UpdateStyleRule(docURL, aValue);
         // XXX Some kind of special document update might need to happen here.
-    }
-
-    // Need to check for the SELECTED attribute
-    // being set.  If we're a <treeitem>, <treerow>, or <treecell>, the act of
-    // setting these attributes forces us to update our selected arrays.
-    nsCOMPtr<nsIAtom> tag;
-    GetTag(*getter_AddRefs(tag));
-    if (mDocument && aNodeInfo->NamespaceEquals(kNameSpaceID_None)) {
-      // See if we're a treeitem atom.
-      nsCOMPtr<nsIRDFNodeList> nodeList;
-      if (tag && (tag == nsXULAtoms::treeitem) &&
-          aNodeInfo->Equals(nsXULAtoms::selected)) {
-        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-        GetParentTree(getter_AddRefs(treeElement));
-        if (treeElement) {
-          nsCOMPtr<nsIDOMNodeList> nodes;
-          treeElement->GetSelectedItems(getter_AddRefs(nodes));
-          nodeList = do_QueryInterface(nodes);
-        }
-      }
-
-      if (nodeList) {
-        // Append this node to the list.
-        nodeList->AppendNode(this);
-      }
     }
 
     // XXX need to check if they're changing an event handler: if so, then we need
@@ -2902,39 +2836,17 @@ nsXULElement::UnsetAttr(PRInt32 aNameSpaceID,
     // XXXwaterson if aNotify == PR_TRUE, do we want to call
     // nsIDocument::BeginUpdate() now?
     if (aNameSpaceID == kNameSpaceID_None) {
-        if (aName == nsXULAtoms::selected) {
-            // Need to check for the SELECTED attribute
-            // being unset.  If we're a <treeitem>, <treerow>, or <treecell>, the act of
-            // unsetting these attributes forces us to update our selected arrays.
-            nsCOMPtr<nsIAtom> tag;
-            GetTag(*getter_AddRefs(tag));
-            
-            // See if we're a treeitem atom.
-            if (tag && (tag == nsXULAtoms::treeitem)) {
-                nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-                GetParentTree(getter_AddRefs(treeElement));
-                if (treeElement) {
-                    nsCOMPtr<nsIDOMNodeList> nodes;
-                    treeElement->GetSelectedItems(getter_AddRefs(nodes));
-                    nsCOMPtr<nsIRDFNodeList> nodeList(do_QueryInterface(nodes));
-                    if (nodeList) {
-                        // Remove this node from the list.
-                        nodeList->RemoveNode(this);
-                    }
-                    
-                }
-            }
-        } else if (mDocument) {
-            if (aName == nsXULAtoms::clazz) {
-                // If CLASS is being unset, delete our class list.
-                Attributes()->UpdateClassList(nsAutoString());
-            } else if (aName == nsXULAtoms::style) {
-                nsCOMPtr <nsIURI> docURL;
-                mDocument->GetBaseURL(*getter_AddRefs(docURL));
-                Attributes()->UpdateStyleRule(docURL, nsAutoString());
-                // XXX Some kind of special document update might need to happen here.
-            }
+      if (mDocument) {
+        if (aName == nsXULAtoms::clazz) {
+            // If CLASS is being unset, delete our class list.
+            Attributes()->UpdateClassList(nsAutoString());
+        } else if (aName == nsXULAtoms::style) {
+            nsCOMPtr <nsIURI> docURL;
+            mDocument->GetBaseURL(*getter_AddRefs(docURL));
+            Attributes()->UpdateStyleRule(docURL, nsAutoString());
+            // XXX Some kind of special document update might need to happen here.
         }
+      }
     }
 
     // XXX Know how to remove POPUP event listeners when an attribute is unset?
@@ -3385,7 +3297,7 @@ nsXULElement::HandleDOMEvent(nsIPresContext* aPresContext,
         parent = mParent;
     }
 
-    if (retarget || (parent != mParent)) {
+    if (!retarget || (parent != mParent)) {
       if (!*aDOMEvent) {
         // We haven't made a DOMEvent yet.  Force making one now.
         nsCOMPtr<nsIEventListenerManager> listenerManager;
@@ -4402,15 +4314,15 @@ nsXULElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 }
 
 NS_IMETHODIMP
-nsXULElement::GetParentTree(nsIDOMXULTreeElement** aTreeElement)
+nsXULElement::GetParentTree(nsIDOMXULMultiSelectControlElement** aTreeElement)
 {
   nsCOMPtr<nsIContent> current;
   GetParent(*getter_AddRefs(current));
   while (current) {
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
-    if (tag && (tag == nsXULAtoms::tree)) {
-      nsCOMPtr<nsIDOMXULTreeElement> element = do_QueryInterface(current);
+    if (tag && (tag == nsXULAtoms::tree || tag == nsXULAtoms::listbox)) {
+      nsCOMPtr<nsIDOMXULMultiSelectControlElement> element = do_QueryInterface(current);
       *aTreeElement = element;
       NS_IF_ADDREF(*aTreeElement);
       return NS_OK;
@@ -4819,8 +4731,7 @@ nsresult nsXULElement::MakeHeavyweight()
 
 nsXULElement::Slots::Slots(nsXULElement* aElement)
     : mAttributes(nsnull),
-      mLazyState(0),
-      mInnerXULElement(nsnull)
+      mLazyState(0)
 {
     MOZ_COUNT_CTOR(nsXULElement::Slots);
 }
@@ -4831,9 +4742,6 @@ nsXULElement::Slots::~Slots()
     MOZ_COUNT_DTOR(nsXULElement::Slots);
 
     NS_IF_RELEASE(mAttributes);
-
-    // Delete the aggregated interface, if one exists.
-    delete mInnerXULElement;
 }
 
 

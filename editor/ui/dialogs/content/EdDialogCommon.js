@@ -413,7 +413,7 @@ function ClearTreelist(tree)
 {
   if (tree)
   {
-    tree.clearItemSelection();
+    tree.clearSelection();
     // Skip over the first <treecolgroup> child
     if (tree.firstChild)
     {
@@ -462,7 +462,7 @@ function RemoveSelectedTreelistItem(tree)
       var treeItem = tree.selectedItems[0];
       if (treeItem)
       {
-        tree.clearItemSelection();
+        tree.cleaclearSelection
         var parent = treeItem.parentNode;
         if (parent)
         {

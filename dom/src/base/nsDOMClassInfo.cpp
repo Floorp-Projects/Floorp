@@ -253,7 +253,6 @@
 #include "nsIDOMTreeWalker.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMXULTreeElement.h"
 #include "nsIDOMXULCommandDispatcher.h"
 #include "nsIDOMCrypto.h"
 #include "nsIDOMCRMFObject.h"
@@ -658,8 +657,6 @@ static nsDOMClassInfoData sClassInfoData[] = {
                            NODE_SCRIPTABLE_FLAGS |
                            nsIXPCScriptable::WANT_ENUMERATE)
   NS_DEFINE_CLASSINFO_DATA(XULElement, nsElementSH,
-                           ELEMENT_SCRIPTABLE_FLAGS)
-  NS_DEFINE_CLASSINFO_DATA(XULTreeElement, nsElementSH,
                            ELEMENT_SCRIPTABLE_FLAGS)
   NS_DEFINE_CLASSINFO_DATA(XULCommandDispatcher, nsDOMGenericSH,
                            DOM_DEFAULT_SCRIPTABLE_FLAGS)
@@ -1706,12 +1703,6 @@ nsDOMClassInfo::Init()
 
   DOM_CLASSINFO_MAP_BEGIN(XULElement, nsIDOMXULElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
-  DOM_CLASSINFO_MAP_END
-
-  DOM_CLASSINFO_MAP_BEGIN(XULTreeElement, nsIDOMXULTreeElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULElement)
-    DOM_CLASSINFO_MAP_ENTRY(nsIDOMXULTreeElement)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMEventTarget)
   DOM_CLASSINFO_MAP_END
 

@@ -244,7 +244,7 @@ function GetAndSelectExistingAttributeValue( attName, treeChildrenId )
   // Attribute doesn't exist in tree, so remove selection
   gDoOnSelectTree = false;
   try {
-    treeChildren.parentNode.clearItemSelection();
+    treeChildren.parentNode.clearSelection();
   } catch (e) {}
   gDoOnSelectTree = true;
 

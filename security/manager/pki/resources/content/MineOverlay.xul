@@ -34,7 +34,7 @@
   <vbox id="myCerts">
     <description>&certmgr.mine;</description>
     <separator class="thin"/>
-    <outliner id="user-outliner" multiple="true" enableColumnDrag="true"
+    <outliner id="user-outliner" seltype="multiple" enableColumnDrag="true"
               onselect="mine_enableButtons()" flex="1">
       <outlinercols>
         <outlinercol id="certcol" label="&certmgr.certname;" primary="true" 
