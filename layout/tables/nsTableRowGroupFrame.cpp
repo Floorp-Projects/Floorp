@@ -1449,6 +1449,7 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
 
 {
   nsresult rv;
+  
   // Recover the state as if aNextFrame is about to be reflowed
   RecoverState(aReflowState, aNextFrame, aDesiredSize.maxElementSize);
 
@@ -1456,12 +1457,16 @@ NS_METHOD nsTableRowGroupFrame::IR_TargetIsChild(nsIPresContext*      aPresConte
   nsRect  oldKidRect;
   aNextFrame->GetRect(oldKidRect);
 
-  // Pass along the reflow command
+  // Reflow the child giving it as much room as it wants. We'll deal with
+  // splitting later after final determination of rows heights taking into
+  // account cells with row spans...
+  nsSize              kidAvailSize(aReflowState.availSize.width, NS_UNCONSTRAINEDSIZE);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState.reflowState,
-                                     aNextFrame, aReflowState.availSize);
+                                     aNextFrame, kidAvailSize);
   nsSize              kidMaxElementSize;
   nsHTMLReflowMetrics desiredSize(aDesiredSize.maxElementSize ? &kidMaxElementSize : nsnull);
 
+  // Pass along the reflow command
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState,
                    0, aReflowState.y, 0, aStatus);
 

@@ -1309,6 +1309,22 @@ NS_METHOD nsTableRowFrame::IR_TargetIsChild(nsIPresContext*      aPresContext,
   { // pass reflow to unknown frame child
     // aDesiredSize does not change
   }
+
+  // When returning whether we're complete we need to look at each of our cell
+  // frames. If any of them has a continuing frame, then we're not complete. We
+  // can't just return the status of the cell frame we just reflowed...
+  aStatus = NS_FRAME_COMPLETE;
+  if (mNextInFlow) {
+    for (nsIFrame* cell = mFrames.FirstChild(); cell; cell->GetNextSibling(&cell)) {
+      nsIFrame* contFrame;
+  
+      cell->GetNextInFlow(&contFrame);
+      if (contFrame) {
+        aStatus =  NS_FRAME_NOT_COMPLETE;
+        break;
+      }
+    }
+  }
   return rv;
 }
 
