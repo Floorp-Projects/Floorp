@@ -1700,26 +1700,20 @@ nsSmtpProtocol::GetUsernamePassword(char **aUsername, char **aPassword)
     mSmtpBundle->GetStringByID(NS_SMTP_PASSWORD_PROMPT_TITLE, getter_Copies(passwordTitle));
 
     if (!passwordTitle) 
-    {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
+        return NS_ERROR_NULL_POINTER;
 
     rv = smtpServer->GetHostname(getter_Copies(hostname));
-    if (NS_FAILED(rv)) goto done;
+    if (NS_FAILED(rv)) 
+        return rv;
 
     passwordPromptString = nsTextFormatter::smprintf(passwordTemplate,
                                                      (const char *) hostname);
     if (!passwordPromptString)
-    {
-        rv = NS_ERROR_NULL_POINTER;
-        goto done;
-    }
+        return NS_ERROR_NULL_POINTER;
     
     rv = smtpServer->GetUsernamePasswordWithUI(passwordPromptString, passwordTitle,
                                        netPrompt, aUsername, aPassword);
 
-done:
     if (passwordPromptString)
         nsCRT::free(passwordPromptString);
 
