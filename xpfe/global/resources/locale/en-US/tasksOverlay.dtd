@@ -15,6 +15,9 @@
 <!ENTITY importUtilCmd.label					"Import Utility">  
 <!ENTITY javaConsoleCmd.label					"Java Console">
 
+<!ENTITY javaScriptConsoleCmd.label                             "JavaScript Console">
+
+
 <!-- LOCALIZATION NOTE (walletMenu.label): DONT_TRANSLATE -->
 <!ENTITY walletMenu.label "Personal Managers">
 <!ENTITY walletFormManager.label "Form Manager">

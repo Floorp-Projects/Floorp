@@ -57,6 +57,11 @@ function toHistory()
 
 }
 
+function toJavaScriptConsole()
+{
+	toOpenWindowByType("global:console", "chrome://global/content/console.xul");
+}
+
 function toJavaConsole()
 {
 	try{
