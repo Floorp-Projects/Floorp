@@ -56,6 +56,11 @@ EXPORTS= mkstream.h mkparse.h mkfsort.h mksort.h mkgeturl.h \
 	netstream.h mkselect.h mktcp.h netutils.h mkpadpac.h mkautocf.h mkhelp.h \
         mkutils.h mktrace.h
 
+ifdef MOZ_MAIL_NEWS
+EXPORT += mkcertld.h mkmailbx.h mknews.h mknewsgr.h \
+	mkpop3.h mkimap4.h mkldap.h
+endif # MOZ_MAIL_NEWS
+
 
 REQUIRES	= ldapurl imap4url jtools progress nspr2 dbm util js parse lay style pref htmldlgs java \
 	libfont netcache httpurl cnetinit security img layer netcnvts network \
