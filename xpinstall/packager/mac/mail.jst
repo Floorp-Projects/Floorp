@@ -1,27 +1,27 @@
-var err = StartInstall("Mozilla Mail", "Seamonkey", "$Version$"); 
-LogComment("StartInstall: " + err);
+var err = startInstall("Mozilla Mail", "Seamonkey", "$Version$"); 
+logComment("startInstall: " + err);
 
-var communicatorFolder = GetFolder("Communicator");
-LogComment("communicatorFolder: " + communicatorFolder);
+var communicatorFolder = getFolder("Communicator");
+logComment("communicatorFolder: " + communicatorFolder);
 
-err = AddDirectory("Program",
+err = addDirectory("Program",
                    "$Version$",
                    "viewer",           // jar source folder 
                    communicatorFolder, // target folder
                    "Mozilla Folder",   // target subdir 
                    false);             // force flag 
 
-LogComment("AddDirectory() returned: " + err);
+logComment("addDirectory() returned: " + err);
 
-err = GetLastError();
+err = getLastError();
 if (err==SUCCESS || err==REBOOT_NEEDED)
 {
-	err = FinalizeInstall(); 
-	LogComment("FinalizeInstall() returned: " + err);
+	err = finalizeInstall(); 
+	logComment("finalizeInstall() returned: " + err);
 }
 else
 {
-	err = AbortInstall();
-	LogComment("AbortInstall() returned: " + err);
+	abortInstall();
+	logComment("abortInstall() due to error: " + err);
 }
 
