@@ -56,64 +56,16 @@
         </columns>
         <rows>
           <row>
-            <checkbox label="&cipher.ssl3.dhe_rsa_aes_256_sha;"
-                      prefstring="security.ssl3.dhe_rsa_aes_256_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_rsa_aes_256_sha');"/>
-          </row>
-          <row>
-            <checkbox label="&cipher.ssl3.dhe_dss_aes_256_sha;"
-                      prefstring="security.ssl3.dhe_dss_aes_256_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_dss_aes_256_sha');"/>
-          </row>
-          <row>
             <checkbox label="&cipher.ssl3.rsa_aes_256_sha;"
                       prefstring="security.ssl3.rsa_aes_256_sha"/>
             <button label="&cipher.details;"
                     oncommand="showInfo('security.ssl3.rsa_aes_256_sha');"/>
           </row>
           <row>
-            <checkbox label="&cipher.ssl3.dhe_rsa_aes_128_sha;"
-                      prefstring="security.ssl3.dhe_rsa_aes_128_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_rsa_aes_128_sha');"/>
-          </row>
-          <row>
-            <checkbox label="&cipher.ssl3.dhe_dss_aes_128_sha;"
-                      prefstring="security.ssl3.dhe_dss_aes_128_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_dss_aes_128_sha');"/>
-          </row>
-          <row>
             <checkbox label="&cipher.ssl3.rsa_aes_128_sha;"
                       prefstring="security.ssl3.rsa_aes_128_sha"/>
             <button label="&cipher.details;"
                     oncommand="showInfo('security.ssl3.rsa_aes_128_sha');"/>
-          </row>
-          <row>
-            <checkbox label="&cipher.ssl3.dhe_rsa_des_ede3_sha;"
-                      prefstring="security.ssl3.dhe_rsa_des_ede3_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_rsa_des_ede3_sha');"/>
-          </row>
-          <row>
-            <checkbox label="&cipher.ssl3.dhe_dss_des_ede3_sha;"
-                      prefstring="security.ssl3.dhe_dss_des_ede3_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_dss_des_ede3_sha');"/>
-          </row>
-          <row>
-            <checkbox label="&cipher.ssl3.dhe_rsa_des_sha;"
-                      prefstring="security.ssl3.dhe_rsa_des_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_rsa_des_sha');"/>
-          </row>
-          <row>
-            <checkbox label="&cipher.ssl3.dhe_dss_des_sha;"
-                      prefstring="security.ssl3.dhe_dss_des_sha"/>
-            <button label="&cipher.details;"
-                    oncommand="showInfo('security.ssl3.dhe_dss_des_sha');"/>
           </row>
           <row>
             <checkbox label="&cipher.ssl3.rsa_null_sha;"

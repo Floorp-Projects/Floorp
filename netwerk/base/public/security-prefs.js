@@ -20,16 +20,8 @@ pref("security.ssl3.rsa_1024_rc4_56_sha", true);
 pref("security.ssl3.rsa_1024_des_cbc_sha", true);
 pref("security.ssl3.rsa_rc4_40_md5", true);
 pref("security.ssl3.rsa_rc2_40_md5", true);
-pref("security.ssl3.dhe_rsa_aes_256_sha", true);
-pref("security.ssl3.dhe_dss_aes_256_sha", true);
 pref("security.ssl3.rsa_aes_256_sha", true);
-pref("security.ssl3.dhe_rsa_aes_128_sha", true);
-pref("security.ssl3.dhe_dss_aes_128_sha", true);
 pref("security.ssl3.rsa_aes_128_sha", true);
-pref("security.ssl3.dhe_rsa_des_ede3_sha", true);
-pref("security.ssl3.dhe_dss_des_ede3_sha", true);
-pref("security.ssl3.dhe_rsa_des_sha", true);
-pref("security.ssl3.dhe_dss_des_sha", true);
 pref("security.ssl3.rsa_null_sha", false);
 pref("security.ssl3.rsa_null_md5", false);
 

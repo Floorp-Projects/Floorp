@@ -76,16 +76,8 @@
 <!ENTITY cipher.ssl3.rsa_rc2_40_md5 "40-bit RC2 encryption with RSA and an MD5 MAC (export)">
 
 <!-- Extra SSL3/TLS ciphers -->
-<!ENTITY cipher.ssl3.dhe_rsa_aes_256_sha "256-bit AES encryption with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_aes_256_sha "256-bit AES encryption with DSA, DHE, and a SHA1 MAC">
 <!ENTITY cipher.ssl3.rsa_aes_256_sha "256-bit AES encryption with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_rsa_aes_128_sha "128-bit AES encryption with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_aes_128_sha "128-bit AES encryption with DSA, DHE, and a SHA1 MAC">
 <!ENTITY cipher.ssl3.rsa_aes_128_sha "128-bit AES encryption with RSA and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_rsa_des_ede3_sha "168-bit Triple DES with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_des_ede3_sha "168-bit Triple DES with DSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_rsa_des_sha "56-bit DES encryption with RSA, DHE, and a SHA1 MAC">
-<!ENTITY cipher.ssl3.dhe_dss_des_sha "56-bit DES encryption with DSA, DHE, and a SHA1 MAC">
 <!ENTITY cipher.ssl3.rsa_null_sha "No encryption with RSA authentication and a SHA1 MAC">
 <!ENTITY cipher.ssl3.rsa_null_md5 "No encryption with RSA authentication and an MD5 MAC">
 
