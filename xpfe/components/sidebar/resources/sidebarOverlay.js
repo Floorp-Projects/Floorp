@@ -41,6 +41,8 @@
 
 var gCurFrame;
 var gTimeoutID = null;
+var gMustInit = true;
+var gAboutToUncollapse = false;
 
 function setBlank()
 {
@@ -516,6 +518,9 @@ function refresh_all_sidebars() {
 // Sidebar Init
 //////////////////////////////////////////////////////////////
 function sidebar_overlay_init() {
+  if (sidebar_is_collapsed() && !gAboutToUncollapse)
+    return;
+  gMustInit = false;
   sidebarObj.panels = new sbPanelList('sidebar-panels');
   sidebarObj.datasource_uri = get_sidebar_datasource_uri();
   sidebarObj.resource = 'urn:sidebar:current-panel-list';
@@ -571,6 +576,7 @@ function sidebar_overlay_init() {
     } else {
       sidebarObj.collapsed = false;
     }
+
     sidebar_open_default_panel(100, 0);
   }
 }
@@ -847,6 +853,8 @@ function SidebarExpandCollapse() {
   var sidebar_splitter = document.getElementById('sidebar-splitter');
   var sidebar_box = document.getElementById('sidebar-box');
   if (sidebar_splitter.getAttribute('state') == 'collapsed') {
+    if (gMustInit)
+      sidebar_overlay_init();
     debug("Expanding the sidebar");
     sidebar_splitter.removeAttribute('state');
     sidebar_box.removeAttribute('collapsed');
@@ -989,6 +997,11 @@ function SidebarTogglePanel(panel_menuitem) {
 function SidebarCleanUpExpandCollapse() {
   // XXX Mini hack. Persist isn't working too well. Force the persist,
   // but wait until the change has commited.
+  if (gMustInit) {
+    gAboutToUncollapse = true;
+    sidebar_overlay_init();
+  }
+
   setTimeout("document.persist('sidebar-box', 'collapsed');",100);
   setTimeout("sidebarObj.panels.refresh();",100);
 }
@@ -1018,6 +1031,8 @@ function SidebarFinishClick() {
   var is_collapsed = document.getElementById('sidebar-box').getAttribute('collapsed') == 'true' ? true : false;
   debug("collapsed: " + is_collapsed);
   if (is_collapsed != sidebarObj.collapsed) {
+    if (gMustInit)
+      sidebar_overlay_init();
     sidebarObj.panels.refresh();
   }
 }
