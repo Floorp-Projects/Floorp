@@ -39,8 +39,10 @@ nsresult CreateStylFromScriptRuns(ScriptCodeRun *scriptCodeRuns,
                                            nsMemory::Alloc(scrpRecLen));
   NS_ENSURE_TRUE(scrpRec, NS_ERROR_OUT_OF_MEMORY);
   
-  OSErr err;
+  OSErr err = noErr;
+#if TARGET_CARBON    
   Str255 themeFontName;
+#endif  
   SInt16 textSize;
   Style textStyle;
   short fontFamilyID;
@@ -62,21 +64,27 @@ nsresult CreateStylFromScriptRuns(ScriptCodeRun *scriptCodeRuns,
   for (ItemCount i = 0; i < scriptRunOutLen; i++) {
     scrpRec->scrpStyleTab[i].scrpStartChar = scriptCodeRuns[i].offset;
 
-    err = ::GetThemeFont(
 #if TARGET_CARBON    
+    err = ::GetThemeFont(
                          kThemeApplicationFont, 
-#else
-                         kThemeSystemFont,
-#endif
                          scriptCodeRuns[i].script, 
                          themeFontName, 
                          &textSize, 
                          &textStyle);
-
     if (err != noErr)
       break;
       
     ::GetFNum(themeFontName, &fontFamilyID);
+#else
+    // kThemeApplicationFont cannot be used on MacOS 9
+    // use script manager to get the application font instead
+    fontFamilyID = NS_STATIC_CAST(short,
+                                  ::GetScriptVariable(scriptCodeRuns[i].script, smScriptAppFond));
+    textSize = NS_STATIC_CAST(SInt16,
+                              ::GetScriptVariable(scriptCodeRuns[i].script, smScriptAppFondSize));
+    textStyle = normal;
+#endif
+      
     ::TextFont(fontFamilyID);
     ::TextSize(textSize);
     ::TextFace(textStyle);
