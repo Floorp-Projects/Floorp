@@ -30,8 +30,8 @@
   xmlns="http://www.w3.org/TR/REC-html40"
   title="&bookmarks.title.label;"
   onload="Init();"
+  class="dialog"
   align="vertical">
-
   <script src="bm-props.js" />
 
   <table style="width:100%; margin:1em;">
@@ -156,8 +156,8 @@
     
     <tr>
     	<td colspan="2" align="right">
-		<button class="cancelbutton" onclick="Cancel();">&bookmarks.cancel.label;</button>
-		<button class="defaultbutton" onclick="Commit();">&bookmarks.ok.label;</button>
+		<xul:titledbutton class="dialog push" onclick="Cancel();" value="&bookmarks.cancel.label;"/>
+		<xul:titledbutton class="dialog push" onclick="Commit();" value="&bookmarks.ok.label;"/>
     	</td>
     </tr>
     
