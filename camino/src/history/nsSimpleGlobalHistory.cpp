@@ -86,17 +86,17 @@ nsIMdbFactory* nsSimpleGlobalHistory::gMdbFactory = nsnull;
 nsIPrefBranch* nsSimpleGlobalHistory::gPrefBranch = nsnull;
 
 // list of terms, plus an optional groupby column
-struct SearchQuery {
+struct SearchQueryData {
   nsVoidArray   terms;            // array of searchTerms
   mdb_column    groupBy;           // column to group by
 };
 
 
 // individual search term, pulled from token/value structs
-class SearchTerm
+class HistorySearchTerm
 {
 public:
-  SearchTerm(const char* aDatasource, PRUint32 aDatasourceLen,
+  HistorySearchTerm(const char* aDatasource, PRUint32 aDatasourceLen,
              const char *aProperty, PRUint32 aPropertyLen,
              const char* aMethod, PRUint32 aMethodLen,
              const char* aText, PRUint32 aTextLen)
@@ -104,16 +104,16 @@ public:
   , property(aProperty, aProperty + aPropertyLen)
   , method(aMethod, aMethod + aMethodLen)
   {
-    MOZ_COUNT_CTOR(SearchTerm);
+    MOZ_COUNT_CTOR(HistorySearchTerm);
     nsresult rv;
     nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv))
       textToSubURI->UnEscapeAndConvert("UTF-8",  PromiseFlatCString(Substring(aText, aText + aTextLen)).get(), getter_Copies(text));
   }
 
-  ~SearchTerm()
+  ~HistorySearchTerm()
   {
-    MOZ_COUNT_DTOR(SearchTerm);
+    MOZ_COUNT_DTOR(HistorySearchTerm);
   }
   
   nsDependentCSubstring   datasource;  // should always be "history" ?
@@ -125,35 +125,35 @@ public:
 
 
 // closure structures for RemoveMatchingRows
-struct matchExpiration_t {
+struct MatchExpirationData {
   PRTime*                 expirationDate;
   nsSimpleGlobalHistory*  history;
 };
 
-struct matchHost_t {
+struct MatchHostData {
   const char*             host;
   PRBool                  entireDomain;          // should we delete the entire domain?
   nsSimpleGlobalHistory*  history;
 };
 
-struct matchSearchTerm_t {
+struct MatchSearchTermData {
   nsIMdbEnv*              env;
   nsIMdbStore*            store;
   
-  SearchTerm*             term;
+  HistorySearchTerm*             term;
   PRBool                  haveClosure;           // are the rest of the fields valid?
   PRTime                  now;
   PRInt32                 intValue;
 };
 
-struct matchQuery_t {
-  SearchQuery*            query;
+struct MatchQueryData {
+  SearchQueryData*            query;
   nsSimpleGlobalHistory*  history;
 };
 
 // Used to describe what prefixes shouldn't be cut from
 // history urls when doing an autocomplete url comparison.
-struct AutocompleteExclude {
+struct AutocompleteExcludeData {
   PRInt32                 schemePrefix;
   PRInt32                 hostnamePrefix;
 };
@@ -235,8 +235,8 @@ GetAgeInDays(PRTime aNormalizedNow, PRTime aDate)
 static PRBool
 matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
 {
-  matchSearchTerm_t *matchSearchTerm = (matchSearchTerm_t*)aClosure;
-  const SearchTerm *term = matchSearchTerm->term;
+  MatchSearchTermData *matchSearchTerm = (MatchSearchTermData*)aClosure;
+  const HistorySearchTerm *term = matchSearchTerm->term;
   nsIMdbEnv *env = matchSearchTerm->env;
   nsIMdbStore *store = matchSearchTerm->store;
   
@@ -279,7 +279,7 @@ matchAgeInDaysCallback(nsIMdbRow *row, void *aClosure)
 static PRBool
 matchExpirationCallback(nsIMdbRow *row, void *aClosure)
 {
-  matchExpiration_t *expires = (matchExpiration_t*)aClosure;
+  MatchExpirationData *expires = (MatchExpirationData*)aClosure;
   return expires->history->MatchExpiration(row, expires->expirationDate);
 }
 
@@ -292,14 +292,14 @@ matchAllCallback(nsIMdbRow *row, void *aClosure)
 static PRBool
 matchHostCallback(nsIMdbRow *row, void *aClosure)
 {
-  matchHost_t *hostInfo = (matchHost_t*)aClosure;
+  MatchHostData *hostInfo = (MatchHostData*)aClosure;
   return hostInfo->history->MatchHost(row, hostInfo);
 }
 
 static PRBool
 matchQueryCallback(nsIMdbRow *row, void *aClosure)
 {
-  matchQuery_t *query = (matchQuery_t*)aClosure;
+  MatchQueryData *query = (MatchQueryData*)aClosure;
   return query->history->RowMatches(row, query->query);
 }
 
@@ -321,17 +321,17 @@ static PRBool HasCell(nsIMdbEnv *aEnv, nsIMdbRow* aRow, mdb_column aCol)
 
 //----------------------------------------------------------------------
 //
-//  nsMdbTableEnumerator
+//  nsHistoryMdbTableEnumerator
 //
 //    An nsISimpleEnumerator implementation that returns the value of
 //    a column as an nsISupports. Allows for some simple selection.
 //
 
-class nsMdbTableEnumerator : public nsISimpleEnumerator
+class nsHistoryMdbTableEnumerator : public nsISimpleEnumerator
 {
 protected:
-              nsMdbTableEnumerator();
-  virtual     ~nsMdbTableEnumerator();
+              nsHistoryMdbTableEnumerator();
+  virtual     ~nsHistoryMdbTableEnumerator();
 
 public:
   // nsISupports methods
@@ -363,7 +363,7 @@ private:
 
 //----------------------------------------------------------------------
 
-nsMdbTableEnumerator::nsMdbTableEnumerator()
+nsHistoryMdbTableEnumerator::nsHistoryMdbTableEnumerator()
   : mEnv(nsnull),
     mTable(nsnull),
     mCursor(nsnull),
@@ -373,7 +373,7 @@ nsMdbTableEnumerator::nsMdbTableEnumerator()
 
 
 nsresult
-nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
+nsHistoryMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
                            nsIMdbTable* aTable)
 {
   NS_PRECONDITION(aEnv != nsnull, "null ptr");
@@ -397,7 +397,7 @@ nsMdbTableEnumerator::Init(nsIMdbEnv* aEnv,
   return NS_OK;
 }
 
-nsMdbTableEnumerator::~nsMdbTableEnumerator()
+nsHistoryMdbTableEnumerator::~nsHistoryMdbTableEnumerator()
 {
   NS_IF_RELEASE(mCurrent);
   NS_IF_RELEASE(mCursor);
@@ -406,10 +406,10 @@ nsMdbTableEnumerator::~nsMdbTableEnumerator()
 }
 
 
-NS_IMPL_ISUPPORTS1(nsMdbTableEnumerator, nsISimpleEnumerator)
+NS_IMPL_ISUPPORTS1(nsHistoryMdbTableEnumerator, nsISimpleEnumerator)
 
 NS_IMETHODIMP
-nsMdbTableEnumerator::HasMoreElements(PRBool* _result)
+nsHistoryMdbTableEnumerator::HasMoreElements(PRBool* _result)
 {
   if (! mCurrent) {
     mdb_err err;
@@ -440,7 +440,7 @@ nsMdbTableEnumerator::HasMoreElements(PRBool* _result)
 
 
 NS_IMETHODIMP
-nsMdbTableEnumerator::GetNext(nsISupports** _result)
+nsHistoryMdbTableEnumerator::GetNext(nsISupports** _result)
 {
   nsresult rv;
 
@@ -462,7 +462,7 @@ nsMdbTableEnumerator::GetNext(nsISupports** _result)
 
 #pragma mark -
 
-class nsMdbTableAllRowsEnumerator : public nsMdbTableEnumerator
+class nsMdbTableAllRowsEnumerator : public nsHistoryMdbTableEnumerator
 {
 public:
               nsMdbTableAllRowsEnumerator(nsSimpleGlobalHistory* inHistory, mdb_column inHiddenColumnToken)
@@ -1324,7 +1324,7 @@ nsSimpleGlobalHistory::RemovePagesFromHost(const nsACString &aHost, PRBool aEnti
 {
   const nsCString &host = PromiseFlatCString(aHost);
 
-  matchHost_t hostInfo;
+  MatchHostData hostInfo;
   hostInfo.history = this;
   hostInfo.entireDomain = aEntireDomain;
   hostInfo.host = host.get();
@@ -1362,7 +1362,7 @@ nsSimpleGlobalHistory::MatchExpiration(nsIMdbRow *row, PRTime* expirationDate)
 
 PRBool
 nsSimpleGlobalHistory::MatchHost(nsIMdbRow *aRow,
-                           matchHost_t *hostInfo)
+                           MatchHostData *hostInfo)
 {
   mdb_err err;
   nsresult rv;
@@ -2153,7 +2153,7 @@ nsSimpleGlobalHistory::ExpireEntries(PRBool notify)
   LL_MUL(microSecondsInExpireDays, secondsInDays, microSecondsPerSecond);
   LL_SUB(expirationDate, GetNow(), microSecondsInExpireDays);
 
-  matchExpiration_t expiration;
+  MatchExpirationData expiration;
   expiration.history = this;
   expiration.expirationDate = &expirationDate;
   
@@ -2318,14 +2318,14 @@ nsSimpleGlobalHistory::TokenForColumn(EColumn inColumn)
 // determines if the row matches the given terms, used above
 //
 PRBool
-nsSimpleGlobalHistory::RowMatches(nsIMdbRow *aRow, SearchQuery *aQuery)
+nsSimpleGlobalHistory::RowMatches(nsIMdbRow *aRow, SearchQueryData *aQuery)
 {
   PRUint32 length = aQuery->terms.Count();
   PRUint32 i;
 
   for (i = 0; i < length; i++)
   {
-    SearchTerm *term = (SearchTerm*)aQuery->terms[i];
+    HistorySearchTerm *term = (HistorySearchTerm*)aQuery->terms[i];
 
     if (!term->datasource.Equals("history"))
       continue;                 // we only match against history queries
@@ -2334,7 +2334,7 @@ nsSimpleGlobalHistory::RowMatches(nsIMdbRow *aRow, SearchQuery *aQuery)
     if (term->match) {
       // queue up some values just in case callback needs it
       // (how would we do this dynamically?)
-      matchSearchTerm_t matchSearchTerm = { mEnv, mStore, term, PR_FALSE, 0, 0 };
+      MatchSearchTermData matchSearchTerm = { mEnv, mStore, term, PR_FALSE, 0, 0 };
       
       if (!term->match(aRow, (void *)&matchSearchTerm))
         return PR_FALSE;
@@ -2479,12 +2479,12 @@ nsSimpleGlobalHistory::Observe(nsISupports *aSubject,
 
 //----------------------------------------------------------------------
 //
-// nsGlobalHistory::AutoCompleteEnumerator
+// HistoryAutoCompleteEnumerator
 //
 //   Implementation
 
-// AutoCompleteEnumerator - for searching for a partial url match  
-class AutoCompleteEnumerator : public nsMdbTableEnumerator
+// HistoryAutoCompleteEnumerator - for searching for a partial url match  
+class HistoryAutoCompleteEnumerator : public nsHistoryMdbTableEnumerator
 {
 protected:
   nsSimpleGlobalHistory* mHistory;
@@ -2492,23 +2492,23 @@ protected:
   mdb_column mHiddenColumn;
   mdb_column mTypedColumn;
   mdb_column mCommentColumn;
-  AutocompleteExclude* mExclude;
+  AutocompleteExcludeData* mExclude;
   const nsAString& mSelectValue;
   PRBool mMatchOnlyTyped;
 
-  virtual ~AutoCompleteEnumerator()
+  virtual ~HistoryAutoCompleteEnumerator()
   {
   }
 
 public:
-  AutoCompleteEnumerator(nsSimpleGlobalHistory* aHistory,
+  HistoryAutoCompleteEnumerator(nsSimpleGlobalHistory* aHistory,
                          mdb_column aURLColumn,
                          mdb_column aCommentColumn,
                          mdb_column aHiddenColumn,
                          mdb_column aTypedColumn,
                          PRBool aMatchOnlyTyped,
                          const nsAString& aSelectValue,
-                         AutocompleteExclude* aExclude) :
+                         AutocompleteExcludeData* aExclude) :
     mHistory(aHistory),
     mURLColumn(aURLColumn),
     mHiddenColumn(aHiddenColumn),
@@ -2525,7 +2525,7 @@ protected:
 
 
 PRBool
-AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
+HistoryAutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 {
   if (!HasCell(mEnv, aRow, mTypedColumn))
   {
@@ -2544,7 +2544,7 @@ AutoCompleteEnumerator::IsResult(nsIMdbRow* aRow)
 }
 
 nsresult
-AutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
+HistoryAutoCompleteEnumerator::ConvertToISupports(nsIMdbRow* aRow, nsISupports** aResult)
 {
   nsCAutoString url;
   mHistory->GetRowValue(aRow, mURLColumn, url);
@@ -2622,7 +2622,7 @@ nsSimpleGlobalHistory::OnStartLookup(const PRUnichar *searchString,
   // pass string through filter and then determine which prefixes to exclude
   // when chopping prefixes off of history urls during comparison
   nsString filtered = AutoCompletePrefilter(nsDependentString(searchString));
-  AutocompleteExclude exclude;
+  AutocompleteExcludeData exclude;
   AutoCompleteGetExcludeInfo(filtered, &exclude);
   
   // perform the actual search here
@@ -2678,7 +2678,7 @@ nsSimpleGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
 
 nsresult
 nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
-                                    AutocompleteExclude* aExclude,
+                                    AutocompleteExcludeData* aExclude,
                                     nsIAutoCompleteResults* aPrevResults,
                                     nsIAutoCompleteResults* aResults)
 {
@@ -2719,8 +2719,8 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
     // searching through the entire history...
         
     // prepare the search enumerator
-    AutoCompleteEnumerator* enumerator;
-    enumerator = new AutoCompleteEnumerator(this, kToken_URLColumn, 
+    HistoryAutoCompleteEnumerator* enumerator;
+    enumerator = new HistoryAutoCompleteEnumerator(this, kToken_URLColumn, 
                                             kToken_NameColumn,
                                             kToken_HiddenColumn,
                                             kToken_TypedColumn,
@@ -2800,9 +2800,9 @@ nsSimpleGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
 }
 
 // If aURL begins with a protocol or domain prefix from our lists,
-// then mark their index in an AutocompleteExclude struct.
+// then mark their index in an AutocompleteExcludeData struct.
 void
-nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExclude* aExclude)
+nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExcludeData* aExclude)
 {
   aExclude->schemePrefix = -1;
   aExclude->hostnamePrefix = -1;
@@ -2830,7 +2830,7 @@ nsSimpleGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, Autocom
 // Cut any protocol and domain prefixes from aURL, except for those which
 // are specified in aExclude
 void
-nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aExclude)
+nsSimpleGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExcludeData* aExclude)
 {
   // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
   // potential URL whose host name is in all lower case.
@@ -2889,7 +2889,7 @@ nsSimpleGlobalHistory::AutoCompletePrefilter(const nsAString& aSearchString)
 PRBool
 nsSimpleGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL, 
                                      const nsAString& aUserURL, 
-                                     AutocompleteExclude* aExclude)
+                                     AutocompleteExcludeData* aExclude)
 {
   AutoCompleteCutPrefix(aHistoryURL, aExclude);
   

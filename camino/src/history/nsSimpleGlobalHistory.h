@@ -58,9 +58,9 @@
 #include "nsVoidArray.h"
 #include "nsSupportsArray.h"
 
-struct matchHost_t;
-struct SearchQuery;
-struct AutocompleteExclude;
+struct MatchHostData;
+struct SearchQueryData;
+struct AutocompleteExcludeData;
 
 typedef PRBool (*rowMatchCallback)(nsIMdbRow *aRow, void *closure);
 
@@ -103,7 +103,7 @@ class nsSimpleGlobalHistory : nsSupportsWeakReference,
                         public nsIObserver,
                         public nsIAutoCompleteSession
 {
-friend class AutoCompleteEnumerator;
+friend class HistoryAutoCompleteEnumerator;
 friend class nsHistoryItem;
 
 public:
@@ -125,8 +125,8 @@ public:
 
   // these must be public so that the callbacks can call them
   PRBool MatchExpiration(nsIMdbRow *row, PRTime* expirationDate);
-  PRBool MatchHost(nsIMdbRow *row, matchHost_t *hostInfo);
-  PRBool RowMatches(nsIMdbRow* aRow, SearchQuery *aQuery);
+  PRBool MatchHost(nsIMdbRow *row, MatchHostData *hostInfo);
+  PRBool RowMatches(nsIMdbRow* aRow, SearchQueryData *aQuery);
 
   PRTime  GetNow();
 
@@ -160,15 +160,15 @@ protected:
   // autocomplete stuff
   //
   nsresult    AutoCompleteSearch(const nsAString& aSearchString,
-                              AutocompleteExclude* aExclude,
+                              AutocompleteExcludeData* aExclude,
                               nsIAutoCompleteResults* aPrevResults,
                               nsIAutoCompleteResults* aResults);
-  void        AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aExclude);
-  void        AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExclude* aExclude);
+  void        AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExcludeData* aExclude);
+  void        AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExcludeData* aExclude);
   nsString    AutoCompletePrefilter(const nsAString& aSearchString);
   PRBool      AutoCompleteCompare(nsAString& aHistoryURL, 
                              const nsAString& aUserURL,
-                             AutocompleteExclude* aExclude);
+                             AutocompleteExcludeData* aExclude);
   PR_STATIC_CALLBACK(int)   AutoCompleteSortComparison(const void *v1, const void *v2, void *unused);
 
   //
