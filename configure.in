@@ -276,6 +276,7 @@ if test "$CC" != "icc"; then
     fi
 fi
 
+GNU_AS=
 GNU_CC=
 GNU_CXX=
 if test "$GCC" = "yes"; then
@@ -284,9 +285,57 @@ fi
 if test "$GXX" = "yes"; then
     GNU_CXX=1
 fi
+if test "`echo | $AS -V 2>&1 | grep -c GNU`" != "0"; then
+    GNU_AS=1
+fi
+rm -f a.out
 
+AC_SUBST(GNU_AS)
 AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
+
+dnl ========================================================
+dnl Check for gcc -pipe support
+dnl ========================================================
+MOZ_ARG_DISABLE_BOOL(gcc-pipe,
+    [  --disable-gcc-pipe      Disable -pipe check for gcc],
+    NO_GCC_PIPE=1)
+
+AC_MSG_CHECKING([for gcc -pipe support])
+
+if test -n "$NO_GCC_PIPE"; then
+    AC_MSG_RESULT([disabled])
+elif test -n "$GNU_CC" && test -n "$GNU_CXX" && test -n "$GNU_AS"; then
+    echo '#include <stdio.h>' > dummy-hello.c
+    echo 'int main() { printf("Hello World\n"); exit(0); }' >> dummy-hello.c
+    ${CC} -S dummy-hello.c -o dummy-hello.s 2>&5
+    cat dummy-hello.s | ${AS} -o dummy-hello.S - 2>&5
+    if test $? = 0; then
+        _res_as_stdin="yes"
+    else
+        _res_as_stdin="no"
+    fi
+    if test "$_res_as_stdin" = "yes"; then
+        _SAVE_CFLAGS=$CFLAGS
+        CFLAGS="$CFLAGS -pipe"
+        AC_TRY_COMPILE( [ #include <stdio.h> ],
+            [printf("Hello World\n");],
+            [_res_gcc_pipe="yes"],
+            [_res_gcc_pipe="no"] )
+        CFLAGS=$_SAVE_CFLAGS
+    fi
+    if test "$_res_as_stdin" = "yes" && test "$_res_gcc_pipe" = "yes"; then
+        _res="yes";
+        CFLAGS="$CFLAGS -pipe"
+        CXXFLAGS="$CXXFLAGS -pipe"
+    else
+        _res="no"
+    fi
+    rm -f dummy-hello.c dummy-hello.s dummy-hello.S dummy-hello a.out
+    AC_MSG_RESULT([$_res])
+else
+    AC_MSG_RESULT([no])
+fi
 
 dnl ========================================================
 dnl Checks for programs.
