@@ -1802,9 +1802,17 @@ net_news_begin_authorize(ActiveEntry * ce)
 
 
 	if (!username) {
+#if defined(SingleSignon)
+          username = SI_Prompt(ce->window_id,
+                               XP_GetString(XP_PROMPT_ENTER_USERNAME),
+                               "",
+                               cd->control_con->hostname);
+
+#else
 	  username = FE_Prompt(ce->window_id,
 						   XP_GetString(XP_PROMPT_ENTER_USERNAME),
 						   username ? username : "");
+#endif
 	  
 	  /* reset net_news_last_username_probably_valid to false */
 	  net_news_last_username_probably_valid = FALSE;
@@ -1924,9 +1932,18 @@ net_news_authorize_response(ActiveEntry * ce)
     
           }
 		if (!password) {
+#if defined(SingleSignon)
+                  password = SI_PromptPassword
+                      (ce->window_id,
+                      XP_GetString
+                          (XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS),
+                      cd->control_con->hostname,
+                      TRUE, TRUE);
+#else
 		  password = 
 			FE_PromptPassword(ce->window_id, XP_GetString( 
 			           XP_PLEASE_ENTER_A_PASSWORD_FOR_NEWS_SERVER_ACCESS ) );
+#endif
 		  net_news_last_username_probably_valid = FALSE;
 		}
 		  
