@@ -74,5 +74,5 @@
 <!ENTITY undoCmd.label                "Undo">
 <!ENTITY undoCmd.accesskey            "U">
 <!ENTITY thisFrameMenu.label              "This Frame">
-<!ENTITY thisFrameMenu.accesskey          "F">
+<!ENTITY thisFrameMenu.accesskey          "h">
 <!ENTITY search.accesskey             "W">
