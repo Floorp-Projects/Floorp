@@ -484,7 +484,7 @@ nsMenuFrame::HandleEvent(nsPresContext* aPresContext,
 
       PRInt32 menuDelay = 300;   // ms
 
-      nsCOMPtr<nsILookAndFeel> lookAndFeel(do_CreateInstance(kLookAndFeelCID));
+      nsCOMPtr<nsILookAndFeel> lookAndFeel(do_GetService(kLookAndFeelCID));
       if (lookAndFeel)
         lookAndFeel->GetMetric(nsILookAndFeel::eMetric_SubmenuDelay, menuDelay);
 

@@ -328,14 +328,18 @@ nsSplitterFrame::Init(nsPresContext*  aPresContext,
   mInner->mChildInfosBefore = nsnull;
   mInner->mState = nsSplitterFrameInner::Open;
   mInner->mDragging = PR_FALSE;
-/* make it real time drag for now due to problems
-  nsILookAndFeel* lookAndFeel;
-  if (NS_SUCCEEDED(nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel))) {
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DragFullWindow, realTimeDrag);
-    NS_RELEASE(lookAndFeel);
+
+  {
+#if 0
+    // make it real time drag for now due to problems
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel) {
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_DragFullWindow, realTimeDrag);
+    }
+    else
+#endif
+      realTimeDrag = 1;
   }
-  else */
-    realTimeDrag = 1;
 
   // determine orientation of parent, and if vertical, set orient to vertical
   // on splitter content, then re-resolve style

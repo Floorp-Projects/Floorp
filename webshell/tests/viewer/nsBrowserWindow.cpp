@@ -191,7 +191,6 @@ static NS_DEFINE_CID(kTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_CID(kWindowCID, NS_WINDOW_CID);
 
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
@@ -1674,12 +1673,13 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 {
   nscoord txtHeight;
   nscoord menuBarHeight;
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, kILookAndFeelIID, (void**)&lookAndFeel)) {
-    lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
-    NS_RELEASE(lookAndFeel);
-  } else {
-    txtHeight = 24;
+  {
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel) {
+      lookAndFeel->GetMetric(nsILookAndFeel::eMetric_TextFieldHeight, txtHeight);
+    } else {
+      txtHeight = 24;
+    }
   }
 
   // Find out the menubar height

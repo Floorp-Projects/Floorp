@@ -1621,13 +1621,14 @@ nsHTMLFramesetBorderFrame::Paint(nsPresContext*      aPresContext,
   nscolor hltColor = NS_RGB(255,255,255);
   nscolor sdwColor = NS_RGB(128,128,128);
 
-  nsILookAndFeel * lookAndFeel;
-  if (NS_OK == nsComponentManager::CreateInstance(kLookAndFeelCID, nsnull, NS_GET_IID(nsILookAndFeel), (void**)&lookAndFeel)) {
-   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
-   lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
-   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
-   lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
-   NS_RELEASE(lookAndFeel);
+  {
+    nsCOMPtr<nsILookAndFeel> lookAndFeel = do_GetService(kLookAndFeelCID);
+    if (lookAndFeel) {
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetBackground,  bgColor);
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_WidgetForeground,  fgColor);
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DShadow,    sdwColor);
+      lookAndFeel->GetColor(nsILookAndFeel::eColor_Widget3DHighlight, hltColor);
+    }
   }
 
   float t2p;
