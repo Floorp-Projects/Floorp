@@ -37,7 +37,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.69 2004/05/17 20:08:36 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.70 2004/07/01 00:26:00 nelsonb%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1215,6 +1215,8 @@ loser:
 SECStatus
 CERT_CheckKeyUsage(CERTCertificate *cert, unsigned int requiredUsage)
 {
+    unsigned int certKeyUsage;
+
     if (!cert) {
         PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
@@ -1249,8 +1251,12 @@ CERT_CheckKeyUsage(CERTCertificate *cert, unsigned int requiredUsage)
 	}
     }
 
-    if ( (cert->keyUsage & requiredUsage) == requiredUsage ) 
+    certKeyUsage = cert->keyUsage;
+    if (certKeyUsage & KU_NON_REPUDIATION)
+        certKeyUsage |= KU_DIGITAL_SIGNATURE;
+    if ( (certKeyUsage & requiredUsage) == requiredUsage ) 
     	return SECSuccess;
+
 loser:
     PORT_SetError(SEC_ERROR_INADEQUATE_KEY_USAGE);
     return SECFailure;
