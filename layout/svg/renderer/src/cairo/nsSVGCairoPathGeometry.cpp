@@ -218,6 +218,13 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
                         NS_GET_B(rgb)/255.0);
     cairo_set_alpha(ctx, double(opacity));
 
+    PRUint16 rule;
+    mSource->GetFillRule(&rule);
+    if (rule == nsISVGGeometrySource::FILL_RULE_EVENODD)
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_EVEN_ODD);
+    else
+      cairo_set_fill_rule(ctx, CAIRO_FILL_RULE_WINDING);
+
     cairo_fill(ctx);
 
     if (bStroking)
