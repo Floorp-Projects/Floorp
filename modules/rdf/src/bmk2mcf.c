@@ -90,7 +90,7 @@ int16 GetBmCharSetID()
    /* we need to implement this in a better way */
    static INTLCharSetID gBmCharSetID = CS_UNKNOWN;
    if(CS_UNKNOWN == gBmCharSetID)
-	gBmCharSetID = INTL_GetCharSetID(INTL_DefaultTextWidgetCsidSel);
+	gBmCharSetID = INTL_GetCharSetID(INTL_OldBookmarkCsidSel);
    return gBmCharSetID;
 }
 
