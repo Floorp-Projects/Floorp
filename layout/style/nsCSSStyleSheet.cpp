@@ -861,7 +861,7 @@ struct ContentEnumData {
   PRInt32           mCount;
 };
 
-void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
+static void ContentEnumFunc(nsICSSStyleRule* aRule, void* aData)
 {
   ContentEnumData* data = (ContentEnumData*)aData;
 
@@ -992,7 +992,7 @@ struct PseudoEnumData {
   PRInt32           mCount;
 };
 
-void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
+static void PseudoEnumFunc(nsICSSStyleRule* aRule, void* aData)
 {
   PseudoEnumData* data = (PseudoEnumData*)aData;
 
