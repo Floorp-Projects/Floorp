@@ -71,12 +71,12 @@ sub find_startup_data {
   my ($fh) = $_[0];
   local $_;
 
-  # Search for "__startuptime" string, and pick off 2nd item.
+  # Search for "__avg_startuptime" string, and pick off 2nd item.
   while (<$fh>) {
-    if (/^  __startuptime/) {
-      # Line format:
-      #  __startuptime: <time> ms
-      #  
+    if (/^  __avg_startuptime/) {
+      # Line format, time in ms:
+      #  __avg_startuptime,<time>
+      # 
       chomp;
       print "\$_ = $_\n";
       @findLine = split(/,/,$_);
