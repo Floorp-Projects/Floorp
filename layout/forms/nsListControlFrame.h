@@ -114,6 +114,7 @@ public:
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
   NS_IMETHOD GetNumberOfOptions(PRInt32* aNumOptions);  
   NS_IMETHOD SyncViewWithFrame();
+  NS_IMETHOD AboutToDropDown();
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(PRInt32 index);
@@ -147,7 +148,8 @@ public:
 
 protected:
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
- 
+  NS_IMETHOD IsTargetOptionDisabled(PRBool &aIsDisabled);
+
   nsListControlFrame();
   virtual ~nsListControlFrame();
 
@@ -191,12 +193,12 @@ protected:
   PRBool   HasSameContent(nsIFrame* aFrame1, nsIFrame* aFrame2);
   void     HandleListSelection(nsIDOMEvent * aDOMEvent);
   PRInt32  GetSelectedIndexFromFrame(nsIFrame *aHitFrame);
-
   // Data Members
   nscoord      mBorderOffsetY;
   nsFormFrame* mFormFrame;
   PRInt32      mSelectedIndex;
   PRInt32      mOldSelectedIndex;
+  PRInt32      mSelectedIndexWhenPoppedDown;
   PRInt32      mStartExtendedIndex;
   PRInt32      mEndExtendedIndex;
   nsIFrame*    mHitFrame;

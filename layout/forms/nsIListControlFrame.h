@@ -81,6 +81,11 @@ public:
    */
   NS_IMETHOD SyncViewWithFrame() = 0;
 
+  /**
+   * 
+   */
+  NS_IMETHOD AboutToDropDown() = 0;
+
 };
 
 #endif
