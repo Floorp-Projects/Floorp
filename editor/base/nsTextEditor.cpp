@@ -572,7 +572,7 @@ nsresult nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
     }
     else
     {
-      newTextNode = aNode;
+      newTextNode = do_QueryInterface(aNode);
     }
     if (NS_SUCCEEDED(result))
     {
@@ -626,7 +626,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
       result = mEditor->SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
     }
     else {
-      newRightTextNode = aEndNode;
+      newRightTextNode = do_QueryInterface(aEndNode);
     }
     if (NS_SUCCEEDED(result))
     {
