@@ -61,9 +61,9 @@ nsJARProtocolHandler::~nsJARProtocolHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS2(nsJARProtocolHandler, 
-                   nsIJARProtocolHandler, 
-                   nsIProtocolHandler)
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsJARProtocolHandler, 
+                              nsIJARProtocolHandler, 
+                              nsIProtocolHandler)
 
 NS_METHOD
 nsJARProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
