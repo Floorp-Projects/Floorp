@@ -38,8 +38,13 @@ extern "C" {
 #include "remoturl.h"
 #include "netcache.h"
 
+#if defined(XP_WIN) || defined(XP_OS2)
 extern char *XP_AppCodeName;
 extern char *XP_AppVersion;
+#else
+extern const char *XP_AppCodeName;
+extern const char *XP_AppVersion;
+#endif
 };
 
 /*
@@ -70,11 +75,9 @@ nsNetlibService::nsNetlibService()
     /* Initialize netlib with 32 sockets... */
     NET_InitNetLib(0, 32);
 
-
     /* XXX: How should the User Agent get initialized? */
     XP_AppCodeName = strdup("Mozilla");
     XP_AppVersion = strdup("5.0 Netscape/5.0 (Windows;I;x86;en)");
-
 }
 
 

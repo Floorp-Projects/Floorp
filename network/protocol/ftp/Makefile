@@ -27,7 +27,7 @@ CSRCS		= \
 EXPORTS= ftpurl.h
 
 REQUIRES	= network nspr2 dbm util pref js java fileurl \
-	security layer img httpurl
+	security layer img httpurl mimetype
 
 include $(DEPTH)/config/rules.mk
 
