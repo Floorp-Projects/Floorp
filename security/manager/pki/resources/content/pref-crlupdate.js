@@ -24,11 +24,12 @@ const nsICRLManager = Components.interfaces.nsICRLManager;
 const nsCRLManager  = "@mozilla.org/security/crlmanager;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsICRLInfo          = Components.interfaces.nsICRLInfo;
-const nsIPref             = Components.interfaces.nsIPref;
+const nsIPrefService      = Components.interfaces.nsIPrefService;
  
 var crl;
 var bundle;
-var prefs;
+var prefService;
+var prefBranch;
 var updateTypeRadio;
 var enabledCheckBox;
 var timeBasedRadio;
@@ -61,7 +62,8 @@ function onLoad()
   autoupdateErrDetailString = autoupdateErrDetailString + crl.nameInDb;
 
   bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
-  prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
+  prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefService);
+  prefBranch = prefService.getBranch(null);
 
   updateTypeRadio = document.getElementById("autoUpdateType");
   enabledCheckBox = document.getElementById("enableCheckBox");
@@ -95,7 +97,7 @@ function initializeSelection()
   var advertisedMenuNode;
   
   try {
-    var isEnabled = prefs.GetBoolPref(autoupdateEnabledString);
+    var isEnabled = prefBranch.getBoolPref(autoupdateEnabledString);
     enabledCheckBox.checked = isEnabled;
   } catch(exception){
     enabledCheckBox.checked = false;
@@ -114,7 +116,7 @@ function initializeSelection()
   
   //Set up the initial selections based on defaults and prefs, if any
   try{
-    var timingPref = prefs.GetIntPref(autoupdateTimeTypeString);
+    var timingPref = prefBranch.getIntPref(autoupdateTimeTypeString);
     if(timingPref != null) {
       if(timingPref == crlManager.TYPE_AUTOUPDATE_TIME_BASED) {
         if(hasNextUpdate){
@@ -144,7 +146,7 @@ function initializeSelection()
   //Now, retrieving the day count
   var timeBasedBox = document.getElementById("nextUpdateDay");
   try {
-    var dayCnt = prefs.GetCharPref(autoupdateDayCntString);
+    var dayCnt = prefBranch.getCharPref(autoupdateDayCntString);
     //alert(dayCnt);
     if(dayCnt != null){
       timeBasedBox.value = dayCnt;
@@ -157,7 +159,7 @@ function initializeSelection()
 
   var freqBasedBox = document.getElementById("nextUpdateFreq");
   try {
-    var freqCnt = prefs.GetCharPref(autoupdateFreqCntString);
+    var freqCnt = prefBranch.getCharPref(autoupdateFreqCntString);
     //alert(freqCnt);
     if(freqCnt != null){
       freqBasedBox.value = freqCnt;
@@ -173,8 +175,8 @@ function initializeSelection()
   var cnt = 0;
   var text;
   try{
-    cnt = prefs.GetIntPref(autoupdateErrCntString);
-    txt = prefs.GetCharPref(autoupdateErrDetailString);
+    cnt = prefBranch.getIntPref(autoupdateErrCntString);
+    txt = prefBranch.getCharPref(autoupdateErrDetailString);
   }catch(exception){}
 
   if( cnt > 0 ){
@@ -204,10 +206,10 @@ function onAccept()
      return false;
 
    //set enable pref
-   prefs.SetBoolPref(autoupdateEnabledString, enabledCheckBox.checked );
+   prefBranch.setBoolPref(autoupdateEnabledString, enabledCheckBox.checked );
    
    //set URL TYPE and value prefs - always to last fetch url - till we have anything else available
-   prefs.SetCharPref(autoupdateURLString,crl.lastFetchURL);
+   prefBranch.setCharPref(autoupdateURLString, crl.lastFetchURL);
    
    var timingTypeId = updateTypeRadio.selectedItem.id;
    var updateTime;
@@ -215,20 +217,20 @@ function onAccept()
    var freqCnt = (document.getElementById("nextUpdateFreq")).value;
 
    if(timingTypeId == "timeBasedRadio"){
-     prefs.SetIntPref(autoupdateTimeTypeString,crlManager.TYPE_AUTOUPDATE_TIME_BASED);
+     prefBranch.setIntPref(autoupdateTimeTypeString, crlManager.TYPE_AUTOUPDATE_TIME_BASED);
      updateTime = crlManager.computeNextAutoUpdateTime(crl, crlManager.TYPE_AUTOUPDATE_TIME_BASED, dayCnt);
    } else {
-     prefs.SetIntPref(autoupdateTimeTypeString,crlManager.TYPE_AUTOUPDATE_FREQ_BASED);
+     prefBranch.setIntPref(autoupdateTimeTypeString, crlManager.TYPE_AUTOUPDATE_FREQ_BASED);
      updateTime = crlManager.computeNextAutoUpdateTime(crl, crlManager.TYPE_AUTOUPDATE_FREQ_BASED, freqCnt);
    }
 
    //alert(updateTime);
-   prefs.SetCharPref(autoupdateTimeString,updateTime); 
-   prefs.SetCharPref(autoupdateDayCntString,dayCnt);
-   prefs.SetCharPref(autoupdateFreqCntString,freqCnt);
+   prefBranch.setCharPref(autoupdateTimeString, updateTime); 
+   prefBranch.setCharPref(autoupdateDayCntString, dayCnt);
+   prefBranch.setCharPref(autoupdateFreqCntString, freqCnt);
 
    //Save Now
-   prefs.savePrefFile(null);
+   prefService.savePrefFile(null);
    
    crlManager.rescheduleCRLAutoUpdate();
    //Close dialog by returning true
