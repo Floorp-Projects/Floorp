@@ -24,7 +24,11 @@
 [% PROCESS global/variables.none.tmpl %]
 
 [% title = BLOCK %]
-  Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %]
+  [% IF attachid %]
+Attachment #[% attachid %] for [% terms.Bug %] #[% bugid %]
+  [% ELSE %]
+Interdiff of #[% oldid %] and #[% newid %] for #[% terms.Bug %] #[% bugid %]
+  [% END %]
 [% END %]
 
 [% style = BLOCK %]
@@ -187,14 +191,15 @@ tbody.file pre:empty {
     [% IF attachid %]
       [% description FILTER html %] (#[% attachid %])
     [% ELSE %]
+      [% USE url %]
       [% old_url = url('attachment.cgi', action = 'diff', id = oldid) %]
       [% new_url = url('attachment.cgi', action = 'diff', id = newid) %]
       Diff Between 
       <a href="[% old_url %]">[% old_desc FILTER html %]</a>
-      (<a href="[% old_url %]">#[% oldid %]</a>)
+      (#[% oldid %])
       and 
       <a href="[% new_url %]">[% new_desc FILTER html %]</a>
-      (<a href="[% new_url %]">#[% newid %]</a>)
+      (#[% newid %])
     [% END %]
     for <a href="show_bug.cgi?id=[% bugid %]">[% terms.Bug %] #[% bugid %]</a>
   [% END %]
