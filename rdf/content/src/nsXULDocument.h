@@ -525,6 +525,7 @@ protected:
 
     nsVoidArray mForwardReferences;
     nsForwardReference::Phase mResolutionPhase;
+    PRInt32 mNextContentID;
 
     // The following are pointers into the content model which provide access to
     // the objects triggering either a popup or a tooltip. These are marked as

@@ -55,6 +55,7 @@
 #include "nsIBrowserWindow.h"
 #include "nsIChromeRegistry.h"
 #include "nsIComponentManager.h"
+#include "nsIContentSink.h" // for NS_CONTENT_ID_COUNTER_BASE
 #include "nsIContentViewer.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIDOMEvent.h"
@@ -203,7 +204,6 @@ nsIXULPrototypeCache* nsXULDocument::gXULCache;
 
 PRLogModuleInfo* nsXULDocument::gXULLog;
 
-
 //----------------------------------------------------------------------
 //
 // PlaceholderChannel
@@ -310,6 +310,7 @@ nsXULDocument::nsXULDocument(void)
       mDisplaySelection(PR_FALSE),
       mIsPopup(PR_FALSE),
       mResolutionPhase(nsForwardReference::eStart),
+      mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
       mState(eState_Master),
       mCurrentScriptProto(nsnull)
 {
@@ -3886,8 +3887,8 @@ nsXULDocument::RebuildWidgetItem(nsIContent* aElement)
 
 nsresult
 nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
-                               nsIAtom* aTag,
-                               nsIContent** aResult)
+                             nsIAtom* aTag,
+                             nsIContent** aResult)
 {
     nsresult rv;
     nsCOMPtr<nsIContent> result;
@@ -3912,6 +3913,8 @@ nsXULDocument::CreateElement(PRInt32 aNameSpaceID,
     rv = result->SetDocument(this, PR_FALSE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set element's document");
     if (NS_FAILED(rv)) return rv;
+
+    result->SetContentID(mNextContentID++);
 
     *aResult = result;
     NS_ADDREF(*aResult);
@@ -4940,6 +4943,8 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
             }
         }
     }
+
+    result->SetContentID(mNextContentID++);
 
     *aResult = result;
     NS_ADDREF(*aResult);

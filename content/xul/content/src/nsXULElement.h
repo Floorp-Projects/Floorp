@@ -519,6 +519,7 @@ protected:
     nsCOMPtr<nsISupportsArray>          mChildren;           // [OWNER]
     nsCOMPtr<nsIEventListenerManager>   mListenerManager;    // [OWNER]
     void*                               mScriptObject;       // [OWNER]
+    PRInt32                             mContentId;
 
     // The state of our sloth for lazy content model construction via
     // RDF; see nsIXULContent and nsRDFGenericBuilder.
