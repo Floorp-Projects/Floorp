@@ -132,11 +132,11 @@ WeekView.prototype.refreshEvents = function()
     this.removeElementsByAttribute("eventbox", "weekview");
 
 
-
     // Figure out the start and end days for the week we're currently viewing
     var startDate = new Date(gHeaderDateItemArray[1].getAttribute("date"));
-    var endDate = new Date(gHeaderDateItemArray[7].getAttribute("date"));
-
+    var endDate = new Date(startDate);
+    endDate.setDate(endDate.getDate() + 7);
+    endDate.setSeconds(endDate.getSeconds() - 1);
 
     // Save this off so we can get it again in onGetResult below
     var savedThis = this;
@@ -147,12 +147,15 @@ WeekView.prototype.refreshEvents = function()
         onGetResult: function(aCalendar, aStatus, aItemType, aDetail, aCount, aItems) {
             for (var i = 0; i < aCount; ++i) {
                 var eventBox = savedThis.createEventBox(aItems[i]);
+                dump("Adding eventBox " + eventBox + "\n");
                 document.getElementById("week-view-content-board").appendChild(eventBox);
             }
         }
     };
 
     ccalendar = createCalendar(); // XXX Should get the composite calendar here
+
+    dump("Fetching events from " + startDate.toString() + " to " + endDate.toString() + "\n");
 
     ccalendar.getItems(ccalendar.ITEM_FILTER_TYPE_EVENT,
                       0, jsDateToDateTime(startDate), jsDateToDateTime(endDate), getListener);
