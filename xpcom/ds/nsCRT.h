@@ -118,7 +118,7 @@ public:
     ::memcpy(aDest, aSrc, (size_t)aCount);
   }
 
-  static PRInt32 memcmp(void* aDest, const void* aSrc, PRUint32 aCount) {
+  static PRInt32 memcmp(const void* aDest, const void* aSrc, PRUint32 aCount) {
     NS_ASSERTION((aDest != NULL && aSrc != NULL) || (aCount == 0), "Invalid NULL argument");
     return ::memcmp(aDest, aSrc, (size_t)aCount);
   }
