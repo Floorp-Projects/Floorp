@@ -225,9 +225,23 @@ nsWebShellWindow::~nsWebShellWindow()
 
 }
 
+NS_IMETHODIMP_(nsrefcnt) nsWebShellWindow::AddRef(void)
+{
+  NS_PRECONDITION(PRInt32(mRefCnt) >= 0, "illegal refcnt");
+  ++mRefCnt;
+  return mRefCnt;
+}
 
-NS_IMPL_ADDREF(nsWebShellWindow);
-NS_IMPL_RELEASE(nsWebShellWindow);
+NS_IMETHODIMP_(nsrefcnt) nsWebShellWindow::Release(void)
+{
+  NS_PRECONDITION(0 != mRefCnt, "dup release");
+  --mRefCnt;
+  if (mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
 
 nsresult
 nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
