@@ -843,7 +843,7 @@ nsClipboardDragDropHookCommand::DoCommandParams(const char *aCommandName,
   nsresult rv = aParams->GetISupportsValue("addhook", getter_AddRefs(isuppHook));
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIClipboardDragDropHooks> hook = do_GetInterface(isuppHook);
+    nsCOMPtr<nsIClipboardDragDropHooks> hook = do_QueryInterface(isuppHook);
     if (hook)
       returnValue = obj->AddClipboardDragDropHooks(hook);
     else
