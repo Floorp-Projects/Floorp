@@ -187,7 +187,13 @@ nsLabelFrame::HandleEvent(nsIPresContext& aPresContext,
 NS_IMETHODIMP
 nsLabelFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 {
-  *aFrame = this;
+  nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
+  if (nsnull != *aFrame) {
+    nsCOMPtr<nsIFormControlFrame> controlFrame = do_QueryInterface(*aFrame);
+    if (!controlFrame) {
+      *aFrame = this;
+    }
+  }
   return NS_OK;
 }
 
