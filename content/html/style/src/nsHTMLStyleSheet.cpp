@@ -1215,11 +1215,19 @@ HTMLStyleSheetImpl::ConstructXMLRootFrame(nsIPresContext*  aPresContext,
                                           nsIStyleContext* aStyleContext,
                                           nsIFrame*&       aNewFrame)
 {
-  // Create the root frame. It gets a special pseudo element style
+  // Create the root frame. It gets a special pseudo element style.
+  // XXX It's wrong that the document element's style context (which is
+  // passed in) isn't based on the xml-root pseudo element style context
+  // we create below. That means that things like font information defined
+  // in the ua.css don't get properly inherited. We could re-resolve the
+  // style context, or change the flow of control so we create the style
+  // context rather than pass it in...
   nsIStyleContext*  rootPseudoStyle;
   rootPseudoStyle = aPresContext->ResolvePseudoStyleContextFor(nsnull, 
                       nsHTMLAtoms::xmlRootPseudo, nsnull);
 
+  // XXX It would be nice if we didn't need this and we made the scroll
+  // frame (or the body wrapper frame) the root of the frame hierarchy
   nsresult  rv = NS_NewHTMLFrame(nsnull, nsnull, aNewFrame);
 
   if (NS_SUCCEEDED(rv)) {
@@ -1236,12 +1244,15 @@ HTMLStyleSheetImpl::ConstructXMLRootFrame(nsIPresContext*  aPresContext,
     // Set the style context
     aNewFrame->SetStyleContext(aPresContext, rootPseudoStyle);
 
-    // Wrap the document element in a scroll frame
+    // Create a scroll frame.
+    // XXX Use the rootPseudoStyle overflow style information to decide whether
+    // we create a scroll frame or just a body wrapper frame...
     nsIFrame* scrollFrame;
     
     if (NS_SUCCEEDED(NS_NewScrollFrame(nsnull, aNewFrame, scrollFrame))) {
-      // The scroll frame gets the original style context, and the scrolled
+      // The scroll frame gets the root pseudo style context, and the scrolled
       // frame gets a SCROLLED-CONTENT pseudo element style context.
+      // XXX We should probably use a different pseudo style context...
       scrollFrame->SetStyleContext(aPresContext, rootPseudoStyle);
 
       nsIStyleContext*  scrolledPseudoStyle;
@@ -1255,18 +1266,11 @@ HTMLStyleSheetImpl::ConstructXMLRootFrame(nsIPresContext*  aPresContext,
       NS_NewBodyFrame(nsnull, scrollFrame, wrapperFrame, NS_BODY_SHRINK_WRAP);
       wrapperFrame->SetStyleContext(aPresContext, scrolledPseudoStyle);
 
-      // Construct a frame for the document element
+      // Construct a frame for the document element and process its children
       nsIFrame* docElementFrame;
       ConstructFrame(aPresContext, aContent, wrapperFrame, docElementFrame);
       wrapperFrame->SetInitialChildList(*aPresContext, nsnull, docElementFrame);
 
-#if 0
-      // Process the child content, and set the frame's initial child list
-      nsIFrame* childList;
-      rv = ProcessChildren(aPresContext, wrapperFrame, aContent, childList);
-      wrapperFrame->SetInitialChildList(*aPresContext, nsnull, childList);
-#endif
-      
       // Set the scroll frame's initial child list
       scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
     }
