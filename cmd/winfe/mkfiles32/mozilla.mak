@@ -373,13 +373,9 @@ BINREL_DIST=$(XPDIST)\WIN954.0_DBG.OBJD
 
 LINK_LIBS= \
 !if "$(MOZ_BITS)"=="32"
-!ifndef NSPR20
-    $(DIST)\lib\pr32$(VERSION_NUMBER).lib \
-!else
     $(DIST)\lib\libnspr21.lib \
     $(DIST)\lib\libplds21.lib \
     $(DIST)\lib\libplc21.lib \
-!endif
 !if defined(MOZ_JAVA)
     $(DIST)\lib\jrt32$(VERSION_NUMBER).lib \
 !elseif !defined(NSJVM)
@@ -748,18 +744,12 @@ CDEFINES=/DXP_PC /Dx386 /D_WINDOWS /D_X86_ \
 	/D_IMAGE_CONVERT \
 	/D_IME_COMPOSITION \
 !if "$(MOZ_BITS)" == "32"
-!ifndef NSPR20
-    /DWIN32 /DJAVA_WIN32 /DHW_THREADS /D_AFXDLL \
-!else
     /DWIN32 /DJAVA_WIN32 /DNSPR20 /D_AFXDLL \
-!endif
 !if defined(MSVC4)
     /DMSVC4 \
 !endif
 !else
-!if defined(NSPR20)
 	/DNSPR20 \
-!endif
 !endif
 !ifdef NO_SECURITY
     /DNO_SECURITY \
@@ -1749,11 +1739,6 @@ install:    \
 	    $(OUTDIR)\xpstrdll.dll    \
 !ENDIF
 !IF "$(MOZ_BITS)"=="32"
-!ifndef NSPR20
-!IF EXIST($(DIST)\bin\pr32$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\pr32$(VERSION_NUMBER).dll    \
-!ENDIF
-!else
 !IF EXIST($(DIST)\bin\libnspr21.dll)
 	    $(OUTDIR)\libnspr21.dll    \
 !ENDIF
@@ -1763,7 +1748,6 @@ install:    \
 !IF EXIST($(DIST)\bin\libplc21.dll)
 	    $(OUTDIR)\libplc21.dll    \
 !ENDIF
-!endif
 !IF EXIST($(DIST)\bin\js32$(VERSION_NUMBER).dll)
 	    $(OUTDIR)\js32$(VERSION_NUMBER).dll    \
 !ENDIF
@@ -1898,11 +1882,6 @@ install:    \
 #           $(JAVABIN_DIR)\jdb16$(VERSION_NUMBER).dll   \
 #!ENDIF
 !ENDIF # JAVA_OR_NSJVM
-!ifndef NSPR20
-!IF EXIST($(DIST)\bin\pr16$(VERSION_NUMBER).dll)
-	    $(OUTDIR)\pr16$(VERSION_NUMBER).dll    \
-!ENDIF
-!else
 !IF EXIST($(DIST)\lib\nspr21.dll)
 	    $(OUTDIR)\nspr21.dll    \
 !ENDIF
@@ -1912,7 +1891,6 @@ install:    \
 !IF EXIST($(DIST)\lib\plc21.dll)
 	    $(OUTDIR)\plc21.dll    \
 !ENDIF
-!endif
 !IF EXIST($(DIST)\bin\js16$(VERSION_NUMBER).dll)
 	    $(OUTDIR)\js16$(VERSION_NUMBER).dll    \
 !ENDIF
@@ -2099,17 +2077,12 @@ $(JAVABIN_DIR)\zpw32$(VERSION_NUMBER).dll:   $(DIST)\bin\zpw32$(VERSION_NUMBER).
 
 
 !IF "$(MOZ_BITS)"=="32"
-!ifndef NSPR20
-$(OUTDIR)\pr32$(VERSION_NUMBER).dll:   $(DIST)\bin\pr32$(VERSION_NUMBER).dll
-    @IF EXIST $(DIST)\bin\pr32$(VERSION_NUMBER).dll copy $(DIST)\bin\pr32$(VERSION_NUMBER).dll $(OUTDIR)\pr32$(VERSION_NUMBER).dll
-!else
 $(OUTDIR)\libnspr21.dll:   $(DIST)\bin\libnspr21.dll
     @IF EXIST $(DIST)\bin\libnspr21.dll copy $(DIST)\bin\libnspr21.dll $(OUTDIR)\libnspr21.dll
 $(OUTDIR)\libplds21.dll:   $(DIST)\bin\libplds21.dll
     @IF EXIST $(DIST)\bin\libplds21.dll copy $(DIST)\bin\libplds21.dll $(OUTDIR)\libplds21.dll
 $(OUTDIR)\libplc21.dll:   $(DIST)\bin\libplc21.dll
     @IF EXIST $(DIST)\bin\libplc21.dll copy $(DIST)\bin\libplc21.dll $(OUTDIR)\libplc21.dll
-!endif
 
 $(OUTDIR)\js32$(VERSION_NUMBER).dll:   $(DIST)\bin\js32$(VERSION_NUMBER).dll
     @IF EXIST $(DIST)\bin\js32$(VERSION_NUMBER).dll copy $(DIST)\bin\js32$(VERSION_NUMBER).dll $(OUTDIR)\js32$(VERSION_NUMBER).dll
@@ -2211,17 +2184,12 @@ $(OUTDIR)\fulls32.lib:   $(DIST)\lib\fulls32.lib
 !endif
 
 !ELSE # (MOZ_BITS==32)
-!ifndef NSPR20
-$(OUTDIR)\pr16$(VERSION_NUMBER).dll:   $(DIST)\bin\pr16$(VERSION_NUMBER).dll
-    @IF EXIST $(DIST)\bin\pr16$(VERSION_NUMBER).dll copy $(DIST)\bin\pr16$(VERSION_NUMBER).dll $(OUTDIR)\pr16$(VERSION_NUMBER).dll
-!else
 $(OUTDIR)\nspr21.dll:   $(DIST)\lib\nspr21.dll
     @IF EXIST $(DIST)\bin\nspr21.dll copy $(DIST)\bin\nspr21.dll $(OUTDIR)\nspr21.dll
 $(OUTDIR)\plds21.dll:   $(DIST)\lib\plds21.dll
     @IF EXIST $(DIST)\bin\plds21.dll copy $(DIST)\bin\plds21.dll $(OUTDIR)\plds21.dll
 $(OUTDIR)\plc21.dll:   $(DIST)\lib\plc21.dll
     @IF EXIST $(DIST)\bin\plc21.dll copy $(DIST)\bin\plc21.dll $(OUTDIR)\plc21.dll
-!endif
 
 $(OUTDIR)\js16$(VERSION_NUMBER).dll:   $(DIST)\bin\js16$(VERSION_NUMBER).dll
     @IF EXIST $(DIST)\bin\js16$(VERSION_NUMBER).dll copy $(DIST)\bin\js16$(VERSION_NUMBER).dll $(OUTDIR)\js16$(VERSION_NUMBER).dll
@@ -2581,13 +2549,9 @@ LINK_CL:
     $(DIST)\lib\jsl16.lib +
 !endif
 !endif
-!if defined(NSPR20)
     $(DIST)\lib\nspr21.lib +
     $(DIST)\lib\plds21.lib +
     $(DIST)\lib\plc21.lib +
-!else
-    $(DIST)\lib\pr16$(VERSION_NUMBER).lib +
-!endif
     $(DIST)\lib\js16$(VERSION_NUMBER).lib +
     $(DIST)\lib\jsj16$(VERSION_NUMBER).lib +
     $(DIST)\lib\xppref16.lib +
