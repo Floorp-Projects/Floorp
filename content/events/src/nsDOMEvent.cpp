@@ -1025,6 +1025,9 @@ nsDOMEvent::SetEventType(const nsAReadableString& aEventTypeArg)
   else if (atom == nsLayoutAtoms::onmousemove && mEvent->eventStructType == NS_MOUSE_EVENT) {
     mEvent->message = NS_MOUSE_MOVE;
   }
+  else if (atom == nsLayoutAtoms::oncontextmenu && mEvent->eventStructType == NS_MOUSE_EVENT) {
+    mEvent->message = NS_CONTEXTMENU;
+  }
   else if (atom == nsLayoutAtoms::onkeydown && mEvent->eventStructType == NS_KEY_EVENT) {
     mEvent->message = NS_KEY_DOWN;
   }
@@ -1064,6 +1067,28 @@ nsDOMEvent::SetEventType(const nsAReadableString& aEventTypeArg)
   else if (atom == nsLayoutAtoms::onerror && mEvent->eventStructType == NS_EVENT) {
     mEvent->message = NS_IMAGE_ERROR;
   }
+  else if (atom == nsLayoutAtoms::onDOMAttrModified && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_ATTRMODIFIED;
+  }
+  else if (atom == nsLayoutAtoms::onDOMCharacterDataModified && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_CHARACTERDATAMODIFIED;
+  }
+  else if (atom == nsLayoutAtoms::onDOMNodeInserted && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_NODEINSERTED;
+  }
+  else if (atom == nsLayoutAtoms::onDOMNodeRemoved && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_NODEREMOVED;
+  }
+  else if (atom == nsLayoutAtoms::onDOMNodeInsertedIntoDocument && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_NODEINSERTEDINTODOCUMENT;
+  }
+  else if (atom == nsLayoutAtoms::onDOMNodeRemovedFromDocument && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_NODEREMOVEDFROMDOCUMENT;
+  }
+  else if (atom == nsLayoutAtoms::onDOMSubtreeModified && mEvent->eventStructType == NS_MUTATION_EVENT) {
+    mEvent->message = NS_MUTATION_SUBTREEMODIFIED;
+  }
+ 
   else {
     return NS_ERROR_FAILURE;
   }
@@ -1288,6 +1313,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_attrmodified];
   case NS_MUTATION_CHARACTERDATAMODIFIED:
     return mEventNames[eDOMEvents_characterdatamodified];
+  case NS_CONTEXTMENU:
+    return mEventNames[eDOMEvents_contextmenu];
   default:
     break;
   }

@@ -1300,7 +1300,16 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
         nsLayoutAtoms::onpaint == aAttribute ||
         nsLayoutAtoms::onresize == aAttribute ||
         nsLayoutAtoms::onscroll == aAttribute ||
-        nsLayoutAtoms::oninput == aAttribute) {
+        nsLayoutAtoms::oninput == aAttribute ||
+        nsLayoutAtoms::oncontextmenu == aAttribute || 
+        nsLayoutAtoms::onDOMAttrModified == aAttribute ||
+        nsLayoutAtoms::onDOMCharacterDataModified == aAttribute || 
+        nsLayoutAtoms::onDOMSubtreeModified == aAttribute ||
+        nsLayoutAtoms::onDOMNodeInsertedIntoDocument == aAttribute || 
+        nsLayoutAtoms::onDOMNodeRemovedFromDocument == aAttribute ||
+        nsLayoutAtoms::onDOMNodeInserted  == aAttribute || 
+        nsLayoutAtoms::onDOMNodeRemoved == aAttribute
+        ) {
       AddScriptEventListener(aAttribute, aValue);
     }
   }

@@ -260,4 +260,8 @@ protected:
 //nsIDOMMutationListener
 // These bits are found in nsMutationEvent.h.
 
+//nsIDOMContextMenuListener
+#define NS_EVENT_BITS_CONTEXT_NONE  0x00
+#define NS_EVENT_BITS_CONTEXT_MENU  0x01
+
 #endif // nsEventListenerManager_h__

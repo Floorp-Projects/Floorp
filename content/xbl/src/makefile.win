@@ -44,6 +44,7 @@ CPPSRCS=					\
   nsXBLScrollHandler.cpp \
   nsXBLFormHandler.cpp \
   nsXBLLoadHandler.cpp \
+  nsXBLContextMenuHandler.cpp \
   nsXBLPrototypeHandler.cpp \
   nsBindingManager.cpp \
   nsXBLInsertionPoint.cpp \
@@ -66,6 +67,7 @@ CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLScrollHandler.obj \
   .\$(OBJDIR)\nsXBLFormHandler.obj \
   .\$(OBJDIR)\nsXBLLoadHandler.obj \
+  .\$(OBJDIR)\nsXBLContextMenuHandler.obj \
   .\$(OBJDIR)\nsXBLPrototypeHandler.obj \
   .\$(OBJDIR)\nsXBLService.obj \
   .\$(OBJDIR)\nsBindingManager.obj \

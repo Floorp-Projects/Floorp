@@ -69,6 +69,7 @@
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMenuListener.h"
 #include "nsIDOMScrollListener.h"
+#include "nsIDOMContextMenuListener.h"
 #include "nsIDOMDragListener.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOMEventReceiver.h"
@@ -277,6 +278,8 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "ondragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
     { "ondragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
     { "ondraggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+
+    { "oncontextmenu",   nsnull, &NS_GET_IID(nsIDOMContextMenuListener) },
 
     { nsnull,            nsnull, nsnull                                 }
 };
