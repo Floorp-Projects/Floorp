@@ -21,7 +21,8 @@ EXPORTS=nsIFormManager.h \
   nsIListControlFrame.h \
   nsIComboboxControlFrame.h \
   nsIRadioControlFrame.h \
-  nsIFormControlFrame.h
+  nsIFormControlFrame.h \
+  nsIFormSubmitObserver.h
 
 MODULE=raptor 
 
