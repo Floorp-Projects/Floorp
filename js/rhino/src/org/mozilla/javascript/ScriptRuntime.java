@@ -1022,90 +1022,6 @@ public class ScriptRuntime {
         return (char)i;
     }
 
-    /**
-     * Converts Java exceptions that JS can catch into an object the script
-     * will see as the catch argument.
-     */
-    private static Object getCatchObject(Context cx, Scriptable scope,
-                                         Throwable t)
-        throws JavaScriptException
-    {
-        EvaluatorException evaluator = null;
-        if (t instanceof EvaluatorException) {
-            evaluator = (EvaluatorException)t;
-            while (t instanceof WrappedException) {
-                t = ((WrappedException)t).getWrappedException();
-            }
-        }
-
-        if (t instanceof JavaScriptException) {
-            return ((JavaScriptException)t).getValue();
-
-        } else if (t instanceof EcmaError) {
-            EcmaError ee = (EcmaError)t;
-            String errorName = ee.getName();
-            return makeErrorObject(cx, scope, errorName, ee.getErrorMessage(),
-                                   ee.sourceName(), ee.lineNumber());
-        } else if (evaluator == null) {
-            // Script can catch only instances of JavaScriptException,
-            // EcmaError and EvaluatorException
-            Kit.codeBug();
-        }
-
-        if (t != evaluator && t instanceof EvaluatorException) {
-            // ALERT: it should not happen as throwAsUncheckedException
-            // takes care about it when exception is propagated through Java
-            // reflection calls, but for now check for it
-            evaluator = (EvaluatorException)t;
-        }
-
-        String errorName;
-        String message;
-        if (t == evaluator) {
-            // Pure evaluator exception
-            if (evaluator instanceof WrappedException) Kit.codeBug();
-            message = evaluator.getMessage();
-            errorName = "InternalError";
-        } else {
-            errorName = "JavaException";
-            message = t.getClass().getName()+": "+t.getMessage();
-        }
-
-        Scriptable errorObject = makeErrorObject(cx, scope, errorName,
-                                                 message,
-                                                 evaluator.sourceName(),
-                                                 evaluator.lineNumber());
-        if (t != evaluator) {
-            Object twrap = cx.getWrapFactory().wrap(cx, scope, t, null);
-            ScriptableObject.putProperty(errorObject, "javaException", twrap);
-        }
-        return errorObject;
-
-    }
-
-    private static Scriptable makeErrorObject(Context cx, Scriptable scope,
-                                              String errorName, String message,
-                                              String fileName, int lineNumber)
-        throws JavaScriptException
-    {
-        int argLength;
-        if (lineNumber > 0) {
-            argLength = 3;
-        } else {
-            argLength = 2;
-        }
-        Object args[] = new Object[argLength];
-        args[0] = message;
-        args[1] = (fileName != null) ? fileName : "";
-        if (lineNumber > 0) {
-            args[2] = new Integer(lineNumber);
-        }
-
-        Scriptable errorObject = cx.newObject(scope, errorName, args);
-        ScriptableObject.putProperty(errorObject, "name", errorName);
-        return errorObject;
-    }
-
     // XXX: this is until setDefaultNamespace will learn how to store NS
     // properly and separates namespace form Scriptable.get etc.
     private static final String DEFAULT_NS_TAG = "__default_namespace__";
@@ -2982,26 +2898,95 @@ public class ScriptRuntime {
         return null;
     }
 
-    public static Scriptable newCatchScope(Throwable exception,
+    public static Scriptable newCatchScope(Throwable t,
                                            Scriptable lastCatchScope,
                                            String exceptionName,
                                            Context cx, Scriptable scope)
     {
         Object obj;
-        if (lastCatchScope == null) {
-            obj = getCatchObject(cx, scope, exception);
+        boolean cacheObj;
+
+      getObj:
+        if (t instanceof JavaScriptException) {
+            cacheObj = false;
+            obj = ((JavaScriptException)t).getValue();
         } else {
-            NativeObject last = (NativeObject)lastCatchScope;
-            obj = last.getAssociatedValue(exception);
-            if (obj == null) Kit.codeBug();
+            cacheObj = true;
+
+            // Create wrapper object unless it was associated with
+            // the previous scope object
+
+            if (lastCatchScope != null) {
+                NativeObject last = (NativeObject)lastCatchScope;
+                obj = last.getAssociatedValue(t);
+                if (obj == null) Kit.codeBug();
+                break getObj;
+            }
+
+            RhinoException re;
+            String errorName;
+            String errorMsg;
+            Throwable javaException = null;
+
+            if (t instanceof EcmaError) {
+                EcmaError ee = (EcmaError)t;
+                re = ee;
+                errorName = ee.getName();
+                errorMsg = ee.getErrorMessage();
+            } else if (t instanceof WrappedException) {
+                WrappedException we = (WrappedException)t;
+                re = we;
+                javaException = we.getWrappedException();
+                errorName = "JavaException";
+                errorMsg = javaException.getClass().getName()
+                           +": "+javaException.getMessage();
+            } else if (t instanceof EvaluatorException) {
+                // Pure evaluator exception, nor WrappedException instance
+                EvaluatorException ee = (EvaluatorException)t;
+                re = ee;
+                errorName = "InternalError";
+                errorMsg = ee.getMessage();
+            } else {
+                // Script can catch only instances of JavaScriptException,
+                // EcmaError and EvaluatorException
+                throw Kit.codeBug();
+            }
+
+            String sourceUri = re.sourceName();
+            if (sourceUri == null) {
+                sourceUri = "";
+            }
+            int line = re.lineNumber();
+            Object args[];
+            if (line > 0) {
+                args = new Object[] { errorMsg, sourceUri, new Integer(line) };
+            } else {
+                args = new Object[] { errorMsg, sourceUri };
+            }
+
+            Scriptable errorObject = cx.newObject(scope, errorName, args);
+            ScriptableObject.putProperty(errorObject, "name", errorName);
+
+            if (javaException != null) {
+                Object wrap = cx.getWrapFactory().wrap(cx, scope, javaException,
+                                                       null);
+                ScriptableObject.defineProperty(
+                    errorObject, "javaException", wrap,
+                    ScriptableObject.PERMANENT | ScriptableObject.READONLY);
+            }
+
+            obj = errorObject;
         }
 
-        NativeObject catchScope = new NativeObject();
+
+        NativeObject catchScopeObject = new NativeObject();
         // See ECMA 12.4
-        catchScope.defineProperty(
+        catchScopeObject.defineProperty(
             exceptionName, obj, ScriptableObject.PERMANENT);
-        catchScope.associateValue(exception, obj);
-        return catchScope;
+        if (cacheObj) {
+            catchScopeObject.associateValue(t, obj);
+        }
+        return catchScopeObject;
     }
 
     public static Scriptable enterWith(Object value, Scriptable scope)

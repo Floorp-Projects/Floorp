@@ -1192,7 +1192,7 @@ class BodyCodegen
         localsMax = firstFreeLocal;
 
         if (fnCurrent == null) {
-            // See comments in visitRegexp
+            // See comments in case Token.REGEXP
             if (scriptOrFn.getRegexpCount() != 0) {
                 scriptRegexpLocal = getNewWordLocal();
                 codegen.pushRegExpArray(cfw, scriptOrFn, contextLocal,
@@ -1470,11 +1470,50 @@ class BodyCodegen
                 break;
 
               case Token.CATCH_SCOPE:
-                visitCatchScope(node, child);
+                {
+                    int local = getLocalBlockRegister(node);
+                    int scopeIndex
+                        = node.getExistingIntProp(Node.CATCH_SCOPE_PROP);
+
+                    String name = child.getString(); // name of exception
+                    child = child.getNext();
+                    generateExpression(child, node); // load expression object
+                    if (scopeIndex == 0) {
+                        cfw.add(ByteCode.ACONST_NULL);
+                    } else {
+                        // Load previous catch scope object
+                        cfw.addALoad(local);
+                    }
+                    cfw.addPush(name);
+                    cfw.addALoad(contextLocal);
+                    cfw.addALoad(variableObjectLocal);
+
+                    addScriptRuntimeInvoke(
+                        "newCatchScope",
+                        "(Ljava/lang/Throwable;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +"Ljava/lang/String;"
+                        +"Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Lorg/mozilla/javascript/Scriptable;");
+                    cfw.addAStore(local);
+                }
                 break;
 
               case Token.THROW:
-                visitThrow(node, child);
+                generateExpression(child, node);
+                cfw.add(ByteCode.NEW,
+                        "org/mozilla/javascript/JavaScriptException");
+                cfw.add(ByteCode.DUP_X1);
+                cfw.add(ByteCode.SWAP);
+                cfw.addPush(scriptOrFn.getSourceName());
+                cfw.addPush(itsLineNumber);
+                cfw.addInvoke(
+                    ByteCode.INVOKESPECIAL,
+                    "org/mozilla/javascript/JavaScriptException",
+                    "<init>",
+                    "(Ljava/lang/Object;Ljava/lang/String;I)V");
+                cfw.add(ByteCode.ATHROW);
                 break;
 
               case Token.RETHROW:
@@ -1504,11 +1543,23 @@ class BodyCodegen
                 break;
 
               case Token.ENTERWITH:
-                visitEnterWith(node, child);
+                generateExpression(child, node);
+                cfw.addALoad(variableObjectLocal);
+                addScriptRuntimeInvoke(
+                    "enterWith",
+                    "(Ljava/lang/Object;"
+                    +"Lorg/mozilla/javascript/Scriptable;"
+                    +")Lorg/mozilla/javascript/Scriptable;");
+                cfw.addAStore(variableObjectLocal);
                 break;
 
               case Token.LEAVEWITH:
-                visitLeaveWith(node, child);
+                cfw.addALoad(variableObjectLocal);
+                addScriptRuntimeInvoke(
+                    "leaveWith",
+                    "(Lorg/mozilla/javascript/Scriptable;"
+                    +")Lorg/mozilla/javascript/Scriptable;");
+                cfw.addAStore(variableObjectLocal);
                 break;
 
               case Token.ENUM_INIT_KEYS:
@@ -1547,7 +1598,10 @@ class BodyCodegen
                 break;
 
               case Token.TARGET:
-                visitTarget((Node.Target)node);
+                {
+                    int label = getTargetLabel((Node.Target)node);
+                    cfw.markLabel(label);
+                }
                 break;
 
               case Token.JSR:
@@ -1558,7 +1612,17 @@ class BodyCodegen
                 break;
 
               case Token.FINALLY:
-                visitFinally(node, child);
+                {
+                    //Save return address in a new local where
+                    int finallyRegister = getNewWordLocal();
+                    cfw.addAStore(finallyRegister);
+                    while (child != null) {
+                        generateStatement(child, node);
+                        child = child.getNext();
+                    }
+                    cfw.add(ByteCode.RET, finallyRegister);
+                    releaseWordLocal((short)finallyRegister);
+                }
                 break;
 
               default:
@@ -1589,27 +1653,68 @@ class BodyCodegen
                 break;
 
               case Token.NAME:
-                visitName(node);
+                {
+                    cfw.addALoad(contextLocal);
+                    cfw.addALoad(variableObjectLocal);
+                    cfw.addPush(node.getString());
+                    addScriptRuntimeInvoke(
+                        "name",
+                        "(Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +"Ljava/lang/String;"
+                        +")Ljava/lang/Object;");
+                }
                 break;
 
               case Token.CALL:
-              case Token.NEW: {
-                int specialType = node.getIntProp(Node.SPECIALCALL_PROP,
-                                                  Node.NON_SPECIALCALL);
-                if (specialType == Node.NON_SPECIALCALL) {
-                    visitCall(node, type, child);
-                } else {
-                    visitSpecialCall(node, type, specialType, child);
+              case Token.NEW:
+                {
+                    int specialType = node.getIntProp(Node.SPECIALCALL_PROP,
+                                                      Node.NON_SPECIALCALL);
+                    if (specialType == Node.NON_SPECIALCALL) {
+                        OptFunctionNode target;
+                        target = (OptFunctionNode)node.getProp(
+                                     Node.DIRECTCALL_PROP);
+
+                        if (target != null) {
+                            visitOptimizedCall(node, target, type, child);
+                        } else if (type == Token.CALL) {
+                            visitStandardCall(node, child);
+                        } else {
+                            visitStandardNew(node, child);
+                        }
+                    } else {
+                        visitSpecialCall(node, type, specialType, child);
+                    }
                 }
                 break;
-              }
 
               case Token.REF_CALL:
-                visitRefCall(node, type, child);
+                generateFunctionAndThisObj(child, node);
+                // stack: ... functionObj thisObj
+                child = child.getNext();
+                generateCallArgArray(node, child, false);
+                cfw.addALoad(contextLocal);
+                cfw.addALoad(variableObjectLocal);
+                addScriptRuntimeInvoke(
+                    "referenceCall",
+                    "(Lorg/mozilla/javascript/Function;"
+                    +"Lorg/mozilla/javascript/Scriptable;"
+                    +"[Ljava/lang/Object;"
+                    +"Lorg/mozilla/javascript/Context;"
+                    +"Lorg/mozilla/javascript/Scriptable;"
+                    +")Ljava/lang/Object;");
                 break;
 
               case Token.NUMBER:
-                visitNumber(node);
+                {
+                    double num = node.getDouble();
+                    if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+                        cfw.addPush(num);
+                    } else {
+                        codegen.pushNumberAsObject(cfw, num);
+                    }
+                }
                 break;
 
               case Token.STRING:
@@ -1639,7 +1744,24 @@ class BodyCodegen
                 break;
 
               case Token.REGEXP:
-                visitRegexp(node);
+                {
+                    int i = node.getExistingIntProp(Node.REGEXP_PROP);
+                    // Scripts can not use REGEXP_ARRAY_FIELD_NAME since
+                    // it it will make script.exec non-reentrant so they
+                    // store regexp array in a local variable while
+                    // functions always access precomputed
+                    // REGEXP_ARRAY_FIELD_NAME not to consume locals
+                    if (fnCurrent == null) {
+                        cfw.addALoad(scriptRegexpLocal);
+                    } else {
+                        cfw.addALoad(funObjLocal);
+                        cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
+                                Codegen.REGEXP_ARRAY_FIELD_NAME,
+                                Codegen.REGEXP_ARRAY_FIELD_TYPE);
+                    }
+                    cfw.addPush(i);
+                    cfw.add(ByteCode.AALOAD);
+                }
                 break;
 
               case Token.COMMA: {
@@ -1875,11 +1997,35 @@ class BodyCodegen
                 break;
 
               case Token.GETELEM:
-                visitGetElem(node, child);
+                generateExpression(child, node); // object
+                generateExpression(child.getNext(), node);  // id
+                cfw.addALoad(contextLocal);
+                cfw.addALoad(variableObjectLocal);
+                if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
+                    addOptRuntimeInvoke(
+                        "getObjectIndex",
+                        "(Ljava/lang/Object;D"
+                        +"Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Ljava/lang/Object;");
+                }
+                else {
+                    addScriptRuntimeInvoke(
+                        "getObjectElem",
+                        "(Ljava/lang/Object;"
+                        +"Ljava/lang/Object;"
+                        +"Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Ljava/lang/Object;");
+                }
                 break;
 
               case Token.GET_REF:
-                visitGetRef(node, child);
+                generateExpression(child, node); // reference
+                addScriptRuntimeInvoke(
+                    "getReference",
+                    "(Ljava/lang/Object;"
+                    +")Ljava/lang/Object;");
                 break;
 
               case Token.GETVAR:
@@ -1906,7 +2052,23 @@ class BodyCodegen
 
               case Token.SET_REF:
               case Token.SET_REF_OP:
-                visitSetRef(type, node, child);
+                {
+                    generateExpression(child, node);
+                    child = child.getNext();
+                    if (type == Token.SET_REF_OP) {
+                        cfw.add(ByteCode.DUP);
+                        addScriptRuntimeInvoke(
+                            "getReference",
+                            "(Ljava/lang/Object;"
+                            +")Ljava/lang/Object;");
+                    }
+                    generateExpression(child, node);
+                    addScriptRuntimeInvoke(
+                        "setReference",
+                        "(Ljava/lang/Object;"
+                        +"Ljava/lang/Object;"
+                        +")Ljava/lang/Object;");
+                }
                 break;
 
               case Token.DEL_REF:
@@ -1931,7 +2093,22 @@ class BodyCodegen
                 break;
 
               case Token.BINDNAME:
-                visitBind(node, child);
+                {
+                    while (child != null) {
+                        generateExpression(child, node);
+                        child = child.getNext();
+                    }
+                    // Generate code for "ScriptRuntime.bind(varObj, "s")"
+                    cfw.addALoad(contextLocal);
+                    cfw.addALoad(variableObjectLocal);
+                    cfw.addPush(node.getString());
+                    addScriptRuntimeInvoke(
+                        "bind",
+                        "(Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +"Ljava/lang/String;"
+                        +")Lorg/mozilla/javascript/Scriptable;");
+                }
                 break;
 
               case Token.LOCAL_LOAD:
@@ -1939,11 +2116,33 @@ class BodyCodegen
                 break;
 
               case Token.SPECIAL_REF:
-                visitSpecialRef(node, child);
+                {
+                    String special
+                        = (String)node.getProp(Node.SPECIAL_PROP_PROP);
+                    generateExpression(child, node);
+                    cfw.addPush(special);
+                    cfw.addALoad(contextLocal);
+                    cfw.addALoad(variableObjectLocal);
+                    addScriptRuntimeInvoke("specialReference",
+                        "(Ljava/lang/Object;"
+                        +"Ljava/lang/String;"
+                        +"Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Ljava/lang/Object;");
+                }
                 break;
 
               case Token.XML_REF:
-                visitXMLRef(node, child);
+                {
+                    generateExpression(child, node);
+                    cfw.addALoad(contextLocal);
+                    cfw.addALoad(variableObjectLocal);
+                    addScriptRuntimeInvoke("xmlReference",
+                        "(Ljava/lang/Object;"
+                        +"Lorg/mozilla/javascript/Context;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")Ljava/lang/Object;");
+                }
                 break;
 
               case Token.DOTQUERY:
@@ -2142,12 +2341,6 @@ class BodyCodegen
         return target.labelId;
     }
 
-    private void visitTarget(Node.Target target)
-    {
-        int label = getTargetLabel(target);
-        cfw.markLabel(label);
-    }
-
     private void visitGOTO(Node.Jump node, int type, Node child)
     {
         Node.Target target = node.target;
@@ -2166,39 +2359,6 @@ class BodyCodegen
             else
                 addGoto(target, ByteCode.GOTO);
         }
-    }
-
-    private void visitFinally(Node node, Node child)
-    {
-        //Save return address in a new local where
-        int finallyRegister = getNewWordLocal();
-        cfw.addAStore(finallyRegister);
-        while (child != null) {
-            generateStatement(child, node);
-            child = child.getNext();
-        }
-        cfw.add(ByteCode.RET, finallyRegister);
-        releaseWordLocal((short)finallyRegister);
-    }
-
-    private void visitEnterWith(Node node, Node child)
-    {
-        generateExpression(child, node);
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke("enterWith",
-                               "(Ljava/lang/Object;"
-                               +"Lorg/mozilla/javascript/Scriptable;"
-                               +")Lorg/mozilla/javascript/Scriptable;");
-        cfw.addAStore(variableObjectLocal);
-    }
-
-    private void visitLeaveWith(Node node, Node child)
-    {
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke("leaveWith",
-                               "(Lorg/mozilla/javascript/Scriptable;"
-                               +")Lorg/mozilla/javascript/Scriptable;");
-        cfw.addAStore(variableObjectLocal);
     }
 
     private void visitArrayLiteral(Node node, Node child)
@@ -2274,20 +2434,6 @@ class BodyCodegen
              +")Lorg/mozilla/javascript/Scriptable;");
     }
 
-    private void visitCall(Node node, int type, Node child)
-    {
-        OptFunctionNode
-            target = (OptFunctionNode)node.getProp(Node.DIRECTCALL_PROP);
-
-        if (target != null) {
-            visitOptimizedCall(node, target, type, child);
-        } else if (type == Token.CALL) {
-            visitStandardCall(node, child);
-        } else {
-            visitStandardNew(node, child);
-        }
-    }
-
     private void visitSpecialCall(Node node, int type, int specialType,
                                   Node child)
     {
@@ -2339,23 +2485,6 @@ class BodyCodegen
         }
 
         addOptRuntimeInvoke(methodName, callSignature);
-    }
-
-    private void visitRefCall(Node node, int type, Node child)
-    {
-        generateFunctionAndThisObj(child, node);
-        // stack: ... functionObj thisObj
-        child = child.getNext();
-        generateCallArgArray(node, child, false);
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke("referenceCall",
-                               "(Lorg/mozilla/javascript/Function;"
-                               +"Lorg/mozilla/javascript/Scriptable;"
-                               +"[Ljava/lang/Object;"
-                               +"Lorg/mozilla/javascript/Context;"
-                               +"Lorg/mozilla/javascript/Scriptable;"
-                               +")Ljava/lang/Object;");
     }
 
     private void visitStandardCall(Node node, Node child)
@@ -2865,23 +2994,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                                 exceptionName);
 
         cfw.add(ByteCode.GOTO, catchLabel);
-    }
-
-    private void visitThrow(Node node, Node child)
-    {
-        generateExpression(child, node);
-        cfw.add(ByteCode.NEW,
-                      "org/mozilla/javascript/JavaScriptException");
-        cfw.add(ByteCode.DUP_X1);
-        cfw.add(ByteCode.SWAP);
-        cfw.addPush(scriptOrFn.getSourceName());
-        cfw.addPush(itsLineNumber);
-        cfw.addInvoke(ByteCode.INVOKESPECIAL,
-                      "org/mozilla/javascript/JavaScriptException",
-                      "<init>",
-                      "(Ljava/lang/Object;Ljava/lang/String;I)V");
-
-        cfw.add(ByteCode.ATHROW);
     }
 
     private void visitSwitch(Node.Jump switchNode, Node child)
@@ -3397,77 +3509,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         if (stackInitial != cfw.getStackTop()) throw Codegen.badTree();
     }
 
-    private void visitNumber(Node node)
-    {
-        double num = node.getDouble();
-        if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-            cfw.addPush(num);
-        } else {
-            codegen.pushNumberAsObject(cfw, num);
-        }
-    }
-
-    private void visitRegexp(Node node)
-    {
-        int i = node.getExistingIntProp(Node.REGEXP_PROP);
-        // Scripts can not use REGEXP_ARRAY_FIELD_NAME since
-        // it it will make script.exec non-reentrant so they
-        // store regexp array in a local variable while
-        // functions always access precomputed REGEXP_ARRAY_FIELD_NAME
-        // not to consume locals
-        if (fnCurrent == null) {
-            cfw.addALoad(scriptRegexpLocal);
-        } else {
-            cfw.addALoad(funObjLocal);
-            cfw.add(ByteCode.GETFIELD, codegen.mainClassName,
-                    Codegen.REGEXP_ARRAY_FIELD_NAME,
-                    Codegen.REGEXP_ARRAY_FIELD_TYPE);
-        }
-        cfw.addPush(i);
-        cfw.add(ByteCode.AALOAD);
-    }
-
-    private void visitCatchScope(Node node, Node child)
-    {
-        int local = getLocalBlockRegister(node);
-        int scopeIndex = node.getExistingIntProp(Node.CATCH_SCOPE_PROP);
-
-        String name = child.getString(); // name of exception variable
-        child = child.getNext();
-        generateExpression(child, node); // load expression object
-        if (scopeIndex == 0) {
-            cfw.add(ByteCode.ACONST_NULL);
-        } else {
-            // Load previous catch scope object
-            cfw.addALoad(local);
-        }
-        cfw.addPush(name);
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-
-        addScriptRuntimeInvoke("newCatchScope",
-                               "(Ljava/lang/Throwable;"
-                               +"Lorg/mozilla/javascript/Scriptable;"
-                               +"Ljava/lang/String;"
-                               +"Lorg/mozilla/javascript/Context;"
-                               +"Lorg/mozilla/javascript/Scriptable;"
-                               +")Lorg/mozilla/javascript/Scriptable;");
-        cfw.addAStore(local);
-    }
-
-    private void visitName(Node node)
-    {
-        cfw.addALoad(contextLocal);                    // push cx
-        cfw.addALoad(variableObjectLocal);             // get variable object
-        cfw.addPush(node.getString());                 // push name
-        addScriptRuntimeInvoke(
-            "name",
-            "(Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +"Ljava/lang/String;"
-            +")Ljava/lang/Object;");
-    }
-
     private void visitSetName(Node node, Node child)
     {
         String name = node.getFirstChild().getString();
@@ -3609,38 +3650,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
         }
     }
 
-    private void visitGetElem(Node node, Node child)
-    {
-        generateExpression(child, node); // object
-        generateExpression(child.getNext(), node);  // id
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-        if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
-            addOptRuntimeInvoke(
-                "getObjectIndex",
-                "(Ljava/lang/Object;D"
-                +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +")Ljava/lang/Object;");
-        }
-        else {
-            addScriptRuntimeInvoke(
-                "getObjectElem",
-                "(Ljava/lang/Object;"
-                +"Ljava/lang/Object;"
-                +"Lorg/mozilla/javascript/Context;"
-                +"Lorg/mozilla/javascript/Scriptable;"
-                +")Ljava/lang/Object;");
-        }
-    }
-
-    private void visitGetRef(Node node, Node child)
-    {
-        generateExpression(child, node); // reference
-        addScriptRuntimeInvoke(
-            "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
-    }
-
     private void visitSetProp(int type, Node node, Node child)
     {
         Node objectChild = child;
@@ -3752,65 +3761,6 @@ Else pass the JS object in the aReg and 0.0 in the dReg.
                 +"Lorg/mozilla/javascript/Scriptable;"
                 +")Ljava/lang/Object;");
         }
-    }
-
-    private void visitSetRef(int type, Node node, Node child)
-    {
-        generateExpression(child, node);
-        child = child.getNext();
-        if (type == Token.SET_REF_OP) {
-            cfw.add(ByteCode.DUP);
-            addScriptRuntimeInvoke(
-                "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
-        }
-        generateExpression(child, node);
-        addScriptRuntimeInvoke(
-            "setReference",
-            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
-    }
-
-    private void visitBind(Node node, Node child)
-    {
-        while (child != null) {
-            generateExpression(child, node);
-            child = child.getNext();
-        }
-        // Generate code for "ScriptRuntime.bind(varObj, "s")"
-        cfw.addALoad(contextLocal);             // push cx
-        cfw.addALoad(variableObjectLocal);             // push variable object
-        cfw.addPush(node.getString());                 // push name
-        addScriptRuntimeInvoke("bind",
-            "(Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +"Ljava/lang/String;"
-            +")Lorg/mozilla/javascript/Scriptable;");
-    }
-
-    private void visitSpecialRef(Node node, Node child)
-    {
-        String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
-        generateExpression(child, node);
-        cfw.addPush(special);
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke("specialReference",
-            "(Ljava/lang/Object;"
-            +"Ljava/lang/String;"
-            +"Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +")Ljava/lang/Object;");
-    }
-
-    private void visitXMLRef(Node node, Node child)
-    {
-        generateExpression(child, node);
-        cfw.addALoad(contextLocal);
-        cfw.addALoad(variableObjectLocal);
-        addScriptRuntimeInvoke("xmlReference",
-            "(Ljava/lang/Object;"
-            +"Lorg/mozilla/javascript/Context;"
-            +"Lorg/mozilla/javascript/Scriptable;"
-            +")Ljava/lang/Object;");
     }
 
     private void visitDotQuery(Node node, Node child)

@@ -535,24 +535,26 @@ public class Interpreter
         Node child = node.getFirstChild();
         switch (type) {
 
-          case Token.FUNCTION: {
-            int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
-            int fnType = scriptOrFn.getFunctionNode(fnIndex).getFunctionType();
-            // Only function expressions or function expression
-            // statements needs closure code creating new function
-            // object on stack as function statements are initialized
-            // at script/function start
-            // In addition function expression can not present here
-            // at statement level, they must only present as expressions.
-            if (fnType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
-                addIndexOp(Icode_CLOSURE_STMT, fnIndex);
-            } else {
-                if (fnType != FunctionNode.FUNCTION_STATEMENT) {
-                    throw Kit.codeBug();
+          case Token.FUNCTION:
+            {
+                int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
+                int fnType = scriptOrFn.getFunctionNode(fnIndex).
+                                 getFunctionType();
+                // Only function expressions or function expression
+                // statements needs closure code creating new function
+                // object on stack as function statements are initialized
+                // at script/function start
+                // In addition function expression can not present here
+                // at statement level, they must only present as expressions.
+                if (fnType == FunctionNode.FUNCTION_EXPRESSION_STATEMENT) {
+                    addIndexOp(Icode_CLOSURE_STMT, fnIndex);
+                } else {
+                    if (fnType != FunctionNode.FUNCTION_STATEMENT) {
+                        throw Kit.codeBug();
+                    }
                 }
             }
             break;
-          }
 
           case Token.SCRIPT:
           case Token.LABEL:
@@ -600,7 +602,32 @@ public class Interpreter
             break;
 
           case Token.SWITCH:
-            visitSwitch((Node.Jump)node);
+            updateLineNumber(node);
+            // See comments in IRFactory.createSwitch() for description
+            // of SWITCH node
+            {
+                Node switchNode = (Node.Jump)node;
+                visitExpression(child, 0);
+                for (Node.Jump caseNode = (Node.Jump)child.getNext();
+                     caseNode != null;
+                     caseNode = (Node.Jump)caseNode.getNext())
+                {
+                    if (caseNode.getType() != Token.CASE)
+                        throw badTree(caseNode);
+                    Node test = caseNode.getFirstChild();
+                    addIcode(Icode_DUP);
+                    stackChange(1);
+                    visitExpression(test, 0);
+                    addToken(Token.SHEQ);
+                    stackChange(-1);
+                    // If true, Icode_IFEQ_POP will jump and remove case
+                    // value from stack
+                    addGoto(caseNode.target, Icode_IFEQ_POP);
+                    stackChange(-1);
+                }
+                addIcode(Icode_POP);
+                stackChange(-1);
+            }
             break;
 
           case Token.TARGET:
@@ -608,25 +635,28 @@ public class Interpreter
             break;
 
           case Token.IFEQ :
-          case Token.IFNE : {
-            Node.Target target = ((Node.Jump)node).target;
-            visitExpression(child, 0);
-            addGoto(target, type);
-            stackChange(-1);
+          case Token.IFNE :
+            {
+                Node.Target target = ((Node.Jump)node).target;
+                visitExpression(child, 0);
+                addGoto(target, type);
+                stackChange(-1);
+            }
             break;
-          }
 
-          case Token.GOTO: {
-            Node.Target target = ((Node.Jump)node).target;
-            addGoto(target, type);
+          case Token.GOTO:
+            {
+                Node.Target target = ((Node.Jump)node).target;
+                addGoto(target, type);
+            }
             break;
-          }
 
-          case Token.JSR: {
-            Node.Target target = ((Node.Jump)node).target;
-            addGoto(target, Icode_GOSUB);
+          case Token.JSR:
+            {
+                Node.Target target = ((Node.Jump)node).target;
+                addGoto(target, Icode_GOSUB);
+            }
             break;
-          }
 
           case Token.FINALLY:
             {
@@ -652,7 +682,33 @@ public class Interpreter
             break;
 
           case Token.TRY:
-            visitTry((Node.Jump)node, child);
+            {
+                Node.Jump tryNode = (Node.Jump)node;
+                int exceptionObjectLocal = getLocalBlockRef(tryNode);
+                int tryStart = itsICodeTop;
+
+                while (child != null) {
+                    visitStatement(child);
+                    child = child.getNext();
+                }
+
+                Node.Target catchTarget = tryNode.target;
+                if (catchTarget != null) {
+                    int catchStartPC
+                        = itsLabelTable[getTargetLabel(catchTarget)];
+                    addExceptionHandler(
+                        tryStart, catchStartPC, catchStartPC,
+                        false, itsWithDepth, exceptionObjectLocal);
+                }
+                Node.Target finallyTarget = tryNode.getFinally();
+                if (finallyTarget != null) {
+                    int finallyStartPC
+                        = itsLabelTable[getTargetLabel(finallyTarget)];
+                    addExceptionHandler(
+                        tryStart, finallyStartPC, finallyStartPC,
+                        true, itsWithDepth, exceptionObjectLocal);
+                }
+            }
             break;
 
           case Token.CATCH_SCOPE:
@@ -722,37 +778,40 @@ public class Interpreter
         int savedStackDepth = itsStackDepth;
         switch (type) {
 
-          case Token.FUNCTION: {
-            int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
-            FunctionNode fn = scriptOrFn.getFunctionNode(fnIndex);
-            // See comments in visitStatement for Token.FUNCTION case
-            if (fn.getFunctionType() != FunctionNode.FUNCTION_EXPRESSION) {
-                throw Kit.codeBug();
+          case Token.FUNCTION:
+            {
+                int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
+                FunctionNode fn = scriptOrFn.getFunctionNode(fnIndex);
+                // See comments in visitStatement for Token.FUNCTION case
+                if (fn.getFunctionType() != FunctionNode.FUNCTION_EXPRESSION) {
+                    throw Kit.codeBug();
+                }
+                addIndexOp(Icode_CLOSURE_EXPR, fnIndex);
+                stackChange(1);
             }
-            addIndexOp(Icode_CLOSURE_EXPR, fnIndex);
-            stackChange(1);
             break;
-          }
 
-          case Token.LOCAL_LOAD: {
-            int localIndex = getLocalBlockRef(node);
-            addIndexOp(Token.LOCAL_LOAD, localIndex);
-            stackChange(1);
-            break;
-          }
-
-          case Token.COMMA: {
-            Node lastChild = node.getLastChild();
-            while (child != lastChild) {
-                visitExpression(child, 0);
-                addIcode(Icode_POP);
-                stackChange(-1);
-                child = child.getNext();
+          case Token.LOCAL_LOAD:
+            {
+                int localIndex = getLocalBlockRef(node);
+                addIndexOp(Token.LOCAL_LOAD, localIndex);
+                stackChange(1);
             }
-            // Preserve tail context flag if any
-            visitExpression(child, contextFlags & ECF_TAIL);
             break;
-          }
+
+          case Token.COMMA:
+            {
+                Node lastChild = node.getLastChild();
+                while (child != lastChild) {
+                    visitExpression(child, 0);
+                    addIcode(Icode_POP);
+                    stackChange(-1);
+                    child = child.getNext();
+                }
+                // Preserve tail context flag if any
+                visitExpression(child, contextFlags & ECF_TAIL);
+            }
+            break;
 
           case Token.USE_STACK:
             // Indicates that stack was modified externally,
@@ -763,56 +822,103 @@ public class Interpreter
           case Token.CALL:
           case Token.NEW:
           case Token.REF_CALL:
-            visitCall(node, contextFlags);
+            {
+                if (type == Token.NEW) {
+                    visitExpression(child, 0);
+                } else {
+                    generateCallFunAndThis(child);
+                }
+                int argCount = 0;
+                while ((child = child.getNext()) != null) {
+                    visitExpression(child, 0);
+                    ++argCount;
+                }
+                int callType = node.getIntProp(Node.SPECIALCALL_PROP,
+                                               Node.NON_SPECIALCALL);
+                if (callType != Node.NON_SPECIALCALL) {
+                    // embed line number and source filename
+                    addIndexOp(Icode_CALLSPECIAL, argCount);
+                    addUint8(callType);
+                    addUint8(type == Token.NEW ? 1 : 0);
+                    addUint16(itsLineNumber & 0xFFFF);
+                } else {
+                    if (type == Token.CALL) {
+                        if ((contextFlags & ECF_TAIL) != 0) {
+                            type = Icode_TAIL_CALL;
+                        }
+                    }
+                    addIndexOp(type, argCount);
+                }
+                // adjust stack
+                if (type == Token.NEW) {
+                    // f, args -> results
+                   stackChange(-argCount);
+                } else {
+                    // f, thisObj, args -> results
+                   stackChange(-1 - argCount);
+                }
+                if (argCount > itsData.itsMaxCalleeArgs) {
+                    itsData.itsMaxCalleeArgs = argCount;
+                }
+            }
             break;
 
           case Token.AND:
-          case Token.OR: {
-            visitExpression(child, 0);
-            addIcode(Icode_DUP);
-            stackChange(1);
-            int afterSecondJumpStart = itsICodeTop;
-            int jump = (type == Token.AND) ? Token.IFNE : Token.IFEQ;
-            addForwardGoto(jump);
-            stackChange(-1);
-            addIcode(Icode_POP);
-            stackChange(-1);
-            child = child.getNext();
-            // Preserve tail context flag if any
-            visitExpression(child, contextFlags & ECF_TAIL);
-            resolveForwardGoto(afterSecondJumpStart);
+          case Token.OR:
+            {
+                visitExpression(child, 0);
+                addIcode(Icode_DUP);
+                stackChange(1);
+                int afterSecondJumpStart = itsICodeTop;
+                int jump = (type == Token.AND) ? Token.IFNE : Token.IFEQ;
+                addForwardGoto(jump);
+                stackChange(-1);
+                addIcode(Icode_POP);
+                stackChange(-1);
+                child = child.getNext();
+                // Preserve tail context flag if any
+                visitExpression(child, contextFlags & ECF_TAIL);
+                resolveForwardGoto(afterSecondJumpStart);
+            }
             break;
-          }
 
-          case Token.HOOK: {
-            Node ifThen = child.getNext();
-            Node ifElse = ifThen.getNext();
-            visitExpression(child, 0);
-            int elseJumpStart = itsICodeTop;
-            addForwardGoto(Token.IFNE);
-            stackChange(-1);
-            // Preserve tail context flag if any
-            visitExpression(ifThen, contextFlags & ECF_TAIL);
-            int afterElseJumpStart = itsICodeTop;
-            addForwardGoto(Token.GOTO);
-            resolveForwardGoto(elseJumpStart);
-            itsStackDepth = savedStackDepth;
-            // Preserve tail context flag if any
-            visitExpression(ifElse, contextFlags & ECF_TAIL);
-            resolveForwardGoto(afterElseJumpStart);
+          case Token.HOOK:
+            {
+                Node ifThen = child.getNext();
+                Node ifElse = ifThen.getNext();
+                visitExpression(child, 0);
+                int elseJumpStart = itsICodeTop;
+                addForwardGoto(Token.IFNE);
+                stackChange(-1);
+                // Preserve tail context flag if any
+                visitExpression(ifThen, contextFlags & ECF_TAIL);
+                int afterElseJumpStart = itsICodeTop;
+                addForwardGoto(Token.GOTO);
+                resolveForwardGoto(elseJumpStart);
+                itsStackDepth = savedStackDepth;
+                // Preserve tail context flag if any
+                visitExpression(ifElse, contextFlags & ECF_TAIL);
+                resolveForwardGoto(afterElseJumpStart);
+            }
             break;
-          }
 
           case Token.GETPROP:
-            visitGetProp(node, child);
+            visitExpression(child, 0);
+            child = child.getNext();
+            addStringOp(Token.GETPROP, child.getString());
             break;
 
           case Token.GETELEM:
-            visitGetElem(node, child);
+            visitExpression(child, 0);
+            child = child.getNext();
+            visitExpression(child, 0);
+            addToken(Token.GETELEM);
+            stackChange(-1);
             break;
 
           case Token.GET_REF:
-            visitGetRef(node, child);
+            visitExpression(child, 0);
+            addToken(Token.GET_REF);
             break;
 
           case Token.DELPROP:
@@ -860,24 +966,25 @@ public class Interpreter
             }
             break;
 
-        case Token.SETPROP:
-          case Token.SETPROP_OP: {
-            visitExpression(child, 0);
-            child = child.getNext();
-            String property = child.getString();
-            child = child.getNext();
-            if (type == Token.SETPROP_OP) {
-                addIcode(Icode_DUP);
-                stackChange(1);
-                addStringOp(Token.GETPROP, property);
-                // Compensate for the following USE_STACK
+          case Token.SETPROP:
+          case Token.SETPROP_OP:
+            {
+                visitExpression(child, 0);
+                child = child.getNext();
+                String property = child.getString();
+                child = child.getNext();
+                if (type == Token.SETPROP_OP) {
+                    addIcode(Icode_DUP);
+                    stackChange(1);
+                    addStringOp(Token.GETPROP, property);
+                    // Compensate for the following USE_STACK
+                    stackChange(-1);
+                }
+                visitExpression(child, 0);
+                addStringOp(Token.SETPROP, property);
                 stackChange(-1);
             }
-            visitExpression(child, 0);
-            addStringOp(Token.SETPROP, property);
-            stackChange(-1);
             break;
-          }
 
           case Token.SETELEM:
           case Token.SETELEM_OP:
@@ -914,33 +1021,35 @@ public class Interpreter
             stackChange(-1);
             break;
 
-          case Token.SETNAME: {
-            String name = child.getString();
-            visitExpression(child, 0);
-            child = child.getNext();
-            visitExpression(child, 0);
-            addStringOp(Token.SETNAME, name);
-            stackChange(-1);
-            break;
-          }
-
-          case Token.TYPEOFNAME: {
-            String name = node.getString();
-            int index = -1;
-            // use typeofname if an activation frame exists
-            // since the vars all exist there instead of in jregs
-            if (itsInFunctionFlag && !itsData.itsNeedsActivation)
-                index = scriptOrFn.getParamOrVarIndex(name);
-            if (index == -1) {
-                addStringOp(Icode_TYPEOFNAME, name);
-                stackChange(1);
-            } else {
-                addVarOp(Token.GETVAR, index);
-                stackChange(1);
-                addToken(Token.TYPEOF);
+          case Token.SETNAME:
+            {
+                String name = child.getString();
+                visitExpression(child, 0);
+                child = child.getNext();
+                visitExpression(child, 0);
+                addStringOp(Token.SETNAME, name);
+                stackChange(-1);
             }
             break;
-          }
+
+          case Token.TYPEOFNAME:
+            {
+                String name = node.getString();
+                int index = -1;
+                // use typeofname if an activation frame exists
+                // since the vars all exist there instead of in jregs
+                if (itsInFunctionFlag && !itsData.itsNeedsActivation)
+                    index = scriptOrFn.getParamOrVarIndex(name);
+                if (index == -1) {
+                    addStringOp(Icode_TYPEOFNAME, name);
+                    stackChange(1);
+                } else {
+                    addVarOp(Token.GETVAR, index);
+                    stackChange(1);
+                    addToken(Token.TYPEOF);
+                }
+            }
+            break;
 
           case Token.BINDNAME:
           case Token.NAME:
@@ -955,41 +1064,68 @@ public class Interpreter
             break;
 
           case Token.NUMBER:
-            visitNumber(node);
-            break;
-
-          case Token.GETVAR: {
-            String name = node.getString();
-            if (itsData.itsNeedsActivation) {
-                // SETVAR handled this by turning into a SETPROP, but
-                // we can't do that to a GETVAR without manufacturing
-                // bogus children. Instead we use a special op to
-                // push the current scope.
-                addIcode(Icode_SCOPE);
-                stackChange(1);
-                addStringOp(Token.GETPROP, name);
-            } else {
-                int index = scriptOrFn.getParamOrVarIndex(name);
-                addVarOp(Token.GETVAR, index);
+            {
+                double num = node.getDouble();
+                int inum = (int)num;
+                if (inum == num) {
+                    if (inum == 0) {
+                        addIcode(Icode_ZERO);
+                        // Check for negative zero
+                        if (1.0 / num < 0.0) {
+                            addToken(Token.NEG);
+                        }
+                    } else if (inum == 1) {
+                        addIcode(Icode_ONE);
+                    } else if ((short)inum == inum) {
+                        addIcode(Icode_SHORTNUMBER);
+                        // write short as uin16 bit pattern
+                        addUint16(inum & 0xFFFF);
+                    } else {
+                        addIcode(Icode_INTNUMBER);
+                        addInt(inum);
+                    }
+                } else {
+                    int index = getDoubleIndex(num);
+                    addIndexOp(Token.NUMBER, index);
+                }
                 stackChange(1);
             }
             break;
-          }
 
-          case Token.SETVAR: {
-            if (itsData.itsNeedsActivation) {
-                child.setType(Token.BINDNAME);
-                node.setType(Token.SETNAME);
-                visitExpression(node, 0);
-            } else {
-                String name = child.getString();
-                child = child.getNext();
-                visitExpression(child, 0);
-                int index = scriptOrFn.getParamOrVarIndex(name);
-                addVarOp(Token.SETVAR, index);
+          case Token.GETVAR:
+            {
+                String name = node.getString();
+                if (itsData.itsNeedsActivation) {
+                    // SETVAR handled this by turning into a SETPROP, but
+                    // we can't do that to a GETVAR without manufacturing
+                    // bogus children. Instead we use a special op to
+                    // push the current scope.
+                    addIcode(Icode_SCOPE);
+                    stackChange(1);
+                    addStringOp(Token.GETPROP, name);
+                } else {
+                    int index = scriptOrFn.getParamOrVarIndex(name);
+                    addVarOp(Token.GETVAR, index);
+                    stackChange(1);
+                }
             }
             break;
-          }
+
+          case Token.SETVAR:
+            {
+                if (itsData.itsNeedsActivation) {
+                    child.setType(Token.BINDNAME);
+                    node.setType(Token.SETNAME);
+                    visitExpression(node, 0);
+                } else {
+                    String name = child.getString();
+                    child = child.getNext();
+                    visitExpression(child, 0);
+                    int index = scriptOrFn.getParamOrVarIndex(name);
+                    addVarOp(Token.SETVAR, index);
+                }
+            }
+            break;
 
           case Token.NULL:
           case Token.THIS:
@@ -1006,24 +1142,26 @@ public class Interpreter
             stackChange(1);
             break;
 
-          case Token.REGEXP: {
-            int index = node.getExistingIntProp(Node.REGEXP_PROP);
-            addIndexOp(Token.REGEXP, index);
-            stackChange(1);
+          case Token.REGEXP:
+            {
+                int index = node.getExistingIntProp(Node.REGEXP_PROP);
+                addIndexOp(Token.REGEXP, index);
+                stackChange(1);
+            }
             break;
-          }
 
           case Token.ARRAYLIT:
           case Token.OBJECTLIT:
             visitLiteral(node, child);
             break;
 
-          case Token.SPECIAL_REF: {
-            visitExpression(child, 0);
-            String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
-            addStringOp(Token.SPECIAL_REF, special);
+          case Token.SPECIAL_REF:
+            {
+                String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
+                visitExpression(child, 0);
+                addStringOp(Token.SPECIAL_REF, special);
+            }
             break;
-          }
 
           case Token.XML_REF:
             visitExpression(child, 0);
@@ -1031,7 +1169,16 @@ public class Interpreter
             break;
 
           case Token.DOTQUERY:
-            visitDotQery(node, child);
+            {
+                int queryPC;
+                updateLineNumber(node);
+                visitExpression(child, 0);
+                addIcode(Icode_ENTERDQ);
+                stackChange(-1);
+                queryPC = itsICodeTop;
+                visitExpression(child.getNext(), 0);
+                addBackwardGoto(Icode_LEAVEDQ, queryPC);
+            }
             break;
 
           case Token.DEFAULTNAMESPACE :
@@ -1043,16 +1190,16 @@ public class Interpreter
             addToken(type);
             break;
 
-          case Token.COLONCOLON : {
-            if (child.getType() != Token.STRING)
-                throw badTree(child);
-            String namespace = child.getString();
-            child = child.getNext();
-            visitExpression(child, 0);
-            addStringOp(Token.COLONCOLON, namespace);
+          case Token.COLONCOLON :
+            {
+                if (child.getType() != Token.STRING)
+                    throw badTree(child);
+                String namespace = child.getString();
+                child = child.getNext();
+                visitExpression(child, 0);
+                addStringOp(Token.COLONCOLON, namespace);
+            }
             break;
-          }
-
 
           default:
             throw badTree(node);
@@ -1060,103 +1207,6 @@ public class Interpreter
         if (savedStackDepth + 1 != itsStackDepth) {
             Kit.codeBug();
         }
-    }
-
-    private void visitSwitch(Node.Jump switchNode)
-    {
-        // See comments in IRFactory.createSwitch() for description
-        // of SWITCH node
-
-        updateLineNumber(switchNode);
-
-        Node child = switchNode.getFirstChild();
-        visitExpression(child, 0);
-        for (Node.Jump caseNode = (Node.Jump)child.getNext();
-             caseNode != null;
-             caseNode = (Node.Jump)caseNode.getNext())
-        {
-            if (caseNode.getType() != Token.CASE)
-                throw badTree(caseNode);
-            Node test = caseNode.getFirstChild();
-            addIcode(Icode_DUP);
-            stackChange(1);
-            visitExpression(test, 0);
-            addToken(Token.SHEQ);
-            stackChange(-1);
-            // If true, Icode_IFEQ_POP will jump and remove case value
-            // from stack
-            addGoto(caseNode.target, Icode_IFEQ_POP);
-            stackChange(-1);
-        }
-        addIcode(Icode_POP);
-        stackChange(-1);
-    }
-
-    private void visitTry(Node.Jump tryNode, Node child)
-    {
-        int tryStart = itsICodeTop;
-        while (child != null) {
-            visitStatement(child);
-            child = child.getNext();
-        }
-
-        int exceptionObjectLocal = getLocalBlockRef(tryNode);
-
-        Node.Target catchTarget = tryNode.target;
-        if (catchTarget != null) {
-            int catchStartPC = itsLabelTable[getTargetLabel(catchTarget)];
-            addExceptionHandler(tryStart, catchStartPC, catchStartPC,
-                                false, itsWithDepth, exceptionObjectLocal);
-        }
-        Node.Target finallyTarget = tryNode.getFinally();
-        if (finallyTarget != null) {
-            int finallyStartPC = itsLabelTable[getTargetLabel(finallyTarget)];
-            addExceptionHandler(tryStart, finallyStartPC, finallyStartPC,
-                                true, itsWithDepth, exceptionObjectLocal);
-        }
-    }
-
-    private void visitCall(Node node, int contextFlags)
-    {
-        int type = node.getType();
-        Node child = node.getFirstChild();
-        if (type == Token.NEW) {
-            visitExpression(child, 0);
-        } else {
-            generateCallFunAndThis(child);
-        }
-        int argCount = 0;
-        while ((child = child.getNext()) != null) {
-            visitExpression(child, 0);
-            ++argCount;
-        }
-        int callType = node.getIntProp(Node.SPECIALCALL_PROP,
-                                       Node.NON_SPECIALCALL);
-        if (callType != Node.NON_SPECIALCALL) {
-            // embed line number and source filename
-            addIndexOp(Icode_CALLSPECIAL, argCount);
-            addUint8(callType);
-            addUint8(type == Token.NEW ? 1 : 0);
-            addUint16(itsLineNumber & 0xFFFF);
-        } else {
-            if (type == Token.CALL) {
-                if ((contextFlags & ECF_TAIL) != 0) {
-                    type = Icode_TAIL_CALL;
-                }
-            }
-            addIndexOp(type, argCount);
-        }
-        // adjust stack
-        if (type == Token.NEW) {
-            // f, args -> results
-           stackChange(-argCount);
-        } else {
-            // f, thisObj, args -> results
-           stackChange(-1 - argCount);
-        }
-        if (argCount > itsData.itsMaxCalleeArgs)
-            itsData.itsMaxCalleeArgs = argCount;
-
     }
 
     private void generateCallFunAndThis(Node left)
@@ -1196,29 +1246,6 @@ public class Interpreter
             stackChange(1);
             break;
         }
-    }
-
-    private void visitGetProp(Node node, Node child)
-    {
-        visitExpression(child, 0);
-        child = child.getNext();
-        String property = child.getString();
-        addStringOp(Token.GETPROP, property);
-    }
-
-    private void visitGetElem(Node node, Node child)
-    {
-        visitExpression(child, 0);
-        child = child.getNext();
-        visitExpression(child, 0);
-        addToken(Token.GETELEM);
-        stackChange(-1);
-    }
-
-    private void visitGetRef(Node node, Node child)
-    {
-        visitExpression(child, 0);
-        addToken(Token.GET_REF);
     }
 
     private void visitIncDec(Node node, Node child)
@@ -1279,34 +1306,6 @@ public class Interpreter
         }
     }
 
-    private void visitNumber(Node node)
-    {
-        double num = node.getDouble();
-        int inum = (int)num;
-        if (inum == num) {
-            if (inum == 0) {
-                addIcode(Icode_ZERO);
-                // Check for negative zero
-                if (1.0 / num < 0.0) {
-                    addToken(Token.NEG);
-                }
-            } else if (inum == 1) {
-                addIcode(Icode_ONE);
-            } else if ((short)inum == inum) {
-                addIcode(Icode_SHORTNUMBER);
-                // write short as uin16 bit pattern
-                addUint16(inum & 0xFFFF);
-            } else {
-                addIcode(Icode_INTNUMBER);
-                addInt(inum);
-            }
-        } else {
-            int index = getDoubleIndex(num);
-            addIndexOp(Token.NUMBER, index);
-        }
-        stackChange(1);
-    }
-
     private void visitLiteral(Node node, Node child)
     {
         int type = node.getType();
@@ -1345,17 +1344,6 @@ public class Interpreter
             itsLiteralIds.add(propertyIds);
             addIndexOp(Token.OBJECTLIT, index);
         }
-    }
-
-    private void visitDotQery(Node node, Node child)
-    {
-        updateLineNumber(node);
-        visitExpression(child, 0);
-        addIcode(Icode_ENTERDQ);
-        stackChange(-1);
-        int queryPC = itsICodeTop;
-        visitExpression(child.getNext(), 0);
-        addBackwardGoto(Icode_LEAVEDQ, queryPC);
     }
 
     private int getLocalBlockRef(Node node)
