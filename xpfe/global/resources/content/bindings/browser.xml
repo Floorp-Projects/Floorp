@@ -245,7 +245,7 @@
       </method>
 
       <constructor>
-        if (this.getAttribute("disableHistory") != "true") {
+        if (!this.hasAttribute("disableHistory")) {
           // wire up session history
           // XXXdwh On a dynamic skin switch, we should be checking our box object to obtain
           // the session history.

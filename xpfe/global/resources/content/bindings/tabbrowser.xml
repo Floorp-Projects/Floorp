@@ -360,7 +360,7 @@
             // If the new tab is busy, and our current state is not busy, then
             // we need to fire a start to all progress listeners.
             const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
-            if (this.mCurrentTab.getAttribute("busy") == "true" && !this.mIsBusy) {
+            if (this.mCurrentTab.hasAttribute("busy") && !this.mIsBusy) {
               this.mIsBusy = true;
               webProgress = this.mCurrentBrowser.webProgress;
               for (i = 0; i < this.mProgressListeners.length; i++) {
@@ -372,7 +372,7 @@
 
             // If the new tab is not busy, and our current state is busy, then
             // we need to fire a stop to all progress listeners.
-            if (this.mCurrentTab.getAttribute("busy") != "true" && this.mIsBusy) {
+            if (!this.mCurrentTab.hasAttribute("busy") && this.mIsBusy) {
               this.mIsBusy = false;
               webProgress = this.mCurrentBrowser.webProgress;
               for (i = 0; i < this.mProgressListeners.length; i++) {

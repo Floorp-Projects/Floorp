@@ -238,7 +238,7 @@
             
           // only accept dialog if accept button is the default
           var btn = this.getButton("accept");
-          if (btn && btn.getAttribute("default") == "true")
+          if (btn && btn.hasAttribute("default"))
             this.acceptDialog();
         ]]>
         </body>

@@ -43,10 +43,11 @@
                 onset="this.setAttribute('group', val); return val;"/>
 
       <property name="open"
-                onget="return this.getAttribute('open') == 'true';"
-                onset="this.setAttribute('open', val); return val;"/>
+                onget="return this.hasAttribute('open');"
+                onset="if (val) this.setAttribute('open', 'true');
+                       else this.removeAttribute('open'); return val;"/>
 
-      <property name="checked" onget="return this.getAttribute('checked') == 'true';">
+      <property name="checked" onget="return this.hasAttribute('checked');">
         <setter><![CDATA[
           if (this.type == "checkbox") {
             this.checkState = val ? 1 : 0;

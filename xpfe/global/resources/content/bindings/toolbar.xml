@@ -109,10 +109,13 @@
 
       <property name="deferAttached">
         <getter>
-          return this.getAttribute("deferattached");
+          return (this.hasAttribute("deferattached") ? "true" : "false");
         </getter>
         <setter>
-          this.setAttribute("deferattached", val);
+          if (val)
+            this.setAttribute("deferattached", "true");
+          else
+            this.removeAttribute("deferattached");
           return val;
         </setter>
       </property>
@@ -221,10 +224,13 @@
     <implementation>
       <property name="collapsed">
         <getter>
-          return this.getAttribute("moz_grippy_collapsed");
+          return this.hasAttribute("moz_grippy_collapsed");
         </getter>
         <setter>
-          this.setAttribute("moz_grippy_collapsed", val);
+          if (val)
+            this.setAttribute("moz_grippy_collapsed", "true");
+          else
+            this.removeAttribute("moz_grippy_collapsed");
           return val;
         </setter>
       </property>

@@ -14,8 +14,7 @@
       <property name="disabled"   onset="if (val) this.setAttribute('disabled', 'true');
                                          else this.removeAttribute('disabled');
                                          return val;"
-                                  onget="var v = this.getAttribute('disabled');
-                                         if (v == 'true') return true; return false;"/>                                  
+                                  onget="return this.hasAttribute('disabled');"/>                                  
       <property name="image"      onset="return this.setAttribute('image',val);"
                                   onget="return this.getAttribute('image');"/>
       <property name="accessKey"  onset="return this.setAttribute('accesskey',val);"
@@ -30,16 +29,6 @@
     </implementation>
   </binding>
 
-  <binding id="text-label">
-    <handlers>
-      <handler event="click" action="var forElementID = this.getAttribute('control');
-                                     if (forElementID)
-                                       var forElement = document.getElementById(forElementID);
-                                     if(forElement)
-                                       forElement.focus();
-                                    "/>
-    </handlers>
-  </binding>
   
   <!--
     Inline Editable UI Element

@@ -15,7 +15,7 @@
           ]]>
         </getter>
       </property>
-      <property name="disabled" onget="if (this.getAttribute('disabled') == 'true') return true; return false;"
+      <property name="disabled" onget="return this.hasAttribute('disabled');"
                                 onset="if (val) this.setAttribute('disabled', 'true');
                                        else this.removeAttribute('disabled'); 
                                        return val;"/>
@@ -38,25 +38,14 @@
   <binding id="label-control" extends="chrome://global/content/bindings/text.xml#text-label">
     <handlers>
       <handler event="click" action="if (this.disabled) return;
-                                     var forElementID = this.getAttribute('control');
-                                     if (forElementID)
-                                       var forElement = document.getElementById(forElementID);
-                                     if(forElement)
-                                       forElement.focus();
+                                     var controlElementID = this.getAttribute('control');
+                                     var controlElement;
+                                     if (controlElementID)
+                                       controlElement = document.getElementById(controlElementID);
+                                     if(controlElement)
+                                       controlElementID.focus();
                                     "/>
     </handlers>
-  </binding>
-
-  <binding id="label-for" extends="chrome://global/content/bindings/text.xml#text-base">
-    <handlers>
-      <handler event="click" action="var forElementID = this.getAttribute('for');
-                                     if (forElementID)
-                                       var forElement = document.getElementById(forElementID);
-                                     if(forElement)
-                                       forElement.focus();
-                                    "/>
-    </handlers>
-  </binding>
-  
+  </binding>  
 </bindings>
 
