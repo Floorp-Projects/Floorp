@@ -563,7 +563,7 @@ PRBool nsHTMLDTD::IsContainer(PRInt32 aTag) const {
     case eHTMLTag_input:      case eHTMLTag_isindex:
     case eHTMLTag_link:
     case eHTMLTag_math:       case eHTMLTag_meta:
-    case eHTMLTag_option:     case eHTMLTag_param:
+    case eHTMLTag_param:
     case eHTMLTag_style:      case eHTMLTag_spacer:
     case eHTMLTag_textarea:
     case eHTMLTag_wbr:
