@@ -283,6 +283,7 @@ protected:
   PRPackedBool                  mFirstDocumentLoad;
   PRPackedBool                  mIsScopeClear;
   PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
+  PRTime                        mLastMouseButtonAction;
   PRPackedBool                  mFullScreen;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
