@@ -441,7 +441,7 @@ class nsTString_CharT : public nsTSubstring_CharT
          */
       NS_COM void AppendInt( PRUint32 aInteger, PRInt32 aRadix = kRadix10 )
         {
-          return AppendInt(PRInt32(aInteger), aRadix);
+          AppendInt(PRInt32(aInteger), aRadix);
         }
 
         /**
