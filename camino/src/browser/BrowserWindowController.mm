@@ -38,6 +38,7 @@
 #import "NSString+Utils.h"
 
 #import "BrowserWindowController.h"
+#import "BrowserWindow.h"
 
 #import "BrowserContentViews.h"
 #import "BrowserWrapper.h"
@@ -1850,9 +1851,10 @@ static NSArray* sToolbarDefaults = nil;
   
   if (aLoadInBG)
   {
-    [[browser window] setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
-    [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
-    [[browser window] setSuppressMakeKeyFront:NO];
+    BrowserWindow* browserWin = [browser window]; 
+    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [browserWin orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
+    [browserWin setSuppressMakeKeyFront:NO];
   }
   else
     [browser showWindow:self];
@@ -1867,9 +1869,10 @@ static NSArray* sToolbarDefaults = nil;
   BrowserWindowController* browser = [[BrowserWindowController alloc] initWithWindowNibName: @"BrowserWindow"];
   if (aLoadInBG)
   {
-    [[browser window] setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
-    [[browser window] orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
-    [[browser window] setSuppressMakeKeyFront:NO];
+    BrowserWindow* browserWin = [browser window];
+    [browserWin setSuppressMakeKeyFront:YES];	// prevent gecko focus bringing the window to the front
+    [browserWin orderWindow: NSWindowBelow relativeTo: [[self window] windowNumber]];
+    [browserWin setSuppressMakeKeyFront:NO];
   }
   else
     [browser showWindow:self];
