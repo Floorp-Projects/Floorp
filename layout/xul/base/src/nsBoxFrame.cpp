@@ -1272,8 +1272,9 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
                             nsFramePaintLayer aWhichLayer)
 {
 
-   const nsStyleDisplay* disp = (const nsStyleDisplay*)
-   mStyleContext->GetStyleData(eStyleStruct_Display);
+   const nsStyleDisplay* disp = 
+     NS_STATIC_CAST(const nsStyleDisplay*,
+       mStyleContext->GetStyleData(eStyleStruct_Display));
 
    // if collapsed nothing is drawn
    if (disp->mVisible == NS_STYLE_VISIBILITY_COLLAPSE) 
@@ -1283,8 +1284,6 @@ nsBoxFrame::Paint(nsIPresContext* aPresContext,
     return NS_OK;
   }
   if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
     if (disp->IsVisible() && mRect.width && mRect.height) {
       // Paint our background and border
       PRIntn skipSides = GetSkipSides();

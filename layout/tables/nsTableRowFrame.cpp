@@ -299,7 +299,6 @@ nsTableRowFrame::DidResize(nsIPresContext*          aPresContext,
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
   if (!tableFrame) return;
-  nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
   nsTableIterator iter(aPresContext, *this, eTableDIR);
   nsIFrame* childFrame = iter.First();
@@ -417,7 +416,6 @@ nsTableRowFrame::CalcTallestCell()
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (NS_FAILED(rv)) return;
 
-  nscoord cellSpacingX = tableFrame->GetCellSpacingX();
   ResetTallestCell(0);
 
   for (nsIFrame* kidFrame = mFrames.FirstChild(); kidFrame; kidFrame->GetNextSibling(&kidFrame)) {
@@ -435,6 +433,7 @@ nsTableRowFrame::CalcTallestCell()
   }
 }
 
+#if 0
 static
 PRBool IsFirstRow(nsIPresContext*  aPresContext,
                   nsTableFrame&    aTable,
@@ -451,7 +450,7 @@ PRBool IsFirstRow(nsIPresContext*  aPresContext,
   }
   return PR_FALSE;
 }
-
+#endif
 
 NS_METHOD nsTableRowFrame::Paint(nsIPresContext* aPresContext,
                                  nsIRenderingContext& aRenderingContext,

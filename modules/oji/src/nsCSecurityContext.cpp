@@ -82,8 +82,6 @@ nsCSecurityContext::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 NS_METHOD 
 nsCSecurityContext::Implies(const char* target, const char* action, PRBool *bAllowedAccess)
 {
-    nsIPrincipal* pIPrincipal = NULL;
-
     if(!bAllowedAccess) {
         return NS_ERROR_FAILURE;
     }
@@ -124,8 +122,6 @@ nsCSecurityContext::GetOrigin(char* buf, int buflen)
           // that case we are not done.
         
         if (!m_pPrincipal && m_pJSCX ) {
-            JSPrincipals *jsprin = nsnull;
-
             nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(m_pJSCX);
             if (scriptContext) {
                 nsCOMPtr<nsIScriptGlobalObject> global = scriptContext->GetGlobalObject();

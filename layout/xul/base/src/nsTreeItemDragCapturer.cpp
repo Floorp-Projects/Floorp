@@ -204,7 +204,6 @@ nsTreeItemDragCapturer :: ConvertEventCoordsToRowCoords ( nsIDOMEvent* inDragEve
   mouseEvent->GetClientY(&y);
   float p2t;
   mPresContext->GetScaledPixelsToTwips(&p2t);
-  nscoord onePixel = NSIntPixelsToTwips(1, p2t);
   nscoord xp       = NSIntPixelsToTwips(x, p2t);
   nscoord yp       = NSIntPixelsToTwips(y, p2t);
   

@@ -337,8 +337,6 @@ nsTreeLayout::LazyRowCreator(nsBoxLayoutState& aState, nsXULTreeGroupFrame* aGro
       return NS_OK;
   }
   
-  nsSize size;
-
   // get the first tree box. If there isn't one create one.
   PRBool created = PR_FALSE;
   nsIBox* box = aGroup->GetFirstTreeBox(&created);

@@ -91,20 +91,12 @@ SpacerFrame::Reflow(nsIPresContext*          aPresContext,
   aMetrics.ascent = 0;
   aMetrics.descent = 0;
 
-  nscoord width = 0;
-  nscoord height = 0;
-
   const nsStylePosition*  position;
   GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
 
   PRUint8 type = GetType();
   switch (type) {
   case TYPE_WORD:
-    if (0 != width) {
-      if (eStyleUnit_Coord == position->mWidth.GetUnit()) {
-        aMetrics.width = position->mWidth.GetCoordValue();
-      }
-    }
     break;
 
   case TYPE_LINE:

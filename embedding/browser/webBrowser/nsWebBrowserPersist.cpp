@@ -61,10 +61,10 @@ struct URIData
 };
 
 nsWebBrowserPersist::nsWebBrowserPersist() :
-    mFirstAndOnlyUse(PR_TRUE),
     mFileCounter(1),
     mFrameCounter(1),
-    mTaskCounter(0)
+    mTaskCounter(0),
+    mFirstAndOnlyUse(PR_TRUE)
 {
     NS_INIT_REFCNT();
 }

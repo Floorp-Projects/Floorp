@@ -862,7 +862,6 @@ nsSplitterFrameInner::MouseDown(nsIDOMEvent* aMouseEvent)
     nsIFrame* childFrame = nsnull;
     childBox->GetFrame(&childFrame);
 
-    nsCOMPtr<nsIContent> content;
     childFrame->GetContent(getter_AddRefs(content));
     nsCOMPtr<nsIAtom> atom;
     nsresult rv;

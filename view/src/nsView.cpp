@@ -450,10 +450,11 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
     mViewManager->GetDeviceContext(dx);
     dx->GetAppUnitsToDevUnits(t2p);
     NS_RELEASE(dx);
-
+#if 0
     /* You would think that doing a move and resize all in one operation would
      * be faster but its not. Something is really broken here. So I'm comenting 
      * this out for now 
+     */
     // if we moved and resized do it all in one shot
     if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED && mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
     {
@@ -483,7 +484,7 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
          return NS_OK;
       }
     } 
-  */
+#endif
     // if we just resized do it
     if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
     {
@@ -495,7 +496,9 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       mWindow->GetBounds(bounds);
 
       if (bounds.width != width || bounds.height != bounds.height) {
+#ifdef DEBUG_evaughan
         printf("%d) Resize(%d,%d)\n", this, width, height);
+#endif
         mWindow->Resize(width,height, PR_TRUE);
       }
 
@@ -517,7 +520,9 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       mWindow->GetBounds(bounds);
       
       if (bounds.x != x || bounds.y != y) {
+#ifdef DEBUG_evaughan
          printf("%d) Move(%d,%d)\n", this, x, y);
+#endif
          mWindow->Move(x,y);
       }
 

@@ -380,7 +380,6 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
       PRBool possibleRedraw = PR_FALSE;
 
       if (sizeChanged) {
-         nsSize maxSize;
          child->GetMaxSize(aState, maxSize);
 
          // make sure the size is in our max size.
@@ -1146,7 +1145,6 @@ nsSprocketLayout::ComputeChildSizes(nsIBox* aBox,
 
   // ---- once we have removed and min and max issues just stretch us out in the remaining space
   // ---- or shrink us. Depends on the size remaining and the spring constants
-  nscoord oldsize = aGivenSize;
   aGivenSize = 0;
   boxSizes = aBoxSizes;
   computedBoxSizes = aComputedBoxSizes;

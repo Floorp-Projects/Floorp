@@ -379,7 +379,6 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
         nsCOMPtr<nsIURI> uri;
         PRBool abortProcess = PR_FALSE;
         aChannel->GetURI(getter_AddRefs(uri));
-        nsCOMPtr<nsIStreamListener> contentStreamListener;
         nsCOMPtr<nsIExternalHelperAppService> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
         if (helperAppService)
         {

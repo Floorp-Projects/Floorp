@@ -746,7 +746,6 @@ BasicTableLayoutStrategy::ComputeNonPctColspanWidths(PRInt32           aWidthInd
                                 colFrame->GetWidth(aWidthIndex + NUM_MAJOR_WIDTHS));
       colWidth = PR_MAX(colWidth, minWidth);
 
-      nscoord numeratorMin     = 0;
       nscoord numeratorPct     = 0;
       nscoord numeratorFix     = 0;
       nscoord numeratorAutoDes = 0;
@@ -1039,7 +1038,6 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
         colFrame->SetWidth(MIN_PRO, colFrame->GetMinWidth());
       }
       else if ((rawProp > 0) && (rawPropTotal > 0)) {
-        nscoord desWidth = colFrame->GetDesWidth();
         nscoord propWidth = NSToCoordRound( ((float)maxPropTotal) * ((float)rawProp) / (float)rawPropTotal ) ;
         propWidth = nsTableFrame::RoundToPixel(propWidth, aPixelToTwips);
         colFrame->SetWidth(MIN_PRO, PR_MAX(propWidth, colFrame->GetMinWidth()));
@@ -1329,7 +1327,6 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
     } // end for (colX ..
 
     float   perTotal         = 0.0f; // total of percentage constrained cols and/or cells in cols
-    nscoord fixWidthTotal    = 0;    // total of fixed widths of all cols
     PRInt32 numPerCols       = 0;    // number of colums that have percentage constraints
     nscoord fixDesTotal      = 0;    // total of fix or des widths of cols 
     nscoord fixDesTotalNoPct = 0;    // total of fix or des widths of cols without pct
@@ -1435,8 +1432,8 @@ BasicTableLayoutStrategy::AssignPctColumnWidths(const nsHTMLReflowState& aReflow
     for (rowX = 0; (rowX < numRows) && !done; rowX++) {
       PRBool originates;
       PRInt32 colSpan;
-      nsTableCellFrame* cellFrame = mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
-      if (!originates || (1 == colSpan)) {
+      mTableFrame->GetCellInfoAt(rowX, colX, &originates, &colSpan);
+      if (!originates || 1 == colSpan) {
         continue;
       }
       // determine if the cell spans cols which have a pct value
@@ -1599,7 +1596,6 @@ void BasicTableLayoutStrategy::CalculateTotals(PRInt32* aTotalCounts,
         aTotalWidths[FIX] += PR_MAX(fix, minCol);
         aDupedWidths[FIX] += minCol;
       }
-      nscoord desCon = colFrame->GetWidth(DES_CON);
       if (fixAdj > 0) {
         if (fixAdj > fix) {
           aTotalCounts[FIX_ADJ]++;

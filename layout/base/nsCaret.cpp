@@ -75,8 +75,8 @@ nsCaret::nsCaret()
 , mCaretTwipsWidth(-1)
 , mCaretPixelsWidth(1)
 , mVisible(PR_FALSE)
-, mReadOnly(PR_FALSE)
 , mDrawn(PR_FALSE)
+, mReadOnly(PR_FALSE)
 , mShowWhenSelection(PR_FALSE)
 , mLastCaretFrame(nsnull)
 , mLastCaretView(nsnull)
@@ -745,7 +745,6 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
   // coorinates relative to the view we are going to use for drawing
   if (coordType == eRenderingViewCoordinates)
   {
-    nsIView*            startingView = theView;
     nsIScrollableView*  scrollableView = nsnull;
   
     nsPoint             drawViewOffset(0, 0);         // offset to the view we are using to draw

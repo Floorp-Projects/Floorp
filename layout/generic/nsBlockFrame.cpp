@@ -2350,7 +2350,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 // XXX_perf: This can be done incrementally
   nscoord xa = 0, ya = 0, xb = aMetrics.width, yb = aMetrics.height;
   if (NS_STYLE_OVERFLOW_HIDDEN != aReflowState.mStyleDisplay->mOverflow) {
-    nsLineBox* line = mLines;
+    line = mLines;
     while (nsnull != line) {
       // Compute min and max x/y values for the reflowed frame's
       // combined areas

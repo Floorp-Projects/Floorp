@@ -102,7 +102,6 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
   // get the screen object and its width/height
   // XXXRight now this will only get the primary monitor.
 
-  nsresult ignore;
   if (!mScreenManager)
     mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
   if (!mScreenManager) {

@@ -353,7 +353,7 @@ get_JSPrincipals_from_java_caller_impl(JNIEnv *pJNIEnv, JSContext *pJSContext, v
 }
 
 static jobject PR_CALLBACK
-get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
+get_java_wrapper_impl(JNIEnv *pJNIEnv, jint a_jsobject)
 {
     nsresult       err    = NS_OK;
     jobject  pJSObjectWrapper = NULL;
@@ -361,7 +361,7 @@ get_java_wrapper_impl(JNIEnv *pJNIEnv, jint jsobject)
     if (pJVMMgr != NULL) {
       nsIJVMPlugin* pJVMPI = pJVMMgr->GetJVMPlugin();
       if (pJVMPI != NULL) {
-         err = pJVMPI->GetJavaWrapper(pJNIEnv, jsobject, &pJSObjectWrapper);
+         err = pJVMPI->GetJavaWrapper(pJNIEnv, a_jsobject, &pJSObjectWrapper);
          //pJVMPI->Release();
       }
       pJVMMgr->Release();
@@ -421,8 +421,6 @@ enter_js_from_java_impl(JNIEnv *jEnv, char **errp,
 
     if (pNSISecurityContext != nsnull) {
         if (pJSCX) {
-            JSPrincipals *jsprin = nsnull;
-
             nsCOMPtr<nsIScriptContext> scriptContext = (nsIScriptContext*)JS_GetContextPrivate(pJSCX);
             if (scriptContext) {
                 nsCOMPtr<nsIScriptGlobalObject> global = scriptContext->GetGlobalObject();

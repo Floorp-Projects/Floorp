@@ -230,7 +230,6 @@ GetHTMLSelectElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIDOMNode* prop;
         nsIDOMNSHTMLSelectElement* b;
         if (NS_OK == a->QueryInterface(kINSHTMLSelectElementIID, (void **)&b)) {
-          nsresult result = NS_OK;
           rv = b->Item(JSVAL_TO_INT(id), &prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object

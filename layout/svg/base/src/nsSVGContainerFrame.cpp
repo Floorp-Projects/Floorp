@@ -176,7 +176,6 @@ nsSVGContainerFrame::Reflow(nsIPresContext*   aPresContext,
 
       nsIFrame * child = mFrames.FirstChild();
       while (child != nsnull) {
-        nsRect rect;
         child->GetRect(rect);
         nsCOMPtr<nsISVGFrame> svgFrame = do_QueryInterface(child);
         if (svgFrame) {

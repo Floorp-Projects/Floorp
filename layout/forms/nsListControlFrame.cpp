@@ -3068,7 +3068,6 @@ nsListControlFrame::IsTargetOptionDisabled(PRBool &aIsDisabled)
 NS_IMETHODIMP 
 nsListControlFrame::IsOptionDisabled(PRInt32 anIndex, PRBool &aIsDisabled)
 {
-  PRBool isOptDisabled = PR_FALSE;
   nsCOMPtr<nsIDOMHTMLCollection> options = getter_AddRefs(GetOptions(mContent));
   nsCOMPtr<nsIDOMHTMLOptionElement> optionElement;
   if (options) {
