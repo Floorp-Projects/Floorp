@@ -52,6 +52,7 @@
         onunload="ComposeUnload()"
         onload="ComposeLoad()"
         onclose="return DoCommandClose()"
+        onfocus="EditorOnFocus()"
         title="&msgComposeWindow.title;"
         windowtype="msgcompose"
         width="640" height="480"

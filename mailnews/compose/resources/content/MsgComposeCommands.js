@@ -191,8 +191,9 @@ var gComposeRecyclingListener = {
     document.getElementById("format_auto").setAttribute("checked", "true");
     document.getElementById("priority_normal").setAttribute("checked", "true");
 
-    //Reset editor attributes
+    //Reset editor
     EditorResetFontAndColorAttributes();
+    EditorCleanup();
 
     //Release the nsIMsgComposeParams object
     if (window.arguments && window.arguments[0])
@@ -1424,6 +1425,9 @@ function ComposeLoad()
 function ComposeUnload()
 {
   dump("\nComposeUnload from XUL\n");
+
+  EditorCleanup();
+
   RemoveMessageComposeOfflineObserver();
   RemoveDirectoryServerObserver(null);
   if (gCurrentIdentity)
