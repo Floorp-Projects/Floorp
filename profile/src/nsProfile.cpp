@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+
 #include "nsIProfile.h"
 #include "nsIPref.h"
 
@@ -816,6 +817,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
 					// Persistency
 					nsPersistentFileDescriptor descriptor(profileDir);
 					char* profileDirString = nsnull;
+					profileDirString = nsCRT::strdup(profileDir.GetCString());
 					nsOutputStringStream stream(profileDirString);
 					stream << descriptor;
     
@@ -844,7 +846,7 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
 							printf("NULL value received for directory name.\n" );
 						#endif
 					}
-					delete [] profileDirString;
+					nsCRT::free(profileDirString);
 				}
 				else
 				{
