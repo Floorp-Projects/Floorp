@@ -6,7 +6,7 @@
         onload="onload()">
     <script type="application/x-javascript">
         <![CDATA[
-            function onload {
+            function onload() {
                 var n = window.arguments[0] - 1;
                 if ( n ) {
                     // We need to open more windows.
