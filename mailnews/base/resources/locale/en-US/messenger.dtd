@@ -198,13 +198,13 @@ Rights Reserved.
 <!ENTITY headersNormalCmd.accesskey "N">
 <!ENTITY headersBriefCmd.label ".Brief">
 <!ENTITY headersBriefCmd.accesskey "B">
-<!ENTITY bodyMenu.label "Message Body as">
+<!ENTITY bodyMenu.label "Message Body As">
 <!ENTITY bodyMenu.accesskey "O">
 <!ENTITY bodyAllowHTML.label "Original HTML">
 <!ENTITY bodyAllowHTML.accesskey "H">
 <!ENTITY bodySanitized.label "Simple HTML">
 <!ENTITY bodySanitized.accesskey "S">
-<!ENTITY bodyAsPlaintext.label "As Plain Text">
+<!ENTITY bodyAsPlaintext.label "Plain Text">
 <!ENTITY bodyAsPlaintext.accesskey "P">
 <!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">
 <!ENTITY viewAttachmentsInlineCmd.accesskey "A">
