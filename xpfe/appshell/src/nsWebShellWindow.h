@@ -218,9 +218,6 @@ protected:
 
   nsIDOMNode * contextMenuTest;
 
-  nsString mStatus;
-  nsString mDefaultStatus;
-
   nsCOMPtr<nsITimer>      mSPTimer;
   PRBool                  mSPTimerSize, mSPTimerPosition;
   PRLock *                mSPTimerLock;

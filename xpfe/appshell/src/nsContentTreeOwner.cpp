@@ -193,32 +193,30 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewWindow(PRInt32 aChromeFlags,
 
 NS_IMETHODIMP nsContentTreeOwner::SetJSStatus(const PRUnichar* aStatus)
 {
-   nsAutoString status(aStatus);
-
-   if(!status.Length())
-      status = mDefaultStatus;
-
-   nsAutoString statusName("status");
-   NS_ENSURE_SUCCESS(mXULWindow->NotifyObservers(statusName.GetUnicode(), 
-      status.GetUnicode()), NS_ERROR_FAILURE);
-
+   nsCOMPtr<nsIDOMElement> window;
+   mXULWindow->GetDOMElementById("WebBrowserChrome", getter_AddRefs(window));
+   if(window)
+      window->SetAttribute("status", aStatus);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetJSDefaultStatus(const PRUnichar* aStatus)
 {
-   mDefaultStatus = aStatus;
-
-   nsAutoString statusName("defaultStatus");
-   NS_ENSURE_SUCCESS(mXULWindow->NotifyObservers(statusName.GetUnicode(), 
-      aStatus), NS_ERROR_FAILURE);
-
+   nsCOMPtr<nsIDOMElement> window;
+   mXULWindow->GetDOMElementById("WebBrowserChrome", getter_AddRefs(window));
+   if(window)
+      window->SetAttribute("defaultStatus", aStatus);
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetOverLink(const PRUnichar* aLink)
 {
-   return SetJSStatus(aLink);
+   nsCOMPtr<nsIDOMElement> window;
+   mXULWindow->GetDOMElementById("WebBrowserChrome", getter_AddRefs(window));
+   if(window)
+      window->SetAttribute("overLink", aLink);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetWebBrowser(nsIWebBrowser* aWebBrowser)
@@ -441,7 +439,7 @@ NS_IMETHODIMP nsContentTreeOwner::ApplyChromeMask()
       return NS_OK;  // We'll do this later when chrome is loaded
       
    nsCOMPtr<nsIDOMElement> window;
-   mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, getter_AddRefs(window));
+   mXULWindow->GetWindowDOMElement(getter_AddRefs(window));
    NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
    
    mXULWindow->mWindow->ShowMenuBar(mChromeMask & 
@@ -496,8 +494,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
       {
       // Get the window title modifiers
       nsCOMPtr<nsIDOMElement> docShellElement;
-      mXULWindow->GetDOMElementFromDocShell(mXULWindow->mDocShell, 
-         getter_AddRefs(docShellElement));
+      mXULWindow->GetWindowDOMElement(getter_AddRefs(docShellElement));
 
       nsAutoString   contentTitleSetting;
 

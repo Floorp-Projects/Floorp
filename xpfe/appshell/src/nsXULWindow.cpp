@@ -38,6 +38,7 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMXULDocument.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIIOService.h"
 #include "nsIJSContextStack.h"
@@ -182,7 +183,7 @@ NS_IMETHODIMP nsXULWindow::SetPersistence(PRBool aPersistX, PRBool aPersistY,
 
 {
    nsCOMPtr<nsIDOMElement> docShellElement;
-   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   GetWindowDOMElement(getter_AddRefs(docShellElement));
    if(!docShellElement)
       return NS_ERROR_FAILURE;
 
@@ -261,7 +262,7 @@ NS_IMETHODIMP nsXULWindow::GetPersistence(PRBool* aPersistX, PRBool* aPersistY,
    PRBool* aPersistSizeMode)
 {
    nsCOMPtr<nsIDOMElement> docShellElement;
-   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   GetWindowDOMElement(getter_AddRefs(docShellElement));
    if(!docShellElement) 
       return NS_ERROR_FAILURE;
 
@@ -695,7 +696,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
    to do that.
 */
    nsCOMPtr<nsIDOMElement> docShellElement;
-   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   GetWindowDOMElement(getter_AddRefs(docShellElement));
    NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
 
    PRInt32 curX = 0;
@@ -766,7 +767,7 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
 NS_IMETHODIMP nsXULWindow::LoadTitleFromXUL()
 {
    nsCOMPtr<nsIDOMElement> docShellElement;
-   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   GetWindowDOMElement(getter_AddRefs(docShellElement));
    NS_ENSURE_TRUE(docShellElement, NS_ERROR_FAILURE);
 
    nsAutoString windowTitle;
@@ -788,7 +789,7 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
      return NS_ERROR_FAILURE;
 
    nsCOMPtr<nsIDOMElement> docShellElement;
-   GetDOMElementFromDocShell(mDocShell, getter_AddRefs(docShellElement));
+   GetWindowDOMElement(getter_AddRefs(docShellElement));
    if(!docShellElement)
       return NS_ERROR_FAILURE;
 
@@ -857,17 +858,16 @@ NS_IMETHODIMP nsXULWindow::PersistPositionAndSize(PRBool aPosition, PRBool aSize
    return NS_OK;
 }
 
-NS_IMETHODIMP nsXULWindow::GetDOMElementFromDocShell(nsIDocShell* aDocShell,
-   nsIDOMElement** aDOMElement)
+NS_IMETHODIMP nsXULWindow::GetWindowDOMElement(nsIDOMElement** aDOMElement)
 {
-   NS_ENSURE_ARG(aDocShell);
+   NS_ENSURE_STATE(mDocShell);
    NS_ENSURE_ARG_POINTER(aDOMElement);
 
    *aDOMElement = nsnull;
 
    nsCOMPtr<nsIContentViewer> cv;
    
-   aDocShell->GetContentViewer(getter_AddRefs(cv));
+   mDocShell->GetContentViewer(getter_AddRefs(cv));
    if(!cv)
       return NS_ERROR_FAILURE;
 
@@ -884,6 +884,34 @@ NS_IMETHODIMP nsXULWindow::GetDOMElementFromDocShell(nsIDocShell* aDocShell,
    domdoc->GetDocumentElement(aDOMElement);
    if(!*aDOMElement)
       return NS_ERROR_FAILURE;
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::GetDOMElementById(char* aID, nsIDOMElement** aDOMElement)
+{
+   NS_ENSURE_STATE(mDocShell);
+   NS_ENSURE_ARG_POINTER(aDOMElement);
+
+   *aDOMElement = nsnull;
+
+   nsCOMPtr<nsIContentViewer> cv;
+   
+   mDocShell->GetContentViewer(getter_AddRefs(cv));
+   if(!cv)
+      return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
+   if(!docv)   
+      return NS_ERROR_FAILURE;
+
+   nsCOMPtr<nsIDocument> doc;
+   docv->GetDocument(*getter_AddRefs(doc));
+   nsCOMPtr<nsIDOMXULDocument> domdoc(do_QueryInterface(doc));
+   if(!domdoc) 
+      return NS_ERROR_FAILURE;
+   
+   NS_ENSURE_SUCCESS(domdoc->GetElementById(aID, aDOMElement), NS_ERROR_FAILURE);
 
    return NS_OK;
 }
