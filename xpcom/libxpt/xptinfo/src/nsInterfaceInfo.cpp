@@ -178,6 +178,77 @@ nsInterfaceInfo::GetConstant(uint16 index, const nsXPTConstant** constant)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInterfaceInfo::GetInfoForParam(nsXPTParamInfo *param, nsIInterfaceInfo** info)
+{
+
+    NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
+                    "not an interface");
+
+    nsIInterfaceInfoManager* mgr;
+    if(NULL == (mgr = nsInterfaceInfoManager::GetInterfaceInfoManager())) {
+        *info = NULL;
+        return NS_ERROR_FAILURE;
+    }
+
+    // what typelib did the entry come from?
+    XPTHeader *which_header = mInterfaceRecord->which_header;
+    NS_ASSERTION(which_header != NULL, "missing header info assoc'd with II");
+
+    // can't use IID, because it could be null for this entry.
+    char *interface_name;
+
+    // offset is 1-based, so subtract 1 to use in interface_directory.
+    interface_name =
+        which_header->interface_directory[param->type.type.interface - 1].name;
+
+    // does addref.  I'll have to do addreff if I find it through a magic
+    // array walk.
+    nsresult nsr = mgr->GetInfoForName(interface_name, info);
+    if (NS_IS_ERROR(nsr)) {
+        // *info has been set to null by well-behaved GetInfoForName
+        NS_RELEASE(mgr);
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsInterfaceInfo::GetIIDForParam(nsXPTParamInfo* param, nsIID** iid)
+{
+    NS_PRECONDITION(param->GetType().TagPart() == nsXPTType::T_INTERFACE,
+                    "not an interface");
+
+    nsIInterfaceInfoManager* mgr;
+    if(NULL == (mgr = nsInterfaceInfoManager::GetInterfaceInfoManager())) {
+        *iid = NULL;
+        return NS_ERROR_FAILURE;
+    }
+
+    // what typelib did the entry come from?
+    XPTHeader *which_header = mInterfaceRecord->which_header;
+    NS_ASSERTION(which_header != NULL, "header missing?");
+
+    // can't use IID, because it could be null for this entry.
+    char *interface_name;
+
+    // offset is 1-based, so subtract 1 to use in interface_directory.
+    interface_name =
+        which_header->interface_directory[param->type.type.interface - 1].name;
+
+    nsresult nsr = mgr->GetIIDForName(interface_name, iid);
+    if (NS_IS_ERROR(nsr)) {
+        // *iid has been set to NULL by well-behaved GetIIDForName
+        NS_RELEASE(mgr);
+        return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+
+
 #ifdef DEBUG
 #include <stdio.h>
 void

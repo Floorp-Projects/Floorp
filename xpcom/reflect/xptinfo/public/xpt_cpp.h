@@ -109,18 +109,6 @@ public:
         return type.type.argnum;
     }
 
-    // This is not inlined, it is more involved!
-    // If XPTInterfaceDirectoryEntry references remain indexes, then it
-    // may be necessary to pass in a param here indicating which typelib
-    // - or at least XPTInterfaceDirectoryEntry - this particular param
-    // is associated with so that we can find the table this index indexes
-    // and then find the referenced XPTInterfaceDirectoryEntry so that we can
-    // find (or build) the appropriate nsIInterfaceInfo. Simple :)
-    XPTI_EXPORT nsIInterfaceInfo* GetInterface(nsIInterfaceInfo *info) const ;
-
-    // a *little* simpler than the above
-    XPTI_EXPORT const nsIID* GetInterfaceIID(nsIInterfaceInfo *info) const ;
-
 private:
     nsXPTParamInfo();   // no implementation
 // NO DATA - this a flyweight wrapper

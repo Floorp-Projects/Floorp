@@ -27,6 +27,8 @@
 
 #include "nsInterfaceRecord.h"
 
+#include "nsInterfaceInfoManager.h"
+
 #ifdef DEBUG
 #include <stdio.h>
 #endif
@@ -50,9 +52,11 @@ class nsInterfaceInfo : public nsIInterfaceInfo
     NS_IMETHOD GetMethodInfo(uint16 index, const nsXPTMethodInfo** info);
     NS_IMETHOD GetConstant(uint16 index, const nsXPTConstant** constant);
 
-    // why constructor public?
-    nsInterfaceInfo(nsInterfaceRecord *record,
-                    nsInterfaceInfo *parent);
+    // Get the interface information or iid associated with a param of some
+    // method in this interface.
+    NS_IMETHOD GetInfoForParam(nsXPTParamInfo* param, nsIInterfaceInfo** info);
+    NS_IMETHOD GetIIDForParam(nsXPTParamInfo* param, nsIID** iid);
+
 public:
     virtual ~nsInterfaceInfo();
 
@@ -61,12 +65,11 @@ public:
 #endif
 
 private:
-    friend nsIInterfaceInfo*
-        nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const;
-    friend const nsIID*
-        nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const;
+    // nsInterfaceInfoManager has access to the constructor.
+    friend class nsInterfaceInfoManager;
 
-    nsInterfaceRecord *getInterfaceRecord() { return mInterfaceRecord; };
+    nsInterfaceInfo(nsInterfaceRecord *record, nsInterfaceInfo *parent);
+
     nsInterfaceRecord *mInterfaceRecord;
     
     nsInterfaceInfo* mParent;

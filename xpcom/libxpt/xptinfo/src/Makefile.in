@@ -28,7 +28,6 @@ CSRCS		= $(NULL)
 
 CPPSRCS		= nsInterfaceInfo.cpp              \
 		  nsInterfaceInfoManager.cpp       \
-		  nsXPTParamInfo.cpp               \
 		  $(NULL)
 
 REQUIRES	= $(MODULE)

@@ -51,11 +51,6 @@ public:
     static nsIAllocator* GetAllocator(nsInterfaceInfoManager* iim = NULL);
 
 private:
-    friend nsIInterfaceInfo*
-        nsXPTParamInfo::GetInterface(nsIInterfaceInfo *info) const;
-    friend const nsIID*
-        nsXPTParamInfo::GetInterfaceIID(nsIInterfaceInfo *info) const;
-
     void initInterfaceTables();
 
     // mapping between names and records
