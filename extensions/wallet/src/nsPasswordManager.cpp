@@ -47,7 +47,8 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
     {
       char * host;
       PRUnichar * user;
-      nsresult rv = SINGSIGN_Enumerate(mHostCount, mUserCount++, &host, &user);
+      PRUnichar * pswd;
+      nsresult rv = SINGSIGN_Enumerate(mHostCount, mUserCount++, &host, &user, &pswd);
       if (NS_FAILED(rv)) {
         return rv;
       }
@@ -55,8 +56,12 @@ class nsPasswordManagerEnumerator : public nsISimpleEnumerator
         mUserCount = 0;
         mHostCount++;
       }
-      nsIPassword *password = new nsPassword(host, user);
+      nsIPassword *password = new nsPassword(host, user, pswd);
+      // note that memory is handed off to "new nsPassword" in a non-xpcom fashion 
       if (password == nsnull) {
+        nsMemory::Free(host);
+        nsMemory::Free(user);
+        nsMemory::Free(pswd);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       *result = password;
@@ -102,8 +107,9 @@ class nsPasswordManagerRejectEnumerator : public nsISimpleEnumerator
         return rv;
       }
 
-      nsIPassword *password = new nsPassword(host, nsnull); /* second argument is not used */
+      nsIPassword *password = new nsPassword(host, nsnull, nsnull); /* only first argument used */
       if (password == nsnull) {
+        nsMemory::Free(host);
         return NS_ERROR_OUT_OF_MEMORY;
       }
       *result = password;

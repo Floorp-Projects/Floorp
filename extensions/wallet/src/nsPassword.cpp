@@ -32,15 +32,17 @@ nsPassword::nsPassword() {
   NS_INIT_REFCNT();
 }
 
-nsPassword::nsPassword(char * host, PRUnichar * user) {
+nsPassword::nsPassword(char * host, PRUnichar * user, PRUnichar * pswd) {
   passwordHost = host;
   passwordUser = user;
+  passwordPswd = pswd;
   NS_INIT_REFCNT();
 }
 
 nsPassword::~nsPassword(void) {
   CRTFREEIF(passwordHost);
   CRTFREEIF(passwordUser);
+  CRTFREEIF(passwordPswd);
 }
 
 NS_IMETHODIMP nsPassword::GetHost(char * *aHost) {
@@ -54,6 +56,14 @@ NS_IMETHODIMP nsPassword::GetHost(char * *aHost) {
 NS_IMETHODIMP nsPassword::GetUser(PRUnichar * *aUser) {
   if (passwordUser) {
     *aUser = (PRUnichar *) nsMemory::Clone(passwordUser, 2*(nsCRT::strlen(passwordUser) + 1));
+    return NS_OK;
+  }
+  return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP nsPassword::GetPassword(PRUnichar * *aPswd) {
+  if (passwordPswd) {
+    *aPswd = (PRUnichar *) nsMemory::Clone(passwordPswd, 2*(nsCRT::strlen(passwordPswd) + 1));
     return NS_OK;
   }
   return NS_ERROR_NULL_POINTER;

@@ -2642,7 +2642,8 @@ SINGSIGN_UserCount(PRInt32 host) {
 
 PUBLIC nsresult
 SINGSIGN_Enumerate
-    (PRInt32 hostNumber, PRInt32 userNumber, char **host, PRUnichar ** user) {
+    (PRInt32 hostNumber, PRInt32 userNumber, char **host,
+     PRUnichar ** user, PRUnichar ** pswd) {
 
   if (hostNumber > SINGSIGN_HostCount() || userNumber > SINGSIGN_UserCount(hostNumber)) {
     return NS_ERROR_FAILURE;
@@ -2661,7 +2662,8 @@ SINGSIGN_Enumerate
 
   /* first non-password data item for user is the username */
   PRInt32 dataCount = userStruct->signonData_list.Count();
-  for (PRInt32 k=0; k<dataCount; k++) {
+  PRInt32 k;
+  for (k=0; k<dataCount; k++) {
     data = NS_STATIC_CAST(si_SignonDataStruct *, userStruct->signonData_list.ElementAt(k));
     if (!(data->isPassword)) {
       break;
@@ -2674,6 +2676,25 @@ SINGSIGN_Enumerate
     return NS_ERROR_FAILURE;
   }
   if (!(*user = userName.ToNewUnicode())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  /* first password data item for user is the password */
+  for (k=0; k<dataCount; k++) {
+    data = NS_STATIC_CAST(si_SignonDataStruct *, userStruct->signonData_list.ElementAt(k));
+    if ((data->isPassword)) {
+      break;
+    }
+  }
+
+  nsAutoString passWord;
+  if (NS_FAILED(si_Decrypt(data->value, passWord))) {
+    /* don't display saved signons if user couldn't unlock the database */
+    Recycle(*user);
+    return NS_ERROR_FAILURE;
+  }
+  if (!(*pswd = passWord.ToNewUnicode())) {
+    Recycle(*user);
     return NS_ERROR_OUT_OF_MEMORY;
   }
   return NS_OK;

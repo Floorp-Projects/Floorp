@@ -36,13 +36,14 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPASSWORD
 
-  nsPassword(char * host, PRUnichar * user);
+  nsPassword(char * host, PRUnichar * user, PRUnichar * pswd);
   nsPassword();
   virtual ~nsPassword(void);
   
 protected:
   char * passwordHost;
   PRUnichar * passwordUser;
+  PRUnichar * passwordPswd;
 };
 
 #endif /* nsPassword_h__ */
