@@ -519,7 +519,7 @@ nsPrefMigration::CreateNewUser5Tree(char* oldProfilePath, char* newProfilePath)
   char* prefsFile;
   
   NS_ASSERTION((PL_strlen(PREF_FILE_NAME_IN_4x) > 0), "don't know how to migrate your platform");
-  if (PL_strlen(PREF_FILE_NAME_IN_4x) > 0) {
+  if (PL_strlen(PREF_FILE_NAME_IN_4x) == 0) {
     return NS_ERROR_UNEXPECTED;
   }
       

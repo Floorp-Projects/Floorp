@@ -2211,8 +2211,6 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 
 	nsresult rv = NS_OK;
 
-#if defined(XP_PC) || defined(XP_MAC)
-
 #if defined(DEBUG_profile)
 	printf("Inside Migrate Profile routine.\n" );
 #endif
@@ -2328,8 +2326,6 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 			}
 		}
 	}
-
-#endif
 
 	return rv;
 }
