@@ -464,6 +464,17 @@ function delayedStartup()
   gFormFillPrefListener.toggleFormFill();
 
   updateHomeTooltip();
+  
+  // Initialize Plugin Overrides
+  try {
+    var types = gPrefService.getCharPref("browser.download.pluginOverrideTypes");
+    types = types.split(",");
+    
+    var catman = Components.classes["@mozilla.org/categorymanager;1"].getService(Components.interfaces.nsICategoryManager);
+    for (var i = 0; i < types.length; ++i)
+      catman.deleteCategoryEntry("Gecko-Content-Viewers", types[i], false);
+  }
+  catch (e) { }
 }
 
 function Shutdown()
@@ -3413,7 +3424,7 @@ nsContextMenu.prototype = {
     },
     // Save URL of clicked-on link.
     saveLink : function () {
-        saveURL( this.linkURL(), this.linkText(), null, true );
+        saveURL( this.linkURL(), this.linkText(), null, true, true );
     },
     // Save URL of clicked-on image.
     saveImage : function () {
