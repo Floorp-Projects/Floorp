@@ -22,6 +22,7 @@
  */
 
 #include  <stdio.h>
+#include  <string.h>
 #include "nscore.h"
 
 //defines and includes for previous installation cleanup process
@@ -107,6 +108,8 @@ NS_gtk_alert(char *aMessage, char *aTitle, char *aOKBtnText)
 
     alertDlg = gtk_dialog_new();
     msgLabel = gtk_label_new(aMessage);
+    if (msgLabel)
+      gtk_label_set_line_wrap(GTK_LABEL(msgLabel), TRUE);
     okBtn = gtk_button_new_with_label(okBtnText);
     packerLbl = gtk_packer_new();
     packerBtn = gtk_packer_new();
@@ -159,28 +162,35 @@ NS_gtk_alert(char *aMessage, char *aTitle, char *aOKBtnText)
 #endif //MOZ_WIDGET_GTK
 
 
+// The maximum allowed length of aMessage is 255 characters!
 void ShowOSAlert(char* aMessage)
 {
 #ifdef DEBUG_dbragg
 printf("\n****Inside ShowOSAlert ***\n");	
 #endif 
 
+    const PRInt32 max_len = 255;
+    char message_copy[max_len+1] = { 0 };
+    PRInt32 input_len = strlen(aMessage);
+    PRInt32 copy_len = (input_len > max_len) ? max_len : input_len;
+    strncpy(message_copy, aMessage, copy_len);
+    message_copy[copy_len] = 0;
+
 #if defined (XP_WIN)
-    MessageBox(NULL, aMessage, NULL, MB_OK | MB_ICONERROR | MB_SETFOREGROUND );
+    MessageBox(NULL, message_copy, NULL, MB_OK | MB_ICONERROR | MB_SETFOREGROUND );
 #elif (XP_MAC)
     short buttonClicked;
-    StandardAlert(kAlertStopAlert, c2pstr(aMessage), nil, nil, &buttonClicked);
+    StandardAlert(kAlertStopAlert, c2pstr(message_copy), nil, nil, &buttonClicked);
 #elif defined (MOZ_WIDGET_GTK)
-    NS_gtk_alert(aMessage, NULL, "OK");
+    NS_gtk_alert(message_copy, NULL, "OK");
 #elif defined (XP_OS2)
     HAB hab = WinInitialize(0);
     HMQ hmq = WinCreateMsgQueue(hmq,0);
-    WinMessageBox( HWND_DESKTOP, HWND_DESKTOP, aMessage, "", 0, MB_OK);
+    WinMessageBox( HWND_DESKTOP, HWND_DESKTOP, message_copy, "", 0, MB_OK);
     WinDestroyMsgQueue(hmq);
     WinTerminate(hab);
-#else
-    fprintf(stdout, "%s\n", aMessage);
 #endif
-
+    // It can't hurt to display the message on the console in any case,
+    // even if we have already tried to display it in a GUI window.
+    fprintf(stdout, "%s\n", aMessage);
 }
-
