@@ -42,6 +42,8 @@
 
 #include "nsIStringBundle.h"
 #include "nsILocale.h"
+#include "nsIFileLocator.h"
+#include "nsFileLocations.h"
 
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -56,6 +58,9 @@ static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 //static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
+
+static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
+static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 #include "htmldlgs.h"
 #include "prlong.h"
@@ -724,14 +729,25 @@ Wallet_BadKey() {
   return keyFailure;
 }
 
+PUBLIC nsFileSpec Wallet_ProfileDirectory(char * file) {
+  nsresult rv;
+  nsIFileLocator* locator = nsnull;
+  rv = nsServiceManager::GetService
+    (kFileLocatorCID, kIFileLocatorIID, (nsISupports**)&locator);
+  if (NS_FAILED(rv) || !locator)
+    return NULL;
+  nsFileSpec dirSpec;
+  rv = locator->GetFileLocation
+     (nsSpecialFileSpec::App_UserProfileDirectory50, &dirSpec);
+  nsServiceManager::ReleaseService(kFileLocatorCID, locator);
+  if (NS_FAILED(rv))
+    return NULL;
+  return dirSpec+file;
+}
+
 PRIVATE PRBool
 wallet_KeyExists() {
-  nsSpecialSystemDirectory keyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  keyFile += "res";
-//  keyFile += "wallet";
-  keyFile += "key";
-  nsInputFileStream strm(keyFile);
-
+  nsInputFileStream strm(Wallet_ProfileDirectory("key"));
   if (!strm.is_open()) {
     return PR_FALSE;
   } else {
@@ -768,11 +784,6 @@ Wallet_SetKey(PRBool newkey) {
   }
   Wallet_RestartKey();
 
-  nsSpecialSystemDirectory keyFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  keyFile += "res";
-//  keyFile += "wallet";
-  keyFile += "key";
-
   /* verify this with the saved key */
   if (newkey || !wallet_KeyExists()) {
 
@@ -781,7 +792,7 @@ Wallet_SetKey(PRBool newkey) {
      * In either case we need to (re)create and re(write) the file.
      */
 
-    nsOutputFileStream strm2(keyFile);
+    nsOutputFileStream strm2(Wallet_ProfileDirectory("key"));
     if (!strm2.is_open()) {
       keyFailure = TRUE;
       *key = '\0';
@@ -802,6 +813,7 @@ Wallet_SetKey(PRBool newkey) {
     strm2.close();
     Wallet_RestartKey();
     keySet = TRUE;
+    keyFailure = FALSE;
     return TRUE;
 
   } else {
@@ -813,7 +825,7 @@ Wallet_SetKey(PRBool newkey) {
      * is why the following code reads a character and immediately after the read
      * checks for eof()
      */
-    nsInputFileStream strm(keyFile);
+    nsInputFileStream strm(Wallet_ProfileDirectory("key"));
     Wallet_RestartKey();
     char* p = key+1;
     while (*p) {
@@ -836,6 +848,7 @@ Wallet_SetKey(PRBool newkey) {
     if (rv) {
       Wallet_RestartKey();
       keySet = TRUE;
+      keyFailure = FALSE;
       return TRUE;
     } else {
       keyFailure = TRUE;
@@ -918,11 +931,7 @@ wallet_WriteToFile(char* filename, XP_List* list, PRBool obscure) {
   }
 
   /* open output stream */
-  nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  walletFile += "res";
-//  walletFile += "wallet";
-  walletFile += filename;
-  nsOutputFileStream strm(walletFile);
+  nsOutputFileStream strm(Wallet_ProfileDirectory(filename));
   if (!strm.is_open()) {
     NS_ERROR("unable to open file");
     return;
@@ -964,11 +973,7 @@ wallet_ReadFromFile
     (char* filename, XP_List*& list, PRBool obscure, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
-  nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  walletFile += "res";
-//  walletFile += "wallet";
-  walletFile += filename;
-  nsInputFileStream strm(walletFile);
+  nsInputFileStream strm(Wallet_ProfileDirectory(filename));
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
     return;
@@ -1049,11 +1054,7 @@ wallet_ReadFromURLFieldToSchemaFile
     (char* filename, XP_List*& list, PlacementType placement = DUP_AFTER) {
 
   /* open input stream */
-  nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-  walletFile += "res";
-//  walletFile += "wallet";
-  walletFile += filename;
-  nsInputFileStream strm(walletFile);
+  nsInputFileStream strm(Wallet_ProfileDirectory(filename));
   if (!strm.is_open()) {
     /* file doesn't exist -- that's not an error */
     return;
@@ -1145,11 +1146,7 @@ wallet_FetchFromNetCenter(char* from, char* to) {
       if (NS_SUCCEEDED(rv)) {
 
         /* open output file */
-        nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-        walletFile += "res";
-//        walletFile += "wallet";
-        walletFile += to;
-        nsOutputFileStream strm(walletFile);
+        nsOutputFileStream strm(Wallet_ProfileDirectory(to));
         if (!strm.is_open()) {
           NS_ERROR("unable to open file");
         } else {
@@ -1962,11 +1959,8 @@ wallet_PostEdit() {
     *separator = BREAK;
 
     /* open SchemaValue file */
-    nsSpecialSystemDirectory walletFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    walletFile += "res";
-//    walletFile += "wallet";
-    walletFile += "SchemaValue.tbl";
-    nsOutputFileStream strm(walletFile);
+    nsOutputFileStream strm(Wallet_ProfileDirectory("SchemaValue.tbl"));
+
     if (!strm.is_open()) {
       NS_ERROR("unable to open file");
       delete []cookies;

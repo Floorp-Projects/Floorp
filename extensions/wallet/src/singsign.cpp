@@ -324,6 +324,8 @@ extern PRBool Wallet_BadKey();
 extern PRBool Wallet_SetKey(PRBool newkey);
 extern char * Wallet_Localize(char * genericString);
 
+extern nsFileSpec Wallet_ProfileDirectory(char * file);
+
 void
 si_RestartKey() {
   Wallet_RestartKey();
@@ -1730,20 +1732,11 @@ SI_LoadSignonData(PRBool fullLoad) {
 #endif
 
     /* open the signon file */
-    nsSpecialSystemDirectory signonFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    signonFile += "res";
-//  signonFile += "wallet";
-    signonFile += "signon.tbl";
-    nsInputFileStream strm(signonFile);
+    nsInputFileStream strm(Wallet_ProfileDirectory("signon.tbl"));
     if (!strm.is_open()) {
       return -1;
     }
-
-    nsSpecialSystemDirectory signonFilex(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    signonFilex += "res";
-//  signonFilex += "wallet";
-    signonFilex += "signonx.tbl";
-    nsInputFileStream strmx(signonFilex);
+    nsInputFileStream strmx(Wallet_ProfileDirectory("signonx.tbl"));
     if (!strmx.is_open()) {
       return -1;
     }
@@ -2064,6 +2057,16 @@ si_SaveSignonDataLocked() {
         return(-1);
     }
 
+    si_RestartKey();
+    while (!si_SetKey()) {
+        if (!si_GetUsingDialogsPref()) {
+          return 1;
+        } else if (!MyFE_Confirm("incorrect key -- do you want to try again?")) {
+            MyFE_Confirm("Key failure -- password file will not be opened");
+            return 1;
+        }
+    }
+
     /* do not save signons if user didn't know the key */
     if (si_BadKey()) {
         return(-1);
@@ -2076,20 +2079,11 @@ si_SaveSignonDataLocked() {
 #endif
 
     /* do nothing if we are unable to open file that contains signon list */
-    nsSpecialSystemDirectory signonFile(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    signonFile += "res";
-//  signonFile += "wallet";
-    signonFile += "signon.tbl";
-    nsOutputFileStream strm(signonFile);
+    nsOutputFileStream strm(Wallet_ProfileDirectory("signon.tbl"));
     if (!strm.is_open()) {
       return 0;
     }
-
-    nsSpecialSystemDirectory signonFilex(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    signonFilex += "res";
-//  signonFilex += "wallet";
-    signonFilex += "signonx.tbl";
-    nsOutputFileStream strmx(signonFilex);
+    nsOutputFileStream strmx(Wallet_ProfileDirectory("signonx.tbl"));
     if (!strmx.is_open()) {
       return 0;
     }
