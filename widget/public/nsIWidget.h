@@ -358,6 +358,14 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD GetZIndex(PRInt32* aZIndex) = 0;
 
     /**
+     * Position this widget just behind the given widget. (Used to
+     * control z-order for top-level widgets. Get/SetZIndex by contrast
+     * control z-order for child widgets of other widgets.)
+     * null aWidget means put on top.
+     */
+    NS_IMETHOD PlaceBehind(nsIWidget *aWidget) = 0;
+
+    /**
      * Minimize, maximize or normalize the window size.
      * Takes a value from nsSizeMode (see nsGUIEvent.h)
      */
