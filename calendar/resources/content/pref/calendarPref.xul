@@ -82,8 +82,7 @@
       */
        
       var _elementIDs = [
-         "dateformat", "weekstarts", "defaultlength", "defaultsnoozelength",
-         "reloadonlaunch", "categories", "daystarthour", "dayendhour"
+      "dateformat", "defaultlength", "defaultsnoozelength", "reloadonlaunch", "categories"
        ];
    </script>
 
@@ -98,39 +97,15 @@
              </menupopup>
            </menulist>
       </hbox>
-      
-      <hbox>
-         <description>&pref.weekstarts.label;</description>
-         <menulist id="weekstarts" prefstring="calendar.week.start">
-          <menupopup id="weekstarts">
-            <menuitem label="&pref.weekstarts.sunday;"    value="0"/>
-            <menuitem label="&pref.weekstarts.monday;"    value="1"/>
-            <menuitem label="&pref.weekstarts.tuesday;"   value="2"/>
-            <menuitem label="&pref.weekstarts.wednesday;" value="3"/>
-            <menuitem label="&pref.weekstarts.thursday;"  value="4"/>
-            <menuitem label="&pref.weekstarts.friday;"    value="5"/>
-            <menuitem label="&pref.weekstarts.saturday;"  value="6" selected="true"/>
-          </menupopup>
-        </menulist>   
-      </hbox>
-      
-      <hbox align="center">
-         <description>Unless there are events, restrict day view to </description>
-         <textbox id="daystarthour" preftype="int" prefstring="calendar.event.defaultstarthour" maxlength="2" size="2" value="8"/>
-         <description>:00 and </description>
-         <textbox id="dayendhour" preftype="int" prefstring="calendar.event.defaultendhour" maxlength="2" size="2" value="17"/>
-         <description>:00 ( 0 - 24 ) </description>
-      </hbox>
-      
-      <hbox align="center">
+     <hbox align="center">
          <description>&pref.defaultlength.label;</description>
-         <textbox id="defaultlength" preftype="int" prefstring="calendar.event.defaultlength" maxlength="3" size="3"/>
+         <textbox flex="1" id="defaultlength" preftype="int" prefstring="calendar.event.defaultlength" maxlength="3" size="3"/>
          <label value="Minutes"/>
       </hbox>
       
       <hbox align="center">
          <description>&pref.defaultsnoozelength.label;</description>
-         <textbox id="defaultsnoozelength" preftype="int" prefstring="calendar.alarms.defaultsnoozelength" maxlength="3" size="3"/>
+         <textbox flex="1" id="defaultsnoozelength" preftype="int" prefstring="calendar.alarms.defaultsnoozelength" maxlength="3" size="3"/>
          <label value="Minutes"/>
       </hbox>
       
@@ -139,8 +114,8 @@
    <groupbox>
       <caption label="&pref.categories.label;"/>
          <vbox>
-         <textbox id="categories" prefstring="calendar.categories.names"/>
-         <description flex="1">&pref.categories.help.description;</description>
+		 <textbox id="categories" prefstring="calendar.categories.names"/>
+		 <description>&pref.categories.help.description;</description>
       </vbox>
    </groupbox>
 </page>

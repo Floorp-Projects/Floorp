@@ -41,6 +41,7 @@
 <!ENTITY calendar.accesskey         "c" >
 <!ENTITY calendar.publish.label     "Publishing">
 <!ENTITY calendar.alarms.label      "Alarms">
+<!ENTITY calendar.views.label       "Views">
 
 <!ENTITY pref.mainbox.label         "General Settings" >
 <!ENTITY pref.alarmgoesoff.label "When an alarm goes off:">
@@ -60,6 +61,32 @@
 <!ENTITY pref.weekstarts.thursday  "Thursday" >
 <!ENTITY pref.weekstarts.friday    "Friday" >
 <!ENTITY pref.weekstarts.saturday  "Saturday" >
+
+<!ENTITY pref.hour.help.description    "Overwritten if events are outside these times" >
+<!ENTITY pref.hour.00    "00:00" >
+<!ENTITY pref.hour.01    "01:00" >
+<!ENTITY pref.hour.02    "02:00" >
+<!ENTITY pref.hour.03    "03:00" >
+<!ENTITY pref.hour.04    "04:00" >
+<!ENTITY pref.hour.05    "05:00" >
+<!ENTITY pref.hour.06    "06:00" >
+<!ENTITY pref.hour.07    "07:00" >
+<!ENTITY pref.hour.08    "08:00" >
+<!ENTITY pref.hour.09    "09:00" >
+<!ENTITY pref.hour.10    "10:00" >
+<!ENTITY pref.hour.11    "11:00" >
+<!ENTITY pref.hour.12    "12:00" >
+<!ENTITY pref.hour.13    "13:00" >
+<!ENTITY pref.hour.14    "14:00" >
+<!ENTITY pref.hour.15    "15:00" >
+<!ENTITY pref.hour.16    "16:00" >
+<!ENTITY pref.hour.17    "17:00" >
+<!ENTITY pref.hour.18    "18:00" >
+<!ENTITY pref.hour.19    "19:00" >
+<!ENTITY pref.hour.20    "20:00" >
+<!ENTITY pref.hour.21    "21:00" >
+<!ENTITY pref.hour.22    "22:00" >
+<!ENTITY pref.hour.23    "23:00" > 
 
 <!ENTITY pref.categories.label   "Categories" >
 
