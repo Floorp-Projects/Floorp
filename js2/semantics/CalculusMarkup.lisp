@@ -349,7 +349,7 @@
 
 ; Emit markup for the name of a local variable, which must be a symbol.
 (defun depict-local-variable (markup-stream name)
-  (depict-char-style (markup-stream :local-variable)
+  (depict-char-style (markup-stream :variable)
     (depict markup-stream (symbol-lower-mixed-case-name name))))
 
 
