@@ -136,6 +136,7 @@ nsExtensionManager.prototype = {
         getNewestExtensionCallback: function (aResult)
         {
           this._newestID = aResult;
+          dump("*** getNewestExtensionCallback result = " + aResult + "\n");
           
           if (this._newestID != -1)
             proxy.getProperty(this._newestID, "xpiurl");
@@ -144,12 +145,12 @@ nsExtensionManager.prototype = {
         getPropertyCallback: function (aResult)
         {
           dump("*** UPDATE URL = " + aResult + "\n");
-        },
+        }
       };
 
       var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
                                  .getService(Components.interfaces.nsIWebServiceProxyFactory);
-      wspFactory.createProxyAsync("http://localhost:8080/axis/VersionCheck.wsdl", 
+      wspFactory.createProxyAsync("http://localhost:8080/axis/services/VersionCheck?wsdl", 
                                   "VersionCheck", "", true, listener);
     }
     else
@@ -256,6 +257,7 @@ nsExtensionManager.prototype = {
   QueryInterface: function (aIID) 
   {
     if (!aIID.equals(Components.interfaces.nsIExtensionManager) &&
+        !aIID.equals(Components.interfaces.nsIObserver) &&
         !aIID.equals(Components.interfaces.nsISupports))
       throw Components.results.NS_ERROR_NO_INTERFACE;
     return this;
