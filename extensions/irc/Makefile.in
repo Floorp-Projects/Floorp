@@ -36,8 +36,6 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= irc
 
-DIRS		= libbs
-
 JSLIBFILES	= \
 		$(srcdir)/js/lib/utils.js \
 		$(srcdir)/js/lib/events.js \

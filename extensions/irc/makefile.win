@@ -31,10 +31,6 @@
 
 DEPTH   =..\..
 
-DIRS = \
-    libbs \
-    $(NULL)
-
 JSLIBFILES = \
     .\js\lib\utils.js \
     .\js\lib\events.js \
