@@ -30,125 +30,124 @@ Rights Reserved.
 <script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
 <script src="chrome://messenger/content/mime.js"/>
 
-  <toolbox id="msgHeaderView">
-    <toolbar id="viewAllHeadersToolbar" collapsed="true">
-        <box id="viewAllHeadersBox" class="header-part1" orient="vertical" flex="1" collapsed="true"/>
-    </toolbar>
+<box id="msgHeaderView">
 
-    <toolbar id="headerPart1" collapsed="true">
-      <box class="header-splitter" orient="horizontal" flex="1">
-        <box class="header-part1" orient="vertical" flex="1">
-          
-          <box id="SubjectBox" class="headerBox" orient="horizontal" collapsed="true">
-             <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&subjectField.label;" popup="allHeadersPopup"/>
-             </hbox>
-             <html class="headerValue subjectvalue" id="SubjectValue" flex="1">*</html>
-          </box>
-          
-          <box id="FromBox" class="headerBox" orient="horizontal" collapsed="true">
-            <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&fromField.label;" popup="allHeadersPopup"/>
-            </hbox>
-            <html class="headerValue" id="FromValue" flex="1"></html>
-          </box>
-          
-          <box id="ReplyToBox" class="headerBox" orient="horizontal" collapsed="true"> 
-            <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&replyToField.label;" popup="allHeadersPopup"/>
-            </hbox>
-            <html class="headerValue" id="ReplyToValue" flex="1"></html>
-          </box>
+<grid id="collapsedHeaderView" class="header-part1" flex="1" collapsed="true">
+  <columns>
+    <column class="collapsedToggleHdrBox" autostretch="never" >
+      <image id="toggleHeaderView" class="collapsedHeaderViewButton"
+          onclick="ToggleHeaderView();"/>
+    </column>
+      
+    <column id="collapsedsubjectBox" collapsed="true" crop="right" flex="1">
+       <hbox>  
+        <text class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
+        <text id="collapsedsubjectValue" class="collapsedHeaderValue" crop="right" flex="1"/>
+       </hbox>
+		</column>
 
+		<column id="collapsedfromBox" collapsed="true">
+        <hbox>
+          <text class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
+          <mail-emailaddress id="collapsedfromValue" flex="1"/>
+        </hbox>
+		</column>
 
-          <box id = "DateBox" class="headerBox" orient="horizontal" collapsed="true">
-            <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&dateField.label;" popup="allHeadersPopup"/>
-            </hbox>
-            <html class="headerValue" id="DateValue" flex="1">*</html>
-          </box>
-        </box>
+    <column id = "collapseddateBox" collapsed="true">
+      <hbox style="text-align: right;">
+			  <text id="collapseddateValue" class="collapsedHeaderValue"/>
+      </hbox>
+		</column>
 
-        <box id="editMessageBox" class="header-part1" orient="vertical" collapsed="true">
-          <spring class="buttonSpacer"/>
-          <button id="editMessageButton" label="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
-          <spring class="buttonSpacer"/>
-        </box>
+    <column id="collapsedAttachmentBox" hide="true" >
+      <image id="collapsedAttachment" class="collapsedAttachmentButton" onclick="ToggleHeaderView();" />  
+    </column>
+  </columns>
+</grid>
 
-        <box id="attachmentBox" class="header-part1" orient="horizontal" collapsed="true">
-          <spring class="buttonSpacer"/>
-            <vbox>
-               <spring class="buttonTopSpacer"/>
-               <menu id="attachmentMenu" class="attachment-menu">
-                  <button id="attachmentButton" label="1" orient="right"/>
-                  <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright"/>
-               </menu>
-              <spring flex="1"/>
-          </vbox>
-          <spring class="buttonSpacer"/>
-        </box>
-      </box>
-    </toolbar>
+<hbox id="expandedHeaderView" class="header-part1" flex="1" collapsed="true">
+  <vbox flex="1">
+    <hbox id="expandedsubjectBox" class="headerBox" collapsed="true">
+      <hbox class="headerValueBox" autostretch="never">
+        <image id="toggleHeaderView" class="expandHeaderViewButton" 
+          onclick="ToggleHeaderView();"/>
+        <spring flex="1"/>
+        <text class="headerdisplayname" value="&subjectField.label;"/>
+      </hbox>
+        <html id="expandedsubjectValue" class="headerValue subjectvalue" flex="1">*</html>
+		</hbox>
 
-    <toolbar id="headerPart2" collapsed="true">
-      <box class="header-part2" orient="vertical" flex="1">
-        <box id="ToBox" class="headerBox" orient="horizontal" collapsed="true">
-          <hbox class="headerValueBox">
-            <text class="headerdisplayname" value="&toField.label;" popup="allHeadersPopup"/>
-           </hbox>
-            <html class="headerValue" id="ToValueShort" flex="1">
-            <image class="showMoreAddressesButton" id="ToValueToggleIcon" 
-                onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </html>
+    <hbox id="expandedfromBox" class="headerBox" collapsed="true">
+       <hbox class="headerValueBox">
+         <text class="headerdisplayname" value="&fromField.label;"/>
+       </hbox>
+       <mail-emailaddress id="expandedfromValue" flex="1"/>
+		</hbox>
 
-            <html class="headerValue" id="ToValueLong" collapsed="true" flex="1">
-            <image class="showFewerAddressesButton"  
-               onclick="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
-            </html>
-        </box>
+    <hbox id="expandedreply-toBox" class="headerBox" collapsed="true"> 
+      <hbox class="headerValueBox">
+        <text class="headerdisplayname" value="&replyToField.label;"/>
+      </hbox>
+        <mail-emailaddress id="expandedreply-toValue" flex="1"/>
+     </hbox>
+		
+    <hbox id = "expandeddateBox" class="headerBox" collapsed="true">
+      <hbox class="headerValueBox">
+        <text class="headerdisplayname" value="&dateField.label;"/>
+      </hbox>
+			<html id="expandeddateValue" class="headerValue" flex="1">*</html>
+		</hbox>
 
-          <box id="CcBox" class="headerBox" orient="horizontal" collapsed="true">
-            <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&ccField.label;" popup="allHeadersPopup"/>
-            </hbox>
-              <html class="headerValue" id="CcValueShort" flex="1">
-              <image class="showMoreAddressesButton" id="CcValueToggleIcon" 
-                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </html>
+    <hbox id="expandedtoBox" class="headerBox" collapsed="true">
+      <hbox class="headerValueBox" autostretch="never">
+        <image class="showMoreAddressesButton" id="expandedtoToggleIcon" 
+             onclick="ToggleLongShortAddresses('expandedtoToggleIcon','expandedtoValue', 'expandedtoValueLong');"/>
+        <text class="headerdisplayname" value="&toField.label;"/>
+      </hbox>       
+      <html id="expandedtoValue"  class="headerValue" flex="1"/>
+      <html id="expandedtoValueLong" class="headerValue" collapsed="true" flex="1"/>
+		</hbox>
+			
+    <hbox id="expandedccBox" class="headerBox" collapsed="true">
+      <hbox class="headerValueBox" autostretch="never">
+         <image class="showMoreAddressesButton" id="expandedccToggleIcon"
+             onclick="ToggleLongShortAddresses('expandedccToggleIcon', 'expandedccValue', 'expandedccValueLong');"/>
+         <text class="headerdisplayname" value="&ccField.label;"/>
+      </hbox>
+      <html id="expandedccValue" class="headerValue" flex="1"/>
+      <html id="expandedccValueLong" class="headerValue" collapsed="true" flex="1"/>
+	  </hbox>
 
-              <html class="headerValue" id="CcValueLong" collapsed="true" flex="1">
-              <image class="showFewerAddressesButton"  
-                onclick="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
-              </html>
-          </box>
+     <hbox id="expandednewsgroupsBox" class="headerBox" collapsed="true">
+        <hbox class="headerValueBox">
+          <text class="headerdisplayname" value="&newsgroupsField.label;"/>
+        </hbox>
+        <html id="expandednewsgroupsValue" class="headerValue" flex="1">*</html>
+		 </hbox>
 
-          <box id="NewsgroupBox" class="headerBox" orient="horizontal" collapsed="true">
-            <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&newsgroupsField.label;" popup="allHeadersPopup"/>
-            </hbox>
-            <html class="headerValue" id="NewsgroupValue" flex="1">*</html>
-          </box>
+     <hbox id="expandedfollowup-toBox" class="headerBox" collapsed="true">
+       <hbox class="headerValueBox">
+          <text class="headerdisplayname" value="&followupToField.label;"/>
+       </hbox>          
+       <html id="expandedfollowup-toValue" class="headerValue" flex="1">*</html> 
+     </hbox>
+   
+   </vbox>
 
-          <box id="FollowupToBox" class="headerBox" orient="horizontal" collapsed="true">
-            <hbox class="headerValueBox">
-              <text class="headerdisplayname" value="&followupToField.label;" popup="allHeadersPopup"/>
-            </hbox>          
-            <html class="headerValue" id="FollowupToValue" flex="1">*</html> 
-          </box>
+    <hbox id="expandedAttachmentBox" class="header-part1" collapsed = 'true'>
+      <spring class="buttonSpacer"/>
+        <vbox>
+           <spring class="buttonTopSpacer"/>
+           <menu id="attachmentMenu" class="attachment-menu">
+              <button id="attachmentButton" value="1" orient="right"/>
+              <menupopup id="attachmentPopup" popupanchor="bottomright" popupalign="topright">
+              </menupopup>
+           </menu>
+          <spring flex="1"/>
+      </vbox>
+      <spring class="buttonSpacer"/>
+    </hbox>
 
-      </box>
-    </toolbar>
-    
-    <toolbar id="headerPart3" collapsed="true">
-      <box class="header-part3" orient="vertical" flex="1">
-        <box id="UserAgentBox" class="headerBox" orient="horizontal" collapsed="true">
-          <hbox class="headerValueBox">
-            <text class="headerdisplayname" value="&userAgentField.label;" popup="allHeadersPopup"/>
-          </hbox>
-          <html class="headerValue" id="UserAgentValue" flex="1">*</html>
-        </box>
-      </box>
-    </toolbar>
-
-  </toolbox>
+  </hbox>
+ </box>
 </overlay>

@@ -3,15 +3,15 @@
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
  * the License at http://www.mozilla.org/NPL/
- *
+ * 
  * Software distributed under the License is distributed on an "AS
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- *
+ * 
  * The Original Code is Mozilla Communicator client code, released
  * March 31, 1998.
- *
+ * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
@@ -24,35 +24,30 @@
 ////////////////////////////////////////////////////////////////////////////////////
 // Warning: if you go to modify any of these JS routines please get a code review from either
 // hangas@netscape.com or mscott@netscape.com. It's critical that the code in here for displaying
-// the message headers for a selected message remain as fast as possible. In particular,
+// the message headers for a selected message remain as fast as possible. In particular, 
 // right now, we only introduce one reflow per message. i.e. if you click on a message in the thread
-// pane, we batch up all the changes for displaying the header pane (to, cc, attachements button, etc.)
+// pane, we batch up all the changes for displaying the header pane (to, cc, attachements button, etc.) 
 // and we make a single pass to display them. It's critical that we maintain this one reflow per message
-// view in the message header pane.
+// view in the message header pane. 
 //
 ////////////////////////////////////////////////////////////////////////////////////
 
 //NOTE: gMessengerBundle must be defined and set or this Overlay won't work
 
-var msgHeaderParserContractID      = "@mozilla.org/messenger/headerparser;1";
-var abAddressCollectorContractID   = "@mozilla.org/addressbook/services/addressCollecter;1";
+var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
+var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
-var msgPaneData;
-var currentHeaderData = {};
 // gGeneratedViewAllHeaderInfo --> we clear this every time we start to display a new message.
-// the view all header popup will set it when we first generate a view of all the headers. this is
+// the view all header popup will set it when we first generate a view of all the headers. this is 
 // just so it won't try to regenerate all the information every time the user clicks on the popup.
-var gGeneratedViewAllHeaderInfo = false;
+var gGeneratedViewAllHeaderInfo = false; 
 var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
 var gCollectIncoming = false;
 var gCollectNewsgroup = false;
-
-// attachments array
-var attachmentUrlArray = new Array();
-var attachmentDisplayNameArray = new Array();
-var attachmentMessageUriArray = new Array();
+var gCollapsedHeaderViewMode = false;
+gBuildAttachmentsForCurrentMsg = false;
 
 var msgHeaderParser = Components.classes[msgHeaderParserContractID].getService(Components.interfaces.nsIMsgHeaderParser);
 var abAddressCollector = Components.classes[abAddressCollectorContractID].getService(Components.interfaces.nsIAbAddressCollecter);
@@ -60,76 +55,133 @@ var abAddressCollector = Components.classes[abAddressCollectorContractID].getSer
 // All these variables are introduced to keep track of insertion and deletion of the toggle button either
 // as the first node in the list of emails or the last node.
 var numOfEmailsInEnumerator;
-var numOfEmailsInToField = 0;
-var numOfEmailsInCcField = 0;
 
 // var used to determine whether to show the toggle button at the
 // beginning or at the end of a list of emails in to/cc fields.
 var gNumOfEmailsToShowToggleButtonInFront = 15;
 
+// For every possible "view" in the message pane, you need to define the header names you want to
+// see in that view. In addition, include information describing how you want that header field to be
+// presented. i.e. if it's an email address field, if you want a toggle inserted on the node in case
+// of multiple email addresses, etc. We'll then use this static table to dynamically generate header view entries
+// which manipulate the UI. 
+// When you add a header to one of these view lists you can specify the following properties:
+// name: the name of the header. i.e. "to", "subject". This must be in lower case and the name of the
+//       header is used to help dynamically generate ids for objects in the document. (REQUIRED)
+// useToggle:      true if the values for this header are multiple email addresses and you want a 
+//                 a toggle icon to show a short vs. long list (DEFAULT: false)
+// useShortView:   (only works on some fields like From). If the field has a long presentation and a
+//                 short presentation we'll use the short one. i.e. if you are showing the From field and you
+//                 set this to true, we can show just "John Doe" instead of "John Doe <jdoe@netscape.net>".
+//                 (DEFAULT: false)
+// 
+// outputFunction: this is a method which takes a headerEntry (see the definition below) and a header value
+//                 This allows you to provide your own methods for actually determining how the header value
+//                 is displayed. (DEFAULT: updateHeaderValue which just sets the header value on the text node)
+
+// Our first view is the collapsed view. This is very light weight view of the data. We only show a couple
+// fields.
+var gCollapsedHeaderList = [ {name:"subject", outputFunction:updateHeaderValueInTextNode},
+                             {name:"from", useShortView:true, outputFunction:OutputEmailAddresses},
+                             {name:"date", outputFunction:updateHeaderValueInTextNode}];
+
+// We also have an expanded header view. This shows many of your more common (and useful) headers.
+var gExpandedHeaderList = [ {name:"subject"}, 
+                            {name:"from", outputFunction:OutputEmailAddresses},
+                            {name:"reply-to", isEmailAddress:true, outputFunction:OutputEmailAddresses},
+                            {name:"date"},
+                            {name:"to", useToggle:true, outputFunction:OutputEmailAddresses},
+                            {name:"cc", useToggle:true, outputFunction:OutputEmailAddresses},
+                            {name:"newsgroups", outputFunction:OutputNewsgroups},
+                            {name:"followup-to", outputFunction:OutputNewsgroups} ];
+
+// Now, for each view the message pane can generate, we need a global table of headerEntries. These
+// header entry objects are generated dynamically based on the static date in the header lists (see above)
+// and elements we find in the DOM based on properties in the header lists. 
+var gCollapsedHeaderView = {};
+var gExpandedHeaderView = {};
+
+// currentHeaderData --> this is an array of header name and value pairs for the currently displayed message.
+//                       it's purely a data object and has no view information. View information is contained in the view objects.
+//                       for a given entry in this array you can ask for:
+// .headerName ---> name of the header (i.e. 'to'). Always stored in lower case
+// .headerValue --> value of the header "johndoe@netscape.net"
+var currentHeaderData = {};
+
+// For the currently displayed message, we store all the attachment data. When displaying a particular
+// view, it's up to the view layer to extract this attachment data and turn it into something useful.
+// For a given entry in the attachments list, you can ask for the following properties:
+// .contentType --> the content type of the attachment
+// url --> an imap, or mailbox url which can be used to fetch the message
+// uri --> an RDF URI which refers to the message containig the attachment
+// notDownloaded --> boolean flag stating whether the attachment is downloaded or not.
+var currentAttachments = new Array();
+
+// createHeaderEntry --> our constructor method which creates a header Entry 
+// based on an entry in one of the header lists. A header entry is different from a header list.
+// a header list just describes how you want a particular header to be presented. The header entry
+// actually has knowledge about the DOM and the actual DOM elements associated with the header.
+// prefix --> the name of the view (i.e. "collapsed", "expanded")
+// headerListInfo --> entry from a header list.
+function createHeaderEntry(prefix, headerListInfo)
+{
+  var partialIDName = prefix + headerListInfo.name;
+  //dump('enclosingBox id = ' + partialIDName + 'Box' + '\n');
+  this.enclosingBox = document.getElementById(partialIDName + 'Box');
+  //dump(this.enclosingBox + \'n');
+  this.textNode = document.getElementById(partialIDName + 'Value');
+  this.isValid = false;
+
+  if (headerListInfo.useToggle != undefined)
+  {
+    this.useToggle = headerListInfo.useToggle;
+    if (this.useToggle) // find the toggle icon in the document
+    {
+      this.toggleIcon = document.getElementById(partialIDName + 'ToggleIcon');
+      this.longTextNode = document.getElementById(partialIDName + 'Value' + 'Long');
+    }
+  }
+  else
+   this.useToggle = false;
+
+  if (headerListInfo.useShortView != undefined)
+    this.useShortView = headerListInfo.useShortView;
+  else
+    this.useShortView = false;
+
+  if (headerListInfo.outputFunction != undefined)
+    this.outputFunction = headerListInfo.outputFunction;
+  else
+    this.outputFunction = updateHeaderValue;
+}
+
+function initializeHeaderViewTables()
+{
+  // iterate over each header in our header list arrays and create header entries 
+  // for each one. These header entries are then stored in the appropriate header table
+  for (var index = 0; index < gCollapsedHeaderList.length; index++)
+  {
+    gCollapsedHeaderView[gCollapsedHeaderList[index].name] = 
+      new createHeaderEntry('collapsed', gCollapsedHeaderList[index]);
+  }
+
+  for (var index = 0; index < gExpandedHeaderList.length; index++)
+  {
+    var headerName = gExpandedHeaderList[index].name;
+    gExpandedHeaderView[headerName] = new createHeaderEntry('expanded', gExpandedHeaderList[index]);
+  }
+}
 
 function OnLoadMsgHeaderPane()
 {
-   // build a document object for the header pane so we can cache fetches for elements
-  // in a local variable
-  // if you add more document elements with ids to msgHeaderPane.xul, you should add
-  // to this object...
-  msgPaneData = new Object;
-
   // HACK...force our XBL bindings file to be load before we try to create our first xbl widget....
   // otherwise we have problems.
 
   document.loadBindingDocument('chrome://messenger/content/mailWidgets.xml');
 
-  if (msgPaneData)
-  {
-    // First group of headers
-    msgPaneData.SubjectBox = document.getElementById("SubjectBox");
-    msgPaneData.SubjectValue = document.getElementById("SubjectValue");
-    msgPaneData.FromBox   =   document.getElementById("FromBox");
-    msgPaneData.FromValue = document.getElementById("FromValue");
-    msgPaneData.ReplyToBox   =   document.getElementById("ReplyToBox");
-    msgPaneData.ReplyToValue = document.getElementById("ReplyToValue");
+  initializeHeaderViewTables();
 
-    msgPaneData.DateBox = document.getElementById("DateBox");
-    msgPaneData.DateValue = document.getElementById("DateValue");
-
-    // Attachment related elements
-    msgPaneData.AttachmentPopup = document.getElementById("attachmentPopup");
-    msgPaneData.AttachmentButton = document.getElementById("attachmentButton");
-
-  // Edit Draft button
-    msgPaneData.EditMessageButton = document.getElementById("editMessageButton");
-
-    // Second toolbar
-    msgPaneData.ToBox = document.getElementById("ToBox");
-
-    // ToValueShort is the div which shows a shortened number of addresses
-    // on the to line...ToValueLong is a div which shows all of the
-    // addresses on the to line. The same rule applies for ccValueShort/Long
-    msgPaneData.ToValueShort = document.getElementById("ToValueShort");
-    msgPaneData.ToValueLong = document.getElementById("ToValueLong");
-    msgPaneData.ToValueToggleIcon = document.getElementById("ToValueToggleIcon");
-
-    msgPaneData.CcBox = document.getElementById("CcBox");
-    msgPaneData.CcValueShort = document.getElementById("CcValueShort");
-    msgPaneData.CcValueLong = document.getElementById("CcValueLong");
-    msgPaneData.CcValueToggleIcon = document.getElementById("CcValueToggleIcon");
-
-    msgPaneData.NewsgroupBox = document.getElementById("NewsgroupBox");
-    msgPaneData.NewsgroupValue = document.getElementById("NewsgroupValue");
-    msgPaneData.FollowupToBox = document.getElementById("FollowupToBox");
-    msgPaneData.FollowupToValue = document.getElementById("FollowupToValue");
-
-    msgPaneData.UserAgentBox = document.getElementById("UserAgentBox");
-    msgPaneData.UserAgentToolbar = document.getElementById("headerPart3");
-    msgPaneData.UserAgentValue = document.getElementById("UserAgentValue");
-
-    msgPaneData.ViewAllHeadersToolbar = document.getElementById("viewAllHeadersToolbar");
-    msgPaneData.ViewAllHeadersBox = document.getElementById("viewAllHeadersBox");
-  }
-
-  // load any preferences that at are global with regards to
+  // load any preferences that at are global with regards to 
   // displaying a message...
   gNumAddressesToShow = pref.GetIntPref("mailnews.max_header_display_length");
   gShowUserAgent = pref.GetBoolPref("mailnews.headers.showUserAgent");
@@ -138,7 +190,7 @@ function OnLoadMsgHeaderPane()
 }
 
 // The messageHeaderSink is the class that gets notified of a message's headers as we display the message
-// through our mime converter.
+// through our mime converter. 
 
 var messageHeaderSink = {
     onStartHeaders: function()
@@ -152,44 +204,32 @@ var messageHeaderSink = {
 
       ClearCurrentHeaders();
       gGeneratedViewAllHeaderInfo = false;
+      gBuildAttachmentsForCurrentMsg = false;
       ClearAttachmentMenu();
       ClearEditMessageButton();
     },
 
-    onEndHeaders: function()
+    onEndHeaders: function() 
     {
-      // WARNING: This is the ONLY routine inside of the message Header Sink that should
+      // WARNING: This is the ONLY routine inside of the message Header Sink that should 
       // trigger a reflow!
-
+      
       if (this.NotifyClearAddresses != undefined)
         NotifyClearAddresses();
 
-      // (1) clear out the email fields for to, from, cc....
-      ClearEmailField(msgPaneData.FromValue);
-      ClearEmailField(msgPaneData.ReplyToValue);
-
-      // When calling the ClearEmailFieldWithButton, pass in the name of the header too.
-      ClearEmailFieldWithButton(msgPaneData.ToValueShort, "to");
-      ClearEmailFieldWithButton(msgPaneData.CcValueShort, "cc");
-      ClearEmailFieldWithButton(msgPaneData.ToValueLong, "to");
-      ClearEmailFieldWithButton(msgPaneData.CcValueLong, "cc");
-
-      // be sure to re-hide the toggle button, we'll re-enable it later if we need it...
-      msgPaneData.ToValueToggleIcon.setAttribute('collapsed', 'true');
-      msgPaneData.CcValueToggleIcon.setAttribute('collapsed', 'true');
-      //hdrViewSetVisible(msgPaneData.ToValueToggleIcon, false);
-      //hdrViewSetVisible(msgPaneData.CcValueToggleIcon, false);
-
+      ClearHeaderView(gCollapsedHeaderView);
+      ClearHeaderView(gExpandedHeaderView);
+      
       ShowMessageHeaderPane();
       UpdateMessageHeaders();
-      if (gIsEditableMsgFolder)
-        ShowEditMessageButton();
+//      if (gIsEditableMsgFolder)
+//        ShowEditMessageButton();
     },
 
-    handleHeader: function(headerName, headerValue, dontCollectAddress)
+    handleHeader: function(headerName, headerValue, dontCollectAddress) 
     {
       // WARNING: if you are modifying this function, make sure you do not do *ANY*
-      // dom manipulations which would trigger a reflow. This method gets called
+      // dom manipulations which would trigger a reflow. This method gets called 
       // for every rfc822 header in the message being displayed. If you introduce a reflow
       // you'll be introducing a reflow for every time we are told about a header. And msgs have
       // a lot of headers. Don't do it =)....Move your code into OnEndHeaders which is only called
@@ -204,40 +244,375 @@ var messageHeaderSink = {
       currentHeaderData[lowerCaseHeaderName] = foo;
       if (lowerCaseHeaderName == "from")
       {
-        if (headerValue && abAddressCollector &&
-        ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
-          abAddressCollector.collectUnicodeAddress(headerValue);
+        if (headerValue && abAddressCollector && 
+		    ((gCollectIncoming && !dontCollectAddress) || (gCollectNewsgroup && dontCollectAddress)))
+          abAddressCollector.collectUnicodeAddress(headerValue);  
       }
-
+ 
     },
 
-    handleAttachment: function(contentType, url, displayName, uri, notDownloaded)
+    handleAttachment: function(contentType, url, displayName, uri, notDownloaded) 
     {
-        // be sure to escape the display name before we insert it into the
-        // method
-      var commandString = "OpenAttachURL('" + contentType + "', '" + url + "', '" + escape(displayName) + "', '" + uri + "')";
-      var screenDisplayName = displayName;
-
-      if (notDownloaded)
-      {
-        screenDisplayName += " " + gMessengerBundle.getString("notDownloaded");
-      }
-
-      AddAttachmentToMenu(screenDisplayName, commandString);
-
-      var count = attachmentUrlArray.length;
-      // dump ("** attachment count**" + count + "\n");
-      if (count < 0) count = 0;
-      attachmentUrlArray[count] = url;
-      attachmentDisplayNameArray[count] = escape(displayName);
-      attachmentMessageUriArray[count] = uri;
+      var numAttachments = currentAttachments.length;
+      currentAttachments.push (new createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded));
     },
-
+    
     onEndAllAttachments: function()
     {
-        AddSaveAllAttachmentsMenu();
+      // AddSaveAllAttachmentsMenu();
+      if (gCollapsedHeaderViewMode)
+        displayAttachmentsForCollapsedView();
+      else
+        displayAttachmentsForExpandedView();
     }
 };
+
+// flush out any local state being held by a header entry for a given
+// table
+function ClearHeaderView(headerTable)
+{
+  for (index in headerTable)
+  {
+     var headerEntry = headerTable[index];
+     if (headerEntry.useToggle)
+     {
+       ClearEmailField(headerEntry.textNode);
+       if (headerEntry.longTextNode)
+        ClearEmailField(headerEntry.longTextNode);        
+     }
+
+     headerEntry.valid = false;
+  }
+}
+
+// make sure that any valid header entry in the table is collapsed
+function hideHeaderView(headerTable)
+{
+  for (index in headerTable)
+  {
+    headerTable[index].enclosingBox.setAttribute('collapsed', true);
+  }
+}
+
+// make sure that any valid header entry in the table specified is 
+// visible
+function showHeaderView(headerTable)
+{
+  var headerEntry;
+  for (index in headerTable)
+  {
+    headerEntry = headerTable[index];
+    if (headerEntry.valid)
+      headerEntry.enclosingBox.removeAttribute('collapsed');
+    else // if the entry is invalid, always make sure it's collapsed
+      headerEntry.enclosingBox.setAttribute('collapsed', true);
+  }
+}
+
+// make sure the appropriate fields within the currently displayed view header mode
+// are collapsed or visible...
+function updateHeaderViews()
+{
+  if (gCollapsedHeaderViewMode)
+  {
+    showHeaderView(gCollapsedHeaderView);
+    displayAttachmentsForCollapsedView();
+  }
+  else
+  {
+    showHeaderView(gExpandedHeaderView);
+    displayAttachmentsForExpandedView();
+  }
+}
+
+function ToggleHeaderView ()
+{
+  expandedNode = document.getElementById("expandedHeaderView");
+  collapsedNode = document.getElementById("collapsedHeaderView");
+
+  if (gCollapsedHeaderViewMode)
+  {          
+    gCollapsedHeaderViewMode = false;
+    // hide the current view
+    hideHeaderView(gCollapsedHeaderView);
+    // update the current view
+    updateHeaderViews();
+    
+    // now uncollapse / collapse the right views
+    expandedNode.removeAttribute("collapsed");
+    collapsedNode.setAttribute("collapsed", "true");
+  }
+  else
+  {
+    gCollapsedHeaderViewMode = true;
+    // hide the current view
+    hideHeaderView(gExpandedHeaderView);
+    // update the current view
+    updateHeaderViews();
+    
+    // now uncollapse / collapse the right views
+    collapsedNode.removeAttribute("collapsed");
+    expandedNode.setAttribute("collapsed", "true");
+  }  
+}
+
+// Clear Email Field takes the passed in div and removes all the child nodes!
+function ClearEmailField(parentDiv)
+{
+  if (parentDiv)
+  {
+    while (parentDiv.childNodes.length > 0)
+      parentDiv.removeChild(parentDiv.childNodes[0]);
+  }
+}
+
+// default method for updating a header value into a header entry
+function updateHeaderValue(headerEntry, headerValue)
+{
+	headerEntry.textNode.childNodes[0].nodeValue = headerValue;
+}
+
+function updateHeaderValueInTextNode(headerEntry, headerValue)
+{
+  headerEntry.textNode.setAttribute("value", headerValue);
+}
+
+// UpdateMessageHeaders: Iterate through all the current header data we received from mime for this message
+// for each header entry table, see if we have a corresponding entry for that header. i.e. does the particular
+// view care about this header value. if it does then call updateHeaderEntry
+function UpdateMessageHeaders()
+{
+  // iterate over each header we received and see if we have a matching entry in each
+  // header view table...
+
+  for (headerName in currentHeaderData)
+  {
+    var headerField = currentHeaderData[headerName];
+    var headerEntry = gExpandedHeaderView[headerName];
+    if (headerEntry != undefined && headerEntry)
+    {
+      headerEntry.outputFunction(headerEntry, headerField.headerValue);
+      headerEntry.valid = true;
+    }
+    headerEntry = gCollapsedHeaderView[headerName];
+    if (headerEntry != undefined && headerEntry)
+    {
+      headerEntry.outputFunction(headerEntry, headerField.headerValue);
+      headerEntry.valid = true;    
+    }
+  }
+
+  // now update the view to make sure the right elements are visible
+  updateHeaderViews();
+  
+  if (this.FinishEmailProcessing != undefined)
+    FinishEmailProcessing();
+}
+
+function ClearCurrentHeaders()
+{
+  currentHeaderData = {};
+  currentAttachments = new Array();
+}
+
+function ShowMessageHeaderPane()
+{ 
+	/* workaround for 39655 */
+  var messagePaneBox = document.getElementById("messagepanebox");
+  if (messagePaneBox && gFolderJustSwitched)
+    messagePaneBox.setAttribute("collapsed", "true");
+
+  var node;
+  if (gCollapsedHeaderViewMode)
+  {          
+    node = document.getElementById("collapsedHeaderView");
+    if (node)
+      node.removeAttribute("collapsed");
+  }
+  else
+  {
+    node = document.getElementById("expandedHeaderView");
+    if (node)
+      node.removeAttribute("collapsed");
+  }
+
+	/* more workaround for 39655 */
+  if (messagePaneBox && gFolderJustSwitched) 
+  {
+    messagePaneBox.setAttribute("collapsed", "false");
+	  gFolderJustSwitched = false;
+  }
+}
+
+function HideMessageHeaderPane()
+{
+  var node = document.getElementById("collapsedHeaderView");
+  if (node)
+    node.setAttribute("collapsed", "true");
+
+  node = document.getElementById("expandedHeaderView");
+  if (node)
+    node.setAttribute("collapsed", "true");
+}
+
+function OutputNewsgroups(headerEntry, headerValue)
+{ 
+  headerValue = headerValue.replace(/,/g,", ");
+  updateHeaderValue(headerEntry, headerValue);
+}
+
+// OutputEmailAddresses --> knows how to take a comma separated list of email addresses,
+// extracts them one by one, linkifying each email address into a mailto url. 
+// Then we add the link'ified email address to the parentDiv passed in.
+// 
+// defaultParentDiv --> the div to add the link-ified email addresses into. 
+// emailAddresses --> comma separated list of the addresses for this header field
+// includeShortLongToggle --> true if you want to include the ability to toggle between short/long
+// address views for this header field. If true, then pass in a another div which is the div the long
+// view will be added too...
+// useShortView --> if true, we'll only generate the Name of the email address field instead of
+//                        showing the name + the email address.
+
+function OutputEmailAddresses(headerEntry, emailAddresses)
+{
+	if ( !emailAddresses ) return;
+
+  if (msgHeaderParser)
+  {
+    // Count the number of email addresses being inserted into each header
+    // The headers could be "to", "cc", "from"
+    var myEnum = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
+    myEnum = myEnum.QueryInterface(Components.interfaces.nsISimpleEnumerator);
+
+    numOfEmailsInEnumerator = 0;
+    while (myEnum.hasMoreElements())
+    {
+        myEnum.getNext();
+        numOfEmailsInEnumerator++;
+    }
+
+    var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
+    enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
+    var numAddressesParsed = 0;
+    if (enumerator)
+    {
+      var emailAddress = {};
+      var name = {};
+
+      while (enumerator.hasMoreElements())
+      {
+        var headerResult = enumerator.getNext();
+        headerResult = enumerator.QueryInterface(Components.interfaces.nsIMsgHeaderParserResult);
+        
+        // get the email and name fields
+        var addrValue = {};
+        var nameValue = {};
+        var fullAddress = headerResult.getAddressAndName(addrValue, nameValue);
+        emailAddress = addrValue.value;
+        name = nameValue.value;
+
+        // if we want to include short/long toggle views and we have a long view, always add it.
+        // if we aren't including a short/long view OR if we are and we haven't parsed enough
+        // addresses to reach the cutoff valve yet then add it to the default (short) div.
+        if (headerEntry.useToggle && headerEntry.longTextNode)
+        {
+          InsertEmailAddressUnderEnclosingBox(headerEntry, headerEntry.longTextNode, emailAddress, fullAddress, name);
+        }
+        if (!headerEntry.useToggle || (numAddressesParsed < gNumAddressesToShow))
+        {
+          InsertEmailAddressUnderEnclosingBox(headerEntry, headerEntry.textNode, emailAddress, fullAddress, name);
+        }
+        
+        numAddressesParsed++;
+      } 
+    } // if enumerator
+
+    if (headerEntry.useToggle && headerEntry.toggleIcon)
+    {
+      if (numAddressesParsed > gNumAddressesToShow) // make sure the icon is always visible if we have more than the # of addresses to show
+        headerEntry.toggleIcon.removeAttribute('collapsed');
+      else
+       headerEntry.toggleIcon.setAttribute('collapsed', true);
+    }
+  } // if msgheader parser
+}
+
+function updateEmailAddressNode(emailAddressNode, emailAddress, fullAddress, displayName, useShortView)
+{
+  if (useShortView && displayName)
+    emailAddressNode.setAttribute("label", displayName);  
+  else
+    emailAddressNode.setAttribute("label", fullAddress);    
+  emailAddressNode.setTextAttribute("emailAddress", emailAddress);
+  emailAddressNode.setTextAttribute("fullAddress", fullAddress);  
+  emailAddressNode.setTextAttribute("displayName", displayName);  
+  
+  if (this.AddExtraAddressProcessing != undefined)
+    AddExtraAddressProcessing(emailAddress, emailAddressNode);
+}
+
+/* InsertEmailAddressUnderEnclosingBox --> right now all email addresses are borderless titled buttons
+   with formatting to make them look like html anchors. When you click on the button,
+   you are prompted with a popup asking you what you want to do with the email address
+   useShortView --> only show the name (if present) instead of the name + email address
+*/
+   
+function InsertEmailAddressUnderEnclosingBox(headerEntry, parentNode,
+                                             emailAddress, fullAddress, displayName) 
+{
+  var itemInDocument = parentNode;
+  // if this header uses a toggle then it can contain multiple email addresses. In this case,
+  // parentNode is really an HTML div. we need to create a mail-emailaddress element and insert it into
+  // the html div.
+  if ( headerEntry.useToggle)
+  {
+    var item = document.createElement("mail-emailaddress");
+    if (item && parentNode) 
+    { 
+      if (parentNode.childNodes.length >= 1)
+      {
+        var textNode = document.createElement("text");
+        textNode.setAttribute("value", ", ");
+        textNode.setAttribute("class", "emailSeparator");
+        parentNode.appendChild(textNode);
+      }
+  
+      itemInDocument = parentNode.appendChild(item);
+    }
+  } 
+
+  updateEmailAddressNode(itemInDocument, emailAddress, fullAddress, displayName, headerEntry.useShortView);
+}
+
+// ToggleLongShortAddresses is used to toggle between showing
+// all of the addresses on a given header line vs. only the first 'n'
+// where 'n' is a user controlled preference. By toggling on the more/less
+// images in the header window, we'll hide / show the appropriate div for that header.
+
+function ToggleLongShortAddresses(imageID, shortDivID, longDivID)
+{
+  var shortNode = document.getElementById(shortDivID);
+  var longNode = document.getElementById(longDivID);
+  var imageNode = document.getElementById(imageID);
+
+  var nodeToReset;
+
+  // test to see which if short is already hidden...
+  if (shortNode.getAttribute("collapsed") == "true")
+  {        
+    longNode.setAttribute("collapsed", true);
+    shortNode.removeAttribute("collapsed"); 
+    imageNode.setAttribute("class", 'showMoreAddressesButton');
+    nodeToReset = shortNode;
+  }
+  else
+  {
+    shortNode.setAttribute("collapsed", true);
+    longNode.removeAttribute("collapsed"); 
+    imageNode.setAttribute("class", 'showFewerAddressesButton');
+    nodeToReset = longNode;
+  }
+}
 
 function AddNodeToAddressBook (emailAddressNode)
 {
@@ -245,9 +620,9 @@ function AddNodeToAddressBook (emailAddressNode)
   {
     var primaryEmail = emailAddressNode.getAttribute("emailAddress");
     var displayName = emailAddressNode.getAttribute("displayName");
-    window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
-            "",
-            "chrome,titlebar,resizeable=no",
+	  window.openDialog("chrome://messenger/content/addressbook/abNewCardDialog.xul",
+					  "",
+					  "chrome,titlebar,resizeable=no", 
             {primaryEmail:primaryEmail, displayName:displayName });
   }
 }
@@ -265,39 +640,108 @@ function SendMailToNode(emailAddressNode)
   }
 }
 
-function OpenAttachURL(contentType, url, displayName, messageUri)
+// createnewAttachmentInfo --> constructor method for creating new attachment object which goes into the
+// data attachment array.
+function createNewAttachmentInfo(contentType, url, displayName, uri, notDownloaded)
+{
+  this.contentType = contentType;
+  this.url = url;
+  this.displayName = displayName;
+  this.uri = uri;
+  this.notDownloaded = notDownloaded;
+}
+
+function saveAttachment(contentType, url, displayName, messageUri)
+{
+  messenger.saveAttachment(url, displayName, messageUri);
+}
+
+function openAttachment(contentType, url, displayName, messageUri)
 {
   messenger.openAttachment(contentType, url, displayName, messageUri);
 }
 
-function AddAttachmentToMenu(name, oncommand)
+function displayAttachmentsForExpandedView()
 {
-  var popup = document.getElementById("attachmentPopup");
-  if (popup)
+  var numAttachments = currentAttachments.length;
+  if (numAttachments > 0 && !gBuildAttachmentsForCurrentMsg)
   {
-    var item = document.createElement('menuitem');
-    if ( item )
+    for (index in currentAttachments)
     {
-      popup.appendChild(item);
-      item.setAttribute('label', name);
-      item.setAttribute('oncommand', oncommand);
+       var attachment = currentAttachments[index];
+      // be sure to escape the display name before we insert it into the method
+      var commandStringPrefix = "('" + attachment.contentType + "', '" + attachment.url + "', '" + escape(attachment.displayName) + "', '" + attachment.uri + "')";
+      var screenDisplayName = attachment.displayName;
+      if (attachment.notDownloaded)
+      {
+        screenDisplayName += " " + gMessengerBundle.getString("notDownloaded");
+      }
+
+      AddAttachmentToMenu(screenDisplayName, commandStringPrefix);    
     }
+    gBuildAttachmentsForCurrentMsg = true;
+  }
+
+  var attachmentNode = document.getElementById('expandedAttachmentBox');
+  if (numAttachments > 0)  // make sure the attachment button is visible
+    attachmentNode.removeAttribute('collapsed');
+  else
+    attachmentNode.setAttribute('collapsed', true);
+}
+
+function displayAttachmentsForCollapsedView()
+{
+  var numAttachments = currentAttachments.length;
+  var attachmentNode = document.getElementById('collapsedAttachmentBox');
+  if (numAttachments > 0)  // make sure the attachment button is visible
+  {
+    attachmentNode.removeAttribute('hide');
+  }
+  else
+  {
+    attachmentNode.setAttribute('hide', true);
+  }
+}
+
+function AddAttachmentToMenu(name, oncommandPrefix) 
+{ 
+  var popup = document.getElementById("attachmentPopup"); 
+  if (popup)
+  { 
+    var item = document.createElement('menu');
+    if ( item ) 
+    {     
+      item = popup.appendChild(item);
+      item.setAttribute('label', name); 
+
+      var openpopup = document.createElement('menupopup');
+      openpopup = item.appendChild(openpopup);
+
+      var menuitementry = document.createElement('menuitem');     
+      menuitementry.setAttribute('oncommand', 'openAttachment' + oncommandPrefix); 
+      menuitementry.setAttribute('label', "Open"); 
+      menuitementry = openpopup.appendChild(menuitementry);
+
+      var menuseparator = document.createElement('menuseparator');
+      openpopup.appendChild(menuseparator);
+      
+      menuitementry = document.createElement('menuitem');
+      menuitementry.setAttribute('oncommand', 'saveAttachment' + oncommandPrefix); 
+      menuitementry.setAttribute('label', "Save"); 
+      menuitementry = openpopup.appendChild(menuitementry);
+    } 
 
     var button = document.getElementById("attachmentButton");
     if (button)
     {
        button.setAttribute("label", popup.childNodes.length);
     }
-  }
-
-  var attachBox = document.getElementById("attachmentBox");
-  if (attachBox)
-    attachBox.removeAttribute("collapsed");
-}
+  } 
+} 
 
 function SaveAllAttachments()
 {
-    try
+    try 
     {
         messenger.saveAllAttachments(attachmentUrlArray.length,
                                      attachmentUrlArray,
@@ -312,6 +756,7 @@ function SaveAllAttachments()
 
 function AddSaveAllAttachmentsMenu()
 {
+  return;
     var popup = document.getElementById("attachmentPopup");
     if (popup && popup.childNodes.length > 1)
     {
@@ -328,413 +773,39 @@ function AddSaveAllAttachmentsMenu()
 }
 
 
-function ClearAttachmentMenu()
-{
-  var popup = document.getElementById("attachmentPopup");
-  if ( popup )
-  {
-     while ( popup.childNodes.length )
-       popup.removeChild(popup.childNodes[0]);
-  }
-
-  var attachBox = document.getElementById("attachmentBox");
-  if (attachBox)
-    attachBox.setAttribute("collapsed", "true");
-
-  // reset attachments name array
-  attachmentUrlArray.length = 0;
-  attachmentDisplayNameArray.length = 0;
-  attachmentMessageUriArray.length = 0;
+function ClearAttachmentMenu() 
+{ 
+  var popup = document.getElementById("attachmentPopup"); 
+  if ( popup ) 
+  { 
+     while ( popup.childNodes.length ) 
+       popup.removeChild(popup.childNodes[0]); 
+  } 
 }
 
-function ShowEditMessageButton()
+function ShowEditMessageButton() 
 {
+  return;
   var editBox = document.getElementById("editMessageBox");
   if (editBox)
     editBox.removeAttribute("collapsed");
-}
+} 
 
-function ClearEditMessageButton()
-{
+function ClearEditMessageButton() 
+{ 
+  return;
   var editBox = document.getElementById("editMessageBox");
   if (editBox)
     editBox.setAttribute("collapsed", "true");
 }
 
-// Assumes that all the child nodes of the parent div need removed..leaving
-// an empty parent div...This is used to clear the To/From/cc lines where
-// we had to insert email addresses one at a time into their parent divs...
-function ClearEmailFieldWithButton(parentDiv, headerName)
-{
-  if (parentDiv)
-  {
-    // the toggle button could be the very first child (if there are many email addresses)
-    // or it could be the last child in the child nodes..
-    // we should never remove the toggle button...
-
-    // We use the delIndex variable to keep track of whether the toggle button is the:
-    // first child -- in which case it is set to 1 and first element is never deleted
-    // last child -- in which case it is set to 0 and the last element is never deleted.
-    var delIndex = 1;
-
-    // Depending on the headerName and the numOfEmails inserted into that header,
-    // decide what the delIndex should be.
-    if (headerName == "to") {
-        if (numOfEmailsInToField < gNumOfEmailsToShowToggleButtonInFront)
-            delIndex = 0;
-    }
-    else if (headerName == "cc") {
-        if (numOfEmailsInCcField < gNumOfEmailsToShowToggleButtonInFront)
-            delIndex = 0;
-    }
-
-    while (parentDiv.childNodes.length > 1)
-      parentDiv.removeChild(parentDiv.childNodes[delIndex]);
-  }
-}
-
-// Clear Email Field takes the passed in div and removes all the child nodes!
-// if your div has a button in it (like To/cc use ClearEmailfieldWithButton
-function ClearEmailField(parentDiv)
-{
-  if (parentDiv)
-  {
-    while (parentDiv.childNodes.length > 0)
-      parentDiv.removeChild(parentDiv.childNodes[0]);
-  }
-}
-
-function OutputNewsgroups(boxNode, textNode, currentHeaderData, headerName)
-{
-  if (currentHeaderData[headerName])
-  {
-    var headerValue = currentHeaderData[headerName].headerValue;
-    headerValue = headerValue.replace(/,/g,", ");
-
-    hdrViewSetNodeWithBox(boxNode, textNode, headerValue);
-  }
-  else
-    hdrViewSetNodeWithBox(boxNode, textNode, "");
-}
-
-
-// OutputEmailAddresses --> knows how to take a comma separated list of email addresses,
-// extracts them one by one, linkifying each email address into a mailto url.
-// Then we add the link'ified email address to the parentDiv passed in.
-//
-// defaultParentDiv --> the div to add the link-ified email addresses into.
-// emailAddresses --> comma separated list of the addresses for this header field
-// includeShortLongToggle --> true if you want to include the ability to toggle between short/long
-// address views for this header field. If true, then pass in a another div which is the div the long
-// view will be added too...
-
-function OutputEmailAddresses(parentBox, defaultParentDiv, emailAddresses, includeShortLongToggle, optionalLongDiv, optionalToggleButton, currentHeaderName)
-{
-  // if we don't have any addresses for this field, hide the parent box!
-  if ( !emailAddresses )
-  {
-    hdrViewSetVisible(parentBox, false);
-    return;
-  }
-  if (msgHeaderParser)
-  {
-    // Count the number of email addresses being inserted into each header
-    // The headers could be "to", "cc", "from"
-    var myEnum = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
-    myEnum = myEnum.QueryInterface(Components.interfaces.nsISimpleEnumerator);
-
-    numOfEmailsInEnumerator = 0;
-    while (myEnum.hasMoreElements())
-    {
-        myEnum.getNext();
-        numOfEmailsInEnumerator++;
-    }
-
-    // Depending on the headerName and the variable that keeps track of the
-    // numOfEmails inserted into that header,
-    if (currentHeaderName == "to")
-        numOfEmailsInToField = numOfEmailsInEnumerator;
-    else if (currentHeaderName == "cc")
-        numOfEmailsInCcField = numOfEmailsInEnumerator;
-
-    var enumerator = msgHeaderParser.ParseHeadersWithEnumerator(emailAddresses);
-    enumerator = enumerator.QueryInterface(Components.interfaces.nsISimpleEnumerator);
-    var numAddressesParsed = 0;
-    if (enumerator)
-    {
-      var emailAddress = {};
-      var name = {};
-
-      while (enumerator.hasMoreElements())
-      {
-        var headerResult = enumerator.getNext();
-        headerResult = enumerator.QueryInterface(Components.interfaces.nsIMsgHeaderParserResult);
-
-        // get the email and name fields
-        var addrValue = {};
-        var nameValue = {};
-        var fullAddress = headerResult.getAddressAndName(addrValue, nameValue);
-        emailAddress = addrValue.value;
-        name = nameValue.value;
-
-        // if we want to include short/long toggle views and we have a long view, always add it.
-        // if we aren't including a short/long view OR if we are and we haven't parsed enough
-        // addresses to reach the cutoff valve yet then add it to the default (short) div.
-        if (includeShortLongToggle && optionalLongDiv)
-        {
-          InsertEmailAddressUnderEnclosingBox(parentBox, optionalLongDiv, true, emailAddress, fullAddress, name);
-        }
-        if (!includeShortLongToggle || (numAddressesParsed < gNumAddressesToShow))
-        {
-          InsertEmailAddressUnderEnclosingBox(parentBox, defaultParentDiv, includeShortLongToggle, emailAddress, fullAddress, name);
-        }
-
-        numAddressesParsed++;
-      }
-    } // if enumerator
-
-    if (includeShortLongToggle && (numAddressesParsed > gNumAddressesToShow) && optionalToggleButton)
-    {
-      optionalToggleButton.removeAttribute('collapsed');
-    }
-  } // if msgheader parser
-}
-
-/* InsertEmailAddressUnderEnclosingBox --> right now all email addresses are borderless titled buttons
-   with formatting to make them look like html anchors. When you click on the button,
-   you are prompted with a popup asking you what you want to do with the email address
-
-   parentBox --> the enclosing box for all the email addresses for this header. This is needed
-                 to control visibility of the header.
-   parentDiv --> the DIV the email addresses need to be inserted into.
-   includesToggleButton --> true if the parentDiv includes a toggle button we want contnet inserted BEFORE
-                            false if the parentDiv does not contain a toggle button. This is required in order
-                            to properly detect if we should be inserting addresses before this node....
-*/
-
-function InsertEmailAddressUnderEnclosingBox(parentBox, parentDiv, includesToggleButton, emailAddress, fullAddress, displayName)
-{
-  if ( parentBox )
-  {
-    var item = document.createElement("mail-emailaddress");
-    var itemInDocument;
-    if ( item && parentDiv)
-    {
-      if (parentDiv.childNodes.length)
-      {
-        var child = parentDiv.childNodes[parentDiv.childNodes.length - 1];
-        if (parentDiv.childNodes.length > 1 || (!includesToggleButton && parentDiv.childNodes.length >= 1) )
-        {
-          var textNode = document.createElement("text");
-          textNode.setAttribute("value", ", ");
-          textNode.setAttribute("class", "emailSeparator");
-          if (includesToggleButton && numOfEmailsInEnumerator < gNumOfEmailsToShowToggleButtonInFront)
-            parentDiv.insertBefore(textNode, child);
-          else
-            parentDiv.appendChild(textNode);
-        }
-        if (includesToggleButton && numOfEmailsInEnumerator < gNumOfEmailsToShowToggleButtonInFront)
-          itemInDocument = parentDiv.insertBefore(item, child);
-        else
-          itemInDocument = parentDiv.appendChild(item);
-      }
-      else
-      {
-        itemInDocument = parentDiv.appendChild(item);
-      }
-
-      itemInDocument.setAttribute("label", fullAddress);
-      itemInDocument.setTextAttribute("emailAddress", emailAddress);
-      itemInDocument.setTextAttribute("fullAddress", fullAddress);
-      itemInDocument.setTextAttribute("displayName", displayName);
-
-      if (this.AddExtraAddressProcessing != undefined)
-        AddExtraAddressProcessing(emailAddress, itemInDocument);
-
-      hdrViewSetVisible(parentBox, true);
-    }
-  }
-}
-
-
-function UpdateMessageHeaders()
-{
-  if (gViewAllHeaders)
-  {
-    fillBoxWithAllHeaders(msgPaneData.ViewAllHeadersBox, false);
-    return;
-  }
-
-  if (currentHeaderData["subject"])
-     hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, currentHeaderData["subject"].headerValue);
-  else
-     hdrViewSetNodeWithBox(msgPaneData.SubjectBox, msgPaneData.SubjectValue, "");
-
-  if (currentHeaderData["from"])
-    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, currentHeaderData["from"].headerValue, false, "", "", "from");
-  else
-    OutputEmailAddresses(msgPaneData.FromBox, msgPaneData.FromValue, "", false, "", "", "");
-
-  if (currentHeaderData["date"])
-    hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, currentHeaderData["date"].headerValue);
-  else
-    hdrViewSetNodeWithBox(msgPaneData.DateBox, msgPaneData.DateValue, "");
-
-  if (currentHeaderData["to"])
-    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, currentHeaderData["to"].headerValue, true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon, "to");
-  else
-    OutputEmailAddresses(msgPaneData.ToBox, msgPaneData.ToValueShort, "", true, msgPaneData.ToValueLong, msgPaneData.ToValueToggleIcon, "");
-
-  if (currentHeaderData["cc"])
-    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, currentHeaderData["cc"].headerValue, true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon, "cc");
-  else
-    OutputEmailAddresses(msgPaneData.CcBox, msgPaneData.CcValueShort, "", true, msgPaneData.CcValueLong, msgPaneData.CcValueToggleIcon, "");
-
-  if (currentHeaderData["reply-to"])
-    OutputEmailAddresses(msgPaneData.ReplyToBox, msgPaneData.ReplyToValue, currentHeaderData["reply-to"].headerValue, false, "", "", "reply-to");
-  else
-    OutputEmailAddresses(msgPaneData.ReplyToBox, msgPaneData.ReplyToValue, "", false, "", "", "");
-
-  if (currentHeaderData["newsgroups"])
-    OutputNewsgroups(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, currentHeaderData, "newsgroups");
-  else
-    hdrViewSetNodeWithBox(msgPaneData.NewsgroupBox, msgPaneData.NewsgroupValue, "");
-
-  if (currentHeaderData["followup-to"])
-    OutputNewsgroups(msgPaneData.FollowupToBox, msgPaneData.FollowupToValue, currentHeaderData, "followup-to");
-  else
-    hdrViewSetNodeWithBox(msgPaneData.FollowupToBox, msgPaneData.NewsgroupValue, "");
-
-  if (gShowUserAgent)
-  {
-    if (currentHeaderData["user-agent"])
-    {
-      hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, currentHeaderData["user-agent"].headerValue);
-      if (msgPaneData.UserAgentToolbar)
-        msgPaneData.UserAgentToolbar.removeAttribute("collapsed");
-    }
-    else
-    {
-      hdrViewSetNodeWithBox(msgPaneData.UserAgentBox, msgPaneData.UserAgentValue, "");
-      if (msgPaneData.UserAgentToolbar)
-        msgPaneData.UserAgentToolbar.setAttribute("collapsed", "true");
-    }
-
-  }
-
-  if (this.FinishEmailProcessing != undefined)
-    FinishEmailProcessing();
-}
-
-function ClearCurrentHeaders()
-{
-  currentHeaderData = {};
-}
-
-function ShowMessageHeaderPane()
-{
-  if (gViewAllHeaders)
-  {
-    HideMessageHeaderPane();
-    msgPaneData.ViewAllHeadersToolbar.removeAttribute("collapsed");
-    msgPaneData.ViewAllHeadersBox.removeAttribute("collapsed");
-  }
-  else
-  {
-    msgPaneData.ViewAllHeadersToolbar.setAttribute("collapsed", "true");
-    msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
-
-  /* workaround for 39655 */
-    var messagePaneBox = document.getElementById("messagepanebox");
-    if (messagePaneBox && gFolderJustSwitched)
-      messagePaneBox.setAttribute("collapsed", "true");
-
-    var node = document.getElementById("headerPart1");
-    if (node)
-      node.removeAttribute("collapsed");
-    node = document.getElementById("headerPart2");
-    if (node)
-      node.removeAttribute("collapsed");
-
-  /* more workaround for 39655 */
-    if (messagePaneBox && gFolderJustSwitched) {
-      messagePaneBox.setAttribute("collapsed", "false");
-    gFolderJustSwitched = false;
-    }
-
-/*
-    node = document.getElementById("headerPart3");
-    if (node)
-      node.removeAttribute("collapsed");
-*/
-  }
-}
-
-function HideMessageHeaderPane()
-{
-  msgPaneData.ViewAllHeadersToolbar.setAttribute("collapsed", "true");
-  msgPaneData.ViewAllHeadersBox.setAttribute("collapsed", "true");
-
-  var node = document.getElementById("headerPart1");
-  if (node)
-    node.setAttribute("collapsed", "true");
-  node = document.getElementById("headerPart2");
-  if (node)
-    node.setAttribute("collapsed", "true");
-  node = document.getElementById("headerPart3");
-  if (msgPaneData.UserAgentToolbar)
-    msgPaneData.UserAgentToolbar.setAttribute("collapsed", "true");
-
-}
-
-// ToggleLongShortAddresses is used to toggle between showing
-// all of the addresses on a given header line vs. only the first 'n'
-// where 'n' is a user controlled preference. By toggling on the more/less
-// images in the header window, we'll hide / show the appropriate div for that header.
-
-function ToggleLongShortAddresses(shortDivID, longDivID)
-{
-  var shortNode = document.getElementById(shortDivID);
-  var longNode = document.getElementById(longDivID);
-  var nodeToReset;
-
-  // test to see which if short is already hidden...
-  if (shortNode.getAttribute("collapsed") == "true")
-  {
-
-     hdrViewSetVisible(longNode, false);
-     hdrViewSetVisible(shortNode, true);
-     nodeToReset = shortNode;
-  }
-  else
-  {
-     hdrViewSetVisible(shortNode, false);
-     hdrViewSetVisible(longNode, true);
-     nodeToReset = longNode;
-  }
-
-   // HACK ALERT: this is required because of a bug in boxes when you add content
-   // to a box which is collapsed, when you then uncollapse that box, the content isn't
-   // displayed. So I'm forcing us to reset the value for each node...
-   var endPos = nodeToReset.childNodes.length;
-   var index = 0;
-   var tempValue;
-   while (index < endPos - 1)
-   {
-     tempValue = nodeToReset.childNodes[index].getAttribute("value");
-     nodeToReset.childNodes[index].setAttribute("value", "");
-     nodeToReset.childNodes[index].setAttribute("value", tempValue);
-     index++;
-   }
-}
-
-// given a box, iterate through all of the headers and add them to
-// the enclosing box.
+// given a box, iterate through all of the headers and add them to 
+// the enclosing box. 
 function fillBoxWithAllHeaders(containerBox, boxPartOfPopup)
 {
   // clear out the old popup date if there is any...
-  while ( containerBox.childNodes.length )
-    containerBox.removeChild(containerBox.childNodes[0]);
+  while ( containerBox.childNodes.length ) 
+    containerBox.removeChild(containerBox.childNodes[0]); 
 
   for (header in currentHeaderData)
   {
@@ -748,12 +819,12 @@ function fillBoxWithAllHeaders(containerBox, boxPartOfPopup)
     var headerValueBox = document.createElement('hbox');
     headerValueBox.setAttribute("class", "headerValueBox");
 
-    var newHeaderTitle  = document.createElement('text');
+	  var newHeaderTitle  = document.createElement('text');
     newHeaderTitle.setAttribute("class", "headerdisplayname");
-    newHeaderTitle.setAttribute("value", currentHeaderData[header].headerName + ':');
+	  newHeaderTitle.setAttribute("value", currentHeaderData[header].headerName + ':');
     headerValueBox.appendChild(newHeaderTitle);
 
-    innerBox.appendChild(headerValueBox);
+	  innerBox.appendChild(headerValueBox);
 
     var newHeaderValue = document.createElement('html');
     // make sure we are properly resized...
@@ -774,7 +845,7 @@ function fillAllHeadersPopup(node)
   // don't bother re-filling the popup if we've already done it for the
   // currently displayed message....
   if (gGeneratedViewAllHeaderInfo == true)
-    return true;
+    return true; 
 
   var containerBox = document.getElementById('allHeadersPopupContainer');
 
@@ -793,63 +864,25 @@ function fillAllHeadersPopup(node)
 // boxPartOfPopup --> true if the box is part of a popup (certain functions are disabled in this scenario)
 function ProcessHeaderValue(containingBox, containerNode, header, boxPartOfPopup)
 {
-    // in the simplest case, we'll just create a text node for the header
-    // and append it to the container Node. for certain headers, we might want to do
-    // extra processing....
-
-    var headerName = header.headerName;
-    headerName = headerName.toLowerCase();
-    if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to" || headerName == "reply-to"))
-    {
-      OutputEmailAddresses(containingBox, containerNode, header.headerValue, false, "", "", headerName)
-      return;
-    }
-
-    var headerValue = header.headerValue;
-    headerValue = headerValue.replace(/\n|\r/g,"");
-    var textNode = document.createTextNode(headerValue);
-    if (headerName == "subject")
-    {
-        containerNode.setAttribute("class", "subjectvalue headerValue");
-    }
-
-    containerNode.appendChild(textNode);
-}
-
-///////////////////////////////////////////////////////////////
-// The following are just small helper functions..
-///////////////////////////////////////////////////////////////
-
-
-function hdrViewSetNodeWithBox(boxNode, textNode, text)
-{
-  if ( text )
-    return hdrViewSetNode(boxNode, textNode, text );
-  else
+  // in the simplest case, we'll just create a text node for the header
+  // and append it to the container Node. for certain headers, we might want to do 
+  // extra processing....
+  
+  var headerName = header.headerName;
+  headerName = headerName.toLowerCase();
+  if (!boxPartOfPopup && (headerName == "cc" || headerName == "from" || headerName == "to" || headerName == "reply-to"))
   {
-    hdrViewSetVisible(boxNode, false);
-    return false;
+    OutputEmailAddresses(containingBox, containerNode, header.headerValue, false, "", "", headerName)
+    return;
   }
-}
+  
+  var headerValue = header.headerValue;
+  headerValue = headerValue.replace(/\n|\r/g,"");
+  var textNode = document.createTextNode(headerValue);
+  if (headerName == "subject")
+  {
+      containerNode.setAttribute("class", "subjectvalue headerValue");
+  }
 
-function hdrViewSetNode(boxNode, textNode, text)
-{
-  textNode.childNodes[0].nodeValue = text;
-  var visible;
-
-  if ( text )
-    visible = true;
-  else
-    visible = false;
-
-  hdrViewSetVisible(boxNode, visible);
-  return visible;
-}
-
-function hdrViewSetVisible(boxNode, visible)
-{
-  if ( visible )
-    boxNode.removeAttribute("collapsed");
-  else
-    boxNode.setAttribute("collapsed", "true");
+  containerNode.appendChild(textNode);
 }
