@@ -121,6 +121,9 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
     //  XXX Unused because presently "All Files"
     //    char *filterBuffer = mFilterList.ToNewCString();
     //    strcpy(fdlg.szFullFile, filterBuffer);
+    strcpy( fdlg.szFullFile, initialDir );
+    strcat(fdlg.szFullFile, "\\");
+    strcat(fdlg.szFullFile, fileBuffer);
 
     if (mMode == modeOpen)
       fdlg.fl |= FDS_OPEN_DIALOG;
