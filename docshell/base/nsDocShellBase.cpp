@@ -322,6 +322,7 @@ NS_IMETHODIMP nsDocShellBase::InitWindow(nativeWindow parentNativeWindow,
 NS_IMETHODIMP nsDocShellBase::Create()
 {
    // Use m_BaseInitInfo to do create
+   // Then delete m_BaseInitInfo
    //XXX First Check
 	/*
 	Tells the window that intialization and setup is complete.  When this is
@@ -333,17 +334,9 @@ NS_IMETHODIMP nsDocShellBase::Create()
 
 NS_IMETHODIMP nsDocShellBase::Destroy()
 {
-   //XXX First Check
-	/*
-	Tell the window that it can destroy itself.  This allows re-using the same
-	object without re-doing a lot of setup.  This is not a required call 
-	before a release.
-
-	@return	NS_OK - Everything destroyed properly.
-				NS_ERROR_NOT_IMPLEMENTED - State preservation is not supported.
-					Release the interface and create a new object.
-	*/
-   return NS_ERROR_FAILURE;
+   // We don't support the dynamic destroy and recreate on the object.  Just
+   // create a new object!
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsDocShellBase::SetPosition(PRInt32 x, PRInt32 y)
