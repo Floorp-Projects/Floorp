@@ -106,7 +106,6 @@ CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult
 }
 
 // The list of components we register
-static nsModuleComponentInfo components[] = 
 {
     { "FTPDirListingConverter", 
       NS_FTPDIRLISTINGCONVERTER_CID,
@@ -122,7 +121,7 @@ static nsModuleComponentInfo components[] =
     
     { "MultiMixedConverter", 
       NS_MULTIMIXEDCONVERTER_CID,
-      NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html", 
+      NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=*/*", 
       CreateNewMultiMixedConvFactory
     },
 
