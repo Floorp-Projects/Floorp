@@ -66,7 +66,7 @@ sub Told {
     } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:mms?|millimeters?|millimetres?)\s*\??\s*$/osi) {
         $self->convertMillimeters($event, $1);
     } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:cms?|centimeters?|centimetres?)\s*\??\s*$/osi) {
-        $self->convertCentieters($event, $1);
+        $self->convertCentimeters($event, $1);
     } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:m|meters?|metres?)\s*\??\s*$/osi) {
         $self->convertMeters($event, $1);
     } elsif ($message =~ m/^\s*(-?(?:[0-9]+\.?|[0-9]+\.[0-9]+|\.[0-9]+)(?:e-?[0-9]+)?)\s*(?:kms?|kilometers?|kilometres?|klic?ks?)\s*\??\s*$/osi) {
@@ -265,10 +265,10 @@ sub convertAngstroms {
     my $accurateMeters = $input / 10000000000.0;
     $self->debug("Accurate KiloMeters: ".$accurateMeters/1000);
     # imperial
-    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
-    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
-    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
-    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    my $inches = sigfig(3, $accurateMeters / (0.0254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.0254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.0254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.0254 * 190080.0));
     # metric
     my $kilometers = sigfig(3, $accurateMeters / 1000.0);
     my $meters = sigfig(3, $accurateMeters);
@@ -285,10 +285,10 @@ sub convertNanometers {
     # get the number
     my $accurateMeters = $input / 1000000000.0;
     # imperial
-    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
-    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
-    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
-    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    my $inches = sigfig(3, $accurateMeters / (0.0254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.0254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.0254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.0254 * 190080.0));
     # metric
     my $kilometers = sigfig(3, $accurateMeters / 1000.0);
     my $meters = sigfig(3, $accurateMeters);
@@ -305,10 +305,10 @@ sub convertMillimeters {
     # get the number
     my $accurateMeters = $input / 1000.0;
     # imperial
-    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
-    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
-    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
-    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    my $inches = sigfig(3, $accurateMeters / (0.0254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.0254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.0254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.0254 * 190080.0));
     # metric
     my $kilometers = sigfig(3, $accurateMeters / 1000.0);
     my $meters = sigfig(3, $accurateMeters);
@@ -319,16 +319,16 @@ sub convertMillimeters {
     $self->say($event, "$event->{'from'}: ${millimeters}mm = ${inches}in, ${feet}ft, ${yards}yd, ${miles}mi; ${kilometers}Km, ${meters}m, ${centimeters}cm, ${nanometers}nm, ${angstroms}Å (to 3sf)");
 }
 
-sub convertCentieters {
+sub convertCentimeters {
     my $self = shift;
     my($event, $input) = @_;
     # get the number
     my $accurateMeters = $input / 100.0;
     # imperial
-    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
-    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
-    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
-    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    my $inches = sigfig(3, $accurateMeters / (0.0254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.0254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.0254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.0254 * 190080.0));
     # metric
     my $kilometers = sigfig(3, $accurateMeters / 1000.0);
     my $meters = sigfig(3, $accurateMeters);
@@ -345,10 +345,10 @@ sub convertMeters {
     # get the number
     my $accurateMeters = $input * 1.0;
     # imperial
-    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
-    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
-    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
-    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    my $inches = sigfig(3, $accurateMeters / (0.0254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.0254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.0254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.0254 * 190080.0));
     # metric
     my $kilometers = sigfig(3, $accurateMeters / 1000.0);
     my $meters = sigfig(3, $accurateMeters);
@@ -365,10 +365,10 @@ sub convertKilometers {
     # get the number
     my $accurateMeters = $input * 1000.0;
     # imperial
-    my $inches = sigfig(3, $accurateMeters / (0.00254 * 1.0));
-    my $feet = sigfig(3, $accurateMeters / (0.00254 * 12.0));
-    my $yards = sigfig(3, $accurateMeters / (0.00254 * 36.0));
-    my $miles = sigfig(3, $accurateMeters / (0.00254 * 190080.0));
+    my $inches = sigfig(3, $accurateMeters / (0.0254 * 1.0));
+    my $feet = sigfig(3, $accurateMeters / (0.0254 * 12.0));
+    my $yards = sigfig(3, $accurateMeters / (0.0254 * 36.0));
+    my $miles = sigfig(3, $accurateMeters / (0.0254 * 190080.0));
     # metric
     my $kilometers = sigfig(3, $accurateMeters / 1000.0);
     my $meters = sigfig(3, $accurateMeters);
