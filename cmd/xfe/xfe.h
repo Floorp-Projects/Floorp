@@ -355,7 +355,7 @@ extern Pixmap fe_ToolbarPixmap (MWContext *context, int i, Boolean disabled_p,
 #endif
 
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 extern Pixmap fe_SecurityPixmap (MWContext *context,
 				 Dimension *w, Dimension *h,
 				 int type);
@@ -1072,7 +1072,7 @@ typedef struct fe_ContextData
   Pixel select_bg_pixel;
   Pixel default_fg_pixel;
   Pixel default_bg_pixel;
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   Pixel secure_document_pixel;
   Pixel insecure_document_pixel;
 #endif

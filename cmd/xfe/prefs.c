@@ -319,7 +319,7 @@ static struct pref_map pref_map[] = {
 {"network.proxy.gopher_port", FIELD_OFFSET(gopher_proxy_port), read_int, write_int},
 {"network.proxy.wais", FIELD_OFFSET(wais_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.wais_port", FIELD_OFFSET(wais_proxy_port), read_int, write_int},
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 {"network.proxy.ssl", FIELD_OFFSET(https_proxy), fe_PrefReadString, fe_PrefWriteString},
 {"network.proxy.ssl_port", FIELD_OFFSET(https_proxy_port), read_int, write_int},
 #endif
@@ -715,7 +715,7 @@ split_all_proxies(XFE_GlobalPrefs* prefs)
     split_proxy(&prefs->http_proxy, &prefs->http_proxy_port, 0);
     split_proxy(&prefs->gopher_proxy, &prefs->gopher_proxy_port, 0);
     split_proxy(&prefs->wais_proxy, &prefs->wais_proxy_port, 0);
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
     split_proxy(&prefs->https_proxy, &prefs->https_proxy_port, 0);
 #endif
 }
@@ -797,7 +797,7 @@ xfe_prefs_from_environment (XFE_GlobalPrefs *prefs)
       }
   PARSE_PROXY_ENV ("ftp_proxy", prefs->ftp_proxy)
   PARSE_PROXY_ENV ("http_proxy", prefs->http_proxy)
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   PARSE_PROXY_ENV ("https_proxy", prefs->https_proxy)
 #endif
   PARSE_PROXY_ENV ("gopher_proxy", prefs->gopher_proxy)
@@ -1487,7 +1487,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			StrAllocCopy (prefs->ftp_proxy, value);
 		else if (!XP_STRCASECMP("HTTP_PROXY", name))
 			StrAllocCopy (prefs->http_proxy, value);
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 		else if (!XP_STRCASECMP("HTTPS_PROXY", name))
 			StrAllocCopy (prefs->https_proxy, value);
 #endif
@@ -1500,7 +1500,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 
       /* SECURITY
        */
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 		else if (!XP_STRCASECMP("ASK_PASSWORD", name))
 			prefs->ask_password = atoi (value);
 		else if (!XP_STRCASECMP("PASSWORD_TIMEOUT", name))
@@ -1529,7 +1529,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 
 		else if (!XP_STRCASECMP("DEFAULT_USER_CERT", name))
 			StrAllocCopy (prefs->def_user_cert, value);
-#endif /* ! NO_SECURITY */
+#endif /* MOZ_SECURITY */
 		else if (!XP_STRCASECMP("ENABLE_SSL2", name))
 			prefs->ssl2_enable = BOOLP (value);
 		else if (!XP_STRCASECMP("ENABLE_SSL3", name))

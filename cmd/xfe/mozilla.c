@@ -421,12 +421,12 @@ XtResource fe_Resources [] =
     XtOffset (fe_ContextData *, default_background_image),
     XtRImmediate, "" },
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   { "secureDocumentColor", XtCForeground, XtRPixel, sizeof (String),
     XtOffset (fe_ContextData *, secure_document_pixel), XtRString, "green" },
   { "insecureDocumentColor", XtCForeground, XtRPixel, sizeof (String),
     XtOffset (fe_ContextData *, insecure_document_pixel), XtRString, "red" },
-#endif /* ! NO_SECURITY */
+#endif /*  MOZ_SECURITY */
 
   { "linkCursor", XtCCursor, XtRCursor, sizeof (Cursor),
     XtOffset (fe_ContextData *, link_cursor), XtRString, "hand2" },

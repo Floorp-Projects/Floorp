@@ -567,7 +567,7 @@ void XFE_PrefsProxiesViewDialog::initPage()
 	FROB(ftp,      proxy, "");
     FROB(gopher,   proxy, "");
     FROB(http,     proxy, "");
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
     FROB(https,    proxy, "");
 #endif
 	FROB(wais,     proxy, "");
@@ -700,7 +700,7 @@ void prefsProxiesViewCb_ok(Widget    w,
     SNARFP (ftp,    proxy, False);
 	SNARFP (gopher, proxy, False);
 	SNARFP (http,   proxy, False);
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 	SNARFP (https,  proxy, False);
 #endif
 	SNARFP (wais,   proxy, False);

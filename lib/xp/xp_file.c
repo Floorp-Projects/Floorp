@@ -1114,7 +1114,7 @@ xp_FileName (const char *name, XP_FileType type, char* buf, char* configBuf)
 		name = buf;
 		break;
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
      case xpCryptoPolicy:
      {
          extern void fe_GetProgramDirectory(char *path, int len);

@@ -52,9 +52,9 @@
 #include "mimeeobj.h"	/*   |     |--- MimeExternalObject					*/
 #include "mimeebod.h"	/*   |--- MimeExternalBody							*/
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "mimesec.h"
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
 /* ==========================================================================
    Allocation and destruction
@@ -184,9 +184,9 @@ mime_find_class (const char *content_type, MimeHeaders *hdrs,
       else if (!strcasecomp(content_type+10,	"mixed"))
 		class = (MimeObjectClass *)&mimeMultipartMixedClass;
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 HG09850
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
 	  if (!class && !exact_match_p)
 		/* Treat all unknown multipart subtypes as "multipart/mixed" */
@@ -231,11 +231,11 @@ HG09850
   else if (!strcasecomp(content_type,			SUN_ATTACHMENT))
 	class = (MimeObjectClass *)&mimeSunAttachmentClass;
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   HG09855
   else if ((class = mime_find_class_from_content_type(content_type)) != 0)
     ;
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
   /* Everything else gets represented as a clickable link.
    */
@@ -586,9 +586,9 @@ mime_imap_part_address(MimeObject *obj)
 }
 
 HG09851
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 HG09852
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 HG09853
 HG09854
 

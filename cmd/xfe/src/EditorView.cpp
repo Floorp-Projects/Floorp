@@ -32,7 +32,7 @@
 #include "fe_proto.h"
 #include "edt.h"
 #include "xeditor.h"
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "secnav.h"
 #include "pk11func.h"
 #endif

@@ -413,7 +413,7 @@ mime_display_stream_complete (NET_StreamClass *stream)
   if (msd->stream)
     {
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
       /* Hold your breath.  This is how we notify compose.c
          that the message was decrypted -- it will set a flag in the
          mime_delivery_state structure, which we don't have access to from
@@ -423,7 +423,7 @@ mime_display_stream_complete (NET_StreamClass *stream)
           obj->options->state &&
           obj->options->state->decrypted_p)
         HG09858 ;
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
       /* Close the output stream. */
       msd->stream->complete (msd->stream);

@@ -172,7 +172,7 @@ static GnomeUIInfo window_submenu[] = {
 
   { GNOME_APP_UI_ITEM, "History", NULL, moz_open_history, NULL, NULL },
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   { GNOME_APP_UI_ITEM, "View Security", NULL, callback, NULL, NULL },
 #endif
 
@@ -257,7 +257,7 @@ static GnomeUIInfo toolbar_info[] = {
     GNOME_APP_PIXMAP_FILENAME,
     "images/TB_Print.xpm" },
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   { GNOME_APP_UI_ITEM,
     "Security", "View the Security Info for this page",
     callback, NULL, NULL,

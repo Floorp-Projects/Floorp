@@ -30,7 +30,7 @@
 
 #include <Xm/PushBP.h>		/* For fast updating of the button pixmap... */
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "ssl.h"
 #endif
 
@@ -40,7 +40,7 @@
 #include "../../lib/xp/biglogo.h"
 #include "../../lib/xp/photo.h"
 #include "../../lib/xp/hype.h"
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "../../lib/xp/rsalogo.h"
 #endif
 #ifdef JAVA
@@ -1585,7 +1585,7 @@ fe_InitIcons (MWContext *c, MSG_BIFF_STATE biffstate)
   }
 }
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 Pixmap
 fe_NewSecurityPixmap (Widget widget, Dimension *w, Dimension *h,
 		      int type)
@@ -1626,7 +1626,7 @@ fe_SecurityPixmap (MWContext *context, Dimension *w, Dimension *h,
   if (h) *h = fe_icons [index].height;
   return fe_icons [index].pixmap;
 }
-#endif /* ! NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
 
 #ifdef EDITOR

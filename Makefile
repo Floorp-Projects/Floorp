@@ -37,7 +37,7 @@ else
 DIRS		+= sun-java nav-java $(DIRS_JS)
 endif
 
-ifndef NO_SECURITY
+ifdef MOZ_SECURITY
 DIRS		+= security
 endif
 

@@ -40,7 +40,7 @@
 #include "../../lib/xp/biglogo.h"
 #include "../../lib/xp/photo.h"
 #include "../../lib/xp/hype.h"
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "../../lib/xp/rsalogo.h"
 #include "ssl.h"
 #include "xp_sec.h"
@@ -1101,7 +1101,7 @@ FE_AboutData(const char* which,
       *length_ret = sizeof (hype_au) - 1;
       *content_type_ret = AUDIO_BASIC;
     }
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   else if (!strcmp (which, "rsalogo"))
     {
       /* Note, this one returns a read-only string. */
@@ -1358,7 +1358,7 @@ FE_AboutData(const char* which,
 	    {
 	      char *a2;
 	      int len;
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 	      char *s0 = XP_GetString(XFE_SECURITY_WITH);
 	      char *s1 = XP_SecurityVersion(1);
 	      char *s2 = XP_SecurityCapabilities();
@@ -1377,7 +1377,7 @@ FE_AboutData(const char* which,
 		       fe_version_and_locale,
 		       ss
 		       );
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 	      free (s2);
 	      free (ss);
 #endif

@@ -21,7 +21,7 @@
  */
 
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "ssl.h"
 #endif
 

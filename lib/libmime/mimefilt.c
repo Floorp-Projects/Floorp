@@ -55,13 +55,13 @@
 #include "prglobal.h"
 #endif
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 #include "key.h"
 #include "cert.h"
 #include "secrng.h"
 #include "secmod.h"
 #include "pk11func.h"
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
 
 #ifndef XP_UNIX
@@ -226,7 +226,7 @@ static int test_image_write_buffer(char *buf, int32 size, void *image_closure)
   return 0;
 }
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
 static char *
 test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
 {
@@ -239,7 +239,7 @@ test_passwd_prompt (PK11SlotInfo *slot, void *wincx)
 	s[strlen(s)-1] = '\0';
   return s;
 }
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
 
 int
@@ -382,9 +382,9 @@ main (int argc, char **argv)
   XP_Bool decrypt_p = FALSE;
   char filename[1000];
 
-#ifndef NO_SECURITY
+#ifdef MOZ_SECURITY
   HG09846
-#endif /* NO_SECURITY */
+#endif /* MOZ_SECURITY */
 
   if (i < argc)
 	{
