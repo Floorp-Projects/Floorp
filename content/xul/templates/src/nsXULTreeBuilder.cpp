@@ -1079,10 +1079,10 @@ nsXULOutlinerBuilder::TokenizeProperties(const nsAReadableString& aString,
     if (! aProperties)
         return NS_ERROR_NULL_POINTER;
 
-    nsAReadableString::const_iterator end;
+    nsAString::const_iterator end;
     aString.EndReading(end);
 
-    nsAReadableString::const_iterator iter;
+    nsAString::const_iterator iter;
     aString.BeginReading(iter);
 
     do {
@@ -1095,7 +1095,7 @@ nsXULOutlinerBuilder::TokenizeProperties(const nsAReadableString& aString,
             break;
 
         // Note the first non-whitespace character
-        nsAReadableString::const_iterator first = iter;
+        nsAString::const_iterator first = iter;
 
         // Advance to the next whitespace character
         while (iter != end && ! nsCRT::IsAsciiSpace(*iter))
