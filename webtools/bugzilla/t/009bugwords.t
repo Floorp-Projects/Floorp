@@ -40,30 +40,13 @@ use Bugzilla::Util;
 
 use File::Spec 0.82;
 
-# We have a list of templates to exclude, if present. This allows us to exclude
-# sample and b.m.o.-specific templates. Do _not_ add a template to this list
-# without checking with developers@bugzilla.org first.
-my @exclude;
+use Test::More tests => ($Support::Templates::num_actual_files); 
 
-BEGIN {
-    @exclude = (
-        'template/en/default/pages/etiquette.html.tmpl'
-    );
-}
-
-use Test::More tests => ($Support::Templates::num_actual_files - 
-                         scalar(@exclude)); 
-
-# Find all the templates (except those in @exclude)
+# Find all the templates
 my @testitems;
 for my $path (@Support::Templates::include_paths) {
-    my @items = map(File::Spec->catfile($path, $_),
-                    Support::Templates::find_actual_files($path));
-    foreach my $item (@items) {              
-        if (lsearch(\@exclude, $item) == -1) {
-            push(@testitems, $item);
-        }
-    }
+    push(@testitems, map(File::Spec->catfile($path, $_),
+                         Support::Templates::find_actual_files($path)));
 }
 
 foreach my $file (@testitems) {
