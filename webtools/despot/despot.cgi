@@ -104,7 +104,7 @@ $::db = Mysql->Connect("localhost", "mozusers", $F::loginname, "")
     || die "Can't connect to database server";
 
 
-my $query = Query("select passwd,despot,neednewpassword,id from users where email = '$F::loginname'");
+my $query = Query("select passwd,despot,neednewpassword,id,disabled from users where email = '$F::loginname'");
 my @row = $query->fetchrow();
 if (!@row || !checkpassword($F::loginpassword, $row[0])) {
     if ($F::loginname !~ /@/) {
@@ -114,21 +114,28 @@ if (!@row || !checkpassword($F::loginpassword, $row[0])) {
     }
 }
 
+my $passwd;
+my $disabled;
+($passwd,$::candespot,$::neednewpassword,$::loginid,$disabled) = @row;
+
+if ($disabled eq "Yes") {
+    Punt("Your account has been disabled.");
+}
 
 
-$::candespot = 0;
-if ($row[1] eq "Yes") {
+
+if ($::candespot eq "Yes") {
     $::candespot = 1;
 } else {
+    $::candespot = 0;
     $::despot = 0;
 }
 
-$::neednewpassword = 0;
-if ($row[2] eq "Yes") {
+if ($::neednewpassword eq "Yes") {
     $::neednewpassword = 1;
+} else {
+    $::neednewpassword = 0;
 }
-
-$::loginid = $row[3];
 
 $::skiptrailer = 0;
 
@@ -210,13 +217,22 @@ sub MainMenu() {
         param("_despot", $::despot);
         if ($::despot) {
             my @l2 = ();
+            my $opts = popup_menu(-name=>"matchtype",
+                                  -values=>["regexp", "not regexp"],
+                                  -default=>"regexp",
+                                  -labels=>{"regexp"=>"Matching regexp",
+                                            "not regexp"=>"Not matching regexp"});
             push(@l2,
-                 li(MyForm("ListUsers") . submit("List all users") .
+                 li("<nobr>" .
+                    MyForm("ListUsers") . submit("List all users") .
+                    $opts .
+                    textfield(-name=>"match", -size=>50) .
+                    "</nobr>" .
                     end_form()));
             push(@l2,
                  li(MyForm("AddUser") . submit("Add or edit user") .
                     "with email<nobr> " .
-                    textfield(-name=>"email", -size=>50) . "</nobr>" .
+                    textfield(-name=>"email", -size=>25) . "</nobr>" .
                     end_form()));
             my $query = Query("select id,name from repositories order by id");
             my @vals = ();
@@ -300,13 +316,15 @@ sub EditUser() {
     my @desc;
     for (my $i=0 ; $i<@row ; $i++) {
         @desc = $query2->fetchrow();
-        my $line = th({-align=>"right"}, "$desc[0]:" .
-                      hidden("orig_$desc[0]", $row[$i]));
+        my $line = th({-align=>"right"}, "$desc[0]:");
         if ($desc[0] ne ($query->name)[$i]) {
             die "show columns in different order than select???";
         }
         $_ = $desc[1];
         if (/^varchar/ || /int\([0-9]*\)$/) {
+            if ($desc[0] eq "voucher") {
+                $row[$i] = IdToEmail($row[$i]);
+            }
             $line .= td(textfield(-name=>($query->name)[$i],
                                   -default=>$row[$i],
                                   -size=>50,
@@ -323,6 +341,9 @@ sub EditUser() {
             $line .= td(radio_group(-name=>$desc[0], "-values"=>\@values,
                                     -default=>$row[$i]));
         }
+        $line .= hidden("orig_$desc[0]", $row[$i]);
+
+            
 
         push(@list,Tr($line));
     }
@@ -367,14 +388,20 @@ sub ChangeUser() {
     my @list;
     my @row;
     while (@row = $query->fetchrow()) {
-        if (defined $row[0] && (param($row[0]) ne param("orig_$row[0]"))) {
+        my $old = param("orig_$row[0]");
+        my $new = param($row[0]);
+        if ($old ne $new) {
+            if ($row[0] eq "voucher") {
+                $old = EmailToId($old);
+                $new = EmailToId($new);
+            }
             Query("insert into changes (email,field,oldvalue,newvalue,who) values (" .
                   $::db->quote($F::orig_email) . ",'$row[0]'," .
-                  $::db->quote(param("orig_$row[0]")) . "," .
-                  $::db->quote(param($row[0])) . ",'" .
-                $F::loginname . "')");
+                  $::db->quote($old) . "," .
+                  $::db->quote($new) . ",'" .
+                  $F::loginname . "')");
         }
-        push(@list, "$row[0] = '" . SqlQuote(param($row[0])) . "'");
+        push(@list, "$row[0] = '" . SqlQuote($new) . "'");
     }
     my $qstr = "update users set " . join(",", @list) . " where email='" .
         SqlQuote($F::orig_email) . "'";
@@ -407,22 +434,28 @@ sub ListPartitions () {
     print p("If you're wondering what a 'partition' is, " .
             a({-href=>"help.html#partition"}, "read this") . ".");
     ListSomething("partitions", "id", "ListPartitions", "EditPartition", "name",
-                  "name,repositoryid,state,description",
+                  "name,repositoryid,state,description", "",
                   {"branchid"=>"branches.name,branches.id=partitions.branchid",
-                   "repositoryid"=>"repositories.name,repositories.id=partitions.repositoryid"});
+                   "repositoryid"=>"repositories.name,repositories.id=partitions.repositoryid"},
+                  "");
 }
 
 
 sub ListUsers() {
     EnsureDespot();
 
-    ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group,neednewpassword", {});
+    # ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "users as u2", {"voucher"=>"u2.email,u2.id=users.voucher"});
+    my $wherepart = "";
+    if ($F::match ne "") {
+        $wherepart = "email $F::matchtype " . $::db->quote($F::match);
+    }
+    ListSomething("users", "email", "ListUsers", "EditUser", "email", "email,realname,gila_group,cvs_group", "", {}, $wherepart);
 }
 
 
 sub ListSomething {
     my ($tablename,$idcolumn,$listprocname,$editprocname,$defaultsortorder,
-        $defaultcolumns,$columndefs) = (@_);
+        $defaultcolumns,$extratables,$columndefs,$extrawhere) = (@_);
 
 
     my %columnremap;
@@ -480,6 +513,9 @@ sub ListSomething {
     my @mungedcols;
     my %usedtables;
     my $wherepart = "";
+    if (defined $extrawhere && $extrawhere ne "") {
+        $wherepart = " where " . $extrawhere;
+    }
     foreach my $c (@cols) {
         my $t = $columnremap{$c};
         push(@mungedcols,$t);
@@ -492,6 +528,14 @@ sub ListSomething {
                 $wherepart .= " and ";
             }
             $wherepart .= $columnwhere{$c};
+        }
+    }
+    if ($extratables ne "") {
+        foreach my $i (split(/,/, $extratables)) {
+            $usedtables{$i} = 1;
+            if ($i =~ m/as (.*)$/) {
+                delete $usedtables{$1};
+            }
         }
     }
     $query = Query("select $tablename.$idcolumn," . join(",", @mungedcols) . " from " . join(",", keys(%usedtables)) . $wherepart . " order by $columnremap{$sortorder}");
@@ -542,7 +586,9 @@ sub ViewAccount {
         if ($desc[0] ne ($query->name)[$i]) {
             die "show columns in different order than select???";
         }
-        $_ = $desc[1];
+        if ($desc[0] eq "voucher") {
+            $row[$i] = IdToEmail($row[$i]);
+        }
         $line .= td($row[$i]);
         push(@list,Tr($line));
     }
@@ -637,7 +683,7 @@ sub EditPartition() {
     $query = Query("select pattern from files where partitionid=$partitionid order by pattern");
     push(@list, CreateListRow("files", $query));
     foreach my $class ("Owner", "Peer", "Member") {
-        $query = Query("select users.email from members,users where members.partitionid = $partitionid and members.class = '$class' and users.id = members.userid order by users.email");
+        $query = Query("select users.email,users.disabled from members,users where members.partitionid = $partitionid and members.class = '$class' and users.id = members.userid order by users.email");
         push(@list, CreateListRow($class, $query));
     }
                                                    
@@ -692,6 +738,7 @@ sub ChangePartition {
     foreach my $class ("Owner", "Peer", "Member") {
         my @names = split(/\n/, param($class));
         foreach my $n (@names) {
+            $n =~ s/\(.*\)//g;
             $n = trim($n);
             if ($n eq "") {
                 next;
@@ -741,6 +788,7 @@ sub ChangePartition {
     foreach my $class ("Owner", "Peer", "Member") {
         my @names = split(/\n/, param($class));
         foreach my $n (@names) {
+            $n =~ s/\(.*\)//g;
             $n = trim($n);
             if ($n eq "") {
                 next;
@@ -791,6 +839,9 @@ sub CreateListRow {
     my @row;
     while (my @row = $query->fetchrow()) {
         my $v = $row[0];
+        if ($row[1] eq "Yes") {
+            $v .= " (disabled)";
+        }
         $result .= $v . "\n";
     }
     return Tr(th(a({-href=>"help.html#$title"}, "$title:")) .
@@ -914,3 +965,41 @@ sub pickrandompassword {
     }
     return $result;
 }
+
+sub IdToEmail {
+    my ($id) = (@_);
+    if ($id eq "0") {
+        return "(none)";
+    } else {
+        my $query3 =
+            Query("select email,disabled from users where id = $id");
+        my @row3;
+        if (@row3 = $query3->fetchrow()) {
+            if ($row3[1] eq "Yes") {
+                $row3[0] .= " (Disabled)";
+            }
+            return $row3[0];
+        }
+    }
+
+    return "<font color=red>Unknown Id $id</font>";
+}
+
+sub EmailToId {
+    my ($email, $forcevalid) = (@_);
+
+    $email =~ s/\(.*\)//g;
+    $email = trim($email);
+
+    my $query = Query("select id from users where email = " .
+                      $::db->quote($email));
+    my @row;
+    if (@row = $query->fetchrow()) {
+        return $row[0];
+    }
+    if ($forcevalid || $email ne "") {
+        Punt("$email is not a registered email address.");
+    }
+    return 0;
+}
+    

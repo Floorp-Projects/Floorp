@@ -93,7 +93,7 @@ $repquery = Query("select id,name,cvsroot from repositories order by name");
 while (@reprow = $repquery->fetchrow()) {
     ($repid,$repname,$reproot) = (@reprow);
 
-    $query = Query("select email,passwd,${repname}_group,neednewpassword from users where ${repname}_group != 'None' and passwd != '' order by email");
+    $query = Query("select email,passwd,${repname}_group,neednewpassword,disabled from users where ${repname}_group != 'None' and passwd != '' order by email");
 
     $tmpdir = "/tmp/syncit.$$";
     mkdir $tmpdir, 0777;
@@ -110,8 +110,8 @@ while (@reprow = $repquery->fetchrow()) {
     print PASSWD "# tweak things from there.\n";
     
     while (@row = $query->fetchrow()) {
-        ($email,$password,$group,$neednew) = @row;
-        if ($neednew eq "Yes") {
+        ($email,$password,$group,$neednew,$disabled) = @row;
+        if ($neednew eq "Yes" || $disabled eq "Yes") {
             next;
         }
         $login = $email;

@@ -98,6 +98,9 @@ create table users (
     cvs_group enum("None", "webmonkey", "cvsadm"),
     despot enum("No", "Yes"),
     neednewpassword enum("No", "Yes"),
+    disabled enum("No", "Yes"),
+    voucher mediumint not null,
+    signedform enum("No", "Yes"),
 
     unique(email),
     unique(mozlogin)
