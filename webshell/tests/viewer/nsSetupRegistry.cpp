@@ -27,7 +27,6 @@
 #include "nsIWebShell.h"
 #include "nsIDocumentLoader.h"
 
-#include "nsParserCIID.h"
 #include "nsDOMCID.h"
 #ifdef OJI
 #include "nsILiveconnect.h"
@@ -61,7 +60,6 @@
     #define GFXWIN_DLL "raptorgfxwin.dll"
     #define VIEW_DLL   "raptorview.dll"
     #define WEB_DLL    "raptorweb.dll"
-    #define PARSER_DLL "raptorhtmlpars.dll"
     #define DOM_DLL    "jsdom.dll"
     #define PLUGIN_DLL "raptorplugin.dll"
     #define CAPS_DLL   "caps.dll"
@@ -72,7 +70,6 @@
     #define GFXWIN_DLL    "GFXWIN_DLL"
     #define VIEW_DLL        "VIEW_DLL"
     #define WEB_DLL            "WEB_DLL"
-    #define PARSER_DLL    "PARSER_DLL"
     #define DOM_DLL        "DOM_DLL"
     #define PLUGIN_DLL    "PLUGIN_DLL"
     #define CAPS_DLL    "CAPS_DLL"
@@ -91,7 +88,6 @@
     #endif
     #define VIEW_DLL   "libraptorview"MOZ_DLL_SUFFIX
     #define WEB_DLL    "libraptorwebwidget"MOZ_DLL_SUFFIX
-    #define PARSER_DLL "libraptorhtmlpars"MOZ_DLL_SUFFIX
     #define DOM_DLL    "libjsdom"MOZ_DLL_SUFFIX
     #define PLUGIN_DLL "libraptorplugin"MOZ_DLL_SUFFIX
     #define CAPS_DLL   "libcaps"MOZ_DLL_SUFFIX
@@ -154,11 +150,6 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 // WEB
 static NS_DEFINE_IID(kCWebShellCID, NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kCDocLoaderServiceCID, NS_DOCUMENTLOADER_SERVICE_CID);
-
-// PARSER
-static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-static NS_DEFINE_CID(kCWellFormedDTDCID, NS_WELLFORMEDDTD_CID);
-static NS_DEFINE_CID(kCNavDTDCID, NS_CNAVDTD_CID);
 
 // DOM
 static NS_DEFINE_IID(kCDOMScriptObjectFactory, NS_DOM_SCRIPT_OBJECT_FACTORY_CID);
@@ -345,11 +336,6 @@ NS_SetupRegistry()
   // WEB
   nsComponentManager::RegisterComponentLib(kCWebShellCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kCDocLoaderServiceCID, NULL, NULL, WEB_DLL, PR_FALSE, PR_FALSE);
-
-  // PARSER
-  nsComponentManager::RegisterComponentLib(kCParserCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCWellFormedDTDCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponentLib(kCNavDTDCID, NULL, NULL, PARSER_DLL, PR_FALSE, PR_FALSE);
 
   // DOM
   nsComponentManager::RegisterComponentLib(kCDOMScriptObjectFactory, NULL, NULL, DOM_DLL, PR_FALSE, PR_FALSE);
