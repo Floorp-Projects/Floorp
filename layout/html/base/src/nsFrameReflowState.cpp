@@ -57,32 +57,40 @@ nsHTMLReflowState::GetPageBoxReflowState(const nsReflowState* aParentRS)
 }
 
 nscoord
-nsHTMLReflowState::GetContainingBlockContentWidth() const
+nsHTMLReflowState::GetContainingBlockContentWidth(const nsReflowState* aParentRS)
 {
   nscoord width = 0;
   const nsHTMLReflowState* rs =
-    GetContainingBlockReflowState(parentReflowState);
+    GetContainingBlockReflowState(aParentRS);
   if (nsnull != rs) {
-    if (rs->HaveFixedContentWidth()) {
-      width = rs->minWidth;
-    }
-    else if (NS_UNCONSTRAINEDSIZE != rs->maxSize.width) {
-      width = rs->maxSize.width;
-      if (nsnull != rs->frame) {
-        // Subtract out the border and padding values because the
-        // percentage is to be computed relative to the content
-        // width, not the outer width.
-        const nsStyleSpacing* spacing;
-        nsresult rv;
-        rv = rs->frame->GetStyleData(eStyleStruct_Spacing,
-                                     (const nsStyleStruct*&) spacing);
-        if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
-          nsMargin borderPadding;
-          rs->ComputeBorderPaddingFor(rs->frame,
-                              (nsHTMLReflowState*) rs->parentReflowState,
-                              borderPadding);
-          width -= borderPadding.left + borderPadding.right;
-        }
+    return ((nsHTMLReflowState*)aParentRS)->GetContentWidth();/* XXX cast */
+  }
+  return width;
+}
+
+nscoord
+nsHTMLReflowState::GetContentWidth() const
+{
+  nscoord width = 0;
+  if (HaveFixedContentWidth()) {
+    width = minWidth;
+  }
+  else if (NS_UNCONSTRAINEDSIZE != maxSize.width) {
+    width = maxSize.width;
+    if (nsnull != frame) {
+      // Subtract out the border and padding values because the
+      // percentage is to be computed relative to the content
+      // width, not the outer width.
+      const nsStyleSpacing* spacing;
+      nsresult rv;
+      rv = frame->GetStyleData(eStyleStruct_Spacing,
+                               (const nsStyleStruct*&) spacing);
+      if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
+        nsMargin borderPadding;
+        ComputeBorderPaddingFor(frame,
+                                parentReflowState,
+                                borderPadding);
+        width -= borderPadding.left + borderPadding.right;
       }
     }
   }
@@ -318,7 +326,7 @@ nsHTMLReflowState::ComputeHorizontalValue(const nsHTMLReflowState& aRS,
 {
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
-    nscoord width = aRS.GetContainingBlockContentWidth();
+    nscoord width = aRS.GetContentWidth();
     float pct = aCoord.GetPercentValue();
     aResult = NSToCoordFloor(width * pct);
   }
@@ -333,7 +341,7 @@ nsHTMLReflowState::ComputeVerticalValue(const nsHTMLReflowState& aRS,
   aResult = 0;
   if (eStyleUnit_Percent == aUnit) {
     // XXX temporary!
-    nscoord width = aRS.GetContainingBlockContentWidth();
+    nscoord width = aRS.GetContentWidth();
     float pct = aCoord.GetPercentValue();
     aResult = NSToCoordFloor(width * pct);
   }
@@ -350,7 +358,16 @@ nsHTMLReflowState::ComputeMarginFor(nsIFrame* aFrame,
                             (const nsStyleStruct*&) spacing);
   if (NS_SUCCEEDED(rv) && (nsnull != spacing)) {
     // If style style can provide us the margin directly, then use it.
-    if (!spacing->GetMargin(aResult) && (nsnull != aParentRS)) {
+#if 0
+    if (!spacing->GetMargin(aResult) && (nsnull != aParentRS))
+#else
+    spacing->CalcMarginFor(aFrame, aResult);
+    if ((eStyleUnit_Percent == spacing->mMargin.GetTopUnit()) ||
+        (eStyleUnit_Percent == spacing->mMargin.GetRightUnit()) ||
+        (eStyleUnit_Percent == spacing->mMargin.GetBottomUnit()) ||
+        (eStyleUnit_Percent == spacing->mMargin.GetLeftUnit()))
+#endif
+    {
       // We have to compute the value (because it's uncomputable by
       // the style code).
       const nsHTMLReflowState* rs = GetContainingBlockReflowState(aParentRS);
