@@ -1,57 +1,28 @@
-
 include $(top_srcdir)/common.mk
-
-INCLUDES = -I$(BOEHM_DIR)
 
 noinst_LIBRARIES = libjs2.a
 
-# can't add this to the library, clients will need to link to gc.a
-# libjs2_a_LIBADD = $(LIBBOEHM)
+libjs2_a_DEPENDENCIES = $(LIBFDLIBM)
 
-libjs2_a_DEPENDENCIES = $(LIBBOEHM)
 libjs2_a_SOURCES = \
-	algo.h \
-	cpucfg.h \
-	debugger.cpp \
-	debugger.h \
-	ds.h \
+	bytecodegen.cpp \
+	collector.cpp \
 	exception.cpp \
-	exception.h \
 	formatter.cpp \
-	formatter.h \
-	gc_allocator.h \
-	gc_container.h \
+	fdlibm_ns.cpp \
 	hash.cpp \
-	hash.h \
-	icode_emitter.cpp \
-	icodegenerator.cpp \
-    icodegenerator.h \
-	interpreter.cpp \
-	interpreter.h \
+	js2runtime.cpp \
+	js2execution.cpp \
+	jsarray.cpp \
 	jsmath.cpp \
-	jsmath.h \
-	jstypes.cpp \
-	jstypes.h \
+	jsstring.cpp \
 	lexer.cpp \
-	lexer.h \
 	mem.cpp \
-	mem.h \
-	nodefactory.h \
 	numerics.cpp \
-	numerics.h \
 	parser.cpp \
-	parser.h \
 	reader.cpp \
-	reader.h \
-	stlcfg.h \
 	strings.cpp \
-	strings.h \
-	systemtypes.h \
+	tracer.cpp \
 	token.cpp \
-	token.h \
 	utilities.cpp \
-	utilities.h \
-	vmtypes.cpp \
-	vmtypes.h \
-	world.cpp \
-	world.h
+	world.cpp
