@@ -7,6 +7,22 @@ __declspec(dllexport) WIDGET GlobalWidgetArray[1000];
 __declspec(dllexport) int GlobalArrayIndex=0;
 __declspec(dllexport) BOOL IsSameCache = TRUE;
 
+extern "C" __declspec(dllexport)
+int GetAttrib(CString theValue, char* attribArray[MAX_SIZE])
+{
+	//	attribArray= (char**) malloc(MIN_SIZE*MINSIZE);
+	int j = 0;
+	for (int i = 0; i < GlobalArrayIndex; i++)
+	{
+		if (GlobalWidgetArray[i].attrib == theValue) 
+		{
+			attribArray[j] = (char*)(LPCTSTR)(GlobalWidgetArray[i].name);
+			j++;
+		}
+	}
+	return j;
+}
+
 
 extern "C" __declspec(dllexport)
 WIDGET* findWidget(CString theName)

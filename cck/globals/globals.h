@@ -11,3 +11,4 @@ extern "C" __declspec(dllimport) WIDGET* SetGlobal(CString theName, CString theV
 extern "C" __declspec(dllimport) WIDGET* findWidget(CString theName);
 extern "C" __declspec(dllimport) void CopyDir(CString from, CString to, LPCTSTR extension, int overwrite);
 extern "C" __declspec(dllexport) void ExecuteCommand(char *command, int showflag, DWORD wait);
+extern "C" __declspec(dllimport) int GetAttrib(CString theValue, char* attribArray[]);
