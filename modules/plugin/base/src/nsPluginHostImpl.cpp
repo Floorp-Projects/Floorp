@@ -2483,6 +2483,21 @@ nsresult nsPluginStreamListenerPeer::SetUpStreamListener(nsIRequest *request,
 
   if (NS_SUCCEEDED(rv)) {
     mPStreamListener->GetStreamType(&mStreamType);
+    // if plugin requests stream type StreamType_AsFile or StreamType_AsFileOnly
+    // most likely it'll try to check file extension,
+    // but our cache does nor support it yet.
+    // temp fix is to copy the file+ext into temp location
+    // all this code should be deleted when bug 90558 got fixed
+#if !defined(CACHE_SUPPOPTS_FILE_EXTENSION)
+    if (mStreamType	>= nsPluginStreamType_AsFile && httpChannel) {
+      // check out if we already set output stream for this channel
+      nsCOMPtr<nsIOutputStream> outStream;
+      mPluginStreamInfo->GetLocalCachedFileStream(getter_AddRefs(outStream));
+      if (!outStream) {
+        SetupPluginCacheFile(httpChannel);
+      }
+    }
+#endif
   }
 
   return rv;
