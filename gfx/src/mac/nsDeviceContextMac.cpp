@@ -1263,6 +1263,19 @@ nsFontEnumeratorMac::HaveFontFor(const char* aLangGroup,PRBool* aResult)
 }
 
 NS_IMETHODIMP
+nsFontEnumeratorMac::GetDefaultFont(const char *aLangGroup, 
+  const char *aGeneric, PRUnichar **aResult)
+{
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsFontEnumeratorMac::UpdateFontList(PRBool *updateFontList)
 {
   *updateFontList = PR_FALSE; // always return false for now

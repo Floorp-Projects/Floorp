@@ -6436,13 +6436,18 @@ nsFontEnumeratorGTK::EnumerateFonts(const char* aLangGroup,
   *aResult = nsnull;
   NS_ENSURE_ARG_POINTER(aCount);
   *aCount = 0;
-  NS_ENSURE_ARG_POINTER(aGeneric);
-  NS_ENSURE_ARG_POINTER(aLangGroup);
 
-  nsCOMPtr<nsIAtom> langGroup = getter_AddRefs(NS_NewAtom(aLangGroup));
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+  nsCOMPtr<nsIAtom> langGroup;
+  if (aLangGroup && *aLangGroup)
+    langGroup = do_GetAtom(aLangGroup);
+  const char* generic = nsnull;
+  if (aGeneric && *aGeneric)
+    generic = aGeneric;
 
   // XXX still need to implement aLangGroup and aGeneric
-  return EnumFonts(langGroup, aGeneric, aCount, aResult);
+  return EnumFonts(langGroup, generic, aCount, aResult);
 }
 
 NS_IMETHODIMP
@@ -6454,6 +6459,19 @@ nsFontEnumeratorGTK::HaveFontFor(const char* aLangGroup, PRBool* aResult)
 
   *aResult = PR_TRUE; // always return true for now.
   // Finish me - ftang
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorGTK::GetDefaultFont(const char *aLangGroup, 
+  const char *aGeneric, PRUnichar **aResult)
+{
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
   return NS_OK;
 }
 

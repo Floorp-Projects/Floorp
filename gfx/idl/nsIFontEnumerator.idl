@@ -47,13 +47,21 @@ interface nsIFontEnumerator : nsISupports
    */
   void EnumerateFonts(in string aLangGroup, in string aGeneric,
     out PRUint32 aCount, [retval, array, size_is(aCount)] out wstring aResult);
-  /*
+
+  /**
     @param  aLangGroup language group
     @return bool do we have a font for this language group
    */
   void HaveFontFor(in string aLangGroup, [retval] out boolean aResult);
 
-  /* 
+  /**
+   * @param  aLangGroup language group
+   * @param  aGeneric CSS generic font
+   * @return suggested default font for this language group and generic family
+   */
+  wstring getDefaultFont(in string aLangGroup, in string aGeneric);
+
+  /**
    * update the global font list
    * return true if font list is changed
    */

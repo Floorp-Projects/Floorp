@@ -387,15 +387,21 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateAllFonts(PRUint32* aCount, PRUnichar*
 	else return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const char* aGeneric, PRUint32* aCount, PRUnichar*** aResult )
+NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const char* aGeneric, PRUint32* aCount, PRUint32* aDefault, PRUnichar*** aResult )
 {
 
 	NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = nsnull;
 	NS_ENSURE_ARG_POINTER(aCount);
 	*aCount = 0;
-	NS_ENSURE_ARG_POINTER(aGeneric);
-	NS_ENSURE_ARG_POINTER(aLangGroup);
+	NS_ENSURE_ARG_POINTER(aDefault);
+	*aDefault = 0;
+
+	// aLangGroup=null or ""  means any (i.e., don't care)
+	// aGeneric=null or ""  means any (i.e, don't care)
+	const char* generic = nsnull;
+	if (aGeneric && *aGeneric)
+		generic = aGeneric;
 
 	int i;
 	if(!gFontDetails)
@@ -428,7 +434,11 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const 
 		  int nCount = 0;
 		  for(i=0;i<gnFonts;i++)
 			{
-				if(stricmp(aGeneric, "monospace") == 0)
+				if(!generic)
+				  {
+					  array[nCount++] = ToNewUnicode(*gFontNames[i]);
+				  }
+				else if stricmp(generic, "monospace") == 0)
 				  {
 					  if(gFontDetails[i].flags & PHFONT_INFO_FIXED)
 						 array[nCount++] = ToNewUnicode(*gFontNames[i]);
@@ -453,6 +463,19 @@ NS_IMETHODIMP
 	NS_ENSURE_ARG_POINTER(aResult);
 	*aResult = PR_TRUE; // always return true for now.
 	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFontEnumeratorPh::GetDefaultFont(const char *aLangGroup, 
+  const char *aGeneric, PRUnichar **aResult)
+{
+  // aLangGroup=null or ""  means any (i.e., don't care)
+  // aGeneric=null or ""  means any (i.e, don't care)
+
+  NS_ENSURE_ARG_POINTER(aResult);
+  *aResult = nsnull;
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
