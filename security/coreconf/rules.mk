@@ -392,7 +392,6 @@ WCCFLAGS3 := $(subst -D,-d,$(WCCFLAGS2))
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.c
 	@$(MAKE_OBJDIR)
-	@echo vpath=$(VPATH)
 ifdef USE_NT_C_SYNTAX
 	$(CC) -Fo$@ -c $(CFLAGS) $(subst /,\\,$<)
 else
@@ -402,16 +401,16 @@ endif
 ifneq ($(OS_ARCH), WINNT)
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.s
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $*.s
+	$(AS) -o $@ $(ASFLAGS) -c $<
 endif
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.asm
 	@$(MAKE_OBJDIR)
-	$(AS) -Fo$@ $(ASFLAGS) -c $*.asm
+	$(AS) -Fo$@ $(ASFLAGS) -c $<
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.S
 	@$(MAKE_OBJDIR)
-	$(AS) -o $@ $(ASFLAGS) -c $*.S
+	$(AS) -o $@ $(ASFLAGS) -c $<
 
 $(OBJDIR)/$(PROG_PREFIX)%: %.cpp
 	@$(MAKE_OBJDIR)
@@ -426,19 +425,19 @@ endif
 #
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.cc
 	@$(MAKE_OBJDIR)
-	$(CCC) -o $@ -c $(CFLAGS) $*.cc
+	$(CCC) -o $@ -c $(CFLAGS) $<
 
 $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX): %.cpp
 	@$(MAKE_OBJDIR)
 ifdef STRICT_CPLUSPLUS_SUFFIX
-	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > $(OBJDIR)/t_$*.cc
+	echo "#line 1 \"$<\"" | cat - $< > $(OBJDIR)/t_$*.cc
 	$(CCC) -o $@ -c $(CFLAGS) $(OBJDIR)/t_$*.cc
 	rm -f $(OBJDIR)/t_$*.cc
 else
 ifdef USE_NT_C_SYNTAX
-	$(CCC) -Fo$@ -c $(CFLAGS) $*.cpp
+	$(CCC) -Fo$@ -c $(CFLAGS) $<
 else
-	$(CCC) -o $@ -c $(CFLAGS) $*.cpp
+	$(CCC) -o $@ -c $(CFLAGS) $<
 endif
 endif #STRICT_CPLUSPLUS_SUFFIX
 
