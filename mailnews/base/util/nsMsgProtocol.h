@@ -34,6 +34,9 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 
+class nsIPrompt;
+class nsIMsgMailNewsUrl;
+
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
 // it unifies the core networking code for the protocols. My hope is that
@@ -119,6 +122,10 @@ protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>       mOwner;
   nsCString                   m_ContentType;
+
+  // private helper routine used by subclasses to quickly get a reference to the correct prompt dialog
+  // for a mailnews url. 
+  nsresult GetPromptDialogFromUrl(nsIMsgMailNewsUrl * aMsgUrl, nsIPrompt ** aPromptDialog);
 };
 
 #endif /* nsMsgProtocol_h__ */

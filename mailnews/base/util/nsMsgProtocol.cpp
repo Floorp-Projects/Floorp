@@ -31,6 +31,7 @@
 #include "nsFileStream.h"
 #include "nsINetSupportDialogService.h"
 #include "nsIDNSService.h"
+#include "nsIMsgWindow.h"
 #include "nsIMsgStatusFeedback.h"
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -226,25 +227,26 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	if (m_channelListener)
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
 	
-  nsCOMPtr <nsIMsgMailNewsUrl> aMsgUrl = do_QueryInterface(ctxt, &rv);
-	if (NS_SUCCEEDED(rv) && aMsgUrl)
+  nsCOMPtr <nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(ctxt, &rv);
+	if (NS_SUCCEEDED(rv) && msgUrl)
 	{
-		rv = aMsgUrl->SetUrlState(PR_FALSE, aStatus);
+		rv = msgUrl->SetUrlState(PR_FALSE, aStatus);
 		if (m_loadGroup)
 			m_loadGroup->RemoveChannel(NS_STATIC_CAST(nsIChannel *, this), nsnull, aStatus, nsnull);
-	}
+    
+	  // !NS_BINDING_ABORTED because we don't want to see an alert if the user 
+	  // cancelled the operation.  also, we'll get here because we call Cancel()
+	  // to force removal of the nsSocketTransport.  see CloseSocket()
+	  // bugs #30775 and #30648 relate to this
+	  if (NS_FAILED(aStatus) && (aStatus != NS_BINDING_ABORTED)) 
+    {
+      nsCOMPtr<nsIPrompt> msgPrompt;
+      GetPromptDialogFromUrl(msgUrl , getter_AddRefs(msgPrompt));
+      NS_ENSURE_TRUE(msgPrompt, NS_ERROR_FAILURE);
 
-	
-	// !NS_BINDING_ABORTED because we don't want to see an alert if the user 
-	// cancelled the operation.  also, we'll get here because we call Cancel()
-	// to force removal of the nsSocketTransport.  see CloseSocket()
-	// bugs #30775 and #30648 relate to this
-	if (NS_FAILED(aStatus) && (aStatus != NS_BINDING_ABORTED)) {
-		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
-		if (NS_SUCCEEDED(rv) && dialog) {
-			// todo, put this into a string bundle
-			nsAutoString alertMsg; alertMsg.AssignWithConversion("unknown error.");
-			switch (aStatus) {
+      nsAutoString alertMsg; alertMsg.AssignWithConversion("unknown error.");
+			switch (aStatus) 
+      {
 				case NS_ERROR_UNKNOWN_HOST:
 						// todo, put this into a string bundle
 						alertMsg.AssignWithConversion("Failed to connect to the server.");
@@ -260,11 +262,26 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
                default:
 						break;
 			}
-			dialog->Alert(nsnull, alertMsg.GetUnicode());
-		}
-	}
+			
+      rv = msgPrompt->Alert(nsnull, alertMsg.GetUnicode());
+    } // if we got an error code
+  } // if we have a mailnews url.
 
 	return rv;
+}
+
+nsresult nsMsgProtocol::GetPromptDialogFromUrl(nsIMsgMailNewsUrl * aMsgUrl, nsIPrompt ** aPromptDialog)
+{
+  // get the nsIPrompt interface from the message window associated wit this url.
+  nsCOMPtr<nsIMsgWindow> msgWindow;
+  aMsgUrl->GetMsgWindow(getter_AddRefs(msgWindow));
+  NS_ENSURE_TRUE(msgWindow, NS_ERROR_FAILURE);
+
+  msgWindow->GetPromptDialog(aPromptDialog);
+
+  NS_ENSURE_TRUE(*aPromptDialog, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 nsresult nsMsgProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
