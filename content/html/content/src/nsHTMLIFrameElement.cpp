@@ -481,6 +481,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
     }
   }
 
+  nsGenericHTMLElement::MapScrollingAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapImageAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
@@ -497,6 +498,7 @@ nsHTMLIFrameElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
 
   static const AttributeDependenceEntry* const map[] = {
     attributes,
+    sScrollingAttributeMap,
     sImageAlignAttributeMap,
     sCommonAttributeMap,
   };

@@ -502,6 +502,7 @@ public:
   static const AttributeDependenceEntry sImageAlignAttributeMap[];
   static const AttributeDependenceEntry sDivAlignAttributeMap[];
   static const AttributeDependenceEntry sBackgroundAttributeMap[];
+  static const AttributeDependenceEntry sScrollingAttributeMap[];
   
   /**
    * A common method where you can just pass in a list of maps to check
@@ -571,6 +572,16 @@ public:
    */
   static void MapBackgroundAttributesInto(const nsIHTMLMappedAttributes* aAttributes,
                                           nsRuleData* aData);
+  /**
+   * Helper to map the scrolling attribute on FRAME and IFRAME
+   * into a style struct.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapScrollingAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                        nsRuleData* aData);
   /**
    * Get the primary frame for a piece of content.
    *

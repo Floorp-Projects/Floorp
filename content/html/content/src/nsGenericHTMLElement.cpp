@@ -3238,6 +3238,12 @@ nsGenericHTMLElement::sBackgroundAttributeMap[] = {
   { nsnull }
 };
 
+/* static */ const nsGenericHTMLElement::AttributeDependenceEntry
+nsGenericHTMLElement::sScrollingAttributeMap[] = {
+  { &nsHTMLAtoms::scrolling },
+  { nsnull }
+};
+
 PRBool
 nsGenericHTMLElement::FindAttributeDependence(const nsIAtom* aAttribute,
                                               const AttributeDependenceEntry* const aMaps[],
@@ -3479,6 +3485,47 @@ nsGenericHTMLElement::MapBackgroundAttributesInto(const nsIHTMLMappedAttributes*
     if ((eHTMLUnit_Color == value.GetUnit()) ||
         (eHTMLUnit_ColorName == value.GetUnit()))
       aData->mColorData->mBackColor.SetColorValue(value.GetColorValue());
+  }
+}
+
+void
+nsGenericHTMLElement::MapScrollingAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                                nsRuleData* aData)
+{
+  if (aData->mSID != eStyleStruct_Display)
+    return;
+
+  // scrolling
+  if (aData->mDisplayData->mOverflow.GetUnit() == eCSSUnit_Null) {
+    nsHTMLValue value;
+    aAttributes->GetAttribute(nsHTMLAtoms::scrolling, value);
+    if (eHTMLUnit_Enumerated == value.GetUnit()) {
+      PRInt32 mappedValue;
+      switch (value.GetIntValue()) {
+        case NS_STYLE_FRAME_ON:
+        case NS_STYLE_FRAME_SCROLL:
+        case NS_STYLE_FRAME_YES:
+          mappedValue = NS_STYLE_OVERFLOW_SCROLL;
+          break;
+
+        case NS_STYLE_FRAME_OFF:
+        case NS_STYLE_FRAME_NOSCROLL:
+        case NS_STYLE_FRAME_NO:
+          mappedValue = NS_STYLE_OVERFLOW_SCROLLBARS_NONE;
+          break;
+      
+        case NS_STYLE_FRAME_AUTO:
+          mappedValue = NS_STYLE_OVERFLOW_AUTO;
+          break;
+
+        default:
+          NS_NOTREACHED("unexpected value");
+          mappedValue = NS_STYLE_OVERFLOW_AUTO;
+          break;
+      }
+      aData->mDisplayData->mOverflow.SetIntValue(mappedValue,
+                                                 eCSSUnit_Enumerated);
+    }
   }
 }
 

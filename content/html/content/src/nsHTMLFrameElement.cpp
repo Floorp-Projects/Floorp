@@ -88,6 +88,8 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
+  NS_IMETHOD_(PRBool) HasAttributeDependentStyle(const nsIAtom* aAttribute) const;
+  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 };
 
 nsresult
@@ -283,6 +285,32 @@ nsHTMLFrameElement::AttributeToString(nsIAtom* aAttribute,
 
   return nsGenericHTMLLeafElement::AttributeToString(aAttribute, aValue,
                                                      aResult);
+}
+
+static void
+MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes,
+                      nsRuleData* aData)
+{
+  nsGenericHTMLElement::MapScrollingAttributeInto(aAttributes, aData);
+  nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
+}
+
+NS_IMETHODIMP_(PRBool)
+nsHTMLFrameElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
+{
+  static const AttributeDependenceEntry* const map[] = {
+    sScrollingAttributeMap,
+    sCommonAttributeMap,
+  };
+  
+  return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
+}
+
+NS_IMETHODIMP
+nsHTMLFrameElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+{
+  aMapRuleFunc = &MapAttributesIntoRule;
+  return NS_OK;
 }
 
 
