@@ -3224,13 +3224,13 @@ const nsString* RuleProcessorData::GetLang(void)
 
 static const PRUnichar kNullCh = PRUnichar('\0');
 
-static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, PRBool aCaseSensitive)
+static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue,
+                            const nsStringComparator& aComparator)
 {
   nsAutoString  valueList(aValueList);
 
   valueList.Append(kNullCh);  // put an extra null at the end
 
-  const PRUnichar* value = aValue.get();
   PRUnichar* start = valueList.BeginWriting();
   PRUnichar* end   = start;
 
@@ -3246,16 +3246,8 @@ static PRBool ValueIncludes(const nsString& aValueList, const nsString& aValue, 
     *end = kNullCh; // end string here
 
     if (start < end) {
-      if (aCaseSensitive) {
-        if (!nsCRT::strcmp(value, start)) {
-          return PR_TRUE;
-        }
-      }
-      else {
-        if (nsDependentString(value).Equals(nsDependentString(start),
-                                            nsCaseInsensitiveStringComparator())) {
-          return PR_TRUE;
-        }
+      if (aValue.Equals(nsDependentString(start, end), aComparator)) {
+        return PR_TRUE;
       }
     }
 
@@ -3320,7 +3312,7 @@ static PRBool IsSignificantChild(nsIContent* aChild, PRBool aAcceptNonWhitespace
 static PRBool
 DashMatchCompare(const nsAString& aAttributeValue,
                  const nsAString& aSelectorValue,
-                 const PRBool aCaseSensitive)
+                 const nsStringComparator& aComparator)
 {
   PRBool result;
   PRUint32 selectorLen = aSelectorValue.Length();
@@ -3339,11 +3331,7 @@ DashMatchCompare(const nsAString& aAttributeValue,
       result = PR_FALSE;
     }
     else {
-      if (aCaseSensitive)
-        result = StringBeginsWith(aAttributeValue, aSelectorValue);
-      else
-        result = StringBeginsWith(aAttributeValue, aSelectorValue,
-                                  nsCaseInsensitiveStringComparator());
+      result = StringBeginsWith(aAttributeValue, aSelectorValue, aComparator);
     }
   }
   return result;
@@ -3356,44 +3344,24 @@ static PRBool AttrMatchesValue(const nsAttrSelector* aAttrSelector,
                                const nsString& aValue)
 {
   NS_PRECONDITION(aAttrSelector, "Must have an attribute selector");
-  const PRBool isCaseSensitive = aAttrSelector->mCaseSensitive;
+  const nsDefaultStringComparator defaultComparator;
+  const nsCaseInsensitiveStringComparator ciComparator;
+  const nsStringComparator& comparator = aAttrSelector->mCaseSensitive
+                ? NS_STATIC_CAST(const nsStringComparator&, defaultComparator)
+                : NS_STATIC_CAST(const nsStringComparator&, ciComparator);
   switch (aAttrSelector->mFunction) {
     case NS_ATTR_FUNC_EQUALS: 
-      if (isCaseSensitive) {
-        return aValue.Equals(aAttrSelector->mValue);
-      }
-      else {
-        return aValue.Equals(aAttrSelector->mValue,
-                             nsCaseInsensitiveStringComparator());
-      }
+      return aValue.Equals(aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_INCLUDES: 
-      return ValueIncludes(aValue, aAttrSelector->mValue, isCaseSensitive);
+      return ValueIncludes(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_DASHMATCH: 
-      return DashMatchCompare(aValue, aAttrSelector->mValue, isCaseSensitive);
+      return DashMatchCompare(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_ENDSMATCH:
-      if (isCaseSensitive) {
-        return StringEndsWith(aValue, aAttrSelector->mValue);
-      }
-      else {
-        return StringEndsWith(aValue, aAttrSelector->mValue,
-                              nsCaseInsensitiveStringComparator());
-      }
+      return StringEndsWith(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_BEGINSMATCH:
-      if (isCaseSensitive) {
-        return StringBeginsWith(aValue, aAttrSelector->mValue);
-      }
-      else {
-        return StringBeginsWith(aValue, aAttrSelector->mValue,
-                                nsCaseInsensitiveStringComparator());
-      }
+      return StringBeginsWith(aValue, aAttrSelector->mValue, comparator);
     case NS_ATTR_FUNC_CONTAINSMATCH:
-      if (isCaseSensitive) {
-        return FindInReadable(aAttrSelector->mValue, aValue);
-      }
-      else {
-        return FindInReadable(aAttrSelector->mValue, aValue,
-                              nsCaseInsensitiveStringComparator());
-      }
+      return FindInReadable(aAttrSelector->mValue, aValue, comparator);
     default:
       NS_NOTREACHED("Shouldn't be ending up here");
       return PR_FALSE;
@@ -3535,7 +3503,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         const nsString* lang = data.GetLang();
         if (lang && !lang->IsEmpty()) { // null check for out-of-memory
           result = localTrue == DashMatchCompare(*lang,
-                          nsDependentString(pseudoClass->mString), PR_FALSE);
+                                    nsDependentString(pseudoClass->mString),
+                                    nsCaseInsensitiveStringComparator());
         }
         else {
           nsIDocument* doc = data.mContent->GetDocument();
@@ -3558,7 +3527,7 @@ static PRBool SelectorMatches(RuleProcessorData &data,
               }
               if (DashMatchCompare(Substring(language, begin, end-begin),
                                    langString,
-                                   PR_FALSE)) {
+                                   nsCaseInsensitiveStringComparator())) {
                 result = localTrue;
                 break;
               }
