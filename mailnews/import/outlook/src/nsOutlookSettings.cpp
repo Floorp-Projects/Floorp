@@ -44,6 +44,7 @@
 #include "nsISmtpServer.h"
 #include "nsOutlookStringBundle.h"
 #include "OutlookDebugLog.h"
+#include "nsIPop3IncomingServer.h"
 
 static NS_DEFINE_IID(kISupportsIID,        	NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kComponentManagerCID, 	NS_COMPONENTMANAGER_CID);
@@ -374,7 +375,16 @@ PRBool OutlookSettings::DoPOP3Server( nsIMsgAccountManager *pMgr, HKEY hKey, cha
 				
 				IMPORT_LOG0( "Created a new account and set the incoming server to the POP3 server.\n");
 					
-				// Fiddle with the identities
+        nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        BYTE *pLeaveOnServer = nsOutlookRegUtil::GetValueBytes( hKey, "Leave Mail On Server");
+        if (pLeaveOnServer)
+        {
+          pop3Server->SetLeaveMessagesOnServer(*pLeaveOnServer == 1 ? PR_TRUE : PR_FALSE);
+          nsOutlookRegUtil::FreeValueBytes(pLeaveOnServer);
+        }
+
+        // Fiddle with the identities
 				SetIdentities( pMgr, account, hKey);
 				result = PR_TRUE;
 				if (ppAccount)

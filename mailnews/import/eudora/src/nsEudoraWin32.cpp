@@ -24,6 +24,7 @@
 #include "nsIServiceManager.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgAccount.h"
+#include "nsIPop3IncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
 #include "nsISmtpService.h"
@@ -751,9 +752,14 @@ PRBool nsEudoraWin32::BuildPOPAccount( nsIMsgAccountManager *accMgr, const char 
 			rv = accMgr->CreateAccount( getter_AddRefs( account));
 			if (NS_SUCCEEDED( rv) && account) {
 				rv = account->SetIncomingServer( in);
-				
+
 				IMPORT_LOG0( "Created a new account and set the incoming server to the POP3 server.\n");
 					
+        nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        UINT valInt = ::GetPrivateProfileInt(pSection, "LeaveMailOnServer", 0, pIni);
+        pop3Server->SetLeaveMessagesOnServer(valInt ? PR_TRUE : PR_FALSE);
+				
 				// Fiddle with the identities
 				SetIdentities( accMgr, account, pSection, pIni, valBuff);
 				result = PR_TRUE;

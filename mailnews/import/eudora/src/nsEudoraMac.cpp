@@ -35,6 +35,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "nsEudoraStringBundle.h"
 #include "nsEudoraImport.h"
+#include "nsIPop3IncomingServer.h"
 
 #include "EudoraDebugLog.h"
 
@@ -498,6 +499,14 @@ nsresult nsEudoraMac::FindTOCFile( nsIFileSpec *pMailFile, nsIFileSpec **ppTOCFi
 #define	kFullNameStr			4
 #define kLeaveOnServerStr		5
 
+// resource IDs 
+#define kSmtpServerID         4
+#define kEmailAddressID       3
+#define kReturnAddressID      5
+#define kFullNameID           77
+#define kLeaveMailOnServerID  18
+
+
 PRBool nsEudoraMac::GetSettingsFromResource( nsIFileSpec *pSettings, short resId, nsCString **pStrs, PRBool *pIMAP)
 {
 	*pIMAP = PR_FALSE;
@@ -523,11 +532,11 @@ PRBool nsEudoraMac::GetSettingsFromResource( nsIFileSpec *pSettings, short resId
 			pStr[i] = (StringPtr) new PRUint8[256];
 			(pStr[i])[0] = 0;
 		}
-		GetIndString( pStr[0], resId /* 1000 */, 4);
-		GetIndString( pStr[1], resId, 3);
-		GetIndString( pStr[2], resId, 5);
-		GetIndString( pStr[3], resId, 77);
-		GetIndString( pStr[4], resId, 18);
+		GetIndString( pStr[0], resId /* 1000 */, kSmtpServerID);
+		GetIndString( pStr[1], resId, kEmailAddressID); // user name@pop server
+		GetIndString( pStr[2], resId, kReturnAddressID); 
+		GetIndString( pStr[3], resId, kFullNameID);
+		GetIndString( pStr[4], resId, kLeaveMailOnServerID);
 		CloseResFile( resFile);
 		
 		theStr = pStr[0];
@@ -711,7 +720,11 @@ PRBool nsEudoraMac::BuildPOPAccount( nsIMsgAccountManager *accMgr, nsCString **p
 				
 				IMPORT_LOG0( "Created a new account and set the incoming server to the POP3 server.\n");
 					
-				// Fiddle with the identities
+        nsCOMPtr<nsIPop3IncomingServer> pop3Server = do_QueryInterface(in, &rv);
+        NS_ENSURE_SUCCESS(rv,rv);
+        pop3Server->SetLeaveMessagesOnServer(*pStrs[kLeaveOnServerStr])[0] == 'Y' ? PR_TRUE : PR_FALSE);
+
+        // Fiddle with the identities
 				SetIdentities( accMgr, account, pStrs);
 				result = PR_TRUE;
 				if (ppAccount)
