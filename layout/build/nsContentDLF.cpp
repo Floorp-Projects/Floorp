@@ -507,7 +507,8 @@ nsContentDLF::CreateRDFDocument(const char* aCommand,
 
 static nsresult
 RegisterTypes(nsICategoryManager* aCatMgr,
-              const char* const* aTypes)
+              const char* const* aTypes,
+              PRBool aPersist = PR_TRUE)
 {
   nsresult rv = NS_OK;
   while (*aTypes) {
@@ -520,7 +521,7 @@ RegisterTypes(nsICategoryManager* aCatMgr,
     // to query the types of viewers layout can create.
     rv = aCatMgr->AddCategoryEntry("Gecko-Content-Viewers", contentType,
                                    "@mozilla.org/content/document-loader-factory;1",
-                                   PR_TRUE, PR_TRUE, nsnull);
+                                   aPersist, PR_TRUE, nsnull);
     if (NS_FAILED(rv)) break;
   }
   return rv;
@@ -547,7 +548,7 @@ nsContentDLF::RegisterSVG()
   nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  return RegisterTypes(catmgr, gSVGTypes);
+  return RegisterTypes(catmgr, gSVGTypes, PR_FALSE);
 }
 
 NS_IMETHODIMP
