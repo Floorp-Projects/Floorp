@@ -57,7 +57,7 @@ Rights Reserved.
  	</box>
 	<box orient="horizontal" >
 		<text id="foldertextlabel" class="label" value="..." for="name"/>
-		<textfield id="name"/>
+		<textfield id="namefield" value="" />
 	</box>
 	<box orient="horizontal" >
 		<box orient="vertical" flex="100%">

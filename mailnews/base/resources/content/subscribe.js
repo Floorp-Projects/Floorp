@@ -5,6 +5,7 @@ var gServerURI = null;
 var RDF = null;
 var gSubscribeDS = null;
 var gStatusBar = null;
+var gNameField = null;
 
 function Stop()
 {
@@ -90,6 +91,7 @@ function SubscribeOnLoad()
 	
    	gSubscribeTree = document.getElementById('subscribetree');
 	gStatusBar = document.getElementById('statusbar-icon');
+	gNameField = document.getElementById('namefield');
 
 	doSetOKCancel(subscribeOK,subscribeCancel);
 
@@ -244,6 +246,13 @@ function SubscribeOnClick(event)
 {
 	if (event.clickCount == 2) {
 		ReverseStateFromNode(event.target.parentNode.parentNode);
+	}
+	else {
+ 		var targetclass = event.target.getAttribute('class');
+		if (targetclass != 'tree-cell-twisty') {
+			var name = event.target.parentNode.parentNode.getAttribute('name');
+			gNameField.setAttribute('value',name);
+		}
 	}
 }
 
