@@ -32,7 +32,7 @@ Rights Reserved.
 			  class="abDirectory" 
 			  flex="100%"
 			  ref="abdirectory://" open="true"
-			  rdf:datasources="rdf:addressdirectory"
+			  datasources="rdf:addressdirectory"
 			  onclick="return ChangeDirectoryByDOMNode(event.target.parentNode.parentNode)">
 			
 			<template>

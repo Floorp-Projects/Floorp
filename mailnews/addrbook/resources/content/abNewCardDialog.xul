@@ -28,6 +28,7 @@ Rights Reserved.
 
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
 		title="&editcardWindow.title;"
 		onload="OnLoadNewCard()"
 		class="dialog"
@@ -35,13 +36,23 @@ Rights Reserved.
 		style="padding:0px"
 		align="vertical">
 
-<html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/>
+<!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
+	<!--box align="horizontal">
+		<html:label for="abPopup">Test: </html:label>
+		<html:select id="abPopup" ref="abdirectory://" datasources="rdf:addressdirectory"> 
+			<template> 
+				<html:option uri="..."
+							 value="rdf:http://home.netscape.com/NC-rdf#DirName"
+							 name="rdf:http://home.netscape.com/NC-rdf#URL"/> 
+			</template> 
+		</html:select> 
+	</box-->
+	
 	<box align="horizontal">
 		<html:label for="chooseAddressBook">&chooseAddressBook.label;</html:label>
 		<html:select id="chooseAddressBook">
 		</html:select>
-		<spring flex="100%"/>
 	</box>
 	
 	<spring style="height:1em"/>
@@ -51,4 +62,3 @@ Rights Reserved.
 	<box id="okCancelButtons"/>
 
 </window>
-

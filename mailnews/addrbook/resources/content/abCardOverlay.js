@@ -32,7 +32,7 @@ function OnLoadNewCard()
 		var option = new Option(abArray[index], uriArray[index]);
 		popup.add(option, null);
 	}
-	popup.value = uriArray[selected]
+	popup.value = uriArray[selected];
 }
 
 
