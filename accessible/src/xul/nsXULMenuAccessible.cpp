@@ -44,6 +44,10 @@
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsIServiceManager.h"
+#include "nsIPresShell.h"
+#include "nsIContent.h"
+#include "nsGUIEvent.h"
+
 
 // ------------------------ Menu Item -----------------------------
 
@@ -75,16 +79,18 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetState(PRUint32 *_retval)
 
   if (!menuItemType.IsEmpty()) {
     // Selectable?
-    if (menuItemType.EqualsLiteral("radio"))
+    if (menuItemType.EqualsIgnoreCase("radio") ||
+        menuItemType.EqualsIgnoreCase("checkbox"))
       *_retval |= STATE_SELECTABLE;
 
     // Checked?
     PRBool isChecked = PR_FALSE;
     element->HasAttribute(NS_LITERAL_STRING("checked"), &isChecked); 
     if (isChecked) {
-      if (*_retval & STATE_SELECTABLE)
-        *_retval |= STATE_SELECTED;  // Use STATE_SELECTED for radio buttons
-      else *_retval |= STATE_CHECKED;
+      nsAutoString checkValue;
+      element->GetAttribute(NS_LITERAL_STRING("checked"), checkValue);
+      if (!checkValue.EqualsIgnoreCase("false"))
+        *_retval |= STATE_CHECKED;
     }
   }
 
@@ -173,6 +179,14 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetKeyBinding(nsAString& _retval)
 NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_MENUITEM;
+  nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
+  NS_ASSERTION(element, "No DOM element for menu node!");
+  nsAutoString menuItemType;
+  element->GetAttribute(NS_LITERAL_STRING("type"), menuItemType);
+  if (menuItemType.EqualsIgnoreCase("radio"))
+    *_retval = ROLE_RADIO_MENU_ITEM;
+  else if (menuItemType.EqualsIgnoreCase("checkbox"))
+    *_retval = ROLE_CHECK_MENU_ITEM;
   return NS_OK;
 }
 
@@ -203,6 +217,14 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
           element->SetAttribute(NS_LITERAL_STRING("menugenerated"), NS_LITERAL_STRING("true"));
         }
       }
+      // fire a popup dom event
+      nsEventStatus status = nsEventStatus_eIgnore;
+      nsMouseEvent event(NS_XUL_POPUP_SHOWING);
+
+      nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mWeakShell));
+      nsCOMPtr<nsIContent> content(do_QueryInterface(childNode));
+      if (presShell && content)
+        presShell->HandleDOMEventWithTarget(content, &event, &status);
     }
   }
 
