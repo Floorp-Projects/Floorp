@@ -81,10 +81,6 @@ static NS_DEFINE_IID(kCScrollingViewCID, NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_IID(kCWebWidgetCID, NS_WEBWIDGET_CID);
 
 
-//#define SAMPLES_BASE_URL "file:////home/kmcclusk/mozilla/dist/Linux2.0.31_x86_DBG.OBJ/bin/res/samples"
-//#define START_URL SAMPLES_BASE_URL "/test0.html"
-
-
 #define SAMPLES_BASE_URL "resource:/res/samples"
 #define DEFAULT_DOC "/test0.html"
 
