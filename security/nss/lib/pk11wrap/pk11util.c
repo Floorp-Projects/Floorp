@@ -40,6 +40,7 @@
 #include "secmod.h"
 #include "nssilock.h"
 #include "secmodi.h"
+#include "secmodti.h"
 #include "pk11func.h"
 #include "pki3hack.h"
 #include "secerr.h"

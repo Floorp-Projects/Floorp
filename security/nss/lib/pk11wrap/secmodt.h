@@ -281,4 +281,10 @@ typedef enum {
    PK11TokenPresentEvent = 1
 } PK11TokenEvent;
 
+/*
+ * CRL Import Flags
+ */
+#define CRL_IMPORT_DEFAULT_OPTIONS 0x00000000
+#define CRL_IMPORT_BYPASS_CHECKS   0x00000001
+
 #endif /*_SECMODT_H_ */

@@ -41,13 +41,14 @@ EXPORTS = \
 	secmodt.h \
 	secpkcs5.h \
 	pk11func.h \
+	pk11pub.h \
+	pk11priv.h \
 	pk11sdr.h \
 	pk11pqg.h \
 	$(NULL)
 
 PRIVATE_EXPORTS = \
 	secmodi.h \
-	secmodti.h \
 	pk11init.h \
 	dev3hack.h \
 	$(NULL)
@@ -56,19 +57,25 @@ MODULE = nss
 
 CSRCS = \
 	dev3hack.c \
+	pk11akey.c \
+	pk11auth.c \
 	pk11cert.c \
+	pk11cxt.c \
 	pk11err.c  \
-	pk11load.c \
-	pk11pars.c \
-	pk11slot.c \
-	pk11list.c \
-	pk11skey.c \
 	pk11kea.c \
-	pk11util.c \
-	pk11sdr.c \
-	pk11pqg.c \
-	pk11pk12.c \
+	pk11list.c \
+	pk11load.c \
+	pk11mech.c \
+	pk11nobj.c \
+	pk11obj.c \
+	pk11pars.c \
 	pk11pbe.c \
+	pk11pk12.c \
+	pk11pqg.c \
+	pk11sdr.c \
+	pk11skey.c \
+	pk11slot.c \
+	pk11util.c \
 	$(NULL)
 
 REQUIRES = dbm

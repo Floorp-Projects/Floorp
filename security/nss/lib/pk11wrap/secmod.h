@@ -91,8 +91,6 @@ SECStatus SECMOD_UnloadUserModule(SECMODModule *mod);
 
 SECMODModule * SECMOD_CreateModule(const char *lib, const char *name,
 					const char *param, const char *nss);
-extern SECStatus SECMOD_Shutdown(void);
-void nss_DumpModuleLog(void);
 
 
 /* Module Management */
@@ -114,12 +112,8 @@ extern SECMODListLock *SECMOD_GetDefaultModuleListLock(void);
 extern SECStatus SECMOD_UpdateModule(SECMODModule *module);
 
 /* lock management */
-extern SECMODListLock *SECMOD_NewListLock(void);
-extern void SECMOD_DestroyListLock(SECMODListLock *);
 extern void SECMOD_GetReadLock(SECMODListLock *);
 extern void SECMOD_ReleaseReadLock(SECMODListLock *);
-extern void SECMOD_GetWriteLock(SECMODListLock *);
-extern void SECMOD_ReleaseWriteLock(SECMODListLock *);
 
 /* Operate on modules by name */
 extern SECMODModule *SECMOD_FindModule(const char *name);
@@ -152,10 +146,7 @@ PRBool SECMOD_IsModulePresent( unsigned long int pubCipherEnableFlags );
 /* Functions used to convert between internal & public representation
  * of Mechanism Flags and Cipher Enable Flags */
 extern unsigned long SECMOD_PubMechFlagstoInternal(unsigned long publicFlags);
-extern unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags);
-
 extern unsigned long SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags);
-extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);
 
 SEC_END_PROTOS
 
