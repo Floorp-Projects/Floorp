@@ -23,16 +23,17 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-EXPORTS =                         \
-		nsIDOMAppCoresManager.h          \
-		nsIDOMBaseAppCore.h          \
-		nsIDOMEditorAppCore.h          \
-		nsIDOMMailCore.h      \
-		nsIDOMRDFCore.h		\
-		nsIDOMToolbarCore.h	  \
+EXPORTS =                       \
+		nsIDOMAppCoresManager.h \
+		nsIDOMBaseAppCore.h     \
+		nsIDOMEditorAppCore.h   \
+		nsIDOMMailCore.h        \
+		nsIDOMPrefsCore.h       \
+		nsIDOMRDFCore.h	        \
+		nsIDOMToolbarCore.h	    \
 		nsIDOMToolkitCore.h		\
-		nsIDOMBrowserAppCore.h     \
-		nsAppCoresCIDs.h     \
+		nsIDOMBrowserAppCore.h  \
+		nsAppCoresCIDs.h        \
 		$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
