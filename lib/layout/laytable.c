@@ -98,9 +98,11 @@ int32
 	lo_align_cell(MWContext *context, lo_DocState *state, lo_TableCell *cell_ptr,
 		LO_CellStruct *cell, lo_TableRec *table, lo_table_span *row_max);
 
+#if 0	/* No longer used after Mariner */
 void
 	lo_RelayoutTags(MWContext *context, lo_DocState *state, PA_Tag * tag_ptr,
 		PA_Tag * tag_end_ptr, LO_Element * elem_list);
+#endif
 	
 PA_Tag *
 	lo_FindReuseableElement(MWContext *context, lo_DocState *state,
@@ -2628,9 +2630,12 @@ lo_RelayoutCaptionSubdoc(MWContext *context, lo_DocState *state, lo_TableCaption
 	lo_TopState *top_state;
 	lo_DocState *old_state;
 	lo_DocState *new_state;
-	PA_Tag *tag_list;
-	PA_Tag *tag_ptr;
-	PA_Tag *tag_end_ptr;
+	/* ifdef-ed out of service: 
+	PA_Tag *tag_list; */
+	/* Commented and ifdef-ed out of service: 
+	PA_Tag *tag_ptr; */
+	/* Commented out of service: 
+	PA_Tag *tag_end_ptr; */
 	int32 doc_id;
 	Bool allow_percent_width;
 	Bool allow_percent_height;
@@ -2644,9 +2649,12 @@ lo_RelayoutCaptionSubdoc(MWContext *context, lo_DocState *state, lo_TableCaption
 	int32 original_tag_count;
 	intn hold_url_list_len;
 	NET_ReloadMethod save_force;
-	Bool save_diff_state;
-	int32 save_state_pushes;
-	int32 save_state_pops;
+	/* ifdef-ed out of service: 
+	Bool save_diff_state; */
+	/* ifdef-ed out of service: 
+	int32 save_state_pushes; */
+	/* ifdef-ed out of service: 
+	int32 save_state_pops; */
 	lo_DocLists *doc_lists;
 	int32 hold_image_list_count;
         int32 hold_applet_list_count;
@@ -3257,9 +3265,12 @@ lo_RelayoutCell(MWContext *context, lo_DocState *state,
 	lo_TopState *top_state;
 	lo_DocState *old_state;
 	lo_DocState *new_state;
-	PA_Tag *tag_list;
-	PA_Tag *tag_ptr;
-	PA_Tag *tag_end_ptr;
+	/* Unused: 
+	PA_Tag *tag_list; */
+	/* COmmented out of service: 
+	PA_Tag *tag_ptr; */
+	/* Commented out of service: 
+	PA_Tag *tag_end_ptr; */
 	int32 doc_id;
 	Bool allow_percent_width;
 	Bool allow_percent_height;
@@ -3273,15 +3284,19 @@ lo_RelayoutCell(MWContext *context, lo_DocState *state,
 	int32 original_tag_count;
 	intn hold_url_list_len;
 	NET_ReloadMethod save_force;
-	Bool save_diff_state;
-	int32 save_state_pushes;
-	int32 save_state_pops;
+	/* Unused: 
+	Bool save_diff_state; */
+	/* Unused: 
+	int32 save_state_pushes; */
+	/* Unused: 
+	;int32 save_state_pops; */
 	lo_DocLists *doc_lists;
 	int32 hold_image_list_count;
         int32 hold_applet_list_count;
         int32 hold_embed_list_count;
 	int32 hold_current_layer_num;
-	LO_Element * elem_list;
+	/* Commented out of service: 
+	LO_Element * elem_list; */
 
 	/*
 	 * Relayout is NOT allowed to block on images, so never
@@ -7930,6 +7945,8 @@ fprintf(stderr, "lo_EndTable called\n");
 	*/
 }
 
+
+#if 0
 /*
  * This function relaysout the tags in a table cell. It knows how to handle
  * certain types of elements that can be resused directly rather than thrown
@@ -8189,7 +8206,7 @@ lo_RelayoutTags(MWContext *context, lo_DocState *state, PA_Tag * tag_ptr,
 	top_state->state_pushes = save_state_pushes;
 	top_state->state_pops = save_state_pops;
 }
-
+#endif
 
 /*
  * Walk the element list, throwing them away until we find one

@@ -880,10 +880,6 @@ void LO_EditorReflow(MWContext *context, ED_TagCursor *pCursor,
 	Bool bFoundBreak, bBreakIsEndTag;
 	int32 iEndLine = -1;
     LO_Element *leadingMquotes = NULL;
-    ED_Element *pTagElement;
-    Bool bItemComplete;
-	LO_Element * element;
-    ED_ElementType	elementType;
 	LO_Element * startElement;
 	LO_Element * endElement;
 	LO_Element * prevElement;
@@ -2058,14 +2054,7 @@ lo_VerifyLayoutImplementation( MWContext *pContext, Bool print) {
  	Bool result;
 	int32 doc_id;
 	lo_TopState *top_state;
-	lo_DocState *state;
-	LO_Element **array;
-	LO_Element *eptr;
-    LO_Element *start;
-    LO_Element *end;
-#ifdef XP_WIN16
-	XP_Block *larray_array;
-#endif /* XP_WIN16 */
+	lo_DocState *state;	
 
     result = TRUE;
     if ( ! pContext ) {

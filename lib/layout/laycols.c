@@ -605,7 +605,6 @@ lo_EndMulticolumn(MWContext *context, lo_DocState *state, PA_Tag *tag,
 	LO_Element *cell_list_end;
 	LO_Element *cell_ele;
 	LO_TableStruct *table_ele;
-	LO_Element *ele;
 
 	cell_ele = NULL;
 	cell_list = NULL;

@@ -4713,7 +4713,6 @@ void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret,
 
     /* Clip Y to the last line of the document */
     {
-        LO_Position endOfDocument;
         int32 endY;
 	LO_Element *last_eptr;
 	last_eptr = LO_getFirstLastElement(context, FALSE);
@@ -4731,7 +4730,6 @@ void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret,
 
     /* Clip Y to the first line of the document */
     {
-        LO_Position startOfDocument;
         int32 startY;
 	LO_Element *first_eptr;
 	first_eptr = LO_getFirstLastElement(context, TRUE);

@@ -1270,7 +1270,7 @@ lo_insert_suppress_tags(MWContext *context, lo_TopState *top_state,
                         LO_BlockInitializeStruct *param)
 {
     PA_Tag *end_tag;
-	int32 i;
+	uint32 i;
 
     /*
      * Since we're adding tags to the blocked tags list without going through

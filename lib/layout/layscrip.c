@@ -450,8 +450,11 @@ static void
 lo_script_archive_exit_fn(URL_Struct *url_struct, int status, MWContext *context)
 {
     ScriptData *data = NULL;
+#ifdef JAVA
+	/* Vars only used in JAVA context */
     char *name;
     JSPrincipals *principals;
+#endif
     ETEvalStuff * stuff;
 
     data = (ScriptData *) url_struct->fe_data;
@@ -532,7 +535,10 @@ lo_script_archive_exit_fn(URL_Struct *url_struct, int status, MWContext *context
 
     lo_DestroyScriptData(data);
 
+#ifdef JAVA	/* Label only used in this context */
 out:
+#endif
+
     /* Always free (or drop a ref on) the url_struct before returning. */
     NET_FreeURLStruct(url_struct);
 }    
