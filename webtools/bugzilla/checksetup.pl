@@ -2120,7 +2120,7 @@ sub RenameField ($$$)
     if ($$ref[1] ne $newname) {
         print "Updating field $field in table $table ...\n";
         my $type = $$ref[1];
-        $type .= " NOT NULL" if $$ref[3];
+        $type .= " NOT NULL" if !$$ref[2];
         $dbh->do("ALTER TABLE $table
                   CHANGE $field
                   $newname $type");
