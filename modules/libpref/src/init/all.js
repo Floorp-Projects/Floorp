@@ -239,6 +239,8 @@ pref("network.http.accept-encoding" ,"gzip,deflate,compress,identity");
 
 pref("network.http.pipelining"      , false);
 pref("network.http.proxy.pipelining", false);
+
+pref("network.http.proxy.ssl.connect",false);
 // </ruslan>
 
 // sspitzer:  change this back to "news" when we get to beta.
