@@ -230,13 +230,13 @@ nsXInstaller::DrawNavButtons()
     gtk_box_pack_start(GTK_BOX(navbtnhbox), navbtntable, TRUE, TRUE, 0);
 
     gtk_table_attach(GTK_TABLE(navbtntable), gCtx->back, 4, 5, 0, 1, 
-                     static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		     static_cast<GtkAttachOptions>( GTK_FILL | GTK_EXPAND),
-		     5, 5);
+        static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+		static_cast<GtkAttachOptions>( GTK_FILL | GTK_EXPAND),
+		5, 5);
     gtk_table_attach(GTK_TABLE(navbtntable), gCtx->next, 5, 6, 0, 1,
-                     static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		     static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
-		     5, 5);
+        static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+		static_cast<GtkAttachOptions>(GTK_FILL | GTK_EXPAND),
+		5, 5);
 
     gtk_widget_show(navbtntable);    
     gtk_widget_show(navbtnhbox); 
