@@ -29,6 +29,8 @@
 #include "nsIEventSinkGetter.h"
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptGlobalObjectData.h"
 #include "nsJSProtocolHandler.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"
@@ -208,12 +210,14 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     nsresult rv;
     
     // The event sink must be a script context owner or we fail.
-    nsIScriptContextOwner* owner;
+    nsIScriptContextOwner* ownerPtr;
     rv = eventSinkGetter->GetEventSink(verb,
                                        NS_GET_IID(nsIScriptContextOwner),
-                                       (nsISupports**)&owner);
+                                       (nsISupports**)&ownerPtr);
     if (NS_FAILED(rv))
         return rv;
+	nsCOMPtr<nsIScriptContextOwner> owner = ownerPtr;
+	NS_RELEASE(ownerPtr);
     
     if (!owner)
         return NS_ERROR_FAILURE;
@@ -221,7 +225,6 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     // So far so good: get the script context from its owner.
     nsCOMPtr<nsIScriptContext> scriptContext;
     rv = owner->GetScriptContext(getter_AddRefs(scriptContext));
-    NS_RELEASE(owner);
     if (NS_FAILED(rv))
         return rv;
 
@@ -229,26 +232,28 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     
     NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager,
                     NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-
     if (NS_FAILED(rv))
         return NS_ERROR_FAILURE;
     
     PRBool hasPrincipal;
     if (NS_FAILED(securityManager->HasSubjectPrincipal(&hasPrincipal)))
-        return NS_ERROR_FAILURE;
-    
-    if (!hasPrincipal) 
-    {
-        // Must be loaded as a result of a user action on a HTML element
-        //  with a javascript: HREF attribute
-        // TODO: need to find URI of enclosing page
-        return NS_OK;
-    }
-    
+        return NS_ERROR_FAILURE;  
     nsCOMPtr<nsIPrincipal> principal;
-
-    if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
-        return NS_ERROR_FAILURE;
+    if (hasPrincipal) {
+		if (NS_FAILED(securityManager->GetSubjectPrincipal(getter_AddRefs(principal))))
+			return NS_ERROR_FAILURE;
+    } else {
+		// No scripts currently executing; get principal from global object
+		nsCOMPtr<nsIScriptGlobalObject> global;
+		owner->GetScriptGlobalObject(getter_AddRefs(global));
+		if (!global)
+			return NS_ERROR_FAILURE;
+		nsCOMPtr<nsIScriptGlobalObjectData> globalData(do_QueryInterface(global));
+		if (!globalData)
+			return NS_ERROR_FAILURE;
+		if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(principal)))) 
+		  return NS_ERROR_FAILURE;
+	}
 
 
     //TODO Change this to GetSpec and then skip past the javascript:
@@ -343,6 +348,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     nsCOMPtr<nsISupports> s;
     rv = NS_NewStringInputStream(getter_AddRefs(s), retString);
+	int length = PL_strlen(retString);
     Recycle(retString);
         
     if (NS_FAILED(rv))
@@ -353,8 +359,7 @@ nsJSProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
 
     nsIChannel* channel;
 
-    rv = serv->NewInputStreamChannel(uri, "text/html",
-                                     -1,      // XXX need contentLength -- implies that the evaluation should happen here, not in Read
+    rv = serv->NewInputStreamChannel(uri, "text/html", length,
                                      in, aGroup, &channel);
     if (NS_FAILED(rv))
         return rv;
