@@ -876,8 +876,11 @@ nsresult nsMsgProtocol::DoNtlmStep1(const char *username, const char *password, 
     rv = m_authModule->GetNextToken((void *)nsnull, 0, &outBuf, &outBufLen);
     if (NS_SUCCEEDED(rv) && outBuf)
     {
-        response.Adopt(PL_Base64Encode((char *)outBuf, outBufLen, nsnull));
-        rv = response.IsEmpty() ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+        char *base64Str = PL_Base64Encode((char *)outBuf, outBufLen, nsnull);
+        if (base64Str)
+          response.Adopt(base64Str);
+        else 
+          rv = NS_ERROR_OUT_OF_MEMORY;
         nsMemory::Free(outBuf);
     }
 
@@ -903,9 +906,11 @@ nsresult nsMsgProtocol::DoNtlmStep2(nsCString &commandResponse, nsCString &respo
     nsMemory::Free(inBuf);
     if (NS_SUCCEEDED(rv) && outBuf)
     {
-        response.Adopt(PL_Base64Encode((char *)outBuf, outBufLen, nsnull));
-        rv = response.IsEmpty() ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-        nsMemory::Free(outBuf);
+        char *base64Str = PL_Base64Encode((char *)outBuf, outBufLen, nsnull);
+        if (base64Str)
+          response.Adopt(base64Str);
+        else 
+          rv = NS_ERROR_OUT_OF_MEMORY;
     }
 
     if (NS_FAILED(rv))
